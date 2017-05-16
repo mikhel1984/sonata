@@ -7,16 +7,41 @@ bigint.__index = bigint
 local function iabs(v) return (v < 0) and (-v) or v end
 local function nval(b, n) return b[n] and (b[0] < 0 and -b[n] or b[n]) or 0 end
 
-function bigint:new(a)
-   assert(rational.isint(a), "Integer number is expected")
-   local o = {}
-   o[0] = (a < 0) and -1 or 1
-   a = iabs(a)
+local function fromint(v) 
+   v = math.tointeger(v)
+   assert(v, 'Integer is expected')
+   local big = {}
+   big[0] = (v < 0) and -1 or 1
+   v = iabs(v)
    local i = 1
-   repeat 
-      o[i], a = math.floor(a % 10), math.floor(a/10)
+   repeat
+      big[i], v = math.floor(v % 10), math.floor(v/10)
       i = i + 1
-   until a == 0
+   until v == 0
+   return big   
+end
+
+local function fromstr(s)
+   assert(string.find(s, '^[+-]?%d+$'), "Wrong string number")
+   local big = {}
+   big[0] = (string.byte(s) == string.byte('-')) and -1 or 1
+   local i = 1
+   for d in string.gmatch(string.reverse(s), '%d') do
+      big[i] = math.tointeger(d)
+      i = i + 1
+   end
+   return big
+end
+
+function bigint:new(a)
+   local o
+   if type(a) == 'number' then 
+      o = fromint(a)
+   elseif type(a) == 'string' then
+      o = fromstr(a)
+   else
+      error("Expected integer or string")
+   end
    setmetatable(o, self)
    return o
 end
@@ -73,8 +98,5 @@ end
 t = bigint:new(123456)
 print(t)
 
-a = bigint:new(-789)
-b = bigint:new(456)
-
-c = a - b
-print(c)
+p = bigint:new("9876511122233344555668987654123458")
+print(p)
