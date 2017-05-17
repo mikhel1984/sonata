@@ -1,71 +1,48 @@
 
-local rational = require "rational"
-
 local bigint = {}
 bigint.__index = bigint
 
 local function iabs(v) return (v < 0) and (-v) or v end
-local function nval(b, n) return b[n] and (b[0] < 0 and -b[n] or b[n]) or 0 end
 
 local function fromint(v) 
    v = math.tointeger(v)
    assert(v, 'Integer is expected')
-   local big = {}
-   big[0] = (v < 0) and -1 or 1
-   v = iabs(v)
-   local i = 1
-   repeat
-      big[i], v = math.floor(v % 10), math.floor(v/10)
-      i = i + 1
-   until v == 0
-   return big   
+   return tostring(iabs(v)), (v < 0) and -1 or 1   
 end
 
 local function fromstr(s)
    assert(string.find(s, '^[+-]?%d+$'), "Wrong string number")
-   local big = {}
-   big[0] = (string.byte(s) == string.byte('-')) and -1 or 1
-   local i = 1
-   for d in string.gmatch(string.reverse(s), '%d') do
-      big[i] = math.tointeger(d)
-      i = i + 1
-   end
-   return big
+   return string.match(s, '%d+'), (string.byte(s) == string.byte('-')) and -1 or 1
 end
 
 function bigint:new(a)
-   local o
+   local s, sign
    if type(a) == 'number' then 
-      o = fromint(a)
+      s, sign = fromint(a)
    elseif type(a) == 'string' then
-      o = fromstr(a)
+      s, sign = fromstr(a)
    else
       error("Expected integer or string")
    end
+   local o = {value = string.reverse(s), sign = sign}
    setmetatable(o, self)
    return o
 end
 
-bigint.copy = function (v)
-   local c = bigint:new(v[0])
-   for i = 1, #v do
-      c[i] = v[i]
-   end
-   return c
-end
-
-bigint.__add = function (a, b)
-   a = (type(a) == "number") and bigint:new(a) or a
-   b = (type(b) == "number") and bigint:new(b) or b
-   local s = math.max(#a, #b)
-   local sum = bigint:new(0)
-   local d, ci = 0, 0
-   for i = 1, s do
-      ci = nval(a, i) + nval(b, i) + d
-      if ci >= 10 then
+bigint.__add = function (a,b)
+   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
+   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   local zero = string.byte('0')
+   local sum = {}
+   local ci, d = 0, 0
+   for i = 1, math.max(#a.value, #b.value) do
+      local ai = string.byte(a.value, i) or zero
+      local bi = string.byte(b.value, i) or zero
+      ci = a.sign * (ai - zero) + b.sign * (bi - zero) + d
+      if ci >= 10 then 
          sum[i] = ci - 10
-	 d = 1 
-      elseif ci <= -10 then 
+         d = 1
+      elseif ci <= -10 then
          sum[i] = -ci - 10
 	 d = -1
       else
@@ -73,30 +50,49 @@ bigint.__add = function (a, b)
 	 d = 0
       end
    end
-   sum[0] = (ci < 0) and -1 or 1
-   if d ~= 0 then sum[s+1] = 1 end
-   return sum
-end
-
-bigint.__sub = function (a,b)
-   b = (type(b) == "number") and bigint:new(b) or b
-   return bigint.__add(a, -b)
+   if d ~= 0 then sum[#sum+1] = 1 end
+   local res = bigint:new(0)
+   res.sign = (ci < 0) and -1 or 1
+   res.value = table.concat(sum)
+   return res
 end
 
 bigint.__unm = function (v)
-   local new = bigint.copy(v)
-   new[0] = -new[0] 
-   return new
+   local res = bigint:new(-v.sign)
+   res.value = v.value
+   return res
 end
 
-bigint.__tostring = function (v) 
-   local str = table.concat(v)
-   str = string.reverse(str)
-   return (v[0] > 0) and str or ('-'..str)
+bigint.__sub = function (a, b)
+   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   return bigint.__add(a, -b)
+end
+--[[
+bigint.__mul = function (a, b) 
+   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
+   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   local zero = string.byte('0')
+   local sum = {}
+   local ci, d = 0, 0
+   for i = 1, #a.value do
+      local ai = string.byte(a.value, i) - zero
+      for j = 1, #b.value do
+         local bi = string.byte(b.value, j) - zero
+	 ci = bi*ai
+	 sum[i] = (sum[i] or 0) + 0
+      end
+   end
+   
+end
+]]
+bigint.__tostring = function (v)
+   return (v.sign == -1 and '-' or '') .. string.reverse(v.value)
 end
 
-t = bigint:new(123456)
+t = bigint:new('1233456732369988007')
 print(t)
+a = bigint:new(123)
+b = bigint:new(-456)
 
-p = bigint:new("9876511122233344555668987654123458")
-print(p)
+c = a - b
+print(c)
