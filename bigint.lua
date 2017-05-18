@@ -14,6 +14,16 @@ local function fromstr(s)
    assert(string.find(s, '^[+-]?%d+$'), "Wrong string number")
    return string.match(s, '%d+'), (string.byte(s) == string.byte('-')) and -1 or 1
 end
+--[[
+local function convolution(t)
+   local d = 0
+   for i = 1, #t do
+      t[i] = t[i]+d
+      d = math.floor(t[i]/10)
+      t[i] = math.floor(t[i]%10)
+   end
+end
+]]
 
 function bigint:new(a)
    local s, sign
@@ -67,28 +77,37 @@ bigint.__sub = function (a, b)
    b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
    return bigint.__add(a, -b)
 end
---[[
+
 bigint.__mul = function (a, b) 
    a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
    b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
    local zero = string.byte('0')
-   local sum = {}
-   local ci, d = 0, 0
+   local sum = {}   
    for i = 1, #a.value do
       local ai = string.byte(a.value, i) - zero
       for j = 1, #b.value do
-         local bi = string.byte(b.value, j) - zero
-	 ci = bi*ai
-	 sum[i] = (sum[i] or 0) + 0
+         local bj = string.byte(b.value, j) - zero
+	 local pos = i+j-1
+	 sum[pos] = (sum[pos] or 0) + ai*bj
       end
    end
-   
+   -- back
+   local d = 0
+   for i = 1, #sum do
+      sum[i] = sum[i] + d
+      d = math.floor(sum[i]/10)
+      sum[i] = math.floor(sum[i] % 10)
+   end
+   if d ~= 0 then sum[#sum+1] = d end
+   local res = bigint:new(a.sign*b.sign)
+   res.value = table.concat(sum)
+   return res   
 end
-]]
+
 bigint.__tostring = function (v)
    return (v.sign == -1 and '-' or '') .. string.reverse(v.value)
 end
-
+--[[
 t = bigint:new('1233456732369988007')
 print(t)
 a = bigint:new(123)
@@ -96,3 +115,8 @@ b = bigint:new(-456)
 
 c = a - b
 print(c)
+]]
+p = bigint:new(-35)
+q = bigint:new(-25)
+r = p*q
+print(r)
