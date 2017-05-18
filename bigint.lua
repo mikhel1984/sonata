@@ -14,16 +14,6 @@ local function fromstr(s)
    assert(string.find(s, '^[+-]?%d+$'), "Wrong string number")
    return string.match(s, '%d+'), (string.byte(s) == string.byte('-')) and -1 or 1
 end
---[[
-local function convolution(t)
-   local d = 0
-   for i = 1, #t do
-      t[i] = t[i]+d
-      d = math.floor(t[i]/10)
-      t[i] = math.floor(t[i]%10)
-   end
-end
-]]
 
 function bigint:new(a)
    local s, sign
@@ -99,9 +89,30 @@ bigint.__mul = function (a, b)
       sum[i] = math.floor(sum[i] % 10)
    end
    if d ~= 0 then sum[#sum+1] = d end
+   -- save
    local res = bigint:new(a.sign*b.sign)
    res.value = table.concat(sum)
    return res   
+end
+
+bigint.__eq = function (a,b)
+   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
+   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   return a.sign == b.sign and a.value == b.value
+end
+
+bigint.__lt = function (a,b)
+   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
+   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   return a.sign < b.sign or 
+         (a.sign > 0 and a.value < b.value) or
+	 (a.sign < 0 and a.value > b.value)
+end
+
+bigint.__le = function (a,b)
+   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
+   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   return bigint.__eq(a,b) or bigint.__lt(a,b)
 end
 
 bigint.__tostring = function (v)
@@ -116,7 +127,7 @@ b = bigint:new(-456)
 c = a - b
 print(c)
 ]]
-p = bigint:new(-35)
-q = bigint:new(-25)
-r = p*q
+p = bigint:new(25)
+q = bigint:new(35)
+r = p<=q
 print(r)
