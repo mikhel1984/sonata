@@ -2,6 +2,8 @@
 local bigint = {}
 bigint.__index = bigint
 
+bigint.BASE = 10
+
 local function iabs(v) return (v < 0) and (-v) or v end
 
 local function fromint(v) 
@@ -39,11 +41,11 @@ bigint.__add = function (a,b)
       local ai = string.byte(a.value, i) or zero
       local bi = string.byte(b.value, i) or zero
       ci = a.sign * (ai - zero) + b.sign * (bi - zero) + d
-      if ci >= 10 then 
-         sum[i] = ci - 10
+      if ci >= bigint.BASE then 
+         sum[i] = ci - bigint.BASE
          d = 1
-      elseif ci <= -10 then
-         sum[i] = -ci - 10
+      elseif ci <= -bigint.BASE then
+         sum[i] = -ci - bigint.BASE
 	 d = -1
       else
          sum[i] = iabs(ci)
@@ -85,8 +87,8 @@ bigint.__mul = function (a, b)
    local d = 0
    for i = 1, #sum do
       sum[i] = sum[i] + d
-      d = math.floor(sum[i]/10)
-      sum[i] = math.floor(sum[i] % 10)
+      d = math.floor(sum[i]/bigint.BASE)
+      sum[i] = math.floor(sum[i] % bigint.BASE)
    end
    if d ~= 0 then sum[#sum+1] = d end
    -- save
@@ -105,6 +107,7 @@ bigint.__lt = function (a,b)
    a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
    b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
    return a.sign < b.sign or 
+         -- use string comparision
          (a.sign > 0 and a.value < b.value) or
 	 (a.sign < 0 and a.value > b.value)
 end
@@ -115,8 +118,12 @@ bigint.__le = function (a,b)
    return bigint.__eq(a,b) or bigint.__lt(a,b)
 end
 
+bigint.__len = function (v)
+   return #v.value
+end
+
 bigint.__tostring = function (v)
-   return (v.sign == -1 and '-' or '') .. string.reverse(v.value)
+   return (v.sign < 0 and '-' or '') .. string.reverse(v.value)
 end
 --[[
 t = bigint:new('1233456732369988007')
