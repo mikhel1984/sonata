@@ -3,6 +3,7 @@ local bigint = {}
 bigint.__index = bigint
 
 bigint.BASE = 10
+bigint.type = 'bigint'
 
 local function iabs(v) return (v < 0) and (-v) or v end
 
@@ -30,6 +31,30 @@ function bigint:new(a)
    setmetatable(o, self)
    return o
 end
+
+local function simplify (v)
+   local i = #v
+   while i > 1 and v[i] == 0 do
+      v[i] = nil
+      i = i - 1
+   end
+end
+
+local function args (a, b)
+   --[[
+   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
+   if b then
+      b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   end
+   ]]
+   a = (a.type == bigint.type) and a or bigint:new(a)
+   if b then
+      b = (b.type == bigint.type) and b or bigint:new(b)
+   end
+   return a, b
+end
+
+
 --[[
 local function gen2 (p,q)
    local low, up, med = p,q,p
@@ -41,8 +66,7 @@ local function gen2 (p,q)
 end
 ]]
 local function div(a,b)
-   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
-   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   a,b = args(a,b)
    local num = string.reverse(a.value)
    local acc = {}
    local k = #b.value
@@ -82,8 +106,7 @@ bigint.copy = function (v)
 end
 
 bigint.__add = function (a,b)
-   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
-   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   a,b = args(a,b)
    local zero = string.byte('0')
    local sum = {}
    local ci, d = 0, 0
@@ -103,9 +126,7 @@ bigint.__add = function (a,b)
       end
    end
    if d ~= 0 then sum[#sum+1] = 1 end
-   -- reduce zeros
-   local j = #sum
-   while j > 1 and sum[j] == 0 do sum[j] = nil; j = j - 1 end
+   simplify(sum)
    -- save
    local res = bigint:new(0)
    res.sign = (ci < 0) and -1 or 1
@@ -120,13 +141,12 @@ bigint.__unm = function (v)
 end
 
 bigint.__sub = function (a, b)
-   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   b = args(b)
    return bigint.__add(a, -b)
 end
 
 bigint.__mul = function (a, b) 
-   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
-   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   a,b = args(a,b)
    local zero = string.byte('0')
    local sum = {}   
    for i = 1, #a.value do
@@ -145,6 +165,7 @@ bigint.__mul = function (a, b)
       sum[i] = math.floor(sum[i] % bigint.BASE)
    end
    if d ~= 0 then sum[#sum+1] = d end
+   simplify(sum)
    -- save
    local res = bigint:new(a.sign*b.sign)
    res.value = table.concat(sum)
@@ -162,14 +183,12 @@ bigint.__mod = function (a, b)
 end
 
 bigint.__eq = function (a,b)
-   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
-   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   a,b = args(a,b)
    return a.sign == b.sign and a.value == b.value
 end
 
 bigint.__lt = function (a,b)
-   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
-   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   a,b = args(a,b)
    if a.sign < b.sign then return true end
    if #a.value == #b.value then
       local va, vb = string.reverse(a.value), string.reverse(b.value)
@@ -180,8 +199,7 @@ bigint.__lt = function (a,b)
 end
 
 bigint.__le = function (a,b)
-   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
-   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   a,b = args(a,b)
    return bigint.__eq(a,b) or bigint.__lt(a,b)
 end
 
@@ -196,7 +214,7 @@ end
 a = bigint:new(62)
 b = bigint:new(25)
 
-print(a % b)
+print(a * b)
 
 --[[
 p,q = div(625, '25')
