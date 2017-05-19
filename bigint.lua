@@ -30,6 +30,56 @@ function bigint:new(a)
    setmetatable(o, self)
    return o
 end
+--[[
+local function gen2 (p,q)
+   local low, up, med = p,q,p
+   return function (b)
+      if b then low = med else up = med end
+      med = math.floor((up+low)*0.5)
+      return med
+   end
+end
+]]
+local function div(a,b)
+   a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
+   b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
+   local num = string.reverse(a.value)
+   local acc = {}
+   local k = #b.value
+   local rest = bigint:new(string.sub(num, 1, k))
+   local denom = bigint.abs(b)
+   while k <= #num do
+      if rest > denom then
+         local n = bigint.BASE
+	 local prod
+	 repeat
+	    n = n-1
+	    prod = denom*n
+	 until prod <= rest
+	 acc[#acc+1] = n
+	 rest = rest-prod
+      else
+         if #acc > 0 then acc[#acc+1] = 0 end
+      end
+      k = k+1
+      rest.value = string.sub(num, k,k) .. rest.value
+   end
+   local result = bigint:new(a.sign*b.sign)
+   result.value = #acc > 0 and string.reverse(table.concat(acc)) or '0'
+   return result, rest   
+end
+
+bigint.abs = function (v)
+   local a = (type(v) == 'number' or type(v) == 'string') and bigint:new(v) or bigint.copy(v)
+   if a.sign < 0 then a.sign = -a.sign end
+   return a
+end
+
+bigint.copy = function (v)
+   local c = bigint:new(v.sign)
+   c.value = v.value
+   return c
+end
 
 bigint.__add = function (a,b)
    a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
@@ -53,6 +103,10 @@ bigint.__add = function (a,b)
       end
    end
    if d ~= 0 then sum[#sum+1] = 1 end
+   -- reduce zeros
+   local j = #sum
+   while j > 1 and sum[j] == 0 do sum[j] = nil; j = j - 1 end
+   -- save
    local res = bigint:new(0)
    res.sign = (ci < 0) and -1 or 1
    res.value = table.concat(sum)
@@ -97,6 +151,16 @@ bigint.__mul = function (a, b)
    return res   
 end
 
+bigint.__div = function (a, b)
+   local res, _ = div(a,b)
+   return res
+end
+
+bigint.__mod = function (a, b)
+   local _, res = div(a,b)
+   return res
+end
+
 bigint.__eq = function (a,b)
    a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
    b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
@@ -106,10 +170,13 @@ end
 bigint.__lt = function (a,b)
    a = (type(a) == 'number' or type(a) == 'string') and bigint:new(a) or a
    b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
-   return a.sign < b.sign or 
-         -- use string comparision
-         (a.sign > 0 and a.value < b.value) or
-	 (a.sign < 0 and a.value > b.value)
+   if a.sign < b.sign then return true end
+   if #a.value == #b.value then
+      local va, vb = string.reverse(a.value), string.reverse(b.value)
+      return (a.sign > 0 and va < vb) or (a.sign < 0 and va > vb)
+   else
+      return (a.sign > 0 and #a.value < #b.value) or (a.sign < 0 and #a.value > #b.value) 
+   end
 end
 
 bigint.__le = function (a,b)
@@ -125,16 +192,16 @@ end
 bigint.__tostring = function (v)
    return (v.sign < 0 and '-' or '') .. string.reverse(v.value)
 end
---[[
-t = bigint:new('1233456732369988007')
-print(t)
-a = bigint:new(123)
-b = bigint:new(-456)
 
-c = a - b
-print(c)
+a = bigint:new(62)
+b = bigint:new(25)
+
+print(a % b)
+
+--[[
+p,q = div(625, '25')
+print(p)
+print(q)
 ]]
-p = bigint:new(25)
-q = bigint:new(35)
-r = p<=q
-print(r)
+
+
