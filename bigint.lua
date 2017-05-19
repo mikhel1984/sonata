@@ -47,24 +47,14 @@ local function args (a, b)
       b = (type(b) == 'number' or type(b) == 'string') and bigint:new(b) or b
    end
    ]]
-   a = (a.type == bigint.type) and a or bigint:new(a)
+   a = (type(a) == 'table' and a.type == bigint.type) and a or bigint:new(a)
    if b then
-      b = (b.type == bigint.type) and b or bigint:new(b)
+      b = (type(b) == 'table' and b.type == bigint.type) and b or bigint:new(b)
    end
    return a, b
 end
 
 
---[[
-local function gen2 (p,q)
-   local low, up, med = p,q,p
-   return function (b)
-      if b then low = med else up = med end
-      med = math.floor((up+low)*0.5)
-      return med
-   end
-end
-]]
 local function div(a,b)
    a,b = args(a,b)
    local num = string.reverse(a.value)
@@ -73,7 +63,7 @@ local function div(a,b)
    local rest = bigint:new(string.sub(num, 1, k))
    local denom = bigint.abs(b)
    while k <= #num do
-      if rest > denom then
+      if rest >= denom then
          local n = bigint.BASE
 	 local prod
 	 repeat
@@ -207,19 +197,40 @@ bigint.__len = function (v)
    return #v.value
 end
 
+bigint.__pow = function (a,b)
+   a,b = args(a,b)
+   assert(b.sign >= 0, "Power must be non negative")
+   if b.value == 0 then 
+      assert(a ~= 0, "Error: 0^0")
+      return bigint:new(1) 
+   end
+   local aa, bb = bigint.copy(a), bigint.copy(b)
+   local res = bigint:new(1)
+   local h = 1
+   while bb > 0 do
+      local p,q = div(bb,2)
+      if q.value ~= '0' then
+         res = res * aa
+      end
+      aa = aa * aa
+      bb = p
+   end
+   return res
+end
+
 bigint.__tostring = function (v)
    return (v.sign < 0 and '-' or '') .. string.reverse(v.value)
 end
 
-a = bigint:new(62)
-b = bigint:new(25)
+bigint.tonumber = function (v)
+   return tonumber(bigint.__tostring(v))
+end
 
-print(a * b)
+a = bigint:new(25)
+b = bigint:new(2)
 
---[[
-p,q = div(625, '25')
-print(p)
-print(q)
-]]
+print(a ^ 36 )
+
+
 
 
