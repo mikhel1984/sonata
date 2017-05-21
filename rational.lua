@@ -40,31 +40,35 @@ rational.about[rational.new] = [[
 Create a rational number. If denom == 1 it can be omited.
 ]]
 
+local function args(a,b)
+   a = (type(a) == "number") and rational:new(a) or a
+   if b then
+      b = (type(b) == "number") and rational:new(b) or b   
+   end
+   return a,b
+end
+
 -- a + b
 rational.__add = function (a, b)   
-   a = (type(a) == "number") and rational:new(a) or a
-   b = (type(b) == "number") and rational:new(b) or b   
+   a,b = args(a,b)
    return rational:new(a.num*b.denom+a.denom*b.num, a.denom*b.denom)
 end
 
 -- a - b
 rational.__sub = function (a, b)   
-   a = (type(a) == "number") and rational:new(a) or a
-   b = (type(b) == "number") and rational:new(b) or b   
+   a,b = args(a,b)
    return rational:new(a.num*b.denom-a.denom*b.num, a.denom*b.denom)
 end
 
 -- a * b
 rational.__mul = function (a, b)
-   a = (type(a) == "number") and rational:new(a) or a
-   b = (type(b) == "number") and rational:new(b) or b 
+   a,b = args(a,b)
    return rational:new(a.num*b.num, a.denom*b.denom)
 end
 
 -- a / b
 rational.__div = function (a, b)
-   a = (type(a) == "number") and rational:new(a) or a
-   b = (type(b) == "number") and rational:new(b) or b 
+   a,b = args(a,b)
    return rational:new(a.num*b.denom, a.denom*b.num)
 end
 
@@ -92,22 +96,19 @@ Get a power b. If a is rational, b must be nonnegative integer.
 
 -- a == b
 rational.__eq = function (a,b)
-   a = (type(a) == "number") and rational:new(a) or a
-   b = (type(b) == "number") and rational:new(b) or b 
+   a,b = args(a,b)
    return a.num == b.num and a.denom == b.denom
 end
 
 -- a < b
 rational.__lt = function (a,b)
-   a = (type(a) == "number") and rational:new(a) or a
-   b = (type(b) == "number") and rational:new(b) or b 
+   a,b = args(a,b)
    return (a.num*b.denom) < (b.num*a.denom)
 end
 
 -- a <= b
 rational.__le = function (a,b)
-   a = (type(a) == "number") and rational:new(a) or a
-   b = (type(b) == "number") and rational:new(b) or b 
+   a,b = args(a,b)
    return (a.num*b.denom) <= (b.num*a.denom)
 end
 

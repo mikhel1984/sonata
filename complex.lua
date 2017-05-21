@@ -18,31 +18,36 @@ complex.about[complex.new] = [[
 Create a complex number. If im == 0 it can be omited.
 ]]
 
+-- argument type correction
+local function args(a,b)
+   a = (type(a) == "number") and complex:new(a) or a
+   if b then
+      b = (type(b) == "number") and complex:new(b) or b
+   end
+   return a,b
+end
+
 -- a + b
 complex.__add = function (a,b)
-   a = (type(a) == "number") and complex:new(a) or a
-   b = (type(b) == "number") and complex:new(b) or b
+   a,b = args(a,b)
    return complex:new(a.real+b.real, a.imag+b.imag)
 end
 
 -- a - b
 complex.__sub = function (a,b)
-   a = (type(a) == "number") and complex:new(a) or a
-   b = (type(b) == "number") and complex:new(b) or b
+   a,b = args(a,b)
    return complex:new(a.real-b.real, a.imag-b.imag)
 end
 
 -- a * b
 complex.__mul = function (a,b)
-   a = (type(a) == "number") and complex:new(a) or a
-   b = (type(b) == "number") and complex:new(b) or b
+   a,b = args(a,b)
    return complex:new(a.real*b.real-a.imag*b.imag, a.real*b.imag+a.imag*b.real)
 end
 
 -- a / b
 complex.__div = function (a,b)
-   a = (type(a) == "number") and complex:new(a) or a
-   b = (type(b) == "number") and complex:new(b) or b
+   a,b = args(a,b)
    local denom = b.real*b.real + b.imag*b.imag
    assert(denom ~= 0, "Denomerator is zero!")
    return complex:new((a.real*b.real+a.imag*b.imag)/denom, (a.imag*b.real-a.real*b.imag)/denom)
@@ -50,8 +55,7 @@ end
 
 -- a ^ b
 complex.__pow = function (a,b)
-   a = (type(a) == "number") and complex:new(a) or a
-   b = (type(b) == "number") and complex:new(b) or b
+   a,b = args(a,b)
    local a0 = complex.abs(a)
    local a1 = complex.arg(a)
    local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
@@ -67,8 +71,7 @@ end
 
 -- a == b
 complex.__eq = function (a, b)
-   a = (type(a) == "number") and complex:new(a) or a
-   b = (type(b) == "number") and complex:new(b) or b
+   a,b = args(a,b)
    return a.real == b.real and a.imag == b.imag
 end
 
