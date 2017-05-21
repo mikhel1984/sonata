@@ -3,12 +3,15 @@
 local complex = {}
 complex.__index = complex
 
+complex.type = 'complex'
+
 -- description
 complex.about = {}
 
 -- constructor
 function complex:new(re, im)   
    im = im or 0
+   assert(type(re) == 'number' and type(im) == 'number', "Numbers are expected")
    local o = {real = re, imag = im}
    setmetatable(o, self)
    return o
@@ -20,9 +23,9 @@ Create a complex number. If im == 0 it can be omited.
 
 -- argument type correction
 local function args(a,b)
-   a = (type(a) == "number") and complex:new(a) or a
+   a = (type(a) == "table" and a.type == complex.type) and a or complex:new(a)
    if b then
-      b = (type(b) == "number") and complex:new(b) or b
+      b = (type(b) == "table" and b.type == complex.type) and b or complex:new(b)
    end
    return a,b
 end

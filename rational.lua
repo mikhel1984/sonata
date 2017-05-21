@@ -3,11 +3,14 @@
 local rational = {}
 rational.__index = rational
 
+rational.type = 'rational'
+
 -- description
 rational.about = {}
 
 -- check if value can be an integer
 rational.isint = function (x)
+   assert(type(x) == 'number', "Number is expected")
    local _,a = math.modf(x)
    return a == 0
 end
@@ -41,9 +44,9 @@ Create a rational number. If denom == 1 it can be omited.
 ]]
 
 local function args(a,b)
-   a = (type(a) == "number") and rational:new(a) or a
+   a = (type(a) == "table" and a.type == rational.type) and a or rational:new(a)
    if b then
-      b = (type(b) == "number") and rational:new(b) or b   
+      b = (type(b) == "table" and b.type == rational.type) and b or rational:new(b)
    end
    return a,b
 end
