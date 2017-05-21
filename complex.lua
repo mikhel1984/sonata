@@ -78,6 +78,7 @@ complex.__eq = function (a, b)
    return a.real == b.real and a.imag == b.imag
 end
 
+
 -- argument of complex number
 complex.arg = function (v) return math.atan(v.imag, v.real) end
 complex.about[complex.arg] = [[
@@ -142,5 +143,8 @@ arg(v), abs(v), Re(v), Im(v), sqrt(v)
   : Constants
 _i
 ]]
+
+-- simplify constructor call
+setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
 
 return complex

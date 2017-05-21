@@ -320,5 +320,8 @@ new(int)
 abs(v), copy(v), tonumber(v), factorial(v)
 ]]
 
+-- simplify constructor call
+setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
+
 return bigint
 

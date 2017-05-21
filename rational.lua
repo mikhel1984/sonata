@@ -151,5 +151,8 @@ decimal(v), Nu(v), De(v), pow(a,b)
 gcd(a,b), isint(a)
 ]]
 
+-- simplify constructor call
+setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
+
 return rational
 
