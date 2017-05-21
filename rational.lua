@@ -12,7 +12,7 @@ rational.isint = function (x)
    return a == 0
 end
 rational.about[rational.isint] = [[
-   : isint(v)
+  : isint(v)
 Check if the number has fractional part.
 ]]
 
@@ -21,7 +21,7 @@ rational.gcd = function (a,b)
    return (a == 0) and b or rational.gcd(b % a, a)
 end
 rational.about[rational.gcd] = [[
-   : gcd(a,b)
+  : gcd(a,b)
 Calculate the greatest common devisor for two integers.
 ]]
 
@@ -36,7 +36,7 @@ function rational:new(n, dn)
    return o
 end
 rational.about[rational.new] = [[
-   : rational:new(num [,denom])
+  : rational:new(num [,denom])
 Create a rational number. If denom == 1 it can be omited.
 ]]
 
@@ -86,7 +86,7 @@ end
 
 rational.pow = rational.__pow
 rational.about[rational.pow] = [[
-   : pow(a,b)
+  : pow(a,b)
 Get a power b. If a is rational, b must be nonnegative integer.
 ]]
 
@@ -119,31 +119,31 @@ end
 -- to float point
 rational.decimal = function (v) return v.num / v.denom end
 rational.about[rational.decimal] = [[
-   : decimal(v)
+  : decimal(v)
 Return rational number as decimal.
 ]]
 
 rational.Nu = function (v) return v.num end
 rational.about[rational.Nu] = [[
-   : Nu(v)
+  : Nu(v)
 Return the numerator of rational number.
 ]]
 
 rational.De = function (v) return v.denom end
 rational.about[rational.De] = [[
-   : De(v)
+  : De(v)
 Return the denominator of the rational number.
 ]]
 
 rational.about.rational = [[
 Module for rational number computations
-   : Base
+  : Base
 +, -, *, /, ^, comparison operations
-   : Constructor
+  : Constructor
 new(num [,denom])
-   : Rational
+  : Rational
 decimal(v), Nu(v), De(v), pow(a,b)
-   : Additional
+  : Additional
 gcd(a,b), isint(a)
 ]]
 

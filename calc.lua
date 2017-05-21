@@ -39,6 +39,7 @@ about = {}
 -- modules
 Rat = nil        -- rational
 Cmp = nil        -- complex
+Big = nil        -- bigint
 
 -- Additional functions --
 function rand() return math.random() end
@@ -60,7 +61,7 @@ function fcreate(str)
    return assert(loadstring("return function (x) return " .. str .. " end"))()
 end
 about[fcreate] = [[
-   : fcreate(str)
+  : fcreate(str)
 Create Lua function from string.
 ]]
 
@@ -76,7 +77,7 @@ function fsolve(fn, a, b)
    return b
 end 
 about[fsolve] = [[
-   : fsolve(function, left_bound, right_bound)
+  : fsolve(function, left_bound, right_bound)
 Find the root of a function at given interval.
 ]]
 
@@ -85,7 +86,7 @@ function solve(str, a, b)
    return fsolve(fcreate(str), a, b)
 end
 about[solve] = [[
-   : solve(string, left_bound, right_bound)
+  : solve(string, left_bound, right_bound)
 Find the root of function (represented as string) at given interval.
 ]]
 
@@ -101,27 +102,27 @@ function plot(str, a, b)
    os.execute(graph)   
 end
 about[plot] = [[
-   : plot(string [,a,b])
+  : plot(string [,a,b])
 Plot function in Gnuplot. Use bounds if they are defined. 
 Variable must be 'x'.
 ]]
 
 about.list = [[
-   : Base 
+  : Base 
 abs(x), exp(x), ln(x), lg(x), pow(x), sqrt(x), rand(), 
 max(...), min(...), deg(x), rad(x)
-   : Trigonometrical 
+  : Trigonometrical 
 sin(x), cos(x), tan(x), asin(x), acos(x), atan(x)
-   : Hyperbolic 
+  : Hyperbolic 
 sh(x), ch(x), th(x), ash(x), ach(x), ath(x)
-   : Solving equation 
+  : Solving equation 
 fsolve(f, a, b), solve(str, a, b)
-   : Other 
+  : Other 
 plot(str [,a,b]), fcreate(str)
-   : Modules for 'lc'
+  : Modules for 'lc'
 import(modname)
-'rational', 'complex'   
-   : Constants
+'rational', 'complex', 'bigint'   
+  : Constants
 _pi, _e
 ]]
 
@@ -151,6 +152,12 @@ function import(modname)
          sqr = Cmp.sqrt; print("- redefine sqr(x) for complex numbers")
          print("Use 'Cmp' to work with complex numbers")
       end
+   elseif modname == "bigint" then
+      if not Big then
+         Big = require(modname)
+         for k,v in pairs(Big.about) do about[k] = v end
+         print("Use 'Big' to work with big integer numbers")
+      end
    else
       print("No such module: " .. modname)
       return
@@ -158,8 +165,8 @@ function import(modname)
    print("Module '" .. modname .. "' is imported")
 end
 about[import] = [[
-   : import modname
-Load module with given name.
+  : import modname
+Load module: 'rational', 'complex', 'bigint'
 ]]
 
 -- Run!

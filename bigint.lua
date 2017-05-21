@@ -95,9 +95,11 @@ local function div(a,b)
    return result, rest   
 end
 
+-- get sum for two bigint
 local function sum(a,b)
    local acc = {}
    local zero = string.byte('0')
+   -- calculate sum
    for i = 1, math.max(#a.value,#b.value) do
       local ai = string.byte(a.value, i) or zero
       local bi = string.byte(b.value, i) or zero      
@@ -107,19 +109,22 @@ local function sum(a,b)
          acc[i+1] = 1
       end      
    end
-   simplify(acc)
+   simplify(acc)   -- remove zeros
    local res = bigint:new(0)
    res.value = table.concat(acc)
    return res
 end
 
+-- get subsruction for two bigint
 local function sub(a,b)
+   -- find the biggest
    local p,q,r = a,b,1
    if bigint.abs(a) < bigint.abs(b) then
       p,q,r = q,p,-1
    end
    local acc = {}
    local zero = string.byte('0')
+   -- calculate sub
    for i = 1, #p.value do
       local pi = string.byte(p.value, i) or zero
       local qi = string.byte(q.value, i) or zero
@@ -129,7 +134,7 @@ local function sub(a,b)
          acc[i+1] = -1
       end
    end
-   simplify(acc)
+   simplify(acc)   -- remove zeros
    local res = bigint:new(r)
    res.value = table.concat(acc)
    return res
@@ -160,7 +165,6 @@ Return copy of given number.
 -- a + b
 bigint.__add = function (a,b)
    a,b = args(a,b) 
-   local res
    if     a.sign > 0 and b.sign > 0 then return sum(a,b)
    elseif a.sign < 0 and b.sign < 0 then return -sum(a,b)
    elseif a.sign > 0 and b.sign < 0 then return sub(a,b)
@@ -177,8 +181,12 @@ end
 
 -- a - b
 bigint.__sub = function (a, b)
-   b = args(b)
-   return bigint.__add(a, -b)
+   a,b = args(a,b)
+   if     a.sign > 0 and b.sign > 0 then return sub(a,b)
+   elseif a.sign > 0 and b.sign < 0 then return sum(a,b)
+   elseif a.sign < 0 and b.sign > 0 then return -sum(a,b)
+   else                                  return sub(b,a)
+   end
 end
 
 -- a * b
@@ -255,7 +263,7 @@ end
 bigint.__pow = function (a,b)
    a,b = args(a,b)
    assert(b.sign >= 0, "Power must be non negative")
-   if b.value == 0 then 
+   if b.value == '0' then 
       assert(a ~= 0, "Error: 0^0")
       return bigint:new(1) 
    end
@@ -281,31 +289,36 @@ end
 bigint.tonumber = function (v)
    return tonumber(bigint.__tostring(v))
 end
+bigint.about[bigint.tonumber] = [[
+  : bigint.tonumber(v)
+Represent current big integer as number if it possible.
+]]
 
+-- m!
 bigint.factorial = function (m)
+   assert(m >= 0, "Nonnegative value is expected!")
    local n = bigint.abs(m)
    local res = bigint:new(1)   
-   local k = 0
-   while n > 0 do   
-      print(n)   
+   while n.value ~= '0' do   
       res = res * n
       n = n - 1      
-      k = k + 1
-      if k == 20 then break end
    end
    return res
 end
+bigint.about[bigint.factorial] = [[
+  : bigint.factorial(n)
+Return factorial of nonnegative integer n.
+]]
 
-a = bigint:new(25)
-b = bigint:new(10)
-c = bigint:new(1)
+bigint.about.bigint = [[
+Module for workint with arbitrary big integers.
+  : Base
++, -, *, /, %, ^, ==, <, <=
+  : Constructor
+new(int)
+  : Additional
+abs(v), copy(v), tonumber(v), factorial(v)
+]]
 
-print(a ^ 36 )
-
-print(bigint.factorial(11))
---print(bigint:new(10) > 0)
---print(-a-b)
-
-
-
+return bigint
 

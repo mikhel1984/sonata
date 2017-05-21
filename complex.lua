@@ -14,7 +14,7 @@ function complex:new(re, im)
    return o
 end
 complex.about[complex.new] = [[
-   : complex:new(re [,im])
+  : complex:new(re [,im])
 Create a complex number. If im == 0 it can be omited.
 ]]
 
@@ -75,28 +75,28 @@ end
 -- argument of complex number
 complex.arg = function (v) return math.atan(v.imag, v.real) end
 complex.about[complex.arg] = [[
-   : arg(v)
+  : arg(v)
 Return argument of complex number.
 ]]
 
 -- module of complex number
 complex.abs = function (v) return math.sqrt(v.real*v.real+v.imag*v.imag) end
 complex.about[complex.abs] = [[
-   : abs(v)
+  : abs(v)
 Return module of complex number.
 ]]
 
 -- real part
 complex.Re  = function (v) return v.real end
 complex.about[complex.Re] = [[
-   : Re(v)
+  : Re(v)
 Return the real part.
 ]]
 
 -- imag part
 complex.Im  = function (v) return v.imag end
 complex.about[complex.Im] = [[
-   : Im(v)
+  : Im(v)
 Return the imaginary part.
 ]]
 
@@ -118,7 +118,7 @@ complex.sqrt = function (v)
    end
 end
 complex.about[complex.sqrt] = [[
-   : sqrt(v)
+  : sqrt(v)
 Return square root. Result can be real of complex.
 ]]
 
@@ -127,13 +127,13 @@ complex._i   = complex:new(0,1)
 
 complex.about.complex = [[
 Module for complex number computations
-   : Base
+  : Base
 +, -, *, /, ^, ==
-   : Constructor
+  : Constructor
 new(real [,imag])
-   : Complex
+  : Complex
 arg(v), abs(v), Re(v), Im(v), sqrt(v)
-   : Constants
+  : Constants
 _i
 ]]
 
