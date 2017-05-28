@@ -6,7 +6,10 @@ rational.__index = rational
 rational.type = 'rational'
 
 -- description
-rational.about = {}
+local help = require "help"
+rational.about = help:new("Computations with rational numbers")
+
+local BASE, OTHER, CONSTRUCTOR = "base", "other", "constructor"
 
 -- check if value can be an integer
 rational.isint = function (x)
@@ -14,19 +17,13 @@ rational.isint = function (x)
    local _,a = math.modf(x)
    return a == 0
 end
-rational.about[rational.isint] = [[
-  : isint(v)
-Check if the number has fractional part.
-]]
+rational.about[rational.isint] = {"isint(v)", "Check if the number has fractional part.", OTHER}
 
 -- greatest common devisor
 rational.gcd = function (a,b)
    return (a == 0) and b or rational.gcd(b % a, a)
 end
-rational.about[rational.gcd] = [[
-  : gcd(a,b)
-Calculate the greatest common devisor for two integers.
-]]
+rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common devisor for two integers.", OTHER}
 
 -- constructor
 function rational:new(n, dn)
@@ -38,10 +35,6 @@ function rational:new(n, dn)
    setmetatable(o, self)
    return o
 end
-rational.about[rational.new] = [[
-  : rational:new(num [,denom])
-Create a rational number. If denom == 1 it can be omited.
-]]
 
 local function args(a,b)
    a = (type(a) == "table" and a.type == rational.type) and a or rational:new(a)
@@ -91,11 +84,12 @@ rational.__pow = function (a, b)
    end
 end
 
+rational.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, -a, a^b}", BASE}
+
+--[=[
 rational.pow = rational.__pow
-rational.about[rational.pow] = [[
-  : pow(a,b)
-Get a power b. If a is rational, b must be nonnegative integer.
-]]
+rational.about[rational.pow] = [[ : pow(a,b) Get a power b. If a is rational, b must be nonnegative integer.  ]]
+]=]
 
 -- a == b
 rational.__eq = function (a,b)
@@ -115,6 +109,8 @@ rational.__le = function (a,b)
    return (a.num*b.denom) <= (b.num*a.denom)
 end
 
+rational.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", BASE}
+
 -- representation
 rational.__tostring = function (v)
    return string.format("%d/%d", v.num, v.denom)
@@ -122,37 +118,17 @@ end
 
 -- to float point
 rational.decimal = function (v) return v.num / v.denom end
-rational.about[rational.decimal] = [[
-  : decimal(v)
-Return rational number as decimal.
-]]
+rational.about[rational.decimal] = {"decimal(v)", "Return rational number as decimal.", OTHER}
 
 rational.Nu = function (v) return v.num end
-rational.about[rational.Nu] = [[
-  : Nu(v)
-Return the numerator of rational number.
-]]
+rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number.", OTHER}
 
 rational.De = function (v) return v.denom end
-rational.about[rational.De] = [[
-  : De(v)
-Return the denominator of the rational number.
-]]
-
-rational.about.rational = [[
-Module for rational number computations
-  : Base
-+, -, *, /, ^, comparison operations
-  : Constructor
-new(num [,denom])
-  : Rational
-decimal(v), Nu(v), De(v), pow(a,b)
-  : Additional
-gcd(a,b), isint(a)
-]]
+rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", OTHER}
 
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
+rational.about[CONSTRUCTOR] = {"Rat(m [,n])", "Create rational number using num (and denom).", CONSTRUCTOR}
 
 return rational
 

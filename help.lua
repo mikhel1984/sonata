@@ -5,8 +5,10 @@ help.__index = help
 
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 
-function help:new()
+function help:new(str)
+   assert(str and type(str) == 'string', "Constructor must include description!")
    local o = {}
+   o[o] = {link=o, str}
    setmetatable(o, self)
    return o
 end
@@ -16,7 +18,7 @@ local function funclist(tbl)
    for k, v in pairs(tbl) do
       if not v.link then
          local category = v[CATEGORY] or ""
-	 local module = v[MODULE] or "--"
+	 local module = v[MODULE] or "Default"
 	 res[module] = res[module] or {}
          res[module][category] = res[module][category] or {}
          table.insert(res[module][category], v[TITLE])
@@ -50,13 +52,17 @@ function help:print(fn)
 end
 
 function help:add(tbl, nm)
+   assert(nm, "Module name is required!")
    for k, v in pairs(tbl) do 
       if not v.link then table.insert(v, nm) end
       self[k] = v 
    end
+   print("Use '" .. nm .. "' to get access.")
 end
 
+return help
 
+--[[
 test = help:new()
 
 test['a'] = {'title 1', 'description 1', 'cat1'}
@@ -72,3 +78,4 @@ bb[bb] = {"This is second test table", link=bb}
 test:add(bb, "bb")
 
 test:print(test)
+]]

@@ -6,7 +6,10 @@ complex.__index = complex
 complex.type = 'complex'
 
 -- description
-complex.about = {}
+local help = require "help"
+complex.about = help:new("Manipulations with complex numbers")
+
+local BASE, OTHER, CONSTRUCTOR = "base", "other", "constructor"
 
 -- constructor
 function complex:new(re, im)   
@@ -16,10 +19,6 @@ function complex:new(re, im)
    setmetatable(o, self)
    return o
 end
-complex.about[complex.new] = [[
-  : complex:new(re [,im])
-Create a complex number. If im == 0 it can be omited.
-]]
 
 -- argument type correction
 local function args(a,b)
@@ -72,40 +71,31 @@ complex.__unm = function (v)
    return complex:new(-v.real, -v.imag)
 end
 
+complex.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a^b, -a", BASE}
+
 -- a == b
 complex.__eq = function (a, b)
    a,b = args(a,b)
    return a.real == b.real and a.imag == b.imag
 end
 
+complex.about["compare"] = {"compare", "a==b, a~=b", BASE}
 
 -- argument of complex number
 complex.arg = function (v) return math.atan(v.imag, v.real) end
-complex.about[complex.arg] = [[
-  : arg(v)
-Return argument of complex number.
-]]
+complex.about[complex.arg] = {"arg(v)", "Return argument of complex number.", BASE}
 
 -- module of complex number
 complex.abs = function (v) return math.sqrt(v.real*v.real+v.imag*v.imag) end
-complex.about[complex.abs] = [[
-  : abs(v)
-Return module of complex number.
-]]
+complex.about[complex.abs] = {"abs(v)", "Return module of complex number.", BASE}
 
 -- real part
 complex.Re  = function (v) return v.real end
-complex.about[complex.Re] = [[
-  : Re(v)
-Return the real part.
-]]
+complex.about[complex.Re] = {"Re(v)", "Return the real part.", OTHER}
 
 -- imag part
 complex.Im  = function (v) return v.imag end
-complex.about[complex.Im] = [[
-  : Im(v)
-Return the imaginary part.
-]]
+complex.about[complex.Im] = {"Im(v)", "Return the imaginary part.", OTHER}
 
 -- number representation
 complex.__tostring = function (v)
@@ -124,27 +114,14 @@ complex.sqrt = function (v)
       return complex.__pow(v, 0.5)
    end
 end
-complex.about[complex.sqrt] = [[
-  : sqrt(v)
-Return square root. Result can be real of complex.
-]]
+complex.about[complex.sqrt] = {"sqrt(v)", "Return square root. Result can be real of complex.", BASE}
 
 -- imaginary unit
 complex._i   = complex:new(0,1)
-
-complex.about.complex = [[
-Module for complex number computations
-  : Base
-+, -, *, /, ^, ==
-  : Constructor
-new(real [,imag])
-  : Complex
-arg(v), abs(v), Re(v), Im(v), sqrt(v)
-  : Constants
-_i
-]]
+complex.about[complex._i] = {"_i", "Complex unit", "constant"}
 
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
+complex.about[CONSTRUCTOR] = {"Cmp(a [,b])", "Create new complex number", CONSTRUCTOR}
 
 return complex

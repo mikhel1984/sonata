@@ -8,7 +8,10 @@ bigint.BASE = 10        -- the radix
 bigint.type = 'bigint'  -- mark of type
 
 -- description
-bigint.about = {}
+local help = require "help"
+bigint.about = help:new("Operations with arbitraty long integers")
+
+local BASE, OTHER, CONSTRUCT = "base", "other", "constructor"
 
 -- absolute value of integer
 local function iabs(v) return (v < 0) and (-v) or v end
@@ -40,10 +43,6 @@ function bigint:new(a)
    setmetatable(o, self)
    return o
 end
-bigint.about[bigint.new] = [[
-  : bigint:new(val)
-Create an arbitrary long integer from integer or string.
-]]
 
 -- reduce front zeros
 local function simplify (v)
@@ -146,10 +145,7 @@ bigint.abs = function (v)
    if a.sign < 0 then a.sign = -a.sign end
    return a
 end
-bigint.about[bigint.abs] = [[
-  : bigint.abs(v)
-Return module of arbitrary long number.
-]]
+bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number.", BASE}
 
 -- get copy
 bigint.copy = function (v)
@@ -157,10 +153,7 @@ bigint.copy = function (v)
    c.value = v.value
    return c
 end
-bigint.about[bigint.copy] = [[
-  : bigint.copy(v)
-Return copy of given number.
-]]
+bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", OTHER}
 
 -- a + b
 bigint.__add = function (a,b)
@@ -280,6 +273,9 @@ bigint.__pow = function (a,b)
    return res
 end
 
+bigint.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", BASE}
+bigint.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", BASE}
+
 -- string representation
 bigint.__tostring = function (v)
    return (v.sign < 0 and '-' or '') .. string.reverse(v.value)
@@ -289,10 +285,7 @@ end
 bigint.tonumber = function (v)
    return tonumber(bigint.__tostring(v))
 end
-bigint.about[bigint.tonumber] = [[
-  : bigint.tonumber(v)
-Represent current big integer as number if it possible.
-]]
+bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", BASE}
 
 -- m!
 bigint.factorial = function (m)
@@ -305,23 +298,11 @@ bigint.factorial = function (m)
    end
    return res
 end
-bigint.about[bigint.factorial] = [[
-  : bigint.factorial(n)
-Return factorial of nonnegative integer n.
-]]
-
-bigint.about.bigint = [[
-Module for workint with arbitrary big integers.
-  : Base
-+, -, *, /, %, ^, ==, <, <=
-  : Constructor
-new(int)
-  : Additional
-abs(v), copy(v), tonumber(v), factorial(v)
-]]
+bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of nonnegative integer n.", BASE}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
+bigint.about["constructor"] = {"Big(v)", "Create big number from integer or string", CONSTRUCT}
 
 return bigint
 
