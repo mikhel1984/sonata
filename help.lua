@@ -3,7 +3,7 @@
 local help = {}
 help.__index = help
 
-local TITLE, DESCRIPTION, CATEGORY = 1, 2, 3
+local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 
 function help:new()
    local o = {}
@@ -16,8 +16,10 @@ local function funclist(tbl)
    for k, v in pairs(tbl) do
       if not v.link then
          local category = v[CATEGORY] or ""
-         res[category] = res[category] or {}
-         table.insert(res[category], v[TITLE])
+	 local module = v[MODULE] or "--"
+	 res[module] = res[module] or {}
+         res[module][category] = res[module][category] or {}
+         table.insert(res[module][category], v[TITLE])
       end
    end
    return res
@@ -33,19 +35,25 @@ function help:print(fn)
          print(string.format("  :%s\n%s", v[TITLE], v[DESCRIPTION]))
       end
    else
-      local t = funclist(self)
-      for cat, n in pairs(t) do
-         print(string.format("  :%s", cat))
-	 for i, v in ipairs(n) do
-	    io.write(v, (i ~= #n and ', ' or ''))
-	 end
-	 print()
+      local lst = funclist(self)
+      for mod, t in pairs(lst) do
+         print(string.format("\t%s", mod))
+         for cat, n in pairs(t) do
+            print(string.format("  :%s", cat))
+	    for i, v in ipairs(n) do
+	       io.write(v, (i ~= #n and ', ' or ''))
+	    end
+	    print()
+         end
       end
    end
 end
 
-function help:add(tbl)
-   for k, v in pairs(tbl) do self[k] = v end
+function help:add(tbl, nm)
+   for k, v in pairs(tbl) do 
+      if not v.link then table.insert(v, nm) end
+      self[k] = v 
+   end
 end
 
 
@@ -61,6 +69,6 @@ bb['m1'] = {'title 4', 'description 4', 'cat2'}
 bb['m2'] = {'tible 5', 'description 5', 'cat3'}
 bb[bb] = {"This is second test table", link=bb}
 
-test:add(bb)
+test:add(bb, "bb")
 
-test:print(bb)
+test:print(test)
