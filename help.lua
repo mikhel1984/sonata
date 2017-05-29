@@ -1,18 +1,20 @@
-
+-- Help management
 
 local help = {}
 help.__index = help
 
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 
+-- constructor
 function help:new(str)
    assert(str and type(str) == 'string', "Constructor must include description!")
    local o = {}
-   o[o] = {link=o, str}
+   o[o] = {link=o, str}        -- save link to itself
    setmetatable(o, self)
    return o
 end
 
+-- create list of functions, sort by module and cathegory
 local function funclist(tbl)
    local res = {}
    for k, v in pairs(tbl) do
@@ -27,16 +29,17 @@ local function funclist(tbl)
    return res
 end
 
+-- print information about function or list of all possible functions
 function help:print(fn)
    if fn then
       local v = self[fn]
-      if v.link then
+      if v.link then                  -- common description
          print(v[1])
 	 return v.link:print()
-      else
+      else                            -- function description
          print(string.format("  :%s\n%s", v[TITLE], v[DESCRIPTION]))
       end
-   else
+   else                               -- function list
       local lst = funclist(self)
       for mod, t in pairs(lst) do
          print(string.format("\t%s", mod))
@@ -45,16 +48,17 @@ function help:print(fn)
 	    for i, v in ipairs(n) do
 	       io.write(v, (i ~= #n and ', ' or ''))
 	    end
-	    print()
+	    print()                   -- new line
          end
       end
    end
 end
 
+-- include content of the other help table into current one
 function help:add(tbl, nm)
    assert(nm, "Module name is required!")
    for k, v in pairs(tbl) do 
-      if not v.link then table.insert(v, nm) end
+      if not v.link then table.insert(v, nm) end -- function description doesn't contain 'link' element
       self[k] = v 
    end
    print("Use '" .. nm .. "' to get access.")
@@ -62,20 +66,3 @@ end
 
 return help
 
---[[
-test = help:new()
-
-test['a'] = {'title 1', 'description 1', 'cat1'}
-test['b'] = {'title 2', 'description 2', 'cat1'}
-test['c'] = {'title 3', 'description 3', 'cat2'}
-test[test] = {"This is a table for test", link=test}
-
-bb = help:new()
-bb['m1'] = {'title 4', 'description 4', 'cat2'}
-bb['m2'] = {'tible 5', 'description 5', 'cat3'}
-bb[bb] = {"This is second test table", link=bb}
-
-test:add(bb, "bb")
-
-test:print(test)
-]]
