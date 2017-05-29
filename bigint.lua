@@ -11,8 +11,6 @@ bigint.type = 'bigint'  -- mark of type
 local help = require "help"
 bigint.about = help:new("Operations with arbitraty long integers")
 
-local BASE, OTHER, CONSTRUCT = "base", "other", "constructor"
-
 -- absolute value of integer
 local function iabs(v) return (v < 0) and (-v) or v end
 
@@ -73,7 +71,7 @@ local function div(a,b)
    -- read the string
    while k <= #num do                             
       if rest >= denom then                       -- try to devide
-         local n, prod = bigint.BASE, nil
+         local n, prod = bigint.help.BASE, nil
 	 repeat                                   -- broot force search for multiplier (
 	    n = n-1
 	    prod = denom*n
@@ -145,7 +143,7 @@ bigint.abs = function (v)
    if a.sign < 0 then a.sign = -a.sign end
    return a
 end
-bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number.", BASE}
+bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number.", help.BASE}
 
 -- get copy
 bigint.copy = function (v)
@@ -153,7 +151,7 @@ bigint.copy = function (v)
    c.value = v.value
    return c
 end
-bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", OTHER}
+bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTHER}
 
 -- a + b
 bigint.__add = function (a,b)
@@ -273,8 +271,8 @@ bigint.__pow = function (a,b)
    return res
 end
 
-bigint.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", BASE}
-bigint.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", BASE}
+bigint.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.BASE}
+bigint.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 -- string representation
 bigint.__tostring = function (v)
@@ -285,7 +283,7 @@ end
 bigint.tonumber = function (v)
    return tonumber(bigint.__tostring(v))
 end
-bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", BASE}
+bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", help.BASE}
 
 -- m!
 bigint.factorial = function (m)
@@ -298,11 +296,11 @@ bigint.factorial = function (m)
    end
    return res
 end
-bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of nonnegative integer n.", BASE}
+bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of nonnegative integer n.", help.BASE}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
-bigint.about["constructor"] = {"Big(v)", "Create big number from integer or string", CONSTRUCT}
+bigint.about[help.NEW] = {"Big(v)", "Create big number from integer or string", help.NEW}
 
 return bigint
 

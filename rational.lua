@@ -9,21 +9,19 @@ rational.type = 'rational'
 local help = require "help"
 rational.about = help:new("Computations with rational numbers")
 
-local BASE, OTHER, CONSTRUCTOR = "base", "other", "constructor"
-
 -- check if value can be an integer
 rational.isint = function (x)
    assert(type(x) == 'number', "Number is expected")
    local _,a = math.modf(x)
    return a == 0
 end
-rational.about[rational.isint] = {"isint(v)", "Check if the number has fractional part.", OTHER}
+rational.about[rational.isint] = {"isint(v)", "Check if the number has fractional part.", help.OTHER}
 
 -- greatest common devisor
 rational.gcd = function (a,b)
    return (a == 0) and b or rational.gcd(b % a, a)
 end
-rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common devisor for two integers.", OTHER}
+rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common devisor for two integers.", help.OTHER}
 
 -- constructor
 function rational:new(n, dn)
@@ -84,7 +82,7 @@ rational.__pow = function (a, b)
    end
 end
 
-rational.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, -a, a^b}", BASE}
+rational.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, -a, a^b}", help.BASE}
 
 --[=[
 rational.pow = rational.__pow
@@ -109,7 +107,7 @@ rational.__le = function (a,b)
    return (a.num*b.denom) <= (b.num*a.denom)
 end
 
-rational.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", BASE}
+rational.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 -- representation
 rational.__tostring = function (v)
@@ -118,17 +116,17 @@ end
 
 -- to float point
 rational.decimal = function (v) return v.num / v.denom end
-rational.about[rational.decimal] = {"decimal(v)", "Return rational number as decimal.", OTHER}
+rational.about[rational.decimal] = {"decimal(v)", "Return rational number as decimal.", help.OTHER}
 
 rational.Nu = function (v) return v.num end
-rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number.", OTHER}
+rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number.", help.OTHER}
 
 rational.De = function (v) return v.denom end
-rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", OTHER}
+rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", help.OTHER}
 
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
-rational.about[CONSTRUCTOR] = {"Rat(m [,n])", "Create rational number using num (and denom).", CONSTRUCTOR}
+rational.about[help.NEW] = {"Rat(m [,n])", "Create rational number using num (and denom).", help.NEW}
 
 return rational
 

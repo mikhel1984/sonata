@@ -3,7 +3,16 @@
 local help = {}
 help.__index = help
 
+-- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
+
+-- constant strings
+help.BASE = 'base'
+help.TRIG = 'trigonometry'
+help.HYP = 'hyperbolic'
+help.CONST = 'constants'
+help.OTHER = 'other'
+help.NEW = 'constructor'
 
 -- constructor
 function help:new(str)
