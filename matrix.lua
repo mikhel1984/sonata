@@ -11,6 +11,16 @@ function matrix:init(r, c, m)
    return m
 end
 
+function matrix.new(...)
+   local args = {...}
+   local cols, rows = 0, #args
+   for i = 1, rows do
+      assert(type(args[i]) == 'table', "Row must be a table!")
+      cols = (cols < #args[i]) and #args[i] or cols
+   end
+   return matrix:init(rows, cols, args)
+end
+
 local function checkindex(m, r, c)
    assert(m.type == matrix.type, "Matrix is expected")
    if c == nil then
@@ -27,10 +37,18 @@ local function checkindex(m, r, c)
    return r, c
 end
 
+local function getval(m, r, c)
+   local v = m[r]
+   if v then 
+      return v[c] or 0
+   else
+      return 0
+   end
+end
+
 matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
-   local v = m[r]
-   return (v and v[c]) and v[c] or 0
+   return getval(m, r, c)
 end
 
 matrix.__call = function (m, r, c)
@@ -68,19 +86,28 @@ matrix.vector = function (...)
    return matrix:init(#v, 1, res)
 end
 
+matrix.__tostring = function (m)
+   local sr = {}
+   for r = 1, m.rows do
+      local sc = {}
+      for c = 1, m.cols do
+         table.insert(sc, string.format("%d", getval(m, r, c)))
+      end
+      table.insert(sr, table.concat(sc, "  "))
+   end
+   return table.concat(sr, "\n")
+end
+
 ----------------
 --[[
-t = matrix:init(2,2)
-print(t:size())
-
-t:set(-1,0, 4)
-t:set(0,-1, 2)
-print(t(0,0), t(0,1), t(1,0), t(1,1))
-]]
-
 v = matrix.vector(1,2,3)
 w = v:transpose()
 
 print(v:size())
 print(w:size())
 print(v(1), w(1))
+]]
+
+m = matrix.new({1,2}, {4,5,6}, {7,8})
+print(m:size(), m(0,0), m(1,1), m(2,2))
+print(m)
