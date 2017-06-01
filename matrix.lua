@@ -75,6 +75,34 @@ matrix.transpose = function (m)
    return res
 end
 
+local function sum(a,b,sign)
+   assert(a.cols == b.cols and a.rows == b.rows, "Wrong matrix size")
+   local res = matrix:init(a.rows, a.cols)
+   for r = 1, res.rows do
+      for c = 1, res.cols do
+         local sum = (sign == '-') and (getval(a,r,c)-getval(b,r,c)) or (getval(a,r,c)+getval(b,r,c))
+	 if sum ~= 0 then 
+	    res[r] = res[r] or {}
+	    res[r][c] = sum
+	 end
+      end
+   end
+   return res
+end
+
+matrix.__add = function (a,b)
+   return sum(a, b)
+end
+
+matrix.__sub = function (a,b)
+   return sum(a, b, '-')
+end
+
+matrix.__unm = function (a)
+   local tmp = matrix:init(a.rows, a.cols)
+   return sum(tmp, a, '-')
+end
+
 matrix.size = function (m)
    assert(m.type == matrix.type, "Matrix is expected")
    return m.rows, m.cols
@@ -108,6 +136,9 @@ print(w:size())
 print(v(1), w(1))
 ]]
 
-m = matrix.new({1,2}, {4,5,6}, {7,8})
-print(m:size(), m(0,0), m(1,1), m(2,2))
-print(m)
+a = matrix.new({1,2},{3,4})
+b = matrix.new({2,1},{3,4})
+
+print(a+b)
+print(a-b)
+print(-a)
