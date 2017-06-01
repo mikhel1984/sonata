@@ -114,6 +114,19 @@ matrix.vector = function (...)
    return matrix:init(#v, 1, res)
 end
 
+matrix.zeros = function (rows, cols)
+   return matrix:init(rows, cols)
+end
+
+matrix.eye = function (rows, cols)
+   local m = matrix:init(rows, cols)
+   for i = 1, math.min(rows, cols) do
+      m[i] = {}
+      m[i][i] = 1
+   end
+   return m
+end
+
 matrix.__tostring = function (m)
    local sr = {}
    for r = 1, m.rows do
@@ -142,3 +155,5 @@ b = matrix.new({2,1},{3,4})
 print(a+b)
 print(a-b)
 print(-a)
+
+print(matrix.eye(2,3))
