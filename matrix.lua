@@ -4,6 +4,8 @@ matrix.__index = matrix
 
 matrix.type = 'matrix'
 
+local function ismatrix(m) return type(m) == 'table' and m.type == matrix.type end
+
 function matrix:init(r, c, m)
    assert(r > 0 and c > 0, "Wrong matrix size")
    m = m or {}
@@ -23,7 +25,7 @@ function matrix.new(...)
 end
 
 local function checkindex(m, r, c)
-   assert(m.type == matrix.type, "Matrix is expected")
+   assert(ismatrix(m), "Matrix is expected")
    if c == nil then
       if m.cols == 1 then 
          r, c = r, 0
@@ -47,6 +49,30 @@ local function getval(m, r, c)
    end
 end
 
+local function setval(m, r, c, v)
+   if v ~= 0 then 
+      m[r] = m[r] or {}
+      m[r][c] = v
+   end
+end
+
+local function kprod(k, m)
+   local res = matrix:init(m.rows, m.cols)
+   for r = 1, m.rows do
+      for c = 1, m.cols do
+      --[[
+         local v = getval(m, r, c)
+	 if v ~= 0 then 
+	    res[r] = res[r] or {}
+	    res[r][c] = k*v
+	 end
+	 ]]
+	 setval(res,r,c, k*getval(m,r,c))
+      end
+   end
+   return res
+end
+
 matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
    return getval(m, r, c)
@@ -66,11 +92,14 @@ matrix.transpose = function (m)
    local res = matrix:init(m.cols, m.rows)
    for r = 1, m.rows do
       for c = 1, m.cols do
+         --[[
          local v = m[r]
 	 if v and v[c] then
 	    res[c] = res[c] or {}
 	    res[c][r] = v[c]
 	 end
+	 ]]
+	 setval(res,c,r, getval(m,r,c))
       end
    end
    return res
@@ -82,10 +111,13 @@ local function sum(a,b,sign)
    for r = 1, res.rows do
       for c = 1, res.cols do
          local sum = (sign == '-') and (getval(a,r,c)-getval(b,r,c)) or (getval(a,r,c)+getval(b,r,c))
+	 --[[
 	 if sum ~= 0 then 
 	    res[r] = res[r] or {}
 	    res[r][c] = sum
 	 end
+	 ]]
+	 setval(res,r,c, sum)
       end
    end
    return res
@@ -113,6 +145,28 @@ matrix.__len = function (m)
    return m.rows, m.cols
 end
 
+matrix.__mul = function (a,b)
+   assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type")
+   if not ismatrix(a) then return kprod(a, b) end
+   if not ismatrix(b) then return kprod(b, a) end
+   assert(a.cols == b.rows, "Impossible to get product: different size")
+   local res = matrix:init(a.rows, b.cols)
+   for r = 1, res.rows do
+      for c = 1, res.cols do
+         local sum = 0
+	 for i = 1, a.cols do sum = sum + getval(a,r,i)*getval(b,i,c) end
+	 --[[
+	 if sum ~= 0 then 
+	    res[r] = res[r] or {}
+	    res[r][c] = sum
+	 end
+	 ]]
+	 setval(res,r,c, sum)
+      end
+   end
+   return res
+end
+
 matrix.vector = function (...)
    local v, res = {...}, {}
    for i = 1, #v do res[i] = {v[i]} end
@@ -126,8 +180,11 @@ end
 matrix.eye = function (rows, cols)
    local m = matrix:init(rows, cols)
    for i = 1, math.min(rows, cols) do
+   --[[
       m[i] = {}
       m[i][i] = 1
+      ]]
+      setval(m,i,i, 1)
    end
    return m
 end
@@ -139,11 +196,14 @@ matrix.sub = function (m, r1, r2, c1, c2)
    local i, j = 1, 1
    for r = r1, r2 do
       for c = c1, c2 do
+         --[[
          local v = getval(m, r, c)
 	 if v ~= 0 then
 	    res[i] = res[i] or {}
 	    res[i][j] = v
 	 end
+	 ]]
+	 setval(res,i,j, getval(m,r,c))
 	 j = j+1
       end
       j = 1
@@ -168,11 +228,14 @@ matrix.concat = function (a, b, dir)
          local src = (r <= a.rows and c <= a.cols) and a or b
          local i = (r <= a.rows) and r or (r - a.rows)
 	 local j = (c <= a.cols) and c or (c - a.cols)
+	 --[[
          local v = getval(src, i, j)
 	 if v ~= 0 then
 	    res[r] = res[r] or {}
 	    res[r][c] = v
 	 end
+	 ]]
+	 setval(res,r,c, getval(src,i,j))
       end
    end
    return res
@@ -200,9 +263,7 @@ end
 
 ----------------
 
-a = matrix.new({1,2},{3,4})
-b = matrix.new({5,6},{7,8})
+a = matrix.new({1,2,3})
+b = matrix.new({1},{2},{3})
 
-print(a .. b)
-print()
-print(a // b)
+print(a*5)
