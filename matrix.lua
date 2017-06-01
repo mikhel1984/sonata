@@ -109,6 +109,10 @@ matrix.size = function (m)
    return m.rows, m.cols
 end
 
+matrix.__len = function (m)
+   return m.rows, m.cols
+end
+
 matrix.vector = function (...)
    local v, res = {...}, {}
    for i = 1, #v do res[i] = {v[i]} end
@@ -153,7 +157,7 @@ matrix.concat = function (a, b, dir)
    if dir == 'h' then
       assert(a.rows == b.rows, "Different number of rows")
       res = matrix:init(a.rows, a.cols+b.cols)
-   elseif dir == 'v' or dir == nil then
+   elseif dir == 'v' then
       assert(a.cols == b.cols, "Different number of columns")
       res = matrix:init(a.rows+b.rows, a.cols)
    else
@@ -178,42 +182,27 @@ matrix.__concat = function (a,b)
    return matrix.concat(a,b,'h')
 end
 
+matrix.__idiv = function (a,b)
+   return matrix.concat(a,b,'v')
+end
+
 matrix.__tostring = function (m)
-   local sr = {}
+   local srow = {}
    for r = 1, m.rows do
-      local sc = {}
+      local scol = {}
       for c = 1, m.cols do
-         table.insert(sc, string.format("%d", getval(m, r, c)))
+         table.insert(scol, getval(m, r, c))
       end
-      table.insert(sr, table.concat(sc, "  "))
+      table.insert(srow, table.concat(scol, "  "))
    end
-   return table.concat(sr, "\n")
+   return table.concat(srow, "\n")
 end
 
 ----------------
---[[
-v = matrix.vector(1,2,3)
-w = v:transpose()
-
-print(v:size())
-print(w:size())
-print(v(1), w(1))
-]]
-
---[[
-a = matrix.new({1,2},{3,4})
-b = matrix.new({2,1},{3,4})
-
-print(a+b)
-print(a-b)
-print(-a)
-
-print(matrix.eye(2,3))
-]]
 
 a = matrix.new({1,2},{3,4})
 b = matrix.new({5,6},{7,8})
 
 print(a .. b)
 print()
-print(matrix.concat(a,b))
+print(a // b)
