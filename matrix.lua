@@ -5,6 +5,7 @@ matrix.__index = matrix
 matrix.type = 'matrix'
 
 function matrix:init(r, c, m)
+   assert(r > 0 and c > 0, "Wrong matrix size")
    m = m or {}
    m.cols, m.rows = c, r
    setmetatable(m, self)
@@ -127,6 +128,56 @@ matrix.eye = function (rows, cols)
    return m
 end
 
+matrix.sub = function (m, r1, r2, c1, c2)
+   r1, c1 = checkindex(m, r1, c1)
+   r2, c2 = checkindex(m, r2, c2)
+   local res = matrix:init(r2-r1+1, c2-c1+1)
+   local i, j = 1, 1
+   for r = r1, r2 do
+      for c = c1, c2 do
+         local v = getval(m, r, c)
+	 if v ~= 0 then
+	    res[i] = res[i] or {}
+	    res[i][j] = v
+	 end
+	 j = j+1
+      end
+      j = 1
+      i = i+1
+   end
+   return res
+end
+
+matrix.concat = function (a, b, dir)
+   local res = nil
+   if dir == 'h' then
+      assert(a.rows == b.rows, "Different number of rows")
+      res = matrix:init(a.rows, a.cols+b.cols)
+   elseif dir == 'v' or dir == nil then
+      assert(a.cols == b.cols, "Different number of columns")
+      res = matrix:init(a.rows+b.rows, a.cols)
+   else
+      error("Unexpected type of concatenation")
+   end
+   for r = 1, res.rows do
+      for c = 1, res.cols do
+         local src = (r <= a.rows and c <= a.cols) and a or b
+         local i = (r <= a.rows) and r or (r - a.rows)
+	 local j = (c <= a.cols) and c or (c - a.cols)
+         local v = getval(src, i, j)
+	 if v ~= 0 then
+	    res[r] = res[r] or {}
+	    res[r][c] = v
+	 end
+      end
+   end
+   return res
+end
+
+matrix.__concat = function (a,b)
+   return matrix.concat(a,b,'h')
+end
+
 matrix.__tostring = function (m)
    local sr = {}
    for r = 1, m.rows do
@@ -149,6 +200,7 @@ print(w:size())
 print(v(1), w(1))
 ]]
 
+--[[
 a = matrix.new({1,2},{3,4})
 b = matrix.new({2,1},{3,4})
 
@@ -157,3 +209,11 @@ print(a-b)
 print(-a)
 
 print(matrix.eye(2,3))
+]]
+
+a = matrix.new({1,2},{3,4})
+b = matrix.new({5,6},{7,8})
+
+print(a .. b)
+print()
+print(matrix.concat(a,b))
