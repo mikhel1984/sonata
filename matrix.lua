@@ -60,14 +60,7 @@ local function kprod(k, m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, m.rows do
       for c = 1, m.cols do
-      --[[
-         local v = getval(m, r, c)
-	 if v ~= 0 then 
-	    res[r] = res[r] or {}
-	    res[r][c] = k*v
-	 end
-	 ]]
-	 setval(res,r,c, k*getval(m,r,c))
+      	 setval(res,r,c, k*getval(m,r,c))
       end
    end
    return res
@@ -92,13 +85,6 @@ matrix.transpose = function (m)
    local res = matrix:init(m.cols, m.rows)
    for r = 1, m.rows do
       for c = 1, m.cols do
-         --[[
-         local v = m[r]
-	 if v and v[c] then
-	    res[c] = res[c] or {}
-	    res[c][r] = v[c]
-	 end
-	 ]]
 	 setval(res,c,r, getval(m,r,c))
       end
    end
@@ -111,12 +97,6 @@ local function sum(a,b,sign)
    for r = 1, res.rows do
       for c = 1, res.cols do
          local sum = (sign == '-') and (getval(a,r,c)-getval(b,r,c)) or (getval(a,r,c)+getval(b,r,c))
-	 --[[
-	 if sum ~= 0 then 
-	    res[r] = res[r] or {}
-	    res[r][c] = sum
-	 end
-	 ]]
 	 setval(res,r,c, sum)
       end
    end
@@ -137,12 +117,21 @@ matrix.__unm = function (a)
 end
 
 matrix.size = function (m)
-   assert(m.type == matrix.type, "Matrix is expected")
+   assert(ismatrix(m), "Matrix is expected")
    return m.rows, m.cols
 end
 
 matrix.__len = function (m)
    return m.rows, m.cols
+end
+
+matrix.copy = function (m)
+   assert(ismatrix(m), "Matrix is expected!")
+   local res = matrix:init(m.rows, m.cols)
+   for r = 1, res.rows do
+      for c = 1, res.cols do setval(res,r,c, getval(m,r,c)) end
+   end
+   return res
 end
 
 matrix.__mul = function (a,b)
@@ -155,12 +144,6 @@ matrix.__mul = function (a,b)
       for c = 1, res.cols do
          local sum = 0
 	 for i = 1, a.cols do sum = sum + getval(a,r,i)*getval(b,i,c) end
-	 --[[
-	 if sum ~= 0 then 
-	    res[r] = res[r] or {}
-	    res[r][c] = sum
-	 end
-	 ]]
 	 setval(res,r,c, sum)
       end
    end
@@ -179,13 +162,7 @@ end
 
 matrix.eye = function (rows, cols)
    local m = matrix:init(rows, cols)
-   for i = 1, math.min(rows, cols) do
-   --[[
-      m[i] = {}
-      m[i][i] = 1
-      ]]
-      setval(m,i,i, 1)
-   end
+   for i = 1, math.min(rows, cols) do setval(m,i,i, 1) end
    return m
 end
 
@@ -196,13 +173,6 @@ matrix.sub = function (m, r1, r2, c1, c2)
    local i, j = 1, 1
    for r = r1, r2 do
       for c = c1, c2 do
-         --[[
-         local v = getval(m, r, c)
-	 if v ~= 0 then
-	    res[i] = res[i] or {}
-	    res[i][j] = v
-	 end
-	 ]]
 	 setval(res,i,j, getval(m,r,c))
 	 j = j+1
       end
@@ -228,13 +198,6 @@ matrix.concat = function (a, b, dir)
          local src = (r <= a.rows and c <= a.cols) and a or b
          local i = (r <= a.rows) and r or (r - a.rows)
 	 local j = (c <= a.cols) and c or (c - a.cols)
-	 --[[
-         local v = getval(src, i, j)
-	 if v ~= 0 then
-	    res[r] = res[r] or {}
-	    res[r][c] = v
-	 end
-	 ]]
 	 setval(res,r,c, getval(src,i,j))
       end
    end
@@ -263,7 +226,10 @@ end
 
 ----------------
 
-a = matrix.new({1,2,3})
-b = matrix.new({1},{2},{3})
+a = matrix.new({1,2},{3,4})
+b = matrix.new({1,2},{3,4})
 
-print(a*5)
+print(a+b)
+print(a .. b)
+print(a // b)
+
