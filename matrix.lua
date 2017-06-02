@@ -68,7 +68,7 @@ end
 
 local function gaussdown(m)
    local A = 1
-   for k = 1, m.rows-1 do
+   for k = 1, m.rows do
       -- look for nonzero element
       local i = k+1
       while getval(m,k,k) == 0 and i <= m.rows do
@@ -91,6 +91,16 @@ local function gaussdown(m)
       end
    end
    return m, A
+end
+
+local function gaussup(m)
+   for k = m.rows-1, 1, -1 do
+      local v = getval(m, k, k+1)
+      if v ~= 0 then
+         for c = k+1, m.cols do setval(m,k,c, getval(m,k,c)-v*getval(m,k+1,c)) end 
+      end
+   end
+   return m
 end
 
 matrix.get = function (m, r, c)
@@ -179,8 +189,20 @@ end
 
 matrix.det = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
-   local tr, K = gaussdown(matrix.copy(m))
-   return (K == 0) and 0 or K*tr[m.rows][m.cols]
+   local _, K = gaussdown(matrix.copy(m))
+   return K
+end
+
+matrix.inv = function (m)
+   assert(m.rows == m.cols, "Square matrix is expected!")
+   local con = matrix.concat(m, matrix.eye(m.cols),'h')
+   con = matrix.rref(con)
+   return matrix.sub(con, 0,-1, m.cols, -1)  -- indexation from 0
+end
+
+matrix.rref = function (m)
+   local tr = gaussdown(matrix.copy(m))
+   return gaussup(tr)
 end
 
 matrix.vector = function (...)
@@ -190,10 +212,12 @@ matrix.vector = function (...)
 end
 
 matrix.zeros = function (rows, cols)
+   cols = cols or rows
    return matrix:init(rows, cols)
 end
 
 matrix.eye = function (rows, cols)
+   cols = cols or rows
    local m = matrix:init(rows, cols)
    for i = 1, math.min(rows, cols) do setval(m,i,i, 1) end
    return m
@@ -259,7 +283,6 @@ end
 
 ----------------
 
-a = matrix.new({0,2,3},{0,5,6},{7,8,9})
+a = matrix.new({1,2},{7,8})
 
-print(a:det())
-print(a)
+print(matrix.inv(a))
