@@ -50,7 +50,7 @@ local function getval(m, r, c)
 end
 
 local function setval(m, r, c, v)
-   if v ~= 0 then 
+   if (m[r] and m[r][c]) or v ~= 0 then 
       m[r] = m[r] or {}
       m[r][c] = v
    end
@@ -64,6 +64,33 @@ local function kprod(k, m)
       end
    end
    return res
+end
+
+local function gaussdown(m)
+   local A = 1
+   for k = 1, m.rows-1 do
+      -- look for nonzero element
+      local i = k+1
+      while getval(m,k,k) == 0 and i <= m.rows do
+         if getval(m,i,k) ~= 0 then m[i],m[k],A = m[k],m[i],-A end
+	 i = i+1
+      end
+      local coef = getval(m,k,k)
+      A = A * coef
+      if coef ~= 0 then
+         -- normalization
+	 coef = 1/coef
+         for c = k, m.cols do setval(m,k,c, getval(m,k,c)*coef) end
+         -- substraction
+         for r = (k+1), m.rows do
+            local v = getval(m, r, k)
+	    if v ~= 0 then
+               for c = k, m.cols do setval(m,r,c, getval(m,r,c)-v*getval(m,k,c)) end
+	    end
+         end
+      end
+   end
+   return m, A
 end
 
 matrix.get = function (m, r, c)
@@ -150,6 +177,12 @@ matrix.__mul = function (a,b)
    return res
 end
 
+matrix.det = function (m)
+   assert(m.rows == m.cols, "Square matrix is expected!")
+   local tr, K = gaussdown(matrix.copy(m))
+   return (K == 0) and 0 or K*tr[m.rows][m.cols]
+end
+
 matrix.vector = function (...)
    local v, res = {...}, {}
    for i = 1, #v do res[i] = {v[i]} end
@@ -226,10 +259,7 @@ end
 
 ----------------
 
-a = matrix.new({1,2},{3,4})
-b = matrix.new({1,2},{3,4})
+a = matrix.new({0,2,3},{0,5,6},{7,8,9})
 
-print(a+b)
-print(a .. b)
-print(a // b)
-
+print(a:det())
+print(a)
