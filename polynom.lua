@@ -5,6 +5,14 @@ polynom.__index = polynom
 
 polynom.type = 'polynom'
 
+local function ispolynom(x) return type(x) == 'table' and x.type == polynom.type end
+
+local function args(a,b)
+   a = ispolynom(a) and a or polynom.new(a)
+   b = ispolynom(b) and b or polynom.new(b)
+   return a, b
+end
+
 function polynom:init(t)
    setmetatable(t, self)
    return t
@@ -28,12 +36,29 @@ polynom.val = function (p,x)
    return res
 end
 
---[[
+
 polynom.__add = function (a,b)
+   a, b = args(a,b)
    local t = {}
-   for i = 
+   local i,j = #a, #b
+   for k = math.max(i,j),1,-1 do
+      t[k] = (a[i] or 0) + (b[j] or 0)
+      i = i-1
+      j = j-1
+   end
+   return polynom:init(t)
 end
-]]
+
+polynom.__unm = function (p)
+   local res = {}
+   for i = 1, #p do res[i] = -p[i] end
+   return polynom:init(res)
+end
+
+polynom.__sub = function (a,b)
+   return a + (-b)
+end
+
 
 polynom.der = function (p,x)
    local der, pow = {}, #p
@@ -62,10 +87,7 @@ end
 
 ----------------------
 
-a = polynom.new(3,2,1)
-b = a:int()
-c = b:der()
+a = polynom.new(1,2,3)
+b = polynom.new(4,5)
 
-print(a)
-print(b)
-print(c)
+print(a-b)
