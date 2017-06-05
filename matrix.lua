@@ -1,11 +1,17 @@
+-- Matrix operations
 
 local matrix = {}
 matrix.__index = matrix
 
 matrix.type = 'matrix'
 
+local help = require "help"
+matrix.about = help:new("Matrix operations. Indexation from 0!")
+
+-- test object type
 local function ismatrix(m) return type(m) == 'table' and m.type == matrix.type end
 
+-- initialization of matrix with given size
 function matrix:init(r, c, m)
    assert(r > 0 and c > 0, "Wrong matrix size")
    m = m or {}
@@ -14,6 +20,7 @@ function matrix:init(r, c, m)
    return m
 end
 
+-- create new matrix from list of tables
 function matrix.new(...)
    local args = {...}
    local cols, rows = 0, #args
@@ -24,6 +31,7 @@ function matrix.new(...)
    return matrix:init(rows, cols, args)
 end
 
+-- check correctness of element index
 local function checkindex(m, r, c)
    assert(ismatrix(m), "Matrix is expected")
    if c == nil then
@@ -40,6 +48,7 @@ local function checkindex(m, r, c)
    return r, c
 end
 
+-- return 0 in element is empty or its value
 local function getval(m, r, c)
    local v = m[r]
    if v then 
@@ -49,6 +58,7 @@ local function getval(m, r, c)
    end
 end
 
+-- set value if need
 local function setval(m, r, c, v)
    if (m[r] and m[r][c]) or v ~= 0 then 
       m[r] = m[r] or {}
@@ -56,6 +66,7 @@ local function setval(m, r, c, v)
    end
 end
 
+-- set product of element to coefficient
 local function kprod(k, m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, m.rows do
@@ -66,6 +77,7 @@ local function kprod(k, m)
    return res
 end
 
+-- transform matrix to upper triangle
 local function gaussdown(m)
    local A = 1
    for k = 1, m.rows do
@@ -93,6 +105,7 @@ local function gaussdown(m)
    return m, A
 end
 
+-- transform triangle matrix to identity matrix
 local function gaussup(m)
    for k = m.rows-1, 1, -1 do
       local v = getval(m, k, k+1)
@@ -103,21 +116,25 @@ local function gaussup(m)
    return m
 end
 
+-- return matrix element
 matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
    return getval(m, r, c)
 end
+matrix.about[matrix.get] = {"get(m,raw,col)", "Return matrix element", help.BASE}
 
-matrix.__call = function (m, r, c)
-   return matrix.get(m, r, c)
-end
+-- simplify call of matrix.get()
+matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
 
+-- set value of matrix
 matrix.set = function (m, r, c, val)
    r, c = checkindex(m, r, c)
    m[r] = m[r] or {}
    m[r][c] = val
 end
+matrix.about[matrix.set] = {"set(m,raw,col,val)", "Set value of matrix", help.BASE} 
 
+-- transpose matrix
 matrix.transpose = function (m)
    local res = matrix:init(m.cols, m.rows)
    for r = 1, m.rows do
@@ -127,7 +144,9 @@ matrix.transpose = function (m)
    end
    return res
 end
+matrix.about[matrix.transpose] = {"transpose(m)", "Return matrnix transpose", help.BASE}
 
+-- auxiliary function for addition/substraction
 local function sum(a,b,sign)
    assert(a.cols == b.cols and a.rows == b.rows, "Wrong matrix size")
    local res = matrix:init(a.rows, a.cols)
@@ -140,28 +159,35 @@ local function sum(a,b,sign)
    return res
 end
 
+-- a + b
 matrix.__add = function (a,b)
    return sum(a, b)
 end
 
+-- a - b
 matrix.__sub = function (a,b)
    return sum(a, b, '-')
 end
 
+-- -a
 matrix.__unm = function (a)
    local tmp = matrix:init(a.rows, a.cols)
    return sum(tmp, a, '-')
 end
 
+-- return size
 matrix.size = function (m)
    assert(ismatrix(m), "Matrix is expected")
    return m.rows, m.cols
 end
+matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'", help.BASE}
 
+-- redefine size call
 matrix.__len = function (m)
    return m.rows, m.cols
 end
 
+-- create copy of matrix
 matrix.copy = function (m)
    assert(ismatrix(m), "Matrix is expected!")
    local res = matrix:init(m.rows, m.cols)
@@ -170,7 +196,9 @@ matrix.copy = function (m)
    end
    return res
 end
+matrix.about[matrix.copy] = {"copy(m)", "Return copy of matrix", help.OTHER}
 
+-- a * b
 matrix.__mul = function (a,b)
    assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type")
    if not ismatrix(a) then return kprod(a, b) end
@@ -187,42 +215,117 @@ matrix.__mul = function (a,b)
    return res
 end
 
+-- a / b
+matrix.__div = function (a,b)
+   assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type")
+   if not ismatrix(b) then return kprod(1/b, a) end
+   return a * matrix.inv(b)
+end
+
+-- a ^ n
+matrix.__pow = function (a,n)
+   n = assert(math.tointeger(n), "Integer is expected!")
+   assert(a.rows == a.cols, "Square matrix is expected!")
+   local res, acc = matrix.eye(a.rows), matrix.copy(a)
+   while n > 0 do
+      if n%2 == 1 then res = res * acc end
+      acc = acc * acc
+      n = n // 2
+   end
+   return res
+end
+matrix.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
+
+-- a == b
+matrix.__eq = function (a,b)
+   if not (ismatrix(a) and ismatrix(b)) then return false end
+   if a.rows ~= b.rows or a.cols ~= b.cols then return false end
+   for r = 1, a.rows do
+      for c = 1, a.cols do
+         if getval(a,r,c) ~= getval(b,r,c) then return false end
+      end
+   end
+   return true
+end
+matrix.about["comp"] = {"comparation", "a==b, a~=b", help.BASE}
+
+
+-- determinant
 matrix.det = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
    local _, K = gaussdown(matrix.copy(m))
    return K
 end
+matrix.about[matrix.det] = {"det(m)", "Calculate determinant", help.BASE}
 
+-- inverse matrix
 matrix.inv = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
-   local con = matrix.concat(m, matrix.eye(m.cols),'h')
-   con = matrix.rref(con)
-   return matrix.sub(con, 0,-1, m.cols, -1)  -- indexation from 0
+   local con, det = matrix.concat(m, matrix.eye(m.cols),'h'), 0
+   con, det = matrix.rref(con)
+   return (det ~= 0) and matrix.sub(con, 0,-1, m.cols, -1) or matrix.ones(m.rows,m.rows,math.huge)  -- indexation from 0
 end
+matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix", help.BASE}
 
+-- calculate system of equations using Gauss method
 matrix.rref = function (m)
-   local tr = gaussdown(matrix.copy(m))
-   return gaussup(tr)
+   local tr, d = gaussdown(matrix.copy(m))
+   return gaussup(tr), d
 end
+matrix.about[matrix.rref] = {"rref(m)", "Perform transformations using Gauss method. Return also determinant.", help.BASE}
 
+-- create vector
 matrix.vector = function (...)
    local v, res = {...}, {}
    for i = 1, #v do res[i] = {v[i]} end
    return matrix:init(#v, 1, res)
 end
+matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers", help.BASE}
 
+-- matrix of 0
 matrix.zeros = function (rows, cols)
    cols = cols or rows
    return matrix:init(rows, cols)
 end
+matrix.about[matrix.vector] = {"zeros(rows[,cols])", "Create matrix from zeros", help.OTHER}
 
+-- matrix of 1
+matrix.ones = function (rows, cols, val)
+   cols = cols or rows
+   val = val or 1
+   local m = matrix:init(rows, cols)
+   for r = 1, rows do
+      m[r] = {}
+      for c = 1, cols do m[r][c] = val end
+   end
+   return m
+end
+matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given numbers (default is 1).", help.OTHER}
+
+-- matrix with random values
+matrix.rand = function (rows, cols)
+   cols = cols or rows
+   local m = matrix:init(rows, cols)
+   for r = 1, rows do
+      m[r] = {}
+      for c = 1, cols do
+         m[r][c] = math.random()
+      end
+   end
+   return m
+end
+matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1", help.OTHER}
+
+-- identity matrix
 matrix.eye = function (rows, cols)
    cols = cols or rows
    local m = matrix:init(rows, cols)
    for i = 1, math.min(rows, cols) do setval(m,i,i, 1) end
    return m
 end
+matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix", help.OTHER}
 
+-- get submatrix
 matrix.sub = function (m, r1, r2, c1, c2)
    r1, c1 = checkindex(m, r1, c1)
    r2, c2 = checkindex(m, r2, c2)
@@ -238,7 +341,9 @@ matrix.sub = function (m, r1, r2, c1, c2)
    end
    return res
 end
+matrix.about[matrix.sub] = {"sum(m, r1, r2, c1, c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2]", help.OTHER}
 
+-- perform concatenation
 matrix.concat = function (a, b, dir)
    local res = nil
    if dir == 'h' then
@@ -260,15 +365,19 @@ matrix.concat = function (a, b, dir)
    end
    return res
 end
+matrix.about[matrix.concat] = {"concat(m1, m2, dir)", "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse m1 .. m2 for horizontal concatenation and m1 // m2 for vertical", help.OTHER}
 
+-- horizontal concatenation
 matrix.__concat = function (a,b)
    return matrix.concat(a,b,'h')
 end
 
+-- vertical concatenation
 matrix.__idiv = function (a,b)
    return matrix.concat(a,b,'v')
 end
 
+-- strig representation
 matrix.__tostring = function (m)
    local srow = {}
    for r = 1, m.rows do
@@ -281,8 +390,8 @@ matrix.__tostring = function (m)
    return table.concat(srow, "\n")
 end
 
-----------------
+-- constructor call
+setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
+matrix.about[help.NEW] = {"Mat(...)", "Create matrix from list of strings (tables)", help.NEW}
 
-a = matrix.new({1,2},{7,8})
-
-print(matrix.inv(a))
+return matrix
