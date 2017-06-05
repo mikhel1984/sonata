@@ -36,6 +36,11 @@ polynom.val = function (p,x)
    return res
 end
 
+polynom.copy = function (p)
+   local cp = {}
+   for i = 1, #p do cp[i] = p[i] end
+   return polynom:init(cp)
+end
 
 polynom.__add = function (a,b)
    a, b = args(a,b)
@@ -59,6 +64,39 @@ polynom.__sub = function (a,b)
    return a + (-b)
 end
 
+polynom.__mul = function (a,b)
+   a,b = args(a,b)
+   local res = polynom:init({0})
+   for j = 1, #b do
+      local tmp = {}
+      for i = 1, #a do tmp[i] = a[i]*b[j] end
+      local pos = #b-j
+      while pos > 0 do
+         table.insert(tmp, 0)
+	 pos = pos-1
+      end
+      res = res + polynom:init(tmp)
+   end
+   return res
+end
+
+polynom.__eq = function (a,b)
+   if type(a) ~= type(b) or a.type ~= b.type then return false end
+   if #a ~= #b then return false end
+   for i = 1, #a do
+      if a[i] ~= b[i] then return false end
+   end
+   return true
+end
+
+polynom.__lt = function (a,b)
+   a,b = args(a,b)
+   return #a < #b or (#a == #b and a[1] < b[1])
+end
+
+polynom.__le = function (a,b)
+   return a == b or a < b
+end
 
 polynom.der = function (p,x)
    local der, pow = {}, #p
@@ -90,4 +128,4 @@ end
 a = polynom.new(1,2,3)
 b = polynom.new(4,5)
 
-print(a-b)
+print(a == a)
