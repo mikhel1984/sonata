@@ -130,13 +130,21 @@ polynom.int = function (p,x)
    return polynom:init(int)
 end
 
+polynom.coef = function (...)
+   local args = {...}
+   local res = polynom:init({1})
+   for i = 1, #args do
+      res = res * polynom:init({1,-args[i]})
+   end
+   return res
+end
+
 polynom.__tostring = function (p)
-   return string.format('[%s]', table.concat(p, ','))
+   --return string.format('[%s]', table.concat(p, ','))
+   return table.concat(p,' ')
 end
 
 
 ----------------------
 
-a = polynom.new(1,1)
-
-print(a^10)
+print(polynom.coef(1,2,3,4))

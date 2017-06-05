@@ -87,6 +87,10 @@ complex.about[complex.arg] = {"arg(v)", "Return argument of complex number.", he
 complex.abs = function (v) return math.sqrt(v.real*v.real+v.imag*v.imag) end
 complex.about[complex.abs] = {"abs(v)", "Return module of complex number.", help.BASE}
 
+-- conjunction
+complex.conj = function (v) return complex:new(v.real, -v.imag) end
+complex.about[complex.conj] = {"conj(v)", "Return the complex conjugate.", help.OTHER}
+
 -- real part
 complex.Re  = function (v) return v.real end
 complex.about[complex.Re] = {"Re(v)", "Return the real part.", help.OTHER}
