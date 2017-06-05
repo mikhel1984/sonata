@@ -341,7 +341,7 @@ matrix.sub = function (m, r1, r2, c1, c2)
    end
    return res
 end
-matrix.about[matrix.sub] = {"sum(m, r1, r2, c1, c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2]", help.OTHER}
+matrix.about[matrix.sub] = {"sub(m, r1, r2, c1, c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2]", help.OTHER}
 
 -- perform concatenation
 matrix.concat = function (a, b, dir)

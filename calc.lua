@@ -42,8 +42,9 @@ quit = os.exit
 Rat = nil        -- rational
 Cmp = nil        -- complex
 Big = nil        -- bigint
+Mat = nil        -- matrix
 
-local MODULE_LIST = "complex, rational, bigint"
+local MODULE_LIST = "complex, rational, bigint, matrix"
 
 -- Additional functions --
 function rand() return math.random() end
@@ -114,12 +115,17 @@ function import(modname)
          Cmp = require(modname)
          about:add(Cmp.about, "Cmp")
          _i = Cmp._i;    print("- add imaginary unit '_i'")
-         sqr = Cmp.sqrt; print("- redefine sqr(x) for complex numbers")         
+         --sqr = Cmp.sqrt; print("- redefine sqr(x) for complex numbers")     
       end
    elseif modname == "bigint" then
       if not Big then
          Big = require(modname)         
          about:add(Big.about, "Big")         
+      end
+   elseif modname == 'matrix' then
+      if not Mat then
+         Mat = require(modname)
+	 about:add(Mat.about, "Mat")
       end
    else
       print("No such module: " .. modname)
@@ -139,7 +145,8 @@ function help(fn)
 end
 
 -- Run!
-print("\nPrint 'quit()' for exit!")
+print("\nLuaCalc ver 0.2.")
+print("Print 'quit()' for exit!")
 print("Print 'help([fn])' to get help.\n")
 
 _PROMPT='lc: '
