@@ -80,6 +80,18 @@ polynom.__mul = function (a,b)
    return res
 end
 
+polynom.__pow = function (p,n)
+   n = assert(math.tointeger(n), "Integer power is expected!")
+   assert(n > 0, "Positive power is expected!")
+   local res, acc = polynom:init({1}), polynom.copy(p)
+   while n > 0 do
+      if n%2 == 1 then res = res*acc end
+      if n ~= 1 then acc = acc * acc end
+      n = n // 2
+   end
+   return res
+end
+
 polynom.__eq = function (a,b)
    if type(a) ~= type(b) or a.type ~= b.type then return false end
    if #a ~= #b then return false end
@@ -125,7 +137,6 @@ end
 
 ----------------------
 
-a = polynom.new(1,2,3)
-b = polynom.new(4,5)
+a = polynom.new(1,1)
 
-print(a == a)
+print(a^10)
