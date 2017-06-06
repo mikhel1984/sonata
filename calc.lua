@@ -43,8 +43,9 @@ Rat = nil        -- rational
 Cmp = nil        -- complex
 Big = nil        -- bigint
 Mat = nil        -- matrix
+Poly = nil       -- polynom
 
-local MODULE_LIST = "complex, rational, bigint, matrix"
+local MODULE_LIST = "complex, rational, bigint, matrix, polynom"
 
 -- Additional functions --
 function rand() return math.random() end
@@ -126,6 +127,11 @@ function import(modname)
       if not Mat then
          Mat = require(modname)
 	 about:add(Mat.about, "Mat")
+      end
+   elseif modname == 'polynom' then
+      if not Poly then
+         Poly = require(modname)
+	 about:add(Poly.about, "Poly")
       end
    else
       print("No such module: " .. modname)
