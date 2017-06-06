@@ -14,17 +14,37 @@ local function args(a,b)
 end
 
 function polynom:init(t)
+   if #t == 0 then t[1] = 0 end
    setmetatable(t, self)
    return t
 end
 
 function polynom.new(...)
    local o = {...}
-   assert(#o > 0, "Unexpected number of coefficients!")
-   for i = 1, #o do
-      assert(type(o[i]) == 'number', "Wrong coefficient type")
-   end
    return polynom:init(o)
+end
+
+local function reduce (p)
+   while p[1] == 0 and #p > 1 do
+      table.remove(p, 1)
+   end
+   return p
+end
+
+local function div(a,b)
+   if #a < #b then return polynom.new(), a end
+   local rest, res = polynom.copy(a), {}
+   local num = polynom:init(table.move(a,1,#b,1,{}))
+   local k = #b+1
+   while #num >= #b do
+      local t = num[1]/b[1]
+      table.insert(res, t)
+      num = num - t*b
+      reduce(num)
+      table.remove(rest, 1)
+      if rest[#b] then table.insert(num, rest[#b]) end
+   end
+   return polynom:init(res), num
 end
 
 polynom.val = function (p,x)
@@ -61,7 +81,7 @@ polynom.__unm = function (p)
 end
 
 polynom.__sub = function (a,b)
-   return a + (-b)
+   return reduce(a + (-b))
 end
 
 polynom.__mul = function (a,b)
@@ -77,6 +97,16 @@ polynom.__mul = function (a,b)
       end
       res = res + polynom:init(tmp)
    end
+   return reduce(res)
+end
+
+polynom.__div = function (a,b)
+   local res, _ = div(a,b)
+   return res
+end
+
+polynom.__mod = function (a,b)
+   local _, res = div(a,b)
    return res
 end
 
@@ -140,11 +170,20 @@ polynom.coef = function (...)
 end
 
 polynom.__tostring = function (p)
-   --return string.format('[%s]', table.concat(p, ','))
    return table.concat(p,' ')
 end
 
 
 ----------------------
 
-print(polynom.coef(1,2,3,4))
+a = polynom.new(1,2,1)
+b = polynom.new(1,1)
+
+--p,q = div(a,b)
+p = a / b
+q = a % b
+
+print(p)
+print(q)
+print(b*p+q)
+
