@@ -1,5 +1,7 @@
 -- Plynom manipulations
 
+--TODO: polyroot, polyfit
+
 local polynom = {}
 polynom.__index = polynom
 
