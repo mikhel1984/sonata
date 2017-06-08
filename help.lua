@@ -70,7 +70,7 @@ function help:add(tbl, nm)
       if not v.link then table.insert(v, nm) end -- function description doesn't contain 'link' element
       self[k] = v 
    end
-   print("Use '" .. nm .. "' to get access.")
+   --print("Use '" .. nm .. "' to get access.")
 end
 
 return help

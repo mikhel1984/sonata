@@ -39,14 +39,24 @@ EPS = 0.0001;      about[EPS] = {"EPS", "Value of tolerance for solving equation
 quit = os.exit
 
 -- modules
-Rat = nil        -- rational
-Cmp = nil        -- complex
-Big = nil        -- bigint
-Mat = nil        -- matrix
-Poly = nil       -- polynom
-Set = nil        -- set
-
-local MODULE_LIST = "complex, rational, bigint, matrix, polynom, set"
+import = {
+   rational = "Rat",
+   complex  = "Cmp",
+   bigint   = "Big",
+   matrix   = "Mat",
+   polynom  = "Pol",
+   set      = "Set"
+}
+-- add modules
+setmetatable(import, 
+{ __call = function (self, name) 
+   local var = assert(self[name], "Wrong module name!")
+   if not _G[var] then
+      _G[var] = require(name)
+      about:add(_G[var].about, var)
+   end
+   print(string.format("Use alias '%s' for access to the module '%s'", var, name))
+end })
 
 -- Additional functions --
 function rand() return math.random() end
@@ -105,46 +115,15 @@ function plot(str, a, b)
 end
 about[plot] = {"plot(str [,a,b])", " Plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", help.OTHER}
 
--- Additional modules
-function import(modname)   
-   if modname == "rational" then
-      if not Rat then
-         Rat = require(modname); about:add(Rat.about, "Rat")                
-      end
-   elseif modname == "complex" then
-      if not Cmp then
-         Cmp = require(modname); about:add(Cmp.about, "Cmp")
-         _i = Cmp._i;    print("- add imaginary unit '_i'")
-      end
-   elseif modname == "bigint" then
-      if not Big then
-         Big = require(modname); about:add(Big.about, "Big")         
-      end
-   elseif modname == 'matrix' then
-      if not Mat then
-         Mat = require(modname); about:add(Mat.about, "Mat")
-      end
-   elseif modname == 'polynom' then
-      if not Poly then
-         Poly = require(modname); about:add(Poly.about, "Poly")
-      end
-   elseif modname == 'set' then
-      if not Set then
-         Set = require(modname); about:add(Set.about, "Set")
-      end
-   else
-      print("No such module: " .. modname); return
-   end
-   print("Module '" .. modname .. "' is imported")
-end
-
 -- Print help information
 function help(fn)   
    if fn then 
       about:print(type(fn)=='table' and fn.about or fn) 
    else
       about:print(about)
-      print("\tAvailable modules:\n" .. MODULE_LIST .. "\nUse 'import name' to load it.")
+      print("\tAvailable modules:")
+      for k in pairs(import) do io.write(k, ', ') end
+      print("\nuse 'import(name)' to load it.")
    end
 end
 
