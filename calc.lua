@@ -44,8 +44,9 @@ Cmp = nil        -- complex
 Big = nil        -- bigint
 Mat = nil        -- matrix
 Poly = nil       -- polynom
+Set = nil        -- set
 
-local MODULE_LIST = "complex, rational, bigint, matrix, polynom"
+local MODULE_LIST = "complex, rational, bigint, matrix, polynom, set"
 
 -- Additional functions --
 function rand() return math.random() end
@@ -108,34 +109,31 @@ about[plot] = {"plot(str [,a,b])", " Plot function in Gnuplot. Use bounds if the
 function import(modname)   
    if modname == "rational" then
       if not Rat then
-         Rat = require(modname)
-         about:add(Rat.about, "Rat")                
+         Rat = require(modname); about:add(Rat.about, "Rat")                
       end
    elseif modname == "complex" then
       if not Cmp then
-         Cmp = require(modname)
-         about:add(Cmp.about, "Cmp")
+         Cmp = require(modname); about:add(Cmp.about, "Cmp")
          _i = Cmp._i;    print("- add imaginary unit '_i'")
-         --sqr = Cmp.sqrt; print("- redefine sqr(x) for complex numbers")     
       end
    elseif modname == "bigint" then
       if not Big then
-         Big = require(modname)         
-         about:add(Big.about, "Big")         
+         Big = require(modname); about:add(Big.about, "Big")         
       end
    elseif modname == 'matrix' then
       if not Mat then
-         Mat = require(modname)
-	 about:add(Mat.about, "Mat")
+         Mat = require(modname); about:add(Mat.about, "Mat")
       end
    elseif modname == 'polynom' then
       if not Poly then
-         Poly = require(modname)
-	 about:add(Poly.about, "Poly")
+         Poly = require(modname); about:add(Poly.about, "Poly")
+      end
+   elseif modname == 'set' then
+      if not Set then
+         Set = require(modname); about:add(Set.about, "Set")
       end
    else
-      print("No such module: " .. modname)
-      return
+      print("No such module: " .. modname); return
    end
    print("Module '" .. modname .. "' is imported")
 end
