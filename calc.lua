@@ -45,7 +45,8 @@ import = {
    bigint   = "Big",
    matrix   = "Mat",
    polynom  = "Pol",
-   set      = "Set"
+   set      = "Set",
+   gnuplot  = "Gnu",
 }
 -- add modules
 setmetatable(import, 
