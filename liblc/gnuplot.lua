@@ -6,7 +6,7 @@ gnuplot.__index = gnuplot
 
 gnuplot.type = 'gnuplot'
 
-local help = require "help"
+local help = require "liblc.help"
 gnuplot.about = help:new("Interface for calling Gnuplot from Lua")
 
 gnuplot.N = 100        -- devide interval into given number of points

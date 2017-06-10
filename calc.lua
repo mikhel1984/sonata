@@ -3,7 +3,7 @@
 -- Lua based calculator
 
 -- help
-help = require "help"
+help = require "liblc.help"
 about = help:new("Lua based calculator")
 --about[about] = {link=about, "Lua based calculator"}
 
@@ -53,7 +53,7 @@ setmetatable(import,
 { __call = function (self, name) 
    local var = assert(self[name], "Wrong module name!")
    if not _G[var] then
-      _G[var] = require(name)
+      _G[var] = require('liblc.'..name)
       about:add(_G[var].about, var)
    end
    print(string.format("Use alias '%s' for access to the module '%s'", var, name))
@@ -129,8 +129,9 @@ function help(fn)
 end
 
 -- Run!
-print("\nLuaCalc ver 0.2.")
+print("\nLuaCalc ver 0.3.")
 print("Print 'quit()' for exit!")
+print("Print 'import(module)' to expand functionality.")
 print("Print 'help([fn])' to get help.\n")
 
 _PROMPT='lc: '

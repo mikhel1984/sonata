@@ -8,7 +8,7 @@ set.type = 'set'
 set.NOT_A_SET = "Set is expected!"
 
 -- description
-local help = require "help"
+local help = require "liblc.help"
 set.about = help:new("Manipulation with sets")
 
 -- check type

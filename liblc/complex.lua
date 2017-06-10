@@ -6,7 +6,7 @@ complex.__index = complex
 complex.type = 'complex'
 
 -- description
-local help = require "help"
+local help = require "liblc.help"
 complex.about = help:new("Manipulations with complex numbers")
 
 -- constructor

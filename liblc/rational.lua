@@ -6,7 +6,7 @@ rational.__index = rational
 rational.type = 'rational'
 
 -- description
-local help = require "help"
+local help = require "liblc.help"
 rational.about = help:new("Computations with rational numbers")
 
 -- check if value can be an integer

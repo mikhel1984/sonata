@@ -5,7 +5,7 @@ matrix.__index = matrix
 
 matrix.type = 'matrix'
 
-local help = require "help"
+local help = require "liblc.help"
 matrix.about = help:new("Matrix operations. Indexation from 0!")
 
 -- test object type

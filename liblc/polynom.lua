@@ -7,7 +7,7 @@ polynom.__index = polynom
 
 polynom.type = 'polynom'
 
-local help = require "help"
+local help = require "liblc.help"
 polynom.about = help:new("Operations with polynomials")
 
 -- check type

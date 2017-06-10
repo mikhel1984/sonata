@@ -8,7 +8,7 @@ bigint.BASE = 10        -- the radix
 bigint.type = 'bigint'  -- mark of type
 
 -- description
-local help = require "help"
+local help = require "liblc.help"
 bigint.about = help:new("Operations with arbitraty long integers")
 
 -- absolute value of integer
