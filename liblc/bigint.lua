@@ -73,15 +73,12 @@ local function div(a,b)
    local denom = bigint.abs(b)                    -- denominator
    -- read the string
    while k <= #num do                             
-      if rest >= denom then                       -- try to devide
-         local n, prod = bigint.BASE, nil
-	 repeat                                   -- broot force search for multiplier (
-	    n = n-1
-	    prod = denom*n
-	 until prod <= rest
+      if rest >= denom then
+         -- get ratio
+	 local n = rest.value:reverse() // denom.value:reverse()
 	 -- save result
-	 acc[#acc+1] = n
-	 rest = rest-prod
+	 acc[#acc+1] = math.tointeger(n)
+	 rest = rest-denom*n
       else
          if #acc > 0 then acc[#acc+1] = 0 end
       end
@@ -227,7 +224,6 @@ end
 -- a == b
 bigint.eq = function (a,b)
    a,b = args(a,b)
-   print(a.sign, b.sign, a.value, b.value)
    return a.sign == b.sign and a.value == b.value
 end
 bigint.about[bigint.eq] = {"eq(a,b)", "Check equality of two values", help.OTHER}
@@ -236,7 +232,6 @@ bigint.__eq = bigint.eq
 
 -- a < b
 bigint.__lt = function (a,b)
-   print("!")
    a,b = args(a,b)
    if a.sign < b.sign then return true end
    if #a.value == #b.value then         -- equial length
