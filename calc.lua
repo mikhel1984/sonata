@@ -50,13 +50,15 @@ import = {
 }
 -- add modules
 setmetatable(import, 
-{ __call = function (self, name) 
+{ __tostring = function (x) return "Done" end,
+  __call = function (self, name) 
    local var = assert(self[name], "Wrong module name!")
    if not _G[var] then
       _G[var] = require('liblc.'..name)
       about:add(_G[var].about, var)
    end
    print(string.format("Use alias '%s' for access to the module '%s'", var, name))
+   return import
 end })
 
 -- Additional functions --

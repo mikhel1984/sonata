@@ -131,8 +131,10 @@ end
 rational.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 -- representation
+local function numstr(v) return type(v) == 'number' and string.format('%d', v) or tostring(v) end
+
 rational.__tostring = function (v)
-   return string.format("%s/%s", tostring(v.num), tostring(v.denom))
+   return numstr(v.num)..'/'..numstr(v.denom)
 end
 
 -- to float point
