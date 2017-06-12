@@ -1,4 +1,32 @@
--- Operations with arbitrary integer numbers
+--[[      bigint.lua
+Operations with arbitrary long integer numbers
+
+----------- Examples -----------------
+
+Big = require 'liblc.bigint'
+
+a = Big(123)           --> 123
+b = Big('456')         --> 456
+
+a + b                  --> 579
+a - b                  --> -333
+a * Big(2)             --> 246
+b / 2                  --> 228
+b % a                  --> 87
+a ^ 3                  --> 1860867
+
+Big.abs('-25')         --> 25
+Big.factorial(10)      --> 3628800
+c = a:copy()           --> 123
+
+a > b                  --> false
+a == b                 --> false
+a:eq(123)              --> true
+#a                     --> 3
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 local bigint = {}
 bigint.__index = bigint
@@ -71,14 +99,22 @@ local function div(a,b)
    local k = #b.value                             -- index of the last character
    local rest = bigint:new(string.sub(num, 1, k)) -- current part of numerator
    local denom = bigint.abs(b)                    -- denominator
+   local q = string.sub(denom.value, #denom.value)
    -- read the string
    while k <= #num do                             
       if rest >= denom then
          -- get ratio
-	 local n = rest.value:reverse() // denom.value:reverse()
+	 local n, p = 1, string.sub(rest.value, #denom.value):reverse()
+	 n = p // q
+	 local prod = n*denom
 	 -- save result
-	 acc[#acc+1] = math.tointeger(n)
-	 rest = rest-denom*n
+	 if prod <= rest then
+	    acc[#acc+1] = math.tointeger(n)
+	    rest = rest-prod
+	 else
+	    acc[#acc+1] = math.tointeger(n-1)
+	    rest = rest-prod-denom
+	 end
       else
          if #acc > 0 then acc[#acc+1] = 0 end
       end
