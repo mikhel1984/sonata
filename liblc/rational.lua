@@ -1,4 +1,28 @@
--- Support of operations with rational numbers
+--[[         rational.lua
+Rational number operatons support.
+
+-------------- Examples --------------------
+
+Rat = require 'liblc.rational'
+
+a = Rat(1,2)           --> 1/2
+b = Rat(2)             --> 2/1
+
+a + b                  --> 5/2
+a * 2                  --> 1/1
+Rat(2,3)*Rat(3,2)      --> 1/1
+a / Rat(1,3)           --> 3/2
+a ^ 3                  --> 1/8
+2 ^ a                  --> 1.41...
+
+b == b                 --> true
+a >= b                 --> false
+
+Rat.gcd(10,15)         --> 5
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 local rational = {}
 rational.__index = rational
@@ -9,25 +33,27 @@ rational.type = 'rational'
 local help = require "liblc.help"
 rational.about = help:new("Computations with rational numbers")
 
+local function isrational(v) return type(v) == 'table' and v.type == rational.type end
+
 -- check if value can be an integer
-rational.isint = function (x)
+local function isint (x)
    assert(type(x) == 'number', "Number is expected")
    local _,a = math.modf(x)
    return a == 0
 end
-rational.about[rational.isint] = {"isint(v)", "Check if the number has fractional part.", help.OTHER}
 
 -- greatest common devisor
 rational.gcd = function (a,b)
-   return (a == 0) and b or rational.gcd(b % a, a)
+   return (a == 0 or (type(a)=='table' and a:eq(0))) and b or rational.gcd(b % a, a)
 end
 rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common devisor for two integers.", help.OTHER}
 
 -- constructor
 function rational:new(n, dn)
    dn = dn or 1
-   assert(rational.isint(n) and rational.isint(dn), "Natural numbers are expected!") 
-   assert(dn ~= 0, "Denomerator is zero!")
+   local mn, mdn = getmetatable(n), getmetatable(dn)
+   assert((type(n)=='number' and isint(n)) or (mn and mn.__div and mn.__mod), "Wrong number type")
+   assert((type(dn)=='number' and isint(dn)) or (mdn and mdn.__div and mdn.__mod), "Wrong number type")
    local g = rational.gcd(n,dn)
    local o = {num=n/g, denom=dn/g}   
    setmetatable(o, self)
@@ -35,9 +61,9 @@ function rational:new(n, dn)
 end
 
 local function args(a,b)
-   a = (type(a) == "table" and a.type == rational.type) and a or rational:new(a)
+   a = isrational(a) and a or rational:new(a)
    if b then
-      b = (type(b) == "table" and b.type == rational.type) and b or rational:new(b)
+      b = isrational(b) and b or rational:new(b)
    end
    return a,b
 end
@@ -77,17 +103,12 @@ rational.__pow = function (a, b)
    if type(a) == "number" then
       return math.pow(a, b)
    else
-      assert(rational.isint(b) and b >= 0, "Power must be a nonnegative integer")
+      assert(isint(b) and b >= 0, "Power must be a nonnegative integer")
       return rational:new(math.pow(a.num, b), math.pow(a.denom, b)) 
    end
 end
 
 rational.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, -a, a^b}", help.BASE}
-
---[=[
-rational.pow = rational.__pow
-rational.about[rational.pow] = [[ : pow(a,b) Get a power b. If a is rational, b must be nonnegative integer.  ]]
-]=]
 
 -- a == b
 rational.__eq = function (a,b)
@@ -111,7 +132,7 @@ rational.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", 
 
 -- representation
 rational.__tostring = function (v)
-   return string.format("%d/%d", v.num, v.denom)
+   return string.format("%s/%s", tostring(v.num), tostring(v.denom))
 end
 
 -- to float point

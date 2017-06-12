@@ -3,16 +3,19 @@
 local bigint = {}
 bigint.__index = bigint
 
--- parameters
-bigint.BASE = 10        -- the radix
 bigint.type = 'bigint'  -- mark of type
 
 -- description
 local help = require "liblc.help"
 bigint.about = help:new("Operations with arbitraty long integers")
 
+bigint.BASE = 10        -- the radix
+bigint.about[bigint.BASE] = {'BASE', "The radix of big integer representation", help.OTHER}
+
 -- absolute value of integer
 local function iabs(v) return (v < 0) and (-v) or v end
+
+local function isbigint(v) return type(v) == 'table' and v.type == bigint.type end
 
 -- convert integer into bigint
 local function fromint(v) 
@@ -53,9 +56,9 @@ end
 
 -- correct function arguments if need
 local function args (a, b)   
-   a = (type(a) == 'table' and a.type == bigint.type) and a or bigint:new(a)
+   a = isbigint(a) and a or bigint:new(a)
    if b then
-      b = (type(b) == 'table' and b.type == bigint.type) and b or bigint:new(b)
+      b = isbigint(b) and b or bigint:new(b)
    end
    return a, b
 end
@@ -71,7 +74,7 @@ local function div(a,b)
    -- read the string
    while k <= #num do                             
       if rest >= denom then                       -- try to devide
-         local n, prod = bigint.help.BASE, nil
+         local n, prod = bigint.BASE, nil
 	 repeat                                   -- broot force search for multiplier (
 	    n = n-1
 	    prod = denom*n
@@ -222,13 +225,18 @@ bigint.__mod = function (a, b)
 end
 
 -- a == b
-bigint.__eq = function (a,b)
+bigint.eq = function (a,b)
    a,b = args(a,b)
+   print(a.sign, b.sign, a.value, b.value)
    return a.sign == b.sign and a.value == b.value
 end
+bigint.about[bigint.eq] = {"eq(a,b)", "Check equality of two values", help.OTHER}
+
+bigint.__eq = bigint.eq
 
 -- a < b
 bigint.__lt = function (a,b)
+   print("!")
    a,b = args(a,b)
    if a.sign < b.sign then return true end
    if #a.value == #b.value then         -- equial length
