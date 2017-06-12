@@ -1,4 +1,30 @@
--- Manipulations with complex numbers
+--[[     complex.lua
+Manipulations with complex numbers.
+
+Cmp = require 'liblc.complex'
+
+a = Cmp(1,2)                   --> 1.000 + 2.000i
+b = Cmp(3)                     --> 3.000 + 0.000i
+
+a + b                          --> 4.000 + 2.000i
+Cmp(3) - b                     --> 0.000 + 0.000i
+a * b                          --> 3.000 + 6.000i
+a / Cmp._i                     --> 2.000 - 1.000i
+Cmp(1,1) ^ Cmp(2,2)            --> -0.265 + 0.319i
+
+a == b                         --> false
+a ~= b                         --> true
+
+a:abs()                        --> 2.236
+a:arg()                        --> 1.107
+a:conj()                       --> 1.000 - 2.000i
+a:Re()                         --> 1.000
+a:Im()                         --> 2.000
+Cmp.sqrt(-2)                   --> 0.000 - 1.414i
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 local complex = {}
 complex.__index = complex
