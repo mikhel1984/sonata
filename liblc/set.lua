@@ -1,6 +1,28 @@
+--[[     set.lua
+Manipulation with sets.
+Based on implementation of Roberto Ierusalimschy.
 
--- Manipulation with sets
--- based on implementation of Roberto Ierusalimschy 
+--------- Examples -------------
+
+Set = require 'liblc.set'
+
+a = Set {1,2,3,4,1}           --> {1,2,3,4}
+b = Set {3,4,5}               --> {3,4,5}
+
+b:check(6)                    --> false
+b:insert(6)                   --> {3,4,5,6}
+b:remove(6)                   --> {3,4,5}
+
+a + b                         --> {1,2,3,4,5}
+a * b                         --> {3,4}
+a / b                         --> {1,2}
+
+a == b                        --> false
+a < b                         --> false
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 local set = {}
 set.__index = set
 

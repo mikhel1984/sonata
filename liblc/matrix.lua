@@ -1,4 +1,39 @@
--- Matrix operations
+--[[     matrix.lua
+Matrix operations.
+
+------------- Examples ---------------
+
+Mat = require 'liblc.matrix'
+
+a = Mat({1,2},{3,4})             --> [1,2; 3,4]
+b = Mat({5,6},{7,8})             --> [5,6; 7,8]
+
+a(0,0)                           --> 1
+b:set(9, 1,0)                    --> [5,6; 9,8]
+a:transpose()                    --> [1,3; 2,4]
+#a                               --> 2,2
+
+a + b                            --> [6,8; 10,12]
+b - a                            --> [4,4; 4,4]
+a * b
+a / b
+a ^ 2 
+
+a:det()
+a:inv()
+c = a:copy()                     --> [1,2; 3,4]
+
+Mat.eye(2)                       --> [1,0; 0,1]
+Mat.zeros(2,3)                   --> [0,0,0; 0,0,0]
+Mat.ones(2,3, 4)                 --> [4,4,4; 4,4,4]
+
+a .. b                           --> [1,2,5,6; 3,4,7,8]
+a // b                           --> [1,2; 3,4; 5,6; 7,8]
+a:sub(0,1,1,-1)                  --> [3,4]
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 local matrix = {}
 matrix.__index = matrix
@@ -127,12 +162,12 @@ matrix.about[matrix.get] = {"get(m,raw,col)", "Return matrix element", help.BASE
 matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
 
 -- set value of matrix
-matrix.set = function (m, r, c, val)
+matrix.set = function (m, val, r, c)
    r, c = checkindex(m, r, c)
    m[r] = m[r] or {}
    m[r][c] = val
 end
-matrix.about[matrix.set] = {"set(m,raw,col,val)", "Set value of matrix", help.BASE} 
+matrix.about[matrix.set] = {"set(m,val,raw,col)", "Set value of matrix", help.BASE} 
 
 -- transpose matrix
 matrix.transpose = function (m)
@@ -175,12 +210,14 @@ matrix.__unm = function (a)
    return sum(tmp, a, '-')
 end
 
+--[[
 -- return size
 matrix.size = function (m)
    assert(ismatrix(m), "Matrix is expected")
    return m.rows, m.cols
 end
 matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'", help.BASE}
+]]
 
 -- redefine size call
 matrix.__len = function (m)

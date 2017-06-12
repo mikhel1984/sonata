@@ -1,4 +1,9 @@
--- Help management
+--[[     help.lua
+Function description management.
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 local help = {}
 help.__index = help

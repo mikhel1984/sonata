@@ -1,4 +1,30 @@
--- Plynom manipulations
+--[[     polynom.lua
+Manipulations with polynomials.
+
+---------- Examples -------------
+
+Poly = require 'liblc.polynom'
+
+a = Poly(1,2,4,3)            --> [1,2,4,3]
+b = Poly(1,1)                --> [1,1]
+a:val(0)                     --> 3
+
+a + b                        --> [1,2,5,4]
+a - b                        --> [1,2,3,2]
+a * a                        --> [1,2,1]
+b / a
+b % a
+a ^ 3                        --> [1,3,3,1]
+
+a:int()                     
+a:der()                     
+Poly.coef(1,-1)              --> [1,0,-1]
+
+c = a:copy()
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 --TODO: polyroot, polyfit
 

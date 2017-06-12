@@ -1,5 +1,26 @@
+--[[     gnuplot.lua
+Call Gnuplot from Lua.
 
--- Call Gnuplot from Lua
+----------- Examples ------------
+
+Gnu = require 'liblc.gnuplot'
+
+g = Gnu.plot2d({
+   {'sin(x)', title='sinus x'},
+   {math.cos, title='cosinus x'},
+   title="Example",
+   xrange = {0, 5},
+   xtitle = "X",
+   ytitle = "Y",
+   permanent = true,
+})
+
+g[3] = {'points.dat', type='data', title='Additional points'}
+g:plot2d()
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 local gnuplot = {}
 gnuplot.__index = gnuplot
@@ -157,6 +178,7 @@ yrange={-2,2}                                -- range of y
 trange={1,2}                                 -- range for parametric functions
 xtitle='A', ytitle='B'                       -- axes names
 separator=','                                -- separator for data files
+permanent=true                               -- create in independant window
 ]],
 help.BASE}
 

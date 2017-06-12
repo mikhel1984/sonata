@@ -44,7 +44,7 @@ import = {
    complex  = "Cmp",
    bigint   = "Big",
    matrix   = "Mat",
-   polynom  = "Pol",
+   polynom  = "Poly",
    set      = "Set",
    gnuplot  = "Gnu",
 }
