@@ -36,7 +36,7 @@ _e = math.exp(1)   about[_e] = {"_e", "Euler number", help.CONST}
 _i = nil         -- import 'complex' to use it
 EPS = 0.0001;      about[EPS] = {"EPS", "Value of tolerance for solving equations.", help.CONST}
 -- Quick exit
-quit = os.exit
+quit = function () print("\n                --==== Buy! ====--\n"); os.exit() end
 
 -- modules
 import = {
@@ -131,7 +131,7 @@ function help(fn)
 end
 
 -- Run!
-print("\nLuaCalc ver 0.3.")
+print("\n             --==== LuaCalc 0.3 ====--\n")
 print("Print 'quit()' for exit!")
 print("Print 'import(module)' to expand functionality.")
 print("Print 'help([fn])' to get help.\n")

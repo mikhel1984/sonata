@@ -8,6 +8,9 @@ Mat = require 'liblc.matrix'
 a = Mat({1,2},{3,4})             --> [1,2; 3,4]
 b = Mat({5,6},{7,8})             --> [5,6; 7,8]
 
+In functions such as 'get', 'set', 'sub' indexation 
+starts from 0.
+
 a(0,0)                           --> 1
 b:set(9, 1,0)                    --> [5,6; 9,8]
 a:transpose()                    --> [1,3; 2,4]
@@ -30,6 +33,8 @@ Mat.ones(2,3, 4)                 --> [4,4,4; 4,4,4]
 a .. b                           --> [1,2,5,6; 3,4,7,8]
 a // b                           --> [1,2; 3,4; 5,6; 7,8]
 a:sub(0,1,1,-1)                  --> [3,4]
+
+a:map(function(x) return x^2 end) --> [1,4; 9,16]
 
 This file is a part of liblc collection. 
 Stanislav Mikhel, 2017.
@@ -218,6 +223,15 @@ matrix.size = function (m)
 end
 matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'", help.BASE}
 ]]
+
+matrix.map = function (m, fn) 
+   local res = matrix:init(m.rows, m.cols)
+   for r = 1, res.rows do
+      for c = 1, res.cols do setval(res,r,c, fn(getval(m,r,c))) end
+   end
+   return res
+end
+matrix.about[matrix.map] = {"map(m,func)", "Apply the given function to all elements, return new matrix", help.OTHER}
 
 -- redefine size call
 matrix.__len = function (m)
