@@ -312,15 +312,14 @@ matrix.about[matrix.det] = {"det(m)", "Calculate determinant", help.BASE}
 -- inverse matrix
 matrix.inv = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
-   local con, det = matrix.concat(m, matrix.eye(m.cols),'h'), 0
-   con, det = matrix.rref(con)
+   local con, det = matrix.rref(m, matrix.eye(m.cols))
    return (det ~= 0) and matrix.sub(con, 0,-1, m.cols, -1) or matrix.ones(m.rows,m.rows,math.huge)  -- indexation from 0
 end
 matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix", help.BASE}
 
 -- calculate system of equations using Gauss method
-matrix.rref = function (m)
-   local tr, d = gaussdown(matrix.copy(m))
+matrix.rref = function (A,b)
+   local tr, d = gaussdown(matrix.concat(A,b,'h'))
    return gaussup(tr), d
 end
 matrix.about[matrix.rref] = {"rref(m)", "Perform transformations using Gauss method. Return also determinant.", help.BASE}
