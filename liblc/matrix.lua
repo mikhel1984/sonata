@@ -45,7 +45,8 @@ matrix.__index = matrix
 
 matrix.type = 'matrix'
 
-local help = require "liblc.help"
+--local help = require "liblc.help"
+local help = require "help"
 matrix.about = help:new("Matrix operations. Indexation from 0!")
 
 -- test object type
@@ -233,10 +234,21 @@ matrix.map = function (m, fn)
 end
 matrix.about[matrix.map] = {"map(m,func)", "Apply the given function to all elements, return new matrix", help.OTHER}
 
+matrix.map_ext = function (m, fn)
+   local res = matrix:init(m.rows, m.cols)
+   for r = 1, res.rows do
+      for c = 1, res.cols do setval(res,r,c, fn(r,c,getval(m,r,c))) end
+   end
+   return res
+end
+
 -- redefine size call
-matrix.__len = function (m)
+matrix.size = function (m)
    return m.rows, m.cols
 end
+matrix.about[matrix.size] = {"size(M)", "Return number rows and columns of the matrix", help.OTHER}
+
+matrix.__len = matrix.size
 
 -- create copy of matrix
 matrix.copy = function (m)
@@ -263,7 +275,7 @@ matrix.__mul = function (a,b)
 	 setval(res,r,c, sum)
       end
    end
-   return res
+   return (res.cols == 1 and res.rows == 1) and getval(res, 1, 1) or res
 end
 
 -- a / b
@@ -415,7 +427,9 @@ matrix.concat = function (a, b, dir)
    end
    return res
 end
-matrix.about[matrix.concat] = {"concat(m1, m2, dir)", "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse m1 .. m2 for horizontal concatenation and m1 // m2 for vertical", help.OTHER}
+matrix.about[matrix.concat] = {"concat(m1, m2, dir)", 
+                               "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse m1 .. m2 for horizontal concatenation and m1 // m2 for vertical", 
+			       help.OTHER}
 
 -- horizontal concatenation
 matrix.__concat = function (a,b)
@@ -440,8 +454,113 @@ matrix.__tostring = function (m)
    return table.concat(srow, "\n")
 end
 
+--> SVD calculation
+
+local function householder (x, k)
+   local n, sum = x.rows, 0
+   local u = matrix.zeros(n, 1)
+   for r = k,n do sum = sum + getval(x, r, 1)^2 end
+   local tmp = getval(x,k,1)
+   setval(u,k,1, tmp + math.sqrt(sum)*(tmp < 0 and -1 or (tmp > 0 and 1 or 0)))
+   for r = k+1,n do setval(u,r,1, getval(x,r,1)) end
+   local ut = matrix.transpose(u)
+   return matrix.eye(n,n) - (2 / (ut * u)) * (u * ut)
+end
+
+local function bidiag_reduction(A)
+   local m,n = A.rows, A.cols
+   local B = matrix.copy(A)
+   local U, V = matrix.eye(m), matrix.eye(n)
+   local M = math.min(m,n)
+   for k = 1, M do
+      local H1 = householder(B:sub(0,-1, k-1,k-1), k)     -- matrix.sub uses indexes from 0
+      B = H1 * B
+      U = U * matrix.transpose(H1)
+      if k < (M-1) then
+         local H2 = householder(matrix.transpose(B:sub(k-1, k-1, 0, -1)), k+1)
+	 local H2t = matrix.transpose(H2)
+	 B = B * H2t
+	 V = V * H2t
+      end
+   end
+   return U, B, V
+end
+
+local function rot(f,g)
+   local c, s, r 
+   if f == 0 then
+      c, s, r = 0, 1, g
+   elseif math.abs(f) > math.abs(g) then
+      local t = g / f
+      local t1 = math.sqrt(1 + t*t)
+      c, s, r = 1/t1, t/t1, f*t1
+   else
+      local t = f / g
+      local t1 = math.sqrt(1 + t*t)
+      s, c, r = 1/t1, t/t1, g*t1
+   end
+   return c, s, r
+end
+
+local function qr_sweep(B)
+   local m,n = B.rows, B.cols
+   local U,V = matrix.eye(m), matrix.eye(n)
+   local M = math.min(m,n)
+   for k = 1, M-1 do
+      local c,s = rot(getval(B,k,k), getval(B,k,k+1))
+      local Q = matrix.eye(n)
+      setval(Q, k,   k,  c); setval(Q, k,   k+1, s)
+      setval(Q, k+1, k, -s); setval(Q, k+1, k+1, c)
+      local Qt = matrix.transpose(Q)
+      B = B * Qt
+      V = V * Qt
+      B = matrix.map(B, function (x) return math.abs(x) > 1e-13 and x or 0 end)
+      c,s = rot(getval(B,k,k), getval(B,k+1,k))
+      Q = matrix.eye(m)
+      setval(Q, k,   k,  c); setval(Q, k,   k+1, s)
+      setval(Q, k+1, k, -s); setval(Q, k+1, k+1, c)
+      B = Q * B
+      U = U * matrix.transpose(Q)
+      B = matrix.map(B, function (x) return math.abs(x) > 1e-13 and x or 0 end)
+   end
+   -- add diagonal to zero matrix
+   local I = matrix.map_ext(matrix.zeros(m,n),
+                            function (r,c,x) return (c == (r+1) and c <= M and r <= M) and 1 or 0 end)
+   -- error - norm
+   local E = 0
+   for r = 1, m do
+      for c = 1, n do E = E + math.abs(getval(I,r,c)*getval(B,r,c)) end
+   end
+   return U, B, V, E
+end
+
+matrix.svd = function (A)
+   local transp = (A.rows < A.cols)
+   local B = transp and A:transpose() or A:copy()
+   local U1, U2, U3, V1, V2, V3
+   U1, B, V1 = bidiag_reduction(B);
+   U2 = matrix.eye(matrix.size(U1))
+   V2 = matrix.eye(matrix.size(V1))
+   local E = math.huge
+   while E > 1e-8 do
+      U3, B, V3, E = qr_sweep(B)
+      U2 = U2 * U3
+      V2 = V2 * V3
+   end
+   U1, V1 = U1*U2, V1*V2
+   if transp then U1, V1 = U1:transpose(), V1:transpose() end
+   return U1, B, V1
+end
+
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
 matrix.about[help.NEW] = {"Mat(...)", "Create matrix from list of strings (tables)", help.NEW}
 
-return matrix
+--return matrix
+
+a = matrix({1,2,3},{4,5,6},{7,8,9},{10,11,12})
+u,s,v = matrix.svd(a)
+print(u, "\n")
+print(s, "\n")
+print(v, "\n")
+
