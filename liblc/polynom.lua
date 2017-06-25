@@ -196,8 +196,11 @@ polynom.__le = function (a,b)
    return a == b or a < b
 end
 
-polynom.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a^n, -a", help.BASE}
-polynom.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+polynom.arithmetic = 'arithmetic'
+polynom.about[polynom.arithmetic] = {polynom.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.BASE}
+
+polynom.comparation = 'comparation'
+polynom.about[polynom.comparation] = {polynom.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 -- get derivative
 polynom.der = function (p,x)
@@ -242,6 +245,7 @@ polynom.__tostring = function (p)
 end
 
 setmetatable(polynom, {__call = function (self, ...) return polynom.new(...) end})
-polynom.about[help.NEW] = {"Poly(...)", "Create a polynom", help.NEW}
+polynom.Poly = 'Poly'
+polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynom", help.NEW}
 
 return polynom

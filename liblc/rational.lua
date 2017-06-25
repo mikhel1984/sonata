@@ -108,7 +108,8 @@ rational.__pow = function (a, b)
    end
 end
 
-rational.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, -a, a^b}", help.BASE}
+rational.arithmetic = 'arithmetic'
+rational.about[rational.arithmetic] = {arithmetic, "a+b, a-b, a*b, a/b, -a, a^b}", help.BASE}
 
 -- a == b
 rational.__eq = function (a,b)
@@ -128,7 +129,8 @@ rational.__le = function (a,b)
    return (a.num*b.denom) <= (b.num*a.denom)
 end
 
-rational.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+rational.comparation = 'comparation'
+rational.about[rational.comparation] = {rational.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 -- representation
 local function numstr(v) return type(v) == 'number' and string.format('%d', v) or tostring(v) end
@@ -149,7 +151,8 @@ rational.about[rational.De] = {"De(v)", "Return the denominator of the rational 
 
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
-rational.about[help.NEW] = {"Rat(m [,n])", "Create rational number using num (and denom).", help.NEW}
+rational.Rat = 'Rat'
+rational.about[rational.Rat] = {"Rat(m [,n])", "Create rational number using num (and denom).", help.NEW}
 
 return rational
 

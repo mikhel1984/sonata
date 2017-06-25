@@ -310,8 +310,10 @@ bigint.__pow = function (a,b)
    return res
 end
 
-bigint.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.BASE}
-bigint.about["compare"] = {"comparation", "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+bigint.arithmetic = 'arithmetic'
+bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.BASE}
+bigint.comparation = 'comparation'
+bigint.about[bigint.comparation] = {bigint.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 -- string representation
 bigint.__tostring = function (v)
@@ -339,7 +341,8 @@ bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of nonnegati
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
-bigint.about[help.NEW] = {"Big(v)", "Create big number from integer or string", help.NEW}
+bigint.Big = 'Big'
+bigint.about[bigint.Big] = {"Big(v)", "Create big number from integer or string", help.NEW}
 
 return bigint
 

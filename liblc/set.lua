@@ -100,7 +100,8 @@ set.__div = function (a,b)
    return res
 end
 
-set.about["arithmetic"] = {"union, intersection, defference", "a+b, a*b, a/b", help.BASE}
+set.arithmetic = 'arithmetic'
+set.about[set.arithmetic] = {"union, intersection, defference", "a+b, a*b, a/b", help.BASE}
 
 -- is subset or the same (a<=b)
 set.__le = function (a,b)
@@ -121,7 +122,8 @@ set.__eq = function (a,b)
    return a <= b and b <= a
 end
 
-set.about["compare"] = {"comparation", "a==b, a~=b, a<b, a<=b, a>b, a>=b", help.BASE}
+set.comparation = 'comparation'
+set.about[set.comparation] = {set.comparation, "a==b, a~=b, a<b, a<=b, a>b, a>=b", help.BASE}
 
 -- #a - number of elements
 set.__len = function (s)
@@ -139,6 +141,7 @@ end
 
 -- redefine constructor
 setmetatable(set, {__call = function (self, v) return set:new(v) end})
-set.about[help.NEW] = {"Set(t)", "Create new set from table of elements", help.NEW}
+set.Set = 'Set'
+set.about[set.Set] = {"Set(t)", "Create new set from table of elements", help.NEW}
 
 return set

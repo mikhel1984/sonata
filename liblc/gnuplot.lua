@@ -162,9 +162,12 @@ gnuplot.__tostring = function (g)
 end
 
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
-gnuplot.about[help.NEW] = {"Gnu([g])", "Transfor given table into gnuplot object", help.NEW}
+gnuplot.Gnu = 'Gnu'
+gnuplot.about[gnuplot.Gnu] = {"Gnu([g])", "Transform given table into gnuplot object", help.NEW}
 
-gnuplot.about['keys'] = {'keys',
+gnuplot.keys = 'keys'
+
+gnuplot.about[gnuplot.keys] = {'keys',
 [[ Table description:
 {'sin(x)'}                                   -- print sinus using Gnuplot functions
 {math.sin, title='sinus'}                    -- plot using function, define in Lua; add legend

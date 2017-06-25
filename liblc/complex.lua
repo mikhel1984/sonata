@@ -95,7 +95,8 @@ complex.__unm = function (v)
    return complex:new(-v.real, -v.imag)
 end
 
-complex.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
+complex.arithmetic = 'arithmetic'
+complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
 
 -- a == b
 complex.__eq = function (a, b)
@@ -103,7 +104,8 @@ complex.__eq = function (a, b)
    return a.real == b.real and a.imag == b.imag
 end
 
-complex.about["compare"] = {"compare", "a==b, a~=b", help.BASE}
+complex.comparation = 'comparation'
+complex.about[complex.comparation] = {complex.comparation, "a==b, a~=b", help.BASE}
 
 -- argument of complex number
 complex.arg = function (v) return math.atan(v.imag, v.real) end
@@ -150,6 +152,7 @@ complex.about[complex._i] = {"_i", "Complex unit", "constant"}
 
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
-complex.about[help.NEW] = {"Cmp(a [,b])", "Create new complex number", help.NEW}
+complex.Cmp = 'Cmp'
+complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number", help.NEW}
 
 return complex

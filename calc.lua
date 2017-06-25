@@ -48,6 +48,15 @@ import = {
    set      = "Set",
    gnuplot  = "Gnu",
 }
+about[import] = {"import 'module_name'", "", help.BASE}
+function import_state_update()
+   local m = {string.format("%-12s%-6s%s", "Module", "Alias", "Loaded")}
+   for k,v in pairs(import) do
+      m[#m+1] = string.format("%-13s%-7s%s", k, v, (_G[v] and '+' or '-'))
+   end
+   return table.concat(m, '\n')
+end
+about[import][2] = import_state_update()
 -- add modules
 setmetatable(import, 
 { __tostring = function (x) return "Done" end,
@@ -58,6 +67,7 @@ setmetatable(import,
       about:add(_G[var].about, var)
    end
    print(string.format("Use alias '%s' for access to the module '%s'", var, name))
+   about[import][2] = import_state_update()
    return import
 end })
 
@@ -131,7 +141,7 @@ function help(fn)
 end
 
 -- Run!
-print("\n             --==== LuaCalc 0.3 ====--\n")
+print("\n             --==== LuaCalc 0.4 ====--\n")
 print("Print 'quit()' for exit!")
 print("Print 'import(module)' to expand functionality.")
 print("Print 'help([fn])' to get help.\n")

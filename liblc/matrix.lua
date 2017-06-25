@@ -215,14 +215,12 @@ matrix.__unm = function (a)
    return sum(tmp, a, '-')
 end
 
---[[
 -- return size
 matrix.size = function (m)
    assert(ismatrix(m), "Matrix is expected")
    return m.rows, m.cols
 end
 matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'", help.BASE}
-]]
 
 matrix.map = function (m, fn) 
    local res = matrix:init(m.rows, m.cols)
@@ -240,12 +238,6 @@ matrix.map_ex = function (m, fn)
    end
    return res
 end
-
--- redefine size call
-matrix.size = function (m)
-   return m.rows, m.cols
-end
-matrix.about[matrix.size] = {"size(M)", "Return number rows and columns of the matrix", help.OTHER}
 
 matrix.__len = matrix.size
 
@@ -296,7 +288,9 @@ matrix.__pow = function (a,n)
    end
    return res
 end
-matrix.about["arithmetic"] = {"arithmetic", "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
+
+matrix.arithmetic = 'arithmetic'
+matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
 
 -- a == b
 matrix.__eq = function (a,b)
@@ -309,7 +303,9 @@ matrix.__eq = function (a,b)
    end
    return true
 end
-matrix.about["comp"] = {"comparation", "a==b, a~=b", help.BASE}
+
+matrix.comparation = 'comparation'
+matrix.about[matrix.comparation] = {matrix.comparation, "a==b, a~=b", help.BASE}
 
 
 -- determinant
@@ -614,6 +610,7 @@ matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick but less accurate function
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
-matrix.about[help.NEW] = {"Mat(...)", "Create matrix from list of strings (tables)", help.NEW}
+matrix.Mat = 'Mat'
+matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables)", help.NEW}
 
 return matrix
