@@ -76,7 +76,7 @@ function help:add(tbl, nm)
    print("lng", mt.locale)
    for k, v in pairs(tbl) do 
       if not v.link then table.insert(v, nm) end -- function description doesn't contain 'link' element
-      -- check localisation
+      -- set localisation
       if lng then
          if v.link then
 	    v[1] = lng.__main__ or v[1]
@@ -88,17 +88,29 @@ function help:add(tbl, nm)
    end
 end
 
+-- read file with localisation data and update main module
 function help:localisation(fname)
    local f = io.open(fname)
    if f then
-      local lng = assert(load("return " .. f:read("*a")))
+      local lng_fn = assert(load("return " .. f:read("*a")))
       f:close()
-      getmetatable(self).locale = lng()            -- save into metatable
+      local lng = lng_fn()
+      getmetatable(self).locale = lng            -- save into metatable
+      -- update functions in calc.lua
+      local lc = lng.Calc
+      for k,v in pairs(self) do
+         if v.link then
+	    self[k][1] = lc.__main__ or v[1]
+	 else
+	    self[k][DESCRIPTION] = lc[v[TITLE]] or v[DESCRIPTION]
+	 end
+      end
    else
       print("File " .. fname .. " wasn't found.")
    end
 end
 
+-- intro text
 function help:intro()
    local mt = getmetatable(self)
    local lng = mt.locale and mt.locale.Calc and mt.locale.Calc.intro
@@ -110,6 +122,7 @@ Print 'quit()' for exit.
    return lng or str
 end
 
+-- text for 'available modules'
 function help:modules()
    local mt = getmetatable(self)
    local m = mt.locale and mt.locale.Calc and mt.locale.Calc.modules

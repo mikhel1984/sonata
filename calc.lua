@@ -5,8 +5,6 @@
 -- help
 help = require "liblc.help"
 about = help:new("Lua based calculator")
-about:localisation("lng.ru")
---about[about] = {link=about, "Lua based calculator"}
 
 -- Common
 abs = math.abs;    about[abs] = {"abs(x)", "Absolut value", help.BASE}
@@ -129,6 +127,9 @@ function plot(str, a, b)
 end
 about[plot] = {"plot(str [,a,b])", " Plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", help.OTHER}
 
+-- read localisation file and update descriptions
+--about:localisation("locale/lng.ru")
+
 -- Print help information
 function help(fn)   
    if fn then 
@@ -136,8 +137,7 @@ function help(fn)
    else
       about:print(about)
       print("\t" .. about:modules())
-      local t = {}
-      for k in pairs(import) do t[#t+1] = k end
+      local t = {}; for k in pairs(import) do t[#t+1] = k end
       print(table.concat(t, ', ') .. '.')
    end
 end
