@@ -234,7 +234,7 @@ matrix.map = function (m, fn)
 end
 matrix.about[matrix.map] = {"map(m,func)", "Apply the given function to all elements, return new matrix", help.OTHER}
 
-matrix.map_ext = function (m, fn)
+matrix.map_ex = function (m, fn)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, res.rows do
       for c = 1, res.cols do setval(res,r,c, fn(r,c,getval(m,r,c))) end
@@ -454,19 +454,22 @@ matrix.__tostring = function (m)
    return table.concat(srow, "\n")
 end
 
---> SVD calculation
+--> SVD - "standard" algorithm implementation
+--  BUT: some of singular values are negative :(
 
+-- Householder transformation
 local function householder (x, k)
    local n, sum = x.rows, 0
    local u = matrix.zeros(n, 1)
    for r = k,n do sum = sum + getval(x, r, 1)^2 end
    local tmp = getval(x,k,1)
-   setval(u,k,1, tmp + math.sqrt(sum)*(tmp < 0 and -1 or (tmp > 0 and 1 or 0)))
+   setval(u,k,1, tmp + math.sqrt(sum)*(tmp < 0 and -1 or (tmp > 0 and 1 or 0)))   -- sign was "+"!
    for r = k+1,n do setval(u,r,1, getval(x,r,1)) end
    local ut = matrix.transpose(u)
    return matrix.eye(n,n) - (2 / (ut * u)) * (u * ut)
 end
 
+-- bidiagonalization
 local function bidiag_reduction(A)
    local m,n = A.rows, A.cols
    local B = matrix.copy(A)
@@ -486,6 +489,7 @@ local function bidiag_reduction(A)
    return U, B, V
 end
 
+-- Given's rotation
 local function rot(f,g)
    local c, s, r 
    if f == 0 then
@@ -502,6 +506,7 @@ local function rot(f,g)
    return c, s, r
 end
 
+-- QR-type sweeps
 local function qr_sweep(B)
    local m,n = B.rows, B.cols
    local U,V = matrix.eye(m), matrix.eye(n)
@@ -524,7 +529,7 @@ local function qr_sweep(B)
       B = matrix.map(B, function (x) return math.abs(x) > 1e-13 and x or 0 end)
    end
    -- add diagonal to zero matrix
-   local I = matrix.map_ext(matrix.zeros(m,n),
+   local I = matrix.map_ex(matrix.zeros(m,n),
                             function (r,c,x) return (c == (r+1) and c <= M and r <= M) and 1 or 0 end)
    -- error - norm
    local E = 0
@@ -534,6 +539,7 @@ local function qr_sweep(B)
    return U, B, V, E
 end
 
+-- "standard" SVD calculation
 matrix.svd = function (A)
    local transp = (A.rows < A.cols)
    local B = transp and A:transpose() or A:copy()
@@ -548,9 +554,63 @@ matrix.svd = function (A)
       V2 = V2 * V3
    end
    U1, V1 = U1*U2, V1*V2
-   if transp then U1, V1 = U1:transpose(), V1:transpose() end
+   if transp then 
+      U1, B, V1 = V1, B:transpose(), U1
+   end
    return U1, B, V1
 end
+matrix.about[matrix.svd] = {"svd(M)", "Singular value decomposition of the matrix M", help.OTHER}
+
+-- pseudoinverse matrix
+matrix.pinv = function (M)
+   local u,s,v = matrix.svd(M)
+   s = matrix.map_ex(s, function (r,c,x) return (r == c and math.abs(x) > 1e-8) and (1/x) or 0 end)
+   return v * s:transpose() * u:transpose()
+end
+matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudoinverse matrix using SVD", help.OTHER}
+
+-- quick pseudoinverse matrix
+-- based on "Fast computation of Moore-Penrose inverse matrices" by Pierre Courrieu
+matrix.pinv2 = function (M)
+   local m,n,transp = M.rows, M.cols, false
+   local A, Mt = nil, M:transpose()
+   if m < n then 
+      A, n, transp = M * Mt, m, true
+   else
+      A = Mt * M
+   end
+   local tol, v = math.huge, 0
+   for i = 1, A.rows do v = getval(A,i,i); tol = math.min(tol, (v > 0 and v or math.huge)) end
+   tol = tol * 1e-9
+   local L, r = matrix.zeros(A:size()), 0
+   for k = 1, n do
+      r = r + 1
+      local B = A:sub(k-1,-1,k-1,k-1)
+      if r > 1 then 
+         local tmp = L:sub(k-1,-1,0,r-2) * L:sub(k-1,k-1,0,r-2):transpose() 
+	 tmp = ismatrix(tmp) and tmp or matrix.new({tmp})         -- product can return a number
+         B = B - tmp
+      end
+      local j = 1
+      for i = k, n do setval(L,i,r, getval(B,j,1)); j = j+1 end   -- copy B to L
+      if getval(L,k,r) > tol then
+         setval(L,k,r, math.sqrt(getval(L,k,r)))
+	 if k < n then
+	    for i = k+1, n do setval(L, i, r, getval(L,i,r)/getval(L,k,r)) end
+	 end
+      else
+         r = r - 1
+      end
+   end
+   L = L:sub(0,-1, 0, r-1)
+   local Lt = L:transpose()
+   local K = matrix.inv(Lt * L)
+   if transp then
+      return Mt * L * K * K * L
+   end
+   return L * K * K * Lt * Mt
+end
+matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick but less accurate function for pseudoinverse matrix calculation", help.OTHER}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
@@ -558,9 +618,17 @@ matrix.about[help.NEW] = {"Mat(...)", "Create matrix from list of strings (table
 
 --return matrix
 
-a = matrix({1,2,3},{4,5,6},{7,8,9},{10,11,12})
+--a = matrix({1,2,3},{4,5,6},{7,8,9},{10,11,12})
+--a = matrix({1,2},{3,4})
+--a = matrix({1},{2},{3},{4})
+--a = matrix({1,-2,3},{4,5,-6},{-7,8,-9},{10,-11,-12})
+a = matrix({1,2,3},{4,5,6})
+--[[
 u,s,v = matrix.svd(a)
 print(u, "\n")
 print(s, "\n")
 print(v, "\n")
-
+print(u * s * v:transpose())
+]]
+--print(matrix.pinv(a))
+print(a:pinv2())
