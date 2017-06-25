@@ -71,11 +71,49 @@ end
 -- include content of the other help table into current one
 function help:add(tbl, nm)
    assert(nm, "Module name is required!")
+   local mt = getmetatable(self)
+   local lng = mt.locale and mt.locale[nm]
+   print("lng", mt.locale)
    for k, v in pairs(tbl) do 
       if not v.link then table.insert(v, nm) end -- function description doesn't contain 'link' element
+      -- check localisation
+      if lng then
+         if v.link then
+	    v[1] = lng.__main__ or v[1]
+	 else
+            v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
+	 end
+      end
       self[k] = v 
    end
-   --print("Use '" .. nm .. "' to get access.")
+end
+
+function help:localisation(fname)
+   local f = io.open(fname)
+   if f then
+      local lng = assert(load("return " .. f:read("*a")))
+      f:close()
+      getmetatable(self).locale = lng()            -- save into metatable
+   else
+      print("File " .. fname .. " wasn't found.")
+   end
+end
+
+function help:intro()
+   local mt = getmetatable(self)
+   local lng = mt.locale and mt.locale.Calc and mt.locale.Calc.intro
+   local str = [[
+Print 'import(module) to expand functionality.
+Print 'help([function]) to get help.
+Print 'quit()' for exit.
+]]
+   return lng or str
+end
+
+function help:modules()
+   local mt = getmetatable(self)
+   local m = mt.locale and mt.locale.Calc and mt.locale.Calc.modules
+   return m or 'Available modules:'
 end
 
 return help

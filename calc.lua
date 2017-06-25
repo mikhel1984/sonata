@@ -5,6 +5,7 @@
 -- help
 help = require "liblc.help"
 about = help:new("Lua based calculator")
+about:localisation("lng.ru")
 --about[about] = {link=about, "Lua based calculator"}
 
 -- Common
@@ -134,17 +135,16 @@ function help(fn)
       about:print(type(fn)=='table' and fn.about or fn) 
    else
       about:print(about)
-      print("\tAvailable modules:")
-      for k in pairs(import) do io.write(k, ', ') end
-      print("\nuse 'import(name)' to load it.")
+      print("\t" .. about:modules())
+      local t = {}
+      for k in pairs(import) do t[#t+1] = k end
+      print(table.concat(t, ', ') .. '.')
    end
 end
 
 -- Run!
 print("\n             --==== LuaCalc 0.4 ====--\n")
-print("Print 'quit()' for exit!")
-print("Print 'import(module)' to expand functionality.")
-print("Print 'help([fn])' to get help.\n")
+print(about:intro())
 
 _PROMPT='lc: '
 _PROMPT2='..: '
