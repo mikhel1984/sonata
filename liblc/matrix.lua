@@ -45,8 +45,7 @@ matrix.__index = matrix
 
 matrix.type = 'matrix'
 
---local help = require "liblc.help"
-local help = require "help"
+local help = require "liblc.help"
 matrix.about = help:new("Matrix operations. Indexation from 0!")
 
 -- test object type
@@ -463,7 +462,7 @@ local function householder (x, k)
    local u = matrix.zeros(n, 1)
    for r = k,n do sum = sum + getval(x, r, 1)^2 end
    local tmp = getval(x,k,1)
-   setval(u,k,1, tmp + math.sqrt(sum)*(tmp < 0 and -1 or (tmp > 0 and 1 or 0)))   -- sign was "+"!
+   setval(u,k,1, tmp + math.sqrt(sum)*(tmp < 0 and -1 or (tmp > 0 and 1 or 0)))  
    for r = k+1,n do setval(u,r,1, getval(x,r,1)) end
    local ut = matrix.transpose(u)
    return matrix.eye(n,n) - (2 / (ut * u)) * (u * ut)
@@ -481,9 +480,9 @@ local function bidiag_reduction(A)
       U = U * matrix.transpose(H1)
       if k < (M-1) then
          local H2 = householder(matrix.transpose(B:sub(k-1, k-1, 0, -1)), k+1)
-	 local H2t = matrix.transpose(H2)
-	 B = B * H2t
-	 V = V * H2t
+	 H2 = matrix.transpose(H2)
+	 B = B * H2
+	 V = V * H2
       end
    end
    return U, B, V
@@ -491,19 +490,18 @@ end
 
 -- Given's rotation
 local function rot(f,g)
-   local c, s, r 
+   -- return cos, sin; r is omited
    if f == 0 then
-      c, s, r = 0, 1, g
+      return 0, 1
    elseif math.abs(f) > math.abs(g) then
       local t = g / f
       local t1 = math.sqrt(1 + t*t)
-      c, s, r = 1/t1, t/t1, f*t1
+      return 1/t1, t/t1
    else
       local t = f / g
       local t1 = math.sqrt(1 + t*t)
-      s, c, r = 1/t1, t/t1, g*t1
+      return t/t1, 1/t1
    end
-   return c, s, r
 end
 
 -- QR-type sweeps
@@ -511,22 +509,25 @@ local function qr_sweep(B)
    local m,n = B.rows, B.cols
    local U,V = matrix.eye(m), matrix.eye(n)
    local M = math.min(m,n)
+   local threshould = function (x) return math.abs(x) > 1e-13 and x or 0 end   
    for k = 1, M-1 do
+      -- first
       local c,s = rot(getval(B,k,k), getval(B,k,k+1))
       local Q = matrix.eye(n)
       setval(Q, k,   k,  c); setval(Q, k,   k+1, s)
       setval(Q, k+1, k, -s); setval(Q, k+1, k+1, c)
-      local Qt = matrix.transpose(Q)
-      B = B * Qt
-      V = V * Qt
-      B = matrix.map(B, function (x) return math.abs(x) > 1e-13 and x or 0 end)
+      Q = matrix.transpose(Q)
+      B = B * Q
+      V = V * Q
+      B = matrix.map(B, threshould)
+      -- second
       c,s = rot(getval(B,k,k), getval(B,k+1,k))
       Q = matrix.eye(m)
       setval(Q, k,   k,  c); setval(Q, k,   k+1, s)
       setval(Q, k+1, k, -s); setval(Q, k+1, k+1, c)
       B = Q * B
       U = U * matrix.transpose(Q)
-      B = matrix.map(B, function (x) return math.abs(x) > 1e-13 and x or 0 end)
+      B = matrix.map(B, threshould)
    end
    -- add diagonal to zero matrix
    local I = matrix.map_ex(matrix.zeros(m,n),
@@ -591,8 +592,7 @@ matrix.pinv2 = function (M)
 	 tmp = ismatrix(tmp) and tmp or matrix.new({tmp})         -- product can return a number
          B = B - tmp
       end
-      local j = 1
-      for i = k, n do setval(L,i,r, getval(B,j,1)); j = j+1 end   -- copy B to L
+      for i = k, n do setval(L,i,r, getval(B,i-k+1,1)) end   -- copy B to L
       if getval(L,k,r) > tol then
          setval(L,k,r, math.sqrt(getval(L,k,r)))
 	 if k < n then
@@ -606,7 +606,7 @@ matrix.pinv2 = function (M)
    local Lt = L:transpose()
    local K = matrix.inv(Lt * L)
    if transp then
-      return Mt * L * K * K * L
+      return Mt * L * K * K * Lt
    end
    return L * K * K * Lt * Mt
 end
@@ -616,19 +616,4 @@ matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick but less accurate function
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
 matrix.about[help.NEW] = {"Mat(...)", "Create matrix from list of strings (tables)", help.NEW}
 
---return matrix
-
---a = matrix({1,2,3},{4,5,6},{7,8,9},{10,11,12})
---a = matrix({1,2},{3,4})
---a = matrix({1},{2},{3},{4})
---a = matrix({1,-2,3},{4,5,-6},{-7,8,-9},{10,-11,-12})
-a = matrix({1,2,3},{4,5,6})
---[[
-u,s,v = matrix.svd(a)
-print(u, "\n")
-print(s, "\n")
-print(v, "\n")
-print(u * s * v:transpose())
-]]
---print(matrix.pinv(a))
-print(a:pinv2())
+return matrix
