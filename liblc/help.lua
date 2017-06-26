@@ -1,6 +1,35 @@
 --[[     help.lua
 Function description management.
 
+about = help:new("Module description*)      -- create new help object
+
+Each function description is represented as table:
+about[function] = 
+{ 
+  function_name,
+  function_description,
+  function_category
+}
+
+If there are more then 1 module, use 
+  about:add(table, module_name)
+to concatenate descriptions. In this way 4-th entry will be added 
+to sort help list according the module name.
+
+To use language localisation, create text file with Lua table in format
+{
+  module_name1 = {
+    __main__ = "Main module description",
+    ["function_name1"] = "Function 1 description",
+    ["function_name2"] = "Function 2 description",
+       ...
+  },
+  module_name2 = {
+  },
+  etc.
+}
+Use about:localisation("file_name") to load it.
+
 This file is a part of liblc collection. 
 Stanislav Mikhel, 2017.
 ]]
@@ -86,6 +115,7 @@ function help:add(tbl, nm)
       end
       self[k] = v 
    end
+   --if lng then mt.locale[nm] = nil end -- free memory
 end
 
 -- read file with localisation data and update main module
