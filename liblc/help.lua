@@ -102,7 +102,6 @@ function help:add(tbl, nm)
    assert(nm, "Module name is required!")
    local mt = getmetatable(self)
    local lng = mt.locale and mt.locale[nm]
-   print("lng", mt.locale)
    for k, v in pairs(tbl) do 
       if not v.link then table.insert(v, nm) end -- function description doesn't contain 'link' element
       -- set localisation

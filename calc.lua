@@ -48,14 +48,16 @@ import = {
    gnuplot  = "Gnu",
 }
 about[import] = {"import 'module_name'", "", help.BASE}
+
 function import_state_update()
-   local m = {string.format("%-12s%-6s%s", "Module", "Alias", "Loaded")}
+   local m = {string.format("%-12s%-6s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
       m[#m+1] = string.format("%-13s%-7s%s", k, v, (_G[v] and '+' or '-'))
    end
    return table.concat(m, '\n')
 end
 about[import][2] = import_state_update()
+
 -- add modules
 setmetatable(import, 
 { __tostring = function (x) return "Done" end,
@@ -90,15 +92,14 @@ end
 about[ath] = {"ath(x)", "Hyperbolic arctangent", help.HYP}
 
 -- create function f(x) from string
-function fcreate(str)
+function fx(str)
    return assert(loadstring("return function (x) return " .. str .. " end"))()
 end
-about[fcreate] = {"fcreate(str)", "Create Lua function from string", help.BASE}
+about[fx] = {"fx(str)", "Create Lua function f(x) from string", help.OTHER}
 
 -- find root of f(x)
-function fsolve(fn, a, b)
-   fn0 = fn(a)
-   fn1 = fn(b)
+function solve(fn, a, b)
+   local fn0, fn1 = fn(a), fn(b)
    assert(fn0*fn1 < 0, "Boundary values must have different sign")   
    repeat 
       b = b-fn1/(fn1-fn0)*(b-a)
@@ -106,19 +107,13 @@ function fsolve(fn, a, b)
    until math.abs(fn1) < EPS
    return b
 end 
-about[fsolve] = {"fsolve(fn, l_bound, r_bound)", "Find the root of a function at given interval", help.OTHER}
-
--- find root of string defined function
-function solve(str, a, b)
-   return fsolve(fcreate(str), a, b)
-end
-about[solve] = {"solve(str, l_bound, r_bound)", " Find the root of function (represented as string) at given interval", help.OTHER}
+about[solve] = {"fsolve(fn, l_bound, r_bound)", "Find the root of a function at given interval", help.OTHER}
 
 -- plot string function
 function plot(str, a, b)
    assert(type(str) == 'string', 'Expected string expression!')  
    -- prepare command 
-   graph = 'gnuplot -p -e "f(x)= ' .. str .. '; plot'
+   local graph = 'gnuplot -p -e "f(x)= ' .. str .. '; plot'
    if a and type(a) == 'number' and b and type(b) == 'number' then
       graph = graph .. ' [' .. a .. ':' .. b .. ']'
    end
@@ -126,6 +121,23 @@ function plot(str, a, b)
    os.execute(graph)   
 end
 about[plot] = {"plot(str [,a,b])", " Plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", help.OTHER}
+
+-- calculate function for range of values
+function eval(fn, x1, xn, step)
+   xn = xn or x1
+   step = step or 1
+   for k = x1, xn, step do print("x="..k.."\tres="..fn(k)) end
+end
+about[eval] = {"eval(fn,x1[,xn[,step]])", "Evalueate function for given value or interval and print result.", help.OTHER}
+
+function howlong(fn,...)
+   local n, sum, t = 10, 0, 0
+   for i = 1,n do
+      t = os.clock(); fn(...); t = os.clock() - t
+      sum = sum + t
+   end
+   return sum / n
+end
 
 -- read localisation file and update descriptions
 --about:localisation("locale/lng.ru")
