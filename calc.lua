@@ -107,7 +107,7 @@ function solve(fn, a, b)
    until math.abs(fn1) < EPS
    return b
 end 
-about[solve] = {"fsolve(fn, l_bound, r_bound)", "Find the root of a function at given interval", help.OTHER}
+about[solve] = {"solve(fn, l_bound, r_bound)", "Find the root of a function at given interval", help.OTHER}
 
 -- plot string function
 function plot(str, a, b)
