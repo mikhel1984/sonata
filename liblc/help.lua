@@ -110,6 +110,7 @@ function help:add(tbl, nm)
 	    v[1] = lng.__main__ or v[1]
 	 else
             v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
+	    v[CATEGORY] = self:get(v[CATEGORY])
 	 end
       end
       self[k] = v 
@@ -132,6 +133,7 @@ function help:localisation(fname)
 	    self[k][1] = lc.__main__ or v[1]
 	 else
 	    self[k][DESCRIPTION] = lc[v[TITLE]] or v[DESCRIPTION]
+	    self[k][CATEGORY] = self:get(v[CATEGORY])
 	 end
       end
    else
@@ -139,23 +141,28 @@ function help:localisation(fname)
    end
 end
 
--- intro text
-function help:intro()
-   local mt = getmetatable(self)
-   local lng = mt.locale and mt.locale.Calc and mt.locale.Calc.intro
-   local str = [[
+-- English version of strings
+local eng = {
+intro = [[
 Print 'import(module) to expand functionality.
 Print 'help([function]) to get help.
 Print 'quit()' for exit.
-]]
-   return lng or str
-end
+]],
+modules = 'Available modules:',
+done = 'Done.',
+alias = "Use alias '%s' for access to the module '%s'.",
+use_import = [[
 
--- text for 'available modules'
-function help:modules()
+Use
+  import 'module' ['module2' 'module3' ...]
+to get additional modules.]],
+}
+
+-- additional translations
+function help:get(txt)
    local mt = getmetatable(self)
-   local m = mt.locale and mt.locale.Calc and mt.locale.Calc.modules
-   return m or 'Available modules:'
+   local lng = mt.locale and mt.locale.Calc and mt.locale.Calc[txt]
+   return lng or eng[txt] or txt
 end
 
 return help

@@ -47,27 +47,27 @@ import = {
    gnuplot  = "Gnu",
    numeric  = "Num",
 }
-about[import] = {"import 'module_name'", "", help.BASE}
+about[import] = {"import", "", help.BASE}
 
 function import_state_update()
    local m = {string.format("%-12s%-6s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
-      m[#m+1] = string.format("%-13s%-7s%s", k, v, (_G[v] and '+' or '-'))
+      m[#m+1] = string.format("%-13s%-7s%s", k, v, (_G[v] and 'v' or '-'))
    end
+   m[#m+1] = about:get('use_import')
    return table.concat(m, '\n')
 end
-about[import][2] = import_state_update()
 
 -- add modules
 setmetatable(import, 
-{ __tostring = function (x) return "Done" end,
+{ __tostring = function (x) return about:get('done') end,
   __call = function (self, name) 
    local var = assert(self[name], "Wrong module name!")
    if not _G[var] then
       _G[var] = require('liblc.'..name)
       about:add(_G[var].about, var)
    end
-   print(string.format("Use alias '%s' for access to the module '%s'", var, name))
+   print(string.format(about:get('alias'), var, name))
    about[import][2] = import_state_update()
    return import
 end })
@@ -128,7 +128,9 @@ function howlong(fn,...)
 end
 
 -- read localisation file and update descriptions
---about:localisation("locale/lng.ru")
+about:localisation("locale/lng.ru")
+
+about[import][2] = import_state_update()
 
 -- Print help information
 function help(fn)   
@@ -136,7 +138,7 @@ function help(fn)
       about:print(type(fn)=='table' and fn.about or fn) 
    else
       about:print(about)
-      print("\t" .. about:modules())
+      print("\t" .. about:get('modules'))
       local t = {}; for k in pairs(import) do t[#t+1] = k end
       print(table.concat(t, ', ') .. '.')
    end
@@ -144,7 +146,7 @@ end
 
 -- Run!
 print("\n             --==== LuaCalc 0.4 ====--\n")
-print(about:intro())
+print(about:get('intro'))
 
 _PROMPT='lc: '
 _PROMPT2='..: '
