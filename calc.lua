@@ -128,7 +128,7 @@ function howlong(fn,...)
 end
 
 -- read localisation file and update descriptions
-about:localisation("locale/lng.ru")
+--about:localisation("locale/lng.ru")
 
 about[import][2] = import_state_update()
 
@@ -142,6 +142,15 @@ function help(fn)
       local t = {}; for k in pairs(import) do t[#t+1] = k end
       print(table.concat(t, ', ') .. '.')
    end
+end
+
+-- read object from its serialization
+function deserialize(obj_str)
+   local f = assert(load("return " .. obj_str)) 
+   local o = f()
+   assert(_G[o.metatablename], "Module '" .. o.modulename .. "' is required")
+   setmetatable(o, _G[o.metatablename])
+   return o
 end
 
 -- Run!

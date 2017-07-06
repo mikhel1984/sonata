@@ -344,5 +344,17 @@ setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Big = 'Big'
 bigint.about[bigint.Big] = {"Big(v)", "Create big number from integer or string", help.NEW}
 
+-- object serialization
+bigint.serialize = function (obj)
+   assert(isbigint(obj), "Wrong object type!")
+   local s = {}
+   s[#s+1] = string.format("value='%s'", obj.value)
+   s[#s+1] = "sign=" .. obj.sign
+   s[#s+1] = "metatablename='Big'"
+   s[#s+1] = "modulename='bigint'"
+   return string.format("{%s}", table.concat(s, ','))
+end
+bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of the object", help.OTHER}
+
 return bigint
 
