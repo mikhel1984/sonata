@@ -1,17 +1,33 @@
 --[[        numeric.lua
 Numerical solutions for some mathematical problems.
 
+-------------- Examples -------------------
+
+Num = require 'liblc.numeric'
+
+Num.TOL = 1e-4                                        --> all functions try to provide this tolerance, default is 1e-3
+
+Num.solve(math.sin, math.pi/2, math.pi*3/2)           --> solve the equation 'sin(x) = 0' on the interval [-pi/2;3*pi/2]
+
+Num.diff(math.sin, 0)                                 --> numerical appoximation of (sin(x))' for x = 0
+
+Num.trapez(math.sin, 0, math.pi)                      --> numerical approximation of given funciton on the interval [0;pi] based on the trapezoidal rule
+
+function test (x,y) return x*y end
+tbl, yn = Num.ode(test, 0, 0, 3)                      --> solution of differential equation, represented by function 'test', on the interval [0;3]
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
 ]]
 
 local numeric = {}
 
---local help = require "liblc.help"
-local help = require 'help'
-numeric.about = help:new("Group of functions for numerical calculations")
+local help = require "liblc.help"
+numeric.about = help:new("Group of functions for numerical calculations.")
 
 -- current tolerance
 numeric.TOL = 1e-3
-numeric.about[numeric.TOL] = {"TOL", "The solution tolerance", help.CONST}
+numeric.about[numeric.TOL] = {"TOL", "The solution tolerance.", help.CONST}
 
 -- find root of equation
 numeric.solve = function (fn, a, b)
@@ -23,7 +39,7 @@ numeric.solve = function (fn, a, b)
    until math.abs(f1) < numeric.TOL
    return b
 end
-numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 in interval [a,b]", help.BASE}
+numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", help.BASE}
 
 -- simple derivative
 numeric.diff = function (fn, x)
@@ -35,6 +51,7 @@ numeric.diff = function (fn, x)
    until math.abs(der-last) < numeric.TOL
    return der
 end
+numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", help.BASE}
 
 -- intergration using trapez method
 numeric.trapez = function (fn, a, b)
@@ -61,7 +78,9 @@ numeric.trapez = function (fn, a, b)
    until math.abs(I-last) < numeric.TOL
    return I
 end
+numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule", help.BASE}
 
+-- Runge-Kutta method
 local function rk(fn, x, y, h)
    local h2 = 0.5*h
    local k1 = fn(x,    y)
@@ -71,36 +90,34 @@ local function rk(fn, x, y, h)
    return y+h*(k1+2*(k2+k3)+k4)/6
 end
 
--- differential equation solution (Runge-Kutt)
-numeric.ode = function (fn, x0,y0,xn)
-   local h = (xn-x0)/10    -- initial step
-   local res = {{x0,y0}}
+-- differential equation solution (Runge-Kutta method)
+numeric.ode = function (fn, x0,y0,xn, dx)
+   local h = dx or (xn-x0)/10      -- initial step
+   local res = {{x0,y0}}           -- save intermediate points
    repeat
       local x,y = table.unpack(res[#res])
       h = math.min(h, xn-x)
       -- correct step
-      local h2 = 0.5*h
-      local y1 =  rk(fn, x, y, h)
-      local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
-      local dy = math.abs(y1-y2)
-      if dy > 15*numeric.TOL then 
-         h = h2
-      elseif dy < 0.1*numeric.TOL then
-         h = 2*h
+      if dx then
+         res[#res+1] = {x+h, rk(fn,x,y,h)}
       else
-         -- calculate for current step
-         res[#res+1] = {x+h, y2}
+         local h2 = 0.5*h
+         local y1 =  rk(fn, x, y, h)
+         local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
+         local dy = math.abs(y1-y2)
+         if dy > 15*numeric.TOL then 
+            h = h2
+         elseif dy < 0.1*numeric.TOL then
+            h = 2*h
+         else
+            -- calculate for current step
+            res[#res+1] = {x+h, y2}
+         end
       end
    until x + h >= xn 
    return res, res[#res][2]
 end
+numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automaticaly according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
 
---return numeric
+return numeric
 
---- test
-
---print(numeric.solve(math.sin, 1.57, 1.57*3))
---print(numeric.diff(math.sin, 0))
---print(numeric.trapez(math.sin, 0, 3.1415))
-dy = function (x,y) return math.sqrt(1-y*y) end
-print(numeric.ode(dy, 0,0,1.4))

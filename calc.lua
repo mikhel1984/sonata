@@ -33,7 +33,6 @@ rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", help.BASE}
 _pi = math.pi;     about[_pi] = {"_pi", "Number pi", help.CONST}
 _e = math.exp(1)   about[_e] = {"_e", "Euler number", help.CONST}
 _i = nil         -- import 'complex' to use it
-EPS = 0.0001;      about[EPS] = {"EPS", "Value of tolerance for solving equations.", help.CONST}
 -- Quick exit
 quit = function () print("\n                --==== Buy! ====--\n"); os.exit() end
 
@@ -46,6 +45,7 @@ import = {
    polynom  = "Poly",
    set      = "Set",
    gnuplot  = "Gnu",
+   numeric  = "Num",
 }
 about[import] = {"import 'module_name'", "", help.BASE}
 
@@ -97,18 +97,6 @@ function fx(str)
 end
 about[fx] = {"fx(str)", "Create Lua function f(x) from string", help.OTHER}
 
--- find root of f(x)
-function solve(fn, a, b)
-   local fn0, fn1 = fn(a), fn(b)
-   assert(fn0*fn1 < 0, "Boundary values must have different sign")   
-   repeat 
-      b = b-fn1/(fn1-fn0)*(b-a)
-      fn1 = fn(b)
-   until math.abs(fn1) < EPS
-   return b
-end 
-about[solve] = {"solve(fn, l_bound, r_bound)", "Find the root of a function at given interval", help.OTHER}
-
 -- plot string function
 function plot(str, a, b)
    assert(type(str) == 'string', 'Expected string expression!')  
@@ -120,7 +108,7 @@ function plot(str, a, b)
    graph = graph .. ' f(x)"'   
    os.execute(graph)   
 end
-about[plot] = {"plot(str [,a,b])", " Plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", help.OTHER}
+about[plot] = {"plot(str [,a,b])", "Quick plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", help.OTHER}
 
 -- calculate function for range of values
 function eval(fn, x1, xn, step)
