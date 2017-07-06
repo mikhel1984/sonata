@@ -155,4 +155,15 @@ setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im
 complex.Cmp = 'Cmp'
 complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number", help.NEW}
 
+-- object serialization
+complex.serialize = function (obj)
+   local s = {}
+   s[#s+1] = string.format("real=%a", obj.real)
+   s[#s+1] = string.format("imag=%a", obj.imag)
+   s[#s+1] = "metatablename='Cmp'"
+   s[#s+1] = "modulename='complex'"
+   return string.format("{%s}", table.concat(s, ','))
+end
+complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object", help.OTHER}
+
 return complex

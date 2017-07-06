@@ -346,7 +346,6 @@ bigint.about[bigint.Big] = {"Big(v)", "Create big number from integer or string"
 
 -- object serialization
 bigint.serialize = function (obj)
-   assert(isbigint(obj), "Wrong object type!")
    local s = {}
    s[#s+1] = string.format("value='%s'", obj.value)
    s[#s+1] = "sign=" .. obj.sign
@@ -354,7 +353,7 @@ bigint.serialize = function (obj)
    s[#s+1] = "modulename='bigint'"
    return string.format("{%s}", table.concat(s, ','))
 end
-bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of the object", help.OTHER}
+bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of bigint object", help.OTHER}
 
 return bigint
 

@@ -613,4 +613,25 @@ setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
 matrix.Mat = 'Mat'
 matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables)", help.NEW}
 
+-- matrix serialization
+matrix.serialize = function (obj)
+   local s = {}
+   s[#s+1] = "cols=" .. obj.cols
+   s[#s+1] = "rows=" .. obj.rows
+   for r = 1, obj.rows do
+      local row = obj[r]
+      if row and #row > 0 then
+	 local tmp = {}
+	 for c = 1, obj.cols do
+	    if row[c] then tmp[#tmp+1] = string.format("[%d]=%a", c, row[c]) end
+	 end
+	 s[#s+1] = string.format("[%d]={%s}", r, table.concat(tmp, ','))
+      end
+   end
+   s[#s+1] = "metatablename='Mat'"
+   s[#s+1] = "modulename='matrix'"
+   return string.format("{%s}", table.concat(s, ','))
+end
+matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal representation", help.OTHER}
+
 return matrix
