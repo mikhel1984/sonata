@@ -39,6 +39,7 @@ help.__index = help
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
+local MAIN = 1
 
 -- constant strings
 help.BASE = 'base'
@@ -61,12 +62,13 @@ end
 local function funclist(tbl)
    local res = {}
    for k, v in pairs(tbl) do
+      -- only main description contains 'link'
       if not v.link then
          local category = v[CATEGORY] or ""
 	 local module = v[MODULE] or "Default"
-	 res[module] = res[module] or {}
-         res[module][category] = res[module][category] or {}
-         table.insert(res[module][category], v[TITLE])
+	 res[module] = res[module] or {}                      -- create table for each module
+         res[module][category] = res[module][category] or {}  -- add table for each category
+         table.insert(res[module][category], v[TITLE])        -- insert function fitle into this table
       end
    end
    return res
@@ -75,20 +77,25 @@ end
 -- print information about function or list of all possible functions
 function help:print(fn)
    if fn then
+      -- expected module or functoin description
       local v = self[fn]
-      if v.link then                  -- common description
-         print(v[1])
+      if v.link then                  
+         -- module common description
+         print(v[MAIN])
+	 -- details
 	 return v.link:print()
-      else                            -- function description
+      else                           
+         -- function description
          print(string.format("  :%s\n%s", v[TITLE], v[DESCRIPTION]))
       end
-   else                               -- function list
+   else                               
+      -- sort functions
       local lst = funclist(self)
-      for mod, t in pairs(lst) do
+      for mod, t in pairs(lst) do                   -- for each module
          print(string.format("\t%s", mod))
-         for cat, n in pairs(t) do
+         for cat, n in pairs(t) do                  -- for each category
             print(string.format("  :%s", cat))
-	    for i, v in ipairs(n) do
+	    for i, v in ipairs(n) do                -- for each function
 	       io.write(v, (i ~= #n and ', ' or ''))
 	    end
 	    print()                   -- new line
@@ -100,38 +107,46 @@ end
 -- include content of the other help table into current one
 function help:add(tbl, nm)
    assert(nm, "Module name is required!")
+   -- localisation data
    local mt = getmetatable(self)
    local lng = mt.locale and mt.locale[nm]
+   -- prepare new 
    for k, v in pairs(tbl) do 
       if not v.link then table.insert(v, nm) end -- function description doesn't contain 'link' element
       -- set localisation
       if lng then
          if v.link then
-	    v[1] = lng.__main__ or v[1]
+	    -- common description
+	    v[MAIN] = lng.__main__ or v[MAIN]
 	 else
+	    -- details
             v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
 	    v[CATEGORY] = self:get(v[CATEGORY])
 	 end
       end
-      self[k] = v 
+      self[k] = v                                -- add to base description table 
    end
-   --if lng then mt.locale[nm] = nil end -- free memory
+   if lng then mt.locale[nm] = nil end -- free memory
 end
 
 -- read file with localisation data and update main module
 function help:localisation(fname)
    local f = io.open(fname)
    if f then
+      -- read from file and represent as Lua table
       local lng_fn = assert(load("return " .. f:read("*a")))
       f:close()
       local lng = lng_fn()
-      getmetatable(self).locale = lng            -- save into metatable
+      -- save into metatable
+      getmetatable(self).locale = lng           
       -- update functions in calc.lua
       local lc = lng.Calc
       for k,v in pairs(self) do
          if v.link then
-	    self[k][1] = lc.__main__ or v[1]
+	    -- common description
+	    self[k][MAIN] = lc.__main__ or v[MAIN]
 	 else
+	    -- details
 	    self[k][DESCRIPTION] = lc[v[TITLE]] or v[DESCRIPTION]
 	    self[k][CATEGORY] = self:get(v[CATEGORY])
 	 end
@@ -161,7 +176,7 @@ to get additional modules.]],
 -- additional translations
 function help:get(txt)
    local mt = getmetatable(self)
-   local lng = mt.locale and mt.locale.Calc and mt.locale.Calc[txt]
+   local lng = mt.locale and mt.locale.Calc and mt.locale.Calc[txt]  -- check in localisation table
    return lng or eng[txt] or txt
 end
 

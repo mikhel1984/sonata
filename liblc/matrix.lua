@@ -46,7 +46,7 @@ matrix.__index = matrix
 matrix.type = 'matrix'
 
 local help = require "liblc.help"
-matrix.about = help:new("Matrix operations. Indexation from 0!")
+matrix.about = help:new("Matrix operations. Indexation from 0! The matrixes are spares by default.")
 
 -- test object type
 local function ismatrix(m) return type(m) == 'table' and m.type == matrix.type end
@@ -161,7 +161,7 @@ matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
    return getval(m, r, c)
 end
-matrix.about[matrix.get] = {"get(m,raw,col)", "Return matrix element", help.BASE}
+matrix.about[matrix.get] = {"get(m,row,col)", "Return matrix element.", help.BASE}
 
 -- simplify call of matrix.get()
 matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
@@ -172,7 +172,7 @@ matrix.set = function (m, val, r, c)
    m[r] = m[r] or {}
    m[r][c] = val
 end
-matrix.about[matrix.set] = {"set(m,val,raw,col)", "Set value of matrix", help.BASE} 
+matrix.about[matrix.set] = {"set(m,val,row,col)", "Set value of matrix.", help.BASE} 
 
 -- transpose matrix
 matrix.transpose = function (m)
@@ -184,11 +184,11 @@ matrix.transpose = function (m)
    end
    return res
 end
-matrix.about[matrix.transpose] = {"transpose(m)", "Return matrnix transpose", help.BASE}
+matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose.", help.BASE}
 
 -- auxiliary function for addition/substraction
 local function sum(a,b,sign)
-   assert(a.cols == b.cols and a.rows == b.rows, "Wrong matrix size")
+   assert(a.cols == b.cols and a.rows == b.rows, "Wrong matrix size!")
    local res = matrix:init(a.rows, a.cols)
    for r = 1, res.rows do
       for c = 1, res.cols do
@@ -220,7 +220,7 @@ matrix.size = function (m)
    assert(ismatrix(m), "Matrix is expected")
    return m.rows, m.cols
 end
-matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'", help.BASE}
+matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'.", help.BASE}
 
 matrix.map = function (m, fn) 
    local res = matrix:init(m.rows, m.cols)
@@ -229,7 +229,7 @@ matrix.map = function (m, fn)
    end
    return res
 end
-matrix.about[matrix.map] = {"map(m,func)", "Apply the given function to all elements, return new matrix", help.OTHER}
+matrix.about[matrix.map] = {"map(m,fn)", "Apply the given function to all elements, return new matrix.", help.OTHER}
 
 matrix.map_ex = function (m, fn)
    local res = matrix:init(m.rows, m.cols)
@@ -250,14 +250,14 @@ matrix.copy = function (m)
    end
    return res
 end
-matrix.about[matrix.copy] = {"copy(m)", "Return copy of matrix", help.OTHER}
+matrix.about[matrix.copy] = {"copy(m)", "Return copy of matrix.", help.OTHER}
 
 -- a * b
 matrix.__mul = function (a,b)
    assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type")
    if not ismatrix(a) then return kprod(a, b) end
    if not ismatrix(b) then return kprod(b, a) end
-   assert(a.cols == b.rows, "Impossible to get product: different size")
+   assert(a.cols == b.rows, "Impossible to get product: different size!")
    local res = matrix:init(a.rows, b.cols)
    for r = 1, res.rows do
       for c = 1, res.cols do
@@ -271,7 +271,7 @@ end
 
 -- a / b
 matrix.__div = function (a,b)
-   assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type")
+   assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type!")
    if not ismatrix(b) then return kprod(1/b, a) end
    return a * matrix.inv(b)
 end
@@ -314,7 +314,7 @@ matrix.det = function (m)
    local _, K = gaussdown(matrix.copy(m))
    return K
 end
-matrix.about[matrix.det] = {"det(m)", "Calculate determinant", help.BASE}
+matrix.about[matrix.det] = {"det(m)", "Calculate determinant.", help.BASE}
 
 -- inverse matrix
 matrix.inv = function (m)
@@ -322,7 +322,7 @@ matrix.inv = function (m)
    local con, det = matrix.rref(m, matrix.eye(m.cols))
    return (det ~= 0) and matrix.sub(con, 0,-1, m.cols, -1) or matrix.ones(m.rows,m.rows,math.huge)  -- indexation from 0
 end
-matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix", help.BASE}
+matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", help.BASE}
 
 -- calculate system of equations using Gauss method
 matrix.rref = function (A,b)
@@ -398,7 +398,7 @@ matrix.sub = function (m, r1, r2, c1, c2)
    end
    return res
 end
-matrix.about[matrix.sub] = {"sub(m, r1, r2, c1, c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2]", help.OTHER}
+matrix.about[matrix.sub] = {"sub(m,r1,r2,c1,c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2]", help.OTHER}
 
 -- perform concatenation
 matrix.concat = function (a, b, dir)
@@ -422,7 +422,7 @@ matrix.concat = function (a, b, dir)
    end
    return res
 end
-matrix.about[matrix.concat] = {"concat(m1, m2, dir)", 
+matrix.about[matrix.concat] = {"concat(m1,m2,dir)", 
                                "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse m1 .. m2 for horizontal concatenation and m1 // m2 for vertical", 
 			       help.OTHER}
 
@@ -556,7 +556,7 @@ matrix.svd = function (A)
    end
    return U1, B, V1
 end
-matrix.about[matrix.svd] = {"svd(M)", "Singular value decomposition of the matrix M", help.OTHER}
+matrix.about[matrix.svd] = {"svd(M)", "Singular value decomposition of the matrix M.", help.OTHER}
 
 -- pseudoinverse matrix
 matrix.pinv = function (M)

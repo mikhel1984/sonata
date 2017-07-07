@@ -2,37 +2,39 @@
 
 -- Lua based calculator
 
+--LOCALISATION_FILE = "locale/lng.ru"
+
 -- help
 help = require "liblc.help"
 about = help:new("Lua based calculator")
 
 -- Common
-abs = math.abs;    about[abs] = {"abs(x)", "Absolut value", help.BASE}
-exp = math.exp;    about[exp] = {"exp(x)", "Exponenta", help.BASE}
-ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm", help.BASE}
-lg = math.log10;   about[lg] = {"lg(x)", "Decimal logarithm", help.BASE}
-pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b", help.BASE}
-sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root", help.BASE}
-max = math.max;    about[max] = {"max(...)", "Maximum number", help.BASE}
-min = math.min;    about[min] = {"min(...)", "Minimum number", help.BASE}
+abs = math.abs;    about[abs] = {"abs(x)", "Absolut value.", help.BASE}
+exp = math.exp;    about[exp] = {"exp(x)", "Exponenta.", help.BASE}
+ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", help.BASE}
+lg = math.log10;   about[lg] = {"lg(x)", "Decimal logarithm.", help.BASE}
+pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b.", help.BASE}
+sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", help.BASE}
+max = math.max;    about[max] = {"max(...)", "Maximum number.", help.BASE}
+min = math.min;    about[min] = {"min(...)", "Minimum number.", help.BASE}
 -- Trigonometrical
-sin = math.sin;    about[sin] = {"sin(x)", "Sinus", help.TRIG}
-cos = math.cos;    about[cos] = {"cos(x)", "Cosinus", help.TRIG}
-tan = math.tan;    about[tan] = {"tan(x)", "Tangent", help.TRIG}
-asin = math.asin;  about[asin] = {"asin(x)", "Arcsinus", help.TRIG}
-acos = math.acos;  about[acos] = {"acos(x)", "Arccosinus", help.TRIG}
-atan = math.atan;  about[atan] = {"atan(x)", "Arctangent", help.TRIG}
+sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", help.TRIG}
+cos = math.cos;    about[cos] = {"cos(x)", "Cosinus x.", help.TRIG}
+tan = math.tan;    about[tan] = {"tan(x)", "Tangent x.", help.TRIG}
+asin = math.asin;  about[asin] = {"asin(x)", "Arcsinus x.", help.TRIG}
+acos = math.acos;  about[acos] = {"acos(x)", "Arccosinus x.", help.TRIG}
+atan = math.atan;  about[atan] = {"atan(y[,x])", "Arctangent y. In case of 2 parameters calculate y/x with signs.", help.TRIG}
 -- Hyperbolic
-ch = math.cosh;    about[ch] = {"ch(x)", "Hyperbolic cosinus", help.HYP}
-sh = math.sinh;    about[sh] = {"sh(x)", "Hyperbolic sinus", help.HYP}
-th = math.tanh;    about[th] = {"th(x)", "Hyperbolic tangent", help.HYP}
+ch = math.cosh;    about[ch] = {"ch(x)", "Hyperbolic cosinus.", help.HYP}
+sh = math.sinh;    about[sh] = {"sh(x)", "Hyperbolic sinus.", help.HYP}
+th = math.tanh;    about[th] = {"th(x)", "Hyperbolic tangent.", help.HYP}
 -- Angles 
 deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", help.BASE}
 rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", help.BASE}
 -- Constants
 _pi = math.pi;     about[_pi] = {"_pi", "Number pi", help.CONST}
 _e = math.exp(1)   about[_e] = {"_e", "Euler number", help.CONST}
-_i = nil         -- import 'complex' to use it
+--_i = nil         -- import 'complex' to use it
 -- Quick exit
 quit = function () print("\n                --==== Buy! ====--\n"); os.exit() end
 
@@ -74,28 +76,28 @@ end })
 
 -- Additional functions --
 function rand() return math.random() end
-about[rand] = {"rand()", "Random number between 0 and 1", help.BASE}
+about[rand] = {"rand()", "Random number between 0 and 1.", help.BASE}
 -- hyperbolic arcsinus
 function ash(x)
    return math.log(x+math.sqrt(x*x+1))
 end
-about[ash] = {"ash(x)", "Hyperbolic arcsinus", help.HYP}
+about[ash] = {"ash(x)", "Hyperbolic arcsinus.", help.HYP}
 -- hyperbolic arccosinus
 function ach(x)
    return math.log(x+math.sqrt(x*x-1))
 end
-about[ach] = {"ach(x)", "Hyperbolic arccosinus", help.HYP}
+about[ach] = {"ach(x)", "Hyperbolic arccosinus.", help.HYP}
 -- hyperbolic arctangenth
 function ath(x)
    return 0.5*math.log((1+x)/(1-x))
 end
-about[ath] = {"ath(x)", "Hyperbolic arctangent", help.HYP}
+about[ath] = {"ath(x)", "Hyperbolic arctangent.", help.HYP}
 
 -- create function f(x) from string
 function fx(str)
    return assert(loadstring("return function (x) return " .. str .. " end"))()
 end
-about[fx] = {"fx(str)", "Create Lua function f(x) from string", help.OTHER}
+about[fx] = {"fx(str)", "Create Lua function f(x) from string.", help.OTHER}
 
 -- plot string function
 function plot(str, a, b)
@@ -108,7 +110,7 @@ function plot(str, a, b)
    graph = graph .. ' f(x)"'   
    os.execute(graph)   
 end
-about[plot] = {"plot(str [,a,b])", "Quick plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", help.OTHER}
+about[plot] = {"plot(str[,a,b])", "Quick plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", help.OTHER}
 
 -- calculate function for range of values
 function eval(fn, x1, xn, step)
@@ -128,7 +130,7 @@ function howlong(fn,...)
 end
 
 -- read localisation file and update descriptions
---about:localisation("locale/lng.ru")
+if LOCALISATION_FILE then about:localisation(LOCALISATION_FILE) end
 
 about[import][2] = import_state_update()
 
@@ -140,7 +142,7 @@ function help(fn)
       about:print(about)
       print("\t" .. about:get('modules'))
       local t = {}; for k in pairs(import) do t[#t+1] = k end
-      print(table.concat(t, ', ') .. '.')
+      print(table.concat(t, ', '))
    end
 end
 
