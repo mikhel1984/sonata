@@ -154,5 +154,16 @@ setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) 
 rational.Rat = 'Rat'
 rational.about[rational.Rat] = {"Rat(m [,n])", "Create rational number using num (and denom).", help.NEW}
 
+-- serialize rational number
+rational.serialize = function (obj)
+   local s = {}
+   s[#s+1] = string.format("num=%d", obj.num)
+   s[#s+1] = string.format("denom=%d", obj.denom)
+   s[#s+1] = "metatablename='Rat'"
+   s[#s+1] = "modulename='rational'"
+   return string.format("{%s}", table.concat(s, ','))
+end
+rational.about[rational.serialize] = {"serialize(obj)", "Save internal representation of rational number", help.OTHER}
+
 return rational
 

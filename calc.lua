@@ -150,6 +150,7 @@ function deserialize(obj_str)
    local o = f()
    assert(_G[o.metatablename], "Module '" .. o.modulename .. "' is required")
    setmetatable(o, _G[o.metatablename])
+   o.modulename = nil; o.metatablename = nil
    return o
 end
 

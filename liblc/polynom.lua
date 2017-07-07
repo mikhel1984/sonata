@@ -248,4 +248,14 @@ setmetatable(polynom, {__call = function (self, ...) return polynom.new(...) end
 polynom.Poly = 'Poly'
 polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynom", help.NEW}
 
+-- polynom serialization
+polynom.serialize = function (obj)
+   local s = {}
+   for i = 1, #obj do s[#s+1] = string.format("%a", obj[i]) end
+   s[#s+1] = "metatablename='Poly'"
+   s[#s+1] = "modulename='polynom'"
+   return string.format("{%s}", table.concat(s, ','))
+end
+polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynom internal representation", help.OTHER}
+
 return polynom

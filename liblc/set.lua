@@ -144,4 +144,20 @@ setmetatable(set, {__call = function (self, v) return set:new(v) end})
 set.Set = 'Set'
 set.about[set.Set] = {"Set(t)", "Create new set from table of elements", help.NEW}
 
+-- set serialization
+set.serialize = function (obj)
+   local s = {}
+   for k in pairs(obj) do 
+      if type(k) == 'string' then
+         s[#s+1] = string.format("['%s']=true", k)
+      else
+         s[#s+1] = string.format("[%s]=true", tostring(k)) 
+      end
+   end
+   s[#s+1] = "metatablename='Set'"
+   s[#s+1] = "modulename='set'"
+   return string.format("{%s}", table.concat(s, ','))
+end
+set.about[set.serialize] = {"serialize(obj)", "Save internal representation of the set", help.OTHER}
+
 return set
