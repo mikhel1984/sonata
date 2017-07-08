@@ -95,7 +95,7 @@ polynom.val = function (p,x)
    end
    return res
 end
-polynom.about[polynom.val] = {"val(p,x)", "Get value of polinom p in point x", help.BASE}
+polynom.about[polynom.val] = {"val(p,x)", "Get value of polinom p in point x.", help.BASE}
 
 -- create copy of object
 polynom.copy = function (p)
@@ -103,7 +103,7 @@ polynom.copy = function (p)
    for i = 1, #p do cp[i] = p[i] end
    return polynom:init(cp)
 end
-polynom.about[polynom.copy] = {"copy(p)", "Get copy of polynom", help.OTHER}
+polynom.about[polynom.copy] = {"copy(p)", "Get copy of polynom.", help.OTHER}
 
 -- a + b
 polynom.__add = function (a,b)
@@ -213,7 +213,7 @@ polynom.der = function (p,x)
    if x then x = polynom.val(der,x) end
    return der, x
 end
-polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynom, and its value, if need", help.BASE}
+polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynom, and its value, if need.", help.BASE}
 
 -- get integral
 polynom.int = function (p,x)
@@ -226,7 +226,7 @@ polynom.int = function (p,x)
    table.insert(int, x)
    return polynom:init(int)
 end
-polynom.about[polynom.int] = {"int(p[,x])", "Calculate integral, x - free coefficient", help.BASE}
+polynom.about[polynom.int] = {"int(p[,x0])", "Calculate integral, x0 - free coefficient.", help.BASE}
 
 -- get polynom from roots
 polynom.coef = function (...)
@@ -237,7 +237,7 @@ polynom.coef = function (...)
    end
    return res
 end
-polynom.about[polynom.coef] = {"coef(...)", "Return polynom with given roots", help.OTHER}
+polynom.about[polynom.coef] = {"coef(...)", "Return polynom with given roots.", help.OTHER}
 
 -- string representation
 polynom.__tostring = function (p)
@@ -256,6 +256,6 @@ polynom.serialize = function (obj)
    s[#s+1] = "modulename='polynom'"
    return string.format("{%s}", table.concat(s, ','))
 end
-polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynom internal representation", help.OTHER}
+polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynom internal representation.", help.OTHER}
 
 return polynom

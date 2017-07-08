@@ -31,7 +31,7 @@ rational.type = 'rational'
 
 -- description
 local help = require "liblc.help"
-rational.about = help:new("Computations with rational numbers")
+rational.about = help:new("Computations with rational numbers.")
 
 local function isrational(v) return type(v) == 'table' and v.type == rational.type end
 
@@ -109,7 +109,7 @@ rational.__pow = function (a, b)
 end
 
 rational.arithmetic = 'arithmetic'
-rational.about[rational.arithmetic] = {arithmetic, "a+b, a-b, a*b, a/b, -a, a^b}", help.BASE}
+rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b}", help.BASE}
 
 -- a == b
 rational.__eq = function (a,b)
@@ -152,7 +152,7 @@ rational.about[rational.De] = {"De(v)", "Return the denominator of the rational 
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
 rational.Rat = 'Rat'
-rational.about[rational.Rat] = {"Rat(m [,n])", "Create rational number using num (and denom).", help.NEW}
+rational.about[rational.Rat] = {"Rat(m[,n])", "Create rational number using num (and denom).", help.NEW}
 
 -- serialize rational number
 rational.serialize = function (obj)
@@ -163,7 +163,7 @@ rational.serialize = function (obj)
    s[#s+1] = "modulename='rational'"
    return string.format("{%s}", table.concat(s, ','))
 end
-rational.about[rational.serialize] = {"serialize(obj)", "Save internal representation of rational number", help.OTHER}
+rational.about[rational.serialize] = {"serialize(obj)", "Save internal representation of rational number.", help.OTHER}
 
 return rational
 

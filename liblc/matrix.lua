@@ -12,7 +12,7 @@ Indexation from 1!
 
 a(1,1)                           --> 1
 b:set(9, 1,1)                    --> [5,6; 9,8]
-a:transpose()                    --> [1,3; 2,4]
+a:transpose() or a:T()           --> [1,3; 2,4]
 #a                               --> 2,2
 
 a + b                            --> [6,8; 10,12]
@@ -80,7 +80,7 @@ local function checkindex(m, r, c)
          r, c = 1, r
       end
    end
-   assert(c <= m.cols and c >= -m.cols, "Column number must not more then " .. m.cols)
+   assert(c <= m.cols and c >= -m.cols, "Column number must be not more then " .. m.cols)
    assert(r <= m.rows and r >= -m.rows, "Row number must be not more then " .. m.rows)
    assert(r ~= 0 and c ~= 0, "Indexation from 1!")
    r = (r < 0) and (m.rows+r+1) or r
@@ -184,7 +184,9 @@ matrix.transpose = function (m)
    end
    return res
 end
-matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose.", help.BASE}
+matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T().", help.BASE}
+
+matrix.T = matrix.transpose
 
 -- auxiliary function for addition/substraction
 local function sum(a,b,sign)
@@ -238,7 +240,7 @@ matrix.map_ex = function (m, fn)
    end
    return res
 end
-matrix.about[matrix.map_ex] = {"map_ex(m, fn)", "Applay function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
+matrix.about[matrix.map_ex] = {"map_ex(m,fn)", "Applay function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
 
 matrix.__len = matrix.size
 

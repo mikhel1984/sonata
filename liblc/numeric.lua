@@ -27,7 +27,7 @@ numeric.about = help:new("Group of functions for numerical calculations.")
 
 -- current tolerance
 numeric.TOL = 1e-3
-numeric.about[numeric.TOL] = {"TOL", "The solution tolerance.", help.CONST}
+numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", help.CONST}
 
 -- find root of equation
 numeric.solve = function (fn, a, b)
