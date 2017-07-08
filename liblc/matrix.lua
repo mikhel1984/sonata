@@ -8,11 +8,10 @@ Mat = require 'liblc.matrix'
 a = Mat({1,2},{3,4})             --> [1,2; 3,4]
 b = Mat({5,6},{7,8})             --> [5,6; 7,8]
 
-In functions such as 'get', 'set', 'sub' indexation 
-starts from 0.
+Indexation from 1!
 
-a(0,0)                           --> 1
-b:set(9, 1,0)                    --> [5,6; 9,8]
+a(1,1)                           --> 1
+b:set(9, 1,1)                    --> [5,6; 9,8]
 a:transpose()                    --> [1,3; 2,4]
 #a                               --> 2,2
 
@@ -32,7 +31,7 @@ Mat.ones(2,3, 4)                 --> [4,4,4; 4,4,4]
 
 a .. b                           --> [1,2,5,6; 3,4,7,8]
 a // b                           --> [1,2; 3,4; 5,6; 7,8]
-a:sub(0,1,1,-1)                  --> [3,4]
+a:sub(1,1,2,-1)                  --> [3,4]
 
 a:map(function(x) return x^2 end) --> [1,4; 9,16]
 
@@ -46,7 +45,7 @@ matrix.__index = matrix
 matrix.type = 'matrix'
 
 local help = require "liblc.help"
-matrix.about = help:new("Matrix operations. Indexation from 0! The matrixes are spares by default.")
+matrix.about = help:new("Matrix operations. The matrixes are spares by default.")
 
 -- test object type
 local function ismatrix(m) return type(m) == 'table' and m.type == matrix.type end
@@ -76,15 +75,16 @@ local function checkindex(m, r, c)
    assert(ismatrix(m), "Matrix is expected")
    if c == nil then
       if m.cols == 1 then 
-         r, c = r, 0
+         r, c = r, 1
       elseif m.rows == 1 then 
-         r, c = 0, r
+         r, c = 1, r
       end
    end
-   assert(c < m.cols and c > -m.cols, "Column number must be less then " .. m.cols)
-   assert(r < m.rows and r > -m.rows, "Row number must be less then " .. m.rows)
-   r = (r < 0) and (m.rows+r+1) or (r+1)
-   c = (c < 0) and (m.cols+c+1) or (c+1)
+   assert(c <= m.cols and c >= -m.cols, "Column number must not more then " .. m.cols)
+   assert(r <= m.rows and r >= -m.rows, "Row number must be not more then " .. m.rows)
+   assert(r ~= 0 and c ~= 0, "Indexation from 1!")
+   r = (r < 0) and (m.rows+r+1) or r
+   c = (c < 0) and (m.cols+c+1) or c
    return r, c
 end
 
@@ -238,6 +238,7 @@ matrix.map_ex = function (m, fn)
    end
    return res
 end
+matrix.about[matrix.map_ex] = {"map_ex(m, fn)", "Applay function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
 
 matrix.__len = matrix.size
 
@@ -320,7 +321,7 @@ matrix.about[matrix.det] = {"det(m)", "Calculate determinant.", help.BASE}
 matrix.inv = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
    local con, det = matrix.rref(m, matrix.eye(m.cols))
-   return (det ~= 0) and matrix.sub(con, 0,-1, m.cols, -1) or matrix.ones(m.rows,m.rows,math.huge)  -- indexation from 0
+   return (det ~= 0) and matrix.sub(con, 1,-1, m.cols+1, -1) or matrix.ones(m.rows,m.rows,math.huge) 
 end
 matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", help.BASE}
 
@@ -471,11 +472,11 @@ local function bidiag_reduction(A)
    local U, V = matrix.eye(m), matrix.eye(n)
    local M = math.min(m,n)
    for k = 1, M do
-      local H1 = householder(B:sub(0,-1, k-1,k-1), k)     -- matrix.sub uses indexes from 0
+      local H1 = householder(B:sub(1,-1, k,k), k)  
       B = H1 * B
       U = U * matrix.transpose(H1)
       if k < (M-1) then
-         local H2 = householder(matrix.transpose(B:sub(k-1, k-1, 0, -1)), k+1)
+         local H2 = householder(matrix.transpose(B:sub(k, k, 1, -1)), k+1)
 	 H2 = matrix.transpose(H2)
 	 B = B * H2
 	 V = V * H2
@@ -486,7 +487,7 @@ end
 
 -- Given's rotation
 local function rot(f,g)
-   -- return cos, sin; r is omited
+   --> return cos, sin; r is omited
    if f == 0 then
       return 0, 1
    elseif math.abs(f) > math.abs(g) then
@@ -582,23 +583,25 @@ matrix.pinv2 = function (M)
    local L, r = matrix.zeros(A:size()), 0
    for k = 1, n do
       r = r + 1
-      local B = A:sub(k-1,-1,k-1,k-1)
+      local B = A:sub(k,n,k,k)
       if r > 1 then 
-         local tmp = L:sub(k-1,-1,0,r-2) * L:sub(k-1,k-1,0,r-2):transpose() 
+         local tmp = L:sub(k,n,1,r-1) * L:sub(k,k,1,r-1):transpose() 
 	 tmp = ismatrix(tmp) and tmp or matrix.new({tmp})         -- product can return a number
          B = B - tmp
       end
       for i = k, n do setval(L,i,r, getval(B,i-k+1,1)) end   -- copy B to L
-      if getval(L,k,r) > tol then
-         setval(L,k,r, math.sqrt(getval(L,k,r)))
+      tmp = getval(L,k,r)
+      if tmp > tol then
+         setval(L,k,r, math.sqrt(tmp))
+         tmp = getval(L,k,r)
 	 if k < n then
-	    for i = k+1, n do setval(L, i, r, getval(L,i,r)/getval(L,k,r)) end
+	    for i = k+1, n do setval(L, i, r, getval(L,i,r)/tmp) end
 	 end
       else
          r = r - 1
       end
    end
-   L = L:sub(0,-1, 0, r-1)
+   L = L:sub(1,-1, 1, (r > 0 and r or 1))
    local Lt = L:transpose()
    local K = matrix.inv(Lt * L)
    if transp then
@@ -606,7 +609,7 @@ matrix.pinv2 = function (M)
    end
    return L * K * K * Lt * Mt
 end
-matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick but less accurate function for pseudoinverse matrix calculation", help.OTHER}
+matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick function for pseudoinverse matrix calculation", help.OTHER}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
