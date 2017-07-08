@@ -95,7 +95,7 @@ about[ath] = {"ath(x)", "Hyperbolic arctangent.", help.HYP}
 
 -- create function f(x) from string
 function fx(str)
-   return assert(loadstring("return function (x) return " .. str .. " end"))()
+   return assert(load("return function (x) return " .. str .. " end"))()
 end
 about[fx] = {"fx(str)", "Create Lua function f(x) from string.", help.OTHER}
 

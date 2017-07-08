@@ -41,6 +41,19 @@ numeric.solve = function (fn, a, b)
 end
 numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", help.BASE}
 
+-- another solution based on Newton's rule
+numeric.newton = function (fn, x1)
+   local h, k, x2 = 0.1, 0, x1
+   repeat
+      x1 = x2
+      x2 = x1 - fn(x1)*h/(fn(x1+h)-fn(x1))
+      k, h = k+1, h*0.618
+      if k > 50 then error("Too many circles!") end
+   until math.abs(fn(x2)-fn(x1)) < numeric.TOL 
+   return x2
+end
+numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition", help.BASE}
+
 -- simple derivative
 numeric.diff = function (fn, x)
    local dx = 2e-2
