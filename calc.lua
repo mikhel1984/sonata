@@ -40,15 +40,15 @@ quit = function () print("\n                --==== Buy! ====--\n"); os.exit() en
 
 -- modules
 import = {
-   rational = "Rat",
-   complex  = "Cmp",
-   bigint   = "Big",
-   matrix   = "Mat",
-   polynom  = "Poly",
-   set      = "Set",
-   gnuplot  = "Gnu",
-   numeric  = "Num",
    array    = "Arr",
+   bigint   = "Big",
+   complex  = "Cmp",
+   gnuplot  = "Gnu",
+   matrix   = "Mat",
+   numeric  = "Num",
+   polynom  = "Poly",
+   rational = "Rat",
+   set      = "Set",
 }
 about[import] = {"import", "", help.BASE}
 

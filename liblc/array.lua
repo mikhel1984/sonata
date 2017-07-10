@@ -338,4 +338,18 @@ array.serialize = function (obj)
 end
 array.about[array.serialize] = {"serialize(obj)", "String representation of array internal structure.", help.OTHER}
 
+array.getnext = function (arr)
+   local a = array:new(table.move(arr.size, 1, #arr.size, 1, {})) -- copy size
+   local count = 0
+
+   return function ()
+             if count == capacity(a) then return nil end
+	     local res = {}
+	     for i = 1, #a.size do res[i] = (count // a.k[i]) % a.size[i]+1 end
+	     count = count + 1
+	     return res
+          end
+end
+array.about[array.getnext] = {"getnext(arr)", "Return iterator along all indexes", help.OTHER}
+
 return array
