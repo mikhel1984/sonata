@@ -1,15 +1,45 @@
+--[[       array.lua
 
+-------------- Examples ------------
+
+Arr = require 'liblc.array'
+
+a = Arr {2,3,4}                        -->  empty array 2 x 3 x 4
+b = Arr.rand {5,2,1}                   -->  array 5 x 2 x 1 with random numbers
+
+#a                                     -->  number of elements in a
+
+b:map(math.sin)                        -->  apply sin(x) to all elements, return new array
+
+Arr.apply(b,b,math.pow)                -->  create array or x^x
+
+a + a                                  -->  get summ for each pair of elements
+
+c = a:sub({1,1,1},{-1,-1,2})           -->  get subarray with all elements for axes 1, 2 and just 2 layers from axe 3
+
+d = Arr.concat(b, b, 3)                -->  concatenate arrays b along 3-rd axe
+
+print(d:fullstring(2,3))               -->  represent as sequence of matrixes where rows and columns are axes 2 and 3 respectively
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 local array = {}
 array.__index = array
 
 array.type = 'array'
 
+-- description
+local help = require "liblc.help"
+array.about = help:new("Manipulations with arrays of elements")
+
 -- check object type
 local function isarray(t)
    return type(t) == 'table' and t.type == array.type 
 end
 
+-- prepare list of coefficients
 local function getk (s)
    local k = {1}
    for i = 2, #s do k[i] = s[i-1]*k[i-1] end
@@ -29,7 +59,7 @@ end
 local function iscorrect(arr, ind)
    if #arr.size ~= #ind then return false end
    for i = 1,#ind do 
-      if ind[i] > arr.size[i] or ind[i] < -arr.size[i] or ind[i] == 0 then return false end
+      if ind[i] > arr.size[i] or ind[i] < 1 then return false end
    end
    return true
 end
@@ -43,10 +73,9 @@ local function index(arr, ind)
    return res
 end
 
+-- number of elements
 local function capacity(arr)
-   local prod = arr.size[1]
-   for i = 2, #arr.size do prod = prod * arr.size[i] end
-   return prod
+   return arr.size[#arr.size] * arr.k[#arr.k]
 end
 
 -- get element
@@ -54,12 +83,14 @@ array.get = function (arr, ind)
    assert(iscorrect(arr, ind), "Wrong index for given array!")
    return arr[index(arr, ind)]
 end
+array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table.", help.BASE}
 
 -- set value
 array.set = function (arr, ind, val)
    assert(iscorrect(arr, ind), "Wrong index for given array!")
    arr[index(arr,ind)] = val 
 end
+array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is a table.", help.BASE}
 
 -- get array copy
 array.copy = function (arr)
@@ -67,6 +98,7 @@ array.copy = function (arr)
    local cp = array:new(table.move(arr.size, 1, #arr.size, 1, {}))
    return table.move(arr, 1, capacity(arr), 1, cp)
 end
+array.about[array.copy] = {"copy(arr)", "Get copy of the array.", help.OTHER}
 
 -- check array size
 array.isequal = function (a1, a2)
@@ -77,7 +109,9 @@ array.isequal = function (a1, a2)
    end
    return true
 end
+array.about[array.isequal] = {"isequial(a1,a2)", "Check size equality.", help.OTHER}
 
+-- apply function of 2 arguments
 array.apply = function (a1, a2, fn)
    assert(array.isequal(a1,a2), "Not compatible arrays!")
    local res, v = array:new(table.move(a1.size, 1, #a1.size, 1, {}))
@@ -87,7 +121,9 @@ array.apply = function (a1, a2, fn)
    end
    return res
 end
+array.about[array.apply] = {"apply(a1,a2,fn)", "Apply function of 2 arguments. Return new array.", help.OTHER}
 
+-- apply function of 1 argument
 array.map = function (a, fn)
    local res, v = array:new(table.move(a.size, 1, #a.size, 1, {}))
    for i = 1, capacity(a) do
@@ -96,6 +132,7 @@ array.map = function (a, fn)
    end
    return res
 end
+array.about[array.map] = {"map(a,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
 
 -- a1 + a2
 array.__add = function (a1, a2)
@@ -122,12 +159,20 @@ array.__div = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x/y end)
 end
 
+array.__pow = function (a1, a2)
+   return array.apply(a1, a2, math.pow)
+end
+
+array.arithmetic = 'arithmetic'
+array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.BASE}
+
 -- random array
 array.rand = function (s)
    local arr = array:new(s)
    for i = 1, capacity(arr) do arr[i] = math.random() end
    return arr
 end
+array.about[array.rand] = {"rand(size)", "Return array with random numbers.", help.BASE}
 
 -- check array equality
 array.__eq = function (a1, a2)
@@ -140,12 +185,61 @@ array.__eq = function (a1, a2)
    return true
 end
 
+array.comparation = 'comparation'
+array.about[array.comparation] = {array.comparation, "a == b, a ~= b", help.BASE}
+
 -- get array dimentions
 array.dim = function (arr)
-   local res = {}
-   table.move(arr.size, 1, #arr.size, 1, res)
+   return table.move(arr.size, 1, #arr.size, 1, {})
+end
+array.about[array.dim] = {"dim(arr)", "Return size of array.", help.BASE}
+
+-- get part of array
+array.sub = function (arr, ind1, ind2)
+   for i = 1, #ind2 do if ind2[i] < 0 then ind2[i] = ind2[i] + arr.size[i] + 1 end end
+   assert(iscorrect(arr, ind1) and iscorrect(arr, ind2), "Wrong index!")
+   -- prepare tables
+   local newsize, ind = {}, {}
+   for i = 1, #ind1 do 
+      newsize[i] = ind2[i] - ind1[i] + 1 
+      ind[i] = 0
+   end 
+   local res = array:new(newsize)
+   -- fill
+   for count = 1, capacity(res) do
+      for i = 1, #ind do 
+         ind[i] = (count // res.k[i]) % res.size[i]
+	 ind2[i] = ind1[i] + ind[i]
+	 ind[i] = ind[i]+1
+      end
+      res[index(res,ind)] = arr[index(arr,ind2)]
+   end
    return res
 end
+array.about[array.sub] = {"sub(arr,ind1,ind2)", "Return subarray restricted by 2 indexes.", help.BASE}
+
+-- concatenate 2 arrays
+array.concat = function (arr1, arr2, axe)
+   assert(axe > 0 and axe <= #arr1.size, "Wrong axe!")
+   for i = 1, #arr1.size do assert(arr1.size[i] == arr2.size[i] or i == axe, "Different size!") end
+
+   local newsize = table.move(arr1.size, 1, #arr1.size, 1, {})
+   newsize[axe] = newsize[axe] + arr2.size[axe]
+
+   local res, ind1, ind2 = array:new(newsize), table.move(newsize, 1, #newsize, 1, {}), table.move(newsize, 1, #newsize, 1, {})
+   local edge = arr1.size[axe]
+   for count = 1, capacity(res) do
+      for i = 1, #ind1 do
+         ind1[i] = (count // res.k[i]) % res.size[i] + 1
+	 ind2[i] = ind1[i]
+      end
+      local second = ind1[axe] > edge
+      ind2[axe] = second and (ind2[axe]-edge) or ind2[axe]
+      res[index(res,ind1)] = second and arr2[index(arr2,ind2)] or arr1[index(arr1,ind2)]
+   end
+   return res 
+end
+array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along given axe.", help.BASE}
 
 -- get number of elements
 array.__len = function (arr)
@@ -221,35 +315,27 @@ array.fullstring = function (arr, r, c)
    end
    return table.concat(res, '\n') 
 end
+array.about[array.fullstring] = {"fullstring(arr,r,c)", "Represent array as sequence of matrixes, where r and c are numbers of axes", help.OTHER}
 
------------------------------
---           test
-----------------------------
+-- constructor
+setmetatable(array, {__call = function (self, v) return array:new(v) end})
+array.Arr = 'Arr'
+array.about[array.Arr] = {"Arr(size)", "Create empty array with given size, represented as a table.", help.NEW}
 
---a = array:new {2, 4, 3}
---b = a:copy()
-a = array.rand {2,3,4}
-b = array.rand {2,3,4}
-
---[[
-d = a + b
-d = a - b
-d = a * b
-d = a / b
-d = -d
-
-print(d:fullstring(1,2))
-]]
-
---print(b)
-
---[[
-for i = 1,2 do
-   for j = 1,4 do
-      for k = 1,3 do
-         print(i,j,k,index(a, {i,j,k}))
+-- serialization
+array.serialize = function (obj)
+   local s = {}
+   s[#s+1] = 'size={' .. table.concat(obj.size, ',') .. '}'
+   s[#s+1] = 'k={' .. table.concat(obj.k, ',') .. '}'
+   for i = 1, capacity(obj) do
+      if obj[i] then
+         s[#s+1] = string.format("[%d]=%s", i, (type(obj[i]) == 'string' and "'"..obj[i].."'" or obj[i]))
       end
    end
+   s[#s+1] = "metatablename='Arr'"
+   s[#s+1] = "modulename='array'"
+   return string.format("{%s}", table.concat(s, ','))
 end
-]]
+array.about[array.serialize] = {"serialize(obj)", "String representation of array internal structure.", help.OTHER}
 
+return array

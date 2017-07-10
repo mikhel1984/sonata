@@ -48,6 +48,7 @@ import = {
    set      = "Set",
    gnuplot  = "Gnu",
    numeric  = "Num",
+   array    = "Arr",
 }
 about[import] = {"import", "", help.BASE}
 
@@ -157,7 +158,7 @@ function deserialize(obj_str)
 end
 
 -- Run!
-print("\n             --==== LuaCalc 0.4 ====--\n")
+print("\n             --==== LuaCalc 0.5 ====--\n")
 print(about:get('intro'))
 
 _PROMPT='lc: '
