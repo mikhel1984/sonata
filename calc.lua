@@ -49,6 +49,7 @@ import = {
    polynom  = "Poly",
    rational = "Rat",
    set      = "Set",
+   stat     = "Stat",
 }
 about[import] = {"import", "", help.BASE}
 

@@ -1,6 +1,33 @@
+--[[       stat.lua
 
+------------ Examples -------------
+
+Stat = require 'liblc.stat'
+
+X = {3,2,5,6,3,4,3,1}
+w = {1,1,0,1,2,2,1,1}
+
+Stat.mean(X)                  --> 3.375
+
+Stat.std(X,w)                 --> 1.314 1.728
+
+Stat.stdcorr(X)               --> 1.598
+
+Stat.median(X)                --> 3.0
+
+tmp = Stat.freq(X)
+tmp[3]                        --> 1.0
+
+Stat.cmoment(2,X)             --> 2.234
+
+This file is a part of liblc collection. 
+Stanislav Mikhel, 2017.
+]]
 
 local stat = {}
+
+local help = require "liblc.help"
+stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
 
 -- summ of all elements
 stat.sum = function (t)
@@ -8,7 +35,9 @@ stat.sum = function (t)
    for i = 1, #t do s = s+t[i] end
    return s
 end
+stat.about[stat.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
 
+-- average
 stat.mean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -21,7 +50,9 @@ stat.mean = function (t, w)
       return stat.sum(t) / #t
    end
 end
+stat.about[stat.mean] = {"mean(t[,w])", "Calculate average value. Weights are can be used.", help.BASE}
 
+-- corrected value of standard deviation and variance
 stat.stdcorr = function (t)
    local mean = stat.mean(t)
    local sq, n = 0, #t
@@ -29,7 +60,9 @@ stat.stdcorr = function (t)
    local sigma = math.sqrt(sq/(n-1))
    return sigma, sigma/math.sqrt(n)
 end
+stat.about[stat.stdcorr] = {"stdcorr(t)", "Corrected value of standard deviation and variance.", help.BASE}
 
+-- standard deviation and variance
 stat.std = function (t, w)
    local mean = stat.mean(t,w)
    local disp = 0
@@ -46,6 +79,7 @@ stat.std = function (t, w)
    end
    return math.sqrt(disp), disp 
 end
+stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weigths are can be used.", help.BASE}
 
 -- maximum value and position
 stat.max = function (t)
@@ -55,6 +89,7 @@ stat.max = function (t)
    end
    return m,k
 end
+stat.about[stat.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
 
 -- minimum value and position
 stat.min = function (t)
@@ -64,7 +99,9 @@ stat.min = function (t)
    end
    return m,k
 end
+stat.about[stat.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
 
+-- geometrical mean
 stat.geomean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -79,7 +116,9 @@ stat.geomean = function (t, w)
       return math.pow(p, 1/#t)
    end
 end
+stat.about[stat.geomean] = {"geomean(t[,w])", "Geometrical mean.", help.OTHER}
 
+-- harmonical mean
 stat.harmean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -94,6 +133,7 @@ stat.harmean = function (t, w)
       return #t / h
    end
 end
+stat.about[stat.harmean] = {"harmean(t[,w])", "Harmonical mean.", help.OTHER}
 
 -- get mediana
 stat.median = function (t)
@@ -106,6 +146,7 @@ stat.median = function (t)
       return (t[len] + t[len+1]) * 0.5
    end
 end
+stat.about[stat.median] = {"median(t)", "List median.", help.BASE}
 
 -- frequency of elements
 stat.freq = function (t)
@@ -114,17 +155,26 @@ stat.freq = function (t)
       r = tmp[v] or 0
       tmp[v] = r+1
    end
-   local res = {}
-   for k,v in pairs(tmp) do res[#res+1] = {k, v} end
-   return res
+   return tmp
 end
+stat.about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", help.BASE}
 
----------------------
---      Test
----------------------
+-- central moment
+stat.cmoment = function (n, x, p)
+   local pk, m = 1/#x, 0
+   for i = 1,#x do m = m + x[i]*(p and p[i] or pk) end
+   local mu = 0
+   for i = 1,#x do mu = mu + math.pow(x[i]-m, n)*(p and p[i] or pk) end
+   return mu
+end
+stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p is a list of waights.", help.BASE}
 
-a = {1.1, 0.9, 1.2, 0.8, 1.2}
-w = {1, 2, 1, 2, 1}
-t = stat.freq(a)
+-- n moment
+stat.moment = function (n, x, p)
+   local pk, m = 1/#x, 0
+   for i = 1,#x do m = m + math.pow(x[i],n)*(p and p[i] or pk) end
+   return m
+end
+stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of waights.", help.BASE}
 
-for _, k in ipairs(t) do print(k[1], k[2]) end
+return stat
