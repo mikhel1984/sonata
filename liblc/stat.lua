@@ -27,7 +27,25 @@ Stanislav Mikhel, 2017.
 local stat = {}
 
 local help = require "liblc.help"
+--local help = require 'help'
 stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
+
+-- magic numbers for gamma approximation
+local magic = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,
+               12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7}
+
+-- gamma function Lanczos approximation (based on Wikipedia) for real numbers
+local function gamma(z) 
+   if z < 0.5 then
+      return math.pi / (math.sin(math.pi*z) * gamma(1-z))
+   else
+      z = z-1
+      local x = 0.99999999999980993
+      for i = 1, #magic do x = x + magic[i]/(z+i) end
+      local t = z + #magic - 0.5
+      return math.sqrt(2*math.pi)*math.pow(t, z+0.5)*math.exp(-t)*x
+   end
+end
 
 -- summ of all elements
 stat.sum = function (t)
@@ -178,3 +196,4 @@ end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of waights.", help.BASE}
 
 return stat
+
