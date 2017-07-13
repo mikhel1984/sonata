@@ -47,6 +47,33 @@ local function gamma(z)
    end
 end
 
+--[[
+local function gRatio(x,y)
+   local m = math.abs(math.max(x,y))
+   if m <= 100 then
+      return gamma(x)/gamma(y)
+   else
+      return math.pow(2,x-y)*gRatio(0.5*x,0.5*y)*gRatio(0.5*x+0.5,0.5*y+0.5)
+   end
+end
+
+local function hyperGeom(a,b,c,z,N)
+   N = N or 20
+   local S,M = 1
+   for i = 1,N do
+      M = math.pow(z,i)
+      for j = 0,i-1 do M = M * (a+j)*(b+j)/((1+j)*(c+j)) end
+      S = S + M
+   end
+   return S
+end
+
+-- source: https://habrahabr.ru/post/307712/
+stat.tdist = function (t,n)
+   return 0.5+t*gRatio(0.5*(n+1),0.5*n)*hyperGeom(0.5,0.5*(n+1),1.5,-t*t/n)/math.sqrt(math.pi*n)
+end
+]]
+
 -- summ of all elements
 stat.sum = function (t)
    local s = 0
