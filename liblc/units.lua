@@ -18,11 +18,29 @@ G = 1e+9,
 
 local function isunits(t) return type(t) == 'table' and t.type == units.type end
 
-local function key(t)
+local function tokey(t)
    local s = {}
-   for k,v in pairs(t) do s[#s+1] = k .. tostring(v) end
-   table.sort(s)
+   for k,v in pairs(t) do s[#s+1] = {v,k} end
+   table.sort(s, function (p1, p2) 
+                    return p1[1] > p2[1] or (p1[1] == p2[1] and string.reverse(p1[2]) < string.reverse(p2[2])) 
+              end)
+   for i,v in ipairs(s) do s[i] = v[1] .. v[2] end
    return table.concat(s)
+end
+
+local function fromkey(s)
+   local t = {}
+   for v,k in string.gmatch(s, '([^%a]+)(%a+)') do t[k] = tonumber(v) end
+   return t
+end
+
+local function diff(s1, s2)
+   local first, base, second = string.match(s1..s2, '^(.-)(.+)(.-)%2$')
+   if base then
+      return first, second, base
+   else
+      return s1, s2, nil
+   end
 end
 
 local op = {
@@ -80,37 +98,43 @@ units.parse = function (str)
 end
 
 function units:new(v,u)
-   local o = {value=v}
-   o.units = u and units.parse(u) or {}
+   local tmp = u and units.parse(u) or {}
+   local o = {value=v, key=tokey(tmp)}
    setmetatable(o, self)
    return o
 end
 
 units.copy = function (u)
    local cp = units:new(u.value)
-   for k,v in pairs(u.units) do cp.units[k] = v end
+   cp.key = u.key
+   --for k,v in pairs(u.units) do cp.units[k] = v end
    return cp
 end
 
+local function collect(str)
+   local t = {}
+   for v,k in string.gmatch(str, '([^%a]+)(%a+)') do 
+      local w = tonumber(v)
+      if w < 0 then w=-w end
+      t[w] = t[w] or {}
+      table.insert(t[w], k)
+   end
+   local g = {}
+   for n, f in pairs(t) do
+      local templ = n > 1 and (#f > 1 and '(%s)^%d' or '%s^%d') or '%s'
+      g[#g+1] = string.format(templ, table.concat(f,'*'), n)
+   end
+   return table.concat(g,'*')
+end
+
 units.__tostring = function (u)
-   local tmp = {}
-   for k,v in pairs(u.units) do
-      tmp[v] = tmp[v] or {}
-      table.insert(tmp[v],k)
-   end
-   local num, denom = {}, {}
-   for n in pairs(tmp) do
-      local str = table.concat(tmp[n], '*')
-      if n > 0 then 
-         table.insert(num, (n == 1 and str or string.format('(%s)^%d',str,n)))
-      else
-         table.insert(denom, (n == -1 and str or string.format('(%s)^%d',str,-n)))
-      end
-   end
-   num = #num > 0 and table.concat(num, '*') or '1'
-   local strdenom = #denom > 0 and table.concat(denom, '*') or ''
-   denom = #denom > 1 and '('..strdenom..')' or strdenom
-   if #denom > 0 then denom = '/' .. denom end
+   local num, denom = string.match(u.key, '([^%-]*)(.*)')
+   num = #num > 0 and collect(num) or '1'
+   denom = #denom > 0 and collect(denom) or ''
+
+   if string.find(denom, '*') then denom = '('..denom..')' end
+   if #denom > 0 then num = num..'/' end
+
    return u.value .. ' ' .. num .. denom
 end
 
@@ -120,9 +144,20 @@ units.rules = {
 ------------------------------
 --          tests
 -----------------------------
---p = units.parse('m*k/(f*s)^2')
+--p = units.parse('kg*km/(mf*Mf)^2')
 --for k,v in pairs(p) do print(k,v) end
+--[[
 a = units:new(2, 'm*k/(f*s)^2')
-b = a:copy()
---for k,v in pairs(a.units) do print(k,v) end
-print(key(b.units))
+print(a)
+p = tokey(a.units)
+print(p)
+for s in string.gmatch(p, '(%a+[^%a]+)') do print(s) end
+b = fromkey(p)
+for k,v in pairs(b) do print(k,v) end
+]]
+--print(tokey(p))
+--q = tokey(p)
+--r = fromkey(q)
+--for k,v in pairs(r) do print(k,v) end
+a = units:new(2, 'm*k/(f*h^2)^2')
+print(a)
