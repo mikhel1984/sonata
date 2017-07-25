@@ -11,10 +11,13 @@ n = 1e-9,
 u = 1e-6,
 m = 1e-3,
 s = 1e-2,
+[""] = 1,
 k = 1e+3,
 M = 1e+6,
 G = 1e+9,
 }
+
+local part = '([^%a]+)(%a+)'  
 
 local function isunits(t) return type(t) == 'table' and t.type == units.type end
 
@@ -30,12 +33,12 @@ end
 
 local function fromkey(s)
    local t = {}
-   for v,k in string.gmatch(s, '([^%a]+)(%a+)') do t[k] = tonumber(v) end
+   for v,k in string.gmatch(s, part) do t[k] = tonumber(v) end
    return t
 end
 
 local function diff(s1, s2)
-   local first, base, second = string.match(s1..s2, '^(.-)(.+)(.-)%2$')
+   local first, base, second = string.match(s1..'|'..s2, '^(.-)(.+)|(.-)%2$')
    if base then
       return first, second, base
    else
@@ -111,9 +114,37 @@ units.copy = function (u)
    return cp
 end
 
+local function iscompatible(k1,k2)
+   if k1 == k2 then return true end
+   local fk2 = string.gmatch(k2, part)
+   for v1,u1 in string.gmatch(k1, part) do
+      local v2,u2 = fk2()
+      if v1 ~= v2 then return false end
+      if u1 ~= u2 then 
+         local l,r,base = diff(u1,u2)
+	 if not (base and coeff[l] and coeff[r]) then return false end
+      end
+   end
+   return true
+end
+
+local function vconvert(v, from, to)
+   local f,res = string.gmatch(to, part), v
+   for v1,u1 in string.gmatch(from, part) do
+      local _,u2 = f()
+      local l,r = diff(u1,u2)
+      res = res * coeff[l]/coeff[r]
+   end
+   return res
+end
+
+units.convert = function (u, str)
+   local res = units:new(1, str)
+end
+
 local function collect(str)
    local t = {}
-   for v,k in string.gmatch(str, '([^%a]+)(%a+)') do 
+   for v,k in string.gmatch(str, part) do 
       local w = tonumber(v)
       if w < 0 then w=-w end
       t[w] = t[w] or {}
@@ -159,5 +190,7 @@ for k,v in pairs(b) do print(k,v) end
 --q = tokey(p)
 --r = fromkey(q)
 --for k,v in pairs(r) do print(k,v) end
-a = units:new(2, 'm*k/(f*h^2)^2')
-print(a)
+--a = units:new(2, 'm*k/(f*h^2)^2')
+--print(a)
+--print(diff('mm','km'))
+print(vconvert(1, '1mm','1km'))
