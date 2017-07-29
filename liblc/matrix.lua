@@ -44,7 +44,7 @@ matrix.__index = matrix
 
 matrix.type = 'matrix'
 
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrixes are spares by default.")
 
 -- test object type

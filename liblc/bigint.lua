@@ -34,7 +34,7 @@ bigint.__index = bigint
 bigint.type = 'bigint'  -- mark of type
 
 -- description
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 bigint.about = help:new("Operations with arbitraty long integers")
 
 bigint.BASE = 10        -- the radix

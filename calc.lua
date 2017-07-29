@@ -1,6 +1,7 @@
 #!/usr/local/bin/lua -i
 
 -- Lua based calculator
+lc_version = 0.5
 
 --LOCALISATION_FILE = "locale/lng.ru"
 
@@ -158,8 +159,9 @@ function deserialize(obj_str)
    return o
 end
 
+
 -- Run!
-print("\n             --==== LuaCalc 0.5 ====--\n")
+print("\n             --==== LuaCalc "..lc_version.." ====--\n")
 print(about:get('intro'))
 
 _PROMPT='lc: '

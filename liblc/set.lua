@@ -30,7 +30,7 @@ set.type = 'set'
 set.NOT_A_SET = "Set is expected!"
 
 -- description
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 set.about = help:new("Manipulation with sets")
 
 -- check type

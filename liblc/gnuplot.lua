@@ -27,7 +27,7 @@ gnuplot.__index = gnuplot
 
 gnuplot.type = 'gnuplot'
 
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 gnuplot.about = help:new("Interface for calling Gnuplot from Lua")
 
 gnuplot.N = 100        -- devide interval into given number of points

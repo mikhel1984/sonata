@@ -30,7 +30,7 @@ rational.__index = rational
 rational.type = 'rational'
 
 -- description
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 rational.about = help:new("Computations with rational numbers.")
 
 local function isrational(v) return type(v) == 'table' and v.type == rational.type end

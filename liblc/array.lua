@@ -31,7 +31,7 @@ array.__index = array
 array.type = 'array'
 
 -- description
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 array.about = help:new("Manipulations with arrays of elements")
 
 -- check object type

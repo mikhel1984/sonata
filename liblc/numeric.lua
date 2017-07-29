@@ -22,7 +22,7 @@ Stanislav Mikhel, 2017.
 
 local numeric = {}
 
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 numeric.about = help:new("Group of functions for numerical calculations.")
 
 -- current tolerance

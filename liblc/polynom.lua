@@ -33,7 +33,7 @@ polynom.__index = polynom
 
 polynom.type = 'polynom'
 
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 polynom.about = help:new("Operations with polynomials")
 
 -- check type

@@ -32,7 +32,7 @@ complex.__index = complex
 complex.type = 'complex'
 
 -- description
-local help = require "liblc.help"
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 complex.about = help:new("Manipulations with complex numbers")
 
 -- constructor

@@ -26,8 +26,7 @@ Stanislav Mikhel, 2017.
 
 local stat = {}
 
-local help = require "liblc.help"
---local help = require 'help'
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
 
 -- magic numbers for gamma approximation
