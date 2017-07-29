@@ -46,6 +46,23 @@ local function diff(s1, s2)
    end
 end
 
+local function args(a,b)
+   a = isunits(a) and a or units:new(a)
+   b = isunits(b) and b or units:new(b)
+   return a,b
+end
+
+local function usize(t) 
+   local n = 0
+   for k in pairs(t) do n = n+1 end
+   return n
+end
+
+local function isempty(t)
+   for k in pairs(t) do return false end
+   return true
+end
+
 local op = {
 ['*'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) + v end end,
 ['/'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) - v end end,
@@ -137,13 +154,13 @@ local function vconvert(v, from, to)
    return res
 end
 
-local function toatom (v, u)
-   local t, res = fromkey(u), v
-   local kold, knew = "", u
+units.toatom = function (uv)
+   local t, res = fromkey(uv.key), uv.value
+   local kold, knew = "", uv.key
    while kold ~= knew do
       kold = knew
       for v1,u1 in string.gmatch(knew, part) do
-         local left,right,base,num
+         local left,right,base
          if units.rules[u1] then
 	    left,right,base = '','',u1
 	 else
@@ -153,13 +170,17 @@ local function toatom (v, u)
 	    end
 	 end
 	 if base then
-	    num = tonumber(v1)
-	    local tmp = units.rules[base](num > 0 and res or 1/res)
-	    local add = fromkey(tmp.key)
-	    t[u1] = nil
-	    op['^'](add,num)
-	    op['*'](t,add)
-	    res = math.pow(tmp.value*units.prefix[right]/units.prefix[left],num)
+	    if type(units.rules[base]) == 'function' then
+	       local result = units.rules[base](uv)
+	       return result.value, result.key
+	    else
+	       local tmp = units.copy(units.rules[base])
+	       local add,num = fromkey(tmp.key), tonumber(v1)
+	       t[u1] = nil
+	       op['^'](add,num)
+	       op['*'](t,add)
+	       res = res*math.pow(tmp.value*units.prefix[right]/units.prefix[left], num)
+	    end
 	 end
       end
       knew = tokey(t)
@@ -167,21 +188,79 @@ local function toatom (v, u)
    return res, knew
 end
 
-units.convert = function (u, str)
-   local res = units:new(1, str)
+local function uconvert(u, tokey)
+   local res = units:new(1)
+   res.key = tokey
    if iscompatible(u.key, res.key) then
       res.value = vconvert(u.value, u.key, res.key)
    else
-      local v1,u1 = toatom(u.value, u.key)
-      print(v1,u1)
-      local v2,u2 = toatom(res.value, res.key)
-      print(v2,u2)
+      local v1,u1 = units.toatom(u)
+      local v2,u2 = units.toatom(res)
       if iscompatible(u1,u2) then
          res.value = vconvert(v1/v2, u1, u2)
       else
          res = nil
       end
    end
+   return res
+end
+
+units.convert = function (u, str)
+   local res = units:new(1, str)
+   return uconvert(u, res.key)
+end
+
+units.__unm = function (u)
+   local res = units.copy(u)
+   res.value = -res.value
+   return res
+end
+
+units.__add = function (a,b)
+   a,b = args(a,b)
+   local tmp = assert(uconvert(b,a.key), "Different units!")
+   local res = units.copy(a)
+   res.value = res.value + tmp.value
+   return res
+end
+
+units.__sub = function (a,b)
+   a,b = args(a,b)
+   local tmp = assert(uconvert(b,a.key), "Different units!")
+   local res = units.copy(a)
+   res.value = res.value - tmp.value
+   return res
+end
+
+units.__mul = function (a,b)
+   a,b = args(a,b)
+   local ta, tb = fromkey(a.key), fromkey(b.key)
+   op['*'](ta,tb)
+   reduce(ta)
+   if isempty(ta) then return a.value*b.value end
+   local res = units:new(a.value*b.value)
+   res.key = tokey(ta)
+   return res
+end
+
+units.__div = function (a,b)
+   a,b = args(a,b)
+   local ta, tb = fromkey(a.key), fromkey(b.key)
+   op['/'](ta,tb)
+   reduce(ta)
+   if isempty(ta) then return a.value/b.value end
+   local res = units:new(a.value/b.value)
+   res.key = tokey(ta)
+   return res
+end
+
+units.__pow = function (a,b)
+   assert(not isunits(b), "Wrong power!")
+   local res = isunits(a) and units.copy(a) or units:new(a)
+   local ta = fromkey(res.key)
+   op['^'](ta,b)
+   res.value = math.pow(res.value, b)
+   res.key = tokey(ta)
    return res
 end
 
@@ -212,18 +291,19 @@ units.__tostring = function (u)
    return u.value .. ' ' .. num .. denom
 end
 
+units.__len = function (u) return u.value end
+
 units.rules = {
 }
 
-units.add = function (ufrom, uto, rule)
-   local tfrom = units:new(1, ufrom)
-   units.rules[tfrom.key] = units.rules[tfrom.key] or {}
-   local tmp = isunits(rule) and rule or units:new(1,uto)
-   units.rules[tmp.key] = rule
+units.add = function (u, rule)
+   units.rules[u] = rule
 end
 
-units.add('h',_, units:new(60,'min'))
-units.add('min',_, units:new(60,'s'))
+units.add('h', units:new(60,'min'))
+units.add('min', units:new(60,'s'))
+units.add('N', units:new(1,'kg*m/s^2'))
+units.add('F', function (x) return units:new(10*x+2,'C') end)
 ------------------------------
 --          tests
 -----------------------------
@@ -238,7 +318,7 @@ units.add('min',_, units:new(60,'s'))
 --print(diff('mm','km'))
 --print(toatom(2, '2kN'))
 --print(vconvert(2, '2m','2mm'))
-p = units:new(2, '1/h^2')
+p = units:new(1, 'N')
 print(p)
---q = p:convert('1/s^2')
---print(q)
+q = units:new(2, 'N')
+print(q^2)
