@@ -5,7 +5,7 @@ units.__index = units
 
 units.type = 'units'
 
-local coeff = {
+units.prefix = {
 p = 1e-12,
 n = 1e-9,
 u = 1e-6,
@@ -110,7 +110,6 @@ end
 units.copy = function (u)
    local cp = units:new(u.value)
    cp.key = u.key
-   --for k,v in pairs(u.units) do cp.units[k] = v end
    return cp
 end
 
@@ -122,7 +121,7 @@ local function iscompatible(k1,k2)
       if v1 ~= v2 then return false end
       if u1 ~= u2 then 
          local l,r,base = diff(u1,u2)
-	 if not (base and coeff[l] and coeff[r]) then return false end
+	 if not (base and units.prefix[l] and units.prefix[r]) then return false end
       end
    end
    return true
@@ -133,13 +132,57 @@ local function vconvert(v, from, to)
    for v1,u1 in string.gmatch(from, part) do
       local _,u2 = f()
       local l,r = diff(u1,u2)
-      res = res * coeff[l]/coeff[r]
+      res = res*math.pow(units.prefix[l]/units.prefix[r], tonumber(v1))
    end
    return res
 end
 
+local function toatom (v, u)
+   local t, res = fromkey(u), v
+   local kold, knew = "", u
+   while kold ~= knew do
+      kold = knew
+      for v1,u1 in string.gmatch(knew, part) do
+         local left,right,base,num
+         if units.rules[u1] then
+	    left,right,base = '','',u1
+	 else
+	    for k in pairs(units.rules) do
+	       left,right,base = diff(k,u1)
+	       if base and units.prefix[left] and units.prefix[right] then break end
+	    end
+	 end
+	 if base then
+	    num = tonumber(v1)
+	    local tmp = units.rules[base](num > 0 and res or 1/res)
+	    local add = fromkey(tmp.key)
+	    t[u1] = nil
+	    op['^'](add,num)
+	    op['*'](t,add)
+	    res = math.pow(tmp.value*units.prefix[right]/units.prefix[left],num)
+	 end
+      end
+      knew = tokey(t)
+   end
+   return res, knew
+end
+
 units.convert = function (u, str)
    local res = units:new(1, str)
+   if iscompatible(u.key, res.key) then
+      res.value = vconvert(u.value, u.key, res.key)
+   else
+      local v1,u1 = toatom(u.value, u.key)
+      print(v1,u1)
+      local v2,u2 = toatom(res.value, res.key)
+      print(v2,u2)
+      if iscompatible(u1,u2) then
+         res.value = vconvert(v1/v2, u1, u2)
+      else
+         res = nil
+      end
+   end
+   return res
 end
 
 local function collect(str)
@@ -172,20 +215,20 @@ end
 units.rules = {
 }
 
+units.add = function (ufrom, uto, rule)
+   local tfrom = units:new(1, ufrom)
+   units.rules[tfrom.key] = units.rules[tfrom.key] or {}
+   local tmp = isunits(rule) and rule or units:new(1,uto)
+   units.rules[tmp.key] = rule
+end
+
+units.add('h',_, units:new(60,'min'))
+units.add('min',_, units:new(60,'s'))
 ------------------------------
 --          tests
 -----------------------------
---p = units.parse('kg*km/(mf*Mf)^2')
+--p = units.parse('1/s')
 --for k,v in pairs(p) do print(k,v) end
---[[
-a = units:new(2, 'm*k/(f*s)^2')
-print(a)
-p = tokey(a.units)
-print(p)
-for s in string.gmatch(p, '(%a+[^%a]+)') do print(s) end
-b = fromkey(p)
-for k,v in pairs(b) do print(k,v) end
-]]
 --print(tokey(p))
 --q = tokey(p)
 --r = fromkey(q)
@@ -193,4 +236,9 @@ for k,v in pairs(b) do print(k,v) end
 --a = units:new(2, 'm*k/(f*h^2)^2')
 --print(a)
 --print(diff('mm','km'))
-print(vconvert(1, '1mm','1km'))
+--print(toatom(2, '2kN'))
+--print(vconvert(2, '2m','2mm'))
+p = units:new(2, '1/h^2')
+print(p)
+--q = p:convert('1/s^2')
+--print(q)
