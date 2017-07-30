@@ -160,6 +160,20 @@ function deserialize(obj_str)
    return o
 end
 
+-- check arguments
+if #arg > 0 then
+   if arg[1] == '-test' then
+      Test = require 'liblc.test'
+      if arg[2] then
+         Test.module(string.format('liblc/%s.lua',arg[2]))
+      else
+         for m in pairs(import) do
+	    Test.module(string.format('liblc/%s.lua',m))
+	 end
+      end
+      os.exit()
+   end
+end
 
 -- Run!
 print("\n             --==== LuaCalc "..lc_version.." ====--\n")

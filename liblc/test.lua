@@ -13,7 +13,7 @@ end
 local function split(str, delim)
    local i,j,k = 1,1,0
    return function ()
-      if i >= #str then return nil end
+      if not str or i >= #str then return nil end
       local res
       j,k = string.find(str, delim, k+1)
       if j then
@@ -29,7 +29,8 @@ end
 
 local function marktest(str, res)
    local min = 20
-   local s = string.match(str, '(.+)%s*%c?')
+   local s = string.match(str, '%C+')
+   s = string.match(s, '^(.-)%s*$')
    if #s > min then s = string.sub(s, min) end
    return string.format('  %s...\t%s', s, (res and 'Succesfull' or 'Failed'))
 end
@@ -44,10 +45,12 @@ test.module = function (fname)
    -- get test
    text = getcode(text)
    local succesfull, failed = 0, 0
+   -- parse
    for block in split(text, delim) do
       local q,a = string.match(block,'(.*)%-%->(.*)')
-      q = q or block
-      a = a or ''
+      q = q or block    -- question
+      a = a or ''       -- answer
+      -- evaluate
       local status, err = pcall(function ()
          local fq = load(q)()
 	 if #a > 0 then
@@ -64,8 +67,7 @@ test.module = function (fname)
    print(string.format("%d test done: %d - succesfull, %d - failed", succesfull+failed, succesfull, failed))
 end
 
-test.module('lc/liblc/abc')
-
+return test
 
 
 
