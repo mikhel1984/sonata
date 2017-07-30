@@ -1,7 +1,6 @@
 
 
 local units = {}
-units.__index = units
 
 units.type = 'units'
 
@@ -264,6 +263,28 @@ units.__pow = function (a,b)
    return res
 end
 
+units.__eq = function (a,b)
+   if not (isunits(a) and isunits(b)) then return false end
+   if a.key == b.key then return a.value == b.value end
+   local tmp = uconvert(b, a.key)
+   if tmp == nil then return false end
+   return a.value == tmp.value
+end
+
+units.__lt = function (a,b)
+   assert(isunits(a) and isunits(b), 'Not compatible!')
+   if a.key == b.key then return a.value < b.value end
+   local tmp = assert(uconvert(b, a.key), 'Not compatible!')
+   return a.value < b.value 
+end
+
+units.__le = function (a,b)
+   assert(isunits(a) and isunits(b), 'Not compatible!')
+   if a.key == b.key then return a.value <= b.value end
+   local tmp = assert(uconvert(b, a.key), 'Not compatible!')
+   return a.value <= b.value 
+end
+
 local function collect(str)
    local t = {}
    for v,k in string.gmatch(str, part) do 
@@ -293,6 +314,18 @@ end
 
 units.__len = function (u) return u.value end
 
+
+units.__index = function (t,k)
+   if units[k] then
+      return units[k]
+   else
+      local v = units.convert(t,k)
+      return v and v.value or nil
+   end
+end
+
+--units.__index = units
+
 units.rules = {
 }
 
@@ -318,7 +351,7 @@ units.add('F', function (x) return units:new(10*x+2,'C') end)
 --print(diff('mm','km'))
 --print(toatom(2, '2kN'))
 --print(vconvert(2, '2m','2mm'))
-p = units:new(1, 'N')
+p = units:new(10, 'N')
 print(p)
-q = units:new(2, 'N')
-print(q^2)
+q = units:new(1, 'N')
+print(p > q)
