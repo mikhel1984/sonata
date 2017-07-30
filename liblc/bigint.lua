@@ -353,7 +353,7 @@ bigint.serialize = function (obj)
    s[#s+1] = "modulename='bigint'"
    return string.format("{%s}", table.concat(s, ','))
 end
-bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of bigint object", help.OTHER}
+bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of bigint object.", help.OTHER}
 
 return bigint
 

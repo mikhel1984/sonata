@@ -51,6 +51,7 @@ import = {
    rational = "Rat",
    set      = "Set",
    stat     = "Stat",
+   units    = "Unit",
 }
 about[import] = {"import", "", help.BASE}
 
