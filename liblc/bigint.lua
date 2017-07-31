@@ -1,32 +1,50 @@
---[[      bigint.lua
-Operations with arbitrary long integer numbers
+---------- bigint.lua -------------
+--
+-- Operations with arbitrary long integer numbers.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
------------ Examples -----------------
+---------------- Tests -----------------
 
+--[[!!
 Big = require 'liblc.bigint'
+a = Big(123)         
+ans = a:tonumber()           --> 123
 
-a = Big(123)           --> 123
-b = Big('456')         --> 456
+b = Big('456')        
+ans = b:tonumber()           --> 456
 
-a + b                  --> 579
-a - b                  --> -333
-a * Big(2)             --> 246
-b / 2                  --> 228
-b % a                  --> 87
-a ^ 3                  --> 1860867
+ans = Big.tonumber(a+b)      --> 579
 
-Big.abs('-25')         --> 25
-Big.factorial(10)      --> 3628800
-c = a:copy()           --> 123
+ans = Big.tonumber(a-b)      --> -333
 
-a > b                  --> false
-a == b                 --> false
-a:eq(123)              --> true
-#a                     --> 3
+ans = Big.tonumber(a*Big(2)) --> 246
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = Big.tonumber(b/2)      --> 228
+
+ans = Big.tonumber(b%a)      --> 87
+
+ans = Big.tonumber(a^3)      --> 1860867
+
+ans = Big.tonumber(Big.abs('-25')) --> 25
+
+c = Big(10)
+ans = Big.tonumber(c:factorial())  --> 3628800
+
+d = a:copy()
+ans = (a == d)               --> true
+
+ans = (a > b)                --> false
+
+ans = (a == b)               --> false
+
+ans = a:eq(123)              --> true
+
+ans = #a                     --> 3
 ]]
+-----------------------------------------
 
 local bigint = {}
 bigint.__index = bigint
