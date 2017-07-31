@@ -3,6 +3,7 @@
 local test = {}
 
 local delim = '%c[%s%c]+'    -- empty strings
+local logname = 'test.log'
 
 local function getcode(str)
    local p = '%-%-%[(=*)%[!!(.-)%]%1%]'
@@ -41,7 +42,11 @@ test.module = function (fname)
    if not f then print("Can't open file '"..fname.."'"); return end
    local text = f:read('*a')
    f:close()
-   print('\nModule: ' .. fname)
+   test.log = test.log or io.open(logname, 'w')
+   -- write head
+   local head = '\nModule: ' .. fname
+   print(head)
+   test.log:write(head,'\n')
    -- get test
    text = getcode(text)
    local succesfull, failed = 0, 0
@@ -50,21 +55,33 @@ test.module = function (fname)
       local q,a = string.match(block,'(.*)%-%->(.*)')
       q = q or block    -- question
       a = a or ''       -- answer
+      local arrow
       -- evaluate
       local status, err = pcall(function ()
          local fq = load(q)()
 	 if #a > 0 then
 	    local fa = load('return '..a)
-	    return ans == fa()
+	    arrow = fa()
+	    return ans == arrow
 	 else
 	    return true
 	 end
       end)
       local res = status and err
       if res then succesfull = succesfull + 1 else failed = failed + 1 end
-      print(marktest(q,res))
+      local mark = marktest(q,res)
+      print(mark)
+      test.log:write(mark,'\n')
+      if not status then
+         test.log:write(err,'\n')
+      elseif not err then
+         test.log:write(tostring(ans),'\t',tostring(arrow),'\n')
+      end
    end
-   print(string.format("%d test done: %d - succesfull, %d - failed", succesfull+failed, succesfull, failed))
+   local final = string.format("%d test done: %d - succesfull, %d - failed", succesfull+failed, succesfull, failed)
+   print(final)
+   test.log:write(final,'\n')
+   test.log:flush()
 end
 
 return test

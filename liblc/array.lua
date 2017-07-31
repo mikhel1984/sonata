@@ -1,29 +1,53 @@
---[[       array.lua
+------------  array.lua ----------------
+--
+-- Manipulations with arrays of elements.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
--------------- Examples ------------
-
+-------------------- Tests -------------------
+--[[!!
 Arr = require 'liblc.array'
+-- empty array
+a = Arr {2,3,4}                       
+ans = a:get{1,2,1}                     --> nil
 
-a = Arr {2,3,4}                        -->  empty array 2 x 3 x 4
-b = Arr.rand {5,2,1}                   -->  array 5 x 2 x 1 with random numbers
+a:set({1,2,1},4)
+ans = a:get{1,2,1}                     --> 4
 
-#a                                     -->  number of elements in a
+-- random array
+b = Arr.rand {5,2,1}
+-- number of elements
+ans = #b                               --> 10
 
-b:map(math.sin)                        -->  apply sin(x) to all elements, return new array
+ans = b:copy()                         --> b
 
-Arr.apply(b,b,math.pow)                -->  create array or x^x
+ans = b:isequal(Arr.rand{5,2,1})       --> true
 
-a + a                                  -->  get summ for each pair of elements
+-- arithmetical operations
+c = b + b
+ans = c:get{1,1,1}                     --> 2*b:get{1,1,1}
 
-c = a:sub({1,1,1},{-1,-1,2})           -->  get subarray with all elements for axes 1, 2 and just 2 layers from axe 3
+-- get subarray
+g = a:sub({1,1,1},{-1,-1,2})         
+ans = g:isequal(Arr{2,3,2})            --> true
 
-d = Arr.concat(b, b, 3)                -->  concatenate arrays b along 3-rd axe
+-- concatenate along the 3-rd axes
+d = Arr.concat(b,b,3)
+ans = d:dim()[3]                       --> 2
 
-print(d:fullstring(2,3))               -->  represent as sequence of matrixes where rows and columns are axes 2 and 3 respectively
+e = Arr.apply(b,b, function (x,y) return x*y end)
+ans = e:get{1,1,1}                     --> (b:get{1,1,1})^2
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+f = b:map(function (x) return 10*x end)
+ans = f:get{1,1,1}                     --> b:get{1,1,1}*10
+
+ans = tostring(a)                      --> 'array 2x3x4'
+
+print(d:fullstring(2,3))
 ]]
+---------------------------------------------
 
 local array = {}
 array.__index = array
@@ -109,7 +133,7 @@ array.isequal = function (a1, a2)
    end
    return true
 end
-array.about[array.isequal] = {"isequial(a1,a2)", "Check size equality.", help.OTHER}
+array.about[array.isequal] = {"isequal(a1,a2)", "Check size equality.", help.OTHER}
 
 -- apply function of 2 arguments
 array.apply = function (a1, a2, fn)
