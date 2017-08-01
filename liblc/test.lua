@@ -4,6 +4,7 @@ local test = {}
 
 local delim = '%c[%s%c]+'    -- empty strings
 local logname = 'test.log'
+local tol = 0.001
 
 local function getcode(str)
    local p = '%-%-%[(=*)%[!!(.-)%]%1%]'
@@ -36,6 +37,11 @@ local function marktest(str, res)
    return string.format('  %s...\t%s', s, (res and 'Succesfull' or 'Failed'))
 end
 
+test.print = function (str)
+   print(str)
+   test.log:write(str,'\n')
+end
+
 test.module = function (fname)
    -- read file
    local f = io.open(fname, 'r')
@@ -44,15 +50,13 @@ test.module = function (fname)
    f:close()
    test.log = test.log or io.open(logname, 'w')
    -- write head
-   local head = '\nModule: ' .. fname
-   print(head)
-   test.log:write(head,'\n')
+   test.print('\nModule: ' .. fname)
    -- get test
    text = getcode(text)
    local succesfull, failed = 0, 0
    -- parse
    for block in split(text, delim) do
-      local q,a = string.match(block,'(.*)%-%->(.*)')
+      local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
       q = q or block    -- question
       a = a or ''       -- answer
       local arrow
@@ -62,16 +66,14 @@ test.module = function (fname)
 	 if #a > 0 then
 	    local fa = load('return '..a)
 	    arrow = fa()
-	    return ans == arrow
+	    return (e == '~') and (math.abs(ans-arrow) <= tol*math.abs(ans)) or (ans == arrow)
 	 else
 	    return true
 	 end
       end)
       local res = status and err
       if res then succesfull = succesfull + 1 else failed = failed + 1 end
-      local mark = marktest(q,res)
-      print(mark)
-      test.log:write(mark,'\n')
+      test.print(marktest(q,res)) 
       if not status then
          test.log:write(err,'\n')
       elseif not err then
@@ -79,8 +81,7 @@ test.module = function (fname)
       end
    end
    local final = string.format("%d tests: %d - succesfull, %d - failed", succesfull+failed, succesfull, failed)
-   print(final)
-   test.log:write(final,'\n')
+   test.print(final)
    test.log:flush()
 end
 

@@ -1,24 +1,31 @@
---[[        numeric.lua
-Numerical solutions for some mathematical problems.
+------------  numeric.lua ----------------
+--
+-- Numerical solutions for some mathematical problems.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
--------------- Examples -------------------
-
+-------------------- Tests -------------------
+--[[!!
 Num = require 'liblc.numeric'
+Num.TOL = 1e-4
+a = Num.solve(math.sin, math.pi*0.5, math.pi*1.5)
+ans = a                                   --~ math.pi
 
-Num.TOL = 1e-4                                        --> all functions try to provide this tolerance, default is 1e-3
+d = Num.newton(math.sin, math.pi*0.7)
+ans = d                                   --~ math.pi
 
-Num.solve(math.sin, math.pi/2, math.pi*3/2)           --> solve the equation 'sin(x) = 0' on the interval [-pi/2;3*pi/2]
+b = Num.diff(math.sin, 0)
+ans = b                                   --~ 1
 
-Num.diff(math.sin, 0)                                 --> numerical appoximation of (sin(x))' for x = 0
+c = Num.trapez(math.sin, 0, math.pi)      
+ans = c                                   --~ 2
 
-Num.trapez(math.sin, 0, math.pi)                      --> numerical approximation of given funciton on the interval [0;pi] based on the trapezoidal rule
-
-function test (x,y) return x*y end
-tbl, yn = Num.ode(test, 0, 0, 3)                      --> solution of differential equation, represented by function 'test', on the interval [0;3]
-
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+tbl, yn = Num.ode(function (x,y) return x*y end, 0, 1, 3)
+ans = yn                                  --~ 90.011
 ]]
+---------------------------------------------
 
 local numeric = {}
 
@@ -133,4 +140,3 @@ end
 numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automaticaly according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
 
 return numeric
-

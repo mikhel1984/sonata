@@ -23,22 +23,22 @@ ans = a * b                    --> Cmp(3,6)
 ans = a / Cmp._i               --> Cmp(2,-1)
 
 c = Cmp(1,1)^Cmp(2,-2)
-ans = math.floor(c:Re()*1000)  --> 6147
+ans = c:Re()                   --~ 6.147
 
-ans = math.floor(c:Im()*1000)  --> 7400
+ans = c:Im()                   --~ 7.4
 
 ans = (a == b)                 --> false
 
 ans = (a ~= b)                 --> true
 
-ans = math.floor(a:abs()*1000) --> 2236
+ans = a:abs()                  --~ 2.236
 
-ans = math.floor(a:arg()*1000) --> 1107
+ans = a:arg()                  --~ 1.107
 
 ans = a:conj()                 --> Cmp(1,-2)
 
 d = Cmp.sqrt(-2)
-ans = math.floor(d:Im()*1000)  --> 1414
+ans = d:Im()                   --~ 1.414
 ]]
 
 local complex = {}

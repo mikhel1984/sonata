@@ -1,30 +1,44 @@
---[[     polynom.lua
-Manipulations with polynomials.
+------------  polynom.lua ----------------
+--
+-- Manipulations with polynomials.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
----------- Examples -------------
-
+-------------------- Tests -------------------
+--[[!!
 Poly = require 'liblc.polynom'
+a = Poly(1,2,4,3)            
+b = Poly(1,1)                
+ans = a:val(0)                --> 3
 
-a = Poly(1,2,4,3)            --> [1,2,4,3]
-b = Poly(1,1)                --> [1,1]
-a:val(0)                     --> 3
+ans = a + b                   --> Poly(1,2,5,4)
 
-a + b                        --> [1,2,5,4]
-a - b                        --> [1,2,3,2]
-a * a                        --> [1,2,1]
-b / a
-b % a
-a ^ 3                        --> [1,3,3,1]
+ans = a - b                   --> Poly(1,2,3,2)
 
-a:int()                     
-a:der()                     
-Poly.coef(1,-1)              --> [1,0,-1]
+ans = b * b                   --> Poly(1,2,1)
+
+ans = b / a                   --> Poly(3,4)
+
+ans = b % a                   --> Poly(1,2,1)
+
+ans = b ^ 3                   --> Poly(1,3,3,1)
+
+ans = b:int()                 --> Poly(1/3,1,1,0)
+
+_,ans = a:der(1)              --> 10
+
+Poly.coef(1,-1)               --> Poly(1,0,-1)
 
 c = a:copy()
+ans = (a == c)                --> true
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = (b == c)                --> false
+
+print(a)
 ]]
+----------------------------------------------
 
 --TODO: polyroot, polyfit
 
