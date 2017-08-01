@@ -75,10 +75,10 @@ test.module = function (fname)
       if not status then
          test.log:write(err,'\n')
       elseif not err then
-         test.log:write(tostring(ans),'\t',tostring(arrow),'\n')
+         test.log:write(tostring(ans),' IS NOT ',tostring(arrow),' !!!\n')
       end
    end
-   local final = string.format("%d test done: %d - succesfull, %d - failed", succesfull+failed, succesfull, failed)
+   local final = string.format("%d tests: %d - succesfull, %d - failed", succesfull+failed, succesfull, failed)
    print(final)
    test.log:write(final,'\n')
    test.log:flush()

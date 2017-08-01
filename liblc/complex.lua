@@ -1,29 +1,44 @@
---[[     complex.lua
-Manipulations with complex numbers.
+------------  complex.lua ----------------
+--
+-- Manipulations with complex numbers.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
+---------------- Tests --------------
+
+--[[!!
 Cmp = require 'liblc.complex'
+a = Cmp(1,2)                  
+b = Cmp(3)
+ans = b                        --> Cmp(3,0)
 
-a = Cmp(1,2)                   --> 1.000 + 2.000i
-b = Cmp(3)                     --> 3.000 + 0.000i
+ans = a + b                    --> Cmp(4,2)
 
-a + b                          --> 4.000 + 2.000i
-Cmp(3) - b                     --> 0.000 + 0.000i
-a * b                          --> 3.000 + 6.000i
-a / Cmp._i                     --> 2.000 - 1.000i
-Cmp(1,1) ^ Cmp(2,2)            --> -0.265 + 0.319i
+ans = Cmp(3) - b               --> Cmp(0)
 
-a == b                         --> false
-a ~= b                         --> true
+ans = a * b                    --> Cmp(3,6)
 
-a:abs()                        --> 2.236
-a:arg()                        --> 1.107
-a:conj()                       --> 1.000 - 2.000i
-a:Re()                         --> 1.000
-a:Im()                         --> 2.000
-Cmp.sqrt(-2)                   --> 0.000 - 1.414i
+ans = a / Cmp._i               --> Cmp(2,-1)
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+c = Cmp(1,1)^Cmp(2,-2)
+ans = math.floor(c:Re()*1000)  --> 6147
+
+ans = math.floor(c:Im()*1000)  --> 7400
+
+ans = (a == b)                 --> false
+
+ans = (a ~= b)                 --> true
+
+ans = math.floor(a:abs()*1000) --> 2236
+
+ans = math.floor(a:arg()*1000) --> 1107
+
+ans = a:conj()                 --> Cmp(1,-2)
+
+d = Cmp.sqrt(-2)
+ans = math.floor(d:Im()*1000)  --> 1414
 ]]
 
 local complex = {}

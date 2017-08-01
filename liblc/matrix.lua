@@ -1,43 +1,79 @@
---[[     matrix.lua
-Matrix operations.
+------------  matrix.lua ----------------
+--
+-- Matrix operations. Indexation from 1.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
-------------- Examples ---------------
-
+-------------------- Tests -------------------
+--[[!!
 Mat = require 'liblc.matrix'
+a = Mat({1,2},{3,4})             
+b = Mat({5,6},{7,8})             
+ans = a(2,2)                     --> 4 
 
-a = Mat({1,2},{3,4})             --> [1,2; 3,4]
-b = Mat({5,6},{7,8})             --> [5,6; 7,8]
+b:set(9, 1,1)
+ans = b(1,1)                     --> 9
 
-Indexation from 1!
+b:set(5, 1,1)
+c = a:T()
+ans = c(1,2)                     --> 3
 
-a(1,1)                           --> 1
-b:set(9, 1,1)                    --> [5,6; 9,8]
-a:transpose() or a:T()           --> [1,3; 2,4]
-#a                               --> 2,2
+_, ans = a:size()                --> 2
 
-a + b                            --> [6,8; 10,12]
-b - a                            --> [4,4; 4,4]
-a * b
-a / b
-a ^ 2 
+ans = a + b                      --> Mat({6,8},{10,12})
 
-a:det()
-a:inv()
-c = a:copy()                     --> [1,2; 3,4]
+ans = b - a                      --> Mat({4,4},{4,4})
 
-Mat.eye(2)                       --> [1,0; 0,1]
-Mat.zeros(2,3)                   --> [0,0,0; 0,0,0]
-Mat.ones(2,3, 4)                 --> [4,4,4; 4,4,4]
+ans = a * b                      --> Mat({19,22},{43,50})
 
-a .. b                           --> [1,2,5,6; 3,4,7,8]
-a // b                           --> [1,2; 3,4; 5,6; 7,8]
-a:sub(1,1,2,-1)                  --> [3,4]
+ans = a / b                      --> Mat({3,2},{-2,-1})
 
-a:map(function(x) return x^2 end) --> [1,4; 9,16]
+ans = a ^ 2                      --> Mat({7,10},{15,22}) 
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = a:det()                    --> -2
+
+e = a:inv()
+ans = e(2,1)                     --> 1.5
+
+f = a:copy()
+ans = (f == a)                   --> true
+
+ans = (a == b)                   --> false
+
+ans = Mat.eye(2)                 --> Mat({1,0},{0,1})
+
+ans = Mat.zeros(2,1)             --> Mat({0},{0})
+
+ans = Mat.ones(2,3,4)            --> Mat({4,4,4},{4,4,4})
+
+ans = a .. b                     --> Mat({1,2,5,6},{3,4,7,8})
+
+ans = a // b                     --> Mat({1,2},{3,4},{5,6},{7,8})
+
+ans = a:map(function (x) return x^2 end)          --> Mat({1,4},{9,16})
+
+ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat({-1,-3},{-2,-4})
+
+ans = Mat.rref(a, Mat({5},{11})) --> Mat({1,0,1},{0,1,2})
+
+ans = Mat.V(1,2,3)               --> Mat({1},{2},{3})
+
+g = Mat({1,2,3},{4,5,6},{7,8,9})
+ans = g:sub(2,-1,2,3)           --> Mat({5,6},{8,9})
+
+h = Mat.rand(3,2)
+print(h)
+
+m = Mat({1,2},{3,4},{5,6})
+n = m:pinv()
+ans = math.floor(n(2,2)*1000)   --> 333
+
+n = m:pinv2()
+ans = math.floor(n(2,2)*1000)   --> 333
 ]]
+-------------------------------------
 
 local matrix = {}
 matrix.__index = matrix
@@ -242,7 +278,7 @@ matrix.map_ex = function (m, fn)
 end
 matrix.about[matrix.map_ex] = {"map_ex(m,fn)", "Applay function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
 
-matrix.__len = matrix.size
+--matrix.__len = matrix.size
 
 -- create copy of matrix
 matrix.copy = function (m)
@@ -332,7 +368,7 @@ matrix.rref = function (A,b)
    local tr, d = gaussdown(matrix.concat(A,b,'h'))
    return gaussup(tr), d
 end
-matrix.about[matrix.rref] = {"rref(m)", "Perform transformations using Gauss method. Return also determinant.", help.BASE}
+matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant.", help.BASE}
 
 -- create vector
 matrix.vector = function (...)
@@ -340,7 +376,9 @@ matrix.vector = function (...)
    for i = 1, #v do res[i] = {v[i]} end
    return matrix:init(#v, 1, res)
 end
-matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers", help.BASE}
+matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V().", help.BASE}
+
+matrix.V = matrix.vector
 
 -- matrix of 0
 matrix.zeros = function (rows, cols)
