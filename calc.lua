@@ -124,15 +124,6 @@ function eval(fn, x1, xn, step)
 end
 about[eval] = {"eval(fn,x1[,xn[,step]])", "Evalueate function for given value or interval and print result.", help.OTHER}
 
-function howlong(fn,...)
-   local n, sum, t = 10, 0, 0
-   for i = 1,n do
-      t = os.clock(); fn(...); t = os.clock() - t
-      sum = sum + t
-   end
-   return sum / n
-end
-
 -- read localisation file and update descriptions
 if LOCALISATION_FILE then about:localisation(LOCALISATION_FILE) end
 
@@ -171,6 +162,7 @@ if #arg > 0 then
 	    Test.module(string.format('liblc/%s.lua',m))
 	 end
       end
+      Test.summary()
       os.exit()
    end
 end
