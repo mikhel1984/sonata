@@ -1,28 +1,42 @@
---[[     set.lua
-Manipulation with sets.
-Based on implementation of Roberto Ierusalimschy.
+------------  set.lua ----------------
+--
+-- Manipulation with sets.
+-- Based on implementation of Roberto Ierusalimschy.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
---------- Examples -------------
-
+-------------------- Tests -------------------
+--[[!!
 Set = require 'liblc.set'
+a = Set {1,2,3,4,1}           
+b = Set {3,4,5}               
+ans = a                        --> Set {1,2,3,4}
 
-a = Set {1,2,3,4,1}           --> {1,2,3,4}
-b = Set {3,4,5}               --> {3,4,5}
+ans = b:check(6)               --> false
 
-b:check(6)                    --> false
-b:insert(6)                   --> {3,4,5,6}
-b:remove(6)                   --> {3,4,5}
+b:insert(6)
+ans = b:check(6)               
+b:remove(6)                    --> true
 
-a + b                         --> {1,2,3,4,5}
-a * b                         --> {3,4}
-a / b                         --> {1,2}
+ans = a + b                    --> Set {1,2,3,4,5}
 
-a == b                        --> false
-a < b                         --> false
+ans = a * b                    --> Set {3,4}
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = a / b                    --> Set {1,2}
+
+ans = (a == b)                 --> false
+
+ans = (a < b)                  --> false
+
+t = a:table()
+ans = a:check(t[1])            --> true
+
+ans = #a                       --> 4
 ]]
+---------------------------------------------
+
 local set = {}
 set.__index = set
 
@@ -31,7 +45,7 @@ set.NOT_A_SET = "Set is expected!"
 
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-set.about = help:new("Manipulation with sets")
+set.about = help:new("Manipulation with sets.")
 
 -- check type
 local function isset(s) return type(s) == 'table' and s.type == set.type end
@@ -49,29 +63,29 @@ set.check = function (s, v)
    assert(isset(s), set.NOT_A_SET)
    return s[v] == true
 end
-set.about[set.check] = {"check(set,val)", "Check if value is in set", help.OTHER}
+set.about[set.check] = {"check(set,val)", "Check if value is in set.", help.OTHER}
 
 -- add new element
 set.insert = function (s, v)
    assert(isset(s), set.NOT_A_SET)
    s[v] = true
 end
-set.about[set.insert] = {"insert(set,val)", "Insert element into set", help.OTHER}
+set.about[set.insert] = {"insert(set,val)", "Insert element into set.", help.OTHER}
 
 -- delete element
 set.remove = function (s,v)
    assert(isset(s), set.NOT_A_SET)
    s[v] = nil
 end
-set.about[set.remove] = {"remove(set,val)", "Remove element from set", help.OTHER}
+set.about[set.remove] = {"remove(set,val)", "Remove element from set.", help.OTHER}
 
 -- convert into lua table
 set.table = function (s)
    local res = {}
-   for k in pairs(v) do table.insert(res, k) end
+   for k in pairs(s) do table.insert(res, k) end
    return res
 end
-set.about[set.table] = {"table(set)", "Represent set as a table", help.OTHER}
+set.about[set.table] = {"table(set)", "Represent set as a table.", help.OTHER}
 
 -- union (a+b)
 set.__add = function (a,b)

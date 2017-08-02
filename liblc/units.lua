@@ -1,4 +1,43 @@
+------------  units.lua ----------------
+--
+-- Operations and conversations with units.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
+-------------------- Tests -------------------
+--[[!!
+Unit = require 'liblc.units'
+a = Unit(1,'m/s')
+ans = a['km/h']                    --> 3.6
+
+cp = a:copy() 
+ans = cp                           --> Unit(1,'m/s')
+
+b = a:convert('km/h')
+ans = b                            --> Unit(3.6, 'km/h')
+
+b = 3 * b
+ans = a + b                        --> Unit(4, 'm/s')
+
+ans = b - a                        --> Unit(2, 'm/s')
+
+ans = a * b                        --> Unit(3, 'm^2/s^2')
+
+ans = b / a                        --> 3
+
+ans = (a < b)                      --> true
+
+ans = b ^ 3                        --> Unit(27, 'm^3/s^3')
+
+Unit.add('snake', Unit(48, 'parrot'))
+c = Unit(2,'snake')
+ans = c['parrot']                  --> 96
+
+ans = c['ksnake']                  --> 0.002
+]]
+---------------------------------------------
 local units = {}
 
 units.type = 'units'

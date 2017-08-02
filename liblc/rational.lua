@@ -1,28 +1,46 @@
---[[         rational.lua
-Rational number operatons support.
+------------  rational.lua ----------------
+--
+-- Rational number operatons support.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
--------------- Examples --------------------
-
+-------------------- Tests -------------------
+--[[!!
 Rat = require 'liblc.rational'
+a = Rat(1,2)
+b = Rat(2)
+ans = b                 --> Rat(2,1)
 
-a = Rat(1,2)           --> 1/2
-b = Rat(2)             --> 2/1
+k = 234781
+ans = Rat(2*k,3*k)      --> Rat(2,3)
 
-a + b                  --> 5/2
-a * 2                  --> 1/1
-Rat(2,3)*Rat(3,2)      --> 1/1
-a / Rat(1,3)           --> 3/2
-a ^ 3                  --> 1/8
-2 ^ a                  --> 1.41...
+ans = a + b             --> Rat(5,2)
 
-b == b                 --> true
-a >= b                 --> false
+ans = 2 * a             --> Rat(1)
 
-Rat.gcd(10,15)         --> 5
+ans = Rat(2,3)*Rat(3,2) --> Rat(1)
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = a / Rat(1,3)      --> Rat(3,2)
+
+ans = a ^ 3             --> Rat(1,8)
+
+ans = 2 ^ a             --~ 1.4142
+
+ans = (b == b)          --> true
+
+ans = (a >= b)          --> false
+
+ans = Rat.gcd(125,65)   --> 5
+
+ans = a:decimal()       --> 0.5
+
+ans = b:Nu()            --> 2
+
+ans = b:De()            --> 1
 ]]
+----------------------------------------------
 
 local rational = {}
 rational.__index = rational

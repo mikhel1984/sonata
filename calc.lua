@@ -1,7 +1,7 @@
 #!/usr/local/bin/lua -i
 
 -- Lua based calculator
-lc_version = '0.5.2'
+lc_version = '0.5.3'
 
 --LOCALISATION_FILE = "locale/lng.ru"
 

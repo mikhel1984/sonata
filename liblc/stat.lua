@@ -1,28 +1,44 @@
---[[       stat.lua
+------------  stat.lua ----------------
+--
+-- Some statistical functions.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
------------- Examples -------------
-
+-------------------- Tests -------------------
+--[[!!
 Stat = require 'liblc.stat'
-
 X = {3,2,5,6,3,4,3,1}
 w = {1,1,0,1,2,2,1,1}
+ans = Stat.mean(X)            --~ 3.375
 
-Stat.mean(X)                  --> 3.375
+ans, tmp = Stat.std(X,W)      --~ 1.314
 
-Stat.std(X,w)                 --> 1.314 1.728
+ans = tmp                     --~ 1.728
 
-Stat.stdcorr(X)               --> 1.598
-
-Stat.median(X)                --> 3.0
+ans = Stat.median(X)          --> 3
 
 tmp = Stat.freq(X)
-tmp[3]                        --> 1.0
+ans = tmp[3]                  --> 1.0
 
-Stat.cmoment(2,X)             --> 2.234
+ans = Stat.cmoment(2,X)       --~ 2.234
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = Stat.moment(3,X,W)      --~ 61.875
+
+ans = Stat.sum(X)             --> 27
+
+ans = Stat.stdcorr(X)         --~ 1.598
+
+_,ans = Stat.max(X)           --> 4
+
+ans = Stat.min(X)             --> 1
+
+ans = Stat.geomean(X)         --~ 2.995
+
+ans = Stat.harmean(X,W)       --~ 2.567
 ]]
+----------------------------------------------
 
 local stat = {}
 
