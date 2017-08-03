@@ -1,6 +1,12 @@
---[[     gnuplot.lua
-Call Gnuplot from Lua.
+------------  array.lua ----------------
+--
+-- Call Gnuplot from Lua.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
 
+--[[   
 ----------- Examples ------------
 
 Gnu = require 'liblc.gnuplot'
@@ -17,9 +23,6 @@ g = Gnu.plot2d({
 
 g[3] = {'points.dat', type='data', title='Additional points'}
 g:plot2d()
-
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
 ]]
 
 local gnuplot = {}

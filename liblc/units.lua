@@ -37,8 +37,13 @@ c = Unit(2,'snake')
 ans = c['parrot']                  --> 96
 
 ans = c['ksnake']                  --> 0.002
+
+print(a)
 ]]
 ---------------------------------------------
+
+--TODO: nonlinear functions
+
 local units = {}
 
 units.type = 'units'

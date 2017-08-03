@@ -1,5 +1,12 @@
---[[     help.lua
-Function description management.
+------------  help.lua ----------------
+--
+-- Function description management.
+--
+-- This file is a part of liblc collection. 
+-- Stanislav Mikhel, 2017.
+----------------------------------------
+
+--[[-
 
 about = help:new("Module description*)      -- create new help object
 
@@ -29,9 +36,6 @@ To use language localisation, create text file with Lua table in format
   etc.
 }
 Use about:localisation("file_name") to load it.
-
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
 ]]
 
 local help = {}
