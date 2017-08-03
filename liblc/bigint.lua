@@ -134,7 +134,7 @@ local function div(a,b)
 	    rest = rest-prod
 	 else
 	    acc[#acc+1] = math.tointeger(n-1)
-	    rest = rest-prod-denom
+	    rest = rest-prod+denom
 	 end
       else
          if #acc > 0 then acc[#acc+1] = 0 end
@@ -377,4 +377,3 @@ end
 bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of bigint object.", help.OTHER}
 
 return bigint
-
