@@ -10,6 +10,7 @@
 
 --[[!!
 Cmp = require 'liblc.complex'
+
 a = Cmp(1,2)                  
 b = Cmp(3)
 ans = b                        --> Cmp(3,0)
@@ -39,6 +40,8 @@ ans = a:conj()                 --> Cmp(1,-2)
 
 d = Cmp.sqrt(-2)
 ans = d:Im()                   --~ 1.414
+
+print(a)
 ]]
 
 local complex = {}

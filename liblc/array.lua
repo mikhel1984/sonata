@@ -9,6 +9,7 @@
 -------------------- Tests -------------------
 --[[!!
 Arr = require 'liblc.array'
+
 -- empty array
 a = Arr {2,3,4}                       
 ans = a:get{1,2,1}                     --> nil
@@ -43,7 +44,7 @@ ans = e:get{1,1,1}                     --> (b:get{1,1,1})^2
 f = b:map(function (x) return 10*x end)
 ans = f:get{1,1,1}                     --> b:get{1,1,1}*10
 
-ans = tostring(a)                      --> 'array 2x3x4'
+print(a)
 
 print(d:fullstring(2,3))
 ]]

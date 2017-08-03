@@ -9,6 +9,7 @@
 -------------------- Tests -------------------
 --[[!!
 Poly = require 'liblc.polynom'
+
 a = Poly(1,2,4,3)            
 b = Poly(1,1)                
 ans = a:val(0)                --> 3

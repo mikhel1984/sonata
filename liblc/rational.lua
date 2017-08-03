@@ -9,6 +9,7 @@
 -------------------- Tests -------------------
 --[[!!
 Rat = require 'liblc.rational'
+
 a = Rat(1,2)
 b = Rat(2)
 ans = b                 --> Rat(2,1)

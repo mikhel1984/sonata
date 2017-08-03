@@ -56,6 +56,7 @@ test.module = function (fname)
    test.print('\n\tModule: ' .. fname)
    -- get test
    text = getcode(text)
+   if not text or #text == 0 then return end
    local succeed, failed = 0, 0
    local fulltime, first = 0
    -- parse
@@ -68,7 +69,7 @@ test.module = function (fname)
       local status, err = pcall(function ()
          local fq = load(q)
 	 time = os.clock(); fq(); time = (os.clock() - time)*1000
-	 --first = first or time
+	 first = first or time
 	 if #a > 0 then
 	    local fa = load('return '..a)
 	    arrow = fa()
@@ -87,6 +88,7 @@ test.module = function (fname)
       end
       fulltime = fulltime + time
    end
+   fulltime = fulltime - (first or 0)
    test.results[fname] = {succeed, failed, fulltime}
    --local final = string.format("%d tests: %d - succeed, %d - failed", succeed+failed, succeed, failed)
    --test.print(final)

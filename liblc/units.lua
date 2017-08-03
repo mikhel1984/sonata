@@ -9,6 +9,7 @@
 -------------------- Tests -------------------
 --[[!!
 Unit = require 'liblc.units'
+
 a = Unit(1,'m/s')
 ans = a['km/h']                    --> 3.6
 

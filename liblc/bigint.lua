@@ -10,6 +10,7 @@
 
 --[[!!
 Big = require 'liblc.bigint'
+
 a = Big(123)         
 ans = a:tonumber()           --> 123
 
@@ -43,6 +44,8 @@ ans = (a == b)               --> false
 ans = a:eq(123)              --> true
 
 ans = #a                     --> 3
+
+print(a)
 ]]
 -----------------------------------------
 

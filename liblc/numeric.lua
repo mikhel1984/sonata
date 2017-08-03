@@ -9,6 +9,7 @@
 -------------------- Tests -------------------
 --[[!!
 Num = require 'liblc.numeric'
+
 Num.TOL = 1e-4
 a = Num.solve(math.sin, math.pi*0.5, math.pi*1.5)
 ans = a                                   --~ math.pi
