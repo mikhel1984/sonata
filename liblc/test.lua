@@ -35,7 +35,7 @@ local function marktest(str, res, time)
    s = string.match(s, '^(.-)%s*$')
    if #s > min then s = string.sub(s, min) end
    local rest = string.rep('.', (full-#s))
-   return string.format('%s%s%s\t%.3f', s, rest, (res and 'Succed' or 'Failed'), time)
+   return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succed' or 'Failed'), time)
 end
 
 test.print = function (str)

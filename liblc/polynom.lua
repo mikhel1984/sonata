@@ -20,17 +20,17 @@ ans = a - b                   --> Poly(1,2,3,2)
 
 ans = b * b                   --> Poly(1,2,1)
 
-ans = b / a                   --> Poly(3,4)
+ans = a / b                   --> Poly(1,1,3)
 
-ans = b % a                   --> Poly(1,2,1)
+ans = a % b                   --> Poly(0)
 
 ans = b ^ 3                   --> Poly(1,3,3,1)
 
-ans = b:int()                 --> Poly(1/3,1,1,0)
+ans = b:int()                 --> Poly(0.5,1,0)
 
-_,ans = a:der(1)              --> 10
+_,ans = a:der(1)              --> 11
 
-Poly.coef(1,-1)               --> Poly(1,0,-1)
+ans = Poly.coef(1,-1)         --> Poly(1,0,-1)
 
 c = a:copy()
 ans = (a == c)                --> true
