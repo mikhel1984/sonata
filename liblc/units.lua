@@ -13,6 +13,8 @@ Unit = require 'liblc.units'
 a = Unit(1,'m/s')
 ans = a['km/h']                    --> 3.6
 
+ans = #a                           --> 1
+
 cp = a:copy() 
 ans = cp                           --> Unit(1,'m/s')
 
@@ -41,8 +43,6 @@ ans = c['ksnake']                  --> 0.002
 print(a)
 ]]
 ---------------------------------------------
-
---TODO: nonlinear functions
 
 local units = {}
 
@@ -240,18 +240,13 @@ units.toatom = function (uv)
 	    end
 	 end
 	 if base then                               -- get common part
-	    if type(units.rules[base]) == 'function' then
-	       local result = units.rules[base](uv)
-	       return result.value, result.key
-	    else
-	       -- replace
-	       local tmp = units.copy(units.rules[base])
-	       local add,num = fromkey(tmp.key), tonumber(v1)
-	       t[u1] = nil
-	       op['^'](add,num)
-	       op['*'](t,add)
-	       res = res*math.pow(tmp.value*units.prefix[right]/units.prefix[left], num)
-	    end
+	    -- replace
+	    local tmp = units.copy(units.rules[base])
+	    local add,num = fromkey(tmp.key), tonumber(v1)
+	    t[u1] = nil
+	    op['^'](add,num)
+	    op['*'](t,add)
+	    res = res*math.pow(tmp.value*units.prefix[right]/units.prefix[left], num)
 	 end
       end
       knew = tokey(t)                              -- back to string
@@ -278,9 +273,12 @@ local function uconvert(u, tokey)
 end
 
 -- convert one units to another, nil if can't
-units.convert = function (u, str)
-   local res = units:new(1, str)
-   return uconvert(u, res.key)
+units.convert = function (u, r)
+   if type(r) == 'function' then return r(u)
+   else
+      local res = units:new(1, r)
+      return uconvert(u, res.key)
+   end
 end
 units.about[units.convert] = {'convert(v, units)','Convert one units to another, return new object or nil.', help.BASE}
 
@@ -344,13 +342,17 @@ units.__pow = function (a,b)
    return res
 end
 
+local function equal(a,b)
+   return math.abs(a-b) <= 1e-3*math.abs(a)
+end
+
 -- a == b
 units.__eq = function (a,b)
    if not (isunits(a) and isunits(b)) then return false end
-   if a.key == b.key then return a.value == b.value end
+   if a.key == b.key then return equal(a.value, b.value) end
    local tmp = uconvert(b, a.key)
    if tmp == nil then return false end
-   return a.value == tmp.value
+   return equal(a.value, tmp.value)
 end
 
 -- a < b
@@ -417,6 +419,7 @@ units.rules = {
 
 -- add new rule
 units.add = function (u, rule)
+   assert(isunits(rule), 'Units object is expected!')
    units.rules[u] = rule
 end
 units.about[units.add] = {'add(unit,rule)', 'Add new rule for conversation.', help.BASE}
@@ -424,8 +427,6 @@ units.about[units.add] = {'add(unit,rule)', 'Add new rule for conversation.', he
 -- some rules
 units.add('h', units:new(60,'min'))
 units.add('min', units:new(60,'s'))
-units.add('N', units:new(1,'kg*m/s^2'))
-units.add('F', function (x) return units:new(10*x+2,'C') end)
 
 -- simplify constructor call
 setmetatable(units, {__call = function (self,v,u) return units:new(v,u) end })
