@@ -14,14 +14,16 @@ X = {3,2,5,6,3,4,3,1}
 w = {1,1,0,1,2,2,1,1}
 ans = Stat.mean(X)            --~ 3.375
 
-ans, tmp = Stat.std(X,W)      --~ 1.314
+ans, tmp = Stat.std(X,W)      --~ 1.495
 
-ans = tmp                     --~ 1.728
+ans = tmp                     --~ 2.234
+
+_,ans = Stat.max(X)           --> 4 
 
 ans = Stat.median(X)          --> 3
 
 tmp = Stat.freq(X)
-ans = tmp[3]                  --> 1.0
+ans = tmp[3]                  --> 3
 
 ans = Stat.cmoment(2,X)       --~ 2.234
 
@@ -30,8 +32,6 @@ ans = Stat.moment(3,X,W)      --~ 61.875
 ans = Stat.sum(X)             --> 27
 
 ans = Stat.stdcorr(X)         --~ 1.598
-
-_,ans = Stat.max(X)           --> 4
 
 ans = Stat.min(X)             --> 1
 
@@ -197,9 +197,10 @@ end
 stat.about[stat.harmean] = {"harmean(t[,w])", "Harmonical mean.", help.OTHER}
 
 -- get mediana
-stat.median = function (t)
+stat.median = function (p)
+   local len = #p
+   local t = table.move(p,1,len,1,{})
    table.sort(t)
-   local len = #t
    if len % 2 == 1 then 
       return t[(len+1)/2]
    else
@@ -211,10 +212,9 @@ stat.about[stat.median] = {"median(t)", "List median.", help.BASE}
 
 -- frequency of elements
 stat.freq = function (t)
-   local tmp, r = {}
+   local tmp = {}
    for _, v in ipairs(t) do
-      r = tmp[v] or 0
-      tmp[v] = r+1
+      tmp[v] = tmp[v] and (tmp[v]+1) or 1
    end
    return tmp
 end
@@ -239,4 +239,3 @@ end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of waights.", help.BASE}
 
 return stat
-
