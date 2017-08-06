@@ -28,7 +28,7 @@ ans = b - a                        --> Unit(2, 'm/s')
 
 ans = a * b                        --> Unit(3, 'm^2/s^2')
 
-ans = b / a                        --> 3
+ans = b / a                        --> Unit(3)
 
 ans = (a < b)                      --> true
 
@@ -238,6 +238,7 @@ units.about[units.copy] = {'copy(u)', 'Create copy of the element.', help.OTHER}
 -- check if 2 elements can be converted to each other
 local function iscompatible(k1,k2)
    if k1 == k2 then return true end
+   if #k1 == 0 and #k2 ~= 0 then return false end
    local fk2 = string.gmatch(k2, part)
    for v1,u1 in string.gmatch(k1, part) do
       local v2,u2 = fk2()
