@@ -58,7 +58,7 @@ p = 1e-12,
 n = 1e-9,
 u = 1e-6,
 m = 1e-3,
-s = 1e-2,
+c = 1e-2,
 [""] = 1,
 k = 1e+3,
 M = 1e+6,
@@ -67,6 +67,10 @@ G = 1e+9,
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 local part = '([^%a]+)(%a+)'     -- highlight value and unit from string
+
+-- save some results
+units.mem_parts = {}
+units.mem_keys = {}
 
 -- check for type
 local function isunits(t) return type(t) == 'table' and t.type == units.type end
@@ -94,8 +98,20 @@ end
 
 -- get common part and difference between 2 strings
 local function diff(s1, s2)
+   -- check memory
+   local p1, p2 = units.mem_parts[s1], units.mem_parts[s2]
+   if p1 and p2 then
+      if p1.base == p2.base then
+         return p1.prefix, p2.prefix, p1.base
+      else
+         return s1, s2, nil
+      end
+   end
+   -- compare, add to memory 
    local first, base, second = string.match(s1..'|'..s2, '^(.-)(.+)|(.-)%2$')
    if base then
+      units.mem_parts[s1] = {base = base, prefix = first}
+      units.mem_parts[s2] = {base = base, prefix = second}
       return first, second, base
    else
       return s1, s2, nil
@@ -137,6 +153,7 @@ local c_prod, c_rat, c_pow = string.byte('*'), string.byte('/'), string.byte('^'
 
 -- get value or evaluate expression in brackets
 units.get_expr = function (str)
+   if #str == 0 then return {}, "" end
    -- check for brackets
    local expr, rest = string.match(str, '^(%b())(.*)')
    if expr then
@@ -182,8 +199,11 @@ end
 
 -- create new element
 function units:new(v,u)
-   local tmp = u and units.parse(u) or {}
-   local o = {value=v, key=tokey(tmp)}
+   u = u or ""
+   if not units.mem_keys[u] then
+      units.mem_keys[u] = tokey(units.parse(u))
+   end
+   local o = {value=v, key=units.mem_keys[u]}
    setmetatable(o, self)
    return o
 end
