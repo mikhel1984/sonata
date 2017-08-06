@@ -142,10 +142,29 @@ local op = {
 local function reduce(t)
    local tmp = {}
    for k,v in pairs(t) do
-      if v == 0 or tonumber(k) then tmp[#tmp+1] = k end
+      if not(v == 0 or tonumber(k)) then tmp[k] = v end
    end
-   for _,k in ipairs(tmp) do t[k] = nil end
-   return t
+   return tmp
+end
+
+local function simplify(val,t)
+   local acc,new,res = {}, {}, val
+   for k,v in pairs(t) do
+      local previous = nil
+      local l,r,base
+      for _,a in ipairs(acc) do
+         l,r,base = diff(k,a)
+	 if base then previous = a; break end
+      end
+      if previous then
+         new[previous] = new[previous] + v
+	 res = res * math.pow(units.prefix[l]/units.prefix[r], v)
+      else
+         new[k] = v
+	 acc[#acc+1] = k
+      end
+   end
+   return res, new
 end
 
 -- possible signs
@@ -250,23 +269,26 @@ units.toatom = function (uv)
    while kold ~= knew do                            -- while can be expanded
       kold = knew
       for v1,u1 in string.gmatch(knew, part) do     -- for every unit
-         local left,right,base                      -- get common part and prefixes
+         local left,right,base,row                  -- get common part and prefixes
          if units.rules[u1] then
+	    row = u1
 	    left,right,base = '','',u1
 	 else
 	    for k in pairs(units.rules) do
 	       left,right,base = diff(k,u1)
-	       if base and units.prefix[left] and units.prefix[right] then break end
+	       if base and units.prefix[left] and units.prefix[right] then row=k; break end
 	    end
 	 end
 	 if base then                               -- get common part
 	    -- replace
-	    local tmp = units.copy(units.rules[base])
+	    local tmp = units.rules[row]
 	    local add,num = fromkey(tmp.key), tonumber(v1)
 	    t[u1] = nil
 	    op['^'](add,num)
 	    op['*'](t,add)
 	    res = res*math.pow(tmp.value*units.prefix[right]/units.prefix[left], num)
+	    res, t = simplify(res, t)
+	    t = reduce(t)
 	 end
       end
       knew = tokey(t)                              -- back to string
@@ -332,7 +354,7 @@ units.__mul = function (a,b)
    a,b = args(a,b)
    local ta, tb = fromkey(a.key), fromkey(b.key)
    op['*'](ta,tb)
-   reduce(ta)
+   ta = reduce(ta)
    if isempty(ta) then return a.value*b.value end
    local res = units:new(a.value*b.value)
    res.key = tokey(ta)
@@ -344,7 +366,7 @@ units.__div = function (a,b)
    a,b = args(a,b)
    local ta, tb = fromkey(a.key), fromkey(b.key)
    op['/'](ta,tb)
-   reduce(ta)
+   ta = reduce(ta)
    if isempty(ta) then return a.value/b.value end
    local res = units:new(a.value/b.value)
    res.key = tokey(ta)
@@ -464,3 +486,4 @@ end
 units.about[units.serialize] = {"serialize(obj)", "Save internal representation of units object.", help.OTHER}
 
 return units
+
