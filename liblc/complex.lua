@@ -184,4 +184,9 @@ complex.serialize = function (obj)
 end
 complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object", help.OTHER}
 
+complex.onimport = function ()
+   _i = complex._i
+   sqrt = complex.sqrt
+end
+
 return complex

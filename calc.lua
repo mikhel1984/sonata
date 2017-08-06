@@ -1,7 +1,7 @@
 #!/usr/local/bin/lua -i
 
 -- Lua based calculator
-lc_version = '0.5.3'
+lc_version = '0.5.4'
 
 --LOCALISATION_FILE = "locale/lng.ru"
 
@@ -72,6 +72,7 @@ setmetatable(import,
    if not _G[var] then
       _G[var] = require('liblc.'..name)
       about:add(_G[var].about, var)
+      if _G[var].onimport then _G[var].onimport() end
    end
    print(string.format(about:get('alias'), var, name))
    about[import][2] = import_state_update()
