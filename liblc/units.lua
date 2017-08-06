@@ -10,6 +10,10 @@
 --[[!!
 Unit = require 'liblc.units'
 
+-- some rules
+Unit.add('h', Unit(60,'min'))
+Unit.add('min', Unit(60,'s'))
+
 a = Unit(1,'m/s')
 ans = a['km/h']                    --> 3.6
 
@@ -40,6 +44,10 @@ ans = c['parrot']                  --> 96
 
 ans = c['ksnake']                  --> 0.002
 
+d = Unit(1,'W')
+e = d:convert(function (x) return Unit(10*math.log((x/Unit(1,'mW')):simp(),10), 'dBm') end)
+ans = #e                           --> 30
+
 print(a)
 ]]
 ---------------------------------------------
@@ -59,6 +67,7 @@ n = 1e-9,
 u = 1e-6,
 m = 1e-3,
 c = 1e-2,
+d = 1e-1,
 [""] = 1,
 k = 1e+3,
 M = 1e+6,
@@ -359,7 +368,7 @@ units.__mul = function (a,b)
    if isempty(ta) then return a.value*b.value end
    local res = units:new(a.value*b.value)
    res.key = tokey(ta)
-   return res
+   return res.key == '' and res.value or res
 end
 
 -- a / b
@@ -371,7 +380,7 @@ units.__div = function (a,b)
    if isempty(ta) then return a.value/b.value end
    local res = units:new(a.value/b.value)
    res.key = tokey(ta)
-   return res
+   return res.key == '' and res.value or res
 end
 
 -- a ^ b
@@ -456,6 +465,16 @@ units.__index = function (t,k)
    end
 end
 
+units.simp = function (u)
+   local val, t = simplify(u.value, fromkey(u.key))
+   t = reduce(t)
+   if #t > 0 then
+      local res = units:new(val)
+      res.key = tokey(t)
+      return res
+   else return val end
+end
+
 -- rules for unit conversation
 units.rules = {
 }
@@ -467,9 +486,6 @@ units.add = function (u, rule)
 end
 units.about[units.add] = {'add(unit,rule)', 'Add new rule for conversation.', help.BASE}
 
--- some rules
-units.add('h', units:new(60,'min'))
-units.add('min', units:new(60,'s'))
 
 -- simplify constructor call
 setmetatable(units, {__call = function (self,v,u) return units:new(v,u) end })
