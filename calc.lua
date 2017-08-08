@@ -1,9 +1,10 @@
 #!/usr/local/bin/lua -i
-
 -- Lua based calculator
 lc_version = '0.5.4'
 
 --LOCALISATION_FILE = "locale/lng.ru"
+
+-- TODO: replace common etc. functions into special module
 
 -- help
 help = require "liblc.help"
@@ -169,7 +170,7 @@ if #arg > 0 then
 end
 
 -- Run!
-print("\n             --==== LuaCalc "..lc_version.." ====--\n")
+print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
 print(about:get('intro'))
 
 _PROMPT='lc: '
