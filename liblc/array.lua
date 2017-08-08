@@ -1,12 +1,14 @@
-------------  array.lua ----------------
---
--- Manipulations with arrays of elements.
---
--- This file is a part of liblc collection. 
--- Stanislav Mikhel, 2017.
-----------------------------------------
+--[[          array.lua 
 
--------------------- Tests -------------------
+--- Manipulations with arrays of elements.
+--  Arrays are sparse as long as possbile.
+--  <i>This file is a part of 'liblc' collection.</i>
+--  @copyright 2017, Stanislav Mikhel
+
+            module 'array'
+--]]
+
+------------------- Tests -------------------
 --[[!!
 Arr = require 'liblc.array'
 
@@ -48,7 +50,13 @@ print(a)
 
 print(d:fullstring(2,3))
 ]]
----------------------------------------------
+
+-------------------------------------------- 
+-- @class table
+-- @name array
+-- @field type Define object type string.
+-- @field about Function description collection.
+
 
 local array = {}
 array.__index = array
@@ -59,19 +67,27 @@ array.type = 'array'
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 array.about = help:new("Manipulations with arrays of elements")
 
--- check object type
+--- Check object type.
+--    <i>Private function.</i>
+--    @param t Object for checking.
+--    @return True if table is an array.
 local function isarray(t)
    return type(t) == 'table' and t.type == array.type 
 end
 
--- prepare list of coefficients
+--- Prepare list of coefficients
+--    <i>Private function.</i>
+--    @param s Array size.
+--    @return Table of coeff.
 local function getk (s)
    local k = {1}
    for i = 2, #s do k[i] = s[i-1]*k[i-1] end
    return k
 end
 
--- constructor
+--- Create new objec, set metatable.
+--    @param s Table of array size.
+--    @return Array object.
 function array:new(s)
    assert(type(s) == 'table', "Table is expected!")
    for i = 1,#s do assert(s[i] > 0 and math.tointeger(s[i]), "Positive integer is expected!") end
@@ -80,7 +96,11 @@ function array:new(s)
    return o
 end
 
--- check index correctness
+--- Check index correctness.
+--    <i>Private function.</i>
+--    @param arr Array object.
+--    @param ind Element index (table).
+--    @return <code>false</code> if index is out of range.
 local function iscorrect(arr, ind)
    if #arr.size ~= #ind then return false end
    for i = 1,#ind do 
@@ -89,7 +109,11 @@ local function iscorrect(arr, ind)
    return true
 end
 
--- transform index into single dimention representation
+--- Transform index into single dimention representation.
+--    <i>Private function.</i>
+--    @param arr Array object.
+--    @param ind Index of the element (table).
+--    @return Vector index.
 local function index(arr, ind)
    local res = ind[1]
    for i = 2,#ind do 
@@ -98,92 +122,132 @@ local function index(arr, ind)
    return res
 end
 
--- number of elements
+--- Maximum number of elements in array.
+--    <i>Private function.</i>
+--    @param arr Array object.
+--    @return Array capacity.
 local function capacity(arr)
    return arr.size[#arr.size] * arr.k[#arr.k]
 end
 
--- get element
+--- Get array element.
+--    @param arr Array object.
+--    @param ind Index of the element (table).
+--    @return Element or error if index is wrong.
 array.get = function (arr, ind)
    assert(iscorrect(arr, ind), "Wrong index for given array!")
    return arr[index(arr, ind)]
 end
 array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table.", help.BASE}
 
--- set value
+--- Set new value.
+--    @param arr Array object.
+--    @param ind Element index (table).
+--    @param val New value.
 array.set = function (arr, ind, val)
    assert(iscorrect(arr, ind), "Wrong index for given array!")
    arr[index(arr,ind)] = val 
 end
 array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is a table.", help.BASE}
 
--- get array copy
+--- Get array copy.
+--    @param arr Array object.
+--    @return Deep copy of the array.
 array.copy = function (arr)
    assert(isarray(arr), "Not an array!")
-   local cp = array:new(table.move(arr.size, 1, #arr.size, 1, {}))
-   return table.move(arr, 1, capacity(arr), 1, cp)
+   local cp = array:new(table.move(arr.size, 1, #arr.size, 1, {}))        -- copy size, create new array
+   return table.move(arr, 1, capacity(arr), 1, cp)                        -- copy array elements
 end
 array.about[array.copy] = {"copy(arr)", "Get copy of the array.", help.OTHER}
 
--- check array size
+--- Compare array size.
+--    @param a1 First array object.
+--    @param a2 Second array object.
+--    @return <code>true</code> if size is the same.
 array.isequal = function (a1, a2)
-   if not (isarray(a1) and isarray(a2)) then return false end
-   if #a1.size ~= #a2.size then return false end
-   for i = 1, #a1.size do
-      if a1.size[i] ~= a2.size[i] then return false end
+   if isarray(a1) and isarray(a2) and #a1.size == #a2.size then
+      for i = 1, #a1.size do
+         if a1.size[i] ~= a2.size[i] then return false end
+      end
+      return true
    end
-   return true
+   return false
 end
 array.about[array.isequal] = {"isequal(a1,a2)", "Check size equality.", help.OTHER}
 
--- apply function of 2 arguments
+--- Apply function of 2 arguments.
+--    @param a1 First array object.
+--    @param a2 Second array object.
+--    @param fn Function with 2 arguments.
+--    @return New array where each element is result of the function evaluation fn(a1[i],a2[i]).
 array.apply = function (a1, a2, fn)
    assert(array.isequal(a1,a2), "Not compatible arrays!")
-   local res, v = array:new(table.move(a1.size, 1, #a1.size, 1, {}))
+   local res, v = array:new(table.move(a1.size, 1, #a1.size, 1, {}))    -- prepare empty copy
    for i = 1, capacity(a1) do 
-      v = fn(a1[i] or 0, a2[i] or 0)
-      if v ~= 0 then res[i] = v end
+      v = fn(a1[i] or 0, a2[i] or 0)             -- elements can be empty
+      if v ~= 0 then res[i] = v end              -- save nonzero values
    end
    return res
 end
 array.about[array.apply] = {"apply(a1,a2,fn)", "Apply function of 2 arguments. Return new array.", help.OTHER}
 
--- apply function of 1 argument
+--- Apply function of 1 argument.
+--    @param a Array object.
+--    @param fn Function with 1 argument.
+--    @return New array where each element is result of the function evaluation fn(a[i]).
 array.map = function (a, fn)
    local res, v = array:new(table.move(a.size, 1, #a.size, 1, {}))
    for i = 1, capacity(a) do
-      v = fn(a[i] or 0)
-      if v ~= 0 then res[i] = v end
+      v = fn(a[i] or 0)                          -- elements can be empty
+      if v ~= 0 then res[i] = v end              -- save nonzero values
    end
    return res
 end
 array.about[array.map] = {"map(a,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
 
--- a1 + a2
+--- a1 + a2
+--    @param a1 First array object.
+--    @param a2 Second array object.
+--    @return New array where eack element is the summ of two given.
 array.__add = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x+y end)
 end
 
--- a1 - a2
+--- a1 - a2
+--    @param a1 First array object.
+--    @param a2 Second array object.
+--    @return New array where eack element is the difference of two given.
 array.__sub = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x-y end)
 end
 
--- -a
+--- -a
+--    @param a Array object.
+--    @return New element where eack element is the negative form of the given one.
 array.__unm = function (a)
    return array.map(a, function (x) return -x end)
 end
 
--- a1 * a2
+--- a1 * a2
+--    @param a1 First array object.
+--    @param a2 Second array object.
+--    @return New array where eack element is the product of two given.
 array.__mul = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x*y end)
 end
 
 -- a1 / a2
+--    @param a1 First array object.
+--    @param a2 Second array object.
+--    @return New array where eack element is the ratio of two given.
 array.__div = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x/y end)
 end
 
+-- a1 ^ a2
+--    @param a1 First array object.
+--    @param a2 Second array object.
+--    @return New array where eack element is result of power operation.
 array.__pow = function (a1, a2)
    return array.apply(a1, a2, math.pow)
 end
@@ -191,37 +255,52 @@ end
 array.arithmetic = 'arithmetic'
 array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.BASE}
 
--- random array
+--- Random array generator.
+--    @param s Size table.
+--    @return Array of the given size with random numbers from 0 to 1.
 array.rand = function (s)
    local arr = array:new(s)
    for i = 1, capacity(arr) do arr[i] = math.random() end
    return arr
 end
-array.about[array.rand] = {"rand(size)", "Return array with random numbers.", help.BASE}
+array.about[array.rand] = {"rand(size)", "Return array with random numbers between 0 and 1.", help.BASE}
 
--- check array equality
+--- a1 == a2
+--    @param a1 First array object.
+--    @param a2 Second array object.
+--    @return <code>true</code> if array size and all elements are the same.
 array.__eq = function (a1, a2)
-   if not array.isequal(a1,a2) then return false end
-   local v1, v2
-   for i = 1, capacity(a1) do
-      v1, v2 = a1[i] or 0, a2[i] or 0
-      if v1 ~= v2 then return false end
+   if array.isequal(a1,a2) then
+      for i = 1, capacity(a1) do
+         local v1, v2 = a1[i] or 0, a2[i] or 0
+         if v1 ~= v2 then return false end
+      end
+      return true
    end
-   return true
+   return false
 end
 
 array.comparation = 'comparation'
 array.about[array.comparation] = {array.comparation, "a == b, a ~= b", help.BASE}
 
--- get array dimentions
+--- Get array dimention.
+--    @param arr Array object.
+--    @return Table of size.
 array.dim = function (arr)
    return table.move(arr.size, 1, #arr.size, 1, {})
 end
 array.about[array.dim] = {"dim(arr)", "Return size of array.", help.BASE}
 
--- get part of array
+--- Get part of array between two indexes.
+--    @param arr Array object.
+--    @param ind1 Index of the lower bound.
+--    @param ind2 Index of the upper bound.
+--    @return Array of elements restricted by the indexes.
 array.sub = function (arr, ind1, ind2)
-   for i = 1, #ind2 do if ind2[i] < 0 then ind2[i] = ind2[i] + arr.size[i] + 1 end end
+   -- negative index means the last element
+   for i = 1, #ind2 do 
+      if ind2[i] < 0 then ind2[i] = ind2[i] + arr.size[i] + 1 end 
+   end
    assert(iscorrect(arr, ind1) and iscorrect(arr, ind2), "Wrong index!")
    -- prepare tables
    local newsize, ind = {}, {}
@@ -232,10 +311,11 @@ array.sub = function (arr, ind1, ind2)
    local res = array:new(newsize)
    -- fill
    for count = 1, capacity(res) do
+      -- calculate new temporary index
       for i = 1, #ind do 
-         ind[i] = (count // res.k[i]) % res.size[i]
-	 ind2[i] = ind1[i] + ind[i]
-	 ind[i] = ind[i]+1
+         local tmp = (count // res.k[i]) % res.size[i]
+	 ind2[i] = ind1[i] + tmp
+	 ind[i] = tmp + 1
       end
       res[index(res,ind)] = arr[index(arr,ind2)]
    end
@@ -243,21 +323,27 @@ array.sub = function (arr, ind1, ind2)
 end
 array.about[array.sub] = {"sub(arr,ind1,ind2)", "Return subarray restricted by 2 indexes.", help.BASE}
 
--- concatenate 2 arrays
+--- Concatenate 2 arrays along given axe.
+--    @param arr1 First array object.
+--    @param arr2 Second array object.
+--    @return New concatenated array.
 array.concat = function (arr1, arr2, axe)
+   -- check size
    assert(axe > 0 and axe <= #arr1.size, "Wrong axe!")
    for i = 1, #arr1.size do assert(arr1.size[i] == arr2.size[i] or i == axe, "Different size!") end
-
+   -- prepare new size
    local newsize = table.move(arr1.size, 1, #arr1.size, 1, {})
    newsize[axe] = newsize[axe] + arr2.size[axe]
-
+   -- combine
    local res, ind1, ind2 = array:new(newsize), table.move(newsize, 1, #newsize, 1, {}), table.move(newsize, 1, #newsize, 1, {})
    local edge = arr1.size[axe]
    for count = 1, capacity(res) do
+      -- prepare index
       for i = 1, #ind1 do
          ind1[i] = (count // res.k[i]) % res.size[i] + 1
 	 ind2[i] = ind1[i]
       end
+      -- get value
       local second = ind1[axe] > edge
       ind2[axe] = second and (ind2[axe]-edge) or ind2[axe]
       res[index(res,ind1)] = second and arr2[index(arr2,ind2)] or arr1[index(arr1,ind2)]
@@ -266,20 +352,29 @@ array.concat = function (arr1, arr2, axe)
 end
 array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along given axe.", help.BASE}
 
--- get number of elements
+--- Get number of elements in array.
+--    @param arr Array object.
+--    @return Array capacity.
 array.__len = function (arr)
    return capacity(arr)
 end
 
--- string representation
+--- String representation.
+--    @param arr Array object.
+--    @return Simple string array description.
 array.__tostring = function (arr)
    return 'array ' .. table.concat(arr.size, 'x')
 end
 
+--- Get array slice.
+--    Show sequance of 2D matrixes with array elements.
+--    @param arr Array object.
+--    @param r Number of axe for representation as rows.
+--    @param c Number of axe for representation as columns.
+--    @return String with all array elements slice by slice.
 array.fullstring = function (arr, r, c)
    local res = {}
-   
-   -- 1D array
+   -- 1 dimentional array
    if #arr.size == 1 then
       for i = 1, arr.size[1] do res[i] = arr[i] or 0 end
       return table.concat(res, ' ')
@@ -287,9 +382,7 @@ array.fullstring = function (arr, r, c)
       r = r or 1
       c = c or 2
    end
-
    assert(r > 0 and r <= #arr.size and c > 0 and c <= #arr.size and r ~= c, "Wrong indexes!")
-
    -- get 2D layer as string
    local function layer (ind)
             local row = {}
@@ -306,7 +399,6 @@ array.fullstring = function (arr, r, c)
 	    end
 	    return table.concat(row, '\n')
          end
-
    -- prepare index calculation
    local bound, current, extent = {}, {}, {}
    local prod = 1
@@ -347,7 +439,9 @@ setmetatable(array, {__call = function (self, v) return array:new(v) end})
 array.Arr = 'Arr'
 array.about[array.Arr] = {"Arr(size)", "Create empty array with given size, represented as a table.", help.NEW}
 
--- serialization
+--- Array serialization.
+--    @param obj Array object
+--    @return String suitable for exchange.
 array.serialize = function (obj)
    local s = {}
    s[#s+1] = 'size={' .. table.concat(obj.size, ',') .. '}'
@@ -363,6 +457,9 @@ array.serialize = function (obj)
 end
 array.about[array.serialize] = {"serialize(obj)", "String representation of array internal structure.", help.OTHER}
 
+--- Iterator for moving across the array.
+--    @param arr Array object.
+--    @return Index of the next array element, <code>nil</code> at the end.
 array.getnext = function (arr)
    local a = array:new(table.move(arr.size, 1, #arr.size, 1, {})) -- copy size
    local count = 0
