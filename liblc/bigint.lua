@@ -68,24 +68,24 @@ local function isbigint(v) return type(v) == 'table' and v.type == bigint.type e
 
 -- convert integer into bigint
 local function fromint(v) 
-   v = math.tointeger(v)
-   assert(v, 'Integer is expected')
-   return tostring(iabs(v)), (v < 0) and -1 or 1   -- return value and sing
+   v = assert(math.tointeger(v), 'Integer is expected')
+   return tostring(iabs(v)), (v < 0) and -1 or 1               -- return value and sing
 end
 
 -- convert string into bigint
 local function fromstr(s)
-   assert(string.find(s, '^[+-]?%d+$'), "Wrong string number")                       -- check format
-   return string.match(s, '%d+'), (string.byte(s) == string.byte('-')) and -1 or 1   -- return value and sing
+   local m,d = string.match(s, '^([+-]?)(%d+)$')               -- get sign and value
+   assert(m and d, 'Wrong number!')
+   return d, (m == '-' and -1 or 1)
 end
 
 -- constructor
 function bigint:new(a)
    local s, sign
-   if     type(a) == 'number' then 
-      s, sign = fromint(a)
-   elseif type(a) == 'string' then
+   if     type(a) == 'string' then
       s, sign = fromstr(a)
+   elseif type(a) == 'number' then 
+      s, sign = fromint(a)
    else
       error("Expected integer or string")
    end
@@ -115,25 +115,25 @@ end
 -- main function for division
 local function div(a,b)
    a,b = args(a,b)
-   local num = string.reverse(a.value)            -- numerator as string
-   local acc = {}                                 -- result
-   local k = #b.value                             -- index of the last character
-   local rest = bigint:new(string.sub(num, 1, k)) -- current part of numerator
-   local denom = bigint.abs(b)                    -- denominator
-   local q = string.sub(denom.value, #denom.value)
+   local num = string.reverse(a.value)             -- numerator as string
+   local acc = {}                                  -- result
+   local k = #b.value                              -- index of the last character
+   local rest = bigint:new(string.sub(num, 1, k))  -- current part the of numerator
+   local denom = bigint.abs(b)                     -- denominator
+   local q = string.sub(denom.value, #denom.value) -- first digit
    -- read the string
    while k <= #num do                             
       if rest >= denom then
          -- get ratio
 	 local n, p = 1, string.sub(rest.value, #denom.value):reverse()
-	 n = p // q
+	 n = math.tointeger(p // q)
 	 local prod = n*denom
 	 -- save result
 	 if prod <= rest then
-	    acc[#acc+1] = math.tointeger(n)
+	    acc[#acc+1] = n
 	    rest = rest-prod
 	 else
-	    acc[#acc+1] = math.tointeger(n-1)
+	    acc[#acc+1] = n-1
 	    rest = rest-prod+denom
 	 end
       else
@@ -149,7 +149,7 @@ local function div(a,b)
    return result, rest   
 end
 
--- get sum for two bigint
+-- get sum of the two positive bigint
 local function sum(a,b)
    local acc = {}
    local zero = string.byte('0')
@@ -169,7 +169,7 @@ local function sum(a,b)
    return res
 end
 
--- get subsruction for two bigint
+-- get subsruction for two positive bigint
 local function sub(a,b)
    -- find the biggest
    local p,q,r = a,b,1
@@ -213,11 +213,11 @@ bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTH
 -- a + b
 bigint.__add = function (a,b)
    a,b = args(a,b) 
-   if     a.sign > 0 and b.sign > 0 then return sum(a,b)
-   elseif a.sign < 0 and b.sign < 0 then return -sum(a,b)
-   elseif a.sign > 0 and b.sign < 0 then return sub(a,b)
-   else                                  return sub(b,a)
-   end   
+   if a.sign > 0 then
+      return (b.sign > 0) and sum(a,b) or sub(a,b)
+   else 
+      return (b.sign > 0) and sub(b,a) or -sum(a,b)
+   end
 end
 
 -- -v
@@ -230,10 +230,10 @@ end
 -- a - b
 bigint.__sub = function (a, b)
    a,b = args(a,b)
-   if     a.sign > 0 and b.sign > 0 then return sub(a,b)
-   elseif a.sign > 0 and b.sign < 0 then return sum(a,b)
-   elseif a.sign < 0 and b.sign > 0 then return -sum(a,b)
-   else                                  return sub(b,a)
+   if a.sign > 0 then
+      return (b.sign > 0) and sub(a,b) or sum(a,b)
+   else
+      return (b.sign > 0) and -sum(a,b) or sub(b,a)
    end
 end
 
@@ -258,7 +258,7 @@ bigint.__mul = function (a, b)
       d = math.floor(sum[i] / bigint.BASE)
       sum[i] = math.floor(sum[i] % bigint.BASE)
    end
-   if d ~= 0 then sum[#sum+1] = d end
+   sum[#sum+1] = d
    simplify(sum)
    -- save
    local res = bigint:new(a.sign*b.sign)
@@ -268,13 +268,13 @@ end
 
 -- a / b
 bigint.__div = function (a, b)
-   local res, _ = div(a,b)
+   local res,_ = div(a,b)
    return res
 end
 
 -- a % b
 bigint.__mod = function (a, b)
-   local _, res = div(a,b)
+   local _,res = div(a,b)
    return res
 end
 
@@ -305,17 +305,17 @@ bigint.__le = function (a,b)
    return bigint.__eq(a,b) or bigint.__lt(a,b)
 end
 
--- #v
+-- #a, number of digits.
 bigint.__len = function (v)
    return #v.value
 end
 
--- a^b
+-- a ^ b
 bigint.__pow = function (a,b)
    a,b = args(a,b)
    assert(b.sign >= 0, "Power must be non negative")
    if b.value == '0' then 
-      assert(a ~= 0, "Error: 0^0")
+      assert(a.value ~= '0', "Error: 0^0")
       return bigint:new(1) 
    end
    local aa, bb, q = bigint.copy(a), bigint.copy(b), nil
@@ -323,10 +323,8 @@ bigint.__pow = function (a,b)
    local h = 1
    while bb > 0 do
       bb,q = div(bb,2)
-      if q.value ~= '0' then
-         res = res * aa
-      end
-      aa = aa * aa      
+      if q.value ~= '0' then res = res*aa end
+      if bb.value ~= '0' then aa = aa*aa end
    end
    return res
 end
@@ -352,9 +350,10 @@ bigint.factorial = function (m)
    assert(m >= 0, "Nonnegative value is expected!")
    local n = bigint.abs(m)
    local res = bigint:new(1)   
+   local one = res:copy()
    while n.value ~= '0' do   
       res = res * n
-      n = n - 1      
+      n = n - one
    end
    return res
 end
