@@ -83,7 +83,7 @@ local function getk (s)
    return k
 end
 
---- Create new objec, set metatable.
+--- Create new object, set metatable.
 --    @param s Table of array size.
 --    @return Array object.
 function array:new(s)
