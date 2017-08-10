@@ -1,7 +1,9 @@
 --[[          complex.lua 
 
 --- Manipulations with complex numbers.
---  <i>This file is a part of 'liblc' collection.</i>
+--  <i>This file is a part of 
+--  <a href="https://github.com/mikhel1984/lc">liblc</a>
+--  collection.</i>
 --  @copyright 2017, Stanislav Mikhel
 
             module 'complex'
