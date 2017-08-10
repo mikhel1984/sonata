@@ -57,12 +57,10 @@ print(d:fullstring(2,3))
 -- @field type Define object type string.
 -- @field about Function description collection.
 
-
 local array = {}
 array.__index = array
-
+-- mark object
 array.type = 'array'
-
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 array.about = help:new("Manipulations with arrays of elements")
@@ -236,7 +234,7 @@ array.__mul = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x*y end)
 end
 
--- a1 / a2
+--- a1 / a2
 --    @param a1 First array object.
 --    @param a2 Second array object.
 --    @return New array where eack element is the ratio of two given.
@@ -244,7 +242,7 @@ array.__div = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x/y end)
 end
 
--- a1 ^ a2
+--- a1 ^ a2
 --    @param a1 First array object.
 --    @param a2 Second array object.
 --    @return New array where eack element is result of power operation.
@@ -440,8 +438,8 @@ array.Arr = 'Arr'
 array.about[array.Arr] = {"Arr(size)", "Create empty array with given size, represented as a table.", help.NEW}
 
 --- Array serialization.
---    @param obj Array object
---    @return String suitable for exchange.
+--    @param obj Array object.
+--    @return String, suitable for exchange.
 array.serialize = function (obj)
    local s = {}
    s[#s+1] = 'size={' .. table.concat(obj.size, ',') .. '}'
