@@ -1,13 +1,16 @@
-------------  array.lua ----------------
---
--- Call Gnuplot from Lua.
---
--- This file is a part of liblc collection. 
--- Stanislav Mikhel, 2017.
-----------------------------------------
+--[[          gnuplot.lua 
+
+--- Call Gnuplot from Lua.
+--  <i>This file is a part of 
+--  <a href="https://github.com/mikhel1984/lc">liblc</a>
+--  collection.</i>
+--  @copyright 2017, Stanislav Mikhel
+
+            module 'gnuplot'
+--]]
 
 --[[   
------------ Examples ------------
+-- -------- Examples ------------
 
 Gnu = require 'liblc.gnuplot'
 
@@ -25,28 +28,44 @@ g[3] = {'points.dat', type='data', title='Additional points'}
 g:plot2d()
 ]]
 
+-------------------------------------------- 
+-- @class table
+-- @name gnuplot
+-- @field type Define object type string.
+-- @field about Function description collection.
+-- @field N Define number of points per interval, default is 100
+
 local gnuplot = {}
 gnuplot.__index = gnuplot
-
+-- mark object
 gnuplot.type = 'gnuplot'
-
+-- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 gnuplot.about = help:new("Interface for calling Gnuplot from Lua")
 
-gnuplot.N = 100        -- devide interval into given number of points
+-- devide interval into given number of points
+gnuplot.N = 100        
 gnuplot.about[gnuplot.N] = {"N", "If no step, devide interval into N number of points", help.CONST}
 
--- constructor
+--- Create new object, set metatable.
+--    @param o Table with image parameters.
+--    @return Gnuplot compatible object.
 function gnuplot:new(o)
    local o = o or {}
    setmetatable(o, self)
    return o
 end
 
--- table to file
+--- Save table into file.
+--    File is located in tmp directory.
+--    <i>Private function.</i>
+--    @param t Table to save.
+--    @return File name.
 local function tmptable(t)
+   -- create temporary file
    local name = os.tmpname()
    local f = io.open(name, 'w')
+   -- save table elements into the file
    for _, row in ipairs(t) do
       for i, val in ipairs(row) do f:write((i>1 and ',' or ''), val) end
       f:write('\n'); f:flush()
@@ -55,7 +74,14 @@ local function tmptable(t)
    return name
 end
 
--- parametric function to file
+--- Prepare temporary file for parametric function.
+--    <i>Private function.</i>
+--    @param fx Function <code>x(t)</code>.
+--    @param fy Function <code>y(t)</code>.
+--    @param from Initial value for parameter <code>t</code>.
+--    @param to Final value for parameter <code>t</code>.
+--    @param step Step of parameter <code>t</code>.
+--    @return File name.
 local function tmpparametric(fx, fy, from, to, step)
    local name = os.tmpname()
    local f = io.open(name, 'w')
@@ -64,7 +90,13 @@ local function tmpparametric(fx, fy, from, to, step)
    return name
 end
 
--- function to file
+--- Save function execution into temporary file.
+--    <i>Private function.</i>
+--    @param fn Function <code>f(x)</code>.
+--    @param from Initial value for <code>x</code>.
+--    @param to Final value for <code>x</code>.
+--    @param step Step of <code>x</code>.
+--    @return File name.
 local function tmpfunction(fn, from, to, step)
    local name = os.tmpname()
    local f = io.open(name, 'w')
@@ -73,7 +105,9 @@ local function tmpfunction(fn, from, to, step)
    return name
 end
 
--- plot graphic
+--- Plot graphic.
+--    @param g Table with parameters of graphic.
+--    @return Table which can be used for plotting.
 gnuplot.plot2d = function (g)
    -- reopen window
    local handle = io.popen('gnuplot' .. (g.permanent and ' -p' or ''), 'w')
@@ -141,7 +175,9 @@ gnuplot.plot2d = function (g)
 end
 gnuplot.about[gnuplot.plot2d] = {"plot2d(g)", "Plot data and parameters, represented as Lua table", help.BASE}
 
--- represent as table
+--- Represent parameters of the graphic.
+--    @param g Table with parameters.
+--    @return String representation.
 gnuplot.__tostring = function (g) 
    local res = {}
    for _, f in ipairs(g) do
