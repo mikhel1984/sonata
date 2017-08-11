@@ -198,7 +198,7 @@ complex.about[complex.Im] = {"Im(v)", "Return the imaginary part.", help.OTHER}
 --    @param v Complex number.
 --    @return String.
 complex.__tostring = function (v)
-   return string.format("%.3f+%.3fi", v.real, v.imag)
+   return string.format("%.3f%+.3fi", v.real, v.imag)
 end
 
 --- Square root with possibility of complex result.

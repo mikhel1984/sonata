@@ -37,6 +37,12 @@ ans = (a == c)                --> true
 
 ans = (b == c)                --> false
 
+d = Poly(2,-2,1)
+ans = d:equation('s')         --> '2*s^2-2*s+1'
+
+f = d:fn()
+ans = f(4)                    --> 25
+
 print(a)
 ]]
 ----------------------------------------------
@@ -257,6 +263,23 @@ polynom.about[polynom.coef] = {"coef(...)", "Return polynom with given roots.", 
 -- string representation
 polynom.__tostring = function (p)
    return table.concat(p,' ')
+end
+
+-- represent polynom in natural form
+polynom.equation = function (p,l)
+   l = l or 'x'
+   local res,pow,mult = {}, #p-1
+   res[1] = string.format('%s%s%s', tostring(p[1]), (pow > 0 and '*'..l or ''), (pow > 1 and '^'..pow or ''))
+   for i = 2,#p do
+      pow = #p-i
+      res[i] = string.format('%s%s%s', (p[i] > 0 and '+'..p[i] or tostring(p[i])), (pow > 0 and '*'..l or ''), (pow > 1 and '^'..pow or ''))
+   end
+   return table.concat(res)
+end
+
+-- Polynom as function
+polynom.fn = function (p)
+   return function (x) return polynom.val(p,x) end
 end
 
 setmetatable(polynom, {__call = function (self, ...) return polynom.new(...) end})
