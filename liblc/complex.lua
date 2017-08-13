@@ -1,4 +1,4 @@
---[[          complex.lua 
+--[[      liblc/complex.lua 
 
 --- Manipulations with complex numbers.
 --  <i>This file is a part of 

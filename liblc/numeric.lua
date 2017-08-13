@@ -1,10 +1,13 @@
-------------  numeric.lua ----------------
---
--- Numerical solutions for some mathematical problems.
---
--- This file is a part of liblc collection. 
--- Stanislav Mikhel, 2017.
-----------------------------------------
+--[[      liblc/numeric.lua 
+
+--- Numerical solutions for some mathematical problems.
+--  <i>This file is a part of 
+--  <a href="https://github.com/mikhel1984/lc">liblc</a>
+--  collection.</i>
+--  @copyright 2017, Stanislav Mikhel
+
+            module 'numeric'
+--]]
 
 -------------------- Tests -------------------
 --[[!!
@@ -28,16 +31,25 @@ ans = yn                                  --~ 90.011
 ]]
 ---------------------------------------------
 
-local numeric = {}
+-------------------------------------------- 
+-- @class table
+-- @name array
+-- @field about Function description collection.
+-- @field TOL Solution tolerance. Default is 0.001.
 
+local numeric = {}
+-- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 numeric.about = help:new("Group of functions for numerical calculations.")
-
 -- current tolerance
 numeric.TOL = 1e-3
 numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", help.CONST}
 
--- find root of equation
+--- Find root of equation at the given interval.
+--    @param fn Function to analize.
+--    @param a Lower bound.
+--    @param b Upper bound.
+--    @return Function root.
 numeric.solve = function (fn, a, b)
    local f0, f1 = fn(a), fn(b)
    assert(f0*f1 < 0, "Boundary values must have different sign!")
@@ -49,7 +61,10 @@ numeric.solve = function (fn, a, b)
 end
 numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", help.BASE}
 
--- another solution based on Newton's rule
+--- Another solution based on Newton's rule.
+--    @param fn Function to analize.
+--    @param x1 Initial value of the root.
+--    @return Function root of <code>nil</code>.
 numeric.newton = function (fn, x1)
    local h, k, x2 = 0.1, 0, x1
    repeat
@@ -62,7 +77,10 @@ numeric.newton = function (fn, x1)
 end
 numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition", help.BASE}
 
--- simple derivative
+--- Simple derivative.
+--    @param fn Function f(x).
+--    @param x Parameter.
+--    @return Numerical approximation of the derivative value.
 numeric.diff = function (fn, x)
    local dx = 2e-2
    local der, last = (fn(x+dx)-fn(x-dx))/(2*dx)
@@ -74,7 +92,11 @@ numeric.diff = function (fn, x)
 end
 numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", help.BASE}
 
--- intergration using trapez method
+--- Intergration using trapez method.
+--    @param fn Function f(x).
+--    @param a Lower bound.
+--    @param b Upper bound.
+--    @return Numerical approximation of the integral.
 numeric.trapez = function (fn, a, b)
    local N, sum = 10, 0
    local fab = (fn(a)+fn(b)) * 0.5
@@ -101,7 +123,13 @@ numeric.trapez = function (fn, a, b)
 end
 numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule", help.BASE}
 
--- Runge-Kutta method
+--- Runge-Kutta method.
+--    <i>Private function.</i>
+--    @param fn Function f(x,y).
+--    @param x First variable.
+--    @param y Second variable.
+--    @param h Step.
+--    @return Approximation for y.
 local function rk(fn, x, y, h)
    local h2 = 0.5*h
    local k1 = fn(x,    y)
@@ -111,7 +139,13 @@ local function rk(fn, x, y, h)
    return y+h*(k1+2*(k2+k3)+k4)/6
 end
 
--- differential equation solution (Runge-Kutta method)
+--- Differential equation solution (Runge-Kutta method).
+--    @param fn function f(x,y).
+--    @param x0 Initial value of absciss.
+--    @param y0 Initial value of ordinate.
+--    @param xn Final value of absciss.
+--    @param dx Step. If it is omitted then step is calculated automatically.
+--    @return Table of intermediate results and value in final point.
 numeric.ode = function (fn, x0,y0,xn, dx)
    local h = dx or (xn-x0)/10      -- initial step
    local res = {{x0,y0}}           -- save intermediate points

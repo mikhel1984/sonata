@@ -1,4 +1,4 @@
---[[          gnuplot.lua 
+--[[      liblc/gnuplot.lua 
 
 --- Call Gnuplot from Lua.
 --  <i>This file is a part of 

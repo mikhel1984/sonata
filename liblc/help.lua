@@ -1,4 +1,4 @@
---[[          help.lua 
+--[[      liblc/help.lua 
 
 --- Function description management.
 --  <i>This file is a part of 
