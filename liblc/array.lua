@@ -1,4 +1,4 @@
---[[          array.lua 
+--[[      liblc/array.lua 
 
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possbile.

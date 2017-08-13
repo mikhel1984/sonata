@@ -1,4 +1,4 @@
---[[          bigint.lua 
+--[[      liblc/bigint.lua 
 
 --- Operations with arbitrary long integer numbers.
 --  <i>This file is a part of 
