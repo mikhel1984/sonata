@@ -63,6 +63,7 @@ local array = {}
 array.__index = array
 -- mark object
 array.type = 'array'
+array.isarray = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 array.about = help:new("Manipulations with arrays of elements")
@@ -71,9 +72,7 @@ array.about = help:new("Manipulations with arrays of elements")
 --    <i>Private function.</i>
 --    @param t Object for checking.
 --    @return True if table is an array.
-local function isarray(t)
-   return type(t) == 'table' and t.type == array.type 
-end
+local function isarray(t) return type(t) == 'table' and t.isarray end
 
 --- Prepare list of coefficients
 --    <i>Private function.</i>

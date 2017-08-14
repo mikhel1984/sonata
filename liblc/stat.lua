@@ -1,10 +1,13 @@
-------------  stat.lua ----------------
---
--- Some statistical functions.
---
--- This file is a part of liblc collection. 
--- Stanislav Mikhel, 2017.
-----------------------------------------
+--[[      liblc/stat.lua 
+
+--- Some statistical functions.
+--  <i>This file is a part of 
+--  <a href="https://github.com/mikhel1984/lc">liblc</a>
+--  collection.</i>
+--  @copyright 2017, Stanislav Mikhel
+
+            module 'stat'
+--]]
 
 -------------------- Tests -------------------
 --[[!!
@@ -39,18 +42,25 @@ ans = Stat.geomean(X)         --~ 2.995
 
 ans = Stat.harmean(X,W)       --~ 2.567
 ]]
-----------------------------------------------
-
-local stat = {}
-
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
 
 -- magic numbers for gamma approximation
 local magic = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,
                12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7}
+-------------------------------------------- 
+-- @class table
+-- @name stat
+-- @field about Function description collection.
 
--- gamma function Lanczos approximation (based on Wikipedia) for real numbers
+local stat = {}
+-- description
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
+
+--- Gamma function.
+--    Lanczos approximation (based on Wikipedia) for real numbers.
+--    <i>Private function.</i>
+--    @param z Real number.
+--    @return G(z).
 local function gamma(z) 
    if z < 0.5 then
       return math.pi / (math.sin(math.pi*z) * gamma(1-z))
@@ -90,7 +100,9 @@ stat.tdist = function (t,n)
 end
 ]]
 
--- summ of all elements
+--- Summ of all elements.
+--    @param t Table with numbers.
+--    @return Summ.
 stat.sum = function (t)
    local s = 0
    for i = 1, #t do s = s+t[i] end
@@ -98,7 +110,10 @@ stat.sum = function (t)
 end
 stat.about[stat.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
 
--- average
+--- Average value.
+--    @param t Table with numbers.
+--    @param w Table with wiegth. Can be omitted.
+--    @return Average.
 stat.mean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -113,7 +128,9 @@ stat.mean = function (t, w)
 end
 stat.about[stat.mean] = {"mean(t[,w])", "Calculate average value. Weights are can be used.", help.BASE}
 
--- corrected value of standard deviation and variance
+--- Corrected value of standard deviation and variance.
+--    @param t Table of numbers.
+--    @return Standard deviation, variance.
 stat.stdcorr = function (t)
    local mean = stat.mean(t)
    local sq, n = 0, #t
@@ -123,7 +140,10 @@ stat.stdcorr = function (t)
 end
 stat.about[stat.stdcorr] = {"stdcorr(t)", "Corrected value of standard deviation and variance.", help.BASE}
 
--- standard deviation and variance
+--- Standard deviation and variance.
+--    @param t Table of numbers.
+--    @param w Table of weights.
+--    @return Standard deviation, variance.
 stat.std = function (t, w)
    local mean = stat.mean(t,w)
    local disp = 0
@@ -142,7 +162,9 @@ stat.std = function (t, w)
 end
 stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weigths are can be used.", help.BASE}
 
--- maximum value and position
+--- Maximum value.
+--    @param t Table of numbers.
+--    @return Maximum value and its index.
 stat.max = function (t)
    local m, k = t[1], 1
    for i = 2, #t do
@@ -152,7 +174,9 @@ stat.max = function (t)
 end
 stat.about[stat.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
 
--- minimum value and position
+--- Minimum value.
+--    @param t Table of numbers.
+--    @return Minimum value and its index.
 stat.min = function (t)
    local m, k = t[1], 1
    for i = 2, #t do
@@ -162,7 +186,10 @@ stat.min = function (t)
 end
 stat.about[stat.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
 
--- geometrical mean
+--- Geometrical mean.
+--    @param t Table of numbers.
+--    @param w Table of weights. Can be omitted.
+--    @return Geometrical mean.
 stat.geomean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -179,7 +206,10 @@ stat.geomean = function (t, w)
 end
 stat.about[stat.geomean] = {"geomean(t[,w])", "Geometrical mean.", help.OTHER}
 
--- harmonical mean
+--- Harmonical mean.
+--    @param t Table of numbers.
+--    @param w Table of weights. Can be omitted.
+--    @return Harmonical mean.
 stat.harmean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -196,7 +226,9 @@ stat.harmean = function (t, w)
 end
 stat.about[stat.harmean] = {"harmean(t[,w])", "Harmonical mean.", help.OTHER}
 
--- get mediana
+--- Find mediana.
+--    @param p Table of numbers.
+--    @return Value of mediana.
 stat.median = function (p)
    local len = #p
    local t = table.move(p,1,len,1,{})
@@ -210,17 +242,23 @@ stat.median = function (p)
 end
 stat.about[stat.median] = {"median(t)", "List median.", help.BASE}
 
--- frequency of elements
+--- Frequency of elements.
+--    @param t Table of numbers.
+--    @return Table where keys are elements and values are their frequencies.
 stat.freq = function (t)
    local tmp = {}
    for _, v in ipairs(t) do
-      tmp[v] = tmp[v] and (tmp[v]+1) or 1
+      tmp[v] = (tmp[v] or 0) + 1
    end
    return tmp
 end
 stat.about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", help.BASE}
 
--- central moment
+--- Central moment.
+--    @param n Order of the moment.
+--    @param x Table of numbers.
+--    @param p Table of weights. Can be omitted.
+--    @return Central moment value.
 stat.cmoment = function (n, x, p)
    local pk, m = 1/#x, 0
    for i = 1,#x do m = m + x[i]*(p and p[i] or pk) end
@@ -230,7 +268,11 @@ stat.cmoment = function (n, x, p)
 end
 stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p is a list of waights.", help.BASE}
 
--- n moment
+--- Noncentral moment.
+--    @param n Order of the moment.
+--    @param x Table of numbers.
+--    @param p Table of weights. Can be omitted.
+--    @return Noncentral moment value.
 stat.moment = function (n, x, p)
    local pk, m = 1/#x, 0
    for i = 1,#x do m = m + math.pow(x[i],n)*(p and p[i] or pk) end

@@ -57,6 +57,7 @@ local complex = {}
 complex.__index = complex
 -- mark object
 complex.type = 'complex'
+complex.iscomplex = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 complex.about = help:new("Manipulations with complex numbers.")
@@ -76,7 +77,7 @@ end
 --    <i>Private function.</i>
 --    @param c Object for checking.
 --    @return <code>true</code> if table is a complex number.
-local function iscomplex(c) return type(c) == 'table' and c.type == complex.type end
+local function iscomplex(c) return type(c) == 'table' and c.iscomplex end
 
 --- Argument type correction.
 --    <i>Private function.</i>

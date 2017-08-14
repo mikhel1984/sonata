@@ -55,6 +55,7 @@ print(a)
 local units = {}
 
 units.type = 'units'
+units.isunits = true
 
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
@@ -82,7 +83,7 @@ units.mem_parts = {}
 units.mem_keys = {}
 
 -- check for type
-local function isunits(t) return type(t) == 'table' and t.type == units.type end
+local function isunits(t) return type(t) == 'table' and t.isunits end
 
 -- comporation for unit sorting
 local function comp (p1,p2) 

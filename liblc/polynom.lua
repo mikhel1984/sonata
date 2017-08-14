@@ -59,6 +59,7 @@ local polynom = {}
 polynom.__index = polynom
 -- marker
 polynom.type = 'polynom'
+polynom.ispolynom = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 polynom.about = help:new("Operations with polynomials")
@@ -67,9 +68,7 @@ polynom.about = help:new("Operations with polynomials")
 --    <i>Private function.</i>
 --    @param x Object for checking.
 --    @return True if table is a polynom.
-local function ispolynom(x) 
-   return type(x) == 'table' and x.type == polynom.type 
-end
+local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
 
 --- Correct arguments if need.
 --    <i>Private function.</i>

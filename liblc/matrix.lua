@@ -89,6 +89,7 @@ local matrix = {}
 matrix.__index = matrix
 -- mark object
 matrix.type = 'matrix'
+matrix.ismatrix = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrixes are spares by default.")
@@ -97,9 +98,7 @@ matrix.about = help:new("Matrix operations. The matrixes are spares by default."
 --    <i>Private function.</i>
 --    @param m Object for checking.
 --    @return True if table is a matrix.
-local function ismatrix(m) 
-   return type(m) == 'table' and m.type == matrix.type 
-end
+local function ismatrix(m) return type(m) == 'table' and m.ismatrix end
 
 --- Initialization of matrix with given size.
 --    @param r Number of rows.

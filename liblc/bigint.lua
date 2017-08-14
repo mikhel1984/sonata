@@ -62,6 +62,7 @@ local bigint = {}
 bigint.__index = bigint
 -- mark of type
 bigint.type = 'bigint'  
+bigint.isbigint = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 bigint.about = help:new("Operations with arbitraty long integers.")
@@ -79,7 +80,7 @@ local function iabs(v) return (v < 0) and (-v) or v end
 --    <i>Private function.</i>
 --    @param t Object for checking.
 --    @return True if table is a bigint.
-local function isbigint(v) return type(v) == 'table' and v.type == bigint.type end
+local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
 --- Convert integer into bigint.
 --    <i>Private function.</i>
