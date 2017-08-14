@@ -1,17 +1,64 @@
+--[[      liblc/test.lua 
 
+--- Unit test system.
+--  <i>This file is a part of 
+--  <a href="https://github.com/mikhel1984/lc">liblc</a>
+--  collection.</i>
+--  @copyright 2017, Stanislav Mikhel
 
-local test = {}
+            module 'test'
+--]]
+
+--[=[
+	Rules for writing test.
+
+   * Tests should be encapsulated in --[[!! ... ]], i.e. in multistring comments with signs '!!'.
+
+   * Each block of test code must be separated with at leas 1 empty line.
+
+   * If test have result, it must be saved in variable 'ans'. To check it write the right value after arrow '-->'. 
+     In case of float point number sign '--~' can be used for not strong equality.
+
+   * Test can have no any results. This way print nothing after '-->' (or don't print arrow itself).
+
+   * To perform tests call 
+     'lua calc.lua -test [module_name]'
+     for example
+     'lua calc.lua -test array'
+   If module name is not written tests will be performed for all modules.
+
+   * Test summary includes information about number of passed and failed tests, average time per test unit (in msec), memory size.
+]=]
 
 local delim = '%c[%s%c]+'    -- empty strings
 local logname = 'test.log'
 local tol = 0.001
 
+-------------------------------------------- 
+-- @class table
+-- @name test
+-- @field results Results for each module.
+-- @field log Log file name.
+
+local test = {}
+-- test results
+test.results = {}
+
+--- Extract test code from file.
+--    <i>Private function.</i>
+--    @param str File text.
+--    @return Unit tests.
 local function getcode(str)
    local p = '%-%-%[(=*)%[!!(.-)%]%1%]'
    local _,q = string.match(str, p) 
    return q
 end
 
+--- Divide string into the list of substrings using delimeter.
+--    <i>Private function.</i>
+--    @param str Source string.
+--    @param delim Delimeter.
+--    @return Table of substrings.
 local function split(str, delim)
    local i,j,k = 1,1,0
    return function ()
@@ -29,6 +76,11 @@ local function split(str, delim)
    end
 end
 
+--- Prepare test code preview.
+--    <i>Private function.</i>
+--    @param str Source string.
+--    @param res Boolean result of execution.
+--    @param time Time of execution, ms.
 local function marktest(str, res, time)
    local min, full = 30, 34
    local s = string.match(str, '%C+')
@@ -38,13 +90,15 @@ local function marktest(str, res, time)
    return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succed' or 'Failed'), time)
 end
 
+--- Save string to the file and also print to the screen.
+--    @param str String for saving.
 test.print = function (str)
    print(str)
    test.log:write(str,'\n')
 end
 
-test.results = {}
-
+--- Try to execute tests listed in module.
+--    @param fname Lua file name.
 test.module = function (fname)
    -- read file
    local f = io.open(fname, 'r')
@@ -56,7 +110,7 @@ test.module = function (fname)
    test.print('\n\tModule: ' .. fname)
    -- get test
    text = getcode(text)
-   if not text or #text == 0 then return end
+   if not text or #text == 0 then return end   -- no tests
    local succeed, failed = 0, 0
    local fulltime, first = 0
    -- parse
@@ -90,11 +144,10 @@ test.module = function (fname)
    end
    fulltime = fulltime - (first or 0)
    test.results[fname] = {succeed, failed, fulltime}
-   --local final = string.format("%d tests: %d - succeed, %d - failed", succeed+failed, succeed, failed)
-   --test.print(final)
    test.log:flush()
 end
 
+--- Combine all results.
 test.summary = function ()
    test.print(string.format('\n%-20s%-10s%-10s%-10s%s', 'Module', 'Succeed', 'Failed', 'Av.time', 'Done'))
    for k,v in pairs(test.results) do
@@ -103,19 +156,18 @@ test.summary = function ()
    print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
 end
 
--- check execution time of function
+--- Check function execution time.
+--    @param fn Function to execute. After it write the list of arguments.
+--    @return Average time in msec.
 test.time = function (fn,...)
    local n, sum, t = 10, 0, 0
    for i = 1,n do
       t = os.clock(); fn(...); t = os.clock() - t
       sum = sum + t
    end
-   return sum / n
+   return sum * 1000/ n
 end
 
 
 return test
-
-
-
 
