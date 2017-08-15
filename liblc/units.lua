@@ -1,10 +1,8 @@
 --[[      liblc/units.lua 
 
 --- Operations and conversations with units.
---  <i>This file is a part of 
---  <a href="https://github.com/mikhel1984/lc">liblc</a>
---  collection.</i>
---  @copyright 2017, Stanislav Mikhel
+--  @author Stanislav Mikhel, 2017
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
 
             module 'units'
 --]]
@@ -62,7 +60,7 @@ local c_prod, c_rat, c_pow = string.byte('*'), string.byte('/'), string.byte('^'
 
 -------------------------------------------- 
 -- @class table
--- @name array
+-- @name units
 -- @field type Define object type string.
 -- @field isunits <code>true</code> for unit object.
 -- @field about Function description collection.
@@ -184,13 +182,7 @@ local function isempty(t)
    return true
 end
 
---- Operations with tables of units.
--- @class table
--- @name op
--- @field '*' Multiplication.
--- @field '/' Devision.
--- @field '^' Power.
-
+-- Operations with tables of units.
 local op = {
 ['*'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) + v end end,
 ['/'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) - v end end,

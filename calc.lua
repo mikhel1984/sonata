@@ -1,8 +1,9 @@
 #!/usr/local/bin/lua -i
 -- Lua based calculator
-lc_version = '0.5.4'
+lc_version = '0.6.0'
 
---LOCALISATION_FILE = "locale/lng.ru"
+-- Uncomment it to set the localisation file.
+-- LOCALISATION_FILE = "locale/lng.ru"
 
 -- TODO: replace common etc. functions into special module
 
