@@ -1,8 +1,11 @@
 #!/usr/local/bin/lua -i
-
 -- Lua based calculator
+lc_version = '0.6.0'
 
---LOCALISATION_FILE = "locale/lng.ru"
+-- Uncomment it to set the localisation file.
+-- LOCALISATION_FILE = "locale/lng.ru"
+
+-- TODO: replace common etc. functions into special module
 
 -- help
 help = require "liblc.help"
@@ -50,6 +53,7 @@ import = {
    rational = "Rat",
    set      = "Set",
    stat     = "Stat",
+   units    = "Unit",
 }
 about[import] = {"import", "", help.BASE}
 
@@ -70,6 +74,7 @@ setmetatable(import,
    if not _G[var] then
       _G[var] = require('liblc.'..name)
       about:add(_G[var].about, var)
+      if _G[var].onimport then _G[var].onimport() end
    end
    print(string.format(about:get('alias'), var, name))
    about[import][2] = import_state_update()
@@ -122,15 +127,6 @@ function eval(fn, x1, xn, step)
 end
 about[eval] = {"eval(fn,x1[,xn[,step]])", "Evalueate function for given value or interval and print result.", help.OTHER}
 
-function howlong(fn,...)
-   local n, sum, t = 10, 0, 0
-   for i = 1,n do
-      t = os.clock(); fn(...); t = os.clock() - t
-      sum = sum + t
-   end
-   return sum / n
-end
-
 -- read localisation file and update descriptions
 if LOCALISATION_FILE then about:localisation(LOCALISATION_FILE) end
 
@@ -158,8 +154,24 @@ function deserialize(obj_str)
    return o
 end
 
+-- check arguments
+if #arg > 0 then
+   if arg[1] == '-test' then
+      Test = require 'liblc.test'
+      if arg[2] then
+         Test.module(string.format('liblc/%s.lua',arg[2]))
+      else
+         for m in pairs(import) do
+	    Test.module(string.format('liblc/%s.lua',m))
+	 end
+      end
+      Test.summary()
+      os.exit()
+   end
+end
+
 -- Run!
-print("\n             --==== LuaCalc 0.5 ====--\n")
+print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
 print(about:get('intro'))
 
 _PROMPT='lc: '

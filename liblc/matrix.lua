@@ -1,56 +1,108 @@
---[[     matrix.lua
-Matrix operations.
+--[[      liblc/matrix.lua 
 
-------------- Examples ---------------
+--- Matrix operations. Indexation from 1.
+--  @author Stanislav Mikhel, 2017
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
 
+            module 'matrix'
+--]]
+
+-------------------- Tests -------------------
+--[[!!
 Mat = require 'liblc.matrix'
 
-a = Mat({1,2},{3,4})             --> [1,2; 3,4]
-b = Mat({5,6},{7,8})             --> [5,6; 7,8]
+a = Mat({1,2},{3,4})             
+b = Mat({5,6},{7,8})             
+ans = a(2,2)                     --> 4 
 
-Indexation from 1!
+b:set(9, 1,1)
+ans = b(1,1)                     --> 9
 
-a(1,1)                           --> 1
-b:set(9, 1,1)                    --> [5,6; 9,8]
-a:transpose() or a:T()           --> [1,3; 2,4]
-#a                               --> 2,2
+b:set(5, 1,1)
+c = a:T()
+ans = c(1,2)                     --> 3
 
-a + b                            --> [6,8; 10,12]
-b - a                            --> [4,4; 4,4]
-a * b
-a / b
-a ^ 2 
+_, ans = a:size()                --> 2
 
-a:det()
-a:inv()
-c = a:copy()                     --> [1,2; 3,4]
+ans = a + b                      --> Mat({6,8},{10,12})
 
-Mat.eye(2)                       --> [1,0; 0,1]
-Mat.zeros(2,3)                   --> [0,0,0; 0,0,0]
-Mat.ones(2,3, 4)                 --> [4,4,4; 4,4,4]
+ans = b - a                      --> Mat({4,4},{4,4})
 
-a .. b                           --> [1,2,5,6; 3,4,7,8]
-a // b                           --> [1,2; 3,4; 5,6; 7,8]
-a:sub(1,1,2,-1)                  --> [3,4]
+ans = a * b                      --> Mat({19,22},{43,50})
 
-a:map(function(x) return x^2 end) --> [1,4; 9,16]
+ans = a / b 
+ans = ans:det()                  --~ 1
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = a ^ 2                      --> Mat({7,10},{15,22}) 
+
+ans = a:det()                    --> -2
+
+e = a:inv()
+ans = e(2,1)                     --> 1.5
+
+f = a:copy()
+ans = (f == a)                   --> true
+
+ans = (a == b)                   --> false
+
+ans = Mat.eye(2)                 --> Mat({1,0},{0,1})
+
+ans = Mat.zeros(2,1)             --> Mat({0},{0})
+
+ans = Mat.ones(2,3,4)            --> Mat({4,4,4},{4,4,4})
+
+ans = a .. b                     --> Mat({1,2,5,6},{3,4,7,8})
+
+ans = a // b                     --> Mat({1,2},{3,4},{5,6},{7,8})
+
+ans = a:map(function (x) return x^2 end)          --> Mat({1,4},{9,16})
+
+ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat({-1,-3},{-2,-4})
+
+ans = Mat.rref(a, Mat({5},{11})) --> Mat({1,0,1},{0,1,2})
+
+ans = Mat.V(1,2,3)               --> Mat({1},{2},{3})
+
+g = Mat({1,2,3},{4,5,6},{7,8,9})
+ans = g:sub(2,-1,2,3)           --> Mat({5,6},{8,9})
+
+h = Mat.rand(3,2)
+print(h)
+
+m = Mat({1,2},{3,4},{5,6})
+n = m:pinv()
+ans = math.floor(n(2,2)*1000)   --> 333
+
+n = m:pinv2()
+ans = math.floor(n(2,2)*1000)   --> 333
 ]]
+
+-------------------------------------------- 
+-- @class table
+-- @name matrix
+-- @field type Define object type string.
+-- @field about Function description collection.
 
 local matrix = {}
 matrix.__index = matrix
-
+-- mark object
 matrix.type = 'matrix'
-
-local help = require "liblc.help"
+matrix.ismatrix = true
+-- description
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrixes are spares by default.")
 
--- test object type
-local function ismatrix(m) return type(m) == 'table' and m.type == matrix.type end
+--- Check object type.
+--    <i>Private function.</i>
+--    @param m Object for checking.
+--    @return True if table is a matrix.
+local function ismatrix(m) return type(m) == 'table' and m.ismatrix end
 
--- initialization of matrix with given size
+--- Initialization of matrix with given size.
+--    @param r Number of rows.
+--    @param c Number of columns.
+--    @param m Table for initialization.
+--    @return Matrix object.
 function matrix:init(r, c, m)
    assert(r > 0 and c > 0, "Wrong matrix size")
    m = m or {}
@@ -59,7 +111,9 @@ function matrix:init(r, c, m)
    return m
 end
 
--- create new matrix from list of tables
+--- Create new matrix from list of tables.
+--    Arguments are rows represented as tables.
+--    @return Matrix object.
 function matrix.new(...)
    local args = {...}
    local cols, rows = 0, #args
@@ -70,7 +124,14 @@ function matrix.new(...)
    return matrix:init(rows, cols, args)
 end
 
--- check correctness of element index
+--- Check correctness of element index.
+--    Used only for user defined inex. Can be negative.
+--    If <code>c</code> is omitted then <code>r</code> is index in vector.
+--    <i>Private function.</i>
+--    @param m Matrix.
+--    @param r Row number.
+--    @param c Col number.
+--    @return Corrected value of row and col.
 local function checkindex(m, r, c)
    assert(ismatrix(m), "Matrix is expected")
    if c == nil then
@@ -80,6 +141,7 @@ local function checkindex(m, r, c)
          r, c = 1, r
       end
    end
+   -- check range
    assert(c <= m.cols and c >= -m.cols, "Column number must be not more then " .. m.cols)
    assert(r <= m.rows and r >= -m.rows, "Row number must be not more then " .. m.rows)
    assert(r ~= 0 and c ~= 0, "Indexation from 1!")
@@ -88,17 +150,23 @@ local function checkindex(m, r, c)
    return r, c
 end
 
--- return 0 in element is empty or its value
+--- Return 0 in element is empty or its value.
+--    <i>Private function.</i>
+--    @param m Matrix.
+--    @param r Row number.
+--    @param c Column number.
+--    @return Element value.
 local function getval(m, r, c)
    local v = m[r]
-   if v then 
-      return v[c] or 0
-   else
-      return 0
-   end
+   return v and v[c] or 0
 end
 
--- set value if need
+--- Set value if need.
+--    <i>Private function.</i>
+--    @param m Matrix.
+--    @param r Row number.
+--    @param c Column number.
+--    @param v New value.
 local function setval(m, r, c, v)
    if (m[r] and m[r][c]) or v ~= 0 then 
       m[r] = m[r] or {}
@@ -106,18 +174,22 @@ local function setval(m, r, c, v)
    end
 end
 
--- set product of element to coefficient
+--- Set product of element to coefficient.
+--    <i>Private function.</i>
+--    @param k Coefficient.
+--    @param m Matrix.
+--    @return Result of production.
 local function kprod(k, m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, m.rows do
-      for c = 1, m.cols do
-      	 setval(res,r,c, k*getval(m,r,c))
-      end
+      for c = 1, m.cols do setval(res,r,c, k*getval(m,r,c)) end
    end
    return res
 end
 
--- transform matrix to upper triangle
+--- Transform matrix to upper triangle.
+--    @param m Initial matrix.
+--    @return Upper triangulated matrix and determinant.
 local function gaussdown(m)
    local A = 1
    for k = 1, m.rows do
@@ -145,7 +217,9 @@ local function gaussdown(m)
    return m, A
 end
 
--- transform triangle matrix to identity matrix
+--- Transform triangle matrix to identity matrix.
+--    @param Initial matrix
+--    @return Matrix with diagonal zeros.
 local function gaussup(m)
    for k = m.rows-1, 1, -1 do
       local v = getval(m, k, k+1)
@@ -156,7 +230,12 @@ local function gaussup(m)
    return m
 end
 
--- return matrix element
+--- Get matrix element.
+--    Can be called with ().
+--    @param m Matrix.
+--    @param r Row number.
+--    @param c Column number.
+--    @return Element value.
 matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
    return getval(m, r, c)
@@ -166,7 +245,11 @@ matrix.about[matrix.get] = {"get(m,row,col)", "Return matrix element.", help.BAS
 -- simplify call of matrix.get()
 matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
 
--- set value of matrix
+--- Set value of matrix element.
+--    @param m Matix.
+--    @param val New value.
+--    @param r Row number.
+--    @param c Column number.
 matrix.set = function (m, val, r, c)
    r, c = checkindex(m, r, c)
    m[r] = m[r] or {}
@@ -174,13 +257,14 @@ matrix.set = function (m, val, r, c)
 end
 matrix.about[matrix.set] = {"set(m,val,row,col)", "Set value of matrix.", help.BASE} 
 
--- transpose matrix
+--- Transpose matrix.
+--    Can be called as T().
+--    @param m Initial matrix.
+--    @return Transposed matrix.
 matrix.transpose = function (m)
    local res = matrix:init(m.cols, m.rows)
    for r = 1, m.rows do
-      for c = 1, m.cols do
-	 setval(res,c,r, getval(m,r,c))
-      end
+      for c = 1, m.cols do setval(res,c,r, getval(m,r,c)) end
    end
    return res
 end
@@ -188,42 +272,58 @@ matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shor
 
 matrix.T = matrix.transpose
 
--- auxiliary function for addition/substraction
+--- Auxiliary function for addition/substraction.
+--    <i>Private function.</i>
+--    @param a First matrix.
+--    @param b Second matrix.
+--    @param sign +1 or -1 (can be omitted).
 local function sum(a,b,sign)
    assert(a.cols == b.cols and a.rows == b.rows, "Wrong matrix size!")
    local res = matrix:init(a.rows, a.cols)
    for r = 1, res.rows do
       for c = 1, res.cols do
-         local sum = (sign == '-') and (getval(a,r,c)-getval(b,r,c)) or (getval(a,r,c)+getval(b,r,c))
-	 setval(res,r,c, sum)
+	 setval(res,r,c, (sign == -1) and (getval(a,r,c)-getval(b,r,c)) or (getval(a,r,c)+getval(b,r,c)))
       end
    end
    return res
 end
 
--- a + b
+--- a + b
+--    @param a First matrix.
+--    @param b Second matrix.
+--    @return Sum of the given matricies.
 matrix.__add = function (a,b)
    return sum(a, b)
 end
 
--- a - b
+--- a - b
+--    @param a First matrix.
+--    @param b Second matrix.
+--    @return Substraction of the given matricies.
 matrix.__sub = function (a,b)
-   return sum(a, b, '-')
+   return sum(a, b, -1)
 end
 
--- -a
+--- -a
+--    @param a Initial matrix.
+--    @return Negative value of matrix.
 matrix.__unm = function (a)
    local tmp = matrix:init(a.rows, a.cols)
-   return sum(tmp, a, '-')
+   return sum(tmp, a, -1)
 end
 
--- return size
+--- Get matrix size.
+--    @param m Matrix to check.
+--    @return Number of rows and columns.
 matrix.size = function (m)
-   assert(ismatrix(m), "Matrix is expected")
    return m.rows, m.cols
 end
 matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'.", help.BASE}
 
+--- Apply function to each element.
+--    @param m Source matrix.
+--    @param fn Function f(x).
+--    @return Result of function evaluation.
 matrix.map = function (m, fn) 
    local res = matrix:init(m.rows, m.cols)
    for r = 1, res.rows do
@@ -233,6 +333,10 @@ matrix.map = function (m, fn)
 end
 matrix.about[matrix.map] = {"map(m,fn)", "Apply the given function to all elements, return new matrix.", help.OTHER}
 
+--- Apply function to each element, use row and col values.
+--    @param m Source matrix.
+--    @param fn Function f(r,c,x).
+--    @return Result of function evaluation.
 matrix.map_ex = function (m, fn)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, res.rows do
@@ -240,11 +344,26 @@ matrix.map_ex = function (m, fn)
    end
    return res
 end
-matrix.about[matrix.map_ex] = {"map_ex(m,fn)", "Applay function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
+matrix.about[matrix.map_ex] = {"map_ex(m,fn)", "Apply function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
 
-matrix.__len = matrix.size
+--- Apply function to each pair elements of given matricies.
+--    @param m1 First matrix.
+--    @param m2 Second matrix.
+--    @param fn Function from two arguments f(v1,v2).
+--    @return Result of function evaluation.
+matrix.apply = function (m1, m2, fn)
+   assert(m1.rows==m2.rows and m1.cols==m2.cols, "Different matrix size!")
+   local res = matrix:init(m1.rows,m1.cols)
+   for r = 1,res.rows do
+      for c = 1,res.cols do setval(res,r,c, fn(getval(m1,r,c), getval(m2,r,c))) end
+   end
+   return res
+end
+matrix.about[matrix.apply] = {"apply(m1,m2,fn)", "Apply fu(v1,v2) to each element of matrixes m1 and m2.", help.OTHER}
 
--- create copy of matrix
+--- Create copy of matrix.
+--    @param m Source matrix.
+--    @return Deep copy.
 matrix.copy = function (m)
    assert(ismatrix(m), "Matrix is expected!")
    local res = matrix:init(m.rows, m.cols)
@@ -255,7 +374,10 @@ matrix.copy = function (m)
 end
 matrix.about[matrix.copy] = {"copy(m)", "Return copy of matrix.", help.OTHER}
 
--- a * b
+--- a * b
+--    @param a First matrix.
+--    @param b Second matrix.
+--    @return Multiplication of the given matricies.
 matrix.__mul = function (a,b)
    assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type")
    if not ismatrix(a) then return kprod(a, b) end
@@ -272,22 +394,28 @@ matrix.__mul = function (a,b)
    return (res.cols == 1 and res.rows == 1) and getval(res, 1, 1) or res
 end
 
--- a / b
+--- a / b
+--    @param a First matrix.
+--    @param b Second matrix.
+--    @return Ratio of the given matricies.
 matrix.__div = function (a,b)
    assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type!")
    if not ismatrix(b) then return kprod(1/b, a) end
    return a * matrix.inv(b)
 end
 
--- a ^ n
+--- a ^ n
+--    @param a Matrix.
+--    @param n Positive integer power.
+--    @return New matrix.
 matrix.__pow = function (a,n)
    n = assert(math.tointeger(n), "Integer is expected!")
    assert(a.rows == a.cols, "Square matrix is expected!")
    local res, acc = matrix.eye(a.rows), matrix.copy(a)
    while n > 0 do
       if n%2 == 1 then res = res * acc end
-      acc = acc * acc
       n = n // 2
+      if n > 0 then acc = acc * acc end
    end
    return res
 end
@@ -295,7 +423,10 @@ end
 matrix.arithmetic = 'arithmetic'
 matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
 
--- a == b
+--- a == b
+--    @param a First matrix.
+--    @param b Second matrix.
+--    @return <code>true</code> if all elements are equial.
 matrix.__eq = function (a,b)
    if not (ismatrix(a) and ismatrix(b)) then return false end
    if a.rows ~= b.rows or a.cols ~= b.cols then return false end
@@ -311,7 +442,9 @@ matrix.comparation = 'comparation'
 matrix.about[matrix.comparation] = {matrix.comparation, "a==b, a~=b", help.BASE}
 
 
--- determinant
+--- Find determinant.
+--    @param m Initial matrix.
+--    @return Determinant.
 matrix.det = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
    local _, K = gaussdown(matrix.copy(m))
@@ -319,7 +452,9 @@ matrix.det = function (m)
 end
 matrix.about[matrix.det] = {"det(m)", "Calculate determinant.", help.BASE}
 
--- inverse matrix
+--- Inverse matrix.
+--    @param m Initial matrix.
+--    @return Result of invertion.
 matrix.inv = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
    local con, det = matrix.rref(m, matrix.eye(m.cols))
@@ -327,29 +462,45 @@ matrix.inv = function (m)
 end
 matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", help.BASE}
 
--- calculate system of equations using Gauss method
+--- Solve system of equations using Gauss method.
+--    @param A Matrix of coefficients.
+--    @param b Free coefficients (matrix of vector).
+--    @return Solution and determinant.
 matrix.rref = function (A,b)
    local tr, d = gaussdown(matrix.concat(A,b,'h'))
    return gaussup(tr), d
 end
-matrix.about[matrix.rref] = {"rref(m)", "Perform transformations using Gauss method. Return also determinant.", help.BASE}
+matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant.", help.BASE}
 
--- create vector
+--- Create vector.
+--    Simplified vector constructor. 
+--    Agrumets are list of vector elements.
+--    Can be called as V(...).
+--    @return Vector form of matrix.
 matrix.vector = function (...)
    local v, res = {...}, {}
    for i = 1, #v do res[i] = {v[i]} end
    return matrix:init(#v, 1, res)
 end
-matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers", help.BASE}
+matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V().", help.BASE}
 
--- matrix of 0
+matrix.V = matrix.vector
+
+--- Create matrix of zeros.
+--    @param rows Number of rows.
+--    @param cols Number of columns. Can be omitted in case of square matrix.
+--    @return Sparse matrix.
 matrix.zeros = function (rows, cols)
    cols = cols or rows
    return matrix:init(rows, cols)
 end
 matrix.about[matrix.vector] = {"zeros(rows[,cols])", "Create matrix from zeros", help.OTHER}
 
--- matrix of 1
+--- Matrix of constants.
+--    @param rows Number of rows.
+--    @param cols Number of columns. Can be omitted in case of square matrix.
+--    @param val Value to set. Default is 1.
+--    @return New matrix.
 matrix.ones = function (rows, cols, val)
    cols = cols or rows
    val = val or 1
@@ -362,7 +513,10 @@ matrix.ones = function (rows, cols, val)
 end
 matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given numbers (default is 1).", help.OTHER}
 
--- matrix with random values
+--- Matrix with random values.
+--    @param rows Number of rows.
+--    @param cols Number of columns. Can be omitted in case of square matrix.
+--    @return New matrix.
 matrix.rand = function (rows, cols)
    cols = cols or rows
    local m = matrix:init(rows, cols)
@@ -376,7 +530,10 @@ matrix.rand = function (rows, cols)
 end
 matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1", help.OTHER}
 
--- identity matrix
+--- Identity matrix.
+--    @param rows Number of rows.
+--    @param cols Number of columns. Can be omitted in case of square matrix.
+--    @return Diagonal matrix with ones.
 matrix.eye = function (rows, cols)
    cols = cols or rows
    local m = matrix:init(rows, cols)
@@ -385,7 +542,12 @@ matrix.eye = function (rows, cols)
 end
 matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix", help.OTHER}
 
--- get submatrix
+--- Get submatrix.
+--    @param m Initial matrix.
+--    @param r1 Lower row index.
+--    @param r2 Upper row index.
+--    @param c1 Lower column number.
+--    @param upper column number.
 matrix.sub = function (m, r1, r2, c1, c2)
    r1, c1 = checkindex(m, r1, c1)
    r2, c2 = checkindex(m, r2, c2)
@@ -403,7 +565,12 @@ matrix.sub = function (m, r1, r2, c1, c2)
 end
 matrix.about[matrix.sub] = {"sub(m,r1,r2,c1,c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2]", help.OTHER}
 
--- perform concatenation
+--- Matrix concatenation.
+--    Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
+--    @param a First matrix.
+--    @param b Second matrix.
+--    @param dib Direction of concatenation ('h' for horizontal, 'v' for vertical).
+--    @return Concatenated matrxi.
 matrix.concat = function (a, b, dir)
    local res = nil
    if dir == 'h' then
@@ -430,16 +597,14 @@ matrix.about[matrix.concat] = {"concat(m1,m2,dir)",
 			       help.OTHER}
 
 -- horizontal concatenation
-matrix.__concat = function (a,b)
-   return matrix.concat(a,b,'h')
-end
+matrix.__concat = function (a,b) return matrix.concat(a,b,'h') end
 
 -- vertical concatenation
-matrix.__idiv = function (a,b)
-   return matrix.concat(a,b,'v')
-end
+matrix.__idiv = function (a,b) return matrix.concat(a,b,'v') end
 
--- strig representation
+--- Strig representation.
+--    @param m Matrix.
+--    @return String.
 matrix.__tostring = function (m)
    local srow = {}
    for r = 1, m.rows do
@@ -455,7 +620,11 @@ end
 --> SVD - "standard" algorithm implementation
 --  BUT: some of singular values are negative :(
 
--- Householder transformation
+--- Householder transformation.
+--    <i>Private function.</i>
+--    @param x Matrix.
+--    @param k Index.
+--    @return Result of transformation.
 local function householder (x, k)
    local n, sum = x.rows, 0
    local u = matrix.zeros(n, 1)
@@ -467,7 +636,10 @@ local function householder (x, k)
    return matrix.eye(n,n) - (2 / (ut * u)) * (u * ut)
 end
 
--- bidiagonalization
+--- Bidiagonalization.
+--    <i>Private function.</i>
+--    @param A Source matrix.
+--    @return U, B, V
 local function bidiag_reduction(A)
    local m,n = A.rows, A.cols
    local B = matrix.copy(A)
@@ -487,7 +659,9 @@ local function bidiag_reduction(A)
    return U, B, V
 end
 
--- Given's rotation
+--- Given's rotation.
+--    <i>Private function.</i>
+--    @return cos, sin
 local function rot(f,g)
    --> return cos, sin; r is omited
    if f == 0 then
@@ -503,7 +677,8 @@ local function rot(f,g)
    end
 end
 
--- QR-type sweeps
+--- QR-type sweeps.
+--    <i>Private function.</i>
 local function qr_sweep(B)
    local m,n = B.rows, B.cols
    local U,V = matrix.eye(m), matrix.eye(n)
@@ -539,7 +714,10 @@ local function qr_sweep(B)
    return U, B, V, E
 end
 
--- "standard" SVD calculation
+--- "Standard" SVD calculation.
+--    Warning: B get negative elements...
+--    @param A original matrix.
+--    @return U,B,V
 matrix.svd = function (A)
    local transp = (A.rows < A.cols)
    local B = transp and A:transpose() or A:copy()
@@ -561,7 +739,9 @@ matrix.svd = function (A)
 end
 matrix.about[matrix.svd] = {"svd(M)", "Singular value decomposition of the matrix M.", help.OTHER}
 
--- pseudoinverse matrix
+--- Pseudoinverse matrix using SVD.
+--    @param M Initial matrix.
+--    @return Pseudoinverse matrix.
 matrix.pinv = function (M)
    local u,s,v = matrix.svd(M)
    s = matrix.map_ex(s, function (r,c,x) return (r == c and math.abs(x) > 1e-8) and (1/x) or 0 end)
@@ -569,8 +749,10 @@ matrix.pinv = function (M)
 end
 matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudoinverse matrix using SVD", help.OTHER}
 
--- quick pseudoinverse matrix
--- based on "Fast computation of Moore-Penrose inverse matrices" by Pierre Courrieu
+--- Quick pseudoinverse matrix.
+--    Based on "Fast computation of Moore-Penrose inverse matrices" by Pierre Courrieu.
+--    @param M Initial matrix.
+--    @return Pseudoinverse matrix.
 matrix.pinv2 = function (M)
    local m,n,transp = M.rows, M.cols, false
    local A, Mt = nil, M:transpose()
@@ -618,7 +800,9 @@ setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
 matrix.Mat = 'Mat'
 matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables)", help.NEW}
 
--- matrix serialization
+--- Matrix serialization.
+--    @param obj Matrix object.
+--    @return String, suitable for exchange.
 matrix.serialize = function (obj)
    local s = {}
    s[#s+1] = "cols=" .. obj.cols

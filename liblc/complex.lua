@@ -1,77 +1,126 @@
---[[     complex.lua
-Manipulations with complex numbers.
+--[[      liblc/complex.lua 
 
+--- Manipulations with complex numbers.
+--  @author Stanislav Mikhel, 2017
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+
+            module 'complex'
+--]]
+
+---------------- Tests --------------
+--[[!!
 Cmp = require 'liblc.complex'
 
-a = Cmp(1,2)                   --> 1.000 + 2.000i
-b = Cmp(3)                     --> 3.000 + 0.000i
+a = Cmp(1,2)                  
+b = Cmp(3)
+ans = b                        --> Cmp(3,0)
 
-a + b                          --> 4.000 + 2.000i
-Cmp(3) - b                     --> 0.000 + 0.000i
-a * b                          --> 3.000 + 6.000i
-a / Cmp._i                     --> 2.000 - 1.000i
-Cmp(1,1) ^ Cmp(2,2)            --> -0.265 + 0.319i
+ans = a + b                    --> Cmp(4,2)
 
-a == b                         --> false
-a ~= b                         --> true
+ans = Cmp(3) - b               --> Cmp(0)
 
-a:abs()                        --> 2.236
-a:arg()                        --> 1.107
-a:conj()                       --> 1.000 - 2.000i
-a:Re()                         --> 1.000
-a:Im()                         --> 2.000
-Cmp.sqrt(-2)                   --> 0.000 - 1.414i
+ans = a * b                    --> Cmp(3,6)
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = a / Cmp._i               --> Cmp(2,-1)
+
+c = Cmp(1,1)^Cmp(2,-2)
+ans = c:Re()                   --~ 6.147
+
+ans = c:Im()                   --~ 7.4
+
+ans = (a == b)                 --> false
+
+ans = (a ~= b)                 --> true
+
+ans = a:abs()                  --~ 2.236
+
+ans = a:arg()                  --~ 1.107
+
+ans = a:conj()                 --> Cmp(1,-2)
+
+d = Cmp.sqrt(-2)
+ans = d:Im()                   --~ 1.414
+
+print(a)
 ]]
+
+-------------------------------------------- 
+-- @class table
+-- @name complex
+-- @field type Define object type string.
+-- @field about Function description collection.
+-- @field _i Complex unit.
 
 local complex = {}
 complex.__index = complex
-
+-- mark object
 complex.type = 'complex'
-
+complex.iscomplex = true
 -- description
-local help = require "liblc.help"
-complex.about = help:new("Manipulations with complex numbers")
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+complex.about = help:new("Manipulations with complex numbers.")
 
--- constructor
+--- Create new object, set metatable.
+--    @param re Real part.
+--    @param im Imaginary part.
+--    @return Complex object.
 function complex:new(re, im)   
    im = im or 0
-   assert(type(re) == 'number' and type(im) == 'number', "Numbers are expected")
    local o = {real = re, imag = im}
    setmetatable(o, self)
    return o
 end
 
--- argument type correction
+--- Check object type.
+--    <i>Private function.</i>
+--    @param c Object for checking.
+--    @return <code>true</code> if table is a complex number.
+local function iscomplex(c) return type(c) == 'table' and c.iscomplex end
+
+--- Argument type correction.
+--    <i>Private function.</i>
+--    @param a First complex or real number.
+--    @param b Second complex, real number or <code>nil</code>.
+--    @return Complex numbers.
 local function args(a,b)
-   a = (type(a) == "table" and a.type == complex.type) and a or complex:new(a)
+   a = iscomplex(a) and a or complex:new(a)
    if b then
-      b = (type(b) == "table" and b.type == complex.type) and b or complex:new(b)
+      b = iscomplex(b) and b or complex:new(b)
    end
    return a,b
 end
 
--- a + b
+--- a + b
+--    @param a First complex or real number.
+--    @param b Second complex or real number.
+--    @return Complex summ.
 complex.__add = function (a,b)
    a,b = args(a,b)
    return complex:new(a.real+b.real, a.imag+b.imag)
 end
 
--- a - b
+--- a - b
+--    @param a First complex or real number.
+--    @param b Second complex or real number.
+--    @return Complex difference.
 complex.__sub = function (a,b)
    a,b = args(a,b)
    return complex:new(a.real-b.real, a.imag-b.imag)
 end
 
--- a * b
+--- a * b
+--    @param a First complex or real number.
+--    @param b Second complex or real number.
+--    @return Complex product.
 complex.__mul = function (a,b)
    a,b = args(a,b)
    return complex:new(a.real*b.real-a.imag*b.imag, a.real*b.imag+a.imag*b.real)
 end
 
--- a / b
+--- a / b
+--    @param a First complex or real number.
+--    @param b Second complex or real number.
+--    @return Complex ratio.
 complex.__div = function (a,b)
    a,b = args(a,b)
    local denom = b.real*b.real + b.imag*b.imag
@@ -79,18 +128,22 @@ complex.__div = function (a,b)
    return complex:new((a.real*b.real+a.imag*b.imag)/denom, (a.imag*b.real-a.real*b.imag)/denom)
 end
 
--- a ^ b
+--- a ^ b
+--    @param a First complex or real number.
+--    @param b Second complex or real number.
+--    @return Complex power.
 complex.__pow = function (a,b)
    a,b = args(a,b)
-   local a0 = complex.abs(a)
-   local a1 = complex.arg(a)
+   local a0, a1 = complex.abs(a), complex.arg(a)
    local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
    local abs = math.pow(a0, b.real)*math.exp(-a1*b.imag)
    local arg = k*b.imag+b.real*a1
    return complex:new(abs*math.cos(arg), abs*math.sin(arg))
 end
 
--- -v
+--- -v
+--    @param v Complex number.
+--    @return Number with inverted signs.
 complex.__unm = function (v)
    return complex:new(-v.real, -v.imag)
 end
@@ -98,7 +151,10 @@ end
 complex.arithmetic = 'arithmetic'
 complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
 
--- a == b
+--- a == b
+--    @param a First complex or real number.
+--    @param b Second complex or real number.
+--    @return <code>true</code> if the real and imaginary parts are equial.
 complex.__eq = function (a, b)
    a,b = args(a,b)
    return a.real == b.real and a.imag == b.imag
@@ -107,32 +163,46 @@ end
 complex.comparation = 'comparation'
 complex.about[complex.comparation] = {complex.comparation, "a==b, a~=b", help.BASE}
 
--- argument of complex number
+--- Argument of complex number.
+--    @param v Complex number.
+--    @return Argument of the number.
 complex.arg = function (v) return math.atan(v.imag, v.real) end
 complex.about[complex.arg] = {"arg(v)", "Return argument of complex number.", help.BASE}
 
--- module of complex number
+--- Module of complex number.
+--    @param v Complex number.
+--    @return Module of the number.
 complex.abs = function (v) return math.sqrt(v.real*v.real+v.imag*v.imag) end
 complex.about[complex.abs] = {"abs(v)", "Return module of complex number.", help.BASE}
 
--- conjunction
+--- Conjunction.
+--    @param v Complex number.
+--    @return Conjunction to the given number.
 complex.conj = function (v) return complex:new(v.real, -v.imag) end
 complex.about[complex.conj] = {"conj(v)", "Return the complex conjugate.", help.OTHER}
 
--- real part
+--- Real part of the number.
+--    @param v Complex value.
+--    @return Real part.
 complex.Re  = function (v) return v.real end
 complex.about[complex.Re] = {"Re(v)", "Return the real part.", help.OTHER}
 
--- imag part
+--- Imag part of the number.
+--    @param v Complex value.
+--    @return Imaginary part.
 complex.Im  = function (v) return v.imag end
 complex.about[complex.Im] = {"Im(v)", "Return the imaginary part.", help.OTHER}
 
--- number representation
+--- String representation.
+--    @param v Complex number.
+--    @return String.
 complex.__tostring = function (v)
-   return string.format("%f%+fi", v.real, v.imag)
+   return string.format("%.3f%+.3fi", v.real, v.imag)
 end
 
--- square root with possible complex result
+--- Square root with possibility of complex result.
+--    @param v Real or complex number.
+--    @return Real or complex square root.
 complex.sqrt = function (v) 
    if type(v) == "number" then
       if v >= 0 then
@@ -155,7 +225,9 @@ setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im
 complex.Cmp = 'Cmp'
 complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number", help.NEW}
 
--- object serialization
+--- Complex number serialization.
+--    @param obj Complex number.
+--    @return String, suitable for exchange.
 complex.serialize = function (obj)
    local s = {}
    s[#s+1] = string.format("real=%a", obj.real)
@@ -165,5 +237,12 @@ complex.serialize = function (obj)
    return string.format("{%s}", table.concat(s, ','))
 end
 complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object", help.OTHER}
+
+--- Function for execution during the module import.
+--    Redefine function sqrt and add complex variable.
+complex.onimport = function ()
+   _i = complex._i
+   sqrt = complex.sqrt
+end
 
 return complex

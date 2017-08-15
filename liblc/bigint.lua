@@ -1,70 +1,113 @@
---[[      bigint.lua
-Operations with arbitrary long integer numbers
+--[[      liblc/bigint.lua 
 
------------ Examples -----------------
+--- Operations with arbitrary long integer numbers.
+--  @author Stanislav Mikhel, 2017
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
 
+            module 'bigint'
+--]]
+
+---------------- Tests -----------------
+--[[!!
 Big = require 'liblc.bigint'
 
-a = Big(123)           --> 123
-b = Big('456')         --> 456
+a = Big(123)         
+ans = a:tonumber()           --> 123
 
-a + b                  --> 579
-a - b                  --> -333
-a * Big(2)             --> 246
-b / 2                  --> 228
-b % a                  --> 87
-a ^ 3                  --> 1860867
+b = Big('456')        
+ans = b:tonumber()           --> 456
 
-Big.abs('-25')         --> 25
-Big.factorial(10)      --> 3628800
-c = a:copy()           --> 123
+ans = Big.tonumber(a+b)      --> 579
 
-a > b                  --> false
-a == b                 --> false
-a:eq(123)              --> true
-#a                     --> 3
+ans = Big.tonumber(a-b)      --> -333
 
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
+ans = Big.tonumber(a*Big(2)) --> 246
+
+ans = Big.tonumber(b/2)      --> 228
+
+ans = Big.tonumber(b%a)      --> 87
+
+ans = Big.tonumber(a^3)      --> 1860867
+
+ans = Big.tonumber(Big.abs('-25')) --> 25
+
+c = Big(10)
+ans = Big.tonumber(c:factorial())  --> 3628800
+
+d = a:copy()
+ans = (a == d)               --> true
+
+ans = (a > b)                --> false
+
+ans = (a == b)               --> false
+
+ans = a:eq(123)              --> true
+
+ans = #a                     --> 3
+
+print(a)
 ]]
+
+-----------------------------------------
+-- @class table
+-- @name bigint
+-- @field type Define object type string.
+-- @field about Function description collection.
+-- @field BASE Radix value. Default is 10.
+
 
 local bigint = {}
 bigint.__index = bigint
-
-bigint.type = 'bigint'  -- mark of type
-
+-- mark of type
+bigint.type = 'bigint'  
+bigint.isbigint = true
 -- description
-local help = require "liblc.help"
-bigint.about = help:new("Operations with arbitraty long integers")
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+bigint.about = help:new("Operations with arbitraty long integers.")
+-- the radix
+bigint.BASE = 10        
+bigint.about[bigint.BASE] = {'BASE', "The radix of big integer representation.", help.OTHER}
 
-bigint.BASE = 10        -- the radix
-bigint.about[bigint.BASE] = {'BASE', "The radix of big integer representation", help.OTHER}
-
--- absolute value of integer
+--- Absolute value of the integer.
+--    <i>Private function.</i>
+--    @param v Integer number.
+--    @return Absolute value.
 local function iabs(v) return (v < 0) and (-v) or v end
 
-local function isbigint(v) return type(v) == 'table' and v.type == bigint.type end
+--- Check object type.
+--    <i>Private function.</i>
+--    @param t Object for checking.
+--    @return True if table is a bigint.
+local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
--- convert integer into bigint
+--- Convert integer into bigint.
+--    <i>Private function.</i>
+--    @param v Integer value.
+--    @return String representation of the number and sign (1 or -1).
 local function fromint(v) 
-   v = math.tointeger(v)
-   assert(v, 'Integer is expected')
-   return tostring(iabs(v)), (v < 0) and -1 or 1   -- return value and sing
+   v = assert(math.tointeger(v), 'Integer is expected')
+   return tostring(iabs(v)), (v < 0) and -1 or 1               -- return value and sing
 end
 
--- convert string into bigint
+--- Convert string into bigint.
+--    <i>Private function.</i>
+--    @param s Integer as string.
+--    @return String representation of the absolute value and the sign (1 or -1).
 local function fromstr(s)
-   assert(string.find(s, '^[+-]?%d+$'), "Wrong string number")                       -- check format
-   return string.match(s, '%d+'), (string.byte(s) == string.byte('-')) and -1 or 1   -- return value and sing
+   local m,d = string.match(s, '^([+-]?)(%d+)$')               -- get sign and value
+   assert(m and d, 'Wrong number!')
+   return d, (m == '-' and -1 or 1)
 end
 
--- constructor
+--- Create new object, set metatable.
+--    @param a Integer as number or string.
+--    @return Bigint object.
 function bigint:new(a)
    local s, sign
-   if     type(a) == 'number' then 
-      s, sign = fromint(a)
-   elseif type(a) == 'string' then
+   if     type(a) == 'string' then
       s, sign = fromstr(a)
+   elseif type(a) == 'number' then 
+      s, sign = fromint(a)
    else
       error("Expected integer or string")
    end
@@ -73,7 +116,10 @@ function bigint:new(a)
    return o
 end
 
--- reduce front zeros
+--- Reduce front zeros.
+--    Convert '00123' to '123'.
+--    <i>Private function.</i>
+--    @param v Table with digits.
 local function simplify (v)
    local i = #v
    while i > 1 and v[i] == 0 do
@@ -82,7 +128,11 @@ local function simplify (v)
    end
 end
 
--- correct function arguments if need
+--- Correct function arguments if need.
+--    <i>Private function.</i>
+--    @param a Bigint or integer.
+--    @param b Bigint or integer or <code>nil</code>.
+--    @return Both arguments as bigint objects (or <code>nil</code>).
 local function args (a, b)   
    a = isbigint(a) and a or bigint:new(a)
    if b then
@@ -91,29 +141,33 @@ local function args (a, b)
    return a, b
 end
 
--- main function for division
+--- Main algorithm for division.
+--    <i>Private function.</i>
+--    @param a First bigint object.
+--    @param b Second bigint object.
+--    @return Ratio and rest as bigint objects.
 local function div(a,b)
    a,b = args(a,b)
-   local num = string.reverse(a.value)            -- numerator as string
-   local acc = {}                                 -- result
-   local k = #b.value                             -- index of the last character
-   local rest = bigint:new(string.sub(num, 1, k)) -- current part of numerator
-   local denom = bigint.abs(b)                    -- denominator
-   local q = string.sub(denom.value, #denom.value)
+   local num = string.reverse(a.value)             -- numerator as string
+   local acc = {}                                  -- result
+   local k = #b.value                              -- index of the last character
+   local rest = bigint:new(string.sub(num, 1, k))  -- current part the of numerator
+   local denom = bigint.abs(b)                     -- denominator
+   local q = string.sub(denom.value, #denom.value) -- first digit
    -- read the string
    while k <= #num do                             
       if rest >= denom then
          -- get ratio
 	 local n, p = 1, string.sub(rest.value, #denom.value):reverse()
-	 n = p // q
+	 n = math.tointeger(p // q)
 	 local prod = n*denom
 	 -- save result
 	 if prod <= rest then
-	    acc[#acc+1] = math.tointeger(n)
+	    acc[#acc+1] = n
 	    rest = rest-prod
 	 else
-	    acc[#acc+1] = math.tointeger(n-1)
-	    rest = rest-prod-denom
+	    acc[#acc+1] = n-1
+	    rest = rest-prod+denom
 	 end
       else
          if #acc > 0 then acc[#acc+1] = 0 end
@@ -128,7 +182,11 @@ local function div(a,b)
    return result, rest   
 end
 
--- get sum for two bigint
+--- Get sum of the two positive bigint numbers.
+--    <i>Private function.</i>
+--    @param a First bigint object.
+--    @param b Second bigint object.
+--    @return Summ.
 local function sum(a,b)
    local acc = {}
    local zero = string.byte('0')
@@ -148,7 +206,11 @@ local function sum(a,b)
    return res
 end
 
--- get subsruction for two bigint
+--- Get subsruction for two positive bigint numbers.
+--    <i>Private function.</i>
+--    @param a First bigint object.
+--    @param b Second bigint object.
+--    @return Substraction.
 local function sub(a,b)
    -- find the biggest
    local p,q,r = a,b,1
@@ -173,7 +235,9 @@ local function sub(a,b)
    return res
 end
 
--- module of number
+--- Module of number.
+--    @param v Bigint or integer number.
+--    @return Absolute value.
 bigint.abs = function (v)
    local a = (type(v) == 'number' or type(v) == 'string') and bigint:new(v) or bigint.copy(v)
    if a.sign < 0 then a.sign = -a.sign end
@@ -181,7 +245,9 @@ bigint.abs = function (v)
 end
 bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number.", help.BASE}
 
--- get copy
+--- Copy of the object.
+--    @param v Original bigint object.
+--    @return Deep copy.
 bigint.copy = function (v)
    local c = bigint:new(v.sign)
    c.value = v.value
@@ -189,34 +255,44 @@ bigint.copy = function (v)
 end
 bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTHER}
 
--- a + b
+--- a + b
+--    @param a First bigint object or integer.
+--    @param b Second bigint object or integer.
+--    @return Summ as bigint object.
 bigint.__add = function (a,b)
    a,b = args(a,b) 
-   if     a.sign > 0 and b.sign > 0 then return sum(a,b)
-   elseif a.sign < 0 and b.sign < 0 then return -sum(a,b)
-   elseif a.sign > 0 and b.sign < 0 then return sub(a,b)
-   else                                  return sub(b,a)
-   end   
+   if a.sign > 0 then
+      return (b.sign > 0) and sum(a,b) or sub(a,b)
+   else 
+      return (b.sign > 0) and sub(b,a) or -sum(a,b)
+   end
 end
 
--- -v
+--- -v
+--    @param v Bigint object.
+--    @return Negative value of the object.
 bigint.__unm = function (v)
    local res = bigint:new(-v.sign)
    res.value = v.value
    return res
 end
-
--- a - b
+--- a - b
+--    @param a First bigint object or integer.
+--    @param b Second bigint object or integer.
+--    @return Difference as bigint object.
 bigint.__sub = function (a, b)
    a,b = args(a,b)
-   if     a.sign > 0 and b.sign > 0 then return sub(a,b)
-   elseif a.sign > 0 and b.sign < 0 then return sum(a,b)
-   elseif a.sign < 0 and b.sign > 0 then return -sum(a,b)
-   else                                  return sub(b,a)
+   if a.sign > 0 then
+      return (b.sign > 0) and sub(a,b) or sum(a,b)
+   else
+      return (b.sign > 0) and -sum(a,b) or sub(b,a)
    end
 end
 
--- a * b
+--- a * b
+--    @param a First bigint object or integer.
+--    @param b Second bigint object or integer.
+--    @return Product as bigint object.
 bigint.__mul = function (a, b) 
    a,b = args(a,b)
    local zero = string.byte('0')
@@ -237,7 +313,7 @@ bigint.__mul = function (a, b)
       d = math.floor(sum[i] / bigint.BASE)
       sum[i] = math.floor(sum[i] % bigint.BASE)
    end
-   if d ~= 0 then sum[#sum+1] = d end
+   sum[#sum+1] = d
    simplify(sum)
    -- save
    local res = bigint:new(a.sign*b.sign)
@@ -245,28 +321,43 @@ bigint.__mul = function (a, b)
    return res   
 end
 
--- a / b
+--- a / b
+--    @param a First bigint object or integer.
+--    @param b Second bigint object or integer.
+--    @return Integer part of the ratio as bigint object.
 bigint.__div = function (a, b)
-   local res, _ = div(a,b)
+   local res,_ = div(a,b)
    return res
 end
 
--- a % b
+--- a % b
+--    @param a First bigint object or integer.
+--    @param b Second bigint object or integer.
+--    @return Rest of the ratio as bigint object.
 bigint.__mod = function (a, b)
-   local _, res = div(a,b)
+   local _,res = div(a,b)
    return res
 end
 
--- a == b
+--- a == b.
+--    In Lua v == 0 is always <code>false</code> because in case of number
+--    the program tries to convert everything into number.
+--    For two bigint objects using of <code>==</code> is also possible.
+--    @param a First bigint object or integer.
+--    @param b Second bigint object or integer.
+--    @return <code>true</code> if numbers have the same values and signs.
 bigint.eq = function (a,b)
    a,b = args(a,b)
    return a.sign == b.sign and a.value == b.value
 end
 bigint.about[bigint.eq] = {"eq(a,b)", "Check equality of two values", help.OTHER}
-
+-- redefine equality
 bigint.__eq = bigint.eq
 
--- a < b
+--- a < b
+--    @param a First bigint object or integer.
+--    @param b Second bigint object or integer.
+--    @return Relation between two numbers.
 bigint.__lt = function (a,b)
    a,b = args(a,b)
    if a.sign < b.sign then return true end
@@ -278,23 +369,31 @@ bigint.__lt = function (a,b)
    end
 end
 
--- a <= b
+--- a <= b
+--    @param a First bigint object or integer.
+--    @param b Second bigint object or integer.
+--    @return Relation between two numbers.
 bigint.__le = function (a,b)
    a,b = args(a,b)
    return bigint.__eq(a,b) or bigint.__lt(a,b)
 end
 
--- #v
+--- #a 
+--    @param v Bigint object.
+--    @return Number of digits.
 bigint.__len = function (v)
    return #v.value
 end
 
--- a^b
+--- a ^ b
+--    @param a Bigint object or integer.
+--    @param b Positive bigint object or integer.
+--    @return Result of power operation.
 bigint.__pow = function (a,b)
    a,b = args(a,b)
    assert(b.sign >= 0, "Power must be non negative")
    if b.value == '0' then 
-      assert(a ~= 0, "Error: 0^0")
+      assert(a.value ~= '0', "Error: 0^0")
       return bigint:new(1) 
    end
    local aa, bb, q = bigint.copy(a), bigint.copy(b), nil
@@ -302,10 +401,8 @@ bigint.__pow = function (a,b)
    local h = 1
    while bb > 0 do
       bb,q = div(bb,2)
-      if q.value ~= '0' then
-         res = res * aa
-      end
-      aa = aa * aa      
+      if q.value ~= '0' then res = res*aa end
+      if bb.value ~= '0' then aa = aa*aa end
    end
    return res
 end
@@ -315,25 +412,32 @@ bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, 
 bigint.comparation = 'comparation'
 bigint.about[bigint.comparation] = {bigint.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
--- string representation
+--- String representation.
+--    @param v Bigint object.
+--    @return Number as string.
 bigint.__tostring = function (v)
    return (v.sign < 0 and '-' or '') .. string.reverse(v.value)
 end
 
--- float number representation
+--- Float number representation.
+--    @param v Bigint object.
+--    @return Integer if possible, otherwise float point number.
 bigint.tonumber = function (v)
    return tonumber(bigint.__tostring(v))
 end
 bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", help.BASE}
 
--- m!
+--- m!
+--    @param m Bigint object or integer.
+--    @return Factorial of the number as bigint object.
 bigint.factorial = function (m)
    assert(m >= 0, "Nonnegative value is expected!")
    local n = bigint.abs(m)
    local res = bigint:new(1)   
+   local one = res:copy()
    while n.value ~= '0' do   
       res = res * n
-      n = n - 1      
+      n = n - one
    end
    return res
 end
@@ -344,7 +448,9 @@ setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Big = 'Big'
 bigint.about[bigint.Big] = {"Big(v)", "Create big number from integer or string", help.NEW}
 
--- object serialization
+--- Bigint serialization.
+--    @param obj Bigint object.
+--    @return String, suitable for exchange.
 bigint.serialize = function (obj)
    local s = {}
    s[#s+1] = string.format("value='%s'", obj.value)
@@ -353,7 +459,6 @@ bigint.serialize = function (obj)
    s[#s+1] = "modulename='bigint'"
    return string.format("{%s}", table.concat(s, ','))
 end
-bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of bigint object", help.OTHER}
+bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of bigint object.", help.OTHER}
 
 return bigint
-

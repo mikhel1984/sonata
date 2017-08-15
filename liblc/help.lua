@@ -1,5 +1,13 @@
---[[     help.lua
-Function description management.
+--[[      liblc/help.lua 
+
+--- Function description management.
+--  @author Stanislav Mikhel, 2017
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+
+            module 'help'
+--]]
+
+--[[     == About help system ==
 
 about = help:new("Module description*)      -- create new help object
 
@@ -29,18 +37,42 @@ To use language localisation, create text file with Lua table in format
   etc.
 }
 Use about:localisation("file_name") to load it.
-
-This file is a part of liblc collection. 
-Stanislav Mikhel, 2017.
-]]
-
-local help = {}
-help.__index = help
+--]]
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
 
+--- English version of some interface strings.
+--    @class table
+--    @name eng
+local eng = {
+intro = [[
+Print 'import(module) to expand functionality.
+Print 'help([function]) to get help.
+Print 'quit()' for exit.
+]],
+modules = 'Available modules:',
+done = 'Done.',
+alias = "Use alias '%s' for access to the module '%s'.",
+use_import = [[
+
+Use
+  import 'module' ['module2' 'module3' ...]
+to get additional modules.]],
+}
+
+-------------------------------------------- 
+-- @class table
+-- @name help
+-- @field BASE Constant.
+-- @field TRIG Constant.
+-- @field HYP Constant.
+-- @field CONST Constant.
+-- @field OTHER Constant.
+-- @field NEW Constant.
+local help = {}
+help.__index = help
 -- constant strings
 help.BASE = 'base'
 help.TRIG = 'trigonometry'
@@ -49,7 +81,9 @@ help.CONST = 'constants'
 help.OTHER = 'other'
 help.NEW = 'constructor'
 
--- constructor
+--- Create new object, set metatable.
+--    @param str Module description.
+--    @return Array object.
 function help:new(str)
    assert(str and type(str) == 'string', "Constructor must include description!")
    local o = {}
@@ -58,7 +92,10 @@ function help:new(str)
    return o
 end
 
--- create list of functions, sort by module and cathegory
+--- Create list of functions, sort by module and cathegory.
+--    <i>Private function.</i>
+--    @param tbl Table with descriptions.
+--    @return Sorted table.
 local function funclist(tbl)
    local res = {}
    for k, v in pairs(tbl) do
@@ -74,7 +111,8 @@ local function funclist(tbl)
    return res
 end
 
--- print information about function or list of all possible functions
+--- Print information about function or list of all possible functions.
+--    @param fn Function or module for getting manual.
 function help:print(fn)
    if fn then
       -- expected module or functoin description
@@ -104,7 +142,9 @@ function help:print(fn)
    end
 end
 
--- include content of the other help table into current one
+--- Include content of the other help table into current one.
+--    @param tbl Table to add.
+--    @param nm Name of the added module.
 function help:add(tbl, nm)
    assert(nm, "Module name is required!")
    -- localisation data
@@ -129,7 +169,8 @@ function help:add(tbl, nm)
    if lng then mt.locale[nm] = nil end -- free memory
 end
 
--- read file with localisation data and update main module
+--- Read file with localisation data and update main module.
+--    @param fname Name of the file with translated text.
 function help:localisation(fname)
    local f = io.open(fname)
    if f then
@@ -156,24 +197,10 @@ function help:localisation(fname)
    end
 end
 
--- English version of strings
-local eng = {
-intro = [[
-Print 'import(module) to expand functionality.
-Print 'help([function]) to get help.
-Print 'quit()' for exit.
-]],
-modules = 'Available modules:',
-done = 'Done.',
-alias = "Use alias '%s' for access to the module '%s'.",
-use_import = [[
 
-Use
-  import 'module' ['module2' 'module3' ...]
-to get additional modules.]],
-}
-
--- additional translations
+--- Get translated string if possible.
+--    @param txt Text to seek.
+--    @return Translated or initial text.
 function help:get(txt)
    local mt = getmetatable(self)
    local lng = mt.locale and mt.locale.Calc and mt.locale.Calc[txt]  -- check in localisation table
