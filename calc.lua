@@ -58,28 +58,38 @@ import = {
 about[import] = {"import", "", help.BASE}
 
 function import_state_update()
-   local m = {string.format("%-12s%-6s%s", "MODULE", "ALIAS", "LOADED")}
+   local m = {string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
-      m[#m+1] = string.format("%-13s%-7s%s", k, v, (_G[v] and 'v' or '-'))
+      m[#m+1] = string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-'))
    end
    m[#m+1] = about:get('use_import')
    return table.concat(m, '\n')
+end
+
+local function doimport(tbl,name)
+   local var = assert(tbl[name], 'Wrong module name: '..name..'!')
+   if not _G[var] then
+      _G[var] = require('liblc.'..name)
+      about:add(_G[var].about, var)
+      if _G[var].onimport then _G[var].onimport() end
+   end
+   return var
 end
 
 -- add modules
 setmetatable(import, 
 { __tostring = function (x) return about:get('done') end,
   __call = function (self, name) 
-   local var = assert(self[name], "Wrong module name!")
-   if not _G[var] then
-      _G[var] = require('liblc.'..name)
-      about:add(_G[var].about, var)
-      if _G[var].onimport then _G[var].onimport() end
-   end
-   print(string.format(about:get('alias'), var, name))
-   about[import][2] = import_state_update()
-   return import
-end })
+    if name == 'all' then 
+       for k,v in pairs(self) do doimport(self,k) end
+    else
+       local var = doimport(self,name)
+       print(string.format(about:get('alias'), var, name))
+    end
+    about[import][2] = import_state_update()
+    return import
+  end,
+})
 
 -- Additional functions --
 function rand() return math.random() end
