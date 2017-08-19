@@ -75,6 +75,10 @@ ans = math.floor(n(2,2)*1000)   --> 333
 
 n = m:pinv2()
 ans = math.floor(n(2,2)*1000)   --> 333
+
+k = Mat.eye(3)
+k = k:fill()
+ans = k[2][1]                   --> 0
 ]]
 
 -------------------------------------------- 
@@ -794,6 +798,19 @@ matrix.pinv2 = function (M)
    return L * K * K * Lt * Mt
 end
 matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick function for pseudoinverse matrix calculation", help.OTHER}
+
+--- Represent matrix in explicit (dense) form.
+--    @param m Source matrix.
+--    @return Dense matrix.
+matrix.fill = function (m)
+   local res = matrix:init(m.rows, m.cols)
+   for r = 1,m.rows do
+      res[r] = {}
+      for c = 1,m.cols do res[r][c] = getval(m,r,c) end
+   end
+   return res
+end
+matrix.about[matrix.fill] = {"fill(m)", "Return dense matrix.", help.OTHER}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
