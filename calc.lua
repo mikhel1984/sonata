@@ -35,6 +35,9 @@ th = math.tanh;    about[th] = {"th(x)", "Hyperbolic tangent.", help.HYP}
 -- Angles 
 deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", help.BASE}
 rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", help.BASE}
+-- Rounding
+floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equial to x.", help.OTHER}
+ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equial to x.", help.OTHER}
 -- Constants
 _pi = math.pi;     about[_pi] = {"_pi", "Number pi", help.CONST}
 _e = math.exp(1)   about[_e] = {"_e", "Euler number", help.CONST}
@@ -110,6 +113,18 @@ function ath(x)
    return 0.5*math.log((1+x)/(1-x))
 end
 about[ath] = {"ath(x)", "Hyperbolic arctangent.", help.HYP}
+
+-- round to closest integer
+function round(x)
+   local p,q = math.modf(x)
+   if q >= 0.5 then 
+      return p+1
+   elseif q <= -0.5 then 
+      return p-1
+   end
+   return p
+end
+about[round] = {'round(x)', 'Round value to closest integer.', help.OTHER}
 
 -- create function f(x) from string
 function fx(str)
