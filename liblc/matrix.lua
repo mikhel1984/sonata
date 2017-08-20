@@ -812,6 +812,32 @@ matrix.fill = function (m)
 end
 matrix.about[matrix.fill] = {"fill(m)", "Return dense matrix.", help.OTHER}
 
+--- Get diagonal vector or create matrix with given elements.
+--    @param m Matrix, vector or table with numbers.
+--    @param n Diagonal index. Default is 0.
+--    @return Vector of matrix.
+matrix.diag = function (m,n)
+   n = n or 0
+   local k,res = (n < 0 and -n or n)
+   if ismatrix(m) then
+      if m.rows == 1 or m.cols == 1 then
+         res = {}
+	 for i = 1,math.max(m.rows,m.cols) do res[i] = m:get(i) end
+	 return matrix.diag(res,n)
+      else
+	 local z = (n < 0) and math.min(m.rows-k,m.cols) or math.min(m.cols-k,m.rows) 
+	 assert(z > 0, "Wrong shift!")
+	 res = matrix:init(z,1)
+	 for i = 1,z do setval(res, i,1, getval(m, (n<0 and i+k or i), (n<0 and i or i+k))) end
+      end
+   else
+      res = matrix:init(#m+k,#m+k)
+      for i = 1,#m do setval(res, (n<0 and i+k or i), (n<0 and i or i+k), m[i]) end
+   end
+   return res
+end
+matrix.about[matrix.diag] = {'diag(M[,n])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.OTHER}
+
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
 matrix.Mat = 'Mat'
