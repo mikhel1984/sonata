@@ -77,8 +77,16 @@ n = m:pinv2()
 ans = math.floor(n(2,2)*1000)   --> 333
 
 k = Mat.eye(3)
-k = k:fill()
+k = k:full()
 ans = k[2][1]                   --> 0
+
+ans = Mat.diag({1,2,3})         --> Mat({1,0,0},{0,2,0},{0,0,3})
+
+ans = g:diag(1)                 --> Mat({2},{6})
+
+x1 = Mat({1,2,3})
+x2 = Mat({4,5,6})
+ans = Mat.cross(x1,x2)          --> Mat({-3},{6},{-3})
 ]]
 
 -------------------------------------------- 
@@ -802,7 +810,7 @@ matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick function for pseudoinverse
 --- Represent matrix in explicit (dense) form.
 --    @param m Source matrix.
 --    @return Dense matrix.
-matrix.fill = function (m)
+matrix.full = function (m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1,m.rows do
       res[r] = {}
@@ -810,7 +818,19 @@ matrix.fill = function (m)
    end
    return res
 end
-matrix.about[matrix.fill] = {"fill(m)", "Return dense matrix.", help.OTHER}
+matrix.about[matrix.full] = {"full(m)", "Return dense matrix.", help.OTHER}
+
+--- Return sparse matrix, if possible.
+--    @param m SOurce matrix.
+--    @return Sparse matrix.
+matrix.sparse = function (m)
+   local res = matrix.init(m.rows, m.cols)
+   for r = 1,m.rows do
+      for c = 1,m.cols do setval(res, r, c, getval(m,r,c)) end
+   end
+   return res
+end
+matrix.about[matrix.sparse] = {"sparse(m)", "Return sparse matrix.", help.OTHER}
 
 --- Get diagonal vector or create matrix with given elements.
 --    @param m Matrix, vector or table with numbers.
@@ -837,6 +857,18 @@ matrix.diag = function (m,n)
    return res
 end
 matrix.about[matrix.diag] = {'diag(M[,n])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.OTHER}
+
+--- a x b
+--    @param a 3-element vector.
+--    @param b 3-element vector.
+--    @return Cross product.
+matrix.cross = function (a,b)
+   assert(a.rows*a.cols == 3 and b.rows*b.cols == 3, "Vector with 3 elements is expected!")
+   local x1,y1,z1 = a:get(1), a:get(2), a:get(3)
+   local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
+   return matrix.new({y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2})
+end
+matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.', help.BASE}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
