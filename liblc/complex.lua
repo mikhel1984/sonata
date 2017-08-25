@@ -15,6 +15,9 @@ a = Cmp(1,2)
 b = Cmp(3)
 ans = b                        --> Cmp(3,0)
 
+j = Cmp._i
+ans = 3+4*j                    --> Cmp(3,4)
+
 ans = a + b                    --> Cmp(4,2)
 
 ans = Cmp(3) - b               --> Cmp(0)
