@@ -119,7 +119,7 @@ function help:print(fn)
       local v = self[fn]
       if v.link then                  
          -- module common description
-         print(v[MAIN])
+         print('\n'..v[MAIN]..'\n')
 	 -- details
 	 return v.link:print()
       else                           
@@ -138,6 +138,7 @@ function help:print(fn)
 	    end
 	    print()                   -- new line
          end
+	 print()
       end
    end
 end

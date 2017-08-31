@@ -10,7 +10,7 @@ lc_version = '0.6.0'
 
 -- help
 help = require "liblc.help"
-about = help:new("Lua based calculator")
+about = help:new("Lua based calculator.")
 
 -- Common
 abs = math.abs;    about[abs] = {"abs(x)", "Absolut value.", help.BASE}
@@ -43,7 +43,7 @@ _pi = math.pi;     about[_pi] = {"_pi", "Number pi", help.CONST}
 _e = math.exp(1)   about[_e] = {"_e", "Euler number", help.CONST}
 --_i = nil         -- import 'complex' to use it
 -- Quick exit
-quit = function () print("\n                --==== Buy! ====--\n"); os.exit() end
+quit = function () print("\n              --======= Buy! =======--\n"); os.exit() end
 
 -- modules
 import = {
