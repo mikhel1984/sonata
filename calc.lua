@@ -1,12 +1,13 @@
 #!/usr/local/bin/lua -i
 -- Lua based calculator
-lc_version = '0.6.0'
+lc_version = '0.6.1'
 
 -- Uncomment it to set the localisation file.
 -- LOCALISATION_FILE = "locale/lng.ru"
 
 -- TODO: replace common etc. functions into special module
 -- TODO: use alias or part of the name for import
+-- TODO: if module has dependencies define mechanism to load it
 
 -- help
 help = require "liblc.help"

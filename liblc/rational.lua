@@ -230,6 +230,26 @@ rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number
 rational.De = function (v) return v.denom end
 rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", help.OTHER}
 
+-- TODO: create module for calculations with integer numbers, add prime and gcd
+-- list of prime numbers
+rational.prime = function (v)
+   assert(v > 0 and isint(v), "Positive integer is expected!")
+   local n = math.floor(math.sqrt(v))
+   -- use Eratosfen method
+   local tmp = {}
+   for i = 1,v do tmp[i] = true end
+   -- remove non prime
+   for i = 2,n do
+      for j = i+i,v,i do tmp[j] = false end
+   end
+   -- save
+   local res = {}
+   for i = 1,v do
+      if tmp[i] then res[#res+1] = i end
+   end
+   return res
+end
+
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
 rational.Rat = 'Rat'
