@@ -232,20 +232,25 @@ rational.about[rational.De] = {"De(v)", "Return the denominator of the rational 
 
 -- TODO: create module for calculations with integer numbers, add prime and gcd
 -- list of prime numbers
+-- result is not sorted
 rational.prime = function (v)
    assert(v > 0 and isint(v), "Positive integer is expected!")
-   local n = math.floor(math.sqrt(v))
-   -- use Eratosfen method
+   -- use "sieve of Eratosthenes"
    local tmp = {}
-   for i = 1,v do tmp[i] = true end
+   for i = 1,v,2 do tmp[i] = true end
    -- remove non prime
-   for i = 2,n do
-      for j = i+i,v,i do tmp[j] = false end
+   for i = 3,math.floor(math.sqrt(v)),2 do
+      if tmp[i] then
+         for j = i+i,v,i do 
+	    if tmp[j] then tmp[j] = false end
+	 end
+      end
    end
-   -- save
+   if v > 1 then tmp[2] = true end
+   -- collect
    local res = {}
-   for i = 1,v do
-      if tmp[i] then res[#res+1] = i end
+   for k,v in pairs(tmp) do
+      if v then res[#res+1] = k end
    end
    return res
 end
