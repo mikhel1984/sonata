@@ -48,8 +48,8 @@ local MAIN = 1
 --    @name eng
 local eng = {
 intro = [[
-Print 'import(module) to expand functionality.
-Print 'help([function]) to get help.
+Print 'import(module)' to expand functionality.
+Print 'help([function])' to get help.
 Print 'quit()' for exit.
 ]],
 modules = 'Available modules:',
