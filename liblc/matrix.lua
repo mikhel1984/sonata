@@ -15,10 +15,10 @@ a = Mat({1,2},{3,4})
 b = Mat({5,6},{7,8})             
 ans = a(2,2)                     --> 4 
 
-b:set(9, 1,1)
+b:set(1,1)(9)
 ans = b(1,1)                     --> 9
 
-b:set(5, 1,1)
+b:set(1,1)(5)
 c = a:T()
 ans = c(1,2)                     --> 3
 
@@ -262,12 +262,21 @@ matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
 --    @param val New value.
 --    @param r Row number.
 --    @param c Column number.
+--[[
 matrix.set = function (m, val, r, c)
    r, c = checkindex(m, r, c)
    m[r] = m[r] or {}
    m[r][c] = val
 end
-matrix.about[matrix.set] = {"set(m,val,row,col)", "Set value of matrix.", help.BASE} 
+]]
+matrix.set = function (m,r,c)
+   r, c = checkindex(m, r, c)
+   return function (val)
+             m[r] = m[r] or {}
+	     m[r][c] = val
+          end
+end
+matrix.about[matrix.set] = {"set(m,row,col)(val)", "Set value of matrix element.", help.BASE} 
 
 --- Transpose matrix.
 --    Can be called as T().
