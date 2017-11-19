@@ -46,7 +46,6 @@ ans = d:equation('s')         --> '2*s^2-2*s+1'
 print(a)
 ]]
 
---TODO: polyroot, polyfit
 
 ----------------------------------------------
 -- @class table
@@ -365,3 +364,6 @@ end
 polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynom internal representation.", help.OTHER}
 
 return polynom
+
+--===========================
+--TODO: polyroot, polyfit
