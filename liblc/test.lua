@@ -46,7 +46,7 @@ test.results = {}
 --    <i>Private function.</i>
 --    @param str File text.
 --    @return Unit tests.
-local function getcode(str)
+test.getcode = function (str)
    local p = '%-%-%[(=*)%[!!(.-)%]%1%]'
    local _,q = string.match(str, p) 
    return q
@@ -107,7 +107,7 @@ test.module = function (fname)
    -- write head
    test.print('\n\tModule: ' .. fname)
    -- get test
-   text = getcode(text)
+   text = test.getcode(text)
    if not text or #text == 0 then return end   -- no tests
    local succeed, failed = 0, 0
    local fulltime, first = 0

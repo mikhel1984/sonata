@@ -101,6 +101,24 @@ function eval(fn, x1, xn, step)
 end
 about[eval] = {"eval(fn,x1[,xn[,step]])", "Evalueate function for given value or interval and print result.", help.OTHER}
 
+-- Print examples from test part of module
+function example(nm)
+   assert(type(nm) == 'string', 'Module name is expected!')
+   local fname = 'liblc/'..nm..'.lua'
+   local f = io.open(fname, 'r')
+   if not f then print("Can't open file '"..fname.."'"); return end
+   local test = require('liblc.test')
+   local txt = f:read('*a')
+   f:close()   
+   txt = test.getcode(txt)
+   if txt then
+      print(txt)
+   else
+      print("No examples found in '"..fname.."'")
+   end
+end
+about[example] = {"example(name)", "Show examples for given module, which used to test.", help.BASE}
+
 -- Print help information
 function help(fn)   
    if fn then 
