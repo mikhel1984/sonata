@@ -8,6 +8,7 @@ lc_version = '0.6.1'
 -- TODO: replace common etc. functions into special module
 -- TODO: use alias or part of the name for import
 -- TODO: if module has dependencies define mechanism to load it
+-- TODO: function 'example' or 'show' to demonstrate test peace of module code as an example
 
 -- help
 help = require "liblc.help"
