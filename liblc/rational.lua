@@ -230,7 +230,6 @@ rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number
 rational.De = function (v) return v.denom end
 rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", help.OTHER}
 
--- TODO: create module for calculations with integer numbers, add prime and gcd
 -- list of prime numbers
 -- result is not sorted
 rational.prime = function (v)
@@ -275,3 +274,5 @@ rational.about[rational.serialize] = {"serialize(obj)", "Save internal represent
 
 return rational
 
+--======================================
+-- TODO: create module for calculations with integer numbers, add prime and gcd

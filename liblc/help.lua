@@ -210,3 +210,6 @@ end
 
 return help
 
+--==========================================
+-- TODO: change lng.ru to ru.lng
+-- TODO: autogeneration of locale template
