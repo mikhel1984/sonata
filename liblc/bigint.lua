@@ -416,7 +416,8 @@ bigint.about[bigint.comparation] = {bigint.comparation, "a<b, a<=b, a>b, a>=b, a
 --    @param v Bigint object.
 --    @return Number as string.
 bigint.__tostring = function (v)
-   return (v.sign < 0 and '-' or '') .. string.reverse(v.value)
+   local value = string.gsub(v.value, '(...)', '%1 ')
+   return (v.sign < 0 and '-' or '') .. string.reverse(value)
 end
 
 --- Float number representation.
