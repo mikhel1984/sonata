@@ -248,4 +248,7 @@ complex.onimport = function ()
    sqrt = complex.sqrt
 end
 
+-- free memory if need
+if not lc_version then complex.about = nil end
+
 return complex

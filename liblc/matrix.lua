@@ -907,4 +907,7 @@ matrix.serialize = function (obj)
 end
 matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal representation", help.OTHER}
 
+-- free memory if need
+if not lc_version then matrix.about = nil end
+
 return matrix

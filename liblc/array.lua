@@ -471,4 +471,7 @@ array.getnext = function (arr)
 end
 array.about[array.getnext] = {"getnext(arr)", "Return iterator along all indexes", help.OTHER}
 
+-- free memory if need
+if not lc_version then array.about = nil end
+
 return array

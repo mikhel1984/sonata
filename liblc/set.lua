@@ -220,4 +220,7 @@ set.serialize = function (obj)
 end
 set.about[set.serialize] = {"serialize(obj)", "Save internal representation of the set", help.OTHER}
 
+-- free memory if need
+if not lc_version then set.about = nil end
+
 return set

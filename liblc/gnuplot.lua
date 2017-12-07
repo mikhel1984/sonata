@@ -222,4 +222,7 @@ permanent=true                               -- create in independant window
 ]],
 help.BASE}
 
+-- free memory if need
+if not lc_version then gnuplot.about = nil end
+
 return gnuplot

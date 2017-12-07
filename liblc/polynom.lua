@@ -363,6 +363,9 @@ polynom.serialize = function (obj)
 end
 polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynom internal representation.", help.OTHER}
 
+-- free memory if need
+if not lc_version then polynom.about = nil end
+
 return polynom
 
 --===========================

@@ -462,4 +462,7 @@ bigint.serialize = function (obj)
 end
 bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of bigint object.", help.OTHER}
 
+-- free memory if need
+if not lc_version then bigint.about = nil end
+
 return bigint

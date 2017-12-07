@@ -278,4 +278,7 @@ stat.moment = function (n, x, p)
 end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of waights.", help.BASE}
 
+-- free memory if need
+if not lc_version then stat.about = nil end
+
 return stat

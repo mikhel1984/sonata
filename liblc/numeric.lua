@@ -172,4 +172,7 @@ numeric.ode = function (fn, x0,y0,xn, dx)
 end
 numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automaticaly according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
 
+-- free memory if need
+if not lc_version then numeric.about = nil end
+
 return numeric

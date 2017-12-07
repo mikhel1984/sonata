@@ -631,5 +631,8 @@ units.serialize = function (obj)
 end
 units.about[units.serialize] = {"serialize(obj)", "Save internal representation of units object.", help.OTHER}
 
+-- free memory if need
+if not lc_version then units.about = nil end
+
 return units
 

@@ -272,6 +272,9 @@ rational.serialize = function (obj)
 end
 rational.about[rational.serialize] = {"serialize(obj)", "Save internal representation of rational number.", help.OTHER}
 
+-- free memory if need
+if not lc_version then rational.about = nil end
+
 return rational
 
 --======================================
