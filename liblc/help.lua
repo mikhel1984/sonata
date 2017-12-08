@@ -39,9 +39,13 @@ To use language localisation, create text file with Lua table in format
 Use about:localisation("file_name") to load it.
 --]]
 
+-- directory with language files
+local LOCALE = 'locale'
+
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
+local _MAIN_ = '__main__'
 
 --- English version of some interface strings.
 --    @class table
@@ -158,7 +162,7 @@ function help:add(tbl, nm)
       if lng then
          if v.link then
 	    -- common description
-	    v[MAIN] = lng.__main__ or v[MAIN]
+	    v[MAIN] = lng[_MAIN_] or v[MAIN]
 	 else
 	    -- details
             v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
@@ -173,6 +177,7 @@ end
 --- Read file with localisation data and update main module.
 --    @param fname Name of the file with translated text.
 function help:localisation(fname)
+   fname = LOCALE ..'/'.. fname
    local f = io.open(fname)
    if f then
       -- read from file and represent as Lua table
@@ -182,11 +187,11 @@ function help:localisation(fname)
       -- save into metatable
       getmetatable(self).locale = lng           
       -- update functions in calc.lua
-      local lc = lng.Calc
+      local lc = lng.Main
       for k,v in pairs(self) do
          if v.link then
 	    -- common description
-	    self[k][MAIN] = lc.__main__ or v[MAIN]
+	    self[k][MAIN] = lc[_MAIN_] or v[MAIN]
 	 else
 	    -- details
 	    self[k][DESCRIPTION] = lc[v[TITLE]] or v[DESCRIPTION]
@@ -198,20 +203,45 @@ function help:localisation(fname)
    end
 end
 
+--- Add table 'about' into the 'eng' for saving into localisation file.
+--    <i>Private function.</i>
+local function eng2about()
+   eng.about = {}
+   for k,v in pairs(eng) do
+      eng.about[k] = {k,v}
+   end
+   eng.about.about = nil
+end
+
+--- Prepare strings with help information of the given module.
+--    <i>Private function.</i>
+--    @param module Module name or table.
+--    @param alias Alias of the module name.
+--    @param lng Localisation table from existing file.
+--    @return String representation of all help information of the module.
 local function helplines(module, alias, lng)
-   local m = require('liblc.' .. module)
+   -- get table and name
+   local m = (type(module) == 'string') and require('liblc.' .. module) or module
+   local mname = (type(module) == 'string') and (module .. '.lua') or 'dialog'
+   -- choose existing data
    local lng_t = lng and lng[alias] or {}
+   -- write to table
    local res = {}
-   res[#res+1] = string.format('%s %s.lng %s', string.rep('-',10), module, string.rep('-',10))
+   res[#res+1] = string.format('%s %s %s', string.rep('-',10), mname, string.rep('-',10))
    res[#res+1] = string.format('%s = {', alias)
+   -- for all descriptions
    for _, elt in pairs(m.about) do
-      local title = elt.link and '__main__' or elt[TITLE]
+      -- save
+      local title = elt.link and _MAIN_ or elt[TITLE]
       local pos = elt.link and MAIN or DESCRIPTION
-      local line = string.format('["%s"] = [[%s]],', title, lng_t[title] or elt[pos])
+      local stitle = string.format('["%s"]', title)
+      local line = string.format('%-24s = [[%s]],', stitle, lng_t[title] or elt[pos])
+      -- comment if this data are new
       if not lng_t[title] then
          line = string.format((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
       end
       if elt.link then
+         -- set main description after the bracket
          table.insert(res,3,line)
       else
          res[#res+1] = line
@@ -222,7 +252,11 @@ local function helplines(module, alias, lng)
    return table.concat(res, '\n')
 end
 
+--- Prepare and save localisation data.
+--    @param fname Language name, for example 'en' or 'it'.
+--    @param modules Table with the list of existing modules.
 function help.prepare(fname, modules)
+   fname = string.format('%s%s%s.lng', LOCALE, '/', fname)
    local f, lng = io.open(fname)
    -- read current file if possible
    if f then 
@@ -233,15 +267,20 @@ function help.prepare(fname, modules)
    -- prepare new file
    f = io.open(fname, 'w')
    -- save descriptions
-   local line = string.rep('-',10)
-   f:write(line, string.format(' %s.lng ', fname), line, '\n')
+   f:write(string.rep('-',10), string.format(' %s ', fname), string.rep('-',10), '\n')
    f:write('{\n')
+   -- dialog elements
+   eng2about()
+   f:write(helplines(eng,'Dialog',lng))
+   -- main functions
+   f:write(helplines('main','Main',lng))
+   -- other modules
    for k,v in pairs(modules) do
-      print(k,v)
       f:write(helplines(k,v,lng))
    end
    f:write('}')
    f:close()
+   print('File '..fname..' is saved!')
 end
 
 --- Get translated string if possible.
@@ -249,7 +288,7 @@ end
 --    @return Translated or initial text.
 function help:get(txt)
    local mt = getmetatable(self)
-   local lng = mt.locale and mt.locale.Calc and mt.locale.Calc[txt]  -- check in localisation table
+   local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localisation table
    return lng or eng[txt] or txt
 end
 

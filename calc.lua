@@ -1,9 +1,9 @@
 #!/usr/local/bin/lua -i
 -- Lua based calculator
-lc_version = '0.6.2'
+lc_version = '0.6.3'
 
 -- Uncomment to set the localisation file.
- LOCALISATION_FILE = "locale/lng.ru"
+LOCALISATION_FILE = "ru.lng"
 
 -- base functionality
 require 'liblc.main'
@@ -62,16 +62,11 @@ setmetatable(import,
   end,
 })
 
--- read localisation file and update descriptions
-if LOCALISATION_FILE then 
-   about:localisation(LOCALISATION_FILE) 
-end
-about[import][2] = import_state_update()
-
 -- check arguments
 if #arg > 0 then
+   -- test modules
    if arg[1] == '-test' then
-      Test = require 'liblc.test'
+      local Test = require 'liblc.test'
       if arg[2] then
          Test.module(string.format('liblc/%s.lua',arg[2]))
       else
@@ -81,8 +76,23 @@ if #arg > 0 then
       end
       Test.summary()
       os.exit()
+   -- update localisation file
+   elseif arg[1] == '-lang' then
+      if arg[2] then
+         local Help = require 'liblc.help'
+	 Help.prepare(arg[2], import)
+      else 
+         print('Current localization file: ', LOCALISATION_FILE)
+      end
+      os.exit()
    end
 end
+
+-- read localisation file and update descriptions
+if LOCALISATION_FILE then 
+   about:localisation(LOCALISATION_FILE) 
+end
+about[import][2] = import_state_update()
 
 -- Run!
 print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
@@ -95,5 +105,3 @@ _PROMPT2='..: '
 -- TODO: use alias or part of the name for import
 -- TODO: if module has dependencies define mechanism to load it
 
---help = require 'liblc.help'
---help.prepare('abc',import)
