@@ -349,7 +349,7 @@ end
 
 setmetatable(polynom, {__call = function (self, ...) return polynom.new(...) end})
 polynom.Poly = 'Poly'
-polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynom", help.NEW}
+polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynom.", help.NEW}
 
 --- Polynom serialization.
 --    @param obj Polynom object.

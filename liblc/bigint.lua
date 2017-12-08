@@ -350,7 +350,7 @@ bigint.eq = function (a,b)
    a,b = args(a,b)
    return a.sign == b.sign and a.value == b.value
 end
-bigint.about[bigint.eq] = {"eq(a,b)", "Check equality of two values", help.OTHER}
+bigint.about[bigint.eq] = {"eq(a,b)", "Check equality of two values.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
 
@@ -447,7 +447,7 @@ bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of nonnegati
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Big = 'Big'
-bigint.about[bigint.Big] = {"Big(v)", "Create big number from integer or string", help.NEW}
+bigint.about[bigint.Big] = {"Big(v)", "Create big number from integer or string.", help.NEW}
 
 --- Bigint serialization.
 --    @param obj Bigint object.

@@ -64,7 +64,7 @@ array.type = 'array'
 array.isarray = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-array.about = help:new("Manipulations with arrays of elements")
+array.about = help:new("Manipulations with arrays of elements.")
 
 --- Check object type.
 --    <i>Private function.</i>
@@ -429,7 +429,7 @@ array.fullstring = function (arr, r, c)
    end
    return table.concat(res, '\n') 
 end
-array.about[array.fullstring] = {"fullstring(arr,r,c)", "Represent array as sequence of matrixes, where r and c are numbers of axes", help.OTHER}
+array.about[array.fullstring] = {"fullstring(arr,r,c)", "Represent array as sequence of matrixes, where r and c are numbers of axes.", help.OTHER}
 
 -- constructor
 setmetatable(array, {__call = function (self, v) return array:new(v) end})
@@ -469,7 +469,7 @@ array.getnext = function (arr)
 	     return res
           end
 end
-array.about[array.getnext] = {"getnext(arr)", "Return iterator along all indexes", help.OTHER}
+array.about[array.getnext] = {"getnext(arr)", "Return iterator along all indexes.", help.OTHER}
 
 -- free memory if need
 if not lc_version then array.about = nil end

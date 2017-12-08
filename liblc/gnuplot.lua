@@ -39,11 +39,11 @@ gnuplot.__index = gnuplot
 gnuplot.type = 'gnuplot'
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-gnuplot.about = help:new("Interface for calling Gnuplot from Lua")
+gnuplot.about = help:new("Interface for calling Gnuplot from Lua.")
 
 -- devide interval into given number of points
 gnuplot.N = 100        
-gnuplot.about[gnuplot.N] = {"N", "If no step, devide interval into N number of points", help.CONST}
+gnuplot.about[gnuplot.N] = {"N", "If no step, devide interval into N number of points.", help.CONST}
 
 --- Create new object, set metatable.
 --    @param o Table with image parameters.
@@ -171,7 +171,7 @@ gnuplot.plot2d = function (g)
    
    return getmetatable(g) and g or gnuplot:new(g)
 end
-gnuplot.about[gnuplot.plot2d] = {"plot2d(g)", "Plot data and parameters, represented as Lua table", help.BASE}
+gnuplot.about[gnuplot.plot2d] = {"plot2d(g)", "Plot data and parameters, represented as Lua table.", help.BASE}
 
 --- Represent parameters of the graphic.
 --    @param g Table with parameters.
@@ -200,7 +200,7 @@ end
 
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
 gnuplot.Gnu = 'Gnu'
-gnuplot.about[gnuplot.Gnu] = {"Gnu([g])", "Transform given table into gnuplot object", help.NEW}
+gnuplot.about[gnuplot.Gnu] = {"Gnu([g])", "Transform given table into gnuplot object.", help.NEW}
 
 gnuplot.keys = 'keys'
 

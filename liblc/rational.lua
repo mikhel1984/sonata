@@ -167,7 +167,7 @@ rational.__pow = function (a, b)
 end
 
 rational.arithmetic = 'arithmetic'
-rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b}", help.BASE}
+rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b} ", help.BASE}
 
 --- a == b
 --    @param a First rational number.
@@ -197,7 +197,7 @@ rational.__le = function (a,b)
 end
 
 rational.comparation = 'comparation'
-rational.about[rational.comparation] = {rational.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+rational.about[rational.comparation] = {rational.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", help.BASE}
 
 --- Number representation.
 --    <i>Private function.</i>

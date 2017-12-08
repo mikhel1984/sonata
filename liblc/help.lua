@@ -27,9 +27,9 @@ to sort help list according the module name.
 To use language localisation, create text file with Lua table in format
 {
   module_name1 = {
-    __main__ = "Main module description",
-    ["function_name1"] = "Function 1 description",
-    ["function_name2"] = "Function 2 description",
+    ["__main__"] = "Main module description.",
+    ["function_name1"] = "Function 1 description.",
+    ["function_name2"] = "Function 2 description.",
        ...
   },
   module_name2 = {
@@ -198,6 +198,51 @@ function help:localisation(fname)
    end
 end
 
+local function helplines(module, alias, lng)
+   local m = require('liblc.' .. module)
+   local lng_t = lng and lng[alias] or {}
+   local res = {}
+   res[#res+1] = string.format('%s %s.lng %s', string.rep('-',10), module, string.rep('-',10))
+   res[#res+1] = string.format('%s = {', alias)
+   for _, elt in pairs(m.about) do
+      local title = elt.link and '__main__' or elt[TITLE]
+      local pos = elt.link and MAIN or DESCRIPTION
+      local line = string.format('["%s"] = [[%s]],', title, lng_t[title] or elt[pos])
+      if not lng_t[title] then
+         line = string.format((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
+      end
+      if elt.link then
+         table.insert(res,3,line)
+      else
+         res[#res+1] = line
+      end
+   end
+   res[#res+1] = '},'
+   res[#res+1] = ''
+   return table.concat(res, '\n')
+end
+
+function help.prepare(fname, modules)
+   local f, lng = io.open(fname)
+   -- read current file if possible
+   if f then 
+      local lng_fn = assert(load("return " .. f:read("*a")))
+      f:close()
+      lng = lng_fn()
+   end
+   -- prepare new file
+   f = io.open(fname, 'w')
+   -- save descriptions
+   local line = string.rep('-',10)
+   f:write(line, string.format(' %s.lng ', fname), line, '\n')
+   f:write('{\n')
+   for k,v in pairs(modules) do
+      print(k,v)
+      f:write(helplines(k,v,lng))
+   end
+   f:write('}')
+   f:close()
+end
 
 --- Get translated string if possible.
 --    @param txt Text to seek.

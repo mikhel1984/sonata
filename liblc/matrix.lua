@@ -515,7 +515,7 @@ matrix.zeros = function (rows, cols)
    cols = cols or rows
    return matrix:init(rows, cols)
 end
-matrix.about[matrix.vector] = {"zeros(rows[,cols])", "Create matrix from zeros", help.OTHER}
+matrix.about[matrix.vector] = {"zeros(rows[,cols])", "Create matrix from zeros.", help.OTHER}
 
 --- Matrix of constants.
 --    @param rows Number of rows.
@@ -549,7 +549,7 @@ matrix.rand = function (rows, cols)
    end
    return m
 end
-matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1", help.OTHER}
+matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1.", help.OTHER}
 
 --- Identity matrix.
 --    @param rows Number of rows.
@@ -561,7 +561,7 @@ matrix.eye = function (rows, cols)
    for i = 1, math.min(rows, cols) do setval(m,i,i, 1) end
    return m
 end
-matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix", help.OTHER}
+matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix.", help.OTHER}
 
 --- Get submatrix.
 --    @param m Initial matrix.
@@ -584,7 +584,7 @@ matrix.sub = function (m, r1, r2, c1, c2)
    end
    return res
 end
-matrix.about[matrix.sub] = {"sub(m,r1,r2,c1,c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2]", help.OTHER}
+matrix.about[matrix.sub] = {"sub(m,r1,r2,c1,c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2].", help.OTHER}
 
 --- Matrix concatenation.
 --    Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
@@ -614,7 +614,7 @@ matrix.concat = function (a, b, dir)
    return res
 end
 matrix.about[matrix.concat] = {"concat(m1,m2,dir)", 
-                               "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse m1 .. m2 for horizontal concatenation and m1 // m2 for vertical", 
+                               "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse m1 .. m2 for horizontal concatenation and m1 // m2 for vertical.", 
 			       help.OTHER}
 
 -- horizontal concatenation
@@ -768,7 +768,7 @@ matrix.pinv = function (M)
    s = matrix.map_ex(s, function (r,c,x) return (r == c and math.abs(x) > 1e-8) and (1/x) or 0 end)
    return v * s:transpose() * u:transpose()
 end
-matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudoinverse matrix using SVD", help.OTHER}
+matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudoinverse matrix using SVD.", help.OTHER}
 
 --- Quick pseudoinverse matrix.
 --    Based on "Fast computation of Moore-Penrose inverse matrices" by Pierre Courrieu.
@@ -814,7 +814,7 @@ matrix.pinv2 = function (M)
    end
    return L * K * K * Lt * Mt
 end
-matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick function for pseudoinverse matrix calculation", help.OTHER}
+matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick function for pseudoinverse matrix calculation.", help.OTHER}
 
 --- Represent matrix in explicit (dense) form.
 --    @param m Source matrix.
@@ -882,7 +882,7 @@ matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vecto
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
 matrix.Mat = 'Mat'
-matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables)", help.NEW}
+matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
 
 --- Matrix serialization.
 --    @param obj Matrix object.
@@ -905,7 +905,7 @@ matrix.serialize = function (obj)
    s[#s+1] = "modulename='matrix'"
    return string.format("{%s}", table.concat(s, ','))
 end
-matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal representation", help.OTHER}
+matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal representation.", help.OTHER}
 
 -- free memory if need
 if not lc_version then matrix.about = nil end

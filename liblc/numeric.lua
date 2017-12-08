@@ -73,7 +73,7 @@ numeric.newton = function (fn, x1)
    until math.abs(fn(x2)-fn(x1)) < numeric.TOL 
    return x2
 end
-numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition", help.BASE}
+numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition.", help.BASE}
 
 --- Simple derivative.
 --    @param fn Function f(x).
@@ -119,7 +119,7 @@ numeric.trapez = function (fn, a, b)
    until math.abs(I-last) < numeric.TOL
    return I
 end
-numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule", help.BASE}
+numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule.", help.BASE}
 
 --- Runge-Kutta method.
 --    <i>Private function.</i>

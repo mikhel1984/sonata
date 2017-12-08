@@ -141,4 +141,6 @@ function deserialize(obj_str)
    return o
 end
 
+main.about = about
+
 return main

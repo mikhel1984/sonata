@@ -221,12 +221,12 @@ complex.about[complex.sqrt] = {"sqrt(v)", "Return square root. Result can be rea
 
 -- imaginary unit
 complex._i   = complex:new(0,1)
-complex.about[complex._i] = {"_i", "Complex unit", "constant"}
+complex.about[complex._i] = {"_i", "Complex unit.", "constant"}
 
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
 complex.Cmp = 'Cmp'
-complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number", help.NEW}
+complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number.", help.NEW}
 
 --- Complex number serialization.
 --    @param obj Complex number.
@@ -239,7 +239,7 @@ complex.serialize = function (obj)
    s[#s+1] = "modulename='complex'"
    return string.format("{%s}", table.concat(s, ','))
 end
-complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object", help.OTHER}
+complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object.", help.OTHER}
 
 --- Function for execution during the module import.
 --    Redefine function sqrt and add complex variable.

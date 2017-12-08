@@ -75,7 +75,7 @@ units.type = 'units'
 units.isunits = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-units.about = help:new("Operations and conversations according the units")
+units.about = help:new("Operations and conversations according the units.")
 
 -- prefix list
 units.prefix = {

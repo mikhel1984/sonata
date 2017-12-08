@@ -200,7 +200,7 @@ end
 -- redefine constructor
 setmetatable(set, {__call = function (self, v) return set:new(v) end})
 set.Set = 'Set'
-set.about[set.Set] = {"Set(t)", "Create new set from table of elements", help.NEW}
+set.about[set.Set] = {"Set(t)", "Create new set from table of elements.", help.NEW}
 
 --- Set serialization.
 --    @param obj Set object.
@@ -218,7 +218,7 @@ set.serialize = function (obj)
    s[#s+1] = "modulename='set'"
    return string.format("{%s}", table.concat(s, ','))
 end
-set.about[set.serialize] = {"serialize(obj)", "Save internal representation of the set", help.OTHER}
+set.about[set.serialize] = {"serialize(obj)", "Save internal representation of the set.", help.OTHER}
 
 -- free memory if need
 if not lc_version then set.about = nil end

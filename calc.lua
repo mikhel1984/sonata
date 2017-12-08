@@ -94,3 +94,6 @@ _PROMPT2='..: '
 --===============================================
 -- TODO: use alias or part of the name for import
 -- TODO: if module has dependencies define mechanism to load it
+
+--help = require 'liblc.help'
+--help.prepare('abc',import)
