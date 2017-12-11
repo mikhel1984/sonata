@@ -43,6 +43,9 @@ ans = (b == c)                --> false
 d = Poly(2,-2,1)
 ans = d:equation('s')         --> '2*s^2-2*s+1'
 
+e = a:real()
+ans = e[1]                    --~ -1.00
+
 print(a)
 ]]
 
@@ -347,6 +350,50 @@ polynom.equation = function (p,l)
    return table.concat(res)
 end
 
+--- Find closest root of using Newton-Rapson technique
+--    <i>Private function.</i>
+--    @param p Source polynom.
+--    @param x Initial value of the root (optional).
+--    @param epx Tolerance
+--    @return Found value and flag about its correctness.
+local function NewtonRapson(p,x,eps)
+   eps = eps or 1e-8
+   x = x or math.random()
+   -- prepare variables
+   local dp,n,max = p:der(), 0, 30
+   while true do
+      -- polynom value
+      local pv = p(x)
+      if math.abs(pv) <= eps or n > max then break
+      else
+         -- update root value and number of iterations
+         x = x - pv / dp(x)
+	 n = n+1
+      end
+   end
+   return x, (n < max)
+end
+
+--- Find real roots of the polynom.
+--    @param p Source polynom.
+--    @return Table with real roots.
+polynom.real = function (p)
+   local res = {}
+   local pp = p:copy()
+   -- if could have roots
+   while #pp > 1 do
+      local x, root = NewtonRapson(pp)
+      if root then 
+         -- save and remove the root
+         res[#res+1] = x
+	 pp = pp / polynom:init({1,-x})
+      else break
+      end
+   end
+   return res
+end
+polynom.about[polynom.real] = {"real(p)", "Find real roots of the polynom.", help.OTHER}
+
 setmetatable(polynom, {__call = function (self, ...) return polynom.new(...) end})
 polynom.Poly = 'Poly'
 polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynom.", help.NEW}
@@ -370,3 +417,4 @@ return polynom
 
 --===========================
 --TODO: polyroot, polyfit
+
