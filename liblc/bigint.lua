@@ -416,9 +416,17 @@ bigint.about[bigint.comparation] = {bigint.comparation, "a<b, a<=b, a>b, a>=b, a
 --    @param v Bigint object.
 --    @return Number as string.
 bigint.__tostring = function (v)
+   return (v.sign < 0 and '-' or '') .. string.reverse(v.value)
+end
+
+--- More convenient string representation
+--    @param v Bigint object.
+--    @return String representation where each 3 digits are separated.
+bigint.str = function (v)
    local value = string.gsub(v.value, '(...)', '%1 ')
    return (v.sign < 0 and '-' or '') .. string.reverse(value)
 end
+bigint.about[bigint.str] = {"str(v)", "More readable string representation of the number", help.OTHER}
 
 --- Float number representation.
 --    @param v Bigint object.

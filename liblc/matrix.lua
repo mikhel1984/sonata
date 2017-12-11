@@ -73,9 +73,6 @@ m = Mat({1,2},{3,4},{5,6})
 n = m:pinv()
 ans = math.floor(n(2,2)*1000)   --> 333
 
-n = m:pinv2()
-ans = math.floor(n(2,2)*1000)   --> 333
-
 k = Mat.eye(3)
 k = k:full()
 ans = k[2][1]                   --> 0
@@ -638,6 +635,7 @@ matrix.__tostring = function (m)
    return table.concat(srow, "\n")
 end
 
+--[=[
 --> SVD - "standard" algorithm implementation
 --  BUT: some of singular values are negative :(
 
@@ -769,12 +767,13 @@ matrix.pinv = function (M)
    return v * s:transpose() * u:transpose()
 end
 matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudoinverse matrix using SVD.", help.OTHER}
+]=]
 
 --- Quick pseudoinverse matrix.
---    Based on "Fast computation of Moore-Penrose inverse matrices" by Pierre Courrieu.
+--    Based on "Fast computation of Moore-Penrose inverse matrices" paper by Pierre Courrieu.
 --    @param M Initial matrix.
 --    @return Pseudoinverse matrix.
-matrix.pinv2 = function (M)
+matrix.pinv = function (M)
    local m,n,transp = M.rows, M.cols, false
    local A, Mt = nil, M:transpose()
    if m < n then 
@@ -814,7 +813,7 @@ matrix.pinv2 = function (M)
    end
    return L * K * K * Lt * Mt
 end
-matrix.about[matrix.pinv2] = {"pinv2(M)", "More quick function for pseudoinverse matrix calculation.", help.OTHER}
+matrix.about[matrix.pinv] = {"pinv(M)", "More quick function for pseudoinverse matrix calculation.", help.OTHER}
 
 --- Represent matrix in explicit (dense) form.
 --    @param m Source matrix.
@@ -911,3 +910,6 @@ matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal repres
 if not lc_version then matrix.about = nil end
 
 return matrix
+
+--=========================
+--TODO: Fix sign in SVD transform
