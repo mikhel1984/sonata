@@ -103,7 +103,7 @@ end
 --    @param p Table of coefficients.
 --    @return Simplified polynom.
 local function reduce (p)
-   while p[1] == 0 and #p > 1 do
+   while #p > 1 and  p[1] == 0 do
       table.remove(p, 1)
    end
    return p
@@ -391,7 +391,9 @@ polynom.real = function (p)
       if root then 
          -- save and remove the root
          res[#res+1] = x
-	 pp = pp / polynom:init({1,-x})
+	 -- devide by (1-x)
+	 for i = 2,#pp-1 do pp[i] = pp[i] + x*pp[i-1] end
+	 pp[#pp] = nil
       else break
       end
    end
