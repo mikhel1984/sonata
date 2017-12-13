@@ -357,17 +357,17 @@ end
 --    @param epx Tolerance
 --    @return Found value and flag about its correctness.
 local function NewtonRapson(p,x,eps)
-   eps = eps or 1e-8
+   eps = eps or 1e-6
    x = x or math.random()
    -- prepare variables
    local dp,n,max = p:der(), 0, 30
    while true do
       -- polynom value
-      local pv = p(x)
-      if math.abs(pv) <= eps or n > max then break
+      local dx = p(x) / dp(x) 
+      if math.abs(dx) <= eps or n > max then break
       else
          -- update root value and number of iterations
-         x = x - pv / dp(x)
+         x = x - dx
 	 n = n+1
       end
    end
@@ -380,6 +380,11 @@ end
 polynom.real = function (p)
    local res = {}
    local pp = p:copy()
+   -- zeros
+   while pp[#pp] == 0 do
+      pp[#pp] = nil
+      res[#res+1] = 0
+   end
    -- if could have roots
    while #pp > 1 do
       local x, root = NewtonRapson(pp)
