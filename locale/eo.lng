@@ -1,0 +1,235 @@
+---------- locale/eo.lng ----------
+{
+---------- dialog ----------
+Dialog = {
+["modules"]              = [[Disponeblaj moduloj:]],
+["intro"]                = [[Entru 'import(modulo)' por piliigi la funcionalidad.
+Entru 'help([funkcio])' por akiri helpon.
+Entru 'quit()' por eliri.
+]],
+["alias"]                = [[Usu la alias '%s' aliri la modulo '%s'.]],
+["done"]                 = [[Preta.]],
+["use_import"]           = [[
+Usu
+  import 'modulo' ['modulo2' 'modulo3' ...]
+por akiri ekstran moduloj.]],
+},
+---------- main.lua ----------
+Main = {
+["__main__"]             = [[Komputado sistemo bazita sur Lua.]],
+--["round(x)"]             = [[Round value to closest integer.]],
+--["sqrt(a)"]              = [[Square root.]],
+--["ash(x)"]               = [[Hyperbolic arcsinus.]],
+--["eval(fn,x1[,xn[,step]])"] = [[Evalueate function for given value or interval and print result.]],
+--["ceil(x)"]              = [[Return smallest integer more or equial to x.]],
+--["flip(t[,N])"]          = [[Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).]],
+--["max(...)"]             = [[Maximum number.]],
+--["_pi"]                  = [[Number pi]],
+--["tan(x)"]               = [[Tangent x.]],
+--["atan(y[,x])"]          = [[Arctangent y. In case of 2 parameters calculate y/x with signs.]],
+--["rand()"]               = [[Random number between 0 and 1.]],
+--["rad(x)"]               = [[Degrees to radians.]],
+--["floor(x)"]             = [[Return largest integer less or equial to x.]],
+--["ln(x)"]                = [[Natural logarithm.]],
+--["ch(x)"]                = [[Hyperbolic cosinus.]],
+--["cos(x)"]               = [[Cosinus x.]],
+--["ath(x)"]               = [[Hyperbolic arctangent.]],
+--["example(name)"]        = [[Show examples for given module, which used to test.]],
+--["pow(a,b)"]             = [[Return a^b.]],
+--["sh(x)"]                = [[Hyperbolic sinus.]],
+--["_e"]                   = [[Euler number]],
+--["exp(x)"]               = [[Exponenta.]],
+--["import"]               = [[]],
+--["fx(str)"]              = [[Create Lua function f(x) from string.]],
+--["asin(x)"]              = [[Arcsinus x.]],
+--["deserialize(obj_str)"] = [[Transform string with serialization into LuaCalculus object.]],
+--["ach(x)"]               = [[Hyperbolic arccosinus.]],
+--["plot(str[,a,b])"]      = [[Quick plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.]],
+--["lg(x)"]                = [[Decimal logarithm.]],
+--["acos(x)"]              = [[Arccosinus x.]],
+--["deg(x)"]               = [[Radians to degrees.]],
+--["min(...)"]             = [[Minimum number.]],
+--["sin(x)"]               = [[Sinus x.]],
+--["th(x)"]                = [[Hyperbolic tangent.]],
+--["abs(x)"]               = [[Absolut value.]],
+},
+---------- stat.lua ----------
+Stat = {
+["__main__"]             = [[Statistikaj kalkuloj. Datumoj devas esti reprezentita kiel tablo Lua.]],
+--["std(t[,w])"]           = [[Standard deviation and variance. Weigths are can be used.]],
+--["mean(t[,w])"]          = [[Calculate average value. Weights are can be used.]],
+--["stdcorr(t)"]           = [[Corrected value of standard deviation and variance.]],
+--["cmoment(n,x[,p])"]     = [[Central moment of x order n, p is a list of waights.]],
+--["moment(n,x[,p])"]      = [[Moment of x order n, p is a list of waights.]],
+--["sum(t)"]               = [[Get sum of all elements.]],
+--["geomean(t[,w])"]       = [[Geometrical mean.]],
+--["freq(t)"]              = [[Return table with frequencies of elements.]],
+--["max(t)"]               = [[Maximal element and its index.]],
+--["median(t)"]            = [[List median.]],
+--["min(t)"]               = [[Minimal element and its index.]],
+--["harmean(t[,w])"]       = [[Harmonical mean.]],
+},
+---------- numeric.lua ----------
+Num = {
+["__main__"]             = [[Grupo de funkcioj por la numeraj kalkuloj.]],
+--["diff(fn,x)"]           = [[Calculate the derivative value for given function.]],
+--[=[["ode(fn,x0,y0,xn[,dx])"] = [[Numerical approximation of the ODE solution.
+If step dx is not defined it is calculated automaticaly according the given tolerance.
+Return table of intermediate points and result yn.]],]=]
+--["TOL"]                  = [[The solution tolerance (0.001 by default).]],
+--["trapez(fn,a,b)"]       = [[Get integral using trapezoidal rule.]],
+--["solve(fn,a,b)"]        = [[Find root of equation fn(x)=0 at interval [a,b].]],
+--["newton(fn,x0)"]        = [[Find root of equation using Newton's rule, use only one initial condition.]],
+},
+---------- gnuplot.lua ----------
+Gnu = {
+["__main__"]             = [[Interfaco por laborado kun Gnuplot de Lua.]],
+--[=[["keys"]                 = [[ Table description:
+{'sin(x)'}                                   -- print sinus using Gnuplot functions
+{math.sin, title='sinus'}                    -- plot using function, define in Lua; add legend
+{'sin.dat', type='data', smooth='unique'}    -- plot data from file, use special type of smoothing
+{tbl, type='data', tible='Table of results'} -- plot data from Lua table, no smoothing
+{math.sin, math.cos, type='parametric'}      -- use parametric functions
+{'sin(t), cos(t)', type='parametric'}        -- parametric function from Gnuplot
+title='Graph name'                           -- set title
+xrange={0,10,0.1}                            -- range of x from 0 to 10, calculate Lua function values with step 0.1
+yrange={-2,2}                                -- range of y
+trange={1,2}                                 -- range for parametric functions
+xtitle='A', ytitle='B'                       -- axes names
+separator=','                                -- separator for data files
+permanent=true                               -- create in independant window
+]],]=]
+--["plot2d(g)"]            = [[Plot data and parameters, represented as Lua table.]],
+--["Gnu([g])"]             = [[Transform given table into gnuplot object.]],
+--["N"]                    = [[If no step, devide interval into N number of points.]],
+},
+---------- array.lua ----------
+Arr = {
+["__main__"]             = [[Manipuladoj kun la tabelo de elementoj.]],
+--["set(arr,ind,val)"]     = [[Set value to the array. Index is a table.]],
+--["apply(a1,a2,fn)"]      = [[Apply function of 2 arguments. Return new array.]],
+--["isequal(a1,a2)"]       = [[Check size equality.]],
+--["sub(arr,ind1,ind2)"]   = [[Return subarray restricted by 2 indexes.]],
+--["map(a,fn)"]            = [[Apply function of 1 argument. Return new array.]],
+--["dim(arr)"]             = [[Return size of array.]],
+--["arithmetic"]           = [[a+b, a-b, a*b, a/b, -a, a^b]],
+--["Arr(size)"]            = [[Create empty array with given size, represented as a table.]],
+--["get(arr,ind)"]         = [[Get array element. Index is a table.]],
+--["serialize(obj)"]       = [[String representation of array internal structure.]],
+--["getnext(arr)"]         = [[Return iterator along all indexes.]],
+--["fullstring(arr,r,c)"]  = [[Represent array as sequence of matrixes, where r and c are numbers of axes.]],
+--["copy(arr)"]            = [[Get copy of the array.]],
+--["comparation"]          = [[a == b, a ~= b]],
+--["concat(a1,a2,axe)"]    = [[Array concatenation along given axe.]],
+--["rand(size)"]           = [[Return array with random numbers between 0 and 1.]],
+},
+---------- complex.lua ----------
+Cmp = {
+["__main__"]             = [[Operacioj kun la kompleksaj nombroj.]],
+--["arg(v)"]               = [[Return argument of complex number.]],
+--["serialize(obj)"]       = [[Save internal representation or complex object.]],
+--["conj(v)"]              = [[Return the complex conjugate.]],
+--["Cmp(a [,b])"]          = [[Create new complex number.]],
+--["Re(v)"]                = [[Return the real part.]],
+--["_i"]                   = [[Complex unit.]],
+--["abs(v)"]               = [[Return module of complex number.]],
+--["Im(v)"]                = [[Return the imaginary part.]],
+--["comparation"]          = [[a==b, a~=b]],
+--["arithmetic"]           = [[a+b, a-b, a*b, a/b, a^b, -a]],
+--["sqrt(v)"]              = [[Return square root. Result can be real of complex.]],
+},
+---------- rational.lua ----------
+Rat = {
+["__main__"]             = [[Komputadoj kun la raciaj nombroj.]],
+--["decimal(v)"]           = [[Return rational number as decimal.]],
+--["Rat(m[,n])"]           = [[Create rational number using num (and denom).]],
+--["gcd(a,b)"]             = [[Calculate the greatest common devisor for two integers.]],
+--["Nu(v)"]                = [[Return the numerator of rational number.]],
+--["serialize(obj)"]       = [[Save internal representation of rational number.]],
+--["De(v)"]                = [[Return the denominator of the rational number.]],
+--["arithmetic"]           = [[a+b, a-b, a*b, a/b, -a, a^b} ]],
+--["comparation"]          = [[a<b, a<=b, a>b, a>=b, a==b, a~=b ]],
+},
+---------- matrix.lua ----------
+Mat = {
+["__main__"]             = [[Operacioj kun matricoj. La matricoj estas maldensa defauxlte.]],
+--["transpose(m)"]         = [[Return matrix transpose. Shorten form is T().]],
+--["pinv(M)"]              = [[More quick function for pseudoinverse matrix calculation.]],
+--["cross(a,b)"]           = [[Cross product or two 3-element vectors.]],
+--["diag(M[,n])"]          = [[Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.]],
+--[=[["concat(m1,m2,dir)"]    = [[Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical
+Use m1 .. m2 for horizontal concatenation and m1 // m2 for vertical.]],]=]
+--["eye(rows[,cols])"]     = [[Create identity matrix.]],
+--["map(m,fn)"]            = [[Apply the given function to all elements, return new matrix.]],
+--["zeros(rows[,cols])"]   = [[Create matrix from zeros.]],
+--["rand(rows[,cols])"]    = [[Create matrix with random numbers from 0 to 1.]],
+--["arithmetic"]           = [[a+b, a-b, a*b, a/b, a^b, -a]],
+--["set(m,row,col)(val)"]  = [[Set value of matrix element.]],
+--["sub(m,r1,r2,c1,c2)"]   = [[Return submatrix with rows [r1;r2] and columns [c1;c2].]],
+--["serialize(obj)"]       = [[Save matrix internal representation.]],
+--["Mat(...)"]             = [[Create matrix from list of strings (tables).]],
+--["sparse(m)"]            = [[Return sparse matrix.]],
+--["rref(A,b)"]            = [[Perform transformations using Gauss method. Return also determinant.]],
+--["map_ex(m,fn)"]         = [[Apply function fn(row,col,val) to all elements, return new matrix.]],
+--["apply(m1,m2,fn)"]      = [[Apply fu(v1,v2) to each element of matrixes m1 and m2.]],
+--["full(m)"]              = [[Return dense matrix.]],
+--["get(m,row,col)"]       = [[Return matrix element.]],
+--["copy(m)"]              = [[Return copy of matrix.]],
+--["size(m)"]              = [[Return number or rows and columns. Can be called with '#'.]],
+--["ones(rows[,cols[,val]])"] = [[Create matrix of given numbers (default is 1).]],
+--["comparation"]          = [[a==b, a~=b]],
+--["inv(m)"]               = [[Return inverse matrix.]],
+--["det(m)"]               = [[Calculate determinant.]],
+},
+---------- bigint.lua ----------
+Big = {
+["__main__"]             = [[Operacioj kun la arbitraj longaj entjeroj.]],
+--["tonumber(v)"]          = [[Represent current big integer as number if it possible.]],
+--["abs(v)"]               = [[Return module of arbitrary long number.]],
+--["copy(v)"]              = [[Return copy of given number.]],
+--["Big(v)"]               = [[Create big number from integer or string.]],
+--["serialize(obj)"]       = [[Save internal representation of bigint object.]],
+--["BASE"]                 = [[The radix of big integer representation.]],
+--["factorial(n)"]         = [[Return factorial of nonnegative integer n.]],
+--["comparation"]          = [[a<b, a<=b, a>b, a>=b, a==b, a~=b]],
+--["eq(a,b)"]              = [[Check equality of two values.]],
+--["arithmetic"]           = [[a+b, a-b, a*b, a/b, a%b, a^b, -a, #a]],
+--["str(v)"]               = [[More readable string representation of the number]],
+},
+---------- units.lua ----------
+Unit = {
+["__main__"]             = [[Operacioj kun unuoj.]],
+--["serialize(obj)"]       = [[Save internal representation of units object.]],
+--["copy(u)"]              = [[Create copy of the element.]],
+--["convert(v, units)"]    = [[Convert one units to another, return new object or nil.]],
+--["prefix"]               = [[Table of possible prefixes for units.]],
+--["add(unit,rule)"]       = [[Add new rule for conversation.]],
+--["Unit(v[,u])"]          = [[Create new elements with units.]],
+},
+---------- set.lua ----------
+Set = {
+["__main__"]             = [[Manipuladoj kun la aroj.]],
+--["table(set)"]           = [[Represent set as a table.]],
+--["Set(t)"]               = [[Create new set from table of elements.]],
+--["insert(set,val)"]      = [[Insert element into set.]],
+--["remove(set,val)"]      = [[Remove element from set.]],
+--["serialize(obj)"]       = [[Save internal representation of the set.]],
+--["comparation"]          = [[a==b, a~=b, a<b, a<=b, a>b, a>=b]],
+--["union, intersection, defference"] = [[a+b, a*b, a/b]],
+--["check(set,val)"]       = [[Check if value is in set.]],
+},
+---------- polynom.lua ----------
+Poly = {
+["__main__"]             = [[Operacioj kun polinomoj.]],
+--["val(p,x)"]             = [[Get value of polinom p in point x.]],
+--["der(p[,x])"]           = [[Calculate derivative of polynom, and its value, if need.]],
+--["real(p)"]              = [[Find real roots of the polynom.]],
+--["int(p[,x0])"]          = [[Calculate integral, x0 - free coefficient.]],
+--["copy(p)"]              = [[Get copy of polynom.]],
+--["serialize(obj)"]       = [[Save polynom internal representation.]],
+--["Poly(...)"]            = [[Create a polynom.]],
+--["coef(...)"]            = [[Return polynom with given roots.]],
+--["comparation"]          = [[a<b, a<=b, a>b, a>=b, a==b, a~=b]],
+--["arithmetic"]           = [[a+b, a-b, a*b, a/b, a^n, -a]],
+},
+}
