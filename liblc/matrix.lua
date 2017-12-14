@@ -74,7 +74,7 @@ n = m:pinv()
 ans = math.floor(n(2,2)*1000)   --> 333
 
 k = Mat.eye(3)
-k = k:full()
+k = k:dense()
 ans = k[2][1]                   --> 0
 
 ans = Mat.diag({1,2,3})         --> Mat({1,0,0},{0,2,0},{0,0,3})
@@ -84,6 +84,8 @@ ans = g:diag(1)                 --> Mat({2},{6})
 x1 = Mat({1,2,3})
 x2 = Mat({4,5,6})
 ans = Mat.cross(x1,x2)          --> Mat({-3},{6},{-3})
+
+ans = Mat.dot(x1,x2)            --> 32
 ]]
 
 -------------------------------------------- 
@@ -143,9 +145,9 @@ end
 --    @return Corrected value of row and col.
 local function checkindex(m, r, c)
    assert(ismatrix(m), "Matrix is expected")
-   if c == nil then
+   if not c then
       if m.cols == 1 then 
-         r, c = r, 1
+         c = 1
       elseif m.rows == 1 then 
          r, c = 1, r
       end
@@ -166,7 +168,7 @@ end
 --    @param c Column number.
 --    @return Element value.
 local function getval(m, r, c)
-   local v = m[r]
+   local v = rawget(m,r)
    return v and v[c] or 0
 end
 
@@ -287,31 +289,19 @@ matrix.transpose = function (m)
    return res
 end
 matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T().", help.BASE}
-
 matrix.T = matrix.transpose
 
---- Auxiliary function for addition/substraction.
---    <i>Private function.</i>
---    @param a First matrix.
---    @param b Second matrix.
---    @param sign +1 or -1 (can be omitted).
-local function sum(a,b,sign)
-   assert(a.cols == b.cols and a.rows == b.rows, "Wrong matrix size!")
-   local res = matrix:init(a.rows, a.cols)
-   for r = 1, res.rows do
-      for c = 1, res.cols do
-	 setval(res,r,c, (sign == -1) and (getval(a,r,c)-getval(b,r,c)) or (getval(a,r,c)+getval(b,r,c)))
-      end
-   end
-   return res
-end
+-- to accelerate calculations
+local fn_sum = function (x,y) return x+y end
+local fn_sub = function (x,y) return x-y end
+local fn_unm = function (x) return -x end
 
 --- a + b
 --    @param a First matrix.
 --    @param b Second matrix.
 --    @return Sum of the given matricies.
 matrix.__add = function (a,b)
-   return sum(a, b)
+   return matrix.apply(a,b,fn_sum)
 end
 
 --- a - b
@@ -319,15 +309,14 @@ end
 --    @param b Second matrix.
 --    @return Substraction of the given matricies.
 matrix.__sub = function (a,b)
-   return sum(a, b, -1)
+   return matrix.apply(a,b,fn_sub)
 end
 
 --- -a
 --    @param a Initial matrix.
 --    @return Negative value of matrix.
 matrix.__unm = function (a)
-   local tmp = matrix:init(a.rows, a.cols)
-   return sum(tmp, a, -1)
+   return matrix.map(a,fn_unm)
 end
 
 --- Get matrix size.
@@ -383,12 +372,7 @@ matrix.about[matrix.apply] = {"apply(m1,m2,fn)", "Apply fu(v1,v2) to each elemen
 --    @param m Source matrix.
 --    @return Deep copy.
 matrix.copy = function (m)
-   assert(ismatrix(m), "Matrix is expected!")
-   local res = matrix:init(m.rows, m.cols)
-   for r = 1, res.rows do
-      for c = 1, res.cols do setval(res,r,c, getval(m,r,c)) end
-   end
-   return res
+   return matrix.map(m, function (x) return x end)
 end
 matrix.about[matrix.copy] = {"copy(m)", "Return copy of matrix.", help.OTHER}
 
@@ -397,7 +381,6 @@ matrix.about[matrix.copy] = {"copy(m)", "Return copy of matrix.", help.OTHER}
 --    @param b Second matrix.
 --    @return Multiplication of the given matricies.
 matrix.__mul = function (a,b)
-   assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type")
    if not ismatrix(a) then return kprod(a, b) end
    if not ismatrix(b) then return kprod(b, a) end
    assert(a.cols == b.rows, "Impossible to get product: different size!")
@@ -417,7 +400,6 @@ end
 --    @param b Second matrix.
 --    @return Ratio of the given matricies.
 matrix.__div = function (a,b)
-   assert(ismatrix(a) or ismatrix(b), "Wrong argemnt type!")
    if not ismatrix(b) then return kprod(1/b, a) end
    return a * matrix.inv(b)
 end
@@ -501,7 +483,6 @@ matrix.vector = function (...)
    return matrix:init(#v, 1, res)
 end
 matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V().", help.BASE}
-
 matrix.V = matrix.vector
 
 --- Create matrix of zeros.
@@ -514,20 +495,28 @@ matrix.zeros = function (rows, cols)
 end
 matrix.about[matrix.vector] = {"zeros(rows[,cols])", "Create matrix from zeros.", help.OTHER}
 
+--- Create dense matrix using given rule.
+--    @param rows Number of rows.
+--    @param cols Number of columns.
+--    @param fn Function which depend on element index.
+matrix.fill = function (rows, cols, fn)
+   assert(rows > 0 and cols > 0, "Wrong matrix size!")
+   local m = matrix:init(rows, cols)
+   for r = 1, rows do
+      m[r] = {}
+      for c = 1,cols do m[r][c] = fn(r,c) end
+   end
+   return m
+end
+matrix.about[matrix.fill] = {"fill(rows,cols,fn)", "Create matrix, using function fn(r,c).", help.OTHER}
+
 --- Matrix of constants.
 --    @param rows Number of rows.
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @param val Value to set. Default is 1.
 --    @return New matrix.
 matrix.ones = function (rows, cols, val)
-   cols = cols or rows
-   val = val or 1
-   local m = matrix:init(rows, cols)
-   for r = 1, rows do
-      m[r] = {}
-      for c = 1, cols do m[r][c] = val end
-   end
-   return m
+   return matrix.fill(rows, cols or rows, function (r,c) return val or 1 end)
 end
 matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given numbers (default is 1).", help.OTHER}
 
@@ -536,15 +525,7 @@ matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given 
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return New matrix.
 matrix.rand = function (rows, cols)
-   cols = cols or rows
-   local m = matrix:init(rows, cols)
-   for r = 1, rows do
-      m[r] = {}
-      for c = 1, cols do
-         m[r][c] = math.random()
-      end
-   end
-   return m
+   return matrix.fill(rows, cols or rows, function (r,c) return math.random() end)
 end
 matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1.", help.OTHER}
 
@@ -576,8 +557,7 @@ matrix.sub = function (m, r1, r2, c1, c2)
 	 setval(res,i,j, getval(m,r,c))
 	 j = j+1
       end
-      j = 1
-      i = i+1
+      i, j = i+1, 1
    end
    return res
 end
@@ -818,7 +798,7 @@ matrix.about[matrix.pinv] = {"pinv(M)", "More quick function for pseudoinverse m
 --- Represent matrix in explicit (dense) form.
 --    @param m Source matrix.
 --    @return Dense matrix.
-matrix.full = function (m)
+matrix.dense = function (m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1,m.rows do
       res[r] = {}
@@ -826,17 +806,14 @@ matrix.full = function (m)
    end
    return res
 end
-matrix.about[matrix.full] = {"full(m)", "Return dense matrix.", help.OTHER}
+matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
 
 --- Return sparse matrix, if possible.
 --    @param m SOurce matrix.
 --    @return Sparse matrix.
 matrix.sparse = function (m)
-   local res = matrix.init(m.rows, m.cols)
-   for r = 1,m.rows do
-      for c = 1,m.cols do setval(res, r, c, getval(m,r,c)) end
-   end
-   return res
+   -- function map uses 'sparse' approach
+   return matrix.map(m, function (x) return x end)
 end
 matrix.about[matrix.sparse] = {"sparse(m)", "Return sparse matrix.", help.OTHER}
 
@@ -877,6 +854,18 @@ matrix.cross = function (a,b)
    return matrix.new({y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2})
 end
 matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.', help.BASE}
+
+--- a . b
+--    @param a 3-element vector.
+--    @param b 3-element vector.
+--    @return Scalar product.
+matrix.dot = function (a,b)
+   assert(a.rows*a.cols == 3 and b.rows*b.cols == 3, "Vector with 3 elements is expected!")
+   local x1,y1,z1 = a:get(1), a:get(2), a:get(3)
+   local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
+   return x1*x2+y1*y2+z1*z2
+end
+matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors', help.BASE}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
