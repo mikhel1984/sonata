@@ -173,15 +173,6 @@ local function args(a,b)
    return a,b
 end
 
---- Check if table is empty.
---    <i>Private function.</i>
---    @param t Table to check.
---    @return <code>true</code> if the table doesn't have elements.
-local function isempty(t)
-   for k in pairs(t) do return false end
-   return true
-end
-
 -- Operations with tables of units.
 local op = {
 ['*'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) + v end end,
@@ -459,7 +450,7 @@ units.__mul = function (a,b)
    local ta, tb = fromkey(a.key), fromkey(b.key)
    op['*'](ta,tb)
    ta = reduce(ta)
-   if isempty(ta) then return a.value*b.value end
+   if not next(ta) then return a.value*b.value end
    local res = units:new(a.value*b.value)
    res.key = tokey(ta)
    return res.key == '' and res.value or res
@@ -474,7 +465,7 @@ units.__div = function (a,b)
    local ta, tb = fromkey(a.key), fromkey(b.key)
    op['/'](ta,tb)
    ta = reduce(ta)
-   if isempty(ta) then return a.value/b.value end
+   if not next(ta) then return a.value/b.value end
    local res = units:new(a.value/b.value)
    res.key = tokey(ta)
    return res.key == '' and res.value or res

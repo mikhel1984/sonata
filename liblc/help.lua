@@ -41,7 +41,7 @@ Use about:localisation("file_name") to load it.
 
 -- directory with language files
 local LOCALE = 'locale'
-
+local SEP = string.sub(package.config,1,1)
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
@@ -177,7 +177,7 @@ end
 --- Read file with localisation data and update main module.
 --    @param fname Name of the file with translated text.
 function help:localisation(fname)
-   fname = LOCALE ..'/'.. fname
+   fname = LOCALE ..SEP.. fname
    local f = io.open(fname)
    if f then
       -- read from file and represent as Lua table
@@ -256,7 +256,7 @@ end
 --    @param fname Language name, for example 'en' or 'it'.
 --    @param modules Table with the list of existing modules.
 function help.prepare(fname, modules)
-   fname = string.format('%s%s%s.lng', LOCALE, '/', fname)
+   fname = string.format('%s%s%s.lng', LOCALE, SEP, fname)
    local f, lng = io.open(fname)
    -- read current file if possible
    if f then 
