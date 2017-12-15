@@ -162,6 +162,18 @@ function flip(t,N)
 end
 about[flip] = {"flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", mhelp.OTHER}
 
+-- Show type of the object.
+function lctype(t)
+   local v = type(t)
+   if v == 'table' then
+      v = t.type or v
+   elseif v == 'number' then
+      v = math.type(t) 
+   end
+   return v
+end
+about[lctype] = {'lctype(t)', 'Show type of the object.', mhelp.OTHER}
+
 -- Print mhelp information
 function help(fn)   
    if fn then 
