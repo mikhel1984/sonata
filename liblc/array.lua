@@ -456,20 +456,20 @@ array.about[array.serialize] = {"serialize(obj)", "String representation of arra
 
 --- Iterator for moving across the array.
 --    @param arr Array object.
---    @return Index of the next array element, <code>nil</code> at the end.
-array.getnext = function (arr)
+--    @return Index of the next array element and the element itself, <code>nil</code> at the end.
+array.next = function (arr)
    local a = array:new(table.move(arr.size, 1, #arr.size, 1, {})) -- copy size
    local count = 0
 
    return function ()
-             if count == capacity(a) then return nil end
+             if count == capacity(a) then return nil, nil end
 	     local res = {}
 	     for i = 1, #a.size do res[i] = (count // a.k[i]) % a.size[i]+1 end
 	     count = count + 1
-	     return res
+	     return res, arr[index(arr,res)]
           end
 end
-array.about[array.getnext] = {"getnext(arr)", "Return iterator along all indexes.", help.OTHER}
+array.about[array.next] = {"next(arr)", "Return iterator along all indexes.", help.OTHER}
 
 -- free memory if need
 if not lc_version then array.about = nil end
