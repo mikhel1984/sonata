@@ -17,7 +17,6 @@ about = mhelp:new("Lua based calculator.")
 abs = math.abs;    about[abs] = {"abs(x)", "Absolut value.", mhelp.BASE}
 exp = math.exp;    about[exp] = {"exp(x)", "Exponenta.", mhelp.BASE}
 ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", mhelp.BASE}
-lg = math.log10;   about[lg] = {"lg(x)", "Decimal logarithm.", mhelp.BASE}
 pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b.", mhelp.BASE}
 sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", mhelp.BASE}
 max = math.max;    about[max] = {"max(...)", "Maximum number.", mhelp.BASE}
@@ -44,6 +43,11 @@ _pi = math.pi;     about[_pi] = {"_pi", "Number pi", mhelp.CONST}
 _e = math.exp(1)   about[_e] = {"_e", "Euler number", mhelp.CONST}
 
 -- Additional functions --
+main.LOG10 = math.log(10)
+
+function lg(x) return math.log(x)/main.LOG10 end
+about[lg] = {"lg(x)", "Decimal logarithm.", mhelp.BASE}
+
 function rand() return math.random() end
 about[rand] = {"rand()", "Random number between 0 and 1.", mhelp.BASE}
 -- hyperbolic arcsinus
