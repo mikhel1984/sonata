@@ -867,6 +867,58 @@ matrix.dot = function (a,b)
 end
 matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors', help.BASE}
 
+matrix.lu = function (m)
+   assert(m.rows == m.cols, "Square matrix is expected!")
+   local a = matrix.copy(m)
+   local vv, rmax = {}
+   local d,dum = 1.0
+   local index = matrix:init(m.rows,1)
+   local TINY = 1e-20
+   -- get scaling information
+   for r = 1,a.rows do
+      local big = 0
+      for c = 1,a.cols do big = math.max(big, math.abs(getval(a,r,c))) end
+      vv[#vv+1] = 1.0/big
+   end
+   -- Crout's method
+   for c = 1,a.cols do
+      for r = 1,c-1 do
+         local sum = getval(a,r,c)
+	 for k = 1,r-1 do sum = sum - getval(a,r,k)*getval(a,k,c) end
+	 setval(a,r,c, sum)
+      end
+      local big = 0                         -- lagest pivot element
+      for r=c,a.rows do
+         local sum = getval(a,r,c)
+	 for k = 1,c-1 do sum = sum - getval(a,r,k)*getval(a,k,c) end
+	 setval(a,r,c, sum)
+	 dum = vv[r]*math.abs(sum)
+	 if dum >= big then big = dum; rmax = r end
+      end
+      if c ~= rmax then
+         -- interchange rows
+         for k = 1,a.rows do
+            dum = getval(a,rmax,k)
+	    setval(a,rmax,k, getval(a,c,k))
+	    setval(a,c,k, dum)
+	 end
+	 d = -d
+	 vv[rmax] = vv[c]
+      end
+      setval(index,c,1, rmax)
+      --index[c] = rmax
+      if getval(a,c,c) == 0 then setval(a,c,c, TINY) end
+      -- divide by pivot element
+      if c ~= a.cols then 
+         dum = 1.0 / getval(a,c,c)
+	 for r = c+1,a.rows do setval(a,r,c, dum*getval(a,r,c)) end
+      end
+   end
+   return matrix.map_ex(a, function (r,c,m) return (r==c) and 1.0 or (r>c and m or 0) end),   -- lower
+          matrix.map_ex(a, function (r,c,m) return r <= c and m or 0 end),                     -- upper
+	  index
+end
+
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
 matrix.Mat = 'Mat'
