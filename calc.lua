@@ -75,7 +75,6 @@ if #arg > 0 then
 	 end
       end
       Test.summary()
-      os.exit()
    -- update localisation file
    elseif arg[1] == '-lang' then
       if arg[2] then
@@ -84,8 +83,11 @@ if #arg > 0 then
       else 
          print('Current localization file: ', LOCALISATION_FILE)
       end
-      os.exit()
+   -- execute all the files from the argument list
+   else
+      for i = 1,#arg do dofile(arg[i]) end
    end
+   os.exit()
 end
 
 -- read localisation file and update descriptions
