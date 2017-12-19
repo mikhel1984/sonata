@@ -86,6 +86,9 @@ x2 = Mat({4,5,6})
 ans = Mat.cross(x1,x2)          --> Mat({-3},{6},{-3})
 
 ans = Mat.dot(x1,x2)            --> 32
+
+l,u,p = b:lu()
+ans = l[2][1]                   --~ 0.714
 ]]
 
 -------------------------------------------- 
@@ -867,13 +870,13 @@ matrix.dot = function (a,b)
 end
 matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors', help.BASE}
 
-matrix.lu = function (m)
+--- Prepare LU transformation for other functions.
+--    @param m Initial square matrix.
+--    @return "Compressed" LU, indexes, number of permutations
+matrix.luprepare = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
    local a = matrix.copy(m)
-   local vv, rmax = {}
-   local d,dum = 1.0
-   local index = matrix:init(m.rows,1)
-   local TINY = 1e-20
+   local vv = {}
    -- get scaling information
    for r = 1,a.rows do
       local big = 0
@@ -881,6 +884,10 @@ matrix.lu = function (m)
       vv[#vv+1] = 1.0/big
    end
    -- Crout's method
+   local rmax, dum
+   local TINY, d = 1e-20, 0
+   --local index = matrix:init(m.rows,1)
+   local index = {}
    for c = 1,a.cols do
       for r = 1,c-1 do
          local sum = getval(a,r,c)
@@ -902,11 +909,11 @@ matrix.lu = function (m)
 	    setval(a,rmax,k, getval(a,c,k))
 	    setval(a,c,k, dum)
 	 end
-	 d = -d
+	 d = d+1
 	 vv[rmax] = vv[c]
       end
-      setval(index,c,1, rmax)
-      --index[c] = rmax
+      --setval(index,c,1, rmax)
+      index[c] = rmax
       if getval(a,c,c) == 0 then setval(a,c,c, TINY) end
       -- divide by pivot element
       if c ~= a.cols then 
@@ -914,10 +921,24 @@ matrix.lu = function (m)
 	 for r = c+1,a.rows do setval(a,r,c, dum*getval(a,r,c)) end
       end
    end
-   return matrix.map_ex(a, function (r,c,m) return (r==c) and 1.0 or (r>c and m or 0) end),   -- lower
-          matrix.map_ex(a, function (r,c,m) return r <= c and m or 0 end),                     -- upper
-	  index
+   return a, index, d
 end
+
+--- LU transform
+--    @param m Initial square matrix.
+--    @return L matrix, U matrix, permutations
+matrix.lu = function (m)
+   local a,_,d = matrix.luprepare(m)
+   local p = matrix.eye(m.rows,m.cols)
+   while d > 0 do
+      local tmp = p[1]; table.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
+      d = d-1
+   end
+   return matrix.map_ex(a, function (r,c,m) return (r==c) and 1.0 or (r>c and m or 0) end),   -- lower
+          matrix.map_ex(a, function (r,c,m) return r <= c and m or 0 end),                    -- upper
+	  p                                                                                   -- permutations
+end
+matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", help.BASE}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
