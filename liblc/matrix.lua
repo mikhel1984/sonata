@@ -615,7 +615,7 @@ matrix.__tostring = function (m)
    for r = 1, m.rows do
       local scol = {}
       for c = 1, m.cols do
-         table.insert(scol, getval(m, r, c))
+         table.insert(scol, tostring(getval(m, r, c)))
       end
       table.insert(srow, table.concat(scol, "  "))
    end
@@ -769,7 +769,11 @@ matrix.pinv = function (M)
       A = Mt * M
    end
    local tol, v = math.huge, 0
-   for i = 1, A.rows do v = getval(A,i,i); tol = math.min(tol, (v > 0 and v or math.huge)) end
+   for i = 1, A.rows do 
+      v = getval(A,i,i);
+      if type(v) == 'table' and v.iscomplex then v = v:abs() end
+      tol = math.min(tol, (v > 0 and v or math.huge)) 
+   end
    tol = tol * 1e-9
    local L, r = matrix.zeros(A:size()), 0
    for k = 1, n do
@@ -782,7 +786,14 @@ matrix.pinv = function (M)
       end
       for i = k, n do setval(L,i,r, getval(B,i-k+1,1)) end   -- copy B to L
       tmp = getval(L,k,r)
-      if tmp > tol then
+      local iscomplex = (type(tmp)=='table') and tmp.iscomplex
+      if iscomplex and tmp:abs() > tol then
+         setval(L,k,r, tmp:sqrt())
+         tmp = getval(L,k,r)
+	 if k < n then
+	    for i = k+1, n do setval(L, i, r, getval(L,i,r)/tmp) end
+	 end
+      elseif not iscomplex and tmp > tol then
          setval(L,k,r, math.sqrt(tmp))
          tmp = getval(L,k,r)
 	 if k < n then
@@ -874,6 +885,10 @@ matrix.dot = function (a,b)
 end
 matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors', help.BASE}
 
+local function fabs(m)
+   return (type(m) == 'table' and m.iscomplex) and m:abs() or math.abs(m)
+end
+
 --- Prepare LU transformation for other functions.
 --    @param m Initial square matrix.
 --    @return "Compressed" LU, indexes, number of permutations
@@ -883,8 +898,14 @@ matrix.luprepare = function (m)
    local vv = {}
    -- get scaling information
    for r = 1,a.rows do
-      local big = 0
-      for c = 1,a.cols do big = math.max(big, math.abs(getval(a,r,c))) end
+      local big,abig,v = 0,0
+      for c = 1,a.cols do 
+         v = fabs(getval(a,r,c))
+	 if v > abig then
+	    big = getval(a,r,c)
+	    abig = v
+	 end
+      end
       vv[#vv+1] = 1.0/big
    end
    -- Crout's method
@@ -903,8 +924,9 @@ matrix.luprepare = function (m)
          local sum = getval(a,r,c)
 	 for k = 1,c-1 do sum = sum - getval(a,r,k)*getval(a,k,c) end
 	 setval(a,r,c, sum)
-	 dum = vv[r]*math.abs(sum)
-	 if dum >= big then big = dum; rmax = r end
+	 sum = fabs(sum)
+	 dum = vv[r]*sum
+	 if fabs(dum) >= fabs(big) then big = dum; rmax = r end
       end
       if c ~= rmax then
          -- interchange rows

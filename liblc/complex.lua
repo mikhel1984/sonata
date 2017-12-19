@@ -163,6 +163,9 @@ complex.__eq = function (a, b)
    return a.real == b.real and a.imag == b.imag
 end
 
+--complex.__lt = function (a,b) return false end
+--complex.__le = function (a,b) return complex.__eq(a,b) end
+
 complex.comparation = 'comparation'
 complex.about[complex.comparation] = {complex.comparation, "a==b, a~=b", help.BASE}
 
