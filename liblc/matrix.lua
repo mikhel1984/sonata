@@ -89,6 +89,10 @@ ans = Mat.dot(x1,x2)            --> 32
 
 l,u,p = b:lu()
 ans = l[2][1]                   --~ 0.714
+
+m = Mat({3,1},{1,3})
+m = m:cholesky()
+ans = m[2][2]                   --~ 1.633
 ]]
 
 -------------------------------------------- 
@@ -939,6 +943,34 @@ matrix.lu = function (m)
 	  p                                                                                   -- permutations
 end
 matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", help.BASE}
+
+--- Cholesky decomposition.
+--    @param m Positive definite symmetric matrix.
+--    @return Lower part of the decomposition.
+matrix.cholesky = function (m)
+   assert(m.rows == m.cols, "Square matrix is expected!")
+   local a,p = matrix.copy(m), {}
+   -- calculate new values
+   for r = 1,a.rows do
+      for c = r,a.cols do
+         local sum = getval(a,r,c)
+	 for k = r-1,1,-1 do sum = sum - getval(a,r,k)*getval(a,c,k) end
+	 if r == c then
+	    assert(sum >= 0, 'The matrix is not positive definite!')
+	    p[r] = math.sqrt(sum)
+	 else
+	    setval(a,c,r, sum/p[r])
+	 end
+      end
+   end
+   -- insert zeros and the main diagonal elements
+   for r = 1,a.rows do
+      for c = r+1,a.cols do setval(a,r,c, 0) end
+      setval(a,r,r, p[r])
+   end
+   return a
+end
+matrix.about[matrix.cholesky] = {"cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", help.OTHER}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
