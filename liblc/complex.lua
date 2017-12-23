@@ -18,6 +18,8 @@ ans = b                        --> Cmp(3,0)
 j = Cmp._i
 ans = 3+4*j                    --> Cmp(3,4)
 
+ans = Cmp.trig(2,0)            --> Cmp(2,0)
+
 ans = a + b                    --> Cmp(4,2)
 
 ans = Cmp(3) - b               --> Cmp(0)
@@ -73,6 +75,11 @@ function complex:new(re, im)
    setmetatable(o, self)
    return o
 end
+
+complex.trig = function (m,a)
+   return complex:new(m*math.cos(a), m*math.sin(a))
+end
+complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle.", help.BASE}
 
 --- Check object type.
 --    <i>Private function.</i>
