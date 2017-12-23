@@ -622,6 +622,41 @@ matrix.__tostring = function (m)
    return table.concat(srow, "\n")
 end
 
+--- Get trace of the matrix.
+--    @param m Source matrix.
+--    @return Sum of elements of the main diagonal.
+matrix.tr = function (m)
+   local sum = 0
+   for i = 1,math.min(m.rows,m.cols) do sum = sum + getval(m,i,i) end
+   return sum
+end
+matrix.about[matrix.tr] = {"tr(m)", "Get trace of the matrix.", help.OTHER}
+
+--- Get matrix row.
+--    @param m Source matrix.
+--    @param k Row index.
+--    @return Row of the matrix.
+matrix.row = function (m,k)
+   assert(k >= -m.rows and k <= m.rows and k ~= 0, 'Wrong row number!')
+   if k < 0 then k = m.rows+k+1 end
+   local r = m[k] or {}
+   return matrix:init(1,m.cols,{r})
+end
+matrix.about[matrix.row] = {"row(m,k)", "Return k-th row of the given matrix.", help.OTHER}
+
+--- Get matrix column.
+--    @param m Source matrix.
+--    @param k Column index.
+--    @return Column of the matrix.
+matrix.col = function (m,k)
+   assert(k >= -m.cols and k <= m.cols and k ~= 0, 'Wrong column number!')
+   if k < 0 then k = m.cols+k+1 end
+   local acc = {}
+   for r = 1,m.rows do acc[r] = {getval(m,r,k)} end
+   return matrix:init(m.rows,1,acc)
+end
+matrix.about[matrix.col] = {"col(m,k)", "Return k-th column of the given matrix.", help.OTHER}
+
 --[=[
 --> SVD - "standard" algorithm implementation
 --  BUT: some of singular values are negative :(

@@ -150,13 +150,13 @@ function flip(t,N)
    for k,v in pairs(t) do
       if math.type(k) ~= 'integer' or k < 1 then
          if count % N == 0 and not continue(count) then break end
-	 print(k..' = '..v)
+	 print(tostring(k)..' = '..tostring(v))
 	 count = count + 1
       end
    end
    -- numbers
    for i,v in ipairs(t) do
-      io.write(v,', ')
+      io.write(tostring(v),', ')
       if i % N == 0 then
          print()
 	 if not continue(i) then break end
