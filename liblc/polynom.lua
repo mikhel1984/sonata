@@ -117,21 +117,15 @@ end
 --    @param b Second polynom.
 --    @return Ratio and the rest.
 local function div(a,b)
-   if #a < #b then return polynom.new(), a end
-   local rest, res = polynom.copy(a), {}
-   -- get part for working with
-   local num = polynom:init(table.move(a,1,#b,1,{}))
-   while #num >= #b do
-      -- calculate next coefficient
-      local t = num[1]/b[1]
-      table.insert(res, t)
-      -- prepare difference
-      num = num - t*b
-      reduce(num)
-      table.remove(rest, 1)
-      if rest[#b] then table.insert(num, rest[#b]) end
+   local rest, res = polynom.copy(a), polynom.new() 
+   -- update coefficients
+   for k = 1,(#a-#b+1) do
+      res[k] = rest[1]/b[1]
+      for j = 1,#b do rest[j] = rest[j] - res[k]*b[j] end
+      -- remove zero element
+      table.remove(rest,1)
    end
-   return polynom:init(res), num
+   return res, rest
 end
 
 --- Polinom value.
