@@ -61,7 +61,7 @@ ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat({-1,-3},{-2,-4})
 
 ans = Mat.rref(a, Mat({5},{11})) --> Mat({1,0,1},{0,1,2})
 
-ans = Mat.V(1,2,3)               --> Mat({1},{2},{3})
+ans = Mat.V {1,2,3}              --> Mat({1},{2},{3})
 
 g = Mat({1,2,3},{4,5,6},{7,8,9})
 ans = g:sub(2,-1,2,3)           --> Mat({5,6},{8,9})
@@ -493,8 +493,8 @@ matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss m
 --    Agrumets are list of vector elements.
 --    Can be called as V(...).
 --    @return Vector form of matrix.
-matrix.vector = function (...)
-   local v, res = {...}, {}
+matrix.vector = function (v)
+   local res = {}
    for i = 1, #v do res[i] = {v[i]} end
    return matrix:init(#v, 1, res)
 end

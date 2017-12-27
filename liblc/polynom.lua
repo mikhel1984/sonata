@@ -11,37 +11,37 @@
 --[[!!
 Poly = require 'liblc.polynom'
 
-a = Poly(1,2,4,3)            
-b = Poly(1,1)                
+a = Poly {1,2,4,3}           
+b = Poly {1,1}                
 ans = a:val(0)                --> 3
 
 ans = a(0)                    --> 3
 
-ans = a + b                   --> Poly(1,2,5,4)
+ans = a + b                   --> Poly {1,2,5,4}
 
-ans = a - b                   --> Poly(1,2,3,2)
+ans = a - b                   --> Poly {1,2,3,2}
 
-ans = b * b                   --> Poly(1,2,1)
+ans = b * b                   --> Poly {1,2,1}
 
-ans = a / b                   --> Poly(1,1,3)
+ans = a / b                   --> Poly {1,1,3}
 
-ans = a % b                   --> Poly(0)
+ans = a % b                   --> Poly {0}
 
-ans = b ^ 3                   --> Poly(1,3,3,1)
+ans = b ^ 3                   --> Poly {1,3,3,1}
 
-ans = b:int()                 --> Poly(0.5,1,0)
+ans = b:int()                 --> Poly {0.5,1,0}
 
 _,ans = a:der(1)              --> 11
 
-ans = Poly.coef(1,-1)         --> Poly(1,0,-1)
+ans = Poly.coef(1,-1)         --> Poly {1,0,-1}
 
 c = a:copy()
 ans = (a == c)                --> true
 
 ans = (b == c)                --> false
 
-d = Poly(2,-2,1)
-ans = d:equation('s')         --> '2*s^2-2*s+1'
+d = Poly {2,-2,1}
+ans = d:str('s')              --> '2*s^2-2*s+1'
 
 e = a:real()
 ans = e[1]                    --~ -1.00
@@ -76,8 +76,8 @@ local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
 --    @param b Second object.
 --    @return Two polinomial objects.
 local function args(a,b)
-   a = ispolynom(a) and a or polynom.new(a)
-   b = ispolynom(b) and b or polynom.new(b)
+   a = ispolynom(a) and a or polynom.new {a}
+   b = ispolynom(b) and b or polynom.new {b}
    return a, b
 end
 
@@ -90,11 +90,13 @@ function polynom:init(t)
    return t
 end
 
---- Create polynom from list of coefficients.
+--- Create polynom from table of coefficients.
 --    Arguments are a list of coefficients.
 --    @return Polynom object.
-function polynom.new(...)
-   local o = {...}
+function polynom.new(p)
+   p = p or {}
+   local o = {}
+   for i = 1,#p do o[i] = p[i] end
    return polynom:init(o)
 end
 
@@ -339,7 +341,7 @@ end
 --    @param p Source polynom.
 --    @param l String variable (default is <code>x</code>).
 --    @return String with traditional form of equation.
-polynom.equation = function (p,l)
+polynom.str = function (p,l)
    l = l or 'x'
    local res,pow,mult = {}, #p-1
    res[1] = string.format('%s%s%s', tostring(p[1]), (pow > 0 and '*'..l or ''), (pow > 1 and '^'..pow or ''))
