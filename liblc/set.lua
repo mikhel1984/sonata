@@ -37,6 +37,9 @@ ans = a:check(t[1])            --> true
 
 ans = #a                       --> 4
 
+d = a:copy()
+ans = (d == a)                 --> true
+
 print(a)
 ]]
 
@@ -108,6 +111,16 @@ set.table = function (s)
    return res
 end
 set.about[set.table] = {"table(set)", "Represent set as a table.", help.OTHER}
+
+--- Copy of the set.
+--    @param s Initial set.
+--    @return Copy object.
+set.copy = function (s)
+   local res = set:new({})
+   for k in pairs(s) do res[k] = true end
+   return res
+end
+set.about[set.copy] = {"copy(s)", "Get copy of the set.", help.OTHER}
 
 --- a + b
 --    @param a First set.

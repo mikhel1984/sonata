@@ -42,6 +42,8 @@ ans = b:Nu()            --> 2
 
 ans = b:De()            --> 1
 
+ans = a:copy()          --> a
+
 print(a)
 ]]
 
@@ -95,6 +97,14 @@ function rational:new(n, dn)
    setmetatable(o, self)
    return o
 end
+
+--- Create copy of the rational number.
+--    @param v Source value.
+--    @return Rational number.
+rational.copy = function (v)
+   return rational:new(v.num, v.denom)
+end
+rational.about[rational.copy] = {"copy(v)", "Get copy of the rational number.", help.OTHER}
 
 --- Argument type correction.
 --    <i>Private function.</i>

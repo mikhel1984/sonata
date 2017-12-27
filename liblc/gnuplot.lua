@@ -226,3 +226,6 @@ help.BASE}
 if not lc_version then gnuplot.about = nil end
 
 return gnuplot
+
+--===========================================
+-- TODO: add copy method

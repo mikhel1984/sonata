@@ -46,6 +46,8 @@ ans = a:conj()                 --> Cmp(1,-2)
 d = Cmp.sqrt(-2)
 ans = d:Im()                   --~ 1.414
 
+ans = a:copy()                 --> a
+
 print(a)
 ]]
 
@@ -76,10 +78,22 @@ function complex:new(re, im)
    return o
 end
 
+--- Create complex number from trigonometric representation.
+--    @param m Module.
+--    @param a Argument.
+--    @return Complex number.
 complex.trig = function (m,a)
    return complex:new(m*math.cos(a), m*math.sin(a))
 end
 complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle.", help.BASE}
+
+--- Create copy of the complex number.
+--    @param c Source value.
+--    @return Complex number.
+complex.copy = function (c)
+   return complex:new(c.real, c.imag)
+end
+complex.about[complex.copy] = {"copy(c)", "Create copy of the complex number.", help.OTHER}
 
 --- Check object type.
 --    <i>Private function.</i>
