@@ -193,20 +193,15 @@ end
 --    @return Multiplication of the objects.
 polynom.__mul = function (a,b)
    a,b = args(a,b)
-   local res = polynom:init({0})
-   for j = 1, #b do
-      -- sum of crossproduct
-      local tmp = {}
-      for i = 1, #a do tmp[i] = a[i]*b[j] end
-      local pos = #b-j
-      -- add zeros to increase power
-      while pos > 0 do
-         table.insert(tmp, 0)
-	 pos = pos-1
+   local res = polynom.new()
+   -- get summ of coefficients
+   for i = 1, #a do
+      for j = 1, #b do
+         local k = i+j-1
+         res[k] = (res[k] or 0) + a[i]*b[j]
       end
-      res = res + polynom:init(tmp)
    end
-   return reduce(res)
+   return res
 end
 
 --- a / b
