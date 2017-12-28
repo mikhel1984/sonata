@@ -237,10 +237,10 @@ local function gaussdown(m)
             local v = getval(m, r, k)
 	    if v ~= 0 then
                for c = k, m.cols do setval(m,r,c, getval(m,r,c)-v*getval(m,k,c)) end
-	    end
-         end
-      end
-   end
+	    end -- if
+         end -- for r
+      end -- if
+   end -- for k
    return m, A
 end
 
@@ -248,12 +248,14 @@ end
 --    @param Initial matrix
 --    @return Matrix with diagonal zeros.
 local function gaussup(m)
-   for k = m.rows-1, 1, -1 do
-      local v = getval(m, k, k+1)
-      if v ~= 0 then
-         for c = k+1, m.cols do setval(m,k,c, getval(m,k,c)-v*getval(m,k+1,c)) end 
-      end
-   end
+   for k = m.rows, 1, -1 do
+      for r = k-1,1,-1 do
+         local v = getval(m, r, k)
+         if v ~= 0 then
+            for c = k, m.cols do setval(m,r,c, getval(m,r,c)-v*getval(m,k,c)) end 
+         end -- if
+      end -- for r
+   end -- for k
    return m
 end
 

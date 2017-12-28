@@ -46,6 +46,11 @@ ans = d:str('s')              --> '2*s^2-2*s+1'
 e = a:real()
 ans = e[1]                    --~ -1.00
 
+A={0,1,2,3}
+B={-3,2,11,24}
+p = Poly.fit(A,B,2)
+ans = p(10)                   --~ 227.0
+
 print(a)
 ]]
 
@@ -392,6 +397,59 @@ polynom.real = function (p)
 end
 polynom.about[polynom.real] = {"real(p)", "Find real roots of the polynom.", help.OTHER}
 
+--- Get sum of the table elements.
+--    Use product if need.
+--    <i>Private function.</i>
+--    @param X Frist table.
+--    @param Y Second table (optional).
+--    @return Sum of elements.
+local function getsum(X,Y)
+   local res = 0
+   if Y then
+      for i = 1, #X do res = res + X[i]*Y[i] end
+   else 
+      for i = 1, #X do res = res + X[i] end
+   end
+   return res
+end
+
+--- Find the best polynom approximation for the line.
+--    @param X Set of independent variables.
+--    @param Y Set of dependent variables.
+--    @param ord Polynom order.
+--    @return Polynom object.
+polynom.fit = function (X,Y,ord)
+   assert(ord > 0 and math.type(ord) == 'integer', 'Wrong order!')
+   assert(#X == #Y, 'Wrong data size!')
+   assert(#X > ord, 'Too few data points!')
+   -- find sums
+   local acc = table.move(X,1,#X,1,{})       -- accumulate powers
+   local sX, sY = {}, {}                     -- accumulate sums
+   local nY = ord
+   sY[nY+1] = getsum(Y) 
+   for nX = 2*ord,1,-1 do
+      sX[nX] = getsum(acc)
+      if nY > 0 then sY[nY] = getsum(acc, Y); nY = nY-1 end
+      if nX > 1 then
+         for i = 1,#acc do acc[i] = acc[i]*X[i] end
+      end -- if
+   end -- for
+   sX[#sX+1] = #X
+   -- prepare matrix
+   local m = {}
+   for k = 1,ord+1 do
+      m[k] = {}
+      for j = 1, ord+1 do m[k][j] = sX[k+j-1] end
+   end
+   -- solve
+   local mat = require 'liblc.matrix'
+   local gaus = mat.rref(mat(table.unpack(m)),mat.V(sY))
+   local res = {}
+   for i = 1,ord+1 do res[i] = gaus(i,-1) end
+   return polynom:init(res)
+end
+polynom.about[polynom.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", help.OTHER}
+
 setmetatable(polynom, {__call = function (self, ...) return polynom.new(...) end})
 polynom.Poly = 'Poly'
 polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynom.", help.NEW}
@@ -414,5 +472,5 @@ if not lc_version then polynom.about = nil end
 return polynom
 
 --===========================
---TODO: polyroot, polyfit
+--TODO: polyroot
 
