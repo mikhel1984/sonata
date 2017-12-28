@@ -108,7 +108,7 @@ about[eval] = {"eval(fn,x1[,xn[,step]])", "Evalueate function for given value or
 -- Print examples from test part of module
 function example(nm)
    assert(type(nm) == 'string', 'Module name is expected!')
-   local fname = 'liblc/'..nm..'.lua'
+   local fname = 'liblc'..mhelp.SEP..nm..'.lua'
    local f = io.open(fname, 'r')
    if not f then print("Can't open file '"..fname.."'"); return end
    local test = require('liblc.test')

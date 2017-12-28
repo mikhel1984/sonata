@@ -41,7 +41,7 @@ Use about:localisation("file_name") to load it.
 
 -- directory with language files
 local LOCALE = 'locale'
-local SEP = string.sub(package.config,1,1)
+local LIB = 'liblc'
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
@@ -84,6 +84,8 @@ help.HYP = 'hyperbolic'
 help.CONST = 'constants'
 help.OTHER = 'other'
 help.NEW = 'constructor'
+
+help.SEP = string.sub(package.config,1,1)
 
 --- Create new object, set metatable.
 --    @param str Module description.
@@ -177,7 +179,7 @@ end
 --- Read file with localisation data and update main module.
 --    @param fname Name of the file with translated text.
 function help:localisation(fname)
-   fname = LOCALE ..SEP.. fname
+   fname = LOCALE ..help.SEP.. fname
    local f = io.open(fname)
    if f then
       -- read from file and represent as Lua table
@@ -256,7 +258,7 @@ end
 --    @param fname Language name, for example 'en' or 'it'.
 --    @param modules Table with the list of existing modules.
 function help.prepare(fname, modules)
-   fname = string.format('%s%s%s.lng', LOCALE, SEP, fname)
+   fname = string.format('%s%s%s.lng', LOCALE, help.SEP, fname)
    local f, lng = io.open(fname)
    -- read current file if possible
    if f then 
@@ -292,6 +294,89 @@ function help:get(txt)
    return lng or eng[txt] or txt
 end
 
+function help.newmodule (mname, alias)
+   if not (mname and alias) then
+      print('Both module name and alias are expected!'); return
+   end
+   local fname = string.format('%s%s%s.lua', LIB, help.SEP, mname)
+   -- check existance
+   local f = io.open(fname) 
+   if f then 
+      f:close()
+      print('File '..fname..' is already exist!'); return
+   end
+   -- write new file
+   local txt = 
+[=[--[[       WORD1
+
+--- This is my module.
+--  @author My Name
+
+           module 'WORD2'
+--]]
+
+--------------- Tests --------------
+--[[!!
+WORD3 = require 'WORD1'
+-- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
+]]
+
+---------------------------------
+-- @class table
+-- @name WORD2
+local WORD2 = {}
+WORD2.__index = WORD2
+
+-- mark
+WORD2.type = 'WORD2'
+WORD2.isWORD2 = true
+local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
+
+-- description
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+WORD2.about = help:new("This is my cool module.")
+
+--- Constructor example
+--    @param t Some value.
+--    @return New object of WORD2.
+function WORD2:new(t)
+   local o = {}
+   -- some logic
+   setmetatable(o,self)
+   return o
+end
+
+-- simplify constructor call
+setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
+WORD2.WORD3 = 'WORD3'
+WORD2.about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
+
+--- Method example
+--   It is good idea to define method for the copy creation.
+--   @param t Initial object.
+--   @return Copy of the object.
+WORD2.copy = function (t)
+   -- some logic
+   return WORD2:new(argument)
+end
+WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
+
+-- free memory in case of standalone usage
+if not lc_version then WORD2.about = nil end
+
+return WORD2
+]=]
+   -- correct text
+   txt = string.gsub(txt, '(WORD%d)', {WORD1=fname, WORD2=mname, WORD3=alias})
+   -- save
+   f = io.open(fname, 'w')
+   f:write(txt)
+   f:close()
+
+   print('File '..fname..' is written.')
+end
+
 return help
 
 --==========================================
+-- TODO: localise error messages

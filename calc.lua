@@ -1,6 +1,6 @@
 #!/usr/local/bin/lua -i
 -- Lua based calculator
-lc_version = '0.6.3'
+lc_version = '0.6.4'
 
 -- Uncomment to set the localisation file.
 LOCALISATION_FILE = "ru.lng"
@@ -78,11 +78,13 @@ if #arg > 0 then
    -- update localisation file
    elseif arg[1] == '-lang' then
       if arg[2] then
-         local Help = require 'liblc.help'
-	 Help.prepare(arg[2], import)
+	 mhelp.prepare(arg[2], import)
       else 
          print('Current localization file: ', LOCALISATION_FILE)
       end
+   -- prepare new module
+   elseif arg[1] == '-new' then
+      mhelp.newmodule(arg[2],arg[3])
    -- execute all the files from the argument list
    else
       for i = 1,#arg do dofile(arg[i]) end
