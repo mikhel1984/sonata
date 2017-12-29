@@ -271,6 +271,9 @@ function help.prepare(fname, modules)
    -- save descriptions
    f:write(string.rep('-',10), string.format(' %s ', fname), string.rep('-',10), '\n')
    f:write('{\n')
+   -- language and authors
+   f:write((lng and lng.language) and string.format("language =\t '%s',", lng.language) or "-- language =\t 'English',", '\n')
+   f:write((lng and lng.authors) and string.format("authors = [[%s]],", lng.authors) or '-- authors = [[Your Name]],', '\n')
    -- dialog elements
    eng2about()
    f:write(helplines(eng,'Dialog',lng))
