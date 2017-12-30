@@ -155,7 +155,7 @@ numeric.ode = function (fn, x0,y0,xn, dx)
          res[#res+1] = {x+h, rk(fn,x,y,h)}
       else
          local h2 = 0.5*h
-         local y1 =  rk(n, x, y, h)
+         local y1 =  rk(fn, x, y, h)
          local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
          local dy = math.abs(y1-y2)
          if dy > 15*numeric.TOL then 
