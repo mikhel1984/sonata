@@ -77,18 +77,18 @@ local function isint (x)
    return a == 0
 end
 
---- The greatest common devisor.
+--- The greatest common deviser.
 --    @param a First integer.
 --    @param b Second integer.
---    @return Greatest common devisor.
+--    @return Greatest common deviser.
 rational.gcd = function (a,b)
    return (a == 0 or (type(a)=='table' and a:eq(0))) and b or rational.gcd(b % a, a)
 end
-rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common devisor for two integers.", help.OTHER}
+rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common deviser for two integers.", help.OTHER}
 
 --- Create new object, set metatable.
 --    @param n Numerator.
---    @param dn Denomerator. Default is 1.
+--    @param dn Denominator. Default is 1.
 --    @return New rational object.
 function rational:new(n, dn)
    dn = dn or 1
@@ -122,7 +122,7 @@ end
 --- a + b
 --    @param a First rational or integer number.
 --    @param b Second rational or integer number.
---    @return Summ of the rational numbers.
+--    @return Sum of the rational numbers.
 rational.__add = function (a, b)   
    a,b = args(a,b)
    return rational:new(a.num*b.denom+a.denom*b.num, a.denom*b.denom)
@@ -131,7 +131,7 @@ end
 --- a - b
 --    @param a First rational or integer number.
 --    @param b Second rational or integer number.
---    @return Substraction of the rational numbers.
+--    @return Subtraction of the rational numbers.
 rational.__sub = function (a, b)   
    a,b = args(a,b)
    return rational:new(a.num*b.denom-a.denom*b.num, a.denom*b.denom)
@@ -149,7 +149,7 @@ end
 --- a / b
 --    @param a First rational or integer number.
 --    @param b Second rational or integer number.
---    @return Substraction of the rational numbers.
+--    @return Subtraction of the rational numbers.
 rational.__div = function (a, b)
    a,b = args(a,b)
    return rational:new(a.num*b.denom, a.denom*b.num)
@@ -171,7 +171,7 @@ rational.__pow = function (a, b)
    if type(a) == "number" then
       return math.pow(a, b)
    else
-      assert(isint(b) and b >= 0, "Power must be a nonnegative integer")
+      assert(isint(b) and b >= 0, "Power must be a non-negative integer")
       return rational:new(math.pow(a.num, b), math.pow(a.denom, b)) 
    end
 end
@@ -206,8 +206,8 @@ rational.__le = function (a,b)
    return (a.num*b.denom) <= (b.num*a.denom)
 end
 
-rational.comparation = 'comparation'
-rational.about[rational.comparation] = {rational.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", help.BASE}
+rational.comparison = 'comparison'
+rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", help.BASE}
 
 --- Number representation.
 --    <i>Private function.</i>
@@ -234,9 +234,9 @@ rational.about[rational.decimal] = {"decimal(v)", "Return rational number as dec
 rational.Nu = function (v) return v.num end
 rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number.", help.OTHER}
 
---- Get denomenator.
+--- Get denominator.
 --    @param v Rational number.
---    @return Denomerator.
+--    @return Denominator.
 rational.De = function (v) return v.denom end
 rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", help.OTHER}
 

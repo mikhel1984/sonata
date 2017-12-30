@@ -63,7 +63,7 @@ print(a)
 local polynom = {}
 polynom.__index = polynom
 -- marker
-polynom.type = 'polynom'
+polynom.type = 'polynomial'
 polynom.ispolynom = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
@@ -75,32 +75,32 @@ polynom.lc_matrix = require 'liblc.matrix'
 --- Check object type.
 --    <i>Private function.</i>
 --    @param x Object for checking.
---    @return True if table is a polynom.
+--    @return True if table is a polynomial.
 local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
 
 --- Correct arguments if need.
 --    <i>Private function.</i>
 --    @param a First object
 --    @param b Second object.
---    @return Two polinomial objects.
+--    @return Two polynomial objects.
 local function args(a,b)
    a = ispolynom(a) and a or polynom.new {a}
    b = ispolynom(b) and b or polynom.new {b}
    return a, b
 end
 
---- Initialize polynom from table.
+--- Initialize polynomial from table.
 --    @param t Table of coefficients.
---    @return Polynom object.
+--    @return Polynomial object.
 function polynom:init(t)
    if #t == 0 then t[1] = 0 end
    setmetatable(t, self)
    return t
 end
 
---- Create polynom from table of coefficients.
+--- Create polynomial from table of coefficients.
 --    Arguments are a list of coefficients.
---    @return Polynom object.
+--    @return Polynomial object.
 function polynom.new(p)
    p = p or {}
    local o = {}
@@ -108,10 +108,10 @@ function polynom.new(p)
    return polynom:init(o)
 end
 
---- Simplify polynom, remove zeros from the begining.
+--- Simplify polynomial, remove zeros from the begin.
 --    <i>Private function.</i>
 --    @param p Table of coefficients.
---    @return Simplified polynom.
+--    @return Simplified polynomial.
 local function reduce (p)
    while #p > 1 and  p[1] == 0 do
       table.remove(p, 1)
@@ -121,8 +121,8 @@ end
 
 --- Calculate ratio and rest of 2 polynomials.
 --    <i>Private function.</i>
---    @param a First polynom.
---    @param b Second polynom.
+--    @param a First polynomial.
+--    @param b Second polynomial.
 --    @return Ratio and the rest.
 local function div(a,b)
    local rest, res = polynom.copy(a), polynom.new() 
@@ -136,9 +136,9 @@ local function div(a,b)
    return res, rest
 end
 
---- Polinom value.
+--- Polynomial value.
 --    Can be called with ().
---    @param p Polynom.
+--    @param p Polynomial.
 --    @param x Variable.
 --    @return Value in the given point.
 polynom.val = function (p,x)
@@ -149,26 +149,26 @@ polynom.val = function (p,x)
    end
    return res
 end
-polynom.about[polynom.val] = {"val(p,x)", "Get value of polinom p in point x.", help.BASE}
+polynom.about[polynom.val] = {"val(p,x)", "Get value of polynomial p in point x.", help.BASE}
 
 polynom.__call = function (p,x) return polynom.val(p,x) end
 
 --- Create copy of object.
---    @param p Initial polynom.
+--    @param p Initial polynomial.
 --    @return Deep copy.
 polynom.copy = function (p)
    return polynom:init(table.move(p,1,#p,1,{}))
 end
-polynom.about[polynom.copy] = {"copy(p)", "Get copy of polynom.", help.OTHER}
+polynom.about[polynom.copy] = {"copy(p)", "Get copy of the polynomial.", help.OTHER}
 
 --- a + b
---    @param a First polynom.
---    @param b Second polynom.
---    @return Summ of the objects.
+--    @param a First polynomial.
+--    @param b Second polynomial.
+--    @return Sum of the objects.
 polynom.__add = function (a,b)
    a, b = args(a,b)
    local t = {}
-   -- get summ of equal powers
+   -- get sum of equal powers
    local i,j = #a, #b
    for k = math.max(i,j),1,-1 do
       t[k] = (a[i] or 0) + (b[j] or 0)
@@ -179,7 +179,7 @@ polynom.__add = function (a,b)
 end
 
 --- -a
---    @param p Source polynom.
+--    @param p Source polynomial.
 --    @return Negative value.
 polynom.__unm = function (p)
    local res = {}
@@ -188,21 +188,21 @@ polynom.__unm = function (p)
 end
 
 --- a - b
---    @param a First polynom.
---    @param b Second polynom.
---    @return Substraction of the objects.
+--    @param a First polynomial.
+--    @param b Second polynomial.
+--    @return Subtraction of the objects.
 polynom.__sub = function (a,b)
    return reduce(a + (-b))
 end
 
 --- a * b
---    @param a First polynom.
---    @param b Second polynom.
+--    @param a First polynomial.
+--    @param b Second polynomial.
 --    @return Multiplication of the objects.
 polynom.__mul = function (a,b)
    a,b = args(a,b)
    local res = polynom.new()
-   -- get summ of coefficients
+   -- get sum of coefficients
    for i = 1, #a do
       for j = 1, #b do
          local k = i+j-1
@@ -213,8 +213,8 @@ polynom.__mul = function (a,b)
 end
 
 --- a / b
---    @param a First polynom.
---    @param b Second polynom.
+--    @param a First polynomial.
+--    @param b Second polynomial.
 --    @return Ratio of the objects.
 polynom.__div = function (a,b)
    local res, _ = div(args(a,b))
@@ -222,8 +222,8 @@ polynom.__div = function (a,b)
 end
 
 --- a % b
---    @param a First polynom.
---    @param b Second polynom.
+--    @param a First polynomial.
+--    @param b Second polynomial.
 --    @return Rest from ratio of the objects.
 polynom.__mod = function (a,b)
    local _, res = div(args(a,b))
@@ -231,9 +231,9 @@ polynom.__mod = function (a,b)
 end
 
 --- a ^ n
---    @param a Polynom.
+--    @param a Polynomial.
 --    @param n Integer value.
---    @return Power of the polynom.
+--    @return Power of the polynomial.
 polynom.__pow = function (p,n)
    n = assert(math.tointeger(n), "Integer power is expected!")
    assert(n > 0, "Positive power is expected!")
@@ -247,9 +247,9 @@ polynom.__pow = function (p,n)
 end
 
 --- a == b
---    @param a Polynom.
+--    @param a Polynomial.
 --    @param n Integer value.
---    @return <code>true</code> if the polynoms are equial.
+--    @return <code>true</code> if the polynomials are equal.
 polynom.__eq = function (a,b)
    if type(a) ~= type(b) or a.type ~= b.type then return false end
    if #a ~= #b then return false end
@@ -260,18 +260,18 @@ polynom.__eq = function (a,b)
 end
 
 --- a < b
---    @param a Frist polynom.
---    @param b Second polynom.
---    @return <code>true</code> if first polynom is less then second.
+--    @param a First polynomial.
+--    @param b Second polynomial.
+--    @return <code>true</code> if first polynomial is less then second.
 polynom.__lt = function (a,b)
    a,b = args(a,b)
    return #a < #b or (#a == #b and a[1] < b[1])
 end
 
 --- a <= b
---    @param a Frist polynom.
---    @param b Second polynom.
---    @return <code>true</code> if first polynom is less or equial then second.
+--    @param a First polynomial.
+--    @param b Second polynomial.
+--    @return <code>true</code> if first polynomial is less or equal then second.
 polynom.__le = function (a,b)
    return a == b or a < b
 end
@@ -279,15 +279,15 @@ end
 polynom.arithmetic = 'arithmetic'
 polynom.about[polynom.arithmetic] = {polynom.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.BASE}
 
-polynom.comparation = 'comparation'
-polynom.about[polynom.comparation] = {polynom.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+polynom.comparison = 'comparison'
+polynom.about[polynom.comparison] = {polynom.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 --- Get derivative.
---    @param p Initial polynom.
+--    @param p Initial polynomial.
 --    @param x Variable (can be omitted).
 --    @return Derivative or its value.
 polynom.der = function (p,x)
-   assert(ispolynom(p), "Polinom is expected!")
+   assert(ispolynom(p), "Polynomial is expected!")
    local der, pow = {}, #p
    for i = 1, #p-1 do
       table.insert(der, p[i]*(pow-i))
@@ -296,14 +296,14 @@ polynom.der = function (p,x)
    if x then x = polynom.val(der,x) end
    return der, x
 end
-polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynom, and its value, if need.", help.BASE}
+polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynomial, and its value, if need.", help.BASE}
 
 --- Get integral.
---    @param p Initial polynom.
+--    @param p Initial polynomial.
 --    @param x Free coefficient.
 --    @return Integral.
 polynom.int = function (p,x)
-   assert(ispolynom(p), "Polynom is expected!")
+   assert(ispolynom(p), "Polynomial is expected!")
    x = x or 0
    local int, pow = {}, #p+1
    for i = 1, #p do
@@ -314,9 +314,9 @@ polynom.int = function (p,x)
 end
 polynom.about[polynom.int] = {"int(p[,x0])", "Calculate integral, x0 - free coefficient.", help.BASE}
 
---- Get polynom from roots.
---    Arguments are a sequance of roots.
---    @return Polynom object.
+--- Get polynomial from roots.
+--    Arguments are a sequence of roots.
+--    @return Polynomial object.
 polynom.coef = function (...)
    local args = {...}
    local res = polynom:init({1})
@@ -325,17 +325,17 @@ polynom.coef = function (...)
    end
    return res
 end
-polynom.about[polynom.coef] = {"coef(...)", "Return polynom with given roots.", help.OTHER}
+polynom.about[polynom.coef] = {"coef(...)", "Return polynomial with given roots.", help.OTHER}
 
 --- String representation.
---    @param p Source polynom.
+--    @param p Source polynomial.
 --    @return Simplified string representation of coefficients.
 polynom.__tostring = function (p)
    return table.concat(p,' ')
 end
 
---- Represent polynom in natural form.
---    @param p Source polynom.
+--- Represent polynomial in natural form.
+--    @param p Source polynomial.
 --    @param l String variable (default is <code>x</code>).
 --    @return String with traditional form of equation.
 polynom.str = function (p,l)
@@ -351,7 +351,7 @@ end
 
 --- Find closest root of using Newton-Rapson technique
 --    <i>Private function.</i>
---    @param p Source polynom.
+--    @param p Source polynomial.
 --    @param x Initial value of the root (optional).
 --    @param epx Tolerance
 --    @return Found value and flag about its correctness.
@@ -361,7 +361,7 @@ local function NewtonRapson(p,x,eps)
    -- prepare variables
    local dp,n,max = p:der(), 0, 30
    while true do
-      -- polynom value
+      -- polynomial value
       local dx = p(x) / dp(x) 
       if math.abs(dx) <= eps or n > max then break
       else
@@ -373,8 +373,8 @@ local function NewtonRapson(p,x,eps)
    return x, (n < max)
 end
 
---- Find real roots of the polynom.
---    @param p Source polynom.
+--- Find real roots of the polynomial.
+--    @param p Source polynomial.
 --    @return Table with real roots.
 polynom.real = function (p)
    local res = {}
@@ -390,7 +390,7 @@ polynom.real = function (p)
       if root then 
          -- save and remove the root
          res[#res+1] = x
-	 -- devide by (1-x)
+	 -- divide by (1-x)
 	 for i = 2,#pp-1 do pp[i] = pp[i] + x*pp[i-1] end
 	 pp[#pp] = nil
       else break
@@ -398,12 +398,12 @@ polynom.real = function (p)
    end
    return res
 end
-polynom.about[polynom.real] = {"real(p)", "Find real roots of the polynom.", help.OTHER}
+polynom.about[polynom.real] = {"real(p)", "Find real roots of the polynomial.", help.OTHER}
 
 --- Get sum of the table elements.
 --    Use product if need.
 --    <i>Private function.</i>
---    @param X Frist table.
+--    @param X First table.
 --    @param Y Second table (optional).
 --    @return Sum of elements.
 local function getsum(X,Y)
@@ -416,11 +416,11 @@ local function getsum(X,Y)
    return res
 end
 
---- Find the best polynom approximation for the line.
+--- Find the best polynomial approximation for the line.
 --    @param X Set of independent variables.
 --    @param Y Set of dependent variables.
---    @param ord Polynom order.
---    @return Polynom object.
+--    @param ord Polynomial order.
+--    @return Polynomial object.
 polynom.fit = function (X,Y,ord)
    assert(ord > 0 and math.type(ord) == 'integer', 'Wrong order!')
    assert(#X == #Y, 'Wrong data size!')
@@ -455,10 +455,10 @@ polynom.about[polynom.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for
 
 setmetatable(polynom, {__call = function (self, ...) return polynom.new(...) end})
 polynom.Poly = 'Poly'
-polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynom.", help.NEW}
+polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
---- Polynom serialization.
---    @param obj Polynom object.
+--- Polynomial serialization.
+--    @param obj Polynomial object.
 --    @return String, suitable for exchange.
 polynom.serialize = function (obj)
    local s = {}
@@ -467,7 +467,7 @@ polynom.serialize = function (obj)
    s[#s+1] = "modulename='polynom'"
    return string.format("{%s}", table.concat(s, ','))
 end
-polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynom internal representation.", help.OTHER}
+polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynomial internal representation.", help.OTHER}
 
 -- free memory if need
 if not lc_version then polynom.about = nil end

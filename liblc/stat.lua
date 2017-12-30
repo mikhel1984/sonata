@@ -98,9 +98,9 @@ stat.tdist = function (t,n)
 end
 ]]
 
---- Summ of all elements.
+--- Sum of all elements.
 --    @param t Table with numbers.
---    @return Summ.
+--    @return Sum.
 stat.sum = function (t)
    local s = 0
    for i = 1, #t do s = s+t[i] end
@@ -110,7 +110,7 @@ stat.about[stat.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
 
 --- Average value.
 --    @param t Table with numbers.
---    @param w Table with wiegth. Can be omitted.
+--    @param w Table with weight. Can be omitted.
 --    @return Average.
 stat.mean = function (t, w)
    if w then
@@ -158,7 +158,7 @@ stat.std = function (t, w)
    end
    return math.sqrt(disp), disp 
 end
-stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weigths are can be used.", help.BASE}
+stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weights are can be used.", help.BASE}
 
 --- Maximum value.
 --    @param t Table of numbers.
@@ -204,10 +204,10 @@ stat.geomean = function (t, w)
 end
 stat.about[stat.geomean] = {"geomean(t[,w])", "Geometrical mean.", help.OTHER}
 
---- Harmonical mean.
+--- Harmonic mean.
 --    @param t Table of numbers.
 --    @param w Table of weights. Can be omitted.
---    @return Harmonical mean.
+--    @return Harmonic mean.
 stat.harmean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -222,11 +222,11 @@ stat.harmean = function (t, w)
       return #t / h
    end
 end
-stat.about[stat.harmean] = {"harmean(t[,w])", "Harmonical mean.", help.OTHER}
+stat.about[stat.harmean] = {"harmean(t[,w])", "Harmonic mean.", help.OTHER}
 
---- Find mediana.
+--- Find median.
 --    @param p Table of numbers.
---    @return Value of mediana.
+--    @return Value of median.
 stat.median = function (p)
    local len = #p
    local t = table.move(p,1,len,1,{})
@@ -264,19 +264,19 @@ stat.cmoment = function (n, x, p)
    for i = 1,#x do mu = mu + math.pow(x[i]-m, n)*(p and p[i] or pk) end
    return mu
 end
-stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p is a list of waights.", help.BASE}
+stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p is a list of weights.", help.BASE}
 
---- Noncentral moment.
+--- Non-central moment.
 --    @param n Order of the moment.
 --    @param x Table of numbers.
 --    @param p Table of weights. Can be omitted.
---    @return Noncentral moment value.
+--    @return Non-central moment value.
 stat.moment = function (n, x, p)
    local pk, m = 1/#x, 0
    for i = 1,#x do m = m + math.pow(x[i],n)*(p and p[i] or pk) end
    return m
 end
-stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of waights.", help.BASE}
+stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", help.BASE}
 
 -- free memory if need
 if not lc_version then stat.about = nil end

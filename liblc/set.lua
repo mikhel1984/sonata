@@ -108,7 +108,7 @@ set.remove = function (s,v)
 end
 set.about[set.remove] = {"remove(set,val)", "Remove element from set.", help.OTHER}
 
---- Convert into lua table.
+--- Convert into Lua table.
 --    @param s Set object.
 --    @return List of elements.
 set.table = function (s)
@@ -177,7 +177,7 @@ set.__div = function (a,b)
 end
 
 set.arithmetic = 'arithmetic'
-set.about[set.arithmetic] = {"union, intersection, defference", "a+b, a*b, a/b", help.BASE}
+set.about[set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", help.BASE}
 
 --- a <= b
 --    @param a First set.
@@ -194,7 +194,7 @@ end
 --- a < b
 --    @param a First set.
 --    @param b Second set.
---    @return <code>true</code> if <code>a</code> is a subset of <code>b</code> but not equial.
+--    @return <code>true</code> if <code>a</code> is a subset of <code>b</code> but not equal.
 set.__lt = function (a,b)
    return a <= b and not (b <= a)
 end
@@ -202,13 +202,13 @@ end
 --- a == b
 --    @param a First set.
 --    @param b Second set.
---    @return <code>true</code> if <code>a</code> and <code>b</code> are equial.
+--    @return <code>true</code> if <code>a</code> and <code>b</code> are equal.
 set.__eq = function (a,b)
    return a <= b and b <= a
 end
 
-set.comparation = 'comparation'
-set.about[set.comparation] = {set.comparation, "a==b, a~=b, a<b, a<=b, a>b, a>=b", help.BASE}
+set.comparison = 'comparison'
+set.about[set.comparison] = {set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", help.BASE}
 
 --- #a 
 --    @param s Set object.

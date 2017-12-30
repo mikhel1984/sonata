@@ -10,7 +10,7 @@
 --[=[
 	Rules for writing test.
 
-   * Tests should be encapsulated in --[[!! ... ]], i.e. in multistring comments with signs '!!'.
+   * Tests should be encapsulated in --[[!! ... ]], i.e. in multi string comments with signs '!!'.
 
    * Each block of test code must be separated with at leas 1 empty line.
 
@@ -25,7 +25,7 @@
      'lua calc.lua -test array'
    If module name is not written tests will be performed for all modules.
 
-   * Test summary includes information about number of passed and failed tests, average time per test unit (in msec), memory size.
+   * Test summary includes information about number of passed and failed tests, average time per test unit (in milliseconds), memory size.
 ]=]
 
 local delim = '%c[%s%c]+'    -- empty strings
@@ -52,10 +52,10 @@ test.getcode = function (str)
    return q
 end
 
---- Divide string into the list of substrings using delimeter.
+--- Divide string into the list of substrings using delimiter.
 --    <i>Private function.</i>
 --    @param str Source string.
---    @param delim Delimeter.
+--    @param delim Delimiter.
 --    @return Table of substrings.
 local function split(str, delim)
    local i,j,k = 1,1,0
@@ -85,7 +85,7 @@ local function marktest(str, res, time)
    s = string.match(s, '^(.-)%s*$')
    if #s > min then s = string.sub(s, min) end
    local rest = string.rep('.', (full-#s))
-   return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succed' or 'Failed'), time)
+   return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'Failed'), time)
 end
 
 --- Save string to the file and also print to the screen.
