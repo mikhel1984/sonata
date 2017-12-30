@@ -40,6 +40,9 @@ ans = #a                       --> 4
 d = a:copy()
 ans = (d == a)                 --> true
 
+e = a:map(function (x) return x^2 end)
+ans = e(16)                    --> true
+
 print(a)
 ]]
 
@@ -82,7 +85,10 @@ set.check = function (s, v)
    assert(isset(s), NOT_A_SET)
    return s[v] == true
 end
-set.about[set.check] = {"check(set,val)", "Check if value is in set.", help.OTHER}
+set.about[set.check] = {"check(set,val)", "Check if value is in set. The same as set(val).", help.OTHER}
+
+-- create alias for 'check'
+set.__call = function (s,x) return s[x] == true end
 
 --- Add new element.
 --    @param s Set object.
@@ -121,6 +127,18 @@ set.copy = function (s)
    return res
 end
 set.about[set.copy] = {"copy(s)", "Get copy of the set.", help.OTHER}
+
+--- Apply function to the elements of set.
+--    @param s Initial set.
+--    @param fn Function.
+--    @return New set, obtained from function.
+set.map = function (s,fn)
+   local res = set:new({})
+   for k in pairs(s) do res[fn(k)] = true end
+   return res
+end
+set.about[set.map] = {"map(s,fn)", "Apply function fn() to obtain new set.", help.OTHER}
+
 
 --- a + b
 --    @param a First set.

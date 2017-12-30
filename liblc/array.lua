@@ -1,7 +1,7 @@
 --[[      liblc/array.lua 
 
 --- Manipulations with arrays of elements.
---  Arrays are sparse as long as possbile.
+--  Arrays are sparse as long as possible.
 --  @author Stanislav Mikhel, 2017
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
 
@@ -32,7 +32,7 @@ ans = b:isequal(Arr.rand{5,2,1})       --> true
 c = b + b
 ans = c:get{1,1,1}                     --> 2*b:get{1,1,1}
 
--- get subarray
+-- get sub array
 g = a:sub({1,1,1},{-1,-1,2})         
 ans = g:isequal(Arr{2,3,2})            --> true
 
@@ -75,7 +75,7 @@ local function isarray(t) return type(t) == 'table' and t.isarray end
 --- Prepare list of coefficients
 --    <i>Private function.</i>
 --    @param s Array size.
---    @return Table of coeff.
+--    @return Table of coefficients.
 local function getk (s)
    local k = {1}
    for i = 2, #s do k[i] = s[i-1]*k[i-1] end
@@ -106,7 +106,7 @@ local function iscorrect(arr, ind)
    return true
 end
 
---- Transform index into single dimention representation.
+--- Transform index into single dimension representation.
 --    <i>Private function.</i>
 --    @param arr Array object.
 --    @param ind Index of the element (table).
@@ -205,7 +205,7 @@ array.about[array.map] = {"map(a,fn)", "Apply function of 1 argument. Return new
 --- a1 + a2
 --    @param a1 First array object.
 --    @param a2 Second array object.
---    @return New array where eack element is the summ of two given.
+--    @return New array where each element is the sum of two given.
 array.__add = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x+y end)
 end
@@ -213,14 +213,14 @@ end
 --- a1 - a2
 --    @param a1 First array object.
 --    @param a2 Second array object.
---    @return New array where eack element is the difference of two given.
+--    @return New array where each element is the difference of two given.
 array.__sub = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x-y end)
 end
 
 --- -a
 --    @param a Array object.
---    @return New element where eack element is the negative form of the given one.
+--    @return New element where each element is the negative form of the given one.
 array.__unm = function (a)
    return array.map(a, function (x) return -x end)
 end
@@ -228,7 +228,7 @@ end
 --- a1 * a2
 --    @param a1 First array object.
 --    @param a2 Second array object.
---    @return New array where eack element is the product of two given.
+--    @return New array where each element is the product of two given.
 array.__mul = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x*y end)
 end
@@ -236,7 +236,7 @@ end
 --- a1 / a2
 --    @param a1 First array object.
 --    @param a2 Second array object.
---    @return New array where eack element is the ratio of two given.
+--    @return New array where each element is the ratio of two given.
 array.__div = function (a1, a2)
    return array.apply(a1, a2, function (x,y) return x/y end)
 end
@@ -244,7 +244,7 @@ end
 --- a1 ^ a2
 --    @param a1 First array object.
 --    @param a2 Second array object.
---    @return New array where eack element is result of power operation.
+--    @return New array where each element is result of power operation.
 array.__pow = function (a1, a2)
    return array.apply(a1, a2, math.pow)
 end
@@ -277,10 +277,10 @@ array.__eq = function (a1, a2)
    return false
 end
 
-array.comparation = 'comparation'
+array.comparation = 'comparison'
 array.about[array.comparation] = {array.comparation, "a == b, a ~= b", help.BASE}
 
---- Get array dimention.
+--- Get array dimension.
 --    @param arr Array object.
 --    @return Table of size.
 array.dim = function (arr)
@@ -364,14 +364,14 @@ array.__tostring = function (arr)
 end
 
 --- Get array slice.
---    Show sequance of 2D matrixes with array elements.
+--    Show sequence of 2D matrices with array elements.
 --    @param arr Array object.
 --    @param r Number of axe for representation as rows.
 --    @param c Number of axe for representation as columns.
 --    @return String with all array elements slice by slice.
 array.fullstring = function (arr, r, c)
    local res = {}
-   -- 1 dimentional array
+   -- 1 dimensional array
    if #arr.size == 1 then
       for i = 1, arr.size[1] do res[i] = arr[i] or 0 end
       return table.concat(res, ' ')
@@ -429,7 +429,7 @@ array.fullstring = function (arr, r, c)
    end
    return table.concat(res, '\n') 
 end
-array.about[array.fullstring] = {"fullstring(arr,r,c)", "Represent array as sequence of matrixes, where r and c are numbers of axes.", help.OTHER}
+array.about[array.fullstring] = {"fullstring(arr,r,c)", "Represent array as sequence of matrices, where r and c are numbers of axes.", help.OTHER}
 
 -- constructor
 setmetatable(array, {__call = function (self, v) return array:new(v) end})
