@@ -117,7 +117,7 @@ matrix.type = 'matrix'
 matrix.ismatrix = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-matrix.about = help:new("Matrix operations. The matrixes are spares by default.")
+matrix.about = help:new("Matrix operations. The matrices are spares by default.")
 
 --- Check object type.
 --    <i>Private function.</i>
@@ -152,7 +152,7 @@ function matrix.new(...)
 end
 
 --- Check correctness of element index.
---    Used only for user defined inex. Can be negative.
+--    Used only for user defined index. Can be negative.
 --    If <code>c</code> is omitted then <code>r</code> is index in vector.
 --    <i>Private function.</i>
 --    @param m Matrix.
@@ -232,7 +232,7 @@ local function gaussdown(m)
          -- normalization
 	 coef = 1/coef
          for c = k, m.cols do setval(m,k,c, getval(m,k,c)*coef) end
-         -- substraction
+         -- subtraction
          for r = (k+1), m.rows do
             local v = getval(m, r, k)
 	    if v ~= 0 then
@@ -275,7 +275,7 @@ matrix.about[matrix.get] = {"get(m,row,col)", "Return matrix element.", help.BAS
 matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
 
 --- Set value of matrix element.
---    @param m Matix.
+--    @param m Matrix.
 --    @param val New value.
 --    @param r Row number.
 --    @param c Column number.
@@ -317,7 +317,7 @@ local fn_unm = function (x) return -x end
 --- a + b
 --    @param a First matrix.
 --    @param b Second matrix.
---    @return Sum of the given matricies.
+--    @return Sum of the given matrices.
 matrix.__add = function (a,b)
    return matrix.apply(a,b,fn_sum)
 end
@@ -325,7 +325,7 @@ end
 --- a - b
 --    @param a First matrix.
 --    @param b Second matrix.
---    @return Substraction of the given matricies.
+--    @return Subtraction of the given matrices.
 matrix.__sub = function (a,b)
    return matrix.apply(a,b,fn_sub)
 end
@@ -371,7 +371,7 @@ matrix.map_ex = function (m, fn)
 end
 matrix.about[matrix.map_ex] = {"map_ex(m,fn)", "Apply function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
 
---- Apply function to each pair elements of given matricies.
+--- Apply function to each pair elements of given matrices.
 --    @param m1 First matrix.
 --    @param m2 Second matrix.
 --    @param fn Function from two arguments f(v1,v2).
@@ -384,7 +384,7 @@ matrix.apply = function (m1, m2, fn)
    end
    return res
 end
-matrix.about[matrix.apply] = {"apply(m1,m2,fn)", "Apply fu(v1,v2) to each element of matrixes m1 and m2.", help.OTHER}
+matrix.about[matrix.apply] = {"apply(m1,m2,fn)", "Apply fu(v1,v2) to each element of matrices m1 and m2.", help.OTHER}
 
 --- Create copy of matrix.
 --    @param m Source matrix.
@@ -397,7 +397,7 @@ matrix.about[matrix.copy] = {"copy(m)", "Return copy of matrix.", help.OTHER}
 --- a * b
 --    @param a First matrix.
 --    @param b Second matrix.
---    @return Multiplication of the given matricies.
+--    @return Multiplication of the given matrices.
 matrix.__mul = function (a,b)
    if not ismatrix(a) then return kprod(a, b) end
    if not ismatrix(b) then return kprod(b, a) end
@@ -416,7 +416,7 @@ end
 --- a / b
 --    @param a First matrix.
 --    @param b Second matrix.
---    @return Ratio of the given matricies.
+--    @return Ratio of the given matrices.
 matrix.__div = function (a,b)
    if not ismatrix(b) then return kprod(1/b, a) end
    return a * matrix.inv(b)
@@ -444,7 +444,7 @@ matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, 
 --- a == b
 --    @param a First matrix.
 --    @param b Second matrix.
---    @return <code>true</code> if all elements are equial.
+--    @return <code>true</code> if all elements are equal.
 matrix.__eq = function (a,b)
    if not (ismatrix(a) and ismatrix(b)) then return false end
    if a.rows ~= b.rows or a.cols ~= b.cols then return false end
@@ -456,8 +456,8 @@ matrix.__eq = function (a,b)
    return true
 end
 
-matrix.comparation = 'comparation'
-matrix.about[matrix.comparation] = {matrix.comparation, "a==b, a~=b", help.BASE}
+matrix.comparison = 'comparison'
+matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.BASE}
 
 
 --- Find determinant.
@@ -472,7 +472,7 @@ matrix.about[matrix.det] = {"det(m)", "Calculate determinant.", help.BASE}
 
 --- Inverse matrix.
 --    @param m Initial matrix.
---    @return Result of invertion.
+--    @return Result of inversion.
 matrix.inv = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
    local con, det = matrix.rref(m, matrix.eye(m.cols))
@@ -492,7 +492,7 @@ matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss m
 
 --- Create vector.
 --    Simplified vector constructor. 
---    Agrumets are list of vector elements.
+--    Arguments are list of vector elements.
 --    Can be called as V(...).
 --    @return Vector form of matrix.
 matrix.vector = function (v)
@@ -559,7 +559,7 @@ matrix.eye = function (rows, cols)
 end
 matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix.", help.OTHER}
 
---- Get submatrix.
+--- Get sub matrix.
 --    @param m Initial matrix.
 --    @param r1 Lower row index.
 --    @param r2 Upper row index.
@@ -579,14 +579,14 @@ matrix.sub = function (m, r1, r2, c1, c2)
    end
    return res
 end
-matrix.about[matrix.sub] = {"sub(m,r1,r2,c1,c2)", "Return submatrix with rows [r1;r2] and columns [c1;c2].", help.OTHER}
+matrix.about[matrix.sub] = {"sub(m,r1,r2,c1,c2)", "Return sub matrix with rows [r1;r2] and columns [c1;c2].", help.OTHER}
 
 --- Matrix concatenation.
 --    Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
 --    @param a First matrix.
 --    @param b Second matrix.
 --    @param dib Direction of concatenation ('h' for horizontal, 'v' for vertical).
---    @return Concatenated matrxi.
+--    @return Concatenated matrix.
 matrix.concat = function (a, b, dir)
    local res = nil
    if dir == 'h' then
@@ -618,7 +618,7 @@ matrix.__concat = function (a,b) return matrix.concat(a,b,'h') end
 -- vertical concatenation
 matrix.__idiv = function (a,b) return matrix.concat(a,b,'v') end
 
---- Strig representation.
+--- String representation.
 --    @param m Matrix.
 --    @return String.
 matrix.__tostring = function (m)
@@ -715,7 +715,7 @@ end
 --    <i>Private function.</i>
 --    @return cos, sin
 local function rot(f,g)
-   --> return cos, sin; r is omited
+   --> return cos, sin; r is omitted
    if f == 0 then
       return 0, 1
    elseif math.abs(f) > math.abs(g) then
@@ -791,21 +791,21 @@ matrix.svd = function (A)
 end
 matrix.about[matrix.svd] = {"svd(M)", "Singular value decomposition of the matrix M.", help.OTHER}
 
---- Pseudoinverse matrix using SVD.
+--- Pseudo inverse matrix using SVD.
 --    @param M Initial matrix.
---    @return Pseudoinverse matrix.
+--    @return Pseudo inverse matrix.
 matrix.pinv = function (M)
    local u,s,v = matrix.svd(M)
    s = matrix.map_ex(s, function (r,c,x) return (r == c and math.abs(x) > 1e-8) and (1/x) or 0 end)
    return v * s:transpose() * u:transpose()
 end
-matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudoinverse matrix using SVD.", help.OTHER}
+matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudo inverse matrix using SVD.", help.OTHER}
 ]=]
 
---- Quick pseudoinverse matrix.
+--- Quick pseudo inverse matrix.
 --    Based on "Fast computation of Moore-Penrose inverse matrices" paper by Pierre Courrieu.
 --    @param M Initial matrix.
---    @return Pseudoinverse matrix.
+--    @return Pseudo inverse matrix.
 matrix.pinv = function (M)
    local m,n,transp = M.rows, M.cols, false
    local A, Mt = nil, M:transpose()
@@ -857,7 +857,7 @@ matrix.pinv = function (M)
    end
    return L * K * K * Lt * Mt
 end
-matrix.about[matrix.pinv] = {"pinv(M)", "More quick function for pseudoinverse matrix calculation.", help.OTHER}
+matrix.about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", help.OTHER}
 
 --- Represent matrix in explicit (dense) form.
 --    @param m Source matrix.
@@ -873,7 +873,7 @@ end
 matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
 
 --- Return sparse matrix, if possible.
---    @param m SOurce matrix.
+--    @param m Source matrix.
 --    @return Sparse matrix.
 matrix.sparse = function (m)
    -- function map uses 'sparse' approach
@@ -965,7 +965,7 @@ matrix.luprepare = function (m)
 	 for k = 1,r-1 do sum = sum - getval(a,r,k)*getval(a,k,c) end
 	 setval(a,r,c, sum)
       end
-      local big = 0                         -- lagest pivot element
+      local big = 0                         -- largest pivot element
       for r=c,a.rows do
          local sum = getval(a,r,c)
 	 for k = 1,c-1 do sum = sum - getval(a,r,k)*getval(a,k,c) end

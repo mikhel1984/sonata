@@ -63,7 +63,7 @@ bigint.type = 'bigint'
 bigint.isbigint = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-bigint.about = help:new("Operations with arbitraty long integers.")
+bigint.about = help:new("Operations with arbitrary long integers.")
 -- the radix
 bigint.BASE = 10        
 bigint.about[bigint.BASE] = {'BASE', "The radix of big integer representation.", help.OTHER}
@@ -186,7 +186,7 @@ end
 --    <i>Private function.</i>
 --    @param a First bigint object.
 --    @param b Second bigint object.
---    @return Summ.
+--    @return Sum.
 local function sum(a,b)
    local acc = {}
    local zero = string.byte('0')
@@ -206,11 +206,11 @@ local function sum(a,b)
    return res
 end
 
---- Get subsruction for two positive bigint numbers.
+--- Get subtraction for two positive bigint numbers.
 --    <i>Private function.</i>
 --    @param a First bigint object.
 --    @param b Second bigint object.
---    @return Substraction.
+--    @return Subtraction.
 local function sub(a,b)
    -- find the biggest
    local p,q,r = a,b,1
@@ -258,7 +258,7 @@ bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTH
 --- a + b
 --    @param a First bigint object or integer.
 --    @param b Second bigint object or integer.
---    @return Summ as bigint object.
+--    @return Sum as bigint object.
 bigint.__add = function (a,b)
    a,b = args(a,b) 
    if a.sign > 0 then
@@ -409,8 +409,8 @@ end
 
 bigint.arithmetic = 'arithmetic'
 bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.BASE}
-bigint.comparation = 'comparation'
-bigint.about[bigint.comparation] = {bigint.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+bigint.comparison = 'comparison'
+bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 --- String representation.
 --    @param v Bigint object.
@@ -440,7 +440,7 @@ bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer a
 --    @param m Bigint object or integer.
 --    @return Factorial of the number as bigint object.
 bigint.factorial = function (m)
-   assert(m >= 0, "Nonnegative value is expected!")
+   assert(m >= 0, "Non-negative value is expected!")
    local n = bigint.abs(m)
    local res = bigint:new(1)   
    local one = res:copy()
@@ -450,7 +450,7 @@ bigint.factorial = function (m)
    end
    return res
 end
-bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of nonnegative integer n.", help.BASE}
+bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of non-negative integer n.", help.BASE}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})

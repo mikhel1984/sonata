@@ -98,7 +98,7 @@ function help:new(str)
    return o
 end
 
---- Create list of functions, sort by module and cathegory.
+--- Create list of functions, sort by module and category.
 --    <i>Private function.</i>
 --    @param tbl Table with descriptions.
 --    @return Sorted table.
@@ -111,7 +111,7 @@ local function funclist(tbl)
 	 local module = v[MODULE] or "Default"
 	 res[module] = res[module] or {}                      -- create table for each module
          res[module][category] = res[module][category] or {}  -- add table for each category
-         table.insert(res[module][category], v[TITLE])        -- insert function fitle into this table
+         table.insert(res[module][category], v[TITLE])        -- insert function file into this table
       end
    end
    return res
@@ -121,7 +121,7 @@ end
 --    @param fn Function or module for getting manual.
 function help:print(fn)
    if fn then
-      -- expected module or functoin description
+      -- expected module or function description
       local v = self[fn]
       if v.link then                  
          -- module common description
@@ -302,7 +302,7 @@ function help.newmodule (mname, alias)
       print('Both module name and alias are expected!'); return
    end
    local fname = string.format('%s%s%s.lua', LIB, help.SEP, mname)
-   -- check existance
+   -- check existence
    local f = io.open(fname) 
    if f then 
       f:close()

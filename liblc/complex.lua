@@ -117,7 +117,7 @@ end
 --- a + b
 --    @param a First complex or real number.
 --    @param b Second complex or real number.
---    @return Complex summ.
+--    @return Complex sum.
 complex.__add = function (a,b)
    a,b = args(a,b)
    return complex:new(a.real+b.real, a.imag+b.imag)
@@ -148,7 +148,7 @@ end
 complex.__div = function (a,b)
    a,b = args(a,b)
    local denom = b.real*b.real + b.imag*b.imag
-   assert(denom ~= 0, "Denomerator is zero!")
+   assert(denom ~= 0, "Denominator is zero!")
    return complex:new((a.real*b.real+a.imag*b.imag)/denom, (a.imag*b.real-a.real*b.imag)/denom)
 end
 
@@ -178,7 +178,7 @@ complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^
 --- a == b
 --    @param a First complex or real number.
 --    @param b Second complex or real number.
---    @return <code>true</code> if the real and imaginary parts are equial.
+--    @return <code>true</code> if the real and imaginary parts are equal.
 complex.__eq = function (a, b)
    a,b = args(a,b)
    return a.real == b.real and a.imag == b.imag
@@ -187,8 +187,8 @@ end
 --complex.__lt = function (a,b) return false end
 --complex.__le = function (a,b) return complex.__eq(a,b) end
 
-complex.comparation = 'comparation'
-complex.about[complex.comparation] = {complex.comparation, "a==b, a~=b", help.BASE}
+complex.comparison = 'comparison'
+complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.BASE}
 
 --- Argument of complex number.
 --    @param v Complex number.
@@ -214,7 +214,7 @@ complex.about[complex.conj] = {"conj(v)", "Return the complex conjugate.", help.
 complex.Re  = function (v) return v.real end
 complex.about[complex.Re] = {"Re(v)", "Return the real part.", help.OTHER}
 
---- Imag part of the number.
+--- Imaginary part of the number.
 --    @param v Complex value.
 --    @return Imaginary part.
 complex.Im  = function (v) return v.imag end

@@ -14,8 +14,8 @@ mhelp = require "liblc.help"
 about = mhelp:new("Lua based calculator.")
 
 -- Common
-abs = math.abs;    about[abs] = {"abs(x)", "Absolut value.", mhelp.BASE}
-exp = math.exp;    about[exp] = {"exp(x)", "Exponenta.", mhelp.BASE}
+abs = math.abs;    about[abs] = {"abs(x)", "Absolute value.", mhelp.BASE}
+exp = math.exp;    about[exp] = {"exp(x)", "Exponent.", mhelp.BASE}
 ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", mhelp.BASE}
 pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b.", mhelp.BASE}
 sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", mhelp.BASE}
@@ -23,21 +23,21 @@ max = math.max;    about[max] = {"max(...)", "Maximum number.", mhelp.BASE}
 min = math.min;    about[min] = {"min(...)", "Minimum number.", mhelp.BASE}
 -- Trigonometrical
 sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", mhelp.TRIG}
-cos = math.cos;    about[cos] = {"cos(x)", "Cosinus x.", mhelp.TRIG}
+cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", mhelp.TRIG}
 tan = math.tan;    about[tan] = {"tan(x)", "Tangent x.", mhelp.TRIG}
-asin = math.asin;  about[asin] = {"asin(x)", "Arcsinus x.", mhelp.TRIG}
-acos = math.acos;  about[acos] = {"acos(x)", "Arccosinus x.", mhelp.TRIG}
+asin = math.asin;  about[asin] = {"asin(x)", "Arcsine x.", mhelp.TRIG}
+acos = math.acos;  about[acos] = {"acos(x)", "Arc cosine x.", mhelp.TRIG}
 atan = math.atan;  about[atan] = {"atan(y[,x])", "Arctangent y. In case of 2 parameters calculate y/x with signs.", mhelp.TRIG}
 -- Hyperbolic
-ch = math.cosh;    about[ch] = {"ch(x)", "Hyperbolic cosinus.", mhelp.HYP}
+ch = math.cosh;    about[ch] = {"ch(x)", "Hyperbolic cosine.", mhelp.HYP}
 sh = math.sinh;    about[sh] = {"sh(x)", "Hyperbolic sinus.", mhelp.HYP}
 th = math.tanh;    about[th] = {"th(x)", "Hyperbolic tangent.", mhelp.HYP}
 -- Angles 
 deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", mhelp.BASE}
 rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", mhelp.BASE}
 -- Rounding
-floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equial to x.", mhelp.OTHER}
-ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equial to x.", mhelp.OTHER}
+floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", mhelp.OTHER}
+ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", mhelp.OTHER}
 -- Constants
 _pi = math.pi;     about[_pi] = {"_pi", "Number pi", mhelp.CONST}
 _e = math.exp(1)   about[_e] = {"_e", "Euler number", mhelp.CONST}
@@ -50,17 +50,17 @@ about[lg] = {"lg(x)", "Decimal logarithm.", mhelp.BASE}
 
 function rand() return math.random() end
 about[rand] = {"rand()", "Random number between 0 and 1.", mhelp.BASE}
--- hyperbolic arcsinus
+-- hyperbolic arcsine
 function ash(x)
    return math.log(x+math.sqrt(x*x+1))
 end
-about[ash] = {"ash(x)", "Hyperbolic arcsinus.", mhelp.HYP}
--- hyperbolic arccosinus
+about[ash] = {"ash(x)", "Hyperbolic arcsine.", mhelp.HYP}
+-- hyperbolic arc cosine
 function ach(x)
    return math.log(x+math.sqrt(x*x-1))
 end
-about[ach] = {"ach(x)", "Hyperbolic arccosinus.", mhelp.HYP}
--- hyperbolic arctangenth
+about[ach] = {"ach(x)", "Hyperbolic arc cosine.", mhelp.HYP}
+-- hyperbolic arctangent
 function ath(x)
    return 0.5*math.log((1+x)/(1-x))
 end
@@ -103,7 +103,7 @@ function eval(fn, x1, xn, step)
    step = step or 1
    for k = x1, xn, step do print("x="..k.."\tres="..fn(k)) end
 end
-about[eval] = {"eval(fn,x1[,xn[,step]])", "Evalueate function for given value or interval and print result.", mhelp.OTHER}
+about[eval] = {"eval(fn,x1[,xn[,step]])", "Evaluate function for given value or interval and print result.", mhelp.OTHER}
 
 -- Print examples from test part of module
 function example(nm)
@@ -137,7 +137,7 @@ about[deserialize] = {"deserialize(obj_str)", "Transform string with serializati
 
 -- Print the contents of a table
 function flip(t,N)
-   assert(type(t) == 'table', 'Talbe is expected!')
+   assert(type(t) == 'table', 'Table is expected!')
    N = N or 10
    local count = 1
    -- dialog

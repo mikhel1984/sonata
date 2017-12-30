@@ -44,7 +44,7 @@ numeric.TOL = 1e-3
 numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", help.CONST}
 
 --- Find root of equation at the given interval.
---    @param fn Function to analize.
+--    @param fn Function to analyze.
 --    @param a Lower bound.
 --    @param b Upper bound.
 --    @return Function root.
@@ -60,7 +60,7 @@ end
 numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", help.BASE}
 
 --- Another solution based on Newton's rule.
---    @param fn Function to analize.
+--    @param fn Function to analyze.
 --    @param x1 Initial value of the root.
 --    @return Function root of <code>nil</code>.
 numeric.newton = function (fn, x1)
@@ -90,7 +90,7 @@ numeric.diff = function (fn, x)
 end
 numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", help.BASE}
 
---- Intergration using trapez method.
+--- Integration using trapeze method.
 --    @param fn Function f(x).
 --    @param a Lower bound.
 --    @param b Upper bound.
@@ -139,9 +139,9 @@ end
 
 --- Differential equation solution (Runge-Kutta method).
 --    @param fn function f(x,y).
---    @param x0 Initial value of absciss.
+--    @param x0 Initial value of abscissa.
 --    @param y0 Initial value of ordinate.
---    @param xn Final value of absciss.
+--    @param xn Final value of abscissa.
 --    @param dx Step. If it is omitted then step is calculated automatically.
 --    @return Table of intermediate results and value in final point.
 numeric.ode = function (fn, x0,y0,xn, dx)
@@ -155,7 +155,7 @@ numeric.ode = function (fn, x0,y0,xn, dx)
          res[#res+1] = {x+h, rk(fn,x,y,h)}
       else
          local h2 = 0.5*h
-         local y1 =  rk(fn, x, y, h)
+         local y1 =  rk(n, x, y, h)
          local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
          local dy = math.abs(y1-y2)
          if dy > 15*numeric.TOL then 
@@ -170,7 +170,7 @@ numeric.ode = function (fn, x0,y0,xn, dx)
    until x + h >= xn 
    return res, res[#res][2]
 end
-numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automaticaly according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
+numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
 
 -- free memory if need
 if not lc_version then numeric.about = nil end

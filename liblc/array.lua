@@ -277,8 +277,8 @@ array.__eq = function (a1, a2)
    return false
 end
 
-array.comparation = 'comparison'
-array.about[array.comparation] = {array.comparation, "a == b, a ~= b", help.BASE}
+array.comparison = 'comparison'
+array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.BASE}
 
 --- Get array dimension.
 --    @param arr Array object.

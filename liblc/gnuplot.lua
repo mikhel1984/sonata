@@ -14,7 +14,7 @@ Gnu = require 'liblc.gnuplot'
 
 g = Gnu.plot2d({
    {'sin(x)', title='sinus x'},
-   {math.cos, title='cosinus x'},
+   {math.cos, title='cosine x'},
    title="Example",
    xrange = {0, 5},
    xtitle = "X",
@@ -41,9 +41,9 @@ gnuplot.type = 'gnuplot'
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 gnuplot.about = help:new("Interface for calling Gnuplot from Lua.")
 
--- devide interval into given number of points
+-- divide interval into given number of points
 gnuplot.N = 100        
-gnuplot.about[gnuplot.N] = {"N", "If no step, devide interval into N number of points.", help.CONST}
+gnuplot.about[gnuplot.N] = {"N", "If no step, divide interval into N number of points.", help.CONST}
 
 --- Create new object, set metatable.
 --    @param o Table with image parameters.
@@ -55,7 +55,7 @@ function gnuplot:new(o)
 end
 
 --- Save table into file.
---    File is located in tmp directory.
+--    File is located in Tmp directory.
 --    <i>Private function.</i>
 --    @param t Table to save.
 --    @return File name.
