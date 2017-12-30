@@ -319,9 +319,13 @@ function help.newmodule (mname, alias)
 --]]
 
 --------------- Tests --------------
---[[!!
-WORD3 = require 'WORD1'
 -- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
+--[[!!
+WORD3 = require 'liblc.WORD2'
+
+-- example
+a = WORD3()
+ans = a.type                   --> 'WORD2'
 ]]
 
 ---------------------------------

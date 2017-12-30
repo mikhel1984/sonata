@@ -69,6 +69,9 @@ polynom.ispolynom = true
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 polynom.about = help:new("Operations with polynomials")
 
+-- dependencies
+polynom.lc_matrix = require 'liblc.matrix'
+
 --- Check object type.
 --    <i>Private function.</i>
 --    @param x Object for checking.
@@ -442,7 +445,7 @@ polynom.fit = function (X,Y,ord)
       for j = 1, ord+1 do m[k][j] = sX[k+j-1] end
    end
    -- solve
-   local mat = require 'liblc.matrix'
+   local mat = polynom.lc_matrix
    local gaus = mat.rref(mat(table.unpack(m)),mat.V(sY))
    local res = {}
    for i = 1,ord+1 do res[i] = gaus(i,-1) end

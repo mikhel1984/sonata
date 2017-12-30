@@ -110,9 +110,10 @@ test.module = function (fname)
    text = test.getcode(text)
    if not text or #text == 0 then return end   -- no tests
    local succeed, failed = 0, 0
-   local fulltime, first = 0
+   local fulltime = 0
    -- parse
    for block in split(text, delim) do
+      if not string.find(block, '%s') then goto endfor end
       local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
       q = q or block    -- question
       a = a or ''       -- answer
@@ -121,7 +122,6 @@ test.module = function (fname)
       local status, err = pcall(function ()
          local fq = load(q)
 	 time = os.clock(); fq(); time = (os.clock() - time)*1000
-	 first = first or time
 	 if #a > 0 then
 	    local fa = load('return '..a)
 	    arrow = fa()
@@ -131,16 +131,17 @@ test.module = function (fname)
 	 end
       end)
       local res = status and err
-      if res then succeed = succeed + 1 else failed = failed + 1 end
       test.print(marktest(q,res,time)) 
       if not status then
          test.log:write(err,'\n')
       elseif not err then
          test.log:write(tostring(ans),' IS NOT ',tostring(arrow),' !!!\n')
       end
+      if string.find(block, 'require') then goto endfor end  -- 'require' takes too mach time
+      if res then succeed = succeed + 1 else failed = failed + 1 end
       fulltime = fulltime + time
+      ::endfor::
    end
-   fulltime = fulltime - (first or 0)
    test.results[fname] = {succeed, failed, fulltime}
    test.log:flush()
 end
