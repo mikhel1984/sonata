@@ -3,7 +3,7 @@
 lc_version = '0.6.4'
 
 -- Uncomment to set the localisation file.
-LOCALISATION_FILE = "ru.lng"
+-- LOCALISATION_FILE = "ru.lng"
 
 -- base functionality
 require 'liblc.main'

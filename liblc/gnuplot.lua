@@ -12,13 +12,25 @@
 Gnu = require 'liblc.gnuplot'
 
 a = {{'sin(x)',title='Sinus x'},permanent=false}
-g = Gnu.plot(a)
+-- use 'permanent=true' instead or not define it at all
+-- 'permanent=false' is just for testing
+Gnu.plot(a)
 
+g = Gnu(a)
 g.xrange = {-10,10}
 g:plot()
 
 b = g:copy()
 print(b)
+ans = b:isavailable()                             --> true
+
+-- print Lua table
+tmp = {{1,1},{2,2},{3,3},{4,4}}
+Gnu.plot {{tmp,with='lines'},permanent=false}
+
+-- print Lua function
+fn1 = function (x) return x^2-x end
+Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
 ]]
 
 -------------------------------------------- 
@@ -61,6 +73,45 @@ local main = {
    table = function (x,y) return string.format('set %s [%f:%f]', x, y[1],y[2]) end,
    boolean = function (x,y) return string.format('%s %s', y and 'set' or 'unset', x) end,
 }
+
+-- combine all options as keys
+local function collect(t) 
+   local res = {}
+   for _,v in ipairs(t) do res[v] = true end
+   return res
+end
+
+-- option checker
+local acc = {options=collect(gnuplot.options), foptions=collect(gnuplot.foptions)}
+acc.options.permanent = true
+acc.options.surface = true
+acc.options.raw = true
+acc.foptions.file = true
+acc.foptions.raw = true
+
+--- Check if all options in table are available
+--    @param g Table with optinos.
+--    @return True if no wrong parameters.
+gnuplot.isavailable = function (g) 
+   local available = true
+   for k,v in pairs(g) do
+      if not acc.options[k] then
+         if type(k) == 'number' and type(v) == 'table' then
+            for p,q in pairs(v) do
+	       if not acc.foptions[p] and type(p) ~= 'number' then
+	          print(p .. ' is not predefined, use "raw" for this option!')
+	          available = false
+	       end -- if
+	    end -- for p,q
+	 else
+	    print(k .. ' is not predefined, use "raw" for this option!')
+	    available = false
+	 end -- if type
+      end -- if not
+   end -- for k,v
+   return available
+end
+gnuplot.about[gnuplot.isavailable] = {"isavailable(g)", "Check if all options in table are predefined in program.", help.OTHER}
 
 -- prepare option string
 local function command (k,v)
@@ -159,6 +210,7 @@ gnuplot.about[gnuplot.copy] = {"copy(g)", "Get copy of the plot options.", help.
 --    @param t Table with parameters of graphic.
 --    @return Table which can be used for plotting.
 gnuplot.plot = function (t)
+   assert(gnuplot.isavailable(t), 'Options are not predefined!')
    if t.permanent == nil then t.permanent = true end
    -- open Gnuplot
    local handle = assert(io.popen('gnuplot' .. (t.permanent and ' -p' or ''), 'w'), 'Cannot open Gnuplot!')
@@ -185,8 +237,6 @@ gnuplot.plot = function (t)
    -- send to Gnuplot
    handle:write(res,'\n')
    handle:close()
-   -- create object
-   -- return getmetatable(t) and t or gnuplot:new(t)
 end
 gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table.", help.BASE}
 
@@ -215,7 +265,7 @@ gnuplot.about[gnuplot.Gnu] = {"Gnu([g])", "Transform given table into gnuplot ob
 
 gnuplot.keys = 'keys'
 gnuplot.about[gnuplot.keys] = {'keys',
-[[ Table description:
+[[  Options description:
 {'sin(x)'}                                   -- print sinus using Gnuplot functions
 {math.sin, title='sinus'}                    -- plot using function, define in Lua; add legend
 {file='sin.dat', ln=1, lw=2}                 -- plot data from file, use given color and width
