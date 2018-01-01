@@ -2,8 +2,8 @@
 
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possible.
---  @author Stanislav Mikhel, 2017
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'array'
 --]]

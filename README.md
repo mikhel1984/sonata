@@ -7,7 +7,7 @@ Following modules are available now:
 * _complex_ - complex number operations
 * _gnuplot_ - use **Gnuplot** for creating images
 * _numeric_ - some numerical evaluations (integration, differentiation, solving equations)
-* _polynom_ - manipulations with polynomial objects
+* _polynom_ - manipulations with polynomials 
 * _rational_ - operations with rational number
 * _set_ - manipulations with sets
 * _stat_ - some statistical functions
@@ -15,8 +15,11 @@ Following modules are available now:
 
 Program includes a help sytem for most of the functions and modules. It also can be translated to other languages. Available now languages:
 * _English (default)_
+* _Esperanto (eo)_
 * _Russian (ru)_
 
 **LuaCalculus** works in standard **Lua** interpreter with version at least _5.3_. To run it, call
 
     lua -i calc.lua
+
+If you have any issues, mail to _vpsys@yandex.ru_. 
