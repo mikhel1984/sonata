@@ -1,8 +1,8 @@
 --[[      liblc/test.lua 
 
 --- Unit test system.
---  @author Stanislav Mikhel, 2017
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'test'
 --]]
@@ -10,7 +10,7 @@
 --[=[
 	Rules for writing test.
 
-   * Tests should be encapsulated in --[[!! ... ]], i.e. in multistring comments with signs '!!'.
+   * Tests should be encapsulated in --[[!! ... ]], i.e. in multi string comments with signs '!!'.
 
    * Each block of test code must be separated with at leas 1 empty line.
 
@@ -25,7 +25,7 @@
      'lua calc.lua -test array'
    If module name is not written tests will be performed for all modules.
 
-   * Test summary includes information about number of passed and failed tests, average time per test unit (in msec), memory size.
+   * Test summary includes information about number of passed and failed tests, average time per test unit (in milliseconds), memory size.
 ]=]
 
 local delim = '%c[%s%c]+'    -- empty strings
@@ -46,16 +46,16 @@ test.results = {}
 --    <i>Private function.</i>
 --    @param str File text.
 --    @return Unit tests.
-local function getcode(str)
+test.getcode = function (str)
    local p = '%-%-%[(=*)%[!!(.-)%]%1%]'
    local _,q = string.match(str, p) 
    return q
 end
 
---- Divide string into the list of substrings using delimeter.
+--- Divide string into the list of substrings using delimiter.
 --    <i>Private function.</i>
 --    @param str Source string.
---    @param delim Delimeter.
+--    @param delim Delimiter.
 --    @return Table of substrings.
 local function split(str, delim)
    local i,j,k = 1,1,0
@@ -85,7 +85,7 @@ local function marktest(str, res, time)
    s = string.match(s, '^(.-)%s*$')
    if #s > min then s = string.sub(s, min) end
    local rest = string.rep('.', (full-#s))
-   return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succed' or 'Failed'), time)
+   return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'Failed'), time)
 end
 
 --- Save string to the file and also print to the screen.
@@ -107,12 +107,13 @@ test.module = function (fname)
    -- write head
    test.print('\n\tModule: ' .. fname)
    -- get test
-   text = getcode(text)
+   text = test.getcode(text)
    if not text or #text == 0 then return end   -- no tests
    local succeed, failed = 0, 0
-   local fulltime, first = 0
+   local fulltime = 0
    -- parse
    for block in split(text, delim) do
+      if not string.find(block, '%s') then goto endfor end
       local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
       q = q or block    -- question
       a = a or ''       -- answer
@@ -121,7 +122,6 @@ test.module = function (fname)
       local status, err = pcall(function ()
          local fq = load(q)
 	 time = os.clock(); fq(); time = (os.clock() - time)*1000
-	 first = first or time
 	 if #a > 0 then
 	    local fa = load('return '..a)
 	    arrow = fa()
@@ -131,16 +131,17 @@ test.module = function (fname)
 	 end
       end)
       local res = status and err
-      if res then succeed = succeed + 1 else failed = failed + 1 end
       test.print(marktest(q,res,time)) 
       if not status then
          test.log:write(err,'\n')
       elseif not err then
          test.log:write(tostring(ans),' IS NOT ',tostring(arrow),' !!!\n')
       end
+      if string.find(block, 'require') then goto endfor end  -- 'require' takes too mach time
+      if res then succeed = succeed + 1 else failed = failed + 1 end
       fulltime = fulltime + time
+      ::endfor::
    end
-   fulltime = fulltime - (first or 0)
    test.results[fname] = {succeed, failed, fulltime}
    test.log:flush()
 end

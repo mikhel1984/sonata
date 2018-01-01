@@ -1,8 +1,8 @@
 --[[      liblc/rational.lua 
 
 --- Rational number operatons support.
---  @author Stanislav Mikhel, 2017
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'rational'
 --]]
@@ -42,6 +42,8 @@ ans = b:Nu()            --> 2
 
 ans = b:De()            --> 1
 
+ans = a:copy()          --> a
+
 print(a)
 ]]
 
@@ -75,18 +77,18 @@ local function isint (x)
    return a == 0
 end
 
---- The greatest common devisor.
+--- The greatest common deviser.
 --    @param a First integer.
 --    @param b Second integer.
---    @return Greatest common devisor.
+--    @return Greatest common deviser.
 rational.gcd = function (a,b)
    return (a == 0 or (type(a)=='table' and a:eq(0))) and b or rational.gcd(b % a, a)
 end
-rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common devisor for two integers.", help.OTHER}
+rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common deviser for two integers.", help.OTHER}
 
 --- Create new object, set metatable.
 --    @param n Numerator.
---    @param dn Denomerator. Default is 1.
+--    @param dn Denominator. Default is 1.
 --    @return New rational object.
 function rational:new(n, dn)
    dn = dn or 1
@@ -95,6 +97,14 @@ function rational:new(n, dn)
    setmetatable(o, self)
    return o
 end
+
+--- Create copy of the rational number.
+--    @param v Source value.
+--    @return Rational number.
+rational.copy = function (v)
+   return rational:new(v.num, v.denom)
+end
+rational.about[rational.copy] = {"copy(v)", "Get copy of the rational number.", help.OTHER}
 
 --- Argument type correction.
 --    <i>Private function.</i>
@@ -112,7 +122,7 @@ end
 --- a + b
 --    @param a First rational or integer number.
 --    @param b Second rational or integer number.
---    @return Summ of the rational numbers.
+--    @return Sum of the rational numbers.
 rational.__add = function (a, b)   
    a,b = args(a,b)
    return rational:new(a.num*b.denom+a.denom*b.num, a.denom*b.denom)
@@ -121,7 +131,7 @@ end
 --- a - b
 --    @param a First rational or integer number.
 --    @param b Second rational or integer number.
---    @return Substraction of the rational numbers.
+--    @return Subtraction of the rational numbers.
 rational.__sub = function (a, b)   
    a,b = args(a,b)
    return rational:new(a.num*b.denom-a.denom*b.num, a.denom*b.denom)
@@ -139,7 +149,7 @@ end
 --- a / b
 --    @param a First rational or integer number.
 --    @param b Second rational or integer number.
---    @return Substraction of the rational numbers.
+--    @return Subtraction of the rational numbers.
 rational.__div = function (a, b)
    a,b = args(a,b)
    return rational:new(a.num*b.denom, a.denom*b.num)
@@ -161,13 +171,13 @@ rational.__pow = function (a, b)
    if type(a) == "number" then
       return math.pow(a, b)
    else
-      assert(isint(b) and b >= 0, "Power must be a nonnegative integer")
+      assert(isint(b) and b >= 0, "Power must be a non-negative integer")
       return rational:new(math.pow(a.num, b), math.pow(a.denom, b)) 
    end
 end
 
 rational.arithmetic = 'arithmetic'
-rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b}", help.BASE}
+rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b} ", help.BASE}
 
 --- a == b
 --    @param a First rational number.
@@ -196,8 +206,8 @@ rational.__le = function (a,b)
    return (a.num*b.denom) <= (b.num*a.denom)
 end
 
-rational.comparation = 'comparation'
-rational.about[rational.comparation] = {rational.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+rational.comparison = 'comparison'
+rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", help.BASE}
 
 --- Number representation.
 --    <i>Private function.</i>
@@ -224,11 +234,35 @@ rational.about[rational.decimal] = {"decimal(v)", "Return rational number as dec
 rational.Nu = function (v) return v.num end
 rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number.", help.OTHER}
 
---- Get denomenator.
+--- Get denominator.
 --    @param v Rational number.
---    @return Denomerator.
+--    @return Denominator.
 rational.De = function (v) return v.denom end
 rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", help.OTHER}
+
+-- list of prime numbers
+-- result is not sorted
+rational.prime = function (v)
+   assert(v > 0 and isint(v), "Positive integer is expected!")
+   -- use "sieve of Eratosthenes"
+   local tmp = {}
+   for i = 1,v,2 do tmp[i] = true end
+   -- remove non prime
+   for i = 3,math.floor(math.sqrt(v)),2 do
+      if tmp[i] then
+         for j = i+i,v,i do 
+	    if tmp[j] then tmp[j] = false end
+	 end
+      end
+   end
+   if v > 1 then tmp[2] = true end
+   -- collect
+   local res = {}
+   for k,v in pairs(tmp) do
+      if v then res[#res+1] = k end
+   end
+   return res
+end
 
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
@@ -248,5 +282,10 @@ rational.serialize = function (obj)
 end
 rational.about[rational.serialize] = {"serialize(obj)", "Save internal representation of rational number.", help.OTHER}
 
+-- free memory if need
+if not lc_version then rational.about = nil end
+
 return rational
 
+--======================================
+-- TODO: create module for calculations with integer numbers, add prime and gcd

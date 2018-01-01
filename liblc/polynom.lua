@@ -1,8 +1,8 @@
 --[[      liblc/polynom.lua 
 
 --- Manipulations with polynomials.
---  @author Stanislav Mikhel, 2017
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'polynom'
 --]]
@@ -11,42 +11,49 @@
 --[[!!
 Poly = require 'liblc.polynom'
 
-a = Poly(1,2,4,3)            
-b = Poly(1,1)                
+a = Poly {1,2,4,3}           
+b = Poly {1,1}                
 ans = a:val(0)                --> 3
 
 ans = a(0)                    --> 3
 
-ans = a + b                   --> Poly(1,2,5,4)
+ans = a + b                   --> Poly {1,2,5,4}
 
-ans = a - b                   --> Poly(1,2,3,2)
+ans = a - b                   --> Poly {1,2,3,2}
 
-ans = b * b                   --> Poly(1,2,1)
+ans = b * b                   --> Poly {1,2,1}
 
-ans = a / b                   --> Poly(1,1,3)
+ans = a / b                   --> Poly {1,1,3}
 
-ans = a % b                   --> Poly(0)
+ans = a % b                   --> Poly {0}
 
-ans = b ^ 3                   --> Poly(1,3,3,1)
+ans = b ^ 3                   --> Poly {1,3,3,1}
 
-ans = b:int()                 --> Poly(0.5,1,0)
+ans = b:int()                 --> Poly {0.5,1,0}
 
 _,ans = a:der(1)              --> 11
 
-ans = Poly.coef(1,-1)         --> Poly(1,0,-1)
+ans = Poly.coef(1,-1)         --> Poly {1,0,-1}
 
 c = a:copy()
 ans = (a == c)                --> true
 
 ans = (b == c)                --> false
 
-d = Poly(2,-2,1)
-ans = d:equation('s')         --> '2*s^2-2*s+1'
+d = Poly {2,-2,1}
+ans = d:str('s')              --> '2*s^2-2*s+1'
+
+e = a:real()
+ans = e[1]                    --~ -1.00
+
+A={0,1,2,3}
+B={-3,2,11,24}
+p = Poly.fit(A,B,2)
+ans = p(10)                   --~ 227.0
 
 print(a)
 ]]
 
---TODO: polyroot, polyfit
 
 ----------------------------------------------
 -- @class table
@@ -56,52 +63,57 @@ print(a)
 local polynom = {}
 polynom.__index = polynom
 -- marker
-polynom.type = 'polynom'
+polynom.type = 'polynomial'
 polynom.ispolynom = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 polynom.about = help:new("Operations with polynomials")
 
+-- dependencies
+polynom.lc_matrix = require 'liblc.matrix'
+
 --- Check object type.
 --    <i>Private function.</i>
 --    @param x Object for checking.
---    @return True if table is a polynom.
+--    @return True if table is a polynomial.
 local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
 
 --- Correct arguments if need.
 --    <i>Private function.</i>
 --    @param a First object
 --    @param b Second object.
---    @return Two polinomial objects.
+--    @return Two polynomial objects.
 local function args(a,b)
-   a = ispolynom(a) and a or polynom.new(a)
-   b = ispolynom(b) and b or polynom.new(b)
+   a = ispolynom(a) and a or polynom.new {a}
+   b = ispolynom(b) and b or polynom.new {b}
    return a, b
 end
 
---- Initialize polynom from table.
+--- Initialize polynomial from table.
 --    @param t Table of coefficients.
---    @return Polynom object.
+--    @return Polynomial object.
 function polynom:init(t)
    if #t == 0 then t[1] = 0 end
    setmetatable(t, self)
    return t
 end
 
---- Create polynom from list of coefficients.
+--- Create polynomial from table of coefficients.
 --    Arguments are a list of coefficients.
---    @return Polynom object.
-function polynom.new(...)
-   local o = {...}
+--    @return Polynomial object.
+function polynom.new(p)
+   p = p or {}
+   local o = {}
+   for i = 1,#p do o[i] = p[i] end
    return polynom:init(o)
 end
 
---- Simplify polynom, remove zeros from the begining.
+--- Simplify polynomial, remove zeros from the begin.
 --    <i>Private function.</i>
 --    @param p Table of coefficients.
---    @return Simplified polynom.
+--    @return Simplified polynomial.
 local function reduce (p)
-   while p[1] == 0 and #p > 1 do
+   while #p > 1 and  p[1] == 0 do
       table.remove(p, 1)
    end
    return p
@@ -109,30 +121,24 @@ end
 
 --- Calculate ratio and rest of 2 polynomials.
 --    <i>Private function.</i>
---    @param a First polynom.
---    @param b Second polynom.
+--    @param a First polynomial.
+--    @param b Second polynomial.
 --    @return Ratio and the rest.
 local function div(a,b)
-   if #a < #b then return polynom.new(), a end
-   local rest, res = polynom.copy(a), {}
-   -- get part for working with
-   local num = polynom:init(table.move(a,1,#b,1,{}))
-   while #num >= #b do
-      -- calculate next coefficient
-      local t = num[1]/b[1]
-      table.insert(res, t)
-      -- prepare difference
-      num = num - t*b
-      reduce(num)
-      table.remove(rest, 1)
-      if rest[#b] then table.insert(num, rest[#b]) end
+   local rest, res = polynom.copy(a), polynom.new() 
+   -- update coefficients
+   for k = 1,(#a-#b+1) do
+      res[k] = rest[1]/b[1]
+      for j = 1,#b do rest[j] = rest[j] - res[k]*b[j] end
+      -- remove zero element
+      table.remove(rest,1)
    end
-   return polynom:init(res), num
+   return res, rest
 end
 
---- Polinom value.
+--- Polynomial value.
 --    Can be called with ().
---    @param p Polynom.
+--    @param p Polynomial.
 --    @param x Variable.
 --    @return Value in the given point.
 polynom.val = function (p,x)
@@ -143,26 +149,26 @@ polynom.val = function (p,x)
    end
    return res
 end
-polynom.about[polynom.val] = {"val(p,x)", "Get value of polinom p in point x.", help.BASE}
+polynom.about[polynom.val] = {"val(p,x)", "Get value of polynomial p in point x.", help.BASE}
 
 polynom.__call = function (p,x) return polynom.val(p,x) end
 
 --- Create copy of object.
---    @param p Initial polynom.
+--    @param p Initial polynomial.
 --    @return Deep copy.
 polynom.copy = function (p)
    return polynom:init(table.move(p,1,#p,1,{}))
 end
-polynom.about[polynom.copy] = {"copy(p)", "Get copy of polynom.", help.OTHER}
+polynom.about[polynom.copy] = {"copy(p)", "Get copy of the polynomial.", help.OTHER}
 
 --- a + b
---    @param a First polynom.
---    @param b Second polynom.
---    @return Summ of the objects.
+--    @param a First polynomial.
+--    @param b Second polynomial.
+--    @return Sum of the objects.
 polynom.__add = function (a,b)
    a, b = args(a,b)
    local t = {}
-   -- get summ of equal powers
+   -- get sum of equal powers
    local i,j = #a, #b
    for k = math.max(i,j),1,-1 do
       t[k] = (a[i] or 0) + (b[j] or 0)
@@ -173,7 +179,7 @@ polynom.__add = function (a,b)
 end
 
 --- -a
---    @param p Source polynom.
+--    @param p Source polynomial.
 --    @return Negative value.
 polynom.__unm = function (p)
    local res = {}
@@ -182,38 +188,33 @@ polynom.__unm = function (p)
 end
 
 --- a - b
---    @param a First polynom.
---    @param b Second polynom.
---    @return Substraction of the objects.
+--    @param a First polynomial.
+--    @param b Second polynomial.
+--    @return Subtraction of the objects.
 polynom.__sub = function (a,b)
    return reduce(a + (-b))
 end
 
 --- a * b
---    @param a First polynom.
---    @param b Second polynom.
+--    @param a First polynomial.
+--    @param b Second polynomial.
 --    @return Multiplication of the objects.
 polynom.__mul = function (a,b)
    a,b = args(a,b)
-   local res = polynom:init({0})
-   for j = 1, #b do
-      -- sum of crossproduct
-      local tmp = {}
-      for i = 1, #a do tmp[i] = a[i]*b[j] end
-      local pos = #b-j
-      -- add zeros to increase power
-      while pos > 0 do
-         table.insert(tmp, 0)
-	 pos = pos-1
+   local res = polynom.new()
+   -- get sum of coefficients
+   for i = 1, #a do
+      for j = 1, #b do
+         local k = i+j-1
+         res[k] = (res[k] or 0) + a[i]*b[j]
       end
-      res = res + polynom:init(tmp)
    end
-   return reduce(res)
+   return res
 end
 
 --- a / b
---    @param a First polynom.
---    @param b Second polynom.
+--    @param a First polynomial.
+--    @param b Second polynomial.
 --    @return Ratio of the objects.
 polynom.__div = function (a,b)
    local res, _ = div(args(a,b))
@@ -221,8 +222,8 @@ polynom.__div = function (a,b)
 end
 
 --- a % b
---    @param a First polynom.
---    @param b Second polynom.
+--    @param a First polynomial.
+--    @param b Second polynomial.
 --    @return Rest from ratio of the objects.
 polynom.__mod = function (a,b)
    local _, res = div(args(a,b))
@@ -230,9 +231,9 @@ polynom.__mod = function (a,b)
 end
 
 --- a ^ n
---    @param a Polynom.
+--    @param a Polynomial.
 --    @param n Integer value.
---    @return Power of the polynom.
+--    @return Power of the polynomial.
 polynom.__pow = function (p,n)
    n = assert(math.tointeger(n), "Integer power is expected!")
    assert(n > 0, "Positive power is expected!")
@@ -246,9 +247,9 @@ polynom.__pow = function (p,n)
 end
 
 --- a == b
---    @param a Polynom.
+--    @param a Polynomial.
 --    @param n Integer value.
---    @return <code>true</code> if the polynoms are equial.
+--    @return <code>true</code> if the polynomials are equal.
 polynom.__eq = function (a,b)
    if type(a) ~= type(b) or a.type ~= b.type then return false end
    if #a ~= #b then return false end
@@ -259,18 +260,18 @@ polynom.__eq = function (a,b)
 end
 
 --- a < b
---    @param a Frist polynom.
---    @param b Second polynom.
---    @return <code>true</code> if first polynom is less then second.
+--    @param a First polynomial.
+--    @param b Second polynomial.
+--    @return <code>true</code> if first polynomial is less then second.
 polynom.__lt = function (a,b)
    a,b = args(a,b)
    return #a < #b or (#a == #b and a[1] < b[1])
 end
 
 --- a <= b
---    @param a Frist polynom.
---    @param b Second polynom.
---    @return <code>true</code> if first polynom is less or equial then second.
+--    @param a First polynomial.
+--    @param b Second polynomial.
+--    @return <code>true</code> if first polynomial is less or equal then second.
 polynom.__le = function (a,b)
    return a == b or a < b
 end
@@ -278,15 +279,15 @@ end
 polynom.arithmetic = 'arithmetic'
 polynom.about[polynom.arithmetic] = {polynom.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.BASE}
 
-polynom.comparation = 'comparation'
-polynom.about[polynom.comparation] = {polynom.comparation, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+polynom.comparison = 'comparison'
+polynom.about[polynom.comparison] = {polynom.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
 
 --- Get derivative.
---    @param p Initial polynom.
+--    @param p Initial polynomial.
 --    @param x Variable (can be omitted).
 --    @return Derivative or its value.
 polynom.der = function (p,x)
-   assert(ispolynom(p), "Polinom is expected!")
+   assert(ispolynom(p), "Polynomial is expected!")
    local der, pow = {}, #p
    for i = 1, #p-1 do
       table.insert(der, p[i]*(pow-i))
@@ -295,14 +296,14 @@ polynom.der = function (p,x)
    if x then x = polynom.val(der,x) end
    return der, x
 end
-polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynom, and its value, if need.", help.BASE}
+polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynomial, and its value, if need.", help.BASE}
 
 --- Get integral.
---    @param p Initial polynom.
+--    @param p Initial polynomial.
 --    @param x Free coefficient.
 --    @return Integral.
 polynom.int = function (p,x)
-   assert(ispolynom(p), "Polynom is expected!")
+   assert(ispolynom(p), "Polynomial is expected!")
    x = x or 0
    local int, pow = {}, #p+1
    for i = 1, #p do
@@ -313,9 +314,9 @@ polynom.int = function (p,x)
 end
 polynom.about[polynom.int] = {"int(p[,x0])", "Calculate integral, x0 - free coefficient.", help.BASE}
 
---- Get polynom from roots.
---    Arguments are a sequance of roots.
---    @return Polynom object.
+--- Get polynomial from roots.
+--    Arguments are a sequence of roots.
+--    @return Polynomial object.
 polynom.coef = function (...)
    local args = {...}
    local res = polynom:init({1})
@@ -324,20 +325,20 @@ polynom.coef = function (...)
    end
    return res
 end
-polynom.about[polynom.coef] = {"coef(...)", "Return polynom with given roots.", help.OTHER}
+polynom.about[polynom.coef] = {"coef(...)", "Return polynomial with given roots.", help.OTHER}
 
 --- String representation.
---    @param p Source polynom.
+--    @param p Source polynomial.
 --    @return Simplified string representation of coefficients.
 polynom.__tostring = function (p)
    return table.concat(p,' ')
 end
 
---- Represent polynom in natural form.
---    @param p Source polynom.
+--- Represent polynomial in natural form.
+--    @param p Source polynomial.
 --    @param l String variable (default is <code>x</code>).
 --    @return String with traditional form of equation.
-polynom.equation = function (p,l)
+polynom.str = function (p,l)
    l = l or 'x'
    local res,pow,mult = {}, #p-1
    res[1] = string.format('%s%s%s', tostring(p[1]), (pow > 0 and '*'..l or ''), (pow > 1 and '^'..pow or ''))
@@ -348,12 +349,116 @@ polynom.equation = function (p,l)
    return table.concat(res)
 end
 
+--- Find closest root of using Newton-Rapson technique
+--    <i>Private function.</i>
+--    @param p Source polynomial.
+--    @param x Initial value of the root (optional).
+--    @param epx Tolerance
+--    @return Found value and flag about its correctness.
+local function NewtonRapson(p,x,eps)
+   eps = eps or 1e-6
+   x = x or math.random()
+   -- prepare variables
+   local dp,n,max = p:der(), 0, 30
+   while true do
+      -- polynomial value
+      local dx = p(x) / dp(x) 
+      if math.abs(dx) <= eps or n > max then break
+      else
+         -- update root value and number of iterations
+         x = x - dx
+	 n = n+1
+      end
+   end
+   return x, (n < max)
+end
+
+--- Find real roots of the polynomial.
+--    @param p Source polynomial.
+--    @return Table with real roots.
+polynom.real = function (p)
+   local res = {}
+   local pp = p:copy()
+   -- zeros
+   while pp[#pp] == 0 do
+      pp[#pp] = nil
+      res[#res+1] = 0
+   end
+   -- if could have roots
+   while #pp > 1 do
+      local x, root = NewtonRapson(pp)
+      if root then 
+         -- save and remove the root
+         res[#res+1] = x
+	 -- divide by (1-x)
+	 for i = 2,#pp-1 do pp[i] = pp[i] + x*pp[i-1] end
+	 pp[#pp] = nil
+      else break
+      end
+   end
+   return res
+end
+polynom.about[polynom.real] = {"real(p)", "Find real roots of the polynomial.", help.OTHER}
+
+--- Get sum of the table elements.
+--    Use product if need.
+--    <i>Private function.</i>
+--    @param X First table.
+--    @param Y Second table (optional).
+--    @return Sum of elements.
+local function getsum(X,Y)
+   local res = 0
+   if Y then
+      for i = 1, #X do res = res + X[i]*Y[i] end
+   else 
+      for i = 1, #X do res = res + X[i] end
+   end
+   return res
+end
+
+--- Find the best polynomial approximation for the line.
+--    @param X Set of independent variables.
+--    @param Y Set of dependent variables.
+--    @param ord Polynomial order.
+--    @return Polynomial object.
+polynom.fit = function (X,Y,ord)
+   assert(ord > 0 and math.type(ord) == 'integer', 'Wrong order!')
+   assert(#X == #Y, 'Wrong data size!')
+   assert(#X > ord, 'Too few data points!')
+   -- find sums
+   local acc = table.move(X,1,#X,1,{})       -- accumulate powers
+   local sX, sY = {}, {}                     -- accumulate sums
+   local nY = ord
+   sY[nY+1] = getsum(Y) 
+   for nX = 2*ord,1,-1 do
+      sX[nX] = getsum(acc)
+      if nY > 0 then sY[nY] = getsum(acc, Y); nY = nY-1 end
+      if nX > 1 then
+         for i = 1,#acc do acc[i] = acc[i]*X[i] end
+      end -- if
+   end -- for
+   sX[#sX+1] = #X
+   -- prepare matrix
+   local m = {}
+   for k = 1,ord+1 do
+      m[k] = {}
+      for j = 1, ord+1 do m[k][j] = sX[k+j-1] end
+   end
+   -- solve
+   local mat = polynom.lc_matrix
+   local gaus = mat.rref(mat(table.unpack(m)),mat.V(sY))
+   local res = {}
+   for i = 1,ord+1 do res[i] = gaus(i,-1) end
+   return polynom:init(res)
+end
+polynom.about[polynom.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", help.OTHER}
+
 setmetatable(polynom, {__call = function (self, ...) return polynom.new(...) end})
 polynom.Poly = 'Poly'
-polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynom", help.NEW}
+polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
---- Polynom serialization.
---    @param obj Polynom object.
+--- Polynomial serialization.
+--    @param obj Polynomial object.
 --    @return String, suitable for exchange.
 polynom.serialize = function (obj)
    local s = {}
@@ -362,6 +467,13 @@ polynom.serialize = function (obj)
    s[#s+1] = "modulename='polynom'"
    return string.format("{%s}", table.concat(s, ','))
 end
-polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynom internal representation.", help.OTHER}
+polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynomial internal representation.", help.OTHER}
+
+-- free memory if need
+if not lc_version then polynom.about = nil end
 
 return polynom
+
+--===========================
+--TODO: polyroot
+

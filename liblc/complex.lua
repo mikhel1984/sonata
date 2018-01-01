@@ -1,8 +1,8 @@
 --[[      liblc/complex.lua 
 
 --- Manipulations with complex numbers.
---  @author Stanislav Mikhel, 2017
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'complex'
 --]]
@@ -14,6 +14,11 @@ Cmp = require 'liblc.complex'
 a = Cmp(1,2)                  
 b = Cmp(3)
 ans = b                        --> Cmp(3,0)
+
+j = Cmp._i
+ans = 3+4*j                    --> Cmp(3,4)
+
+ans = Cmp.trig(2,0)            --> Cmp(2,0)
 
 ans = a + b                    --> Cmp(4,2)
 
@@ -40,6 +45,8 @@ ans = a:conj()                 --> Cmp(1,-2)
 
 d = Cmp.sqrt(-2)
 ans = d:Im()                   --~ 1.414
+
+ans = a:copy()                 --> a
 
 print(a)
 ]]
@@ -71,6 +78,23 @@ function complex:new(re, im)
    return o
 end
 
+--- Create complex number from trigonometric representation.
+--    @param m Module.
+--    @param a Argument.
+--    @return Complex number.
+complex.trig = function (m,a)
+   return complex:new(m*math.cos(a), m*math.sin(a))
+end
+complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle.", help.BASE}
+
+--- Create copy of the complex number.
+--    @param c Source value.
+--    @return Complex number.
+complex.copy = function (c)
+   return complex:new(c.real, c.imag)
+end
+complex.about[complex.copy] = {"copy(c)", "Create copy of the complex number.", help.OTHER}
+
 --- Check object type.
 --    <i>Private function.</i>
 --    @param c Object for checking.
@@ -93,7 +117,7 @@ end
 --- a + b
 --    @param a First complex or real number.
 --    @param b Second complex or real number.
---    @return Complex summ.
+--    @return Complex sum.
 complex.__add = function (a,b)
    a,b = args(a,b)
    return complex:new(a.real+b.real, a.imag+b.imag)
@@ -124,7 +148,7 @@ end
 complex.__div = function (a,b)
    a,b = args(a,b)
    local denom = b.real*b.real + b.imag*b.imag
-   assert(denom ~= 0, "Denomerator is zero!")
+   assert(denom ~= 0, "Denominator is zero!")
    return complex:new((a.real*b.real+a.imag*b.imag)/denom, (a.imag*b.real-a.real*b.imag)/denom)
 end
 
@@ -154,14 +178,17 @@ complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^
 --- a == b
 --    @param a First complex or real number.
 --    @param b Second complex or real number.
---    @return <code>true</code> if the real and imaginary parts are equial.
+--    @return <code>true</code> if the real and imaginary parts are equal.
 complex.__eq = function (a, b)
    a,b = args(a,b)
    return a.real == b.real and a.imag == b.imag
 end
 
-complex.comparation = 'comparation'
-complex.about[complex.comparation] = {complex.comparation, "a==b, a~=b", help.BASE}
+--complex.__lt = function (a,b) return false end
+--complex.__le = function (a,b) return complex.__eq(a,b) end
+
+complex.comparison = 'comparison'
+complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.BASE}
 
 --- Argument of complex number.
 --    @param v Complex number.
@@ -187,7 +214,7 @@ complex.about[complex.conj] = {"conj(v)", "Return the complex conjugate.", help.
 complex.Re  = function (v) return v.real end
 complex.about[complex.Re] = {"Re(v)", "Return the real part.", help.OTHER}
 
---- Imag part of the number.
+--- Imaginary part of the number.
 --    @param v Complex value.
 --    @return Imaginary part.
 complex.Im  = function (v) return v.imag end
@@ -218,12 +245,12 @@ complex.about[complex.sqrt] = {"sqrt(v)", "Return square root. Result can be rea
 
 -- imaginary unit
 complex._i   = complex:new(0,1)
-complex.about[complex._i] = {"_i", "Complex unit", "constant"}
+complex.about[complex._i] = {"_i", "Complex unit.", "constant"}
 
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
 complex.Cmp = 'Cmp'
-complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number", help.NEW}
+complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number.", help.NEW}
 
 --- Complex number serialization.
 --    @param obj Complex number.
@@ -236,7 +263,7 @@ complex.serialize = function (obj)
    s[#s+1] = "modulename='complex'"
    return string.format("{%s}", table.concat(s, ','))
 end
-complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object", help.OTHER}
+complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object.", help.OTHER}
 
 --- Function for execution during the module import.
 --    Redefine function sqrt and add complex variable.
@@ -244,5 +271,8 @@ complex.onimport = function ()
    _i = complex._i
    sqrt = complex.sqrt
 end
+
+-- free memory if need
+if not lc_version then complex.about = nil end
 
 return complex

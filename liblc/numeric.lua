@@ -1,8 +1,8 @@
 --[[      liblc/numeric.lua 
 
 --- Numerical solutions for some mathematical problems.
---  @author Stanislav Mikhel, 2017
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'numeric'
 --]]
@@ -44,7 +44,7 @@ numeric.TOL = 1e-3
 numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", help.CONST}
 
 --- Find root of equation at the given interval.
---    @param fn Function to analize.
+--    @param fn Function to analyze.
 --    @param a Lower bound.
 --    @param b Upper bound.
 --    @return Function root.
@@ -60,7 +60,7 @@ end
 numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", help.BASE}
 
 --- Another solution based on Newton's rule.
---    @param fn Function to analize.
+--    @param fn Function to analyze.
 --    @param x1 Initial value of the root.
 --    @return Function root of <code>nil</code>.
 numeric.newton = function (fn, x1)
@@ -73,7 +73,7 @@ numeric.newton = function (fn, x1)
    until math.abs(fn(x2)-fn(x1)) < numeric.TOL 
    return x2
 end
-numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition", help.BASE}
+numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition.", help.BASE}
 
 --- Simple derivative.
 --    @param fn Function f(x).
@@ -90,7 +90,7 @@ numeric.diff = function (fn, x)
 end
 numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", help.BASE}
 
---- Intergration using trapez method.
+--- Integration using trapeze method.
 --    @param fn Function f(x).
 --    @param a Lower bound.
 --    @param b Upper bound.
@@ -119,7 +119,7 @@ numeric.trapez = function (fn, a, b)
    until math.abs(I-last) < numeric.TOL
    return I
 end
-numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule", help.BASE}
+numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule.", help.BASE}
 
 --- Runge-Kutta method.
 --    <i>Private function.</i>
@@ -139,9 +139,9 @@ end
 
 --- Differential equation solution (Runge-Kutta method).
 --    @param fn function f(x,y).
---    @param x0 Initial value of absciss.
+--    @param x0 Initial value of abscissa.
 --    @param y0 Initial value of ordinate.
---    @param xn Final value of absciss.
+--    @param xn Final value of abscissa.
 --    @param dx Step. If it is omitted then step is calculated automatically.
 --    @return Table of intermediate results and value in final point.
 numeric.ode = function (fn, x0,y0,xn, dx)
@@ -170,6 +170,9 @@ numeric.ode = function (fn, x0,y0,xn, dx)
    until x + h >= xn 
    return res, res[#res][2]
 end
-numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automaticaly according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
+numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
+
+-- free memory if need
+if not lc_version then numeric.about = nil end
 
 return numeric

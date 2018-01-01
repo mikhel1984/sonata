@@ -2,8 +2,8 @@
 
 --- Manipulation with sets.
 --  Based on implementation of Roberto Ierusalimschy.
---  @author Stanislav Mikhel, 2017
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'set'
 --]]
@@ -36,6 +36,12 @@ t = a:table()
 ans = a:check(t[1])            --> true
 
 ans = #a                       --> 4
+
+d = a:copy()
+ans = (d == a)                 --> true
+
+e = a:map(function (x) return x^2 end)
+ans = e(16)                    --> true
 
 print(a)
 ]]
@@ -79,7 +85,10 @@ set.check = function (s, v)
    assert(isset(s), NOT_A_SET)
    return s[v] == true
 end
-set.about[set.check] = {"check(set,val)", "Check if value is in set.", help.OTHER}
+set.about[set.check] = {"check(set,val)", "Check if value is in set. The same as set(val).", help.OTHER}
+
+-- create alias for 'check'
+set.__call = function (s,x) return s[x] == true end
 
 --- Add new element.
 --    @param s Set object.
@@ -99,7 +108,7 @@ set.remove = function (s,v)
 end
 set.about[set.remove] = {"remove(set,val)", "Remove element from set.", help.OTHER}
 
---- Convert into lua table.
+--- Convert into Lua table.
 --    @param s Set object.
 --    @return List of elements.
 set.table = function (s)
@@ -108,6 +117,28 @@ set.table = function (s)
    return res
 end
 set.about[set.table] = {"table(set)", "Represent set as a table.", help.OTHER}
+
+--- Copy of the set.
+--    @param s Initial set.
+--    @return Copy object.
+set.copy = function (s)
+   local res = set:new({})
+   for k in pairs(s) do res[k] = true end
+   return res
+end
+set.about[set.copy] = {"copy(s)", "Get copy of the set.", help.OTHER}
+
+--- Apply function to the elements of set.
+--    @param s Initial set.
+--    @param fn Function.
+--    @return New set, obtained from function.
+set.map = function (s,fn)
+   local res = set:new({})
+   for k in pairs(s) do res[fn(k)] = true end
+   return res
+end
+set.about[set.map] = {"map(s,fn)", "Apply function fn() to obtain new set.", help.OTHER}
+
 
 --- a + b
 --    @param a First set.
@@ -146,7 +177,7 @@ set.__div = function (a,b)
 end
 
 set.arithmetic = 'arithmetic'
-set.about[set.arithmetic] = {"union, intersection, defference", "a+b, a*b, a/b", help.BASE}
+set.about[set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", help.BASE}
 
 --- a <= b
 --    @param a First set.
@@ -163,7 +194,7 @@ end
 --- a < b
 --    @param a First set.
 --    @param b Second set.
---    @return <code>true</code> if <code>a</code> is a subset of <code>b</code> but not equial.
+--    @return <code>true</code> if <code>a</code> is a subset of <code>b</code> but not equal.
 set.__lt = function (a,b)
    return a <= b and not (b <= a)
 end
@@ -171,13 +202,13 @@ end
 --- a == b
 --    @param a First set.
 --    @param b Second set.
---    @return <code>true</code> if <code>a</code> and <code>b</code> are equial.
+--    @return <code>true</code> if <code>a</code> and <code>b</code> are equal.
 set.__eq = function (a,b)
    return a <= b and b <= a
 end
 
-set.comparation = 'comparation'
-set.about[set.comparation] = {set.comparation, "a==b, a~=b, a<b, a<=b, a>b, a>=b", help.BASE}
+set.comparison = 'comparison'
+set.about[set.comparison] = {set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", help.BASE}
 
 --- #a 
 --    @param s Set object.
@@ -200,7 +231,7 @@ end
 -- redefine constructor
 setmetatable(set, {__call = function (self, v) return set:new(v) end})
 set.Set = 'Set'
-set.about[set.Set] = {"Set(t)", "Create new set from table of elements", help.NEW}
+set.about[set.Set] = {"Set(t)", "Create new set from table of elements.", help.NEW}
 
 --- Set serialization.
 --    @param obj Set object.
@@ -218,6 +249,9 @@ set.serialize = function (obj)
    s[#s+1] = "modulename='set'"
    return string.format("{%s}", table.concat(s, ','))
 end
-set.about[set.serialize] = {"serialize(obj)", "Save internal representation of the set", help.OTHER}
+set.about[set.serialize] = {"serialize(obj)", "Save internal representation of the set.", help.OTHER}
+
+-- free memory if need
+if not lc_version then set.about = nil end
 
 return set

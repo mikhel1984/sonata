@@ -1,8 +1,8 @@
 --[[      liblc/units.lua 
 
 --- Operations and conversations with units.
---  @author Stanislav Mikhel, 2017
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'units'
 --]]
@@ -64,7 +64,7 @@ local c_prod, c_rat, c_pow = string.byte('*'), string.byte('/'), string.byte('^'
 -- @field type Define object type string.
 -- @field isunits <code>true</code> for unit object.
 -- @field about Function description collection.
--- @field prefix List of preffixes in SI. Can be expanded.
+-- @field prefix List of prefixes in SI. Can be expanded.
 -- @field mem_parts Intermediate results for unit parts.
 -- @field mem_keys Intermediate results for unit keys.
 -- @field rules List of rules for units transformation.
@@ -75,7 +75,7 @@ units.type = 'units'
 units.isunits = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-units.about = help:new("Operations and conversations according the units")
+units.about = help:new("Operations and conversations according the units.")
 
 -- prefix list
 units.prefix = {
@@ -105,7 +105,7 @@ units.rules = {}
 --    @return <code>true</code> if table is units.
 local function isunits(t) return type(t) == 'table' and t.isunits end
 
---- Comporation rule for unit sorting.
+--- Comparison rule for unit sorting.
 --    <i>Private function.</i>
 --    @param p1 First table of components.
 --    @param p2 Second table of components.
@@ -171,15 +171,6 @@ local function args(a,b)
    a = isunits(a) and a or units:new(a)
    b = isunits(b) and b or units:new(b)
    return a,b
-end
-
---- Check if table is empty.
---    <i>Private function.</i>
---    @param t Table to check.
---    @return <code>true</code> if the table doesn't have elements.
-local function isempty(t)
-   for k in pairs(t) do return false end
-   return true
 end
 
 -- Operations with tables of units.
@@ -441,7 +432,7 @@ end
 --- a - b
 --    @param a First unit object.
 --    @param b Second unit object.
---    @return Substraction of objects with the same units.
+--    @return Subtraction of objects with the same units.
 units.__sub = function (a,b)
    a,b = args(a,b)
    local tmp = assert(uconvert(b,a.key), "Different units!")
@@ -459,7 +450,7 @@ units.__mul = function (a,b)
    local ta, tb = fromkey(a.key), fromkey(b.key)
    op['*'](ta,tb)
    ta = reduce(ta)
-   if isempty(ta) then return a.value*b.value end
+   if not next(ta) then return a.value*b.value end
    local res = units:new(a.value*b.value)
    res.key = tokey(ta)
    return res.key == '' and res.value or res
@@ -474,7 +465,7 @@ units.__div = function (a,b)
    local ta, tb = fromkey(a.key), fromkey(b.key)
    op['/'](ta,tb)
    ta = reduce(ta)
-   if isempty(ta) then return a.value/b.value end
+   if not next(ta) then return a.value/b.value end
    local res = units:new(a.value/b.value)
    res.key = tokey(ta)
    return res.key == '' and res.value or res
@@ -498,7 +489,7 @@ end
 --    <i>Private function.</i>
 --    @param a First unit object.
 --    @param b Second unit object.
---    @return <code>true</code> if the objects are equial.
+--    @return <code>true</code> if the objects are equal.
 local function equal(a,b)
    return math.abs(a-b) <= 1e-3*math.abs(a)
 end
@@ -506,7 +497,7 @@ end
 --- a == b
 --    @param a First unit object.
 --    @param b Second unit object.
---    @return <code>true</code> if the objects are equial.
+--    @return <code>true</code> if the objects are equal.
 units.__eq = function (a,b)
    if not (isunits(a) and isunits(b)) then return false end
    if a.key == b.key then return equal(a.value, b.value) end
@@ -518,7 +509,7 @@ end
 --- a < b
 --    @param a First unit object.
 --    @param b Second unit object.
---    @return Result of comparision.
+--    @return Result of comparison.
 units.__lt = function (a,b)
    assert(isunits(a) and isunits(b), 'Not compatible!')
    if a.key == b.key then return a.value < b.value end
@@ -529,7 +520,7 @@ end
 --- a <= b
 --    @param a First unit object.
 --    @param b Second unit object.
---    @return Result of comparision.
+--    @return Result of comparison.
 units.__le = function (a,b)
    assert(isunits(a) and isunits(b), 'Not compatible!')
    if a.key == b.key then return a.value <= b.value end
@@ -591,7 +582,7 @@ end
 
 --- Reduce elements with common base part.
 --    @param u Unit object.
---    @return Resutl of simplification.
+--    @return Result of simplification.
 units.simp = function (u)
    local val, t = simplify(u.value, fromkey(u.key))
    t = reduce(t)
@@ -630,6 +621,9 @@ units.serialize = function (obj)
    return string.format("{%s}", table.concat(s, ','))
 end
 units.about[units.serialize] = {"serialize(obj)", "Save internal representation of units object.", help.OTHER}
+
+-- free memory if need
+if not lc_version then units.about = nil end
 
 return units
 
