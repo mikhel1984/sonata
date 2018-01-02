@@ -78,25 +78,6 @@ function round(x)
 end
 about[round] = {'round(x)', 'Round value to closest integer.', mhelp.OTHER}
 
--- create function f(x) from string
-function fx(str)
-   return assert(load("return function (x) return " .. str .. " end"))()
-end
-about[fx] = {"fx(str)", "Create Lua function f(x) from string.", mhelp.OTHER}
-
--- plot string function
-function plot(str, a, b)
-   assert(type(str) == 'string', 'Expected string expression!')  
-   -- prepare command 
-   local graph = 'gnuplot -p -e "f(x)= ' .. str .. '; plot'
-   if a and type(a) == 'number' and b and type(b) == 'number' then
-      graph = graph .. ' [' .. a .. ':' .. b .. ']'
-   end
-   graph = graph .. ' f(x)"'   
-   os.execute(graph)   
-end
-about[plot] = {"plot(str[,a,b])", "Quick plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", mhelp.OTHER}
-
 -- calculate function for range of values
 function eval(fn, x1, xn, step)
    xn = xn or x1
