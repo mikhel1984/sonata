@@ -446,7 +446,7 @@ polynom.fit = function (X,Y,ord)
    end
    -- solve
    local mat = polynom.lc_matrix
-   local gaus = mat.rref(mat(table.unpack(m)),mat.V(sY))
+   local gaus = mat.rref(mat(m),mat.V(sY))
    local res = {}
    for i = 1,ord+1 do res[i] = gaus(i,-1) end
    return polynom:init(res)

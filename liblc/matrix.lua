@@ -11,8 +11,8 @@
 --[[!!
 Mat = require 'liblc.matrix'
 
-a = Mat({1,2},{3,4})             
-b = Mat({5,6},{7,8})             
+a = Mat {{1,2},{3,4}}             
+b = Mat {{5,6},{7,8}}             
 ans = a(2,2)                     --> 4 
 
 b:set(1,1)(9)
@@ -24,16 +24,16 @@ ans = c(1,2)                     --> 3
 
 _, ans = a:size()                --> 2
 
-ans = a + b                      --> Mat({6,8},{10,12})
+ans = a + b                      --> Mat {{6,8},{10,12}}
 
-ans = b - a                      --> Mat({4,4},{4,4})
+ans = b - a                      --> Mat {{4,4},{4,4}}
 
-ans = a * b                      --> Mat({19,22},{43,50})
+ans = a * b                      --> Mat {{19,22},{43,50}}
 
 ans = a / b 
 ans = ans:det()                  --~ 1
 
-ans = a ^ 2                      --> Mat({7,10},{15,22}) 
+ans = a ^ 2                      --> Mat {{7,10},{15,22}} 
 
 ans = a:det()                    --> -2
 
@@ -45,31 +45,31 @@ ans = (f == a)                   --> true
 
 ans = (a == b)                   --> false
 
-ans = Mat.eye(2)                 --> Mat({1,0},{0,1})
+ans = Mat.eye(2)                 --> Mat {{1,0},{0,1}}
 
-ans = Mat.zeros(2,1)             --> Mat({0},{0})
+ans = Mat.zeros(2,1)             --> Mat {{0},{0}}
 
-ans = Mat.ones(2,3,4)            --> Mat({4,4,4},{4,4,4})
+ans = Mat.ones(2,3,4)            --> Mat {{4,4,4},{4,4,4}}
 
-ans = a .. b                     --> Mat({1,2,5,6},{3,4,7,8})
+ans = a .. b                     --> Mat {{1,2,5,6},{3,4,7,8}}
 
-ans = a // b                     --> Mat({1,2},{3,4},{5,6},{7,8})
+ans = a // b                     --> Mat {{1,2},{3,4},{5,6},{7,8}}
 
-ans = a:map(function (x) return x^2 end)          --> Mat({1,4},{9,16})
+ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
-ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat({-1,-3},{-2,-4})
+ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat {{-1,-3},{-2,-4}}
 
-ans = Mat.rref(a, Mat({5},{11})) --> Mat({1,0,1},{0,1,2})
+ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
 
-ans = Mat.V {1,2,3}              --> Mat({1},{2},{3})
+ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 
-g = Mat({1,2,3},{4,5,6},{7,8,9})
-ans = g:sub(2,-1,2,3)           --> Mat({5,6},{8,9})
+g = Mat {{1,2,3},{4,5,6},{7,8,9}}
+ans = g:sub(2,-1,2,3)           --> Mat {{5,6},{8,9}}
 
 h = Mat.rand(3,2)
 print(h)
 
-m = Mat({1,2},{3,4},{5,6})
+m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
 ans = math.floor(n(2,2)*1000)   --> 333
 
@@ -77,20 +77,20 @@ k = Mat.eye(3)
 k = k:dense()
 ans = k[2][1]                   --> 0
 
-ans = Mat.diag({1,2,3})         --> Mat({1,0,0},{0,2,0},{0,0,3})
+ans = Mat.diag({1,2,3})         --> Mat {{1,0,0},{0,2,0},{0,0,3}}
 
-ans = g:diag(1)                 --> Mat({2},{6})
+ans = g:diag(1)                 --> Mat {{2},{6}}
 
-x1 = Mat({1,2,3})
-x2 = Mat({4,5,6})
-ans = Mat.cross(x1,x2)          --> Mat({-3},{6},{-3})
+x1 = Mat {{1,2,3}}
+x2 = Mat {{4,5,6}}
+ans = Mat.cross(x1,x2)          --> Mat {{-3},{6},{-3}}
 
 ans = Mat.dot(x1,x2)            --> 32
 
 l,u,p = b:lu()
 ans = l[2][1]                   --~ 0.714
 
-m = Mat({3,1},{1,3})
+m = Mat {{3,1},{1,3}}
 m = m:cholesky()
 ans = m[2][2]                   --~ 1.633
 
@@ -141,14 +141,14 @@ end
 --- Create new matrix from list of tables.
 --    Arguments are rows represented as tables.
 --    @return Matrix object.
-function matrix.new(...)
-   local args = {...}
-   local cols, rows = 0, #args
+function matrix.new(m)
+   m = m or {}
+   local cols, rows = 0, #m
    for i = 1, rows do
-      assert(type(args[i]) == 'table', "Row must be a table!")
-      cols = (cols < #args[i]) and #args[i] or cols
+      assert(type(m[i]) == 'table', "Row must be a table!")
+      cols = (cols < #m[i]) and #m[i] or cols
    end
-   return matrix:init(rows, cols, args)
+   return matrix:init(rows, cols, m)
 end
 
 --- Check correctness of element index.
@@ -827,7 +827,7 @@ matrix.pinv = function (M)
       local B = A:sub(k,n,k,k)
       if r > 1 then 
          local tmp = L:sub(k,n,1,r-1) * L:sub(k,k,1,r-1):transpose() 
-	 tmp = ismatrix(tmp) and tmp or matrix.new({tmp})         -- product can return a number
+	 tmp = ismatrix(tmp) and tmp or matrix.new {{tmp}}         -- product can return a number
          B = B - tmp
       end
       for i = k, n do setval(L,i,r, getval(B,i-k+1,1)) end   -- copy B to L
@@ -915,7 +915,7 @@ matrix.cross = function (a,b)
    assert(a.rows*a.cols == 3 and b.rows*b.cols == 3, "Vector with 3 elements is expected!")
    local x1,y1,z1 = a:get(1), a:get(2), a:get(3)
    local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
-   return matrix.new({y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2})
+   return matrix.new {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}}
 end
 matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.', help.BASE}
 
@@ -1041,7 +1041,7 @@ end
 matrix.about[matrix.cholesky] = {"cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", help.OTHER}
 
 -- constructor call
-setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
+setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})
 matrix.Mat = 'Mat'
 matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
 
