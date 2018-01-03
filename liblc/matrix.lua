@@ -356,7 +356,9 @@ matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can 
 --    @return Result of function evaluation.
 matrix.map = function (m, fn) 
    local res = matrix:init(m.rows, m.cols)
+   res.isdense = m.isdense
    for r = 1, res.rows do
+      if res.isdense then res[r] = {} end
       for c = 1, res.cols do setval(res,r,c, fn(getval(m,r,c))) end
    end
    return res
@@ -369,7 +371,9 @@ matrix.about[matrix.map] = {"map(m,fn)", "Apply the given function to all elemen
 --    @return Result of function evaluation.
 matrix.map_ex = function (m, fn)
    local res = matrix:init(m.rows, m.cols)
+   res.isdense = m.isdense
    for r = 1, res.rows do
+      if res.isdense then res[r] = {} end
       for c = 1, res.cols do setval(res,r,c, fn(r,c,getval(m,r,c))) end
    end
    return res
@@ -384,7 +388,9 @@ matrix.about[matrix.map_ex] = {"map_ex(m,fn)", "Apply function fn(row,col,val) t
 matrix.apply = function (m1, m2, fn)
    assert(m1.rows==m2.rows and m1.cols==m2.cols, "Different matrix size!")
    local res = matrix:init(m1.rows,m1.cols)
+   res.isdense = m1.isdense and m2.isdense
    for r = 1,res.rows do
+      if res.isdense then res[r] = {} end
       for c = 1,res.cols do setval(res,r,c, fn(getval(m1,r,c), getval(m2,r,c))) end
    end
    return res
@@ -883,8 +889,11 @@ matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
 --    @param m Source matrix.
 --    @return Sparse matrix.
 matrix.sparse = function (m)
-   -- function map uses 'sparse' approach
-   return matrix.map(m, function (x) return x end)
+   local res = matrix:init(m.rows, m.cols)
+   for r = 1, res.rows do
+      for c = 1, res.cols do setval(res,r,c, getval(m,r,c)) end
+   end
+   return res
 end
 matrix.about[matrix.sparse] = {"sparse(m)", "Return sparse matrix.", help.OTHER}
 
