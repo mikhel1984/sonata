@@ -144,10 +144,13 @@ end
 function matrix.new(m)
    m = m or {}
    local cols, rows = 0, #m
+   local equal = true
    for i = 1, rows do
       assert(type(m[i]) == 'table', "Row must be a table!")
       cols = (cols < #m[i]) and #m[i] or cols
+      if i > 1 then equal = equal and #m[i] == #m[i-1] end
    end
+   m.isdense = equal
    return matrix:init(rows, cols, m)
 end
 
@@ -184,6 +187,7 @@ end
 --    @param c Column number.
 --    @return Element value.
 local function getval(m, r, c)
+   if m.isdense then return m[r][c] end
    local v = rawget(m,r)
    return v and v[c] or 0
 end
@@ -195,6 +199,7 @@ end
 --    @param c Column number.
 --    @param v New value.
 local function setval(m, r, c, v)
+   if m.isdense then m[r][c] = v; return end
    if (m[r] and m[r][c]) or v ~= 0 then 
       m[r] = m[r] or {}
       m[r][c] = v
@@ -524,6 +529,7 @@ matrix.fill = function (rows, cols, fn)
       m[r] = {}
       for c = 1,cols do m[r][c] = fn(r,c) end
    end
+   m.isdense = true
    return m
 end
 matrix.about[matrix.fill] = {"fill(rows,cols,fn)", "Create matrix, using function fn(r,c).", help.OTHER}
@@ -868,6 +874,7 @@ matrix.dense = function (m)
       res[r] = {}
       for c = 1,m.cols do res[r][c] = getval(m,r,c) end
    end
+   res.isdense = true
    return res
 end
 matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
