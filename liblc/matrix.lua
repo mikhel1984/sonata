@@ -33,6 +33,10 @@ ans = a * b                      --> Mat {{19,22},{43,50}}
 ans = a / b 
 ans = ans:det()                  --~ 1
 
+ans = 2 * a                      --> Mat {{2,4},{6,8}}
+
+ans = a - 1                      --> Mat {{0,1},{2,3}}
+
 ans = a ^ 2                      --> Mat {{7,10},{15,22}} 
 
 ans = a:det()                    --> -2
@@ -50,6 +54,8 @@ ans = Mat.eye(2)                 --> Mat {{1,0},{0,1}}
 ans = Mat.zeros(2,1)             --> Mat {{0},{0}}
 
 ans = Mat.ones(2,3,4)            --> Mat {{4,4,4},{4,4,4}}
+
+ans = Mat.ones(a,3)              --> Mat {{3,3},{3,3}}
 
 ans = a .. b                     --> Mat {{1,2,5,6},{3,4,7,8}}
 
@@ -71,11 +77,14 @@ print(h)
 
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
-ans = math.floor(n(2,2)*1000)   --> 333
+ans = n(2,2)                    --~ 0.333
 
 k = Mat.eye(3)
 k = k:dense()
 ans = k[2][1]                   --> 0
+
+k = k:sparse()
+ans = k[2][1]                   --> nil
 
 ans = Mat.diag({1,2,3})         --> Mat {{1,0,0},{0,2,0},{0,0,3}}
 
@@ -187,9 +196,7 @@ end
 --    @param c Column number.
 --    @return Element value.
 local function getval(m, r, c)
-   if m.isdense then return m[r][c] end
-   local v = rawget(m,r)
-   return v and v[c] or 0
+   return m[r] and m[r][c] or 0
 end
 
 --- Set value if need.
@@ -199,8 +206,9 @@ end
 --    @param c Column number.
 --    @param v New value.
 local function setval(m, r, c, v)
-   if m.isdense then m[r][c] = v; return end
-   if (m[r] and m[r][c]) or v ~= 0 then 
+   if m.isdense then 
+      m[r][c] = v
+   elseif (m[r] and m[r][c]) or v ~= 0 then 
       m[r] = m[r] or {}
       m[r][c] = v
    end
@@ -324,6 +332,8 @@ local fn_unm = function (x) return -x end
 --    @param b Second matrix.
 --    @return Sum of the given matrices.
 matrix.__add = function (a,b)
+   a = ismatrix(a) and a or matrix.ones(b.rows, b.cols, a)
+   b = ismatrix(b) and b or matrix.ones(a.rows, a.cols, b)
    return matrix.apply(a,b,fn_sum)
 end
 
@@ -332,6 +342,8 @@ end
 --    @param b Second matrix.
 --    @return Subtraction of the given matrices.
 matrix.__sub = function (a,b)
+   a = ismatrix(a) and a or matrix.ones(b.rows, b.cols, a)
+   b = ismatrix(b) and b or matrix.ones(a.rows, a.cols, b)
    return matrix.apply(a,b,fn_sub)
 end
 
@@ -519,6 +531,7 @@ matrix.V = matrix.vector
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return Sparse matrix.
 matrix.zeros = function (rows, cols)
+   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    cols = cols or rows
    return matrix:init(rows, cols)
 end
@@ -546,6 +559,7 @@ matrix.about[matrix.fill] = {"fill(rows,cols,fn)", "Create matrix, using functio
 --    @param val Value to set. Default is 1.
 --    @return New matrix.
 matrix.ones = function (rows, cols, val)
+   if ismatrix(rows) then rows,cols,val = rows.rows, rows.cols, cols end
    return matrix.fill(rows, cols or rows, function (r,c) return val or 1 end)
 end
 matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given numbers (default is 1).", help.OTHER}
@@ -555,6 +569,7 @@ matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given 
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return New matrix.
 matrix.rand = function (rows, cols)
+   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    return matrix.fill(rows, cols or rows, function (r,c) return math.random() end)
 end
 matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1.", help.OTHER}
@@ -564,6 +579,7 @@ matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random num
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return Diagonal matrix with ones.
 matrix.eye = function (rows, cols)
+   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    cols = cols or rows
    local m = matrix:init(rows, cols)
    for i = 1, math.min(rows, cols) do setval(m,i,i, 1) end
