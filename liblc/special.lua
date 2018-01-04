@@ -93,7 +93,52 @@ stat.tdist = function (t,n)
 end
 ]]
 
+special.erfc = function (x)
+   local z = math.abs(x)
+   local t = 1.0/(1+0.5*z)
+   local ans = t*math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*
+               (0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))))
+   return (x >= 0.0) and ans or (2.0-ans)
+end
+special.about[special.erfc] = {"erfc(x)", "Complementary error function.", help.BASE}
 
+special.erf = function (x) return 1-special.erfc(x) end
+special.about[special.erf] = {"erf(x)", "Error function.", help.BASE}
+
+local function bessj0 (x)
+   local ax  = math.abs(x)
+   local ans1, ans2
+   if ax < 8.0 then
+      local y = x*x
+      ans1 = 57568490574.0+y*(-13362590354.0+y*(651619640.7+y*(-11214424.18+y*(77392.33017-y*184.9052456))))
+      ans2 = 57568490411.0+y*(1029532985.0+y*(9494680.718+y*(59272.64853+y*(267.8532712+y))))
+      return ans1/ans2
+   else
+      local z = 8.0/ax
+      local y,xx = z*z, ax-0.785398164
+      ans1 = 1.0+y*(-0.1098628627E-2+y*(0.2734510407E-4+y*(-0.2073370639E-5+y*0.2093887211E-6)))
+      ans2 = -0.1562499995E-1+y*(0.1430488765E-3+y*(-0.6911147651E-5+y*(0.7621095161E-6-y*0.934935152E-7)))
+      return math.sqrt(0.636619772/ax)*(math.cos(xx)*ans1-z*math.sin(xx)*ans2)
+   end
+end
+
+local function bessy0 (x)
+   assert(x > 0, 'Positive value is expected!')
+   local ans1, ans2
+   if x < 8.0 then
+      local y = x*x
+      ans1 = -2957821389.0+y*(7062834065.0+y*(-512359803.6+y*(10879881.29+y*(-86327.92757+y*228.4622733))))
+      ans2 = 40076544269.0+y*(745249964.8+y*(7189466.438+y*(47447.26470+y*(226.1030244+y))))
+      return ans1/ans2+0.636619772*bessj0(x)*math.log(x)
+   else
+      local z = 8.0/x
+      local y,xx = z*z, x-0.785398164
+      ans1 = 1.0+y*(-0.1098628627E-2+y*(0.2734510407E-4+y*(-0.2073370639E-5+y*0.2093887211E-6)))
+      ans2 = -0.1562499995E-1+y*(0.1430488765E-3+y*(-0.6911147651E-5+y*(0.7621095161E-6-y*0.934935152E-7)))
+      return math.sqrt(0.636619772/x)*(math.sin(xx)*ans1+z*math.cos(xx)*ans2)
+
+   end
+end
 
 -- free memory in case of standalone usage
 if not lc_version then special.about = nil end
