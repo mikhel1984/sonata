@@ -22,6 +22,7 @@ import = {
    polynom  = "Poly",
    rational = "Rat",
    set      = "Set",
+   special  = "Spec",
    stat     = "Stat",
    units    = "Unit",
 }

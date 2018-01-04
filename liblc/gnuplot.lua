@@ -8,7 +8,7 @@
 --]]
 
 --------------- Tests ---------------
---[[!!   
+--[[ set !! before release  
 Gnu = require 'liblc.gnuplot'
 
 a = {{'sin(x)',title='Sinus x'},permanent=false}

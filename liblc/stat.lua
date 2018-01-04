@@ -41,9 +41,7 @@ ans = Stat.geomean(X)         --~ 2.995
 ans = Stat.harmean(X,W)       --~ 2.567
 ]]
 
--- magic numbers for gamma approximation
-local magic = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,
-               12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7}
+
 -------------------------------------------- 
 -- @class table
 -- @name stat
@@ -53,50 +51,6 @@ local stat = {}
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
-
---- Gamma function.
---    Lanczos approximation (based on Wikipedia) for real numbers.
---    <i>Private function.</i>
---    @param z Real number.
---    @return G(z).
-local function gamma(z) 
-   if z < 0.5 then
-      return math.pi / (math.sin(math.pi*z) * gamma(1-z))
-   else
-      z = z-1
-      local x = 0.99999999999980993
-      for i = 1, #magic do x = x + magic[i]/(z+i) end
-      local t = z + #magic - 0.5
-      return math.sqrt(2*math.pi)*math.pow(t, z+0.5)*math.exp(-t)*x
-   end
-end
-
---[[
-local function gRatio(x,y)
-   local m = math.abs(math.max(x,y))
-   if m <= 100 then
-      return gamma(x)/gamma(y)
-   else
-      return math.pow(2,x-y)*gRatio(0.5*x,0.5*y)*gRatio(0.5*x+0.5,0.5*y+0.5)
-   end
-end
-
-local function hyperGeom(a,b,c,z,N)
-   N = N or 20
-   local S,M = 1
-   for i = 1,N do
-      M = math.pow(z,i)
-      for j = 0,i-1 do M = M * (a+j)*(b+j)/((1+j)*(c+j)) end
-      S = S + M
-   end
-   return S
-end
-
--- source: https://habrahabr.ru/post/307712/
-stat.tdist = function (t,n)
-   return 0.5+t*gRatio(0.5*(n+1),0.5*n)*hyperGeom(0.5,0.5*(n+1),1.5,-t*t/n)/math.sqrt(math.pi*n)
-end
-]]
 
 --- Sum of all elements.
 --    @param t Table with numbers.
