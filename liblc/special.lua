@@ -107,15 +107,16 @@ special.about[special.erf] = {"erf(x)", "Error function.", help.BASE}
 
 local function bessj0 (x)
    local ax  = math.abs(x)
-   local ans1, ans2
+   local ans1, ans2, y
    if ax < 8.0 then
-      local y = x*x
+      y = x*x
       ans1 = 57568490574.0+y*(-13362590354.0+y*(651619640.7+y*(-11214424.18+y*(77392.33017-y*184.9052456))))
       ans2 = 57568490411.0+y*(1029532985.0+y*(9494680.718+y*(59272.64853+y*(267.8532712+y))))
       return ans1/ans2
    else
       local z = 8.0/ax
-      local y,xx = z*z, ax-0.785398164
+      y = z*z
+      local xx = ax-0.785398164
       ans1 = 1.0+y*(-0.1098628627E-2+y*(0.2734510407E-4+y*(-0.2073370639E-5+y*0.2093887211E-6)))
       ans2 = -0.1562499995E-1+y*(0.1430488765E-3+y*(-0.6911147651E-5+y*(0.7621095161E-6-y*0.934935152E-7)))
       return math.sqrt(0.636619772/ax)*(math.cos(xx)*ans1-z*math.sin(xx)*ans2)
@@ -123,21 +124,111 @@ local function bessj0 (x)
 end
 
 local function bessy0 (x)
-   assert(x > 0, 'Positive value is expected!')
-   local ans1, ans2
+   local ans1, ans2, y
    if x < 8.0 then
-      local y = x*x
+      y = x*x
       ans1 = -2957821389.0+y*(7062834065.0+y*(-512359803.6+y*(10879881.29+y*(-86327.92757+y*228.4622733))))
       ans2 = 40076544269.0+y*(745249964.8+y*(7189466.438+y*(47447.26470+y*(226.1030244+y))))
       return ans1/ans2+0.636619772*bessj0(x)*math.log(x)
    else
       local z = 8.0/x
-      local y,xx = z*z, x-0.785398164
+      y = z*z
+      local xx = x-0.785398164
       ans1 = 1.0+y*(-0.1098628627E-2+y*(0.2734510407E-4+y*(-0.2073370639E-5+y*0.2093887211E-6)))
       ans2 = -0.1562499995E-1+y*(0.1430488765E-3+y*(-0.6911147651E-5+y*(0.7621095161E-6-y*0.934935152E-7)))
       return math.sqrt(0.636619772/x)*(math.sin(xx)*ans1+z*math.cos(xx)*ans2)
 
    end
+end
+
+local function bessj1 (x)
+   local ax = math.abs(x)
+   local ans1, ans2, y
+   if ax < 8.0 then
+      y = x*x
+      ans1 = x*(72362614232.0*y*(-7895059235.0+y*(242396853.1+y*(-2972611.439+y*(15704.4826-y*30.16036606)))))
+      ans2 = 144725228442.0+y*(2300535178.0+y*(18583304.74+y*(99447.43394+y*(376.9991397+y))))
+      return ans1/ans2
+   else
+      local z = 8.0/ax
+      local xx = ax-2.356194491
+      y = z*z
+      ans1 = 1.0+y*(-0.183105E-2+y*(-0.3516396496E-4+y*(0.2457520174E-5-y*0.240337019E-6)))
+      ans2 = 0.04687499995+y*(-0.2002690873E-3+y*(0.8449199096E-5+y*(-0.88228987E-6+y*0.105787412E-6)))
+      ans1 = math.sqrt(0.636619772/ax)*(math.cos(xx)*ans1-z*math.sin(xx)*ans2)
+      return (x >= 0) and ans1 or -ans1
+   end
+end
+
+local function bessy1 (x)
+   local ans1, ans2, y
+   if x < 8.0 then
+      y = x*x
+      ans1 = x*(-0.4900604943+y*(0.1275274390E13+y*(-0.5153438139E11+y*(0.7349264551E9+y*(-0.4237922726E7+y*0.8511937935E4)))))
+      ans2 = 0.2499580570E14+y*(0.4244419664E12+y*(0.3733650367E10+y*(0.2245904002E8+y*(0.1020426050E6+y*(0.3549632885E3+y)))))
+      return ans1/ans2+0.636619772*(bessj1(x)*math.log(x)-1.0/x)
+   else
+      local z = 8.0/x
+      local xx = x-2.356194491
+      y = z*z
+      ans1 = 1.0+y*(-0.183105E-2+y*(-0.3516396496E-4+y*(0.2457520174E-5-y*0.240337019E-6)))
+      ans2 = 0.04687499995+y*(-0.2002690873E-3+y*(0.8449199096E-5+y*(-0.88228987E-6+y*0.105787412E-6)))
+      return math.sqrt(0.636619772/x)*(math.sin(xx)*ans1+z*math.cos(xx)*ans2)
+   end
+end
+
+special.bessy = function (n,x)
+   assert(x > 0, 'Positive value is expected!')
+   assert(n >= 0, 'Non-negative order is expected!')
+   if n == 0 then return bessy0(x) end
+   if n == 1 then return bessy1(x) end
+   local tox = 2.0/x
+   local by = bessy1(x)
+   local bym = bessy0(x)
+   for i = 1,(n-1) do
+      by, bym = i*tox*by-bym, by
+   end
+   return by
+end
+
+special.bessj = function (n,x)
+   assert(n >= 0, 'Non-negative order is expected!')
+   if n == 0 then return bessj0(x) end
+   if n == 1 then return bessj1(x) end
+   if x == 0 then return 0 end
+   local ACC, BIGNO, BIGNI = 40, 1E10, 1E-10
+   
+   local ax = math.abs(x)
+   local tox = 2.0/ax
+   local bj, bjm, ans
+   if ax > n then
+      bjm = bessj0(ax)
+      bj = bessj1(ax)
+      for i = 1,(n-1) do 
+         bj, bjm = i*tox*bj-bjm, bm
+      end
+      ans = bj
+   else
+      local m = math.floor(n+math.sqrt(ACC*n)) 
+      local jsum, sum = false, 0
+      local ans, bjp = 0, 0
+      bj = 1
+      for i = m,1,-1 do
+         bjm, bjp, bj = i*tox*bj-bjp, bj, bjm
+	 if math.abs(bj) > BIGNO then
+	    bj = bj*BIGNI
+	    bjp = bjp*BIGNI
+	    ans = ans*BIGNI
+	    sum = sum*BIGNI
+	 end
+	 if jsum then sum = sum+bj end
+	 jsum = not jsum
+	 if i == n then ans = bjp end
+      end
+      sum = 2.0*sum-bj
+      ans = ans/sum
+   end
+   return (x < 0.0 and (n & 1)) and -ans or ans
 end
 
 -- free memory in case of standalone usage
