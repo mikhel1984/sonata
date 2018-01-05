@@ -7,11 +7,29 @@
             module 'main'
 --]]
 
+---------------- Tests ---------------------
+--[[!!
+require 'liblc.main'
+
+ans = round(0.9)                 --> 1.0
+
+ans = fact(12)                   --> 479001600
+
+ans = fact(50)                   --~ 3.0414E+64
+
+ans = lctype(25)                 --> 'integer'
+
+a = {a=1,b=2;3,4,5}
+flip(a)
+]]
+
 local main = {}
 
 -- mhelp
 mhelp = require "liblc.help"
 about = mhelp:new("Lua based calculator.")
+
+local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
 
 -- Common
 abs = math.abs;    about[abs] = {"abs(x)", "Absolute value.", mhelp.BASE}
@@ -40,7 +58,7 @@ floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or 
 ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", mhelp.OTHER}
 -- Constants
 _pi = math.pi;     about[_pi] = {"_pi", "Number pi", mhelp.CONST}
-_e = math.exp(1)   about[_e] = {"_e", "Euler number", mhelp.CONST}
+_e = math.exp(1.0) about[_e] = {"_e", "Euler number", mhelp.CONST}
 
 -- Additional functions --
 main.LOG10 = math.log(10)
@@ -85,6 +103,21 @@ function eval(fn, x1, xn, step)
    for k = x1, xn, step do print("x="..k.."\tres="..fn(k)) end
 end
 about[eval] = {"eval(fn,x1[,xn[,step]])", "Evaluate function for given value or interval and print result.", mhelp.OTHER}
+
+function fact(n)
+   assert(n >= 0 and math.type(n) == 'integer', 'Expected positive integer value!')
+   local tmp = factorials[n]
+   if tmp and tmp < math.huge then return tmp end
+   -- calculate
+   local maxint, isint = math.maxinteger / 100, true
+   for i = #factorials,n do
+      tmp = factorials[i]*(i+1)
+      assert(tmp < math.huge, "Too big value! Try Big.fact(n) or Spec.gammaln(n+1).")
+      if isint and tmp > maxint then tmp = tmp * 1.0; isint = false end
+      factorials[i+1] = tmp
+   end
+   return factorials[n]
+end
 
 -- Print examples from test part of module
 function example(nm)

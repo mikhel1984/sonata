@@ -32,7 +32,7 @@ ans = Big.tonumber(a^3)      --> 1860867
 ans = Big.tonumber(Big.abs('-25')) --> 25
 
 c = Big(10)
-ans = Big.tonumber(c:factorial())  --> 3628800
+ans = Big.tonumber(c:fact())  --> 3628800
 
 d = a:copy()
 ans = (a == d)               --> true
@@ -439,7 +439,7 @@ bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer a
 --- m!
 --    @param m Bigint object or integer.
 --    @return Factorial of the number as bigint object.
-bigint.factorial = function (m)
+bigint.fact = function (m)
    assert(m >= 0, "Non-negative value is expected!")
    local n = bigint.abs(m)
    local res = bigint:new(1)   
@@ -450,7 +450,7 @@ bigint.factorial = function (m)
    end
    return res
 end
-bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of non-negative integer n.", help.BASE}
+bigint.about[bigint.fact] = {"fact(n)", "Return factorial of non-negative integer n.", help.BASE}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
