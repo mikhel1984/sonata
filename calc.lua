@@ -16,6 +16,7 @@ import = {
    array    = "Arr",
    bigint   = "Big",
    complex  = "Cmp",
+   const    = "Const",
    gnuplot  = "Gnu",
    matrix   = "Mat",
    numeric  = "Num",
