@@ -59,12 +59,17 @@ special.gammaln = function (z)
    for i = 1, #k_gammaln do y=y+1; ser = ser+k_gammaln[i]/y end
    return -tmp+math.log(2.5066282746310005*ser/x)
 end
-special.about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma function.", help.BASE}
+special.about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma function.", help.OTHER}
 
 special.beta = function (z,w)
    return math.exp(special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w))
 end
 special.about[special.beta] = {"beta(z,w)", "Beta function.", help.BASE}
+
+special.betaln = function (z,w)
+   return special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w)
+end
+special.about[special.betaln] = {"betaln(z,w)", "Natural logarithm of beta function.", help.OTHER}
 
 --[[
 local function gRatio(x,y)
@@ -116,9 +121,9 @@ local function bessj0 (x)
    else
       local z = 8.0/ax
       y = z*z
-      local xx = ax-0.785398164
       ans1 = 1.0+y*(-0.1098628627E-2+y*(0.2734510407E-4+y*(-0.2073370639E-5+y*0.2093887211E-6)))
       ans2 = -0.1562499995E-1+y*(0.1430488765E-3+y*(-0.6911147651E-5+y*(0.7621095161E-6-y*0.934935152E-7)))
+      local xx = ax-0.785398164
       return math.sqrt(0.636619772/ax)*(math.cos(xx)*ans1-z*math.sin(xx)*ans2)
    end
 end
@@ -133,9 +138,9 @@ local function bessy0 (x)
    else
       local z = 8.0/x
       y = z*z
-      local xx = x-0.785398164
       ans1 = 1.0+y*(-0.1098628627E-2+y*(0.2734510407E-4+y*(-0.2073370639E-5+y*0.2093887211E-6)))
-      ans2 = -0.1562499995E-1+y*(0.1430488765E-3+y*(-0.6911147651E-5+y*(0.7621095161E-6-y*0.934935152E-7)))
+      ans2 = -0.1562499995E-1+y*(0.1430488765E-3+y*(-0.6911147651E-5+y*(0.7621095161E-6-y*0.934945152E-7)))
+      local xx = x-0.785398164
       return math.sqrt(0.636619772/x)*(math.sin(xx)*ans1+z*math.cos(xx)*ans2)
 
    end
@@ -146,15 +151,15 @@ local function bessj1 (x)
    local ans1, ans2, y
    if ax < 8.0 then
       y = x*x
-      ans1 = x*(72362614232.0*y*(-7895059235.0+y*(242396853.1+y*(-2972611.439+y*(15704.4826-y*30.16036606)))))
+      ans1 = x*(72362614232.0+y*(-7895059235.0+y*(242396853.1+y*(-2972611.439+y*(15704.4826-y*30.16036606)))))
       ans2 = 144725228442.0+y*(2300535178.0+y*(18583304.74+y*(99447.43394+y*(376.9991397+y))))
       return ans1/ans2
    else
       local z = 8.0/ax
-      local xx = ax-2.356194491
       y = z*z
-      ans1 = 1.0+y*(-0.183105E-2+y*(-0.3516396496E-4+y*(0.2457520174E-5-y*0.240337019E-6)))
+      ans1 = 1.0+y*(0.183105E-2+y*(-0.3516396496E-4+y*(0.2457520174E-5-y*0.240337019E-6)))
       ans2 = 0.04687499995+y*(-0.2002690873E-3+y*(0.8449199096E-5+y*(-0.88228987E-6+y*0.105787412E-6)))
+      local xx = ax-2.356194491
       ans1 = math.sqrt(0.636619772/ax)*(math.cos(xx)*ans1-z*math.sin(xx)*ans2)
       return (x >= 0) and ans1 or -ans1
    end
@@ -164,19 +169,23 @@ local function bessy1 (x)
    local ans1, ans2, y
    if x < 8.0 then
       y = x*x
-      ans1 = x*(-0.4900604943+y*(0.1275274390E13+y*(-0.5153438139E11+y*(0.7349264551E9+y*(-0.4237922726E7+y*0.8511937935E4)))))
+      ans1 = x*(-0.4900604943E13+y*(0.1275274390E13+y*(-0.5153438139E11+y*(0.7349264551E9+y*(-0.4237922726E7+y*0.8511937935E4)))))
       ans2 = 0.2499580570E14+y*(0.4244419664E12+y*(0.3733650367E10+y*(0.2245904002E8+y*(0.1020426050E6+y*(0.3549632885E3+y)))))
       return ans1/ans2+0.636619772*(bessj1(x)*math.log(x)-1.0/x)
    else
       local z = 8.0/x
-      local xx = x-2.356194491
       y = z*z
-      ans1 = 1.0+y*(-0.183105E-2+y*(-0.3516396496E-4+y*(0.2457520174E-5-y*0.240337019E-6)))
+      ans1 = 1.0+y*(0.183105E-2+y*(-0.3516396496E-4+y*(0.2457520174E-5-y*0.240337019E-6)))
       ans2 = 0.04687499995+y*(-0.2002690873E-3+y*(0.8449199096E-5+y*(-0.88228987E-6+y*0.105787412E-6)))
+      local xx = x-2.356194491
       return math.sqrt(0.636619772/x)*(math.sin(xx)*ans1+z*math.cos(xx)*ans2)
    end
 end
 
+--- Bessel function of the second kind
+--    @param n Polynomial order.
+--    @param x Nonnegative real number.
+--    @return Polynomial value
 special.bessy = function (n,x)
    assert(x > 0, 'Positive value is expected!')
    assert(n >= 0, 'Non-negative order is expected!')
@@ -190,7 +199,12 @@ special.bessy = function (n,x)
    end
    return by
 end
+special.about[special.bessy] = {"bessy(n,x)","Bessel function of the second kind.", help.BASE}
 
+--- Bessel function of the first kind
+--    @param n Polynomial order.
+--    @param x Real number.
+--    @return Polynomial value
 special.bessj = function (n,x)
    assert(n >= 0, 'Non-negative order is expected!')
    if n == 0 then return bessj0(x) end
@@ -209,12 +223,12 @@ special.bessj = function (n,x)
       end
       ans = bj
    else
-      local m = math.floor(n+math.sqrt(ACC*n)) 
+      local m = math.floor((n+math.floor(math.sqrt(ACC*n)))/2)*2 
       local jsum, sum = false, 0
-      local ans, bjp = 0, 0
-      bj = 1
+      local bjp = 0
+      bj, ans = 1, 0
       for i = m,1,-1 do
-         bjm, bjp, bj = i*tox*bj-bjp, bj, bjm
+         bj, bjp = i*tox*bj-bjp, bj
 	 if math.abs(bj) > BIGNO then
 	    bj = bj*BIGNI
 	    bjp = bjp*BIGNI
@@ -230,6 +244,7 @@ special.bessj = function (n,x)
    end
    return (x < 0.0 and (n & 1)) and -ans or ans
 end
+special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind.", help.BASE}
 
 -- free memory in case of standalone usage
 if not lc_version then special.about = nil end
