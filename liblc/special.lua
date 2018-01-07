@@ -11,6 +11,20 @@
 --[[!!
 Spec = require 'liblc.special'
 
+ans = Spec.beta(3,4)               --~ 1.667E-2
+
+ans = Spec.betaln(10,20)           --~ -19.115
+
+ans = Spec.erf(1)                  --~ 0.8427
+
+ans = Spec.erfc(0.5)               --~ 0.4795
+
+-- Ei(x)
+ans = Spec.expint(3.3)             --~ 8.939E-3
+
+-- E3(x)
+ans = Spec.expint(2, 5)            --~ 9.965E-4
+
 ans = Spec.gamma(-1.5)             --~ 2.3633
 
 ans = Spec.gammaln(100)            --~ 359.1342
