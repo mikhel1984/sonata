@@ -71,6 +71,78 @@ special.betaln = function (z,w)
 end
 special.about[special.betaln] = {"betaln(z,w)", "Natural logarithm of beta function.", help.OTHER}
 
+special.expint = function (n,x)
+   if x == nil then n,x = 1,n end
+   assert(n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1)), 'Bad arguments!')
+   if n == 0 then return math.exp(-x)/x end
+   local nm1 = n-1
+   if x == 0.0 then return 1.0/nm1 end
+   local MAXIT, EULER, FPMIN, EPS = 100, 0.5772156649, 1E-30, 1E-7
+   if x > 1.0 then
+      local b, c = x+n, 1.0/FPMIN
+      local d = 1.0/b
+      local h = d
+      for i = 1,MAXIT do
+         local a = -i*(nm1+i)
+	 b = b+2.0
+	 d, c = 1.0/(a*d+b), b+a/c
+	 local del = c*d
+	 h = h*del
+	 if math.abs(del-1.0) < EPS then return h*math.exp(-x) end
+      end
+   else
+      local ans = (nm1 ~= 0) and 1.0/nm1 or -math.log(x)-EULER
+      local fact, psy, del = 1.0
+      for i = 1,MAXIT do
+         fact = fact*(-x/i)
+	 if i ~= nm1 then 
+	    del = -fact/(i-nm1) 
+	 else
+	    psy = -EULER
+	    for ii = 1,nm1 do psy = psy+1.0/ii end
+	    del = fact*(-math.log(x)+psy)
+	 end
+	 ans = ans+del
+	 if math.abs(del) < math.abs(ans)*EPS then return ans end
+      end -- for i
+   end -- if x
+   error('Evaluation is failed!')
+end
+special.about[special.expint] = {"expint(n,x)", "Exponential integral En(x).", help.BASE}
+
+--[[
+special.ei = function (x)
+   assert(x >= 0, "Positive argument is expected!")
+   local EULER, MAXIT, FPMIN, EPS = 0.57721566, 100, 1E-30, 6E-8
+   if x < FPMIN then return math.log(x)+EULER end
+   local sum, term = 0.0, 1.0
+   if x < -math.log(EPS) then
+      local fact = 1.0
+      for k = 1,MAXIT do
+         fact = fact*x/k
+	 term = fact/k
+	 sum = sum+term
+	 if term < sum*EPS then break end
+      end
+      return sum+math.log(x)+EULER
+   else
+      for k = 1,MAXIT do
+         local prev = term
+	 term = term*k/x
+	 if term < EPS then break end
+	 if term < prev then 
+	    sum = sum+term
+	 else
+	    sum = sum-prev
+	    break
+	 end
+      end
+      return math.exp(x)*(1.0+sum)/x
+   end
+end
+special.about[special.ei] = {"ei(x)", "Exponential integral Ei(x).", help.BASE}
+]]
+
 --[[
 local function gRatio(x,y)
    local m = math.abs(math.max(x,y))
