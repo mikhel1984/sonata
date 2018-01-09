@@ -1,6 +1,7 @@
 --[[       liblc/special.lua
 
 --- Special mathematical functions.
+--  Most functions are based on "Numerical recipes in C" by W.H.Press, S.A.Teukolsky, W.T.Vetterling and B.P.Flannery
 --  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -15,6 +16,8 @@ ans = Spec.beta(3,4)               --~ 1.667E-2
 
 ans = Spec.betaln(10,20)           --~ -19.115
 
+ans = Spec.betainc(0.5, 2, 3.3)    --~ 0.7309
+
 ans = Spec.erf(1)                  --~ 0.8427
 
 ans = Spec.erfc(0.5)               --~ 0.4795
@@ -28,6 +31,13 @@ ans = Spec.expint(2, 5)            --~ 9.965E-4
 ans = Spec.gamma(-1.5)             --~ 2.3633
 
 ans = Spec.gammaln(100)            --~ 359.1342
+
+ans = Spec.gammp(7.7, 2.3)         --~ 3.85E-3
+
+ans = Spec.gammq(1.5, 4.8)         --~ 2.23E-2
+
+-- another syntax
+ans = Spec.gammainc(2.1, 0.3, 'upper') --~ 1.942E-2
 ]]
 
 -- magic numbers for gamma approximation
@@ -36,6 +46,8 @@ local k_gamma = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.6
 
 local k_gammaln = {76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,
                    0.1208650973866179E-2,-0.5395239384953E-5}
+
+local function lowbound(a,b) return math.abs(a) > b and a or b end
 
 ---------------------------------
 -- @class table
@@ -75,6 +87,67 @@ special.gammaln = function (z)
 end
 special.about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma function.", help.OTHER}
 
+-- Returns series representation for incomplete gamma function P.
+local function gser(a,x)
+   local ITMAX,EPS = 100, 3E-7
+   local gamser = 0.0
+   if x <= 0 then
+      assert(x == 0, 'Negative x in routine "gser"!')
+   else
+      local ap,del = a, 1.0/a
+      local sum = del
+      for i = 1,ITMAX do
+         ap = ap+1
+	 del = del*x/ap
+	 sum = sum+del
+	 if math.abs(del) < math.abs(sum)*EPS then
+	    gamser = sum*math.exp(-x+a*math.log(x)-special.gammaln(a))
+	    break
+	 end
+      end
+   end
+   return gamser
+end
+
+-- Returns continued fruction representation for incomplete gamma function Q.
+local function gcf(a,x)
+   local ITMAX,EPS,FPMIN = 100, 3E-7, 1E-30
+   local gammcf = 0.0
+   local b,c = x+1.0-a, 1.0/FPMIN
+   local d = 1.0/b
+   local h,an,del = d
+   for i = 1,ITMAX do
+      an,b = -i*(i-a), b+2.0
+      d,c = 1.0/lowbound(an*d+b,FPMIN), lowbound(b+an/c,FPMIN)
+      del = d*c
+      h = h*del
+      if math.abs(del-1.0) < EPS then break end
+   end
+   gammcf = math.exp(-x+a*math.log(x)-special.gammaln(a))*h
+   return gammcf
+end
+
+special.gammp = function (a,x)
+   assert(x >= 0.0 and a > 0, 'Invalid arguments!')
+   return (x < a+1.0) and gser(a,x) or 1.0-gcf(a,x)
+end
+special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).", help.BASE}
+
+special.gammq = function (a,x)
+   assert(x >= 0.0 and a > 0, 'Invalid arguments!')
+   return (x < a+1.0) and 1-gser(a,x) or gcf(a,x)
+end
+special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) = 1-P(a,x).", help.BASE}
+
+special.gammainc = function (x,a,tp)
+   tp = tp or 'lower'
+   if     tp == 'lower' then return special.gammp(a,x)
+   elseif tp == 'upper' then return special.gammq(a,x)
+   else error('Unexpected type '..tostring(tp))
+   end
+end
+special.about[special.gammainc] = {"gammainc(x,a,type)", "Incomplete gamma function, P (type=lower) or Q (type=upper).", help.OTHER}
+
 special.beta = function (z,w)
    return math.exp(special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w))
 end
@@ -84,6 +157,39 @@ special.betaln = function (z,w)
    return special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w)
 end
 special.about[special.betaln] = {"betaln(z,w)", "Natural logarithm of beta function.", help.OTHER}
+
+
+-- Evaluates continued fraction for incomplete beta function by modified Lentz's method.
+local function betacf(a,b,x)
+   local MAXIT,EPS,FPMIN = 100, 3E-7, 1E-30
+   local qab,qap,qam = a+b, a+1.0, a-1.0
+   local c,d = 1.0, 1.0/lowbound(1.0-qab*x/qap,FPMIN)
+   local h,m2,aa,del = d
+   for m = 1,MAXIT do
+      m2 = 2*m
+      aa = m*(b-m)*x/((qam+m2)*(a+m2))
+      d,c = 1.0/lowbound(1.0+aa*d,FPMIN), lowbound(1.0+aa/c,FPMIN)
+      h = h*d*c
+      aa = -(a+m)*(qab+m)*x/((a+m2)*(qap+m2))
+      d,c = 1.0/lowbound(1.0+aa*d,FPMIN), lowbound(1.0+aa/c,FPMIN)
+      del = d*c
+      h = h*del
+      if math.abs(del-1.0) < EPS then break end
+   end
+   return h
+end
+
+special.betainc = function (x,a,b)
+   assert(x >= 0.0 and x <= 1.0, "Expected x between 0 and 1!")
+   local bt
+   if x == 0 or x == 1 then 
+      bt = 0.0
+   else
+      bt = math.exp(special.gammaln(a+b)-special.gammaln(a)-special.gammaln(b)+a*math.log(x)+b*math.log(1.0-x))
+   end
+   return (x < (a+1.0)/(a+b+2.0)) and (bt*betacf(a,b,x)/a) or (1.0-bt*betacf(b,a,1.0-x)/b)
+end
+special.about[special.betainc] = {"betainc(x,a,b)", "Incomplete beta function Ix(a,b).", help.OTHER}
 
 special.expint = function (n,x)
    if x == nil then n,x = 1,n end
@@ -124,66 +230,6 @@ special.expint = function (n,x)
 end
 special.about[special.expint] = {"expint(n,x)", "Exponential integral En(x).", help.BASE}
 
---[[
-special.ei = function (x)
-   assert(x >= 0, "Positive argument is expected!")
-   local EULER, MAXIT, FPMIN, EPS = 0.57721566, 100, 1E-30, 6E-8
-   if x < FPMIN then return math.log(x)+EULER end
-   local sum, term = 0.0, 1.0
-   if x < -math.log(EPS) then
-      local fact = 1.0
-      for k = 1,MAXIT do
-         fact = fact*x/k
-	 term = fact/k
-	 sum = sum+term
-	 if term < sum*EPS then break end
-      end
-      return sum+math.log(x)+EULER
-   else
-      for k = 1,MAXIT do
-         local prev = term
-	 term = term*k/x
-	 if term < EPS then break end
-	 if term < prev then 
-	    sum = sum+term
-	 else
-	    sum = sum-prev
-	    break
-	 end
-      end
-      return math.exp(x)*(1.0+sum)/x
-   end
-end
-special.about[special.ei] = {"ei(x)", "Exponential integral Ei(x).", help.BASE}
-]]
-
---[[
-local function gRatio(x,y)
-   local m = math.abs(math.max(x,y))
-   if m <= 100 then
-      return gamma(x)/gamma(y)
-   else
-      return math.pow(2,x-y)*gRatio(0.5*x,0.5*y)*gRatio(0.5*x+0.5,0.5*y+0.5)
-   end
-end
-
-local function hyperGeom(a,b,c,z,N)
-   N = N or 20
-   local S,M = 1
-   for i = 1,N do
-      M = math.pow(z,i)
-      for j = 0,i-1 do M = M * (a+j)*(b+j)/((1+j)*(c+j)) end
-      S = S + M
-   end
-   return S
-end
-
--- source: https://habrahabr.ru/post/307712/
-stat.tdist = function (t,n)
-   return 0.5+t*gRatio(0.5*(n+1),0.5*n)*hyperGeom(0.5,0.5*(n+1),1.5,-t*t/n)/math.sqrt(math.pi*n)
-end
-]]
-
 special.erfc = function (x)
    local z = math.abs(x)
    local t = 1.0/(1+0.5*z)
@@ -195,6 +241,8 @@ special.about[special.erfc] = {"erfc(x)", "Complementary error function.", help.
 
 special.erf = function (x) return 1-special.erfc(x) end
 special.about[special.erf] = {"erf(x)", "Error function.", help.BASE}
+
+-- Bessel functions
 
 local function bessj0 (x)
    local ax  = math.abs(x)
@@ -274,7 +322,7 @@ end
 --    @return Polynomial value
 special.bessy = function (n,x)
    assert(x > 0, 'Positive value is expected!')
-   assert(n >= 0, 'Non-negative order is expected!')
+   assert(n >= 0 and math.tointeger(n) == n, 'Non-negative integer order is expected!')
    if n == 0 then return bessy0(x) end
    if n == 1 then return bessy1(x) end
    local tox = 2.0/x
@@ -292,7 +340,7 @@ special.about[special.bessy] = {"bessy(n,x)","Bessel function of the second kind
 --    @param x Real number.
 --    @return Polynomial value
 special.bessj = function (n,x)
-   assert(n >= 0, 'Non-negative order is expected!')
+   assert(n >= 0 and math.tointeger(n) == n, 'Non-negative integer order is expected!')
    if n == 0 then return bessj0(x) end
    if n == 1 then return bessj1(x) end
    if x == 0 then return 0 end
@@ -331,6 +379,90 @@ special.bessj = function (n,x)
    return (x < 0.0 and (n & 1)) and -ans or ans
 end
 special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind.", help.BASE}
+
+-- Modified Bessel function
+local function bessi0 (x)
+   local ax = math.abs(x)
+   if ax < 3.75 then
+      local y = x/3.75
+      y = y*y
+      return 1.0+y*(3.5156229+y*(3.0899424+y*(1.2067492+y*(0.2659732+y*(0.360768E-1+y*0.45813E-2)))))
+   else
+      local y = 3.75/ax
+      return (math.exp(ax)/math.sqrt(ax))*(0.39894228+y*(0.1328592E-1+y*(0.225319E-2+y*(-0.157565E-2+y*(0.916281e-2+
+                                           y*(-0.2057706E-1+y*(0.2635537E-1+y*(-0.1647633E-1+y*0.392377E-2))))))))
+   end
+end
+
+local function bessk0 (x)
+   if x <= 2.0 then
+      local y = x*x/4.0
+      return (-math.log(x/2.0)*bessi0(x))+(-0.57721566+y*(0.42278420+y*(0.23069756+y*(0.3488590E-1+y*(0.262698E-2+y*(0.10750E-3+y*0.74E-5))))))
+   else
+      local y = 2.0/x
+      return (math.exp(-x)/math.sqrt(x))*(1.25331414+y*(-0.7832358E-1+y*(0.2189568E-1+y*(-0.1062446E-1+y*(0.587872E-2+y*(-0.251540E-2+y*0.53208E-3))))))
+   end
+end
+
+local function bessi1 (x)
+   local ax,ans = math.abs(x)
+   if ax < 3.75 then
+      local y = x/3.75
+      y = y*y
+      ans = ax*(0.5+y*(0.87890594+y*(0.51498869+y*(0.15084934+y*(0.2658733e-1+y*(0.301532E-2+y*0.32411E-3))))))
+   else
+      local y = 3.75/ax
+      ans = 0.2282967E-1+y*(-0.2895312E-1+y*(0.1787654E-1-y*0.420059E-2))
+      ans = 0.39894228+y*(-0.3988024E-1+y*(-0.362018E-2+y*(0.163801E-2+y*(-0.1031555E-1+y*ans))))
+      ans = ans*(math.exp(ax)/math.sqrt(ax))
+   end
+   return (x < 0) and -ans or ans
+end
+
+local function bessk1 (x)
+   if x <= 2.0 then
+      local y = x*x/4.0
+      return (math.log(x/2.0)*bessi1(x))+(1.0/x)*(1.0+y*(0.15443144+y*(-0.67278597+y*(-0.18156897+y*(-0.1919402E-1+y*(-0.110404E-2-y*0.4686E-4))))))
+   else
+      local y = 2.0/x
+      return (math.exp(-x)/math.sqrt(x))*(1.25331414+y*(0.23498619+y*(-0.3655620E-1+y*(0.1504268E-1+y*(-0.780353E-2+y*(0.325614E-2-y*0.68245E-3))))))
+   end
+end
+
+special.bessk = function (n,x)
+   assert(x > 0, "Positiva value is expected!")
+   assert(n >= 0 and math.tointeger(n) == n, "Non-negative integer order is expected!")
+   if n == 0 then return bessk0(x) end
+   if n == 1 then return bessk1(x) end
+   local tox,bkm,bk = 2.0/x, bessk0(x), bessk1(x)
+   for j = 1,n-1 do
+      bk, bkm = bkm+j*tox*bk, bk
+   end
+   return bk
+end
+special.about[special.bessk] = {"bessk(n,x)", "Modified Bessel function Kn(x).", help.BASE}
+
+special.bessi = function (n,x)
+   assert(n >= 0 and math.tointeger(n) == n, "Non-negative integer order is expected!")
+   if n == 0 then return bessi0(x) end
+   if n == 1 then return bessi1(x) end
+   if x == 0 then return 0.0 end
+   local ACC,BIGNO,BIGNI = 40.0, 1E10, 1E-10
+   local tox = 2.0/math.abs(x)
+   local bip,ans,bi = 0.0, 0.0, 1.0
+   for j = 2*(n+math.floor(math.sqrt(ACC*n))),1,-1 do
+      bi, bip = bip+j*tox*bi
+      if math.abs(bi) > BIGNO then
+         ans = ans*BIGNI
+	 bi = bi*BIGNI
+	 bip = bip*BIGNI
+      end
+      if j == n then ans = bip end
+   end
+   ans = ans*bessi0(x)/bi
+   return (x < 0.0 and (n & 1)) and -ans or ans
+end
+special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x).", help.BASE}
 
 -- free memory in case of standalone usage
 if not lc_version then special.about = nil end
