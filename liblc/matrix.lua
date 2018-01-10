@@ -111,6 +111,9 @@ ans = m:get(1)                  --> 1
 m = a:col(-1)
 ans = m:get(2)                  --> 4
 
+ans = a:sum()                   --> Mat {{3},{7}}
+
+ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
 ]]
 
 -------------------------------------------- 
@@ -1071,6 +1074,44 @@ matrix.cholesky = function (m)
    return a
 end
 matrix.about[matrix.cholesky] = {"cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", help.OTHER}
+
+--- Apply function to all elements along given direction.
+--    @param m Initial matrix.
+--    @param fn Function of 2 arguments.
+--    @param dir Direction of evaluations (optional).
+--    @param init Initial value (optional).
+--    @return Reduced matrix.
+matrix.reduce = function (m,fn,dir,init)
+   dir = dir or 'r'
+   init = init or 0
+   local res
+   if dir == 'r' then
+      res = matrix:init(m.rows,1)
+      for r = 1,m.rows do
+         local s = init
+	 for c = 1,m.cols do s = fn(s,getval(m,r,c)) end
+	 setval(res,r,1, s)
+      end
+   elseif dir == 'c' then
+      res = matrix:init(1,m.cols)
+      for c = 1,m.cols do
+         local s = init
+	 for r = 1,m.rows do s = fn(s,getval(m,r,c)) end
+	 setval(res,1,c, s)
+      end
+   else
+      error("Only 'r'(ows) or 'c'(olomns) are expected!")
+   end
+   return res
+end
+matrix.about[matrix.reduce] = {"reduce(m,fn,dir,init)","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.",help.OTHER}
+
+--- Get summ of all elements.
+--    @param m Initial matrix.
+--    @param dir Direction (optional).
+--    @return Sum along 'r'ows or 'c'olumns
+matrix.sum = function (m,dir) return matrix.reduce(m, fn_sum, dir, 0) end
+matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given direction ('r' or 'c').", help.BASE}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})
