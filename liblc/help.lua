@@ -387,3 +387,6 @@ return help
 
 --==========================================
 -- TODO: localise error messages
+-- TODO: refactor help module
+-- TODO: add help -h for program
+-- TODO: set help.BASE as default value
