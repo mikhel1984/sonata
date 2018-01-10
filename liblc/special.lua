@@ -38,6 +38,14 @@ ans = Spec.gammq(1.5, 4.8)         --~ 2.23E-2
 
 -- another syntax
 ans = Spec.gammainc(2.1, 0.3, 'upper') --~ 1.942E-2
+
+ans = Spec.bessj(3, 1.5)           --~ 6.096E-2
+
+ans = Spec.bessy(4, 0.8)           --~ -78.751
+
+ans = Spec.bessi(2, -3.6)          --~ 4.254
+
+ans = Spec.bessk(5, 5)             --~ 3.2706E-2
 ]]
 
 -- magic numbers for gamma approximation
@@ -376,7 +384,7 @@ special.bessj = function (n,x)
       sum = 2.0*sum-bj
       ans = ans/sum
    end
-   return (x < 0.0 and (n & 1)) and -ans or ans
+   return (x < 0.0 and (n & 1)==1) and -ans or ans
 end
 special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind.", help.BASE}
 
@@ -422,7 +430,7 @@ end
 local function bessk1 (x)
    if x <= 2.0 then
       local y = x*x/4.0
-      return (math.log(x/2.0)*bessi1(x))+(1.0/x)*(1.0+y*(0.15443144+y*(-0.67278597+y*(-0.18156897+y*(-0.1919402E-1+y*(-0.110404E-2-y*0.4686E-4))))))
+      return (math.log(x/2.0)*bessi1(x))+(1.0/x)*(1.0+y*(0.15443144+y*(-0.67278579+y*(-0.18156897+y*(-0.1919402E-1+y*(-0.110404E-2-y*0.4686E-4))))))
    else
       local y = 2.0/x
       return (math.exp(-x)/math.sqrt(x))*(1.25331414+y*(0.23498619+y*(-0.3655620E-1+y*(0.1504268E-1+y*(-0.780353E-2+y*(0.325614E-2-y*0.68245E-3))))))
@@ -451,7 +459,7 @@ special.bessi = function (n,x)
    local tox = 2.0/math.abs(x)
    local bip,ans,bi = 0.0, 0.0, 1.0
    for j = 2*(n+math.floor(math.sqrt(ACC*n))),1,-1 do
-      bi, bip = bip+j*tox*bi
+      bi, bip = bip+j*tox*bi, bi
       if math.abs(bi) > BIGNO then
          ans = ans*BIGNI
 	 bi = bi*BIGNI
@@ -460,7 +468,7 @@ special.bessi = function (n,x)
       if j == n then ans = bip end
    end
    ans = ans*bessi0(x)/bi
-   return (x < 0.0 and (n & 1)) and -ans or ans
+   return (x < 0.0 and (n & 1)==1) and -ans or ans
 end
 special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x).", help.BASE}
 
