@@ -97,12 +97,11 @@ end
 about[round] = {'round(x)', 'Round value to closest integer.', mhelp.OTHER}
 
 -- calculate function for range of values
-function eval(fn, x1, xn, step)
+function main.eval(fn, x1, xn, step)
    xn = xn or x1
    step = step or 1
    for k = x1, xn, step do print("x="..k.."\tres="..fn(k)) end
 end
-about[eval] = {"eval(fn,x1[,xn[,step]])", "Evaluate function for given value or interval and print result.", mhelp.OTHER}
 
 function fact(n)
    assert(n >= 0 and math.type(n) == 'integer', 'Expected positive integer value!')
@@ -201,6 +200,15 @@ function help(fn)
       print("\t" .. about:get('modules'))
       local t = {}; for k in pairs(import) do t[#t+1] = k end
       print(table.concat(t, ', '))
+   end
+end
+
+function main.evalstr (s)
+   local T = require 'liblc.test'
+   for c in T.split(s,';') do
+      if not (c:find('=') or c:find('print')) then c = string.format('print(%s)',c) end
+      local fn = load(c)
+      if fn then fn() end
    end
 end
 

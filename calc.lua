@@ -78,6 +78,11 @@ if #arg > 0 then
 	 end
       end
       Test.summary()
+   -- calculate
+   elseif arg[1] == '-e' or arg[1] == '-eval' then
+      local mm = require('liblc.main')
+      local tmp = table.move(arg,2,#arg,1,{})
+      mm.evalstr(table.concat(tmp,' '))
    -- update localisation file
    elseif arg[1] == '-lang' then
       if arg[2] then
