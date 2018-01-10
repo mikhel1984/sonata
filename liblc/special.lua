@@ -250,6 +250,36 @@ special.about[special.erfc] = {"erfc(x)", "Complementary error function.", help.
 special.erf = function (x) return 1-special.erfc(x) end
 special.about[special.erf] = {"erf(x)", "Error function.", help.BASE}
 
+local function plgndr (n,m,x)
+   local pmm = 1.0
+   if m > 0 then
+      local somx2 = math.sqrt((1-x)*(1+x))
+      local fact = 1.0
+      for i = 1,m do 
+         pmm = pmm*(-fact)*somx2
+	 fact = fact+2.0
+      end
+   end
+   if n == m then return pmm
+   else
+      local pmmp1 = x*(2*m+1)*pmm
+      if n ~= m+1 then
+         for ll = m+2,n do
+	    pmmp1, pmm = (x*(2*ll-1)*pmmp1-(ll+m-1)*pmm)/(ll-m), pmmp1
+	 end
+      end
+      return pmmp1
+   end
+end
+
+special.legendre = function (n,x)
+   assert(n >= 0 and math.abs(x) <= 1, 'Bad arguments')
+   local res = {}
+   for i = 1,n+1 do res[i] = plgndr(n,i,x) end
+   return res
+end
+special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polinomial coefficients.", help.BASE}
+
 -- Bessel functions
 
 local function bessj0 (x)
@@ -471,6 +501,130 @@ special.bessi = function (n,x)
    return (x < 0.0 and (n & 1)==1) and -ans or ans
 end
 special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x).", help.BASE}
+
+-- Fractional Bessel functions
+--[[
+
+local function chebev (a,b,c,m,x)
+   --assert((x-a)*(x-b) > 0.0, 'Not in range!')
+   local d,dd,y = 0.0, 0.0, (2.0*x-a-b)/(b-a)
+   local y2 = 2.0*y
+   for j = m,2,-1 do d, dd = y2*d-dd+c[j], d end
+   return y*d-dd+0.5*c[1] 
+end
+
+local cheb_c1 = {-1.142022680371168,6.5165112670737E-3,3.087090173086E-4,-3.4706269649E-6,6.9437664E-9,3.67795E-11,-1.356E-13}
+local cheb_c2 = {1.843740587300905,-7.68528408447868E-2,1.2719271366546E-3,-4.9717367042E-6,-3.31261198E-8,2.423096E-10,-1.702E-13,-1.49E-15}
+-- Evaluates G1 and G2 by Chebyshev expansion
+local function beschd (x)
+   local NUSE1,NUSE2 = 5, 5
+   local xx = 8.0*x*x-1.0
+   local gam1 = chebev(-1.0,1.0,cheb_c1,NUSE1,xx)
+   local gam2 = chebev(-1.0,1.0,cheb_c2,NUSE2,xx)
+   local gampl = gam2-x*gam1
+   local gammi = gam2+x*gam1
+   return gam1, gam2, gampl, gammi
+end
+
+-- Bessel functions and their derivatives
+local function bessjy (x,xnu)
+   assert(x > 0 and xnu >= 0, 'Bad arguments!')
+   local EPS,FPMIN,MAXIT,XMIN = 1E-10, 1E-30, 10000, 2.0
+   local nl = (x < XMIN) and math.floor(xnu+0.5) or math.max(0,math.floor(xnu-x+1.5))
+   local xmu = xnu-nl
+   local xi = 1.0/x
+   local xi2 = 2.0*xi
+   local isign = 1
+   local h = math.max(xnu*xi,FPMIN)
+   local b,c,d,del = xi2*xnu, h, 0.0
+   for i = 1,MAXIT do
+      b = b+xi2
+      c,d = lowbound(b-1.0/c,FPMIN), 1.0/lowbound(b-d,FPMIN)
+      del = c*d
+      h = del*h
+      if d < 0.0 then isign = -isign end
+      if math.abs(del-1.0) < EPS then break end
+   end
+   local rjl = isign*FPMIN
+   local rjpl = h*rjl
+   local rjl1, rjp1 = rjl, rjpl
+   local fact = xnu*xi
+   for l = nl,1,-1 do
+      local rjtemp = fact*rjl+rjpl
+      fact = fact-xi
+      rjpl = fact*rjtemp-rjl
+      rjl = rjtemp
+   end
+   if rjl == 0.0 then rjl = EPS end
+   local f = rjpl/rjl
+   local rymu,rjmu,ry1
+   if x < XMIN then 
+      local x2 = 0.5*x
+      local pimu = math.pi*xmu
+      fact = (math.abs(pimu) < EPS) and 1.0 or pimu/math.sin(pimu)
+      d = -math.log(x2)
+      local e = xmu*d
+      local fact2 = (math.abs(e) < EPS) and 1.0 or math.sinh(e)/e
+      local gam1, gam2, gampl, gammi = beschd(xmu)
+      local ff = 2.0/math.pi*fact*(gam1*math.cosh(e)+gam2*fact2*d)
+      e = math.exp(e)
+      local p,q = e/(gampl*math.pi), 1.0/(e*math.pi*gammi)
+      pimu = 0.5*pimu
+      fact2 = (math.abs(pimu) < EPS) and 1.0 or math.sin(pimu)/pimu
+      local r = math.pi*pimu*fact2*fact2
+      c,d = 1.0, -x2*x2
+      local sum, sum1 = ff+r*q, p
+      for i = 1,MAXIT do
+         ff = (i*ff+p+q)/(i*i-xmu*xmu)
+	 c = c*d/i
+	 p,q = p/(i-xmu), q/(i+xmu)
+	 del = c*(ff+r*q)
+	 sum,sum1 = sum+del, sum1+c*p-i*del
+	 if math.abs(del) < (1.0+math.abs(sum))*EPS then break end
+      end
+      rymu = -sum
+      ry1 = -sum1*xi2
+      rjmu = (xi2/math.pi)/(xmu*xi*rymu-ry1-f*rymu)
+   else
+      local a = 0.25-xmu*xmu
+      local p,q = -0.5*xi, 1.0
+      local br,bi = 2.0*x, 2.0
+      fact = a*xi/(p*p+q*q)
+      local cr,ci = br+q*fact, bi+p*fact
+      local den = br*br+bi*bi
+      local dr,di = br/den, -bi/den
+      local dlr, dli = cr*dr-ci*di, cr*di+ci*dr
+      p,q = p*dlr-q*dli, p*dli+q*dlr
+      for i = 2,MAXIT do
+         a = a+2*(i-1)
+	 bi = bi+2.0
+	 dr = a*dr+br
+	 di = a*di+bi
+	 if math.abs(dr)+math.abs(di) < FPMIN then dr = FMPIN end
+	 fact = a/(cr*cr+ci*ci)
+	 cr,ci = br+cr*fact, bi-ci*fact
+	 if math.abs(cr)+math.abs(ci) < FPMIN then cr = FPMIN end
+	 den = dr*dr+di*di
+	 dr,di = dr/den, -di/den
+	 dlr,dli = cr*dr-ci*di, cr*di+ci*dr
+	 p,q = p*dlr-q*dli, p*dli+q*dlr
+	 if math.abs(dlr-1.0)+math.abs(dli) < EPS then break end
+      end
+      local gam = (p-f)/q
+      rjmu = math.sqrt((xi2/math.pi)/((p-f)*gam+q))
+      rjmu = (rjl >= 0.0) and math.abs(rjmu) or -math.abs(rjmu)
+      rymu = rjmu*gam
+      ry1=xmu*xi*rymu-rymu*(p+q/gam)
+   end
+   fact = rjmu/rjl
+   local rj = rjl1*fact
+   local rjp = rjp1*fact
+   for i = 1,nl do ry1, rymu = (xmu+i)*xi2*ry1-rymu, ry1 end
+   local ry = rymu
+   local ryp = xnu*xi*rymu-ry1
+   return rj,rjp,ry,ryp
+end
+]]
 
 -- free memory in case of standalone usage
 if not lc_version then special.about = nil end
