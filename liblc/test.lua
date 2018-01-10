@@ -56,8 +56,8 @@ end
 --    <i>Private function.</i>
 --    @param str Source string.
 --    @param delim Delimiter.
---    @return Table of substrings.
-local function split(str, delim)
+--    @return Iterator along the substrings.
+test.split = function (str, delim)
    local i,j,k = 1,1,0
    return function ()
       if not str or i >= #str then return nil end
@@ -112,7 +112,7 @@ test.module = function (fname)
    local succeed, failed = 0, 0
    local fulltime = 0
    -- parse
-   for block in split(text, delim) do
+   for block in test.split(text, delim) do
       if not string.find(block, '%s') then goto endfor end
       local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
       q = q or block    -- question
