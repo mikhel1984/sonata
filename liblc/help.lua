@@ -312,13 +312,13 @@ function help.newmodule (mname, alias)
    local txt = 
 [=[--[[       WORD1
 
---- This is my module.
+3L This is my module.
 --  @author My Name
 
-           module 'WORD2'
+           WORD4 'WORD2'
 --]]
 
---------------- Tests --------------
+3L3L3L3L3L Tests 3L3L3L3L
 -- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
 --[[!!
 WORD3 = require 'liblc.WORD2'
@@ -328,7 +328,7 @@ a = WORD3()
 ans = a.type                   --> 'WORD2'
 ]]
 
----------------------------------
+3L3L3L3L3L3L3L3L3L3L3L
 -- @class table
 -- @name WORD2
 local WORD2 = {}
@@ -343,7 +343,7 @@ local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 WORD2.about = help:new("This is my cool module.")
 
---- Constructor example
+3L Constructor example
 --    @param t Some value.
 --    @return New object of WORD2.
 function WORD2:new(t)
@@ -358,7 +358,7 @@ setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
 WORD2.WORD3 = 'WORD3'
 WORD2.about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
 
---- Method example
+3L Method example
 --   It is good idea to define method for the copy creation.
 --   @param t Initial object.
 --   @return Copy of the object.
@@ -374,7 +374,8 @@ if not lc_version then WORD2.about = nil end
 return WORD2
 ]=]
    -- correct text
-   txt = string.gsub(txt, '(WORD%d)', {WORD1=fname, WORD2=mname, WORD3=alias})
+   txt = string.gsub(txt, '3L', '---')            -- protect from creating failed documentation
+   txt = string.gsub(txt, '(WORD%d)', {WORD1=fname, WORD2=mname, WORD3=alias, WORD4='module'})
    -- save
    f = io.open(fname, 'w')
    f:write(txt)
@@ -389,4 +390,3 @@ return help
 -- TODO: localise error messages
 -- TODO: refactor help module
 -- TODO: add help -h for program
--- TODO: set help.BASE as default value
