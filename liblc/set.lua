@@ -177,7 +177,7 @@ set.__div = function (a,b)
 end
 
 set.arithmetic = 'arithmetic'
-set.about[set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", help.BASE}
+set.about[set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", }
 
 --- a <= b
 --    @param a First set.
@@ -208,7 +208,7 @@ set.__eq = function (a,b)
 end
 
 set.comparison = 'comparison'
-set.about[set.comparison] = {set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", help.BASE}
+set.about[set.comparison] = {set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", }
 
 --- #a 
 --    @param s Set object.

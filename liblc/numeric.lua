@@ -57,7 +57,7 @@ numeric.solve = function (fn, a, b)
    until math.abs(f1) < numeric.TOL
    return b
 end
-numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", help.BASE}
+numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", }
 
 --- Another solution based on Newton's rule.
 --    @param fn Function to analyze.
@@ -73,7 +73,7 @@ numeric.newton = function (fn, x1)
    until math.abs(fn(x2)-fn(x1)) < numeric.TOL 
    return x2
 end
-numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition.", help.BASE}
+numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition.", }
 
 --- Simple derivative.
 --    @param fn Function f(x).
@@ -88,7 +88,7 @@ numeric.diff = function (fn, x)
    until math.abs(der-last) < numeric.TOL
    return der
 end
-numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", help.BASE}
+numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", }
 
 --- Integration using trapeze method.
 --    @param fn Function f(x).
@@ -119,7 +119,7 @@ numeric.trapez = function (fn, a, b)
    until math.abs(I-last) < numeric.TOL
    return I
 end
-numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule.", help.BASE}
+numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule.", }
 
 --- Runge-Kutta method.
 --    <i>Private function.</i>
@@ -170,7 +170,7 @@ numeric.ode = function (fn, x0,y0,xn, dx)
    until x + h >= xn 
    return res, res[#res][2]
 end
-numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
+numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", }
 
 -- free memory if need
 if not lc_version then numeric.about = nil end

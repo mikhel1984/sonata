@@ -107,7 +107,7 @@ local function funclist(tbl)
    for k, v in pairs(tbl) do
       -- only main description contains 'link'
       if not v.link then
-         local category = v[CATEGORY] or ""
+         local category = v[CATEGORY] or help.BASE
 	 local module = v[MODULE] or "Default"
 	 res[module] = res[module] or {}                      -- create table for each module
          res[module][category] = res[module][category] or {}  -- add table for each category
@@ -125,7 +125,7 @@ function help:print(fn)
       local v = self[fn]
       if v.link then                  
          -- module common description
-         print('\n'..v[MAIN]..'\n')
+         print('\n'..v[MAIN], '\n')
 	 -- details
 	 return v.link:print()
       else                           
@@ -138,7 +138,7 @@ function help:print(fn)
       for mod, t in pairs(lst) do                   -- for each module
          print(string.format("\t%s", mod))
          for cat, n in pairs(t) do                  -- for each category
-            print(string.format("  :%s", cat))
+            print(string.format("  /%s", cat))
 	    for i, v in ipairs(n) do                -- for each function
 	       io.write(v, (i ~= #n and ', ' or ''))
 	    end
@@ -159,7 +159,7 @@ function help:add(tbl, nm)
    local lng = mt.locale and mt.locale[nm]
    -- prepare new 
    for k, v in pairs(tbl) do 
-      if not v.link then table.insert(v, nm) end -- function description doesn't contain 'link' element
+      if not v.link then v[MODULE] = nm end -- function description doesn't contain 'link' element
       -- set localisation
       if lng then
          if v.link then

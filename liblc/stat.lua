@@ -78,7 +78,7 @@ stat.mean = function (t, w)
       return stat.sum(t) / #t
    end
 end
-stat.about[stat.mean] = {"mean(t[,w])", "Calculate average value. Weights are can be used.", help.BASE}
+stat.about[stat.mean] = {"mean(t[,w])", "Calculate average value. Weights are can be used.", }
 
 --- Corrected value of standard deviation and variance.
 --    @param t Table of numbers.
@@ -90,7 +90,7 @@ stat.stdcorr = function (t)
    local sigma = math.sqrt(sq/(n-1))
    return sigma, sigma/math.sqrt(n)
 end
-stat.about[stat.stdcorr] = {"stdcorr(t)", "Corrected value of standard deviation and variance.", help.BASE}
+stat.about[stat.stdcorr] = {"stdcorr(t)", "Corrected value of standard deviation and variance.", }
 
 --- Standard deviation and variance.
 --    @param t Table of numbers.
@@ -112,7 +112,7 @@ stat.std = function (t, w)
    end
    return math.sqrt(disp), disp 
 end
-stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weights are can be used.", help.BASE}
+stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weights are can be used.", }
 
 --- Maximum value.
 --    @param t Table of numbers.
@@ -192,7 +192,7 @@ stat.median = function (p)
       return (t[len] + t[len+1]) * 0.5
    end
 end
-stat.about[stat.median] = {"median(t)", "List median.", help.BASE}
+stat.about[stat.median] = {"median(t)", "List median.", }
 
 --- Frequency of elements.
 --    @param t Table of numbers.
@@ -204,7 +204,7 @@ stat.freq = function (t)
    end
    return tmp
 end
-stat.about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", help.BASE}
+stat.about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", }
 
 --- Central moment.
 --    @param n Order of the moment.
@@ -218,7 +218,7 @@ stat.cmoment = function (n, x, p)
    for i = 1,#x do mu = mu + math.pow(x[i]-m, n)*(p and p[i] or pk) end
    return mu
 end
-stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p is a list of weights.", help.BASE}
+stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p is a list of weights.", }
 
 --- Non-central moment.
 --    @param n Order of the moment.
@@ -230,7 +230,7 @@ stat.moment = function (n, x, p)
    for i = 1,#x do m = m + math.pow(x[i],n)*(p and p[i] or pk) end
    return m
 end
-stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", help.BASE}
+stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", }
 
 -- free memory if need
 if not lc_version then stat.about = nil end

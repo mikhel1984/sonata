@@ -406,7 +406,7 @@ units.convert = function (u, r)
       return uconvert(u, res.key)
    end
 end
-units.about[units.convert] = {'convert(v, units)','Convert one units to another, return new object or nil.', help.BASE}
+units.about[units.convert] = {'convert(v, units)','Convert one units to another, return new object or nil.', }
 
 --- -a
 --    @param u Unit object.
@@ -601,7 +601,7 @@ units.add = function (u, rule)
    assert(isunits(rule), 'Units object is expected!')
    units.rules[u] = rule
 end
-units.about[units.add] = {'add(unit,rule)', 'Add new rule for conversation.', help.BASE}
+units.about[units.add] = {'add(unit,rule)', 'Add new rule for conversation.', }
 
 
 -- simplify constructor call

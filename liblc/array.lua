@@ -135,7 +135,7 @@ array.get = function (arr, ind)
    assert(iscorrect(arr, ind), "Wrong index for given array!")
    return arr[index(arr, ind)]
 end
-array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table.", help.BASE}
+array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table.", }
 
 --- Set new value.
 --    @param arr Array object.
@@ -145,7 +145,7 @@ array.set = function (arr, ind, val)
    assert(iscorrect(arr, ind), "Wrong index for given array!")
    arr[index(arr,ind)] = val 
 end
-array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is a table.", help.BASE}
+array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is a table.", }
 
 --- Get array copy.
 --    @param arr Array object.
@@ -250,7 +250,7 @@ array.__pow = function (a1, a2)
 end
 
 array.arithmetic = 'arithmetic'
-array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.BASE}
+array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", }
 
 --- Random array generator.
 --    @param s Size table.
@@ -260,7 +260,7 @@ array.rand = function (s)
    for i = 1, capacity(arr) do arr[i] = math.random() end
    return arr
 end
-array.about[array.rand] = {"rand(size)", "Return array with random numbers between 0 and 1.", help.BASE}
+array.about[array.rand] = {"rand(size)", "Return array with random numbers between 0 and 1.", }
 
 --- a1 == a2
 --    @param a1 First array object.
@@ -278,7 +278,7 @@ array.__eq = function (a1, a2)
 end
 
 array.comparison = 'comparison'
-array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.BASE}
+array.about[array.comparison] = {array.comparison, "a == b, a ~= b", }
 
 --- Get array dimension.
 --    @param arr Array object.
@@ -286,7 +286,7 @@ array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.BASE}
 array.dim = function (arr)
    return table.move(arr.size, 1, #arr.size, 1, {})
 end
-array.about[array.dim] = {"dim(arr)", "Return size of array.", help.BASE}
+array.about[array.dim] = {"dim(arr)", "Return size of array.", }
 
 --- Get part of array between two indexes.
 --    @param arr Array object.
@@ -318,7 +318,7 @@ array.sub = function (arr, ind1, ind2)
    end
    return res
 end
-array.about[array.sub] = {"sub(arr,ind1,ind2)", "Return subarray restricted by 2 indexes.", help.BASE}
+array.about[array.sub] = {"sub(arr,ind1,ind2)", "Return subarray restricted by 2 indexes.", }
 
 --- Concatenate 2 arrays along given axe.
 --    @param arr1 First array object.
@@ -347,7 +347,7 @@ array.concat = function (arr1, arr2, axe)
    end
    return res 
 end
-array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along given axe.", help.BASE}
+array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along given axe.", }
 
 --- Get number of elements in array.
 --    @param arr Array object.

@@ -32,13 +32,13 @@ about = mhelp:new("Lua based calculator.")
 local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
 
 -- Common
-abs = math.abs;    about[abs] = {"abs(x)", "Absolute value.", mhelp.BASE}
-exp = math.exp;    about[exp] = {"exp(x)", "Exponent.", mhelp.BASE}
-ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", mhelp.BASE}
-pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b.", mhelp.BASE}
-sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", mhelp.BASE}
-max = math.max;    about[max] = {"max(...)", "Maximum number.", mhelp.BASE}
-min = math.min;    about[min] = {"min(...)", "Minimum number.", mhelp.BASE}
+abs = math.abs;    about[abs] = {"abs(x)", "Absolute value.", }
+exp = math.exp;    about[exp] = {"exp(x)", "Exponent.", }
+ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", }
+pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b.", }
+sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", }
+max = math.max;    about[max] = {"max(...)", "Maximum number.", }
+min = math.min;    about[min] = {"min(...)", "Minimum number.", }
 -- Trigonometrical
 sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", mhelp.TRIG}
 cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", mhelp.TRIG}
@@ -51,8 +51,8 @@ ch = math.cosh;    about[ch] = {"ch(x)", "Hyperbolic cosine.", mhelp.HYP}
 sh = math.sinh;    about[sh] = {"sh(x)", "Hyperbolic sinus.", mhelp.HYP}
 th = math.tanh;    about[th] = {"th(x)", "Hyperbolic tangent.", mhelp.HYP}
 -- Angles 
-deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", mhelp.BASE}
-rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", mhelp.BASE}
+deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", }
+rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", }
 -- Rounding
 floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", mhelp.OTHER}
 ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", mhelp.OTHER}
@@ -64,10 +64,10 @@ _e = math.exp(1.0) about[_e] = {"_e", "Euler number", mhelp.CONST}
 main.LOG10 = math.log(10)
 
 function lg(x) return math.log(x)/main.LOG10 end
-about[lg] = {"lg(x)", "Decimal logarithm.", mhelp.BASE}
+about[lg] = {"lg(x)", "Decimal logarithm.", }
 
 function rand() return math.random() end
-about[rand] = {"rand()", "Random number between 0 and 1.", mhelp.BASE}
+about[rand] = {"rand()", "Random number between 0 and 1.", }
 -- hyperbolic arcsine
 function ash(x)
    return math.log(x+math.sqrt(x*x+1))
@@ -134,7 +134,7 @@ function example(nm)
       print("No examples found in '"..fname.."'")
    end
 end
-about[example] = {"example(name)", "Show examples for given module, which used to test.", mhelp.BASE}
+about[example] = {"example(name)", "Show examples for given module, which used to test.", }
 
 
 -- read object from its serialization

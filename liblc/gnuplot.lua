@@ -204,7 +204,7 @@ gnuplot.copy = function (g)
    end
    return cp
 end
-gnuplot.about[gnuplot.copy] = {"copy(g)", "Get copy of the plot options.", help.BASE}
+gnuplot.about[gnuplot.copy] = {"copy(g)", "Get copy of the plot options.", }
 
 --- Plot graphic.
 --    @param t Table with parameters of graphic.
@@ -238,7 +238,7 @@ gnuplot.plot = function (t)
    handle:write(res,'\n')
    handle:close()
 end
-gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table.", help.BASE}
+gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table.", }
 
 
 --- Represent parameters of the graphic.
@@ -288,7 +288,7 @@ samples=200                                  -- define number of points
 permanent=true                               -- create in independant window
 raw='set pm3d'                               -- set Gnuplot options manually
 ]],
-help.BASE}
+}
 
 -- free memory if need
 if not lc_version then gnuplot.about = nil end

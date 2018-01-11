@@ -285,7 +285,7 @@ matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
    return getval(m, r, c)
 end
-matrix.about[matrix.get] = {"get(m,row,col)", "Return matrix element.", help.BASE}
+matrix.about[matrix.get] = {"get(m,row,col)", "Return matrix element.", }
 
 -- simplify call of matrix.get()
 matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
@@ -309,7 +309,7 @@ matrix.set = function (m,r,c)
 	     m[r][c] = val
           end
 end
-matrix.about[matrix.set] = {"set(m,row,col)(val)", "Set value of matrix element.", help.BASE} 
+matrix.about[matrix.set] = {"set(m,row,col)(val)", "Set value of matrix element.", } 
 
 --- Transpose matrix.
 --    Can be called as T().
@@ -322,7 +322,7 @@ matrix.transpose = function (m)
    end
    return res
 end
-matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T().", help.BASE}
+matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T().", }
 matrix.T = matrix.transpose
 
 -- to accelerate calculations
@@ -363,7 +363,7 @@ end
 matrix.size = function (m)
    return m.rows, m.cols
 end
-matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'.", help.BASE}
+matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'.", }
 
 --- Apply function to each element.
 --    @param m Source matrix.
@@ -465,7 +465,7 @@ matrix.__pow = function (a,n)
 end
 
 matrix.arithmetic = 'arithmetic'
-matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
+matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", }
 
 --- a == b
 --    @param a First matrix.
@@ -483,7 +483,7 @@ matrix.__eq = function (a,b)
 end
 
 matrix.comparison = 'comparison'
-matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.BASE}
+matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", }
 
 
 --- Find determinant.
@@ -494,7 +494,7 @@ matrix.det = function (m)
    local _, K = gaussdown(matrix.copy(m))
    return K
 end
-matrix.about[matrix.det] = {"det(m)", "Calculate determinant.", help.BASE}
+matrix.about[matrix.det] = {"det(m)", "Calculate determinant.", }
 
 --- Inverse matrix.
 --    @param m Initial matrix.
@@ -504,7 +504,7 @@ matrix.inv = function (m)
    local con, det = matrix.rref(m, matrix.eye(m.cols))
    return (det ~= 0) and matrix.sub(con, 1,-1, m.cols+1, -1) or matrix.ones(m.rows,m.rows,math.huge) 
 end
-matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", help.BASE}
+matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", }
 
 --- Solve system of equations using Gauss method.
 --    @param A Matrix of coefficients.
@@ -514,7 +514,7 @@ matrix.rref = function (A,b)
    local tr, d = gaussdown(matrix.concat(A,b,'h'))
    return gaussup(tr), d
 end
-matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant.", help.BASE}
+matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant.", }
 
 --- Create vector.
 --    Simplified vector constructor. 
@@ -526,7 +526,7 @@ matrix.vector = function (v)
    for i = 1, #v do res[i] = {v[i]} end
    return matrix:init(#v, 1, res)
 end
-matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V().", help.BASE}
+matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V().", }
 matrix.V = matrix.vector
 
 --- Create matrix of zeros.
@@ -952,7 +952,7 @@ matrix.cross = function (a,b)
    local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
    return matrix.new {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}}
 end
-matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.', help.BASE}
+matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.', }
 
 --- a . b
 --    @param a 3-element vector.
@@ -964,7 +964,7 @@ matrix.dot = function (a,b)
    local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
    return x1*x2+y1*y2+z1*z2
 end
-matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors', help.BASE}
+matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors', }
 
 local function fabs(m)
    return (type(m) == 'table' and m.iscomplex) and m:abs() or math.abs(m)
@@ -1045,7 +1045,7 @@ matrix.lu = function (m)
           matrix.map_ex(a, function (r,c,m) return r <= c and m or 0 end),                    -- upper
 	  p                                                                                   -- permutations
 end
-matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", help.BASE}
+matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", }
 
 --- Cholesky decomposition.
 --    @param m Positive definite symmetric matrix.
@@ -1111,7 +1111,7 @@ matrix.about[matrix.reduce] = {"reduce(m,fn,dir,init)","Evaluate s=fn(s,x) along
 --    @param dir Direction (optional).
 --    @return Sum along 'r'ows or 'c'olumns
 matrix.sum = function (m,dir) return matrix.reduce(m, fn_sum, dir, 0) end
-matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given direction ('r' or 'c').", help.BASE}
+matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given direction ('r' or 'c').", }
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})

@@ -83,7 +83,7 @@ special.gamma = function (z)
       return math.sqrt(2*math.pi)*math.pow(t, z+0.5)*math.exp(-t)*x
    end
 end
-special.about[special.gamma] = {"gamma(z)", "Gamma function.", help.BASE}
+special.about[special.gamma] = {"gamma(z)", "Gamma function.", }
 
 special.gammaln = function (z)
    local x,y = z,z
@@ -139,13 +139,13 @@ special.gammp = function (a,x)
    assert(x >= 0.0 and a > 0, 'Invalid arguments!')
    return (x < a+1.0) and gser(a,x) or 1.0-gcf(a,x)
 end
-special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).", help.BASE}
+special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).", }
 
 special.gammq = function (a,x)
    assert(x >= 0.0 and a > 0, 'Invalid arguments!')
    return (x < a+1.0) and 1-gser(a,x) or gcf(a,x)
 end
-special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) = 1-P(a,x).", help.BASE}
+special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) = 1-P(a,x).", }
 
 special.gammainc = function (x,a,tp)
    tp = tp or 'lower'
@@ -159,7 +159,7 @@ special.about[special.gammainc] = {"gammainc(x,a,type)", "Incomplete gamma funct
 special.beta = function (z,w)
    return math.exp(special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w))
 end
-special.about[special.beta] = {"beta(z,w)", "Beta function.", help.BASE}
+special.about[special.beta] = {"beta(z,w)", "Beta function.", }
 
 special.betaln = function (z,w)
    return special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w)
@@ -236,7 +236,7 @@ special.expint = function (n,x)
    end -- if x
    error('Evaluation is failed!')
 end
-special.about[special.expint] = {"expint(n,x)", "Exponential integral En(x).", help.BASE}
+special.about[special.expint] = {"expint(n,x)", "Exponential integral En(x).", }
 
 special.erfc = function (x)
    local z = math.abs(x)
@@ -245,10 +245,10 @@ special.erfc = function (x)
                (0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))))
    return (x >= 0.0) and ans or (2.0-ans)
 end
-special.about[special.erfc] = {"erfc(x)", "Complementary error function.", help.BASE}
+special.about[special.erfc] = {"erfc(x)", "Complementary error function.", }
 
 special.erf = function (x) return 1-special.erfc(x) end
-special.about[special.erf] = {"erf(x)", "Error function.", help.BASE}
+special.about[special.erf] = {"erf(x)", "Error function.", }
 
 local function plgndr (n,m,x)
    local pmm = 1.0
@@ -278,7 +278,7 @@ special.legendre = function (n,x)
    for i = 1,n+1 do res[i] = plgndr(n,i,x) end
    return res
 end
-special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polinomial coefficients.", help.BASE}
+special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polinomial coefficients.", }
 
 -- Bessel functions
 
@@ -371,7 +371,7 @@ special.bessy = function (n,x)
    end
    return by
 end
-special.about[special.bessy] = {"bessy(n,x)","Bessel function of the second kind.", help.BASE}
+special.about[special.bessy] = {"bessy(n,x)","Bessel function of the second kind.", }
 
 --- Bessel function of the first kind
 --    @param n Polynomial order.
@@ -416,7 +416,7 @@ special.bessj = function (n,x)
    end
    return (x < 0.0 and (n & 1)==1) and -ans or ans
 end
-special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind.", help.BASE}
+special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind.", }
 
 -- Modified Bessel function
 local function bessi0 (x)
@@ -478,7 +478,7 @@ special.bessk = function (n,x)
    end
    return bk
 end
-special.about[special.bessk] = {"bessk(n,x)", "Modified Bessel function Kn(x).", help.BASE}
+special.about[special.bessk] = {"bessk(n,x)", "Modified Bessel function Kn(x).", }
 
 special.bessi = function (n,x)
    assert(n >= 0 and math.tointeger(n) == n, "Non-negative integer order is expected!")
@@ -500,7 +500,7 @@ special.bessi = function (n,x)
    ans = ans*bessi0(x)/bi
    return (x < 0.0 and (n & 1)==1) and -ans or ans
 end
-special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x).", help.BASE}
+special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x).", }
 
 -- Fractional Bessel functions
 --[[

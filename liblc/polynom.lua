@@ -149,7 +149,7 @@ polynom.val = function (p,x)
    end
    return res
 end
-polynom.about[polynom.val] = {"val(p,x)", "Get value of polynomial p in point x.", help.BASE}
+polynom.about[polynom.val] = {"val(p,x)", "Get value of polynomial p in point x.", }
 
 polynom.__call = function (p,x) return polynom.val(p,x) end
 
@@ -277,10 +277,10 @@ polynom.__le = function (a,b)
 end
 
 polynom.arithmetic = 'arithmetic'
-polynom.about[polynom.arithmetic] = {polynom.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.BASE}
+polynom.about[polynom.arithmetic] = {polynom.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", }
 
 polynom.comparison = 'comparison'
-polynom.about[polynom.comparison] = {polynom.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+polynom.about[polynom.comparison] = {polynom.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", }
 
 --- Get derivative.
 --    @param p Initial polynomial.
@@ -296,7 +296,7 @@ polynom.der = function (p,x)
    if x then x = polynom.val(der,x) end
    return der, x
 end
-polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynomial, and its value, if need.", help.BASE}
+polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynomial, and its value, if need.", }
 
 --- Get integral.
 --    @param p Initial polynomial.
@@ -312,7 +312,7 @@ polynom.int = function (p,x)
    table.insert(int, x)
    return polynom:init(int)
 end
-polynom.about[polynom.int] = {"int(p[,x0])", "Calculate integral, x0 - free coefficient.", help.BASE}
+polynom.about[polynom.int] = {"int(p[,x0])", "Calculate integral, x0 - free coefficient.", }
 
 --- Get polynomial from roots.
 --    Arguments are a sequence of roots.

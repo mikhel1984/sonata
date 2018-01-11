@@ -85,7 +85,7 @@ end
 complex.trig = function (m,a)
    return complex:new(m*math.cos(a), m*math.sin(a))
 end
-complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle.", help.BASE}
+complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle.", }
 
 --- Create copy of the complex number.
 --    @param c Source value.
@@ -173,7 +173,7 @@ complex.__unm = function (v)
 end
 
 complex.arithmetic = 'arithmetic'
-complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
+complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", }
 
 --- a == b
 --    @param a First complex or real number.
@@ -188,19 +188,19 @@ end
 --complex.__le = function (a,b) return complex.__eq(a,b) end
 
 complex.comparison = 'comparison'
-complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.BASE}
+complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", }
 
 --- Argument of complex number.
 --    @param v Complex number.
 --    @return Argument of the number.
 complex.arg = function (v) return math.atan(v.imag, v.real) end
-complex.about[complex.arg] = {"arg(v)", "Return argument of complex number.", help.BASE}
+complex.about[complex.arg] = {"arg(v)", "Return argument of complex number.", }
 
 --- Module of complex number.
 --    @param v Complex number.
 --    @return Module of the number.
 complex.abs = function (v) return math.sqrt(v.real*v.real+v.imag*v.imag) end
-complex.about[complex.abs] = {"abs(v)", "Return module of complex number.", help.BASE}
+complex.about[complex.abs] = {"abs(v)", "Return module of complex number.", }
 
 --- Conjunction.
 --    @param v Complex number.
@@ -241,7 +241,7 @@ complex.sqrt = function (v)
       return complex.__pow(v, 0.5)
    end
 end
-complex.about[complex.sqrt] = {"sqrt(v)", "Return square root. Result can be real of complex.", help.BASE}
+complex.about[complex.sqrt] = {"sqrt(v)", "Return square root. Result can be real of complex.", }
 
 -- imaginary unit
 complex._i   = complex:new(0,1)

@@ -243,7 +243,7 @@ bigint.abs = function (v)
    if a.sign < 0 then a.sign = -a.sign end
    return a
 end
-bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number.", help.BASE}
+bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number.", }
 
 --- Copy of the object.
 --    @param v Original bigint object.
@@ -408,9 +408,9 @@ bigint.__pow = function (a,b)
 end
 
 bigint.arithmetic = 'arithmetic'
-bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.BASE}
+bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", }
 bigint.comparison = 'comparison'
-bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", }
 
 --- String representation.
 --    @param v Bigint object.
@@ -434,7 +434,7 @@ bigint.about[bigint.str] = {"str(v)", "More readable string representation of th
 bigint.tonumber = function (v)
    return tonumber(bigint.__tostring(v))
 end
-bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", help.BASE}
+bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", }
 
 --- m!
 --    @param m Bigint object or integer.
@@ -450,7 +450,7 @@ bigint.fact = function (m)
    end
    return res
 end
-bigint.about[bigint.fact] = {"fact(n)", "Return factorial of non-negative integer n.", help.BASE}
+bigint.about[bigint.fact] = {"fact(n)", "Return factorial of non-negative integer n.", }
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
