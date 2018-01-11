@@ -280,6 +280,33 @@ special.legendre = function (n,x)
 end
 special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polinomial coefficients.", }
 
+local c_dawson = {}
+
+special.dawson = function (x)
+   local NMAX,H,A1,A2,A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
+    
+   if #c_dawson == 0 then 
+      for i = 1,NMAX do c_dawson[i] = math.exp(-((2.0*i-1.0)*H)^2) end
+   end
+   local xx = math.abs(x)
+   if xx < 0.2 then 
+      local x2 = x*x
+      return x*(1.0-A1*x2*(1.0-A2*x2*(1.0-A3*x2)))
+   else
+      local n0 = 2*math.floor(0.5*xx/H+0.5)
+      local xp = xx-n0*H
+      local e1 = math.exp(2.0*xp*H)
+      local e2,d1 = e1*e1, n0+1
+      local d2,sum = d1-2.0, 0.0
+      for i = 1,NMAX do
+         sum = sum + c_dawson[i]*(e1/d1+1.0/(d2*e1))
+	 d1,d2,e1 = d1+2.0, d2-2.0, e1*e2
+      end
+      return 0.5641895835*sum*(x>=0 and math.exp(-xp*xp) or -math.exp(-xp*xp))
+   end
+end
+special.about[special.dawson] = {"dawson(x)", "Dawson integral."}
+
 -- Bessel functions
 
 local function bessj0 (x)
