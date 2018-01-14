@@ -297,7 +297,7 @@ function help:get(txt)
    return lng or eng[txt] or txt
 end
 
-function help.newmodule (mname, alias)
+function help.newmodule (mname, alias, description)
    if not (mname and alias) then
       print('Both module name and alias are expected!'); return
    end
@@ -309,10 +309,11 @@ function help.newmodule (mname, alias)
       print('File '..fname..' is already exist!'); return
    end
    -- write new file
+   description = description or "This is my cool module!"
    local txt = 
 [=[--[[       WORD1
 
-3L This is my module.
+3L WORD5
 --  @author My Name
 
            WORD4 'WORD2'
@@ -342,7 +343,7 @@ local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
 
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-WORD2.about = help:new("This is my cool module.")
+WORD2.about = help:new("WORD5")
 
 3L Constructor example
 --    @param t Some value.
@@ -376,7 +377,7 @@ return WORD2
 ]=]
    -- correct text
    txt = string.gsub(txt, '3L', '---')            -- protect from creating failed documentation
-   txt = string.gsub(txt, '(WORD%d)', {WORD1=fname, WORD2=mname, WORD3=alias, WORD4='module'})
+   txt = string.gsub(txt, '(WORD%d)', {WORD1=fname, WORD2=mname, WORD3=alias, WORD4='module', WORD5=description})
    -- save
    f = io.open(fname, 'w')
    f:write(txt)

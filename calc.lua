@@ -1,28 +1,29 @@
 #!/usr/local/bin/lua -i
--- Lua based calculator
--- This file is a part of 'liblc' collection, 2017-2018.
+--| Lua based calculator
+--| This file is a part of 'liblc' collection, 2017-2018.
 lc_version = '0.7.2'
 
--- Uncomment to set the localisation file.
--- LOCALISATION_FILE = "ru.lng"
+--| Uncomment to set the localisation file.
+--LOCALISATION_FILE = "ru.lng"
 
--- Optional (for bash alias lc='~/.lc/calc.lua')
--- package.path = package.path .. ';./.lc/?.lua'
+--| Optional (for bash alias lc='~/.lc/calc.lua')
+--package.path = package.path .. ';./.lc/?.lua'
 
--- Table for program variables
+--| Table for program variables
 liblc = {}
 
--- base functionality
+--| base functionality
 liblc.main = require 'liblc.main'
--- Quick exit
+--| Quick exit
 quit = function () print("\n              --======= Buy! =======--\n"); os.exit() end
 
--- modules
+--| modules
 import = {
    array    = "Arr",
    bigint   = "Big",
    complex  = "Cmp",
    const    = "_C",
+   files    = "File",
    gnuplot  = "Gnu",
    matrix   = "Mat",
    numeric  = "Num",
@@ -35,7 +36,7 @@ import = {
 }
 about[import] = {"import", ""}
 
--- update help information about imported modules
+--| update help information about imported modules
 function liblc.import_state_update()
    local m = {string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
@@ -45,7 +46,7 @@ function liblc.import_state_update()
    return table.concat(m, '\n')
 end
 
--- import actions
+--| import actions
 function liblc.doimport(tbl,name)
    local var = assert(tbl[name], 'Wrong module name: '..name..'!')
    if not _G[var] then
@@ -56,7 +57,7 @@ function liblc.doimport(tbl,name)
    return var
 end
 
--- add modules
+--| add modules
 setmetatable(import, 
 { __tostring = function (x) return about:get('done') end,
   __call = function (self, name) 
@@ -71,7 +72,7 @@ setmetatable(import,
   end,
 })
 
--- check arguments
+--| check arguments
 if #arg > 0 then
    -- test modules
    if arg[1] == '-test' then
@@ -97,7 +98,7 @@ if #arg > 0 then
       end
    -- prepare new module
    elseif arg[1] == '-new' then
-      mhelp.newmodule(arg[2],arg[3])
+      mhelp.newmodule(arg[2],arg[3],arg[4])
    -- execute all the files from the argument list
    else
       for i = 1,#arg do dofile(arg[i]) end
@@ -105,18 +106,21 @@ if #arg > 0 then
    os.exit()
 end
 
--- read localisation file and update descriptions
+--| read localisation file and update descriptions
 if LOCALISATION_FILE then 
    about:localisation(LOCALISATION_FILE) 
 end
 about[import][2] = liblc.import_state_update()
 
--- Run!
+--| Run!
 print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
 print(about:get('intro'))
 
 _PROMPT='lc: '
 _PROMPT2='..: '
+
+--| Import modules by default
+--import 'array' 'bigint' 'complex'
 
 --===============================================
 -- TODO: use alias or part of the name for import
