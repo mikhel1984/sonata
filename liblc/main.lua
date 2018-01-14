@@ -203,6 +203,7 @@ function help(fn)
    end
 end
 
+-- Evaluate string equation, print result
 function main.evalstr (s)
    local T = require 'liblc.test'
    for c in T.split(s,';') do

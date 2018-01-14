@@ -9,8 +9,11 @@ lc_version = '0.7.2'
 -- Optional (for bash alias lc='~/.lc/calc.lua')
 -- package.path = package.path .. ';./.lc/?.lua'
 
+-- Table for program variables
+liblc = {}
+
 -- base functionality
-require 'liblc.main'
+liblc.main = require 'liblc.main'
 -- Quick exit
 quit = function () print("\n              --======= Buy! =======--\n"); os.exit() end
 
@@ -30,10 +33,10 @@ import = {
    stat     = "Stat",
    units    = "Unit",
 }
-about[import] = {"import", "", "base"}
+about[import] = {"import", ""}
 
 -- update help information about imported modules
-function import_state_update()
+function liblc.import_state_update()
    local m = {string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
       m[#m+1] = string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-'))
@@ -43,7 +46,7 @@ function import_state_update()
 end
 
 -- import actions
-local function doimport(tbl,name)
+function liblc.doimport(tbl,name)
    local var = assert(tbl[name], 'Wrong module name: '..name..'!')
    if not _G[var] then
       _G[var] = require('liblc.'..name)
@@ -58,12 +61,12 @@ setmetatable(import,
 { __tostring = function (x) return about:get('done') end,
   __call = function (self, name) 
     if name == 'all' then 
-       for k,v in pairs(self) do doimport(self,k) end
+       for k,v in pairs(self) do liblc.doimport(self,k) end
     else
-       local var = doimport(self,name)
+       local var = liblc.doimport(self,name)
        print(string.format(about:get('alias'), var, name))
     end
-    about[import][2] = import_state_update()
+    about[import][2] = liblc.import_state_update()
     return import
   end,
 })
@@ -83,9 +86,8 @@ if #arg > 0 then
       Test.summary()
    -- calculate
    elseif arg[1] == '-e' or arg[1] == '-eval' then
-      local mm = require('liblc.main')
       local tmp = table.move(arg,2,#arg,1,{})
-      mm.evalstr(table.concat(tmp,' '))
+      liblc.main.evalstr(table.concat(tmp,' '))
    -- update localisation file
    elseif arg[1] == '-lang' then
       if arg[2] then
@@ -107,7 +109,7 @@ end
 if LOCALISATION_FILE then 
    about:localisation(LOCALISATION_FILE) 
 end
-about[import][2] = import_state_update()
+about[import][2] = liblc.import_state_update()
 
 -- Run!
 print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
