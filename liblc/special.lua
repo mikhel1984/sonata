@@ -71,7 +71,8 @@ local function lowbound(a,b) return math.abs(a) > b and a or b end
 ---------------------------------
 -- @class table
 -- @name special
--- @field about Function description collection.
+-- @field about Description of functions.
+
 local special = {}
 special.__index = special
 

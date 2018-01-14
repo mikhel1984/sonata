@@ -331,6 +331,7 @@ ans = a.type                   --> 'WORD2'
 3L3L3L3L3L3L3L3L3L3L3L
 -- @class table
 -- @name WORD2
+-- @field about Description of functions.
 local WORD2 = {}
 WORD2.__index = WORD2
 

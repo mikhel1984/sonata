@@ -59,7 +59,7 @@ print(a)
 -- @class table
 -- @name polynom
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 local polynom = {}
 polynom.__index = polynom
 -- marker

@@ -63,7 +63,7 @@ local c_prod, c_rat, c_pow = string.byte('*'), string.byte('/'), string.byte('^'
 -- @name units
 -- @field type Define object type string.
 -- @field isunits <code>true</code> for unit object.
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field prefix List of prefixes in SI. Can be expanded.
 -- @field mem_parts Intermediate results for unit parts.
 -- @field mem_keys Intermediate results for unit keys.

@@ -55,7 +55,7 @@ print(a)
 -- @class table
 -- @name complex
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field _i Complex unit.
 
 local complex = {}

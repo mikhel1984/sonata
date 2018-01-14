@@ -51,7 +51,7 @@ local NOT_A_SET = "Set is expected!"
 -- @class table
 -- @name set
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 local set = {}
 set.__index = set
 -- mark

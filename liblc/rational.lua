@@ -51,7 +51,7 @@ print(a)
 -- @class table
 -- @name rational
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 local rational = {}
 rational.__index = rational
 -- mark

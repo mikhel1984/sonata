@@ -120,7 +120,7 @@ ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
 -- @class table
 -- @name matrix
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 
 local matrix = {}
 matrix.__index = matrix

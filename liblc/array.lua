@@ -55,7 +55,7 @@ print(d:fullstring(2,3))
 -- @class table
 -- @name array
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 
 local array = {}
 array.__index = array

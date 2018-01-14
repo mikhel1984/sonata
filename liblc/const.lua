@@ -11,6 +11,8 @@
 ---------------------------------
 -- @class table
 -- @name const
+-- @field about Description of functions.
+
 local const = {
    -- physics
 G_u='N*m^2/kg^2',   G    = 6.672041E-11,            -- constant of gravitation

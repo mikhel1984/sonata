@@ -45,7 +45,7 @@ ans = Stat.harmean(X,W)       --~ 2.567
 -------------------------------------------- 
 -- @class table
 -- @name stat
--- @field about Function description collection.
+-- @field about Description of functions.
 
 local stat = {}
 -- description

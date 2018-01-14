@@ -52,7 +52,7 @@ print(a)
 -- @class table
 -- @name bigint
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field BASE Radix value. Default is 10.
 
 

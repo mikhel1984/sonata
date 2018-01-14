@@ -32,7 +32,7 @@ ans = yn                                  --~ 90.011
 -------------------------------------------- 
 -- @class table
 -- @name array
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field TOL Solution tolerance. Default is 0.001.
 
 local numeric = {}
