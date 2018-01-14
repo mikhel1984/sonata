@@ -46,20 +46,32 @@ ans = Spec.bessy(4, 0.8)           --~ -78.751
 ans = Spec.bessi(2, -3.6)          --~ 4.254
 
 ans = Spec.bessk(5, 5)             --~ 3.2706E-2
+
+lst = Spec.legendre(3, 0.5)
+ans = lst[1]                       --~ -0.4375
+
+ans = Spec.dawson(3.3)             --~ 0.1598
 ]]
 
--- magic numbers for gamma approximation
+-- constants for gamma approximation
 local k_gamma = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,
-               12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7}
+               12.507343278686905,-0.13857109526572012,9.9843695780195716E-6,1.5056327351493116E-7}
 
+-- constants for ln(gamma) approximation
 local k_gammaln = {76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,
                    0.1208650973866179E-2,-0.5395239384953E-5}
 
+--- Fixed lower bound based on absolute value.
+--    <i>Private function.</i>
+--    @param a Value to return.
+--    @param b Lower bound.
+--    @return Second argument if first is too small.
 local function lowbound(a,b) return math.abs(a) > b and a or b end
 
 ---------------------------------
 -- @class table
 -- @name special
+-- @field about Function description collection.
 local special = {}
 special.__index = special
 
@@ -69,7 +81,6 @@ special.about = help:new("Special mathematical functions.")
 
 --- Gamma function.
 --    Lanczos approximation (based on Wikipedia) for real numbers.
---    <i>Private function.</i>
 --    @param z Real number.
 --    @return G(z).
 special.gamma = function (z) 
@@ -85,6 +96,9 @@ special.gamma = function (z)
 end
 special.about[special.gamma] = {"gamma(z)", "Gamma function.", }
 
+--- Logarithm of gamma function.
+--    @param z Positive number.
+--    @return log(gamma(z))
 special.gammaln = function (z)
    local x,y = z,z
    local tmp = x+5.5
@@ -95,7 +109,11 @@ special.gammaln = function (z)
 end
 special.about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma function.", help.OTHER}
 
--- Returns series representation for incomplete gamma function P.
+--- Series representation for incomplete gamma function P.
+--    <i>Private function.</i>
+--    @param a Order.
+--    @param x Real value.
+--    @return Representation of P.
 local function gser(a,x)
    local ITMAX,EPS = 100, 3E-7
    local gamser = 0.0
@@ -117,10 +135,13 @@ local function gser(a,x)
    return gamser
 end
 
--- Returns continued fruction representation for incomplete gamma function Q.
+-- Continued fruction representation for incomplete gamma function Q.
+--    <i>Private function.</i>
+--    @param a Order.
+--    @param x Real value.
+--    @return Representation of Q.
 local function gcf(a,x)
    local ITMAX,EPS,FPMIN = 100, 3E-7, 1E-30
-   local gammcf = 0.0
    local b,c = x+1.0-a, 1.0/FPMIN
    local d = 1.0/b
    local h,an,del = d
@@ -131,22 +152,34 @@ local function gcf(a,x)
       h = h*del
       if math.abs(del-1.0) < EPS then break end
    end
-   gammcf = math.exp(-x+a*math.log(x)-special.gammaln(a))*h
-   return gammcf
+   return math.exp(-x+a*math.log(x)-special.gammaln(a))*h
 end
 
+--- Incomplete gamma functoin P(a,x).
+--    @param a Order.
+--    @param x Non-negative value.
+--    @return Value of P(a,x).
 special.gammp = function (a,x)
    assert(x >= 0.0 and a > 0, 'Invalid arguments!')
    return (x < a+1.0) and gser(a,x) or 1.0-gcf(a,x)
 end
 special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).", }
 
+--- Incomplete gamma function Q(a,x).
+--    @param a Order.
+--    @param x Non-negative value.
+--    @return Value of Q(a.x).
 special.gammq = function (a,x)
    assert(x >= 0.0 and a > 0, 'Invalid arguments!')
    return (x < a+1.0) and 1-gser(a,x) or gcf(a,x)
 end
 special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) = 1-P(a,x).", }
 
+--- Other syntax for incomplete gamma function.
+--    @param x Real value.
+--    @param a Order.
+--    @param tp Type of function (lower of upper).
+--    @return Value of correspondant incomplete function.
 special.gammainc = function (x,a,tp)
    tp = tp or 'lower'
    if     tp == 'lower' then return special.gammp(a,x)
@@ -156,18 +189,31 @@ special.gammainc = function (x,a,tp)
 end
 special.about[special.gammainc] = {"gammainc(x,a,type)", "Incomplete gamma function, P (type=lower) or Q (type=upper).", help.OTHER}
 
+--- Beta function.
+--    @param z First value.
+--    @param w Second value.
+--    @return B(z,w).
 special.beta = function (z,w)
    return math.exp(special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w))
 end
 special.about[special.beta] = {"beta(z,w)", "Beta function.", }
 
+--- Logarithm of beta function.
+--    @param z First argument.
+--    @param w Second argument.
+--    @return log(B(x)).
 special.betaln = function (z,w)
    return special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w)
 end
 special.about[special.betaln] = {"betaln(z,w)", "Natural logarithm of beta function.", help.OTHER}
 
 
--- Evaluates continued fraction for incomplete beta function by modified Lentz's method.
+--- Evaluates continued fraction for incomplete beta function by modified Lentz's method.
+--    <i>Private function.</i>
+--    @param a First bound.
+--    @param b Second bound.
+--    @param x Value between 0 and 1.
+--    @return Fraction value.
 local function betacf(a,b,x)
    local MAXIT,EPS,FPMIN = 100, 3E-7, 1E-30
    local qab,qap,qam = a+b, a+1.0, a-1.0
@@ -187,6 +233,11 @@ local function betacf(a,b,x)
    return h
 end
 
+--- Incomplete beta function
+--    @param x Value between 0 and 1.
+--    @param a First bound.
+--    @param b Second bound.
+--    @return Value of Ix(a,b).
 special.betainc = function (x,a,b)
    assert(x >= 0.0 and x <= 1.0, "Expected x between 0 and 1!")
    local bt
@@ -199,6 +250,10 @@ special.betainc = function (x,a,b)
 end
 special.about[special.betainc] = {"betainc(x,a,b)", "Incomplete beta function Ix(a,b).", help.OTHER}
 
+--- Exponential integral.
+--    @param n Power.
+--    @param x Non-negative value.
+--    @return Value of En(x).
 special.expint = function (n,x)
    if x == nil then n,x = 1,n end
    assert(n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1)), 'Bad arguments!')
@@ -238,6 +293,9 @@ special.expint = function (n,x)
 end
 special.about[special.expint] = {"expint(n,x)", "Exponential integral En(x).", }
 
+--- Complementary error function.
+--    @param x Real value.
+--    @return Error value.
 special.erfc = function (x)
    local z = math.abs(x)
    local t = 1.0/(1+0.5*z)
@@ -245,11 +303,20 @@ special.erfc = function (x)
                (0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))))
    return (x >= 0.0) and ans or (2.0-ans)
 end
-special.about[special.erfc] = {"erfc(x)", "Complementary error function.", }
+special.about[special.erfc] = {"erfc(x)", "Complementary error function."}
 
+--- Error function.
+--    @param x Real value.
+--    @return Error value.
 special.erf = function (x) return 1-special.erfc(x) end
-special.about[special.erf] = {"erf(x)", "Error function.", }
+special.about[special.erf] = {"erf(x)", "Error function."}
 
+--- Legendre coefficient.
+--    <i>Private function.</i>
+--    @param n Total order.
+--    @param m Current order.
+--    @param x Real number.
+--    @return Pn_m(x)
 local function plgndr (n,m,x)
    local pmm = 1.0
    if m > 0 then
@@ -272,16 +339,24 @@ local function plgndr (n,m,x)
    end
 end
 
+--- List of Legendre coefficients.
+--    @param n Polinomial order.
+--    @param x Real number.
+--    @return Table with coefficients.
 special.legendre = function (n,x)
    assert(n >= 0 and math.abs(x) <= 1, 'Bad arguments')
    local res = {}
-   for i = 1,n+1 do res[i] = plgndr(n,i,x) end
+   for i = 1,n+1 do res[i] = plgndr(n,i-1,x) end
    return res
 end
-special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polinomial coefficients.", }
+special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polinomial coefficients."}
 
+-- List of Dawson function coefficients.
 local c_dawson = {}
 
+--- Dawson integral.
+--    @param x Real number.
+--    @return Integral value.
 special.dawson = function (x)
    local NMAX,H,A1,A2,A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
     
@@ -307,8 +382,12 @@ special.dawson = function (x)
 end
 special.about[special.dawson] = {"dawson(x)", "Dawson integral."}
 
--- Bessel functions
+--***** Bessel functions ******
 
+--- Bessel function J0.
+--    <i>Private function.</i>
+--    @param x Real number.
+--    @return J0(x).
 local function bessj0 (x)
    local ax  = math.abs(x)
    local ans1, ans2, y
@@ -327,6 +406,10 @@ local function bessj0 (x)
    end
 end
 
+--- Bessel function Y0.
+--    <i>Private function.</i>
+--    @param x Non-negative number.
+--    @return Y0(x).
 local function bessy0 (x)
    local ans1, ans2, y
    if x < 8.0 then
@@ -345,6 +428,10 @@ local function bessy0 (x)
    end
 end
 
+--- Bessel function J1.
+--    <i>Private function.</i>
+--    @param x Real number.
+--    @return J1(x).
 local function bessj1 (x)
    local ax = math.abs(x)
    local ans1, ans2, y
@@ -364,6 +451,10 @@ local function bessj1 (x)
    end
 end
 
+--- Bessel function Y1.
+--    <i>Private function.</i>
+--    @param x Non-negative number.
+--    @return Y1(x).
 local function bessy1 (x)
    local ans1, ans2, y
    if x < 8.0 then
@@ -443,9 +534,12 @@ special.bessj = function (n,x)
    end
    return (x < 0.0 and (n & 1)==1) and -ans or ans
 end
-special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind.", }
+special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind."}
 
--- Modified Bessel function
+--- Modified Bessel function I0.
+--    <i>Private function.</i>
+--    @param x Real number.
+--    @return I0(x).
 local function bessi0 (x)
    local ax = math.abs(x)
    if ax < 3.75 then
@@ -459,6 +553,10 @@ local function bessi0 (x)
    end
 end
 
+--- Modified Bessel function K0.
+--    <i>Private function.</i>
+--    @param x Non-negative number.
+--    @return K0(x).
 local function bessk0 (x)
    if x <= 2.0 then
       local y = x*x/4.0
@@ -469,6 +567,10 @@ local function bessk0 (x)
    end
 end
 
+--- Modified Bessel function I1.
+--    <i>Private function.</i>
+--    @param x Real number.
+--    @return I1(x).
 local function bessi1 (x)
    local ax,ans = math.abs(x)
    if ax < 3.75 then
@@ -484,6 +586,10 @@ local function bessi1 (x)
    return (x < 0) and -ans or ans
 end
 
+--- Modified Bessel function K1.
+--    <i>Private function.</i>
+--    @param x Non-negative number.
+--    @return K1(x).
 local function bessk1 (x)
    if x <= 2.0 then
       local y = x*x/4.0
@@ -494,6 +600,10 @@ local function bessk1 (x)
    end
 end
 
+--- Modified Bessel function Kn.
+--    @param n Order.
+--    @param x Positive value.
+--    @return Kn(x).
 special.bessk = function (n,x)
    assert(x > 0, "Positiva value is expected!")
    assert(n >= 0 and math.tointeger(n) == n, "Non-negative integer order is expected!")
@@ -505,8 +615,12 @@ special.bessk = function (n,x)
    end
    return bk
 end
-special.about[special.bessk] = {"bessk(n,x)", "Modified Bessel function Kn(x).", }
+special.about[special.bessk] = {"bessk(n,x)", "Modified Bessel function Kn(x)."}
 
+--- Modified Bessel function In.
+--    @param n Order.
+--    @param x Real number.
+--    @return In(x).
 special.bessi = function (n,x)
    assert(n >= 0 and math.tointeger(n) == n, "Non-negative integer order is expected!")
    if n == 0 then return bessi0(x) end
@@ -527,7 +641,7 @@ special.bessi = function (n,x)
    ans = ans*bessi0(x)/bi
    return (x < 0.0 and (n & 1)==1) and -ans or ans
 end
-special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x).", }
+special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x)."}
 
 -- Fractional Bessel functions
 --[[
