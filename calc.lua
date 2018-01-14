@@ -1,10 +1,13 @@
 #!/usr/local/bin/lua -i
 -- Lua based calculator
 -- This file is a part of 'liblc' collection, 2017-2018.
-lc_version = '0.7.1'
+lc_version = '0.7.2'
 
 -- Uncomment to set the localisation file.
 -- LOCALISATION_FILE = "ru.lng"
+
+-- Optional (for bash alias lc='~/.lc/calc.lua')
+-- package.path = package.path .. ';./.lc/?.lua'
 
 -- base functionality
 require 'liblc.main'
