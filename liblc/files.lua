@@ -86,6 +86,23 @@ files.tblread = function (fname, delim)
    return res
 end
 
+-- Returns text of the file
+files.read = function (fname)
+   local str
+   local f = io.open(fname, 'r')
+   if f then
+      str = f:read('a')
+      f:close()
+   end
+   return str
+end
+
+-- Load Lua table from file
+files.tblimport = function (fname)
+   local str = files.read(fname)
+   return str and load('return '..str) or nil
+end
+
 --[[
 --- Constructor example
 --    @param t Some value.
