@@ -13,32 +13,52 @@ Stat = require 'liblc.stat'
 
 X = {3,2,5,6,3,4,3,1}
 w = {1,1,0,1,2,2,1,1}
-ans = Stat.mean(X)            --~ 3.375
+ans = Stat.mean(X)                --~ 3.375
 
-ans, tmp = Stat.std(X,W)      --~ 1.495
+ans, tmp = Stat.std(X,W)          --~ 1.495
 
-ans = tmp                     --~ 2.234
+ans = tmp                         --~ 2.234
 
-_,ans = Stat.max(X)           --> 4 
+_,ans = Stat.max(X)               --> 4 
 
-ans = Stat.median(X)          --> 3
+ans = Stat.median(X)              --> 3
 
 tmp = Stat.freq(X)
-ans = tmp[3]                  --> 3
+ans = tmp[3]                      --> 3
 
-ans = Stat.cmoment(2,X)       --~ 2.234
+ans = Stat.cmoment(2,X)           --~ 2.234
 
-ans = Stat.moment(3,X,W)      --~ 61.875
+ans = Stat.moment(3,X,W)          --~ 61.875
 
-ans = Stat.sum(X)             --> 27
+ans = Stat.sum(X)                 --> 27
 
-ans = Stat.stdcorr(X)         --~ 1.598
+ans = Stat.stdcorr(X)             --~ 1.598
 
-ans = Stat.min(X)             --> 1
+ans = Stat.min(X)                 --> 1
 
-ans = Stat.geomean(X)         --~ 2.995
+ans = Stat.geomean(X)             --~ 2.995
 
-ans = Stat.harmean(X,W)       --~ 2.567
+ans = Stat.harmean(X,W)           --~ 2.567
+
+ans = Stat.poisscdf(3, 0.5)       --~ 0.998
+
+ans = Stat.poisspdf(5, 1.1)       --~ 4.467E-3
+
+ans = Stat.chi2cdf(0.5, 2)        --~ 0.2212
+
+ans = Stat.chi2pdf(1.2, 2.1)      --~ 0.2748
+
+ans = Stat.tcdf(4, 2.5)           --~ 0.9805
+
+ans = Stat.tpdf(2, 3.3)           --~ 0.0672
+
+ans = Stat.fcdf(0.8, 1.1, 2.2)    --~ 0.5285
+
+ans = Stat.fpdf(1.3, 2.7, 2.4)    --~ 0.2174
+
+ans = Stat.normcdf(1, 1.5, 2.1)   --~ 0.4059
+
+ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 ]]
 
 
@@ -51,6 +71,9 @@ local stat = {}
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
+
+-- some functions depend of module 'special'
+stat.lc_special = require 'liblc.special'
 
 --- Sum of all elements.
 --    @param t Table with numbers.
@@ -231,6 +254,85 @@ stat.moment = function (n, x, p)
    return m
 end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", }
+
+-- Poisson cumulative distribution
+-- @param x Value.
+-- @param lam Mean parameter.
+stat.poisscdf = function (k,lam)
+   return stat.lc_special.gammq(k+1,lam)
+end
+
+stat.poisspdf = function (x,lam)
+   assert(lam >= 0, 'Wrong argument!')
+   if math.tointeger(x) == nil then return 0.0 end
+   local f = 1
+   for i = 1,x do f = f*i end
+   return math.pow(lam,x)*math.exp(-lam)/f
+end
+
+-- Chi-square cumulative distribution
+-- @param x Value.
+-- @param v Degree of freedom.
+stat.chi2cdf = function (x,v)
+   return stat.lc_special.gammp(v/2,x/2)
+end
+
+stat.chi2pdf = function (x,v)
+   if x <= 0 then return 0 end
+   local v2 = 0.5*v
+   return math.pow(x,v2-1)*math.exp(-x*0.5)/(math.pow(2.0,v2)*stat.lc_special.gamma(v2))
+end
+
+-- Student's cumulative distribution
+-- @param x Value.
+-- @param nu Degree of freedom.
+stat.tcdf = function (x,nu)
+   local tmp = nu/(nu+x*x)
+   return 1-0.5*stat.lc_special.betainc(tmp,0.5*nu,0.5)
+end
+
+stat.tpdf = function (x,nu)
+   local tmp = math.sqrt(nu)*stat.lc_special.beta(0.5,0.5*nu)
+   return math.pow(1+x*x/nu,-0.5*(nu+1))/tmp
+end
+
+-- F cumulative distribution
+-- @param x Value.
+-- @param v1 Numerator degree of freedom.
+-- @param v2 Denomenator degree of freedom.
+stat.fcdf = function (x,v1,v2)
+   local tmp = v1*x/(v2+v1*x)
+   return stat.lc_special.betainc(tmp,v1*0.5,v2*0.5)
+end
+
+stat.fpdf = function (x,v1,v2)
+   local tmp = math.pow(v1*x,v1)*math.pow(v2,v2)/math.pow(v1*x+v2,v1+v2)
+   return math.sqrt(tmp)/(x*stat.lc_special.beta(0.5*v1,0.5*v2))
+end
+
+--[[
+-- Binomial cumulative distribution
+-- @param x Value.
+-- @param N Number of trails.
+-- @param p Probability of success.
+stat.binocdf = function (x,N,p)
+   return stat.lc_special.betainc(p,x,N-x+1)
+end
+]]
+
+-- Normal cumulative distribution
+-- @param x Value.
+-- @param mu Shift.
+-- @param sig Width.
+stat.normcdf = function (x,mu,sig)
+   mu,sig = mu or 0, sig or 1
+   return 0.5*(1+stat.lc_special.erf((x-mu)/(sig*1.4142135623731)))
+end
+
+stat.normpdf = function (x,mu,sig)
+   mu,sig = mu or 0, sig or 1
+   return math.exp(-0.5*((x-mu)/sig)^2)/math.sqrt(2*math.pi*sig*sig)
+end
 
 -- free memory if need
 if not lc_version then stat.about = nil end
