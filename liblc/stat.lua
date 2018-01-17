@@ -255,13 +255,19 @@ stat.moment = function (n, x, p)
 end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", }
 
--- Poisson cumulative distribution
--- @param x Value.
--- @param lam Mean parameter.
-stat.poisscdf = function (k,lam)
-   return stat.lc_special.gammq(k+1,lam)
+--- Poisson cumulative distribution.
+--    @param x Value.
+--    @param lam Mean parameter.
+--    @return Cumulative value.
+stat.poisscdf = function (x,lam)
+   return stat.lc_special.gammq(x+1,lam)
 end
+stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution."}
 
+--- Poisson density function.
+--    @param x Value.
+--    @param lam Mean patameter.
+--    @return Density value.
 stat.poisspdf = function (x,lam)
    assert(lam >= 0, 'Wrong argument!')
    if math.tointeger(x) == nil then return 0.0 end
@@ -269,46 +275,69 @@ stat.poisspdf = function (x,lam)
    for i = 1,x do f = f*i end
    return math.pow(lam,x)*math.exp(-lam)/f
 end
+stat.about[stat.poisspdf] = {"poisspdf(x,lam)", "Poisson distribution density."}
 
--- Chi-square cumulative distribution
--- @param x Value.
--- @param v Degree of freedom.
+--- Chi-square cumulative distribution
+--    @param x Value.
+--    @param v Degree of freedom.
+--    @return Cumulative value.
 stat.chi2cdf = function (x,v)
    return stat.lc_special.gammp(v/2,x/2)
 end
+stat.about[stat.chi2cdf] = {"chi2cdf(x,v)", "Chi-square cumulative distribution."}
 
+--- Chi-square density function.
+--    @param x Value.
+--    @param v Degree of freedom.
+--    @return Density value.
 stat.chi2pdf = function (x,v)
    if x <= 0 then return 0 end
    local v2 = 0.5*v
    return math.pow(x,v2-1)*math.exp(-x*0.5)/(math.pow(2.0,v2)*stat.lc_special.gamma(v2))
 end
+stat.about[stat.chi2pdf] = {"chi2pdf(x,v)", "Chi-square distribution density."}
 
--- Student's cumulative distribution
--- @param x Value.
--- @param nu Degree of freedom.
+--- Student's cumulative distribution
+--    @param x Value.
+--    @param nu Degree of freedom.
+--    @return Cumulative value.
 stat.tcdf = function (x,nu)
    local tmp = nu/(nu+x*x)
    return 1-0.5*stat.lc_special.betainc(tmp,0.5*nu,0.5)
 end
+stat.about[stat.tcdf] = {"tcdf(x,nu)", "Student's cumulative distribution."}
 
+--- Student's density function.
+--    @param x Value.
+--    @param nu Degree of freedom.
+--    @return Density value.
 stat.tpdf = function (x,nu)
    local tmp = math.sqrt(nu)*stat.lc_special.beta(0.5,0.5*nu)
    return math.pow(1+x*x/nu,-0.5*(nu+1))/tmp
 end
+stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density."}
 
--- F cumulative distribution
--- @param x Value.
--- @param v1 Numerator degree of freedom.
--- @param v2 Denomenator degree of freedom.
+--- F cumulative distribution
+--    @param x Value.
+--    @param v1 Numerator degree of freedom.
+--    @param v2 Denomenator degree of freedom.
+--    @return Cumulative value.
 stat.fcdf = function (x,v1,v2)
    local tmp = v1*x/(v2+v1*x)
    return stat.lc_special.betainc(tmp,v1*0.5,v2*0.5)
 end
+stat.about[stat.fcdf] = {"fcdf(x,v1,v2)", "F cumulative distribution."}
 
+--- F density function.
+--    @param x Value.
+--    @param v1 Numerator degree of freedom.
+--    @param v2 Denomenator degree of freedom.
+--    @return Density value.
 stat.fpdf = function (x,v1,v2)
    local tmp = math.pow(v1*x,v1)*math.pow(v2,v2)/math.pow(v1*x+v2,v1+v2)
    return math.sqrt(tmp)/(x*stat.lc_special.beta(0.5*v1,0.5*v2))
 end
+stat.about[stat.fpdf] = {"fpdf(x,v1,v2)", "F distribution density."}
 
 --[[
 -- Binomial cumulative distribution
@@ -320,21 +349,32 @@ stat.binocdf = function (x,N,p)
 end
 ]]
 
--- Normal cumulative distribution
--- @param x Value.
--- @param mu Shift.
--- @param sig Width.
+--- Normal cumulative distribution
+--    @param x Value.
+--    @param mu Shift.
+--    @param sig Width.
+--    @return Cumulative value.
 stat.normcdf = function (x,mu,sig)
    mu,sig = mu or 0, sig or 1
    return 0.5*(1+stat.lc_special.erf((x-mu)/(sig*1.4142135623731)))
 end
+stat.about[stat.normcdf] = {"normcdf(x,mu,sig)", "Normal cumulative distribution."}
 
+--- Normal density function.
+--    @param x Value.
+--    @param mu Shift.
+--    @param sig Width.
+--    @return Density value.
 stat.normpdf = function (x,mu,sig)
    mu,sig = mu or 0, sig or 1
    return math.exp(-0.5*((x-mu)/sig)^2)/math.sqrt(2*math.pi*sig*sig)
 end
+stat.about[stat.normpdf] = {"normpdf(x,nu,sig)", "Normal distribution density."}
 
 -- free memory if need
 if not lc_version then stat.about = nil end
 
 return stat
+
+--====================================
+-- TODO: binomial distribution
