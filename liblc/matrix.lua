@@ -44,6 +44,9 @@ ans = a:det()                    --> -2
 e = a:inv()
 ans = e(2,1)                     --> 1.5
 
+e = a^-1
+ans = e(2,1)                     --> 1.5
+
 f = a:copy()
 ans = (f == a)                   --> true
 
@@ -275,6 +278,9 @@ local function gaussup(m)
    return m
 end
 
+matrix.triang = gaussdown
+matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangularization produced by Gaussian elimination.', help.OTHER}
+
 --- Get matrix element.
 --    Can be called with ().
 --    @param m Matrix.
@@ -455,6 +461,7 @@ end
 matrix.__pow = function (a,n)
    n = assert(math.tointeger(n), "Integer is expected!")
    assert(a.rows == a.cols, "Square matrix is expected!")
+   if n == -1 then return matrix.inv(a) end
    local res, acc = matrix.eye(a.rows), matrix.copy(a)
    while n > 0 do
       if n%2 == 1 then res = res * acc end

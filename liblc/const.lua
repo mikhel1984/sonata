@@ -7,6 +7,13 @@
            module 'const'
 --]]
 
+--[[!!
+_C = require 'liblc.const'
+
+ans = _C.e                  --~ 1.602e-19
+
+ans = _C.e_u                --> 'C'
+]]
 
 ---------------------------------
 -- @class table
