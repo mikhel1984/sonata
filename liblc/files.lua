@@ -7,9 +7,15 @@
 --]]
 
 --------------- Tests ------------
---[[   !!
+--[[!!
 File = require 'liblc.files'
 
+nm = os.tmpname()
+a = {1, 2.0, a = 'pqr', b = {3,4,c='abc'}}
+File.tblexport(nm, a)
+
+aa = File.tblimport(nm)
+ans = aa.b.c                         --> 'abc'
 ]]
 
 ---------------------------------
@@ -111,6 +117,42 @@ files.tblimport = function (fname)
    return f and f() or nil
 end
 files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, writen into file."}
+
+
+local val2str = {
+   ['string'] =   function (x) return string.format('"%s"', x) end,
+   ['number'] =   function (x) return math.type(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
+   ['function'] = function (x) x = tostring(x); print('Bad value: '..x); return x end,
+   ['boolean'] =  function (x) return tostring(x) end,
+   ['nil'] =      function (x) return 'nil' end,
+}
+val2str['table'] = function (x) return val2str.tbl(x) end
+val2str['thread'] = val2str['function']
+
+--- Table to string conversation.
+--    @param t Lua table.
+--    @return String form.
+val2str.tbl =  function (t)
+   local res = {}
+   for _,val in ipairs(t) do res[#res+1] = val2str[type(val)](val) end
+   for k,val in pairs(t) do
+      if not math.tointeger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
+   end
+   return string.format('{%s}', table.concat(res,','))
+end
+
+--- Save Lua table to the file.
+--    @param fname File name.
+--    @param t Lua table.
+files.tblexport = function (fname, t)
+   assert(fname and t, 'Wrong arguments!')
+   local str = val2str.tbl(t)
+   local f = assert(io.open(fname,'w'), "Can't create file "..tostring(fname))
+   f:write(str)
+   f:close()
+   print('Done')
+end
+files.about[files.tblexport] = {"tblexport(fname,tbl)", "Save Lua table into file."}
 
 -- free memory in case of standalone usage
 if not lc_version then files.about = nil end

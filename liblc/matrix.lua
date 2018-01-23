@@ -278,8 +278,29 @@ local function gaussup(m)
    return m
 end
 
-matrix.triang = gaussdown
+--- Matrix triangularization.
+--    @param m Initial matrix.
+--    @return Triangularized matrix.
+matrix.triang = function (m)
+   local res = matrix.copy(m)
+   return gaussdown(res)
+end
 matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangularization produced by Gaussian elimination.', help.OTHER}
+
+matrix.rank = function (m)
+   local mat,i = matrix.triang(m),1
+   while i <= mat.rows do
+      if not mat[i] then break end
+      local zeros = true
+      for j = 1,mat.cols do
+         if getval(mat,i,j) ~= 0 then zeros = false; break end
+      end
+      if zeros then break end
+      i = i+1
+   end
+   return i-1
+end
+
 
 --- Get matrix element.
 --    Can be called with ().
@@ -1118,7 +1139,12 @@ matrix.about[matrix.reduce] = {"reduce(m,fn,dir,init)","Evaluate s=fn(s,x) along
 --    @param dir Direction (optional).
 --    @return Sum along 'r'ows or 'c'olumns
 matrix.sum = function (m,dir) return matrix.reduce(m, fn_sum, dir, 0) end
-matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given direction ('r' or 'c').", }
+matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given direction ('r' or 'c')."}
+
+matrix.sqnorm = function (m,dir)
+   return matrix.reduce(m, function (a,b) return a+b^2 end, dir, 0)
+end
+matrix.about[matrix.sqnorm] = {"sqnorm(m,dir)", "Calculate square norm along given direction."}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})
@@ -1155,3 +1181,4 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
+--TODO: rank
