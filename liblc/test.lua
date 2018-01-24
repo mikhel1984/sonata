@@ -42,6 +42,8 @@ local test = {}
 -- test results
 test.results = {}
 
+test.lc_files = require('liblc.files')
+
 --- Extract test code from file.
 --    <i>Private function.</i>
 --    @param str File text.
@@ -50,28 +52,6 @@ test.getcode = function (str)
    local p = '%-%-%[(=*)%[!!(.-)%]%1%]'
    local _,q = string.match(str, p) 
    return q
-end
-
---- Divide string into the list of substrings using delimiter.
---    <i>Private function.</i>
---    @param str Source string.
---    @param delim Delimiter.
---    @return Iterator along the substrings.
-test.split = function (str, delim)
-   local i,j,k = 1,1,0
-   return function ()
-      if not str or i >= #str then return nil end
-      local res
-      j,k = string.find(str, delim, k+1)
-      if j then
-         res = string.sub(str, i, j-1)
-	 i = k+1
-      else
-         res = string.sub(str, i)
-	 i = #str
-      end
-      return res
-   end
 end
 
 --- Prepare test code preview.
@@ -99,10 +79,7 @@ end
 --    @param fname Lua file name.
 test.module = function (fname)
    -- read file
-   local f = io.open(fname, 'r')
-   if not f then print("Can't open file '"..fname.."'"); return end
-   local text = f:read('*a')
-   f:close()
+   local text = assert(test.lc_files.read(fname), "Can't open file '"..fname.."'")
    test.log = test.log or io.open(logname, 'w')
    -- write head
    test.print('\n\tModule: ' .. fname)
@@ -112,7 +89,7 @@ test.module = function (fname)
    local succeed, failed = 0, 0
    local fulltime = 0
    -- parse
-   for block in test.split(text, delim) do
+   for block in test.lc_files.split(text, delim) do
       if not string.find(block, '%s') then goto endfor end
       local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
       q = q or block    -- question

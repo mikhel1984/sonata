@@ -9,8 +9,17 @@
 --------------- Tests ------------
 --[[!!
 File = require 'liblc.files'
-
 nm = os.tmpname()
+
+t = {{1,2,3},{4,5,6}}
+File.dsvwrite(nm, t, ';')
+
+tt = File.dsvread(nm, ';')
+ans = tt[2][2]                       --> 5
+
+s = File.read(nm)
+ans = string.sub(s,1,5)              --> '1;2;3'
+
 a = {1, 2.0, a = 'pqr', b = {3,4,c='abc'}}
 File.tblexport(nm, a)
 
@@ -55,7 +64,7 @@ files.about[files.split] = {"split(str,delim)", "Return iterator over substrings
 --    @param t Lua table.
 --    @param fname File name.
 --    @param delim Delimeter.
-files.dsvwrite = function (t, fname, delim)
+files.dsvwrite = function (fname, t, delim)
    assert(type(t) == 'table', 'Table is expected, got '..type(t))
    local f = assert(io.open(fname,'w'), "Can't create file "..tostring(fname))
    delim = delim or ','
@@ -66,7 +75,7 @@ files.dsvwrite = function (t, fname, delim)
    f:close()
    print('Done')
 end
-files.about[files.dsvwrite] = {"dsvwrite(tbl,fname,del)", "Save Lua table as delimeter separated data into file."}
+files.about[files.dsvwrite] = {"dsvwrite(fname,tbl,del)", "Save Lua table as delimeter separated data into file."}
 
 --- Import data from text file, use given delimeter
 --    @param fname File name.

@@ -179,14 +179,11 @@ end
 --- Read file with localisation data and update main module.
 --    @param fname Name of the file with translated text.
 function help:localisation(fname)
-   fname = LOCALE ..help.SEP.. fname
-   local f = io.open(fname)
-   if f then
-      -- read from file and represent as Lua table
-      local lng_fn = assert(load("return " .. f:read("*a")))
-      f:close()
-      local lng = lng_fn()
-      -- save into metatable
+   fname = LOCALE..help.SEP..fname
+   -- call method of the 'files' module
+   help.lc_files = help.lc_files or require('liblc.files')
+   local lng = help.lc_files.tblimport(fname)
+   if lng then
       getmetatable(self).locale = lng           
       -- update functions in calc.lua
       local lc = lng.Main
@@ -259,15 +256,11 @@ end
 --    @param modules Table with the list of existing modules.
 function help.prepare(fname, modules)
    fname = string.format('%s%s%s.lng', LOCALE, help.SEP, fname)
-   local f, lng = io.open(fname)
-   -- read current file if possible
-   if f then 
-      local lng_fn = assert(load("return " .. f:read("*a")))
-      f:close()
-      lng = lng_fn()
-   end
+   -- call method of the 'files' module
+   help.lc_files = help.lc_files or require('liblc.files')
    -- prepare new file
-   f = io.open(fname, 'w')
+   local lng = help.lc_files.tblimport(fname)
+   local f = io.open(fname, 'w')
    -- save descriptions
    f:write(string.rep('-',10), string.format(' %s ', fname), string.rep('-',10), '\n')
    f:write('{\n')
