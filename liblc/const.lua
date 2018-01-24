@@ -33,6 +33,8 @@ h_u='J*s',          h    = 6.62617636E-34,          -- Planck's constant
 c_u='m/s',          c    = 2.99792458E8,            -- speed of light
 g_u='m/s^2',        g    = 9.80665,                 -- 'standard' acceleration of free fall
 eps0_u='F/m',       eps0 = 8.85418781871E-12,       -- permitivity of free space
+                    phi  = 0.5*(1+math.sqrt(5)),    -- golden ratio
+                    Adams= 42,                      -- ;)
 }
 
 -- description
@@ -50,15 +52,9 @@ const.about[const.h] = {"h", "Planck's constant.", help.CONST}
 const.about[const.c] = {"c", "Speed of light.", help.CONST}
 const.about[const.g] = {"g", "Acceleration of free fall.", help.CONST}
 const.about[const.eps0] = {"eps0", "Permitivity of free space.", help.CONST}
+const.about[const.phi] = {"phi", "Golden ratio.", help.CONST}
+const.about[const.Adams] = {"Adams", "Answer to the ultimate question of life, the Universe, and Everything.", help.CONST}
 
-
---[[
-const.__index = const
--- mark
-const.type = 'const'
-const.isconst = true
-local function isconst(t) return type(t)=='table' and t.isconst end
-]]
 
 -- free memory in case of standalone usage
 if not lc_version then const.about = nil end

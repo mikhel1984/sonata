@@ -29,6 +29,7 @@ import = {
    set      = "Set",
    special  = "Spec",
    stat     = "Stat",
+   struct   = "Struct",
    units    = "Unit",
 }
 about[import] = {"import", ""}

@@ -123,6 +123,7 @@ function help:print(fn)
    if fn then
       -- expected module or function description
       local v = self[fn]
+      if not v then print('No help for :',fn); return end
       if v.link then                  
          -- module common description
          print('\n'..v[MAIN], '\n')
