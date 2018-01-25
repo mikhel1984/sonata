@@ -40,6 +40,9 @@ ans = Stat.geomean(X)             --~ 2.995
 
 ans = Stat.harmean(X,W)           --~ 2.567
 
+h = Stat.hyst(X,4)
+ans = h.Y[1]                      --> 2
+
 ans = Stat.poisscdf(3, 0.5)       --~ 0.998
 
 ans = Stat.poisspdf(5, 1.1)       --~ 4.467E-3
@@ -254,6 +257,47 @@ stat.moment = function (n, x, p)
    return m
 end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", }
+
+--- Hystogram of the data distribution.
+--    @param t Data table.
+--    @param N Number of intervals (default is 10).
+--    @param a Low boundary (default is the minimum value).
+--    @param b High boundary (default is the maximum value).
+--    @return Table, where X is scale and Y is frequency.
+stat.hyst = function (t,N,a,b)
+   -- find limits
+   if not (a and b) then
+      local max, min = -math.huge, math.huge
+      for _,v in ipairs(t) do
+         if v > max then
+	    max = v
+	 elseif v < min then
+	    min = v
+	 end
+      end
+      a = a or min
+      b = b or max
+   end
+   assert(a <= b, 'Wrong limits!')
+   -- number of intervals
+   N = N or 10
+   local res = {X={},Y={}}
+   -- X values
+   local step = (b-a)/N
+   res.X[0] = a
+   for i = 1,N do res.X[i] = res.X[i-1]+step; res.Y[i] = 0 end
+   -- Y values
+   for _,v in ipairs(t) do
+      if v >= a and v <= b then
+         local pos = math.floor((v-a)/step)+1
+         if pos > N then pos = N end -- for v == b
+         local prev = res.Y[pos]
+         res.Y[pos] = prev+1 
+      end
+   end
+   return res
+end
+stat.about[stat.hyst] = {"hyst(data[,N[,a,b]])", "Find hystogram for given data on the interfal [a,b] with N ranges. Return table with scale (X) and frequencies (Y).", help.OTHER}
 
 --- Poisson cumulative distribution.
 --    @param x Value.

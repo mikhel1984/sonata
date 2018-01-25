@@ -7,10 +7,33 @@
 --]]
 
 --------------- Tests ------------
---[[ !!
+--[[!!
 Struct = require 'liblc.struct'
 
+a = Struct.Stack()
+a:push(1)
+a:push(2)
+ans = #a                        --> 2
+
+a:push(3)
+ans = a:pop()                   --> 3
+
+a:pop()
+ans = a:pop()                   --> 1
+
+b = Struct.Queue()
+b:enqueue(1)
+b:enqueue(2)
+ans = b:dequeue()               --> 1
+
+b:pushfirst(4)
+ans = b:poplast()               --> 2
+
+ans = #b                        --> 1
 ]]
+
+local STACK = 'stack'
+local QUEUE = 'queue'
 
 ---------------------------------
 -- @class table
@@ -22,54 +45,78 @@ local struct = {}
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 struct.about = help:new("Main data structures.")
 
-struct.stack = {}
-struct.stack.__index = struct.stack
-struct.stack.type = 'stack'
+--	STACK
+struct.Stack = {type='stack'}
+struct.Stack.__index = struct.Stack
 
-struct.stack.new = function (self)
+--- Constructor for stack data structure.
+--    @return New stack.
+struct.Stack.new = function (self)
    local o = {}
    setmetatable(o, self)
    return o
 end
 
-struct.Stack = function () return struct.stack:new() end
+--- Alias for stack constructor.
+--    @return New stack.
+--struct.Stack = function () return struct.stack:new() end
+setmetatable(struct.Stack, {__call = function (self) return struct.Stack:new() end})
+struct.about[struct.Stack] = {"Stack()", "Create new stack.", STACK}
 
-struct.stack.push = function (self, val)
+--- Add element to the stack.
+--    @param val Value to push (except nil).
+struct.Stack.push = function (self, val)
    assert(val ~= nil)
    self[#self+1] = val
 end
+struct.about[struct.Stack.push] = {"push(val)", "Push value to the stack, except nil.", STACK}
 
-struct.stack.pop = function (self)
+--- Get value from the top of stack.
+--    @return Top value or nil.
+struct.Stack.pop = function (self)
    local res = self[#self]
    if res then self[#self] = nil end
    return res
 end
+struct.about[struct.Stack.pop] = {"pop()", "Pop value from the stack, return element or nil.", STACK}
 
-struct.queue = {}
-struct.queue.__index = struct.queue
-struct.queue.type = 'queue'
+--	QUEUE
+struct.Queue = {type='queue'}
+struct.Queue.__index = struct.Queue
 
-struct.queue.new = function (self)
+--- Queue constructor.
+--    @return New queue.
+struct.Queue.new = function (self)
    local o = {first=0, last=-1}
    setmetatable(o, self)
    return o
 end
 
-struct.Queue = function () return struct.queue:new() end
+--struct.Queue = function () return struct.queue:new() end
+setmetatable(struct.Queue, {__call = function (self) return struct.Queue:new() end})
+struct.about[struct.Queue] = {"Queue()", "Create new queue.", QUEUE}
 
-struct.queue.enqueue = function (self,val)
+--- Put value to the end of queue.
+--    @param val Value to put.
+struct.Queue.enqueue = function (self,val)
    local last = self.last+1
    self.last = last
    self[last] = val
 end
+struct.about[struct.Queue.enqueue] = {"enqueue(val)", "Add value to the back of queue.", QUEUE}
 
-struct.queue.pushfirst = function (self,val)
+--- Put value to the top of queue (as in stack).
+--    @param val Value to put.
+struct.Queue.pushfirst = function (self,val)
    local first = self.first-1
    self.first = first
    self[first] = val
 end
+struct.about[struct.Queue.pushfirst] = {"pushfirst(val)", "Add value to the top of queue.", QUEUE}
 
-struct.queue.dequeue = function (self)
+--- Get value from the top of queue.
+--    @return Top value of nil.
+struct.Queue.dequeue = function (self)
    local first,val = self.first
    if first <= self.last then
       val = self[first]
@@ -78,8 +125,11 @@ struct.queue.dequeue = function (self)
    end
    return val
 end
+struct.about[struct.Queue.dequeue] = {"dequeue()", "Get value from the top of queue.", QUEUE}
 
-struct.queue.poplast = function (self)
+--- Get value from the end of queue.
+--    @return Last value of nil.
+struct.Queue.poplast = function (self)
    local last, val = self.last
    if self.first <= last then
       val = self[last]
@@ -88,8 +138,11 @@ struct.queue.poplast = function (self)
    end
    return val
 end
+struct.about[struct.Queue.poplast] = {"poplast()", "Get value from the end of queue.", QUEUE}
 
-struct.queue.__len = function (t) return t.last-t.first+1 end
+--- Queue size.
+--    @return Number of elements in queue.
+struct.Queue.__len = function (t) return t.last-t.first+1 end
 
 -- free memory in case of standalone usage
 if not lc_version then struct.about = nil end
