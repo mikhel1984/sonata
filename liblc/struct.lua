@@ -22,18 +22,19 @@ a:pop()
 ans = a:pop()                   --> 1
 
 b = Struct.Queue()
-b:enqueue(1)
-b:enqueue(2)
-ans = b:dequeue()               --> 1
+b:add(1)
+b:add(2)
+ans = b:rem()                   --> 1
 
-b:pushfirst(4)
-ans = b:poplast()               --> 2
+b:addfirst(4)
+ans = b:remlast()               --> 2
 
 ans = #b                        --> 1
 ]]
 
 local STACK = 'stack'
 local QUEUE = 'queue'
+local HEAP = 'heap'
 
 ---------------------------------
 -- @class table
@@ -80,6 +81,11 @@ struct.Stack.pop = function (self)
 end
 struct.about[struct.Stack.pop] = {"pop()", "Pop value from the stack, return element or nil.", STACK}
 
+--- Top value of the stack.
+--    @return Top value without removing it.
+struct.Stack.peek = function (s) return s[#s] end
+struct.about[struct.Stack.peek] = {"peek()", "Return top value without removing it.", STACK}
+
 --- Copy stack.
 --    @param s Original stack.
 --    @return Copy.
@@ -90,7 +96,7 @@ struct.Stack.copy = function (s)
    end
    return res
 end
-struct.about[struct.Stack.copy] = {"copy()", "Return copy of the stack.", STACK}
+struct.about[struct.Stack.copy] = {"copy()", "Return copy of the object.", STACK}
 
 --	QUEUE
 struct.Queue = {type='queue'}
@@ -110,25 +116,25 @@ struct.about[struct.Queue] = {"Queue()", "Create new queue.", QUEUE}
 
 --- Put value to the end of queue.
 --    @param val Value to put.
-struct.Queue.enqueue = function (self,val)
+struct.Queue.add = function (self,val)
    local last = self.last+1
    self.last = last
    self[last] = val
 end
-struct.about[struct.Queue.enqueue] = {"enqueue(val)", "Add value to the back of queue.", QUEUE}
+struct.about[struct.Queue.add] = {"add(val)", "Add value to the back of queue.", QUEUE}
 
 --- Put value to the top of queue (as in stack).
 --    @param val Value to put.
-struct.Queue.pushfirst = function (self,val)
+struct.Queue.addfirst = function (self,val)
    local first = self.first-1
    self.first = first
    self[first] = val
 end
-struct.about[struct.Queue.pushfirst] = {"pushfirst(val)", "Add value to the top of queue.", QUEUE}
+struct.about[struct.Queue.addfirst] = {"addfirst(val)", "Add value to the top of queue.", QUEUE}
 
 --- Get value from the top of queue.
 --    @return Top value of nil.
-struct.Queue.dequeue = function (self)
+struct.Queue.rem = function (self)
    local first,val = self.first
    if first <= self.last then
       val = self[first]
@@ -137,11 +143,11 @@ struct.Queue.dequeue = function (self)
    end
    return val
 end
-struct.about[struct.Queue.dequeue] = {"dequeue()", "Get value from the top of queue.", QUEUE}
+struct.about[struct.Queue.rem] = {"rem()", "Get value from the top of queue, remove it.", QUEUE}
 
 --- Get value from the end of queue.
 --    @return Last value of nil.
-struct.Queue.poplast = function (self)
+struct.Queue.remlast = function (self)
    local last, val = self.last
    if self.first <= last then
       val = self[last]
@@ -150,7 +156,13 @@ struct.Queue.poplast = function (self)
    end
    return val
 end
-struct.about[struct.Queue.poplast] = {"poplast()", "Get value from the end of queue.", QUEUE}
+struct.about[struct.Queue.remlast] = {"remlast()", "Get value from the end of queue, remove it.", QUEUE}
+
+--- Get top value of the queue.
+--    @return Top value without removing it.
+struct.Queue.peek = function (q) return q[q.first] end
+struct.about[struct.Queue.peek] = {"peek()", "Return top value without removing it.", QUEUE}
+
 
 --- Queue size.
 --    @return Number of elements in queue.
@@ -166,7 +178,58 @@ struct.Queue.copy = function (q)
    table.move(q,first,last,first,res)
    return res
 end
-struct.about[struct.Queue.copy] = {"copy()", "Return copy of the queue.", QUEUE}
+struct.about[struct.Queue.copy] = {"copy()", "Return copy of the object.", QUEUE}
+
+--	HEAP
+struct.Heap = {type='heap'}
+struct.Heap.__index = struct.Heap
+
+struct.Heap.new = function (self)
+   local o = {N=0}
+   o.less = function (a,b) return a < b end
+   setmetatable(o, self)
+   return o
+end
+
+setmetatable(struct.Heap, {__call = function (self) return struct.Heap:new() end})
+
+local function fixUp(h, k)
+   while k > 1 and h.less(h[k//2], h[k]) do
+      local k2 = k // 2
+      h[k],h[k2] = h[k2],h[k]
+      k = k2
+   end
+end
+
+local function fixDown(h, k, N)
+   while 2*k <= N do
+      local j = 2*k
+      if j < N and h.less(h[j],h[j+1]) then j=j+1 end
+      if not h.less(h[k],h[j]) then break end
+      h[k],h[j] = h[j],h[k]
+      k = j
+   end
+end
+
+struct.Heap.insert = function (h, v)
+   local n = h.N+1
+   h.N = n
+   h[n] = v
+   fixUp(h, n)
+end
+
+struct.Heap.delmax = function (h)
+   local n = h.N
+   if n == 0 then return nil end
+   h[1],h[n] = h[n],h[1]
+   fixDown(h,1,n-1)
+   h.N = n-1
+   return h[n]
+end
+
+struct.Heap.isempty = function (h) return h.N == 0 end
+
+struct.Heap.__len = function (h) return h.N end
 
 -- free memory in case of standalone usage
 if not lc_version then struct.about = nil end
