@@ -18,7 +18,7 @@ quit = function () print("\n              --======= Buy! =======--\n"); os.exit(
 import = {
    array    = "Arr",
    bigint   = "Big",
-   complex  = "Cmp",
+   complex  = "Comp",
    const    = "_C",
    files    = "File",
    gnuplot  = "Gnu",
@@ -29,7 +29,7 @@ import = {
    set      = "Set",
    special  = "Spec",
    stat     = "Stat",
-   struct   = "Struct",
+   struct   = "DS",
    units    = "Unit",
 }
 about[import] = {"import", ""}

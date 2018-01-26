@@ -9,26 +9,26 @@
 
 ---------------- Tests --------------
 --[[!!
-Cmp = require 'liblc.complex'
+Comp = require 'liblc.complex'
 
-a = Cmp(1,2)                  
-b = Cmp(3)
-ans = b                        --> Cmp(3,0)
+a = Comp(1,2)                  
+b = Comp(3)
+ans = b                        --> Comp(3,0)
 
-j = Cmp._i
-ans = 3+4*j                    --> Cmp(3,4)
+j = Comp._i
+ans = 3+4*j                    --> Comp(3,4)
 
-ans = Cmp.trig(2,0)            --> Cmp(2,0)
+ans = Comp.trig(2,0)            --> Comp(2,0)
 
-ans = a + b                    --> Cmp(4,2)
+ans = a + b                    --> Comp(4,2)
 
-ans = Cmp(3) - b               --> Cmp(0)
+ans = Comp(3) - b               --> Comp(0)
 
-ans = a * b                    --> Cmp(3,6)
+ans = a * b                    --> Comp(3,6)
 
-ans = a / Cmp._i               --> Cmp(2,-1)
+ans = a / Comp._i               --> Comp(2,-1)
 
-c = Cmp(1,1)^Cmp(2,-2)
+c = Comp(1,1)^Comp(2,-2)
 ans = c:Re()                   --~ 6.147
 
 ans = c:Im()                   --~ 7.4
@@ -41,9 +41,9 @@ ans = a:abs()                  --~ 2.236
 
 ans = a:arg()                  --~ 1.107
 
-ans = a:conj()                 --> Cmp(1,-2)
+ans = a:conj()                 --> Comp(1,-2)
 
-d = Cmp.sqrt(-2)
+d = Comp.sqrt(-2)
 ans = d:Im()                   --~ 1.414
 
 ans = a:copy()                 --> a
@@ -249,8 +249,8 @@ complex.about[complex._i] = {"_i", "Complex unit.", "constant"}
 
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
-complex.Cmp = 'Cmp'
-complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number.", help.NEW}
+complex.Comp = 'Comp'
+complex.about[complex.Comp] = {"Comp(a[,b])", "Create new complex number.", help.NEW}
 
 --- Complex number serialization.
 --    @param obj Complex number.
@@ -259,7 +259,7 @@ complex.serialize = function (obj)
    local s = {}
    s[#s+1] = string.format("real=%a", obj.real)
    s[#s+1] = string.format("imag=%a", obj.imag)
-   s[#s+1] = "metatablename='Cmp'"
+   s[#s+1] = "metatablename='Comp'"
    s[#s+1] = "modulename='complex'"
    return string.format("{%s}", table.concat(s, ','))
 end

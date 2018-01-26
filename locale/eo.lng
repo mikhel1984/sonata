@@ -71,7 +71,7 @@ Poly = {
 --["comparison"]           = [[a<b, a<=b, a>b, a>=b, a==b, a~=b]],
 },
 ---------- complex.lua ----------
-Cmp = {
+Comp = {
 ["__main__"]             = [[Operacioj kun la kompleksaj nombroj.]],
 ["sqrt(v)"]              = [[Kvadrata radiko. Rezulto povas esti vera aǔ imaginara nombro.]],
 ["trig(module,angle)"]   = [[Uzi geometria prezento por kompleksa nombro.]],

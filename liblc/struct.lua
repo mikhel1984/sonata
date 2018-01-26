@@ -80,6 +80,18 @@ struct.Stack.pop = function (self)
 end
 struct.about[struct.Stack.pop] = {"pop()", "Pop value from the stack, return element or nil.", STACK}
 
+--- Copy stack.
+--    @param s Original stack.
+--    @return Copy.
+struct.Stack.copy = function (s)
+   local res = struct.Stack:new()
+   if s[1] then
+      table.move(s,1,#s,1,res)
+   end
+   return res
+end
+struct.about[struct.Stack.copy] = {"copy()", "Return copy of the stack.", STACK}
+
 --	QUEUE
 struct.Queue = {type='queue'}
 struct.Queue.__index = struct.Queue
@@ -143,6 +155,18 @@ struct.about[struct.Queue.poplast] = {"poplast()", "Get value from the end of qu
 --- Queue size.
 --    @return Number of elements in queue.
 struct.Queue.__len = function (t) return t.last-t.first+1 end
+
+--- Queue copy.
+--    @param q Original queue.
+--    @return Copy.
+struct.Queue.copy = function (q)
+   local res = struct.Queue:new()
+   local first,last = q.first, q.last
+   res.first = first; res.last = last
+   table.move(q,first,last,first,res)
+   return res
+end
+struct.about[struct.Queue.copy] = {"copy()", "Return copy of the queue.", QUEUE}
 
 -- free memory in case of standalone usage
 if not lc_version then struct.about = nil end
