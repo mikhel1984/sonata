@@ -36,6 +36,9 @@ local STACK = 'stack'
 local QUEUE = 'queue'
 local HEAP = 'heap'
 
+-- Common help lines.
+local COPY = {"copy()", "Return copy of the object."}
+
 ---------------------------------
 -- @class table
 -- @name struct
@@ -96,7 +99,9 @@ struct.Stack.copy = function (s)
    end
    return res
 end
-struct.about[struct.Stack.copy] = {"copy()", "Return copy of the object.", STACK}
+struct.about[struct.Stack.copy] = COPY
+
+struct.Stack.isempty = function (s) return #s == 0 end
 
 --	QUEUE
 struct.Queue = {type='queue'}
@@ -168,6 +173,10 @@ struct.about[struct.Queue.peek] = {"peek()", "Return top value without removing 
 --    @return Number of elements in queue.
 struct.Queue.__len = function (t) return t.last-t.first+1 end
 
+--- Check if the queue is empty.
+--    @return True if there is no elements in the queue.
+struct.Queue.isempty = function (q) return q.first+1 == q.last end
+
 --- Queue copy.
 --    @param q Original queue.
 --    @return Copy.
@@ -178,21 +187,30 @@ struct.Queue.copy = function (q)
    table.move(q,first,last,first,res)
    return res
 end
-struct.about[struct.Queue.copy] = {"copy()", "Return copy of the object.", QUEUE}
+struct.about[struct.Queue.copy] = COPY
 
 --	HEAP
 struct.Heap = {type='heap'}
 struct.Heap.__index = struct.Heap
 
-struct.Heap.new = function (self)
+--- Heap constructor.
+--    @param less Comparision function.
+--    @return New heap object.
+struct.Heap.new = function (self, less)
    local o = {N=0}
-   o.less = function (a,b) return a < b end
+   -- default function for comparision, can be changed
+   o.less = less or function (a,b) return a < b end
    setmetatable(o, self)
    return o
 end
 
+-- Simplify constructor call.
 setmetatable(struct.Heap, {__call = function (self) return struct.Heap:new() end})
+struct.about[struct.Heap] = {"Heap([less])", "Create new heap object. Comparison method 'less' can be predefined.", HEAP}
 
+--- Fix order of the heap in up direction.
+--    @param h Heap object.
+--    @param k Start index.
 local function fixUp(h, k)
    while k > 1 and h.less(h[k//2], h[k]) do
       local k2 = k // 2
@@ -201,6 +219,10 @@ local function fixUp(h, k)
    end
 end
 
+--- Fix order of the heap in down direction.
+--    @param h Heap object.
+--    @param k Start index.
+--    @param N End index.
 local function fixDown(h, k, N)
    while 2*k <= N do
       local j = 2*k
@@ -211,14 +233,22 @@ local function fixDown(h, k, N)
    end
 end
 
+--- Insert element to the heap.
+--    @param h Heap object.
+--    @param v Element to add.
 struct.Heap.insert = function (h, v)
    local n = h.N+1
    h.N = n
    h[n] = v
    fixUp(h, n)
 end
+struct.about[struct.Heap.insert] = {"insert(v)", "Add element to the heap.", HEAP}
 
-struct.Heap.delmax = function (h)
+--- Get top element from the heap.
+--    If 'less' method is default, top is the maximum element.
+--    @param h Heap object.
+--    @return Top element or nil.
+struct.Heap.deltop = function (h)
    local n = h.N
    if n == 0 then return nil end
    h[1],h[n] = h[n],h[1]
@@ -226,10 +256,22 @@ struct.Heap.delmax = function (h)
    h.N = n-1
    return h[n]
 end
+struct.about[struct.Heap.deltop] = {"deltop()", "Return top element. For the default less() function top is maximum.", HEAP}
 
+--- Check for elements in the heap.
+--    @param h Heap.
+--    @return True if heap is empty.
 struct.Heap.isempty = function (h) return h.N == 0 end
+struct.about[struct.Heap.isempty] = {"isempty()", "Return true if the heap is empty.", HEAP}
 
+-- Number of elements.
 struct.Heap.__len = function (h) return h.N end
+
+struct.Heap.copy = function (h) 
+   local res = struct.Heap:new(h.less)
+   table.move(h,1,#h,1,res)
+   return res
+end
 
 -- free memory in case of standalone usage
 if not lc_version then struct.about = nil end
