@@ -384,5 +384,5 @@ return help
 
 --==========================================
 -- TODO: localise error messages
--- TODO: refactor help module
+-- TODO: problem with the common names of different objects in the same module
 -- TODO: add help -h for program

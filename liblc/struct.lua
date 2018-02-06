@@ -38,6 +38,7 @@ local HEAP = 'heap'
 
 -- Common help lines.
 local COPY = {"copy()", "Return copy of the object."}
+local ISEMPTY = {"isempty()", "Return true if the object is empty."}
 
 ---------------------------------
 -- @class table
@@ -48,6 +49,9 @@ local struct = {}
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 struct.about = help:new("Main data structures.")
+
+struct.about['COPY'] = {"copy()", "Return copy of the object."}
+struct.about['ISEMPTY'] = {"isempty()", "Return true if the object is empty."}
 
 --	STACK
 struct.Stack = {type='stack'}
@@ -99,7 +103,7 @@ struct.Stack.copy = function (s)
    end
    return res
 end
-struct.about[struct.Stack.copy] = COPY
+--struct.about[struct.Stack.copy] = COPY
 
 struct.Stack.isempty = function (s) return #s == 0 end
 
@@ -187,7 +191,7 @@ struct.Queue.copy = function (q)
    table.move(q,first,last,first,res)
    return res
 end
-struct.about[struct.Queue.copy] = COPY
+--struct.about[struct.Queue.copy] = COPY
 
 --	HEAP
 struct.Heap = {type='heap'}
