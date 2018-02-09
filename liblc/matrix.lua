@@ -1146,6 +1146,16 @@ matrix.sqnorm = function (m,dir)
 end
 matrix.about[matrix.sqnorm] = {"sqnorm(m,dir)", "Calculate square norm along given direction."}
 
+matrix.norm = function (m)
+   local sum = 0
+   for r = 1,m.rows do
+      for c = 1,m.cols do
+         sum = sum+getval(m,r,c)^2
+      end
+   end
+   return math.sqrt(sum)
+end
+
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})
 matrix.Mat = 'Mat'

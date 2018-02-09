@@ -26,6 +26,16 @@ ans = c                                   --~ 2
 
 tbl, yn = Num.ode(function (x,y) return x*y end, 0, 1, 3)
 ans = yn                                  --~ 90.011
+
+-- use matrices for high order equations
+Mat = require 'liblc.matrix'
+
+-- y''-2*y'+2*y = 1
+-- represent as: x1 = y, x2 = y'
+-- so: x1' = x2, x2' = 1+2*x2-2*x1
+myfun = function (t,x) return Mat.V {x(2), 1+2*x(2)-2*x(1)} end
+_, xn = Num.ode(myfun, 0, Mat.V {3,2}, 2, 0.2) 
+ans = xn(1)                               --~  -10.54
 ]]
 ---------------------------------------------
 
@@ -145,7 +155,8 @@ end
 --    @param dx Step. If it is omitted then step is calculated automatically.
 --    @return Table of intermediate results and value in final point.
 numeric.ode = function (fn, x0,y0,xn, dx)
-   local h = dx or (xn-x0)/10      -- initial step
+   local PARTS, MAX, MIN = 10, 15, 0.1
+   local h = dx or (xn-x0)/PARTS   -- initial step
    local res = {{x0,y0}}           -- save intermediate points
    repeat
       local x,y = table.unpack(res[#res])
@@ -154,17 +165,18 @@ numeric.ode = function (fn, x0,y0,xn, dx)
       if dx then
          res[#res+1] = {x+h, rk(fn,x,y,h)}
       else
+         -- step correction
          local h2 = 0.5*h
          local y1 =  rk(fn, x, y, h)
          local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
-         local dy = math.abs(y1-y2)
-         if dy > 15*numeric.TOL then 
+	 local dy = (type(y1) == 'table') and (y2-y1):norm() or math.abs(y2-y1)
+         if dy > MAX*numeric.TOL then 
             h = h2
-         elseif dy < 0.1*numeric.TOL then
+         elseif dy < MIN*numeric.TOL then
             h = 2*h
          else
-            -- calculate for current step
-            res[#res+1] = {x+h, y2}
+            -- save for current step
+            res[#res+1] = {x+h, y2}      -- use y2 instead y1 because it proboly more precise (?)
          end
       end
    until x + h >= xn 
