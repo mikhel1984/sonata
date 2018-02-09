@@ -79,16 +79,27 @@ units.about = help:new("Operations and conversations according the units.")
 
 -- prefix list
 units.prefix = {
-p = 1e-12,
-n = 1e-9,
-u = 1e-6,
-m = 1e-3,
-c = 1e-2,
-d = 1e-1,
+y = 1e-24,  -- yocto
+z = 1e-21,  -- zepto
+a = 1e-18,  -- atto
+f = 1e-15,  -- femto
+p = 1e-12,  -- pico
+n = 1e-9,   -- nano
+u = 1e-6,   -- micro
+m = 1e-3,   -- milli
+c = 1e-2,   -- centi
+d = 1e-1,   -- deci
 [""] = 1,
-k = 1e+3,
-M = 1e+6,
-G = 1e+9,
+da = 1e+1,  -- deca
+h = 1e+2,   -- hecto
+k = 1e+3,   -- kilo
+M = 1e+6,   -- mega
+G = 1e+9,   -- giga
+T = 1e+12,  -- tera
+P = 1e+15,  -- peta
+E = 1e+18,  -- exa
+Z = 1e+21,  -- zetta
+Y = 1e+24,  -- yotta
 }
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
