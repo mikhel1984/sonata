@@ -76,7 +76,10 @@ local help = lc_version and (require "liblc.help") or {new=function () return {}
 stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
 
 -- some functions depend of module 'special'
-stat.lc_special = require 'liblc.special'
+stat.lc_special = pcall(require,'liblc.special')
+if not stat.lc_special then
+   print('WARNING >> Not available: poisscdf(), chi2cdf(), chi2pdf(), tcdf(), tpdf(), normcdf()')
+end
 
 --- Sum of all elements.
 --    @param t Table with numbers.

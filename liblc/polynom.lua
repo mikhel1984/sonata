@@ -70,7 +70,10 @@ local help = lc_version and (require "liblc.help") or {new=function () return {}
 polynom.about = help:new("Operations with polynomials")
 
 -- dependencies
-polynom.lc_matrix = require 'liblc.matrix'
+--polynom.lc_matrix = pcall(require,'liblc.matrix')
+if not polynom.lc_matrix then 
+   print('WARNING >> Not available: fit()')
+end
 
 --- Check object type.
 --    <i>Private function.</i>
