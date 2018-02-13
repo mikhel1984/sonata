@@ -134,15 +134,18 @@ matrix.ismatrix = true
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrices are spares by default.")
 
--- return zero except nil value
-local get0 = function () return 0 end
--- comment this function in order to work a little bit faster, but in this case matrix can become dense
-local set0 = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end
+-- metatable for new rows
+local access = {
+   -- return 0 instead nil
+   __index = function () return 0 end,
+   -- comment this function in order to work a little bit faster, but in this case matrix can become dense
+   __newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
+}
 -- access to the elements
 matrix.__index = function (t,k) 
    if type(k) == 'number' then
    -- new element
-      local tmp = setmetatable({}, {__index = get0, __newindex = set0})
+      local tmp = setmetatable({}, access)
       t[k] = tmp
       return tmp
    else
