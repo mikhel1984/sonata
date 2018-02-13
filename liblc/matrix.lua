@@ -13,12 +13,13 @@ Mat = require 'liblc.matrix'
 
 a = Mat {{1,2},{3,4}}             
 b = Mat {{5,6},{7,8}}             
-ans = a(2,2)                     --> 4 
+ans = a[2][2]                    --> 4 
 
+-- use index checking
 b:set(1,1)(9)
-ans = b(1,1)                     --> 9
+ans = b:get(1,1)                 --> 9
 
-b:set(1,1)(5)
+b[1][1] = 5
 c = a:T()
 ans = c(1,2)                     --> 3
 
@@ -87,7 +88,7 @@ k = k:dense()
 ans = k[2][1]                   --> 0
 
 k = k:sparse()
-ans = k[2][1]                   --> nil
+ans = k[2][1]                   --> 0
 
 ans = Mat.diag({1,2,3})         --> Mat {{1,0,0},{0,2,0},{0,0,3}}
 
@@ -133,19 +134,22 @@ matrix.ismatrix = true
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrices are spares by default.")
 
--- access to the elements
+-- return zero except nil value
 local get0 = function () return 0 end
-
+-- comment this function in order to work a little bit faster, but in this case matrix can become dense
+local set0 = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end
+-- access to the elements
 matrix.__index = function (t,k) 
    if type(k) == 'number' then
-      local tmp = setmetatable({}, {__index = get0})
+   -- new element
+      local tmp = setmetatable({}, {__index = get0, __newindex = set0})
       t[k] = tmp
       return tmp
    else
+   -- matrix methods
       return matrix[k]
    end
 end
-   
 
 --- Check object type.
 --    <i>Private function.</i>
@@ -172,13 +176,10 @@ end
 function matrix.new(m)
    m = m or {}
    local cols, rows = 0, #m
-   --local equal = true
    for i = 1, rows do
       assert(type(m[i]) == 'table', "Row must be a table!")
       cols = (cols < #m[i]) and #m[i] or cols
-    --  if i > 1 then equal = equal and #m[i] == #m[i-1] end
    end
-   --m.isdense = equal
    return matrix:init(rows, cols, m)
 end
 
@@ -208,37 +209,6 @@ local function checkindex(m, r, c)
    return r, c
 end
 
---- Return 0 in element is empty or its value.
---    <i>Private function.</i>
---    @param m Matrix.
---    @param r Row number.
---    @param c Column number.
---    @return Element value.
---[[
-local function getval(m, r, c)
-   --return m[r] and m[r][c] or 0
-   return m[r][c]
-end]]
-
---- Set value if need.
---    <i>Private function.</i>
---    @param m Matrix.
---    @param r Row number.
---    @param c Column number.
---    @param v New value.
-local function setval(m, r, c, v)
-   --[[if m.isdense then 
-      m[r][c] = v
-   else]] 
-   --[[
-   if (m[r] and m[r][c]) or v ~= 0 then 
-      m[r] = m[r] or {}
-      m[r][c] = v
-   end
-   ]]
-   m[r][c] = v
-end
-
 --- Set product of element to coefficient.
 --    <i>Private function.</i>
 --    @param k Coefficient.
@@ -247,7 +217,7 @@ end
 local function kprod(k, m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, m.rows do
-      for c = 1, m.cols do setval(res,r,c, k*m[r][c]) end
+      for c = 1, m.cols do res[r][c] = k*m[r][c] end
    end
    return res
 end
@@ -269,12 +239,12 @@ local function gaussdown(m)
       if coef ~= 0 then
          -- normalization
 	 coef = 1/coef
-         for c = k, m.cols do setval(m,k,c, m[k][c]*coef) end
+         for c = k, m.cols do m[k][c] = m[k][c]*coef end
          -- subtraction
          for r = (k+1), m.rows do
             local v = m[r][k]
 	    if v ~= 0 then
-               for c = k, m.cols do setval(m,r,c, m[r][c]-v*m[k][c]) end
+               for c = k, m.cols do m[r][c] = m[r][c]-v*m[k][c] end
 	    end -- if
          end -- for r
       end -- if
@@ -290,7 +260,7 @@ local function gaussup(m)
       for r = k-1,1,-1 do
          local v = m[r][k]
          if v ~= 0 then
-            for c = k, m.cols do setval(m,r,c, m[r][c]-v*m[k][c]) end 
+            for c = k, m.cols do m[r][c] = m[r][c]-v*m[k][c] end 
          end -- if
       end -- for r
    end -- for k
@@ -321,7 +291,7 @@ matrix.rank = function (m)
 end
 
 
---- Get matrix element.
+--- Check index and get matrix element.
 --    Can be called with ().
 --    @param m Matrix.
 --    @param r Row number.
@@ -331,31 +301,21 @@ matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
    return m[r][c]
 end
-matrix.about[matrix.get] = {"get(m,row,col)", "Return matrix element.", }
+matrix.about[matrix.get] = {"get(m,row,col)", "Check index and return matrix element.", }
 
 -- simplify call of matrix.get()
-matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
+matrix.__call = function (m,r,c) return m[r][c] end
 
 --- Set value of matrix element.
 --    @param m Matrix.
 --    @param val New value.
 --    @param r Row number.
 --    @param c Column number.
---[[
-matrix.set = function (m, val, r, c)
-   r, c = checkindex(m, r, c)
-   m[r] = m[r] or {}
-   m[r][c] = val
-end
-]]
 matrix.set = function (m,r,c)
    r, c = checkindex(m, r, c)
-   return function (val)
-         --    m[r] = m[r] or {}
-	     m[r][c] = val
-          end
+   return function (val) m[r][c] = val end
 end
-matrix.about[matrix.set] = {"set(m,row,col)(val)", "Set value of matrix element.", } 
+matrix.about[matrix.set] = {"set(m,row,col)(val)", "Check index and set value of matrix element.", } 
 
 --- Transpose matrix.
 --    Can be called as T().
@@ -364,7 +324,7 @@ matrix.about[matrix.set] = {"set(m,row,col)(val)", "Set value of matrix element.
 matrix.transpose = function (m)
    local res = matrix:init(m.cols, m.rows)
    for r = 1, m.rows do
-      for c = 1, m.cols do setval(res,c,r, m[r][c]) end
+      for c = 1, m.cols do res[c][r] = m[r][c] end
    end
    return res
 end
@@ -417,10 +377,8 @@ matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can 
 --    @return Result of function evaluation.
 matrix.map = function (m, fn) 
    local res = matrix:init(m.rows, m.cols)
-   --res.isdense = m.isdense
    for r = 1, res.rows do
-      --if res.isdense then res[r] = {} end
-      for c = 1, res.cols do setval(res,r,c, fn(m[r][c])) end
+      for c = 1, res.cols do res[r][c] = fn(m[r][c]) end
    end
    return res
 end
@@ -432,10 +390,8 @@ matrix.about[matrix.map] = {"map(m,fn)", "Apply the given function to all elemen
 --    @return Result of function evaluation.
 matrix.map_ex = function (m, fn)
    local res = matrix:init(m.rows, m.cols)
-   --res.isdense = m.isdense
    for r = 1, res.rows do
-      --if res.isdense then res[r] = {} end
-      for c = 1, res.cols do setval(res,r,c, fn(r,c,m[r][c])) end
+      for c = 1, res.cols do res[r][c] = fn(r,c,m[r][c]) end
    end
    return res
 end
@@ -449,10 +405,8 @@ matrix.about[matrix.map_ex] = {"map_ex(m,fn)", "Apply function fn(row,col,val) t
 matrix.apply = function (m1, m2, fn)
    assert(m1.rows==m2.rows and m1.cols==m2.cols, "Different matrix size!")
    local res = matrix:init(m1.rows,m1.cols)
-   --res.isdense = m1.isdense and m2.isdense
    for r = 1,res.rows do
-      --if res.isdense then res[r] = {} end
-      for c = 1,res.cols do setval(res,r,c, fn(m1[r][c], m2[r][c])) end
+      for c = 1,res.cols do res[r][c] = fn(m1[r][c], m2[r][c]) end
    end
    return res
 end
@@ -479,7 +433,7 @@ matrix.__mul = function (a,b)
       for c = 1, res.cols do
          local sum = 0
 	 for i = 1, a.cols do sum = sum + a[r][i]*b[i][c] end
-	 setval(res,r,c, sum)
+	 res[r][c] = sum
       end
    end
    return (res.cols == 1 and res.rows == 1) and res[1][1] or res
@@ -598,7 +552,6 @@ matrix.fill = function (rows, cols, fn)
       m[r] = {}
       for c = 1,cols do m[r][c] = fn(r,c) end
    end
-   --m.isdense = true
    return m
 end
 matrix.about[matrix.fill] = {"fill(rows,cols,fn)", "Create matrix, using function fn(r,c).", help.OTHER}
@@ -632,7 +585,7 @@ matrix.eye = function (rows, cols)
    if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    cols = cols or rows
    local m = matrix:init(rows, cols)
-   for i = 1, math.min(rows, cols) do setval(m,i,i, 1) end
+   for i = 1, math.min(rows, cols) do m[i][i] = 1 end
    return m
 end
 matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix.", help.OTHER}
@@ -650,7 +603,7 @@ matrix.sub = function (m, r1, r2, c1, c2)
    local i, j = 1, 1
    for r = r1, r2 do
       for c = c1, c2 do
-	 setval(res,i,j, m[r][c])
+	 res[i][j] = m[r][c]
 	 j = j+1
       end
       i, j = i+1, 1
@@ -681,7 +634,7 @@ matrix.concat = function (a, b, dir)
          local src = (r <= a.rows and c <= a.cols) and a or b
          local i = (r <= a.rows) and r or (r - a.rows)
 	 local j = (c <= a.cols) and c or (c - a.cols)
-	 setval(res,r,c, src[i][j])
+	 res[r][c] = src[i][j]
       end
    end
    return res
@@ -908,20 +861,20 @@ matrix.pinv = function (M)
 	 tmp = ismatrix(tmp) and tmp or matrix.new {{tmp}}         -- product can return a number
          B = B - tmp
       end
-      for i = k, n do setval(L,i,r, B[i-k+1][1]) end   -- copy B to L
+      for i = k, n do L[i][r] = B[i-k+1][1] end   -- copy B to L
       tmp = L[k][r]
       local iscomplex = (type(tmp)=='table') and tmp.iscomplex
       if iscomplex and tmp:abs() > tol then
-         setval(L,k,r, tmp:sqrt())
+         L[k][r] = tmp:sqrt()
          tmp = L[k][r]
 	 if k < n then
-	    for i = k+1, n do setval(L, i, r, L[i][r]/tmp) end
+	    for i = k+1, n do L[i][r] = L[i][r]/tmp end
 	 end
       elseif not iscomplex and tmp > tol then
-         setval(L,k,r, math.sqrt(tmp))
+         L[k][r] = math.sqrt(tmp)
          tmp = L[k][r]
 	 if k < n then
-	    for i = k+1, n do setval(L, i, r, L[i][r]/tmp) end
+	    for i = k+1, n do L[i][r] = L[i][r]/tmp end
 	 end
       else
          r = r - 1
@@ -946,7 +899,6 @@ matrix.dense = function (m)
       res[r] = {}
       for c = 1,m.cols do res[r][c] = m[r][c] end
    end
-   --res.isdense = true
    return res
 end
 matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
@@ -957,7 +909,7 @@ matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
 matrix.sparse = function (m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, res.rows do
-      for c = 1, res.cols do setval(res,r,c, m[r][c]) end
+      for c = 1, res.cols do res[r][c] = m[r][c] end
    end
    return res
 end
@@ -979,11 +931,11 @@ matrix.diag = function (m,n)
 	 local z = (n < 0) and math.min(m.rows-k,m.cols) or math.min(m.cols-k,m.rows) 
 	 assert(z > 0, "Wrong shift!")
 	 res = matrix:init(z,1)
-	 for i = 1,z do setval(res, i,1, m[(n<0 and i+k or i)][(n<0 and i or i+k)]) end
+	 for i = 1,z do res[i][1] = m[(n<0 and i+k or i)][(n<0 and i or i+k)] end
       end
    else
       res = matrix:init(#m+k,#m+k)
-      for i = 1,#m do setval(res, (n<0 and i+k or i), (n<0 and i or i+k), m[i]) end
+      for i = 1,#m do res[(n<0 and i+k or i)][(n<0 and i or i+k)] = m[i] end
    end
    return res
 end
@@ -1045,13 +997,13 @@ matrix.luprepare = function (m)
       for r = 1,c-1 do
          local sum = a[r][c]
 	 for k = 1,r-1 do sum = sum - a[r][k]*a[k][c] end
-	 setval(a,r,c, sum)
+	 a[r][c] = sum
       end
       local big = 0                         -- largest pivot element
       for r=c,a.rows do
          local sum = a[r][c]
 	 for k = 1,c-1 do sum = sum - a[r][k]*a[k][c] end
-	 setval(a,r,c, sum)
+	 a[r][c] = sum
 	 sum = fabs(sum)
 	 dum = vv[r]*sum
 	 if fabs(dum) >= fabs(big) then big = dum; rmax = r end
@@ -1060,19 +1012,18 @@ matrix.luprepare = function (m)
          -- interchange rows
          for k = 1,a.rows do
             dum = a[rmax][k]
-	    setval(a,rmax,k, a[c][k])
-	    setval(a,c,k, dum)
+	    a[rmax][k] = a[c][k]
+	    a[c][k] = dum
 	 end
 	 d = d+1
 	 vv[rmax] = vv[c]
       end
-      --setval(index,c,1, rmax)
       index[c] = rmax
-      if a[c][c] == 0 then setval(a,c,c, TINY) end
+      if a[c][c] == 0 then a[c][c] = TINY end
       -- divide by pivot element
       if c ~= a.cols then 
          dum = 1.0 / a[c][c]
-	 for r = c+1,a.rows do setval(a,r,c, dum*a[r][c]) end
+	 for r = c+1,a.rows do a[r][c] = dum*a[r][c] end
       end
    end
    return a, index, d
@@ -1109,14 +1060,14 @@ matrix.cholesky = function (m)
 	    assert(sum >= 0, 'The matrix is not positive definite!')
 	    p[r] = math.sqrt(sum)
 	 else
-	    setval(a,c,r, sum/p[r])
+	    a[c][r] = sum/p[r]
 	 end
       end
    end
    -- insert zeros and the main diagonal elements
    for r = 1,a.rows do
-      for c = r+1,a.cols do setval(a,r,c, 0) end
-      setval(a,r,r, p[r])
+      for c = r+1,a.cols do a[r][c] = 0 end
+      a[r][r] = p[r]
    end
    return a
 end
@@ -1137,14 +1088,14 @@ matrix.reduce = function (m,fn,dir,init)
       for r = 1,m.rows do
          local s = init
 	 for c = 1,m.cols do s = fn(s,m[r][c]) end
-	 setval(res,r,1, s)
+	 res[r][1] = s
       end
    elseif dir == 'c' then
       res = matrix:init(1,m.cols)
       for c = 1,m.cols do
          local s = init
 	 for r = 1,m.rows do s = fn(s,m[r][c]) end
-	 setval(res,1,c, s)
+	 res[1][c] = s
       end
    else
       error("Only 'r'(ows) or 'c'(olomns) are expected!")
