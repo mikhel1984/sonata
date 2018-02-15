@@ -1,7 +1,8 @@
 --[[       liblc/files.lua
 
---- Routines for working with data files..
---  @author My Name
+--- Routines for working with data files.
+--  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
            module 'files'
 --]]
@@ -11,18 +12,25 @@
 File = require 'liblc.files'
 nm = os.tmpname()
 
+-- save table 
+-- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
 File.dsvwrite(nm, t, ';')
 
+-- read table from file
+-- with separator ';'
 tt = File.dsvread(nm, ';')
 ans = tt[2][2]                       --> 5
 
+-- get file text as string
 s = File.read(nm)
 ans = string.sub(s,1,5)              --> '1;2;3'
 
+-- serialize table to file
 a = {1, 2.0, a = 'pqr', b = {3,4,c='abc'}}
 File.tblexport(nm, a)
 
+-- deserialize table from file
 aa = File.tblimport(nm)
 ans = aa.b.c                         --> 'abc'
 ]]
@@ -127,7 +135,15 @@ files.tblimport = function (fname)
 end
 files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, writen into file."}
 
-
+--- @class table
+--  @name val2str
+--  @field string Prepare strings.
+--  @field number Number to string.
+--  @field function Reminder about function.
+--  @field boolean Boolean to string.
+--  @field nil Nil to string.
+--  @field table Process table.
+--  @field thread Reminder about thread.
 local val2str = {
    ['string'] =   function (x) return string.format('"%s"', x) end,
    ['number'] =   function (x) return math.type(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
@@ -170,3 +186,4 @@ return files
 
 --==================================
 -- TODO: improve dsv read/write according the specification
+-- TODO: fix export negative and fractional keys

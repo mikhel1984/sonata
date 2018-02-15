@@ -11,12 +11,15 @@
 --[[!!
 Big = require 'liblc.bigint'
 
+-- from integer
 a = Big(123)         
 ans = a:tonumber()           --> 123
 
+-- from string
 b = Big('456')        
 ans = b:tonumber()           --> 456
 
+-- arithmetical operations
 ans = Big.tonumber(a+b)      --> 579
 
 ans = Big.tonumber(a-b)      --> -333
@@ -29,11 +32,14 @@ ans = Big.tonumber(b%a)      --> 87
 
 ans = Big.tonumber(a^3)      --> 1860867
 
+-- absolute value
 ans = Big.tonumber(Big.abs('-25')) --> 25
 
+-- factorial
 c = Big(10)
 ans = Big.tonumber(c:fact())  --> 3628800
 
+-- make copy, comparision
 d = a:copy()
 ans = (a == d)               --> true
 
@@ -41,11 +47,17 @@ ans = (a > b)                --> false
 
 ans = (a == b)               --> false
 
+-- compare with number
 ans = a:eq(123)              --> true
 
+-- number of digits
 ans = #a                     --> 3
 
+-- simple print
 print(a)
+
+-- more friendly representation
+print(c:str())
 ]]
 
 -----------------------------------------

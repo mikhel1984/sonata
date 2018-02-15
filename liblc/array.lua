@@ -16,6 +16,7 @@ Arr = require 'liblc.array'
 a = Arr {2,3,4}                       
 ans = a:get{1,2,1}                     --> nil
 
+-- set values
 a:set({1,2,1},4)
 ans = a:get{1,2,1}                     --> 4
 
@@ -26,6 +27,7 @@ ans = #b                               --> 10
 
 ans = b:copy()                         --> b
 
+-- compare sizes
 ans = b:isequal(Arr.rand{5,2,1})       --> true
 
 -- arithmetical operations
@@ -40,14 +42,20 @@ ans = g:isequal(Arr{2,3,2})            --> true
 d = Arr.concat(b,b,3)
 ans = d:dim()[3]                       --> 2
 
+-- apply functions of 2 arguments
+-- to get new array
 e = Arr.apply(b,b, function (x,y) return x*y end)
 ans = e:get{1,1,1}                     --> (b:get{1,1,1})^2
 
+-- apply function of 1 argument
+-- to get new array
 f = b:map(function (x) return 10*x end)
 ans = f:get{1,1,1}                     --> b:get{1,1,1}*10
 
+-- simple print
 print(a)
 
+-- print slices for axis 2 and 3
 print(d:fullstring(2,3))
 ]]
 

@@ -11,43 +11,59 @@
 --[[!!
 Comp = require 'liblc.complex'
 
-a = Comp(1,2)                  
+-- real and imag pars
+a = Comp(1,2)
+-- or just real                  
 b = Comp(3)
 ans = b                        --> Comp(3,0)
 
+-- imaginary unit
 j = Comp._i
 ans = 3+4*j                    --> Comp(3,4)
 
-ans = Comp.trig(2,0)            --> Comp(2,0)
+-- use trigonomitrical form
+ans = Comp.trig(2,0)           --> Comp(2,0)
 
+-- arithmentics
 ans = a + b                    --> Comp(4,2)
 
-ans = Comp(3) - b               --> Comp(0)
+ans = Comp(3) - b              --> Comp(0)
 
 ans = a * b                    --> Comp(3,6)
 
-ans = a / Comp._i               --> Comp(2,-1)
+ans = a / Comp._i              --> Comp(2,-1)
 
+-- power could be complex
 c = Comp(1,1)^Comp(2,-2)
+-- real part
 ans = c:Re()                   --~ 6.147
 
+-- imaginary part
 ans = c:Im()                   --~ 7.4
 
+-- comparision
 ans = (a == b)                 --> false
 
 ans = (a ~= b)                 --> true
 
+-- absolute value
 ans = a:abs()                  --~ 2.236
 
+-- argument (angle)
 ans = a:arg()                  --~ 1.107
 
+-- conjugated number
 ans = a:conj()                 --> Comp(1,-2)
 
+-- complex square root
+-- after import becomes default
 d = Comp.sqrt(-2)
 ans = d:Im()                   --~ 1.414
 
+-- make copy
 ans = a:copy()                 --> a
 
+-- show
 print(a)
 ]]
 

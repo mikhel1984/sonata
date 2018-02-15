@@ -8,7 +8,7 @@
 --]]
 
 --------------- Tests ---------------
---[[ set !! before release  
+--[[ !!  
 Gnu = require 'liblc.gnuplot'
 
 a = {{'sin(x)',title='Sinus x'},permanent=false}
@@ -16,12 +16,16 @@ a = {{'sin(x)',title='Sinus x'},permanent=false}
 -- 'permanent=false' is just for testing
 Gnu.plot(a)
 
+-- save as object
+-- to simplify modification
 g = Gnu(a)
 g.xrange = {-10,10}
 g:plot()
 
+-- copy parameters to other object
 b = g:copy()
 print(b)
+-- check correctness of the table
 ans = b:isavailable()                             --> true
 
 -- print Lua table
@@ -258,7 +262,7 @@ gnuplot.__tostring = function (g)
    return string.format('{\n%s\n}', table.concat(res, ',\n'))
 end
 
-
+-- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
 gnuplot.Gnu = 'Gnu'
 gnuplot.about[gnuplot.Gnu] = {"Gnu([g])", "Transform given table into gnuplot object.", help.NEW}

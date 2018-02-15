@@ -10,15 +10,17 @@
 --[[!!
 _C = require 'liblc.const'
 
+-- charge of electron
 ans = _C.e                  --~ 1.602e-19
 
+-- units has postfix _u
 ans = _C.e_u                --> 'C'
 ]]
 
 ---------------------------------
 -- @class table
 -- @name const
--- @field about Description of functions.
+-- @field about Description of values.
 
 local const = {
    -- physics
