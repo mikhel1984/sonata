@@ -11,8 +11,10 @@
 --[[!!
 Mat = require 'liblc.matrix'
 
+-- define matrix objects
 a = Mat {{1,2},{3,4}}             
-b = Mat {{5,6},{7,8}}             
+b = Mat {{5,6},{7,8}}  
+-- call in typical way           
 ans = a[2][2]                    --> 4 
 
 -- use index checking
@@ -20,11 +22,15 @@ b:set(1,1)(9)
 ans = b:get(1,1)                 --> 9
 
 b[1][1] = 5
+-- transpose
 c = a:T()
-ans = c(1,2)                     --> 3
+-- use () as alias for get()
+ans = c(1,-1)                    --> 3
 
+-- matrix raws and columns
 _, ans = a:size()                --> 2
 
+-- arithmetical operations
 ans = a + b                      --> Mat {{6,8},{10,12}}
 
 ans = b - a                      --> Mat {{4,4},{4,4}}
@@ -32,92 +38,131 @@ ans = b - a                      --> Mat {{4,4},{4,4}}
 ans = a * b                      --> Mat {{19,22},{43,50}}
 
 ans = a / b 
+-- determinant
 ans = ans:det()                  --~ 1
 
+-- multiply to scalar
 ans = 2 * a                      --> Mat {{2,4},{6,8}}
 
+-- add scalar (to all elements)
 ans = a - 1                      --> Mat {{0,1},{2,3}}
 
 ans = a ^ 2                      --> Mat {{7,10},{15,22}} 
 
+-- determinant
 ans = a:det()                    --> -2
 
+-- inverse matrix
 e = a:inv()
 ans = e(2,1)                     --> 1.5
 
+-- another call of inversion
 e = a^-1
 ans = e(2,1)                     --> 1.5
 
+-- object copy
 f = a:copy()
 ans = (f == a)                   --> true
 
+-- element-wise comparision
 ans = (a == b)                   --> false
 
+-- identity matrix
 ans = Mat.eye(2)                 --> Mat {{1,0},{0,1}}
 
+-- matrix of zeros
 ans = Mat.zeros(2,1)             --> Mat {{0},{0}}
 
+-- matrix of constants = 4
 ans = Mat.ones(2,3,4)            --> Mat {{4,4,4},{4,4,4}}
 
+-- matrix of constants = 1
 ans = Mat.ones(a,3)              --> Mat {{3,3},{3,3}}
 
+-- horizontal concatenation
 ans = a .. b                     --> Mat {{1,2,5,6},{3,4,7,8}}
 
+-- vertical concatenation
 ans = a // b                     --> Mat {{1,2},{3,4},{5,6},{7,8}}
 
+-- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
+-- apply function which depends on index too
 ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat {{-1,-3},{-2,-4}}
 
+-- use Gauss transform to solve equation
 ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
 
+-- create vector
 ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 
+-- get submatrix
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
 ans = g:sub(2,-1,2,3)           --> Mat {{5,6},{8,9}}
 
+-- random matrix
 h = Mat.rand(3,2)
 print(h)
 
+-- pseudoinverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
 ans = n(2,2)                    --~ 0.333
 
+-- get dense copy of the matrix
 k = Mat.eye(3)
 k = k:dense()
 ans = k[2][1]                   --> 0
 
 k = k:sparse()
-ans = k[2][1]                   --> 0
+ans = rawget(k[2],1)             --> nil
 
+-- make diagonal matrix
 ans = Mat.diag({1,2,3})         --> Mat {{1,0,0},{0,2,0},{0,0,3}}
 
+-- shifted diagonal
 ans = g:diag(1)                 --> Mat {{2},{6}}
 
+-- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
 ans = Mat.cross(x1,x2)          --> Mat {{-3},{6},{-3}}
 
+-- dot product of 2 vectors
 ans = Mat.dot(x1,x2)            --> 32
 
+-- LU transform
 l,u,p = b:lu()
 ans = l[2][1]                   --~ 0.714
 
+-- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:cholesky()
 ans = m[2][2]                   --~ 1.633
 
+-- matrix trace
 ans = a:tr()                    --> 5
 
+-- extract row
 m = a:row(1)
-ans = m:get(1)                  --> 1
+-- vector doesn't need in 2 indeces
+ans = m(1)                      --> 1
 
+-- extract column
+-- index could be negative 
 m = a:col(-1)
 ans = m:get(2)                  --> 4
 
+-- apply summation to each row
 ans = a:sum()                   --> Mat {{3},{7}}
 
+-- apply product to each column
+-- initial value is 1
 ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
+
+-- get rank
+ans = Mat.ones(2,3):rank()      --> 1
 ]]
 
 -------------------------------------------- 
@@ -134,9 +179,13 @@ matrix.ismatrix = true
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrices are spares by default.")
 
--- metatable for new rows
+--- Metatable for new rows.
+-- @class table
+-- @name access
+-- @field __index Return 0 instead nil
+-- @field __newindex Help matrix to be sparse.
 local access = {
-   -- return 0 instead nil
+   -- 0 instead nil
    __index = function () return 0 end,
    -- comment this function in order to work a little bit faster, but in this case matrix can become dense
    __newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
@@ -182,6 +231,7 @@ function matrix.new(m)
    for i = 1, rows do
       assert(type(m[i]) == 'table', "Row must be a table!")
       cols = (cols < #m[i]) and #m[i] or cols
+      setmetatable(m[i], access)
    end
    return matrix:init(rows, cols, m)
 end
@@ -279,6 +329,9 @@ matrix.triang = function (m)
 end
 matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangularization produced by Gaussian elimination.', help.OTHER}
 
+--- Matrix rank.
+--    @param m Initial matrix.
+--    @return Value of rank.
 matrix.rank = function (m)
    local mat,i = matrix.triang(m),1
    while i <= mat.rows do
@@ -292,7 +345,7 @@ matrix.rank = function (m)
    end
    return i-1
 end
-
+matrix.about[matrix.rank] = {"rank(m)", "Find rank of the matrix."}
 
 --- Check index and get matrix element.
 --    Can be called with ().
@@ -304,10 +357,10 @@ matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
    return m[r][c]
 end
-matrix.about[matrix.get] = {"get(m,row,col)", "Check index and return matrix element.", }
+matrix.about[matrix.get] = {"get(m,row,col)", "Check index and return matrix element."}
 
 -- simplify call of matrix.get()
-matrix.__call = function (m,r,c) return m[r][c] end
+matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
 
 --- Set value of matrix element.
 --    @param m Matrix.
@@ -318,7 +371,7 @@ matrix.set = function (m,r,c)
    r, c = checkindex(m, r, c)
    return function (val) m[r][c] = val end
 end
-matrix.about[matrix.set] = {"set(m,row,col)(val)", "Check index and set value of matrix element.", } 
+matrix.about[matrix.set] = {"set(m,row,col)(val)", "Check index and set value of matrix element."} 
 
 --- Transpose matrix.
 --    Can be called as T().
@@ -331,7 +384,7 @@ matrix.transpose = function (m)
    end
    return res
 end
-matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T().", }
+matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T()."}
 matrix.T = matrix.transpose
 
 -- to accelerate calculations
@@ -372,7 +425,7 @@ end
 matrix.size = function (m)
    return m.rows, m.cols
 end
-matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'.", }
+matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'."}
 
 --- Apply function to each element.
 --    @param m Source matrix.
@@ -469,7 +522,7 @@ matrix.__pow = function (a,n)
 end
 
 matrix.arithmetic = 'arithmetic'
-matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", }
+matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a"}
 
 --- a == b
 --    @param a First matrix.
@@ -487,7 +540,7 @@ matrix.__eq = function (a,b)
 end
 
 matrix.comparison = 'comparison'
-matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", }
+matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b"}
 
 
 --- Find determinant.
@@ -498,7 +551,7 @@ matrix.det = function (m)
    local _, K = gaussdown(matrix.copy(m))
    return K
 end
-matrix.about[matrix.det] = {"det(m)", "Calculate determinant.", }
+matrix.about[matrix.det] = {"det(m)", "Calculate determinant."}
 
 --- Inverse matrix.
 --    @param m Initial matrix.
@@ -518,7 +571,7 @@ matrix.rref = function (A,b)
    local tr, d = gaussdown(matrix.concat(A,b,'h'))
    return gaussup(tr), d
 end
-matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant.", }
+matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant."}
 
 --- Create vector.
 --    Simplified vector constructor. 
@@ -530,7 +583,7 @@ matrix.vector = function (v)
    for i = 1, #v do res[i] = {v[i]} end
    return matrix:init(#v, 1, res)
 end
-matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V().", }
+matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V()."}
 matrix.V = matrix.vector
 
 --- Create matrix of zeros.
@@ -954,7 +1007,7 @@ matrix.cross = function (a,b)
    local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
    return matrix.new {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}}
 end
-matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.', }
+matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.'}
 
 --- a . b
 --    @param a 3-element vector.
@@ -966,8 +1019,9 @@ matrix.dot = function (a,b)
    local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
    return x1*x2+y1*y2+z1*z2
 end
-matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors', }
+matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors'}
 
+-- Auxiliary function for working with complex numbers.
 local function fabs(m)
    return (type(m) == 'table' and m.iscomplex) and m:abs() or math.abs(m)
 end
@@ -1046,7 +1100,7 @@ matrix.lu = function (m)
           matrix.map_ex(a, function (r,c,m) return r <= c and m or 0 end),                    -- upper
 	  p                                                                                   -- permutations
 end
-matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", }
+matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", help.OTHER}
 
 --- Cholesky decomposition.
 --    @param m Positive definite symmetric matrix.
@@ -1114,11 +1168,18 @@ matrix.about[matrix.reduce] = {"reduce(m,fn,dir,init)","Evaluate s=fn(s,x) along
 matrix.sum = function (m,dir) return matrix.reduce(m, fn_sum, dir, 0) end
 matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given direction ('r' or 'c')."}
 
+--- Get euclidean norm for each column/row.
+--    @param n Initial matrix.
+--    @param dir Direction (optional).
+--    @return Norm along rows or columns.
 matrix.sqnorm = function (m,dir)
    return matrix.reduce(m, function (a,b) return a+b^2 end, dir, 0)
 end
 matrix.about[matrix.sqnorm] = {"sqnorm(m,dir)", "Calculate square norm along given direction."}
 
+--- Eucledian norm of the matrix at whole.
+--    @param m Current matrix.
+--    @return Norm value.
 matrix.norm = function (m)
    local sum = 0
    for r = 1,m.rows do
@@ -1164,4 +1225,3 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
---TODO: rank

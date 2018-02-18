@@ -75,6 +75,7 @@ to get additional modules.]],
 -- @field CONST Constant.
 -- @field OTHER Constant.
 -- @field NEW Constant.
+-- @field SEP Current system separator.
 local help = {}
 help.__index = help
 -- constant strings
@@ -291,6 +292,10 @@ function help:get(txt)
    return lng or eng[txt] or txt
 end
 
+--- Generate template for new module.
+--    @param mname Module name.
+--    @param alias Module short name.
+--    @param description Short module description.
 function help.newmodule (mname, alias, description)
    if not (mname and alias) then
       print('Both module name and alias are expected!'); return

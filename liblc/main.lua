@@ -11,14 +11,22 @@
 --[[!!
 require 'liblc.main'
 
+-- constants starts from _
+ans = _pi                        --> math.pi
+
+-- round number
 ans = round(0.9)                 --> 1.0
 
+-- 'small' factorial - int
 ans = fact(12)                   --> 479001600
 
+-- 'big' factorial - float
 ans = fact(50)                   --~ 3.0414E+64
 
+-- get object type
 ans = lctype(25)                 --> 'integer'
 
+-- show table components
 a = {a=1,b=2;3,4,5}
 flip(a)
 ]]
@@ -29,6 +37,7 @@ local main = {}
 mhelp = require "liblc.help"
 about = mhelp:new("Lua based calculator.")
 
+-- first 11 factorials
 local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
 
 -- Common
