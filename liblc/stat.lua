@@ -11,54 +11,74 @@
 --[[!!
 Stat = require 'liblc.stat'
 
+-- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
 w = {1,1,0,1,2,2,1,1}
+-- average
 ans = Stat.mean(X)                --~ 3.375
 
+-- standard deviation
 ans, tmp = Stat.std(X,W)          --~ 1.495
 
+-- variance
 ans = tmp                         --~ 2.234
 
+-- maximum element and index
 _,ans = Stat.max(X)               --> 4 
 
+-- median
 ans = Stat.median(X)              --> 3
 
+-- table of frequencies
 tmp = Stat.freq(X)
 ans = tmp[3]                      --> 3
 
+-- central moment
 ans = Stat.cmoment(2,X)           --~ 2.234
 
+-- non-central moment
 ans = Stat.moment(3,X,W)          --~ 61.875
 
+-- summ of elements
 ans = Stat.sum(X)                 --> 27
 
+-- corrected standard deviation
 ans = Stat.stdcorr(X)             --~ 1.598
 
+-- minimum value
 ans = Stat.min(X)                 --> 1
 
+-- geometrical mean
 ans = Stat.geomean(X)             --~ 2.995
 
+-- harmonical mean
 ans = Stat.harmean(X,W)           --~ 2.567
 
+-- find hystogram
 h = Stat.hyst(X,4)
 ans = h.Y[1]                      --> 2
 
+-- Poisson cdf and pdf
 ans = Stat.poisscdf(3, 0.5)       --~ 0.998
 
 ans = Stat.poisspdf(5, 1.1)       --~ 4.467E-3
 
+-- Chi2 cdf and pdf
 ans = Stat.chi2cdf(0.5, 2)        --~ 0.2212
 
 ans = Stat.chi2pdf(1.2, 2.1)      --~ 0.2748
 
+-- Student cdf and pdf
 ans = Stat.tcdf(4, 2.5)           --~ 0.9805
 
 ans = Stat.tpdf(2, 3.3)           --~ 0.0672
 
+-- F cdf and pdf
 ans = Stat.fcdf(0.8, 1.1, 2.2)    --~ 0.5285
 
 ans = Stat.fpdf(1.3, 2.7, 2.4)    --~ 0.2174
 
+-- Gauss cdf and pdf
 ans = Stat.normcdf(1, 1.5, 2.1)   --~ 0.4059
 
 ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
@@ -76,9 +96,11 @@ local help = lc_version and (require "liblc.help") or {new=function () return {}
 stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
 
 -- some functions depend of module 'special'
-stat.lc_special = pcall(require,'liblc.special')
-if not stat.lc_special then
+local done
+done, stat.lc_special = pcall(require,'liblc.special')
+if not done then
    print('WARNING >> Not available: poisscdf(), chi2cdf(), chi2pdf(), tcdf(), tpdf(), normcdf()')
+   stat.lc_special = nil
 end
 
 --- Sum of all elements.

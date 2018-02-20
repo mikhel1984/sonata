@@ -11,13 +11,17 @@
 --[[!!
 Rat = require 'liblc.rational'
 
+-- numerator, denomenator
 a = Rat(1,2)
+-- only numerator
 b = Rat(2)
 ans = b                 --> Rat(2,1)
 
+-- simplification
 k = 234781
 ans = Rat(2*k,3*k)      --> Rat(2,3)
 
+-- arithmetics
 ans = a + b             --> Rat(5,2)
 
 ans = 2 * a             --> Rat(1)
@@ -30,20 +34,27 @@ ans = a ^ 3             --> Rat(1,8)
 
 ans = 2 ^ a             --~ 1.4142
 
+-- comparision
 ans = (b == b)          --> true
 
 ans = (a >= b)          --> false
 
+-- greatest common division
 ans = Rat.gcd(125,65)   --> 5
 
+-- represent as decimal
 ans = a:decimal()       --> 0.5
 
+-- numerator
 ans = b:Nu()            --> 2
 
+-- denomenator
 ans = b:De()            --> 1
 
+-- make copy
 ans = a:copy()          --> a
 
+-- show
 print(a)
 ]]
 

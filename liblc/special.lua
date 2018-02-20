@@ -12,12 +12,14 @@
 --[[!!
 Spec = require 'liblc.special'
 
+-- beta functions
 ans = Spec.beta(3,4)               --~ 1.667E-2
 
 ans = Spec.betaln(10,20)           --~ -19.115
 
 ans = Spec.betainc(0.5, 2, 3.3)    --~ 0.7309
 
+-- error functions
 ans = Spec.erf(1)                  --~ 0.8427
 
 ans = Spec.erfc(0.5)               --~ 0.4795
@@ -28,6 +30,7 @@ ans = Spec.expint(3.3)             --~ 8.939E-3
 -- E3(x)
 ans = Spec.expint(2, 5)            --~ 9.965E-4
 
+-- gamma functions
 ans = Spec.gamma(-1.5)             --~ 2.3633
 
 ans = Spec.gammaln(100)            --~ 359.1342
@@ -39,6 +42,7 @@ ans = Spec.gammq(1.5, 4.8)         --~ 2.23E-2
 -- another syntax
 ans = Spec.gammainc(2.1, 0.3, 'upper') --~ 1.942E-2
 
+-- Bessel functions
 ans = Spec.bessj(3, 1.5)           --~ 6.096E-2
 
 ans = Spec.bessy(4, 0.8)           --~ -78.751
@@ -47,9 +51,11 @@ ans = Spec.bessi(2, -3.6)          --~ 4.254
 
 ans = Spec.bessk(5, 5)             --~ 3.2706E-2
 
+-- Legendre function
 lst = Spec.legendre(3, 0.5)
 ans = lst[1]                       --~ -0.4375
 
+-- Dawson function
 ans = Spec.dawson(3.3)             --~ 0.1598
 ]]
 

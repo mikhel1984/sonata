@@ -11,19 +11,28 @@
 --[[!!
 Num = require 'liblc.numeric'
 
+-- define tolerance
 Num.TOL = 1e-4
+-- solve 'sin(x) = 0' for x in (pi/2...3*pi/2)
 a = Num.solve(math.sin, math.pi*0.5, math.pi*1.5)
 ans = a                                   --~ math.pi
 
+-- newton method
+-- only one initial value
 d = Num.newton(math.sin, math.pi*0.7)
 ans = d                                   --~ math.pi
 
+-- numeric derivative
 b = Num.diff(math.sin, 0)
 ans = b                                   --~ 1
 
+-- numeric integral
 c = Num.trapez(math.sin, 0, math.pi)      
 ans = c                                   --~ 2
 
+-- solve ODE x*y = x'
+-- for x = 0..3, y(0) = 1
+-- return table of soluntions and y(3)
 tbl, yn = Num.ode(function (x,y) return x*y end, 0, 1, 3)
 ans = yn                                  --~ 90.011
 
