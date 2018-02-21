@@ -11,21 +11,27 @@
 --[[!!
 Unit = require 'liblc.units'
 
--- some rules
+-- add some rules
 Unit.add('h', Unit(60,'min'))
 Unit.add('min', Unit(60,'s'))
 
+-- define variable
 a = Unit(1,'m/s')
+-- convert to km/h, get only value
 ans = a['km/h']                    --> 3.6
 
+-- get numerical value
 ans = #a                           --> 1
 
+-- make copy
 cp = a:copy() 
 ans = cp                           --> Unit(1,'m/s')
 
+-- get converted variable
 b = a:convert('km/h')
 ans = b                            --> Unit(3.6, 'km/h')
 
+-- arithmetics
 b = 3 * b
 ans = a + b                        --> Unit(4, 'm/s')
 
@@ -39,18 +45,26 @@ ans = (a < b)                      --> true
 
 ans = b ^ 3                        --> Unit(27, 'm^3/s^3')
 
+-- new rule
 Unit.add('snake', Unit(48, 'parrot'))
+-- define variable
 c = Unit(2,'snake')
+-- convert
 ans = c['parrot']                  --> 96
 
+-- convert using prefix
 ans = c['ksnake']                  --> 0.002
 
+-- complex rule
 d = Unit(1,'W')
+-- define function for conversation, apply it
 e = d:convert(function (x) return Unit(10*math.log((x/Unit(1,'mW')):simp(),10), 'dBm') end)
 ans = #e                           --> 30
 
+-- another definition syntax
 ans = 2 * Unit('N')                --> Unit(2,'N')
 
+-- show result
 print(a)
 ]]
 

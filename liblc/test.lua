@@ -17,15 +17,17 @@
    * If test have result, it must be saved in variable 'ans'. To check it write the right value after arrow '-->'. 
      In case of float point number sign '--~' can be used for not strong equality.
 
-   * Test can have no any results. This way print nothing after '-->' (or don't print arrow itself).
+   * Test can have no any results. In this case '-->' can be omited.
 
    * To perform tests call 
-     'lua calc.lua -test [module_name]'
-     for example
-     'lua calc.lua -test array'
-   If module name is not written tests will be performed for all modules.
+       'lua calc.lua -test [module_name]'
+     For example
+       'lua calc.lua -test array'
+     If module name is not written tests will be executed for all modules.
 
    * Test summary includes information about number of passed and failed tests, average time per test unit (in milliseconds), memory size.
+     
+   * The results are saved to the 'test.log' file. It contains error messages as well (don't displayed on ths screen).
 ]=]
 
 local delim = '%c[%s%c]+'    -- empty strings
