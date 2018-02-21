@@ -8,28 +8,78 @@
 
 --------------- Tests ------------
 --[[!!
-Struct = require 'liblc.struct'
+DS = require 'liblc.struct'
 
-a = Struct.Stack()
+-- create stack
+a = DS.Stack()
+-- add values
 a:push(1)
 a:push(2)
+-- stack size
 ans = #a                        --> 2
 
-a:push(3)
-ans = a:pop()                   --> 3
+-- top value
+ans = a:peek()                  --> 2
 
+-- make copy
+aa = a:copy()
+
+-- get value
 a:pop()
 ans = a:pop()                   --> 1
 
-b = Struct.Queue()
+-- check capacity
+ans = a:isempty()               --> true
+
+-- create queue
+b = DS.Queue()
+-- add elements to the tale
 b:add(1)
 b:add(2)
+-- get from the head
 ans = b:rem()                   --> 1
 
+-- add to the head
 b:addfirst(4)
+-- remove from the tale
 ans = b:remlast()               --> 2
 
+-- check queue size
 ans = #b                        --> 1
+
+-- top value
+ans = b:peek()                  --> 4
+
+-- check capacity
+ans = b:isempty()               --> false
+
+-- make copy
+bb = b:copy()
+
+-- create heap
+c = DS.Heap()
+c:insert(1)
+c:insert(3)
+c:insert(2)
+ans = c:deltop()                --> 3
+
+-- check capacity
+ans = c:isempty()               --> false
+
+-- new heap
+-- with user comparision function
+-- (return minimum element)
+d = DS.Heap(function (a,b) return a > b end)
+d:insert(1)
+d:insert(3)
+d:insert(2)
+ans = d:deltop()                --> 1
+
+-- make copy
+dd = d:copy()
+
+-- heap size
+ans = #dd                       --> 2
 ]]
 
 local STACK = 'stack'
@@ -50,6 +100,7 @@ local struct = {}
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 struct.about = help:new("Main data structures.")
 
+-- common methods
 struct.about['COPY'] = {"copy()", "Return copy of the object."}
 struct.about['ISEMPTY'] = {"isempty()", "Return true if the object is empty."}
 
@@ -65,13 +116,12 @@ struct.Stack.new = function (self)
    return o
 end
 
---- Alias for stack constructor.
---    @return New stack.
---struct.Stack = function () return struct.stack:new() end
+-- Alias for stack constructor
 setmetatable(struct.Stack, {__call = function (self) return struct.Stack:new() end})
 struct.about[struct.Stack] = {"Stack()", "Create new stack.", STACK}
 
 --- Add element to the stack.
+--    @param self Stack object.
 --    @param val Value to push (except nil).
 struct.Stack.push = function (self, val)
    assert(val ~= nil)
@@ -80,6 +130,7 @@ end
 struct.about[struct.Stack.push] = {"push(val)", "Push value to the stack, except nil.", STACK}
 
 --- Get value from the top of stack.
+--    @param self Stack object.
 --    @return Top value or nil.
 struct.Stack.pop = function (self)
    local res = self[#self]
@@ -89,12 +140,13 @@ end
 struct.about[struct.Stack.pop] = {"pop()", "Pop value from the stack, return element or nil.", STACK}
 
 --- Top value of the stack.
+--    @param s Stack object.
 --    @return Top value without removing it.
 struct.Stack.peek = function (s) return s[#s] end
 struct.about[struct.Stack.peek] = {"peek()", "Return top value without removing it.", STACK}
 
 --- Copy stack.
---    @param s Original stack.
+--    @param s Stack object.
 --    @return Copy.
 struct.Stack.copy = function (s)
    local res = struct.Stack:new()
@@ -103,8 +155,10 @@ struct.Stack.copy = function (s)
    end
    return res
 end
---struct.about[struct.Stack.copy] = COPY
 
+--- Check stack size.
+--    @param s Stack object.
+--    @return True if stack is empty.
 struct.Stack.isempty = function (s) return #s == 0 end
 
 --	QUEUE
@@ -119,11 +173,12 @@ struct.Queue.new = function (self)
    return o
 end
 
---struct.Queue = function () return struct.queue:new() end
+-- Alias for queue constructor
 setmetatable(struct.Queue, {__call = function (self) return struct.Queue:new() end})
 struct.about[struct.Queue] = {"Queue()", "Create new queue.", QUEUE}
 
 --- Put value to the end of queue.
+--    @param self Queue object.
 --    @param val Value to put.
 struct.Queue.add = function (self,val)
    local last = self.last+1
@@ -133,6 +188,7 @@ end
 struct.about[struct.Queue.add] = {"add(val)", "Add value to the back of queue.", QUEUE}
 
 --- Put value to the top of queue (as in stack).
+--    @param self Queue object.
 --    @param val Value to put.
 struct.Queue.addfirst = function (self,val)
    local first = self.first-1
@@ -142,6 +198,7 @@ end
 struct.about[struct.Queue.addfirst] = {"addfirst(val)", "Add value to the top of queue.", QUEUE}
 
 --- Get value from the top of queue.
+--    @param self Queue object.
 --    @return Top value of nil.
 struct.Queue.rem = function (self)
    local first,val = self.first
@@ -155,6 +212,7 @@ end
 struct.about[struct.Queue.rem] = {"rem()", "Get value from the top of queue, remove it.", QUEUE}
 
 --- Get value from the end of queue.
+--    @param self Queue object.
 --    @return Last value of nil.
 struct.Queue.remlast = function (self)
    local last, val = self.last
@@ -168,13 +226,13 @@ end
 struct.about[struct.Queue.remlast] = {"remlast()", "Get value from the end of queue, remove it.", QUEUE}
 
 --- Get top value of the queue.
+--    @param q Queue object.
 --    @return Top value without removing it.
 struct.Queue.peek = function (q) return q[q.first] end
 struct.about[struct.Queue.peek] = {"peek()", "Return top value without removing it.", QUEUE}
 
 
---- Queue size.
---    @return Number of elements in queue.
+-- Queue size
 struct.Queue.__len = function (t) return t.last-t.first+1 end
 
 --- Check if the queue is empty.
@@ -191,7 +249,6 @@ struct.Queue.copy = function (q)
    table.move(q,first,last,first,res)
    return res
 end
---struct.about[struct.Queue.copy] = COPY
 
 --	HEAP
 struct.Heap = {type='heap'}
@@ -209,7 +266,7 @@ struct.Heap.new = function (self, less)
 end
 
 -- Simplify constructor call.
-setmetatable(struct.Heap, {__call = function (self) return struct.Heap:new() end})
+setmetatable(struct.Heap, {__call = function (self,l) return struct.Heap:new(l) end})
 struct.about[struct.Heap] = {"Heap([less])", "Create new heap object. Comparison method 'less' can be predefined.", HEAP}
 
 --- Fix order of the heap in up direction.
@@ -263,7 +320,7 @@ end
 struct.about[struct.Heap.deltop] = {"deltop()", "Return top element. For the default less() function top is maximum.", HEAP}
 
 --- Check for elements in the heap.
---    @param h Heap.
+--    @param h Heap object.
 --    @return True if heap is empty.
 struct.Heap.isempty = function (h) return h.N == 0 end
 struct.about[struct.Heap.isempty] = {"isempty()", "Return true if the heap is empty.", HEAP}
@@ -271,8 +328,12 @@ struct.about[struct.Heap.isempty] = {"isempty()", "Return true if the heap is em
 -- Number of elements.
 struct.Heap.__len = function (h) return h.N end
 
+--- Make heap copy.
+--    @param h Original heap.
+--    @return New heap.
 struct.Heap.copy = function (h) 
    local res = struct.Heap:new(h.less)
+   res.N = h.N
    table.move(h,1,#h,1,res)
    return res
 end
