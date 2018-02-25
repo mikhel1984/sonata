@@ -34,7 +34,7 @@ k_u='J/K',          k    = 1.38066244E-23,          -- Boltzmann constant
 h_u='J*s',          h    = 6.62617636E-34,          -- Planck's constant
 c_u='m/s',          c    = 2.99792458E8,            -- speed of light
 g_u='m/s^2',        g    = 9.80665,                 -- 'standard' acceleration of free fall
-eps0_u='F/m',       eps0 = 8.85418781871E-12,       -- permitivity of free space
+eps0_u='F/m',       eps0 = 8.85418781871E-12,       -- permittivity of a vacuum
                     phi  = 0.5*(1+math.sqrt(5)),    -- golden ratio
                     Adams= 42,                      -- ;)
 }
@@ -49,11 +49,11 @@ const.about[const.mu0] = {"mu0", "Permeability of free space.", help.CONST}
 const.about[const.R] = {"R", "Universal gas constant.", help.CONST}
 const.about[const.Vm] = {"Vm", "Volume of one mole of ideal gas.", help.CONST}
 const.about[const.NA] = {"NA", "Avogadro's number.", help.CONST}
-const.about[const.k] = {"k", "Boltzman's constant.", help.CONST}
+const.about[const.k] = {"k", "Boltzmann's constant.", help.CONST}
 const.about[const.h] = {"h", "Planck's constant.", help.CONST}
 const.about[const.c] = {"c", "Speed of light.", help.CONST}
 const.about[const.g] = {"g", "Acceleration of free fall.", help.CONST}
-const.about[const.eps0] = {"eps0", "Permitivity of free space.", help.CONST}
+const.about[const.eps0] = {"eps0", "Permittivity of free space.", help.CONST}
 const.about[const.phi] = {"phi", "Golden ratio.", help.CONST}
 const.about[const.Adams] = {"Adams", "Answer to the ultimate question of life, the Universe, and Everything.", help.CONST}
 

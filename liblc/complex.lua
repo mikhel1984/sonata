@@ -21,10 +21,10 @@ ans = b                        --> Comp(3,0)
 j = Comp._i
 ans = 3+4*j                    --> Comp(3,4)
 
--- use trigonomitrical form
+-- use trigonometrical form
 ans = Comp.trig(2,0)           --> Comp(2,0)
 
--- arithmentics
+-- arithmetic
 ans = a + b                    --> Comp(4,2)
 
 ans = Comp(3) - b              --> Comp(0)
@@ -41,7 +41,7 @@ ans = c:Re()                   --~ 6.147
 -- imaginary part
 ans = c:Im()                   --~ 7.4
 
--- comparision
+-- comparison
 ans = (a == b)                 --> false
 
 ans = (a ~= b)                 --> true

@@ -32,7 +32,7 @@ ans = c                                   --~ 2
 
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
--- return table of soluntions and y(3)
+-- return table of solutions and y(3)
 tbl, yn = Num.ode(function (x,y) return x*y end, 0, 1, 3)
 ans = yn                                  --~ 90.011
 

@@ -289,7 +289,7 @@ grid='polar'                                 -- polar grid
 legend=false                                 -- don't use legend
 surface=true                                 -- plot surface in 3D
 samples=200                                  -- define number of points
-permanent=true                               -- create in independant window
+permanent=true                               -- create in independent window
 raw='set pm3d'                               -- set Gnuplot options manually
 ]],
 }

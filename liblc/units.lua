@@ -31,7 +31,7 @@ ans = cp                           --> Unit(1,'m/s')
 b = a:convert('km/h')
 ans = b                            --> Unit(3.6, 'km/h')
 
--- arithmetics
+-- arithmetic
 b = 3 * b
 ans = a + b                        --> Unit(4, 'm/s')
 

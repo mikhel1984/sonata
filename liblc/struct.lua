@@ -67,7 +67,7 @@ ans = c:deltop()                --> 3
 ans = c:isempty()               --> false
 
 -- new heap
--- with user comparision function
+-- with user comparison function
 -- (return minimum element)
 d = DS.Heap(function (a,b) return a > b end)
 d:insert(1)

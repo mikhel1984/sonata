@@ -142,7 +142,7 @@ local function gser(a,x)
    return gamser
 end
 
--- Continued fruction representation for incomplete gamma function Q.
+-- Continued fraction representation for incomplete gamma function Q.
 --    <i>Private function.</i>
 --    @param a Order.
 --    @param x Real value.
@@ -162,7 +162,7 @@ local function gcf(a,x)
    return math.exp(-x+a*math.log(x)-special.gammaln(a))*h
 end
 
---- Incomplete gamma functoin P(a,x).
+--- Incomplete gamma function P(a,x).
 --    @param a Order.
 --    @param x Non-negative value.
 --    @return Value of P(a,x).
@@ -186,7 +186,7 @@ special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) 
 --    @param x Real value.
 --    @param a Order.
 --    @param tp Type of function (lower of upper).
---    @return Value of correspondant incomplete function.
+--    @return Value of correspondent incomplete function.
 special.gammainc = function (x,a,tp)
    tp = tp or 'lower'
    if     tp == 'lower' then return special.gammp(a,x)
@@ -347,7 +347,7 @@ local function plgndr (n,m,x)
 end
 
 --- List of Legendre coefficients.
---    @param n Polinomial order.
+--    @param n Polynomial order.
 --    @param x Real number.
 --    @return Table with coefficients.
 special.legendre = function (n,x)
@@ -356,7 +356,7 @@ special.legendre = function (n,x)
    for i = 1,n+1 do res[i] = plgndr(n,i-1,x) end
    return res
 end
-special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polinomial coefficients."}
+special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polynomial coefficients."}
 
 -- List of Dawson function coefficients.
 local c_dawson = {}

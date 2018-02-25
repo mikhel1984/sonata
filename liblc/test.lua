@@ -17,7 +17,7 @@
    * If test have result, it must be saved in variable 'ans'. To check it write the right value after arrow '-->'. 
      In case of float point number sign '--~' can be used for not strong equality.
 
-   * Test can have no any results. In this case '-->' can be omited.
+   * Test can have no any results. In this case '-->' can be omitted.
 
    * To perform tests call 
        'lua calc.lua -test [module_name]'
@@ -27,7 +27,7 @@
 
    * Test summary includes information about number of passed and failed tests, average time per test unit (in milliseconds), memory size.
      
-   * The results are saved to the 'test.log' file. It contains error messages as well (don't displayed on ths screen).
+   * The results are saved to the 'test.log' file. It contains error messages as well (don't displayed on the screen).
 ]=]
 
 local delim = '%c[%s%c]+'    -- empty strings

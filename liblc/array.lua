@@ -328,7 +328,7 @@ array.sub = function (arr, ind1, ind2)
 end
 array.about[array.sub] = {"sub(arr,ind1,ind2)", "Return subarray restricted by 2 indexes.", }
 
---- Concatenate 2 arrays along given axe.
+--- Concatenate 2 arrays along given axes.
 --    @param arr1 First array object.
 --    @param arr2 Second array object.
 --    @return New concatenated array.
@@ -374,8 +374,8 @@ end
 --- Get array slice.
 --    Show sequence of 2D matrices with array elements.
 --    @param arr Array object.
---    @param r Number of axe for representation as rows.
---    @param c Number of axe for representation as columns.
+--    @param r Number of axes for representation as rows.
+--    @param c Number of axes for representation as columns.
 --    @return String with all array elements slice by slice.
 array.fullstring = function (arr, r, c)
    local res = {}

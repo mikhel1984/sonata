@@ -3,8 +3,8 @@
 --[[ This file is a part of 'liblc' collection, 2017-2018.]]
 lc_version = '0.7.5'
 
---[[ Uncomment to set the localisation file ]]
---LOCALISATION_FILE = "ru.lng"
+--[[ Uncomment to set the localization file ]]
+LOCALIZATION_FILE = "ru.lng"
 
 --[[ Optional (for bash alias lc='path/to/calc.lua') ]]
 --package.path = package.path .. ';path/to/?.lua'
@@ -87,12 +87,12 @@ if #arg > 0 then
    elseif arg[1] == '-e' or arg[1] == '-eval' then
       local tmp = table.move(arg,2,#arg,1,{})
       liblc.main.evalstr(table.concat(tmp,' '))
-   -- update localisation file
+   -- update localization file
    elseif arg[1] == '-lang' then
       if arg[2] then
 	 mhelp.prepare(arg[2], import)
       else 
-         print('Current localization file: ', LOCALISATION_FILE)
+         print('Current localization file: ', LOCALIZATION_FILE)
       end
    -- prepare new module
    elseif arg[1] == '-new' then
@@ -104,9 +104,9 @@ if #arg > 0 then
    os.exit()
 end
 
---[[ Read localisation file and update descriptions ]]
-if LOCALISATION_FILE then 
-   about:localisation(LOCALISATION_FILE) 
+--[[ Read localization file and update descriptions ]]
+if LOCALIZATION_FILE then 
+   about:localization(LOCALIZATION_FILE) 
 end
 about[import][2] = liblc.import_state_update()
 
@@ -122,4 +122,4 @@ _PROMPT2='..: '
 
 --===============================================
 -- TODO: use alias or part of the name for import
-
+-- TODO: rename program, for (Balu, Luca etc.)

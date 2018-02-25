@@ -51,10 +51,10 @@ ans = Stat.min(X)                 --> 1
 -- geometrical mean
 ans = Stat.geomean(X)             --~ 2.995
 
--- harmonical mean
+-- harmonic mean
 ans = Stat.harmean(X,W)           --~ 2.567
 
--- find hystogram
+-- find histogram
 h = Stat.hyst(X,4)
 ans = h.Y[1]                      --> 2
 
@@ -283,7 +283,7 @@ stat.moment = function (n, x, p)
 end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", }
 
---- Hystogram of the data distribution.
+--- Histogram of the data distribution.
 --    @param t Data table.
 --    @param N Number of intervals (default is 10).
 --    @param a Low boundary (default is the minimum value).

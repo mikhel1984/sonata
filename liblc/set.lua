@@ -35,7 +35,7 @@ ans = a * b                    --> Set {3,4}
 -- difference
 ans = a / b                    --> Set {1,2}
 
--- comparision
+-- comparison
 ans = (a == b)                 --> false
 
 ans = (a < b)                  --> false

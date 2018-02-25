@@ -27,7 +27,7 @@ c = a:T()
 -- use () as alias for get()
 ans = c(1,-1)                    --> 3
 
--- matrix raws and columns
+-- matrix rows and columns
 _, ans = a:size()                --> 2
 
 -- arithmetical operations
@@ -64,7 +64,7 @@ ans = e(2,1)                     --> 1.5
 f = a:copy()
 ans = (f == a)                   --> true
 
--- element-wise comparision
+-- element-wise comparison
 ans = (a == b)                   --> false
 
 -- identity matrix
@@ -146,7 +146,7 @@ ans = a:tr()                    --> 5
 
 -- extract row
 m = a:row(1)
--- vector doesn't need in 2 indeces
+-- vector doesn't need in 2 indices
 ans = m(1)                      --> 1
 
 -- extract column
@@ -320,14 +320,14 @@ local function gaussup(m)
    return m
 end
 
---- Matrix triangularization.
+--- Matrix triangulation.
 --    @param m Initial matrix.
---    @return Triangularized matrix.
+--    @return Triangulated matrix.
 matrix.triang = function (m)
    local res = matrix.copy(m)
    return gaussdown(res)
 end
-matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangularization produced by Gaussian elimination.', help.OTHER}
+matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangulation produced by Gaussian elimination.', help.OTHER}
 
 --- Matrix rank.
 --    @param m Initial matrix.
@@ -1177,7 +1177,7 @@ matrix.sqnorm = function (m,dir)
 end
 matrix.about[matrix.sqnorm] = {"sqnorm(m,dir)", "Calculate square norm along given direction."}
 
---- Eucledian norm of the matrix at whole.
+--- Euclidean norm of the matrix at whole.
 --    @param m Current matrix.
 --    @return Norm value.
 matrix.norm = function (m)
@@ -1225,3 +1225,4 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
+--TODO: use get({},2) for 2nd column, get({1,3},{2,7,2}) to get submatrix with steps etc.

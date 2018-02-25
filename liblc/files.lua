@@ -45,9 +45,9 @@ local files = {}
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 files.about = help:new("Routines for working with data files.")
 
---- Split string into substring based on given delimeter
+--- Split string into substring based on given delimiter
 --    @param str Initial string.
---    @param delim Delimeter string.
+--    @param delim Delimiter string.
 --    @return Iterator over substrings.
 files.split = function (str, delim)
    local i,j,k = 1,1,0
@@ -59,19 +59,19 @@ files.split = function (str, delim)
       if j then
          res = string.sub(str, i, j-1)
 	 i = k+1
-      else  -- no more delimeters
+      else  -- no more delimiters
          res = string.sub(str, i)
 	 i = #str+1
       end
       return res
    end
 end
-files.about[files.split] = {"split(str,delim)", "Return iterator over substrings separated by the delimeter.", help.OTHER}
+files.about[files.split] = {"split(str,delim)", "Return iterator over substrings separated by the delimiter.", help.OTHER}
 
---- Save Lua table in file, use given delimeter
+--- Save Lua table in file, use given delimiter
 --    @param t Lua table.
 --    @param fname File name.
---    @param delim Delimeter.
+--    @param delim Delimiter.
 files.dsvwrite = function (fname, t, delim)
    assert(type(t) == 'table', 'Table is expected, got '..type(t))
    local f = assert(io.open(fname,'w'), "Can't create file "..tostring(fname))
@@ -83,11 +83,11 @@ files.dsvwrite = function (fname, t, delim)
    f:close()
    print('Done')
 end
-files.about[files.dsvwrite] = {"dsvwrite(fname,tbl,del)", "Save Lua table as delimeter separated data into file."}
+files.about[files.dsvwrite] = {"dsvwrite(fname,tbl,del)", "Save Lua table as delimiter separated data into file."}
 
---- Import data from text file, use given delimeter
+--- Import data from text file, use given delimiter
 --    @param fname File name.
---    @param delim Delimeter.
+--    @param delim Delimiter.
 --    @return Lua table with data.
 files.dsvread = function (fname, delim)
    local f = assert(io.open(fname, 'r'), "Can't open file "..fname)
@@ -110,7 +110,7 @@ files.dsvread = function (fname, delim)
    f:close()
    return res
 end
-files.about[files.dsvread] = {"dsvread(fname,del)", "Read delimeter separated data as Lua table."}
+files.about[files.dsvread] = {"dsvread(fname,del)", "Read delimiter separated data as Lua table."}
 
 --- Returns text of the file.
 --    @param fname
@@ -133,7 +133,7 @@ files.tblimport = function (fname)
    if str then f = load('return '..str) end
    return f and f() or nil
 end
-files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, writen into file."}
+files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, written into file."}
 
 --- @class table
 --  @name val2str

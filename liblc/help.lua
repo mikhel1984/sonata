@@ -24,7 +24,7 @@ If there are more then 1 module, use
 to concatenate descriptions. In this way 4-th entry will be added 
 to sort help list according the module name.
 
-To use language localisation, create text file with Lua table in format
+To use language localization, create text file with Lua table in format
 {
   module_name1 = {
     ["__main__"] = "Main module description.",
@@ -36,7 +36,7 @@ To use language localisation, create text file with Lua table in format
   },
   etc.
 }
-Use about:localisation("file_name") to load it.
+Use about:localization("file_name") to load it.
 --]]
 
 -- directory with language files
@@ -156,13 +156,13 @@ end
 --    @param nm Name of the added module.
 function help:add(tbl, nm)
    assert(nm, "Module name is required!")
-   -- localisation data
+   -- localization data
    local mt = getmetatable(self)
    local lng = mt.locale and mt.locale[nm]
    -- prepare new 
    for k, v in pairs(tbl) do 
       if not v.link then v[MODULE] = nm end -- function description doesn't contain 'link' element
-      -- set localisation
+      -- set localization
       if lng then
          if v.link then
 	    -- common description
@@ -178,9 +178,9 @@ function help:add(tbl, nm)
    if lng then mt.locale[nm] = nil end -- free memory
 end
 
---- Read file with localisation data and update main module.
+--- Read file with localization data and update main module.
 --    @param fname Name of the file with translated text.
-function help:localisation(fname)
+function help:localization(fname)
    fname = LOCALE..help.SEP..fname
    -- call method of the 'files' module
    help.lc_files = help.lc_files or require('liblc.files')
@@ -204,7 +204,7 @@ function help:localisation(fname)
    end
 end
 
---- Add table 'about' into the 'eng' for saving into localisation file.
+--- Add table 'about' into the 'eng' for saving into localization file.
 --    <i>Private function.</i>
 local function eng2about()
    eng.about = {}
@@ -218,7 +218,7 @@ end
 --    <i>Private function.</i>
 --    @param module Module name or table.
 --    @param alias Alias of the module name.
---    @param lng Localisation table from existing file.
+--    @param lng Localization table from existing file.
 --    @return String representation of all help information of the module.
 local function helplines(module, alias, lng)
    -- get table and name
@@ -253,7 +253,7 @@ local function helplines(module, alias, lng)
    return table.concat(res, '\n')
 end
 
---- Prepare and save localisation data.
+--- Prepare and save localization data.
 --    @param fname Language name, for example 'en' or 'it'.
 --    @param modules Table with the list of existing modules.
 function help.prepare(fname, modules)
@@ -288,7 +288,7 @@ end
 --    @return Translated or initial text.
 function help:get(txt)
    local mt = getmetatable(self)
-   local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localisation table
+   local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localization table
    return lng or eng[txt] or txt
 end
 
@@ -388,6 +388,6 @@ end
 return help
 
 --==========================================
--- TODO: localise error messages
+-- TODO: localize error messages
 -- TODO: problem with the common names of different objects in the same module
 -- TODO: add help -h for program
