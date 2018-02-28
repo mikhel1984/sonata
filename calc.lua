@@ -122,4 +122,4 @@ _PROMPT2='..: '
 
 --===============================================
 -- TODO: use alias or part of the name for import
--- TODO: rename program, for (Balu, Luca etc.)
+-- TODO: rename program, for example, 'Balu LC'

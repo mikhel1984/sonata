@@ -86,10 +86,6 @@ local STACK = 'stack'
 local QUEUE = 'queue'
 local HEAP = 'heap'
 
--- Common help lines.
-local COPY = {"copy()", "Return copy of the object."}
-local ISEMPTY = {"isempty()", "Return true if the object is empty."}
-
 ---------------------------------
 -- @class table
 -- @name struct
@@ -229,8 +225,6 @@ struct.about[struct.Queue.remlast] = {"remlast()", "Get value from the end of qu
 --    @param q Queue object.
 --    @return Top value without removing it.
 struct.Queue.peek = function (q) return q[q.first] end
-struct.about[struct.Queue.peek] = {"peek()", "Return top value without removing it.", QUEUE}
-
 
 -- Queue size
 struct.Queue.__len = function (t) return t.last-t.first+1 end
@@ -323,7 +317,6 @@ struct.about[struct.Heap.deltop] = {"deltop()", "Return top element. For the def
 --    @param h Heap object.
 --    @return True if heap is empty.
 struct.Heap.isempty = function (h) return h.N == 0 end
-struct.about[struct.Heap.isempty] = {"isempty()", "Return true if the heap is empty.", HEAP}
 
 -- Number of elements.
 struct.Heap.__len = function (h) return h.N end

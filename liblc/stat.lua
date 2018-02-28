@@ -322,7 +322,7 @@ stat.hyst = function (t,N,a,b)
    end
    return res
 end
-stat.about[stat.hyst] = {"hyst(data[,N[,a,b]])", "Find hystogram for given data on the interfal [a,b] with N ranges. Return table with scale (X) and frequencies (Y).", help.OTHER}
+stat.about[stat.hyst] = {"hyst(data[,N[,a,b]])", "Find hystogram for given data on the interval [a,b] with N ranges. Return table with scale (X) and frequencies (Y).", help.OTHER}
 
 --- Poisson cumulative distribution.
 --    @param x Value.
