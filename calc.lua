@@ -1,7 +1,7 @@
 #!/usr/local/bin/lua -i
 --[[ Lua based calculator ]]
 --[[ This file is a part of 'liblc' collection, 2017-2018.]]
-lc_version = '0.8'
+lc_version = '0.8.0'
 
 --[[ Uncomment to set the localization file ]]
 --LOCALIZATION_FILE = "eo.lng"
