@@ -1,10 +1,10 @@
 #!/usr/local/bin/lua -i
 --[[ Lua based calculator ]]
 --[[ This file is a part of 'liblc' collection, 2017-2018.]]
-lc_version = '0.7.5'
+lc_version = '0.8'
 
 --[[ Uncomment to set the localization file ]]
-LOCALIZATION_FILE = "ru.lng"
+--LOCALIZATION_FILE = "eo.lng"
 
 --[[ Optional (for bash alias lc='path/to/calc.lua') ]]
 --package.path = package.path .. ';path/to/?.lua'
