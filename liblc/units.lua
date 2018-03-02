@@ -11,21 +11,27 @@
 --[[!!
 Unit = require 'liblc.units'
 
--- some rules
+-- add some rules
 Unit.add('h', Unit(60,'min'))
 Unit.add('min', Unit(60,'s'))
 
+-- define variable
 a = Unit(1,'m/s')
+-- convert to km/h, get only value
 ans = a['km/h']                    --> 3.6
 
+-- get numerical value
 ans = #a                           --> 1
 
+-- make copy
 cp = a:copy() 
 ans = cp                           --> Unit(1,'m/s')
 
+-- get converted variable
 b = a:convert('km/h')
 ans = b                            --> Unit(3.6, 'km/h')
 
+-- arithmetic
 b = 3 * b
 ans = a + b                        --> Unit(4, 'm/s')
 
@@ -39,18 +45,26 @@ ans = (a < b)                      --> true
 
 ans = b ^ 3                        --> Unit(27, 'm^3/s^3')
 
+-- new rule
 Unit.add('snake', Unit(48, 'parrot'))
+-- define variable
 c = Unit(2,'snake')
+-- convert
 ans = c['parrot']                  --> 96
 
+-- convert using prefix
 ans = c['ksnake']                  --> 0.002
 
+-- complex rule
 d = Unit(1,'W')
+-- define function for conversation, apply it
 e = d:convert(function (x) return Unit(10*math.log((x/Unit(1,'mW')):simp(),10), 'dBm') end)
 ans = #e                           --> 30
 
+-- another definition syntax
 ans = 2 * Unit('N')                --> Unit(2,'N')
 
+-- show result
 print(a)
 ]]
 
@@ -63,7 +77,7 @@ local c_prod, c_rat, c_pow = string.byte('*'), string.byte('/'), string.byte('^'
 -- @name units
 -- @field type Define object type string.
 -- @field isunits <code>true</code> for unit object.
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field prefix List of prefixes in SI. Can be expanded.
 -- @field mem_parts Intermediate results for unit parts.
 -- @field mem_keys Intermediate results for unit keys.
@@ -79,16 +93,27 @@ units.about = help:new("Operations and conversations according the units.")
 
 -- prefix list
 units.prefix = {
-p = 1e-12,
-n = 1e-9,
-u = 1e-6,
-m = 1e-3,
-c = 1e-2,
-d = 1e-1,
+y = 1e-24,  -- yocto
+z = 1e-21,  -- zepto
+a = 1e-18,  -- atto
+f = 1e-15,  -- femto
+p = 1e-12,  -- pico
+n = 1e-9,   -- nano
+u = 1e-6,   -- micro
+m = 1e-3,   -- milli
+c = 1e-2,   -- centi
+d = 1e-1,   -- deci
 [""] = 1,
-k = 1e+3,
-M = 1e+6,
-G = 1e+9,
+da = 1e+1,  -- deca
+h = 1e+2,   -- hecto
+k = 1e+3,   -- kilo
+M = 1e+6,   -- mega
+G = 1e+9,   -- giga
+T = 1e+12,  -- tera
+P = 1e+15,  -- peta
+E = 1e+18,  -- exa
+Z = 1e+21,  -- zetta
+Y = 1e+24,  -- yotta
 }
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
@@ -406,7 +431,7 @@ units.convert = function (u, r)
       return uconvert(u, res.key)
    end
 end
-units.about[units.convert] = {'convert(v, units)','Convert one units to another, return new object or nil.', help.BASE}
+units.about[units.convert] = {'convert(v, units)','Convert one units to another, return new object or nil.', }
 
 --- -a
 --    @param u Unit object.
@@ -601,7 +626,7 @@ units.add = function (u, rule)
    assert(isunits(rule), 'Units object is expected!')
    units.rules[u] = rule
 end
-units.about[units.add] = {'add(unit,rule)', 'Add new rule for conversation.', help.BASE}
+units.about[units.add] = {'add(unit,rule)', 'Add new rule for conversation.', }
 
 
 -- simplify constructor call

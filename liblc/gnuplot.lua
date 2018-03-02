@@ -8,7 +8,7 @@
 --]]
 
 --------------- Tests ---------------
---[[!!   
+--[[!!  
 Gnu = require 'liblc.gnuplot'
 
 a = {{'sin(x)',title='Sinus x'},permanent=false}
@@ -16,12 +16,16 @@ a = {{'sin(x)',title='Sinus x'},permanent=false}
 -- 'permanent=false' is just for testing
 Gnu.plot(a)
 
+-- save as object
+-- to simplify modification
 g = Gnu(a)
 g.xrange = {-10,10}
 g:plot()
 
+-- copy parameters to other object
 b = g:copy()
 print(b)
+-- check correctness of the table
 ans = b:isavailable()                             --> true
 
 -- print Lua table
@@ -37,7 +41,7 @@ Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
 -- @class table
 -- @name gnuplot
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field N Define number of points per interval, default is 100
 -- @field options Gnuplot options that predefined in LuaCalculus
 -- @field foptions Predefined function plot options
@@ -204,7 +208,7 @@ gnuplot.copy = function (g)
    end
    return cp
 end
-gnuplot.about[gnuplot.copy] = {"copy(g)", "Get copy of the plot options.", help.BASE}
+gnuplot.about[gnuplot.copy] = {"copy(g)", "Get copy of the plot options.", }
 
 --- Plot graphic.
 --    @param t Table with parameters of graphic.
@@ -238,7 +242,7 @@ gnuplot.plot = function (t)
    handle:write(res,'\n')
    handle:close()
 end
-gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table.", help.BASE}
+gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table.", }
 
 
 --- Represent parameters of the graphic.
@@ -258,7 +262,7 @@ gnuplot.__tostring = function (g)
    return string.format('{\n%s\n}', table.concat(res, ',\n'))
 end
 
-
+-- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
 gnuplot.Gnu = 'Gnu'
 gnuplot.about[gnuplot.Gnu] = {"Gnu([g])", "Transform given table into gnuplot object.", help.NEW}
@@ -285,10 +289,10 @@ grid='polar'                                 -- polar grid
 legend=false                                 -- don't use legend
 surface=true                                 -- plot surface in 3D
 samples=200                                  -- define number of points
-permanent=true                               -- create in independant window
+permanent=true                               -- create in independent window
 raw='set pm3d'                               -- set Gnuplot options manually
 ]],
-help.BASE}
+}
 
 -- free memory if need
 if not lc_version then gnuplot.about = nil end

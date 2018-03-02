@@ -16,6 +16,7 @@ Arr = require 'liblc.array'
 a = Arr {2,3,4}                       
 ans = a:get{1,2,1}                     --> nil
 
+-- set values
 a:set({1,2,1},4)
 ans = a:get{1,2,1}                     --> 4
 
@@ -26,6 +27,7 @@ ans = #b                               --> 10
 
 ans = b:copy()                         --> b
 
+-- compare sizes
 ans = b:isequal(Arr.rand{5,2,1})       --> true
 
 -- arithmetical operations
@@ -40,14 +42,20 @@ ans = g:isequal(Arr{2,3,2})            --> true
 d = Arr.concat(b,b,3)
 ans = d:dim()[3]                       --> 2
 
+-- apply functions of 2 arguments
+-- to get new array
 e = Arr.apply(b,b, function (x,y) return x*y end)
 ans = e:get{1,1,1}                     --> (b:get{1,1,1})^2
 
+-- apply function of 1 argument
+-- to get new array
 f = b:map(function (x) return 10*x end)
 ans = f:get{1,1,1}                     --> b:get{1,1,1}*10
 
+-- simple print
 print(a)
 
+-- print slices for axis 2 and 3
 print(d:fullstring(2,3))
 ]]
 
@@ -55,7 +63,7 @@ print(d:fullstring(2,3))
 -- @class table
 -- @name array
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 
 local array = {}
 array.__index = array
@@ -135,7 +143,7 @@ array.get = function (arr, ind)
    assert(iscorrect(arr, ind), "Wrong index for given array!")
    return arr[index(arr, ind)]
 end
-array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table.", help.BASE}
+array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table.", }
 
 --- Set new value.
 --    @param arr Array object.
@@ -145,7 +153,7 @@ array.set = function (arr, ind, val)
    assert(iscorrect(arr, ind), "Wrong index for given array!")
    arr[index(arr,ind)] = val 
 end
-array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is a table.", help.BASE}
+array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is a table.", }
 
 --- Get array copy.
 --    @param arr Array object.
@@ -250,7 +258,7 @@ array.__pow = function (a1, a2)
 end
 
 array.arithmetic = 'arithmetic'
-array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.BASE}
+array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", }
 
 --- Random array generator.
 --    @param s Size table.
@@ -260,7 +268,7 @@ array.rand = function (s)
    for i = 1, capacity(arr) do arr[i] = math.random() end
    return arr
 end
-array.about[array.rand] = {"rand(size)", "Return array with random numbers between 0 and 1.", help.BASE}
+array.about[array.rand] = {"rand(size)", "Return array with random numbers between 0 and 1.", }
 
 --- a1 == a2
 --    @param a1 First array object.
@@ -278,7 +286,7 @@ array.__eq = function (a1, a2)
 end
 
 array.comparison = 'comparison'
-array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.BASE}
+array.about[array.comparison] = {array.comparison, "a == b, a ~= b", }
 
 --- Get array dimension.
 --    @param arr Array object.
@@ -286,7 +294,7 @@ array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.BASE}
 array.dim = function (arr)
    return table.move(arr.size, 1, #arr.size, 1, {})
 end
-array.about[array.dim] = {"dim(arr)", "Return size of array.", help.BASE}
+array.about[array.dim] = {"dim(arr)", "Return size of array.", }
 
 --- Get part of array between two indexes.
 --    @param arr Array object.
@@ -318,9 +326,9 @@ array.sub = function (arr, ind1, ind2)
    end
    return res
 end
-array.about[array.sub] = {"sub(arr,ind1,ind2)", "Return subarray restricted by 2 indexes.", help.BASE}
+array.about[array.sub] = {"sub(arr,ind1,ind2)", "Return subarray restricted by 2 indexes.", }
 
---- Concatenate 2 arrays along given axe.
+--- Concatenate 2 arrays along given axes.
 --    @param arr1 First array object.
 --    @param arr2 Second array object.
 --    @return New concatenated array.
@@ -347,7 +355,7 @@ array.concat = function (arr1, arr2, axe)
    end
    return res 
 end
-array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along given axe.", help.BASE}
+array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along given axe.", }
 
 --- Get number of elements in array.
 --    @param arr Array object.
@@ -366,8 +374,8 @@ end
 --- Get array slice.
 --    Show sequence of 2D matrices with array elements.
 --    @param arr Array object.
---    @param r Number of axe for representation as rows.
---    @param c Number of axe for representation as columns.
+--    @param r Number of axes for representation as rows.
+--    @param c Number of axes for representation as columns.
 --    @return String with all array elements slice by slice.
 array.fullstring = function (arr, r, c)
    local res = {}

@@ -11,28 +11,47 @@
 --[[!!
 Num = require 'liblc.numeric'
 
+-- define tolerance
 Num.TOL = 1e-4
+-- solve 'sin(x) = 0' for x in (pi/2...3*pi/2)
 a = Num.solve(math.sin, math.pi*0.5, math.pi*1.5)
 ans = a                                   --~ math.pi
 
+-- newton method
+-- only one initial value
 d = Num.newton(math.sin, math.pi*0.7)
 ans = d                                   --~ math.pi
 
+-- numeric derivative
 b = Num.diff(math.sin, 0)
 ans = b                                   --~ 1
 
+-- numeric integral
 c = Num.trapez(math.sin, 0, math.pi)      
 ans = c                                   --~ 2
 
+-- solve ODE x*y = x'
+-- for x = 0..3, y(0) = 1
+-- return table of solutions and y(3)
 tbl, yn = Num.ode(function (x,y) return x*y end, 0, 1, 3)
 ans = yn                                  --~ 90.011
+
+-- use matrices for high order equations
+Mat = require 'liblc.matrix'
+
+-- y''-2*y'+2*y = 1
+-- represent as: x1 = y, x2 = y'
+-- so: x1' = x2, x2' = 1+2*x2-2*x1
+myfun = function (t,x) return Mat.V {x(2), 1+2*x(2)-2*x(1)} end
+_, xn = Num.ode(myfun, 0, Mat.V {3,2}, 2, 0.2) 
+ans = xn(1)                               --~  -10.54
 ]]
 ---------------------------------------------
 
 -------------------------------------------- 
 -- @class table
 -- @name array
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field TOL Solution tolerance. Default is 0.001.
 
 local numeric = {}
@@ -57,7 +76,7 @@ numeric.solve = function (fn, a, b)
    until math.abs(f1) < numeric.TOL
    return b
 end
-numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", help.BASE}
+numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", }
 
 --- Another solution based on Newton's rule.
 --    @param fn Function to analyze.
@@ -73,7 +92,7 @@ numeric.newton = function (fn, x1)
    until math.abs(fn(x2)-fn(x1)) < numeric.TOL 
    return x2
 end
-numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition.", help.BASE}
+numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition.", }
 
 --- Simple derivative.
 --    @param fn Function f(x).
@@ -88,7 +107,7 @@ numeric.diff = function (fn, x)
    until math.abs(der-last) < numeric.TOL
    return der
 end
-numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", help.BASE}
+numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", }
 
 --- Integration using trapeze method.
 --    @param fn Function f(x).
@@ -119,7 +138,7 @@ numeric.trapez = function (fn, a, b)
    until math.abs(I-last) < numeric.TOL
    return I
 end
-numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule.", help.BASE}
+numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule.", }
 
 --- Runge-Kutta method.
 --    <i>Private function.</i>
@@ -145,7 +164,8 @@ end
 --    @param dx Step. If it is omitted then step is calculated automatically.
 --    @return Table of intermediate results and value in final point.
 numeric.ode = function (fn, x0,y0,xn, dx)
-   local h = dx or (xn-x0)/10      -- initial step
+   local PARTS, MAX, MIN = 10, 15, 0.1
+   local h = dx or (xn-x0)/PARTS   -- initial step
    local res = {{x0,y0}}           -- save intermediate points
    repeat
       local x,y = table.unpack(res[#res])
@@ -154,23 +174,24 @@ numeric.ode = function (fn, x0,y0,xn, dx)
       if dx then
          res[#res+1] = {x+h, rk(fn,x,y,h)}
       else
+         -- step correction
          local h2 = 0.5*h
          local y1 =  rk(fn, x, y, h)
          local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
-         local dy = math.abs(y1-y2)
-         if dy > 15*numeric.TOL then 
+	 local dy = (type(y1) == 'table') and (y2-y1):norm() or math.abs(y2-y1)
+         if dy > MAX*numeric.TOL then 
             h = h2
-         elseif dy < 0.1*numeric.TOL then
+         elseif dy < MIN*numeric.TOL then
             h = 2*h
          else
-            -- calculate for current step
-            res[#res+1] = {x+h, y2}
+            -- save for current step
+            res[#res+1] = {x+h, y2}      -- use y2 instead y1 because it proboly more precise (?)
          end
       end
    until x + h >= xn 
    return res, res[#res][2]
 end
-numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", help.BASE}
+numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", }
 
 -- free memory if need
 if not lc_version then numeric.about = nil end

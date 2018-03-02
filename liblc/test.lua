@@ -17,15 +17,17 @@
    * If test have result, it must be saved in variable 'ans'. To check it write the right value after arrow '-->'. 
      In case of float point number sign '--~' can be used for not strong equality.
 
-   * Test can have no any results. This way print nothing after '-->' (or don't print arrow itself).
+   * Test can have no any results. In this case '-->' can be omitted.
 
    * To perform tests call 
-     'lua calc.lua -test [module_name]'
-     for example
-     'lua calc.lua -test array'
-   If module name is not written tests will be performed for all modules.
+       'lua calc.lua -test [module_name]'
+     For example
+       'lua calc.lua -test array'
+     If module name is not written tests will be executed for all modules.
 
    * Test summary includes information about number of passed and failed tests, average time per test unit (in milliseconds), memory size.
+     
+   * The results are saved to the 'test.log' file. It contains error messages as well (don't displayed on the screen).
 ]=]
 
 local delim = '%c[%s%c]+'    -- empty strings
@@ -42,6 +44,8 @@ local test = {}
 -- test results
 test.results = {}
 
+test.lc_files = require('liblc.files')
+
 --- Extract test code from file.
 --    <i>Private function.</i>
 --    @param str File text.
@@ -50,28 +54,6 @@ test.getcode = function (str)
    local p = '%-%-%[(=*)%[!!(.-)%]%1%]'
    local _,q = string.match(str, p) 
    return q
-end
-
---- Divide string into the list of substrings using delimiter.
---    <i>Private function.</i>
---    @param str Source string.
---    @param delim Delimiter.
---    @return Table of substrings.
-local function split(str, delim)
-   local i,j,k = 1,1,0
-   return function ()
-      if not str or i >= #str then return nil end
-      local res
-      j,k = string.find(str, delim, k+1)
-      if j then
-         res = string.sub(str, i, j-1)
-	 i = k+1
-      else
-         res = string.sub(str, i)
-	 i = #str
-      end
-      return res
-   end
 end
 
 --- Prepare test code preview.
@@ -99,10 +81,7 @@ end
 --    @param fname Lua file name.
 test.module = function (fname)
    -- read file
-   local f = io.open(fname, 'r')
-   if not f then print("Can't open file '"..fname.."'"); return end
-   local text = f:read('*a')
-   f:close()
+   local text = assert(test.lc_files.read(fname), "Can't open file '"..fname.."'")
    test.log = test.log or io.open(logname, 'w')
    -- write head
    test.print('\n\tModule: ' .. fname)
@@ -112,7 +91,7 @@ test.module = function (fname)
    local succeed, failed = 0, 0
    local fulltime = 0
    -- parse
-   for block in split(text, delim) do
+   for block in test.lc_files.split(text, delim) do
       if not string.find(block, '%s') then goto endfor end
       local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
       q = q or block    -- question

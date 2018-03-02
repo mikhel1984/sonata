@@ -11,13 +11,17 @@
 --[[!!
 Rat = require 'liblc.rational'
 
+-- numerator, denominator
 a = Rat(1,2)
+-- only numerator
 b = Rat(2)
 ans = b                 --> Rat(2,1)
 
+-- simplification
 k = 234781
 ans = Rat(2*k,3*k)      --> Rat(2,3)
 
+-- arithmetic
 ans = a + b             --> Rat(5,2)
 
 ans = 2 * a             --> Rat(1)
@@ -30,20 +34,27 @@ ans = a ^ 3             --> Rat(1,8)
 
 ans = 2 ^ a             --~ 1.4142
 
+-- comparison
 ans = (b == b)          --> true
 
 ans = (a >= b)          --> false
 
+-- greatest common division
 ans = Rat.gcd(125,65)   --> 5
 
+-- represent as decimal
 ans = a:decimal()       --> 0.5
 
+-- numerator
 ans = b:Nu()            --> 2
 
+-- denominator
 ans = b:De()            --> 1
 
+-- make copy
 ans = a:copy()          --> a
 
+-- show
 print(a)
 ]]
 
@@ -51,7 +62,7 @@ print(a)
 -- @class table
 -- @name rational
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 local rational = {}
 rational.__index = rational
 -- mark
@@ -77,14 +88,14 @@ local function isint (x)
    return a == 0
 end
 
---- The greatest common deviser.
+--- The greatest common divisor. 
 --    @param a First integer.
 --    @param b Second integer.
---    @return Greatest common deviser.
+--    @return Greatest common divisor.
 rational.gcd = function (a,b)
    return (a == 0 or (type(a)=='table' and a:eq(0))) and b or rational.gcd(b % a, a)
 end
-rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common deviser for two integers.", help.OTHER}
+rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Create new object, set metatable.
 --    @param n Numerator.
@@ -177,7 +188,7 @@ rational.__pow = function (a, b)
 end
 
 rational.arithmetic = 'arithmetic'
-rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b} ", help.BASE}
+rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b} ", }
 
 --- a == b
 --    @param a First rational number.
@@ -207,7 +218,7 @@ rational.__le = function (a,b)
 end
 
 rational.comparison = 'comparison'
-rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", help.BASE}
+rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", }
 
 --- Number representation.
 --    <i>Private function.</i>

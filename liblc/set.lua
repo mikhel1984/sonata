@@ -12,37 +12,51 @@
 --[[!!
 Set = require 'liblc.set'
 
+-- define elements of the set
 a = Set {1,2,3,4,1}           
 b = Set {3,4,5}               
 ans = a                        --> Set {1,2,3,4}
 
+-- check if 6 in set b
 ans = b:check(6)               --> false
 
+-- add value
 b:insert(6)
-ans = b:check(6)               
+ans = b:check(6)  
+-- remove value             
 b:remove(6)                    --> true
 
+-- union
 ans = a + b                    --> Set {1,2,3,4,5}
 
+-- intersection
 ans = a * b                    --> Set {3,4}
 
+-- difference
 ans = a / b                    --> Set {1,2}
 
+-- comparison
 ans = (a == b)                 --> false
 
 ans = (a < b)                  --> false
 
+-- represent as list
 t = a:table()
 ans = a:check(t[1])            --> true
 
+-- size of the set
 ans = #a                       --> 4
 
+-- make copy
 d = a:copy()
 ans = (d == a)                 --> true
 
+-- generate new set
+-- from given, use function
 e = a:map(function (x) return x^2 end)
 ans = e(16)                    --> true
 
+-- show
 print(a)
 ]]
 
@@ -51,7 +65,7 @@ local NOT_A_SET = "Set is expected!"
 -- @class table
 -- @name set
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 local set = {}
 set.__index = set
 -- mark
@@ -177,7 +191,7 @@ set.__div = function (a,b)
 end
 
 set.arithmetic = 'arithmetic'
-set.about[set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", help.BASE}
+set.about[set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", }
 
 --- a <= b
 --    @param a First set.
@@ -208,7 +222,7 @@ set.__eq = function (a,b)
 end
 
 set.comparison = 'comparison'
-set.about[set.comparison] = {set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", help.BASE}
+set.about[set.comparison] = {set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", }
 
 --- #a 
 --    @param s Set object.

@@ -1,34 +1,41 @@
 #!/usr/local/bin/lua -i
--- Lua based calculator
--- This file is a part of 'liblc' collection, 2017-2018.
-lc_version = '0.7'
+--[[ Lua based calculator ]]
+--[[ This file is a part of 'liblc' collection, 2017-2018.]]
+lc_version = '0.8'
 
--- Uncomment to set the localisation file.
--- LOCALISATION_FILE = "ru.lng"
+--[[ Uncomment to set the localization file ]]
+--LOCALIZATION_FILE = "eo.lng"
 
--- base functionality
-require 'liblc.main'
--- Quick exit
+--[[ Optional (for bash alias lc='path/to/calc.lua') ]]
+--package.path = package.path .. ';path/to/?.lua'
+
+--[[ Table for program variables. Import base functions. ]]
+liblc = {main=require('liblc.main')}
+--[[ Quick exit ]]
 quit = function () print("\n              --======= Buy! =======--\n"); os.exit() end
 
--- modules
+--[[ Modules ]]
 import = {
    array    = "Arr",
    bigint   = "Big",
-   complex  = "Cmp",
+   complex  = "Comp",
+   const    = "_C",
+   files    = "File",
    gnuplot  = "Gnu",
    matrix   = "Mat",
    numeric  = "Num",
    polynom  = "Poly",
    rational = "Rat",
    set      = "Set",
+   special  = "Spec",
    stat     = "Stat",
+   struct   = "DS",
    units    = "Unit",
 }
-about[import] = {"import", "", "base"}
+about[import] = {"import", ""}
 
--- update help information about imported modules
-function import_state_update()
+--[[ Update help information about imported modules ]]
+function liblc.import_state_update()
    local m = {string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
       m[#m+1] = string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-'))
@@ -37,8 +44,8 @@ function import_state_update()
    return table.concat(m, '\n')
 end
 
--- import actions
-local function doimport(tbl,name)
+--[[ Import actions ]]
+function liblc.doimport(tbl,name)
    local var = assert(tbl[name], 'Wrong module name: '..name..'!')
    if not _G[var] then
       _G[var] = require('liblc.'..name)
@@ -48,22 +55,22 @@ local function doimport(tbl,name)
    return var
 end
 
--- add modules
+--[[ add modules ]]
 setmetatable(import, 
 { __tostring = function (x) return about:get('done') end,
   __call = function (self, name) 
     if name == 'all' then 
-       for k,v in pairs(self) do doimport(self,k) end
+       for k,v in pairs(self) do liblc.doimport(self,k) end
     else
-       local var = doimport(self,name)
+       local var = liblc.doimport(self,name)
        print(string.format(about:get('alias'), var, name))
     end
-    about[import][2] = import_state_update()
+    about[import][2] = liblc.import_state_update()
     return import
   end,
 })
 
--- check arguments
+--[[ Check arguments ]]
 if #arg > 0 then
    -- test modules
    if arg[1] == '-test' then
@@ -76,16 +83,20 @@ if #arg > 0 then
 	 end
       end
       Test.summary()
-   -- update localisation file
+   -- calculate
+   elseif arg[1] == '-e' or arg[1] == '-eval' then
+      local tmp = table.move(arg,2,#arg,1,{})
+      liblc.main.evalstr(table.concat(tmp,' '))
+   -- update localization file
    elseif arg[1] == '-lang' then
       if arg[2] then
 	 mhelp.prepare(arg[2], import)
       else 
-         print('Current localization file: ', LOCALISATION_FILE)
+         print('Current localization file: ', LOCALIZATION_FILE)
       end
    -- prepare new module
    elseif arg[1] == '-new' then
-      mhelp.newmodule(arg[2],arg[3])
+      mhelp.newmodule(arg[2],arg[3],arg[4])
    -- execute all the files from the argument list
    else
       for i = 1,#arg do dofile(arg[i]) end
@@ -93,19 +104,22 @@ if #arg > 0 then
    os.exit()
 end
 
--- read localisation file and update descriptions
-if LOCALISATION_FILE then 
-   about:localisation(LOCALISATION_FILE) 
+--[[ Read localization file and update descriptions ]]
+if LOCALIZATION_FILE then 
+   about:localization(LOCALIZATION_FILE) 
 end
-about[import][2] = import_state_update()
+about[import][2] = liblc.import_state_update()
 
--- Run!
+--[[ Run! ]]
 print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
 print(about:get('intro'))
 
 _PROMPT='lc: '
 _PROMPT2='..: '
 
+--[[ Import modules by default ]]
+--import 'array' 'bigint' 'complex'
+
 --===============================================
 -- TODO: use alias or part of the name for import
-
+-- TODO: rename program, for example, 'Balu LC'

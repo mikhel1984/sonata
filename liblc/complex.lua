@@ -9,45 +9,61 @@
 
 ---------------- Tests --------------
 --[[!!
-Cmp = require 'liblc.complex'
+Comp = require 'liblc.complex'
 
-a = Cmp(1,2)                  
-b = Cmp(3)
-ans = b                        --> Cmp(3,0)
+-- real and imag pars
+a = Comp(1,2)
+-- or just real                  
+b = Comp(3)
+ans = b                        --> Comp(3,0)
 
-j = Cmp._i
-ans = 3+4*j                    --> Cmp(3,4)
+-- imaginary unit
+j = Comp._i
+ans = 3+4*j                    --> Comp(3,4)
 
-ans = Cmp.trig(2,0)            --> Cmp(2,0)
+-- use trigonometrical form
+ans = Comp.trig(2,0)           --> Comp(2,0)
 
-ans = a + b                    --> Cmp(4,2)
+-- arithmetic
+ans = a + b                    --> Comp(4,2)
 
-ans = Cmp(3) - b               --> Cmp(0)
+ans = Comp(3) - b              --> Comp(0)
 
-ans = a * b                    --> Cmp(3,6)
+ans = a * b                    --> Comp(3,6)
 
-ans = a / Cmp._i               --> Cmp(2,-1)
+ans = a / Comp._i              --> Comp(2,-1)
 
-c = Cmp(1,1)^Cmp(2,-2)
+-- power could be complex
+c = Comp(1,1)^Comp(2,-2)
+-- real part
 ans = c:Re()                   --~ 6.147
 
+-- imaginary part
 ans = c:Im()                   --~ 7.4
 
+-- comparison
 ans = (a == b)                 --> false
 
 ans = (a ~= b)                 --> true
 
+-- absolute value
 ans = a:abs()                  --~ 2.236
 
+-- argument (angle)
 ans = a:arg()                  --~ 1.107
 
-ans = a:conj()                 --> Cmp(1,-2)
+-- conjugated number
+ans = a:conj()                 --> Comp(1,-2)
 
-d = Cmp.sqrt(-2)
+-- complex square root
+-- after import becomes default
+d = Comp.sqrt(-2)
 ans = d:Im()                   --~ 1.414
 
+-- make copy
 ans = a:copy()                 --> a
 
+-- show
 print(a)
 ]]
 
@@ -55,7 +71,7 @@ print(a)
 -- @class table
 -- @name complex
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field _i Complex unit.
 
 local complex = {}
@@ -85,7 +101,7 @@ end
 complex.trig = function (m,a)
    return complex:new(m*math.cos(a), m*math.sin(a))
 end
-complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle.", help.BASE}
+complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle.", }
 
 --- Create copy of the complex number.
 --    @param c Source value.
@@ -173,7 +189,7 @@ complex.__unm = function (v)
 end
 
 complex.arithmetic = 'arithmetic'
-complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
+complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", }
 
 --- a == b
 --    @param a First complex or real number.
@@ -188,19 +204,19 @@ end
 --complex.__le = function (a,b) return complex.__eq(a,b) end
 
 complex.comparison = 'comparison'
-complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.BASE}
+complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", }
 
 --- Argument of complex number.
 --    @param v Complex number.
 --    @return Argument of the number.
 complex.arg = function (v) return math.atan(v.imag, v.real) end
-complex.about[complex.arg] = {"arg(v)", "Return argument of complex number.", help.BASE}
+complex.about[complex.arg] = {"arg(v)", "Return argument of complex number.", }
 
 --- Module of complex number.
 --    @param v Complex number.
 --    @return Module of the number.
 complex.abs = function (v) return math.sqrt(v.real*v.real+v.imag*v.imag) end
-complex.about[complex.abs] = {"abs(v)", "Return module of complex number.", help.BASE}
+complex.about[complex.abs] = {"abs(v)", "Return module of complex number.", }
 
 --- Conjunction.
 --    @param v Complex number.
@@ -241,7 +257,7 @@ complex.sqrt = function (v)
       return complex.__pow(v, 0.5)
    end
 end
-complex.about[complex.sqrt] = {"sqrt(v)", "Return square root. Result can be real of complex.", help.BASE}
+complex.about[complex.sqrt] = {"sqrt(v)", "Return square root. Result can be real of complex.", }
 
 -- imaginary unit
 complex._i   = complex:new(0,1)
@@ -249,8 +265,8 @@ complex.about[complex._i] = {"_i", "Complex unit.", "constant"}
 
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
-complex.Cmp = 'Cmp'
-complex.about[complex.Cmp] = {"Cmp(a [,b])", "Create new complex number.", help.NEW}
+complex.Comp = 'Comp'
+complex.about[complex.Comp] = {"Comp(a[,b])", "Create new complex number.", help.NEW}
 
 --- Complex number serialization.
 --    @param obj Complex number.
@@ -259,7 +275,7 @@ complex.serialize = function (obj)
    local s = {}
    s[#s+1] = string.format("real=%a", obj.real)
    s[#s+1] = string.format("imag=%a", obj.imag)
-   s[#s+1] = "metatablename='Cmp'"
+   s[#s+1] = "metatablename='Comp'"
    s[#s+1] = "modulename='complex'"
    return string.format("{%s}", table.concat(s, ','))
 end

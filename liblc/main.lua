@@ -7,20 +7,47 @@
             module 'main'
 --]]
 
+---------------- Tests ---------------------
+--[[!!
+require 'liblc.main'
+
+-- constants starts from _
+ans = _pi                        --> math.pi
+
+-- round number
+ans = round(0.9)                 --> 1.0
+
+-- 'small' factorial - int
+ans = fact(12)                   --> 479001600
+
+-- 'big' factorial - float
+ans = fact(50)                   --~ 3.0414E+64
+
+-- get object type
+ans = lctype(25)                 --> 'integer'
+
+-- show table components
+a = {a=1,b=2;3,4,5}
+flip(a)
+]]
+
 local main = {}
 
 -- mhelp
 mhelp = require "liblc.help"
 about = mhelp:new("Lua based calculator.")
 
+-- first 11 factorials
+local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
+
 -- Common
-abs = math.abs;    about[abs] = {"abs(x)", "Absolute value.", mhelp.BASE}
-exp = math.exp;    about[exp] = {"exp(x)", "Exponent.", mhelp.BASE}
-ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", mhelp.BASE}
-pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b.", mhelp.BASE}
-sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", mhelp.BASE}
-max = math.max;    about[max] = {"max(...)", "Maximum number.", mhelp.BASE}
-min = math.min;    about[min] = {"min(...)", "Minimum number.", mhelp.BASE}
+abs = math.abs;    about[abs] = {"abs(x)", "Absolute value.", }
+exp = math.exp;    about[exp] = {"exp(x)", "Exponent.", }
+ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", }
+pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b.", }
+sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", }
+max = math.max;    about[max] = {"max(...)", "Maximum number.", }
+min = math.min;    about[min] = {"min(...)", "Minimum number.", }
 -- Trigonometrical
 sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", mhelp.TRIG}
 cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", mhelp.TRIG}
@@ -33,23 +60,23 @@ ch = math.cosh;    about[ch] = {"ch(x)", "Hyperbolic cosine.", mhelp.HYP}
 sh = math.sinh;    about[sh] = {"sh(x)", "Hyperbolic sinus.", mhelp.HYP}
 th = math.tanh;    about[th] = {"th(x)", "Hyperbolic tangent.", mhelp.HYP}
 -- Angles 
-deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", mhelp.BASE}
-rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", mhelp.BASE}
+deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", }
+rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", }
 -- Rounding
 floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", mhelp.OTHER}
 ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", mhelp.OTHER}
 -- Constants
 _pi = math.pi;     about[_pi] = {"_pi", "Number pi", mhelp.CONST}
-_e = math.exp(1)   about[_e] = {"_e", "Euler number", mhelp.CONST}
+_e = math.exp(1.0) about[_e] = {"_e", "Euler number", mhelp.CONST}
 
 -- Additional functions --
 main.LOG10 = math.log(10)
 
 function lg(x) return math.log(x)/main.LOG10 end
-about[lg] = {"lg(x)", "Decimal logarithm.", mhelp.BASE}
+about[lg] = {"lg(x)", "Decimal logarithm.", }
 
 function rand() return math.random() end
-about[rand] = {"rand()", "Random number between 0 and 1.", mhelp.BASE}
+about[rand] = {"rand()", "Random number between 0 and 1.", }
 -- hyperbolic arcsine
 function ash(x)
    return math.log(x+math.sqrt(x*x+1))
@@ -78,32 +105,27 @@ function round(x)
 end
 about[round] = {'round(x)', 'Round value to closest integer.', mhelp.OTHER}
 
--- create function f(x) from string
-function fx(str)
-   return assert(load("return function (x) return " .. str .. " end"))()
-end
-about[fx] = {"fx(str)", "Create Lua function f(x) from string.", mhelp.OTHER}
-
--- plot string function
-function plot(str, a, b)
-   assert(type(str) == 'string', 'Expected string expression!')  
-   -- prepare command 
-   local graph = 'gnuplot -p -e "f(x)= ' .. str .. '; plot'
-   if a and type(a) == 'number' and b and type(b) == 'number' then
-      graph = graph .. ' [' .. a .. ':' .. b .. ']'
-   end
-   graph = graph .. ' f(x)"'   
-   os.execute(graph)   
-end
-about[plot] = {"plot(str[,a,b])", "Quick plot function in Gnuplot. Use bounds if they are defined.  Variable must be 'x'.", mhelp.OTHER}
-
 -- calculate function for range of values
-function eval(fn, x1, xn, step)
+function main.eval(fn, x1, xn, step)
    xn = xn or x1
    step = step or 1
    for k = x1, xn, step do print("x="..k.."\tres="..fn(k)) end
 end
-about[eval] = {"eval(fn,x1[,xn[,step]])", "Evaluate function for given value or interval and print result.", mhelp.OTHER}
+
+function fact(n)
+   assert(n >= 0 and math.type(n) == 'integer', 'Expected positive integer value!')
+   local tmp = factorials[n]
+   if tmp and tmp < math.huge then return tmp end
+   -- calculate
+   local maxint, isint = math.maxinteger / 100, true
+   for i = #factorials,n do
+      tmp = factorials[i]*(i+1)
+      assert(tmp < math.huge, "Too big value! Try Big.fact(n) or Spec.gammaln(n+1).")
+      if isint and tmp > maxint then tmp = tmp * 1.0; isint = false end
+      factorials[i+1] = tmp
+   end
+   return factorials[n]
+end
 
 -- Print examples from test part of module
 function example(nm)
@@ -121,7 +143,7 @@ function example(nm)
       print("No examples found in '"..fname.."'")
    end
 end
-about[example] = {"example(name)", "Show examples for given module, which used to test.", mhelp.BASE}
+about[example] = {"example(name)", "Show examples for given module, which used to test.", }
 
 
 -- read object from its serialization
@@ -190,8 +212,20 @@ function help(fn)
    end
 end
 
+-- Evaluate string equation, print result
+function main.evalstr (s)
+   local T = require 'liblc.test'
+   for c in T.split(s,';') do
+      if not (c:find('=') or c:find('print')) then c = string.format('print(%s)',c) end
+      local fn = load(c)
+      if fn then fn() end
+   end
+end
+
 main.about = about
 
 return main
 
 --===============================
+
+-- TODO: round() for different number of digits

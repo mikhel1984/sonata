@@ -11,12 +11,16 @@
 --[[!!
 Poly = require 'liblc.polynom'
 
+-- coefficients in ascendant order
 a = Poly {1,2,4,3}           
-b = Poly {1,1}                
+b = Poly {1,1}   
+-- polynomial value for x=0             
 ans = a:val(0)                --> 3
 
+-- simplified call
 ans = a(0)                    --> 3
 
+-- arithmetic
 ans = a + b                   --> Poly {1,2,5,4}
 
 ans = a - b                   --> Poly {1,2,3,2}
@@ -29,29 +33,41 @@ ans = a % b                   --> Poly {0}
 
 ans = b ^ 3                   --> Poly {1,3,3,1}
 
+-- integration
+-- free coefficient is 0
 ans = b:int()                 --> Poly {0.5,1,0}
 
+-- derivative
+-- and its value for x=1
 _,ans = a:der(1)              --> 11
 
+-- build polynomial using roots
 ans = Poly.coef(1,-1)         --> Poly {1,0,-1}
 
+-- make copy and compare
 c = a:copy()
 ans = (a == c)                --> true
 
 ans = (b == c)                --> false
 
-d = Poly {2,-2,1}
-ans = d:str('s')              --> '2*s^2-2*s+1'
-
+-- find real roots
 e = a:real()
 ans = e[1]                    --~ -1.00
 
+-- fit curve with polynomial
+-- of 2 order
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly.fit(A,B,2)
 ans = p(10)                   --~ 227.0
 
+-- simple print
 print(a)
+
+-- human-friendly print
+-- with varialbe 's'
+d = Poly {2,-2,1}
+ans = d:str('s')              --> '2*s^2-2*s+1'
 ]]
 
 
@@ -59,7 +75,7 @@ print(a)
 -- @class table
 -- @name polynom
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 local polynom = {}
 polynom.__index = polynom
 -- marker
@@ -70,7 +86,12 @@ local help = lc_version and (require "liblc.help") or {new=function () return {}
 polynom.about = help:new("Operations with polynomials")
 
 -- dependencies
-polynom.lc_matrix = require 'liblc.matrix'
+local done
+done, polynom.lc_matrix = pcall(require,'liblc.matrix')
+if not done then 
+   print('WARNING >> Not available: fit()')
+   polynom.lc_matrix = nil
+end
 
 --- Check object type.
 --    <i>Private function.</i>
@@ -149,8 +170,9 @@ polynom.val = function (p,x)
    end
    return res
 end
-polynom.about[polynom.val] = {"val(p,x)", "Get value of polynomial p in point x.", help.BASE}
+polynom.about[polynom.val] = {"val(p,x)", "Get value of polynomial p in point x.", }
 
+-- simplify call
 polynom.__call = function (p,x) return polynom.val(p,x) end
 
 --- Create copy of object.
@@ -277,10 +299,10 @@ polynom.__le = function (a,b)
 end
 
 polynom.arithmetic = 'arithmetic'
-polynom.about[polynom.arithmetic] = {polynom.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.BASE}
+polynom.about[polynom.arithmetic] = {polynom.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", }
 
 polynom.comparison = 'comparison'
-polynom.about[polynom.comparison] = {polynom.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+polynom.about[polynom.comparison] = {polynom.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", }
 
 --- Get derivative.
 --    @param p Initial polynomial.
@@ -296,7 +318,7 @@ polynom.der = function (p,x)
    if x then x = polynom.val(der,x) end
    return der, x
 end
-polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynomial, and its value, if need.", help.BASE}
+polynom.about[polynom.der] = {"der(p[,x])", "Calculate derivative of polynomial, and its value, if need.", }
 
 --- Get integral.
 --    @param p Initial polynomial.
@@ -312,7 +334,7 @@ polynom.int = function (p,x)
    table.insert(int, x)
    return polynom:init(int)
 end
-polynom.about[polynom.int] = {"int(p[,x0])", "Calculate integral, x0 - free coefficient.", help.BASE}
+polynom.about[polynom.int] = {"int(p[,x0])", "Calculate integral, x0 - free coefficient.", }
 
 --- Get polynomial from roots.
 --    Arguments are a sequence of roots.
@@ -446,9 +468,9 @@ polynom.fit = function (X,Y,ord)
    end
    -- solve
    local mat = polynom.lc_matrix
-   local gaus = mat.rref(mat(table.unpack(m)),mat.V(sY))
+   local gaus = mat.rref(mat(m),mat.V(sY))
    local res = {}
-   for i = 1,ord+1 do res[i] = gaus(i,-1) end
+   for i = 1,ord+1 do res[i] = gaus:get(i,-1) end
    return polynom:init(res)
 end
 polynom.about[polynom.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", help.OTHER}

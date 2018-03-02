@@ -11,113 +11,197 @@
 --[[!!
 Mat = require 'liblc.matrix'
 
-a = Mat({1,2},{3,4})             
-b = Mat({5,6},{7,8})             
-ans = a(2,2)                     --> 4 
+-- define matrix objects
+a = Mat {{1,2},{3,4}}             
+b = Mat {{5,6},{7,8}}  
+-- call in typical way           
+ans = a[2][2]                    --> 4 
 
+-- use index checking
 b:set(1,1)(9)
-ans = b(1,1)                     --> 9
+ans = b:get(1,1)                 --> 9
 
-b:set(1,1)(5)
+b[1][1] = 5
+-- transpose
 c = a:T()
-ans = c(1,2)                     --> 3
+-- use () as alias for get()
+ans = c(1,-1)                    --> 3
 
+-- matrix rows and columns
 _, ans = a:size()                --> 2
 
-ans = a + b                      --> Mat({6,8},{10,12})
+-- arithmetical operations
+ans = a + b                      --> Mat {{6,8},{10,12}}
 
-ans = b - a                      --> Mat({4,4},{4,4})
+ans = b - a                      --> Mat {{4,4},{4,4}}
 
-ans = a * b                      --> Mat({19,22},{43,50})
+ans = a * b                      --> Mat {{19,22},{43,50}}
 
 ans = a / b 
+-- determinant
 ans = ans:det()                  --~ 1
 
-ans = a ^ 2                      --> Mat({7,10},{15,22}) 
+-- multiply to scalar
+ans = 2 * a                      --> Mat {{2,4},{6,8}}
 
+-- add scalar (to all elements)
+ans = a - 1                      --> Mat {{0,1},{2,3}}
+
+ans = a ^ 2                      --> Mat {{7,10},{15,22}} 
+
+-- determinant
 ans = a:det()                    --> -2
 
+-- inverse matrix
 e = a:inv()
 ans = e(2,1)                     --> 1.5
 
+-- another call of inversion
+e = a^-1
+ans = e(2,1)                     --> 1.5
+
+-- object copy
 f = a:copy()
 ans = (f == a)                   --> true
 
+-- element-wise comparison
 ans = (a == b)                   --> false
 
-ans = Mat.eye(2)                 --> Mat({1,0},{0,1})
+-- identity matrix
+ans = Mat.eye(2)                 --> Mat {{1,0},{0,1}}
 
-ans = Mat.zeros(2,1)             --> Mat({0},{0})
+-- matrix of zeros
+ans = Mat.zeros(2,1)             --> Mat {{0},{0}}
 
-ans = Mat.ones(2,3,4)            --> Mat({4,4,4},{4,4,4})
+-- matrix of constants = 4
+ans = Mat.ones(2,3,4)            --> Mat {{4,4,4},{4,4,4}}
 
-ans = a .. b                     --> Mat({1,2,5,6},{3,4,7,8})
+-- matrix of constants = 1
+ans = Mat.ones(a,3)              --> Mat {{3,3},{3,3}}
 
-ans = a // b                     --> Mat({1,2},{3,4},{5,6},{7,8})
+-- horizontal concatenation
+ans = a .. b                     --> Mat {{1,2,5,6},{3,4,7,8}}
 
-ans = a:map(function (x) return x^2 end)          --> Mat({1,4},{9,16})
+-- vertical concatenation
+ans = a // b                     --> Mat {{1,2},{3,4},{5,6},{7,8}}
 
-ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat({-1,-3},{-2,-4})
+-- apply function of 1 argument
+ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
-ans = Mat.rref(a, Mat({5},{11})) --> Mat({1,0,1},{0,1,2})
+-- apply function which depends on index too
+ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat {{-1,-3},{-2,-4}}
 
-ans = Mat.V {1,2,3}              --> Mat({1},{2},{3})
+-- use Gauss transform to solve equation
+ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
 
-g = Mat({1,2,3},{4,5,6},{7,8,9})
-ans = g:sub(2,-1,2,3)           --> Mat({5,6},{8,9})
+-- create vector
+ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 
+-- get submatrix
+g = Mat {{1,2,3},{4,5,6},{7,8,9}}
+ans = g:sub(2,-1,2,3)           --> Mat {{5,6},{8,9}}
+
+-- random matrix
 h = Mat.rand(3,2)
 print(h)
 
-m = Mat({1,2},{3,4},{5,6})
+-- pseudoinverse matrix
+m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
-ans = math.floor(n(2,2)*1000)   --> 333
+ans = n(2,2)                    --~ 0.333
 
+-- get dense copy of the matrix
 k = Mat.eye(3)
 k = k:dense()
 ans = k[2][1]                   --> 0
 
-ans = Mat.diag({1,2,3})         --> Mat({1,0,0},{0,2,0},{0,0,3})
+k = k:sparse()
+ans = rawget(k[2],1)             --> nil
 
-ans = g:diag(1)                 --> Mat({2},{6})
+-- make diagonal matrix
+ans = Mat.diag({1,2,3})         --> Mat {{1,0,0},{0,2,0},{0,0,3}}
 
-x1 = Mat({1,2,3})
-x2 = Mat({4,5,6})
-ans = Mat.cross(x1,x2)          --> Mat({-3},{6},{-3})
+-- shifted diagonal
+ans = g:diag(1)                 --> Mat {{2},{6}}
 
+-- cross-product of 2 vectors
+x1 = Mat {{1,2,3}}
+x2 = Mat {{4,5,6}}
+ans = Mat.cross(x1,x2)          --> Mat {{-3},{6},{-3}}
+
+-- dot product of 2 vectors
 ans = Mat.dot(x1,x2)            --> 32
 
+-- LU transform
 l,u,p = b:lu()
 ans = l[2][1]                   --~ 0.714
 
-m = Mat({3,1},{1,3})
+-- Cholesky decomposition
+m = Mat {{3,1},{1,3}}
 m = m:cholesky()
 ans = m[2][2]                   --~ 1.633
 
+-- matrix trace
 ans = a:tr()                    --> 5
 
+-- extract row
 m = a:row(1)
-ans = m:get(1)                  --> 1
+-- vector doesn't need in 2 indices
+ans = m(1)                      --> 1
 
+-- extract column
+-- index could be negative 
 m = a:col(-1)
 ans = m:get(2)                  --> 4
 
+-- apply summation to each row
+ans = a:sum()                   --> Mat {{3},{7}}
+
+-- apply product to each column
+-- initial value is 1
+ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
+
+-- get rank
+ans = Mat.ones(2,3):rank()      --> 1
 ]]
 
 -------------------------------------------- 
 -- @class table
 -- @name matrix
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 
 local matrix = {}
-matrix.__index = matrix
 -- mark object
 matrix.type = 'matrix'
 matrix.ismatrix = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrices are spares by default.")
+
+--- Metatable for new rows.
+-- @class table
+-- @name access
+-- @field __index Return 0 instead nil
+-- @field __newindex Help matrix to be sparse.
+local access = {
+   -- 0 instead nil
+   __index = function () return 0 end,
+   -- comment this function in order to work a little bit faster, but in this case matrix can become dense
+   __newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
+}
+-- access to the elements
+matrix.__index = function (t,k) 
+   if type(k) == 'number' then
+   -- new element
+      local tmp = setmetatable({}, access)
+      t[k] = tmp
+      return tmp
+   else
+   -- matrix methods
+      return matrix[k]
+   end
+end
 
 --- Check object type.
 --    <i>Private function.</i>
@@ -141,14 +225,15 @@ end
 --- Create new matrix from list of tables.
 --    Arguments are rows represented as tables.
 --    @return Matrix object.
-function matrix.new(...)
-   local args = {...}
-   local cols, rows = 0, #args
+function matrix.new(m)
+   m = m or {}
+   local cols, rows = 0, #m
    for i = 1, rows do
-      assert(type(args[i]) == 'table', "Row must be a table!")
-      cols = (cols < #args[i]) and #args[i] or cols
+      assert(type(m[i]) == 'table', "Row must be a table!")
+      cols = (cols < #m[i]) and #m[i] or cols
+      setmetatable(m[i], access)
    end
-   return matrix:init(rows, cols, args)
+   return matrix:init(rows, cols, m)
 end
 
 --- Check correctness of element index.
@@ -177,30 +262,6 @@ local function checkindex(m, r, c)
    return r, c
 end
 
---- Return 0 in element is empty or its value.
---    <i>Private function.</i>
---    @param m Matrix.
---    @param r Row number.
---    @param c Column number.
---    @return Element value.
-local function getval(m, r, c)
-   local v = rawget(m,r)
-   return v and v[c] or 0
-end
-
---- Set value if need.
---    <i>Private function.</i>
---    @param m Matrix.
---    @param r Row number.
---    @param c Column number.
---    @param v New value.
-local function setval(m, r, c, v)
-   if (m[r] and m[r][c]) or v ~= 0 then 
-      m[r] = m[r] or {}
-      m[r][c] = v
-   end
-end
-
 --- Set product of element to coefficient.
 --    <i>Private function.</i>
 --    @param k Coefficient.
@@ -209,7 +270,7 @@ end
 local function kprod(k, m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, m.rows do
-      for c = 1, m.cols do setval(res,r,c, k*getval(m,r,c)) end
+      for c = 1, m.cols do res[r][c] = k*m[r][c] end
    end
    return res
 end
@@ -222,21 +283,21 @@ local function gaussdown(m)
    for k = 1, m.rows do
       -- look for nonzero element
       local i = k+1
-      while getval(m,k,k) == 0 and i <= m.rows do
-         if getval(m,i,k) ~= 0 then m[i],m[k],A = m[k],m[i],-A end
+      while m[k][k] == 0 and i <= m.rows do
+         if m[i][k] ~= 0 then m[i],m[k],A = m[k],m[i],-A end
 	 i = i+1
       end
-      local coef = getval(m,k,k)
+      local coef = m[k][k]
       A = A * coef
       if coef ~= 0 then
          -- normalization
 	 coef = 1/coef
-         for c = k, m.cols do setval(m,k,c, getval(m,k,c)*coef) end
+         for c = k, m.cols do m[k][c] = m[k][c]*coef end
          -- subtraction
          for r = (k+1), m.rows do
-            local v = getval(m, r, k)
+            local v = m[r][k]
 	    if v ~= 0 then
-               for c = k, m.cols do setval(m,r,c, getval(m,r,c)-v*getval(m,k,c)) end
+               for c = k, m.cols do m[r][c] = m[r][c]-v*m[k][c] end
 	    end -- if
          end -- for r
       end -- if
@@ -250,16 +311,43 @@ end
 local function gaussup(m)
    for k = m.rows, 1, -1 do
       for r = k-1,1,-1 do
-         local v = getval(m, r, k)
+         local v = m[r][k]
          if v ~= 0 then
-            for c = k, m.cols do setval(m,r,c, getval(m,r,c)-v*getval(m,k,c)) end 
+            for c = k, m.cols do m[r][c] = m[r][c]-v*m[k][c] end 
          end -- if
       end -- for r
    end -- for k
    return m
 end
 
---- Get matrix element.
+--- Matrix triangulation.
+--    @param m Initial matrix.
+--    @return Triangulated matrix.
+matrix.triang = function (m)
+   local res = matrix.copy(m)
+   return gaussdown(res)
+end
+matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangulation produced by Gaussian elimination.', help.OTHER}
+
+--- Matrix rank.
+--    @param m Initial matrix.
+--    @return Value of rank.
+matrix.rank = function (m)
+   local mat,i = matrix.triang(m),1
+   while i <= mat.rows do
+      if not mat[i] then break end
+      local zeros = true
+      for j = 1,mat.cols do
+         if mat[i][j] ~= 0 then zeros = false; break end
+      end
+      if zeros then break end
+      i = i+1
+   end
+   return i-1
+end
+matrix.about[matrix.rank] = {"rank(m)", "Find rank of the matrix."}
+
+--- Check index and get matrix element.
 --    Can be called with ().
 --    @param m Matrix.
 --    @param r Row number.
@@ -267,9 +355,9 @@ end
 --    @return Element value.
 matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
-   return getval(m, r, c)
+   return m[r][c]
 end
-matrix.about[matrix.get] = {"get(m,row,col)", "Return matrix element.", help.BASE}
+matrix.about[matrix.get] = {"get(m,row,col)", "Check index and return matrix element."}
 
 -- simplify call of matrix.get()
 matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
@@ -279,21 +367,11 @@ matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
 --    @param val New value.
 --    @param r Row number.
 --    @param c Column number.
---[[
-matrix.set = function (m, val, r, c)
-   r, c = checkindex(m, r, c)
-   m[r] = m[r] or {}
-   m[r][c] = val
-end
-]]
 matrix.set = function (m,r,c)
    r, c = checkindex(m, r, c)
-   return function (val)
-             m[r] = m[r] or {}
-	     m[r][c] = val
-          end
+   return function (val) m[r][c] = val end
 end
-matrix.about[matrix.set] = {"set(m,row,col)(val)", "Set value of matrix element.", help.BASE} 
+matrix.about[matrix.set] = {"set(m,row,col)(val)", "Check index and set value of matrix element."} 
 
 --- Transpose matrix.
 --    Can be called as T().
@@ -302,11 +380,11 @@ matrix.about[matrix.set] = {"set(m,row,col)(val)", "Set value of matrix element.
 matrix.transpose = function (m)
    local res = matrix:init(m.cols, m.rows)
    for r = 1, m.rows do
-      for c = 1, m.cols do setval(res,c,r, getval(m,r,c)) end
+      for c = 1, m.cols do res[c][r] = m[r][c] end
    end
    return res
 end
-matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T().", help.BASE}
+matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T()."}
 matrix.T = matrix.transpose
 
 -- to accelerate calculations
@@ -319,6 +397,8 @@ local fn_unm = function (x) return -x end
 --    @param b Second matrix.
 --    @return Sum of the given matrices.
 matrix.__add = function (a,b)
+   a = ismatrix(a) and a or matrix.ones(b.rows, b.cols, a)
+   b = ismatrix(b) and b or matrix.ones(a.rows, a.cols, b)
    return matrix.apply(a,b,fn_sum)
 end
 
@@ -327,6 +407,8 @@ end
 --    @param b Second matrix.
 --    @return Subtraction of the given matrices.
 matrix.__sub = function (a,b)
+   a = ismatrix(a) and a or matrix.ones(b.rows, b.cols, a)
+   b = ismatrix(b) and b or matrix.ones(a.rows, a.cols, b)
    return matrix.apply(a,b,fn_sub)
 end
 
@@ -343,7 +425,7 @@ end
 matrix.size = function (m)
    return m.rows, m.cols
 end
-matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'.", help.BASE}
+matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can be called with '#'."}
 
 --- Apply function to each element.
 --    @param m Source matrix.
@@ -352,7 +434,7 @@ matrix.about[matrix.size] = {"size(m)", "Return number or rows and columns. Can 
 matrix.map = function (m, fn) 
    local res = matrix:init(m.rows, m.cols)
    for r = 1, res.rows do
-      for c = 1, res.cols do setval(res,r,c, fn(getval(m,r,c))) end
+      for c = 1, res.cols do res[r][c] = fn(m[r][c]) end
    end
    return res
 end
@@ -365,7 +447,7 @@ matrix.about[matrix.map] = {"map(m,fn)", "Apply the given function to all elemen
 matrix.map_ex = function (m, fn)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, res.rows do
-      for c = 1, res.cols do setval(res,r,c, fn(r,c,getval(m,r,c))) end
+      for c = 1, res.cols do res[r][c] = fn(r,c,m[r][c]) end
    end
    return res
 end
@@ -380,7 +462,7 @@ matrix.apply = function (m1, m2, fn)
    assert(m1.rows==m2.rows and m1.cols==m2.cols, "Different matrix size!")
    local res = matrix:init(m1.rows,m1.cols)
    for r = 1,res.rows do
-      for c = 1,res.cols do setval(res,r,c, fn(getval(m1,r,c), getval(m2,r,c))) end
+      for c = 1,res.cols do res[r][c] = fn(m1[r][c], m2[r][c]) end
    end
    return res
 end
@@ -406,11 +488,11 @@ matrix.__mul = function (a,b)
    for r = 1, res.rows do
       for c = 1, res.cols do
          local sum = 0
-	 for i = 1, a.cols do sum = sum + getval(a,r,i)*getval(b,i,c) end
-	 setval(res,r,c, sum)
+	 for i = 1, a.cols do sum = sum + a[r][i]*b[i][c] end
+	 res[r][c] = sum
       end
    end
-   return (res.cols == 1 and res.rows == 1) and getval(res, 1, 1) or res
+   return (res.cols == 1 and res.rows == 1) and res[1][1] or res
 end
 
 --- a / b
@@ -429,6 +511,7 @@ end
 matrix.__pow = function (a,n)
    n = assert(math.tointeger(n), "Integer is expected!")
    assert(a.rows == a.cols, "Square matrix is expected!")
+   if n == -1 then return matrix.inv(a) end
    local res, acc = matrix.eye(a.rows), matrix.copy(a)
    while n > 0 do
       if n%2 == 1 then res = res * acc end
@@ -439,7 +522,7 @@ matrix.__pow = function (a,n)
 end
 
 matrix.arithmetic = 'arithmetic'
-matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.BASE}
+matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a"}
 
 --- a == b
 --    @param a First matrix.
@@ -450,14 +533,14 @@ matrix.__eq = function (a,b)
    if a.rows ~= b.rows or a.cols ~= b.cols then return false end
    for r = 1, a.rows do
       for c = 1, a.cols do
-         if getval(a,r,c) ~= getval(b,r,c) then return false end
+         if a[r][c] ~= b[r][c] then return false end
       end
    end
    return true
 end
 
 matrix.comparison = 'comparison'
-matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.BASE}
+matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b"}
 
 
 --- Find determinant.
@@ -468,7 +551,7 @@ matrix.det = function (m)
    local _, K = gaussdown(matrix.copy(m))
    return K
 end
-matrix.about[matrix.det] = {"det(m)", "Calculate determinant.", help.BASE}
+matrix.about[matrix.det] = {"det(m)", "Calculate determinant."}
 
 --- Inverse matrix.
 --    @param m Initial matrix.
@@ -478,7 +561,7 @@ matrix.inv = function (m)
    local con, det = matrix.rref(m, matrix.eye(m.cols))
    return (det ~= 0) and matrix.sub(con, 1,-1, m.cols+1, -1) or matrix.ones(m.rows,m.rows,math.huge) 
 end
-matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", help.BASE}
+matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", }
 
 --- Solve system of equations using Gauss method.
 --    @param A Matrix of coefficients.
@@ -488,7 +571,7 @@ matrix.rref = function (A,b)
    local tr, d = gaussdown(matrix.concat(A,b,'h'))
    return gaussup(tr), d
 end
-matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant.", help.BASE}
+matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant."}
 
 --- Create vector.
 --    Simplified vector constructor. 
@@ -500,7 +583,7 @@ matrix.vector = function (v)
    for i = 1, #v do res[i] = {v[i]} end
    return matrix:init(#v, 1, res)
 end
-matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V().", help.BASE}
+matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V()."}
 matrix.V = matrix.vector
 
 --- Create matrix of zeros.
@@ -508,6 +591,7 @@ matrix.V = matrix.vector
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return Sparse matrix.
 matrix.zeros = function (rows, cols)
+   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    cols = cols or rows
    return matrix:init(rows, cols)
 end
@@ -534,6 +618,7 @@ matrix.about[matrix.fill] = {"fill(rows,cols,fn)", "Create matrix, using functio
 --    @param val Value to set. Default is 1.
 --    @return New matrix.
 matrix.ones = function (rows, cols, val)
+   if ismatrix(rows) then rows,cols,val = rows.rows, rows.cols, cols end
    return matrix.fill(rows, cols or rows, function (r,c) return val or 1 end)
 end
 matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given numbers (default is 1).", help.OTHER}
@@ -543,6 +628,7 @@ matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given 
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return New matrix.
 matrix.rand = function (rows, cols)
+   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    return matrix.fill(rows, cols or rows, function (r,c) return math.random() end)
 end
 matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1.", help.OTHER}
@@ -552,9 +638,10 @@ matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random num
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return Diagonal matrix with ones.
 matrix.eye = function (rows, cols)
+   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    cols = cols or rows
    local m = matrix:init(rows, cols)
-   for i = 1, math.min(rows, cols) do setval(m,i,i, 1) end
+   for i = 1, math.min(rows, cols) do m[i][i] = 1 end
    return m
 end
 matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix.", help.OTHER}
@@ -572,7 +659,7 @@ matrix.sub = function (m, r1, r2, c1, c2)
    local i, j = 1, 1
    for r = r1, r2 do
       for c = c1, c2 do
-	 setval(res,i,j, getval(m,r,c))
+	 res[i][j] = m[r][c]
 	 j = j+1
       end
       i, j = i+1, 1
@@ -603,7 +690,7 @@ matrix.concat = function (a, b, dir)
          local src = (r <= a.rows and c <= a.cols) and a or b
          local i = (r <= a.rows) and r or (r - a.rows)
 	 local j = (c <= a.cols) and c or (c - a.cols)
-	 setval(res,r,c, getval(src,i,j))
+	 res[r][c] = src[i][j]
       end
    end
    return res
@@ -626,7 +713,7 @@ matrix.__tostring = function (m)
    for r = 1, m.rows do
       local scol = {}
       for c = 1, m.cols do
-         table.insert(scol, tostring(getval(m, r, c)))
+         table.insert(scol, tostring(m[r][c]))
       end
       table.insert(srow, table.concat(scol, "  "))
    end
@@ -638,7 +725,7 @@ end
 --    @return Sum of elements of the main diagonal.
 matrix.tr = function (m)
    local sum = 0
-   for i = 1,math.min(m.rows,m.cols) do sum = sum + getval(m,i,i) end
+   for i = 1,math.min(m.rows,m.cols) do sum = sum + m[i][i] end
    return sum
 end
 matrix.about[matrix.tr] = {"tr(m)", "Get trace of the matrix.", help.OTHER}
@@ -663,7 +750,7 @@ matrix.col = function (m,k)
    assert(k >= -m.cols and k <= m.cols and k ~= 0, 'Wrong column number!')
    if k < 0 then k = m.cols+k+1 end
    local acc = {}
-   for r = 1,m.rows do acc[r] = {getval(m,r,k)} end
+   for r = 1,m.rows do acc[r] = {m[r][k]} end
    return matrix:init(m.rows,1,acc)
 end
 matrix.about[matrix.col] = {"col(m,k)", "Return k-th column of the given matrix.", help.OTHER}
@@ -816,7 +903,7 @@ matrix.pinv = function (M)
    end
    local tol, v = math.huge, 0
    for i = 1, A.rows do 
-      v = getval(A,i,i);
+      v = A[i][i];
       if type(v) == 'table' and v.iscomplex then v = v:abs() end
       tol = math.min(tol, (v > 0 and v or math.huge)) 
    end
@@ -827,23 +914,23 @@ matrix.pinv = function (M)
       local B = A:sub(k,n,k,k)
       if r > 1 then 
          local tmp = L:sub(k,n,1,r-1) * L:sub(k,k,1,r-1):transpose() 
-	 tmp = ismatrix(tmp) and tmp or matrix.new({tmp})         -- product can return a number
+	 tmp = ismatrix(tmp) and tmp or matrix.new {{tmp}}         -- product can return a number
          B = B - tmp
       end
-      for i = k, n do setval(L,i,r, getval(B,i-k+1,1)) end   -- copy B to L
-      tmp = getval(L,k,r)
+      for i = k, n do L[i][r] = B[i-k+1][1] end   -- copy B to L
+      tmp = L[k][r]
       local iscomplex = (type(tmp)=='table') and tmp.iscomplex
       if iscomplex and tmp:abs() > tol then
-         setval(L,k,r, tmp:sqrt())
-         tmp = getval(L,k,r)
+         L[k][r] = tmp:sqrt()
+         tmp = L[k][r]
 	 if k < n then
-	    for i = k+1, n do setval(L, i, r, getval(L,i,r)/tmp) end
+	    for i = k+1, n do L[i][r] = L[i][r]/tmp end
 	 end
       elseif not iscomplex and tmp > tol then
-         setval(L,k,r, math.sqrt(tmp))
-         tmp = getval(L,k,r)
+         L[k][r] = math.sqrt(tmp)
+         tmp = L[k][r]
 	 if k < n then
-	    for i = k+1, n do setval(L, i, r, getval(L,i,r)/tmp) end
+	    for i = k+1, n do L[i][r] = L[i][r]/tmp end
 	 end
       else
          r = r - 1
@@ -866,7 +953,7 @@ matrix.dense = function (m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1,m.rows do
       res[r] = {}
-      for c = 1,m.cols do res[r][c] = getval(m,r,c) end
+      for c = 1,m.cols do res[r][c] = m[r][c] end
    end
    return res
 end
@@ -876,8 +963,11 @@ matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
 --    @param m Source matrix.
 --    @return Sparse matrix.
 matrix.sparse = function (m)
-   -- function map uses 'sparse' approach
-   return matrix.map(m, function (x) return x end)
+   local res = matrix:init(m.rows, m.cols)
+   for r = 1, res.rows do
+      for c = 1, res.cols do res[r][c] = m[r][c] end
+   end
+   return res
 end
 matrix.about[matrix.sparse] = {"sparse(m)", "Return sparse matrix.", help.OTHER}
 
@@ -897,11 +987,11 @@ matrix.diag = function (m,n)
 	 local z = (n < 0) and math.min(m.rows-k,m.cols) or math.min(m.cols-k,m.rows) 
 	 assert(z > 0, "Wrong shift!")
 	 res = matrix:init(z,1)
-	 for i = 1,z do setval(res, i,1, getval(m, (n<0 and i+k or i), (n<0 and i or i+k))) end
+	 for i = 1,z do res[i][1] = m[(n<0 and i+k or i)][(n<0 and i or i+k)] end
       end
    else
       res = matrix:init(#m+k,#m+k)
-      for i = 1,#m do setval(res, (n<0 and i+k or i), (n<0 and i or i+k), m[i]) end
+      for i = 1,#m do res[(n<0 and i+k or i)][(n<0 and i or i+k)] = m[i] end
    end
    return res
 end
@@ -915,9 +1005,9 @@ matrix.cross = function (a,b)
    assert(a.rows*a.cols == 3 and b.rows*b.cols == 3, "Vector with 3 elements is expected!")
    local x1,y1,z1 = a:get(1), a:get(2), a:get(3)
    local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
-   return matrix.new({y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2})
+   return matrix.new {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}}
 end
-matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.', help.BASE}
+matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.'}
 
 --- a . b
 --    @param a 3-element vector.
@@ -929,8 +1019,9 @@ matrix.dot = function (a,b)
    local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
    return x1*x2+y1*y2+z1*z2
 end
-matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors', help.BASE}
+matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors'}
 
+-- Auxiliary function for working with complex numbers.
 local function fabs(m)
    return (type(m) == 'table' and m.iscomplex) and m:abs() or math.abs(m)
 end
@@ -946,9 +1037,9 @@ matrix.luprepare = function (m)
    for r = 1,a.rows do
       local big,abig,v = 0,0
       for c = 1,a.cols do 
-         v = fabs(getval(a,r,c))
+         v = fabs(a[r][c])
 	 if v > abig then
-	    big = getval(a,r,c)
+	    big = a[r][c]
 	    abig = v
 	 end
       end
@@ -961,15 +1052,15 @@ matrix.luprepare = function (m)
    local index = {}
    for c = 1,a.cols do
       for r = 1,c-1 do
-         local sum = getval(a,r,c)
-	 for k = 1,r-1 do sum = sum - getval(a,r,k)*getval(a,k,c) end
-	 setval(a,r,c, sum)
+         local sum = a[r][c]
+	 for k = 1,r-1 do sum = sum - a[r][k]*a[k][c] end
+	 a[r][c] = sum
       end
       local big = 0                         -- largest pivot element
       for r=c,a.rows do
-         local sum = getval(a,r,c)
-	 for k = 1,c-1 do sum = sum - getval(a,r,k)*getval(a,k,c) end
-	 setval(a,r,c, sum)
+         local sum = a[r][c]
+	 for k = 1,c-1 do sum = sum - a[r][k]*a[k][c] end
+	 a[r][c] = sum
 	 sum = fabs(sum)
 	 dum = vv[r]*sum
 	 if fabs(dum) >= fabs(big) then big = dum; rmax = r end
@@ -977,20 +1068,19 @@ matrix.luprepare = function (m)
       if c ~= rmax then
          -- interchange rows
          for k = 1,a.rows do
-            dum = getval(a,rmax,k)
-	    setval(a,rmax,k, getval(a,c,k))
-	    setval(a,c,k, dum)
+            dum = a[rmax][k]
+	    a[rmax][k] = a[c][k]
+	    a[c][k] = dum
 	 end
 	 d = d+1
 	 vv[rmax] = vv[c]
       end
-      --setval(index,c,1, rmax)
       index[c] = rmax
-      if getval(a,c,c) == 0 then setval(a,c,c, TINY) end
+      if a[c][c] == 0 then a[c][c] = TINY end
       -- divide by pivot element
       if c ~= a.cols then 
-         dum = 1.0 / getval(a,c,c)
-	 for r = c+1,a.rows do setval(a,r,c, dum*getval(a,r,c)) end
+         dum = 1.0 / a[c][c]
+	 for r = c+1,a.rows do a[r][c] = dum*a[r][c] end
       end
    end
    return a, index, d
@@ -1010,7 +1100,7 @@ matrix.lu = function (m)
           matrix.map_ex(a, function (r,c,m) return r <= c and m or 0 end),                    -- upper
 	  p                                                                                   -- permutations
 end
-matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", help.BASE}
+matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", help.OTHER}
 
 --- Cholesky decomposition.
 --    @param m Positive definite symmetric matrix.
@@ -1021,27 +1111,87 @@ matrix.cholesky = function (m)
    -- calculate new values
    for r = 1,a.rows do
       for c = r,a.cols do
-         local sum = getval(a,r,c)
-	 for k = r-1,1,-1 do sum = sum - getval(a,r,k)*getval(a,c,k) end
+         local sum = a[r][c]
+	 for k = r-1,1,-1 do sum = sum - a[r][k]*a[c][k] end
 	 if r == c then
 	    assert(sum >= 0, 'The matrix is not positive definite!')
 	    p[r] = math.sqrt(sum)
 	 else
-	    setval(a,c,r, sum/p[r])
+	    a[c][r] = sum/p[r]
 	 end
       end
    end
    -- insert zeros and the main diagonal elements
    for r = 1,a.rows do
-      for c = r+1,a.cols do setval(a,r,c, 0) end
-      setval(a,r,r, p[r])
+      for c = r+1,a.cols do a[r][c] = 0 end
+      a[r][r] = p[r]
    end
    return a
 end
 matrix.about[matrix.cholesky] = {"cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", help.OTHER}
 
+--- Apply function to all elements along given direction.
+--    @param m Initial matrix.
+--    @param fn Function of 2 arguments.
+--    @param dir Direction of evaluations (optional).
+--    @param init Initial value (optional).
+--    @return Reduced matrix.
+matrix.reduce = function (m,fn,dir,init)
+   dir = dir or 'r'
+   init = init or 0
+   local res
+   if dir == 'r' then
+      res = matrix:init(m.rows,1)
+      for r = 1,m.rows do
+         local s = init
+	 for c = 1,m.cols do s = fn(s,m[r][c]) end
+	 res[r][1] = s
+      end
+   elseif dir == 'c' then
+      res = matrix:init(1,m.cols)
+      for c = 1,m.cols do
+         local s = init
+	 for r = 1,m.rows do s = fn(s,m[r][c]) end
+	 res[1][c] = s
+      end
+   else
+      error("Only 'r'(ows) or 'c'(olomns) are expected!")
+   end
+   return res
+end
+matrix.about[matrix.reduce] = {"reduce(m,fn,dir,init)","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.",help.OTHER}
+
+--- Get summ of all elements.
+--    @param m Initial matrix.
+--    @param dir Direction (optional).
+--    @return Sum along 'r'ows or 'c'olumns
+matrix.sum = function (m,dir) return matrix.reduce(m, fn_sum, dir, 0) end
+matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given direction ('r' or 'c')."}
+
+--- Get euclidean norm for each column/row.
+--    @param n Initial matrix.
+--    @param dir Direction (optional).
+--    @return Norm along rows or columns.
+matrix.sqnorm = function (m,dir)
+   return matrix.reduce(m, function (a,b) return a+b^2 end, dir, 0)
+end
+matrix.about[matrix.sqnorm] = {"sqnorm(m,dir)", "Calculate square norm along given direction."}
+
+--- Euclidean norm of the matrix at whole.
+--    @param m Current matrix.
+--    @return Norm value.
+matrix.norm = function (m)
+   local sum = 0
+   for r = 1,m.rows do
+      for c = 1,m.cols do
+         sum = sum+(m[r][c])^2
+      end
+   end
+   return math.sqrt(sum)
+end
+
 -- constructor call
-setmetatable(matrix, {__call = function (self,...) return matrix.new(...) end})
+setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})
 matrix.Mat = 'Mat'
 matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
 
@@ -1075,3 +1225,4 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
+--TODO: use get({},2) for 2nd column, get({1,3},{2,7,2}) to get submatrix with steps etc.

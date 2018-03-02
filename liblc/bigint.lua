@@ -11,12 +11,15 @@
 --[[!!
 Big = require 'liblc.bigint'
 
+-- from integer
 a = Big(123)         
 ans = a:tonumber()           --> 123
 
+-- from string
 b = Big('456')        
 ans = b:tonumber()           --> 456
 
+-- arithmetical operations
 ans = Big.tonumber(a+b)      --> 579
 
 ans = Big.tonumber(a-b)      --> -333
@@ -29,11 +32,14 @@ ans = Big.tonumber(b%a)      --> 87
 
 ans = Big.tonumber(a^3)      --> 1860867
 
+-- absolute value
 ans = Big.tonumber(Big.abs('-25')) --> 25
 
+-- factorial
 c = Big(10)
-ans = Big.tonumber(c:factorial())  --> 3628800
+ans = Big.tonumber(c:fact())  --> 3628800
 
+-- make copy, comparision
 d = a:copy()
 ans = (a == d)               --> true
 
@@ -41,18 +47,24 @@ ans = (a > b)                --> false
 
 ans = (a == b)               --> false
 
+-- compare with number
 ans = a:eq(123)              --> true
 
+-- number of digits
 ans = #a                     --> 3
 
+-- simple print
 print(a)
+
+-- more friendly representation
+print(c:str())
 ]]
 
 -----------------------------------------
 -- @class table
 -- @name bigint
 -- @field type Define object type string.
--- @field about Function description collection.
+-- @field about Description of functions.
 -- @field BASE Radix value. Default is 10.
 
 
@@ -243,7 +255,7 @@ bigint.abs = function (v)
    if a.sign < 0 then a.sign = -a.sign end
    return a
 end
-bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number.", help.BASE}
+bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number.", }
 
 --- Copy of the object.
 --    @param v Original bigint object.
@@ -408,9 +420,9 @@ bigint.__pow = function (a,b)
 end
 
 bigint.arithmetic = 'arithmetic'
-bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.BASE}
+bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", }
 bigint.comparison = 'comparison'
-bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.BASE}
+bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", }
 
 --- String representation.
 --    @param v Bigint object.
@@ -434,12 +446,12 @@ bigint.about[bigint.str] = {"str(v)", "More readable string representation of th
 bigint.tonumber = function (v)
    return tonumber(bigint.__tostring(v))
 end
-bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", help.BASE}
+bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", }
 
 --- m!
 --    @param m Bigint object or integer.
 --    @return Factorial of the number as bigint object.
-bigint.factorial = function (m)
+bigint.fact = function (m)
    assert(m >= 0, "Non-negative value is expected!")
    local n = bigint.abs(m)
    local res = bigint:new(1)   
@@ -450,7 +462,7 @@ bigint.factorial = function (m)
    end
    return res
 end
-bigint.about[bigint.factorial] = {"factorial(n)", "Return factorial of non-negative integer n.", help.BASE}
+bigint.about[bigint.fact] = {"fact(n)", "Return factorial of non-negative integer n.", }
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
