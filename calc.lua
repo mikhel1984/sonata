@@ -71,9 +71,10 @@ setmetatable(import,
 })
 
 --[[ Check arguments ]]
+local arg1 = arg[1]
 if #arg > 0 then
    -- test modules
-   if arg[1] == '-test' then
+   if arg1 == '-t' or arg1 == '--test' then
       local Test = require 'liblc.test'
       if arg[2] then
          Test.module(string.format('liblc/%s.lua',arg[2]))
@@ -84,18 +85,18 @@ if #arg > 0 then
       end
       Test.summary()
    -- calculate
-   elseif arg[1] == '-e' or arg[1] == '-eval' then
+   elseif arg1 == '-e' or arg1 == '--eval' then
       local tmp = table.move(arg,2,#arg,1,{})
       liblc.main.evalstr(table.concat(tmp,' '))
    -- update localization file
-   elseif arg[1] == '-lang' then
+   elseif arg1 == '-l' or arg1 == '--lang' then
       if arg[2] then
 	 mhelp.prepare(arg[2], import)
       else 
          print('Current localization file: ', LOCALIZATION_FILE)
       end
    -- prepare new module
-   elseif arg[1] == '-new' then
+   elseif arg1 == '-n' or arg1 == '--new' then
       mhelp.newmodule(arg[2],arg[3],arg[4])
    -- execute all the files from the argument list
    else
@@ -123,3 +124,5 @@ _PROMPT2='..: '
 --===============================================
 -- TODO: use alias or part of the name for import
 -- TODO: rename program, for example, 'Balu LC'
+-- TODO: fix flag -e
+-- TODO: add links to README file

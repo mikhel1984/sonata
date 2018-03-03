@@ -197,3 +197,6 @@ numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation 
 if not lc_version then numeric.about = nil end
 
 return numeric
+
+--===============================
+-- TODO: change ode signature
