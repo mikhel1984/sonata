@@ -126,3 +126,5 @@ _PROMPT2='..: '
 -- TODO: rename program, for example, 'Balu LC'
 -- TODO: fix flag -e
 -- TODO: add links to README file
+-- TODO: add pause and step-by-step execution
+-- TODO: optimize for LuaJIT or write C objects
