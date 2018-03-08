@@ -165,6 +165,8 @@ ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
 ans = Mat.ones(2,3):rank()      --> 1
 ]]
 
+local KEYWORD = 0xACCEC
+
 -------------------------------------------- 
 -- @class table
 -- @name matrix

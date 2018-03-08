@@ -69,6 +69,9 @@ setmetatable(import,
     return import
   end,
 })
+--[[ Text colors ]]
+mhelp.usecolors(true)
+local CMAIN, CHELP, CRESET = mhelp.CMAIN, mhelp.CHELP, mhelp.CRESET
 
 --[[ Check arguments ]]
 local arg1 = arg[1]
@@ -112,11 +115,11 @@ end
 about[import][2] = liblc.import_state_update()
 
 --[[ Run! ]]
-print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
-print(about:get('intro'))
+print(CMAIN.."\n           --==== LuaCalculus "..lc_version.." ====--\n")
+print(CHELP..about:get('intro'))
 
-_PROMPT='lc: '
-_PROMPT2='..: '
+_PROMPT = CMAIN..'lc:'..CRESET..' '
+_PROMPT2= CMAIN..'..:'..CRESET..' '
 
 --[[ Import modules by default ]]
 --import 'array' 'bigint' 'complex'

@@ -88,6 +88,10 @@ help.NEW = 'constructor'
 
 help.SEP = string.sub(package.config,1,1)
 
+help.CMAIN = ''
+help.CHELP = ''
+help.CRESET = ''
+
 --- Create new object, set metatable.
 --    @param str Module description.
 --    @return Array object.
@@ -121,6 +125,7 @@ end
 --- Print information about function or list of all possible functions.
 --    @param fn Function or module for getting manual.
 function help:print(fn)
+   io.write(help.CHELP)
    if fn then
       -- expected module or function description
       local v = self[fn]
@@ -148,6 +153,14 @@ function help:print(fn)
          end
 	 print()
       end
+   end
+end
+
+function help.usecolors(use)
+   if use then
+      help.CMAIN = '\x1B[32m' 
+      help.CHELP = '\x1B[33m' 
+      help.CRESET = '\x1B[0m'
    end
 end
 
