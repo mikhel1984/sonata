@@ -11,8 +11,12 @@ lc_version = '0.8.0'
 
 --[[ Table for program variables. Import base functions. ]]
 liblc = {main=require('liblc.main')}
+
+--[[ Text colors ]]
+mhelp.usecolors(true)
+
 --[[ Quick exit ]]
-quit = function () print("\n              --======= Buy! =======--\n"); os.exit() end
+quit = function () print(mhelp.CMAIN.."\n              --======= Buy! =======--\n"..mhelp.CRESET); os.exit() end
 
 --[[ Modules ]]
 import = {
@@ -63,15 +67,13 @@ setmetatable(import,
        for k,v in pairs(self) do liblc.doimport(self,k) end
     else
        local var = liblc.doimport(self,name)
+       io.write(mhelp.CHELP)
        print(string.format(about:get('alias'), var, name))
     end
     about[import][2] = liblc.import_state_update()
     return import
   end,
 })
---[[ Text colors ]]
-mhelp.usecolors(true)
-local CMAIN, CHELP, CRESET = mhelp.CMAIN, mhelp.CHELP, mhelp.CRESET
 
 --[[ Check arguments ]]
 local arg1 = arg[1]
@@ -115,11 +117,13 @@ end
 about[import][2] = liblc.import_state_update()
 
 --[[ Run! ]]
-print(CMAIN.."\n           --==== LuaCalculus "..lc_version.." ====--\n")
-print(CHELP..about:get('intro'))
+io.write(mhelp.CMAIN)
+print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
+io.write(mhelp.CHELP)
+print(about:get('intro'))
 
-_PROMPT = CMAIN..'lc:'..CRESET..' '
-_PROMPT2= CMAIN..'..:'..CRESET..' '
+_PROMPT = mhelp.CMAIN..'lc:'..mhelp.CRESET..' '
+_PROMPT2= mhelp.CMAIN..'..:'..mhelp.CRESET..' '
 
 --[[ Import modules by default ]]
 --import 'array' 'bigint' 'complex'
