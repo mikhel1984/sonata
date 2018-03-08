@@ -13,10 +13,10 @@ lc_version = '0.8.0'
 liblc = {main=require('liblc.main')}
 
 --[[ Text colors ]]
-mhelp.usecolors(true)
+lc_help.usecolors(lc_help.SEP == '/')       -- UNIX
 
 --[[ Quick exit ]]
-quit = function () print(mhelp.CMAIN.."\n              --======= Buy! =======--\n"..mhelp.CRESET); os.exit() end
+quit = function () print(lc_help.CMAIN.."\n              --======= Buy! =======--\n"..lc_help.CRESET); os.exit() end
 
 --[[ Modules ]]
 import = {
@@ -61,14 +61,14 @@ end
 
 --[[ add modules ]]
 setmetatable(import, 
-{ __tostring = function (x) return about:get('done') end,
+{ __tostring = function (x) io.write(lc_help.CHELP); return about:get('done') end,
   __call = function (self, name) 
     if name == 'all' then 
        for k,v in pairs(self) do liblc.doimport(self,k) end
     else
        local var = liblc.doimport(self,name)
-       io.write(mhelp.CHELP)
-       print(string.format(about:get('alias'), var, name))
+       io.write(lc_help.CHELP)
+       print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, name))
     end
     about[import][2] = liblc.import_state_update()
     return import
@@ -96,13 +96,13 @@ if #arg > 0 then
    -- update localization file
    elseif arg1 == '-l' or arg1 == '--lang' then
       if arg[2] then
-	 mhelp.prepare(arg[2], import)
+	 lc_help.prepare(arg[2], import)
       else 
          print('Current localization file: ', LOCALIZATION_FILE)
       end
    -- prepare new module
    elseif arg1 == '-n' or arg1 == '--new' then
-      mhelp.newmodule(arg[2],arg[3],arg[4])
+      lc_help.newmodule(arg[2],arg[3],arg[4])
    -- execute all the files from the argument list
    else
       for i = 1,#arg do dofile(arg[i]) end
@@ -117,13 +117,13 @@ end
 about[import][2] = liblc.import_state_update()
 
 --[[ Run! ]]
-io.write(mhelp.CMAIN)
+io.write(lc_help.CMAIN)
 print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
-io.write(mhelp.CHELP)
+io.write(lc_help.CHELP)
 print(about:get('intro'))
 
-_PROMPT = mhelp.CMAIN..'lc:'..mhelp.CRESET..' '
-_PROMPT2= mhelp.CMAIN..'..:'..mhelp.CRESET..' '
+_PROMPT = lc_help.CMAIN..'lc:'..lc_help.CRESET..' '
+_PROMPT2= lc_help.CMAIN..'..:'..lc_help.CRESET..' '
 
 --[[ Import modules by default ]]
 --import 'array' 'bigint' 'complex'

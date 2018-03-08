@@ -91,6 +91,8 @@ help.SEP = string.sub(package.config,1,1)
 help.CMAIN = ''
 help.CHELP = ''
 help.CRESET = ''
+help.CBOLD = ''
+help.CNBOLD = ''
 
 --- Create new object, set metatable.
 --    @param str Module description.
@@ -143,7 +145,9 @@ function help:print(fn)
       -- sort functions
       local lst = funclist(self)
       for mod, t in pairs(lst) do                   -- for each module
+         io.write(help.CBOLD)
          print(string.format("\t%s", mod))
+	 io.write(help.CNBOLD)
          for cat, n in pairs(t) do                  -- for each category
             print(string.format("  /%s", cat))
 	    for i, v in ipairs(n) do                -- for each function
@@ -161,6 +165,8 @@ function help.usecolors(use)
       help.CMAIN = '\x1B[32m' 
       help.CHELP = '\x1B[33m' 
       help.CRESET = '\x1B[0m'
+      help.CBOLD = '\x1B[1m'
+      help.CNBOLD = '\x1B[22m'
    end
 end
 
