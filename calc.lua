@@ -151,7 +151,7 @@ end
 
 --===============================================
 -- TODO: use alias or part of the name for import
--- TODO: rename program, for example, 'Balu LC'
+-- TODO: rename program, for example, 'Balu LC', 'Sigma LC'...
 -- TODO: fix flag -e
 -- TODO: add links to README file
 -- TODO: add pause and step-by-step execution

@@ -214,7 +214,7 @@ end
 
 -- Evaluate string equation, print result
 function main.evalstr (s)
-   local T = require 'liblc.test'
+   local T = require 'liblc.files'
    for c in T.split(s,';') do
       if not (c:find('=') or c:find('print')) then c = string.format('print(%s)',c) end
       local fn = load(c)
