@@ -19,7 +19,7 @@ LC_USE_COLOR = true
 --====================  CODE  ========================
 
 -- Version
-lc_version = '0.8.0'
+lc_version = '0.8.1'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -153,5 +153,5 @@ end
 -- TODO: use alias or part of the name for import
 -- TODO: rename program, for example, 'Balu LC', 'Sigma LC'...
 -- TODO: add links to README file
--- TODO: add pause and step-by-step execution
+-- TODO: add step-by-step execution
 -- TODO: optimize for LuaJIT or write C objects

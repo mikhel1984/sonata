@@ -17,6 +17,9 @@ ans = _pi                        --> math.pi
 -- round number
 ans = round(0.9)                 --> 1.0
 
+-- save 2 digits
+ans = round(math.pi, 2)          --> 3.142
+
 -- 'small' factorial - int
 ans = fact(12)                   --> 479001600
 
@@ -191,7 +194,7 @@ end
 about[flip] = {"flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
 
 -- Show type of the object.
-function lctype(t)
+function lc_type(t)
    local v = type(t)
    if v == 'table' then
       v = t.type or v
@@ -200,7 +203,12 @@ function lctype(t)
    end
    return v
 end
-about[lctype] = {'lctype(t)', 'Show type of the object.', lc_help.OTHER}
+about[lc_type] = {'lc_type(t)', 'Show type of the object.', lc_help.OTHER}
+
+function lc_pause(s)
+   if s then io.write(s) end
+   io.read()
+end
 
 -- Print lc_help information
 function help(fn)   
