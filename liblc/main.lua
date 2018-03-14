@@ -94,16 +94,18 @@ end
 about[ath] = {"ath(x)", "Hyperbolic arctangent.", lc_help.HYP}
 
 -- round to closest integer
-function round(x)
-   local p,q = math.modf(x)
+function round(x,n)
+   n = n or 0
+   k = math.pow(10,n)
+   local p,q = math.modf(x*k)
    if q >= 0.5 then 
-      return p+1
+      p = p+1
    elseif q <= -0.5 then 
-      return p-1
+      p = p-1
    end
-   return p
+   return p / k
 end
-about[round] = {'round(x)', 'Round value to closest integer.', lc_help.OTHER}
+about[round] = {'round(x[,n])', 'Round value, define number of decimal digits.', lc_help.OTHER}
 
 -- calculate function for range of values
 function main.eval(fn, x1, xn, step)
@@ -228,4 +230,3 @@ return main
 
 --===============================
 
--- TODO: round() for different number of digits
