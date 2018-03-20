@@ -254,7 +254,7 @@ end
 --    @param a2 Second array object.
 --    @return New array where each element is result of power operation.
 array.__pow = function (a1, a2)
-   return array.apply(a1, a2, math.pow)
+   return array.apply(a1, a2, function (x,y) return x^y end)
 end
 
 array.arithmetic = 'arithmetic'

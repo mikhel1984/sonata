@@ -98,7 +98,7 @@ special.gamma = function (z)
       local x = 0.99999999999980993
       for i = 1, #k_gamma do x = x + k_gamma[i]/(z+i) end
       local t = z + #k_gamma - 0.5
-      return math.sqrt(2*math.pi)*math.pow(t, z+0.5)*math.exp(-t)*x
+      return math.sqrt(2*math.pi)*t^(z+0.5)*math.exp(-t)*x
    end
 end
 special.about[special.gamma] = {"gamma(z)", "Gamma function.", }
@@ -712,7 +712,7 @@ local function bessjy (x,xnu)
       fact = (math.abs(pimu) < EPS) and 1.0 or pimu/math.sin(pimu)
       d = -math.log(x2)
       local e = xmu*d
-      local fact2 = (math.abs(e) < EPS) and 1.0 or math.sinh(e)/e
+      local fact2 = (math.abs(e) < EPS) and 1.0 or math.sinh(e)/e -- sinh is depricated!
       local gam1, gam2, gampl, gammi = beschd(xmu)
       local ff = 2.0/math.pi*fact*(gam1*math.cosh(e)+gam2*fact2*d)
       e = math.exp(e)

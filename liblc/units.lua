@@ -233,7 +233,7 @@ local function simplify(val,t)
       end
       if previous then
          new[previous] = new[previous] + v
-	 res = res * math.pow(units.prefix[l]/units.prefix[r], v)
+	 res = res * (units.prefix[l]/units.prefix[r])^v
       else
          new[k] = v
 	 acc[#acc+1] = k
@@ -358,7 +358,7 @@ local function vconvert(v, from, to)
    for v1,u1 in string.gmatch(from, part) do
       local _,u2 = f()
       local l,r = diff(u1,u2)
-      res = res*math.pow(units.prefix[l]/units.prefix[r], tonumber(v1))
+      res = res*(units.prefix[l]/units.prefix[r])^tonumber(v1)
    end
    return res
 end
@@ -389,7 +389,7 @@ units.toatom = function (uv)
 	    t[u1] = nil
 	    op['^'](add,num)
 	    op['*'](t,add)
-	    res = res*math.pow(tmp.value*units.prefix[right]/units.prefix[left], num)
+	    res = res*(tmp.value*units.prefix[right]/units.prefix[left])^num
 	    res, t = simplify(res, t)
 	    t = reduce(t)
 	 end
@@ -505,7 +505,7 @@ units.__pow = function (a,b)
    local res = isunits(a) and units.copy(a) or units:new(a)
    local ta = fromkey(res.key)
    op['^'](ta,b)
-   res.value = math.pow(res.value, b)
+   res.value = (res.value)^b
    res.key = tokey(ta)
    return res
 end

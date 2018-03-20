@@ -47,7 +47,6 @@ local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
 abs = math.abs;    about[abs] = {"abs(x)", "Absolute value.", }
 exp = math.exp;    about[exp] = {"exp(x)", "Exponent.", }
 ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", }
-pow = math.pow;    about[pow] = {"pow(a,b)", "Return a^b.", }
 sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", }
 max = math.max;    about[max] = {"max(...)", "Maximum number.", }
 min = math.min;    about[min] = {"min(...)", "Minimum number.", }
@@ -59,9 +58,12 @@ asin = math.asin;  about[asin] = {"asin(x)", "Arcsine x.", lc_help.TRIG}
 acos = math.acos;  about[acos] = {"acos(x)", "Arc cosine x.", lc_help.TRIG}
 atan = math.atan;  about[atan] = {"atan(y[,x])", "Arctangent y. In case of 2 parameters calculate y/x with signs.", lc_help.TRIG}
 -- Hyperbolic
-ch = math.cosh;    about[ch] = {"ch(x)", "Hyperbolic cosine.", lc_help.HYP}
-sh = math.sinh;    about[sh] = {"sh(x)", "Hyperbolic sinus.", lc_help.HYP}
-th = math.tanh;    about[th] = {"th(x)", "Hyperbolic tangent.", lc_help.HYP}
+ch = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+about[ch] = {"ch(x)", "Hyperbolic cosine.", lc_help.HYP}
+sh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end   
+about[sh] = {"sh(x)", "Hyperbolic sinus.", lc_help.HYP}
+th = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
+about[th] = {"th(x)", "Hyperbolic tangent.", lc_help.HYP}
 -- Angles 
 deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", }
 rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", }
@@ -99,7 +101,7 @@ about[ath] = {"ath(x)", "Hyperbolic arctangent.", lc_help.HYP}
 -- round to closest integer
 function round(x,n)
    n = n or 0
-   k = math.pow(10,n)
+   k = 10^n
    local p,q = math.modf(x*k)
    if q >= 0.5 then 
       p = p+1
@@ -205,10 +207,12 @@ function lc_type(t)
 end
 about[lc_type] = {'lc_type(t)', 'Show type of the object.', lc_help.OTHER}
 
+-- Wait for press button
 function lc_pause(s)
    if s then io.write(s) end
    io.read()
 end
+about[lc_pause] = {'lc_pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
 
 -- Print lc_help information
 function help(fn)   

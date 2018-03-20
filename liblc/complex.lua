@@ -176,7 +176,7 @@ complex.__pow = function (a,b)
    a,b = args(a,b)
    local a0, a1 = complex.abs(a), complex.arg(a)
    local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
-   local abs = math.pow(a0, b.real)*math.exp(-a1*b.imag)
+   local abs = a0^(b.real)*math.exp(-a1*b.imag)
    local arg = k*b.imag+b.real*a1
    return complex:new(abs*math.cos(arg), abs*math.sin(arg))
 end
