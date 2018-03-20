@@ -586,7 +586,7 @@ matrix.__pow = function (a,n)
    local res, acc = matrix.eye(a.rows), matrix.copy(a)
    while n > 0 do
       if n%2 == 1 then res = res * acc end
-      n = n // 2
+      n = math.fmod(n,2)
       if n > 0 then acc = acc * acc end
    end
    return res

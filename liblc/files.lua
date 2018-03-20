@@ -41,6 +41,12 @@ ans = aa.b.c                         --> 'abc'
 -- @field about Description of functions.
 local files = {}
 
+if _VERSION < 'Lua 5.3' then
+   files.load = loadstring
+else
+   files.load = load
+end
+
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 files.about = help:new("Routines for working with data files.")
@@ -130,7 +136,7 @@ end
 --    @return Lua table or nil.
 files.tblimport = function (fname)
    local str,f = files.read(fname)
-   if str then f = load('return '..str) end
+   if str then f = files.load('return '..str) end
    return f and f() or nil
 end
 files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, written into file."}

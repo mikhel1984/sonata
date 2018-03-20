@@ -267,8 +267,8 @@ struct.about[struct.Heap] = {"Heap([less])", "Create new heap object. Comparison
 --    @param h Heap object.
 --    @param k Start index.
 local function fixUp(h, k)
-   while k > 1 and h.less(h[k//2], h[k]) do
-      local k2 = k // 2
+   while k > 1 and h.less(h[math.fmod(k,2)], h[k]) do
+      local k2 = math.fmod(k,2)
       h[k],h[k2] = h[k2],h[k]
       k = k2
    end
