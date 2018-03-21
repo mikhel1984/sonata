@@ -82,6 +82,8 @@ local function lowbound(a,b) return math.abs(a) > b and a or b end
 local special = {}
 special.__index = special
 
+local Ver = require "liblc.versions"
+
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 special.about = help:new("Special mathematical functions.")
@@ -485,7 +487,7 @@ end
 --    @return Polynomial value
 special.bessy = function (n,x)
    assert(x > 0, 'Positive value is expected!')
-   assert(n >= 0 and math.tointeger(n) == n, 'Non-negative integer order is expected!')
+   assert(n >= 0 and Ver.isinteger(n), 'Non-negative integer order is expected!')
    if n == 0 then return bessy0(x) end
    if n == 1 then return bessy1(x) end
    local tox = 2.0/x
@@ -503,7 +505,7 @@ special.about[special.bessy] = {"bessy(n,x)","Bessel function of the second kind
 --    @param x Real number.
 --    @return Polynomial value
 special.bessj = function (n,x)
-   assert(n >= 0 and math.tointeger(n) == n, 'Non-negative integer order is expected!')
+   assert(n >= 0 and Ver.isinteger(n), 'Non-negative integer order is expected!')
    if n == 0 then return bessj0(x) end
    if n == 1 then return bessj1(x) end
    if x == 0 then return 0 end
@@ -539,7 +541,7 @@ special.bessj = function (n,x)
       sum = 2.0*sum-bj
       ans = ans/sum
    end
-   return (x < 0.0 and (n & 1)==1) and -ans or ans
+   return (x < 0.0 and (n % 2)==1) and -ans or ans
 end
 special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind."}
 
@@ -613,7 +615,7 @@ end
 --    @return Kn(x).
 special.bessk = function (n,x)
    assert(x > 0, "Positiva value is expected!")
-   assert(n >= 0 and math.tointeger(n) == n, "Non-negative integer order is expected!")
+   assert(n >= 0 and Ver.isinteger(n), "Non-negative integer order is expected!")
    if n == 0 then return bessk0(x) end
    if n == 1 then return bessk1(x) end
    local tox,bkm,bk = 2.0/x, bessk0(x), bessk1(x)
@@ -629,7 +631,7 @@ special.about[special.bessk] = {"bessk(n,x)", "Modified Bessel function Kn(x)."}
 --    @param x Real number.
 --    @return In(x).
 special.bessi = function (n,x)
-   assert(n >= 0 and math.tointeger(n) == n, "Non-negative integer order is expected!")
+   assert(n >= 0 and Ver.isinteger(n), "Non-negative integer order is expected!")
    if n == 0 then return bessi0(x) end
    if n == 1 then return bessi1(x) end
    if x == 0 then return 0.0 end
@@ -646,7 +648,7 @@ special.bessi = function (n,x)
       if j == n then ans = bip end
    end
    ans = ans*bessi0(x)/bi
-   return (x < 0.0 and (n & 1)==1) and -ans or ans
+   return (x < 0.0 and (n % 2)==1) and -ans or ans
 end
 special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x)."}
 

@@ -84,6 +84,7 @@ ans = Stat.normcdf(1, 1.5, 2.1)   --~ 0.4059
 ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 ]]
 
+local Ver = require "liblc.versions"
 
 -------------------------------------------- 
 -- @class table
@@ -234,7 +235,7 @@ stat.about[stat.harmean] = {"harmean(t[,w])", "Harmonic mean.", help.OTHER}
 --    @return Value of median.
 stat.median = function (p)
    local len = #p
-   local t = table.move(p,1,len,1,{})
+   local t = Ver.move(p,1,len,1,{})
    table.sort(t)
    if len % 2 == 1 then 
       return t[(len+1)/2]
@@ -339,7 +340,7 @@ stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution
 --    @return Density value.
 stat.poisspdf = function (x,lam)
    assert(lam >= 0, 'Wrong argument!')
-   if math.tointeger(x) == nil then return 0.0 end
+   if Ver.tointeger(x) == nil then return 0.0 end
    local f = 1
    for i = 1,x do f = f*i end
    return lam^x*math.exp(-lam)/f

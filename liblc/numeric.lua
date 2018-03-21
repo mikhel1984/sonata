@@ -62,6 +62,8 @@ numeric.about = help:new("Group of functions for numerical calculations.")
 numeric.TOL = 1e-3
 numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", help.CONST}
 
+local Ver = require "liblc.versions"
+
 --- Find root of equation at the given interval.
 --    @param fn Function to analyze.
 --    @param a Lower bound.
@@ -168,7 +170,7 @@ numeric.ode = function (fn, x0,y0,xn, dx)
    local h = dx or (xn-x0)/PARTS   -- initial step
    local res = {{x0,y0}}           -- save intermediate points
    repeat
-      local x,y = table.unpack(res[#res])
+      local x,y = Ver.unpack(res[#res])
       h = math.min(h, xn-x)
       -- correct step
       if dx then

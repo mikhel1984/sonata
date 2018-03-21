@@ -36,8 +36,8 @@ ans = Big.tonumber(a^3)      --> 1860867
 ans = Big.tonumber(Big.abs('-25')) --> 25
 
 -- factorial
-c = Big(10)
-ans = Big.tonumber(c:fact())  --> 3628800
+c = Big(10):fact()
+ans = Big.tonumber(c)  --> 3628800
 
 -- make copy, comparision
 d = a:copy()
@@ -51,6 +51,7 @@ ans = (a == b)               --> false
 ans = a:eq(123)              --> true
 
 -- number of digits
+-- in Lua5.1 use 'digits' method
 ans = #a                     --> 3
 
 -- simple print
@@ -80,6 +81,8 @@ bigint.about = help:new("Operations with arbitrary long integers.")
 bigint.BASE = 10        
 bigint.about[bigint.BASE] = {'BASE', "The radix of big integer representation.", help.OTHER}
 
+local Ver = require "liblc.versions"
+
 --- Absolute value of the integer.
 --    <i>Private function.</i>
 --    @param v Integer number.
@@ -97,7 +100,7 @@ local function isbigint(v) return type(v) == 'table' and v.isbigint end
 --    @param v Integer value.
 --    @return String representation of the number and sign (1 or -1).
 local function fromint(v) 
-   v = assert(math.tointeger(v), 'Integer is expected')
+   v = assert(Ver.tointeger(v), 'Integer is expected')
    return tostring(iabs(v)), (v < 0) and -1 or 1               -- return value and sing
 end
 
@@ -171,7 +174,7 @@ local function div(a,b)
       if rest >= denom then
          -- get ratio
 	 local n, p = 1, string.sub(rest.value, #denom.value):reverse()
-	 n = math.tointeger(math.modf(p/q))
+	 n = math.modf(p/q)
 	 local prod = n*denom
 	 -- save result
 	 if prod <= rest then
@@ -397,6 +400,12 @@ bigint.__len = function (v)
    return #v.value
 end
 
+--- Number of digits. Use # for the same puprose.
+--    @param v Bigint object
+--    @return Number of digits.
+bigint.digits = function (v) return #v.value end
+bigint.about[bigint.digits] = {"digits(v)", "Number of digits, the same as #v.", help.OTHER}
+
 --- a ^ b
 --    @param a Bigint object or integer.
 --    @param b Positive bigint object or integer.
@@ -411,7 +420,7 @@ bigint.__pow = function (a,b)
    local aa, bb, q = bigint.copy(a), bigint.copy(b), nil
    local res = bigint:new(1)
    local h = 1
-   while bb > 0 do
+   while bb.value ~= '0' do
       bb,q = div(bb,2)
       if q.value ~= '0' then res = res*aa end
       if bb.value ~= '0' then aa = aa*aa end
@@ -444,7 +453,7 @@ bigint.about[bigint.str] = {"str(v)", "More readable string representation of th
 --    @param v Bigint object.
 --    @return Integer if possible, otherwise float point number.
 bigint.tonumber = function (v)
-   return tonumber(bigint.__tostring(v))
+   return tonumber(tostring(v))
 end
 bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", }
 
@@ -452,8 +461,9 @@ bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer a
 --    @param m Bigint object or integer.
 --    @return Factorial of the number as bigint object.
 bigint.fact = function (m)
-   assert(m >= 0, "Non-negative value is expected!")
-   local n = bigint.abs(m)
+   local n = isbigint(m) and m:copy() or bigint:new(m)
+   assert(n.sign > 0, "Non-negative value is expected!")
+   --local n = bigint.abs(m)
    local res = bigint:new(1)   
    local one = res:copy()
    while n.value ~= '0' do   

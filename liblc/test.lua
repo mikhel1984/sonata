@@ -46,6 +46,8 @@ test.results = {}
 
 test.lc_files = require('liblc.files')
 
+local Ver = require "liblc.versions"
+
 --- Extract test code from file.
 --    <i>Private function.</i>
 --    @param str File text.
@@ -99,10 +101,10 @@ test.module = function (fname)
          local arrow, time
          -- evaluate
          local status, err = pcall(function ()
-            local fq = load(q)
+            local fq = Ver.loadstr(q)
 	    time = os.clock(); fq(); time = (os.clock() - time)*1000
 	    if #a > 0 then
-	       local fa = load('return '..a)
+	       local fa = Ver.loadstr('return '..a)
 	       arrow = fa()
 	       return (e == '~') and (math.abs(ans-arrow) <= tol*math.abs(ans)) or (ans == arrow)
 	    else

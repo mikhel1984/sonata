@@ -592,6 +592,8 @@ end
 --    @return Current value.
 units.__len = function (u) return u.value end
 
+units.val = function (u) return u.value end
+
 --- Convert using v['new_units'] notation.
 --    @param t Initial unit object.
 --    @param k New Units.

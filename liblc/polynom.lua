@@ -85,6 +85,8 @@ polynom.ispolynom = true
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 polynom.about = help:new("Operations with polynomials")
 
+local Ver = require "liblc.versions"
+
 -- dependencies
 local done
 done, polynom.lc_matrix = pcall(require,'liblc.matrix')
@@ -179,7 +181,7 @@ polynom.__call = function (p,x) return polynom.val(p,x) end
 --    @param p Initial polynomial.
 --    @return Deep copy.
 polynom.copy = function (p)
-   return polynom:init(table.move(p,1,#p,1,{}))
+   return polynom:init(Ver.move(p,1,#p,1,{}))
 end
 polynom.about[polynom.copy] = {"copy(p)", "Get copy of the polynomial.", help.OTHER}
 
@@ -257,7 +259,7 @@ end
 --    @param n Integer value.
 --    @return Power of the polynomial.
 polynom.__pow = function (p,n)
-   n = assert(math.tointeger(n), "Integer power is expected!")
+   n = assert(Ver.tointeger(n), "Integer power is expected!")
    assert(n > 0, "Positive power is expected!")
    local res, acc = polynom:init({1}), polynom.copy(p)
    while n > 0 do
@@ -444,11 +446,11 @@ end
 --    @param ord Polynomial order.
 --    @return Polynomial object.
 polynom.fit = function (X,Y,ord)
-   assert(ord > 0 and math.type(ord) == 'integer', 'Wrong order!')
+   assert(ord > 0 and Ver.mtype(ord) == 'integer', 'Wrong order!')
    assert(#X == #Y, 'Wrong data size!')
    assert(#X > ord, 'Too few data points!')
    -- find sums
-   local acc = table.move(X,1,#X,1,{})       -- accumulate powers
+   local acc = Ver.move(X,1,#X,1,{})       -- accumulate powers
    local sX, sY = {}, {}                     -- accumulate sums
    local nY = ord
    sY[nY+1] = getsum(Y) 

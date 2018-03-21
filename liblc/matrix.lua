@@ -181,6 +181,8 @@ matrix.ismatrix = true
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrices are spares by default.")
 
+local Ver = require "liblc.versions"
+
 --- Metatable for new rows.
 -- @class table
 -- @name access
@@ -580,7 +582,7 @@ end
 --    @param n Positive integer power.
 --    @return New matrix.
 matrix.__pow = function (a,n)
-   n = assert(math.tointeger(n), "Integer is expected!")
+   n = assert(Ver.tointeger(n), "Integer is expected!")
    assert(a.rows == a.cols, "Square matrix is expected!")
    if n == -1 then return matrix.inv(a) end
    local res, acc = matrix.eye(a.rows), matrix.copy(a)
@@ -1168,7 +1170,7 @@ matrix.lu = function (m)
    local a,_,d = matrix.luprepare(m)
    local p = matrix.eye(m.rows,m.cols)
    while d > 0 do
-      local tmp = p[1]; table.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
+      local tmp = p[1]; Ver.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
       d = d-1
    end
    return matrix.map_ex(a, function (r,c,m) return (r==c) and 1.0 or (r>c and m or 0) end),   -- lower

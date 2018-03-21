@@ -149,7 +149,7 @@ files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, written i
 --  @field thread Reminder about thread.
 local val2str = {
    ['string'] =   function (x) return string.format('"%s"', x) end,
-   ['number'] =   function (x) return math.type(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
+   ['number'] =   function (x) return Ver.mtype(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
    ['function'] = function (x) x = tostring(x); print('Bad value: '..x); return x end,
    ['boolean'] =  function (x) return tostring(x) end,
    ['nil'] =      function (x) return 'nil' end,
@@ -164,7 +164,7 @@ val2str.tbl =  function (t)
    local res = {}
    for _,val in ipairs(t) do res[#res+1] = val2str[type(val)](val) end
    for k,val in pairs(t) do
-      if not math.tointeger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
+      if not Ver.isinteger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
    end
    return string.format('{%s}', table.concat(res,','))
 end
