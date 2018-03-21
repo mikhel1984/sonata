@@ -74,17 +74,8 @@ array.isarray = true
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 array.about = help:new("Manipulations with arrays of elements.")
 
-if _VERSION < 'Lua 5.3' then
-   array.isinteger = function (x) _,p = math.modf(x); return p == 0.0 end
-   array.tmove = function (src,sfrom,sto,dfrom,dest) 
-                   k = 0
-                   for i = sfrom,sto do dest[dfrom+k] = src[i]; k=k+1 end
-		   return dest
-                end
-else
-   array.isinteger = math.tointeger
-   array.tmove = table.move
-end
+-- compatibility with previous versions
+local Ver = require "liblc.versions"
 
 --- Check object type.
 --    <i>Private function.</i>
@@ -107,7 +98,7 @@ end
 --    @return Array object.
 function array:new(s)
    assert(type(s) == 'table', "Table is expected!")
-   for i = 1,#s do assert(s[i] > 0 and array.isinteger(s[i]), "Positive integer is expected!") end
+   for i = 1,#s do assert(s[i] > 0 and Ver.isinteger(s[i]), "Positive integer is expected!") end
    local o = {size = s, k = getk(s)}
    setmetatable(o, self)
    return o
@@ -172,8 +163,8 @@ array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is 
 --    @return Deep copy of the array.
 array.copy = function (arr)
    assert(isarray(arr), "Not an array!")
-   local cp = array:new(array.tmove(arr.size, 1, #arr.size, 1, {}))        -- copy size, create new array
-   return array.tmove(arr, 1, capacity(arr), 1, cp)                        -- copy array elements
+   local cp = array:new(Ver.move(arr.size, 1, #arr.size, 1, {}))        -- copy size, create new array
+   return Ver.move(arr, 1, capacity(arr), 1, cp)                        -- copy array elements
 end
 array.about[array.copy] = {"copy(arr)", "Get copy of the array.", help.OTHER}
 
@@ -199,7 +190,7 @@ array.about[array.isequal] = {"isequal(a1,a2)", "Check size equality.", help.OTH
 --    @return New array where each element is result of the function evaluation fn(a1[i],a2[i]).
 array.apply = function (a1, a2, fn)
    assert(array.isequal(a1,a2), "Not compatible arrays!")
-   local res, v = array:new(array.tmove(a1.size, 1, #a1.size, 1, {}))    -- prepare empty copy
+   local res, v = array:new(Ver.move(a1.size, 1, #a1.size, 1, {}))    -- prepare empty copy
    for i = 1, capacity(a1) do 
       v = fn(a1[i] or 0, a2[i] or 0)             -- elements can be empty
       if v ~= 0 then res[i] = v end              -- save nonzero values
@@ -213,7 +204,7 @@ array.about[array.apply] = {"apply(a1,a2,fn)", "Apply function of 2 arguments. R
 --    @param fn Function with 1 argument.
 --    @return New array where each element is result of the function evaluation fn(a[i]).
 array.map = function (a, fn)
-   local res, v = array:new(array.tmove(a.size, 1, #a.size, 1, {}))
+   local res, v = array:new(Ver.move(a.size, 1, #a.size, 1, {}))
    for i = 1, capacity(a) do
       v = fn(a[i] or 0)                          -- elements can be empty
       if v ~= 0 then res[i] = v end              -- save nonzero values
@@ -304,7 +295,7 @@ array.about[array.comparison] = {array.comparison, "a == b, a ~= b", }
 --    @param arr Array object.
 --    @return Table of size.
 array.dim = function (arr)
-   return array.tmove(arr.size, 1, #arr.size, 1, {})
+   return Ver.move(arr.size, 1, #arr.size, 1, {})
 end
 array.about[array.dim] = {"dim(arr)", "Return size of array.", }
 
@@ -349,10 +340,10 @@ array.concat = function (arr1, arr2, axe)
    assert(axe > 0 and axe <= #arr1.size, "Wrong axe!")
    for i = 1, #arr1.size do assert(arr1.size[i] == arr2.size[i] or i == axe, "Different size!") end
    -- prepare new size
-   local newsize = array.tmove(arr1.size, 1, #arr1.size, 1, {})
+   local newsize = Ver.move(arr1.size, 1, #arr1.size, 1, {})
    newsize[axe] = newsize[axe] + arr2.size[axe]
    -- combine
-   local res, ind1, ind2 = array:new(newsize), array.tmove(newsize, 1, #newsize, 1, {}), array.tmove(newsize, 1, #newsize, 1, {})
+   local res, ind1, ind2 = array:new(newsize), Ver.move(newsize, 1, #newsize, 1, {}), Ver.move(newsize, 1, #newsize, 1, {})
    local edge = arr1.size[axe]
    for count = 1, capacity(res) do
       -- prepare index
@@ -427,7 +418,7 @@ array.fullstring = function (arr, r, c)
 	 prod = prod * arr.size[i]
       end
    end
-   local next_index = array.tmove(arr.size, 1, #arr.size, 1, {})
+   local next_index = Ver.move(arr.size, 1, #arr.size, 1, {})
 
    for counter = 0, prod-1 do
       -- find coefficients
@@ -478,7 +469,7 @@ array.about[array.serialize] = {"serialize(obj)", "String representation of arra
 --    @param arr Array object.
 --    @return Index of the next array element and the element itself, <code>nil</code> at the end.
 array.next = function (arr)
-   local a = array:new(array.tmove(arr.size, 1, #arr.size, 1, {})) -- copy size
+   local a = array:new(Ver.move(arr.size, 1, #arr.size, 1, {})) -- copy size
    local count = 0
 
    return function ()
