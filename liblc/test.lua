@@ -92,34 +92,35 @@ test.module = function (fname)
    local fulltime = 0
    -- parse
    for block in test.lc_files.split(text, delim) do
-      if not string.find(block, '%s') then goto endfor end
-      local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
-      q = q or block    -- question
-      a = a or ''       -- answer
-      local arrow, time
-      -- evaluate
-      local status, err = pcall(function ()
-         local fq = load(q)
-	 time = os.clock(); fq(); time = (os.clock() - time)*1000
-	 if #a > 0 then
-	    local fa = load('return '..a)
-	    arrow = fa()
-	    return (e == '~') and (math.abs(ans-arrow) <= tol*math.abs(ans)) or (ans == arrow)
-	 else
-	    return true
-	 end
-      end)
-      local res = status and err
-      test.print(marktest(q,res,time)) 
-      if not status then
-         test.log:write(err,'\n')
-      elseif not err then
-         test.log:write(tostring(ans),' IS NOT ',tostring(arrow),' !!!\n')
+      if string.find(block, '%s') then 
+         local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
+         q = q or block    -- question
+         a = a or ''       -- answer
+         local arrow, time
+         -- evaluate
+         local status, err = pcall(function ()
+            local fq = load(q)
+	    time = os.clock(); fq(); time = (os.clock() - time)*1000
+	    if #a > 0 then
+	       local fa = load('return '..a)
+	       arrow = fa()
+	       return (e == '~') and (math.abs(ans-arrow) <= tol*math.abs(ans)) or (ans == arrow)
+	    else
+	       return true
+	    end
+         end)
+         local res = status and err
+         test.print(marktest(q,res,time)) 
+         if not status then
+            test.log:write(err,'\n')
+         elseif not err then
+            test.log:write(tostring(ans),' IS NOT ',tostring(arrow),' !!!\n')
+         end
+         if not string.find(block, 'require') then -- 'require' takes too mach time
+            if res then succeed = succeed + 1 else failed = failed + 1 end
+            fulltime = fulltime + time
+         end
       end
-      if string.find(block, 'require') then goto endfor end  -- 'require' takes too mach time
-      if res then succeed = succeed + 1 else failed = failed + 1 end
-      fulltime = fulltime + time
-      ::endfor::
    end
    test.results[fname] = {succeed, failed, fulltime}
    test.log:flush()

@@ -263,7 +263,7 @@ polynom.__pow = function (p,n)
    while n > 0 do
       if n%2 == 1 then res = res*acc end
       if n ~= 1 then acc = acc * acc end
-      n = math.fmod(n,2)
+      n = math.modf(n/2)
    end
    return res
 end

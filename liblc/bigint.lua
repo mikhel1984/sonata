@@ -171,7 +171,7 @@ local function div(a,b)
       if rest >= denom then
          -- get ratio
 	 local n, p = 1, string.sub(rest.value, #denom.value):reverse()
-	 n = math.tointeger(math.fmod(p,q))
+	 n = math.tointeger(math.modf(p/q))
 	 local prod = n*denom
 	 -- save result
 	 if prod <= rest then
