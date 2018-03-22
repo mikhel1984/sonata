@@ -2,7 +2,7 @@
 **LuaCalculus** is a **Lua** based program for mathematical computations. It is also a library of objects and functions for solving the different mathematical tasks. Each module is independent from others and can be used standalone.
 
 Following modules are available now:
-[array](https://github.com/mikhel1984/lc/wiki/Example:-arrays) - multidimensional collections of elements
+* [array](https://github.com/mikhel1984/lc/wiki/Example:-arrays) - multidimensional collections of elements
 * [bigint](https://github.com/mikhel1984/lc/wiki/Example:-bigint) - arbitrary long integer numbers
 * [complex](https://github.com/mikhel1984/lc/wiki/Example:-complex) - complex numbers
 * _const_ - collection of constants
@@ -23,7 +23,7 @@ Program includes a help system for most of the functions and modules. It also ca
 * _Esperanto (eo)_
 * _Russian (ru)_
 
-**LuaCalculus** works in standard **Lua** interpreter. It is oriended on version _5.3_, but most of the functions are compatible also with 5.1 and 5.2. To run it, call
+**LuaCalculus** works in standard **Lua** interpreter. It is oriended on version _5.3_, but most of the functions are compatible also with _5.1_ and _5.2_ versions. In order to run it, call
 
     lua -i calc.lua
 
