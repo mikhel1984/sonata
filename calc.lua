@@ -8,7 +8,7 @@
 LC_LOCALIZATION = "ru.lng"
 
 --	Text coloring.
---LC_USE_COLOR = true
+LC_USE_COLOR = true
 
 --	Load after start
 --LC_DEFAULT_MODULES = {'matrix','numeric'}
@@ -152,7 +152,6 @@ end
 --===============================================
 -- TODO: use alias or part of the name for import
 -- TODO: rename program, for example, 'Balu LC', 'Sigma LC'...
--- TODO: add links to README file
 -- TODO: add step-by-step execution
 -- TODO: optimize for LuaJIT or write C objects
 -- TODO: add 'evaluatable' expressions in text files

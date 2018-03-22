@@ -27,7 +27,7 @@ versions.move = function (src,sfrom,sto,dfrom,dest)
          local k = 0
          for i = sfrom,sto do dest[dfrom+k] = src[i]; k=k+1 end
       else
-         local tmp = versions.move(src,sfrom,sto,dfrom,{})
+         local tmp = versions.move(src,sfrom,sto,sfrom,{})
 	 local dest = versions.move(tmp,sfrom,sto,dfrom,src)
 	 if dfrom > sfrom then 
 	    for i = sfrom,dfrom-1 do dest[i] = nil end
