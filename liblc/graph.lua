@@ -64,22 +64,24 @@ end
 function graph:new(t)
    local o = {}
    -- add nodes
-   for _,elt in ipairs(t) do
-      if type(elt) == 'table' then
-         addnode(o, elt[1],elt[2],elt[3],elt[4])
-      else
-         addnode(o, elt)
-      end
-   end
+   for _,elt in ipairs(t) do graph.add(elt) end
    setmetatable(o,self)
    return o
 end
 
 graph.add = function (g, t)
    if type(t) == 'table' then
-      addnode(g, t[1],t[2],t[3],t[4])   -- edge
+      local t1,t2,w12,w21 = t[1],t[2],t[3],t[4]
+      g[t1] = g[t1] or {}
+      g[t2] = g[t2] or {}
+      if not (t3 or t4) then
+         local w = t.w or 1
+	 g[t1][t2] = w; g[t2][t1] = w
+      else
+         g[t1][t2] = w12; g[t2][t1] = w21
+      end
    else
-      addnode(g, t)                 -- node
+      g[t] = g[t] or {}
    end
 end
 
