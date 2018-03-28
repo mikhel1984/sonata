@@ -20,43 +20,17 @@ ans = a.type                   --> 'graph'
 -- @class table
 -- @name graph
 -- @field about Description of functions.
-local graph = {}
+local graph = {type='graph', isgraph=true}
 graph.__index = graph
 
--- mark
-graph.type = 'graph'
-graph.isgraph = true
+-- marker
 local function isgraph(t) return type(t)=='table' and t.isgraph end
 
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 graph.about = help:new("Operations with graphs.")
 
--- assume that single node is just name
--- table with two elements is underected edge with unit weight
--- edge with weight must be included for both direction independently
-local function addnode(tbl,n1,n2,w1,w2)
-   tbl[n1] = tbl[n1] or {}
-   if n2 then
-      tbl[n2] = tbl[n2] or {}
-      if not (w1 or w2) then w1 = 1; w2 = 1 end
-      tbl[n1][n2] = w1
-      tbl[n2][n1] = w2
-   end
-end
-
-local function remnode(tbl,n1,n2)
-   if n2 then
-      local w = tbl[n1][n2]
-      tbl[n1][n2] = nil
-      if tbl[n2][n1] == w then
-         tbl[n2][n1] = nil
-      end
-   else
-      for k in pairs(tbl[n1]) do tbl[k][n1] = nil end -- remove edges
-      tbl[k] = nil
-   end
-end
+local function isedge(m) return type(m) == 'table' end
 
 --- Constructor example
 --    @param t Some value.
@@ -64,14 +38,14 @@ end
 function graph:new(t)
    local o = {}
    -- add nodes
-   for _,elt in ipairs(t) do graph.add(elt) end
+   for _,elt in ipairs(t) do graph.add(o,elt) end
    setmetatable(o,self)
    return o
 end
 
 graph.add = function (g, t)
-   if type(t) == 'table' then
-      local t1,t2,w12,w21 = t[1],t[2],t[3],t[4]
+   if isedge(t) then
+      local t1,t2,w12,w21 = t[1],t[2],t[3] or t.w12,t[4] or t.w21
       g[t1] = g[t1] or {}
       g[t2] = g[t2] or {}
       if not (t3 or t4) then
@@ -86,10 +60,15 @@ graph.add = function (g, t)
 end
 
 graph.remove = function (g, t)
-   if type(t) == 'table' then
-      remnode(g, table.unpack(t))
+   if isedge(t) then
+      local t1,t2 = t[1],t[2]
+      g[t1][t2] = nil
+      if not t.single then        -- change keyword ???
+         g[t2][t1] = nil
+      end
    else
-      remnode(g, t)
+      for _,v in pairs(g) do v[t] = nil end
+      g[t] = nil
    end
 end
 
@@ -100,9 +79,7 @@ graph.about[graph.Graph] = {"Graph(t)", "Create new graph.", help.NEW}
 
 graph.nodes = function (g)
    local res = {}
-   for k in pairs(g) do
-      res[#res+1] = k
-   end
+   for k in pairs(g) do res[#res+1] = k end
    return res
 end
 
@@ -123,17 +100,14 @@ graph.edges = function (g)
    return res
 end
 
---[[
---- Method example
---   It is good idea to define method for the copy creation.
---   @param t Initial object.
---   @return Copy of the object.
-graph.copy = function (t)
-   -- some logic
-   return graph:new(argument)
+graph.copy = function (g)
+   local res = graph:new({})
+   for k,v in pairs(g) do
+      res[k] = {}
+      for n,w in pairs(v) do res[k][n] = w end
+   end
+   return res
 end
-graph.about[graph.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
-]]
 
 graph.__len = function (g)
    local n = 0
@@ -147,7 +121,7 @@ graph.__tostring = function (g)
    if #nd <= 5 then 
       res = string.format('Graph {%s}', table.concat(nd,','))
    else
-      res = string.format('Graph {%s - %d - %s}', 
+      res = string.format('Graph {%s -%d- %s}', 
                           tostring(nd[1]), #nd-2, tostring(nd[#nd]))
    end
    return res
@@ -158,16 +132,21 @@ if not lc_version then graph.about = nil end
 
 return graph
 
---[[
-a = graph {{'a','b'},{'a','c',2},{'c','b',3,4}}
+-- TODO: multible edges for the same verteces
 
+--[[
+a = graph {{'a','b'},{'a','c',w=2},{'c','b',3,4}}
+print(a)
+b = a:copy()
+print(b)
 a:add('pp')
 a:add({'t','u'})
 
 a:remove({'t','u'})
+a:remove('a')
 
-n = a:nodes()
-for _,v in ipairs(n) do print(v) end
+n = a:edges()
+for _,v in ipairs(n) do print(v[1],v[2]) end
 
 print(a)
 ]]
