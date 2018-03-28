@@ -32,14 +32,16 @@ local function isgraph(t) return type(t)=='table' and t.isgraph end
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 graph.about = help:new("Operations with graphs.")
 
-local function addnode(tbl,n1,n2,v1,v2)
+-- assume that single node is just name
+-- table with two elements is underected edge with unit weight
+-- edge with weight must be included for both direction independently
+local function addnode(tbl,n1,n2,w1,w2)
    tbl[n1] = tbl[n1] or {}
    if n2 then
-      v1 = v1 or 1
-      v2 = v2 or v1
-      tbl[n1][n2] = v1
       tbl[n2] = tbl[n2] or {}
-      tbl[n2][n1] = v2
+      if not (w1 or w2) then w1 = 1; w2 = 1 end
+      tbl[n1][n2] = w1
+      tbl[n2][n1] = w2
    end
 end
 
@@ -64,7 +66,7 @@ function graph:new(t)
    -- add nodes
    for _,elt in ipairs(t) do
       if type(elt) == 'table' then
-         addnode(o, table.unpack(elt))
+         addnode(o, elt[1],elt[2],elt[3],elt[4])
       else
          addnode(o, elt)
       end
@@ -75,7 +77,7 @@ end
 
 graph.add = function (g, t)
    if type(t) == 'table' then
-      addnode(g, table.unpack(t))   -- edge
+      addnode(g, t[1],t[2],t[3],t[4])   -- edge
    else
       addnode(g, t)                 -- node
    end
