@@ -37,12 +37,14 @@ quit = function () print(lc_help.CMAIN.."\n              --======= Buy! =======-
 
 -- Modules 
 import = {
+--   name     alias
    array    = "Arr",
    bigint   = "Big",
    complex  = "Comp",
    const    = "_C",
    files    = "File",
    gnuplot  = "Gnu",
+   graph    = "Graph",
    matrix   = "Mat",
    numeric  = "Num",
    polynom  = "Poly",

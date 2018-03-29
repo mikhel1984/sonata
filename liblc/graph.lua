@@ -58,6 +58,7 @@ graph.add = function (g, t)
       g[t] = g[t] or {}
    end
 end
+graph.about[graph.add] = {"add(e)","Add new node or edge. Node denoted as a single name, edge is a table of names (and weights if need)."}
 
 graph.remove = function (g, t)
    if isedge(t) then
@@ -71,6 +72,7 @@ graph.remove = function (g, t)
       g[t] = nil
    end
 end
+graph.about[graph.remove] = {"remove(e)", "Remove node or edge. Node is a single name, edge - talbe of names."}
 
 -- simplify constructor call
 setmetatable(graph, {__call = function (self,v) return graph:new(v) end})
@@ -82,6 +84,7 @@ graph.nodes = function (g)
    for k in pairs(g) do res[#res+1] = k end
    return res
 end
+graph.about[graph.nodes] = {"nodes()","List of graph nodes."}
 
 graph.edges = function (g)
    local nodes = graph.nodes(g)
@@ -99,6 +102,7 @@ graph.edges = function (g)
    end
    return res
 end
+graph.about[graph.edges] = {"edges()", "List of graph edges."}
 
 graph.copy = function (g)
    local res = graph:new({})
@@ -108,6 +112,7 @@ graph.copy = function (g)
    end
    return res
 end
+graph.about[graph.copy] = {"copy()", "Get copy of the graph."}
 
 graph.__len = function (g)
    local n = 0
