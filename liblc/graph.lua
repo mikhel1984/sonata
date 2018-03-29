@@ -11,9 +11,41 @@
 --[[!!
 Graph = require 'liblc.graph'
 
--- example
-a = Graph()
-ans = a.type                   --> 'graph'
+-- build graph
+-- single names - nodes, names in brackets - edges 
+-- letter w denotes weight of non directed edge
+-- numbers are weigths of directed edges
+a = Graph {'a','b',{'a','c'},{'d','e',w=2},{'d','b',4,3}}
+
+-- list of nodes
+nd = a:nodes()
+ans = #nd                      --> 5
+
+-- list of edges
+ed = a:edges()
+ans = #ed                      --> 5
+
+-- add node
+a:add('h') 
+-- add edge
+a:add {'a','d'}
+-- check size
+ans = #a                       --> 6
+
+-- remove edge
+a:remove {'a','d'}
+-- remove node
+a:remove('a')
+-- new edge number
+ed = a:edges()
+ans = #ed                      --> 5
+
+-- make copy
+b = a:copy()
+
+-- show
+print(b)
+
 ]]
 
 ---------------------------------
@@ -32,6 +64,12 @@ graph.about = help:new("Operations with graphs.")
 
 local function isedge(m) return type(m) == 'table' end
 
+local function tbllen (m) 
+   local n = 0
+   for k in pairs(m) do n = n+1 end
+   return n
+end
+
 --- Constructor example
 --    @param t Some value.
 --    @return New object of graph.
@@ -45,7 +83,7 @@ end
 
 graph.add = function (g, t)
    if isedge(t) then
-      local t1,t2,w12,w21 = t[1],t[2],t[3] or t.w12,t[4] or t.w21
+      local t1,t2,w12,w21 = t[1], t[2], t[3] or t.w12, t[4] or t.w21
       g[t1] = g[t1] or {}
       g[t2] = g[t2] or {}
       if not (t3 or t4) then
@@ -62,7 +100,7 @@ graph.about[graph.add] = {"add(e)","Add new node or edge. Node denoted as a sing
 
 graph.remove = function (g, t)
    if isedge(t) then
-      local t1,t2 = t[1],t[2]
+      local t1,t2 = t[1], t[2]
       g[t1][t2] = nil
       if not t.single then        -- change keyword ???
          g[t2][t1] = nil
@@ -115,9 +153,7 @@ end
 graph.about[graph.copy] = {"copy()", "Get copy of the graph."}
 
 graph.__len = function (g)
-   local n = 0
-   for i in pairs(g) do n = n+1 end
-   return n
+   return tbllen(g)
 end
 
 graph.__tostring = function (g)
@@ -131,6 +167,15 @@ graph.__tostring = function (g)
    end
    return res
 end
+
+graph.iscomplete = function (g)
+   local n = tbllen(g)
+   for _,v in ipairs(g) do
+      if n ~= tbllen(v) then return false end
+   end
+   return true
+end
+graph.about[graph.iscomplete] = {'iscomplete(g)', 'Check completeness of the graph.', help.OTHER}
 
 -- free memory in case of standalone usage
 if not lc_version then graph.about = nil end
