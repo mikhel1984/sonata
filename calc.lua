@@ -139,7 +139,7 @@ about[import][2] = liblc.import_state_update()
 
 -- Run! 
 io.write(lc_help.CMAIN)
-print("\n           --==== LuaCalculus "..lc_version.." ====--\n")
+print("\n  # #        --===== Sonata LC =====--\n# #             --==== "..lc_version.." ====--\n")
 io.write(lc_help.CHELP)
 print(about:get('intro'))
 
@@ -153,7 +153,6 @@ end
 
 --===============================================
 -- TODO: use alias or part of the name for import
--- TODO: rename program, for example, 'Balu LC', 'Sigma LC', 'Sonata LC'...
 -- TODO: add step-by-step execution
 -- TODO: optimize for LuaJIT or write C objects
 -- TODO: add 'evaluatable' expressions in text files

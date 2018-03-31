@@ -195,6 +195,12 @@ function flip(t,N)
 end
 about[flip] = {"flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
 
+-- Return 'scintific' representation of the number
+function sci(x)
+   print(string.format('%.2E',x))
+end
+about[sci] = {"sci(x)", "'Scintific' representation of the number.", lc_help.OTHER}
+
 -- Show type of the object.
 function lc_type(t)
    local v = type(t)
