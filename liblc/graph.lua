@@ -58,6 +58,8 @@ graph.__index = graph
 -- marker
 local function isgraph(t) return type(t)=='table' and t.isgraph end
 
+graph.lc_struct = require 'liblc.struct'
+
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 graph.about = help:new("Operations with graphs.")
@@ -176,6 +178,48 @@ graph.iscomplete = function (g)
    return true
 end
 graph.about[graph.iscomplete] = {'iscomplete(g)', 'Check completeness of the graph.', help.OTHER}
+
+graph.bfs = function (g, start, goal)
+   local visited,path = {},{}
+   local queue = graph.lc_struct.Queue()
+   queue:add(start); visited[start] = true
+   while not queue:isempty() do
+      local node = queue:rem()
+      path[#path+1] = node
+      if node == goal then
+         return true
+      end
+      local previous = queue:size()
+      for v in pairs(g[node]) do
+         if not visited[v] then
+	    queue:add(v); visited[v] = true
+	 end
+      end
+      if queue:size() == previous then path[#path] = nil end
+   end
+   return nil
+end
+
+graph.dfs = function (g, start, goal)
+   local visited, path = {}, {}
+   local stack = graph.lc_struct.Stack()
+   stack:push(start); visited[start] = true
+   while not stack:isempty() do
+      local node = stack:pop()
+      path[#path+1] = node
+      if node == goal then
+         return path
+      end
+      local previous = stack:size()
+      for v in pairs(g[node]) do
+         if not visited[v] then
+	    stack:push(v); visited[v] = true
+	 end
+      end
+      if stack:size() == previous then path[#path] = nil end
+   end
+   return nil
+end
 
 -- free memory in case of standalone usage
 if not lc_version then graph.about = nil end

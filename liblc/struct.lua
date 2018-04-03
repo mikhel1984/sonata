@@ -154,6 +154,8 @@ struct.Stack.copy = function (s)
    return res
 end
 
+struct.Stack.size = function (s) return #s end
+
 --- Check stack size.
 --    @param s Stack object.
 --    @return True if stack is empty.
