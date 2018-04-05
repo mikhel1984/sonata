@@ -96,39 +96,12 @@ setmetatable(import,
   end,
 })
 
--- Check arguments 
-local arg1 = arg[1]
 if #arg > 0 then
-   -- test modules
-   if arg1 == '-t' or arg1 == '--test' then
-      local Test = require 'liblc.test'
-      if arg[2] then
-         Test.module(string.format('liblc/%s.lua',arg[2]))
-      else
-         for m in pairs(import) do
-	    Test.module(string.format('liblc/%s.lua',m))
-	 end
-      end
-      Test.summary()
-   -- calculate
-   elseif arg1 == '-e' or arg1 == '--eval' then
-      local tmp = table.move(arg,2,#arg,1,{})
-      liblc.main.evalstr(table.concat(tmp,' '))
-   -- update localization file
-   elseif arg1 == '-l' or arg1 == '--lang' then
-      if arg[2] then
-	 lc_help.prepare(arg[2], import)
-      else 
-         print('Current localization file: ', LC_LOCALIZATION)
-      end
-   -- prepare new module
-   elseif arg1 == '-n' or arg1 == '--new' then
-      lc_help.newmodule(arg[2],arg[3],arg[4])
-   -- execute all the files from the argument list
-   else
-      for i = 1,#arg do dofile(arg[i]) end
-   end
-   os.exit()
+   local command = liblc.main.args[arg[1]]
+   if type(command) == 'string' then command = liblc.main.args[command] end
+   if not command then command = liblc.main.args['no flags'] end
+   command.process(arg)
+   if command.exit then os.exit() end
 end
 
 -- Read localization file and update descriptions. 
@@ -139,7 +112,7 @@ about[import][2] = liblc.import_state_update()
 
 -- Run! 
 io.write(lc_help.CMAIN)
-print("\n  # #        --===== Sonata LC =====--\n# #             --==== "..lc_version.." ====--\n")
+print("\n # #          --===== Sonata LC =====--\n  # #            --==== "..lc_version.." ====--\n")
 io.write(lc_help.CHELP)
 print(about:get('intro'))
 

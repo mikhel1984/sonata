@@ -33,6 +33,7 @@ ans = lctype(25)                 --> 'integer'
 a = {a=1,b=2;3,4,5}
 flip(a)
 ]]
+local Ver = require "liblc.versions"
 
 local main = {}
 
@@ -243,6 +244,80 @@ function main.evalstr (s)
 end
 
 main.about = about
+
+main.args = {
+-- run tests
+['-t'] = '--test',
+['--test'] = {
+description = 'Apply unit tests to desired module, or all modules if the name is not defined.',
+process = function (args)
+   local Test = require 'liblc.test'
+   if args[2] then
+      Test.module(string.format('liblc/%s.lua',args[2]))
+   else
+      for m in pairs(import) do
+	 Test.module(string.format('liblc/%s.lua',m))
+      end
+   end
+   Test.summary()
+end,
+exit = true},
+-- evaluate expressions
+['-e'] = '--eval',
+['--eval'] = {
+description = 'Evaluate command line expression(s).',
+process = function (args) main.evalstr(args[2]) end,
+exit = true},
+-- localisation file
+['-l'] = '--lang',
+['--lang'] = {
+description = 'Create/update file for localisation.',
+process = function (args)
+   if args[2] then
+      lc_help.prepare(args[2], import)
+   else 
+      print('Current localization file: ', LC_LOCALIZATION)
+   end
+end,
+exit = true},
+-- new module
+['-n'] = '--new',
+['--new'] = {
+description = 'Generate template for a new module.',
+process = function (args)
+   lc_help.newmodule(args[2],args[3],args[4])
+end,
+exit = true},
+-- process files
+['no flags'] = {
+description = 'Evaluate file(s).',
+process = function (args)
+   for i = 1,#args do dofile(args[i]) end
+end,
+exit = true},
+-- 
+['-h'] = '--help',
+}
+-- show help
+main.args['--help'] = {
+description = 'Get this help message.',
+process = function ()
+   print "\n'Sonata LC' is a Lua based program for mathematical calculations.\n"
+   print "USAGE:\n\tlua -i sonata.lua [flag [arg1 arg2 ...]]"
+   print "(option '-i' could be omitted when the program is in non-interractive mode)\n\nFLAGS:"
+   for k,v in pairs(main.args) do 
+      if type(v) == 'string' then
+         local ref = main.args[v]
+         print(string.format('\t%s, %s - %s', k, v, ref.description))
+      end
+   end
+   print("\nVERSION: "..lc_version)
+   local modules = {}
+   for k in pairs(import) do modules[#modules+1] = k end
+   print(string.format("Available modules: %s.\n", table.concat(modules,', ')))
+   print "BUGS: mail to 'vpsys@yandex.ru'\n"
+end,
+exit = true}
 
 return main
 
