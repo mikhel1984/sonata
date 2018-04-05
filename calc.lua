@@ -112,7 +112,7 @@ about[import][2] = liblc.import_state_update()
 
 -- Run! 
 io.write(lc_help.CMAIN)
-print("\n # #          --===== Sonata LC =====--\n  # #            --==== "..lc_version.." ====--\n")
+print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --==== "..lc_version.." ====--         # #\n")
 io.write(lc_help.CHELP)
 print(about:get('intro'))
 
