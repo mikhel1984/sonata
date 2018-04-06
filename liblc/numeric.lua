@@ -33,7 +33,7 @@ ans = c                                   --~ 2
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl, yn = Num.ode(function (x,y) return x*y end, 0, 1, 3)
+tbl, yn = Num.ode(function (x,y) return x*y end, {0,1}, 3)
 ans = yn                                  --~ 90.011
 
 -- use matrices for high order equations
@@ -43,8 +43,15 @@ Mat = require 'liblc.matrix'
 -- represent as: x1 = y, x2 = y'
 -- so: x1' = x2, x2' = 1+2*x2-2*x1
 myfun = function (t,x) return Mat.V {x(2), 1+2*x(2)-2*x(1)} end
-_, xn = Num.ode(myfun, 0, Mat.V {3,2}, 2, 0.2) 
+_, xn = Num.ode(myfun, {0, Mat.V{3,2} }, 2, 0.2) 
 ans = xn(1)                               --~  -10.54
+
+-- define exit condition
+-- from time, current and previous results
+exit = function (t,c,p) return c < 0.1 end
+myfun = function (t,x) return -x end
+_, yn = Num.ode(myfun, {0,1}, exit)
+ans = yn                                  --~ 0.0856
 ]]
 ---------------------------------------------
 
@@ -159,16 +166,24 @@ local function rk(fn, x, y, h)
 end
 
 --- Differential equation solution (Runge-Kutta method).
---    @param fn function f(x,y).
---    @param x0 Initial value of abscissa.
---    @param y0 Initial value of ordinate.
---    @param xn Final value of abscissa.
+--    @param fn function f(t,y).
+--    @param init Initial time and vlue {t0,x0}
+--    @param exit Stop condition, number of function
 --    @param dx Step. If it is omitted then step is calculated automatically.
 --    @return Table of intermediate results and value in final point.
-numeric.ode = function (fn, x0,y0,xn, dx)
-   local PARTS, MAX, MIN = 10, 15, 0.1
-   local h = dx or (xn-x0)/PARTS   -- initial step
-   local res = {{x0,y0}}           -- save intermediate points
+numeric.ode = function (fn, init,exit,dx)
+   local PARTS, MAX, MIN = 10, 15*numeric.TOL, 0.1*numeric.TOL
+   local h, xn, break_condition
+   if type(exit) == 'number' then
+      break_condition = function (t) return t >= exit end
+      xn = exit
+      h = dx or (xn-init[1])/PARTS
+   else
+      break_condition = exit
+      xn = math.huge
+      h = dx or numeric.TOL
+   end
+   local res = {init}           -- save intermediate points
    repeat
       local x,y = Ver.unpack(res[#res])
       h = math.min(h, xn-x)
@@ -181,19 +196,19 @@ numeric.ode = function (fn, x0,y0,xn, dx)
          local y1 =  rk(fn, x, y, h)
          local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
 	 local dy = (type(y1) == 'table') and (y2-y1):norm() or math.abs(y2-y1)
-         if dy > MAX*numeric.TOL then 
+         if dy > MAX then 
             h = h2
-         elseif dy < MIN*numeric.TOL then
+         elseif dy < MIN then
             h = 2*h
          else
             -- save for current step
             res[#res+1] = {x+h, y2}      -- use y2 instead y1 because it proboly more precise (?)
          end
       end
-   until x + h >= xn 
+   until break_condition(res[#res][1],res[#res][2],res[#res-1] and res[#res-1][2])
    return res, res[#res][2]
 end
-numeric.about[numeric.ode] = {"ode(fn,x0,y0,xn[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", }
+numeric.about[numeric.ode] = {"ode(fn,init,break[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", }
 
 -- free memory if need
 if not lc_version then numeric.about = nil end
