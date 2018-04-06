@@ -33,7 +33,6 @@ ans = lctype(25)                 --> 'integer'
 a = {a=1,b=2;3,4,5}
 flip(a)
 ]]
-local Ver = require "liblc.versions"
 
 local main = {}
 
@@ -101,8 +100,7 @@ about[ath] = {"ath(x)", "Hyperbolic arctangent.", lc_help.HYP}
 
 -- round to closest integer
 function round(x,n)
-   n = n or 0
-   k = 10^n
+   k = 10^(n or 0)
    local p,q = math.modf(x*k)
    if q >= 0.5 then 
       p = p+1

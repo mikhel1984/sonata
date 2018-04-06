@@ -23,7 +23,7 @@ ans = #nd                      --> 5
 
 -- list of edges
 ed = a:edges()
-ans = #ed                      --> 5
+ans = #ed                      --> 3
 
 -- add node
 a:add('h') 
@@ -38,7 +38,7 @@ a:remove {'a','d'}
 a:remove('a')
 -- new edge number
 ed = a:edges()
-ans = #ed                      --> 5
+ans = #ed                      --> 2
 
 -- make copy
 b = a:copy()

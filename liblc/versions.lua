@@ -20,8 +20,8 @@ then --==================== Previous versions =======================
 versions.isinteger = function (x) 
       if type(x) == 'string' then x = tonumber(x) end
       if not x then return false end
-      local _,p = math.modf(x) 
-      return p == 0.0 
+      local v,p = math.modf(x) 
+      return p == 0.0 and v <= 1E9
    end
    
 -- Return integer number or nil.
