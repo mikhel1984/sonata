@@ -187,7 +187,7 @@ graph.bfs = function (g, start, goal)
       local node = queue:rem()
       path[#path+1] = node
       if node == goal then
-         return true
+         return true, path
       end
       local previous = queue:size()
       for v in pairs(g[node]) do
@@ -197,8 +197,9 @@ graph.bfs = function (g, start, goal)
       end
       if queue:size() == previous then path[#path] = nil end
    end
-   return nil
+   return false, path
 end
+graph.about[graph.bfs] = {"bfs(start,goal)","Bredth first search. Return result and found path."}
 
 graph.dfs = function (g, start, goal)
    local visited, path = {}, {}
@@ -208,7 +209,7 @@ graph.dfs = function (g, start, goal)
       local node = stack:pop()
       path[#path+1] = node
       if node == goal then
-         return path
+         return true, path
       end
       local previous = stack:size()
       for v in pairs(g[node]) do
@@ -218,8 +219,9 @@ graph.dfs = function (g, start, goal)
       end
       if stack:size() == previous then path[#path] = nil end
    end
-   return nil
+   return false, path
 end
+graph.about[graph.dfs] = {"dfs(start,goal)","Depth first search. Return result and found path."}
 
 -- free memory in case of standalone usage
 if not lc_version then graph.about = nil end

@@ -69,13 +69,21 @@ end
 
 -- Import actions 
 function liblc.doimport(tbl,name)
-   local var = assert(tbl[name], 'Wrong module name: '..name..'!')
+   local var = tbl[name]
+   if not var then
+      if not liblc.alias then 
+         liblc.alias = {}
+	 for k,v in pairs(import) do liblc.alias[v] = k end
+      end
+      var = name
+      name = assert(liblc.alias[name], "Wrong module name: "..name.."!")
+   end
    if not _G[var] then
       _G[var] = require('liblc.'..name)
       about:add(_G[var].about, var)
       if _G[var].onimport then _G[var].onimport() end
    end
-   return var
+   return var, name
 end
 
 -- Add modules 
@@ -87,9 +95,9 @@ setmetatable(import,
     elseif type(name) == 'table' then
        for _,v in ipairs(name) do import(v) end
     else
-       local var = liblc.doimport(self,name)
+       local var, nm = liblc.doimport(self,name)
        io.write(lc_help.CHELP)
-       print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, name))
+       print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))
     end
     about[import][2] = liblc.import_state_update()
     return import
