@@ -1,7 +1,7 @@
 --[[      liblc/main.lua 
 
 --- Define aliases for standard operations and add some new common functions.
---  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'main'
@@ -313,7 +313,7 @@ process = function ()
    local modules = {}
    for k in pairs(import) do modules[#modules+1] = k end
    print(string.format("Available modules: %s.\n", table.concat(modules,', ')))
-   print "BUGS: mail to 'vpsys@yandex.ru'\n"
+   print "BUGS: mail to 'sonatalc@yandex.ru'\n"
 end,
 exit = true}
 

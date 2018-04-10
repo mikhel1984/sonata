@@ -27,4 +27,4 @@ Program includes a help system for most of the functions and modules. It also ca
 
     lua -i calc.lua
 
-If you have any issues, mail to _vpsys@yandex.ru_. 
+If you have any issues, mail to _sonatalc@yandex.ru_. 

@@ -1,7 +1,8 @@
 --[[       liblc/struct.lua
 
 --- Main data structures.
---  @author My Name
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
            module 'struct'
 --]]
