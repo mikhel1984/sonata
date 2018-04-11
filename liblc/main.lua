@@ -161,7 +161,7 @@ function deserialize(obj_str)
    o.modulename = nil; o.metatablename = nil
    return o
 end
-about[deserialize] = {"deserialize(obj_str)", "Transform string with serialization into LuaCalculus object.", lc_help.OTHER}
+about[deserialize] = {"deserialize(obj_str)", "Transform string with serialization into Sonata LC object.", lc_help.OTHER}
 
 -- Print the contents of a table
 function flip(t,N)
@@ -268,7 +268,7 @@ process = function (args) main.evalstr(args[2]) end,
 exit = true},
 -- localisation file
 ['-l'] = '--lang',
-['--lang'] = {
+['--lng'] = {
 description = 'Create/update file for localisation.',
 process = function (args)
    if args[2] then

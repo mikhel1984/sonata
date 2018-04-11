@@ -133,7 +133,6 @@ if LC_DEFAULT_MODULES then
 end
 
 --===============================================
--- TODO: use alias or part of the name for import
 -- TODO: add step-by-step execution
 -- TODO: optimize for LuaJIT or write C objects
 -- TODO: add 'evaluatable' expressions in text files

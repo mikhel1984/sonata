@@ -43,7 +43,7 @@ Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
 -- @field type Define object type string.
 -- @field about Description of functions.
 -- @field N Define number of points per interval, default is 100
--- @field options Gnuplot options that predefined in LuaCalculus
+-- @field options Gnuplot options that predefined in Sonata LC
 -- @field foptions Predefined function plot options
 
 local gnuplot = {}
