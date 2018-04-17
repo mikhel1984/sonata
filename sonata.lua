@@ -4,19 +4,19 @@
 
 --================= CONFIGURATION ====================
 
---	Uncomment to set the localization file.
+--	Uncomment to set the localization file
 LC_LOCALIZATION = "ru.lng"
 
---	Text coloring.
+--	Text coloring
 LC_USE_COLOR = true
 
---	Load after start
+--	Load after start (optional)
 --LC_DEFAULT_MODULES = {'matrix','numeric'}
 
---	Optional (for bash alias lc='path/to/calc.lua') 
+--	Path (optional, for bash alias lc='path/to/sonata.lua') 
 --LC_ADD_PATH = path/to/?.lua
 
---====================  CODE  ========================
+--=====================  CODE  ========================
 
 -- Version
 lc_version = '0.8.4'
@@ -26,7 +26,7 @@ if LC_ADD_PATH then
    package.path = package.path..';'..LC_ADD_PATH
 end
 
--- Table for program variables. Import base functions. 
+-- Table for program variables. Import base functions 
 liblc = {main=require('liblc.main')}
 
 -- Text colors 
@@ -57,7 +57,7 @@ import = {
 }
 about[import] = {"import", ""}
 
--- Update help information about imported modules, 
+-- Update help information about imported modules 
 function liblc.import_state_update()
    local m = {string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
@@ -104,6 +104,7 @@ setmetatable(import,
   end,
 })
 
+-- Process command line arguments
 if #arg > 0 then
    local command = liblc.main.args[arg[1]]
    if type(command) == 'string' then command = liblc.main.args[command] end
@@ -112,7 +113,7 @@ if #arg > 0 then
    if command.exit then os.exit() end
 end
 
--- Read localization file and update descriptions. 
+-- Read localization file and update descriptions 
 if LC_LOCALIZATION then 
    about:localization(LC_LOCALIZATION) 
 end
