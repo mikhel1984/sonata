@@ -237,7 +237,7 @@ local function getmin(tbl)
    return key, minval
 end
 
-graph.dijkstra = function(g,start,goal)
+graph.Dijkstra = function(g,start,goal)
    -- define local set 
    local set = {}
    for k in pairs(g) do set[k] = math.huge end
@@ -271,10 +271,69 @@ graph.dijkstra = function(g,start,goal)
       return dist, prev
    end
 end
-graph.about[graph.dijkstra] = {'dijkstra(g,start[,goal]', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length."}
+graph.about[graph.Dijkstra] = {'Dijkstra(g,start[,goal]', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length."}
+
+graph.BellmanFord = function (g, start,goal)
+   -- initialize
+   local prev = {}
+   local dist = {}
+   local N = 0      -- number of nodes
+   for k in pairs(g) do dist[k] = math.huge; N = N+1 end
+   dist[start] = 0
+
+   -- relax
+   for i = 1,N-1 do
+      for u in pairs(g) do
+         for v,d in pairs(g[u]) do
+            local alt = dist[u] + d
+            if alt < dist[v] then
+	       dist[v] = alt; prev[v] = u
+	    end
+         end
+      end
+   end
+--[[
+   -- check for negative circles
+   for u in pairs(g) do
+      for v,d in pairs(g[u]) do
+         assert(dist[u] + d >= dist[v], 'Negative circle!')
+      end
+   end
+]]
+   -- result
+   if goal then
+      local p,k = {goal},goal
+      while prev[k] and #p < N do
+         k = prev[k]; p[#p+1] = k
+      end
+      local rev = {}
+      for i = 1,#p do rev[#p-i+1] = p[i] end
+      return dist[goal], rev
+   else
+      return dist, prev
+   end
+end
+graph.about[graph.BellmanFord] = {'BellmanFord(start[,goal]','Shortest path search using Bellman-Ford algorithm.'}
+
+graph.spath = function (g,start,goal)
+   local positive = true
+   for u in pairs(g) do
+      for _,d in pairs(g[u]) do
+         if d < 0 then positive = false; break end
+      end
+      if not positive then break end
+   end
+   if positive then 
+      return graph.Dijkstra(g,start,goal) 
+   else 
+      return graph.BellmanFord(g,start,goal)
+   end
+end
+graph.about[graph.spath] = {'spath(start[,goal])', "Find shortest path using algorithm of Dijkstra of Bellman-Ford."}
 
 -- free memory in case of standalone usage
 if not lc_version then graph.about = nil end
+
 
 return graph
 
