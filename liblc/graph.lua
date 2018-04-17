@@ -223,26 +223,60 @@ graph.dfs = function (g, start, goal)
 end
 graph.about[graph.dfs] = {"dfs(start,goal)","Depth first search. Return result and found path."}
 
+-- Get key with minimum value, remove it
+local function getmin(tbl)
+   local minval = math.huge 
+   local key
+   -- find new minimal value
+   for k,v in pairs(tbl) do
+      if v < minval then 
+         key = k; minval = v
+      end
+   end
+   if key then tbl[key] = nil end
+   return key, minval
+end
+
+graph.dijkstra = function(g,start,goal)
+   -- define local set 
+   local set = {}
+   for k in pairs(g) do set[k] = math.huge end
+   set[start] = 0
+
+   local prev = {}
+   local dist = {}
+
+   while true do
+      local current, val = getmin(set)
+      if not current then break end
+
+      dist[current] = val
+      for k,v in pairs(g[current]) do
+         local alt = val + v
+	 if set[k] and set[k] > alt then
+	    set[k] = alt; prev[k] = current
+	 end
+      end
+   end
+   -- result
+   if goal then
+      local p, k = {goal},goal 
+      while prev[k] do
+         k = prev[k]; p[#p+1] = k
+      end
+      local rev = {}
+      for i = 1,#p do rev[#p-i+1] = p[i] end
+      return dist[goal], rev
+   else
+      return dist, prev
+   end
+end
+graph.about[graph.dijkstra] = {'dijkstra(g,start[,goal]', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length."}
+
 -- free memory in case of standalone usage
 if not lc_version then graph.about = nil end
 
 return graph
 
--- TODO: multible edges for the same verteces
-
---[[
-a = graph {{'a','b'},{'a','c',w=2},{'c','b',3,4}}
-print(a)
-b = a:copy()
-print(b)
-a:add('pp')
-a:add({'t','u'})
-
-a:remove({'t','u'})
-a:remove('a')
-
-n = a:edges()
-for _,v in ipairs(n) do print(v[1],v[2]) end
-
-print(a)
-]]
+-- TODO: multiple edges for the same verteces
+-- TODO: add heap to Dijkstra's algorithm
