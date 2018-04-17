@@ -25,6 +25,6 @@ Program includes a help system for most of the functions and modules. It also ca
 
 **Sonata LC** works in standard **Lua** interpreter. It is oriended on version _5.3_, but most of the functions are compatible also with _5.1_ and _5.2_ versions. In order to run it, call
 
-    lua -i calc.lua
+    lua -i sonata.lua
 
 If you have any issues, mail to _sonatalc@yandex.ru_. 
