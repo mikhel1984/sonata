@@ -234,9 +234,9 @@ end
 function lc_life(board,flat)
    assert(board.type == 'matrix', 'Matrix is expected!')
    local rows,cols = board:size() 
-   local src,gen,ans = board, 0
+   local src,gen = board, 0
    local g = function (x) return x ~= 0 and 1 or 0 end
-   -- count neighbours
+   -- make decision about current cell
    local islive = function (r,c)
             local n = g(src[r-1][c-1]) + g(src[r][c-1]) + g(src[r+1][c-1]) + g(src[r-1][c]) + g(src[r+1][c]) + g(src[r-1][c+1]) + g(src[r][c+1]) + g(src[r+1][c+1])
 	    if not flat then
@@ -247,6 +247,7 @@ function lc_life(board,flat)
 	    end
 	    return g(src[r][c]) == 1 and (n == 2 or n == 3) and 1 or n == 3 and 1 or 0
          end
+   -- evaluate
    repeat
       local new = board:zeros()    -- empty matrix of the same size
       gen = gen+1
@@ -258,8 +259,9 @@ function lc_life(board,flat)
 	 end
 	 print('|')
       end
+      if gen > 1 and new == src then print('Game Over'); break end
       src = new
-      io.write('Circle: '..gen..' Continue? (y/n)')
+      io.write('#'..gen..'  continue? (y/n) ')
    until 'n' == io.read()
 end
 
@@ -299,7 +301,7 @@ description = 'Evaluate command line expression(s).',
 process = function (args) main.evalstr(args[2]) end,
 exit = true},
 -- localisation file
-['-l'] = '--lang',
+['-l'] = '--lng',
 ['--lng'] = {
 description = 'Create/update file for localisation.',
 process = function (args)
@@ -318,6 +320,11 @@ process = function (args)
    lc_help.newmodule(args[2],args[3],args[4])
 end,
 exit = true},
+-- run code for debugging 
+['--dbg'] = {
+description = "Run file 'dbg.lua'",
+process = function (args) dofile('dbg.lua') end,
+exit = false},
 -- process files
 ['no flags'] = {
 description = 'Evaluate file(s).',
@@ -337,7 +344,7 @@ process = function ()
    print "(option '-i' could be omitted when the program is in non-interractive mode)\n\nFLAGS:"
    for k,v in pairs(main.args) do 
       if type(v) == 'string' then
-         local ref = main.args[v]
+         local ref = main.args[v]         
          print(string.format('\t%s, %s - %s', k, v, ref.description))
       end
    end
