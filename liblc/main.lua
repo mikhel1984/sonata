@@ -231,6 +231,38 @@ function help(fn)
    end
 end
 
+function lc_life(board,flat)
+   assert(board.type == 'matrix', 'Matrix is expected!')
+   local rows,cols = board:size() 
+   local src,gen,ans = board, 0
+   local g = function (x) return x ~= 0 and 1 or 0 end
+   -- count neighbours
+   local islive = function (r,c)
+            local n = g(src[r-1][c-1]) + g(src[r][c-1]) + g(src[r+1][c-1]) + g(src[r-1][c]) + g(src[r+1][c]) + g(src[r-1][c+1]) + g(src[r][c+1]) + g(src[r+1][c+1])
+	    if not flat then
+	       if r == 1 then n = n + g(src[rows][c-1]) + g(src[rows][c]) + g(src[rows][c+1]) end
+	       if c == 1 then n = n + g(src[r-1][cols]) + g(src[r][cols]) + g(src[r+1][cols]) end
+               if r == rows then n = n + g(src[1][c-1]) + g(src[1][c]) + g(src[1][c+1]) end
+	       if c == cols then n = n + g(src[r-1][1]) + g(src[r][1]) + g(src[r+1][1]) end
+	    end
+	    return g(src[r][c]) == 1 and (n == 2 or n == 3) and 1 or n == 3 and 1 or 0
+         end
+   repeat
+      local new = board:zeros()    -- empty matrix of the same size
+      gen = gen+1
+      -- update 
+      for r = 1,rows do
+         for c = 1,cols do 
+	    new[r][c] = gen > 1 and islive(r,c) or g(src[r][c]) 
+	    io.write(g(new[r][c]) == 1 and '*' or ' ')
+	 end
+	 print('|')
+      end
+      src = new
+      io.write('Circle: '..gen..' Continue? (y/n)')
+   until 'n' == io.read()
+end
+
 -- Evaluate string equation, print result
 function main.evalstr (s)
    local T = require 'liblc.files'
