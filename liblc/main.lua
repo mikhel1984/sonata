@@ -231,21 +231,16 @@ function help(fn)
    end
 end
 
-function lc_life(board,flat)
+-- Simple implementation of 'the life'
+-- prepare your initial board in form of matrix
+function lc_life(board)
    assert(board.type == 'matrix', 'Matrix is expected!')
    local rows,cols = board:size() 
    local src,gen = board, 0
-   local g = function (x) return x ~= 0 and 1 or 0 end
    -- make decision about current cell
    local islive = function (r,c)
-            local n = g(src[r-1][c-1]) + g(src[r][c-1]) + g(src[r+1][c-1]) + g(src[r-1][c]) + g(src[r+1][c]) + g(src[r-1][c+1]) + g(src[r][c+1]) + g(src[r+1][c+1])
-	    if not flat then
-	       if r == 1 then n = n + g(src[rows][c-1]) + g(src[rows][c]) + g(src[rows][c+1]) end
-	       if c == 1 then n = n + g(src[r-1][cols]) + g(src[r][cols]) + g(src[r+1][cols]) end
-               if r == rows then n = n + g(src[1][c-1]) + g(src[1][c]) + g(src[1][c+1]) end
-	       if c == cols then n = n + g(src[r-1][1]) + g(src[r][1]) + g(src[r+1][1]) end
-	    end
-	    return g(src[r][c]) == 1 and (n == 2 or n == 3) and 1 or n == 3 and 1 or 0
+            local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c] + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
+	    return src[r][c] == 1 and (n == 2 or n == 3) and 1 or n == 3 and 1 or 0
          end
    -- evaluate
    repeat
@@ -254,14 +249,14 @@ function lc_life(board,flat)
       -- update 
       for r = 1,rows do
          for c = 1,cols do 
-	    new[r][c] = gen > 1 and islive(r,c) or g(src[r][c]) 
-	    io.write(g(new[r][c]) == 1 and '*' or ' ')
+	    new[r][c] = gen > 1 and islive(r,c) or src[r][c] ~= 0 and 1 or 0
+	    io.write(new[r][c] == 1 and '*' or ' ')
 	 end
 	 print('|')
       end
-      if gen > 1 and new == src then print('Game Over'); break end
+      if gen > 1 and new == src then print('~~ Game Over ~~'); break end
       src = new
-      io.write('#'..gen..'  continue? (y/n) ')
+      io.write(string.format('#%-2d continue? (y/n) ', gen))
    until 'n' == io.read()
 end
 
