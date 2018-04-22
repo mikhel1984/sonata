@@ -236,11 +236,12 @@ end
 function lc_life(board)
    assert(board.type == 'matrix', 'Matrix is expected!')
    local rows,cols = board:size() 
-   local src,gen = board, 0
+   local src = board
+   local gen = 0
    -- make decision about current cell
    local islive = function (r,c)
-            local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c] + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
-	    return src[r][c] == 1 and (n == 2 or n == 3) and 1 or n == 3 and 1 or 0
+            local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c] + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]	    
+	    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
          end
    -- evaluate
    repeat
@@ -256,7 +257,7 @@ function lc_life(board)
       end
       if gen > 1 and new == src then print('~~ Game Over ~~'); break end
       src = new
-      io.write(string.format('#%-2d continue? (y/n) ', gen))
+      io.write(string.format('#%-3d continue? (y/n) ', gen))
    until 'n' == io.read()
 end
 
