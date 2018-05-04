@@ -134,7 +134,3 @@ if LC_DEFAULT_MODULES then
 end
 
 --===============================================
--- TODO: add step-by-step execution
--- TODO: optimize for LuaJIT or write C objects
--- TODO: add 'evaluatable' expressions in text files
--- TODO: define API for each module

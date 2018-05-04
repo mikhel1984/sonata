@@ -309,7 +309,7 @@ process = function (args)
 end,
 exit = true},
 -- new module
-['-n'] = '--new',
+--['-n'] = '--new',
 ['--new'] = {
 description = 'Generate template for a new module.',
 process = function (args)
@@ -355,4 +355,8 @@ exit = true}
 return main
 
 --===============================
-
+-- TODO: add step-by-step execution
+-- TODO: optimize for LuaJIT or write C objects
+-- TODO: add 'evaluatable' expressions in text files
+-- TODO: define API for each module
+-- TODO: add constant parameters
