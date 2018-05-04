@@ -40,6 +40,22 @@ local function noblank(s,n)
    return string.find(s,'[^%s]',n)
 end
 
+local function strOp (t)
+   local left = t.left:str()
+   local right = t.right:str()
+   return string.format('%s%s%s', left, t.op, right)
+end
+
+local function strFn (t)
+   local a = {}
+   for _,v in ipairs(t.args) do a[#a+1] = v:str() end
+   return string.format('%s(%s)', t.fn, table.concat(a,','))
+end
+
+local function strVar (t) return t.name end
+
+local function strNum (t) return tostring(t.value) end
+
 local function parseSum (s,n)
    n = noblank(s,n)
    local res,res2
@@ -49,7 +65,7 @@ local function parseSum (s,n)
       local op = string.sub(s,n,1)
       if op == '+' or op == '-' then
          res2,n = parseProd(s,n+1)
-         res = symbol:new {op=op, left=res, right=res2}
+         res = symbol:new {op=op, left=res, right=res2, str=strOp}
       else break end
    end
    return res, n
@@ -64,7 +80,7 @@ local function parseFactor(s,n)
       local op = string.sub(s,n,1)
       if op == '*' or '/' then
          res2,n = parsePow(s,n)
-         res = symbol:new {op=op, left=res, right=res2}
+         res = symbol:new {op=op, left=res, right=res2, str=strOp}
       else break end
    end
    return res, n
@@ -78,7 +94,7 @@ local function parsePow(s,n)
    if op == '^' then
       res2 = parsePrim(s,n+1)
       res2,n = parsePrim(s,n)
-      res = symbol:new {op=op, left=res, right=res2}
+      res = symbol:new {op=op, left=res, right=res2, str=strOp}
    end
    return res, n
 end
@@ -105,15 +121,15 @@ local function parsePrim(s,n)
    local res
    if isnumber(s,n) then
       res,n = get_number(s,n)
-      res = symbol:new {value=res}
+      res = symbol:new {value=res, str=strNum}
    elseif isname(s,n) then
       res,n = get_word(s,n)
       local list,n2 = parseArgs(s,n)
       if list then
-         res = symbol:new {fn=res, args=list}
+         res = symbol:new {fn=res, args=list, str=strFn}
 	 n = n2
       else
-         res = symbol:new {name=res}
+         res = symbol:new {name=res, str=strVar}
       end
    elseif string.sub(s,n,1) == '(' then
       res,n = parseSum(s,n)
@@ -152,8 +168,14 @@ function symbol:new(t)
    return o
 end
 
+symbol.parse = function (s)
+   local val = parseSum(s,1)
+   return val
+end
 
-
+symbol.__tostring = function (s)
+   return s:str()
+end
 --[[
 -- simplify constructor call
 setmetatable(symbol, {__call = function (self,v) return symbol:new(v) end})
