@@ -156,6 +156,12 @@ local function issymbol(t) return type(t)=='table' and t.issymbol end
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 symbol.about = help:new("Symbolical calculations.")
 
+local function args(a,b)
+   a = issymbol(a) and a or symbol._num(a)
+   b = issymbol(b) and b or symbol._num(b)
+   return a,b
+end
+
 --- Constructor example
 --    @param t Some value.
 --    @return New object of symbol.
@@ -189,13 +195,15 @@ end
 symbol._strOp = function (t)
    local left = t.left and t.left:str() or ""
    local right = t.right:str()
-   if t.op == '*' or t.op == '/' then
-      local op1,op2 = (t.left and t.left.op), t.right.op
+   local op1,op2 = (t.left and t.left.op), t.right.op
+   if t.op == '*' then
       if op1=='+' or op1=='-' then left = string.format('(%s)',left) end
       if op2=='+' or op2=='-' then right = string.format('(%s)',right) end
-   elseif t.op == '^' then
-      if t.left.op then left = string.format('(%s)',left) end
-      if t.right.op then right = string.format('(%s)',right) end
+   elseif t.op == '^' or t.op == '/' then
+      if op1 then left = string.format('(%s)',left) end
+      if op2 then right = string.format('(%s)',right) end
+   elseif t.op == '-' and not t.left then
+      if op2 then right = string.format('(%s)',right) end
    end
    return string.format('%s%s%s', left, t.op, right)
 end
@@ -267,6 +275,36 @@ symbol.eval = function (s,env)
    return s:ev(env) 
 end
 
+symbol.__add = function (a,b)
+   a,b = args(a,b)
+   return symbol._op('+',a,b)
+end
+
+symbol.__sub = function (a,b)
+   a,b = args(a,b)
+   return symbol._op('-',a,b)
+end
+
+symbol.__mul = function (a,b)
+   a,b = args(a,b)
+   return symbol._op('*',a,b)
+end
+
+symbol.__div = function (a,b)
+   a,b = args(a,b)
+   return symbol._op('/',a,b)
+end
+
+symbol.__pow = function (a,b)
+   a,b = args(a,b)
+   return symbol._op('^',a,b)
+end
+
+symbol.__unm = function (a)
+   a = issymbol(a) and a or symbol._num(a)
+   return symbol._op('-',nil,a)
+end
+
 symbol.__tostring = function (s) return s:str() end
 
 
@@ -288,7 +326,7 @@ symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BAS
 --if not lc_version then symbol.about = nil end
 
 --return symbol
-
+--[[
 a = symbol.parse('name.fn(b+c, q )^( a+ d * f)')
 b = a:copy()
 
@@ -298,3 +336,14 @@ p2 = 2
 
 c = symbol.parse('p1+p2*fun(p1,p2)^2')
 print(c:eval())
+]]
+
+x1 = symbol.parse('a+b')
+x2 = symbol.parse('c*d')
+
+print(x1+x2)
+print(x1-x2)
+print(x1*x2)
+print(x1/x2)
+print(x1^x2)
+print(-x1)

@@ -19,7 +19,7 @@ LC_USE_COLOR = true
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.8.4'
+lc_version = '0.8.5'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
