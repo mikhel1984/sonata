@@ -136,6 +136,14 @@ parser.Prim = function (s,n)
    return res, n
 end
 
+local oplist = {
+['+'] = function (a,b) return a+b end,
+['-'] = function (a,b) return a-b end,
+['*'] = function (a,b) return a*b end,
+['/'] = function (a,b) return a/b end,
+['^'] = function (a,b) return a^b end,
+}
+
 -------------------------------------
 symbol.__index = symbol
 
@@ -158,21 +166,27 @@ function symbol:new(t)
 end
 
 symbol._op = function (op,s1,s2) 
-   return symbol:new {op=op, left=s1, right=s2, str=symbol._strOp} 
+   return symbol:new {op=op, left=s1, right=s2, str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp} 
 end
 
-symbol._num = function (v) return symbol:new {value=v, str=symbol._strNum} end
+symbol._num = function (v) 
+   return symbol:new {value=v, str=symbol._strNum, cpy=symbol._cpyNum, ev=symbol._evNum} 
+end
 
-symbol._var = function (n) return symbol:new {name=n, str=symbol._strVar} end
+symbol._var = function (n) 
+   return symbol:new {name=n, str=symbol._strVar, cpy=symbol._cpyVar, ev=symbol._evVar} 
+end
 
-symbol._fn = function (f,a) return symbol:new {fn=f, args=a, str=symbol._strFn} end
+symbol._fn = function (f,a) 
+   return symbol:new {fn=f, args=a, str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn} 
+end
 
 symbol.parse = function (s)
    local val = parser.Sum(s,1)
    return val
 end
 
-function symbol._strOp (t)
+symbol._strOp = function (t)
    local left = t.left and t.left:str() or ""
    local right = t.right:str()
    if t.op == '*' or t.op == '/' then
@@ -186,34 +200,89 @@ function symbol._strOp (t)
    return string.format('%s%s%s', left, t.op, right)
 end
 
-function symbol._strFn (t)
+symbol._strFn = function  (t)
    local a = {}
    for _,v in ipairs(t.args) do a[#a+1] = v:str() end
    return string.format('%s(%s)', t.fn, table.concat(a,','))
 end
 
-function symbol._strVar (t) return t.name end
+symbol._strVar = function (t) return t.name end
 
-function symbol._strNum (t) return tostring(t.value) end
+symbol._strNum = function (t) return tostring(t.value) end
+
+symbol._cpyOp = function (t) 
+   return symbol._op(t.op, t.left and t.left:cpy(), t.right:cpy())
+end
+
+symbol._cpyFn = function (t)
+   local a = {}
+   for _,v in ipairs(t.args) do a[#a+1] = v:cpy() end
+   return symbol._fn(t.fn, a)
+end
+
+symbol._cpyVar = function (t) return symbol._var(t.name) end
+
+symbol._cpyNum  = function (t) return symbol._num (t.value) end
+
+symbol._evOp = function (t,env)
+   local left = t.left and t.left:ev(env)
+   local right = t.right:ev(env)
+   local sl,sr = issymbol(left), issymbol(right)
+   if not (sl or sr) then
+      return oplist[t.op](left or 0,right)
+   else
+      if left and not sl then left = symbol._num(left) end
+      right = sr and right or symbol._num(right)
+      return symbol._op(t.op, left, right)
+   end
+end
+
+symbol._evFn = function (t,env)
+   local a,issym = {}, false
+   for _,v in ipairs(t.args) do
+      a[#a+1] = v:ev(env)
+      issym = issym or issymbol(a[#a])
+   end
+   -- 
+   local fn = env[t.fn] 
+   if type(fn) ~= 'function' or issym then
+      for i,v in ipairs(a) do
+         if not issymbol(v) then a[i] = symbol._num(v) end
+      end
+      return symbol._fn(t.fn, a)
+   else
+      return fn(table.unpack(a))
+   end
+
+end
+
+symbol._evVar = function (t,env) 
+   return env[t.name] or t 
+end
+
+symbol._evNum = function (t,env) return t.value end
+
+symbol.eval = function (s,env) 
+   env = env or _ENV
+   return s:ev(env) 
+end
 
 symbol.__tostring = function (s) return s:str() end
+
 
 --[[
 -- simplify constructor call
 setmetatable(symbol, {__call = function (self,v) return symbol:new(v) end})
 symbol.Sym = 'Sym'
 symbol.about[symbol.Sym] = {"Sym(t)", "Create new symbol.", help.NEW}
+]]
 
---- Method example
---   It is good idea to define method for the copy creation.
 --   @param t Initial object.
 --   @return Copy of the object.
 symbol.copy = function (t)
-   -- some logic
-   return symbol:new(argument)
+   return t:cpy()
 end
 symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
-]]
 
 -- free memory in case of standalone usage
 --if not lc_version then symbol.about = nil end
@@ -221,4 +290,11 @@ symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BAS
 --return symbol
 
 a = symbol.parse('name.fn(b+c, q )^( a+ d * f)')
-print(a )
+b = a:copy()
+
+fun = function (a,b) return a/b end
+p1 = 4
+p2 = 2
+
+c = symbol.parse('p1+p2*fun(p1,p2)^2')
+print(c:eval())
