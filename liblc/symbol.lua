@@ -16,138 +16,127 @@ a = Sym()
 ans = a.type                   --> 'symbol'
 ]]
 
-local function isnumber(s,n) return string.find(s,'^%d',n) ~= nil end
+local symbol = {}
+--------
+local parser = {}
+-- eval
+-- copy
 
-local function isname(s,n) return string.find(s,'^%a',n) ~= nil end
+parser.isnumber = function(s,n) return string.find(s,'^%d',n) ~= nil end
 
-local function get_number(s,n)
+parser.isname = function(s,n) return string.find(s,'^%a',n) ~= nil end
+
+parser.get_number = function(s,n)
    local p,q = string.find(s,'%d+%.?%d*',n)
    local p2,q2 = string.find(s,'[eE][-+]?%d+',q+1)
    if p2 then q = q2 end
    return string.sub(s,p,q), q+1
 end
 
-local function get_word(s,n)
-   local p,q = string.find(s,'%a[%w_]*',n)
+parser.get_word = function(s,n)
+   local p,q = string.find(s,'%a[%w_%.]*',n)
    return string.sub(s,p,q), q+1
 end
 
-local function get_sign(s,n)
-   return string.sub(s,n,n+1), n+1
+parser.get_sign = function(s,n)
+   return string.sub(s,n,n), n+1
 end
 
-local function noblank(s,n)
-   return string.find(s,'[^%s]',n)
+parser.noblank = function(s,n)
+   n = string.find(s,'[^%s%c]',n)
+   return n and n or #s+1
 end
 
-local function strOp (t)
-   local left = t.left:str()
-   local right = t.right:str()
-   return string.format('%s%s%s', left, t.op, right)
-end
-
-local function strFn (t)
-   local a = {}
-   for _,v in ipairs(t.args) do a[#a+1] = v:str() end
-   return string.format('%s(%s)', t.fn, table.concat(a,','))
-end
-
-local function strVar (t) return t.name end
-
-local function strNum (t) return tostring(t.value) end
-
-local function parseSum (s,n)
-   n = noblank(s,n)
+parser.Sum = function(s,n)
+   --print('sum',n)
+   n = parser.noblank(s,n)
    local res,res2
-   res,n = parseProd(s,n)
+   res,n = parser.Prod(s,n)
    while n <= #s do
-      n = noblank(s,n)
-      local op = string.sub(s,n,1)
+      n = parser.noblank(s,n)
+      local op = string.sub(s,n,n)
       if op == '+' or op == '-' then
-         res2,n = parseProd(s,n+1)
-         res = symbol:new {op=op, left=res, right=res2, str=strOp}
+         res2,n = parser.Prod(s,n+1)
+	 res = symbol._op(op,res,res2)
       else break end
    end
    return res, n
 end
 
-local function parseFactor(s,n)
-   n = noblank(s,n)
+parser.Prod = function (s,n)
+   --print('prod',n)
+   n = parser.noblank(s,n)
    local res,res2
-   res,n = parsePow(s,n)
+   res,n = parser.Pow(s,n)
    while n <= #s do
-      n = noblank(s,n)
-      local op = string.sub(s,n,1)
-      if op == '*' or '/' then
-         res2,n = parsePow(s,n)
-         res = symbol:new {op=op, left=res, right=res2, str=strOp}
+      n = parser.noblank(s,n)
+      local op = string.sub(s,n,n)
+      if op == '*' or op == '/' then
+         res2,n = parser.Pow(s,n+1)
+	 res = symbol._op(op,res,res2)
       else break end
    end
    return res, n
 end
 
-local function parsePow(s,n)
-   n = noblank(s,n)
+parser.Pow = function (s,n)
+   --print('pow',n)
+   n = parser.noblank(s,n)
    local res,res2
-   res,n = parsePrim(s,n)
-   local op = string.sub(s,n,1)
+   res,n = parser.Prim(s,n)
+   local op = string.sub(s,n,n)
    if op == '^' then
-      res2 = parsePrim(s,n+1)
-      res2,n = parsePrim(s,n)
-      res = symbol:new {op=op, left=res, right=res2, str=strOp}
+      res2,n = parser.Prim(s,n+1)
+      res = symbol._op(op,res,res2)
    end
    return res, n
 end
 
-local function parseArgs(s,n)
-   n = noblank(s,n)
-   if string.sub(s,n,1) ~= '(' then return nil end
+parser.Args = function (s,n)
+   --print('args',n)
+   n = parser.noblank(s,n)
+   if string.sub(s,n,n) ~= '(' then return nil end
    local t = {}
-   n = n+1
    while true do
-      t[#t+1] = parseSum(s,n)
-      n = noblank(s,n)
-      local p = string.sub(s,n,1)
-      if p == ')' then break
-      elseif p == ',' then 
-         n = n+1
-      end
+      t[#t+1],n = parser.Sum(s,n+1)
+      n = parser.noblank(s,n)
+      local p = string.sub(s,n,n)
+      if p ~= ',' then break end
    end
    return t, n+1
 end
 
-local function parsePrim(s,n)
-   n = noblank(s,n)
-   local res
-   if isnumber(s,n) then
-      res,n = get_number(s,n)
-      res = symbol:new {value=res, str=strNum}
-   elseif isname(s,n) then
-      res,n = get_word(s,n)
-      local list,n2 = parseArgs(s,n)
+parser.Prim = function (s,n)
+   --print('prim',n)
+   n = parser.noblank(s,n)
+   local p,res = string.sub(s,n,n)
+   if parser.isnumber(s,n) then
+      res,n = parser.get_number(s,n)
+      res = symbol._num(res)
+   elseif parser.isname(s,n) then
+      res,n = parser.get_word(s,n)
+      local list,n2 = parser.Args(s,n)
       if list then
-         res = symbol:new {fn=res, args=list, str=strFn}
+	 res = symbol._fn(res,list)
 	 n = n2
       else
-         res = symbol:new {name=res, str=strVar}
+	 res = symbol._var(res)
       end
-   elseif string.sub(s,n,1) == '(' then
-      res,n = parseSum(s,n)
-      n = noblank(s,n)
-      if string.sub(s,n,1) ~= ')' then
-         error('unexpected symbol '..string.sub(s,n,1))
+   elseif p == '(' then
+      res,n = parser.Sum(s,n+1)
+      n = parser.noblank(s,n)
+      if string.sub(s,n,n) ~= ')' then
+         error(') is expected, got '..string.sub(s,n,n))
       end
+   elseif p == '-' then
+      -- negative number, do nothing
    else
-      error('unexpected symbol '..string.sub(s,n,1))
+      error('unexpected symbol '..p)
    end
    return res, n
 end
 
----------------------------------
--- @class table
--- @name symbol
--- @field about Description of functions.
-local symbol = {}
+-------------------------------------
 symbol.__index = symbol
 
 -- mark
@@ -168,14 +157,47 @@ function symbol:new(t)
    return o
 end
 
+symbol._op = function (op,s1,s2) 
+   return symbol:new {op=op, left=s1, right=s2, str=symbol._strOp} 
+end
+
+symbol._num = function (v) return symbol:new {value=v, str=symbol._strNum} end
+
+symbol._var = function (n) return symbol:new {name=n, str=symbol._strVar} end
+
+symbol._fn = function (f,a) return symbol:new {fn=f, args=a, str=symbol._strFn} end
+
 symbol.parse = function (s)
-   local val = parseSum(s,1)
+   local val = parser.Sum(s,1)
    return val
 end
 
-symbol.__tostring = function (s)
-   return s:str()
+function symbol._strOp (t)
+   local left = t.left and t.left:str() or ""
+   local right = t.right:str()
+   if t.op == '*' or t.op == '/' then
+      local op1,op2 = (t.left and t.left.op), t.right.op
+      if op1=='+' or op1=='-' then left = string.format('(%s)',left) end
+      if op2=='+' or op2=='-' then right = string.format('(%s)',right) end
+   elseif t.op == '^' then
+      if t.left.op then left = string.format('(%s)',left) end
+      if t.right.op then right = string.format('(%s)',right) end
+   end
+   return string.format('%s%s%s', left, t.op, right)
 end
+
+function symbol._strFn (t)
+   local a = {}
+   for _,v in ipairs(t.args) do a[#a+1] = v:str() end
+   return string.format('%s(%s)', t.fn, table.concat(a,','))
+end
+
+function symbol._strVar (t) return t.name end
+
+function symbol._strNum (t) return tostring(t.value) end
+
+symbol.__tostring = function (s) return s:str() end
+
 --[[
 -- simplify constructor call
 setmetatable(symbol, {__call = function (self,v) return symbol:new(v) end})
@@ -198,4 +220,5 @@ symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BAS
 
 --return symbol
 
-print(get_word('a2b_c',1))
+a = symbol.parse('name.fn(b+c, q )^( a+ d * f)')
+print(a )
