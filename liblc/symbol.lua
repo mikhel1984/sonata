@@ -16,6 +16,8 @@ a = Sym()
 ans = a.type                   --> 'symbol'
 ]]
 
+local CLS_OP, CLS_VAR, CLS_NUM, CLS_FN = 1, 2, 3, 4
+
 local symbol = {}
 --------
 local parser = {}
@@ -167,13 +169,13 @@ function symbol:new(t)
 end
 
 
-symbol._op = function (op,s1,s2) return symbol:new {op=op, left=s1, right=s2} end
+symbol._op = function (op,s1,s2) return symbol:new {cls=CLS_OP, op=op, left=s1, right=s2} end
 
-symbol._num = function (v) return symbol:new {value=v} end
+symbol._num = function (v) return symbol:new {cls=CLS_NUM, value=v} end
 
-symbol._var = function (n) return symbol:new {name=n} end
+symbol._var = function (n) return symbol:new {cls=CLS_VAR, name=n} end
 
-symbol._fn = function (f,a) return symbol:new {fn=f, args=a} end
+symbol._fn = function (f,a) return symbol:new {cls=CLS_FN, fn=f, args=a} end
 
 symbol.parse = function (s)
    local val = parser.Sum(s,1)
@@ -297,17 +299,18 @@ end
 symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
 
 ------ base classes
-local class_op = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp}
+local _class = {}
+_class[CLS_OP] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp}
 
-local class_fn = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn}
+_class[CLS_FN] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn}
 
-local class_num = {
+_class[CLS_NUM] = {
 str = function (t) return tostring(t.value) end,
 cpy = function (t) return symbol._num (t.value) end,
 ev = function (t,env) return t.value end,
 }
 
-local class_var = {
+_class[CLS_VAR] = {
 str = function (t) return t.name end,
 cpy = function (t) return symbol._var(t.name) end,
 ev = function (t,env) return env[t.name] or t end,
@@ -316,10 +319,7 @@ ev = function (t,env) return env[t.name] or t end,
 ----- inheritance
 symbol.__index = function (t,k)
    if symbol[k] then return symbol[k]
-   elseif rawget(t,'op') then return class_op[k]
-   elseif rawget(t,'name') then return class_var[k]
-   elseif rawget(t,'fn') then return class_fn[k]
-   elseif rawget(t,'value') then return class_num[k]
+   else return _class[t.cls][k]
    end
 end
 -- free memory in case of standalone usage
