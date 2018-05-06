@@ -144,9 +144,6 @@ local oplist = {
 ['^'] = function (a,b) return a^b end,
 }
 
--------------------------------------
-symbol.__index = symbol
-
 -- mark
 symbol.type = 'symbol'
 symbol.issymbol = true
@@ -166,26 +163,17 @@ end
 --    @param t Some value.
 --    @return New object of symbol.
 function symbol:new(t)
-   local o = t or {}
-   setmetatable(o,self)
-   return o
+   return setmetatable(t,self)
 end
 
-symbol._op = function (op,s1,s2) 
-   return symbol:new {op=op, left=s1, right=s2, str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp} 
-end
 
-symbol._num = function (v) 
-   return symbol:new {value=v, str=symbol._strNum, cpy=symbol._cpyNum, ev=symbol._evNum} 
-end
+symbol._op = function (op,s1,s2) return symbol:new {op=op, left=s1, right=s2} end
 
-symbol._var = function (n) 
-   return symbol:new {name=n, str=symbol._strVar, cpy=symbol._cpyVar, ev=symbol._evVar} 
-end
+symbol._num = function (v) return symbol:new {value=v} end
 
-symbol._fn = function (f,a) 
-   return symbol:new {fn=f, args=a, str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn} 
-end
+symbol._var = function (n) return symbol:new {name=n} end
+
+symbol._fn = function (f,a) return symbol:new {fn=f, args=a} end
 
 symbol.parse = function (s)
    local val = parser.Sum(s,1)
@@ -214,9 +202,6 @@ symbol._strFn = function  (t)
    return string.format('%s(%s)', t.fn, table.concat(a,','))
 end
 
-symbol._strVar = function (t) return t.name end
-
-symbol._strNum = function (t) return tostring(t.value) end
 
 symbol._cpyOp = function (t) 
    return symbol._op(t.op, t.left and t.left:cpy(), t.right:cpy())
@@ -228,9 +213,6 @@ symbol._cpyFn = function (t)
    return symbol._fn(t.fn, a)
 end
 
-symbol._cpyVar = function (t) return symbol._var(t.name) end
-
-symbol._cpyNum  = function (t) return symbol._num (t.value) end
 
 symbol._evOp = function (t,env)
    local left = t.left and t.left:ev(env)
@@ -261,14 +243,8 @@ symbol._evFn = function (t,env)
    else
       return fn(table.unpack(a))
    end
-
 end
 
-symbol._evVar = function (t,env) 
-   return env[t.name] or t 
-end
-
-symbol._evNum = function (t,env) return t.value end
 
 symbol.eval = function (s,env) 
    env = env or _ENV
@@ -308,12 +284,10 @@ end
 symbol.__tostring = function (s) return s:str() end
 
 
---[[
 -- simplify constructor call
-setmetatable(symbol, {__call = function (self,v) return symbol:new(v) end})
+setmetatable(symbol, {__call = function (self,v) return symbol.parse(v) end})
 symbol.Sym = 'Sym'
 symbol.about[symbol.Sym] = {"Sym(t)", "Create new symbol.", help.NEW}
-]]
 
 --   @param t Initial object.
 --   @return Copy of the object.
@@ -322,11 +296,36 @@ symbol.copy = function (t)
 end
 symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
 
+------ base classes
+local class_op = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp}
+
+local class_fn = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn}
+
+local class_num = {
+str = function (t) return tostring(t.value) end,
+cpy = function (t) return symbol._num (t.value) end,
+ev = function (t,env) return t.value end,
+}
+
+local class_var = {
+str = function (t) return t.name end,
+cpy = function (t) return symbol._var(t.name) end,
+ev = function (t,env) return env[t.name] or t end,
+}
+
+----- inheritance
+symbol.__index = function (t,k)
+   if symbol[k] then return symbol[k]
+   elseif rawget(t,'op') then return class_op[k]
+   elseif rawget(t,'name') then return class_var[k]
+   elseif rawget(t,'fn') then return class_fn[k]
+   elseif rawget(t,'value') then return class_num[k]
+   end
+end
 -- free memory in case of standalone usage
 --if not lc_version then symbol.about = nil end
 
 --return symbol
---[[
 a = symbol.parse('name.fn(b+c, q )^( a+ d * f)')
 b = a:copy()
 
@@ -334,10 +333,10 @@ fun = function (a,b) return a/b end
 p1 = 4
 p2 = 2
 
-c = symbol.parse('p1+p2*fun(p1,p2)^2')
+c = symbol('p1+p2*fun(p1,p2)^2')
 print(c:eval())
-]]
 
+--[[
 x1 = symbol.parse('a+b')
 x2 = symbol.parse('c*d')
 
@@ -347,3 +346,4 @@ print(x1*x2)
 print(x1/x2)
 print(x1^x2)
 print(-x1)
+]]
