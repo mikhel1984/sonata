@@ -144,6 +144,16 @@ end
 
 local simplify = {}
 
+simplify.testfn = function (nm,t) 
+   for i = 1,#t do nm = nm + i*t[i] end 
+   return nm
+end
+
+simplify.hash = function (h,nm) 
+   if not h[nm] then h[nm] = math.random(65535)*1.0 end
+   return h[nm]
+end
+
 
 ----------------------------------
 -- mark
@@ -181,9 +191,6 @@ symbol.parse = function (s)
    local val = parser.Sum(s,1)
    return val
 end
-
-
-
 
 
 symbol.eval = function (s,env) 
@@ -308,7 +315,7 @@ symbol._eqOp = function (t1,t2)
    if rawequal(t1,t2) then return true end
    if not (t2.cls == CLS_OP and t1.op == t2.op)  then return false end
 
-   local res = (t1.left == t2.left) or t1.left and t2.left and t1.left:equal(t2.left) 
+   local res = rawequal(t1.left,t2.left) or t1.left and t2.left and t1.left:equal(t2.left) 
    res = res and t1.right:equal(t2.right)
    if not res and (t1.op == '+' or t1.op == '*') then 
       res = t1.left:equal(t2.right) and t1.right:equal(t2.left)
