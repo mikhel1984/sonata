@@ -18,11 +18,17 @@ ans = a.type                   --> 'symbol'
 
 local CLS_OP, CLS_VAR, CLS_NUM, CLS_FN = 1, 2, 3, 4
 
+local oplist = {
+['+'] = function (a,b) return a+b end,
+['-'] = function (a,b) return a-b end,
+['*'] = function (a,b) return a*b end,
+['/'] = function (a,b) return a/b end,
+['^'] = function (a,b) return a^b end,
+}
+
 local symbol = {}
 --------
 local parser = {}
--- eval
--- copy
 
 parser.isnumber = function(s,n) return string.find(s,'^%d',n) ~= nil end
 
@@ -38,10 +44,6 @@ end
 parser.get_word = function(s,n)
    local p,q = string.find(s,'%a[%w_%.]*',n)
    return string.sub(s,p,q), q+1
-end
-
-parser.get_sign = function(s,n)
-   return string.sub(s,n,n), n+1
 end
 
 parser.noblank = function(s,n)
@@ -138,14 +140,12 @@ parser.Prim = function (s,n)
    return res, n
 end
 
-local oplist = {
-['+'] = function (a,b) return a+b end,
-['-'] = function (a,b) return a-b end,
-['*'] = function (a,b) return a*b end,
-['/'] = function (a,b) return a/b end,
-['^'] = function (a,b) return a^b end,
-}
+-----------------------------------
 
+local simplify = {}
+
+
+----------------------------------
 -- mark
 symbol.type = 'symbol'
 symbol.issymbol = true
@@ -182,70 +182,8 @@ symbol.parse = function (s)
    return val
 end
 
-symbol._strOp = function (t)
-   local left = t.left and t.left:str() or ""
-   local right = t.right:str()
-   local op1,op2 = (t.left and t.left.op), t.right.op
-   if t.op == '*' then
-      if op1=='+' or op1=='-' then left = string.format('(%s)',left) end
-      if op2=='+' or op2=='-' then right = string.format('(%s)',right) end
-   elseif t.op == '^' or t.op == '/' then
-      if op1 then left = string.format('(%s)',left) end
-      if op2 then right = string.format('(%s)',right) end
-   elseif t.op == '-' and not t.left then
-      if op2 then right = string.format('(%s)',right) end
-   end
-   return string.format('%s%s%s', left, t.op, right)
-end
-
-symbol._strFn = function  (t)
-   local a = {}
-   for _,v in ipairs(t.args) do a[#a+1] = v:str() end
-   return string.format('%s(%s)', t.fn, table.concat(a,','))
-end
 
 
-symbol._cpyOp = function (t) 
-   return symbol._op(t.op, t.left and t.left:cpy(), t.right:cpy())
-end
-
-symbol._cpyFn = function (t)
-   local a = {}
-   for _,v in ipairs(t.args) do a[#a+1] = v:cpy() end
-   return symbol._fn(t.fn, a)
-end
-
-
-symbol._evOp = function (t,env)
-   local left = t.left and t.left:ev(env)
-   local right = t.right:ev(env)
-   local sl,sr = issymbol(left), issymbol(right)
-   if not (sl or sr) then
-      return oplist[t.op](left or 0,right)
-   else
-      if left and not sl then left = symbol._num(left) end
-      right = sr and right or symbol._num(right)
-      return symbol._op(t.op, left, right)
-   end
-end
-
-symbol._evFn = function (t,env)
-   local a,issym = {}, false
-   for _,v in ipairs(t.args) do
-      a[#a+1] = v:ev(env)
-      issym = issym or issymbol(a[#a])
-   end
-   -- 
-   local fn = env[t.fn] 
-   if type(fn) ~= 'function' or issym then
-      for i,v in ipairs(a) do
-         if not issymbol(v) then a[i] = symbol._num(v) end
-      end
-      return symbol._fn(t.fn, a)
-   else
-      return fn(table.unpack(a))
-   end
-end
 
 
 symbol.eval = function (s,env) 
@@ -285,6 +223,10 @@ end
 
 symbol.__tostring = function (s) return s:str() end
 
+symbol.__eq = function (s1,s2)
+   return issymbol(s1) and issymbol(s2) and s1:equal(s2)
+end
+
 
 -- simplify constructor call
 setmetatable(symbol, {__call = function (self,v) return symbol.parse(v) end})
@@ -298,33 +240,124 @@ symbol.copy = function (t)
 end
 symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
 
+symbol._strOp = function (t)
+   local left = t.left and t.left:str() or ""
+   local right = t.right:str()
+   local op1,op2 = (t.left and t.left.op), t.right.op
+   if t.op == '*' then
+      if op1=='+' or op1=='-' then left = string.format('(%s)',left) end
+      if op2=='+' or op2=='-' then right = string.format('(%s)',right) end
+   elseif t.op == '^' or t.op == '/' then
+      if op1 then left = string.format('(%s)',left) end
+      if op2 then right = string.format('(%s)',right) end
+   elseif t.op == '-' and not t.left then
+      if op2 then right = string.format('(%s)',right) end
+   end
+   return string.format('%s%s%s', left, t.op, right)
+end
+
+symbol._strFn = function  (t)
+   local a = {}
+   for _,v in ipairs(t.args) do a[#a+1] = v:str() end
+   return string.format('%s(%s)', t.fn, table.concat(a,','))
+end
+
+
+symbol._cpyOp = function (t) 
+   return symbol._op(t.op, t.left and t.left:cpy(), t.right:cpy())
+end
+
+symbol._cpyFn = function (t)
+   local a = {}
+   for _,v in ipairs(t.args) do a[#a+1] = v:cpy() end
+   return symbol._fn(t.fn, a)
+end
+
+symbol._evOp = function (t,env)
+   local left = t.left and t.left:ev(env)
+   local right = t.right:ev(env)
+   local sl,sr = issymbol(left), issymbol(right)
+   if not (sl or sr) then
+      return oplist[t.op](left or 0,right)
+   else
+      if left and not sl then left = symbol._num(left) end
+      right = sr and right or symbol._num(right)
+      return symbol._op(t.op, left, right)
+   end
+end
+
+symbol._evFn = function (t,env)
+   local a,issym = {}, false
+   for _,v in ipairs(t.args) do
+      a[#a+1] = v:ev(env)
+      issym = issym or issymbol(a[#a])
+   end
+   -- 
+   local fn = env[t.fn] 
+   if type(fn) ~= 'function' or issym then
+      for i,v in ipairs(a) do
+         if not issymbol(v) then a[i] = symbol._num(v) end
+      end
+      return symbol._fn(t.fn, a)
+   else
+      return fn(table.unpack(a))
+   end
+end
+
+symbol._eqOp = function (t1,t2)
+   if rawequal(t1,t2) then return true end
+   if not (t2.cls == CLS_OP and t1.op == t2.op)  then return false end
+
+   local res = (t1.left == t2.left) or t1.left and t2.left and t1.left:equal(t2.left) 
+   res = res and t1.right:equal(t2.right)
+   if not res and (t1.op == '+' or t1.op == '*') then 
+      res = t1.left:equal(t2.right) and t1.right:equal(t2.left)
+   end
+   return res
+end
+
+symbol._eqFn = function (t1,t2)
+   if rawequal(t1,r2) then return true end
+   if t2.cls == CLS_FN and t1.fn == t2.fn and #t1.args == #t2.args then
+      for i = 1,#t1.args do
+         if not t1.args[i]:equal(t2.args[i]) then return false end
+      end
+   else
+      return false
+   end
+   return true
+end
+
 ------ base classes
 local _class = {}
-_class[CLS_OP] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp}
+_class[CLS_OP] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp, equal=symbol._eqOp}
 
-_class[CLS_FN] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn}
+_class[CLS_FN] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn, equal=symbol._eqFn}
 
 _class[CLS_NUM] = {
 str = function (t) return tostring(t.value) end,
 cpy = function (t) return symbol._num (t.value) end,
 ev = function (t,env) return t.value end,
+equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_NUM and t2.value == t1.value end,
 }
 
 _class[CLS_VAR] = {
 str = function (t) return t.name end,
 cpy = function (t) return symbol._var(t.name) end,
 ev = function (t,env) return env[t.name] or t end,
+equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_VAR and t2.name == t1.name end,
 }
 
 ----- inheritance
 symbol.__index = function (t,k)
-   if symbol[k] then return symbol[k]
-   else return _class[t.cls][k]
+   if rawget(symbol,k) then return symbol[k]
+   else return rawget(_class[t.cls],k)
    end
 end
 -- free memory in case of standalone usage
 --if not lc_version then symbol.about = nil end
 
+--[[
 --return symbol
 a = symbol.parse('name.fn(b+c, q )^( a+ d * f)')
 b = a:copy()
@@ -335,6 +368,11 @@ p2 = 2
 
 c = symbol('p1+p2*fun(p1,p2)^2')
 print(c:eval())
+]]
+
+a = symbol('fn1(a,b+c)')
+b = symbol('fn2(a,c+b)')
+print(a == b)
 
 --[[
 x1 = symbol.parse('a+b')
