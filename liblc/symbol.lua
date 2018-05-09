@@ -149,9 +149,31 @@ simplify.testfn = function (nm,t)
    return nm
 end
 
-simplify.hash = function (h,nm) 
+simplify.hash = function (nm,h) 
    if not h[nm] then h[nm] = math.random(65535)*1.0 end
    return h[nm]
+end
+
+simplify._varHash = function (s,h) 
+   s.hash = simplify.hash(s.name,h)
+   return s.hash
+end
+
+simplify._numHash = function (s,h)
+   s.hash = s.value*1.0
+   return s.hash
+end
+
+simplify._opHash = function (s,h)
+   s.hash = oplist[s.op](s.left and s.left:doHash(h) or 0, s.right:doHash(h))   
+   return s.hash
+end
+
+simplify._fnHash = function (s,h)
+   local t = {}
+   for i = 1,#s.args do t[#t+1] = s.args[i]:doHash(h) end
+   s.hash = simplify.testfn(simplify.hash(s.fn,h), t)
+   return s.hash
 end
 
 
@@ -179,13 +201,13 @@ function symbol:new(t)
 end
 
 
-symbol._op = function (op,s1,s2) return symbol:new {cls=CLS_OP, op=op, left=s1, right=s2} end
+symbol._op = function (op,s1,s2) return symbol:new {cls=CLS_OP, op=op, left=s1, right=s2, hash=0} end
 
-symbol._num = function (v) return symbol:new {cls=CLS_NUM, value=v} end
+symbol._num = function (v) return symbol:new {cls=CLS_NUM, value=v, hash=0} end
 
-symbol._var = function (n) return symbol:new {cls=CLS_VAR, name=n} end
+symbol._var = function (n) return symbol:new {cls=CLS_VAR, name=n, hash=0} end
 
-symbol._fn = function (f,a) return symbol:new {cls=CLS_FN, fn=f, args=a} end
+symbol._fn = function (f,a) return symbol:new {cls=CLS_FN, fn=f, args=a, hash=0} end
 
 symbol.parse = function (s)
    local val = parser.Sum(s,1)
@@ -337,15 +359,18 @@ end
 
 ------ base classes
 local _class = {}
-_class[CLS_OP] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp, equal=symbol._eqOp}
+_class[CLS_OP] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp, 
+                  equal=symbol._eqOp, doHash=simplify._opHash}
 
-_class[CLS_FN] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn, equal=symbol._eqFn}
+_class[CLS_FN] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn, 
+                  equal=symbol._eqFn, doHash=simplify._fnHash}
 
 _class[CLS_NUM] = {
 str = function (t) return tostring(t.value) end,
 cpy = function (t) return symbol._num (t.value) end,
 ev = function (t,env) return t.value end,
 equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_NUM and t2.value == t1.value end,
+doHash = simplify._numHash,
 }
 
 _class[CLS_VAR] = {
@@ -353,6 +378,7 @@ str = function (t) return t.name end,
 cpy = function (t) return symbol._var(t.name) end,
 ev = function (t,env) return env[t.name] or t end,
 equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_VAR and t2.name == t1.name end,
+doHash = simplify._varHash,
 }
 
 ----- inheritance
@@ -379,7 +405,8 @@ print(c:eval())
 
 a = symbol('fn1(a,b+c)')
 b = symbol('fn2(a,c+b)')
-print(a == b)
+--print(a == b)
+print(a:doHash({}))
 
 --[[
 x1 = symbol.parse('a+b')
