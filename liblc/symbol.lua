@@ -56,6 +56,7 @@ parser.Sum = function(s,n)
    n = parser.noblank(s,n)
    local res,res2
    res,n = parser.Prod(s,n)
+   res = res or symbol.NULL
    while n <= #s do
       n = parser.noblank(s,n)
       local op = string.sub(s,n,n)
@@ -165,7 +166,7 @@ simplify._numHash = function (s,h)
 end
 
 simplify._opHash = function (s,h)
-   s.hash = oplist[s.op](s.left and s.left:doHash(h) or 0, s.right:doHash(h))   
+   s.hash = oplist[s.op](s.left:doHash(h), s.right:doHash(h))   
    return s.hash
 end
 
@@ -208,6 +209,10 @@ symbol._num = function (v) return symbol:new {cls=CLS_NUM, value=v, hash=0} end
 symbol._var = function (n) return symbol:new {cls=CLS_VAR, name=n, hash=0} end
 
 symbol._fn = function (f,a) return symbol:new {cls=CLS_FN, fn=f, args=a, hash=0} end
+-- null value for unar minus
+symbol.NULL = symbol._num(0)
+symbol.NULL.cpy = function () return symbol.NULL end
+symbol.NULL.str = function () return "" end
 
 symbol.parse = function (s)
    local val = parser.Sum(s,1)
@@ -247,7 +252,7 @@ end
 
 symbol.__unm = function (a)
    a = issymbol(a) and a or symbol._num(a)
-   return symbol._op('-',nil,a)
+   return symbol._op('-',symbol.NULL,a)
 end
 
 symbol.__tostring = function (s) return s:str() end
@@ -270,16 +275,16 @@ end
 symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
 
 symbol._strOp = function (t)
-   local left = t.left and t.left:str() or ""
+   local left = t.left:str() 
    local right = t.right:str()
-   local op1,op2 = (t.left and t.left.op), t.right.op
+   local op1,op2 = t.left.op, t.right.op
    if t.op == '*' then
       if op1=='+' or op1=='-' then left = string.format('(%s)',left) end
       if op2=='+' or op2=='-' then right = string.format('(%s)',right) end
    elseif t.op == '^' or t.op == '/' then
       if op1 then left = string.format('(%s)',left) end
       if op2 then right = string.format('(%s)',right) end
-   elseif t.op == '-' and not t.left then
+   elseif t.op == '-' then
       if op2 then right = string.format('(%s)',right) end
    end
    return string.format('%s%s%s', left, t.op, right)
@@ -293,7 +298,7 @@ end
 
 
 symbol._cpyOp = function (t) 
-   return symbol._op(t.op, t.left and t.left:cpy(), t.right:cpy())
+   return symbol._op(t.op, t.left:cpy(), t.right:cpy())
 end
 
 symbol._cpyFn = function (t)
@@ -303,11 +308,11 @@ symbol._cpyFn = function (t)
 end
 
 symbol._evOp = function (t,env)
-   local left = t.left and t.left:ev(env)
+   local left = t.left:ev(env)
    local right = t.right:ev(env)
    local sl,sr = issymbol(left), issymbol(right)
    if not (sl or sr) then
-      return oplist[t.op](left or 0,right)
+      return oplist[t.op](left,right)
    else
       if left and not sl then left = symbol._num(left) end
       right = sr and right or symbol._num(right)
@@ -337,8 +342,7 @@ symbol._eqOp = function (t1,t2)
    if rawequal(t1,t2) then return true end
    if not (t2.cls == CLS_OP and t1.op == t2.op)  then return false end
 
-   local res = rawequal(t1.left,t2.left) or t1.left and t2.left and t1.left:equal(t2.left) 
-   res = res and t1.right:equal(t2.right)
+   local res = t1.left:equal(t2.left) and t1.right:equal(t2.right)
    if not res and (t1.op == '+' or t1.op == '*') then 
       res = t1.left:equal(t2.right) and t1.right:equal(t2.left)
    end
@@ -384,7 +388,7 @@ doHash = simplify._varHash,
 ----- inheritance
 symbol.__index = function (t,k)
    if rawget(symbol,k) then return symbol[k]
-   else return rawget(_class[t.cls],k)
+   else return _class[t.cls][k]
    end
 end
 -- free memory in case of standalone usage
@@ -403,10 +407,12 @@ c = symbol('p1+p2*fun(p1,p2)^2')
 print(c:eval())
 ]]
 
-a = symbol('fn1(a,b+c)')
-b = symbol('fn2(a,c+b)')
+
+--print(symbol('-b'))
+--a = symbol('fn1(a,b+c)')
+--b = symbol('fn2(a,c+b)')
 --print(a == b)
-print(a:doHash({}))
+--print(a:doHash({}))
 
 --[[
 x1 = symbol.parse('a+b')
