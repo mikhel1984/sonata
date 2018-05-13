@@ -9,7 +9,7 @@
 
 ---------------- Tests ---------------------
 --[[!!
-require 'liblc.main'
+lc = require 'liblc.main'
 
 -- constants starts from _
 ans = _pi                        --> math.pi
@@ -18,7 +18,7 @@ ans = _pi                        --> math.pi
 ans = round(0.9)                 --> 1.0
 
 -- save 2 digits
-ans = round(math.pi, 2)          --> 3.142
+ans = round(math.pi, 2)          --> 3.14
 
 -- 'small' factorial - int
 ans = fact(12)                   --> 479001600
@@ -27,11 +27,23 @@ ans = fact(12)                   --> 479001600
 ans = fact(50)                   --~ 3.0414E+64
 
 -- get object type
-ans = lctype(25)                 --> 'integer'
+ans = lc.type(25)                --> 'integer'
 
 -- show table components
 a = {a=1,b=2;3,4,5}
-flip(a)
+lc.flip(a)
+
+-- generate 'vector'
+b = lc.range(3)
+ans = b[3]                      --> 3
+
+-- full form
+b = lc.range(2,10,2)
+ans = b[2]                      --> 4
+
+-- append a to b
+lc.append(b,a)
+ans = b.b                       --> 2
 ]]
 
 local main = {}
@@ -218,6 +230,31 @@ function main.pause(s)
    io.read()
 end
 about[main.pause] = {'lc_pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
+
+-- Generate sequence of values
+main.range = function (from,to,step)
+   step = step or 1
+   if not to then to = from; from = 1 end
+   assert((to-from)*step > 0)
+   local res = {}
+   for i = from,to,step do res[#res+1] = i end
+   return res
+end
+
+-- append to table a value or elements of other table
+main.append = function (t,val)
+   if type(val) == 'table' then
+      for k,v in pairs(val) do 
+         if type(k) == 'number' then
+	    t[#t+1] = v
+	 else
+            t[k] = v 
+	 end
+      end
+   else
+      t[#t+1] = val
+   end
+end
 
 -- Print lc_help information
 function help(fn)   
