@@ -75,9 +75,9 @@ _pi = math.pi;     about[_pi] = {"_pi", "Number pi", lc_help.CONST}
 _e = math.exp(1.0) about[_e] = {"_e", "Euler number", lc_help.CONST}
 
 -- Additional functions --
-main.LOG10 = math.log(10)
+main._LOG10 = math.log(10)
 
-function lg(x) return math.log(x)/main.LOG10 end
+function lg(x) return math.log(x)/main._LOG10 end
 about[lg] = {"lg(x)", "Decimal logarithm.", }
 
 function rand() return math.random() end
@@ -134,7 +134,7 @@ function fact(n)
 end
 
 -- Print examples from test part of module
-function example(nm)
+function main.example(nm)
    assert(type(nm) == 'string', 'Module name is expected!')
    local fname = 'liblc'..lc_help.SEP..nm..'.lua'
    local f = io.open(fname, 'r')
@@ -149,11 +149,11 @@ function example(nm)
       print("No examples found in '"..fname.."'")
    end
 end
-about[example] = {"example(name)", "Show examples for given module, which used to test.", }
+about[main.example] = {"example(name)", "Show examples for given module, which used to test.", }
 
 
 -- read object from its serialization
-function deserialize(obj_str)
+function main.deserialize(obj_str)
    local f = assert(load("return " .. obj_str)) 
    local o = f()
    assert(_G[o.metatablename], "Module '" .. o.modulename .. "' is required")
@@ -161,10 +161,10 @@ function deserialize(obj_str)
    o.modulename = nil; o.metatablename = nil
    return o
 end
-about[deserialize] = {"deserialize(obj_str)", "Transform string with serialization into Sonata LC object.", lc_help.OTHER}
+about[main.deserialize] = {"deserialize(obj_str)", "Transform string with serialization into Sonata LC object.", lc_help.OTHER}
 
 -- Print the contents of a table
-function flip(t,N)
+function main.flip(t,N)
    assert(type(t) == 'table', 'Table is expected!')
    N = N or 10
    local count = 1
@@ -192,16 +192,16 @@ function flip(t,N)
    end
    print(#t > 0 and '\n}' or '}')
 end
-about[flip] = {"flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
+about[main.flip] = {"flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
 
 -- Return 'scintific' representation of the number
-function sci(x)
+function main.sci(x)
    print(string.format('%.2E',x))
 end
-about[sci] = {"sci(x)", "'Scintific' representation of the number.", lc_help.OTHER}
+about[main.sci] = {"sci(x)", "'Scintific' representation of the number.", lc_help.OTHER}
 
 -- Show type of the object.
-function lc_type(t)
+function main.type(t)
    local v = type(t)
    if v == 'table' then
       v = t.type or v
@@ -210,14 +210,14 @@ function lc_type(t)
    end
    return v
 end
-about[lc_type] = {'lc_type(t)', 'Show type of the object.', lc_help.OTHER}
+about[main.type] = {'lc_type(t)', 'Show type of the object.', lc_help.OTHER}
 
 -- Wait for press button
-function lc_pause(s)
+function main.pause(s)
    if s then io.write(s) end
    io.read()
 end
-about[lc_pause] = {'lc_pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
+about[main.pause] = {'lc_pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
 
 -- Print lc_help information
 function help(fn)   
@@ -233,7 +233,7 @@ end
 
 -- Simple implementation of 'the life'
 -- prepare your initial board in form of matrix
-function lc_life(board)
+function main.life(board)
    assert(board.type == 'matrix', 'Matrix is expected!')
    local rows,cols = board:size() 
    local src = board
@@ -273,7 +273,7 @@ end
 
 main.about = about
 
-main.args = {
+main._args = {
 -- run tests
 ['-t'] = '--test',
 ['--test'] = {
@@ -332,13 +332,13 @@ exit = true},
 ['-h'] = '--help',
 }
 -- show help
-main.args['--help'] = {
+main._args['--help'] = {
 description = 'Get this help message.',
 process = function ()
    print "\n'Sonata LC' is a Lua based program for mathematical calculations.\n"
    print "USAGE:\n\tlua -i sonata.lua [flag [arg1 arg2 ...]]"
    print "(option '-i' could be omitted when the program is in non-interractive mode)\n\nFLAGS:"
-   for k,v in pairs(main.args) do 
+   for k,v in pairs(main._args) do 
       if type(v) == 'string' then
          local ref = main.args[v]         
          print(string.format('\t%s, %s - %s', k, v, ref.description))

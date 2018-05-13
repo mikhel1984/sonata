@@ -27,7 +27,9 @@ if LC_ADD_PATH then
 end
 
 -- Table for program variables. Import base functions 
-liblc = {main=require('liblc.main')}
+--liblc = {main=require('liblc.main')}
+lc = require('liblc.main')
+lc_local = {}
 
 -- Text colors 
 lc_help.usecolors(LC_USE_COLOR) 
@@ -58,7 +60,7 @@ import = {
 about[import] = {"import", ""}
 
 -- Update help information about imported modules 
-function liblc.import_state_update()
+function lc_local.import_state_update()
    local m = {string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
       m[#m+1] = string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-'))
@@ -68,15 +70,15 @@ function liblc.import_state_update()
 end
 
 -- Import actions 
-function liblc.doimport(tbl,name)
+function lc_local.doimport(tbl,name)
    local var = tbl[name]
    if not var then
-      if not liblc.alias then 
-         liblc.alias = {}
-	 for k,v in pairs(import) do liblc.alias[v] = k end
+      if not lc_local.alias then 
+         lc_local.alias = {}
+	 for k,v in pairs(import) do lc_local.alias[v] = k end
       end
       var = name
-      name = assert(liblc.alias[name], "Wrong module name: "..name.."!")
+      name = assert(lc_local.alias[name], "Wrong module name: "..name.."!")
    end
    if not _G[var] then
       _G[var] = require('liblc.'..name)
@@ -91,24 +93,24 @@ setmetatable(import,
 { __tostring = function (x) io.write(lc_help.CHELP); return about:get('done') end,
   __call = function (self, name) 
     if name == 'all' then 
-       for k,v in pairs(self) do liblc.doimport(self,k) end
+       for k,v in pairs(self) do lc_local.doimport(self,k) end
     elseif type(name) == 'table' then
        for _,v in ipairs(name) do import(v) end
     else
-       local var, nm = liblc.doimport(self,name)
+       local var, nm = lc_local.doimport(self,name)
        io.write(lc_help.CHELP)
        print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))
     end
-    about[import][2] = liblc.import_state_update()
+    about[import][2] = lc_local.import_state_update()
     return import
   end,
 })
 
 -- Process command line arguments
 if #arg > 0 then
-   local command = liblc.main.args[arg[1]]
-   if type(command) == 'string' then command = liblc.main.args[command] end
-   if not command then command = liblc.main.args['no flags'] end
+   local command = lc._args[arg[1]]
+   if type(command) == 'string' then command = lc._args[command] end
+   if not command then command = lc._args['no flags'] end
    command.process(arg)
    if command.exit then os.exit() end
 end
@@ -117,7 +119,7 @@ end
 if LC_LOCALIZATION then 
    about:localization(LC_LOCALIZATION) 
 end
-about[import][2] = liblc.import_state_update()
+about[import][2] = lc_local.import_state_update()
 
 -- Run! 
 io.write(lc_help.CMAIN)
