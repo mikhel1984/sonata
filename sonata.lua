@@ -98,8 +98,10 @@ setmetatable(import,
        for _,v in ipairs(name) do import(v) end
     else
        local var, nm = lc_local.doimport(self,name)
-       io.write(lc_help.CHELP)
-       print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))
+       if lc_local.dialog then
+          io.write(lc_help.CHELP)
+          print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))
+       end
     end
     about[import][2] = lc_local.import_state_update()
     return import
@@ -113,6 +115,7 @@ if #arg > 0 then
    if not command then command = lc._args['no flags'] end
    command.process(arg)
    if command.exit then os.exit() end
+   lc_local.dialog = true
 end
 
 -- Read localization file and update descriptions 

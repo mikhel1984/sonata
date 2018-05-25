@@ -1036,6 +1036,16 @@ matrix.dense = function (m)
 end
 matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
 
+-- matrix as table (temporary ?)
+matrix.table = function (m)
+   local res = {}
+   for r = 1,m.rows do
+      res[r] = {}
+      for c = 1,m.cols do res[r][c] = m[r][c] end
+   end
+   return res
+end
+
 --- Return sparse matrix, if possible.
 --    @param m Source matrix.
 --    @return Sparse matrix.
