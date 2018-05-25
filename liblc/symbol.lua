@@ -17,6 +17,7 @@ ans = a.type                   --> 'symbol'
 ]]
 
 local CLS_OP, CLS_VAR, CLS_NUM, CLS_FN = 1, 2, 3, 4
+local OP_SUM, OP_PROD, OP_POW = 1, 2, 3
 
 local oplist = {
 ['+'] = function (a,b) return a+b end,
@@ -24,6 +25,9 @@ local oplist = {
 ['*'] = function (a,b) return a*b end,
 ['/'] = function (a,b) return a/b end,
 ['^'] = function (a,b) return a^b end,
+type = {
+['+'] = OP_SUM, ['-'] = OP_SUM, ['*'] = OP_PROD, ['/'] = OP_PROD, ['^'] = OP_POW
+},
 }
 
 local symbol = {}
@@ -176,6 +180,30 @@ simplify._fnHash = function (s,h)
    s.hash = simplify.testfn(simplify.hash(s.fn,h), t)
    return s.hash
 end
+
+simplify._colNumFn = function (s)
+   for i = 1,#s.args do s.args[i]:collectNum() end
+end
+
+simplify._colNumOp = function (s)
+   s.left:collectNum()
+   s.right:collectNum()
+   local cl,cr = s.left.cls, s.right.cls
+   if cl == CLS_NUM and cr == CLS_NUM then
+      s = symbol._num(oplist[s.op](s.left.value, s.right.value))
+   else
+   end
+end
+
+simplify._colNumOp1 = function (op,sl,sr,invert)
+end
+
+simplify._sumExpr = function (op,s1,s2)
+   local res
+   if s1.value then
+   end
+end
+
 
 
 ----------------------------------
@@ -375,6 +403,7 @@ cpy = function (t) return symbol._num (t.value) end,
 ev = function (t,env) return t.value end,
 equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_NUM and t2.value == t1.value end,
 doHash = simplify._numHash,
+collectNum = function() end,
 }
 
 _class[CLS_VAR] = {
@@ -383,6 +412,7 @@ cpy = function (t) return symbol._var(t.name) end,
 ev = function (t,env) return env[t.name] or t end,
 equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_VAR and t2.name == t1.name end,
 doHash = simplify._varHash,
+collectNum = function() end,
 }
 
 ----- inheritance
