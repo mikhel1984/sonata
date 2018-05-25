@@ -25,9 +25,10 @@ local oplist = {
 ['*'] = function (a,b) return a*b end,
 ['/'] = function (a,b) return a/b end,
 ['^'] = function (a,b) return a^b end,
-type = {
-['+'] = OP_SUM, ['-'] = OP_SUM, ['*'] = OP_PROD, ['/'] = OP_PROD, ['^'] = OP_POW
-},
+type = { ['+'] = OP_SUM, ['-'] = OP_SUM, ['*'] = OP_PROD, ['/'] = OP_PROD, ['^'] = OP_POW },
+sign = { ['+'] = 1, ['-'] = -1, ['*'] = 1, ['/'] = -1, },
+inv = { ['+'] = '-', ['-'] = '+', ['*'] = '/', ['/'] = '*', },
+[OP_SUM] = {[1]='+', [-1]='-']}, [OP_PROD] = {[1]='*', [-1]='/'},
 }
 
 local symbol = {}
@@ -147,6 +148,49 @@ end
 
 -----------------------------------
 
+local opcombine = {
+['+'] = {
+  ['+'] = {
+    ['+'] = function (n1,s1,n2.s2) return symbol._op('+', symbol._num(n1.value+n2.value), symbol._op('+',s1,s2)) end,
+    ['-'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value+n2.value), symbol._op('-',s1,s2)) end,
+  },
+  ['-'] = {
+    ['+'] = function (n1,s1,n2.s2) return symbol._op('+', symbol._num(n1.value-n2.value), symbol._op('-',s1,s2)) end,
+    ['-'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value-n2.value), symbol._op('+',s1,s2)) end,
+  },
+},
+['-'] = {
+  ['+'] = {
+    ['+'] = function (n1,s1,n2.s2) return symbol._op('+', symbol._num(n1.value+n2.value), symbol._op('-',s2,s1)) end,
+    ['-'] = function (n1,s1,n2,s2) return symbol._op('-', symbol._num(n1.value+n2.value), symbol._op('+',s1,s2)) end,
+  },
+  ['-'] = {
+    ['+'] = function (n1,s1,n2.s2) return symbol._op('-', symbol._num(n1.value-n2.value), symbol._op('+',s1,s2)) end,
+    ['-'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value-n2.value), symbol._op('-',s2,s1)) end,
+  },
+},
+['*'] = {
+  ['*'] = {
+    ['*'] = function (n1,s1,n2.s2) return symbol._op('*', symbol._num(n1.value*n2.value), symbol._op('*',s1,s2)) end,
+    ['/'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value*n2.value), symbol._op('/',s1,s2)) end,
+  },
+  ['/'] = {
+    ['*'] = function (n1,s1,n2.s2) return symbol._op('*', symbol._num(n1.value/n2.value), symbol._op('/',s1,s2)) end,
+    ['/'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value/n2.value), symbol._op('*',s1,s2)) end,
+  },
+},
+['/'] = {
+  ['*'] = {
+    ['*'] = function (n1,s1,n2.s2) return symbol._op('*', symbol._num(n1.value*n2.value), symbol._op('/',s2,s1)) end,
+    ['/'] = function (n1,s1,n2,s2) return symbol._op('/', symbol._num(n1.value*n2.value), symbol._op('*',s1,s2)) end,
+  },
+  ['/'] = {
+    ['*'] = function (n1,s1,n2.s2) return symbol._op('/', symbol._num(n1.value/n2.value), symbol._op('*',s1,s2)) end,
+    ['/'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value/n2.value), symbol._op('/',s2,s1)) end,
+  },
+},
+}
+
 local simplify = {}
 
 simplify.testfn = function (nm,t) 
@@ -187,24 +231,44 @@ end
 
 simplify._colNumOp = function (s)
    s.left:collectNum()
-   s.right:collectNum()
-   local cl,cr = s.left.cls, s.right.cls
-   if cl == CLS_NUM and cr == CLS_NUM then
-      s = symbol._num(oplist[s.op](s.left.value, s.right.value))
-   else
+   s.right:collectNum()   
+   local op = s.op
+   -- order elements
+   if s.right.value then 
+      if s.left.value then
+         s = symbol._num(oplist[op](s.left.value, s.right.value)); return  
+      elseif op == '*' or op == '+' then
+      -- swap, number should be left
+         s.left, s.right = s.right, s.left   
+      elseif op == '-' then
+         s.right.value = -s.right.value
+	 s = symbol._op('+', s.right, s.left)
+      elseif op == '/' then
+         s.right.value = 1/s.right.value
+	 s = symbol._op('*', s.right, s.left)
+      end 
+   end
+   -- simplify
+   local opl, opr = s.left.op, s.right.op
+   local optype = oplist.type[op]
+   if optype == oplist.type[opr] then
+      if s.left.value then
+         if op == '*' or op == '+' then
+	    s = symbol._op(s.right.op, symbol._num(oplist[op](s.left.value, s.right.left.value)), s.right.right)
+	 elseif op == '-' then
+	    s = symbol._op(s.right.op == '-' and '+' or '-', symbol._num(oplist[op](s.left.value, s.right.left.value)), s.right.right)
+	 else
+	    s = symbol._op(s.right.op == '/' and '*' or '/', symbol._num(oplist[op](s.left.value, s.right.left.value)), s.right.right)
+	 end
+      elseif optype == oplist.type[opl] and s.left.left.value and s.right.left.value then
+         --local g1,g2,g3 = oplist.sign[opl],oplist.sign[op],oplist.sign[opr]
+	 --g3 = g2*g3
+	 --local v1,v2 = symbol._num(oplist[op](s.left.left.value,s.right.left.value))
+	 --if g1 > g3 then v2 = symbol._op(
+         s = opcombine[s.left.op][op][s.right.op](s.left.left, s.left.right, s.right.left, s.right.right)
+      end
    end
 end
-
-simplify._colNumOp1 = function (op,sl,sr,invert)
-end
-
-simplify._sumExpr = function (op,s1,s2)
-   local res
-   if s1.value then
-   end
-end
-
-
 
 ----------------------------------
 -- mark
@@ -241,6 +305,9 @@ symbol._fn = function (f,a) return symbol:new {cls=CLS_FN, fn=f, args=a, hash=0}
 symbol.NULL = symbol._num(0)
 symbol.NULL.cpy = function () return symbol.NULL end
 symbol.NULL.str = function () return "" end
+
+symbol.ZERO = symbol._num(0)
+symbol.ONE = symbol._num(1)
 
 symbol.parse = function (s)
    local val = parser.Sum(s,1)
@@ -392,10 +459,10 @@ end
 ------ base classes
 local _class = {}
 _class[CLS_OP] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp, 
-                  equal=symbol._eqOp, doHash=simplify._opHash}
+                  equal=symbol._eqOp, doHash=simplify._opHash, collectNum=simplify._colNumOp}
 
 _class[CLS_FN] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn, 
-                  equal=symbol._eqFn, doHash=simplify._fnHash}
+                  equal=symbol._eqFn, doHash=simplify._fnHash, collectNum=simplify._colNumFn}
 
 _class[CLS_NUM] = {
 str = function (t) return tostring(t.value) end,
