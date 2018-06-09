@@ -6,8 +6,7 @@
            module 'symbol'
 --]]
 
---------------- Tests ------------
--- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
+
 --[[!!
 Sym = require 'liblc.symbol'
 
@@ -17,18 +16,9 @@ ans = a.type                   --> 'symbol'
 ]]
 
 local CLS_OP, CLS_VAR, CLS_NUM, CLS_FN = 1, 2, 3, 4
-local OP_SUM, OP_PROD, OP_POW = 1, 2, 3
-
-local oplist = {
-['+'] = function (a,b) return a+b end,
-['-'] = function (a,b) return a-b end,
-['*'] = function (a,b) return a*b end,
-['/'] = function (a,b) return a/b end,
-['^'] = function (a,b) return a^b end,
-type = { ['+'] = OP_SUM, ['-'] = OP_SUM, ['*'] = OP_PROD, ['/'] = OP_PROD, ['^'] = OP_POW },
-}
 
 local symbol = {}
+
 --------
 local parser = {}
 
@@ -146,141 +136,50 @@ end
 
 -----------------------------------
 
-local opcombine = {
-['+'] = {
-  ['+'] = {
-    ['+'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value+n2.value), symbol._op('+',s1,s2)) end,
-    ['-'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value+n2.value), symbol._op('-',s1,s2)) end,
-  },
-  ['-'] = {
-    ['+'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value-n2.value), symbol._op('-',s1,s2)) end,
-    ['-'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value-n2.value), symbol._op('+',s1,s2)) end,
-  },
-},
-['-'] = {
-  ['+'] = {
-    ['+'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value+n2.value), symbol._op('-',s2,s1)) end,
-    ['-'] = function (n1,s1,n2,s2) return symbol._op('-', symbol._num(n1.value+n2.value), symbol._op('+',s1,s2)) end,
-  },
-  ['-'] = {
-    ['+'] = function (n1,s1,n2,s2) return symbol._op('-', symbol._num(n1.value-n2.value), symbol._op('+',s1,s2)) end,
-    ['-'] = function (n1,s1,n2,s2) return symbol._op('+', symbol._num(n1.value-n2.value), symbol._op('-',s2,s1)) end,
-  },
-},
-['*'] = {
-  ['*'] = {
-    ['*'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value*n2.value), symbol._op('*',s1,s2)) end,
-    ['/'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value*n2.value), symbol._op('/',s1,s2)) end,
-  },
-  ['/'] = {
-    ['*'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value/n2.value), symbol._op('/',s1,s2)) end,
-    ['/'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value/n2.value), symbol._op('*',s1,s2)) end,
-  },
-},
-['/'] = {
-  ['*'] = {
-    ['*'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value*n2.value), symbol._op('/',s2,s1)) end,
-    ['/'] = function (n1,s1,n2,s2) return symbol._op('/', symbol._num(n1.value*n2.value), symbol._op('*',s1,s2)) end,
-  },
-  ['/'] = {
-    ['*'] = function (n1,s1,n2,s2) return symbol._op('/', symbol._num(n1.value/n2.value), symbol._op('*',s1,s2)) end,
-    ['/'] = function (n1,s1,n2,s2) return symbol._op('*', symbol._num(n1.value/n2.value), symbol._op('/',s2,s1)) end,
-  },
-},
-}
 
-local simplify = {}
 
-simplify.testfn = function (nm,t) 
+local hash = {
+testfn = function (nm,t) 
    for i = 1,#t do nm = nm + i*t[i] end 
    return nm
-end
-
-simplify.hash = function (nm,h) 
+end,
+--
+find = function (nm,h) 
    if not h[nm] then h[nm] = math.random(65535)*1.0 end
    return h[nm]
-end
-
-simplify._varHash = function (s,h) 
-   s.hash = simplify.hash(s.name,h)
+end,
+--
+var = function (s,h) 
+   s.hash = hash.find(s.name,h)
    return s.hash
-end
-
-simplify._numHash = function (s,h)
+end,
+--
+num = function (s,h)
    s.hash = s.value*1.0
    return s.hash
-end
-
-simplify._opHash = function (s,h)
-   s.hash = oplist[s.op](s.left:doHash(h), s.right:doHash(h))   
+end,
+--
+op = function (s,h)
+   s.hash = symbol[s.op].eval(s.left:doHash(h), s.right:doHash(h))   
    return s.hash
-end
-
-simplify._fnHash = function (s,h)
+end,
+--
+fn = function (s,h)
    local t = {}
    for i = 1,#s.args do t[#t+1] = s.args[i]:doHash(h) end
-   s.hash = simplify.testfn(simplify.hash(s.fn,h), t)
+   s.hash = hash.testfn(hash.find(s.fn,h), t)
    return s.hash
-end
+end 
+}
 
-simplify._colNumFn = function (s)
-   for i = 1,#s.args do s.args[i] = s.args[i]:collectNum() end
-end
-
-simplify._colNumOp = function (s)
-   s.left = s.left:collectNum()
-   s.right = s.right:collectNum()   
-   local op = s.op
-   -- order elements
-   if s.right.value then 
-      if s.left.value then
-         return symbol._num(oplist[op](s.left.value, s.right.value))  
-      elseif op == '*' or op == '+' then
-      -- swap, number should be left
-         s.left, s.right = s.right, s.left   
-      elseif op == '-' then
-         s.right.value = -s.right.value
-	 s = symbol._op('+', s.right, s.left)
-      elseif op == '/' then
-         s.right.value = 1/s.right.value
-	 s = symbol._op('*', s.right, s.left)
-      end 
-      op = s.op
-   end
-   -- simplify
-   local opl, opr = s.left.op, s.right.op
-   local optype = oplist.type[op]
-   if optype == oplist.type[opr] and s.right.left.value then
-      if s.left.value then
-         s = opcombine[(optype==OP_SUM) and '+' or '*'][op][s.right.op](s.left, symbol.NULL, s.right.left, s.right.right)
-	 simplify._removeNull(s)
-      elseif optype == oplist.type[opl] and s.left.left.value then
-         s = opcombine[s.left.op][op][s.right.op](s.left.left, s.left.right, s.right.left, s.right.right)
-      end
-   elseif optype == oplist.type[opl] and s.left.left.value then
-      s = opcombine[s.left.op][op][(optype==OP_SUM) and '+' or '*'](s.left.left, s.left.right, (optype==OP_SUM) and symbol.ZERO or symbol.ONE, s.right)
-   end
-   return s
-end
-
-simplify._removeNull = function (s)
-   local t = s.right
-   if rawequal(t.right,symbol.NULL) then
-      s.right = t.left
-   elseif rawequal(t.left,symbol.NULL) then
-      s.right = t.right
-      if s.op == '+' or s.op == '*' then
-	 s.op = t.op
-      else
-         if     t.op == '-' then s.op = '+'
-	 elseif t.op == '/' then s.op = '*'
-	 end
-      end
-   end
-   --return s
-end
 
 ----------------------------------
+symbol['+'] = {eval=function (a,b) return a+b end, level=0, commutative=true}
+symbol['-'] = {eval=function (a,b) return a-b end, level=0, commutative=false}
+symbol['*'] = {eval=function (a,b) return a*b end, level=1, commutative=true}
+symbol['/'] = {eval=function (a,b) return a/b end, level=1, commutative=false}
+symbol['^'] = {eval=function (a,b) return a^b end, level=2, commutative=false}
+
 -- mark
 symbol.type = 'symbol'
 symbol.issymbol = true
@@ -304,7 +203,7 @@ function symbol:new(t)
 end
 
 
-symbol._op = function (op,s1,s2) return symbol:new {cls=CLS_OP, op=op, left=s1, right=s2, hash=0, grp = oplist.type[op]} end
+symbol._op = function (op,s1,s2) return symbol:new {cls=CLS_OP, op=op, left=s1, right=s2, hash=0} end
 
 symbol._num = function (v) return symbol:new {cls=CLS_NUM, value=v, hash=0} end
 
@@ -379,10 +278,12 @@ symbol.copy = function (t)
 end
 symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
 
+--[[
 symbol.simplify = function (s)
    s = s:collectNum()
    return s
 end
+]]
 
 symbol._strOp = function (t)
    local left = t.left:str() 
@@ -422,7 +323,7 @@ symbol._evOp = function (t,env)
    local right = t.right:ev(env)
    local sl,sr = issymbol(left), issymbol(right)
    if not (sl or sr) then
-      return oplist[t.op](left,right)
+      return symbol[t.op].eval(left,right)
    else
       if left and not sl then left = symbol._num(left) end
       right = sr and right or symbol._num(right)
@@ -474,18 +375,17 @@ end
 ------ base classes
 local _class = {}
 _class[CLS_OP] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp, 
-                  equal=symbol._eqOp, doHash=simplify._opHash, collectNum=simplify._colNumOp}
+                  equal=symbol._eqOp, doHash=hash.op}
 
 _class[CLS_FN] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn, 
-                  equal=symbol._eqFn, doHash=simplify._fnHash, collectNum=simplify._colNumFn}
+                  equal=symbol._eqFn, doHash=hash.fn}
 
 _class[CLS_NUM] = {
 str = function (t) return tostring(t.value) end,
 cpy = function (t) return symbol._num (t.value) end,
 ev = function (t,env) return t.value end,
 equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_NUM and t2.value == t1.value end,
-doHash = simplify._numHash,
-collectNum = function(t) return t end,
+doHash = hash.num,
 }
 
 _class[CLS_VAR] = {
@@ -493,16 +393,22 @@ str = function (t) return t.name end,
 cpy = function (t) return symbol._var(t.name) end,
 ev = function (t,env) return env[t.name] or t end,
 equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_VAR and t2.name == t1.name end,
-doHash = simplify._varHash,
-collectNum = function(t) return t end,
+doHash = hash.var,
 }
 
 ----- inheritance
 symbol.__index = function (t,k)
-   if rawget(symbol,k) then return symbol[k]
-   else return _class[t.cls][k]
+   if rawget(symbol,k) then 
+      return symbol[k]
+   else 
+      return _class[t.cls][k] 
    end
 end
+
+
+
+
+
 -- free memory in case of standalone usage
 --if not lc_version then symbol.about = nil end
 
@@ -538,6 +444,6 @@ print(x1^x2)
 print(-x1)
 ]]
 
-a = symbol('-b+2-c+2+(2+a)')
-print(a)
-print(a:simplify())
+--a = symbol('-b+2-c+2+(2+a)')
+--print(a)
+--print(a:simplify())
