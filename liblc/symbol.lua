@@ -148,29 +148,30 @@ find = function (nm,h)
    if not h[nm] then h[nm] = math.random(65535)*1.0 end
    return h[nm]
 end,
+}
 --
-var = function (s,h) 
+hash.var = function (s,h) 
    s.hash = hash.find(s.name,h)
    return s.hash
-end,
+end
 --
-num = function (s,h)
+hash.num = function (s,h)
    s.hash = s.value*1.0
    return s.hash
-end,
+end
 --
-op = function (s,h)
+hash.op = function (s,h)
    s.hash = symbol[s.op].eval(s.left:doHash(h), s.right:doHash(h))   
    return s.hash
-end,
+end
 --
-fn = function (s,h)
+hash.fn = function (s,h)
    local t = {}
    for i = 1,#s.args do t[#t+1] = s.args[i]:doHash(h) end
    s.hash = hash.testfn(hash.find(s.fn,h), t)
    return s.hash
 end 
-}
+
 
 
 ----------------------------------
@@ -412,8 +413,8 @@ end
 -- free memory in case of standalone usage
 --if not lc_version then symbol.about = nil end
 
---[[
 --return symbol
+--[[
 a = symbol.parse('name.fn(b+c, q )^( a+ d * f)')
 b = a:copy()
 
@@ -425,12 +426,13 @@ c = symbol('p1+p2*fun(p1,p2)^2')
 print(c:eval())
 ]]
 
-
---print(symbol('-b'))
---a = symbol('fn1(a,b+c)')
---b = symbol('fn2(a,c+b)')
---print(a == b)
---print(a:doHash({}))
+--[[
+print(symbol('-b'))
+a = symbol('fn1(a,b+c)')
+b = symbol('fn2(a,c+b)')
+print(a == b)
+print(a:doHash({}))
+]]
 
 --[[
 x1 = symbol.parse('a+b')
