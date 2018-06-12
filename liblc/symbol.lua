@@ -15,9 +15,19 @@ a = Sym()
 ans = a.type                   --> 'symbol'
 ]]
 
-local CLS_OP, CLS_VAR, CLS_NUM, CLS_FN = 1, 2, 3, 4
+local OPERATION, VARIABLE, NUMBER, FUNCTION = 1, 2, 3, 4
 
 local symbol = {}
+
+symbol._libs = {}
+
+symbol._add_lib = function (self, s)
+   local lib = require(s)
+   lib.root = self
+   table.insert(symbol._libs, lib)
+end
+
+symbol:_add_lib('sym_base')
 
 --------
 local parser = {}
@@ -172,7 +182,12 @@ hash.fn = function (s,h)
    return s.hash
 end 
 
-
+symbol._get_lib_for = function (key)
+   for _,v in ipairs(symbol._libs) do
+      if v[key] then return v[key] end
+   end
+   return nil
+end
 
 ----------------------------------
 symbol['+'] = {eval=function (a,b) return a+b end, level=0, commutative=true}
@@ -204,13 +219,13 @@ function symbol:new(t)
 end
 
 
-symbol._op = function (op,s1,s2) return symbol:new {cls=CLS_OP, op=op, left=s1, right=s2, hash=0} end
+symbol._op = function (op,s1,s2) return symbol:new {cls=OPERATION, op=op, left=s1, right=s2, hash=0} end
 
-symbol._num = function (v) return symbol:new {cls=CLS_NUM, value=v, hash=0} end
+symbol._num = function (v) return symbol:new {cls=NUMBER, value=v, hash=0} end
 
-symbol._var = function (n) return symbol:new {cls=CLS_VAR, name=n, hash=0} end
+symbol._var = function (n) return symbol:new {cls=VARIABLE, name=n, hash=0} end
 
-symbol._fn = function (f,a) return symbol:new {cls=CLS_FN, fn=f, args=a, hash=0} end
+symbol._fn = function (f,a) return symbol:new {cls=FUNCTION, fn=f, args=a, hash=0} end
 -- null value for unar minus
 symbol.NULL = symbol._num(0)
 symbol.NULL.cpy = function () return symbol.NULL end
@@ -352,7 +367,7 @@ end
 
 symbol._eqOp = function (t1,t2)
    if rawequal(t1,t2) then return true end
-   if not (t2.cls == CLS_OP and t1.op == t2.op)  then return false end
+   if not (t2.cls == OPERATION and t1.op == t2.op)  then return false end
 
    local res = t1.left:equal(t2.left) and t1.right:equal(t2.right)
    if not res and (t1.op == '+' or t1.op == '*') then 
@@ -363,7 +378,7 @@ end
 
 symbol._eqFn = function (t1,t2)
    if rawequal(t1,r2) then return true end
-   if t2.cls == CLS_FN and t1.fn == t2.fn and #t1.args == #t2.args then
+   if t2.cls == FUNCTION and t1.fn == t2.fn and #t1.args == #t2.args then
       for i = 1,#t1.args do
          if not t1.args[i]:equal(t2.args[i]) then return false end
       end
@@ -374,36 +389,32 @@ symbol._eqFn = function (t1,t2)
 end
 
 ------ base classes
-local _class = {}
-_class[CLS_OP] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp, 
+local _class = {0,0,0,0}
+_class[OPERATION] = {str=symbol._strOp, cpy=symbol._cpyOp, ev=symbol._evOp, 
                   equal=symbol._eqOp, doHash=hash.op}
 
-_class[CLS_FN] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn, 
+_class[FUNCTION] = {str=symbol._strFn, cpy=symbol._cpyFn, ev=symbol._evFn, 
                   equal=symbol._eqFn, doHash=hash.fn}
 
-_class[CLS_NUM] = {
+_class[NUMBER] = {
 str = function (t) return tostring(t.value) end,
 cpy = function (t) return symbol._num (t.value) end,
 ev = function (t,env) return t.value end,
-equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_NUM and t2.value == t1.value end,
+equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == NUMBER and t2.value == t1.value end,
 doHash = hash.num,
 }
 
-_class[CLS_VAR] = {
+_class[VARIABLE] = {
 str = function (t) return t.name end,
 cpy = function (t) return symbol._var(t.name) end,
 ev = function (t,env) return env[t.name] or t end,
-equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == CLS_VAR and t2.name == t1.name end,
+equal = function (t1,t2) return rawequal(t1,t2) or t2.cls == VARIABLE and t2.name == t1.name end,
 doHash = hash.var,
 }
 
 ----- inheritance
 symbol.__index = function (t,k)
-   if rawget(symbol,k) then 
-      return symbol[k]
-   else 
-      return _class[t.cls][k] 
-   end
+   return rawget(symbol,k) and symbol[k] or _class[t.cls][k] or symbol._get_lib_for(k)
 end
 
 
@@ -432,9 +443,7 @@ a = symbol('fn1(a,b+c)')
 b = symbol('fn2(a,c+b)')
 print(a == b)
 print(a:doHash({}))
-]]
 
---[[
 x1 = symbol.parse('a+b')
 x2 = symbol.parse('c*d')
 
@@ -446,6 +455,6 @@ print(x1^x2)
 print(-x1)
 ]]
 
---a = symbol('-b+2-c+2+(2+a)')
---print(a)
---print(a:simplify())
+a = symbol('-b+2-c+2+(2+a)')
+print(a)
+print(a:simplify())
