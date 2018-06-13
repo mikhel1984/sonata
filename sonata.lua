@@ -55,6 +55,7 @@ import = {
    special  = "Spec",
    stat     = "Stat",
    struct   = "DS",
+   symbol   = "Sym",
    units    = "Unit",
 }
 about[import] = {"import", ""}

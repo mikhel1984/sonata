@@ -1,7 +1,8 @@
 --[[       liblc/symbol.lua
 
 --- Symbolical calculations.
---  @author My Name
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
            module 'symbol'
 --]]
@@ -10,49 +11,108 @@
 --[[!!
 Sym = require 'liblc.symbol'
 
--- example
-a = Sym()
-ans = a.type                   --> 'symbol'
+-- parse equation
+s1 = Sym('fn(a+b, c)^(3+c/2*d)')
+-- show as string
+print(s1)
+
+-- make copy
+ans = s1:copy()                       --> s1
+
+-- evaluation
+s2 = Sym('a-b*sin(c)')
+ans = s2:eval({a=1,b=2,c=math.pi/2,sin=math.sin})  --> -1
+
+-- partial definition
+ans = s2:eval({a=1,c=0})              --> Sym('1-b*sin(0)')
+
+-- use global variables
+a,b,c = 1,2,0
+sin = math.sin
+ans = s2:eval()                       --> 1
+
+-- s1 + s2
+s1 = Sym('a+b')
+s2 = Sym('a-b')
+s3 = s1 + s2
+ans = s3:eval()                       --> 2
+
+-- s1 - s2
+s3 = s1 - s2
+ans = s3:eval()                       --> 4
+
+-- s1 * s2
+s3 = s1 * s2                          
+ans = s3:eval()                       --> -3
+
+-- s1 / s2
+s3 = s1 / s2
+ans = s3:eval()                       --> -3
+
+-- s2 ^ s1
+s3 = s2 ^ s1
+ans = s3:eval()                       --> 1
+
+-- -s2
+s3 = -s2
+ans = s3:eval()                       --> 1
+
 ]]
 
 local OPERATION, VARIABLE, NUMBER, FUNCTION = 1, 2, 3, 4
 
+-- 
 local symbol = {}
+-- mark
+symbol.type = 'symbol'
+symbol.issymbol = true
+local function issymbol(t) return type(t)=='table' and t.issymbol end
 
+-- description
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+symbol.about = help:new("Symbolical calculations.")
+
+local function args(a,b)
+   a = issymbol(a) and a or symbol._num(a)
+   b = issymbol(b) and b or symbol._num(b)
+   return a,b
+end
+
+-- collect addidional libs
 symbol._libs = {}
-
+-- add functions for symbol processing
 symbol._add_lib = function (self, s)
    local lib = require(s)
    lib.root = self
    table.insert(symbol._libs, lib)
 end
+-- basic simplifications
+--symbol:_add_lib('liblc.sym_base')
 
-symbol:_add_lib('sym_base')
-
---------
+-- String parser (private class)
 local parser = {}
-
+-- check for numbers
 parser.isnumber = function(s,n) return string.find(s,'^%d',n) ~= nil end
-
+-- check for literals
 parser.isname = function(s,n) return string.find(s,'^%a',n) ~= nil end
-
+-- extract number in different forms of representations
 parser.get_number = function(s,n)
    local p,q = string.find(s,'%d+%.?%d*',n)
    local p2,q2 = string.find(s,'[eE][-+]?%d+',q+1)
    if p2 then q = q2 end
    return string.sub(s,p,q), q+1
 end
-
+-- get literal
 parser.get_word = function(s,n)
    local p,q = string.find(s,'%a[%w_%.]*',n)
    return string.sub(s,p,q), q+1
 end
-
+-- remove white space
 parser.noblank = function(s,n)
    n = string.find(s,'[^%s%c]',n)
    return n and n or #s+1
 end
-
+-- parse summation
 parser.Sum = function(s,n)
    --print('sum',n)
    n = parser.noblank(s,n)
@@ -69,7 +129,7 @@ parser.Sum = function(s,n)
    end
    return res, n
 end
-
+-- parse product
 parser.Prod = function (s,n)
    --print('prod',n)
    n = parser.noblank(s,n)
@@ -85,7 +145,7 @@ parser.Prod = function (s,n)
    end
    return res, n
 end
-
+-- parse power
 parser.Pow = function (s,n)
    --print('pow',n)
    n = parser.noblank(s,n)
@@ -98,7 +158,7 @@ parser.Pow = function (s,n)
    end
    return res, n
 end
-
+-- parse function arguments
 parser.Args = function (s,n)
    --print('args',n)
    n = parser.noblank(s,n)
@@ -112,7 +172,7 @@ parser.Args = function (s,n)
    end
    return t, n+1
 end
-
+-- parse atoms
 parser.Prim = function (s,n)
    --print('prim',n)
    n = parser.noblank(s,n)
@@ -145,43 +205,42 @@ parser.Prim = function (s,n)
 end
 
 -----------------------------------
-
-
-
+-- Simple hash calculator
 local hash = {
+-- function representation
 testfn = function (nm,t) 
    for i = 1,#t do nm = nm + i*t[i] end 
    return nm
 end,
---
+-- get hash of find new
 find = function (nm,h) 
    if not h[nm] then h[nm] = math.random(65535)*1.0 end
    return h[nm]
 end,
 }
---
+-- apply for variable
 hash.var = function (s,h) 
    s.hash = hash.find(s.name,h)
    return s.hash
 end
---
+-- apply for number
 hash.num = function (s,h)
    s.hash = s.value*1.0
    return s.hash
 end
---
+-- apply for operation
 hash.op = function (s,h)
    s.hash = symbol[s.op].eval(s.left:doHash(h), s.right:doHash(h))   
    return s.hash
 end
---
+-- apply for function
 hash.fn = function (s,h)
    local t = {}
    for i = 1,#s.args do t[#t+1] = s.args[i]:doHash(h) end
    s.hash = hash.testfn(hash.find(s.fn,h), t)
    return s.hash
 end 
-
+-- fund function in libraries
 symbol._get_lib_for = function (key)
    for _,v in ipairs(symbol._libs) do
       if v[key] then return v[key] end
@@ -189,27 +248,13 @@ symbol._get_lib_for = function (key)
    return nil
 end
 
-----------------------------------
+-- operations
 symbol['+'] = {eval=function (a,b) return a+b end, level=0, commutative=true}
 symbol['-'] = {eval=function (a,b) return a-b end, level=0, commutative=false}
 symbol['*'] = {eval=function (a,b) return a*b end, level=1, commutative=true}
 symbol['/'] = {eval=function (a,b) return a/b end, level=1, commutative=false}
 symbol['^'] = {eval=function (a,b) return a^b end, level=2, commutative=false}
 
--- mark
-symbol.type = 'symbol'
-symbol.issymbol = true
-local function issymbol(t) return type(t)=='table' and t.issymbol end
-
--- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-symbol.about = help:new("Symbolical calculations.")
-
-local function args(a,b)
-   a = issymbol(a) and a or symbol._num(a)
-   b = issymbol(b) and b or symbol._num(b)
-   return a,b
-end
 
 --- Constructor example
 --    @param t Some value.
@@ -218,7 +263,7 @@ function symbol:new(t)
    return setmetatable(t,self)
 end
 
-
+-- local constructors
 symbol._op = function (op,s1,s2) return symbol:new {cls=OPERATION, op=op, left=s1, right=s2, hash=0} end
 
 symbol._num = function (v) return symbol:new {cls=NUMBER, value=v, hash=0} end
@@ -234,53 +279,52 @@ symbol.NULL.str = function () return "" end
 symbol.ZERO = symbol._num(0)
 symbol.ONE = symbol._num(1)
 
+-- do parsing
 symbol.parse = function (s)
    local val = parser.Sum(s,1)
    return val
 end
-
-
+-- find value
 symbol.eval = function (s,env) 
    env = env or _ENV
    return s:ev(env) 
 end
-
+-- a+b
 symbol.__add = function (a,b)
    a,b = args(a,b)
    return symbol._op('+',a,b)
 end
-
+-- a-b
 symbol.__sub = function (a,b)
    a,b = args(a,b)
    return symbol._op('-',a,b)
 end
-
+-- a*b
 symbol.__mul = function (a,b)
    a,b = args(a,b)
    return symbol._op('*',a,b)
 end
-
+-- a/b
 symbol.__div = function (a,b)
    a,b = args(a,b)
    return symbol._op('/',a,b)
 end
-
+-- a^b
 symbol.__pow = function (a,b)
    a,b = args(a,b)
    return symbol._op('^',a,b)
 end
-
+-- -a
 symbol.__unm = function (a)
    a = issymbol(a) and a or symbol._num(a)
    return symbol._op('-',symbol.NULL,a)
 end
-
+-- string representation
 symbol.__tostring = function (s) return s:str() end
-
+-- check equality
 symbol.__eq = function (s1,s2)
    return issymbol(s1) and issymbol(s2) and s1:equal(s2)
 end
-
 
 -- simplify constructor call
 setmetatable(symbol, {__call = function (self,v) return symbol.parse(v) end})
@@ -294,13 +338,7 @@ symbol.copy = function (t)
 end
 symbol.about[symbol.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
 
---[[
-symbol.simplify = function (s)
-   s = s:collectNum()
-   return s
-end
-]]
-
+-- operation to string
 symbol._strOp = function (t)
    local left = t.left:str() 
    local right = t.right:str()
@@ -316,24 +354,24 @@ symbol._strOp = function (t)
    end
    return string.format('%s%s%s', left, t.op, right)
 end
-
+-- function to string
 symbol._strFn = function  (t)
    local a = {}
    for _,v in ipairs(t.args) do a[#a+1] = v:str() end
    return string.format('%s(%s)', t.fn, table.concat(a,','))
 end
 
-
+-- operation copy
 symbol._cpyOp = function (t) 
    return symbol._op(t.op, t.left:cpy(), t.right:cpy())
 end
-
+-- function copy
 symbol._cpyFn = function (t)
    local a = {}
    for _,v in ipairs(t.args) do a[#a+1] = v:cpy() end
    return symbol._fn(t.fn, a)
 end
-
+-- evaluate operation
 symbol._evOp = function (t,env)
    local left = t.left:ev(env)
    local right = t.right:ev(env)
@@ -346,7 +384,7 @@ symbol._evOp = function (t,env)
       return symbol._op(t.op, left, right)
    end
 end
-
+-- evaluate function
 symbol._evFn = function (t,env)
    local a,issym = {}, false
    for _,v in ipairs(t.args) do
@@ -364,7 +402,7 @@ symbol._evFn = function (t,env)
       return fn(table.unpack(a))
    end
 end
-
+-- operation equality
 symbol._eqOp = function (t1,t2)
    if rawequal(t1,t2) then return true end
    if not (t2.cls == OPERATION and t1.op == t2.op)  then return false end
@@ -375,7 +413,7 @@ symbol._eqOp = function (t1,t2)
    end
    return res
 end
-
+-- function equality
 symbol._eqFn = function (t1,t2)
    if rawequal(t1,r2) then return true end
    if t2.cls == FUNCTION and t1.fn == t2.fn and #t1.args == #t2.args then
@@ -417,44 +455,7 @@ symbol.__index = function (t,k)
    return rawget(symbol,k) and symbol[k] or _class[t.cls][k] or symbol._get_lib_for(k)
 end
 
-
-
-
-
 -- free memory in case of standalone usage
---if not lc_version then symbol.about = nil end
+if not lc_version then symbol.about = nil end
 
---return symbol
---[[
-a = symbol.parse('name.fn(b+c, q )^( a+ d * f)')
-b = a:copy()
-
-fun = function (a,b) return a/b end
-p1 = 4
-p2 = 2
-
-c = symbol('p1+p2*fun(p1,p2)^2')
-print(c:eval())
-]]
-
---[[
-print(symbol('-b'))
-a = symbol('fn1(a,b+c)')
-b = symbol('fn2(a,c+b)')
-print(a == b)
-print(a:doHash({}))
-
-x1 = symbol.parse('a+b')
-x2 = symbol.parse('c*d')
-
-print(x1+x2)
-print(x1-x2)
-print(x1*x2)
-print(x1/x2)
-print(x1^x2)
-print(-x1)
-]]
-
-a = symbol('-b+2-c+2+(2+a)')
-print(a)
-print(a:simplify())
+return symbol
