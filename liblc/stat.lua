@@ -1,7 +1,7 @@
 --[[      liblc/stat.lua 
 
 --- Some statistical functions.
---  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'stat'
@@ -84,6 +84,7 @@ ans = Stat.normcdf(1, 1.5, 2.1)   --~ 0.4059
 ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 ]]
 
+local Ver = require "liblc.versions"
 
 -------------------------------------------- 
 -- @class table
@@ -204,7 +205,7 @@ stat.geomean = function (t, w)
    else
       local p = 1
       for i = 1, #t do p = p * t[i] end
-      return math.pow(p, 1/#t)
+      return p^(1/#t)
    end
 end
 stat.about[stat.geomean] = {"geomean(t[,w])", "Geometrical mean.", help.OTHER}
@@ -234,7 +235,7 @@ stat.about[stat.harmean] = {"harmean(t[,w])", "Harmonic mean.", help.OTHER}
 --    @return Value of median.
 stat.median = function (p)
    local len = #p
-   local t = table.move(p,1,len,1,{})
+   local t = Ver.move(p,1,len,1,{})
    table.sort(t)
    if len % 2 == 1 then 
       return t[(len+1)/2]
@@ -266,7 +267,7 @@ stat.cmoment = function (n, x, p)
    local pk, m = 1/#x, 0
    for i = 1,#x do m = m + x[i]*(p and p[i] or pk) end
    local mu = 0
-   for i = 1,#x do mu = mu + math.pow(x[i]-m, n)*(p and p[i] or pk) end
+   for i = 1,#x do mu = mu + (x[i]-m)^n*(p and p[i] or pk) end
    return mu
 end
 stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p is a list of weights.", }
@@ -278,7 +279,7 @@ stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p 
 --    @return Non-central moment value.
 stat.moment = function (n, x, p)
    local pk, m = 1/#x, 0
-   for i = 1,#x do m = m + math.pow(x[i],n)*(p and p[i] or pk) end
+   for i = 1,#x do m = m + (x[i])^n*(p and p[i] or pk) end
    return m
 end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", }
@@ -339,10 +340,10 @@ stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution
 --    @return Density value.
 stat.poisspdf = function (x,lam)
    assert(lam >= 0, 'Wrong argument!')
-   if math.tointeger(x) == nil then return 0.0 end
+   if Ver.tointeger(x) == nil then return 0.0 end
    local f = 1
    for i = 1,x do f = f*i end
-   return math.pow(lam,x)*math.exp(-lam)/f
+   return lam^x*math.exp(-lam)/f
 end
 stat.about[stat.poisspdf] = {"poisspdf(x,lam)", "Poisson distribution density."}
 
@@ -362,7 +363,7 @@ stat.about[stat.chi2cdf] = {"chi2cdf(x,v)", "Chi-square cumulative distribution.
 stat.chi2pdf = function (x,v)
    if x <= 0 then return 0 end
    local v2 = 0.5*v
-   return math.pow(x,v2-1)*math.exp(-x*0.5)/(math.pow(2.0,v2)*stat.lc_special.gamma(v2))
+   return x^(v2-1)*math.exp(-x*0.5)/(2.0^v2*stat.lc_special.gamma(v2))
 end
 stat.about[stat.chi2pdf] = {"chi2pdf(x,v)", "Chi-square distribution density."}
 
@@ -382,7 +383,7 @@ stat.about[stat.tcdf] = {"tcdf(x,nu)", "Student's cumulative distribution."}
 --    @return Density value.
 stat.tpdf = function (x,nu)
    local tmp = math.sqrt(nu)*stat.lc_special.beta(0.5,0.5*nu)
-   return math.pow(1+x*x/nu,-0.5*(nu+1))/tmp
+   return (1+x*x/nu)^(-0.5*(nu+1))/tmp
 end
 stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density."}
 
@@ -403,7 +404,7 @@ stat.about[stat.fcdf] = {"fcdf(x,v1,v2)", "F cumulative distribution."}
 --    @param v2 Denomenator degree of freedom.
 --    @return Density value.
 stat.fpdf = function (x,v1,v2)
-   local tmp = math.pow(v1*x,v1)*math.pow(v2,v2)/math.pow(v1*x+v2,v1+v2)
+   local tmp = (v1*x)^v1*v2^v2/(v1*x+v2)^(v1+v2)
    return math.sqrt(tmp)/(x*stat.lc_special.beta(0.5*v1,0.5*v2))
 end
 stat.about[stat.fpdf] = {"fpdf(x,v1,v2)", "F distribution density."}

@@ -2,7 +2,7 @@
 
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possible.
---  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'array'
@@ -74,6 +74,9 @@ array.isarray = true
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 array.about = help:new("Manipulations with arrays of elements.")
 
+-- compatibility with previous versions
+local Ver = require "liblc.versions"
+
 --- Check object type.
 --    <i>Private function.</i>
 --    @param t Object for checking.
@@ -95,7 +98,7 @@ end
 --    @return Array object.
 function array:new(s)
    assert(type(s) == 'table', "Table is expected!")
-   for i = 1,#s do assert(s[i] > 0 and math.tointeger(s[i]), "Positive integer is expected!") end
+   for i = 1,#s do assert(s[i] > 0 and Ver.isinteger(s[i]), "Positive integer is expected!") end
    local o = {size = s, k = getk(s)}
    setmetatable(o, self)
    return o
@@ -160,8 +163,8 @@ array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is 
 --    @return Deep copy of the array.
 array.copy = function (arr)
    assert(isarray(arr), "Not an array!")
-   local cp = array:new(table.move(arr.size, 1, #arr.size, 1, {}))        -- copy size, create new array
-   return table.move(arr, 1, capacity(arr), 1, cp)                        -- copy array elements
+   local cp = array:new(Ver.move(arr.size, 1, #arr.size, 1, {}))        -- copy size, create new array
+   return Ver.move(arr, 1, capacity(arr), 1, cp)                        -- copy array elements
 end
 array.about[array.copy] = {"copy(arr)", "Get copy of the array.", help.OTHER}
 
@@ -187,7 +190,7 @@ array.about[array.isequal] = {"isequal(a1,a2)", "Check size equality.", help.OTH
 --    @return New array where each element is result of the function evaluation fn(a1[i],a2[i]).
 array.apply = function (a1, a2, fn)
    assert(array.isequal(a1,a2), "Not compatible arrays!")
-   local res, v = array:new(table.move(a1.size, 1, #a1.size, 1, {}))    -- prepare empty copy
+   local res, v = array:new(Ver.move(a1.size, 1, #a1.size, 1, {}))    -- prepare empty copy
    for i = 1, capacity(a1) do 
       v = fn(a1[i] or 0, a2[i] or 0)             -- elements can be empty
       if v ~= 0 then res[i] = v end              -- save nonzero values
@@ -201,7 +204,7 @@ array.about[array.apply] = {"apply(a1,a2,fn)", "Apply function of 2 arguments. R
 --    @param fn Function with 1 argument.
 --    @return New array where each element is result of the function evaluation fn(a[i]).
 array.map = function (a, fn)
-   local res, v = array:new(table.move(a.size, 1, #a.size, 1, {}))
+   local res, v = array:new(Ver.move(a.size, 1, #a.size, 1, {}))
    for i = 1, capacity(a) do
       v = fn(a[i] or 0)                          -- elements can be empty
       if v ~= 0 then res[i] = v end              -- save nonzero values
@@ -254,7 +257,7 @@ end
 --    @param a2 Second array object.
 --    @return New array where each element is result of power operation.
 array.__pow = function (a1, a2)
-   return array.apply(a1, a2, math.pow)
+   return array.apply(a1, a2, function (x,y) return x^y end)
 end
 
 array.arithmetic = 'arithmetic'
@@ -292,7 +295,7 @@ array.about[array.comparison] = {array.comparison, "a == b, a ~= b", }
 --    @param arr Array object.
 --    @return Table of size.
 array.dim = function (arr)
-   return table.move(arr.size, 1, #arr.size, 1, {})
+   return Ver.move(arr.size, 1, #arr.size, 1, {})
 end
 array.about[array.dim] = {"dim(arr)", "Return size of array.", }
 
@@ -318,7 +321,7 @@ array.sub = function (arr, ind1, ind2)
    for count = 1, capacity(res) do
       -- calculate new temporary index
       for i = 1, #ind do 
-         local tmp = (count // res.k[i]) % res.size[i]
+         local tmp = math.fmod(count,res.k[i]) % res.size[i]
 	 ind2[i] = ind1[i] + tmp
 	 ind[i] = tmp + 1
       end
@@ -337,15 +340,15 @@ array.concat = function (arr1, arr2, axe)
    assert(axe > 0 and axe <= #arr1.size, "Wrong axe!")
    for i = 1, #arr1.size do assert(arr1.size[i] == arr2.size[i] or i == axe, "Different size!") end
    -- prepare new size
-   local newsize = table.move(arr1.size, 1, #arr1.size, 1, {})
+   local newsize = Ver.move(arr1.size, 1, #arr1.size, 1, {})
    newsize[axe] = newsize[axe] + arr2.size[axe]
    -- combine
-   local res, ind1, ind2 = array:new(newsize), table.move(newsize, 1, #newsize, 1, {}), table.move(newsize, 1, #newsize, 1, {})
+   local res, ind1, ind2 = array:new(newsize), Ver.move(newsize, 1, #newsize, 1, {}), Ver.move(newsize, 1, #newsize, 1, {})
    local edge = arr1.size[axe]
    for count = 1, capacity(res) do
       -- prepare index
       for i = 1, #ind1 do
-         ind1[i] = (count // res.k[i]) % res.size[i] + 1
+         ind1[i] = math.fmod(count,res.k[i]) % res.size[i] + 1
 	 ind2[i] = ind1[i]
       end
       -- get value
@@ -415,11 +418,11 @@ array.fullstring = function (arr, r, c)
 	 prod = prod * arr.size[i]
       end
    end
-   local next_index = table.move(arr.size, 1, #arr.size, 1, {})
+   local next_index = Ver.move(arr.size, 1, #arr.size, 1, {})
 
    for counter = 0, prod-1 do
       -- find coefficients
-      for i = #current,1,-1 do current[i] = (counter // extent[i]) % bound[i] end
+      for i = #current,1,-1 do current[i] = math.fmod(counter,extent[i]) % bound[i] end
       -- write
       local k = #current
       for i = #next_index, 1, -1 do
@@ -466,13 +469,13 @@ array.about[array.serialize] = {"serialize(obj)", "String representation of arra
 --    @param arr Array object.
 --    @return Index of the next array element and the element itself, <code>nil</code> at the end.
 array.next = function (arr)
-   local a = array:new(table.move(arr.size, 1, #arr.size, 1, {})) -- copy size
+   local a = array:new(Ver.move(arr.size, 1, #arr.size, 1, {})) -- copy size
    local count = 0
 
    return function ()
              if count == capacity(a) then return nil, nil end
 	     local res = {}
-	     for i = 1, #a.size do res[i] = (count // a.k[i]) % a.size[i]+1 end
+	     for i = 1, #a.size do res[i] = math.fmod(count,a.k[i]) % a.size[i]+1 end
 	     count = count + 1
 	     return res, arr[index(arr,res)]
           end

@@ -1,7 +1,7 @@
 --[[       liblc/files.lua
 
 --- Routines for working with data files.
---  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
            module 'files'
@@ -40,6 +40,9 @@ ans = aa.b.c                         --> 'abc'
 -- @name files
 -- @field about Description of functions.
 local files = {}
+
+-- compatibility
+local Ver = require "liblc.versions"
 
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
@@ -130,7 +133,7 @@ end
 --    @return Lua table or nil.
 files.tblimport = function (fname)
    local str,f = files.read(fname)
-   if str then f = load('return '..str) end
+   if str then f = Ver.loadstr('return '..str) end
    return f and f() or nil
 end
 files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, written into file."}
@@ -146,7 +149,7 @@ files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, written i
 --  @field thread Reminder about thread.
 local val2str = {
    ['string'] =   function (x) return string.format('"%s"', x) end,
-   ['number'] =   function (x) return math.type(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
+   ['number'] =   function (x) return Ver.mtype(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
    ['function'] = function (x) x = tostring(x); print('Bad value: '..x); return x end,
    ['boolean'] =  function (x) return tostring(x) end,
    ['nil'] =      function (x) return 'nil' end,
@@ -161,7 +164,7 @@ val2str.tbl =  function (t)
    local res = {}
    for _,val in ipairs(t) do res[#res+1] = val2str[type(val)](val) end
    for k,val in pairs(t) do
-      if not math.tointeger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
+      if not Ver.isinteger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
    end
    return string.format('{%s}', table.concat(res,','))
 end

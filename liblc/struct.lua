@@ -1,7 +1,8 @@
 --[[       liblc/struct.lua
 
 --- Main data structures.
---  @author My Name
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
            module 'struct'
 --]]
@@ -82,6 +83,8 @@ dd = d:copy()
 ans = #dd                       --> 2
 ]]
 
+local Ver = require "liblc.versions"
+
 local STACK = 'stack'
 local QUEUE = 'queue'
 local HEAP = 'heap'
@@ -147,10 +150,12 @@ struct.about[struct.Stack.peek] = {"peek()", "Return top value without removing 
 struct.Stack.copy = function (s)
    local res = struct.Stack:new()
    if s[1] then
-      table.move(s,1,#s,1,res)
+      Ver.move(s,1,#s,1,res)
    end
    return res
 end
+
+struct.Stack.size = function (s) return #s end
 
 --- Check stack size.
 --    @param s Stack object.
@@ -229,6 +234,8 @@ struct.Queue.peek = function (q) return q[q.first] end
 -- Queue size
 struct.Queue.__len = function (t) return t.last-t.first+1 end
 
+struct.Queue.size = function (t) return t.last-t.first+1 end
+
 --- Check if the queue is empty.
 --    @return True if there is no elements in the queue.
 struct.Queue.isempty = function (q) return q.first+1 == q.last end
@@ -240,7 +247,7 @@ struct.Queue.copy = function (q)
    local res = struct.Queue:new()
    local first,last = q.first, q.last
    res.first = first; res.last = last
-   table.move(q,first,last,first,res)
+   Ver.move(q,first,last,first,res)
    return res
 end
 
@@ -267,8 +274,8 @@ struct.about[struct.Heap] = {"Heap([less])", "Create new heap object. Comparison
 --    @param h Heap object.
 --    @param k Start index.
 local function fixUp(h, k)
-   while k > 1 and h.less(h[k//2], h[k]) do
-      local k2 = k // 2
+   while k > 1 and h.less(h[math.modf(k*0.5)], h[k]) do
+      local k2 = math.modf(k*0.5)
       h[k],h[k2] = h[k2],h[k]
       k = k2
    end
@@ -321,13 +328,15 @@ struct.Heap.isempty = function (h) return h.N == 0 end
 -- Number of elements.
 struct.Heap.__len = function (h) return h.N end
 
+struct.Heap.size = function (h) return h.N end
+
 --- Make heap copy.
 --    @param h Original heap.
 --    @return New heap.
 struct.Heap.copy = function (h) 
    local res = struct.Heap:new(h.less)
    res.N = h.N
-   table.move(h,1,#h,1,res)
+   Ver.move(h,1,#h,1,res)
    return res
 end
 

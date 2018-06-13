@@ -1,7 +1,7 @@
 --[[      liblc/help.lua 
 
 --- Function description management.
---  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'help'
@@ -88,6 +88,12 @@ help.NEW = 'constructor'
 
 help.SEP = string.sub(package.config,1,1)
 
+help.CMAIN = ''
+help.CHELP = ''
+help.CRESET = ''
+help.CBOLD = ''
+help.CNBOLD = ''
+
 --- Create new object, set metatable.
 --    @param str Module description.
 --    @return Array object.
@@ -121,6 +127,7 @@ end
 --- Print information about function or list of all possible functions.
 --    @param fn Function or module for getting manual.
 function help:print(fn)
+   io.write(help.CHELP)
    if fn then
       -- expected module or function description
       local v = self[fn]
@@ -138,7 +145,9 @@ function help:print(fn)
       -- sort functions
       local lst = funclist(self)
       for mod, t in pairs(lst) do                   -- for each module
+         io.write(help.CBOLD)
          print(string.format("\t%s", mod))
+	 io.write(help.CNBOLD)
          for cat, n in pairs(t) do                  -- for each category
             print(string.format("  /%s", cat))
 	    for i, v in ipairs(n) do                -- for each function
@@ -148,6 +157,16 @@ function help:print(fn)
          end
 	 print()
       end
+   end
+end
+
+function help.usecolors(use)
+   if use then
+      help.CMAIN = '\x1B[32m' 
+      help.CHELP = '\x1B[33m' 
+      help.CRESET = '\x1B[0m'
+      help.CBOLD = '\x1B[1m'
+      help.CNBOLD = '\x1B[22m'
    end
 end
 
@@ -390,4 +409,3 @@ return help
 --==========================================
 -- TODO: localize error messages
 -- TODO: problem with the common names of different objects in the same module
--- TODO: add help -h for program

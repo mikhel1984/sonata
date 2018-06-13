@@ -1,7 +1,7 @@
 --[[      liblc/matrix.lua 
 
 --- Matrix operations. Indexation from 1.
---  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'matrix'
@@ -99,7 +99,7 @@ ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 
 -- get submatrix
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
-ans = g:sub(2,-1,2,3)           --> Mat {{5,6},{8,9}}
+ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
 
 -- random matrix
 h = Mat.rand(3,2)
@@ -144,14 +144,14 @@ ans = m[2][2]                   --~ 1.633
 -- matrix trace
 ans = a:tr()                    --> 5
 
--- extract row
-m = a:row(1)
+-- extract first row
+m = a({},1)
 -- vector doesn't need in 2 indices
 ans = m(1)                      --> 1
 
--- extract column
--- index could be negative 
-m = a:col(-1)
+-- extract last column
+-- index can be negative 
+m = a(-1,{})
 ans = m:get(2)                  --> 4
 
 -- apply summation to each row
@@ -164,6 +164,8 @@ ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
 -- get rank
 ans = Mat.ones(2,3):rank()      --> 1
 ]]
+
+local KEYWORD = 0xACCEC
 
 -------------------------------------------- 
 -- @class table
@@ -178,6 +180,8 @@ matrix.ismatrix = true
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 matrix.about = help:new("Matrix operations. The matrices are spares by default.")
+
+local Ver = require "liblc.versions"
 
 --- Metatable for new rows.
 -- @class table
@@ -353,11 +357,80 @@ matrix.about[matrix.rank] = {"rank(m)", "Find rank of the matrix."}
 --    @param r Row number.
 --    @param c Column number.
 --    @return Element value.
+--[[
 matrix.get = function (m, r, c)
    r, c = checkindex(m, r, c)
    return m[r][c]
 end
 matrix.about[matrix.get] = {"get(m,row,col)", "Check index and return matrix element."}
+]]
+
+local function torange(x,range)
+   if x < 0 then x = x + range + 1 end
+   if x <= 0 or x > range then return nil end
+   return x
+end
+
+matrix.get = function (m,a,b)
+   if not b then
+      -- vector call
+      if m.rows == 1 then b,a = a,1 else b = 1 end
+   end
+   local numa = type(a) == 'number'
+   local numb = type(b) == 'number'
+   -- check range
+   if numa then
+      a = torange(a, m.rows)
+      if not a then return nil end
+   end
+   if numb then 
+      b = torange(b, m.cols)
+      if not b then return nil end
+   end
+
+   -- both are numbers
+   if numa and numb then return m[a][b] end
+
+   -- expected table
+   if numa then
+      a = {a,a,1}
+   else
+      local tmp = torange(a[1] or 1, m.rows)
+      if not tmp then return nil end
+      a[1] = tmp
+      tmp = torange(a[2] or m.rows, m.rows)
+      if not tmp then return nil end
+      a[2] = tmp
+      a[3] = a[3] or 1
+      if (a[2]-a[1])/a[3] < 0 then return nil end
+   end
+   if numb then
+      b = {b,b,1}
+   else
+      local tmp = torange(b[1] or 1, m.cols)
+      if not tmp then return nil end
+      b[1] = tmp
+      tmp = torange(b[2] or m.cols, m.cols)
+      if not tmp then return nil end
+      b[2] = tmp
+      b[3] = b[3] or 1
+      if (b[2]-b[1])/b[3] < 0 then return nil end
+   end
+
+   -- fill matrix
+   local res = matrix:init(math.floor((a[2]-a[1])/a[3])+1, math.floor((b[2]-b[1])/b[3])+1)
+   local i,j = 0,0
+   for r = a[1],a[2],a[3] do
+      i = i+1
+      for c = b[1],b[2],b[3] do
+         j = j+1
+         res[i][j] = m[r][c]
+      end
+      j = 0
+   end
+   return res
+end
+
 
 -- simplify call of matrix.get()
 matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
@@ -509,13 +582,13 @@ end
 --    @param n Positive integer power.
 --    @return New matrix.
 matrix.__pow = function (a,n)
-   n = assert(math.tointeger(n), "Integer is expected!")
+   n = assert(Ver.tointeger(n), "Integer is expected!")
    assert(a.rows == a.cols, "Square matrix is expected!")
    if n == -1 then return matrix.inv(a) end
    local res, acc = matrix.eye(a.rows), matrix.copy(a)
    while n > 0 do
       if n%2 == 1 then res = res * acc end
-      n = n // 2
+      n = math.modf(n*0.5)
       if n > 0 then acc = acc * acc end
    end
    return res
@@ -559,7 +632,7 @@ matrix.about[matrix.det] = {"det(m)", "Calculate determinant."}
 matrix.inv = function (m)
    assert(m.rows == m.cols, "Square matrix is expected!")
    local con, det = matrix.rref(m, matrix.eye(m.cols))
-   return (det ~= 0) and matrix.sub(con, 1,-1, m.cols+1, -1) or matrix.ones(m.rows,m.rows,math.huge) 
+   return (det ~= 0) and matrix.get(con, {1,-1}, {m.cols+1, -1}) or matrix.ones(m.rows,m.rows,math.huge) 
 end
 matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", }
 
@@ -646,6 +719,7 @@ matrix.eye = function (rows, cols)
 end
 matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix.", help.OTHER}
 
+--[[ use get({},{}) instead
 --- Get sub matrix.
 --    @param m Initial matrix.
 --    @param r1 Lower row index.
@@ -667,6 +741,7 @@ matrix.sub = function (m, r1, r2, c1, c2)
    return res
 end
 matrix.about[matrix.sub] = {"sub(m,r1,r2,c1,c2)", "Return sub matrix with rows [r1;r2] and columns [c1;c2].", help.OTHER}
+]]
 
 --- Matrix concatenation.
 --    Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
@@ -730,6 +805,7 @@ matrix.tr = function (m)
 end
 matrix.about[matrix.tr] = {"tr(m)", "Get trace of the matrix.", help.OTHER}
 
+--[[ use get({}) instead
 --- Get matrix row.
 --    @param m Source matrix.
 --    @param k Row index.
@@ -754,6 +830,7 @@ matrix.col = function (m,k)
    return matrix:init(m.rows,1,acc)
 end
 matrix.about[matrix.col] = {"col(m,k)", "Return k-th column of the given matrix.", help.OTHER}
+]]
 
 --[=[
 --> SVD - "standard" algorithm implementation
@@ -911,9 +988,9 @@ matrix.pinv = function (M)
    local L, r = matrix.zeros(A:size()), 0
    for k = 1, n do
       r = r + 1
-      local B = A:sub(k,n,k,k)
+      local B = A:get({k,n},{k,k})
       if r > 1 then 
-         local tmp = L:sub(k,n,1,r-1) * L:sub(k,k,1,r-1):transpose() 
+         local tmp = L:get({k,n},{1,r-1}) * L:get({k,k},{1,r-1}):transpose() 
 	 tmp = ismatrix(tmp) and tmp or matrix.new {{tmp}}         -- product can return a number
          B = B - tmp
       end
@@ -936,7 +1013,7 @@ matrix.pinv = function (M)
          r = r - 1
       end
    end
-   L = L:sub(1,-1, 1, (r > 0 and r or 1))
+   L = L:get({1,-1},{1, (r > 0 and r or 1)})
    local Lt = L:transpose()
    local K = matrix.inv(Lt * L)
    if transp then
@@ -958,6 +1035,16 @@ matrix.dense = function (m)
    return res
 end
 matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
+
+-- matrix as table (temporary ?)
+matrix.table = function (m)
+   local res = {}
+   for r = 1,m.rows do
+      res[r] = {}
+      for c = 1,m.cols do res[r][c] = m[r][c] end
+   end
+   return res
+end
 
 --- Return sparse matrix, if possible.
 --    @param m Source matrix.
@@ -1093,7 +1180,7 @@ matrix.lu = function (m)
    local a,_,d = matrix.luprepare(m)
    local p = matrix.eye(m.rows,m.cols)
    while d > 0 do
-      local tmp = p[1]; table.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
+      local tmp = p[1]; Ver.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
       d = d-1
    end
    return matrix.map_ex(a, function (r,c,m) return (r==c) and 1.0 or (r>c and m or 0) end),   -- lower
@@ -1225,4 +1312,3 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
---TODO: use get({},2) for 2nd column, get({1,3},{2,7,2}) to get submatrix with steps etc.

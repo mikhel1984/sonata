@@ -1,14 +1,14 @@
 --[[      liblc/gnuplot.lua 
 
 --- Call Gnuplot from Lua.
---  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'gnuplot'
 --]]
 
 --------------- Tests ---------------
---[[!!  
+--[[ !!
 Gnu = require 'liblc.gnuplot'
 
 a = {{'sin(x)',title='Sinus x'},permanent=false}
@@ -43,7 +43,7 @@ Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
 -- @field type Define object type string.
 -- @field about Description of functions.
 -- @field N Define number of points per interval, default is 100
--- @field options Gnuplot options that predefined in LuaCalculus
+-- @field options Gnuplot options that predefined in Sonata LC
 -- @field foptions Predefined function plot options
 
 local gnuplot = {}

@@ -1,0 +1,341 @@
+--[[       liblc/graph.lua
+
+--- Operations with graphs.
+--  @author My Name
+
+           module 'graph'
+--]]
+
+--------------- Tests ------------
+-- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
+--[[!!
+Graph = require 'liblc.graph'
+
+-- build graph
+-- single names - nodes, names in brackets - edges 
+-- letter w denotes weight of non directed edge
+-- numbers are weigths of directed edges
+a = Graph {'a','b',{'a','c'},{'d','e',w=2},{'d','b',4,3}}
+
+-- list of nodes
+nd = a:nodes()
+ans = #nd                      --> 5
+
+-- list of edges
+ed = a:edges()
+ans = #ed                      --> 3
+
+-- add node
+a:add('h') 
+-- add edge
+a:add {'a','d'}
+-- check size
+ans = #a                       --> 6
+
+-- remove edge
+a:remove {'a','d'}
+-- remove node
+a:remove('a')
+-- new edge number
+ed = a:edges()
+ans = #ed                      --> 2
+
+-- make copy
+b = a:copy()
+
+-- show
+print(b)
+
+]]
+
+---------------------------------
+-- @class table
+-- @name graph
+-- @field about Description of functions.
+local graph = {type='graph', isgraph=true}
+graph.__index = graph
+
+-- marker
+local function isgraph(t) return type(t)=='table' and t.isgraph end
+
+graph.lc_struct = require 'liblc.struct'
+
+-- description
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+graph.about = help:new("Operations with graphs.")
+
+local function isedge(m) return type(m) == 'table' end
+
+local function tbllen (m) 
+   local n = 0
+   for k in pairs(m) do n = n+1 end
+   return n
+end
+
+--- Constructor example
+--    @param t Some value.
+--    @return New object of graph.
+function graph:new(t)
+   local o = {}
+   -- add nodes
+   for _,elt in ipairs(t) do graph.add(o,elt) end
+   setmetatable(o,self)
+   return o
+end
+
+graph.add = function (g, t)
+   if isedge(t) then
+      local t1,t2,w12,w21 = t[1], t[2], t[3] or t.w12, t[4] or t.w21
+      g[t1] = g[t1] or {}
+      g[t2] = g[t2] or {}
+      if not (t3 or t4) then
+         local w = t.w or 1
+	 g[t1][t2] = w; g[t2][t1] = w
+      else
+         g[t1][t2] = w12; g[t2][t1] = w21
+      end
+   else
+      g[t] = g[t] or {}
+   end
+end
+graph.about[graph.add] = {"add(e)","Add new node or edge. Node denoted as a single name, edge is a table of names (and weights if need)."}
+
+graph.remove = function (g, t)
+   if isedge(t) then
+      local t1,t2 = t[1], t[2]
+      g[t1][t2] = nil
+      if not t.single then        -- change keyword ???
+         g[t2][t1] = nil
+      end
+   else
+      for _,v in pairs(g) do v[t] = nil end
+      g[t] = nil
+   end
+end
+graph.about[graph.remove] = {"remove(e)", "Remove node or edge. Node is a single name, edge - talbe of names."}
+
+-- simplify constructor call
+setmetatable(graph, {__call = function (self,v) return graph:new(v) end})
+graph.Graph = 'Graph'
+graph.about[graph.Graph] = {"Graph(t)", "Create new graph.", help.NEW}
+
+graph.nodes = function (g)
+   local res = {}
+   for k in pairs(g) do res[#res+1] = k end
+   return res
+end
+graph.about[graph.nodes] = {"nodes()","List of graph nodes."}
+
+graph.edges = function (g)
+   local nodes = graph.nodes(g)
+   local res = {}
+   for i = 1,#nodes do
+      local ni = nodes[i]
+      for j = i,#nodes do
+         local nj = nodes[j]
+         local w = g[ni][nj]
+	 if w then 
+	    res[#res+1] = {ni,nj} 
+	    if g[nj][ni] ~= w then res[#res+1] = {nj,ni} end
+	 end
+      end
+   end
+   return res
+end
+graph.about[graph.edges] = {"edges()", "List of graph edges."}
+
+graph.copy = function (g)
+   local res = graph:new({})
+   for k,v in pairs(g) do
+      res[k] = {}
+      for n,w in pairs(v) do res[k][n] = w end
+   end
+   return res
+end
+graph.about[graph.copy] = {"copy()", "Get copy of the graph."}
+
+graph.__len = function (g)
+   return tbllen(g)
+end
+
+graph.__tostring = function (g)
+   local nd = graph.nodes(g)
+   local res
+   if #nd <= 5 then 
+      res = string.format('Graph {%s}', table.concat(nd,','))
+   else
+      res = string.format('Graph {%s -%d- %s}', 
+                          tostring(nd[1]), #nd-2, tostring(nd[#nd]))
+   end
+   return res
+end
+
+graph.iscomplete = function (g)
+   local n = tbllen(g)
+   for _,v in ipairs(g) do
+      if n ~= tbllen(v) then return false end
+   end
+   return true
+end
+graph.about[graph.iscomplete] = {'iscomplete(g)', 'Check completeness of the graph.', help.OTHER}
+
+graph.bfs = function (g, start, goal)
+   local visited,path = {},{}
+   local queue = graph.lc_struct.Queue()
+   queue:add(start); visited[start] = true
+   while not queue:isempty() do
+      local node = queue:rem()
+      path[#path+1] = node
+      if node == goal then
+         return true, path
+      end
+      local previous = queue:size()
+      for v in pairs(g[node]) do
+         if not visited[v] then
+	    queue:add(v); visited[v] = true
+	 end
+      end
+      if queue:size() == previous then path[#path] = nil end
+   end
+   return false, path
+end
+graph.about[graph.bfs] = {"bfs(start,goal)","Bredth first search. Return result and found path."}
+
+graph.dfs = function (g, start, goal)
+   local visited, path = {}, {}
+   local stack = graph.lc_struct.Stack()
+   stack:push(start); visited[start] = true
+   while not stack:isempty() do
+      local node = stack:pop()
+      path[#path+1] = node
+      if node == goal then
+         return true, path
+      end
+      local previous = stack:size()
+      for v in pairs(g[node]) do
+         if not visited[v] then
+	    stack:push(v); visited[v] = true
+	 end
+      end
+      if stack:size() == previous then path[#path] = nil end
+   end
+   return false, path
+end
+graph.about[graph.dfs] = {"dfs(start,goal)","Depth first search. Return result and found path."}
+
+-- Get key with minimum value, remove it
+local function getmin(tbl)
+   local minval = math.huge 
+   local key
+   -- find new minimal value
+   for k,v in pairs(tbl) do
+      if v < minval then 
+         key = k; minval = v
+      end
+   end
+   if key then tbl[key] = nil end
+   return key, minval
+end
+
+graph.Dijkstra = function(g,start,goal)
+   -- define local set 
+   local set = {}
+   for k in pairs(g) do set[k] = math.huge end
+   set[start] = 0
+
+   local prev = {}
+   local dist = {}
+
+   while true do
+      local current, val = getmin(set)
+      if not current then break end
+
+      dist[current] = val
+      for k,v in pairs(g[current]) do
+         local alt = val + v
+	 if set[k] and set[k] > alt then
+	    set[k] = alt; prev[k] = current
+	 end
+      end
+   end
+   -- result
+   if goal then
+      local p, k = {goal},goal 
+      while prev[k] do
+         k = prev[k]; p[#p+1] = k
+      end
+      local rev = {}
+      for i = 1,#p do rev[#p-i+1] = p[i] end
+      return dist[goal], rev
+   else
+      return dist, prev
+   end
+end
+graph.about[graph.Dijkstra] = {'Dijkstra(g,start[,goal]', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length."}
+
+graph.BellmanFord = function (g, start,goal)
+   -- initialize
+   local prev = {}
+   local dist = {}
+   local N = 0      -- number of nodes
+   for k in pairs(g) do dist[k] = math.huge; N = N+1 end
+   dist[start] = 0
+
+   -- relax
+   for i = 1,N-1 do
+      for u in pairs(g) do
+         for v,d in pairs(g[u]) do
+            local alt = dist[u] + d
+            if alt < dist[v] then
+	       dist[v] = alt; prev[v] = u
+	    end
+         end
+      end
+   end
+--[[
+   -- check for negative circles
+   for u in pairs(g) do
+      for v,d in pairs(g[u]) do
+         assert(dist[u] + d >= dist[v], 'Negative circle!')
+      end
+   end
+]]
+   -- result
+   if goal then
+      local p,k = {goal},goal
+      while prev[k] and #p < N do
+         k = prev[k]; p[#p+1] = k
+      end
+      local rev = {}
+      for i = 1,#p do rev[#p-i+1] = p[i] end
+      return dist[goal], rev
+   else
+      return dist, prev
+   end
+end
+graph.about[graph.BellmanFord] = {'BellmanFord(start[,goal]','Shortest path search using Bellman-Ford algorithm.'}
+
+graph.spath = function (g,start,goal)
+   local positive = true
+   for u in pairs(g) do
+      for _,d in pairs(g[u]) do
+         if d < 0 then positive = false; break end
+      end
+      if not positive then break end
+   end
+   if positive then 
+      return graph.Dijkstra(g,start,goal) 
+   else 
+      return graph.BellmanFord(g,start,goal)
+   end
+end
+graph.about[graph.spath] = {'spath(start[,goal])', "Find shortest path using algorithm of Dijkstra of Bellman-Ford."}
+
+-- free memory in case of standalone usage
+if not lc_version then graph.about = nil end
+
+
+return graph
+
+-- TODO: multiple edges for the same verteces
+-- TODO: add heap to Dijkstra's algorithm

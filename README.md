@@ -1,29 +1,30 @@
-# LuaCalculus
-**LuaCalculus** is a **Lua** based program for mathematical computations. It is also a library of objects and functions for solving the different mathematical tasks. Each module is independent from others and can be used standalone.
+# Sonata LC
+**Sonata Lua Calculus** is a **Lua** based program for mathematical computations. It is also a library of objects and functions for solving the different mathematical tasks. Each module is independent from others and can be used standalone.
 
 Following modules are available now:
-* _array_ - multidimensional collections of elements
-* _bigint_ - arbitrary long integer numbers
-* _complex_ - complex number operations
+* [array](https://github.com/mikhel1984/lc/wiki/Example:-arrays) - multidimensional collections of elements
+* [bigint](https://github.com/mikhel1984/lc/wiki/Example:-bigint) - arbitrary long integer numbers
+* [complex](https://github.com/mikhel1984/lc/wiki/Example:-complex) - complex numbers
 * _const_ - collection of constants
-* _files_ - some routines for working with files
-* _gnuplot_ - use **Gnuplot** for creating images
-* _numeric_ - some numerical evaluations (integration, differentiation, solving equations)
-* _polynom_ - manipulations with polynomials 
-* _rational_ - operations with rational number
-* _set_ - manipulations with sets
+* _files_ - routines for working with data files
+* [gnuplot](https://github.com/mikhel1984/lc/wiki/Example:-gnuplot) - use **Gnuplot** for creating images
+* [matrix](https://github.com/mikhel1984/lc/wiki/Example:-matrix) - operations with matrices
+* [numeric](https://github.com/mikhel1984/lc/wiki/Example:-numeric) - some numerical evaluations, such as integration, differentiation, solving equations
+* [polynom](https://github.com/mikhel1984/lc/wiki/Example:-polynom) - manipulations with polynomial objects
+* [rational](https://github.com/mikhel1984/lc/wiki/Example:-rational) - operations with rational numbers
+* [set](https://github.com/mikhel1984/lc/wiki/Example:-set) - operations with sets
 * _special_ - special functions
-* _stat_ - some statistical functions
+* [stat](https://github.com/mikhel1984/lc/wiki/Example:-stat) - some statistical functions
 * _struct_ - base data structures
-* _units_ - units conversation and other manipulations
+* [units](https://github.com/mikhel1984/lc/wiki/Example:-units) - units conversation and other operations
 
 Program includes a help system for most of the functions and modules. It also can be translated to other languages. Available now languages:
 * _English (default)_
 * _Esperanto (eo)_
 * _Russian (ru)_
 
-**LuaCalculus** works in standard **Lua** interpreter with version at least _5.3_. To run it, call
+**Sonata LC** works in standard **Lua** interpreter. It is oriended on version _5.3_, but most of the functions are compatible also with _5.1_ and _5.2_ versions. In order to run it, call
 
-    lua -i calc.lua
+    lua -i sonata.lua
 
-If you have any issues, mail to _vpsys@yandex.ru_. 
+If you have any issues, mail to _sonatalc@yandex.ru_. 

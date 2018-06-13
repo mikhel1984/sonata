@@ -1,7 +1,7 @@
 --[[      liblc/rational.lua 
 
 --- Rational number operatons support.
---  @author <a href="mailto:vpsys@yandex.ru">Stanislav Mikhel</a>
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
             module 'rational'
@@ -180,10 +180,10 @@ end
 rational.__pow = function (a, b)
    b = (type(b) == "number") and b or (b.num/b.denom)  -- to float point
    if type(a) == "number" then
-      return math.pow(a, b)
+      return a^b
    else
       assert(isint(b) and b >= 0, "Power must be a non-negative integer")
-      return rational:new(math.pow(a.num, b), math.pow(a.denom, b)) 
+      return rational:new((a.num)^b, (a.denom)^b) 
    end
 end
 
