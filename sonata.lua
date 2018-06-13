@@ -5,10 +5,10 @@
 --================= CONFIGURATION ====================
 
 --	Uncomment to set the localization file
---LC_LOCALIZATION = "ru.lng"
+LC_LOCALIZATION = "ru.lng"
 
 --	Text coloring
---LC_USE_COLOR = true
+LC_USE_COLOR = true
 
 --	Load after start (optional)
 --LC_DEFAULT_MODULES = {'matrix','numeric'}
@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.9'
+lc_version = '0.9.0'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -127,7 +127,7 @@ about[import][2] = lc_local.import_state_update()
 
 -- Run! 
 io.write(lc_help.CMAIN)
-print("\n   # #       --===== Sonata LC =====--       # #\n    # #          --==== "..lc_version.." ====--          # #\n")
+print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --==== "..lc_version.." ====--         # #\n")
 io.write(lc_help.CHELP)
 print(about:get('intro'))
 
