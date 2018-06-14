@@ -59,33 +59,29 @@ print(a)
 print(d:fullstring(2,3))
 ]]
 
--- Locals
--- compatibility with previous versions
+-- 	LOCAL
+
+-- Compatibility with previous versions
 local Ver = require "liblc.versions"
 
---- Check object type.
---    <i>Private function.</i>
---    @param t Object for checking.
---    @return True if table is an array.
+-- Check object type.
 local function isarray(t) return type(t) == 'table' and t.isarray end
 
---- Prepare list of coefficients
---    <i>Private function.</i>
---    @param s Array size.
---    @return Table of coefficients.
+-- Prepare list of coefficients
 local function getk (s)
    local k = {1}
    for i = 2, #s do k[i] = s[i-1]*k[i-1] end
    return k
 end
 
--------------------------------------------- 
--- @class table
--- @name array
--- @field type Define object type string.
--- @field about Description of functions.
+-- Info
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 
-local array = {type='array', isarray=true,
+-- 	MODULE
+
+local array = {
+type='array', isarray=true,
+-- elementary function definition
 _add_ = function (x,y) return x+y end,
 _sub_ = function (x,y) return x-y end,
 _unm_ = function (x) return -x end,
@@ -93,25 +89,17 @@ _mul_ = function (x,y) return x*y end,
 _div_ = function (x,y) return x/y end,
 _pow_ = function (x,y) return x^y end,
 }
+-- Submatrix
 array.__index = array
--- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+-- Description
 array.about = help:new("Manipulations with arrays of elements.")
 
---- Create new object, set metatable.
---    @param s Table of array size.
---    @return Array object.
+-- Create new object, set metatable.
 array.new = function (self, s)
-   local o = {size = s, k = getk(s)}
-   setmetatable(o, self)
-   return o
+   return setmetatable({size=s, k=getk(s)}, self)
 end
 
---- Check index correctness.
---    <i>Private function.</i>
---    @param arr Array object.
---    @param ind Element index (table).
---    @return <code>false</code> if index is out of range.
+-- Check index correctness.
 array._icorrect = function (arr, ind)
    if #arr.size ~= #ind then return false end
    for i = 1,#ind do 
@@ -120,11 +108,7 @@ array._icorrect = function (arr, ind)
    return true
 end
 
---- Transform index into single dimension representation.
---    <i>Private function.</i>
---    @param arr Array object.
---    @param ind Index of the element (table).
---    @return Vector index.
+-- Transform index into single dimension representation.
 array._iconvert = function (arr, ind)
    local res, k = ind[1], arr.k
    for i = 2,#ind do 
@@ -133,12 +117,10 @@ array._iconvert = function (arr, ind)
    return res
 end
 
---- Maximum number of elements in array.
---    <i>Private function.</i>
---    @param arr Array object.
---    @return Array array._capacity.
+-- Maximum number of elements in array.
 array._capacity = function (arr)
-   return arr.size[#arr.size] * arr.k[#arr.k]
+   local S,K = arr.size, arr.k
+   return S[#S] * K[#K]
 end
 
 --- Get array element.
@@ -215,50 +197,32 @@ array.map = function (a, fn)
 end
 array.about[array.map] = {"map(a,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
 
-
---- a1 + a2
---    @param a1 First array object.
---    @param a2 Second array object.
---    @return New array where each element is the sum of two given.
+-- a1 + a2
 array.__add = function (a1, a2)
    return array.apply(a1, a2, array._add_)
 end
 
---- a1 - a2
---    @param a1 First array object.
---    @param a2 Second array object.
---    @return New array where each element is the difference of two given.
+-- a1 - a2
 array.__sub = function (a1, a2)
    return array.apply(a1, a2, array._sub_)
 end
 
---- -a
---    @param a Array object.
---    @return New element where each element is the negative form of the given one.
+-- -a
 array.__unm = function (a)
    return array.map(a, array._unm_)
 end
 
---- a1 * a2
---    @param a1 First array object.
---    @param a2 Second array object.
---    @return New array where each element is the product of two given.
+-- a1 * a2
 array.__mul = function (a1, a2)
    return array.apply(a1, a2, array._mul_)
 end
 
---- a1 / a2
---    @param a1 First array object.
---    @param a2 Second array object.
---    @return New array where each element is the ratio of two given.
+-- a1 / a2
 array.__div = function (a1, a2)
    return array.apply(a1, a2, array._div_)
 end
 
---- a1 ^ a2
---    @param a1 First array object.
---    @param a2 Second array object.
---    @return New array where each element is result of power operation.
+-- a1 ^ a2
 array.__pow = function (a1, a2)
    return array.apply(a1, a2, array._pow_)
 end
@@ -276,10 +240,7 @@ array.rand = function (s)
 end
 array.about[array.rand] = {"rand(size)", "Return array with random numbers between 0 and 1.", }
 
---- a1 == a2
---    @param a1 First array object.
---    @param a2 Second array object.
---    @return <code>true</code> if array size and all elements are the same.
+-- a1 == a2
 array.__eq = function (a1, a2)
    if array.isequal(a1,a2) then
       for i = 1, array._capacity(a1) do
@@ -366,18 +327,16 @@ array.concat = function (arr1, arr2, axe)
 end
 array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along given axe.", }
 
---- Get number of elements in array.
+--- Method #
 --    @param arr Array object.
---    @return Array array._capacity.
+--    @return Number of elements.
 array.__len = function (arr)
    return array._capacity(arr)
 end
 
---- String representation.
---    @param arr Array object.
---    @return Simple string array description.
+-- String representation.
 array.__tostring = function (arr)
-   return 'array ' .. table.concat(arr.size, 'x')
+   return 'Array ' .. table.concat(arr.size, 'x')
 end
 
 --- Get array slice.
@@ -449,10 +408,12 @@ array.fullstring = function (arr, r, c)
 end
 array.about[array.fullstring] = {"fullstring(arr,r,c)", "Represent array as sequence of matrices, where r and c are numbers of axes.", help.OTHER}
 
--- constructor
+-- Constructor
 setmetatable(array, {__call = function (self, v) 
+   -- check correctness
    assert(type(v) == 'table', "Table is expected!")
    for i = 1,#v do assert(v[i] > 0 and Ver.isinteger(v[i]), "Positive integer is expected!") end
+   -- build
    return array:new(v) 
 end})
 array.Arr = 'Arr'
@@ -476,7 +437,7 @@ array.serialize = function (obj)
 end
 array.about[array.serialize] = {"serialize(obj)", "String representation of array internal structure.", help.OTHER}
 
---- Iterator for moving across the array.
+--- Iterator across the array.
 --    @param arr Array object.
 --    @return Index of the next array element and the element itself, <code>nil</code> at the end.
 array.next = function (arr)
@@ -493,7 +454,7 @@ array.next = function (arr)
 end
 array.about[array.next] = {"next(arr)", "Return iterator along all indexes.", help.OTHER}
 
--- free memory if need
+-- Free memory if need
 if not lc_version then array.about = nil end
 
 return array
