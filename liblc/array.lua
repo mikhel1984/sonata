@@ -85,7 +85,14 @@ end
 -- @field type Define object type string.
 -- @field about Description of functions.
 
-local array = {type='array', isarray=true}
+local array = {type='array', isarray=true,
+_add_ = function (x,y) return x+y end,
+_sub_ = function (x,y) return x-y end,
+_unm_ = function (x) return -x end,
+_mul_ = function (x,y) return x*y end,
+_div_ = function (x,y) return x/y end,
+_pow_ = function (x,y) return x^y end,
+}
 array.__index = array
 -- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
@@ -208,12 +215,6 @@ array.map = function (a, fn)
 end
 array.about[array.map] = {"map(a,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
 
-array._add_ = function (x,y) return x+y end
-array._sub_ = function (x,y) return x-y end
-array._unm_ = function (x) return -x end
-array._mul_ = function (x,y) return x*y end
-array._div_ = function (x,y) return x/y end
-array._pow_ = function (x,y) return x^y end
 
 --- a1 + a2
 --    @param a1 First array object.
@@ -282,8 +283,7 @@ array.about[array.rand] = {"rand(size)", "Return array with random numbers betwe
 array.__eq = function (a1, a2)
    if array.isequal(a1,a2) then
       for i = 1, array._capacity(a1) do
-         local v1, v2 = a1[i] or 0, a2[i] or 0
-         if v1 ~= v2 then return false end
+	 if (a1[i] or 0) ~= (a2[i] or 0) then return false end
       end
       return true
    end
@@ -320,10 +320,11 @@ array.sub = function (arr, ind1, ind2)
    end 
    local res = array:new(newsize)
    -- fill
+   local K, S = res.k, res.size
    for count = 1, array._capacity(res) do
       -- calculate new temporary index
       for i = 1, #ind do 
-         local tmp = math.fmod(count,res.k[i]) % res.size[i]
+         local tmp = math.fmod(count,K[i]) % S[i]
 	 ind2[i] = ind1[i] + tmp
 	 ind[i] = tmp + 1
       end
@@ -349,10 +350,11 @@ array.concat = function (arr1, arr2, axe)
    -- combine
    local res, ind1, ind2 = array:new(newsize), Ver.move(newsize, 1, #newsize, 1, {}), Ver.move(newsize, 1, #newsize, 1, {})
    local edge = arr1.size[axe]
+   local K, S = res.k, res.size
    for count = 1, array._capacity(res) do
       -- prepare index
       for i = 1, #ind1 do
-         ind1[i] = math.fmod(count,res.k[i]) % res.size[i] + 1
+         ind1[i] = math.fmod(count, K[i]) % S[i] + 1
 	 ind2[i] = ind1[i]
       end
       -- get value
@@ -386,23 +388,24 @@ end
 --    @return String with all array elements slice by slice.
 array.fullstring = function (arr, r, c)
    local res = {}
+   local S = arr.size
    -- 1 dimensional array
-   if #arr.size == 1 then
-      for i = 1, arr.size[1] do res[i] = arr[i] or 0 end
+   if #S == 1 then
+      for i = 1, S[1] do res[i] = arr[i] or 0 end
       return table.concat(res, ' ')
-   elseif #arr.size == 2 then
+   elseif #S == 2 then
       r = r or 1
       c = c or 2
    end
-   assert(r > 0 and r <= #arr.size and c > 0 and c <= #arr.size and r ~= c, "Wrong indexes!")
+   assert(r > 0 and r <= #S and c > 0 and c <= #S and r ~= c, "Wrong indexes!")
    -- get 2D layer as string
    local function layer (ind)
             local row = {}
-	    for i = 1, arr.size[r] do
+	    for i = 1, S[r] do
 	       ind[r] = i
 	       -- get row
 	       local col = {}
-	       for j = 1, arr.size[c] do
+	       for j = 1, S[c] do
 	          ind[c]  = j
 		  col[#col+1] = arr[array._iconvert(arr, ind)] or 0
 	       end
@@ -414,15 +417,15 @@ array.fullstring = function (arr, r, c)
    -- prepare index calculation
    local bound, current, extent = {}, {}, {}
    local prod = 1
-   for i = 1, #arr.size do
+   for i = 1, #S do
       if i ~= r and i ~= c then 
-         bound[#bound+1] = arr.size[i]; 
+         bound[#bound+1] = S[i]; 
 	 current[#current+1] = 0 
 	 extent[#extent+1] = prod
-	 prod = prod * arr.size[i]
+	 prod = prod * S[i]
       end
    end
-   local next_index = Ver.move(arr.size, 1, #arr.size, 1, {})
+   local next_index = Ver.move(S, 1, #S, 1, {})
 
    for counter = 0, prod-1 do
       -- find coefficients
@@ -478,12 +481,12 @@ array.about[array.serialize] = {"serialize(obj)", "String representation of arra
 --    @return Index of the next array element and the element itself, <code>nil</code> at the end.
 array.next = function (arr)
    local a = array:new(Ver.move(arr.size, 1, #arr.size, 1, {})) -- copy size
-   local count = 0
+   local count, S, K, len = 0, a.size, a.k, array._capacity(a)
 
    return function ()
-             if count == array._capacity(a) then return nil, nil end
+             if count == len then return nil, nil end
 	     local res = {}
-	     for i = 1, #a.size do res[i] = math.fmod(count,a.k[i]) % a.size[i]+1 end
+	     for i = 1, #S do res[i] = math.fmod(count,K[i]) % S[i]+1 end
 	     count = count + 1
 	     return res, arr[array._iconvert(arr,res)]
           end
