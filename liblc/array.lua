@@ -285,7 +285,7 @@ array.sub = function (arr, ind1, ind2)
    for count = 1, array._capacity(res) do
       -- calculate new temporary index
       for i = 1, #ind do 
-         local tmp = math.fmod(count,K[i]) % S[i]
+         local tmp = math.modf(count,K[i]) % S[i]
 	 ind2[i] = ind1[i] + tmp
 	 ind[i] = tmp + 1
       end
@@ -315,7 +315,7 @@ array.concat = function (arr1, arr2, axe)
    for count = 1, array._capacity(res) do
       -- prepare index
       for i = 1, #ind1 do
-         ind1[i] = math.fmod(count, K[i]) % S[i] + 1
+         ind1[i] = math.modf(count, K[i]) % S[i] + 1
 	 ind2[i] = ind1[i]
       end
       -- get value
@@ -378,7 +378,7 @@ array.fullstring = function (arr, r, c)
    local prod = 1
    for i = 1, #S do
       if i ~= r and i ~= c then 
-         bound[#bound+1] = S[i]; 
+         bound[#bound+1] = S[i] 
 	 current[#current+1] = 0 
 	 extent[#extent+1] = prod
 	 prod = prod * S[i]
@@ -388,17 +388,18 @@ array.fullstring = function (arr, r, c)
 
    for counter = 0, prod-1 do
       -- find coefficients
-      for i = #current,1,-1 do current[i] = math.fmod(counter,extent[i]) % bound[i] end
+      for i = #current,1,-1 do current[i] = math.modf(counter,extent[i]) % bound[i] end
       -- write
       local k = #current
       for i = #next_index, 1, -1 do
-         if i == r then next_index[i] = 'R'
+         if     i == r then next_index[i] = 'R'
 	 elseif i == c then next_index[i] = 'C'
 	 else
 	    next_index[i] = current[k]+1
 	    k = k-1
 	 end
       end
+      --print(next_index[1],next_index[2],next_index[3])
       -- get strings
       res[#res+1] = '{' .. table.concat(next_index,',') .. '}' 
       res[#res+1] = layer(next_index)
@@ -447,7 +448,7 @@ array.next = function (arr)
    return function ()
              if count == len then return nil, nil end
 	     local res = {}
-	     for i = 1, #S do res[i] = math.fmod(count,K[i]) % S[i]+1 end
+	     for i = 1, #S do res[i] = math.modf(count,K[i]) % S[i]+1 end
 	     count = count + 1
 	     return res, arr[array._iconvert(arr,res)]
           end
