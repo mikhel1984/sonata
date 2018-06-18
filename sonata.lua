@@ -115,8 +115,10 @@ if #arg > 0 then
    if not command then command = lc._args['no flags'] end
    command.process(arg)
    if command.exit then os.exit() end
-   lc_local.dialog = true
 end
+
+-- Show additional information
+lc_local.dialog = true
 
 -- Read localization file and update descriptions 
 if LC_LOCALIZATION then 

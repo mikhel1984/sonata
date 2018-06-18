@@ -229,7 +229,7 @@ array.__pow = function (a1, a2)
 end
 
 array.arithmetic = 'arithmetic'
-array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b"}
+array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.META}
 
 --- Random array generator.
 --    @param s Size table.
@@ -253,7 +253,7 @@ array.__eq = function (arr1, arr2)
 end
 
 array.comparison = 'comparison'
-array.about[array.comparison] = {array.comparison, "a == b, a ~= b"}
+array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
 
 --- Get array dimension.
 --    @param arr Array object.
@@ -336,6 +336,7 @@ array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along the
 array.__len = function (arr)
    return array._capacity(arr)
 end
+array.about['#'] = {"#arr", "Return maximum number of elements.", help.META}
 
 -- String representation.
 array.__tostring = function (arr)

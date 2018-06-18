@@ -85,6 +85,7 @@ help.HYP = 'hyperbolic'
 help.CONST = 'constants'
 help.OTHER = 'other'
 help.NEW = 'constructor'
+help.META = 'methods'
 
 help.SEP = string.sub(package.config,1,1)
 
