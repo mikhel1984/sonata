@@ -377,7 +377,7 @@ process = function ()
    print "(option '-i' could be omitted when the program is in non-interractive mode)\n\nFLAGS:"
    for k,v in pairs(main._args) do 
       if type(v) == 'string' then
-         local ref = main.args[v]         
+         local ref = main._args[v]         
          print(string.format('\t%s, %s - %s', k, v, ref.description))
       end
    end

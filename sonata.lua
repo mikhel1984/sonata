@@ -27,7 +27,6 @@ if LC_ADD_PATH then
 end
 
 -- Table for program variables. Import base functions 
---liblc = {main=require('liblc.main')}
 lc = require('liblc.main')
 lc_local = {}
 

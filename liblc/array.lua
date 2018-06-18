@@ -285,7 +285,7 @@ array.sub = function (arr, ind1, ind2)
    for count = 1, array._capacity(res) do
       -- calculate new temporary index
       for i = 1, #ind do 
-         local tmp = math.modf(count,K[i]) % S[i]
+         local tmp = math.modf(count/K[i]) % S[i]
 	 ind2[i] = ind1[i] + tmp
 	 ind[i] = tmp + 1
       end
@@ -315,7 +315,7 @@ array.concat = function (arr1, arr2, axe)
    for count = 1, array._capacity(res) do
       -- prepare index
       for i = 1, #ind1 do
-         ind1[i] = math.modf(count, K[i]) % S[i] + 1
+         ind1[i] = math.modf(count/K[i]) % S[i] + 1
 	 ind2[i] = ind1[i]
       end
       -- get value
@@ -323,9 +323,10 @@ array.concat = function (arr1, arr2, axe)
       ind2[axe] = second and (ind2[axe]-edge) or ind2[axe]
       res[array._iconvert(res,ind1)] = second and arr2[array._iconvert(arr2,ind2)] or arr1[array._iconvert(arr1,ind2)]
    end
+   --for i = 1, array._capacity(arr2) do print(i, arr2[i]) end
    return res 
 end
-array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along given axe.", }
+array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along the given axis.", }
 
 --- Method #
 --    @param arr Array object.
@@ -388,7 +389,7 @@ array.fullstring = function (arr, r, c)
 
    for counter = 0, prod-1 do
       -- find coefficients
-      for i = #current,1,-1 do current[i] = math.modf(counter,extent[i]) % bound[i] end
+      for i = #current,1,-1 do current[i] = math.modf(counter/extent[i]) % bound[i] end
       -- write
       local k = #current
       for i = #next_index, 1, -1 do
@@ -448,7 +449,7 @@ array.next = function (arr)
    return function ()
              if count == len then return nil, nil end
 	     local res = {}
-	     for i = 1, #S do res[i] = math.modf(count,K[i]) % S[i]+1 end
+	     for i = 1, #S do res[i] = math.modf(count/K[i]) % S[i]+1 end
 	     count = count + 1
 	     return res, arr[array._iconvert(arr,res)]
           end
