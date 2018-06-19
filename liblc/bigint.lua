@@ -95,6 +95,8 @@ local function simplify (tdigits)
    end
 end
 
+local ZERO = string.byte('0')
+
 --	INFO 
 
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
@@ -142,21 +144,22 @@ bigint._div_ = function (a,b)
    local k = #b.value                              -- index of the last character
    local rest = bigint:new(string.sub(num, 1, k))  -- current part the of numerator
    local denom = bigint.abs(b)                     -- denominator
-   local q = string.sub(denom.value, #denom.value) -- first digit
+   local last = #denom.value                       -- length of denominator
+   local q = string.sub(denom.value, last) -- first digit
    -- read the string
    while k <= #num do                             
       if rest >= denom then
          -- get ratio
-	 local n, p = 1, string.sub(rest.value, #denom.value):reverse()
-	 n = math.modf(p/q)
-	 local prod = n*denom
+	 local p = string.sub(rest.value, last):reverse()
+	 local n = math.modf(p/q)
+	 local prod = bigint.__mul(n,denom)        -- n * denom
 	 -- save result
-	 if prod <= rest then
+	 if bigint.__le(prod, rest) then           -- prod <= rest
 	    acc[#acc+1] = n
-	    rest = rest-prod
+	    rest = bigint.__sub(rest, prod)        -- rest - prod
 	 else
 	    acc[#acc+1] = n-1
-	    rest = rest-prod+denom
+	    rest = bigint.__sub(rest,prod)+denom   -- rest-prod+denom
 	 end
       else
          if #acc > 0 then acc[#acc+1] = 0 end
@@ -172,16 +175,15 @@ bigint._div_ = function (a,b)
 end
 
 -- Get sum of the two positive bigint numbers.
-bigint._sum = function (a,b)
-   local acc = {}
-   local zero = string.byte('0')
+bigint._sum = function (big1,big2)
+   local acc, base = {}, bigint.BASE
    -- calculate sum
-   for i = 1, math.max(#a.value,#b.value) do
-      local ai = string.byte(a.value, i) or zero
-      local bi = string.byte(b.value, i) or zero      
-      acc[i] = (acc[i] or 0) + (ai-zero) + (bi-zero)
-      if acc[i] >= bigint.BASE then
-         acc[i] = acc[i] - bigint.BASE
+   for i = 1, math.max(#big1.value,#big2.value) do
+      local ai = string.byte(big1.value, i) or ZERO
+      local bi = string.byte(big2.value, i) or ZERO      
+      acc[i] = (acc[i] or 0) + (ai-ZERO) + (bi-ZERO)
+      if acc[i] >= base then
+         acc[i] = acc[i] - base
          acc[i+1] = 1
       end      
    end
@@ -192,18 +194,17 @@ bigint._sum = function (a,b)
 end
 
 -- Get subtraction for two positive bigint numbers.
-bigint._sub_ = function (a,b)
+bigint._sub_ = function (big1,big2)
    -- find the biggest
-   local p,q,r = a,b,1
-   if bigint.abs(a) < bigint.abs(b) then
+   local p,q,r = big1,big2,1
+   if bigint.abs(big1) < bigint.abs(big2) then
       p,q,r = q,p,-1
    end
    local acc = {}
-   local zero = string.byte('0')
    -- calculate sub
    for i = 1, #p.value do
-      local pi = string.byte(p.value, i) or zero
-      local qi = string.byte(q.value, i) or zero
+      local pi = string.byte(p.value, i) or ZERO
+      local qi = string.byte(q.value, i) or ZERO
       acc[i] = (acc[i] or 0) + pi - qi    -- (pi-zero)-(qi-zero)
       if acc[i] < 0 then
          acc[i] = acc[i] + bigint.BASE
@@ -266,15 +267,13 @@ end
 -- a * b
 bigint.__mul = function (a, b) 
    a,b = bigint._args(a,b)
-   local zero = string.byte('0')
    local sum = {}
    -- get products   
    for i = 1, #a.value do
-      local ai = string.byte(a.value, i) - zero
+      local ai = string.byte(a.value, i) - ZERO
       for j = 1, #b.value do
-         local bj = string.byte(b.value, j) - zero
 	 local pos = i+j-1
-	 sum[pos] = (sum[pos] or 0) + ai*bj
+	 sum[pos] = (sum[pos] or 0) + ai*(string.byte(b.value,j)-ZERO)
       end
    end
    -- back
@@ -347,26 +346,28 @@ bigint.__len = bigint.digits
 -- a ^ b
 bigint.__pow = function (a,b)
    a,b = bigint._args(a,b)
-   assert(b.sign >= 0, "Power must be non negative")
-   if b.value == '0' then 
-      assert(a.value ~= '0', "Error: 0^0")
-      return bigint:new(1) 
-   end
-   local aa, bb, q = bigint.copy(a), bigint.copy(b), nil
+   assert(b.sign >= 0, "Power must be non negative!")
    local res = bigint:new(1)
-   local h = 1
-   while bb.value ~= '0' do
-      bb,q = bigint._div_(bb,2)
-      if q.value ~= '0' then res = res*aa end
-      if bb.value ~= '0' then aa = aa*aa end
+   if b.value == '0' then 
+      assert(a.value ~= '0', "Error: 0^0!")
+      return res
+   end
+   local aa, bb, q = bigint.copy(a), bigint.copy(b)
+   local h, two = 1, bigint:new(2)
+   while true do
+      bb,q = bigint._div_(bb,two)
+      if q.value ~= '0' then res = bigint.__mul(res,aa) end
+      if bb.value ~= '0' then 
+         aa = bigint.__mul(aa,aa)
+      else break end
    end
    return res
 end
 
 bigint.arithmetic = 'arithmetic'
-bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", }
+bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.META}
 bigint.comparison = 'comparison'
-bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", }
+bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.META}
 
 -- String representation.
 bigint.__tostring = function (v)
@@ -388,7 +389,7 @@ bigint.about[bigint.str] = {"str(v)", "More readable string representation of th
 bigint.tonumber = function (v)
    return tonumber(tostring(v))
 end
-bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible.", }
+bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer as number if it possible."}
 
 --- m!
 --    @param m Bigint object or integer.
@@ -396,16 +397,15 @@ bigint.about[bigint.tonumber] = {"tonumber(v)", "Represent current big integer a
 bigint.fact = function (m)
    local n = isbigint(m) and m:copy() or bigint:new(m)
    assert(n.sign > 0, "Non-negative value is expected!")
-   --local n = bigint.abs(m)
    local res = bigint:new(1)   
    local one = res:copy()
    while n.value ~= '0' do   
-      res = res * n
-      n = n - one
+      res = bigint.__mul(res, n)
+      n = bigint.__sub(n, one)
    end
    return res
 end
-bigint.about[bigint.fact] = {"fact(n)", "Return factorial of non-negative integer n.", }
+bigint.about[bigint.fact] = {"fact(n)", "Return factorial of non-negative integer n."}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
