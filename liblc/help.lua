@@ -410,3 +410,4 @@ return help
 --==========================================
 -- TODO: localize error messages
 -- TODO: problem with the common names of different objects in the same module
+-- TODO: generate help in html, similar to luadock

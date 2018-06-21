@@ -407,6 +407,19 @@ bigint.fact = function (m)
 end
 bigint.about[bigint.fact] = {"fact(n)", "Return factorial of non-negative integer n."}
 
+--[[
+bigint.base = function (big, base)
+   local letterA = string.byte('A')
+   local res = {}
+   local value = string.reverse(big.value)
+   local acc = 0
+   for i = 1,#value do
+      local d = string.byte(value,i)
+      if d >= letterA then d = d - letterA + 10 else d = d - ZERO end
+   end
+end
+]]
+
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Big = 'Big'
@@ -429,3 +442,5 @@ bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representatio
 if not lc_version then bigint.about = nil end
 
 return bigint
+
+-- TODO: work with different bases
