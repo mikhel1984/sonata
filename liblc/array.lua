@@ -89,11 +89,11 @@ _unm_ = function (x) return -x end,
 _mul_ = function (x,y) return x*y end,
 _div_ = function (x,y) return x/y end,
 _pow_ = function (x,y) return x^y end,
+-- description
+about = help:new("Manipulations with arrays of elements.")
 }
 -- Submatrix
 array.__index = array
--- Description
-array.about = help:new("Manipulations with arrays of elements.")
 
 -- Create new object, set metatable.
 array.new = function (self, tsize)

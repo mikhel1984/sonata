@@ -17,10 +17,13 @@ ans = _C.e                  --~ 1.602e-19
 ans = _C.e_u                --> 'C'
 ]]
 
----------------------------------
--- @class table
--- @name const
--- @field about Description of values.
+--	LOCAL
+
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+
+local CONST = help.CONST
+
+--	MODULE
 
 local const = {
    -- physics
@@ -42,15 +45,14 @@ pc_u='m',           pc = 3.08567758128E16,          -- one parsec
 ly_u='m',           ly = 9.4607304725808E15,        -- light year
    -- math
                     phi  = 0.5*(1+math.sqrt(5)),    -- golden ratio
-		    EulerMascheroni = 0.5772156649015328606065120, -- gamma
+		    EuMa = 0.5772156649015328606065120, -- gamma
    --
                     Adams= 42,                      -- ;)
-}
 
 -- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-const.about = help:new("Collection of constant values.")
-local CONST = help.CONST
+about = help:new("Collection of constant values.")
+}
+
 -- physics
 const.about[const.G] = {"G", "Gravitational constant.", CONST}
 const.about[const.e] = {"e", "Electron charge.", CONST}
@@ -67,13 +69,12 @@ const.about[const.sigma] = {"sigma", "Stefan-Boltzmann constant.", CONST}
 const.about[const.Rinf] = {"Rinf", "Rydberg constant", CONST}
 -- astronomy
 const.about[const.pc] = {"pc", "One parsec.", CONST}
-const.about[const.ly] = {"lu", "One light year.", CONST}
+const.about[const.ly] = {"ly", "One light year.", CONST}
 -- mathematics
 const.about[const.phi] = {"phi", "Golden ratio.", CONST}
-const.about[const.EulerMascheroni] = {"EulerMascheroni", "Difference between harmonic series and the natural logarithm.", CONST}
+const.about[const.EuMa] = {"EuMa", "Difference between harmonic series and the natural logarithm.", CONST}
 --
 const.about[const.Adams] = {"Adams", "Answer to the ultimate question of life, the Universe, and Everything.", CONST}
-
 
 -- free memory in case of standalone usage
 if not lc_version then const.about = nil end

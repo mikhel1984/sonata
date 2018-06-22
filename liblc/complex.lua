@@ -79,10 +79,14 @@ local help = lc_version and (require "liblc.help") or {new=function () return {}
 
 --	MODULE
 
-local complex = {type='complex', iscomplex=true}
-complex.__index = complex
+local complex = {
+-- mark
+type='complex', iscomplex=true,
 -- description
-complex.about = help:new("Manipulations with complex numbers.")
+about = help:new("Manipulations with complex numbers."),
+}
+
+complex.__index = complex
 
 -- Constructor
 complex.new = function (self, re, im)   

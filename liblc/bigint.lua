@@ -103,10 +103,14 @@ local help = lc_version and (require "liblc.help") or {new=function () return {}
 
 --	MODULE
 
-local bigint = {type='bigint', isbigint=true}
-bigint.__index = bigint
+local bigint = {
+-- mark
+type='bigint', isbigint=true,
 -- description
-bigint.about = help:new("Operations with arbitrary long integers.")
+about = help:new("Operations with arbitrary long integers."),
+}
+
+bigint.__index = bigint
 -- the radix
 bigint.BASE = 10        
 bigint.about[bigint.BASE] = {'BASE', "The radix of big integer representation.", help.OTHER}
