@@ -35,20 +35,22 @@ aa = File.tblimport(nm)
 ans = aa.b.c                         --> 'abc'
 ]]
 
----------------------------------
--- @class table
--- @name files
--- @field about Description of functions.
-local files = {}
+--	LOCAL
 
 -- compatibility
 local Ver = require "liblc.versions"
 
--- description
+--	INFO
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-files.about = help:new("Routines for working with data files.")
 
---- Split string into substring based on given delimiter
+--	MODULE
+
+local files = {
+-- description
+about = help:new("Routines for working with data files."),
+}
+
+--- Split string into substrings based on the given delimiter
 --    @param str Initial string.
 --    @param delim Delimiter string.
 --    @return Iterator over substrings.
@@ -57,8 +59,8 @@ files.split = function (str, delim)
    -- return iterator
    return function ()
       if not str or i > #str then return nil end
-      local res
       j,k = string.find(str, delim, k+1)
+      local res
       if j then
          res = string.sub(str, i, j-1)
 	 i = k+1
@@ -74,9 +76,8 @@ files.about[files.split] = {"split(str,delim)", "Return iterator over substrings
 --- Save Lua table in file, use given delimiter
 --    @param t Lua table.
 --    @param fname File name.
---    @param delim Delimiter.
+--    @param delim Delimiter, default is coma.
 files.dsvwrite = function (fname, t, delim)
-   assert(type(t) == 'table', 'Table is expected, got '..type(t))
    local f = assert(io.open(fname,'w'), "Can't create file "..tostring(fname))
    delim = delim or ','
    for _,v in ipairs(t) do
@@ -90,23 +91,21 @@ files.about[files.dsvwrite] = {"dsvwrite(fname,tbl,del)", "Save Lua table as del
 
 --- Import data from text file, use given delimiter
 --    @param fname File name.
---    @param delim Delimiter.
+--    @param delim Delimiter, default is coma.
 --    @return Lua table with data.
 files.dsvread = function (fname, delim)
    local f = assert(io.open(fname, 'r'), "Can't open file "..fname)
    delim = delim or ','
    local res = {}
    for s in f:lines('l') do
+      -- read data
       s = string.match(s,'^%s*(.*)%s*$')
       local i,j = #res+1,1
       if #s > 0 then
          res[i] = {}
+	 -- read string elements
 	 for p in files.split(s,delim) do
 	    res[i][j], j = tonumber(p) or p, j+1
-	 end
-	 if #res[i] > 0 then
-	    if #res[i] == 1 then res[i] = res[i][1] end -- ??
-	    i = i+1
 	 end
       end
    end
@@ -119,8 +118,7 @@ files.about[files.dsvread] = {"dsvread(fname,del)", "Read delimiter separated da
 --    @param fname
 --    @return String or nil.
 files.read = function (fname)
-   local str
-   local f = io.open(fname, 'r')
+   local f, str = io.open(fname, 'r')
    if f then
       str = f:read('*a')
       f:close()
@@ -133,6 +131,7 @@ end
 --    @return Lua table or nil.
 files.tblimport = function (fname)
    local str,f = files.read(fname)
+   -- use Lua default import
    if str then f = Ver.loadstr('return '..str) end
    return f and f() or nil
 end
