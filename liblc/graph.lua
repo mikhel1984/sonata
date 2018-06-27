@@ -397,5 +397,6 @@ if not lc_version then graph.about = nil end
 
 return graph
 
+--=========================================
 -- TODO: multiple edges for the same verteces
 -- TODO: add heap to Dijkstra's algorithm

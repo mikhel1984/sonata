@@ -447,4 +447,5 @@ if not lc_version then bigint.about = nil end
 
 return bigint
 
+--=================================
 -- TODO: work with different bases

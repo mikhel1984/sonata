@@ -165,71 +165,72 @@ ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
 ans = Mat.ones(2,3):rank()      --> 1
 ]]
 
+--	LOCAL
+
 local KEYWORD = 0xACCEC
 
--------------------------------------------- 
--- @class table
--- @name matrix
--- @field type Define object type string.
--- @field about Description of functions.
-
-local matrix = {}
--- mark object
-matrix.type = 'matrix'
-matrix.ismatrix = true
--- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-matrix.about = help:new("Matrix operations. The matrices are spares by default.")
-
+-- compatibility
 local Ver = require "liblc.versions"
 
---- Metatable for new rows.
--- @class table
--- @name access
--- @field __index Return 0 instead nil
--- @field __newindex Help matrix to be sparse.
+-- Metatable for new rows.
 local access = {
    -- 0 instead nil
    __index = function () return 0 end,
    -- comment this function in order to work a little bit faster, but in this case matrix can become dense
    __newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
 }
+
+-- Check object type.
+local function ismatrix(m) return type(m) == 'table' and m.ismatrix end
+
+-- Correct range if possible
+local function torange(x,range)
+   if x < 0 then x = x + range + 1 end
+   if x <= 0 or x > range then return nil end
+   return x
+end
+
+--	INFO
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+
+--	MODULE
+
+local matrix = {
+-- mark object
+type = 'matrix', ismatrix = true,
+-- description
+matrix.about = help:new("Matrix operations. The matrices are spares by default."),
+}
+
 -- access to the elements
 matrix.__index = function (t,k) 
    if type(k) == 'number' then
-   -- new element
+      -- new element
       local tmp = setmetatable({}, access)
       t[k] = tmp
       return tmp
    else
-   -- matrix methods
+      -- matrix methods
       return matrix[k]
    end
 end
-
---- Check object type.
---    <i>Private function.</i>
---    @param m Object for checking.
---    @return True if table is a matrix.
-local function ismatrix(m) return type(m) == 'table' and m.ismatrix end
 
 --- Initialization of matrix with given size.
 --    @param r Number of rows.
 --    @param c Number of columns.
 --    @param m Table for initialization.
 --    @return Matrix object.
-function matrix:init(r, c, m)
+matrix.init = function (self, r, c, m)
    assert(r > 0 and c > 0, "Wrong matrix size")
    m = m or {}
    m.cols, m.rows = c, r
-   setmetatable(m, self)
-   return m
+   return setmetatable(m, self)
 end
 
 --- Create new matrix from list of tables.
 --    Arguments are rows represented as tables.
 --    @return Matrix object.
-function matrix.new(m)
+matrix.new = function (m)
    m = m or {}
    local cols, rows = 0, #m
    for i = 1, rows do
@@ -240,7 +241,7 @@ function matrix.new(m)
    return matrix:init(rows, cols, m)
 end
 
---- Check correctness of element index.
+-- Check correctness of element index.
 --    Used only for user defined index. Can be negative.
 --    If <code>c</code> is omitted then <code>r</code> is index in vector.
 --    <i>Private function.</i>
@@ -350,26 +351,6 @@ matrix.rank = function (m)
    return i-1
 end
 matrix.about[matrix.rank] = {"rank(m)", "Find rank of the matrix."}
-
---- Check index and get matrix element.
---    Can be called with ().
---    @param m Matrix.
---    @param r Row number.
---    @param c Column number.
---    @return Element value.
---[[
-matrix.get = function (m, r, c)
-   r, c = checkindex(m, r, c)
-   return m[r][c]
-end
-matrix.about[matrix.get] = {"get(m,row,col)", "Check index and return matrix element."}
-]]
-
-local function torange(x,range)
-   if x < 0 then x = x + range + 1 end
-   if x <= 0 or x > range then return nil end
-   return x
-end
 
 matrix.get = function (m,a,b)
    if not b then

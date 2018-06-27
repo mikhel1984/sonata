@@ -46,39 +46,48 @@ lc.append(b,a)
 ans = b.b                       --> 2
 ]]
 
-local main = {}
+--	LOCAL
+
+local TRIG = 'trigonometry'
+local HYP = 'hyperbolic'
+
+-- first 11 factorials
+local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
+
+--	INFO
 
 -- lc_help
 lc_help = require "liblc.help"
 about = lc_help:new("Lua based calculator.")
 
--- first 11 factorials
-local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
+--	MODULE
+
+local main = {_LOG10=math.log(10)}
 
 -- Common
-abs = math.abs;    about[abs] = {"abs(x)", "Absolute value.", }
-exp = math.exp;    about[exp] = {"exp(x)", "Exponent.", }
-ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm.", }
-sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root.", }
-max = math.max;    about[max] = {"max(...)", "Maximum number.", }
-min = math.min;    about[min] = {"min(...)", "Minimum number.", }
+abs = math.abs;    about[abs] = {"abs(x)", "Absolute value."}
+exp = math.exp;    about[exp] = {"exp(x)", "Exponent."}
+ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm."}
+sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root."}
+max = math.max;    about[max] = {"max(...)", "Maximum number."}
+min = math.min;    about[min] = {"min(...)", "Minimum number."}
 -- Trigonometrical
-sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", lc_help.TRIG}
-cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", lc_help.TRIG}
-tan = math.tan;    about[tan] = {"tan(x)", "Tangent x.", lc_help.TRIG}
-asin = math.asin;  about[asin] = {"asin(x)", "Arcsine x.", lc_help.TRIG}
-acos = math.acos;  about[acos] = {"acos(x)", "Arc cosine x.", lc_help.TRIG}
-atan = math.atan;  about[atan] = {"atan(y[,x])", "Arctangent y. In case of 2 parameters calculate y/x with signs.", lc_help.TRIG}
+sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", TRIG}
+cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", TRIG}
+tan = math.tan;    about[tan] = {"tan(x)", "Tangent x.", TRIG}
+asin = math.asin;  about[asin] = {"asin(x)", "Arcsine x.", TRIG}
+acos = math.acos;  about[acos] = {"acos(x)", "Arc cosine x.", TRIG}
+atan = math.atan;  about[atan] = {"atan(y[,x])", "Arctangent y. In case of 2 parameters calculate y/x with signs.", TRIG}
 -- Hyperbolic
 ch = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
-about[ch] = {"ch(x)", "Hyperbolic cosine.", lc_help.HYP}
+about[ch] = {"ch(x)", "Hyperbolic cosine.", HYP}
 sh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end   
-about[sh] = {"sh(x)", "Hyperbolic sinus.", lc_help.HYP}
+about[sh] = {"sh(x)", "Hyperbolic sinus.", HYP}
 th = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
-about[th] = {"th(x)", "Hyperbolic tangent.", lc_help.HYP}
+about[th] = {"th(x)", "Hyperbolic tangent.", HYP}
 -- Angles 
-deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees.", }
-rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians.", }
+deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees."}
+rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians."}
 -- Rounding
 floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", lc_help.OTHER}
 ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", lc_help.OTHER}
@@ -86,32 +95,24 @@ ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or eq
 _pi = math.pi;     about[_pi] = {"_pi", "Number pi", lc_help.CONST}
 _e = math.exp(1.0) about[_e] = {"_e", "Euler number", lc_help.CONST}
 
--- Additional functions --
-main._LOG10 = math.log(10)
 
-function lg(x) return math.log(x)/main._LOG10 end
-about[lg] = {"lg(x)", "Decimal logarithm.", }
+lg = function (x) return math.log(x)/main._LOG10 end
+about[lg] = {"lg(x)", "Decimal logarithm."}
 
-function rand() return math.random() end
-about[rand] = {"rand()", "Random number between 0 and 1.", }
+rand = function () return math.random() end
+about[rand] = {"rand()", "Random number between 0 and 1."}
 -- hyperbolic arcsine
-function ash(x)
-   return math.log(x+math.sqrt(x*x+1))
-end
-about[ash] = {"ash(x)", "Hyperbolic arcsine.", lc_help.HYP}
+ash = function (x) return math.log(x+math.sqrt(x*x+1)) end
+about[ash] = {"ash(x)", "Hyperbolic arcsine.", HYP}
 -- hyperbolic arc cosine
-function ach(x)
-   return math.log(x+math.sqrt(x*x-1))
-end
-about[ach] = {"ach(x)", "Hyperbolic arc cosine.", lc_help.HYP}
+ach = function (x) return math.log(x+math.sqrt(x*x-1)) end
+about[ach] = {"ach(x)", "Hyperbolic arc cosine.", HYP}
 -- hyperbolic arctangent
-function ath(x)
-   return 0.5*math.log((1+x)/(1-x))
-end
-about[ath] = {"ath(x)", "Hyperbolic arctangent.", lc_help.HYP}
+ath = function (x) return 0.5*math.log((1+x)/(1-x)) end
+about[ath] = {"ath(x)", "Hyperbolic arctangent.", HYP}
 
 -- round to closest integer
-function round(x,n)
+round = function (x,n)
    k = 10^(n or 0)
    local p,q = math.modf(x*k)
    if q >= 0.5 then 
@@ -124,13 +125,13 @@ end
 about[round] = {'round(x[,n])', 'Round value, define number of decimal digits.', lc_help.OTHER}
 
 -- calculate function for range of values
-function main.eval(fn, x1, xn, step)
+main.eval = function (fn, x1, xn, step)
    xn = xn or x1
    step = step or 1
    for k = x1, xn, step do print("x="..k.."\tres="..fn(k)) end
 end
 
-function fact(n)
+fact = function (n)
    assert(n >= 0 and math.type(n) == 'integer', 'Expected positive integer value!')
    local tmp = factorials[n]
    if tmp and tmp < math.huge then return tmp end
@@ -144,9 +145,10 @@ function fact(n)
    end
    return factorials[n]
 end
+about[fact] = {'fact(n)', 'Evaluate factorial.'}
 
 -- Print examples from test part of module
-function main.example(nm)
+main.example = function (nm)
    assert(type(nm) == 'string', 'Module name is expected!')
    local fname = 'liblc'..lc_help.SEP..nm..'.lua'
    local f = io.open(fname, 'r')
@@ -161,11 +163,11 @@ function main.example(nm)
       print("No examples found in '"..fname.."'")
    end
 end
-about[main.example] = {"example(name)", "Show examples for given module, which used to test.", }
+about[main.example] = {"example(name)", "Show examples for given module, which used to test.", lc_help.OTHER}
 
 
 -- read object from its serialization
-function main.deserialize(obj_str)
+main.deserialize = function (obj_str)
    local f = assert(load("return " .. obj_str)) 
    local o = f()
    assert(_G[o.metatablename], "Module '" .. o.modulename .. "' is required")
@@ -176,7 +178,7 @@ end
 about[main.deserialize] = {"deserialize(obj_str)", "Transform string with serialization into Sonata LC object.", lc_help.OTHER}
 
 -- Print the contents of a table
-function main.flip(t,N)
+main.flip = function (t,N)
    assert(type(t) == 'table', 'Table is expected!')
    N = N or 10
    local count = 1
@@ -207,7 +209,7 @@ end
 about[main.flip] = {"flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
 
 -- Return 'scintific' representation of the number
-function main.sci(x)
+main.sci = function (x)
    print(string.format('%.2E',x))
 end
 about[main.sci] = {"sci(x)", "'Scintific' representation of the number.", lc_help.OTHER}
@@ -222,14 +224,14 @@ function main.type(t)
    end
    return v
 end
-about[main.type] = {'lc_type(t)', 'Show type of the object.', lc_help.OTHER}
+about[main.type] = {'type(t)', 'Show type of the object.', lc_help.OTHER}
 
 -- Wait for press button
-function main.pause(s)
+main.pause = function (s)
    if s then io.write(s) end
    io.read()
 end
-about[main.pause] = {'lc_pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
+about[main.pause] = {'lc.pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
 
 -- Generate sequence of values
 main.range = function (from,to,step)
@@ -240,6 +242,7 @@ main.range = function (from,to,step)
    for i = from,to,step do res[#res+1] = i end
    return res
 end
+about[main.range] = {'lc.range([from,]to[,step])','Generate table with sequence of numbers.', lc_help.OTHER}
 
 -- append to table a value or elements of other table
 main.append = function (t,val)
@@ -255,9 +258,10 @@ main.append = function (t,val)
       t[#t+1] = val
    end
 end
+about[main.append] = {'lc.append(tbl,val)','Append value or table to the given table.', lc_help.OTHER}
 
 -- Print lc_help information
-function help(fn)   
+help = function(fn)   
    if fn then 
       about:print(type(fn)=='table' and fn.about or fn) 
    else
@@ -270,7 +274,7 @@ end
 
 -- Simple implementation of 'the life'
 -- prepare your initial board in form of matrix
-function main.life(board)
+main.life = function (board)
    assert(board.type == 'matrix', 'Matrix is expected!')
    local rows,cols = board:size() 
    local src = board
@@ -298,8 +302,8 @@ function main.life(board)
    until 'n' == io.read()
 end
 
--- Evaluate string equation, print result
-function main.evalstr (s)
+-- Evaluate string equations, separated with semicolon, print result
+main.evalstr = function (s)
    local T = require 'liblc.files'
    for c in T.split(s,';') do
       if not (c:find('=') or c:find('print')) then c = string.format('print(%s)',c) end
