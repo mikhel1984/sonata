@@ -48,58 +48,85 @@ print(b)
 
 ]]
 
----------------------------------
--- @class table
--- @name graph
--- @field about Description of functions.
-local graph = {type='graph', isgraph=true}
-graph.__index = graph
+--	LOCAL
+
+local SEARCH = 'search'
+
+-- Get key with minimum value, remove it
+local function getmin(tbl)
+   local minval, key = math.huge 
+   -- find new minimal value
+   for k,v in pairs(tbl) do
+      if v < minval then 
+         key = k; minval = v
+      end
+   end
+   if key then tbl[key] = nil end
+   return key, minval
+end
 
 -- marker
 local function isgraph(t) return type(t)=='table' and t.isgraph end
 
-graph.lc_struct = require 'liblc.struct'
-
--- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-graph.about = help:new("Operations with graphs.")
-
+-- check element
 local function isedge(m) return type(m) == 'table' end
 
+-- count elements
 local function tbllen (m) 
    local n = 0
    for k in pairs(m) do n = n+1 end
    return n
 end
 
---- Constructor example
+--	INFO
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+
+--	MODULE
+local graph = {
+type='graph', isgraph=true,
+-- description
+about = help:new("Operations with graphs."),
+}
+-- meta
+graph.__index = graph
+-- external library
+graph.lc_struct = require 'liblc.struct'
+
+-- Constructor example
 --    @param t Some value.
 --    @return New object of graph.
-function graph:new(t)
+graph.new = function (self,t)
    local o = {}
    -- add nodes
    for _,elt in ipairs(t) do graph.add(o,elt) end
-   setmetatable(o,self)
-   return o
+   return setmetatable(o,self)
 end
 
+--- Add node or edge.
+--    @param g Graph.
+--    @param t New element.
 graph.add = function (g, t)
    if isedge(t) then
-      local t1,t2,w12,w21 = t[1], t[2], t[3] or t.w12, t[4] or t.w21
+      local t1,t2,w12,w21 = t[1], t[2], (t[3] or t.w12), (t[4] or t.w21)
       g[t1] = g[t1] or {}
       g[t2] = g[t2] or {}
       if not (t3 or t4) then
+         -- no weights
          local w = t.w or 1
 	 g[t1][t2] = w; g[t2][t1] = w
       else
          g[t1][t2] = w12; g[t2][t1] = w21
       end
    else
+      -- node
       g[t] = g[t] or {}
    end
 end
 graph.about[graph.add] = {"add(e)","Add new node or edge. Node denoted as a single name, edge is a table of names (and weights if need)."}
 
+--- Remove node or edge.
+--    @param g Graph.
+--    @param t Element to remove.
 graph.remove = function (g, t)
    if isedge(t) then
       local t1,t2 = t[1], t[2]
@@ -108,6 +135,7 @@ graph.remove = function (g, t)
          g[t2][t1] = nil
       end
    else
+      -- node
       for _,v in pairs(g) do v[t] = nil end
       g[t] = nil
    end
@@ -119,31 +147,43 @@ setmetatable(graph, {__call = function (self,v) return graph:new(v) end})
 graph.Graph = 'Graph'
 graph.about[graph.Graph] = {"Graph(t)", "Create new graph.", help.NEW}
 
+--- Get graph nodes.
+--    @param g Graph.
+--    @return List of nodes.
 graph.nodes = function (g)
    local res = {}
-   for k in pairs(g) do res[#res+1] = k end
+   for k in pairs(g) do res[#res+1] = tostring(k) end
    return res
 end
 graph.about[graph.nodes] = {"nodes()","List of graph nodes."}
 
+--- Get graph edges.
+--    @param g Graph.
+--    @return List of edges.
 graph.edges = function (g)
-   local nodes = graph.nodes(g)
-   local res = {}
+   local nodes, res = graph.nodes(g), {}
    for i = 1,#nodes do
+      -- all nodes
       local ni = nodes[i]
+      local Wi = g[ni]
       for j = i,#nodes do
+         -- all pairs
          local nj = nodes[j]
-         local w = g[ni][nj]
+         local w = Wi[nj]
 	 if w then 
 	    res[#res+1] = {ni,nj} 
+	    -- different edges
 	    if g[nj][ni] ~= w then res[#res+1] = {nj,ni} end
-	 end
-      end
+	 end -- if
+      end -- for
    end
    return res
 end
 graph.about[graph.edges] = {"edges()", "List of graph edges."}
 
+--- Make the graph copy.
+--    @param g Graph.
+--    @return Deep copy of the graph.
 graph.copy = function (g)
    local res = graph:new({})
    for k,v in pairs(g) do
@@ -154,13 +194,12 @@ graph.copy = function (g)
 end
 graph.about[graph.copy] = {"copy()", "Get copy of the graph."}
 
-graph.__len = function (g)
-   return tbllen(g)
-end
+-- Get number of nodes.
+graph.__len = function (g) return tbllen(g) end
 
+-- String representation
 graph.__tostring = function (g)
-   local nd = graph.nodes(g)
-   local res
+   local nd, res = graph.nodes(g)
    if #nd <= 5 then 
       res = string.format('Graph {%s}', table.concat(nd,','))
    else
@@ -170,6 +209,9 @@ graph.__tostring = function (g)
    return res
 end
 
+--- Check graph completeness.
+--    @param g Graph.
+--    @return true if graph is complete.
 graph.iscomplete = function (g)
    local n = tbllen(g)
    for _,v in ipairs(g) do
@@ -179,91 +221,97 @@ graph.iscomplete = function (g)
 end
 graph.about[graph.iscomplete] = {'iscomplete(g)', 'Check completeness of the graph.', help.OTHER}
 
+--- Bredth first search.
+--    @param g Graph.
+--    @param start Initial node.
+--    @param goal Goal node.
+--    @return Result and found path.
 graph.bfs = function (g, start, goal)
    local visited,path = {},{}
+   -- use queue
    local queue = graph.lc_struct.Queue()
    queue:add(start); visited[start] = true
+   -- run
    while not queue:isempty() do
       local node = queue:rem()
       path[#path+1] = node
-      if node == goal then
-         return true, path
-      end
+      -- found
+      if node == goal then return true, path end
       local previous = queue:size()
+      -- add sucessors
       for v in pairs(g[node]) do
          if not visited[v] then
 	    queue:add(v); visited[v] = true
 	 end
       end
-      if queue:size() == previous then path[#path] = nil end
+      if queue:size() == previous then path[#path] = nil end  -- remove last node
    end
    return false, path
 end
-graph.about[graph.bfs] = {"bfs(start,goal)","Bredth first search. Return result and found path."}
+graph.about[graph.bfs] = {"bfs(g,start,goal)","Bredth first search. Return result and found path.", SEARCH}
 
+--- Depth first search.
+--    @param g Graph.
+--    @param start Initial node.
+--    @param goal Goal node.
+--    @return Result and found path.
 graph.dfs = function (g, start, goal)
    local visited, path = {}, {}
+   -- use stack
    local stack = graph.lc_struct.Stack()
    stack:push(start); visited[start] = true
+   -- run
    while not stack:isempty() do
       local node = stack:pop()
       path[#path+1] = node
-      if node == goal then
-         return true, path
-      end
+      -- found
+      if node == goal then return true, path end
       local previous = stack:size()
+      -- add sucessors
       for v in pairs(g[node]) do
          if not visited[v] then
 	    stack:push(v); visited[v] = true
 	 end
       end
-      if stack:size() == previous then path[#path] = nil end
+      if stack:size() == previous then path[#path] = nil end -- remove last node
    end
    return false, path
 end
-graph.about[graph.dfs] = {"dfs(start,goal)","Depth first search. Return result and found path."}
+graph.about[graph.dfs] = {"dfs(start,goal)","Depth first search. Return result and found path.", SEARCH}
 
--- Get key with minimum value, remove it
-local function getmin(tbl)
-   local minval = math.huge 
-   local key
-   -- find new minimal value
-   for k,v in pairs(tbl) do
-      if v < minval then 
-         key = k; minval = v
-      end
-   end
-   if key then tbl[key] = nil end
-   return key, minval
-end
-
+--- Shortest path search using Dijkstra algorithm.
+--    @param g Graph.
+--    @param start Initial node.
+--    @param goal Goal node.
+--    @return Table of distances and predecessors or path and its length.
 graph.Dijkstra = function(g,start,goal)
    -- define local set 
    local set = {}
    for k in pairs(g) do set[k] = math.huge end
    set[start] = 0
-
-   local prev = {}
-   local dist = {}
-
+   -- save results
+   local prev, dist = {}, {}
+   -- run
    while true do
       local current, val = getmin(set)
       if not current then break end
-
+      -- update minimal distance
       dist[current] = val
       for k,v in pairs(g[current]) do
          local alt = val + v
 	 if set[k] and set[k] > alt then
 	    set[k] = alt; prev[k] = current
-	 end
-      end
+	 end -- if
+      end -- for
    end
    -- result
    if goal then
+      -- find path
       local p, k = {goal},goal 
       while prev[k] do
          k = prev[k]; p[#p+1] = k
       end
+      -- change order
       local rev = {}
       for i = 1,#p do rev[#p-i+1] = p[i] end
       return dist[goal], rev
@@ -271,16 +319,20 @@ graph.Dijkstra = function(g,start,goal)
       return dist, prev
    end
 end
-graph.about[graph.Dijkstra] = {'Dijkstra(g,start[,goal]', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length."}
+graph.about[graph.Dijkstra] = {'Dijkstra(g,start[,goal]', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.", SEARCH}
 
+--- Find shortest path with Bellman-Ford algorithm/
+--    @param g Graph.
+--    @param start Initial node.
+--    @param goal Goal node.
+--    @return Table of distances and predecessors or path and its length.
 graph.BellmanFord = function (g, start,goal)
    -- initialize
-   local prev = {}
-   local dist = {}
+   local prev, dist = {}, {}
    local N = 0      -- number of nodes
+   -- initialize
    for k in pairs(g) do dist[k] = math.huge; N = N+1 end
    dist[start] = 0
-
    -- relax
    for i = 1,N-1 do
       for u in pairs(g) do
@@ -288,9 +340,9 @@ graph.BellmanFord = function (g, start,goal)
             local alt = dist[u] + d
             if alt < dist[v] then
 	       dist[v] = alt; prev[v] = u
-	    end
-         end
-      end
+	    end -- if
+         end -- for
+      end -- for
    end
 --[[
    -- check for negative circles
@@ -302,10 +354,12 @@ graph.BellmanFord = function (g, start,goal)
 ]]
    -- result
    if goal then
+      -- save path
       local p,k = {goal},goal
       while prev[k] and #p < N do
          k = prev[k]; p[#p+1] = k
       end
+      -- revert
       local rev = {}
       for i = 1,#p do rev[#p-i+1] = p[i] end
       return dist[goal], rev
@@ -313,9 +367,15 @@ graph.BellmanFord = function (g, start,goal)
       return dist, prev
    end
 end
-graph.about[graph.BellmanFord] = {'BellmanFord(start[,goal]','Shortest path search using Bellman-Ford algorithm.'}
+graph.about[graph.BellmanFord] = {'BellmanFord(start[,goal]','Shortest path search using Bellman-Ford algorithm.', SEARCH}
 
+--- "Smart" function that choose which algorithm to use base on weights.
+--    @param g Graph.
+--    @param start Initial node.
+--    @param goal Goal node.
+--    @return Table of distances and predecessors or path and its length.
 graph.spath = function (g,start,goal)
+   -- check weights
    local positive = true
    for u in pairs(g) do
       for _,d in pairs(g[u]) do
@@ -323,17 +383,17 @@ graph.spath = function (g,start,goal)
       end
       if not positive then break end
    end
+   -- search
    if positive then 
       return graph.Dijkstra(g,start,goal) 
    else 
       return graph.BellmanFord(g,start,goal)
    end
 end
-graph.about[graph.spath] = {'spath(start[,goal])', "Find shortest path using algorithm of Dijkstra of Bellman-Ford."}
+graph.about[graph.spath] = {'spath(start[,goal])', "Find shortest path using algorithm of Dijkstra of Bellman-Ford.", SEARCH}
 
 -- free memory in case of standalone usage
 if not lc_version then graph.about = nil end
-
 
 return graph
 
