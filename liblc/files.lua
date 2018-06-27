@@ -33,12 +33,39 @@ File.tblexport(nm, a)
 -- deserialize table from file
 aa = File.tblimport(nm)
 ans = aa.b.c                         --> 'abc'
+
+-- string split
+str = 'abc//defg//hijkl//mnop'
+ans = 0
+for s in File.split(str, '//') do ans = ans+1 end  --> 4
+
 ]]
 
 --	LOCAL
 
 -- compatibility
 local Ver = require "liblc.versions"
+
+-- serialization rules
+local val2str = {
+   ['string'] =   function (x) return string.format('"%s"', x) end,
+   ['number'] =   function (x) return Ver.mtype(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
+   ['function'] = function (x) x = tostring(x); print('Bad value: '..x); return x end,
+   ['boolean'] =  function (x) return tostring(x) end,
+   ['nil'] =      function (x) return 'nil' end,
+}
+val2str['table'] = function (x) return val2str.tbl(x) end
+val2str['thread'] = val2str['function']
+
+-- Table to string conversation.
+val2str.tbl =  function (t)
+   local res = {}
+   for _,val in ipairs(t) do res[#res+1] = val2str[type(val)](val) end
+   for k,val in pairs(t) do
+      if not Ver.isinteger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
+   end
+   return string.format('{%s}', table.concat(res,','))
+end
 
 --	INFO
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
@@ -105,7 +132,7 @@ files.dsvread = function (fname, delim)
          res[i] = {}
 	 -- read string elements
 	 for p in files.split(s,delim) do
-	    res[i][j], j = tonumber(p) or p, j+1
+	    res[i][j], j = (tonumber(p) or p), j+1
 	 end
       end
    end
@@ -137,37 +164,6 @@ files.tblimport = function (fname)
 end
 files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, written into file."}
 
---- @class table
---  @name val2str
---  @field string Prepare strings.
---  @field number Number to string.
---  @field function Reminder about function.
---  @field boolean Boolean to string.
---  @field nil Nil to string.
---  @field table Process table.
---  @field thread Reminder about thread.
-local val2str = {
-   ['string'] =   function (x) return string.format('"%s"', x) end,
-   ['number'] =   function (x) return Ver.mtype(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
-   ['function'] = function (x) x = tostring(x); print('Bad value: '..x); return x end,
-   ['boolean'] =  function (x) return tostring(x) end,
-   ['nil'] =      function (x) return 'nil' end,
-}
-val2str['table'] = function (x) return val2str.tbl(x) end
-val2str['thread'] = val2str['function']
-
---- Table to string conversation.
---    @param t Lua table.
---    @return String form.
-val2str.tbl =  function (t)
-   local res = {}
-   for _,val in ipairs(t) do res[#res+1] = val2str[type(val)](val) end
-   for k,val in pairs(t) do
-      if not Ver.isinteger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
-   end
-   return string.format('{%s}', table.concat(res,','))
-end
-
 --- Save Lua table to the file.
 --    @param fname File name.
 --    @param t Lua table.
@@ -189,3 +185,4 @@ return files
 --==================================
 -- TODO: improve dsv read/write according the specification
 -- TODO: fix export negative and fractional keys
+-- TODO: json read/write

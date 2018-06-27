@@ -92,7 +92,7 @@ _pow_ = function (x,y) return x^y end,
 -- description
 about = help:new("Manipulations with arrays of elements.")
 }
--- Submatrix
+-- metamethods
 array.__index = array
 
 -- Create new object, set metatable.

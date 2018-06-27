@@ -37,32 +37,7 @@ fn1 = function (x) return x^2-x end
 Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
 ]]
 
--------------------------------------------- 
--- @class table
--- @name gnuplot
--- @field type Define object type string.
--- @field about Description of functions.
--- @field N Define number of points per interval, default is 100
--- @field options Gnuplot options that predefined in Sonata LC
--- @field foptions Predefined function plot options
-
-local gnuplot = {}
-gnuplot.__index = gnuplot
--- mark object
-gnuplot.type = 'gnuplot'
--- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-gnuplot.about = help:new("Interface for calling Gnuplot from Lua.")
-
--- divide interval into given number of points
-gnuplot.N = 100        
-gnuplot.about[gnuplot.N] = {"N", "If no samples, divide interval into N points.", help.CONST}
-
--- basic common options
-gnuplot.options = {'terminal','output','parametric','size','polar','grid','key','title',
-                   'xlabel','ylabel','xrange','yrange','zrange','trange','samples'}
--- basic function options
-gnuplot.foptions = {'title','with','linetype','linestyle','linewidth','ls','ln','lw'}
+--	LOCAL
 
 -- rules
 local special = {
@@ -78,12 +53,45 @@ local main = {
    boolean = function (x,y) return string.format('%s %s', y and 'set' or 'unset', x) end,
 }
 
+-- prepare option string
+local function command (k,v)
+   return special[k] and special[k](v) or main[type(v)](k,v)
+end
+
+-- function option string
+local function prepare(k,v)
+   if k == 'title' then v = string.format('"%s"', v) end
+   return k,v
+end
+
 -- combine all options as keys
 local function collect(t) 
    local res = {}
    for _,v in ipairs(t) do res[v] = true end
    return res
 end
+
+--	INFO
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+
+--	MODULE
+
+local gnuplot = {
+type = 'gnuplot',
+-- basic common options
+options = {'terminal','output','parametric','size','polar','grid','key','title',
+                   'xlabel','ylabel','xrange','yrange','zrange','trange','samples'},
+-- basic function options
+foptions = {'title','with','linetype','linestyle','linewidth','ls','ln','lw'},
+-- description
+about = help:new("Interface for calling Gnuplot from Lua."),
+}
+-- metha
+gnuplot.__index = gnuplot
+
+-- divide interval into given number of points
+gnuplot.N = 100        
+gnuplot.about[gnuplot.N] = {"N", "If no samples, divide interval into N points.", help.CONST}
 
 -- option checker
 local acc = {options=collect(gnuplot.options), foptions=collect(gnuplot.foptions)}
@@ -99,6 +107,7 @@ acc.foptions.raw = true
 gnuplot.isavailable = function (g) 
    local available = true
    for k,v in pairs(g) do
+      -- find options which were not predefined
       if not acc.options[k] then
          if type(k) == 'number' and type(v) == 'table' then
             for p,q in pairs(v) do
@@ -117,19 +126,8 @@ gnuplot.isavailable = function (g)
 end
 gnuplot.about[gnuplot.isavailable] = {"isavailable(g)", "Check if all options in table are predefined in program.", help.OTHER}
 
--- prepare option string
-local function command (k,v)
-   return special[k] and special[k](v) or main[type(v)](k,v)
-end
-
--- function option string
-local function prepare(k,v)
-   if k == 'title' then v = string.format('"%s"', v) end
-   return k,v
-end
-
 -- save table to tmp file
-local function tbl2file(t)
+gnuplot._tbl2file = function (t)
    local name = os.tmpname()
    local f = io.open(name, 'w')
    for _, row in ipairs(t) do
@@ -137,15 +135,16 @@ local function tbl2file(t)
       f:write('\n')
    end
    f:close()
+
    return string.format('"%s"', name)
 end
 
 -- save function result to tmp file
-local function fn2file(fn,base)
+gnuplot._fn2file = function (fn,base)
    local name = os.tmpname()
    local xl = base.xrange and base.xrange[1] or (-10)
    local xr = base.xrange and base.xrange[2] or 10
-   local N = base.samples or 100
+   local N = base.samples or gnuplot.N
    local dx = (xr-xl)/N
    local f = io.open(name, 'w')
    if base.surface then
@@ -159,21 +158,18 @@ local function fn2file(fn,base)
       for x = xl,xr,dx do f:write(x,' ',fn(x),'\n') end
    end
    f:close()
+
    return string.format('"%s"', name)
 end
 
 -- prepare functions representation
-local function_str = {table=tbl2file, ['function']=fn2file, string=function (x) return x end}
-
--- get function representation
-local function getfunction (t,base)
-   return t[1] and function_str[type(t[1])](t[1],base) or string.format('"%s"', t.file)
-end
+gnuplot._str = {table=gnuplot._tbl2file, ['function']=gnuplot._fn2file, string=function (x) return x end}
 
 -- add function parameters
-local function graph (t,base)
+gnuplot._graph = function (t,base)
    -- function/file name
-   local str = getfunction(t, base)
+   local fn = t[1]
+   local str = (fn and gnuplot._str[type(fn)](fn,base) or string.format('"%s"', t.file))
    -- prepare options
    for _,k in ipairs(gnuplot.foptions) do
       if t[k] then str = string.format('%s %s %s ', str, prepare(k,t[k])) end
@@ -183,13 +179,9 @@ local function graph (t,base)
    return str
 end
 
---- Create new object, set metatable.
---    @param o Table with image parameters.
---    @return Gnuplot compatible object.
-function gnuplot:new(o)
-   local o = o or {}
-   setmetatable(o, self)
-   return o
+-- Create new object, set metatable.
+gnuplot.new = function (self,o)
+   return setmetatable(o or {}, self)
 end
 
 --- Get copy of graph options.
@@ -215,21 +207,20 @@ gnuplot.about[gnuplot.copy] = {"copy(g)", "Get copy of the plot options.", }
 --    @return Table which can be used for plotting.
 gnuplot.plot = function (t)
    assert(gnuplot.isavailable(t), 'Options are not predefined!')
+   -- define 'permanent' option
    if t.permanent == nil then t.permanent = true end
    -- open Gnuplot
    local handle = assert(io.popen('gnuplot' .. (t.permanent and ' -p' or ''), 'w'), 'Cannot open Gnuplot!')
-   local cmd = {}
    -- save options
+   local cmd = {}
    for _,k in ipairs(gnuplot.options) do
-      if t[k] or t[k] == false then
-         cmd[#cmd+1] = command(k, t[k])
-      end
+      if t[k] ~= nil then cmd[#cmd+1] = command(k, t[k]) end
    end
    if t.raw then cmd[#cmd+1] = t.raw end
    -- prepare functions
    local fn = {}
    for _,f in ipairs(t) do
-      fn[#fn+1] = graph(f,t)
+      fn[#fn+1] = gnuplot._graph(f,t)
    end
    -- command
    if #fn > 0 then
@@ -237,17 +228,14 @@ gnuplot.plot = function (t)
       cmd[#cmd+1] = cmd_plot .. table.concat(fn,',')
    end
    local res = table.concat(cmd, '\n')
-   --print(res)
    -- send to Gnuplot
    handle:write(res,'\n')
    handle:close()
 end
-gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table.", }
+gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table." }
 
 
---- Represent parameters of the graphic.
---    @param g Table with parameters.
---    @return String representation.
+-- Represent parameters of the graphic.
 gnuplot.__tostring = function (g) 
    local res = {}
    for k,v in pairs(g) do
@@ -258,7 +246,6 @@ gnuplot.__tostring = function (g)
       end
          res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
    end
-
    return string.format('{\n%s\n}', table.concat(res, ',\n'))
 end
 
@@ -291,7 +278,7 @@ surface=true                                 -- plot surface in 3D
 samples=200                                  -- define number of points
 permanent=true                               -- create in independent window
 raw='set pm3d'                               -- set Gnuplot options manually
-]],
+]]
 }
 
 -- free memory if need
