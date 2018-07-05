@@ -55,21 +55,39 @@ ans = yn                                  --~ 0.0856
 ]]
 ---------------------------------------------
 
--------------------------------------------- 
--- @class table
--- @name array
--- @field about Description of functions.
--- @field TOL Solution tolerance. Default is 0.001.
+--	LOCAL
 
-local numeric = {}
--- description
+local Ver = require "liblc.versions"
+
+-- Runge-Kutta method.
+--    @param fn Function f(x,y).
+--    @param x First variable.
+--    @param y Second variable.
+--    @param h Step.
+--    @return Approximation for y.
+local function rk(fn, x, y, h)
+   local h2 = 0.5*h
+   local k1 = fn(x,    y)
+   local k2 = fn(x+h2, y+h2*k1)
+   local k3 = fn(x+h2, y+h2*k2)
+   local k4 = fn(x+h,  y+h*k3)
+   return y+h*(k1+2*(k2+k3)+k4)/6
+end
+
+--	INFO
+
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-numeric.about = help:new("Group of functions for numerical calculations.")
+
+--	MODULE
+
+local numeric = {
+-- description
+about = help:new("Group of functions for numerical calculations."),
+}
+
 -- current tolerance
 numeric.TOL = 1e-3
 numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", help.CONST}
-
-local Ver = require "liblc.versions"
 
 --- Find root of equation at the given interval.
 --    @param fn Function to analyze.
@@ -78,14 +96,14 @@ local Ver = require "liblc.versions"
 --    @return Function root.
 numeric.solve = function (fn, a, b)
    local f0, f1 = fn(a), fn(b)
-   assert(f0*f1 < 0, "Boundary values must have different sign!")
+   if f0*f1 >= 0 then error("Boundary values must have different sign!") end
    repeat
       b = b - (b-a)*f1/(f1-f0)
       f1 = fn(b)
    until math.abs(f1) < numeric.TOL
    return b
 end
-numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b].", }
+numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Another solution based on Newton's rule.
 --    @param fn Function to analyze.
@@ -97,11 +115,11 @@ numeric.newton = function (fn, x1)
       x1 = x2
       x2 = x1 - fn(x1)*h/(fn(x1+h)-fn(x1))
       k, h = k+1, h*0.618
-      if k > 50 then error("Too many circles!") end
+      if k > 50 then error("Too many iterations!") end
    until math.abs(fn(x2)-fn(x1)) < numeric.TOL 
    return x2
 end
-numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition.", }
+numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition."}
 
 --- Simple derivative.
 --    @param fn Function f(x).
@@ -116,7 +134,7 @@ numeric.diff = function (fn, x)
    until math.abs(der-last) < numeric.TOL
    return der
 end
-numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function.", }
+numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function."}
 
 --- Integration using trapeze method.
 --    @param fn Function f(x).
@@ -147,23 +165,7 @@ numeric.trapez = function (fn, a, b)
    until math.abs(I-last) < numeric.TOL
    return I
 end
-numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule.", }
-
---- Runge-Kutta method.
---    <i>Private function.</i>
---    @param fn Function f(x,y).
---    @param x First variable.
---    @param y Second variable.
---    @param h Step.
---    @return Approximation for y.
-local function rk(fn, x, y, h)
-   local h2 = 0.5*h
-   local k1 = fn(x,    y)
-   local k2 = fn(x+h2, y+h2*k1)
-   local k3 = fn(x+h2, y+h2*k2)
-   local k4 = fn(x+h,  y+h*k3)
-   return y+h*(k1+2*(k2+k3)+k4)/6
-end
+numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule."}
 
 --- Differential equation solution (Runge-Kutta method).
 --    @param fn function f(t,y).
@@ -202,13 +204,13 @@ numeric.ode = function (fn, init,exit,dx)
             h = 2*h
          else
             -- save for current step
-            res[#res+1] = {x+h, y2}      -- use y2 instead y1 because it proboly more precise (?)
+            res[#res+1] = {x+h, y2}      -- use y2 instead y1 because it is probobly more precise (?)
          end
       end
    until break_condition(res[#res][1],res[#res][2],res[#res-1] and res[#res-1][2])
    return res, res[#res][2]
 end
-numeric.about[numeric.ode] = {"ode(fn,init,break[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn.", }
+numeric.about[numeric.ode] = {"ode(fn,init,break[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn."}
 
 -- free memory if need
 if not lc_version then numeric.about = nil end
