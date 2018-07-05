@@ -19,7 +19,7 @@ LC_USE_COLOR = true
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.9.1'
+lc_version = '0.9.2'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -54,7 +54,6 @@ import = {
    special  = "Spec",
    stat     = "Stat",
    struct   = "DS",
-   symbol   = "Sym",
    units    = "Unit",
 }
 about[import] = {"import", ""}

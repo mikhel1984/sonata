@@ -70,80 +70,73 @@ d = Poly {2,-2,1}
 ans = d:str('s')              --> '2*s^2-2*s+1'
 ]]
 
-
-----------------------------------------------
--- @class table
--- @name polynom
--- @field type Define object type string.
--- @field about Description of functions.
-local polynom = {}
-polynom.__index = polynom
--- marker
-polynom.type = 'polynomial'
-polynom.ispolynom = true
--- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-polynom.about = help:new("Operations with polynomials")
+--	LOCAL
 
 local Ver = require "liblc.versions"
 
--- dependencies
-local done
-done, polynom.lc_matrix = pcall(require,'liblc.matrix')
-if not done then 
-   print('WARNING >> Not available: fit()')
-   polynom.lc_matrix = nil
+-- Check object type.
+local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
+
+-- Simplify polynomial, remove zeros from the begin.
+--    @param p Table of coefficients.
+--    @return Simplified polynomial.
+local function reduce (p)
+   while #p > 1 and  p[1] == 0 do table.remove(p, 1) end
+   return p
 end
 
---- Check object type.
---    <i>Private function.</i>
---    @param x Object for checking.
---    @return True if table is a polynomial.
-local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
+--	INFO
+
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+
+--	MODULE
+
+local polynom = {
+-- marker
+type = 'polynomial', ispolynom = true,
+-- description
+about = help:new("Operations with polynomials"),
+}
+polynom.__index = polynom
+
+-- dependencies
+local done, M = pcall(require,'liblc.matrix')
+if done then
+   polynom.lc_matrix = M 
+else
+   print('WARNING >> Not available: fit()')
+end
 
 --- Correct arguments if need.
 --    <i>Private function.</i>
 --    @param a First object
 --    @param b Second object.
 --    @return Two polynomial objects.
-local function args(a,b)
+polynom._args = function (a,b)
    a = ispolynom(a) and a or polynom.new {a}
    b = ispolynom(b) and b or polynom.new {b}
    return a, b
 end
 
---- Initialize polynomial from table.
+-- Initialize polynomial from table.
 --    @param t Table of coefficients.
 --    @return Polynomial object.
-function polynom:init(t)
+polynom.init = function (self, t)
    if #t == 0 then t[1] = 0 end
-   setmetatable(t, self)
-   return t
+   return setmetatable(t, self)
 end
 
---- Create polynomial from table of coefficients.
+-- Create polynomial from table of coefficients.
 --    Arguments are a list of coefficients.
 --    @return Polynomial object.
-function polynom.new(p)
+polynom.new = function (p)
    p = p or {}
    local o = {}
    for i = 1,#p do o[i] = p[i] end
    return polynom:init(o)
 end
 
---- Simplify polynomial, remove zeros from the begin.
---    <i>Private function.</i>
---    @param p Table of coefficients.
---    @return Simplified polynomial.
-local function reduce (p)
-   while #p > 1 and  p[1] == 0 do
-      table.remove(p, 1)
-   end
-   return p
-end
-
---- Calculate ratio and rest of 2 polynomials.
---    <i>Private function.</i>
+-- Calculate ratio and rest of 2 polynomials.
 --    @param a First polynomial.
 --    @param b Second polynomial.
 --    @return Ratio and the rest.
@@ -190,7 +183,7 @@ polynom.about[polynom.copy] = {"copy(p)", "Get copy of the polynomial.", help.OT
 --    @param b Second polynomial.
 --    @return Sum of the objects.
 polynom.__add = function (a,b)
-   a, b = args(a,b)
+   a, b = polynom._args(a,b)
    local t = {}
    -- get sum of equal powers
    local i,j = #a, #b
@@ -224,7 +217,7 @@ end
 --    @param b Second polynomial.
 --    @return Multiplication of the objects.
 polynom.__mul = function (a,b)
-   a,b = args(a,b)
+   a,b = polynom._args(a,b)
    local res = polynom.new()
    -- get sum of coefficients
    for i = 1, #a do
@@ -241,7 +234,7 @@ end
 --    @param b Second polynomial.
 --    @return Ratio of the objects.
 polynom.__div = function (a,b)
-   local res, _ = div(args(a,b))
+   local res, _ = div(polynom._args(a,b))
    return res
 end
 
@@ -250,7 +243,7 @@ end
 --    @param b Second polynomial.
 --    @return Rest from ratio of the objects.
 polynom.__mod = function (a,b)
-   local _, res = div(args(a,b))
+   local _, res = div(polynom._args(a,b))
    return res
 end
 
@@ -288,7 +281,7 @@ end
 --    @param b Second polynomial.
 --    @return <code>true</code> if first polynomial is less then second.
 polynom.__lt = function (a,b)
-   a,b = args(a,b)
+   a,b = polynom._args(a,b)
    return #a < #b or (#a == #b and a[1] < b[1])
 end
 
