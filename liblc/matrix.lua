@@ -663,14 +663,18 @@ matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random num
 --    @param rows Number of rows.
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return Diagonal matrix with ones.
-matrix.eye = function (rows, cols)
-   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
+matrix.eye = function (rows, cols, val)
+   if ismatrix(rows) then 
+      val = cols or 1
+      rows,cols = rows.rows, rows.cols 
+   end
    cols = cols or rows
+   val = val or 1
    local m = matrix:init(rows, cols)
-   for i = 1, math.min(rows, cols) do m[i][i] = 1 end
+   for i = 1, math.min(rows, cols) do m[i][i] = val end
    return m
 end
-matrix.about[matrix.eye] = {"eye(rows[,cols])", "Create identity matrix.", help.OTHER}
+matrix.about[matrix.eye] = {"eye(rows[,cols[,init]])", "Create identity matrix. Diagonal value (init) can be nonzero.", help.OTHER}
 
 --- Matrix concatenation.
 --    Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
