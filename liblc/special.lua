@@ -59,6 +59,10 @@ ans = lst[1]                       --~ -0.4375
 ans = Spec.dawson(3.3)             --~ 0.1598
 ]]
 
+--	LOCAL
+
+local Ver = require "liblc.versions"
+
 -- constants for gamma approximation
 local k_gamma = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,
                12.507343278686905,-0.13857109526572012,9.9843695780195716E-6,1.5056327351493116E-7}
@@ -67,26 +71,23 @@ local k_gamma = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.6
 local k_gammaln = {76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,
                    0.1208650973866179E-2,-0.5395239384953E-5}
 
---- Fixed lower bound based on absolute value.
---    <i>Private function.</i>
+-- Fixed lower bound based on absolute value.
 --    @param a Value to return.
 --    @param b Lower bound.
 --    @return Second argument if first is too small.
 local function lowbound(a,b) return math.abs(a) > b and a or b end
 
----------------------------------
--- @class table
--- @name special
--- @field about Description of functions.
+--	INFO
 
-local special = {}
-special.__index = special
-
-local Ver = require "liblc.versions"
-
--- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-special.about = help:new("Special mathematical functions.")
+
+--	MODULE
+
+local special = {
+-- description
+about = help:new("Special mathematical functions.")
+}
+special.__index = special
 
 --- Gamma function.
 --    Lanczos approximation (based on Wikipedia) for real numbers.
@@ -103,7 +104,7 @@ special.gamma = function (z)
       return math.sqrt(2*math.pi)*t^(z+0.5)*math.exp(-t)*x
    end
 end
-special.about[special.gamma] = {"gamma(z)", "Gamma function.", }
+special.about[special.gamma] = {"gamma(z)", "Gamma function."}
 
 --- Logarithm of gamma function.
 --    @param z Positive number.
@@ -118,16 +119,14 @@ special.gammaln = function (z)
 end
 special.about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma function.", help.OTHER}
 
---- Series representation for incomplete gamma function P.
---    <i>Private function.</i>
+-- Series representation for incomplete gamma function P.
 --    @param a Order.
 --    @param x Real value.
 --    @return Representation of P.
-local function gser(a,x)
+special._gser = function (a,x)
    local ITMAX,EPS = 100, 3E-7
    local gamser = 0.0
-   if x <= 0 then
-      assert(x == 0, 'Negative x in routine "gser"!')
+   if x <= 0 then assert(x == 0)
    else
       local ap,del = a, 1.0/a
       local sum = del
@@ -145,11 +144,10 @@ local function gser(a,x)
 end
 
 -- Continued fraction representation for incomplete gamma function Q.
---    <i>Private function.</i>
 --    @param a Order.
 --    @param x Real value.
 --    @return Representation of Q.
-local function gcf(a,x)
+special._gcf = function (a,x)
    local ITMAX,EPS,FPMIN = 100, 3E-7, 1E-30
    local b,c = x+1.0-a, 1.0/FPMIN
    local d = 1.0/b
@@ -170,7 +168,7 @@ end
 --    @return Value of P(a,x).
 special.gammp = function (a,x)
    assert(x >= 0.0 and a > 0, 'Invalid arguments!')
-   return (x < a+1.0) and gser(a,x) or 1.0-gcf(a,x)
+   return (x < a+1.0) and special._gser(a,x) or 1.0-special._gcf(a,x)
 end
 special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).", }
 
@@ -180,7 +178,7 @@ special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).
 --    @return Value of Q(a.x).
 special.gammq = function (a,x)
    assert(x >= 0.0 and a > 0, 'Invalid arguments!')
-   return (x < a+1.0) and 1-gser(a,x) or gcf(a,x)
+   return (x < a+1.0) and 1-special._gser(a,x) or special._gcf(a,x)
 end
 special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) = 1-P(a,x).", }
 
@@ -217,13 +215,12 @@ end
 special.about[special.betaln] = {"betaln(z,w)", "Natural logarithm of beta function.", help.OTHER}
 
 
---- Evaluates continued fraction for incomplete beta function by modified Lentz's method.
---    <i>Private function.</i>
+-- Evaluates continued fraction for incomplete beta function by modified Lentz's method.
 --    @param a First bound.
 --    @param b Second bound.
 --    @param x Value between 0 and 1.
 --    @return Fraction value.
-local function betacf(a,b,x)
+special._betacf = function (a,b,x)
    local MAXIT,EPS,FPMIN = 100, 3E-7, 1E-30
    local qab,qap,qam = a+b, a+1.0, a-1.0
    local c,d = 1.0, 1.0/lowbound(1.0-qab*x/qap,FPMIN)
@@ -248,14 +245,14 @@ end
 --    @param b Second bound.
 --    @return Value of Ix(a,b).
 special.betainc = function (x,a,b)
-   assert(x >= 0.0 and x <= 1.0, "Expected x between 0 and 1!")
+   if not (x >= 0.0 and x <= 1.0) then error("Expected x between 0 and 1!") end
    local bt
    if x == 0 or x == 1 then 
       bt = 0.0
    else
       bt = math.exp(special.gammaln(a+b)-special.gammaln(a)-special.gammaln(b)+a*math.log(x)+b*math.log(1.0-x))
    end
-   return (x < (a+1.0)/(a+b+2.0)) and (bt*betacf(a,b,x)/a) or (1.0-bt*betacf(b,a,1.0-x)/b)
+   return (x < (a+1.0)/(a+b+2.0)) and (bt*special._betacf(a,b,x)/a) or (1.0-bt*special._betacf(b,a,1.0-x)/b)
 end
 special.about[special.betainc] = {"betainc(x,a,b)", "Incomplete beta function Ix(a,b).", help.OTHER}
 
@@ -265,7 +262,7 @@ special.about[special.betainc] = {"betainc(x,a,b)", "Incomplete beta function Ix
 --    @return Value of En(x).
 special.expint = function (n,x)
    if x == nil then n,x = 1,n end
-   assert(n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1)), 'Bad arguments!')
+   if not (n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1))) then error('Bad arguments!') end
    if n == 0 then return math.exp(-x)/x end
    local nm1 = n-1
    if x == 0.0 then return 1.0/nm1 end
