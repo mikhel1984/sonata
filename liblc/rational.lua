@@ -58,35 +58,31 @@ ans = a:copy()          --> a
 print(a)
 ]]
 
--------------------------------------------- 
--- @class table
--- @name rational
--- @field type Define object type string.
--- @field about Description of functions.
-local rational = {}
-rational.__index = rational
--- mark
-rational.type = 'rational'
-rational.isrational = true
--- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-rational.about = help:new("Computations with rational numbers.")
+--	LOCAL
 
---- Check object type.
---    <i>Private function.</i>
---    @param v Object for checking.
---    @return True if table is a rational number.
+local Ver = require('liblc.versions')
+
+-- Check object type.
 local function isrational(v) return type(v) == 'table' and v.isrational end
 
---- Check if value can be an integer.
---    <i>Private function.</i>
---    @param x Number.
---    @return <code>true</code> if the number doesn't have a fractional part.
-local function isint (x)
-   assert(type(x) == 'number', "Number is expected")
-   local _,a = math.modf(x)
-   return a == 0
-end
+-- Number representation.
+--    @param v Variable.
+--    @return String representation.
+local function numstr(v) return type(v) == 'number' and string.format('%d', v) or tostring(v) end
+
+--	INFO
+
+local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+
+--	MODULE
+
+local rational = {
+-- mark
+type = 'rational', isrational = true,
+-- description
+about = help:new("Computations with rational numbers."),
+}
+rational.__index = rational
 
 --- The greatest common divisor. 
 --    @param a First integer.
@@ -101,12 +97,10 @@ rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common divis
 --    @param n Numerator.
 --    @param dn Denominator. Default is 1.
 --    @return New rational object.
-function rational:new(n, dn)
+rational.new = function (self, n, dn)
    dn = dn or 1
    local g = rational.gcd(n,dn)
-   local o = {num=n/g, denom=dn/g}   
-   setmetatable(o, self)
-   return o
+   return setmetatable({num=n/g, denom=dn/g}, self)   
 end
 
 --- Create copy of the rational number.
@@ -117,12 +111,11 @@ rational.copy = function (v)
 end
 rational.about[rational.copy] = {"copy(v)", "Get copy of the rational number.", help.OTHER}
 
---- Argument type correction.
---    <i>Private function.</i>
+-- Argument type correction.
 --    @param a First rational or natural number.
 --    @param b Second rational or natural number.
 --    @return Arguments as rational numbers.
-local function args(a,b)
+rational._args = function (a,b)
    a = isrational(a) and a or rational:new(a)
    if b then
       b = isrational(b) and b or rational:new(b)
@@ -130,105 +123,71 @@ local function args(a,b)
    return a,b
 end
 
---- a + b
---    @param a First rational or integer number.
---    @param b Second rational or integer number.
---    @return Sum of the rational numbers.
+-- a + b
 rational.__add = function (a, b)   
-   a,b = args(a,b)
+   a,b = rational._args(a,b)
    return rational:new(a.num*b.denom+a.denom*b.num, a.denom*b.denom)
 end
 
---- a - b
---    @param a First rational or integer number.
---    @param b Second rational or integer number.
---    @return Subtraction of the rational numbers.
+-- a - b
 rational.__sub = function (a, b)   
-   a,b = args(a,b)
+   a,b = rational._args(a,b)
    return rational:new(a.num*b.denom-a.denom*b.num, a.denom*b.denom)
 end
 
---- a * b
---    @param a First rational or integer number.
---    @param b Second rational or integer number.
---    @return Multiplication of the rational numbers.
+-- a * b
 rational.__mul = function (a, b)
-   a,b = args(a,b)
+   a,b = rational._args(a,b)
    return rational:new(a.num*b.num, a.denom*b.denom)
 end
 
---- a / b
---    @param a First rational or integer number.
---    @param b Second rational or integer number.
---    @return Subtraction of the rational numbers.
+-- a / b
 rational.__div = function (a, b)
-   a,b = args(a,b)
+   a,b = rational._args(a,b)
    return rational:new(a.num*b.denom, a.denom*b.num)
 end
 
---- - v
---    @param v Rational number
---    @return Negative value.
+-- - v
 rational.__unm = function (v)
    return rational:new(-a.num, a.denom)
 end
 
---- a ^ b
---    @param a First number.
---    @param b Second number.
---    @return Power.
+-- a ^ b
 rational.__pow = function (a, b)
    b = (type(b) == "number") and b or (b.num/b.denom)  -- to float point
    if type(a) == "number" then
       return a^b
    else
-      assert(isint(b) and b >= 0, "Power must be a non-negative integer")
+      if not (Ver.isinteger(b) and b >= 0) then error("Power must be a non-negative integer") end
       return rational:new((a.num)^b, (a.denom)^b) 
    end
 end
 
 rational.arithmetic = 'arithmetic'
-rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b} ", }
+rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b} ", help.META}
 
---- a == b
---    @param a First rational number.
---    @param b Second rational number.
---    @return <code>true</code> In case of equality.
+-- a == b
 rational.__eq = function (a,b)
-   a,b = args(a,b)
+   a,b = rational._args(a,b)
    return a.num == b.num and a.denom == b.denom
 end
 
---- a < b
---    @param a First rational number.
---    @param b Second rational number.
---    @return <code>true</code> if relation is right.
+-- a < b
 rational.__lt = function (a,b)
-   a,b = args(a,b)
+   a,b = rational._args(a,b)
    return (a.num*b.denom) < (b.num*a.denom)
 end
 
---- a <= b
---    @param a First rational number.
---    @param b Second rational number.
---    @return <code>true</code> if relation is right.
+-- a <= b
 rational.__le = function (a,b)
-   a,b = args(a,b)
+   a,b = rational._args(a,b)
    return (a.num*b.denom) <= (b.num*a.denom)
 end
 
 rational.comparison = 'comparison'
-rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", }
+rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", help.META}
 
---- Number representation.
---    <i>Private function.</i>
---    @param v Variable.
---    @return String representation.
-local function numstr(v) return type(v) == 'number' and string.format('%d', v) or tostring(v) end
-
---- String representation.
---    @param v Rational number.
---    @return String form.
+-- String representation.
 rational.__tostring = function (v)
    return numstr(v.num)..'/'..numstr(v.denom)
 end
@@ -253,8 +212,9 @@ rational.about[rational.De] = {"De(v)", "Return the denominator of the rational 
 
 -- list of prime numbers
 -- result is not sorted
+--[[ for future
 rational.prime = function (v)
-   assert(v > 0 and isint(v), "Positive integer is expected!")
+   if not (v > 0 and Ver.isinteger(v)) then error("Positive integer is expected!") end
    -- use "sieve of Eratosthenes"
    local tmp = {}
    for i = 1,v,2 do tmp[i] = true end
@@ -274,6 +234,7 @@ rational.prime = function (v)
    end
    return res
 end
+]]
 
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
