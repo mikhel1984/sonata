@@ -7,9 +7,7 @@
             module 'versions'
 --]]
 
--------------------------
--- @class table
--- @name versions
+--	MODULE
 
 local versions = {}
 

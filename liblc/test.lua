@@ -30,45 +30,43 @@
    * The results are saved to the 'test.log' file. It contains error messages as well (don't displayed on the screen).
 ]=]
 
-local delim = '%c[%s%c]+'    -- empty strings
-local logname = 'test.log'
-local tol = 0.001
-
--------------------------------------------- 
--- @class table
--- @name test
--- @field results Results for each module.
--- @field log Log file name.
-
-local test = {}
--- test results
-test.results = {}
-
-test.lc_files = require('liblc.files')
+--	LOCAL
 
 local Ver = require "liblc.versions"
 
+local DELIM = '%c[%s%c]+'    -- empty strings
+local LOG_NAME = 'test.log'
+local TOL = 0.001
+local CODE_TEMPLATE = '%-%-%[(=*)%[!!(.-)%]%1%]'
+local TEST_TEMPLATE = '(.*)%-%-([>~])(.*)'
+
+--	MODULE
+
+local test = {
+-- test results
+results = {},
+-- files functions
+lc_files = require('liblc.files'),
+}
+
 --- Extract test code from file.
---    <i>Private function.</i>
 --    @param str File text.
 --    @return Unit tests.
-test.getcode = function (str)
-   local p = '%-%-%[(=*)%[!!(.-)%]%1%]'
-   local _,q = string.match(str, p) 
+test._getcode = function (str)
+   local _,q = string.match(str, CODE_TEMPLATE) 
    return q
 end
 
 --- Prepare test code preview.
---    <i>Private function.</i>
 --    @param str Source string.
 --    @param res Boolean result of execution.
 --    @param time Time of execution, ms.
-local function marktest(str, res, time)
-   local min, full = 30, 34
+test._marktest = function (str, res, time)
+   local MIN, FULL = 30, 34
    local s = string.match(str, '%C+')
    s = string.match(s, '^(.-)%s*$')
-   if #s > min then s = string.sub(s, min) end
-   local rest = string.rep('.', (full-#s))
+   if #s > MIN then s = string.sub(s, MIN) end
+   local rest = string.rep('.', (FULL-#s))
    return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'Failed'), time)
 end
 
@@ -84,18 +82,18 @@ end
 test.module = function (fname)
    -- read file
    local text = assert(test.lc_files.read(fname), "Can't open file '"..fname.."'")
-   test.log = test.log or io.open(logname, 'w')
+   test.log = test.log or io.open(LOG_NAME, 'w')
    -- write head
    test.print('\n\tModule: ' .. fname)
    -- get test
-   text = test.getcode(text)
+   text = test._getcode(text)
    if not text or #text == 0 then return end   -- no tests
    local succeed, failed = 0, 0
    local fulltime = 0
    -- parse
-   for block in test.lc_files.split(text, delim) do
+   for block in test.lc_files.split(text, DELIM) do
       if string.find(block, '%s') then 
-         local q,e,a = string.match(block,'(.*)%-%-([>~])(.*)')
+         local q,e,a = string.match(block, TEST_TEMPLATE)
          q = q or block    -- question
          a = a or ''       -- answer
          local arrow, time
@@ -106,13 +104,13 @@ test.module = function (fname)
 	    if #a > 0 then
 	       local fa = Ver.loadstr('return '..a)
 	       arrow = fa()
-	       return (e == '~') and (math.abs(ans-arrow) <= tol*math.abs(ans)) or (ans == arrow)
+	       return (e == '~') and (math.abs(ans-arrow) <= TOL*math.abs(ans)) or (ans == arrow)
 	    else
 	       return true
 	    end
          end)
          local res = status and err
-         test.print(marktest(q,res,time)) 
+         test.print(test._marktest(q,res,time)) 
          if not status then
             test.log:write(err,'\n')
          elseif not err then
