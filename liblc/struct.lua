@@ -81,6 +81,53 @@ dd = d:copy()
 
 -- heap size
 ans = #dd                       --> 2
+
+-- define elements of the set
+a = DS.Set {1,2,3,4,1}           
+b = DS.Set {3,4,5}               
+ans = a                        --> DS.Set {1,2,3,4}
+
+-- check if 6 in set b
+ans = b:check(6)               --> false
+
+-- add value
+b:insert(6)
+ans = b:check(6)  
+-- remove value             
+b:remove(6)                    --> true
+
+-- union
+ans = a + b                    --> DS.Set {1,2,3,4,5}
+
+-- intersection
+ans = a * b                    --> DS.Set {3,4}
+
+-- difference
+ans = a / b                    --> DS.Set {1,2}
+
+-- comparison
+ans = (a == b)                 --> false
+
+ans = (a < b)                  --> false
+
+-- represent as list
+t = a:table()
+ans = a:check(t[1])            --> true
+
+-- size of the set
+ans = #a                       --> 4
+
+-- make copy
+d = a:copy()
+ans = (d == a)                 --> true
+
+-- generate new set from given
+-- use function
+e = a:map(function (x) return x^2 end)
+ans = e[16]                    --> true
+
+-- show
+print(a)
 ]]
 
 local Ver = require "liblc.versions"
@@ -88,6 +135,7 @@ local Ver = require "liblc.versions"
 local STACK = 'stack'
 local QUEUE = 'queue'
 local HEAP = 'heap'
+local SET = 'set'
 
 ---------------------------------
 -- @class table
@@ -339,6 +387,173 @@ struct.Heap.copy = function (h)
    Ver.move(h,1,#h,1,res)
    return res
 end
+
+--	SET
+
+struct.Set = {type='set'}
+struct.Set.__index = struct.Set
+
+
+--- Create new object, set metatable.
+--    @param l Table of elements.
+--    @return New set object.
+function struct.Set:new(l)
+   local o = {}
+   for i = 1, #l do o[l[i]] = true end
+   setmetatable(o, self)
+   return o
+end
+
+--- Check if value is in set.
+--    @param s Source set.
+--    @param v Element to check.
+--    @return <code>true</code> if the element is in the set.
+struct.Set.check = function (s, v)
+   return s[v] == true
+end
+struct.about[struct.Set.check] = {"check(set,val)", "Check if value is in set. The same as set(val).", SET}
+
+--- Add new element.
+--    @param s Set object.
+--    @param v New element.
+struct.Set.insert = function (s, v)
+   s[v] = true
+end
+struct.about[struct.Set.insert] = {"insert(set,val)", "Insert element into set.", SET}
+
+--- Delete element.
+--    @param s Set object.
+--    @param v Element.
+struct.Set.remove = function (s,v)
+   s[v] = nil
+end
+struct.about[struct.Set.remove] = {"remove(set,val)", "Remove element from set.", SET}
+
+--- Convert into Lua table.
+--    @param s Set object.
+--    @return List of elements.
+struct.Set.table = function (s)
+   local res = {}
+   for k in pairs(s) do table.insert(res, k) end
+   return res
+end
+struct.about[struct.Set.table] = {"table(set)", "Represent set as a table.", SET}
+
+--- Copy of the set.
+--    @param s Initial set.
+--    @return Copy object.
+struct.Set.copy = function (s)
+   local res = struct.Set:new({})
+   for k in pairs(s) do res[k] = true end
+   return res
+end
+struct.about[struct.Set.copy] = {"copy(s)", "Get copy of the set.", SET}
+
+--- Apply function to the elements of set.
+--    @param s Initial set.
+--    @param fn Function.
+--    @return New set, obtained from function.
+struct.Set.map = function (s,fn)
+   local res = struct.Set:new({})
+   for k in pairs(s) do res[fn(k)] = true end
+   return res
+end
+struct.about[struct.Set.map] = {"map(s,fn)", "Apply function fn() to obtain new set.", SET}
+
+
+--- a + b
+--    @param a First set.
+--    @param b Second set.
+--    @return Union.
+struct.Set.__add = function (a,b)
+   assert(a.type == 'set' and b.type == 'set')
+   local res = struct.Set:new({})
+   for k in pairs(a) do res[k] = true end
+   for k in pairs(b) do res[k] = true end
+   return res
+end
+
+--- a * b
+--    @param a First set.
+--    @param b Second set.
+--    @return Intersection.
+struct.Set.__mul = function (a,b)
+   assert(a.type == 'set' and b.type == 'set')
+   local res = struct.Set:new({})
+   for k in pairs(a) do res[k] = b[k] end
+   return res
+end
+
+--- a / b
+--    @param a First set.
+--    @param b Second set.
+--    @return Difference.
+struct.Set.__div = function (a,b)
+   assert(a.type == 'set' and b.type == 'set')
+   local res = struct.Set:new({})
+   for k in pairs(a) do
+      if not b[k] then res[k] = true end
+   end
+   return res
+end
+
+struct.Set.arithmetic = 'arithmetic'
+struct.about[struct.Set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", SET}
+
+--- a <= b
+--    @param a First set.
+--    @param b Second set.
+--    @return <code>true</code> if <code>a</code> is a subset of <code>b</code>.
+struct.Set.__le = function (a,b)
+   assert(a.type == 'set' and b.type == 'set')
+   for k in pairs(a) do
+      if not b[k] then return false end
+   end
+   return true
+end
+
+--- a < b
+--    @param a First set.
+--    @param b Second set.
+--    @return <code>true</code> if <code>a</code> is a subset of <code>b</code> but not equal.
+struct.Set.__lt = function (a,b)
+   return a <= b and not (b <= a)
+end
+
+--- a == b
+--    @param a First set.
+--    @param b Second set.
+--    @return <code>true</code> if <code>a</code> and <code>b</code> are equal.
+struct.Set.__eq = function (a,b)
+   return a <= b and b <= a
+end
+
+struct.Set.comparison = 'comparison'
+struct.about[struct.Set.comparison] = {struct.Set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", SET}
+
+--- #a 
+--    @param s Set object.
+--    @return Number of elements.
+struct.Set.__len = function (s)
+   local n = 0
+   for k in pairs(s) do n = n+1 end
+   return n
+end
+
+--- String representation.
+--    @param s Set object.
+--    @return Set as string.
+struct.Set.__tostring = function (s)
+   local lst = {}
+   for e in pairs(s) do table.insert(lst, e) end
+   return string.format('{%s}', table.concat(lst,','))
+end
+
+-- redefine constructor
+setmetatable(struct.Set, {__call = function (self, v) return struct.Set:new(v) end})
+struct.Set.Set = 'Set'
+struct.about[struct.Set.Set] = {"Set(t)", "Create new set from table of elements.", SET}
+
 
 -- free memory in case of standalone usage
 if not lc_version then struct.about = nil end

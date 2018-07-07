@@ -50,7 +50,6 @@ import = {
    numeric  = "Num",
    polynom  = "Poly",
    rational = "Rat",
-   set      = "Set",
    special  = "Spec",
    stat     = "Stat",
    struct   = "DS",
