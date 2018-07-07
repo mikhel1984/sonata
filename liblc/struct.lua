@@ -88,11 +88,11 @@ b = DS.Set {3,4,5}
 ans = a                        --> DS.Set {1,2,3,4}
 
 -- check if 6 in set b
-ans = b:check(6)               --> false
+ans = b[6]                     --> nil
 
 -- add value
 b:insert(6)
-ans = b:check(6)  
+ans = b[6]  
 -- remove value             
 b:remove(6)                    --> true
 
@@ -112,7 +112,7 @@ ans = (a < b)                  --> false
 
 -- represent as list
 t = a:table()
-ans = a:check(t[1])            --> true
+ans = a[ t[1] ]                --> true
 
 -- size of the set
 ans = #a                       --> 4
@@ -130,6 +130,8 @@ ans = e[16]                    --> true
 print(a)
 ]]
 
+--	LOCAL
+
 local Ver = require "liblc.versions"
 
 local STACK = 'stack'
@@ -137,30 +139,30 @@ local QUEUE = 'queue'
 local HEAP = 'heap'
 local SET = 'set'
 
----------------------------------
--- @class table
--- @name struct
--- @field about Description of functions.
-local struct = {}
+--	INFO
 
--- description
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-struct.about = help:new("Main data structures.")
+
+--	MODULE
+
+local struct = {
+-- description
+about = help:new("Main data structures.")
+}
 
 -- common methods
-struct.about['COPY'] = {"copy()", "Return copy of the object."}
-struct.about['ISEMPTY'] = {"isempty()", "Return true if the object is empty."}
+--struct.about['COPY'] = {"copy()", "Return copy of the object."}
+--struct.about['ISEMPTY'] = {"isempty()", "Return true if the object is empty."}
 
 --	STACK
+
 struct.Stack = {type='stack'}
 struct.Stack.__index = struct.Stack
 
 --- Constructor for stack data structure.
 --    @return New stack.
 struct.Stack.new = function (self)
-   local o = {}
-   setmetatable(o, self)
-   return o
+   return setmetatable({}, self)
 end
 
 -- Alias for stack constructor
@@ -202,13 +204,16 @@ struct.Stack.copy = function (s)
    end
    return res
 end
+struct.about[struct.Stack.copy] = {"Stack.copy(s)", "Create copy of the stack.", STACK}
 
 struct.Stack.size = function (s) return #s end
+struct.about[struct.Stack.size] = {"Stack.size(s)", "Return number of elements in stack.", STACK}
 
 --- Check stack size.
 --    @param s Stack object.
 --    @return True if stack is empty.
 struct.Stack.isempty = function (s) return #s == 0 end
+struct.about[struct.Stack.isempty] = {"Stack.isempty(s)", "Return true if the stack is empty.", STACK}
 
 --	QUEUE
 struct.Queue = {type='queue'}
@@ -217,9 +222,7 @@ struct.Queue.__index = struct.Queue
 --- Queue constructor.
 --    @return New queue.
 struct.Queue.new = function (self)
-   local o = {first=0, last=-1}
-   setmetatable(o, self)
-   return o
+   return setmetatable({first=0, last=-1}, self)
 end
 
 -- Alias for queue constructor
@@ -278,15 +281,18 @@ struct.about[struct.Queue.remlast] = {"remlast()", "Get value from the end of qu
 --    @param q Queue object.
 --    @return Top value without removing it.
 struct.Queue.peek = function (q) return q[q.first] end
+struct.about[struct.Queue.peek] = {"Queue.peek(q)", "Get next element, don't remove it.", QUEUE}
 
 -- Queue size
 struct.Queue.__len = function (t) return t.last-t.first+1 end
 
 struct.Queue.size = function (t) return t.last-t.first+1 end
+struct.about[struct.Queue.size] = {"Queue.size(q)", "Return number of elements in queue.", QUEUE}
 
 --- Check if the queue is empty.
 --    @return True if there is no elements in the queue.
 struct.Queue.isempty = function (q) return q.first+1 == q.last end
+struct.about[struct.Queue.isempty] = {"Queue.isempty(q)", "Return true if the queue is empty.", QUEUE}
 
 --- Queue copy.
 --    @param q Original queue.
@@ -298,6 +304,7 @@ struct.Queue.copy = function (q)
    Ver.move(q,first,last,first,res)
    return res
 end
+struct.about[struct.Queue.copy] = {"Queue.copy(q)", "Make copy of the queue.", QUEUE}
 
 --	HEAP
 struct.Heap = {type='heap'}
@@ -310,8 +317,7 @@ struct.Heap.new = function (self, less)
    local o = {N=0}
    -- default function for comparision, can be changed
    o.less = less or function (a,b) return a < b end
-   setmetatable(o, self)
-   return o
+   return setmetatable(o, self)
 end
 
 -- Simplify constructor call.
@@ -321,7 +327,7 @@ struct.about[struct.Heap] = {"Heap([less])", "Create new heap object. Comparison
 --- Fix order of the heap in up direction.
 --    @param h Heap object.
 --    @param k Start index.
-local function fixUp(h, k)
+struct.Heap._fixUp = function (h, k)
    while k > 1 and h.less(h[math.modf(k*0.5)], h[k]) do
       local k2 = math.modf(k*0.5)
       h[k],h[k2] = h[k2],h[k]
@@ -333,7 +339,7 @@ end
 --    @param h Heap object.
 --    @param k Start index.
 --    @param N End index.
-local function fixDown(h, k, N)
+struct.Heap._fixDown = function (h, k, N)
    while 2*k <= N do
       local j = 2*k
       if j < N and h.less(h[j],h[j+1]) then j=j+1 end
@@ -350,7 +356,7 @@ struct.Heap.insert = function (h, v)
    local n = h.N+1
    h.N = n
    h[n] = v
-   fixUp(h, n)
+   struct.Heap._fixUp(h, n)
 end
 struct.about[struct.Heap.insert] = {"insert(v)", "Add element to the heap.", HEAP}
 
@@ -362,7 +368,7 @@ struct.Heap.deltop = function (h)
    local n = h.N
    if n == 0 then return nil end
    h[1],h[n] = h[n],h[1]
-   fixDown(h,1,n-1)
+   struct.Heap._fixDown(h,1,n-1)
    h.N = n-1
    return h[n]
 end
@@ -372,11 +378,12 @@ struct.about[struct.Heap.deltop] = {"deltop()", "Return top element. For the def
 --    @param h Heap object.
 --    @return True if heap is empty.
 struct.Heap.isempty = function (h) return h.N == 0 end
+struct.about[struct.Heap.isempty] = {"Heap.isempty(h)", "Return true if the heap is empty.", HEAP}
 
 -- Number of elements.
-struct.Heap.__len = function (h) return h.N end
-
 struct.Heap.size = function (h) return h.N end
+struct.Heap.__len = struct.Heap.size
+struct.about[struct.Heap.size] = {"Heap.size(h)", "Get number of elements in the heap.", HEAP}
 
 --- Make heap copy.
 --    @param h Original heap.
@@ -387,6 +394,7 @@ struct.Heap.copy = function (h)
    Ver.move(h,1,#h,1,res)
    return res
 end
+struct.about[struct.Heap.copy] = {"Heap.copy(h)", "Make copy of the heap.", HEAP}
 
 --	SET
 
@@ -397,21 +405,11 @@ struct.Set.__index = struct.Set
 --- Create new object, set metatable.
 --    @param l Table of elements.
 --    @return New set object.
-function struct.Set:new(l)
+struct.Set.new = function (self, l)
    local o = {}
    for i = 1, #l do o[l[i]] = true end
-   setmetatable(o, self)
-   return o
+   return setmetatable(o, self)
 end
-
---- Check if value is in set.
---    @param s Source set.
---    @param v Element to check.
---    @return <code>true</code> if the element is in the set.
-struct.Set.check = function (s, v)
-   return s[v] == true
-end
-struct.about[struct.Set.check] = {"check(set,val)", "Check if value is in set. The same as set(val).", SET}
 
 --- Add new element.
 --    @param s Set object.
@@ -447,7 +445,7 @@ struct.Set.copy = function (s)
    for k in pairs(s) do res[k] = true end
    return res
 end
-struct.about[struct.Set.copy] = {"copy(s)", "Get copy of the set.", SET}
+struct.about[struct.Set.copy] = {"Set.copy(s)", "Get copy of the set.", SET}
 
 --- Apply function to the elements of set.
 --    @param s Initial set.
@@ -462,8 +460,6 @@ struct.about[struct.Set.map] = {"map(s,fn)", "Apply function fn() to obtain new 
 
 
 --- a + b
---    @param a First set.
---    @param b Second set.
 --    @return Union.
 struct.Set.__add = function (a,b)
    assert(a.type == 'set' and b.type == 'set')
@@ -474,8 +470,6 @@ struct.Set.__add = function (a,b)
 end
 
 --- a * b
---    @param a First set.
---    @param b Second set.
 --    @return Intersection.
 struct.Set.__mul = function (a,b)
    assert(a.type == 'set' and b.type == 'set')
@@ -485,8 +479,6 @@ struct.Set.__mul = function (a,b)
 end
 
 --- a / b
---    @param a First set.
---    @param b Second set.
 --    @return Difference.
 struct.Set.__div = function (a,b)
    assert(a.type == 'set' and b.type == 'set')
@@ -501,8 +493,6 @@ struct.Set.arithmetic = 'arithmetic'
 struct.about[struct.Set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", SET}
 
 --- a <= b
---    @param a First set.
---    @param b Second set.
 --    @return <code>true</code> if <code>a</code> is a subset of <code>b</code>.
 struct.Set.__le = function (a,b)
    assert(a.type == 'set' and b.type == 'set')
@@ -513,16 +503,12 @@ struct.Set.__le = function (a,b)
 end
 
 --- a < b
---    @param a First set.
---    @param b Second set.
 --    @return <code>true</code> if <code>a</code> is a subset of <code>b</code> but not equal.
 struct.Set.__lt = function (a,b)
    return a <= b and not (b <= a)
 end
 
 --- a == b
---    @param a First set.
---    @param b Second set.
 --    @return <code>true</code> if <code>a</code> and <code>b</code> are equal.
 struct.Set.__eq = function (a,b)
    return a <= b and b <= a
@@ -531,18 +517,20 @@ end
 struct.Set.comparison = 'comparison'
 struct.about[struct.Set.comparison] = {struct.Set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", SET}
 
---- #a 
---    @param s Set object.
+-- #a 
 --    @return Number of elements.
 struct.Set.__len = function (s)
    local n = 0
    for k in pairs(s) do n = n+1 end
    return n
 end
+struct.Set.size = struct.Set.__len
+struct.about[struct.Set.size] = {"Set.size(s)", "Number of elements in the set.", SET}
+
+struct.Set.isempty = function (s) return next(s) == nil end
+struct.about[struct.Set.isempty] = {"Set.isempty(s)", "Return true if the set is empty.", SET}
 
 --- String representation.
---    @param s Set object.
---    @return Set as string.
 struct.Set.__tostring = function (s)
    local lst = {}
    for e in pairs(s) do table.insert(lst, e) end
@@ -551,9 +539,7 @@ end
 
 -- redefine constructor
 setmetatable(struct.Set, {__call = function (self, v) return struct.Set:new(v) end})
-struct.Set.Set = 'Set'
-struct.about[struct.Set.Set] = {"Set(t)", "Create new set from table of elements.", SET}
-
+struct.about[struct.Set] = {"Set(t)", "Create new set from table of elements.", SET}
 
 -- free memory in case of standalone usage
 if not lc_version then struct.about = nil end

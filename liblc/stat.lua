@@ -84,24 +84,29 @@ ans = Stat.normcdf(1, 1.5, 2.1)   --~ 0.4059
 ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 ]]
 
+--	LOCAL
+
 local Ver = require "liblc.versions"
 
--------------------------------------------- 
--- @class table
--- @name stat
--- @field about Description of functions.
+local DISTRIB = 'distribution'
 
-local stat = {}
--- description
+--	INFO
+
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
-stat.about = help:new("Statistical calculations. Data set must be a Lua table.")
+
+--	MODULE
+
+local stat = {
+-- description
+about = help:new("Statistical calculations. Data set must be a Lua table.")
+}
 
 -- some functions depend of module 'special'
-local done
-done, stat.lc_special = pcall(require,'liblc.special')
-if not done then
+local done, tmp = pcall(require,'liblc.special')
+if done then
+   stat.lc_special = tmp
+else
    print('WARNING >> Not available: poisscdf(), chi2cdf(), chi2pdf(), tcdf(), tpdf(), normcdf()')
-   stat.lc_special = nil
 end
 
 --- Sum of all elements.
@@ -332,7 +337,7 @@ stat.about[stat.hyst] = {"hyst(data[,N[,a,b]])", "Find hystogram for given data 
 stat.poisscdf = function (x,lam)
    return stat.lc_special.gammq(x+1,lam)
 end
-stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution."}
+stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution.", DISTRIB}
 
 --- Poisson density function.
 --    @param x Value.
@@ -345,7 +350,7 @@ stat.poisspdf = function (x,lam)
    for i = 1,x do f = f*i end
    return lam^x*math.exp(-lam)/f
 end
-stat.about[stat.poisspdf] = {"poisspdf(x,lam)", "Poisson distribution density."}
+stat.about[stat.poisspdf] = {"poisspdf(x,lam)", "Poisson distribution density.", DISTRIB}
 
 --- Chi-square cumulative distribution
 --    @param x Value.
@@ -354,7 +359,7 @@ stat.about[stat.poisspdf] = {"poisspdf(x,lam)", "Poisson distribution density."}
 stat.chi2cdf = function (x,v)
    return stat.lc_special.gammp(v/2,x/2)
 end
-stat.about[stat.chi2cdf] = {"chi2cdf(x,v)", "Chi-square cumulative distribution."}
+stat.about[stat.chi2cdf] = {"chi2cdf(x,v)", "Chi-square cumulative distribution.", DISTRIB}
 
 --- Chi-square density function.
 --    @param x Value.
@@ -365,7 +370,7 @@ stat.chi2pdf = function (x,v)
    local v2 = 0.5*v
    return x^(v2-1)*math.exp(-x*0.5)/(2.0^v2*stat.lc_special.gamma(v2))
 end
-stat.about[stat.chi2pdf] = {"chi2pdf(x,v)", "Chi-square distribution density."}
+stat.about[stat.chi2pdf] = {"chi2pdf(x,v)", "Chi-square distribution density.", DISTRIB}
 
 --- Student's cumulative distribution
 --    @param x Value.
@@ -375,7 +380,7 @@ stat.tcdf = function (x,nu)
    local tmp = nu/(nu+x*x)
    return 1-0.5*stat.lc_special.betainc(tmp,0.5*nu,0.5)
 end
-stat.about[stat.tcdf] = {"tcdf(x,nu)", "Student's cumulative distribution."}
+stat.about[stat.tcdf] = {"tcdf(x,nu)", "Student's cumulative distribution.", DISTRIB}
 
 --- Student's density function.
 --    @param x Value.
@@ -385,7 +390,7 @@ stat.tpdf = function (x,nu)
    local tmp = math.sqrt(nu)*stat.lc_special.beta(0.5,0.5*nu)
    return (1+x*x/nu)^(-0.5*(nu+1))/tmp
 end
-stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density."}
+stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density.", DISTRIB}
 
 --- F cumulative distribution
 --    @param x Value.
@@ -396,7 +401,7 @@ stat.fcdf = function (x,v1,v2)
    local tmp = v1*x/(v2+v1*x)
    return stat.lc_special.betainc(tmp,v1*0.5,v2*0.5)
 end
-stat.about[stat.fcdf] = {"fcdf(x,v1,v2)", "F cumulative distribution."}
+stat.about[stat.fcdf] = {"fcdf(x,v1,v2)", "F cumulative distribution.", DISTRIB}
 
 --- F density function.
 --    @param x Value.
@@ -407,7 +412,7 @@ stat.fpdf = function (x,v1,v2)
    local tmp = (v1*x)^v1*v2^v2/(v1*x+v2)^(v1+v2)
    return math.sqrt(tmp)/(x*stat.lc_special.beta(0.5*v1,0.5*v2))
 end
-stat.about[stat.fpdf] = {"fpdf(x,v1,v2)", "F distribution density."}
+stat.about[stat.fpdf] = {"fpdf(x,v1,v2)", "F distribution density.", DISTRIB}
 
 --[[
 -- Binomial cumulative distribution
@@ -428,7 +433,7 @@ stat.normcdf = function (x,mu,sig)
    mu,sig = mu or 0, sig or 1
    return 0.5*(1+stat.lc_special.erf((x-mu)/(sig*1.4142135623731)))
 end
-stat.about[stat.normcdf] = {"normcdf(x,mu,sig)", "Normal cumulative distribution."}
+stat.about[stat.normcdf] = {"normcdf(x,mu,sig)", "Normal cumulative distribution.", DISTRIB}
 
 --- Normal density function.
 --    @param x Value.
@@ -439,7 +444,7 @@ stat.normpdf = function (x,mu,sig)
    mu,sig = mu or 0, sig or 1
    return math.exp(-0.5*((x-mu)/sig)^2)/math.sqrt(2*math.pi*sig*sig)
 end
-stat.about[stat.normpdf] = {"normpdf(x,nu,sig)", "Normal distribution density."}
+stat.about[stat.normpdf] = {"normpdf(x,nu,sig)", "Normal distribution density.", DISTRIB}
 
 -- free memory if need
 if not lc_version then stat.about = nil end
