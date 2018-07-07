@@ -26,7 +26,7 @@ g:plot()
 b = g:copy()
 print(b)
 -- check correctness of the table
-ans = b:isavailable()                             --> true
+ans = b:isAvailable()                             --> true
 
 -- print Lua table
 tmp = {{1,1},{2,2},{3,3},{4,4}}
@@ -104,7 +104,7 @@ acc.foptions.raw = true
 --- Check if all options in table are available
 --    @param g Table with optinos.
 --    @return True if no wrong parameters.
-gnuplot.isavailable = function (g) 
+gnuplot.isAvailable = function (g) 
    local available = true
    for k,v in pairs(g) do
       -- find options which were not predefined
@@ -124,7 +124,7 @@ gnuplot.isavailable = function (g)
    end -- for k,v
    return available
 end
-gnuplot.about[gnuplot.isavailable] = {"isavailable(g)", "Check if all options in table are predefined in program.", help.OTHER}
+gnuplot.about[gnuplot.isAvailable] = {"isAvailable(g)", "Check if all options in table are predefined in program.", help.OTHER}
 
 -- save table to tmp file
 gnuplot._tbl2file = function (t)
@@ -206,7 +206,7 @@ gnuplot.about[gnuplot.copy] = {"copy(g)", "Get copy of the plot options.", }
 --    @param t Table with parameters of graphic.
 --    @return Table which can be used for plotting.
 gnuplot.plot = function (t)
-   assert(gnuplot.isavailable(t), 'Options are not predefined!')
+   assert(gnuplot.isAvailable(t), 'Options are not predefined!')
    -- define 'permanent' option
    if t.permanent == nil then t.permanent = true end
    -- open Gnuplot

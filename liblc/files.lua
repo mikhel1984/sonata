@@ -15,11 +15,11 @@ nm = os.tmpname()
 -- save table 
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-File.dsvwrite(nm, t, ';')
+File.dsvWrite(nm, t, ';')
 
 -- read table from file
 -- with separator ';'
-tt = File.dsvread(nm, ';')
+tt = File.dsvRead(nm, ';')
 ans = tt[2][2]                       --> 5
 
 -- get file text as string
@@ -28,10 +28,10 @@ ans = string.sub(s,1,5)              --> '1;2;3'
 
 -- serialize table to file
 a = {1, 2.0, a = 'pqr', b = {3,4,c='abc'}}
-File.tblexport(nm, a)
+File.tblExport(nm, a)
 
 -- deserialize table from file
-aa = File.tblimport(nm)
+aa = File.tblImport(nm)
 ans = aa.b.c                         --> 'abc'
 
 -- string split
@@ -104,7 +104,7 @@ files.about[files.split] = {"split(str,delim)", "Return iterator over substrings
 --    @param t Lua table.
 --    @param fname File name.
 --    @param delim Delimiter, default is coma.
-files.dsvwrite = function (fname, t, delim)
+files.dsvWrite = function (fname, t, delim)
    local f = assert(io.open(fname,'w'), "Can't create file "..tostring(fname))
    delim = delim or ','
    for _,v in ipairs(t) do
@@ -114,13 +114,13 @@ files.dsvwrite = function (fname, t, delim)
    f:close()
    print('Done')
 end
-files.about[files.dsvwrite] = {"dsvwrite(fname,tbl,del)", "Save Lua table as delimiter separated data into file."}
+files.about[files.dsvWrite] = {"dsvWrite(fname,tbl,del)", "Save Lua table as delimiter separated data into file."}
 
 --- Import data from text file, use given delimiter
 --    @param fname File name.
 --    @param delim Delimiter, default is coma.
 --    @return Lua table with data.
-files.dsvread = function (fname, delim)
+files.dsvRead = function (fname, delim)
    local f = assert(io.open(fname, 'r'), "Can't open file "..fname)
    delim = delim or ','
    local res = {}
@@ -139,7 +139,7 @@ files.dsvread = function (fname, delim)
    f:close()
    return res
 end
-files.about[files.dsvread] = {"dsvread(fname,del)", "Read delimiter separated data as Lua table."}
+files.about[files.dsvRead] = {"dsvRead(fname,del)", "Read delimiter separated data as Lua table."}
 
 --- Returns text of the file.
 --    @param fname
@@ -156,18 +156,18 @@ end
 --- Load Lua table from file.
 --    @param fname File name.
 --    @return Lua table or nil.
-files.tblimport = function (fname)
+files.tblImport = function (fname)
    local str,f = files.read(fname)
    -- use Lua default import
    if str then f = Ver.loadstr('return '..str) end
    return f and f() or nil
 end
-files.about[files.tblimport] = {"tblimport(fname)", "Import Lua table, written into file."}
+files.about[files.tblImport] = {"tblImport(fname)", "Import Lua table, written into file."}
 
 --- Save Lua table to the file.
 --    @param fname File name.
 --    @param t Lua table.
-files.tblexport = function (fname, t)
+files.tblExport = function (fname, t)
    assert(fname and t, 'Wrong arguments!')
    local str = val2str.tbl(t)
    local f = assert(io.open(fname,'w'), "Can't create file "..tostring(fname))
@@ -175,7 +175,7 @@ files.tblexport = function (fname, t)
    f:close()
    print('Done')
 end
-files.about[files.tblexport] = {"tblexport(fname,tbl)", "Save Lua table into file."}
+files.about[files.tblExport] = {"tblExport(fname,tbl)", "Save Lua table into file."}
 
 -- free memory in case of standalone usage
 if not lc_version then files.about = nil end

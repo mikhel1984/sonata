@@ -81,7 +81,7 @@ function lc_local.doimport(tbl,name)
    if not _G[var] then
       _G[var] = require('liblc.'..name)
       about:add(_G[var].about, var)
-      if _G[var].onimport then _G[var].onimport() end
+      if _G[var].onImport then _G[var].onImport() end
    end
    return var, name
 end

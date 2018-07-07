@@ -69,7 +69,7 @@ local Ver = require "liblc.versions"
 local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
 -- Convert integer into bigint.
-local function fromint(n) 
+local function fromInt(n) 
    n = assert(Ver.tointeger(n), 'Integer is expected')
    -- return value and sign
    if n < 0 then 
@@ -80,7 +80,7 @@ local function fromint(n)
 end
 
 -- Convert string into bigint.
-local function fromstr(s)
+local function fromStr(s)
    local m,d = string.match(s, '^([+-]?)(%d+)$')               -- get sign and value
    assert(m and d, 'Wrong number!')
    return d, (m == '-' and -1 or 1)
@@ -121,9 +121,9 @@ bigint.about[bigint.BASE] = {'BASE', "The radix of big integer representation.",
 bigint.new = function (self, a)
    local s, sign
    if     type(a) == 'string' then
-      s, sign = fromstr(a)
+      s, sign = fromStr(a)
    elseif type(a) == 'number' then 
-      s, sign = fromint(a)
+      s, sign = fromInt(a)
    else
       error("Expected integer or string!")
    end

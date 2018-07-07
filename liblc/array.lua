@@ -28,7 +28,7 @@ ans = #b                               --> 10
 ans = b:copy()                         --> b
 
 -- compare sizes
-ans = b:isequal(Arr.rand{5,2,1})       --> true
+ans = b:isEqual(Arr.rand{5,2,1})       --> true
 
 -- arithmetical operations
 c = b + b
@@ -36,7 +36,7 @@ ans = c:get{1,1,1}                     --> 2*b:get{1,1,1}
 
 -- get sub array
 g = a:sub({1,1,1},{-1,-1,2})         
-ans = g:isequal(Arr{2,3,2})            --> true
+ans = g:isEqual(Arr{2,3,2})            --> true
 
 -- concatenate along the 3-rd axes
 d = Arr.concat(b,b,3)
@@ -56,7 +56,7 @@ ans = f:get{1,1,1}                     --> b:get{1,1,1}*10
 print(a)
 
 -- print slices for axis 2 and 3
-print(d:fullstring(2,3))
+print(d:fullString(2,3))
 ]]
 
 -- 	LOCAL
@@ -101,7 +101,7 @@ array.new = function (self, tsize)
 end
 
 -- Check index correctness.
-array._isindex = function (arr, tind)
+array._isIndex = function (arr, tind)
    if #arr.size ~= #tind then return false end
    for i = 1,#tind do 
       if tind[i] > arr.size[i] or tind[i] < 1 then return false end
@@ -110,7 +110,7 @@ array._isindex = function (arr, tind)
 end
 
 -- Transform index into single dimension representation.
-array._iconvert = function (arr, tind)
+array._indexConvert = function (arr, tind)
    local res, k = tind[1], arr.k
    for i = 2,#tind do 
       res = res + (tind[i]-1) * k[i]
@@ -129,8 +129,8 @@ end
 --    @param tind Index of the element (table).
 --    @return Element or error if index is wrong.
 array.get = function (arr, tind)
-   assert(array._isindex(arr, tind), "Wrong index!")
-   return arr[array._iconvert(arr, tind)]
+   assert(array._isIndex(arr, tind), "Wrong index!")
+   return arr[array._indexConvert(arr, tind)]
 end
 array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table."}
 
@@ -139,8 +139,8 @@ array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table."
 --    @param tind Element index (table).
 --    @param val New value.
 array.set = function (arr, tind, val)
-   assert(array._isindex(arr, tind), "Wrong index!")
-   arr[array._iconvert(arr,tind)] = val 
+   assert(array._isIndex(arr, tind), "Wrong index!")
+   arr[array._indexConvert(arr,tind)] = val 
 end
 array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is a table."}
 
@@ -157,7 +157,7 @@ array.about[array.copy] = {"copy(arr)", "Get copy of the array.", help.OTHER}
 --    @param a1 First array object.
 --    @param a2 Second array object.
 --    @return <code>true</code> if size is the same.
-array.isequal = function (arr1, arr2)
+array.isEqual = function (arr1, arr2)
    if isarray(arr1) and isarray(arr2) and #arr1.size == #arr2.size then
       for i = 1, #arr1.size do
          if arr1.size[i] ~= arr2.size[i] then return false end
@@ -166,7 +166,7 @@ array.isequal = function (arr1, arr2)
    end
    return false
 end
-array.about[array.isequal] = {"isequal(a1,a2)", "Check size equality.", help.OTHER}
+array.about[array.isEqual] = {"isEqual(a1,a2)", "Check size equality.", help.OTHER}
 
 --- Apply function of 2 arguments.
 --    @param a1 First array object.
@@ -174,7 +174,7 @@ array.about[array.isequal] = {"isequal(a1,a2)", "Check size equality.", help.OTH
 --    @param fn Function with 2 arguments.
 --    @return New array where each element is result of the function evaluation fn(a1[i],a2[i]).
 array.apply = function (arr1, arr2, ffun)
-   assert(array.isequal(arr1,arr2), "Not compatible arrays!")
+   assert(array.isEqual(arr1,arr2), "Not compatible arrays!")
    local res, v = array:new(Ver.move(arr1.size, 1, #arr1.size, 1, {}))    -- prepare empty copy
    for i = 1, array._capacity(arr1) do 
       v = ffun(arr1[i] or 0, arr2[i] or 0)           -- elements can be empty
@@ -243,7 +243,7 @@ array.about[array.rand] = {"rand(size)", "Return array with random numbers betwe
 
 -- a1 == a2
 array.__eq = function (arr1, arr2)
-   if array.isequal(arr1,arr2) then
+   if array.isEqual(arr1,arr2) then
       for i = 1, array._capacity(arr1) do
 	 if (arr1[i] or 0) ~= (arr2[i] or 0) then return false end
       end
@@ -273,7 +273,7 @@ array.sub = function (arr, tind1, tind2)
    for i = 1, #tind2 do 
       if tind2[i] < 0 then tind2[i] = tind2[i] + arr.size[i] + 1 end 
    end
-   assert(array._isindex(arr, tind1) and array._isindex(arr, tind2), "Wrong index!")
+   assert(array._isIndex(arr, tind1) and array._isIndex(arr, tind2), "Wrong index!")
    -- prepare tables
    local newsize, ind = {}, {}
    for i = 1, #tind1 do 
@@ -290,7 +290,7 @@ array.sub = function (arr, tind1, tind2)
 	 tind2[i] = tind1[i] + tmp
 	 ind[i] = tmp + 1
       end
-      res[array._iconvert(res,ind)] = arr[array._iconvert(arr,tind2)]
+      res[array._indexConvert(res,ind)] = arr[array._indexConvert(arr,tind2)]
    end
    return res
 end
@@ -323,7 +323,7 @@ array.concat = function (arr1, arr2, naxis)
       -- get value
       local second = ind1[naxis] > edge
       ind2[naxis] = second and (ind2[naxis]-edge) or ind2[naxis]
-      res[array._iconvert(res,ind1)] = second and arr2[array._iconvert(arr2,ind2)] or arr1[array._iconvert(arr1,ind2)]
+      res[array._indexConvert(res,ind1)] = second and arr2[array._indexConvert(arr2,ind2)] or arr1[array._indexConvert(arr1,ind2)]
    end
    --for i = 1, array._capacity(arr2) do print(i, arr2[i]) end
    return res 
@@ -349,7 +349,7 @@ end
 --    @param nrow Number of axes for representation as rows.
 --    @param ncol Number of axes for representation as columns.
 --    @return String with all array elements slice by slice.
-array.fullstring = function (arr, nrow, ncol)
+array.fullString = function (arr, nrow, ncol)
    local res = {}
    local S = arr.size
    -- 1 dimensional array
@@ -370,7 +370,7 @@ array.fullstring = function (arr, nrow, ncol)
 	       local col = {}
 	       for j = 1, S[ncol] do
 	          ind[ncol]  = j
-		  col[#col+1] = arr[array._iconvert(arr, ind)] or 0
+		  col[#col+1] = arr[array._indexConvert(arr, ind)] or 0
 	       end
 	       -- save
 	       row[#row+1] = table.concat(col, ' ')
@@ -411,7 +411,7 @@ array.fullstring = function (arr, nrow, ncol)
    end
    return table.concat(res, '\n') 
 end
-array.about[array.fullstring] = {"fullstring(arr,r,c)", "Represent array as sequence of matrices, where r and c are numbers of axes.", help.OTHER}
+array.about[array.fullString] = {"fullString(arr,r,c)", "Represent array as sequence of matrices, where r and c are numbers of axes.", help.OTHER}
 
 -- Constructor
 setmetatable(array, {__call = function (self, v) 
@@ -454,7 +454,7 @@ array.next = function (arr)
 	     local res = {}
 	     for i = 1, #S do res[i] = math.modf(count/K[i]) % S[i]+1 end
 	     count = count + 1
-	     return res, arr[array._iconvert(arr,res)]
+	     return res, arr[array._indexConvert(arr,res)]
           end
 end
 array.about[array.next] = {"next(arr)", "Return iterator along all indexes.", help.OTHER}

@@ -242,7 +242,7 @@ end
 complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object.", help.OTHER}
 
 -- Function for execution during the module import.
-complex.onimport = function ()
+complex.onImport = function ()
    -- redefine function sqrt and add complex variable _i
    _i = complex._i
    sqrt = complex.sqrt
