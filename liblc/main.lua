@@ -303,7 +303,7 @@ main.life = function (board)
 end
 
 -- Evaluate string equations, separated with semicolon, print result
-main.evalstr = function (s)
+main.evalStr = function (s)
    local T = require 'liblc.files'
    for c in T.split(s,';') do
       if not (c:find('=') or c:find('print')) then c = string.format('print(%s)',c) end
@@ -335,7 +335,7 @@ exit = true},
 ['-e'] = '--eval',
 ['--eval'] = {
 description = 'Evaluate command line expression(s).',
-process = function (args) main.evalstr(args[2]) end,
+process = function (args) main.evalStr(args[2]) end,
 exit = true},
 -- localisation file
 ['-l'] = '--lng',
@@ -354,7 +354,7 @@ exit = true},
 ['--new'] = {
 description = 'Generate template for a new module.',
 process = function (args)
-   lc_help.newmodule(args[2],args[3],args[4])
+   lc_help.newModule(args[2],args[3],args[4])
 end,
 exit = true},
 -- run code for debugging 

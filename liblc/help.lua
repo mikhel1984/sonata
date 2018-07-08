@@ -80,7 +80,7 @@ end
 --    @param alias Alias of the module name.
 --    @param lng Localization table from existing file.
 --    @return String representation of all help information of the module.
-local function helplines(module, alias, lng)
+local function helpLines(module, alias, lng)
    -- get table and name
    local m = (type(module) == 'string') and require('liblc.' .. module) or module
    local mname = (type(module) == 'string') and (module .. '.lua') or 'dialog'
@@ -147,7 +147,7 @@ help.new = function (self,str)
 end
 
 -- Create list of functions, sort by module and category.
-help._funclist = function (tbl)
+help._funcList = function (tbl)
    local res = {}
    for k, v in pairs(tbl) do
       -- only main description contains 'link'
@@ -181,7 +181,7 @@ help.print = function (self,fn)
       end
    else                               
       -- sort functions
-      local lst = help._funclist(self)
+      local lst = help._funcList(self)
       for mod, t in pairs(lst) do                   -- for each module
          io.write(help.CBOLD)
          print(string.format("\t%s", mod))
@@ -198,7 +198,7 @@ help.print = function (self,fn)
    end -- if
 end
 
-help.usecolors = function (use)
+help.useColors = function (use)
    if use then
       help.CMAIN = '\x1B[32m' 
       help.CHELP = '\x1B[33m' 
@@ -241,7 +241,7 @@ help.localization = function (self,fname)
    fname = LOCALE..help.SEP..fname
    -- call method of the 'files' module
    help.lc_files = help.lc_files or require('liblc.files')
-   local lng = help.lc_files.tblimport(fname)
+   local lng = help.lc_files.tblImport(fname)
    if lng then
       getmetatable(self).locale = lng           
       -- update functions in calc.lua
@@ -269,7 +269,7 @@ help.prepare = function(fname, modules)
    -- call method of the 'files' module
    help.lc_files = help.lc_files or require('liblc.files')
    -- prepare new file
-   local lng = help.lc_files.tblimport(fname)
+   local lng = help.lc_files.tblImport(fname)
    local f = io.open(fname, 'w')
    -- save descriptions
    f:write(string.rep('-',10), string.format(' %s ', fname), string.rep('-',10), '\n')
@@ -279,12 +279,12 @@ help.prepare = function(fname, modules)
    f:write((lng and lng.authors) and string.format("authors = [[%s]],", lng.authors) or '-- authors = [[Your Name]],', '\n')
    -- dialog elements
    eng2about()
-   f:write(helplines(eng,'Dialog',lng))
+   f:write(helpLines(eng,'Dialog',lng))
    -- main functions
-   f:write(helplines('main','Main',lng))
+   f:write(helpLines('main','Main',lng))
    -- other modules
    for k,v in pairs(modules) do
-      f:write(helplines(k,v,lng))
+      f:write(helpLines(k,v,lng))
    end
    f:write('}')
    f:close()
@@ -304,7 +304,7 @@ end
 --    @param mname Module name.
 --    @param alias Module short name.
 --    @param description Short module description.
-help.newmodule = function (mname, alias, description)
+help.newModule = function (mname, alias, description)
    if not (mname and alias) then
       error('Both module name and alias are expected!')
    end

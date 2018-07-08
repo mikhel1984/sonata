@@ -19,7 +19,7 @@ LC_USE_COLOR = true
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.9.2'
+lc_version = '0.9.3'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -31,7 +31,7 @@ lc = require('liblc.main')
 lc_local = {}
 
 -- Text colors 
-lc_help.usecolors(LC_USE_COLOR) 
+lc_help.useColors(LC_USE_COLOR) 
 
 -- Quick exit 
 quit = function () print(lc_help.CMAIN.."\n              --======= Buy! =======--\n"..lc_help.CRESET); os.exit() end

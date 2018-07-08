@@ -53,7 +53,7 @@ print(b)
 local SEARCH = 'search'
 
 -- Get key with minimum value, remove it
-local function getmin(tbl)
+local function getMin(tbl)
    local minval, key = math.huge 
    -- find new minimal value
    for k,v in pairs(tbl) do
@@ -69,10 +69,10 @@ end
 local function isgraph(t) return type(t)=='table' and t.isgraph end
 
 -- check element
-local function isedge(m) return type(m) == 'table' end
+local function isEdge(m) return type(m) == 'table' end
 
 -- count elements
-local function tbllen (m) 
+local function tblLen (m) 
    local n = 0
    for k in pairs(m) do n = n+1 end
    return n
@@ -106,7 +106,7 @@ end
 --    @param g Graph.
 --    @param t New element.
 graph.add = function (g, t)
-   if isedge(t) then
+   if isEdge(t) then
       local t1,t2,w12,w21 = t[1], t[2], (t[3] or t.w12), (t[4] or t.w21)
       g[t1] = g[t1] or {}
       g[t2] = g[t2] or {}
@@ -128,7 +128,7 @@ graph.about[graph.add] = {"add(e)","Add new node or edge. Node denoted as a sing
 --    @param g Graph.
 --    @param t Element to remove.
 graph.remove = function (g, t)
-   if isedge(t) then
+   if isEdge(t) then
       local t1,t2 = t[1], t[2]
       g[t1][t2] = nil
       if not t.single then        -- change keyword ???
@@ -195,7 +195,7 @@ end
 graph.about[graph.copy] = {"copy()", "Get copy of the graph."}
 
 -- Get number of nodes.
-graph.__len = function (g) return tbllen(g) end
+graph.__len = function (g) return tblLen(g) end
 
 -- String representation
 graph.__tostring = function (g)
@@ -212,14 +212,14 @@ end
 --- Check graph completeness.
 --    @param g Graph.
 --    @return true if graph is complete.
-graph.iscomplete = function (g)
-   local n = tbllen(g)
+graph.isComplete = function (g)
+   local n = tblLen(g)
    for _,v in ipairs(g) do
-      if n ~= tbllen(v) then return false end
+      if n ~= tblLen(v) then return false end
    end
    return true
 end
-graph.about[graph.iscomplete] = {'iscomplete(g)', 'Check completeness of the graph.', help.OTHER}
+graph.about[graph.isComplete] = {'isComplete(g)', 'Check completeness of the graph.', help.OTHER}
 
 --- Bredth first search.
 --    @param g Graph.
@@ -293,7 +293,7 @@ graph.Dijkstra = function(g,start,goal)
    local prev, dist = {}, {}
    -- run
    while true do
-      local current, val = getmin(set)
+      local current, val = getMin(set)
       if not current then break end
       -- update minimal distance
       dist[current] = val
