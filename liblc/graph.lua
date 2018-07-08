@@ -61,6 +61,7 @@ local function getMin(tbl)
          key = k; minval = v
       end
    end
+   -- exclude minimal value
    if key then tbl[key] = nil end
    return key, minval
 end
@@ -187,8 +188,9 @@ graph.about[graph.edges] = {"edges()", "List of graph edges."}
 graph.copy = function (g)
    local res = graph:new({})
    for k,v in pairs(g) do
-      res[k] = {}
-      for n,w in pairs(v) do res[k][n] = w end
+      local tmp = {}
+      for n,w in pairs(v) do tmp[n] = w end
+      res[k] = tmp
    end
    return res
 end

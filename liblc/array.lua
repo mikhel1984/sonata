@@ -74,7 +74,8 @@ local function getk (tsize)
    return k
 end
 
--- Info
+--	INFO
+
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 
 -- 	MODULE
@@ -363,17 +364,16 @@ array.fullString = function (arr, nrow, ncol)
    assert(nrow > 0 and nrow <= #S and ncol > 0 and ncol <= #S and nrow ~= ncol, "Wrong indexes!")
    -- get 2D layer as string
    local function layer (ind)
-            local row = {}
+            local row, col = {}, {}
 	    for i = 1, S[nrow] do
 	       ind[nrow] = i
 	       -- get row
-	       local col = {}
 	       for j = 1, S[ncol] do
 	          ind[ncol]  = j
-		  col[#col+1] = arr[array._indexConvert(arr, ind)] or 0
+		  col[j] = arr[array._indexConvert(arr, ind)] or 0
 	       end
 	       -- save
-	       row[#row+1] = table.concat(col, ' ')
+	       row[i] = table.concat(col, ' ')
 	    end
 	    return table.concat(row, '\n')
          end

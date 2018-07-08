@@ -60,7 +60,7 @@ val2str['thread'] = val2str['function']
 -- Table to string conversation.
 val2str.tbl =  function (t)
    local res = {}
-   for _,val in ipairs(t) do res[#res+1] = val2str[type(val)](val) end
+   for i,val in ipairs(t) do res[i] = val2str[type(val)](val) end
    for k,val in pairs(t) do
       if not Ver.isInteger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
    end

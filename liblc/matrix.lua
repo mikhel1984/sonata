@@ -1040,7 +1040,7 @@ matrix._luPrepare = function (m)
 	    abig = v
 	 end
       end
-      vv[#vv+1] = 1.0/big
+      vv[r] = 1.0/big
    end
    -- Crout's method
    local rmax, dum

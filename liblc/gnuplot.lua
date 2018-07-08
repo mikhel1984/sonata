@@ -219,8 +219,8 @@ gnuplot.plot = function (t)
    if t.raw then cmd[#cmd+1] = t.raw end
    -- prepare functions
    local fn = {}
-   for _,f in ipairs(t) do
-      fn[#fn+1] = gnuplot._graph(f,t)
+   for i,f in ipairs(t) do
+      fn[i] = gnuplot._graph(f,t)
    end
    -- command
    if #fn > 0 then
