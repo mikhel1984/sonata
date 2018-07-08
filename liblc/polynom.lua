@@ -90,7 +90,7 @@ end
 --    @param X First table.
 --    @param Y Second table (optional).
 --    @return Sum of elements.
-local function getsum(X,Y)
+local function getSum(X,Y)
    local res = 0
    if Y then
       for i = 1, #X do res = res + X[i]*Y[i] end
@@ -247,7 +247,7 @@ end
 
 -- a ^ n
 polynom.__pow = function (p,n)
-   n = assert(Ver.tointeger(n), "Integer power is expected!")
+   n = assert(Ver.toInteger(n), "Integer power is expected!")
    if n <= 0 then error("Positive power is expected!") end
    local res, acc = polynom:init({1}), polynom.copy(p)
    while n > 0 do
@@ -406,17 +406,17 @@ polynom.about[polynom.real] = {"real(p)", "Find real roots of the polynomial.", 
 --    @param ord Polynomial order.
 --    @return Polynomial object.
 polynom.fit = function (X,Y,ord)
-   if not (ord > 0 and Ver.mtype(ord) == 'integer') then error('Wrong order!') end
+   if not (ord > 0 and Ver.mathType(ord) == 'integer') then error('Wrong order!') end
    if #X ~= #Y then error('Wrong data size!') end
    if #X <= ord then error('Too few data points!') end
    -- find sums
    local acc = Ver.move(X,1,#X,1,{})       -- accumulate powers
    local sX, sY = {}, {}                     -- accumulate sums
    local nY = ord
-   sY[nY+1] = getsum(Y) 
+   sY[nY+1] = getSum(Y) 
    for nX = 2*ord,1,-1 do
-      sX[nX] = getsum(acc)
-      if nY > 0 then sY[nY] = getsum(acc, Y); nY = nY-1 end
+      sX[nX] = getSum(acc)
+      if nY > 0 then sY[nY] = getSum(acc, Y); nY = nY-1 end
       if nX > 1 then
          for i = 1,#acc do acc[i] = acc[i]*X[i] end
       end -- if

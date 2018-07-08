@@ -89,7 +89,7 @@ ans = a // b                     --> Mat {{1,2},{3,4},{5,6},{7,8}}
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
 -- apply function which depends on index too
-ans = a:map_ex(function (x,r,c) return x-r-c end) --> Mat {{-1,-3},{-2,-4}}
+ans = a:mapEx(function (x,r,c) return x-r-c end) --> Mat {{-1,-3},{-2,-4}}
 
 -- use Gauss transform to solve equation
 ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
@@ -138,7 +138,7 @@ ans = l[2][1]                   --~ 0.714
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
-m = m:cholesky()
+m = m:Cholesky()
 ans = m[2][2]                   --~ 1.633
 
 -- matrix trace
@@ -187,7 +187,7 @@ local access = {
 local function ismatrix(m) return type(m) == 'table' and m.ismatrix end
 
 -- Correct range if possible
-local function torange(x,range)
+local function toRange(x,range)
    if x < 0 then x = x + range + 1 end
    if x <= 0 or x > range then return nil end
    return x
@@ -273,7 +273,7 @@ end
 --    @param k Coefficient.
 --    @param m Matrix.
 --    @return Result of production.
-matrix._kprod = function (k, m)
+matrix._kProd = function (k, m)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, m.rows do
       local resr, mr = res[r], m[r]
@@ -285,7 +285,7 @@ end
 -- Transform matrix to upper triangle.
 --    @param m Initial matrix.
 --    @return Upper triangulated matrix and determinant.
-matrix._gaussdown = function (m)
+matrix._GaussDown = function (m)
    local A = 1
    for k = 1, m.rows do
       -- look for nonzero element
@@ -317,7 +317,7 @@ end
 -- Transform triangle matrix to identity matrix.
 --    @param Initial matrix
 --    @return Matrix with diagonal zeros.
-matrix._gaussup = function (m)
+matrix._GaussUp = function (m)
    for k = m.rows, 1, -1 do
       local mk = m[k]
       for r = k-1,1,-1 do
@@ -336,7 +336,7 @@ end
 --    @return Triangulated matrix.
 matrix.triang = function (m)
    local res = matrix.copy(m)
-   return matrix._gaussdown(res)
+   return matrix._GaussDown(res)
 end
 matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangulation produced by Gaussian elimination.', help.OTHER}
 
@@ -367,8 +367,8 @@ matrix.get = function (m,a,b)
    local numa = type(a) == 'number'
    local numb = type(b) == 'number'
    -- check range
-   if numa then a = torange(a, m.rows) end
-   if numb then b = torange(b, m.cols) end
+   if numa then a = toRange(a, m.rows) end
+   if numb then b = toRange(b, m.cols) end
    if not (a and b) then return nil end
 
    -- both are numbers
@@ -378,16 +378,16 @@ matrix.get = function (m,a,b)
    if numa then
       a = {a,a,1}
    else
-      a[1] = torange(a[1] or 1, m.rows)
-      a[2] = torange(a[2] or m.rows, m.rows)
+      a[1] = toRange(a[1] or 1, m.rows)
+      a[2] = toRange(a[2] or m.rows, m.rows)
       a[3] = a[3] or 1
       if not (a[1] and a[2] and (a[2]-a[1])/a[3] >= 0) then return nil end
    end
    if numb then
       b = {b,b,1}
    else
-      b[1] = torange(b[1] or 1, m.cols)
-      b[2] = torange(b[2] or m.cols, m.cols)
+      b[1] = toRange(b[1] or 1, m.cols)
+      b[2] = toRange(b[2] or m.cols, m.cols)
       b[3] = b[3] or 1
       if not (b[1] and b[2] and (b[2]-b[1])/b[3] >= 0) then return nil end
    end
@@ -478,7 +478,7 @@ matrix.about[matrix.map] = {"map(m,fn)", "Apply the given function to all elemen
 --    @param m Source matrix.
 --    @param fn Function f(r,c,x).
 --    @return Result of function evaluation.
-matrix.map_ex = function (m, fn)
+matrix.mapEx = function (m, fn)
    local res = matrix:init(m.rows, m.cols)
    for r = 1, res.rows do
       local resr, mr = res[r], m[r]
@@ -486,7 +486,7 @@ matrix.map_ex = function (m, fn)
    end
    return res
 end
-matrix.about[matrix.map_ex] = {"map_ex(m,fn)", "Apply function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
+matrix.about[matrix.mapEx] = {"mapEx(m,fn)", "Apply function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
 
 --- Apply function to each pair elements of given matrices.
 --    @param m1 First matrix.
@@ -514,8 +514,8 @@ matrix.about[matrix.copy] = {"copy(m)", "Return copy of matrix.", help.OTHER}
 
 -- a * b
 matrix.__mul = function (a,b)
-   if not ismatrix(a) then return matrix._kprod(a, b) end
-   if not ismatrix(b) then return matrix._kprod(b, a) end
+   if not ismatrix(a) then return matrix._kProd(a, b) end
+   if not ismatrix(b) then return matrix._kProd(b, a) end
    if (a.cols ~= b.rows) then error("Impossible to get product: different size!") end
    local res = matrix:init(a.rows, b.cols)
    for r = 1, res.rows do
@@ -531,13 +531,13 @@ end
 
 -- a / b
 matrix.__div = function (a,b)
-   if not ismatrix(b) then return matrix._kprod(1/b, a) end
+   if not ismatrix(b) then return matrix._kProd(1/b, a) end
    return a * matrix.inv(b)
 end
 
 -- a ^ n
 matrix.__pow = function (a,n)
-   n = assert(Ver.tointeger(n), "Integer is expected!")
+   n = assert(Ver.toInteger(n), "Integer is expected!")
    if (a.rows ~= a.cols) then error("Square matrix is expected!") end
    if n == -1 then return matrix.inv(a) end
    local res, acc = matrix.eye(a.rows), matrix.copy(a)
@@ -574,7 +574,7 @@ matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
 --    @return Determinant.
 matrix.det = function (m)
    if (m.rows ~= m.cols) then error("Square matrix is expected!") end
-   local _, K = matrix._gaussdown(matrix.copy(m))
+   local _, K = matrix._GaussDown(matrix.copy(m))
    return K
 end
 matrix.about[matrix.det] = {"det(m)", "Calculate determinant."}
@@ -594,8 +594,8 @@ matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix."}
 --    @param b Free coefficients (matrix of vector).
 --    @return Solution and determinant.
 matrix.rref = function (A,b)
-   local tr, d = matrix._gaussdown(matrix.concat(A,b,'h'))
-   return matrix._gaussup(tr), d
+   local tr, d = matrix._GaussDown(matrix.concat(A,b,'h'))
+   return matrix._GaussUp(tr), d
 end
 matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant."}
 
@@ -827,7 +827,7 @@ local function qr_sweep(B)
       B = matrix.map(B, threshould)
    end
    -- add diagonal to zero matrix
-   local I = matrix.map_ex(matrix.zeros(m,n),
+   local I = matrix.mapEx(matrix.zeros(m,n),
                             function (r,c,x) return (c == (r+1) and c <= M and r <= M) and 1 or 0 end)
    -- error - norm
    local E = 0
@@ -867,7 +867,7 @@ matrix.about[matrix.svd] = {"svd(M)", "Singular value decomposition of the matri
 --    @return Pseudo inverse matrix.
 matrix.pinv = function (M)
    local u,s,v = matrix.svd(M)
-   s = matrix.map_ex(s, function (r,c,x) return (r == c and math.abs(x) > 1e-8) and (1/x) or 0 end)
+   s = matrix.mapEx(s, function (r,c,x) return (r == c and math.abs(x) > 1e-8) and (1/x) or 0 end)
    return v * s:transpose() * u:transpose()
 end
 matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudo inverse matrix using SVD.", help.OTHER}
@@ -1025,7 +1025,7 @@ end
 -- Prepare LU transformation for other functions.
 --    @param m Initial square matrix.
 --    @return "Compressed" LU, indexes, number of permutations
-matrix._luprepare = function (m)
+matrix._luPrepare = function (m)
    if m.rows ~= m.cols then error("Square matrix is expected!") end
    local a = matrix.copy(m)
    local vv = {}
@@ -1089,14 +1089,14 @@ end
 --    @param m Initial square matrix.
 --    @return L matrix, U matrix, permutations
 matrix.lu = function (m)
-   local a,_,d = matrix._luprepare(m)
+   local a,_,d = matrix._luPrepare(m)
    local p = matrix.eye(m.rows,m.cols)
    while d > 0 do
       local tmp = p[1]; Ver.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
       d = d-1
    end
-   return matrix.map_ex(a, function (r,c,m) return (r==c) and 1.0 or (r>c and m or 0) end),   -- lower
-          matrix.map_ex(a, function (r,c,m) return r <= c and m or 0 end),                    -- upper
+   return matrix.mapEx(a, function (r,c,m) return (r==c) and 1.0 or (r>c and m or 0) end),   -- lower
+          matrix.mapEx(a, function (r,c,m) return r <= c and m or 0 end),                    -- upper
 	  p                                                                                   -- permutations
 end
 matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", help.OTHER}
@@ -1104,7 +1104,7 @@ matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U
 --- Cholesky decomposition.
 --    @param m Positive definite symmetric matrix.
 --    @return Lower part of the decomposition.
-matrix.cholesky = function (m)
+matrix.Cholesky = function (m)
    if m.rows ~= m.cols then error("Square matrix is expected!") end
    local a,p = matrix.copy(m), {}
    -- calculate new values
@@ -1129,7 +1129,7 @@ matrix.cholesky = function (m)
    end
    return a
 end
-matrix.about[matrix.cholesky] = {"cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", help.OTHER}
+matrix.about[matrix.Cholesky] = {"Cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", help.OTHER}
 
 --- Apply function to all elements along given direction.
 --    @param m Initial matrix.
@@ -1173,10 +1173,10 @@ matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given dire
 --    @param n Initial matrix.
 --    @param dir Direction (optional).
 --    @return Norm along rows or columns.
-matrix.sqnorm = function (m,dir)
+matrix.sqNorm = function (m,dir)
    return matrix.reduce(m, function (a,b) return a+b^2 end, dir, 0)
 end
-matrix.about[matrix.sqnorm] = {"sqnorm(m,dir)", "Calculate square norm along given direction."}
+matrix.about[matrix.sqNorm] = {"sqNorm(m,dir)", "Calculate square norm along given direction."}
 
 --- Euclidean norm of the matrix at whole.
 --    @param m Current matrix.

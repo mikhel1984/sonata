@@ -49,7 +49,7 @@ local Ver = require "liblc.versions"
 -- serialization rules
 local val2str = {
    ['string'] =   function (x) return string.format('"%s"', x) end,
-   ['number'] =   function (x) return Ver.mtype(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
+   ['number'] =   function (x) return Ver.mathType(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
    ['function'] = function (x) x = tostring(x); print('Bad value: '..x); return x end,
    ['boolean'] =  function (x) return tostring(x) end,
    ['nil'] =      function (x) return 'nil' end,
@@ -62,7 +62,7 @@ val2str.tbl =  function (t)
    local res = {}
    for _,val in ipairs(t) do res[#res+1] = val2str[type(val)](val) end
    for k,val in pairs(t) do
-      if not Ver.isinteger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
+      if not Ver.isInteger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
    end
    return string.format('{%s}', table.concat(res,','))
 end
@@ -159,7 +159,7 @@ end
 files.tblImport = function (fname)
    local str,f = files.read(fname)
    -- use Lua default import
-   if str then f = Ver.loadstr('return '..str) end
+   if str then f = Ver.loadStr('return '..str) end
    return f and f() or nil
 end
 files.about[files.tblImport] = {"tblImport(fname)", "Import Lua table, written into file."}

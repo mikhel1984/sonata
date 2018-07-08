@@ -70,10 +70,10 @@ print(a)
 
 --	LOCAL
 
-local part = '([^%a]+)(%a+)'     -- highlight value and unit from string
+local PART = '([^%a]+)(%a+)'     -- highlight value and unit from string
 
 -- possible signs
-local c_prod, c_rat, c_pow = string.byte('*'), string.byte('/'), string.byte('^')
+local C_PROD, CRAT, C_POW = string.byte('*'), string.byte('/'), string.byte('^')
 
 --- Check object type.
 local function isunits(t) return type(t) == 'table' and t.isunits end
@@ -90,7 +90,7 @@ end
 --    <i>Private function.</i>
 --    @param t Table of units.
 --    @return Key string.
-local function tokey(t)
+local function toKey(t)
    local s = {}
    for k,v in pairs(t) do s[#s+1] = {v,k} end
    table.sort(s, comp)
@@ -102,9 +102,9 @@ end
 --    <i>Private function.</i>
 --    @param s Key string.
 --    @return Table of units.
-local function fromkey(s)
+local function fromKey(s)
    local t = {}
-   for v,k in string.gmatch(s, part) do t[k] = tonumber(v) end
+   for v,k in string.gmatch(s, PART) do t[k] = tonumber(v) end
    return t
 end
 
@@ -178,7 +178,6 @@ units.prefix = {
 }
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
-
 --- Get common part and units._difference between 2 strings.
 --    <i>Private function.</i>
 --    @param s1 First string.
@@ -244,13 +243,13 @@ end
 --- Get value or evaluate expression in brackets.
 --    @param str Expression.
 --    @return Table of units and string rest.
-units.get_expr = function (str)
+units.getExpr = function (str)
    if #str == 0 then return {}, "" end
    -- check for brackets
    local expr, rest = string.match(str, '^(%b())(.*)')
    if expr then
       -- evaluate
-      local res = units.get_term(string.match(expr,'%((.+)%)'))
+      local res = units.getTerm(string.match(expr,'%((.+)%)'))
       return res, rest
    else
       -- return table with units
@@ -262,9 +261,9 @@ end
 --- Evaluate expression a^b.
 --    @param str Expression.
 --    @return Table of units and string rest.
-units.get_pow = function (str)
-   local res, rest, num = units.get_expr(str)
-   if string.byte(rest) == c_pow then
+units.getPow = function (str)
+   local res, rest, num = units.getExpr(str)
+   if string.byte(rest) == C_POW then
       -- get powert and evaluate
       num, rest = string.match(rest, '%^(-?[%d%.]+)(.*)')
       op['^'](res, tonumber(num))
@@ -275,13 +274,13 @@ end
 --- Evaluate a * b.
 --    @param str Expression.
 --    @return Table of units and string rest.
-units.get_term = function (str)
-   local res, rest = units.get_pow(str)
-   while string.byte(rest) == c_prod or string.byte(rest) == c_rat do
+units.getTerm = function (str)
+   local res, rest = units.getPow(str)
+   while string.byte(rest) == C_PROD or string.byte(rest) == CRAT do
       -- while get * or / get terms and evaluate
       local sign, tmp
       sign, rest = string.match(rest, "([%*/])(.*)")
-      tmp, rest = units.get_pow(rest)
+      tmp, rest = units.getPow(rest)
       op[sign](res, tmp)
    end
    return res, rest
@@ -291,7 +290,7 @@ end
 --    @param str Initial string with units.
 --    @return Reduced list of units.
 units.parse = function (str)
-   local res = units.get_term(str)
+   local res = units.getTerm(str)
    return reduce(res)
 end
 
@@ -306,7 +305,7 @@ units.new = function (self, v,u)
       if type(v) == 'string' then v,u = 1,v else u = "" end
    end
    if not units.mem_keys[u] then
-      units.mem_keys[u] = tokey(units.parse(u))
+      units.mem_keys[u] = toKey(units.parse(u))
    end
    return setmetatable({value=v, key=units.mem_keys[u]}, self)
 end
@@ -328,8 +327,8 @@ units.about[units.copy] = {'copy(u)', 'Create copy of the element.', help.OTHER}
 units._isCompatible = function (k1,k2)
    if k1 == k2 then return true end
    if #k1 == 0 and #k2 ~= 0 then return false end
-   local fk2 = string.gmatch(k2, part)
-   for v1,u1 in string.gmatch(k1, part) do
+   local fk2 = string.gmatch(k2, PART)
+   for v1,u1 in string.gmatch(k1, PART) do
       local v2,u2 = fk2()
       -- compare powers and units
       if v1 ~= v2 then return false end
@@ -347,8 +346,8 @@ end
 --    @param to Final key.
 --    @return Result value of conversation.
 units._valConvert = function (v, from, to)
-   local f,res = string.gmatch(to, part), v
-   for v1,u1 in string.gmatch(from, part) do
+   local f,res = string.gmatch(to, PART), v
+   for v1,u1 in string.gmatch(from, PART) do
       local _,u2 = f()
       local l,r = units._diff(u1,u2)
       res = res*(units.prefix[l]/units.prefix[r])^tonumber(v1)
@@ -359,12 +358,12 @@ end
 --- Simplify units representation.
 --    @param uv Initial units object.
 --    @return Replace all unit to its representation if it is possible.
-units.toatom = function (uv)
-   local t, res = fromkey(uv.key), uv.value
+units.toAtom = function (uv)
+   local t, res = fromKey(uv.key), uv.value
    local kold, knew = "", uv.key
    while kold ~= knew do                            -- while can be expanded
       kold = knew
-      for v1,u1 in string.gmatch(knew, part) do     -- for every unit
+      for v1,u1 in string.gmatch(knew, PART) do     -- for every unit
          local left,right,base,row                  -- get common part and prefixes
          if units.rules[u1] then
 	    row = u1
@@ -378,7 +377,7 @@ units.toatom = function (uv)
 	 if base then                               -- get common part
 	    -- replace
 	    local tmp = units.rules[row]
-	    local add,num = fromkey(tmp.key), tonumber(v1)
+	    local add,num = fromKey(tmp.key), tonumber(v1)
 	    t[u1] = nil
 	    op['^'](add,num)
 	    op['*'](t,add)
@@ -387,23 +386,23 @@ units.toatom = function (uv)
 	    t = reduce(t)
 	 end
       end
-      knew = tokey(t)                              -- back to string
+      knew = toKey(t)                              -- back to string
    end
    return res, knew
 end
 
 --- Convert one unit to another using internal representation.
 --    @param u Initial unit object,
---    @param tokey Expected key.
+--    @param toKey Expected key.
 --    @return Converted object of <code>nil</nil>.
-units._unitConvert = function (u, tokey)
+units._unitConvert = function (u, toKey)
    local res = units:new(1)
-   res.key = tokey
+   res.key = toKey
    if units._isCompatible(u.key, res.key) then
       res.value = units._valConvert(u.value, u.key, res.key)
    else
-      local v1,u1 = units.toatom(u)
-      local v2,u2 = units.toatom(res)
+      local v1,u1 = units.toAtom(u)
+      local v2,u2 = units.toAtom(res)
       if units._isCompatible(u1,u2) then
          res.value = units._valConvert(v1/v2, u1, u2)
       else
@@ -460,12 +459,12 @@ end
 --    @return Product of unit objects.
 units.__mul = function (a,b)
    a,b = units._args(a,b)
-   local ta, tb = fromkey(a.key), fromkey(b.key)
+   local ta, tb = fromKey(a.key), fromKey(b.key)
    op['*'](ta,tb)
    ta = reduce(ta)
    if not next(ta) then return a.value*b.value end
    local res = units:new(a.value*b.value)
-   res.key = tokey(ta)
+   res.key = toKey(ta)
    return res.key == '' and res.value or res
 end
 
@@ -475,12 +474,12 @@ end
 --    @return Ratio of unit objects.
 units.__div = function (a,b)
    a,b = units._args(a,b)
-   local ta, tb = fromkey(a.key), fromkey(b.key)
+   local ta, tb = fromKey(a.key), fromKey(b.key)
    op['/'](ta,tb)
    ta = reduce(ta)
    if not next(ta) then return a.value/b.value end
    local res = units:new(a.value/b.value)
-   res.key = tokey(ta)
+   res.key = toKey(ta)
    return res.key == '' and res.value or res
 end
 
@@ -491,10 +490,10 @@ end
 units.__pow = function (a,b)
    assert(not isunits(b), "Wrong power!")
    local res = isunits(a) and units.copy(a) or units:new(a)
-   local ta = fromkey(res.key)
+   local ta = fromKey(res.key)
    op['^'](ta,b)
    res.value = (res.value)^b
-   res.key = tokey(ta)
+   res.key = toKey(ta)
    return res
 end
 
@@ -538,7 +537,7 @@ end
 --    @return Traditional representation.
 units._collect = function (str)
    local t = {}
-   for v,k in string.gmatch(str, part) do 
+   for v,k in string.gmatch(str, PART) do 
       local w = tonumber(v)
       if w < 0 then w=-w end
       t[w] = t[w] or {}
@@ -590,11 +589,11 @@ end
 --    @param u Unit object.
 --    @return Result of simplification.
 units.simp = function (u)
-   local val, t = units._simplify(u.value, fromkey(u.key))
+   local val, t = units._simplify(u.value, fromKey(u.key))
    t = reduce(t)
    if #t > 0 then
       local res = units:new(val)
-      res.key = tokey(t)
+      res.key = toKey(t)
       return res
    else return val end
 end

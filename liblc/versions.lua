@@ -15,7 +15,7 @@ if _VERSION < 'Lua 5.3'
 then --==================== Previous versions =======================
 
 -- Check if the number is integer.
-versions.isinteger = function (x) 
+versions.isInteger = function (x) 
       if type(x) == 'string' then x = tonumber(x) end
       if not x then return false end
       local v,p = math.modf(x) 
@@ -23,7 +23,7 @@ versions.isinteger = function (x)
    end
    
 -- Return integer number or nil.
-versions.tointeger = function (x) 
+versions.toInteger = function (x) 
       if type(x) == 'string' then x = tonumber(x) end
       local p,q = math.modf(x) 
       return (q == 0.0) and p or nil
@@ -46,9 +46,9 @@ versions.move = function (src,sfrom,sto,dfrom,dest)
       return dest
    end
 -- Execute string code.
-versions.loadstr = loadstring
+versions.loadStr = loadstring
 -- Check type of the number.
-versions.mtype = function (x)
+versions.mathType = function (x)
       local _,p = math.modf(x)
       return (p == 0.0) and 'integer' or 'float'
    end
@@ -58,15 +58,15 @@ versions.unpack = unpack
 else --================ New version ================
 
 -- Check if the number is integer.
-versions.isinteger = math.tointeger
+versions.isInteger = math.tointeger
 -- Return integer number or nil.
-versions.tointeger = math.tointeger
+versions.toInteger = math.tointeger
 -- Move elements to new position (and table).
 versions.move = table.move
 -- Execute string code.
-versions.loadstr = load
+versions.loadStr = load
 -- Check type of the number.
-versions.mtype = math.type
+versions.mathType = math.type
 -- Extract table values.
 versions.unpack = table.unpack
 

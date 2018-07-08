@@ -345,7 +345,7 @@ stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution
 --    @return Density value.
 stat.poisspdf = function (x,lam)
    assert(lam >= 0, 'Wrong argument!')
-   if Ver.tointeger(x) == nil then return 0.0 end
+   if Ver.toInteger(x) == nil then return 0.0 end
    local f = 1
    for i = 1,x do f = f*i end
    return lam^x*math.exp(-lam)/f

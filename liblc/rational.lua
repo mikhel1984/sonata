@@ -68,7 +68,7 @@ local function isrational(v) return type(v) == 'table' and v.isrational end
 -- Number representation.
 --    @param v Variable.
 --    @return String representation.
-local function numstr(v) return type(v) == 'number' and string.format('%d', v) or tostring(v) end
+local function numStr(v) return type(v) == 'number' and string.format('%d', v) or tostring(v) end
 
 --	INFO
 
@@ -158,7 +158,7 @@ rational.__pow = function (a, b)
    if type(a) == "number" then
       return a^b
    else
-      if not (Ver.isinteger(b) and b >= 0) then error("Power must be a non-negative integer") end
+      if not (Ver.isInteger(b) and b >= 0) then error("Power must be a non-negative integer") end
       return rational:new((a.num)^b, (a.denom)^b) 
    end
 end
@@ -189,7 +189,7 @@ rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=
 
 -- String representation.
 rational.__tostring = function (v)
-   return numstr(v.num)..'/'..numstr(v.denom)
+   return numStr(v.num)..'/'..numStr(v.denom)
 end
 
 --- Float point representation.
@@ -214,7 +214,7 @@ rational.about[rational.De] = {"De(v)", "Return the denominator of the rational 
 -- result is not sorted
 --[[ for future
 rational.prime = function (v)
-   if not (v > 0 and Ver.isinteger(v)) then error("Positive integer is expected!") end
+   if not (v > 0 and Ver.isInteger(v)) then error("Positive integer is expected!") end
    -- use "sieve of Eratosthenes"
    local tmp = {}
    for i = 1,v,2 do tmp[i] = true end

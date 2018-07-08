@@ -30,7 +30,7 @@ a:pop()
 ans = a:pop()                   --> 1
 
 -- check capacity
-ans = a:isempty()               --> true
+ans = a:isEmpty()               --> true
 
 -- create queue
 b = DS.Queue()
@@ -41,9 +41,9 @@ b:add(2)
 ans = b:rem()                   --> 1
 
 -- add to the head
-b:addfirst(4)
+b:addFirst(4)
 -- remove from the tale
-ans = b:remlast()               --> 2
+ans = b:remLast()               --> 2
 
 -- check queue size
 ans = #b                        --> 1
@@ -52,7 +52,7 @@ ans = #b                        --> 1
 ans = b:peek()                  --> 4
 
 -- check capacity
-ans = b:isempty()               --> false
+ans = b:isEmpty()               --> false
 
 -- make copy
 bb = b:copy()
@@ -62,10 +62,10 @@ c = DS.Heap()
 c:insert(1)
 c:insert(3)
 c:insert(2)
-ans = c:deltop()                --> 3
+ans = c:top()                --> 3
 
 -- check capacity
-ans = c:isempty()               --> false
+ans = c:isEmpty()               --> false
 
 -- new heap
 -- with user comparison function
@@ -74,7 +74,7 @@ d = DS.Heap(function (a,b) return a > b end)
 d:insert(1)
 d:insert(3)
 d:insert(2)
-ans = d:deltop()                --> 1
+ans = d:top()                --> 1
 
 -- make copy
 dd = d:copy()
@@ -152,7 +152,7 @@ about = help:new("Main data structures.")
 
 -- common methods
 --struct.about['COPY'] = {"copy()", "Return copy of the object."}
---struct.about['ISEMPTY'] = {"isempty()", "Return true if the object is empty."}
+--struct.about['ISEMPTY'] = {"isEmpty()", "Return true if the object is empty."}
 
 --	STACK
 
@@ -212,8 +212,8 @@ struct.about[struct.Stack.size] = {"Stack.size(s)", "Return number of elements i
 --- Check stack size.
 --    @param s Stack object.
 --    @return True if stack is empty.
-struct.Stack.isempty = function (s) return #s == 0 end
-struct.about[struct.Stack.isempty] = {"Stack.isempty(s)", "Return true if the stack is empty.", STACK}
+struct.Stack.isEmpty = function (s) return #s == 0 end
+struct.about[struct.Stack.isEmpty] = {"Stack.isEmpty(s)", "Return true if the stack is empty.", STACK}
 
 --	QUEUE
 struct.Queue = {type='queue'}
@@ -242,12 +242,12 @@ struct.about[struct.Queue.add] = {"add(val)", "Add value to the back of queue.",
 --- Put value to the top of queue (as in stack).
 --    @param self Queue object.
 --    @param val Value to put.
-struct.Queue.addfirst = function (self,val)
+struct.Queue.addFirst = function (self,val)
    local first = self.first-1
    self.first = first
    self[first] = val
 end
-struct.about[struct.Queue.addfirst] = {"addfirst(val)", "Add value to the top of queue.", QUEUE}
+struct.about[struct.Queue.addFirst] = {"addFirst(val)", "Add value to the top of queue.", QUEUE}
 
 --- Get value from the top of queue.
 --    @param self Queue object.
@@ -266,7 +266,7 @@ struct.about[struct.Queue.rem] = {"rem()", "Get value from the top of queue, rem
 --- Get value from the end of queue.
 --    @param self Queue object.
 --    @return Last value of nil.
-struct.Queue.remlast = function (self)
+struct.Queue.remLast = function (self)
    local last, val = self.last
    if self.first <= last then
       val = self[last]
@@ -275,7 +275,7 @@ struct.Queue.remlast = function (self)
    end
    return val
 end
-struct.about[struct.Queue.remlast] = {"remlast()", "Get value from the end of queue, remove it.", QUEUE}
+struct.about[struct.Queue.remLast] = {"remLast()", "Get value from the end of queue, remove it.", QUEUE}
 
 --- Get top value of the queue.
 --    @param q Queue object.
@@ -291,8 +291,8 @@ struct.about[struct.Queue.size] = {"Queue.size(q)", "Return number of elements i
 
 --- Check if the queue is empty.
 --    @return True if there is no elements in the queue.
-struct.Queue.isempty = function (q) return q.first+1 == q.last end
-struct.about[struct.Queue.isempty] = {"Queue.isempty(q)", "Return true if the queue is empty.", QUEUE}
+struct.Queue.isEmpty = function (q) return q.first+1 == q.last end
+struct.about[struct.Queue.isEmpty] = {"Queue.isEmpty(q)", "Return true if the queue is empty.", QUEUE}
 
 --- Queue copy.
 --    @param q Original queue.
@@ -364,7 +364,7 @@ struct.about[struct.Heap.insert] = {"insert(v)", "Add element to the heap.", HEA
 --    If 'less' method is default, top is the maximum element.
 --    @param h Heap object.
 --    @return Top element or nil.
-struct.Heap.deltop = function (h)
+struct.Heap.top = function (h)
    local n = h.N
    if n == 0 then return nil end
    h[1],h[n] = h[n],h[1]
@@ -372,13 +372,13 @@ struct.Heap.deltop = function (h)
    h.N = n-1
    return h[n]
 end
-struct.about[struct.Heap.deltop] = {"deltop()", "Return top element. For the default less() function top is maximum.", HEAP}
+struct.about[struct.Heap.top] = {"top()", "Return top element. For the default less() function top is maximum.", HEAP}
 
 --- Check for elements in the heap.
 --    @param h Heap object.
 --    @return True if heap is empty.
-struct.Heap.isempty = function (h) return h.N == 0 end
-struct.about[struct.Heap.isempty] = {"Heap.isempty(h)", "Return true if the heap is empty.", HEAP}
+struct.Heap.isEmpty = function (h) return h.N == 0 end
+struct.about[struct.Heap.isEmpty] = {"Heap.isEmpty(h)", "Return true if the heap is empty.", HEAP}
 
 -- Number of elements.
 struct.Heap.size = function (h) return h.N end
@@ -527,8 +527,8 @@ end
 struct.Set.size = struct.Set.__len
 struct.about[struct.Set.size] = {"Set.size(s)", "Number of elements in the set.", SET}
 
-struct.Set.isempty = function (s) return next(s) == nil end
-struct.about[struct.Set.isempty] = {"Set.isempty(s)", "Return true if the set is empty.", SET}
+struct.Set.isEmpty = function (s) return next(s) == nil end
+struct.about[struct.Set.isEmpty] = {"Set.isEmpty(s)", "Return true if the set is empty.", SET}
 
 --- String representation.
 struct.Set.__tostring = function (s)

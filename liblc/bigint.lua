@@ -70,7 +70,7 @@ local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
 -- Convert integer into bigint.
 local function fromInt(n) 
-   n = assert(Ver.tointeger(n), 'Integer is expected')
+   n = assert(Ver.toInteger(n), 'Integer is expected')
    -- return value and sign
    if n < 0 then 
       return -n, -1

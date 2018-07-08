@@ -417,7 +417,7 @@ array.about[array.fullString] = {"fullString(arr,r,c)", "Represent array as sequ
 setmetatable(array, {__call = function (self, v) 
    -- check correctness
    assert(type(v) == 'table', "Table is expected!")
-   for i = 1,#v do assert(v[i] > 0 and Ver.isinteger(v[i]), "Positive integer is expected!") end
+   for i = 1,#v do assert(v[i] > 0 and Ver.isInteger(v[i]), "Positive integer is expected!") end
    -- build
    return array:new(v) 
 end})

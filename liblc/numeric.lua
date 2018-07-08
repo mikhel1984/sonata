@@ -17,9 +17,9 @@ Num.TOL = 1e-4
 a = Num.solve(math.sin, math.pi*0.5, math.pi*1.5)
 ans = a                                   --~ math.pi
 
--- newton method
+-- Newton method
 -- only one initial value
-d = Num.newton(math.sin, math.pi*0.7)
+d = Num.Newton(math.sin, math.pi*0.7)
 ans = d                                   --~ math.pi
 
 -- numeric derivative
@@ -109,7 +109,7 @@ numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 
 --    @param fn Function to analyze.
 --    @param x1 Initial value of the root.
 --    @return Function root of <code>nil</code>.
-numeric.newton = function (fn, x1)
+numeric.Newton = function (fn, x1)
    local h, k, x2 = 0.1, 0, x1
    repeat
       x1 = x2
@@ -119,7 +119,7 @@ numeric.newton = function (fn, x1)
    until math.abs(fn(x2)-fn(x1)) < numeric.TOL 
    return x2
 end
-numeric.about[numeric.newton] = {"newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition."}
+numeric.about[numeric.Newton] = {"Newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition."}
 
 --- Simple derivative.
 --    @param fn Function f(x).

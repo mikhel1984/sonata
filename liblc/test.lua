@@ -52,7 +52,7 @@ lc_files = require('liblc.files'),
 --- Extract test code from file.
 --    @param str File text.
 --    @return Unit tests.
-test._getcode = function (str)
+test._getCode = function (str)
    local _,q = string.match(str, CODE_TEMPLATE) 
    return q
 end
@@ -61,7 +61,7 @@ end
 --    @param str Source string.
 --    @param res Boolean result of execution.
 --    @param time Time of execution, ms.
-test._marktest = function (str, res, time)
+test._markTest = function (str, res, time)
    local MIN, FULL = 30, 34
    local s = string.match(str, '%C+')
    s = string.match(s, '^(.-)%s*$')
@@ -86,7 +86,7 @@ test.module = function (fname)
    -- write head
    test.print('\n\tModule: ' .. fname)
    -- get test
-   text = test._getcode(text)
+   text = test._getCode(text)
    if not text or #text == 0 then return end   -- no tests
    local succeed, failed = 0, 0
    local fulltime = 0
@@ -99,10 +99,10 @@ test.module = function (fname)
          local arrow, time
          -- evaluate
          local status, err = pcall(function ()
-            local fq = Ver.loadstr(q)
+            local fq = Ver.loadStr(q)
 	    time = os.clock(); fq(); time = (os.clock() - time)*1000
 	    if #a > 0 then
-	       local fa = Ver.loadstr('return '..a)
+	       local fa = Ver.loadStr('return '..a)
 	       arrow = fa()
 	       return (e == '~') and (math.abs(ans-arrow) <= TOL*math.abs(ans)) or (ans == arrow)
 	    else
@@ -110,7 +110,7 @@ test.module = function (fname)
 	    end
          end)
          local res = status and err
-         test.print(test._marktest(q,res,time)) 
+         test.print(test._markTest(q,res,time)) 
          if not status then
             test.log:write(err,'\n')
          elseif not err then
