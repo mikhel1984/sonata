@@ -62,6 +62,8 @@ print(a)
 
 local Ver = require('liblc.versions')
 
+local NUM, DENOM = 1, 2
+
 -- Check object type.
 local function isrational(v) return type(v) == 'table' and v.isrational end
 
@@ -100,14 +102,14 @@ rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common divis
 rational.new = function (self, n, dn)
    dn = dn or 1
    local g = rational.gcd(n,dn)
-   return setmetatable({num=n/g, denom=dn/g}, self)   
+   return setmetatable({n/g, dn/g}, self)   
 end
 
 --- Create copy of the rational number.
 --    @param v Source value.
 --    @return Rational number.
 rational.copy = function (v)
-   return rational:new(v.num, v.denom)
+   return rational:new(v[NUM], v[DENOM])
 end
 rational.about[rational.copy] = {"copy(v)", "Get copy of the rational number.", help.OTHER}
 
@@ -126,40 +128,40 @@ end
 -- a + b
 rational.__add = function (a, b)   
    a,b = rational._args(a,b)
-   return rational:new(a.num*b.denom+a.denom*b.num, a.denom*b.denom)
+   return rational:new(a[1]*b[2]+a[2]*b[1], a[2]*b[2])
 end
 
 -- a - b
 rational.__sub = function (a, b)   
    a,b = rational._args(a,b)
-   return rational:new(a.num*b.denom-a.denom*b.num, a.denom*b.denom)
+   return rational:new(a[1]*b[2]-a[2]*b[1], a[2]*b[2])
 end
 
 -- a * b
 rational.__mul = function (a, b)
    a,b = rational._args(a,b)
-   return rational:new(a.num*b.num, a.denom*b.denom)
+   return rational:new(a[1]*b[1], a[2]*b[2])
 end
 
 -- a / b
 rational.__div = function (a, b)
    a,b = rational._args(a,b)
-   return rational:new(a.num*b.denom, a.denom*b.num)
+   return rational:new(a[1]*b[2], a[2]*b[1])
 end
 
 -- - v
 rational.__unm = function (v)
-   return rational:new(-a.num, a.denom)
+   return rational:new(-a[1], a[2])
 end
 
 -- a ^ b
 rational.__pow = function (a, b)
-   b = (type(b) == "number") and b or (b.num/b.denom)  -- to float point
+   b = (type(b) == "number") and b or (b[1]/b[2])  -- to float point
    if type(a) == "number" then
       return a^b
    else
       if not (Ver.isInteger(b) and b >= 0) then error("Power must be a non-negative integer") end
-      return rational:new((a.num)^b, (a.denom)^b) 
+      return rational:new((a[1])^b, (a[2])^b) 
    end
 end
 
@@ -169,19 +171,19 @@ rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b,
 -- a == b
 rational.__eq = function (a,b)
    a,b = rational._args(a,b)
-   return a.num == b.num and a.denom == b.denom
+   return a[1] == b[1] and a[2] == b[2]
 end
 
 -- a < b
 rational.__lt = function (a,b)
    a,b = rational._args(a,b)
-   return (a.num*b.denom) < (b.num*a.denom)
+   return (a[1]*b[2]) < (b[1]*a[2])
 end
 
 -- a <= b
 rational.__le = function (a,b)
    a,b = rational._args(a,b)
-   return (a.num*b.denom) <= (b.num*a.denom)
+   return (a[1]*b[2]) <= (b[1]*a[2])
 end
 
 rational.comparison = 'comparison'
@@ -189,25 +191,25 @@ rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=
 
 -- String representation.
 rational.__tostring = function (v)
-   return numStr(v.num)..'/'..numStr(v.denom)
+   return numStr(v[NUM])..'/'..numStr(v[DENOM])
 end
 
 --- Float point representation.
 --    @param v Rational number.
 --    @return Decimal fraction.
-rational.decimal = function (v) return v.num / v.denom end
+rational.decimal = function (v) return v[NUM] / v[DENOM] end
 rational.about[rational.decimal] = {"decimal(v)", "Return rational number as decimal.", help.OTHER}
 
 --- Get numerator.
 --    @param v Rational number.
 --    @return Numerator.
-rational.Nu = function (v) return v.num end
+rational.Nu = function (v) return v[NUM] end
 rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number.", help.OTHER}
 
 --- Get denominator.
 --    @param v Rational number.
 --    @return Denominator.
-rational.De = function (v) return v.denom end
+rational.De = function (v) return v[DENOM] end
 rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", help.OTHER}
 
 -- list of prime numbers
@@ -246,8 +248,8 @@ rational.about[rational.Rat] = {"Rat(m[,n])", "Create rational number using num 
 --    @return String, suitable for exchange.
 rational.serialize = function (obj)
    local s = {}
-   s[#s+1] = string.format("num=%d", obj.num)
-   s[#s+1] = string.format("denom=%d", obj.denom)
+   s[#s+1] = tostring(obj[NUM])
+   s[#s+1] = tostring(obj[DENOM])
    s[#s+1] = "metatablename='Rat'"
    s[#s+1] = "modulename='rational'"
    return string.format("{%s}", table.concat(s, ','))

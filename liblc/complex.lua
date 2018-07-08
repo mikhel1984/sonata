@@ -70,6 +70,8 @@ print(a)
 
 --	LOCAL
 
+local REAL, IMAG = 1, 2
+
 -- check object
 local function iscomplex(c) return type(c) == 'table' and c.iscomplex end
 
@@ -90,8 +92,7 @@ complex.__index = complex
 
 -- Constructor
 complex.new = function (self, re, im)   
-   im = im or 0
-   return setmetatable({real = re, imag = im}, self)
+   return setmetatable({re, im or 0}, self)
 end
 
 --- Create complex number from trigonometric representation.
@@ -107,7 +108,7 @@ complex.about[complex.trig] = {"trig(module,angle)", "Create complex number usin
 --    @param c Source value.
 --    @return Complex number.
 complex.copy = function (c)
-   return complex:new(c.real, c.imag)
+   return complex:new(c[REAL], c[IMAG])
 end
 complex.about[complex.copy] = {"copy(c)", "Create copy of the complex number.", help.OTHER}
 
@@ -123,26 +124,26 @@ end
 -- a + b
 complex.__add = function (a,b)
    a,b = complex._args(a,b)
-   return complex:new(a.real+b.real, a.imag+b.imag)
+   return complex:new(a[1]+b[1], a[2]+b[2])
 end
 
 -- a - b
 complex.__sub = function (a,b)
    a,b = complex._args(a,b)
-   return complex:new(a.real-b.real, a.imag-b.imag)
+   return complex:new(a[1]-b[1], a[2]-b[2])
 end
 
 -- a * b
 complex.__mul = function (a,b)
    a,b = complex._args(a,b)
-   return complex:new(a.real*b.real-a.imag*b.imag, a.real*b.imag+a.imag*b.real)
+   return complex:new(a[1]*b[1]-a[2]*b[2], a[1]*b[2]+a[2]*b[1])
 end
 
 -- a / b
 complex.__div = function (a,b)
    a,b = complex._args(a,b)
-   local denom = b.real*b.real + b.imag*b.imag
-   return complex:new((a.real*b.real+a.imag*b.imag)/denom, (a.imag*b.real-a.real*b.imag)/denom)
+   local denom = b[1]*b[1] + b[2]*b[2]
+   return complex:new((a[1]*b[1]+a[2]*b[2])/denom, (a[2]*b[1]-a[1]*b[2])/denom)
 end
 
 -- a ^ b
@@ -150,14 +151,14 @@ complex.__pow = function (a,b)
    a,b = complex._args(a,b)
    local a0, a1 = complex.abs(a), complex.arg(a)
    local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
-   local abs = a0^(b.real)*math.exp(-a1*b.imag)
-   local arg = k*b.imag+b.real*a1
+   local abs = a0^(b[1])*math.exp(-a1*b[2])
+   local arg = k*b[2]+b[1]*a1
    return complex:new(abs*math.cos(arg), abs*math.sin(arg))
 end
 
 -- -v
 complex.__unm = function (v)
-   return complex:new(-v.real, -v.imag)
+   return complex:new(-v[1], -v[2])
 end
 
 complex.arithmetic = 'arithmetic'
@@ -166,7 +167,7 @@ complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^
 -- a == b
 complex.__eq = function (a, b)
    a,b = complex._args(a,b)
-   return a.real == b.real and a.imag == b.imag
+   return a[1] == b[1] and a[2] == b[2]
 end
 
 complex.comparison = 'comparison'
@@ -175,36 +176,36 @@ complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META
 --- Argument of complex number.
 --    @param v Complex number.
 --    @return Argument of the number.
-complex.arg = function (v) return math.atan(v.imag, v.real) end
+complex.arg = function (v) return math.atan(v[2], v[1]) end
 complex.about[complex.arg] = {"arg(v)", "Return argument of complex number."}
 
 --- Module of complex number.
 --    @param v Complex number.
 --    @return Module of the number.
-complex.abs = function (v) return math.sqrt(v.real*v.real+v.imag*v.imag) end
+complex.abs = function (v) return math.sqrt(v[1]*v[1]+v[2]*v[2]) end
 complex.about[complex.abs] = {"abs(v)", "Return module of complex number."}
 
 --- Conjunction.
 --    @param v Complex number.
 --    @return Conjunction to the given number.
-complex.conj = function (v) return complex:new(v.real, -v.imag) end
+complex.conj = function (v) return complex:new(v[1], -v[2]) end
 complex.about[complex.conj] = {"conj(v)", "Return the complex conjugate.", help.OTHER}
 
 --- Real part of the number.
 --    @param v Complex value.
 --    @return Real part.
-complex.Re  = function (v) return v.real end
+complex.Re  = function (v) return v[REAL] end
 complex.about[complex.Re] = {"Re(v)", "Return the real part.", help.OTHER}
 
 --- Imaginary part of the number.
 --    @param v Complex value.
 --    @return Imaginary part.
-complex.Im  = function (v) return v.imag end
+complex.Im  = function (v) return v[IMAG] end
 complex.about[complex.Im] = {"Im(v)", "Return the imaginary part.", help.OTHER}
 
 -- String representation.
 complex.__tostring = function (v)
-   return string.format("%.3f%+.3fi", v.real, v.imag)
+   return string.format("%.3f%+.3fi", v[REAL], v[IMAG])
 end
 
 --- Square root with possibility of complex result.
@@ -233,8 +234,8 @@ complex.about[complex.Comp] = {"Comp(a[,b])", "Create new complex number.", help
 --    @return String, suitable for exchange.
 complex.serialize = function (obj)
    local s = {}
-   s[#s+1] = string.format("real=%a", obj.real)
-   s[#s+1] = string.format("imag=%a", obj.imag)
+   s[#s+1] = tostring(obj[REAL])
+   s[#s+1] = tostring(obj[IMAG])
    s[#s+1] = "metatablename='Comp'"
    s[#s+1] = "modulename='complex'"
    return string.format("{%s}", table.concat(s, ','))
