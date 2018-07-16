@@ -375,23 +375,34 @@ exit = true},
 -- show help
 main._args['--help'] = {
 description = 'Get this help message.',
-process = function ()
-   print "\n'Sonata LC' is a Lua based program for mathematical calculations.\n"
-   print "USAGE:\n\tlua -i sonata.lua [flag [arg1 arg2 ...]]"
-   print "(option '-i' could be omitted when the program is in non-interractive mode)\n\nFLAGS:"
+process = function () print(main._args.text()) end,
+exit = true}
+-- string representation of the help info
+main._args.text = function ()
+   local txt = {   
+      "\n'Sonata LC' is a Lua based program for mathematical calculations.",
+      "",
+      "USAGE:",
+      "\tlua -i sonata.lua [flag [arg1 arg2 ...]]",
+      "(option '-i' could be omitted when the program is in non-interractive mode)",
+      "",
+      "FLAGS:"
+   }
    for k,v in pairs(main._args) do 
       if type(v) == 'string' then
-         local ref = main._args[v]         
-         print(string.format('\t%s, %s - %s', k, v, ref.description))
+         --local ref = main._args[v]         
+         txt[#txt+1] = string.format('\t%s, %s - %s', k, v, main._args[v].description)
       end
    end
-   print("\nVERSION: "..lc_version)
+   txt[#txt+1] = "\nVERSION: "..lc_version
+   txt[#txt+1] = ""
    local modules = {}
    for k in pairs(import) do modules[#modules+1] = k end
-   print(string.format("Available modules: %s.\n", table.concat(modules,', ')))
-   print "BUGS: mail to 'sonatalc@yandex.ru'\n"
-end,
-exit = true}
+   txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
+   txt[#txt+1] = "BUGS: mail to 'sonatalc@yandex.ru'\n"
+   
+   return table.concat(txt,'\n')   
+end
 
 return main
 
