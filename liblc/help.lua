@@ -122,23 +122,24 @@ local function docLines(module, alias, lng)
       if elt.link then
          description = lng_t[_MAIN_] or elt[MAIN]
       else
-         local title = string.format('<b>%s</b>', elt[TITLE])
-         fn[#fn+1] = {title, lng_t[title] or elt[DESCRIPTION]}
-	 --fn[#fn][2] = string.gsub(fn[#fn][2], '\n','<br>\n')
+         local title = string.format('%s', elt[TITLE])
+	 local desc = lng_t[title] or elt[DESCRIPTION]
+         fn[#fn+1] = {title, string.gsub(desc, '\n', '<br>\n')}
       end
    end
    -- sort
    table.sort(fn, function (a,b) return a[1] < b[1] end)
    -- format
    for i = 1,#fn do
-      fn[i] = string.format("%s - %s", fn[i][1], fn[i][2])
+      fn[i] = string.format("<b>%s</b> - %s<br>", fn[i][1], fn[i][2])
    end
    
    return table.concat(fn, "\n"), description   
 end
 
 local function docExample (str)
-   return str
+   if not str then return nil end
+   return string.format('<pre style="background-color: silver; width: 700px;">%s</pre>', str)
 end
 
 --	MODULE
@@ -426,14 +427,27 @@ help.generateDoc = function (locName, modules)
    local res = {
       "<html><head>",
       '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">',
-      "<title>Sonata LC Documentation</title>",
+      "<title>Sonata LC Help</title>",
       "</head><body>",
-      "<h4>Content</h4>",
+      '<a name="Top"></a>',
+      '<h3 align="center"># Modules #</h3>',
    }
-   -- add content here
+   -- prepare module list
+   local sortedModules = {}
+   for k,v in pairs(modules) do sortedModules[#sortedModules+1] = {k,v} end
+   table.sort(sortedModules, function (a,b) return a[1] < b[1] end)
+   -- add content
+   res[#res+1] = '<ul>'
+   for _,val in ipairs(sortedModules) do
+      res[#res+1] = string.format('<li><a href="#%s">%s</a></li>', val[2], val[1])
+   end
+   res[#res+1] = '</ul>'
+   res[#res+1] = '<h3 align="center"># About #</h3>'
    -- program description
    local base = string.gsub(lc._args.text(), '\n', '<br>\n')
-   res[#res+1] = base
+   base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
+   res[#res+1] = string.format('<p>%s</p>', base)
+   res[#res+1] = '<p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p>'
 
    local fname = string.format('%s%s%s', LOCALE, help.SEP, locName)
    -- call method of the 'files' module
@@ -443,23 +457,29 @@ help.generateDoc = function (locName, modules)
    local lng = help.lc_files.tblImport(fname)
 
    eng2about()
-
-   res[#res+1] = "<h3>Main</h3>"
+   
+   res[#res+1] = '<a name="Main"></a>'
+   res[#res+1] = '<h3 align="center"># Main (main) #</h3>'
    local functions, description = docLines('main','Main',lng)
-   res[#res+1] = description
-   res[#res+1] = functions
+   res[#res+1] = string.format('<p align="center">%s</p>', description)
+   res[#res+1] = string.format('<p>%s</p>', functions)
    local fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, 'main'))
    res[#res+1] = docExample(help.lc_test._getCode(fstr))
+   res[#res+1] = '<a href="#Top">Top</a>'
    -- other modules
-   for k,v in pairs(modules) do
-      res[#res+1] = string.format("<h3>%s (%s)</h3>", v, k)
+   for _, val in ipairs(sortedModules) do
+      local k,v = val[1], val[2]
+      res[#res+1] = string.format('<a name="%s"></a>', v)
+      res[#res+1] = string.format('<h3 align="center"># %s (%s) #</h3>', v, k)
       functions, description = docLines(k, v, lng)
-      res[#res+1] = description
-      res[#res+1] = functions
+      res[#res+1] = string.format('<p align="center">%s</p>', description)
+      res[#res+1] = string.format('<p>%s</p>', functions)
       fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, k))
       res[#res+1] = docExample(help.lc_test._getCode(fstr))
+      res[#res+1] = '<a href="#Top">Top</a>'
    end
 
+   res[#res+1] = '<p align="center"><i>2017-2018, Stanislav Mikhel</i></p>'
    res[#res+1] = '</body></html>'
 
    -- save
