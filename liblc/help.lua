@@ -113,6 +113,34 @@ local function helpLines(module, alias, lng)
    return table.concat(res, '\n')
 end
 
+local function docLines(module, alias, lng)
+   local m = require('liblc.'..module)
+   local lng_t = lng and lng[alias] or {}
+   -- collect
+   local fn, description = {}
+   for _, elt in pairs(m.about) do
+      if elt.link then
+         description = lng_t[_MAIN_] or elt[MAIN]
+      else
+         local title = string.format('<b>%s</b>', elt[TITLE])
+         fn[#fn+1] = {title, lng_t[title] or elt[DESCRIPTION]}
+	 --fn[#fn][2] = string.gsub(fn[#fn][2], '\n','<br>\n')
+      end
+   end
+   -- sort
+   table.sort(fn, function (a,b) return a[1] < b[1] end)
+   -- format
+   for i = 1,#fn do
+      fn[i] = string.format("%s - %s", fn[i][1], fn[i][2])
+   end
+   
+   return table.concat(fn, "\n"), description   
+end
+
+local function docExample (str)
+   return str
+end
+
 --	MODULE
 
 local help = {
@@ -391,6 +419,55 @@ return WORD2
    f:close()
 
    print('File '..fname..' is written.')
+end
+
+help.generateDoc = function (locName, modules)
+   -- prepare text
+   local res = {
+      "<html><head>",
+      '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">',
+      "<title>Sonata LC Documentation</title>",
+      "</head><body>",
+      "<h4>Content</h4>",
+   }
+   -- add content here
+   -- program description
+   local base = string.gsub(lc._args.text(), '\n', '<br>\n')
+   res[#res+1] = base
+
+   local fname = string.format('%s%s%s', LOCALE, help.SEP, locName)
+   -- call method of the 'files' module
+   help.lc_files = help.lc_files or require('liblc.files')
+   help.lc_test = help.lc_test or require('liblc.test')
+   -- prepare new file
+   local lng = help.lc_files.tblImport(fname)
+
+   eng2about()
+
+   res[#res+1] = "<h3>Main</h3>"
+   local functions, description = docLines('main','Main',lng)
+   res[#res+1] = description
+   res[#res+1] = functions
+   local fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, 'main'))
+   res[#res+1] = docExample(help.lc_test._getCode(fstr))
+   -- other modules
+   for k,v in pairs(modules) do
+      res[#res+1] = string.format("<h3>%s (%s)</h3>", v, k)
+      functions, description = docLines(k, v, lng)
+      res[#res+1] = description
+      res[#res+1] = functions
+      fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, k))
+      res[#res+1] = docExample(help.lc_test._getCode(fstr))
+   end
+
+   res[#res+1] = '</body></html>'
+
+   -- save
+   local f = io.open('help.html','w')
+   f:write(table.concat(res,'\n'))
+   f:close()
+
+   print("File 'help.html' is written.")
 end
 
 return help

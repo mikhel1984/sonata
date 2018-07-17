@@ -349,8 +349,14 @@ process = function (args)
    end
 end,
 exit = true},
+-- generate 'help.html'
+['-d'] = '--doc',
+['--doc'] = {
+description = 'Create/update documentation file.',
+process = function () lc_help.generateDoc(LC_LOCALIZATION, import) end,
+exit = true},
 -- new module
---['-n'] = '--new',
+['-n'] = '--new',
 ['--new'] = {
 description = 'Generate template for a new module.',
 process = function (args)
