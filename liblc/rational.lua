@@ -9,6 +9,7 @@
 
 -------------------- Tests -------------------
 --[[!!
+-- import 'rational'
 Rat = require 'liblc.rational'
 
 -- numerator, denominator

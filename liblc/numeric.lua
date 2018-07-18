@@ -9,6 +9,7 @@
 
 -------------------- Tests -------------------
 --[[!!
+-- import 'numeric'
 Num = require 'liblc.numeric'
 
 -- define tolerance

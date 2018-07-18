@@ -10,6 +10,7 @@
 
 ------------------- Tests -------------------
 --[[!!
+-- import 'array'
 Arr = require 'liblc.array'
 
 -- empty array

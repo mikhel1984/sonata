@@ -147,25 +147,6 @@ fact = function (n)
 end
 about[fact] = {'fact(n)', 'Evaluate factorial.'}
 
--- Print examples from test part of module
-main.example = function (nm)
-   assert(type(nm) == 'string', 'Module name is expected!')
-   local fname = 'liblc'..lc_help.SEP..nm..'.lua'
-   local f = io.open(fname, 'r')
-   if not f then print("Can't open file '"..fname.."'"); return end
-   local test = require('liblc.test')
-   local txt = f:read('*a')
-   f:close()   
-   txt = test.getcode(txt)
-   if txt then
-      print(txt)
-   else
-      print("No examples found in '"..fname.."'")
-   end
-end
-about[main.example] = {"example(name)", "Show examples for given module, which used to test.", lc_help.OTHER}
-
-
 -- read object from its serialization
 main.deserialize = function (obj_str)
    local f = assert(load("return " .. obj_str)) 
@@ -330,12 +311,6 @@ process = function (args)
    end
    Test.summary()
 end,
-exit = true},
--- evaluate expressions
-['-e'] = '--eval',
-['--eval'] = {
-description = 'Evaluate command line expression(s).',
-process = function (args) main.evalStr(args[2]) end,
 exit = true},
 -- localisation file
 ['-l'] = '--lng',

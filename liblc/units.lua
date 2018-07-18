@@ -9,6 +9,7 @@
 
 -------------------- Tests -------------------
 --[[!!
+-- import 'units'
 Unit = require 'liblc.units'
 
 -- add some rules

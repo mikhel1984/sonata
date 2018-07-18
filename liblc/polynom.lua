@@ -9,6 +9,7 @@
 
 -------------------- Tests -------------------
 --[[!!
+-- import 'polynom'
 Poly = require 'liblc.polynom'
 
 -- coefficients in ascendant order

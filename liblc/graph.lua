@@ -9,6 +9,7 @@
 --------------- Tests ------------
 -- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
 --[[!!
+-- import 'graph'
 Graph = require 'liblc.graph'
 
 -- build graph

@@ -9,6 +9,7 @@
 
 ---------------- Tests --------------
 --[[!!
+-- import 'complex'
 Comp = require 'liblc.complex'
 
 -- real and imag pars

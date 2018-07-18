@@ -9,7 +9,9 @@
 
 --------------- Tests ------------
 --[[!!
+-- import 'files'
 File = require 'liblc.files'
+-- prepare file name
 nm = os.tmpname()
 
 -- save table 

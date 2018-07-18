@@ -8,6 +8,7 @@
 --]]
 
 --[[!!
+-- import 'const'
 _C = require 'liblc.const'
 
 -- charge of electron

@@ -9,6 +9,7 @@
 
 --------------- Tests ------------
 --[[!!
+-- import 'struct'
 DS = require 'liblc.struct'
 
 -- create stack
@@ -176,7 +177,7 @@ struct.Stack.push = function (self, val)
    assert(val ~= nil)
    self[#self+1] = val
 end
-struct.about[struct.Stack.push] = {"push(val)", "Push value to the stack, except nil.", STACK}
+struct.about[struct.Stack.push] = {"Stack.push(val)", "Push value to the stack, except nil.", STACK}
 
 --- Get value from the top of stack.
 --    @param self Stack object.
@@ -186,13 +187,13 @@ struct.Stack.pop = function (self)
    if res then self[#self] = nil end
    return res
 end
-struct.about[struct.Stack.pop] = {"pop()", "Pop value from the stack, return element or nil.", STACK}
+struct.about[struct.Stack.pop] = {"Stack.pop()", "Pop value from the stack, return element or nil.", STACK}
 
 --- Top value of the stack.
 --    @param s Stack object.
 --    @return Top value without removing it.
 struct.Stack.peek = function (s) return s[#s] end
-struct.about[struct.Stack.peek] = {"peek()", "Return top value without removing it.", STACK}
+struct.about[struct.Stack.peek] = {"Stack.peek()", "Return top value without removing it.", STACK}
 
 --- Copy stack.
 --    @param s Stack object.
@@ -237,7 +238,7 @@ struct.Queue.add = function (self,val)
    self.last = last
    self[last] = val
 end
-struct.about[struct.Queue.add] = {"add(val)", "Add value to the back of queue.", QUEUE}
+struct.about[struct.Queue.add] = {"Queue.add(val)", "Add value to the back of queue.", QUEUE}
 
 --- Put value to the top of queue (as in stack).
 --    @param self Queue object.
@@ -247,7 +248,7 @@ struct.Queue.addFirst = function (self,val)
    self.first = first
    self[first] = val
 end
-struct.about[struct.Queue.addFirst] = {"addFirst(val)", "Add value to the top of queue.", QUEUE}
+struct.about[struct.Queue.addFirst] = {"Queue.addFirst(val)", "Add value to the top of queue.", QUEUE}
 
 --- Get value from the top of queue.
 --    @param self Queue object.
@@ -261,7 +262,7 @@ struct.Queue.rem = function (self)
    end
    return val
 end
-struct.about[struct.Queue.rem] = {"rem()", "Get value from the top of queue, remove it.", QUEUE}
+struct.about[struct.Queue.rem] = {"Queue.rem()", "Get value from the top of queue, remove it.", QUEUE}
 
 --- Get value from the end of queue.
 --    @param self Queue object.
@@ -275,7 +276,7 @@ struct.Queue.remLast = function (self)
    end
    return val
 end
-struct.about[struct.Queue.remLast] = {"remLast()", "Get value from the end of queue, remove it.", QUEUE}
+struct.about[struct.Queue.remLast] = {"Queue.remLast()", "Get value from the end of queue, remove it.", QUEUE}
 
 --- Get top value of the queue.
 --    @param q Queue object.
@@ -358,7 +359,7 @@ struct.Heap.insert = function (h, v)
    h[n] = v
    struct.Heap._fixUp(h, n)
 end
-struct.about[struct.Heap.insert] = {"insert(v)", "Add element to the heap.", HEAP}
+struct.about[struct.Heap.insert] = {"Heap.insert(v)", "Add element to the heap.", HEAP}
 
 --- Get top element from the heap.
 --    If 'less' method is default, top is the maximum element.
@@ -372,7 +373,7 @@ struct.Heap.top = function (h)
    h.N = n-1
    return h[n]
 end
-struct.about[struct.Heap.top] = {"top()", "Return top element. For the default less() function top is maximum.", HEAP}
+struct.about[struct.Heap.top] = {"Heap.top()", "Return top element. For the default less() function top is maximum.", HEAP}
 
 --- Check for elements in the heap.
 --    @param h Heap object.
@@ -417,7 +418,7 @@ end
 struct.Set.insert = function (s, v)
    s[v] = true
 end
-struct.about[struct.Set.insert] = {"insert(set,val)", "Insert element into set.", SET}
+struct.about[struct.Set.insert] = {"Set.insert(S,val)", "Insert element into set.", SET}
 
 --- Delete element.
 --    @param s Set object.
@@ -425,7 +426,7 @@ struct.about[struct.Set.insert] = {"insert(set,val)", "Insert element into set."
 struct.Set.remove = function (s,v)
    s[v] = nil
 end
-struct.about[struct.Set.remove] = {"remove(set,val)", "Remove element from set.", SET}
+struct.about[struct.Set.remove] = {"Set.remove(S,val)", "Remove element from set.", SET}
 
 --- Convert into Lua table.
 --    @param s Set object.
@@ -435,7 +436,7 @@ struct.Set.table = function (s)
    for k in pairs(s) do table.insert(res, k) end
    return res
 end
-struct.about[struct.Set.table] = {"table(set)", "Represent set as a table.", SET}
+struct.about[struct.Set.table] = {"Set.table(S)", "Represent set as a table.", SET}
 
 --- Copy of the set.
 --    @param s Initial set.
@@ -445,7 +446,7 @@ struct.Set.copy = function (s)
    for k in pairs(s) do res[k] = true end
    return res
 end
-struct.about[struct.Set.copy] = {"Set.copy(s)", "Get copy of the set.", SET}
+struct.about[struct.Set.copy] = {"Set.copy(S)", "Get copy of the set.", SET}
 
 --- Apply function to the elements of set.
 --    @param s Initial set.
@@ -456,7 +457,7 @@ struct.Set.map = function (s,fn)
    for k in pairs(s) do res[fn(k)] = true end
    return res
 end
-struct.about[struct.Set.map] = {"map(s,fn)", "Apply function fn() to obtain new set.", SET}
+struct.about[struct.Set.map] = {"Set.map(s,fn)", "Apply function fn() to obtain new set.", SET}
 
 
 --- a + b
@@ -490,7 +491,7 @@ struct.Set.__div = function (a,b)
 end
 
 struct.Set.arithmetic = 'arithmetic'
-struct.about[struct.Set.arithmetic] = {"union, intersection, difference", "a+b, a*b, a/b", SET}
+struct.about[struct.Set.arithmetic] = {"Set: union, intersection, difference", "a+b, a*b, a/b", SET}
 
 --- a <= b
 --    @return <code>true</code> if <code>a</code> is a subset of <code>b</code>.
@@ -514,7 +515,7 @@ struct.Set.__eq = function (a,b)
    return a <= b and b <= a
 end
 
-struct.Set.comparison = 'comparison'
+struct.Set.comparison = 'Set: comparison'
 struct.about[struct.Set.comparison] = {struct.Set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", SET}
 
 -- #a 

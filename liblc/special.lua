@@ -10,6 +10,7 @@
 
 --------------- Tests --------------
 --[[!!
+-- import 'special'
 Spec = require 'liblc.special'
 
 -- beta functions

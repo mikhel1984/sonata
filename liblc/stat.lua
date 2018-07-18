@@ -9,6 +9,7 @@
 
 -------------------- Tests -------------------
 --[[!!
+-- import 'stat'
 Stat = require 'liblc.stat'
 
 -- initial data (tables)

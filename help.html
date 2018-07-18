@@ -30,16 +30,15 @@
 (option '-i' could be omitted when the program is in non-interractive mode)<br>
 <br>
 <b>FLAGS</b>:<br>
-	-h, --help - Get this help message.<br>
+	-l, --lng - Create/update file for localisation.<br>
 	-n, --new - Generate template for a new module.<br>
 	-d, --doc - Create/update documentation file.<br>
 	-t, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
-	-e, --eval - Evaluate command line expression(s).<br>
-	-l, --lng - Create/update file for localisation.<br>
+	-h, --help - Get this help message.<br>
 <br>
 <b>VERSION</b>: 0.9.3<br>
 <br>
-<b>MODULES</b>: stat, matrix, numeric, complex, units, struct, const, array, rational, special, gnuplot, bigint, files, polynom, graph.<br>
+<b>MODULES</b>: rational, stat, complex, const, units, struct, special, files, bigint, graph, array, polynom, numeric, matrix, gnuplot.<br>
 <br>
 <b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
 </p>
@@ -61,7 +60,6 @@
 <b>cos(x)</b> - Косинус числа x.<br>
 <b>deg(x)</b> - Преобразование радиан в градусы.<br>
 <b>deserialize(obj_str)</b> - Преобразует строку сериализации в объект Sonata LC.<br>
-<b>example(name)</b> - Печатает примеры для данного модуля. В качестве примеров используются тестовые выражения.<br>
 <b>exp(x)</b> - Экспоненциальная зависимость.<br>
 <b>fact(n)</b> - Evaluate factorial.<br>
 <b>flip(t[,N])</b> - Отображает содержимое таблицы Lua в удобном для пользователя виде. Спрашивает о продолжении после каждых N элементов (по умолчанию 10).<br>
@@ -143,6 +141,7 @@ ans = b.b                       --> 2
 <b>set(arr,ind,val)</b> - Установить значение элемента. Индекс в виде таблицы.<br>
 <b>sub(arr,ind1,ind2)</b> - Выделение части массива, ограниченной двумя индексами.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'array'
 Arr = require 'liblc.array'
 
 -- empty array
@@ -208,6 +207,7 @@ print(d:fullString(2,3))
 <b>str(v)</b> - Более удобное отображение длинного числа.<br>
 <b>tonumber(v)</b> - Преобразует число к целому либо с плавающей точкой.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'bigint'
 Big = require 'liblc.bigint'
 
 -- from integer
@@ -277,6 +277,7 @@ print(c:str())
 <b>sqrt(v)</b> - Квадратный корень положительного или отрицательного числа.<br>
 <b>trig(module,angle)</b> - Создаёт комплексное число на основе тригонометрического представления.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'complex'
 Comp = require 'liblc.complex'
 
 -- real and imag pars
@@ -357,6 +358,7 @@ print(a)
 <b>phi</b> - Золотое сечение.<br>
 <b>sigma</b> - Stefan-Boltzmann constant.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'const'
 _C = require 'liblc.const'
 
 -- charge of electron
@@ -375,7 +377,9 @@ ans = _C.e_u                --> 'C'
 <b>tblExport(fname,tbl)</b> - Save Lua table into file.<br>
 <b>tblImport(fname)</b> - Import Lua table, written into file.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'files'
 File = require 'liblc.files'
+-- prepare file name
 nm = os.tmpname()
 
 -- save table 
@@ -455,6 +459,7 @@ raw='set pm3d'                               -- позволяет написа�
 <b>remove(e)</b> - Remove node or edge. Node is a single name, edge - talbe of names.<br>
 <b>spath(start[,goal])</b> - Find shortest path using algorithm of Dijkstra of Bellman-Ford.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'graph'
 Graph = require 'liblc.graph'
 
 -- build graph
@@ -533,6 +538,7 @@ print(b)
 <b>triang(m)</b> - Приведение к треугольному виду методом Гаусса.<br>
 <b>zeros(rows[,cols])</b> - Матрица нулей с заданными размерами.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'matrix'
 Mat = require 'liblc.matrix'
 
 -- define matrix objects
@@ -701,6 +707,7 @@ Return table of intermediate points and result yn.<br>
 <b>solve(fn,a,b)</b> - Поиск решения уравнения на заданном интервале.<br>
 <b>trapez(fn,a,b)</b> - Численное интегрирование на указанном интервале.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'numeric'
 Num = require 'liblc.numeric'
 
 -- define tolerance
@@ -761,6 +768,7 @@ ans = yn                                  --~ 0.0856
 <b>serialize(obj)</b> - Строковое представление полинома с учётом внутренней структуры.<br>
 <b>val(p,x)</b> - Вычисляет значение полинома в заданной точке.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'polynom'
 Poly = require 'liblc.polynom'
 
 -- coefficients in ascendant order
@@ -835,6 +843,7 @@ ans = d:str('s')              --> '2*s^2-2*s+1'
 <b>gcd(a,b)</b> - Наименьшее общее кратное двух чисел.<br>
 <b>serialize(obj)</b> - Строковое представление рационального числа с учётом внутренней структуры.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'rational'
 Rat = require 'liblc.rational'
 
 -- numerator, denominator
@@ -905,6 +914,7 @@ print(a)
 <b>gammp(a,x)</b> - Неполная гамма-функция P(a,x).<br>
 <b>gammq(a,x)</b> - Неполная гамма-функция Q(a,x) = 1-P(a,x).<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'special'
 Spec = require 'liblc.special'
 
 -- beta functions
@@ -981,6 +991,7 @@ ans = Spec.Dawson(3.3)             --~ 0.1598
 <b>tcdf(x,nu)</b> - Распределение Стьюдента.<br>
 <b>tpdf(x,nu)</b> - Плотность распределения Стьюдента.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'stat'
 Stat = require 'liblc.stat'
 
 -- initial data (tables)
@@ -1061,37 +1072,38 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 <p align="center">Базовые структуры данных.</p>
 <p><b>Heap([less])</b> - Создаёт новую кучу. Для сравнения элементов может быть переопределён метод 'less'.<br>
 <b>Heap.copy(h)</b> - Make copy of the heap.<br>
+<b>Heap.insert(v)</b> - Add element to the heap.<br>
 <b>Heap.isEmpty(h)</b> - Return true if the heap is empty.<br>
 <b>Heap.size(h)</b> - Get number of elements in the heap.<br>
+<b>Heap.top()</b> - Return top element. For the default less() function top is maximum.<br>
 <b>Queue()</b> - Создаёт новую очередь.<br>
+<b>Queue.add(val)</b> - Add value to the back of queue.<br>
+<b>Queue.addFirst(val)</b> - Add value to the top of queue.<br>
 <b>Queue.copy(q)</b> - Make copy of the queue.<br>
 <b>Queue.isEmpty(q)</b> - Return true if the queue is empty.<br>
 <b>Queue.peek(q)</b> - Get next element, don't remove it.<br>
+<b>Queue.rem()</b> - Get value from the top of queue, remove it.<br>
+<b>Queue.remLast()</b> - Get value from the end of queue, remove it.<br>
 <b>Queue.size(q)</b> - Return number of elements in queue.<br>
 <b>Set(t)</b> - Create new set from table of elements.<br>
 <b>Set.copy(s)</b> - Get copy of the set.<br>
+<b>Set.insert(set,val)</b> - Insert element into set.<br>
 <b>Set.isEmpty(s)</b> - Return true if the set is empty.<br>
+<b>Set.map(s,fn)</b> - Apply function fn() to obtain new set.<br>
+<b>Set.remove(set,val)</b> - Remove element from set.<br>
 <b>Set.size(s)</b> - Number of elements in the set.<br>
+<b>Set: comparison</b> - a==b, a~=b, a<b, a<=b, a>b, a>=b<br>
+<b>Set: union, intersection, difference</b> - a+b, a*b, a/b<br>
 <b>Stack()</b> - Создаёт новый стек.<br>
 <b>Stack.copy(s)</b> - Create copy of the stack.<br>
 <b>Stack.isEmpty(s)</b> - Return true if the stack is empty.<br>
+<b>Stack.peek()</b> - Return top value without removing it.<br>
+<b>Stack.pop()</b> - Pop value from the stack, return element or nil.<br>
+<b>Stack.push(val)</b> - Push value to the stack, except nil.<br>
 <b>Stack.size(s)</b> - Return number of elements in stack.<br>
-<b>add(val)</b> - Помещает элемент в очередь.<br>
-<b>addFirst(val)</b> - Add value to the top of queue.<br>
-<b>comparison</b> - a==b, a~=b, a<b, a<=b, a>b, a>=b<br>
-<b>insert(set,val)</b> - Insert element into set.<br>
-<b>insert(v)</b> - Добавляет элемент в кучу.<br>
-<b>map(s,fn)</b> - Apply function fn() to obtain new set.<br>
-<b>peek()</b> - Возвращает значение следующего элемента не удаляя его.<br>
-<b>pop()</b> - Извлекает значение из стека, либо возвращает nil.<br>
-<b>push(val)</b> - Помещает в стек новое значение (кроме nil).<br>
-<b>rem()</b> - Извлекает из очереди следующий элемент.<br>
-<b>remLast()</b> - Get value from the end of queue, remove it.<br>
-<b>remove(set,val)</b> - Remove element from set.<br>
-<b>table(set)</b> - Represent set as a table.<br>
-<b>top()</b> - Return top element. For the default less() function top is maximum.<br>
-<b>union, intersection, difference</b> - a+b, a*b, a/b<br></p>
+<b>table(set)</b> - Represent set as a table.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'struct'
 DS = require 'liblc.struct'
 
 -- create stack
@@ -1223,6 +1235,7 @@ print(a)
 <b>prefix</b> - Таблица возможных префиксов для единиц измерений.<br>
 <b>serialize(obj)</b> - Строковое представление объекта с единицами измерения.<br></p>
 <pre style="background-color: silver; width: 700px;">
+-- import 'units'
 Unit = require 'liblc.units'
 
 -- add some rules

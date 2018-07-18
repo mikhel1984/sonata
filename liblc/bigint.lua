@@ -9,6 +9,7 @@
 
 ---------------- Tests -----------------
 --[[!!
+-- import 'bigint'
 Big = require 'liblc.bigint'
 
 -- from integer

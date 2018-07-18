@@ -9,6 +9,7 @@
 
 -------------------- Tests -------------------
 --[[!!
+-- import 'matrix'
 Mat = require 'liblc.matrix'
 
 -- define matrix objects
