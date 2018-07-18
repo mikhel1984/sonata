@@ -49,7 +49,7 @@ ans = xn(1)                               --~  -10.54
 
 -- define exit condition
 -- from time, current and previous results
-exit = function (t,c,p) return c < 0.1 end
+exit = function (time,current,previous) return current < 0.1 end
 myfun = function (t,x) return -x end
 _, yn = Num.ode(myfun, {0,1}, exit)
 ans = yn                                  --~ 0.0856
@@ -171,7 +171,7 @@ numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoid
 --- Differential equation solution (Runge-Kutta method).
 --    @param fn function f(t,y).
 --    @param init Initial time and vlue {t0,x0}
---    @param exit Stop condition, number of function
+--    @param exit Stop condition, number or function
 --    @param dx Step. If it is omitted then step is calculated automatically.
 --    @return Table of intermediate results and value in final point.
 numeric.ode = function (fn, init,exit,dx)

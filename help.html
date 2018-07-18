@@ -30,15 +30,15 @@
 (option '-i' could be omitted when the program is in non-interractive mode)<br>
 <br>
 <b>FLAGS</b>:<br>
-	-l, --lng - Create/update file for localisation.<br>
-	-n, --new - Generate template for a new module.<br>
 	-d, --doc - Create/update documentation file.<br>
-	-t, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
 	-h, --help - Get this help message.<br>
+	-t, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
+	-n, --new - Generate template for a new module.<br>
+	-l, --lng - Create/update file for localisation.<br>
 <br>
 <b>VERSION</b>: 0.9.3<br>
 <br>
-<b>MODULES</b>: rational, stat, complex, const, units, struct, special, files, bigint, graph, array, polynom, numeric, matrix, gnuplot.<br>
+<b>MODULES</b>: units, complex, gnuplot, polynom, struct, stat, special, numeric, bigint, rational, array, const, matrix, files, graph.<br>
 <br>
 <b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
 </p>
@@ -747,7 +747,7 @@ ans = xn(1)                               --~  -10.54
 
 -- define exit condition
 -- from time, current and previous results
-exit = function (t,c,p) return c < 0.1 end
+exit = function (time,current,previous) return current < 0.1 end
 myfun = function (t,x) return -x end
 _, yn = Num.ode(myfun, {0,1}, exit)
 ans = yn                                  --~ 0.0856
@@ -1086,12 +1086,13 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 <b>Queue.remLast()</b> - Get value from the end of queue, remove it.<br>
 <b>Queue.size(q)</b> - Return number of elements in queue.<br>
 <b>Set(t)</b> - Create new set from table of elements.<br>
-<b>Set.copy(s)</b> - Get copy of the set.<br>
-<b>Set.insert(set,val)</b> - Insert element into set.<br>
+<b>Set.copy(S)</b> - Get copy of the set.<br>
+<b>Set.insert(S,val)</b> - Insert element into set.<br>
 <b>Set.isEmpty(s)</b> - Return true if the set is empty.<br>
 <b>Set.map(s,fn)</b> - Apply function fn() to obtain new set.<br>
-<b>Set.remove(set,val)</b> - Remove element from set.<br>
+<b>Set.remove(S,val)</b> - Remove element from set.<br>
 <b>Set.size(s)</b> - Number of elements in the set.<br>
+<b>Set.table(S)</b> - Represent set as a table.<br>
 <b>Set: comparison</b> - a==b, a~=b, a<b, a<=b, a>b, a>=b<br>
 <b>Set: union, intersection, difference</b> - a+b, a*b, a/b<br>
 <b>Stack()</b> - Создаёт новый стек.<br>
@@ -1100,8 +1101,7 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 <b>Stack.peek()</b> - Return top value without removing it.<br>
 <b>Stack.pop()</b> - Pop value from the stack, return element or nil.<br>
 <b>Stack.push(val)</b> - Push value to the stack, except nil.<br>
-<b>Stack.size(s)</b> - Return number of elements in stack.<br>
-<b>table(set)</b> - Represent set as a table.<br></p>
+<b>Stack.size(s)</b> - Return number of elements in stack.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'struct'
 DS = require 'liblc.struct'

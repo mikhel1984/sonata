@@ -293,6 +293,31 @@ main.evalStr = function (s)
    end
 end
 
+main.evalText = function (src,dst)
+   local F = require('liblc.files')
+   local txt = assert(F.read(src), 'No such file: '..tostring(src))
+   local res = string.gsub(txt, '##(.-)##', function (s)
+                  for expr in F.split(s,';') do
+                     if string.find(expr, '=') or string.find(expr,'import') then
+                        local fn = load(expr)
+                        if fn then fn() end
+                     else
+                        local fn = load('return '..expr)
+                        if fn then return tostring(fn()) end
+                     end
+                  end
+                  return ''
+               end)
+   if dst then
+      out = assert(io.open(dst, 'w'), 'Cannot create file: '..tostring(dst))
+      out:write(res)
+      out:close()
+      print('Done')
+   else
+      print(res)
+   end   
+end
+
 main.about = about
 
 main._args = {
@@ -336,6 +361,14 @@ exit = true},
 description = 'Generate template for a new module.',
 process = function (args)
    lc_help.newModule(args[2],args[3],args[4])
+end,
+exit = true},
+-- evaluate code in text file
+['-e'] = '--eval',
+['--eval'] = {
+description = 'Read text file and evaluate expressions in ##..##.',
+process = function (args)
+   main.evalText(args[2],args[3])
 end,
 exit = true},
 -- run code for debugging 
@@ -389,7 +422,5 @@ return main
 
 --===============================
 -- TODO: add step-by-step execution
--- TODO: optimize for LuaJIT or write C objects
--- TODO: add 'evaluatable' expressions in text files
 -- TODO: define API for each module
 -- TODO: add constant parameters
