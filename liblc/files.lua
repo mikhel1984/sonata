@@ -48,6 +48,8 @@ for s in File.split(str, '//') do ans = ans+1 end  --> 4
 -- compatibility
 local Ver = require "liblc.versions"
 
+local READ, WRITE = 'read', 'write'
+
 -- serialization rules
 local val2str = {
    ['string'] =   function (x) return string.format('"%s"', x) end,
@@ -116,7 +118,7 @@ files.dsvWrite = function (fname, t, delim)
    f:close()
    print('Done')
 end
-files.about[files.dsvWrite] = {"dsvWrite(fname,tbl,del)", "Save Lua table as delimiter separated data into file."}
+files.about[files.dsvWrite] = {"dsvWrite(fname,tbl,del)", "Save Lua table as delimiter separated data into file.", WRITE}
 
 --- Import data from text file, use given delimiter
 --    @param fname File name.
@@ -141,7 +143,7 @@ files.dsvRead = function (fname, delim)
    f:close()
    return res
 end
-files.about[files.dsvRead] = {"dsvRead(fname,del)", "Read delimiter separated data as Lua table."}
+files.about[files.dsvRead] = {"dsvRead(fname,del)", "Read delimiter separated data as Lua table.", READ}
 
 --- Returns text of the file.
 --    @param fname
@@ -164,7 +166,7 @@ files.tblImport = function (fname)
    if str then f = Ver.loadStr('return '..str) end
    return f and f() or nil
 end
-files.about[files.tblImport] = {"tblImport(fname)", "Import Lua table, written into file."}
+files.about[files.tblImport] = {"tblImport(fname)", "Import Lua table, written into file.", READ}
 
 --- Save Lua table to the file.
 --    @param fname File name.
@@ -177,7 +179,7 @@ files.tblExport = function (fname, t)
    f:close()
    print('Done')
 end
-files.about[files.tblExport] = {"tblExport(fname,tbl)", "Save Lua table into file."}
+files.about[files.tblExport] = {"tblExport(fname,tbl)", "Save Lua table into file.", WRITE}
 
 -- free memory in case of standalone usage
 if not lc_version then files.about = nil end

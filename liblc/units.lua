@@ -88,7 +88,6 @@ local function comp (p1,p2)
 end
 
 --- Represent table of units as string.
---    <i>Private function.</i>
 --    @param t Table of units.
 --    @return Key string.
 local function toKey(t)
@@ -100,7 +99,6 @@ local function toKey(t)
 end
 
 --- Convert internal string representation to the table.
---    <i>Private function.</i>
 --    @param s Key string.
 --    @return Table of units.
 local function fromKey(s)
@@ -180,7 +178,6 @@ units.prefix = {
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 --- Get common part and units._difference between 2 strings.
---    <i>Private function.</i>
 --    @param s1 First string.
 --    @param s2 Second string.
 --    @return First prefix, second prefix, common part.
@@ -498,6 +495,9 @@ units.__pow = function (a,b)
    return res
 end
 
+units.arithmetic = 'arithmetic'
+units.about[units.arithmetic] = {units.arithmetic, 'a+b, a-b, a*b, a/b, a^n', help.META}
+
 --- a == b
 --    @param a First unit object.
 --    @param b Second unit object.
@@ -532,8 +532,10 @@ units.__le = function (a,b)
    return a.value <= b.value 
 end
 
+units.comparison = 'comparison'
+units.about[units.comparison] = {units.comparison, 'a==b, a~=b, a<b, a<=b, a>b, a>=b', help.META}
+
 --- Prepare units for print operation.
---    <i>Private function.</i>
 --    @param str Units key.
 --    @return Traditional representation.
 units._collect = function (str)

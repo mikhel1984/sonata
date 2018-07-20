@@ -194,6 +194,8 @@ local function toRange(x,range)
    return x
 end
 
+local TRANSFORM = 'transform'
+
 --	INFO
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 
@@ -339,7 +341,7 @@ matrix.triang = function (m)
    local res = matrix.copy(m)
    return matrix._GaussDown(res)
 end
-matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangulation produced by Gaussian elimination.', help.OTHER}
+matrix.about[matrix.triang] = {'triang(m)', 'Matrix triangulation produced by Gaussian elimination.', TRANSFORM}
 
 --- Matrix rank.
 --    @param m Initial matrix.
@@ -435,7 +437,7 @@ matrix.transpose = function (m)
    end
    return res
 end
-matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T()."}
+matrix.about[matrix.transpose] = {"transpose(m)", "Return matrix transpose. Shorten form is T().", TRANSFORM}
 matrix.T = matrix.transpose
 
 
@@ -473,7 +475,7 @@ matrix.map = function (m, fn)
    end
    return res
 end
-matrix.about[matrix.map] = {"map(m,fn)", "Apply the given function to all elements, return new matrix.", help.OTHER}
+matrix.about[matrix.map] = {"map(m,fn)", "Apply the given function to all elements, return new matrix.", TRANSFORM}
 
 --- Apply function to each element, use row and col values.
 --    @param m Source matrix.
@@ -487,7 +489,7 @@ matrix.mapEx = function (m, fn)
    end
    return res
 end
-matrix.about[matrix.mapEx] = {"mapEx(m,fn)", "Apply function fn(row,col,val) to all elements, return new matrix.", help.OTHER}
+matrix.about[matrix.mapEx] = {"mapEx(m,fn)", "Apply function fn(row,col,val) to all elements, return new matrix.", TRANSFORM}
 
 --- Apply function to each pair elements of given matrices.
 --    @param m1 First matrix.
@@ -503,7 +505,7 @@ matrix.apply = function (m1, m2, fn)
    end
    return res
 end
-matrix.about[matrix.apply] = {"apply(m1,m2,fn)", "Apply fu(v1,v2) to each element of matrices m1 and m2.", help.OTHER}
+matrix.about[matrix.apply] = {"apply(m1,m2,fn)", "Apply fu(v1,v2) to each element of matrices m1 and m2.", TRANSFORM}
 
 --- Create copy of matrix.
 --    @param m Source matrix.
@@ -588,7 +590,7 @@ matrix.inv = function (m)
    local con, det = matrix.rref(m, matrix.eye(m.cols))
    return (det ~= 0) and matrix.get(con, {1,-1}, {m.cols+1, -1}) or matrix.ones(m.rows,m.rows,math.huge) 
 end
-matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix."}
+matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", TRANSFORM}
 
 --- Solve system of equations using Gauss method.
 --    @param A Matrix of coefficients.
@@ -610,7 +612,7 @@ matrix.vector = function (v)
    for i = 1, #v do res[i] = {v[i]} end
    return matrix:init(#v, 1, res)
 end
-matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V()."}
+matrix.about[matrix.vector] = {"vector(...)", "Create vector from list of numbers. The same as V().", help.NEW}
 matrix.V = matrix.vector
 
 --- Create matrix of zeros.
@@ -622,7 +624,7 @@ matrix.zeros = function (rows, cols)
    cols = cols or rows                                           -- input is a number
    return matrix:init(rows, cols)
 end
-matrix.about[matrix.vector] = {"zeros(rows[,cols])", "Create matrix from zeros.", help.OTHER}
+matrix.about[matrix.vector] = {"zeros(rows[,cols])", "Create matrix from zeros.", help.NEW}
 
 --- Create dense matrix using given rule.
 --    @param rows Number of rows.
@@ -648,7 +650,7 @@ matrix.ones = function (rows, cols, val)
    if ismatrix(rows) then rows,cols,val = rows.rows, rows.cols, cols end
    return matrix.fill(rows, cols or rows, function (r,c) return val or 1 end)
 end
-matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given numbers (default is 1).", help.OTHER}
+matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given numbers (default is 1).", help.NEW}
 
 --- Matrix with random values.
 --    @param rows Number of rows.
@@ -658,7 +660,7 @@ matrix.rand = function (rows, cols)
    if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    return matrix.fill(rows, cols or rows, function (r,c) return math.random() end)
 end
-matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1.", help.OTHER}
+matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1.", help.NEW}
 
 --- Identity matrix.
 --    @param rows Number of rows.
@@ -675,7 +677,7 @@ matrix.eye = function (rows, cols, val)
    for i = 1, math.min(rows, cols) do m[i][i] = val end
    return m
 end
-matrix.about[matrix.eye] = {"eye(rows[,cols[,init]])", "Create identity matrix. Diagonal value (init) can be nonzero.", help.OTHER}
+matrix.about[matrix.eye] = {"eye(rows[,cols[,init]])", "Create identity matrix. Diagonal value (init) can be nonzero.", help.NEW}
 
 --- Matrix concatenation.
 --    Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
@@ -707,7 +709,7 @@ matrix.concat = function (a, b, dir)
 end
 matrix.about[matrix.concat] = {"concat(m1,m2,dir)", 
                                "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse m1 .. m2 for horizontal concatenation and m1 // m2 for vertical.", 
-			       help.OTHER}
+			       TRANSFORM}
 
 -- horizontal concatenation
 matrix.__concat = function (a,b) return matrix.concat(a,b,'h') end
@@ -929,7 +931,7 @@ matrix.pinv = function (M)
    end
    return L * K * K * Lt * Mt
 end
-matrix.about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", help.OTHER}
+matrix.about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", TRANSFORM}
 
 --- Represent matrix in explicit (dense) form.
 --    @param m Source matrix.
@@ -954,6 +956,7 @@ matrix.table = function (m)
    end
    return res
 end
+matrix.about[matrix.table] = {"table(M)", "Convert to simple Lua table.", help.OTHER}
 
 --- Return sparse matrix, if possible.
 --    @param m Source matrix.
@@ -992,7 +995,7 @@ matrix.diag = function (m,n)
    end
    return res
 end
-matrix.about[matrix.diag] = {'diag(M[,n])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.OTHER}
+matrix.about[matrix.diag] = {'diag(M[,n])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
 
 --- a x b
 --    @param a 3-element vector.
@@ -1100,7 +1103,7 @@ matrix.lu = function (m)
           matrix.mapEx(a, function (r,c,m) return r <= c and m or 0 end),                    -- upper
 	  p                                                                                   -- permutations
 end
-matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", help.OTHER}
+matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}
 
 --- Cholesky decomposition.
 --    @param m Positive definite symmetric matrix.
@@ -1130,7 +1133,7 @@ matrix.Cholesky = function (m)
    end
    return a
 end
-matrix.about[matrix.Cholesky] = {"Cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", help.OTHER}
+matrix.about[matrix.Cholesky] = {"Cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
 
 --- Apply function to all elements along given direction.
 --    @param m Initial matrix.

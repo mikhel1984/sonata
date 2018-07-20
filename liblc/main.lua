@@ -187,13 +187,13 @@ main.flip = function (t,N)
    end
    print(#t > 0 and '\n}' or '}')
 end
-about[main.flip] = {"flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
+about[main.flip] = {"lc.flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
 
 -- Return 'scintific' representation of the number
 main.sci = function (x)
    print(string.format('%.2E',x))
 end
-about[main.sci] = {"sci(x)", "'Scintific' representation of the number.", lc_help.OTHER}
+about[main.sci] = {"lc.sci(x)", "'Scintific' representation of the number.", lc_help.OTHER}
 
 -- Show type of the object.
 function main.type(t)
@@ -205,7 +205,7 @@ function main.type(t)
    end
    return v
 end
-about[main.type] = {'type(t)', 'Show type of the object.', lc_help.OTHER}
+about[main.type] = {'lc.type(t)', 'Show type of the object.', lc_help.OTHER}
 
 -- Wait for press button
 main.pause = function (s)

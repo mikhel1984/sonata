@@ -199,19 +199,19 @@ end
 --    @param v Rational number.
 --    @return Decimal fraction.
 rational.decimal = function (v) return v[NUM] / v[DENOM] end
-rational.about[rational.decimal] = {"decimal(v)", "Return rational number as decimal.", help.OTHER}
+rational.about[rational.decimal] = {"decimal(v)", "Return rational number as decimal."}
 
 --- Get numerator.
 --    @param v Rational number.
 --    @return Numerator.
 rational.Nu = function (v) return v[NUM] end
-rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number.", help.OTHER}
+rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number."}
 
 --- Get denominator.
 --    @param v Rational number.
 --    @return Denominator.
 rational.De = function (v) return v[DENOM] end
-rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number.", help.OTHER}
+rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number."}
 
 -- list of prime numbers
 -- result is not sorted
