@@ -72,9 +72,13 @@ print(a)
 --	LOCAL
 
 local REAL, IMAG = 1, 2
+local FUNCTIONS = 'functions'
 
 -- check object
 local function iscomplex(c) return type(c) == 'table' and c.iscomplex end
+
+local function cosh (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+local function sinh (x) return 0.5*(math.exp(x)-math.exp(-x)) end
 
 --	INFO
 
@@ -219,7 +223,86 @@ complex.sqrt = function (v)
       return complex.__pow(v, 0.5)
    end
 end
-complex.about[complex.sqrt] = {"sqrt(v)", "Return square root. Result can be real of complex."}
+complex.about[complex.sqrt] = {"sqrt(z)", "Return square root. Result can be real of complex.", FUNCTIONS}
+
+-- Exponent
+complex.exp = function (v)
+   if iscomplex(v) then
+      local r = math.exp(v[1])
+      return complex:new(r*cos(v[2]), r*sin(v[2]))
+   else
+      return math.exp(v)
+   end
+end
+complex.about[complex.exp] = {"exp(z)", "Return expenent in real or complex power.", FUNCTIONS}
+
+complex.ln = function (z)
+   if type(v) == "number" then
+      return z <= 0 and complex:new(math.log(-z),math.pi) or math.log(z)
+   else
+      return complex:new(0.5*math.log(z[1]^2+z[2]^2), math.atan(z[2],z[1]))
+   end
+end
+complex.about[complex.ln] = {"ln(z)", "Complex logarithm.", FUNCTIONS}
+
+-- sinus
+complex.sin = function (v)
+   if iscomplex(v) then
+      return complex:new(math.sin(v[1])*cosh(v[2]), math.cos(v[1])*sinh(v[2]))
+   else
+      return math.sin(v)
+   end
+end
+complex.about[complex.sin] = {"sin(z)", "Return sinus of real or complex number.", FUNCTIONS}
+
+-- cosinus
+complex.cos = function (z)
+   if iscomplex(z) then
+      return complex:new(math.cos(z[1])*cosh(z[2]), -math.sin(z[1])*sinh(z[2]))
+   else
+      return math.cos(z)
+   end
+end
+complex.about[complex.cos] = {"cos(z)", "Return cosine of real or complex number.", FUNCTIONS}
+
+-- tangent
+complex.tan = function (z)
+   if iscomplex(z) then
+      local den = math.cos(2*z[1]) + cosh(2*z[2])
+      return complex:new(math.sin(2*z[1])/den, sinh(2*z[2])/den)
+   else
+      return math.tan(z)
+   end
+end
+complex.about[complex.tan] = {"tan(z)", "Return tangent of real or complex number.", FUNCTIONS}
+
+-- hyperbolic
+complex.sh = function (z)
+   if iscomplex(z) then
+      return 0.5*(complex.exp(z)-complex.exp(-z))
+   else
+      return sinh(z)
+   end
+end
+complex.about[complex.sh] = {"sh(z)", "Return hyperbolic sinus of a real or complex number.", FUNCTIONS}
+
+complex.ch = function (z)
+   if iscomplex(z) then
+      return 0.5*(complex.exp(z)+complex.exp(-z))
+   else
+      return cosh(z)
+   end
+end
+complex.about[complex.ch] = {"ch(z)", "Return hyperbolic cosine of a real or complex nubmer.", FUNCTIONS}
+
+complex.th = function (z)
+   if iscomplex(z) then
+      return (complex.exp(2*z)-1)/(complex.exp(2*z)+1)
+   else
+      return sinh(z)/cosh(z)
+   end
+end
+complex.about[complex.th] = {"th(z)", "Return hyperbolic tangent of a real or complex number.", FUNCTIONS}
 
 -- imaginary unit
 complex._i   = complex:new(0,1)
@@ -245,12 +328,23 @@ complex.about[complex.serialize] = {"serialize(obj)", "Save internal representat
 
 -- Function for execution during the module import.
 complex.onImport = function ()
-   -- redefine function sqrt and add complex variable _i
+   -- redefine functions and add complex variable _i
    _i = complex._i
    sqrt = complex.sqrt
+   exp = complex.exp
+   ln  = complex.ln
+   sin = complex.sin
+   cos = complex.cos
+   tan = complex.tan
+   sh  = complex.sh
+   ch  = complex.ch
+   th  = complex.th
 end
 
 -- free memory if need
 if not lc_version then complex.about = nil end
 
 return complex
+
+--==========================
+-- TODO: define inverse trigonometric complex functions

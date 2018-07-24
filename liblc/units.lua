@@ -74,7 +74,8 @@ print(a)
 local PART = '([^%a]+)(%a+)'     -- highlight value and unit from string
 
 -- possible signs
-local C_PROD, CRAT, C_POW = string.byte('*'), string.byte('/'), string.byte('^')
+local C_PROD, C_RAT, C_POW = string.byte('*'), string.byte('/'), string.byte('^')
+local BASE, PREFIX = 1, 2
 
 --- Check object type.
 local function isunits(t) return type(t) == 'table' and t.isunits end
@@ -178,27 +179,27 @@ units.prefix = {
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 --- Get common part and units._difference between 2 strings.
---    @param s1 First string.
---    @param s2 Second string.
+--    @param str1 First string.
+--    @param str2 Second string.
 --    @return First prefix, second prefix, common part.
-units._diff = function (s1, s2)
+units._diff = function (str1, str2)
    -- check memory
-   local p1, p2 = units.mem_parts[s1], units.mem_parts[s2]
+   local p1, p2 = units.mem_parts[str1], units.mem_parts[str2]
    if p1 and p2 then
-      if p1.base == p2.base then
-         return p1.prefix, p2.prefix, p1.base
+      if p1[BASE] == p2[BASE] then
+         return p1[PREFIX], p2[PREFIX], p1[BASE]
       else
-         return s1, s2, nil
+         return str1, str2, nil
       end
    end
    -- compare, add to memory 
-   local first, base, second = string.match(s1..'|'..s2, '^(.-)(.+)|(.-)%2$')
+   local first, base, second = string.match(str1..'|'..str2, '^(.-)(.+)|(.-)%2$')
    if base then
-      units.mem_parts[s1] = {base = base, prefix = first}
-      units.mem_parts[s2] = {base = base, prefix = second}
+      units.mem_parts[str1] = {base, first}
+      units.mem_parts[str2] = {base, second}
       return first, second, base
    else
-      return s1, s2, nil
+      return str1, str2, nil
    end
 end
 
@@ -274,7 +275,7 @@ end
 --    @return Table of units and string rest.
 units.getTerm = function (str)
    local res, rest = units.getPow(str)
-   while string.byte(rest) == C_PROD or string.byte(rest) == CRAT do
+   while string.byte(rest) == C_PROD or string.byte(rest) == C_RAT do
       -- while get * or / get terms and evaluate
       local sign, tmp
       sign, rest = string.match(rest, "([%*/])(.*)")
