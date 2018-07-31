@@ -30,58 +30,59 @@
 (option '-i' could be omitted when the program is in non-interractive mode)<br>
 <br>
 <b>FLAGS</b>:<br>
-	-d, --doc - Create/update documentation file.<br>
-	-h, --help - Get this help message.<br>
 	-t, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
-	-n, --new - Generate template for a new module.<br>
+	-h, --help - Get this help message.<br>
+	-d, --doc - Create/update documentation file.<br>
+	-e, --eval - Read text file and evaluate expressions in ##..##.<br>
 	-l, --lng - Create/update file for localisation.<br>
+	-n, --new - Generate template for a new module.<br>
 <br>
-<b>VERSION</b>: 0.9.3<br>
+<b>VERSION</b>: 0.9.4<br>
 <br>
-<b>MODULES</b>: units, complex, gnuplot, polynom, struct, stat, special, numeric, bigint, rational, array, const, matrix, files, graph.<br>
+<b>MODULES</b>: bigint, gnuplot, files, numeric, units, complex, const, struct, stat, array, special, polynom, rational, matrix, graph.<br>
 <br>
 <b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
 </p>
 <p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p>
 <a name="Main"></a>
 <h3 align="center"># Main (main) #</h3>
-<p align="center">Lua как расширяемый калькулятор</p>
-<p><b>_e</b> - Число Эйлера.<br>
-<b>_pi</b> - Число пи.<br>
-<b>abs(x)</b> - Абсолютная величина.<br>
-<b>ach(x)</b> - Гиперболический арккосинус x.<br>
-<b>acos(x)</b> - Арккосинус числа x.<br>
-<b>ash(x)</b> - Гиперболический арксинус x.<br>
-<b>asin(x)</b> - Арксинус числа x.<br>
-<b>atan(y[,x])</b> - Арктангенс числа y. Если заданы 2 аргумента, тангенс определяется как y/x с учётом знаков.<br>
-<b>ath(x)</b> - Гиперболический арктангенс x.<br>
-<b>ceil(x)</b> - Возвращает наименьшее целое, большее или равное x.<br>
-<b>ch(x)</b> - Гиперболический косинус x.<br>
-<b>cos(x)</b> - Косинус числа x.<br>
-<b>deg(x)</b> - Преобразование радиан в градусы.<br>
-<b>deserialize(obj_str)</b> - Преобразует строку сериализации в объект Sonata LC.<br>
-<b>exp(x)</b> - Экспоненциальная зависимость.<br>
-<b>fact(n)</b> - Evaluate factorial.<br>
-<b>flip(t[,N])</b> - Отображает содержимое таблицы Lua в удобном для пользователя виде. Спрашивает о продолжении после каждых N элементов (по умолчанию 10).<br>
-<b>floor(x)</b> - Возвращает наибольшее целое, меньшее или равное x.<br>
+<p align="center">Lua based calculator.</p>
+<p><b>_e</b> - Euler number<br>
+<b>_pi</b> - Number pi<br>
+<b>abs(x)</b> - Absolute value.<br>
+<b>acos(x)</b> - Arc cosine x.<br>
+<b>acosh(x)</b> - Hyperbolic arc cosine.<br>
+<b>asin(x)</b> - Arcsine x.<br>
+<b>asinh(x)</b> - Hyperbolic arcsine.<br>
+<b>atan(y[,x])</b> - Arctangent y. In case of 2 parameters calculate y/x with signs.<br>
+<b>atanh(x)</b> - Hyperbolic arctangent.<br>
+<b>ceil(x)</b> - Return smallest integer more or equal to x.<br>
+<b>cos(x)</b> - Cosine x.<br>
+<b>cosh(x)</b> - Hyperbolic cosine.<br>
+<b>deg2rad(x)</b> - Convert degrees to radians.<br>
+<b>deserialize(obj_str)</b> - Transform string with serialization into Sonata LC object.<br>
+<b>exp(x)</b> - Exponent.<br>
+<b>factorial(n)</b> - Evaluate factorial.<br>
+<b>floor(x)</b> - Return largest integer less or equal to x.<br>
 <b>import</b> - <br>
 <b>lc.append(tbl,val)</b> - Append value or table to the given table.<br>
+<b>lc.flip(t[,N])</b> - Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).<br>
 <b>lc.pause([str])</b> - Wait for button press, print text if need.<br>
 <b>lc.range([from,]to[,step])</b> - Generate table with sequence of numbers.<br>
-<b>lg(x)</b> - Десятичный логарифм.<br>
-<b>ln(x)</b> - Натуральный логарифм.<br>
-<b>max(...)</b> - Находит максимальное из чисел.<br>
-<b>min(...)</b> - Находит минимальное из чисел.<br>
-<b>rad(x)</b> - Преобразование градусов в радианы.<br>
-<b>rand()</b> - Случайное число между 0 и 1.<br>
+<b>lc.sci(x)</b> - 'Scintific' representation of the number.<br>
+<b>lc.type(t)</b> - Show type of the object.<br>
+<b>log(x)</b> - Natural logarithm.<br>
+<b>log10(x)</b> - Decimal logarithm.<br>
+<b>max(...)</b> - Maximum number.<br>
+<b>min(...)</b> - Minimum number.<br>
+<b>rad2deg(x)</b> - Convert radians to degrees.<br>
+<b>rand([a,b])</b> - Random number between 0 and 1 or in the given interval of integers.<br>
 <b>round(x[,n])</b> - Round value, define number of decimal digits.<br>
-<b>sci(x)</b> - 'Scintific' representation of the number.<br>
-<b>sh(x)</b> - Гиперболический синус x.<br>
-<b>sin(x)</b> - Синус числа x.<br>
-<b>sqrt(a)</b> - Квадратный корень числа.<br>
-<b>tan(x)</b> - Тангенс числа x.<br>
-<b>th(x)</b> - Гиперболический тангенс x.<br>
-<b>type(t)</b> - Show type of the object.<br></p>
+<b>sin(x)</b> - Sinus x.<br>
+<b>sinh(x)</b> - Hyperbolic sinus.<br>
+<b>sqrt(a)</b> - Square root.<br>
+<b>tan(x)</b> - Tangent x.<br>
+<b>tanh(x)</b> - Hyperbolic tangent.<br></p>
 <pre style="background-color: silver; width: 700px;">
 lc = require 'liblc.main'
 
@@ -95,10 +96,10 @@ ans = round(0.9)                 --> 1.0
 ans = round(math.pi, 2)          --> 3.14
 
 -- 'small' factorial - int
-ans = fact(12)                   --> 479001600
+ans = factorial(12)              --> 479001600
 
 -- 'big' factorial - float
-ans = fact(50)                   --~ 3.0414E+64
+ans = factorial(50)              --~ 3.0414E+64
 
 -- get object type
 ans = lc.type(25)                --> 'integer'
@@ -122,24 +123,24 @@ ans = b.b                       --> 2
 <a href="#Top">Top</a>
 <a name="Arr"></a>
 <h3 align="center"># Arr (array) #</h3>
-<p align="center">Манипуляции с массивами элементов. По-умолчанию, массив разряженный.</p>
+<p align="center">Manipulations with arrays of elements.</p>
 <p><b>#arr</b> - Return maximum number of elements.<br>
-<b>Arr(size)</b> - Формирует пустой массив заданной размерности.<br>
-<b>apply(a1,a2,fn)</b> - Применить к массивам функцию двух переменных. Возвращает новый массив.<br>
+<b>Arr(size)</b> - Create empty array with given size, represented as a table.<br>
+<b>apply(a1,a2,fn)</b> - Apply function of 2 arguments. Return new array.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b<br>
 <b>comparison</b> - a == b, a ~= b<br>
-<b>concat(a1,a2,axe)</b> - Объединение двух массивов вдоль заданной оси.<br>
-<b>copy(arr)</b> - Создание копии массива.<br>
-<b>dim(arr)</b> - Возвращает список размеров массива.<br>
+<b>concat(a1,a2,axe)</b> - Array concatenation along the given axis.<br>
+<b>copy(A)</b> - Get copy of the array.<br>
+<b>dim(arr)</b> - Return size of array.<br>
 <b>fullString(arr,r,c)</b> - Represent array as sequence of matrices, where r and c are numbers of axes.<br>
-<b>get(arr,ind)</b> - Извлечь значение элемента. Индекс представлен в виде таблицы.<br>
+<b>get(A,tInd)</b> - Get array element. Index is a table.<br>
 <b>isEqual(a1,a2)</b> - Check size equality.<br>
-<b>map(a,fn)</b> - Применить к массиву функцию одного переменного. Возвращает новый массив.<br>
-<b>next(arr)</b> - Возвращает итератор по всем индексам значениям массива.<br>
-<b>rand(size)</b> - Возвращает массив случайных чисел заданной размерности.<br>
-<b>serialize(obj)</b> - Строковое представление массива с учётом внутренней структуры.<br>
-<b>set(arr,ind,val)</b> - Установить значение элемента. Индекс в виде таблицы.<br>
-<b>sub(arr,ind1,ind2)</b> - Выделение части массива, ограниченной двумя индексами.<br></p>
+<b>map(a,fn)</b> - Apply function of 1 argument. Return new array.<br>
+<b>next(arr)</b> - Return iterator along all indexes.<br>
+<b>rand(size)</b> - Return array with random numbers between 0 and 1.<br>
+<b>serialize(obj)</b> - String representation of array internal structure.<br>
+<b>set(A,tInd,val)</b> - Set value to the array. Index is a table.<br>
+<b>sub(arr,ind1,ind2)</b> - Return subarray restricted by 2 indexes.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'array'
 Arr = require 'liblc.array'
@@ -193,19 +194,19 @@ print(d:fullString(2,3))
 <a href="#Top">Top</a>
 <a name="Big"></a>
 <h3 align="center"># Big (bigint) #</h3>
-<p align="center">Операции с целыми числами произвольной точности.</p>
-<p><b>BASE</b> - Основание системы счисления.<br>
-<b>Big(v)</b> - Создаёт целое число произвольной точности из обычного числа или строки.<br>
-<b>abs(v)</b> - Абсолютное значение целого числа.<br>
+<p align="center">Operations with arbitrary long integers.</p>
+<p><b>BASE</b> - The radix of big integer representation.<br>
+<b>Big(v)</b> - Create big number from integer or string.<br>
+<b>abs(v)</b> - Return module of arbitrary long number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br>
-<b>copy(v)</b> - Создаёт копию числа.<br>
+<b>copy(v)</b> - Return copy of given number.<br>
 <b>digits(v)</b> - Number of digits, the same as #v.<br>
-<b>eq(a,b)</b> - Проверяет равенство двух чисел.<br>
-<b>fact(n)</b> - Факториал неотрицательного целого числа.<br>
-<b>serialize(obj)</b> - Строковое представление числа произвольной точности с учётом внутренней структуры.<br>
-<b>str(v)</b> - Более удобное отображение длинного числа.<br>
-<b>tonumber(v)</b> - Преобразует число к целому либо с плавающей точкой.<br></p>
+<b>eq(a,b)</b> - Check equality of two values.<br>
+<b>fact(n)</b> - Return factorial of non-negative integer n.<br>
+<b>serialize(obj)</b> - Save internal representation of bigint object.<br>
+<b>str(v)</b> - More readable string representation of the number<br>
+<b>tonumber(v)</b> - Represent current big integer as number if it possible.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'bigint'
 Big = require 'liblc.bigint'
@@ -262,20 +263,28 @@ print(c:str())
 <a href="#Top">Top</a>
 <a name="Comp"></a>
 <h3 align="center"># Comp (complex) #</h3>
-<p align="center">Комплексные числа и манипуляции с ними.</p>
-<p><b>Comp(a[,b])</b> - Новое комплексное число.<br>
-<b>Im(v)</b> - Мнимая часть числа.<br>
-<b>Re(v)</b> - Действительная часть числа.<br>
-<b>_i</b> - Комплексная единица.<br>
-<b>abs(v)</b> - Возвращает модуль комплексного числа.<br>
-<b>arg(v)</b> - Вычисляет аргумент (угол) комплексного числа.<br>
+<p align="center">Manipulations with complex numbers.</p>
+<p><b>Comp(a[,b])</b> - Create new complex number.<br>
+<b>Im(v)</b> - Return the imaginary part.<br>
+<b>Re(v)</b> - Return the real part.<br>
+<b>_i</b> - Complex unit.<br>
+<b>abs(v)</b> - Return module of complex number.<br>
+<b>arg(v)</b> - Return argument of complex number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>conj(v)</b> - Возвращает комплексно сопряжённое число.<br>
-<b>copy(c)</b> - Возвращает копию комплексного числа.<br>
-<b>serialize(obj)</b> - Строковое представление комплексного числа с учётом внутренней структуры.<br>
-<b>sqrt(v)</b> - Квадратный корень положительного или отрицательного числа.<br>
-<b>trig(module,angle)</b> - Создаёт комплексное число на основе тригонометрического представления.<br></p>
+<b>conj(v)</b> - Return the complex conjugate.<br>
+<b>copy(c)</b> - Create copy of the complex number.<br>
+<b>cos(z)</b> - Return cosine of real or complex number.<br>
+<b>cosh(z)</b> - Return hyperbolic cosine of a real or complex nubmer.<br>
+<b>exp(z)</b> - Return expenent in real or complex power.<br>
+<b>log(z)</b> - Complex logarithm.<br>
+<b>serialize(obj)</b> - Save internal representation or complex object.<br>
+<b>sin(z)</b> - Return sinus of real or complex number.<br>
+<b>sinh(z)</b> - Return hyperbolic sinus of a real or complex number.<br>
+<b>sqrt(z)</b> - Return square root. Result can be real of complex.<br>
+<b>tan(z)</b> - Return tangent of real or complex number.<br>
+<b>tanh(z)</b> - Return hyperbolic tangent of a real or complex number.<br>
+<b>trig(module,angle)</b> - Create complex number using module and angle.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'complex'
 Comp = require 'liblc.complex'
@@ -338,24 +347,24 @@ print(a)
 <a href="#Top">Top</a>
 <a name="_C"></a>
 <h3 align="center"># _C (const) #</h3>
-<p align="center">Набор констант.</p>
-<p><b>Adams</b> - Ответ на главный вопрос о жизни, вселенной и всего такого.<br>
+<p align="center">Collection of constant values.</p>
+<p><b>Adams</b> - Answer to the ultimate question of life, the Universe, and Everything.<br>
 <b>EuMa</b> - Difference between harmonic series and the natural logarithm.<br>
-<b>G</b> - Гравитационная постоянная.<br>
-<b>NA</b> - Число Авогадро.<br>
-<b>R</b> - Универсальная газовая постоянная.<br>
+<b>G</b> - Gravitational constant.<br>
+<b>NA</b> - Avogadro's number.<br>
+<b>R</b> - Universal gas constant.<br>
 <b>Rinf</b> - Rydberg constant<br>
-<b>Vm</b> - Объём моля идеального газа.<br>
-<b>c</b> - Скорость света в вакууме.<br>
-<b>e</b> - Заряд электрона.<br>
-<b>eps0</b> - Электрическая постоянная.<br>
-<b>g</b> - Ускорение свободного падения.<br>
-<b>h</b> - Постоянная Планка.<br>
-<b>k</b> - Постоянная Больцмана.<br>
+<b>Vm</b> - Volume of one mole of ideal gas.<br>
+<b>c</b> - Speed of light.<br>
+<b>e</b> - Electron charge.<br>
+<b>eps0</b> - Permittivity of free space.<br>
+<b>g</b> - Acceleration of free fall.<br>
+<b>h</b> - Planck's constant.<br>
+<b>k</b> - Boltzmann's constant.<br>
 <b>ly</b> - One light year.<br>
-<b>mu0</b> - Магнитная постоянная.<br>
+<b>mu0</b> - Permeability of free space.<br>
 <b>pc</b> - One parsec.<br>
-<b>phi</b> - Золотое сечение.<br>
+<b>phi</b> - Golden ratio.<br>
 <b>sigma</b> - Stefan-Boltzmann constant.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'const'
@@ -370,10 +379,10 @@ ans = _C.e_u                --> 'C'
 <a href="#Top">Top</a>
 <a name="File"></a>
 <h3 align="center"># File (files) #</h3>
-<p align="center">Вспомогательные функции для работы с файлами.</p>
+<p align="center">Routines for working with data files.</p>
 <p><b>dsvRead(fname,del)</b> - Read delimiter separated data as Lua table.<br>
 <b>dsvWrite(fname,tbl,del)</b> - Save Lua table as delimiter separated data into file.<br>
-<b>split(str,delim)</b> - Генерирует итератор, который возвращает части строки с учётом разделителя.<br>
+<b>split(str,delim)</b> - Return iterator over substrings separated by the delimiter.<br>
 <b>tblExport(fname,tbl)</b> - Save Lua table into file.<br>
 <b>tblImport(fname)</b> - Import Lua table, written into file.<br></p>
 <pre style="background-color: silver; width: 700px;">
@@ -413,35 +422,35 @@ for s in File.split(str, '//') do ans = ans+1 end  --> 4
 <a href="#Top">Top</a>
 <a name="Gnu"></a>
 <h3 align="center"># Gnu (gnuplot) #</h3>
-<p align="center">Интерфейс для работы с Gnuplot из Lua.</p>
-<p><b>Gnu([g])</b> - Делает таблицу Gnuplot-совместимым объектом программы.<br>
-<b>N</b> - Если шаг не указан, интервал делится на данное количество отрезков.<br>
-<b>copy(g)</b> - Создаёт копию объекта с параметрами построения графика.<br>
+<p align="center">Interface for calling Gnuplot from Lua.</p>
+<p><b>Gnu([g])</b> - Transform given table into gnuplot object.<br>
+<b>N</b> - If no samples, divide interval into N points.<br>
+<b>copy(g)</b> - Get copy of the plot options.<br>
 <b>isAvailable(g)</b> - Check if all options in table are predefined in program.<br>
-<b>keys</b> -   Описание параметров:<br>
-{'sin(x)'}                                   -- функция задана в текстовом виде<br>
-{math.sin, title='sinus'}                    -- строит график для Lua функции, добавляет текст в легенду<br>
-{file='sin.dat', ln=1, lw=2}                 -- строит график для файла с учётом цвета и толщины маркеров<br>
-{tbl, with='lines'}                          -- строит график для Lua таблицы с помощью линий<br>
-title='Graph name'                           -- имя графика в целом<br>
-xrange={0,10}                                -- диапазон x от 0 до 10<br>
-yrange={-2,2}                                -- диапазон y<br>
-zrange={0,5}                                 -- диапазон z<br>
-trange={1,2}                                 -- изменение параметра в случае параметрической функции<br>
-xtitle='A', ytitle='B'                       -- имена осей<br>
-terminal='jpeg'                              -- сохранение результата в файл<br>
-output='my_plot.jpg'                         -- имя файла для вывода результата<br>
-parametric=true                              -- параметрическое представление функции<br>
-size='square'                                -- установить квадратный размер изображения<br>
-polar=true                                   -- график в полярных координатах<br>
-grid='polar'                                 -- изменить тип сетки на полярный<br>
-legend=false                                 -- отключить легенду<br>
-surface=true                                 -- построение трёхмерного графика<br>
-samples=200                                  -- задать число точек на графике<br>
-permanent=true                               -- сохранить окно графика при завершении программы (по-умолчанию)<br>
-raw='set pm3d'                               -- позволяет написать команды Gnuplot в явном виде<br>
+<b>keys</b> -   Options description:<br>
+{'sin(x)'}                                   -- print sinus using Gnuplot functions<br>
+{math.sin, title='sinus'}                    -- plot using function, define in Lua; add legend<br>
+{file='sin.dat', ln=1, lw=2}                 -- plot data from file, use given color and width<br>
+{tbl, with='lines'}                          -- plot data from Lua table, use lines<br>
+title='Graph name'                           -- set title<br>
+xrange={0,10}                                -- range of x from 0 to 10<br>
+yrange={-2,2}                                -- range of y<br>
+zrange={0,5}                                 -- range of z<br>
+trange={1,2}                                 -- range for parametric functions<br>
+xtitle='A', ytitle='B'                       -- axes names<br>
+terminal='jpeg'                              -- save result as jpeg image<br>
+output='my_plot.jpg'                         -- file name<br>
+parametric=true                              -- create parametric plot<br>
+size='square'                                -- set square size<br>
+polar=true                                   -- use polar coordinate system<br>
+grid='polar'                                 -- polar grid<br>
+legend=false                                 -- don't use legend<br>
+surface=true                                 -- plot surface in 3D<br>
+samples=200                                  -- define number of points<br>
+permanent=true                               -- create in independent window<br>
+raw='set pm3d'                               -- set Gnuplot options manually<br>
 <br>
-<b>plot(g)</b> - Строит график функций, представленных в виде таблицы Lua.<br></p>
+<b>plot(g)</b> - Plot data, represented as Lua table.<br></p>
 <a href="#Top">Top</a>
 <a name="Graph"></a>
 <h3 align="center"># Graph (graph) #</h3>
@@ -501,42 +510,43 @@ print(b)
 <a href="#Top">Top</a>
 <a name="Mat"></a>
 <h3 align="center"># Mat (matrix) #</h3>
-<p align="center">Операции с матрицами. Индексация начинается с 1. По-умолчанию, матрицы разряжённые.</p>
+<p align="center">Matrix operations. The matrices are spares by default.</p>
 <p><b>Cholesky(m)</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
-<b>Mat(...)</b> - Формирование матрицы. Аргументы являются списком строк, каждая из которых - таблица чисел.<br>
-<b>apply(m1,m2,fn)</b> - Применяет fn(v1,v2) к каждой паре элементов матриц m1 и m2.<br>
+<b>Mat(...)</b> - Create matrix from list of strings (tables).<br>
+<b>apply(m1,m2,fn)</b> - Apply fu(v1,v2) to each element of matrices m1 and m2.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>concat(m1,m2,dir)</b> - Объединяет 2 матрицы по горизонтали (dir='h') или вертикали (dir='v').<br>
-Для горизонтальной конкатенации можно использовать запись m1..m2, для вертикальной - m1//m2.<br>
-<b>copy(m)</b> - Возвращает копию матрицы.<br>
-<b>cross(a,b)</b> - Векторное произведение 3-элементных векторов.<br>
-<b>dense(m)</b> - Возвращает плотную матрицу.<br>
-<b>det(m)</b> - Определитель матрицы.<br>
-<b>diag(M[,n])</b> - Возвращает диагональные элементы либо создаёт матрицу, используя заданный вектор в качестве диагонали со смещением n.<br>
-<b>dot(a,b)</b> - Скалярное произведение двух 3-элементных векторов.<br>
+<b>concat(m1,m2,dir)</b> - Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical<br>
+Use m1 .. m2 for horizontal concatenation and m1 // m2 for vertical.<br>
+<b>copy(m)</b> - Return copy of matrix.<br>
+<b>cross(a,b)</b> - Cross product or two 3-element vectors.<br>
+<b>dense(m)</b> - Return dense matrix.<br>
+<b>det(m)</b> - Calculate determinant.<br>
+<b>diag(M[,n])</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.<br>
+<b>dot(a,b)</b> - Scalar product of two 3-element vectors<br>
 <b>eye(rows[,cols[,init]])</b> - Create identity matrix. Diagonal value (init) can be nonzero.<br>
-<b>fill(rows,cols,fn)</b> - Формирует матрицу, элементы которой определяются функцией fn(r,c).<br>
-<b>inv(m)</b> - Вычисляет обратную матрицу.<br>
-<b>lu(m)</b> - LU разложение матрицы. Возвращает L,U и P элементы.<br>
-<b>map(m,fn)</b> - Применяет указанную функцию fn(x) ко всем элементам матрицы, возвращает новую матрицу.<br>
+<b>fill(rows,cols,fn)</b> - Create matrix, using function fn(r,c).<br>
+<b>inv(m)</b> - Return inverse matrix.<br>
+<b>lu(m)</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
+<b>map(m,fn)</b> - Apply the given function to all elements, return new matrix.<br>
 <b>mapEx(m,fn)</b> - Apply function fn(row,col,val) to all elements, return new matrix.<br>
-<b>ones(rows[,cols[,val]])</b> - Формирует матрицу, все элементы которой равны заданному числу (по-умолчанию 1).<br>
-<b>pinv(M)</b> - Вычисление псевдоинверсной матрицы через SVD разложение.<br>
-<b>rand(rows[,cols])</b> - Матрица случайных чисел от 0 до 1.<br>
-<b>rank(m)</b> - Находит ранг матрицы.<br>
-<b>reduce(m,fn,dir,init)</b> - Вычисляет функцию s=fn(s,x) вдоль строк (dir='r') или столбцов (dir='c'), s0=init - начальное значение.<br>
-<b>rref(A,b)</b> - Применяет метод Гаусса для решения системы линейных уравнений. Возвращает полученную матрицу и детерминант.<br>
-<b>serialize(obj)</b> - Строковое представление матрицы с учётом внутренней структуры.<br>
-<b>set(m,row,col)(val)</b> - Установить значение элемента матрицы.<br>
-<b>size(m)</b> - Возвращает число строк и столбцов матрицы.<br>
-<b>sparse(m)</b> - Возвращает разряжённую матрицу.<br>
+<b>ones(rows[,cols[,val]])</b> - Create matrix of given numbers (default is 1).<br>
+<b>pinv(M)</b> - Pseudo inverse matrix calculation.<br>
+<b>rand(rows[,cols])</b> - Create matrix with random numbers from 0 to 1.<br>
+<b>rank(m)</b> - Find rank of the matrix.<br>
+<b>reduce(m,fn,dir,init)</b> - Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.<br>
+<b>rref(A,b)</b> - Perform transformations using Gauss method. Return also determinant.<br>
+<b>serialize(obj)</b> - Save matrix internal representation.<br>
+<b>set(m,row,col)(val)</b> - Check index and set value of matrix element.<br>
+<b>size(m)</b> - Return number or rows and columns. Can be called with '#'.<br>
+<b>sparse(m)</b> - Return sparse matrix.<br>
 <b>sqNorm(m,dir)</b> - Calculate square norm along given direction.<br>
-<b>sum(m,dir)</b> - Вычисление суммы элементов вдоль заданного направления ('r' или 'c').<br>
-<b>tr(m)</b> - След матрицы.<br>
-<b>transpose(m)</b> - Возвращает транспонированную матрицу. Сокращённая форма - T().<br>
-<b>triang(m)</b> - Приведение к треугольному виду методом Гаусса.<br>
-<b>zeros(rows[,cols])</b> - Матрица нулей с заданными размерами.<br></p>
+<b>sum(m,dir)</b> - Find sum of elements along given direction ('r' or 'c').<br>
+<b>table(M)</b> - Convert to simple Lua table.<br>
+<b>tr(m)</b> - Get trace of the matrix.<br>
+<b>transpose(m)</b> - Return matrix transpose. Shorten form is T().<br>
+<b>triang(m)</b> - Matrix triangulation produced by Gaussian elimination.<br>
+<b>zeros(rows[,cols])</b> - Create matrix from zeros.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'matrix'
 Mat = require 'liblc.matrix'
@@ -697,15 +707,15 @@ ans = Mat.ones(2,3):rank()      --> 1
 <a href="#Top">Top</a>
 <a name="Num"></a>
 <h3 align="center"># Num (numeric) #</h3>
-<p align="center">Применение численных методов для решения ряда задач.</p>
+<p align="center">Group of functions for numerical calculations.</p>
 <p><b>Newton(fn,x0)</b> - Find root of equation using Newton's rule, use only one initial condition.<br>
-<b>TOL</b> - Точность вычислений (0.001 по умолчанию).<br>
-<b>diff(fn,x)</b> - Численное дифференцирование в заданной точке.<br>
+<b>TOL</b> - The solution tolerance (0.001 by default).<br>
+<b>diff(fn,x)</b> - Calculate the derivative value for given function.<br>
 <b>ode(fn,init,break[,dx])</b> - Numerical approximation of the ODE solution.<br>
 If step dx is not defined it is calculated automatically according the given tolerance.<br>
 Return table of intermediate points and result yn.<br>
-<b>solve(fn,a,b)</b> - Поиск решения уравнения на заданном интервале.<br>
-<b>trapez(fn,a,b)</b> - Численное интегрирование на указанном интервале.<br></p>
+<b>solve(fn,a,b)</b> - Find root of equation fn(x)=0 at interval [a,b].<br>
+<b>trapez(fn,a,b)</b> - Get integral using trapezoidal rule.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'numeric'
 Num = require 'liblc.numeric'
@@ -755,18 +765,18 @@ ans = yn                                  --~ 0.0856
 <a href="#Top">Top</a>
 <a name="Poly"></a>
 <h3 align="center"># Poly (polynom) #</h3>
-<p align="center">Операции с полиномами.</p>
-<p><b>Poly(...)</b> - Формирует полином из списка коэффициентов.<br>
+<p align="center">Operations with polynomials</p>
+<p><b>Poly(...)</b> - Create a polynomial.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n, -a<br>
-<b>coef(...)</b> - Вычисляет полином через список его корней.<br>
+<b>coef(...)</b> - Return polynomial with given roots.<br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br>
-<b>copy(p)</b> - Создание копии полинома.<br>
-<b>der(p[,x])</b> - Вычисление производной полинома. Возвращает значение в точке, если она задана.<br>
-<b>fit(X,Y,ord)</b> - Аппроксимация данных полиномом заданной степени.<br>
-<b>int(p[,x0])</b> - Вычисляет первообразную интеграла, x0 - свободный коэффициент<br>
-<b>real(p)</b> - Возвращает список действительных корней полинома.<br>
-<b>serialize(obj)</b> - Строковое представление полинома с учётом внутренней структуры.<br>
-<b>val(p,x)</b> - Вычисляет значение полинома в заданной точке.<br></p>
+<b>copy(p)</b> - Get copy of the polynomial.<br>
+<b>der(p[,x])</b> - Calculate derivative of polynomial, and its value, if need.<br>
+<b>fit(X,Y,ord)</b> - Find polynomial approximation for the line.<br>
+<b>int(p[,x0])</b> - Calculate integral, x0 - free coefficient.<br>
+<b>real(p)</b> - Find real roots of the polynomial.<br>
+<b>serialize(obj)</b> - Save polynomial internal representation.<br>
+<b>val(p,x)</b> - Get value of polynomial p in point x.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'polynom'
 Poly = require 'liblc.polynom'
@@ -832,16 +842,16 @@ ans = d:str('s')              --> '2*s^2-2*s+1'
 <a href="#Top">Top</a>
 <a name="Rat"></a>
 <h3 align="center"># Rat (rational) #</h3>
-<p align="center">Операции с целыми числами произвольной длины.</p>
-<p><b>De(v)</b> - Знаменатель рационального числа.<br>
-<b>Nu(v)</b> - Числитель рационального числа.<br>
-<b>Rat(m[,n])</b> - Возвращает рациональное число с указанными числителем и знаменателем (если задан).<br>
+<p align="center">Computations with rational numbers.</p>
+<p><b>De(v)</b> - Return the denominator of the rational number.<br>
+<b>Nu(v)</b> - Return the numerator of rational number.<br>
+<b>Rat(m[,n])</b> - Create rational number using num (and denom).<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b} <br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b <br>
-<b>copy(v)</b> - Возвращает копию рационального числа.<br>
-<b>decimal(v)</b> - Возвращает десятичное представление дроби.<br>
-<b>gcd(a,b)</b> - Наименьшее общее кратное двух чисел.<br>
-<b>serialize(obj)</b> - Строковое представление рационального числа с учётом внутренней структуры.<br></p>
+<b>copy(v)</b> - Get copy of the rational number.<br>
+<b>decimal(v)</b> - Return rational number as decimal.<br>
+<b>gcd(a,b)</b> - Calculate the greatest common divisor for two integers.<br>
+<b>serialize(obj)</b> - Save internal representation of rational number.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'rational'
 Rat = require 'liblc.rational'
@@ -895,24 +905,24 @@ print(a)
 <a href="#Top">Top</a>
 <a name="Spec"></a>
 <h3 align="center"># Spec (special) #</h3>
-<p align="center">Специальные математические функции.</p>
+<p align="center">Special mathematical functions.</p>
 <p><b>Dawson(x)</b> - Dawson integral.<br>
 <b>Legendre(n,x)</b> - Return list of Legendre polynomial coefficients.<br>
-<b>bessi(n,x)</b> - Модифицированная функция Бесселя In(x).<br>
-<b>bessj(n,x)</b> - Функция Бесселя первого рода.<br>
-<b>bessk(n,x)</b> - Модифицированная функция Бесселя Kn(x).<br>
-<b>bessy(n,x)</b> - Функция Бесселя второго рода.<br>
-<b>beta(z,w)</b> - Бета-функция.<br>
-<b>betainc(x,a,b)</b> - Неполная бета-функция Ix(a,b).<br>
-<b>betaln(z,w)</b> - Натуральный логарифм бета-функции.<br>
-<b>erf(x)</b> - Функция ошибок.<br>
-<b>erfc(x)</b> - Дополнительная функция ошибки.<br>
-<b>expint(n,x)</b> - Интегральная экспонента En(x).<br>
-<b>gamma(z)</b> - Гамма-функция.<br>
-<b>gammainc(x,a,type)</b> - Неполная гамма-функция, P (type='lower') или Q (type='upper').<br>
-<b>gammaln(z)</b> - Натуральный логарифм гамма-функции.<br>
-<b>gammp(a,x)</b> - Неполная гамма-функция P(a,x).<br>
-<b>gammq(a,x)</b> - Неполная гамма-функция Q(a,x) = 1-P(a,x).<br></p>
+<b>bessi(n,x)</b> - Modified Bessel function In(x).<br>
+<b>bessj(n,x)</b> - Bessel function of the first kind.<br>
+<b>bessk(n,x)</b> - Modified Bessel function Kn(x).<br>
+<b>bessy(n,x)</b> - Bessel function of the second kind.<br>
+<b>beta(z,w)</b> - Beta function.<br>
+<b>betainc(x,a,b)</b> - Incomplete beta function Ix(a,b).<br>
+<b>betaln(z,w)</b> - Natural logarithm of beta function.<br>
+<b>erf(x)</b> - Error function.<br>
+<b>erfc(x)</b> - Complementary error function.<br>
+<b>expint(n,x)</b> - Exponential integral En(x).<br>
+<b>gamma(z)</b> - Gamma function.<br>
+<b>gammainc(x,a,type)</b> - Incomplete gamma function, P (type=lower) or Q (type=upper).<br>
+<b>gammaln(z)</b> - Natural logarithm of gamma function.<br>
+<b>gammp(a,x)</b> - Incomplete gamma function P(a,x).<br>
+<b>gammq(a,x)</b> - Incomplete gamma function Q(a,x) = 1-P(a,x).<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'special'
 Spec = require 'liblc.special'
@@ -966,30 +976,30 @@ ans = Spec.Dawson(3.3)             --~ 0.1598
 <a href="#Top">Top</a>
 <a name="Stat"></a>
 <h3 align="center"># Stat (stat) #</h3>
-<p align="center">Статистические вычисления. Данные должны быть представлены в виде Lua таблиц.</p>
-<p><b>chi2cdf(x,v)</b> - Хи-квадрат распределение.<br>
-<b>chi2pdf(x,v)</b> - Плотность хи-квадрат распределения.<br>
-<b>cmoment(n,x[,p])</b> - Центральный момент x порядка n, p - список весов.<br>
-<b>fcdf(x,v1,v2)</b> - Функция F-распределения.<br>
-<b>fpdf(x,v1,v2)</b> - Плотность F-распределения.<br>
-<b>freq(t)</b> - Возвращает таблицу с частотами элементов.<br>
-<b>geomean(t[,w])</b> - Геометрическое среднее.<br>
-<b>harmean(t[,w])</b> - Гармоническое среднее.<br>
-<b>hyst(data[,N[,a,b]])</b> - Расчёт гистограммы на интервале [a,b] с N диапазонами. Возвращает шкалу (X) и частоты (Y).<br>
-<b>max(t)</b> - Наибольший элемент и его индекс.<br>
-<b>mean(t[,w])</b> - Расчёт среднего значения (с учётом весов).<br>
-<b>median(t)</b> - Медиана списка.<br>
-<b>min(t)</b> - Минимальный элемент и его индекс.<br>
-<b>moment(n,x[,p])</b> - Расчёт момента x порядка n, p - список весов.<br>
-<b>normcdf(x,mu,sig)</b> - Нормальное распределение.<br>
-<b>normpdf(x,nu,sig)</b> - Плотность нормального распределения.<br>
-<b>poisscdf(x,lam)</b> - Распределение Пуассона.<br>
-<b>poisspdf(x,lam)</b> - Плотность распределения Пуассона.<br>
-<b>std(t[,w])</b> - Стандартное отклонение и дисперсия (с учётом весов).<br>
-<b>stdcorr(t)</b> - Скорректированные значения стандартного отклонения и дисперсии.<br>
-<b>sum(t)</b> - Сумма элементов выборки.<br>
-<b>tcdf(x,nu)</b> - Распределение Стьюдента.<br>
-<b>tpdf(x,nu)</b> - Плотность распределения Стьюдента.<br></p>
+<p align="center">Statistical calculations. Data set must be a Lua table.</p>
+<p><b>chi2cdf(x,v)</b> - Chi-square cumulative distribution.<br>
+<b>chi2pdf(x,v)</b> - Chi-square distribution density.<br>
+<b>cmoment(n,x[,p])</b> - Central moment of x order n, p is a list of weights.<br>
+<b>fcdf(x,v1,v2)</b> - F cumulative distribution.<br>
+<b>fpdf(x,v1,v2)</b> - F distribution density.<br>
+<b>freq(t)</b> - Return table with frequencies of elements.<br>
+<b>geomean(t[,w])</b> - Geometrical mean.<br>
+<b>harmean(t[,w])</b> - Harmonic mean.<br>
+<b>hyst(data[,N[,a,b]])</b> - Find hystogram for given data on the interval [a,b] with N ranges. Return table with scale (X) and frequencies (Y).<br>
+<b>max(t)</b> - Maximal element and its index.<br>
+<b>mean(t[,w])</b> - Calculate average value. Weights are can be used.<br>
+<b>median(t)</b> - List median.<br>
+<b>min(t)</b> - Minimal element and its index.<br>
+<b>moment(n,x[,p])</b> - Moment of x order n, p is a list of weights.<br>
+<b>normcdf(x,mu,sig)</b> - Normal cumulative distribution.<br>
+<b>normpdf(x,nu,sig)</b> - Normal distribution density.<br>
+<b>poisscdf(x,lam)</b> - Poisson cumulative distribution.<br>
+<b>poisspdf(x,lam)</b> - Poisson distribution density.<br>
+<b>std(t[,w])</b> - Standard deviation and variance. Weights are can be used.<br>
+<b>stdcorr(t)</b> - Corrected value of standard deviation and variance.<br>
+<b>sum(t)</b> - Get sum of all elements.<br>
+<b>tcdf(x,nu)</b> - Student's cumulative distribution.<br>
+<b>tpdf(x,nu)</b> - Student's distribution density.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'stat'
 Stat = require 'liblc.stat'
@@ -1069,14 +1079,14 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 <a href="#Top">Top</a>
 <a name="DS"></a>
 <h3 align="center"># DS (struct) #</h3>
-<p align="center">Базовые структуры данных.</p>
-<p><b>Heap([less])</b> - Создаёт новую кучу. Для сравнения элементов может быть переопределён метод 'less'.<br>
+<p align="center">Main data structures.</p>
+<p><b>Heap([less])</b> - Create new heap object. Comparison method 'less' can be predefined.<br>
 <b>Heap.copy(h)</b> - Make copy of the heap.<br>
 <b>Heap.insert(v)</b> - Add element to the heap.<br>
 <b>Heap.isEmpty(h)</b> - Return true if the heap is empty.<br>
 <b>Heap.size(h)</b> - Get number of elements in the heap.<br>
 <b>Heap.top()</b> - Return top element. For the default less() function top is maximum.<br>
-<b>Queue()</b> - Создаёт новую очередь.<br>
+<b>Queue()</b> - Create new queue.<br>
 <b>Queue.add(val)</b> - Add value to the back of queue.<br>
 <b>Queue.addFirst(val)</b> - Add value to the top of queue.<br>
 <b>Queue.copy(q)</b> - Make copy of the queue.<br>
@@ -1095,7 +1105,7 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 <b>Set.table(S)</b> - Represent set as a table.<br>
 <b>Set: comparison</b> - a==b, a~=b, a<b, a<=b, a>b, a>=b<br>
 <b>Set: union, intersection, difference</b> - a+b, a*b, a/b<br>
-<b>Stack()</b> - Создаёт новый стек.<br>
+<b>Stack()</b> - Create new stack.<br>
 <b>Stack.copy(s)</b> - Create copy of the stack.<br>
 <b>Stack.isEmpty(s)</b> - Return true if the stack is empty.<br>
 <b>Stack.peek()</b> - Return top value without removing it.<br>
@@ -1227,13 +1237,15 @@ print(a)
 <a href="#Top">Top</a>
 <a name="Unit"></a>
 <h3 align="center"># Unit (units) #</h3>
-<p align="center">Операции и преобразования с учётом единиц измерения.</p>
-<p><b>Unit(v[,u])</b> - Создание новой величины с заданными единицами измерения.<br>
-<b>add(unit,rule)</b> - Добавление правила для преобразования заданных величин.<br>
-<b>convert(v, units)</b> - Преобразование единиц измерения, возвращает новый объект или nil.<br>
-<b>copy(u)</b> - Копия элемента.<br>
-<b>prefix</b> - Таблица возможных префиксов для единиц измерений.<br>
-<b>serialize(obj)</b> - Строковое представление объекта с единицами измерения.<br></p>
+<p align="center">Operations and conversations according the units.</p>
+<p><b>Unit(v[,u])</b> - Create new elements with units.<br>
+<b>add(unit,rule)</b> - Add new rule for conversation.<br>
+<b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n<br>
+<b>comparison</b> - a==b, a~=b, a<b, a<=b, a>b, a>=b<br>
+<b>convert(v, units)</b> - Convert one units to another, return new object or nil.<br>
+<b>copy(u)</b> - Create copy of the element.<br>
+<b>prefix</b> - Table of possible prefixes for units.<br>
+<b>serialize(obj)</b> - Save internal representation of units object.<br></p>
 <pre style="background-color: silver; width: 700px;">
 -- import 'units'
 Unit = require 'liblc.units'

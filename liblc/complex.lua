@@ -77,8 +77,8 @@ local FUNCTIONS = 'functions'
 -- check object
 local function iscomplex(c) return type(c) == 'table' and c.iscomplex end
 
-local function cosh (x) return 0.5*(math.exp(x)+math.exp(-x)) end
-local function sinh (x) return 0.5*(math.exp(x)-math.exp(-x)) end
+local function ch (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+local function sh (x) return 0.5*(math.exp(x)-math.exp(-x)) end
 
 --	INFO
 
@@ -229,26 +229,26 @@ complex.about[complex.sqrt] = {"sqrt(z)", "Return square root. Result can be rea
 complex.exp = function (v)
    if iscomplex(v) then
       local r = math.exp(v[1])
-      return complex:new(r*cos(v[2]), r*sin(v[2]))
+      return complex:new(r*math.cos(v[2]), r*math.sin(v[2]))
    else
       return math.exp(v)
    end
 end
 complex.about[complex.exp] = {"exp(z)", "Return expenent in real or complex power.", FUNCTIONS}
 
-complex.ln = function (z)
+complex.log = function (z)
    if type(v) == "number" then
       return z <= 0 and complex:new(math.log(-z),math.pi) or math.log(z)
    else
       return complex:new(0.5*math.log(z[1]^2+z[2]^2), math.atan(z[2],z[1]))
    end
 end
-complex.about[complex.ln] = {"ln(z)", "Complex logarithm.", FUNCTIONS}
+complex.about[complex.log] = {"log(z)", "Complex logarithm.", FUNCTIONS}
 
 -- sinus
 complex.sin = function (v)
    if iscomplex(v) then
-      return complex:new(math.sin(v[1])*cosh(v[2]), math.cos(v[1])*sinh(v[2]))
+      return complex:new(math.sin(v[1])*ch(v[2]), math.cos(v[1])*sh(v[2]))
    else
       return math.sin(v)
    end
@@ -258,7 +258,7 @@ complex.about[complex.sin] = {"sin(z)", "Return sinus of real or complex number.
 -- cosinus
 complex.cos = function (z)
    if iscomplex(z) then
-      return complex:new(math.cos(z[1])*cosh(z[2]), -math.sin(z[1])*sinh(z[2]))
+      return complex:new(math.cos(z[1])*ch(z[2]), -math.sin(z[1])*sh(z[2]))
    else
       return math.cos(z)
    end
@@ -268,8 +268,8 @@ complex.about[complex.cos] = {"cos(z)", "Return cosine of real or complex number
 -- tangent
 complex.tan = function (z)
    if iscomplex(z) then
-      local den = math.cos(2*z[1]) + cosh(2*z[2])
-      return complex:new(math.sin(2*z[1])/den, sinh(2*z[2])/den)
+      local den = math.cos(2*z[1]) + ch(2*z[2])
+      return complex:new(math.sin(2*z[1])/den, sh(2*z[2])/den)
    else
       return math.tan(z)
    end
@@ -277,32 +277,20 @@ end
 complex.about[complex.tan] = {"tan(z)", "Return tangent of real or complex number.", FUNCTIONS}
 
 -- hyperbolic
-complex.sh = function (z)
-   if iscomplex(z) then
+complex.sinh = function (z)
       return 0.5*(complex.exp(z)-complex.exp(-z))
-   else
-      return sinh(z)
-   end
 end
-complex.about[complex.sh] = {"sh(z)", "Return hyperbolic sinus of a real or complex number.", FUNCTIONS}
+complex.about[complex.sinh] = {"sinh(z)", "Return hyperbolic sinus of a real or complex number.", FUNCTIONS}
 
-complex.ch = function (z)
-   if iscomplex(z) then
+complex.cosh = function (z)
       return 0.5*(complex.exp(z)+complex.exp(-z))
-   else
-      return cosh(z)
-   end
 end
-complex.about[complex.ch] = {"ch(z)", "Return hyperbolic cosine of a real or complex nubmer.", FUNCTIONS}
+complex.about[complex.cosh] = {"cosh(z)", "Return hyperbolic cosine of a real or complex nubmer.", FUNCTIONS}
 
-complex.th = function (z)
-   if iscomplex(z) then
-      return (complex.exp(2*z)-1)/(complex.exp(2*z)+1)
-   else
-      return sinh(z)/cosh(z)
-   end
+complex.tanh = function (z)
+   return complex.sinh(z) / complex.cosh(z)
 end
-complex.about[complex.th] = {"th(z)", "Return hyperbolic tangent of a real or complex number.", FUNCTIONS}
+complex.about[complex.tanh] = {"tanh(z)", "Return hyperbolic tangent of a real or complex number.", FUNCTIONS}
 
 -- imaginary unit
 complex._i   = complex:new(0,1)
@@ -332,7 +320,7 @@ complex.onImport = function ()
    _i = complex._i
    sqrt = complex.sqrt
    exp = complex.exp
-   ln  = complex.ln
+   log  = complex.log
    sin = complex.sin
    cos = complex.cos
    tan = complex.tan

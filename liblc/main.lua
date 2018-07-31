@@ -21,10 +21,10 @@ ans = round(0.9)                 --> 1.0
 ans = round(math.pi, 2)          --> 3.14
 
 -- 'small' factorial - int
-ans = fact(12)                   --> 479001600
+ans = factorial(12)              --> 479001600
 
 -- 'big' factorial - float
-ans = fact(50)                   --~ 3.0414E+64
+ans = factorial(50)              --~ 3.0414E+64
 
 -- get object type
 ans = lc.type(25)                --> 'integer'
@@ -67,7 +67,7 @@ local main = {_LOG10=math.log(10)}
 -- Common
 abs = math.abs;    about[abs] = {"abs(x)", "Absolute value."}
 exp = math.exp;    about[exp] = {"exp(x)", "Exponent."}
-ln = math.log;     about[ln] = {"ln(x)", "Natural logarithm."}
+log = math.log;    about[log] = {"log(x)", "Natural logarithm."}
 sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root."}
 max = math.max;    about[max] = {"max(...)", "Maximum number."}
 min = math.min;    about[min] = {"min(...)", "Minimum number."}
@@ -79,15 +79,15 @@ asin = math.asin;  about[asin] = {"asin(x)", "Arcsine x.", TRIG}
 acos = math.acos;  about[acos] = {"acos(x)", "Arc cosine x.", TRIG}
 atan = math.atan;  about[atan] = {"atan(y[,x])", "Arctangent y. In case of 2 parameters calculate y/x with signs.", TRIG}
 -- Hyperbolic
-ch = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
-about[ch] = {"ch(x)", "Hyperbolic cosine.", HYP}
-sh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end   
-about[sh] = {"sh(x)", "Hyperbolic sinus.", HYP}
-th = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
-about[th] = {"th(x)", "Hyperbolic tangent.", HYP}
+cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+about[cosh] = {"cosh(x)", "Hyperbolic cosine.", HYP}
+sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end   
+about[sinh] = {"sinh(x)", "Hyperbolic sinus.", HYP}
+tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
+about[tanh] = {"tanh(x)", "Hyperbolic tangent.", HYP}
 -- Angles 
-deg = math.deg;    about[deg] = {"deg(x)", "Radians to degrees."}
-rad = math.rad;    about[rad] = {"rad(x)", "Degrees to radians."}
+rad2deg = math.deg;    about[rad2deg] = {"rad2deg(x)", "Convert radians to degrees."}
+deg2rad = math.rad;    about[deg2rad] = {"deg2rad(x)", "Convert degrees to radians."}
 -- Rounding
 floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", lc_help.OTHER}
 ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", lc_help.OTHER}
@@ -96,20 +96,20 @@ _pi = math.pi;     about[_pi] = {"_pi", "Number pi", lc_help.CONST}
 _e = math.exp(1.0) about[_e] = {"_e", "Euler number", lc_help.CONST}
 
 
-lg = function (x) return math.log(x)/main._LOG10 end
-about[lg] = {"lg(x)", "Decimal logarithm."}
+log10 = function (x) return math.log(x)/main._LOG10 end
+about[log10] = {"log10(x)", "Decimal logarithm."}
 
 rand = function () return math.random() end
-about[rand] = {"rand()", "Random number between 0 and 1."}
+about[rand] = {"rand([a,b])", "Random number between 0 and 1 or in the given interval of integers."}
 -- hyperbolic arcsine
-ash = function (x) return math.log(x+math.sqrt(x*x+1)) end
-about[ash] = {"ash(x)", "Hyperbolic arcsine.", HYP}
+asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
+about[asinh] = {"asinh(x)", "Hyperbolic arcsine.", HYP}
 -- hyperbolic arc cosine
-ach = function (x) return math.log(x+math.sqrt(x*x-1)) end
-about[ach] = {"ach(x)", "Hyperbolic arc cosine.", HYP}
+acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
+about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
 -- hyperbolic arctangent
-ath = function (x) return 0.5*math.log((1+x)/(1-x)) end
-about[ath] = {"ath(x)", "Hyperbolic arctangent.", HYP}
+atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
+about[atanh] = {"atanh(x)", "Hyperbolic arctangent.", HYP}
 
 -- round to closest integer
 round = function (x,n)
@@ -131,7 +131,7 @@ main.eval = function (fn, x1, xn, step)
    for k = x1, xn, step do print("x="..k.."\tres="..fn(k)) end
 end
 
-fact = function (n)
+factorial = function (n)
    assert(n >= 0 and math.type(n) == 'integer', 'Expected positive integer value!')
    local tmp = factorials[n]
    if tmp and tmp < math.huge then return tmp end
@@ -145,7 +145,7 @@ fact = function (n)
    end
    return factorials[n]
 end
-about[fact] = {'fact(n)', 'Evaluate factorial.'}
+about[factorial] = {'factorial(n)', 'Evaluate factorial.'}
 
 -- read object from its serialization
 main.deserialize = function (obj_str)
@@ -281,16 +281,6 @@ main.life = function (board)
       src = new
       io.write(string.format('#%-3d continue? (y/n) ', gen))
    until 'n' == io.read()
-end
-
--- Evaluate string equations, separated with semicolon, print result
-main.evalStr = function (s)
-   local T = require 'liblc.files'
-   for c in T.split(s,';') do
-      if not (c:find('=') or c:find('print')) then c = string.format('print(%s)',c) end
-      local fn = load(c)
-      if fn then fn() end
-   end
 end
 
 main.evalText = function (src,dst)

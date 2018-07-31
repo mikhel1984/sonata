@@ -2,6 +2,13 @@
 
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possible.
+--
+--  Object structure:</br>
+--  <code>{a1...an, b1...bn, c1...cn, ...,</br> array_size, index_coefficients}</code></br>
+--  i.e. all elements of the array are writen sequentially, row by row. Position of one element is calculated as
+--  <code>C1*n1+C2*n2+...+Ck*nk</code>
+--  where <code>{n1,n2,...nk}<code> - index, <code>C1...Ck</code> - size based coefficients.
+--
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -65,15 +72,10 @@ print(d:fullString(2,3))
 -- Compatibility with previous versions
 local Ver = require "liblc.versions"
 
--- Check object type.
+--- Check object type.
+--  @param t Object.
+--  @return True if the object is array.
 local function isarray(t) return type(t) == 'table' and t.isarray end
-
--- Prepare list of coefficients
-local function getk (tsize)
-   local k = {1}
-   for i = 2, #tsize do k[i] = tsize[i-1]*k[i-1] end
-   return k
-end
 
 --	INFO
 
@@ -97,157 +99,194 @@ about = help:new("Manipulations with arrays of elements.")
 -- metamethods
 array.__index = array
 
--- Create new object, set metatable.
-array.new = function (self, tsize)
-   return setmetatable({size=tsize, k=getk(tsize)}, self)
+--- Create new object, set metatable.
+--  @param self Pointer to object.
+--  @param tSize Table with array size.
+--  @return Empty array.
+array.new = function (self, tSize)
+   -- prepare list of coefficients
+   local k = {1}
+   for i = 2, #tSize do k[i] = tSize[i-1]*k[i-1] end
+   -- return new object
+   return setmetatable({size=tSize, k=k}, self)
 end
 
--- Check index correctness.
-array._isIndex = function (arr, tind)
-   if #arr.size ~= #tind then return false end
-   for i = 1,#tind do 
-      if tind[i] > arr.size[i] or tind[i] < 1 then return false end
+--- Check index correctness.
+--  @param A Array.
+--  @param tInd Index to check.
+--  @return True if the index is correct for current array.
+array._isIndex = function (A, tInd)
+   if #A.size ~= #tInd then return false end
+   for i = 1,#tInd do 
+      if tInd[i] > A.size[i] or tInd[i] < 1 then return false end
    end
    return true
 end
 
--- Transform index into single dimension representation.
-array._indexConvert = function (arr, tind)
-   local res, k = tind[1], arr.k
-   for i = 2,#tind do 
-      res = res + (tind[i]-1) * k[i]
+--- Transform index into single dimension representation.
+--  @param A Array.
+--  @param tInd Element index.
+--  @return Position of the element in the array table.
+array._indexConvert = function (A, tInd)
+   local res, k = tInd[1], A.k
+   for i = 2,#tInd do 
+      res = res + (tInd[i]-1) * k[i]
    end
    return res
 end
 
--- Maximum number of elements in array.
-array._capacity = function (arr)
-   local S,K = arr.size, arr.k
+--- Maximum number of elements in the array.
+--  @param A Array.
+--  @return "Volume" of the array.
+array._capacity = function (A)
+   local S,K = A.size, A.k
    return S[#S] * K[#K]
 end
 
 --- Get array element.
---    @param arr Array object.
---    @param tind Index of the element (table).
---    @return Element or error if index is wrong.
-array.get = function (arr, tind)
-   assert(array._isIndex(arr, tind), "Wrong index!")
-   return arr[array._indexConvert(arr, tind)]
+--  @param A Array object.
+--  @param tInd Index of the element (table).
+--  @return Element or error if index is wrong.
+array.get = function (A, tInd)
+   if not array._isIndex(A, tInd) then error("Wrong index!") end
+   return A[array._indexConvert(A, tInd)]
 end
-array.about[array.get] = {"get(arr,ind)", "Get array element. Index is a table."}
+array.about[array.get] = {"get(A,tInd)", "Get array element. Index is a table."}
 
 --- Set new value.
---    @param arr Array object.
---    @param tind Element index (table).
---    @param val New value.
-array.set = function (arr, tind, val)
-   assert(array._isIndex(arr, tind), "Wrong index!")
-   arr[array._indexConvert(arr,tind)] = val 
+--  @param A Array object.
+--  @param tInd Element index (table).
+--  @param val New value.
+array.set = function (A, tInd, val)
+   if not array._isIndex(A, tInd) then error("Wrong index!") end
+   A[array._indexConvert(A,tInd)] = val 
 end
-array.about[array.set] = {"set(arr,ind,val)", "Set value to the array. Index is a table."}
+array.about[array.set] = {"set(A,tInd,val)", "Set value to the array. Index is a table."}
 
 --- Get array copy.
---    @param arr Array object.
---    @return Deep copy of the array.
-array.copy = function (arr)
-   local cp = array:new(Ver.move(arr.size, 1, #arr.size, 1, {}))          -- copy size, create new array
-   return Ver.move(arr, 1, array._capacity(arr), 1, cp)                   -- copy array elements
+--  @param A Array object.
+--  @return Deep copy of the array.
+array.copy = function (A)
+   local cp = array:new(Ver.move(A.size, 1, #A.size, 1, {}))          -- copy size, create new array
+   return Ver.move(A, 1, array._capacity(A), 1, cp)                   -- copy array elements
 end
-array.about[array.copy] = {"copy(arr)", "Get copy of the array.", help.OTHER}
+array.about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
 
 --- Compare array size.
---    @param a1 First array object.
---    @param a2 Second array object.
---    @return <code>true</code> if size is the same.
-array.isEqual = function (arr1, arr2)
-   if isarray(arr1) and isarray(arr2) and #arr1.size == #arr2.size then
-      for i = 1, #arr1.size do
-         if arr1.size[i] ~= arr2.size[i] then return false end
+--  @param A1 First array object.
+--  @param A2 Second array object.
+--  @return True if size is the same.
+array.isEqual = function (A1, A2)
+   if isarray(A1) and isarray(A2) and #A1.size == #A2.size then
+      -- compare size
+      for i = 1, #A1.size do
+         if A1.size[i] ~= A2.size[i] then return false end
       end
       return true
    end
    return false
 end
-array.about[array.isEqual] = {"isEqual(a1,a2)", "Check size equality.", help.OTHER}
+array.about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTHER}
 
 --- Apply function of 2 arguments.
---    @param a1 First array object.
---    @param a2 Second array object.
---    @param fn Function with 2 arguments.
---    @return New array where each element is result of the function evaluation fn(a1[i],a2[i]).
-array.apply = function (arr1, arr2, ffun)
-   assert(array.isEqual(arr1,arr2), "Not compatible arrays!")
-   local res, v = array:new(Ver.move(arr1.size, 1, #arr1.size, 1, {}))    -- prepare empty copy
-   for i = 1, array._capacity(arr1) do 
-      v = ffun(arr1[i] or 0, arr2[i] or 0)           -- elements can be empty
-      if v ~= 0 then res[i] = v end                  -- save nonzero values
+--  @param A1 First array object.
+--  @param A2 Second array object.
+--  @param func Function with 2 arguments.
+--  @return New array where each element is result of the function evaluation fn(a1[i],a2[i]).
+array.apply = function (A1, A2, func)
+   if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
+   local res, v = array:new(Ver.move(A1.size, 1, #A1.size, 1, {}))    -- prepare empty copy
+   for i = 1, array._capacity(A1) do 
+      v = func(A1[i] or 0, A2[i] or 0)                                -- elements can be empty
+      if v ~= 0 then res[i] = v end                                   -- save nonzero values
    end
    return res
 end
-array.about[array.apply] = {"apply(a1,a2,fn)", "Apply function of 2 arguments. Return new array.", help.OTHER}
+array.about[array.apply] = {"apply(A1,A2,func)", "Apply function of 2 arguments. Return new array.", help.OTHER}
 
 --- Apply function of 1 argument.
---    @param a Array object.
---    @param fn Function with 1 argument.
---    @return New array where each element is result of the function evaluation fn(a[i]).
-array.map = function (arr, ffun)
-   local res, v = array:new(Ver.move(arr.size, 1, #arr.size, 1, {}))
-   for i = 1, array._capacity(arr) do
-      v = ffun(arr[i] or 0)                          -- elements can be empty
+--  @param A Array object.
+--  @param func Function with 1 argument.
+--  @return New array where each element is result of the function evaluation func(a[i]).
+array.map = function (A, func)
+   local res, v = array:new(Ver.move(A.size, 1, #A.size, 1, {}))
+   for i = 1, array._capacity(A) do
+      v = func(A[i] or 0)                            -- elements can be empty
       if v ~= 0 then res[i] = v end                  -- save nonzero values
    end
    return res
 end
-array.about[array.map] = {"map(a,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
+array.about[array.map] = {"map(A,func)", "Apply function of 1 argument. Return new array.", help.OTHER}
 
--- a1 + a2
-array.__add = function (a1, a2)
-   return array.apply(a1, a2, array._add_)
+--- A1 + A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with elementwise sum.
+array.__add = function (A1, A2)
+   return array.apply(A1, A2, array._add_)
 end
 
--- a1 - a2
-array.__sub = function (a1, a2)
-   return array.apply(a1, a2, array._sub_)
+--- A1 - A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with elementwise difference.
+array.__sub = function (A1, A2)
+   return array.apply(A1, A2, array._sub_)
 end
 
--- -a
-array.__unm = function (a)
-   return array.map(a, array._unm_)
+--- -A
+--  @param A Array.
+--  @return Array with inverted sign.
+array.__unm = function (A)
+   return array.map(A, array._unm_)
 end
 
--- a1 * a2
-array.__mul = function (a1, a2)
-   return array.apply(a1, a2, array._mul_)
+--- A1 * A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with element wise product.
+array.__mul = function (A1, A2)
+   return array.apply(A1, A2, array._mul_)
 end
 
--- a1 / a2
-array.__div = function (a1, a2)
-   return array.apply(a1, a2, array._div_)
+--- A1 / A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with element wise ratio.
+array.__div = function (A1, A2)
+   return array.apply(A1, A2, array._div_)
 end
 
--- a1 ^ a2
-array.__pow = function (a1, a2)
-   return array.apply(a1, a2, array._pow_)
+--- A1 ^ A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with element wise power.
+array.__pow = function (A1, A2)
+   return array.apply(A1, A2, array._pow_)
 end
 
 array.arithmetic = 'arithmetic'
 array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.META}
 
 --- Random array generator.
---    @param s Size table.
---    @return Array of the given size with random numbers from 0 to 1.
-array.rand = function (tsize)
-   local arr = array:new(tsize)
+--  @param tSize Size table.
+--  @return Array of the given size with random numbers from 0 to 1.
+array.rand = function (tSize)
+   local arr = array:new(tSize)
    for i = 1, array._capacity(arr) do arr[i] = math.random() end
    return arr
 end
-array.about[array.rand] = {"rand(size)", "Return array with random numbers between 0 and 1."}
+array.about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
 
--- a1 == a2
-array.__eq = function (arr1, arr2)
-   if array.isEqual(arr1,arr2) then
-      for i = 1, array._capacity(arr1) do
-	 if (arr1[i] or 0) ~= (arr2[i] or 0) then return false end
+--- a1 == A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return True if all elements are equal.
+array.__eq = function (A1, A2)
+   if array.isEqual(A1,A2) then
+      -- compare element wise
+      for i = 1, array._capacity(A1) do
+	 if (A1[i] or 0) ~= (A2[i] or 0) then return false end
       end
       return true
    end
@@ -258,28 +297,28 @@ array.comparison = 'comparison'
 array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
 
 --- Get array dimension.
---    @param arr Array object.
---    @return Table of size.
-array.dim = function (arr)
-   return Ver.move(arr.size, 1, #arr.size, 1, {})
+--  @param A Array object.
+--  @return Table with array size.
+array.dim = function (A)
+   return Ver.move(A.size, 1, #A.size, 1, {})
 end
-array.about[array.dim] = {"dim(arr)", "Return size of array."}
+array.about[array.dim] = {"dim(A)", "Return size of array."}
 
 --- Get part of array between two indexes.
---    @param arr Array object.
---    @param tind1 Index of the lower bound.
---    @param tind2 Index of the upper bound.
---    @return Array of elements restricted by the indexes.
-array.sub = function (arr, tind1, tind2)
+--  @param A Array object.
+--  @param tInd1 Index of the lower bound.
+--  @param tInd2 Index of the upper bound.
+--  @return Array of elements restricted by the indices.
+array.sub = function (A, tInd1, tInd2)
    -- negative index means the last element
-   for i = 1, #tind2 do 
-      if tind2[i] < 0 then tind2[i] = tind2[i] + arr.size[i] + 1 end 
+   for i = 1, #tInd2 do 
+      if tInd2[i] < 0 then tInd2[i] = tInd2[i] + A.size[i] + 1 end 
    end
-   assert(array._isIndex(arr, tind1) and array._isIndex(arr, tind2), "Wrong index!")
+   if not (array._isIndex(A, tInd1) and array._isIndex(A, tInd2)) then error("Wrong index!") end
    -- prepare tables
    local newsize, ind = {}, {}
-   for i = 1, #tind1 do 
-      newsize[i] = tind2[i] - tind1[i] + 1 
+   for i = 1, #tInd1 do 
+      newsize[i] = tInd2[i] - tInd1[i] + 1 
       ind[i]     = 0
    end 
    local res = array:new(newsize)
@@ -289,32 +328,32 @@ array.sub = function (arr, tind1, tind2)
       -- calculate new temporary index
       for i = 1, #ind do 
          local tmp = math.modf(count/K[i]) % S[i]
-	 tind2[i] = tind1[i] + tmp
+	 tInd2[i] = tInd1[i] + tmp
 	 ind[i] = tmp + 1
       end
-      res[array._indexConvert(res,ind)] = arr[array._indexConvert(arr,tind2)]
+      res[array._indexConvert(res,ind)] = A[array._indexConvert(A,tInd2)]
    end
    return res
 end
-array.about[array.sub] = {"sub(arr,ind1,ind2)", "Return subarray restricted by 2 indexes."}
+array.about[array.sub] = {"sub(A,tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
 
 --- Concatenate 2 arrays along given axes.
---    @param arr1 First array object.
---    @param arr2 Second array object.
---    @param naxis Axis number.
---    @return New concatenated array.
-array.concat = function (arr1, arr2, naxis)
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @param nAxis Axis number.
+--  @return New concatenated array.
+array.concat = function (A1, A2, nAxis)
    -- check size
-   assert(naxis > 0 and naxis <= #arr1.size, "Wrong naxis!")
-   for i = 1, #arr1.size do 
-     if not (arr1.size[i] == arr2.size[i] or i == naxis) then error("Different size!") end
+   if not (nAxis > 0 and nAxis <= #A1.size) then error("Wrong axis!") end
+   for i = 1, #A1.size do 
+     if not (A1.size[i] == A2.size[i] or i == nAxis) then error("Different size!") end
    end
    -- prepare new size
-   local newsize = Ver.move(arr1.size, 1, #arr1.size, 1, {})
-   newsize[naxis] = newsize[naxis] + arr2.size[naxis]
+   local newsize = Ver.move(A1.size, 1, #A1.size, 1, {})
+   newsize[nAxis] = newsize[nAxis] + A2.size[nAxis]
    -- combine
    local res, ind1, ind2 = array:new(newsize), {}, {}
-   local edge = arr1.size[naxis]
+   local edge = A1.size[nAxis]
    local K, S = res.k, res.size
    for count = 1, array._capacity(res) do
       -- prepare index
@@ -323,55 +362,57 @@ array.concat = function (arr1, arr2, naxis)
 	 ind2[i] = ind1[i]
       end
       -- get value
-      local second = ind1[naxis] > edge
-      ind2[naxis] = second and (ind2[naxis]-edge) or ind2[naxis]
-      res[array._indexConvert(res,ind1)] = second and arr2[array._indexConvert(arr2,ind2)] or arr1[array._indexConvert(arr1,ind2)]
+      local second = ind1[nAxis] > edge
+      ind2[nAxis] = second and (ind2[nAxis]-edge) or ind2[nAxis]
+      res[array._indexConvert(res,ind1)] = second and A2[array._indexConvert(A2,ind2)] or A1[array._indexConvert(A1,ind2)]
    end
    --for i = 1, array._capacity(arr2) do print(i, arr2[i]) end
    return res 
 end
-array.about[array.concat] = {"concat(a1,a2,axe)", "Array concatenation along the given axis."}
+array.about[array.concat] = {"concat(A1,A2,nAxis)", "Array concatenation along the given axis."}
 
 --- Method #
---    @param arr Array object.
---    @return Number of elements.
-array.__len = function (arr)
-   return array._capacity(arr)
+--  @param A Array object.
+--  @return Number of elements.
+array.__len = function (A)
+   return array._capacity(A)
 end
-array.about['#'] = {"#arr", "Return maximum number of elements.", help.META}
+array.about['#array'] = {"#array", "Return maximum number of elements.", help.META}
 
--- String representation.
-array.__tostring = function (arr)
-   return 'Array ' .. table.concat(arr.size, 'x')
+--- String representation.
+--  @param A Array.
+--  @return String representation of the array.
+array.__tostring = function (A)
+   return 'Array ' .. table.concat(A.size, 'x')
 end
 
 --- Get array slice.
---    Show sequence of 2D matrices with array elements.
---    @param arr Array object.
---    @param nrow Number of axes for representation as rows.
---    @param ncol Number of axes for representation as columns.
---    @return String with all array elements slice by slice.
-array.fullString = function (arr, nrow, ncol)
+--  Show sequence of 2D matrices with array elements.
+--  @param A Array object.
+--  @param nRow Number of axes for representation as rows.
+--  @param nCol Number of axes for representation as columns.
+--  @return String with all array elements slice by slice.
+array.fullString = function (A, nRow, nCol)
    local res = {}
-   local S = arr.size
+   local S = A.size
    -- 1 dimensional array
    if #S == 1 then
-      for i = 1, S[1] do res[i] = arr[i] or 0 end
+      for i = 1, S[1] do res[i] = A[i] or 0 end
       return table.concat(res, ' ')
    elseif #S == 2 then
-      nrow = nrow or 1
-      ncol = ncol or 2
+      nRow = nRow or 1
+      nCol = nCol or 2
    end
-   assert(nrow > 0 and nrow <= #S and ncol > 0 and ncol <= #S and nrow ~= ncol, "Wrong indexes!")
+   assert(nRow > 0 and nRow <= #S and nCol > 0 and nCol <= #S and nRow ~= nCol, "Wrong indexes!")
    -- get 2D layer as string
    local function layer (ind)
             local row, col = {}, {}
-	    for i = 1, S[nrow] do
-	       ind[nrow] = i
+	    for i = 1, S[nRow] do
+	       ind[nRow] = i
 	       -- get row
-	       for j = 1, S[ncol] do
-	          ind[ncol]  = j
-		  col[j] = arr[array._indexConvert(arr, ind)] or 0
+	       for j = 1, S[nCol] do
+	          ind[nCol]  = j
+		  col[j] = A[array._indexConvert(A, ind)] or 0
 	       end
 	       -- save
 	       row[i] = table.concat(col, ' ')
@@ -382,7 +423,7 @@ array.fullString = function (arr, nrow, ncol)
    local bound, current, extent = {}, {}, {}
    local prod = 1
    for i = 1, #S do
-      if i ~= nrow and i ~= ncol then 
+      if i ~= nRow and i ~= nCol then 
          bound[#bound+1] = S[i] 
 	 current[#current+1] = 0 
 	 extent[#extent+1] = prod
@@ -397,14 +438,13 @@ array.fullString = function (arr, nrow, ncol)
       -- write
       local k = #current
       for i = #next_index, 1, -1 do
-         if     i == nrow then next_index[i] = 'R'
-	 elseif i == ncol then next_index[i] = 'C'
+         if     i == nRow then next_index[i] = 'R'
+	 elseif i == nCol then next_index[i] = 'C'
 	 else
 	    next_index[i] = current[k]+1
 	    k = k-1
 	 end
       end
-      --print(next_index[1],next_index[2],next_index[3])
       -- get strings
       res[#res+1] = '{' .. table.concat(next_index,',') .. '}' 
       res[#res+1] = layer(next_index)
@@ -412,42 +452,42 @@ array.fullString = function (arr, nrow, ncol)
    end
    return table.concat(res, '\n') 
 end
-array.about[array.fullString] = {"fullString(arr,r,c)", "Represent array as sequence of matrices, where r and c are numbers of axes.", help.OTHER}
+array.about[array.fullString] = {"fullString(A,nRow,nCol)", "Represent array as sequence of matrices, where r and c are numbers of axes.", help.OTHER}
 
 -- Constructor
-setmetatable(array, {__call = function (self, v) 
+setmetatable(array, {__call = function (self, tSize) 
    -- check correctness
-   assert(type(v) == 'table', "Table is expected!")
-   for i = 1,#v do assert(v[i] > 0 and Ver.isInteger(v[i]), "Positive integer is expected!") end
+   assert(type(tSize) == 'table', "Table is expected!")
+   for i = 1,#tSize do assert(tSize[i] > 0 and Ver.isInteger(tSize[i]), "Positive integer is expected!") end
    -- build
-   return array:new(v) 
+   return array:new(tSize) 
 end})
 array.Arr = 'Arr'
-array.about[array.Arr] = {"Arr(size)", "Create empty array with given size, represented as a table.", help.NEW}
+array.about[array.Arr] = {"Arr(tSize)", "Create empty array with given size, represented as a table.", help.NEW}
 
 --- Array serialization.
---    @param obj Array object.
---    @return String, suitable for exchange.
-array.serialize = function (obj)
+--  @param A Array object.
+--  @return String, suitable for exchange.
+array.serialize = function (A)
    local s = {}
-   s[#s+1] = 'size={' .. table.concat(obj.size, ',') .. '}'
-   s[#s+1] = 'k={' .. table.concat(obj.k, ',') .. '}'
-   for i = 1, array._capacity(obj) do
-      if obj[i] then
-         s[#s+1] = string.format("[%d]=%s", i, (type(obj[i]) == 'string' and "'"..obj[i].."'" or obj[i]))
+   s[#s+1] = 'size={' .. table.concat(A.size, ',') .. '}'
+   s[#s+1] = 'k={' .. table.concat(A.k, ',') .. '}'
+   for i = 1, array._capacity(A) do
+      if A[i] then
+         s[#s+1] = string.format("[%d]=%s", i, (type(A[i]) == 'string' and "'"..A[i].."'" or A[i]))
       end
    end
    s[#s+1] = "metatablename='Arr'"
    s[#s+1] = "modulename='array'"
    return string.format("{%s}", table.concat(s, ','))
 end
-array.about[array.serialize] = {"serialize(obj)", "String representation of array internal structure.", help.OTHER}
+array.about[array.serialize] = {"serialize(A)", "String representation of array internal structure.", help.OTHER}
 
 --- Iterator across the array.
---    @param arr Array object.
---    @return Index of the next array element and the element itself, <code>nil</code> at the end.
-array.next = function (arr)
-   local a = array:new(Ver.move(arr.size, 1, #arr.size, 1, {})) -- copy size
+--  @param A Array object.
+--  @return Iterator which calculate index of the next array element and the element itself, <code>nil</code> at the end.
+array.next = function (A)
+   local a = array:new(Ver.move(A.size, 1, #A.size, 1, {})) -- copy size
    local count, S, K, len = 0, a.size, a.k, array._capacity(a)
 
    return function ()
@@ -455,10 +495,10 @@ array.next = function (arr)
 	     local res = {}
 	     for i = 1, #S do res[i] = math.modf(count/K[i]) % S[i]+1 end
 	     count = count + 1
-	     return res, arr[array._indexConvert(arr,res)]
+	     return res, A[array._indexConvert(A,res)]
           end
 end
-array.about[array.next] = {"next(arr)", "Return iterator along all indexes.", help.OTHER}
+array.about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}
 
 -- Free memory if need
 if not lc_version then array.about = nil end
