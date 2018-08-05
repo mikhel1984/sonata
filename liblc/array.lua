@@ -3,8 +3,9 @@
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possible.
 --
---  Object structure:</br>
---  <code>{a1...an, b1...bn, c1...cn, ...,</br> array_size, index_coefficients}</code></br>
+--  Object structure:                     </br>
+--  <code>{a1...an, b1...bn, c1...cn, ...,</br> 
+--  array_size, index_coefficients}</code></br>
 --  i.e. all elements of the array are writen sequentially, row by row. Position of one element is calculated as
 --  <code>C1*n1+C2*n2+...+Ck*nk</code>
 --  where <code>{n1,n2,...nk}<code> - index, <code>C1...Ck</code> - size based coefficients.
