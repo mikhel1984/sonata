@@ -466,9 +466,8 @@ end})
 array.Arr = 'Arr'
 array.about[array.Arr] = {"Arr(tSize)", "Create empty array with given size, represented as a table.", help.NEW}
 
---- Array serialization.
---  @param A Array object.
---  @return String, suitable for exchange.
+--[[
+-- Array serialization.
 array.serialize = function (A)
    local s = {}
    s[#s+1] = 'size={' .. table.concat(A.size, ',') .. '}'
@@ -483,6 +482,7 @@ array.serialize = function (A)
    return string.format("{%s}", table.concat(s, ','))
 end
 array.about[array.serialize] = {"serialize(A)", "String representation of array internal structure.", help.OTHER}
+]]
 
 --- Iterator across the array.
 --  @param A Array object.
