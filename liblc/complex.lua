@@ -1,6 +1,11 @@
 --[[      liblc/complex.lua 
 
 --- Manipulations with complex numbers.
+--  
+--  Object structure                </br>
+--  <code> {REAL, IMAGINARY} </code></br>
+--  i.e. complex number is a table which consists of two elements.
+--
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -72,12 +77,22 @@ print(a)
 --	LOCAL
 
 local REAL, IMAG = 1, 2
+
+-- help section 
 local FUNCTIONS = 'functions'
 
--- check object
+--- Check object type.
+--  @param c Object.
+--  @return True if the object is a complex number.
 local function iscomplex(c) return type(c) == 'table' and c.iscomplex end
 
+--- Hyperbolic cosine.
+--  @param x Real number.
+--  @return Hyperbolic cosine value.
 local function ch (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+--- Hyperbolic sine.
+--  @param x Real number.
+--  @return Hyperbolic sine value.
 local function sh (x) return 0.5*(math.exp(x)-math.exp(-x)) end
 
 --	INFO
@@ -95,29 +110,35 @@ about = help:new("Manipulations with complex numbers."),
 
 complex.__index = complex
 
--- Constructor
+--- Create new object, set metatable
+--  @param re Real part.
+--  @param im Imaginary part, default is 0.
+--  @return Complex number.
 complex.new = function (self, re, im)   
    return setmetatable({re, im or 0}, self)
 end
 
 --- Create complex number from trigonometric representation.
---    @param m Module.
---    @param a Argument.
---    @return Complex number.
+--  @param m Module.
+--  @param a Argument.
+--  @return Complex number.
 complex.trig = function (m,a)
    return complex:new(m*math.cos(a), m*math.sin(a))
 end
 complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle."}
 
 --- Create copy of the complex number.
---    @param c Source value.
---    @return Complex number.
-complex.copy = function (c)
-   return complex:new(c[REAL], c[IMAG])
+--  @param C Source value.
+--  @return Complex number.
+complex.copy = function (C)
+   return complex:new(C[REAL], C[IMAG])
 end
-complex.about[complex.copy] = {"copy(c)", "Create copy of the complex number.", help.OTHER}
+complex.about[complex.copy] = {"copy(C)", "Create copy of the complex number.", help.OTHER}
 
--- Correct arguments
+--- Correct arguments.
+--  @param a Real or complex number.
+--  @param b Real or complex number (optional).
+--  @return Complex number(s).
 complex._args = function (a,b)
    a = iscomplex(a) and a or complex:new(a)
    if b then
@@ -126,44 +147,61 @@ complex._args = function (a,b)
    return a,b
 end
 
--- a + b
-complex.__add = function (a,b)
-   a,b = complex._args(a,b)
-   return complex:new(a[1]+b[1], a[2]+b[2])
+--- C1 + C2
+--  @param C1 Real or complex number.
+--  @param C2 Real or complex number.
+--  @return Sum of numbers.
+complex.__add = function (C1,C2)
+   C1,C2 = complex._args(C1,C2)
+   return complex:new(C1[1]+C2[1], C1[2]+C2[2])
 end
 
--- a - b
-complex.__sub = function (a,b)
-   a,b = complex._args(a,b)
-   return complex:new(a[1]-b[1], a[2]-b[2])
+--- C1 - C2 
+--  @param C1 Real or complex number.
+--  @param C2 Real or complex number.
+--  @return Difference of numbers.
+complex.__sub = function (C1,C2)
+   C1,C2 = complex._args(C1,C2)
+   return complex:new(C1[1]-C2[1], C1[2]-C2[2])
 end
 
--- a * b
-complex.__mul = function (a,b)
-   a,b = complex._args(a,b)
-   return complex:new(a[1]*b[1]-a[2]*b[2], a[1]*b[2]+a[2]*b[1])
+--- C1 * C2
+--  @param C1 Real or complex number.
+--  @param C2 Real or complex number.
+--  @return Product of numbers.
+complex.__mul = function (C1,C2)
+   C1,C2 = complex._args(C1,C2)
+   return complex:new(C1[1]*C2[1]-C1[2]*C2[2], C1[1]*C2[2]+C1[2]*C2[1])
 end
 
--- a / b
-complex.__div = function (a,b)
-   a,b = complex._args(a,b)
-   local denom = b[1]*b[1] + b[2]*b[2]
-   return complex:new((a[1]*b[1]+a[2]*b[2])/denom, (a[2]*b[1]-a[1]*b[2])/denom)
+--- C1 / C2
+--  @param C1 Real or complex number.
+--  @param C2 Real or complex number.
+--  @return Ratio of numbers.
+complex.__div = function (C1,C2)
+   C1,C2 = complex._args(C1,C2)
+   local denom = C2[1]*C2[1] + C2[2]*C2[2]
+   return complex:new((C1[1]*C2[1]+C1[2]*C2[2])/denom, (C1[2]*C2[1]-C1[1]*C2[2])/denom)
 end
 
--- a ^ b
-complex.__pow = function (a,b)
-   a,b = complex._args(a,b)
-   local a0, a1 = complex.abs(a), complex.arg(a)
+--- C1 ^ C2
+--  @param C1 Real or complex number.
+--  @param C2 Real or complex number.
+--  @return Power.
+complex.__pow = function (C1,C2)
+   C1,C2 = complex._args(C1,C2)
+   local a0, a1 = complex.abs(C1), complex.arg(C1)
    local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
-   local abs = a0^(b[1])*math.exp(-a1*b[2])
-   local arg = k*b[2]+b[1]*a1
+   local abs = a0^(C2[1])*math.exp(-a1*C2[2])
+   local arg = k*C2[2]+C2[1]*a1
    return complex:new(abs*math.cos(arg), abs*math.sin(arg))
 end
 
--- -v
-complex.__unm = function (v)
-   return complex:new(-v[1], -v[2])
+--- -C
+--  @param C Complex number.
+--  @return Negative value.
+complex.__unm = function (C)
+   return complex:new(-C[1], -C[2])
 end
 
 complex.arithmetic = 'arithmetic'
