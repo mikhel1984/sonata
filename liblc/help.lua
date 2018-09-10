@@ -1,6 +1,7 @@
 --[[      liblc/help.lua 
 
 --- Function description management.
+--
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -24,19 +25,16 @@ If there are more then 1 module, use
 to concatenate descriptions. In this way 4-th entry will be added 
 to sort help list according the module name.
 
-To use language localization, create text file with Lua table in format
-{
-  module_name1 = {
-    ["__main__"] = "Main module description.",
-    ["function_name1"] = "Function 1 description.",
-    ["function_name2"] = "Function 2 description.",
-       ...
-  },
-  module_name2 = {
-  },
-  etc.
-}
-Use about:localization("file_name") to load it.
+To use language localization, create template with the help of 
+
+   lua sonata.lua --lng filename
+
+uncomment and translate desired strings. To load this file, call it with 
+
+   LC_LOCALIZATION=filename
+
+inside the sonata.lua
+
 --]]
 
 --	LOCAL
@@ -47,7 +45,7 @@ local LIB = 'liblc'
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
-local _MAIN_ = '__main__'
+local _MAIN_ = '__module__'
 
 -- English version of some interface strings.
 local eng = {
@@ -66,7 +64,7 @@ Use
 to get additional modules.]],
 }
 
--- Add table 'about' into the 'eng' for saving into localization file.
+--- Add table 'about' into the 'eng' for saving into localization file.
 local function eng2about()
    eng.about = {}
    for k,v in pairs(eng) do
@@ -75,11 +73,11 @@ local function eng2about()
    eng.about.about = nil
 end
 
--- Prepare strings with help information of the given module.
---    @param module Module name or table.
---    @param alias Alias of the module name.
---    @param lng Localization table from existing file.
---    @return String representation of all help information of the module.
+--- Prepare strings with help information of the given module.
+--  @param module Module name or table.
+--  @param alias Alias of the module name.
+--  @param lng Localization table from existing file.
+--  @return String representation of all help information of the module.
 local function helpLines(module, alias, lng)
    -- get table and name
    local m = (type(module) == 'string') and require('liblc.' .. module) or module
@@ -113,6 +111,11 @@ local function helpLines(module, alias, lng)
    return table.concat(res, '\n')
 end
 
+--- Prepare strings with help information for html generation.
+--  @param module Module name or table.
+--  @param alias Alias of the module name.
+--  @param lng Localization table from existing file.
+--  @return String representation of all help information of the module.
 local function docLines(module, alias, lng)
    local m = require('liblc.'..module)
    local lng_t = lng and lng[alias] or {}
@@ -147,8 +150,6 @@ end
 local help = {
 -- constant strings
 BASE = 'base',
-TRIG = 'trigonometry',
-HYP = 'hyperbolic',
 CONST = 'constants',
 OTHER = 'other',
 NEW = 'constructor',
@@ -166,10 +167,11 @@ CNBOLD = '',
 help.__index = help
 
 --- Create new object, set metatable.
---    @param str Module description.
---    @return Array object.
+--  @param self Parent table.
+--  @param str Module description.
+--  @return Help object.
 help.new = function (self,str)
-   assert(str and type(str) == 'string', "Constructor must include description!")
+   assert(type(str) == 'string', "Constructor must include description!")
    local o = {}
    o[o] = {link=o, str}        -- save link to itself
    return setmetatable(o, self)
