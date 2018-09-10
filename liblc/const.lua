@@ -1,6 +1,6 @@
 --[[       liblc/const.lua
 
---- Collection of the constant values.
+--- Collection of constants.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -22,7 +22,7 @@ ans = _C.e_u                --> 'C'
 
 local help = lc_version and (require "liblc.help") or {new=function () return {} end}
 
-local CONST = help.CONST
+local PHY, ASTR, MATH = "physics", "astronomy", "math"
 
 --	MODULE
 
@@ -51,31 +51,31 @@ ly_u='m',           ly = 9.4607304725808E15,        -- light year
                     Adams= 42,                      -- ;)
 
 -- description
-about = help:new("Collection of constant values.")
+about = help:new("Collection of constants.")
 }
 
 -- physics
-const.about[const.G] = {"G", "Gravitational constant.", CONST}
-const.about[const.e] = {"e", "Electron charge.", CONST}
-const.about[const.mu0] = {"mu0", "Permeability of free space.", CONST}
-const.about[const.R] = {"R", "Universal gas constant.", CONST}
-const.about[const.Vm] = {"Vm", "Volume of one mole of ideal gas.", CONST}
-const.about[const.NA] = {"NA", "Avogadro's number.", CONST}
-const.about[const.k] = {"k", "Boltzmann's constant.", CONST}
-const.about[const.h] = {"h", "Planck's constant.", CONST}
-const.about[const.c] = {"c", "Speed of light.", CONST}
-const.about[const.g] = {"g", "Acceleration of free fall.", CONST}
-const.about[const.eps0] = {"eps0", "Permittivity of free space.", CONST}
-const.about[const.sigma] = {"sigma", "Stefan-Boltzmann constant.", CONST}
-const.about[const.Rinf] = {"Rinf", "Rydberg constant", CONST}
+const.about[const.G] = {"G", "Gravitational constant.", PHY}
+const.about[const.e] = {"e", "Electron charge.", PHY}
+const.about[const.mu0] = {"mu0", "Permeability of free space.", PHY}
+const.about[const.R] = {"R", "Universal gas constant.", PHY}
+const.about[const.Vm] = {"Vm", "Volume of one mole of ideal gas.", PHY}
+const.about[const.NA] = {"NA", "Avogadro's number.", PHY}
+const.about[const.k] = {"k", "Boltzmann's constant.", PHY}
+const.about[const.h] = {"h", "Planck's constant.", PHY}
+const.about[const.c] = {"c", "Speed of light.", PHY}
+const.about[const.g] = {"g", "Acceleration of free fall.", PHY}
+const.about[const.eps0] = {"eps0", "Permittivity of free space.", PHY}
+const.about[const.sigma] = {"sigma", "Stefan-Boltzmann constant.", PHY}
+const.about[const.Rinf] = {"Rinf", "Rydberg constant", PHY}
 -- astronomy
-const.about[const.pc] = {"pc", "One parsec.", CONST}
-const.about[const.ly] = {"ly", "One light year.", CONST}
+const.about[const.pc] = {"pc", "One parsec.", ASTR}
+const.about[const.ly] = {"ly", "One light year.", ASTR}
 -- mathematics
-const.about[const.phi] = {"phi", "Golden ratio.", CONST}
-const.about[const.EuMa] = {"EuMa", "Difference between harmonic series and the natural logarithm.", CONST}
+const.about[const.phi] = {"phi", "Golden ratio.", MATH}
+const.about[const.EuMa] = {"EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
 --
-const.about[const.Adams] = {"Adams", "Answer to the ultimate question of life, the Universe, and Everything.", CONST}
+const.about[const.Adams] = {"Adams", "Answer to the ultimate question of life, the Universe, and Everything.", help.OTHER}
 
 -- free memory in case of standalone usage
 if not lc_version then const.about = nil end
