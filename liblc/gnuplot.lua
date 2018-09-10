@@ -1,6 +1,10 @@
 --[[      liblc/gnuplot.lua 
 
---- Call Gnuplot from Lua.
+--- Call Gnuplot from Sonata LC.
+--
+--  Object structure:
+--  all parameters of the plot are saved in form of table, each function is in separate subtable.
+--
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -40,13 +44,15 @@ Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
 
 --	LOCAL
 
--- rules
+-- special commands
 local special = {
    output = function (x) return string.format('set output "%s"', x) end,
    xlabel = function (x) return string.format('set xlabel "%s"', x) end,
    ylabel = function (x) return string.format('set ylabel "%s"', x) end,
    title = function (x) return string.format('set title "%s"', x) end,
 }
+
+-- main commands
 local main = {
    string = function (x,y) return string.format('set %s %s', x, y) end,
    number = function (x,y) return string.format('set %s %d', x, y) end,
@@ -54,18 +60,26 @@ local main = {
    boolean = function (x,y) return string.format('%s %s', y and 'set' or 'unset', x) end,
 }
 
--- prepare option string
+--- Prepare option string
+--  @param k Key.
+--  @param v Value.
+--  @return String with command.
 local function command (k,v)
    return special[k] and special[k](v) or main[type(v)](k,v)
 end
 
--- function option string
+--- Function option string
+--  @param k Key.
+--  @param v Value.
+--  @return String, prepared for usage in function.
 local function prepare(k,v)
    if k == 'title' then v = string.format('"%s"', v) end
    return k,v
 end
 
--- combine all options as keys
+--- Combine all options as keys
+--  @param t Table with parametrs.
+--  @return List of options.
 local function collect(t) 
    local res = {}
    for _,v in ipairs(t) do res[v] = true end
@@ -103,11 +117,11 @@ acc.foptions.file = true
 acc.foptions.raw = true
 
 --- Check if all options in table are available
---    @param g Table with optinos.
---    @return True if no wrong parameters.
-gnuplot.isAvailable = function (g) 
+--  @param G Table with optinos.
+--  @return True if no unexpected parameters.
+gnuplot.isAvailable = function (G) 
    local available = true
-   for k,v in pairs(g) do
+   for k,v in pairs(G) do
       -- find options which were not predefined
       if not acc.options[k] then
          if type(k) == 'number' and type(v) == 'table' then
@@ -125,9 +139,11 @@ gnuplot.isAvailable = function (g)
    end -- for k,v
    return available
 end
-gnuplot.about[gnuplot.isAvailable] = {"isAvailable(g)", "Check if all options in table are predefined in program.", help.OTHER}
+gnuplot.about[gnuplot.isAvailable] = {"isAvailable(G)", "Check if all options in table are predefined in program.", help.OTHER}
 
--- save table to tmp file
+--- Save table to tmp file
+--  @param t Lua table with numbers.
+--  @return File name as string.
 gnuplot._tbl2file = function (t)
    local name = os.tmpname()
    local f = io.open(name, 'w')
@@ -140,7 +156,10 @@ gnuplot._tbl2file = function (t)
    return string.format('"%s"', name)
 end
 
--- save function result to tmp file
+--- Save function result to tmp file
+--  @param fn Lua function.
+--  @param base Range and step.
+--  @return File name as a string.
 gnuplot._fn2file = function (fn,base)
    local name = os.tmpname()
    local xl = base.xrange and base.xrange[1] or (-10)
@@ -163,10 +182,13 @@ gnuplot._fn2file = function (fn,base)
    return string.format('"%s"', name)
 end
 
--- prepare functions representation
+-- Prepare functions representation
 gnuplot._str = {table=gnuplot._tbl2file, ['function']=gnuplot._fn2file, string=function (x) return x end}
 
--- add function parameters
+--- Add function parameters
+--  @param t Table with function definition.
+--  @param base Argument range.
+--  @return String representation of the plot command.
 gnuplot._graph = function (t,base)
    -- function/file name
    local fn = t[1]
@@ -180,17 +202,20 @@ gnuplot._graph = function (t,base)
    return str
 end
 
--- Create new object, set metatable.
+--- Create new object, set metatable.
+--  @param self Pointer to parent table.
+--  @param o Talbe with parameters or nil.
+--  @return New 'gnuplot' object.
 gnuplot.new = function (self,o)
    return setmetatable(o or {}, self)
 end
 
 --- Get copy of graph options.
---    @param g Initial table.
---    @return Copy of table.
-gnuplot.copy = function (g)
+--  @param G Initial table.
+--  @return Copy of table.
+gnuplot.copy = function (G)
    local cp = gnuplot:new()
-   for k,v in pairs(g) do
+   for k,v in pairs(G) do
       if type(v) == 'table' then
          local tmp = {}
 	 for p,q in pairs(v) do tmp[p] = q end
@@ -201,11 +226,11 @@ gnuplot.copy = function (g)
    end
    return cp
 end
-gnuplot.about[gnuplot.copy] = {"copy(g)", "Get copy of the plot options.", }
+gnuplot.about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 
 --- Plot graphic.
---    @param t Table with parameters of graphic.
---    @return Table which can be used for plotting.
+--  @param t Table with parameters of graphic.
+--  @return Table which can be used for plotting.
 gnuplot.plot = function (t)
    assert(gnuplot.isAvailable(t), 'Options are not predefined!')
    -- define 'permanent' option
@@ -235,11 +260,12 @@ gnuplot.plot = function (t)
 end
 gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table." }
 
-
--- Represent parameters of the graphic.
-gnuplot.__tostring = function (g) 
+--- Represent parameters of the graphic.
+--  @param G Gnuplot object.
+--  @return String with object properties.
+gnuplot.__tostring = function (G) 
    local res = {}
-   for k,v in pairs(g) do
+   for k,v in pairs(G) do
       if type(v) == 'table' then
          local tmp = {}
 	 for p,q in pairs(v) do tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q)) end
@@ -288,4 +314,4 @@ if not lc_version then gnuplot.about = nil end
 return gnuplot
 
 --===========================================
-
+TODO: add example for 'raw' usage
