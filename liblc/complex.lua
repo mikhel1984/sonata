@@ -119,21 +119,21 @@ complex.new = function (self, re, im)
 end
 
 --- Create complex number from trigonometric representation.
---  @param m Module.
---  @param a Argument.
+--  @param mod Module.
+--  @param arg Argument.
 --  @return Complex number.
-complex.trig = function (m,a)
-   return complex:new(m*math.cos(a), m*math.sin(a))
+complex.trig = function (mod,arg)
+   return complex:new(mod*math.cos(arg), mod*math.sin(arg))
 end
 complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle."}
 
 --- Create copy of the complex number.
 --  @param C Source value.
 --  @return Complex number.
-complex.copy = function (C)
-   return complex:new(C[REAL], C[IMAG])
+complex.copy = function (Z)
+   return complex:new(Z[REAL], Z[IMAG])
 end
-complex.about[complex.copy] = {"copy(C)", "Create copy of the complex number.", help.OTHER}
+complex.about[complex.copy] = {"copy(Z)", "Create copy of the complex number.", help.OTHER}
 
 --- Correct arguments.
 --  @param a Real or complex number.
@@ -147,190 +147,214 @@ complex._args = function (a,b)
    return a,b
 end
 
---- C1 + C2
---  @param C1 Real or complex number.
---  @param C2 Real or complex number.
+--- Z1 + Z2
+--  @param Z1 Real or complex number.
+--  @param Z2 Real or complex number.
 --  @return Sum of numbers.
-complex.__add = function (C1,C2)
-   C1,C2 = complex._args(C1,C2)
-   return complex:new(C1[1]+C2[1], C1[2]+C2[2])
+complex.__add = function (Z1,Z2)
+   Z1,Z2 = complex._args(Z1,Z2)
+   return complex:new(Z1[1]+Z2[1], Z1[2]+Z2[2])
 end
 
---- C1 - C2 
---  @param C1 Real or complex number.
---  @param C2 Real or complex number.
+--- Z1 - Z2 
+--  @param Z1 Real or complex number.
+--  @param Z2 Real or complex number.
 --  @return Difference of numbers.
-complex.__sub = function (C1,C2)
-   C1,C2 = complex._args(C1,C2)
-   return complex:new(C1[1]-C2[1], C1[2]-C2[2])
+complex.__sub = function (Z1,Z2)
+   Z1,Z2 = complex._args(Z1,Z2)
+   return complex:new(Z1[1]-Z2[1], Z1[2]-Z2[2])
 end
 
---- C1 * C2
---  @param C1 Real or complex number.
---  @param C2 Real or complex number.
+--- Z1 * Z2
+--  @param Z1 Real or complex number.
+--  @param Z2 Real or complex number.
 --  @return Product of numbers.
-complex.__mul = function (C1,C2)
-   C1,C2 = complex._args(C1,C2)
-   return complex:new(C1[1]*C2[1]-C1[2]*C2[2], C1[1]*C2[2]+C1[2]*C2[1])
+complex.__mul = function (Z1,Z2)
+   Z1,Z2 = complex._args(Z1,Z2)
+   return complex:new(Z1[1]*Z2[1]-Z1[2]*Z2[2], Z1[1]*Z2[2]+Z1[2]*Z2[1])
 end
 
---- C1 / C2
---  @param C1 Real or complex number.
---  @param C2 Real or complex number.
+--- Z1 / Z2
+--  @param Z1 Real or complex number.
+--  @param Z2 Real or complex number.
 --  @return Ratio of numbers.
-complex.__div = function (C1,C2)
-   C1,C2 = complex._args(C1,C2)
-   local denom = C2[1]*C2[1] + C2[2]*C2[2]
-   return complex:new((C1[1]*C2[1]+C1[2]*C2[2])/denom, (C1[2]*C2[1]-C1[1]*C2[2])/denom)
+complex.__div = function (Z1,Z2)
+   Z1,Z2 = complex._args(Z1,Z2)
+   local denom = Z2[1]*Z2[1] + Z2[2]*Z2[2]
+   return complex:new((Z1[1]*Z2[1]+Z1[2]*Z2[2])/denom, (Z1[2]*Z2[1]-Z1[1]*Z2[2])/denom)
 end
 
---- C1 ^ C2
---  @param C1 Real or complex number.
---  @param C2 Real or complex number.
+--- Z1 ^ Z2
+--  @param Z1 Real or complex number.
+--  @param Z2 Real or complex number.
 --  @return Power.
-complex.__pow = function (C1,C2)
-   C1,C2 = complex._args(C1,C2)
-   local a0, a1 = complex.abs(C1), complex.arg(C1)
+complex.__pow = function (Z1,Z2)
+   Z1,Z2 = complex._args(Z1,Z2)
+   local a0, a1 = complex.abs(Z1), complex.arg(Z1)
    local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
-   local abs = a0^(C2[1])*math.exp(-a1*C2[2])
-   local arg = k*C2[2]+C2[1]*a1
+   local abs = a0^(Z2[1])*math.exp(-a1*Z2[2])
+   local arg = k*Z2[2]+Z2[1]*a1
    return complex:new(abs*math.cos(arg), abs*math.sin(arg))
 end
 
---- -C
---  @param C Complex number.
+--- -Z
+--  @param Z Complex number.
 --  @return Negative value.
-complex.__unm = function (C)
-   return complex:new(-C[1], -C[2])
+complex.__unm = function (Z)
+   return complex:new(-Z[1], -Z[2])
 end
 
 complex.arithmetic = 'arithmetic'
 complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
 
--- a == b
-complex.__eq = function (a, b)
-   a,b = complex._args(a,b)
-   return a[1] == b[1] and a[2] == b[2]
+--- Z1 == Z2
+--  @param Z1 Real or complex number.
+--  @param Z2 Real or complex number.
+--  @return True if the real and complex parts are the same.
+complex.__eq = function (Z1, Z2)
+   Z1,Z2 = complex._args(Z1,Z2)
+   return Z1[1] == Z2[1] and Z1[2] == Z2[2]
 end
 
 complex.comparison = 'comparison'
 complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META}
 
 --- Argument of complex number.
---    @param v Complex number.
---    @return Argument of the number.
-complex.arg = function (v) return math.atan(v[2], v[1]) end
-complex.about[complex.arg] = {"arg(v)", "Return argument of complex number."}
+--  @param Z Complex number.
+--  @return Argument of the number.
+complex.arg = function (Z) return math.atan(Z[2], Z[1]) end
+complex.about[complex.arg] = {"arg(Z)", "Return argument of complex number."}
 
 --- Module of complex number.
---    @param v Complex number.
---    @return Module of the number.
-complex.abs = function (v) return math.sqrt(v[1]*v[1]+v[2]*v[2]) end
-complex.about[complex.abs] = {"abs(v)", "Return module of complex number."}
+--  @param Z Complex number.
+--  @return Module of the number.
+complex.abs = function (Z) return math.sqrt(Z[1]*Z[1]+Z[2]*Z[2]) end
+complex.about[complex.abs] = {"abs(Z)", "Return module of complex number."}
 
 --- Conjunction.
---    @param v Complex number.
---    @return Conjunction to the given number.
-complex.conj = function (v) return complex:new(v[1], -v[2]) end
-complex.about[complex.conj] = {"conj(v)", "Return the complex conjugate.", help.OTHER}
+--  @param Z Complex number.
+--  @return Conjunction to the given number.
+complex.conj = function (Z) return complex:new(Z[1], -Z[2]) end
+complex.about[complex.conj] = {"conj(Z)", "Return the complex conjugate.", help.OTHER}
 
 --- Real part of the number.
---    @param v Complex value.
---    @return Real part.
-complex.Re  = function (v) return v[REAL] end
-complex.about[complex.Re] = {"Re(v)", "Return the real part.", help.OTHER}
+--  @param Z Complex value.
+--  @return Real part.
+complex.Re  = function (Z) return Z[REAL] end
+complex.about[complex.Re] = {"Re(Z)", "Return the real part.", help.OTHER}
 
 --- Imaginary part of the number.
---    @param v Complex value.
---    @return Imaginary part.
-complex.Im  = function (v) return v[IMAG] end
-complex.about[complex.Im] = {"Im(v)", "Return the imaginary part.", help.OTHER}
+--  @param Z Complex value.
+--  @return Imaginary part.
+complex.Im  = function (Z) return Z[IMAG] end
+complex.about[complex.Im] = {"Im(Z)", "Return the imaginary part.", help.OTHER}
 
--- String representation.
-complex.__tostring = function (v)
-   return string.format("%.3f%+.3fi", v[REAL], v[IMAG])
+--- String representation.
+--  @param Z Complex number.
+--  @return String with complex number elements.
+complex.__tostring = function (Z)
+   return string.format("%.3f%+.3fi", Z[REAL], Z[IMAG])
 end
 
 --- Square root with possibility of complex result.
---    @param v Real or complex number.
---    @return Real or complex square root.
-complex.sqrt = function (v) 
-   if type(v) == "number" then
-      return v < 0 and complex:new(0,math.sqrt(-v)) or math.sqrt(v)
+--  @param Z Real or complex number.
+--  @return Real or complex square root.
+complex.sqrt = function (Z) 
+   if type(Z) == "number" then
+      return Z < 0 and complex:new(0,math.sqrt(-Z)) or math.sqrt(Z)
    else
-      return complex.__pow(v, 0.5)
+      return complex.__pow(Z, 0.5)
    end
 end
-complex.about[complex.sqrt] = {"sqrt(z)", "Return square root. Result can be real of complex.", FUNCTIONS}
+complex.about[complex.sqrt] = {"sqrt(Z)", "Return square root. Result can be real of complex.", FUNCTIONS}
 
--- Exponent
-complex.exp = function (v)
-   if iscomplex(v) then
-      local r = math.exp(v[1])
-      return complex:new(r*math.cos(v[2]), r*math.sin(v[2]))
+--- Exponent
+--  @param Z Real or complex number.
+--  @return Real or complex exponent.
+complex.exp = function (Z)
+   if iscomplex(Z) then
+      local r = math.exp(Z[1])
+      return complex:new(r*math.cos(Z[2]), r*math.sin(Z[2]))
    else
-      return math.exp(v)
+      return math.exp(Z)
    end
 end
-complex.about[complex.exp] = {"exp(z)", "Return expenent in real or complex power.", FUNCTIONS}
+complex.about[complex.exp] = {"exp(Z)", "Return exponent in real or complex power.", FUNCTIONS}
 
-complex.log = function (z)
-   if type(v) == "number" then
-      return z <= 0 and complex:new(math.log(-z),math.pi) or math.log(z)
+--- Natural logarithm
+--  @param Z Real or complex number.
+--  @return Real or complex logarithm.
+complex.log = function (Z)
+   if type(Z) == "number" then
+      return Z <= 0 and complex:new(math.log(-Z),math.pi) or math.log(Z)
    else
-      return complex:new(0.5*math.log(z[1]^2+z[2]^2), math.atan(z[2],z[1]))
+      return complex:new(0.5*math.log(Z[1]^2+Z[2]^2), math.atan(Z[2],Z[1]))
    end
 end
-complex.about[complex.log] = {"log(z)", "Complex logarithm.", FUNCTIONS}
+complex.about[complex.log] = {"log(Z)", "Complex logarithm.", FUNCTIONS}
 
--- sinus
-complex.sin = function (v)
-   if iscomplex(v) then
-      return complex:new(math.sin(v[1])*ch(v[2]), math.cos(v[1])*sh(v[2]))
+--- Sinus
+--  @param Z Real or complex number.
+--  @return Real or complex sinus.
+complex.sin = function (Z)
+   if iscomplex(Z) then
+      return complex:new(math.sin(Z[1])*ch(Z[2]), math.cos(Z[1])*sh(Z[2]))
    else
-      return math.sin(v)
+      return math.sin(Z)
    end
 end
-complex.about[complex.sin] = {"sin(z)", "Return sinus of real or complex number.", FUNCTIONS}
+complex.about[complex.sin] = {"sin(Z)", "Return sinus of real or complex number.", FUNCTIONS}
 
--- cosinus
-complex.cos = function (z)
-   if iscomplex(z) then
-      return complex:new(math.cos(z[1])*ch(z[2]), -math.sin(z[1])*sh(z[2]))
+--- Cosine
+--  @param Z Real or complex number.
+--  @return Real or complex cosine.
+complex.cos = function (Z)
+   if iscomplex(Z) then
+      return complex:new(math.cos(Z[1])*ch(Z[2]), -math.sin(Z[1])*sh(Z[2]))
    else
-      return math.cos(z)
+      return math.cos(Z)
    end
 end
-complex.about[complex.cos] = {"cos(z)", "Return cosine of real or complex number.", FUNCTIONS}
+complex.about[complex.cos] = {"cos(Z)", "Return cosine of real or complex number.", FUNCTIONS}
 
--- tangent
-complex.tan = function (z)
-   if iscomplex(z) then
-      local den = math.cos(2*z[1]) + ch(2*z[2])
-      return complex:new(math.sin(2*z[1])/den, sh(2*z[2])/den)
+--- Tangent
+--  @param Z Real or complex number.
+--  @return Real or complex tangent.
+complex.tan = function (Z)
+   if iscomplex(Z) then
+      local den = math.cos(2*Z[1]) + ch(2*Z[2])
+      return complex:new(math.sin(2*Z[1])/den, sh(2*Z[2])/den)
    else
-      return math.tan(z)
+      return math.tan(Z)
    end
 end
-complex.about[complex.tan] = {"tan(z)", "Return tangent of real or complex number.", FUNCTIONS}
+complex.about[complex.tan] = {"tan(Z)", "Return tangent of real or complex number.", FUNCTIONS}
 
--- hyperbolic
-complex.sinh = function (z)
-      return 0.5*(complex.exp(z)-complex.exp(-z))
+--- Hyperbolic sinus
+--  @param Z Real or complex number.
+--  @return Real or complex hyperbolic sinus.
+complex.sinh = function (Z)
+      return 0.5*(complex.exp(Z)-complex.exp(-Z))
 end
-complex.about[complex.sinh] = {"sinh(z)", "Return hyperbolic sinus of a real or complex number.", FUNCTIONS}
+complex.about[complex.sinh] = {"sinh(Z)", "Return hyperbolic sinus of a real or complex number.", FUNCTIONS}
 
-complex.cosh = function (z)
-      return 0.5*(complex.exp(z)+complex.exp(-z))
+--- Hyperbolic cosine
+--  @param Z Real or complex number.
+--  @return Real or complex hyperbolic cosine.
+complex.cosh = function (Z)
+      return 0.5*(complex.exp(Z)+complex.exp(-Z))
 end
-complex.about[complex.cosh] = {"cosh(z)", "Return hyperbolic cosine of a real or complex nubmer.", FUNCTIONS}
+complex.about[complex.cosh] = {"cosh(Z)", "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
 
-complex.tanh = function (z)
-   return complex.sinh(z) / complex.cosh(z)
+--- Hyperbolic tangent
+--  @param Z Real or complex number.
+--  @return Real or complex hyperbolic tangent.
+complex.tanh = function (Z)
+   return complex.sinh(Z) / complex.cosh(Z)
 end
-complex.about[complex.tanh] = {"tanh(z)", "Return hyperbolic tangent of a real or complex number.", FUNCTIONS}
+complex.about[complex.tanh] = {"tanh(Z)", "Return hyperbolic tangent of a real or complex number.", FUNCTIONS}
 
--- imaginary unit
+-- Imaginary unit
 complex._i   = complex:new(0,1)
 complex.about[complex._i] = {"_i", "Complex unit.", help.CONST}
 
@@ -339,7 +363,8 @@ setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im
 complex.Comp = 'Comp'
 complex.about[complex.Comp] = {"Comp(a[,b])", "Create new complex number.", help.NEW}
 
---- Complex number serialization.
+--[[
+-- Complex number serialization.
 --    @param obj Complex number.
 --    @return String, suitable for exchange.
 complex.serialize = function (obj)
@@ -351,8 +376,9 @@ complex.serialize = function (obj)
    return string.format("{%s}", table.concat(s, ','))
 end
 complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object.", help.OTHER}
+]]
 
--- Function for execution during the module import.
+--- Function for execution during the module import.
 complex.onImport = function ()
    -- redefine functions and add complex variable _i
    _i = complex._i
@@ -366,6 +392,7 @@ complex.onImport = function ()
    ch  = complex.ch
    th  = complex.th
 end
+
 
 -- free memory if need
 if not lc_version then complex.about = nil end
