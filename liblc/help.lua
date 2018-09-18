@@ -81,12 +81,12 @@ end
 local function helpLines(module, alias, lng)
    -- get table and name
    local m = (type(module) == 'string') and require('liblc.' .. module) or module
-   local mname = (type(module) == 'string') and (module .. '.lua') or 'dialog'
+   local mName = (type(module) == 'string') and (module .. '.lua') or 'dialog'
    -- choose existing data
    local lng_t = lng and lng[alias] or {}
    -- write to table
    local res = {}
-   res[#res+1] = string.format('%s %s %s', string.rep('-',10), mname, string.rep('-',10))
+   res[#res+1] = string.format('%s %s %s', string.rep('-',10), mName, string.rep('-',10))
    res[#res+1] = string.format('%s = {', alias)
    -- for all descriptions
    for _, elt in pairs(m.about) do
@@ -177,7 +177,9 @@ help.new = function (self,str)
    return setmetatable(o, self)
 end
 
--- Create list of functions, sort by module and category.
+--- Create list of functions, sort by module and category.
+--  @param tbl Table of paris 'function - description'.
+--  @return Groupped descriptions.
 help._funcList = function (tbl)
    local res = {}
    for k, v in pairs(tbl) do
@@ -194,7 +196,8 @@ help._funcList = function (tbl)
 end
 
 --- Print information about function or list of all possible functions.
---    @param fn Function or module for getting manual.
+--  @param self Parent object.
+--  @param fn Function or module for getting manual.
 help.print = function (self,fn)
    io.write(help.CHELP)
    if fn then
@@ -229,8 +232,10 @@ help.print = function (self,fn)
    end -- if
 end
 
-help.useColors = function (use)
-   if use then
+--- Auxilary funciton, which define colors for text elements.
+--  @param bUse Boolean flag of usage.
+help.useColors = function (bUse)
+   if bUse then
       help.CMAIN = '\x1B[32m' 
       help.CHELP = '\x1B[33m' 
       help.CRESET = '\x1B[0m'
@@ -240,8 +245,9 @@ help.useColors = function (use)
 end
 
 --- Include content of the other help table into current one.
---    @param tbl Table to add.
---    @param nm Name of the added module.
+--  @param self Parent object.
+--  @param tbl Table to add.
+--  @param nm Name of the added module.
 help.add = function (self,tbl,nm)
    assert(nm, "Module name is required!")
    -- localization data
@@ -267,12 +273,13 @@ help.add = function (self,tbl,nm)
 end
 
 --- Read file with localization data and update main module.
---    @param fname Name of the file with translated text.
-help.localization = function (self,fname)
-   fname = LOCALE..help.SEP..fname
+--  @param self Parent object.
+--  @param fName Name of the file with translated text.
+help.localization = function (self,fName)
+   fName = LOCALE..help.SEP..fName
    -- call method of the 'files' module
    help.lc_files = help.lc_files or require('liblc.files')
-   local lng = help.lc_files.tblImport(fname)
+   local lng = help.lc_files.tblImport(fName)
    if lng then
       getmetatable(self).locale = lng           
       -- update functions in calc.lua
@@ -288,22 +295,22 @@ help.localization = function (self,fname)
 	 end
       end
    else
-      print("File " .. fname .. " wasn't found.")
+      print("File " .. fName .. " wasn't found.")
    end
 end
 
 --- Prepare and save localization data.
---    @param fname Language name, for example 'en' or 'it'.
---    @param modules Table with the list of existing modules.
-help.prepare = function(fname, modules)
-   fname = string.format('%s%s%s.lng', LOCALE, help.SEP, fname)
+--    @param fName Language name, for example 'en' or 'it'.
+--    @param tModules Table with the list of existing modules.
+help.prepare = function(fName, tModules)
+   fName = string.format('%s%s%s.lng', LOCALE, help.SEP, fName)
    -- call method of the 'files' module
    help.lc_files = help.lc_files or require('liblc.files')
    -- prepare new file
-   local lng = help.lc_files.tblImport(fname)
-   local f = io.open(fname, 'w')
+   local lng = help.lc_files.tblImport(fName)
+   local f = io.open(fName, 'w')
    -- save descriptions
-   f:write(string.rep('-',10), string.format(' %s ', fname), string.rep('-',10), '\n')
+   f:write(string.rep('-',10), string.format(' %s ', fName), string.rep('-',10), '\n')
    f:write('{\n')
    -- language and authors
    f:write((lng and lng.language) and string.format("language =\t '%s',", lng.language) or "-- language =\t 'English',", '\n')
@@ -314,17 +321,18 @@ help.prepare = function(fname, modules)
    -- main functions
    f:write(helpLines('main','Main',lng))
    -- other modules
-   for k,v in pairs(modules) do
+   for k,v in pairs(tModules) do
       f:write(helpLines(k,v,lng))
    end
    f:write('}')
    f:close()
-   print('File '..fname..' is saved!')
+   print('File '..fName..' is saved!')
 end
 
 --- Get translated string if possible.
---    @param txt Text to seek.
---    @return Translated or initial text.
+--  @param self Parent object.
+--  @param txt Text to seek.
+--  @return Translated or initial text.
 help.get = function (self,txt)
    local mt = getmetatable(self)
    local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localization table
@@ -332,19 +340,19 @@ help.get = function (self,txt)
 end
 
 --- Generate template for new module.
---    @param mname Module name.
---    @param alias Module short name.
---    @param description Short module description.
-help.newModule = function (mname, alias, description)
-   if not (mname and alias) then
+--  @param mName Module name.
+--  @param alias Module short name.
+--  @param description Short module description.
+help.newModule = function (mName, alias, description)
+   if not (mName and alias) then
       error('Both module name and alias are expected!')
    end
-   local fname = string.format('%s%s%s.lua', LIB, help.SEP, mname)
+   local fName = string.format('%s%s%s.lua', LIB, help.SEP, mName)
    -- check existence
-   local f = io.open(fname) 
+   local f = io.open(fName) 
    if f then 
       f:close()
-      print('File '..fname..' is already exists!'); return
+      print('File '..fName..' is already exists!'); return
    end
    -- write new file
    description = description or "This is my cool module!"
@@ -415,16 +423,19 @@ return WORD2
 ]=]
    -- correct text
    txt = string.gsub(txt, '3L', '---')            -- protect from creating failed documentation
-   txt = string.gsub(txt, '(WORD%d)', {WORD1=fname, WORD2=mname, WORD3=alias, WORD4='module', WORD5=description})
+   txt = string.gsub(txt, '(WORD%d)', {WORD1=fName, WORD2=mName, WORD3=alias, WORD4='module', WORD5=description})
    -- save
-   f = io.open(fname, 'w')
+   f = io.open(fName, 'w')
    f:write(txt)
    f:close()
 
-   print('File '..fname..' is written.')
+   print('File '..fName..' is written.')
 end
 
-help.generateDoc = function (locName, modules)
+--- Generate html file with documentation.
+--  @param locName Name of locale.
+--  @param tModules Table with description for all modules.
+help.generateDoc = function (locName, tModules)
    -- prepare text
    local res = {
       "<html><head>",
@@ -436,7 +447,7 @@ help.generateDoc = function (locName, modules)
    }
    -- prepare module list
    local sortedModules = {}
-   for k,v in pairs(modules) do sortedModules[#sortedModules+1] = {k,v} end
+   for k,v in pairs(tModules) do sortedModules[#sortedModules+1] = {k,v} end
    table.sort(sortedModules, function (a,b) return a[1] < b[1] end)
    -- add content
    res[#res+1] = '<ul>'
@@ -451,12 +462,12 @@ help.generateDoc = function (locName, modules)
    res[#res+1] = string.format('<p>%s</p>', base)
    res[#res+1] = '<p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p>'
 
-   local fname = string.format('%s%s%s', LOCALE, help.SEP, locName)
+   local fName = string.format('%s%s%s', LOCALE, help.SEP, locName)
    -- call method of the 'files' module
    help.lc_files = help.lc_files or require('liblc.files')
    help.lc_test = help.lc_test or require('liblc.test')
    -- prepare new file
-   local lng = help.lc_files.tblImport(fname)
+   local lng = help.lc_files.tblImport(fName)
 
    eng2about()
    
@@ -496,5 +507,3 @@ return help
 
 --==========================================
 -- TODO: localize error messages
--- TODO: problem with the common names of different objects in the same module
--- TODO: generate help in html, similar to luadock
