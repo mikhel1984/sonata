@@ -657,6 +657,7 @@ matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given 
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return New matrix.
 matrix.rand = function (rows, cols)
+   if not rows then return math.random() end
    if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    return matrix.fill(rows, cols or rows, function (r,c) return math.random() end)
 end
@@ -1223,6 +1224,11 @@ matrix.serialize = function (obj)
    return string.format("{%s}", table.concat(s, ','))
 end
 matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal representation.", help.OTHER}
+
+--- Function for execution during the module import.
+matrix.onImport = function ()
+   rand = matrix.rand
+end
 
 -- free memory if need
 if not lc_version then matrix.about = nil end

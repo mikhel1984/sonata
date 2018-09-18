@@ -1,6 +1,7 @@
 --[[      liblc/main.lua 
 
 --- Define aliases for standard operations and add some new common functions.
+--
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -77,7 +78,9 @@ cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", TRIG}
 tan = math.tan;    about[tan] = {"tan(x)", "Tangent x.", TRIG}
 asin = math.asin;  about[asin] = {"asin(x)", "Arcsine x.", TRIG}
 acos = math.acos;  about[acos] = {"acos(x)", "Arc cosine x.", TRIG}
-atan = math.atan;  about[atan] = {"atan(y[,x])", "Arctangent y. In case of 2 parameters calculate y/x with signs.", TRIG}
+atan = math.atan;  about[atan] = {"atan(x)", "Arctangent x.", TRIG}
+atan2 = function (y,x) return math.atan(y,x) end 
+about[atan2] = {"atan2(y,x)", "Arctangent of y/x, use signes.", TRIG}
 -- Hyperbolic
 cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
 about[cosh] = {"cosh(x)", "Hyperbolic cosine.", HYP}
@@ -90,17 +93,19 @@ rad2deg = math.deg;    about[rad2deg] = {"rad2deg(x)", "Convert radians to degre
 deg2rad = math.rad;    about[deg2rad] = {"deg2rad(x)", "Convert degrees to radians."}
 -- Rounding
 floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", lc_help.OTHER}
-ceil = math.ceil;  about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", lc_help.OTHER}
+ceil = math.ceil;   about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", lc_help.OTHER}
 -- Constants
-_pi = math.pi;     about[_pi] = {"_pi", "Number pi", lc_help.CONST}
-_e = math.exp(1.0) about[_e] = {"_e", "Euler number", lc_help.CONST}
+_pi = math.pi;      about[_pi] = {"_pi", "Number pi", lc_help.CONST}
+_e = math.exp(1.0); about[_e] = {"_e", "Euler number", lc_help.CONST}
 
 
 log10 = function (x) return math.log(x)/main._LOG10 end
 about[log10] = {"log10(x)", "Decimal logarithm."}
 
 rand = function () return math.random() end
-about[rand] = {"rand([a,b])", "Random number between 0 and 1 or in the given interval of integers."}
+about[rand] = {"rand()", "Random number between 0 and 1."}
+randi = function (N) return math.random(1,N) end
+about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
 -- hyperbolic arcsine
 asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
 about[asinh] = {"asinh(x)", "Hyperbolic arcsine.", HYP}
