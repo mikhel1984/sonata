@@ -657,7 +657,6 @@ matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given 
 --    @param cols Number of columns. Can be omitted in case of square matrix.
 --    @return New matrix.
 matrix.rand = function (rows, cols)
-   if not rows then return math.random() end
    if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    return matrix.fill(rows, cols or rows, function (r,c) return math.random() end)
 end
@@ -1227,7 +1226,20 @@ matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal repres
 
 --- Function for execution during the module import.
 matrix.onImport = function ()
-   rand = matrix.rand
+   local _rand = rand
+   rand = function (a,...) return a and matrix.rand(a,...) or _rand(a,...) end
+   local _abs = abs
+   abs = function (a) return ismatrix(a) and matrix.map(a,_abs) or _abs(a) end
+   local _sqrt = sqrt
+   sqrt = function (a) return ismatrix(a) and matrix.map(a,_sqrt) or _sqrt(a) end
+   local _exp = exp
+   exp = function (a) return ismatrix(a) and matrix.map(a,_exp) or _exp(a) end
+   local _sin = sin
+   sin = function (a) return ismatrix(a) and matrix.map(a,_sin) or _sin(a) end
+   local _cos = cos
+   cos = function (a) return ismatrix(a) and matrix.map(a,_cos) or _cos(a) end
+   local _tan = tan
+   tan = function (a) return ismatrix(a) and matrix.map(a,_tan) or _tan(a) end
 end
 
 -- free memory if need
@@ -1237,3 +1249,4 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
+--TODO: redefine basic functions for matrix arguments
