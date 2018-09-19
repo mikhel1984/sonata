@@ -725,7 +725,8 @@ matrix.__tostring = function (m)
    for r = 1, m.rows do
       local scol, mr = {}, m[r]
       for c = 1, m.cols do
-         table.insert(scol, tostring(mr[c]))
+         local tmp = mr[c]
+         table.insert(scol, type(tmp) == 'number' and string.format('%.3f',tmp) or tostring(mr[c]))
       end
       table.insert(srow, table.concat(scol, "  "))
    end
@@ -1226,19 +1227,19 @@ matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal repres
 
 --- Function for execution during the module import.
 matrix.onImport = function ()
-   local _rand = rand
+   local _rand = rand or math.random
    rand = function (a,...) return a and matrix.rand(a,...) or _rand(a,...) end
-   local _abs = abs
+   local _abs = abs or math.abs
    abs = function (a) return ismatrix(a) and matrix.map(a,_abs) or _abs(a) end
-   local _sqrt = sqrt
+   local _sqrt = sqrt or math.sqrt
    sqrt = function (a) return ismatrix(a) and matrix.map(a,_sqrt) or _sqrt(a) end
-   local _exp = exp
+   local _exp = exp or math.exp
    exp = function (a) return ismatrix(a) and matrix.map(a,_exp) or _exp(a) end
-   local _sin = sin
+   local _sin = sin or math.sin
    sin = function (a) return ismatrix(a) and matrix.map(a,_sin) or _sin(a) end
-   local _cos = cos
+   local _cos = cos or math.cos
    cos = function (a) return ismatrix(a) and matrix.map(a,_cos) or _cos(a) end
-   local _tan = tan
+   local _tan = tan or math.tan
    tan = function (a) return ismatrix(a) and matrix.map(a,_tan) or _tan(a) end
 end
 
