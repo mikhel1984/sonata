@@ -76,11 +76,11 @@ min = math.min;    about[min] = {"min(...)", "Minimum number."}
 sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", TRIG}
 cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", TRIG}
 tan = math.tan;    about[tan] = {"tan(x)", "Tangent x.", TRIG}
-asin = math.asin;  about[asin] = {"asin(x)", "Arcsine x.", TRIG}
-acos = math.acos;  about[acos] = {"acos(x)", "Arc cosine x.", TRIG}
-atan = math.atan;  about[atan] = {"atan(x)", "Arctangent x.", TRIG}
+asin = math.asin;  about[asin] = {"asin(x)", "Inverse sine x.", TRIG}
+acos = math.acos;  about[acos] = {"acos(x)", "Inverse cosine x.", TRIG}
+atan = math.atan;  about[atan] = {"atan(x)", "Inverse tangent x.", TRIG}
 atan2 = function (y,x) return math.atan(y,x) end 
-about[atan2] = {"atan2(y,x)", "Arctangent of y/x, use signes.", TRIG}
+about[atan2] = {"atan2(y,x)", "Inverse tangent of y/x, use signs.", TRIG}
 -- Hyperbolic
 cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
 about[cosh] = {"cosh(x)", "Hyperbolic cosine.", HYP}
@@ -106,17 +106,20 @@ rand = function () return math.random() end
 about[rand] = {"rand()", "Random number between 0 and 1."}
 randi = function (N) return math.random(1,N) end
 about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
--- hyperbolic arcsine
+-- hyperbolic inverse sine
 asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
-about[asinh] = {"asinh(x)", "Hyperbolic arcsine.", HYP}
+about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
 -- hyperbolic arc cosine
 acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
 about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
--- hyperbolic arctangent
+-- hyperbolic inverse tangent
 atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
-about[atanh] = {"atanh(x)", "Hyperbolic arctangent.", HYP}
+about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
--- round to closest integer
+--- Round to closest integer.
+--  @param x Real number.
+--  @param n Number of decimal digits.
+--  @return Rounded number.
 round = function (x,n)
    k = 10^(n or 0)
    local p,q = math.modf(x*k)
@@ -129,13 +132,9 @@ round = function (x,n)
 end
 about[round] = {'round(x[,n])', 'Round value, define number of decimal digits.', lc_help.OTHER}
 
--- calculate function for range of values
-main.eval = function (fn, x1, xn, step)
-   xn = xn or x1
-   step = step or 1
-   for k = x1, xn, step do print("x="..k.."\tres="..fn(k)) end
-end
-
+--- Factorial of integer number.
+--  @param n Positive integer.
+--  @return Value of factorial.
 factorial = function (n)
    assert(n >= 0 and math.type(n) == 'integer', 'Expected positive integer value!')
    local tmp = factorials[n]
@@ -152,6 +151,7 @@ factorial = function (n)
 end
 about[factorial] = {'factorial(n)', 'Evaluate factorial.'}
 
+--[[
 -- read object from its serialization
 main.deserialize = function (obj_str)
    local f = assert(load("return " .. obj_str)) 
@@ -162,8 +162,11 @@ main.deserialize = function (obj_str)
    return o
 end
 about[main.deserialize] = {"deserialize(obj_str)", "Transform string with serialization into Sonata LC object.", lc_help.OTHER}
+]]
 
--- Print the contents of a table
+--- Print the contents of a Lua table.
+--  @param t Lua table.
+--  @param N Number of fields in a listing, default is 10.
 main.flip = function (t,N)
    assert(type(t) == 'table', 'Table is expected!')
    N = N or 10
@@ -194,13 +197,16 @@ main.flip = function (t,N)
 end
 about[main.flip] = {"lc.flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
 
--- Return 'scintific' representation of the number
+--- Print 'scientific' representation of the number
+--  @param x Number to show.
 main.sci = function (x)
    print(string.format('%.2E',x))
 end
-about[main.sci] = {"lc.sci(x)", "'Scintific' representation of the number.", lc_help.OTHER}
+about[main.sci] = {"lc.sci(x)", "'Scientific' representation of the number.", lc_help.OTHER}
 
--- Show type of the object.
+--- Show type of the object.
+--  @param t Some Lua or Sonata object.
+--  @return String with type value.
 function main.type(t)
    local v = type(t)
    if v == 'table' then
@@ -212,14 +218,19 @@ function main.type(t)
 end
 about[main.type] = {'lc.type(t)', 'Show type of the object.', lc_help.OTHER}
 
--- Wait for press button
-main.pause = function (s)
-   if s then io.write(s) end
+--- Wait for press button.
+--  @param txt Text to show. 
+main.pause = function (txt)
+   if txt then io.write(txt) end
    io.read()
 end
 about[main.pause] = {'lc.pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
 
--- Generate sequence of values
+--- Generate sequence of values
+--  @param from Begining of range (default is 1).
+--  @param to End of range.
+--  @param step Step value (default is 1).
+--  @return Table with numbers.
 main.range = function (from,to,step)
    step = step or 1
    if not to then to = from; from = 1 end
@@ -230,7 +241,9 @@ main.range = function (from,to,step)
 end
 about[main.range] = {'lc.range([from,]to[,step])','Generate table with sequence of numbers.', lc_help.OTHER}
 
--- append to table a value or elements of other table
+--- Append to table a value or elements of other table.
+--  @param t Destination table.
+--  @param val New value of another table.
 main.append = function (t,val)
    if type(val) == 'table' then
       for k,v in pairs(val) do 
@@ -246,7 +259,8 @@ main.append = function (t,val)
 end
 about[main.append] = {'lc.append(tbl,val)','Append value or table to the given table.', lc_help.OTHER}
 
--- Print lc_help information
+--- Print lc_help information.
+--  @param fn Function name.
 help = function(fn)   
    if fn then 
       about:print(type(fn)=='table' and fn.about or fn) 
@@ -258,8 +272,9 @@ help = function(fn)
    end
 end
 
--- Simple implementation of 'the life'
--- prepare your initial board in form of matrix
+--- Simple implementation of 'the life'.
+--  Prepare your initial board in form of matrix.
+--  @param board Matrix with 'ones' as live cells.
 main.life = function (board)
    assert(board.type == 'matrix', 'Matrix is expected!')
    local rows,cols = board:size() 
@@ -288,6 +303,11 @@ main.life = function (board)
    until 'n' == io.read()
 end
 
+--- Read text file and evaluate expressions in special template.
+--  Current template is '## some expressions ##'. One template can consists of several expressions,
+--  separated with ';'. If expression has '=' it just evaluated, otherwise the result will be shown.
+--  @param src Source file.
+--  @param dst File name. If defined, file will be saved in this file.
 main.evalText = function (src,dst)
    local F = require('liblc.files')
    local txt = assert(F.read(src), 'No such file: '..tostring(src))
@@ -332,10 +352,10 @@ process = function (args)
    Test.summary()
 end,
 exit = true},
--- localisation file
+-- localization file
 ['-l'] = '--lng',
 ['--lng'] = {
-description = 'Create/update file for localisation.',
+description = 'Create/update file for localization.',
 process = function (args)
    if args[2] then
       lc_help.prepare(args[2], import)
@@ -393,7 +413,7 @@ main._args.text = function ()
       "",
       "USAGE:",
       "\tlua -i sonata.lua [flag [arg1 arg2 ...]]",
-      "(option '-i' could be omitted when the program is in non-interractive mode)",
+      "(option '-i' could be omitted when the program is in non-interactive mode)",
       "",
       "FLAGS:"
    }

@@ -394,3 +394,4 @@ return complex
 
 --==========================
 -- TODO: define inverse trigonometric complex functions
+-- TODO: write tests for new complex functions
