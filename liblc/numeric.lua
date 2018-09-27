@@ -1,6 +1,7 @@
 --[[      liblc/numeric.lua 
 
 --- Numerical solutions for some mathematical problems.
+--
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -34,7 +35,7 @@ ans = c                                   --~ 2
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl, yn = Num.ode(function (x,y) return x*y end, {0,1}, 3)
+tbl, yn = Num.ode45(function (x,y) return x*y end, {0,3}, 1)
 ans = yn                                  --~ 90.011
 
 -- use matrices for high order equations
@@ -44,15 +45,15 @@ Mat = require 'liblc.matrix'
 -- represent as: x1 = y, x2 = y'
 -- so: x1' = x2, x2' = 1+2*x2-2*x1
 myfun = function (t,x) return Mat.V {x(2), 1+2*x(2)-2*x(1)} end
-_, xn = Num.ode(myfun, {0, Mat.V{3,2} }, 2, 0.2) 
+_, xn = Num.ode45(myfun, {0,2}, Mat.V{3,2}, {dt=0.2}) 
 ans = xn(1)                               --~  -10.54
 
 -- define exit condition
 -- from time, current and previous results
-exit = function (time,current,previous) return current < 0.1 end
+cond = function (time,current,previous) return current < 0.1 end
 myfun = function (t,x) return -x end
-_, yn = Num.ode(myfun, {0,1}, exit)
-ans = yn                                  --~ 0.0856
+y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
+ans = y[#y][1]                           --~ 2.5
 ]]
 ---------------------------------------------
 
@@ -61,11 +62,11 @@ ans = yn                                  --~ 0.0856
 local Ver = require "liblc.versions"
 
 -- Runge-Kutta method.
---    @param fn Function f(x,y).
---    @param x First variable.
---    @param y Second variable.
---    @param h Step.
---    @return Approximation for y.
+-- @param fn Function f(x,y).
+-- @param x First variable.
+-- @param y Second variable.
+-- @param h Step.
+-- @return Approximation for y.
 local function rk(fn, x, y, h)
    local h2 = 0.5*h
    local k1 = fn(x,    y)
@@ -88,13 +89,13 @@ about = help:new("Group of functions for numerical calculations."),
 
 -- current tolerance
 numeric.TOL = 1e-3
-numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", help.CONST}
+numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", "parameters"}
 
 --- Find root of equation at the given interval.
---    @param fn Function to analyze.
---    @param a Lower bound.
---    @param b Upper bound.
---    @return Function root.
+--  @param fn Function to analyze.
+--  @param a Lower bound.
+--  @param b Upper bound.
+--  @return Function root.
 numeric.solve = function (fn, a, b)
    local f0, f1 = fn(a), fn(b)
    if f0*f1 >= 0 then error("Boundary values must have different sign!") end
@@ -107,9 +108,9 @@ end
 numeric.about[numeric.solve] = {"solve(fn,a,b)", "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Another solution based on Newton's rule.
---    @param fn Function to analyze.
---    @param x1 Initial value of the root.
---    @return Function root of <code>nil</code>.
+--  @param fn Function to analyze.
+--  @param x1 Initial value of the root.
+--  @return Function root of <code>nil</code>.
 numeric.Newton = function (fn, x1)
    local h, k, x2 = 0.1, 0, x1
    repeat
@@ -123,9 +124,9 @@ end
 numeric.about[numeric.Newton] = {"Newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition."}
 
 --- Simple derivative.
---    @param fn Function f(x).
---    @param x Parameter.
---    @return Numerical approximation of the derivative value.
+--  @param fn Function f(x).
+--  @param x Parameter.
+--  @return Numerical approximation of the derivative value.
 numeric.diff = function (fn, x)
    local dx = 2e-2
    local der, last = (fn(x+dx)-fn(x-dx))/(2*dx)
@@ -138,10 +139,10 @@ end
 numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function."}
 
 --- Integration using trapeze method.
---    @param fn Function f(x).
---    @param a Lower bound.
---    @param b Upper bound.
---    @return Numerical approximation of the integral.
+--  @param fn Function f(x).
+--  @param a Lower bound.
+--  @param b Upper bound.
+--  @return Numerical approximation of the integral.
 numeric.trapez = function (fn, a, b)
    local N, sum = 10, 0
    local fab = (fn(a)+fn(b)) * 0.5
@@ -169,29 +170,40 @@ end
 numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule."}
 
 --- Differential equation solution (Runge-Kutta method).
---    @param fn function f(t,y).
---    @param init Initial time and vlue {t0,x0}
---    @param exit Stop condition, number or function
---    @param dx Step. If it is omitted then step is calculated automatically.
---    @return Table of intermediate results and value in final point.
-numeric.ode = function (fn, init,exit,dx)
+--  @param fn function f(t,y).
+--  @param tInit Initial time and vlue {t0,x0}
+--  @param exit Stop condition, number or function
+--  @param dx Step. If it is omitted then step is calculated automatically.
+--  @return Table of intermediate results and value in final point.
+--numeric.ode45 = function (fn, tInit,exit,dx)
+numeric.ode45 = function (fn,tDelta,y0,param)
    local PARTS, MAX, MIN = 10, 15*numeric.TOL, 0.1*numeric.TOL
-   local h, xn, break_condition
+   local h, break_condition
+   local xn = tDelta[2]
+   if xn < math.huge then
+      h = param and param.dt or (xn-tDelta[1])/PARTS
+   else
+      h = param and param.dt or numeric.TOL
+   end
+   local exit = param and param.exit or function () return false end
+   --[[
    if type(exit) == 'number' then
       break_condition = function (t) return t >= exit end
       xn = exit
-      h = dx or (xn-init[1])/PARTS
+      h = dx or (xn-tDelta[1])/PARTS
    else
       break_condition = exit
       xn = math.huge
       h = dx or numeric.TOL
    end
-   local res = {init}           -- save intermediate points
-   repeat
+   ]]
+   local res = {{tDelta[1],y0}}           -- save intermediate points
+   while res[#res][1] < xn do
+   --repeat
       local x,y = Ver.unpack(res[#res])
       h = math.min(h, xn-x)
       -- correct step
-      if dx then
+      if param and param.dt then
          res[#res+1] = {x+h, rk(fn,x,y,h)}
       else
          -- step correction
@@ -208,10 +220,12 @@ numeric.ode = function (fn, init,exit,dx)
             res[#res+1] = {x+h, y2}      -- use y2 instead y1 because it is probobly more precise (?)
          end
       end
-   until break_condition(res[#res][1],res[#res][2],res[#res-1] and res[#res-1][2])
+      if exit(res[#res][1],res[#res][2], (#res>1) and res[#res-1][2]) then break end 
+   --until break_condition(res[#res][1],res[#res][2],res[#res-1] and res[#res-1][2])
+   end
    return res, res[#res][2]
 end
-numeric.about[numeric.ode] = {"ode(fn,init,break[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn."}
+numeric.about[numeric.ode45] = {"ode45(fn,tInit,break[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn."}
 
 -- free memory if need
 if not lc_version then numeric.about = nil end
@@ -219,4 +233,4 @@ if not lc_version then numeric.about = nil end
 return numeric
 
 --===============================
--- TODO: change ode signature
+-- TODO: check ode solver

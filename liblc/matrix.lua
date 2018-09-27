@@ -108,7 +108,7 @@ ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
 h = Mat.rand(3,2)
 print(h)
 
--- pseudoinverse matrix
+-- pseudo inverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
 ans = n(2,2)                    --~ 0.333
@@ -217,7 +217,7 @@ type = 'matrix', ismatrix = true,
 about = help:new("Matrix operations. The matrices are spares by default."),
 }
 
---- Methametod for access to elements.
+--- Metametod for access to elements.
 --  @param t Table (object).
 --  @param k Key.
 --  @return New matrix row or desired method.
@@ -245,7 +245,7 @@ matrix.init = function (self, nR, nC, M)
 end
 
 --- Create new matrix from list of tables.
---  @param M Table, where each subtable is a raw of matrix.
+--  @param M Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
 matrix.new = function (M)
    M = M or {}
@@ -348,12 +348,12 @@ matrix.rank = function (M)
 end
 matrix.about[matrix.rank] = {"rank(M)", "Find rank of the matrix."}
 
---- Get element or submatrix. 
---  In case of submatrix each index should be a table of 2 or 3 lements: [begin,end[,step]].
+--- Get element or sub matrix. 
+--  In case of sub matrix each index should be a table of 2 or 3 elements: [begin,end[,step]].
 --  @param M Source matrix.
 --  @param a Raw index or array of indexes.
 --  @param b Column index or array of indexes. In case of vector can be omitted.
---  @return Element or subarray or nil in case of error.
+--  @return Element or sub array or nil in case of error.
 matrix.get = function (M,a,b)
    if not b then
       -- vector call
@@ -953,7 +953,7 @@ matrix.about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", TR
 
 --- Matrix to table.
 --  @param M Source matrix.
---  @return Table without methametods.
+--  @return Table without metametods.
 matrix.table = function (M)
    local res = {}
    for r = 1,M.rows do
@@ -1017,9 +1017,9 @@ end
 matrix.about[matrix.cross] = {'cross(V1,V2)','Cross product or two 3-element vectors.'}
 
 --- V1 . V2
---    @param V1 3-element vector.
---    @param V2 3-element vector.
---    @return Scalar product.
+--  @param V1 3-element vector.
+--  @param V2 3-element vector.
+--  @return Scalar product.
 matrix.dot = function (V1,V2)
    if (V1.rows*V1.cols ~= 3 or V2.rows*V2.cols ~= 3) then error("Vector with 3 elements is expected!") end
    local x1,y1,z1 = V1:get(1), V1:get(2), V1:get(3)
@@ -1175,41 +1175,43 @@ matrix.reduce = function (M,fn,dir,init)
 end
 matrix.about[matrix.reduce] = {"reduce(M,fn,dir,init)","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.",help.OTHER}
 
---- Get summ of all elements.
---    @param m Initial matrix.
---    @param dir Direction (optional).
---    @return Sum along 'r'ows or 'c'olumns
-matrix.sum = function (m,dir) return matrix.reduce(m, fn_sum, dir, 0) end
-matrix.about[matrix.sum] = {"sum(m,dir)", "Find sum of elements along given direction ('r' or 'c')."}
+--- Get sum of all elements.
+--  @param M Initial matrix.
+--  @param dir Direction (optional).
+--  @return Sum along 'r'ows or 'c'olumns
+matrix.sum = function (M,dir) return matrix.reduce(M, fn_sum, dir, 0) end
+matrix.about[matrix.sum] = {"sum(M,dir)", "Find sum of elements along given direction ('r' or 'c')."}
 
 --- Get euclidean norm for each column/row.
---    @param n Initial matrix.
---    @param dir Direction (optional).
---    @return Norm along rows or columns.
-matrix.sqNorm = function (m,dir)
-   return matrix.reduce(m, function (a,b) return a+b^2 end, dir, 0)
+--  @param m Initial matrix.
+--  @param dir Direction (optional).
+--  @return Norm along rows or columns.
+matrix.sqNorm = function (M,dir)
+   return matrix.reduce(M, function (a,b) return a+b^2 end, dir, 0)
 end
-matrix.about[matrix.sqNorm] = {"sqNorm(m,dir)", "Calculate square norm along given direction."}
+matrix.about[matrix.sqNorm] = {"sqNorm(M,dir)", "Calculate square norm along given direction."}
 
 --- Euclidean norm of the matrix at whole.
---    @param m Current matrix.
---    @return Norm value.
-matrix.norm = function (m)
+--  @param M Current matrix.
+--  @return Norm value.
+matrix.norm = function (M)
    local sum = 0
-   for r = 1,m.rows do
-      local mr = m[r]
-      for c = 1,m.cols do
+   for r = 1,M.rows do
+      local mr = M[r]
+      for c = 1,M.cols do
          sum = sum+(mr[c])^2
       end
    end
    return math.sqrt(sum)
 end
+matrix.about[matrix.norm] = {"norm(M)", "Euclidean norm."}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})
 matrix.Mat = 'Mat'
 matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
 
+--[[
 --- Matrix serialization.
 --    @param obj Matrix object.
 --    @return String, suitable for exchange.
@@ -1232,6 +1234,7 @@ matrix.serialize = function (obj)
    return string.format("{%s}", table.concat(s, ','))
 end
 matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal representation.", help.OTHER}
+]]
 
 --- Function for execution during the module import.
 matrix.onImport = function ()
