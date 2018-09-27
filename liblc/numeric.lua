@@ -53,7 +53,7 @@ ans = xn(1)                               --~  -10.54
 cond = function (time,current,previous) return current < 0.1 end
 myfun = function (t,x) return -x end
 y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
-ans = y[#y][1]                           --~ 2.5
+ans = y[#y][1]                           --~ 2.56
 ]]
 ---------------------------------------------
 
@@ -171,32 +171,16 @@ numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoid
 
 --- Differential equation solution (Runge-Kutta method).
 --  @param fn function f(t,y).
---  @param tInit Initial time and vlue {t0,x0}
---  @param exit Stop condition, number or function
---  @param dx Step. If it is omitted then step is calculated automatically.
+--  @param tDelta Time interval {t0,tn}
+--  @param y0 Function value at time t0.
+--  @param param Table of additional parameters: dt - time step, exit - exit condition
 --  @return Table of intermediate results and value in final point.
---numeric.ode45 = function (fn, tInit,exit,dx)
 numeric.ode45 = function (fn,tDelta,y0,param)
-   local PARTS, MAX, MIN = 10, 15*numeric.TOL, 0.1*numeric.TOL
-   local h, break_condition
+   local MAX, MIN = 15*numeric.TOL, 0.1*numeric.TOL
    local xn = tDelta[2]
-   if xn < math.huge then
-      h = param and param.dt or (xn-tDelta[1])/PARTS
-   else
-      h = param and param.dt or numeric.TOL
-   end
+   local h = param and param.dt or (10*numeric.TOL)
    local exit = param and param.exit or function () return false end
-   --[[
-   if type(exit) == 'number' then
-      break_condition = function (t) return t >= exit end
-      xn = exit
-      h = dx or (xn-tDelta[1])/PARTS
-   else
-      break_condition = exit
-      xn = math.huge
-      h = dx or numeric.TOL
-   end
-   ]]
+   -- evaluate
    local res = {{tDelta[1],y0}}           -- save intermediate points
    while res[#res][1] < xn do
    --repeat
@@ -217,15 +201,14 @@ numeric.ode45 = function (fn,tDelta,y0,param)
             h = 2*h
          else
             -- save for current step
-            res[#res+1] = {x+h, y2}      -- use y2 instead y1 because it is probobly more precise (?)
+            res[#res+1] = {x+h, y2}      -- use y2 instead y1 because it is probably more precise (?)
          end
       end
       if exit(res[#res][1],res[#res][2], (#res>1) and res[#res-1][2]) then break end 
-   --until break_condition(res[#res][1],res[#res][2],res[#res-1] and res[#res-1][2])
    end
    return res, res[#res][2]
 end
-numeric.about[numeric.ode45] = {"ode45(fn,tInit,break[,dx])", "Numerical approximation of the ODE solution.\nIf step dx is not defined it is calculated automatically according the given tolerance.\nReturn table of intermediate points and result yn."}
+numeric.about[numeric.ode45] = {"ode45(fn,tDelta,y0[,param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
 -- free memory if need
 if not lc_version then numeric.about = nil end
