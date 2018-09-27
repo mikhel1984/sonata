@@ -113,11 +113,13 @@ m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
 ans = n(2,2)                    --~ 0.333
 
--- get dense copy of the matrix
+-- get simple copy
 k = Mat.eye(3)
-k = k:dense()
+k = k:table()
 ans = k[2][1]                   --> 0
 
+-- back to matrix
+k = Mat(k)
 k = k:sparse()
 ans = rawget(k[2],1)             --> nil
 
@@ -689,51 +691,57 @@ end
 matrix.about[matrix.eye] = {"eye(rows[,cols[,init]])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
 
 --- Matrix concatenation.
---    Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
---    @param a First matrix.
---    @param b Second matrix.
---    @param dib Direction of concatenation ('h' for horizontal, 'v' for vertical).
---    @return Concatenated matrix.
-matrix.concat = function (a, b, dir)
+--  Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @param dir Direction of concatenation ('h' for horizontal, 'v' for vertical).
+--  @return Concatenated matrix.
+matrix.concat = function (M1, M2, dir)
    local res = nil
    if dir == 'h' then
-      if (a.rows ~= b.rows) then error("Different number of rows") end
-      res = matrix:init(a.rows, a.cols+b.cols, {})
+      if (M1.rows ~= M2.rows) then error("Different number of rows") end
+      res = matrix:init(M1.rows, M1.cols+M2.cols, {})
    elseif dir == 'v' then
-      if (a.cols ~= b.cols) then error("Different number of columns") end
-      res = matrix:init(a.rows+b.rows, a.cols, {})
+      if (M1.cols ~= M2.cols) then error("Different number of columns") end
+      res = matrix:init(M1.rows+M2.rows, M1.cols, {})
    else
       error("Unexpected type of concatenation")
    end
    for r = 1, res.rows do
       local resr = res[r]
       for c = 1, res.cols do
-         local src = (r <= a.rows and c <= a.cols) and a or b
-         local i = (r <= a.rows) and r or (r - a.rows)
-	 local j = (c <= a.cols) and c or (c - a.cols)
+         local src = (r <= M1.rows and c <= M1.cols) and M1 or M2
+         local i = (r <= M1.rows) and r or (r - M1.rows)
+	 local j = (c <= M1.cols) and c or (c - M1.cols)
 	 resr[c] = src[i][j]
       end
    end
    return res
 end
-matrix.about[matrix.concat] = {"concat(m1,m2,dir)", 
-                               "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse m1 .. m2 for horizontal concatenation and m1 // m2 for vertical.", 
+matrix.about[matrix.concat] = {"concat(M1,M2,dir)", 
+                               "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.", 
 			       TRANSFORM}
 
--- horizontal concatenation
-matrix.__concat = function (a,b) return matrix.concat(a,b,'h') end
+--- Horizontal concatenation
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @return Concatenated matrix.
+matrix.__concat = function (M1,M2) return matrix.concat(M1,M2,'h') end
 
--- vertical concatenation
-matrix.__idiv = function (a,b) return matrix.concat(a,b,'v') end
+--- vertical concatenation
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @return Concatenated matrix.
+matrix.__idiv = function (M1,M2) return matrix.concat(M1,M2,'v') end
 
--- String representation.
---    @param m Matrix.
---    @return String.
-matrix.__tostring = function (m)
+--- String representation.
+--  @param M Matrix.
+--  @return String.
+matrix.__tostring = function (M)
    local srow = {}
-   for r = 1, m.rows do
-      local scol, mr = {}, m[r]
-      for c = 1, m.cols do
+   for r = 1, M.rows do
+      local scol, mr = {}, M[r]
+      for c = 1, M.cols do
          local tmp = mr[c]
          table.insert(scol, type(tmp) == 'number' and string.format('%.3f',tmp) or tostring(mr[c]))
       end
@@ -743,14 +751,14 @@ matrix.__tostring = function (m)
 end
 
 --- Get trace of the matrix.
---    @param m Source matrix.
---    @return Sum of elements of the main diagonal.
-matrix.tr = function (m)
+--  @param m Source matrix.
+--  @return Sum of elements of the main diagonal.
+matrix.tr = function (M)
    local sum = 0
-   for i = 1,math.min(m.rows,m.cols) do sum = sum + m[i][i] end
+   for i = 1,math.min(M.rows,M.cols) do sum = sum + M[i][i] end
    return sum
 end
-matrix.about[matrix.tr] = {"tr(m)", "Get trace of the matrix.", help.OTHER}
+matrix.about[matrix.tr] = {"tr(M)", "Get trace of the matrix.", help.OTHER}
 
 --[=[
 --> SVD - "standard" algorithm implementation
@@ -887,9 +895,9 @@ matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudo inverse matrix using 
 ]=]
 
 --- Quick pseudo inverse matrix.
---    Based on "Fast computation of Moore-Penrose inverse matrices" paper by Pierre Courrieu.
---    @param M Initial matrix.
---    @return Pseudo inverse matrix.
+--  Based on "Fast computation of Moore-Penrose inverse matrices" paper by Pierre Courrieu.
+--  @param M Initial matrix.
+--  @return Pseudo inverse matrix.
 matrix.pinv = function (M)
    local m,n,transp = M.rows, M.cols, false
    local A, Mt = nil, M:transpose()
@@ -900,7 +908,7 @@ matrix.pinv = function (M)
    end
    local tol, v = math.huge, 0
    for i = 1, A.rows do 
-      v = A[i][i];
+      v = A[i][i]
       if type(v) == 'table' and v.iscomplex then v = v:abs() end
       tol = math.min(tol, (v > 0 and v or math.huge)) 
    end
@@ -943,105 +951,96 @@ matrix.pinv = function (M)
 end
 matrix.about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", TRANSFORM}
 
---- Represent matrix in explicit (dense) form.
---    @param m Source matrix.
---    @return Dense matrix.
-matrix.dense = function (m)
-   local res = matrix:init(m.rows, m.cols, {})
-   for r = 1,m.rows do
-      res[r] = {}
-      local resr, mr = res[r], m[r]
-      for c = 1,m.cols do resr[c] = mr[c] end
-   end
-   return res
-end
-matrix.about[matrix.dense] = {"dense(m)", "Return dense matrix.", help.OTHER}
-
--- matrix as table (temporary ?)
-matrix.table = function (m)
+--- Matrix to table.
+--  @param M Source matrix.
+--  @return Table without methametods.
+matrix.table = function (M)
    local res = {}
-   for r = 1,m.rows do
-      res[r] = {}
-      for c = 1,m.cols do res[r][c] = m[r][c] end
+   for r = 1,M.rows do
+      local resr, mr = {}, M[r]
+      for c = 1,M.cols do resr[c] = mr[c] end
+      res[r] = resr
    end
    return res
 end
 matrix.about[matrix.table] = {"table(M)", "Convert to simple Lua table.", help.OTHER}
 
---- Return sparse matrix, if possible.
---    @param m Source matrix.
---    @return Sparse matrix.
-matrix.sparse = function (m)
-   local res = matrix:init(m.rows, m.cols, {})
+--- Remove zeros.
+--  @param M Source matrix.
+--  @return Sparse matrix.
+matrix.sparse = function (M)
+   local res = matrix:init(M.rows, M.cols, {})
    for r = 1, res.rows do
-      local resr, mr = res[r], m[r]
+      local resr, mr = res[r], M[r]
       for c = 1, res.cols do resr[c] = mr[c] end
    end
    return res
 end
-matrix.about[matrix.sparse] = {"sparse(m)", "Return sparse matrix.", help.OTHER}
+matrix.about[matrix.sparse] = {"sparse(M)", "Return sparse matrix.", help.OTHER}
 
 --- Get diagonal vector or create matrix with given elements.
---    @param m Matrix, vector or table with numbers.
---    @param n Diagonal index. Default is 0.
---    @return Vector of matrix.
-matrix.diag = function (m,n)
+--  @param M Matrix, vector or table with numbers.
+--  @param n Diagonal index. Default is 0.
+--  @return Vector of matrix.
+matrix.diag = function (M,n)
    n = n or 0
    local k,res = (n < 0 and -n or n)
-   if ismatrix(m) then
-      if m.rows == 1 or m.cols == 1 then
+   if ismatrix(M) then
+      if M.rows == 1 or M.cols == 1 then
          res = {}
-	 for i = 1,math.max(m.rows,m.cols) do res[i] = m:get(i) end
+	 for i = 1,math.max(M.rows,M.cols) do res[i] = M:get(i) end
 	 return matrix.diag(res,n)
       else
-	 local z = (n < 0) and math.min(m.rows-k,m.cols) or math.min(m.cols-k,m.rows) 
+	 local z = (n < 0) and math.min(M.rows-k,M.cols) or math.min(M.cols-k,M.rows) 
 	 if z <= 0 then error("Wrong shift!") end
 	 res = matrix:init(z,1, {})
-	 for i = 1,z do res[i][1] = m[(n<0 and i+k or i)][(n<0 and i or i+k)] end
+	 for i = 1,z do res[i][1] = M[(n<0 and i+k or i)][(n<0 and i or i+k)] end
       end
    else
-      res = matrix:init(#m+k,#m+k, {})
-      for i = 1,#m do res[(n<0 and i+k or i)][(n<0 and i or i+k)] = m[i] end
+      res = matrix:init(#M+k,#M+k, {})
+      for i = 1,#M do res[(n<0 and i+k or i)][(n<0 and i or i+k)] = M[i] end
    end
    return res
 end
 matrix.about[matrix.diag] = {'diag(M[,n])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
 
---- a x b
---    @param a 3-element vector.
---    @param b 3-element vector.
---    @return Cross product.
-matrix.cross = function (a,b)
-   if (a.rows*a.cols ~= 3 or b.rows*b.cols ~= 3) then error("Vector with 3 elements is expected!") end
-   local x1,y1,z1 = a:get(1), a:get(2), a:get(3)
-   local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
+--- V1 x V2
+--  @param V1 3-element vector.
+--  @param V2 3-element vector.
+--  @return Cross product.
+matrix.cross = function (V1,V2)
+   if (V1.rows*V1.cols ~= 3 or V2.rows*V2.cols ~= 3) then error("Vector with 3 elements is expected!") end
+   local x1,y1,z1 = V1:get(1), V1:get(2), V1:get(3)
+   local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
    return matrix.new {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}}
 end
-matrix.about[matrix.cross] = {'cross(a,b)','Cross product or two 3-element vectors.'}
+matrix.about[matrix.cross] = {'cross(V1,V2)','Cross product or two 3-element vectors.'}
 
---- a . b
---    @param a 3-element vector.
---    @param b 3-element vector.
+--- V1 . V2
+--    @param V1 3-element vector.
+--    @param V2 3-element vector.
 --    @return Scalar product.
-matrix.dot = function (a,b)
-   if (a.rows*a.cols ~= 3 or b.rows*b.cols ~= 3) then error("Vector with 3 elements is expected!") end
-   local x1,y1,z1 = a:get(1), a:get(2), a:get(3)
-   local x2,y2,z2 = b:get(1), b:get(2), b:get(3)
+matrix.dot = function (V1,V2)
+   if (V1.rows*V1.cols ~= 3 or V2.rows*V2.cols ~= 3) then error("Vector with 3 elements is expected!") end
+   local x1,y1,z1 = V1:get(1), V1:get(2), V1:get(3)
+   local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
    return x1*x2+y1*y2+z1*z2
 end
-matrix.about[matrix.dot] = {'dot(a,b)', 'Scalar product of two 3-element vectors'}
+matrix.about[matrix.dot] = {'dot(V1,V2)', 'Scalar product of two 3-element vectors'}
 
--- Auxiliary function for working with complex numbers.
-matrix._fabs = function (m)
-   return (type(m) == 'table' and m.iscomplex) and m:abs() or math.abs(m)
+--- Auxiliary function for working with complex numbers.
+--  @param a Number.
+--  @return Absolute value.
+matrix._fabs = function (a)
+   return (type(a) == 'table' and a.iscomplex) and a:abs() or math.abs(a)
 end
 
--- Prepare LU transformation for other functions.
---    @param m Initial square matrix.
---    @return "Compressed" LU, indexes, number of permutations
-matrix._luPrepare = function (m)
-   if m.rows ~= m.cols then error("Square matrix is expected!") end
-   local a = matrix.copy(m)
+--- Prepare LU transformation for other functions.
+--  @param M Initial square matrix.
+--  @return "Compressed" LU, indexes, number of permutations
+matrix._luPrepare = function (M)
+   if M.rows ~= M.cols then error("Square matrix is expected!") end
+   local a = matrix.copy(M)
    local vv = {}
    -- get scaling information
    for r = 1,a.rows do
@@ -1100,27 +1099,27 @@ matrix._luPrepare = function (m)
 end
 
 --- LU transform
---    @param m Initial square matrix.
---    @return L matrix, U matrix, permutations
-matrix.lu = function (m)
-   local a,_,d = matrix._luPrepare(m)
-   local p = matrix.eye(m.rows,m.cols)
+--  @param M Initial square matrix.
+--  @return L matrix, U matrix, permutations
+matrix.lu = function (M)
+   local a,_,d = matrix._luPrepare(M)
+   local p = matrix.eye(M.rows,M.cols)
    while d > 0 do
       local tmp = p[1]; Ver.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
       d = d-1
    end
-   return matrix.mapEx(a, function (r,c,m) return (r==c) and 1.0 or (r>c and m or 0) end),   -- lower
-          matrix.mapEx(a, function (r,c,m) return r <= c and m or 0 end),                    -- upper
+   return matrix.mapEx(a, function (r,c,M) return (r==c) and 1.0 or (r>c and M or 0) end),   -- lower
+          matrix.mapEx(a, function (r,c,M) return r <= c and M or 0 end),                    -- upper
 	  p                                                                                   -- permutations
 end
-matrix.about[matrix.lu] = {"lu(m)", "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}
+matrix.about[matrix.lu] = {"lu(M)", "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}
 
 --- Cholesky decomposition.
---    @param m Positive definite symmetric matrix.
---    @return Lower part of the decomposition.
-matrix.Cholesky = function (m)
-   if m.rows ~= m.cols then error("Square matrix is expected!") end
-   local a,p = matrix.copy(m), {}
+--  @param M Positive definite symmetric matrix.
+--  @return Lower part of the decomposition.
+matrix.Cholesky = function (M)
+   if M.rows ~= M.cols then error("Square matrix is expected!") end
+   local a,p = matrix.copy(M), {}
    -- calculate new values
    for r = 1,a.rows do
       local ar = a[r]
@@ -1143,30 +1142,30 @@ matrix.Cholesky = function (m)
    end
    return a
 end
-matrix.about[matrix.Cholesky] = {"Cholesky(m)", "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
+matrix.about[matrix.Cholesky] = {"Cholesky(M)", "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
 
 --- Apply function to all elements along given direction.
---    @param m Initial matrix.
---    @param fn Function of 2 arguments.
---    @param dir Direction of evaluations (optional).
---    @param init Initial value (optional).
---    @return Reduced matrix.
-matrix.reduce = function (m,fn,dir,init)
+--  @param M Initial matrix.
+--  @param fn Function of 2 arguments.
+--  @param dir Direction of evaluations (optional).
+--  @param init Initial value (optional).
+--  @return Reduced matrix.
+matrix.reduce = function (M,fn,dir,init)
    dir = dir or 'r'
    init = init or 0
    local res
    if dir == 'r' then
-      res = matrix:init(m.rows,1, {})
-      for r = 1,m.rows do
-         local s, mr = init, m[r]
-	 for c = 1,m.cols do s = fn(s,mr[c]) end
+      res = matrix:init(M.rows,1, {})
+      for r = 1,M.rows do
+         local s, mr = init, M[r]
+	 for c = 1,M.cols do s = fn(s,mr[c]) end
 	 res[r][1] = s
       end
    elseif dir == 'c' then
-      res = matrix:init(1,m.cols, {})
-      for c = 1,m.cols do
+      res = matrix:init(1,M.cols, {})
+      for c = 1,M.cols do
          local s = init
-	 for r = 1,m.rows do s = fn(s,m[r][c]) end
+	 for r = 1,M.rows do s = fn(s,M[r][c]) end
 	 res[1][c] = s
       end
    else
@@ -1174,7 +1173,7 @@ matrix.reduce = function (m,fn,dir,init)
    end
    return res
 end
-matrix.about[matrix.reduce] = {"reduce(m,fn,dir,init)","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.",help.OTHER}
+matrix.about[matrix.reduce] = {"reduce(M,fn,dir,init)","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.",help.OTHER}
 
 --- Get summ of all elements.
 --    @param m Initial matrix.
