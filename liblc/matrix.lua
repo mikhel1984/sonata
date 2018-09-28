@@ -598,23 +598,30 @@ matrix.about[matrix.det] = {"det(M)", "Calculate determinant."}
 matrix.inv = function (M)
    if (M.rows ~= M.cols) then error("Square matrix is expected!") end
    local size = M.cols
-   local con, det = matrix.rref(M, matrix.eye(size))
-   if det ~= 0 then
-      -- reuse found matrix
-      for r = 1, size do
-         local conr = con[r]
-         for c = 1, size do
-	    local p = size+c
-	    conr[c], conr[p] = conr[p], nil
-	 end
-      end
-      con.cols = size
-      return con
+   -- prepare matrix
+   local res, det = matrix.copy(M)
+   -- add "tail"
+   for i = 1,size do
+      res[i][i+size] = 1
    end
-   -- determinant is 0
-   return matrix.ones(size, size, math.huge)
+   res.cols = 2*size
+   res, det = matrix._GaussDown(res)
+   if det == 0 then 
+      return matrix.ones(size,size, math.huge)
+   end
+   res = matrix._GaussUp(res)
+   -- move result
+   for r = 1,size do
+      local resr = res[r]
+      for c = 1,size do
+         local p = size+c
+	 resr[c], resr[p] = resr[p], nil
+      end
+   end
+   res.cols = size
+   return res
 end
-matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", TRANSFORM}
+matrix.about[matrix.inv] = {"inv(M)", "Return inverse matrix.", TRANSFORM}
 
 --- Solve system of equations using Gauss method.
 --  @param A Matrix of coefficients.
