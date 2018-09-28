@@ -92,7 +92,7 @@ ans = a // b                     --> Mat {{1,2},{3,4},{5,6},{7,8}}
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
 -- apply function which depends on index too
-ans = a:mapEx(function (x,r,c) return x-r-c end) --> Mat {{-1,-3},{-2,-4}}
+ans = a:mapEx(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
 
 -- use Gauss transform to solve equation
 ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
@@ -271,7 +271,7 @@ matrix._kProd = function (k, M)
    return res
 end
 
---- Transform matrix to upper triangle.
+--- Transform matrix to upper triangle (in-place).
 --  @param M Initial matrix.
 --  @return Upper triangulated matrix and determinant.
 matrix._GaussDown = function (M)
@@ -303,7 +303,7 @@ matrix._GaussDown = function (M)
    return M, A
 end
 
---- Transform triangle matrix to identity matrix.
+--- Transform triangle matrix to identity matrix (in-place).
 --  @param M Initial matrix
 --  @return Matrix with diagonal zeros.
 matrix._GaussUp = function (M)
@@ -324,8 +324,7 @@ end
 --  @param M Initial matrix.
 --  @return Triangulated matrix.
 matrix.triang = function (M)
-   local res = matrix.copy(M)
-   return matrix._GaussDown(res)
+   return matrix._GaussDown(matrix.copy(M))
 end
 matrix.about[matrix.triang] = {'triang(M)', 'Matrix triangulation produced by Gaussian elimination.', TRANSFORM}
 
@@ -337,6 +336,7 @@ matrix.rank = function (M)
    while i <= mat.rows do
       local mati = mat[i]
       if not mati then break end
+      -- find nonzero element
       local zeros = true
       for j = i,mat.cols do
          if mati[j] ~= 0 then zeros = false; break end
@@ -473,17 +473,17 @@ matrix.about[matrix.map] = {"map(M,fn)", "Apply the given function to all elemen
 
 --- Apply function to each element, use row and col values.
 --  @param M Source matrix.
---  @param fn Function f(r,c,x).
+--  @param fn Function f(x,r,c).
 --  @return Result of function evaluation.
 matrix.mapEx = function (M, fn)
    local res = matrix:init(M.rows, M.cols, {})
    for r = 1, res.rows do
       local resr, mr = res[r], M[r]
-      for c = 1, res.cols do resr[c] = fn(r,c,mr[c]) end
+      for c = 1, res.cols do resr[c] = fn(mr[c],r,c) end
    end
    return res
 end
-matrix.about[matrix.mapEx] = {"mapEx(M,fn)", "Apply function fn(row,col,val) to all elements, return new matrix.", TRANSFORM}
+matrix.about[matrix.mapEx] = {"mapEx(M,fn)", "Apply function fn(val,row,col) to all elements, return new matrix.", TRANSFORM}
 
 --- Apply function to each pair elements of given matrices.
 --  @param M1 First matrix.
@@ -523,11 +523,12 @@ matrix.__mul = function (M1,M2)
    if not ismatrix(M2) then return matrix._kProd(M2, M1) end
    if (M1.cols ~= M2.rows) then error("Impossible to get product: different size!") end
    local res = matrix:init(M1.rows, M2.cols,{})
+   local resCols, m1Cols = res.cols, M1.cols
    for r = 1, res.rows do
       local ar, resr = M1[r], res[r]
-      for c = 1, res.cols do
+      for c = 1, resCols do
          local sum = 0
-	 for i = 1, M1.cols do sum = sum + ar[i]*M2[i][c] end
+	 for i = 1, m1Cols do sum = sum + ar[i]*M2[i][c] end
 	 resr[c] = sum
       end
    end
@@ -639,7 +640,7 @@ matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss m
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
 matrix.vector = function (t)
-   local res = {}
+   local res = {0,0,0}          -- prepare some memory
    for i = 1, #t do res[i] = {t[i]} end
    return matrix:init(#t, 1, res)
 end
@@ -921,15 +922,15 @@ matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudo inverse matrix using 
 --  @return Pseudo inverse matrix.
 matrix.pinv = function (M)
    local m,n,transp = M.rows, M.cols, false
-   local A, Mt = nil, M:transpose()
+   local Mt, A = M:transpose()
    if m < n then 
       A, n, transp = matrix.__mul(M, Mt), m, true
    else
       A = matrix.__mul(Mt, M)
    end
-   local tol, v = math.huge, 0
+   local tol = math.huge
    for i = 1, A.rows do 
-      v = A[i][i]
+      local v = A[i][i]
       if type(v) == 'table' and v.iscomplex then v = v:abs() end
       tol = math.min(tol, (v > 0 and v or math.huge)) 
    end
@@ -940,7 +941,7 @@ matrix.pinv = function (M)
       local B = A:get({k,n},k)
       if r > 1 then 
          tmp = L:get({k,n},{1,r-1}) * L:get(k,{1,r-1}):transpose() 
-	 tmp = ismatrix(tmp) and tmp or matrix.new{{tmp}}         -- product can return a number
+	 tmp = ismatrix(tmp) and tmp or matrix:init(1,1,{{tmp}})         -- product can return a number
          B = B - tmp
       end
       for i = k, n do L[i][r] = B[i-k+1][1] end   -- copy B to L
@@ -949,20 +950,16 @@ matrix.pinv = function (M)
       if iscomplex and tmp:abs() > tol then
          L[k][r] = tmp:sqrt()
          tmp = L[k][r]
-	 if k < n then
-	    for i = k+1, n do L[i][r] = L[i][r]/tmp end
-	 end
+         for i = k+1, n do L[i][r] = L[i][r]/tmp end
       elseif not iscomplex and tmp > tol then
          L[k][r] = math.sqrt(tmp)
          tmp = L[k][r]
-	 if k < n then
-	    for i = k+1, n do L[i][r] = L[i][r]/tmp end
-	 end
+         for i = k+1, n do L[i][r] = L[i][r]/tmp end
       else
          r = r - 1
       end
    end
-   L = L:get({1,-1},{1, (r > 0 and r or 1)})
+   L.cols = (r > 0) and r or 1
    local Lt = L:transpose()
    local K = matrix.inv(Lt * L)
    if transp then
@@ -1033,7 +1030,7 @@ matrix.cross = function (V1,V2)
    if (V1.rows*V1.cols ~= 3 or V2.rows*V2.cols ~= 3) then error("Vector with 3 elements is expected!") end
    local x1,y1,z1 = V1:get(1), V1:get(2), V1:get(3)
    local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
-   return matrix.new {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}}
+   return matrix:init(3,1, {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}})
 end
 matrix.about[matrix.cross] = {'cross(V1,V2)','Cross product or two 3-element vectors.'}
 
@@ -1129,8 +1126,8 @@ matrix.lu = function (M)
       local tmp = p[1]; Ver.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
       d = d-1
    end
-   return matrix.mapEx(a, function (r,c,M) return (r==c) and 1.0 or (r>c and M or 0) end),   -- lower
-          matrix.mapEx(a, function (r,c,M) return r <= c and M or 0 end),                    -- upper
+   return matrix.mapEx(a, function (M,r,c) return (r==c) and 1.0 or (r>c and M or 0) end),   -- lower
+          matrix.mapEx(a, function (M,r,c) return r <= c and M or 0 end),                    -- upper
 	  p                                                                                   -- permutations
 end
 matrix.about[matrix.lu] = {"lu(M)", "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}
