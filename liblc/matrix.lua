@@ -597,8 +597,22 @@ matrix.about[matrix.det] = {"det(M)", "Calculate determinant."}
 --  @return Result of inversion.
 matrix.inv = function (M)
    if (M.rows ~= M.cols) then error("Square matrix is expected!") end
-   local con, det = matrix.rref(M, matrix.eye(M.cols))
-   return (det ~= 0) and matrix.get(con, {1,-1}, {M.cols+1, -1}) or matrix.ones(M.rows,M.rows,math.huge) 
+   local size = M.cols
+   local con, det = matrix.rref(M, matrix.eye(size))
+   if det ~= 0 then
+      -- reuse found matrix
+      for r = 1, size do
+         local conr = con[r]
+         for c = 1, size do
+	    local p = size+c
+	    conr[c], conr[p] = conr[p], nil
+	 end
+      end
+      con.cols = size
+      return con
+   end
+   -- determinant is 0
+   return matrix.ones(size, size, math.huge)
 end
 matrix.about[matrix.inv] = {"inv(m)", "Return inverse matrix.", TRANSFORM}
 
