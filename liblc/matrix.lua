@@ -1096,10 +1096,11 @@ matrix._luPrepare = function (M)
       end
       local ac = a[c]
       if c ~= rmax then
+         local armax = a[rmax]
          -- interchange rows
          for k = 1,a.rows do
-            dum = a[rmax][k]
-	    a[rmax][k] = ac[k]
+            dum = armax[k]
+	    armax[k] = ac[k]
 	    ac[k] = dum
 	 end
 	 d = d+1
