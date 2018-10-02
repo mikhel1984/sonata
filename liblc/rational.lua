@@ -1,6 +1,11 @@
 --[[      liblc/rational.lua 
 
 --- Rational number operatons support.
+--  
+--  Object structure:                   </br>
+--  <code>{numerator,denominator}</code></br>
+--  where both numbers are integers.
+--  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -65,12 +70,14 @@ local Ver = require('liblc.versions')
 
 local NUM, DENOM = 1, 2
 
--- Check object type.
+--- Check object type.
+--  @param v Test object.
+--  @return True for rational number.
 local function isrational(v) return type(v) == 'table' and v.isrational end
 
--- Number representation.
---    @param v Variable.
---    @return String representation.
+--- Number representation.
+--  @param v Value.
+--  @return String representation.
 local function numStr(v) return type(v) == 'number' and string.format('%d', v) or tostring(v) end
 
 --	INFO
@@ -88,18 +95,18 @@ about = help:new("Computations with rational numbers."),
 rational.__index = rational
 
 --- The greatest common divisor. 
---    @param a First integer.
---    @param b Second integer.
---    @return Greatest common divisor.
+--  @param a First integer.
+--  @param b Second integer.
+--  @return Greatest common divisor.
 rational.gcd = function (a,b)
    return (a == 0 or (type(a)=='table' and a:eq(0))) and b or rational.gcd(b % a, a)
 end
 rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Create new object, set metatable.
---    @param n Numerator.
---    @param dn Denominator. Default is 1.
---    @return New rational object.
+--  @param n Numerator.
+--  @param dn Denominator. Default is 1.
+--  @return New rational object.
 rational.new = function (self, n, dn)
    dn = dn or 1
    local g = rational.gcd(n,dn)
@@ -107,17 +114,17 @@ rational.new = function (self, n, dn)
 end
 
 --- Create copy of the rational number.
---    @param v Source value.
---    @return Rational number.
-rational.copy = function (v)
-   return rational:new(v[NUM], v[DENOM])
+--  @param R Source value.
+--  @return Rational number.
+rational.copy = function (R)
+   return setmetatable({R[NUM], R[DENOM]}, rational)
 end
-rational.about[rational.copy] = {"copy(v)", "Get copy of the rational number.", help.OTHER}
+rational.about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
 
--- Argument type correction.
---    @param a First rational or natural number.
---    @param b Second rational or natural number.
---    @return Arguments as rational numbers.
+--- Argument type correction.
+--  @param a First rational or natural number.
+--  @param b Second rational or natural number.
+--  @return Arguments as rational numbers.
 rational._args = function (a,b)
    a = isrational(a) and a or rational:new(a)
    if b then
@@ -126,28 +133,40 @@ rational._args = function (a,b)
    return a,b
 end
 
--- a + b
-rational.__add = function (a, b)   
-   a,b = rational._args(a,b)
-   return rational:new(a[1]*b[2]+a[2]*b[1], a[2]*b[2])
+--- R1 + R2
+--  @param R1 First rational or integer number.
+--  @param R2 Second rational or integer number.
+--  @return Sum.
+rational.__add = function (R1, R2)   
+   R1,R2 = rational._args(R1,R2)
+   return rational:new(R1[1]*R2[2]+R1[2]*R2[1], R1[2]*R2[2])
 end
 
--- a - b
-rational.__sub = function (a, b)   
-   a,b = rational._args(a,b)
-   return rational:new(a[1]*b[2]-a[2]*b[1], a[2]*b[2])
+--- R1 - R2
+--  @param R1 First rational or integer number.
+--  @param R2 Second rational or integer number.
+--  @return Difference.
+rational.__sub = function (R1, R2)   
+   R1,R2 = rational._args(R1,R2)
+   return rational:new(R1[1]*R2[2]-R1[2]*R2[1], R1[2]*R2[2])
 end
 
--- a * b
-rational.__mul = function (a, b)
-   a,b = rational._args(a,b)
-   return rational:new(a[1]*b[1], a[2]*b[2])
+--- R1 * R2
+--  @param R1 First rational or integer number.
+--  @param R2 Second rational or integer number.
+--  @return Product.
+rational.__mul = function (R1, R2)
+   R1,R2 = rational._args(R1,R2)
+   return rational:new(R1[1]*R2[1], R1[2]*R2[2])
 end
 
--- a / b
-rational.__div = function (a, b)
-   a,b = rational._args(a,b)
-   return rational:new(a[1]*b[2], a[2]*b[1])
+--- R1 / R2
+--  @param R1 First rational or integer number.
+--  @param R2 Second rational or integer number.
+--  @return Ratio.
+rational.__div = function (R1, R2)
+   R1,R2 = rational._args(R1,R2)
+   return rational:new(R1[1]*R2[2], R1[2]*R2[1])
 end
 
 -- - v
