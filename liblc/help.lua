@@ -142,7 +142,7 @@ end
 
 local function docExample (str)
    if not str then return nil end
-   return string.format('<pre style="background-color: silver; width: 700px;">%s</pre>', str)
+   return string.format('<pre class="example">%s</pre>', str)
 end
 
 --	MODULE
@@ -442,8 +442,16 @@ help.generateDoc = function (locName, tModules)
       '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">',
       "<title>Sonata LC Help</title>",
       "</head><body>",
+      '<style type="text/css">',
+      'H3 {text-align:center;}',
+      'P {line-height:1.3;}',
+      'UL {column-count: 4; border: 2px solid blue; border-radius: 5px; padding: 5px 5px 5px 30px;}',
+      'DIV {margin-left: 10px;}',
+      '.EXAMPLE {border: 2px solid blue; border-radius: 5px; background: lightgrey; padding: 15px; margin: 10px 0px; color:navy; }',
+      '.DESCRIPT {text-align:center; font-style:italic; }',
+      '</style>',
       '<a name="Top"></a>',
-      '<h3 align="center"># Modules #</h3>',
+      '<div><h3># Modules #</h3>',
    }
    -- prepare module list
    local sortedModules = {}
@@ -454,13 +462,13 @@ help.generateDoc = function (locName, tModules)
    for _,val in ipairs(sortedModules) do
       res[#res+1] = string.format('<li><a href="#%s">%s</a></li>', val[2], val[1])
    end
-   res[#res+1] = '</ul>'
-   res[#res+1] = '<h3 align="center"># About #</h3>'
+   res[#res+1] = '</ul></div>'
+   res[#res+1] = '<div><h3># About #</h3>'
    -- program description
    local base = string.gsub(lc._args.text(), '\n', '<br>\n')
    base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
    res[#res+1] = string.format('<p>%s</p>', base)
-   res[#res+1] = '<p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p>'
+   res[#res+1] = '<p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p></div>'
 
    local fName = string.format('%s%s%s', LOCALE, help.SEP, locName)
    -- call method of the 'files' module
@@ -471,28 +479,28 @@ help.generateDoc = function (locName, tModules)
 
    eng2about()
    
-   res[#res+1] = '<a name="Main"></a>'
-   res[#res+1] = '<h3 align="center"># Main (main) #</h3>'
+   res[#res+1] = '<div><a name="Main"></a>'
+   res[#res+1] = '<h3># Main (main) #</h3>'
    local functions, description = docLines('main','Main',lng)
-   res[#res+1] = string.format('<p align="center">%s</p>', description)
+   res[#res+1] = string.format('<p class="descript">%s</p>', description)
    res[#res+1] = string.format('<p>%s</p>', functions)
    local fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, 'main'))
    res[#res+1] = docExample(help.lc_test._getCode(fstr))
-   res[#res+1] = '<a href="#Top">Top</a>'
+   res[#res+1] = '<a href="#Top">Top</a></div>'
    -- other modules
    for _, val in ipairs(sortedModules) do
       local k,v = val[1], val[2]
-      res[#res+1] = string.format('<a name="%s"></a>', v)
-      res[#res+1] = string.format('<h3 align="center"># %s (%s) #</h3>', v, k)
+      res[#res+1] = string.format('<div><a name="%s"></a>', v)
+      res[#res+1] = string.format('<h3># %s (%s) #</h3>', v, k)
       functions, description = docLines(k, v, lng)
-      res[#res+1] = string.format('<p align="center">%s</p>', description)
+      res[#res+1] = string.format('<p class="descript">%s</p>', description)
       res[#res+1] = string.format('<p>%s</p>', functions)
       fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, k))
       res[#res+1] = docExample(help.lc_test._getCode(fstr))
-      res[#res+1] = '<a href="#Top">Top</a>'
+      res[#res+1] = '<a href="#Top">Top</a></div>'
    end
 
-   res[#res+1] = '<p align="center"><i>2017-2018, Stanislav Mikhel</i></p>'
+   res[#res+1] = '<div><p align="center"><i>2017-2018, Stanislav Mikhel</i></p></div>'
    res[#res+1] = '</body></html>'
 
    -- save

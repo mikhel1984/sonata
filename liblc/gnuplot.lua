@@ -314,4 +314,4 @@ if not lc_version then gnuplot.about = nil end
 return gnuplot
 
 --===========================================
-TODO: add example for 'raw' usage
+--TODO: add example for 'raw' usage

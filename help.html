@@ -2,8 +2,16 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Sonata LC Help</title>
 </head><body>
+<style type="text/css">
+H3 {text-align:center;}
+P {line-height:1.3;}
+UL {column-count: 4; border: 2px solid blue; border-radius: 5px; padding: 5px 5px 5px 30px;}
+DIV {margin-left: 10px;}
+.EXAMPLE {border: 2px solid blue; border-radius: 5px; background: lightgrey; padding: 15px; margin: 10px 0px; color:navy; }
+.DESCRIPT {text-align:center; font-style:italic; }
+</style>
 <a name="Top"></a>
-<h3 align="center"># Modules #</h3>
+<div><h3># Modules #</h3>
 <ul>
 <li><a href="#Arr">array</a></li>
 <li><a href="#Big">bigint</a></li>
@@ -20,47 +28,47 @@
 <li><a href="#Stat">stat</a></li>
 <li><a href="#DS">struct</a></li>
 <li><a href="#Unit">units</a></li>
-</ul>
-<h3 align="center"># About #</h3>
+</ul></div>
+<div><h3># About #</h3>
 <p><br>
 'Sonata LC' is a Lua based program for mathematical calculations.<br>
 <br>
 <b>USAGE</b>:<br>
 	lua -i sonata.lua [flag [arg1 arg2 ...]]<br>
-(option '-i' could be omitted when the program is in non-interractive mode)<br>
+(option '-i' could be omitted when the program is in non-interactive mode)<br>
 <br>
 <b>FLAGS</b>:<br>
+	-l, --lng - Create/update file for localization.<br>
+	-d, --doc - Create/update documentation file.<br>
 	-t, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
 	-h, --help - Get this help message.<br>
-	-d, --doc - Create/update documentation file.<br>
 	-e, --eval - Read text file and evaluate expressions in ##..##.<br>
-	-l, --lng - Create/update file for localisation.<br>
 	-n, --new - Generate template for a new module.<br>
 <br>
-<b>VERSION</b>: 0.9.4<br>
+<b>VERSION</b>: 0.9.6<br>
 <br>
-<b>MODULES</b>: bigint, gnuplot, files, numeric, units, complex, const, struct, stat, array, special, polynom, rational, matrix, graph.<br>
+<b>MODULES</b>: rational, const, files, special, struct, graph, array, units, bigint, matrix, stat, gnuplot, numeric, polynom, complex.<br>
 <br>
 <b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
 </p>
-<p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p>
-<a name="Main"></a>
-<h3 align="center"># Main (main) #</h3>
-<p align="center">Lua based calculator.</p>
+<p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p></div>
+<div><a name="Main"></a>
+<h3># Main (main) #</h3>
+<p class="descript">Lua based calculator.</p>
 <p><b>_e</b> - Euler number<br>
 <b>_pi</b> - Number pi<br>
 <b>abs(x)</b> - Absolute value.<br>
-<b>acos(x)</b> - Arc cosine x.<br>
+<b>acos(x)</b> - Inverse cosine x.<br>
 <b>acosh(x)</b> - Hyperbolic arc cosine.<br>
-<b>asin(x)</b> - Arcsine x.<br>
-<b>asinh(x)</b> - Hyperbolic arcsine.<br>
-<b>atan(y[,x])</b> - Arctangent y. In case of 2 parameters calculate y/x with signs.<br>
-<b>atanh(x)</b> - Hyperbolic arctangent.<br>
+<b>asin(x)</b> - Inverse sine x.<br>
+<b>asinh(x)</b> - Hyperbolic inverse sine.<br>
+<b>atan(x)</b> - Inverse tangent x.<br>
+<b>atan2(y,x)</b> - Inverse tangent of y/x, use signs.<br>
+<b>atanh(x)</b> - Hyperbolic inverse tangent.<br>
 <b>ceil(x)</b> - Return smallest integer more or equal to x.<br>
 <b>cos(x)</b> - Cosine x.<br>
 <b>cosh(x)</b> - Hyperbolic cosine.<br>
 <b>deg2rad(x)</b> - Convert degrees to radians.<br>
-<b>deserialize(obj_str)</b> - Transform string with serialization into Sonata LC object.<br>
 <b>exp(x)</b> - Exponent.<br>
 <b>factorial(n)</b> - Evaluate factorial.<br>
 <b>floor(x)</b> - Return largest integer less or equal to x.<br>
@@ -69,21 +77,22 @@
 <b>lc.flip(t[,N])</b> - Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).<br>
 <b>lc.pause([str])</b> - Wait for button press, print text if need.<br>
 <b>lc.range([from,]to[,step])</b> - Generate table with sequence of numbers.<br>
-<b>lc.sci(x)</b> - 'Scintific' representation of the number.<br>
+<b>lc.sci(x)</b> - 'Scientific' representation of the number.<br>
 <b>lc.type(t)</b> - Show type of the object.<br>
 <b>log(x)</b> - Natural logarithm.<br>
 <b>log10(x)</b> - Decimal logarithm.<br>
 <b>max(...)</b> - Maximum number.<br>
 <b>min(...)</b> - Minimum number.<br>
 <b>rad2deg(x)</b> - Convert radians to degrees.<br>
-<b>rand([a,b])</b> - Random number between 0 and 1 or in the given interval of integers.<br>
+<b>rand()</b> - Random number between 0 and 1.<br>
+<b>randi(N)</b> - Random integer in range from 1 to N.<br>
 <b>round(x[,n])</b> - Round value, define number of decimal digits.<br>
 <b>sin(x)</b> - Sinus x.<br>
 <b>sinh(x)</b> - Hyperbolic sinus.<br>
 <b>sqrt(a)</b> - Square root.<br>
 <b>tan(x)</b> - Tangent x.<br>
 <b>tanh(x)</b> - Hyperbolic tangent.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 lc = require 'liblc.main'
 
 -- constants starts from _
@@ -120,28 +129,27 @@ ans = b[2]                      --> 4
 lc.append(b,a)
 ans = b.b                       --> 2
 </pre>
-<a href="#Top">Top</a>
-<a name="Arr"></a>
-<h3 align="center"># Arr (array) #</h3>
-<p align="center">Manipulations with arrays of elements.</p>
-<p><b>#arr</b> - Return maximum number of elements.<br>
-<b>Arr(size)</b> - Create empty array with given size, represented as a table.<br>
-<b>apply(a1,a2,fn)</b> - Apply function of 2 arguments. Return new array.<br>
+<a href="#Top">Top</a></div>
+<div><a name="Arr"></a>
+<h3># Arr (array) #</h3>
+<p class="descript">Manipulations with arrays of elements.</p>
+<p><b>#array</b> - Return maximum number of elements.<br>
+<b>Arr(tSize)</b> - Create empty array with given size, represented as a table.<br>
+<b>apply(A1,A2,func)</b> - Apply function of 2 arguments. Return new array.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b<br>
 <b>comparison</b> - a == b, a ~= b<br>
-<b>concat(a1,a2,axe)</b> - Array concatenation along the given axis.<br>
+<b>concat(A1,A2,nAxis)</b> - Array concatenation along the given axis.<br>
 <b>copy(A)</b> - Get copy of the array.<br>
-<b>dim(arr)</b> - Return size of array.<br>
-<b>fullString(arr,r,c)</b> - Represent array as sequence of matrices, where r and c are numbers of axes.<br>
+<b>dim(A)</b> - Return size of array.<br>
+<b>fullString(A,nRow,nCol)</b> - Represent array as sequence of matrices, where r and c are numbers of axes.<br>
 <b>get(A,tInd)</b> - Get array element. Index is a table.<br>
-<b>isEqual(a1,a2)</b> - Check size equality.<br>
-<b>map(a,fn)</b> - Apply function of 1 argument. Return new array.<br>
-<b>next(arr)</b> - Return iterator along all indexes.<br>
-<b>rand(size)</b> - Return array with random numbers between 0 and 1.<br>
-<b>serialize(obj)</b> - String representation of array internal structure.<br>
+<b>isEqual(A1,A2)</b> - Check size equality.<br>
+<b>map(A,func)</b> - Apply function of 1 argument. Return new array.<br>
+<b>next(A)</b> - Return iterator along all indexes.<br>
+<b>rand(tSize)</b> - Return array with random numbers between 0 and 1.<br>
 <b>set(A,tInd,val)</b> - Set value to the array. Index is a table.<br>
-<b>sub(arr,ind1,ind2)</b> - Return subarray restricted by 2 indexes.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<b>sub(A,tInd1,tInd2)</b> - Return sub array restricted by 2 indexes.<br></p>
+<pre class="example">
 -- import 'array'
 Arr = require 'liblc.array'
 
@@ -191,23 +199,22 @@ print(a)
 -- print slices for axis 2 and 3
 print(d:fullString(2,3))
 </pre>
-<a href="#Top">Top</a>
-<a name="Big"></a>
-<h3 align="center"># Big (bigint) #</h3>
-<p align="center">Operations with arbitrary long integers.</p>
+<a href="#Top">Top</a></div>
+<div><a name="Big"></a>
+<h3># Big (bigint) #</h3>
+<p class="descript">Operations with arbitrary long integers.</p>
 <p><b>BASE</b> - The radix of big integer representation.<br>
 <b>Big(v)</b> - Create big number from integer or string.<br>
 <b>abs(v)</b> - Return module of arbitrary long number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br>
 <b>copy(v)</b> - Return copy of given number.<br>
-<b>digits(v)</b> - Number of digits, the same as #v.<br>
+<b>digits(B)</b> - Number of digits, the same as #B.<br>
 <b>eq(a,b)</b> - Check equality of two values.<br>
-<b>fact(n)</b> - Return factorial of non-negative integer n.<br>
-<b>serialize(obj)</b> - Save internal representation of bigint object.<br>
-<b>str(v)</b> - More readable string representation of the number<br>
-<b>tonumber(v)</b> - Represent current big integer as number if it possible.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<b>fact(B)</b> - Return factorial of non-negative integer n.<br>
+<b>str(B[,n])</b> - More readable string representation of the number. Optional argument defines number of digits in a group.<br>
+<b>tonumber(N)</b> - Represent current big integer as number if it possible.<br></p>
+<pre class="example">
 -- import 'bigint'
 Big = require 'liblc.bigint'
 
@@ -239,7 +246,7 @@ ans = Big.tonumber(Big.abs('-25')) --> 25
 c = Big(10):fact()
 ans = Big.tonumber(c)  --> 3628800
 
--- make copy, comparision
+-- make copy, comparison
 d = a:copy()
 ans = (a == d)               --> true
 
@@ -259,33 +266,33 @@ print(a)
 
 -- more friendly representation
 print(c:str())
+print(c:str(6))
 </pre>
-<a href="#Top">Top</a>
-<a name="Comp"></a>
-<h3 align="center"># Comp (complex) #</h3>
-<p align="center">Manipulations with complex numbers.</p>
+<a href="#Top">Top</a></div>
+<div><a name="Comp"></a>
+<h3># Comp (complex) #</h3>
+<p class="descript">Manipulations with complex numbers.</p>
 <p><b>Comp(a[,b])</b> - Create new complex number.<br>
-<b>Im(v)</b> - Return the imaginary part.<br>
-<b>Re(v)</b> - Return the real part.<br>
+<b>Im(Z)</b> - Return the imaginary part.<br>
+<b>Re(Z)</b> - Return the real part.<br>
 <b>_i</b> - Complex unit.<br>
-<b>abs(v)</b> - Return module of complex number.<br>
-<b>arg(v)</b> - Return argument of complex number.<br>
+<b>abs(Z)</b> - Return module of complex number.<br>
+<b>arg(Z)</b> - Return argument of complex number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>conj(v)</b> - Return the complex conjugate.<br>
-<b>copy(c)</b> - Create copy of the complex number.<br>
-<b>cos(z)</b> - Return cosine of real or complex number.<br>
-<b>cosh(z)</b> - Return hyperbolic cosine of a real or complex nubmer.<br>
-<b>exp(z)</b> - Return expenent in real or complex power.<br>
-<b>log(z)</b> - Complex logarithm.<br>
-<b>serialize(obj)</b> - Save internal representation or complex object.<br>
-<b>sin(z)</b> - Return sinus of real or complex number.<br>
-<b>sinh(z)</b> - Return hyperbolic sinus of a real or complex number.<br>
-<b>sqrt(z)</b> - Return square root. Result can be real of complex.<br>
-<b>tan(z)</b> - Return tangent of real or complex number.<br>
-<b>tanh(z)</b> - Return hyperbolic tangent of a real or complex number.<br>
+<b>conj(Z)</b> - Return the complex conjugate.<br>
+<b>copy(Z)</b> - Create copy of the complex number.<br>
+<b>cos(Z)</b> - Return cosine of a complex number.<br>
+<b>cosh(Z)</b> - Return hyperbolic cosine of a real or complex number.<br>
+<b>exp(Z)</b> - Return exponent in for complex argument.<br>
+<b>log(Z)</b> - Complex logarithm.<br>
+<b>sin(Z)</b> - Return sinus of a complex number.<br>
+<b>sinh(Z)</b> - Return hyperbolic sinus of a complex number.<br>
+<b>sqrt(Z)</b> - Return square root. Result can be real of complex.<br>
+<b>tan(Z)</b> - Return tangent of a complex number.<br>
+<b>tanh(Z)</b> - Return hyperbolic tangent of a complex number.<br>
 <b>trig(module,angle)</b> - Create complex number using module and angle.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'complex'
 Comp = require 'liblc.complex'
 
@@ -344,10 +351,10 @@ ans = a:copy()                 --> a
 -- show
 print(a)
 </pre>
-<a href="#Top">Top</a>
-<a name="_C"></a>
-<h3 align="center"># _C (const) #</h3>
-<p align="center">Collection of constant values.</p>
+<a href="#Top">Top</a></div>
+<div><a name="_C"></a>
+<h3># _C (const) #</h3>
+<p class="descript">Collection of constants.</p>
 <p><b>Adams</b> - Answer to the ultimate question of life, the Universe, and Everything.<br>
 <b>EuMa</b> - Difference between harmonic series and the natural logarithm.<br>
 <b>G</b> - Gravitational constant.<br>
@@ -366,7 +373,7 @@ print(a)
 <b>pc</b> - One parsec.<br>
 <b>phi</b> - Golden ratio.<br>
 <b>sigma</b> - Stefan-Boltzmann constant.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'const'
 _C = require 'liblc.const'
 
@@ -376,16 +383,16 @@ ans = _C.e                  --~ 1.602e-19
 -- units has postfix _u
 ans = _C.e_u                --> 'C'
 </pre>
-<a href="#Top">Top</a>
-<a name="File"></a>
-<h3 align="center"># File (files) #</h3>
-<p align="center">Routines for working with data files.</p>
-<p><b>dsvRead(fname,del)</b> - Read delimiter separated data as Lua table.<br>
-<b>dsvWrite(fname,tbl,del)</b> - Save Lua table as delimiter separated data into file.<br>
+<a href="#Top">Top</a></div>
+<div><a name="File"></a>
+<h3># File (files) #</h3>
+<p class="descript">Routines for working with data files.</p>
+<p><b>dsvRead(fName,del)</b> - Read delimiter separated data as Lua table.<br>
+<b>dsvWrite(fname,tbl,delim)</b> - Save Lua table as delimiter separated data into file.<br>
 <b>split(str,delim)</b> - Return iterator over substrings separated by the delimiter.<br>
-<b>tblExport(fname,tbl)</b> - Save Lua table into file.<br>
-<b>tblImport(fname)</b> - Import Lua table, written into file.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<b>tblExport(fName,tbl)</b> - Save Lua table into file.<br>
+<b>tblImport(fName)</b> - Import Lua table, written into file.<br></p>
+<pre class="example">
 -- import 'files'
 File = require 'liblc.files'
 -- prepare file name
@@ -419,14 +426,14 @@ ans = 0
 for s in File.split(str, '//') do ans = ans+1 end  --> 4
 
 </pre>
-<a href="#Top">Top</a>
-<a name="Gnu"></a>
-<h3 align="center"># Gnu (gnuplot) #</h3>
-<p align="center">Interface for calling Gnuplot from Lua.</p>
+<a href="#Top">Top</a></div>
+<div><a name="Gnu"></a>
+<h3># Gnu (gnuplot) #</h3>
+<p class="descript">Interface for calling Gnuplot from Lua.</p>
 <p><b>Gnu([g])</b> - Transform given table into gnuplot object.<br>
 <b>N</b> - If no samples, divide interval into N points.<br>
-<b>copy(g)</b> - Get copy of the plot options.<br>
-<b>isAvailable(g)</b> - Check if all options in table are predefined in program.<br>
+<b>copy(G)</b> - Get copy of the plot options.<br>
+<b>isAvailable(G)</b> - Check if all options in table are predefined in program.<br>
 <b>keys</b> -   Options description:<br>
 {'sin(x)'}                                   -- print sinus using Gnuplot functions<br>
 {math.sin, title='sinus'}                    -- plot using function, define in Lua; add legend<br>
@@ -451,10 +458,39 @@ permanent=true                               -- create in independent window<br>
 raw='set pm3d'                               -- set Gnuplot options manually<br>
 <br>
 <b>plot(g)</b> - Plot data, represented as Lua table.<br></p>
-<a href="#Top">Top</a>
-<a name="Graph"></a>
-<h3 align="center"># Graph (graph) #</h3>
-<p align="center">Operations with graphs.</p>
+<pre class="example">
+-- import 'gnuplot'
+Gnu = require 'liblc.gnuplot'
+
+a = {{'sin(x)',title='Sinus x'},permanent=false}
+-- use 'permanent=true' instead or not define it at all
+-- 'permanent=false' is just for testing
+Gnu.plot(a)
+
+-- save as object
+-- to simplify modification
+g = Gnu(a)
+g.xrange = {-10,10}
+g:plot()
+
+-- copy parameters to other object
+b = g:copy()
+print(b)
+-- check correctness of the table
+ans = b:isAvailable()                             --> true
+
+-- print Lua table
+tmp = {{1,1},{2,2},{3,3},{4,4}}
+Gnu.plot {{tmp,with='lines'},permanent=false}
+
+-- print Lua function
+fn1 = function (x) return x^2-x end
+Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
+</pre>
+<a href="#Top">Top</a></div>
+<div><a name="Graph"></a>
+<h3># Graph (graph) #</h3>
+<p class="descript">Operations with graphs.</p>
 <p><b>BellmanFord(start[,goal]</b> - Shortest path search using Bellman-Ford algorithm.<br>
 <b>Dijkstra(g,start[,goal]</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
 <b>Graph(t)</b> - Create new graph.<br>
@@ -467,7 +503,7 @@ raw='set pm3d'                               -- set Gnuplot options manually<br>
 <b>nodes()</b> - List of graph nodes.<br>
 <b>remove(e)</b> - Remove node or edge. Node is a single name, edge - talbe of names.<br>
 <b>spath(start[,goal])</b> - Find shortest path using algorithm of Dijkstra of Bellman-Ford.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'graph'
 Graph = require 'liblc.graph'
 
@@ -507,47 +543,45 @@ b = a:copy()
 print(b)
 
 </pre>
-<a href="#Top">Top</a>
-<a name="Mat"></a>
-<h3 align="center"># Mat (matrix) #</h3>
-<p align="center">Matrix operations. The matrices are spares by default.</p>
-<p><b>Cholesky(m)</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
+<a href="#Top">Top</a></div>
+<div><a name="Mat"></a>
+<h3># Mat (matrix) #</h3>
+<p class="descript">Matrix operations. The matrices are spares by default.</p>
+<p><b>Cholesky(M)</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
 <b>Mat(...)</b> - Create matrix from list of strings (tables).<br>
-<b>apply(m1,m2,fn)</b> - Apply fu(v1,v2) to each element of matrices m1 and m2.<br>
+<b>apply(M1,M2,fn)</b> - Apply fu(v1,v2) to each element of matrices m1 and m2.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>concat(m1,m2,dir)</b> - Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical<br>
-Use m1 .. m2 for horizontal concatenation and m1 // m2 for vertical.<br>
-<b>copy(m)</b> - Return copy of matrix.<br>
-<b>cross(a,b)</b> - Cross product or two 3-element vectors.<br>
-<b>dense(m)</b> - Return dense matrix.<br>
-<b>det(m)</b> - Calculate determinant.<br>
+<b>concat(M1,M2,dir)</b> - Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical<br>
+Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
+<b>copy(M)</b> - Return copy of matrix.<br>
+<b>cross(V1,V2)</b> - Cross product or two 3-element vectors.<br>
+<b>det(M)</b> - Calculate determinant.<br>
 <b>diag(M[,n])</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.<br>
-<b>dot(a,b)</b> - Scalar product of two 3-element vectors<br>
-<b>eye(rows[,cols[,init]])</b> - Create identity matrix. Diagonal value (init) can be nonzero.<br>
+<b>dot(V1,V2)</b> - Scalar product of two 3-element vectors<br>
+<b>eye(rows[,cols[,init]])</b> - Create identity matrix. Diagonal value (init) can be defined.<br>
 <b>fill(rows,cols,fn)</b> - Create matrix, using function fn(r,c).<br>
-<b>inv(m)</b> - Return inverse matrix.<br>
-<b>lu(m)</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
-<b>map(m,fn)</b> - Apply the given function to all elements, return new matrix.<br>
-<b>mapEx(m,fn)</b> - Apply function fn(row,col,val) to all elements, return new matrix.<br>
+<b>inv(M)</b> - Return inverse matrix.<br>
+<b>lu(M)</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
+<b>map(M,fn)</b> - Apply the given function to all elements, return new matrix.<br>
+<b>mapEx(M,fn)</b> - Apply function fn(val,row,col) to all elements, return new matrix.<br>
+<b>norm(M)</b> - Euclidean norm.<br>
 <b>ones(rows[,cols[,val]])</b> - Create matrix of given numbers (default is 1).<br>
 <b>pinv(M)</b> - Pseudo inverse matrix calculation.<br>
 <b>rand(rows[,cols])</b> - Create matrix with random numbers from 0 to 1.<br>
-<b>rank(m)</b> - Find rank of the matrix.<br>
-<b>reduce(m,fn,dir,init)</b> - Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.<br>
+<b>rank(M)</b> - Find rank of the matrix.<br>
+<b>reduce(M,fn,dir,init)</b> - Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.<br>
 <b>rref(A,b)</b> - Perform transformations using Gauss method. Return also determinant.<br>
-<b>serialize(obj)</b> - Save matrix internal representation.<br>
-<b>set(m,row,col)(val)</b> - Check index and set value of matrix element.<br>
-<b>size(m)</b> - Return number or rows and columns. Can be called with '#'.<br>
-<b>sparse(m)</b> - Return sparse matrix.<br>
-<b>sqNorm(m,dir)</b> - Calculate square norm along given direction.<br>
-<b>sum(m,dir)</b> - Find sum of elements along given direction ('r' or 'c').<br>
+<b>size(M)</b> - Return number or rows and columns.<br>
+<b>sparse(M)</b> - Return sparse matrix.<br>
+<b>sqNorm(M,dir)</b> - Calculate square norm along given direction.<br>
+<b>sum(M,dir)</b> - Find sum of elements along given direction ('r' or 'c').<br>
 <b>table(M)</b> - Convert to simple Lua table.<br>
-<b>tr(m)</b> - Get trace of the matrix.<br>
-<b>transpose(m)</b> - Return matrix transpose. Shorten form is T().<br>
-<b>triang(m)</b> - Matrix triangulation produced by Gaussian elimination.<br>
+<b>tr(M)</b> - Get trace of the matrix.<br>
+<b>transpose(M)</b> - Return matrix transpose. Shorten form is T().<br>
+<b>triang(M)</b> - Matrix triangulation produced by Gaussian elimination.<br>
 <b>zeros(rows[,cols])</b> - Create matrix from zeros.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'matrix'
 Mat = require 'liblc.matrix'
 
@@ -556,10 +590,6 @@ a = Mat {{1,2},{3,4}}
 b = Mat {{5,6},{7,8}}  
 -- call in typical way           
 ans = a[2][2]                    --> 4 
-
--- use index checking
-b:set(1,1)(9)
-ans = b:get(1,1)                 --> 9
 
 b[1][1] = 5
 -- transpose
@@ -629,7 +659,7 @@ ans = a // b                     --> Mat {{1,2},{3,4},{5,6},{7,8}}
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
 -- apply function which depends on index too
-ans = a:mapEx(function (x,r,c) return x-r-c end) --> Mat {{-1,-3},{-2,-4}}
+ans = a:mapEx(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
 
 -- use Gauss transform to solve equation
 ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
@@ -645,16 +675,18 @@ ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
 h = Mat.rand(3,2)
 print(h)
 
--- pseudoinverse matrix
+-- pseudo inverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
 ans = n(2,2)                    --~ 0.333
 
--- get dense copy of the matrix
+-- get simple copy
 k = Mat.eye(3)
-k = k:dense()
+k = k:table()
 ans = k[2][1]                   --> 0
 
+-- back to matrix
+k = Mat(k)
 k = k:sparse()
 ans = rawget(k[2],1)             --> nil
 
@@ -704,19 +736,19 @@ ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
 -- get rank
 ans = Mat.ones(2,3):rank()      --> 1
 </pre>
-<a href="#Top">Top</a>
-<a name="Num"></a>
-<h3 align="center"># Num (numeric) #</h3>
-<p align="center">Group of functions for numerical calculations.</p>
+<a href="#Top">Top</a></div>
+<div><a name="Num"></a>
+<h3># Num (numeric) #</h3>
+<p class="descript">Group of functions for numerical calculations.</p>
 <p><b>Newton(fn,x0)</b> - Find root of equation using Newton's rule, use only one initial condition.<br>
 <b>TOL</b> - The solution tolerance (0.001 by default).<br>
 <b>diff(fn,x)</b> - Calculate the derivative value for given function.<br>
-<b>ode(fn,init,break[,dx])</b> - Numerical approximation of the ODE solution.<br>
-If step dx is not defined it is calculated automatically according the given tolerance.<br>
+<b>ode45(fn,tDelta,y0[,param])</b> - Numerical approximation of the ODE solution.<br>
+First parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.<br>
 Return table of intermediate points and result yn.<br>
 <b>solve(fn,a,b)</b> - Find root of equation fn(x)=0 at interval [a,b].<br>
 <b>trapez(fn,a,b)</b> - Get integral using trapezoidal rule.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'numeric'
 Num = require 'liblc.numeric'
 
@@ -742,7 +774,7 @@ ans = c                                   --~ 2
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl, yn = Num.ode(function (x,y) return x*y end, {0,1}, 3)
+tbl, yn = Num.ode45(function (x,y) return x*y end, {0,3}, 1)
 ans = yn                                  --~ 90.011
 
 -- use matrices for high order equations
@@ -752,32 +784,31 @@ Mat = require 'liblc.matrix'
 -- represent as: x1 = y, x2 = y'
 -- so: x1' = x2, x2' = 1+2*x2-2*x1
 myfun = function (t,x) return Mat.V {x(2), 1+2*x(2)-2*x(1)} end
-_, xn = Num.ode(myfun, {0, Mat.V{3,2} }, 2, 0.2) 
+_, xn = Num.ode45(myfun, {0,2}, Mat.V{3,2}, {dt=0.2}) 
 ans = xn(1)                               --~  -10.54
 
 -- define exit condition
 -- from time, current and previous results
-exit = function (time,current,previous) return current < 0.1 end
+cond = function (time,current,previous) return current < 0.1 end
 myfun = function (t,x) return -x end
-_, yn = Num.ode(myfun, {0,1}, exit)
-ans = yn                                  --~ 0.0856
+y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
+ans = y[#y][1]                           --~ 2.56
 </pre>
-<a href="#Top">Top</a>
-<a name="Poly"></a>
-<h3 align="center"># Poly (polynom) #</h3>
-<p align="center">Operations with polynomials</p>
+<a href="#Top">Top</a></div>
+<div><a name="Poly"></a>
+<h3># Poly (polynom) #</h3>
+<p class="descript">Operations with polynomials</p>
 <p><b>Poly(...)</b> - Create a polynomial.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n, -a<br>
 <b>coef(...)</b> - Return polynomial with given roots.<br>
-<b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br>
-<b>copy(p)</b> - Get copy of the polynomial.<br>
-<b>der(p[,x])</b> - Calculate derivative of polynomial, and its value, if need.<br>
+<b>comparison</b> - a==b, a~=b<br>
+<b>copy(P)</b> - Get copy of the polynomial.<br>
+<b>der(P)</b> - Calculate derivative of polynomial.<br>
 <b>fit(X,Y,ord)</b> - Find polynomial approximation for the line.<br>
-<b>int(p[,x0])</b> - Calculate integral, x0 - free coefficient.<br>
+<b>int(P[,x0])</b> - Calculate integral, x0 - free coefficient.<br>
 <b>real(p)</b> - Find real roots of the polynomial.<br>
-<b>serialize(obj)</b> - Save polynomial internal representation.<br>
-<b>val(p,x)</b> - Get value of polynomial p in point x.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<b>val(P,x)</b> - Get value of polynomial P in point x.<br></p>
+<pre class="example">
 -- import 'polynom'
 Poly = require 'liblc.polynom'
 
@@ -809,7 +840,8 @@ ans = b:int()                 --> Poly {0.5,1,0}
 
 -- derivative
 -- and its value for x=1
-_,ans = a:der(1)              --> 11
+ader = a:der()
+ans = ader(1)                 --> 11
 
 -- build polynomial using roots
 ans = Poly.coef(1,-1)         --> Poly {1,0,-1}
@@ -835,24 +867,24 @@ ans = p(10)                   --~ 227.0
 print(a)
 
 -- human-friendly print
--- with varialbe 's'
+-- with variable 's'
 d = Poly {2,-2,1}
 ans = d:str('s')              --> '2*s^2-2*s+1'
 </pre>
-<a href="#Top">Top</a>
-<a name="Rat"></a>
-<h3 align="center"># Rat (rational) #</h3>
-<p align="center">Computations with rational numbers.</p>
+<a href="#Top">Top</a></div>
+<div><a name="Rat"></a>
+<h3># Rat (rational) #</h3>
+<p class="descript">Computations with rational numbers.</p>
 <p><b>De(v)</b> - Return the denominator of the rational number.<br>
 <b>Nu(v)</b> - Return the numerator of rational number.<br>
 <b>Rat(m[,n])</b> - Create rational number using num (and denom).<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b} <br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b <br>
-<b>copy(v)</b> - Get copy of the rational number.<br>
+<b>copy(R)</b> - Get copy of the rational number.<br>
 <b>decimal(v)</b> - Return rational number as decimal.<br>
 <b>gcd(a,b)</b> - Calculate the greatest common divisor for two integers.<br>
 <b>serialize(obj)</b> - Save internal representation of rational number.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'rational'
 Rat = require 'liblc.rational'
 
@@ -902,10 +934,10 @@ ans = a:copy()          --> a
 -- show
 print(a)
 </pre>
-<a href="#Top">Top</a>
-<a name="Spec"></a>
-<h3 align="center"># Spec (special) #</h3>
-<p align="center">Special mathematical functions.</p>
+<a href="#Top">Top</a></div>
+<div><a name="Spec"></a>
+<h3># Spec (special) #</h3>
+<p class="descript">Special mathematical functions.</p>
 <p><b>Dawson(x)</b> - Dawson integral.<br>
 <b>Legendre(n,x)</b> - Return list of Legendre polynomial coefficients.<br>
 <b>bessi(n,x)</b> - Modified Bessel function In(x).<br>
@@ -923,7 +955,7 @@ print(a)
 <b>gammaln(z)</b> - Natural logarithm of gamma function.<br>
 <b>gammp(a,x)</b> - Incomplete gamma function P(a,x).<br>
 <b>gammq(a,x)</b> - Incomplete gamma function Q(a,x) = 1-P(a,x).<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'special'
 Spec = require 'liblc.special'
 
@@ -973,10 +1005,10 @@ ans = lst[1]                       --~ -0.4375
 -- Dawson function
 ans = Spec.Dawson(3.3)             --~ 0.1598
 </pre>
-<a href="#Top">Top</a>
-<a name="Stat"></a>
-<h3 align="center"># Stat (stat) #</h3>
-<p align="center">Statistical calculations. Data set must be a Lua table.</p>
+<a href="#Top">Top</a></div>
+<div><a name="Stat"></a>
+<h3># Stat (stat) #</h3>
+<p class="descript">Statistical calculations. Data set must be a Lua table.</p>
 <p><b>chi2cdf(x,v)</b> - Chi-square cumulative distribution.<br>
 <b>chi2pdf(x,v)</b> - Chi-square distribution density.<br>
 <b>cmoment(n,x[,p])</b> - Central moment of x order n, p is a list of weights.<br>
@@ -1000,7 +1032,7 @@ ans = Spec.Dawson(3.3)             --~ 0.1598
 <b>sum(t)</b> - Get sum of all elements.<br>
 <b>tcdf(x,nu)</b> - Student's cumulative distribution.<br>
 <b>tpdf(x,nu)</b> - Student's distribution density.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'stat'
 Stat = require 'liblc.stat'
 
@@ -1076,10 +1108,10 @@ ans = Stat.normcdf(1, 1.5, 2.1)   --~ 0.4059
 
 ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 </pre>
-<a href="#Top">Top</a>
-<a name="DS"></a>
-<h3 align="center"># DS (struct) #</h3>
-<p align="center">Main data structures.</p>
+<a href="#Top">Top</a></div>
+<div><a name="DS"></a>
+<h3># DS (struct) #</h3>
+<p class="descript">Main data structures.</p>
 <p><b>Heap([less])</b> - Create new heap object. Comparison method 'less' can be predefined.<br>
 <b>Heap.copy(h)</b> - Make copy of the heap.<br>
 <b>Heap.insert(v)</b> - Add element to the heap.<br>
@@ -1112,7 +1144,7 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 <b>Stack.pop()</b> - Pop value from the stack, return element or nil.<br>
 <b>Stack.push(val)</b> - Push value to the stack, except nil.<br>
 <b>Stack.size(s)</b> - Return number of elements in stack.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'struct'
 DS = require 'liblc.struct'
 
@@ -1234,10 +1266,10 @@ ans = e[16]                    --> true
 -- show
 print(a)
 </pre>
-<a href="#Top">Top</a>
-<a name="Unit"></a>
-<h3 align="center"># Unit (units) #</h3>
-<p align="center">Operations and conversations according the units.</p>
+<a href="#Top">Top</a></div>
+<div><a name="Unit"></a>
+<h3># Unit (units) #</h3>
+<p class="descript">Operations and conversations according the units.</p>
 <p><b>Unit(v[,u])</b> - Create new elements with units.<br>
 <b>add(unit,rule)</b> - Add new rule for conversation.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n<br>
@@ -1246,7 +1278,7 @@ print(a)
 <b>copy(u)</b> - Create copy of the element.<br>
 <b>prefix</b> - Table of possible prefixes for units.<br>
 <b>serialize(obj)</b> - Save internal representation of units object.<br></p>
-<pre style="background-color: silver; width: 700px;">
+<pre class="example">
 -- import 'units'
 Unit = require 'liblc.units'
 
@@ -1306,6 +1338,6 @@ ans = 2 * Unit('N')                --> Unit(2,'N')
 -- show result
 print(a)
 </pre>
-<a href="#Top">Top</a>
-<p align="center"><i>2017-2018, Stanislav Mikhel</i></p>
+<a href="#Top">Top</a></div>
+<div><p align="center"><i>2017-2018, Stanislav Mikhel</i></p></div>
 </body></html>
