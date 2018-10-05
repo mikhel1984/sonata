@@ -451,7 +451,7 @@ help.generateDoc = function (locName, tModules)
       '.DESCRIPT {text-align:center; font-style:italic; }',
       '</style>',
       '<a name="Top"></a>',
-      '<div><h3># Modules #</h3>',
+      '<div><h1 align="center">Sonata Lua Calculus</h1>',
    }
    -- prepare module list
    local sortedModules = {}

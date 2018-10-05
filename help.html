@@ -11,7 +11,7 @@ DIV {margin-left: 10px;}
 .DESCRIPT {text-align:center; font-style:italic; }
 </style>
 <a name="Top"></a>
-<div><h3># Modules #</h3>
+<div><h1 align="center">Sonata Lua Calculus</h1>
 <ul>
 <li><a href="#Arr">array</a></li>
 <li><a href="#Big">bigint</a></li>
@@ -38,16 +38,16 @@ DIV {margin-left: 10px;}
 (option '-i' could be omitted when the program is in non-interactive mode)<br>
 <br>
 <b>FLAGS</b>:<br>
-	-l, --lng - Create/update file for localization.<br>
-	-d, --doc - Create/update documentation file.<br>
 	-t, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
 	-h, --help - Get this help message.<br>
-	-e, --eval - Read text file and evaluate expressions in ##..##.<br>
 	-n, --new - Generate template for a new module.<br>
+	-l, --lng - Create/update file for localization.<br>
+	-e, --eval - Read text file and evaluate expressions in ##..##.<br>
+	-d, --doc - Create/update documentation file.<br>
 <br>
 <b>VERSION</b>: 0.9.6<br>
 <br>
-<b>MODULES</b>: rational, const, files, special, struct, graph, array, units, bigint, matrix, stat, gnuplot, numeric, polynom, complex.<br>
+<b>MODULES</b>: polynom, stat, gnuplot, bigint, complex, units, array, numeric, special, files, graph, struct, rational, const, matrix.<br>
 <br>
 <b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
 </p>
@@ -458,35 +458,6 @@ permanent=true                               -- create in independent window<br>
 raw='set pm3d'                               -- set Gnuplot options manually<br>
 <br>
 <b>plot(g)</b> - Plot data, represented as Lua table.<br></p>
-<pre class="example">
--- import 'gnuplot'
-Gnu = require 'liblc.gnuplot'
-
-a = {{'sin(x)',title='Sinus x'},permanent=false}
--- use 'permanent=true' instead or not define it at all
--- 'permanent=false' is just for testing
-Gnu.plot(a)
-
--- save as object
--- to simplify modification
-g = Gnu(a)
-g.xrange = {-10,10}
-g:plot()
-
--- copy parameters to other object
-b = g:copy()
-print(b)
--- check correctness of the table
-ans = b:isAvailable()                             --> true
-
--- print Lua table
-tmp = {{1,1},{2,2},{3,3},{4,4}}
-Gnu.plot {{tmp,with='lines'},permanent=false}
-
--- print Lua function
-fn1 = function (x) return x^2-x end
-Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
-</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Graph"></a>
 <h3># Graph (graph) #</h3>
