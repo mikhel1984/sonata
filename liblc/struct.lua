@@ -1,6 +1,7 @@
 --[[       liblc/struct.lua
 
 --- Main data structures.
+--  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
 
@@ -137,8 +138,8 @@ local Ver = require "liblc.versions"
 
 local STACK = 'stack'
 local QUEUE = 'queue'
-local HEAP = 'heap'
-local SET = 'set'
+local HEAP  = 'heap'
+local SET   = 'set'
 
 --	INFO
 
@@ -151,17 +152,14 @@ local struct = {
 about = help:new("Main data structures.")
 }
 
--- common methods
---struct.about['COPY'] = {"copy()", "Return copy of the object."}
---struct.about['ISEMPTY'] = {"isEmpty()", "Return true if the object is empty."}
-
 --	STACK
 
 struct.Stack = {type='stack'}
 struct.Stack.__index = struct.Stack
 
 --- Constructor for stack data structure.
---    @return New stack.
+--  @param self Parent object.
+--  @return New stack.
 struct.Stack.new = function (self)
    return setmetatable({}, self)
 end
@@ -171,50 +169,53 @@ setmetatable(struct.Stack, {__call = function (self) return struct.Stack:new() e
 struct.about[struct.Stack] = {"Stack()", "Create new stack.", STACK}
 
 --- Add element to the stack.
---    @param self Stack object.
---    @param val Value to push (except nil).
+--  @param self Stack object.
+--  @param val Value to push (except nil).
 struct.Stack.push = function (self, val)
    assert(val ~= nil)
    self[#self+1] = val
 end
-struct.about[struct.Stack.push] = {"Stack.push(val)", "Push value to the stack, except nil.", STACK}
+struct.about[struct.Stack.push] = {"Stack.push(S,val)", "Push value to the stack, except nil.", STACK}
 
 --- Get value from the top of stack.
---    @param self Stack object.
---    @return Top value or nil.
+--  @param self Stack object.
+--  @return Top value or nil.
 struct.Stack.pop = function (self)
    local res = self[#self]
    if res then self[#self] = nil end
    return res
 end
-struct.about[struct.Stack.pop] = {"Stack.pop()", "Pop value from the stack, return element or nil.", STACK}
+struct.about[struct.Stack.pop] = {"Stack.pop(S)", "Pop value from the stack, return element or nil.", STACK}
 
 --- Top value of the stack.
---    @param s Stack object.
---    @return Top value without removing it.
-struct.Stack.peek = function (s) return s[#s] end
-struct.about[struct.Stack.peek] = {"Stack.peek()", "Return top value without removing it.", STACK}
+--  @param S Stack object.
+--  @return Top value without removing it.
+struct.Stack.peek = function (S) return S[#S] end
+struct.about[struct.Stack.peek] = {"Stack.peek(S)", "Return top value without removing it.", STACK}
 
 --- Copy stack.
---    @param s Stack object.
---    @return Copy.
-struct.Stack.copy = function (s)
+--  @param S Stack object.
+--  @return Copy.
+struct.Stack.copy = function (S)
    local res = struct.Stack:new()
-   if s[1] then
-      Ver.move(s,1,#s,1,res)
+   if S[1] then
+      Ver.move(S,1,#S,1,res)
    end
    return res
 end
-struct.about[struct.Stack.copy] = {"Stack.copy(s)", "Create copy of the stack.", STACK}
+struct.about[struct.Stack.copy] = {"Stack.copy(S)", "Create copy of the stack.", STACK}
 
-struct.Stack.size = function (s) return #s end
-struct.about[struct.Stack.size] = {"Stack.size(s)", "Return number of elements in stack.", STACK}
+--- Number of elements.
+--  @param S Stack object.
+--  @return Stack size.
+struct.Stack.size = function (S) return #S end
+struct.about[struct.Stack.size] = {"Stack.size(S)", "Return number of elements in stack.", STACK}
 
 --- Check stack size.
---    @param s Stack object.
---    @return True if stack is empty.
-struct.Stack.isEmpty = function (s) return #s == 0 end
-struct.about[struct.Stack.isEmpty] = {"Stack.isEmpty(s)", "Return true if the stack is empty.", STACK}
+--  @param S Stack object.
+--  @return True if stack is empty.
+struct.Stack.isEmpty = function (S) return #S == 0 end
+struct.about[struct.Stack.isEmpty] = {"Stack.isEmpty(S)", "Return true if the stack is empty.", STACK}
 
 --	QUEUE
 struct.Queue = {type='queue'}
