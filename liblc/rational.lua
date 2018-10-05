@@ -169,68 +169,84 @@ rational.__div = function (R1, R2)
    return rational:new(R1[1]*R2[2], R1[2]*R2[1])
 end
 
--- - v
-rational.__unm = function (v)
-   return rational:new(-a[1], a[2])
+--- -R
+--  @param R Rational number.
+--  @preturn Opposite rational number.
+rational.__unm = function (R)
+   return rational:new(-R[1], R[2])
 end
 
--- a ^ b
-rational.__pow = function (a, b)
-   b = (type(b) == "number") and b or (b[1]/b[2])  -- to float point
-   if type(a) == "number" then
-      return a^b
+--- R1 ^ R2
+--  @param R1 Rational or real number.
+--  @param R2 Rational or real number.
+--  @return Power value.
+rational.__pow = function (R1, R2)
+   R2 = (type(R2) == "number") and R2 or (R2[1]/R2[2])  -- to float point
+   if type(R1) == "number" then
+      return R1^R2
    else
-      if not (Ver.isInteger(b) and b >= 0) then error("Power must be a non-negative integer") end
-      return rational:new((a[1])^b, (a[2])^b) 
+      if not (Ver.isInteger(R2) and R2 >= 0) then error("Power must be a non-negative integer") end
+      return rational:new((R1[1])^R2, (R1[2])^R2) 
    end
 end
 
 rational.arithmetic = 'arithmetic'
-rational.about[rational.arithmetic] = {rational.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b} ", help.META}
+rational.about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} ", help.META}
 
--- a == b
-rational.__eq = function (a,b)
-   a,b = rational._args(a,b)
-   return a[1] == b[1] and a[2] == b[2]
+--- R1 == R2
+--  @param R1 First number.
+--  @param R2 Second number.
+--  @return True if the numbers are equal.
+rational.__eq = function (R1,R2)
+   R1,R2 = rational._args(R1,R2)
+   return R1[1] == R2[1] and R1[2] == R2[2]
 end
 
--- a < b
-rational.__lt = function (a,b)
-   a,b = rational._args(a,b)
-   return (a[1]*b[2]) < (b[1]*a[2])
+--- R1 < R2
+--  @param R1 First number.
+--  @param R2 Second number.
+--  @return True if the first number is less.
+rational.__lt = function (R1,R2)
+   R1,R2 = rational._args(R1,R2)
+   return (R1[1]*R2[2]) < (R2[1]*R1[2])
 end
 
--- a <= b
-rational.__le = function (a,b)
-   a,b = rational._args(a,b)
-   return (a[1]*b[2]) <= (b[1]*a[2])
+--- R1 <= R2
+--  @param R1 First number.
+--  @param R2 Second number.
+--  @return True in the first value is less or equal then the second one.
+rational.__le = function (R1,R2)
+   R1,R2 = rational._args(R1,R2)
+   return (R1[1]*R2[2]) <= (R2[1]*R1[2])
 end
 
 rational.comparison = 'comparison'
-rational.about[rational.comparison] = {rational.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b ", help.META}
+rational.about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
 
--- String representation.
-rational.__tostring = function (v)
-   return numStr(v[NUM])..'/'..numStr(v[DENOM])
+--- String representation.
+--  @param R Rational number.
+--  @return String with numerator and denominator.
+rational.__tostring = function (R)
+   return numStr(R[NUM])..'/'..numStr(R[DENOM])
 end
 
 --- Float point representation.
---    @param v Rational number.
---    @return Decimal fraction.
-rational.decimal = function (v) return v[NUM] / v[DENOM] end
-rational.about[rational.decimal] = {"decimal(v)", "Return rational number as decimal."}
+--  @param R Rational number.
+--  @return Decimal fraction.
+rational.decimal = function (R) return R[NUM] / R[DENOM] end
+rational.about[rational.decimal] = {"decimal(R)", "Return rational number as decimal."}
 
 --- Get numerator.
---    @param v Rational number.
---    @return Numerator.
-rational.Nu = function (v) return v[NUM] end
-rational.about[rational.Nu] = {"Nu(v)", "Return the numerator of rational number."}
+--  @param R Rational number.
+--  @return Numerator.
+rational.Nu = function (R) return R[NUM] end
+rational.about[rational.Nu] = {"Nu(R)", "Return the numerator of rational number."}
 
 --- Get denominator.
---    @param v Rational number.
---    @return Denominator.
-rational.De = function (v) return v[DENOM] end
-rational.about[rational.De] = {"De(v)", "Return the denominator of the rational number."}
+--  @param R Rational number.
+--  @return Denominator.
+rational.De = function (R) return R[DENOM] end
+rational.about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 
 -- list of prime numbers
 -- result is not sorted
@@ -263,6 +279,7 @@ setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) 
 rational.Rat = 'Rat'
 rational.about[rational.Rat] = {"Rat(m[,n])", "Create rational number using num (and denom).", help.NEW}
 
+--[[
 --- Rational number serialization.
 --    @param obj Rational number.
 --    @return String, suitable for exchange.
@@ -275,6 +292,7 @@ rational.serialize = function (obj)
    return string.format("{%s}", table.concat(s, ','))
 end
 rational.about[rational.serialize] = {"serialize(obj)", "Save internal representation of rational number.", help.OTHER}
+]]
 
 -- free memory if need
 if not lc_version then rational.about = nil end
