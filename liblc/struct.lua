@@ -222,7 +222,8 @@ struct.Queue = {type='queue'}
 struct.Queue.__index = struct.Queue
 
 --- Queue constructor.
---    @return New queue.
+--  @param self Parent object.
+--  @return New queue.
 struct.Queue.new = function (self)
    return setmetatable({first=0, last=-1}, self)
 end
@@ -232,52 +233,52 @@ setmetatable(struct.Queue, {__call = function (self) return struct.Queue:new() e
 struct.about[struct.Queue] = {"Queue()", "Create new queue.", QUEUE}
 
 --- Put value to the end of queue.
---    @param self Queue object.
---    @param val Value to put.
-struct.Queue.add = function (self,val)
-   local last = self.last+1
-   self.last = last
-   self[last] = val
+--  @param Q Queue object.
+--  @param val Value to put.
+struct.Queue.add = function (Q,val)
+   local last = Q.last+1
+   Q.last = last
+   Q[last] = val
 end
-struct.about[struct.Queue.add] = {"Queue.add(val)", "Add value to the back of queue.", QUEUE}
+struct.about[struct.Queue.add] = {"Queue.add(Q,val)", "Add value to the back of queue.", QUEUE}
 
 --- Put value to the top of queue (as in stack).
---    @param self Queue object.
---    @param val Value to put.
-struct.Queue.addFirst = function (self,val)
-   local first = self.first-1
-   self.first = first
-   self[first] = val
+--  @param Q Queue object.
+--  @param val Value to put.
+struct.Queue.addFirst = function (Q,val)
+   local first = Q.first-1
+   Q.first = first
+   Q[first] = val
 end
-struct.about[struct.Queue.addFirst] = {"Queue.addFirst(val)", "Add value to the top of queue.", QUEUE}
+struct.about[struct.Queue.addFirst] = {"Queue.addFirst(Q,val)", "Add value to the top of queue.", QUEUE}
 
 --- Get value from the top of queue.
---    @param self Queue object.
---    @return Top value of nil.
-struct.Queue.rem = function (self)
-   local first,val = self.first
-   if first <= self.last then
-      val = self[first]
-      self[first] = nil
-      self.first = first+1
+--  @param Q Queue object.
+--  @return Top value of nil.
+struct.Queue.rem = function (Q)
+   local first,val = Q.first
+   if first <= Q.last then
+      val = Q[first]
+      Q[first] = nil
+      Q.first = first+1
    end
    return val
 end
-struct.about[struct.Queue.rem] = {"Queue.rem()", "Get value from the top of queue, remove it.", QUEUE}
+struct.about[struct.Queue.rem] = {"Queue.rem(Q)", "Get value from the top of queue, remove it.", QUEUE}
 
 --- Get value from the end of queue.
---    @param self Queue object.
---    @return Last value of nil.
-struct.Queue.remLast = function (self)
-   local last, val = self.last
-   if self.first <= last then
-      val = self[last]
-      self[last] = nil
-      self.last = last-1
+--  @param Q Queue object.
+--  @return Last value of nil.
+struct.Queue.remLast = function (Q)
+   local last, val = Q.last
+   if Q.first <= last then
+      val = Q[last]
+      Q[last] = nil
+      Q.last = last-1
    end
    return val
 end
-struct.about[struct.Queue.remLast] = {"Queue.remLast()", "Get value from the end of queue, remove it.", QUEUE}
+struct.about[struct.Queue.remLast] = {"Queue.remLast(Q)", "Get value from the end of queue, remove it.", QUEUE}
 
 --- Get top value of the queue.
 --    @param q Queue object.
@@ -292,29 +293,31 @@ struct.Queue.size = function (t) return t.last-t.first+1 end
 struct.about[struct.Queue.size] = {"Queue.size(q)", "Return number of elements in queue.", QUEUE}
 
 --- Check if the queue is empty.
---    @return True if there is no elements in the queue.
-struct.Queue.isEmpty = function (q) return q.first+1 == q.last end
-struct.about[struct.Queue.isEmpty] = {"Queue.isEmpty(q)", "Return true if the queue is empty.", QUEUE}
+--  @param Q Queue object.
+--  @return True if there is no elements in the queue.
+struct.Queue.isEmpty = function (Q) return Q.first+1 == Q.last end
+struct.about[struct.Queue.isEmpty] = {"Queue.isEmpty(Q)", "Return true if the queue is empty.", QUEUE}
 
 --- Queue copy.
---    @param q Original queue.
---    @return Copy.
-struct.Queue.copy = function (q)
+--  @param Q Original queue.
+--  @return Copy.
+struct.Queue.copy = function (Q)
    local res = struct.Queue:new()
-   local first,last = q.first, q.last
+   local first,last = Q.first, Q.last
    res.first = first; res.last = last
-   Ver.move(q,first,last,first,res)
+   Ver.move(Q,first,last,first,res)
    return res
 end
-struct.about[struct.Queue.copy] = {"Queue.copy(q)", "Make copy of the queue.", QUEUE}
+struct.about[struct.Queue.copy] = {"Queue.copy(Q)", "Make copy of the queue.", QUEUE}
 
 --	HEAP
 struct.Heap = {type='heap'}
 struct.Heap.__index = struct.Heap
 
 --- Heap constructor.
---    @param less Comparision function.
---    @return New heap object.
+--  @param self Heap object.
+--  @param less Comparision function.
+--  @return New heap object.
 struct.Heap.new = function (self, less)
    local o = {N=0}
    -- default function for comparision, can be changed
@@ -327,215 +330,235 @@ setmetatable(struct.Heap, {__call = function (self,l) return struct.Heap:new(l) 
 struct.about[struct.Heap] = {"Heap([less])", "Create new heap object. Comparison method 'less' can be predefined.", HEAP}
 
 --- Fix order of the heap in up direction.
---    @param h Heap object.
---    @param k Start index.
-struct.Heap._fixUp = function (h, k)
-   while k > 1 and h.less(h[math.modf(k*0.5)], h[k]) do
+--  @param H Heap object.
+--  @param k Start index.
+struct.Heap._fixUp = function (H, k)
+   while k > 1 and H.less(H[math.modf(k*0.5)], H[k]) do
       local k2 = math.modf(k*0.5)
-      h[k],h[k2] = h[k2],h[k]
+      H[k],H[k2] = H[k2],H[k]
       k = k2
    end
 end
 
 --- Fix order of the heap in down direction.
---    @param h Heap object.
---    @param k Start index.
---    @param N End index.
-struct.Heap._fixDown = function (h, k, N)
+--  @param H Heap object.
+--  @param k Start index.
+--  @param N End index.
+struct.Heap._fixDown = function (H, k, N)
    while 2*k <= N do
       local j = 2*k
-      if j < N and h.less(h[j],h[j+1]) then j=j+1 end
-      if not h.less(h[k],h[j]) then break end
-      h[k],h[j] = h[j],h[k]
+      if j < N and H.less(H[j],H[j+1]) then j=j+1 end
+      if not H.less(H[k],H[j]) then break end
+      H[k],H[j] = H[j],H[k]
       k = j
    end
 end
 
 --- Insert element to the heap.
---    @param h Heap object.
---    @param v Element to add.
-struct.Heap.insert = function (h, v)
-   local n = h.N+1
-   h.N = n
-   h[n] = v
-   struct.Heap._fixUp(h, n)
+--  @param H Heap object.
+--  @param v Element to add.
+struct.Heap.insert = function (H, v)
+   local n = H.N+1
+   H.N = n
+   H[n] = v
+   struct.Heap._fixUp(H, n)
 end
-struct.about[struct.Heap.insert] = {"Heap.insert(v)", "Add element to the heap.", HEAP}
+struct.about[struct.Heap.insert] = {"Heap.insert(H,v)", "Add element to the heap.", HEAP}
 
 --- Get top element from the heap.
---    If 'less' method is default, top is the maximum element.
---    @param h Heap object.
---    @return Top element or nil.
-struct.Heap.top = function (h)
-   local n = h.N
+--  If 'less' method is default, top is the maximum element.
+--  @param H Heap object.
+--  @return Top element or nil.
+struct.Heap.top = function (H)
+   local n = H.N
    if n == 0 then return nil end
-   h[1],h[n] = h[n],h[1]
-   struct.Heap._fixDown(h,1,n-1)
-   h.N = n-1
-   return h[n]
+   H[1],H[n] = H[n],H[1]
+   struct.Heap._fixDown(H,1,n-1)
+   H.N = n-1
+   return H[n]
 end
-struct.about[struct.Heap.top] = {"Heap.top()", "Return top element. For the default less() function top is maximum.", HEAP}
+struct.about[struct.Heap.top] = {"Heap.top(H)", "Return top element. For the default less() function top is maximum.", HEAP}
 
 --- Check for elements in the heap.
---    @param h Heap object.
---    @return True if heap is empty.
-struct.Heap.isEmpty = function (h) return h.N == 0 end
-struct.about[struct.Heap.isEmpty] = {"Heap.isEmpty(h)", "Return true if the heap is empty.", HEAP}
+--  @param H Heap object.
+--  @return True if heap is empty.
+struct.Heap.isEmpty = function (H) return H.N == 0 end
+struct.about[struct.Heap.isEmpty] = {"Heap.isEmpty(H)", "Return true if the heap is empty.", HEAP}
 
--- Number of elements.
-struct.Heap.size = function (h) return h.N end
+--- Number of elements.
+--  @param H Heap object.
+--  @return Size of heap.
+struct.Heap.size = function (H) return H.N end
 struct.Heap.__len = struct.Heap.size
-struct.about[struct.Heap.size] = {"Heap.size(h)", "Get number of elements in the heap.", HEAP}
+struct.about[struct.Heap.size] = {"Heap.size(H)", "Get number of elements in the heap.", HEAP}
 
 --- Make heap copy.
---    @param h Original heap.
---    @return New heap.
-struct.Heap.copy = function (h) 
-   local res = struct.Heap:new(h.less)
-   res.N = h.N
-   Ver.move(h,1,#h,1,res)
+--  @param H Original heap.
+--  @return New heap.
+struct.Heap.copy = function (H) 
+   local res = struct.Heap:new(H.less)
+   res.N = H.N
+   Ver.move(H,1,#H,1,res)
    return res
 end
-struct.about[struct.Heap.copy] = {"Heap.copy(h)", "Make copy of the heap.", HEAP}
+struct.about[struct.Heap.copy] = {"Heap.copy(H)", "Make copy of the heap.", HEAP}
 
 --	SET
 
 struct.Set = {type='set'}
 struct.Set.__index = struct.Set
 
-
 --- Create new object, set metatable.
---    @param l Table of elements.
---    @return New set object.
-struct.Set.new = function (self, l)
+--  @param self Set object.
+--  @param lst Table of elements.
+--  @return New set object.
+struct.Set.new = function (self, lst)
    local o = {}
-   for i = 1, #l do o[l[i]] = true end
+   for i = 1, #lst do o[lst[i]] = true end
    return setmetatable(o, self)
 end
 
 --- Add new element.
---    @param s Set object.
---    @param v New element.
-struct.Set.insert = function (s, v)
-   s[v] = true
+--  @param S Set object.
+--  @param v New element.
+struct.Set.insert = function (S, v)
+   S[v] = true
 end
 struct.about[struct.Set.insert] = {"Set.insert(S,val)", "Insert element into set.", SET}
 
 --- Delete element.
---    @param s Set object.
---    @param v Element.
-struct.Set.remove = function (s,v)
-   s[v] = nil
+--  @param S Set object.
+--  @param v Element.
+struct.Set.remove = function (S,v)
+   S[v] = nil
 end
 struct.about[struct.Set.remove] = {"Set.remove(S,val)", "Remove element from set.", SET}
 
 --- Convert into Lua table.
---    @param s Set object.
---    @return List of elements.
-struct.Set.table = function (s)
+--  @param S Set object.
+--  @return List of elements.
+struct.Set.table = function (S)
    local res = {}
-   for k in pairs(s) do table.insert(res, k) end
+   for k in pairs(S) do table.insert(res, k) end
    return res
 end
 struct.about[struct.Set.table] = {"Set.table(S)", "Represent set as a table.", SET}
 
 --- Copy of the set.
---    @param s Initial set.
---    @return Copy object.
-struct.Set.copy = function (s)
+--  @param S Initial set.
+--  @return Copy object.
+struct.Set.copy = function (S)
    local res = struct.Set:new({})
-   for k in pairs(s) do res[k] = true end
+   for k in pairs(S) do res[k] = true end
    return res
 end
 struct.about[struct.Set.copy] = {"Set.copy(S)", "Get copy of the set.", SET}
 
 --- Apply function to the elements of set.
---    @param s Initial set.
---    @param fn Function.
---    @return New set, obtained from function.
-struct.Set.map = function (s,fn)
+--  @param S Initial set.
+--  @param fn Function.
+--  @return New set, obtained from function.
+struct.Set.map = function (S,fn)
    local res = struct.Set:new({})
-   for k in pairs(s) do res[fn(k)] = true end
+   for k in pairs(S) do res[fn(k)] = true end
    return res
 end
-struct.about[struct.Set.map] = {"Set.map(s,fn)", "Apply function fn() to obtain new set.", SET}
+struct.about[struct.Set.map] = {"Set.map(S,fn)", "Apply function fn() to obtain new set.", SET}
 
 
---- a + b
---    @return Union.
-struct.Set.__add = function (a,b)
-   assert(a.type == 'set' and b.type == 'set')
+--- S1 + S2
+--  @param S1 First set.
+--  @param S2 Second set.
+--  @return Union.
+struct.Set.__add = function (S1,S2)
+   assert(S1.type == 'set' and S2.type == 'set')
    local res = struct.Set:new({})
-   for k in pairs(a) do res[k] = true end
-   for k in pairs(b) do res[k] = true end
-   return res
-end
-
---- a * b
---    @return Intersection.
-struct.Set.__mul = function (a,b)
-   assert(a.type == 'set' and b.type == 'set')
-   local res = struct.Set:new({})
-   for k in pairs(a) do res[k] = b[k] end
+   for k in pairs(S1) do res[k] = true end
+   for k in pairs(S2) do res[k] = true end
    return res
 end
 
---- a / b
---    @return Difference.
-struct.Set.__div = function (a,b)
-   assert(a.type == 'set' and b.type == 'set')
+--- S1 * S2
+--  @param S1 First set.
+--  @param S2 Second set.
+--  @return Intersection.
+struct.Set.__mul = function (S1,S2)
+   assert(S1.type == 'set' and S2.type == 'set')
    local res = struct.Set:new({})
-   for k in pairs(a) do
-      if not b[k] then res[k] = true end
+   for k in pairs(S1) do res[k] = S2[k] end
+   return res
+end
+
+--- S1 / S2
+--  @param S1 First set.
+--  @param S2 Second set.
+--  @return Difference.
+struct.Set.__div = function (S1,S2)
+   assert(S1.type == 'set' and S2.type == 'set')
+   local res = struct.Set:new({})
+   for k in pairs(S1) do
+      if not S2[k] then res[k] = true end
    end
    return res
 end
 
 struct.Set.arithmetic = 'arithmetic'
-struct.about[struct.Set.arithmetic] = {"Set: union, intersection, difference", "a+b, a*b, a/b", SET}
+struct.about[struct.Set.arithmetic] = {"Set: union, intersection, difference", "S1+S2, S1*S2, S1/S2", SET}
 
---- a <= b
---    @return <code>true</code> if <code>a</code> is a subset of <code>b</code>.
-struct.Set.__le = function (a,b)
-   assert(a.type == 'set' and b.type == 'set')
-   for k in pairs(a) do
-      if not b[k] then return false end
+--- S1 <= S2
+--  @param S1 First set.
+--  @param S2 Second set.
+--  @return True if S1 is a subset of S2.
+struct.Set.__le = function (S1,S2)
+   assert(S1.type == 'set' and S2.type == 'set')
+   for k in pairs(S1) do
+      if not S2[k] then return false end
    end
    return true
 end
 
---- a < b
---    @return <code>true</code> if <code>a</code> is a subset of <code>b</code> but not equal.
-struct.Set.__lt = function (a,b)
-   return a <= b and not (b <= a)
+--- S1 < S1
+--  @param S1 First set.
+--  @param S2 Second set.
+--  @return True if S1 is a subset of S2 but not equal.
+struct.Set.__lt = function (S1,S2)
+   return S1 <= S2 and not (S2 <= S1)
 end
 
---- a == b
---    @return <code>true</code> if <code>a</code> and <code>b</code> are equal.
-struct.Set.__eq = function (a,b)
-   return a <= b and b <= a
+--- S1 == S2
+--  @param S1 First set.
+--  @param S2 Second set.
+--  @return True if S1 and S2 are equal.
+struct.Set.__eq = function (S1,S2)
+   return S1 <= S2 and S2 <= S1
 end
 
 struct.Set.comparison = 'Set: comparison'
-struct.about[struct.Set.comparison] = {struct.Set.comparison, "a==b, a~=b, a<b, a<=b, a>b, a>=b", SET}
+struct.about[struct.Set.comparison] = {struct.Set.comparison, "S1==S2, S1~=S2, S1<S2, S1<=S2, S1>S2, S1>=S2", SET}
 
--- #a 
---    @return Number of elements.
-struct.Set.__len = function (s)
+--- #S 
+--  @param S Set object.
+--  @return Number of elements in set.
+struct.Set.__len = function (S)
    local n = 0
-   for k in pairs(s) do n = n+1 end
+   for k in pairs(S) do n = n+1 end
    return n
 end
 struct.Set.size = struct.Set.__len
-struct.about[struct.Set.size] = {"Set.size(s)", "Number of elements in the set.", SET}
+struct.about[struct.Set.size] = {"Set.size(S)", "Number of elements in the set.", SET}
 
-struct.Set.isEmpty = function (s) return next(s) == nil end
-struct.about[struct.Set.isEmpty] = {"Set.isEmpty(s)", "Return true if the set is empty.", SET}
+--- Check if the set is empty.
+--  @param S Set object.
+--  @return True if the set is empty.
+struct.Set.isEmpty = function (S) return next(S) == nil end
+struct.about[struct.Set.isEmpty] = {"Set.isEmpty(S)", "Return true if the set is empty.", SET}
 
 --- String representation.
-struct.Set.__tostring = function (s)
+--  @param S Set object.
+--  @return String with the set elements.
+struct.Set.__tostring = function (S)
    local lst = {}
-   for e in pairs(s) do table.insert(lst, e) end
+   for e in pairs(S) do table.insert(lst, e) end
    return string.format('{%s}', table.concat(lst,','))
 end
 
@@ -548,3 +571,5 @@ if not lc_version then struct.about = nil end
 
 return struct
 
+--========================================
+-- TODO: change method names like in c++ or python
