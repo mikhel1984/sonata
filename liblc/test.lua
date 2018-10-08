@@ -50,17 +50,18 @@ lc_files = require('liblc.files'),
 }
 
 --- Extract test code from file.
---    @param str File text.
---    @return Unit tests.
+--  @param str File text.
+--  @return Strings with unit tests.
 test._getCode = function (str)
    local _,q = string.match(str, CODE_TEMPLATE) 
    return q
 end
 
 --- Prepare test code preview.
---    @param str Source string.
---    @param res Boolean result of execution.
---    @param time Time of execution, ms.
+--  @param str Source string.
+--  @param res Boolean result of execution.
+--  @param time Time of execution, ms.
+--  @return String with test results.
 test._markTest = function (str, res, time)
    local MIN, FULL = 30, 34
    local s = string.match(str, '%C+')
@@ -70,15 +71,15 @@ test._markTest = function (str, res, time)
    return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'Failed'), time)
 end
 
---- Save string to the file and also print to the screen.
---    @param str String for saving.
+--- Save string to the file and simultaneously print to the screen.
+--  @param str String for saving.
 test.print = function (str)
    print(str)
    test.log:write(str,'\n')
 end
 
---- Try to execute tests listed in module.
---    @param fname Lua file name.
+--- Execute tests listed in module.
+--  @param fname Lua file name.
 test.module = function (fname)
    -- read file
    local text = assert(test.lc_files.read(fname), "Can't open file '"..fname.."'")
@@ -136,8 +137,8 @@ test.summary = function ()
 end
 
 --- Check function execution time.
---    @param fn Function to execute. After it write the list of arguments.
---    @return Average time in msec.
+--  @param fn Function to execute. After it write the list of arguments.
+--  @return Average time in msec.
 test.time = function (fn,...)
    local n, sum, t = 10, 0, 0
    for i = 1,n do
@@ -146,7 +147,6 @@ test.time = function (fn,...)
    end
    return sum * 1000/ n
 end
-
 
 return test
 
