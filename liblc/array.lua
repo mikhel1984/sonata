@@ -53,7 +53,7 @@ ans = d:dim()[3]                       --> 2
 
 -- apply functions of 2 arguments
 -- to get new array
-e = Arr.apply(b,b, function (x,y) return x*y end)
+e = Arr.apply2(function (x,y) return x*y end, b, b)
 ans = e:get{1,1,1}                     --> (b:get{1,1,1})^2
 
 -- apply function of 1 argument
@@ -190,11 +190,11 @@ end
 array.about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTHER}
 
 --- Apply function of 2 arguments.
+--  @param func Function with 2 arguments.
 --  @param A1 First array object.
 --  @param A2 Second array object.
---  @param func Function with 2 arguments.
---  @return New array where each element is result of the function evaluation fn(a1[i],a2[i]).
-array.apply = function (A1, A2, func)
+--  @return New array where each element is result of the function evaluation func(A1[i],A2[i]).
+array.apply2 = function (func, A1, A2)
    if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
    local res, v = array:new(Ver.move(A1.size, 1, #A1.size, 1, {}))    -- prepare empty copy
    for i = 1, array._capacity(A1) do 
@@ -203,7 +203,25 @@ array.apply = function (A1, A2, func)
    end
    return res
 end
-array.about[array.apply] = {"apply(A1,A2,func)", "Apply function of 2 arguments. Return new array.", help.OTHER}
+array.about[array.apply2] = {"apply2(func,A1,A2)", "Apply function of 2 arguments. Return new array.", help.OTHER}
+
+array.apply = function (func, ...)
+   arg = {...}
+   -- check arguments
+   for i = 2,#arg do
+      if not array.isEqual(arg[i],arg[i-1]) then error("Not compatible arrays!") end
+   end
+   -- prepare new
+   local tmp, v = arg[0]
+   local res = array:new(Ver.move(tmp.size, 1, #tmp.size, 1, {}))
+   for i = 1, array._capacity(tmp) do
+      -- collect
+      for k = 1,#arg do v[k] = arg[k][i] or 0 end
+      -- evaluate
+      local p = func(Ver.unpack(v))
+      if p ~= 0 then res[i] = p end
+   end
+end
 
 --- Apply function of 1 argument.
 --  @param A Array object.
@@ -224,7 +242,7 @@ array.about[array.map] = {"map(A,func)", "Apply function of 1 argument. Return n
 --  @param A2 Second array.
 --  @return Array with elementwise sum.
 array.__add = function (A1, A2)
-   return array.apply(A1, A2, array._add_)
+   return array.apply2(array._add_, A1, A2)
 end
 
 --- A1 - A2
@@ -232,7 +250,7 @@ end
 --  @param A2 Second array.
 --  @return Array with elementwise difference.
 array.__sub = function (A1, A2)
-   return array.apply(A1, A2, array._sub_)
+   return array.apply2(array._sub_, A1, A2)
 end
 
 --- -A
@@ -247,7 +265,7 @@ end
 --  @param A2 Second array.
 --  @return Array with element wise product.
 array.__mul = function (A1, A2)
-   return array.apply(A1, A2, array._mul_)
+   return array.apply2(array._mul_, A1, A2)
 end
 
 --- A1 / A2
@@ -255,7 +273,7 @@ end
 --  @param A2 Second array.
 --  @return Array with element wise ratio.
 array.__div = function (A1, A2)
-   return array.apply(A1, A2, array._div_)
+   return array.apply2(array._div_, A1, A2)
 end
 
 --- A1 ^ A2
@@ -263,7 +281,7 @@ end
 --  @param A2 Second array.
 --  @return Array with element wise power.
 array.__pow = function (A1, A2)
-   return array.apply(A1, A2, array._pow_)
+   return array.apply2(array._pow_, A1, A2)
 end
 
 array.arithmetic = 'arithmetic'
