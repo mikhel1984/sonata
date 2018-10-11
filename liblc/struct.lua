@@ -22,7 +22,7 @@ a:push(2)
 ans = #a                        --> 2
 
 -- top value
-ans = a:peek()                  --> 2
+ans = a:top()                   --> 2
 
 -- make copy
 aa = a:copy()
@@ -37,21 +37,24 @@ ans = a:isEmpty()               --> true
 -- create queue
 b = DS.Queue()
 -- add elements to the tale
-b:add(1)
-b:add(2)
+b:push(1)
+b:push(2)
 -- get from the head
-ans = b:rem()                   --> 1
+ans = b:pop()                   --> 1
 
 -- add to the head
-b:addFirst(4)
+b:pushFront(4)
 -- remove from the tale
-ans = b:remLast()               --> 2
+ans = b:popBack()               --> 2
 
 -- check queue size
 ans = #b                        --> 1
 
 -- top value
-ans = b:peek()                  --> 4
+ans = b:front()                 --> 4
+
+-- opposite
+ans = b:back()                  --> 4
 
 -- check capacity
 ans = b:isEmpty()               --> false
@@ -61,28 +64,31 @@ bb = b:copy()
 
 -- create heap
 c = DS.Heap()
-c:insert(1)
-c:insert(3)
-c:insert(2)
-ans = c:top()                --> 3
+c:push(1)
+c:push(3)
+c:push(2)
+ans = c:top()                  --> 3
+
+-- get element
+ans = c:pop()                  --> 3
 
 -- check capacity
-ans = c:isEmpty()               --> false
+ans = c:isEmpty()              --> false
 
 -- new heap
 -- with user comparison function
 -- (return minimum element)
 d = DS.Heap(function (a,b) return a > b end)
-d:insert(1)
-d:insert(3)
-d:insert(2)
-ans = d:top()                --> 1
+d:push(1)
+d:push(3)
+d:push(2)
+ans = d:top()                   --> 1
 
 -- make copy
 dd = d:copy()
 
 -- heap size
-ans = #dd                       --> 2
+ans = #dd                       --> 3
 
 -- define elements of the set
 a = DS.Set {1,2,3,4,1}           
@@ -96,7 +102,7 @@ ans = b[6]                     --> nil
 b:insert(6)
 ans = b[6]  
 -- remove value             
-b:remove(6)                    --> true
+b:erase(6)                    --> true
 
 -- union
 ans = a + b                    --> DS.Set {1,2,3,4,5}
@@ -118,6 +124,8 @@ ans = a[ t[1] ]                --> true
 
 -- size of the set
 ans = #a                       --> 4
+
+ans = a:isEmpty()              --> false
 
 -- make copy
 d = a:copy()
@@ -190,8 +198,8 @@ struct.about[struct.Stack.pop] = {"Stack.pop(S)", "Pop value from the stack, ret
 --- Top value of the stack.
 --  @param S Stack object.
 --  @return Top value without removing it.
-struct.Stack.peek = function (S) return S[#S] end
-struct.about[struct.Stack.peek] = {"Stack.peek(S)", "Return top value without removing it.", STACK}
+struct.Stack.top = function (S) return S[#S] end
+struct.about[struct.Stack.top] = {"Stack.top(S)", "Return top value without removing it.", STACK}
 
 --- Copy stack.
 --  @param S Stack object.
@@ -235,27 +243,27 @@ struct.about[struct.Queue] = {"Queue()", "Create new queue.", QUEUE}
 --- Put value to the end of queue.
 --  @param Q Queue object.
 --  @param val Value to put.
-struct.Queue.add = function (Q,val)
+struct.Queue.push = function (Q,val)
    local last = Q.last+1
    Q.last = last
    Q[last] = val
 end
-struct.about[struct.Queue.add] = {"Queue.add(Q,val)", "Add value to the back of queue.", QUEUE}
+struct.about[struct.Queue.push] = {"Queue.push(Q,val)", "Add value to the back of queue.", QUEUE}
 
 --- Put value to the top of queue (as in stack).
 --  @param Q Queue object.
 --  @param val Value to put.
-struct.Queue.addFirst = function (Q,val)
+struct.Queue.pushFront = function (Q,val)
    local first = Q.first-1
    Q.first = first
    Q[first] = val
 end
-struct.about[struct.Queue.addFirst] = {"Queue.addFirst(Q,val)", "Add value to the top of queue.", QUEUE}
+struct.about[struct.Queue.pushFront] = {"Queue.pushFront(Q,val)", "Add value to the top of queue.", QUEUE}
 
 --- Get value from the top of queue.
 --  @param Q Queue object.
 --  @return Top value of nil.
-struct.Queue.rem = function (Q)
+struct.Queue.pop = function (Q)
    local first,val = Q.first
    if first <= Q.last then
       val = Q[first]
@@ -264,12 +272,12 @@ struct.Queue.rem = function (Q)
    end
    return val
 end
-struct.about[struct.Queue.rem] = {"Queue.rem(Q)", "Get value from the top of queue, remove it.", QUEUE}
+struct.about[struct.Queue.pop] = {"Queue.pop(Q)", "Get value from the top of queue, remove it.", QUEUE}
 
 --- Get value from the end of queue.
 --  @param Q Queue object.
 --  @return Last value of nil.
-struct.Queue.remLast = function (Q)
+struct.Queue.popBack = function (Q)
    local last, val = Q.last
    if Q.first <= last then
       val = Q[last]
@@ -278,19 +286,26 @@ struct.Queue.remLast = function (Q)
    end
    return val
 end
-struct.about[struct.Queue.remLast] = {"Queue.remLast(Q)", "Get value from the end of queue, remove it.", QUEUE}
+struct.about[struct.Queue.popBack] = {"Queue.popBack(Q)", "Get value from the end of queue, remove it.", QUEUE}
 
 --- Get top value of the queue.
---    @param q Queue object.
---    @return Top value without removing it.
-struct.Queue.peek = function (q) return q[q.first] end
-struct.about[struct.Queue.peek] = {"Queue.peek(q)", "Get next element, don't remove it.", QUEUE}
+--  @param Q Queue object.
+--  @return Front value without removing it.
+struct.Queue.front = function (Q) return Q[Q.first] end
+struct.about[struct.Queue.front] = {"Queue.front(Q)", "Get next element, don't remove it.", QUEUE}
 
--- Queue size
-struct.Queue.__len = function (t) return t.last-t.first+1 end
+--- Get back element from the queue.
+--  @param Q Queue object.
+--  @return Back element without removing it.
+struct.Queue.back = function (Q) return Q[Q.last] end
+struct.about[struct.Queue.back] = {"Queue.back(Q)", "Get next element, don't remove it.", QUEUE}
 
-struct.Queue.size = function (t) return t.last-t.first+1 end
+--- Queue size
+--  @param Q Queue object.
+--  @return Number of elements in queue.
+struct.Queue.size = function (Q) return Q.last-Q.first+1 end
 struct.about[struct.Queue.size] = {"Queue.size(q)", "Return number of elements in queue.", QUEUE}
+struct.Queue.__len = struct.Queue.size
 
 --- Check if the queue is empty.
 --  @param Q Queue object.
@@ -357,19 +372,19 @@ end
 --- Insert element to the heap.
 --  @param H Heap object.
 --  @param v Element to add.
-struct.Heap.insert = function (H, v)
+struct.Heap.push = function (H, v)
    local n = H.N+1
    H.N = n
    H[n] = v
    struct.Heap._fixUp(H, n)
 end
-struct.about[struct.Heap.insert] = {"Heap.insert(H,v)", "Add element to the heap.", HEAP}
+struct.about[struct.Heap.push] = {"Heap.push(H,v)", "Add element to the heap.", HEAP}
 
 --- Get top element from the heap.
 --  If 'less' method is default, top is the maximum element.
 --  @param H Heap object.
 --  @return Top element or nil.
-struct.Heap.top = function (H)
+struct.Heap.pop = function (H)
    local n = H.N
    if n == 0 then return nil end
    H[1],H[n] = H[n],H[1]
@@ -377,7 +392,14 @@ struct.Heap.top = function (H)
    H.N = n-1
    return H[n]
 end
-struct.about[struct.Heap.top] = {"Heap.top(H)", "Return top element. For the default less() function top is maximum.", HEAP}
+struct.about[struct.Heap.pop] = {"Heap.pop(H)", "Return top element. For the default less() function top is maximum.", HEAP}
+
+--- Get top of the heap.
+--  @param H Heap object.
+--  @return Value of the top element.
+struct.Heap.top = function (H)
+   return H[1]
+end
 
 --- Check for elements in the heap.
 --  @param H Heap object.
@@ -389,8 +411,8 @@ struct.about[struct.Heap.isEmpty] = {"Heap.isEmpty(H)", "Return true if the heap
 --  @param H Heap object.
 --  @return Size of heap.
 struct.Heap.size = function (H) return H.N end
-struct.Heap.__len = struct.Heap.size
 struct.about[struct.Heap.size] = {"Heap.size(H)", "Get number of elements in the heap.", HEAP}
+struct.Heap.__len = struct.Heap.size
 
 --- Make heap copy.
 --  @param H Original heap.
@@ -429,10 +451,10 @@ struct.about[struct.Set.insert] = {"Set.insert(S,val)", "Insert element into set
 --- Delete element.
 --  @param S Set object.
 --  @param v Element.
-struct.Set.remove = function (S,v)
+struct.Set.erase = function (S,v)
    S[v] = nil
 end
-struct.about[struct.Set.remove] = {"Set.remove(S,val)", "Remove element from set.", SET}
+struct.about[struct.Set.erase] = {"Set.erase(S,val)", "Remove element from set.", SET}
 
 --- Convert into Lua table.
 --  @param S Set object.
@@ -572,4 +594,3 @@ if not lc_version then struct.about = nil end
 return struct
 
 --========================================
--- TODO: change method names like in c++ or python

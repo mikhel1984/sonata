@@ -119,7 +119,7 @@ end
 local op = {
 ['*'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) + v end end,
 ['/'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) - v end end,
-['^'] = function(u,n) for k,v in pairs(u) do u[k] = v*n end end
+['^'] = function(u,n)  for k,v in pairs(u)  do u[k] = v*n end end
 }
 
 --- Remove empty elements from table of units.
