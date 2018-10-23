@@ -272,6 +272,56 @@ help = function(fn)
    end
 end
 
+--- Find function name
+--  @param dbg Structure with debug info.
+--  @return String with funciton name.
+main._getName = function (dbg)
+   if dbg.what == 'C' then
+      return dbg.name
+   end
+   local lc = string.format("[%s]:%d", dbg.short_src, dbg.linedefined)
+   if dbg.what ~= "main" and dbg.namewhat ~= "" then
+      return string.format("%s (%s)", lc, dbg.name)
+   else
+      return lc
+   end
+end
+
+--- Count internal calls inside function.
+--  Base on example from "Programming in Lua" by Roberto Ierusalimschy.
+--  @param fn Function to check.
+--  @param ... List of arguments.
+main.profile = function (fn,...)
+   -- prepare storage
+   local counters = {}
+   local names = {}
+   local function hook()
+      local f = debug.getinfo(2, "f").func
+      local count = counters[f]
+
+      if count == nil then 
+         counters[f] = 1
+	 names[f] = debug.getinfo(2, "Sn")
+      else 
+         counters[f] = count+1
+      end
+   end
+
+   -- run
+   debug.sethook(hook, "c")    -- turn on
+   fn(...)
+   debug.sethook()             -- turn off
+
+   -- process results
+   local stat = {}
+   for f, c in pairs(counters) do stat[#stat+1] = {main._getName(names[f]), c} end
+   table.sort(stat, function (a,b) return a[2] > b[2] end)
+
+   -- show results
+   for _, res in ipairs(stat) do print(res[1], res[2]) end
+end
+about[main.profile] = {"profile(fn,...)", "Count calls inside the function.", lc_help.OTHER}
+
 --- Simple implementation of 'the life'.
 --  Prepare your initial board in form of matrix.
 --  @param board Matrix with 'ones' as live cells.
