@@ -1,8 +1,8 @@
---[[      liblc/stat.lua 
+--[[      sonatalib/stat.lua 
 
 --- Some statistical functions.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'stat'
 --]]
@@ -10,7 +10,7 @@
 -------------------- Tests -------------------
 --[[!!
 -- import 'stat'
-Stat = require 'liblc.stat'
+Stat = require 'sonatalib.stat'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -87,13 +87,13 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 
 --	LOCAL
 
-local Ver = require "liblc.versions"
+local Ver = require "sonatalib.versions"
 
 local DISTRIB = 'distribution'
 
 --	INFO
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -103,7 +103,7 @@ about = help:new("Statistical calculations. Data set must be a Lua table.")
 }
 
 -- some functions depend of module 'special'
-local done, tmp = pcall(require,'liblc.special')
+local done, tmp = pcall(require,'sonatalib.special')
 if done then
    stat.lc_special = tmp
 else

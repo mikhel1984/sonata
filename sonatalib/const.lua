@@ -1,15 +1,15 @@
---[[       liblc/const.lua
+--[[       sonatalib/const.lua
 
 --- Collection of constants.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
            module 'const'
 --]]
 
 --[[!!
 -- import 'const'
-_C = require 'liblc.const'
+_C = require 'sonatalib.const'
 
 -- charge of electron
 ans = _C.e                  --~ 1.602e-19
@@ -20,7 +20,7 @@ ans = _C.e_u                --> 'C'
 
 --	LOCAL
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 local PHY, ASTR, MATH = "physics", "astronomy", "math"
 

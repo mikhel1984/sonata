@@ -1,8 +1,8 @@
---[[       liblc/files.lua
+--[[       sonatalib/files.lua
 
 --- Routines for working with data files.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
            module 'files'
 --]]
@@ -10,7 +10,7 @@
 --------------- Tests ------------
 --[[!!
 -- import 'files'
-File = require 'liblc.files'
+File = require 'sonatalib.files'
 -- prepare file name
 nm = os.tmpname()
 
@@ -46,7 +46,7 @@ for s in File.split(str, '//') do ans = ans+1 end  --> 4
 --	LOCAL
 
 -- compatibility
-local Ver = require "liblc.versions"
+local Ver = require "sonatalib.versions"
 
 local READ, WRITE = 'read', 'write'
 
@@ -75,7 +75,7 @@ end
 
 --	INFO
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 

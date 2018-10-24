@@ -1,9 +1,9 @@
---[[      liblc/numeric.lua 
+--[[      sonatalib/numeric.lua 
 
 --- Numerical solutions for some mathematical problems.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'numeric'
 --]]
@@ -11,7 +11,7 @@
 -------------------- Tests -------------------
 --[[!!
 -- import 'numeric'
-Num = require 'liblc.numeric'
+Num = require 'sonatalib.numeric'
 
 -- define tolerance
 Num.TOL = 1e-4
@@ -39,7 +39,7 @@ tbl, yn = Num.ode45(function (x,y) return x*y end, {0,3}, 1)
 ans = yn                                  --~ 90.011
 
 -- use matrices for high order equations
-Mat = require 'liblc.matrix'
+Mat = require 'sonatalib.matrix'
 
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
@@ -59,7 +59,7 @@ ans = y[#y][1]                           --~ 2.56
 
 --	LOCAL
 
-local Ver = require "liblc.versions"
+local Ver = require "sonatalib.versions"
 
 -- Runge-Kutta method.
 -- @param fn Function f(x,y).
@@ -78,7 +78,7 @@ end
 
 --	INFO
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 

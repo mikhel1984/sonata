@@ -1,4 +1,4 @@
---[[      liblc/matrix.lua 
+--[[      sonatalib/matrix.lua 
 
 --- Matrix operations. Indexation from 1.
 --
@@ -8,7 +8,7 @@
 --  Internal elements can be empty tables, but anyway operation X[i][j] will return 0.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'matrix'
 --]]
@@ -16,7 +16,7 @@
 -------------------- Tests -------------------
 --[[!!
 -- import 'matrix'
-Mat = require 'liblc.matrix'
+Mat = require 'sonatalib.matrix'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}             
@@ -178,7 +178,7 @@ local fn_sub = function (x,y) return x-y end
 local fn_unm = function (x) return -x end
 
 -- compatibility
-local Ver = require "liblc.versions"
+local Ver = require "sonatalib.versions"
 
 -- Metatable for new rows.
 local access = {
@@ -206,7 +206,7 @@ end
 local TRANSFORM = 'transform'
 
 --	INFO
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 

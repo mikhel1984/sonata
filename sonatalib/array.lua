@@ -1,4 +1,4 @@
---[[      liblc/array.lua 
+--[[      sonatalib/array.lua 
 
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possible.
@@ -11,7 +11,7 @@
 --  where <code>{n1,n2,...nk}<code> - index, <code>C1...Ck</code> - size based coefficients.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'array'
 --]]
@@ -19,7 +19,7 @@
 ------------------- Tests -------------------
 --[[!!
 -- import 'array'
-Arr = require 'liblc.array'
+Arr = require 'sonatalib.array'
 
 -- empty array
 a = Arr {2,3,4}                       
@@ -71,7 +71,7 @@ print(d:fullString(2,3))
 -- 	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require "liblc.versions"
+local Ver = require "sonatalib.versions"
 
 --- Check object type.
 --  @param t Object.
@@ -80,7 +80,7 @@ local function isarray(t) return type(t) == 'table' and t.isarray end
 
 --	INFO
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 -- 	MODULE
 

@@ -1,9 +1,9 @@
---[[      liblc/help.lua 
+--[[      sonatalib/help.lua 
 
 --- Function description management.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'help'
 --]]
@@ -41,7 +41,7 @@ inside the sonata.lua
 
 -- directory with language files
 local LOCALE = 'locale'
-local LIB = 'liblc'
+local LIB = 'sonatalib'
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
@@ -80,7 +80,7 @@ end
 --  @return String representation of all help information of the module.
 local function helpLines(module, alias, lng)
    -- get table and name
-   local m = (type(module) == 'string') and require('liblc.' .. module) or module
+   local m = (type(module) == 'string') and require('sonatalib.' .. module) or module
    local mName = (type(module) == 'string') and (module .. '.lua') or 'dialog'
    -- choose existing data
    local lng_t = lng and lng[alias] or {}
@@ -117,7 +117,7 @@ end
 --  @param lng Localization table from existing file.
 --  @return String representation of all help information of the module.
 local function docLines(module, alias, lng)
-   local m = require('liblc.'..module)
+   local m = require('sonatalib.'..module)
    local lng_t = lng and lng[alias] or {}
    -- collect
    local fn, description = {}
@@ -278,7 +278,7 @@ end
 help.localization = function (self,fName)
    fName = LOCALE..help.SEP..fName
    -- call method of the 'files' module
-   help.lc_files = help.lc_files or require('liblc.files')
+   help.lc_files = help.lc_files or require('sonatalib.files')
    local lng = help.lc_files.tblImport(fName)
    if lng then
       getmetatable(self).locale = lng           
@@ -305,7 +305,7 @@ end
 help.prepare = function(fName, tModules)
    fName = string.format('%s%s%s.lng', LOCALE, help.SEP, fName)
    -- call method of the 'files' module
-   help.lc_files = help.lc_files or require('liblc.files')
+   help.lc_files = help.lc_files or require('sonatalib.files')
    -- prepare new file
    local lng = help.lc_files.tblImport(fName)
    local f = io.open(fName, 'w')
@@ -368,7 +368,7 @@ help.newModule = function (mName, alias, description)
 3L3L3L3L3L Tests 3L3L3L3L
 -- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
 --[[!!
-WORD3 = require 'liblc.WORD2'
+WORD3 = require 'sonatalib.WORD2'
 
 -- example
 a = WORD3()
@@ -388,7 +388,7 @@ WORD2.isWORD2 = true
 local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
 
 -- description
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 WORD2.about = help:new("WORD5")
 
 3L Constructor example
@@ -472,8 +472,8 @@ help.generateDoc = function (locName, tModules)
 
    local fName = string.format('%s%s%s', LOCALE, help.SEP, locName)
    -- call method of the 'files' module
-   help.lc_files = help.lc_files or require('liblc.files')
-   help.lc_test = help.lc_test or require('liblc.test')
+   help.lc_files = help.lc_files or require('sonatalib.files')
+   help.lc_test = help.lc_test or require('sonatalib.test')
    -- prepare new file
    local lng = help.lc_files.tblImport(fName)
 

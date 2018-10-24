@@ -1,9 +1,9 @@
---[[       liblc/struct.lua
+--[[       sonatalib/struct.lua
 
 --- Main data structures.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
            module 'struct'
 --]]
@@ -11,7 +11,7 @@
 --------------- Tests ------------
 --[[!!
 -- import 'struct'
-DS = require 'liblc.struct'
+DS = require 'sonatalib.struct'
 
 -- create stack
 a = DS.Stack()
@@ -142,7 +142,7 @@ print(a)
 
 --	LOCAL
 
-local Ver = require "liblc.versions"
+local Ver = require "sonatalib.versions"
 
 local STACK = 'stack'
 local QUEUE = 'queue'
@@ -151,7 +151,7 @@ local SET   = 'set'
 
 --	INFO
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 

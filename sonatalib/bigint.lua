@@ -1,4 +1,4 @@
---[[      liblc/bigint.lua 
+--[[      sonatalib/bigint.lua 
 
 --- Operations with arbitrary long integer numbers.
 --
@@ -8,7 +8,7 @@
 --  Besides, digits have inverted sequence. For example, number <code>123</code> is represented as <code>"321"</code>.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'bigint'
 --]]
@@ -16,7 +16,7 @@
 ---------------- Tests -----------------
 --[[!!
 -- import 'bigint'
-Big = require 'liblc.bigint'
+Big = require 'sonatalib.bigint'
 
 -- from integer
 a = Big(123)         
@@ -71,7 +71,7 @@ print(c:str(6))
 
 --	LOCAL
 
-local Ver = require "liblc.versions"
+local Ver = require "sonatalib.versions"
 
 local SIGN, VALUE = 1, 2
 
@@ -94,7 +94,7 @@ end
 
 --	INFO 
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 

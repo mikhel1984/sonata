@@ -1,4 +1,4 @@
---[[      liblc/gnuplot.lua 
+--[[      sonatalib/gnuplot.lua 
 
 --- Call Gnuplot from Sonata LC.
 --
@@ -6,7 +6,7 @@
 --  all parameters of the plot are saved in form of table, each function is in separate subtable.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'gnuplot'
 --]]
@@ -14,7 +14,7 @@
 --------------- Tests ---------------
 --[[ !!
 -- import 'gnuplot'
-Gnu = require 'liblc.gnuplot'
+Gnu = require 'sonatalib.gnuplot'
 
 a = {{'sin(x)',title='Sinus x'},permanent=false}
 -- use 'permanent=true' instead or not define it at all
@@ -87,7 +87,7 @@ local function collect(t)
 end
 
 --	INFO
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 

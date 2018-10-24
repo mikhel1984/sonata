@@ -1,4 +1,4 @@
---[[       liblc/graph.lua
+--[[       sonatalib/graph.lua
 
 --- Operations with graphs.
 --  @author My Name
@@ -10,7 +10,7 @@
 -- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
 --[[!!
 -- import 'graph'
-Graph = require 'liblc.graph'
+Graph = require 'sonatalib.graph'
 
 -- build graph
 -- single names - nodes, names in brackets - edges 
@@ -81,7 +81,7 @@ local function tblLen (m)
 end
 
 --	INFO
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 local graph = {
@@ -92,7 +92,7 @@ about = help:new("Operations with graphs."),
 -- meta
 graph.__index = graph
 -- external library
-graph.lc_struct = require 'liblc.struct'
+graph.lc_struct = require 'sonatalib.struct'
 
 -- Constructor example
 --    @param t Some value.

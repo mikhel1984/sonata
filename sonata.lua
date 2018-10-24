@@ -1,6 +1,6 @@
 #!/usr/local/bin/lua -i
 -- Lua based calculator 
--- This file is a part of 'liblc' collection, 2017-2018.
+-- This file is a part of 'sonatalib' collection, 2017-2018.
 
 --================= CONFIGURATION ====================
 
@@ -27,7 +27,7 @@ if LC_ADD_PATH then
 end
 
 -- Table for program variables. Import base functions 
-lc = require('liblc.main')
+lc = require('sonatalib.main')
 lc_local = {}
 
 -- Text colors 
@@ -79,7 +79,7 @@ function lc_local.doimport(tbl,name)
       name = assert(lc_local.alias[name], "Wrong module name: "..name.."!")
    end
    if not _G[var] then
-      _G[var] = require('liblc.'..name)
+      _G[var] = require('sonatalib.'..name)
       about:add(_G[var].about, var)
       if _G[var].onImport then _G[var].onImport() end
    end

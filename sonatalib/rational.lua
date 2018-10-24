@@ -1,4 +1,4 @@
---[[      liblc/rational.lua 
+--[[      sonatalib/rational.lua 
 
 --- Rational number operatons support.
 --  
@@ -7,7 +7,7 @@
 --  where both numbers are integers.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'rational'
 --]]
@@ -15,7 +15,7 @@
 -------------------- Tests -------------------
 --[[!!
 -- import 'rational'
-Rat = require 'liblc.rational'
+Rat = require 'sonatalib.rational'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -66,7 +66,7 @@ print(a)
 
 --	LOCAL
 
-local Ver = require('liblc.versions')
+local Ver = require('sonatalib.versions')
 
 local NUM, DENOM = 1, 2
 
@@ -82,7 +82,7 @@ local function numStr(v) return type(v) == 'number' and string.format('%d', v) o
 
 --	INFO
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 

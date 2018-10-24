@@ -1,16 +1,16 @@
---[[      liblc/main.lua 
+--[[      sonatalib/main.lua 
 
 --- Define aliases for standard operations and add some new common functions.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'main'
 --]]
 
 ---------------- Tests ---------------------
 --[[!!
-lc = require 'liblc.main'
+lc = require 'sonatalib.main'
 
 -- constants starts from _
 ans = _pi                        --> math.pi
@@ -58,7 +58,7 @@ local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
 --	INFO
 
 -- lc_help
-lc_help = require "liblc.help"
+lc_help = require "sonatalib.help"
 about = lc_help:new("Lua based calculator.")
 
 --	MODULE
@@ -359,7 +359,7 @@ end
 --  @param src Source file.
 --  @param dst File name. If defined, file will be saved in this file.
 main.evalText = function (src,dst)
-   local F = require('liblc.files')
+   local F = require('sonatalib.files')
    local txt = assert(F.read(src), 'No such file: '..tostring(src))
    local res = string.gsub(txt, '##(.-)##', function (s)
                   for expr in F.split(s,';') do
@@ -391,12 +391,12 @@ main._args = {
 ['--test'] = {
 description = 'Apply unit tests to desired module, or all modules if the name is not defined.',
 process = function (args)
-   local Test = require 'liblc.test'
+   local Test = require 'sonatalib.test'
    if args[2] then
-      Test.module(string.format('liblc/%s.lua',args[2]))
+      Test.module(string.format('sonatalib/%s.lua',args[2]))
    else
       for m in pairs(import) do
-	 Test.module(string.format('liblc/%s.lua',m))
+	 Test.module(string.format('sonatalib/%s.lua',m))
       end
    end
    Test.summary()

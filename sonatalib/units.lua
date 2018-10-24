@@ -1,4 +1,4 @@
---[[      liblc/units.lua 
+--[[      sonatalib/units.lua 
 
 --- Operations and conversations with units.
 --
@@ -7,7 +7,7 @@
 --  Key is represented in form "power1..unit1..power2..unit2...etc'.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> units._collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> units._collection, 2017-2018.
 
             module 'units'
 --]]
@@ -15,7 +15,7 @@
 -------------------- Tests -------------------
 --[[!!
 -- import 'units'
-Unit = require 'liblc.units'
+Unit = require 'sonatalib.units'
 
 -- add some rules
 Unit.add('h', Unit(60,'min'))
@@ -143,7 +143,7 @@ end
 
 --	INFO
 
-local help = lc_version and (require "liblc.help") or {new=function () return {} end}
+local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 

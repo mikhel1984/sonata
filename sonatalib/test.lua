@@ -1,8 +1,8 @@
---[[      liblc/test.lua 
+--[[      sonatalib/test.lua 
 
 --- Unit test system.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
             module 'test'
 --]]
@@ -32,7 +32,7 @@
 
 --	LOCAL
 
-local Ver = require "liblc.versions"
+local Ver = require "sonatalib.versions"
 
 local DELIM = '%c[%s%c]+'    -- empty strings
 local LOG_NAME = 'test.log'
@@ -46,7 +46,7 @@ local test = {
 -- test results
 results = {},
 -- files functions
-lc_files = require('liblc.files'),
+lc_files = require('sonatalib.files'),
 }
 
 --- Extract test code from file.
@@ -129,9 +129,9 @@ end
 
 --- Combine all results.
 test.summary = function ()
-   test.print(string.format('\n%-20s%-10s%-10s%-10s%s', 'Module', 'Succeed', 'Failed', 'Av.time', 'Done'))
+   test.print(string.format('\n%-25s%-10s%-10s%-10s%s', 'Module', 'Succeed', 'Failed', 'Av.time', 'Done'))
    for k,v in pairs(test.results) do
-      test.print(string.format('%-22s%-10d%-9d%-10.3f%s', k, v[1], v[2], v[3]/(v[1]+v[2]), (v[2]==0 and 'v' or '-')))
+      test.print(string.format('%-27s%-10d%-9d%-10.3f%s', k, v[1], v[2], v[3]/(v[1]+v[2]), (v[2]==0 and 'v' or '-')))
    end
    print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
 end
