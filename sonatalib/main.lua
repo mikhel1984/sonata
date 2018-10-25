@@ -95,8 +95,10 @@ deg2rad = math.rad;    about[deg2rad] = {"deg2rad(x)", "Convert degrees to radia
 floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", lc_help.OTHER}
 ceil = math.ceil;   about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", lc_help.OTHER}
 -- Constants
-_pi = math.pi;      about[_pi] = {"_pi", "Number pi", lc_help.CONST}
-_e = math.exp(1.0); about[_e] = {"_e", "Euler number", lc_help.CONST}
+_pi = math.pi;      about[_pi] = {"_pi", "Number pi.", lc_help.CONST}
+_e = math.exp(1.0); about[_e] = {"_e", "Euler number.", lc_help.CONST}
+
+_ans = 0;           about[_ans] = {"_ans", "Result of the last operation."}
 
 
 log10 = function (x) return math.log(x)/main._LOG10 end
@@ -385,10 +387,18 @@ end
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'break' to exit this function.
-main.REW = function ()
+main.REW = function (logFile)
    local invA, invB, cmd = lc_help.CMAIN..'>'.._PROMPT, lc_help.CMAIN..'>'.._PROMPT2, ""
    local invite = invA
    local ERROR = lc_help.CERROR.."ERROR: "
+   -- save session if need
+   local log
+   if logFile then
+      log = io.open(logFile, 'w')
+      local d = os.date('*t')
+      log:write(string.format('-- LOG(Sonata LC): %d-%d-%d %d:%d\n', d.day, d.month, d.year, d.hour, d.min))
+   end
+
    while true do
       io.write(invite)
       cmd = cmd .. io.read()
@@ -402,7 +412,12 @@ main.REW = function ()
       if not err then
          local ok, res = pcall(fn)
 	 if ok then
-	    if res then print(res) end
+	    if res then _ans = res; print(res) end
+	    -- save to log
+	    if log then
+	       log:write('\n', cmd, '\n')
+	       if res then log:write('--[[ ', res, ' ]]\n') end
+	    end
 	 else
 	    print(ERROR, res, lc_help.CRESET)
 	 end
@@ -414,6 +429,7 @@ main.REW = function ()
          invite = invB
       end
    end
+   if log then log:close() end
 end
 about[main.REW] = {"REW()", "Read-evaluate-write Lua commands", lc_help.OTHER}
 
@@ -437,7 +453,7 @@ process = function (args)
 end,
 exit = true},
 -- localization file
-['-l'] = '--lng',
+['-L'] = '--lng',
 ['--lng'] = {
 description = 'Create/update file for localization.',
 process = function (args)
@@ -449,13 +465,13 @@ process = function (args)
 end,
 exit = true},
 -- generate 'help.html'
-['-d'] = '--doc',
+['-D'] = '--doc',
 ['--doc'] = {
 description = 'Create/update documentation file.',
 process = function () lc_help.generateDoc(LC_LOCALIZATION, import) end,
 exit = true},
 -- new module
-['-n'] = '--new',
+['-N'] = '--new',
 ['--new'] = {
 description = 'Generate template for a new module.',
 process = function (args)
@@ -470,6 +486,15 @@ process = function (args)
    main.evalText(args[2],args[3])
 end,
 exit = true},
+-- save session to log file
+['-l'] = '--log',
+['--log'] = {
+description = "Save session into the log file.",
+process = function (args)
+   local d = os.date('*t')
+   main._logFile_ = string.format('ses%d%d%d_%0d%0d.log', d.year, d.month, d.day, d.hour, d.min)
+end,
+exit = false},
 -- run code for debugging 
 ['--dbg'] = {
 description = "Run file 'dbg.lua'",

@@ -142,7 +142,7 @@ if LC_DEFAULT_MODULES then
 end
 
 if arg[-1] ~= '-i' then
-   lc.REW()
+   lc.REW(lc._logFile_)
 end
 
 --===============================================
