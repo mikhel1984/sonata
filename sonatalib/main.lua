@@ -383,6 +383,39 @@ main.evalText = function (src,dst)
    end   
 end
 
+--- Read-Evaluate-Write circle as a Lua program.
+--  Call 'break' to exit this function.
+main.REW = function ()
+   local invA, invB, cmd = ">lc: ", ">..: ", ""
+   local invite = invA
+   while true do
+      io.write(invite)
+      cmd = cmd .. io.read()
+      if cmd == 'break' then break end
+      -- parse command
+      local fn, err = load(cmd)
+      if err then   -- when print is expected
+         fn, err = load("return "..cmd)
+      end
+      -- process 
+      if not err then
+         local ok, res = pcall(fn)
+	 if ok then
+	    if res then print(res) end
+	 else
+	    print("ERROR: ", res)
+	 end
+	 cmd = ""; invite = invA
+      elseif string.find(err, 'error') then
+         print("ERROR: ", err)
+	 cmd = ""; invite = invA
+      else
+         invite = invB
+      end
+   end
+end
+about[main.REW] = {"REW()", "Read-evaluate-write Lua commands", lc_help.OTHER}
+
 main.about = about
 
 main._args = {
