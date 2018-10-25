@@ -125,7 +125,7 @@ rational.about[rational.copy] = {"copy(R)", "Get copy of the rational number.", 
 --  @param a First rational or natural number.
 --  @param b Second rational or natural number.
 --  @return Arguments as rational numbers.
-rational._args = function (a,b)
+rational._args_ = function (a,b)
    a = isrational(a) and a or rational:new(a)
    if b then
       b = isrational(b) and b or rational:new(b)
@@ -138,7 +138,7 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Sum.
 rational.__add = function (R1, R2)   
-   R1,R2 = rational._args(R1,R2)
+   R1,R2 = rational._args_(R1,R2)
    return rational:new(R1[1]*R2[2]+R1[2]*R2[1], R1[2]*R2[2])
 end
 
@@ -147,7 +147,7 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Difference.
 rational.__sub = function (R1, R2)   
-   R1,R2 = rational._args(R1,R2)
+   R1,R2 = rational._args_(R1,R2)
    return rational:new(R1[1]*R2[2]-R1[2]*R2[1], R1[2]*R2[2])
 end
 
@@ -156,7 +156,7 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Product.
 rational.__mul = function (R1, R2)
-   R1,R2 = rational._args(R1,R2)
+   R1,R2 = rational._args_(R1,R2)
    return rational:new(R1[1]*R2[1], R1[2]*R2[2])
 end
 
@@ -165,7 +165,7 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Ratio.
 rational.__div = function (R1, R2)
-   R1,R2 = rational._args(R1,R2)
+   R1,R2 = rational._args_(R1,R2)
    return rational:new(R1[1]*R2[2], R1[2]*R2[1])
 end
 
@@ -198,7 +198,7 @@ rational.about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2
 --  @param R2 Second number.
 --  @return True if the numbers are equal.
 rational.__eq = function (R1,R2)
-   R1,R2 = rational._args(R1,R2)
+   R1,R2 = rational._args_(R1,R2)
    return R1[1] == R2[1] and R1[2] == R2[2]
 end
 
@@ -207,7 +207,7 @@ end
 --  @param R2 Second number.
 --  @return True if the first number is less.
 rational.__lt = function (R1,R2)
-   R1,R2 = rational._args(R1,R2)
+   R1,R2 = rational._args_(R1,R2)
    return (R1[1]*R2[2]) < (R2[1]*R1[2])
 end
 
@@ -216,7 +216,7 @@ end
 --  @param R2 Second number.
 --  @return True in the first value is less or equal then the second one.
 rational.__le = function (R1,R2)
-   R1,R2 = rational._args(R1,R2)
+   R1,R2 = rational._args_(R1,R2)
    return (R1[1]*R2[2]) <= (R2[1]*R1[2])
 end
 

@@ -134,7 +134,7 @@ end
 --  @param num1 First number representation.
 --  @param num2 Second number representation (optional).
 --  @return Bigint objects.
-bigint._args = function (num1, num2)   
+bigint._args_ = function (num1, num2)   
    num1 = isbigint(num1) and num1 or bigint:new(num1)
    if num2 then
       num2 = isbigint(num2) and num2 or bigint:new(num2)
@@ -147,7 +147,7 @@ end
 --  @param num2 Second number representation.
 --  @return The quotient and remainder.
 bigint._div_ = function (num1,num2)
-   num1,num2 = bigint._args(num1,num2)
+   num1,num2 = bigint._args_(num1,num2)
    local num = string.reverse(num1[2])          -- numerator as string
    local acc = {}                                  -- result
    local k = #num2[2]                           -- index of the last character
@@ -187,7 +187,7 @@ end
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
 --  @return Sum of the values.
-bigint._sum = function (B1,B2)
+bigint._sum_ = function (B1,B2)
    local acc, base = {}, bigint.BASE
    -- calculate sum
    for i = 1, math.max(#B1[2],#B2[2]) do
@@ -257,11 +257,11 @@ bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTH
 --  @param B2 Second bigint or integer.
 --  @return Sum object.
 bigint.__add = function (B1,B2)
-   B1,B2 = bigint._args(B1,B2) 
+   B1,B2 = bigint._args_(B1,B2) 
    if B1[1] > 0 then
-      return (B2[1] > 0) and bigint._sum(B1,B2) or bigint._sub_(B1,B2)
+      return (B2[1] > 0) and bigint._sum_(B1,B2) or bigint._sub_(B1,B2)
    else 
-      return (B2[1] > 0) and bigint._sub_(B2,B1) or -bigint._sum(B1,B2)
+      return (B2[1] > 0) and bigint._sub_(B2,B1) or -bigint._sum_(B1,B2)
    end
 end
 
@@ -279,11 +279,11 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Difference object.
 bigint.__sub = function (B1, B2)
-   B1,B2 = bigint._args(B1,B2)
+   B1,B2 = bigint._args_(B1,B2)
    if B1[1] > 0 then
-      return (B2[1] > 0) and bigint._sub_(B1,B2) or bigint._sum(B1,B2)
+      return (B2[1] > 0) and bigint._sub_(B1,B2) or bigint._sum_(B1,B2)
    else
-      return (B2[1] > 0) and -bigint._sum(B1,B2) or bigint._sub_(B2,B1)
+      return (B2[1] > 0) and -bigint._sum_(B1,B2) or bigint._sub_(B2,B1)
    end
 end
 
@@ -292,7 +292,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Product object.
 bigint.__mul = function (B1, B2) 
-   B1,B2 = bigint._args(B1,B2)
+   B1,B2 = bigint._args_(B1,B2)
    local sum = {}
    -- get products   
    for i = 1, #B1[VALUE] do
@@ -343,7 +343,7 @@ end
 --  @param B2 Second bigint object or integer.
 --  @return <code>true</code> if numbers have the same values and signs.
 bigint.eq = function (B1,B2)
-   B1,B2 = bigint._args(B1,B2)
+   B1,B2 = bigint._args_(B1,B2)
    return B1[1] == B2[1] and B1[2] == B2[2]
 end
 bigint.about[bigint.eq] = {"eq(a,b)", "Check equality of two values.", help.OTHER}
@@ -355,7 +355,7 @@ bigint.__eq = bigint.eq
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1,B2)
-   B1,B2 = bigint._args(B1,B2)
+   B1,B2 = bigint._args_(B1,B2)
    if B1[1] < B2[1] then return true end
    if #B1[VALUE] == #B2[VALUE] then         -- equal length
       local va, vb = string.reverse(B1[2]), string.reverse(B2[2])
@@ -370,7 +370,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less or equal to the second.
 bigint.__le = function (B1,B2)
-   B1,B2 = bigint._args(B1,B2)
+   B1,B2 = bigint._args_(B1,B2)
    return bigint.__eq(B1,B2) or bigint.__lt(B1,B2)
 end
 
@@ -386,7 +386,7 @@ bigint.__len = bigint.digits
 --  @param B2 Second bigint or integer.
 --  @return Power of the number.
 bigint.__pow = function (B1,B2)
-   B1,B2 = bigint._args(B1,B2)
+   B1,B2 = bigint._args_(B1,B2)
    if B2[1] < 0 then error('Negative power!') end
    local res = bigint:new(1)
    if B2[2] == '0' then 

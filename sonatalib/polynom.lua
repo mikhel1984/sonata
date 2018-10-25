@@ -133,7 +133,7 @@ end
 --  @param a First object
 --  @param b Second object.
 --  @return Two polynomial objects.
-polynom._args = function (a,b)
+polynom._args_ = function (a,b)
    a = ispolynom(a) and a or polynom:init({a})
    b = ispolynom(b) and b or polynom:init({b})
    return a, b
@@ -152,7 +152,7 @@ end
 --  @param P1 First polynomial.
 --  @param P2 Second polynomial.
 --  @return Ratio and the rest.
-polynom._div = function (P1,P2)
+polynom._div_ = function (P1,P2)
    local rest, res = polynom.copy(P1), polynom:init({})
    -- update coefficients
    for k = 1,(#P1-#P2+1) do
@@ -193,7 +193,7 @@ polynom.about[polynom.copy] = {"copy(P)", "Get copy of the polynomial.", help.OT
 --  @param P2 Second polynomial or number.
 --  @return Sum.
 polynom.__add = function (P1,P2)
-   P1, P2 = polynom._args(P1,P2)
+   P1, P2 = polynom._args_(P1,P2)
    local t = {}
    -- get sum of equal powers
    local i,j = #P1, #P2
@@ -226,7 +226,7 @@ end
 --  @param P2 Second polynomial or number.
 --  @return Product.
 polynom.__mul = function (P1,P2)
-   P1,P2 = polynom._args(P1,P2)
+   P1,P2 = polynom._args_(P1,P2)
    local res = polynom:init({})
    -- get sum of coefficients
    for i = 1, #P1 do
@@ -243,7 +243,7 @@ end
 --  @param P2 Second polynomial or number.
 --  @param Ratio.
 polynom.__div = function (P1,P2)
-   local res, _ = polynom._div(polynom._args(P1,P2))
+   local res, _ = polynom._div_(polynom._args_(P1,P2))
    return res
 end
 
@@ -252,7 +252,7 @@ end
 --  @param P2 Second polynomial or number.
 --  @return Rest.
 polynom.__mod = function (P1,P2)
-   local _, res = polynom._div(polynom._args(P1,P2))
+   local _, res = polynom._div_(polynom._args_(P1,P2))
    return res
 end
 

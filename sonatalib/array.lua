@@ -116,7 +116,7 @@ end
 --  @param A Array.
 --  @param tInd Index to check.
 --  @return True if the index is correct for current array.
-array._isIndex = function (A, tInd)
+array._isIndex_ = function (A, tInd)
    if #A.size ~= #tInd then return false end
    for i = 1,#tInd do 
       if tInd[i] > A.size[i] or tInd[i] < 1 then return false end
@@ -128,7 +128,7 @@ end
 --  @param A Array.
 --  @param tInd Element index.
 --  @return Position of the element in the array table.
-array._indexConvert = function (A, tInd)
+array._indexConvert_ = function (A, tInd)
    local res, k = tInd[1], A.k
    for i = 2,#tInd do 
       res = res + (tInd[i]-1) * k[i]
@@ -139,7 +139,7 @@ end
 --- Maximum number of elements in the array.
 --  @param A Array.
 --  @return "Volume" of the array.
-array._capacity = function (A)
+array._capacity_ = function (A)
    local S,K = A.size, A.k
    return S[#S] * K[#K]
 end
@@ -149,8 +149,8 @@ end
 --  @param tInd Index of the element (table).
 --  @return Element or error if index is wrong.
 array.get = function (A, tInd)
-   if not array._isIndex(A, tInd) then error("Wrong index!") end
-   return A[array._indexConvert(A, tInd)]
+   if not array._isIndex_(A, tInd) then error("Wrong index!") end
+   return A[array._indexConvert_(A, tInd)]
 end
 array.about[array.get] = {"get(A,tInd)", "Get array element. Index is a table."}
 
@@ -159,8 +159,8 @@ array.about[array.get] = {"get(A,tInd)", "Get array element. Index is a table."}
 --  @param tInd Element index (table).
 --  @param val New value.
 array.set = function (A, tInd, val)
-   if not array._isIndex(A, tInd) then error("Wrong index!") end
-   A[array._indexConvert(A,tInd)] = val 
+   if not array._isIndex_(A, tInd) then error("Wrong index!") end
+   A[array._indexConvert_(A,tInd)] = val 
 end
 array.about[array.set] = {"set(A,tInd,val)", "Set value to the array. Index is a table."}
 
@@ -169,7 +169,7 @@ array.about[array.set] = {"set(A,tInd,val)", "Set value to the array. Index is a
 --  @return Deep copy of the array.
 array.copy = function (A)
    local cp = array:new(Ver.move(A.size, 1, #A.size, 1, {}))          -- copy size, create new array
-   return Ver.move(A, 1, array._capacity(A), 1, cp)                   -- copy array elements
+   return Ver.move(A, 1, array._capacity_(A), 1, cp)                   -- copy array elements
 end
 array.about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
 
@@ -197,7 +197,7 @@ array.about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTH
 array.apply2 = function (func, A1, A2)
    if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
    local res, v = array:new(Ver.move(A1.size, 1, #A1.size, 1, {}))    -- prepare empty copy
-   for i = 1, array._capacity(A1) do 
+   for i = 1, array._capacity_(A1) do 
       v = func(A1[i] or 0, A2[i] or 0)                                -- elements can be empty
       if v ~= 0 then res[i] = v end                                   -- save nonzero values
    end
@@ -214,7 +214,7 @@ array.apply = function (func, ...)
    -- prepare new
    local tmp, v = arg[0]
    local res = array:new(Ver.move(tmp.size, 1, #tmp.size, 1, {}))
-   for i = 1, array._capacity(tmp) do
+   for i = 1, array._capacity_(tmp) do
       -- collect
       for k = 1,#arg do v[k] = arg[k][i] or 0 end
       -- evaluate
@@ -229,7 +229,7 @@ end
 --  @return New array where each element is result of the function evaluation func(a[i]).
 array.map = function (A, func)
    local res, v = array:new(Ver.move(A.size, 1, #A.size, 1, {}))
-   for i = 1, array._capacity(A) do
+   for i = 1, array._capacity_(A) do
       v = func(A[i] or 0)                            -- elements can be empty
       if v ~= 0 then res[i] = v end                  -- save nonzero values
    end
@@ -292,7 +292,7 @@ array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b"
 --  @return Array of the given size with random numbers from 0 to 1.
 array.rand = function (tSize)
    local arr = array:new(tSize)
-   for i = 1, array._capacity(arr) do arr[i] = math.random() end
+   for i = 1, array._capacity_(arr) do arr[i] = math.random() end
    return arr
 end
 array.about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
@@ -304,7 +304,7 @@ array.about[array.rand] = {"rand(tSize)", "Return array with random numbers betw
 array.__eq = function (A1, A2)
    if array.isEqual(A1,A2) then
       -- compare element wise
-      for i = 1, array._capacity(A1) do
+      for i = 1, array._capacity_(A1) do
 	 if (A1[i] or 0) ~= (A2[i] or 0) then return false end
       end
       return true
@@ -333,7 +333,7 @@ array.sub = function (A, tInd1, tInd2)
    for i = 1, #tInd2 do 
       if tInd2[i] < 0 then tInd2[i] = tInd2[i] + A.size[i] + 1 end 
    end
-   if not (array._isIndex(A, tInd1) and array._isIndex(A, tInd2)) then error("Wrong index!") end
+   if not (array._isIndex_(A, tInd1) and array._isIndex_(A, tInd2)) then error("Wrong index!") end
    -- prepare tables
    local newsize, ind = {}, {}
    for i = 1, #tInd1 do 
@@ -343,14 +343,14 @@ array.sub = function (A, tInd1, tInd2)
    local res = array:new(newsize)
    -- fill
    local K, S = res.k, res.size
-   for count = 1, array._capacity(res) do
+   for count = 1, array._capacity_(res) do
       -- calculate new temporary index
       for i = 1, #ind do 
          local tmp = math.modf(count/K[i]) % S[i]
 	 tInd2[i] = tInd1[i] + tmp
 	 ind[i] = tmp + 1
       end
-      res[array._indexConvert(res,ind)] = A[array._indexConvert(A,tInd2)]
+      res[array._indexConvert_(res,ind)] = A[array._indexConvert_(A,tInd2)]
    end
    return res
 end
@@ -374,7 +374,7 @@ array.concat = function (A1, A2, nAxis)
    local res, ind1, ind2 = array:new(newsize), {}, {}
    local edge = A1.size[nAxis]
    local K, S = res.k, res.size
-   for count = 1, array._capacity(res) do
+   for count = 1, array._capacity_(res) do
       -- prepare index
       for i = 1, #newsize do
          ind1[i] = math.modf(count/K[i]) % S[i] + 1
@@ -383,9 +383,9 @@ array.concat = function (A1, A2, nAxis)
       -- get value
       local second = ind1[nAxis] > edge
       ind2[nAxis] = second and (ind2[nAxis]-edge) or ind2[nAxis]
-      res[array._indexConvert(res,ind1)] = second and A2[array._indexConvert(A2,ind2)] or A1[array._indexConvert(A1,ind2)]
+      res[array._indexConvert_(res,ind1)] = second and A2[array._indexConvert_(A2,ind2)] or A1[array._indexConvert_(A1,ind2)]
    end
-   --for i = 1, array._capacity(arr2) do print(i, arr2[i]) end
+   --for i = 1, array._capacity_(arr2) do print(i, arr2[i]) end
    return res 
 end
 array.about[array.concat] = {"concat(A1,A2,nAxis)", "Array concatenation along the given axis."}
@@ -394,7 +394,7 @@ array.about[array.concat] = {"concat(A1,A2,nAxis)", "Array concatenation along t
 --  @param A Array object.
 --  @return Number of elements.
 array.__len = function (A)
-   return array._capacity(A)
+   return array._capacity_(A)
 end
 array.about['#array'] = {"#array", "Return maximum number of elements.", help.META}
 
@@ -431,7 +431,7 @@ array.fullString = function (A, nRow, nCol)
 	       -- get row
 	       for j = 1, S[nCol] do
 	          ind[nCol]  = j
-		  col[j] = A[array._indexConvert(A, ind)] or 0
+		  col[j] = A[array._indexConvert_(A, ind)] or 0
 	       end
 	       -- save
 	       row[i] = table.concat(col, ' ')
@@ -490,7 +490,7 @@ array.serialize = function (A)
    local s = {}
    s[#s+1] = 'size={' .. table.concat(A.size, ',') .. '}'
    s[#s+1] = 'k={' .. table.concat(A.k, ',') .. '}'
-   for i = 1, array._capacity(A) do
+   for i = 1, array._capacity_(A) do
       if A[i] then
          s[#s+1] = string.format("[%d]=%s", i, (type(A[i]) == 'string' and "'"..A[i].."'" or A[i]))
       end
@@ -507,14 +507,14 @@ array.about[array.serialize] = {"serialize(A)", "String representation of array 
 --  @return Iterator which calculate index of the next array element and the element itself, <code>nil</code> at the end.
 array.next = function (A)
    local a = array:new(Ver.move(A.size, 1, #A.size, 1, {})) -- copy size
-   local count, S, K, len = 0, a.size, a.k, array._capacity(a)
+   local count, S, K, len = 0, a.size, a.k, array._capacity_(a)
 
    return function ()
              if count == len then return nil, nil end
 	     local res = {}
 	     for i = 1, #S do res[i] = math.modf(count/K[i]) % S[i]+1 end
 	     count = count + 1
-	     return res, A[array._indexConvert(A,res)]
+	     return res, A[array._indexConvert_(A,res)]
           end
 end
 array.about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}

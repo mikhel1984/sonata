@@ -180,7 +180,7 @@ end
 --- Create list of functions, sort by module and category.
 --  @param tbl Table of paris 'function - description'.
 --  @return Groupped descriptions.
-help._funcList = function (tbl)
+help._funcList_ = function (tbl)
    local res = {}
    for k, v in pairs(tbl) do
       -- only main description contains 'link'
@@ -215,7 +215,7 @@ help.print = function (self,fn)
       end
    else                               
       -- sort functions
-      local lst = help._funcList(self)
+      local lst = help._funcList_(self)
       for mod, t in pairs(lst) do                   -- for each module
          io.write(help.CBOLD)
          print(string.format("\t%s", mod))

@@ -144,7 +144,7 @@ gnuplot.about[gnuplot.isAvailable] = {"isAvailable(G)", "Check if all options in
 --- Save table to tmp file
 --  @param t Lua table with numbers.
 --  @return File name as string.
-gnuplot._tbl2file = function (t)
+gnuplot._tbl2file_ = function (t)
    local name = os.tmpname()
    local f = io.open(name, 'w')
    for _, row in ipairs(t) do
@@ -160,7 +160,7 @@ end
 --  @param fn Lua function.
 --  @param base Range and step.
 --  @return File name as a string.
-gnuplot._fn2file = function (fn,base)
+gnuplot._fn2file_ = function (fn,base)
    local name = os.tmpname()
    local xl = base.xrange and base.xrange[1] or (-10)
    local xr = base.xrange and base.xrange[2] or 10
@@ -183,16 +183,16 @@ gnuplot._fn2file = function (fn,base)
 end
 
 -- Prepare functions representation
-gnuplot._str = {table=gnuplot._tbl2file, ['function']=gnuplot._fn2file, string=function (x) return x end}
+gnuplot._str_ = {table=gnuplot._tbl2file_, ['function']=gnuplot._fn2file_, string=function (x) return x end}
 
 --- Add function parameters
 --  @param t Table with function definition.
 --  @param base Argument range.
 --  @return String representation of the plot command.
-gnuplot._graph = function (t,base)
+gnuplot._graph_ = function (t,base)
    -- function/file name
    local fn = t[1]
-   local str = (fn and gnuplot._str[type(fn)](fn,base) or string.format('"%s"', t.file))
+   local str = (fn and gnuplot._str_[type(fn)](fn,base) or string.format('"%s"', t.file))
    -- prepare options
    for _,k in ipairs(gnuplot.foptions) do
       if t[k] then str = string.format('%s %s %s ', str, prepare(k,t[k])) end
@@ -246,7 +246,7 @@ gnuplot.plot = function (t)
    -- prepare functions
    local fn = {}
    for i,f in ipairs(t) do
-      fn[i] = gnuplot._graph(f,t)
+      fn[i] = gnuplot._graph_(f,t)
    end
    -- command
    if #fn > 0 then

@@ -52,7 +52,7 @@ lc_files = require('sonatalib.files'),
 --- Extract test code from file.
 --  @param str File text.
 --  @return Strings with unit tests.
-test._getCode = function (str)
+test._getCode_ = function (str)
    local _,q = string.match(str, CODE_TEMPLATE) 
    return q
 end
@@ -62,7 +62,7 @@ end
 --  @param res Boolean result of execution.
 --  @param time Time of execution, ms.
 --  @return String with test results.
-test._markTest = function (str, res, time)
+test._markTest_ = function (str, res, time)
    local MIN, FULL = 30, 34
    local s = string.match(str, '%C+')
    s = string.match(s, '^(.-)%s*$')
@@ -87,7 +87,7 @@ test.module = function (fname)
    -- write head
    test.print('\n\tModule: ' .. fname)
    -- get test
-   text = test._getCode(text)
+   text = test._getCode_(text)
    if not text or #text == 0 then return end   -- no tests
    local succeed, failed = 0, 0
    local fulltime = 0
@@ -111,7 +111,7 @@ test.module = function (fname)
 	    end
          end)
          local res = status and err
-         test.print(test._markTest(q,res,time)) 
+         test.print(test._markTest_(q,res,time)) 
          if not status then
             test.log:write(err,'\n')
          elseif not err then

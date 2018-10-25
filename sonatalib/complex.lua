@@ -139,7 +139,7 @@ complex.about[complex.copy] = {"copy(Z)", "Create copy of the complex number.", 
 --  @param a Real or complex number.
 --  @param b Real or complex number (optional).
 --  @return Complex number(s).
-complex._args = function (a,b)
+complex._args_ = function (a,b)
    a = iscomplex(a) and a or complex:new(a)
    if b then
       b = iscomplex(b) and b or complex:new(b)
@@ -152,7 +152,7 @@ end
 --  @param Z2 Real or complex number.
 --  @return Sum of numbers.
 complex.__add = function (Z1,Z2)
-   Z1,Z2 = complex._args(Z1,Z2)
+   Z1,Z2 = complex._args_(Z1,Z2)
    return complex:new(Z1[1]+Z2[1], Z1[2]+Z2[2])
 end
 
@@ -161,7 +161,7 @@ end
 --  @param Z2 Real or complex number.
 --  @return Difference of numbers.
 complex.__sub = function (Z1,Z2)
-   Z1,Z2 = complex._args(Z1,Z2)
+   Z1,Z2 = complex._args_(Z1,Z2)
    return complex:new(Z1[1]-Z2[1], Z1[2]-Z2[2])
 end
 
@@ -170,7 +170,7 @@ end
 --  @param Z2 Real or complex number.
 --  @return Product of numbers.
 complex.__mul = function (Z1,Z2)
-   Z1,Z2 = complex._args(Z1,Z2)
+   Z1,Z2 = complex._args_(Z1,Z2)
    return complex:new(Z1[1]*Z2[1]-Z1[2]*Z2[2], Z1[1]*Z2[2]+Z1[2]*Z2[1])
 end
 
@@ -179,7 +179,7 @@ end
 --  @param Z2 Real or complex number.
 --  @return Ratio of numbers.
 complex.__div = function (Z1,Z2)
-   Z1,Z2 = complex._args(Z1,Z2)
+   Z1,Z2 = complex._args_(Z1,Z2)
    local denom = Z2[1]*Z2[1] + Z2[2]*Z2[2]
    return complex:new((Z1[1]*Z2[1]+Z1[2]*Z2[2])/denom, (Z1[2]*Z2[1]-Z1[1]*Z2[2])/denom)
 end
@@ -189,7 +189,7 @@ end
 --  @param Z2 Real or complex number.
 --  @return Power.
 complex.__pow = function (Z1,Z2)
-   Z1,Z2 = complex._args(Z1,Z2)
+   Z1,Z2 = complex._args_(Z1,Z2)
    local a0, a1 = complex.abs(Z1), complex.arg(Z1)
    local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
    local abs = a0^(Z2[1])*math.exp(-a1*Z2[2])
@@ -212,7 +212,7 @@ complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^
 --  @param Z2 Real or complex number.
 --  @return True if the real and complex parts are the same.
 complex.__eq = function (Z1, Z2)
-   Z1,Z2 = complex._args(Z1,Z2)
+   Z1,Z2 = complex._args_(Z1,Z2)
    return Z1[1] == Z2[1] and Z1[2] == Z2[2]
 end
 

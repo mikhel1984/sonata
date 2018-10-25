@@ -108,9 +108,9 @@ setmetatable(import,
 
 -- Process command line arguments
 if #arg > 0 then
-   local command = lc._args[arg[1]]
-   if type(command) == 'string' then command = lc._args[command] end
-   if not command then command = lc._args['no flags'] end
+   local command = lc._args_[arg[1]]
+   if type(command) == 'string' then command = lc._args_[command] end
+   if not command then command = lc._args_['no flags'] end
    command.process(arg)
    if command.exit then os.exit() end
 end

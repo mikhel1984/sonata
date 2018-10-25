@@ -129,7 +129,7 @@ special.about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma func
 --  @param a Order.
 --  @param x Real value.
 --  @return Representation of P.
-special._gammaSer = function (a,x)
+special._gammaSer_ = function (a,x)
    local ITMAX,EPS = 100, 3E-7
    local gamser = 0.0
    if x <= 0 then assert(x == 0)
@@ -153,7 +153,7 @@ end
 --  @param a Order.
 --  @param x Real value.
 --  @return Representation of Q.
-special._gcf = function (a,x)
+special._gcf_ = function (a,x)
    local ITMAX,EPS,FPMIN = 100, 3E-7, 1E-30
    local b,c = x+1.0-a, 1.0/FPMIN
    local d = 1.0/b
@@ -174,7 +174,7 @@ end
 --  @return Value of P(a,x).
 special.gammp = function (a,x)
    if not (x >= 0.0 and a > 0) then error('Invalid arguments!') end
-   return (x < a+1.0) and special._gammaSer(a,x) or 1.0-special._gcf(a,x)
+   return (x < a+1.0) and special._gammaSer_(a,x) or 1.0-special._gcf_(a,x)
 end
 special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).", GAMMA}
 
@@ -184,7 +184,7 @@ special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).
 --  @return Value of Q(a.x).
 special.gammq = function (a,x)
    if not (x >= 0.0 and a > 0) then error('Invalid arguments!') end
-   return (x < a+1.0) and 1-special._gammaSer(a,x) or special._gcf(a,x)
+   return (x < a+1.0) and 1-special._gammaSer_(a,x) or special._gcf_(a,x)
 end
 special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) = 1-P(a,x).", GAMMA}
 
@@ -328,7 +328,7 @@ special.about[special.erf] = {"erf(x)", "Error function."}
 --  @param m Current order.
 --  @param x Real number.
 --  @return Pn_m(x)
-special._plgndr = function (n,m,x)
+special._plgndr_ = function (n,m,x)
    local pmm = 1.0
    if m > 0 then
       local somx2 = math.sqrt((1-x)*(1+x))
@@ -357,7 +357,7 @@ end
 special.Legendre = function (n,x)
    assert(n >= 0 and math.abs(x) <= 1, 'Bad arguments')
    local res = {}
-   for i = 1,n+1 do res[i] = special._plgndr(n,i-1,x) end
+   for i = 1,n+1 do res[i] = special._plgndr_(n,i-1,x) end
    return res
 end
 special.about[special.Legendre] = {"Legendre(n,x)","Return list of Legendre polynomial coefficients."}
@@ -397,7 +397,7 @@ special.about[special.Dawson] = {"Dawson(x)", "Dawson integral."}
 --- Bessel function J0.
 --  @param x Real number.
 --  @return J0(x).
-special._bessj0 = function (x)
+special._bessj0_ = function (x)
    local ax  = math.abs(x)
    local ans1, ans2, y
    if ax < 8.0 then
@@ -418,13 +418,13 @@ end
 --- Bessel function Y0.
 --  @param x Non-negative number.
 --  @return Y0(x).
-special._bessy0 = function (x)
+special._bessy0_ = function (x)
    local ans1, ans2, y
    if x < 8.0 then
       y = x*x
       ans1 = -2957821389.0+y*(7062834065.0+y*(-512359803.6+y*(10879881.29+y*(-86327.92757+y*228.4622733))))
       ans2 = 40076544269.0+y*(745249964.8+y*(7189466.438+y*(47447.26470+y*(226.1030244+y))))
-      return ans1/ans2+0.636619772*special._bessj0(x)*math.log(x)
+      return ans1/ans2+0.636619772*special._bessj0_(x)*math.log(x)
    else
       local z = 8.0/x
       y = z*z
@@ -438,7 +438,7 @@ end
 --- Bessel function J1.
 --  @param x Real number.
 --  @return J1(x).
-special._bessj1 = function (x)
+special._bessj1_ = function (x)
    local ax = math.abs(x)
    local ans1, ans2, y
    if ax < 8.0 then
@@ -466,7 +466,7 @@ special._bessy1 = function (x)
       y = x*x
       ans1 = x*(-0.4900604943E13+y*(0.1275274390E13+y*(-0.5153438139E11+y*(0.7349264551E9+y*(-0.4237922726E7+y*0.8511937935E4)))))
       ans2 = 0.2499580570E14+y*(0.4244419664E12+y*(0.3733650367E10+y*(0.2245904002E8+y*(0.1020426050E6+y*(0.3549632885E3+y)))))
-      return ans1/ans2+0.636619772*(special._bessj1(x)*math.log(x)-1.0/x)
+      return ans1/ans2+0.636619772*(special._bessj1_(x)*math.log(x)-1.0/x)
    else
       local z = 8.0/x
       y = z*z
@@ -484,11 +484,11 @@ end
 special.bessy = function (n,x)
    if x <= 0 then error('Positive value is expected!') end
    if not (n >= 0 and Ver.isInteger(n)) then error('Non-negative integer order is expected!') end
-   if n == 0 then return special._bessy0(x) end
+   if n == 0 then return special._bessy0_(x) end
    if n == 1 then return special._bessy1(x) end
    local tox = 2.0/x
    local by = special._bessy1(x)
-   local bym = special._bessy0(x)
+   local bym = special._bessy0_(x)
    for i = 1,(n-1) do
       by, bym = i*tox*by-bym, by
    end
@@ -502,8 +502,8 @@ special.about[special.bessy] = {"bessy(n,x)","Bessel function of the second kind
 --  @return Polynomial value
 special.bessj = function (n,x)
    if not (n >= 0 and Ver.isInteger(n)) then error('Non-negative integer order is expected!') end
-   if n == 0 then return special._bessj0(x) end
-   if n == 1 then return special._bessj1(x) end
+   if n == 0 then return special._bessj0_(x) end
+   if n == 1 then return special._bessj1_(x) end
    if x == 0 then return 0 end
    local ACC, BIGNO, BIGNI = 40, 1E10, 1E-10
    
@@ -511,8 +511,8 @@ special.bessj = function (n,x)
    local tox = 2.0/ax
    local bj, bjm, ans
    if ax > n then
-      bjm = special._bessj0(ax)
-      bj = special._bessj1(ax)
+      bjm = special._bessj0_(ax)
+      bj = special._bessj1_(ax)
       for i = 1,(n-1) do 
          bj, bjm = i*tox*bj-bjm, bm
       end
@@ -544,7 +544,7 @@ special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind
 --- Modified Bessel function I0.
 --  @param x Real number.
 --  @return I0(x).
-special._bessi0 = function (x)
+special._bessi0_ = function (x)
    local ax = math.abs(x)
    if ax < 3.75 then
       local y = x/3.75
@@ -560,10 +560,10 @@ end
 --- Modified Bessel function K0.
 --  @param x Non-negative number.
 --  @return K0(x).
-special._bessk0 = function (x)
+special._bessk0_ = function (x)
    if x <= 2.0 then
       local y = x*x/4.0
-      return (-math.log(x/2.0)*special._bessi0(x))+(-0.57721566+y*(0.42278420+y*(0.23069756+y*(0.3488590E-1+y*(0.262698E-2+y*(0.10750E-3+y*0.74E-5))))))
+      return (-math.log(x/2.0)*special._bessi0_(x))+(-0.57721566+y*(0.42278420+y*(0.23069756+y*(0.3488590E-1+y*(0.262698E-2+y*(0.10750E-3+y*0.74E-5))))))
    else
       local y = 2.0/x
       return (math.exp(-x)/math.sqrt(x))*(1.25331414+y*(-0.7832358E-1+y*(0.2189568E-1+y*(-0.1062446E-1+y*(0.587872E-2+y*(-0.251540E-2+y*0.53208E-3))))))
@@ -573,7 +573,7 @@ end
 --- Modified Bessel function I1.
 --  @param x Real number.
 --  @return I1(x).
-special._bessi1 = function (x)
+special._bessi1_ = function (x)
    local ax,ans = math.abs(x)
    if ax < 3.75 then
       local y = x/3.75
@@ -591,10 +591,10 @@ end
 --- Modified Bessel function K1.
 --  @param x Non-negative number.
 --  @return K1(x).
-special._bessk1 = function (x)
+special._bessk1_ = function (x)
    if x <= 2.0 then
       local y = x*x/4.0
-      return (math.log(x/2.0)*special._bessi1(x))+(1.0/x)*(1.0+y*(0.15443144+y*(-0.67278579+y*(-0.18156897+y*(-0.1919402E-1+y*(-0.110404E-2-y*0.4686E-4))))))
+      return (math.log(x/2.0)*special._bessi1_(x))+(1.0/x)*(1.0+y*(0.15443144+y*(-0.67278579+y*(-0.18156897+y*(-0.1919402E-1+y*(-0.110404E-2-y*0.4686E-4))))))
    else
       local y = 2.0/x
       return (math.exp(-x)/math.sqrt(x))*(1.25331414+y*(0.23498619+y*(-0.3655620E-1+y*(0.1504268E-1+y*(-0.780353E-2+y*(0.325614E-2-y*0.68245E-3))))))
@@ -608,9 +608,9 @@ end
 special.bessk = function (n,x)
    if x <= 0 then error("Positiva value is expected!") end
    if not (n >= 0 and Ver.isInteger(n)) then error("Non-negative integer order is expected!") end
-   if n == 0 then return special._bessk0(x) end
-   if n == 1 then return special._bessk1(x) end
-   local tox,bkm,bk = 2.0/x, special._bessk0(x), special._bessk1(x)
+   if n == 0 then return special._bessk0_(x) end
+   if n == 1 then return special._bessk1_(x) end
+   local tox,bkm,bk = 2.0/x, special._bessk0_(x), special._bessk1_(x)
    for j = 1,n-1 do
       bk, bkm = bkm+j*tox*bk, bk
    end
@@ -624,8 +624,8 @@ special.about[special.bessk] = {"bessk(n,x)", "Modified Bessel function Kn(x).",
 --  @return In(x).
 special.bessi = function (n,x)
    assert(n >= 0 and Ver.isInteger(n), "Non-negative integer order is expected!")
-   if n == 0 then return special._bessi0(x) end
-   if n == 1 then return special._bessi1(x) end
+   if n == 0 then return special._bessi0_(x) end
+   if n == 1 then return special._bessi1_(x) end
    if x == 0 then return 0.0 end
    local ACC,BIGNO,BIGNI = 40.0, 1E10, 1E-10
    local tox = 2.0/math.abs(x)
@@ -639,7 +639,7 @@ special.bessi = function (n,x)
       end
       if j == n then ans = bip end
    end
-   ans = ans*special._bessi0(x)/bi
+   ans = ans*special._bessi0_(x)/bi
    return (x < 0.0 and (n % 2)==1) and -ans or ans
 end
 special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x).", BESSEL}

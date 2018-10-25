@@ -347,7 +347,7 @@ struct.about[struct.Heap] = {"Heap([less])", "Create new heap object. Comparison
 --- Fix order of the heap in up direction.
 --  @param H Heap object.
 --  @param k Start index.
-struct.Heap._fixUp = function (H, k)
+struct.Heap._fixUp_ = function (H, k)
    while k > 1 and H.less(H[math.modf(k*0.5)], H[k]) do
       local k2 = math.modf(k*0.5)
       H[k],H[k2] = H[k2],H[k]
@@ -359,7 +359,7 @@ end
 --  @param H Heap object.
 --  @param k Start index.
 --  @param N End index.
-struct.Heap._fixDown = function (H, k, N)
+struct.Heap._fixDown_ = function (H, k, N)
    while 2*k <= N do
       local j = 2*k
       if j < N and H.less(H[j],H[j+1]) then j=j+1 end
@@ -376,7 +376,7 @@ struct.Heap.push = function (H, v)
    local n = H.N+1
    H.N = n
    H[n] = v
-   struct.Heap._fixUp(H, n)
+   struct.Heap._fixUp_(H, n)
 end
 struct.about[struct.Heap.push] = {"Heap.push(H,v)", "Add element to the heap.", HEAP}
 
@@ -388,7 +388,7 @@ struct.Heap.pop = function (H)
    local n = H.N
    if n == 0 then return nil end
    H[1],H[n] = H[n],H[1]
-   struct.Heap._fixDown(H,1,n-1)
+   struct.Heap._fixDown_(H,1,n-1)
    H.N = n-1
    return H[n]
 end

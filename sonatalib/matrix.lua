@@ -262,7 +262,7 @@ end
 --  @param k Coefficient.
 --  @param m Matrix.
 --  @return Result of production.
-matrix._kProd = function (k, M)
+matrix._kProd_ = function (k, M)
    local res = matrix:init(M.rows, M.cols, {})
    for r = 1, M.rows do
       local resr, mr = res[r], M[r]
@@ -274,7 +274,7 @@ end
 --- Transform matrix to upper triangle (in-place).
 --  @param M Initial matrix.
 --  @return Upper triangulated matrix and determinant.
-matrix._GaussDown = function (M)
+matrix._GaussDown_ = function (M)
    local A = 1
    for k = 1, M.rows do
       -- look for nonzero element
@@ -306,7 +306,7 @@ end
 --- Transform triangle matrix to identity matrix (in-place).
 --  @param M Initial matrix
 --  @return Matrix with diagonal zeros.
-matrix._GaussUp = function (M)
+matrix._GaussUp_ = function (M)
    for k = M.rows, 1, -1 do
       local mk = M[k]
       for r = k-1,1,-1 do
@@ -324,7 +324,7 @@ end
 --  @param M Initial matrix.
 --  @return Triangulated matrix.
 matrix.triang = function (M)
-   return matrix._GaussDown(matrix.copy(M))
+   return matrix._GaussDown_(matrix.copy(M))
 end
 matrix.about[matrix.triang] = {'triang(M)', 'Matrix triangulation produced by Gaussian elimination.', TRANSFORM}
 
@@ -519,8 +519,8 @@ matrix.about[matrix.copy] = {"copy(M)", "Return copy of matrix.", help.OTHER}
 --  @param M2 Second matrix or number.
 --  @return Result of multiplication.
 matrix.__mul = function (M1,M2)
-   if not ismatrix(M1) then return matrix._kProd(M1, M2) end
-   if not ismatrix(M2) then return matrix._kProd(M2, M1) end
+   if not ismatrix(M1) then return matrix._kProd_(M1, M2) end
+   if not ismatrix(M2) then return matrix._kProd_(M2, M1) end
    if (M1.cols ~= M2.rows) then error("Impossible to get product: different size!") end
    local res = matrix:init(M1.rows, M2.cols,{})
    local resCols, m1Cols = res.cols, M1.cols
@@ -540,7 +540,7 @@ end
 --  @param M2 Second matrix or number.
 --  @return Matrix of ratio.
 matrix.__div = function (M1,M2)
-   if not ismatrix(M2) then return matrix._kProd(1/M2, M1) end
+   if not ismatrix(M2) then return matrix._kProd_(1/M2, M1) end
    return matrix.__mul(M1, matrix.inv(M2))
 end
 
@@ -588,7 +588,7 @@ matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
 --  @return Determinant.
 matrix.det = function (M)
    if (M.rows ~= M.cols) then error("Square matrix is expected!") end
-   local _, K = matrix._GaussDown(matrix.copy(M))
+   local _, K = matrix._GaussDown_(matrix.copy(M))
    return K
 end
 matrix.about[matrix.det] = {"det(M)", "Calculate determinant."}
@@ -606,11 +606,11 @@ matrix.inv = function (M)
       res[i][i+size] = 1
    end
    res.cols = 2*size
-   res, det = matrix._GaussDown(res)
+   res, det = matrix._GaussDown_(res)
    if det == 0 then 
       return matrix.ones(size,size, math.huge)
    end
-   res = matrix._GaussUp(res)
+   res = matrix._GaussUp_(res)
    -- move result
    for r = 1,size do
       local resr = res[r]
@@ -629,8 +629,8 @@ matrix.about[matrix.inv] = {"inv(M)", "Return inverse matrix.", TRANSFORM}
 --  @param b Free coefficients (matrix of vector).
 --  @return Solution and determinant.
 matrix.rref = function (A,b)
-   local tr, d = matrix._GaussDown(matrix.concat(A,b,'h'))
-   return matrix._GaussUp(tr), d
+   local tr, d = matrix._GaussDown_(matrix.concat(A,b,'h'))
+   return matrix._GaussUp_(tr), d
 end
 matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant."}
 
@@ -1049,14 +1049,14 @@ matrix.about[matrix.dot] = {'dot(V1,V2)', 'Scalar product of two 3-element vecto
 --- Auxiliary function for working with complex numbers.
 --  @param a Number.
 --  @return Absolute value.
-matrix._fabs = function (a)
+matrix._fabs_ = function (a)
    return (type(a) == 'table' and a.iscomplex) and a:abs() or math.abs(a)
 end
 
 --- Prepare LU transformation for other functions.
 --  @param M Initial square matrix.
 --  @return "Compressed" LU, indexes, number of permutations
-matrix._luPrepare = function (M)
+matrix._luPrepare_ = function (M)
    if M.rows ~= M.cols then error("Square matrix is expected!") end
    local a = matrix.copy(M)
    local vv = {}
@@ -1065,7 +1065,7 @@ matrix._luPrepare = function (M)
       local big,abig,v = 0,0
       local ar = a[r]
       for c = 1,a.cols do 
-         v = matrix._fabs(ar[c])
+         v = matrix._fabs_(ar[c])
 	 if v > abig then
 	    big = ar[c]
 	    abig = v
@@ -1090,9 +1090,9 @@ matrix._luPrepare = function (M)
          local sum = ar[c]
 	 for k = 1,c-1 do sum = sum - ar[k]*a[k][c] end
 	 ar[c] = sum
-	 sum = matrix._fabs(sum)
+	 sum = matrix._fabs_(sum)
 	 dum = vv[r]*sum
-	 if matrix._fabs(dum) >= matrix._fabs(big) then big = dum; rmax = r end
+	 if matrix._fabs_(dum) >= matrix._fabs_(big) then big = dum; rmax = r end
       end
       local ac = a[c]
       if c ~= rmax then
@@ -1121,7 +1121,7 @@ end
 --  @param M Initial square matrix.
 --  @return L matrix, U matrix, permutations
 matrix.lu = function (M)
-   local a,_,d = matrix._luPrepare(M)
+   local a,_,d = matrix._luPrepare_(M)
    local p = matrix.eye(M.rows,M.cols)
    while d > 0 do
       local tmp = p[1]; Ver.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift

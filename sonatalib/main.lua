@@ -275,7 +275,7 @@ end
 --- Find function name
 --  @param dbg Structure with debug info.
 --  @return String with funciton name.
-main._getName = function (dbg)
+main._getName_ = function (dbg)
    if dbg.what == 'C' then
       return dbg.name
    end
@@ -314,7 +314,7 @@ main.profile = function (fn,...)
 
    -- process results
    local stat = {}
-   for f, c in pairs(counters) do stat[#stat+1] = {main._getName(names[f]), c} end
+   for f, c in pairs(counters) do stat[#stat+1] = {main._getName_(names[f]), c} end
    table.sort(stat, function (a,b) return a[2] > b[2] end)
 
    -- show results
@@ -418,7 +418,7 @@ about[main.REW] = {"REW()", "Read-evaluate-write Lua commands", lc_help.OTHER}
 
 main.about = about
 
-main._args = {
+main._args_ = {
 -- run tests
 ['-t'] = '--test',
 ['--test'] = {
@@ -485,12 +485,12 @@ exit = true},
 ['-h'] = '--help',
 }
 -- show help
-main._args['--help'] = {
+main._args_['--help'] = {
 description = 'Get this help message.',
-process = function () print(main._args.text()) end,
+process = function () print(main._args_.text()) end,
 exit = true}
 -- string representation of the help info
-main._args.text = function ()
+main._args_.text = function ()
    local txt = {   
       "\n'Sonata LC' is a Lua based program for mathematical calculations.",
       "",
@@ -500,10 +500,10 @@ main._args.text = function ()
       "",
       "FLAGS:"
    }
-   for k,v in pairs(main._args) do 
+   for k,v in pairs(main._args_) do 
       if type(v) == 'string' then
-         --local ref = main._args[v]         
-         txt[#txt+1] = string.format('\t%s, %s - %s', k, v, main._args[v].description)
+         --local ref = main._args_[v]         
+         txt[#txt+1] = string.format('\t%s, %s - %s', k, v, main._args_[v].description)
       end
    end
    txt[#txt+1] = "\nVERSION: "..lc_version

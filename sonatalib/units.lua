@@ -7,7 +7,7 @@
 --  Key is represented in form "power1..unit1..power2..unit2...etc'.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> units._collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> units._collect_ion, 2017-2018.
 
             module 'units'
 --]]
@@ -185,11 +185,11 @@ units.prefix = {
 }
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
---- Get common part and units._difference between 2 strings.
+--- Get common part and units._diff_erence between 2 strings.
 --  @param str1 First string.
 --  @param str2 Second string.
 --  @return First prefix, second prefix, common part.
-units._diff = function (str1, str2)
+units._diff_ = function (str1, str2)
    -- check memory
    local p1, p2 = units.mem_parts[str1], units.mem_parts[str2]
    if p1 and p2 then
@@ -214,7 +214,7 @@ end
 --  @param a First unit object or number.
 --  @param b Second unit object or number.
 --  @return Arguments as units.
-units._args = function (a,b)
+units._args_ = function (a,b)
    a = isunits(a) and a or units:new(a)
    b = isunits(b) and b or units:new(b)
    return a,b
@@ -224,13 +224,13 @@ end
 --  @param val Initial value.
 --  @param t Table of units.
 --  @return New value and reduced table of units.
-units._simplify = function (val,t)
+units._simplify_ = function (val,t)
    local acc,new,res = {}, {}, val
    for k,v in pairs(t) do
       local previous = nil
       local l,r,base
       for _,a in ipairs(acc) do
-         l,r,base = units._diff(k,a)
+         l,r,base = units._diff_(k,a)
 	 if base then previous = a; break end
       end
       if previous then
@@ -331,7 +331,7 @@ units.about[units.copy] = {'copy(U)', 'Create copy of the element.', help.OTHER}
 --  @param k1 First key.
 --  @param k2 Second key.
 --  @return <code>true</code> if conversation is possible.
-units._isCompatible = function (k1,k2)
+units._isCompatible_ = function (k1,k2)
    if k1 == k2 then return true end
    if #k1 == 0 and #k2 ~= 0 then return false end
    local fk2 = string.gmatch(k2, PART)
@@ -340,7 +340,7 @@ units._isCompatible = function (k1,k2)
       -- compare powers and units
       if v1 ~= v2 then return false end
       if u1 ~= u2 then 
-         local l,r,base = units._diff(u1,u2)
+         local l,r,base = units._diff_(u1,u2)
 	 if not (base and units.prefix[l] and units.prefix[r]) then return false end
       end
    end
@@ -352,11 +352,11 @@ end
 --  @param from Initial key.
 --  @param to Final key.
 --  @return Result value of conversation.
-units._valConvert = function (v, from, to)
+units._valConvert_ = function (v, from, to)
    local f,res = string.gmatch(to, PART), v
    for v1,u1 in string.gmatch(from, PART) do
       local _,u2 = f()
-      local l,r = units._diff(u1,u2)
+      local l,r = units._diff_(u1,u2)
       res = res*(units.prefix[l]/units.prefix[r])^tonumber(v1)
    end
    return res
@@ -377,7 +377,7 @@ units.toAtom = function (U)
 	    left,right,base = '','',u1
 	 else
 	    for k in pairs(units.rules) do
-	       left,right,base = units._diff(k,u1)
+	       left,right,base = units._diff_(k,u1)
 	       if base and units.prefix[left] and units.prefix[right] then row=k; break end
 	    end
 	 end
@@ -389,7 +389,7 @@ units.toAtom = function (U)
 	    op['^'](add,num)
 	    op['*'](t,add)
 	    res = res*(tmp.value*units.prefix[right]/units.prefix[left])^num
-	    res, t = units._simplify(res, t)
+	    res, t = units._simplify_(res, t)
 	    t = reduce(t)
 	 end
       end
@@ -402,16 +402,16 @@ end
 --  @param U Initial unit object,
 --  @param toKey Expected key.
 --  @return Converted object of <code>nil</nil>.
-units._unitConvert = function (U, toKey)
+units._unitConvert_ = function (U, toKey)
    local res = units:new(1)
    res.key = toKey
-   if units._isCompatible(U.key, res.key) then
-      res.value = units._valConvert(U.value, U.key, res.key)
+   if units._isCompatible_(U.key, res.key) then
+      res.value = units._valConvert_(U.value, U.key, res.key)
    else
       local v1,u1 = units.toAtom(U)
       local v2,u2 = units.toAtom(res)
-      if units._isCompatible(u1,u2) then
-         res.value = units._valConvert(v1/v2, u1, u2)
+      if units._isCompatible_(u1,u2) then
+         res.value = units._valConvert_(v1/v2, u1, u2)
       else
          res = nil
       end
@@ -427,7 +427,7 @@ units.convert = function (U, r)
    if type(r) == 'function' then return r(U)
    else
       local res = units:new(1, r)
-      return units._unitConvert(U, res.key)
+      return units._unitConvert_(U, res.key)
    end
 end
 units.about[units.convert] = {'convert(v, units)','Convert one units to another, return new object or nil.', }
@@ -446,8 +446,8 @@ end
 --  @param U2 Second unit object.
 --  @return Sum of unit objects.
 units.__add = function (U1,U2)
-   U1,U2 = units._args(U1,U2)
-   local tmp = assert(units._unitConvert(U2,U1.key), "Different units!")
+   U1,U2 = units._args_(U1,U2)
+   local tmp = assert(units._unitConvert_(U2,U1.key), "Different units!")
    local res = units.copy(U1)
    res.value = res.value + tmp.value
    return res
@@ -458,8 +458,8 @@ end
 --  @param U2 Second unit object.
 --  @return Subtraction of objects with the same units.
 units.__sub = function (U1,U2)
-   U1,U2 = units._args(U1,U2)
-   local tmp = assert(units._unitConvert(U2,U1.key), "Different units!")
+   U1,U2 = units._args_(U1,U2)
+   local tmp = assert(units._unitConvert_(U2,U1.key), "Different units!")
    local res = units.copy(U1)
    res.value = res.value - tmp.value
    return res
@@ -470,7 +470,7 @@ end
 --  @param U2 Second unit object.
 --  @return Product of unit objects.
 units.__mul = function (U1,U2)
-   U1,U2 = units._args(U1,U2)
+   U1,U2 = units._args_(U1,U2)
    local ta, tb = fromKey(U1.key), fromKey(U2.key)
    op['*'](ta,tb)
    ta = reduce(ta)
@@ -485,7 +485,7 @@ end
 --  @param U2 Second unit object.
 --  @return Ratio of unit objects.
 units.__div = function (U1,U2)
-   U1,U2 = units._args(U1,U2)
+   U1,U2 = units._args_(U1,U2)
    local ta, tb = fromKey(U1.key), fromKey(U2.key)
    op['/'](ta,tb)
    ta = reduce(ta)
@@ -519,7 +519,7 @@ units.about[units.arithmetic] = {units.arithmetic, 'U1+U2, U1-U2, U1*u2, U1/U2, 
 units.__eq = function (U1,U2)
    if not (isunits(U1) and isunits(U2)) then return false end
    if U1.key == U2.key then return equal(U1.value, U2.value) end
-   local tmp = units._unitConvert(U2, U1.key)
+   local tmp = units._unitConvert_(U2, U1.key)
    if tmp == nil then return false end
    return equal(U1.value, tmp.value)
 end
@@ -531,7 +531,7 @@ end
 units.__lt = function (U1,U2)
    assert(isunits(U1) and isunits(U2), 'Not compatible!')
    if U1.key == U2.key then return U1.value < U2.value end
-   local tmp = assert(units._unitConvert(U2, U1.key), 'Not compatible!')
+   local tmp = assert(units._unitConvert_(U2, U1.key), 'Not compatible!')
    return U1.value < U2.value 
 end
 
@@ -542,7 +542,7 @@ end
 units.__le = function (U1,U2)
    assert(isunits(U1) and isunits(U2), 'Not compatible!')
    if U1.key == U2.key then return U1.value <= U2.value end
-   local tmp = assert(units._unitConvert(U2, U1.key), 'Not compatible!')
+   local tmp = assert(units._unitConvert_(U2, U1.key), 'Not compatible!')
    return U1.value <= U2.value 
 end
 
@@ -552,7 +552,7 @@ units.about[units.comparison] = {units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U
 --- Prepare units for print operation.
 --  @param str Units key.
 --  @return Traditional representation.
-units._collect = function (str)
+units._collect_ = function (str)
    local t = {}
    for v,k in string.gmatch(str, PART) do 
       local w = tonumber(v)
@@ -573,8 +573,8 @@ end
 --  @return Unit value in traditional form.
 units.__tostring = function (U)
    local num, denom = string.match(U.key, '([^%-]*)(.*)')
-   num = #num > 0 and units._collect(num) or '1'
-   denom = #denom > 0 and units._collect(denom) or ''
+   num = #num > 0 and units._collect_(num) or '1'
+   denom = #denom > 0 and units._collect_(denom) or ''
 
    if string.find(denom, '*') then denom = '('..denom..')' end
    if #denom > 0 then num = num..'/' end
@@ -609,7 +609,7 @@ end
 --  @param U Unit object.
 --  @return Result of simplification.
 units.simp = function (U)
-   local val, t = units._simplify(U.value, fromKey(U.key))
+   local val, t = units._simplify_(U.value, fromKey(U.key))
    t = reduce(t)
    if #t > 0 then
       local res = units:new(val)
