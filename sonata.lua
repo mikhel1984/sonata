@@ -36,6 +36,9 @@ lc_help.useColors(LC_USE_COLOR)
 -- Quick exit 
 quit = function () print(lc_help.CMAIN.."\n              --======= Buy! =======--\n"..lc_help.CRESET); os.exit() end
 
+-- Update random seed
+math.randomseed(os.time())
+
 -- Modules 
 import = {
 --   name     alias
@@ -128,7 +131,7 @@ about[import][2] = lc_local.import_state_update()
 io.write(lc_help.CMAIN)
 print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --==== "..lc_version.." ====--         # #\n")
 io.write(lc_help.CHELP)
-print(about:get('intro'))
+print(about:get('intro'), lc_help.CRESET)
 
 _PROMPT = lc_help.CMAIN..'lc:'..lc_help.CRESET..' '
 _PROMPT2= lc_help.CMAIN..'..:'..lc_help.CRESET..' '
@@ -136,6 +139,10 @@ _PROMPT2= lc_help.CMAIN..'..:'..lc_help.CRESET..' '
 -- Import default modules
 if LC_DEFAULT_MODULES then
    import(LC_DEFAULT_MODULES)  
+end
+
+if arg[-1] ~= '-i' then
+   lc.REW()
 end
 
 --===============================================

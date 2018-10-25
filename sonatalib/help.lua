@@ -162,6 +162,7 @@ CHELP = '',
 CRESET = '',
 CBOLD = '',
 CNBOLD = '',
+CERROR = '',
 }
 -- metamethods
 help.__index = help
@@ -241,6 +242,7 @@ help.useColors = function (bUse)
       help.CRESET = '\x1B[0m'
       help.CBOLD = '\x1B[1m'
       help.CNBOLD = '\x1B[22m'
+      help.CERROR = '\x1B[31m'
    end
 end
 

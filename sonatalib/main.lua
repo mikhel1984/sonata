@@ -386,8 +386,9 @@ end
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'break' to exit this function.
 main.REW = function ()
-   local invA, invB, cmd = ">lc: ", ">..: ", ""
+   local invA, invB, cmd = lc_help.CMAIN..'>'.._PROMPT, lc_help.CMAIN..'>'.._PROMPT2, ""
    local invite = invA
+   local ERROR = lc_help.CERROR.."ERROR: "
    while true do
       io.write(invite)
       cmd = cmd .. io.read()
@@ -403,11 +404,11 @@ main.REW = function ()
 	 if ok then
 	    if res then print(res) end
 	 else
-	    print("ERROR: ", res)
+	    print(ERROR, res, lc_help.CRESET)
 	 end
 	 cmd = ""; invite = invA
       elseif string.find(err, 'error') then
-         print("ERROR: ", err)
+         print(ERROR, err, lc_help.CRESET)
 	 cmd = ""; invite = invA
       else
          invite = invB
