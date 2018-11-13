@@ -521,8 +521,8 @@ main._args_.text = function ()
       "\n'Sonata LC' is a Lua based program for mathematical calculations.",
       "",
       "USAGE:",
-      "\tlua -i sonata.lua [flag [arg1 arg2 ...]]",
-      "(option '-i' could be omitted when the program is in non-interactive mode)",
+      "\tlua [-i] sonata.lua [flag [arg1 arg2 ...]]",
+      "(option '-i' could be used for working in native interpretator of Lua)",
       "",
       "FLAGS:"
    }
@@ -537,7 +537,7 @@ main._args_.text = function ()
    local modules = {}
    for k in pairs(import) do modules[#modules+1] = k end
    txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
-   txt[#txt+1] = "BUGS: mail to 'sonatalc@yandex.ru'\n"
+   txt[#txt+1] = "BUGS: mail to 'SonataLC@yandex.ru'\n"
    
    return table.concat(txt,'\n')   
 end

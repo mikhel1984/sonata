@@ -50,9 +50,9 @@ local _MAIN_ = '__module__'
 -- English version of some interface strings.
 local eng = {
 intro = [[
-Print 'import(module)' to expand functionality.
-Print 'help([function])' to get help.
-Print 'quit()' for exit.
+Enter 'import(module)' to expand functionality.
+Enter 'help([function])' to get help.
+Enter 'quit()' for exit.
 ]],
 modules = 'Available modules:',
 done = 'Done.',
