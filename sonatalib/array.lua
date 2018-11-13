@@ -49,12 +49,17 @@ ans = g:isEqual(Arr{2,3,2})            --> true
 
 -- concatenate along the 3-rd axes
 d = Arr.concat(b,b,3)
+-- size for given dimention
 ans = d:dim()[3]                       --> 2
 
--- apply functions of 2 arguments
--- to get new array
-e = Arr.apply2(function (x,y) return x*y end, b, b)
-ans = e:get{1,1,1}                     --> (b:get{1,1,1})^2
+-- apply function of several arguments
+a1 = Arr.rand{2,2}
+a2 = Arr.rand{2,2}
+a3 = Arr.rand{2,2}
+fn = function (x,y,z) return x*y+z end
+a4 = Arr.apply(fn, a1,a2,a3)
+ans = a4:get{1,2}                      --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
+
 
 -- apply function of 1 argument
 -- to get new array
@@ -66,6 +71,10 @@ print(a)
 
 -- print slices for axis 2 and 3
 print(d:fullString(2,3))
+
+-- iterate over array 
+for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
+
 ]]
 
 -- 	LOCAL
@@ -194,7 +203,7 @@ array.about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTH
 --  @param A1 First array object.
 --  @param A2 Second array object.
 --  @return New array where each element is result of the function evaluation func(A1[i],A2[i]).
-array.apply2 = function (func, A1, A2)
+array._apply2_ = function (func, A1, A2)
    if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
    local res, v = array:new(Ver.move(A1.size, 1, #A1.size, 1, {}))    -- prepare empty copy
    for i = 1, array._capacity_(A1) do 
@@ -203,8 +212,11 @@ array.apply2 = function (func, A1, A2)
    end
    return res
 end
-array.about[array.apply2] = {"apply2(func,A1,A2)", "Apply function of 2 arguments. Return new array.", help.OTHER}
 
+--- Apply function of several arguments.
+--  @param func Function with 2 arguments.
+--  @param ... List of arrays.
+--  @return New array where each element is result of the function evaluation.
 array.apply = function (func, ...)
    arg = {...}
    -- check arguments
@@ -212,7 +224,7 @@ array.apply = function (func, ...)
       if not array.isEqual(arg[i],arg[i-1]) then error("Not compatible arrays!") end
    end
    -- prepare new
-   local tmp, v = arg[0]
+   local tmp, v = arg[1], {}
    local res = array:new(Ver.move(tmp.size, 1, #tmp.size, 1, {}))
    for i = 1, array._capacity_(tmp) do
       -- collect
@@ -221,7 +233,9 @@ array.apply = function (func, ...)
       local p = func(Ver.unpack(v))
       if p ~= 0 then res[i] = p end
    end
+   return res
 end
+array.about[array.apply] = {"apply(func, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
 
 --- Apply function of 1 argument.
 --  @param A Array object.
@@ -242,7 +256,7 @@ array.about[array.map] = {"map(A,func)", "Apply function of 1 argument. Return n
 --  @param A2 Second array.
 --  @return Array with elementwise sum.
 array.__add = function (A1, A2)
-   return array.apply2(array._add_, A1, A2)
+   return array._apply2_(array._add_, A1, A2)
 end
 
 --- A1 - A2
@@ -250,7 +264,7 @@ end
 --  @param A2 Second array.
 --  @return Array with elementwise difference.
 array.__sub = function (A1, A2)
-   return array.apply2(array._sub_, A1, A2)
+   return array._apply2_(array._sub_, A1, A2)
 end
 
 --- -A
@@ -265,7 +279,7 @@ end
 --  @param A2 Second array.
 --  @return Array with element wise product.
 array.__mul = function (A1, A2)
-   return array.apply2(array._mul_, A1, A2)
+   return array._apply2_(array._mul_, A1, A2)
 end
 
 --- A1 / A2
@@ -273,7 +287,7 @@ end
 --  @param A2 Second array.
 --  @return Array with element wise ratio.
 array.__div = function (A1, A2)
-   return array.apply2(array._div_, A1, A2)
+   return array._apply2_(array._div_, A1, A2)
 end
 
 --- A1 ^ A2
@@ -281,7 +295,7 @@ end
 --  @param A2 Second array.
 --  @return Array with element wise power.
 array.__pow = function (A1, A2)
-   return array.apply2(array._pow_, A1, A2)
+   return array._apply2_(array._pow_, A1, A2)
 end
 
 array.arithmetic = 'arithmetic'

@@ -14,6 +14,8 @@
 
    * Each block of test code must be separated with at leas 1 empty line.
 
+   * Each expression in block must occupy only one line.
+
    * If test have result, it must be saved in variable 'ans'. To check it write the right value after arrow '-->'. 
      In case of float point number sign '--~' can be used for not strong equality.
 
