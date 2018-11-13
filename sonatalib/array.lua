@@ -537,3 +537,6 @@ array.about[array.next] = {"next(A)", "Return iterator along all indexes.", help
 if not lc_version then array.about = nil end
 
 return array
+
+--=======================
+--TODO: slice to matrix (square table)

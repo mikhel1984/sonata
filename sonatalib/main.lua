@@ -402,7 +402,7 @@ main.REW = function (logFile)
    while true do
       io.write(invite)
       cmd = cmd .. io.read()
-      if cmd == 'break' then break end
+      if cmd == 'quit' then break end
       -- parse command
       local fn, err = load(cmd)
       if err then   -- when print is expected
@@ -436,6 +436,7 @@ about[main.REW] = {"REW()", "Read-evaluate-write Lua commands", lc_help.OTHER}
 main.about = about
 
 main._args_ = {
+
 -- run tests
 ['-t'] = '--test',
 ['--test'] = {
@@ -452,6 +453,7 @@ process = function (args)
    Test.summary()
 end,
 exit = true},
+
 -- localization file
 ['-L'] = '--lng',
 ['--lng'] = {
@@ -464,12 +466,14 @@ process = function (args)
    end
 end,
 exit = true},
+
 -- generate 'help.html'
 ['-D'] = '--doc',
 ['--doc'] = {
 description = 'Create/update documentation file.',
 process = function () lc_help.generateDoc(LC_LOCALIZATION, import) end,
 exit = true},
+
 -- new module
 ['-N'] = '--new',
 ['--new'] = {
@@ -478,6 +482,7 @@ process = function (args)
    lc_help.newModule(args[2],args[3],args[4])
 end,
 exit = true},
+
 -- evaluate code in text file
 ['-e'] = '--eval',
 ['--eval'] = {
@@ -486,6 +491,7 @@ process = function (args)
    main.evalText(args[2],args[3])
 end,
 exit = true},
+
 -- save session to log file
 ['-l'] = '--log',
 ['--log'] = {
@@ -495,11 +501,13 @@ process = function (args)
    main._logFile_ = string.format('ses%d%d%d_%0d%0d.log', d.year, d.month, d.day, d.hour, d.min)
 end,
 exit = false},
+
 -- run code for debugging 
 ['--dbg'] = {
 description = "Run file 'dbg.lua'",
 process = function (args) dofile('dbg.lua') end,
 exit = false},
+
 -- process files
 ['no flags'] = {
 description = 'Evaluate file(s).',
@@ -507,6 +515,7 @@ process = function (args)
    for i = 1,#args do dofile(args[i]) end
 end,
 exit = true},
+
 -- 
 ['-h'] = '--help',
 }

@@ -14,7 +14,7 @@ _C = require 'sonatalib.const'
 -- charge of electron
 ans = _C.e                  --~ 1.602e-19
 
--- units has postfix _u
+-- units have postfix _u
 ans = _C.e_u                --> 'C'
 ]]
 
@@ -27,6 +27,7 @@ local PHY, ASTR, MATH = "physics", "astronomy", "math"
 --	MODULE
 
 local const = {
+
    -- physics
 G_u='N*m^2/kg^2',   G    = 6.672041E-11,            -- constant of gravitation
 e_u='C',            e    = 1.602189246E-19,         -- charge of electron
@@ -41,14 +42,17 @@ g_u='m/s^2',        g    = 9.80665,                 -- 'standard' acceleration o
 eps0_u='F/m',       eps0 = 8.85418781871E-12,       -- permittivity of a vacuum
 sigma_u='W/(m^2*K^4)', sigma = 5.6704E-8,           -- Stefan-Boltzmann constant
 Rinf_u='1/m',       Rinf = 10973731.56852773,       -- Rydberg constant
+
    -- astronomy
 pc_u='m',           pc = 3.08567758128E16,          -- one parsec
 ly_u='m',           ly = 9.4607304725808E15,        -- light year
+
    -- math
                     phi  = 0.5*(1+math.sqrt(5)),    -- golden ratio
 		    EuMa = 0.5772156649015328606065120, -- gamma
-   --
-                    Adams= 42,                      -- ;)
+
+   -- 
+                    the_answer_to_the_ultimate_question_of_life_the_universe_and_everything = 42,
 
 -- description
 about = help:new("Collection of constants.")
@@ -74,8 +78,6 @@ const.about[const.ly] = {"ly", "One light year.", ASTR}
 -- mathematics
 const.about[const.phi] = {"phi", "Golden ratio.", MATH}
 const.about[const.EuMa] = {"EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
---
-const.about[const.Adams] = {"Adams", "Answer to the ultimate question of life, the Universe, and Everything.", help.OTHER}
 
 -- free memory in case of standalone usage
 if not lc_version then const.about = nil end

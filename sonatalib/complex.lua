@@ -39,13 +39,14 @@ ans = a * b                    --> Comp(3,6)
 
 ans = a / Comp._i              --> Comp(2,-1)
 
--- power could be complex
+-- power can be complex
 c = Comp(1,1)^Comp(2,-2)
+
 -- real part
-ans = c:Re()                   --~ 6.147
+ans = c:real()                   --~ 6.147
 
 -- imaginary part
-ans = c:Im()                   --~ 7.4
+ans = c:imag()                   --~ 7.4
 
 -- comparison
 ans = (a == b)                 --> false
@@ -61,13 +62,37 @@ ans = a:arg()                  --~ 1.107
 -- conjugated number
 ans = a:conj()                 --> Comp(1,-2)
 
--- complex square root
--- after import becomes default
+-- some functions after import 
+-- become default, such as
 d = Comp.sqrt(-2)
-ans = d:Im()                   --~ 1.414
+ans = d:imag()                   --~ 1.414
+
+-- exp
+ans = Comp.exp(d):real()         --~ 0.156
+
+-- log
+ans = Comp.log(d):real()         --~ 0.3465
+
+-- sin 
+ans = Comp.sin(d):imag()         --~ 1.935
+
+-- cos 
+ans = Comp.cos(d):imag()         --~ 0
+
+-- tan
+ans = Comp.tan(d):real()         --~ 0
+
+-- sinh
+ans = Comp.sinh(d):real()        --~ 0
+
+-- cosh
+ans = Comp.cosh(d):real()        --~ 0.156
+
+-- tanh
+ans = Comp.tanh(d):imag()        --~ 6.334
 
 -- make copy
-ans = a:copy()                 --> a
+ans = a:copy()                   --> a
 
 -- show
 print(a)
@@ -240,14 +265,14 @@ complex.about[complex.conj] = {"conj(Z)", "Return the complex conjugate.", help.
 --- Real part of the number.
 --  @param Z Complex value.
 --  @return Real part.
-complex.Re  = function (Z) return Z[REAL] end
-complex.about[complex.Re] = {"Re(Z)", "Return the real part.", help.OTHER}
+complex.real  = function (Z) return Z[REAL] end
+complex.about[complex.real] = {"real(Z)", "Return the real part.", help.OTHER}
 
 --- Imaginary part of the number.
 --  @param Z Complex value.
 --  @return Imaginary part.
-complex.Im  = function (Z) return Z[IMAG] end
-complex.about[complex.Im] = {"Im(Z)", "Return the imaginary part.", help.OTHER}
+complex.imag  = function (Z) return Z[IMAG] end
+complex.about[complex.imag] = {"imag(Z)", "Return the imaginary part.", help.OTHER}
 
 --- String representation.
 --  @param Z Complex number.
@@ -394,4 +419,3 @@ return complex
 
 --==========================
 -- TODO: define inverse trigonometric complex functions
--- TODO: write tests for new complex functions

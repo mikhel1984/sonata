@@ -66,6 +66,7 @@ print(a)
 
 -- more friendly representation
 print(c:str())
+-- set number of digits in group
 print(c:str(6))
 ]]
 
@@ -451,19 +452,6 @@ bigint.fact = function (B)
    return res
 end
 bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer n."}
-
---[[
-bigint.base = function (big, base)
-   local letterA = string.byte('A')
-   local res = {}
-   local value = string.reverse(big[VALUE])
-   local acc = 0
-   for i = 1,#value do
-      local d = string.byte(value,i)
-      if d >= letterA then d = d - letterA + 10 else d = d - ZERO end
-   end
-end
-]]
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
