@@ -311,7 +311,7 @@ struct.Queue.__len = struct.Queue.size
 --- Check if the queue is empty.
 --  @param Q Queue object.
 --  @return True if there is no elements in the queue.
-struct.Queue.isEmpty = function (Q) return Q.first+1 == Q.last end
+struct.Queue.isEmpty = function (Q) return Q.first-1 == Q.last end
 struct.about[struct.Queue.isEmpty] = {"Queue.isEmpty(Q)", "Return true if the queue is empty.", QUEUE}
 
 --- Queue copy.

@@ -13,7 +13,7 @@
 Graph = require 'sonatalib.graph'
 
 -- build graph
--- single names - nodes, names in brackets - edges 
+-- single name - node, names in brackets - edges 
 -- letter w denotes weight of non directed edge
 -- numbers are weigths of directed edges
 a = Graph {'a','b',{'a','c'},{'d','e',w=2},{'d','b',4,3}}
@@ -43,6 +43,36 @@ ans = #ed                      --> 2
 
 -- make copy
 b = a:copy()
+
+-- completeness 
+ans = b:isComplete()           --> false
+
+-- prepare graph
+c = Graph {{'a','b'},{'a','c'},{'b','d'},{'b','e'},{'c','f'},{'f','g'},{'f','h'},{'e','g'}}
+
+-- bredth first search
+_,path = c:bfs('e','h')
+ans = path[3]                  --> 'f'
+
+-- depth first search
+found,path = c:dfs('d','c')
+ans = found                    --> true
+
+-- update weight
+-- (default is 1)
+-- use 'add' for it
+c:add{'a','b',w=0.5}
+c:add{'b','e',w=0.4}
+c:add{'c','f',w=2}
+
+-- Dijkstra path search
+dist,prev = c:Dijkstra('a') 
+ans = dist['g']                --> 1.9
+
+-- Bellman-Ford path search
+c:add{'f','h',w=-0.5)
+dist,prev = c:BellmanFord('a')
+ans = dist['h'] 
 
 -- show
 print(b)
@@ -80,6 +110,23 @@ local function tblLen (m)
    return n
 end
 
+-- find path
+local function getPath(prev,v)
+   local res = {v}
+   -- get sequence
+   while prev[v] ~= v do
+      v = prev[v]
+      res[#res+1] = v
+   end
+   -- invert
+   local L = #res
+   local n = L // 2
+   for i = 1,n do
+      res[i], res[L-i+1] = res[L-i+1], res[i]
+   end
+   return res
+end
+
 --	INFO
 local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
 
@@ -94,9 +141,9 @@ graph.__index = graph
 -- external library
 graph.lc_struct = require 'sonatalib.struct'
 
--- Constructor example
---    @param t Some value.
---    @return New object of graph.
+--- Constructor example
+--  @param t Some value.
+--  @return New object of graph.
 graph.new = function (self,t)
    local o = {}
    -- add nodes
@@ -105,8 +152,8 @@ graph.new = function (self,t)
 end
 
 --- Add node or edge.
---    @param g Graph.
---    @param t New element.
+--  @param g Graph.
+--  @param t New element.
 graph.add = function (g, t)
    if isEdge(t) then
       local t1,t2,w12,w21 = t[1], t[2], (t[3] or t.w12), (t[4] or t.w21)
@@ -127,8 +174,8 @@ end
 graph.about[graph.add] = {"add(e)","Add new node or edge. Node denoted as a single name, edge is a table of names (and weights if need)."}
 
 --- Remove node or edge.
---    @param g Graph.
---    @param t Element to remove.
+--  @param g Graph.
+--  @param t Element to remove.
 graph.remove = function (g, t)
    if isEdge(t) then
       local t1,t2 = t[1], t[2]
@@ -150,8 +197,8 @@ graph.Graph = 'Graph'
 graph.about[graph.Graph] = {"Graph(t)", "Create new graph.", help.NEW}
 
 --- Get graph nodes.
---    @param g Graph.
---    @return List of nodes.
+--  @param g Graph.
+--  @return List of nodes.
 graph.nodes = function (g)
    local res = {}
    for k in pairs(g) do res[#res+1] = tostring(k) end
@@ -160,8 +207,8 @@ end
 graph.about[graph.nodes] = {"nodes()","List of graph nodes."}
 
 --- Get graph edges.
---    @param g Graph.
---    @return List of edges.
+--  @param g Graph.
+--  @return List of edges.
 graph.edges = function (g)
    local nodes, res = graph.nodes(g), {}
    for i = 1,#nodes do
@@ -184,8 +231,8 @@ end
 graph.about[graph.edges] = {"edges()", "List of graph edges."}
 
 --- Make the graph copy.
---    @param g Graph.
---    @return Deep copy of the graph.
+--  @param g Graph.
+--  @return Deep copy of the graph.
 graph.copy = function (g)
    local res = graph:new({})
    for k,v in pairs(g) do
@@ -197,10 +244,14 @@ graph.copy = function (g)
 end
 graph.about[graph.copy] = {"copy()", "Get copy of the graph."}
 
--- Get number of nodes.
-graph.__len = function (g) return tblLen(g) end
+--- Get number of nodes.
+--  @param G Graph object.
+--  @return Number of nodes.
+graph.__len = function (G) return tblLen(G) end
 
--- String representation
+--- String representation
+--  @param g Graph object.
+--  @return String with compressed graph structure.
 graph.__tostring = function (g)
    local nd, res = graph.nodes(g)
    if #nd <= 5 then 
@@ -213,8 +264,8 @@ graph.__tostring = function (g)
 end
 
 --- Check graph completeness.
---    @param g Graph.
---    @return true if graph is complete.
+--  @param g Graph.
+--  @return true if graph is complete.
 graph.isComplete = function (g)
    local n = tblLen(g)
    for _,v in ipairs(g) do
@@ -225,68 +276,66 @@ end
 graph.about[graph.isComplete] = {'isComplete(g)', 'Check completeness of the graph.', help.OTHER}
 
 --- Bredth first search.
---    @param g Graph.
---    @param start Initial node.
---    @param goal Goal node.
---    @return Result and found path.
+--  @param g Graph.
+--  @param start Initial node.
+--  @param goal Goal node.
+--  @return Result and found path.
 graph.bfs = function (g, start, goal)
-   local visited,path = {},{}
+   local pred = {}
    -- use queue
    local queue = graph.lc_struct.Queue()
-   queue:add(start); visited[start] = true
+   queue:push(start)
+   pred[start] = start
    -- run
-   while not queue:isempty() do
-      local node = queue:rem()
-      path[#path+1] = node
+   while not queue:isEmpty() do
+      local node = queue:pop()
       -- found
-      if node == goal then return true, path end
-      local previous = queue:size()
+      if node == goal then return true, getPath(pred, goal) end
       -- add sucessors
       for v in pairs(g[node]) do
-         if not visited[v] then
-	    queue:add(v); visited[v] = true
+         if not pred[v] then
+	    queue:push(v) 
+	    pred[v] = node
 	 end
       end
-      if queue:size() == previous then path[#path] = nil end  -- remove last node
    end
-   return false, path
+   return false
 end
 graph.about[graph.bfs] = {"bfs(g,start,goal)","Bredth first search. Return result and found path.", SEARCH}
 
 --- Depth first search.
---    @param g Graph.
---    @param start Initial node.
---    @param goal Goal node.
---    @return Result and found path.
+--  @param g Graph.
+--  @param start Initial node.
+--  @param goal Goal node.
+--  @return Result and found path.
 graph.dfs = function (g, start, goal)
-   local visited, path = {}, {}
+   local pred = {}
    -- use stack
    local stack = graph.lc_struct.Stack()
-   stack:push(start); visited[start] = true
+   stack:push(start) 
+   pred[start] = start
    -- run
-   while not stack:isempty() do
+   while not stack:isEmpty() do
       local node = stack:pop()
-      path[#path+1] = node
       -- found
-      if node == goal then return true, path end
-      local previous = stack:size()
+      if node == goal then return true, getPath(pred, goal) end
       -- add sucessors
       for v in pairs(g[node]) do
-         if not visited[v] then
-	    stack:push(v); visited[v] = true
+         if not pred[v] then
+	    stack:push(v)
+	    pred[v] = node
 	 end
       end
-      if stack:size() == previous then path[#path] = nil end -- remove last node
    end
-   return false, path
+   return false
 end
 graph.about[graph.dfs] = {"dfs(start,goal)","Depth first search. Return result and found path.", SEARCH}
 
 --- Shortest path search using Dijkstra algorithm.
---    @param g Graph.
---    @param start Initial node.
---    @param goal Goal node.
---    @return Table of distances and predecessors or path and its length.
+--  @param g Graph.
+--  @param start Initial node.
+--  @param goal Goal node.
+--  @return Table of distances and predecessors or path and its length.
 graph.Dijkstra = function(g,start,goal)
    -- define local set 
    local set = {}
@@ -325,10 +374,10 @@ end
 graph.about[graph.Dijkstra] = {'Dijkstra(g,start[,goal]', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.", SEARCH}
 
 --- Find shortest path with Bellman-Ford algorithm/
---    @param g Graph.
---    @param start Initial node.
---    @param goal Goal node.
---    @return Table of distances and predecessors or path and its length.
+--  @param g Graph.
+--  @param start Initial node.
+--  @param goal Goal node.
+--  @return Table of distances and predecessors or path and its length.
 graph.BellmanFord = function (g, start,goal)
    -- initialize
    local prev, dist = {}, {}
@@ -372,34 +421,11 @@ graph.BellmanFord = function (g, start,goal)
 end
 graph.about[graph.BellmanFord] = {'BellmanFord(start[,goal]','Shortest path search using Bellman-Ford algorithm.', SEARCH}
 
---- "Smart" function that choose which algorithm to use base on weights.
---    @param g Graph.
---    @param start Initial node.
---    @param goal Goal node.
---    @return Table of distances and predecessors or path and its length.
-graph.spath = function (g,start,goal)
-   -- check weights
-   local positive = true
-   for u in pairs(g) do
-      for _,d in pairs(g[u]) do
-         if d < 0 then positive = false; break end
-      end
-      if not positive then break end
-   end
-   -- search
-   if positive then 
-      return graph.Dijkstra(g,start,goal) 
-   else 
-      return graph.BellmanFord(g,start,goal)
-   end
-end
-graph.about[graph.spath] = {'spath(start[,goal])', "Find shortest path using algorithm of Dijkstra of Bellman-Ford.", SEARCH}
-
 -- free memory in case of standalone usage
 if not lc_version then graph.about = nil end
 
 return graph
 
 --=========================================
--- TODO: multiple edges for the same verteces
 -- TODO: add heap to Dijkstra's algorithm
+-- TODO: isPositive, isDirected, isWeighted etc.

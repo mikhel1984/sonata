@@ -414,11 +414,11 @@ main.REW = function (logFile)
       if not err then
          local ok, res = pcall(fn)
 	 if ok then
-	    if res then _ans = res; print(res) end
+	    if res ~= nil then _ans = res; print(res) end
 	    -- save to log
 	    if log then
 	       log:write('\n', cmd, '\n')
-	       if res then log:write('--[[ ', res, ' ]]\n') end
+	       if res ~= nil then log:write('--[[ ', res, ' ]]\n') end
 	    end
 	 else
 	    print(ERROR, res, lc_help.CRESET)
