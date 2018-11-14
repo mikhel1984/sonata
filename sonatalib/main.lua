@@ -9,7 +9,8 @@
 --]]
 
 ---------------- Tests ---------------------
---[[!!
+--[[TEST
+
 lc = require 'sonatalib.main'
 
 -- constants starts from _
@@ -45,7 +46,8 @@ ans = b[2]                      --> 4
 -- append a to b
 lc.append(b,a)
 ans = b.b                       --> 2
-]]
+
+--]]
 
 --	LOCAL
 

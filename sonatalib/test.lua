@@ -10,7 +10,7 @@
 --[=[
 	Rules for writing test.
 
-   * Tests should be encapsulated in --[[!! ... ]], i.e. in multi string comments with signs '!!'.
+   * Tests should be encapsulated in --[[TEST ... ]], i.e. in multi string comments with signs '!!'.
 
    * Each block of test code must be separated with at leas 1 empty line.
 
@@ -39,7 +39,7 @@ local Ver = require "sonatalib.versions"
 local DELIM = '%c[%s%c]+'    -- empty strings
 local LOG_NAME = 'test.log'
 local TOL = 0.001
-local CODE_TEMPLATE = '%-%-%[(=*)%[!!(.-)%]%1%]'
+local CODE_TEMPLATE = '%-%-%[(=*)%[TEST(.-)%]%1%]'
 local TEST_TEMPLATE = '(.*)%-%-([>~])(.*)'
 
 --	MODULE
@@ -152,3 +152,5 @@ end
 
 return test
 
+--=========================
+--TODO: Add file with tests for combination of different classes

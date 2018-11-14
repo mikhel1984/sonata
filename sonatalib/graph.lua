@@ -7,8 +7,8 @@
 --]]
 
 --------------- Tests ------------
--- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
---[[!!
+--[[TEST
+
 -- import 'graph'
 Graph = require 'sonatalib.graph'
 
@@ -47,7 +47,7 @@ b = a:copy()
 -- show
 print(b)
 
-]]
+--]]
 
 --	LOCAL
 

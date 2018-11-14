@@ -11,7 +11,8 @@
 --]]
 
 --------------- Tests --------------
---[[!!
+--[[TEST
+
 -- import 'special'
 Spec = require 'sonatalib.special'
 
@@ -60,7 +61,8 @@ ans = lst[1]                       --~ -0.4375
 
 -- Dawson function
 ans = Spec.Dawson(3.3)             --~ 0.1598
-]]
+
+--]]
 
 --	LOCAL
 

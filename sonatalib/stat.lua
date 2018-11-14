@@ -8,7 +8,8 @@
 --]]
 
 -------------------- Tests -------------------
---[[!!
+--[[TEST
+
 -- import 'stat'
 Stat = require 'sonatalib.stat'
 
@@ -83,7 +84,8 @@ ans = Stat.fpdf(1.3, 2.7, 2.4)    --~ 0.2174
 ans = Stat.normcdf(1, 1.5, 2.1)   --~ 0.4059
 
 ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
-]]
+
+--]]
 
 --	LOCAL
 

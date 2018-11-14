@@ -14,7 +14,8 @@
 --]]
 
 -------------------- Tests -------------------
---[[!!
+--[[TEST
+
 -- import 'matrix'
 Mat = require 'sonatalib.matrix'
 
@@ -168,7 +169,7 @@ ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
 
 -- get rank
 ans = Mat.ones(2,3):rank()      --> 1
-]]
+--]]
 
 --	LOCAL
 

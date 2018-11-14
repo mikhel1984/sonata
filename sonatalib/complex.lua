@@ -13,7 +13,8 @@
 --]]
 
 ---------------- Tests --------------
---[[!!
+--[[TEST
+
 -- import 'complex'
 Comp = require 'sonatalib.complex'
 
@@ -96,8 +97,8 @@ ans = a:copy()                   --> a
 
 -- show
 print(a)
-]]
 
+--]]
 
 --	LOCAL
 

@@ -7,7 +7,8 @@
            module 'const'
 --]]
 
---[[!!
+--[[TEST
+
 -- import 'const'
 _C = require 'sonatalib.const'
 
@@ -16,7 +17,7 @@ ans = _C.e                  --~ 1.602e-19
 
 -- units have postfix _u
 ans = _C.e_u                --> 'C'
-]]
+--]]
 
 --	LOCAL
 

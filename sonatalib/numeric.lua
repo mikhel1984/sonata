@@ -9,7 +9,8 @@
 --]]
 
 -------------------- Tests -------------------
---[[!!
+--[[TEST
+
 -- import 'numeric'
 Num = require 'sonatalib.numeric'
 
@@ -54,8 +55,8 @@ cond = function (time,current,previous) return current < 0.1 end
 myfun = function (t,x) return -x end
 y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
 ans = y[#y][1]                           --~ 2.56
-]]
----------------------------------------------
+
+--]]
 
 --	LOCAL
 

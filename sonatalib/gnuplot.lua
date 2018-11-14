@@ -12,7 +12,8 @@
 --]]
 
 --------------- Tests ---------------
---[[ !!
+--[[ TEST
+
 -- import 'gnuplot'
 Gnu = require 'sonatalib.gnuplot'
 
@@ -40,7 +41,8 @@ Gnu.plot {{tmp,with='lines'},permanent=false}
 -- print Lua function
 fn1 = function (x) return x^2-x end
 Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
-]]
+
+--]]
 
 --	LOCAL
 

@@ -9,7 +9,8 @@
 --]]
 
 --------------- Tests ------------
---[[!!
+--[[TEST
+
 -- import 'struct'
 DS = require 'sonatalib.struct'
 
@@ -138,7 +139,7 @@ ans = e[16]                    --> true
 
 -- show
 print(a)
-]]
+--]]
 
 --	LOCAL
 

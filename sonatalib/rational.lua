@@ -13,7 +13,8 @@
 --]]
 
 -------------------- Tests -------------------
---[[!!
+--[[TEST
+
 -- import 'rational'
 Rat = require 'sonatalib.rational'
 
@@ -62,7 +63,8 @@ ans = a:copy()          --> a
 
 -- show
 print(a)
-]]
+
+--]]
 
 --	LOCAL
 

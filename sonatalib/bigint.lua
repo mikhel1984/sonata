@@ -14,7 +14,7 @@
 --]]
 
 ---------------- Tests -----------------
---[[!!
+--[[TEST
 -- import 'bigint'
 Big = require 'sonatalib.bigint'
 
@@ -68,7 +68,8 @@ print(a)
 print(c:str())
 -- set number of digits in group
 print(c:str(6))
-]]
+
+--]]
 
 --	LOCAL
 

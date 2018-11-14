@@ -17,7 +17,8 @@
 --]]
 
 ------------------- Tests -------------------
---[[!!
+--[[TEST
+
 -- import 'array'
 Arr = require 'sonatalib.array'
 
@@ -75,7 +76,7 @@ print(d:fullString(2,3))
 -- iterate over array 
 for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 
-]]
+--]]
 
 -- 	LOCAL
 

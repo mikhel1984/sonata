@@ -8,7 +8,8 @@
 --]]
 
 --------------- Tests ------------
---[[!!
+--[[TEST
+
 -- import 'files'
 File = require 'sonatalib.files'
 -- prepare file name
@@ -41,7 +42,7 @@ str = 'abc//defg//hijkl//mnop'
 ans = 0
 for s in File.split(str, '//') do ans = ans+1 end  --> 4
 
-]]
+--]]
 
 --	LOCAL
 

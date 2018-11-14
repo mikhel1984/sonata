@@ -13,7 +13,8 @@
 --]]
 
 -------------------- Tests -------------------
---[[!!
+--[[TEST
+
 -- import 'units'
 Unit = require 'sonatalib.units'
 
@@ -72,7 +73,7 @@ ans = 2 * Unit('N')                --> Unit(2,'N')
 
 -- show result
 print(a)
-]]
+--]]
 
 --	LOCAL
 

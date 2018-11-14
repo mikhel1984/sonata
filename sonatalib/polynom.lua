@@ -13,7 +13,8 @@
 --]]
 
 -------------------- Tests -------------------
---[[!!
+--[[TEST
+
 -- import 'polynom'
 Poly = require 'sonatalib.polynom'
 
@@ -75,7 +76,8 @@ print(a)
 -- with variable 's'
 d = Poly {2,-2,1}
 ans = d:str('s')              --> '2*s^2-2*s+1'
-]]
+
+--]]
 
 --	LOCAL
 
