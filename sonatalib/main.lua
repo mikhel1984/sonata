@@ -16,11 +16,29 @@ lc = require 'sonatalib.main'
 -- constants starts from _
 ans = _pi                        --> math.pi
 
+-- standard functions 
+ans = exp(0)+sin(_pi/2)+cosh(0)  --~ 3.0
+
+-- degrees and grad
+d = rad2deg(_pi)
+ans = deg2rad(d)                 --~ _pi
+
+-- upper and lower int
+ans = ceil(_e)-floor(_e)       --> 1
+
 -- round number
 ans = round(0.9)                 --> 1.0
 
 -- save 2 digits
 ans = round(math.pi, 2)          --> 3.14
+
+-- random between 0 and 1
+p = rand()
+ans = (p >= 0) and (p <= 1)      --> true
+
+-- random integer (1 to 10)
+p = randi(10)
+ans = (p >= 1) and (p <= 10)     --> true
 
 -- 'small' factorial - int
 ans = factorial(12)              --> 479001600
@@ -35,17 +53,23 @@ ans = lc.type(25)                --> 'integer'
 a = {a=1,b=2;3,4,5}
 lc.flip(a)
 
+-- show "scientific" view
+lc.sci(1234.56789)
+
 -- generate 'vector'
 b = lc.range(3)
 ans = b[3]                      --> 3
 
--- full form
+-- even numbers
 b = lc.range(2,10,2)
 ans = b[2]                      --> 4
 
 -- append a to b
 lc.append(b,a)
 ans = b.b                       --> 2
+
+-- simple profiler
+lc.profile(round, _pi, 2)
 
 --]]
 
