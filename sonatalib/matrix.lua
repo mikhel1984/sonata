@@ -74,6 +74,9 @@ ans = (a == b)                   --> false
 -- identity matrix
 ans = Mat.eye(2)                 --> Mat {{1,0},{0,1}}
 
+-- matrix argument
+ans = Mat.eye(a)                 --> Mat {{1,0},{0,1}}
+
 -- matrix of zeros
 ans = Mat.zeros(2,1)             --> Mat {{0},{0}}
 
@@ -83,17 +86,34 @@ ans = Mat.ones(2,3,4)            --> Mat {{4,4,4},{4,4,4}}
 -- matrix of constants = 1
 ans = Mat.ones(a,3)              --> Mat {{3,3},{3,3}}
 
+-- define rule to fill
+-- result matrix is 'dense'
+fn = function (i,j) return i == j and 1 or 0 end
+ans = Mat.fill(2,3,fn)           --> Mat {{1,0,0},{0,1,0}}
+
 -- horizontal concatenation
 ans = a .. b                     --> Mat {{1,2,5,6},{3,4,7,8}}
 
 -- vertical concatenation
 ans = a // b                     --> Mat {{1,2},{3,4},{5,6},{7,8}}
 
+-- explicit concatenation 
+ans = a:concat(b,'h')            --> Mat {{1,2,5,6},{3,4,7,8}}
+
+-- to triangular form
+print(Mat.triang(a .. b))
+
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
 -- apply function which depends on index too
 ans = a:mapEx(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
+
+-- apply function to matrices
+-- element-wise
+fn = function (x,y,z) return x*y+z end
+aa = Mat.apply(fn, b,b,b) 
+ans = aa[1][1]                    --> 30
 
 -- use Gauss transform to solve equation
 ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
@@ -105,6 +125,13 @@ ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
 ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
 
+-- square norm along rows
+gsq = g:sqNorm('r') 
+ans = gsq[1][1]                 --> 14
+
+-- eualedian norm
+ans = Mat.V({1,2,3}):norm()     --~ math.sqrt(14)
+
 -- random matrix
 h = Mat.rand(3,2)
 print(h)
@@ -114,12 +141,14 @@ m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
 ans = n(2,2)                    --~ 0.333
 
--- get simple copy
+-- copy as Lua table
+-- without methametods
 k = Mat.eye(3)
 k = k:table()
 ans = k[2][1]                   --> 0
 
 -- back to matrix
+-- (import table)
 k = Mat(k)
 k = k:sparse()
 ans = rawget(k[2],1)             --> nil
@@ -430,7 +459,7 @@ matrix.T = matrix.transpose
 matrix.__add = function (M1,M2)
    M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
    M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
-   return matrix.apply(M1,M2,fn_sum)
+   return matrix._apply2_(fn_sum,M1,M2)
 end
 
 --- M1 - M2
@@ -440,7 +469,7 @@ end
 matrix.__sub = function (M1,M2)
    M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
    M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
-   return matrix.apply(M1,M2,fn_sub)
+   return matrix._apply2_(fn_sub,M1,M2)
 end
 
 --- - M
@@ -491,7 +520,7 @@ matrix.about[matrix.mapEx] = {"mapEx(M,fn)", "Apply function fn(val,row,col) to 
 --  @param M2 Second matrix.
 --  @param fn Function from two arguments f(v1,v2).
 --  @return Result of function evaluation.
-matrix.apply = function (M1, M2, fn)
+matrix._apply2_ = function (fn, M1, M2)
    if (M1.rows~=M2.rows or M1.cols~=M2.cols) then error("Different matrix size!") end
    local res = matrix:init(M1.rows,M1.cols,{})
    for r = 1,res.rows do
@@ -500,7 +529,31 @@ matrix.apply = function (M1, M2, fn)
    end
    return res
 end
-matrix.about[matrix.apply] = {"apply(M1,M2,fn)", "Apply fu(v1,v2) to each element of matrices m1 and m2.", TRANSFORM}
+
+--- Apply function element-wise to matrices.
+--  @param fn Function of several arguments.
+--  @param ... List of matrices.
+--  @return New found matrix.
+matrix.apply = function (fn, ...)
+   local arg = {...}
+   local rows, cols = arg[1].rows, arg[1].cols
+   -- check size
+   for i = 2,#arg do
+      if arg[i].rows ~= rows or arg[i].cols ~= cols then error("Different size!") end
+   end
+   local res, v = matrix:init(rows, cols, {}), {}
+   -- evaluate
+   for r = 1,res.rows do
+      for c = 1,res.cols do
+         -- collect
+	 for k = 1,#arg do v[k] = arg[k][r][c] end
+	 -- calc
+	 res[r][c] = fn(Ver.unpack(v))
+      end
+   end
+   return res
+end
+matrix.about[matrix.apply] = {'apply(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
 
 --- Create copy of matrix.
 --  @param M Source matrix.
@@ -1281,4 +1334,3 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
---TODO: redefine basic functions for matrix arguments
