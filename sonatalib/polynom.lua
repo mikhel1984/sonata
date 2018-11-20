@@ -45,8 +45,8 @@ ans = b ^ 3                   --> Poly {1,3,3,1}
 ans = b:int()                 --> Poly {0.5,1,0}
 
 -- derivative
--- and its value for x=1
 ader = a:der()
+-- and its value for x=1
 ans = ader(1)                 --> 11
 
 -- build polynomial using roots
@@ -56,14 +56,20 @@ ans = Poly.coef(1,-1)         --> Poly {1,0,-1}
 c = a:copy()
 ans = (a == c)                --> true
 
+-- not equal
 ans = (b == c)                --> false
+
+-- find root
+-- near some value
+pp = Poly.coef(2,3)
+ans = pp:NewtonRapson(0)      --~ 2.00
 
 -- find real roots
 e = a:real()
 ans = e[1]                    --~ -1.00
 
 -- fit curve with polynomial
--- of 2 order
+-- of order 2
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly.fit(A,B,2)
@@ -73,7 +79,7 @@ ans = p(10)                   --~ 227.0
 print(a)
 
 -- human-friendly print
--- with variable 's'
+-- with variable 's' (default is 'x')
 d = Poly {2,-2,1}
 ans = d:str('s')              --> '2*s^2-2*s+1'
 
