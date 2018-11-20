@@ -68,9 +68,6 @@ ans = b[2]                      --> 4
 lc.append(b,a)
 ans = b.b                       --> 2
 
--- simple profiler
-lc.profile(round, _pi, 2)
-
 --]]
 
 --	LOCAL
@@ -315,41 +312,6 @@ main._getName_ = function (dbg)
    end
 end
 
---- Count internal calls inside function.
---  Base on example from "Programming in Lua" by Roberto Ierusalimschy.
---  @param fn Function to check.
---  @param ... List of arguments.
-main.profile = function (fn,...)
-   -- prepare storage
-   local counters = {}
-   local names = {}
-   local function hook()
-      local f = debug.getinfo(2, "f").func
-      local count = counters[f]
-
-      if count == nil then 
-         counters[f] = 1
-	 names[f] = debug.getinfo(2, "Sn")
-      else 
-         counters[f] = count+1
-      end
-   end
-
-   -- run
-   debug.sethook(hook, "c")    -- turn on
-   fn(...)
-   debug.sethook()             -- turn off
-
-   -- process results
-   local stat = {}
-   for f, c in pairs(counters) do stat[#stat+1] = {main._getName_(names[f]), c} end
-   table.sort(stat, function (a,b) return a[2] > b[2] end)
-
-   -- show results
-   for _, res in ipairs(stat) do print(res[1], res[2]) end
-end
-about[main.profile] = {"profile(fn,...)", "Count calls inside the function.", lc_help.OTHER}
-
 --- Simple implementation of 'the life'.
 --  Prepare your initial board in form of matrix.
 --  @param board Matrix with 'ones' as live cells.
@@ -461,6 +423,7 @@ about[main.REW] = {"REW()", "Read-evaluate-write Lua commands", lc_help.OTHER}
 
 main.about = about
 
+-- command line arguments of Sonata LC and their processing
 main._args_ = {
 
 -- run tests
@@ -526,12 +489,6 @@ process = function (args)
    local d = os.date('*t')
    main._logFile_ = string.format('ses%d%d%d_%0d%0d.log', d.year, d.month, d.day, d.hour, d.min)
 end,
-exit = false},
-
--- run code for debugging 
-['--dbg'] = {
-description = "Run file 'dbg.lua'",
-process = function (args) dofile('dbg.lua') end,
 exit = false},
 
 -- process files

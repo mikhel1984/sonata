@@ -150,6 +150,40 @@ test.time = function (fn,...)
    return sum * 1000/ n
 end
 
+--- Count internal calls inside function.
+--  Based on example from "Programming in Lua" by Roberto Ierusalimschy.
+--  @param fn Function to check.
+--  @param ... List of arguments.
+test.profile = function (fn,...)
+   -- prepare storage
+   local counters = {}
+   local names = {}
+   local function hook()
+      local f = debug.getinfo(2, "f").func
+      local count = counters[f]
+
+      if count == nil then 
+         counters[f] = 1
+	 names[f] = debug.getinfo(2, "Sn")
+      else 
+         counters[f] = count+1
+      end
+   end
+
+   -- run
+   debug.sethook(hook, "c")    -- turn on
+   fn(...)
+   debug.sethook()             -- turn off
+
+   -- process results
+   local stat = {}
+   for f, c in pairs(counters) do stat[#stat+1] = {main._getName_(names[f]), c} end
+   table.sort(stat, function (a,b) return a[2] > b[2] end)
+
+   -- show results
+   for _, res in ipairs(stat) do print(res[1], res[2]) end
+end
+
 return test
 
 --=========================

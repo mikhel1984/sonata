@@ -490,4 +490,5 @@ if not lc_version then graph.about = nil end
 return graph
 
 --=========================================
--- TODO: add heap to Dijkstra's algorithm
+--TODO: add heap to Dijkstra's algorithm
+--TODO: fix 'direct edges' test

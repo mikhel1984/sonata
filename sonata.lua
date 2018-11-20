@@ -1,4 +1,4 @@
-#!/usr/local/bin/lua -i
+#!/usr/local/bin/lua
 -- Lua based calculator 
 -- This file is a part of 'sonatalib' collection, 2017-2018.
 
