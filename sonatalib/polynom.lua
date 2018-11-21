@@ -191,9 +191,7 @@ polynom.__call = function (p,x) return polynom.val(p,x) end
 --- Create copy of object.
 --  @param P Initial polynomial.
 --  @return Deep copy.
-polynom.copy = function (P)
-   return polynom:init(Ver.move(P,1,#P,1,{}))
-end
+polynom.copy = function (P) return polynom:init(Ver.move(P,1,#P,1,{})) end
 polynom.about[polynom.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
 
 --- P1 + P2
@@ -225,9 +223,7 @@ end
 --  @param P1 First polinomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Difference.
-polynom.__sub = function (P1,P2)
-   return reduce(P1 + (-P2))
-end
+polynom.__sub = function (P1,P2) return reduce(P1 + (-P2)) end
 
 --- P1 * P2
 --  @param P1 First polinomial or number.
@@ -345,9 +341,7 @@ polynom.about[polynom.coef] = {"coef(...)", "Return polynomial with given roots.
 --- String representation.
 --  @param P Polynomial object.
 --  @return String with coefficients.
-polynom.__tostring = function (P)
-   return table.concat(P,' ')
-end
+polynom.__tostring = function (P) return table.concat(P,' ') end
 
 --- Represent polynomial in "natural" form.
 --  @param P Source polynomial.

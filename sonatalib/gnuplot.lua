@@ -208,9 +208,7 @@ end
 --  @param self Pointer to parent table.
 --  @param o Talbe with parameters or nil.
 --  @return New 'gnuplot' object.
-gnuplot.new = function (self,o)
-   return setmetatable(o or {}, self)
-end
+gnuplot.new = function (self,o) return setmetatable(o or {}, self) end
 
 --- Get copy of graph options.
 --  @param G Initial table.

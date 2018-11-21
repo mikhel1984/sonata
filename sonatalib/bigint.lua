@@ -434,9 +434,7 @@ bigint.about[bigint.str] = {"str(B[,n])", "More readable string representation o
 --- Float number representation.
 --  @param v Bigint object.
 --  @return Integer if possible, otherwise float point number.
-bigint.tonumber = function (B)
-   return tonumber(tostring(B))
-end
+bigint.tonumber = function (B) return tonumber(tostring(B)) end
 bigint.about[bigint.tonumber] = {"tonumber(N)", "Represent current big integer as number if it possible.", help.OTHER}
 
 --- B!
@@ -478,4 +476,4 @@ if not lc_version then bigint.about = nil end
 return bigint
 
 --=================================
--- TODO: work with different bases
+--TODO: work with different bases

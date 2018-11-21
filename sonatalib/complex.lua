@@ -140,25 +140,19 @@ complex.__index = complex
 --  @param re Real part.
 --  @param im Imaginary part, default is 0.
 --  @return Complex number.
-complex.new = function (self, re, im)   
-   return setmetatable({re, im or 0}, self)
-end
+complex.new = function (self, re, im)   return setmetatable({re, im or 0}, self) end
 
 --- Create complex number from trigonometric representation.
 --  @param mod Module.
 --  @param arg Argument.
 --  @return Complex number.
-complex.trig = function (mod,arg)
-   return complex:new(mod*math.cos(arg), mod*math.sin(arg))
-end
+complex.trig = function (mod,arg) return complex:new(mod*math.cos(arg), mod*math.sin(arg)) end
 complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle."}
 
 --- Create copy of the complex number.
 --  @param C Source value.
 --  @return Complex number.
-complex.copy = function (Z)
-   return complex:new(Z[REAL], Z[IMAG])
-end
+complex.copy = function (Z) return complex:new(Z[REAL], Z[IMAG]) end
 complex.about[complex.copy] = {"copy(Z)", "Create copy of the complex number.", help.OTHER}
 
 --- Correct arguments.
@@ -226,9 +220,7 @@ end
 --- -Z
 --  @param Z Complex number.
 --  @return Negative value.
-complex.__unm = function (Z)
-   return complex:new(-Z[1], -Z[2])
-end
+complex.__unm = function (Z) return complex:new(-Z[1], -Z[2]) end
 
 complex.arithmetic = 'arithmetic'
 complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
@@ -278,9 +270,7 @@ complex.about[complex.imag] = {"imag(Z)", "Return the imaginary part.", help.OTH
 --- String representation.
 --  @param Z Complex number.
 --  @return String with complex number elements.
-complex.__tostring = function (Z)
-   return string.format("%.3f%+.3fi", Z[REAL], Z[IMAG])
-end
+complex.__tostring = function (Z) return string.format("%.3f%+.3fi", Z[REAL], Z[IMAG]) end
 
 --- Square root with possibility of complex result.
 --  @param Z Real or complex number.
@@ -343,25 +333,19 @@ complex.about[complex.tan] = {"tan(Z)", "Return tangent of a complex number.", F
 --- Hyperbolic sinus
 --  @param Z Complex number.
 --  @return Complex hyperbolic sinus.
-complex.sinh = function (Z)
-   return 0.5*(complex.exp(Z)-complex.exp(-Z))
-end
+complex.sinh = function (Z) return 0.5*(complex.exp(Z)-complex.exp(-Z)) end
 complex.about[complex.sinh] = {"sinh(Z)", "Return hyperbolic sinus of a complex number.", FUNCTIONS}
 
 --- Hyperbolic cosine
 --  @param Z Complex number.
 --  @return Complex hyperbolic cosine.
-complex.cosh = function (Z)
-   return 0.5*(complex.exp(Z)+complex.exp(-Z))
-end
+complex.cosh = function (Z) return 0.5*(complex.exp(Z)+complex.exp(-Z)) end
 complex.about[complex.cosh] = {"cosh(Z)", "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
 
 --- Hyperbolic tangent
 --  @param Z Complex number.
 --  @return Complex hyperbolic tangent.
-complex.tanh = function (Z)
-   return complex.sinh(Z) / complex.cosh(Z)
-end
+complex.tanh = function (Z) return complex.sinh(Z) / complex.cosh(Z) end
 complex.about[complex.tanh] = {"tanh(Z)", "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
 -- Imaginary unit
@@ -419,4 +403,4 @@ if not lc_version then complex.about = nil end
 return complex
 
 --==========================
--- TODO: define inverse trigonometric complex functions
+--TODO: define inverse trigonometric complex functions

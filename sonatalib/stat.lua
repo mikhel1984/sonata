@@ -36,16 +36,10 @@ tmp = Stat.freq(X)
 ans = tmp[3]                      --> 3
 
 -- central moment
-ans = Stat.cmoment(2,X)           --~ 2.234
-
--- non-central moment
-ans = Stat.moment(3,X,W)          --~ 61.875
+ans = Stat.moment(2,X)           --~ 2.234
 
 -- summ of elements
 ans = Stat.sum(X)                 --> 27
-
--- corrected standard deviation
-ans = Stat.stdcorr(X)             --~ 1.598
 
 -- minimum value
 ans = Stat.min(X)                 --> 1
@@ -54,7 +48,7 @@ ans = Stat.min(X)                 --> 1
 ans = Stat.geomean(X)             --~ 2.995
 
 -- harmonic mean
-ans = Stat.harmean(X,W)           --~ 2.567
+ans = Stat.harmmean(X,W)           --~ 2.567
 
 -- find histogram
 h = Stat.hyst(X,4)
@@ -113,8 +107,8 @@ else
 end
 
 --- Sum of all elements.
---    @param t Table with numbers.
---    @return Sum.
+--  @param t Table with numbers.
+--  @return Sum.
 stat.sum = function (t)
    local s = 0
    for i = 1, #t do s = s+t[i] end
@@ -123,9 +117,9 @@ end
 stat.about[stat.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
 
 --- Average value.
---    @param t Table with numbers.
---    @param w Table with weight. Can be omitted.
---    @return Average.
+--  @param t Table with numbers.
+--  @param w Table with weight. Can be omitted.
+--  @return Average.
 stat.mean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -140,22 +134,10 @@ stat.mean = function (t, w)
 end
 stat.about[stat.mean] = {"mean(t[,w])", "Calculate average value. Weights are can be used.", }
 
---- Corrected value of standard deviation and variance.
---    @param t Table of numbers.
---    @return Standard deviation, variance.
-stat.stdcorr = function (t)
-   local mean = stat.mean(t)
-   local sq, n = 0, #t
-   for i = 1,#t do sq = sq + (t[i]-mean)^2 end
-   local sigma = math.sqrt(sq/(n-1))
-   return sigma, sigma/math.sqrt(n)
-end
-stat.about[stat.stdcorr] = {"stdcorr(t)", "Corrected value of standard deviation and variance.", }
-
 --- Standard deviation and variance.
---    @param t Table of numbers.
---    @param w Table of weights.
---    @return Standard deviation, variance.
+--  @param t Table of numbers.
+--  @param w Table of weights.
+--  @return Standard deviation, variance.
 stat.std = function (t, w)
    local mean = stat.mean(t,w)
    local disp = 0
@@ -175,8 +157,8 @@ end
 stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weights are can be used.", }
 
 --- Maximum value.
---    @param t Table of numbers.
---    @return Maximum value and its index.
+--  @param t Table of numbers.
+--  @return Maximum value and its index.
 stat.max = function (t)
    local m, k = t[1], 1
    for i = 2, #t do
@@ -187,8 +169,8 @@ end
 stat.about[stat.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
 
 --- Minimum value.
---    @param t Table of numbers.
---    @return Minimum value and its index.
+--  @param t Table of numbers.
+--  @return Minimum value and its index.
 stat.min = function (t)
    local m, k = t[1], 1
    for i = 2, #t do
@@ -199,9 +181,9 @@ end
 stat.about[stat.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
 
 --- Geometrical mean.
---    @param t Table of numbers.
---    @param w Table of weights. Can be omitted.
---    @return Geometrical mean.
+--  @param t Table of numbers.
+--  @param w Table of weights. Can be omitted.
+--  @return Geometrical mean.
 stat.geomean = function (t, w)
    if w then
       local st, sw = 0, 0
@@ -219,10 +201,10 @@ end
 stat.about[stat.geomean] = {"geomean(t[,w])", "Geometrical mean.", help.OTHER}
 
 --- Harmonic mean.
---    @param t Table of numbers.
---    @param w Table of weights. Can be omitted.
---    @return Harmonic mean.
-stat.harmean = function (t, w)
+--  @param t Table of numbers.
+--  @param w Table of weights. Can be omitted.
+--  @return Harmonic mean.
+stat.harmmean = function (t, w)
    if w then
       local st, sw = 0, 0
       for i = 1,#t do
@@ -236,11 +218,11 @@ stat.harmean = function (t, w)
       return #t / h
    end
 end
-stat.about[stat.harmean] = {"harmean(t[,w])", "Harmonic mean.", help.OTHER}
+stat.about[stat.harmmean] = {"harmmean(t[,w])", "Harmonic mean.", help.OTHER}
 
 --- Find median.
---    @param p Table of numbers.
---    @return Value of median.
+--  @param p Table of numbers.
+--  @return Value of median.
 stat.median = function (p)
    local len = #p
    local t = Ver.move(p,1,len,1,{})
@@ -255,8 +237,8 @@ end
 stat.about[stat.median] = {"median(t)", "List median.", }
 
 --- Frequency of elements.
---    @param t Table of numbers.
---    @return Table where keys are elements and values are their frequencies.
+--  @param t Table of numbers.
+--  @return Table where keys are elements and values are their frequencies.
 stat.freq = function (t)
    local tmp = {}
    for _, v in ipairs(t) do
@@ -267,37 +249,25 @@ end
 stat.about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", }
 
 --- Central moment.
---    @param n Order of the moment.
---    @param x Table of numbers.
---    @param p Table of weights. Can be omitted.
---    @return Central moment value.
-stat.cmoment = function (n, x, p)
+--  @param n Order of the moment.
+--  @param x Table of numbers.
+--  @param p Table of weights. Can be omitted.
+--  @return Central moment value.
+stat.moment = function (n, x, p)
    local pk, m = 1/#x, 0
    for i = 1,#x do m = m + x[i]*(p and p[i] or pk) end
    local mu = 0
    for i = 1,#x do mu = mu + (x[i]-m)^n*(p and p[i] or pk) end
    return mu
 end
-stat.about[stat.cmoment] = {"cmoment(n,x[,p])", "Central moment of x order n, p is a list of weights.", }
-
---- Non-central moment.
---    @param n Order of the moment.
---    @param x Table of numbers.
---    @param p Table of weights. Can be omitted.
---    @return Non-central moment value.
-stat.moment = function (n, x, p)
-   local pk, m = 1/#x, 0
-   for i = 1,#x do m = m + (x[i])^n*(p and p[i] or pk) end
-   return m
-end
-stat.about[stat.moment] = {"moment(n,x[,p])", "Moment of x order n, p is a list of weights.", }
+stat.about[stat.moment] = {"moment(n,x[,p])", "Central moment of x order n, p is a list of weights.", }
 
 --- Histogram of the data distribution.
---    @param t Data table.
---    @param N Number of intervals (default is 10).
---    @param a Low boundary (default is the minimum value).
---    @param b High boundary (default is the maximum value).
---    @return Table, where X is scale and Y is frequency.
+--  @param t Data table.
+--  @param N Number of intervals (default is 10).
+--  @param a Low boundary (default is the minimum value).
+--  @param b High boundary (default is the maximum value).
+--  @return Table, where X is scale and Y is frequency.
 stat.hyst = function (t,N,a,b)
    -- find limits
    if not (a and b) then
@@ -337,9 +307,7 @@ stat.about[stat.hyst] = {"hyst(data[,N[,a,b]])", "Find hystogram for given data 
 --    @param x Value.
 --    @param lam Mean parameter.
 --    @return Cumulative value.
-stat.poisscdf = function (x,lam)
-   return stat.lc_special.gammq(x+1,lam)
-end
+stat.poisscdf = function (x,lam) return stat.lc_special.gammq(x+1,lam) end
 stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution.", DISTRIB}
 
 --- Poisson density function.
@@ -359,9 +327,7 @@ stat.about[stat.poisspdf] = {"poisspdf(x,lam)", "Poisson distribution density.",
 --    @param x Value.
 --    @param v Degree of freedom.
 --    @return Cumulative value.
-stat.chi2cdf = function (x,v)
-   return stat.lc_special.gammp(v/2,x/2)
-end
+stat.chi2cdf = function (x,v) return stat.lc_special.gammp(v/2,x/2) end
 stat.about[stat.chi2cdf] = {"chi2cdf(x,v)", "Chi-square cumulative distribution.", DISTRIB}
 
 --- Chi-square density function.
@@ -455,4 +421,5 @@ if not lc_version then stat.about = nil end
 return stat
 
 --====================================
--- TODO: binomial distribution
+--TODO: binomial distribution
+--TODO: hyst -> histcounts

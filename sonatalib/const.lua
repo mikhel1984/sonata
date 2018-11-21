@@ -84,3 +84,5 @@ const.about[const.EuMa] = {"EuMa", "Difference between harmonic series and the n
 if not lc_version then const.about = nil end
 
 return const
+
+--============================================

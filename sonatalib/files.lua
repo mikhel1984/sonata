@@ -192,6 +192,6 @@ if not lc_version then files.about = nil end
 return files
 
 --==================================
--- TODO: improve dsv read/write according the specification
--- TODO: fix export negative and fractional keys
--- TODO: json read/write
+--TODO: improve dsv read/write according the specification
+--TODO: fix export negative and fractional keys
+--TODO: json read/write

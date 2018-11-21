@@ -250,13 +250,13 @@ end
 --- Get value or evaluate expression in brackets.
 --  @param str Expression.
 --  @return Table of units and string rest.
-units.getExpr = function (str)
+units._getExpr_ = function (str)
    if #str == 0 then return {}, "" end
    -- check for brackets
    local expr, rest = string.match(str, '^(%b())(.*)')
    if expr then
       -- evaluate
-      local res = units.getTerm(string.match(expr,'%((.+)%)'))
+      local res = units._getTerm_(string.match(expr,'%((.+)%)'))
       return res, rest
    else
       -- return table with units
@@ -268,8 +268,8 @@ end
 --- Evaluate expression a^b.
 --  @param str Expression.
 --  @return Table of units and string rest.
-units.getPow = function (str)
-   local res, rest, num = units.getExpr(str)
+units._getPow_ = function (str)
+   local res, rest, num = units._getExpr_(str)
    if string.byte(rest) == C_POW then
       -- get power and evaluate
       num, rest = string.match(rest, '%^(-?[%d%.]+)(.*)')
@@ -281,13 +281,13 @@ end
 --- Evaluate a * b.
 --  @param str Expression.
 --  @return Table of units and string rest.
-units.getTerm = function (str)
-   local res, rest = units.getPow(str)
+units._getTerm_ = function (str)
+   local res, rest = units._getPow_(str)
    while string.byte(rest) == C_PROD or string.byte(rest) == C_RAT do
       -- while get * or / get terms and evaluate
       local sign, tmp
       sign, rest = string.match(rest, "([%*/])(.*)")
-      tmp, rest = units.getPow(rest)
+      tmp, rest = units._getPow_(rest)
       op[sign](res, tmp)
    end
    return res, rest
@@ -296,8 +296,8 @@ end
 --- Parse units expression.
 --  @param str Initial string with units.
 --  @return Reduced list of units.
-units.parse = function (str)
-   local res = units.getTerm(str)
+units._parse_ = function (str)
+   local res = units._getTerm_(str)
    return reduce(res)
 end
 
@@ -313,7 +313,7 @@ units.new = function (self, v,u)
       if type(v) == 'string' then v,u = 1,v else u = "" end
    end
    if not units.mem_keys[u] then
-      units.mem_keys[u] = toKey(units.parse(u))
+      units.mem_keys[u] = toKey(units._parse_(u))
    end
    return setmetatable({value=v, key=units.mem_keys[u]}, self)
 end
@@ -366,7 +366,7 @@ end
 --- Simplify units representation.
 --  @param U Initial units object.
 --  @return Replace all unit to its representation if it is possible.
-units.toAtom = function (U)
+units._toAtom_ = function (U)
    local t, res = fromKey(U.key), U.value
    local kold, knew = "", U.key
    while kold ~= knew do                            -- while can be expanded
@@ -409,8 +409,8 @@ units._unitConvert_ = function (U, toKey)
    if units._isCompatible_(U.key, res.key) then
       res.value = units._valConvert_(U.value, U.key, res.key)
    else
-      local v1,u1 = units.toAtom(U)
-      local v2,u2 = units.toAtom(res)
+      local v1,u1 = units._toAtom_(U)
+      local v2,u2 = units._toAtom_(res)
       if units._isCompatible_(u1,u2) then
          res.value = units._valConvert_(v1/v2, u1, u2)
       else
@@ -525,7 +525,7 @@ units.__eq = function (U1,U2)
    return equal(U1.value, tmp.value)
 end
 
---- U1 < b
+--- U1 < U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return Result of comparison.
@@ -536,7 +536,7 @@ units.__lt = function (U1,U2)
    return U1.value < U2.value 
 end
 
---- U1 <= b
+--- U1 <= U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return Result of comparison.
@@ -583,15 +583,12 @@ units.__tostring = function (U)
    return U.value .. ' ' .. num .. denom
 end
 
---- #U
---  @param U Unit object.
---  @return Current value.
-units.__len = function (U) return U.value end
-
 --- Value of the unit object.
+--  The same as #U.
 --  @param U Unit object.
 --  @return Value.
 units.val = function (U) return U.value end
+units.__len = units.val
 
 --- Convert using v['new_units'] notation.
 --  @param U Initial unit object.

@@ -95,6 +95,7 @@ log = math.log;    about[log] = {"log(x)", "Natural logarithm."}
 sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root."}
 max = math.max;    about[max] = {"max(...)", "Maximum number."}
 min = math.min;    about[min] = {"min(...)", "Minimum number."}
+
 -- Trigonometrical
 sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", TRIG}
 cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", TRIG}
@@ -104,6 +105,7 @@ acos = math.acos;  about[acos] = {"acos(x)", "Inverse cosine x.", TRIG}
 atan = math.atan;  about[atan] = {"atan(x)", "Inverse tangent x.", TRIG}
 atan2 = function (y,x) return math.atan(y,x) end 
 about[atan2] = {"atan2(y,x)", "Inverse tangent of y/x, use signs.", TRIG}
+
 -- Hyperbolic
 cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
 about[cosh] = {"cosh(x)", "Hyperbolic cosine.", HYP}
@@ -111,33 +113,36 @@ sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
 about[sinh] = {"sinh(x)", "Hyperbolic sinus.", HYP}
 tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
 about[tanh] = {"tanh(x)", "Hyperbolic tangent.", HYP}
+
 -- Angles 
 rad2deg = math.deg;    about[rad2deg] = {"rad2deg(x)", "Convert radians to degrees."}
 deg2rad = math.rad;    about[deg2rad] = {"deg2rad(x)", "Convert degrees to radians."}
+
 -- Rounding
 floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", lc_help.OTHER}
 ceil = math.ceil;   about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", lc_help.OTHER}
+
 -- Constants
 _pi = math.pi;      about[_pi] = {"_pi", "Number pi.", lc_help.CONST}
 _e = math.exp(1.0); about[_e] = {"_e", "Euler number.", lc_help.CONST}
-
+-- result 
 _ans = 0;           about[_ans] = {"_ans", "Result of the last operation."}
 
 
 log10 = function (x) return math.log(x)/main._LOG10 end
 about[log10] = {"log10(x)", "Decimal logarithm."}
 
+-- random
 rand = function () return math.random() end
 about[rand] = {"rand()", "Random number between 0 and 1."}
 randi = function (N) return math.random(1,N) end
 about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
--- hyperbolic inverse sine
+
+-- hyperbolic inverse 
 asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
 about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
--- hyperbolic arc cosine
 acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
 about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
--- hyperbolic inverse tangent
 atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
 about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
@@ -224,9 +229,7 @@ about[main.flip] = {"lc.flip(t[,N])", "Print Lua table in user-friendly form. As
 
 --- Print 'scientific' representation of the number
 --  @param x Number to show.
-main.sci = function (x)
-   print(string.format('%.2E',x))
-end
+main.sci = function (x) print(string.format('%.2E',x)) end
 about[main.sci] = {"lc.sci(x)", "'Scientific' representation of the number.", lc_help.OTHER}
 
 --- Show type of the object.
@@ -430,7 +433,7 @@ main._args_ = {
 ['-t'] = '--test',
 ['--test'] = {
 description = 'Apply unit tests to desired module, or all modules if the name is not defined.',
-process = function (args)
+process     = function (args)
    local Test = require 'sonatalib.test'
    if args[2] then
       Test.module(string.format('sonatalib/%s.lua',args[2]))
@@ -447,7 +450,7 @@ exit = true},
 ['-L'] = '--lng',
 ['--lng'] = {
 description = 'Create/update file for localization.',
-process = function (args)
+process     = function (args)
    if args[2] then
       lc_help.prepare(args[2], import)
    else 
@@ -460,32 +463,28 @@ exit = true},
 ['-D'] = '--doc',
 ['--doc'] = {
 description = 'Create/update documentation file.',
-process = function () lc_help.generateDoc(LC_LOCALIZATION, import) end,
-exit = true},
+process     = function () lc_help.generateDoc(LC_LOCALIZATION, import) end,
+exit        = true},
 
 -- new module
 ['-N'] = '--new',
 ['--new'] = {
 description = 'Generate template for a new module.',
-process = function (args)
-   lc_help.newModule(args[2],args[3],args[4])
-end,
-exit = true},
+process     = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
+exit        = true},
 
 -- evaluate code in text file
 ['-e'] = '--eval',
 ['--eval'] = {
 description = 'Read text file and evaluate expressions in ##..##.',
-process = function (args)
-   main.evalText(args[2],args[3])
-end,
-exit = true},
+process     = function (args) main.evalText(args[2],args[3]) end,
+exit        = true},
 
 -- save session to log file
 ['-l'] = '--log',
 ['--log'] = {
 description = "Save session into the log file.",
-process = function (args)
+process     = function (args)
    local d = os.date('*t')
    main._logFile_ = string.format('ses%d%d%d_%0d%0d.log', d.year, d.month, d.day, d.hour, d.min)
 end,
@@ -494,9 +493,7 @@ exit = false},
 -- process files
 ['no flags'] = {
 description = 'Evaluate file(s).',
-process = function (args)
-   for i = 1,#args do dofile(args[i]) end
-end,
+process = function (args) for i = 1,#args do dofile(args[i]) end end,
 exit = true},
 
 -- 
@@ -537,6 +534,6 @@ end
 return main
 
 --===============================
--- TODO: add step-by-step execution
--- TODO: define API for each module
--- TODO: add constant parameters
+--TODO: add step-by-step execution
+--TODO: define API for each module
+--TODO: add constant parameters

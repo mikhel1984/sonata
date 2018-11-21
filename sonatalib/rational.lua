@@ -118,9 +118,7 @@ end
 --- Create copy of the rational number.
 --  @param R Source value.
 --  @return Rational number.
-rational.copy = function (R)
-   return setmetatable({R[NUM], R[DENOM]}, rational)
-end
+rational.copy = function (R) return setmetatable({R[NUM], R[DENOM]}, rational) end
 rational.about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
 
 --- Argument type correction.
@@ -174,9 +172,7 @@ end
 --- -R
 --  @param R Rational number.
 --  @preturn Opposite rational number.
-rational.__unm = function (R)
-   return rational:new(-R[1], R[2])
-end
+rational.__unm = function (R) return rational:new(-R[1], R[2]) end
 
 --- R1 ^ R2
 --  @param R1 Rational or real number.
@@ -228,9 +224,7 @@ rational.about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R
 --- String representation.
 --  @param R Rational number.
 --  @return String with numerator and denominator.
-rational.__tostring = function (R)
-   return numStr(R[NUM])..'/'..numStr(R[DENOM])
-end
+rational.__tostring = function (R) return numStr(R[NUM])..'/'..numStr(R[DENOM]) end
 
 --- Float point representation.
 --  @param R Rational number.
@@ -302,4 +296,4 @@ if not lc_version then rational.about = nil end
 return rational
 
 --======================================
--- TODO: create module for calculations with integer numbers, add prime and gcd
+--TODO: create module for calculations with integer numbers, add prime and gcd

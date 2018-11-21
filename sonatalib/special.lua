@@ -47,20 +47,20 @@ ans = Spec.gammq(1.5, 4.8)         --~ 2.23E-2
 ans = Spec.gammainc(2.1, 0.3, 'upper') --~ 1.942E-2
 
 -- Bessel functions
-ans = Spec.bessj(3, 1.5)           --~ 6.096E-2
+ans = Spec.besselj(3, 1.5)         --~ 6.096E-2
 
-ans = Spec.bessy(4, 0.8)           --~ -78.751
+ans = Spec.bessely(4, 0.8)         --~ -78.751
 
-ans = Spec.bessi(2, -3.6)          --~ 4.254
+ans = Spec.besseli(2, -3.6)          --~ 4.254
 
-ans = Spec.bessk(5, 5)             --~ 3.2706E-2
+ans = Spec.besselk(5, 5)           --~ 3.2706E-2
 
 -- Legendre function
-lst = Spec.Legendre(3, 0.5)
+lst = Spec.legendre(3, 0.5)
 ans = lst[1]                       --~ -0.4375
 
 -- Dawson function
-ans = Spec.Dawson(3.3)             --~ 0.1598
+ans = Spec.dawson(3.3)             --~ 0.1598
 
 --]]
 
@@ -325,7 +325,7 @@ special.about[special.erfc] = {"erfc(x)", "Complementary error function."}
 special.erf = function (x) return 1-special.erfc(x) end
 special.about[special.erf] = {"erf(x)", "Error function."}
 
---- Legendre coefficient.
+--- legendre coefficient.
 --  @param n Total order.
 --  @param m Current order.
 --  @param x Real number.
@@ -352,28 +352,28 @@ special._plgndr_ = function (n,m,x)
    end
 end
 
---- List of Legendre coefficients.
+--- List of legendre coefficients.
 --  @param n Polynomial order.
 --  @param x Real number.
 --  @return Table with coefficients.
-special.Legendre = function (n,x)
+special.legendre = function (n,x)
    assert(n >= 0 and math.abs(x) <= 1, 'Bad arguments')
    local res = {}
    for i = 1,n+1 do res[i] = special._plgndr_(n,i-1,x) end
    return res
 end
-special.about[special.Legendre] = {"Legendre(n,x)","Return list of Legendre polynomial coefficients."}
+special.about[special.legendre] = {"legendre(n,x)","Return list of legendre polynomial coefficients."}
 
---- Dawson integral.
+--- dawson integral.
 --  @param x Real number.
 --  @return Integral value.
-special.Dawson = function (x)
+special.dawson = function (x)
    local NMAX,H,A1,A2,A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
     
-   if not special._c_Dawson then 
-      -- List of Dawson function coefficients.
-      special._c_Dawson = {0,0,0,0,0,0}
-      for i = 1,NMAX do special._c_Dawson[i] = math.exp(-((2.0*i-1.0)*H)^2) end
+   if not special._c_dawson then 
+      -- List of dawson function coefficients.
+      special._c_dawson = {0,0,0,0,0,0}
+      for i = 1,NMAX do special._c_dawson[i] = math.exp(-((2.0*i-1.0)*H)^2) end
    end
    local xx = math.abs(x)
    if xx < 0.2 then 
@@ -386,13 +386,13 @@ special.Dawson = function (x)
       local e2,d1 = e1*e1, n0+1
       local d2,sum = d1-2.0, 0.0
       for i = 1,NMAX do
-         sum = sum + special._c_Dawson[i]*(e1/d1+1.0/(d2*e1))
+         sum = sum + special._c_dawson[i]*(e1/d1+1.0/(d2*e1))
 	 d1,d2,e1 = d1+2.0, d2-2.0, e1*e2
       end
       return 0.5641895835*sum*(x>=0 and math.exp(-xp*xp) or -math.exp(-xp*xp))
    end
 end
-special.about[special.Dawson] = {"Dawson(x)", "Dawson integral."}
+special.about[special.dawson] = {"dawson(x)", "dawson integral."}
 
 --***** Bessel functions ******
 
@@ -483,7 +483,7 @@ end
 --  @param n Polynomial order.
 --  @param x Nonnegative real number.
 --  @return Polynomial value
-special.bessy = function (n,x)
+special.bessely = function (n,x)
    if x <= 0 then error('Positive value is expected!') end
    if not (n >= 0 and Ver.isInteger(n)) then error('Non-negative integer order is expected!') end
    if n == 0 then return special._bessy0_(x) end
@@ -496,13 +496,13 @@ special.bessy = function (n,x)
    end
    return by
 end
-special.about[special.bessy] = {"bessy(n,x)","Bessel function of the second kind.", BESSEL}
+special.about[special.bessely] = {"bessely(n,x)","Bessel function of the second kind.", BESSEL}
 
 --- Bessel function of the first kind
 --  @param n Polynomial order.
 --  @param x Real number.
 --  @return Polynomial value
-special.bessj = function (n,x)
+special.besselj = function (n,x)
    if not (n >= 0 and Ver.isInteger(n)) then error('Non-negative integer order is expected!') end
    if n == 0 then return special._bessj0_(x) end
    if n == 1 then return special._bessj1_(x) end
@@ -541,7 +541,7 @@ special.bessj = function (n,x)
    end
    return (x < 0.0 and (n % 2)==1) and -ans or ans
 end
-special.about[special.bessj] = {"bessj(n,x)", "Bessel function of the first kind.", BESSEL}
+special.about[special.besselj] = {"besselj(n,x)", "Bessel function of the first kind.", BESSEL}
 
 --- Modified Bessel function I0.
 --  @param x Real number.
@@ -607,7 +607,7 @@ end
 --  @param n Order.
 --  @param x Positive value.
 --  @return Kn(x).
-special.bessk = function (n,x)
+special.besselk = function (n,x)
    if x <= 0 then error("Positiva value is expected!") end
    if not (n >= 0 and Ver.isInteger(n)) then error("Non-negative integer order is expected!") end
    if n == 0 then return special._bessk0_(x) end
@@ -618,13 +618,13 @@ special.bessk = function (n,x)
    end
    return bk
 end
-special.about[special.bessk] = {"bessk(n,x)", "Modified Bessel function Kn(x).", BESSEL}
+special.about[special.besselk] = {"besselk(n,x)", "Modified Bessel function Kn(x).", BESSEL}
 
 --- Modified Bessel function In.
 --  @param n Order.
 --  @param x Real number.
 --  @return In(x).
-special.bessi = function (n,x)
+special.besseli = function (n,x)
    assert(n >= 0 and Ver.isInteger(n), "Non-negative integer order is expected!")
    if n == 0 then return special._bessi0_(x) end
    if n == 1 then return special._bessi1_(x) end
@@ -644,7 +644,7 @@ special.bessi = function (n,x)
    ans = ans*special._bessi0_(x)/bi
    return (x < 0.0 and (n % 2)==1) and -ans or ans
 end
-special.about[special.bessi] = {"bessi(n,x)", "Modified Bessel function In(x).", BESSEL}
+special.about[special.besseli] = {"besseli(n,x)", "Modified Bessel function In(x).", BESSEL}
 
 -- free memory in case of standalone usage
 if not lc_version then special.about = nil end

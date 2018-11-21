@@ -256,48 +256,36 @@ array.about[array.map] = {"map(A,func)", "Apply function of 1 argument. Return n
 --  @param A1 First array.
 --  @param A2 Second array.
 --  @return Array with elementwise sum.
-array.__add = function (A1, A2)
-   return array._apply2_(array._add_, A1, A2)
-end
+array.__add = function (A1, A2) return array._apply2_(array._add_, A1, A2) end
 
 --- A1 - A2
 --  @param A1 First array.
 --  @param A2 Second array.
 --  @return Array with elementwise difference.
-array.__sub = function (A1, A2)
-   return array._apply2_(array._sub_, A1, A2)
-end
+array.__sub = function (A1, A2) return array._apply2_(array._sub_, A1, A2) end
 
 --- -A
 --  @param A Array.
 --  @return Array with inverted sign.
-array.__unm = function (A)
-   return array.map(A, array._unm_)
-end
+array.__unm = function (A) return array.map(A, array._unm_) end
 
 --- A1 * A2
 --  @param A1 First array.
 --  @param A2 Second array.
 --  @return Array with element wise product.
-array.__mul = function (A1, A2)
-   return array._apply2_(array._mul_, A1, A2)
-end
+array.__mul = function (A1, A2) return array._apply2_(array._mul_, A1, A2) end
 
 --- A1 / A2
 --  @param A1 First array.
 --  @param A2 Second array.
 --  @return Array with element wise ratio.
-array.__div = function (A1, A2)
-   return array._apply2_(array._div_, A1, A2)
-end
+array.__div = function (A1, A2) return array._apply2_(array._div_, A1, A2) end
 
 --- A1 ^ A2
 --  @param A1 First array.
 --  @param A2 Second array.
 --  @return Array with element wise power.
-array.__pow = function (A1, A2)
-   return array._apply2_(array._pow_, A1, A2)
-end
+array.__pow = function (A1, A2) return array._apply2_(array._pow_, A1, A2) end
 
 array.arithmetic = 'arithmetic'
 array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.META}
@@ -333,9 +321,7 @@ array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
 --- Get array dimension.
 --  @param A Array object.
 --  @return Table with array size.
-array.dim = function (A)
-   return Ver.move(A.size, 1, #A.size, 1, {})
-end
+array.dim = function (A) return Ver.move(A.size, 1, #A.size, 1, {}) end
 array.about[array.dim] = {"dim(A)", "Return size of array."}
 
 --- Get part of array between two indexes.
@@ -408,17 +394,13 @@ array.about[array.concat] = {"concat(A1,A2,nAxis)", "Array concatenation along t
 --- Method #
 --  @param A Array object.
 --  @return Number of elements.
-array.__len = function (A)
-   return array._capacity_(A)
-end
+array.__len = function (A) return array._capacity_(A) end
 array.about['#array'] = {"#array", "Return maximum number of elements.", help.META}
 
 --- String representation.
 --  @param A Array.
 --  @return String representation of the array.
-array.__tostring = function (A)
-   return 'Array ' .. table.concat(A.size, 'x')
-end
+array.__tostring = function (A) return 'Array ' .. table.concat(A.size, 'x') end
 
 --- Get array slice.
 --  Show sequence of 2D matrices with array elements.

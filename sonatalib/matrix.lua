@@ -353,9 +353,7 @@ end
 --- Matrix triangulation.
 --  @param M Initial matrix.
 --  @return Triangulated matrix.
-matrix.triang = function (M)
-   return matrix._GaussDown_(matrix.copy(M))
-end
+matrix.triang = function (M) return matrix._GaussDown_(matrix.copy(M)) end
 matrix.about[matrix.triang] = {'triang(M)', 'Matrix triangulation produced by Gaussian elimination.', TRANSFORM}
 
 --- Matrix rank.
@@ -475,16 +473,12 @@ end
 --- - M
 --  @param M Matrix object.
 --  @return Matrix where each element has opposite sign.
-matrix.__unm = function (a)
-   return matrix.map(a,fn_unm)
-end
+matrix.__unm = function (a) return matrix.map(a,fn_unm) end
 
 --- Get matrix size.
 --  @param M Matrix.
 --  @return Number of rows and columns.
-matrix.size = function (M)
-   return M.rows, M.cols
-end
+matrix.size = function (M) return M.rows, M.cols end
 matrix.about[matrix.size] = {"size(M)", "Return number or rows and columns."}
 
 --- Apply function to each element.

@@ -20,7 +20,8 @@ a = DS.Stack()
 a:push(1)
 a:push(2)
 -- stack size
-ans = #a                        --> 2
+-- (the same as #a)
+ans = a:size()                  --> 2
 
 -- top value
 ans = a:top()                   --> 2
@@ -49,7 +50,8 @@ b:pushFront(4)
 ans = b:popBack()               --> 2
 
 -- check queue size
-ans = #b                        --> 1
+-- (the same as #b)
+ans = b:size()                  --> 1
 
 -- top value
 ans = b:front()                 --> 4
@@ -89,7 +91,11 @@ ans = d:top()                   --> 1
 dd = d:copy()
 
 -- heap size
-ans = #dd                       --> 3
+-- (equal to #dd)
+ans = dd:size()                 --> 3
+
+-- get heap element
+ans = dd:pop()                  --> 1
 
 -- define elements of the set
 a = DS.Set {1,2,3,4,1}           
@@ -120,11 +126,12 @@ ans = (a == b)                 --> false
 ans = (a < b)                  --> false
 
 -- represent as list
-t = a:table()
+t = a:list()
 ans = a[ t[1] ]                --> true
 
 -- size of the set
-ans = #a                       --> 4
+-- (the same as #a)
+ans = a:size()                 --> 4
 
 ans = a:isEmpty()              --> false
 
@@ -132,8 +139,8 @@ ans = a:isEmpty()              --> false
 d = a:copy()
 ans = (d == a)                 --> true
 
--- generate new set from given
--- use function
+-- generate new set 
+-- using function
 e = a:map(function (x) return x^2 end)
 ans = e[16]                    --> true
 
@@ -169,9 +176,7 @@ struct.Stack.__index = struct.Stack
 --- Constructor for stack data structure.
 --  @param self Parent object.
 --  @return New stack.
-struct.Stack.new = function (self)
-   return setmetatable({}, self)
-end
+struct.Stack.new = function (self) return setmetatable({}, self) end
 
 -- Alias for stack constructor
 setmetatable(struct.Stack, {__call = function (self) return struct.Stack:new() end})
@@ -398,9 +403,8 @@ struct.about[struct.Heap.pop] = {"Heap.pop(H)", "Return top element. For the def
 --- Get top of the heap.
 --  @param H Heap object.
 --  @return Value of the top element.
-struct.Heap.top = function (H)
-   return H[1]
-end
+struct.Heap.top = function (H) return H[1] end
+struct.about[struct.Heap.top] = {'Heap.top(H)', "Return value of the top element.", HEAP}
 
 --- Check for elements in the heap.
 --  @param H Heap object.
@@ -444,28 +448,24 @@ end
 --- Add new element.
 --  @param S Set object.
 --  @param v New element.
-struct.Set.insert = function (S, v)
-   S[v] = true
-end
+struct.Set.insert = function (S, v) S[v] = true end
 struct.about[struct.Set.insert] = {"Set.insert(S,val)", "Insert element into set.", SET}
 
 --- Delete element.
 --  @param S Set object.
 --  @param v Element.
-struct.Set.erase = function (S,v)
-   S[v] = nil
-end
+struct.Set.erase = function (S,v) S[v] = nil end
 struct.about[struct.Set.erase] = {"Set.erase(S,val)", "Remove element from set.", SET}
 
---- Convert into Lua table.
+--- Convert into array.
 --  @param S Set object.
 --  @return List of elements.
-struct.Set.table = function (S)
+struct.Set.list = function (S)
    local res = {}
    for k in pairs(S) do table.insert(res, k) end
    return res
 end
-struct.about[struct.Set.table] = {"Set.table(S)", "Represent set as a table.", SET}
+struct.about[struct.Set.list] = {"Set.list(S)", "Represent set as a list of elements.", SET}
 
 --- Copy of the set.
 --  @param S Initial set.
