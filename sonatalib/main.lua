@@ -56,17 +56,13 @@ lc.flip(a)
 -- show "scientific" view
 lc.sci(1234.56789)
 
--- generate 'vector'
+-- generate 'sequence'
 b = lc.range(3)
 ans = b[3]                      --> 3
 
 -- even numbers
 b = lc.range(2,10,2)
 ans = b[2]                      --> 4
-
--- append a to b
-lc.append(b,a)
-ans = b.b                       --> 2
 
 --]]
 
@@ -269,24 +265,6 @@ main.range = function (from,to,step)
 end
 about[main.range] = {'lc.range([from,]to[,step])','Generate table with sequence of numbers.', lc_help.OTHER}
 
---- Append to table a value or elements of other table.
---  @param t Destination table.
---  @param val New value of another table.
-main.append = function (t,val)
-   if type(val) == 'table' then
-      for k,v in pairs(val) do 
-         if type(k) == 'number' then
-	    t[#t+1] = v
-	 else
-            t[k] = v 
-	 end
-      end
-   else
-      t[#t+1] = val
-   end
-end
-about[main.append] = {'lc.append(tbl,val)','Append value or table to the given table.', lc_help.OTHER}
-
 --- Print lc_help information.
 --  @param fn Function name.
 help = function(fn)   
@@ -375,6 +353,7 @@ main.evalText = function (src,dst)
       print(res)
    end   
 end
+about[main.evalText] = {"lc.evalText(src[,dst])", "Read text file and evaluate expressions in ##..##. Save resuto to dst file, if need.", lc_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'break' to exit this function.
@@ -430,7 +409,7 @@ main.about = about
 main._args_ = {
 
 -- run tests
-['-t'] = '--test',
+['-T'] = '--test',
 ['--test'] = {
 description = 'Apply unit tests to desired module, or all modules if the name is not defined.',
 process     = function (args)
@@ -473,13 +452,6 @@ description = 'Generate template for a new module.',
 process     = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
 exit        = true},
 
--- evaluate code in text file
-['-e'] = '--eval',
-['--eval'] = {
-description = 'Read text file and evaluate expressions in ##..##.',
-process     = function (args) main.evalText(args[2],args[3]) end,
-exit        = true},
-
 -- save session to log file
 ['-l'] = '--log',
 ['--log'] = {
@@ -491,8 +463,8 @@ end,
 exit = false},
 
 -- process files
-['no flags'] = {
-description = 'Evaluate file(s).',
+['default'] = {
+--description = 'Evaluate file(s).',
 process = function (args) for i = 1,#args do dofile(args[i]) end end,
 exit = true},
 
@@ -521,6 +493,7 @@ main._args_.text = function ()
          txt[#txt+1] = string.format('\t%s, %s - %s', k, v, main._args_[v].description)
       end
    end
+   txt[#txt+1] = "\t No flag - Evaluate file(s)."
    txt[#txt+1] = "\nVERSION: "..lc_version
    txt[#txt+1] = ""
    local modules = {}

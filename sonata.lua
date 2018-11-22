@@ -113,7 +113,7 @@ setmetatable(import,
 if #arg > 0 then
    local command = lc._args_[arg[1]]
    if type(command) == 'string' then command = lc._args_[command] end
-   if not command then command = lc._args_['no flags'] end
+   if not command then command = lc._args_['default'] end
    command.process(arg)
    if command.exit then os.exit() end
 end

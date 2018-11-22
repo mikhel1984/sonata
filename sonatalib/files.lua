@@ -29,11 +29,10 @@ ans = tt[2][2]                       --> 5
 s = File.read(nm)
 ans = string.sub(s,1,5)              --> '1;2;3'
 
--- serialize table to file
-a = {1, 2.0, a = 'pqr', b = {3,4,c='abc'}}
-File.tblExport(nm, a)
-
--- deserialize table from file
+-- read table from file
+f = io.open(nm,'w')
+f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
+f:close()
 aa = File.tblImport(nm)
 ans = aa.b.c                         --> 'abc'
 
@@ -51,29 +50,6 @@ for s in File.split(str, '//') do ans = ans+1 end  --> 4
 local Ver = require "sonatalib.versions"
 
 local READ, WRITE = 'read', 'write'
-
--- serialization rules
-local val2str = {
-   ['string'] =   function (x) return string.format('"%s"', x) end,
-   ['number'] =   function (x) return Ver.mathType(x) == 'float' and string.format('%a',x) or string.format('%d',x) end,
-   ['function'] = function (x) x = tostring(x); print('Bad value: '..x); return x end,
-   ['boolean'] =  function (x) return tostring(x) end,
-   ['nil'] =      function (x) return 'nil' end,
-}
-val2str['table'] = function (x) return val2str.tbl(x) end
-val2str['thread'] = val2str['function']
-
---- Table to string conversation.
---  @param t Lua table.
---  @return String representation of the table elements.
-val2str.tbl = function (t)
-   local res = {}
-   for i,val in ipairs(t) do res[i] = val2str[type(val)](val) end
-   for k,val in pairs(t) do
-      if not Ver.isInteger(k) then res[#res+1] = string.format("['%s']=%s", tostring(k), val2str[type(val)](val)) end
-   end
-   return string.format('{%s}', table.concat(res,','))
-end
 
 --	INFO
 
@@ -173,19 +149,6 @@ files.tblImport = function (fName)
 end
 files.about[files.tblImport] = {"tblImport(fName)", "Import Lua table, written into file.", READ}
 
---- Save Lua table to the file.
---  @param fName File name.
---  @param tbl Lua table.
-files.tblExport = function (fName, tbl)
-   assert(fName and tbl, 'Wrong arguments!')
-   local str = val2str.tbl(tbl)
-   local f = assert(io.open(fName,'w'), "Can't create file "..tostring(fName))
-   f:write(str)
-   f:close()
-   print('Done')
-end
-files.about[files.tblExport] = {"tblExport(fName,tbl)", "Save Lua table into file.", WRITE}
-
 -- free memory in case of standalone usage
 if not lc_version then files.about = nil end
 
@@ -193,5 +156,5 @@ return files
 
 --==================================
 --TODO: improve dsv read/write according the specification
---TODO: fix export negative and fractional keys
 --TODO: json read/write
+--TODO: table export
