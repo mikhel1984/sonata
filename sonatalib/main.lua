@@ -278,6 +278,7 @@ help = function(fn)
       local t = {}; for k in pairs(import) do t[#t+1] = k end
       print(table.concat(t, ', '))
    end
+   io.write(lc_help.CRESET)
 end
 
 --- Find function name
@@ -422,9 +423,9 @@ end
 main.evalDemo = function (text)
    local ERROR = lc_help.CERROR.."ERROR: "
    local cmd = ""
-   local sf = require("sonatalib.files")
-   for line in sf.split(text,'\r?\n') do
-      if string.find(line, '^%s-%-%-PAUSE') then 
+   -- read lines
+   for line in string.gmatch(text, '([^\n]+)\r?\n?') do
+      if string.find(line, '^%s*%-%-%s*PAUSE') then 
          -- run dialog
 	 local lcmd, lquit = "", false
 	 local invA, invB = '?> ', '>> '
@@ -433,7 +434,7 @@ main.evalDemo = function (text)
 	    io.write(invite)
 	    lcmd = lcmd .. io.read()
 	    if lcmd == "" then break end  -- continue file evaluation
-            local status, res = _evaluate_(lcmd .. io.read())
+            local status, res = _evaluate_(lcmd)
             if status == EV_RES then
                if res ~= nil then print(res) end
 	       invite = invA; lcmd = ""
@@ -448,7 +449,7 @@ main.evalDemo = function (text)
             end
 	 end
 	 if lquit then break end
-      elseif string.find(line, '^%s-%-%-') then
+      elseif string.find(line, '^%s*%-%-') then
          -- highlight line comments
          io.write(lc_help.CHELP, line, lc_help.CRESET, '\n')
       else
