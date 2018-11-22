@@ -71,6 +71,8 @@ ans = b[2]                      --> 4
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
 
+local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
+
 -- first 11 factorials
 local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
 
@@ -329,7 +331,7 @@ end
 --  separated with ';'. If expression has '=' it just evaluated, otherwise the result will be shown.
 --  @param src Source file.
 --  @param dst File name. If defined, file will be saved in this file.
-main.evalText = function (src,dst)
+main.evalTF = function (src,dst)
    local F = require('sonatalib.files')
    local txt = assert(F.read(src), 'No such file: '..tostring(src))
    local res = string.gsub(txt, '##(.-)##', function (s)
@@ -353,11 +355,35 @@ main.evalText = function (src,dst)
       print(res)
    end   
 end
-about[main.evalText] = {"lc.evalText(src[,dst])", "Read text file and evaluate expressions in ##..##. Save resuto to dst file, if need.", lc_help.OTHER}
+about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expressions in ##..##. Save resuto to dst file, if need.", lc_help.OTHER}
+
+local function _evaluate_(cmd)
+   if cmd == 'quit' then return EV_QUIT end 
+   -- parse 
+   local fn, err = load(cmd)
+   if err then
+      fn, err = load('return '..cmd)
+   end
+   if err then
+      if string.find(err, 'error') then
+         return EV_ERROR, err
+      else
+         return EV_CMD, cmd
+      end
+   else
+      local ok, res = pcall(fn)
+      if ok then 
+	 _ans = res
+	 return EV_RES, res
+      else
+         return EV_ERROR, res
+      end
+   end
+end
 
 --- Read-Evaluate-Write circle as a Lua program.
---  Call 'break' to exit this function.
-main.REW = function (logFile)
+--  Call 'quit' to exit this function.
+main.evalDialog = function (logFile)
    local invA, invB, cmd = lc_help.CMAIN..'>'.._PROMPT, lc_help.CMAIN..'>'.._PROMPT2, ""
    local invite = invA
    local ERROR = lc_help.CERROR.."ERROR: "
@@ -368,41 +394,81 @@ main.REW = function (logFile)
       local d = os.date('*t')
       log:write(string.format('-- LOG(Sonata LC): %d-%d-%d %d:%d\n', d.day, d.month, d.year, d.hour, d.min))
    end
-
+   -- start dialog
    while true do
       io.write(invite)
-      cmd = cmd .. io.read()
-      if cmd == 'quit' then break end
-      -- parse command
-      local fn, err = load(cmd)
-      if err then   -- when print is expected
-         fn, err = load("return "..cmd)
-      end
-      -- process 
-      if not err then
-         local ok, res = pcall(fn)
-	 if ok then
-	    if res ~= nil then _ans = res; print(res) end
-	    -- save to log
-	    if log then
-	       log:write('\n', cmd, '\n')
-	       if res ~= nil then log:write('--[[ ', res, ' ]]\n') end
-	    end
-	 else
-	    print(ERROR, res, lc_help.CRESET)
+      -- command processing
+      local status, res = _evaluate_(cmd .. io.read())
+      if status == EV_RES then
+         if res ~= nil then print(res) end
+	 invite = invA; cmd = ""
+	 if log then
+	    log:write('\n', cmd, '\n')
+	    if res ~= nil then log:write('--[[ ', res, ' ]]\n') end
 	 end
-	 cmd = ""; invite = invA
-      elseif string.find(err, 'error') then
-         print(ERROR, err, lc_help.CRESET)
-	 cmd = ""; invite = invA
-      else
-         invite = invB
+      elseif status == EV_CMD then
+         invite = invB; cmd = res
+      elseif status == EV_ERROR then
+	 print(ERROR, res, lc_help.CRESET)
+	 invite = invA; cmd = ""
+      else -- status == EV_QUIT
+         break
       end
    end
    if log then log:close() end
 end
-about[main.REW] = {"REW()", "Read-evaluate-write Lua commands", lc_help.OTHER}
 
+
+main.evalDemo = function (text)
+   local ERROR = lc_help.CERROR.."ERROR: "
+   local cmd = ""
+   local sf = require("sonatalib.files")
+   for line in sf.split(text,'\r?\n') do
+      if string.find(line, '^%s-%-%-PAUSE') then 
+         -- run dialog
+	 local lcmd, lquit = "", false
+	 local invA, invB = '?> ', '>> '
+	 local invite = invA
+	 while true do
+	    io.write(invite)
+	    lcmd = lcmd .. io.read()
+	    if lcmd == "" then break end  -- continue file evaluation
+            local status, res = _evaluate_(lcmd .. io.read())
+            if status == EV_RES then
+               if res ~= nil then print(res) end
+	       invite = invA; lcmd = ""
+            elseif status == EV_CMD then
+               invite = invB; lcmd = res
+            elseif status == EV_ERROR then
+	       print(ERROR, res, lc_help.CRESET)
+	       invite = invA; lcmd = ""
+            else --  EV_QUIT
+	       lquit = true
+               break
+            end
+	 end
+	 if lquit then break end
+      elseif string.find(line, '^%s-%-%-') then
+         -- highlight line comments
+         io.write(lc_help.CHELP, line, lc_help.CRESET, '\n')
+      else
+         -- print line and evaluate
+         io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
+	 local status, res = _evaluate_(string.format('%s %s', cmd, line))
+	 if status == EV_RES then
+	    if res ~= nil then print(res) end
+	    cmd = ""
+	 elseif status == EV_CMD then
+	    cmd = res
+	 else -- EV_ERROR 
+	    print(ERROR, res, lc_help.CRESET)
+	    break
+	 end
+      end
+   end
+end
+
+-- save link to help info
 main.about = about
 
 -- command line arguments of Sonata LC and their processing
