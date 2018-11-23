@@ -1,0 +1,93 @@
+-- Wellcome to Sonata Lua Calculus!
+-- Here you can find some tips about it.
+-- Print 'quit' to exit the program. 
+-- Press "Enter" to continue...
+-- PAUSE
+
+--	BASICS
+-- Available functions can be listed using:
+help()
+-- PAUSE
+
+-- Information about function can be obtained as
+help(round)
+-- PAUSE
+
+-- By the way, this is an interactive mode.
+-- You can enter Lua valid expressioin after '?>'
+-- and see the result. For example, try to get help
+-- for any other function. 
+-- PAUSE
+
+-- You can calculate arithmetical expressions
+-- and create variables. 
+x = 3
+2*x^2+3*x+5
+-- Available constants:
+_pi
+_e
+-- Last result is saved to variable
+_ans
+-- PAUSE
+
+--	MODULES
+-- Additional modules could be loaded 
+-- with the help of "import" function.
+-- List of modules, aliases and the current status:
+help(import)
+-- PAUSE 
+
+-- In order to load module, enter 
+--    import 'name'
+-- or
+--    import('name')
+-- Module will be available for its alias.
+-- For example
+import 'array'
+a = Arr.rand {2,2,2}      -- new array with size 2x2x2
+-- Functions can be called as methods of class
+Arr.get(a, {1,1,1})
+-- or object
+a:get{1,1,1}              -- get element with index (1,1,1)
+-- PAUSE
+
+-- Several modules could be loaded as
+--    import 'name1' 'name2'
+-- or
+--    import {'name1','name2'}
+-- or
+--    import({'name1','name2'}
+import 'complex' 'bigint'
+-- PAUSE
+
+-- It is possible to use alias instead of module name
+import 'Num'
+-- PAUSE
+
+-- In order to load all modules, enter
+import 'all'
+-- PAUSE
+
+-- Some modules modify the program environment.
+-- For example, if the 'complex' is loaded,
+-- you can can work with complex unit
+_i
+-- and some functions can work with it
+sqrt(-4)
+exp(3+_i*4)
+-- PAUSE
+
+--	Breif module overview
+-- PAUSE
+--	ARRAY
+-- Provides basic operations with arrays,
+-- i.e. multidimensional ordered sequence of elements.
+a = Arr {2,3,1}        -- create empty array of size 2x3x1
+a:set({1,2,1},3)       -- do a(1,2,1) = 3
+a:get{1,2,1}           -- get a(1,2,1) 
+b = Arr.rand{2,3,1}    -- random elements
+c = a+b                -- element-wise summ
+for ind, val in c:next() do 
+   print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val))
+end
+-- PAUSE

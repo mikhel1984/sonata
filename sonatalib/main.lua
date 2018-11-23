@@ -360,6 +360,9 @@ about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expre
 
 local function _evaluate_(cmd)
    if cmd == 'quit' then return EV_QUIT end 
+   -- remove line comments
+   local tmp = string.match(cmd, '^(.*)%-%-.*$')
+   if tmp then cmd = tmp end
    -- parse 
    local fn, err = load('return '..cmd)
    if err then
@@ -420,10 +423,13 @@ main.evalDialog = function (logFile)
 end
 
 
-main.evalDemo = function (text)
+main.evalDemo = function (fname)
+   local f = assert(io.open(fname))
+   local text = f:read('a'); f:close()
    local ERROR = lc_help.CERROR.."ERROR: "
    local cmd = ""
    -- read lines
+   print(string.format("Run file %s",fname))
    for line in string.gmatch(text, '([^\n]+)\r?\n?') do
       if string.find(line, '^%s*%-%-%s*PAUSE') then 
          -- run dialog
@@ -532,7 +538,15 @@ exit = false},
 -- process files
 ['default'] = {
 --description = 'Evaluate file(s).',
-process = function (args) for i = 1,#args do dofile(args[i]) end end,
+process = function (args) 
+   for i = 1,#args do 
+      if string.find(args[i], '%.demo$') then
+         main.evalDemo(args[i])
+      else
+         dofile(args[i]) 
+      end
+   end 
+end,
 exit = true},
 
 -- 
