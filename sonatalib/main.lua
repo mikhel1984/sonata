@@ -361,9 +361,9 @@ about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expre
 local function _evaluate_(cmd)
    if cmd == 'quit' then return EV_QUIT end 
    -- parse 
-   local fn, err = load(cmd)
+   local fn, err = load('return '..cmd)
    if err then
-      fn, err = load('return '..cmd)
+      fn, err = load(cmd)      
    end
    if err then
       if string.find(err, 'error') then

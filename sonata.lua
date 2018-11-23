@@ -58,7 +58,6 @@ import = {
    struct   = "DS",
    units    = "Unit",
 }
-about[import] = {"import", ""}
 
 -- Update help information about imported modules 
 function lc_local.import_state_update()
@@ -69,6 +68,8 @@ function lc_local.import_state_update()
    m[#m+1] = about:get('use_import')
    return table.concat(m, '\n')
 end
+-- save current state
+about[import] = {"import", lc_local.import_state_update()}
 
 -- Import actions 
 function lc_local.doimport(tbl,name)
@@ -91,7 +92,7 @@ end
 
 -- Add modules 
 setmetatable(import, 
-{ __tostring = function (x) io.write(lc_help.CHELP); return about:get('done') end,
+{ __tostring = function (x) io.write(lc_help.CHELP); return about:get('done')..lc_help.CRESET end,
   __call = function (self, name) 
     if name == 'all' then 
        for k,v in pairs(self) do lc_local.doimport(self,k) end
@@ -101,8 +102,8 @@ setmetatable(import,
        local var, nm = lc_local.doimport(self,name)
        if lc_local.dialog then
           io.write(lc_help.CHELP)
-          print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))
-       end
+          print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))          
+       end       
     end
     about[import][2] = lc_local.import_state_update()
     return import
@@ -124,8 +125,8 @@ lc_local.dialog = true
 -- Read localization file and update descriptions 
 if LC_LOCALIZATION then 
    about:localization(LC_LOCALIZATION) 
+   about[import][2] = lc_local.import_state_update()
 end
-about[import][2] = lc_local.import_state_update()
 
 -- Run! 
 io.write(lc_help.CMAIN)
