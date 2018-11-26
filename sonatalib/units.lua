@@ -28,7 +28,8 @@ a = Unit(1,'m/s')
 ans = a['km/h']                    --> 3.6
 
 -- get numerical value
-ans = #a                           --> 1
+-- (the save as #a)
+ans = a:val()                      --> 1
 
 -- make copy
 cp = a:copy() 
@@ -65,8 +66,9 @@ ans = c['ksnake']                  --> 0.002
 -- complex rule
 d = Unit(1,'W')
 -- define function for conversation, apply it
-e = d:convert(function (x) return Unit(10*math.log((x/Unit(1,'mW')):simp(),10), 'dBm') end)
-ans = #e                           --> 30
+lg = function (x) return math.log(x)/math.log(10) end
+e = d:convert(function (x) return Unit( 10*lg((x/Unit(1,'mW')):simp()) , 'dBm') end)
+ans = #e                           --~ 30
 
 -- another definition syntax
 ans = 2 * Unit('N')                --> Unit(2,'N')

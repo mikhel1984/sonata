@@ -58,8 +58,8 @@ ans = (a == b)               --> false
 ans = a:eq(123)              --> true
 
 -- number of digits
--- in Lua5.1 use 'digits' method
-ans = #a                     --> 3
+-- (the same as #a) 
+ans = a:size()               --> 3
 
 -- simple print
 print(a)
@@ -379,9 +379,9 @@ end
 --- #a 
 --  @param B Bigint object.
 --  @return Number of digits.
-bigint.digits = function (B) return #B[VALUE] end
-bigint.about[bigint.digits] = {"digits(B)", "Number of digits, the same as #B.", help.OTHER}
-bigint.__len = bigint.digits
+bigint.size = function (B) return #B[VALUE] end
+bigint.about[bigint.size] = {"size(B)", "Number of digits, the same as #B.", help.OTHER}
+bigint.__len = bigint.size
 
 --- B1 ^ B2
 --  @param B1 First bigint or integer.
