@@ -40,13 +40,8 @@ ans = (p >= 0) and (p <= 1)      --> true
 p = randi(10)
 ans = (p >= 1) and (p <= 10)     --> true
 
--- 'small' factorial - int
-ans = factorial(12)              --> 479001600
-
--- 'big' factorial - float
-ans = factorial(50)              --~ 3.0414E+64
-
 -- get object type
+-- "knows" types for Sonata objects
 ans = lc.type(25)                --> 'integer'
 
 -- show table components
@@ -74,7 +69,10 @@ local HYP = 'hyperbolic'
 local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
 -- first 11 factorials
-local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
+--local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
+
+-- compatibility
+local Ver = require "sonatalib.versions"
 
 --	INFO
 
@@ -160,11 +158,12 @@ round = function (x,n)
 end
 about[round] = {'round(x[,n])', 'Round value, define number of decimal digits.', lc_help.OTHER}
 
+--[[
 --- Factorial of integer number.
 --  @param n Positive integer.
 --  @return Value of factorial.
 factorial = function (n)
-   assert(n >= 0 and math.type(n) == 'integer', 'Expected positive integer value!')
+   assert(n >= 0 and Ver.mathType(n) == 'integer', 'Expected positive integer value!')
    local tmp = factorials[n]
    if tmp and tmp < math.huge then return tmp end
    -- calculate
@@ -178,6 +177,7 @@ factorial = function (n)
    return factorials[n]
 end
 about[factorial] = {'factorial(n)', 'Evaluate factorial.'}
+]]
 
 --[[
 -- read object from its serialization
@@ -207,7 +207,7 @@ main.flip = function (t,N)
    print('{')
    -- keys/values
    for k,v in pairs(t) do
-      if math.type(k) ~= 'integer' or k < 1 then
+      if Ver.mathType(k) ~= 'integer' or k < 1 then
          if count % N == 0 and not continue(count) then break end
 	 print(tostring(k)..' = '..tostring(v))
 	 count = count + 1
@@ -238,7 +238,7 @@ function main.type(t)
    if v == 'table' then
       v = t.type or v
    elseif v == 'number' then
-      v = math.type(t) 
+      v = Ver.mathType(t) 
    end
    return v
 end
@@ -338,10 +338,10 @@ main.evalTF = function (src,dst)
    local res = string.gsub(txt, '##(.-)##', function (s)
                   for expr in F.split(s,';') do
                      if string.find(expr, '=') or string.find(expr,'import') then
-                        local fn = load(expr)
+                        local fn = Ver.loadStr(expr)
                         if fn then fn() end
                      else
-                        local fn = load('return '..expr)
+                        local fn = Ver.loadStr('return '..expr)
                         if fn then return tostring(fn()) end
                      end
                   end
@@ -364,9 +364,9 @@ local function _evaluate_(cmd)
    local tmp = string.match(cmd, '^(.*)%-%-.*$')
    if tmp then cmd = tmp end
    -- parse 
-   local fn, err = load('return '..cmd)
+   local fn, err = Ver.loadStr('return '..cmd)
    if err then
-      fn, err = load(cmd)      
+      fn, err = Ver.loadStr(cmd)      
    end
    if err then
       if string.find(err, 'error') then

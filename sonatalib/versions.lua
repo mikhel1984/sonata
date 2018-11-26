@@ -50,7 +50,9 @@ versions.move = function (src,sfrom,sto,dfrom,dest)
 versions.loadStr = loadstring
 -- Check type of the number.
 versions.mathType = function (x)
-      local _,p = math.modf(x)
+      local n = tonumber(x)
+      if not n then return nil end
+      local _,p = math.modf(n)
       return (p == 0.0) and 'integer' or 'float'
    end
 -- Extract table values.

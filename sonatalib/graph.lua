@@ -159,7 +159,7 @@ local function getPath(tPrev,v)
    end
    -- invert
    local L = #res
-   local n = L // 2
+   local n = math.modf(L/2)
    for i = 1,n do
       res[i], res[L-i+1] = res[L-i+1], res[i]
    end
