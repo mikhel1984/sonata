@@ -86,3 +86,5 @@ if not lc_version then const.about = nil end
 return const
 
 --============================================
+--TODO: make values unchangebe
+--TODO: implement possibility to add "constant" values

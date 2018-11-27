@@ -19,18 +19,11 @@ ans = _pi                        --> math.pi
 -- standard functions 
 ans = exp(0)+sin(_pi/2)+cosh(0)  --~ 3.0
 
--- degrees and grad
-d = rad2deg(_pi)
-ans = deg2rad(d)                 --~ _pi
-
--- upper and lower int
-ans = ceil(_e)-floor(_e)       --> 1
-
 -- round number
-ans = round(0.9)                 --> 1.0
+ans = lc.round(0.9)                 --> 1.0
 
 -- save 2 digits
-ans = round(math.pi, 2)          --> 3.14
+ans = lc.round(math.pi, 2)          --> 3.14
 
 -- random between 0 and 1
 p = rand()
@@ -46,7 +39,7 @@ ans = lc.type(25)                --> 'integer'
 
 -- show table components
 a = {a=1,b=2;3,4,5}
-lc.flip(a)
+lc.show(a)
 
 -- show "scientific" view
 lc.sci(1234.56789)
@@ -63,6 +56,11 @@ ans = b[2]                      --> 4
 c = lc.map(sin, b)
 ans = c[1]                      --~ 0.9093
 
+-- use Lua functions if need
+ans = math.floor(_pi)
+
+ans = math.deg(_pi)
+
 --]]
 
 --	LOCAL
@@ -71,9 +69,6 @@ local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
 
 local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
-
--- first 11 factorials
---local factorials = {[0] = 1, 1,2,6,24,120,720,5040,40320,362880,3628800}
 
 -- compatibility
 local Ver = require "sonatalib.versions"
@@ -93,16 +88,19 @@ local function _evaluate_(cmd)
    end
    if err then
       if string.find(err, 'error') then
+         -- parsing error
          return EV_ERROR, err
       else
+         -- expected rest of command
          return EV_CMD, cmd
       end
    else
       local ok, res = pcall(fn)
       if ok then 
-	 _ans = res
+	 _ans = res          -- save last result
 	 return EV_RES, res
       else
+         -- evaluation error
          return EV_ERROR, res
       end
    end
@@ -116,41 +114,44 @@ about = lc_help:new("Lua based calculator.")
 
 --	MODULE
 
-local main = {_LOG10=math.log(10)}
+local main = {}
 
--- Common
-abs = math.abs;    about[abs] = {"abs(x)", "Absolute value."}
-exp = math.exp;    about[exp] = {"exp(x)", "Exponent."}
-log = math.log;    about[log] = {"log(x)", "Natural logarithm."}
+-- Commonly used methods
+abs = math.abs;    about[abs] =  {"abs(x)", "Absolute value."}
+exp = math.exp;    about[exp] =  {"exp(x)", "Exponent."}
+log = math.log;    about[log] =  {"log(x)", "Natural logarithm."}
 sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root."}
-max = math.max;    about[max] = {"max(...)", "Maximum number."}
-min = math.min;    about[min] = {"min(...)", "Minimum number."}
 
 -- Trigonometrical
-sin = math.sin;    about[sin] = {"sin(x)", "Sinus x.", TRIG}
-cos = math.cos;    about[cos] = {"cos(x)", "Cosine x.", TRIG}
-tan = math.tan;    about[tan] = {"tan(x)", "Tangent x.", TRIG}
+sin = math.sin;    about[sin] =  {"sin(x)", "Sinus x.", TRIG}
+cos = math.cos;    about[cos] =  {"cos(x)", "Cosine x.", TRIG}
+tan = math.tan;    about[tan] =  {"tan(x)", "Tangent x.", TRIG}
 asin = math.asin;  about[asin] = {"asin(x)", "Inverse sine x.", TRIG}
 acos = math.acos;  about[acos] = {"acos(x)", "Inverse cosine x.", TRIG}
 atan = math.atan;  about[atan] = {"atan(x)", "Inverse tangent x.", TRIG}
+
 atan2 = function (y,x) return math.atan(y,x) end 
 about[atan2] = {"atan2(y,x)", "Inverse tangent of y/x, use signs.", TRIG}
 
 -- Hyperbolic
 cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
 about[cosh] = {"cosh(x)", "Hyperbolic cosine.", HYP}
+
 sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end   
 about[sinh] = {"sinh(x)", "Hyperbolic sinus.", HYP}
+
 tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
 about[tanh] = {"tanh(x)", "Hyperbolic tangent.", HYP}
 
--- Angles 
-rad2deg = math.deg;    about[rad2deg] = {"rad2deg(x)", "Convert radians to degrees."}
-deg2rad = math.rad;    about[deg2rad] = {"deg2rad(x)", "Convert degrees to radians."}
+-- Hyperbolic inverse 
+asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
+about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
 
--- Rounding
-floor = math.floor; about[floor] = {"floor(x)", "Return largest integer less or equal to x.", lc_help.OTHER}
-ceil = math.ceil;   about[ceil] = {"ceil(x)", "Return smallest integer more or equal to x.", lc_help.OTHER}
+acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
+about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
+
+atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
+about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
 _pi = math.pi;      about[_pi] = {"_pi", "Number pi.", lc_help.CONST}
@@ -158,30 +159,19 @@ _e = math.exp(1.0); about[_e] = {"_e", "Euler number.", lc_help.CONST}
 -- result 
 _ans = 0;           about[_ans] = {"_ans", "Result of the last operation."}
 
-
-log10 = function (x) return math.log(x)/main._LOG10 end
-about[log10] = {"log10(x)", "Decimal logarithm."}
-
 -- random
 rand = function () return math.random() end
 about[rand] = {"rand()", "Random number between 0 and 1."}
+
 randi = function (N) return math.random(1,N) end
 about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
-
--- hyperbolic inverse 
-asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
-about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
-acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
-about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
-atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
-about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 --- Round to closest integer.
 --  @param x Real number.
 --  @param n Number of decimal digits.
 --  @return Rounded number.
-round = function (x,n)
-   k = 10^(n or 0)
+main.round = function (x,n)
+   local k = 10^(n or 0)
    local p,q = math.modf(x*k)
    if q >= 0.5 then 
       p = p+1
@@ -190,28 +180,7 @@ round = function (x,n)
    end
    return p / k
 end
-about[round] = {'round(x[,n])', 'Round value, define number of decimal digits.', lc_help.OTHER}
-
---[[
---- Factorial of integer number.
---  @param n Positive integer.
---  @return Value of factorial.
-factorial = function (n)
-   assert(n >= 0 and Ver.mathType(n) == 'integer', 'Expected positive integer value!')
-   local tmp = factorials[n]
-   if tmp and tmp < math.huge then return tmp end
-   -- calculate
-   local maxint, isint = math.maxinteger / 100, true
-   for i = #factorials,n do
-      tmp = factorials[i]*(i+1)
-      assert(tmp < math.huge, "Too big value! Try Big.fact(n) or Spec.gammaln(n+1).")
-      if isint and tmp > maxint then tmp = tmp * 1.0; isint = false end
-      factorials[i+1] = tmp
-   end
-   return factorials[n]
-end
-about[factorial] = {'factorial(n)', 'Evaluate factorial.'}
-]]
+about[main.round] = {'lc.round(x[,n])', 'Round value, define number of decimal digits.', lc_help.OTHER}
 
 --[[
 -- read object from its serialization
@@ -227,10 +196,11 @@ about[main.deserialize] = {"deserialize(obj_str)", "Transform string with serial
 ]]
 
 --- Print the contents of a Lua table.
---  @param t Lua table.
+--  @param t Lua table (not necessarily).
 --  @param N Number of fields in a listing, default is 10.
-main.flip = function (t,N)
-   assert(type(t) == 'table', 'Table is expected!')
+main.show = function (t,N)
+   if type(t) ~= 'table' then print(t) end
+   -- show table
    N = N or 10
    local count = 1
    -- dialog
@@ -257,7 +227,7 @@ main.flip = function (t,N)
    end
    print(#t > 0 and '\n}' or '}')
 end
-about[main.flip] = {"lc.flip(t[,N])", "Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).", lc_help.OTHER}
+about[main.show] = {"lc.show(t[,N])", "Print Lua object. In case of table, ask about continuation after each N elements (default is 10).", lc_help.OTHER}
 
 --- Print 'scientific' representation of the number
 --  @param x Number to show.
@@ -277,14 +247,6 @@ function main.type(t)
    return v
 end
 about[main.type] = {'lc.type(t)', 'Show type of the object.', lc_help.OTHER}
-
---- Wait for press button.
---  @param txt Text to show. 
-main.pause = function (txt)
-   if txt then io.write(txt) end
-   io.read()
-end
-about[main.pause] = {'lc.pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
 
 --- Generate sequence of values.
 --  @param from Begining of range (default is 1).
@@ -606,6 +568,5 @@ end
 return main
 
 --===============================
---TODO: add step-by-step execution
---TODO: define API for each module
 --TODO: add constant parameters
+--TODO: save last command as well
