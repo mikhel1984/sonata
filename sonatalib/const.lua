@@ -17,6 +17,21 @@ ans = _C.e                  --~ 1.602e-19
 
 -- units have postfix _u
 ans = _C.e_u                --> 'C'
+
+-- modification generate error
+ans = pcall(function() _C.e = 0 end)  --> false
+
+-- as well as addition
+ans = pcall(function() _C.myConst = 10 end) --> false
+
+-- create "immutable" value
+_C.set('myConst', 10)
+ans = _C.myConst            --> 10
+
+-- remove constant
+_C.delete('myConst')
+ans = _C.myConst            --> nil
+ 
 --]]
 
 --	LOCAL
@@ -27,8 +42,8 @@ local PHY, ASTR, MATH = "physics", "astronomy", "math"
 
 --	MODULE
 
-local const = {
-
+-- Set of constants
+_data_ = {
    -- physics
 G_u='N*m^2/kg^2',   G    = 6.672041E-11,            -- constant of gravitation
 e_u='C',            e    = 1.602189246E-19,         -- charge of electron
@@ -54,31 +69,64 @@ ly_u='m',           ly = 9.4607304725808E15,        -- light year
 
    -- 
                     the_answer_to_the_ultimate_question_of_life_the_universe_and_everything = 42,
+}
 
+-- Interface
+local const = {
 -- description
 about = help:new("Collection of constants.")
 }
 
 -- physics
-const.about[const.G] = {"G", "Gravitational constant.", PHY}
-const.about[const.e] = {"e", "Electron charge.", PHY}
-const.about[const.mu0] = {"mu0", "Permeability of free space.", PHY}
-const.about[const.R] = {"R", "Universal gas constant.", PHY}
-const.about[const.Vm] = {"Vm", "Volume of one mole of ideal gas.", PHY}
-const.about[const.NA] = {"NA", "Avogadro's number.", PHY}
-const.about[const.k] = {"k", "Boltzmann's constant.", PHY}
-const.about[const.h] = {"h", "Planck's constant.", PHY}
-const.about[const.c] = {"c", "Speed of light.", PHY}
-const.about[const.g] = {"g", "Acceleration of free fall.", PHY}
-const.about[const.eps0] = {"eps0", "Permittivity of free space.", PHY}
-const.about[const.sigma] = {"sigma", "Stefan-Boltzmann constant.", PHY}
-const.about[const.Rinf] = {"Rinf", "Rydberg constant", PHY}
+const.about[_data_.G] = {"G", "Gravitational constant.", PHY}
+const.about[_data_.e] = {"e", "Electron charge.", PHY}
+const.about[_data_.mu0] = {"mu0", "Permeability of free space.", PHY}
+const.about[_data_.R] = {"R", "Universal gas constant.", PHY}
+const.about[_data_.Vm] = {"Vm", "Volume of one mole of ideal gas.", PHY}
+const.about[_data_.NA] = {"NA", "Avogadro's number.", PHY}
+const.about[_data_.k] = {"k", "Boltzmann's constant.", PHY}
+const.about[_data_.h] = {"h", "Planck's constant.", PHY}
+const.about[_data_.c] = {"c", "Speed of light.", PHY}
+const.about[_data_.g] = {"g", "Acceleration of free fall.", PHY}
+const.about[_data_.eps0] = {"eps0", "Permittivity of free space.", PHY}
+const.about[_data_.sigma] = {"sigma", "Stefan-Boltzmann constant.", PHY}
+const.about[_data_.Rinf] = {"Rinf", "Rydberg constant", PHY}
 -- astronomy
-const.about[const.pc] = {"pc", "One parsec.", ASTR}
-const.about[const.ly] = {"ly", "One light year.", ASTR}
+const.about[_data_.pc] = {"pc", "One parsec.", ASTR}
+const.about[_data_.ly] = {"ly", "One light year.", ASTR}
 -- mathematics
-const.about[const.phi] = {"phi", "Golden ratio.", MATH}
-const.about[const.EuMa] = {"EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
+const.about[_data_.phi] = {"phi", "Golden ratio.", MATH}
+const.about[_data_.EuMa] = {"EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
+
+--- Make value "constant".
+--  @param name Name of constant.
+--  @param val  Value of constant.
+const.set = function (name,val)
+   -- add only new constants
+   if _data_[name] then error('Cannot modify '..tostring(name)) end
+   _data_[name] = val
+   print('Done')
+end
+const.about[const.set] = {'set(name,value)','Create new constant.'}
+
+--- Remove exixting constant.
+--  @param name Name of constant.
+const.delete = function (name)
+   if _data_[name] then      
+      _data_[name] = nil
+      print('Done')
+   end
+end
+const.about[const.delete] = {'delete(name)','Remove constant.'}
+
+-- Define behavior of the "interface".
+setmetatable(const, 
+{
+   -- read existing values
+   __index = function (t,k) return _data_[k] end,
+   -- don't modify values
+   __newindex = function (t,k,v) error('Constants are immutable!') end,
+})
 
 -- free memory in case of standalone usage
 if not lc_version then const.about = nil end
@@ -86,5 +134,3 @@ if not lc_version then const.about = nil end
 return const
 
 --============================================
---TODO: make values unchangebe
---TODO: implement possibility to add "constant" values
