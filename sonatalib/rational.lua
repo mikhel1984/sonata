@@ -50,7 +50,7 @@ ans = (a >= b)          --> false
 ans = Rat.gcd(125,65)   --> 5
 
 -- represent as decimal
-ans = a:decimal()       --> 0.5
+ans = a:val()       --> 0.5
 
 -- numerator
 ans = b:Nu()            --> 2
@@ -229,8 +229,8 @@ rational.__tostring = function (R) return numStr(R[NUM])..'/'..numStr(R[DENOM]) 
 --- Float point representation.
 --  @param R Rational number.
 --  @return Decimal fraction.
-rational.decimal = function (R) return R[NUM] / R[DENOM] end
-rational.about[rational.decimal] = {"decimal(R)", "Return rational number as decimal."}
+rational.val = function (R) return R[NUM] / R[DENOM] end
+rational.about[rational.val] = {"val(R)", "Return rational number as decimal."}
 
 --- Get numerator.
 --  @param R Rational number.

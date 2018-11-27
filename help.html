@@ -34,29 +34,31 @@ DIV {margin-left: 10px;}
 'Sonata LC' is a Lua based program for mathematical calculations.<br>
 <br>
 <b>USAGE</b>:<br>
-	lua -i sonata.lua [flag [arg1 arg2 ...]]<br>
-(option '-i' could be omitted when the program is in non-interactive mode)<br>
+	lua [-i] sonata.lua [flag [arg1 arg2 ...]]<br>
+(option '-i' could be used for working in native interpretator of Lua)<br>
 <br>
 <b>FLAGS</b>:<br>
-	-t, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
+	-T, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
+	-l, --log - Save session into the log file.<br>
+	-N, --new - Generate template for a new module.<br>
 	-h, --help - Get this help message.<br>
-	-n, --new - Generate template for a new module.<br>
-	-l, --lng - Create/update file for localization.<br>
-	-e, --eval - Read text file and evaluate expressions in ##..##.<br>
-	-d, --doc - Create/update documentation file.<br>
+	-L, --lng - Create/update file for localization.<br>
+	-D, --doc - Create/update documentation file.<br>
+	 No flag - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.6<br>
+<b>VERSION</b>: 0.9.10<br>
 <br>
-<b>MODULES</b>: polynom, stat, gnuplot, bigint, complex, units, array, numeric, special, files, graph, struct, rational, const, matrix.<br>
+<b>MODULES</b>: special, numeric, complex, graph, polynom, units, files, array, struct, rational, bigint, stat, const, matrix, gnuplot.<br>
 <br>
-<b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
+<b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
 <p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p></div>
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
 <p class="descript">Lua based calculator.</p>
-<p><b>_e</b> - Euler number<br>
-<b>_pi</b> - Number pi<br>
+<p><b>_ans</b> - Result of the last operation.<br>
+<b>_e</b> - Euler number.<br>
+<b>_pi</b> - Number pi.<br>
 <b>abs(x)</b> - Absolute value.<br>
 <b>acos(x)</b> - Inverse cosine x.<br>
 <b>acosh(x)</b> - Hyperbolic arc cosine.<br>
@@ -65,77 +67,84 @@ DIV {margin-left: 10px;}
 <b>atan(x)</b> - Inverse tangent x.<br>
 <b>atan2(y,x)</b> - Inverse tangent of y/x, use signs.<br>
 <b>atanh(x)</b> - Hyperbolic inverse tangent.<br>
-<b>ceil(x)</b> - Return smallest integer more or equal to x.<br>
 <b>cos(x)</b> - Cosine x.<br>
 <b>cosh(x)</b> - Hyperbolic cosine.<br>
-<b>deg2rad(x)</b> - Convert degrees to radians.<br>
 <b>exp(x)</b> - Exponent.<br>
-<b>factorial(n)</b> - Evaluate factorial.<br>
-<b>floor(x)</b> - Return largest integer less or equal to x.<br>
-<b>import</b> - <br>
-<b>lc.append(tbl,val)</b> - Append value or table to the given table.<br>
-<b>lc.flip(t[,N])</b> - Print Lua table in user-friendly form. Ask about continuation after each N elements (default is 10).<br>
-<b>lc.pause([str])</b> - Wait for button press, print text if need.<br>
+<b>lc.evalTF(src[,dst])</b> - Read text file and evaluate expressions in ##..##. Save resuto to dst file, if need.<br>
+<b>lc.map(fn,tbl)</b> - Evaluate function for each table element.<br>
 <b>lc.range([from,]to[,step])</b> - Generate table with sequence of numbers.<br>
+<b>lc.round(x[,n])</b> - Round value, define number of decimal digits.<br>
 <b>lc.sci(x)</b> - 'Scientific' representation of the number.<br>
+<b>lc.show(t[,N])</b> - Print Lua object. In case of table, ask about continuation after each N elements (default is 10).<br>
 <b>lc.type(t)</b> - Show type of the object.<br>
 <b>log(x)</b> - Natural logarithm.<br>
-<b>log10(x)</b> - Decimal logarithm.<br>
-<b>max(...)</b> - Maximum number.<br>
-<b>min(...)</b> - Minimum number.<br>
-<b>rad2deg(x)</b> - Convert radians to degrees.<br>
 <b>rand()</b> - Random number between 0 and 1.<br>
 <b>randi(N)</b> - Random integer in range from 1 to N.<br>
-<b>round(x[,n])</b> - Round value, define number of decimal digits.<br>
 <b>sin(x)</b> - Sinus x.<br>
 <b>sinh(x)</b> - Hyperbolic sinus.<br>
 <b>sqrt(a)</b> - Square root.<br>
 <b>tan(x)</b> - Tangent x.<br>
 <b>tanh(x)</b> - Hyperbolic tangent.<br></p>
 <pre class="example">
-lc = require 'liblc.main'
+
+lc = require 'sonatalib.main'
 
 -- constants starts from _
 ans = _pi                        --> math.pi
 
+-- standard functions 
+ans = exp(0)+sin(_pi/2)+cosh(0)  --~ 3.0
+
 -- round number
-ans = round(0.9)                 --> 1.0
+ans = lc.round(0.9)                 --> 1.0
 
 -- save 2 digits
-ans = round(math.pi, 2)          --> 3.14
+ans = lc.round(math.pi, 2)          --> 3.14
 
--- 'small' factorial - int
-ans = factorial(12)              --> 479001600
+-- random between 0 and 1
+p = rand()
+ans = (p >= 0) and (p <= 1)      --> true
 
--- 'big' factorial - float
-ans = factorial(50)              --~ 3.0414E+64
+-- random integer (1 to 10)
+p = randi(10)
+ans = (p >= 1) and (p <= 10)     --> true
 
 -- get object type
+-- "knows" types for Sonata objects
 ans = lc.type(25)                --> 'integer'
 
 -- show table components
 a = {a=1,b=2;3,4,5}
-lc.flip(a)
+lc.show(a)
 
--- generate 'vector'
+-- show "scientific" view
+lc.sci(1234.56789)
+
+-- generate 'sequence'
 b = lc.range(3)
 ans = b[3]                      --> 3
 
--- full form
+-- even numbers
 b = lc.range(2,10,2)
 ans = b[2]                      --> 4
 
--- append a to b
-lc.append(b,a)
-ans = b.b                       --> 2
-</pre>
+-- calculate function values
+c = lc.map(sin, b)
+ans = c[1]                      --~ 0.9093
+
+-- use Lua functions if need
+ans = math.floor(_pi)
+
+ans = math.deg(_pi)
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Arr"></a>
 <h3># Arr (array) #</h3>
 <p class="descript">Manipulations with arrays of elements.</p>
 <p><b>#array</b> - Return maximum number of elements.<br>
 <b>Arr(tSize)</b> - Create empty array with given size, represented as a table.<br>
-<b>apply(A1,A2,func)</b> - Apply function of 2 arguments. Return new array.<br>
+<b>apply(func, ...)</b> - Apply function of several arguments. Return new array.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b<br>
 <b>comparison</b> - a == b, a ~= b<br>
 <b>concat(A1,A2,nAxis)</b> - Array concatenation along the given axis.<br>
@@ -150,8 +159,9 @@ ans = b.b                       --> 2
 <b>set(A,tInd,val)</b> - Set value to the array. Index is a table.<br>
 <b>sub(A,tInd1,tInd2)</b> - Return sub array restricted by 2 indexes.<br></p>
 <pre class="example">
+
 -- import 'array'
-Arr = require 'liblc.array'
+Arr = require 'sonatalib.array'
 
 -- empty array
 a = Arr {2,3,4}                       
@@ -181,12 +191,17 @@ ans = g:isEqual(Arr{2,3,2})            --> true
 
 -- concatenate along the 3-rd axes
 d = Arr.concat(b,b,3)
+-- size for given dimention
 ans = d:dim()[3]                       --> 2
 
--- apply functions of 2 arguments
--- to get new array
-e = Arr.apply(b,b, function (x,y) return x*y end)
-ans = e:get{1,1,1}                     --> (b:get{1,1,1})^2
+-- apply function of several arguments
+a1 = Arr.rand{2,2}
+a2 = Arr.rand{2,2}
+a3 = Arr.rand{2,2}
+fn = function (x,y,z) return x*y+z end
+a4 = Arr.apply(fn, a1,a2,a3)
+ans = a4:get{1,2}                      --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
+
 
 -- apply function of 1 argument
 -- to get new array
@@ -198,7 +213,11 @@ print(a)
 
 -- print slices for axis 2 and 3
 print(d:fullString(2,3))
-</pre>
+
+-- iterate over array 
+for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Big"></a>
 <h3># Big (bigint) #</h3>
@@ -209,42 +228,42 @@ print(d:fullString(2,3))
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br>
 <b>copy(v)</b> - Return copy of given number.<br>
-<b>digits(B)</b> - Number of digits, the same as #B.<br>
 <b>eq(a,b)</b> - Check equality of two values.<br>
 <b>fact(B)</b> - Return factorial of non-negative integer n.<br>
+<b>size(B)</b> - Number of digits, the same as #B.<br>
 <b>str(B[,n])</b> - More readable string representation of the number. Optional argument defines number of digits in a group.<br>
-<b>tonumber(N)</b> - Represent current big integer as number if it possible.<br></p>
+<b>val(N)</b> - Represent current big integer as number if it possible.<br></p>
 <pre class="example">
 -- import 'bigint'
-Big = require 'liblc.bigint'
+Big = require 'sonatalib.bigint'
 
 -- from integer
 a = Big(123)         
-ans = a:tonumber()           --> 123
+ans = a:val()           --> 123
 
 -- from string
 b = Big('456')        
-ans = b:tonumber()           --> 456
+ans = b:val()           --> 456
 
 -- arithmetical operations
-ans = Big.tonumber(a+b)      --> 579
+ans = Big.val(a+b)      --> 579
 
-ans = Big.tonumber(a-b)      --> -333
+ans = Big.val(a-b)      --> -333
 
-ans = Big.tonumber(a*Big(2)) --> 246
+ans = Big.val(a*Big(2)) --> 246
 
-ans = Big.tonumber(b/2)      --> 228
+ans = Big.val(b/2)      --> 228
 
-ans = Big.tonumber(b%a)      --> 87
+ans = Big.val(b%a)      --> 87
 
-ans = Big.tonumber(a^3)      --> 1860867
+ans = Big.val(a^3)      --> 1860867
 
 -- absolute value
-ans = Big.tonumber(Big.abs('-25')) --> 25
+ans = Big.val(Big.abs('-25')) --> 25
 
 -- factorial
 c = Big(10):fact()
-ans = Big.tonumber(c)  --> 3628800
+ans = Big.val(c)  --> 3628800
 
 -- make copy, comparison
 d = a:copy()
@@ -258,23 +277,23 @@ ans = (a == b)               --> false
 ans = a:eq(123)              --> true
 
 -- number of digits
--- in Lua5.1 use 'digits' method
-ans = #a                     --> 3
+-- (the same as #a) 
+ans = a:size()               --> 3
 
 -- simple print
 print(a)
 
 -- more friendly representation
 print(c:str())
+-- set number of digits in group
 print(c:str(6))
-</pre>
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Comp"></a>
 <h3># Comp (complex) #</h3>
 <p class="descript">Manipulations with complex numbers.</p>
 <p><b>Comp(a[,b])</b> - Create new complex number.<br>
-<b>Im(Z)</b> - Return the imaginary part.<br>
-<b>Re(Z)</b> - Return the real part.<br>
 <b>_i</b> - Complex unit.<br>
 <b>abs(Z)</b> - Return module of complex number.<br>
 <b>arg(Z)</b> - Return argument of complex number.<br>
@@ -285,7 +304,9 @@ print(c:str(6))
 <b>cos(Z)</b> - Return cosine of a complex number.<br>
 <b>cosh(Z)</b> - Return hyperbolic cosine of a real or complex number.<br>
 <b>exp(Z)</b> - Return exponent in for complex argument.<br>
+<b>imag(Z)</b> - Return the imaginary part.<br>
 <b>log(Z)</b> - Complex logarithm.<br>
+<b>real(Z)</b> - Return the real part.<br>
 <b>sin(Z)</b> - Return sinus of a complex number.<br>
 <b>sinh(Z)</b> - Return hyperbolic sinus of a complex number.<br>
 <b>sqrt(Z)</b> - Return square root. Result can be real of complex.<br>
@@ -293,8 +314,9 @@ print(c:str(6))
 <b>tanh(Z)</b> - Return hyperbolic tangent of a complex number.<br>
 <b>trig(module,angle)</b> - Create complex number using module and angle.<br></p>
 <pre class="example">
+
 -- import 'complex'
-Comp = require 'liblc.complex'
+Comp = require 'sonatalib.complex'
 
 -- real and imag pars
 a = Comp(1,2)
@@ -318,13 +340,14 @@ ans = a * b                    --> Comp(3,6)
 
 ans = a / Comp._i              --> Comp(2,-1)
 
--- power could be complex
+-- power can be complex
 c = Comp(1,1)^Comp(2,-2)
+
 -- real part
-ans = c:Re()                   --~ 6.147
+ans = c:real()                   --~ 6.147
 
 -- imaginary part
-ans = c:Im()                   --~ 7.4
+ans = c:imag()                   --~ 7.4
 
 -- comparison
 ans = (a == b)                 --> false
@@ -340,28 +363,53 @@ ans = a:arg()                  --~ 1.107
 -- conjugated number
 ans = a:conj()                 --> Comp(1,-2)
 
--- complex square root
--- after import becomes default
+-- some functions after import 
+-- become default, such as
 d = Comp.sqrt(-2)
-ans = d:Im()                   --~ 1.414
+ans = d:imag()                   --~ 1.414
+
+-- exp
+ans = Comp.exp(d):real()         --~ 0.156
+
+-- log
+ans = Comp.log(d):real()         --~ 0.3465
+
+-- sin 
+ans = Comp.sin(d):imag()         --~ 1.935
+
+-- cos 
+ans = Comp.cos(d):imag()         --~ 0
+
+-- tan
+ans = Comp.tan(d):real()         --~ 0
+
+-- sinh
+ans = Comp.sinh(d):real()        --~ 0
+
+-- cosh
+ans = Comp.cosh(d):real()        --~ 0.156
+
+-- tanh
+ans = Comp.tanh(d):imag()        --~ 6.334
 
 -- make copy
-ans = a:copy()                 --> a
+ans = a:copy()                   --> a
 
 -- show
 print(a)
-</pre>
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="_C"></a>
 <h3># _C (const) #</h3>
 <p class="descript">Collection of constants.</p>
-<p><b>Adams</b> - Answer to the ultimate question of life, the Universe, and Everything.<br>
-<b>EuMa</b> - Difference between harmonic series and the natural logarithm.<br>
+<p><b>EuMa</b> - Difference between harmonic series and the natural logarithm.<br>
 <b>G</b> - Gravitational constant.<br>
 <b>NA</b> - Avogadro's number.<br>
 <b>R</b> - Universal gas constant.<br>
 <b>Rinf</b> - Rydberg constant<br>
 <b>Vm</b> - Volume of one mole of ideal gas.<br>
+<b>add(name,value)</b> - Create new constant.<br>
 <b>c</b> - Speed of light.<br>
 <b>e</b> - Electron charge.<br>
 <b>eps0</b> - Permittivity of free space.<br>
@@ -372,17 +420,34 @@ print(a)
 <b>mu0</b> - Permeability of free space.<br>
 <b>pc</b> - One parsec.<br>
 <b>phi</b> - Golden ratio.<br>
+<b>remove(name)</b> - Delete constant.<br>
 <b>sigma</b> - Stefan-Boltzmann constant.<br></p>
 <pre class="example">
+
 -- import 'const'
-_C = require 'liblc.const'
+_C = require 'sonatalib.const'
 
 -- charge of electron
 ans = _C.e                  --~ 1.602e-19
 
--- units has postfix _u
+-- units have postfix _u
 ans = _C.e_u                --> 'C'
-</pre>
+
+-- modification generate error
+ans = pcall(function() _C.e = 0 end)  --> false
+
+-- as well as addition
+ans = pcall(function() _C.myConst = 10 end) --> false
+
+-- create "immutable" value
+_C.add('myConst', 10)
+ans = _C.myConst            --> 10
+
+-- remove constant
+_C.remove('myConst')
+ans = _C.myConst            --> nil
+ 
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="File"></a>
 <h3># File (files) #</h3>
@@ -390,11 +455,11 @@ ans = _C.e_u                --> 'C'
 <p><b>dsvRead(fName,del)</b> - Read delimiter separated data as Lua table.<br>
 <b>dsvWrite(fname,tbl,delim)</b> - Save Lua table as delimiter separated data into file.<br>
 <b>split(str,delim)</b> - Return iterator over substrings separated by the delimiter.<br>
-<b>tblExport(fName,tbl)</b> - Save Lua table into file.<br>
 <b>tblImport(fName)</b> - Import Lua table, written into file.<br></p>
 <pre class="example">
+
 -- import 'files'
-File = require 'liblc.files'
+File = require 'sonatalib.files'
 -- prepare file name
 nm = os.tmpname()
 
@@ -412,20 +477,20 @@ ans = tt[2][2]                       --> 5
 s = File.read(nm)
 ans = string.sub(s,1,5)              --> '1;2;3'
 
--- serialize table to file
-a = {1, 2.0, a = 'pqr', b = {3,4,c='abc'}}
-File.tblExport(nm, a)
-
--- deserialize table from file
+-- read table from file
+f = io.open(nm,'w')
+f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
+f:close()
 aa = File.tblImport(nm)
 ans = aa.b.c                         --> 'abc'
 
 -- string split
 str = 'abc//defg//hijkl//mnop'
 ans = 0
+-- iterate over string parts
 for s in File.split(str, '//') do ans = ans+1 end  --> 4
 
-</pre>
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Gnu"></a>
 <h3># Gnu (gnuplot) #</h3>
@@ -462,26 +527,29 @@ raw='set pm3d'                               -- set Gnuplot options manually<br>
 <div><a name="Graph"></a>
 <h3># Graph (graph) #</h3>
 <p class="descript">Operations with graphs.</p>
-<p><b>BellmanFord(start[,goal]</b> - Shortest path search using Bellman-Ford algorithm.<br>
-<b>Dijkstra(g,start[,goal]</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
+<p><b>BellmanFord(G,start[,goal]</b> - Shortest path search using Bellman-Ford algorithm.<br>
+<b>Dijkstra(G,start[,goal]</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
 <b>Graph(t)</b> - Create new graph.<br>
-<b>add(e)</b> - Add new node or edge. Node denoted as a single name, edge is a table of names (and weights if need).<br>
-<b>bfs(g,start,goal)</b> - Bredth first search. Return result and found path.<br>
-<b>copy()</b> - Get copy of the graph.<br>
-<b>dfs(start,goal)</b> - Depth first search. Return result and found path.<br>
-<b>edges()</b> - List of graph edges.<br>
-<b>isComplete(g)</b> - Check completeness of the graph.<br>
-<b>nodes()</b> - List of graph nodes.<br>
-<b>remove(e)</b> - Remove node or edge. Node is a single name, edge - talbe of names.<br>
-<b>spath(start[,goal])</b> - Find shortest path using algorithm of Dijkstra of Bellman-Ford.<br></p>
+<b>add(G,e)</b> - Add new node or edge to graph G. Node denoted as a single name, edge is a table of names (and weights if need).<br>
+<b>bfs(G,start,goal)</b> - Breadth first search. Return result and found path.<br>
+<b>copy(G)</b> - Get copy of the graph.<br>
+<b>dfs(G,start,goal)</b> - Depth first search. Return result and found path.<br>
+<b>edges(G)</b> - List of graph edges.<br>
+<b>isComplete(G)</b> - Check completeness of the graph.<br>
+<b>isDirected(G)</b> - Check if the graph has directed edges.<br>
+<b>isNegative(G)</b> - Check if the graph has negative edges.<br>
+<b>isWeighted(G)</b> - Check if the graph has weight different from 1.<br>
+<b>nodes(G)</b> - List of graph nodes.<br>
+<b>remove(G,e)</b> - Remove node or edge from the graph G. Node is a single name, edge - table of names.<br></p>
 <pre class="example">
+
 -- import 'graph'
-Graph = require 'liblc.graph'
+Graph = require 'sonatalib.graph'
 
 -- build graph
--- single names - nodes, names in brackets - edges 
+-- single name - node, names in brackets - edges 
 -- letter w denotes weight of non directed edge
--- numbers are weigths of directed edges
+-- numbers are weights of directed edges
 a = Graph {'a','b',{'a','c'},{'d','e',w=2},{'d','b',4,3}}
 
 -- list of nodes
@@ -489,8 +557,13 @@ nd = a:nodes()
 ans = #nd                      --> 5
 
 -- list of edges
+-- if an edge has different weight for different sizes
+-- it is represented twice
 ed = a:edges()
-ans = #ed                      --> 3
+ans = #ed                      --> 4
+
+-- has directed edges
+ans = a:isDirected()           --> true
 
 -- add node
 a:add('h') 
@@ -505,22 +578,67 @@ a:remove {'a','d'}
 a:remove('a')
 -- new edge number
 ed = a:edges()
-ans = #ed                      --> 2
+ans = #ed                      --> 3
+
+-- directed edges
+-- second way to define
+-- from first to second node
+a:add {'c','p',w12=2} 
+-- and vise versa
+a:add {'c','q',w21=3}
+ed = a:edges()
+ans = #ed                      --> 5
 
 -- make copy
 b = a:copy()
 
+-- completeness 
+ans = b:isComplete()           --> false
+
+-- prepare graph
+c = Graph {{'a','b'},{'a','c'},{'b','d'},{'b','e'},{'c','f'},{'f','g'},{'f','h'},{'e','g'}}
+
+-- is it weighted 
+ans = c:isWeighted()           --> false
+
+-- breadth first search
+_,path = c:bfs('e','h')
+ans = path[3]                  --> 'f'
+
+-- depth first search
+found,path = c:dfs('d','c')
+ans = found                    --> true
+
+-- update weight
+-- (default is 1)
+-- use 'add' for it
+c:add{'a','b',w=0.5}
+c:add{'b','e',w=0.4}
+c:add{'c','f',w=2}
+
+-- Dijkstra path search
+dist,prev = c:Dijkstra('a') 
+ans = dist['g']                --> 1.9
+
+-- Bellman-Ford path search
+c:add{'f','h',w=-0.5}
+dist,prev = c:BellmanFord('a')
+ans = dist['h'] 
+
+-- check negative edges
+ans = c:isNegative()           --> true
+
 -- show
 print(b)
 
-</pre>
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Mat"></a>
 <h3># Mat (matrix) #</h3>
 <p class="descript">Matrix operations. The matrices are spares by default.</p>
 <p><b>Cholesky(M)</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
 <b>Mat(...)</b> - Create matrix from list of strings (tables).<br>
-<b>apply(M1,M2,fn)</b> - Apply fu(v1,v2) to each element of matrices m1 and m2.<br>
+<b>apply(fn,M1,M2,...)</b> - Apply function to the given matrices element-wise.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
 <b>comparison</b> - a==b, a~=b<br>
 <b>concat(M1,M2,dir)</b> - Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical<br>
@@ -534,8 +652,7 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>fill(rows,cols,fn)</b> - Create matrix, using function fn(r,c).<br>
 <b>inv(M)</b> - Return inverse matrix.<br>
 <b>lu(M)</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
-<b>map(M,fn)</b> - Apply the given function to all elements, return new matrix.<br>
-<b>mapEx(M,fn)</b> - Apply function fn(val,row,col) to all elements, return new matrix.<br>
+<b>map(M,fn)</b> - Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).<br>
 <b>norm(M)</b> - Euclidean norm.<br>
 <b>ones(rows[,cols[,val]])</b> - Create matrix of given numbers (default is 1).<br>
 <b>pinv(M)</b> - Pseudo inverse matrix calculation.<br>
@@ -553,8 +670,9 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>triang(M)</b> - Matrix triangulation produced by Gaussian elimination.<br>
 <b>zeros(rows[,cols])</b> - Create matrix from zeros.<br></p>
 <pre class="example">
+
 -- import 'matrix'
-Mat = require 'liblc.matrix'
+Mat = require 'sonatalib.matrix'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}             
@@ -611,6 +729,9 @@ ans = (a == b)                   --> false
 -- identity matrix
 ans = Mat.eye(2)                 --> Mat {{1,0},{0,1}}
 
+-- matrix argument
+ans = Mat.eye(a)                 --> Mat {{1,0},{0,1}}
+
 -- matrix of zeros
 ans = Mat.zeros(2,1)             --> Mat {{0},{0}}
 
@@ -620,17 +741,32 @@ ans = Mat.ones(2,3,4)            --> Mat {{4,4,4},{4,4,4}}
 -- matrix of constants = 1
 ans = Mat.ones(a,3)              --> Mat {{3,3},{3,3}}
 
+-- define rule to fill
+-- result matrix is 'dense'
+fn = function (i,j) return i == j and 1 or 0 end
+ans = Mat.fill(2,3,fn)           --> Mat {{1,0,0},{0,1,0}}
+
 -- horizontal concatenation
 ans = a .. b                     --> Mat {{1,2,5,6},{3,4,7,8}}
 
 -- vertical concatenation
-ans = a // b                     --> Mat {{1,2},{3,4},{5,6},{7,8}}
+-- (a // b - for short)
+ans = a:concat(b,'v')            --> Mat {{1,2},{3,4},{5,6},{7,8}}
+
+-- to triangular form
+print(Mat.triang(a .. b))
 
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
 -- apply function which depends on index too
-ans = a:mapEx(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
+ans = a:map(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
+
+-- apply function to matrices
+-- element-wise
+fn = function (x,y,z) return x*y+z end
+aa = Mat.apply(fn, b,b,b) 
+ans = aa[1][1]                    --> 30
 
 -- use Gauss transform to solve equation
 ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
@@ -642,6 +778,13 @@ ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
 ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
 
+-- square norm along rows
+gsq = g:sqNorm('r') 
+ans = gsq[1][1]                 --> 14
+
+-- eualedian norm
+ans = Mat.V({1,2,3}):norm()     --~ math.sqrt(14)
+
 -- random matrix
 h = Mat.rand(3,2)
 print(h)
@@ -651,12 +794,14 @@ m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
 ans = n(2,2)                    --~ 0.333
 
--- get simple copy
+-- copy as Lua table
+-- without methametods
 k = Mat.eye(3)
 k = k:table()
 ans = k[2][1]                   --> 0
 
 -- back to matrix
+-- (import table)
 k = Mat(k)
 k = k:sparse()
 ans = rawget(k[2],1)             --> nil
@@ -706,7 +851,7 @@ ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
 
 -- get rank
 ans = Mat.ones(2,3):rank()      --> 1
-</pre>
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Num"></a>
 <h3># Num (numeric) #</h3>
@@ -720,8 +865,9 @@ Return table of intermediate points and result yn.<br>
 <b>solve(fn,a,b)</b> - Find root of equation fn(x)=0 at interval [a,b].<br>
 <b>trapez(fn,a,b)</b> - Get integral using trapezoidal rule.<br></p>
 <pre class="example">
+
 -- import 'numeric'
-Num = require 'liblc.numeric'
+Num = require 'sonatalib.numeric'
 
 -- define tolerance
 Num.TOL = 1e-4
@@ -749,7 +895,7 @@ tbl, yn = Num.ode45(function (x,y) return x*y end, {0,3}, 1)
 ans = yn                                  --~ 90.011
 
 -- use matrices for high order equations
-Mat = require 'liblc.matrix'
+Mat = require 'sonatalib.matrix'
 
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
@@ -764,7 +910,8 @@ cond = function (time,current,previous) return current < 0.1 end
 myfun = function (t,x) return -x end
 y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
 ans = y[#y][1]                           --~ 2.56
-</pre>
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Poly"></a>
 <h3># Poly (polynom) #</h3>
@@ -780,8 +927,9 @@ ans = y[#y][1]                           --~ 2.56
 <b>real(p)</b> - Find real roots of the polynomial.<br>
 <b>val(P,x)</b> - Get value of polynomial P in point x.<br></p>
 <pre class="example">
+
 -- import 'polynom'
-Poly = require 'liblc.polynom'
+Poly = require 'sonatalib.polynom'
 
 -- coefficients in ascendant order
 a = Poly {1,2,4,3}           
@@ -810,8 +958,8 @@ ans = b ^ 3                   --> Poly {1,3,3,1}
 ans = b:int()                 --> Poly {0.5,1,0}
 
 -- derivative
--- and its value for x=1
 ader = a:der()
+-- and its value for x=1
 ans = ader(1)                 --> 11
 
 -- build polynomial using roots
@@ -821,14 +969,20 @@ ans = Poly.coef(1,-1)         --> Poly {1,0,-1}
 c = a:copy()
 ans = (a == c)                --> true
 
+-- not equal
 ans = (b == c)                --> false
+
+-- find root
+-- near some value
+pp = Poly.coef(2,3)
+ans = pp:NewtonRapson(0)      --~ 2.00
 
 -- find real roots
 e = a:real()
 ans = e[1]                    --~ -1.00
 
 -- fit curve with polynomial
--- of 2 order
+-- of order 2
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly.fit(A,B,2)
@@ -838,26 +992,27 @@ ans = p(10)                   --~ 227.0
 print(a)
 
 -- human-friendly print
--- with variable 's'
+-- with variable 's' (default is 'x')
 d = Poly {2,-2,1}
 ans = d:str('s')              --> '2*s^2-2*s+1'
-</pre>
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Rat"></a>
 <h3># Rat (rational) #</h3>
 <p class="descript">Computations with rational numbers.</p>
-<p><b>De(v)</b> - Return the denominator of the rational number.<br>
-<b>Nu(v)</b> - Return the numerator of rational number.<br>
+<p><b>De(R)</b> - Return the denominator of the rational number.<br>
+<b>Nu(R)</b> - Return the numerator of rational number.<br>
 <b>Rat(m[,n])</b> - Create rational number using num (and denom).<br>
-<b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b} <br>
-<b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b <br>
+<b>arithmetic</b> - R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} <br>
+<b>comparison</b> - R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2<br>
 <b>copy(R)</b> - Get copy of the rational number.<br>
-<b>decimal(v)</b> - Return rational number as decimal.<br>
 <b>gcd(a,b)</b> - Calculate the greatest common divisor for two integers.<br>
-<b>serialize(obj)</b> - Save internal representation of rational number.<br></p>
+<b>val(R)</b> - Return rational number as decimal.<br></p>
 <pre class="example">
+
 -- import 'rational'
-Rat = require 'liblc.rational'
+Rat = require 'sonatalib.rational'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -891,7 +1046,7 @@ ans = (a >= b)          --> false
 ans = Rat.gcd(125,65)   --> 5
 
 -- represent as decimal
-ans = a:decimal()       --> 0.5
+ans = a:val()       --> 0.5
 
 -- numerator
 ans = b:Nu()            --> 2
@@ -904,20 +1059,20 @@ ans = a:copy()          --> a
 
 -- show
 print(a)
-</pre>
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Spec"></a>
 <h3># Spec (special) #</h3>
 <p class="descript">Special mathematical functions.</p>
-<p><b>Dawson(x)</b> - Dawson integral.<br>
-<b>Legendre(n,x)</b> - Return list of Legendre polynomial coefficients.<br>
-<b>bessi(n,x)</b> - Modified Bessel function In(x).<br>
-<b>bessj(n,x)</b> - Bessel function of the first kind.<br>
-<b>bessk(n,x)</b> - Modified Bessel function Kn(x).<br>
-<b>bessy(n,x)</b> - Bessel function of the second kind.<br>
+<p><b>besseli(n,x)</b> - Modified Bessel function In(x).<br>
+<b>besselj(n,x)</b> - Bessel function of the first kind.<br>
+<b>besselk(n,x)</b> - Modified Bessel function Kn(x).<br>
+<b>bessely(n,x)</b> - Bessel function of the second kind.<br>
 <b>beta(z,w)</b> - Beta function.<br>
 <b>betainc(x,a,b)</b> - Incomplete beta function Ix(a,b).<br>
 <b>betaln(z,w)</b> - Natural logarithm of beta function.<br>
+<b>dawson(x)</b> - dawson integral.<br>
 <b>erf(x)</b> - Error function.<br>
 <b>erfc(x)</b> - Complementary error function.<br>
 <b>expint(n,x)</b> - Exponential integral En(x).<br>
@@ -925,10 +1080,12 @@ print(a)
 <b>gammainc(x,a,type)</b> - Incomplete gamma function, P (type=lower) or Q (type=upper).<br>
 <b>gammaln(z)</b> - Natural logarithm of gamma function.<br>
 <b>gammp(a,x)</b> - Incomplete gamma function P(a,x).<br>
-<b>gammq(a,x)</b> - Incomplete gamma function Q(a,x) = 1-P(a,x).<br></p>
+<b>gammq(a,x)</b> - Incomplete gamma function Q(a,x) = 1-P(a,x).<br>
+<b>legendre(n,x)</b> - Return list of legendre polynomial coefficients.<br></p>
 <pre class="example">
+
 -- import 'special'
-Spec = require 'liblc.special'
+Spec = require 'sonatalib.special'
 
 -- beta functions
 ans = Spec.beta(3,4)               --~ 1.667E-2
@@ -961,51 +1118,51 @@ ans = Spec.gammq(1.5, 4.8)         --~ 2.23E-2
 ans = Spec.gammainc(2.1, 0.3, 'upper') --~ 1.942E-2
 
 -- Bessel functions
-ans = Spec.bessj(3, 1.5)           --~ 6.096E-2
+ans = Spec.besselj(3, 1.5)         --~ 6.096E-2
 
-ans = Spec.bessy(4, 0.8)           --~ -78.751
+ans = Spec.bessely(4, 0.8)         --~ -78.751
 
-ans = Spec.bessi(2, -3.6)          --~ 4.254
+ans = Spec.besseli(2, -3.6)          --~ 4.254
 
-ans = Spec.bessk(5, 5)             --~ 3.2706E-2
+ans = Spec.besselk(5, 5)           --~ 3.2706E-2
 
 -- Legendre function
-lst = Spec.Legendre(3, 0.5)
+lst = Spec.legendre(3, 0.5)
 ans = lst[1]                       --~ -0.4375
 
 -- Dawson function
-ans = Spec.Dawson(3.3)             --~ 0.1598
-</pre>
+ans = Spec.dawson(3.3)             --~ 0.1598
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Stat"></a>
 <h3># Stat (stat) #</h3>
 <p class="descript">Statistical calculations. Data set must be a Lua table.</p>
 <p><b>chi2cdf(x,v)</b> - Chi-square cumulative distribution.<br>
 <b>chi2pdf(x,v)</b> - Chi-square distribution density.<br>
-<b>cmoment(n,x[,p])</b> - Central moment of x order n, p is a list of weights.<br>
 <b>fcdf(x,v1,v2)</b> - F cumulative distribution.<br>
 <b>fpdf(x,v1,v2)</b> - F distribution density.<br>
 <b>freq(t)</b> - Return table with frequencies of elements.<br>
 <b>geomean(t[,w])</b> - Geometrical mean.<br>
-<b>harmean(t[,w])</b> - Harmonic mean.<br>
+<b>harmmean(t[,w])</b> - Harmonic mean.<br>
 <b>hyst(data[,N[,a,b]])</b> - Find hystogram for given data on the interval [a,b] with N ranges. Return table with scale (X) and frequencies (Y).<br>
 <b>max(t)</b> - Maximal element and its index.<br>
 <b>mean(t[,w])</b> - Calculate average value. Weights are can be used.<br>
 <b>median(t)</b> - List median.<br>
 <b>min(t)</b> - Minimal element and its index.<br>
-<b>moment(n,x[,p])</b> - Moment of x order n, p is a list of weights.<br>
+<b>moment(n,x[,p])</b> - Central moment of x order n, p is a list of weights.<br>
 <b>normcdf(x,mu,sig)</b> - Normal cumulative distribution.<br>
 <b>normpdf(x,nu,sig)</b> - Normal distribution density.<br>
 <b>poisscdf(x,lam)</b> - Poisson cumulative distribution.<br>
 <b>poisspdf(x,lam)</b> - Poisson distribution density.<br>
 <b>std(t[,w])</b> - Standard deviation and variance. Weights are can be used.<br>
-<b>stdcorr(t)</b> - Corrected value of standard deviation and variance.<br>
 <b>sum(t)</b> - Get sum of all elements.<br>
 <b>tcdf(x,nu)</b> - Student's cumulative distribution.<br>
 <b>tpdf(x,nu)</b> - Student's distribution density.<br></p>
 <pre class="example">
+
 -- import 'stat'
-Stat = require 'liblc.stat'
+Stat = require 'sonatalib.stat'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -1030,16 +1187,10 @@ tmp = Stat.freq(X)
 ans = tmp[3]                      --> 3
 
 -- central moment
-ans = Stat.cmoment(2,X)           --~ 2.234
-
--- non-central moment
-ans = Stat.moment(3,X,W)          --~ 61.875
+ans = Stat.moment(2,X)           --~ 2.234
 
 -- summ of elements
 ans = Stat.sum(X)                 --> 27
-
--- corrected standard deviation
-ans = Stat.stdcorr(X)             --~ 1.598
 
 -- minimum value
 ans = Stat.min(X)                 --> 1
@@ -1048,7 +1199,7 @@ ans = Stat.min(X)                 --> 1
 ans = Stat.geomean(X)             --~ 2.995
 
 -- harmonic mean
-ans = Stat.harmean(X,W)           --~ 2.567
+ans = Stat.harmmean(X,W)           --~ 2.567
 
 -- find histogram
 h = Stat.hyst(X,4)
@@ -1078,46 +1229,50 @@ ans = Stat.fpdf(1.3, 2.7, 2.4)    --~ 0.2174
 ans = Stat.normcdf(1, 1.5, 2.1)   --~ 0.4059
 
 ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
-</pre>
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="DS"></a>
 <h3># DS (struct) #</h3>
 <p class="descript">Main data structures.</p>
 <p><b>Heap([less])</b> - Create new heap object. Comparison method 'less' can be predefined.<br>
-<b>Heap.copy(h)</b> - Make copy of the heap.<br>
-<b>Heap.insert(v)</b> - Add element to the heap.<br>
-<b>Heap.isEmpty(h)</b> - Return true if the heap is empty.<br>
-<b>Heap.size(h)</b> - Get number of elements in the heap.<br>
-<b>Heap.top()</b> - Return top element. For the default less() function top is maximum.<br>
+<b>Heap.copy(H)</b> - Make copy of the heap.<br>
+<b>Heap.isEmpty(H)</b> - Return true if the heap is empty.<br>
+<b>Heap.pop(H)</b> - Return top element. For the default less() function top is maximum.<br>
+<b>Heap.push(H,v)</b> - Add element to the heap.<br>
+<b>Heap.size(H)</b> - Get number of elements in the heap.<br>
+<b>Heap.top(H)</b> - Return value of the top element.<br>
 <b>Queue()</b> - Create new queue.<br>
-<b>Queue.add(val)</b> - Add value to the back of queue.<br>
-<b>Queue.addFirst(val)</b> - Add value to the top of queue.<br>
-<b>Queue.copy(q)</b> - Make copy of the queue.<br>
-<b>Queue.isEmpty(q)</b> - Return true if the queue is empty.<br>
-<b>Queue.peek(q)</b> - Get next element, don't remove it.<br>
-<b>Queue.rem()</b> - Get value from the top of queue, remove it.<br>
-<b>Queue.remLast()</b> - Get value from the end of queue, remove it.<br>
+<b>Queue.back(Q)</b> - Get next element, don't remove it.<br>
+<b>Queue.copy(Q)</b> - Make copy of the queue.<br>
+<b>Queue.front(Q)</b> - Get next element, don't remove it.<br>
+<b>Queue.isEmpty(Q)</b> - Return true if the queue is empty.<br>
+<b>Queue.pop(Q)</b> - Get value from the top of queue, remove it.<br>
+<b>Queue.popBack(Q)</b> - Get value from the end of queue, remove it.<br>
+<b>Queue.push(Q,val)</b> - Add value to the back of queue.<br>
+<b>Queue.pushFront(Q,val)</b> - Add value to the top of queue.<br>
 <b>Queue.size(q)</b> - Return number of elements in queue.<br>
 <b>Set(t)</b> - Create new set from table of elements.<br>
 <b>Set.copy(S)</b> - Get copy of the set.<br>
+<b>Set.erase(S,val)</b> - Remove element from set.<br>
 <b>Set.insert(S,val)</b> - Insert element into set.<br>
-<b>Set.isEmpty(s)</b> - Return true if the set is empty.<br>
-<b>Set.map(s,fn)</b> - Apply function fn() to obtain new set.<br>
-<b>Set.remove(S,val)</b> - Remove element from set.<br>
-<b>Set.size(s)</b> - Number of elements in the set.<br>
-<b>Set.table(S)</b> - Represent set as a table.<br>
-<b>Set: comparison</b> - a==b, a~=b, a<b, a<=b, a>b, a>=b<br>
-<b>Set: union, intersection, difference</b> - a+b, a*b, a/b<br>
+<b>Set.isEmpty(S)</b> - Return true if the set is empty.<br>
+<b>Set.list(S)</b> - Represent set as a list of elements.<br>
+<b>Set.map(S,fn)</b> - Apply function fn() to obtain new set.<br>
+<b>Set.size(S)</b> - Number of elements in the set.<br>
+<b>Set: comparison</b> - S1==S2, S1~=S2, S1<S2, S1<=S2, S1>S2, S1>=S2<br>
+<b>Set: union, intersection, difference</b> - S1+S2, S1*S2, S1/S2<br>
 <b>Stack()</b> - Create new stack.<br>
-<b>Stack.copy(s)</b> - Create copy of the stack.<br>
-<b>Stack.isEmpty(s)</b> - Return true if the stack is empty.<br>
-<b>Stack.peek()</b> - Return top value without removing it.<br>
-<b>Stack.pop()</b> - Pop value from the stack, return element or nil.<br>
-<b>Stack.push(val)</b> - Push value to the stack, except nil.<br>
-<b>Stack.size(s)</b> - Return number of elements in stack.<br></p>
+<b>Stack.copy(S)</b> - Create copy of the stack.<br>
+<b>Stack.isEmpty(S)</b> - Return true if the stack is empty.<br>
+<b>Stack.pop(S)</b> - Pop value from the stack, return element or nil.<br>
+<b>Stack.push(S,val)</b> - Push value to the stack, except nil.<br>
+<b>Stack.size(S)</b> - Return number of elements in stack.<br>
+<b>Stack.top(S)</b> - Return top value without removing it.<br></p>
 <pre class="example">
+
 -- import 'struct'
-DS = require 'liblc.struct'
+DS = require 'sonatalib.struct'
 
 -- create stack
 a = DS.Stack()
@@ -1125,10 +1280,11 @@ a = DS.Stack()
 a:push(1)
 a:push(2)
 -- stack size
-ans = #a                        --> 2
+-- (the same as #a)
+ans = a:size()                  --> 2
 
 -- top value
-ans = a:peek()                  --> 2
+ans = a:top()                   --> 2
 
 -- make copy
 aa = a:copy()
@@ -1143,21 +1299,25 @@ ans = a:isEmpty()               --> true
 -- create queue
 b = DS.Queue()
 -- add elements to the tale
-b:add(1)
-b:add(2)
+b:push(1)
+b:push(2)
 -- get from the head
-ans = b:rem()                   --> 1
+ans = b:pop()                   --> 1
 
 -- add to the head
-b:addFirst(4)
+b:pushFront(4)
 -- remove from the tale
-ans = b:remLast()               --> 2
+ans = b:popBack()               --> 2
 
 -- check queue size
-ans = #b                        --> 1
+-- (the same as #b)
+ans = b:size()                  --> 1
 
 -- top value
-ans = b:peek()                  --> 4
+ans = b:front()                 --> 4
+
+-- opposite
+ans = b:back()                  --> 4
 
 -- check capacity
 ans = b:isEmpty()               --> false
@@ -1167,28 +1327,35 @@ bb = b:copy()
 
 -- create heap
 c = DS.Heap()
-c:insert(1)
-c:insert(3)
-c:insert(2)
-ans = c:top()                --> 3
+c:push(1)
+c:push(3)
+c:push(2)
+ans = c:top()                  --> 3
+
+-- get element
+ans = c:pop()                  --> 3
 
 -- check capacity
-ans = c:isEmpty()               --> false
+ans = c:isEmpty()              --> false
 
 -- new heap
 -- with user comparison function
 -- (return minimum element)
 d = DS.Heap(function (a,b) return a > b end)
-d:insert(1)
-d:insert(3)
-d:insert(2)
-ans = d:top()                --> 1
+d:push(1)
+d:push(3)
+d:push(2)
+ans = d:top()                   --> 1
 
 -- make copy
 dd = d:copy()
 
 -- heap size
-ans = #dd                       --> 2
+-- (equal to #dd)
+ans = dd:size()                 --> 3
+
+-- get heap element
+ans = dd:pop()                  --> 1
 
 -- define elements of the set
 a = DS.Set {1,2,3,4,1}           
@@ -1202,7 +1369,7 @@ ans = b[6]                     --> nil
 b:insert(6)
 ans = b[6]  
 -- remove value             
-b:remove(6)                    --> true
+b:erase(6)                    --> true
 
 -- union
 ans = a + b                    --> DS.Set {1,2,3,4,5}
@@ -1219,39 +1386,42 @@ ans = (a == b)                 --> false
 ans = (a < b)                  --> false
 
 -- represent as list
-t = a:table()
+t = a:list()
 ans = a[ t[1] ]                --> true
 
 -- size of the set
-ans = #a                       --> 4
+-- (the same as #a)
+ans = a:size()                 --> 4
+
+ans = a:isEmpty()              --> false
 
 -- make copy
 d = a:copy()
 ans = (d == a)                 --> true
 
--- generate new set from given
--- use function
+-- generate new set 
+-- using function
 e = a:map(function (x) return x^2 end)
 ans = e[16]                    --> true
 
 -- show
 print(a)
-</pre>
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Unit"></a>
 <h3># Unit (units) #</h3>
 <p class="descript">Operations and conversations according the units.</p>
 <p><b>Unit(v[,u])</b> - Create new elements with units.<br>
 <b>add(unit,rule)</b> - Add new rule for conversation.<br>
-<b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n<br>
-<b>comparison</b> - a==b, a~=b, a<b, a<=b, a>b, a>=b<br>
+<b>arithmetic</b> - U1+U2, U1-U2, U1*u2, U1/U2, U1^n<br>
+<b>comparison</b> - U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2<br>
 <b>convert(v, units)</b> - Convert one units to another, return new object or nil.<br>
-<b>copy(u)</b> - Create copy of the element.<br>
-<b>prefix</b> - Table of possible prefixes for units.<br>
-<b>serialize(obj)</b> - Save internal representation of units object.<br></p>
+<b>copy(U)</b> - Create copy of the element.<br>
+<b>prefix</b> - Table of possible prefixes for units.<br></p>
 <pre class="example">
+
 -- import 'units'
-Unit = require 'liblc.units'
+Unit = require 'sonatalib.units'
 
 -- add some rules
 Unit.add('h', Unit(60,'min'))
@@ -1263,7 +1433,8 @@ a = Unit(1,'m/s')
 ans = a['km/h']                    --> 3.6
 
 -- get numerical value
-ans = #a                           --> 1
+-- (the save as #a)
+ans = a:val()                      --> 1
 
 -- make copy
 cp = a:copy() 
@@ -1300,15 +1471,16 @@ ans = c['ksnake']                  --> 0.002
 -- complex rule
 d = Unit(1,'W')
 -- define function for conversation, apply it
-e = d:convert(function (x) return Unit(10*math.log((x/Unit(1,'mW')):simp(),10), 'dBm') end)
-ans = #e                           --> 30
+lg = function (x) return math.log(x)/math.log(10) end
+e = d:convert(function (x) return Unit( 10*lg((x/Unit(1,'mW')):simp()) , 'dBm') end)
+ans = #e                           --~ 30
 
 -- another definition syntax
 ans = 2 * Unit('N')                --> Unit(2,'N')
 
 -- show result
 print(a)
-</pre>
+--</pre>
 <a href="#Top">Top</a></div>
 <div><p align="center"><i>2017-2018, Stanislav Mikhel</i></p></div>
 </body></html>

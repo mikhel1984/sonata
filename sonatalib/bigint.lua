@@ -20,31 +20,31 @@ Big = require 'sonatalib.bigint'
 
 -- from integer
 a = Big(123)         
-ans = a:tonumber()           --> 123
+ans = a:val()           --> 123
 
 -- from string
 b = Big('456')        
-ans = b:tonumber()           --> 456
+ans = b:val()           --> 456
 
 -- arithmetical operations
-ans = Big.tonumber(a+b)      --> 579
+ans = Big.val(a+b)      --> 579
 
-ans = Big.tonumber(a-b)      --> -333
+ans = Big.val(a-b)      --> -333
 
-ans = Big.tonumber(a*Big(2)) --> 246
+ans = Big.val(a*Big(2)) --> 246
 
-ans = Big.tonumber(b/2)      --> 228
+ans = Big.val(b/2)      --> 228
 
-ans = Big.tonumber(b%a)      --> 87
+ans = Big.val(b%a)      --> 87
 
-ans = Big.tonumber(a^3)      --> 1860867
+ans = Big.val(a^3)      --> 1860867
 
 -- absolute value
-ans = Big.tonumber(Big.abs('-25')) --> 25
+ans = Big.val(Big.abs('-25')) --> 25
 
 -- factorial
 c = Big(10):fact()
-ans = Big.tonumber(c)  --> 3628800
+ans = Big.val(c)  --> 3628800
 
 -- make copy, comparison
 d = a:copy()
@@ -434,8 +434,8 @@ bigint.about[bigint.str] = {"str(B[,n])", "More readable string representation o
 --- Float number representation.
 --  @param v Bigint object.
 --  @return Integer if possible, otherwise float point number.
-bigint.tonumber = function (B) return tonumber(tostring(B)) end
-bigint.about[bigint.tonumber] = {"tonumber(N)", "Represent current big integer as number if it possible.", help.OTHER}
+bigint.val = function (B) return tonumber(tostring(B)) end
+bigint.about[bigint.val] = {"val(N)", "Represent current big integer as number if it possible.", help.OTHER}
 
 --- B!
 --  @param B Bigint object or integer.

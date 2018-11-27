@@ -105,7 +105,7 @@ print(Mat.triang(a .. b))
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
 -- apply function which depends on index too
-ans = a:mapEx(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
+ans = a:map(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
 
 -- apply function to matrices
 -- element-wise
@@ -487,25 +487,11 @@ matrix.map = function (M, fn)
    local res = matrix:init(M.rows, M.cols, {})
    for r = 1, res.rows do
       local resr, mr = res[r], M[r]
-      for c = 1, res.cols do resr[c] = fn(mr[c]) end
-   end
-   return res
-end
-matrix.about[matrix.map] = {"map(M,fn)", "Apply the given function to all elements, return new matrix.", TRANSFORM}
-
---- Apply function to each element, use row and col values.
---  @param M Source matrix.
---  @param fn Function f(x,r,c).
---  @return Result of function evaluation.
-matrix.mapEx = function (M, fn)
-   local res = matrix:init(M.rows, M.cols, {})
-   for r = 1, res.rows do
-      local resr, mr = res[r], M[r]
       for c = 1, res.cols do resr[c] = fn(mr[c],r,c) end
    end
    return res
 end
-matrix.about[matrix.mapEx] = {"mapEx(M,fn)", "Apply function fn(val,row,col) to all elements, return new matrix.", TRANSFORM}
+matrix.about[matrix.map] = {"map(M,fn)", "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).", TRANSFORM}
 
 --- Apply function to each pair elements of given matrices.
 --  @param M1 First matrix.
@@ -1173,8 +1159,8 @@ matrix.lu = function (M)
       local tmp = p[1]; Ver.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
       d = d-1
    end
-   return matrix.mapEx(a, function (M,r,c) return (r==c) and 1.0 or (r>c and M or 0) end),   -- lower
-          matrix.mapEx(a, function (M,r,c) return r <= c and M or 0 end),                    -- upper
+   return matrix.map(a, function (M,r,c) return (r==c) and 1.0 or (r>c and M or 0) end),   -- lower
+          matrix.map(a, function (M,r,c) return r <= c and M or 0 end),                    -- upper
 	  p                                                                                   -- permutations
 end
 matrix.about[matrix.lu] = {"lu(M)", "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}

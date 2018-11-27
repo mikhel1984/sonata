@@ -119,6 +119,12 @@ end
 local function docLines(module, alias, lng)
    local m = require('sonatalib.'..module)
    local lng_t = lng and lng[alias] or {}
+   -- remove 'import' from 'main'
+   if module == 'main' then
+      for k,v in pairs(m.about) do
+         if v[TITLE] == 'import' then m.about[k] = nil; break end
+      end
+   end
    -- collect
    local fn, description = {}
    for _, elt in pairs(m.about) do
@@ -467,7 +473,7 @@ help.generateDoc = function (locName, tModules)
    res[#res+1] = '</ul></div>'
    res[#res+1] = '<div><h3># About #</h3>'
    -- program description
-   local base = string.gsub(lc._args.text(), '\n', '<br>\n')
+   local base = string.gsub(lc._args_.text(), '\n', '<br>\n')
    base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
    res[#res+1] = string.format('<p>%s</p>', base)
    res[#res+1] = '<p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p></div>'
@@ -487,7 +493,7 @@ help.generateDoc = function (locName, tModules)
    res[#res+1] = string.format('<p class="descript">%s</p>', description)
    res[#res+1] = string.format('<p>%s</p>', functions)
    local fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, 'main'))
-   res[#res+1] = docExample(help.lc_test._getCode(fstr))
+   res[#res+1] = docExample(help.lc_test._getCode_(fstr))
    res[#res+1] = '<a href="#Top">Top</a></div>'
    -- other modules
    for _, val in ipairs(sortedModules) do
@@ -498,7 +504,7 @@ help.generateDoc = function (locName, tModules)
       res[#res+1] = string.format('<p class="descript">%s</p>', description)
       res[#res+1] = string.format('<p>%s</p>', functions)
       fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, k))
-      res[#res+1] = docExample(help.lc_test._getCode(fstr))
+      res[#res+1] = docExample(help.lc_test._getCode_(fstr))
       res[#res+1] = '<a href="#Top">Top</a></div>'
    end
 

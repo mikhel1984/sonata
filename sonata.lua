@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.9.8'
+lc_version = '0.9.10'
 
 -- Add path to the libraries
 if LC_ADD_PATH then

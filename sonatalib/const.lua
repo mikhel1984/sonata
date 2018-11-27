@@ -25,11 +25,11 @@ ans = pcall(function() _C.e = 0 end)  --> false
 ans = pcall(function() _C.myConst = 10 end) --> false
 
 -- create "immutable" value
-_C.set('myConst', 10)
+_C.add('myConst', 10)
 ans = _C.myConst            --> 10
 
 -- remove constant
-_C.delete('myConst')
+_C.remove('myConst')
 ans = _C.myConst            --> nil
  
 --]]
@@ -101,23 +101,23 @@ const.about[_data_.EuMa] = {"EuMa", "Difference between harmonic series and the 
 --- Make value "constant".
 --  @param name Name of constant.
 --  @param val  Value of constant.
-const.set = function (name,val)
+const.add = function (name,val)
    -- add only new constants
    if _data_[name] then error('Cannot modify '..tostring(name)) end
    _data_[name] = val
    print('Done')
 end
-const.about[const.set] = {'set(name,value)','Create new constant.'}
+const.about[const.add] = {'add(name,value)','Create new constant.'}
 
 --- Remove exixting constant.
 --  @param name Name of constant.
-const.delete = function (name)
+const.remove = function (name)
    if _data_[name] then      
       _data_[name] = nil
       print('Done')
    end
 end
-const.about[const.delete] = {'delete(name)','Remove constant.'}
+const.about[const.remove] = {'remove(name)','Delete constant.'}
 
 -- Define behavior of the "interface".
 setmetatable(const, 
