@@ -376,20 +376,17 @@ main.evalDialog = function (logFile)
    if logFile then
       log = io.open(logFile, 'w')
       local d = os.date('*t')
-      log:write(string.format('-- LOG(Sonata LC): %d-%d-%d %d:%d\n', d.day, d.month, d.year, d.hour, d.min))
+      log:write(string.format('-- Sonata LC # log # %d-%d-%d %d:%d \n\n', d.day, d.month, d.year, d.hour, d.min))
    end
    -- start dialog
    while true do
       io.write(invite)
       -- command processing
-      local status, res = _evaluate_(cmd .. io.read())
+      local newLine = io.read()
+      local status, res = _evaluate_(cmd..newLine)
       if status == EV_RES then
          if res ~= nil then print(res) end
 	 invite = invA; cmd = ""
-	 if log then
-	    log:write('\n', cmd, '\n')
-	    if res ~= nil then log:write('--[[ ', res, ' ]]\n') end
-	 end
       elseif status == EV_CMD then
          invite = invB; cmd = res
       elseif status == EV_ERROR then
@@ -397,6 +394,15 @@ main.evalDialog = function (logFile)
 	 invite = invA; cmd = ""
       else -- status == EV_QUIT
          break
+      end
+      -- logging
+      if log then
+         log:write(newLine,'\n')
+	 if status == EV_RES and res then 
+	    log:write('--[[ ', res, ' ]]\n\n') 
+	 elseif status == EV_ERROR then
+	    log:write('--[[ ERROR ]]\n\n')
+	 end
       end
    end
    if log then log:close() end
@@ -543,7 +549,7 @@ main._args_.text = function ()
       "\n'Sonata LC' is a Lua based program for mathematical calculations.",
       "",
       "USAGE:",
-      "\tlua [-i] sonata.lua [flag [arg1 arg2 ...]]",
+      "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
       "(option '-i' could be used for working in native interpretator of Lua)",
       "",
       "FLAGS:"
@@ -568,5 +574,4 @@ end
 return main
 
 --===============================
---TODO: add constant parameters
 --TODO: save last command as well

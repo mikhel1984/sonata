@@ -26,7 +26,7 @@ d = Num.Newton(math.sin, math.pi*0.7)
 ans = d                                   --~ math.pi
 
 -- numeric derivative
-b = Num.diff(math.sin, 0)
+b = Num.der(math.sin, 0)
 ans = b                                   --~ 1
 
 -- numeric integral
@@ -128,7 +128,7 @@ numeric.about[numeric.Newton] = {"Newton(fn,x0)", "Find root of equation using N
 --  @param fn Function f(x).
 --  @param x Parameter.
 --  @return Numerical approximation of the derivative value.
-numeric.diff = function (fn, x)
+numeric.der = function (fn, x)
    local dx = 2e-2
    local der, last = (fn(x+dx)-fn(x-dx))/(2*dx)
    repeat
@@ -137,7 +137,7 @@ numeric.diff = function (fn, x)
    until math.abs(der-last) < numeric.TOL
    return der
 end
-numeric.about[numeric.diff] = {"diff(fn,x)", "Calculate the derivative value for given function."}
+numeric.about[numeric.der] = {"der(fn,x)", "Calculate the derivative value for given function."}
 
 --- Integration using trapeze method.
 --  @param fn Function f(x).

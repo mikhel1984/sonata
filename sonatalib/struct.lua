@@ -106,10 +106,10 @@ ans = a                        --> DS.Set {1,2,3,4}
 ans = b[6]                     --> nil
 
 -- add value
-b:insert(6)
+b:add(6)
 ans = b[6]  
 -- remove value             
-b:erase(6)                    --> true
+b:remove(6)                    --> true
 
 -- union
 ans = a + b                    --> DS.Set {1,2,3,4,5}
@@ -448,14 +448,14 @@ end
 --- Add new element.
 --  @param S Set object.
 --  @param v New element.
-struct.Set.insert = function (S, v) S[v] = true end
-struct.about[struct.Set.insert] = {"Set.insert(S,val)", "Insert element into set.", SET}
+struct.Set.add = function (S, v) S[v] = true end
+struct.about[struct.Set.add] = {"Set.add(S,val)", "Insert element into set.", SET}
 
 --- Delete element.
 --  @param S Set object.
 --  @param v Element.
-struct.Set.erase = function (S,v) S[v] = nil end
-struct.about[struct.Set.erase] = {"Set.erase(S,val)", "Remove element from set.", SET}
+struct.Set.remove = function (S,v) S[v] = nil end
+struct.about[struct.Set.remove] = {"Set.remove(S,val)", "Remove element from set.", SET}
 
 --- Convert into array.
 --  @param S Set object.

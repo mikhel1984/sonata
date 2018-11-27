@@ -70,9 +70,6 @@ ans = f:get{1,1,1}                     --> b:get{1,1,1}*10
 -- simple print
 print(a)
 
--- print slices for axis 2 and 3
-print(d:fullString(2,3))
-
 -- iterate over array 
 for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 
@@ -401,74 +398,6 @@ array.about['#array'] = {"#array", "Return maximum number of elements.", help.ME
 --  @param A Array.
 --  @return String representation of the array.
 array.__tostring = function (A) return 'Array ' .. table.concat(A.size, 'x') end
-
---- Get array slice.
---  Show sequence of 2D matrices with array elements.
---  @param A Array object.
---  @param nRow Number of axes for representation as rows.
---  @param nCol Number of axes for representation as columns.
---  @return String with all array elements slice by slice.
-array.fullString = function (A, nRow, nCol)
-   local res = {}
-   local S = A.size
-   -- 1 dimensional array
-   if #S == 1 then
-      for i = 1, S[1] do res[i] = A[i] or 0 end
-      return table.concat(res, ' ')
-   elseif #S == 2 then
-      nRow = nRow or 1
-      nCol = nCol or 2
-   end
-   assert(nRow > 0 and nRow <= #S and nCol > 0 and nCol <= #S and nRow ~= nCol, "Wrong indexes!")
-   -- get 2D layer as string
-   local function layer (ind)
-            local row, col = {}, {}
-	    for i = 1, S[nRow] do
-	       ind[nRow] = i
-	       -- get row
-	       for j = 1, S[nCol] do
-	          ind[nCol]  = j
-		  col[j] = A[array._indexConvert_(A, ind)] or 0
-	       end
-	       -- save
-	       row[i] = table.concat(col, ' ')
-	    end
-	    return table.concat(row, '\n')
-         end
-   -- prepare index calculation
-   local bound, current, extent = {}, {}, {}
-   local prod = 1
-   for i = 1, #S do
-      if i ~= nRow and i ~= nCol then 
-         bound[#bound+1] = S[i] 
-	 current[#current+1] = 0 
-	 extent[#extent+1] = prod
-	 prod = prod * S[i]
-      end
-   end
-   local next_index = Ver.move(S, 1, #S, 1, {})
-
-   for counter = 0, prod-1 do
-      -- find coefficients
-      for i = #current,1,-1 do current[i] = math.modf(counter/extent[i]) % bound[i] end
-      -- write
-      local k = #current
-      for i = #next_index, 1, -1 do
-         if     i == nRow then next_index[i] = 'R'
-	 elseif i == nCol then next_index[i] = 'C'
-	 else
-	    next_index[i] = current[k]+1
-	    k = k-1
-	 end
-      end
-      -- get strings
-      res[#res+1] = '{' .. table.concat(next_index,',') .. '}' 
-      res[#res+1] = layer(next_index)
-      res[#res+1] = ''
-   end
-   return table.concat(res, '\n') 
-end
-array.about[array.fullString] = {"fullString(A,nRow,nCol)", "Represent array as sequence of matrices, where r and c are numbers of axes.", help.OTHER}
 
 -- Constructor
 setmetatable(array, {__call = function (self, tSize) 

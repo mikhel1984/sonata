@@ -91,12 +91,12 @@ c:add{'b','e',w=0.4}
 c:add{'c','f',w=2}
 
 -- Dijkstra path search
-dist,prev = c:Dijkstra('a') 
+dist,prev = c:pathD('a') 
 ans = dist['g']                --> 1.9
 
 -- Bellman-Ford path search
 c:add{'f','h',w=-0.5}
-dist,prev = c:BellmanFord('a')
+dist,prev = c:pathBF('a')
 ans = dist['h'] 
 
 -- check negative edges
@@ -415,7 +415,7 @@ graph.about[graph.dfs] = {"dfs(G,start,goal)","Depth first search. Return result
 --  @param start Initial node.
 --  @param goal Goal node.
 --  @return Table of distances and predecessors or path and its length.
-graph.Dijkstra = function(G,start,goal)
+graph.pathD = function(G,start,goal)
    -- define local set 
    local set = {}
    for k in pairs(G) do set[k] = math.huge end
@@ -442,14 +442,14 @@ graph.Dijkstra = function(G,start,goal)
       return dist, prev
    end
 end
-graph.about[graph.Dijkstra] = {'Dijkstra(G,start[,goal]', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.", SEARCH}
+graph.about[graph.pathD] = {'pathD(G,start[,goal])', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.", SEARCH}
 
 --- Find shortest path with Bellman-Ford algorithm/
 --  @param G Graph.
 --  @param start Initial node.
 --  @param goal Goal node.
 --  @return Table of distances and predecessors or path and its length.
-graph.BellmanFord = function (G, start,goal)
+graph.pathBF = function (G, start,goal)
    -- initialize
    local prev, dist = {[start]=start}, {}
    local N = 0      -- number of nodes
@@ -482,7 +482,7 @@ graph.BellmanFord = function (G, start,goal)
       return dist, prev
    end
 end
-graph.about[graph.BellmanFord] = {'BellmanFord(G,start[,goal]','Shortest path search using Bellman-Ford algorithm.', SEARCH}
+graph.about[graph.pathBF] = {'pathBF(G,start[,goal])','Shortest path search using Bellman-Ford algorithm.', SEARCH}
 
 -- free memory in case of standalone usage
 if not lc_version then graph.about = nil end

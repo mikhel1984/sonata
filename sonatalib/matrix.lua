@@ -65,6 +65,7 @@ e = a^-1
 ans = e(2,1)                     --> 1.5
 
 -- object copy
+-- (it doesn't copy zeros)
 f = a:copy()
 ans = (f == a)                   --> true
 
@@ -140,16 +141,10 @@ n = m:pinv()
 ans = n(2,2)                    --~ 0.333
 
 -- copy as Lua table
--- without methametods
+-- (without methametods)
 k = Mat.eye(3)
 k = k:table()
 ans = k[2][1]                   --> 0
-
--- back to matrix
--- (import table)
-k = Mat(k)
-k = k:sparse()
-ans = rawget(k[2],1)             --> nil
 
 -- make diagonal matrix
 ans = Mat.diag({1,2,3})         --> Mat {{1,0,0},{0,2,0},{0,0,3}}
@@ -1014,19 +1009,6 @@ matrix.table = function (M)
    return res
 end
 matrix.about[matrix.table] = {"table(M)", "Convert to simple Lua table.", help.OTHER}
-
---- Remove zeros.
---  @param M Source matrix.
---  @return Sparse matrix.
-matrix.sparse = function (M)
-   local res = matrix:init(M.rows, M.cols, {})
-   for r = 1, res.rows do
-      local resr, mr = res[r], M[r]
-      for c = 1, res.cols do resr[c] = mr[c] end
-   end
-   return res
-end
-matrix.about[matrix.sparse] = {"sparse(M)", "Return sparse matrix.", help.OTHER}
 
 --- Get diagonal vector or create matrix with given elements.
 --  @param M Matrix, vector or table with numbers.
