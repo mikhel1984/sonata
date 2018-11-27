@@ -18,12 +18,12 @@ Following modules are available now:
 * _struct_ - base data structures
 * [units](https://github.com/mikhel1984/lc/wiki/Example:-units) - units conversation and other operations
 
-Program includes a help system for most of the functions and modules. It also can be translated to other languages. Available now languages:
+Program includes a help system for most of the functions and modules. It is available in such languages as:
 * _English (default)_
 * _Esperanto (eo)_
 * _Russian (ru)_
 
-**Sonata LC** works in standard **Lua** interpreter. It is oriended on version _5.3_, but most of the functions are compatible also with _5.1_ and _5.2_ versions. In order to run it, call
+**Sonata LC** works in standard **Lua** interpreter. It is oriended on version _5.3_, but most of the functions are compatible with _5.1_ version. In order to run it, call
 
     lua sonata.lua
 

@@ -59,6 +59,10 @@ ans = b[3]                      --> 3
 b = lc.range(2,10,2)
 ans = b[2]                      --> 4
 
+-- calculate function values
+c = lc.map(sin, b)
+ans = c[1]                      --~ 0.9093
+
 --]]
 
 --	LOCAL
@@ -73,6 +77,36 @@ local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
 -- compatibility
 local Ver = require "sonatalib.versions"
+
+--- Process command string.
+--  @param cmd String with Lua expression.
+--  @return Status of processing and rest of command.
+local function _evaluate_(cmd)
+   if cmd == 'quit' then return EV_QUIT end 
+   -- remove line comments
+   local tmp = string.match(cmd, '^(.*)%-%-.*$')
+   if tmp then cmd = tmp end
+   -- parse 
+   local fn, err = Ver.loadStr('return '..cmd)
+   if err then
+      fn, err = Ver.loadStr(cmd)      
+   end
+   if err then
+      if string.find(err, 'error') then
+         return EV_ERROR, err
+      else
+         return EV_CMD, cmd
+      end
+   else
+      local ok, res = pcall(fn)
+      if ok then 
+	 _ans = res
+	 return EV_RES, res
+      else
+         return EV_ERROR, res
+      end
+   end
+end
 
 --	INFO
 
@@ -252,7 +286,7 @@ main.pause = function (txt)
 end
 about[main.pause] = {'lc.pause([str])', 'Wait for button press, print text if need.', lc_help.OTHER}
 
---- Generate sequence of values
+--- Generate sequence of values.
 --  @param from Begining of range (default is 1).
 --  @param to End of range.
 --  @param step Step value (default is 1).
@@ -266,6 +300,17 @@ main.range = function (from,to,step)
    return res
 end
 about[main.range] = {'lc.range([from,]to[,step])','Generate table with sequence of numbers.', lc_help.OTHER}
+
+--- Generate list of function values.
+--  @param fn Function to apply.
+--  @param tbl Table with arguments.
+--  @return Table with result of evaluation.
+main.map = function (fn, tbl)
+   local res = {}
+   for _,v in ipairs(tbl) do res[#res+1] = fn(v) end
+   return res
+end
+about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.', lc_help.OTHER}
 
 --- Print lc_help information.
 --  @param fn Function name.
@@ -357,33 +402,6 @@ main.evalTF = function (src,dst)
    end   
 end
 about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expressions in ##..##. Save resuto to dst file, if need.", lc_help.OTHER}
-
-local function _evaluate_(cmd)
-   if cmd == 'quit' then return EV_QUIT end 
-   -- remove line comments
-   local tmp = string.match(cmd, '^(.*)%-%-.*$')
-   if tmp then cmd = tmp end
-   -- parse 
-   local fn, err = Ver.loadStr('return '..cmd)
-   if err then
-      fn, err = Ver.loadStr(cmd)      
-   end
-   if err then
-      if string.find(err, 'error') then
-         return EV_ERROR, err
-      else
-         return EV_CMD, cmd
-      end
-   else
-      local ok, res = pcall(fn)
-      if ok then 
-	 _ans = res
-	 return EV_RES, res
-      else
-         return EV_ERROR, res
-      end
-   end
-end
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
