@@ -8,7 +8,7 @@
 --LC_LOCALIZATION = "ru.lng"
 
 --	Text coloring
---LC_USE_COLOR = true
+LC_USE_COLOR = true
 
 --	Load after start (optional)
 --LC_DEFAULT_MODULES = {'matrix','numeric'}
@@ -33,8 +33,8 @@ lc_local = {}
 -- Text colors 
 lc_help.useColors(LC_USE_COLOR) 
 
--- Quick exit 
-quit = function () print(lc_help.CMAIN.."\n              --======= Buy! =======--\n"..lc_help.CRESET); os.exit() end
+-- Quit the program
+quit = lc._exit_
 
 -- Update random seed
 math.randomseed(os.time())
@@ -92,7 +92,9 @@ end
 
 -- Add modules 
 setmetatable(import, 
-{ __tostring = function (x) io.write(lc_help.CHELP); return about:get('done')..lc_help.CRESET end,
+{ -- last recursive call 
+  __tostring = function (x) io.write(lc_help.CHELP); return about:get('done')..lc_help.CRESET end,
+  -- load modules
   __call = function (self, name) 
     if name == 'all' then 
        for k,v in pairs(self) do lc_local.doimport(self,k) end

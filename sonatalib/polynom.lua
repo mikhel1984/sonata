@@ -50,7 +50,7 @@ ader = a:der()
 ans = ader(1)                 --> 11
 
 -- build polynomial using roots
-ans = Poly.coef(1,-1)         --> Poly {1,0,-1}
+ans = Poly.build(1,-1)         --> Poly {1,0,-1}
 
 -- make copy and compare
 c = a:copy()
@@ -58,11 +58,6 @@ ans = (a == c)                --> true
 
 -- not equal
 ans = (b == c)                --> false
-
--- find root
--- near some value
-pp = Poly.coef(2,3)
-ans = pp:NewtonRapson(0)      --~ 2.00
 
 -- find real roots
 e = a:real()
@@ -329,7 +324,7 @@ polynom.about[polynom.int] = {"int(P[,x0])", "Calculate integral, x0 - free coef
 --  Arguments are a sequence of roots.
 --  @param ... List of roots.
 --  @return Polynomial object.
-polynom.coef = function (...)
+polynom.build = function (...)
    local args = {...}
    local res = polynom:init({1})
    local mul = polynom.__mul
@@ -338,7 +333,7 @@ polynom.coef = function (...)
    end
    return res
 end
-polynom.about[polynom.coef] = {"coef(...)", "Return polynomial with given roots.", help.OTHER}
+polynom.about[polynom.build] = {"build(root1,root2,...)", "Return polynomial with given roots.", help.OTHER}
 
 --- String representation.
 --  @param P Polynomial object.
@@ -365,7 +360,7 @@ end
 --  @param x0 Initial value of the root (optional).
 --  @param epx Tolerance
 --  @return Found value and flag about its correctness.
-polynom.NewtonRapson = function (P,x0,eps)
+polynom._NewtonRapson_ = function (P,x0,eps)
    eps = eps or 1e-6
    x0 = x0 or math.random()
    -- prepare variables
@@ -395,7 +390,7 @@ polynom.real = function (P)
       res[#res+1] = 0
    end
    -- if could have roots
-   local n_r = polynom.NewtonRapson 
+   local n_r = polynom._NewtonRapson_ 
    while #pp > 1 do
       local x, root = n_r(pp)
       if root then 
@@ -437,13 +432,14 @@ polynom.fit = function (X,Y,ord)
    for k = 1,ord+1 do
       local mk = {}
       for j = 1, ord+1 do mk[j] = sX[k+j-1] end
-      --m[k] = mk
       acc[k] = mk
    end
    for k = ord+2,#acc do acc[k] = nil end
+   -- add summs to the last "column"
+   for i = 1,#acc do table.insert(acc[i],sY[i]) end
    -- solve
    local mat = polynom.lc_matrix
-   local gaus = mat.rref(mat(acc),mat.V(sY))
+   local gaus = mat.rref(mat(acc))
    local res = {}
    for i = 1,ord+1 do res[i] = gaus:get(i,-1) end
    return polynom:init(res)

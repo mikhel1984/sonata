@@ -99,9 +99,6 @@ ans = a .. b                     --> Mat {{1,2,5,6},{3,4,7,8}}
 -- (a // b - for short)
 ans = a:concat(b,'v')            --> Mat {{1,2},{3,4},{5,6},{7,8}}
 
--- to triangular form
-print(Mat.triang(a .. b))
-
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
@@ -115,7 +112,7 @@ aa = Mat.apply(fn, b,b,b)
 ans = aa[1][1]                    --> 30
 
 -- use Gauss transform to solve equation
-ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
+ans = Mat.rref(a .. Mat{{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
 
 -- create vector
 ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
@@ -123,10 +120,6 @@ ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 -- get submatrix
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
 ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
-
--- square norm along rows
-gsq = g:sqNorm('r') 
-ans = gsq[1][1]                 --> 14
 
 -- eualedian norm
 ans = Mat.V({1,2,3}):norm()     --~ math.sqrt(14)
@@ -187,7 +180,7 @@ ans = a:sum()                   --> Mat {{3},{7}}
 
 -- apply product to each column
 -- initial value is 1
-ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
+ans = a:reduce(function (x,y) return x*y end, 'c') --> Mat {{3,8}}
 
 -- get rank
 ans = Mat.ones(2,3):rank()      --> 1
@@ -343,17 +336,12 @@ matrix._GaussUp_ = function (M)
    return M
 end
 
---- Matrix triangulation.
---  @param M Initial matrix.
---  @return Triangulated matrix.
-matrix.triang = function (M) return matrix._GaussDown_(matrix.copy(M)) end
-matrix.about[matrix.triang] = {'triang(M)', 'Matrix triangulation produced by Gaussian elimination.', TRANSFORM}
-
 --- Matrix rank.
 --  @param M Initial matrix.
 --  @return Value of rank.
 matrix.rank = function (M)
-   local mat,i = matrix.triang(M),1
+   local mat = matrix._GaussDown_(matrix.copy(M))
+   local i = 1
    while i <= mat.rows do
       local mati = mat[i]
       if not mati then break end
@@ -654,14 +642,12 @@ end
 matrix.about[matrix.inv] = {"inv(M)", "Return inverse matrix.", TRANSFORM}
 
 --- Solve system of equations using Gauss method.
---  @param A Matrix of coefficients.
---  @param b Free coefficients (matrix of vector).
---  @return Solution and determinant.
-matrix.rref = function (A,b)
-   local tr, d = matrix._GaussDown_(matrix.concat(A,b,'h'))
-   return matrix._GaussUp_(tr), d
+--  @param M Matrix representation for system of equations.
+--  @return Transformed matrix.
+matrix.rref = function (M)
+   return matrix._GaussUp_(matrix._GaussDown_(M))
 end
-matrix.about[matrix.rref] = {"rref(A,b)", "Perform transformations using Gauss method. Return also determinant."}
+matrix.about[matrix.rref] = {"rref(M)", "Perform transformations using Gauss method."}
 
 --- Create vector.
 --  Simplified vector constructor. 
@@ -1184,24 +1170,23 @@ matrix.about[matrix.chol] = {"chol(M)", "Cholesky decomposition of positive defi
 --  @param M Initial matrix.
 --  @param fn Function of 2 arguments.
 --  @param dir Direction of evaluations (optional).
---  @param init Initial value (optional).
 --  @return Reduced matrix.
-matrix.reduce = function (M,fn,dir,init)
+matrix.reduce = function (M,fn,dir)
    dir = dir or 'r'
-   init = init or 0
    local res
    if dir == 'r' then
       res = matrix:init(M.rows,1, {})
       for r = 1,M.rows do
-         local s, mr = init, M[r]
-	 for c = 1,M.cols do s = fn(s,mr[c]) end
+         local mr = M[r]
+	 local s = mr[1]
+	 for c = 2,M.cols do s = fn(s,mr[c]) end
 	 res[r][1] = s
       end
    elseif dir == 'c' then
       res = matrix:init(1,M.cols, {})
       for c = 1,M.cols do
-         local s = init
-	 for r = 1,M.rows do s = fn(s,M[r][c]) end
+         local s = M[1][c]
+	 for r = 2,M.rows do s = fn(s,M[r][c]) end
 	 res[1][c] = s
       end
    else
@@ -1215,17 +1200,8 @@ matrix.about[matrix.reduce] = {"reduce(M,fn,dir,init)","Evaluate s=fn(s,x) along
 --  @param M Initial matrix.
 --  @param dir Direction (optional).
 --  @return Sum along 'r'ows or 'c'olumns
-matrix.sum = function (M,dir) return matrix.reduce(M, fn_sum, dir, 0) end
+matrix.sum = function (M,dir) return matrix.reduce(M, fn_sum, dir) end
 matrix.about[matrix.sum] = {"sum(M,dir)", "Find sum of elements along given direction ('r' or 'c')."}
-
---- Get euclidean norm for each column/row.
---  @param m Initial matrix.
---  @param dir Direction (optional).
---  @return Norm along rows or columns.
-matrix.sqNorm = function (M,dir)
-   return matrix.reduce(M, function (a,b) return a+b^2 end, dir, 0)
-end
-matrix.about[matrix.sqNorm] = {"sqNorm(M,dir)", "Calculate square norm along given direction."}
 
 --- Euclidean norm of the matrix at whole.
 --  @param M Current matrix.
@@ -1297,4 +1273,5 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
+--TODO: Redefine 'norm' method
 --TODO: change matrix print

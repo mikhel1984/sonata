@@ -1,6 +1,6 @@
 --[[       sonatalib/files.lua
 
---- Routines for working with data files.
+--- Routines for working with files and text.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
 
@@ -59,7 +59,7 @@ local help = lc_version and (require "sonatalib.help") or {new=function () retur
 
 local files = {
 -- description
-about = help:new("Routines for working with data files."),
+about = help:new("Routines for working with files and text."),
 }
 
 --- Split string into substrings based on the given delimiter.
@@ -137,6 +137,7 @@ files.read = function (fName)
    end
    return str
 end
+files.about[files.read] = {"read(fName)", "Return file content as a text.", READ}
 
 --- Load Lua table from file.
 --  @param fName File name.

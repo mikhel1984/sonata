@@ -406,6 +406,7 @@ main.evalDialog = function (logFile)
       end
    end
    if log then log:close() end
+   main._exit_()
 end
 
 
@@ -570,6 +571,8 @@ main._args_.text = function ()
    
    return table.concat(txt,'\n')   
 end
+
+main._exit_ = function () print(lc_help.CMAIN.."\n              --======= Buy! =======--\n"..lc_help.CRESET); os.exit() end
 
 return main
 
