@@ -274,20 +274,6 @@ main.map = function (fn, tbl)
 end
 about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.', lc_help.OTHER}
 
---- Print lc_help information.
---  @param fn Function name.
-help = function(fn)   
-   if fn then 
-      about:print(type(fn)=='table' and fn.about or fn) 
-   else
-      about:print(about)
-      print("\t" .. about:get('modules'))
-      local t = {}; for k in pairs(import) do t[#t+1] = k end
-      print(table.concat(t, ', '))
-   end
-   io.write(lc_help.CRESET)
-end
-
 --- Find function name
 --  @param dbg Structure with debug info.
 --  @return String with funciton name.

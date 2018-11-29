@@ -28,6 +28,7 @@ end
 
 -- Table for program variables. Import base functions 
 lc = require('sonatalib.main')
+-- Environment
 lc_local = {}
 
 -- Text colors 
@@ -61,15 +62,14 @@ import = {
 
 -- Update help information about imported modules 
 function lc_local.import_state_update()
-   local m = {string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
+   local m = {lc_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
       m[#m+1] = string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-'))
    end
    m[#m+1] = about:get('use_import')
+   m[#m+1] = lc_help.CRESET
    return table.concat(m, '\n')
 end
--- save current state
-about[import] = {"import", lc_local.import_state_update()}
 
 -- Import actions 
 function lc_local.doimport(tbl,name)
@@ -107,7 +107,6 @@ setmetatable(import,
           print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))          
        end       
     end
-    about[import][2] = lc_local.import_state_update()
     return import
   end,
 })
@@ -127,8 +126,30 @@ lc_local.dialog = true
 -- Read localization file and update descriptions 
 if LC_LOCALIZATION then 
    about:localization(LC_LOCALIZATION) 
-   about[import][2] = lc_local.import_state_update()
 end
+
+--- Print lc_help information.
+--  @param fn Function name.
+help = function(fn)   
+   if fn then 
+      if fn == import then
+         print(lc_local.import_state_update())
+      else
+         about:print(type(fn)=='table' and fn.about or fn) 
+      end
+   else
+      about:print(about)
+      print("\t" .. about:get('modules'))
+      local t = {}; for k in pairs(import) do t[#t+1] = k end
+      print(table.concat(t, ', '))
+   end
+   io.write(lc_help.CRESET)
+end
+
+-- save references for "global" methods
+lc_local.import = import
+lc_local.help = help            
+lc_local.quit = quit
 
 -- Run! 
 io.write(lc_help.CMAIN)
@@ -149,5 +170,4 @@ if arg[-1] ~= '-i' then
 end
 
 --===============================================
---TODO: rename functions to matlab style
 --TODO: change _PROMPT
