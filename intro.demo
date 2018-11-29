@@ -79,6 +79,12 @@ exp(3+_i*4)
 
 --	Breif module overview
 -- PAUSE
+--	COMPLEX
+-- Operations with complex numbers.
+a = Comp(1,2)          -- real and complex components
+b = 3+_i*4             -- use complex unit
+-- PAUSE
+
 --	ARRAY
 -- Provides basic operations with arrays,
 -- i.e. multidimensional ordered sequence of elements.
@@ -91,3 +97,18 @@ for ind, val in c:next() do
    print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val))
 end
 -- PAUSE
+
+--	BIGINT
+-- Operations with long integers.
+a = Big(1234)          -- create new from number
+b = Big '56789'        -- or from string
+-- Typical operations are available
+a - b
+a * b
+b^50 
+_ans:val()             -- decimal representation
+c = Big(50):fact()     -- factorial
+c:str()                -- more "friendly" view
+-- PAUSE
+
+

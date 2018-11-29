@@ -20,9 +20,9 @@ Comp = require 'sonatalib.complex'
 
 -- real and imag pars
 a = Comp(1,2)
--- or just real                  
+-- or just imaginary
 b = Comp(3)
-ans = b                        --> Comp(3,0)
+ans = b                        --> Comp(0,3)
 
 -- imaginary unit
 j = Comp._i
@@ -32,11 +32,11 @@ ans = 3+4*j                    --> Comp(3,4)
 ans = Comp.trig(2,0)           --> Comp(2,0)
 
 -- arithmetic
-ans = a + b                    --> Comp(4,2)
+ans = a + b                    --> Comp(1,5)
 
 ans = Comp(3) - b              --> Comp(0)
 
-ans = a * b                    --> Comp(3,6)
+ans = a * b                    --> Comp(-6,3)
 
 ans = a / Comp._i              --> Comp(2,-1)
 
@@ -58,7 +58,7 @@ ans = (a ~= b)                 --> true
 ans = a:abs()                  --~ 2.236
 
 -- argument (angle)
-ans = a:arg()                  --~ 1.107
+ans = a:angle()                  --~ 1.107
 
 -- conjugated number
 ans = a:conj()                 --> Comp(1,-2)
@@ -140,7 +140,7 @@ complex.__index = complex
 --  @param re Real part.
 --  @param im Imaginary part, default is 0.
 --  @return Complex number.
-complex.new = function (self, re, im)   return setmetatable({re, im or 0}, self) end
+complex.new = function (self, re, im)   return setmetatable({im and re or 0, im or re}, self) end
 
 --- Create complex number from trigonometric representation.
 --  @param mod Module.
@@ -160,9 +160,9 @@ complex.about[complex.copy] = {"copy(Z)", "Create copy of the complex number.", 
 --  @param b Real or complex number (optional).
 --  @return Complex number(s).
 complex._args_ = function (a,b)
-   a = iscomplex(a) and a or complex:new(a)
+   a = iscomplex(a) and a or complex:new(a,0)
    if b then
-      b = iscomplex(b) and b or complex:new(b)
+      b = iscomplex(b) and b or complex:new(b,0)
    end
    return a,b
 end
@@ -210,7 +210,7 @@ end
 --  @return Power.
 complex.__pow = function (Z1,Z2)
    Z1,Z2 = complex._args_(Z1,Z2)
-   local a0, a1 = complex.abs(Z1), complex.arg(Z1)
+   local a0, a1 = complex.abs(Z1), complex.angle(Z1)
    local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
    local abs = a0^(Z2[1])*math.exp(-a1*Z2[2])
    local arg = k*Z2[2]+Z2[1]*a1
@@ -240,8 +240,8 @@ complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META
 --- Argument of complex number.
 --  @param Z Complex number.
 --  @return Argument of the number.
-complex.arg = function (Z) return math.atan(Z[2], Z[1]) end
-complex.about[complex.arg] = {"arg(Z)", "Return argument of complex number."}
+complex.angle = function (Z) return math.atan(Z[2], Z[1]) end
+complex.about[complex.angle] = {"angle(Z)", "Return argument of complex number."}
 
 --- Module of complex number.
 --  @param Z Complex number.
@@ -355,7 +355,7 @@ complex.about[complex._i] = {"_i", "Complex unit.", help.CONST}
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
 complex.Comp = 'Comp'
-complex.about[complex.Comp] = {"Comp(a[,b])", "Create new complex number.", help.NEW}
+complex.about[complex.Comp] = {"Comp([a,]b)", "Create new complex number.", help.NEW}
 
 --[[
 -- Complex number serialization.
@@ -404,3 +404,4 @@ return complex
 
 --==========================
 --TODO: define inverse trigonometric complex functions
+--TODO: define Comp(x) as 0+i*x 

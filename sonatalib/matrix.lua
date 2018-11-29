@@ -166,7 +166,7 @@ ans = l[2][1]                   --~ 0.714
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
-m = m:Cholesky()
+m = m:chol()
 ans = m[2][2]                   --~ 1.633
 
 -- matrix trace
@@ -1150,7 +1150,7 @@ matrix.about[matrix.lu] = {"lu(M)", "LU decomposition for the matrix. Return L,U
 --- Cholesky decomposition.
 --  @param M Positive definite symmetric matrix.
 --  @return Lower part of the decomposition.
-matrix.Cholesky = function (M)
+matrix.chol = function (M)
    if M.rows ~= M.cols then error("Square matrix is expected!") end
    local a,p = matrix.copy(M), {}
    -- calculate new values
@@ -1175,7 +1175,7 @@ matrix.Cholesky = function (M)
    end
    return a
 end
-matrix.about[matrix.Cholesky] = {"Cholesky(M)", "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
+matrix.about[matrix.chol] = {"chol(M)", "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
 
 --- Apply function to all elements along given direction.
 --  @param M Initial matrix.
