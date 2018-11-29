@@ -516,12 +516,13 @@ matrix.apply = function (fn, ...)
    end
    local res, v = matrix:init(rows, cols, {}), {}
    -- evaluate
+   local upack = Ver.unpack
    for r = 1,res.rows do
       for c = 1,res.cols do
          -- collect
 	 for k = 1,#arg do v[k] = arg[k][r][c] end
 	 -- calc
-	 res[r][c] = fn(Ver.unpack(v))
+	 res[r][c] = fn(upack(v))
       end
    end
    return res
@@ -580,10 +581,11 @@ matrix.__pow = function (M,n)
    if (M.rows ~= M.cols) then error("Square matrix is expected!") end
    if n == -1 then return matrix.inv(M) end
    local res, acc = matrix.eye(M.rows), matrix.copy(M)
+   local mul = matrix.__mul
    while n > 0 do
-      if n%2 == 1 then res = matrix.__mul(res, acc) end
+      if n%2 == 1 then res = mul(res, acc) end
       n = math.modf(n*0.5)
-      if n > 0 then acc = matrix.__mul(acc, acc) end
+      if n > 0 then acc = mul(acc, acc) end
    end
    return res
 end
@@ -1137,8 +1139,9 @@ end
 matrix.lu = function (M)
    local a,_,d = matrix._luPrepare_(M)
    local p = matrix.eye(M.rows,M.cols)
+   local move = Ver.move
    while d > 0 do
-      local tmp = p[1]; Ver.move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
+      local tmp = p[1]; move(p,2,p.rows,1); p[p.rows] = tmp   -- shift
       d = d-1
    end
    return matrix.map(a, function (M,r,c) return (r==c) and 1.0 or (r>c and M or 0) end),   -- lower

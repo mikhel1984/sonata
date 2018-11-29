@@ -404,4 +404,3 @@ return complex
 
 --==========================
 --TODO: define inverse trigonometric complex functions
---TODO: define Comp(x) as 0+i*x 

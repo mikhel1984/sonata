@@ -216,19 +216,21 @@ end
 --  @param ... List of arrays.
 --  @return New array where each element is result of the function evaluation.
 array.apply = function (func, ...)
-   arg = {...}
+   local arg = {...}
    -- check arguments
+   local eq = array.isEqual
    for i = 2,#arg do
-      if not array.isEqual(arg[i],arg[i-1]) then error("Not compatible arrays!") end
+      if not eq(arg[i],arg[i-1]) then error("Not compatible arrays!") end
    end
    -- prepare new
    local tmp, v = arg[1], {}
    local res = array:new(Ver.move(tmp.size, 1, #tmp.size, 1, {}))
+   local upack = Ver.unpack
    for i = 1, array._capacity_(tmp) do
       -- collect
       for k = 1,#arg do v[k] = arg[k][i] or 0 end
       -- evaluate
-      local p = func(Ver.unpack(v))
+      local p = func(upack(v))
       if p ~= 0 then res[i] = p end
    end
    return res
@@ -292,7 +294,8 @@ array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b"
 --  @return Array of the given size with random numbers from 0 to 1.
 array.rand = function (tSize)
    local arr = array:new(tSize)
-   for i = 1, array._capacity_(arr) do arr[i] = math.random() end
+   local rnd = math.random
+   for i = 1, array._capacity_(arr) do arr[i] = rnd() end
    return arr
 end
 array.about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
@@ -341,6 +344,7 @@ array.sub = function (A, tInd1, tInd2)
    local res = array:new(newsize)
    -- fill
    local K, S = res.k, res.size
+   local conv = array._indexConvert_
    for count = 1, array._capacity_(res) do
       -- calculate new temporary index
       for i = 1, #ind do 
@@ -348,7 +352,7 @@ array.sub = function (A, tInd1, tInd2)
 	 tInd2[i] = tInd1[i] + tmp
 	 ind[i] = tmp + 1
       end
-      res[array._indexConvert_(res,ind)] = A[array._indexConvert_(A,tInd2)]
+      res[conv(res,ind)] = A[conv(A,tInd2)]
    end
    return res
 end
@@ -372,6 +376,7 @@ array.concat = function (A1, A2, nAxis)
    local res, ind1, ind2 = array:new(newsize), {}, {}
    local edge = A1.size[nAxis]
    local K, S = res.k, res.size
+   local conv = array._indexConvert_
    for count = 1, array._capacity_(res) do
       -- prepare index
       for i = 1, #newsize do
@@ -381,7 +386,7 @@ array.concat = function (A1, A2, nAxis)
       -- get value
       local second = ind1[nAxis] > edge
       ind2[nAxis] = second and (ind2[nAxis]-edge) or ind2[nAxis]
-      res[array._indexConvert_(res,ind1)] = second and A2[array._indexConvert_(A2,ind2)] or A1[array._indexConvert_(A1,ind2)]
+      res[conv(res,ind1)] = second and A2[conv(A2,ind2)] or A1[conv(A1,ind2)]
    end
    --for i = 1, array._capacity_(arr2) do print(i, arr2[i]) end
    return res 

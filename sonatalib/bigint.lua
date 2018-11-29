@@ -157,20 +157,21 @@ bigint._div_ = function (num1,num2)
    local denom = bigint.abs(num2)                  -- denominator
    local last = #denom[2]                       -- length of denominator
    local q = string.sub(denom[2], last)         -- first digit
+   local mul, sub, le = bigint.__mul, bigint.__sub, bigint.__le
    -- read the string
    while k <= #num do                             
       if rest >= denom then
          -- get ratio
 	 local p = string.sub(rest[2], last):reverse()
 	 local n = math.modf(p/q)
-	 local prod = bigint.__mul(n,denom)        -- n * denom
+	 local prod = mul(n,denom)                 -- n * denom
 	 -- save result
-	 if bigint.__le(prod, rest) then           -- prod <= rest
+	 if le(prod, rest) then                    -- prod <= rest
 	    acc[#acc+1] = n
-	    rest = bigint.__sub(rest, prod)        -- rest - prod
+	    rest = sub(rest, prod)                 -- rest - prod
 	 else
 	    acc[#acc+1] = n-1
-	    rest = bigint.__sub(rest,prod)+denom   -- rest-prod+denom
+	    rest = sub(rest,prod)+denom            -- rest-prod+denom
 	 end
       else
          if #acc > 0 then acc[#acc+1] = 0 end
@@ -217,14 +218,14 @@ bigint._sub_ = function (B1,B2)
    if bigint.abs(B1) < bigint.abs(B2) then
       p,q,r = q,p,-1
    end
-   local acc = {}
+   local acc, base = {}, bigint.BASE
    -- calculate sub
    for i = 1, #p[VALUE] do
       local pi = string.byte(p[2], i) or ZERO
       local qi = string.byte(q[2], i) or ZERO
       acc[i] = (acc[i] or 0) + pi - qi    -- (pi-zero)-(qi-zero)
       if acc[i] < 0 then
-         acc[i] = acc[i] + bigint.BASE
+         acc[i] = acc[i] + base
          acc[i+1] = -1
       end
    end
@@ -305,11 +306,11 @@ bigint.__mul = function (B1, B2)
       end
    end
    -- back
-   local d = 0
+   local d, base = 0, bigint.BASE
    for i = 1, #sum do
       sum[i] = sum[i] + d
-      d = math.floor(sum[i] / bigint.BASE)
-      sum[i] = math.floor(sum[i] % bigint.BASE)
+      d = math.floor(sum[i] / base)
+      sum[i] = math.floor(sum[i] % base)
    end
    sum[#sum+1] = d
    simplify(sum)
@@ -397,11 +398,12 @@ bigint.__pow = function (B1,B2)
    end
    local aa, bb, q = bigint.copy(B1), bigint.copy(B2)
    local h, two = 1, bigint:new(2)
+   local div, mul = bigint._div_, bigint.__mul
    while true do
-      bb,q = bigint._div_(bb,two)
-      if q[2] ~= '0' then res = bigint.__mul(res,aa) end
+      bb,q = div(bb,two)
+      if q[2] ~= '0' then res = mul(res,aa) end
       if bb[2] ~= '0' then 
-         aa = bigint.__mul(aa,aa)
+         aa = mul(aa,aa)
       else break end
    end
    return res
@@ -444,9 +446,10 @@ bigint.fact = function (B)
    local n = isbigint(B) and B:copy() or bigint:new(B)
    assert(n[1] > 0, "Non-negative value is expected!")
    local res, one = bigint:new(1), bigint:new(1)   
+   local mul, sub = bigint.__mul, bigint.__sub
    while n[2] ~= '0' do   
-      res = bigint.__mul(res, n)
-      n   = bigint.__sub(n, one)
+      res = mul(res, n)
+      n   = sub(n, one)
    end
    return res
 end
