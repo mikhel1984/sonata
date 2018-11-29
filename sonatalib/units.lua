@@ -229,11 +229,12 @@ end
 --  @return New value and reduced table of units.
 units._simplify_ = function (val,t)
    local acc,new,res = {}, {}, val
+   local udiff = units._diff_
    for k,v in pairs(t) do
       local previous = nil
       local l,r,base
       for _,a in ipairs(acc) do
-         l,r,base = units._diff_(k,a)
+         l,r,base = udiff(k,a)
 	 if base then previous = a; break end
       end
       if previous then
@@ -338,12 +339,13 @@ units._isCompatible_ = function (k1,k2)
    if k1 == k2 then return true end
    if #k1 == 0 and #k2 ~= 0 then return false end
    local fk2 = string.gmatch(k2, PART)
+   local udiff = units._diff_
    for v1,u1 in string.gmatch(k1, PART) do
       local v2,u2 = fk2()
       -- compare powers and units
       if v1 ~= v2 then return false end
       if u1 ~= u2 then 
-         local l,r,base = units._diff_(u1,u2)
+         local l,r,base = udiff(u1,u2)
 	 if not (base and units.prefix[l] and units.prefix[r]) then return false end
       end
    end
@@ -357,9 +359,10 @@ end
 --  @return Result value of conversation.
 units._valConvert_ = function (v, from, to)
    local f,res = string.gmatch(to, PART), v
+   local udiff = units._diff_
    for v1,u1 in string.gmatch(from, PART) do
       local _,u2 = f()
-      local l,r = units._diff_(u1,u2)
+      local l,r = udiff(u1,u2)
       res = res*(units.prefix[l]/units.prefix[r])^tonumber(v1)
    end
    return res
@@ -371,6 +374,7 @@ end
 units._toAtom_ = function (U)
    local t, res = fromKey(U.key), U.value
    local kold, knew = "", U.key
+   local usimp, udiff = units._simplify_, units._diff_
    while kold ~= knew do                            -- while can be expanded
       kold = knew
       for v1,u1 in string.gmatch(knew, PART) do     -- for every unit
@@ -380,7 +384,7 @@ units._toAtom_ = function (U)
 	    left,right,base = '','',u1
 	 else
 	    for k in pairs(units.rules) do
-	       left,right,base = units._diff_(k,u1)
+	       left,right,base = udiff(k,u1)
 	       if base and units.prefix[left] and units.prefix[right] then row=k; break end
 	    end
 	 end
@@ -392,7 +396,7 @@ units._toAtom_ = function (U)
 	    op['^'](add,num)
 	    op['*'](t,add)
 	    res = res*(tmp.value*units.prefix[right]/units.prefix[left])^num
-	    res, t = units._simplify_(res, t)
+	    res, t = usimp(res, t)
 	    t = reduce(t)
 	 end
       end

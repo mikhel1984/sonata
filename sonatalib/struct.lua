@@ -184,20 +184,17 @@ struct.about[struct.Stack] = {"Stack()", "Create new stack.", STACK}
 
 --- Add element to the stack.
 --  @param self Stack object.
---  @param val Value to push (except nil).
+--  @param val Value to push. Nil is ignored.
 struct.Stack.push = function (self, val)
-   assert(val ~= nil)
-   self[#self+1] = val
+   table.insert(self,val)
 end
-struct.about[struct.Stack.push] = {"Stack.push(S,val)", "Push value to the stack, except nil.", STACK}
+struct.about[struct.Stack.push] = {"Stack.push(S,val)", "Push value to the stack (except nil).", STACK}
 
 --- Get value from the top of stack.
 --  @param self Stack object.
 --  @return Top value or nil.
 struct.Stack.pop = function (self)
-   local res = self[#self]
-   if res then self[#self] = nil end
-   return res
+   return table.remove(self)
 end
 struct.about[struct.Stack.pop] = {"Stack.pop(S)", "Pop value from the stack, return element or nil.", STACK}
 

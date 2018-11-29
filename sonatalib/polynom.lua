@@ -268,9 +268,10 @@ polynom.__pow = function (P,n)
    n = assert(Ver.toInteger(n), "Integer power is expected!")
    if n <= 0 then error("Positive power is expected!") end
    local res, acc = polynom:init({1}), polynom.copy(P)
+   local mul = polynom.__mul
    while n > 0 do
-      if n%2 == 1 then res = polynom.__mul(res,acc) end
-      if n ~= 1 then acc = polynom.__mul(acc,acc) end
+      if n%2 == 1 then res = mul(res,acc) end
+      if n ~= 1 then acc = mul(acc,acc) end
       n = math.modf(n/2)
    end
    return res
@@ -331,8 +332,9 @@ polynom.about[polynom.int] = {"int(P[,x0])", "Calculate integral, x0 - free coef
 polynom.coef = function (...)
    local args = {...}
    local res = polynom:init({1})
+   local mul = polynom.__mul
    for i = 1, #args do
-      res = polynom.__mul(res, polynom:init({1,-args[i]}))
+      res = mul(res, polynom:init({1,-args[i]}))
    end
    return res
 end
@@ -368,9 +370,10 @@ polynom.NewtonRapson = function (P,x0,eps)
    x0 = x0 or math.random()
    -- prepare variables
    local dp,n,max = P:der(), 0, 30
+   local val = polynom.val
    while true do
       -- polynomial value
-      local dx = polynom.val(P,x0) / polynom.val(dp,x0) 
+      local dx = val(P,x0) / val(dp,x0) 
       if math.abs(dx) <= eps or n > max then break
       else
          -- update root value and number of iterations
@@ -392,8 +395,9 @@ polynom.real = function (P)
       res[#res+1] = 0
    end
    -- if could have roots
+   local n_r = polynom.NewtonRapson 
    while #pp > 1 do
-      local x, root = polynom.NewtonRapson(pp)
+      local x, root = n_r(pp)
       if root then 
          -- save and remove the root
          res[#res+1] = x

@@ -183,9 +183,10 @@ numeric.ode45 = function (fn,tDelta,y0,param)
    local exit = param and param.exit or function () return false end
    -- evaluate
    local res = {{tDelta[1],y0}}           -- save intermediate points
+   local upack = Ver.unpack
    while res[#res][1] < xn do
    --repeat
-      local x,y = Ver.unpack(res[#res])
+      local x,y = upack(res[#res])
       h = math.min(h, xn-x)
       -- correct step
       if param and param.dt then

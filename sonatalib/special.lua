@@ -138,12 +138,13 @@ special._gammaSer_ = function (a,x)
    else
       local ap,del = a, 1.0/a
       local sum = del
+      local gammaln = special.gammaln
       for i = 1,ITMAX do
          ap = ap+1
 	 del = del*x/ap
 	 sum = sum+del
 	 if math.abs(del) < math.abs(sum)*EPS then
-	    gamser = sum*math.exp(-x+a*math.log(x)-special.gammaln(a))
+	    gamser = sum*math.exp(-x+a*math.log(x)-gammaln(a))
 	    break
 	 end
       end
@@ -359,7 +360,8 @@ end
 special.legendre = function (n,x)
    assert(n >= 0 and math.abs(x) <= 1, 'Bad arguments')
    local res = {}
-   for i = 1,n+1 do res[i] = special._plgndr_(n,i-1,x) end
+   local plgndr = special._plgndr_
+   for i = 1,n+1 do res[i] = plgndr(n,i-1,x) end
    return res
 end
 special.about[special.legendre] = {"legendre(n,x)","Return list of legendre polynomial coefficients."}
