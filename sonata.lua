@@ -105,7 +105,7 @@ setmetatable(import,
        for _,v in ipairs(name) do import(v) end
     else
        local var, nm = lc_local.doimport(self,name)
-       if lc_local.dialog then
+       if LC_DIALOG then
           io.write(lc_help.CHELP)
           print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))          
        end       
@@ -125,9 +125,6 @@ help = function(fn)
       end
    else
       about:print(about)
-      --print("\t" .. about:get('modules'))
-      --local t = {}; for k in pairs(import) do t[#t+1] = k end
-      --print(table.concat(t, ', '))
    end
    io.write(lc_help.CRESET)
 end
@@ -141,8 +138,8 @@ if #arg > 0 then
    if command.exit then os.exit() end
 end
 
--- Show additional information
-lc_local.dialog = true
+-- Prepare for dialog mode
+LC_DIALOG = true
 
 -- Read localization file and update descriptions 
 if LC_LOCALIZATION then 

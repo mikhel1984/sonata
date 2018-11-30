@@ -112,7 +112,7 @@ end
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -465,7 +465,7 @@ polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynomial internal 
 ]]
 
 -- free memory if need
-if not lc_version then polynom.about = nil end
+if not LC_DIALOG then polynom.about = nil end
 
 return polynom
 

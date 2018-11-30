@@ -146,7 +146,7 @@ end
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -653,7 +653,7 @@ units.about[units.serialize] = {"serialize(obj)", "Save internal representation 
 ]]
 
 -- free memory if need
-if not lc_version then units.about = nil end
+if not LC_DIALOG then units.about = nil end
 
 return units
 

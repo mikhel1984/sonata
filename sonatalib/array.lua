@@ -87,7 +87,7 @@ local function isarray(t) return type(t) == 'table' and t.isarray end
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 -- 	MODULE
 
@@ -451,7 +451,7 @@ end
 array.about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}
 
 -- Free memory if need
-if not lc_version then array.about = nil end
+if not LC_DIALOG then array.about = nil end
 
 return array
 

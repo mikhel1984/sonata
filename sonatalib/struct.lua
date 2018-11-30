@@ -159,7 +159,7 @@ local SET   = 'set'
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -587,7 +587,7 @@ setmetatable(struct.Set, {__call = function (self, v) return struct.Set:new(v) e
 struct.about[struct.Set] = {"Set(t)", "Create new set from table of elements.", SET}
 
 -- free memory in case of standalone usage
-if not lc_version then struct.about = nil end
+if not LC_DIALOG then struct.about = nil end
 
 return struct
 

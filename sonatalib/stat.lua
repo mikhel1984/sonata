@@ -89,7 +89,7 @@ local DISTRIB = 'distribution'
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -416,7 +416,7 @@ end
 stat.about[stat.normpdf] = {"normpdf(x,nu,sig)", "Normal distribution density.", DISTRIB}
 
 -- free memory if need
-if not lc_version then stat.about = nil end
+if not LC_DIALOG then stat.about = nil end
 
 return stat
 

@@ -79,7 +79,7 @@ end
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -213,7 +213,7 @@ end
 numeric.about[numeric.ode45] = {"ode45(fn,tDelta,y0[,param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
 -- free memory if need
-if not lc_version then numeric.about = nil end
+if not LC_DIALOG then numeric.about = nil end
 
 return numeric
 

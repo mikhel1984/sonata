@@ -89,7 +89,7 @@ local function collect(t)
 end
 
 --	INFO
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -309,7 +309,7 @@ raw='set pm3d'                               -- set Gnuplot options manually
 }
 
 -- free memory if need
-if not lc_version then gnuplot.about = nil end
+if not LC_DIALOG then gnuplot.about = nil end
 
 return gnuplot
 

@@ -36,7 +36,7 @@ ans = _C.myConst            --> nil
 
 --	LOCAL
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 local PHY, ASTR, MATH = "physics", "astronomy", "math"
 
@@ -129,7 +129,7 @@ setmetatable(const,
 })
 
 -- free memory in case of standalone usage
-if not lc_version then const.about = nil end
+if not LC_DIALOG then const.about = nil end
 
 return const
 

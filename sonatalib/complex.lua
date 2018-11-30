@@ -123,7 +123,7 @@ local function sh (x) return 0.5*(math.exp(x)-math.exp(-x)) end
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -398,7 +398,7 @@ end
 
 
 -- free memory if need
-if not lc_version then complex.about = nil end
+if not LC_DIALOG then complex.about = nil end
 
 return complex
 

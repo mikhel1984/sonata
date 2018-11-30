@@ -53,7 +53,7 @@ local READ, WRITE = 'read', 'write'
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -151,7 +151,7 @@ end
 files.about[files.tblImport] = {"tblImport(fName)", "Import Lua table, written into file.", READ}
 
 -- free memory in case of standalone usage
-if not lc_version then files.about = nil end
+if not LC_DIALOG then files.about = nil end
 
 return files
 

@@ -87,7 +87,7 @@ local GAMMA, BETA, BESSEL = 'gamma', 'beta', 'bessel'
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -649,6 +649,6 @@ end
 special.about[special.besseli] = {"besseli(n,x)", "Modified Bessel function In(x).", BESSEL}
 
 -- free memory in case of standalone usage
-if not lc_version then special.about = nil end
+if not LC_DIALOG then special.about = nil end
 
 return special

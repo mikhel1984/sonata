@@ -222,7 +222,7 @@ end
 local TRANSFORM = 'transform'
 
 --	INFO
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -1267,7 +1267,7 @@ matrix.onImport = function ()
 end
 
 -- free memory if need
-if not lc_version then matrix.about = nil end
+if not LC_DIALOG then matrix.about = nil end
 
 return matrix
 

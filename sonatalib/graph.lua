@@ -168,7 +168,7 @@ end
 
 --	INFO
 
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -485,7 +485,7 @@ end
 graph.about[graph.pathBF] = {'pathBF(G,start[,goal])','Shortest path search using Bellman-Ford algorithm.', SEARCH}
 
 -- free memory in case of standalone usage
-if not lc_version then graph.about = nil end
+if not LC_DIALOG then graph.about = nil end
 
 return graph
 
