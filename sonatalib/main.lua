@@ -354,11 +354,10 @@ about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expre
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
 main.evalDialog = function (logFile)
-   local invA, invB, cmd = lc_help.CMAIN..'>'.._PROMPT, lc_help.CMAIN..'>'.._PROMPT2, ""
-   local invite = invA
-   local ERROR = lc_help.CERROR.."ERROR: "
+   local invA, invB = lc_help.CMAIN..'lc: '..lc_help.CRESET, lc_help.CMAIN..'..: '..lc_help.CRESET
+   local invite, cmd = invA, ""
+   local ERROR, log = lc_help.CERROR.."ERROR: "
    -- save session if need
-   local log
    if logFile then
       log = io.open(logFile, 'w')
       local d = os.date('*t')
@@ -517,7 +516,7 @@ exit = false},
 --description = 'Evaluate file(s).',
 process = function (args) 
    for i = 1,#args do 
-      if string.find(args[i], '%.demo$') then
+      if string.find(args[i], '%.note$') then
          main.evalDemo(args[i])
       else
          dofile(args[i]) 

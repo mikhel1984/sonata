@@ -50,8 +50,9 @@ local _MAIN_ = '__module__'
 -- English version of some interface strings.
 local eng = {
 intro = [[
-Enter 'import(module)' to expand functionality.
 Enter 'help([function])' to get help.
+Enter 'import(module)' to expand functionality.
+Enter 'run(filename)' to execute Lua script.
 Enter 'quit()' for exit.
 ]],
 modules = 'Available modules:',
@@ -61,7 +62,7 @@ use_import = [[
 
 Use
   import 'module' ['module2' 'module3' ...]
-to get additional modules.]],
+to load modules.]],
 }
 
 --- Add table 'about' into the 'eng' for saving into localization file.

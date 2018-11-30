@@ -37,6 +37,9 @@ lc_help.useColors(LC_USE_COLOR)
 -- Quit the program
 quit = lc._exit_
 
+-- Load file
+run = dofile
+
 -- Update random seed
 math.randomseed(os.time())
 
@@ -158,9 +161,6 @@ print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --===
 io.write(lc_help.CHELP)
 print(about:get('intro'), lc_help.CRESET)
 
-_PROMPT = lc_help.CMAIN..'lc:'..lc_help.CRESET..' '
-_PROMPT2= lc_help.CMAIN..'..:'..lc_help.CRESET..' '
-
 -- Import default modules
 if LC_DEFAULT_MODULES then
    import(LC_DEFAULT_MODULES)  
@@ -171,4 +171,4 @@ if arg[-1] ~= '-i' then
 end
 
 --===============================================
---TODO: change _PROMPT
+--TODO: replace a constant header
