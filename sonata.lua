@@ -125,9 +125,9 @@ help = function(fn)
       end
    else
       about:print(about)
-      print("\t" .. about:get('modules'))
-      local t = {}; for k in pairs(import) do t[#t+1] = k end
-      print(table.concat(t, ', '))
+      --print("\t" .. about:get('modules'))
+      --local t = {}; for k in pairs(import) do t[#t+1] = k end
+      --print(table.concat(t, ', '))
    end
    io.write(lc_help.CRESET)
 end

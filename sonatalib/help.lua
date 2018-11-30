@@ -50,12 +50,12 @@ local _MAIN_ = '__module__'
 -- English version of some interface strings.
 local eng = {
 intro = [[
-Enter 'help([function])' to get help.
-Enter 'import(module)' to expand functionality.
-Enter 'run(filename)' to execute Lua script.
-Enter 'quit()' for exit.
+------- help([function]) * get help -------------
+--------- import(module) * expand functionality -
+---------- run(filename) * execute Lua script ---
+----------------- quit() * exit -----------------
 ]],
-modules = 'Available modules:',
+--modules = 'Available modules:',
 done = 'Done.',
 alias = "Use alias '%s' for access to the module '%s'.",
 use_import = [[
