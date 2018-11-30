@@ -19,7 +19,7 @@ LC_USE_COLOR = true
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.9.10'
+lc_version = '0.9.11'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -111,23 +111,6 @@ setmetatable(import,
   end,
 })
 
--- Process command line arguments
-if #arg > 0 then
-   local command = lc._args_[arg[1]]
-   if type(command) == 'string' then command = lc._args_[command] end
-   if not command then command = lc._args_['default'] end
-   command.process(arg)
-   if command.exit then os.exit() end
-end
-
--- Show additional information
-lc_local.dialog = true
-
--- Read localization file and update descriptions 
-if LC_LOCALIZATION then 
-   about:localization(LC_LOCALIZATION) 
-end
-
 --- Print lc_help information.
 --  @param fn Function name.
 help = function(fn)   
@@ -145,6 +128,24 @@ help = function(fn)
    end
    io.write(lc_help.CRESET)
 end
+
+-- Process command line arguments
+if #arg > 0 then
+   local command = lc._args_[arg[1]]
+   if type(command) == 'string' then command = lc._args_[command] end
+   if not command then command = lc._args_['default'] end
+   command.process(arg)
+   if command.exit then os.exit() end
+end
+
+-- Show additional information
+lc_local.dialog = true
+
+-- Read localization file and update descriptions 
+if LC_LOCALIZATION then 
+   about:localization(LC_LOCALIZATION) 
+end
+
 
 -- save references for "global" methods
 lc_local.import = import

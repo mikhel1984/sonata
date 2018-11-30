@@ -401,6 +401,7 @@ main.evalDemo = function (fname)
    local text = f:read('a'); f:close()
    local ERROR = lc_help.CERROR.."ERROR: "
    local cmd = ""
+   local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD
    -- read lines
    print(string.format("Run file %s",fname))
    for line in string.gmatch(text, '([^\n]+)\r?\n?') do
@@ -430,7 +431,10 @@ main.evalDemo = function (fname)
 	 if lquit then break end
       elseif string.find(line, '^%s*%-%-') then
          -- highlight line comments
-         io.write(lc_help.CHELP, line, lc_help.CRESET, '\n')
+         --io.write(lc_help.CHELP, line, lc_help.CRESET, '\n')
+	 line = string.gsub(line, '\t(.+)', templ)
+	 line = string.format("%s%s%s\n", lc_help.CHELP, line, lc_help.CRESET)
+	 io.write(line)
       else
          -- print line and evaluate
          io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
