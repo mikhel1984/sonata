@@ -364,7 +364,7 @@ help.newModule = function (mName, alias, description)
       print('File '..fName..' is already exists!'); return
    end
    -- write new file
-   description = description or "This is my cool module!"
+   description = description or "The module of your dream!"
    local txt = 
 [=[--[[       WORD1
 
@@ -374,40 +374,49 @@ help.newModule = function (mName, alias, description)
            WORD4 'WORD2'
 --]]
 
-3L3L3L3L3L Tests 3L3L3L3L
 -- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
---[[!!
+--[[TEST
+
 WORD3 = require 'sonatalib.WORD2'
 
 -- example
 a = WORD3()
-ans = a.type                   --> 'WORD2'
-]]
+ans = a.type    --> 'WORD2'
 
-3L3L3L3L3L3L3L3L3L3L3L
--- @class table
--- @name WORD2
--- @field about Description of functions.
-local WORD2 = {}
-WORD2.__index = WORD2
+ans = math.pi   --~ 355/113
 
--- mark
-WORD2.type = 'WORD2'
-WORD2.isWORD2 = true
+--]]
+
+--	LOCAL
+
+3L Check object type.
+--  @param t Object.
+--  @return True if the object is WORD2.
 local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
 
--- description
-local help = lc_version and (require "sonatalib.help") or {new=function () return {} end}
-WORD2.about = help:new("WORD5")
+--	INFO
 
-3L Constructor example
---    @param t Some value.
---    @return New object of WORD2.
+local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+
+--	MODULE
+
+local WORD2 = {
+-- mark
+type = 'WORD2', isWORD2 = true,
+-- description
+about = help:new("WORD5"),
+}
+-- methametods
+WORD2.__index = WORD2
+
+3L Constructor example.
+--  @param t Some value.
+--  @return New object of WORD2.
 function WORD2:new(t)
    local o = {}
-   -- some logic
-   setmetatable(o,self)
-   return o
+   -- your logic 
+   -- return object
+   return setmetatable(o,self)
 end
 
 -- simplify constructor call
@@ -415,20 +424,23 @@ setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
 WORD2.WORD3 = 'WORD3'
 WORD2.about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
 
-3L Method example
---   It is good idea to define method for the copy creation.
---   @param t Initial object.
---   @return Copy of the object.
+3L Method example.
+--  It is good idea to define method for the copy creation.
+--  @param t Initial object.
+--  @return Copy of the object.
 WORD2.copy = function (t)
    -- some logic
    return WORD2:new(argument)
 end
-WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object.", help.BASE}
+WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object."}
 
 -- free memory in case of standalone usage
-if not lc_version then WORD2.about = nil end
+if not LC_DIALOG then WORD2.about = nil end
 
 return WORD2
+
+--======================================
+--TODO: write new functions
 ]=]
    -- correct text
    txt = string.gsub(txt, '3L', '---')            -- protect from creating failed documentation
