@@ -50,10 +50,10 @@ local _MAIN_ = '__module__'
 -- English version of some interface strings.
 local eng = {
 intro = [[
-------- help([function]) * get help -------------
---------- import(module) * expand functionality -
----------- run(filename) * execute Lua script ---
------------------ quit() * exit -----------------
+------- help([function]) = get help -------------
+--------- import(module) = expand functionality -
+---------- run(filename) = execute Lua script ---
+----------------- quit() = exit -----------------
 ]],
 --modules = 'Available modules:',
 done = 'Done.',
@@ -536,5 +536,3 @@ return help
 
 --==========================================
 --TODO: localize error messages
---TODO: add 'dofile' into invite
---TODO: update structure of the module template

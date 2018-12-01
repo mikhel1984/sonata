@@ -154,7 +154,7 @@ lc_local.quit = quit
 
 -- Run! 
 io.write(lc_help.CMAIN)
-print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --==== "..lc_version.." ====--         # #\n")
+print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --==== "..lc_version.." ====--        # #\n")
 io.write(lc_help.CHELP)
 print(about:get('intro'), lc_help.CRESET)
 

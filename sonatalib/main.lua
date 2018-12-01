@@ -480,6 +480,7 @@ exit = true},
 description = 'Create/update file for localization.',
 process     = function (args)
    if args[2] then
+      LC_DIALOG = true -- load help info
       lc_help.prepare(args[2], import)
    else 
       print('Current localization file: ', LC_LOCALIZATION)
@@ -491,7 +492,10 @@ exit = true},
 ['-D'] = '--doc',
 ['--doc'] = {
 description = 'Create/update documentation file.',
-process     = function () lc_help.generateDoc(LC_LOCALIZATION, import) end,
+process     = function ()
+   LC_DIALOG = true    -- load help info
+   lc_help.generateDoc(LC_LOCALIZATION, import) 
+end,
 exit        = true},
 
 -- new module
@@ -540,17 +544,17 @@ main._args_.text = function ()
       "",
       "USAGE:",
       "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
-      "(option '-i' could be used for working in native interpretator of Lua)",
+      "(option '-i' could be used for working in native Lua interpretator)",
       "",
       "FLAGS:"
    }
    for k,v in pairs(main._args_) do 
       if type(v) == 'string' then
          --local ref = main._args_[v]         
-         txt[#txt+1] = string.format('\t%s, %s - %s', k, v, main._args_[v].description)
+         txt[#txt+1] = string.format('\t%s, %-6s - %s', k, v, main._args_[v].description)
       end
    end
-   txt[#txt+1] = "\t No flag - Evaluate file(s)."
+   txt[#txt+1] = "\t No flag   - Evaluate file(s)."
    txt[#txt+1] = "\nVERSION: "..lc_version
    txt[#txt+1] = ""
    local modules = {}
