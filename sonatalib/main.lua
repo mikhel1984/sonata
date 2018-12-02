@@ -520,7 +520,8 @@ exit = false},
 --description = 'Evaluate file(s).',
 process = function (args) 
    for i = 1,#args do 
-      if string.find(args[i], '%.note$') then
+      if string.find(args[i], '%.note?$') then
+         LC_DIALOG = true
          main.evalDemo(args[i])
       else
          dofile(args[i]) 
