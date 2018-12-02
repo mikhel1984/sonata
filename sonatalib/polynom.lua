@@ -318,7 +318,7 @@ polynom.int = function (P,x0)
    table.insert(int, x0)
    return polynom:init(int)
 end
-polynom.about[polynom.int] = {"int(P[,x0])", "Calculate integral, x0 - free coefficient."}
+polynom.about[polynom.int] = {"int(P[,x0=0])", "Calculate integral, x0 - free coefficient."}
 
 --- Get polynomial from roots.
 --  Arguments are a sequence of roots.

@@ -203,7 +203,7 @@ special.gammainc = function (x,a,tp)
    else error('Unexpected type '..tostring(tp))
    end
 end
-special.about[special.gammainc] = {"gammainc(x,a,type)", "Incomplete gamma function, P (type=lower) or Q (type=upper).", GAMMA}
+special.about[special.gammainc] = {"gammainc(x,a[,type='lower')", "Incomplete gamma function, P (type=lower) or Q (type=upper).", GAMMA}
 
 --- Beta function.
 --  @param z First value.

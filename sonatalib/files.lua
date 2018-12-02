@@ -99,7 +99,7 @@ files.dsvWrite = function (fName, tbl, delim)
    f:close()
    print('Done')
 end
-files.about[files.dsvWrite] = {"dsvWrite(fname,tbl,delim)", "Save Lua table as delimiter separated data into file.", WRITE}
+files.about[files.dsvWrite] = {"dsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", WRITE}
 
 --- Import data from text file, use given delimiter.
 --  @param fName File name.
@@ -124,7 +124,7 @@ files.dsvRead = function (fName, delim)
    f:close()
    return res
 end
-files.about[files.dsvRead] = {"dsvRead(fName,del)", "Read delimiter separated data as Lua table.", READ}
+files.about[files.dsvRead] = {"dsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", READ}
 
 --- Returns text of the file.
 --  @param fName

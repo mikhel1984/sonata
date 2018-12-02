@@ -110,7 +110,7 @@ about = help:new("Operations with arbitrary long integers."),
 bigint.__index = bigint
 -- the radix
 bigint.BASE = 10        
-bigint.about[bigint.BASE] = {'BASE', "The radix of big integer representation.", help.OTHER}
+bigint.about[bigint.BASE] = {'BASE[=10]', "The radix of big integer representation.", help.OTHER}
 
 --- Create new object, set metatable.
 --  @param num Integer as number or string.
@@ -431,7 +431,7 @@ bigint.str = function (B,n)
    local value = string.gsub(B[VALUE], templ, '%1 ')
    return (B[SIGN] < 0 and '-' or '') .. string.reverse(value)
 end
-bigint.about[bigint.str] = {"str(B[,n])", "More readable string representation of the number. Optional argument defines number of digits in a group.", help.OTHER}
+bigint.about[bigint.str] = {"str(B[,n=3])", "More readable string representation of the number. Optional argument defines number of digits in a group.", help.OTHER}
 
 --- Float number representation.
 --  @param v Bigint object.

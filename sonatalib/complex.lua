@@ -355,7 +355,7 @@ complex.about[complex._i] = {"_i", "Complex unit.", help.CONST}
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
 complex.Comp = 'Comp'
-complex.about[complex.Comp] = {"Comp([a,]b)", "Create new complex number.", help.NEW}
+complex.about[complex.Comp] = {"Comp([a=0,]b)", "Create new complex number.", help.NEW}
 
 --[[
 -- Complex number serialization.

@@ -629,7 +629,7 @@ units.add = function (U, rule)
    assert(isunits(rule), 'Units object is expected!')
    units.rules[U] = rule
 end
-units.about[units.add] = {'add(unit,rule)', 'Add new rule for conversation.'}
+units.about[units.add] = {'add(U,rule)', 'Add new rule for conversation.'}
 
 
 -- simplify constructor call

@@ -671,7 +671,7 @@ matrix.zeros = function (nR, nC)
    nC = nC or nR                                       -- input is a number
    return matrix:init(nR, nC, {})
 end
-matrix.about[matrix.vector] = {"zeros(rows[,cols])", "Create matrix from zeros.", help.NEW}
+matrix.about[matrix.vector] = {"zeros(rows[,cols=rows])", "Create matrix from zeros.", help.NEW}
 
 --- Create dense matrix using given rule.
 --  @param rows Number of rows.
@@ -697,7 +697,7 @@ matrix.ones = function (rows, cols, val)
    if ismatrix(rows) then rows,cols,val = rows.rows, rows.cols, cols end
    return matrix.fill(rows, cols or rows, function () return val or 1 end)
 end
-matrix.about[matrix.ones] = {"ones(rows[,cols[,val]])", "Create matrix of given numbers (default is 1).", help.NEW}
+matrix.about[matrix.ones] = {"ones(rows[,cols=rows,val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
 
 --- Matrix with random values.
 --  @param rows Number of rows.
@@ -707,7 +707,7 @@ matrix.rand = function (rows, cols)
    if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
    return matrix.fill(rows, cols or rows, function () return math.random() end)
 end
-matrix.about[matrix.rand] = {"rand(rows[,cols])", "Create matrix with random numbers from 0 to 1.", help.NEW}
+matrix.about[matrix.rand] = {"rand(rows[,cols=rows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
 
 --- Identity matrix.
 --  @param rows Number of rows.
@@ -725,7 +725,7 @@ matrix.eye = function (rows, cols, val)
    for i = 1, math.min(rows, cols) do m[i][i] = val end
    return m
 end
-matrix.about[matrix.eye] = {"eye(rows[,cols[,init]])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
+matrix.about[matrix.eye] = {"eye(rows[,cols=rows,init=1])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
 
 --- Matrix concatenation.
 --  Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
@@ -1022,7 +1022,7 @@ matrix.diag = function (M,n)
    end
    return res
 end
-matrix.about[matrix.diag] = {'diag(M[,n])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
+matrix.about[matrix.diag] = {'diag(M[,n=0])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
 
 --- V1 x V2
 --  @param V1 3-element vector.
@@ -1194,7 +1194,7 @@ matrix.reduce = function (M,fn,dir)
    end
    return res
 end
-matrix.about[matrix.reduce] = {"reduce(M,fn,dir,init)","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.",help.OTHER}
+matrix.about[matrix.reduce] = {"reduce(M,fn,dir[='r'])","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c').",help.OTHER}
 
 --- Get sum of all elements.
 --  @param M Initial matrix.

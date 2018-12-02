@@ -108,7 +108,7 @@ gnuplot.__index = gnuplot
 
 -- divide interval into given number of points
 gnuplot.N = 100        
-gnuplot.about[gnuplot.N] = {"N", "If no samples, divide interval into N points.", help.CONST}
+gnuplot.about[gnuplot.N] = {"N[=100]", "If no samples, divide interval into N points.", help.CONST}
 
 -- option checker
 local acc = {options=collect(gnuplot.options), foptions=collect(gnuplot.foptions)}
@@ -229,28 +229,28 @@ end
 gnuplot.about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 
 --- Plot graphic.
---  @param t Table with parameters of graphic.
+--  @param G Table with parameters of graphic.
 --  @return Table which can be used for plotting.
-gnuplot.plot = function (t)
-   assert(gnuplot.isAvailable(t), 'Options are not predefined!')
+gnuplot.plot = function (G)
+   assert(gnuplot.isAvailable(G), 'Options are not predefined!')
    -- define 'permanent' option
-   if t.permanent == nil then t.permanent = true end
+   if G.permanent == nil then G.permanent = true end
    -- open Gnuplot
-   local handle = assert(io.popen('gnuplot' .. (t.permanent and ' -p' or ''), 'w'), 'Cannot open Gnuplot!')
+   local handle = assert(io.popen('gnuplot' .. (G.permanent and ' -p' or ''), 'w'), 'Cannot open Gnuplot!')
    -- save options
    local cmd = {}
    for _,k in ipairs(gnuplot.options) do
-      if t[k] ~= nil then cmd[#cmd+1] = command(k, t[k]) end
+      if G[k] ~= nil then cmd[#cmd+1] = command(k, G[k]) end
    end
-   if t.raw then cmd[#cmd+1] = t.raw end
+   if G.raw then cmd[#cmd+1] = G.raw end
    -- prepare functions
    local fn = {}
-   for i,f in ipairs(t) do
-      fn[i] = gnuplot._graph_(f,t)
+   for i,f in ipairs(G) do
+      fn[i] = gnuplot._graph_(f,G)
    end
    -- command
    if #fn > 0 then
-      local cmd_plot = t.surface and 'splot ' or 'plot '
+      local cmd_plot = G.surface and 'splot ' or 'plot '
       cmd[#cmd+1] = cmd_plot .. table.concat(fn,',')
    end
    local res = table.concat(cmd, '\n')
@@ -258,7 +258,7 @@ gnuplot.plot = function (t)
    handle:write(res,'\n')
    handle:close()
 end
-gnuplot.about[gnuplot.plot] = {"plot(g)", "Plot data, represented as Lua table." }
+gnuplot.about[gnuplot.plot] = {"plot(G)", "Plot data, represented as Lua table." }
 
 --- Represent parameters of the graphic.
 --  @param G Gnuplot object.
@@ -279,7 +279,7 @@ end
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
 gnuplot.Gnu = 'Gnu'
-gnuplot.about[gnuplot.Gnu] = {"Gnu([g])", "Transform given table into gnuplot object.", help.NEW}
+gnuplot.about[gnuplot.Gnu] = {"Gnu([G])", "Transform given table into gnuplot object.", help.NEW}
 
 gnuplot.keys = 'keys'
 gnuplot.about[gnuplot.keys] = {'keys',

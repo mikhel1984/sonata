@@ -110,7 +110,7 @@ end
 
 -- lc_help
 lc_help = require "sonatalib.help"
-about = lc_help:new("Lua based calculator.")
+about = lc_help:new("Lua based mathematics.")
 
 --	MODULE
 
@@ -155,7 +155,7 @@ about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
 _pi = math.pi;      about[_pi] = {"_pi", "Number pi.", lc_help.CONST}
-_e = math.exp(1.0); about[_e] = {"_e", "Euler number.", lc_help.CONST}
+_e = math.exp(1.0); about[_e]  = {"_e", "Euler number.", lc_help.CONST}
 -- result 
 _ans = 0;           about[_ans] = {"_ans", "Result of the last operation."}
 
@@ -180,7 +180,7 @@ main.round = function (x,n)
    end
    return p / k
 end
-about[main.round] = {'lc.round(x[,n])', 'Round value, define number of decimal digits.', lc_help.OTHER}
+about[main.round] = {'lc.round(x[,n=0])', 'Round value, define number of decimal digits.', lc_help.OTHER}
 
 --[[
 -- read object from its serialization
@@ -227,7 +227,7 @@ main.show = function (t,N)
    end
    print(#t > 0 and '\n}' or '}')
 end
-about[main.show] = {"lc.show(t[,N])", "Print Lua object. In case of table, ask about continuation after each N elements (default is 10).", lc_help.OTHER}
+about[main.show] = {"lc.show(t[,N=10])", "Print Lua object. In case of table, ask about continuation after each N elements.", lc_help.OTHER}
 
 --- Print 'scientific' representation of the number
 --  @param x Number to show.
@@ -261,7 +261,7 @@ main.range = function (from,to,step)
    for i = from,to,step do res[#res+1] = i end
    return res
 end
-about[main.range] = {'lc.range([from,]to[,step])','Generate table with sequence of numbers.', lc_help.OTHER}
+about[main.range] = {'lc.range([from=1,]to[,step=1])','Generate table with sequence of numbers.', lc_help.OTHER}
 
 --- Generate list of function values.
 --  @param fn Function to apply.

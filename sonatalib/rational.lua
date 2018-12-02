@@ -273,7 +273,7 @@ end
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
 rational.Rat = 'Rat'
-rational.about[rational.Rat] = {"Rat(m[,n])", "Create rational number using num (and denom).", help.NEW}
+rational.about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
 
 --[[
 --- Rational number serialization.

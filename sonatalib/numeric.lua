@@ -90,7 +90,7 @@ about = help:new("Group of functions for numerical calculations."),
 
 -- current tolerance
 numeric.TOL = 1e-3
-numeric.about[numeric.TOL] = {"TOL", "The solution tolerance (0.001 by default).", "parameters"}
+numeric.about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance (0.001 by default).", "parameters"}
 
 --- Find root of equation at the given interval.
 --  @param fn Function to analyze.
@@ -122,7 +122,7 @@ numeric.Newton = function (fn, x1)
    until math.abs(fn(x2)-fn(x1)) < numeric.TOL 
    return x2
 end
-numeric.about[numeric.Newton] = {"Newton(fn,x0)", "Find root of equation using Newton's rule, use only one initial condition."}
+numeric.about[numeric.Newton] = {"Newton(fn,x0)", "Find root of equation using Newton's rule with only one initial condition."}
 
 --- Simple derivative.
 --  @param fn Function f(x).

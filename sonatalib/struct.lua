@@ -307,7 +307,7 @@ struct.about[struct.Queue.back] = {"Queue.back(Q)", "Get next element, don't rem
 --  @param Q Queue object.
 --  @return Number of elements in queue.
 struct.Queue.size = function (Q) return Q.last-Q.first+1 end
-struct.about[struct.Queue.size] = {"Queue.size(q)", "Return number of elements in queue.", QUEUE}
+struct.about[struct.Queue.size] = {"Queue.size(Q)", "Return number of elements in queue.", QUEUE}
 struct.Queue.__len = struct.Queue.size
 
 --- Check if the queue is empty.

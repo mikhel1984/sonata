@@ -32,7 +32,7 @@ ans = a:get{1,2,1}                     --> 4
 
 -- random array
 b = Arr.rand {5,2,1}
--- number of elements
+-- max number of elements
 ans = #b                               --> 10
 
 ans = b:copy()                         --> b
@@ -144,12 +144,14 @@ array._indexConvert_ = function (A, tInd)
 end
 
 --- Maximum number of elements in the array.
+--  The same as #A.
 --  @param A Array.
 --  @return "Volume" of the array.
-array._capacity_ = function (A)
+array.capacity = function (A)
    local S,K = A.size, A.k
    return S[#S] * K[#K]
 end
+array.about[array.capacity] = {"capacity(A)", "Maximal number of elements in the array. The same as #A.", help.OTHER}
 
 --- Get array element.
 --  @param A Array object.
@@ -176,7 +178,7 @@ array.about[array.set] = {"set(A,tInd,val)", "Set value to the array. Index is a
 --  @return Deep copy of the array.
 array.copy = function (A)
    local cp = array:new(Ver.move(A.size, 1, #A.size, 1, {}))          -- copy size, create new array
-   return Ver.move(A, 1, array._capacity_(A), 1, cp)                   -- copy array elements
+   return Ver.move(A, 1, array.capacity(A), 1, cp)                   -- copy array elements
 end
 array.about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
 
@@ -204,7 +206,7 @@ array.about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTH
 array._apply2_ = function (func, A1, A2)
    if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
    local res, v = array:new(Ver.move(A1.size, 1, #A1.size, 1, {}))    -- prepare empty copy
-   for i = 1, array._capacity_(A1) do 
+   for i = 1, array.capacity(A1) do 
       v = func(A1[i] or 0, A2[i] or 0)                                -- elements can be empty
       if v ~= 0 then res[i] = v end                                   -- save nonzero values
    end
@@ -226,7 +228,7 @@ array.apply = function (func, ...)
    local tmp, v = arg[1], {}
    local res = array:new(Ver.move(tmp.size, 1, #tmp.size, 1, {}))
    local upack = Ver.unpack
-   for i = 1, array._capacity_(tmp) do
+   for i = 1, array.capacity(tmp) do
       -- collect
       for k = 1,#arg do v[k] = arg[k][i] or 0 end
       -- evaluate
@@ -243,7 +245,7 @@ array.about[array.apply] = {"apply(func, ...)", "Apply function of several argum
 --  @return New array where each element is result of the function evaluation func(a[i]).
 array.map = function (A, func)
    local res, v = array:new(Ver.move(A.size, 1, #A.size, 1, {}))
-   for i = 1, array._capacity_(A) do
+   for i = 1, array.capacity(A) do
       v = func(A[i] or 0)                            -- elements can be empty
       if v ~= 0 then res[i] = v end                  -- save nonzero values
    end
@@ -295,7 +297,7 @@ array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b"
 array.rand = function (tSize)
    local arr = array:new(tSize)
    local rnd = math.random
-   for i = 1, array._capacity_(arr) do arr[i] = rnd() end
+   for i = 1, array.capacity(arr) do arr[i] = rnd() end
    return arr
 end
 array.about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
@@ -307,7 +309,7 @@ array.about[array.rand] = {"rand(tSize)", "Return array with random numbers betw
 array.__eq = function (A1, A2)
    if array.isEqual(A1,A2) then
       -- compare element wise
-      for i = 1, array._capacity_(A1) do
+      for i = 1, array.capacity(A1) do
 	 if (A1[i] or 0) ~= (A2[i] or 0) then return false end
       end
       return true
@@ -345,7 +347,7 @@ array.sub = function (A, tInd1, tInd2)
    -- fill
    local K, S = res.k, res.size
    local conv = array._indexConvert_
-   for count = 1, array._capacity_(res) do
+   for count = 1, array.capacity(res) do
       -- calculate new temporary index
       for i = 1, #ind do 
          local tmp = math.modf(count/K[i]) % S[i]
@@ -377,7 +379,7 @@ array.concat = function (A1, A2, nAxis)
    local edge = A1.size[nAxis]
    local K, S = res.k, res.size
    local conv = array._indexConvert_
-   for count = 1, array._capacity_(res) do
+   for count = 1, array.capacity(res) do
       -- prepare index
       for i = 1, #newsize do
          ind1[i] = math.modf(count/K[i]) % S[i] + 1
@@ -388,7 +390,6 @@ array.concat = function (A1, A2, nAxis)
       ind2[nAxis] = second and (ind2[nAxis]-edge) or ind2[nAxis]
       res[conv(res,ind1)] = second and A2[conv(A2,ind2)] or A1[conv(A1,ind2)]
    end
-   --for i = 1, array._capacity_(arr2) do print(i, arr2[i]) end
    return res 
 end
 array.about[array.concat] = {"concat(A1,A2,nAxis)", "Array concatenation along the given axis."}
@@ -396,8 +397,7 @@ array.about[array.concat] = {"concat(A1,A2,nAxis)", "Array concatenation along t
 --- Method #
 --  @param A Array object.
 --  @return Number of elements.
-array.__len = function (A) return array._capacity_(A) end
-array.about['#array'] = {"#array", "Return maximum number of elements.", help.META}
+array.__len = array.capacity
 
 --- String representation.
 --  @param A Array.
@@ -421,7 +421,7 @@ array.serialize = function (A)
    local s = {}
    s[#s+1] = 'size={' .. table.concat(A.size, ',') .. '}'
    s[#s+1] = 'k={' .. table.concat(A.k, ',') .. '}'
-   for i = 1, array._capacity_(A) do
+   for i = 1, array.capacity(A) do
       if A[i] then
          s[#s+1] = string.format("[%d]=%s", i, (type(A[i]) == 'string' and "'"..A[i].."'" or A[i]))
       end
@@ -438,7 +438,7 @@ array.about[array.serialize] = {"serialize(A)", "String representation of array 
 --  @return Iterator which calculate index of the next array element and the element itself, <code>nil</code> at the end.
 array.next = function (A)
    local a = array:new(Ver.move(A.size, 1, #A.size, 1, {})) -- copy size
-   local count, S, K, len = 0, a.size, a.k, array._capacity_(a)
+   local count, S, K, len = 0, a.size, a.k, array.capacity(a)
 
    return function ()
              if count == len then return nil, nil end
