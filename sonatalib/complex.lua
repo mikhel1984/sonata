@@ -92,6 +92,25 @@ ans = Comp.cosh(d):real()        --~ 0.156
 -- tanh
 ans = Comp.tanh(d):imag()        --~ 6.334
 
+-- asin
+z = Comp(2,3)
+ans = a:asin():imag()            --~ 1.983
+
+-- acos 
+ans = a:acos():real()            --~ 1.000
+
+-- atan
+ans = a:atan():imag()            --~ 0.2291
+
+-- asinh
+ans = a:asinh():real()           --~ 1.9686
+
+-- acosh
+ans = a:acosh():imag()           --~ 1.000
+
+-- atanh
+ans = a:atanh():real()           --~ 0.1469
+
 -- make copy
 ans = a:copy()                   --> a
 
@@ -348,6 +367,51 @@ complex.about[complex.cosh] = {"cosh(Z)", "Return hyperbolic cosine of a real or
 complex.tanh = function (Z) return complex.sinh(Z) / complex.cosh(Z) end
 complex.about[complex.tanh] = {"tanh(Z)", "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
+--- Inverse sine.
+--  @param Z Complex number.
+--  @return Complex inverse sine.
+complex.asin = function (Z)  
+   local j = complex._i
+   return -j*complex.log(j*Z+complex.sqrt(1-Z*Z))
+end
+complex.about[complex.asin] = {"asin(Z)", "Complex inverse sine.", FUNCTIONS}
+
+--- Inverse cosine.
+--  @param Z Complex number.
+--  @return Complex inverse cosine.
+complex.acos = function (Z) return -complex._i*complex.log(Z+complex.sqrt(Z*Z-1)) end
+complex.about[complex.acos] = {"acos(Z)", "Complex inverse cosine.", FUNCTIONS}
+
+--- Inverse tangent.
+--  @param Z Complex number.
+--  @return Complex inverse tangent.
+complex.atan = function (Z)
+   local j = complex._i
+   return -0.5*j*complex.log((1+j*Z)/(1-j*Z))
+end
+complex.about[complex.atan] = {"atan(Z)", "Complex inverse tangent.", FUNCTIONS}
+
+
+--- Inverse hyperbolic sine.
+--  @param Z Complex number.
+--  @return Complex inverse hyperbolic sine.
+complex.asinh = function (Z) return complex.log(Z+complex.sqrt(Z*Z+1)) end
+complex.about[complex.asinh] = {"asinh(Z)", "Complex inverse hyperbolic sine.", FUNCTIONS}
+
+
+--- Inverse hyperbolic cosine.
+--  @param Z Complex number.
+--  @return Complex inverse hyperbolic cosine.
+complex.acosh = function (Z) return complex.log(Z+complex.sqrt(Z*Z-1)) end
+complex.about[complex.acosh] = {"acosh(Z)", "Complex inverse hyperbolic cosine.", FUNCTIONS}
+
+
+--- Inverse hyperbolic tangent.
+--  @param Z Complex number.
+--  @return Complex inverse hyperbolic tangent.
+complex.atanh = function (Z) return 0.5*complex.log((1+Z)/(1-Z)) end
+complex.about[complex.atanh] = {"atanh(Z)", "Complex inverse hyperbolic tangent.", FUNCTIONS}
+
 -- Imaginary unit
 complex._i   = complex:new(0,1)
 complex.about[complex._i] = {"_i", "Complex unit.", help.CONST}
@@ -376,24 +440,36 @@ complex.about[complex.serialize] = {"serialize(obj)", "Save internal representat
 complex.onImport = function ()
    -- redefine functions and add complex variable _i
    _i = complex._i
-   local _sqrt = sqrt or math.sqrt
+   local _sqrt = sqrt
    sqrt = function (a) return (iscomplex(a) or type(a) == 'number') and complex.sqrt(a) or _sqrt(a) end
-   local _exp = exp or math.exp
+   local _exp = exp 
    exp = function (a) return iscomplex(a) and complex.exp(a) or _exp(a) end
-   local _log = log or math.log 
+   local _log = log
    log = function (a) return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a) end
-   local _sin = sin or math.sin
+   local _sin = sin
    sin = function (a) return iscomplex(a) and complex.sin(a) or _sin(a) end
-   local _cos = cos or math.cos
+   local _cos = cos
    cos = function (a) return iscomplex(a) and complex.cos(a) or _cos(a) end
-   local _tan = tan or math.tan
+   local _tan = tan
    tan = function (a) return iscomplex(a) and complex.tan(a) or _tan(a) end
-   local _sinh = sinh or sh
+   local _sinh = sinh
    sinh = function (a) return iscomplex(a) and complex.sinh(a) or _sinh(a) end
-   local _cosh = cosh or ch
+   local _cosh = cosh
    cosh = function (a) return iscomplex(a) and complex.cosh(a) or _cosh(a) end
    local _tanh = tanh
    tanh = function (a) return iscomplex(a) and complex.tanh(a) or _tanh(a) end
+   local _asin = asin 
+   asin = function (a) return iscomplex(a) and complex.asin(a) or _asin(a) end
+   local _acos = acos
+   acos = function (a) return iscomplex(a) and complex.acos(a) or _acos(a) end
+   local _atan = atan 
+   atan = function (a) return iscomplex(a) and complex.atan(a) or _atan(a) end
+   local _asinh = asinh 
+   asinh = function (a) return iscomplex(a) and complex.asinh(a) or _asinh(a) end
+   local _acosh = acosh
+   acosh = function (a) return iscomplex(a) and complex.acosh(a) or _acosh(a) end
+   local _atanh = atanh 
+   atanh = function (a) return iscomplex(a) and complex.atanh(a) or _atanh(a) end
 end
 
 

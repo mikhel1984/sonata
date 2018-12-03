@@ -34,28 +34,28 @@ DIV {margin-left: 10px;}
 'Sonata LC' is a Lua based program for mathematical calculations.<br>
 <br>
 <b>USAGE</b>:<br>
-	lua [-i] sonata.lua [flag [arg1 arg2 ...]]<br>
-(option '-i' could be used for working in native interpretator of Lua)<br>
+	lua [-i] sonata.lua [flag] [arg1 arg2 ...]<br>
+(option '-i' could be used for working in native Lua interpretator)<br>
 <br>
 <b>FLAGS</b>:<br>
-	-T, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
-	-l, --log - Save session into the log file.<br>
-	-N, --new - Generate template for a new module.<br>
+	-N, --new  - Generate template for a new module.<br>
+	-l, --log  - Save session into the log file.<br>
 	-h, --help - Get this help message.<br>
-	-L, --lng - Create/update file for localization.<br>
-	-D, --doc - Create/update documentation file.<br>
-	 No flag - Evaluate file(s).<br>
+	-D, --doc  - Create/update documentation file.<br>
+	-L, --lng  - Create/update file for localization.<br>
+	-T, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
+	 No flag   - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.10<br>
+<b>VERSION</b>: 0.9.11<br>
 <br>
-<b>MODULES</b>: special, numeric, complex, graph, polynom, units, files, array, struct, rational, bigint, stat, const, matrix, gnuplot.<br>
+<b>MODULES</b>: array, struct, matrix, files, units, stat, special, gnuplot, polynom, complex, const, rational, bigint, graph, numeric.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
-<p><a href="https://github.com/mikhel1984/lc/wiki">WIKI</a></p></div>
+<p><a href="https://github.com/mikhel1984/lc/wiki">Project Wiki</a></p></div>
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
-<p class="descript">Lua based calculator.</p>
+<p class="descript">Lua based mathematics.</p>
 <p><b>_ans</b> - Result of the last operation.<br>
 <b>_e</b> - Euler number.<br>
 <b>_pi</b> - Number pi.<br>
@@ -72,10 +72,10 @@ DIV {margin-left: 10px;}
 <b>exp(x)</b> - Exponent.<br>
 <b>lc.evalTF(src[,dst])</b> - Read text file and evaluate expressions in ##..##. Save resuto to dst file, if need.<br>
 <b>lc.map(fn,tbl)</b> - Evaluate function for each table element.<br>
-<b>lc.range([from,]to[,step])</b> - Generate table with sequence of numbers.<br>
-<b>lc.round(x[,n])</b> - Round value, define number of decimal digits.<br>
+<b>lc.range([from=1,]to[,step=1])</b> - Generate table with sequence of numbers.<br>
+<b>lc.round(x[,n=0])</b> - Round value, define number of decimal digits.<br>
 <b>lc.sci(x)</b> - 'Scientific' representation of the number.<br>
-<b>lc.show(t[,N])</b> - Print Lua object. In case of table, ask about continuation after each N elements (default is 10).<br>
+<b>lc.show(t[,N=10])</b> - Print Lua object. In case of table, ask about continuation after each N elements.<br>
 <b>lc.type(t)</b> - Show type of the object.<br>
 <b>log(x)</b> - Natural logarithm.<br>
 <b>rand()</b> - Random number between 0 and 1.<br>
@@ -142,15 +142,14 @@ ans = math.deg(_pi)
 <div><a name="Arr"></a>
 <h3># Arr (array) #</h3>
 <p class="descript">Manipulations with arrays of elements.</p>
-<p><b>#array</b> - Return maximum number of elements.<br>
-<b>Arr(tSize)</b> - Create empty array with given size, represented as a table.<br>
+<p><b>Arr(tSize)</b> - Create empty array with given size, represented as a table.<br>
 <b>apply(func, ...)</b> - Apply function of several arguments. Return new array.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b<br>
+<b>capacity(A)</b> - Maximal number of elements in the array. The same as #A.<br>
 <b>comparison</b> - a == b, a ~= b<br>
 <b>concat(A1,A2,nAxis)</b> - Array concatenation along the given axis.<br>
 <b>copy(A)</b> - Get copy of the array.<br>
 <b>dim(A)</b> - Return size of array.<br>
-<b>fullString(A,nRow,nCol)</b> - Represent array as sequence of matrices, where r and c are numbers of axes.<br>
 <b>get(A,tInd)</b> - Get array element. Index is a table.<br>
 <b>isEqual(A1,A2)</b> - Check size equality.<br>
 <b>map(A,func)</b> - Apply function of 1 argument. Return new array.<br>
@@ -173,7 +172,7 @@ ans = a:get{1,2,1}                     --> 4
 
 -- random array
 b = Arr.rand {5,2,1}
--- number of elements
+-- max number of elements
 ans = #b                               --> 10
 
 ans = b:copy()                         --> b
@@ -211,9 +210,6 @@ ans = f:get{1,1,1}                     --> b:get{1,1,1}*10
 -- simple print
 print(a)
 
--- print slices for axis 2 and 3
-print(d:fullString(2,3))
-
 -- iterate over array 
 for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 
@@ -222,7 +218,7 @@ for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 <div><a name="Big"></a>
 <h3># Big (bigint) #</h3>
 <p class="descript">Operations with arbitrary long integers.</p>
-<p><b>BASE</b> - The radix of big integer representation.<br>
+<p><b>BASE[=10]</b> - The radix of big integer representation.<br>
 <b>Big(v)</b> - Create big number from integer or string.<br>
 <b>abs(v)</b> - Return module of arbitrary long number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
@@ -231,7 +227,7 @@ for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 <b>eq(a,b)</b> - Check equality of two values.<br>
 <b>fact(B)</b> - Return factorial of non-negative integer n.<br>
 <b>size(B)</b> - Number of digits, the same as #B.<br>
-<b>str(B[,n])</b> - More readable string representation of the number. Optional argument defines number of digits in a group.<br>
+<b>str(B[,n=3])</b> - More readable string representation of the number. Optional argument defines number of digits in a group.<br>
 <b>val(N)</b> - Represent current big integer as number if it possible.<br></p>
 <pre class="example">
 -- import 'bigint'
@@ -293,10 +289,10 @@ print(c:str(6))
 <div><a name="Comp"></a>
 <h3># Comp (complex) #</h3>
 <p class="descript">Manipulations with complex numbers.</p>
-<p><b>Comp(a[,b])</b> - Create new complex number.<br>
+<p><b>Comp([a=0,]b)</b> - Create new complex number.<br>
 <b>_i</b> - Complex unit.<br>
 <b>abs(Z)</b> - Return module of complex number.<br>
-<b>arg(Z)</b> - Return argument of complex number.<br>
+<b>angle(Z)</b> - Return argument of complex number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
 <b>comparison</b> - a==b, a~=b<br>
 <b>conj(Z)</b> - Return the complex conjugate.<br>
@@ -320,9 +316,9 @@ Comp = require 'sonatalib.complex'
 
 -- real and imag pars
 a = Comp(1,2)
--- or just real                  
+-- or just imaginary
 b = Comp(3)
-ans = b                        --> Comp(3,0)
+ans = b                        --> Comp(0,3)
 
 -- imaginary unit
 j = Comp._i
@@ -332,11 +328,11 @@ ans = 3+4*j                    --> Comp(3,4)
 ans = Comp.trig(2,0)           --> Comp(2,0)
 
 -- arithmetic
-ans = a + b                    --> Comp(4,2)
+ans = a + b                    --> Comp(1,5)
 
 ans = Comp(3) - b              --> Comp(0)
 
-ans = a * b                    --> Comp(3,6)
+ans = a * b                    --> Comp(-6,3)
 
 ans = a / Comp._i              --> Comp(2,-1)
 
@@ -358,7 +354,7 @@ ans = (a ~= b)                 --> true
 ans = a:abs()                  --~ 2.236
 
 -- argument (angle)
-ans = a:arg()                  --~ 1.107
+ans = a:angle()                  --~ 1.107
 
 -- conjugated number
 ans = a:conj()                 --> Comp(1,-2)
@@ -451,9 +447,10 @@ ans = _C.myConst            --> nil
 <a href="#Top">Top</a></div>
 <div><a name="File"></a>
 <h3># File (files) #</h3>
-<p class="descript">Routines for working with data files.</p>
-<p><b>dsvRead(fName,del)</b> - Read delimiter separated data as Lua table.<br>
-<b>dsvWrite(fname,tbl,delim)</b> - Save Lua table as delimiter separated data into file.<br>
+<p class="descript">Routines for working with files and text.</p>
+<p><b>dsvRead(fName[,delim=','])</b> - Read delimiter separated data as Lua table.<br>
+<b>dsvWrite(fname,tbl[,delim=','])</b> - Save Lua table as delimiter separated data into file.<br>
+<b>read(fName)</b> - Return file content as a text.<br>
 <b>split(str,delim)</b> - Return iterator over substrings separated by the delimiter.<br>
 <b>tblImport(fName)</b> - Import Lua table, written into file.<br></p>
 <pre class="example">
@@ -495,8 +492,8 @@ for s in File.split(str, '//') do ans = ans+1 end  --> 4
 <div><a name="Gnu"></a>
 <h3># Gnu (gnuplot) #</h3>
 <p class="descript">Interface for calling Gnuplot from Lua.</p>
-<p><b>Gnu([g])</b> - Transform given table into gnuplot object.<br>
-<b>N</b> - If no samples, divide interval into N points.<br>
+<p><b>Gnu([G])</b> - Transform given table into gnuplot object.<br>
+<b>N[=100]</b> - If no samples, divide interval into N points.<br>
 <b>copy(G)</b> - Get copy of the plot options.<br>
 <b>isAvailable(G)</b> - Check if all options in table are predefined in program.<br>
 <b>keys</b> -   Options description:<br>
@@ -522,14 +519,12 @@ samples=200                                  -- define number of points<br>
 permanent=true                               -- create in independent window<br>
 raw='set pm3d'                               -- set Gnuplot options manually<br>
 <br>
-<b>plot(g)</b> - Plot data, represented as Lua table.<br></p>
+<b>plot(G)</b> - Plot data, represented as Lua table.<br></p>
 <a href="#Top">Top</a></div>
 <div><a name="Graph"></a>
 <h3># Graph (graph) #</h3>
 <p class="descript">Operations with graphs.</p>
-<p><b>BellmanFord(G,start[,goal]</b> - Shortest path search using Bellman-Ford algorithm.<br>
-<b>Dijkstra(G,start[,goal]</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
-<b>Graph(t)</b> - Create new graph.<br>
+<p><b>Graph(t)</b> - Create new graph.<br>
 <b>add(G,e)</b> - Add new node or edge to graph G. Node denoted as a single name, edge is a table of names (and weights if need).<br>
 <b>bfs(G,start,goal)</b> - Breadth first search. Return result and found path.<br>
 <b>copy(G)</b> - Get copy of the graph.<br>
@@ -540,6 +535,8 @@ raw='set pm3d'                               -- set Gnuplot options manually<br>
 <b>isNegative(G)</b> - Check if the graph has negative edges.<br>
 <b>isWeighted(G)</b> - Check if the graph has weight different from 1.<br>
 <b>nodes(G)</b> - List of graph nodes.<br>
+<b>pathBF(G,start[,goal])</b> - Shortest path search using Bellman-Ford algorithm.<br>
+<b>pathD(G,start[,goal])</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
 <b>remove(G,e)</b> - Remove node or edge from the graph G. Node is a single name, edge - table of names.<br></p>
 <pre class="example">
 
@@ -617,12 +614,12 @@ c:add{'b','e',w=0.4}
 c:add{'c','f',w=2}
 
 -- Dijkstra path search
-dist,prev = c:Dijkstra('a') 
+dist,prev = c:pathD('a') 
 ans = dist['g']                --> 1.9
 
 -- Bellman-Ford path search
 c:add{'f','h',w=-0.5}
-dist,prev = c:BellmanFord('a')
+dist,prev = c:pathBF('a')
 ans = dist['h'] 
 
 -- check negative edges
@@ -636,39 +633,36 @@ print(b)
 <div><a name="Mat"></a>
 <h3># Mat (matrix) #</h3>
 <p class="descript">Matrix operations. The matrices are spares by default.</p>
-<p><b>Cholesky(M)</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
-<b>Mat(...)</b> - Create matrix from list of strings (tables).<br>
+<p><b>Mat(...)</b> - Create matrix from list of strings (tables).<br>
 <b>apply(fn,M1,M2,...)</b> - Apply function to the given matrices element-wise.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
+<b>chol(M)</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
 <b>comparison</b> - a==b, a~=b<br>
 <b>concat(M1,M2,dir)</b> - Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical<br>
 Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>copy(M)</b> - Return copy of matrix.<br>
 <b>cross(V1,V2)</b> - Cross product or two 3-element vectors.<br>
 <b>det(M)</b> - Calculate determinant.<br>
-<b>diag(M[,n])</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.<br>
+<b>diag(M[,n=0])</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.<br>
 <b>dot(V1,V2)</b> - Scalar product of two 3-element vectors<br>
-<b>eye(rows[,cols[,init]])</b> - Create identity matrix. Diagonal value (init) can be defined.<br>
+<b>eye(rows[,cols=rows,init=1])</b> - Create identity matrix. Diagonal value (init) can be defined.<br>
 <b>fill(rows,cols,fn)</b> - Create matrix, using function fn(r,c).<br>
 <b>inv(M)</b> - Return inverse matrix.<br>
 <b>lu(M)</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
 <b>map(M,fn)</b> - Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).<br>
 <b>norm(M)</b> - Euclidean norm.<br>
-<b>ones(rows[,cols[,val]])</b> - Create matrix of given numbers (default is 1).<br>
+<b>ones(rows[,cols=rows,val=1])</b> - Create matrix of given numbers (default is 1).<br>
 <b>pinv(M)</b> - Pseudo inverse matrix calculation.<br>
-<b>rand(rows[,cols])</b> - Create matrix with random numbers from 0 to 1.<br>
+<b>rand(rows[,cols=rows])</b> - Create matrix with random numbers from 0 to 1.<br>
 <b>rank(M)</b> - Find rank of the matrix.<br>
-<b>reduce(M,fn,dir,init)</b> - Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c'), where s0=init.<br>
-<b>rref(A,b)</b> - Perform transformations using Gauss method. Return also determinant.<br>
+<b>reduce(M,fn,dir[='r'])</b> - Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c').<br>
+<b>rref(M)</b> - Perform transformations using Gauss method.<br>
 <b>size(M)</b> - Return number or rows and columns.<br>
-<b>sparse(M)</b> - Return sparse matrix.<br>
-<b>sqNorm(M,dir)</b> - Calculate square norm along given direction.<br>
 <b>sum(M,dir)</b> - Find sum of elements along given direction ('r' or 'c').<br>
 <b>table(M)</b> - Convert to simple Lua table.<br>
 <b>tr(M)</b> - Get trace of the matrix.<br>
 <b>transpose(M)</b> - Return matrix transpose. Shorten form is T().<br>
-<b>triang(M)</b> - Matrix triangulation produced by Gaussian elimination.<br>
-<b>zeros(rows[,cols])</b> - Create matrix from zeros.<br></p>
+<b>zeros(rows[,cols=rows])</b> - Create matrix from zeros.<br></p>
 <pre class="example">
 
 -- import 'matrix'
@@ -720,6 +714,7 @@ e = a^-1
 ans = e(2,1)                     --> 1.5
 
 -- object copy
+-- (it doesn't copy zeros)
 f = a:copy()
 ans = (f == a)                   --> true
 
@@ -753,9 +748,6 @@ ans = a .. b                     --> Mat {{1,2,5,6},{3,4,7,8}}
 -- (a // b - for short)
 ans = a:concat(b,'v')            --> Mat {{1,2},{3,4},{5,6},{7,8}}
 
--- to triangular form
-print(Mat.triang(a .. b))
-
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)          --> Mat {{1,4},{9,16}}
 
@@ -769,7 +761,7 @@ aa = Mat.apply(fn, b,b,b)
 ans = aa[1][1]                    --> 30
 
 -- use Gauss transform to solve equation
-ans = Mat.rref(a, Mat {{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
+ans = Mat.rref(a .. Mat{{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
 
 -- create vector
 ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
@@ -777,10 +769,6 @@ ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 -- get submatrix
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
 ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
-
--- square norm along rows
-gsq = g:sqNorm('r') 
-ans = gsq[1][1]                 --> 14
 
 -- eualedian norm
 ans = Mat.V({1,2,3}):norm()     --~ math.sqrt(14)
@@ -795,16 +783,10 @@ n = m:pinv()
 ans = n(2,2)                    --~ 0.333
 
 -- copy as Lua table
--- without methametods
+-- (without methametods)
 k = Mat.eye(3)
 k = k:table()
 ans = k[2][1]                   --> 0
-
--- back to matrix
--- (import table)
-k = Mat(k)
-k = k:sparse()
-ans = rawget(k[2],1)             --> nil
 
 -- make diagonal matrix
 ans = Mat.diag({1,2,3})         --> Mat {{1,0,0},{0,2,0},{0,0,3}}
@@ -826,7 +808,7 @@ ans = l[2][1]                   --~ 0.714
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
-m = m:Cholesky()
+m = m:chol()
 ans = m[2][2]                   --~ 1.633
 
 -- matrix trace
@@ -847,7 +829,7 @@ ans = a:sum()                   --> Mat {{3},{7}}
 
 -- apply product to each column
 -- initial value is 1
-ans = a:reduce(function (x,y) return x*y end, 'c', 1) --> Mat {{3,8}}
+ans = a:reduce(function (x,y) return x*y end, 'c') --> Mat {{3,8}}
 
 -- get rank
 ans = Mat.ones(2,3):rank()      --> 1
@@ -856,9 +838,9 @@ ans = Mat.ones(2,3):rank()      --> 1
 <div><a name="Num"></a>
 <h3># Num (numeric) #</h3>
 <p class="descript">Group of functions for numerical calculations.</p>
-<p><b>Newton(fn,x0)</b> - Find root of equation using Newton's rule, use only one initial condition.<br>
-<b>TOL</b> - The solution tolerance (0.001 by default).<br>
-<b>diff(fn,x)</b> - Calculate the derivative value for given function.<br>
+<p><b>Newton(fn,x0)</b> - Find root of equation using Newton's rule with only one initial condition.<br>
+<b>TOL[=0.001]</b> - The solution tolerance (0.001 by default).<br>
+<b>der(fn,x)</b> - Calculate the derivative value for given function.<br>
 <b>ode45(fn,tDelta,y0[,param])</b> - Numerical approximation of the ODE solution.<br>
 First parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.<br>
 Return table of intermediate points and result yn.<br>
@@ -881,7 +863,7 @@ d = Num.Newton(math.sin, math.pi*0.7)
 ans = d                                   --~ math.pi
 
 -- numeric derivative
-b = Num.diff(math.sin, 0)
+b = Num.der(math.sin, 0)
 ans = b                                   --~ 1
 
 -- numeric integral
@@ -918,12 +900,12 @@ ans = y[#y][1]                           --~ 2.56
 <p class="descript">Operations with polynomials</p>
 <p><b>Poly(...)</b> - Create a polynomial.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n, -a<br>
-<b>coef(...)</b> - Return polynomial with given roots.<br>
+<b>build(root1,root2,...)</b> - Return polynomial with given roots.<br>
 <b>comparison</b> - a==b, a~=b<br>
 <b>copy(P)</b> - Get copy of the polynomial.<br>
 <b>der(P)</b> - Calculate derivative of polynomial.<br>
 <b>fit(X,Y,ord)</b> - Find polynomial approximation for the line.<br>
-<b>int(P[,x0])</b> - Calculate integral, x0 - free coefficient.<br>
+<b>int(P[,x0=0])</b> - Calculate integral, x0 - free coefficient.<br>
 <b>real(p)</b> - Find real roots of the polynomial.<br>
 <b>val(P,x)</b> - Get value of polynomial P in point x.<br></p>
 <pre class="example">
@@ -963,7 +945,7 @@ ader = a:der()
 ans = ader(1)                 --> 11
 
 -- build polynomial using roots
-ans = Poly.coef(1,-1)         --> Poly {1,0,-1}
+ans = Poly.build(1,-1)         --> Poly {1,0,-1}
 
 -- make copy and compare
 c = a:copy()
@@ -971,11 +953,6 @@ ans = (a == c)                --> true
 
 -- not equal
 ans = (b == c)                --> false
-
--- find root
--- near some value
-pp = Poly.coef(2,3)
-ans = pp:NewtonRapson(0)      --~ 2.00
 
 -- find real roots
 e = a:real()
@@ -1003,7 +980,7 @@ ans = d:str('s')              --> '2*s^2-2*s+1'
 <p class="descript">Computations with rational numbers.</p>
 <p><b>De(R)</b> - Return the denominator of the rational number.<br>
 <b>Nu(R)</b> - Return the numerator of rational number.<br>
-<b>Rat(m[,n])</b> - Create rational number using num (and denom).<br>
+<b>Rat(m[,n=1])</b> - Create rational number using num (and denom).<br>
 <b>arithmetic</b> - R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} <br>
 <b>comparison</b> - R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2<br>
 <b>copy(R)</b> - Get copy of the rational number.<br>
@@ -1077,7 +1054,7 @@ print(a)
 <b>erfc(x)</b> - Complementary error function.<br>
 <b>expint(n,x)</b> - Exponential integral En(x).<br>
 <b>gamma(z)</b> - Gamma function.<br>
-<b>gammainc(x,a,type)</b> - Incomplete gamma function, P (type=lower) or Q (type=upper).<br>
+<b>gammainc(x,a[,type='lower')</b> - Incomplete gamma function, P (type=lower) or Q (type=upper).<br>
 <b>gammaln(z)</b> - Natural logarithm of gamma function.<br>
 <b>gammp(a,x)</b> - Incomplete gamma function P(a,x).<br>
 <b>gammq(a,x)</b> - Incomplete gamma function Q(a,x) = 1-P(a,x).<br>
@@ -1251,14 +1228,14 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 <b>Queue.popBack(Q)</b> - Get value from the end of queue, remove it.<br>
 <b>Queue.push(Q,val)</b> - Add value to the back of queue.<br>
 <b>Queue.pushFront(Q,val)</b> - Add value to the top of queue.<br>
-<b>Queue.size(q)</b> - Return number of elements in queue.<br>
+<b>Queue.size(Q)</b> - Return number of elements in queue.<br>
 <b>Set(t)</b> - Create new set from table of elements.<br>
+<b>Set.add(S,val)</b> - Insert element into set.<br>
 <b>Set.copy(S)</b> - Get copy of the set.<br>
-<b>Set.erase(S,val)</b> - Remove element from set.<br>
-<b>Set.insert(S,val)</b> - Insert element into set.<br>
 <b>Set.isEmpty(S)</b> - Return true if the set is empty.<br>
 <b>Set.list(S)</b> - Represent set as a list of elements.<br>
 <b>Set.map(S,fn)</b> - Apply function fn() to obtain new set.<br>
+<b>Set.remove(S,val)</b> - Remove element from set.<br>
 <b>Set.size(S)</b> - Number of elements in the set.<br>
 <b>Set: comparison</b> - S1==S2, S1~=S2, S1<S2, S1<=S2, S1>S2, S1>=S2<br>
 <b>Set: union, intersection, difference</b> - S1+S2, S1*S2, S1/S2<br>
@@ -1266,7 +1243,7 @@ ans = Stat.normpdf(0.7, 0.5, 0.8) --~ 0.4833
 <b>Stack.copy(S)</b> - Create copy of the stack.<br>
 <b>Stack.isEmpty(S)</b> - Return true if the stack is empty.<br>
 <b>Stack.pop(S)</b> - Pop value from the stack, return element or nil.<br>
-<b>Stack.push(S,val)</b> - Push value to the stack, except nil.<br>
+<b>Stack.push(S,val)</b> - Push value to the stack (except nil).<br>
 <b>Stack.size(S)</b> - Return number of elements in stack.<br>
 <b>Stack.top(S)</b> - Return top value without removing it.<br></p>
 <pre class="example">
@@ -1366,10 +1343,10 @@ ans = a                        --> DS.Set {1,2,3,4}
 ans = b[6]                     --> nil
 
 -- add value
-b:insert(6)
+b:add(6)
 ans = b[6]  
 -- remove value             
-b:erase(6)                    --> true
+b:remove(6)                    --> true
 
 -- union
 ans = a + b                    --> DS.Set {1,2,3,4,5}
@@ -1412,7 +1389,7 @@ print(a)
 <h3># Unit (units) #</h3>
 <p class="descript">Operations and conversations according the units.</p>
 <p><b>Unit(v[,u])</b> - Create new elements with units.<br>
-<b>add(unit,rule)</b> - Add new rule for conversation.<br>
+<b>add(U,rule)</b> - Add new rule for conversation.<br>
 <b>arithmetic</b> - U1+U2, U1-U2, U1*u2, U1/U2, U1^n<br>
 <b>comparison</b> - U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2<br>
 <b>convert(v, units)</b> - Convert one units to another, return new object or nil.<br>
