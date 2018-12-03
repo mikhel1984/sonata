@@ -128,6 +128,10 @@ ans = Mat.V({1,2,3}):norm()     --~ math.sqrt(14)
 h = Mat.rand(3,2)
 print(h)
 
+-- random integer matrix
+-- from 1 to 20
+print(h:randi(20))
+
 -- pseudo inverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
@@ -709,6 +713,24 @@ matrix.rand = function (rows, cols)
 end
 matrix.about[matrix.rand] = {"rand(rows[,cols=rows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
 
+--- Matrix with integer random values from 1 to defined max value.
+--  @param x1 Source matrix or upper limit.
+--  @param x2 Upper limit or number of rows.
+--  @param x3 Number of columns (optional).
+--  @return Matrix with integer random elements.
+matrix.randi = function (x1,x2,x3)
+   local N, rows, cols
+   if ismatrix(x1) then 
+      -- matrix, N
+      N, rows, cols = x2, x1.rows, x1.cols
+   else
+      -- N, rows [,cols]
+      N, rows, cols = x1, x2, x3 or x2
+   end
+   return matrix.fill(rows, cols, function () return math.random(1,N) end)
+end
+matrix.about[matrix.randi] = {"randi([M],N,[rows],[cols=rows])", "Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.", help.NEW}
+
 --- Identity matrix.
 --  @param rows Number of rows.
 --  @param cols Number of columns. Can be omitted in case of square matrix.
@@ -1250,20 +1272,43 @@ matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal repres
 
 --- Function for execution during the module import.
 matrix.onImport = function ()
-   local _rand = rand or math.random
+   -- basic
+   local _rand = rand
    rand = function (a,...) return a and matrix.rand(a,...) or _rand(a,...) end
-   local _abs = abs or math.abs
+   local _randi = randi
+   randi = function (a,b,...) return b and matrix.randi(a,b,...) or _randi(a,b,...) end
+   local _abs = abs 
    abs = function (a) return ismatrix(a) and matrix.map(a,_abs) or _abs(a) end
-   local _sqrt = sqrt or math.sqrt
+   local _sqrt = sqrt
    sqrt = function (a) return ismatrix(a) and matrix.map(a,_sqrt) or _sqrt(a) end
-   local _exp = exp or math.exp
+   local _exp = exp
    exp = function (a) return ismatrix(a) and matrix.map(a,_exp) or _exp(a) end
-   local _sin = sin or math.sin
+   -- trigonometric
+   local _sin = sin
    sin = function (a) return ismatrix(a) and matrix.map(a,_sin) or _sin(a) end
-   local _cos = cos or math.cos
+   local _cos = cos
    cos = function (a) return ismatrix(a) and matrix.map(a,_cos) or _cos(a) end
-   local _tan = tan or math.tan
+   local _tan = tan
    tan = function (a) return ismatrix(a) and matrix.map(a,_tan) or _tan(a) end
+   local _asin = asin
+   asin = function (a) return ismatrix(a) and matrix.map(a,_asin) or _asin(a) end
+   local _acos = acos
+   acos = function (a) return ismatrix(a) and matrix.map(a,_acos) or _acos(a) end
+   local _atan = atan
+   atan = function (a) return ismatrix(a) and matrix.map(a,_atan) or _atan(a) end
+   -- hyperbolic
+   local _sinh = sinh
+   sinh = function (a) return ismatrix(a) and matrix.map(a,_sinh) or _sinh(a) end
+   local _cosh = cosh
+   cosh = function (a) return ismatrix(a) and matrix.map(a,_cosh) or _cosh(a) end
+   local _tanh = tanh
+   tanh = function (a) return ismatrix(a) and matrix.map(a,_tanh) or _tanh(a) end
+   local _asinh = asinh
+   asinh = function (a) return ismatrix(a) and matrix.map(a,_asinh) or _asinh(a) end
+   local _acosh = acosh
+   acosh = function (a) return ismatrix(a) and matrix.map(a,_acosh) or _acosh(a) end
+   local _atanh = atanh
+   atanh = function (a) return ismatrix(a) and matrix.map(a,_atanh) or _atanh(a) end
 end
 
 -- free memory if need

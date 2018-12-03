@@ -94,22 +94,22 @@ ans = Comp.tanh(d):imag()        --~ 6.334
 
 -- asin
 z = Comp(2,3)
-ans = a:asin():imag()            --~ 1.983
+ans = z:asin():imag()            --~ 1.983
 
 -- acos 
-ans = a:acos():real()            --~ 1.000
+ans = z:acos():real()            --~ 1.000
 
 -- atan
-ans = a:atan():imag()            --~ 0.2291
+ans = z:atan():imag()            --~ 0.2291
 
 -- asinh
-ans = a:asinh():real()           --~ 1.9686
+ans = z:asinh():real()           --~ 1.9686
 
 -- acosh
-ans = a:acosh():imag()           --~ 1.000
+ans = z:acosh():imag()           --~ 1.000
 
 -- atanh
-ans = a:atanh():real()           --~ 0.1469
+ans = z:atanh():real()           --~ 0.1469
 
 -- make copy
 ans = a:copy()                   --> a
@@ -439,6 +439,7 @@ complex.about[complex.serialize] = {"serialize(obj)", "Save internal representat
 --- Function for execution during the module import.
 complex.onImport = function ()
    -- redefine functions and add complex variable _i
+   -- basic
    _i = complex._i
    local _sqrt = sqrt
    sqrt = function (a) return (iscomplex(a) or type(a) == 'number') and complex.sqrt(a) or _sqrt(a) end
@@ -446,24 +447,26 @@ complex.onImport = function ()
    exp = function (a) return iscomplex(a) and complex.exp(a) or _exp(a) end
    local _log = log
    log = function (a) return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a) end
+   -- trigonometric
    local _sin = sin
    sin = function (a) return iscomplex(a) and complex.sin(a) or _sin(a) end
    local _cos = cos
    cos = function (a) return iscomplex(a) and complex.cos(a) or _cos(a) end
    local _tan = tan
    tan = function (a) return iscomplex(a) and complex.tan(a) or _tan(a) end
-   local _sinh = sinh
-   sinh = function (a) return iscomplex(a) and complex.sinh(a) or _sinh(a) end
-   local _cosh = cosh
-   cosh = function (a) return iscomplex(a) and complex.cosh(a) or _cosh(a) end
-   local _tanh = tanh
-   tanh = function (a) return iscomplex(a) and complex.tanh(a) or _tanh(a) end
    local _asin = asin 
    asin = function (a) return iscomplex(a) and complex.asin(a) or _asin(a) end
    local _acos = acos
    acos = function (a) return iscomplex(a) and complex.acos(a) or _acos(a) end
    local _atan = atan 
    atan = function (a) return iscomplex(a) and complex.atan(a) or _atan(a) end
+   -- hyperbolic
+   local _sinh = sinh
+   sinh = function (a) return iscomplex(a) and complex.sinh(a) or _sinh(a) end
+   local _cosh = cosh
+   cosh = function (a) return iscomplex(a) and complex.cosh(a) or _cosh(a) end
+   local _tanh = tanh
+   tanh = function (a) return iscomplex(a) and complex.tanh(a) or _tanh(a) end
    local _asinh = asinh 
    asinh = function (a) return iscomplex(a) and complex.asinh(a) or _asinh(a) end
    local _acosh = acosh
@@ -471,7 +474,6 @@ complex.onImport = function ()
    local _atanh = atanh 
    atanh = function (a) return iscomplex(a) and complex.atanh(a) or _atanh(a) end
 end
-
 
 -- free memory if need
 if not LC_DIALOG then complex.about = nil end
