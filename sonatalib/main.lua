@@ -83,16 +83,17 @@ local function _evaluate_(cmd)
    if tmp then cmd = tmp end
    -- parse 
    local fn, err = Ver.loadStr('return '..cmd)
+   local expected_next = string.find(err or '', 'expected near')
    if err then
       fn, err = Ver.loadStr(cmd)      
    end
    if err then
-      if string.find(err, 'error') then
+      if string.find(err, 'error') or not expected_next then
          -- parsing error
          return EV_ERROR, err
       else
          -- expected rest of command
-         return EV_CMD, cmd
+         return EV_CMD, cmd..' '
       end
    else
       local ok, res = pcall(fn)
@@ -368,7 +369,7 @@ main.evalDialog = function (logFile)
       io.write(invite)
       -- command processing
       local newLine = io.read()
-      local status, res = _evaluate_(cmd..newLine)
+      local status, res = _evaluate_(string.format("%s%s",cmd,newLine))
       if status == EV_RES then
          if res ~= nil then print(res) end
 	 invite = invA; cmd = ""
