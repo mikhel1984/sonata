@@ -224,7 +224,9 @@ rational.about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R
 --- String representation.
 --  @param R Rational number.
 --  @return String with numerator and denominator.
-rational.__tostring = function (R) return numStr(R[NUM])..'/'..numStr(R[DENOM]) end
+rational.__tostring = function (R) 
+   return string.format("%s/%s", numStr(R[NUM]), numStr(R[DENOM])) 
+end
 
 --- Float point representation.
 --  @param R Rational number.
@@ -297,3 +299,5 @@ return rational
 
 --======================================
 --TODO: create module for calculations with integer numbers, add prime and gcd
+--TODO: string representation as true ration (str)
+--TODO: why sign is in denominator?
