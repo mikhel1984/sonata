@@ -110,7 +110,6 @@ about = help:new("Operations with arbitrary long integers."),
 bigint.__index = bigint
 -- the radix
 bigint.BASE = 10        
-bigint.about[bigint.BASE] = {'BASE[=10]', "The radix of big integer representation.", help.OTHER}
 
 --- Create new object, set metatable.
 --  @param num Integer as number or string.

@@ -85,12 +85,12 @@ local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return
 
 local numeric = {
 -- description
-about = help:new("Group of functions for numerical calculations."),
+about = help:new("Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL."),
 }
 
 -- current tolerance
 numeric.TOL = 1e-3
-numeric.about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance (0.001 by default).", "parameters"}
+numeric.about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance.", "parameters"}
 
 --- Find root of equation at the given interval.
 --  @param fn Function to analyze.

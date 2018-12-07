@@ -102,7 +102,7 @@ _mul_ = function (x,y) return x*y end,
 _div_ = function (x,y) return x/y end,
 _pow_ = function (x,y) return x^y end,
 -- description
-about = help:new("Manipulations with arrays of elements.")
+about = help:new("Manipulations with arrays of elements. Indeces have form of tables. Indexation from 1.")
 }
 -- metamethods
 array.__index = array
@@ -161,7 +161,7 @@ array.get = function (A, tInd)
    if not array._isIndex_(A, tInd) then error("Wrong index!") end
    return A[array._indexConvert_(A, tInd)]
 end
-array.about[array.get] = {"get(A,tInd)", "Get array element. Index is a table."}
+array.about[array.get] = {"get(A,tInd)", "Get array element."}
 
 --- Set new value.
 --  @param A Array object.
@@ -171,7 +171,7 @@ array.set = function (A, tInd, val)
    if not array._isIndex_(A, tInd) then error("Wrong index!") end
    A[array._indexConvert_(A,tInd)] = val 
 end
-array.about[array.set] = {"set(A,tInd,val)", "Set value to the array. Index is a table."}
+array.about[array.set] = {"set(A,tInd,val)", "Set value to the array."}
 
 --- Get array copy.
 --  @param A Array object.
@@ -413,7 +413,7 @@ setmetatable(array, {__call = function (self, tSize)
    return array:new(tSize) 
 end})
 array.Arr = 'Arr'
-array.about[array.Arr] = {"Arr(tSize)", "Create empty array with given size, represented as a table.", help.NEW}
+array.about[array.Arr] = {"Arr(tSize)", "Create empty array with given size.", help.NEW}
 
 --[[
 -- Array serialization.

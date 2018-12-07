@@ -272,7 +272,8 @@ complex.about[complex.abs] = {"abs(Z)", "Return module of complex number."}
 --  @param Z Complex number.
 --  @return Conjunction to the given number.
 complex.conj = function (Z) return complex:new(Z[1], -Z[2]) end
-complex.about[complex.conj] = {"conj(Z)", "Return the complex conjugate.", help.OTHER}
+complex.about[complex.conj] = {"conj(Z)", "Return the complex conjugate. Equal to ~Z.", help.OTHER}
+complex.__bnot = complex.conj
 
 --- Real part of the number.
 --  @param Z Complex value.

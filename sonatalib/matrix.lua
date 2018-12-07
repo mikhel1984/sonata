@@ -1320,3 +1320,4 @@ return matrix
 --TODO: Fix sign in SVD transform
 --TODO: Redefine 'norm' method
 --TODO: change matrix print
+--TODO: 'table' for Nx1 matrix return simple table
