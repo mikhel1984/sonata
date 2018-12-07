@@ -398,7 +398,7 @@ end
 
 main.evalDemo = function (fname)
    local f = assert(io.open(fname))
-   local text = f:read('a'); f:close()
+   local text = f:read('*a'); f:close()
    local ERROR = lc_help.CERROR.."ERROR: "
    local cmd = ""
    local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD

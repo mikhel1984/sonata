@@ -120,7 +120,7 @@ local polynom = {
 -- marker
 type = 'polynomial', ispolynom = true,
 -- description
-about = help:new("Operations with polynomials"),
+about = help:new("Operations with polynomials."),
 }
 polynom.__index = polynom
 
