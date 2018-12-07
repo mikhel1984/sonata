@@ -13,20 +13,17 @@
 _C = require 'sonatalib.const'
 
 -- charge of electron
-ans = _C.e                  --~ 1.602e-19
+ans = _C.phy.e                  --~ 1.602e-19
 
 -- units have postfix _u
-ans = _C.e_u                --> 'C'
-
--- modification generate error
-ans = pcall(function() _C.e = 0 end)  --> false
-
--- as well as addition
-ans = pcall(function() _C.myConst = 10 end) --> false
+ans = _C.phy.e_u                --> 'C'
 
 -- create "immutable" value
 _C.add('myConst', 10)
 ans = _C.myConst            --> 10
+
+-- modification generate error
+ans = pcall(function() _C.myConst = 0 end)  --> false
 
 -- remove constant
 _C.remove('myConst')
@@ -45,6 +42,7 @@ local PHY, ASTR, MATH = "physics", "astronomy", "math"
 -- Set of constants
 _data_ = {
    -- physics
+phy = {
 G_u='N*m^2/kg^2',   G    = 6.672041E-11,            -- constant of gravitation
 e_u='C',            e    = 1.602189246E-19,         -- charge of electron
 mu0_u='N/A^2',      mu0  = 4E-7*math.pi,            -- magnetic constant
@@ -58,15 +56,17 @@ g_u='m/s^2',        g    = 9.80665,                 -- 'standard' acceleration o
 eps0_u='F/m',       eps0 = 8.85418781871E-12,       -- permittivity of a vacuum
 sigma_u='W/(m^2*K^4)', sigma = 5.6704E-8,           -- Stefan-Boltzmann constant
 Rinf_u='1/m',       Rinf = 10973731.56852773,       -- Rydberg constant
-
+},
    -- astronomy
+astro = {
 pc_u='m',           pc = 3.08567758128E16,          -- one parsec
 ly_u='m',           ly = 9.4607304725808E15,        -- light year
-
+},
    -- math
+math = { 
                     phi  = 0.5*(1+math.sqrt(5)),    -- golden ratio
 		    EuMa = 0.5772156649015328606065120, -- gamma
-
+},
    -- 
                     the_answer_to_the_ultimate_question_of_life_the_universe_and_everything = 42,
 }
@@ -78,25 +78,25 @@ about = help:new("Collection of constants.")
 }
 
 -- physics
-const.about[_data_.G] = {"G", "Gravitational constant.", PHY}
-const.about[_data_.e] = {"e", "Electron charge.", PHY}
-const.about[_data_.mu0] = {"mu0", "Permeability of free space.", PHY}
-const.about[_data_.R] = {"R", "Universal gas constant.", PHY}
-const.about[_data_.Vm] = {"Vm", "Volume of one mole of ideal gas.", PHY}
-const.about[_data_.NA] = {"NA", "Avogadro's number.", PHY}
-const.about[_data_.k] = {"k", "Boltzmann's constant.", PHY}
-const.about[_data_.h] = {"h", "Planck's constant.", PHY}
-const.about[_data_.c] = {"c", "Speed of light.", PHY}
-const.about[_data_.g] = {"g", "Acceleration of free fall.", PHY}
-const.about[_data_.eps0] = {"eps0", "Permittivity of free space.", PHY}
-const.about[_data_.sigma] = {"sigma", "Stefan-Boltzmann constant.", PHY}
-const.about[_data_.Rinf] = {"Rinf", "Rydberg constant", PHY}
+const.about[_data_.phy.G] = {"phy.G", "Gravitational constant.", PHY}
+const.about[_data_.phy.e] = {"phy.e", "Electron charge.", PHY}
+const.about[_data_.phy.mu0] = {"phy.mu0", "Permeability of free space.", PHY}
+const.about[_data_.phy.R] = {"phy.R", "Universal gas constant.", PHY}
+const.about[_data_.phy.Vm] = {"phy.Vm", "Volume of one mole of ideal gas.", PHY}
+const.about[_data_.phy.NA] = {"phy.NA", "Avogadro's number.", PHY}
+const.about[_data_.phy.k] = {"phy.k", "Boltzmann's constant.", PHY}
+const.about[_data_.phy.h] = {"phy.h", "Planck's constant.", PHY}
+const.about[_data_.phy.c] = {"phy.c", "Speed of light.", PHY}
+const.about[_data_.phy.g] = {"phy.g", "Acceleration of free fall.", PHY}
+const.about[_data_.phy.eps0] = {"phy.eps0", "Permittivity of free space.", PHY}
+const.about[_data_.phy.sigma] = {"phy.sigma", "Stefan-Boltzmann constant.", PHY}
+const.about[_data_.phy.Rinf] = {"phy.Rinf", "Rydberg constant", PHY}
 -- astronomy
-const.about[_data_.pc] = {"pc", "One parsec.", ASTR}
-const.about[_data_.ly] = {"ly", "One light year.", ASTR}
+const.about[_data_.astro.pc] = {"astro.pc", "One parsec.", ASTR}
+const.about[_data_.astro.ly] = {"astro.ly", "One light year.", ASTR}
 -- mathematics
-const.about[_data_.phi] = {"phi", "Golden ratio.", MATH}
-const.about[_data_.EuMa] = {"EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
+const.about[_data_.math.phi] = {"math.phi", "Golden ratio.", MATH}
+const.about[_data_.math.EuMa] = {"math.EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
 
 --- Make value "constant".
 --  @param name Name of constant.
