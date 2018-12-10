@@ -354,7 +354,7 @@ graph.isWeighted = function (G)
    end
    return false
 end
-graph.about[graph.isWeighted] = {'isWeighted(G)', 'Check if the graph has weight different from 1.', help.OTHER}
+graph.about[graph.isWeighted] = {'isWeighted(G)', 'Check if any edge has weight different from 1.', help.OTHER}
 
 --- Breadth first search.
 --  @param G Graph.

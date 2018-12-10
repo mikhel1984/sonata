@@ -778,7 +778,7 @@ matrix.concat = function (M1, M2, dir)
    return res
 end
 matrix.about[matrix.concat] = {"concat(M1,M2,dir)", 
-                               "Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical\nUse M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.", 
+                               "Concatenate two matrices, dir='h' - in horizontal direction, dir='v' - in vertical\nUse M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.", 
 			       TRANSFORM}
 
 --- Horizontal concatenation
@@ -1068,7 +1068,7 @@ matrix.dot = function (V1,V2)
    local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
    return x1*x2+y1*y2+z1*z2
 end
-matrix.about[matrix.dot] = {'dot(V1,V2)', 'Scalar product of two 3-element vectors'}
+matrix.about[matrix.dot] = {'dot(V1,V2)', 'Scalar product of two 3-element vectors.'}
 
 --- Auxiliary function for working with complex numbers.
 --  @param a Number.

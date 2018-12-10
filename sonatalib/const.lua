@@ -90,7 +90,7 @@ const.about[_data_.phy.c] = {"phy.c", "Speed of light.", PHY}
 const.about[_data_.phy.g] = {"phy.g", "Acceleration of free fall.", PHY}
 const.about[_data_.phy.eps0] = {"phy.eps0", "Permittivity of free space.", PHY}
 const.about[_data_.phy.sigma] = {"phy.sigma", "Stefan-Boltzmann constant.", PHY}
-const.about[_data_.phy.Rinf] = {"phy.Rinf", "Rydberg constant", PHY}
+const.about[_data_.phy.Rinf] = {"phy.Rinf", "Rydberg constant.", PHY}
 -- astronomy
 const.about[_data_.astro.pc] = {"astro.pc", "One parsec.", ASTR}
 const.about[_data_.astro.ly] = {"astro.ly", "One light year.", ASTR}
