@@ -198,15 +198,16 @@ end
 --  @param t New element.
 graph.add = function (G, t)
    if isEdge(t) then
-      local t1,t2,w12,w21 = t[1], t[2], (t[3] or t.w12), (t[4] or t.w21)
+      local t1,t2 = t[1], t[2]
+      local w12,w21 = (t[3] or t.w12), (t[4] or t.w21)
       G[t1] = G[t1] or {}
       G[t2] = G[t2] or {}
-      if not (w12 or w21) then
+      if w12 or w21 then
+         G[t1][t2] = w12; G[t2][t1] = w21
+      else
          -- no weights
          local w = t.w or 1
 	 G[t1][t2] = w; G[t2][t1] = w
-      else
-         G[t1][t2] = w12; G[t2][t1] = w21
       end
    else
       -- node

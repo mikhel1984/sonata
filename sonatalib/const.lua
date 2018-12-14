@@ -134,4 +134,3 @@ if not LC_DIALOG then const.about = nil end
 return const
 
 --============================================
---TODO: subsections for different constants

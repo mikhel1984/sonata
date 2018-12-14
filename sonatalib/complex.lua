@@ -482,4 +482,3 @@ if not LC_DIALOG then complex.about = nil end
 return complex
 
 --==========================
---TODO: define inverse trigonometric complex functions

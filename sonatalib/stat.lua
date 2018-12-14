@@ -48,11 +48,15 @@ ans = Stat.min(X)                 --> 1
 ans = Stat.geomean(X)             --~ 2.995
 
 -- harmonic mean
-ans = Stat.harmmean(X,W)           --~ 2.567
+ans = Stat.harmmean(X,W)          --~ 2.567
 
 -- find histogram
-h = Stat.hyst(X,4)
-ans = h.Y[1]                      --> 2
+a,b = Stat.histcounts(X, 3)
+ans = b[1]                        --> 1
+
+-- define edges 
+a,b = Stat.histcounts(X,{0,4,7})   
+ans = a[1]                        --> 5 
 
 -- Poisson cdf and pdf
 ans = Stat.poisscdf(3, 0.5)       --~ 0.998
@@ -262,46 +266,52 @@ stat.moment = function (n, x, p)
 end
 stat.about[stat.moment] = {"moment(n,x[,p])", "Central moment of x order n, p is a list of weights.", }
 
---- Histogram of the data distribution.
---  @param t Data table.
---  @param N Number of intervals (default is 10).
---  @param a Low boundary (default is the minimum value).
---  @param b High boundary (default is the maximum value).
---  @return Table, where X is scale and Y is frequency.
-stat.hyst = function (t,N,a,b)
-   -- find limits
-   if not (a and b) then
-      local max, min = -math.huge, math.huge
-      for _,v in ipairs(t) do
-         if v > max then
-	    max = v
-	 elseif v < min then
-	    min = v
-	 end
-      end
-      a = a or min
-      b = b or max
+--- Number of elements in each bin.
+--  @param x Data table.
+--  @param rng Number of bins or table with edges.
+--  @return Two tables, with sum and edges.
+stat.histcounts = function (x, rng)
+   rng = rng or 10 
+   local bins
+   -- make copy and sort
+   local t = Ver.move(x,1,#x,1,{})
+   table.sort(t)
+   -- prepare edges
+   if type(rng) == 'number' then
+      local vMin, vMax = t[1], t[#t]
+      bins = {}
+      for v = vMin, vMax, (vMax-vMin)/rng do bins[#bins+1] = v end   
+      bins[#bins] = vMax+(vMax-vMin)*0.001         
+   elseif type(rng) == 'table' then      
+      bins = rng
+   else
+      error("Expected number or table")
    end
-   assert(a <= b, 'Wrong limits!')
-   -- number of intervals
-   N = N or 10
-   local res = {X={},Y={}}
-   -- X values
-   local step = (b-a)/N
-   res.X[0] = a
-   for i = 1,N do res.X[i] = res.X[i-1]+step; res.Y[i] = 0 end
-   -- Y values
-   for _,v in ipairs(t) do
-      if v >= a and v <= b then
-         local pos = math.floor((v-a)/step)+1
-         if pos > N then pos = N end -- for v == b
-         local prev = res.Y[pos]
-         res.Y[pos] = prev+1 
+   -- check order
+   for i = 2,#bins do 
+      if bins[i] <= bins[i-1] then error("Wrong order") end
+   end   
+   -- fill result
+   local res = {}
+   for i = 1,#bins-1 do res[i] = 0 end
+   --for i = 1, #bins-1 do res[i] = 0 end
+   local p,upper = 1, bins[2]
+   for _,v in ipairs(t) do      
+      if v < bins[1] then
+         -- just skip
+      elseif v < upper then
+         res[p] = res[p]+1
+      else
+         -- next bin
+         while bins[p+1] and v >= bins[p+1] do p = p+1 end
+         if p >= #bins then break end
+         upper = bins[p+1]
+         res[p] = res[p]+1
       end
    end
-   return res
+   return res, bins
 end
-stat.about[stat.hyst] = {"hyst(data[,N[,a,b]])", "Find hystogram for given data on the interval [a,b] with N ranges. Return table with scale (X) and frequencies (Y).", help.OTHER}
+stat.about[stat.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bins. Edges can be either number or table."}
 
 --- Poisson cumulative distribution.
 --    @param x Value.
@@ -422,4 +432,3 @@ return stat
 
 --====================================
 --TODO: binomial distribution
---TODO: hyst -> histcounts
