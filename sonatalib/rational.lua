@@ -111,7 +111,7 @@ rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common divis
 --  @return New rational object.
 rational.new = function (self, n, dn)
    dn = dn or 1
-   local g = rational.gcd(n,dn)
+   local g = rational.gcd(dn,n)             -- inverse order move sign to denominator
    return setmetatable({n/g, dn/g}, self)   
 end
 
@@ -300,4 +300,3 @@ return rational
 --======================================
 --TODO: create module for calculations with integer numbers, add prime and gcd
 --TODO: string representation as true ration (str)
---TODO: why sign is in denominator?

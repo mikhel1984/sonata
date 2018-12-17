@@ -492,4 +492,3 @@ return graph
 
 --=========================================
 --TODO: add heap to Dijkstra's algorithm
---TODO: fix 'direct edges' test

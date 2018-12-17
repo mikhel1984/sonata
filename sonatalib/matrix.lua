@@ -1011,10 +1011,18 @@ matrix.about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", TR
 --  @return Table without metametods.
 matrix.table = function (M)
    local res = {}
-   for r = 1,M.rows do
-      local resr, mr = {}, M[r]
-      for c = 1,M.cols do resr[c] = mr[c] end
-      res[r] = resr
+   -- simplify 'vector' representation
+   if M.rows == 1 then
+      for c = 1,M.cols do res[c] = M[1][c] end
+   elseif M.cols == 1 then
+      for r = 1,M.rows do res[r] = M[r][1] end
+   -- full matrix
+   else
+      for r = 1,M.rows do
+         local resr, mr = {}, M[r]
+         for c = 1,M.cols do resr[c] = mr[c] end
+         res[r] = resr
+      end
    end
    return res
 end
@@ -1320,4 +1328,3 @@ return matrix
 --TODO: Fix sign in SVD transform
 --TODO: Redefine 'norm' method
 --TODO: change matrix print
---TODO: 'table' for Nx1 matrix return simple table
