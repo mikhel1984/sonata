@@ -255,19 +255,19 @@ graph.about[graph.nodes] = {"nodes(G)","List of graph nodes."}
 graph.edges = function (G)
    local nodes, res = graph.nodes(G), {}
    for i = 1,#nodes do
-      -- all nodes
       local ni = nodes[i]
       local Wi = G[ni]
       for j = i,#nodes do
-         -- all pairs
          local nj = nodes[j]
-         local w = Wi[nj]
-	 if w then 
-	    res[#res+1] = {ni,nj} 
-	    -- different edges
-	    if G[nj][ni] ~= w then res[#res+1] = {nj,ni} end
-	 end -- if
-      end -- for
+	 local wij = Wi[nj]
+	 local wji = G[nj][ni]
+	 if wij and wji then
+	    res[#res+1] = {ni,nj}
+	    if wij ~= wji then res[#res+1] = {nj,ni} end
+	 elseif wij then res[#res+1] = {ni,nj}
+	 elseif wji then res[#res+1] = {nj,ni}
+	 end
+      end
    end
    return res
 end
