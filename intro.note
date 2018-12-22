@@ -158,17 +158,15 @@ a:set({1,2,1},3)       -- do a(1,2,1) = 3
 a:get{1,2,1}           -- get a(1,2,1) 
 b = Arr.rand{2,3,1}    -- random elements
 c = a+b                -- element-wise summ
-for ind, val in c:next() do 
-   print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val))
-end
+for ind, val in c:next() do print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val)) end
 -- PAUSE
 
 --	CONST
 -- Some usefull constants.
-_C.G                  -- gravitational constant
-_C.G_u                -- units of measurement are available with postfix '_u'
--- Constants can't be modified.
+_C.phy.G                  -- gravitational constant
+_C.phy.G_u                -- units of measurement are available with postfix '_u'
 -- It is possible to define own constant.
+-- It can't be modified.
 _C.add('foo',42)
 _C.foo
 -- ...and remove it
@@ -177,5 +175,58 @@ _C.remove('foo')
 
 --	GRAPH
 -- Manipulations with graphs.
+-- Define graph with edges 'ab' and 'bc' and node 'd'
+g = Graph {{'a','b'},{'b','c'},'d'}
+-- nodes:
+for _,v in ipairs(g:nodes()) do print(v) end
+-- edges: 
+for _,v in ipairs(g:edges()) do print(v[1],v[2]) end
+-- default weight is 1
+g['a']['b']
+-- you can add weighted edges
+g:add {'b','e',w=2}
+g:add ('f')
+-- find path
+found, path = g:bfs('a','c')
+for _, v in ipairs(path) do print(v) end
 
+-- PAUSE
 
+--	RATIONAL
+-- Rational numbers.
+a = Rat(1,2)
+b = Rat(1,3)
+-- arithmetics
+a + b
+a * b
+a / b
+-- float point representation
+a:val()
+a:Nu()      -- numerator
+a:De()      -- denominator
+-- PAUSE
+
+--	SPECIAL
+-- Some special functions.
+Spec.beta(1,3)
+Spec.erf(2)
+Spec.gamma(2.2)
+Spec.besselj(2, 0.5)
+-- PAUSE
+
+--	UNITS
+-- Conversation between measurement units.
+-- Define rules
+Unit.add('h', Unit(60, 'min'))       -- 1 h = 60 min
+Unit.add('min', Unit(60, 'sec'))     -- 1 min = 60 sec
+-- new variable
+v = Unit(2, 'm/sec')
+-- convert to 'km/h'
+v['km/h']
+-- arithmetic is possible
+t = Unit(10,'sec')
+s = v * t
+s
+-- PAUSE
+
+-- We wish you a plasant work with the program! 
