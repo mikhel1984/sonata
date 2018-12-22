@@ -121,6 +121,9 @@ print(a)
 
 --	LOCAL
 
+-- Compatibility with previous versions
+local Ver = require "sonatalib.versions"
+
 local REAL, IMAG = 1, 2
 
 -- help section 
@@ -259,7 +262,7 @@ complex.about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META
 --- Argument of complex number.
 --  @param Z Complex number.
 --  @return Argument of the number.
-complex.angle = function (Z) return math.atan(Z[2], Z[1]) end
+complex.angle = function (Z) return Ver.atan2(Z[2], Z[1]) end
 complex.about[complex.angle] = {"angle(Z)", "Return argument of complex number."}
 
 --- Module of complex number.
@@ -320,7 +323,7 @@ complex.log = function (Z)
    if type(Z) == "number" then
       return Z <= 0 and complex:new(math.log(-Z),math.pi) or math.log(Z)
    else
-      return complex:new(0.5*math.log(Z[1]^2+Z[2]^2), math.atan(Z[2],Z[1]))
+      return complex:new(0.5*math.log(Z[1]^2+Z[2]^2), Ver.atan2(Z[2],Z[1]))
    end
 end
 complex.about[complex.log] = {"log(Z)", "Complex logarithm.", FUNCTIONS}

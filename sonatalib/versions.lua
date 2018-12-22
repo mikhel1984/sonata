@@ -57,6 +57,8 @@ versions.mathType = function (x)
    end
 -- Extract table values.
 versions.unpack = unpack
+-- Arctangent with sign
+versions.atan2 = math.atan2
 
 else --================ New version ================
 
@@ -72,6 +74,8 @@ versions.loadStr = load
 versions.mathType = math.type
 -- Extract table values.
 versions.unpack = table.unpack
+-- Arctangent with sign
+versions.atan2 = math.atan
 
 end
 

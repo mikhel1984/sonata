@@ -44,7 +44,8 @@ a:add('h')
 -- add edge
 a:add {'a','d'}
 -- check size
-ans = #a                       --> 6
+-- (same as #a)
+ans = a:size()                 --> 6
 
 -- remove edge
 a:remove {'a','d'}
@@ -290,7 +291,8 @@ graph.about[graph.copy] = {"copy(G)", "Get copy of the graph."}
 --- Get number of nodes.
 --  @param G Graph object.
 --  @return Number of nodes.
-graph.__len = function (G) return tblLen(G) end
+graph.size = function (G) return tblLen(G) end
+graph.__len = size
 
 --- String representation
 --  @param G Graph object.
