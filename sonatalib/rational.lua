@@ -299,4 +299,4 @@ return rational
 
 --======================================
 --TODO: create module for calculations with integer numbers, add prime and gcd
---TODO: string representation as true ration (str)
+--TODO: string representation as true ratio (str)

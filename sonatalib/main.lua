@@ -131,7 +131,7 @@ asin = math.asin;  about[asin] = {"asin(x)", "Inverse sine x.", TRIG}
 acos = math.acos;  about[acos] = {"acos(x)", "Inverse cosine x.", TRIG}
 atan = math.atan;  about[atan] = {"atan(x)", "Inverse tangent x.", TRIG}
 
-atan2 = function (y,x) return math.atan(y,x) end 
+atan2 = Ver.atan2 
 about[atan2] = {"atan2(y,x)", "Inverse tangent of y/x, use signs.", TRIG}
 
 -- Hyperbolic
