@@ -3,7 +3,7 @@
 --- Auxilary functions for compatiblity with Lua 5.1 and 5.2.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2018.
 
             module 'versions'
 --]]

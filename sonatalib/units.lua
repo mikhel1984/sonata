@@ -7,7 +7,7 @@
 --  Key is represented in form "power1..unit1..power2..unit2...etc'.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> units._collect_ion, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> units._collect_ion, 2017-2018.
 
             module 'units'
 --]]

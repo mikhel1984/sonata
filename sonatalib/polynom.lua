@@ -7,7 +7,7 @@
 --  where each element <i>pk</i> corresponds to coefficient of <i>x^k</i>.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2018.
 
             module 'polynom'
 --]]

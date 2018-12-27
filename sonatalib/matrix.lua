@@ -8,7 +8,7 @@
 --  Internal elements can be empty tables, but anyway operation X[i][j] will return 0.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">sonatalib</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2018.
 
             module 'matrix'
 --]]
