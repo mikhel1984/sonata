@@ -14,7 +14,7 @@ LC_USE_COLOR = true
 --LC_DEFAULT_MODULES = {'matrix','numeric'}
 
 --	Path (optional, for bash alias lc='path/to/sonata.lua') 
---LC_ADD_PATH = path/to/?.lua
+--LC_ADD_PATH = path/to/dir/
 
 --=====================  CODE  ========================
 
@@ -23,7 +23,7 @@ lc_version = '0.9.13'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
-   package.path = package.path..';'..LC_ADD_PATH
+   package.path = string.format("%s;%s?.lua", package.path, LC_ADD_PATH)
 end
 
 -- Table for program variables. Import base functions 

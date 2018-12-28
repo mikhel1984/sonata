@@ -40,8 +40,8 @@ inside the sonata.lua
 --	LOCAL
 
 -- directory with language files
-local LOCALE = 'locale'
-local LIB = 'sonatalib'
+local LOCALE = (LC_ADD_PATH or '')..'locale'
+local LIB    = (LC_ADD_PATH or '')..'sonatalib'
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1

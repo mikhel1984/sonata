@@ -465,10 +465,10 @@ description = 'Apply unit tests to desired module, or all modules if the name is
 process     = function (args)
    local Test = require 'sonatalib.test'
    if args[2] then
-      Test.module(string.format('sonatalib/%s.lua',args[2]))
+      Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),args[2]))
    else
       for m in pairs(import) do
-	 Test.module(string.format('sonatalib/%s.lua',m))
+	 Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),m))
       end
    end
    Test.summary()
