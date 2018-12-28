@@ -5,7 +5,7 @@
 --================= CONFIGURATION ====================
 
 --	Uncomment to set the localization file
-LC_LOCALIZATION = "ru.lng"
+--LC_LOCALIZATION = "ru.lng"
 
 --	Text coloring
 LC_USE_COLOR = true
@@ -19,7 +19,7 @@ LC_USE_COLOR = true
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.9.12'
+lc_version = '0.9.13'
 
 -- Add path to the libraries
 if LC_ADD_PATH then

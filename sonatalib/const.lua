@@ -35,14 +35,16 @@ ans = _C.myConst            --> nil
 
 local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
-local PHY, ASTR, MATH = "physics", "astronomy", "math"
+local PHY, ASTRO, MATH = "physics", "astronomy", "math"
+
+--- Call error when user try to modify constant value
+local function modifyError () error('Constants are immutable!') end
 
 --	MODULE
 
 -- Set of constants
-_data_ = {
-   -- physics
-phy = {
+-- physics
+local _phy_ = {
 G_u='N*m^2/kg^2',   G    = 6.672041E-11,            -- constant of gravitation
 e_u='C',            e    = 1.602189246E-19,         -- charge of electron
 mu0_u='N/A^2',      mu0  = 4E-7*math.pi,            -- magnetic constant
@@ -56,55 +58,62 @@ g_u='m/s^2',        g    = 9.80665,                 -- 'standard' acceleration o
 eps0_u='F/m',       eps0 = 8.85418781871E-12,       -- permittivity of a vacuum
 sigma_u='W/(m^2*K^4)', sigma = 5.6704E-8,           -- Stefan-Boltzmann constant
 Rinf_u='1/m',       Rinf = 10973731.56852773,       -- Rydberg constant
-},
-   -- astronomy
-astro = {
+}
+
+-- astronomy
+local _astro_ = {
 pc_u='m',           pc = 3.08567758128E16,          -- one parsec
 ly_u='m',           ly = 9.4607304725808E15,        -- light year
-},
-   -- math
-math = { 
+}
+
+-- math
+local _math_ = { 
                     phi  = 0.5*(1+math.sqrt(5)),    -- golden ratio
 		    EuMa = 0.5772156649015328606065120, -- gamma
-},
-   -- 
+}
+
+-- user defined
+local _user_ = {
                     the_answer_to_the_ultimate_question_of_life_the_universe_and_everything = 42,
 }
 
 -- Interface
 local const = {
+phy = {},
+astro = {},
+math = {},
 -- description
-about = help:new("Collection of constants.")
+about = help:new("Collection of constants."),
 }
 
 -- physics
-const.about[_data_.phy.G] = {"phy.G", "Gravitational constant.", PHY}
-const.about[_data_.phy.e] = {"phy.e", "Electron charge.", PHY}
-const.about[_data_.phy.mu0] = {"phy.mu0", "Permeability of free space.", PHY}
-const.about[_data_.phy.R] = {"phy.R", "Universal gas constant.", PHY}
-const.about[_data_.phy.Vm] = {"phy.Vm", "Volume of one mole of ideal gas.", PHY}
-const.about[_data_.phy.NA] = {"phy.NA", "Avogadro's number.", PHY}
-const.about[_data_.phy.k] = {"phy.k", "Boltzmann's constant.", PHY}
-const.about[_data_.phy.h] = {"phy.h", "Planck's constant.", PHY}
-const.about[_data_.phy.c] = {"phy.c", "Speed of light.", PHY}
-const.about[_data_.phy.g] = {"phy.g", "Acceleration of free fall.", PHY}
-const.about[_data_.phy.eps0] = {"phy.eps0", "Permittivity of free space.", PHY}
-const.about[_data_.phy.sigma] = {"phy.sigma", "Stefan-Boltzmann constant.", PHY}
-const.about[_data_.phy.Rinf] = {"phy.Rinf", "Rydberg constant.", PHY}
+const.about[_phy_.G] = {"phy.G", "Gravitational constant.", PHY}
+const.about[_phy_.e] = {"phy.e", "Electron charge.", PHY}
+const.about[_phy_.mu0] = {"phy.mu0", "Permeability of free space.", PHY}
+const.about[_phy_.R] = {"phy.R", "Universal gas constant.", PHY}
+const.about[_phy_.Vm] = {"phy.Vm", "Volume of one mole of ideal gas.", PHY}
+const.about[_phy_.NA] = {"phy.NA", "Avogadro's number.", PHY}
+const.about[_phy_.k] = {"phy.k", "Boltzmann's constant.", PHY}
+const.about[_phy_.h] = {"phy.h", "Planck's constant.", PHY}
+const.about[_phy_.c] = {"phy.c", "Speed of light.", PHY}
+const.about[_phy_.g] = {"phy.g", "Acceleration of free fall.", PHY}
+const.about[_phy_.eps0] = {"phy.eps0", "Permittivity of free space.", PHY}
+const.about[_phy_.sigma] = {"phy.sigma", "Stefan-Boltzmann constant.", PHY}
+const.about[_phy_.Rinf] = {"phy.Rinf", "Rydberg constant.", PHY}
 -- astronomy
-const.about[_data_.astro.pc] = {"astro.pc", "One parsec.", ASTR}
-const.about[_data_.astro.ly] = {"astro.ly", "One light year.", ASTR}
+const.about[_astro_.pc] = {"astro.pc", "One parsec.", ASTRO}
+const.about[_astro_.ly] = {"astro.ly", "One light year.", ASTRO}
 -- mathematics
-const.about[_data_.math.phi] = {"math.phi", "Golden ratio.", MATH}
-const.about[_data_.math.EuMa] = {"math.EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
+const.about[_math_.phi] = {"math.phi", "Golden ratio.", MATH}
+const.about[_math_.EuMa] = {"math.EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
 
 --- Make value "constant".
 --  @param name Name of constant.
 --  @param val  Value of constant.
 const.add = function (name,val)
    -- add only new constants
-   if _data_[name] then error('Cannot modify '..tostring(name)) end
-   _data_[name] = val
+   if _user_[name] then error('Cannot modify '..tostring(name)) end
+   _user_[name] = val
    print('Done')
 end
 const.about[const.add] = {'add(name,value)','Create new constant.'}
@@ -112,14 +121,20 @@ const.about[const.add] = {'add(name,value)','Create new constant.'}
 --- Remove exixting constant.
 --  @param name Name of constant.
 const.remove = function (name)
-   if _data_[name] then      
-      _data_[name] = nil
+   if _user_[name] then      
+      _user_[name] = nil
       print('Done')
    end
 end
 const.about[const.remove] = {'remove(name)','Delete constant.'}
 
--- Define behavior of the "interface".
+-- Make objects "immutable"
+setmetatable(const,       {__newindex=modifyError, __index = function (t,k) return _user_[k] end})
+setmetatable(const.phy,   {__newindex=modifyError, __index = function (t,k) return _phy_[k] end})
+setmetatable(const.astro, {__newindex=modifyError, __index = function (t,k) return _astro_[k] end})
+setmetatable(const.math,  {__newindex=modifyError, __index = function (t,k) return _math_[k] end})
+
+--[[
 setmetatable(const, 
 {
    -- read existing values
@@ -127,6 +142,7 @@ setmetatable(const,
    -- don't modify values
    __newindex = function (t,k,v) error('Constants are immutable!') end,
 })
+]]
 
 -- free memory in case of standalone usage
 if not LC_DIALOG then const.about = nil end
