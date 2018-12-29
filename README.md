@@ -5,17 +5,17 @@ Following modules are available now:
 * [array](https://github.com/mikhel1984/sonata/wiki/Example:-arrays) - multidimensional collections of elements
 * [bigint](https://github.com/mikhel1984/sonata/wiki/Example:-bigint) - arbitrary long integer numbers
 * [complex](https://github.com/mikhel1984/sonata/wiki/Example:-complex) - complex numbers
-* _const_ - collection of constants
-* _files_ - routines for working with data files
+* [const](https://github.com/mikhel1984/sonata/wiki/Example:-const) - collection of constants
+* [files](https://github.com/mikhel1984/sonata/wiki/Example:-files) - routines for working with data files
 * [gnuplot](https://github.com/mikhel1984/sonata/wiki/Example:-gnuplot) - use **Gnuplot** for creating images
+* [graph](https://github.com/mikhel1984/sonata/wiki/Example:-graph) - operations with graphs
 * [matrix](https://github.com/mikhel1984/sonata/wiki/Example:-matrix) - operations with matrices
 * [numeric](https://github.com/mikhel1984/sonata/wiki/Example:-numeric) - some numerical evaluations, such as integration, differentiation, solving equations
 * [polynom](https://github.com/mikhel1984/sonata/wiki/Example:-polynom) - manipulations with polynomial objects
 * [rational](https://github.com/mikhel1984/sonata/wiki/Example:-rational) - operations with rational numbers
-* [set](https://github.com/mikhel1984/sonata/wiki/Example:-set) - operations with sets
-* _special_ - special functions
+* [special](https://github.com/mikhel1984/sonata/wiki/Example:-special) - special functions
 * [stat](https://github.com/mikhel1984/sonata/wiki/Example:-stat) - some statistical functions
-* _struct_ - base data structures
+* [struct](https://github.com/mikhel1984/sonata/wiki/Example:-struct) - base data structures
 * [units](https://github.com/mikhel1984/sonata/wiki/Example:-units) - units conversation and other operations
 
 Program includes a help system for most of the functions and modules. It is available in such languages as:
