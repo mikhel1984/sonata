@@ -1,6 +1,6 @@
-#!/usr/local/bin/lua -i
+#!/usr/local/bin/lua
 -- Lua based calculator 
--- This file is a part of 'liblc' collection, 2017-2018.
+-- This file is a part of 'sonatalib' collection, 2017-2019.
 
 --================= CONFIGURATION ====================
 
@@ -14,28 +14,34 @@
 --LC_DEFAULT_MODULES = {'matrix','numeric'}
 
 --	Path (optional, for bash alias lc='path/to/sonata.lua') 
---LC_ADD_PATH = path/to/?.lua
+--LC_ADD_PATH = path/to/dir/
 
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.9'
+lc_version = '0.9.14'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
-   package.path = package.path..';'..LC_ADD_PATH
+   package.path = string.format("%s;%s?.lua", package.path, LC_ADD_PATH)
 end
 
 -- Table for program variables. Import base functions 
---liblc = {main=require('liblc.main')}
-lc = require('liblc.main')
+lc = require('sonatalib.main')
+-- Environment
 lc_local = {}
 
 -- Text colors 
-lc_help.usecolors(LC_USE_COLOR) 
+lc_help.useColors(LC_USE_COLOR) 
 
--- Quick exit 
-quit = function () print(lc_help.CMAIN.."\n              --======= Buy! =======--\n"..lc_help.CRESET); os.exit() end
+-- Quit the program
+quit = lc._exit_
+
+-- Load file
+run = dofile
+
+-- Update random seed
+math.randomseed(os.time())
 
 -- Modules 
 import = {
@@ -51,22 +57,20 @@ import = {
    numeric  = "Num",
    polynom  = "Poly",
    rational = "Rat",
-   set      = "Set",
    special  = "Spec",
    stat     = "Stat",
    struct   = "DS",
-   symbol   = "Sym",
    units    = "Unit",
 }
-about[import] = {"import", ""}
 
 -- Update help information about imported modules 
 function lc_local.import_state_update()
-   local m = {string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
+   local m = {lc_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
       m[#m+1] = string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-'))
    end
    m[#m+1] = about:get('use_import')
+   m[#m+1] = lc_help.CRESET
    return table.concat(m, '\n')
 end
 
@@ -82,16 +86,18 @@ function lc_local.doimport(tbl,name)
       name = assert(lc_local.alias[name], "Wrong module name: "..name.."!")
    end
    if not _G[var] then
-      _G[var] = require('liblc.'..name)
+      _G[var] = require('sonatalib.'..name)
       about:add(_G[var].about, var)
-      if _G[var].onimport then _G[var].onimport() end
+      if _G[var].onImport then _G[var].onImport() end
    end
    return var, name
 end
 
 -- Add modules 
 setmetatable(import, 
-{ __tostring = function (x) io.write(lc_help.CHELP); return about:get('done') end,
+{ -- last recursive call 
+  __tostring = function (x) io.write(lc_help.CHELP); return about:get('done')..lc_help.CRESET end,
+  -- load modules
   __call = function (self, name) 
     if name == 'all' then 
        for k,v in pairs(self) do lc_local.doimport(self,k) end
@@ -99,44 +105,66 @@ setmetatable(import,
        for _,v in ipairs(name) do import(v) end
     else
        local var, nm = lc_local.doimport(self,name)
-       if lc_local.dialog then
+       if LC_DIALOG then
           io.write(lc_help.CHELP)
-          print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))
-       end
+          print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))          
+       end       
     end
-    about[import][2] = lc_local.import_state_update()
     return import
   end,
 })
 
+--- Print lc_help information.
+--  @param fn Function name.
+help = function(fn)   
+   if fn then 
+      if fn == import then
+         print(lc_local.import_state_update())
+      else
+         about:print(type(fn)=='table' and fn.about or fn) 
+      end
+   else
+      about:print(about)
+   end
+   io.write(lc_help.CRESET)
+end
+
 -- Process command line arguments
 if #arg > 0 then
-   local command = lc._args[arg[1]]
-   if type(command) == 'string' then command = lc._args[command] end
-   if not command then command = lc._args['no flags'] end
+   local command = lc._args_[arg[1]]
+   if type(command) == 'string' then command = lc._args_[command] end
+   if not command then command = lc._args_['default'] end
    command.process(arg)
    if command.exit then os.exit() end
-   lc_local.dialog = true
 end
+
+-- Prepare for dialog mode
+LC_DIALOG = true
 
 -- Read localization file and update descriptions 
 if LC_LOCALIZATION then 
    about:localization(LC_LOCALIZATION) 
 end
-about[import][2] = lc_local.import_state_update()
+
+
+-- save references for "global" methods
+lc_local.import = import
+lc_local.help = help            
+lc_local.quit = quit
 
 -- Run! 
 io.write(lc_help.CMAIN)
-print("\n   # #       --===== Sonata LC =====--       # #\n    # #          --==== "..lc_version.." ====--          # #\n")
+print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --==== "..lc_version.." ====--        # #\n")
 io.write(lc_help.CHELP)
-print(about:get('intro'))
-
-_PROMPT = lc_help.CMAIN..'lc:'..lc_help.CRESET..' '
-_PROMPT2= lc_help.CMAIN..'..:'..lc_help.CRESET..' '
+print(about:get('intro'), lc_help.CRESET)
 
 -- Import default modules
 if LC_DEFAULT_MODULES then
    import(LC_DEFAULT_MODULES)  
+end
+
+if arg[-1] ~= '-i' then
+   lc.evalDialog(lc._logFile_)
 end
 
 --===============================================

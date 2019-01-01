@@ -1,15 +1,14 @@
---[[      liblc/versions.lua 
+--[[      sonatalib/versions.lua 
 
 --- Auxilary functions for compatiblity with Lua 5.1 and 5.2.
+--
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/lc">liblc</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
 
             module 'versions'
 --]]
 
--------------------------
--- @class table
--- @name versions
+--	MODULE
 
 local versions = {}
 
@@ -17,7 +16,7 @@ if _VERSION < 'Lua 5.3'
 then --==================== Previous versions =======================
 
 -- Check if the number is integer.
-versions.isinteger = function (x) 
+versions.isInteger = function (x) 
       if type(x) == 'string' then x = tonumber(x) end
       if not x then return false end
       local v,p = math.modf(x) 
@@ -25,7 +24,7 @@ versions.isinteger = function (x)
    end
    
 -- Return integer number or nil.
-versions.tointeger = function (x) 
+versions.toInteger = function (x) 
       if type(x) == 'string' then x = tonumber(x) end
       local p,q = math.modf(x) 
       return (q == 0.0) and p or nil
@@ -48,29 +47,35 @@ versions.move = function (src,sfrom,sto,dfrom,dest)
       return dest
    end
 -- Execute string code.
-versions.loadstr = loadstring
+versions.loadStr = loadstring
 -- Check type of the number.
-versions.mtype = function (x)
-      local _,p = math.modf(x)
+versions.mathType = function (x)
+      local n = tonumber(x)
+      if not n then return nil end
+      local _,p = math.modf(n)
       return (p == 0.0) and 'integer' or 'float'
    end
 -- Extract table values.
 versions.unpack = unpack
+-- Arctangent with sign
+versions.atan2 = math.atan2
 
 else --================ New version ================
 
 -- Check if the number is integer.
-versions.isinteger = math.tointeger
+versions.isInteger = math.tointeger
 -- Return integer number or nil.
-versions.tointeger = math.tointeger
+versions.toInteger = math.tointeger
 -- Move elements to new position (and table).
 versions.move = table.move
 -- Execute string code.
-versions.loadstr = load
+versions.loadStr = load
 -- Check type of the number.
-versions.mtype = math.type
+versions.mathType = math.type
 -- Extract table values.
 versions.unpack = table.unpack
+-- Arctangent with sign
+versions.atan2 = math.atan
 
 end
 
