@@ -5,7 +5,7 @@
 --  Most functions are based on "Numerical recipes in C" by W.H.Press, S.A.Teukolsky, W.T.Vetterling and B.P.Flannery
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2018.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
 
            module 'special'
 --]]

@@ -1,6 +1,6 @@
 #!/usr/local/bin/lua
 -- Lua based calculator 
--- This file is a part of 'sonatalib' collection, 2017-2018.
+-- This file is a part of 'sonatalib' collection, 2017-2019.
 
 --================= CONFIGURATION ====================
 
@@ -8,7 +8,7 @@
 --LC_LOCALIZATION = "ru.lng"
 
 --	Text coloring
-LC_USE_COLOR = true
+--LC_USE_COLOR = true
 
 --	Load after start (optional)
 --LC_DEFAULT_MODULES = {'matrix','numeric'}

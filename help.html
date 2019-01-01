@@ -38,17 +38,17 @@ DIV {margin-left: 10px;}
 (option '-i' could be used for working in native Lua interpretator)<br>
 <br>
 <b>FLAGS</b>:<br>
-	-N, --new  - Generate template for a new module.<br>
-	-l, --log  - Save session into the log file.<br>
-	-h, --help - Get this help message.<br>
 	-D, --doc  - Create/update documentation file.<br>
-	-L, --lng  - Create/update file for localization.<br>
+	-h, --help - Get this help message.<br>
+	-l, --log  - Save session into the log file.<br>
 	-T, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
+	-N, --new  - Generate template for a new module.<br>
+	-L, --lng  - Create/update file for localization.<br>
 	 No flag   - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.11<br>
+<b>VERSION</b>: 0.9.13<br>
 <br>
-<b>MODULES</b>: array, struct, matrix, files, units, stat, special, gnuplot, polynom, complex, const, rational, bigint, graph, numeric.<br>
+<b>MODULES</b>: special, bigint, complex, files, matrix, stat, struct, gnuplot, rational, polynom, numeric, array, graph, units, const.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
@@ -64,7 +64,6 @@ DIV {margin-left: 10px;}
 <b>acosh(x)</b> - Hyperbolic arc cosine.<br>
 <b>asin(x)</b> - Inverse sine x.<br>
 <b>asinh(x)</b> - Hyperbolic inverse sine.<br>
-<b>atan(x)</b> - Inverse tangent x.<br>
 <b>atan2(y,x)</b> - Inverse tangent of y/x, use signs.<br>
 <b>atanh(x)</b> - Hyperbolic inverse tangent.<br>
 <b>cos(x)</b> - Cosine x.<br>
@@ -141,8 +140,8 @@ ans = math.deg(_pi)
 <a href="#Top">Top</a></div>
 <div><a name="Arr"></a>
 <h3># Arr (array) #</h3>
-<p class="descript">Manipulations with arrays of elements.</p>
-<p><b>Arr(tSize)</b> - Create empty array with given size, represented as a table.<br>
+<p class="descript">Manipulations with arrays of elements. Indeces have form of tables. Indexation from 1.</p>
+<p><b>Arr(tSize)</b> - Create empty array with given size.<br>
 <b>apply(func, ...)</b> - Apply function of several arguments. Return new array.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b<br>
 <b>capacity(A)</b> - Maximal number of elements in the array. The same as #A.<br>
@@ -150,12 +149,12 @@ ans = math.deg(_pi)
 <b>concat(A1,A2,nAxis)</b> - Array concatenation along the given axis.<br>
 <b>copy(A)</b> - Get copy of the array.<br>
 <b>dim(A)</b> - Return size of array.<br>
-<b>get(A,tInd)</b> - Get array element. Index is a table.<br>
+<b>get(A,tInd)</b> - Get array element.<br>
 <b>isEqual(A1,A2)</b> - Check size equality.<br>
 <b>map(A,func)</b> - Apply function of 1 argument. Return new array.<br>
 <b>next(A)</b> - Return iterator along all indexes.<br>
 <b>rand(tSize)</b> - Return array with random numbers between 0 and 1.<br>
-<b>set(A,tInd,val)</b> - Set value to the array. Index is a table.<br>
+<b>set(A,tInd,val)</b> - Set value to the array.<br>
 <b>sub(A,tInd1,tInd2)</b> - Return sub array restricted by 2 indexes.<br></p>
 <pre class="example">
 
@@ -218,8 +217,7 @@ for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 <div><a name="Big"></a>
 <h3># Big (bigint) #</h3>
 <p class="descript">Operations with arbitrary long integers.</p>
-<p><b>BASE[=10]</b> - The radix of big integer representation.<br>
-<b>Big(v)</b> - Create big number from integer or string.<br>
+<p><b>Big(v)</b> - Create big number from integer or string.<br>
 <b>abs(v)</b> - Return module of arbitrary long number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br>
@@ -292,10 +290,16 @@ print(c:str(6))
 <p><b>Comp([a=0,]b)</b> - Create new complex number.<br>
 <b>_i</b> - Complex unit.<br>
 <b>abs(Z)</b> - Return module of complex number.<br>
+<b>acos(Z)</b> - Complex inverse cosine.<br>
+<b>acosh(Z)</b> - Complex inverse hyperbolic cosine.<br>
 <b>angle(Z)</b> - Return argument of complex number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
+<b>asin(Z)</b> - Complex inverse sine.<br>
+<b>asinh(Z)</b> - Complex inverse hyperbolic sine.<br>
+<b>atan(Z)</b> - Complex inverse tangent.<br>
+<b>atanh(Z)</b> - Complex inverse hyperbolic tangent.<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>conj(Z)</b> - Return the complex conjugate.<br>
+<b>conj(Z)</b> - Return the complex conjugate. Equal to ~Z.<br>
 <b>copy(Z)</b> - Create copy of the complex number.<br>
 <b>cos(Z)</b> - Return cosine of a complex number.<br>
 <b>cosh(Z)</b> - Return hyperbolic cosine of a real or complex number.<br>
@@ -388,6 +392,25 @@ ans = Comp.cosh(d):real()        --~ 0.156
 -- tanh
 ans = Comp.tanh(d):imag()        --~ 6.334
 
+-- asin
+z = Comp(2,3)
+ans = z:asin():imag()            --~ 1.983
+
+-- acos 
+ans = z:acos():real()            --~ 1.000
+
+-- atan
+ans = z:atan():imag()            --~ 0.2291
+
+-- asinh
+ans = z:asinh():real()           --~ 1.9686
+
+-- acosh
+ans = z:acosh():imag()           --~ 1.000
+
+-- atanh
+ans = z:atanh():real()           --~ 0.1469
+
 -- make copy
 ans = a:copy()                   --> a
 
@@ -399,45 +422,44 @@ print(a)
 <div><a name="_C"></a>
 <h3># _C (const) #</h3>
 <p class="descript">Collection of constants.</p>
-<p><b>EuMa</b> - Difference between harmonic series and the natural logarithm.<br>
-<b>G</b> - Gravitational constant.<br>
-<b>NA</b> - Avogadro's number.<br>
-<b>R</b> - Universal gas constant.<br>
-<b>Rinf</b> - Rydberg constant<br>
-<b>Vm</b> - Volume of one mole of ideal gas.<br>
-<b>add(name,value)</b> - Create new constant.<br>
-<b>c</b> - Speed of light.<br>
-<b>e</b> - Electron charge.<br>
-<b>eps0</b> - Permittivity of free space.<br>
-<b>g</b> - Acceleration of free fall.<br>
-<b>h</b> - Planck's constant.<br>
-<b>k</b> - Boltzmann's constant.<br>
-<b>ly</b> - One light year.<br>
-<b>mu0</b> - Permeability of free space.<br>
-<b>pc</b> - One parsec.<br>
-<b>phi</b> - Golden ratio.<br>
-<b>remove(name)</b> - Delete constant.<br>
-<b>sigma</b> - Stefan-Boltzmann constant.<br></p>
+<p><b>add(name,value)</b> - Create new constant.<br>
+<b>astro.ly</b> - One light year.<br>
+<b>astro.pc</b> - One parsec.<br>
+<b>math.EuMa</b> - Difference between harmonic series and the natural logarithm.<br>
+<b>math.e</b> - Base of the natural logarithm.<br>
+<b>math.phi</b> - Golden ratio.<br>
+<b>math.pi</b> - Ratio of a circle's circumference to its diameter.<br>
+<b>phy.G</b> - Gravitational constant.<br>
+<b>phy.NA</b> - Avogadro's number.<br>
+<b>phy.R</b> - Universal gas constant.<br>
+<b>phy.Rinf</b> - Rydberg constant.<br>
+<b>phy.Vm</b> - Volume of one mole of ideal gas.<br>
+<b>phy.c</b> - Speed of light.<br>
+<b>phy.e</b> - Electron charge.<br>
+<b>phy.eps0</b> - Permittivity of free space.<br>
+<b>phy.g</b> - Acceleration of free fall.<br>
+<b>phy.h</b> - Planck's constant.<br>
+<b>phy.k</b> - Boltzmann's constant.<br>
+<b>phy.mu0</b> - Permeability of free space.<br>
+<b>phy.sigma</b> - Stefan-Boltzmann constant.<br>
+<b>remove(name)</b> - Delete constant.<br></p>
 <pre class="example">
 
 -- import 'const'
 _C = require 'sonatalib.const'
 
 -- charge of electron
-ans = _C.e                  --~ 1.602e-19
+ans = _C.phy.e                  --~ 1.602e-19
 
 -- units have postfix _u
-ans = _C.e_u                --> 'C'
-
--- modification generate error
-ans = pcall(function() _C.e = 0 end)  --> false
-
--- as well as addition
-ans = pcall(function() _C.myConst = 10 end) --> false
+ans = _C.phy.e_u                --> 'C'
 
 -- create "immutable" value
 _C.add('myConst', 10)
 ans = _C.myConst            --> 10
+
+-- modification generate error
+ans = pcall(function() _C.myConst = 0 end)  --> false
 
 -- remove constant
 _C.remove('myConst')
@@ -520,6 +542,37 @@ permanent=true                               -- create in independent window<br>
 raw='set pm3d'                               -- set Gnuplot options manually<br>
 <br>
 <b>plot(G)</b> - Plot data, represented as Lua table.<br></p>
+<pre class="example">
+
+-- import 'gnuplot'
+Gnu = require 'sonatalib.gnuplot'
+
+a = {{'sin(x)',title='Sinus x'},permanent=false}
+-- use 'permanent=true' instead or not define it at all
+-- 'permanent=false' is just for testing
+Gnu.plot(a)
+
+-- save as object
+-- to simplify modification
+g = Gnu(a)
+g.xrange = {-10,10}
+g:plot()
+
+-- copy parameters to other object
+b = g:copy()
+print(b)
+-- check correctness of the table
+ans = b:isAvailable()                             --> true
+
+-- print Lua table
+tmp = {{1,1},{2,2},{3,3},{4,4}}
+Gnu.plot {{tmp,with='lines'},permanent=false}
+
+-- print Lua function
+fn1 = function (x) return x^2-x end
+Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
+
+--</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Graph"></a>
 <h3># Graph (graph) #</h3>
@@ -533,7 +586,7 @@ raw='set pm3d'                               -- set Gnuplot options manually<br>
 <b>isComplete(G)</b> - Check completeness of the graph.<br>
 <b>isDirected(G)</b> - Check if the graph has directed edges.<br>
 <b>isNegative(G)</b> - Check if the graph has negative edges.<br>
-<b>isWeighted(G)</b> - Check if the graph has weight different from 1.<br>
+<b>isWeighted(G)</b> - Check if any edge has weight different from 1.<br>
 <b>nodes(G)</b> - List of graph nodes.<br>
 <b>pathBF(G,start[,goal])</b> - Shortest path search using Bellman-Ford algorithm.<br>
 <b>pathD(G,start[,goal])</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
@@ -567,7 +620,8 @@ a:add('h')
 -- add edge
 a:add {'a','d'}
 -- check size
-ans = #a                       --> 6
+-- (same as #a)
+ans = a:size()                 --> 6
 
 -- remove edge
 a:remove {'a','d'}
@@ -638,13 +692,13 @@ print(b)
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
 <b>chol(M)</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>concat(M1,M2,dir)</b> - Concatenate two matrix, dir='h' - in horizontal direction, dir='v' - in vertical<br>
+<b>concat(M1,M2,dir)</b> - Concatenate two matrices, dir='h' - in horizontal direction, dir='v' - in vertical<br>
 Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>copy(M)</b> - Return copy of matrix.<br>
 <b>cross(V1,V2)</b> - Cross product or two 3-element vectors.<br>
 <b>det(M)</b> - Calculate determinant.<br>
 <b>diag(M[,n=0])</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.<br>
-<b>dot(V1,V2)</b> - Scalar product of two 3-element vectors<br>
+<b>dot(V1,V2)</b> - Scalar product of two 3-element vectors.<br>
 <b>eye(rows[,cols=rows,init=1])</b> - Create identity matrix. Diagonal value (init) can be defined.<br>
 <b>fill(rows,cols,fn)</b> - Create matrix, using function fn(r,c).<br>
 <b>inv(M)</b> - Return inverse matrix.<br>
@@ -654,6 +708,7 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>ones(rows[,cols=rows,val=1])</b> - Create matrix of given numbers (default is 1).<br>
 <b>pinv(M)</b> - Pseudo inverse matrix calculation.<br>
 <b>rand(rows[,cols=rows])</b> - Create matrix with random numbers from 0 to 1.<br>
+<b>randi([M],N,[rows],[cols=rows])</b> - Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.<br>
 <b>rank(M)</b> - Find rank of the matrix.<br>
 <b>reduce(M,fn,dir[='r'])</b> - Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c').<br>
 <b>rref(M)</b> - Perform transformations using Gauss method.<br>
@@ -777,6 +832,10 @@ ans = Mat.V({1,2,3}):norm()     --~ math.sqrt(14)
 h = Mat.rand(3,2)
 print(h)
 
+-- random integer matrix
+-- from 1 to 20
+print(h:randi(20))
+
 -- pseudo inverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
@@ -837,9 +896,9 @@ ans = Mat.ones(2,3):rank()      --> 1
 <a href="#Top">Top</a></div>
 <div><a name="Num"></a>
 <h3># Num (numeric) #</h3>
-<p class="descript">Group of functions for numerical calculations.</p>
+<p class="descript">Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL.</p>
 <p><b>Newton(fn,x0)</b> - Find root of equation using Newton's rule with only one initial condition.<br>
-<b>TOL[=0.001]</b> - The solution tolerance (0.001 by default).<br>
+<b>TOL[=0.001]</b> - The solution tolerance.<br>
 <b>der(fn,x)</b> - Calculate the derivative value for given function.<br>
 <b>ode45(fn,tDelta,y0[,param])</b> - Numerical approximation of the ODE solution.<br>
 First parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.<br>
@@ -897,7 +956,7 @@ ans = y[#y][1]                           --~ 2.56
 <a href="#Top">Top</a></div>
 <div><a name="Poly"></a>
 <h3># Poly (polynom) #</h3>
-<p class="descript">Operations with polynomials</p>
+<p class="descript">Operations with polynomials.</p>
 <p><b>Poly(...)</b> - Create a polynomial.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n, -a<br>
 <b>build(root1,root2,...)</b> - Return polynomial with given roots.<br>
@@ -1122,7 +1181,7 @@ ans = Spec.dawson(3.3)             --~ 0.1598
 <b>freq(t)</b> - Return table with frequencies of elements.<br>
 <b>geomean(t[,w])</b> - Geometrical mean.<br>
 <b>harmmean(t[,w])</b> - Harmonic mean.<br>
-<b>hyst(data[,N[,a,b]])</b> - Find hystogram for given data on the interval [a,b] with N ranges. Return table with scale (X) and frequencies (Y).<br>
+<b>histcounts(X[,rng=10])</b> - Calculate amount of bins. Edges can be either number or table.<br>
 <b>max(t)</b> - Maximal element and its index.<br>
 <b>mean(t[,w])</b> - Calculate average value. Weights are can be used.<br>
 <b>median(t)</b> - List median.<br>
@@ -1176,11 +1235,15 @@ ans = Stat.min(X)                 --> 1
 ans = Stat.geomean(X)             --~ 2.995
 
 -- harmonic mean
-ans = Stat.harmmean(X,W)           --~ 2.567
+ans = Stat.harmmean(X,W)          --~ 2.567
 
 -- find histogram
-h = Stat.hyst(X,4)
-ans = h.Y[1]                      --> 2
+a,b = Stat.histcounts(X, 3)
+ans = b[1]                        --> 1
+
+-- define edges 
+a,b = Stat.histcounts(X,{0,4,7})   
+ans = a[1]                        --> 5 
 
 -- Poisson cdf and pdf
 ans = Stat.poisscdf(3, 0.5)       --~ 0.998
@@ -1449,7 +1512,7 @@ ans = c['ksnake']                  --> 0.002
 d = Unit(1,'W')
 -- define function for conversation, apply it
 lg = function (x) return math.log(x)/math.log(10) end
-e = d:convert(function (x) return Unit( 10*lg((x/Unit(1,'mW')):simp()) , 'dBm') end)
+e = d:convert(function (x) return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') end)
 ans = #e                           --~ 30
 
 -- another definition syntax
