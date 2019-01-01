@@ -489,7 +489,7 @@ help.generateDoc = function (locName, tModules)
    local base = string.gsub(lc._args_.text(), '\n', '<br>\n')
    base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
    res[#res+1] = string.format('<p>%s</p>', base)
-   res[#res+1] = '<p><a href="https://github.com/mikhel1984/lc/wiki">Project Wiki</a></p></div>'
+   res[#res+1] = '<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>'
 
    local fName = string.format('%s%s%s', LOCALE, help.SEP, locName)
    -- call method of the 'files' module
