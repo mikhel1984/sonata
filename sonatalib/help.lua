@@ -412,7 +412,7 @@ WORD2.__index = WORD2
 3L Constructor example.
 --  @param t Some value.
 --  @return New object of WORD2.
-function WORD2:new(t)
+WORD2.new = function(self,t)
    local o = {}
    -- your logic 
    -- return object
