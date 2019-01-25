@@ -96,7 +96,7 @@ quaternion.normalize = function (Q)
    if k > 0 then 
       for i = 1,4 do Q[i] = Q[i]/k end
    end
-   return Q
+   --return Q
 end
 
 quaternion.rotate = function (Q,vec)
@@ -119,6 +119,24 @@ quaternion.toRot = function (Q)
       {1-2*s*(j*j+k*k), 2*s*(i*j-k*w), 2*s*(i*j+j*w)},
       {2*s*(i*j+k*w), 1-2*s*(i*i+k*k), 2*s*(j*k-i*w)},
       {2*s*(i*k-j*w), 2*s*(j*k+i*w), 1-2*s*(i*i+j*j)}}
+end
+
+quaternion.fromRot = function (M)
+   assert(M.ismatrix)
+   local tr = M[1][1] + M[2][2] + M[3][3]
+   if tr > 0 then
+      local S = 2*math.sqrt(1+tr)
+      return quaternion:new({0.25*S, (M[3][2]-M[2][3])/S, (M[1][3]-M[3][1])/S, (M[2][1]-M[1][2])/S})
+   elseif M[1][1] > M[2][2] and M[1][1] > M[3][3] then
+      local S = 2*math.sqrt(1+M[1][1]-M[2][2]-M[3][3])
+      return quaternion:new({(M[3][2]-M[2][3])/S, 0.25*S, (M[1][2]+M[2][1])/S, (M[1][3]+M[3][1])/S})
+   elseif M[2][2] > M[3][3] then
+      local S = 2*math.sqrt(1+M[2][2]-M[1][1]-M[3][3])
+      return quaternion:new({(M[1][3]-M[3][1])/S, (M[1][2]+M[2][1])/S, 0.25*S, (M[2][3]+M[3][2])/S})
+   else 
+      local S = 2*math.sqrt(1+M[3][3]-M[1][1]-M[2][2])
+      return quaternion:new({(M[2][1]-M[1][2])/S, (M[1][3]+M[3][1])/S, (M[2][3]+M[3][2])/S, 0.25*S})
+   end
 end
 
 quaternion.__add = function (Q1,Q2)
@@ -154,9 +172,9 @@ quaternion.qi = function(Q) return Q[Q_i] end
 quaternion.qj = function(Q) return Q[Q_j] end
 quaternion.qk = function(Q) return Q[Q_k] end
 
-quaternion._i = quaternion:new({0,1,0,0})
-quaternion._j = quaternion:new({0,0,1,0})
-quaternion._k = quaternion:new({0,0,0,1})
+--quaternion._i = quaternion:new({0,1,0,0})
+--quaternion._j = quaternion:new({0,0,1,0})
+--quaternion._k = quaternion:new({0,0,0,1})
 
 quaternion.__tostring = function (Q)
    return string.format("%.3f%+.3fi%+.3fj%+.3fk", Q[Q_w], Q[Q_i], Q[Q_j], Q[Q_k])
@@ -166,7 +184,10 @@ end
 setmetatable(quaternion, 
 {__call = function (self,v) 
    assert(type(v) == 'table')
-   for i = 1,4 do v[i] = v[i] or 0 end
+   v[0] = v[0] or v.w or 0
+   v[1] = v[1] or v.x or 0
+   v[2] = v[2] or v.y or 0
+   v[3] = v[3] or v.z or 0
    return quaternion:new(v) end
 })
 
@@ -190,4 +211,10 @@ c = a:conj() * b
 print(c:toRot())
 print(ma:T()*mb)
 ]]
-
+--[[
+a = quaternion {0.1, 0.2, 0.3, 0.4}
+a:normalize()
+print(a)
+b = a:toRot()
+print(quaternion.fromRot(b))
+]]
