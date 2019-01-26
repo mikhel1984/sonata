@@ -45,22 +45,23 @@ math.randomseed(os.time())
 
 -- Modules 
 import = {
---   name     alias
-   array    = "Arr",
-   bigint   = "Big",
-   complex  = "Comp",
-   const    = "_C",
-   files    = "File",
-   gnuplot  = "Gnu",
-   graph    = "Graph",
-   matrix   = "Mat",
-   numeric  = "Num",
-   polynom  = "Poly",
-   rational = "Rat",
-   special  = "Spec",
-   stat     = "Stat",
-   struct   = "DS",
-   units    = "Unit",
+--   name       alias
+   array      = "Arr",
+   bigint     = "Big",
+   complex    = "Comp",
+   const      = "_C",
+   files      = "File",
+   gnuplot    = "Gnu",
+   graph      = "Graph",
+   matrix     = "Mat",
+   numeric    = "Num",
+   polynom    = "Poly",
+   quaternion = "Quat",
+   rational   = "Rat",
+   special    = "Spec",
+   stat       = "Stat",
+   struct     = "DS",
+   units      = "Unit",
 }
 
 -- Update help information about imported modules 
