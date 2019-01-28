@@ -6,9 +6,53 @@
            module 'quaternion'
 --]]
 
---[[ TEST
-
+--[[TEST
+-- initialize
 Quat = require 'sonatalib.quaternion'
+
+-- new quaternion
+-- set {w,x,y,z}
+a = Quat {1,2,3,4}
+-- part of elements
+b = Quat {w=3, x=4}
+ans = b               --> Quat{3,4,0,0}
+
+-- conjugation
+ans = a:conj()        --> Quat{1,-2,-3,-4}
+
+-- norm
+ans = b:abs()         --~ 5.000
+
+-- inversion
+c = a*a:inv()
+ans = c:abs()         --~ 1.000
+
+-- arithmetic
+ans = a+b             --> Quat{4,6,3,4}
+
+ans = a*b             --> Quat{-5,10,25}
+
+ans = 3*b             --> Quat{9,12,0,0}
+
+-- unit quaternion
+a:normalize()
+ans = a:abs()         --~ 1.000
+
+-- rotation matrix
+m = a:toRot()
+d = Quat.fromRot(m)
+ans = Quat.abs(d-a)   --~ 0.0456
+
+-- use angle 
+-- and axis
+ang = 0.5
+axis = {1,1,1}
+f = Quat.fromAA(ang,axis)
+ans,_ = f:toAA()      --~ ang
+
+-- rotate vector
+p = a:rotate({1,0,0})
+ans = p[1]            --~ -0.667
 
 --]]
 
@@ -84,7 +128,7 @@ quaternion.toAA = function (Q)
    local w,x,y,z = Q[1]/d,Q[2]/d,Q[3]/d,Q[4]/d
    -- get sin
    local v = math.sqrt(x*x+y*y+z*z)
-   return math.atan(v,w), {x/v, y/v, z/v}    -- replace atan with Ver.atan2
+   return 2*math.atan(v,w), {x/v, y/v, z/v}    -- replace atan with Ver.atan2
 end
 quaternion.about[quaternion.toAA] = {'toAA(Q)','Get angle and axis of rotation.',ROTATION}
 
@@ -138,9 +182,9 @@ quaternion.rotate = function (Q,vec)
    assert(math.abs(quaternion.abs(Q)-1) < 1E-3)
    local p1,p2 
    if vec.ismatrix then
-      p1 = quaternion:init({0,vec(1),vec(2),vec(3)})
+      p1 = quaternion:new({0,vec(1),vec(2),vec(3)})
    else
-      p1 = quaternion:init({0,vec[1],vec[2],vec[3]})
+      p1 = quaternion:new({0,vec[1],vec[2],vec[3]})
    end
    p2 = Q*p1*quaternion.conj(Q) 
    return {p2[2],p2[3],p2[4]}
@@ -277,10 +321,10 @@ quaternion.about[quaternion.imag] = {'imag(Q)', 'Get table of the imaginary part
 setmetatable(quaternion, 
 {__call = function (self,v) 
    assert(type(v) == 'table')
-   v[0] = v[0] or v.w or 0
-   v[1] = v[1] or v.x or 0
-   v[2] = v[2] or v.y or 0
-   v[3] = v[3] or v.z or 0
+   v[1] = v[1] or v.w or 0
+   v[2] = v[2] or v.x or 0
+   v[3] = v[3] or v.y or 0
+   v[4] = v[4] or v.z or 0
    return quaternion:new(v) end
 })
 
