@@ -34,9 +34,16 @@ ans = a*b             --> Quat{-5,10,25}
 
 ans = 3*b             --> Quat{9,12,0,0}
 
+-- power
+ans = b^3             --> b * b * b
+
 -- unit quaternion
 a:normalize()
 ans = a:abs()         --~ 1.000
+
+-- unit power
+aa = a^1.5
+ans = aa:qk()         --~ 0.648
 
 -- rotation matrix
 m = a:toRot()
@@ -54,9 +61,15 @@ ans,_ = f:toAA()      --~ ang
 p = a:rotate({1,0,0})
 ans = p[1]            --~ -0.667
 
+-- spherical interpolation
+d = Quat.slerp(a,b,0.5)
+ans = d:qw()          --~ 0.467
+
 --]]
 
 --	LOCAL
+
+local Ver = require "sonatalib.versions"
 
 -- element indexation
 local Q_w, Q_i, Q_j, Q_k = 1, 2, 3, 4
@@ -128,7 +141,7 @@ quaternion.toAA = function (Q)
    local w,x,y,z = Q[1]/d,Q[2]/d,Q[3]/d,Q[4]/d
    -- get sin
    local v = math.sqrt(x*x+y*y+z*z)
-   return 2*math.atan(v,w), {x/v, y/v, z/v}    -- replace atan with Ver.atan2
+   return 2*Ver.atan2(v,w), {x/v, y/v, z/v} 
 end
 quaternion.about[quaternion.toAA] = {'toAA(Q)','Get angle and axis of rotation.',ROTATION}
 
@@ -263,8 +276,33 @@ quaternion.__mul = function (Q1,Q2)
        Q1[1]*Q2[4]+Q1[2]*Q2[3]-Q1[3]*Q2[2]+Q1[4]*Q2[1]})
 end
 
+--- Q ^ k
+--  @param Q Quaternion.
+--  @param k Each number for unit quaternion, -1 or positive integer for others.
+--  @return Power value.
+quaternion.__pow = function (Q,k)
+   if k == -1 then
+      return quaternion.inv(Q)
+   elseif k > 0 and Ver.isInteger(k) then
+      -- positive integer use for all quaternions
+      local res, acc = quaternion:new{1,0,0,0}, quaternion.copy(Q)
+      while k > 0 do
+         if k % 2 == 1 then res = quaternion.__mul(res, acc) end
+	 k = math.modf(k * 0.5)
+	 if k > 0 then acc = quaternion.__mul(acc, acc) end
+      end
+      return res
+   else
+      if math.abs(quaternion._norm_(Q)-1) > 1E-4 then error("Can't apply power function!") end
+      local angle, axis = quaternion.toAA(Q)
+      angle = 0.5 * k * angle    -- new angle
+      local sa = math.sin(angle)
+      return quaternion:new {math.cos(angle), sa*axis[1], sa*axis[2], sa*axis[3]}
+   end
+end
+
 quaternion.arithmetic = 'arithmetic'
-quaternion.about[quaternion.arithmetic] = {quaternion.arithmetic, 'a + b, a - b, a * b, -a', help.META}
+quaternion.about[quaternion.arithmetic] = {quaternion.arithmetic, 'a + b, a - b, a * b, a ^ k, -a', help.META}
 
 --- Check quality of two quaternions.
 --  @param Q1 First quaternion.
@@ -317,6 +355,32 @@ quaternion.about[quaternion.qk] = {'qk(Q)','Element k.',help.OTHER}
 quaternion.imag = function (Q) return {Q[Q_i],Q[Q_j],Q[Q_k]} end
 quaternion.about[quaternion.imag] = {'imag(Q)', 'Get table of the imaginary part.', help.OTHER}
 
+--- Spherical linear interpolation.
+--  @param Q1 Start quaternion.
+--  @param Q2 End quaternion.
+--  @param t Part from 0 to 1.
+--  @return Intermediate quaternion.
+quaternion.slerp = function (Q1,Q2,t)
+   -- assume quaternions are not unit
+   local qa = quaternion.copy(Q1) 
+   local qb = quaternion.copy(Q2)
+   quaternion.normalize(qa); quaternion.normalize(qb)
+   local dot = qa[1]*qb[1]+qa[2]*qb[2]+qa[3]*qb[3]+qa[4]*qb[4]
+   -- should be positive
+   if dot < 0 then qb = -qb; dot = -dot end
+   -- linear interpolation for close points
+   if dot > 0.999 then
+      local res = qa + t*(qb-qa)
+      quaternion.normalize(res)
+      return res
+   end
+   -- calculate
+   local theta = math.acos(dot)
+   local sin_th = math.sin(theta)
+   return (math.sin((1-t)*theta)/sin_th) * qa + (math.sin(t*theta)/sin_th) * qb
+end
+quaternion.about[quaternion.slerp] = {'slerp(Q1,Q2,t)','Spherical linear interpolation for part t.', help.OTHER}
+
 -- simplify constructor call
 setmetatable(quaternion, 
 {__call = function (self,v) 
@@ -337,21 +401,3 @@ if not LC_DIALOG then quaternion.about = nil end
 return quaternion
 
 --======================================
---TODO: should the inverse quaternion exists if the norm is zero?
-
---[[
-a = quaternion.fromAA(0.5, {1,1,1})
-b = quaternion.fromAA(0.3, {2,2,1})
-ma = a:toRot()
-mb = b:toRot()
-c = a:conj() * b
-print(c:toRot())
-print(ma:T()*mb)
-]]
---[[
-a = quaternion {0.1, 0.2, 0.3, 0.4}
-a:normalize()
-print(a)
-b = a:toRot()
-print(quaternion.fromRot(b))
-]]
