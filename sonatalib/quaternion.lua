@@ -43,7 +43,7 @@ ans = a:abs()         --~ 1.000
 
 -- unit power
 aa = a^1.5
-ans = aa:qk()         --~ 0.648
+ans = aa:qz()         --~ 0.648
 
 -- rotation matrix
 m = a:toRot()
@@ -331,23 +331,23 @@ quaternion.qw = function(Q) return Q[Q_w] end
 quaternion.real = quaternion.qw
 quaternion.about[quaternion.qw] = {'qw(Q)','Real part (same as real(Q)).',help.OTHER}
 
---- Get i.
+--- Get x.
 --  @param Q Quaternion.
---  @return Element i.
-quaternion.qi = function(Q) return Q[Q_i] end
-quaternion.about[quaternion.qi] = {'qi(Q)','Element i.',help.OTHER}
+--  @return Element x.
+quaternion.qx = function(Q) return Q[Q_i] end
+quaternion.about[quaternion.qx] = {'qx(Q)','Element x.',help.OTHER}
 
---- Get j.
+--- Get y.
 --  @param Q Quaternion.
---  @return Element j.
-quaternion.qj = function(Q) return Q[Q_j] end
-quaternion.about[quaternion.qj] = {'qj(Q)','Element j.',help.OTHER}
+--  @return Element y.
+quaternion.qy = function(Q) return Q[Q_j] end
+quaternion.about[quaternion.qy] = {'qy(Q)','Element y.',help.OTHER}
 
---- Get k.
+--- Get z.
 --  @param Q Quaternion.
---  @return Element k.
-quaternion.qk = function(Q) return Q[Q_k] end
-quaternion.about[quaternion.qk] = {'qk(Q)','Element k.',help.OTHER}
+--  @return Element z.
+quaternion.qz = function(Q) return Q[Q_k] end
+quaternion.about[quaternion.qz] = {'qz(Q)','Element z.',help.OTHER}
 
 --- Get imaginary part.
 --  @param Q Quaternion.
