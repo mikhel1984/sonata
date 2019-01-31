@@ -1,5 +1,5 @@
 # Sonata LC
-**Sonata Lua Calculus** is a **Lua** based program for mathematical computations. It is also a library of objects and functions for solving the different mathematical tasks. Each module is independent from others and can be used standalone.
+**Sonata Lua Calculus** is a **Lua** based program for mathematical computations. It is also a library of objects and functions for solving the different mathematical tasks.
 
 ![Screenshot](https://user-images.githubusercontent.com/20392522/51679461-17989b00-1ff0-11e9-83f8-922a3356f505.png)
 
