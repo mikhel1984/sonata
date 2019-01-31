@@ -14,6 +14,7 @@ Following modules are available now:
 * [matrix](https://github.com/mikhel1984/sonata/wiki/Example:-matrix) - operations with matrices
 * [numeric](https://github.com/mikhel1984/sonata/wiki/Example:-numeric) - some numerical evaluations, such as integration, differentiation, solving equations
 * [polynom](https://github.com/mikhel1984/sonata/wiki/Example:-polynom) - manipulations with polynomial objects
+* [quaternion](https://github.com/mikhel1984/sonata/wiki/Example:-quaternion) - rotation and other operations
 * [rational](https://github.com/mikhel1984/sonata/wiki/Example:-rational) - operations with rational numbers
 * [special](https://github.com/mikhel1984/sonata/wiki/Example:-special) - special functions
 * [stat](https://github.com/mikhel1984/sonata/wiki/Example:-stat) - some statistical functions

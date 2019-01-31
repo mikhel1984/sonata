@@ -65,6 +65,9 @@ ans = p[1]            --~ -0.667
 d = Quat.slerp(a,b,0.5)
 ans = d:qw()          --~ 0.467
 
+-- make copy
+ans = d:copy()        --> d
+
 --]]
 
 --	LOCAL
@@ -283,7 +286,7 @@ end
 quaternion.__pow = function (Q,k)
    if k == -1 then
       return quaternion.inv(Q)
-   elseif k > 0 and Ver.isInteger(k) then
+   elseif k >= 0 and Ver.isInteger(k) then
       -- positive integer use for all quaternions
       local res, acc = quaternion:new{1,0,0,0}, quaternion.copy(Q)
       while k > 0 do
