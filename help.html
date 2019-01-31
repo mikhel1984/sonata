@@ -23,6 +23,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Mat">matrix</a></li>
 <li><a href="#Num">numeric</a></li>
 <li><a href="#Poly">polynom</a></li>
+<li><a href="#Quat">quaternion</a></li>
 <li><a href="#Rat">rational</a></li>
 <li><a href="#Spec">special</a></li>
 <li><a href="#Stat">stat</a></li>
@@ -38,17 +39,17 @@ DIV {margin-left: 10px;}
 (option '-i' could be used for working in native Lua interpretator)<br>
 <br>
 <b>FLAGS</b>:<br>
-	-D, --doc  - Create/update documentation file.<br>
-	-L, --lng  - Create/update file for localization.<br>
-	-T, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
 	-h, --help - Get this help message.<br>
+	-T, --test - Apply unit tests to desired module, or all modules if the name is not defined.<br>
 	-l, --log  - Save session into the log file.<br>
+	-D, --doc  - Create/update documentation file.<br>
 	-N, --new  - Generate template for a new module.<br>
+	-L, --lng  - Create/update file for localization.<br>
 	 No flag   - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.13<br>
+<b>VERSION</b>: 0.9.15<br>
 <br>
-<b>MODULES</b>: const, bigint, units, stat, rational, struct, complex, matrix, numeric, special, array, polynom, gnuplot, graph, files.<br>
+<b>MODULES</b>: units, files, const, matrix, graph, numeric, bigint, gnuplot, array, stat, quaternion, complex, rational, special, polynom, struct.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
@@ -1031,6 +1032,92 @@ print(a)
 -- with variable 's' (default is 'x')
 d = Poly {2,-2,1}
 ans = d:str('s')              --> '2*s^2-2*s+1'
+
+--</pre>
+<a href="#Top">Top</a></div>
+<div><a name="Quat"></a>
+<h3># Quat (quaternion) #</h3>
+<p class="descript">Operations with quaternions.</p>
+<p><b>Quat(t={0,0,0,0})</b> - Create new quaternion.<br>
+<b>abs(Q)</b> - Value of the norm.<br>
+<b>arithmetic</b> - a + b, a - b, a * b, a ^ k, -a<br>
+<b>comparison</b> - a == b, a ~= b<br>
+<b>conj(Q)</b> - Get conjugation.<br>
+<b>copy(t)</b> - Create a copy of the quaternion.<br>
+<b>fromAA(fAng,vAxe)</b> - Create quaternion using angle and axis.<br>
+<b>fromRot(M)</b> - Convert rotatoin matrix to quaternion.<br>
+<b>imag(Q)</b> - Get table of the imaginary part.<br>
+<b>inv(Q)</b> - Find inverted quaternion.<br>
+<b>normalize(Q)</b> - Make unit quaternion.<br>
+<b>qw(Q)</b> - Real part (same as real(Q)).<br>
+<b>qx(Q)</b> - Element x.<br>
+<b>qy(Q)</b> - Element y.<br>
+<b>qz(Q)</b> - Element z.<br>
+<b>rotate(Q,vec)</b> - Apply quaternion to rotate the vector.<br>
+<b>slerp(Q1,Q2,t)</b> - Spherical linear interpolation for part t.<br>
+<b>toAA(Q)</b> - Get angle and axis of rotation.<br>
+<b>toRot(Q)</b> - Get equal rotation matrix.<br></p>
+<pre class="example">
+-- initialize
+Quat = require 'sonatalib.quaternion'
+
+-- new quaternion
+-- set {w,x,y,z}
+a = Quat {1,2,3,4}
+-- part of elements
+b = Quat {w=3, x=4}
+ans = b               --> Quat{3,4,0,0}
+
+-- conjugation
+ans = a:conj()        --> Quat{1,-2,-3,-4}
+
+-- norm
+ans = b:abs()         --~ 5.000
+
+-- inversion
+c = a*a:inv()
+ans = c:abs()         --~ 1.000
+
+-- arithmetic
+ans = a+b             --> Quat{4,6,3,4}
+
+ans = a*b             --> Quat{-5,10,25}
+
+ans = 3*b             --> Quat{9,12,0,0}
+
+-- power
+ans = b^3             --> b * b * b
+
+-- unit quaternion
+a:normalize()
+ans = a:abs()         --~ 1.000
+
+-- unit power
+aa = a^1.5
+ans = aa:qz()         --~ 0.648
+
+-- rotation matrix
+m = a:toRot()
+d = Quat.fromRot(m)
+ans = Quat.abs(d-a)   --~ 0.0456
+
+-- use angle 
+-- and axis
+ang = 0.5
+axis = {1,1,1}
+f = Quat.fromAA(ang,axis)
+ans,_ = f:toAA()      --~ ang
+
+-- rotate vector
+p = a:rotate({1,0,0})
+ans = p[1]            --~ -0.667
+
+-- spherical interpolation
+d = Quat.slerp(a,b,0.5)
+ans = d:qw()          --~ 0.467
+
+-- make copy
+ans = d:copy()        --> d
 
 --</pre>
 <a href="#Top">Top</a></div>

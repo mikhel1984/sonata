@@ -1,6 +1,8 @@
 # Sonata LC
 **Sonata Lua Calculus** is a **Lua** based program for mathematical computations. It is also a library of objects and functions for solving the different mathematical tasks. Each module is independent from others and can be used standalone.
 
+![Screenshot](https://user-images.githubusercontent.com/20392522/51679461-17989b00-1ff0-11e9-83f8-922a3356f505.png)
+
 Following modules are available now:
 * [array](https://github.com/mikhel1984/sonata/wiki/Example:-arrays) - multidimensional collections of elements
 * [bigint](https://github.com/mikhel1984/sonata/wiki/Example:-bigint) - arbitrary long integer numbers
@@ -12,6 +14,7 @@ Following modules are available now:
 * [matrix](https://github.com/mikhel1984/sonata/wiki/Example:-matrix) - operations with matrices
 * [numeric](https://github.com/mikhel1984/sonata/wiki/Example:-numeric) - some numerical evaluations, such as integration, differentiation, solving equations
 * [polynom](https://github.com/mikhel1984/sonata/wiki/Example:-polynom) - manipulations with polynomial objects
+* [quaternion](https://github.com/mikhel1984/sonata/wiki/Example:-quaternion) - rotation and other operations
 * [rational](https://github.com/mikhel1984/sonata/wiki/Example:-rational) - operations with rational numbers
 * [special](https://github.com/mikhel1984/sonata/wiki/Example:-special) - special functions
 * [stat](https://github.com/mikhel1984/sonata/wiki/Example:-stat) - some statistical functions

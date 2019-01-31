@@ -412,7 +412,7 @@ WORD2.__index = WORD2
 3L Constructor example.
 --  @param t Some value.
 --  @return New object of WORD2.
-function WORD2:new(t)
+WORD2.new = function(self,t)
    local o = {}
    -- your logic 
    -- return object
@@ -432,7 +432,7 @@ WORD2.copy = function (t)
    -- some logic
    return WORD2:new(argument)
 end
-WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object."}
+WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
 
 -- free memory in case of standalone usage
 if not LC_DIALOG then WORD2.about = nil end
