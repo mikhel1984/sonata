@@ -25,7 +25,7 @@ ans = b:abs()         --~ 5.000
 
 -- inversion
 c = a*a:inv()
-ans = c:abs()         --~ 1.000
+ans = c:qw()          --~ 1.000
 
 -- arithmetic
 ans = a+b             --> Quat{4,6,3,4}
@@ -176,7 +176,7 @@ quaternion.about[quaternion.abs] = {'abs(Q)','Value of the norm.'}
 --  @return Inverted quaternion.
 quaternion.inv = function (Q) 
    local k = 1 / quaternion._norm_(Q)
-   return quaternion:new({Q[1]*k, Q[2]*k, Q[3]*k, Q[4]*k})
+   return quaternion:new({Q[1]*k, -Q[2]*k, -Q[3]*k, -Q[4]*k})
 end
 quaternion.about[quaternion.inv] = {'inv(Q)','Find inverted quaternion.'}
 
@@ -383,6 +383,18 @@ quaternion.slerp = function (Q1,Q2,t)
    return (math.sin((1-t)*theta)/sin_th) * qa + (math.sin(t*theta)/sin_th) * qb
 end
 quaternion.about[quaternion.slerp] = {'slerp(Q1,Q2,t)','Spherical linear interpolation for part t.', help.OTHER}
+
+--- Get equalent square matrix
+--  @param Q Quaternion.
+--  @return Equalent matrix representation.
+quaternion.mat = function (Q)
+   return quaternion.lc_matrix:init(4,4,
+      {{Q[1],-Q[2],-Q[3],-Q[4]},
+       {Q[2], Q[1],-Q[4], Q[3]},
+       {Q[3], Q[4], Q[1],-Q[2]},
+       {Q[4],-Q[3], Q[2], Q[1]}})
+end
+quaternion.about[quaternion.mat] = {'mat(Q)','Equalent matrix representation.',help.OTHER}
 
 -- simplify constructor call
 setmetatable(quaternion, 
