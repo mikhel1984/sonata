@@ -188,6 +188,11 @@ ans = a:reduce(function (x,y) return x*y end, 'c') --> Mat {{3,8}}
 
 -- get rank
 ans = Mat.ones(2,3):rank()      --> 1
+
+-- change size
+tmp = Mat{{1,2},{3,4},{5,6}} 
+ans = tmp:reshape(2,3)          --> Mat {{1,2,3},{4,5,6}}
+
 --]]
 
 --	LOCAL
@@ -1225,6 +1230,33 @@ matrix.reduce = function (M,fn,dir)
    return res
 end
 matrix.about[matrix.reduce] = {"reduce(M,fn,dir[='r'])","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c').",help.OTHER}
+
+--- Change matrix size.
+--  @param M Source matrix.
+--  @param nRows New number of rows.
+--  @param nCols New number of columns.
+--  @return Matrix with new size.
+matrix.reshape = function (M,nRows,nCols)
+   nRows = nRows or (M.rows*M.cols)
+   nCols = nCols or 1
+   assert(nRows > 0 and nCols > 0)
+   local res = matrix:init(nRows,nCols,{})
+   local newR, newC = 1, 1    -- temporary indeces
+   for r = 1, M.rows do
+      local Mr = M[r]
+      for c = 1, M.cols do
+         res[newR][newC] = Mr[c]
+	 newC = newC+1
+	 if newC > nCols then
+	    newC = 1
+	    newR = newR+1
+	 end
+      end
+      if newR > nRows then break end
+   end
+   return res
+end
+matrix.about[matrix.reshape] = {"reshape(M,nRows[=size],nCols[=1])","Change matrix size.",help.OTHER}
 
 --- Get sum of all elements.
 --  @param M Initial matrix.
