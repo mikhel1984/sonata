@@ -346,12 +346,21 @@ polynom.__tostring = function (P) return table.concat(P,' ') end
 --  @return String with traditional form of equation.
 polynom.str = function (P,var)
    var = var or 'x'
-   local res,pow,mult = {}, #P-1
-   res[1] = string.format('%s%s%s', tostring(P[1]), (pow > 0 and '*'..var or ''), (pow > 1 and '^'..pow or ''))
-   for i = 2,#P do
-      pow = #P-i
-      res[i] = string.format('%s%s%s', (P[i] > 0 and '+'..P[i] or tostring(P[i])), (pow > 0 and '*'..var or ''), (pow > 1 and '^'..pow or ''))
+   local res, pow = {}, #P-1
+   for i = 1,#P-1 do
+      local a,b = P[i], P[i+1]
+      if a ~= 0 then                                                      -- ignore coefficient = 0
+         if a ~= 1 then res[#res+1] = tostring(a)..'*' end                -- eliminate coefficient = 1
+         res[#res+1] = var                                                -- variable name
+         if pow > 1 then res[#res+1] = '^'..tostring(pow) end             -- eliminate power=1
+         res[#res+1] = ' '
+      end 
+      if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
+      pow = pow-1  
    end
+   local c = P[#P]
+   if type(c) ~= 'number' or c ~= 0 then res[#res+1] = tostring(c) end     -- free coefficient
+      
    return table.concat(res)
 end
 
