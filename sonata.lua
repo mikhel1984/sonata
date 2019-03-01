@@ -100,8 +100,10 @@ setmetatable(import,
   __tostring = function (x) io.write(lc_help.CHELP); return about:get('done')..lc_help.CRESET end,
   -- load modules
   __call = function (self, name) 
-    if name == 'all' then 
-       for k,v in pairs(self) do lc_local.doimport(self,k) end
+    if not name then
+       print(lc_local.import_state_update())
+    elseif name == 'all' then 
+       for k,v in pairs(self) do lc_local.doimport(self,k) end    
     elseif type(name) == 'table' then
        for _,v in ipairs(name) do import(v) end
     else
