@@ -567,7 +567,7 @@ main._args_.text = function ()
    return table.concat(txt,'\n')   
 end
 
-main._exit_ = function () print(lc_help.CMAIN.."\n              --======= Buy! =======--\n"..lc_help.CRESET); os.exit() end
+main._exit_ = function () print(lc_help.CMAIN.."\n              --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
 
 return main
 
