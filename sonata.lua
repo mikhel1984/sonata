@@ -87,9 +87,12 @@ function lc_local.doimport(tbl,name)
       name = assert(lc_local.alias[name], "Wrong module name: "..name.."!")
    end
    if not _G[var] then
-      _G[var] = require('sonatalib.'..name)
-      about:add(_G[var].about, var)
-      if _G[var].onImport then _G[var].onImport() end
+      local lib = require('sonatalib.'..name)
+      _G[var] = lib
+      -- add description if need
+      if lib.about then about:add(lib.about, var) end
+      -- do additional actions
+      if lib.onImport then lib.onImport() end
    end
    return var, name
 end
