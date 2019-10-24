@@ -132,6 +132,10 @@ print(h)
 -- from 1 to 20
 print(h:randi(20))
 
+-- random matrix with 
+-- normal distribution
+print(Mat.randn(2,2))
+
 -- pseudo inverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
@@ -717,6 +721,16 @@ matrix.rand = function (rows, cols)
    return matrix.fill(rows, cols or rows, function () return math.random() end)
 end
 matrix.about[matrix.rand] = {"rand(rows[,cols=rows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
+
+--- Matrix with normally distributed random values.
+--  @param rows Number of rows.
+--  @param cols Number of columns. Can be omitted in case of square matrix.
+--  @return New matrix.
+matrix.randn = function (rows,cols)
+   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
+   return matrix.fill(rows, cols or rows, function () return randn() end)
+end
+matrix.about[matrix.randn] = {"randn(rows[,cols=rows])","Create matrix with normally distributed values (0 mean and unit variance)", help.NEW}
 
 --- Matrix with integer random values from 1 to defined max value.
 --  @param x1 Source matrix or upper limit.
@@ -1317,6 +1331,8 @@ matrix.onImport = function ()
    rand = function (a,...) return a and matrix.rand(a,...) or _rand(a,...) end
    local _randi = randi
    randi = function (a,b,...) return b and matrix.randi(a,b,...) or _randi(a,b,...) end
+   local _randn = randn
+   randn = function (a,...) return a and matrix.randn(a,...) or _rand(a,...) end
    local _abs = abs 
    abs = function (a) return ismatrix(a) and matrix.map(a,_abs) or _abs(a) end
    local _sqrt = sqrt

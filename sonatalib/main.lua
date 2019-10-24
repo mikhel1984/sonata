@@ -33,6 +33,9 @@ ans = (p >= 0) and (p <= 1)      --> true
 p = randi(10)
 ans = (p >= 1) and (p <= 10)     --> true
 
+-- normal distributed random
+print(randn())
+
 -- get object type
 -- "knows" types for Sonata objects
 ans = lc.type(25)                --> 'integer'
@@ -166,6 +169,19 @@ about[rand] = {"rand()", "Random number between 0 and 1."}
 
 randi = function (N) return math.random(1,N) end
 about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
+
+randn = function () 
+   -- use Box-Muller transform
+   local u,v,s
+   while true do
+      u = 2*math.random()-1
+      v = 2*math.random()-1
+      s = u*u + v*v
+      if s > 0 and s <= 1 then break end
+   end
+   return u * math.sqrt(-2*math.log(s)/s)
+end
+about[randn] = {"randn()", "Normal distributed random value with 0 mean and variance 1."}
 
 --- Round to closest integer.
 --  @param x Real number.
