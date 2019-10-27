@@ -17,50 +17,50 @@
 Spec = require 'sonatalib.special'
 
 -- beta functions
-ans = Spec.beta(3,4)               --~ 1.667E-2
+ans = Spec.beta(3,4) * 1E2         --3> 1.667
 
-ans = Spec.betaln(10,20)           --~ -19.115
+ans = Spec.betaln(10,20)           --3> -19.115
 
-ans = Spec.betainc(0.5, 2, 3.3)    --~ 0.7309
+ans = Spec.betainc(0.5, 2, 3.3)    --3> 0.7309
 
 -- error functions
-ans = Spec.erf(1)                  --~ 0.8427
+ans = Spec.erf(1)                  --3> 0.8427
 
-ans = Spec.erfc(0.5)               --~ 0.4795
+ans = Spec.erfc(0.5)               --3> 0.4795
 
 -- Ei(x)
-ans = Spec.expint(3.3)             --~ 8.939E-3
+ans = Spec.expint(3.3) * 1E3       --3> 8.939
 
 -- E3(x)
-ans = Spec.expint(2, 5)            --~ 9.965E-4
+ans = Spec.expint(2, 5) * 1E4      --3> 9.965
 
 -- gamma functions
-ans = Spec.gamma(-1.5)             --~ 2.3633
+ans = Spec.gamma(-1.5)             --3> 2.3633
 
-ans = Spec.gammaln(100)            --~ 359.1342
+ans = Spec.gammaln(100)            --3> 359.1342
 
-ans = Spec.gammp(7.7, 2.3)         --~ 3.85E-3
+ans = Spec.gammp(7.7, 2.3) * 1E3   --2> 3.85
 
-ans = Spec.gammq(1.5, 4.8)         --~ 2.23E-2
+ans = Spec.gammq(1.5, 4.8) * 1E2   --2> 2.23
 
 -- another syntax
-ans = Spec.gammainc(2.1, 0.3, 'upper') --~ 1.942E-2
+ans = Spec.gammainc(2.1, 0.3, 'upper') * 1E2 --3> 1.942
 
 -- Bessel functions
-ans = Spec.besselj(3, 1.5)         --~ 6.096E-2
+ans = Spec.besselj(3, 1.5) * 1E2   --3> 6.096
 
-ans = Spec.bessely(4, 0.8)         --~ -78.751
+ans = Spec.bessely(4, 0.8)         --3> -78.751
 
-ans = Spec.besseli(2, -3.6)          --~ 4.254
+ans = Spec.besseli(2, -3.6)        --3> 4.254
 
-ans = Spec.besselk(5, 5)           --~ 3.2706E-2
+ans = Spec.besselk(5, 5) * 1E2     --3> 3.2706
 
 -- Legendre function
 lst = Spec.legendre(3, 0.5)
-ans = lst[1]                       --~ -0.4375
+ans = lst[1]                       --3> -0.4375
 
 -- Dawson function
-ans = Spec.dawson(3.3)             --~ 0.1598
+ans = Spec.dawson(3.3)             --3> 0.1598
 
 --]]
 

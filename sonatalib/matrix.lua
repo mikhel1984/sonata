@@ -122,7 +122,7 @@ g = Mat {{1,2,3},{4,5,6},{7,8,9}}
 ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
 
 -- eualedian norm
-ans = Mat.V({1,2,3}):norm()     --~ math.sqrt(14)
+ans = Mat.V({1,2,3}):norm()     --3> math.sqrt(14)
 
 -- random matrix
 h = Mat.rand(3,2)
@@ -139,7 +139,7 @@ print(Mat.randn(2,2))
 -- pseudo inverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
-ans = n(2,2)                    --~ 0.333
+ans = n(2,2)                    --3> 0.333
 
 -- copy as Lua table
 -- (without methametods)
@@ -163,12 +163,12 @@ ans = Mat.dot(x1,x2)            --> 32
 
 -- LU transform
 l,u,p = b:lu()
-ans = l[2][1]                   --~ 0.714
+ans = l[2][1]                   --3> 0.714
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
-ans = m[2][2]                   --~ 1.633
+ans = m[2][2]                   --3> 1.633
 
 -- matrix trace
 ans = a:tr()                    --> 5

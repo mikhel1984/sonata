@@ -17,13 +17,13 @@ lc = require 'sonatalib.main'
 ans = _pi                        --> math.pi
 
 -- standard functions 
-ans = exp(0)+sin(_pi/2)+cosh(0)  --~ 3.0
+ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
 
 -- round number
-ans = lc.round(0.9)                 --> 1.0
+ans = lc.round(0.9)              --> 1.0
 
 -- save 2 digits
-ans = lc.round(math.pi, 2)          --> 3.14
+ans = lc.round(math.pi, 2)       --> 3.14
 
 -- random between 0 and 1
 p = rand()
@@ -57,7 +57,7 @@ ans = b[2]                      --> 4
 
 -- calculate function values
 c = lc.map(sin, b)
-ans = c[1]                      --~ 0.9093
+ans = c[1]                      --3> 0.909
 
 -- use Lua functions if need
 ans = math.floor(_pi)

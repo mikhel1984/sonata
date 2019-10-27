@@ -39,7 +39,7 @@ ans = a / Rat(1,3)      --> Rat(3,2)
 
 ans = a ^ 3             --> Rat(1,8)
 
-ans = 2 ^ a             --~ 1.4142
+ans = 2 ^ a             --3> 1.414
 
 -- comparison
 ans = (b == b)          --> true

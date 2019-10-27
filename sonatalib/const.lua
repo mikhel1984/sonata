@@ -13,7 +13,7 @@
 _C = require 'sonatalib.const'
 
 -- charge of electron
-ans = _C.phy.e                  --~ 1.602e-19
+ans = _C.phy.e * 1E19          --3> 1.602
 
 -- units have postfix _u
 ans = _C.phy.e_u                --> 'C'

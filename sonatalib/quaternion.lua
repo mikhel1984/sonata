@@ -21,11 +21,11 @@ ans = b               --> Quat{3,4,0,0}
 ans = a:conj()        --> Quat{1,-2,-3,-4}
 
 -- norm
-ans = b:abs()         --~ 5.000
+ans = b:abs()         --1> 5.000
 
 -- inversion
 c = a*a:inv()
-ans = c:qw()          --~ 1.000
+ans = c:qw()          --1> 1.000
 
 -- arithmetic
 ans = a+b             --> Quat{4,6,3,4}
@@ -39,31 +39,31 @@ ans = b^3             --> b * b * b
 
 -- unit quaternion
 a:normalize()
-ans = a:abs()         --~ 1.000
+ans = a:abs()         --1> 1.000
 
 -- unit power
 aa = a^1.5
-ans = aa:qz()         --~ 0.648
+ans = aa:qz()         --3> 0.648
 
 -- rotation matrix
 m = a:toRot()
 d = Quat.fromRot(m)
-ans = Quat.abs(d-a)   --~ 0.0456
+ans = Quat.abs(d-a)   --3> 0.0456
 
 -- use angle 
 -- and axis
 ang = 0.5
 axis = {1,1,1}
 f = Quat.fromAA(ang,axis)
-ans,_ = f:toAA()      --~ ang
+ans,_ = f:toAA()      --3> ang
 
 -- rotate vector
 p = a:rotate({1,0,0})
-ans = p[1]            --~ -0.667
+ans = p[1]            --3> -0.667
 
 -- spherical interpolation
 d = Quat.slerp(a,b,0.5)
-ans = d:qw()          --~ 0.467
+ans = d:qw()          --3> 0.467
 
 -- make copy
 ans = d:copy()        --> d

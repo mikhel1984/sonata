@@ -68,7 +68,7 @@ ans = e[1]                    --~ -1.00
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly.fit(A,B,2)
-ans = p(10)                   --~ 227.0
+ans = p(10)                   --0> 227.0
 
 -- simple print
 print(a)
