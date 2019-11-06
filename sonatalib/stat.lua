@@ -393,15 +393,6 @@ stat.fpdf = function (x,v1,v2)
 end
 stat.about[stat.fpdf] = {"fpdf(x,v1,v2)", "F distribution density.", DISTRIB}
 
---[[
--- Binomial cumulative distribution
--- @param x Value.
--- @param N Number of trails.
--- @param p Probability of success.
-stat.binocdf = function (x,N,p)
-   return stat.lc_special.betainc(p,x,N-x+1)
-end
-]]
 
 --- Normal cumulative distribution
 --    @param x Value.

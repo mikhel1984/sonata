@@ -637,20 +637,6 @@ setmetatable(units, {__call = function (self,v,u) return units:new(v,u) end })
 units.Unit = 'Unit'
 units.about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
 
---[[
---- Unit object serialization.
---    @param obj Unit object.
---    @return String, suitable for exchange.
-units.serialize = function (obj)
-   local s = {}
-   s[#s+1] = 'value='..obj.value
-   s[#s+1] = string.format("key='%s'", obj.key)
-   s[#s+1] = "metatablename='Unit'"
-   s[#s+1] = "modulename='units'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-units.about[units.serialize] = {"serialize(obj)", "Save internal representation of units object.", help.OTHER}
-]]
 
 -- free memory if need
 if not LC_DIALOG then units.about = nil end

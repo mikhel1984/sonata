@@ -459,20 +459,6 @@ setmetatable(polynom, {__call = function (self, t) return polynom:init(Ver.move(
 polynom.Poly = 'Poly'
 polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
---[[
---- Polynomial serialization.
---    @param obj Polynomial object.
---    @return String, suitable for exchange.
-polynom.serialize = function (obj)
-   local s = {}
-   for i = 1, #obj do s[#s+1] = string.format("%a", obj[i]) end
-   s[#s+1] = "metatablename='Poly'"
-   s[#s+1] = "modulename='polynom'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynomial internal representation.", help.OTHER}
-]]
-
 -- free memory if need
 if not LC_DIALOG then polynom.about = nil end
 

@@ -415,24 +415,6 @@ end})
 array.Arr = 'Arr'
 array.about[array.Arr] = {"Arr(tSize)", "Create empty array with given size.", help.NEW}
 
---[[
--- Array serialization.
-array.serialize = function (A)
-   local s = {}
-   s[#s+1] = 'size={' .. table.concat(A.size, ',') .. '}'
-   s[#s+1] = 'k={' .. table.concat(A.k, ',') .. '}'
-   for i = 1, array.capacity(A) do
-      if A[i] then
-         s[#s+1] = string.format("[%d]=%s", i, (type(A[i]) == 'string' and "'"..A[i].."'" or A[i]))
-      end
-   end
-   s[#s+1] = "metatablename='Arr'"
-   s[#s+1] = "modulename='array'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-array.about[array.serialize] = {"serialize(A)", "String representation of array internal structure.", help.OTHER}
-]]
-
 --- Iterator across the array.
 --  @param A Array object.
 --  @return Iterator which calculate index of the next array element and the element itself, <code>nil</code> at the end.

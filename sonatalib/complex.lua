@@ -425,21 +425,6 @@ setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im
 complex.Comp = 'Comp'
 complex.about[complex.Comp] = {"Comp([a=0,]b)", "Create new complex number.", help.NEW}
 
---[[
--- Complex number serialization.
---    @param obj Complex number.
---    @return String, suitable for exchange.
-complex.serialize = function (obj)
-   local s = {}
-   s[#s+1] = tostring(obj[REAL])
-   s[#s+1] = tostring(obj[IMAG])
-   s[#s+1] = "metatablename='Comp'"
-   s[#s+1] = "modulename='complex'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object.", help.OTHER}
-]]
-
 --- Function for execution during the module import.
 complex.onImport = function ()
    -- redefine functions and add complex variable _i

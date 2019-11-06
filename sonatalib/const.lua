@@ -138,16 +138,6 @@ setmetatable(const.phy,   {__newindex=modifyError, __index = function (t,k) retu
 setmetatable(const.astro, {__newindex=modifyError, __index = function (t,k) return _astro_[k] end})
 setmetatable(const.math,  {__newindex=modifyError, __index = function (t,k) return _math_[k] end})
 
---[[
-setmetatable(const, 
-{
-   -- read existing values
-   __index = function (t,k) return _data_[k] end,
-   -- don't modify values
-   __newindex = function (t,k,v) error('Constants are immutable!') end,
-})
-]]
-
 -- free memory in case of standalone usage
 if not LC_DIALOG then const.about = nil end
 
