@@ -1,4 +1,4 @@
--- Wellcome to Sonata Lua Calculus!
+-- Welcome to Sonata Lua Calculus!
 -- Here you can find some tips about it.
 -- Print 'quit' to exit the program. 
 -- Press "Enter" to continue...
@@ -14,7 +14,7 @@ help(round)
 -- PAUSE
 
 -- By the way, this is an interactive mode.
--- You can enter Lua valid expressioin after '?>'
+-- You can enter Lua valid expression after '?>'
 -- and see the result. For example, try to get help
 -- for any other function. 
 -- PAUSE
@@ -76,7 +76,7 @@ sqrt(-4)
 exp(3+_i*4)
 -- PAUSE
 
---	Breif module overview
+--	Brief module overview
 -- PAUSE
 --	COMPLEX
 -- Operations with complex numbers.
@@ -95,7 +95,7 @@ a = Mat({
 b = Mat {{5,6},{7,8}}  
 a[2][1]                -- get element (indexation from 1)
 a[2][1] = 5            -- set new value
-a:get(-1,-1)           -- function 'get' can work with negative indeces
+a:get(-1,-1)           -- function 'get' can work with negative indices
 a:get(1,{1,2})         -- and return submatrix
 -- PAUSE
 a * b                  -- arithmetic is available 
@@ -106,7 +106,7 @@ b:det()                -- determinant
 a .. b                 -- horizontal concatenation
 c = a // b             -- vertical concatenation
 c 
-c:pinv()               -- pseudoinverse
+c:pinv()               -- pseudo-inverse
 -- PAUSE
 
 --	NUMERIC
@@ -128,7 +128,7 @@ yn                     -- y(3)
 -- Work with polynomials.
 a = Poly {2,3,4,5}     -- sequence of coefficients, from kn to k0 
 b = Poly {1,2} 
-a(1)                   -- value of the polinomial for x=1
+a(1)                   -- value of the polynomial for x=1
 c = a * b              -- apply arithmetic operations
 c:str('s')             -- 'pretty print' representation
 b:int(3)               -- integrate polynomial, use initial condition
@@ -157,12 +157,12 @@ a = Arr {2,3,1}        -- create empty array of size 2x3x1
 a:set({1,2,1},3)       -- do a(1,2,1) = 3
 a:get{1,2,1}           -- get a(1,2,1) 
 b = Arr.rand{2,3,1}    -- random elements
-c = a+b                -- element-wise summ
+c = a+b                -- element-wise sum
 for ind, val in c:next() do print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val)) end
 -- PAUSE
 
 --	CONST
--- Some usefull constants.
+-- Some useful constants.
 _C.phy.G                  -- gravitational constant
 _C.phy.G_u                -- units of measurement are available with postfix '_u'
 -- It is possible to define own constant.
@@ -229,4 +229,17 @@ s = v * t
 s
 -- PAUSE
 
--- We wish you a plasant work with the program! 
+--	QUATERNION
+-- Quaternions and rotation.
+a = Quat{1,2,3,4}        -- {w,x,y,z}
+b = Quat{w=3,x=4}        -- y=0 and z=0
+-- arithmetics
+a + b
+a * b
+b + 1
+a:inv()
+-- slerp
+Quat.slerp(a,b,0.5)      -- use normalization inside
+          
+
+-- We wish you a pleasant work with the program! 
