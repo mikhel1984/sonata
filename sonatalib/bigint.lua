@@ -108,7 +108,7 @@ about = help:new("Operations with arbitrary long integers."),
 }
 
 bigint.__index = bigint
--- the radix
+-- the basis
 bigint.BASE = 10        
 
 --- Create new object, set metatable.
@@ -458,19 +458,6 @@ bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative intege
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Big = 'Big'
 bigint.about[bigint.Big] = {"Big(v)", "Create big number from integer or string.", help.NEW}
-
---[[
--- Bigint serialization.
-bigint.serialize = function (obj)
-   local s = {}
-   s[#s+1] = string.format("value='%s'", obj[VALUE])
-   s[#s+1] = "sign=" .. obj[SIGN]
-   s[#s+1] = "metatablename='Big'"
-   s[#s+1] = "modulename='bigint'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-bigint.about[bigint.serialize] = {"serialize(obj)", "Save internal representation of bigint object.", help.OTHER}
-]]
 
 -- free memory if need
 if not LC_DIALOG then bigint.about = nil end

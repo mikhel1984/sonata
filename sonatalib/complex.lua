@@ -18,7 +18,7 @@
 -- import 'complex'
 Comp = require 'sonatalib.complex'
 
--- real and imag pars
+-- real and imaginary pars
 a = Comp(1,2)
 -- or just imaginary
 b = Comp(3)
@@ -44,10 +44,10 @@ ans = a / Comp._i              --> Comp(2,-1)
 c = Comp(1,1)^Comp(2,-2)
 
 -- real part
-ans = c:real()                   --~ 6.147
+ans = c:real()                 --3> 6.147
 
 -- imaginary part
-ans = c:imag()                   --~ 7.4
+ans = c:imag()                 --1> 7.4
 
 -- comparison
 ans = (a == b)                 --> false
@@ -55,10 +55,10 @@ ans = (a == b)                 --> false
 ans = (a ~= b)                 --> true
 
 -- absolute value
-ans = a:abs()                  --~ 2.236
+ans = a:abs()                  --3> 2.236
 
 -- argument (angle)
-ans = a:angle()                  --~ 1.107
+ans = a:angle()                --3> 1.107
 
 -- conjugated number
 ans = a:conj()                 --> Comp(1,-2)
@@ -66,53 +66,53 @@ ans = a:conj()                 --> Comp(1,-2)
 -- some functions after import 
 -- become default, such as
 d = Comp.sqrt(-2)
-ans = d:imag()                   --~ 1.414
+ans = d:imag()                 --3> 1.414
 
 -- exp
-ans = Comp.exp(d):real()         --~ 0.156
+ans = Comp.exp(d):real()       --3> 0.156
 
 -- log
-ans = Comp.log(d):real()         --~ 0.3465
+ans = Comp.log(d):real()       --3> 0.3465
 
 -- sin 
-ans = Comp.sin(d):imag()         --~ 1.935
+ans = Comp.sin(d):imag()       --3> 1.935
 
 -- cos 
-ans = Comp.cos(d):imag()         --~ 0
+ans = Comp.cos(d):imag()       --1> 0
 
 -- tan
-ans = Comp.tan(d):real()         --~ 0
+ans = Comp.tan(d):real()       --1> 0
 
 -- sinh
-ans = Comp.sinh(d):real()        --~ 0
+ans = Comp.sinh(d):real()      --1> 0
 
 -- cosh
-ans = Comp.cosh(d):real()        --~ 0.156
+ans = Comp.cosh(d):real()      --3> 0.156
 
 -- tanh
-ans = Comp.tanh(d):imag()        --~ 6.334
+ans = Comp.tanh(d):imag()      --3> 6.334
 
 -- asin
 z = Comp(2,3)
-ans = z:asin():imag()            --~ 1.983
+ans = z:asin():imag()          --3> 1.983
 
 -- acos 
-ans = z:acos():real()            --~ 1.000
+ans = z:acos():real()          --2> 1.000
 
 -- atan
-ans = z:atan():imag()            --~ 0.2291
+ans = z:atan():imag()          --3> 0.229
 
 -- asinh
-ans = z:asinh():real()           --~ 1.9686
+ans = z:asinh():real()         --3> 1.968
 
 -- acosh
-ans = z:acosh():imag()           --~ 1.000
+ans = z:acosh():imag()         --1> 1.000
 
 -- atanh
-ans = z:atanh():real()           --~ 0.1469
+ans = z:atanh():real()         --3> 0.146
 
 -- make copy
-ans = a:copy()                   --> a
+ans = a:copy()                 --> a
 
 -- show
 print(a)
@@ -424,21 +424,6 @@ complex.about[complex._i] = {"_i", "Complex unit.", help.CONST}
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
 complex.Comp = 'Comp'
 complex.about[complex.Comp] = {"Comp([a=0,]b)", "Create new complex number.", help.NEW}
-
---[[
--- Complex number serialization.
---    @param obj Complex number.
---    @return String, suitable for exchange.
-complex.serialize = function (obj)
-   local s = {}
-   s[#s+1] = tostring(obj[REAL])
-   s[#s+1] = tostring(obj[IMAG])
-   s[#s+1] = "metatablename='Comp'"
-   s[#s+1] = "modulename='complex'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-complex.about[complex.serialize] = {"serialize(obj)", "Save internal representation or complex object.", help.OTHER}
-]]
 
 --- Function for execution during the module import.
 complex.onImport = function ()

@@ -17,14 +17,14 @@
    * Each expression in block must occupy only one line.
 
    * If test have result, it must be saved in variable 'ans'. To check it write the right value after arrow '-->'. 
-     In case of float point number sign '--~' can be used for not strong equality.
+     In case of float point number use '--n>' to define number number of equal digital signs n (0-9).
 
    * Test can have no any results. In this case '-->' can be omitted.
 
    * To perform tests call 
-       'lua calc.lua -test [module_name]'
+       'lua sonata.lua --test [module_name]' or 'lua sonata.lua -t [module_name]'
      For example
-       'lua calc.lua -test array'
+       'lua sonata.lua --test array'
      If module name is not written tests will be executed for all modules.
 
    * Test summary includes information about number of passed and failed tests, average time per test unit (in milliseconds), memory size.
@@ -38,9 +38,9 @@ local Ver = require "sonatalib.versions"
 
 local DELIM = '%c[%s%c]+'    -- empty strings
 local LOG_NAME = 'test.log'
-local TOL = 0.001
 local CODE_TEMPLATE = '%-%-%[(=*)%[TEST(.-)%]%1%]'
-local TEST_TEMPLATE = '(.*)%-%-([>~])(.*)'
+local TEST_TEMPLATE = '(.*)%-%-(%d?)>(.*)'
+local TOL_LST = {['0']=1,['1']=1E1,['2']=1E2,['3']=1E3,['4']=1E4,['5']=1E5,['6']=1E6,['7']=1E7,['8']=1E8,['9']=1E9}
 
 --	MODULE
 
@@ -107,7 +107,18 @@ test.module = function (fname)
 	    if #a > 0 then
 	       local fa = Ver.loadStr('return '..a)
 	       arrow = fa()
-	       return (e == '~') and (math.abs(ans-arrow) <= TOL*math.abs(ans)) or (ans == arrow)
+               if e == '' then
+                  return ans == arrow
+               else 
+                  -- approximately equal
+                  local tol = TOL_LST[e]
+                  if tol then 
+                     return tol*math.abs(ans-arrow) < 1
+                  else
+                     print('Unexpected symbol '..e)
+                     return false
+                  end
+               end
 	    else
 	       return true
 	    end

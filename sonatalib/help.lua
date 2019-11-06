@@ -186,8 +186,8 @@ help.new = function (self,str)
 end
 
 --- Create list of functions, sort by module and category.
---  @param tbl Table of paris 'function - description'.
---  @return Groupped descriptions.
+--  @param tbl Table of pairs 'function - description'.
+--  @return Grouped descriptions.
 help._funcList_ = function (tbl)
    local res = {}
    for k, v in pairs(tbl) do
@@ -240,7 +240,7 @@ help.print = function (self,fn)
    end -- if
 end
 
---- Auxilary funciton, which define colors for text elements.
+--- Auxiliary function, which define colors for text elements.
 --  @param bUse Boolean flag of usage.
 help.useColors = function (bUse)
    if bUse then
@@ -521,7 +521,7 @@ help.generateDoc = function (locName, tModules)
       res[#res+1] = '<a href="#Top">Top</a></div>'
    end
 
-   res[#res+1] = '<div><p align="center"><i>2017-2018, Stanislav Mikhel</i></p></div>'
+   res[#res+1] = '<div><p align="center"><i>2017-2019, Stanislav Mikhel</i></p></div>'
    res[#res+1] = '</body></html>'
 
    -- save

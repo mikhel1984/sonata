@@ -13,7 +13,7 @@
 _C = require 'sonatalib.const'
 
 -- charge of electron
-ans = _C.phy.e                  --~ 1.602e-19
+ans = _C.phy.e * 1E19          --3> 1.602
 
 -- units have postfix _u
 ans = _C.phy.e_u                --> 'C'
@@ -122,7 +122,7 @@ const.add = function (name,val)
 end
 const.about[const.add] = {'add(name,value)','Create new constant.'}
 
---- Remove exixting constant.
+--- Remove existing constant.
 --  @param name Name of constant.
 const.remove = function (name)
    if _user_[name] then      
@@ -137,16 +137,6 @@ setmetatable(const,       {__newindex=modifyError, __index = function (t,k) retu
 setmetatable(const.phy,   {__newindex=modifyError, __index = function (t,k) return _phy_[k] end})
 setmetatable(const.astro, {__newindex=modifyError, __index = function (t,k) return _astro_[k] end})
 setmetatable(const.math,  {__newindex=modifyError, __index = function (t,k) return _math_[k] end})
-
---[[
-setmetatable(const, 
-{
-   -- read existing values
-   __index = function (t,k) return _data_[k] end,
-   -- don't modify values
-   __newindex = function (t,k,v) error('Constants are immutable!') end,
-})
-]]
 
 -- free memory in case of standalone usage
 if not LC_DIALOG then const.about = nil end

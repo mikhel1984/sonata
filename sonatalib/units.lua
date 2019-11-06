@@ -68,7 +68,7 @@ d = Unit(1,'W')
 -- define function for conversation, apply it
 lg = function (x) return math.log(x)/math.log(10) end
 e = d:convert(function (x) return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') end)
-ans = #e                           --~ 30
+ans = #e                           --0> 30
 
 -- another definition syntax
 ans = 2 * Unit('N')                --> Unit(2,'N')
@@ -188,7 +188,7 @@ units.prefix = {
 }
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
---- Get common part and units._diff_erence between 2 strings.
+--- Get common part and difference between 2 strings.
 --  @param str1 First string.
 --  @param str2 Second string.
 --  @return First prefix, second prefix, common part.
@@ -637,20 +637,6 @@ setmetatable(units, {__call = function (self,v,u) return units:new(v,u) end })
 units.Unit = 'Unit'
 units.about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
 
---[[
---- Unit object serialization.
---    @param obj Unit object.
---    @return String, suitable for exchange.
-units.serialize = function (obj)
-   local s = {}
-   s[#s+1] = 'value='..obj.value
-   s[#s+1] = string.format("key='%s'", obj.key)
-   s[#s+1] = "metatablename='Unit'"
-   s[#s+1] = "modulename='units'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-units.about[units.serialize] = {"serialize(obj)", "Save internal representation of units object.", help.OTHER}
-]]
 
 -- free memory if need
 if not LC_DIALOG then units.about = nil end

@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Version
-lc_version = '0.9.15'
+lc_version = '0.9.16'
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -87,9 +87,12 @@ function lc_local.doimport(tbl,name)
       name = assert(lc_local.alias[name], "Wrong module name: "..name.."!")
    end
    if not _G[var] then
-      _G[var] = require('sonatalib.'..name)
-      about:add(_G[var].about, var)
-      if _G[var].onImport then _G[var].onImport() end
+      local lib = require('sonatalib.'..name)
+      _G[var] = lib
+      -- add description if need
+      if lib.about then about:add(lib.about, var) end
+      -- do additional actions
+      if lib.onImport then lib.onImport() end
    end
    return var, name
 end
@@ -100,8 +103,10 @@ setmetatable(import,
   __tostring = function (x) io.write(lc_help.CHELP); return about:get('done')..lc_help.CRESET end,
   -- load modules
   __call = function (self, name) 
-    if name == 'all' then 
-       for k,v in pairs(self) do lc_local.doimport(self,k) end
+    if not name then
+       print(lc_local.import_state_update())
+    elseif name == 'all' then 
+       for k,v in pairs(self) do lc_local.doimport(self,k) end    
     elseif type(name) == 'table' then
        for _,v in ipairs(name) do import(v) end
     else

@@ -121,8 +121,8 @@ ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
 ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
 
--- eualedian norm
-ans = Mat.V({1,2,3}):norm()     --~ math.sqrt(14)
+-- euclidean norm
+ans = Mat.V({1,2,3}):norm()     --3> math.sqrt(14)
 
 -- random matrix
 h = Mat.rand(3,2)
@@ -132,10 +132,14 @@ print(h)
 -- from 1 to 20
 print(h:randi(20))
 
+-- random matrix with 
+-- normal distribution
+print(Mat.randn(2,2))
+
 -- pseudo inverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
-ans = n(2,2)                    --~ 0.333
+ans = n(2,2)                    --3> 0.333
 
 -- copy as Lua table
 -- (without methametods)
@@ -159,12 +163,12 @@ ans = Mat.dot(x1,x2)            --> 32
 
 -- LU transform
 l,u,p = b:lu()
-ans = l[2][1]                   --~ 0.714
+ans = l[2][1]                   --3> 0.714
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
-ans = m[2][2]                   --~ 1.633
+ans = m[2][2]                   --3> 1.633
 
 -- matrix trace
 ans = a:tr()                    --> 5
@@ -188,6 +192,11 @@ ans = a:reduce(function (x,y) return x*y end, 'c') --> Mat {{3,8}}
 
 -- get rank
 ans = Mat.ones(2,3):rank()      --> 1
+
+-- change size
+tmp = Mat{{1,2},{3,4},{5,6}} 
+ans = tmp:reshape(2,3)          --> Mat {{1,2,3},{4,5,6}}
+
 --]]
 
 --	LOCAL
@@ -438,7 +447,7 @@ matrix.T = matrix.transpose
 --- M1 + M2
 --  @param M1 First matrix or number.
 --  @param M2 Second matrix or number.
---  @return Summ matrix.
+--  @return Sum matrix.
 matrix.__add = function (M1,M2)
    M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
    M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
@@ -713,6 +722,16 @@ matrix.rand = function (rows, cols)
 end
 matrix.about[matrix.rand] = {"rand(rows[,cols=rows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
 
+--- Matrix with normally distributed random values.
+--  @param rows Number of rows.
+--  @param cols Number of columns. Can be omitted in case of square matrix.
+--  @return New matrix.
+matrix.randn = function (rows,cols)
+   if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
+   return matrix.fill(rows, cols or rows, function () return randn() end)
+end
+matrix.about[matrix.randn] = {"randn(rows[,cols=rows])","Create matrix with normally distributed values (0 mean and unit variance)", help.NEW}
+
 --- Matrix with integer random values from 1 to defined max value.
 --  @param x1 Source matrix or upper limit.
 --  @param x2 Upper limit or number of rows.
@@ -819,139 +838,6 @@ matrix.tr = function (M)
 end
 matrix.about[matrix.tr] = {"tr(M)", "Get trace of the matrix.", help.OTHER}
 
---[=[
---> SVD - "standard" algorithm implementation
---  BUT: some of singular values are negative :(
-
--- Householder transformation.
---    <i>Private function.</i>
---    @param x Matrix.
---    @param k Index.
---    @return Result of transformation.
-local function householder (x, k)
-   local n, sum = x.rows, 0
-   local u = matrix.zeros(n, 1)
-   for r = k,n do sum = sum + getval(x, r, 1)^2 end
-   local tmp = getval(x,k,1)
-   setval(u,k,1, tmp + math.sqrt(sum)*(tmp < 0 and -1 or (tmp > 0 and 1 or 0)))  
-   for r = k+1,n do setval(u,r,1, getval(x,r,1)) end
-   local ut = matrix.transpose(u)
-   return matrix.eye(n,n) - (2 / (ut * u)) * (u * ut)
-end
-
--- Bidiagonalization.
---    <i>Private function.</i>
---    @param A Source matrix.
---    @return U, B, V
-local function bidiag_reduction(A)
-   local m,n = A.rows, A.cols
-   local B = matrix.copy(A)
-   local U, V = matrix.eye(m), matrix.eye(n)
-   local M = math.min(m,n)
-   for k = 1, M do
-      local H1 = householder(B:sub(1,-1, k,k), k)  
-      B = H1 * B
-      U = U * matrix.transpose(H1)
-      if k < (M-1) then
-         local H2 = householder(matrix.transpose(B:sub(k, k, 1, -1)), k+1)
-	 H2 = matrix.transpose(H2)
-	 B = B * H2
-	 V = V * H2
-      end
-   end
-   return U, B, V
-end
-
--- Given's rotation.
---    <i>Private function.</i>
---    @return cos, sin
-local function rot(f,g)
-   --> return cos, sin; r is omitted
-   if f == 0 then
-      return 0, 1
-   elseif math.abs(f) > math.abs(g) then
-      local t = g / f
-      local t1 = math.sqrt(1 + t*t)
-      return 1/t1, t/t1
-   else
-      local t = f / g
-      local t1 = math.sqrt(1 + t*t)
-      return t/t1, 1/t1
-   end
-end
-
--- QR-type sweeps.
---    <i>Private function.</i>
-local function qr_sweep(B)
-   local m,n = B.rows, B.cols
-   local U,V = matrix.eye(m), matrix.eye(n)
-   local M = math.min(m,n)
-   local threshould = function (x) return math.abs(x) > 1e-13 and x or 0 end   
-   for k = 1, M-1 do
-      -- first
-      local c,s = rot(getval(B,k,k), getval(B,k,k+1))
-      local Q = matrix.eye(n)
-      setval(Q, k,   k,  c); setval(Q, k,   k+1, s)
-      setval(Q, k+1, k, -s); setval(Q, k+1, k+1, c)
-      Q = matrix.transpose(Q)
-      B = B * Q
-      V = V * Q
-      B = matrix.map(B, threshould)
-      -- second
-      c,s = rot(getval(B,k,k), getval(B,k+1,k))
-      Q = matrix.eye(m)
-      setval(Q, k,   k,  c); setval(Q, k,   k+1, s)
-      setval(Q, k+1, k, -s); setval(Q, k+1, k+1, c)
-      B = Q * B
-      U = U * matrix.transpose(Q)
-      B = matrix.map(B, threshould)
-   end
-   -- add diagonal to zero matrix
-   local I = matrix.mapEx(matrix.zeros(m,n),
-                            function (r,c,x) return (c == (r+1) and c <= M and r <= M) and 1 or 0 end)
-   -- error - norm
-   local E = 0
-   for r = 1, m do
-      for c = 1, n do E = E + math.abs(getval(I,r,c)*getval(B,r,c)) end
-   end
-   return U, B, V, E
-end
-
--- "Standard" SVD calculation.
---    Warning: B get negative elements...
---    @param A original matrix.
---    @return U,B,V
-matrix.svd = function (A)
-   local transp = (A.rows < A.cols)
-   local B = transp and A:transpose() or A:copy()
-   local U1, U2, U3, V1, V2, V3
-   U1, B, V1 = bidiag_reduction(B);
-   U2 = matrix.eye(matrix.size(U1))
-   V2 = matrix.eye(matrix.size(V1))
-   local E = math.huge
-   while E > 1e-8 do
-      U3, B, V3, E = qr_sweep(B)
-      U2 = U2 * U3
-      V2 = V2 * V3
-   end
-   U1, V1 = U1*U2, V1*V2
-   if transp then 
-      U1, B, V1 = V1, B:transpose(), U1
-   end
-   return U1, B, V1
-end
-matrix.about[matrix.svd] = {"svd(M)", "Singular value decomposition of the matrix M.", help.OTHER}
-
--- Pseudo inverse matrix using SVD.
---    @param M Initial matrix.
---    @return Pseudo inverse matrix.
-matrix.pinv = function (M)
-   local u,s,v = matrix.svd(M)
-   s = matrix.mapEx(s, function (r,c,x) return (r == c and math.abs(x) > 1e-8) and (1/x) or 0 end)
-   return v * s:transpose() * u:transpose()
-end
-matrix.about[matrix.pinv] = {"pinv(M)", "Calculates pseudo inverse matrix using SVD.", help.OTHER}
-]=]
 
 --- Quick pseudo inverse matrix.
 --  Based on "Fast computation of Moore-Penrose inverse matrices" paper by Pierre Courrieu.
@@ -1226,6 +1112,33 @@ matrix.reduce = function (M,fn,dir)
 end
 matrix.about[matrix.reduce] = {"reduce(M,fn,dir[='r'])","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c').",help.OTHER}
 
+--- Change matrix size.
+--  @param M Source matrix.
+--  @param nRows New number of rows.
+--  @param nCols New number of columns.
+--  @return Matrix with new size.
+matrix.reshape = function (M,nRows,nCols)
+   nRows = nRows or (M.rows*M.cols)
+   nCols = nCols or 1
+   assert(nRows > 0 and nCols > 0)
+   local res = matrix:init(nRows,nCols,{})
+   local newR, newC = 1, 1    -- temporary indices
+   for r = 1, M.rows do
+      local Mr = M[r]
+      for c = 1, M.cols do
+         res[newR][newC] = Mr[c]
+	 newC = newC+1
+	 if newC > nCols then
+	    newC = 1
+	    newR = newR+1
+	 end
+      end
+      if newR > nRows then break end
+   end
+   return res
+end
+matrix.about[matrix.reshape] = {"reshape(M,nRows[=size],nCols[=1])","Change matrix size.",help.OTHER}
+
 --- Get sum of all elements.
 --  @param M Initial matrix.
 --  @param dir Direction (optional).
@@ -1253,31 +1166,6 @@ setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})
 matrix.Mat = 'Mat'
 matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
 
---[[
---- Matrix serialization.
---    @param obj Matrix object.
---    @return String, suitable for exchange.
-matrix.serialize = function (obj)
-   local s = {}
-   s[#s+1] = "cols=" .. obj.cols
-   s[#s+1] = "rows=" .. obj.rows
-   for r = 1, obj.rows do
-      local row = obj[r]
-      if row and #row > 0 then
-	 local tmp = {}
-	 for c = 1, obj.cols do
-	    if row[c] then tmp[#tmp+1] = string.format("[%d]=%a", c, row[c]) end
-	 end
-	 s[#s+1] = string.format("[%d]={%s}", r, table.concat(tmp, ','))
-      end
-   end
-   s[#s+1] = "metatablename='Mat'"
-   s[#s+1] = "modulename='matrix'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-matrix.about[matrix.serialize] = {"serialize(obj)", "Save matrix internal representation.", help.OTHER}
-]]
-
 --- Function for execution during the module import.
 matrix.onImport = function ()
    -- basic
@@ -1285,6 +1173,8 @@ matrix.onImport = function ()
    rand = function (a,...) return a and matrix.rand(a,...) or _rand(a,...) end
    local _randi = randi
    randi = function (a,b,...) return b and matrix.randi(a,b,...) or _randi(a,b,...) end
+   local _randn = randn
+   randn = function (a,...) return a and matrix.randn(a,...) or _rand(a,...) end
    local _abs = abs 
    abs = function (a) return ismatrix(a) and matrix.map(a,_abs) or _abs(a) end
    local _sqrt = sqrt

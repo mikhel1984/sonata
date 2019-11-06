@@ -1,6 +1,6 @@
 --[[      sonatalib/rational.lua 
 
---- Rational number operatons support.
+--- Rational number operations support.
 --  
 --  Object structure:                   </br>
 --  <code>{numerator,denominator}</code></br>
@@ -39,7 +39,7 @@ ans = a / Rat(1,3)      --> Rat(3,2)
 
 ans = a ^ 3             --> Rat(1,8)
 
-ans = 2 ^ a             --~ 1.4142
+ans = 2 ^ a             --3> 1.414
 
 -- comparison
 ans = (b == b)          --> true
@@ -246,51 +246,10 @@ rational.about[rational.Nu] = {"Nu(R)", "Return the numerator of rational number
 rational.De = function (R) return R[DENOM] end
 rational.about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 
--- list of prime numbers
--- result is not sorted
---[[ for future
-rational.prime = function (v)
-   if not (v > 0 and Ver.isInteger(v)) then error("Positive integer is expected!") end
-   -- use "sieve of Eratosthenes"
-   local tmp = {}
-   for i = 1,v,2 do tmp[i] = true end
-   -- remove non prime
-   for i = 3,math.floor(math.sqrt(v)),2 do
-      if tmp[i] then
-         for j = i+i,v,i do 
-	    if tmp[j] then tmp[j] = false end
-	 end
-      end
-   end
-   if v > 1 then tmp[2] = true end
-   -- collect
-   local res = {}
-   for k,v in pairs(tmp) do
-      if v then res[#res+1] = k end
-   end
-   return res
-end
-]]
-
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
 rational.Rat = 'Rat'
 rational.about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
-
---[[
---- Rational number serialization.
---    @param obj Rational number.
---    @return String, suitable for exchange.
-rational.serialize = function (obj)
-   local s = {}
-   s[#s+1] = tostring(obj[NUM])
-   s[#s+1] = tostring(obj[DENOM])
-   s[#s+1] = "metatablename='Rat'"
-   s[#s+1] = "modulename='rational'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-rational.about[rational.serialize] = {"serialize(obj)", "Save internal representation of rational number.", help.OTHER}
-]]
 
 -- free memory if need
 if not LC_DIALOG then rational.about = nil end

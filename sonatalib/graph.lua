@@ -401,7 +401,7 @@ graph.dfs = function (G, start, goal)
       local node = stack:pop()
       -- found
       if node == goal then return true, getPath(pred, goal) end
-      -- add sucessors
+      -- add successors
       for v in pairs(G[node]) do
          if not pred[v] then
 	    stack:push(v)

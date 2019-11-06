@@ -17,50 +17,50 @@
 Spec = require 'sonatalib.special'
 
 -- beta functions
-ans = Spec.beta(3,4)               --~ 1.667E-2
+ans = Spec.beta(3,4) * 1E2         --3> 1.667
 
-ans = Spec.betaln(10,20)           --~ -19.115
+ans = Spec.betaln(10,20)           --3> -19.115
 
-ans = Spec.betainc(0.5, 2, 3.3)    --~ 0.7309
+ans = Spec.betainc(0.5, 2, 3.3)    --3> 0.7309
 
 -- error functions
-ans = Spec.erf(1)                  --~ 0.8427
+ans = Spec.erf(1)                  --3> 0.8427
 
-ans = Spec.erfc(0.5)               --~ 0.4795
+ans = Spec.erfc(0.5)               --3> 0.4795
 
 -- Ei(x)
-ans = Spec.expint(3.3)             --~ 8.939E-3
+ans = Spec.expint(3.3) * 1E3       --3> 8.939
 
 -- E3(x)
-ans = Spec.expint(2, 5)            --~ 9.965E-4
+ans = Spec.expint(2, 5) * 1E4      --3> 9.965
 
 -- gamma functions
-ans = Spec.gamma(-1.5)             --~ 2.3633
+ans = Spec.gamma(-1.5)             --3> 2.3633
 
-ans = Spec.gammaln(100)            --~ 359.1342
+ans = Spec.gammaln(100)            --3> 359.1342
 
-ans = Spec.gammp(7.7, 2.3)         --~ 3.85E-3
+ans = Spec.gammp(7.7, 2.3) * 1E3   --2> 3.85
 
-ans = Spec.gammq(1.5, 4.8)         --~ 2.23E-2
+ans = Spec.gammq(1.5, 4.8) * 1E2   --2> 2.23
 
 -- another syntax
-ans = Spec.gammainc(2.1, 0.3, 'upper') --~ 1.942E-2
+ans = Spec.gammainc(2.1, 0.3, 'upper') * 1E2 --3> 1.942
 
 -- Bessel functions
-ans = Spec.besselj(3, 1.5)         --~ 6.096E-2
+ans = Spec.besselj(3, 1.5) * 1E2   --3> 6.096
 
-ans = Spec.bessely(4, 0.8)         --~ -78.751
+ans = Spec.bessely(4, 0.8)         --3> -78.751
 
-ans = Spec.besseli(2, -3.6)          --~ 4.254
+ans = Spec.besseli(2, -3.6)        --3> 4.254
 
-ans = Spec.besselk(5, 5)           --~ 3.2706E-2
+ans = Spec.besselk(5, 5) * 1E2     --3> 3.2706
 
 -- Legendre function
 lst = Spec.legendre(3, 0.5)
-ans = lst[1]                       --~ -0.4375
+ans = lst[1]                       --3> -0.4375
 
 -- Dawson function
-ans = Spec.dawson(3.3)             --~ 0.1598
+ans = Spec.dawson(3.3)             --3> 0.1598
 
 --]]
 
@@ -326,7 +326,7 @@ special.about[special.erfc] = {"erfc(x)", "Complementary error function."}
 special.erf = function (x) return 1-special.erfc(x) end
 special.about[special.erf] = {"erf(x)", "Error function."}
 
---- legendre coefficient.
+--- Legendre coefficient.
 --  @param n Total order.
 --  @param m Current order.
 --  @param x Real number.
@@ -353,7 +353,7 @@ special._plgndr_ = function (n,m,x)
    end
 end
 
---- List of legendre coefficients.
+--- List of Legendre coefficients.
 --  @param n Polynomial order.
 --  @param x Real number.
 --  @return Table with coefficients.
@@ -364,16 +364,16 @@ special.legendre = function (n,x)
    for i = 1,n+1 do res[i] = plgndr(n,i-1,x) end
    return res
 end
-special.about[special.legendre] = {"legendre(n,x)","Return list of legendre polynomial coefficients."}
+special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polynomial coefficients."}
 
---- dawson integral.
+--- Dawson integral.
 --  @param x Real number.
 --  @return Integral value.
 special.dawson = function (x)
    local NMAX,H,A1,A2,A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
     
    if not special._c_dawson then 
-      -- List of dawson function coefficients.
+      -- List of Dawson function coefficients.
       special._c_dawson = {0,0,0,0,0,0}
       for i = 1,NMAX do special._c_dawson[i] = math.exp(-((2.0*i-1.0)*H)^2) end
    end
@@ -394,7 +394,7 @@ special.dawson = function (x)
       return 0.5641895835*sum*(x>=0 and math.exp(-xp*xp) or -math.exp(-xp*xp))
    end
 end
-special.about[special.dawson] = {"dawson(x)", "dawson integral."}
+special.about[special.dawson] = {"dawson(x)", "Dawson integral."}
 
 --***** Bessel functions ******
 
@@ -483,7 +483,7 @@ end
 
 --- Bessel function of the second kind
 --  @param n Polynomial order.
---  @param x Nonnegative real number.
+--  @param x Non-negative real number.
 --  @return Polynomial value
 special.bessely = function (n,x)
    if x <= 0 then error('Positive value is expected!') end
@@ -610,7 +610,7 @@ end
 --  @param x Positive value.
 --  @return Kn(x).
 special.besselk = function (n,x)
-   if x <= 0 then error("Positiva value is expected!") end
+   if x <= 0 then error("Positive value is expected!") end
    if not (n >= 0 and Ver.isInteger(n)) then error("Non-negative integer order is expected!") end
    if n == 0 then return special._bessk0_(x) end
    if n == 1 then return special._bessk1_(x) end

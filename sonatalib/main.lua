@@ -17,13 +17,13 @@ lc = require 'sonatalib.main'
 ans = _pi                        --> math.pi
 
 -- standard functions 
-ans = exp(0)+sin(_pi/2)+cosh(0)  --~ 3.0
+ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
 
 -- round number
-ans = lc.round(0.9)                 --> 1.0
+ans = lc.round(0.9)              --> 1.0
 
 -- save 2 digits
-ans = lc.round(math.pi, 2)          --> 3.14
+ans = lc.round(math.pi, 2)       --> 3.14
 
 -- random between 0 and 1
 p = rand()
@@ -32,6 +32,9 @@ ans = (p >= 0) and (p <= 1)      --> true
 -- random integer (1 to 10)
 p = randi(10)
 ans = (p >= 1) and (p <= 10)     --> true
+
+-- normal distributed random
+print(randn())
 
 -- get object type
 -- "knows" types for Sonata objects
@@ -54,7 +57,7 @@ ans = b[2]                      --> 4
 
 -- calculate function values
 c = lc.map(sin, b)
-ans = c[1]                      --~ 0.9093
+ans = c[1]                      --3> 0.909
 
 -- use Lua functions if need
 ans = math.floor(_pi)
@@ -167,6 +170,19 @@ about[rand] = {"rand()", "Random number between 0 and 1."}
 randi = function (N) return math.random(1,N) end
 about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
 
+randn = function () 
+   -- use Box-Muller transform
+   local u,v,s
+   while true do
+      u = 2*math.random()-1
+      v = 2*math.random()-1
+      s = u*u + v*v
+      if s > 0 and s <= 1 then break end
+   end
+   return u * math.sqrt(-2*math.log(s)/s)
+end
+about[randn] = {"randn()", "Normal distributed random value with 0 mean and variance 1."}
+
 --- Round to closest integer.
 --  @param x Real number.
 --  @param n Number of decimal digits.
@@ -182,19 +198,6 @@ main.round = function (x,n)
    return p / k
 end
 about[main.round] = {'lc.round(x[,n=0])', 'Round value, define number of decimal digits.', lc_help.OTHER}
-
---[[
--- read object from its serialization
-main.deserialize = function (obj_str)
-   local f = assert(load("return " .. obj_str)) 
-   local o = f()
-   assert(_G[o.metatablename], "Module '" .. o.modulename .. "' is required")
-   setmetatable(o, _G[o.metatablename])
-   o.modulename = nil; o.metatablename = nil
-   return o
-end
-about[main.deserialize] = {"deserialize(obj_str)", "Transform string with serialization into Sonata LC object.", lc_help.OTHER}
-]]
 
 --- Print the contents of a Lua table.
 --  @param t Lua table (not necessarily).
@@ -250,7 +253,7 @@ end
 about[main.type] = {'lc.type(t)', 'Show type of the object.', lc_help.OTHER}
 
 --- Generate sequence of values.
---  @param from Begining of range (default is 1).
+--  @param from Beginning of range (default is 1).
 --  @param to End of range.
 --  @param step Step value (default is 1).
 --  @return Table with numbers.
@@ -277,7 +280,7 @@ about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.',
 
 --- Find function name
 --  @param dbg Structure with debug info.
---  @return String with funciton name.
+--  @return String with function name.
 main._getName_ = function (dbg)
    if dbg.what == 'C' then
       return dbg.name
@@ -350,7 +353,7 @@ main.evalTF = function (src,dst)
       print(res)
    end   
 end
-about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expressions in ##..##. Save resuto to dst file, if need.", lc_help.OTHER}
+about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expressions in ##..##. Save result to dst file, if need.", lc_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
@@ -546,7 +549,7 @@ main._args_.text = function ()
       "",
       "USAGE:",
       "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
-      "(option '-i' could be used for working in native Lua interpretator)",
+      "(option '-i' could be used for working in native Lua interpreter)",
       "",
       "FLAGS:"
    }
@@ -567,7 +570,7 @@ main._args_.text = function ()
    return table.concat(txt,'\n')   
 end
 
-main._exit_ = function () print(lc_help.CMAIN.."\n              --======= Buy! =======--\n"..lc_help.CRESET); os.exit() end
+main._exit_ = function () print(lc_help.CMAIN.."\n              --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
 
 return main
 

@@ -68,7 +68,7 @@ ans = e[1]                    --~ -1.00
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly.fit(A,B,2)
-ans = p(10)                   --~ 227.0
+ans = p(10)                   --0> 227.0
 
 -- simple print
 print(a)
@@ -76,7 +76,7 @@ print(a)
 -- human-friendly print
 -- with variable 's' (default is 'x')
 d = Poly {2,-2,1}
-ans = d:str('s')              --> '2*s^2-2*s+1'
+ans = d:str('s')              --> '2*s^2 -2*s +1'
 
 --]]
 
@@ -190,7 +190,7 @@ polynom.copy = function (P) return polynom:init(Ver.move(P,1,#P,1,{})) end
 polynom.about[polynom.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
 
 --- P1 + P2
---  @param P1 First polinomial or number.
+--  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Sum.
 polynom.__add = function (P1,P2)
@@ -206,8 +206,8 @@ polynom.__add = function (P1,P2)
 end
 
 --- -P
---  @param P Polinomial object.
---  @return Polinomial with inverted signs.
+--  @param P Polynomial object.
+--  @return Polynomial with inverted signs.
 polynom.__unm = function (P)
    local res = {}
    for i = 1, #P do res[i] = -P[i] end
@@ -215,13 +215,13 @@ polynom.__unm = function (P)
 end
 
 --- P1 - P2
---  @param P1 First polinomial or number.
+--  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Difference.
 polynom.__sub = function (P1,P2) return reduce(P1 + (-P2)) end
 
 --- P1 * P2
---  @param P1 First polinomial or number.
+--  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Product.
 polynom.__mul = function (P1,P2)
@@ -247,7 +247,7 @@ polynom.__div = function (P1,P2)
 end
 
 --- P1 % P2
---  @param P1 First polinomial or number.
+--  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Rest.
 polynom.__mod = function (P1,P2)
@@ -346,12 +346,21 @@ polynom.__tostring = function (P) return table.concat(P,' ') end
 --  @return String with traditional form of equation.
 polynom.str = function (P,var)
    var = var or 'x'
-   local res,pow,mult = {}, #P-1
-   res[1] = string.format('%s%s%s', tostring(P[1]), (pow > 0 and '*'..var or ''), (pow > 1 and '^'..pow or ''))
-   for i = 2,#P do
-      pow = #P-i
-      res[i] = string.format('%s%s%s', (P[i] > 0 and '+'..P[i] or tostring(P[i])), (pow > 0 and '*'..var or ''), (pow > 1 and '^'..pow or ''))
+   local res, pow = {}, #P-1
+   for i = 1,#P-1 do
+      local a,b = P[i], P[i+1]
+      if a ~= 0 then                                                      -- ignore coefficient = 0
+         if a ~= 1 then res[#res+1] = tostring(a)..'*' end                -- eliminate coefficient = 1
+         res[#res+1] = var                                                -- variable name
+         if pow > 1 then res[#res+1] = '^'..tostring(pow) end             -- eliminate power=1
+         res[#res+1] = ' '
+      end 
+      if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
+      pow = pow-1  
    end
+   local c = P[#P]
+   if type(c) ~= 'number' or c ~= 0 then res[#res+1] = tostring(c) end     -- free coefficient
+      
    return table.concat(res)
 end
 
@@ -435,7 +444,7 @@ polynom.fit = function (X,Y,ord)
       acc[k] = mk
    end
    for k = ord+2,#acc do acc[k] = nil end
-   -- add summs to the last "column"
+   -- add sums to the last "column"
    for i = 1,#acc do table.insert(acc[i],sY[i]) end
    -- solve
    local mat = polynom.lc_matrix
@@ -449,20 +458,6 @@ polynom.about[polynom.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for
 setmetatable(polynom, {__call = function (self, t) return polynom:init(Ver.move(t,1,#t,1,{})) end})
 polynom.Poly = 'Poly'
 polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
-
---[[
---- Polynomial serialization.
---    @param obj Polynomial object.
---    @return String, suitable for exchange.
-polynom.serialize = function (obj)
-   local s = {}
-   for i = 1, #obj do s[#s+1] = string.format("%a", obj[i]) end
-   s[#s+1] = "metatablename='Poly'"
-   s[#s+1] = "modulename='polynom'"
-   return string.format("{%s}", table.concat(s, ','))
-end
-polynom.about[polynom.serialize] = {"serialize(obj)", "Save polynomial internal representation.", help.OTHER}
-]]
 
 -- free memory if need
 if not LC_DIALOG then polynom.about = nil end
