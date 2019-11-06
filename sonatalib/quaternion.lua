@@ -1,12 +1,19 @@
---[[       sonatalib/quaternion.lua
+--[[      sonatalib/quaternion.lua
 
---- Operations with quaternions.
---  @author My Name
+--- Operations with unit quaternions.
+--
+--  Object structure:        </br>
+--  <code>{w,x,y,z} </code></br>
+--  where <i>w</i> is a real part, <i>x, y, z</i> are imaginary elements.
+--
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
 
            module 'quaternion'
 --]]
 
 --[[TEST
+
 -- initialize
 Quat = require 'sonatalib.quaternion'
 
@@ -241,12 +248,12 @@ quaternion.fromRot = function (M)
       return quaternion:new({(M[2][1]-M[1][2])/S, (M[1][3]+M[3][1])/S, (M[2][3]+M[3][2])/S, 0.25*S})
    end
 end
-quaternion.about[quaternion.fromRot] = {'fromRot(M)','Convert rotatoin matrix to quaternion.',ROTATION}
+quaternion.about[quaternion.fromRot] = {'fromRot(M)','Convert rotation matrix to quaternion.',ROTATION}
 
 --- Q1 + Q2
 --  @param Q1 First quaternion.
 --  @param Q2 Second quaternion.
---  @return Summ object.
+--  @return Sum object.
 quaternion.__add = function (Q1,Q2)
    Q1,Q2 = quaternion._args_(Q1,Q2)
    return quaternion:new({Q1[1]+Q2[1],Q1[2]+Q2[2],Q1[3]+Q2[3],Q1[4]+Q2[4]})
@@ -384,9 +391,9 @@ quaternion.slerp = function (Q1,Q2,t)
 end
 quaternion.about[quaternion.slerp] = {'slerp(Q1,Q2,t)','Spherical linear interpolation for part t.', help.OTHER}
 
---- Get equalent square matrix
+--- Get equivalent square matrix
 --  @param Q Quaternion.
---  @return Equalent matrix representation.
+--  @return Equivalent matrix representation.
 quaternion.mat = function (Q)
    return quaternion.lc_matrix:init(4,4,
       {{Q[1],-Q[2],-Q[3],-Q[4]},
@@ -394,7 +401,7 @@ quaternion.mat = function (Q)
        {Q[3], Q[4], Q[1],-Q[2]},
        {Q[4],-Q[3], Q[2], Q[1]}})
 end
-quaternion.about[quaternion.mat] = {'mat(Q)','Equalent matrix representation.',help.OTHER}
+quaternion.about[quaternion.mat] = {'mat(Q)','Equivalent matrix representation.',help.OTHER}
 
 -- simplify constructor call
 setmetatable(quaternion, 

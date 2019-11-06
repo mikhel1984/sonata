@@ -18,7 +18,7 @@
 -- import 'complex'
 Comp = require 'sonatalib.complex'
 
--- real and imag pars
+-- real and imaginary pars
 a = Comp(1,2)
 -- or just imaginary
 b = Comp(3)

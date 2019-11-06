@@ -322,7 +322,7 @@ stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution
 
 --- Poisson density function.
 --    @param x Value.
---    @param lam Mean patameter.
+--    @param lam Mean parameter.
 --    @return Density value.
 stat.poisspdf = function (x,lam)
    assert(lam >= 0, 'Wrong argument!')
@@ -374,7 +374,7 @@ stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density.", DISTRI
 --- F cumulative distribution
 --    @param x Value.
 --    @param v1 Numerator degree of freedom.
---    @param v2 Denomenator degree of freedom.
+--    @param v2 Denominator degree of freedom.
 --    @return Cumulative value.
 stat.fcdf = function (x,v1,v2)
    local tmp = v1*x/(v2+v1*x)
@@ -385,7 +385,7 @@ stat.about[stat.fcdf] = {"fcdf(x,v1,v2)", "F cumulative distribution.", DISTRIB}
 --- F density function.
 --    @param x Value.
 --    @param v1 Numerator degree of freedom.
---    @param v2 Denomenator degree of freedom.
+--    @param v2 Denominator degree of freedom.
 --    @return Density value.
 stat.fpdf = function (x,v1,v2)
    local tmp = (v1*x)^v1*v2^v2/(v1*x+v2)^(v1+v2)

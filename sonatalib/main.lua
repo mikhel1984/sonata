@@ -199,19 +199,6 @@ main.round = function (x,n)
 end
 about[main.round] = {'lc.round(x[,n=0])', 'Round value, define number of decimal digits.', lc_help.OTHER}
 
---[[
--- read object from its serialization
-main.deserialize = function (obj_str)
-   local f = assert(load("return " .. obj_str)) 
-   local o = f()
-   assert(_G[o.metatablename], "Module '" .. o.modulename .. "' is required")
-   setmetatable(o, _G[o.metatablename])
-   o.modulename = nil; o.metatablename = nil
-   return o
-end
-about[main.deserialize] = {"deserialize(obj_str)", "Transform string with serialization into Sonata LC object.", lc_help.OTHER}
-]]
-
 --- Print the contents of a Lua table.
 --  @param t Lua table (not necessarily).
 --  @param N Number of fields in a listing, default is 10.
@@ -266,7 +253,7 @@ end
 about[main.type] = {'lc.type(t)', 'Show type of the object.', lc_help.OTHER}
 
 --- Generate sequence of values.
---  @param from Begining of range (default is 1).
+--  @param from Beginning of range (default is 1).
 --  @param to End of range.
 --  @param step Step value (default is 1).
 --  @return Table with numbers.
@@ -293,7 +280,7 @@ about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.',
 
 --- Find function name
 --  @param dbg Structure with debug info.
---  @return String with funciton name.
+--  @return String with function name.
 main._getName_ = function (dbg)
    if dbg.what == 'C' then
       return dbg.name
@@ -366,7 +353,7 @@ main.evalTF = function (src,dst)
       print(res)
    end   
 end
-about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expressions in ##..##. Save resuto to dst file, if need.", lc_help.OTHER}
+about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expressions in ##..##. Save result to dst file, if need.", lc_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
@@ -562,7 +549,7 @@ main._args_.text = function ()
       "",
       "USAGE:",
       "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
-      "(option '-i' could be used for working in native Lua interpretator)",
+      "(option '-i' could be used for working in native Lua interpreter)",
       "",
       "FLAGS:"
    }

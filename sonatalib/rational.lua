@@ -1,6 +1,6 @@
 --[[      sonatalib/rational.lua 
 
---- Rational number operatons support.
+--- Rational number operations support.
 --  
 --  Object structure:                   </br>
 --  <code>{numerator,denominator}</code></br>

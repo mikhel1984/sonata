@@ -108,7 +108,7 @@ about = help:new("Operations with arbitrary long integers."),
 }
 
 bigint.__index = bigint
--- the radix
+-- the basis
 bigint.BASE = 10        
 
 --- Create new object, set metatable.

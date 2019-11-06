@@ -121,7 +121,7 @@ ans = Mat.V {1,2,3}              --> Mat {{1},{2},{3}}
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
 ans = g({2,-1},{2,3})           --> Mat {{5,6},{8,9}}
 
--- eualedian norm
+-- euclidean norm
 ans = Mat.V({1,2,3}):norm()     --3> math.sqrt(14)
 
 -- random matrix
@@ -447,7 +447,7 @@ matrix.T = matrix.transpose
 --- M1 + M2
 --  @param M1 First matrix or number.
 --  @param M2 Second matrix or number.
---  @return Summ matrix.
+--  @return Sum matrix.
 matrix.__add = function (M1,M2)
    M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
    M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
@@ -1122,7 +1122,7 @@ matrix.reshape = function (M,nRows,nCols)
    nCols = nCols or 1
    assert(nRows > 0 and nCols > 0)
    local res = matrix:init(nRows,nCols,{})
-   local newR, newC = 1, 1    -- temporary indeces
+   local newR, newC = 1, 1    -- temporary indices
    for r = 1, M.rows do
       local Mr = M[r]
       for c = 1, M.cols do

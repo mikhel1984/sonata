@@ -190,7 +190,7 @@ polynom.copy = function (P) return polynom:init(Ver.move(P,1,#P,1,{})) end
 polynom.about[polynom.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
 
 --- P1 + P2
---  @param P1 First polinomial or number.
+--  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Sum.
 polynom.__add = function (P1,P2)
@@ -206,8 +206,8 @@ polynom.__add = function (P1,P2)
 end
 
 --- -P
---  @param P Polinomial object.
---  @return Polinomial with inverted signs.
+--  @param P Polynomial object.
+--  @return Polynomial with inverted signs.
 polynom.__unm = function (P)
    local res = {}
    for i = 1, #P do res[i] = -P[i] end
@@ -215,13 +215,13 @@ polynom.__unm = function (P)
 end
 
 --- P1 - P2
---  @param P1 First polinomial or number.
+--  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Difference.
 polynom.__sub = function (P1,P2) return reduce(P1 + (-P2)) end
 
 --- P1 * P2
---  @param P1 First polinomial or number.
+--  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Product.
 polynom.__mul = function (P1,P2)
@@ -247,7 +247,7 @@ polynom.__div = function (P1,P2)
 end
 
 --- P1 % P2
---  @param P1 First polinomial or number.
+--  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Rest.
 polynom.__mod = function (P1,P2)
@@ -444,7 +444,7 @@ polynom.fit = function (X,Y,ord)
       acc[k] = mk
    end
    for k = ord+2,#acc do acc[k] = nil end
-   -- add summs to the last "column"
+   -- add sums to the last "column"
    for i = 1,#acc do table.insert(acc[i],sY[i]) end
    -- solve
    local mat = polynom.lc_matrix

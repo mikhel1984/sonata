@@ -188,7 +188,7 @@ units.prefix = {
 }
 units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
---- Get common part and units._diff_erence between 2 strings.
+--- Get common part and difference between 2 strings.
 --  @param str1 First string.
 --  @param str2 Second string.
 --  @return First prefix, second prefix, common part.

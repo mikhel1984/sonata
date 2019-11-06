@@ -6,7 +6,7 @@
 --  Object structure:                     </br>
 --  <code>{a1...an, b1...bn, c1...cn, ...,</br> 
 --  array_size, index_coefficients}</code></br>
---  i.e. all elements of the array are writen sequentially, row by row. Position of one element is calculated as
+--  i.e. all elements of the array are written sequentially, row by row. Position of one element is calculated as
 --  <code>C1*n1+C2*n2+...+Ck*nk</code>
 --  where <code>{n1,n2,...nk}<code> - index, <code>C1...Ck</code> - size based coefficients.
 --
@@ -50,7 +50,7 @@ ans = g:isEqual(Arr{2,3,2})            --> true
 
 -- concatenate along the 3-rd axes
 d = Arr.concat(b,b,3)
--- size for given dimention
+-- size for given dimension
 ans = d:dim()[3]                       --> 2
 
 -- apply function of several arguments
@@ -102,7 +102,7 @@ _mul_ = function (x,y) return x*y end,
 _div_ = function (x,y) return x/y end,
 _pow_ = function (x,y) return x^y end,
 -- description
-about = help:new("Manipulations with arrays of elements. Indeces have form of tables. Indexation from 1.")
+about = help:new("Manipulations with arrays of elements. Indices have form of tables. Indexation from 1.")
 }
 -- metamethods
 array.__index = array
@@ -256,13 +256,13 @@ array.about[array.map] = {"map(A,func)", "Apply function of 1 argument. Return n
 --- A1 + A2
 --  @param A1 First array.
 --  @param A2 Second array.
---  @return Array with elementwise sum.
+--  @return Array with element wise sum.
 array.__add = function (A1, A2) return array._apply2_(array._add_, A1, A2) end
 
 --- A1 - A2
 --  @param A1 First array.
 --  @param A2 Second array.
---  @return Array with elementwise difference.
+--  @return Array with element wise difference.
 array.__sub = function (A1, A2) return array._apply2_(array._sub_, A1, A2) end
 
 --- -A

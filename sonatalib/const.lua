@@ -122,7 +122,7 @@ const.add = function (name,val)
 end
 const.about[const.add] = {'add(name,value)','Create new constant.'}
 
---- Remove exixting constant.
+--- Remove existing constant.
 --  @param name Name of constant.
 const.remove = function (name)
    if _user_[name] then      

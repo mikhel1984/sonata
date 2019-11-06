@@ -80,7 +80,7 @@ local function prepare(k,v)
 end
 
 --- Combine all options as keys
---  @param t Table with parametrs.
+--  @param t Table with parameters.
 --  @return List of options.
 local function collect(t) 
    local res = {}
@@ -206,7 +206,7 @@ end
 
 --- Create new object, set metatable.
 --  @param self Pointer to parent table.
---  @param o Talbe with parameters or nil.
+--  @param o Table with parameters or nil.
 --  @return New 'gnuplot' object.
 gnuplot.new = function (self,o) return setmetatable(o or {}, self) end
 

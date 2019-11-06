@@ -334,11 +334,11 @@ struct.Heap.__index = struct.Heap
 
 --- Heap constructor.
 --  @param self Heap object.
---  @param less Comparision function.
+--  @param less Comparison function.
 --  @return New heap object.
 struct.Heap.new = function (self, less)
    local o = {N=0}
-   -- default function for comparision, can be changed
+   -- default function for comparison, can be changed
    o.less = less or function (a,b) return a < b end
    return setmetatable(o, self)
 end

@@ -186,8 +186,8 @@ help.new = function (self,str)
 end
 
 --- Create list of functions, sort by module and category.
---  @param tbl Table of paris 'function - description'.
---  @return Groupped descriptions.
+--  @param tbl Table of pairs 'function - description'.
+--  @return Grouped descriptions.
 help._funcList_ = function (tbl)
    local res = {}
    for k, v in pairs(tbl) do
@@ -240,7 +240,7 @@ help.print = function (self,fn)
    end -- if
 end
 
---- Auxilary funciton, which define colors for text elements.
+--- Auxiliary function, which define colors for text elements.
 --  @param bUse Boolean flag of usage.
 help.useColors = function (bUse)
    if bUse then
