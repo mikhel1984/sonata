@@ -222,7 +222,7 @@ quaternion.toRot = function (Q)
    local s = 1 / quaternion._norm_(Q)
    local w,i,j,k = Q[1],Q[2],Q[3],Q[4]
    return mat {
-      {1-2*s*(j*j+k*k), 2*s*(i*j-k*w), 2*s*(i*j+j*w)},
+      {1-2*s*(j*j+k*k), 2*s*(i*j-k*w), 2*s*(i*k+j*w)},
       {2*s*(i*j+k*w), 1-2*s*(i*i+k*k), 2*s*(j*k-i*w)},
       {2*s*(i*k-j*w), 2*s*(j*k+i*w), 1-2*s*(i*i+j*j)}}
 end
