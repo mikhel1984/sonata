@@ -18,8 +18,8 @@
 
 --=====================  CODE  ========================
 
--- Version
-lc_version = '0.9.16'
+-- Environment
+lc_local = { version = '0.9.16' }
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -28,8 +28,6 @@ end
 
 -- Table for program variables. Import base functions 
 lc = require('sonatalib.main')
--- Environment
-lc_local = {}
 
 -- Text colors 
 lc_help.useColors(LC_USE_COLOR) 
@@ -64,7 +62,7 @@ import = {
    units      = "Unit",
 }
 
--- Update help information about imported modules 
+-- Update help information about the imported modules 
 function lc_local.import_state_update()
    local m = {lc_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
    for k,v in pairs(import) do
@@ -78,7 +76,8 @@ end
 -- Import actions 
 function lc_local.doimport(tbl,name)
    local var = tbl[name]
-   if not var then
+   if not var then     
+      -- try alias
       if not lc_local.alias then 
          lc_local.alias = {}
 	 for k,v in pairs(import) do lc_local.alias[v] = k end
@@ -89,7 +88,7 @@ function lc_local.doimport(tbl,name)
    if not _G[var] then
       local lib = require('sonatalib.'..name)
       _G[var] = lib
-      -- add description if need
+      -- add description 
       if lib.about then about:add(lib.about, var) end
       -- do additional actions
       if lib.onImport then lib.onImport() end
@@ -104,12 +103,16 @@ setmetatable(import,
   -- load modules
   __call = function (self, name) 
     if not name then
+       -- show loaded modules
        print(lc_local.import_state_update())
     elseif name == 'all' then 
+       -- load all modules
        for k,v in pairs(self) do lc_local.doimport(self,k) end    
     elseif type(name) == 'table' then
+       -- load group of modules
        for _,v in ipairs(name) do import(v) end
     else
+       -- load module
        local var, nm = lc_local.doimport(self,name)
        if LC_DIALOG then
           io.write(lc_help.CHELP)
@@ -160,7 +163,7 @@ lc_local.quit = quit
 
 -- Run! 
 io.write(lc_help.CMAIN)
-print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --==== "..lc_version.." ====--        # #\n")
+print("\n   # #       --===== Sonata LC =====--       # #\n    # #         --==== "..lc_local.version.." ====--        # #\n")
 io.write(lc_help.CHELP)
 print(about:get('intro'), lc_help.CRESET)
 

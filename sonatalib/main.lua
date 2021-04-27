@@ -560,7 +560,7 @@ main._args_.text = function ()
       end
    end
    txt[#txt+1] = "\t No flag   - Evaluate file(s)."
-   txt[#txt+1] = "\nVERSION: "..lc_version
+   txt[#txt+1] = "\nVERSION: "..lc_local.version
    txt[#txt+1] = ""
    local modules = {}
    for k in pairs(import) do modules[#modules+1] = k end
