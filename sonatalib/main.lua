@@ -173,12 +173,11 @@ about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
 randn = function () 
   -- use Box-Muller transform
   local u,v,s
-  while true do  -- use repeat/until
+  repeat
     u = 2*math.random()-1
     v = 2*math.random()-1
     s = u*u + v*v
-    if s <= 1 and s > 0 then break end
-  end
+  until s <= 1 and s > 0.0
   return u * math.sqrt(-2*math.log(s)/s)
 end
 about[randn] = {"randn()", "Normal distributed random value with 0 mean and variance 1."}
