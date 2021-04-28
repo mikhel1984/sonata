@@ -20,9 +20,9 @@ versions.isInteger = function (x)
       if type(x) == 'string' then x = tonumber(x) end
       if not x then return false end
       local v,p = math.modf(x) 
-      return p == 0.0 and v <= 1E9
+      return p == 0.0 and v >= -1E9 and v <= 1E9
    end
-   
+
 -- Return integer number or nil.
 versions.toInteger = function (x) 
       if type(x) == 'string' then x = tonumber(x) end
@@ -32,20 +32,24 @@ versions.toInteger = function (x)
 
 -- Move elements to new position (and table).
 versions.move = function (src,sfrom,sto,dfrom,dest)
-      if dest then
-         local k = 0
-         for i = sfrom,sto do dest[dfrom+k] = src[i]; k=k+1 end
+      if dest and dest ~= src then
+         for i = sfrom, sto, 1 do 
+            dest[dfrom] = src[i]
+            dfrom = dfrom + 1
+         end
       else
-         local tmp = versions.move(src,sfrom,sto,sfrom,{})
-	 local dest = versions.move(tmp,sfrom,sto,dfrom,src)
-	 if dfrom > sfrom then 
-	    for i = sfrom,dfrom-1 do dest[i] = nil end
-	 else
-	    for i = dfrom+sto-sfrom+1,sto do dest[i] = nil end
-	 end
+         local acc = versions.move(src,sfrom,sto,sfrom,{})
+         local dest = versions.move(acc,sfrom,sto,dfrom,src)
+         -- clear cells
+         if dfrom > sfrom then 
+            for i = sfrom, dfrom-1 do dest[i] = nil end
+         else
+            for i = dfrom+sto-sfrom+1, sto do dest[i] = nil end
+         end
       end
       return dest
    end
+
 -- Execute string code.
 versions.loadStr = loadstring
 -- Check type of the number.

@@ -177,7 +177,7 @@ randn = function ()
       u = 2*math.random()-1
       v = 2*math.random()-1
       s = u*u + v*v
-      if s > 0 and s <= 1 then break end
+      if s > 0 and s <= 1 then break end  -- s is always ~= 0 ?
    end
    return u * math.sqrt(-2*math.log(s)/s)
 end
