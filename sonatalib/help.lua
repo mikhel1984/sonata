@@ -10,7 +10,7 @@
 
 --[[    == About help system ==
 
-about = help:new("Module description*)    -- create new help object
+about = help:new("Module description*)  -- create new help object
 
 Each function description is represented as table:
 about[function] =
@@ -47,7 +47,7 @@ local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
 local _MAIN_ = '__module__'
 
--- English version of some interface strings.
+-- English version of some interface strings
 local eng = {
 intro = [[
 ------- help([function]) = get help -------------
@@ -86,9 +86,10 @@ local function helpLines(module, alias, lng)
   -- choose existing data
   local lng_t = lng and lng[alias] or {}
   -- write to table
-  local res = {}
-  res[#res+1] = string.format('%s %s %s', string.rep('-',10), mName, string.rep('-',10))
-  res[#res+1] = string.format('%s = {', alias)
+  local res = {
+    string.format('%s %s %s', string.rep('-',10), mName, string.rep('-',10)),
+    string.format('%s = {', alias)
+  }
   -- for all descriptions
   for _, elt in pairs(m.about) do
     -- save
@@ -120,19 +121,13 @@ end
 local function docLines(module, alias, lng)
   local m = require('sonatalib.'..module)
   local lng_t = lng and lng[alias] or {}
-  -- remove 'import' from 'main'
-  if module == 'main' then
-    for k,v in pairs(m.about) do
-      if v[TITLE] == 'import' then m.about[k] = nil; break end
-    end
-  end
   -- collect
   local fn, description = {}
   for _, elt in pairs(m.about) do
     if elt.link then
       description = lng_t[_MAIN_] or elt[MAIN]
     else
-      local title = string.format('%s', elt[TITLE])
+      local title = elt[TITLE]
       local desc = lng_t[title] or elt[DESCRIPTION]
       fn[#fn+1] = {title, string.gsub(desc, '\n', '<br>\n')}
     end
@@ -140,13 +135,15 @@ local function docLines(module, alias, lng)
   -- sort
   table.sort(fn, function (a,b) return a[1] < b[1] end)
   -- format
-  for i = 1,#fn do
-    fn[i] = string.format("<b>%s</b> - %s<br>", fn[i][1], fn[i][2])
+  for i,v in ipairs(fn) do
+    fn[i] = string.format("<b>%s</b> - %s<br>", v[1], v[2])
   end
-  
-  return table.concat(fn, "\n"), description  
+  return table.concat(fn, "\n"), description
 end
 
+--- Prepare module example for html generation.
+--  @param str Example text.
+--  @return String representation with tags.
 local function docExample (str)
   if not str then return nil end
   return string.format('<pre class="example">%s</pre>', str)
