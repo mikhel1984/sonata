@@ -2,7 +2,7 @@
 
 --- Routines for working with files and text.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'files'
 --]]
@@ -70,7 +70,9 @@ files.split = function (str, delim)
   local i,j,k = 1,1,0
   -- return iterator
   return function ()
-    if not str or i > #str then return nil end
+    if not str or i > #str then 
+      return nil 
+    end
     j,k = string.find(str, delim, k+1)
     local res
     if j then
@@ -90,7 +92,7 @@ files.about[files.split] = {"split(str,delim)", "Return iterator over substrings
 --  @param fName File name.
 --  @param delim Delimiter, default is coma.
 files.dsvWrite = function (fName, tbl, delim)
-  local f = assert(io.open(fName,'w'), "Can't create file "..tostring(fName))
+  local f = assert(io.open(fName,'w'))
   delim = delim or ','
   for _,v in ipairs(tbl) do
     if type(v) == 'table' then v = table.concat(v,delim) end
@@ -106,19 +108,19 @@ files.about[files.dsvWrite] = {"dsvWrite(fname,tbl[,delim=','])", "Save Lua tabl
 --  @param delim Delimiter, default is coma.
 --  @return Lua table with data.
 files.dsvRead = function (fName, delim)
-  local f = assert(io.open(fName, 'r'), "Can't open file "..fName)
+  local f = assert(io.open(fName, 'r'))
   delim = delim or ','
   local res = {}
   for s in f:lines('l') do
     -- read data
     s = string.match(s,'^%s*(.*)%s*$')
-    local i,j = #res+1,1
     if #s > 0 then
-      res[i] = {}
+      local tmp = {}
       -- read string elements
       for p in files.split(s,delim) do
-        res[i][j], j = (tonumber(p) or p), j+1
+        tmp[#tmp+1] = tonumber(p) or p
       end
+      res[#res+1] = tmp
     end
   end
   f:close()
