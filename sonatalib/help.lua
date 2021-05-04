@@ -176,7 +176,7 @@ help.__index = help
 --  @param str Module description.
 --  @return Help object.
 help.new = function (self,str)
-  assert(type(str) == 'string', "Constructor must include description!")
+  assert(type(str) == 'string', "Constructor must have a description!")
   local o = {}
   o[o] = {link=o, str}      -- save link to itself
   return setmetatable(o, self)
@@ -208,12 +208,14 @@ help.print = function (self,fn)
   if fn then
     -- expected module or function description
     local v = self[fn]
-    if not v then print('No help for :',fn); return end
+    if not v then 
+      return print('No help for :',fn) 
+    end
     if v.link then
       -- module common description
-      print('\n'..v[MAIN], '\n')
+      io.write('\n',v[MAIN],'\n\n')
       -- details
-      return v.link:print()
+      v.link:print()
     else
       -- function description
       print(string.format("  :%s\n%s", v[TITLE], v[DESCRIPTION]))
@@ -222,17 +224,14 @@ help.print = function (self,fn)
     -- sort functions
     local lst = help._funcList_(self)
     for mod, t in pairs(lst) do             -- for each module
-      io.write(help.CBOLD)
-      print(string.format("\t%s", mod))
-      io.write(help.CNBOLD)
+      io.write(help.CBOLD, '\t', mod, '\n', help.CNBOLD)
       for cat, n in pairs(t) do            -- for each category
-        print(string.format("  /%s", cat))
+        io.write("  /", cat, '\n')
         for i, v in ipairs(n) do           -- for each function
-          io.write(v, (i ~= #n and ', ' or ''))
+          io.write(v, (i ~= #n and ', ' or '\n'))
         end
-        print()             -- new line
-      end -- for
-      print()
+      end 
+      print()   -- add empty line
     end -- for
   end -- if
 end
