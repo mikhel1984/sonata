@@ -1,6 +1,6 @@
 #!/usr/local/bin/lua
 -- Lua based calculator 
--- This file is a part of 'sonatalib' collection, 2017-2019.
+-- This file is a part of 'sonatalib' collection, 2021.
 
 --================= CONFIGURATION ====================
 
@@ -76,7 +76,7 @@ end
 -- Import actions 
 function lc_local.doimport(tbl,name)
   local var = tbl[name]
-  if not var then    
+  if not var then
     -- try alias
     if not lc_local.alias then 
       lc_local.alias = {}
@@ -161,9 +161,10 @@ lc_local.help = help
 lc_local.quit = quit
 
 -- Run! 
-io.write(lc_help.CMAIN)
-print("\n  # #     --===== Sonata LC =====--     # #\n   # #      --==== "..lc_local.version.." ====--      # #\n")
-io.write(lc_help.CHELP)
+io.write(lc_help.CMAIN, '\n',
+"  # #     --===== Sonata LC =====--     # #\n",
+"   # #      --==== ", lc_local.version, " ====--      # #\n\n",
+lc_help.CHELP)
 print(about:get('intro'), lc_help.CRESET)
 
 -- Import default modules

@@ -3,7 +3,7 @@
 --- Function description management.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'help'
 --]]
@@ -260,7 +260,7 @@ help.add = function (self,tbl,nm)
   local lng = mt.locale and mt.locale[nm]
   -- prepare new 
   for k, v in pairs(tbl) do 
-    if not v.link then v[MODULE] = nm end    -- function description doesn't contain 'link' element
+    if not v.link then v[MODULE] = nm end    -- no 'link' element in the function description
     if lng then
       -- set localization
       if v.link then
@@ -270,9 +270,9 @@ help.add = function (self,tbl,nm)
         -- details
         v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
         v[CATEGORY] = self:get(v[CATEGORY])
-      end -- if
-    end 
-    self[k] = v                      -- add to base description table 
+      end 
+    end -- lng
+    self[k] = v                       -- add to the base table 
   end
   if lng then mt.locale[nm] = nil end -- free memory
 end
@@ -286,8 +286,8 @@ help.localization = function (self,fName)
   help.lc_files = help.lc_files or require('sonatalib.files')
   local lng = help.lc_files.tblImport(fName)
   if lng then
-    getmetatable(self).locale = lng
-    -- update functions in calc.lua
+    getmetatable(self).locale = lng   -- save translation
+    -- update functions in main.lua
     local lc = lng.Main
     for k,v in pairs(self) do
       if v.link then
@@ -300,13 +300,13 @@ help.localization = function (self,fName)
       end
     end
   else
-    print("File " .. fName .. " wasn't found.")
+    io.write("File ", fName, " wasn't found.\n")
   end
 end
 
 --- Prepare and save localization data.
---   @param fName Language name, for example 'en' or 'it'.
---   @param tModules Table with the list of existing modules.
+--  @param fName Language name, for example 'en' or 'it'.
+--  @param tModules Table with the list of existing modules.
 help.prepare = function(fName, tModules)
   fName = string.format('%s%s%s.lng', LOCALE, help.SEP, fName)
   -- call method of the 'files' module
@@ -318,8 +318,8 @@ help.prepare = function(fName, tModules)
   f:write(string.rep('-',10), string.format(' %s ', fName), string.rep('-',10), '\n')
   f:write('{\n')
   -- language and authors
-  f:write((lng and lng.language) and string.format("language =\t '%s',", lng.language) or "-- language =\t 'English',", '\n')
-  f:write((lng and lng.authors) and string.format("authors = [[%s]],", lng.authors) or '-- authors = [[Your Name]],', '\n')
+  f:write(string.format("language = '%s',", lng and lng.language or 'English'), '\n')
+  f:write(string.format("authors  = [[%s]],", lng and lng.authors or 'Your Name'), '\n')
   -- dialog elements
   eng2about()
   f:write(helpLines(eng,'Dialog',lng))
@@ -331,7 +331,7 @@ help.prepare = function(fName, tModules)
   end
   f:write('}')
   f:close()
-  print('File '..fName..' is saved!')
+  io.write('File ', fName, ' is saved!\n')
 end
 
 --- Get translated string if possible.
@@ -349,15 +349,15 @@ end
 --  @param alias Module short name.
 --  @param description Short module description.
 help.newModule = function (mName, alias, description)
-  if not (mName and alias) then
-    error('Both module name and alias are expected!')
+  if not (mName and alias) then 
+    return print('Expected: --new "name" "Alias" ["description"]')
   end
   local fName = string.format('%s%s%s.lua', LIB, help.SEP, mName)
   -- check existence
   local f = io.open(fName) 
   if f then 
     f:close()
-    print('File '..fName..' is already exists!'); return
+    return print('File '..fName..' is already exists!')
   end
   -- write new file
   description = description or "The module of your dream!"
@@ -370,16 +370,16 @@ help.newModule = function (mName, alias, description)
 	WORD4 'WORD2'
 --]]
 
--- Define here your tests, save results to 'ans', use --> for equality and --~ for estimation.
+-- Define here your tests, save results to 'ans', use --> for the strict equality and --2> for the two digit precision (for example).
 --[[TEST
 
 WORD3 = require 'sonatalib.WORD2'
 
 -- example
 a = WORD3()
-ans = a.type   --> 'WORD2'
+ans = a.type   -->  'WORD2'
 
-ans = math.pi  --~ 355/113
+ans = math.pi  --2> 355/113
 
 --]]
 
@@ -439,13 +439,13 @@ return WORD2
 --TODO: write new functions
 ]=]
   -- correct text
-  txt = string.gsub(txt, '3L', '---')        -- protect from creating failed documentation
+  txt = string.gsub(txt, '3L', '---')     -- protect from creating failed documentation
   txt = string.gsub(txt, '(WORD%d)', {WORD1=fName, WORD2=mName, WORD3=alias, WORD4='module', WORD5=description})
   -- save
   f = io.open(fName, 'w')
   f:write(txt)
   f:close()
-  print('File '..fName..' is written.')
+  io.write('File ', fName, ' is written.\n')
 end
 
 --- Generate html file with documentation.
@@ -516,14 +516,14 @@ help.generateDoc = function (locName, tModules)
     res[#res+1] = '<a href="#Top">Top</a></div>'
   end
 
-  res[#res+1] = '<div><p align="center"><i>2017-2019, Stanislav Mikhel</i></p></div>'
+  res[#res+1] = '<div><p align="center"><i>2021, Stanislav Mikhel</i></p></div>'
   res[#res+1] = '</body></html>'
 
   -- save
   local f = io.open('help.html','w')
   f:write(table.concat(res,'\n'))
   f:close()
-  print("File 'help.html' is written.")
+  io.write("File 'help.html' is written.\n")
 end
 
 return help
