@@ -458,6 +458,11 @@ end
 -- save link to help info
 main.about = about
 
+main._updateHelp = function (fNew, fOld)
+  main.about[fNew] = main.about[fOld]
+  main.about[fOld] = nil
+end
+
 -- command line arguments of Sonata LC and their processing
 main._args_ = {
 

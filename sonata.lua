@@ -162,8 +162,8 @@ lc_local.quit = quit
 
 -- Run! 
 io.write(lc_help.CMAIN, '\n',
-"  # #     --===== Sonata LC =====--     # #\n",
-"   # #      --==== ", lc_local.version, " ====--      # #\n\n",
+"   # #       --===== Sonata LC =====--       # #\n",
+"    # #        --==== ", lc_local.version, " ====--        # #\n\n",
 lc_help.CHELP)
 print(about:get('intro'), lc_help.CRESET)
 
