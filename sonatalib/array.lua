@@ -3,7 +3,7 @@
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possible.
 --
---  Object structure:              </br>
+--  Object structure:</br>
 --  <code>{a1...an, b1...bn, c1...cn, ...,</br> 
 --  array_size, index_coefficients}</code></br>
 --  i.e. all elements of the array are written sequentially, row by row. Position of one element is calculated as
@@ -11,7 +11,7 @@
 --  where <code>{n1,n2,...nk}<code> - index, <code>C1...Ck</code> - size based coefficients.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'array'
 --]]
@@ -71,7 +71,14 @@ ans = f:get{1,1,1}              --> b:get{1,1,1}*10
 print(a)
 
 -- iterate over array 
-for ind, val in a4:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
+-- prepare 
+g = Arr {2,2}
+g:set({1,1}, 1)
+g:set({2,1}, 2)
+g:set({1,2}, 3)
+g:set({2,2}, 4)
+-- show
+for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 
 --]]
 
@@ -122,7 +129,7 @@ end
 --- Check index correctness.
 --  @param A Array.
 --  @param tInd Index to check.
---  @return True if the index is correct for current array.
+--  @return True if the index is correct for the current array.
 array._isIndex_ = function (A, tInd)
   if #A.size ~= #tInd then return false end
   for i = 1,#tInd do 
@@ -135,7 +142,7 @@ end
 --  @param A Array.
 --  @param tInd Element index.
 --  @return Position of the element in the array table.
-array._indexConvert_ = function (A, tInd)
+array._pos_ = function (A, tInd)
   local res, k = tInd[1], A.k
   for i = 2,#tInd do 
     res = res + (tInd[i]-1) * k[i]
@@ -159,7 +166,7 @@ array.about[array.capacity] = {"capacity(A)", "Maximal number of elements in the
 --  @return Element or error if index is wrong.
 array.get = function (A, tInd)
   if not array._isIndex_(A, tInd) then error("Wrong index!") end
-  return A[array._indexConvert_(A, tInd)]
+  return A[array._pos_(A, tInd)]
 end
 array.about[array.get] = {"get(A,tInd)", "Get array element."}
 
@@ -169,7 +176,7 @@ array.about[array.get] = {"get(A,tInd)", "Get array element."}
 --  @param val New value.
 array.set = function (A, tInd, val)
   if not array._isIndex_(A, tInd) then error("Wrong index!") end
-  A[array._indexConvert_(A,tInd)] = val 
+  A[array._pos_(A,tInd)] = val 
 end
 array.about[array.set] = {"set(A,tInd,val)", "Set value to the array."}
 
@@ -214,21 +221,20 @@ array._apply2_ = function (func, A1, A2)
 end
 
 --- Apply function of several arguments.
---  @param func Function with 2 arguments.
+--  @param func Function with N arguments.
 --  @param ... List of arrays.
 --  @return New array where each element is result of the function evaluation.
 array.apply = function (func, ...)
   local arg = {...}
   -- check arguments
-  local eq = array.isEqual
+  local eq, a1 = array.isEqual, arg[1]
   for i = 2,#arg do
-    if not eq(arg[i],arg[i-1]) then error("Not compatible arrays!") end
+    if not eq(arg[i], a1) then error("Not compatible arrays!") end
   end
   -- prepare new
-  local tmp, v = arg[1], {}
-  local res = array:new(Ver.move(tmp.size, 1, #tmp.size, 1, {}))
-  local upack = Ver.unpack
-  for i = 1, array.capacity(tmp) do
+  local v, upack = {}, Ver.unpack
+  local res = array:new(Ver.move(a1.size, 1, #a1.size, 1, {}))
+  for i = 1, array.capacity(a1) do
     -- collect
     for k = 1,#arg do v[k] = arg[k][i] or 0 end
     -- evaluate
@@ -247,7 +253,7 @@ array.map = function (A, func)
   local res, v = array:new(Ver.move(A.size, 1, #A.size, 1, {}))
   for i = 1, array.capacity(A) do
     v = func(A[i] or 0)                   -- elements can be empty
-    if v ~= 0 then res[i] = v end            -- save nonzero values
+    if v ~= 0 then res[i] = v end         -- save nonzero values
   end
   return res
 end
@@ -296,8 +302,7 @@ array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b"
 --  @return Array of the given size with random numbers from 0 to 1.
 array.rand = function (tSize)
   local arr = array:new(tSize)
-  local rnd = math.random
-  for i = 1, array.capacity(arr) do arr[i] = rnd() end
+  for i = 1, array.capacity(arr) do arr[i] = math.random() end
   return arr
 end
 array.about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
@@ -324,7 +329,7 @@ array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
 --  @param A Array object.
 --  @return Table with array size.
 array.dim = function (A) return Ver.move(A.size, 1, #A.size, 1, {}) end
-array.about[array.dim] = {"dim(A)", "Return size of array."}
+array.about[array.dim] = {"dim(A)", "Return size of the array."}
 
 --- Get part of array between two indexes.
 --  @param A Array object.
@@ -341,12 +346,12 @@ array.sub = function (A, tInd1, tInd2)
   local newsize, ind = {}, {}
   for i = 1, #tInd1 do 
     newsize[i] = tInd2[i] - tInd1[i] + 1
-    ind[i]    = 0
+    ind[i]     = 0
   end 
   local res = array:new(newsize)
   -- fill
   local K, S = res.k, res.size
-  local conv = array._indexConvert_
+  local conv = array._pos_
   for count = 1, array.capacity(res) do
     -- calculate new temporary index
     for i = 1, #ind do 
@@ -378,7 +383,7 @@ array.concat = function (A1, A2, nAxis)
   local res, ind1, ind2 = array:new(newsize), {}, {}
   local edge = A1.size[nAxis]
   local K, S = res.k, res.size
-  local conv = array._indexConvert_
+  local conv = array._pos_
   for count = 1, array.capacity(res) do
     -- prepare index
     for i = 1, #newsize do
@@ -413,20 +418,19 @@ setmetatable(array, {__call = function (self, tSize)
   return array:new(tSize) 
 end})
 array.Arr = 'Arr'
-array.about[array.Arr] = {"Arr(tSize)", "Create empty array with given size.", help.NEW}
+array.about[array.Arr] = {"Arr(tSize)", "Create empty array with the given size.", help.NEW}
 
 --- Iterator across the array.
 --  @param A Array object.
 --  @return Iterator which calculate index of the next array element and the element itself, <code>nil</code> at the end.
 array.next = function (A)
-  local a = array:new(Ver.move(A.size, 1, #A.size, 1, {})) -- copy size
-  local count, S, K, len = 0, a.size, a.k, array.capacity(a)
+  local count, S, K, len = 0, A.size, A.k, array.capacity(A)
   return function ()
     if count == len then return nil, nil end
     local res = {}
     for i = 1, #S do res[i] = math.modf(count/K[i]) % S[i]+1 end
     count = count + 1
-    return res, A[array._indexConvert_(A,res)]
+    return res, A[count]
   end
 end
 array.about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}
@@ -438,3 +442,4 @@ return array
 
 --=======================
 --TODO: slice to matrix (square table)
+--TODO: make row-by-row indexation
