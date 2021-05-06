@@ -68,7 +68,7 @@ test._markTest_ = function (str, res, time)
   local MIN, FULL = 30, 34
   local s = string.match(str, '%C+')
   s = string.match(s, '^(.-)%s*$')
-  if #s > MIN then s = string.sub(s, MIN) end
+  if #s > MIN then s = string.sub(s, 1, MIN) end
   local rest = string.rep('.', (FULL-#s))
   return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'Failed'), time)
 end
