@@ -217,7 +217,7 @@ bigint._sub_ = function (B1,B2)
   end
   local acc, base = {}, 10
   -- calculate sub
-  for i = 1, #p[VALUE] do
+  for i = 1, #p[2] do
     local pi = string.byte(p[2], i) or ZERO
     local qi = string.byte(q[2], i) or ZERO
     acc[i] = (acc[i] or 0) + pi - qi   -- (pi-zero)-(qi-zero)
@@ -295,9 +295,9 @@ bigint.__mul = function (B1, B2)
   B1,B2 = bigint._args_(B1,B2)
   local sum = {}
   -- get products  
-  for i = 1, #B1[VALUE] do
+  for i = 1, #B1[2] do
     local ai = string.byte(B1[2], i) - ZERO
-    for j = 1, #B2[VALUE] do
+    for j = 1, #B2[2] do
       local pos = i+j-1
       sum[pos] = (sum[pos] or 0) + ai*(string.byte(B2[2],j)-ZERO)
     end
@@ -357,11 +357,11 @@ bigint.__eq = bigint.eq
 bigint.__lt = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
   if B1[1] < B2[1] then return true end
-  if #B1[VALUE] == #B2[VALUE] then   -- equal length
+  if #B1[2] == #B2[2] then   -- equal length
     local va, vb = string.reverse(B1[2]), string.reverse(B2[2])
     return (B1[1] > 0 and va < vb) or (B1[1] < 0 and va > vb)
   else                              -- different length
-    return (B1[1] > 0 and #B1[VALUE] < #B2[VALUE]) or (B1[1] < 0 and #B1[VALUE] > #B2[VALUE]) 
+    return (B1[1] > 0 and #B1[2] < #B2[2]) or (B1[1] < 0 and #B1[2] > #B2[2]) 
   end
 end
 
@@ -377,7 +377,7 @@ end
 --- #a 
 --  @param B Bigint object.
 --  @return Number of digits.
-bigint.size = function (B) return #B[VALUE] end
+bigint.size = function (B) return #B[2] end
 bigint.about[bigint.size] = {"size(B)", "Number of digits, the same as #B.", help.OTHER}
 bigint.__len = bigint.size
 
@@ -415,7 +415,7 @@ bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==
 --  @param B Bigint object.
 --  @return String object.
 bigint.__tostring = function (B)
-  return (B[SIGN] < 0 and '-' or '') .. string.reverse(B[VALUE])
+  return (B[1] < 0 and '-' or '') .. string.reverse(B[2])
 end
 
 --- More convenient string representation
@@ -425,8 +425,8 @@ end
 bigint.str = function (B,n)
   n = n or 3
   local templ = string.format('(%s)', string.rep('.',n))
-  local value = string.gsub(B[VALUE], templ, '%1 ')
-  return (B[SIGN] < 0 and '-' or '') .. string.reverse(value)
+  local value = string.gsub(B[2], templ, '%1 ')
+  return (B[1] < 0 and '-' or '') .. string.reverse(value)
 end
 bigint.about[bigint.str] = {"str(B[,n=3])", "More readable string representation of the number. Optional argument defines number of digits in a group.", help.OTHER}
 

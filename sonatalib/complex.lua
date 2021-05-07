@@ -2,12 +2,12 @@
 
 --- Manipulations with complex numbers.
 --  
---  Object structure           </br>
+--  Object structure </br>
 --  <code> {REAL, IMAGINARY} </code></br>
 --  i.e. complex number is a table which consists of two elements.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'complex'
 --]]
@@ -138,6 +138,7 @@ local function iscomplex(c) return type(c) == 'table' and c.iscomplex end
 --  @param x Real number.
 --  @return Hyperbolic cosine value.
 local function ch (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+
 --- Hyperbolic sine.
 --  @param x Real number.
 --  @return Hyperbolic sine value.
@@ -483,3 +484,4 @@ if not LC_DIALOG then complex.about = nil end
 return complex
 
 --==========================
+--TODO: Comp(x) is real number
