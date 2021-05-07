@@ -2,13 +2,13 @@
 
 --- Operations with arbitrary long integer numbers.
 --
---  Object structure:        </br> 
+--  Object structure: </br> 
 --  <code> {SIGN, VALUE} </code></br>
 --  where <code>SIGN</code> is +1/-1 and <code>VALUE</code> is a string, each character corresponds to one digit.
 --  Besides, digits have inverted sequence. For example, number <code>123</code> is represented as <code>"321"</code>.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'bigint'
 --]]
@@ -84,7 +84,7 @@ local ZERO = string.byte('0')
 --  @return True if the object is a big integer.
 local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
---- Reduce front zeros in place. Convert '00123' to '123'.
+--- Reduce front zeros in place. E.g. convert '00123' to '123'.
 --  @param tDigits Table with digits.
 local function simplify (tDigits)
   local i = #tDigits
@@ -108,8 +108,6 @@ about = help:new("Operations with arbitrary long integers."),
 }
 
 bigint.__index = bigint
--- the basis
-bigint.BASE = 10
 
 --- Create new object, set metatable.
 --  @param num Integer as number or string.
@@ -190,7 +188,7 @@ end
 --  @param B2 Second bigint object.
 --  @return Sum of the values.
 bigint._sum_ = function (B1,B2)
-  local acc, base = {}, bigint.BASE
+  local acc, base = {}, 10
   -- calculate sum
   for i = 1, math.max(#B1[2],#B2[2]) do
     local ai = string.byte(B1[2], i) or ZERO
@@ -217,7 +215,7 @@ bigint._sub_ = function (B1,B2)
   if bigint.abs(B1) < bigint.abs(B2) then
     p,q,r = q,p,-1
   end
-  local acc, base = {}, bigint.BASE
+  local acc, base = {}, 10
   -- calculate sub
   for i = 1, #p[VALUE] do
     local pi = string.byte(p[2], i) or ZERO
@@ -305,7 +303,7 @@ bigint.__mul = function (B1, B2)
     end
   end
   -- back
-  local d, base = 0, bigint.BASE
+  local d, base = 0, 10
   for i = 1, #sum do
     sum[i] = sum[i] + d
     d = math.floor(sum[i] / base)
@@ -465,4 +463,5 @@ if not LC_DIALOG then bigint.about = nil end
 return bigint
 
 --=================================
---TODO: work with different bases
+--TODO: translate to different bases
+--TODO: improve power method
