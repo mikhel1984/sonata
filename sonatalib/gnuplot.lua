@@ -6,7 +6,7 @@
 --  all parameters of the plot are saved in form of table, each function is in separate subtable.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'gnuplot'
 --]]
@@ -51,14 +51,14 @@ local special = {
   output = function (x) return string.format('set output "%s"', x) end,
   xlabel = function (x) return string.format('set xlabel "%s"', x) end,
   ylabel = function (x) return string.format('set ylabel "%s"', x) end,
-  title = function (x) return string.format('set title "%s"', x) end,
+  title  = function (x) return string.format('set title "%s"', x) end,
 }
 
 -- main commands
 local main = {
-  string = function (x,y) return string.format('set %s %s', x, y) end,
-  number = function (x,y) return string.format('set %s %d', x, y) end,
-  table = function (x,y) return string.format('set %s [%f:%f]', x, y[1],y[2]) end,
+  string  = function (x,y) return string.format('set %s %s', x, y) end,
+  number  = function (x,y) return string.format('set %s %d', x, y) end,
+  table   = function (x,y) return string.format('set %s [%f:%f]', x, y[1],y[2]) end,
   boolean = function (x,y) return string.format('%s %s', y and 'set' or 'unset', x) end,
 }
 
@@ -67,7 +67,8 @@ local main = {
 --  @param v Value.
 --  @return String with command.
 local function command (k,v)
-  return special[k] and special[k](v) or main[type(v)](k,v)
+  local spc = special[k]
+  return spc and spc(v) or main[type(v)](k,v)
 end
 
 --- Function option string
@@ -118,7 +119,7 @@ acc.options.raw = true
 acc.foptions.file = true
 acc.foptions.raw = true
 
---- Check if all options in table are available
+--- Check if all options in the table are available
 --  @param G Table with optinos.
 --  @return True if no unexpected parameters.
 gnuplot.isAvailable = function (G) 
@@ -129,16 +130,16 @@ gnuplot.isAvailable = function (G)
       if type(k) == 'number' and type(v) == 'table' then
         for p,q in pairs(v) do
           if not acc.foptions[p] and type(p) ~= 'number' then
-            print(p .. ' is not predefined, use "raw" for this option!')
+            io.write(p, ' is not predefined, use "raw" for this option!\n')
             available = false
           end -- if
         end -- for p,q
       else
-        print(k .. ' is not predefined, use "raw" for this option!')
+        io.write(k, ' is not predefined, use "raw" for this option!\n')
         available = false
-      end -- if type
-    end -- if not
-  end -- for k,v
+      end -- type
+    end -- acc.options
+  end -- k,v
   return available
 end
 gnuplot.about[gnuplot.isAvailable] = {"isAvailable(G)", "Check if all options in table are predefined in program.", help.OTHER}
@@ -150,11 +151,10 @@ gnuplot._tbl2file_ = function (t)
   local name = os.tmpname()
   local f = io.open(name, 'w')
   for _, row in ipairs(t) do
-    for i,val in ipairs(row) do f:write(val,' ') end
+    for _, val in ipairs(row) do f:write(val,' ') end
     f:write('\n')
   end
   f:close()
-
   return string.format('"%s"', name)
 end
 
@@ -175,12 +175,11 @@ gnuplot._fn2file_ = function (fn,base)
     local dy = (yr-yl)/N
     for x = xl,xr,dx do 
       for y = yl,yr,dy do f:write(x,' ',y,' ',fn(x,y),'\n') end
-    end -- for x
+    end 
   else
     for x = xl,xr,dx do f:write(x,' ',fn(x),'\n') end
   end
   f:close()
-
   return string.format('"%s"', name)
 end
 
@@ -232,7 +231,7 @@ gnuplot.about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 --  @param G Table with parameters of graphic.
 --  @return Table which can be used for plotting.
 gnuplot.plot = function (G)
-  assert(gnuplot.isAvailable(G), 'Options are not predefined!')
+  if not gnuplot.isAvailable(G) then return end
   -- define 'permanent' option
   if G.permanent == nil then G.permanent = true end
   -- open Gnuplot
@@ -268,10 +267,12 @@ gnuplot.__tostring = function (G)
   for k,v in pairs(G) do
     if type(v) == 'table' then
       local tmp = {}
-      for p,q in pairs(v) do tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q)) end
+      for p,q in pairs(v) do 
+        tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q)) 
+      end
       v = string.format('{%s}', table.concat(tmp,',')) 
     end
-      res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
+    res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
   end
   return string.format('{\n%s\n}', table.concat(res, ',\n'))
 end

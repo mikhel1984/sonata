@@ -1,7 +1,7 @@
 --[[		sonatalib/complex.lua 
 
 --- Manipulations with complex numbers.
---  
+--
 --  Object structure </br>
 --  <code> {REAL, IMAGINARY} </code></br>
 --  i.e. complex number is a table which consists of two elements.

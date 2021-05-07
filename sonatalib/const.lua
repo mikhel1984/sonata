@@ -2,7 +2,7 @@
 
 --- Collection of constants.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'const'
 --]]
@@ -76,7 +76,7 @@ local _math_ = {
 
 -- user defined
 local _user_ = {
-    the_answer_to_the_ultimate_question_of_life_the_universe_and_everything = 42,
+the_answer_to_the_ultimate_question_of_life_the_universe_and_everything = 42,
 }
 
 -- Interface
