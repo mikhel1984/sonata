@@ -2,14 +2,14 @@
 
 --- Operations with graphs.
 --
---  Object structure:                        </br>
+--  Object structure: </br>
 --  <code>{node1 = {nodeA=weightA, nodeB=weightB, ... }, </br>
---  { ... }                               </br>
+--  { ... } </br>
 --  {nodeN = {nodeP=weightP, nodeQ=weightQ, ...}}</code> </br>
 --  i.e. each node has links to adjucent nodes.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'graph'
 --]]
@@ -120,7 +120,7 @@ local function getMin(tbl)
   -- find new minimal value
   for k,v in pairs(tbl) do
     if v < minval then 
-      key = k; minval = v
+      key, minval = k, v
     end
   end
   -- exclude minimal value
@@ -204,11 +204,13 @@ graph.add = function (G, t)
     G[t1] = G[t1] or {}
     G[t2] = G[t2] or {}
     if w12 or w21 then
-      G[t1][t2] = w12; G[t2][t1] = w21
+      G[t1][t2] = w12 
+      G[t2][t1] = w21
     else
       -- no weights
       local w = t.w or 1
-      G[t1][t2] = w; G[t2][t1] = w
+      G[t1][t2] = w 
+      G[t2][t1] = w
     end
   else
     -- node
@@ -257,7 +259,7 @@ graph.edges = function (G)
   local nodes, res = graph.nodes(G), {}
   for i = 1,#nodes do
     local ni = nodes[i]
-    local Wi = G[ni]
+    local Wi = G[ni]             -- what if node is not string?
     for j = i,#nodes do
       local nj = nodes[j]
       local wij = Wi[nj]
@@ -300,14 +302,13 @@ graph.__len = size
 --  @param G Graph object.
 --  @return String with compressed graph structure.
 graph.__tostring = function (G)
-  local nd, res = graph.nodes(G)
+  local nd = graph.nodes(G)
   if #nd <= 5 then 
-    res = string.format('Graph {%s}', table.concat(nd,','))
+    return string.format('Graph {%s}', table.concat(nd,','))
   else
-    res = string.format('Graph {%s -%d- %s}',
-            tostring(nd[1]), #nd-2, tostring(nd[#nd]))
+    return string.format('Graph {%s -%d- %s}',
+      tostring(nd[1]), #nd-2, tostring(nd[#nd]))
   end
-  return res
 end
 
 --- Check graph completeness.
@@ -372,10 +373,12 @@ graph.bfs = function (G, start, goal)
   local queue = graph.lc_struct.Queue()
   queue:push(start)
   -- run
-  while not queue:isEmpty() do
+  repeat 
     local node = queue:pop()
-    -- found
-    if node == goal then return true, getPath(pred, goal) end
+    if node == goal then 
+      -- found
+      return true, getPath(pred, goal) 
+    end
     -- add successors
     for v in pairs(G[node]) do
       if not pred[v] then
@@ -383,7 +386,7 @@ graph.bfs = function (G, start, goal)
         pred[v] = node
       end
     end
-  end
+  until queue:isEmpty()
   return false
 end
 graph.about[graph.bfs] = {"bfs(G,start,goal)","Breadth first search. Return result and found path.", SEARCH}
@@ -399,10 +402,12 @@ graph.dfs = function (G, start, goal)
   local stack = graph.lc_struct.Stack()
   stack:push(start) 
   -- run
-  while not stack:isEmpty() do
+  repeat
     local node = stack:pop()
-    -- found
-    if node == goal then return true, getPath(pred, goal) end
+    if node == goal then 
+      -- found
+      return true, getPath(pred, goal) 
+    end
     -- add successors
     for v in pairs(G[node]) do
       if not pred[v] then
@@ -410,7 +415,7 @@ graph.dfs = function (G, start, goal)
         pred[v] = node
       end
     end
-  end
+  until stack:isEmpty()
   return false
 end
 graph.about[graph.dfs] = {"dfs(G,start,goal)","Depth first search. Return result and found path.", SEARCH}
@@ -436,8 +441,9 @@ graph.pathD = function(G,start,goal)
     for k,v in pairs(G[current]) do
       local alt = val + v
       if set[k] and set[k] > alt then
-        set[k] = alt; prev[k] = current
-      end -- if
+        set[k] = alt 
+        prev[k] = current
+      end 
     end -- for
   end
   -- result
@@ -467,10 +473,11 @@ graph.pathBF = function (G, start,goal)
       for v,d in pairs(G[u]) do
         local alt = dist[u] + d
         if alt < dist[v] then
-          dist[v] = alt; prev[v] = u
-        end -- if
-      end -- for
-    end -- for
+          dist[v] = alt 
+          prev[v] = u
+        end 
+      end -- v,d
+    end -- u
   end
 --[[
   -- check for negative circles
