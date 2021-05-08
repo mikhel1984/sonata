@@ -8,7 +8,7 @@
 --  Internal elements can be empty tables, but anyway operation X[i][j] will return 0.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'matrix'
 --]]
@@ -43,7 +43,7 @@ ans = a * b               --> Mat {{19,22},{43,50}}
 
 ans = a / b 
 -- determinant
-ans = ans:det()            --~ 1
+ans = ans:det()            --2> 1
 
 -- multiply to scalar
 ans = 2 * a               --> Mat {{2,4},{6,8}}
@@ -214,7 +214,9 @@ local access = {
   -- 0 instead nil
   __index = function () return 0 end,
   -- comment this function in order to work a little bit faster, but in this case matrix can become dense
-  __newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
+  __newindex = function (t,k,v) 
+    if v ~= 0 then rawset(t,k,v) end 
+  end,
 }
 
 --- Check object type.
@@ -361,7 +363,10 @@ matrix.rank = function (M)
     -- find nonzero element
     local zeros = true
     for j = i,mat.cols do
-      if mati[j] ~= 0 then zeros = false; break end
+      if mati[j] ~= 0 then 
+        zeros = false 
+        break 
+      end
     end
     if zeros then break end
     i = i+1
@@ -519,9 +524,9 @@ matrix.apply = function (fn, ...)
   for r = 1,res.rows do
     for c = 1,res.cols do
       -- collect
-	 for k = 1,#arg do v[k] = arg[k][r][c] end
-	 -- calc
-	 res[r][c] = fn(upack(v))
+      for k = 1,#arg do v[k] = arg[k][r][c] end
+      -- calc
+      res[r][c] = fn(upack(v))
     end
   end
   return res
@@ -1235,3 +1240,4 @@ return matrix
 --TODO: Fix sign in SVD transform
 --TODO: Redefine 'norm' method
 --TODO: change matrix print
+--TODO: map and apply as common methods

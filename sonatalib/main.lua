@@ -3,7 +3,7 @@
 --- Define aliases for standard operations and add some new common functions.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'main'
 --]]
@@ -158,10 +158,10 @@ atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
 about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
-_pi = math.pi;    about[_pi] = {"_pi", "Number pi.", lc_help.CONST}
-_e = math.exp(1.0); about[_e]  = {"_e", "Euler number.", lc_help.CONST}
+_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", lc_help.CONST}
+_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", lc_help.CONST}
 -- result 
-_ans = 0;        about[_ans] = {"_ans", "Result of the last operation."}
+_ans = 0;   about[_ans] = {"_ans", "Result of the last operation."}
 
 -- random
 rand = function () return math.random() end
@@ -177,7 +177,7 @@ randn = function ()
     u = 2*math.random()-1
     v = 2*math.random()-1
     s = u*u + v*v
-  until s <= 1 and s > 0.0
+  until s <= 1 and s > 0
   return u * math.sqrt(-2*math.log(s)/s)
 end
 about[randn] = {"randn()", "Normal distributed random value with 0 mean and variance 1."}
@@ -281,9 +281,7 @@ about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.',
 --  @param dbg Structure with debug info.
 --  @return String with function name.
 main._getName_ = function (dbg)
-  if dbg.what == 'C' then
-    return dbg.name
-  end
+  if dbg.what == 'C' then return dbg.name end
   local lc = string.format("[%s]:%d", dbg.short_src, dbg.linedefined)
   if dbg.what ~= "main" and dbg.namewhat ~= "" then
     return string.format("%s (%s)", lc, dbg.name)
@@ -292,7 +290,7 @@ main._getName_ = function (dbg)
   end
 end
 
---- Simple implementation of 'the life'.
+--- Simple implementation of 'The Life' game ;)
 --  Prepare your initial board in form of matrix.
 --  @param board Matrix with 'ones' as live cells.
 main.life = function (board)
@@ -315,9 +313,11 @@ main.life = function (board)
         new[r][c] = gen > 1 and islive(r,c) or src[r][c] ~= 0 and 1 or 0
         io.write(new[r][c] == 1 and '*' or ' ')
       end
-      print('|')
+      io.write('|\n')
     end
-    if gen > 1 and new == src then print('~~ Game Over ~~'); break end
+    if gen > 1 and new == src then 
+      return print('~~ Game Over ~~') 
+    end
     src = new
     io.write(string.format('#%-3d continue? (y/n) ', gen))
   until 'n' == io.read()
@@ -406,7 +406,7 @@ main.evalDemo = function (fname)
   local cmd = ""
   local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD
   -- read lines
-  print(string.format("Run file %s",fname))
+  io.write("Run file ", fname)
   for line in string.gmatch(text, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-%s*PAUSE') then 
       -- run dialog
