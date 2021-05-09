@@ -7,7 +7,7 @@
 --  where <i>w</i> is a real part, <i>x, y, z</i> are imaginary elements.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'quaternion'
 --]]
@@ -75,14 +75,15 @@ ans = d:qw()       --3> 0.467
 -- make copy
 ans = d:copy()      --> d
 
+-- show 
+print(d)
+
 --]]
 
 --	LOCAL
 
 local Ver = require "sonatalib.versions"
 
--- element indexation
-local Q_w, Q_i, Q_j, Q_k = 1, 2, 3, 4
 local ROTATION = 'rotation'
 
 --- Check object type.
@@ -137,7 +138,7 @@ quaternion.fromAA = function (fAng, vAxe)
     x,y,z = vAxe[1], vAxe[2], vAxe[3] 
   end
   local d = math.sqrt(x*x+y*y+z*z)
-  d = math.sin(fAng*0.5) / d   -- normalize and multiply by angle
+  if d > 0 then d = math.sin(fAng*0.5) / d end
   return quaternion:new({math.cos(fAng*0.5), x*d, y*d, z*d})
 end
 quaternion.about[quaternion.fromAA] = {'fromAA(fAng,vAxe)','Create quaternion using angle and axis.',ROTATION}
@@ -150,7 +151,7 @@ quaternion.toAA = function (Q)
   local d = quaternion.abs(Q)
   local w,x,y,z = Q[1]/d,Q[2]/d,Q[3]/d,Q[4]/d
   -- get sin
-  local v = math.sqrt(x*x+y*y+z*z)
+  local v = math.sqrt(x*x+y*y+z*z)     -- what if v == 0 ?
   return 2*Ver.atan2(v,w), {x/v, y/v, z/v} 
 end
 quaternion.about[quaternion.toAA] = {'toAA(Q)','Get angle and axis of rotation.',ROTATION}
@@ -288,7 +289,7 @@ end
 
 --- Q ^ k
 --  @param Q Quaternion.
---  @param k Each number for unit quaternion, -1 or positive integer for others.
+--  @param k Any number for unit quaternion, -1 or positive integer for others.
 --  @return Power value.
 quaternion.__pow = function (Q,k)
   if k == -1 then
@@ -331,38 +332,38 @@ quaternion.about[quaternion.comparison] = {quaternion.comparison, 'a == b, a ~= 
 --  @param Q Quaternion.
 --  @return String with quaternion elements.
 quaternion.__tostring = function (Q)
-  return string.format("%.3f%+.3fi%+.3fj%+.3fk", Q[Q_w], Q[Q_i], Q[Q_j], Q[Q_k])
+  return string.format("%.3f%+.3fi%+.3fj%+.3fk", Q[1], Q[2], Q[3], Q[4])
 end
 
 --- Get real part.
 --  @param Q Quaternion.
 --  @return Real element.
-quaternion.qw = function(Q) return Q[Q_w] end
+quaternion.qw = function(Q) return Q[1] end
 quaternion.real = quaternion.qw
 quaternion.about[quaternion.qw] = {'qw(Q)','Real part (same as real(Q)).',help.OTHER}
 
 --- Get x.
 --  @param Q Quaternion.
 --  @return Element x.
-quaternion.qx = function(Q) return Q[Q_i] end
+quaternion.qx = function(Q) return Q[2] end
 quaternion.about[quaternion.qx] = {'qx(Q)','Element x.',help.OTHER}
 
 --- Get y.
 --  @param Q Quaternion.
 --  @return Element y.
-quaternion.qy = function(Q) return Q[Q_j] end
+quaternion.qy = function(Q) return Q[3] end
 quaternion.about[quaternion.qy] = {'qy(Q)','Element y.',help.OTHER}
 
 --- Get z.
 --  @param Q Quaternion.
 --  @return Element z.
-quaternion.qz = function(Q) return Q[Q_k] end
+quaternion.qz = function(Q) return Q[4] end
 quaternion.about[quaternion.qz] = {'qz(Q)','Element z.',help.OTHER}
 
 --- Get imaginary part.
 --  @param Q Quaternion.
 --  @return Table with imaginary elements.
-quaternion.imag = function (Q) return {Q[Q_i],Q[Q_j],Q[Q_k]} end
+quaternion.imag = function (Q) return {Q[2],Q[3],Q[4]} end
 quaternion.about[quaternion.imag] = {'imag(Q)', 'Get table of the imaginary part.', help.OTHER}
 
 --- Spherical linear interpolation.
@@ -411,7 +412,8 @@ setmetatable(quaternion,
   v[2] = v[2] or v.x or 0
   v[3] = v[3] or v.y or 0
   v[4] = v[4] or v.z or 0
-  return quaternion:new(v) end
+  return quaternion:new(v) 
+end
 })
 
 quaternion.Quat = 'Quat'
@@ -423,3 +425,4 @@ if not LC_DIALOG then quaternion.about = nil end
 return quaternion
 
 --======================================
+--TODO: rename qx to qi etc

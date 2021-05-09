@@ -3,7 +3,7 @@
 --- Main data structures.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'struct'
 --]]
@@ -484,7 +484,6 @@ struct.Set.map = function (S,fn)
   return res
 end
 struct.about[struct.Set.map] = {"Set.map(S,fn)", "Apply function fn() to obtain new set.", SET}
-
 
 --- S1 + S2
 --  @param S1 First set.

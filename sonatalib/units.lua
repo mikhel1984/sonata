@@ -7,7 +7,7 @@
 --  Key is represented in form "power1..unit1..power2..unit2...etc'.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> units._collect_ion, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> units._collect_ion, 2021.
 
 		module 'units'
 --]]
@@ -25,53 +25,53 @@ Unit.add('min', Unit(60,'s'))
 -- define variable
 a = Unit(1,'m/s')
 -- convert to km/h, get only value
-ans = a['km/h']              --> 3.6
+ans = a['km/h']                  --> 3.6
 
 -- get numerical value
 -- (the save as #a)
-ans = a:val()               --> 1
+ans = a:val()                    --> 1
 
 -- make copy
 cp = a:copy() 
-ans = cp                  --> Unit(1,'m/s')
+ans = cp                         --> Unit(1,'m/s')
 
 -- get converted variable
 b = a:convert('km/h')
-ans = b                   --> Unit(3.6, 'km/h')
+ans = b                          --> Unit(3.6, 'km/h')
 
 -- arithmetic
 b = 3 * b
-ans = a + b                --> Unit(4, 'm/s')
+ans = a + b                      --> Unit(4, 'm/s')
 
-ans = b - a                --> Unit(2, 'm/s')
+ans = b - a                      --> Unit(2, 'm/s')
 
-ans = a * b                --> Unit(3, 'm^2/s^2')
+ans = a * b                      --> Unit(3, 'm^2/s^2')
 
-ans = b / a                --> Unit(3)
+ans = b / a                      --> Unit(3)
 
-ans = (a < b)               --> true
+ans = (a < b)                    --> true
 
-ans = b ^ 3                --> Unit(27, 'm^3/s^3')
+ans = b ^ 3                      --> Unit(27, 'm^3/s^3')
 
 -- new rule
 Unit.add('snake', Unit(48, 'parrot'))
 -- define variable
 c = Unit(2,'snake')
 -- convert
-ans = c['parrot']            --> 96
+ans = c['parrot']                --> 96
 
 -- convert using prefix
-ans = c['ksnake']            --> 0.002
+ans = c['ksnake']                --> 0.002
 
 -- complex rule
 d = Unit(1,'W')
 -- define function for conversation, apply it
 lg = function (x) return math.log(x)/math.log(10) end
 e = d:convert(function (x) return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') end)
-ans = #e                  --0> 30
+ans = #e                        --0> 30
 
 -- another definition syntax
-ans = 2 * Unit('N')           --> Unit(2,'N')
+ans = 2 * Unit('N')              --> Unit(2,'N')
 
 -- show result
 print(a)
@@ -641,3 +641,5 @@ if not LC_DIALOG then units.about = nil end
 
 return units
 
+--==================================================
+--TODO: check and simplify

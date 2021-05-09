@@ -5,7 +5,7 @@
 --  Most functions are based on "Numerical recipes in C" by W.H.Press, S.A.Teukolsky, W.T.Vetterling and B.P.Flannery
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'special'
 --]]
@@ -84,6 +84,10 @@ local function lowBound(a,b) return math.abs(a) > b and a or b end
 
 -- doc categories
 local GAMMA, BETA, BESSEL = 'gamma', 'beta', 'bessel'
+
+-- error 
+local ERR_POSINT = "Non-negative integer order is expected!"
+local ERR_INVARG = "Invalid arguments!"
 
 --	INFO
 
@@ -176,7 +180,7 @@ end
 --  @param x Non-negative value.
 --  @return Value of P(a,x).
 special.gammp = function (a,x)
-  if not (x >= 0.0 and a > 0) then error('Invalid arguments!') end
+  if x < 0.0 or a <= 0 then error(ERR_INVARG) end
   return (x < a+1.0) and special._gammaSer_(a,x) or 1.0-special._gcf_(a,x)
 end
 special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).", GAMMA}
@@ -186,7 +190,7 @@ special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).
 --  @param x Non-negative value.
 --  @return Value of Q(a.x).
 special.gammq = function (a,x)
-  if not (x >= 0.0 and a > 0) then error('Invalid arguments!') end
+  if x < 0.0 or a <= 0 then error(ERR_INVARG) end
   return (x < a+1.0) and 1-special._gammaSer_(a,x) or special._gcf_(a,x)
 end
 special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) = 1-P(a,x).", GAMMA}
@@ -194,7 +198,7 @@ special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) 
 --- Other syntax for incomplete gamma function.
 --  @param x Real value.
 --  @param a Order.
---  @param tp Type of function (lower of upper).
+--  @param tp Type of function ('lower' of 'upper').
 --  @return Value of correspondent incomplete function.
 special.gammainc = function (x,a,tp)
   tp = tp or 'lower'
@@ -203,7 +207,7 @@ special.gammainc = function (x,a,tp)
   else error('Unexpected type '..tostring(tp))
   end
 end
-special.about[special.gammainc] = {"gammainc(x,a[,type='lower')", "Incomplete gamma function, P (type=lower) or Q (type=upper).", GAMMA}
+special.about[special.gammainc] = {"gammainc(x,a[,type='lower')", "Incomplete gamma function, P (type='lower') or Q (type='upper').", GAMMA}
 
 --- Beta function.
 --  @param z First value.
@@ -253,7 +257,7 @@ end
 --  @param b Second bound.
 --  @return Value of Ix(a,b).
 special.betainc = function (x,a,b)
-  if not (x >= 0.0 and x <= 1.0) then error("Expected x between 0 and 1!") end
+  if x < 0.0 or x > 1.0 then error("Expected x between 0 and 1!") end
   local bt
   if x == 0 or x == 1 then 
     bt = 0.0
@@ -270,7 +274,7 @@ special.about[special.betainc] = {"betainc(x,a,b)", "Incomplete beta function Ix
 --  @return Value of En(x).
 special.expint = function (n,x)
   if x == nil then n,x = 1,n end
-  if not (n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1))) then error('Bad arguments!') end
+  if not (n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1))) then error(ERR_INVARG) end
   if n == 0 then return math.exp(-x)/x end
   local nm1 = n-1
   if x == 0.0 then return 1.0/nm1 end
@@ -357,7 +361,7 @@ end
 --  @param x Real number.
 --  @return Table with coefficients.
 special.legendre = function (n,x)
-  assert(n >= 0 and math.abs(x) <= 1, 'Bad arguments')
+  if n < 0 or math.abs(x) > 1 then error(ERR_INVARG) end
   local res = {}
   local plgndr = special._plgndr_
   for i = 1,n+1 do res[i] = plgndr(n,i-1,x) end
@@ -370,7 +374,6 @@ special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre poly
 --  @return Integral value.
 special.dawson = function (x)
   local NMAX,H,A1,A2,A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
-   
   if not special._c_dawson then 
     -- List of Dawson function coefficients.
     special._c_dawson = {0,0,0,0,0,0}
@@ -486,7 +489,7 @@ end
 --  @return Polynomial value
 special.bessely = function (n,x)
   if x <= 0 then error('Positive value is expected!') end
-  if not (n >= 0 and Ver.isInteger(n)) then error('Non-negative integer order is expected!') end
+  if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
   if n == 0 then return special._bessy0_(x) end
   if n == 1 then return special._bessy1(x) end
   local tox = 2.0/x
@@ -504,12 +507,11 @@ special.about[special.bessely] = {"bessely(n,x)","Bessel function of the second 
 --  @param x Real number.
 --  @return Polynomial value
 special.besselj = function (n,x)
-  if not (n >= 0 and Ver.isInteger(n)) then error('Non-negative integer order is expected!') end
+  if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
   if n == 0 then return special._bessj0_(x) end
   if n == 1 then return special._bessj1_(x) end
   if x == 0 then return 0 end
   local ACC, BIGNO, BIGNI = 40, 1E10, 1E-10
-  
   local ax = math.abs(x)
   local tox = 2.0/ax
   local bj, bjm, ans
@@ -610,7 +612,7 @@ end
 --  @return Kn(x).
 special.besselk = function (n,x)
   if x <= 0 then error("Positive value is expected!") end
-  if not (n >= 0 and Ver.isInteger(n)) then error("Non-negative integer order is expected!") end
+  if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
   if n == 0 then return special._bessk0_(x) end
   if n == 1 then return special._bessk1_(x) end
   local tox,bkm,bk = 2.0/x, special._bessk0_(x), special._bessk1_(x)
@@ -626,7 +628,7 @@ special.about[special.besselk] = {"besselk(n,x)", "Modified Bessel function Kn(x
 --  @param x Real number.
 --  @return In(x).
 special.besseli = function (n,x)
-  assert(n >= 0 and Ver.isInteger(n), "Non-negative integer order is expected!")
+  if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
   if n == 0 then return special._bessi0_(x) end
   if n == 1 then return special._bessi1_(x) end
   if x == 0 then return 0.0 end
@@ -651,3 +653,5 @@ special.about[special.besseli] = {"besseli(n,x)", "Modified Bessel function In(x
 if not LC_DIALOG then special.about = nil end
 
 return special
+
+--===================================

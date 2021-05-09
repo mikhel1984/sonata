@@ -2,12 +2,12 @@
 
 --- Manipulations with polynomials.
 --
---  Object structure:      </br>
+--  Object structure: </br>
 --  <code>{pn ... p0} </code></br>
 --  where each element <i>pk</i> corresponds to coefficient of <i>x^k</i>.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'polynom'
 --]]

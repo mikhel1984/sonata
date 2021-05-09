@@ -7,7 +7,7 @@
 --  where both numbers are integers.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2017-2019.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
 
 	module 'rational'
 --]]
@@ -70,7 +70,7 @@ print(a)
 
 local Ver = require('sonatalib.versions')
 
-local NUM, DENOM = 1, 2
+--  NUM, DENOM = 1, 2
 
 --- Check object type.
 --  @param v Test object.
@@ -80,7 +80,9 @@ local function isrational(v) return type(v) == 'table' and v.isrational end
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
-local function numStr(v) return type(v) == 'number' and string.format('%d', v) or tostring(v) end
+local function numStr(v) 
+  return type(v) == 'number' and string.format('%d', v) or tostring(v) 
+end
 
 --	INFO
 
@@ -118,7 +120,7 @@ end
 --- Create copy of the rational number.
 --  @param R Source value.
 --  @return Rational number.
-rational.copy = function (R) return setmetatable({R[NUM], R[DENOM]}, rational) end
+rational.copy = function (R) return setmetatable({R[1], R[2]}, rational) end
 rational.about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
 
 --- Argument type correction.
@@ -225,25 +227,25 @@ rational.about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R
 --  @param R Rational number.
 --  @return String with numerator and denominator.
 rational.__tostring = function (R) 
-  return string.format("%s/%s", numStr(R[NUM]), numStr(R[DENOM])) 
+  return string.format("%s/%s", numStr(R[1]), numStr(R[2])) 
 end
 
 --- Float point representation.
 --  @param R Rational number.
 --  @return Decimal fraction.
-rational.val = function (R) return R[NUM] / R[DENOM] end
+rational.val = function (R) return R[1] / R[2] end
 rational.about[rational.val] = {"val(R)", "Return rational number as decimal."}
 
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
-rational.Nu = function (R) return R[NUM] end
+rational.Nu = function (R) return R[1] end
 rational.about[rational.Nu] = {"Nu(R)", "Return the numerator of rational number."}
 
 --- Get denominator.
 --  @param R Rational number.
 --  @return Denominator.
-rational.De = function (R) return R[DENOM] end
+rational.De = function (R) return R[2] end
 rational.about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 
 -- simplify constructor call
@@ -257,5 +259,4 @@ if not LC_DIALOG then rational.about = nil end
 return rational
 
 --======================================
---TODO: create module for calculations with integer numbers, add prime and gcd
 --TODO: string representation as true ratio (str)
