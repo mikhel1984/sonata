@@ -240,6 +240,7 @@ b + 1
 a:inv()
 -- slerp
 Quat.slerp(a,b,0.5)      -- use normalization inside
-          
+
+-- PAUSE 
 
 -- We wish you a pleasant work with the program! 
