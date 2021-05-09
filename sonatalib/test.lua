@@ -117,7 +117,7 @@ test.module = function (fname)
             if tol then 
               return tol*math.abs(ans-arrow) < 1
             else
-              print('Unexpected symbol '..e)
+              io.write('Unexpected symbol ', e, '\n')
               return false
             end
           end 

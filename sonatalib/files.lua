@@ -99,7 +99,7 @@ files.dsvWrite = function (fName, tbl, delim)
     f:write(v,'\n')
   end
   f:close()
-  print('Done')
+  io.write('Done\n')
 end
 files.about[files.dsvWrite] = {"dsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", WRITE}
 

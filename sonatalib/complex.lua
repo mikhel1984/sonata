@@ -124,7 +124,7 @@ print(a)
 -- Compatibility with previous versions
 local Ver = require "sonatalib.versions"
 
-local REAL, IMAG = 1, 2
+-- REAL, IMAG = 1, 2
 
 -- help section 
 local FUNCTIONS = 'functions'
@@ -175,7 +175,7 @@ complex.about[complex.trig] = {"trig(module,angle)", "Create complex number usin
 --- Create copy of the complex number.
 --  @param C Source value.
 --  @return Complex number.
-complex.copy = function (Z) return complex:new(Z[REAL], Z[IMAG]) end
+complex.copy = function (Z) return complex:new(Z[1], Z[2]) end
 complex.about[complex.copy] = {"copy(Z)", "Create copy of the complex number.", help.OTHER}
 
 --- Correct arguments.
@@ -282,19 +282,19 @@ complex.__bnot = complex.conj
 --- Real part of the number.
 --  @param Z Complex value.
 --  @return Real part.
-complex.real  = function (Z) return Z[REAL] end
+complex.real  = function (Z) return Z[1] end
 complex.about[complex.real] = {"real(Z)", "Return the real part.", help.OTHER}
 
 --- Imaginary part of the number.
 --  @param Z Complex value.
 --  @return Imaginary part.
-complex.imag  = function (Z) return Z[IMAG] end
+complex.imag  = function (Z) return Z[2] end
 complex.about[complex.imag] = {"imag(Z)", "Return the imaginary part.", help.OTHER}
 
 --- String representation.
 --  @param Z Complex number.
 --  @return String with complex number elements.
-complex.__tostring = function (Z) return string.format("%.3f%+.3fi", Z[REAL], Z[IMAG]) end
+complex.__tostring = function (Z) return string.format("%.3f%+.3fi", Z[1], Z[2]) end
 
 --- Square root with possibility of complex result.
 --  @param Z Real or complex number.

@@ -231,7 +231,7 @@ help.print = function (self,fn)
           io.write(v, (i ~= #n and ', ' or '\n'))
         end
       end 
-      print()   -- add empty line
+      io.write('\n')
     end -- for
   end -- if
 end

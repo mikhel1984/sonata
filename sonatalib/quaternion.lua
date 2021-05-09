@@ -86,6 +86,8 @@ local Ver = require "sonatalib.versions"
 
 local ROTATION = 'rotation'
 
+-- W, X, Y, Z = 1, 2, 3, 4
+
 --- Check object type.
 --  @param t Object.
 --  @return True if the object is quaternion.

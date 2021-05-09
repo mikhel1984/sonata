@@ -75,7 +75,7 @@ print(c:str(6))
 
 local Ver = require "sonatalib.versions"
 
-local SIGN, VALUE = 1, 2
+-- SIGN, VALUE = 1, 2
 
 local ZERO = string.byte('0')
 
@@ -246,8 +246,8 @@ bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number."}
 --  @param v Original bigint object.
 --  @return Deep copy.
 bigint.copy = function (B)
-  local c = bigint:new(B[SIGN])
-  c[VALUE] = B[VALUE]
+  local c = bigint:new(B[1])
+  c[2] = B[2]
   return c
 end
 bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTHER}
