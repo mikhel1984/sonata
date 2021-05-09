@@ -24,34 +24,34 @@ Arr = require 'sonatalib.array'
 
 -- empty array
 a = Arr {2,3,4}
-ans = a:get{1,2,1}              --> nil
+ans = a:get{1,2,1}            --> nil
 
 -- set values
 a:set({1,2,1},4)
-ans = a:get{1,2,1}              --> 4
+ans = a:get{1,2,1}            --> 4
 
 -- random array
 b = Arr.rand {5,2,1}
 -- max number of elements
-ans = #b                     --> 10
+ans = #b                      --> 10
 
-ans = b:copy()                 --> b
+ans = b:copy()                --> b
 
 -- compare sizes
-ans = b:isEqual(Arr.rand{5,2,1})     --> true
+ans = b:isEqual(Arr.rand{5,2,1})  --> true
 
 -- arithmetical operations
 c = b + b
-ans = c:get{1,1,1}              --> 2*b:get{1,1,1}
+ans = c:get{1,1,1}            --> 2*b:get{1,1,1}
 
 -- get sub array
 g = a:sub({1,1,1},{-1,-1,2})
-ans = g:isEqual(Arr{2,3,2})        --> true
+ans = g:isEqual(Arr{2,3,2})   --> true
 
 -- concatenate along the 3-rd axes
 d = Arr.concat(b,b,3)
 -- size for given dimension
-ans = d:dim()[3]                --> 2
+ans = d:dim()[3]              --> 2
 
 -- apply function of several arguments
 a1 = Arr.rand{2,2}
@@ -59,13 +59,13 @@ a2 = Arr.rand{2,2}
 a3 = Arr.rand{2,2}
 fn = function (x,y,z) return x*y+z end
 a4 = Arr.apply(fn, a1,a2,a3)
-ans = a4:get{1,2}               --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
+ans = a4:get{1,2}             --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
 
 
 -- apply function of 1 argument
 -- to get new array
 f = b:map(function (x) return 10*x end)
-ans = f:get{1,1,1}              --> b:get{1,1,1}*10
+ans = f:get{1,1,1}            --> b:get{1,1,1}*10
 
 -- simple print
 print(a)

@@ -13,21 +13,21 @@
 _C = require 'sonatalib.const'
 
 -- charge of electron
-ans = _C.phy.e * 1E19       --3> 1.602
+ans = _C.phy.e * 1E19        --3> 1.602
 
 -- units have postfix _u
-ans = _C.phy.e_u           --> 'C'
+ans = _C.phy.e_u              --> 'C'
 
 -- create "immutable" value
 _C.add('myConst', 10)
-ans = _C.myConst        --> 10
+ans = _C.myConst              --> 10
 
 -- modification generate error
 ans = pcall(function() _C.myConst = 0 end)  --> false
 
 -- remove constant
 _C.remove('myConst')
-ans = _C.myConst        --> nil
+ans = _C.myConst              --> nil
 
 --]]
 

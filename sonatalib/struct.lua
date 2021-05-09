@@ -21,20 +21,20 @@ a:push(1)
 a:push(2)
 -- stack size
 -- (the same as #a)
-ans = a:size()            --> 2
+ans = a:size()                --> 2
 
 -- top value
-ans = a:top()             --> 2
+ans = a:top()                 --> 2
 
 -- make copy
 aa = a:copy()
 
 -- get value
 a:pop()
-ans = a:pop()             --> 1
+ans = a:pop()                 --> 1
 
 -- check capacity
-ans = a:isEmpty()          --> true
+ans = a:isEmpty()             --> true
 
 -- create queue
 b = DS.Queue()
@@ -42,25 +42,25 @@ b = DS.Queue()
 b:push(1)
 b:push(2)
 -- get from the head
-ans = b:pop()             --> 1
+ans = b:pop()                 --> 1
 
 -- add to the head
 b:pushFront(4)
 -- remove from the tale
-ans = b:popBack()          --> 2
+ans = b:popBack()             --> 2
 
 -- check queue size
 -- (the same as #b)
-ans = b:size()            --> 1
+ans = b:size()                --> 1
 
 -- top value
-ans = b:front()            --> 4
+ans = b:front()               --> 4
 
 -- opposite
-ans = b:back()            --> 4
+ans = b:back()                --> 4
 
 -- check capacity
-ans = b:isEmpty()          --> false
+ans = b:isEmpty()             --> false
 
 -- make copy
 bb = b:copy()
@@ -70,13 +70,13 @@ c = DS.Heap()
 c:push(1)
 c:push(3)
 c:push(2)
-ans = c:top()            --> 3
+ans = c:top()                 --> 3
 
 -- get element
-ans = c:pop()            --> 3
+ans = c:pop()                 --> 3
 
 -- check capacity
-ans = c:isEmpty()          --> false
+ans = c:isEmpty()             --> false
 
 -- new heap
 -- with user comparison function
@@ -85,64 +85,64 @@ d = DS.Heap(function (a,b) return a > b end)
 d:push(1)
 d:push(3)
 d:push(2)
-ans = d:top()             --> 1
+ans = d:top()                 --> 1
 
 -- make copy
 dd = d:copy()
 
 -- heap size
 -- (equal to #dd)
-ans = dd:size()            --> 3
+ans = dd:size()               --> 3
 
 -- get heap element
-ans = dd:pop()            --> 1
+ans = dd:pop()                --> 1
 
 -- define elements of the set
 a = DS.Set {1,2,3,4,1}
 b = DS.Set {3,4,5}
-ans = a                --> DS.Set {1,2,3,4}
+ans = a                       --> DS.Set {1,2,3,4}
 
 -- check if 6 in set b
-ans = b[6]              --> nil
+ans = b[6]                    --> nil
 
 -- add value
 b:add(6)
 ans = b[6]  
 -- remove value
-b:remove(6)              --> true
+b:remove(6)                   --> true
 
 -- union
-ans = a + b              --> DS.Set {1,2,3,4,5}
+ans = a + b                   --> DS.Set {1,2,3,4,5}
 
 -- intersection
-ans = a * b              --> DS.Set {3,4}
+ans = a * b                   --> DS.Set {3,4}
 
 -- difference
-ans = a / b              --> DS.Set {1,2}
+ans = a / b                   --> DS.Set {1,2}
 
 -- comparison
-ans = (a == b)            --> false
+ans = (a == b)                --> false
 
-ans = (a < b)            --> false
+ans = (a < b)                 --> false
 
 -- represent as list
 t = a:list()
-ans = a[ t[1] ]           --> true
+ans = a[ t[1] ]               --> true
 
 -- size of the set
 -- (the same as #a)
-ans = a:size()            --> 4
+ans = a:size()                --> 4
 
-ans = a:isEmpty()          --> false
+ans = a:isEmpty()             --> false
 
 -- make copy
 d = a:copy()
-ans = (d == a)            --> true
+ans = (d == a)                --> true
 
 -- generate new set 
 -- using function
 e = a:map(function (x) return x^2 end)
-ans = e[16]              --> true
+ans = e[16]                   --> true
 
 -- show
 print(a)

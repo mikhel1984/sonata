@@ -28,16 +28,16 @@ a = Graph {'a','b',{'a','c'},{'d','e',w=2},{'d','b',4,3}}
 
 -- list of nodes
 nd = a:nodes()
-ans = #nd               --> 5
+ans = #nd                     --> 5
 
 -- list of edges
 -- if an edge has different weight for different sizes
 -- it is represented twice
 ed = a:edges()
-ans = #ed               --> 4
+ans = #ed                     --> 4
 
 -- has directed edges
-ans = a:isDirected()     --> true
+ans = a:isDirected()          --> true
 
 -- add node
 a:add('h') 
@@ -45,7 +45,7 @@ a:add('h')
 a:add {'a','d'}
 -- check size
 -- (same as #a)
-ans = a:size()            --> 6
+ans = a:size()                --> 6
 
 -- remove edge
 a:remove {'a','d'}
@@ -53,7 +53,7 @@ a:remove {'a','d'}
 a:remove('a')
 -- new edge number
 ed = a:edges()
-ans = #ed               --> 3
+ans = #ed                     --> 3
 
 -- directed edges
 -- second way to define
@@ -62,27 +62,27 @@ a:add {'c','p',w12=2}
 -- and vise versa
 a:add {'c','q',w21=3}
 ed = a:edges()
-ans = #ed               --> 5
+ans = #ed                     --> 5
 
 -- make copy
 b = a:copy()
 
 -- completeness 
-ans = b:isComplete()        --> false
+ans = b:isComplete()          --> false
 
 -- prepare graph
 c = Graph {{'a','b'},{'a','c'},{'b','d'},{'b','e'},{'c','f'},{'f','g'},{'f','h'},{'e','g'}}
 
 -- is it weighted 
-ans = c:isWeighted()        --> false
+ans = c:isWeighted()          --> false
 
 -- breadth first search
 _,path = c:bfs('e','h')
-ans = path[3]            --> 'f'
+ans = path[3]                 --> 'f'
 
 -- depth first search
 found,path = c:dfs('d','c')
-ans = found              --> true
+ans = found                   --> true
 
 -- update weight
 -- (default is 1)
@@ -93,7 +93,7 @@ c:add{'c','f',w=2}
 
 -- Dijkstra path search
 dist,prev = c:pathD('a') 
-ans = dist['g']           --> 1.9
+ans = dist['g']               --> 1.9
 
 -- Bellman-Ford path search
 c:add{'f','h',w=-0.5}
@@ -101,7 +101,7 @@ dist,prev = c:pathBF('a')
 ans = dist['h'] 
 
 -- check negative edges
-ans = c:isNegative()        --> true
+ans = c:isNegative()          --> true
 
 -- show
 print(b)

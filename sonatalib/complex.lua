@@ -22,51 +22,51 @@ Comp = require 'sonatalib.complex'
 a = Comp(1,2)
 -- or just imaginary
 b = Comp(3)
-ans = b                     --> Comp(0,3)
+ans = b                       --> Comp(0,3)
 
 -- imaginary unit
 j = Comp._i
-ans = 3+4*j                 --> Comp(3,4)
+ans = 3+4*j                   --> Comp(3,4)
 
 -- use trigonometrical form
-ans = Comp.trig(2,0)        --> Comp(2,0)
+ans = Comp.trig(2,0)          --> Comp(2,0)
 
 -- arithmetic
-ans = a + b                 --> Comp(1,5)
+ans = a + b                   --> Comp(1,5)
 
-ans = Comp(3) - b           --> Comp(0)
+ans = Comp(3) - b             --> Comp(0)
 
-ans = a * b                 --> Comp(-6,3)
+ans = a * b                   --> Comp(-6,3)
 
-ans = a / Comp._i           --> Comp(2,-1)
+ans = a / Comp._i             --> Comp(2,-1)
 
 -- power can be complex
 c = Comp(1,1)^Comp(2,-2)
 
 -- real part
-ans = c:real()             --3> 6.147
+ans = c:real()               --3> 6.147
 
 -- imaginary part
-ans = c:imag()             --1> 7.4
+ans = c:imag()               --1> 7.4
 
 -- comparison
-ans = (a == b)              --> false
+ans = (a == b)                --> false
 
-ans = (a ~= b)              --> true
+ans = (a ~= b)                --> true
 
 -- absolute value
-ans = a:abs()              --3> 2.236
+ans = a:abs()                --3> 2.236
 
 -- argument (angle)
-ans = a:angle()            --3> 1.107
+ans = a:angle()              --3> 1.107
 
 -- conjugated number
-ans = a:conj()              --> Comp(1,-2)
+ans = a:conj()                --> Comp(1,-2)
 
 -- some functions after import 
 -- become default, such as
 d = Comp.sqrt(-2)
-ans = d:imag()             --3> 1.414
+ans = d:imag()               --3> 1.414
 
 -- exp
 ans = Comp.exp(d):real()     --3> 0.156

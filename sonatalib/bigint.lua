@@ -20,46 +20,46 @@ Big = require 'sonatalib.bigint'
 
 -- from integer
 a = Big(123)
-ans = a:val()        --> 123
+ans = a:val()                 --> 123
 
 -- from string
 b = Big('456')
-ans = b:val()        --> 456
+ans = b:val()                 --> 456
 
 -- arithmetical operations
-ans = Big.val(a+b)    --> 579
+ans = Big.val(a+b)            --> 579
 
-ans = Big.val(a-b)    --> -333
+ans = Big.val(a-b)            --> -333
 
-ans = Big.val(a*Big(2)) --> 246
+ans = Big.val(a*Big(2))       --> 246
 
-ans = Big.val(b/2)    --> 228
+ans = Big.val(b/2)            --> 228
 
-ans = Big.val(b%a)    --> 87
+ans = Big.val(b%a)            --> 87
 
-ans = Big.val(a^3)    --> 1860867
+ans = Big.val(a^3)            --> 1860867
 
 -- absolute value
 ans = Big.val(Big.abs('-25')) --> 25
 
 -- factorial
 c = Big(10):fact()
-ans = Big.val(c)  --> 3628800
+ans = Big.val(c)              --> 3628800
 
 -- make copy, comparison
 d = a:copy()
-ans = (a == d)          --> true
+ans = (a == d)                --> true
 
-ans = (a > b)           --> false
+ans = (a > b)                 --> false
 
-ans = (a == b)          --> false
+ans = (a == b)                --> false
 
 -- compare with number
-ans = a:eq(123)          --> true
+ans = a:eq(123)               --> true
 
 -- number of digits
 -- (the same as #a) 
-ans = a:size()          --> 3
+ans = a:size()                --> 3
 
 -- simple print
 print(a)

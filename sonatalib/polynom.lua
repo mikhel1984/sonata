@@ -22,53 +22,53 @@ Poly = require 'sonatalib.polynom'
 a = Poly {1,2,4,3}
 b = Poly {1,1}  
 -- polynomial value for x=0
-ans = a:val(0)           --> 3
+ans = a:val(0)                --> 3
 
 -- simplified call
-ans = a(0)              --> 3
+ans = a(0)                    --> 3
 
 -- arithmetic
-ans = a + b             --> Poly {1,2,5,4}
+ans = a + b                   --> Poly {1,2,5,4}
 
-ans = a - b             --> Poly {1,2,3,2}
+ans = a - b                   --> Poly {1,2,3,2}
 
-ans = b * b             --> Poly {1,2,1}
+ans = b * b                   --> Poly {1,2,1}
 
-ans = a / b             --> Poly {1,1,3}
+ans = a / b                   --> Poly {1,1,3}
 
-ans = a % b             --> Poly {0}
+ans = a % b                   --> Poly {0}
 
-ans = b ^ 3             --> Poly {1,3,3,1}
+ans = b ^ 3                   --> Poly {1,3,3,1}
 
 -- integration
 -- free coefficient is 0
-ans = b:int()            --> Poly {0.5,1,0}
+ans = b:int()                 --> Poly {0.5,1,0}
 
 -- derivative
 ader = a:der()
 -- and its value for x=1
-ans = ader(1)            --> 11
+ans = ader(1)                 --> 11
 
 -- build polynomial using roots
-ans = Poly.build(1,-1)      --> Poly {1,0,-1}
+ans = Poly.build(1,-1)        --> Poly {1,0,-1}
 
 -- make copy and compare
 c = a:copy()
-ans = (a == c)           --> true
+ans = (a == c)                --> true
 
 -- not equal
-ans = (b == c)           --> false
+ans = (b == c)                --> false
 
 -- find real roots
 e = a:real()
-ans = e[1]              --~ -1.00
+ans = e[1]                   --1> -1.00
 
 -- fit curve with polynomial
 -- of order 2
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly.fit(A,B,2)
-ans = p(10)             --0> 227.0
+ans = p(10)                  --0> 227.0
 
 -- simple print
 print(a)
@@ -76,7 +76,7 @@ print(a)
 -- human-friendly print
 -- with variable 's' (default is 'x')
 d = Poly {2,-2,1}
-ans = d:str('s')          --> '2*s^2 -2*s +1'
+ans = d:str('s')              --> '2*s^2 -2*s +1'
 
 --]]
 

@@ -27,14 +27,14 @@ ans = tt[2][2]                --> 5
 
 -- get file text as string
 s = File.read(nm)
-ans = string.sub(s,1,5)          --> '1;2;3'
+ans = string.sub(s,1,5)       --> '1;2;3'
 
 -- read table from file
 f = io.open(nm,'w')
 f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
 f:close()
 aa = File.tblImport(nm)
-ans = aa.b.c                 --> 'abc'
+ans = aa.b.c                  --> 'abc'
 
 -- string split
 str = 'abc//defg//hijkl//mnop'

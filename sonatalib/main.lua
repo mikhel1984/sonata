@@ -14,31 +14,31 @@
 lc = require 'sonatalib.main'
 
 -- constants starts from _
-ans = _pi                --> math.pi
+ans = _pi                     --> math.pi
 
 -- standard functions 
 ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
 
 -- round number
-ans = lc.round(0.9)          --> 1.0
+ans = lc.round(0.9)           --> 1.0
 
 -- save 2 digits
-ans = lc.round(math.pi, 2)     --> 3.14
+ans = lc.round(math.pi, 2)    --> 3.14
 
 -- random between 0 and 1
 p = rand()
-ans = (p >= 0) and (p <= 1)    --> true
+ans = (p >= 0) and (p <= 1)   --> true
 
 -- random integer (1 to 10)
 p = randi(10)
-ans = (p >= 1) and (p <= 10)    --> true
+ans = (p >= 1) and (p <= 10)  --> true
 
 -- normal distributed random
 print(randn())
 
 -- get object type
 -- "knows" types for Sonata objects
-ans = lc.type(25)           --> 'integer'
+ans = lc.type(25)             --> 'integer'
 
 -- show table components
 a = {a=1,b=2;3,4,5}
@@ -49,15 +49,15 @@ lc.sci(1234.56789)
 
 -- generate 'sequence'
 b = lc.range(3)
-ans = b[3]               --> 3
+ans = b[3]                    --> 3
 
 -- even numbers
 b = lc.range(2,10,2)
-ans = b[2]               --> 4
+ans = b[2]                    --> 4
 
 -- calculate function values
 c = lc.map(sin, b)
-ans = c[1]               --3> 0.909
+ans = c[1]                   --3> 0.909
 
 -- use Lua functions if need
 ans = math.floor(_pi)

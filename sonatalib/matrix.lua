@@ -23,69 +23,69 @@ Mat = require 'sonatalib.matrix'
 a = Mat {{1,2},{3,4}}
 b = Mat {{5,6},{7,8}}
 -- call in typical way
-ans = a[2][2]              --> 4 
+ans = a[2][2]                 --> 4 
 
 b[1][1] = 5
 -- transpose
 c = a:T()
 -- use () as alias for get()
-ans = c(1,-1)              --> 3
+ans = c(1,-1)                 --> 3
 
 -- matrix rows and columns
-_, ans = a:size()           --> 2
+_, ans = a:size()             --> 2
 
 -- arithmetical operations
-ans = a + b               --> Mat {{6,8},{10,12}}
+ans = a + b                   --> Mat {{6,8},{10,12}}
 
-ans = b - a               --> Mat {{4,4},{4,4}}
+ans = b - a                   --> Mat {{4,4},{4,4}}
 
-ans = a * b               --> Mat {{19,22},{43,50}}
+ans = a * b                   --> Mat {{19,22},{43,50}}
 
 ans = a / b 
 -- determinant
-ans = ans:det()            --2> 1
+ans = ans:det()              --2> 1
 
 -- multiply to scalar
-ans = 2 * a               --> Mat {{2,4},{6,8}}
+ans = 2 * a                   --> Mat {{2,4},{6,8}}
 
 -- add scalar (to all elements)
-ans = a - 1               --> Mat {{0,1},{2,3}}
+ans = a - 1                   --> Mat {{0,1},{2,3}}
 
-ans = a ^ 2               --> Mat {{7,10},{15,22}} 
+ans = a ^ 2                   --> Mat {{7,10},{15,22}} 
 
 -- determinant
-ans = a:det()              --> -2
+ans = a:det()                 --> -2
 
 -- inverse matrix
 e = a:inv()
-ans = e(2,1)              --> 1.5
+ans = e(2,1)                  --> 1.5
 
 -- another call of inversion
 e = a^-1
-ans = e(2,1)              --> 1.5
+ans = e(2,1)                  --> 1.5
 
 -- object copy
 -- (it doesn't copy zeros)
 f = a:copy()
-ans = (f == a)             --> true
+ans = (f == a)                --> true
 
 -- element-wise comparison
-ans = (a == b)             --> false
+ans = (a == b)                --> false
 
 -- identity matrix
-ans = Mat.eye(2)            --> Mat {{1,0},{0,1}}
+ans = Mat.eye(2)              --> Mat {{1,0},{0,1}}
 
 -- matrix argument
-ans = Mat.eye(a)            --> Mat {{1,0},{0,1}}
+ans = Mat.eye(a)              --> Mat {{1,0},{0,1}}
 
 -- matrix of zeros
-ans = Mat.zeros(2,1)         --> Mat {{0},{0}}
+ans = Mat.zeros(2,1)          --> Mat {{0},{0}}
 
 -- matrix of constants = 4
-ans = Mat.ones(2,3,4)        --> Mat {{4,4,4},{4,4,4}}
+ans = Mat.ones(2,3,4)         --> Mat {{4,4,4},{4,4,4}}
 
 -- matrix of constants = 1
-ans = Mat.ones(a,3)          --> Mat {{3,3},{3,3}}
+ans = Mat.ones(a,3)           --> Mat {{3,3},{3,3}}
 
 -- define rule to fill
 -- result matrix is 'dense'
@@ -93,11 +93,11 @@ fn = function (i,j) return i == j and 1 or 0 end
 ans = Mat.fill(2,3,fn)        --> Mat {{1,0,0},{0,1,0}}
 
 -- horizontal concatenation
-ans = a .. b              --> Mat {{1,2,5,6},{3,4,7,8}}
+ans = a .. b                  --> Mat {{1,2,5,6},{3,4,7,8}}
 
 -- vertical concatenation
 -- (a // b - for short)
-ans = a:concat(b,'v')        --> Mat {{1,2},{3,4},{5,6},{7,8}}
+ans = a:concat(b,'v')         --> Mat {{1,2},{3,4},{5,6},{7,8}}
 
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)       --> Mat {{1,4},{9,16}}
@@ -109,20 +109,20 @@ ans = a:map(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
 -- element-wise
 fn = function (x,y,z) return x*y+z end
 aa = Mat.apply(fn, b,b,b) 
-ans = aa[1][1]              --> 30
+ans = aa[1][1]                --> 30
 
 -- use Gauss transform to solve equation
-ans = Mat.rref(a .. Mat{{5},{11}}) --> Mat {{1,0,1},{0,1,2}}
+ans = Mat.rref(a .. Mat{{5},{11}})             --> Mat {{1,0,1},{0,1,2}}
 
 -- create vector
-ans = Mat.V {1,2,3}          --> Mat {{1},{2},{3}}
+ans = Mat.V {1,2,3}           --> Mat {{1},{2},{3}}
 
 -- get submatrix
 g = Mat {{1,2,3},{4,5,6},{7,8,9}}
-ans = g({2,-1},{2,3})        --> Mat {{5,6},{8,9}}
+ans = g({2,-1},{2,3})         --> Mat {{5,6},{8,9}}
 
 -- euclidean norm
-ans = Mat.V({1,2,3}):norm()    --3> math.sqrt(14)
+ans = Mat.V({1,2,3}):norm()  --3> math.sqrt(14)
 
 -- random matrix
 h = Mat.rand(3,2)
@@ -139,52 +139,52 @@ print(Mat.randn(2,2))
 -- pseudo inverse matrix
 m = Mat {{1,2},{3,4},{5,6}}
 n = m:pinv()
-ans = n(2,2)              --3> 0.333
+ans = n(2,2)                 --3> 0.333
 
 -- copy as Lua table
 -- (without methametods)
 k = Mat.eye(3)
 k = k:table()
-ans = k[2][1]             --> 0
+ans = k[2][1]                 --> 0
 
 -- make diagonal matrix
-ans = Mat.diag({1,2,3})      --> Mat {{1,0,0},{0,2,0},{0,0,3}}
+ans = Mat.diag({1,2,3})       --> Mat {{1,0,0},{0,2,0},{0,0,3}}
 
 -- shifted diagonal
-ans = g:diag(1)            --> Mat {{2},{6}}
+ans = g:diag(1)               --> Mat {{2},{6}}
 
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
-ans = Mat.cross(x1,x2)       --> Mat {{-3},{6},{-3}}
+ans = Mat.cross(x1,x2)        --> Mat {{-3},{6},{-3}}
 
 -- dot product of 2 vectors
-ans = Mat.dot(x1,x2)        --> 32
+ans = Mat.dot(x1,x2)          --> 32
 
 -- LU transform
 l,u,p = b:lu()
-ans = l[2][1]             --3> 0.714
+ans = l[2][1]                --3> 0.714
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
-ans = m[2][2]             --3> 1.633
+ans = m[2][2]                --3> 1.633
 
 -- matrix trace
-ans = a:tr()              --> 5
+ans = a:tr()                  --> 5
 
 -- extract first row
 m = a({},1)
 -- vector doesn't need in 2 indices
-ans = m(1)               --> 1
+ans = m(1)                    --> 1
 
 -- extract last column
 -- index can be negative 
 m = a(-1,{})
-ans = m:get(2)            --> 4
+ans = m:get(2)                --> 4
 
 -- apply summation to each row
-ans = a:sum()             --> Mat {{3},{7}}
+ans = a:sum()                 --> Mat {{3},{7}}
 
 -- apply product to each column
 -- initial value is 1
@@ -195,7 +195,7 @@ ans = Mat.ones(2,3):rank()    --> 1
 
 -- change size
 tmp = Mat{{1,2},{3,4},{5,6}} 
-ans = tmp:reshape(2,3)       --> Mat {{1,2,3},{4,5,6}}
+ans = tmp:reshape(2,3)        --> Mat {{1,2,3},{4,5,6}}
 
 --]]
 

@@ -18,26 +18,26 @@ Num = require 'sonatalib.numeric'
 Num.TOL = 1e-4
 -- solve 'sin(x) = 0' for x in (pi/2...3*pi/2)
 a = Num.solve(math.sin, math.pi*0.5, math.pi*1.5)
-ans = a                        --3> math.pi
+ans = a                      --3> math.pi
 
 -- Newton method
 -- only one initial value
 d = Num.Newton(math.sin, math.pi*0.7)
-ans = d                        --3> math.pi
+ans = d                      --3> math.pi
 
 -- numeric derivative
 b = Num.der(math.sin, 0)
-ans = b                        --0> 1
+ans = b                      --0> 1
 
 -- numeric integral
 c = Num.trapez(math.sin, 0, math.pi)
-ans = c                        --0> 2
+ans = c                      --0> 2
 
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
 tbl, yn = Num.ode45(function (x,y) return x*y end, {0,3}, 1)
-ans = yn                       --2> 90.011
+ans = yn                     --2> 90.011
 
 -- use matrices for high order equations
 Mat = require 'sonatalib.matrix'
@@ -47,14 +47,14 @@ Mat = require 'sonatalib.matrix'
 -- so: x1' = x2, x2' = 1+2*x2-2*x1
 myfun = function (t,x) return Mat.V {x(2), 1+2*x(2)-2*x(1)} end
 _, xn = Num.ode45(myfun, {0,2}, Mat.V{3,2}, {dt=0.2}) 
-ans = xn(1)                     --2>  -10.54
+ans = xn(1)                  --2>  -10.54
 
 -- define exit condition
 -- from time, current and previous results
 cond = function (time,current,previous) return current < 0.1 end
 myfun = function (t,x) return -x end
 y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
-ans = y[#y][1]                  --2> 2.56
+ans = y[#y][1]               --2> 2.56
 
 --]]
 

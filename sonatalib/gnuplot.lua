@@ -32,7 +32,7 @@ g:plot()
 b = g:copy()
 print(b)
 -- check correctness of the table
-ans = b:isAvailable()                    --> true
+ans = b:isAvailable()              --> true
 
 -- print Lua table
 tmp = {{1,1},{2,2},{3,3},{4,4}}
