@@ -58,7 +58,6 @@ import = {
   rational  = "Rat",
   special   = "Spec",
   stat      = "Stat",
-  struct    = "DS",
   units     = "Unit",
 }
 
