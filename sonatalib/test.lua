@@ -163,6 +163,19 @@ test.time = function (fn,...)
   return sum * 1000/ n
 end
 
+--- Find function name
+--  @param dbg Structure with debug info.
+--  @return String with function name.
+test._getName_ = function (dbg)
+  if dbg.what == 'C' then return dbg.name end
+  local lc = string.format("[%s]:%d", dbg.short_src, dbg.linedefined)
+  if dbg.what ~= "main" and dbg.namewhat ~= "" then
+    return string.format("%s (%s)", lc, dbg.name)
+  else
+    return lc
+  end
+end
+
 --- Count internal calls inside function.
 --  Based on example from "Programming in Lua" by Roberto Ierusalimschy.
 --  @param fn Function to check.
@@ -188,7 +201,7 @@ test.profile = function (fn,...)
 
   -- process results
   local stat = {}
-  for f, c in pairs(counters) do stat[#stat+1] = {main._getName_(names[f]), c} end
+  for f, c in pairs(counters) do stat[#stat+1] = {test._getName_(names[f]), c} end
   table.sort(stat, function (a,b) return a[2] > b[2] end)
 
   -- show results

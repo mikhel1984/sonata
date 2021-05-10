@@ -278,19 +278,6 @@ main.map = function (fn, tbl)
 end
 about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.', lc_help.OTHER}
 
---- Find function name
---  @param dbg Structure with debug info.
---  @return String with function name.
-main._getName_ = function (dbg)
-  if dbg.what == 'C' then return dbg.name end
-  local lc = string.format("[%s]:%d", dbg.short_src, dbg.linedefined)
-  if dbg.what ~= "main" and dbg.namewhat ~= "" then
-    return string.format("%s (%s)", lc, dbg.name)
-  else
-    return lc
-  end
-end
-
 --- Simple implementation of 'The Life' game ;)
 --  Prepare your initial board in form of matrix.
 --  @param board Matrix with 'ones' as live cells.
@@ -324,6 +311,8 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
+--- Session logging.
+--  @param flat Value 'on'/true to start and 'off'/false to stop.
 log = function (flag)
   if flag == 'on' or flag == true then
     if not main._logFile_ then
@@ -336,8 +325,11 @@ log = function (flag)
       main._logFile_:close() 
       main._logFile_ = nil
     end
+  else
+    io.write('Unexpected argument!\n')
   end
 end
+about[log] = {'log(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
