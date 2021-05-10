@@ -439,7 +439,6 @@ end
 main._args_ = {
 
 -- run tests
-['-T'] = '--test',
 ['--test'] = {
 description = 'Apply unit tests to desired module, or all modules if the name is not defined.',
 process = function (args)
@@ -456,8 +455,7 @@ end,
 exit = true},
 
 -- localization file
-['-L'] = '--lng',
-['--lng'] = {
+['--lang'] = {
 description = 'Create/update file for localization.',
 process = function (args)
   if args[2] then
@@ -470,7 +468,6 @@ end,
 exit = true},
 
 -- generate 'help.html'
-['-D'] = '--doc',
 ['--doc'] = {
 description = 'Create/update documentation file.',
 process = function ()
@@ -480,14 +477,12 @@ end,
 exit = true},
 
 -- new module
-['-N'] = '--new',
 ['--new'] = {
 description = 'Generate template for a new module.',
 process = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
 exit = true},
 
 -- save session to log file
-['-l'] = '--log',
 ['--log'] = {
 description = "Save session into the log file.",
 process = function (args)
@@ -511,16 +506,15 @@ process = function (args)
 end,
 exit = true},
 
--- 
-['-h'] = '--help',
 }
 -- show help
 main._args_['--help'] = {
-description = 'Get this help message.',
-process = function () print(main._args_.text()) end,
+process = function () print(main._arghelp_()) end,
 exit = true}
+main._args_['-h'] = main._args_['--help']
+
 -- string representation of the help info
-main._args_.text = function ()
+main._arghelp_ = function ()
   local txt = {  
     "\n'Sonata LC' is a Lua based program for mathematical calculations.",
     "",
@@ -528,12 +522,13 @@ main._args_.text = function ()
     "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
     "(option '-i' could be used for working in native Lua interpreter)",
     "",
-    "FLAGS:"
+    "FLAGS:",
+    "\t--help, -h - Get this help message.",
+    "\t\t(Development)",
   }
   for k,v in pairs(main._args_) do 
-    if type(v) == 'string' then
-      --local ref = main._args_[v]      
-      txt[#txt+1] = string.format('\t%s, %-6s - %s', k, v, main._args_[v].description)
+    if v.description then
+      txt[#txt+1] = string.format('\t%-8s - %s', k, v.description)
     end
   end
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
