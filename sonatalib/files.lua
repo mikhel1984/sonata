@@ -158,6 +158,6 @@ if not LC_DIALOG then files.about = nil end
 return files
 
 --==================================
---TODO: improve dsv read/write according the specification
---TODO: json read/write
+--TODO: json read/write (?)
 --TODO: table export
+--TODO: LC data import/export

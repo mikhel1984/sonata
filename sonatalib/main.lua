@@ -323,38 +323,6 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
---- Read text file and evaluate expressions in special template.
---  Current template is '## some expressions ##'. One template can consists of several expressions,
---  separated with ';'. If expression has '=' it just evaluated, otherwise the result will be shown.
---  @param src Source file.
---  @param dst File name. If defined, file will be saved in this file.
-main.evalTF = function (src,dst)
-  local F = require('sonatalib.files')
-  local txt = assert(F.read(src), 'No such file: '..tostring(src))
-  local res = string.gsub(txt, '##(.-)##',
-    function (s)
-      for expr in F.split(s,';') do
-        if string.find(expr, '=') or string.find(expr,'import') then
-          local fn = Ver.loadStr(expr)
-          if fn then fn() end
-        else
-          local fn = Ver.loadStr('return '..expr)
-          if fn then return tostring(fn()) end
-        end
-      end
-      return ''
-    end)
-  if dst then
-    out = assert(io.open(dst, 'w'), 'Cannot create file: '..tostring(dst))
-    out:write(res)
-    out:close()
-    print('Done')
-  else
-    print(res)
-  end  
-end
-about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expressions in ##..##. Save result to dst file, if need.", lc_help.OTHER}
-
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
 main.evalDialog = function (logFile)
@@ -398,7 +366,8 @@ main.evalDialog = function (logFile)
   main._exit_()
 end
 
-
+--- Evaluate 'note'-file.
+--  @param fname Script file name.
 main.evalDemo = function (fname)
   local f = assert(io.open(fname))
   local text = f:read('*a'); f:close()
@@ -458,9 +427,12 @@ end
 -- save link to help info
 main.about = about
 
-main._updateHelp = function (fNew, fOld)
-  main.about[fNew] = main.about[fOld]
-  main.about[fOld] = nil
+--- Update help reference when redefine function.
+--  @param fnNew New function.
+--  @param fnOld Old function.
+main._updateHelp = function (fnNew, fnOld)
+  main.about[fnNew] = main.about[fnOld]
+  main.about[fnOld] = nil
 end
 
 -- command line arguments of Sonata LC and their processing
