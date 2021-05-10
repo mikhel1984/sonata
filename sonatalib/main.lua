@@ -70,6 +70,7 @@ ans = math.deg(_pi)
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
+local LOGNAME = 'sonata.log'
 
 local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
@@ -323,18 +324,27 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
+log = function (flag)
+  if flag == 'on' or flag == true then
+    if not main._logFile_ then
+      main._logFile_ = io.open(LOGNAME, 'a')
+      local d = os.date('*t')
+      main._logFile_:write(string.format('\n-- Session %d-%d-%d %d:%d \n\n', d.day, d.month, d.year, d.hour, d.min))
+    end
+  elseif flag == 'off' or flag == false then
+    if main._logFile_ then
+      main._logFile_:close() 
+      main._logFile_ = nil
+    end
+  end
+end
+
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
-main.evalDialog = function (logFile)
+main.evalDialog = function ()
   local invA, invB = lc_help.CMAIN..'lc: '..lc_help.CRESET, lc_help.CMAIN..'..: '..lc_help.CRESET
   local invite, cmd = invA, ""
   local ERROR, log = lc_help.CERROR.."ERROR: "
-  -- save session if need
-  if logFile then
-    log = io.open(logFile, 'w')
-    local d = os.date('*t')
-    log:write(string.format('-- Sonata LC # log # %d-%d-%d %d:%d \n\n', d.day, d.month, d.year, d.hour, d.min))
-  end
   -- start dialog
   while true do
     io.write(invite)
@@ -353,16 +363,16 @@ main.evalDialog = function (logFile)
       break
     end
     -- logging
-    if log then
-      log:write(newLine,'\n')
+    if main._logFile_ then
+      main._logFile_:write(newLine,'\n')
       if status == EV_RES and res then 
-        log:write('--[[ ', res, ' ]]\n\n') 
+        main._logFile_:write('--[[ ', res, ' ]]\n\n') 
       elseif status == EV_ERROR then
-        log:write('--[[ ERROR ]]\n\n')
+        main._logFile_:write('--[[ ERROR ]]\n\n')
       end
     end
   end
-  if log then log:close() end
+  if main._logFile_ then main._logFile_:close() end
   main._exit_()
 end
 
@@ -482,15 +492,6 @@ description = 'Generate template for a new module.',
 process = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
 exit = true},
 
--- save session to log file
-['--log'] = {
-description = "Save session into the log file.",
-process = function (args)
-  local d = os.date('*t')
-  main._logFile_ = string.format('ses%d%d%d_%0d%0d.log', d.year, d.month, d.day, d.hour, d.min)
-end,
-exit = false},
-
 -- process files
 ['default'] = {
 --description = 'Evaluate file(s).',
@@ -538,8 +539,7 @@ main._arghelp_ = function ()
   for k in pairs(import) do modules[#modules+1] = k end
   txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
   txt[#txt+1] = "BUGS: mail to 'SonataLC@yandex.ru'\n"
-
-  return table.concat(txt,'\n')  
+  return table.concat(txt,'\n')
 end
 
 main._exit_ = function () print(lc_help.CMAIN.."\n          --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end

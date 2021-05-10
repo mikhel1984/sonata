@@ -172,7 +172,7 @@ if LC_DEFAULT_MODULES then
 end
 
 if arg[-1] ~= '-i' then
-  lc.evalDialog(lc._logFile_)
+  lc.evalDialog()
 end
 
 --===============================================
