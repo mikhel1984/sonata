@@ -209,10 +209,10 @@ main.show = function (t,N)
   local count = 1
   -- dialog
   local function continue(n)
-      io.write(n, ' - continue? (y/n) ')
-      return string.lower(io.read()) == 'y'
-    end
-  print('{')
+    io.write(n, ' - continue? (y/n) ')
+    return string.lower(io.read()) == 'y'
+  end
+  io.write('{\n')
   -- keys/values
   for k,v in pairs(t) do
     if Ver.mathType(k) ~= 'integer' or k < 1 then
@@ -225,7 +225,7 @@ main.show = function (t,N)
   for i,v in ipairs(t) do
     io.write(tostring(v),', ')
     if i % N == 0 then
-      print()
+      io.write('\n')
       if not continue(i) then break end
     end
   end
@@ -313,7 +313,7 @@ end
 
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
-log = function (flag)
+logging = function (flag)
   if flag == 'on' or flag == true then
     if not main._logFile_ then
       main._logFile_ = io.open(LOGNAME, 'a')
@@ -329,7 +329,7 @@ log = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
-about[log] = {'log(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
+about[logging] = {'logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.

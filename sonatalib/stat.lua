@@ -58,30 +58,10 @@ ans = b[1]                    --> 1
 a,b = Stat.histcounts(X,{0,4,7})  
 ans = a[1]                    --> 5 
 
--- Poisson cdf and pdf
-ans = Stat.poisscdf(3, 0.5)  --3> 0.998
-
-ans = Stat.poisspdf(5, 1.1) * 1E3 --3> 4.467
-
--- Chi2 cdf and pdf
-ans = Stat.chi2cdf(0.5, 2)   --3> 0.2212
-
-ans = Stat.chi2pdf(1.2, 2.1) --3> 0.2748
-
 -- Student cdf and pdf
 ans = Stat.tcdf(4, 2.5)      --3> 0.9805
 
 ans = Stat.tpdf(2, 3.3)      --3> 0.0672
-
--- F cdf and pdf
-ans = Stat.fcdf(0.8, 1.1, 2.2)    --3> 0.5285
-
-ans = Stat.fpdf(1.3, 2.7, 2.4)    --3> 0.2174
-
--- Gauss cdf and pdf
-ans = Stat.normcdf(1, 1.5, 2.1)   --3> 0.4059
-
-ans = Stat.normpdf(0.7, 0.5, 0.8) --3> 0.4833
 
 --]]
 
@@ -313,43 +293,6 @@ stat.histcounts = function (x, rng)
 end
 stat.about[stat.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bins. Edges can be either number or table."}
 
---- Poisson cumulative distribution.
---   @param x Value.
---   @param lam Mean parameter.
---   @return Cumulative value.
-stat.poisscdf = function (x,lam) return stat.lc_special.gammq(x+1,lam) end
-stat.about[stat.poisscdf] = {"poisscdf(x,lam)", "Poisson cumulative distribution.", DISTRIB}
-
---- Poisson density function.
---   @param x Value.
---   @param lam Mean parameter.
---   @return Density value.
-stat.poisspdf = function (x,lam)
-  assert(lam >= 0, 'Wrong argument!')
-  if Ver.toInteger(x) == nil then return 0.0 end
-  local f = 1
-  for i = 1,x do f = f*i end
-  return lam^x*math.exp(-lam)/f
-end
-stat.about[stat.poisspdf] = {"poisspdf(x,lam)", "Poisson distribution density.", DISTRIB}
-
---- Chi-square cumulative distribution
---   @param x Value.
---   @param v Degree of freedom.
---   @return Cumulative value.
-stat.chi2cdf = function (x,v) return stat.lc_special.gammp(v/2,x/2) end
-stat.about[stat.chi2cdf] = {"chi2cdf(x,v)", "Chi-square cumulative distribution.", DISTRIB}
-
---- Chi-square density function.
---   @param x Value.
---   @param v Degree of freedom.
---   @return Density value.
-stat.chi2pdf = function (x,v)
-  if x <= 0 then return 0 end
-  local v2 = 0.5*v
-  return x^(v2-1)*math.exp(-x*0.5)/(2.0^v2*stat.lc_special.gamma(v2))
-end
-stat.about[stat.chi2pdf] = {"chi2pdf(x,v)", "Chi-square distribution density.", DISTRIB}
 
 --- Student's cumulative distribution
 --   @param x Value.
@@ -371,55 +314,10 @@ stat.tpdf = function (x,nu)
 end
 stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density.", DISTRIB}
 
---- F cumulative distribution
---   @param x Value.
---   @param v1 Numerator degree of freedom.
---   @param v2 Denominator degree of freedom.
---   @return Cumulative value.
-stat.fcdf = function (x,v1,v2)
-  local tmp = v1*x/(v2+v1*x)
-  return stat.lc_special.betainc(tmp,v1*0.5,v2*0.5)
-end
-stat.about[stat.fcdf] = {"fcdf(x,v1,v2)", "F cumulative distribution.", DISTRIB}
-
---- F density function.
---   @param x Value.
---   @param v1 Numerator degree of freedom.
---   @param v2 Denominator degree of freedom.
---   @return Density value.
-stat.fpdf = function (x,v1,v2)
-  local tmp = (v1*x)^v1*v2^v2/(v1*x+v2)^(v1+v2)
-  return math.sqrt(tmp)/(x*stat.lc_special.beta(0.5*v1,0.5*v2))
-end
-stat.about[stat.fpdf] = {"fpdf(x,v1,v2)", "F distribution density.", DISTRIB}
-
-
---- Normal cumulative distribution
---   @param x Value.
---   @param mu Shift.
---   @param sig Width.
---   @return Cumulative value.
-stat.normcdf = function (x,mu,sig)
-  mu,sig = mu or 0, sig or 1
-  return 0.5*(1+stat.lc_special.erf((x-mu)/(sig*1.4142135623731)))
-end
-stat.about[stat.normcdf] = {"normcdf(x,mu,sig)", "Normal cumulative distribution.", DISTRIB}
-
---- Normal density function.
---   @param x Value.
---   @param mu Shift.
---   @param sig Width.
---   @return Density value.
-stat.normpdf = function (x,mu,sig)
-  mu,sig = mu or 0, sig or 1
-  return math.exp(-0.5*((x-mu)/sig)^2)/math.sqrt(2*math.pi*sig*sig)
-end
-stat.about[stat.normpdf] = {"normpdf(x,nu,sig)", "Normal distribution density.", DISTRIB}
-
 -- free memory if need
 if not LC_DIALOG then stat.about = nil end
 
 return stat
 
 --====================================
---TODO: save only Student distribution
+--TODO: add tinv
