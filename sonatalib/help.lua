@@ -51,8 +51,8 @@ local _MAIN_ = '__module__'
 local eng = {
 intro = [[
 ------- help([function]) = get help -------------
---------- import(module) = expand functionality -
 ------- dofile(filename) = execute Lua script ---
+------------ use(module) = expand functionality -
 ----------------- quit() = exit -----------------
 ]],
 --modules = 'Available modules:',
@@ -60,8 +60,8 @@ done = 'Done.',
 alias = "Use alias '%s' for access to the module '%s'.",
 use_import = [[
 
-Use
-  import 'module' ['module2' 'module3' ...]
+Call
+  use 'module' OR use {'moduleA','moduleB' ...}
 to load modules.]],
 }
 

@@ -5,12 +5,12 @@ authors = [[Stanislav Mikhel]],
 ---------- dialog ----------
 Dialog = {
 ["intro"]                = [[-------- help([functio]) = akiri helpon -----------
---------- import(modulo) = piliigi la funcionalidad
 ---- dofile(dosieronomo) = kuru Lua-scripto -------
+------------ use(modulo) = piliigi la funcionalidad
 ----------------- quit() = finu -------------------
 ]],
-["use_import"]           = [[Usu
-  import 'modulo' ['modulo2' 'modulo3' ...]
+["use_import"]           = [[Alvoku
+  use 'modulo' aǔ use {'moduloA','moduloB' ...}
 por akiri ekstrajn modulojn.]],
 ["done"]                 = [[Preta.]],
 ["alias"]                = [[Usu la alias '%s' aliri la modulo '%s'.]],
