@@ -52,7 +52,7 @@ local eng = {
 intro = [[
 ------- help([function]) = get help -------------
 --------- import(module) = expand functionality -
----------- run(filename) = execute Lua script ---
+------- dofile(filename) = execute Lua script ---
 ----------------- quit() = exit -----------------
 ]],
 --modules = 'Available modules:',

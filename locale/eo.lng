@@ -6,7 +6,7 @@ authors = [[Stanislav Mikhel]],
 Dialog = {
 ["intro"]                = [[-------- help([functio]) = akiri helpon -----------
 --------- import(modulo) = piliigi la funcionalidad
-------- run(dosieronomo) = kuru Lua-scripto -------
+---- dofile(dosieronomo) = kuru Lua-scripto -------
 ----------------- quit() = finu -------------------
 ]],
 ["use_import"]           = [[Usu

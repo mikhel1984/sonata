@@ -35,9 +35,6 @@ lc_help.useColors(LC_USE_COLOR)
 -- Quit the program
 quit = lc._exit_
 
--- Load file
-run = dofile
-
 -- Update random seed
 math.randomseed(os.time())
 
