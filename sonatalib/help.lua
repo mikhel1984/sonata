@@ -445,7 +445,7 @@ return WORD2
   f = io.open(fName, 'w')
   f:write(txt)
   f:close()
-  io.write('File ', fName, ' is written.\n')
+  io.write('File ', fName, ' is ready.\n')
 end
 
 --- Generate html file with documentation.
@@ -523,10 +523,10 @@ help.generateDoc = function (locName, tModules)
   local f = io.open('help.html','w')
   f:write(table.concat(res,'\n'))
   f:close()
-  io.write("File 'help.html' is written.\n")
+  io.write("File 'help.html' is ready.\n")
 end
 
 return help
 
 --==========================================
---TODO: localize error messages
+--TODO: localize error messages (?)

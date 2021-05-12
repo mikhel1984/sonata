@@ -40,7 +40,7 @@ ans = Big.val(b%a)            --> 87
 ans = Big.val(a^3)            --> 1860867
 
 -- absolute value
-ans = Big.val(Big.abs('-25')) --> 25
+ans = Big.abs('-25'):val()    --> 25
 
 -- factorial
 c = Big(10):fact()

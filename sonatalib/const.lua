@@ -69,7 +69,6 @@ ly_u='m',        ly = 9.4607304725808E15,   -- light year
 -- math
 local _math_ = { 
                 phi = 1.618033988749895,           -- golden ratio
-               EuMa = 0.5772156649015328606065120, -- gamma
                  pi = 3.1415926535897932384626434, -- length to diameter
                   e = 2.7182818284590452353602875, -- base of natural logarithm
 }
@@ -107,7 +106,6 @@ const.about[_astro_.pc] = {"astro.pc", "One parsec.", ASTRO}
 const.about[_astro_.ly] = {"astro.ly", "One light year.", ASTRO}
 -- mathematics
 const.about[_math_.phi] = {"math.phi", "Golden ratio.", MATH}
-const.about[_math_.EuMa] = {"math.EuMa", "Difference between harmonic series and the natural logarithm.", MATH}
 const.about[_math_.pi] = {"math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
 const.about[_math_.e] = {"math.e", "Base of the natural logarithm.", MATH}
 

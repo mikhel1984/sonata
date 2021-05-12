@@ -87,7 +87,7 @@ local done, tmp = pcall(require,'sonatalib.special')
 if done then
   stat.lc_special = tmp
 else
-  print('WARNING >> Not available: poisscdf(), chi2cdf(), chi2pdf(), tcdf(), tpdf(), normcdf()')
+  print('WARNING >> Not available: tcdf(), tpdf()')
 end
 
 --- Sum of all elements.
@@ -116,7 +116,7 @@ stat.mean = function (t, w)
     return stat.sum(t) / #t
   end
 end
-stat.about[stat.mean] = {"mean(t[,w])", "Calculate average value. Weights are can be used.", }
+stat.about[stat.mean] = {"mean(t[,w])", "Calculate average value. Weights can be used.", }
 
 --- Standard deviation and variance.
 --  @param t Table of numbers.
@@ -138,7 +138,7 @@ stat.std = function (t, w)
   end
   return math.sqrt(disp), disp 
 end
-stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weights are can be used.", }
+stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weights can be used.", }
 
 --- Maximum value.
 --  @param t Table of numbers.
@@ -218,7 +218,7 @@ stat.median = function (p)
     return (t[len] + t[len+1]) * 0.5
   end
 end
-stat.about[stat.median] = {"median(t)", "List median.", }
+stat.about[stat.median] = {"median(t)", "Median of the list."}
 
 --- Frequency of elements.
 --  @param t Table of numbers.
