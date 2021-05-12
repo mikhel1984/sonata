@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Environment
-lc_local = { version = '0.9.17' }
+lc_local = { version = '0.9.18' }
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -58,7 +58,6 @@ import = {
   rational  = "Rat",
   special   = "Spec",
   stat      = "Stat",
-  struct    = "DS",
   units     = "Unit",
 }
 
@@ -173,7 +172,7 @@ if LC_DEFAULT_MODULES then
 end
 
 if arg[-1] ~= '-i' then
-  lc.evalDialog(lc._logFile_)
+  lc.evalDialog()
 end
 
 --===============================================

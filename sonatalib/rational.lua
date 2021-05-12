@@ -260,3 +260,4 @@ return rational
 
 --======================================
 --TODO: string representation as true ratio (str)
+--TODO: use keys (num, den)

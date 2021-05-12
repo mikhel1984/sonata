@@ -428,3 +428,4 @@ return quaternion
 
 --======================================
 --TODO: rename qx to qi etc
+--TODO: use fields (i,j,k,w)

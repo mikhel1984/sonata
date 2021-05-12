@@ -152,21 +152,9 @@ print(a)
 
 local Ver = require "sonatalib.versions"
 
-local STACK = 'stack'
-local QUEUE = 'queue'
-local HEAP  = 'heap'
-local SET  = 'set'
-
---	INFO
-
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
-
 --	MODULE
 
-local struct = {
--- description
-about = help:new("Main data structures.")
-}
+local struct = {}
 
 --	STACK
 
@@ -180,7 +168,6 @@ struct.Stack.new = function (self) return setmetatable({}, self) end
 
 -- Alias for stack constructor
 setmetatable(struct.Stack, {__call = function (self) return struct.Stack:new() end})
-struct.about[struct.Stack] = {"Stack()", "Create new stack.", STACK}
 
 --- Add element to the stack.
 --  @param self Stack object.
@@ -188,7 +175,6 @@ struct.about[struct.Stack] = {"Stack()", "Create new stack.", STACK}
 struct.Stack.push = function (self, val)
   table.insert(self,val)
 end
-struct.about[struct.Stack.push] = {"Stack.push(S,val)", "Push value to the stack (except nil).", STACK}
 
 --- Get value from the top of stack.
 --  @param self Stack object.
@@ -196,13 +182,11 @@ struct.about[struct.Stack.push] = {"Stack.push(S,val)", "Push value to the stack
 struct.Stack.pop = function (self)
   return table.remove(self)
 end
-struct.about[struct.Stack.pop] = {"Stack.pop(S)", "Pop value from the stack, return element or nil.", STACK}
 
 --- Top value of the stack.
 --  @param S Stack object.
 --  @return Top value without removing it.
 struct.Stack.top = function (S) return S[#S] end
-struct.about[struct.Stack.top] = {"Stack.top(S)", "Return top value without removing it.", STACK}
 
 --- Copy stack.
 --  @param S Stack object.
@@ -214,19 +198,16 @@ struct.Stack.copy = function (S)
   end
   return res
 end
-struct.about[struct.Stack.copy] = {"Stack.copy(S)", "Create copy of the stack.", STACK}
 
 --- Number of elements.
 --  @param S Stack object.
 --  @return Stack size.
 struct.Stack.size = function (S) return #S end
-struct.about[struct.Stack.size] = {"Stack.size(S)", "Return number of elements in stack.", STACK}
 
 --- Check stack size.
 --  @param S Stack object.
 --  @return True if stack is empty.
 struct.Stack.isEmpty = function (S) return #S == 0 end
-struct.about[struct.Stack.isEmpty] = {"Stack.isEmpty(S)", "Return true if the stack is empty.", STACK}
 
 --	QUEUE
 struct.Queue = {type='queue'}
@@ -241,7 +222,6 @@ end
 
 -- Alias for queue constructor
 setmetatable(struct.Queue, {__call = function (self) return struct.Queue:new() end})
-struct.about[struct.Queue] = {"Queue()", "Create new queue.", QUEUE}
 
 --- Put value to the end of queue.
 --  @param Q Queue object.
@@ -251,7 +231,6 @@ struct.Queue.push = function (Q,val)
   Q.last = last
   Q[last] = val
 end
-struct.about[struct.Queue.push] = {"Queue.push(Q,val)", "Add value to the back of queue.", QUEUE}
 
 --- Put value to the top of queue (as in stack).
 --  @param Q Queue object.
@@ -261,7 +240,6 @@ struct.Queue.pushFront = function (Q,val)
   Q.first = first
   Q[first] = val
 end
-struct.about[struct.Queue.pushFront] = {"Queue.pushFront(Q,val)", "Add value to the top of queue.", QUEUE}
 
 --- Get value from the top of queue.
 --  @param Q Queue object.
@@ -275,7 +253,6 @@ struct.Queue.pop = function (Q)
   end
   return val
 end
-struct.about[struct.Queue.pop] = {"Queue.pop(Q)", "Get value from the top of queue, remove it.", QUEUE}
 
 --- Get value from the end of queue.
 --  @param Q Queue object.
@@ -289,32 +266,27 @@ struct.Queue.popBack = function (Q)
   end
   return val
 end
-struct.about[struct.Queue.popBack] = {"Queue.popBack(Q)", "Get value from the end of queue, remove it.", QUEUE}
 
 --- Get top value of the queue.
 --  @param Q Queue object.
 --  @return Front value without removing it.
 struct.Queue.front = function (Q) return Q[Q.first] end
-struct.about[struct.Queue.front] = {"Queue.front(Q)", "Get next element, don't remove it.", QUEUE}
 
 --- Get back element from the queue.
 --  @param Q Queue object.
 --  @return Back element without removing it.
 struct.Queue.back = function (Q) return Q[Q.last] end
-struct.about[struct.Queue.back] = {"Queue.back(Q)", "Get next element, don't remove it.", QUEUE}
 
 --- Queue size
 --  @param Q Queue object.
 --  @return Number of elements in queue.
 struct.Queue.size = function (Q) return Q.last-Q.first+1 end
-struct.about[struct.Queue.size] = {"Queue.size(Q)", "Return number of elements in queue.", QUEUE}
 struct.Queue.__len = struct.Queue.size
 
 --- Check if the queue is empty.
 --  @param Q Queue object.
 --  @return True if there is no elements in the queue.
 struct.Queue.isEmpty = function (Q) return Q.first-1 == Q.last end
-struct.about[struct.Queue.isEmpty] = {"Queue.isEmpty(Q)", "Return true if the queue is empty.", QUEUE}
 
 --- Queue copy.
 --  @param Q Original queue.
@@ -326,7 +298,6 @@ struct.Queue.copy = function (Q)
   Ver.move(Q,first,last,first,res)
   return res
 end
-struct.about[struct.Queue.copy] = {"Queue.copy(Q)", "Make copy of the queue.", QUEUE}
 
 --	HEAP
 struct.Heap = {type='heap'}
@@ -345,7 +316,6 @@ end
 
 -- Simplify constructor call.
 setmetatable(struct.Heap, {__call = function (self,l) return struct.Heap:new(l) end})
-struct.about[struct.Heap] = {"Heap([less])", "Create new heap object. Comparison method 'less' can be predefined.", HEAP}
 
 --- Fix order of the heap in up direction.
 --  @param H Heap object.
@@ -381,7 +351,6 @@ struct.Heap.push = function (H, v)
   H[n] = v
   struct.Heap._fixUp_(H, n)
 end
-struct.about[struct.Heap.push] = {"Heap.push(H,v)", "Add element to the heap.", HEAP}
 
 --- Get top element from the heap.
 --  If 'less' method is default, top is the maximum element.
@@ -395,25 +364,21 @@ struct.Heap.pop = function (H)
   H.N = n-1
   return H[n]
 end
-struct.about[struct.Heap.pop] = {"Heap.pop(H)", "Return top element. For the default less() function top is maximum.", HEAP}
 
 --- Get top of the heap.
 --  @param H Heap object.
 --  @return Value of the top element.
 struct.Heap.top = function (H) return H[1] end
-struct.about[struct.Heap.top] = {'Heap.top(H)', "Return value of the top element.", HEAP}
 
 --- Check for elements in the heap.
 --  @param H Heap object.
 --  @return True if heap is empty.
 struct.Heap.isEmpty = function (H) return H.N == 0 end
-struct.about[struct.Heap.isEmpty] = {"Heap.isEmpty(H)", "Return true if the heap is empty.", HEAP}
 
 --- Number of elements.
 --  @param H Heap object.
 --  @return Size of heap.
 struct.Heap.size = function (H) return H.N end
-struct.about[struct.Heap.size] = {"Heap.size(H)", "Get number of elements in the heap.", HEAP}
 struct.Heap.__len = struct.Heap.size
 
 --- Make heap copy.
@@ -425,7 +390,6 @@ struct.Heap.copy = function (H)
   Ver.move(H,1,#H,1,res)
   return res
 end
-struct.about[struct.Heap.copy] = {"Heap.copy(H)", "Make copy of the heap.", HEAP}
 
 --	SET
 
@@ -446,13 +410,11 @@ end
 --  @param S Set object.
 --  @param v New element.
 struct.Set.add = function (S, v) S[v] = true end
-struct.about[struct.Set.add] = {"Set.add(S,val)", "Insert element into set.", SET}
 
 --- Delete element.
 --  @param S Set object.
 --  @param v Element.
 struct.Set.remove = function (S,v) S[v] = nil end
-struct.about[struct.Set.remove] = {"Set.remove(S,val)", "Remove element from set.", SET}
 
 --- Convert into array.
 --  @param S Set object.
@@ -462,7 +424,6 @@ struct.Set.list = function (S)
   for k in pairs(S) do table.insert(res, k) end
   return res
 end
-struct.about[struct.Set.list] = {"Set.list(S)", "Represent set as a list of elements.", SET}
 
 --- Copy of the set.
 --  @param S Initial set.
@@ -472,7 +433,6 @@ struct.Set.copy = function (S)
   for k in pairs(S) do res[k] = true end
   return res
 end
-struct.about[struct.Set.copy] = {"Set.copy(S)", "Get copy of the set.", SET}
 
 --- Apply function to the elements of set.
 --  @param S Initial set.
@@ -483,7 +443,6 @@ struct.Set.map = function (S,fn)
   for k in pairs(S) do res[fn(k)] = true end
   return res
 end
-struct.about[struct.Set.map] = {"Set.map(S,fn)", "Apply function fn() to obtain new set.", SET}
 
 --- S1 + S2
 --  @param S1 First set.
@@ -521,9 +480,6 @@ struct.Set.__div = function (S1,S2)
   return res
 end
 
-struct.Set.arithmetic = 'arithmetic'
-struct.about[struct.Set.arithmetic] = {"Set: union, intersection, difference", "S1+S2, S1*S2, S1/S2", SET}
-
 --- S1 <= S2
 --  @param S1 First set.
 --  @param S2 Second set.
@@ -552,9 +508,6 @@ struct.Set.__eq = function (S1,S2)
   return S1 <= S2 and S2 <= S1
 end
 
-struct.Set.comparison = 'Set: comparison'
-struct.about[struct.Set.comparison] = {struct.Set.comparison, "S1==S2, S1~=S2, S1<S2, S1<=S2, S1>S2, S1>=S2", SET}
-
 --- #S 
 --  @param S Set object.
 --  @return Number of elements in set.
@@ -564,13 +517,11 @@ struct.Set.__len = function (S)
   return n
 end
 struct.Set.size = struct.Set.__len
-struct.about[struct.Set.size] = {"Set.size(S)", "Number of elements in the set.", SET}
 
 --- Check if the set is empty.
 --  @param S Set object.
 --  @return True if the set is empty.
 struct.Set.isEmpty = function (S) return next(S) == nil end
-struct.about[struct.Set.isEmpty] = {"Set.isEmpty(S)", "Return true if the set is empty.", SET}
 
 --- String representation.
 --  @param S Set object.
@@ -583,10 +534,6 @@ end
 
 -- redefine constructor
 setmetatable(struct.Set, {__call = function (self, v) return struct.Set:new(v) end})
-struct.about[struct.Set] = {"Set(t)", "Create new set from table of elements.", SET}
-
--- free memory in case of standalone usage
-if not LC_DIALOG then struct.about = nil end
 
 return struct
 

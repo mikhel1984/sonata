@@ -183,13 +183,6 @@ ans = m(1)                    --> 1
 m = a(-1,{})
 ans = m:get(2)                --> 4
 
--- apply summation to each row
-ans = a:sum()                 --> Mat {{3},{7}}
-
--- apply product to each column
--- initial value is 1
-ans = a:reduce(function (x,y) return x*y end, 'c') --> Mat {{3,8}}
-
 -- get rank
 ans = Mat.ones(2,3):rank()    --> 1
 
@@ -1084,36 +1077,6 @@ matrix.chol = function (M)
 end
 matrix.about[matrix.chol] = {"chol(M)", "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
 
---- Apply function to all elements along given direction.
---  @param M Initial matrix.
---  @param fn Function of 2 arguments.
---  @param dir Direction of evaluations (optional).
---  @return Reduced matrix.
-matrix.reduce = function (M,fn,dir)
-  dir = dir or 'r'
-  local res
-  if dir == 'r' then
-    res = matrix:init(M.rows,1, {})
-    for r = 1,M.rows do
-      local mr = M[r]
-      local s = mr[1]
-      for c = 2,M.cols do s = fn(s,mr[c]) end
-      res[r][1] = s
-    end
-  elseif dir == 'c' then
-    res = matrix:init(1,M.cols, {})
-    for c = 1,M.cols do
-      local s = M[1][c]
-      for r = 2,M.rows do s = fn(s,M[r][c]) end
-      res[1][c] = s
-    end
-  else
-    error("Only 'r'(ows) or 'c'(olomns) are expected!")
-  end
-  return res
-end
-matrix.about[matrix.reduce] = {"reduce(M,fn,dir[='r'])","Evaluate s=fn(s,x) along rows (dir='r') or columns (dir='c').",help.OTHER}
-
 --- Change matrix size.
 --  @param M Source matrix.
 --  @param nRows New number of rows.
@@ -1122,7 +1085,6 @@ matrix.about[matrix.reduce] = {"reduce(M,fn,dir[='r'])","Evaluate s=fn(s,x) alon
 matrix.reshape = function (M,nRows,nCols)
   nRows = nRows or (M.rows*M.cols)
   nCols = nCols or 1
-  assert(nRows > 0 and nCols > 0)
   local res = matrix:init(nRows,nCols,{})
   local newR, newC = 1, 1   -- temporary indices
   for r = 1, M.rows do
@@ -1140,13 +1102,6 @@ matrix.reshape = function (M,nRows,nCols)
   return res
 end
 matrix.about[matrix.reshape] = {"reshape(M,nRows[=size],nCols[=1])","Change matrix size.",help.OTHER}
-
---- Get sum of all elements.
---  @param M Initial matrix.
---  @param dir Direction (optional).
---  @return Sum along 'r'ows or 'c'olumns
-matrix.sum = function (M,dir) return matrix.reduce(M, fn_sum, dir) end
-matrix.about[matrix.sum] = {"sum(M,dir)", "Find sum of elements along given direction ('r' or 'c')."}
 
 --- Euclidean norm of the matrix at whole.
 --  @param M Current matrix.

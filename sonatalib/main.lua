@@ -70,6 +70,7 @@ ans = math.deg(_pi)
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
+local LOGNAME = 'sonata.log'
 
 local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
@@ -208,10 +209,10 @@ main.show = function (t,N)
   local count = 1
   -- dialog
   local function continue(n)
-      io.write(n, ' - continue? (y/n) ')
-      return string.lower(io.read()) == 'y'
-    end
-  print('{')
+    io.write(n, ' - continue? (y/n) ')
+    return string.lower(io.read()) == 'y'
+  end
+  io.write('{\n')
   -- keys/values
   for k,v in pairs(t) do
     if Ver.mathType(k) ~= 'integer' or k < 1 then
@@ -224,7 +225,7 @@ main.show = function (t,N)
   for i,v in ipairs(t) do
     io.write(tostring(v),', ')
     if i % N == 0 then
-      print()
+      io.write('\n')
       if not continue(i) then break end
     end
   end
@@ -277,19 +278,6 @@ main.map = function (fn, tbl)
 end
 about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.', lc_help.OTHER}
 
---- Find function name
---  @param dbg Structure with debug info.
---  @return String with function name.
-main._getName_ = function (dbg)
-  if dbg.what == 'C' then return dbg.name end
-  local lc = string.format("[%s]:%d", dbg.short_src, dbg.linedefined)
-  if dbg.what ~= "main" and dbg.namewhat ~= "" then
-    return string.format("%s (%s)", lc, dbg.name)
-  else
-    return lc
-  end
-end
-
 --- Simple implementation of 'The Life' game ;)
 --  Prepare your initial board in form of matrix.
 --  @param board Matrix with 'ones' as live cells.
@@ -323,50 +311,32 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
---- Read text file and evaluate expressions in special template.
---  Current template is '## some expressions ##'. One template can consists of several expressions,
---  separated with ';'. If expression has '=' it just evaluated, otherwise the result will be shown.
---  @param src Source file.
---  @param dst File name. If defined, file will be saved in this file.
-main.evalTF = function (src,dst)
-  local F = require('sonatalib.files')
-  local txt = assert(F.read(src), 'No such file: '..tostring(src))
-  local res = string.gsub(txt, '##(.-)##',
-    function (s)
-      for expr in F.split(s,';') do
-        if string.find(expr, '=') or string.find(expr,'import') then
-          local fn = Ver.loadStr(expr)
-          if fn then fn() end
-        else
-          local fn = Ver.loadStr('return '..expr)
-          if fn then return tostring(fn()) end
-        end
-      end
-      return ''
-    end)
-  if dst then
-    out = assert(io.open(dst, 'w'), 'Cannot create file: '..tostring(dst))
-    out:write(res)
-    out:close()
-    print('Done')
+--- Session logging.
+--  @param flat Value 'on'/true to start and 'off'/false to stop.
+logging = function (flag)
+  if flag == 'on' or flag == true then
+    if not main._logFile_ then
+      main._logFile_ = io.open(LOGNAME, 'a')
+      local d = os.date('*t')
+      main._logFile_:write(string.format('\n-- Session %d-%d-%d %d:%d \n\n', d.day, d.month, d.year, d.hour, d.min))
+    end
+  elseif flag == 'off' or flag == false then
+    if main._logFile_ then
+      main._logFile_:close() 
+      main._logFile_ = nil
+    end
   else
-    print(res)
-  end  
+    io.write('Unexpected argument!\n')
+  end
 end
-about[main.evalTF] = {"lc.evalTF(src[,dst])", "Read text file and evaluate expressions in ##..##. Save result to dst file, if need.", lc_help.OTHER}
+about[logging] = {'logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
-main.evalDialog = function (logFile)
+main.evalDialog = function ()
   local invA, invB = lc_help.CMAIN..'lc: '..lc_help.CRESET, lc_help.CMAIN..'..: '..lc_help.CRESET
   local invite, cmd = invA, ""
   local ERROR, log = lc_help.CERROR.."ERROR: "
-  -- save session if need
-  if logFile then
-    log = io.open(logFile, 'w')
-    local d = os.date('*t')
-    log:write(string.format('-- Sonata LC # log # %d-%d-%d %d:%d \n\n', d.day, d.month, d.year, d.hour, d.min))
-  end
   -- start dialog
   while true do
     io.write(invite)
@@ -385,20 +355,21 @@ main.evalDialog = function (logFile)
       break
     end
     -- logging
-    if log then
-      log:write(newLine,'\n')
+    if main._logFile_ then
+      main._logFile_:write(newLine,'\n')
       if status == EV_RES and res then 
-        log:write('--[[ ', res, ' ]]\n\n') 
+        main._logFile_:write('--[[ ', res, ' ]]\n\n') 
       elseif status == EV_ERROR then
-        log:write('--[[ ERROR ]]\n\n')
+        main._logFile_:write('--[[ ERROR ]]\n\n')
       end
     end
   end
-  if log then log:close() end
+  if main._logFile_ then main._logFile_:close() end
   main._exit_()
 end
 
-
+--- Evaluate 'note'-file.
+--  @param fname Script file name.
 main.evalDemo = function (fname)
   local f = assert(io.open(fname))
   local text = f:read('*a'); f:close()
@@ -458,16 +429,18 @@ end
 -- save link to help info
 main.about = about
 
-main._updateHelp = function (fNew, fOld)
-  main.about[fNew] = main.about[fOld]
-  main.about[fOld] = nil
+--- Update help reference when redefine function.
+--  @param fnNew New function.
+--  @param fnOld Old function.
+main._updateHelp = function (fnNew, fnOld)
+  main.about[fnNew] = main.about[fnOld]
+  main.about[fnOld] = nil
 end
 
 -- command line arguments of Sonata LC and their processing
 main._args_ = {
 
 -- run tests
-['-T'] = '--test',
 ['--test'] = {
 description = 'Apply unit tests to desired module, or all modules if the name is not defined.',
 process = function (args)
@@ -484,8 +457,7 @@ end,
 exit = true},
 
 -- localization file
-['-L'] = '--lng',
-['--lng'] = {
+['--lang'] = {
 description = 'Create/update file for localization.',
 process = function (args)
   if args[2] then
@@ -498,7 +470,6 @@ end,
 exit = true},
 
 -- generate 'help.html'
-['-D'] = '--doc',
 ['--doc'] = {
 description = 'Create/update documentation file.',
 process = function ()
@@ -508,21 +479,10 @@ end,
 exit = true},
 
 -- new module
-['-N'] = '--new',
 ['--new'] = {
 description = 'Generate template for a new module.',
 process = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
 exit = true},
-
--- save session to log file
-['-l'] = '--log',
-['--log'] = {
-description = "Save session into the log file.",
-process = function (args)
-  local d = os.date('*t')
-  main._logFile_ = string.format('ses%d%d%d_%0d%0d.log', d.year, d.month, d.day, d.hour, d.min)
-end,
-exit = false},
 
 -- process files
 ['default'] = {
@@ -539,16 +499,15 @@ process = function (args)
 end,
 exit = true},
 
--- 
-['-h'] = '--help',
 }
 -- show help
 main._args_['--help'] = {
-description = 'Get this help message.',
-process = function () print(main._args_.text()) end,
+process = function () print(main._arghelp_()) end,
 exit = true}
+main._args_['-h'] = main._args_['--help']
+
 -- string representation of the help info
-main._args_.text = function ()
+main._arghelp_ = function ()
   local txt = {  
     "\n'Sonata LC' is a Lua based program for mathematical calculations.",
     "",
@@ -556,12 +515,13 @@ main._args_.text = function ()
     "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
     "(option '-i' could be used for working in native Lua interpreter)",
     "",
-    "FLAGS:"
+    "FLAGS:",
+    "\t--help, -h - Get this help message.",
+    "\t\t(Development)",
   }
   for k,v in pairs(main._args_) do 
-    if type(v) == 'string' then
-      --local ref = main._args_[v]      
-      txt[#txt+1] = string.format('\t%s, %-6s - %s', k, v, main._args_[v].description)
+    if v.description then
+      txt[#txt+1] = string.format('\t%-8s - %s', k, v.description)
     end
   end
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
@@ -571,8 +531,7 @@ main._args_.text = function ()
   for k in pairs(import) do modules[#modules+1] = k end
   txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
   txt[#txt+1] = "BUGS: mail to 'SonataLC@yandex.ru'\n"
-
-  return table.concat(txt,'\n')  
+  return table.concat(txt,'\n')
 end
 
 main._exit_ = function () print(lc_help.CMAIN.."\n          --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
