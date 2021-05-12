@@ -32,17 +32,17 @@ _ans
 
 --	MODULES
 -- Additional modules could be loaded 
--- with the help of "import" function.
+-- with the help of "use" function.
 -- List of modules, aliases and the current status:
-help(import)
+help(use)
 -- PAUSE 
 
 -- In order to load module, enter 
---    import 'name'
+--    use 'name'
 -- or
---    import('name')
+--    use ('name1')
 -- Module will be available for its alias.
-import 'array'
+use 'array'
 a = Arr.rand {2,2,2}      -- new array with size 2x2x2
 -- Functions can be called as methods of class
 Arr.get(a, {1,1,1})
@@ -51,20 +51,16 @@ a:get{1,1,1}              -- get element with index (1,1,1)
 -- PAUSE
 
 -- Several modules could be loaded as
---    import 'name1' 'name2'
--- or
---    import {'name1','name2'}
--- or
---    import({'name1','name2'}
-import 'complex' 'bigint'
+--    use {'name1','name2'}
+use {'complex', 'bigint'}
 -- PAUSE
 
 -- It is possible to use alias instead of module name
-import 'Num'
+use 'Num'
 -- PAUSE
 
 -- In order to load all modules, enter
-import 'all'
+use 'all'
 -- PAUSE
 
 -- Some modules modify the program environment.

@@ -58,16 +58,7 @@ use = {
   units     = "Unit",
 }
 
--- Update help information about the imported modules 
-function lc_local.import_state_update()
-  local m = {lc_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED")}
-  for k,v in pairs(use) do
-    m[#m+1] = string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-'))
-  end
-  m[#m+1] = about:get('use_import')
-  m[#m+1] = lc_help.CRESET
-  return table.concat(m, '\n')
-end
+
 
 -- Import actions 
 function lc_local.doimport(tbl,name)
@@ -98,7 +89,11 @@ setmetatable(use,
   __call = function (self, name)
    if not name then
      -- show loaded modules
-     print(lc_local.import_state_update())
+     io.write('\n', lc_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
+     for k,v in pairs(use) do
+       io.write(string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-')),'\n')
+     end
+     io.write(about:get('use_import'), lc_help.CRESET, '\n\n')
    elseif name == 'all' then
      -- load all modules
      for k,v in pairs(self) do lc_local.doimport(self,k) end
