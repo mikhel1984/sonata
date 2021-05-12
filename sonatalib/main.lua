@@ -80,8 +80,13 @@ local Ver = require "sonatalib.versions"
 --- Process command string.
 --  @param cmd String with Lua expression.
 --  @return Status of processing and rest of command.
-local function _evaluate_(cmd)
-  if cmd == 'quit' then return EV_QUIT end 
+local function _evaluate_(cmd, nextCmd)
+  if nextCmd == 'quit' then return EV_QUIT end
+  -- forced termination 
+  if string.find(nextCmd, '^%s*%-%-') then
+    return EV_RES, 'BREAK'
+  end
+  cmd = cmd..nextCmd
   -- remove line comments
   local tmp = string.match(cmd, '^(.*)%-%-.*$')
   if tmp then cmd = tmp end
@@ -342,7 +347,7 @@ main.evalDialog = function ()
     io.write(invite)
     -- command processing
     local newLine = io.read()
-    local status, res = _evaluate_(string.format("%s%s",cmd,newLine))
+    local status, res = _evaluate_(cmd, newLine)
     if status == EV_RES then
       if res ~= nil then print(res) end
       invite = invA; cmd = ""
@@ -388,7 +393,7 @@ main.evalDemo = function (fname)
         io.write(invite)
         lcmd = lcmd .. io.read()
         if lcmd == "" then break end  -- continue file evaluation
-        local status, res = _evaluate_(lcmd)
+        local status, res = _evaluate_(lcmd, '')
         if status == EV_RES then
           if res ~= nil then print(res) end
           invite = invA; lcmd = ""
@@ -412,7 +417,7 @@ main.evalDemo = function (fname)
     else
       -- print line and evaluate
       io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
-      local status, res = _evaluate_(string.format('%s %s', cmd, line))
+      local status, res = _evaluate_(string.format('%s %s', cmd, line), '')
       if status == EV_RES then
         if res ~= nil then print(res) end
         cmd = ""
@@ -534,7 +539,7 @@ main._arghelp_ = function ()
   return table.concat(txt,'\n')
 end
 
-main._exit_ = function () print(lc_help.CMAIN.."\n          --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
+main._exit_ = function () print(lc_help.CMAIN.."\n             --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
 
 return main
 
