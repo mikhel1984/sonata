@@ -83,18 +83,18 @@ local Ver = require "sonatalib.versions"
 local function _evaluate_(cmd, nextCmd)
   if nextCmd == 'quit' then return EV_QUIT end
   -- forced termination 
-  if string.find(nextCmd, '^%s*%-%-') then
+  if nextCmd == '--' then
     return EV_RES, 'BREAK'
   end
   cmd = cmd..nextCmd
   -- remove line comments
   local tmp = string.match(cmd, '^(.*)%-%-.*$')
   if tmp then cmd = tmp end
-  -- parse 
-  local fn, err = Ver.loadStr('return '..cmd)
+  -- 'parse'
+  local fn, err = Ver.loadStr('return '..cmd)  -- either 'return expr'
   local expected_next = string.find(err or '', 'expected near')
   if err then
-    fn, err = Ver.loadStr(cmd)
+    fn, err = Ver.loadStr(cmd)                 -- or 'expr'
   end
   if err then
     if string.find(err, 'error') or not expected_next then
@@ -341,7 +341,7 @@ about[logging] = {'logging(flag)', "Save session into the log file. Use 'on'/tru
 main.evalDialog = function ()
   local invA, invB = lc_help.CMAIN..'lc: '..lc_help.CRESET, lc_help.CMAIN..'..: '..lc_help.CRESET
   local invite, cmd = invA, ""
-  local ERROR, log = lc_help.CERROR.."ERROR: "
+  local ERROR = lc_help.CERROR.."ERROR: "
   -- start dialog
   while true do
     io.write(invite)
@@ -382,7 +382,7 @@ main.evalDemo = function (fname)
   local cmd = ""
   local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD
   -- read lines
-  io.write("Run file ", fname)
+  io.write("Run file ", fname, "\n")
   for line in string.gmatch(text, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-%s*PAUSE') then 
       -- run dialog
@@ -391,9 +391,9 @@ main.evalDemo = function (fname)
       local invite = invA
       while true do
         io.write(invite)
-        lcmd = lcmd .. io.read()
-        if lcmd == "" then break end  -- continue file evaluation
-        local status, res = _evaluate_(lcmd, '')
+        local newCmd = io.read()
+        if newCmd == "" then break end  -- continue file evaluation
+        local status, res = _evaluate_(lcmd, newCmd)
         if status == EV_RES then
           if res ~= nil then print(res) end
           invite = invA; lcmd = ""
@@ -410,7 +410,6 @@ main.evalDemo = function (fname)
       if lquit then break end
     elseif string.find(line, '^%s*%-%-') then
       -- highlight line comments
-      --io.write(lc_help.CHELP, line, lc_help.CRESET, '\n')
       line = string.gsub(line, '\t(.+)', templ)
       line = string.format("%s%s%s\n", lc_help.CHELP, line, lc_help.CRESET)
       io.write(line)
@@ -494,7 +493,7 @@ exit = true},
 --description = 'Evaluate file(s).',
 process = function (args) 
   for i = 1,#args do 
-    if string.find(args[i], '%.note?$') then
+    if string.find(args[i], '%.note$') then
       LC_DIALOG = true
       main.evalDemo(args[i])
     else
