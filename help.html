@@ -40,15 +40,18 @@ DIV {margin-left: 10px;}
 <b>FLAGS</b>:<br>
 	--help, -h - Get this help message.<br>
 		(Development)<br>
-	--doc    - Create/update documentation file.<br>
 	--test   - Apply unit tests to desired module, or all modules if the name is not defined.<br>
+	  (e.g. --test array)<br>
 	--lang   - Create/update file for localization.<br>
+	  (e.g. --lang eo)<br>
 	--new    - Generate template for a new module.<br>
+	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
+	--doc    - Create/update documentation file.<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.17<br>
+<b>VERSION</b>: 0.9.19<br>
 <br>
-<b>MODULES</b>: polynom, numeric, array, units, files, stat, special, rational, quaternion, bigint, complex, matrix, const, graph, gnuplot.<br>
+<b>MODULES</b>: special, files, graph, numeric, array, complex, quaternion, rational, gnuplot, const, stat, matrix, bigint, polynom, units.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
@@ -162,7 +165,7 @@ ans = math.deg(_pi)
 <b>sub(A,tInd1,tInd2)</b> - Return sub array restricted by 2 indexes.<br></p>
 <pre class="example">
 
--- import 'array'
+-- use 'array'
 Arr = require 'sonatalib.array'
 
 -- empty array
@@ -239,7 +242,7 @@ for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 <b>str(B[,n=3])</b> - More readable string representation of the number. Optional argument defines number of digits in a group.<br>
 <b>val(N)</b> - Represent current big integer as number if it possible.<br></p>
 <pre class="example">
--- import 'bigint'
+-- use 'bigint'
 Big = require 'sonatalib.bigint'
 
 -- from integer
@@ -298,7 +301,7 @@ print(c:str(6))
 <div><a name="Comp"></a>
 <h3># Comp (complex) #</h3>
 <p class="descript">Manipulations with complex numbers.</p>
-<p><b>Comp([a=0,]b)</b> - Create new complex number.<br>
+<p><b>Comp([re=0],[im=0])</b> - Create new complex number.<br>
 <b>_i</b> - Complex unit.<br>
 <b>abs(Z)</b> - Return module of complex number.<br>
 <b>acos(Z)</b> - Complex inverse cosine.<br>
@@ -315,9 +318,7 @@ print(c:str(6))
 <b>cos(Z)</b> - Return cosine of a complex number.<br>
 <b>cosh(Z)</b> - Return hyperbolic cosine of a real or complex number.<br>
 <b>exp(Z)</b> - Return exponent in for complex argument.<br>
-<b>imag(Z)</b> - Return the imaginary part.<br>
 <b>log(Z)</b> - Complex logarithm.<br>
-<b>real(Z)</b> - Return the real part.<br>
 <b>sin(Z)</b> - Return sinus of a complex number.<br>
 <b>sinh(Z)</b> - Return hyperbolic sinus of a complex number.<br>
 <b>sqrt(Z)</b> - Return square root. Result can be real of complex.<br>
@@ -326,14 +327,13 @@ print(c:str(6))
 <b>trig(module,angle)</b> - Create complex number using module and angle.<br></p>
 <pre class="example">
 
--- import 'complex'
+-- use 'complex'
 Comp = require 'sonatalib.complex'
 
 -- real and imaginary pars
 a = Comp(1,2)
 -- or just imaginary
-b = Comp(3)
-ans = b                       --> Comp(0,3)
+b = Comp(0,3)
 
 -- imaginary unit
 j = Comp._i
@@ -345,7 +345,7 @@ ans = Comp.trig(2,0)          --> Comp(2,0)
 -- arithmetic
 ans = a + b                   --> Comp(1,5)
 
-ans = Comp(3) - b             --> Comp(0)
+ans = Comp(0,3) - b           --> Comp(0,0)
 
 ans = a * b                   --> Comp(-6,3)
 
@@ -355,10 +355,10 @@ ans = a / Comp._i             --> Comp(2,-1)
 c = Comp(1,1)^Comp(2,-2)
 
 -- real part
-ans = c:real()               --3> 6.147
+ans = c.Re                   --3> 6.147
 
 -- imaginary part
-ans = c:imag()               --1> 7.4
+ans = c.Im                   --1> 7.4
 
 -- comparison
 ans = (a == b)                --> false
@@ -377,50 +377,50 @@ ans = a:conj()                --> Comp(1,-2)
 -- some functions after import 
 -- become default, such as
 d = Comp.sqrt(-2)
-ans = d:imag()               --3> 1.414
+ans = d.Im                   --3> 1.414
 
 -- exp
-ans = Comp.exp(d):real()     --3> 0.156
+ans = Comp.exp(d).Re         --3> 0.156
 
 -- log
-ans = Comp.log(d):real()     --3> 0.3465
+ans = Comp.log(d).Re         --3> 0.3465
 
 -- sin 
-ans = Comp.sin(d):imag()     --3> 1.935
+ans = Comp.sin(d).Im         --3> 1.935
 
 -- cos 
-ans = Comp.cos(d):imag()     --1> 0
+ans = Comp.cos(d).Im         --1> 0
 
 -- tan
-ans = Comp.tan(d):real()     --1> 0
+ans = Comp.tan(d).Re         --1> 0
 
 -- sinh
-ans = Comp.sinh(d):real()    --1> 0
+ans = Comp.sinh(d).Re        --1> 0
 
 -- cosh
-ans = Comp.cosh(d):real()    --3> 0.156
+ans = Comp.cosh(d).Re        --3> 0.156
 
 -- tanh
-ans = Comp.tanh(d):imag()    --3> 6.334
+ans = Comp.tanh(d).Im        --3> 6.334
 
 -- asin
 z = Comp(2,3)
-ans = z:asin():imag()        --3> 1.983
+ans = z:asin().Im            --3> 1.983
 
 -- acos 
-ans = z:acos():real()        --2> 1.000
+ans = z:acos().Re            --2> 1.000
 
 -- atan
-ans = z:atan():imag()        --3> 0.229
+ans = z:atan().Im            --3> 0.229
 
 -- asinh
-ans = z:asinh():real()       --3> 1.968
+ans = z:asinh().Re           --3> 1.968
 
 -- acosh
-ans = z:acosh():imag()       --1> 1.000
+ans = z:acosh().Im           --1> 1.000
 
 -- atanh
-ans = z:atanh():real()       --3> 0.146
+ans = z:atanh().Re           --3> 0.146
 
 -- make copy
 ans = a:copy()                --> a
@@ -455,7 +455,7 @@ print(a)
 <b>remove(name)</b> - Delete constant.<br></p>
 <pre class="example">
 
--- import 'const'
+-- use 'const'
 _C = require 'sonatalib.const'
 
 -- charge of electron
@@ -487,7 +487,7 @@ ans = _C.myConst              --> nil
 <b>tblImport(fName)</b> - Import Lua table, written into file.<br></p>
 <pre class="example">
 
--- import 'files'
+-- use 'files'
 File = require 'sonatalib.files'
 -- prepare file name
 nm = os.tmpname()
@@ -554,7 +554,7 @@ raw='set pm3d'                    -- set Gnuplot options manually<br>
 <b>plot(G)</b> - Plot data, represented as Lua table.<br></p>
 <pre class="example">
 
--- import 'gnuplot'
+-- use 'gnuplot'
 Gnu = require 'sonatalib.gnuplot'
 
 a = {{'sin(x)',title='Sinus x'},permanent=false}
@@ -603,7 +603,7 @@ Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
 <b>remove(G,e)</b> - Remove node or edge from the graph G. Node is a single name, edge - table of names.<br></p>
 <pre class="example">
 
--- import 'graph'
+-- use 'graph'
 Graph = require 'sonatalib.graph'
 
 -- build graph
@@ -730,7 +730,7 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>zeros(rows[,cols=rows])</b> - Create matrix from zeros.<br></p>
 <pre class="example">
 
--- import 'matrix'
+-- use 'matrix'
 Mat = require 'sonatalib.matrix'
 
 -- define matrix objects
@@ -919,7 +919,7 @@ Return table of intermediate points and result yn.<br>
 <b>trapez(fn,a,b)</b> - Get integral using trapezoidal rule.<br></p>
 <pre class="example">
 
--- import 'numeric'
+-- use 'numeric'
 Num = require 'sonatalib.numeric'
 
 -- define tolerance
@@ -981,7 +981,7 @@ ans = y[#y][1]               --2> 2.56
 <b>val(P,x)</b> - Get value of polynomial P in point x.<br></p>
 <pre class="example">
 
--- import 'polynom'
+-- use 'polynom'
 Poly = require 'sonatalib.polynom'
 
 -- coefficients in ascendant order
@@ -1061,24 +1061,21 @@ ans = d:str('s')              --> '2*s^2 -2*s +1'
 <b>inv(Q)</b> - Find inverted quaternion.<br>
 <b>mat(Q)</b> - Equivalent matrix representation.<br>
 <b>normalize(Q)</b> - Make unit quaternion.<br>
-<b>qw(Q)</b> - Real part (same as real(Q)).<br>
-<b>qx(Q)</b> - Element x.<br>
-<b>qy(Q)</b> - Element y.<br>
-<b>qz(Q)</b> - Element z.<br>
+<b>real(Q)</b> - Real part (same as Q.w).<br>
 <b>rotate(Q,vec)</b> - Apply quaternion to rotate the vector.<br>
 <b>slerp(Q1,Q2,t)</b> - Spherical linear interpolation for part t.<br>
 <b>toAA(Q)</b> - Get angle and axis of rotation.<br>
 <b>toRot(Q)</b> - Get equal rotation matrix.<br></p>
 <pre class="example">
 
--- initialize
+-- use 'quaternion'
 Quat = require 'sonatalib.quaternion'
 
 -- new quaternion
--- set {w,x,y,z}
+-- set {w,i,j,k}
 a = Quat {1,2,3,4}
 -- part of elements
-b = Quat {w=3, x=4}
+b = Quat {w=3, i=4}
 ans = b                       --> Quat{3,4,0,0}
 
 -- conjugation
@@ -1089,7 +1086,7 @@ ans = b:abs()                --1> 5.000
 
 -- inversion
 c = a*a:inv()
-ans = c:qw()                 --1> 1.000
+ans = c.w                    --1> 1.000
 
 -- arithmetic
 ans = a+b                     --> Quat{4,6,3,4}
@@ -1107,7 +1104,11 @@ ans = a:abs()                --1> 1.000
 
 -- unit power
 aa = a^1.5
-ans = aa:qz()                --3> 0.648
+ans = aa.i                   --3> 0.324
+
+ans = aa.j                   --3> 0.486
+
+ans = aa.k                   --3> 0.648
 
 -- rotation matrix
 m = a:toRot()
@@ -1127,7 +1128,7 @@ ans = p[1]                   --3> -0.667
 
 -- spherical interpolation
 d = Quat.slerp(a,b,0.5)
-ans = d:qw()                 --3> 0.467
+ans = d.w                    --3> 0.467
 
 -- make copy
 ans = d:copy()                --> d
@@ -1150,7 +1151,7 @@ print(d)
 <b>val(R)</b> - Return rational number as decimal.<br></p>
 <pre class="example">
 
--- import 'rational'
+-- use 'rational'
 Rat = require 'sonatalib.rational'
 
 -- numerator, denominator
@@ -1223,7 +1224,7 @@ print(a)
 <b>legendre(n,x)</b> - Return list of Legendre polynomial coefficients.<br></p>
 <pre class="example">
 
--- import 'special'
+-- use 'special'
 Spec = require 'sonatalib.special'
 
 -- beta functions
@@ -1292,7 +1293,7 @@ ans = Spec.dawson(3.3)       --3> 0.1598
 <b>tpdf(x,nu)</b> - Student's distribution density.<br></p>
 <pre class="example">
 
--- import 'stat'
+-- use 'stat'
 Stat = require 'sonatalib.stat'
 
 -- initial data (tables)
@@ -1359,7 +1360,7 @@ ans = Stat.tpdf(2, 3.3)      --3> 0.0672
 <b>prefix</b> - Table of possible prefixes for units.<br></p>
 <pre class="example">
 
--- import 'units'
+-- use 'units'
 Unit = require 'sonatalib.units'
 
 -- add some rules

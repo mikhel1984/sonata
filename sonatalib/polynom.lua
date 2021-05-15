@@ -15,7 +15,7 @@
 -------------------- Tests -------------------
 --[[TEST
 
--- import 'polynom'
+-- use 'polynom'
 Poly = require 'sonatalib.polynom'
 
 -- coefficients in ascendant order

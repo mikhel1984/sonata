@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Environment
-lc_local = { version = '0.9.18' }
+lc_local = { version = '0.9.19' }
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -35,14 +35,11 @@ lc_help.useColors(LC_USE_COLOR)
 -- Quit the program
 quit = lc._exit_
 
--- Load file
-run = dofile
-
 -- Update random seed
 math.randomseed(os.time())
 
 -- Modules 
-import = {
+use = {
 --  name     alias
   array     = "Arr",
   bigint    = "Big",
@@ -61,16 +58,7 @@ import = {
   units     = "Unit",
 }
 
--- Update help information about the imported modules 
-function lc_local.import_state_update()
-  local m = {lc_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "LOADED")}
-  for k,v in pairs(import) do
-    m[#m+1] = string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-'))
-  end
-  m[#m+1] = about:get('use_import')
-  m[#m+1] = lc_help.CRESET
-  return table.concat(m, '\n')
-end
+
 
 -- Import actions 
 function lc_local.doimport(tbl,name)
@@ -79,7 +67,7 @@ function lc_local.doimport(tbl,name)
     -- try alias
     if not lc_local.alias then 
       lc_local.alias = {}
-      for k,v in pairs(import) do lc_local.alias[v] = k end
+      for k,v in pairs(use) do lc_local.alias[v] = k end
     end
     var = name
     name = assert(lc_local.alias[name], "Wrong module name: "..name.."!")
@@ -96,29 +84,30 @@ function lc_local.doimport(tbl,name)
 end
 
 -- Add modules 
-setmetatable(import, 
-{ -- last recursive call 
-  __tostring = function (x) io.write(lc_help.CHELP); return about:get('done')..lc_help.CRESET end,
-  -- load modules
-  __call = function (self, name) 
+setmetatable(use,
+{ -- load modules
+  __call = function (self, name)
    if not name then
      -- show loaded modules
-     print(lc_local.import_state_update())
-   elseif name == 'all' then 
+     io.write('\n', lc_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
+     for k,v in pairs(use) do
+       io.write(string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-')),'\n')
+     end
+     io.write(about:get('use_import'), lc_help.CRESET, '\n\n')
+   elseif name == 'all' then
      -- load all modules
-     for k,v in pairs(self) do lc_local.doimport(self,k) end   
+     for k,v in pairs(self) do lc_local.doimport(self,k) end
    elseif type(name) == 'table' then
      -- load group of modules
-     for _,v in ipairs(name) do import(v) end
+     for _,v in ipairs(name) do use(v) end
    else
      -- load module
      local var, nm = lc_local.doimport(self,name)
      if LC_DIALOG then
        io.write(lc_help.CHELP)
-       print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))       
-     end     
+       print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))
+     end
    end
-   return import
   end,
 })
 
@@ -126,8 +115,8 @@ setmetatable(import,
 --  @param fn Function name.
 help = function(fn)  
   if fn then 
-    if fn == import then
-      print(lc_local.import_state_update())
+    if fn == use then
+      use()
     else
       about:print(type(fn)=='table' and fn.about or fn) 
     end
@@ -155,7 +144,7 @@ if LC_LOCALIZATION then
 end
 
 -- save references for "global" methods
-lc_local.import = import
+lc_local.use = use
 lc_local.help = help
 lc_local.quit = quit
 
@@ -168,7 +157,7 @@ print(about:get('intro'), lc_help.CRESET)
 
 -- Import default modules
 if LC_DEFAULT_MODULES then
-  import(LC_DEFAULT_MODULES)
+  use(LC_DEFAULT_MODULES)
 end
 
 if arg[-1] ~= '-i' then

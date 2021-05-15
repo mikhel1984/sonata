@@ -80,16 +80,21 @@ local Ver = require "sonatalib.versions"
 --- Process command string.
 --  @param cmd String with Lua expression.
 --  @return Status of processing and rest of command.
-local function _evaluate_(cmd)
-  if cmd == 'quit' then return EV_QUIT end 
+local function _evaluate_(cmd, nextCmd)
+  if nextCmd == 'quit' then return EV_QUIT end
+  -- forced termination 
+  if nextCmd == '--' then
+    return EV_RES, 'BREAK'
+  end
+  cmd = cmd..nextCmd
   -- remove line comments
   local tmp = string.match(cmd, '^(.*)%-%-.*$')
   if tmp then cmd = tmp end
-  -- parse 
-  local fn, err = Ver.loadStr('return '..cmd)
+  -- 'parse'
+  local fn, err = Ver.loadStr('return '..cmd)  -- either 'return expr'
   local expected_next = string.find(err or '', 'expected near')
   if err then
-    fn, err = Ver.loadStr(cmd)
+    fn, err = Ver.loadStr(cmd)                 -- or 'expr'
   end
   if err then
     if string.find(err, 'error') or not expected_next then
@@ -336,13 +341,13 @@ about[logging] = {'logging(flag)', "Save session into the log file. Use 'on'/tru
 main.evalDialog = function ()
   local invA, invB = lc_help.CMAIN..'lc: '..lc_help.CRESET, lc_help.CMAIN..'..: '..lc_help.CRESET
   local invite, cmd = invA, ""
-  local ERROR, log = lc_help.CERROR.."ERROR: "
+  local ERROR = lc_help.CERROR.."ERROR: "
   -- start dialog
   while true do
     io.write(invite)
     -- command processing
     local newLine = io.read()
-    local status, res = _evaluate_(string.format("%s%s",cmd,newLine))
+    local status, res = _evaluate_(cmd, newLine)
     if status == EV_RES then
       if res ~= nil then print(res) end
       invite = invA; cmd = ""
@@ -377,7 +382,7 @@ main.evalDemo = function (fname)
   local cmd = ""
   local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD
   -- read lines
-  io.write("Run file ", fname)
+  io.write("Run file ", fname, "\n")
   for line in string.gmatch(text, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-%s*PAUSE') then 
       -- run dialog
@@ -386,9 +391,9 @@ main.evalDemo = function (fname)
       local invite = invA
       while true do
         io.write(invite)
-        lcmd = lcmd .. io.read()
-        if lcmd == "" then break end  -- continue file evaluation
-        local status, res = _evaluate_(lcmd)
+        local newCmd = io.read()
+        if newCmd == "" then break end  -- continue file evaluation
+        local status, res = _evaluate_(lcmd, newCmd)
         if status == EV_RES then
           if res ~= nil then print(res) end
           invite = invA; lcmd = ""
@@ -405,14 +410,13 @@ main.evalDemo = function (fname)
       if lquit then break end
     elseif string.find(line, '^%s*%-%-') then
       -- highlight line comments
-      --io.write(lc_help.CHELP, line, lc_help.CRESET, '\n')
       line = string.gsub(line, '\t(.+)', templ)
       line = string.format("%s%s%s\n", lc_help.CHELP, line, lc_help.CRESET)
       io.write(line)
     else
       -- print line and evaluate
       io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
-      local status, res = _evaluate_(string.format('%s %s', cmd, line))
+      local status, res = _evaluate_(string.format('%s %s', cmd, line), '')
       if status == EV_RES then
         if res ~= nil then print(res) end
         cmd = ""
@@ -442,13 +446,13 @@ main._args_ = {
 
 -- run tests
 ['--test'] = {
-description = 'Apply unit tests to desired module, or all modules if the name is not defined.',
+description = 'Apply unit tests to desired module, or all modules if the name is not defined.\n\t  (e.g. --test array)',
 process = function (args)
   local Test = require 'sonatalib.test'
   if args[2] then
     Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),args[2]))
   else
-    for m in pairs(import) do
+    for m in pairs(use) do
       Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),m))
     end
   end
@@ -458,11 +462,11 @@ exit = true},
 
 -- localization file
 ['--lang'] = {
-description = 'Create/update file for localization.',
+description = 'Create/update file for localization.\n\t  (e.g. --lang eo)',
 process = function (args)
   if args[2] then
     LC_DIALOG = true -- load help info
-    lc_help.prepare(args[2], import)
+    lc_help.prepare(args[2], use)
   else 
     print('Current localization file: ', LC_LOCALIZATION)
   end
@@ -474,13 +478,13 @@ exit = true},
 description = 'Create/update documentation file.',
 process = function ()
   LC_DIALOG = true   -- load help info
-  lc_help.generateDoc(LC_LOCALIZATION, import) 
+  lc_help.generateDoc(LC_LOCALIZATION, use) 
 end,
 exit = true},
 
 -- new module
 ['--new'] = {
-description = 'Generate template for a new module.',
+description = 'Generate template for a new module.\n\t  (e.g. --new  signal  Sig  "Signal processing functions.")',
 process = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
 exit = true},
 
@@ -489,7 +493,7 @@ exit = true},
 --description = 'Evaluate file(s).',
 process = function (args) 
   for i = 1,#args do 
-    if string.find(args[i], '%.note?$') then
+    if string.find(args[i], '%.note$') then
       LC_DIALOG = true
       main.evalDemo(args[i])
     else
@@ -528,15 +532,16 @@ main._arghelp_ = function ()
   txt[#txt+1] = "\nVERSION: "..lc_local.version
   txt[#txt+1] = ""
   local modules = {}
-  for k in pairs(import) do modules[#modules+1] = k end
+  for k in pairs(use) do modules[#modules+1] = k end
   txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
   txt[#txt+1] = "BUGS: mail to 'SonataLC@yandex.ru'\n"
   return table.concat(txt,'\n')
 end
 
-main._exit_ = function () print(lc_help.CMAIN.."\n          --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
+main._exit_ = function () print(lc_help.CMAIN.."\n             --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
 
 return main
 
 --===============================
 --TODO: save last command as well
+--TODO: generate doc for desired lang using command line

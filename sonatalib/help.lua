@@ -51,8 +51,8 @@ local _MAIN_ = '__module__'
 local eng = {
 intro = [[
 ------- help([function]) = get help -------------
---------- import(module) = expand functionality -
----------- run(filename) = execute Lua script ---
+------- dofile(filename) = execute Lua script ---
+------------ use(module) = expand functionality -
 ----------------- quit() = exit -----------------
 ]],
 --modules = 'Available modules:',
@@ -60,8 +60,8 @@ done = 'Done.',
 alias = "Use alias '%s' for access to the module '%s'.",
 use_import = [[
 
-Use
-  import 'module' ['module2' 'module3' ...]
+Call
+  use 'module' OR use {'moduleA','moduleB' ...}
 to load modules.]],
 }
 
@@ -373,6 +373,7 @@ help.newModule = function (mName, alias, description)
 -- Define here your tests, save results to 'ans', use --> for the strict equality and --2> for the two digit precision (for example).
 --[[TEST
 
+-- use 'WORD2'
 WORD3 = require 'sonatalib.WORD2'
 
 -- example
@@ -523,7 +524,7 @@ help.generateDoc = function (locName, tModules)
   local f = io.open('help.html','w')
   f:write(table.concat(res,'\n'))
   f:close()
-  io.write("File 'help.html' is ready.\n")
+  io.write("File 'help.html' is saved!\n")
 end
 
 return help

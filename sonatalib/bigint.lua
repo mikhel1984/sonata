@@ -15,7 +15,7 @@
 
 ---------------- Tests -----------------
 --[[TEST
--- import 'bigint'
+-- use 'bigint'
 Big = require 'sonatalib.bigint'
 
 -- from integer

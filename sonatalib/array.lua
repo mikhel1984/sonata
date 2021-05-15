@@ -19,7 +19,7 @@
 ------------------- Tests -------------------
 --[[TEST
 
--- import 'array'
+-- use 'array'
 Arr = require 'sonatalib.array'
 
 -- empty array

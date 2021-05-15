@@ -13,7 +13,7 @@
 --------------- Tests --------------
 --[[TEST
 
--- import 'special'
+-- use 'special'
 Spec = require 'sonatalib.special'
 
 -- beta functions

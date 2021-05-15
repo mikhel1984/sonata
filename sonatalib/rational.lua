@@ -15,7 +15,7 @@
 -------------------- Tests -------------------
 --[[TEST
 
--- import 'rational'
+-- use 'rational'
 Rat = require 'sonatalib.rational'
 
 -- numerator, denominator

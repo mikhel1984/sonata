@@ -11,7 +11,7 @@
 --------------- Tests ------------
 --[[TEST
 
--- import 'struct'
+-- use 'struct'
 DS = require 'sonatalib.struct'
 
 -- create stack

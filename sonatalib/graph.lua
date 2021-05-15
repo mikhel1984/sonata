@@ -17,7 +17,7 @@
 --------------- Tests ------------
 --[[TEST
 
--- import 'graph'
+-- use 'graph'
 Graph = require 'sonatalib.graph'
 
 -- build graph

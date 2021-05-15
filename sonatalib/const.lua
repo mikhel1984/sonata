@@ -9,7 +9,7 @@
 
 --[[TEST
 
--- import 'const'
+-- use 'const'
 _C = require 'sonatalib.const'
 
 -- charge of electron

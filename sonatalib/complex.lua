@@ -15,14 +15,13 @@
 ---------------- Tests --------------
 --[[TEST
 
--- import 'complex'
+-- use 'complex'
 Comp = require 'sonatalib.complex'
 
 -- real and imaginary pars
 a = Comp(1,2)
 -- or just imaginary
-b = Comp(3)
-ans = b                       --> Comp(0,3)
+b = Comp(0,3)
 
 -- imaginary unit
 j = Comp._i
@@ -34,7 +33,7 @@ ans = Comp.trig(2,0)          --> Comp(2,0)
 -- arithmetic
 ans = a + b                   --> Comp(1,5)
 
-ans = Comp(3) - b             --> Comp(0)
+ans = Comp(0,3) - b           --> Comp(0,0)
 
 ans = a * b                   --> Comp(-6,3)
 
@@ -44,10 +43,10 @@ ans = a / Comp._i             --> Comp(2,-1)
 c = Comp(1,1)^Comp(2,-2)
 
 -- real part
-ans = c:real()               --3> 6.147
+ans = c.Re                   --3> 6.147
 
 -- imaginary part
-ans = c:imag()               --1> 7.4
+ans = c.Im                   --1> 7.4
 
 -- comparison
 ans = (a == b)                --> false
@@ -66,50 +65,50 @@ ans = a:conj()                --> Comp(1,-2)
 -- some functions after import 
 -- become default, such as
 d = Comp.sqrt(-2)
-ans = d:imag()               --3> 1.414
+ans = d.Im                   --3> 1.414
 
 -- exp
-ans = Comp.exp(d):real()     --3> 0.156
+ans = Comp.exp(d).Re         --3> 0.156
 
 -- log
-ans = Comp.log(d):real()     --3> 0.3465
+ans = Comp.log(d).Re         --3> 0.3465
 
 -- sin 
-ans = Comp.sin(d):imag()     --3> 1.935
+ans = Comp.sin(d).Im         --3> 1.935
 
 -- cos 
-ans = Comp.cos(d):imag()     --1> 0
+ans = Comp.cos(d).Im         --1> 0
 
 -- tan
-ans = Comp.tan(d):real()     --1> 0
+ans = Comp.tan(d).Re         --1> 0
 
 -- sinh
-ans = Comp.sinh(d):real()    --1> 0
+ans = Comp.sinh(d).Re        --1> 0
 
 -- cosh
-ans = Comp.cosh(d):real()    --3> 0.156
+ans = Comp.cosh(d).Re        --3> 0.156
 
 -- tanh
-ans = Comp.tanh(d):imag()    --3> 6.334
+ans = Comp.tanh(d).Im        --3> 6.334
 
 -- asin
 z = Comp(2,3)
-ans = z:asin():imag()        --3> 1.983
+ans = z:asin().Im            --3> 1.983
 
 -- acos 
-ans = z:acos():real()        --2> 1.000
+ans = z:acos().Re            --2> 1.000
 
 -- atan
-ans = z:atan():imag()        --3> 0.229
+ans = z:atan().Im            --3> 0.229
 
 -- asinh
-ans = z:asinh():real()       --3> 1.968
+ans = z:asinh().Re           --3> 1.968
 
 -- acosh
-ans = z:acosh():imag()       --1> 1.000
+ans = z:acosh().Im           --1> 1.000
 
 -- atanh
-ans = z:atanh():real()       --3> 0.146
+ans = z:atanh().Re           --3> 0.146
 
 -- make copy
 ans = a:copy()                --> a
@@ -157,13 +156,32 @@ type='complex', iscomplex=true,
 about = help:new("Manipulations with complex numbers."),
 }
 
-complex.__index = complex
+--- Call unknown key. Use proxy to access the elements.
+--  @param t Table.
+--  @param k Key.
+--  @return Value or method.
+complex.__index = function (t,k)
+  if    complex[k] then return complex[k]
+  elseif k == 'Re' then return t[1]
+  elseif k == 'Im' then return t[2]
+  end
+end -- default is return nil
+
+--- Set unknown key. Use proxy to access the element.
+--  @param t Table.
+--  @param k Key.
+--  @param v Value.
+complex.__newindex = function (t,k,v)
+  if     k == 'Re' then t[1] = v
+  elseif k == 'Im' then t[2] = v
+  end
+end
 
 --- Create new object, set metatable
 --  @param re Real part.
 --  @param im Imaginary part, default is 0.
 --  @return Complex number.
-complex.new = function (self, re, im)  return setmetatable({im and re or 0, im or re}, self) end
+complex.new = function (self, re, im)  return setmetatable({re or 0, im or 0}, self) end
 
 --- Create complex number from trigonometric representation.
 --  @param mod Module.
@@ -278,18 +296,6 @@ complex.about[complex.abs] = {"abs(Z)", "Return module of complex number."}
 complex.conj = function (Z) return complex:new(Z[1], -Z[2]) end
 complex.about[complex.conj] = {"conj(Z)", "Return the complex conjugate. Equal to ~Z.", help.OTHER}
 complex.__bnot = complex.conj
-
---- Real part of the number.
---  @param Z Complex value.
---  @return Real part.
-complex.real  = function (Z) return Z[1] end
-complex.about[complex.real] = {"real(Z)", "Return the real part.", help.OTHER}
-
---- Imaginary part of the number.
---  @param Z Complex value.
---  @return Imaginary part.
-complex.imag  = function (Z) return Z[2] end
-complex.about[complex.imag] = {"imag(Z)", "Return the imaginary part.", help.OTHER}
 
 --- String representation.
 --  @param Z Complex number.
@@ -421,7 +427,7 @@ complex.about[complex._i] = {"_i", "Complex unit.", help.CONST}
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
 complex.Comp = 'Comp'
-complex.about[complex.Comp] = {"Comp([a=0,]b)", "Create new complex number.", help.NEW}
+complex.about[complex.Comp] = {"Comp([re=0],[im=0])", "Create new complex number.", help.NEW}
 
 --- Function for execution during the module import.
 complex.onImport = function ()
@@ -484,5 +490,3 @@ if not LC_DIALOG then complex.about = nil end
 return complex
 
 --==========================
---TODO: Comp(x) is real number
---TODO: use Re, Im
