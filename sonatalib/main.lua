@@ -452,7 +452,7 @@ process = function (args)
   if args[2] then
     Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),args[2]))
   else
-    for m in pairs(import) do
+    for m in pairs(use) do
       Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),m))
     end
   end
@@ -466,7 +466,7 @@ description = 'Create/update file for localization.',
 process = function (args)
   if args[2] then
     LC_DIALOG = true -- load help info
-    lc_help.prepare(args[2], import)
+    lc_help.prepare(args[2], use)
   else 
     print('Current localization file: ', LC_LOCALIZATION)
   end
@@ -478,7 +478,7 @@ exit = true},
 description = 'Create/update documentation file.',
 process = function ()
   LC_DIALOG = true   -- load help info
-  lc_help.generateDoc(LC_LOCALIZATION, import) 
+  lc_help.generateDoc(LC_LOCALIZATION, use) 
 end,
 exit = true},
 
@@ -532,7 +532,7 @@ main._arghelp_ = function ()
   txt[#txt+1] = "\nVERSION: "..lc_local.version
   txt[#txt+1] = ""
   local modules = {}
-  for k in pairs(import) do modules[#modules+1] = k end
+  for k in pairs(use) do modules[#modules+1] = k end
   txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
   txt[#txt+1] = "BUGS: mail to 'SonataLC@yandex.ru'\n"
   return table.concat(txt,'\n')
