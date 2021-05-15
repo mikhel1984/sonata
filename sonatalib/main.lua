@@ -446,7 +446,7 @@ main._args_ = {
 
 -- run tests
 ['--test'] = {
-description = 'Apply unit tests to desired module, or all modules if the name is not defined.',
+description = 'Apply unit tests to desired module, or all modules if the name is not defined.\n\t  (e.g. --test array)',
 process = function (args)
   local Test = require 'sonatalib.test'
   if args[2] then
@@ -462,7 +462,7 @@ exit = true},
 
 -- localization file
 ['--lang'] = {
-description = 'Create/update file for localization.',
+description = 'Create/update file for localization.\n\t  (e.g. --lang eo)',
 process = function (args)
   if args[2] then
     LC_DIALOG = true -- load help info
@@ -484,7 +484,7 @@ exit = true},
 
 -- new module
 ['--new'] = {
-description = 'Generate template for a new module.',
+description = 'Generate template for a new module.\n\t  (e.g. --new  signal  Sig  "Signal processing functions.")',
 process = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
 exit = true},
 
@@ -544,3 +544,4 @@ return main
 
 --===============================
 --TODO: save last command as well
+--TODO: generate doc for desired lang using command line

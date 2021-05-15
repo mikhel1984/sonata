@@ -524,7 +524,7 @@ help.generateDoc = function (locName, tModules)
   local f = io.open('help.html','w')
   f:write(table.concat(res,'\n'))
   f:close()
-  io.write("File 'help.html' is ready.\n")
+  io.write("File 'help.html' is saved!\n")
 end
 
 return help
