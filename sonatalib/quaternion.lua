@@ -3,8 +3,8 @@
 --- Operations with unit quaternions.
 --
 --  Object structure: </br>
---  <code>{w,x,y,z} </code></br>
---  where <i>w</i> is a real part, <i>x, y, z</i> are imaginary elements.
+--  <code>{w,i,j,k} </code></br>
+--  where <i>w</i> is a real part, <i>i, j, k</i> are imaginary elements.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
@@ -18,10 +18,10 @@
 Quat = require 'sonatalib.quaternion'
 
 -- new quaternion
--- set {w,x,y,z}
+-- set {w,i,j,k}
 a = Quat {1,2,3,4}
 -- part of elements
-b = Quat {w=3, x=4}
+b = Quat {w=3, i=4}
 ans = b                       --> Quat{3,4,0,0}
 
 -- conjugation
@@ -32,7 +32,7 @@ ans = b:abs()                --1> 5.000
 
 -- inversion
 c = a*a:inv()
-ans = c:qw()                 --1> 1.000
+ans = c.w                    --1> 1.000
 
 -- arithmetic
 ans = a+b                     --> Quat{4,6,3,4}
@@ -50,7 +50,11 @@ ans = a:abs()                --1> 1.000
 
 -- unit power
 aa = a^1.5
-ans = aa:qz()                --3> 0.648
+ans = aa.i                   --3> 0.324
+
+ans = aa.j                   --3> 0.486
+
+ans = aa.k                   --3> 0.648
 
 -- rotation matrix
 m = a:toRot()
@@ -70,7 +74,7 @@ ans = p[1]                   --3> -0.667
 
 -- spherical interpolation
 d = Quat.slerp(a,b,0.5)
-ans = d:qw()                 --3> 0.467
+ans = d.w                    --3> 0.467
 
 -- make copy
 ans = d:copy()                --> d
@@ -87,6 +91,7 @@ local Ver = require "sonatalib.versions"
 local ROTATION = 'rotation'
 
 -- W, X, Y, Z = 1, 2, 3, 4
+local keys = {w=1, i=2, j=3, k=4}
 
 --- Check object type.
 --  @param t Object.
@@ -105,8 +110,19 @@ type = 'quaternion', isquaternion = true,
 -- description
 about = help:new("Operations with quaternions."),
 }
--- methametods
-quaternion.__index = quaternion
+
+-- 
+quaternion.__index = function (t,k)
+  if quaternion[k] then return quaternion[k]
+  elseif keys[k] then return t[keys[k]]
+  end
+end  -- default is return nil
+
+quaternion.__newindex = function (t,k,v)
+  if keys[k] then 
+    t[keys[k]] = v
+  end
+end
 
 -- interaction with matrices
 quaternion.lc_matrix = require 'sonatalib.matrix'
@@ -340,27 +356,8 @@ end
 --- Get real part.
 --  @param Q Quaternion.
 --  @return Real element.
-quaternion.qw = function(Q) return Q[1] end
-quaternion.real = quaternion.qw
-quaternion.about[quaternion.qw] = {'qw(Q)','Real part (same as real(Q)).',help.OTHER}
-
---- Get x.
---  @param Q Quaternion.
---  @return Element x.
-quaternion.qx = function(Q) return Q[2] end
-quaternion.about[quaternion.qx] = {'qx(Q)','Element x.',help.OTHER}
-
---- Get y.
---  @param Q Quaternion.
---  @return Element y.
-quaternion.qy = function(Q) return Q[3] end
-quaternion.about[quaternion.qy] = {'qy(Q)','Element y.',help.OTHER}
-
---- Get z.
---  @param Q Quaternion.
---  @return Element z.
-quaternion.qz = function(Q) return Q[4] end
-quaternion.about[quaternion.qz] = {'qz(Q)','Element z.',help.OTHER}
+quaternion.real = function(Q) return Q[1] end
+quaternion.about[quaternion.real] = {'real(Q)','Real part (same as Q.w).',help.OTHER}
 
 --- Get imaginary part.
 --  @param Q Quaternion.
@@ -411,9 +408,9 @@ setmetatable(quaternion,
 {__call = function (self,v) 
   assert(type(v) == 'table')
   v[1] = v[1] or v.w or 0
-  v[2] = v[2] or v.x or 0
-  v[3] = v[3] or v.y or 0
-  v[4] = v[4] or v.z or 0
+  v[2] = v[2] or v.i or 0
+  v[3] = v[3] or v.j or 0
+  v[4] = v[4] or v.k or 0
   return quaternion:new(v) 
 end
 })
@@ -427,5 +424,3 @@ if not LC_DIALOG then quaternion.about = nil end
 return quaternion
 
 --======================================
---TODO: rename qx to qi etc
---TODO: use fields (i,j,k,w)

@@ -165,8 +165,7 @@ complex.__index = function (t,k)
   elseif k == 'Re' then return t[1]
   elseif k == 'Im' then return t[2]
   end
-  return nil
-end
+end -- default is return nil
 
 --- Set unknown key. Use proxy to access the element.
 --  @param t Table.
