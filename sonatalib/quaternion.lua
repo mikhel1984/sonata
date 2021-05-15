@@ -14,7 +14,7 @@
 
 --[[TEST
 
--- initialize
+-- use 'quaternion'
 Quat = require 'sonatalib.quaternion'
 
 -- new quaternion

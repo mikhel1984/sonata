@@ -15,7 +15,7 @@
 -------------------- Tests -------------------
 --[[TEST
 
--- import 'units'
+-- use 'units'
 Unit = require 'sonatalib.units'
 
 -- add some rules

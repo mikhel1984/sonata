@@ -16,7 +16,7 @@
 -------------------- Tests -------------------
 --[[TEST
 
--- import 'matrix'
+-- use 'matrix'
 Mat = require 'sonatalib.matrix'
 
 -- define matrix objects

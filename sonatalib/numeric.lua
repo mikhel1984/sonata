@@ -11,7 +11,7 @@
 -------------------- Tests -------------------
 --[[TEST
 
--- import 'numeric'
+-- use 'numeric'
 Num = require 'sonatalib.numeric'
 
 -- define tolerance

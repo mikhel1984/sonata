@@ -373,6 +373,7 @@ help.newModule = function (mName, alias, description)
 -- Define here your tests, save results to 'ans', use --> for the strict equality and --2> for the two digit precision (for example).
 --[[TEST
 
+-- use 'WORD2'
 WORD3 = require 'sonatalib.WORD2'
 
 -- example

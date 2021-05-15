@@ -10,7 +10,7 @@
 --------------- Tests ------------
 --[[TEST
 
--- import 'files'
+-- use 'files'
 File = require 'sonatalib.files'
 -- prepare file name
 nm = os.tmpname()

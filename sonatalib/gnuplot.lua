@@ -14,7 +14,7 @@
 --------------- Tests ---------------
 --[[TEST
 
--- import 'gnuplot'
+-- use 'gnuplot'
 Gnu = require 'sonatalib.gnuplot'
 
 a = {{'sin(x)',title='Sinus x'},permanent=false}

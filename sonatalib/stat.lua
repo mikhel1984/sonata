@@ -10,7 +10,7 @@
 -------------------- Tests -------------------
 --[[TEST
 
--- import 'stat'
+-- use 'stat'
 Stat = require 'sonatalib.stat'
 
 -- initial data (tables)
