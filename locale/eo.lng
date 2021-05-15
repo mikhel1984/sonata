@@ -365,7 +365,7 @@ Comp = {
 ["__module__"]           = [[Operacioj kun la kompleksaj nombroj.]],
 ["atan(Z)"]              = [[Tangentarko de complexa nombro.]],
 ["trig(module,angle)"]   = [[Uzi geometria prezento por kompleksa nombro.]],
-["Comp([a=0,]b)"]        = [[Krei novan kompleksan nombron.]],
+["Comp([re=0],[im=0])"]  = [[Krei novan kompleksan nombron.]],
 ["tan(Z)"]               = [[Tangento de kompleksa nombro.]],
 ["imag(Z)"]              = [[La imaginara parto.]],
 ["_i"]                   = [[Kompleksa unuo.]],

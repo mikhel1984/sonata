@@ -21,8 +21,7 @@ Comp = require 'sonatalib.complex'
 -- real and imaginary pars
 a = Comp(1,2)
 -- or just imaginary
-b = Comp(3)
-ans = b                       --> Comp(0,3)
+b = Comp(0,3)
 
 -- imaginary unit
 j = Comp._i
@@ -34,7 +33,7 @@ ans = Comp.trig(2,0)          --> Comp(2,0)
 -- arithmetic
 ans = a + b                   --> Comp(1,5)
 
-ans = Comp(3) - b             --> Comp(0)
+ans = Comp(0,3) - b           --> Comp(0,0)
 
 ans = a * b                   --> Comp(-6,3)
 
@@ -163,7 +162,7 @@ complex.__index = complex
 --  @param re Real part.
 --  @param im Imaginary part, default is 0.
 --  @return Complex number.
-complex.new = function (self, re, im)  return setmetatable({im and re or 0, im or re}, self) end
+complex.new = function (self, re, im)  return setmetatable({re or 0, im or 0}, self) end
 
 --- Create complex number from trigonometric representation.
 --  @param mod Module.
@@ -421,7 +420,7 @@ complex.about[complex._i] = {"_i", "Complex unit.", help.CONST}
 -- simplify constructor call
 setmetatable(complex, {__call = function (self, re, im) return complex:new(re,im) end })
 complex.Comp = 'Comp'
-complex.about[complex.Comp] = {"Comp([a=0,]b)", "Create new complex number.", help.NEW}
+complex.about[complex.Comp] = {"Comp([re=0],[im=0])", "Create new complex number.", help.NEW}
 
 --- Function for execution during the module import.
 complex.onImport = function ()
@@ -484,5 +483,4 @@ if not LC_DIALOG then complex.about = nil end
 return complex
 
 --==========================
---TODO: Comp(x) is real number
 --TODO: use Re, Im
