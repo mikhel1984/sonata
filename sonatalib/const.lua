@@ -68,7 +68,7 @@ ly_u='m',        ly = 9.4607304725808E15,   -- light year
 
 -- math
 local _math_ = { 
-                phi = 1.618033988749895,           -- golden ratio
+                phi = 1.6180339887498948482045868, -- golden ratio
                  pi = 3.1415926535897932384626434, -- length to diameter
                   e = 2.7182818284590452353602875, -- base of natural logarithm
 }
@@ -142,4 +142,3 @@ if not LC_DIALOG then const.about = nil end
 return const
 
 --============================================
---TODO: add digits to the 'golden ratio'
