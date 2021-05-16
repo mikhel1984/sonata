@@ -113,10 +113,8 @@ about = help:new("Operations with quaternions."),
 
 -- 
 quaternion.__index = function (t,k)
-  if quaternion[k] then return quaternion[k]
-  elseif keys[k] then return t[keys[k]]
-  end
-end  -- default is return nil
+  return quaternion[k] or t[keys[k] or '']
+end
 
 quaternion.__newindex = function (t,k,v)
   if keys[k] then 

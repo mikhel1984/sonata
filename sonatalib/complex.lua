@@ -124,6 +124,7 @@ print(a)
 local Ver = require "sonatalib.versions"
 
 -- REAL, IMAG = 1, 2
+local keys = {Re=1, Im=2}
 
 -- help section 
 local FUNCTIONS = 'functions'
@@ -161,19 +162,16 @@ about = help:new("Manipulations with complex numbers."),
 --  @param k Key.
 --  @return Value or method.
 complex.__index = function (t,k)
-  if    complex[k] then return complex[k]
-  elseif k == 'Re' then return t[1]
-  elseif k == 'Im' then return t[2]
-  end
-end -- default is return nil
+  return complex[k] or t[keys[k] or '']
+end 
 
 --- Set unknown key. Use proxy to access the element.
 --  @param t Table.
 --  @param k Key.
 --  @param v Value.
 complex.__newindex = function (t,k,v)
-  if     k == 'Re' then t[1] = v
-  elseif k == 'Im' then t[2] = v
+  if keys[k] then 
+    t[keys[k]] = v
   end
 end
 
