@@ -17,7 +17,7 @@
 -- use 'gnuplot'
 Gnu = require 'sonatalib.gnuplot'
 
-a = {{'sin(x)',title='Sinus x'},permanent=false}
+a = {{math.sin, title='Sinus x'},permanent=false}
 -- use 'permanent=true' instead or not define it at all
 -- 'permanent=false' is just for testing
 Gnu.plot(a)
@@ -38,7 +38,7 @@ ans = b:isAvailable()              --> true
 tmp = {{1,1},{2,2},{3,3},{4,4}}
 Gnu.plot {{tmp,with='lines'},permanent=false}
 
--- print Lua function
+-- define function
 fn1 = function (x) return x^2-x end
 Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
 
@@ -184,7 +184,11 @@ gnuplot._fn2file_ = function (fn,base)
 end
 
 -- Prepare functions representation
-gnuplot._str_ = {table=gnuplot._tbl2file_, ['function']=gnuplot._fn2file_, string=function (x) return x end}
+--gnuplot._str_ = {
+--  table=gnuplot._tbl2file_,
+--  ['function']=gnuplot._fn2file_,
+--  string=function (x) return string.format('"%s"', x) end
+--}
 
 --- Add function parameters
 --  @param t Table with function definition.
@@ -192,8 +196,15 @@ gnuplot._str_ = {table=gnuplot._tbl2file_, ['function']=gnuplot._fn2file_, strin
 --  @return String representation of the plot command.
 gnuplot._graph_ = function (t,base)
   -- function/file name
-  local fn = t[1]
-  local str = (fn and gnuplot._str_[type(fn)](fn,base) or string.format('"%s"', t.file))
+  local fn, str = t[1]
+  if type(fn) == 'table' then
+    str = gnuplot._tbl2file_(fn,base)
+  elseif type(fn) == 'function' then
+    str = gnuplot._fn2file_(fn,base)
+  else -- type(fn) == 'string' !!
+    str = string.format('"%s"', fn)
+  end
+  --local str = gnuplot._str_[type(fn)](fn,base)
   -- prepare options
   for _,k in ipairs(gnuplot.foptions) do
     if t[k] then str = string.format('%s %s %s ', str, prepare(k,t[k])) end
@@ -285,9 +296,8 @@ gnuplot.about[gnuplot.Gnu] = {"Gnu([G])", "Transform given table into gnuplot ob
 gnuplot.keys = 'keys'
 gnuplot.about[gnuplot.keys] = {'keys',
 [[  Options description:
-{'sin(x)'}                        -- print sinus using Gnuplot functions
 {math.sin, title='sinus'}         -- plot using function, define in Lua; add legend
-{file='sin.dat', ln=1, lw=2}      -- plot data from file, use given color and width
+{'sin.dat', ln=1, lw=2}           -- plot data from file, use given color and width
 {tbl, with='lines'}               -- plot data from Lua table, use lines
 title='Graph name'                -- set title
 xrange={0,10}                     -- range of x from 0 to 10
