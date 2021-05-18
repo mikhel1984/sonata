@@ -16,10 +16,10 @@
 
 -- use 'gnuplot'
 Gnu = require 'sonatalib.gnuplot'
+Gnu.testmode = true -- just for testing
 
-a = {{math.sin, title='sin'},{math.cos, title='cos'},permanent=false}
--- use 'permanent=true' instead or not define it at all
--- 'permanent=false' is just for testing
+-- table of functions
+a = {{math.sin, title='sin'},{math.cos, title='cos'}}
 Gnu.plot(a)
 
 -- save as object
@@ -39,16 +39,21 @@ print(b)
 ans = b:isAvailable()              --> true
 
 -- send 'raw' command to Gnuplot 
-cmd = 'plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'
-Gnu.plot {raw=cmd, permanent=false}
+Gnu.plot {raw='plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'}
 
 -- print Lua table
 tmp = {{1,1},{2,2},{3,3},{4,4}}
-Gnu.plot {{tmp,with='lines'},permanent=false}
+Gnu.plot {{tmp,with='lines'}}
 
 -- define function
 fn1 = function (x) return x^2-x end
-Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
+Gnu.plot {{fn1,with='lines',title='x^2-x'}}
+
+-- simple plot 
+t1 = {1,2,3,4,5}
+t2 = {2,4,6,4,2}
+-- can be called as "plot(t1,t2,'some curve')"
+Gnu.simple(t1,t2,'some curve')
 
 --]]
 
@@ -121,7 +126,6 @@ gnuplot.about[gnuplot.N] = {"N[=100]", "If no samples, divide interval into N po
 
 -- option checker
 local acc = {options=collect(gnuplot.options), foptions=collect(gnuplot.foptions)}
-acc.options.permanent = true
 acc.options.surface = true
 acc.options.raw = true
 acc.foptions.file = true
@@ -251,10 +255,8 @@ gnuplot.about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 --  @return Table which can be used for plotting.
 gnuplot.plot = function (G)
   if not gnuplot.isAvailable(G) then return end
-  -- define 'permanent' option
-  if G.permanent == nil then G.permanent = true end
   -- open Gnuplot
-  local handle = assert(io.popen('gnuplot' .. (G.permanent and ' -p' or ''), 'w'), 'Cannot open Gnuplot!')
+  local handle = assert(io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'), 'Cannot open Gnuplot!')
   -- save options
   local cmd = {}
   for _,k in ipairs(gnuplot.options) do
@@ -368,7 +370,6 @@ grid='polar'                      -- polar grid
 legend=false                      -- don't use legend
 surface=true                      -- plot surface in 3D
 samples=200                       -- define number of points
-permanent=true                    -- create in independent window
 raw='set pm3d'                    -- set Gnuplot options manually
 ]]
 }
