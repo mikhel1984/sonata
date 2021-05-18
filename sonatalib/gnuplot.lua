@@ -17,7 +17,7 @@
 -- use 'gnuplot'
 Gnu = require 'sonatalib.gnuplot'
 
-a = {{math.sin, title='Sinus x'},permanent=false}
+a = {{math.sin, title='sin'},{math.cos, title='cos'},permanent=false}
 -- use 'permanent=true' instead or not define it at all
 -- 'permanent=false' is just for testing
 Gnu.plot(a)
@@ -25,14 +25,22 @@ Gnu.plot(a)
 -- save as object
 -- to simplify modification
 g = Gnu(a)
-g.xrange = {-10,10}
+g.xrange = {0,10}   -- add rangle
+-- save to file 
+g.terminal = 'png'
+g.output = 'test.png'
 g:plot()
 
 -- copy parameters to other object
 b = g:copy()
 print(b)
+
 -- check correctness of the table
 ans = b:isAvailable()              --> true
+
+-- send 'raw' command to Gnuplot 
+cmd = 'plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'
+Gnu.plot {raw=cmd, permanent=false}
 
 -- print Lua table
 tmp = {{1,1},{2,2},{3,3},{4,4}}
@@ -325,4 +333,3 @@ if not LC_DIALOG then gnuplot.about = nil end
 return gnuplot
 
 --===========================================
---TODO: add example for 'raw' usage
