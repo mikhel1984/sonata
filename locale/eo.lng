@@ -312,8 +312,7 @@ Gnu = {
 ["Gnu([G])"]             = [[Konverti Lua tablon al 'gnuplot' objekto.]],
 ["N[=100]"]              = [[Nombro da punktoj sur la grafikaĵo se la parametro 'samples' ne estas specifita.]],
 ["keys"]                 = [[  Priskribo de parametroj:
-{'sin(x)'}                                   -- konstrui grafeon por sinuso
-{math.sin, title='sinus'}                    -- grafeon por Lua funkcio, aldoni priskribon
+{math.sin, title='sin'}                      -- grafeon por Lua funkcio, aldoni priskribon
 {file='sin.dat', ln=1, lw=2}                 -- grafeon por datumndosieron, specifi koloron kaj dikecon
 {tbl, with='lines'}                          -- grafeon por Lua tabulo, uzi linioj
 title='Graph name'                           -- apudskribo
@@ -331,7 +330,6 @@ grid='polar'                                 -- polusa koordinata sistemo
 legend=false                                 -- malebligi priskribon
 surface=true                                 -- tridimensia grafeo
 samples=200                                  -- nombro da punktoj
-permanent=true                               -- sendependa grafeo
 raw='set pm3d'                               -- fiksi la Gnuplot parametrojn permane 
 ]],
 ["plot(G)"]              = [[Konstrui funkcian grafeon. Parametroj estas specifita en Lua table G.]],

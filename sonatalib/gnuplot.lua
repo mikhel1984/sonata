@@ -256,7 +256,8 @@ gnuplot.about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 gnuplot.plot = function (G)
   if not gnuplot.isAvailable(G) then return end
   -- open Gnuplot
-  local handle = assert(io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'), 'Cannot open Gnuplot!')
+  local handle = assert(
+    io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'), 'Cannot open Gnuplot!')
   -- save options
   local cmd = {}
   for _,k in ipairs(gnuplot.options) do
@@ -387,3 +388,4 @@ return gnuplot
 
 --===========================================
 --TODO: plot matrix columns (rows)
+--TODO: optional (x,f(x)) in simple ?
