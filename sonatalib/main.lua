@@ -545,3 +545,4 @@ return main
 --===============================
 --TODO: save last command as well
 --TODO: generate doc for desired lang using command line
+--TODO: string function definition to map

@@ -296,6 +296,52 @@ gnuplot.__tostring = function (G)
   return string.format('{\n%s\n}', table.concat(res, ',\n'))
 end
 
+--- Save one or two lists into tmp file
+--  @param t1 First Lua table (list).
+--  @param t2 Second Lua table (list) or nil.
+--  @return File name.
+gnuplot._lst2file_ = function (t1,t2)
+  local name = os.tmpname()
+  local f = io.open(name, 'w')
+  if t2 then 
+    for i, v1 in ipairs(t1) do f:write(v1, ' ', t2[i], '\n') end
+  else
+    for i, v1 in ipairs(t1) do f:write(i, ' ', v1, '\n') end
+  end  
+  f:close()
+  return name
+end
+
+--- Simplified plotting
+--  @param ... Can be "t", "t1,t2", "t1,t2,name", "t,name" etc.
+gnuplot.simple = function (...)
+  local ag, cmd = {...}, {grid=true}
+  local i, n = 1, 1
+  repeat 
+    -- ag[i] have to be table
+    local name, legend
+    if type(ag[i+1]) == 'table' then
+      assert(#ag[i] == #ag[i+1], "Different table length!")
+      name = gnuplot._lst2file_(ag[i], ag[i+1])
+      i = i+2
+    else
+      name = gnuplot._lst2file_(ag[i])
+      i = i+1
+    end
+    if type(ag[i]) == 'string' then
+      legend = ag[i]
+      i = i+1
+    else 
+      legend = tostring(n)
+    end
+    cmd[#cmd+1] = {name, with='lines', title=legend}
+    n = n + 1
+  until i > #ag
+  -- show
+  gnuplot.plot(cmd)
+end
+gnuplot.about[gnuplot.simple] = {"simple(x1,[y1,[nm,[x2,..]]])", "Simplified, Matlab-like plot function. Each argument is either the list of numbers or the curve name."}
+
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
 gnuplot.Gnu = 'Gnu'
@@ -303,8 +349,8 @@ gnuplot.about[gnuplot.Gnu] = {"Gnu([G])", "Transform given table into gnuplot ob
 
 gnuplot.keys = 'keys'
 gnuplot.about[gnuplot.keys] = {'keys',
-[[  Options description:
-{math.sin, title='sinus'}         -- plot using function, define in Lua; add legend
+[[  Options / examples:
+{math.sin, title='sin'}           -- plot using function, define in Lua; add legend
 {'sin.dat', ln=1, lw=2}           -- plot data from file, use given color and width
 {tbl, with='lines'}               -- plot data from Lua table, use lines
 title='Graph name'                -- set title
@@ -327,9 +373,16 @@ raw='set pm3d'                    -- set Gnuplot options manually
 ]]
 }
 
+--- Function for execution during the module import.
+gnuplot.onImport = function ()
+  plot = gnuplot.simple
+  lc.about[plot] = {"plot(x1,[y1,[nm,[x2,..]]])", gnuplot.about[gnuplot.simple][2]}
+end
+
 -- free memory if need
 if not LC_DIALOG then gnuplot.about = nil end
 
 return gnuplot
 
 --===========================================
+--TODO: plot matrix columns (rows)
