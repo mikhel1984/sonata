@@ -58,8 +58,6 @@ use = {
   units     = "Unit",
 }
 
-
-
 -- Import actions 
 function lc_local.doimport(tbl,name)
   local var = tbl[name]
@@ -142,11 +140,6 @@ LC_DIALOG = true
 if LC_LOCALIZATION then 
   about:localization(LC_LOCALIZATION) 
 end
-
--- save references for "global" methods
-lc_local.use = use
-lc_local.help = help
-lc_local.quit = quit
 
 -- Run! 
 io.write(lc_help.CMAIN, '\n',

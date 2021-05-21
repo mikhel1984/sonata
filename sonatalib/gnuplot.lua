@@ -93,6 +93,7 @@ end
 --  @return String, prepared for usage in function.
 local function prepare(k,v)
   if k == 'title' then v = string.format('"%s"', v) end
+  if k == 'using' then v = string.format('%d:%d', v[1],v[2]) end
   return k,v
 end
 
@@ -116,7 +117,7 @@ type = 'gnuplot',
 options = {'terminal','output','parametric','size','polar','grid','key','title',
   'xlabel','ylabel','xrange','yrange','zrange','trange','samples'},
 -- basic function options
-foptions = {'title','with','linetype','linestyle','linewidth','ls','ln','lw'},
+foptions = {'using','title','with','linetype','linestyle','linewidth','ls','ln','lw'},
 -- description
 about = help:new("Interface for calling Gnuplot from Lua."),
 }
@@ -170,7 +171,7 @@ gnuplot._tbl2file_ = function (t)
     f:write('\n')
   end
   f:close()
-  return string.format('"%s"', name)
+  return string.format('"%s"', name), #t[1]
 end
 
 --- Save function result to tmp file
@@ -182,7 +183,7 @@ gnuplot._fn2file_ = function (fn,base)
   local xl = base.xrange and base.xrange[1] or (-10)
   local xr = base.xrange and base.xrange[2] or 10
   local N = base.samples or gnuplot.N
-  local dx = (xr-xl)/N
+  local dx, L = (xr-xl)/N, 1
   local f = io.open(name, 'w')
   if base.surface then
     local yl = base.yrange and base.yrange[1] or (-10)
@@ -192,10 +193,20 @@ gnuplot._fn2file_ = function (fn,base)
       for y = yl,yr,dy do f:write(x,' ',y,' ',fn(x,y),'\n') end
     end 
   else
-    for x = xl,xr,dx do f:write(x,' ',fn(x),'\n') end
+    for x = xl,xr,dx do
+      f:write(x)
+      local v = fn(x)
+      if type(v) == 'table' then
+        for i = 1,#v do f:write(' ',v[i]) end
+        L = #v + 1
+      else 
+        f:write(' ',v)
+      end
+      f:write('\n')
+    end
   end
   f:close()
-  return string.format('"%s"', name)
+  return string.format('"%s"', name), L
 end
 
 --- Add function parameters
@@ -204,20 +215,29 @@ end
 --  @return String representation of the plot command.
 gnuplot._graph_ = function (t,base)
   -- function/file name
-  local fn, str = t[1]
+  local fn, N, str, nm = t[1], 1, ''
   if type(fn) == 'table' then
-    str = gnuplot._tbl2file_(fn,base)
+    nm, N = gnuplot._tbl2file_(fn,base)
   elseif type(fn) == 'function' then
-    str = gnuplot._fn2file_(fn,base)
+    nm, N = gnuplot._fn2file_(fn,base)
   else -- type(fn) == 'string' !!
-    str = string.format('"%s"', fn)
+    nm = string.format('"%s"', fn)
   end
+  if t['using'] then N = 1 end     -- used defined columns
   -- prepare options
   for _,k in ipairs(gnuplot.foptions) do
     if t[k] then str = string.format('%s %s %s ', str, prepare(k,t[k])) end
   end
   if t.raw then str = string.format('%s %s', str, t.raw) end
-
+  if N > 2 then     -- plot all columns
+    local acc = {}
+    for i = 2, N do
+      acc[#acc+1] = string.format('%s using 1:%d %s', nm, i, str)
+    end
+    str = table.concat(acc, ',')
+  else 
+    str = string.format('%s %s', nm, str)
+  end
   return str
 end
 
