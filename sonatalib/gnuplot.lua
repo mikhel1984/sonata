@@ -198,13 +198,6 @@ gnuplot._fn2file_ = function (fn,base)
   return string.format('"%s"', name)
 end
 
--- Prepare functions representation
---gnuplot._str_ = {
---  table=gnuplot._tbl2file_,
---  ['function']=gnuplot._fn2file_,
---  string=function (x) return string.format('"%s"', x) end
---}
-
 --- Add function parameters
 --  @param t Table with function definition.
 --  @param base Argument range.
@@ -219,7 +212,6 @@ gnuplot._graph_ = function (t,base)
   else -- type(fn) == 'string' !!
     str = string.format('"%s"', fn)
   end
-  --local str = gnuplot._str_[type(fn)](fn,base)
   -- prepare options
   for _,k in ipairs(gnuplot.foptions) do
     if t[k] then str = string.format('%s %s %s ', str, prepare(k,t[k])) end
@@ -324,7 +316,7 @@ gnuplot._lst2file_ = function (t1,t2)
 end
 
 --- Simplified plotting
---  @param ... Can be "t", "t1,t2", "t1,t2,name", "t,name" etc.
+--  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
 gnuplot.simple = function (...)
   local ag, cmd = {...}, {grid=true}
   local i, n = 1, 1
@@ -332,7 +324,7 @@ gnuplot.simple = function (...)
     -- ag[i] have to be table
     local var, name, legend = ag[i+1], nil, nil
     if type(var) == 'table' or type(var) == 'function' then
-      name = gnuplot._lst2file_(ag[i], ag[i+1])
+      name = gnuplot._lst2file_(ag[i], var)
       i = i+2
     else
       name = gnuplot._lst2file_(ag[i])
@@ -350,7 +342,7 @@ gnuplot.simple = function (...)
   -- show
   gnuplot.plot(cmd)
 end
-gnuplot.about[gnuplot.simple] = {"simple(x1,[y1,[nm,[x2,..]]])", "Simplified, Matlab-like plot function. 'x' is list of numbers, 'y' is either the list or functin, 'nm' - curve name."}
+gnuplot.about[gnuplot.simple] = {"simple(x1,[y1,[nm,[x2,..]]])", "Simplified, Matlab-like plot function. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
@@ -395,5 +387,4 @@ return gnuplot
 
 --===========================================
 --TODO: plot matrix columns (rows)
---TODO: optional (x,f(x)) in simple ?
---TODO: add 'using' for tables
+--TODO: add 'using' for tables, 'all' by default
