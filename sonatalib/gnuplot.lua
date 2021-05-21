@@ -55,6 +55,9 @@ t2 = {2,4,6,4,2}
 -- can be called as "plot(t1,t2,'some curve')"
 Gnu.simple(t1,t2,'some curve')
 
+-- simplified function plot
+Gnu.simple(t1, math.sin, 'sin')
+
 --]]
 
 --	LOCAL
@@ -307,7 +310,12 @@ gnuplot._lst2file_ = function (t1,t2)
   local name = os.tmpname()
   local f = io.open(name, 'w')
   if t2 then 
-    for i, v1 in ipairs(t1) do f:write(v1, ' ', t2[i], '\n') end
+    if type(t2) == 'table' then
+      assert(#t1 == #t2, 'Different talbe length!')
+      for i, v1 in ipairs(t1) do f:write(v1, ' ', t2[i], '\n') end
+    else -- must be function 
+      for i, v1 in ipairs(t1) do f:write(v1, ' ', t2(v1), '\n') end
+    end
   else
     for i, v1 in ipairs(t1) do f:write(i, ' ', v1, '\n') end
   end  
@@ -322,9 +330,8 @@ gnuplot.simple = function (...)
   local i, n = 1, 1
   repeat 
     -- ag[i] have to be table
-    local name, legend
-    if type(ag[i+1]) == 'table' then
-      assert(#ag[i] == #ag[i+1], "Different table length!")
+    local var, name, legend = ag[i+1], nil, nil
+    if type(var) == 'table' or type(var) == 'function' then
       name = gnuplot._lst2file_(ag[i], ag[i+1])
       i = i+2
     else
@@ -343,7 +350,7 @@ gnuplot.simple = function (...)
   -- show
   gnuplot.plot(cmd)
 end
-gnuplot.about[gnuplot.simple] = {"simple(x1,[y1,[nm,[x2,..]]])", "Simplified, Matlab-like plot function. Each argument is either the list of numbers or the curve name."}
+gnuplot.about[gnuplot.simple] = {"simple(x1,[y1,[nm,[x2,..]]])", "Simplified, Matlab-like plot function. 'x' is list of numbers, 'y' is either the list or functin, 'nm' - curve name."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
@@ -389,3 +396,4 @@ return gnuplot
 --===========================================
 --TODO: plot matrix columns (rows)
 --TODO: optional (x,f(x)) in simple ?
+--TODO: add 'using' for tables
