@@ -35,9 +35,6 @@ g:plot()
 b = g:copy()
 print(b)
 
--- check correctness of the table
-ans = b:isAvailable()              --> true
-
 -- send 'raw' command to Gnuplot 
 Gnu.plot {raw='plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'}
 
@@ -97,15 +94,6 @@ local function prepare(k,v)
   return k,v
 end
 
---- Combine all options as keys
---  @param t Table with parameters.
---  @return List of options.
-local function collect(t) 
-  local res = {}
-  for _,v in ipairs(t) do res[v] = true end
-  return res
-end
-
 --	INFO
 local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
@@ -119,7 +107,7 @@ options = {'terminal','output','parametric','size','polar','grid','key','title',
 -- basic function options
 foptions = {'using','title','with','linetype','linestyle','linewidth','ls','ln','lw'},
 -- description
-about = help:new("Interface for calling Gnuplot from Lua."),
+about = help:new("Interface for calling Gnuplot from Sonata LC."),
 }
 -- metha
 gnuplot.__index = gnuplot
@@ -127,38 +115,6 @@ gnuplot.__index = gnuplot
 -- divide interval into given number of points
 gnuplot.N = 100
 gnuplot.about[gnuplot.N] = {"N[=100]", "If no samples, divide interval into N points.", help.CONST}
-
--- option checker
-local acc = {options=collect(gnuplot.options), foptions=collect(gnuplot.foptions)}
-acc.options.surface = true
-acc.options.raw = true
-acc.foptions.file = true
-acc.foptions.raw = true
-
---- Check if all options in the table are available
---  @param G Table with optinos.
---  @return True if no unexpected parameters.
-gnuplot.isAvailable = function (G) 
-  local available = true
-  for k,v in pairs(G) do
-    -- find options which were not predefined
-    if not acc.options[k] then
-      if type(k) == 'number' and type(v) == 'table' then
-        for p,q in pairs(v) do
-          if not acc.foptions[p] and type(p) ~= 'number' then
-            io.write(p, ' is not predefined, use "raw" for this option!\n')
-            available = false
-          end -- if
-        end -- for p,q
-      else
-        io.write(k, ' is not predefined, use "raw" for this option!\n')
-        available = false
-      end -- type
-    end -- acc.options
-  end -- k,v
-  return available
-end
-gnuplot.about[gnuplot.isAvailable] = {"isAvailable(G)", "Check if all options in table are predefined in program.", help.OTHER}
 
 --- Save table to tmp file
 --  @param t Lua table with numbers.
@@ -171,7 +127,7 @@ gnuplot._tbl2file_ = function (t)
     f:write('\n')
   end
   f:close()
-  return string.format('"%s"', name), #t[1]
+  return string.format('"%s"', name)
 end
 
 --- Save function result to tmp file
@@ -183,7 +139,7 @@ gnuplot._fn2file_ = function (fn,base)
   local xl = base.xrange and base.xrange[1] or (-10)
   local xr = base.xrange and base.xrange[2] or 10
   local N = base.samples or gnuplot.N
-  local dx, L = (xr-xl)/N, 1
+  local dx = (xr-xl)/N
   local f = io.open(name, 'w')
   if base.surface then
     local yl = base.yrange and base.yrange[1] or (-10)
@@ -194,19 +150,11 @@ gnuplot._fn2file_ = function (fn,base)
     end 
   else
     for x = xl,xr,dx do
-      f:write(x)
-      local v = fn(x)
-      if type(v) == 'table' then
-        for i = 1,#v do f:write(' ',v[i]) end
-        L = #v + 1
-      else 
-        f:write(' ',v)
-      end
-      f:write('\n')
+      f:write(x,' ',fn(x),'\n')
     end
   end
   f:close()
-  return string.format('"%s"', name), L
+  return string.format('"%s"', name)
 end
 
 --- Add function parameters
@@ -215,30 +163,19 @@ end
 --  @return String representation of the plot command.
 gnuplot._graph_ = function (t,base)
   -- function/file name
-  local fn, N, str, nm = t[1], 1, ''
+  local fn, str, nm = t[1], ''
   if type(fn) == 'table' then
-    nm, N = gnuplot._tbl2file_(fn,base)
+    nm = gnuplot._tbl2file_(fn,base)
   elseif type(fn) == 'function' then
-    nm, N = gnuplot._fn2file_(fn,base)
+    nm = gnuplot._fn2file_(fn,base)
   else -- type(fn) == 'string' !!
     nm = string.format('"%s"', fn)
   end
-  if t['using'] then N = 1 end     -- used defined columns
   -- prepare options
   for _,k in ipairs(gnuplot.foptions) do
     if t[k] then str = string.format('%s %s %s ', str, prepare(k,t[k])) end
   end
-  if t.raw then str = string.format('%s %s', str, t.raw) end
-  if N > 2 then     -- plot all columns
-    local acc = {}
-    for i = 2, N do
-      acc[#acc+1] = string.format('%s using 1:%d %s', nm, i, str)
-    end
-    str = table.concat(acc, ',')
-  else 
-    str = string.format('%s %s', nm, str)
-  end
-  return str
+  return string.format('%s %s', nm, str)
 end
 
 --- Create new object, set metatable.
@@ -269,7 +206,6 @@ gnuplot.about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 --  @param G Table with parameters of graphic.
 --  @return Table which can be used for plotting.
 gnuplot.plot = function (G)
-  if not gnuplot.isAvailable(G) then return end
   -- open Gnuplot
   local handle = assert(
     io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'), 'Cannot open Gnuplot!')
@@ -407,4 +343,3 @@ return gnuplot
 
 --===========================================
 --TODO: plot matrix columns (rows)
---TODO: add 'using' for tables, 'all' by default
