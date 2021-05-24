@@ -100,6 +100,8 @@ local function prepare(k,v)
   return k,v
 end
 
+local GPPLOT = 'plot'
+
 --	INFO
 local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
@@ -122,9 +124,9 @@ gnuplot.__index = gnuplot
 gnuplot.N = 100
 gnuplot.about[gnuplot.N] = {"N[=100]", "If no samples, divide interval into N points.", help.CONST}
 
---- Save table to tmp file
+--- Save table to tmp file.
 --  @param t Lua table with numbers.
---  @return File name as string.
+--  @return File name.
 gnuplot._tbl2file_ = function (t)
   local name = os.tmpname()
   local f = io.open(name, 'w')
@@ -136,10 +138,25 @@ gnuplot._tbl2file_ = function (t)
   return name
 end
 
---- Save function result to tmp file
+--- Save matrix to tmp file.
+--  @param t Sonata LC matrix. 
+--  @return File name.
+gnuplot._mat2file_ = function (t)
+  local name = os.tmpname()
+  local f = io.open(name, 'w')
+  for i = 1, t.rows do
+    local row = t[i]
+    for j = 1, t.cols do f:write(row[j],' ') end
+    f:write('\n')
+  end
+  f:close()
+  return name
+end
+
+--- Save function result to tmp file.
 --  @param fn Lua function.
 --  @param base Range and step.
---  @return File name as a string.
+--  @return File name.
 gnuplot._fn2file_ = function (fn,base)
   local name = os.tmpname()
   local xl = base.xrange and base.xrange[1] or (-10)
@@ -171,7 +188,7 @@ gnuplot._graph_ = function (t,base)
   -- function/file name
   local fn, str, nm = t[1], ''
   if type(fn) == 'table' then
-    nm = gnuplot._tbl2file_(fn,base)
+    nm = fn.ismatrix and gnuplot._mat2file_(fn) or gnuplot._tbl2file_(fn)
   elseif type(fn) == 'function' then
     nm = gnuplot._fn2file_(fn,base)
   else -- type(fn) == 'string' !!
@@ -311,7 +328,7 @@ gnuplot.plot = function (...)
   cmd.grid = true
   cmd:show()
 end
-gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.", SIMPLE}
 
 --- Plot table of data file.
 --  @param t Table or dat-file.
@@ -322,10 +339,11 @@ gnuplot.tplot = function (t,...)
   if type(t) == 'table' then
     if ag[1] == 'all' then 
       -- update table
+      local n = t.ismatrix and t.cols or #t[1] -- column #
       ag = {}
-      for i = 1,#t[1] do ag[#ag+1] = i end
+      for i = 1,n do ag[#ag+1] = i end
     end
-    t = gnuplot._tbl2file_(t)
+    t = t.ismatrix and gnuplot._mat2file_(t) or gnuplot._tbl2file_(t)
   end
   if #ag > 1 then
     for i = 2,#ag do
@@ -337,7 +355,7 @@ gnuplot.tplot = function (t,...)
   cmd.grid = true
   cmd:show()
 end
-gnuplot.about[gnuplot.tplot] = {"tplot(t,[1,3,4])", "Plot table of data file. Optional elements are either columns (x,y1,y2...) or keyword 'all' (for tables)."}
+gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements are either columns or keyword 'all' (for tables and matrices).", SIMPLE}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
@@ -372,7 +390,9 @@ raw='set pm3d'                    -- set Gnuplot options manually
 --- Function for execution during the module import.
 gnuplot.onImport = function ()
   plot = gnuplot.plot
-  lc.about[plot] = {"plot(x1,[y1,[nm,[x2,..]]])", gnuplot.about[gnuplot.plot][2]}
+  lc.about[plot] = {gnuplot.about[gnuplot.plot][1], gnuplot.about[gnuplot.plot][2], GPPLOT}
+  tplot = gnuplot.tplot 
+  lc.about[tplot] = {gnuplot.about[gnuplot.tplot][1], gnuplot.about[gnuplot.tplot][2], GPPLOT}
 end
 
 -- free memory if need
@@ -381,4 +401,3 @@ if not LC_DIALOG then gnuplot.about = nil end
 return gnuplot
 
 --===========================================
---TODO: plot matrix columns (rows)
