@@ -305,15 +305,15 @@ Quat = {
 ["real(Q)"]              = [[Reala parto de la kvaterniono (la sama kiel Q.w)).]],
 },
 ---------- gnuplot.lua ----------
-Gnu = {
+Gp = {
 ["__module__"]           = [[Interfaco por laborado kun Gnuplot de Lua.]],
 ["copy(G)"]              = [[Krei kopion la parametroj de grafeo.]],
 ["isAvailable(G)"]       = [[Kontrolu plenumon kaj antaǔdifinitaj opcioj.]],
-["Gnu()"]                = [[Krei tablon por 'Gnuplot'.]],
+["Gp()"]                 = [[Krei tablon por 'Gnuplot'.]],
 ["N[=100]"]              = [[Nombro da punktoj sur la grafikaĵo se la parametro 'samples' ne estas specifita.]],
 ["keys"]                 = [[  Priskribo de parametroj:
 {math.sin, title='sin'}                      -- grafeon por Lua funkcio, aldoni priskribon
-{file='sin.dat', ln=1, lw=2}                 -- grafeon por datumndosieron, specifi koloron kaj dikecon
+{'sin.dat', ln=1, lw=2}                      -- grafeon por datumndosieron, specifi koloron kaj dikecon
 {tbl, with='lines'}                          -- grafeon por Lua tabulo, uzi linioj
 title='Graph name'                           -- apudskribo
 xrange={0,10}                                -- gamo x de 0 ĝis 10

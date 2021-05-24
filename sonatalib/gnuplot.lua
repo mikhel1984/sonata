@@ -15,20 +15,20 @@
 --[[TEST
 
 -- use 'gnuplot'
-Gnu = require 'sonatalib.gnuplot'
---Gnu.testmode = true -- just for testing
+Gp = require 'sonatalib.gnuplot'
+Gp.testmode = true -- just for testing
 
 -- simple plot 
 t1 = {1,2,3,4,5}
 t2 = {2,4,6,4,2}
 -- in the dialog call "plot(t1,t2,'some curve')"
-Gnu.plot(t1,t2,'some curve')
+Gp.plot(t1,t2,'some curve')
 
 -- simplified function plot
-Gnu.plot(t1, math.sin, 'sin')
+Gp.plot(t1, math.sin, 'sin')
 
 -- extended capabilities
-a = Gnu()
+a = Gp()
 a:add {math.sin, title='sin'}
 a:add {math.cos, title='cos'}
 a:show()
@@ -45,19 +45,19 @@ b = a:copy()
 print(b)
 
 -- send 'raw' command to Gnuplot
-c = Gnu()
+c = Gp()
 c.raw = 'plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'
 c:show()
 
 -- print Lua table
 tmp = {{1,1},{2,2},{3,3},{4,4}}
-d = Gnu()
+d = Gp()
 d:add {tmp,with='lines'}
 d:show()
 
 -- define function
 fn1 = function (x) return x^2-x end
-f = Gnu()
+f = Gp()
 f:add {fn1,with='lines',title='x^2-x'}
 f:show()
 
@@ -314,8 +314,8 @@ gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of num
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
-gnuplot.Gnu = 'Gnu'
-gnuplot.about[gnuplot.Gnu] = {"Gnu()", "Prepare Gnuplot object.", help.NEW}
+gnuplot.Gp = 'Gp'
+gnuplot.about[gnuplot.Gp] = {"Gp()", "Prepare Gnuplot object.", help.NEW}
 
 gnuplot.keys = 'keys'
 gnuplot.about[gnuplot.keys] = {'keys',
