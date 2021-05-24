@@ -328,7 +328,7 @@ gnuplot.plot = function (...)
   cmd.grid = true
   cmd:show()
 end
-gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.", SIMPLE}
+gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Plot table of data file.
 --  @param t Table or dat-file.
@@ -355,7 +355,30 @@ gnuplot.tplot = function (t,...)
   cmd.grid = true
   cmd:show()
 end
-gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements are either columns or keyword 'all' (for tables and matrices).", SIMPLE}
+gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements are either columns or keyword 'all' (for tables and matrices)."}
+
+--- Polar plot.
+--  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
+gnuplot.polar = function(...)
+  local ag, i, n = {...}, 1, 1
+  local cmd = gnuplot:new()
+  repeat 
+    local name = gnuplot._lst2file_(ag[i],ag[i+1]) 
+    i = i + 2
+    local legend
+    if type(ag[i]) == 'string' then
+      legend = ag[i]
+      i = i + 1
+    else 
+      legend = tostring(n)
+    end
+    cmd[#cmd+1] = {name, title=legend, with='lines'}
+    n = n + 1
+  until i > #ag
+  cmd.polar = true
+  cmd:show()
+end
+gnuplot.about[gnuplot.polar] = {'polar(x1,y1,[nm,[x2,y2..]])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
@@ -393,6 +416,8 @@ gnuplot.onImport = function ()
   lc.about[plot] = {gnuplot.about[gnuplot.plot][1], gnuplot.about[gnuplot.plot][2], GPPLOT}
   tplot = gnuplot.tplot 
   lc.about[tplot] = {gnuplot.about[gnuplot.tplot][1], gnuplot.about[gnuplot.tplot][2], GPPLOT}
+  polar = gnuplot.polar
+  lc.about[polar] = {gnuplot.about[gnuplot.polar][1], gnuplot.about[gnuplot.polar][2], GPPLOT}
 end
 
 -- free memory if need
