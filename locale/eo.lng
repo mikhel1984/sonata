@@ -309,7 +309,7 @@ Gnu = {
 ["__module__"]           = [[Interfaco por laborado kun Gnuplot de Lua.]],
 ["copy(G)"]              = [[Krei kopion la parametroj de grafeo.]],
 ["isAvailable(G)"]       = [[Kontrolu plenumon kaj antaǔdifinitaj opcioj.]],
-["Gnu([G])"]             = [[Konverti Lua tablon al 'gnuplot' objekto.]],
+["Gnu()"]                = [[Krei tablon por 'Gnuplot'.]],
 ["N[=100]"]              = [[Nombro da punktoj sur la grafikaĵo se la parametro 'samples' ne estas specifita.]],
 ["keys"]                 = [[  Priskribo de parametroj:
 {math.sin, title='sin'}                      -- grafeon por Lua funkcio, aldoni priskribon
@@ -332,6 +332,6 @@ surface=true                                 -- tridimensia grafeo
 samples=200                                  -- nombro da punktoj
 raw='set pm3d'                               -- fiksi la Gnuplot parametrojn permane 
 ]],
-["plot(G)"]              = [[Konstrui funkcian grafeon. Parametroj estas specifita en Lua table G.]],
+["show(G)"]              = [[Konstrui funkcian grafeon. Parametroj estas specifita en Lua table G.]],
 },
 }

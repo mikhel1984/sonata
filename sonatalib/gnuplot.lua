@@ -16,44 +16,50 @@
 
 -- use 'gnuplot'
 Gnu = require 'sonatalib.gnuplot'
-Gnu.testmode = true -- just for testing
-
--- table of functions
-a = {{math.sin, title='sin'},{math.cos, title='cos'}}
-Gnu.plot(a)
-
--- save as object
--- to simplify modification
-g = Gnu(a)
-g.xrange = {0,10}   -- add rangle
--- save to file 
-g.terminal = 'png'
-g.output = 'test.png'
-g:plot()
-
--- copy parameters to other object
-b = g:copy()
-print(b)
-
--- send 'raw' command to Gnuplot 
-Gnu.plot {raw='plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'}
-
--- print Lua table
-tmp = {{1,1},{2,2},{3,3},{4,4}}
-Gnu.plot {{tmp,with='lines'}}
-
--- define function
-fn1 = function (x) return x^2-x end
-Gnu.plot {{fn1,with='lines',title='x^2-x'}}
+--Gnu.testmode = true -- just for testing
 
 -- simple plot 
 t1 = {1,2,3,4,5}
 t2 = {2,4,6,4,2}
--- can be called as "plot(t1,t2,'some curve')"
-Gnu.simple(t1,t2,'some curve')
+-- in the dialog call "plot(t1,t2,'some curve')"
+Gnu.plot(t1,t2,'some curve')
 
 -- simplified function plot
-Gnu.simple(t1, math.sin, 'sin')
+Gnu.plot(t1, math.sin, 'sin')
+
+-- extended capabilities
+a = Gnu()
+a:add {math.sin, title='sin'}
+a:add {math.cos, title='cos'}
+a:show()
+
+-- additional parameters
+a.xrange = {0,10}   -- add rangle
+-- save to file 
+a.terminal = 'png'
+a.output = 'test.png'
+a:show()
+
+-- copy parameters to other object
+b = a:copy()
+print(b)
+
+-- send 'raw' command to Gnuplot
+c = Gnu()
+c.raw = 'plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'
+c:show()
+
+-- print Lua table
+tmp = {{1,1},{2,2},{3,3},{4,4}}
+d = Gnu()
+d:add {tmp,with='lines'}
+d:show()
+
+-- define function
+fn1 = function (x) return x^2-x end
+f = Gnu()
+f:add {fn1,with='lines',title='x^2-x'}
+f:show()
 
 --]]
 
@@ -182,7 +188,12 @@ end
 --  @param self Pointer to parent table.
 --  @param o Table with parameters or nil.
 --  @return New 'gnuplot' object.
-gnuplot.new = function (self,o) return setmetatable(o or {}, self) end
+gnuplot.new = function (self) return setmetatable({}, self) end
+
+--- Add new curve to the plot.
+--  @param G Gnuplot object.
+--  @param tCurve Table with function/table and parameters.
+gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
 
 --- Get copy of graph options.
 --  @param G Initial table.
@@ -205,7 +216,7 @@ gnuplot.about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 --- Plot graphic.
 --  @param G Table with parameters of graphic.
 --  @return Table which can be used for plotting.
-gnuplot.plot = function (G)
+gnuplot.show = function (G)
   -- open Gnuplot
   local handle = assert(
     io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'), 'Cannot open Gnuplot!')
@@ -230,7 +241,7 @@ gnuplot.plot = function (G)
   handle:write(res,'\n')
   handle:close()
 end
-gnuplot.about[gnuplot.plot] = {"plot(G)", "Plot data, represented as Lua table." }
+gnuplot.about[gnuplot.show] = {"show(G)", "Plot data, represented as Lua table." }
 
 --- Represent parameters of the graphic.
 --  @param G Gnuplot object.
@@ -273,8 +284,9 @@ end
 
 --- Simplified plotting
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
-gnuplot.simple = function (...)
-  local ag, cmd = {...}, {grid=true}
+gnuplot.plot = function (...)
+  local ag = {...}
+  local cmd = gnuplot:new()
   local i, n = 1, 1
   repeat 
     -- ag[i] have to be table
@@ -295,15 +307,15 @@ gnuplot.simple = function (...)
     cmd[#cmd+1] = {name, with='lines', title=legend}
     n = n + 1
   until i > #ag
-  -- show
-  gnuplot.plot(cmd)
+  cmd.grid = true
+  cmd:show()
 end
-gnuplot.about[gnuplot.simple] = {"simple(x1,[y1,[nm,[x2,..]]])", "Simplified, Matlab-like plot function. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
 gnuplot.Gnu = 'Gnu'
-gnuplot.about[gnuplot.Gnu] = {"Gnu([G])", "Transform given table into gnuplot object.", help.NEW}
+gnuplot.about[gnuplot.Gnu] = {"Gnu()", "Prepare Gnuplot object.", help.NEW}
 
 gnuplot.keys = 'keys'
 gnuplot.about[gnuplot.keys] = {'keys',
@@ -332,8 +344,8 @@ raw='set pm3d'                    -- set Gnuplot options manually
 
 --- Function for execution during the module import.
 gnuplot.onImport = function ()
-  plot = gnuplot.simple
-  lc.about[plot] = {"plot(x1,[y1,[nm,[x2,..]]])", gnuplot.about[gnuplot.simple][2]}
+  plot = gnuplot.plot
+  lc.about[plot] = {"plot(x1,[y1,[nm,[x2,..]]])", gnuplot.about[gnuplot.plot][2]}
 end
 
 -- free memory if need
