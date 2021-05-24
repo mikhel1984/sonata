@@ -133,7 +133,7 @@ gnuplot._tbl2file_ = function (t)
     f:write('\n')
   end
   f:close()
-  return string.format('"%s"', name)
+  return name
 end
 
 --- Save function result to tmp file
@@ -160,7 +160,7 @@ gnuplot._fn2file_ = function (fn,base)
     end
   end
   f:close()
-  return string.format('"%s"', name)
+  return name
 end
 
 --- Add function parameters
@@ -175,13 +175,13 @@ gnuplot._graph_ = function (t,base)
   elseif type(fn) == 'function' then
     nm = gnuplot._fn2file_(fn,base)
   else -- type(fn) == 'string' !!
-    nm = string.format('"%s"', fn)
+    nm = fn
   end
   -- prepare options
   for _,k in ipairs(gnuplot.foptions) do
     if t[k] then str = string.format('%s %s %s ', str, prepare(k,t[k])) end
   end
-  return string.format('%s %s', nm, str)
+  return nm, str
 end
 
 --- Create new object, set metatable.
@@ -194,6 +194,7 @@ gnuplot.new = function (self) return setmetatable({}, self) end
 --  @param G Gnuplot object.
 --  @param tCurve Table with function/table and parameters.
 gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
+gnuplot.about[gnuplot.add] = {"add(tCurve)", "Add new curve to figure."}
 
 --- Get copy of graph options.
 --  @param G Initial table.
@@ -229,7 +230,7 @@ gnuplot.show = function (G)
   -- prepare functions
   local fn = {}
   for i,f in ipairs(G) do
-    fn[i] = gnuplot._graph_(f,G)
+    fn[i] = string.format('"%s" %s', gnuplot._graph_(f,G))
   end
   -- command
   if #fn > 0 then
@@ -282,7 +283,7 @@ gnuplot._lst2file_ = function (t1,t2)
   return name
 end
 
---- Simplified plotting
+--- Matlab-like plotting
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
 gnuplot.plot = function (...)
   local ag = {...}
@@ -311,6 +312,32 @@ gnuplot.plot = function (...)
   cmd:show()
 end
 gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+
+--- Plot table of data file.
+--  @param t Table or dat-file.
+--  @param ... Column indexes for plotting (e.g. 1,4,9) or word 'all'
+gnuplot.tplot = function (t,...)
+  local ag = {...}
+  local cmd = gnuplot:new()
+  if type(t) == 'table' then
+    if ag[1] == 'all' then 
+      -- update table
+      ag = {}
+      for i = 1,#t[1] do ag[#ag+1] = i end
+    end
+    t = gnuplot._tbl2file_(t)
+  end
+  if #ag > 1 then
+    for i = 2,#ag do
+      cmd[#cmd+1] = {t, using={ag[1],ag[i]}, title=tostring(ag[i]), with='lines'}
+    end
+  else
+    cmd[1] = {t, title='2', with='lines'}
+  end
+  cmd.grid = true
+  cmd:show()
+end
+gnuplot.about[gnuplot.tplot] = {"tplot(t,[1,3,4])", "Plot table of data file. Optional elements are either columns (x,y1,y2...) or keyword 'all' (for tables)."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
