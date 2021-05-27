@@ -57,7 +57,7 @@ intro = [[
 ]],
 --modules = 'Available modules:',
 done = 'Done.',
-alias = "Use alias '%s' for access to the module '%s'.",
+alias = "Use alias '%s' for access to the '%s' module.",
 use_import = [[
 
 Call

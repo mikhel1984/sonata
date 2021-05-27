@@ -332,13 +332,13 @@ gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of num
 
 --- Plot table of data file.
 --  @param t Table or dat-file.
---  @param ... Column indexes for plotting (e.g. 1,4,9) or word 'all'
+--  @param ... Column indexes for plotting (e.g. 1,4,9), plot all by default
 gnuplot.tplot = function (t,...)
   local ag = {...}
   local cmd = gnuplot:new()
   if type(t) == 'table' then
-    if ag[1] == 'all' then 
-      -- update table
+    if #ag == 0 then 
+      -- show all
       local n = t.ismatrix and t.cols or #t[1] -- column #
       ag = {}
       for i = 1,n do ag[#ag+1] = i end
@@ -347,7 +347,7 @@ gnuplot.tplot = function (t,...)
   end
   if #ag > 1 then
     for i = 2,#ag do
-      cmd[#cmd+1] = {t, using={ag[1],ag[i]}, title=tostring(ag[i]), with='lines'}
+      cmd[#cmd+1] = {t, using={ag[1],ag[i]}, title=string.format("%d:%d",ag[1], ag[i]), with='lines'}
     end
   else
     cmd[1] = {t, title='2', with='lines'}
@@ -359,7 +359,7 @@ gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or d
 
 --- Polar plot.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
-gnuplot.polar = function(...)
+gnuplot.polarplot = function(...)
   local ag, i, n = {...}, 1, 1
   local cmd = gnuplot:new()
   repeat 
@@ -378,7 +378,7 @@ gnuplot.polar = function(...)
   cmd.polar = true
   cmd:show()
 end
-gnuplot.about[gnuplot.polar] = {'polar(x1,y1,[nm,[x2,y2..]])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+gnuplot.about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,[x2,y2..]])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
@@ -417,7 +417,7 @@ gnuplot.onImport = function ()
   tplot = gnuplot.tplot 
   lc.about[tplot] = {gnuplot.about[gnuplot.tplot][1], gnuplot.about[gnuplot.tplot][2], GPPLOT}
   polar = gnuplot.polar
-  lc.about[polar] = {gnuplot.about[gnuplot.polar][1], gnuplot.about[gnuplot.polar][2], GPPLOT}
+  lc.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[gnuplot.polarplot][2], GPPLOT}
 end
 
 -- free memory if need
