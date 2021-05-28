@@ -96,7 +96,7 @@ end
 --  @return String, prepared for usage in function.
 local function prepare(k,v)
   if k == 'title' then v = string.format('"%s"', v) end
-  if k == 'using' then v = string.format('%d:%d', v[1],v[2]) end
+  if k == 'using' then v = table.concat(v,':') end
   return k,v
 end
 
@@ -283,10 +283,16 @@ end
 --  @param t1 First Lua table (list).
 --  @param t2 Second Lua table (list) or nil.
 --  @return File name.
-gnuplot._lst2file_ = function (t1,t2)
+gnuplot._lst2file_ = function (t1,t2,t3)
   local name = os.tmpname()
   local f = io.open(name, 'w')
-  if t2 then 
+  if t3 then -- must be function
+    for _,v1 in ipairs(t1) do
+      for _,v2 in ipairs(t2) do
+        f:write(v1,' ',v2,' ',t3(v1,v2),'\n')
+      end
+    end
+  elseif t2 then 
     if type(t2) == 'table' then
       assert(#t1 == #t2, 'Different talbe length!')
       for i, v1 in ipairs(t1) do f:write(v1, ' ', t2[i], '\n') end
@@ -353,9 +359,13 @@ end
 gnuplot.tplot = function (t,...)
   local f, ag = gnuplot._vecPrepare_(t,...)
   local cmd = gnuplot:new()
-  for i = 2,#ag do
-    cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
-      title=string.format("%d:%d",ag[1], ag[i])}
+  if #ag > 1 then
+    for i = 2,#ag do
+      cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
+        title=string.format("%d:%d",ag[1], ag[i])}
+    end
+  else 
+    cmd[#cmd+1] = {f, with='lines', title='1:2'}
   end
   cmd.grid = true
   cmd:show()
@@ -392,15 +402,62 @@ gnuplot.about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,[x2,y2..]])', "Make pol
 gnuplot.tpolar = function (t,...)
   local f, ag = gnuplot._vecPrepare_(t,...)
   local cmd = gnuplot:new()
-  for i = 2,#ag do
-    cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
-      title=string.format("%d:%d",ag[1], ag[i])}
+  if #ag > 1 then
+    for i = 2,#ag do
+      cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
+        title=string.format("%d:%d",ag[1], ag[i])}
+    end
+  else 
+    cmd[#cmd+1] = {f, with='lines', title='1:2'}
   end
   cmd.polar = true
   cmd.grid = 'polar'
   cmd:show()
 end
 gnuplot.about[gnuplot.tpolar] = {"tpolar(t,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
+
+--- Surface plot.
+--  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
+gnuplot.surfplot = function(...)
+  local ag, i, n = {...}, 1, 1
+  local cmd = gnuplot:new()
+  repeat
+    local name = gnuplot._lst2file_(ag[i],ag[i+1],ag[i+2])
+    i = i + 3
+    local legend
+    if type(ag[i]) == 'string' then
+      legend = ag[i]
+      i = i + 1
+    else
+      legend = tostring(n)
+    end
+    cmd[#cmd+1] = {name, title=legend}
+    n = n + 1
+  until i > #ag
+  cmd.surface = true
+  cmd:show()
+end
+gnuplot.about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make surfac3 plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
+
+--- Sufrace plot from table of data file.
+--  @param t Table, matrix or dat-file.
+--  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
+gnuplot.tsurf = function (t,...)
+  local f, ag = gnuplot._vecPrepare_(t,...)
+  print(f)
+  local cmd = gnuplot:new()
+  if #ag > 2 then
+    for i = 3,#ag do
+      cmd[#cmd+1] = {f, using={ag[1],ag[2],ag[i]}, 
+        title=string.format("%d:%d:%d",ag[1],ag[2],ag[i])}
+    end
+  else
+    cmd[#cmd+1] = {f, title='1:2:3'}
+  end
+  cmd.surface = true
+  cmd:show()
+end
+gnuplot.about[gnuplot.tsurf] = {"tsurf(t,[x1,y1,z1,z2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
@@ -435,16 +492,21 @@ raw='set pm3d'                    -- set Gnuplot options manually
 --- Function for execution during the module import.
 gnuplot.onImport = function ()
   plot = gnuplot.plot
-  local hlp = gnuplot.about[gnuplot.plot]
+  local hlp = gnuplot.about[plot]
   lc.about[plot] = {hlp[1], hlp[2], GPPLOT}
   tplot = gnuplot.tplot 
-  hlp = gnuplot.about[gnuplot.tplot]
+  hlp = gnuplot.about[tplot]
   lc.about[tplot] = {hlp[1], hlp[2], GPPLOT}
   polar = gnuplot.polarplot
-  lc.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[gnuplot.polarplot][2], GPPLOT}
+  lc.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[polar][2], GPPLOT}
   tpolar = gnuplot.tpolar
-  hlp = gnuplot.about[gnuplot.tpolar]
+  hlp = gnuplot.about[tpolar]
   lc.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
+  surf = gnuplot.surfplot
+  lc.about[surf] = {'surf(x1,y1,fn1,[nm,[x2,y2..]])', gnuplot.about[surf][2], GPPLOT}
+  tsurf = gnuplot.tsurf
+  hlp = gnuplot.about[tsurf]
+  lc.about[tsurf] = {hlp[1], hlp[2], GPPLOT}
 end
 
 -- free memory if need
