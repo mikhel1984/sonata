@@ -330,12 +330,11 @@ gnuplot.plot = function (...)
 end
 gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
---- Plot table of data file.
---  @param t Table or dat-file.
---  @param ... Column indexes for plotting (e.g. 1,4,9), plot all by default
-gnuplot.tplot = function (t,...)
+--- Prepare arguments for table or matrix.
+--  @param t Table, matrix or dat-file.
+--  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
+gnuplot._vecPrepare_ = function (t,...)
   local ag = {...}
-  local cmd = gnuplot:new()
   if type(t) == 'table' then
     if #ag == 0 then 
       -- show all
@@ -345,17 +344,23 @@ gnuplot.tplot = function (t,...)
     end
     t = t.ismatrix and gnuplot._mat2file_(t) or gnuplot._tbl2file_(t)
   end
-  if #ag > 1 then
-    for i = 2,#ag do
-      cmd[#cmd+1] = {t, using={ag[1],ag[i]}, title=string.format("%d:%d",ag[1], ag[i]), with='lines'}
-    end
-  else
-    cmd[1] = {t, title='2', with='lines'}
+  return t, ag
+end
+
+--- Plot table of data file.
+--  @param t Table, matrix or dat-file.
+--  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
+gnuplot.tplot = function (t,...)
+  local f, ag = gnuplot._vecPrepare_(t,...)
+  local cmd = gnuplot:new()
+  for i = 2,#ag do
+    cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
+      title=string.format("%d:%d",ag[1], ag[i])}
   end
   cmd.grid = true
   cmd:show()
 end
-gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements are either columns or keyword 'all' (for tables and matrices)."}
+gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
 
 --- Polar plot.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
@@ -376,9 +381,26 @@ gnuplot.polarplot = function(...)
     n = n + 1
   until i > #ag
   cmd.polar = true
+  cmd.grid = 'polar'
   cmd:show()
 end
 gnuplot.about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,[x2,y2..]])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+
+--- Polar plot table of data file.
+--  @param t Table, matrix or dat-file.
+--  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
+gnuplot.tpolar = function (t,...)
+  local f, ag = gnuplot._vecPrepare_(t,...)
+  local cmd = gnuplot:new()
+  for i = 2,#ag do
+    cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
+      title=string.format("%d:%d",ag[1], ag[i])}
+  end
+  cmd.polar = true
+  cmd.grid = 'polar'
+  cmd:show()
+end
+gnuplot.about[gnuplot.tpolar] = {"tpolar(t,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
@@ -413,11 +435,16 @@ raw='set pm3d'                    -- set Gnuplot options manually
 --- Function for execution during the module import.
 gnuplot.onImport = function ()
   plot = gnuplot.plot
-  lc.about[plot] = {gnuplot.about[gnuplot.plot][1], gnuplot.about[gnuplot.plot][2], GPPLOT}
+  local hlp = gnuplot.about[gnuplot.plot]
+  lc.about[plot] = {hlp[1], hlp[2], GPPLOT}
   tplot = gnuplot.tplot 
-  lc.about[tplot] = {gnuplot.about[gnuplot.tplot][1], gnuplot.about[gnuplot.tplot][2], GPPLOT}
-  polar = gnuplot.polar
+  hlp = gnuplot.about[gnuplot.tplot]
+  lc.about[tplot] = {hlp[1], hlp[2], GPPLOT}
+  polar = gnuplot.polarplot
   lc.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[gnuplot.polarplot][2], GPPLOT}
+  tpolar = gnuplot.tpolar
+  hlp = gnuplot.about[gnuplot.tpolar]
+  lc.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
 end
 
 -- free memory if need
