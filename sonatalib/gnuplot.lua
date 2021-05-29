@@ -147,10 +147,6 @@ about = help:new("Interface for calling Gnuplot from Sonata LC."),
 -- metha
 gnuplot.__index = gnuplot
 
--- divide interval into given number of points
-gnuplot.N = 100
-gnuplot.about[gnuplot.N] = {"N[=100]", "If no samples, divide interval into N points.", help.CONST}
-
 --- Save table to tmp file.
 --  @param t Lua table with numbers.
 --  @return File name.
@@ -188,7 +184,7 @@ gnuplot._fn2file_ = function (fn,base)
   local name = os.tmpname()
   local xl = base.xrange and base.xrange[1] or (-10)
   local xr = base.xrange and base.xrange[2] or 10
-  local N = base.samples or gnuplot.N
+  local N = base.samples or 100
   local dx = (xr-xl)/N
   local f = io.open(name, 'w')
   if base.surface then
@@ -464,7 +460,7 @@ gnuplot.surfplot = function(...)
   cmd.surface = true
   cmd:show()
 end
-gnuplot.about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make surfac3 plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
+gnuplot.about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 --- Sufrace plot from table of data file.
 --  @param t Table, matrix or dat-file.
@@ -484,7 +480,7 @@ gnuplot.tsurf = function (t,...)
   cmd.surface = true
   cmd:show()
 end
-gnuplot.about[gnuplot.tsurf] = {"tsurf(t,[x1,y1,z1,z2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
+gnuplot.about[gnuplot.tsurf] = {"tsurf(t,[x1,y1,z1,z2..])", "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
