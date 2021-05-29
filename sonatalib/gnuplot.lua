@@ -27,7 +27,34 @@ Gp.plot(t1,t2,'some curve')
 -- simplified function plot
 Gp.plot(t1, math.sin, 'sin')
 
--- extended capabilities
+-- name can be skipped 
+Gp.plot(t1, math.sin, t1, math.cos)
+
+-- plot table (or matrix, or datafile)
+arr = {}
+for i = 1,50 do x = 0.1*i; arr[i] = {x, math.sin(x), math.cos(x)} end
+-- all columns by default (for table and matrix)
+Gp.tplot(arr)
+
+-- the same, but with explicit column specification
+Gp.tplot(arr,1,2,3)
+
+-- in polar coordinate system
+Gp.polarplot(t1,t2,'some curve')
+
+-- from table
+Gp.tpolar(arr,1,2) 
+
+-- plot surface
+function fun(x,y) return x*x + y*y end
+Gp.surfplot(t1,t2,fun,'some surf')
+
+-- from table 
+arr2 = {}
+for _,v1 in ipairs(t1) do for _,v2 in ipairs(t2) do arr2[#arr2+1] = {v1,v2,fun(v1,v2)} end end
+Gp.tsurf(arr2)
+
+-- direct use Gp object
 a = Gp()
 a:add {math.sin, title='sin'}
 a:add {math.cos, title='cos'}
