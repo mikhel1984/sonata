@@ -57,7 +57,7 @@ intro = [[
 ]],
 --modules = 'Available modules:',
 done = 'Done.',
-alias = "Use alias '%s' for access to the module '%s'.",
+alias = "Use alias '%s' for access to the '%s' module.",
 use_import = [[
 
 Call
@@ -226,7 +226,7 @@ help.print = function (self,fn)
     for mod, t in pairs(lst) do             -- for each module
       io.write(help.CBOLD, '\t', mod, '\n', help.CNBOLD)
       for cat, n in pairs(t) do            -- for each category
-        io.write("  /", cat, '\n')
+        io.write("    |", cat, ':\n')
         for i, v in ipairs(n) do           -- for each function
           io.write(v, (i ~= #n and ', ' or '\n'))
         end

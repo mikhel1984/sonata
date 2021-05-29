@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Environment
-lc_local = { version = '0.9.19' }
+lc_local = { version = '0.9.20' }
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -46,7 +46,7 @@ use = {
   complex   = "Comp",
   const     = "_C",
   files     = "File",
-  gnuplot   = "Gnu",
+  gnuplot   = "Gp",
   graph     = "Graph",
   matrix    = "Mat",
   numeric   = "Num",
@@ -57,8 +57,6 @@ use = {
   stat      = "Stat",
   units     = "Unit",
 }
-
-
 
 -- Import actions 
 function lc_local.doimport(tbl,name)
@@ -142,11 +140,6 @@ LC_DIALOG = true
 if LC_LOCALIZATION then 
   about:localization(LC_LOCALIZATION) 
 end
-
--- save references for "global" methods
-lc_local.use = use
-lc_local.help = help
-lc_local.quit = quit
 
 -- Run! 
 io.write(lc_help.CMAIN, '\n',

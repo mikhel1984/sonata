@@ -18,7 +18,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Comp">complex</a></li>
 <li><a href="#_C">const</a></li>
 <li><a href="#File">files</a></li>
-<li><a href="#Gnu">gnuplot</a></li>
+<li><a href="#Gp">gnuplot</a></li>
 <li><a href="#Graph">graph</a></li>
 <li><a href="#Mat">matrix</a></li>
 <li><a href="#Num">numeric</a></li>
@@ -40,18 +40,18 @@ DIV {margin-left: 10px;}
 <b>FLAGS</b>:<br>
 	--help, -h - Get this help message.<br>
 		(Development)<br>
+	--new    - Generate template for a new module.<br>
+	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	--test   - Apply unit tests to desired module, or all modules if the name is not defined.<br>
 	  (e.g. --test array)<br>
 	--lang   - Create/update file for localization.<br>
 	  (e.g. --lang eo)<br>
-	--new    - Generate template for a new module.<br>
-	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	--doc    - Create/update documentation file.<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.19<br>
+<b>VERSION</b>: 0.9.20<br>
 <br>
-<b>MODULES</b>: special, files, graph, numeric, array, complex, quaternion, rational, gnuplot, const, stat, matrix, bigint, polynom, units.<br>
+<b>MODULES</b>: const, gnuplot, special, quaternion, units, stat, bigint, numeric, rational, polynom, complex, matrix, array, files, graph.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
@@ -521,17 +521,15 @@ for s in File.split(str, '//') do ans = ans+1 end  --> 4
 
 --</pre>
 <a href="#Top">Top</a></div>
-<div><a name="Gnu"></a>
-<h3># Gnu (gnuplot) #</h3>
-<p class="descript">Interface for calling Gnuplot from Lua.</p>
-<p><b>Gnu([G])</b> - Transform given table into gnuplot object.<br>
-<b>N[=100]</b> - If no samples, divide interval into N points.<br>
+<div><a name="Gp"></a>
+<h3># Gp (gnuplot) #</h3>
+<p class="descript">Interface for calling Gnuplot from Sonata LC.</p>
+<p><b>Gp()</b> - Prepare Gnuplot object.<br>
+<b>add(tCurve)</b> - Add new curve to figure.<br>
 <b>copy(G)</b> - Get copy of the plot options.<br>
-<b>isAvailable(G)</b> - Check if all options in table are predefined in program.<br>
-<b>keys</b> -   Options description:<br>
-{'sin(x)'}                        -- print sinus using Gnuplot functions<br>
-{math.sin, title='sinus'}         -- plot using function, define in Lua; add legend<br>
-{file='sin.dat', ln=1, lw=2}      -- plot data from file, use given color and width<br>
+<b>keys</b> -   Options / examples:<br>
+{math.sin, title='sin'}           -- plot using function, define in Lua; add legend<br>
+{'sin.dat', ln=1, lw=2}           -- plot data from file, use given color and width<br>
 {tbl, with='lines'}               -- plot data from Lua table, use lines<br>
 title='Graph name'                -- set title<br>
 xrange={0,10}                     -- range of x from 0 to 10<br>
@@ -548,39 +546,90 @@ grid='polar'                      -- polar grid<br>
 legend=false                      -- don't use legend<br>
 surface=true                      -- plot surface in 3D<br>
 samples=200                       -- define number of points<br>
-permanent=true                    -- create in independent window<br>
 raw='set pm3d'                    -- set Gnuplot options manually<br>
 <br>
-<b>plot(G)</b> - Plot data, represented as Lua table.<br></p>
+<b>plot(x1,[y1,[nm,[x2,..]]])</b> - 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
+<b>polarplot(x1,y1,[nm,[x2,y2..]])</b> - Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
+<b>show(G)</b> - Plot data, represented as Lua table.<br>
+<b>surfplot(x1,y1,fn1,[nm,[x2,y2..]])</b> - Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name.<br>
+<b>tplot(t,[x,y1,y2..])</b> - Plot table, matrix or data file. Optional elements define columns.<br>
+<b>tpolar(t,[x,y1,y2..])</b> - Polar plot for table, matrix or data file. Optional elements define columns.<br>
+<b>tsurf(t,[x1,y1,z1,z2..])</b> - Surface plot for table, matrix or data file. Optional elements define columns.<br></p>
 <pre class="example">
 
 -- use 'gnuplot'
-Gnu = require 'sonatalib.gnuplot'
+Gp = require 'sonatalib.gnuplot'
+Gp.testmode = true -- just for testing
 
-a = {{'sin(x)',title='Sinus x'},permanent=false}
--- use 'permanent=true' instead or not define it at all
--- 'permanent=false' is just for testing
-Gnu.plot(a)
+-- simple plot 
+t1 = {1,2,3,4,5}
+t2 = {2,4,6,4,2}
+-- in the dialog call "plot(t1,t2,'some curve')"
+Gp.plot(t1,t2,'some curve')
 
--- save as object
--- to simplify modification
-g = Gnu(a)
-g.xrange = {-10,10}
-g:plot()
+-- simplified function plot
+Gp.plot(t1, math.sin, 'sin')
+
+-- name can be skipped 
+Gp.plot(t1, math.sin, t1, math.cos)
+
+-- plot table (or matrix, or datafile)
+arr = {}
+for i = 1,50 do x = 0.1*i; arr[i] = {x, math.sin(x), math.cos(x)} end
+-- all columns by default (for table and matrix)
+Gp.tplot(arr)
+
+-- the same, but with explicit column specification
+Gp.tplot(arr,1,2,3)
+
+-- in polar coordinate system
+Gp.polarplot(t1,t2,'some curve')
+
+-- from table
+Gp.tpolar(arr,1,2) 
+
+-- plot surface
+function fun(x,y) return x*x + y*y end
+Gp.surfplot(t1,t2,fun,'some surf')
+
+-- from table 
+arr2 = {}
+for _,v1 in ipairs(t1) do for _,v2 in ipairs(t2) do arr2[#arr2+1] = {v1,v2,fun(v1,v2)} end end
+Gp.tsurf(arr2)
+
+-- direct use Gp object
+a = Gp()
+a:add {math.sin, title='sin'}
+a:add {math.cos, title='cos'}
+a:show()
+
+-- additional parameters
+a.xrange = {0,10}   -- add rangle
+-- save to file 
+a.terminal = 'png'
+a.output = 'test.png'
+a:show()
 
 -- copy parameters to other object
-b = g:copy()
+b = a:copy()
 print(b)
--- check correctness of the table
-ans = b:isAvailable()              --> true
+
+-- send 'raw' command to Gnuplot
+c = Gp()
+c.raw = 'plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'
+c:show()
 
 -- print Lua table
 tmp = {{1,1},{2,2},{3,3},{4,4}}
-Gnu.plot {{tmp,with='lines'},permanent=false}
+d = Gp()
+d:add {tmp,with='lines'}
+d:show()
 
--- print Lua function
+-- define function
 fn1 = function (x) return x^2-x end
-Gnu.plot {{fn1,with='lines',title='x^2-x'},permanent=false}
+f = Gp()
+f:add {fn1,with='lines',title='x^2-x'}
+f:show()
 
 --</pre>
 <a href="#Top">Top</a></div>

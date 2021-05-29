@@ -227,6 +227,16 @@ local function toRange(ind,nRange)
   return ind
 end
 
+--- Add new row to matrix
+--  @param t Table (matrix).
+--  @param k Index.
+--  @return Matrix row.
+local function addRow(t,k)
+  local row = setmetatable({}, access)
+  t[k] = row
+  return row
+end
+
 local TRANSFORM = 'transform'
 
 --	INFO
@@ -246,15 +256,7 @@ about = help:new("Matrix operations. The matrices are spares by default."),
 --  @param k Key.
 --  @return New matrix row or desired method.
 matrix.__index = function (t,k) 
-  if type(k) == 'number' then
-    -- new element
-    local tmp = setmetatable({}, access)
-    t[k] = tmp
-    return tmp
-  else
-    -- matrix methods
-    return matrix[k]
-  end
+  return matrix[k] or (type(k)=='number' and addRow(t,k))
 end
 
 --- Initialization of matrix with given size.
