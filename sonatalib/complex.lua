@@ -162,7 +162,7 @@ about = help:new("Manipulations with complex numbers."),
 --  @param k Key.
 --  @return Value or method.
 complex.__index = function (t,k)
-  return complex[k] or t[keys[k] or '']
+  return complex[k] or rawget(t, keys[k] or '')
 end 
 
 --- Set unknown key. Use proxy to access the element.

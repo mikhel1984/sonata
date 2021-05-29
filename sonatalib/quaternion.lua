@@ -113,7 +113,7 @@ about = help:new("Operations with quaternions."),
 
 -- 
 quaternion.__index = function (t,k)
-  return quaternion[k] or t[keys[k] or '']
+  return quaternion[k] or rawget(t,keys[k] or '')
 end
 
 quaternion.__newindex = function (t,k,v)
