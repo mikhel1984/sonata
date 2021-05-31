@@ -119,7 +119,7 @@ bigint.new = function (self, num)
     sign, s = string.match(num, '^([+-]?)(%d+)$')
     sign = (sign == '-') and -1 or 1
   elseif type(num) == 'number' then 
-    s = Ver.toInteger(num)
+    s = tostring(Ver.toInteger(num))
     sign = (num < 0) and -1 or 1
   end
   -- check result
@@ -133,7 +133,7 @@ end
 --  @param num1 First number representation.
 --  @param num2 Second number representation (optional).
 --  @return Bigint objects.
-bigint._args_ = function (num1, num2)  
+bigint._args_ = function (num1, num2)
   num1 = isbigint(num1) and num1 or bigint:new(num1)
   if num2 then
     num2 = isbigint(num2) and num2 or bigint:new(num2)
@@ -180,7 +180,7 @@ bigint._div_ = function (num1,num2)
   -- convert result
   local result = bigint:new(num1[1]*num2[1])
   result[2] = (#acc > 0) and string.reverse(table.concat(acc)) or '0'
-  return result, rest  
+  return result, rest
 end
 
 --- Get sum of the two positive big numbers.
@@ -465,3 +465,4 @@ return bigint
 --=================================
 --TODO: translate to different bases
 --TODO: improve power method
+--TODO: factorization
