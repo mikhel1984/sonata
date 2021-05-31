@@ -36,7 +36,8 @@ ans = c                      --0> 2
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl, yn = Num.ode45(function (x,y) return x*y end, {0,3}, 1)
+tbl, yn = Num.ode45(function (x,y) return x*y end, 
+                    {0,3}, 1)
 ans = yn                     --2> 90.011
 
 -- use matrices for high order equations
@@ -45,13 +46,17 @@ Mat = require 'sonatalib.matrix'
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
 -- so: x1' = x2, x2' = 1+2*x2-2*x1
-myfun = function (t,x) return Mat.V {x(2), 1+2*x(2)-2*x(1)} end
+myfun = function (t,x) 
+  return Mat.V {x(2), 1+2*x(2)-2*x(1)}
+end
 _, xn = Num.ode45(myfun, {0,2}, Mat.V{3,2}, {dt=0.2}) 
 ans = xn(1)                  --2>  -10.54
 
 -- define exit condition
 -- from time, current and previous results
-cond = function (time,current,previous) return current < 0.1 end
+cond = function (time,current,previous) 
+  return current < 0.1 
+end
 myfun = function (t,x) return -x end
 y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
 ans = y[#y][1]               --2> 2.56

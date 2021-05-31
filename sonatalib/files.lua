@@ -40,7 +40,9 @@ ans = aa.b.c                  --> 'abc'
 str = 'abc//defg//hijkl//mnop'
 ans = 0
 -- iterate over string parts
-for s in File.split(str, '//') do ans = ans+1 end  --> 4
+for s in File.split(str, '//') do
+  ans = ans+1 
+end                           --> 4
 
 --]]
 

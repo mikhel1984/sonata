@@ -73,27 +73,34 @@ ans = (f == a)                --> true
 ans = (a == b)                --> false
 
 -- identity matrix
-ans = Mat.eye(2)              --> Mat {{1,0},{0,1}}
+ans = Mat.eye(2)              --> Mat {{1,0},
+                                       {0,1}}
 
 -- matrix argument
-ans = Mat.eye(a)              --> Mat {{1,0},{0,1}}
+ans = Mat.eye(a)              --> Mat {{1,0},
+                                       {0,1}}
 
 -- matrix of zeros
 ans = Mat.zeros(2,1)          --> Mat {{0},{0}}
 
 -- matrix of constants = 4
-ans = Mat.ones(2,3,4)         --> Mat {{4,4,4},{4,4,4}}
+ans = Mat.ones(2,3,4)         --> Mat {{4,4,4},
+                                       {4,4,4}}
 
 -- matrix of constants = 1
 ans = Mat.ones(a,3)           --> Mat {{3,3},{3,3}}
 
 -- define rule to fill
 -- result matrix is 'dense'
-fn = function (i,j) return i == j and 1 or 0 end
-ans = Mat.fill(2,3,fn)        --> Mat {{1,0,0},{0,1,0}}
+fn = function (i,j) 
+  return i == j and 1 or 0 
+end
+ans = Mat.fill(2,3,fn)        --> Mat {{1,0,0},
+                                       {0,1,0}}
 
 -- horizontal concatenation
-ans = a .. b                  --> Mat {{1,2,5,6},{3,4,7,8}}
+ans = a .. b                  --> Mat {{1,2,5,6},
+                                       {3,4,7,8}}
 
 -- vertical concatenation
 -- (a // b - for short)
@@ -112,14 +119,20 @@ aa = Mat.apply(fn, b,b,b)
 ans = aa[1][1]                --> 30
 
 -- use Gauss transform to solve equation
-ans = Mat.rref(a .. Mat{{5},{11}})             --> Mat {{1,0,1},{0,1,2}}
+ans = Mat.rref(a .. Mat{{5},{11}})             --> Mat {{1,0,1},
+                                                        {0,1,2}}
 
 -- create vector
 ans = Mat.V {1,2,3}           --> Mat {{1},{2},{3}}
 
 -- get submatrix
-g = Mat {{1,2,3},{4,5,6},{7,8,9}}
-ans = g({2,-1},{2,3})         --> Mat {{5,6},{8,9}}
+g = Mat {
+  {1,2,3},
+  {4,5,6},
+  {7,8,9}
+}
+ans = g({2,-1},{2,3})         --> Mat {{5,6},
+                                       {8,9}}
 
 -- euclidean norm
 ans = Mat.V({1,2,3}):norm()  --3> math.sqrt(14)
@@ -137,7 +150,11 @@ print(h:randi(20))
 print(Mat.randn(2,2))
 
 -- pseudo inverse matrix
-m = Mat {{1,2},{3,4},{5,6}}
+m = Mat {
+  {1,2},
+  {3,4},
+  {5,6}
+}
 n = m:pinv()
 ans = n(2,2)                 --3> 0.333
 
@@ -148,7 +165,9 @@ k = k:table()
 ans = k[2][1]                 --> 0
 
 -- make diagonal matrix
-ans = Mat.diag({1,2,3})       --> Mat {{1,0,0},{0,2,0},{0,0,3}}
+ans = Mat.diag({1,2,3})       --> Mat {{1,0,0},
+                                       {0,2,0},
+                                       {0,0,3}}
 
 -- shifted diagonal
 ans = g:diag(1)               --> Mat {{2},{6}}
@@ -187,8 +206,13 @@ ans = m:get(2)                --> 4
 ans = Mat.ones(2,3):rank()    --> 1
 
 -- change size
-tmp = Mat{{1,2},{3,4},{5,6}} 
-ans = tmp:reshape(2,3)        --> Mat {{1,2,3},{4,5,6}}
+tmp = Mat{
+  {1,2},
+  {3,4},
+  {5,6}
+} 
+ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
+                                       {4,5,6}}
 
 --]]
 

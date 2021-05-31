@@ -41,7 +41,7 @@ print(randn())
 ans = lc.type(25)             --> 'integer'
 
 -- show table components
-a = {a=1,b=2;3,4,5}
+a = {a=1,b=2, 3,4,5}
 lc.show(a)
 
 -- show "scientific" view

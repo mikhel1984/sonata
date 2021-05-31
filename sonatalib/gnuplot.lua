@@ -32,7 +32,10 @@ Gp.plot(t1, math.sin, t1, math.cos)
 
 -- plot table (or matrix, or datafile)
 arr = {}
-for i = 1,50 do x = 0.1*i; arr[i] = {x, math.sin(x), math.cos(x)} end
+for i = 1,50 do 
+  x = 0.1*i 
+  arr[i] = {x, math.sin(x), math.cos(x)} 
+end
 -- all columns by default (for table and matrix)
 Gp.tplot(arr)
 
@@ -51,7 +54,11 @@ Gp.surfplot(t1,t2,fun,'some surf')
 
 -- from table 
 arr2 = {}
-for _,v1 in ipairs(t1) do for _,v2 in ipairs(t2) do arr2[#arr2+1] = {v1,v2,fun(v1,v2)} end end
+for _,v1 in ipairs(t1) do
+  for _,v2 in ipairs(t2) do
+    arr2[#arr2+1] = {v1,v2,fun(v1,v2)}
+  end
+end
 Gp.tsurf(arr2)
 
 -- direct use Gp object
@@ -77,7 +84,12 @@ c.raw = 'plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'
 c:show()
 
 -- print Lua table
-tmp = {{1,1},{2,2},{3,3},{4,4}}
+tmp = {
+  {1,1},
+  {2,2},
+  {3,3},
+  {4,4}
+}
 d = Gp()
 d:add {tmp,with='lines'}
 d:show()
@@ -467,7 +479,6 @@ gnuplot.about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make s
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tsurf = function (t,...)
   local f, ag = gnuplot._vecPrepare_(t,...)
-  print(f)
   local cmd = gnuplot:new()
   if #ag > 2 then
     for i = 3,#ag do
