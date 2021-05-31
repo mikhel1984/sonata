@@ -475,9 +475,12 @@ exit = true},
 
 -- generate 'help.html'
 ['--doc'] = {
-description = 'Create/update documentation file.',
-process = function ()
+description = 'Create/update documentation file.\n\t  (e.g. --doc eo)',
+process = function (args)
   LC_DIALOG = true   -- load help info
+  if args[2] then
+    LC_LOCALIZATION = args[2]..'.lng'
+  end
   lc_help.generateDoc(LC_LOCALIZATION, use) 
 end,
 exit = true},
