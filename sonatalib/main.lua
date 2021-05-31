@@ -446,7 +446,8 @@ main._args_ = {
 
 -- run tests
 ['--test'] = {
-description = 'Apply unit tests to desired module, or all modules if the name is not defined.\n\t  (e.g. --test array)',
+description = 'Apply the unit tests to the desired module. Call all modules if the name is not defined.',
+example = '--test array',
 process = function (args)
   local Test = require 'sonatalib.test'
   if args[2] then
@@ -462,7 +463,8 @@ exit = true},
 
 -- localization file
 ['--lang'] = {
-description = 'Create/update file for localization.\n\t  (e.g. --lang eo)',
+description = 'Creating/updating a file for localization.',
+example = '--lang eo',
 process = function (args)
   if args[2] then
     LC_DIALOG = true -- load help info
@@ -475,7 +477,8 @@ exit = true},
 
 -- generate 'help.html'
 ['--doc'] = {
-description = 'Create/update documentation file.\n\t  (e.g. --doc eo)',
+description = 'Creating/updating a documentation file.',
+example = '--doc ru',
 process = function (args)
   LC_DIALOG = true   -- load help info
   if args[2] then
@@ -487,7 +490,8 @@ exit = true},
 
 -- new module
 ['--new'] = {
-description = 'Generate template for a new module.\n\t  (e.g. --new  signal  Sig  "Signal processing functions.")',
+description = 'Create a template for a new module.',
+example = '--new  signal  Sig  "Signal processing functions."',
 process = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
 exit = true},
 
@@ -529,6 +533,9 @@ main._arghelp_ = function ()
   for k,v in pairs(main._args_) do 
     if v.description then
       txt[#txt+1] = string.format('\t%-8s - %s', k, v.description)
+      if v.example then
+        txt[#txt+1] = string.format('\t  (e.g. %s)', v.example)
+      end
     end
   end
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
@@ -547,5 +554,4 @@ return main
 
 --===============================
 --TODO: save last command as well
---TODO: generate doc for desired lang using command line
 --TODO: string function definition to map
