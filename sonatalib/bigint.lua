@@ -113,20 +113,37 @@ bigint.__index = bigint
 --  @param num Integer as number or string.
 --  @return Bigint object.
 bigint.new = function (self, num)
-  local s, sign
+  local acc = {base=10, sign=1}
   -- prepare
   if type(num) == 'string' then
-    sign, s = string.match(num, '^([+-]?)(%d+)$')
-    sign = (sign == '-') and -1 or 1
-  elseif type(num) == 'number' then 
-    s = tostring(Ver.toInteger(num))
-    sign = (num < 0) and -1 or 1
+    local sign, s = string.match(num, '^([+-]?)(%d+)$')
+    if sign == '-' then acc.sign = -1 end
+    s = string.reverse(s)
+    for i = 1,#s do
+      acc[i] = string.byte(s,i)-ZERO 
+    end
+  elseif type(num) == 'number' and Ver.isInteger(num) then 
+    if num < 0 then 
+      acc.sign = -1
+      num = -num
+    end
+    repeat
+      local n,_ = math.modf(num / 10)
+      acc[#acc+1] = num - 10*n
+      num = n
+    until num == 0
+  elseif type(num) == 'table' then
+    acc.base = num.base or acc.base 
+    acc.sign = num.sign or acc.sign
+    for i = #num,1,-1 do
+      acc[#acc+1] = num[i]
+    end
   end
   -- check result
-  if not s then
+  if #acc == 0 then
     error('Wrong number '..tostring(num))
   end
-  return setmetatable({sign, string.reverse(s)}, self)
+  return setmetatable(acc, self)
 end
 
 --- Correct function arguments if need.
@@ -374,13 +391,6 @@ bigint.__le = function (B1,B2)
   return bigint.__eq(B1,B2) or bigint.__lt(B1,B2)
 end
 
---- #a 
---  @param B Bigint object.
---  @return Number of digits.
-bigint.size = function (B) return #B[2] end
-bigint.about[bigint.size] = {"size(B)", "Number of digits, the same as #B.", help.OTHER}
-bigint.__len = bigint.size
-
 --- B1 ^ B2
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
@@ -415,7 +425,8 @@ bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==
 --  @param B Bigint object.
 --  @return String object.
 bigint.__tostring = function (B)
-  return (B[1] < 0 and '-' or '') .. string.reverse(B[2])
+  local s = table.concat(B, (B.base == 10) and '' or '|') 
+  return (B.sign < 0 and '-' or '') .. string.reverse(s)
 end
 
 --- More convenient string representation
