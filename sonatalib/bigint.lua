@@ -152,9 +152,7 @@ end
 --  @return Bigint objects.
 bigint._args_ = function (num1, num2)
   num1 = isbigint(num1) and num1 or bigint:new(num1)
-  if num2 then
-    num2 = isbigint(num2) and num2 or bigint:new(num2)
-  end
+  num2 = isbigint(num2) and num2 or bigint:new(num2)
   return num1, num2
 end
 
@@ -361,7 +359,13 @@ end
 --  @return <code>true</code> if numbers have the same values and signs.
 bigint.eq = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  return B1[1] == B2[1] and B1[2] == B2[2]
+  if #B1 == #B2 and B1.sign == B2.sign and B1.base == B2.base then
+    for i = 1,#B1 do
+      if B1[i] ~= B2[i] then return false end
+    end
+    return true
+  end
+  return false
 end
 bigint.about[bigint.eq] = {"eq(a,b)", "Check equality of two values.", help.OTHER}
 -- redefine equality
@@ -373,12 +377,33 @@ bigint.__eq = bigint.eq
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  if B1[1] < B2[1] then return true end
-  if #B1[2] == #B2[2] then   -- equal length
-    local va, vb = string.reverse(B1[2]), string.reverse(B2[2])
-    return (B1[1] > 0 and va < vb) or (B1[1] < 0 and va > vb)
+  if B1.base ~= B2.base then error('Different bases!') end
+  if B1.sign < B2.sign then return true end
+  if #B1 == #B2 then   -- equal length
+    for i = #B1,1,-1 do
+      if B1[i] ~= B2[i] then
+        return (B1.sign > 0 and B1[i] < B2[i]) or (B1.sign < 0 and B1[i] > B2[i])
+      end
+    end
+    return false
   else                              -- different length
-    return (B1[1] > 0 and #B1[2] < #B2[2]) or (B1[1] < 0 and #B1[2] > #B2[2]) 
+    return (B1.sign > 0 and #B1 < #B2) or (B1.sign < 0 and #B1 > #B2) 
+  end
+end
+
+bigint._gt_ = function (B1,B2)
+  B1,B2 = bigint._args_(B1,B2)
+  if B1.base ~= B2.base then error('Different bases!') end
+  if B1.sign > B2.sign then return true end 
+  if #B1 == #B2 then 
+    for i = #B1,1,-1 do
+      if B1[i] ~= B2[i] then
+        return (B1.sign > 0 and B1[i] > B2[i]) or (B1.sign < 0 and B1[i] < B2[i])
+      end
+    end
+    return false
+  else 
+    return (B1.sign > 0 and #B1 > #B2) or (B1.sign < 0 and #B1 < #B2)
   end
 end
 
@@ -387,8 +412,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less or equal to the second.
 bigint.__le = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
-  return bigint.__eq(B1,B2) or bigint.__lt(B1,B2)
+  return not bigint._gt_(B1,B2)
 end
 
 --- B1 ^ B2
