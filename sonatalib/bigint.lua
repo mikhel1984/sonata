@@ -449,8 +449,16 @@ bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==
 --  @param B Bigint object.
 --  @return String object.
 bigint.__tostring = function (B)
-  local s = table.concat(B, (B._base_ == 10) and '' or '|') 
-  return (B.sign < 0 and '-' or '') .. string.reverse(s)
+  local s
+  if B._base_ > 10 then
+    s = {}
+    local n = #B+1
+    for i = 1,#B do s[i] = B[n-i] end
+    s = table.concat(s, '|')
+  else
+    s = string.reverse(table.concat(B, (B._base_ == 10) and '' or '|'))
+  end
+  return (B.sign < 0 and '-' or '') .. s
 end
 
 --- More convenient string representation
@@ -494,13 +502,14 @@ bigint.fact = function (B)
 end
 bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer n."}
 
-bigint._divBase_ = function (B, bOld, bNew)
-  local res, rest = {}, 0
-  for i = 1,#B do
+bigint._divBase_ = function (B, bOld, bNew)   --TODO: use reversed order
+  local res, rest, set = {}, 0, false
+  for i = #B,1,-1 do
     rest = rest * bOld + B[i]
     local n,_ = math.modf(rest / bNew)
-    if #res > 0 or n > 0 then
-      res[#res+1] = n
+    if set or n > 0 then
+      res[i] = n
+      set = true
     end
     rest = (rest - bNew * n)
   end
@@ -513,8 +522,8 @@ bigint.rebase = function (B,base)
   local res = bigint:new({0,sign=B.sign, base=base})
   res[1] = nil    -- remove zero
   -- reverse order
-  local dig, n = {}, #B+1
-  for i,v in ipairs(B) do dig[n-i] = v end
+  local dig, n = B, #B+1
+  --for i,v in ipairs(B) do dig[n-i] = v end
   repeat 
     dig, n = bigint._divBase_(dig, B._base_, base)
     res[#res+1] = n
@@ -537,3 +546,4 @@ return bigint
 --=================================
 --TODO: improve power method
 --TODO: factorization
+--TODO: check for prime
