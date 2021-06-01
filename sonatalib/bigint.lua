@@ -261,8 +261,8 @@ bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number."}
 --  @param v Original bigint object.
 --  @return Deep copy.
 bigint.copy = function (B)
-  local c = bigint:new(B[1])
-  c[2] = B[2]
+  local c = bigint:new({B[1], sign=B.sign, base=B._base_})
+  for i = 2,#B do c[i] = B[i] end
   return c
 end
 bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTHER}
@@ -458,7 +458,7 @@ bigint.__tostring = function (B)
   else
     s = string.reverse(table.concat(B, (B._base_ == 10) and '' or '|'))
   end
-  return (B.sign < 0 and '-' or '') .. s
+  return B.sign < 0 and ('-' .. s) or s
 end
 
 --- More convenient string representation
@@ -502,10 +502,10 @@ bigint.fact = function (B)
 end
 bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer n."}
 
-bigint._divBase_ = function (B, bOld, bNew)   --TODO: use reversed order
+bigint._divBase_ = function (t, bOld, bNew)
   local res, rest, set = {}, 0, false
-  for i = #B,1,-1 do
-    rest = rest * bOld + B[i]
+  for i = #t,1,-1 do
+    rest = rest * bOld + t[i]               -- TODO: change in place?
     local n,_ = math.modf(rest / bNew)
     if set or n > 0 then
       res[i] = n
@@ -518,7 +518,7 @@ end
 
 bigint.rebase = function (B,base)
   if base <= 0 then error("Wrong base "..tostring(base)) end
-  if B._base_ == base then return B end   -- return copy ?
+  if B._base_ == base then return B:copy() end
   local res = bigint:new({0,sign=B.sign, base=base})
   res[1] = nil    -- remove zero
   -- reverse order
