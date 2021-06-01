@@ -468,7 +468,14 @@ bigint.about[bigint.str] = {"str(B[,n=3])", "More readable string representation
 --- Float number representation.
 --  @param v Bigint object.
 --  @return Integer if possible, otherwise float point number.
-bigint.val = function (B) return tonumber(tostring(B)) end
+bigint.val = function (B) 
+  local d, v, sum = B.base, 1, 0
+  for i = 1,#B do
+    sum = sum + B[i]*v
+    v = v * d
+  end
+  return sum
+end
 bigint.about[bigint.val] = {"val(N)", "Represent current big integer as number if it possible.", help.OTHER}
 
 --- B!
@@ -486,6 +493,12 @@ bigint.fact = function (B)
   return res
 end
 bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer n."}
+
+--bigint.rebase = function (B,base)
+--  if B.base == base then return B end 
+--  local acc = {} 
+  
+--end
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
