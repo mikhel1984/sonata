@@ -113,7 +113,7 @@ bigint.__index = bigint
 --  @param num Integer as number or string.
 --  @return Bigint object.
 bigint.new = function (self, num)
-  local acc = {base=10, sign=1}
+  local acc = {_base_=10, sign=1}
   -- prepare
   if type(num) == 'string' then
     local sign, s = string.match(num, '^([+-]?)(%d+)$')
@@ -133,7 +133,7 @@ bigint.new = function (self, num)
       num = n
     until num == 0
   elseif type(num) == 'table' then
-    acc.base = num.base or acc.base 
+    acc._base_ = num.base or acc._base_
     acc.sign = num.sign or acc.sign
     for i = #num,1,-1 do
       acc[#acc+1] = num[i]
@@ -359,7 +359,7 @@ end
 --  @return <code>true</code> if numbers have the same values and signs.
 bigint.eq = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  if #B1 == #B2 and B1.sign == B2.sign and B1.base == B2.base then
+  if #B1 == #B2 and B1.sign == B2.sign and B1._base_ == B2._base_ then
     for i = 1,#B1 do
       if B1[i] ~= B2[i] then return false end
     end
@@ -377,7 +377,7 @@ bigint.__eq = bigint.eq
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  if B1.base ~= B2.base then error('Different bases!') end
+  if B1._base_ ~= B2._base_ then error('Different bases!') end
   if B1.sign < B2.sign then return true end
   if #B1 == #B2 then   -- equal length
     for i = #B1,1,-1 do
@@ -393,7 +393,7 @@ end
 
 bigint._gt_ = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  if B1.base ~= B2.base then error('Different bases!') end
+  if B1._base_ ~= B2._base_ then error('Different bases!') end
   if B1.sign > B2.sign then return true end 
   if #B1 == #B2 then 
     for i = #B1,1,-1 do
@@ -449,7 +449,7 @@ bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==
 --  @param B Bigint object.
 --  @return String object.
 bigint.__tostring = function (B)
-  local s = table.concat(B, (B.base == 10) and '' or '|') 
+  local s = table.concat(B, (B._base_ == 10) and '' or '|') 
   return (B.sign < 0 and '-' or '') .. string.reverse(s)
 end
 
@@ -469,7 +469,7 @@ bigint.about[bigint.str] = {"str(B[,n=3])", "More readable string representation
 --  @param v Bigint object.
 --  @return Integer if possible, otherwise float point number.
 bigint.val = function (B) 
-  local d, v, sum = B.base, 1, 0
+  local d, v, sum = B._base_, 1, 0
   for i = 1,#B do
     sum = sum + B[i]*v
     v = v * d
@@ -494,11 +494,35 @@ bigint.fact = function (B)
 end
 bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer n."}
 
---bigint.rebase = function (B,base)
---  if B.base == base then return B end 
---  local acc = {} 
-  
---end
+bigint._divBase_ = function (B, bOld, bNew)
+  local res, rest = {}, 0
+  for i = 1,#B do
+    rest = rest * bOld + B[i]
+    local n,_ = math.modf(rest / bNew)
+    if #res > 0 or n > 0 then
+      res[#res+1] = n
+    end
+    rest = (rest - bNew * n)
+  end
+  return res, rest
+end
+
+bigint.rebase = function (B,base)
+  if base <= 0 then error("Wrong base "..tostring(base)) end
+  if B._base_ == base then return B end   -- return copy ?
+  local res = bigint:new({0,sign=B.sign, base=base})
+  res[1] = nil    -- remove zero
+  -- reverse order
+  local dig, n = {}, #B+1
+  for i,v in ipairs(B) do dig[n-i] = v end
+  repeat 
+    dig, n = bigint._divBase_(dig, B._base_, base)
+    res[#res+1] = n
+  until #dig == 0
+  return res
+end
+
+bigint.base = function (B) return B._base_ end
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
@@ -511,6 +535,5 @@ if not LC_DIALOG then bigint.about = nil end
 return bigint
 
 --=================================
---TODO: translate to different bases
 --TODO: improve power method
 --TODO: factorization
