@@ -153,6 +153,11 @@ end
 bigint._args_ = function (num1, num2)
   num1 = isbigint(num1) and num1 or bigint:new(num1)
   num2 = isbigint(num2) and num2 or bigint:new(num2)
+  if num1._base_ > num2._base_ then
+    num2 = num2:rebase(num1._base_)
+  elseif num1._base_ < num2._base_ then
+    num1 = num1:rebase(num2._base_)
+  end
   return num1, num2
 end
 
@@ -203,20 +208,19 @@ end
 --  @param B2 Second bigint object.
 --  @return Sum of the values.
 bigint._sum_ = function (B1,B2)
-  local acc, base = {}, 10
-  -- calculate sum
-  for i = 1, math.max(#B1[2],#B2[2]) do
-    local ai = string.byte(B1[2], i) or ZERO
-    local bi = string.byte(B2[2], i) or ZERO
-    acc[i] = (acc[i] or 0) + (ai-ZERO) + (bi-ZERO)
-    if acc[i] >= base then
-      acc[i] = acc[i] - base
-      acc[i+1] = 1
+  local n, add = B1._base_, 0
+  local res = bigint:new({0,base=n})
+  for i = 1, math.max(#B1,#B2) do
+    local v = (B1[i] or 0) + (B2[i] or 0) + add
+    if v >= n then
+      res[i] = v - n
+      add = 1
+    else 
+      res[i] = v
+      add = 0
     end
   end
-  simplify(acc)     -- remove zeros
-  local res = bigint:new(0)
-  res[2] = table.concat(acc)
+  if add == 1 then res[#res+1] = 1 end
   return res
 end
 
@@ -225,25 +229,33 @@ end
 --  @param B2 Second bigint object.
 --  @return Difference of the values.
 bigint._sub_ = function (B1,B2)
-  -- find the biggest
-  local p,q,r = B1,B2,1
-  if bigint.abs(B1) < bigint.abs(B2) then
-    p,q,r = q,p,-1
+  local r, n, sub = 1, B1._base_, 0
+  local res = bigint:new({0,base=n})
+  -- find the bigger number
+  if #B1 < #B2 then
+    r = -1
+  elseif #B1 == #B2 then
+    local i = #B1
+    -- find first difference
+    while i > 0 and B1[i] == B2[i] do i = i - 1 end
+    if i == 0 then return res end
+    if i > 0 and B1[i] < B2[i] then r = -1 end
   end
-  local acc, base = {}, 10
-  -- calculate sub
-  for i = 1, #p[2] do
-    local pi = string.byte(p[2], i) or ZERO
-    local qi = string.byte(q[2], i) or ZERO
-    acc[i] = (acc[i] or 0) + pi - qi   -- (pi-zero)-(qi-zero)
-    if acc[i] < 0 then
-      acc[i] = acc[i] + base
-      acc[i+1] = -1
+  if r == -1 then
+    B1, B2 = B2, B1
+  end
+  -- subtraction
+  for i = 1, math.max(#B1,#B2) do
+    local v = B1[i] - (B2[i] or 0) - sub
+    if v < 0 then
+      res[i] = v + n
+      sub = 1
+    elseif v > 0 or (v == 0 and B1[i+1]) then
+      res[i] = v
+      sub = 0
     end
   end
-  simplify(acc)  -- remove zeros
-  local res = bigint:new(r)
-  res[2] = table.concat(acc)
+  res.sign = r
   return res
 end
 
@@ -252,7 +264,7 @@ end
 --  @return Absolute value.
 bigint.abs = function (val)
   local a = isbigint(val) and bigint.copy(val) or bigint:new(val)
-  a[1] = 1 
+  a.sign = 1 
   return a
 end
 bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number."}
@@ -273,10 +285,10 @@ bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTH
 --  @return Sum object.
 bigint.__add = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2) 
-  if B1[1] > 0 then
-    return (B2[1] > 0) and bigint._sum_(B1,B2) or bigint._sub_(B1,B2)
+  if B1.sign > 0 then
+    return (B2.sign > 0) and bigint._sum_(B1,B2) or bigint._sub_(B1,B2)
   else 
-    return (B2[1] > 0) and bigint._sub_(B2,B1) or -bigint._sum_(B1,B2)
+    return (B2.sign > 0) and bigint._sub_(B2,B1) or -bigint._sum_(B1,B2)
   end
 end
 
@@ -284,8 +296,8 @@ end
 --  @param B Bigint object.
 --  @return Opposite value.
 bigint.__unm = function (B)
-  local res = bigint:new(-B[1])
-  res[2] = B[2]
+  local res = B:copy()
+  res.sign = -res.sign
   return res
 end
 
@@ -295,10 +307,10 @@ end
 --  @return Difference object.
 bigint.__sub = function (B1, B2)
   B1,B2 = bigint._args_(B1,B2)
-  if B1[1] > 0 then
-    return (B2[1] > 0) and bigint._sub_(B1,B2) or bigint._sum_(B1,B2)
+  if B1.sign > 0 then
+    return (B2.sign > 0) and bigint._sub_(B1,B2) or bigint._sum_(B1,B2)
   else
-    return (B2[1] > 0) and -bigint._sum_(B1,B2) or bigint._sub_(B2,B1)
+    return (B2.sign > 0) and -bigint._sum_(B1,B2) or bigint._sub_(B2,B1)
   end
 end
 
@@ -359,7 +371,7 @@ end
 --  @return <code>true</code> if numbers have the same values and signs.
 bigint.eq = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  if #B1 == #B2 and B1.sign == B2.sign and B1._base_ == B2._base_ then
+  if #B1 == #B2 and B1.sign == B2.sign then
     for i = 1,#B1 do
       if B1[i] ~= B2[i] then return false end
     end
@@ -377,7 +389,6 @@ bigint.__eq = bigint.eq
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  if B1._base_ ~= B2._base_ then error('Different bases!') end
   if B1.sign < B2.sign then return true end
   if #B1 == #B2 then   -- equal length
     for i = #B1,1,-1 do
@@ -393,7 +404,6 @@ end
 
 bigint._gt_ = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  if B1._base_ ~= B2._base_ then error('Different bases!') end
   if B1.sign > B2.sign then return true end 
   if #B1 == #B2 then 
     for i = #B1,1,-1 do
