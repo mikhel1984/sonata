@@ -161,23 +161,6 @@ bigint._args_ = function (num1, num2)
   return num1, num2
 end
 
--- check if numerator is less then denomenator
-bigint._less_ = function (denom,num,nh,nl)
-  -- short table
-  nl = nl-1
-  if nh-nl == #denom then
-    for i = #denom, 1, -1 do
-      if num[nl+i] < denom[i] then 
-        return true 
-      end
-    end
-    return false
-  else
-    return nh-nl < #denom
-  end
-end
-
-
 --- Main algorithm for division.
 --  @param num1 First number representation.
 --  @param num2 Second number representation.
@@ -189,18 +172,15 @@ bigint._div_ = function (B1,B2)
   if #B1 < #B2 then  -- too short
     return res, B1:copy()
   end
-  local den = B2:abs()
-  local rest = bigint:new({0,base=B1._base_})
+  local rem = bigint:new({0,base=B1._base_}); rem[1] = nil
   local k = #B1-#B2+1
-  Ver.move(B1,k+1,#B1,1,rest)  -- copy last elements
-  local v2 = B2:val()
-  local acc = {}
+  Ver.move(B1,k+1,#B1,1,rem)  -- copy last elements
+  local v2, den, acc = B2:val(), B2:abs(), {}
   for i = k,1,-1 do
-    table.insert(rest,1,B1[i])
-    if rest >= den then
-      local v1 = rest:val()
-      local n = math.modf(v1 / v2)  -- estimate
-      local tmp = rest - den*n
+    table.insert(rem,1,B1[i])
+    if rem >= den then
+      local n = math.modf(rem:val() / v2)  -- estimate
+      local tmp = rem - den*n
       if tmp.sign < 0 then 
         n = n - 1
         tmp = tmp + den
@@ -208,55 +188,16 @@ bigint._div_ = function (B1,B2)
         n = n + 1
         tmp = tmp - den
       end
-      rest = tmp
+      rem = tmp
       acc[#acc+1] = n
     elseif #acc > 0 then
       acc[#acc+1] = 0
     end
   end
   for i,v in ipairs(acc) do res[#acc-i+1] = v end
-  return res, rest
+  res.sign = B1.sign*B2.sign
+  return res, rem
 end
-
---[[
-bigint._div_ = function (num1,num2)
-  num1,num2 = bigint._args_(num1,num2)
-  local num = string.reverse(num1[2])  -- numerator as string
-  local acc = {}                       -- result
-  local k = #num2[2]                   -- index of the last character
-  local rest = bigint:new(string.sub(num, 1, k))  -- current part the of numerator
-  local denom = bigint.abs(num2)       -- denominator
-  local last = #denom[2]               -- length of denominator
-  local q = string.sub(denom[2], last) -- first digit
-  local mul, sub, le = bigint.__mul, bigint.__sub, bigint.__le
-  -- read the string
-  while k <= #num do
-    if rest >= denom then
-      -- get ratio
-      local p = string.sub(rest[2], last):reverse()
-      local n = math.modf(p/q)
-      local prod = mul(n,denom)       -- n * denom
-      -- save result
-      if le(prod, rest) then          -- prod <= rest
-        acc[#acc+1] = n
-        rest = sub(rest, prod)        -- rest - prod
-      else
-        acc[#acc+1] = n-1
-        rest = sub(rest,prod)+denom   -- rest-prod+denom
-      end
-    else
-      if #acc > 0 then acc[#acc+1] = 0 end
-    end
-    k = k+1
-    -- update current numerator
-    rest[2] = string.sub(num, k,k) .. rest[2]
-  end
-  -- convert result
-  local result = bigint:new(num1[1]*num2[1])
-  result[2] = (#acc > 0) and string.reverse(table.concat(acc)) or '0'
-  return result, rest
-end
-]]
 
 --- Get sum of the two positive big numbers.
 --  @param B1 First bigint object.
