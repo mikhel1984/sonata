@@ -491,7 +491,7 @@ bigint.val = function (B)
     sum = sum + B[i]*v
     v = v * d
   end
-  return sum
+  return sum * B.sign
 end
 bigint.about[bigint.val] = {"val(N)", "Represent current big integer as number if it possible.", help.OTHER}
 
@@ -512,17 +512,19 @@ end
 bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer n."}
 
 bigint._divBase_ = function (t, bOld, bNew)
-  local res, rest, set = {}, 0, false
+  local rest, set = 0, false
   for i = #t,1,-1 do
     rest = rest * bOld + t[i]               -- TODO: change in place?
     local n,_ = math.modf(rest / bNew)
     if set or n > 0 then
-      res[i] = n
+      t[i] = n
       set = true
+    else 
+      t[i] = nil
     end
     rest = (rest - bNew * n)
   end
-  return res, rest
+  return t, rest
 end
 
 bigint.rebase = function (B,base)
@@ -531,8 +533,8 @@ bigint.rebase = function (B,base)
   local res = bigint:new({0,sign=B.sign, base=base})
   res[1] = nil    -- remove zero
   -- reverse order
-  local dig, n = B, #B+1
-  --for i,v in ipairs(B) do dig[n-i] = v end
+  local dig, n = {}, #B+1
+  for i,v in ipairs(B) do dig[i] = v end
   repeat 
     dig, n = bigint._divBase_(dig, B._base_, base)
     res[#res+1] = n
