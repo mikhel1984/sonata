@@ -58,16 +58,18 @@ ans = (a == b)                --> false
 ans = a:eq(123)               --> true
 
 -- number of digits
--- (the same as #a) 
-ans = a:size()                --> 3
+ans = #a                      --> 3
+
+-- 2nd digit (from the lowest)
+ans = a[2]                    --> 2
 
 -- simple print
 print(a)
 
 -- more friendly representation
-print(c:str())
+--print(c:str())
 -- set number of digits in group
-print(c:str(6))
+--print(c:str(6))
 
 --]]
 
@@ -499,12 +501,12 @@ bigint.about[bigint.val] = {"val(N)", "Represent current big integer as number i
 --  @return Factorial of the number as bigint object.
 bigint.fact = function (B)
   local n = isbigint(B) and B:copy() or bigint:new(B)
-  assert(n[1] > 0, "Non-negative value is expected!")
-  local res, one = bigint:new(1), bigint:new(1)  
-  local mul, sub = bigint.__mul, bigint.__sub
-  while n[2] ~= '0' do  
-    res = mul(res, n)
-    n  = sub(n, one)
+  assert(n.sign > 0, "Non-negative value is expected!")
+  local res, one = bigint:new({1,base=B._base_}), bigint:new({1,base=B._base_})
+  if #n == 1 and n[1] == 0 then return res end  -- 0! == 1
+  while #n > 1 or #n == 1 and n[1] > 0 do
+    res = res * n
+    n = n - one
   end
   return res
 end
