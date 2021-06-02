@@ -318,30 +318,26 @@ end
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
 --  @return Product object.
-bigint.__mul = function (B1, B2) 
+bigint.__mul = function (B1, B2)
   B1,B2 = bigint._args_(B1,B2)
-  local sum = {}
-  -- get products  
-  for i = 1, #B1[2] do
-    local ai = string.byte(B1[2], i) - ZERO
-    for j = 1, #B2[2] do
-      local pos = i+j-1
-      sum[pos] = (sum[pos] or 0) + ai*(string.byte(B2[2],j)-ZERO)
+  local sum = bigint:new({0, base=B1._base_, sign=B1.sign*B2.sign})
+  -- get products
+  for i = 0,#B1-1 do
+    local v = B1[i+1]
+    for j = 1,#B2 do
+      local pos = i+j
+      sum[pos] = (sum[pos] or 0) + v * B2[j]
     end
   end
-  -- back
-  local d, base = 0, 10
-  for i = 1, #sum do
-    sum[i] = sum[i] + d
-    d = math.floor(sum[i] / base)
-    sum[i] = math.floor(sum[i] % base)
+  -- rearrange
+  local rest, d = 0, B1._base_
+  for i = 1,#sum do
+    sum[i] = sum[i] + rest
+    rest = math.modf(sum[i] / d)
+    sum[i] = sum[i] - rest * d
   end
-  sum[#sum+1] = d
-  simplify(sum)
-  -- save
-  local res = bigint:new(B1[1]*B2[1])
-  res[2] = table.concat(sum)
-  return res  
+  if rest > 0 then sum[#sum+1] = rest end
+  return sum
 end
 
 --- B1 / B1
