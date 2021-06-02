@@ -161,10 +161,64 @@ bigint._args_ = function (num1, num2)
   return num1, num2
 end
 
+-- check if numerator is less then denomenator
+bigint._less_ = function (denom,num,nh,nl)
+  -- short table
+  nl = nl-1
+  if nh-nl == #denom then
+    for i = #denom, 1, -1 do
+      if num[nl+i] < denom[i] then 
+        return true 
+      end
+    end
+    return false
+  else
+    return nh-nl < #denom
+  end
+end
+
+
 --- Main algorithm for division.
 --  @param num1 First number representation.
 --  @param num2 Second number representation.
 --  @return The quotient and remainder.
+bigint._div_ = function (B1,B2)
+  B1, B2 = bigint._args_(B1,B2)
+  if #B2 == 1 and B2[1] == 0 then error("Divide by 0!") end
+  local res = bigint:new({0,base=B1._base_})
+  if #B1 < #B2 then  -- too short
+    return res, B1:copy()
+  end
+  local den = B2:abs()
+  local rest = bigint:new({0,base=B1._base_})
+  local k = #B1-#B2+1
+  Ver.move(B1,k+1,#B1,1,rest)  -- copy last elements
+  local v2 = B2:val()
+  local acc = {}
+  for i = k,1,-1 do
+    table.insert(rest,1,B1[i])
+    if rest >= den then
+      local v1 = rest:val()
+      local n = math.modf(v1 / v2)  -- estimate
+      local tmp = rest - den*n
+      if tmp.sign < 0 then 
+        n = n - 1
+        tmp = tmp + den
+      elseif tmp > den then
+        n = n + 1
+        tmp = tmp - den
+      end
+      rest = tmp
+      acc[#acc+1] = n
+    elseif #acc > 0 then
+      acc[#acc+1] = 0
+    end
+  end
+  for i,v in ipairs(acc) do res[#acc-i+1] = v end
+  return res, rest
+end
+
+--[[
 bigint._div_ = function (num1,num2)
   num1,num2 = bigint._args_(num1,num2)
   local num = string.reverse(num1[2])  -- numerator as string
@@ -202,6 +256,7 @@ bigint._div_ = function (num1,num2)
   result[2] = (#acc > 0) and string.reverse(table.concat(acc)) or '0'
   return result, rest
 end
+]]
 
 --- Get sum of the two positive big numbers.
 --  @param B1 First bigint object.
@@ -314,13 +369,9 @@ bigint.__sub = function (B1, B2)
   end
 end
 
---- B1 * B2
---  @param B1 First bigint or integer.
---  @param B2 Second bigint or integer.
---  @return Product object.
-bigint.__mul = function (B1, B2)
-  B1,B2 = bigint._args_(B1,B2)
-  local sum = bigint:new({0, base=B1._base_, sign=B1.sign*B2.sign})
+-- 'simple' product
+bigint._mul_ = function (B1,B2)
+  local sum = bigint:new({0, base=B1._base_})
   -- get products
   for i = 0,#B1-1 do
     local v = B1[i+1]
@@ -338,6 +389,17 @@ bigint.__mul = function (B1, B2)
   end
   if rest > 0 then sum[#sum+1] = rest end
   return sum
+end
+
+--- B1 * B2
+--  @param B1 First bigint or integer.
+--  @param B2 Second bigint or integer.
+--  @return Product object.
+bigint.__mul = function (B1, B2)
+  B1,B2 = bigint._args_(B1,B2)
+  local res = bigint._mul_(B1,B2)
+  res.sign = B1.sign * B2.sign
+  return res
 end
 
 --- B1 / B1
