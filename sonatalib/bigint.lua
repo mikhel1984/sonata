@@ -430,23 +430,22 @@ end
 --  @return Power of the number.
 bigint.__pow = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
-  if B2[1] < 0 then error('Negative power!') end
-  local res = bigint:new(1)
-  if B2[2] == '0' then 
-    assert(B1[2] ~= '0', "Error: 0^0!")
+  if B2.sign < 0 then error('Negative power!') end
+  local y, x = bigint:new({1,base=B1._base_}), B1
+  if #B2 == 1 and B2[1] == 0 then 
+    assert(#B1 > 1 or B1[1] ~= 0, "Error: 0^0!")
     return res
   end
-  local aa, bb, q = bigint.copy(B1), bigint.copy(B2)
-  local h, two = 1, bigint:new(2)
-  local div, mul = bigint._div_, bigint.__mul
-  while true do
-    bb,q = div(bb,two)
-    if q[2] ~= '0' then res = mul(res,aa) end
-    if bb[2] ~= '0' then 
-      aa = mul(aa,aa)
-    else break end
+  local dig, rest = {}
+  for i = 1,#B2 do dig[i] = B2[i] end
+  while #dig > 1 or #dig == 1 and dig[1] > 1 do
+    dig, rest = bigint._divBase_(dig, B1._base_, 2)
+    if rest == 1 then
+      y = y * x
+    end
+    x = x * x
   end
-  return res
+  return x * y
 end
 
 bigint.arithmetic = 'arithmetic'
