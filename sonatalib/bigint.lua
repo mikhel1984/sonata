@@ -66,18 +66,11 @@ ans = a[2]                    --> 2
 -- simple print
 print(a)
 
--- more friendly representation
---print(c:str())
--- set number of digits in group
---print(c:str(6))
-
 --]]
 
 --	LOCAL
 
 local Ver = require "sonatalib.versions"
-
--- SIGN, VALUE = 1, 2
 
 local ZERO = string.byte('0')
 
@@ -85,16 +78,6 @@ local ZERO = string.byte('0')
 --  @param v Object.
 --  @return True if the object is a big integer.
 local function isbigint(v) return type(v) == 'table' and v.isbigint end
-
---- Reduce front zeros in place. E.g. convert '00123' to '123'.
---  @param tDigits Table with digits.
-local function simplify (tDigits)
-  local i = #tDigits
-  while i > 1 and tDigits[i] == 0 do
-    tDigits[i] = nil
-    i = i - 1
-  end
-end
 
 --	INFO 
 
@@ -122,10 +105,10 @@ bigint.new = function (self, num)
     if sign == '-' then acc.sign = -1 end
     s = string.reverse(s)
     for i = 1,#s do
-      acc[i] = string.byte(s,i)-ZERO 
+      acc[i] = string.byte(s,i)-ZERO
     end
-  elseif type(num) == 'number' and Ver.isInteger(num) then 
-    if num < 0 then 
+  elseif type(num) == 'number' and Ver.isInteger(num) then
+    if num < 0 then
       acc.sign = -1
       num = -num
     end
@@ -135,10 +118,10 @@ bigint.new = function (self, num)
       num = n
     until num == 0
   elseif type(num) == 'table' then
-    acc._base_ = num.base or acc._base_
-    acc.sign = num.sign or acc.sign
+    acc._base_ = num.base or 10
+    acc.sign = num.sign or 1
     for i = #num,1,-1 do
-      acc[#acc+1] = num[i]
+      acc[#acc+1] = num[i] -- reverse
     end
   end
   -- check result
@@ -168,13 +151,13 @@ end
 --  @param num2 Second number representation.
 --  @return The quotient and remainder.
 bigint._div_ = function (B1,B2)
-  B1, B2 = bigint._args_(B1,B2)
   if #B2 == 1 and B2[1] == 0 then error("Divide by 0!") end
-  local res = bigint:new({0,base=B1._base_})
+  local d = B1._base_
+  local res = bigint:new({0,base=d})
   if #B1 < #B2 then  -- too short
     return res, B1:copy()
   end
-  local rem = bigint:new({0,base=B1._base_}); rem[1] = nil
+  local rem = bigint:new({0,base=d}); rem[1] = nil
   local k = #B1-#B2+1
   Ver.move(B1,k+1,#B1,1,rem)  -- copy last elements
   local v2, den, acc = B2:val(), B2:abs(), {}
@@ -182,8 +165,8 @@ bigint._div_ = function (B1,B2)
     table.insert(rem,1,B1[i])
     if rem >= den then
       local n = math.modf(rem:val() / v2)  -- estimate
-      local tmp = rem - den*n
-      if tmp.sign < 0 then 
+      local tmp = rem - den*bigint:new({n,base=d})
+      if tmp.sign < 0 then
         n = n - 1
         tmp = tmp + den
       elseif tmp > den then
@@ -213,7 +196,7 @@ bigint._sum_ = function (B1,B2)
     if v >= n then
       res[i] = v - n
       add = 1
-    else 
+    else
       res[i] = v
       add = 0
     end
@@ -350,6 +333,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Ratio object.
 bigint.__div = function (B1, B2)
+  B1, B2 = bigint._args_(B1,B2)
   local res,_ = bigint._div_(B1,B2)
   return res
 end
@@ -359,6 +343,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Remainder object.
 bigint.__mod = function (B1, B2)
+  B1, B2 = bigint._args_(B1,B2)
   local _,res = bigint._div_(B1,B2)
   return res
 end
@@ -398,22 +383,25 @@ bigint.__lt = function (B1,B2)
       end
     end
     return false
-  else                              -- different length
-    return (B1.sign > 0 and #B1 < #B2) or (B1.sign < 0 and #B1 > #B2) 
+  else                 -- different length
+    return (B1.sign > 0 and #B1 < #B2) or (B1.sign < 0 and #B1 > #B2)
   end
 end
 
+--- Check if the first number is greater then the second
+--  @param B1 First number.
+--  @param B2 Second number.
+--  @return True if B1 > B2.
 bigint._gt_ = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
-  if B1.sign > B2.sign then return true end 
-  if #B1 == #B2 then 
+  if B1.sign > B2.sign then return true end
+  if #B1 == #B2 then
     for i = #B1,1,-1 do
       if B1[i] ~= B2[i] then
         return (B1.sign > 0 and B1[i] > B2[i]) or (B1.sign < 0 and B1[i] < B2[i])
       end
     end
     return false
-  else 
+  else
     return (B1.sign > 0 and #B1 > #B2) or (B1.sign < 0 and #B1 < #B2)
   end
 end
@@ -423,6 +411,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less or equal to the second.
 bigint.__le = function (B1,B2)
+  B1,B2 = bigint._args_(B1,B2)
   return not bigint._gt_(B1,B2)
 end
 
@@ -434,20 +423,20 @@ bigint.__pow = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
   if B2.sign < 0 then error('Negative power!') end
   local y, x = bigint:new({1,base=B1._base_}), B1
-  if #B2 == 1 and B2[1] == 0 then 
+  if #B2 == 1 and B2[1] == 0 then
     assert(#B1 > 1 or B1[1] ~= 0, "Error: 0^0!")
     return res
   end
-  local dig, rest = {}
+  local dig, mul, rest = {}, bigint._mul_
   for i = 1,#B2 do dig[i] = B2[i] end
   while #dig > 1 or #dig == 1 and dig[1] > 1 do
     dig, rest = bigint._divBase_(dig, B1._base_, 2)
     if rest == 1 then
-      y = y * x
+      y = mul(y, x)
     end
-    x = x * x
+    x = mul(x, x)
   end
-  return x * y
+  return mul(x, y)
 end
 
 bigint.arithmetic = 'arithmetic'
@@ -471,22 +460,10 @@ bigint.__tostring = function (B)
   return B.sign < 0 and ('-' .. s) or s
 end
 
---- More convenient string representation
---  @param B Bigint object.
---  @param n Number of digits in group (default is 3).
---  @return String representation where each n digits are separated.
-bigint.str = function (B,n)
-  n = n or 3
-  local templ = string.format('(%s)', string.rep('.',n))
-  local value = string.gsub(B[2], templ, '%1 ')
-  return (B[1] < 0 and '-' or '') .. string.reverse(value)
-end
-bigint.about[bigint.str] = {"str(B[,n=3])", "More readable string representation of the number. Optional argument defines number of digits in a group.", help.OTHER}
-
 --- Float number representation.
 --  @param v Bigint object.
 --  @return Integer if possible, otherwise float point number.
-bigint.val = function (B) 
+bigint.val = function (B)
   local d, v, sum = B._base_, 1, 0
   for i = 1,#B do
     sum = sum + B[i]*v
@@ -504,18 +481,24 @@ bigint.fact = function (B)
   assert(n.sign > 0, "Non-negative value is expected!")
   local res, one = bigint:new({1,base=B._base_}), bigint:new({1,base=B._base_})
   if #n == 1 and n[1] == 0 then return res end  -- 0! == 1
-  while #n > 1 or #n == 1 and n[1] > 0 do
-    res = res * n
-    n = n - one
-  end
+  local mul, sub = bigint._mul_, bigint._sub_
+  repeat 
+    res = mul(res, n)
+    n = sub(n, one)
+  until #n == 1 and n[1] == 0
   return res
 end
 bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer n."}
 
+--- Divide elements in the list ot given number, find reminder
+--  @param t List of numbers.
+--  @param bOld Initial bases.
+--  @param bNew New bases.
+--  @return Quotient and reminder.
 bigint._divBase_ = function (t, bOld, bNew)
   local rest, set = 0, false
   for i = #t,1,-1 do
-    rest = rest * bOld + t[i]               -- TODO: change in place?
+    rest = rest * bOld + t[i]
     local n,_ = math.modf(rest / bNew)
     if set or n > 0 then
       t[i] = n
@@ -523,7 +506,7 @@ bigint._divBase_ = function (t, bOld, bNew)
     else 
       t[i] = nil
     end
-    rest = (rest - bNew * n)
+    rest = rest - bNew * n
   end
   return t, rest
 end
@@ -543,6 +526,7 @@ bigint.rebase = function (B,base)
   return res
 end
 
+--- Get ...
 bigint.base = function (B) return B._base_ end
 
 -- simplify constructor call
@@ -556,6 +540,5 @@ if not LC_DIALOG then bigint.about = nil end
 return bigint
 
 --=================================
---TODO: improve power method
 --TODO: factorization
 --TODO: check for prime
