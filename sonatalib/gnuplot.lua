@@ -34,7 +34,7 @@ Gp.plot(t1, math.sin, t1, math.cos)
 arr = {}
 for i = 1,50 do 
   x = 0.1*i 
-  arr[i] = {x, math.sin(x), math.cos(x)} 
+  arr[i] = {x, math.sin(x), math.cos(x)}
 end
 -- all columns by default (for table and matrix)
 Gp.tplot(arr)
@@ -139,9 +139,11 @@ local function prepare(k,v)
   return k,v
 end
 
-local GPPLOT = 'plot'
+-- Quick plot category
+local GPPLOT = 'quick'
 
 --	INFO
+
 local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
 
 --	MODULE
@@ -203,9 +205,9 @@ gnuplot._fn2file_ = function (fn,base)
     local yl = base.yrange and base.yrange[1] or (-10)
     local yr = base.yrange and base.yrange[2] or 10
     local dy = (yr-yl)/N
-    for x = xl,xr,dx do 
+    for x = xl,xr,dx do
       for y = yl,yr,dy do f:write(x,' ',y,' ',fn(x,y),'\n') end
-    end 
+    end
   else
     for x = xl,xr,dx do
       f:write(x,' ',fn(x),'\n')
@@ -299,15 +301,15 @@ gnuplot.about[gnuplot.show] = {"show(G)", "Plot data, represented as Lua table."
 --- Represent parameters of the graphic.
 --  @param G Gnuplot object.
 --  @return String with object properties.
-gnuplot.__tostring = function (G) 
+gnuplot.__tostring = function (G)
   local res = {}
   for k,v in pairs(G) do
     if type(v) == 'table' then
       local tmp = {}
-      for p,q in pairs(v) do 
-        tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q)) 
+      for p,q in pairs(v) do
+        tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q))
       end
-      v = string.format('{%s}', table.concat(tmp,',')) 
+      v = string.format('{%s}', table.concat(tmp,','))
     end
     res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
   end
@@ -347,7 +349,7 @@ gnuplot.plot = function (...)
   local ag = {...}
   local cmd = gnuplot:new()
   local i, n = 1, 1
-  repeat 
+  repeat
     -- ag[i] have to be table
     local var, name, legend = ag[i+1], nil, nil
     if type(var) == 'table' or type(var) == 'function' then
@@ -360,7 +362,7 @@ gnuplot.plot = function (...)
     if type(ag[i]) == 'string' then
       legend = ag[i]
       i = i+1
-    else 
+    else
       legend = tostring(n)
     end
     cmd[#cmd+1] = {name, with='lines', title=legend}
@@ -412,14 +414,14 @@ gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or d
 gnuplot.polarplot = function(...)
   local ag, i, n = {...}, 1, 1
   local cmd = gnuplot:new()
-  repeat 
-    local name = gnuplot._lst2file_(ag[i],ag[i+1]) 
+  repeat
+    local name = gnuplot._lst2file_(ag[i],ag[i+1])
     i = i + 2
     local legend
     if type(ag[i]) == 'string' then
       legend = ag[i]
       i = i + 1
-    else 
+    else
       legend = tostring(n)
     end
     cmd[#cmd+1] = {name, title=legend, with='lines'}
@@ -442,7 +444,7 @@ gnuplot.tpolar = function (t,...)
       cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
         title=string.format("%d:%d",ag[1], ag[i])}
     end
-  else 
+  else
     cmd[#cmd+1] = {f, with='lines', title='1:2'}
   end
   cmd.polar = true
@@ -482,7 +484,7 @@ gnuplot.tsurf = function (t,...)
   local cmd = gnuplot:new()
   if #ag > 2 then
     for i = 3,#ag do
-      cmd[#cmd+1] = {f, using={ag[1],ag[2],ag[i]}, 
+      cmd[#cmd+1] = {f, using={ag[1],ag[2],ag[i]},
         title=string.format("%d:%d:%d",ag[1],ag[2],ag[i])}
     end
   else
