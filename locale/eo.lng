@@ -298,7 +298,7 @@ _C = {
 ["astro.ly"]             = [[Unu uma jaro.]],
 },
 ---------- bigint.lua ----------
-Big = {
+Int = {
 ["__module__"]           = [[Operacioj kun la arbitraj longaj entjeroj.]],
 --["arithmetic"]           = [[a+b, a-b, a*b, a/b, a%b, a^b, -a, #a]],
 ["abs(v)"]               = [[Absoluta valoro.]],
@@ -306,7 +306,7 @@ Big = {
 ["copy(v)"]              = [[Krei kopion de granda entjero.]],
 ["size(B)"]              = [[Numbro de ciferoj, la sama kiel #B.]],
 ["eq(a,b)"]              = [[Egaleco kontrolo.]],
-["Big(v)"]               = [[Krei novan arbitra longa entjero bazitan sur la nombro aǔ teksto.]],
+["Int(v)"]               = [[Krei novan arbitra longa entjero bazitan sur la nombro, teksto aǔ tablo.]],
 ["val(N)"]               = [[Prezenti grandan entjeron en nombra formo se eble.]],
 ["fact(B)"]              = [[Revenas faktorialon de la ne indika entjera nombro n.]],
 --["comparison"]           = [[a<b, a<=b, a>b, a>=b, a==b, a~=b]],

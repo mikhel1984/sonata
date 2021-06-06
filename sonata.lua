@@ -42,7 +42,7 @@ math.randomseed(os.time())
 use = {
 --  name     alias
   array     = "Arr",
-  bigint    = "Big",
+  bigint    = "Int",
   complex   = "Comp",
   const     = "_C",
   files     = "File",

@@ -15,43 +15,43 @@
 ---------------- Tests -----------------
 --[[TEST
 -- use 'bigint'
-Big = require 'sonatalib.bigint'
+Int = require 'sonatalib.bigint'
 
 -- from integer
-a = Big(123)
+a = Int(123)
 ans = a:val()                 --> 123
 
 -- from string
-b = Big('456')
+b = Int('456')
 ans = b:val()                 --> 456
 
 -- from table 
 -- 'sign' and 'base' can be skipped
-g = Big {1,2,3,sign=-1,base=10}
+g = Int {1,2,3,sign=-1,base=10}
 ans = g:val()                 --> -123
 
 -- check equality
 ans = (a == -g)               --> true
 
 -- arithmetical operations
-ans = Big.val(a+b)            --> 579
+ans = Int.val(a+b)            --> 579
 
-ans = Big.val(a-b)            --> -333
+ans = Int.val(a-b)            --> -333
 
-ans = Big.val(a*Big(2))       --> 246
+ans = Int.val(a*Int(2))       --> 246
 
-ans = Big.val(b/2)            --> 228
+ans = Int.val(b/2)            --> 228
 
-ans = Big.val(b%a)            --> 87
+ans = Int.val(b%a)            --> 87
 
-ans = Big.val(a^3)            --> 1860867
+ans = Int.val(a^3)            --> 1860867
 
 -- absolute value
-ans = Big.abs('-25'):val()    --> 25
+ans = Int.abs('-25'):val()    --> 25
 
 -- factorial
-c = Big(10):fact()
-ans = Big.val(c)              --> 3628800
+c = Int(10):fact()
+ans = Int.val(c)              --> 3628800
 
 -- make copy, comparison
 d = a:copy()
@@ -564,8 +564,8 @@ bigint.about[bigint.base] = {"base(B)", "Current numeric base."}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
-bigint.Big = 'Big'
-bigint.about[bigint.Big] = {"Big(v)", "Create big number from integer or string.", help.NEW}
+bigint.Int = 'Int'
+bigint.about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.NEW}
 
 -- free memory if need
 if not LC_DIALOG then bigint.about = nil end
