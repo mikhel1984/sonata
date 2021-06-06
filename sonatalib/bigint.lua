@@ -3,9 +3,8 @@
 --- Operations with arbitrary long integer numbers.
 --
 --  Object structure: </br> 
---  <code> {SIGN, VALUE} </code></br>
---  where <code>SIGN</code> is +1/-1 and <code>VALUE</code> is a string, each character corresponds to one digit.
---  Besides, digits have inverted sequence. For example, number <code>123</code> is represented as <code>"321"</code>.
+--  <code> {sign=S,_base_=B, v1, ... vn} </code></br>
+--  where <code>S</code> is +1/-1, B is 10 by default, v1 - vn are digits of the number in reverse order. For example, number <code>123</code> is represented as <code>{sign=1, _base_=10, 3, 2, 1}</code>.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
@@ -25,6 +24,14 @@ ans = a:val()                 --> 123
 -- from string
 b = Big('456')
 ans = b:val()                 --> 456
+
+-- from table 
+-- 'sign' and 'base' can be skipped
+g = Big {1,2,3,sign=-1,base=10}
+ans = g:val()                 --> -123
+
+-- check equality
+ans = (a == -g)               --> true
 
 -- arithmetical operations
 ans = Big.val(a+b)            --> 579
@@ -63,6 +70,21 @@ ans = #a                      --> 3
 -- 2nd digit (from the lowest)
 ans = a[2]                    --> 2
 
+-- get numeric base 
+ans = g:base()                --> 10
+
+-- change numeric base
+v = g:rebase(60)
+ans = tostring(v)             --> '-2|3'
+
+-- still the same value
+ans = (v == g)                --> true
+
+-- operations with different bases
+-- transform to the biggest common base
+w = v + b
+ans = tostring(w)             --> '5|33'
+
 -- simple print
 print(a)
 
@@ -95,12 +117,18 @@ about = help:new("Operations with arbitrary long integers."),
 bigint.__index = bigint
 
 --- Create new object, set metatable.
---  @param num Integer as number or string.
+--  @param num Integer, string or table.
 --  @return Bigint object.
 bigint.new = function (self, num)
   local acc = {_base_=10, sign=1}
   -- prepare
-  if type(num) == 'string' then
+  if type(num) == 'table' then
+    acc._base_ = num.base or 10
+    acc.sign   = num.sign or 1
+    for i = #num,1,-1 do
+      acc[#acc+1] = num[i] -- reverse
+    end
+  elseif type(num) == 'string' then
     local sign, s = string.match(num, '^([+-]?)(%d+)$')
     if sign == '-' then acc.sign = -1 end
     s = string.reverse(s)
@@ -116,13 +144,7 @@ bigint.new = function (self, num)
       local n,_ = math.modf(num / 10)
       acc[#acc+1] = num - 10*n
       num = n
-    until num == 0
-  elseif type(num) == 'table' then
-    acc._base_ = num.base or 10
-    acc.sign = num.sign or 1
-    for i = #num,1,-1 do
-      acc[#acc+1] = num[i] -- reverse
-    end
+    until num == 0  
   end
   -- check result
   if #acc == 0 then
@@ -134,7 +156,7 @@ end
 --- Correct function arguments if need.
 --  @param num1 First number representation.
 --  @param num2 Second number representation (optional).
---  @return Bigint objects.
+--  @return Bigint objects with the same numeric bases.
 bigint._args_ = function (num1, num2)
   num1 = isbigint(num1) and num1 or bigint:new(num1)
   num2 = isbigint(num2) and num2 or bigint:new(num2)
@@ -295,7 +317,10 @@ bigint.__sub = function (B1, B2)
   end
 end
 
--- 'simple' product
+--- Straightforward product algorithm.
+--  @param B1 First bigint multiplier.
+--  @param B2 Second bigint multiplier.
+--  @return Product without sign. 
 bigint._mul_ = function (B1,B2)
   local sum = bigint:new({0, base=B1._base_})
   -- get products
@@ -349,7 +374,7 @@ bigint.__mod = function (B1, B2)
 end
 
 --- a == b.
---  In Lua v == 0 is always <code>false</code> because in case of number
+--  In Lua v == 0 is always <code>false</code> because in the case of number
 --  the program tries to convert everything into number.
 --  For two bigint objects using of <code>==</code> is also possible.
 --  @param B1 First bigint object or integer.
@@ -469,7 +494,7 @@ bigint.val = function (B)
     sum = sum + B[i]*v
     v = v * d
   end
-  return sum * B.sign
+  return B.sign >= 0 and sum or (-sum)
 end
 bigint.about[bigint.val] = {"val(N)", "Represent current big integer as number if it possible.", help.OTHER}
 
@@ -511,6 +536,10 @@ bigint._divBase_ = function (t, bOld, bNew)
   return t, rest
 end
 
+--- Change current numeric base.
+--  @param B Bigint object.
+--  @param base New base. 
+--  @return Copy with new base.
 bigint.rebase = function (B,base)
   if base <= 0 then error("Wrong base "..tostring(base)) end
   if B._base_ == base then return B:copy() end
@@ -525,9 +554,13 @@ bigint.rebase = function (B,base)
   until #dig == 0
   return res
 end
+bigint.about[bigint.rebase] = {"rebase(B,base)","Convert number to the new numeric base."}
 
---- Get ...
+--- Get numeric base.
+--  @param B Bigint object.
+--  @return Base value.
 bigint.base = function (B) return B._base_ end
+bigint.about[bigint.base] = {"base(B)", "Current numeric base."}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
@@ -542,3 +575,4 @@ return bigint
 --=================================
 --TODO: factorization
 --TODO: check for prime
+--TODO: rename module, change description for val
