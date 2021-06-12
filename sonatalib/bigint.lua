@@ -592,6 +592,24 @@ bigint._sqrt_ = function (B)
   return ai
 end
 
+bigint._powm_ = function (B1,B2,B3)
+  local div = bigint._div_
+  _, B1 = div(B1,B3)
+  if #B1 == 1 and B1[1] == 0 then return bigint:new({0,base=B1._base_}) end
+  local y, x = bigint:new({1,base=B1._base_}), B1
+  local dig, mul, rest = {}, bigint._mul_
+  for i = 1,#B2 do dig[i] = B2[i] end
+  while #dig > 1 or #dig == 1 and dig[1] > 1 do
+    dig, rest = bigint._divBase_(dig, B1._base_, 2)
+    if rest == 1 then
+      _,y = div(mul(y, x), B3)
+    end
+    _, x = div(mul(x, x), B3)
+  end
+  _, rest = div(mul(x,y), B3)
+  return rest
+end
+
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Int = 'Int'
