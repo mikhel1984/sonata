@@ -562,6 +562,24 @@ bigint.about[bigint.rebase] = {"rebase(B,base)","Convert number to the new numer
 bigint.base = function (B) return B._base_ end
 bigint.about[bigint.base] = {"base(B)", "Current numeric base."}
 
+--- Greatest common devision for bigint objects.
+--  @param B1 First value.
+--  @param B2 Second value.
+--  @return Bigint gcd.
+bigint._gcd_ = function (B1,B2)
+  return (#B1 == 1 and B1[1] == 0) and B2 or bigint._gcd_(B2 % B1, B1)
+end
+
+--- Greatest common devision for two (big) numbers.
+--  @param B1 First value.
+--  @param B2 Second value.
+--  @return Bigint gcd.
+bigint.gcd = function (B1,B2)
+  B1,B2 = bigint._args_(B1,B2)
+  return bigint._gcd_(B1,B2)
+end
+bigint.about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers."}
+
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Int = 'Int'
