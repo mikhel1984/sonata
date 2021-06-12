@@ -580,6 +580,18 @@ bigint.gcd = function (B1,B2)
 end
 bigint.about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers."}
 
+bigint.random = function (B)
+  local res = bigint:new({0,sign=B.sign,base=B._base_})
+  local n = math.random(1,#B)
+  for i = 1,n-1 do res[i] = math.random(1,B._base_) - 1 end
+  if n < #B then
+    res[n] = math.random(1,B._base_-1) 
+  elseif B[n] > 1 then
+    res[n] = math.random(1,B[n]-1)
+  end
+  return res
+end
+
 -- Babylonian method
 bigint._sqrt_ = function (B)
   local ai, aii = bigint:new({1,base=B._base_})
