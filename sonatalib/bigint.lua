@@ -622,6 +622,21 @@ bigint._powm_ = function (B1,B2,B3)
   return rest
 end
 
+bigint._trivialSearch_ = function (B)
+  local div, sum = bigint._div_, bigint._sum_
+  local one = bigint:new({1,base=B._base_})
+  local n = sum(one, one)
+  local sq = bigint._sqrt_(B) 
+  while #sq > #n or not bigint._gt_(n,sq) do
+    local v1,v2 = div(B,n)
+    if #v2 == 1 and v2[1] == 0 then
+      return n, v1
+    end
+    n = sum(n, one)
+  end
+  return nil  -- not found
+end
+
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Int = 'Int'
@@ -635,4 +650,3 @@ return bigint
 --=================================
 --TODO: factorization
 --TODO: check for prime
---TODO: rename module, change description for val
