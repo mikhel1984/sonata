@@ -227,6 +227,23 @@ bigint._sum_ = function (B1,B2)
   return res
 end
 
+-- Increment for positive number
+bigint._incr_ = function (B)
+  local add = 1
+  for i = 1,#B do
+    B[i] = B[i] + add
+    if B[i] == B._base_ then
+      B[i], add = 0, 1
+    else
+      add = 0
+      break
+    end
+  end
+  if add > 0 then
+    B[#B+1] = 1
+  end
+end
+
 --- Get subtraction for two positive bigint numbers.
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
@@ -260,6 +277,26 @@ bigint._sub_ = function (B1,B2)
   end
   res.sign = r
   return res
+end
+
+-- Decrement for positive number
+bigint._decr_ = function (B)
+  local dif = 1
+  for i = 1,#B do
+    B[i] = B[i] - dif
+    if B[i] < 0 then
+      B[i] = B._base_ - 1
+      dif = 1
+    elseif i == #B and B[i] == 0 then
+      dif = 1
+    else
+      dif = 0
+      break
+    end
+  end
+  if dif > 0 then
+    B[#B] = nil
+  end
 end
 
 --- Absolute value of number.
