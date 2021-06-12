@@ -275,6 +275,10 @@ bigint._sub_ = function (B1,B2)
       sub = 0
     end
   end
+  -- simplify 
+  while #res > 1 and res[#res] == 0 do
+    res[#res] = nil
+  end
   res.sign = r
   return res
 end
@@ -651,14 +655,18 @@ bigint._powm_ = function (B1,B2,B3)
   _, B1 = div(B1,B3)
   if #B1 == 1 and B1[1] == 0 then return bigint:new({0,base=B1._base_}) end
   local y, x = bigint:new({1,base=B1._base_}), B1
-  local dig, mul, rest = {}, bigint._mul_
-  for i = 1,#B2 do dig[i] = B2[i] end
+  local dig, mul, rest = bigint.copy(B2), bigint._mul_
+  --for i = 1,#B2 do dig[i] = B2[i] end
   while #dig > 1 or #dig == 1 and dig[1] > 1 do
     dig, rest = bigint._divBase_(dig, B1._base_, 2)
     if rest == 1 then
+--      print('a', y*x)
       _,y = div(mul(y, x), B3)
+--      print('y',y)
     end
+--      print('b', x*x)
     _, x = div(mul(x, x), B3)
+--    print('x',x)
   end
   _, rest = div(mul(x,y), B3)
   return rest
@@ -680,6 +688,7 @@ bigint._trivialSearch_ = function (B)
 end
 
 bigint.factorize = function (B)
+  B = isbigint(B) and B or bigint:new(B)
   local v, res = B, {}
   if B.sign < 0 then res[1] = -1 end
   while true do
@@ -693,6 +702,33 @@ bigint.factorize = function (B)
     end
   end
   return res
+end
+
+bigint._primeFermat_ = function (B)
+  local a
+  local div, pow = bigint._div_, bigint._powm_
+  for i = 1,10 do
+    repeat 
+      a = bigint.random(B)
+    until a:val() >= 2
+    print(a)
+    local v1 = pow(a,B,B)
+    print(v1)
+    local _,v2 = div(a,B)
+    print(v2)
+    if v1 ~= v2 then return false end
+  end
+  return true
+end
+
+bigint.isPrime = function (B,method)
+  B = isbigint(B) and B or bigint:new(B)
+  if method == 'Fermat' then
+    return bigint._primeFermat_(B)
+  end
+  -- default is a simple search
+  local v1,v2 = bigint._trivialSearch_(B)
+  return v1 == nil
 end
 
 -- simplify constructor call
