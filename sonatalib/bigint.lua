@@ -580,6 +580,18 @@ bigint.gcd = function (B1,B2)
 end
 bigint.about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers."}
 
+-- Babylonian method
+bigint._sqrt_ = function (B)
+  local ai, aii = bigint:new({1,base=B._base_})
+  local sum, div, sub = bigint._sum_, bigint._div_, bigint._sub_
+  repeat
+    aii,_ = div(B,ai)
+    aii = bigint._divBase_(sum(ai,aii), B._base_, 2)
+    ai, aii = aii, sub(aii,ai)
+  until #aii == 1 and (aii[1] <= 1)   -- TODO: check and decrease if need
+  return ai
+end
+
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Int = 'Int'
