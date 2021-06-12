@@ -187,7 +187,7 @@ bigint._div_ = function (B1,B2)
     table.insert(rem,1,B1[i])
     if rem >= den then
       local n = math.modf(rem:val() / v2)  -- estimate
-      local tmp = rem - den*bigint:new({n,base=d})
+      local tmp = rem - den * bigint:new({n,base=d})
       if tmp.sign < 0 then
         n = n - 1
         tmp = tmp + den
@@ -281,6 +281,7 @@ end
 
 -- Decrement for positive number
 bigint._decr_ = function (B)
+  if #B == 1 and B[1] == 0 then return end
   local dif = 1
   for i = 1,#B do
     B[i] = B[i] - dif
@@ -295,7 +296,11 @@ bigint._decr_ = function (B)
     end
   end
   if dif > 0 then
-    B[#B] = nil
+    if #B > 1 then
+      B[#B] = nil
+    else
+      B[1] = 0
+    end
   end
 end
 
@@ -541,12 +546,12 @@ bigint.about[bigint.val] = {"val(N)", "Represent current big integer as number i
 bigint.fact = function (B)
   local n = isbigint(B) and B:copy() or bigint:new(B)
   assert(n.sign > 0, "Non-negative value is expected!")
-  local res, one = bigint:new({1,base=B._base_}), bigint:new({1,base=B._base_})
+  local res = bigint:new({1,base=B._base_})
   if #n == 1 and n[1] == 0 then return res end  -- 0! == 1
-  local mul, sub = bigint._mul_, bigint._sub_
+  local mul = bigint._mul_
   repeat 
     res = mul(res, n)
-    n = sub(n, one)
+    bigint._decr_(n)
   until #n == 1 and n[1] == 0
   return res
 end
@@ -631,10 +636,10 @@ end
 
 -- Babylonian method
 bigint._sqrt_ = function (B)
-  local ai, aii = bigint:new({1,base=B._base_})
+  local ai = bigint:new({1,base=B._base_})
   local sum, div, sub = bigint._sum_, bigint._div_, bigint._sub_
   repeat
-    aii,_ = div(B,ai)
+    local aii,_ = div(B,ai)
     aii = bigint._divBase_(sum(ai,aii), B._base_, 2)
     ai, aii = aii, sub(aii,ai)
   until #aii == 1 and (aii[1] <= 1)   -- TODO: check and decrease if need
@@ -661,17 +666,33 @@ end
 
 bigint._trivialSearch_ = function (B)
   local div, sum = bigint._div_, bigint._sum_
-  local one = bigint:new({1,base=B._base_})
-  local n = sum(one, one)
+  local n = bigint:new({1,base=B._base_})
+  bigint._incr_(n)   -- n = 2
   local sq = bigint._sqrt_(B) 
   while #sq > #n or not bigint._gt_(n,sq) do
     local v1,v2 = div(B,n)
     if #v2 == 1 and v2[1] == 0 then
       return n, v1
     end
-    n = sum(n, one)
+    bigint._incr_(n)
   end
   return nil  -- not found
+end
+
+bigint.factorize = function (B)
+  local v, res = B, {}
+  if B.sign < 0 then res[1] = -1 end
+  while true do
+    local n, q = bigint._trivialSearch_(v)
+    if n == nil then
+      res[#res+1] = v
+      break
+    else
+      res[#res+1] = n
+      v = q
+    end
+  end
+  return res
 end
 
 -- simplify constructor call
