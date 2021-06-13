@@ -88,6 +88,30 @@ ans = tostring(w)             --> '5|33'
 -- simple print
 print(a)
 
+-- check if it prime
+-- iterate though multipliers 
+ans = Int.isPrime(1229)       --> true
+
+-- Fermat theorem 
+ans = Int.isPrime(1229,'Fermat') --> true
+
+-- factorize 
+t = b:factorize()
+ans = #t                      --> 5
+
+-- check factorization
+ans = 1
+for i = 1,#t do
+  ans = ans * (t[i]:val())
+end                           --> 456
+
+-- pseudo-random number
+-- from 0 to b
+print(b:random())
+
+-- greatest common divisor
+ans = a:gcd(b):val()          --> 3
+
 --]]
 
 --	LOCAL
@@ -95,6 +119,8 @@ print(a)
 local Ver = require "sonatalib.versions"
 
 local ZERO = string.byte('0')
+
+local NUMB = 'numbers'
 
 --- Check object type.
 --  @param v Object.
@@ -227,7 +253,8 @@ bigint._sum_ = function (B1,B2)
   return res
 end
 
--- Increment for positive number
+--- In-place increment for positive number.
+--  @param B Number to increase by 1.
 bigint._incr_ = function (B)
   local add = 1
   for i = 1,#B do
@@ -283,7 +310,8 @@ bigint._sub_ = function (B1,B2)
   return res
 end
 
--- Decrement for positive number
+--- In-place decrement for positive number.
+--  @param B Number to decrease by 1.
 bigint._decr_ = function (B)
   if #B == 1 and B[1] == 0 then return end
   local dif = 1
@@ -624,8 +652,11 @@ bigint.gcd = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
   return bigint._gcd_(B1,B2)
 end
-bigint.about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers."}
+bigint.about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers.", NUMB}
 
+--- Generate random number.
+--  @param B Upper limit.
+--  @return Number from 0 to B.
 bigint.random = function (B)
   local res = bigint:new({0,sign=B.sign,base=B._base_})
   local n = math.random(1,#B)
@@ -637,8 +668,11 @@ bigint.random = function (B)
   end
   return res
 end
+bigint.about[bigint.random] = {"random(B)","Generate pseudo-random value from 0 to B."}
 
--- Babylonian method
+--- Estimate square root using Babylonian method.
+--  @param B Bigint object.
+--  @return Estimation of sqrt(B).
 bigint._sqrt_ = function (B)
   local ai = bigint:new({1,base=B._base_})
   local sum, div, sub = bigint._sum_, bigint._div_, bigint._sub_
@@ -650,28 +684,31 @@ bigint._sqrt_ = function (B)
   return ai
 end
 
+--- Find (B1 ^ B2) % B3
+--  @param B1 First bigint object.
+--  @param B2 Second bigint object.
+--  @param B3 Third bigint object.
+--  @return Modular power.
 bigint._powm_ = function (B1,B2,B3)
   local div = bigint._div_
   _, B1 = div(B1,B3)
   if #B1 == 1 and B1[1] == 0 then return bigint:new({0,base=B1._base_}) end
   local y, x = bigint:new({1,base=B1._base_}), B1
   local dig, mul, rest = bigint.copy(B2), bigint._mul_
-  --for i = 1,#B2 do dig[i] = B2[i] end
   while #dig > 1 or #dig == 1 and dig[1] > 1 do
     dig, rest = bigint._divBase_(dig, B1._base_, 2)
     if rest == 1 then
---      print('a', y*x)
       _,y = div(mul(y, x), B3)
---      print('y',y)
     end
---      print('b', x*x)
     _, x = div(mul(x, x), B3)
---    print('x',x)
   end
   _, rest = div(mul(x,y), B3)
   return rest
 end
 
+--- Searching for prime factor.
+--  @param B Integer number.
+--  @return Pair of multipliers of nil.
 bigint._trivialSearch_ = function (B)
   local div, sum = bigint._div_, bigint._sum_
   local n = bigint:new({1,base=B._base_})
@@ -687,6 +724,9 @@ bigint._trivialSearch_ = function (B)
   return nil  -- not found
 end
 
+--- Find multipliers for the number.
+--  @param B Integer number.
+--  @return List of prime numbers.
 bigint.factorize = function (B)
   B = isbigint(B) and B or bigint:new(B)
   local v, res = B, {}
@@ -703,24 +743,29 @@ bigint.factorize = function (B)
   end
   return res
 end
+bigint.about[bigint.factorize] = {"factorize(B)", "Find the list of multipliers.", NUMB}
 
+--- Check if it prime using the Fermat theorem.
+--  @param B Number.
+--  @return true if prime.
 bigint._primeFermat_ = function (B)
   local a
   local div, pow = bigint._div_, bigint._powm_
-  for i = 1,10 do
+  for i = 1,5 do
     repeat 
       a = bigint.random(B)
     until a:val() >= 2
-    print(a)
     local v1 = pow(a,B,B)
-    print(v1)
     local _,v2 = div(a,B)
-    print(v2)
     if v1 ~= v2 then return false end
   end
   return true
 end
 
+--- Check if the number is prime.
+--  @param B Number.
+--  @param method Trivial search by default. Can be 'Fremat'.
+--  @return true if prime.
 bigint.isPrime = function (B,method)
   B = isbigint(B) and B or bigint:new(B)
   if method == 'Fermat' then
@@ -730,6 +775,7 @@ bigint.isPrime = function (B,method)
   local v1,v2 = bigint._trivialSearch_(B)
   return v1 == nil
 end
+bigint.about[bigint.isPrime] = {"isPrime(B[,method])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
@@ -742,5 +788,3 @@ if not LC_DIALOG then bigint.about = nil end
 return bigint
 
 --=================================
---TODO: factorization
---TODO: check for prime
