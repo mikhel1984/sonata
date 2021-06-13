@@ -658,13 +658,23 @@ bigint.about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for 
 --  @param B Upper limit.
 --  @return Number from 0 to B.
 bigint.random = function (B)
-  local res = bigint:new({0,sign=B.sign,base=B._base_})
-  local n = math.random(1,#B)
-  for i = 1,n-1 do res[i] = math.random(1,B._base_) - 1 end
-  if n < #B then
-    res[n] = math.random(1,B._base_-1) 
-  elseif B[n] > 1 then
-    res[n] = math.random(1,B[n]-1)
+  local d, set, any, v = B._base_, false
+  local res = bigint:new({0,sign=B.sign,base=d})
+  local n = math.random(1,#B) 
+  any = (n ~= #B)
+  for i = n,1,-1 do
+    -- generate
+    if any then
+      v = math.random(1,d) - 1
+    else
+      v = math.random(1,B[i]+1)-1
+      any = (v < B[i])
+    end
+    -- add
+    if set or v > 0 then
+      res[i] = v
+      set = true
+    end
   end
   return res
 end

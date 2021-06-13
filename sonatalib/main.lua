@@ -555,3 +555,4 @@ return main
 --===============================
 --TODO: save last command as well
 --TODO: string function definition to map
+--TODO: transform 'lc.show' to extended 'print', rename it
