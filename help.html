@@ -14,7 +14,7 @@ DIV {margin-left: 10px;}
 <div><h1 align="center">Sonata Lua Calculus</h1>
 <ul>
 <li><a href="#Arr">array</a></li>
-<li><a href="#Big">bigint</a></li>
+<li><a href="#Int">bigint</a></li>
 <li><a href="#Comp">complex</a></li>
 <li><a href="#_C">const</a></li>
 <li><a href="#File">files</a></li>
@@ -35,23 +35,24 @@ DIV {margin-left: 10px;}
 <br>
 <b>USAGE</b>:<br>
 	lua [-i] sonata.lua [flag] [arg1 arg2 ...]<br>
-(option '-i' could be used for working in native Lua interpreter)<br>
+(option '-i' can be used for working in native Lua interpreter)<br>
 <br>
 <b>FLAGS</b>:<br>
 	--help, -h - Get this help message.<br>
-		(Development)<br>
-	--new    - Generate template for a new module.<br>
-	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
-	--test   - Apply unit tests to desired module, or all modules if the name is not defined.<br>
-	  (e.g. --test array)<br>
-	--lang   - Create/update file for localization.<br>
+		{Development}<br>
+	--doc    - Creating/updating a documentation file.<br>
+	  (e.g. --doc ru)<br>
+	--lang   - Creating/updating a file for localization.<br>
 	  (e.g. --lang eo)<br>
-	--doc    - Create/update documentation file.<br>
+	--new    - Create a template for a new module.<br>
+	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
+	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
+	  (e.g. --test array)<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.20<br>
+<b>VERSION</b>: 0.9.21<br>
 <br>
-<b>MODULES</b>: const, gnuplot, special, quaternion, units, stat, bigint, numeric, rational, polynom, complex, matrix, array, files, graph.<br>
+<b>MODULES</b>: quaternion, polynom, rational, stat, files, matrix, bigint, units, const, array, gnuplot, numeric, complex, graph, special.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
@@ -120,7 +121,7 @@ print(randn())
 ans = lc.type(25)             --> 'integer'
 
 -- show table components
-a = {a=1,b=2;3,4,5}
+a = {a=1,b=2, 3,4,5}
 lc.show(a)
 
 -- show "scientific" view
@@ -228,50 +229,62 @@ for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 
 --</pre>
 <a href="#Top">Top</a></div>
-<div><a name="Big"></a>
-<h3># Big (bigint) #</h3>
+<div><a name="Int"></a>
+<h3># Int (bigint) #</h3>
 <p class="descript">Operations with arbitrary long integers.</p>
-<p><b>Big(v)</b> - Create big number from integer or string.<br>
+<p><b>Int(v)</b> - Create number from integer, string or table.<br>
 <b>abs(v)</b> - Return module of arbitrary long number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
+<b>base(B)</b> - Current numeric base.<br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br>
 <b>copy(v)</b> - Return copy of given number.<br>
 <b>eq(a,b)</b> - Check equality of two values.<br>
 <b>fact(B)</b> - Return factorial of non-negative integer n.<br>
-<b>size(B)</b> - Number of digits, the same as #B.<br>
-<b>str(B[,n=3])</b> - More readable string representation of the number. Optional argument defines number of digits in a group.<br>
+<b>factorize(B)</b> - Find the list of multipliers.<br>
+<b>gcd(B1,B2)</b> - Find the greatest common divisor for two integers.<br>
+<b>isPrime(B[,method])</b> - Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.<br>
+<b>random(B)</b> - Generate pseudo-random value from 0 to B.<br>
+<b>rebase(B,base)</b> - Convert number to the new numeric base.<br>
 <b>val(N)</b> - Represent current big integer as number if it possible.<br></p>
 <pre class="example">
 -- use 'bigint'
-Big = require 'sonatalib.bigint'
+Int = require 'sonatalib.bigint'
 
 -- from integer
-a = Big(123)
+a = Int(123)
 ans = a:val()                 --> 123
 
 -- from string
-b = Big('456')
+b = Int('456')
 ans = b:val()                 --> 456
 
+-- from table 
+-- 'sign' and 'base' can be skipped
+g = Int {1,2,3,sign=-1,base=10}
+ans = g:val()                 --> -123
+
+-- check equality
+ans = (a == -g)               --> true
+
 -- arithmetical operations
-ans = Big.val(a+b)            --> 579
+ans = Int.val(a+b)            --> 579
 
-ans = Big.val(a-b)            --> -333
+ans = Int.val(a-b)            --> -333
 
-ans = Big.val(a*Big(2))       --> 246
+ans = Int.val(a*Int(2))       --> 246
 
-ans = Big.val(b/2)            --> 228
+ans = Int.val(b/2)            --> 228
 
-ans = Big.val(b%a)            --> 87
+ans = Int.val(b%a)            --> 87
 
-ans = Big.val(a^3)            --> 1860867
+ans = Int.val(a^3)            --> 1860867
 
 -- absolute value
-ans = Big.abs('-25'):val()    --> 25
+ans = Int.abs('-25'):val()    --> 25
 
 -- factorial
-c = Big(10):fact()
-ans = Big.val(c)              --> 3628800
+c = Int(10):fact()
+ans = Int.val(c)              --> 3628800
 
 -- make copy, comparison
 d = a:copy()
@@ -285,16 +298,52 @@ ans = (a == b)                --> false
 ans = a:eq(123)               --> true
 
 -- number of digits
--- (the same as #a) 
-ans = a:size()                --> 3
+ans = #a                      --> 3
+
+-- 2nd digit (from the lowest)
+ans = a[2]                    --> 2
+
+-- get numeric base 
+ans = g:base()                --> 10
+
+-- change numeric base
+v = g:rebase(60)
+ans = tostring(v)             --> '-2|3'
+
+-- still the same value
+ans = (v == g)                --> true
+
+-- operations with different bases
+-- transform to the biggest common base
+w = v + b
+ans = tostring(w)             --> '5|33'
 
 -- simple print
 print(a)
 
--- more friendly representation
-print(c:str())
--- set number of digits in group
-print(c:str(6))
+-- check if it prime
+-- iterate though multipliers 
+ans = Int.isPrime(1229)       --> true
+
+-- Fermat theorem 
+ans = Int.isPrime(1229,'Fermat') --> true
+
+-- factorize 
+t = b:factorize()
+ans = #t                      --> 5
+
+-- check factorization
+ans = 1
+for i = 1,#t do
+  ans = ans * (t[i]:val())
+end                           --> 456
+
+-- pseudo-random number
+-- from 0 to b
+print(b:random())
+
+-- greatest common divisor
+ans = a:gcd(b):val()          --> 3
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -517,7 +566,9 @@ ans = aa.b.c                  --> 'abc'
 str = 'abc//defg//hijkl//mnop'
 ans = 0
 -- iterate over string parts
-for s in File.split(str, '//') do ans = ans+1 end  --> 4
+for s in File.split(str, '//') do
+  ans = ans+1 
+end                           --> 4
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -575,7 +626,10 @@ Gp.plot(t1, math.sin, t1, math.cos)
 
 -- plot table (or matrix, or datafile)
 arr = {}
-for i = 1,50 do x = 0.1*i; arr[i] = {x, math.sin(x), math.cos(x)} end
+for i = 1,50 do 
+  x = 0.1*i 
+  arr[i] = {x, math.sin(x), math.cos(x)}
+end
 -- all columns by default (for table and matrix)
 Gp.tplot(arr)
 
@@ -594,7 +648,11 @@ Gp.surfplot(t1,t2,fun,'some surf')
 
 -- from table 
 arr2 = {}
-for _,v1 in ipairs(t1) do for _,v2 in ipairs(t2) do arr2[#arr2+1] = {v1,v2,fun(v1,v2)} end end
+for _,v1 in ipairs(t1) do
+  for _,v2 in ipairs(t2) do
+    arr2[#arr2+1] = {v1,v2,fun(v1,v2)}
+  end
+end
 Gp.tsurf(arr2)
 
 -- direct use Gp object
@@ -620,7 +678,12 @@ c.raw = 'plot x**2-2*x+1; set xlabel "X"; set ylabel "Y"'
 c:show()
 
 -- print Lua table
-tmp = {{1,1},{2,2},{3,3},{4,4}}
+tmp = {
+  {1,1},
+  {2,2},
+  {3,3},
+  {4,4}
+}
 d = Gp()
 d:add {tmp,with='lines'}
 d:show()
@@ -659,7 +722,11 @@ Graph = require 'sonatalib.graph'
 -- single name - node, names in brackets - edges 
 -- letter w denotes weight of non directed edge
 -- numbers are weights of directed edges
-a = Graph {'a','b',{'a','c'},{'d','e',w=2},{'d','b',4,3}}
+a = Graph {'a','b',
+  {'a','c'},
+  {'d','e',w=2},
+  {'d','b',4,3}
+}
 
 -- list of nodes
 nd = a:nodes()
@@ -706,7 +773,16 @@ b = a:copy()
 ans = b:isComplete()          --> false
 
 -- prepare graph
-c = Graph {{'a','b'},{'a','c'},{'b','d'},{'b','e'},{'c','f'},{'f','g'},{'f','h'},{'e','g'}}
+c = Graph {
+  {'a','b'},
+  {'a','c'},
+  {'b','d'},
+  {'b','e'},
+  {'c','f'},
+  {'f','g'},
+  {'f','h'},
+  {'e','g'}
+}
 
 -- is it weighted 
 ans = c:isWeighted()          --> false
@@ -836,27 +912,34 @@ ans = (f == a)                --> true
 ans = (a == b)                --> false
 
 -- identity matrix
-ans = Mat.eye(2)              --> Mat {{1,0},{0,1}}
+ans = Mat.eye(2)              --> Mat {{1,0},
+                                       {0,1}}
 
 -- matrix argument
-ans = Mat.eye(a)              --> Mat {{1,0},{0,1}}
+ans = Mat.eye(a)              --> Mat {{1,0},
+                                       {0,1}}
 
 -- matrix of zeros
 ans = Mat.zeros(2,1)          --> Mat {{0},{0}}
 
 -- matrix of constants = 4
-ans = Mat.ones(2,3,4)         --> Mat {{4,4,4},{4,4,4}}
+ans = Mat.ones(2,3,4)         --> Mat {{4,4,4},
+                                       {4,4,4}}
 
 -- matrix of constants = 1
 ans = Mat.ones(a,3)           --> Mat {{3,3},{3,3}}
 
 -- define rule to fill
 -- result matrix is 'dense'
-fn = function (i,j) return i == j and 1 or 0 end
-ans = Mat.fill(2,3,fn)        --> Mat {{1,0,0},{0,1,0}}
+fn = function (i,j) 
+  return i == j and 1 or 0 
+end
+ans = Mat.fill(2,3,fn)        --> Mat {{1,0,0},
+                                       {0,1,0}}
 
 -- horizontal concatenation
-ans = a .. b                  --> Mat {{1,2,5,6},{3,4,7,8}}
+ans = a .. b                  --> Mat {{1,2,5,6},
+                                       {3,4,7,8}}
 
 -- vertical concatenation
 -- (a // b - for short)
@@ -875,14 +958,20 @@ aa = Mat.apply(fn, b,b,b)
 ans = aa[1][1]                --> 30
 
 -- use Gauss transform to solve equation
-ans = Mat.rref(a .. Mat{{5},{11}})             --> Mat {{1,0,1},{0,1,2}}
+ans = Mat.rref(a .. Mat{{5},{11}})             --> Mat {{1,0,1},
+                                                        {0,1,2}}
 
 -- create vector
 ans = Mat.V {1,2,3}           --> Mat {{1},{2},{3}}
 
 -- get submatrix
-g = Mat {{1,2,3},{4,5,6},{7,8,9}}
-ans = g({2,-1},{2,3})         --> Mat {{5,6},{8,9}}
+g = Mat {
+  {1,2,3},
+  {4,5,6},
+  {7,8,9}
+}
+ans = g({2,-1},{2,3})         --> Mat {{5,6},
+                                       {8,9}}
 
 -- euclidean norm
 ans = Mat.V({1,2,3}):norm()  --3> math.sqrt(14)
@@ -900,7 +989,11 @@ print(h:randi(20))
 print(Mat.randn(2,2))
 
 -- pseudo inverse matrix
-m = Mat {{1,2},{3,4},{5,6}}
+m = Mat {
+  {1,2},
+  {3,4},
+  {5,6}
+}
 n = m:pinv()
 ans = n(2,2)                 --3> 0.333
 
@@ -911,7 +1004,9 @@ k = k:table()
 ans = k[2][1]                 --> 0
 
 -- make diagonal matrix
-ans = Mat.diag({1,2,3})       --> Mat {{1,0,0},{0,2,0},{0,0,3}}
+ans = Mat.diag({1,2,3})       --> Mat {{1,0,0},
+                                       {0,2,0},
+                                       {0,0,3}}
 
 -- shifted diagonal
 ans = g:diag(1)               --> Mat {{2},{6}}
@@ -950,8 +1045,13 @@ ans = m:get(2)                --> 4
 ans = Mat.ones(2,3):rank()    --> 1
 
 -- change size
-tmp = Mat{{1,2},{3,4},{5,6}} 
-ans = tmp:reshape(2,3)        --> Mat {{1,2,3},{4,5,6}}
+tmp = Mat{
+  {1,2},
+  {3,4},
+  {5,6}
+} 
+ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
+                                       {4,5,6}}
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -993,7 +1093,8 @@ ans = c                      --0> 2
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl, yn = Num.ode45(function (x,y) return x*y end, {0,3}, 1)
+tbl, yn = Num.ode45(function (x,y) return x*y end, 
+                    {0,3}, 1)
 ans = yn                     --2> 90.011
 
 -- use matrices for high order equations
@@ -1002,13 +1103,17 @@ Mat = require 'sonatalib.matrix'
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
 -- so: x1' = x2, x2' = 1+2*x2-2*x1
-myfun = function (t,x) return Mat.V {x(2), 1+2*x(2)-2*x(1)} end
+myfun = function (t,x) 
+  return Mat.V {x(2), 1+2*x(2)-2*x(1)}
+end
 _, xn = Num.ode45(myfun, {0,2}, Mat.V{3,2}, {dt=0.2}) 
 ans = xn(1)                  --2>  -10.54
 
 -- define exit condition
 -- from time, current and previous results
-cond = function (time,current,previous) return current < 0.1 end
+cond = function (time,current,previous) 
+  return current < 0.1 
+end
 myfun = function (t,x) return -x end
 y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
 ans = y[#y][1]               --2> 2.56
@@ -1460,8 +1565,12 @@ ans = c['ksnake']             --> 0.002
 -- complex rule
 d = Unit(1,'W')
 -- define function for conversation, apply it
-lg = function (x) return math.log(x)/math.log(10) end
-e = d:convert(function (x) return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') end)
+lg = function (x) 
+  return math.log(x)/math.log(10) 
+end
+e = d:convert(function (x) 
+  return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') 
+end)
 ans = #e                     --0> 30
 
 -- another definition syntax

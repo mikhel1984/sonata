@@ -524,11 +524,11 @@ main._arghelp_ = function ()
     "",
     "USAGE:",
     "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
-    "(option '-i' could be used for working in native Lua interpreter)",
+    "(option '-i' can be used for working in native Lua interpreter)",
     "",
     "FLAGS:",
     "\t--help, -h - Get this help message.",
-    "\t\t(Development)",
+    "\t\t{Development}",
   }
   for k,v in pairs(main._args_) do 
     if v.description then
