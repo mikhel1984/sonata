@@ -18,7 +18,6 @@ Following modules are available now:
 * [rational](https://github.com/mikhel1984/sonata/wiki/Example:-rational) - operations with rational numbers
 * [special](https://github.com/mikhel1984/sonata/wiki/Example:-special) - special functions
 * [stat](https://github.com/mikhel1984/sonata/wiki/Example:-stat) - some statistical functions
-* [struct](https://github.com/mikhel1984/sonata/wiki/Example:-struct) - base data structures
 * [units](https://github.com/mikhel1984/sonata/wiki/Example:-units) - units conversation and other operations
 
 The program includes a help system for most of the functions and modules. It is available in such languages as:
@@ -29,5 +28,10 @@ The program includes a help system for most of the functions and modules. It is 
 **Sonata LC** works in standard **Lua** interpreter. It is oriented on version _5.3_, but most of the functions are compatible with _5.1_ version. In order to run it, call
 
     lua sonata.lua
+    
+To get a brief introduction, run
+
+    lua sonata.lua intro.note
+
 
 If you have any issues, mail to _SonataLC@yandex.ru_. 

@@ -14,8 +14,6 @@
 
   * Each block of test code must be separated with at leas 1 empty line.
 
-  * Each expression in block must occupy only one line.
-
   * If the test have a result, it must be saved in the variable 'ans'. Write the right value after arrow '-->' to make checking. 
     In the case of float point number use '--n>' to define the number of digital signs n (0-9) for comparison.
 
@@ -36,7 +34,7 @@
 
 local Ver = require "sonatalib.versions"
 
-local DELIM = '%c[%s%c]+'   -- empty strings
+local DELIM = '\r?\n[%s%c]*\n'
 local LOG_NAME = 'test.log'
 local CODE_TEMPLATE = '%-%-%[(=*)%[TEST(.-)%]%1%]'
 local TEST_TEMPLATE = '(.*)%-%-(%d?)>(.*)'
@@ -211,4 +209,3 @@ end
 return test
 
 --=========================
---TODO: multiline tests

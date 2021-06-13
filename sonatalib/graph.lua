@@ -24,7 +24,11 @@ Graph = require 'sonatalib.graph'
 -- single name - node, names in brackets - edges 
 -- letter w denotes weight of non directed edge
 -- numbers are weights of directed edges
-a = Graph {'a','b',{'a','c'},{'d','e',w=2},{'d','b',4,3}}
+a = Graph {'a','b',
+  {'a','c'},
+  {'d','e',w=2},
+  {'d','b',4,3}
+}
 
 -- list of nodes
 nd = a:nodes()
@@ -71,7 +75,16 @@ b = a:copy()
 ans = b:isComplete()          --> false
 
 -- prepare graph
-c = Graph {{'a','b'},{'a','c'},{'b','d'},{'b','e'},{'c','f'},{'f','g'},{'f','h'},{'e','g'}}
+c = Graph {
+  {'a','b'},
+  {'a','c'},
+  {'b','d'},
+  {'b','e'},
+  {'c','f'},
+  {'f','g'},
+  {'f','h'},
+  {'e','g'}
+}
 
 -- is it weighted 
 ans = c:isWeighted()          --> false

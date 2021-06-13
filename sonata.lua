@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Environment
-lc_local = { version = '0.9.20' }
+lc_local = { version = '0.9.21' }
 
 -- Add path to the libraries
 if LC_ADD_PATH then
@@ -42,7 +42,7 @@ math.randomseed(os.time())
 use = {
 --  name     alias
   array     = "Arr",
-  bigint    = "Big",
+  bigint    = "Int",
   complex   = "Comp",
   const     = "_C",
   files     = "File",

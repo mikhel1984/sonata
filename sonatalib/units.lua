@@ -66,8 +66,12 @@ ans = c['ksnake']             --> 0.002
 -- complex rule
 d = Unit(1,'W')
 -- define function for conversation, apply it
-lg = function (x) return math.log(x)/math.log(10) end
-e = d:convert(function (x) return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') end)
+lg = function (x) 
+  return math.log(x)/math.log(10) 
+end
+e = d:convert(function (x) 
+  return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') 
+end)
 ans = #e                     --0> 30
 
 -- another definition syntax
