@@ -369,18 +369,16 @@ end
 --- Evaluate 'note'-file.
 --  @param fname Script file name.
 main.evalDemo = function (fname)
-  local f = assert(io.open(fname))
-  local text = f:read('*a'); f:close()
   local ERROR = lc_help.CERROR.."ERROR: "
   local cmd = ""
   local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD
+  local invA, invB = '?> ', '>> '
   -- read lines
   io.write("Run file ", fname, "\n")
-  for line in string.gmatch(text, '([^\n]+)\r?\n?') do
+  for line in io.lines(fname) do
     if string.find(line, '^%s*%-%-%s*PAUSE') then 
-      -- run dialog
+      -- call dialog
       local lcmd, lquit = "", false
-      local invA, invB = '?> ', '>> '
       local invite = invA
       while true do
         io.write(invite)
@@ -409,7 +407,6 @@ main.evalDemo = function (fname)
     else
       -- print line and evaluate
       io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
-      --local status, res = _evaluate_(string.format('%s %s', cmd, line), '')
       local status, res = _evaluate_(cmd, line)
       if status == EV_RES then
         if res ~= nil then print(res) end
