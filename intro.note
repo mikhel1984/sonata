@@ -87,8 +87,8 @@ sin(b)                 -- modified function behavior
 
 --	MATRIX
 -- Manipulations with matrices.
-a = Mat({
-  {1, 2},
+a = Mat({      \
+  {1, 2},      \
   {3, 4}})             -- write matrix row by row
 b = Mat {{5,6},{7,8}}  
 a[2][1]                -- get element (indexation from 1)
@@ -111,14 +111,17 @@ c:pinv()               -- pseudo-inverse
 -- Numerical solutions for some typical problems.
 -- Tolerance is defined with parameter
 Num.TOL
-fn = function (x) return 2*sin(x)+sin(2*x) end -- introduce some function
+fn = function (x)          \
+  return 2*sin(x)+sin(2*x) \
+end -- introduce some function
 Num.Newton(fn, _pi/3)  -- find root near the pi/3
 Num.der(fn, _pi/3)     -- estimate derivative in the point
 Num.trapez(fn, 0, _pi/3) -- find integral from 0 to pi/3
 -- Solve ODE 
-t,yn = Num.ode45(function(t,y) return t*y end,  -- y' = f(t,y)
-                 {1,3},                         -- t = 1..3
-		 1)                             -- y(1) = 1
+t,yn = Num.ode45(                               \
+  function(t,y) return t*y end,  -- y' = f(t,y) \
+  {1,3},                         -- t = 1..3    \
+  1)                             -- y(1) = 1
 yn                     -- y(3)
 -- PAUSE
 
@@ -137,15 +140,15 @@ t[1]
 
 --	BIGINT
 -- Operations with long integers.
-a = Big(1234)          -- create new from number
-b = Big '56789'        -- or from string
+a = Int(1234)          -- create new from number
+b = Int '56789'        -- or from string
 -- Typical operations are available
 a - b
 a * b
 b^50 
 _ans:val()             -- decimal representation
-c = Big(50):fact()     -- factorial
-c:str()                -- more "friendly" view
+c = Int(50):fact()     -- factorial
+a:rebase(42)           -- get value in new numerical base
 -- PAUSE
 
 --	ARRAY
@@ -156,7 +159,9 @@ a:set({1,2,1},3)       -- do a(1,2,1) = 3
 a:get{1,2,1}           -- get a(1,2,1) 
 b = Arr.rand{2,3,1}    -- random elements
 c = a+b                -- element-wise sum
-for ind, val in c:next() do print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val)) end
+for ind, val in c:next() do    \
+  print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val)) \
+end
 -- PAUSE
 
 --	CONST
@@ -176,9 +181,13 @@ _C.remove('foo')
 -- Define graph with edges 'ab' and 'bc' and node 'd'
 g = Graph {{'a','b'},{'b','c'},'d'}
 -- nodes:
-for _,v in ipairs(g:nodes()) do print(v) end
+for _,v in ipairs(g:nodes()) do \
+  print(v)                      \
+end
 -- edges: 
-for _,v in ipairs(g:edges()) do print(v[1],v[2]) end
+for _,v in ipairs(g:edges()) do \
+  print(v[1],v[2])              \
+end
 -- default weight is 1
 g['a']['b']
 -- you can add weighted edges
@@ -186,7 +195,9 @@ g:add {'b','e',w=2}
 g:add ('f')
 -- find path
 found, path = g:bfs('a','c')
-for _, v in ipairs(path) do print(v) end
+for _, v in ipairs(path) do  \
+  print(v)                   \
+end
 
 -- PAUSE
 
@@ -261,7 +272,9 @@ surf(a,a,fun)
 -- PAUSE
 
 -- Plot data from table, matrix or file.
-function fun(x) return {x,sin(x),cos(x)} end
+function fun(x)             \
+  return {x,sin(x),cos(x)}  \
+end
 b = lc.map(fun, a)
 -- define x,y
 tplot(b,1,3)

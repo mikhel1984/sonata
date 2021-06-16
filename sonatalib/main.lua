@@ -89,11 +89,12 @@ local function _evaluate_(cmd, nextCmd)
     return EV_CMD, string.format("%s%s\n", cmd, partCmd)
   end
   cmd = cmd..nextCmd
-  -- get result
+  -- 'parse'
   local fn, err = Ver.loadStr('return '..cmd)  -- either 'return expr'
   if err then
     fn, err = Ver.loadStr(cmd)                 -- or 'expr'
   end
+  -- get result
   if err then
     return EV_ERROR, err
   else
@@ -408,7 +409,8 @@ main.evalDemo = function (fname)
     else
       -- print line and evaluate
       io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
-      local status, res = _evaluate_(string.format('%s %s', cmd, line), '')
+      --local status, res = _evaluate_(string.format('%s %s', cmd, line), '')
+      local status, res = _evaluate_(cmd, line)
       if status == EV_RES then
         if res ~= nil then print(res) end
         cmd = ""
