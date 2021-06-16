@@ -82,28 +82,20 @@ local Ver = require "sonatalib.versions"
 --  @return Status of processing and rest of command.
 local function _evaluate_(cmd, nextCmd)
   if nextCmd == 'quit' then return EV_QUIT end
-  -- forced termination 
-  if nextCmd == '--' then
-    return EV_RES, 'BREAK'
+  -- check if multiline
+  local partCmd = string.match(nextCmd, "(.*)\\%s*")
+  if partCmd ~= nil then
+    -- expected next line 
+    return EV_CMD, string.format("%s%s\n", cmd, partCmd)
   end
   cmd = cmd..nextCmd
-  -- remove line comments
-  local tmp = string.match(cmd, '^(.*)%-%-.*$')
-  if tmp then cmd = tmp end
-  -- 'parse'
+  -- get result
   local fn, err = Ver.loadStr('return '..cmd)  -- either 'return expr'
-  local expected_next = string.find(err or '', 'expected near')
   if err then
     fn, err = Ver.loadStr(cmd)                 -- or 'expr'
   end
   if err then
-    if string.find(err, 'error') or not expected_next then
-      -- parsing error
-      return EV_ERROR, err
-    else
-      -- expected rest of command
-      return EV_CMD, cmd..' '
-    end
+    return EV_ERROR, err
   else
     local ok, res = pcall(fn)
     if ok then 
@@ -556,3 +548,4 @@ return main
 --TODO: save last command as well
 --TODO: string function definition to map
 --TODO: transform 'lc.show' to extended 'print', rename it
+--TODO: multiline input with '\' symbol
