@@ -197,44 +197,74 @@ main.round = function (x,n)
 end
 about[main.round] = {'lc.round(x[,n=0])', 'Round value, define number of decimal digits.', lc_help.OTHER}
 
---- Print the contents of a Lua table.
---  @param t Lua table (not necessarily).
---  @param N Number of fields in a listing, default is 10.
-main.show = function (t,N)
-  if type(t) ~= 'table' then print(t) end
-  -- show table
-  N = N or 10
-  local count = 1
+--- Print element, use 'scientific' form for float numbers.
+--  @param v Value to print.
+main._showElt_ = function (v)
+  local tp = Ver.mathType(v)
+  if tp == 'float' or tp == 'integer' and math.abs(v) >= 1000 then
+    return string.format('%.2E', v)  -- 'scientific' format
+  else
+    return tostring(v)
+  end
+end
+
+--- Show elements of the table.
+--  @param t Table to print.
+main._showTable_ = function (t)
+  local N, nums = 10, {}
   -- dialog
   local function continue(n)
-    io.write(n, ' - continue? (y/n) ')
+    io.write(n, ' continue? (y/n) ')
     return string.lower(io.read()) == 'y'
   end
-  io.write('{\n')
-  -- keys/values
-  for k,v in pairs(t) do
-    if Ver.mathType(k) ~= 'integer' or k < 1 then
-      if count % N == 0 and not continue(count) then break end
-      print(tostring(k)..' = '..tostring(v))
-      count = count + 1
-    end
-  end
-  -- numbers
+  io.write('\n{ ')
+  -- list elements
   for i,v in ipairs(t) do
-    io.write(tostring(v),', ')
+    io.write(main._showElt_(v), ', ')
+    nums[i] = true
     if i % N == 0 then
       io.write('\n')
       if not continue(i) then break end
     end
   end
-  print(#t > 0 and '\n}' or '}')
+  -- hash table elements
+  local count = 0
+  for k,v in pairs(t) do
+    if not nums[k] then
+      io.write('\n', tostring(k), ' = ', main._showElt_(v), ', ')
+      count = count + 1
+      if count % N == 0 and not continue("") then break end
+    end
+  end
+  io.write(' }\n')
 end
-about[main.show] = {"lc.show(t[,N=10])", "Print Lua object. In case of table, ask about continuation after each N elements.", lc_help.OTHER}
 
---- Print 'scientific' representation of the number
---  @param x Number to show.
-main.sci = function (x) print(string.format('%.2E',x)) end
-about[main.sci] = {"lc.sci(x)", "'Scientific' representation of the number.", lc_help.OTHER}
+--- Show table content and scientific form of numbers.
+--  @param ... List of arguments.
+main.print = function (...)
+  for i,v in ipairs({...}) do
+    if type(v) == 'table' then
+      local mt = getmetatable(v)
+      if mt and mt.__tostring then
+        -- has representation
+        local tmp = tostring(v)
+        if string.find(tmp,'\n') then
+          io.write('\n', tmp, '\n')
+        else
+          io.write(tmp, '\t')
+        end
+      else
+        -- require representation
+        main._showTable_(v)
+      end
+    else
+      -- show value
+      io.write(main._showElt_(v), '\t')
+    end
+  end
+  io.write('\n')
+end
+about[main.print] = {"lc.print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", lc_help.OTHER}
 
 --- Show type of the object.
 --  @param t Some Lua or Sonata object.
