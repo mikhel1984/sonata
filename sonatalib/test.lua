@@ -17,15 +17,16 @@
   * If the test have a result, it must be saved in the variable 'ans'. Write the right value after arrow '-->' to make checking. 
     In the case of float point number use '--n>' to define the number of digital signs n (0-9) for comparison.
 
-  * Test can have no any result. In this case '-->' can be omitted.
+  * Test can have no result. In this case '-->' can be omitted.
 
-  * To perform tests call 
-     'lua sonata.lua --test [module_name]' or 'lua sonata.lua -t [module_name]'
-    For example
-     'lua sonata.lua --test array'
-    If module name is not written tests will be executed for all modules.
-
-  * Test summary includes information about the number of the passed and failed tests, average time per test unit (in milliseconds), memory size.
+  * To perform tests call for each module name
+    test.module(file1)
+    test.module(file2)
+    etc.
+    
+  * Test summary includes information about the number of the passed and failed tests, average time per test unit (in milliseconds), memory size. Call 
+    test.summary()
+    to show all the results.
 
   * The results and the error messages are saved to the 'test.log' file. 
 ]=]
@@ -73,7 +74,7 @@ end
 
 --- Save string to the file and simultaneously print to the screen.
 --  @param str String for saving.
-test._print = function (str)
+test._print_ = function (str)
   print(str)
   test.log:write(str,'\n')
 end
@@ -85,7 +86,7 @@ test.module = function (fname)
   local text = assert(test.lc_files.read(fname), "Can't open file '"..fname.."'")
   test.log = test.log or io.open(LOG_NAME, 'w')
   -- write head
-  test._print('\n\tModule: ' .. fname)
+  test._print_('\n\tModule: ' .. fname)
   -- get test
   text = test._getCode_(text)
   if not text or #text == 0 then return end  -- no tests
@@ -124,7 +125,7 @@ test.module = function (fname)
         end
       end)
       local res = status and err
-      test._print(test._markTest_(q,res,time)) 
+      test._print_(test._markTest_(q,res,time)) 
       if not status then
         test.log:write(err,'\n')
       elseif not err then
@@ -142,24 +143,19 @@ end
 
 --- Combine all results.
 test.summary = function ()
-  test._print(string.format('\n%-25s%-10s%-10s%-10s%s', 'Module', 'Succeed', 'Failed', 'Av.time', 'Done'))
+  test._print_(string.format('\n%-25s%-10s%-10s%-10s%s', 'Module', 'Succeed', 'Failed', 'Av.time', 'Done'))
   for k,v in pairs(test.results) do
-    test._print(string.format('%-27s%-10d%-9d%-10.3f%s', k, v[1], v[2], v[3]/(v[1]+v[2]), (v[2]==0 and 'v' or '-')))
+    test._print_(string.format('%-27s%-10d%-9d%-10.3f%s', k, v[1], v[2], v[3]/(v[1]+v[2]), (v[2]==0 and 'v' or '-')))
   end
   print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
 end
 
---- Check function execution time.
---  @param fn Function to execute. After it write the list of arguments.
---  @return Average time in msec.
-test.time = function (fn,...)
-  local n, sum, t = 10, 0, 0
-  for i = 1,n do
-    t = os.clock(); fn(...); t = os.clock() - t
-    sum = sum + t
-  end
-  return sum * 1000/ n
+--- Remove old results
+test.clear = function ()
+  test.results = {}
 end
+
+--============ Diagnostic methods =================
 
 --- Find function name
 --  @param dbg Structure with debug info.
@@ -191,19 +187,28 @@ test.profile = function (fn,...)
       counters[f] = count+1
     end
   end
-
   -- run
   debug.sethook(hook, "c")   -- turn on
   fn(...)
   debug.sethook()         -- turn off
-
   -- process results
   local stat = {}
   for f, c in pairs(counters) do stat[#stat+1] = {test._getName_(names[f]), c} end
   table.sort(stat, function (a,b) return a[2] > b[2] end)
-
   -- show results
   for _, res in ipairs(stat) do print(res[1], res[2]) end
+end
+
+--- Check function execution time.
+--  @param fn Function to execute. After it write the list of arguments.
+--  @return Average time in msec.
+test.time = function (fn,...)
+  local n, sum, t = 10, 0, 0
+  for i = 1,n do
+    t = os.clock(); fn(...); t = os.clock() - t
+    sum = sum + t
+  end
+  return sum * 1000/ n
 end
 
 return test
