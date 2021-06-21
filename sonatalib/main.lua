@@ -67,7 +67,7 @@ ans = math.deg(_pi)
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
-local LOGNAME = 'logs.note'
+local LOGNAME = 'log.note'
 
 local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
@@ -403,7 +403,11 @@ main.evalDemo = function (fname)
   local invA, invB = '?> ', '>> '
   -- read lines
   io.write("Run file ", fname, "\n")
-  for line in io.lines(fname) do
+  -- read
+  local f = assert(io.open(fname, 'r'))
+  local txt = f:read('*a'); f:close()
+  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
+  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-%s*PAUSE') then 
       -- call dialog
       local lcmd, lquit = "", false
@@ -572,4 +576,3 @@ main._exit_ = function () print(lc_help.CMAIN.."\n             --======= Bye! ==
 return main
 
 --===============================
--- TODO: remove multiline comments in 'note' files
