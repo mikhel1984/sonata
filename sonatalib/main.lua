@@ -67,7 +67,7 @@ ans = math.deg(_pi)
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
-local LOGNAME = 'sonata.log'
+local LOGNAME = 'logs.note'
 
 local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
@@ -343,7 +343,8 @@ logging = function (flag)
     if not main._logFile_ then
       main._logFile_ = io.open(LOGNAME, 'a')
       local d = os.date('*t')
-      main._logFile_:write(string.format('\n-- Session %d-%d-%d %d:%d \n\n', d.day, d.month, d.year, d.hour, d.min))
+      main._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
+      main._logFile_:write('-- ')  -- prepare comment for 'logging on'
     end
   elseif flag == 'off' or flag == false then
     if main._logFile_ then
@@ -571,3 +572,4 @@ main._exit_ = function () print(lc_help.CMAIN.."\n             --======= Bye! ==
 return main
 
 --===============================
+-- TODO: remove multiline comments in 'note' files
