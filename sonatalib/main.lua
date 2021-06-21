@@ -40,12 +40,9 @@ print(randn())
 -- "knows" types for Sonata objects
 ans = lc.type(25)             --> 'integer'
 
--- show table components
+-- modified print function 
 a = {a=1,b=2, 3,4,5}
-lc.show(a)
-
--- show "scientific" view
-lc.sci(1234.56789)
+lc.print(a, 0.123)
 
 -- generate 'sequence'
 b = lc.range(3)
@@ -574,7 +571,3 @@ main._exit_ = function () print(lc_help.CMAIN.."\n             --======= Bye! ==
 return main
 
 --===============================
---TODO: save last command as well
---TODO: string function definition to map
---TODO: transform 'lc.show' to extended 'print', rename it
---TODO: multiline input with '\' symbol
