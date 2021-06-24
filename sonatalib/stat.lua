@@ -314,8 +314,8 @@ stat.tpdf = function (x,nu)
 end
 stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density.", DISTRIB}
 
--- free memory if need
-if not LC_DIALOG then stat.about = nil end
+-- Uncomment to remove descriptions
+--stat.about = nil
 
 return stat
 

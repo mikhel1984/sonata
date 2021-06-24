@@ -416,8 +416,8 @@ end
 quaternion.Quat = 'Quat'
 quaternion.about[quaternion.Quat] = {"Quat(t={0,0,0,0})", "Create new quaternion.", help.NEW}
 
--- free memory in case of standalone usage
-if not LC_DIALOG then quaternion.about = nil end
+-- Uncomment to remove descriptions
+--quaternion.about = nil
 
 return quaternion
 

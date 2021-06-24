@@ -44,15 +44,15 @@ DIV {margin-left: 10px;}
 	  (e.g. --doc ru)<br>
 	--lang   - Creating/updating a file for localization.<br>
 	  (e.g. --lang eo)<br>
-	--new    - Create a template for a new module.<br>
-	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
 	  (e.g. --test array)<br>
+	--new    - Create a template for a new module.<br>
+	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
 <b>VERSION</b>: 0.9.21<br>
 <br>
-<b>MODULES</b>: quaternion, polynom, rational, stat, files, matrix, bigint, units, const, array, gnuplot, numeric, complex, graph, special.<br>
+<b>MODULES</b>: rational, array, units, special, polynom, numeric, gnuplot, quaternion, complex, bigint, stat, files, const, graph, matrix.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
@@ -74,10 +74,9 @@ DIV {margin-left: 10px;}
 <b>cosh(x)</b> - Hyperbolic cosine.<br>
 <b>exp(x)</b> - Exponent.<br>
 <b>lc.map(fn,tbl)</b> - Evaluate function for each table element.<br>
+<b>lc.print(...)</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
 <b>lc.range([from=1,]to[,step=1])</b> - Generate table with sequence of numbers.<br>
 <b>lc.round(x[,n=0])</b> - Round value, define number of decimal digits.<br>
-<b>lc.sci(x)</b> - 'Scientific' representation of the number.<br>
-<b>lc.show(t[,N=10])</b> - Print Lua object. In case of table, ask about continuation after each N elements.<br>
 <b>lc.type(t)</b> - Show type of the object.<br>
 <b>log(x)</b> - Natural logarithm.<br>
 <b>logging(flag)</b> - Save session into the log file. Use 'on'/true to start and 'off'/false to stop.<br>
@@ -120,12 +119,9 @@ print(randn())
 -- "knows" types for Sonata objects
 ans = lc.type(25)             --> 'integer'
 
--- show table components
+-- modified print function 
 a = {a=1,b=2, 3,4,5}
-lc.show(a)
-
--- show "scientific" view
-lc.sci(1234.56789)
+lc.print(a, 0.123)
 
 -- generate 'sequence'
 b = lc.range(3)

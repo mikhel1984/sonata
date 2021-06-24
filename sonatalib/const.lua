@@ -136,8 +136,8 @@ setmetatable(const.phy,   {__newindex=modifyError, __index = function (t,k) retu
 setmetatable(const.astro, {__newindex=modifyError, __index = function (t,k) return _astro_[k] end})
 setmetatable(const.math,  {__newindex=modifyError, __index = function (t,k) return _math_[k] end})
 
--- free memory in case of standalone usage
-if not LC_DIALOG then const.about = nil end
+-- Uncomment to remove descriptions
+--const.about = nil
 
 return const
 

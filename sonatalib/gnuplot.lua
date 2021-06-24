@@ -545,8 +545,8 @@ gnuplot.onImport = function ()
   lc.about[tsurf] = {hlp[1], hlp[2], GPPLOT}
 end
 
--- free memory if need
-if not LC_DIALOG then gnuplot.about = nil end
+-- Uncomment to remove descriptions
+--gnuplot.about = nil
 
 return gnuplot
 

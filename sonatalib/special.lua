@@ -649,8 +649,8 @@ special.besseli = function (n,x)
 end
 special.about[special.besseli] = {"besseli(n,x)", "Modified Bessel function In(x).", BESSEL}
 
--- free memory in case of standalone usage
-if not LC_DIALOG then special.about = nil end
+-- Uncomment to remove descriptions
+--special.about = nil
 
 return special
 

@@ -12,28 +12,18 @@
 
 about = help:new("Module description*)  -- create new help object
 
-Each function description is represented as table:
+Each function description is represented as a table:
 about[function] =
 {
   function_name,
   function_description,
-  function_category
+  function_category (can be skipped)
 }
 
-If there are more then 1 module, use
+If there are several modules, use
   about:add(table, module_name)
-to concatenate descriptions. In this way 4-th entry will be added
+to concatenate descriptions. In this case the 4-th entry will be added
 to sort help list according the module name.
-
-To use language localization, create template with the help of
-
-  lua sonata.lua --lng filename
-
-uncomment and translate desired strings. To load this file, call it with
-
-  LC_LOCALIZATION=filename
-
-inside the sonata.lua
 
 --]]
 
@@ -42,6 +32,7 @@ inside the sonata.lua
 -- directory with language files
 local LOCALE = (LC_ADD_PATH or '')..'locale'
 local LIB   = (LC_ADD_PATH or '')..'sonatalib'
+
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
@@ -74,81 +65,6 @@ local function eng2about()
   eng.about.about = nil
 end
 
---- Prepare strings with help information of the given module.
---  @param module Module name or table.
---  @param alias Alias of the module name.
---  @param lng Localization table from existing file.
---  @return String representation of all help information of the module.
-local function helpLines(module, alias, lng)
-  -- get table and name
-  local m = (type(module) == 'string') and require('sonatalib.' .. module) or module
-  local mName = (type(module) == 'string') and (module .. '.lua') or 'dialog'
-  -- choose existing data
-  local lng_t = lng and lng[alias] or {}
-  -- write to table
-  local res = {
-    string.format('%s %s %s', string.rep('-',10), mName, string.rep('-',10)),
-    string.format('%s = {', alias)
-  }
-  -- for all descriptions
-  for _, elt in pairs(m.about) do
-    -- save
-    local title = elt.link and _MAIN_ or elt[TITLE]
-    local pos = elt.link and MAIN or DESCRIPTION
-    local stitle = string.format('["%s"]', title)
-    local line = string.format('%-24s = [[%s]],', stitle, lng_t[title] or elt[pos])
-    -- comment if this data are new
-    if not lng_t[title] then
-      line = string.format((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
-    end
-    if elt.link then
-      -- set main description after the bracket
-      table.insert(res,3,line)
-    else
-      res[#res+1] = line
-    end
-  end
-  res[#res+1] = '},'
-  res[#res+1] = ''
-  return table.concat(res, '\n')
-end
-
---- Prepare strings with help information for html generation.
---  @param module Module name or table.
---  @param alias Alias of the module name.
---  @param lng Localization table from existing file.
---  @return String representation of all help information of the module.
-local function docLines(module, alias, lng)
-  local m = require('sonatalib.'..module)
-  local lng_t = lng and lng[alias] or {}
-  -- collect
-  local fn, description = {}
-  for _, elt in pairs(m.about) do
-    if elt.link then
-      description = lng_t[_MAIN_] or elt[MAIN]
-    else
-      local title = elt[TITLE]
-      local desc = lng_t[title] or elt[DESCRIPTION]
-      fn[#fn+1] = {title, string.gsub(desc, '\n', '<br>\n')}
-    end
-  end
-  -- sort
-  table.sort(fn, function (a,b) return a[1] < b[1] end)
-  -- format
-  for i,v in ipairs(fn) do
-    fn[i] = string.format("<b>%s</b> - %s<br>", v[1], v[2])
-  end
-  return table.concat(fn, "\n"), description
-end
-
---- Prepare module example for html generation.
---  @param str Example text.
---  @return String representation with tags.
-local function docExample (str)
-  if not str then return nil end
-  return string.format('<pre class="example">%s</pre>', str)
-end
-
 --	MODULE
 
 local help = {
@@ -170,6 +86,21 @@ CERROR = '',
 }
 -- metamethods
 help.__index = help
+
+--- Auxiliary function, which define colors for text elements.
+--  @param bUse Boolean flag of usage.
+help.useColors = function (bUse)
+  if bUse then
+    help.CMAIN  = '\x1B[32m' 
+    help.CHELP  = '\x1B[33m' 
+    help.CRESET = '\x1B[0m'
+    help.CBOLD  = '\x1B[1m'
+    help.CNBOLD = '\x1B[22m'
+    help.CERROR = '\x1B[31m'
+  end
+end
+
+--================== Function help system ==================
 
 --- Create new object, set metatable.
 --  @param self Parent table.
@@ -236,19 +167,6 @@ help.print = function (self,fn)
   end -- if
 end
 
---- Auxiliary function, which define colors for text elements.
---  @param bUse Boolean flag of usage.
-help.useColors = function (bUse)
-  if bUse then
-    help.CMAIN  = '\x1B[32m' 
-    help.CHELP  = '\x1B[33m' 
-    help.CRESET = '\x1B[0m'
-    help.CBOLD  = '\x1B[1m'
-    help.CNBOLD = '\x1B[22m'
-    help.CERROR = '\x1B[31m'
-  end
-end
-
 --- Include content of the other help table into current one.
 --  @param self Parent object.
 --  @param tbl Table to add.
@@ -275,6 +193,47 @@ help.add = function (self,tbl,nm)
     self[k] = v                       -- add to the base table 
   end
   if lng then mt.locale[nm] = nil end -- free memory
+end
+
+--================== Localization template =================
+
+--- Prepare strings with help information of the given module.
+--  @param module Module name or table.
+--  @param alias Alias of the module name.
+--  @param lng Localization table from existing file.
+--  @return String representation of all help information of the module.
+local function helpLines(module, alias, lng)
+  -- get table and name
+  local m = (type(module) == 'string') and require('sonatalib.' .. module) or module
+  local mName = (type(module) == 'string') and (module .. '.lua') or 'dialog'
+  -- choose existing data
+  local lng_t = lng and lng[alias] or {}
+  -- write to table
+  local res = {
+    string.format('%s %s %s', string.rep('-',10), mName, string.rep('-',10)),
+    string.format('%s = {', alias)
+  }
+  -- for all descriptions
+  for _, elt in pairs(m.about) do
+    -- save
+    local title = elt.link and _MAIN_ or elt[TITLE]
+    local pos = elt.link and MAIN or DESCRIPTION
+    local stitle = string.format('["%s"]', title)
+    local line = string.format('%-24s = [[%s]],', stitle, lng_t[title] or elt[pos])
+    -- comment if this data are new
+    if not lng_t[title] then
+      line = string.format((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
+    end
+    if elt.link then
+      -- set main description after the bracket
+      table.insert(res,3,line)
+    else
+      res[#res+1] = line
+    end
+  end
+  res[#res+1] = '},'
+  res[#res+1] = ''
+  return table.concat(res, '\n')
 end
 
 --- Read file with localization data and update main module.
@@ -343,6 +302,8 @@ help.get = function (self,txt)
   local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localization table
   return lng or eng[txt] or txt
 end
+
+--================== Module template =======================
 
 --- Generate template for new module.
 --  @param mName Module name.
@@ -431,8 +392,8 @@ WORD2.copy = function (t)
 end
 WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
 
--- free memory in case of standalone usage
-if not LC_DIALOG then WORD2.about = nil end
+-- Uncomment to remove descriptions
+--WORD2.about = nil
 
 return WORD2
 
@@ -447,6 +408,44 @@ return WORD2
   f:write(txt)
   f:close()
   io.write('File ', fName, ' is ready.\n')
+end
+
+--================== HTML documentation ====================
+
+--- Prepare strings with help information for html generation.
+--  @param module Module name or table.
+--  @param alias Alias of the module name.
+--  @param lng Localization table from existing file.
+--  @return String representation of all help information of the module.
+local function docLines(module, alias, lng)
+  local m = require('sonatalib.'..module)
+  local lng_t = lng and lng[alias] or {}
+  -- collect
+  local fn, description = {}
+  for _, elt in pairs(m.about) do
+    if elt.link then
+      description = lng_t[_MAIN_] or elt[MAIN]
+    else
+      local title = elt[TITLE]
+      local desc = lng_t[title] or elt[DESCRIPTION]
+      fn[#fn+1] = {title, string.gsub(desc, '\n', '<br>\n')}
+    end
+  end
+  -- sort
+  table.sort(fn, function (a,b) return a[1] < b[1] end)
+  -- format
+  for i,v in ipairs(fn) do
+    fn[i] = string.format("<b>%s</b> - %s<br>", v[1], v[2])
+  end
+  return table.concat(fn, "\n"), description
+end
+
+--- Prepare module example for html generation.
+--  @param str Example text.
+--  @return String representation with tags.
+local function docExample (str)
+  if not str then return nil end
+  return string.format('<pre class="example">%s</pre>', str)
 end
 
 --- Generate html file with documentation.

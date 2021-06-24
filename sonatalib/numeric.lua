@@ -217,8 +217,8 @@ numeric.ode45 = function (fn,tDelta,y0,param)
 end
 numeric.about[numeric.ode45] = {"ode45(fn,tDelta,y0[,param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
--- free memory if need
-if not LC_DIALOG then numeric.about = nil end
+-- Uncomment to remove descriptions
+--numeric.about = nil
 
 return numeric
 
