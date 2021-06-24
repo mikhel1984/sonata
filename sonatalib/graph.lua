@@ -509,8 +509,8 @@ graph.pathBF = function (G, start,goal)
 end
 graph.about[graph.pathBF] = {'pathBF(G,start[,goal])','Shortest path search using Bellman-Ford algorithm.', SEARCH}
 
--- free memory in case of standalone usage
-if not LC_DIALOG then graph.about = nil end
+-- Uncomment to remove descriptions
+--graph.about = nil
 
 return graph
 

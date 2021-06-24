@@ -792,8 +792,8 @@ setmetatable(bigint, {__call = function (self, v) return bigint:new(v) end})
 bigint.Int = 'Int'
 bigint.about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.NEW}
 
--- free memory if need
-if not LC_DIALOG then bigint.about = nil end
+-- Uncomment to remove descriptions
+--bigint.about = nil
 
 return bigint
 

@@ -1212,8 +1212,8 @@ matrix.onImport = function ()
   lc._updateHelp(atanh,_atanh)
 end
 
--- free memory if need
-if not LC_DIALOG then matrix.about = nil end
+-- Uncomment to remove descriptions
+--matrix.about = nil
 
 return matrix
 

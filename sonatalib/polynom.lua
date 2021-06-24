@@ -459,11 +459,12 @@ setmetatable(polynom, {__call = function (self, t) return polynom:init(Ver.move(
 polynom.Poly = 'Poly'
 polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
--- free memory if need
-if not LC_DIALOG then polynom.about = nil end
+-- Uncomment to remove descriptions
+--polynom.about = nil
 
 return polynom
 
 --===========================
 --TODO: polyroot
+--TODO: change order
 

@@ -253,8 +253,8 @@ setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) 
 rational.Rat = 'Rat'
 rational.about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
 
--- free memory if need
-if not LC_DIALOG then rational.about = nil end
+-- Uncomment to remove descriptions
+--rational.about = nil
 
 return rational
 

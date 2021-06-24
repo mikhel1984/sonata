@@ -482,8 +482,8 @@ complex.onImport = function ()
   lc._updateHelp(atanh,_atanh)
 end
 
--- free memory if need
-if not LC_DIALOG then complex.about = nil end
+-- Uncomment to remove descriptions
+--complex.about = nil
 
 return complex
 

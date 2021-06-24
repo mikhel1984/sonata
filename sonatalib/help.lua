@@ -12,28 +12,18 @@
 
 about = help:new("Module description*)  -- create new help object
 
-Each function description is represented as table:
+Each function description is represented as a table:
 about[function] =
 {
   function_name,
   function_description,
-  function_category
+  function_category (can be skipped)
 }
 
-If there are more then 1 module, use
+If there are several modules, use
   about:add(table, module_name)
-to concatenate descriptions. In this way 4-th entry will be added
+to concatenate descriptions. In this case the 4-th entry will be added
 to sort help list according the module name.
-
-To use language localization, create template with the help of
-
-  lua sonata.lua --lng filename
-
-uncomment and translate desired strings. To load this file, call it with
-
-  LC_LOCALIZATION=filename
-
-inside the sonata.lua
 
 --]]
 
@@ -431,8 +421,8 @@ WORD2.copy = function (t)
 end
 WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
 
--- free memory in case of standalone usage
-if not LC_DIALOG then WORD2.about = nil end
+-- Uncomment to remove descriptions
+--WORD2.about = nil
 
 return WORD2
 

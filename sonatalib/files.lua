@@ -154,8 +154,8 @@ files.tblImport = function (fName)
 end
 files.about[files.tblImport] = {"tblImport(fName)", "Import Lua table, written into file.", READ}
 
--- free memory in case of standalone usage
-if not LC_DIALOG then files.about = nil end
+-- Uncomment to remove descriptions
+--files.about = nil
 
 return files
 

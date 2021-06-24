@@ -640,8 +640,8 @@ setmetatable(units, {__call = function (self,v,u) return units:new(v,u) end })
 units.Unit = 'Unit'
 units.about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
 
--- free memory if need
-if not LC_DIALOG then units.about = nil end
+-- Uncomment to remove descriptions
+--units.about = nil
 
 return units
 

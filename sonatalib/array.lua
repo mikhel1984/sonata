@@ -435,8 +435,8 @@ array.next = function (A)
 end
 array.about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}
 
--- Free memory if need
-if not LC_DIALOG then array.about = nil end
+-- Uncomment to remove descriptions
+--array.about = nil
 
 return array
 
