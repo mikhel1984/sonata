@@ -303,9 +303,8 @@ main.map = function (fn, tbl)
 end
 about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.', lc_help.OTHER}
 
---- Simple implementation of 'The Life' game ;)
---  Prepare your initial board in form of matrix.
---  @param board Matrix with 'ones' as live cells.
+-- "In the game of life the strong survive..." (Scorpions) ;)
+--  board - matrix with 'ones' as live cells
 main.life = function (board)
   assert(board.type == 'matrix', 'Matrix is expected!')
   local rows,cols = board:size() 
