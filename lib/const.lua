@@ -1,8 +1,8 @@
---[[		sonatalib/const.lua
+--[[		sonata/lib/const.lua
 
 --- Collection of constants.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'const'
 --]]
@@ -10,7 +10,7 @@
 --[[TEST
 
 -- use 'const'
-_C = require 'sonatalib.const'
+_C = require 'lib.const'
 
 -- charge of electron
 ans = _C.phy.e * 1E19        --3> 1.602
@@ -33,7 +33,7 @@ ans = _C.myConst              --> nil
 
 --	LOCAL
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 local PHY, ASTRO, MATH = "physics", "astronomy", "math"
 

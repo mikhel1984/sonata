@@ -1,8 +1,8 @@
---[[		sonatalib/test.lua 
+--[[		sonata/core/test.lua 
 
 --- Unit test system.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata</a> collection, 2021.
 
 	module 'test'
 --]]
@@ -33,13 +33,13 @@
 
 --	LOCAL
 
-local Ver = require "sonatalib.versions"
-
 local DELIM = '\r?\n[%s%c]*\n'
 local LOG_NAME = 'test.log'
 local CODE_TEMPLATE = '%-%-%[(=*)%[TEST(.-)%]%1%]'
 local TEST_TEMPLATE = '(.*)%-%-(%d?)>(.*)'
 local TOL = {['0']=1,['1']=1E1,['2']=1E2,['3']=1E3,['4']=1E4,['5']=1E5,['6']=1E6,['7']=1E7,['8']=1E8,['9']=1E9}
+
+local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
 --	MODULE
 
@@ -47,7 +47,7 @@ local test = {
 -- test results
 results = {},
 -- files functions
-lc_files = require('sonatalib.files'),
+lc_files = require('core.files'),
 }
 
 --- Extract test code from file.
@@ -93,7 +93,7 @@ test.module = function (fname)
   local succeed, failed = 0, 0
   local fulltime = 0
   -- parse
-  for block in test.lc_files.split(text, DELIM) do
+  for block in test.split(text, DELIM) do
     if string.find(block, '%s') then 
       local q,e,a = string.match(block, TEST_TEMPLATE)
       q = q or block   -- question
@@ -101,12 +101,12 @@ test.module = function (fname)
       local arrow, time
       -- evaluate
       local status, err = pcall(function ()
-        local fq = Ver.loadStr(q)
+        local fq = loadStr(q)
         -- estimate duration
         time = os.clock(); fq(); time = (os.clock() - time)*1000
         -- check result
         if #a > 0 then
-          fq = Ver.loadStr('return '..a)
+          fq = loadStr('return '..a)
           arrow = fq()
           if e == '' then
             return ans == arrow
@@ -153,6 +153,30 @@ end
 --- Remove old results
 test.clear = function ()
   test.results = {}
+end
+
+--- Split string into substrings based on the given delimiter.
+--  @param str Initial string.
+--  @param delim Delimiter string.
+--  @return Iterator over substrings.
+test.split = function (str, delim)
+  local i,j,k = 1,1,0
+  -- return iterator
+  return function ()
+    if not str or i > #str then 
+      return nil 
+    end
+    j,k = string.find(str, delim, k+1)
+    local res
+    if j then
+      res = string.sub(str, i, j-1)
+      i = k+1
+    else  -- no more delimiters
+      res = string.sub(str, i)
+      i = #str+1
+    end
+    return res
+  end
 end
 
 --============ Diagnostic methods =================

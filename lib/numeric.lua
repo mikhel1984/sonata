@@ -1,9 +1,9 @@
---[[		sonatalib/numeric.lua 
+--[[		sonata/lib/numeric.lua 
 
 --- Numerical solutions for some mathematical problems.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'numeric'
 --]]
@@ -12,7 +12,7 @@
 --[[TEST
 
 -- use 'numeric'
-Num = require 'sonatalib.numeric'
+Num = require 'lib.numeric'
 
 -- define tolerance
 Num.TOL = 1e-4
@@ -41,7 +41,7 @@ tbl, yn = Num.ode45(function (x,y) return x*y end,
 ans = yn                     --2> 90.011
 
 -- use matrices for high order equations
-Mat = require 'sonatalib.matrix'
+Mat = require 'lib.matrix'
 
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
@@ -65,7 +65,7 @@ ans = y[#y][1]               --2> 2.56
 
 --	LOCAL
 
-local Ver = require "sonatalib.versions"
+local Ver = require "lib.versions"
 
 -- Runge-Kutta method.
 -- @param fn Function f(x,y).
@@ -84,7 +84,7 @@ end
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

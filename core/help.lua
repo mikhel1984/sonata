@@ -1,9 +1,9 @@
---[[		sonatalib/help.lua 
+--[[		sonata/core/help.lua 
 
 --- Function description management.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata</a> collection, 2021.
 
 	module 'help'
 --]]
@@ -64,6 +64,8 @@ local function eng2about()
   end
   eng.about.about = nil
 end
+
+local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
 --	MODULE
 
@@ -241,9 +243,7 @@ end
 --  @param fName Name of the file with translated text.
 help.localization = function (self,fName)
   fName = LOCALE..help.SEP..fName
-  -- call method of the 'files' module
-  help.lc_files = help.lc_files or require('sonatalib.files')
-  local lng = help.lc_files.tblImport(fName)
+  local lng = help.tblImport(fName)
   if lng then
     getmetatable(self).locale = lng   -- save translation
     -- update functions in main.lua
@@ -268,10 +268,8 @@ end
 --  @param tModules Table with the list of existing modules.
 help.prepare = function(fName, tModules)
   fName = string.format('%s%s%s.lng', LOCALE, help.SEP, fName)
-  -- call method of the 'files' module
-  help.lc_files = help.lc_files or require('sonatalib.files')
   -- prepare new file
-  local lng = help.lc_files.tblImport(fName)
+  local lng = help.tblImport(fName)
   local f = io.open(fName, 'w')
   -- save descriptions
   f:write(string.rep('-',10), string.format(' %s ', fName), string.rep('-',10), '\n')
@@ -354,7 +352,7 @@ local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -488,10 +486,9 @@ help.generateDoc = function (locName, tModules)
 
   local fName = string.format('%s%s%s', LOCALE, help.SEP, locName)
   -- call method of the 'files' module
-  help.lc_files = help.lc_files or require('sonatalib.files')
-  help.lc_test = help.lc_test or require('sonatalib.test')
+  help.lc_test = help.lc_test or require('core.test')
   -- prepare new file
-  local lng = help.lc_files.tblImport(fName)
+  local lng = help.tblImport(fName)
 
   eng2about()
   
@@ -500,7 +497,7 @@ help.generateDoc = function (locName, tModules)
   local functions, description = docLines('main','Main',lng)
   res[#res+1] = string.format('<p class="descript">%s</p>', description)
   res[#res+1] = string.format('<p>%s</p>', functions)
-  local fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, 'main'))
+  local fstr = help.readAll(string.format('%s%s%s.lua', LIB, help.SEP, 'main'))
   res[#res+1] = docExample(help.lc_test._getCode_(fstr))
   res[#res+1] = '<a href="#Top">Top</a></div>'
   -- other modules
@@ -511,7 +508,7 @@ help.generateDoc = function (locName, tModules)
     functions, description = docLines(k, v, lng)
     res[#res+1] = string.format('<p class="descript">%s</p>', description)
     res[#res+1] = string.format('<p>%s</p>', functions)
-    fstr = help.lc_files.read(string.format('%s%s%s.lua', LIB, help.SEP, k))
+    fstr = help.readAll(string.format('%s%s%s.lua', LIB, help.SEP, k))
     res[#res+1] = docExample(help.lc_test._getCode_(fstr))
     res[#res+1] = '<a href="#Top">Top</a></div>'
   end
@@ -524,6 +521,30 @@ help.generateDoc = function (locName, tModules)
   f:write(table.concat(res,'\n'))
   f:close()
   io.write("File 'help.html' is saved!\n")
+end
+
+--================== Files ===================
+
+--- Returns text of the file.
+--  @param fName
+--  @return String or nil.
+help.readAll = function (fName)
+  local f, str = io.open(fName, 'r')
+  if f then
+    str = f:read('*a')
+    f:close()
+  end
+  return str
+end
+
+--- Load Lua table from file.
+--  @param fName File name.
+--  @return Lua table or nil.
+help.tblImport = function (fName)
+  local str,f = help.readAll(fName)
+  -- use Lua default import
+  if str then f = loadStr('return '..str) end
+  return f and f() or nil
 end
 
 return help

@@ -1,9 +1,9 @@
---[[		sonatalib/main.lua 
+--[[		sonata/core/main.lua 
 
 --- Define aliases for standard operations and add some new common functions.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata</a> collection, 2021.
 
 	module 'main'
 --]]
@@ -11,7 +11,7 @@
 ---------------- Tests ---------------------
 --[[TEST
 
-lc = require 'sonatalib.main'
+lc = require 'core.main'
 
 -- constants starts from _
 ans = _pi                     --> math.pi
@@ -61,18 +61,53 @@ ans = math.floor(_pi)
 
 ans = math.deg(_pi)
 
+-- prepare file name
+nm = os.tmpname()
+
+-- save table 
+-- separate elements with ';'
+t = {{1,2,3},{4,5,6}}
+File.dsvWrite(nm, t, ';')
+
+-- read table from file
+-- with separator ';'
+tt = File.dsvRead(nm, ';')
+ans = tt[2][2]                --> 5
+
+-- read table from file
+f = io.open(nm,'w')
+f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
+f:close()
+aa = File.tblImport(nm)
+ans = aa.b.c                  --> 'abc'
+
 --]]
 
 --	LOCAL
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
+local FILES = 'files'
 local LOGNAME = 'log.note'
 
 local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
 -- compatibility
-local Ver = require "sonatalib.versions"
+local Ver = {}
+if _VERSION < 'Lua 5.3' then
+  Ver.loadStr = loadstring
+  Ver.atan2 = math.atan2
+  Ver.mathType = function (x)
+    local n = tonumber(x)
+    if not n then return nil end
+    local _,p = math.modf(n)
+    return (p == 0.0) and 'integer' or 'float'
+  end
+else
+  Ver.loadStr = load
+  Ver.atan2 = math.atan
+  Ver.mathType = math.type
+end
 
 --- Process command string.
 --  @param cmd String with Lua expression.
@@ -109,7 +144,7 @@ end
 --	INFO
 
 -- lc_help
-lc_help = require "sonatalib.help"
+lc_help = require "core.help"
 about = lc_help:new("Lua based mathematics.")
 
 --	MODULE
@@ -335,6 +370,51 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
+--- Save Lua table in file, use given delimiter.
+--  @param tbl Lua table.
+--  @param fName File name.
+--  @param delim Delimiter, default is coma.
+main.dsvWrite = function (fName, tbl, delim)
+  local f = assert(io.open(fName,'w'))
+  delim = delim or ','
+  for _,v in ipairs(tbl) do
+    if type(v) == 'table' then v = table.concat(v,delim) end
+    f:write(v,'\n')
+  end
+  f:close()
+  io.write('Done\n')
+end
+about[main.dsvWrite] = {"lc.dsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", FILES}
+
+--- Import data from text file, use given delimiter.
+--  @param fName File name.
+--  @param delim Delimiter, default is coma.
+--  @return Lua table with data.
+main.dsvRead = function (fName, delim)
+  local f = assert(io.open(fName, 'r'))
+  local Test = require('core.test')
+  delim = delim or ','
+  local res = {}
+  for s in f:lines('l') do
+    -- read data
+    s = string.match(s,'^%s*(.*)%s*$')
+    if #s > 0 then
+      local tmp = {}
+      -- read string elements
+      for p in Test.split(s,delim) do
+        tmp[#tmp+1] = tonumber(p) or p
+      end
+      res[#res+1] = tmp
+    end
+  end
+  f:close()
+  return res
+end
+about[main.dsvRead] = {"lc.dsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
+
+main.tblImport = lc_help.tblImport
+about[main.tblImport] = {"lc.tblImport(fName)", "Import Lua table, saved into file.", FILES}
+
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
 logging = function (flag)
@@ -471,7 +551,7 @@ main._args_ = {
 description = 'Apply the unit tests to the desired module. Call all modules if the name is not defined.',
 example = '--test array',
 process = function (args)
-  local Test = require 'sonatalib.test'
+  local Test = require('core.test')
   if args[2] then
     Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),args[2]))
   else

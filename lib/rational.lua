@@ -1,4 +1,4 @@
---[[		sonatalib/rational.lua 
+--[[		sonata/lib/rational.lua 
 
 --- Rational number operations support.
 --  
@@ -7,7 +7,7 @@
 --  where both numbers are integers.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'rational'
 --]]
@@ -16,7 +16,7 @@
 --[[TEST
 
 -- use 'rational'
-Rat = require 'sonatalib.rational'
+Rat = require 'lib.rational'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -68,7 +68,7 @@ print(a)
 
 --	LOCAL
 
-local Ver = require('sonatalib.versions')
+local Ver = require('lib.versions')
 
 --  NUM, DENOM = 1, 2
 
@@ -86,7 +86,7 @@ end
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

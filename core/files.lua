@@ -1,8 +1,8 @@
---[[		sonatalib/files.lua
+--[[		sonata/core/files.lua
 
 --- Routines for working with files and text.
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata</a> collection, 2021.
 
 	module 'files'
 --]]
@@ -11,7 +11,7 @@
 --[[TEST
 
 -- use 'files'
-File = require 'sonatalib.files'
+File = require 'core.files'
 -- prepare file name
 nm = os.tmpname()
 
@@ -48,14 +48,13 @@ end                           --> 4
 
 --	LOCAL
 
--- compatibility
-local Ver = require "sonatalib.versions"
-
 local READ, WRITE = 'read', 'write'
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
+
+local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
 --	MODULE
 
@@ -149,7 +148,7 @@ files.about[files.read] = {"read(fName)", "Return file content as a text.", READ
 files.tblImport = function (fName)
   local str,f = files.read(fName)
   -- use Lua default import
-  if str then f = Ver.loadStr('return '..str) end
+  if str then f = loadStr('return '..str) end
   return f and f() or nil
 end
 files.about[files.tblImport] = {"tblImport(fName)", "Import Lua table, written into file.", READ}

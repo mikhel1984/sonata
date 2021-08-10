@@ -1,4 +1,4 @@
---[[		sonatalib/quaternion.lua
+--[[		sonata/lib/quaternion.lua
 
 --- Operations with unit quaternions.
 --
@@ -7,7 +7,7 @@
 --  where <i>w</i> is a real part, <i>i, j, k</i> are imaginary elements.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'quaternion'
 --]]
@@ -15,7 +15,7 @@
 --[[TEST
 
 -- use 'quaternion'
-Quat = require 'sonatalib.quaternion'
+Quat = require 'lib.quaternion'
 
 -- new quaternion
 -- set {w,i,j,k}
@@ -86,7 +86,7 @@ print(d)
 
 --	LOCAL
 
-local Ver = require "sonatalib.versions"
+local Ver = require "lib.versions"
 
 local ROTATION = 'rotation'
 
@@ -100,7 +100,7 @@ local function isquaternion(t) return type(t)=='table' and t.isquaternion end
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -123,7 +123,7 @@ quaternion.__newindex = function (t,k,v)
 end
 
 -- interaction with matrices
-quaternion.lc_matrix = require 'sonatalib.matrix'
+quaternion.lc_matrix = require 'lib.matrix'
 
 --- Check arguments.
 --  @param q1 First quaternion or number.

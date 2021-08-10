@@ -1,4 +1,4 @@
---[[		sonatalib/gnuplot.lua 
+--[[		sonata/lib/gnuplot.lua 
 
 --- Call Gnuplot from Sonata LC.
 --
@@ -6,7 +6,7 @@
 --  all parameters of the plot are saved in form of table, each function is in separate subtable.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'gnuplot'
 --]]
@@ -15,7 +15,7 @@
 --[[TEST
 
 -- use 'gnuplot'
-Gp = require 'sonatalib.gnuplot'
+Gp = require 'lib.gnuplot'
 Gp.testmode = true -- just for testing
 
 -- simple plot 
@@ -144,7 +144,7 @@ local GPPLOT = 'quick'
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

@@ -1,6 +1,6 @@
 #!/usr/local/bin/lua
 -- Lua based calculator 
--- This file is a part of 'sonatalib' collection, 2021.
+-- This file is a part of 'sonata.lib' collection, 2021.
 
 --================= CONFIGURATION ====================
 
@@ -27,7 +27,7 @@ if LC_ADD_PATH then
 end
 
 -- Table for program variables. Import base functions 
-lc = require('sonatalib.main')
+lc = require('core.main')
 
 -- Text colors 
 lc_help.useColors(LC_USE_COLOR) 
@@ -45,7 +45,6 @@ use = {
   bigint    = "Int",
   complex   = "Comp",
   const     = "_C",
-  files     = "File",
   gnuplot   = "Gp",
   graph     = "Graph",
   matrix    = "Mat",
@@ -71,7 +70,7 @@ function lc_local.doimport(tbl,name)
     name = assert(lc_local.alias[name], "Wrong module name: "..name.."!")
   end
   if not _G[var] then
-    local lib = require('sonatalib.'..name)
+    local lib = require('lib.'..name)
     _G[var] = lib
     -- add description 
     if lib.about then about:add(lib.about, var) end

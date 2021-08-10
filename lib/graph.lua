@@ -1,4 +1,4 @@
---[[		sonatalib/graph.lua
+--[[		sonata/lib/graph.lua
 
 --- Operations with graphs.
 --
@@ -9,7 +9,7 @@
 --  i.e. each node has links to adjucent nodes.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'graph'
 --]]
@@ -18,7 +18,7 @@
 --[[TEST
 
 -- use 'graph'
-Graph = require 'sonatalib.graph'
+Graph = require 'lib.graph'
 
 -- build graph
 -- single name - node, names in brackets - edges 
@@ -182,7 +182,7 @@ end
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -195,7 +195,7 @@ about = help:new("Operations with graphs."),
 graph.__index = graph
 
 -- external library
-graph.lc_struct = require 'sonatalib.struct'
+graph.lc_struct = require 'lib.struct'
 
 --- Constructor example
 --  @param t Some value.

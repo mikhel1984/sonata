@@ -1,9 +1,9 @@
---[[		sonatalib/struct.lua
+--[[		sonata/lib/struct.lua
 
 --- Main data structures.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'struct'
 --]]
@@ -12,7 +12,7 @@
 --[[TEST
 
 -- use 'struct'
-DS = require 'sonatalib.struct'
+DS = require 'lib.struct'
 
 -- create stack
 a = DS.Stack()
@@ -150,7 +150,7 @@ print(a)
 
 --	LOCAL
 
-local Ver = require "sonatalib.versions"
+local Ver = require "lib.versions"
 
 --	MODULE
 
