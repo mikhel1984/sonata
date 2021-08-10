@@ -41,13 +41,13 @@ local TOL = {['0']=1,['1']=1E1,['2']=1E2,['3']=1E3,['4']=1E4,['5']=1E5,['6']=1E6
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
+local help = require('core.help')
+
 --	MODULE
 
 local test = {
 -- test results
 results = {},
--- files functions
-lc_files = require('core.files'),
 }
 
 --- Extract test code from file.
@@ -83,7 +83,7 @@ end
 --  @param fname Lua file name.
 test.module = function (fname)
   -- read file
-  local text = assert(test.lc_files.read(fname), "Can't open file '"..fname.."'")
+  local text = assert(help.readAll(fname), "Can't open file '"..fname.."'")
   test.log = test.log or io.open(LOG_NAME, 'w')
   -- write head
   test._print_('\n\tModule: ' .. fname)

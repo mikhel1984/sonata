@@ -46,6 +46,10 @@ Main = {
 ["asinh(x)"]             = [[La hiperbola sinusarko de nombro x.]],
 ["_e"]                   = [[Eǔlera nombro.]],
 ["log(x)"]               = [[Natura logaritmo.]],
+["lc.dsvWrite(fname,tbl[,delim=','])"] = [[Savi Lua tabulon kiel dosieron kun delimitilo disigita datumojn.]],
+["lc.tblImport(fName)"]     = [[Importi Lua tabulo de la dosiero.]],
+["lc.dsvRead(fName[,delim=','])"] = [[Legas datumojn disigitaj per delimitilo en la dosiero, revenas Lua tabulon.]],
+
 },
 ---------- matrix.lua ----------
 Mat = {
@@ -86,9 +90,6 @@ Uzi M1 .. M2 por horizontala kunmeto, kaj M1 // M2 por vertikala.]],
 File = {
 ["__module__"]           = [[Rutinoj por labori kun datumja dosieroj kaj tekstoj.]],
 ["split(str,delim)"]     = [[Generas funkcion, kiu redonas partojn de la teksto apartigita per delimitilo.]],
-["dsvWrite(fname,tbl[,delim=','])"] = [[Savi Lua tabulon kiel dosieron kun delimitilo disigita datumojn.]],
-["tblImport(fName)"]     = [[Importi Lua tabulo de la dosiero.]],
-["dsvRead(fName[,delim=','])"] = [[Legas datumojn disigitaj per delimitilo en la dosiero, revenas Lua tabulon.]],
 ["read(fName)"]          = [[Reveni dosieron kiel teksto.]],
 },
 ---------- stat.lua ----------
