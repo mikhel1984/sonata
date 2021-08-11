@@ -67,18 +67,18 @@ nm = os.tmpname()
 -- save table 
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-File.dsvWrite(nm, t, ';')
+lc.dsvWrite(nm, t, ';')
 
 -- read table from file
 -- with separator ';'
-tt = File.dsvRead(nm, ';')
+tt = lc.dsvRead(nm, ';')
 ans = tt[2][2]                --> 5
 
 -- read table from file
 f = io.open(nm,'w')
 f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
 f:close()
-aa = File.tblImport(nm)
+aa = lc.tblImport(nm)
 ans = aa.b.c                  --> 'abc'
 
 --]]
@@ -553,10 +553,14 @@ example = '--test array',
 process = function (args)
   local Test = require('core.test')
   if args[2] then
-    Test.module(string.format('%slib/%s.lua',(LC_ADD_PATH or ''),args[2]))
+    if args[2] == 'main' then
+      Test.module(string.format('%score/main.lua', (LC_ADD_PATH or '')))
+    else
+      Test.module(string.format('%slib/%s.lua', (LC_ADD_PATH or ''), args[2]))
+    end
   else
     for m in pairs(use) do
-      Test.module(string.format('%slib/%s.lua',(LC_ADD_PATH or ''),m))
+      Test.module(string.format('%slib/%s.lua', (LC_ADD_PATH or ''), m))
     end
   end
   Test.summary()
