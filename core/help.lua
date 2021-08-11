@@ -323,15 +323,16 @@ help.newModule = function (mName, alias, description)
   -- write new file
   description = description or "The module of your dream!"
   local txt = 
-[=[--[[		WORD1
+[=[--[[		sonata/WORD1
 
 3L WORD5
---  @author My Name
+--  @author Your Name
 
 	WORD4 'WORD2'
 --]]
 
--- Define here your tests, save results to 'ans', use --> for the strict equality and --2> for the two digit precision (for example).
+-- Define here your tests, save results to 'ans', use --> for the strict equality 
+-- and --2> for the two digit precision (for example).
 --[[TEST
 
 -- use 'WORD2'
