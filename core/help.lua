@@ -31,7 +31,7 @@ to sort help list according the module name.
 
 -- directory with language files
 local LOCALE = (LC_ADD_PATH or '')..'locale'
-local LIB   = (LC_ADD_PATH or '')..'sonatalib'
+local LIB   = (LC_ADD_PATH or '')..'lib'
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
@@ -206,7 +206,9 @@ end
 --  @return String representation of all help information of the module.
 local function helpLines(module, alias, lng)
   -- get table and name
-  local m = (type(module) == 'string') and require('sonatalib.' .. module) or module
+  local m = (type(module) == 'string') 
+             and require((module == 'main' and 'core.' or 'lib.') .. module)
+             or module
   local mName = (type(module) == 'string') and (module .. '.lua') or 'dialog'
   -- choose existing data
   local lng_t = lng and lng[alias] or {}
@@ -333,7 +335,7 @@ help.newModule = function (mName, alias, description)
 --[[TEST
 
 -- use 'WORD2'
-WORD3 = require 'sonatalib.WORD2'
+WORD3 = require 'lib.WORD2'
 
 -- example
 a = WORD3()
@@ -416,7 +418,7 @@ end
 --  @param lng Localization table from existing file.
 --  @return String representation of all help information of the module.
 local function docLines(module, alias, lng)
-  local m = require('sonatalib.'..module)
+  local m = require((module == 'main' and 'core.' or 'lib.')..module)
   local lng_t = lng and lng[alias] or {}
   -- collect
   local fn, description = {}
@@ -497,7 +499,7 @@ help.generateDoc = function (locName, tModules)
   local functions, description = docLines('main','Main',lng)
   res[#res+1] = string.format('<p class="descript">%s</p>', description)
   res[#res+1] = string.format('<p>%s</p>', functions)
-  local fstr = help.readAll(string.format('%s%s%s.lua', LIB, help.SEP, 'main'))
+  local fstr = help.readAll(string.format('%score%smain.lua', (LC_ADD_PATH or ''), help.SEP))
   res[#res+1] = docExample(help.lc_test._getCode_(fstr))
   res[#res+1] = '<a href="#Top">Top</a></div>'
   -- other modules
