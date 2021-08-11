@@ -574,7 +574,8 @@ example = '--lang eo',
 process = function (args)
   if args[2] then
     LC_DIALOG = true -- load help info
-    lc_help.prepare(args[2], use)
+    local Gen = require('core.generator')
+    Gen.lang(args[2], use)
   else 
     print('Current localization file: ', LC_LOCALIZATION)
   end
@@ -587,10 +588,11 @@ description = 'Creating/updating a documentation file.',
 example = '--doc ru',
 process = function (args)
   LC_DIALOG = true   -- load help info
+  local Gen = require('core.generator')
   if args[2] then
     LC_LOCALIZATION = args[2]..'.lng'
   end
-  lc_help.generateDoc(LC_LOCALIZATION, use) 
+  Gen.doc(LC_LOCALIZATION, use) 
 end,
 exit = true},
 
@@ -598,7 +600,10 @@ exit = true},
 ['--new'] = {
 description = 'Create a template for a new module.',
 example = '--new  signal  Sig  "Signal processing functions."',
-process = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
+process = function (args)
+  local Gen = require('core.generator')
+  Gen.module(args[2],args[3],args[4]) 
+end,
 exit = true},
 
 -- process files
