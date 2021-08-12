@@ -417,7 +417,7 @@ about[main.tblImport] = {"lc.tblImport(fName)", "Import Lua table, saved into fi
 
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
-logging = function (flag)
+main.log = function (flag)
   if flag == 'on' or flag == true then
     if not main._logFile_ then
       main._logFile_ = io.open(LOGNAME, 'a')
@@ -434,7 +434,7 @@ logging = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
-about[logging] = {'logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
+about[main.log] = {'lc.log(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
