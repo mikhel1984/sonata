@@ -64,8 +64,7 @@ help.__index = help
 help.english = {
 intro = [[
 ------- help([function]) = get help -------------
-------- dofile(filename) = execute Lua script ---
------------- use(module) = expand functionality -
+---------- use([module]) = expand functionality -
 ----------------- quit() = exit -----------------
 ]],
 --modules = 'Available modules:',

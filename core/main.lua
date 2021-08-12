@@ -436,6 +436,19 @@ main.log = function (flag)
 end
 about[main.log] = {'lc.log(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
 
+--- Execute file inside the interpreter.
+--  @param fName Lua or note file name.
+main.run = function (fname)
+  if string.find(fname, '%.lua$') then
+    dofile(fname)
+  elseif string.find(fname, '%.note$') then
+    main.evalNote(fname, false)
+  else
+    io.write('Expected .lua or .note!\n')
+  end
+end
+about[main.run] = {'lc.run(fName)', "Execute lua- or note-file.", lc_help.OTHER}
+
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
 main.evalDialog = function ()
@@ -475,46 +488,51 @@ end
 
 --- Evaluate 'note'-file.
 --  @param fname Script file name.
-main.evalDemo = function (fname)
+main.evalNote = function (fname, full)
+  full = (full ~= false)
   local ERROR = lc_help.CERROR.."ERROR: "
   local cmd = ""
   local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD
   local invA, invB = '?> ', '>> '
   -- read lines
-  io.write("Run file ", fname, "\n")
+  if full then io.write("Run file ", fname, "\n") end
   -- read
   local f = assert(io.open(fname, 'r'))
   local txt = f:read('*a'); f:close()
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
-    if string.find(line, '^%s*%-%-%s*PAUSE') then 
-      -- call dialog
-      local lcmd, lquit = "", false
-      local invite = invA
-      while true do
-        io.write(invite)
-        local newCmd = io.read()
-        if newCmd == "" then break end  -- continue file evaluation
-        local status, res = _evaluate_(lcmd, newCmd)
-        if status == EV_RES then
-          if res ~= nil then print(res) end
-          invite = invA; lcmd = ""
-        elseif status == EV_CMD then
-          invite = invB; lcmd = res
-        elseif status == EV_ERROR then
-          print(ERROR, res, lc_help.CRESET)
-          invite = invA; lcmd = ""
-        else --  EV_QUIT
-          lquit = true
-          break
+    if string.find(line, '^%s*%-%-%s*PAUSE') then
+      if full then
+        -- call dialog
+        local lcmd, lquit = "", false
+        local invite = invA
+        while true do
+          io.write(invite)
+          local newCmd = io.read()
+          if newCmd == "" then break end  -- continue file evaluation
+          local status, res = _evaluate_(lcmd, newCmd)
+          if status == EV_RES then
+            if res ~= nil then print(res) end
+            invite = invA; lcmd = ""
+          elseif status == EV_CMD then
+            invite = invB; lcmd = res
+          elseif status == EV_ERROR then
+            print(ERROR, res, lc_help.CRESET)
+            invite = invA; lcmd = ""
+          else --  EV_QUIT
+            lquit = true
+            break
+          end
         end
+        if lquit then break end
       end
-      if lquit then break end
     elseif string.find(line, '^%s*%-%-') then
-      -- highlight line comments
-      line = string.gsub(line, '\t(.+)', templ)
-      line = string.format("%s%s%s\n", lc_help.CHELP, line, lc_help.CRESET)
-      io.write(line)
+      if full then
+        -- highlight line comments
+        line = string.gsub(line, '\t(.+)', templ)
+        line = string.format("%s%s%s\n", lc_help.CHELP, line, lc_help.CRESET)
+        io.write(line)
+      end
     else
       -- print line and evaluate
       io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
@@ -613,7 +631,7 @@ process = function (args)
   for i = 1,#args do 
     if string.find(args[i], '%.note$') then
       LC_DIALOG = true
-      main.evalDemo(args[i])
+      main.evalNote(args[i])
     else
       dofile(args[i]) 
     end
@@ -664,3 +682,5 @@ main._exit_ = function () print(lc_help.CMAIN.."\n             --======= Bye! ==
 return main
 
 --===============================
+
+--TODO don't print result when ; in the end
