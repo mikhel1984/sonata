@@ -17,7 +17,6 @@ DIV {margin-left: 10px;}
 <li><a href="#Int">bigint</a></li>
 <li><a href="#Comp">complex</a></li>
 <li><a href="#_C">const</a></li>
-<li><a href="#File">files</a></li>
 <li><a href="#Gp">gnuplot</a></li>
 <li><a href="#Graph">graph</a></li>
 <li><a href="#Mat">matrix</a></li>
@@ -38,7 +37,7 @@ DIV {margin-left: 10px;}
 (option '-i' can be used for working in native Lua interpreter)<br>
 <br>
 <b>FLAGS</b>:<br>
-	--help, -h - Get this help message.<br>
+	-h - Get this help message.<br>
 		{Development}<br>
 	--doc    - Creating/updating a documentation file.<br>
 	  (e.g. --doc ru)<br>
@@ -50,9 +49,9 @@ DIV {margin-left: 10px;}
 	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.21<br>
+<b>VERSION</b>: 0.9.22<br>
 <br>
-<b>MODULES</b>: rational, array, units, special, polynom, numeric, gnuplot, quaternion, complex, bigint, stat, files, const, graph, matrix.<br>
+<b>MODULES</b>: matrix, array, graph, rational, complex, numeric, polynom, units, gnuplot, stat, special, quaternion, const, bigint.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
@@ -73,13 +72,17 @@ DIV {margin-left: 10px;}
 <b>cos(x)</b> - Cosine x.<br>
 <b>cosh(x)</b> - Hyperbolic cosine.<br>
 <b>exp(x)</b> - Exponent.<br>
+<b>lc.dsvRead(fName[,delim=','])</b> - Read delimiter separated data as Lua table.<br>
+<b>lc.dsvWrite(fname,tbl[,delim=','])</b> - Save Lua table as delimiter separated data into file.<br>
+<b>lc.log(flag)</b> - Save session into the log file. Use 'on'/true to start and 'off'/false to stop.<br>
 <b>lc.map(fn,tbl)</b> - Evaluate function for each table element.<br>
 <b>lc.print(...)</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
 <b>lc.range([from=1,]to[,step=1])</b> - Generate table with sequence of numbers.<br>
 <b>lc.round(x[,n=0])</b> - Round value, define number of decimal digits.<br>
+<b>lc.run(fName)</b> - Execute lua- or note-file.<br>
+<b>lc.tblImport(fName)</b> - Import Lua table, saved into file.<br>
 <b>lc.type(t)</b> - Show type of the object.<br>
 <b>log(x)</b> - Natural logarithm.<br>
-<b>logging(flag)</b> - Save session into the log file. Use 'on'/true to start and 'off'/false to stop.<br>
 <b>rand()</b> - Random number between 0 and 1.<br>
 <b>randi(N)</b> - Random integer in range from 1 to N.<br>
 <b>randn()</b> - Normal distributed random value with 0 mean and variance 1.<br>
@@ -90,7 +93,7 @@ DIV {margin-left: 10px;}
 <b>tanh(x)</b> - Hyperbolic tangent.<br></p>
 <pre class="example">
 
-lc = require 'sonatalib.main'
+lc = require 'core.main'
 
 -- constants starts from _
 ans = _pi                     --> math.pi
@@ -140,6 +143,26 @@ ans = math.floor(_pi)
 
 ans = math.deg(_pi)
 
+-- prepare file name
+nm = os.tmpname()
+
+-- save table 
+-- separate elements with ';'
+t = {{1,2,3},{4,5,6}}
+lc.dsvWrite(nm, t, ';')
+
+-- read table from file
+-- with separator ';'
+tt = lc.dsvRead(nm, ';')
+ans = tt[2][2]                --> 5
+
+-- read table from file
+f = io.open(nm,'w')
+f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
+f:close()
+aa = lc.tblImport(nm)
+ans = aa.b.c                  --> 'abc'
+
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Arr"></a>
@@ -163,7 +186,7 @@ ans = math.deg(_pi)
 <pre class="example">
 
 -- use 'array'
-Arr = require 'sonatalib.array'
+Arr = require 'lib.array'
 
 -- empty array
 a = Arr {2,3,4}
@@ -244,7 +267,7 @@ for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 <b>val(N)</b> - Represent current big integer as number if it possible.<br></p>
 <pre class="example">
 -- use 'bigint'
-Int = require 'sonatalib.bigint'
+Int = require 'lib.bigint'
 
 -- from integer
 a = Int(123)
@@ -373,7 +396,7 @@ ans = a:gcd(b):val()          --> 3
 <pre class="example">
 
 -- use 'complex'
-Comp = require 'sonatalib.complex'
+Comp = require 'lib.complex'
 
 -- real and imaginary pars
 a = Comp(1,2)
@@ -501,7 +524,7 @@ print(a)
 <pre class="example">
 
 -- use 'const'
-_C = require 'sonatalib.const'
+_C = require 'lib.const'
 
 -- charge of electron
 ans = _C.phy.e * 1E19        --3> 1.602
@@ -519,52 +542,6 @@ ans = pcall(function() _C.myConst = 0 end)  --> false
 -- remove constant
 _C.remove('myConst')
 ans = _C.myConst              --> nil
-
---</pre>
-<a href="#Top">Top</a></div>
-<div><a name="File"></a>
-<h3># File (files) #</h3>
-<p class="descript">Routines for working with files and text.</p>
-<p><b>dsvRead(fName[,delim=','])</b> - Read delimiter separated data as Lua table.<br>
-<b>dsvWrite(fname,tbl[,delim=','])</b> - Save Lua table as delimiter separated data into file.<br>
-<b>read(fName)</b> - Return file content as a text.<br>
-<b>split(str,delim)</b> - Return iterator over substrings separated by the delimiter.<br>
-<b>tblImport(fName)</b> - Import Lua table, written into file.<br></p>
-<pre class="example">
-
--- use 'files'
-File = require 'sonatalib.files'
--- prepare file name
-nm = os.tmpname()
-
--- save table 
--- separate elements with ';'
-t = {{1,2,3},{4,5,6}}
-File.dsvWrite(nm, t, ';')
-
--- read table from file
--- with separator ';'
-tt = File.dsvRead(nm, ';')
-ans = tt[2][2]                --> 5
-
--- get file text as string
-s = File.read(nm)
-ans = string.sub(s,1,5)       --> '1;2;3'
-
--- read table from file
-f = io.open(nm,'w')
-f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
-f:close()
-aa = File.tblImport(nm)
-ans = aa.b.c                  --> 'abc'
-
--- string split
-str = 'abc//defg//hijkl//mnop'
-ans = 0
--- iterate over string parts
-for s in File.split(str, '//') do
-  ans = ans+1 
-end                           --> 4
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -605,7 +582,7 @@ raw='set pm3d'                    -- set Gnuplot options manually<br>
 <pre class="example">
 
 -- use 'gnuplot'
-Gp = require 'sonatalib.gnuplot'
+Gp = require 'lib.gnuplot'
 Gp.testmode = true -- just for testing
 
 -- simple plot 
@@ -712,7 +689,7 @@ f:show()
 <pre class="example">
 
 -- use 'graph'
-Graph = require 'sonatalib.graph'
+Graph = require 'lib.graph'
 
 -- build graph
 -- single name - node, names in brackets - edges 
@@ -852,7 +829,7 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <pre class="example">
 
 -- use 'matrix'
-Mat = require 'sonatalib.matrix'
+Mat = require 'lib.matrix'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}
@@ -1065,7 +1042,7 @@ Return table of intermediate points and result yn.<br>
 <pre class="example">
 
 -- use 'numeric'
-Num = require 'sonatalib.numeric'
+Num = require 'lib.numeric'
 
 -- define tolerance
 Num.TOL = 1e-4
@@ -1094,7 +1071,7 @@ tbl, yn = Num.ode45(function (x,y) return x*y end,
 ans = yn                     --2> 90.011
 
 -- use matrices for high order equations
-Mat = require 'sonatalib.matrix'
+Mat = require 'lib.matrix'
 
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
@@ -1132,7 +1109,7 @@ ans = y[#y][1]               --2> 2.56
 <pre class="example">
 
 -- use 'polynom'
-Poly = require 'sonatalib.polynom'
+Poly = require 'lib.polynom'
 
 -- coefficients in ascendant order
 a = Poly {1,2,4,3}
@@ -1219,7 +1196,7 @@ ans = d:str('s')              --> '2*s^2 -2*s +1'
 <pre class="example">
 
 -- use 'quaternion'
-Quat = require 'sonatalib.quaternion'
+Quat = require 'lib.quaternion'
 
 -- new quaternion
 -- set {w,i,j,k}
@@ -1302,7 +1279,7 @@ print(d)
 <pre class="example">
 
 -- use 'rational'
-Rat = require 'sonatalib.rational'
+Rat = require 'lib.rational'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -1375,7 +1352,7 @@ print(a)
 <pre class="example">
 
 -- use 'special'
-Spec = require 'sonatalib.special'
+Spec = require 'lib.special'
 
 -- beta functions
 ans = Spec.beta(3,4) * 1E2   --3> 1.667
@@ -1444,7 +1421,7 @@ ans = Spec.dawson(3.3)       --3> 0.1598
 <pre class="example">
 
 -- use 'stat'
-Stat = require 'sonatalib.stat'
+Stat = require 'lib.stat'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -1511,7 +1488,7 @@ ans = Stat.tpdf(2, 3.3)      --3> 0.0672
 <pre class="example">
 
 -- use 'units'
-Unit = require 'sonatalib.units'
+Unit = require 'lib.units'
 
 -- add some rules
 Unit.add('h', Unit(60,'min'))

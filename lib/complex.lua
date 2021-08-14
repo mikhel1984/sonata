@@ -1,4 +1,4 @@
---[[		sonatalib/complex.lua 
+--[[		sonata/lib/complex.lua 
 
 --- Manipulations with complex numbers.
 --
@@ -7,7 +7,7 @@
 --  i.e. complex number is a table which consists of two elements.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'complex'
 --]]
@@ -16,7 +16,7 @@
 --[[TEST
 
 -- use 'complex'
-Comp = require 'sonatalib.complex'
+Comp = require 'lib.complex'
 
 -- real and imaginary pars
 a = Comp(1,2)
@@ -121,7 +121,7 @@ print(a)
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require "sonatalib.versions"
+local Ver = require "lib.versions"
 
 -- REAL, IMAG = 1, 2
 local keys = {Re=1, Im=2}
@@ -146,7 +146,7 @@ local function sh (x) return 0.5*(math.exp(x)-math.exp(-x)) end
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

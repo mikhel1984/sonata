@@ -1,9 +1,9 @@
---[[		sonatalib/main.lua 
+--[[		sonata/core/main.lua 
 
 --- Define aliases for standard operations and add some new common functions.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2021.
 
 	module 'main'
 --]]
@@ -11,7 +11,7 @@
 ---------------- Tests ---------------------
 --[[TEST
 
-lc = require 'sonatalib.main'
+lc = require 'core.main'
 
 -- constants starts from _
 ans = _pi                     --> math.pi
@@ -61,18 +61,53 @@ ans = math.floor(_pi)
 
 ans = math.deg(_pi)
 
+-- prepare file name
+nm = os.tmpname()
+
+-- save table 
+-- separate elements with ';'
+t = {{1,2,3},{4,5,6}}
+lc.dsvWrite(nm, t, ';')
+
+-- read table from file
+-- with separator ';'
+tt = lc.dsvRead(nm, ';')
+ans = tt[2][2]                --> 5
+
+-- read table from file
+f = io.open(nm,'w')
+f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
+f:close()
+aa = lc.tblImport(nm)
+ans = aa.b.c                  --> 'abc'
+
 --]]
 
 --	LOCAL
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
+local FILES = 'files'
 local LOGNAME = 'log.note'
 
 local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
 -- compatibility
-local Ver = require "sonatalib.versions"
+local Ver = {}
+if _VERSION < 'Lua 5.3' then
+  Ver.loadStr = loadstring
+  Ver.atan2 = math.atan2
+  Ver.mathType = function (x)
+    local n = tonumber(x)
+    if not n then return nil end
+    local _,p = math.modf(n)
+    return (p == 0.0) and 'integer' or 'float'
+  end
+else
+  Ver.loadStr = load
+  Ver.atan2 = math.atan
+  Ver.mathType = math.type
+end
 
 --- Process command string.
 --  @param cmd String with Lua expression.
@@ -109,7 +144,7 @@ end
 --	INFO
 
 -- lc_help
-lc_help = require "sonatalib.help"
+lc_help = require "core.help"
 about = lc_help:new("Lua based mathematics.")
 
 --	MODULE
@@ -303,9 +338,8 @@ main.map = function (fn, tbl)
 end
 about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.', lc_help.OTHER}
 
---- Simple implementation of 'The Life' game ;)
---  Prepare your initial board in form of matrix.
---  @param board Matrix with 'ones' as live cells.
+-- "In the game of life the strong survive..." (Scorpions) ;)
+--  board - matrix with 'ones' as live cells
 main.life = function (board)
   assert(board.type == 'matrix', 'Matrix is expected!')
   local rows,cols = board:size() 
@@ -336,9 +370,54 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
+--- Save Lua table in file, use given delimiter.
+--  @param tbl Lua table.
+--  @param fName File name.
+--  @param delim Delimiter, default is coma.
+main.dsvWrite = function (fName, tbl, delim)
+  local f = assert(io.open(fName,'w'))
+  delim = delim or ','
+  for _,v in ipairs(tbl) do
+    if type(v) == 'table' then v = table.concat(v,delim) end
+    f:write(v,'\n')
+  end
+  f:close()
+  io.write('Done\n')
+end
+about[main.dsvWrite] = {"lc.dsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", FILES}
+
+--- Import data from text file, use given delimiter.
+--  @param fName File name.
+--  @param delim Delimiter, default is coma.
+--  @return Lua table with data.
+main.dsvRead = function (fName, delim)
+  local f = assert(io.open(fName, 'r'))
+  local Test = require('core.test')
+  delim = delim or ','
+  local res = {}
+  for s in f:lines('l') do
+    -- read data
+    s = string.match(s,'^%s*(.*)%s*$')
+    if #s > 0 then
+      local tmp = {}
+      -- read string elements
+      for p in Test.split(s,delim) do
+        tmp[#tmp+1] = tonumber(p) or p
+      end
+      res[#res+1] = tmp
+    end
+  end
+  f:close()
+  return res
+end
+about[main.dsvRead] = {"lc.dsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
+
+main.tblImport = lc_help.tblImport
+about[main.tblImport] = {"lc.tblImport(fName)", "Import Lua table, saved into file.", FILES}
+
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
-logging = function (flag)
+main.log = function (flag)
   if flag == 'on' or flag == true then
     if not main._logFile_ then
       main._logFile_ = io.open(LOGNAME, 'a')
@@ -355,7 +434,20 @@ logging = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
-about[logging] = {'logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
+about[main.log] = {'lc.log(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
+
+--- Execute file inside the interpreter.
+--  @param fName Lua or note file name.
+main.run = function (fname)
+  if string.find(fname, '%.lua$') then
+    dofile(fname)
+  elseif string.find(fname, '%.note$') then
+    main.evalNote(fname, false)
+  else
+    io.write('Expected .lua or .note!\n')
+  end
+end
+about[main.run] = {'lc.run(fName)', "Execute lua- or note-file.", lc_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
@@ -396,46 +488,51 @@ end
 
 --- Evaluate 'note'-file.
 --  @param fname Script file name.
-main.evalDemo = function (fname)
+main.evalNote = function (fname, full)
+  full = (full ~= false)
   local ERROR = lc_help.CERROR.."ERROR: "
   local cmd = ""
   local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD
   local invA, invB = '?> ', '>> '
   -- read lines
-  io.write("Run file ", fname, "\n")
+  if full then io.write("Run file ", fname, "\n") end
   -- read
   local f = assert(io.open(fname, 'r'))
   local txt = f:read('*a'); f:close()
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
-    if string.find(line, '^%s*%-%-%s*PAUSE') then 
-      -- call dialog
-      local lcmd, lquit = "", false
-      local invite = invA
-      while true do
-        io.write(invite)
-        local newCmd = io.read()
-        if newCmd == "" then break end  -- continue file evaluation
-        local status, res = _evaluate_(lcmd, newCmd)
-        if status == EV_RES then
-          if res ~= nil then print(res) end
-          invite = invA; lcmd = ""
-        elseif status == EV_CMD then
-          invite = invB; lcmd = res
-        elseif status == EV_ERROR then
-          print(ERROR, res, lc_help.CRESET)
-          invite = invA; lcmd = ""
-        else --  EV_QUIT
-          lquit = true
-          break
+    if string.find(line, '^%s*%-%-%s*PAUSE') then
+      if full then
+        -- call dialog
+        local lcmd, lquit = "", false
+        local invite = invA
+        while true do
+          io.write(invite)
+          local newCmd = io.read()
+          if newCmd == "" then break end  -- continue file evaluation
+          local status, res = _evaluate_(lcmd, newCmd)
+          if status == EV_RES then
+            if res ~= nil then print(res) end
+            invite = invA; lcmd = ""
+          elseif status == EV_CMD then
+            invite = invB; lcmd = res
+          elseif status == EV_ERROR then
+            print(ERROR, res, lc_help.CRESET)
+            invite = invA; lcmd = ""
+          else --  EV_QUIT
+            lquit = true
+            break
+          end
         end
+        if lquit then break end
       end
-      if lquit then break end
     elseif string.find(line, '^%s*%-%-') then
-      -- highlight line comments
-      line = string.gsub(line, '\t(.+)', templ)
-      line = string.format("%s%s%s\n", lc_help.CHELP, line, lc_help.CRESET)
-      io.write(line)
+      if full then
+        -- highlight line comments
+        line = string.gsub(line, '\t(.+)', templ)
+        line = string.format("%s%s%s\n", lc_help.CHELP, line, lc_help.CRESET)
+        io.write(line)
+      end
     else
       -- print line and evaluate
       io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
@@ -464,115 +561,10 @@ main._updateHelp = function (fnNew, fnOld)
   main.about[fnOld] = nil
 end
 
--- command line arguments of Sonata LC and their processing
-main._args_ = {
-
--- run tests
-['--test'] = {
-description = 'Apply the unit tests to the desired module. Call all modules if the name is not defined.',
-example = '--test array',
-process = function (args)
-  local Test = require 'sonatalib.test'
-  if args[2] then
-    Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),args[2]))
-  else
-    for m in pairs(use) do
-      Test.module(string.format('%ssonatalib/%s.lua',(LC_ADD_PATH or ''),m))
-    end
-  end
-  Test.summary()
-end,
-exit = true},
-
--- localization file
-['--lang'] = {
-description = 'Creating/updating a file for localization.',
-example = '--lang eo',
-process = function (args)
-  if args[2] then
-    LC_DIALOG = true -- load help info
-    lc_help.prepare(args[2], use)
-  else 
-    print('Current localization file: ', LC_LOCALIZATION)
-  end
-end,
-exit = true},
-
--- generate 'help.html'
-['--doc'] = {
-description = 'Creating/updating a documentation file.',
-example = '--doc ru',
-process = function (args)
-  LC_DIALOG = true   -- load help info
-  if args[2] then
-    LC_LOCALIZATION = args[2]..'.lng'
-  end
-  lc_help.generateDoc(LC_LOCALIZATION, use) 
-end,
-exit = true},
-
--- new module
-['--new'] = {
-description = 'Create a template for a new module.',
-example = '--new  signal  Sig  "Signal processing functions."',
-process = function (args) lc_help.newModule(args[2],args[3],args[4]) end,
-exit = true},
-
--- process files
-['default'] = {
---description = 'Evaluate file(s).',
-process = function (args) 
-  for i = 1,#args do 
-    if string.find(args[i], '%.note$') then
-      LC_DIALOG = true
-      main.evalDemo(args[i])
-    else
-      dofile(args[i]) 
-    end
-  end 
-end,
-exit = true},
-
-}
--- show help
-main._args_['--help'] = {
-process = function () print(main._arghelp_()) end,
-exit = true}
-main._args_['-h'] = main._args_['--help']
-
--- string representation of the help info
-main._arghelp_ = function ()
-  local txt = {  
-    "\n'Sonata LC' is a Lua based program for mathematical calculations.",
-    "",
-    "USAGE:",
-    "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
-    "(option '-i' can be used for working in native Lua interpreter)",
-    "",
-    "FLAGS:",
-    "\t--help, -h - Get this help message.",
-    "\t\t{Development}",
-  }
-  for k,v in pairs(main._args_) do 
-    if v.description then
-      txt[#txt+1] = string.format('\t%-8s - %s', k, v.description)
-      if v.example then
-        txt[#txt+1] = string.format('\t  (e.g. %s)', v.example)
-      end
-    end
-  end
-  txt[#txt+1] = "\t No flag  - Evaluate file(s)."
-  txt[#txt+1] = "\nVERSION: "..lc_local.version
-  txt[#txt+1] = ""
-  local modules = {}
-  for k in pairs(use) do modules[#modules+1] = k end
-  txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
-  txt[#txt+1] = "BUGS: mail to 'SonataLC@yandex.ru'\n"
-  return table.concat(txt,'\n')
-end
-
 main._exit_ = function () print(lc_help.CMAIN.."\n             --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
 
 return main
 
 --===============================
+
+--TODO don't print result when ; in the end

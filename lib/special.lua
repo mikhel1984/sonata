@@ -1,11 +1,11 @@
---[[		sonatalib/special.lua
+--[[		sonata/lib/special.lua
 
 --- Special mathematical functions.
 --
 --  Most functions are based on "Numerical recipes in C" by W.H.Press, S.A.Teukolsky, W.T.Vetterling and B.P.Flannery
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'special'
 --]]
@@ -14,7 +14,7 @@
 --[[TEST
 
 -- use 'special'
-Spec = require 'sonatalib.special'
+Spec = require 'lib.special'
 
 -- beta functions
 ans = Spec.beta(3,4) * 1E2   --3> 1.667
@@ -66,7 +66,7 @@ ans = Spec.dawson(3.3)       --3> 0.1598
 
 --	LOCAL
 
-local Ver = require "sonatalib.versions"
+local Ver = require "lib.versions"
 
 -- constants for gamma approximation
 local k_gamma = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,
@@ -91,7 +91,7 @@ local ERR_INVARG = "Invalid arguments!"
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

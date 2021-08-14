@@ -1,4 +1,4 @@
---[[		sonatalib/polynom.lua 
+--[[		sonata/lib/polynom.lua 
 
 --- Manipulations with polynomials.
 --
@@ -7,7 +7,7 @@
 --  where each element <i>pk</i> corresponds to coefficient of <i>x^k</i>.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'polynom'
 --]]
@@ -16,7 +16,7 @@
 --[[TEST
 
 -- use 'polynom'
-Poly = require 'sonatalib.polynom'
+Poly = require 'lib.polynom'
 
 -- coefficients in ascendant order
 a = Poly {1,2,4,3}
@@ -82,7 +82,7 @@ ans = d:str('s')              --> '2*s^2 -2*s +1'
 
 --	LOCAL
 
-local Ver = require "sonatalib.versions"
+local Ver = require "lib.versions"
 
 -- Check object type.
 local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
@@ -112,7 +112,7 @@ end
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -125,7 +125,7 @@ about = help:new("Operations with polynomials."),
 polynom.__index = polynom
 
 -- dependencies
-local done, M = pcall(require,'sonatalib.matrix')
+local done, M = pcall(require,'lib.matrix')
 if done then
   polynom.lc_matrix = M 
 else

@@ -1,4 +1,4 @@
---[[		sonatalib/array.lua 
+--[[		sonata/lib/array.lua 
 
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possible.
@@ -11,7 +11,7 @@
 --  where <code>{n1,n2,...nk}<code> - index, <code>C1...Ck</code> - size based coefficients.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'array'
 --]]
@@ -20,7 +20,7 @@
 --[[TEST
 
 -- use 'array'
-Arr = require 'sonatalib.array'
+Arr = require 'lib.array'
 
 -- empty array
 a = Arr {2,3,4}
@@ -85,7 +85,7 @@ for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require "sonatalib.versions"
+local Ver = require "lib.versions"
 
 --- Check object type.
 --  @param t Object.
@@ -94,7 +94,7 @@ local function isarray(t) return type(t) == 'table' and t.isarray end
 
 --	INFO
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

@@ -1,4 +1,4 @@
---[[		sonatalib/bigint.lua 
+--[[		sonata/lib/bigint.lua 
 
 --- Operations with arbitrary long integer numbers.
 --
@@ -7,7 +7,7 @@
 --  where <code>S</code> is +1/-1, B is 10 by default, v1 - vn are digits of the number in reverse order. For example, number <code>123</code> is represented as <code>{sign=1, _base_=10, 3, 2, 1}</code>.
 --  
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonatalib</a> collection, 2021.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'bigint'
 --]]
@@ -15,7 +15,7 @@
 ---------------- Tests -----------------
 --[[TEST
 -- use 'bigint'
-Int = require 'sonatalib.bigint'
+Int = require 'lib.bigint'
 
 -- from integer
 a = Int(123)
@@ -116,7 +116,7 @@ ans = a:gcd(b):val()          --> 3
 
 --	LOCAL
 
-local Ver = require "sonatalib.versions"
+local Ver = require "lib.versions"
 
 local ZERO = string.byte('0')
 
@@ -129,7 +129,7 @@ local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
 --	INFO 
 
-local help = LC_DIALOG and (require "sonatalib.help") or {new=function () return {} end}
+local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
