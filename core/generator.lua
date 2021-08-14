@@ -58,7 +58,7 @@ generator.module = function (mName, alias, description)
 --]]
 
 -- Define here your tests, save results to 'ans', use --> for the strict equality 
--- and --2> for the two digit precision (for example).
+-- and --n> for the n-digit precision in the case of floating numbers.
 --[[TEST
 
 -- use 'WORD2'
@@ -209,7 +209,7 @@ generator.doc = function (locName, tModules)
   res[#res+1] = '</ul></div>'
   res[#res+1] = '<div><h3># About #</h3>'
   -- program description
-  local base = string.gsub(lc._arghelp_(), '\n', '<br>\n')
+  local base = string.gsub(lc_local._arghelp_(), '\n', '<br>\n')
   base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
   res[#res+1] = string.format('<p>%s</p>', base)
   res[#res+1] = '<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>'
