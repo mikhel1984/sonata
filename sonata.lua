@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Environment
-lc_local = { version = '0.9.22' }
+lc_local = { version = '0.9.23' }
 
 -- Add path to the libraries
 if LC_ADD_PATH then

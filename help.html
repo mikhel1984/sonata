@@ -37,59 +37,60 @@ DIV {margin-left: 10px;}
 (option '-i' can be used for working in native Lua interpreter)<br>
 <br>
 <b>FLAGS</b>:<br>
-	--help, -h - Get this help message.<br>
+	-h - Get this help message.<br>
 		{Development}<br>
-	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
-	  (e.g. --test array)<br>
 	--doc    - Creating/updating a documentation file.<br>
 	  (e.g. --doc ru)<br>
-	--new    - Create a template for a new module.<br>
-	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	--lang   - Creating/updating a file for localization.<br>
 	  (e.g. --lang eo)<br>
+	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
+	  (e.g. --test array)<br>
+	--new    - Create a template for a new module.<br>
+	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
 <b>VERSION</b>: 0.9.22<br>
 <br>
-<b>MODULES</b>: rational, quaternion, stat, numeric, polynom, units, special, complex, graph, matrix, array, bigint, gnuplot, const.<br>
+<b>MODULES</b>: matrix, array, graph, rational, complex, numeric, polynom, units, gnuplot, stat, special, quaternion, const, bigint.<br>
 <br>
 <b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
 </p>
 <p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
-<p class="descript">Программа для математических расчётов на Lua.</p>
-<p><b>_ans</b> - Результат последней операции.<br>
-<b>_e</b> - Число Эйлера.<br>
-<b>_pi</b> - Число pi.<br>
-<b>abs(x)</b> - Абсолютное значение (модуль) числа.<br>
-<b>acos(x)</b> - Арккосинус x.<br>
-<b>acosh(x)</b> - Гиперболический арккосинус.<br>
-<b>asin(x)</b> - Арксинус x.<br>
-<b>asinh(x)</b> - Гиперболический арксинус.<br>
-<b>atan2(y,x)</b> - Арктангенс, который учитывает знаки агрументов.<br>
-<b>atanh(x)</b> - Гиперболический арктангенс.<br>
-<b>cos(x)</b> - Косинус x.<br>
-<b>cosh(x)</b> - Гиперболический косинус.<br>
-<b>exp(x)</b> - Экспоненциальная зависимость.<br>
+<p class="descript">Lua based mathematics.</p>
+<p><b>_ans</b> - Result of the last operation.<br>
+<b>_e</b> - Euler number.<br>
+<b>_pi</b> - Number pi.<br>
+<b>abs(x)</b> - Absolute value.<br>
+<b>acos(x)</b> - Inverse cosine x.<br>
+<b>acosh(x)</b> - Hyperbolic arc cosine.<br>
+<b>asin(x)</b> - Inverse sine x.<br>
+<b>asinh(x)</b> - Hyperbolic inverse sine.<br>
+<b>atan2(y,x)</b> - Inverse tangent of y/x, use signs.<br>
+<b>atanh(x)</b> - Hyperbolic inverse tangent.<br>
+<b>cos(x)</b> - Cosine x.<br>
+<b>cosh(x)</b> - Hyperbolic cosine.<br>
+<b>exp(x)</b> - Exponent.<br>
 <b>lc.dsvRead(fName[,delim=','])</b> - Read delimiter separated data as Lua table.<br>
 <b>lc.dsvWrite(fname,tbl[,delim=','])</b> - Save Lua table as delimiter separated data into file.<br>
-<b>lc.map(fn,tbl)</b> - Вычисляет функцию для всех элементов списка (таблицы), возвращает новый список.<br>
-<b>lc.print(...)</b> - Дополненная функция печати, показывает элементы таблицы, представляет числа в н "научно" виде.<br>
-<b>lc.range([from=1,]to[,step=1])</b> - Генерация последовательности чисел в заданном диапазоне.<br>
-<b>lc.round(x[,n=0])</b> - Округление числа до заданного количества десятичных знаков.<br>
+<b>lc.log(flag)</b> - Save session into the log file. Use 'on'/true to start and 'off'/false to stop.<br>
+<b>lc.map(fn,tbl)</b> - Evaluate function for each table element.<br>
+<b>lc.print(...)</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
+<b>lc.range([from=1,]to[,step=1])</b> - Generate table with sequence of numbers.<br>
+<b>lc.round(x[,n=0])</b> - Round value, define number of decimal digits.<br>
+<b>lc.run(fName)</b> - Execute lua- or note-file.<br>
 <b>lc.tblImport(fName)</b> - Import Lua table, saved into file.<br>
-<b>lc.type(t)</b> - Печатает тип объекта, распознаёт типы, заданные в Sonata.<br>
-<b>log(x)</b> - Натуральный логарифм.<br>
-<b>logging(flag)</b> - Сохранение сессии в файл. Используйте 'on'/true для начала и 'off'/false для окончания.<br>
-<b>rand()</b> - Случайное число от 0 до 1.<br>
-<b>randi(N)</b> - Случайное целое число от 1 до N.<br>
-<b>randn()</b> - Нормально распределённая случайная величина с нулевым средним и единичной дисперсией.<br>
-<b>sin(x)</b> - Синус x.<br>
-<b>sinh(x)</b> - Гиперболический синус.<br>
-<b>sqrt(a)</b> - Квадратный корень числа.<br>
-<b>tan(x)</b> - Тангенс x.<br>
-<b>tanh(x)</b> - Гиперболический тангенс.<br></p>
+<b>lc.type(t)</b> - Show type of the object.<br>
+<b>log(x)</b> - Natural logarithm.<br>
+<b>rand()</b> - Random number between 0 and 1.<br>
+<b>randi(N)</b> - Random integer in range from 1 to N.<br>
+<b>randn()</b> - Normal distributed random value with 0 mean and variance 1.<br>
+<b>sin(x)</b> - Sinus x.<br>
+<b>sinh(x)</b> - Hyperbolic sinus.<br>
+<b>sqrt(a)</b> - Square root.<br>
+<b>tan(x)</b> - Tangent x.<br>
+<b>tanh(x)</b> - Hyperbolic tangent.<br></p>
 <pre class="example">
 
 lc = require 'core.main'
@@ -166,22 +167,22 @@ ans = aa.b.c                  --> 'abc'
 <a href="#Top">Top</a></div>
 <div><a name="Arr"></a>
 <h3># Arr (array) #</h3>
-<p class="descript">Операции с массивами, т.е. многомерными упорядоченными последовательностями элементов. Индексы задаются в виде таблицы. Индексация с единицы.</p>
-<p><b>Arr(tSize)</b> - Создаёт пустой массив заданного размера.<br>
-<b>apply(func, ...)</b> - Формирует новый массив путём применения функции к одному или нескольким исходным.<br>
+<p class="descript">Manipulations with arrays of elements. Indices have form of tables. Indexation from 1.</p>
+<p><b>Arr(tSize)</b> - Create empty array with the given size.<br>
+<b>apply(func, ...)</b> - Apply function of several arguments. Return new array.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, -a, a^b<br>
-<b>capacity(A)</b> - Возвращает максимальное число элементов в массиве. Эквивалентно #A.<br>
+<b>capacity(A)</b> - Maximal number of elements in the array. The same as #A.<br>
 <b>comparison</b> - a == b, a ~= b<br>
-<b>concat(A1,A2,nAxis)</b> - Формирует новый массив путём объединения двух исходных по заданной оси.<br>
-<b>copy(A)</b> - Возвращает копию массива.<br>
-<b>dim(A)</b> - Возвращает размерность массива.<br>
-<b>get(A,tInd)</b> - Возвращает значение заданного элемента.<br>
-<b>isEqual(A1,A2)</b> - Сравнение размерностей массивов.<br>
-<b>map(A,func)</b> - Формирует новый массив путём применения функции к элементам исходного.<br>
-<b>next(A)</b> - Итератор, который при каждом вызове возвращает индекс и элемент множества.<br>
-<b>rand(tSize)</b> - Создаёт массив случайных чисел от 0 до 1.<br>
-<b>set(A,tInd,val)</b> - Присваивание значения заданному элементу.<br>
-<b>sub(A,tInd1,tInd2)</b> - Возвращает массив, ограниченный двумя индексами.<br></p>
+<b>concat(A1,A2,nAxis)</b> - Array concatenation along the given axis.<br>
+<b>copy(A)</b> - Get copy of the array.<br>
+<b>dim(A)</b> - Return size of the array.<br>
+<b>get(A,tInd)</b> - Get array element.<br>
+<b>isEqual(A1,A2)</b> - Check size equality.<br>
+<b>map(A,func)</b> - Apply function of 1 argument. Return new array.<br>
+<b>next(A)</b> - Return iterator along all indexes.<br>
+<b>rand(tSize)</b> - Return array with random numbers between 0 and 1.<br>
+<b>set(A,tInd,val)</b> - Set value to the array.<br>
+<b>sub(A,tInd1,tInd2)</b> - Return sub array restricted by 2 indexes.<br></p>
 <pre class="example">
 
 -- use 'array'
@@ -249,21 +250,21 @@ for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 <a href="#Top">Top</a></div>
 <div><a name="Int"></a>
 <h3># Int (bigint) #</h3>
-<p class="descript">Вычисления с целыми числами произвольной длины.</p>
-<p><b>Int(v)</b> - Создаёт большое целое число на основе числа, строки или таблицы.<br>
-<b>abs(v)</b> - Возвращает модуль числа.<br>
+<p class="descript">Operations with arbitrary long integers.</p>
+<p><b>Int(v)</b> - Create number from integer, string or table.<br>
+<b>abs(v)</b> - Return module of arbitrary long number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
-<b>base(B)</b> - Возвращает основание системы счисления.<br>
+<b>base(B)</b> - Current numeric base.<br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br>
-<b>copy(v)</b> - Возвращает копию числа.<br>
-<b>eq(a,b)</b> - Проверка равенства двух чисел.<br>
-<b>fact(B)</b> - Вычисляет факториал целого неотрицательного числа.<br>
-<b>factorize(B)</b> - Возвращает список простых множителей для данного числа.<br>
-<b>gcd(B1,B2)</b> - Наибольший общий делитель.<br>
-<b>isPrime(B[,method])</b> - Проверка числа на простоту. Установите метод 'Fermat' для использования малой теоремы Ферма.<br>
-<b>random(B)</b> - Псевдо-случайное число от 0 до B.<br>
-<b>rebase(B,base)</b> - Конвертирует число в новую систему счисления.<br>
-<b>val(N)</b> - Представление в виде числа с плавающей точкой.<br></p>
+<b>copy(v)</b> - Return copy of given number.<br>
+<b>eq(a,b)</b> - Check equality of two values.<br>
+<b>fact(B)</b> - Return factorial of non-negative integer n.<br>
+<b>factorize(B)</b> - Find the list of multipliers.<br>
+<b>gcd(B1,B2)</b> - Find the greatest common divisor for two integers.<br>
+<b>isPrime(B[,method])</b> - Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.<br>
+<b>random(B)</b> - Generate pseudo-random value from 0 to B.<br>
+<b>rebase(B,base)</b> - Convert number to the new numeric base.<br>
+<b>val(N)</b> - Represent current big integer as number if it possible.<br></p>
 <pre class="example">
 -- use 'bigint'
 Int = require 'lib.bigint'
@@ -367,31 +368,31 @@ ans = a:gcd(b):val()          --> 3
 <a href="#Top">Top</a></div>
 <div><a name="Comp"></a>
 <h3># Comp (complex) #</h3>
-<p class="descript">Вычисления с комплексными числами.</p>
-<p><b>Comp([re=0],[im=0])</b> - Создаёт новое комплексное число.<br>
-<b>_i</b> - Комплексная единица.<br>
-<b>abs(Z)</b> - Модуль комплексного числа.<br>
-<b>acos(Z)</b> - Комплексный обратный косинус.<br>
-<b>acosh(Z)</b> - Комплексный обратный гиперболический косинус.<br>
-<b>angle(Z)</b> - Аргумент комплексного числа.<br>
+<p class="descript">Manipulations with complex numbers.</p>
+<p><b>Comp([re=0],[im=0])</b> - Create new complex number.<br>
+<b>_i</b> - Complex unit.<br>
+<b>abs(Z)</b> - Return module of complex number.<br>
+<b>acos(Z)</b> - Complex inverse cosine.<br>
+<b>acosh(Z)</b> - Complex inverse hyperbolic cosine.<br>
+<b>angle(Z)</b> - Return argument of complex number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
-<b>asin(Z)</b> - Комплексный обратный синус.<br>
-<b>asinh(Z)</b> - Комплексный обратный гиперболический синус.<br>
-<b>atan(Z)</b> - Комплексный обратный тангенс.<br>
-<b>atanh(Z)</b> - Комплексный обратный гиперболический тангенс.<br>
+<b>asin(Z)</b> - Complex inverse sine.<br>
+<b>asinh(Z)</b> - Complex inverse hyperbolic sine.<br>
+<b>atan(Z)</b> - Complex inverse tangent.<br>
+<b>atanh(Z)</b> - Complex inverse hyperbolic tangent.<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>conj(Z)</b> - Комплексно-сопряженное число. Эквивалентно ~Z.<br>
-<b>copy(Z)</b> - Возвращает копию комплексного числа.<br>
-<b>cos(Z)</b> - Комплексный косинус.<br>
-<b>cosh(Z)</b> - Комплексный гиперболический косинус.<br>
-<b>exp(Z)</b> - Комплексная экспонента.<br>
-<b>log(Z)</b> - Комплексный логарифм.<br>
-<b>sin(Z)</b> - Комплексный синус.<br>
-<b>sinh(Z)</b> - Комплексный гиперболический синус.<br>
-<b>sqrt(Z)</b> - Комплексный квадратный корень.<br>
-<b>tan(Z)</b> - Комплексный тангенс.<br>
-<b>tanh(Z)</b> - Комплексный гиперболический тангенс.<br>
-<b>trig(module,angle)</b> - Формирует комплексное число через модуль и агрумент.<br></p>
+<b>conj(Z)</b> - Return the complex conjugate. Equal to ~Z.<br>
+<b>copy(Z)</b> - Create copy of the complex number.<br>
+<b>cos(Z)</b> - Return cosine of a complex number.<br>
+<b>cosh(Z)</b> - Return hyperbolic cosine of a real or complex number.<br>
+<b>exp(Z)</b> - Return exponent in for complex argument.<br>
+<b>log(Z)</b> - Complex logarithm.<br>
+<b>sin(Z)</b> - Return sinus of a complex number.<br>
+<b>sinh(Z)</b> - Return hyperbolic sinus of a complex number.<br>
+<b>sqrt(Z)</b> - Return square root. Result can be real of complex.<br>
+<b>tan(Z)</b> - Return tangent of a complex number.<br>
+<b>tanh(Z)</b> - Return hyperbolic tangent of a complex number.<br>
+<b>trig(module,angle)</b> - Create complex number using module and angle.<br></p>
 <pre class="example">
 
 -- use 'complex'
@@ -499,27 +500,27 @@ print(a)
 <a href="#Top">Top</a></div>
 <div><a name="_C"></a>
 <h3># _C (const) #</h3>
-<p class="descript">Разнообразные константы.</p>
-<p><b>add(name,value)</b> - Добавление неизменяемого значения.<br>
-<b>astro.ly</b> - Световой год.<br>
-<b>astro.pc</b> - Один парсек.<br>
-<b>math.e</b> - Основание натурального логарифма.<br>
-<b>math.phi</b> - Золотое сечение.<br>
-<b>math.pi</b> - Отношение длины окружности к её диаметру.<br>
-<b>phy.G</b> - Гравитационная постоянная.<br>
-<b>phy.NA</b> - Число Авогадро.<br>
-<b>phy.R</b> - Универсальная газовая постоянная.<br>
-<b>phy.Rinf</b> - Постоянная Ридберга.<br>
-<b>phy.Vm</b> - Объём моля идеального газа.<br>
-<b>phy.c</b> - Скорость света.<br>
-<b>phy.e</b> - Заряд электрона.<br>
-<b>phy.eps0</b> - Электрическая постоянная.<br>
-<b>phy.g</b> - Ускорение свободного падения.<br>
-<b>phy.h</b> - Число планка.<br>
-<b>phy.k</b> - Постоянная Больцмана.<br>
-<b>phy.mu0</b> - Магнитная постоянная.<br>
-<b>phy.sigma</b> - Постоянная Стефана-Больцмана.<br>
-<b>remove(name)</b> - Удаление константы.<br></p>
+<p class="descript">Collection of constants.</p>
+<p><b>add(name,value)</b> - Create new constant.<br>
+<b>astro.ly</b> - One light year.<br>
+<b>astro.pc</b> - One parsec.<br>
+<b>math.e</b> - Base of the natural logarithm.<br>
+<b>math.phi</b> - Golden ratio.<br>
+<b>math.pi</b> - Ratio of a circle's circumference to its diameter.<br>
+<b>phy.G</b> - Gravitational constant.<br>
+<b>phy.NA</b> - Avogadro's number.<br>
+<b>phy.R</b> - Universal gas constant.<br>
+<b>phy.Rinf</b> - Rydberg constant.<br>
+<b>phy.Vm</b> - Volume of one mole of ideal gas.<br>
+<b>phy.c</b> - Speed of light.<br>
+<b>phy.e</b> - Electron charge.<br>
+<b>phy.eps0</b> - Permittivity of free space.<br>
+<b>phy.g</b> - Acceleration of free fall.<br>
+<b>phy.h</b> - Planck's constant.<br>
+<b>phy.k</b> - Boltzmann's constant.<br>
+<b>phy.mu0</b> - Permeability of free space.<br>
+<b>phy.sigma</b> - Stefan-Boltzmann constant.<br>
+<b>remove(name)</b> - Delete constant.<br></p>
 <pre class="example">
 
 -- use 'const'
@@ -546,38 +547,38 @@ ans = _C.myConst              --> nil
 <a href="#Top">Top</a></div>
 <div><a name="Gp"></a>
 <h3># Gp (gnuplot) #</h3>
-<p class="descript">Интерфейс для взаимодействия с Gnuplot.</p>
-<p><b>Gp()</b> - Подготовка таблицы для Gnuplot.<br>
-<b>add(tCurve)</b> - Добавить функцию для построения.<br>
-<b>copy(G)</b> - Возвращает копию параметров графика.<br>
-<b>keys</b> -   Описание параметров:<br>
-{math.sin, title='sin'}                      -- строит график для Lua функции, добавляет текст в легенду<br>
-{'sin.dat', ln=1, lw=2}                      -- строит график для файла с учётом цвета и толщины маркеров<br>
-{tbl, with='lines'}                          -- строит график для Lua таблицы с помощью линий<br>
-title='Graph name'                           -- имя графика в целом<br>
-xrange={0,10}                                -- диапазон x от 0 до 10<br>
-yrange={-2,2}                                -- диапазон y<br>
-zrange={0,5}                                 -- диапазон z<br>
-trange={1,2}                                 -- изменение параметра в случае параметрической функции<br>
-xtitle='A', ytitle='B'                       -- имена осей<br>
-terminal='jpeg'                              -- сохранение результата в файл<br>
-output='my_plot.jpg'                         -- имя файла для вывода результата<br>
-parametric=true                              -- параметрическое представление функции<br>
-size='square'                                -- установить квадратный размер изображения<br>
-polar=true                                   -- график в полярных координатах<br>
-grid='polar'                                 -- изменить тип сетки на полярный<br>
-legend=false                                 -- отключить легенду<br>
-surface=true                                 -- построение трёхмерного графика<br>
-samples=200                                  -- задать число точек на графике<br>
-raw='set pm3d'                               -- позволяет написать команды Gnuplot в явном виде<br>
+<p class="descript">Interface for calling Gnuplot from Sonata LC.</p>
+<p><b>Gp()</b> - Prepare Gnuplot object.<br>
+<b>add(tCurve)</b> - Add new curve to figure.<br>
+<b>copy(G)</b> - Get copy of the plot options.<br>
+<b>keys</b> -   Options / examples:<br>
+{math.sin, title='sin'}           -- plot using function, define in Lua; add legend<br>
+{'sin.dat', ln=1, lw=2}           -- plot data from file, use given color and width<br>
+{tbl, with='lines'}               -- plot data from Lua table, use lines<br>
+title='Graph name'                -- set title<br>
+xrange={0,10}                     -- range of x from 0 to 10<br>
+yrange={-2,2}                     -- range of y<br>
+zrange={0,5}                      -- range of z<br>
+trange={1,2}                      -- range for parametric functions<br>
+xtitle='A', ytitle='B'            -- axes names<br>
+terminal='jpeg'                   -- save result as jpeg image<br>
+output='my_plot.jpg'              -- file name<br>
+parametric=true                   -- create parametric plot<br>
+size='square'                     -- set square size<br>
+polar=true                        -- use polar coordinate system<br>
+grid='polar'                      -- polar grid<br>
+legend=false                      -- don't use legend<br>
+surface=true                      -- plot surface in 3D<br>
+samples=200                       -- define number of points<br>
+raw='set pm3d'                    -- set Gnuplot options manually<br>
 <br>
-<b>plot(x1,[y1,[nm,[x2,..]]])</b> - 'x' - список чисел, 'y' - список или функция, 'nm' - имя кривой.<br>
-<b>polarplot(x1,y1,[nm,[x2,y2..]])</b> - График в полярных координатах. 'x' - список чисел, 'y' - список либо функция, 'nm' - имя кривой.<br>
-<b>show(G)</b> - Строит график на основе параметров, представленных в виде таблицы Lua.<br>
-<b>surfplot(x1,y1,fn1,[nm,[x2,y2..]])</b> - Построение поверхности. 'x' и 'y' - списки чисел, 'fn' - функция двух агрументов, 'nm' - имя поверхности.<br>
-<b>tplot(t,[x,y1,y2..])</b> - Построение графика на основе таблицы, матрицы или файла. Опциональные элементы определяют необходимые столбцы.<br>
-<b>tpolar(t,[x,y1,y2..])</b> - График в полярных координатах для таблицы, матрицы или файла. Опциональные элементы определяют стоблцы.<br>
-<b>tsurf(t,[x1,y1,z1,z2..])</b> - Построение графика поверхности на основе таблицы, матрицы или файла. Опциональные элементы определяют необходимые столбцы.<br></p>
+<b>plot(x1,[y1,[nm,[x2,..]]])</b> - 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
+<b>polarplot(x1,y1,[nm,[x2,y2..]])</b> - Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
+<b>show(G)</b> - Plot data, represented as Lua table.<br>
+<b>surfplot(x1,y1,fn1,[nm,[x2,y2..]])</b> - Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name.<br>
+<b>tplot(t,[x,y1,y2..])</b> - Plot table, matrix or data file. Optional elements define columns.<br>
+<b>tpolar(t,[x,y1,y2..])</b> - Polar plot for table, matrix or data file. Optional elements define columns.<br>
+<b>tsurf(t,[x1,y1,z1,z2..])</b> - Surface plot for table, matrix or data file. Optional elements define columns.<br></p>
 <pre class="example">
 
 -- use 'gnuplot'
@@ -670,21 +671,21 @@ f:show()
 <a href="#Top">Top</a></div>
 <div><a name="Graph"></a>
 <h3># Graph (graph) #</h3>
-<p class="descript">Операции с графами.</p>
-<p><b>Graph(t)</b> - Создает новый граф.<br>
-<b>add(G,e)</b> - Добавляет узел (одиночное имя) или ребро. Ребро представлено списком, содержащим начало, конец и, при необходимости, вес (веса).<br>
-<b>bfs(G,start,goal)</b> - Поиск в ширину. Возвращает флаг результата и найденный путь.<br>
-<b>copy(G)</b> - Создаёт копию графа.<br>
-<b>dfs(G,start,goal)</b> - Поиск в глубину. Возвращает флаг результата и найденный путь.<br>
-<b>edges(G)</b> - Возвращает список рёбер.<br>
-<b>isComplete(G)</b> - True если граф полный.<br>
-<b>isDirected(G)</b> - True если граф направленный.<br>
-<b>isNegative(G)</b> - True если граф содержит отрицательные веса.<br>
-<b>isWeighted(G)</b> - True если граф взвешенный.<br>
-<b>nodes(G)</b> - Возвращает список узвло графа.<br>
-<b>pathBF(G,start[,goal])</b> - Поиск кратчайшего пути алгоритмом Беллмана-Форда. Возвращает таблицу расстояний и узлов. Если задана цель, возвращает путь и его длину.<br>
-<b>pathD(G,start[,goal])</b> - Поиск кратчайшего пути алгоритмом Дейкстры. Возвращает таблицу расстояний и узлов. Если задана цель, возвращает путь и его длину.<br>
-<b>remove(G,e)</b> - Удаляет узел или ребро. Узлы представляются именем, рёбра - двухэлементным списком.<br></p>
+<p class="descript">Operations with graphs.</p>
+<p><b>Graph(t)</b> - Create new graph.<br>
+<b>add(G,e)</b> - Add new node or edge to graph G. Node denoted as a single name, edge is a table of names (and weights if need).<br>
+<b>bfs(G,start,goal)</b> - Breadth first search. Return result and found path.<br>
+<b>copy(G)</b> - Get copy of the graph.<br>
+<b>dfs(G,start,goal)</b> - Depth first search. Return result and found path.<br>
+<b>edges(G)</b> - List of graph edges.<br>
+<b>isComplete(G)</b> - Check completeness of the graph.<br>
+<b>isDirected(G)</b> - Check if the graph has directed edges.<br>
+<b>isNegative(G)</b> - Check if the graph has negative edges.<br>
+<b>isWeighted(G)</b> - Check if any edge has weight different from 1.<br>
+<b>nodes(G)</b> - List of graph nodes.<br>
+<b>pathBF(G,start[,goal])</b> - Shortest path search using Bellman-Ford algorithm.<br>
+<b>pathD(G,start[,goal])</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
+<b>remove(G,e)</b> - Remove node or edge from the graph G. Node is a single name, edge - table of names.<br></p>
 <pre class="example">
 
 -- use 'graph'
@@ -793,38 +794,38 @@ print(b)
 <a href="#Top">Top</a></div>
 <div><a name="Mat"></a>
 <h3># Mat (matrix) #</h3>
-<p class="descript">Операции с матрицами. На нулевые элементы память не расходуется. Индексация с единицы.</p>
-<p><b>Mat(...)</b> - Создаёт матрицу на основе таблицы строк.<br>
-<b>apply(fn,M1,M2,...)</b> - Применяет функцию к одной или нескольким матрицам.<br>
+<p class="descript">Matrix operations. The matrices are spares by default.</p>
+<p><b>Mat(...)</b> - Create matrix from list of strings (tables).<br>
+<b>apply(fn,M1,M2,...)</b> - Apply function to the given matrices element-wise.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
-<b>chol(M)</b> - Преобразование Холески для положительно определённой симметричной матрицы.<br>
+<b>chol(M)</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>concat(M1,M2,dir)</b> - Объединяет две матрица горизонтально (dir='h') или вертикально (dir='v').<br>
-Горизонтальная конкатенация доступна в виде M1 .. M2, а вертикальная - M1 // M2.<br>
-<b>copy(M)</b> - Возвращает копию матрицы.<br>
-<b>cross(V1,V2)</b> - Векторное произведение 3-элементных векторов.<br>
-<b>det(M)</b> - Определитель матрицы.<br>
-<b>diag(M[,n=0])</b> - Извлекает диагональные элементы либо формирует новую матрицу из вектора. n - индекс диагонали.<br>
-<b>dot(V1,V2)</b> - Скалярное произведение 3-элементных векторов.<br>
-<b>eye(rows[,cols=rows,init=1])</b> - Возвращает единичную матрицу. Диагональные элементы могут быть отличны от 1.<br>
-<b>fill(rows,cols,fn)</b> - Генерирует матрицу на основе функции fn(строка,столбец).<br>
-<b>inv(M)</b> - Обратная матрица.<br>
-<b>lu(M)</b> - LU преобразование матрицы. Возвращает L,U и P.<br>
-<b>map(M,fn)</b> - Формирует новую матрицу путём применения указанной функции к исходной. Функция может зависеть как от элементов, f(x) так и от индексов f(x,row,col).<br>
-<b>norm(M)</b> - Евклидова норма.<br>
-<b>ones(rows[,cols=rows,val=1])</b> - Формирует матрицу из единиц (или заданного числа).<br>
-<b>pinv(M)</b> - Вовзращает псевдо-обратную матрицу.<br>
-<b>rand(rows[,cols=rows])</b> - Создаёт матрицу случайных чисел от 0 до 1.<br>
-<b>randi([M],N,[rows],[cols=rows])</b> - Создаёт матрицу случайных целых чисел от 1 до N. Возможен вызов в виде 'randi(M,N)' или 'randi(N,r,c)'.<br>
-<b>randn(rows[,cols=rows])</b> - Возвращает матрицу нормально распределённых случайных чисел (с нулевым средним и единичной дисперсией).<br>
-<b>rank(M)</b> - Возвращает ранг матрицы.<br>
-<b>reshape(M,nRows[=size],nCols[=1])</b> - Изменение размера матрицы.<br>
-<b>rref(M)</b> - Преобразование матрицы методом Гаусса.<br>
-<b>size(M)</b> - Возвращает число строк и столбцов матрицы.<br>
-<b>table(M)</b> - Преобразует матрицу в обыкновенную Lua таблицу.<br>
-<b>tr(M)</b> - След матрицы.<br>
-<b>transpose(M)</b> - Транспонирование матрицы. Эквивалентно T().<br>
-<b>zeros(rows[,cols=rows])</b> - Формирует матрицу нулей.<br></p>
+<b>concat(M1,M2,dir)</b> - Concatenate two matrices, dir='h' - in horizontal direction, dir='v' - in vertical<br>
+Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
+<b>copy(M)</b> - Return copy of matrix.<br>
+<b>cross(V1,V2)</b> - Cross product or two 3-element vectors.<br>
+<b>det(M)</b> - Calculate determinant.<br>
+<b>diag(M[,n=0])</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.<br>
+<b>dot(V1,V2)</b> - Scalar product of two 3-element vectors.<br>
+<b>eye(rows[,cols=rows,init=1])</b> - Create identity matrix. Diagonal value (init) can be defined.<br>
+<b>fill(rows,cols,fn)</b> - Create matrix, using function fn(r,c).<br>
+<b>inv(M)</b> - Return inverse matrix.<br>
+<b>lu(M)</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
+<b>map(M,fn)</b> - Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).<br>
+<b>norm(M)</b> - Euclidean norm.<br>
+<b>ones(rows[,cols=rows,val=1])</b> - Create matrix of given numbers (default is 1).<br>
+<b>pinv(M)</b> - Pseudo inverse matrix calculation.<br>
+<b>rand(rows[,cols=rows])</b> - Create matrix with random numbers from 0 to 1.<br>
+<b>randi([M],N,[rows],[cols=rows])</b> - Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.<br>
+<b>randn(rows[,cols=rows])</b> - Create matrix with normally distributed values (0 mean and unit variance)<br>
+<b>rank(M)</b> - Find rank of the matrix.<br>
+<b>reshape(M,nRows[=size],nCols[=1])</b> - Change matrix size.<br>
+<b>rref(M)</b> - Perform transformations using Gauss method.<br>
+<b>size(M)</b> - Return number or rows and columns.<br>
+<b>table(M)</b> - Convert to simple Lua table.<br>
+<b>tr(M)</b> - Get trace of the matrix.<br>
+<b>transpose(M)</b> - Return matrix transpose. Shorten form is T().<br>
+<b>zeros(rows[,cols=rows])</b> - Create matrix from zeros.<br></p>
 <pre class="example">
 
 -- use 'matrix'
@@ -1029,15 +1030,15 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 <a href="#Top">Top</a></div>
 <div><a name="Num"></a>
 <h3># Num (numeric) #</h3>
-<p class="descript">Функции для численных расчётов. Все функции работают с точностью, определяемой параметром TOL.</p>
-<p><b>Newton(fn,x0)</b> - Поиск корня методом Ньютона в окрестностях заданной точки.<br>
-<b>TOL[=0.001]</b> - Точность решения.<br>
-<b>der(fn,x)</b> - Оценка производной функции в точке.<br>
-<b>ode45(fn,tDelta,y0[,param])</b> - Численное решение ОДУ.<br>
-Первый параметр задаёт уравнение, второй - временной интервал, третий - начальное значение функции. Дополнительно можно определить такие параметры как шаг интегрирования и условие прерывания.<br>
-Возвращает таблицу промежуточных точек и конечное значение yn.<br>
-<b>solve(fn,a,b)</b> - Поиск корня уравнения fn(x)=0 на интервале [a,b].<br>
-<b>trapez(fn,a,b)</b> - Интегрирование методом трапеций.<br></p>
+<p class="descript">Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL.</p>
+<p><b>Newton(fn,x0)</b> - Find root of equation using Newton's rule with only one initial condition.<br>
+<b>TOL[=0.001]</b> - The solution tolerance.<br>
+<b>der(fn,x)</b> - Calculate the derivative value for given function.<br>
+<b>ode45(fn,tDelta,y0[,param])</b> - Numerical approximation of the ODE solution.<br>
+First parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.<br>
+Return table of intermediate points and result yn.<br>
+<b>solve(fn,a,b)</b> - Find root of equation fn(x)=0 at interval [a,b].<br>
+<b>trapez(fn,a,b)</b> - Get integral using trapezoidal rule.<br></p>
 <pre class="example">
 
 -- use 'numeric'
@@ -1094,17 +1095,17 @@ ans = y[#y][1]               --2> 2.56
 <a href="#Top">Top</a></div>
 <div><a name="Poly"></a>
 <h3># Poly (polynom) #</h3>
-<p class="descript">Действия над полиномами.</p>
-<p><b>Poly(...)</b> - Создаёт полином на основе списка коэффициентов.<br>
+<p class="descript">Operations with polynomials.</p>
+<p><b>Poly(...)</b> - Create a polynomial.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n, -a<br>
-<b>build(root1,root2,...)</b> - Строит полином на основе списка корней.<br>
+<b>build(root1,root2,...)</b> - Return polynomial with given roots.<br>
 <b>comparison</b> - a==b, a~=b<br>
-<b>copy(P)</b> - Возвращает копию полинома.<br>
-<b>der(P)</b> - Первая производная полинома.<br>
-<b>fit(X,Y,ord)</b> - Аппроксимация точек полиномом заданной степени.<br>
-<b>int(P[,x0=0])</b> - Первообразная полинома, x0 - свободный коэффициент.<br>
-<b>real(p)</b> - Возвращает список действительных корней полинома.<br>
-<b>val(P,x)</b> - Вычисляет значение полинома в заданной точке. Эквивалентно вызаву P(x).<br></p>
+<b>copy(P)</b> - Get copy of the polynomial.<br>
+<b>der(P)</b> - Calculate derivative of polynomial.<br>
+<b>fit(X,Y,ord)</b> - Find polynomial approximation for the line.<br>
+<b>int(P[,x0=0])</b> - Calculate integral, x0 - free coefficient.<br>
+<b>real(p)</b> - Find real roots of the polynomial.<br>
+<b>val(P,x)</b> - Get value of polynomial P in point x.<br></p>
 <pre class="example">
 
 -- use 'polynom'
@@ -1174,24 +1175,24 @@ ans = d:str('s')              --> '2*s^2 -2*s +1'
 <a href="#Top">Top</a></div>
 <div><a name="Quat"></a>
 <h3># Quat (quaternion) #</h3>
-<p class="descript">Операции над кватернионами.</p>
-<p><b>Quat(t={0,0,0,0})</b> - Определение кватерниона через таблицу коэффициентов.<br>
-<b>abs(Q)</b> - Норма кватерниона.<br>
+<p class="descript">Operations with quaternions.</p>
+<p><b>Quat(t={0,0,0,0})</b> - Create new quaternion.<br>
+<b>abs(Q)</b> - Value of the norm.<br>
 <b>arithmetic</b> - a + b, a - b, a * b, a ^ k, -a<br>
 <b>comparison</b> - a == b, a ~= b<br>
-<b>conj(Q)</b> - Сопряжённый кватернион.<br>
-<b>copy(t)</b> - Возвращает копию кватерниона.<br>
-<b>fromAA(fAng,vAxe)</b> - Возвращает кватернион для заданного угла и оси вращения.<br>
-<b>fromRot(M)</b> - Строит кватернион на основе угла поворота и оси вращения.<br>
-<b>imag(Q)</b> - Возвращает таблицу мнимых элементов кватерниона.<br>
-<b>inv(Q)</b> - Возвращает крватернион, обратный к данному.<br>
-<b>mat(Q)</b> - Представление в виде эквивалентной матрицы.<br>
-<b>normalize(Q)</b> - Приводит кватернион к единичной форме.<br>
-<b>real(Q)</b> - Действительная часть (эквивалентно Q.w).<br>
-<b>rotate(Q,vec)</b> - Возвращает вектор, полученный при вращении с помощью заданного кватерниона.<br>
-<b>slerp(Q1,Q2,t)</b> - Сферическая линейная интерполяция двух кватернионов.<br>
-<b>toAA(Q)</b> - Возвращает угол поворота и ось вращения.<br>
-<b>toRot(Q)</b> - Возвращает эквивалентную матрицу вращения.<br></p>
+<b>conj(Q)</b> - Get conjugation.<br>
+<b>copy(t)</b> - Create a copy of the quaternion.<br>
+<b>fromAA(fAng,vAxe)</b> - Create quaternion using angle and axis.<br>
+<b>fromRot(M)</b> - Convert rotation matrix to quaternion.<br>
+<b>imag(Q)</b> - Get table of the imaginary part.<br>
+<b>inv(Q)</b> - Find inverted quaternion.<br>
+<b>mat(Q)</b> - Equivalent matrix representation.<br>
+<b>normalize(Q)</b> - Make unit quaternion.<br>
+<b>real(Q)</b> - Real part (same as Q.w).<br>
+<b>rotate(Q,vec)</b> - Apply quaternion to rotate the vector.<br>
+<b>slerp(Q1,Q2,t)</b> - Spherical linear interpolation for part t.<br>
+<b>toAA(Q)</b> - Get angle and axis of rotation.<br>
+<b>toRot(Q)</b> - Get equal rotation matrix.<br></p>
 <pre class="example">
 
 -- use 'quaternion'
@@ -1266,15 +1267,15 @@ print(d)
 <a href="#Top">Top</a></div>
 <div><a name="Rat"></a>
 <h3># Rat (rational) #</h3>
-<p class="descript">Операции с числами, представленными в виде дроби.</p>
-<p><b>De(R)</b> - Возвращает знаменатель.<br>
-<b>Nu(R)</b> - Возвращает числитель.<br>
-<b>Rat(m[,n=1])</b> - Для создания рационального числа укажите числитель и (опционально) знаменатель.<br>
+<p class="descript">Computations with rational numbers.</p>
+<p><b>De(R)</b> - Return the denominator of the rational number.<br>
+<b>Nu(R)</b> - Return the numerator of rational number.<br>
+<b>Rat(m[,n=1])</b> - Create rational number using num (and denom).<br>
 <b>arithmetic</b> - R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} <br>
 <b>comparison</b> - R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2<br>
-<b>copy(R)</b> - Возвращает копию рационального числа.<br>
-<b>gcd(a,b)</b> - Наибольший общий делитель.<br>
-<b>val(R)</b> - Представление рационального числа в десятичном виде.<br></p>
+<b>copy(R)</b> - Get copy of the rational number.<br>
+<b>gcd(a,b)</b> - Calculate the greatest common divisor for two integers.<br>
+<b>val(R)</b> - Return rational number as decimal.<br></p>
 <pre class="example">
 
 -- use 'rational'
@@ -1330,24 +1331,24 @@ print(a)
 <a href="#Top">Top</a></div>
 <div><a name="Spec"></a>
 <h3># Spec (special) #</h3>
-<p class="descript">Специальные функции.</p>
-<p><b>besseli(n,x)</b> - Модифицированная функция Бесселя In(x).<br>
-<b>besselj(n,x)</b> - Функция Бесселя первого рода.<br>
-<b>besselk(n,x)</b> - Модифицированная функция Бесселя Kn(x).<br>
-<b>bessely(n,x)</b> - Функция Бесселя второго рода.<br>
-<b>beta(z,w)</b> - Бета-функция.<br>
-<b>betainc(x,a,b)</b> - Неполная бета-функция Ix(a,b).<br>
-<b>betaln(z,w)</b> - Натуральный логарифм бета-функции.<br>
-<b>dawson(x)</b> - Интеграл Доусона.<br>
-<b>erf(x)</b> - Функция ошибки.<br>
-<b>erfc(x)</b> - Дополнительная функция ошибки.<br>
-<b>expint(n,x)</b> - Экспоненциальный интеграл En(x).<br>
-<b>gamma(z)</b> - Гамма-функция.<br>
-<b>gammainc(x,a[,type='lower')</b> - Неполная гамма-функция, P (lower - нижняя) или Q (upper - верхняя).<br>
-<b>gammaln(z)</b> - Натуральный логарифм гамма-функции.<br>
-<b>gammp(a,x)</b> - Неполная гамма-функция P(a,x).<br>
-<b>gammq(a,x)</b> - Неполная гамма-функция Q(a,x) = 1-P(a,x).<br>
-<b>legendre(n,x)</b> - Список коэффициентов полиномов Лежандра.<br></p>
+<p class="descript">Special mathematical functions.</p>
+<p><b>besseli(n,x)</b> - Modified Bessel function In(x).<br>
+<b>besselj(n,x)</b> - Bessel function of the first kind.<br>
+<b>besselk(n,x)</b> - Modified Bessel function Kn(x).<br>
+<b>bessely(n,x)</b> - Bessel function of the second kind.<br>
+<b>beta(z,w)</b> - Beta function.<br>
+<b>betainc(x,a,b)</b> - Incomplete beta function Ix(a,b).<br>
+<b>betaln(z,w)</b> - Natural logarithm of beta function.<br>
+<b>dawson(x)</b> - Dawson integral.<br>
+<b>erf(x)</b> - Error function.<br>
+<b>erfc(x)</b> - Complementary error function.<br>
+<b>expint(n,x)</b> - Exponential integral En(x).<br>
+<b>gamma(z)</b> - Gamma function.<br>
+<b>gammainc(x,a[,type='lower')</b> - Incomplete gamma function, P (type='lower') or Q (type='upper').<br>
+<b>gammaln(z)</b> - Natural logarithm of gamma function.<br>
+<b>gammp(a,x)</b> - Incomplete gamma function P(a,x).<br>
+<b>gammq(a,x)</b> - Incomplete gamma function Q(a,x) = 1-P(a,x).<br>
+<b>legendre(n,x)</b> - Return list of Legendre polynomial coefficients.<br></p>
 <pre class="example">
 
 -- use 'special'
@@ -1403,20 +1404,20 @@ ans = Spec.dawson(3.3)       --3> 0.1598
 <a href="#Top">Top</a></div>
 <div><a name="Stat"></a>
 <h3># Stat (stat) #</h3>
-<p class="descript">Статистические вычисления. Исходные данные представлены в виде Lua таблиц.</p>
-<p><b>freq(t)</b> - Возвращает таблицу частот элементов.<br>
-<b>geomean(t[,w])</b> - Геометрическое среднее.<br>
-<b>harmmean(t[,w])</b> - Гармоническое среднее.<br>
-<b>histcounts(X[,rng=10])</b> - Распределение данных по интервалам. Можно указать число интервалов разбиения, либо задать границы в виде таблицы.<br>
-<b>max(t)</b> - Максимальный элемент и его индекс.<br>
-<b>mean(t[,w])</b> - Вычисляет среднее значение.<br>
-<b>median(t)</b> - Медиана списка.<br>
-<b>min(t)</b> - Возвращает наименьший элемент и его индекс.<br>
-<b>moment(n,x[,p])</b> - Центральный момент x порядка n (с весами p).<br>
-<b>std(t[,w])</b> - Возвращает математическое ожидание и дисперсию.<br>
-<b>sum(t)</b> - Возвращает сумму элементов.<br>
-<b>tcdf(x,nu)</b> - Распределение Стьюдента.<br>
-<b>tpdf(x,nu)</b> - Плотность распределения Стьюдента.<br></p>
+<p class="descript">Statistical calculations. Data set must be a Lua table.</p>
+<p><b>freq(t)</b> - Return table with frequencies of elements.<br>
+<b>geomean(t[,w])</b> - Geometrical mean.<br>
+<b>harmmean(t[,w])</b> - Harmonic mean.<br>
+<b>histcounts(X[,rng=10])</b> - Calculate amount of bins. Edges can be either number or table.<br>
+<b>max(t)</b> - Maximal element and its index.<br>
+<b>mean(t[,w])</b> - Calculate average value. Weights can be used.<br>
+<b>median(t)</b> - Median of the list.<br>
+<b>min(t)</b> - Minimal element and its index.<br>
+<b>moment(n,x[,p])</b> - Central moment of x order n, p is a list of weights.<br>
+<b>std(t[,w])</b> - Standard deviation and variance. Weights can be used.<br>
+<b>sum(t)</b> - Get sum of all elements.<br>
+<b>tcdf(x,nu)</b> - Student's cumulative distribution.<br>
+<b>tpdf(x,nu)</b> - Student's distribution density.<br></p>
 <pre class="example">
 
 -- use 'stat'
@@ -1476,14 +1477,14 @@ ans = Stat.tpdf(2, 3.3)      --3> 0.0672
 <a href="#Top">Top</a></div>
 <div><a name="Unit"></a>
 <h3># Unit (units) #</h3>
-<p class="descript">Операции с единицами измерения.</p>
-<p><b>Unit(v[,u])</b> - Создание числа и/или единиц измерения.<br>
-<b>add(U,rule)</b> - Добавление нового правила преобразования единиц измерения.<br>
+<p class="descript">Operations and conversations according the units.</p>
+<p><b>Unit(v[,u])</b> - Create new elements with units.<br>
+<b>add(U,rule)</b> - Add new rule for conversation.<br>
 <b>arithmetic</b> - U1+U2, U1-U2, U1*u2, U1/U2, U1^n<br>
 <b>comparison</b> - U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2<br>
-<b>convert(v, units)</b> - Преобразование между единицами измерения, функция возвращает новый объект или nil.<br>
-<b>copy(U)</b> - Создание копии объекта с его единицами измерения.<br>
-<b>prefix</b> - Таблица дольных и кратных приставок.<br></p>
+<b>convert(v, units)</b> - Convert one units to another, return new object or nil.<br>
+<b>copy(U)</b> - Create copy of the element.<br>
+<b>prefix</b> - Table of possible prefixes for units.<br></p>
 <pre class="example">
 
 -- use 'units'
