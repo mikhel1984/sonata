@@ -258,7 +258,7 @@ end
 
 -- Run! 
 io.write(lc_help.CMAIN, '\n',
-"   # #       --===== Sonata LC =====--       # #\n",
+"   # #       --=====  Sonata  =====--       # #\n",
 "    # #        --==== ", lc_local.version, " ====--        # #\n\n",
 lc_help.CHELP)
 print(about:get('intro'), lc_help.CRESET)
@@ -274,3 +274,4 @@ end
 
 --===============================================
 --note: all methods in _args_ require exit after execution...
+--TODO: rename all (lc -> db)

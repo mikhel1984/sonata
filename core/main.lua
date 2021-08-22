@@ -452,7 +452,7 @@ about[main.run] = {'lc.run(fName)', "Execute lua- or note-file.", lc_help.OTHER}
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
 main.evalDialog = function ()
-  local invA, invB = lc_help.CMAIN..'lc: '..lc_help.CRESET, lc_help.CMAIN..'..: '..lc_help.CRESET
+  local invA, invB = lc_help.CMAIN..'db: '..lc_help.CRESET, lc_help.CMAIN..'..: '..lc_help.CRESET
   local invite, cmd = invA, ""
   local ERROR = lc_help.CERROR.."ERROR: "
   -- start dialog
