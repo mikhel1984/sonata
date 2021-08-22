@@ -130,6 +130,7 @@ __call = function (self,t)
   local f = t.f  -- flattening
   t.e2 = f*(2-f)
   t.b = t.a*(1-f)
+  t.xyzInto = {}
   return setmetatable(t, self)
 end
 })
@@ -150,6 +151,35 @@ SK42 = ellipsoid {a = 6378245, f = 1/298.3}
 }
 -- methametods
 geodesy.__index = geodesy
+
+-- WGS84 and PZ90   dx     dy   dz  wx  wy             wz           m
+local pz90wgs84 = {-1.1, -0.3, -0.9; 0, 0, math.rad(-0.2/3600); -0.12E-6 }
+-- xyz
+geodesy.PZ90.xyzInto[geodesy.WGS84] = ellipsoid._fwdXYZ(pz90wgs84)
+geodesy.WGS84.xyzInto[geodesy.PZ90] = ellipsoid._bwdXYZ(pz90wgs84)
+
+-- PZ90 and PZ9002
+local pz9002pz90 = {1.07, 0.03, -0.02; 0, 0, math.rad(0.13/3600); 0.22E-6}
+-- xyz
+geodesy.PZ9002.xyzInto[geodesy.PZ90] = ellipsoid._fwdXYZ(pz9002pz90)
+geodesy.PZ90.xyzInto[geodesy.PZ9002] = ellipsoid._bwdXYZ(pz9002pz90)
+
+-- PZ9002 and WGS84
+local pz9002wgs84 = {-0.36, 0.08, 0.18; 0, 0, 0; 0}
+-- xyz
+geodesy.PZ9002.xyzInto[geodesy.WGS84] = ellipsoid._fwdXYZ(pz9002wgs84)
+geodesy.WGS84.xyzInto[geodesy.PZ9002] = ellipsoid._bwdXYZ(pz9002wgs84)
+
+-- SK42 and PZ90
+local sk42pz90 = {25, -141, -80; 0, math.rad(-0.35/3600), math.rad(-0.66/3600); 0}
+-- xyz
+geodesy.SK42.xyzInto[geodesy.PZ90] = ellipsoid._fwdXYZ(sk42pz90)
+geodesy.PZ90.xyzInto[geodesy.SK42] = ellipsoid._bwdXYZ(sk42pz90)
+
+-- SK42 and PZ9002 
+local sk42pz9002 = {23.93, -141.03, -79.98; 0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6} 
+geodesy.SK42.xyzInto[geodesy.PZ9002] = ellipsoid._fwdXYZ(sk42pz9002)
+geodesy.PZ9002.xyzInto[geodesy.SK42] = ellipsoid._bwdXYZ(sk42pz9002)
 
 -- Uncomment to remove descriptions
 --geodesy.about = nil
