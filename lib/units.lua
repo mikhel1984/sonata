@@ -150,7 +150,7 @@ end
 
 --	INFO
 
-local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

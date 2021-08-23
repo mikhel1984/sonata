@@ -30,7 +30,7 @@ local function toRad(d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600)
 
 --	INFO
 
-local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

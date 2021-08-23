@@ -16,7 +16,7 @@ local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
 local _MAIN_ = '__module__'
 
-local LIB = (LC_ADD_PATH or '')..'lib'
+local LIB = (SONATA_ADD_PATH or '')..'lib'
 
 --- Add table 'about' into the 'eng' for saving into localization file.
 local function eng2about()
@@ -81,7 +81,7 @@ local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
 
 --	INFO
 
-local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -184,7 +184,7 @@ generator.doc = function (locName, tModules)
   local res = {
     "<html><head>",
     '<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">',
-    "<title>Sonata LC Help</title>",
+    "<title>Sonata Help</title>",
     "</head><body>",
     '<style type="text/css">',
     'H3 {text-align:center;}',
@@ -209,7 +209,7 @@ generator.doc = function (locName, tModules)
   res[#res+1] = '</ul></div>'
   res[#res+1] = '<div><h3># About #</h3>'
   -- program description
-  local base = string.gsub(lc_local._arghelp_(), '\n', '<br>\n')
+  local base = string.gsub(Sn_local._arghelp_(), '\n', '<br>\n')
   base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
   res[#res+1] = string.format('<p>%s</p>', base)
   res[#res+1] = '<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>'
@@ -225,7 +225,7 @@ generator.doc = function (locName, tModules)
   local functions, description = docLines('main','Main',lng)
   res[#res+1] = string.format('<p class="descript">%s</p>', description)
   res[#res+1] = string.format('<p>%s</p>', functions)
-  local fstr = Help.readAll(string.format('%score%smain.lua', (LC_ADD_PATH or ''), Help.SEP))
+  local fstr = Help.readAll(string.format('%score%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
   res[#res+1] = docExample(Test._getCode_(fstr))
   res[#res+1] = '<a href="#Top">Top</a></div>'
   -- other modules

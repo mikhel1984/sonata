@@ -1,6 +1,6 @@
 --[[		sonata/lib/gnuplot.lua 
 
---- Call Gnuplot from Sonata LC.
+--- Call Gnuplot from Sonata.
 --
 --  Object structure:
 --  all parameters of the plot are saved in form of table, each function is in separate subtable.
@@ -144,7 +144,7 @@ local GPPLOT = 'quick'
 
 --	INFO
 
-local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -156,7 +156,7 @@ options = {'terminal','output','parametric','size','polar','grid','key','title',
 -- basic function options
 foptions = {'using','title','with','linetype','linestyle','linewidth','ls','ln','lw'},
 -- description
-about = help:new("Interface for calling Gnuplot from Sonata LC."),
+about = help:new("Interface for calling Gnuplot from Sonata."),
 }
 -- metha
 gnuplot.__index = gnuplot
@@ -176,7 +176,7 @@ gnuplot._tbl2file_ = function (t)
 end
 
 --- Save matrix to tmp file.
---  @param t Sonata LC matrix. 
+--  @param t Sonata matrix. 
 --  @return File name.
 gnuplot._mat2file_ = function (t)
   local name = os.tmpname()
@@ -529,20 +529,20 @@ raw='set pm3d'                    -- set Gnuplot options manually
 gnuplot.onImport = function ()
   plot = gnuplot.plot
   local hlp = gnuplot.about[plot]
-  lc.about[plot] = {hlp[1], hlp[2], GPPLOT}
+  Sn.about[plot] = {hlp[1], hlp[2], GPPLOT}
   tplot = gnuplot.tplot 
   hlp = gnuplot.about[tplot]
-  lc.about[tplot] = {hlp[1], hlp[2], GPPLOT}
+  Sn.about[tplot] = {hlp[1], hlp[2], GPPLOT}
   polar = gnuplot.polarplot
-  lc.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[polar][2], GPPLOT}
+  Sn.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[polar][2], GPPLOT}
   tpolar = gnuplot.tpolar
   hlp = gnuplot.about[tpolar]
-  lc.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
+  Sn.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
   surf = gnuplot.surfplot
-  lc.about[surf] = {'surf(x1,y1,fn1,[nm,[x2,y2..]])', gnuplot.about[surf][2], GPPLOT}
+  Sn.about[surf] = {'surf(x1,y1,fn1,[nm,[x2,y2..]])', gnuplot.about[surf][2], GPPLOT}
   tsurf = gnuplot.tsurf
   hlp = gnuplot.about[tsurf]
-  lc.about[tsurf] = {hlp[1], hlp[2], GPPLOT}
+  Sn.about[tsurf] = {hlp[1], hlp[2], GPPLOT}
 end
 
 -- Uncomment to remove descriptions

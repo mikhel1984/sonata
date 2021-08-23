@@ -1,13 +1,13 @@
 # Sonata LC Localization Files
 
-Language files for **Sonata LC**. 
+Language files for **Sonata**. 
 
 ## Set localization
 
-In order to change language of the program, write desired name into parameter __LC_LOCALIZATION__ in the head of file __sonata.lua__. 
+In order to change language of the program, write desired name into parameter __SONATA_LOCALIZATION__ in the head of file __sonata.lua__. 
 For example, 
 
-    LC_LOCALIZATION = "ru.lng"
+    SONATA_LOCALIZATION = "ru.lng"
 
 ## Add new language 
 

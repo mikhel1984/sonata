@@ -264,7 +264,7 @@ end
 local TRANSFORM = 'transform'
 
 --	INFO
-local help = LC_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -1154,62 +1154,62 @@ matrix.onImport = function ()
   -- basic
   local _rand = rand
   rand = function (a,...) return a and matrix.rand(a,...) or _rand(a,...) end
-  lc._updateHelp(rand,_rand)
+  Sn._updateHelp(rand,_rand)
   local _randi = randi
   randi = function (a,b,...) return b and matrix.randi(a,b,...) or _randi(a,b,...) end
-  lc._updateHelp(randi,_randi)
+  Sn._updateHelp(randi,_randi)
   local _randn = randn
   randn = function (a,...) return a and matrix.randn(a,...) or _rand(a,...) end
-  lc._updateHelp(randn,_randn)
+  Sn._updateHelp(randn,_randn)
   local _abs = abs 
   abs = function (a) return ismatrix(a) and matrix.map(a,_abs) or _abs(a) end
-  lc._updateHelp(abs,_abs)
+  Sn._updateHelp(abs,_abs)
   local _sqrt = sqrt
   sqrt = function (a) return ismatrix(a) and matrix.map(a,_sqrt) or _sqrt(a) end
-  lc._updateHelp(sqrt,_sqrt)
+  Sn._updateHelp(sqrt,_sqrt)
   local _exp = exp
   exp = function (a) return ismatrix(a) and matrix.map(a,_exp) or _exp(a) end
-  lc._updateHelp(exp,_exp)
+  Sn._updateHelp(exp,_exp)
 
   -- trigonometric
   local _sin = sin
   sin = function (a) return ismatrix(a) and matrix.map(a,_sin) or _sin(a) end
-  lc._updateHelp(sin,_sin)
+  Sn._updateHelp(sin,_sin)
   local _cos = cos
   cos = function (a) return ismatrix(a) and matrix.map(a,_cos) or _cos(a) end
-  lc._updateHelp(cos,_cos)
+  Sn._updateHelp(cos,_cos)
   local _tan = tan
   tan = function (a) return ismatrix(a) and matrix.map(a,_tan) or _tan(a) end
-  lc._updateHelp(tan,_tan)
+  Sn._updateHelp(tan,_tan)
   local _asin = asin
   asin = function (a) return ismatrix(a) and matrix.map(a,_asin) or _asin(a) end
-  lc._updateHelp(asin,_asin)
+  Sn._updateHelp(asin,_asin)
   local _acos = acos
   acos = function (a) return ismatrix(a) and matrix.map(a,_acos) or _acos(a) end
-  lc._updateHelp(acos,_acos)
+  Sn._updateHelp(acos,_acos)
   local _atan = atan
   atan = function (a) return ismatrix(a) and matrix.map(a,_atan) or _atan(a) end
-  lc._updateHelp(atan,_atan)
+  Sn._updateHelp(atan,_atan)
 
   -- hyperbolic
   local _sinh = sinh
   sinh = function (a) return ismatrix(a) and matrix.map(a,_sinh) or _sinh(a) end
-  lc._updateHelp(sinh,_sinh)
+  Sn._updateHelp(sinh,_sinh)
   local _cosh = cosh
   cosh = function (a) return ismatrix(a) and matrix.map(a,_cosh) or _cosh(a) end
-  lc._updateHelp(cosh,_cosh)
+  Sn._updateHelp(cosh,_cosh)
   local _tanh = tanh
   tanh = function (a) return ismatrix(a) and matrix.map(a,_tanh) or _tanh(a) end
-  lc._updateHelp(tanh,_tanh)
+  Sn._updateHelp(tanh,_tanh)
   local _asinh = asinh
   asinh = function (a) return ismatrix(a) and matrix.map(a,_asinh) or _asinh(a) end
-  lc._updateHelp(asinh,_asinh)
+  Sn._updateHelp(asinh,_asinh)
   local _acosh = acosh
   acosh = function (a) return ismatrix(a) and matrix.map(a,_acosh) or _acosh(a) end
-  lc._updateHelp(acosh,_acosh)
+  Sn._updateHelp(acosh,_acosh)
   local _atanh = atanh
   atanh = function (a) return ismatrix(a) and matrix.map(a,_atanh) or _atanh(a) end
-  lc._updateHelp(atanh,_atanh)
+  Sn._updateHelp(atanh,_atanh)
 end
 
 -- Uncomment to remove descriptions

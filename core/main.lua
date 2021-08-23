@@ -11,7 +11,7 @@
 ---------------- Tests ---------------------
 --[[TEST
 
-lc = require 'core.main'
+Sn = require 'core.main'
 
 -- constants starts from _
 ans = _pi                     --> math.pi
@@ -20,10 +20,10 @@ ans = _pi                     --> math.pi
 ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
 
 -- round number
-ans = lc.round(0.9)           --> 1.0
+ans = Sn.round(0.9)           --> 1.0
 
 -- save 2 digits
-ans = lc.round(math.pi, 2)    --> 3.14
+ans = Sn.round(math.pi, 2)    --> 3.14
 
 -- random between 0 and 1
 p = rand()
@@ -38,22 +38,22 @@ print(randn())
 
 -- get object type
 -- "knows" types for Sonata objects
-ans = lc.type(25)             --> 'integer'
+ans = Sn.type(25)             --> 'integer'
 
 -- modified print function 
 a = {a=1,b=2, 3,4,5}
-lc.print(a, 0.123)
+Sn.print(a, 0.123)
 
 -- generate 'sequence'
-b = lc.range(3)
+b = Sn.range(3)
 ans = b[3]                    --> 3
 
 -- even numbers
-b = lc.range(2,10,2)
+b = Sn.range(2,10,2)
 ans = b[2]                    --> 4
 
 -- calculate function values
-c = lc.map(sin, b)
+c = Sn.map(sin, b)
 ans = c[1]                   --3> 0.909
 
 -- use Lua functions if need
@@ -67,18 +67,18 @@ nm = os.tmpname()
 -- save table 
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-lc.dsvWrite(nm, t, ';')
+Sn.dsvWrite(nm, t, ';')
 
 -- read table from file
 -- with separator ';'
-tt = lc.dsvRead(nm, ';')
+tt = Sn.dsvRead(nm, ';')
 ans = tt[2][2]                --> 5
 
 -- read table from file
 f = io.open(nm,'w')
 f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
 f:close()
-aa = lc.tblImport(nm)
+aa = Sn.tblImport(nm)
 ans = aa.b.c                  --> 'abc'
 
 --]]
@@ -143,9 +143,9 @@ end
 
 --	INFO
 
--- lc_help
-lc_help = require "core.help"
-about = lc_help:new("Lua based mathematics.")
+-- Sn_help
+Sn_help = require "core.help"
+about = Sn_help:new("Lua based mathematics.")
 
 --	MODULE
 
@@ -189,8 +189,8 @@ atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
 about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
-_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", lc_help.CONST}
-_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", lc_help.CONST}
+_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", Sn_help.CONST}
+_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", Sn_help.CONST}
 -- result 
 _ans = 0;   about[_ans] = {"_ans", "Result of the last operation."}
 
@@ -227,7 +227,7 @@ main.round = function (x,n)
   end
   return p / k
 end
-about[main.round] = {'lc.round(x[,n=0])', 'Round value, define number of decimal digits.', lc_help.OTHER}
+about[main.round] = {'Sn.round(x[,n=0])', 'Round value, define number of decimal digits.', Sn_help.OTHER}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -296,7 +296,7 @@ main.print = function (...)
   end
   io.write('\n')
 end
-about[main.print] = {"lc.print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", lc_help.OTHER}
+about[main.print] = {"Sn.print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", Sn_help.OTHER}
 
 --- Show type of the object.
 --  @param t Some Lua or Sonata object.
@@ -310,7 +310,7 @@ function main.type(t)
   end
   return v
 end
-about[main.type] = {'lc.type(t)', 'Show type of the object.', lc_help.OTHER}
+about[main.type] = {'Sn.type(t)', 'Show type of the object.', Sn_help.OTHER}
 
 --- Generate sequence of values.
 --  @param from Beginning of range (default is 1).
@@ -325,7 +325,7 @@ main.range = function (from,to,step)
   for i = from,to,step do res[#res+1] = i end
   return res
 end
-about[main.range] = {'lc.range([from=1,]to[,step=1])','Generate table with sequence of numbers.', lc_help.OTHER}
+about[main.range] = {'Sn.range([from=1,]to[,step=1])','Generate table with sequence of numbers.', Sn_help.OTHER}
 
 --- Generate list of function values.
 --  @param fn Function to apply.
@@ -336,7 +336,7 @@ main.map = function (fn, tbl)
   for _,v in ipairs(tbl) do res[#res+1] = fn(v) end
   return res
 end
-about[main.map] = {'lc.map(fn,tbl)','Evaluate function for each table element.', lc_help.OTHER}
+about[main.map] = {'Sn.map(fn,tbl)','Evaluate function for each table element.', Sn_help.OTHER}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -384,7 +384,7 @@ main.dsvWrite = function (fName, tbl, delim)
   f:close()
   io.write('Done\n')
 end
-about[main.dsvWrite] = {"lc.dsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", FILES}
+about[main.dsvWrite] = {"Sn.dsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
 --  @param fName File name.
@@ -410,10 +410,10 @@ main.dsvRead = function (fName, delim)
   f:close()
   return res
 end
-about[main.dsvRead] = {"lc.dsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
+about[main.dsvRead] = {"Sn.dsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
 
-main.tblImport = lc_help.tblImport
-about[main.tblImport] = {"lc.tblImport(fName)", "Import Lua table, saved into file.", FILES}
+main.tblImport = Sn_help.tblImport
+about[main.tblImport] = {"Sn.tblImport(fName)", "Import Lua table, saved into file.", FILES}
 
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
@@ -434,7 +434,7 @@ main.log = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
-about[main.log] = {'lc.log(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", lc_help.OTHER}
+about[main.log] = {'Sn.log(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", Sn_help.OTHER}
 
 --- Execute file inside the interpreter.
 --  @param fName Lua or note file name.
@@ -447,14 +447,14 @@ main.run = function (fname)
     io.write('Expected .lua or .note!\n')
   end
 end
-about[main.run] = {'lc.run(fName)', "Execute lua- or note-file.", lc_help.OTHER}
+about[main.run] = {'Sn.run(fName)', "Execute lua- or note-file.", Sn_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
 main.evalDialog = function ()
-  local invA, invB = lc_help.CMAIN..'db: '..lc_help.CRESET, lc_help.CMAIN..'..: '..lc_help.CRESET
+  local invA, invB = Sn_help.CMAIN..'dp: '..Sn_help.CRESET, Sn_help.CMAIN..'..: '..Sn_help.CRESET
   local invite, cmd = invA, ""
-  local ERROR = lc_help.CERROR.."ERROR: "
+  local ERROR = Sn_help.CERROR.."ERROR: "
   -- start dialog
   while true do
     io.write(invite)
@@ -467,7 +467,7 @@ main.evalDialog = function ()
     elseif status == EV_CMD then
       invite = invB; cmd = res
     elseif status == EV_ERROR then
-      print(ERROR, res, lc_help.CRESET)
+      print(ERROR, res, Sn_help.CRESET)
       invite = invA; cmd = ""
     else -- status == EV_QUIT
       break
@@ -490,9 +490,9 @@ end
 --  @param fname Script file name.
 main.evalNote = function (fname, full)
   full = (full ~= false)
-  local ERROR = lc_help.CERROR.."ERROR: "
+  local ERROR = Sn_help.CERROR.."ERROR: "
   local cmd = ""
-  local templ = lc_help.CBOLD..'\t%1'..lc_help.CNBOLD
+  local templ = Sn_help.CBOLD..'\t%1'..Sn_help.CNBOLD
   local invA, invB = '?> ', '>> '
   -- read lines
   if full then io.write("Run file ", fname, "\n") end
@@ -517,7 +517,7 @@ main.evalNote = function (fname, full)
           elseif status == EV_CMD then
             invite = invB; lcmd = res
           elseif status == EV_ERROR then
-            print(ERROR, res, lc_help.CRESET)
+            print(ERROR, res, Sn_help.CRESET)
             invite = invA; lcmd = ""
           else --  EV_QUIT
             lquit = true
@@ -530,12 +530,12 @@ main.evalNote = function (fname, full)
       if full then
         -- highlight line comments
         line = string.gsub(line, '\t(.+)', templ)
-        line = string.format("%s%s%s\n", lc_help.CHELP, line, lc_help.CRESET)
+        line = string.format("%s%s%s\n", Sn_help.CHELP, line, Sn_help.CRESET)
         io.write(line)
       end
     else
       -- print line and evaluate
-      io.write(lc_help.CMAIN, '@ ', lc_help.CRESET, line, '\n')
+      io.write(Sn_help.CMAIN, '@ ', Sn_help.CRESET, line, '\n')
       local status, res = _evaluate_(cmd, line)
       if status == EV_RES then
         if res ~= nil then print(res) end
@@ -543,7 +543,7 @@ main.evalNote = function (fname, full)
       elseif status == EV_CMD then
         cmd = res
       else -- EV_ERROR 
-        print(ERROR, res, lc_help.CRESET)
+        print(ERROR, res, Sn_help.CRESET)
         break
       end
     end
@@ -561,7 +561,7 @@ main._updateHelp = function (fnNew, fnOld)
   main.about[fnOld] = nil
 end
 
-main._exit_ = function () print(lc_help.CMAIN.."\n             --======= Bye! =======--\n"..lc_help.CRESET); os.exit() end
+main._exit_ = function () print(Sn_help.CMAIN.."\n             --======= Bye! =======--\n"..Sn_help.CRESET); os.exit() end
 
 return main
 

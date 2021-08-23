@@ -5,35 +5,35 @@
 --================= CONFIGURATION ====================
 
 --	Uncomment to set the localization file
---LC_LOCALIZATION = "ru.lng"
+--SONATA_LOCALIZATION = "ru.lng"
 
 --	Text coloring
---LC_USE_COLOR = true
+--SONATA_USE_COLOR = true
 
 --	Load after start (optional)
---LC_DEFAULT_MODULES = {'matrix','numeric'}
+--SONATA_DEFAULT_MODULES = {'matrix','numeric'}
 
---	Path (optional, for bash alias lc='path/to/sonata.lua')
---LC_ADD_PATH = path/to/dir/
+--	Path (optional, for bash alias, e.g. sonata='path/to/sonata.lua')
+--SONATA_ADD_PATH = path/to/dir/
 
 --=====================  CODE  ========================
 
 -- Environment
-lc_local = { version = '0.9.23' }
+Sn_local = { version = '0.9.23' }
 
 -- Add path to the libraries
-if LC_ADD_PATH then
-  package.path = string.format("%s;%s?.lua", package.path, LC_ADD_PATH)
+if SONATA_ADD_PATH then
+  package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
 
 -- Table for program variables. Import base functions 
-lc = require('core.main')
+Sn = require('core.main')
 
 -- Text colors 
-lc_help.useColors(LC_USE_COLOR) 
+Sn_help.useColors(SONATA_USE_COLOR) 
 
 -- Quit the program
-quit = lc._exit_
+quit = Sn._exit_
 
 -- Update random seed
 math.randomseed(os.time())
@@ -58,16 +58,16 @@ use = {
 }
 
 -- Import actions 
-function lc_local.doimport(tbl,name)
+function Sn_local.doimport(tbl,name)
   local var = tbl[name]
   if not var then
     -- try alias
-    if not lc_local.alias then 
-      lc_local.alias = {}
-      for k,v in pairs(use) do lc_local.alias[v] = k end
+    if not Sn_local.alias then 
+      Sn_local.alias = {}
+      for k,v in pairs(use) do Sn_local.alias[v] = k end
     end
     var = name
-    name = assert(lc_local.alias[name], "Wrong module name: "..name.."!")
+    name = assert(Sn_local.alias[name], "Wrong module name: "..name.."!")
   end
   if not _G[var] then
     local lib = require('lib.'..name)
@@ -86,29 +86,29 @@ setmetatable(use,
   __call = function (self, name)
     if not name then
       -- show loaded modules
-      io.write('\n', lc_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
+      io.write('\n', Sn_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
       for k,v in pairs(use) do
         io.write(string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-')),'\n')
       end
-      io.write(about:get('use_import'), lc_help.CRESET, '\n\n')
+      io.write(about:get('use_import'), Sn_help.CRESET, '\n\n')
     elseif name == 'all' then
       -- load all modules
-      for k,v in pairs(self) do lc_local.doimport(self,k) end
+      for k,v in pairs(self) do Sn_local.doimport(self,k) end
     elseif type(name) == 'table' then
       -- load group of modules
       for _,v in ipairs(name) do use(v) end
     else
       -- load module
-      local var, nm = lc_local.doimport(self,name)
-      if LC_DIALOG then
-        io.write(lc_help.CHELP)
-        print(string.format(about:get('alias'), lc_help.CBOLD..var..lc_help.CNBOLD, nm))
+      local var, nm = Sn_local.doimport(self,name)
+      if SONATA_DIALOG then
+        io.write(Sn_help.CHELP)
+        print(string.format(about:get('alias'), Sn_help.CBOLD..var..Sn_help.CNBOLD, nm))
       end
     end
   end,
 })
 
---- Print lc_help information.
+--- Print Sn_help information.
 --  @param fn Function name.
 help = function(fn)
   if fn then 
@@ -120,10 +120,10 @@ help = function(fn)
   else
     about:print(about)
   end
-  io.write(lc_help.CRESET)
+  io.write(Sn_help.CRESET)
 end
 
--- command line arguments of Sonata LC and their processing
+-- command line arguments of Sonata and their processing
 local _args_ = {
 
 -- run tests
@@ -134,13 +134,13 @@ process = function (args)
   local Test = require('core.test')
   if args[2] then
     if args[2] == 'main' then
-      Test.module(string.format('%score/main.lua', (LC_ADD_PATH or '')))
+      Test.module(string.format('%score/main.lua', (SONATA_ADD_PATH or '')))
     else
-      Test.module(string.format('%slib/%s.lua', (LC_ADD_PATH or ''), args[2]))
+      Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
     end
   else
     for m in pairs(use) do
-      Test.module(string.format('%slib/%s.lua', (LC_ADD_PATH or ''), m))
+      Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), m))
     end
   end
   Test.summary()
@@ -153,11 +153,11 @@ description = 'Creating/updating a file for localization.',
 example = '--lang eo',
 process = function (args)
   if args[2] then
-    LC_DIALOG = true -- load help info
+    SONATA_DIALOG = true -- load help info
     local Gen = require('core.generator')
     Gen.lang(args[2], use)
   else 
-    print('Current localization file: ', LC_LOCALIZATION)
+    print('Current localization file: ', SONATA_LOCALIZATION)
   end
 end,
 exit = true},
@@ -167,12 +167,12 @@ exit = true},
 description = 'Creating/updating a documentation file.',
 example = '--doc ru',
 process = function (args)
-  LC_DIALOG = true   -- load help info
+  SONATA_DIALOG = true   -- load help info
   local Gen = require('core.generator')
   if args[2] then
-    LC_LOCALIZATION = args[2]..'.lng'
+    SONATA_LOCALIZATION = args[2]..'.lng'
   end
-  Gen.doc(LC_LOCALIZATION, use) 
+  Gen.doc(SONATA_LOCALIZATION, use) 
 end,
 exit = true},
 
@@ -192,8 +192,8 @@ exit = true},
 process = function (args) 
   for i = 1,#args do 
     if string.find(args[i], '%.note$') then
-      LC_DIALOG = true
-      lc.evalNote(args[i])
+      SONATA_DIALOG = true
+      Sn.evalNote(args[i])
     else
       dofile(args[i]) 
     end
@@ -204,13 +204,13 @@ exit = true},
 
 -- show help
 _args_['-h'] = {
-process = function () print(lc_local._arghelp_()) end,
+process = function () print(Sn_local._arghelp_()) end,
 exit = true}
 
 -- string representation of the help info
-lc_local._arghelp_ = function ()
+Sn_local._arghelp_ = function ()
   local txt = {  
-    "\n'Sonata LC' is a Lua based program for mathematical calculations.",
+    "\n'Sonata' is a Lua based program for mathematical calculations.",
     "",
     "USAGE:",
     "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
@@ -229,12 +229,12 @@ lc_local._arghelp_ = function ()
     end
   end
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
-  txt[#txt+1] = "\nVERSION: "..lc_local.version
+  txt[#txt+1] = "\nVERSION: "..Sn_local.version
   txt[#txt+1] = ""
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end
   txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
-  txt[#txt+1] = "BUGS: mail to 'SonataLC@yandex.ru'\n"
+  txt[#txt+1] = "BUGS: mail to 'sonatalc@yandex.ru'\n"
   return table.concat(txt,'\n')
 end
 
@@ -249,29 +249,28 @@ if #arg > 0 then
 end
 
 -- Prepare for dialog mode
-LC_DIALOG = true
+SONATA_DIALOG = true
 
 -- Read localization file and update descriptions
-if LC_LOCALIZATION then 
-  about:localization(LC_LOCALIZATION) 
+if SONATA_LOCALIZATION then 
+  about:localization(SONATA_LOCALIZATION) 
 end
 
 -- Run! 
-io.write(lc_help.CMAIN, '\n',
+io.write(Sn_help.CMAIN, '\n',
 "   # #       --=====  Sonata  =====--       # #\n",
-"    # #        --==== ", lc_local.version, " ====--        # #\n\n",
-lc_help.CHELP)
-print(about:get('intro'), lc_help.CRESET)
+"    # #        --==== ", Sn_local.version, " ====--        # #\n\n",
+Sn_help.CHELP)
+print(about:get('intro'), Sn_help.CRESET)
 
 -- Import default modules
-if LC_DEFAULT_MODULES then
-  use(LC_DEFAULT_MODULES)
+if SONATA_DEFAULT_MODULES then
+  use(SONATA_DEFAULT_MODULES)
 end
 
 if arg[-1] ~= '-i' then
-  lc.evalDialog()
+  Sn.evalDialog()
 end
 
 --===============================================
 --note: all methods in _args_ require exit after execution...
---TODO: rename all (lc -> db)
