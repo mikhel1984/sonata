@@ -433,53 +433,53 @@ complex.onImport = function ()
   _i = complex._i
   local _sqrt = sqrt
   sqrt = function (a) return (iscomplex(a) or type(a) == 'number') and complex.sqrt(a) or _sqrt(a) end
-  Sn._updateHelp(sqrt,_sqrt)
+  Main._updateHelp(sqrt,_sqrt)
   local _exp = exp 
   exp = function (a) return iscomplex(a) and complex.exp(a) or _exp(a) end
-  Sn._updateHelp(exp,_exp)
+  Main._updateHelp(exp,_exp)
   local _log = log
   log = function (a) return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a) end
-  Sn._updateHelp(log,_log)
+  Main._updateHelp(log,_log)
 
   -- trigonometric
   local _sin = sin
   sin = function (a) return iscomplex(a) and complex.sin(a) or _sin(a) end
-  Sn._updateHelp(sin,_sin)
+  Main._updateHelp(sin,_sin)
   local _cos = cos
   cos = function (a) return iscomplex(a) and complex.cos(a) or _cos(a) end
-  Sn._updateHelp(sqrt,_sqrt)
+  Main._updateHelp(sqrt,_sqrt)
   local _tan = tan
   tan = function (a) return iscomplex(a) and complex.tan(a) or _tan(a) end
-  Sn._updateHelp(tan,_tan)
+  Main._updateHelp(tan,_tan)
   local _asin = asin 
   asin = function (a) return iscomplex(a) and complex.asin(a) or _asin(a) end
-  Sn._updateHelp(asin,_asin)
+  Main._updateHelp(asin,_asin)
   local _acos = acos
   acos = function (a) return iscomplex(a) and complex.acos(a) or _acos(a) end
-  Sn._updateHelp(acos,_acos)
+  Main._updateHelp(acos,_acos)
   local _atan = atan 
   atan = function (a) return iscomplex(a) and complex.atan(a) or _atan(a) end
-  Sn._updateHelp(atan,_atan)
+  Main._updateHelp(atan,_atan)
 
   -- hyperbolic
   local _sinh = sinh
   sinh = function (a) return iscomplex(a) and complex.sinh(a) or _sinh(a) end
-  Sn._updateHelp(sinh,_sinh)
+  Main._updateHelp(sinh,_sinh)
   local _cosh = cosh
   cosh = function (a) return iscomplex(a) and complex.cosh(a) or _cosh(a) end
-  Sn._updateHelp(cosh,_cosh)
+  Main._updateHelp(cosh,_cosh)
   local _tanh = tanh
   tanh = function (a) return iscomplex(a) and complex.tanh(a) or _tanh(a) end
-  Sn._updateHelp(tanh,_tanh)
+  Main._updateHelp(tanh,_tanh)
   local _asinh = asinh 
   asinh = function (a) return iscomplex(a) and complex.asinh(a) or _asinh(a) end
-  Sn._updateHelp(asinh,_asinh)
+  Main._updateHelp(asinh,_asinh)
   local _acosh = acosh
   acosh = function (a) return iscomplex(a) and complex.acosh(a) or _acosh(a) end
-  Sn._updateHelp(acosh,_acosh)
+  Main._updateHelp(acosh,_acosh)
   local _atanh = atanh 
   atanh = function (a) return iscomplex(a) and complex.atanh(a) or _atanh(a) end
-  Sn._updateHelp(atanh,_atanh)
+  Main._updateHelp(atanh,_atanh)
 end
 
 -- Uncomment to remove descriptions

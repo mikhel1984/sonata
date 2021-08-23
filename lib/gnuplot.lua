@@ -529,20 +529,20 @@ raw='set pm3d'                    -- set Gnuplot options manually
 gnuplot.onImport = function ()
   plot = gnuplot.plot
   local hlp = gnuplot.about[plot]
-  Sn.about[plot] = {hlp[1], hlp[2], GPPLOT}
+  Main.about[plot] = {hlp[1], hlp[2], GPPLOT}
   tplot = gnuplot.tplot 
   hlp = gnuplot.about[tplot]
-  Sn.about[tplot] = {hlp[1], hlp[2], GPPLOT}
+  Main.about[tplot] = {hlp[1], hlp[2], GPPLOT}
   polar = gnuplot.polarplot
-  Sn.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[polar][2], GPPLOT}
+  Main.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[polar][2], GPPLOT}
   tpolar = gnuplot.tpolar
   hlp = gnuplot.about[tpolar]
-  Sn.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
+  Main.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
   surf = gnuplot.surfplot
-  Sn.about[surf] = {'surf(x1,y1,fn1,[nm,[x2,y2..]])', gnuplot.about[surf][2], GPPLOT}
+  Main.about[surf] = {'surf(x1,y1,fn1,[nm,[x2,y2..]])', gnuplot.about[surf][2], GPPLOT}
   tsurf = gnuplot.tsurf
   hlp = gnuplot.about[tsurf]
-  Sn.about[tsurf] = {hlp[1], hlp[2], GPPLOT}
+  Main.about[tsurf] = {hlp[1], hlp[2], GPPLOT}
 end
 
 -- Uncomment to remove descriptions

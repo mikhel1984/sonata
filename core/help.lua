@@ -112,7 +112,7 @@ help._funcList_ = function (tbl)
     -- only main description contains 'link'
     if not v.link then
       local category = v[CATEGORY] or help.BASE
-      local module = v[MODULE] or "Sn"
+      local module = v[MODULE] or "Main"
       res[module] = res[module] or {}               -- create table for each module
       res[module][category] = res[module][category] or {}  -- add table for each category
       table.insert(res[module][category], v[TITLE])      -- insert function file into this table
