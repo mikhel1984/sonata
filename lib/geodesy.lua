@@ -13,13 +13,35 @@
 -- use 'geodesy'
 Geo = require 'lib.geodesy'
 
--- example
-a = Geo()
-ans = a.type   -->  'geodesy'
+-- generate random from number -1 to 1
+rnd = function () return 2*math.random()-1 end
+-- random coordinates (degrees and meters)
+t0 = {B=rnd()*180, L=rnd()*90, H=rnd()*1000}
+print(t0.B, t0.L, t0.H)
+
+--test in WGS84
+wgs84 = Geo.WGS84
+-- BLH to XYZ
+t1 = wgs84:toXYZ(t0)
+print(t1.X, t1.Y, t1.Z)
+
+-- XYZ to BHL
+t2 = wgs84:toBLH(t1)
+print(t2.B, t2.L, t2.H)
+ans = t2.B                 --3> t0.B
+
+ans = t2.L                 --3> t0.L
+
+ans = t2.H                 --3> t0.H
+
+
 
 --]]
 
 --	LOCAL
+
+-- Compatibility with previous versions
+local Ver = require "lib.versions"
 
 local s_TOL = math.rad(1E-4 / 3600)   -- 0.0001'' 
 
@@ -78,46 +100,34 @@ ellipsoid.toBLH = function (E, t)
   local X, Y, Z = t.X, t.Y, t.Z
   local D = math.sqrt(X*X + Y*Y)
   local B, L, H  -- result in rad
-  if D < 1E-6 then
+  if D < 1E-10 then
     B = (Z == 0 and 0 or (Z > 0 and 0.5 or -0.5)) * math.pi
-    local sB = math.sin(B)
     L = 0
-    H = Z * sB - E.a * math.sqrt(1 - E.e2 * sB * sB)
+    H = math.abs(Z) - E.b
   else
-    local La = math.asin(Y/D)
-    -- check Y
-    if Y < 0 then
-      L = (X < 0) and (math.pi + La) or (2*math.pi - La)
-    elseif Y > 0 then
-      L = (X < 0) and (math.pi - La) or La
-    else -- Y == 0
-      L = (X < 0) and math.pi or 0
+    -- solve Browning's iterative equation
+    local e22 = E.e2 / (1 - E.e2)
+    -- initial value for tan(B)
+    local tg = Z / D * (1 + e22 * E.b / math.sqrt(X*X + Y*Y + Z*Z))
+    for i = 1,2 do       -- TODO: use tol estimation
+      tg = tg * (1 - E.f)    -- get tan(theta)
+      local theta = math.atan(tg)
+      tg = (Z + e22 * E.b * math.sin(theta)^3) / (D - E.e2 * E.a * math.cos(theta)^3)
     end
-    -- check Z
-    if Z == 0 then
-      B = 0
-      H = D - E.a
+    B = math.atan(tg)
+    L = Ver.atan2(Y,X)
+    local sb = math.sin(B)
+    local N = E.a / math.sqrt(1 - E.e2 * sb * sb)
+    if math.abs(tg) > 1 then
+      H = Z / sb - (1 - E.e2) * N
     else
-      -- auxiliary
-      local r = math.sqrt(X*X + Y*Y + Z*Z)
-      local c = math.asin(Z / r)
-      local p = E.e2 * E.a / (2 * r)
-      local s2, b, sb = 0
-      repeat
-        local s1 = s2
-        b = c + s1
-        sb = math.sin(b)
-        s2 = math.asin(p * sb / math.sqrt(1 - E.e2 * sb * sb))
-      until math.abs(s2-s1) < s_TOL
-      B = b
-      H = D * math.cos(B) + Z * sb - E.a * math.sqrt(1 - E.e2 * sb * sb)
+      H = D / math.cos(B) - N
     end
   end
   return {
     B = math.deg(B),
     L = math.deg(L),
-    H = H
-  }
+    H = H }
 end
 _about_[ellipsoid.toBLH] = {"toBLH(E,tXYZ)", "Transform Cartesian coordinates to Geodetic."}
 
@@ -201,10 +211,20 @@ geodesy.PZ9002.xyzInto[geodesy.SK42] = ellipsoid._bwdXYZ(sk42pz9002)
 --  @param d Degrees.
 --  @param m Minutes (optional).
 --  @param s Seconds (optional).
---  Angle value in radians.
-geodesy.deg2rad = function (d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
-geodesy.about[geodesy.deg2rad] = {"deg2rad(d[,m[,s]])", "Convert degrees, minutes and seconds to radians", help.OTHER}
+--  @return Angle in radians.
+geodesy.dms2rad = function (d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
+geodesy.about[geodesy.dms2rad] = {"dms2rad(d[,m[,s]])", "Convert degrees, minutes and seconds to radians", help.OTHER}
 
+--- Convert degrees to degrees-minutes-seconds.
+--  @param d Angle in degrees.
+--  @return Degrees, minutes, seconds.
+geodesy.deg2dms = function (d)
+  local deg = math.floor(d)
+  local min = math.floor(60 * (d - deg))
+  local sec = 3600 * (d - deg) - 60 * min
+  return deg, min, sec
+end
+geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle degrees."}
 
 -- Uncomment to remove descriptions
 --geodesy.about = nil
