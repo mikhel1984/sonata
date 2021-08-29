@@ -1,7 +1,9 @@
 --[[		sonata/lib/geodesy.lua
 
 --- Coordinate transformations and other geodetic tasks
---  @author Stanislav Mikhel
+--
+--  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
 
 	module 'geodesy'
 --]]
@@ -26,19 +28,35 @@ local s_TOL = math.rad(1E-4 / 3600)   -- 0.0001''
 --  @return True if the object is geodesy.
 local function isgeodesy(t) return type(t)=='table' and t.isgeodesy end
 
-local function toRad(d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
-
 --	INFO
 
 local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
+-- Reference ellipsoid
 local ellipsoid = {}
 -- methametods
 ellipsoid.__index = ellipsoid
 
--- t = {B = b, L = l, H = h}
+-- temporary save here the function description
+local _about_ = help:new("Coordinate transformations and other geodetic tasks")
+
+--- Ellipsoid object constructor.
+--  @param t Table with parameters, obligatory are semi-major axis, flattening.
+--  @return New ellipsoid.
+ellipsoid.new = function (self,t)
+  local f = t.f  -- flattening
+  t.e2 = f*(2-f)
+  t.b = t.a*(1-f)
+  t.xyzInto = {}
+  return setmetatable(t, self)
+end
+
+--- Transform Geodetic coordinats to Cartesian.
+--  @param E Reference ellipsoid object.
+--  @param t Dictionary with coordinates: B (deg), L (deg), H (m).
+--  @return Dictionary with coordinates in meters: X, Y, Z.
 ellipsoid.toXYZ = function (E, t)
   -- convert to radians
   local B, L, H = math.rad(t.B), math.rad(t.L), t.H
@@ -48,11 +66,14 @@ ellipsoid.toXYZ = function (E, t)
   return {
     X = NH * math.cos(L),
     Y = NH * math.sin(L),
-    Z = ((1-E.e2)*N + H) * sB
-  }
+    Z = ((1-E.e2)*N + H) * sB }
 end
+_about_[ellipsoid.toXYZ] = {"toXYZ(E,tBLH)", "Transform Geodetic coordinates to Cartesian."}
 
--- t = {X = x, Y = y, Z = z}
+--- Transform Cartesian coordinates to Geodetic.
+--  @param E Reference ellipsoid object.
+--  @param t Dictionary with coordinates in meters: X, Y, Z.
+--  @return Dictionary with coordinates: B (deg), L (deg), H (m).
 ellipsoid.toBLH = function (E, t)
   local X, Y, Z = t.X, t.Y, t.Z
   local D = math.sqrt(X*X + Y*Y)
@@ -98,13 +119,15 @@ ellipsoid.toBLH = function (E, t)
     H = H
   }
 end
+_about_[ellipsoid.toBLH] = {"toBLH(E,tXYZ)", "Transform Cartesian coordinates to Geodetic."}
 
--- par = {dX, dY, dZ; wx, wy, wz; m}
+--- Transform coordinates between two Cartesian systems, forward direction.
+--  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
+--  @return Function for coordinate transformation.
 ellipsoid._fwdXYZ = function (par)
   local m = 1 + par[7]
   local wx, wy, wz = par[4], par[5], par[6]
-  -- t = {X = x, Y = y, Z = z}
-  return function (t) 
+  return function (t)    -- t = {X = x, Y = y, Z = z}
     return {
       X = m * ( t.X + wz * t.Y - wy * t.Z) + par[1],
       Y = m * (-wz * t.X + t.Y + wx * t.Z) + par[2],
@@ -113,6 +136,9 @@ ellipsoid._fwdXYZ = function (par)
   end
 end
 
+--- Transform coordinates between two Cartesian systems, backward direction.
+--  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
+--  @return Function for coordinate transformation.
 ellipsoid._bwdXYZ = function (par)
   local m = 1 - par[7]
   local wx, wy, wz = par[4], par[5], par[6]
@@ -125,29 +151,19 @@ ellipsoid._bwdXYZ = function (par)
   end
 end
 
-setmetatable(ellipsoid, {
-__call = function (self,t)
-  local f = t.f  -- flattening
-  t.e2 = f*(2-f)
-  t.b = t.a*(1-f)
-  t.xyzInto = {}
-  return setmetatable(t, self)
-end
-})
-
-
+-- Collection of Geodetic methods
 local geodesy = {
 -- mark
 type = 'geodesy', isgeodesy = true,
 -- description
-about = help:new("Coordinate transformations and other geodetic tasks"),
+about = _about_,
 
--- ellipsoid approximations
-WGS84 = ellipsoid {a = 6378137, f = 1/298.257223563}, -- 
+-- Ellipsoids
+WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563},
 -- russian systems
-PZ90 = ellipsoid {a = 6378136, f = 1/298.25784}, 
-PZ9002 = ellipsoid {a = 6378136, f = 1/298.25784}, 
-SK42 = ellipsoid {a = 6378245, f = 1/298.3}
+PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784},
+PZ9002 = ellipsoid:new {a = 6378136, f = 1/298.25784},
+SK42 = ellipsoid:new {a = 6378245, f = 1/298.3}
 }
 -- methametods
 geodesy.__index = geodesy
@@ -180,6 +196,15 @@ geodesy.PZ90.xyzInto[geodesy.SK42] = ellipsoid._bwdXYZ(sk42pz90)
 local sk42pz9002 = {23.93, -141.03, -79.98; 0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6} 
 geodesy.SK42.xyzInto[geodesy.PZ9002] = ellipsoid._fwdXYZ(sk42pz9002)
 geodesy.PZ9002.xyzInto[geodesy.SK42] = ellipsoid._bwdXYZ(sk42pz9002)
+
+--- Convert degrees to radians.
+--  @param d Degrees.
+--  @param m Minutes (optional).
+--  @param s Seconds (optional).
+--  Angle value in radians.
+geodesy.deg2rad = function (d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
+geodesy.about[geodesy.deg2rad] = {"deg2rad(d[,m[,s]])", "Convert degrees, minutes and seconds to radians", help.OTHER}
+
 
 -- Uncomment to remove descriptions
 --geodesy.about = nil
