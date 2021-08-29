@@ -16,7 +16,7 @@ Geo = require 'lib.geodesy'
 -- generate random from number -1 to 1
 rnd = function () return 2*math.random()-1 end
 -- random coordinates (degrees and meters)
-t0 = {B=rnd()*180, L=rnd()*90, H=rnd()*1000}
+t0 = {B=rnd()*90, L=rnd()*180, H=rnd()*1000}
 print(t0.B, t0.L, t0.H)
 
 --test in WGS84
@@ -160,6 +160,31 @@ ellipsoid._bwdXYZ = function (par)
     }
   end
 end
+
+-- Datum conversation (Molodensky method)
+
+-- Forward direction
+ellipsoid._fwdBLH = function (A,B,par)
+  local dX, dY, dZ = par[1], par[2], par[3]
+  local da, df = B.a - A.a, B.f - A.f
+  return function (t)
+    local B, L, H = math.deg(t.B), math.deg(t.L), t.H
+    local sB, cB = math.sin(B), math.cos(B)
+    local sL, cL = math.sin(L), math.cos(L)
+    local tmp = 1 - A.e2*sB*sB
+    local M = A.a*(1-A.e2)/tmp^1.5
+    local N = A.a/math.sqrt(tmp)
+    local dB = (-dX*sB*cL - dY*sB*sL + dZ*cB+N*A.e2*sB*cB*da/A.a + sB*cB*(M/(1-f)+N*(1-f))*df) / (M + H)
+    local dL = (-dX*sL + dY*cL) / ((N + H)*cB)
+    local dH = dX*cB*cL + dY*cB*sL + dZ*sL - A.a*da/N + N*(1-f)*sL*sL*df
+    return {
+      B = math.deg(B + dB),
+      L = math.deg(L + dL),
+      H = H + dH
+    } 
+  end
+end
+
 
 -- Collection of Geodetic methods
 local geodesy = {
