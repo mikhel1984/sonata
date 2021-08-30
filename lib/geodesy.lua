@@ -34,14 +34,21 @@ ans = t2.L                 --3> t0.L
 
 ans = t2.H                 --3> t0.H
 
+-- coordinate transformation function
 pz90 = Geo.PZ90
-blh_wgs84_pz90 = wgs84.blhInto[pz90]
-t3 = blh_wgs84_pz90(t0)
-print(t3.B, t3.L, t3.H)
+xyz_wgs84_pz90 = wgs84.xyzInto[pz90]
+t3 = xyz_wgs84_pz90(t1) 
+print(t3.X, t3.Y, t3.Z)
 
-blh_pz90_wgs84 = pz90.blhInto[wgs84]
-t4 = blh_pz90_wgs84(t3)
+-- datum transformation
+blh_wgs84_pz90 = wgs84.blhInto[pz90]
+t4 = blh_wgs84_pz90(t0)
 print(t4.B, t4.L, t4.H)
+
+-- compare
+t5 = pz90:toXYZ(t4)
+print(t5.X, t5.Y, t5.Z)
+
 
 
 --]]
@@ -168,7 +175,7 @@ ellipsoid._bwdXYZ = function (par)
   end
 end
 
---- Molodensky transformation.
+--- Molodensky transformation. Axis are assumed to be parallel to each other.
 --  @param E Ellipsoid object.
 --  @param dx Shift in X, m.
 --  @param dy Shift in Y, m.
@@ -178,19 +185,18 @@ end
 --  @param t Coordinates of a point.
 --  @return Shift in B, L, H coordinates.
 ellipsoid._molodensky = function (E,dx,dy,dz,da,df,t)
-  local B, L, H = math.rad(t.B), math.rad(t.L), t.H
+  local B, L = math.rad(t.B), math.rad(t.L)
   local sB, cB = math.sin(B), math.cos(B)
   local sL, cL = math.sin(L), math.cos(L)
-  local tmp = 1 - E.e2*sB*sB
-  local M = E.a * (1-E.e2) / tmp^1.5
-  local N = E.a / math.sqrt(tmp)
-  local dB = (-dx*sB*cL - dy*sB*sL + dz*cB + N*E.e2*sB*cB*da/E.a + sB*cB*(M/(1-E.f)+N*(1-E.f))*df) / (M + H)
-  local dL = (-dx*sL + dy*cL) / ((N + H)*cB)
-  local dH = dx*cB*cL + dy*cB*sL + dz*sL - E.a*da/N + N*(1-E.f)*sL*sL*df
+  local tmp, f1 = 1 - E.e2*sB*sB, 1 - E.f
+  local M, N = E.a * (1-E.e2) / tmp^1.5, E.a / math.sqrt(tmp)
+  local dB = (-dx*sB*cL - dy*sB*sL + dz*cB + N*E.e2*sB*cB*da/E.a + sB*cB*(M/f1 + N*f1)*df) / (M + t.H)
+  local dL = (-dx*sL + dy*cL) / ((N + t.H)*cB)
+  local dH = dx*cB*cL + dy*cB*sL + dz*sL - E.a*da/N + N*f1*sB*sB*df
   return math.deg(dB), math.deg(dL), dH
 end
 
---- Datum transformation, forward direction.
+--- Datum transformation from E1 to E2.
 --  @param E1 Src ellipsoid object.
 --  @param E2 Dst ellipsoid object.
 --  @param par Transformation parameters.
@@ -207,15 +213,16 @@ ellipsoid._fwdBLH = function (E1,E2,par)
   end
 end
 
---- Datum transformation, backward direction.
+--- Datum transformation from E2 to E1.
 --  @param E1 Dst ellipsoid object.
 --  @param E2 Src ellipsoid object.
 --  @param par Transformation parameters.
 --  @return Function for transformation.
+
 ellipsoid._bwdBLH = function (E1,E2,par)
-  local da, df = E2.a - E1.a, E2.f - E1.f
+  local da, df = E1.a - E2.a, E1.f - E2.f
   return function (t)
-    local dB, dL, dH = ellipsoid._molodensky(E2, -par[1], -par[2], -par[3], -da, -df, t)
+    local dB, dL, dH = ellipsoid._molodensky(E2, -par[1], -par[2], -par[3], da, df, t)
     return {
       B = t.B + dB,
       L = t.L + dL,
@@ -241,38 +248,38 @@ SK42 = ellipsoid:new {a = 6378245, f = 1/298.3}
 -- methametods
 geodesy.__index = geodesy
 
--- WGS84 and PZ90   dx     dy   dz  wx  wy             wz           m
-local pz90wgs84 = {-1.1, -0.3, -0.9; 0, 0, math.rad(-0.2/3600); -0.12E-6 }
--- xyz
-geodesy.PZ90.xyzInto[geodesy.WGS84] = ellipsoid._fwdXYZ(pz90wgs84)
-geodesy.WGS84.xyzInto[geodesy.PZ90] = ellipsoid._bwdXYZ(pz90wgs84)
--- blh
-geodesy.PZ90.blhInto[geodesy.WGS84] = ellipsoid._fwdBLH(geodesy.PZ90, geodesy.WGS84, pz90wgs84)
-geodesy.WGS84.blhInto[geodesy.PZ90] = ellipsoid._bwdBLH(geodesy.PZ90, geodesy.WGS84, pz90wgs84)
+--- Simplify configuration of coordinate transformation between ellipsoids.
+--  @param E1 First ellipsoid object.
+--  @param E2 Second ellipsoid object.
+--  @param par List of parameters {dX, dY, dZ; wx, wy, wz; m}
+local _setTranslation_ = function (E1, E2, par)
+  -- cartesian
+  E1.xyzInto[E2] = ellipsoid._fwdXYZ(par)
+  E2.xyzInto[E1] = ellipsoid._bwdXYZ(par)
+  -- datum
+  E1.blhInto[E2] = ellipsoid._fwdBLH(E1, E2, par)
+  E2.blhInto[E1] = ellipsoid._bwdBLH(E1, E2, par)
+end
 
+-- PZ90 to WGS84
+_setTranslation_(geodesy.PZ90, geodesy.WGS84, 
+  {-1.1, -0.3, -0.9; 0, 0, math.rad(-0.2/3600); -0.12E-6})
 
 -- PZ90 and PZ9002
-local pz9002pz90 = {1.07, 0.03, -0.02; 0, 0, math.rad(0.13/3600); 0.22E-6}
--- xyz
-geodesy.PZ9002.xyzInto[geodesy.PZ90] = ellipsoid._fwdXYZ(pz9002pz90)
-geodesy.PZ90.xyzInto[geodesy.PZ9002] = ellipsoid._bwdXYZ(pz9002pz90)
+_setTranslation_(geodesy.PZ9002, geodesy.PZ90, 
+  {1.07, 0.03, -0.02; 0, 0, math.rad(0.13/3600); 0.22E-6})
 
 -- PZ9002 and WGS84
-local pz9002wgs84 = {-0.36, 0.08, 0.18; 0, 0, 0; 0}
--- xyz
-geodesy.PZ9002.xyzInto[geodesy.WGS84] = ellipsoid._fwdXYZ(pz9002wgs84)
-geodesy.WGS84.xyzInto[geodesy.PZ9002] = ellipsoid._bwdXYZ(pz9002wgs84)
+_setTranslation_(geodesy.PZ9002, geodesy.WGS84, 
+  {-0.36, 0.08, 0.18; 0, 0, 0; 0})
 
 -- SK42 and PZ90
-local sk42pz90 = {25, -141, -80; 0, math.rad(-0.35/3600), math.rad(-0.66/3600); 0}
--- xyz
-geodesy.SK42.xyzInto[geodesy.PZ90] = ellipsoid._fwdXYZ(sk42pz90)
-geodesy.PZ90.xyzInto[geodesy.SK42] = ellipsoid._bwdXYZ(sk42pz90)
+_setTranslation_(geodesy.SK42, geodesy.PZ90, 
+  {25, -141, -80; 0, math.rad(-0.35/3600), math.rad(-0.66/3600); 0})
 
 -- SK42 and PZ9002 
-local sk42pz9002 = {23.93, -141.03, -79.98; 0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6} 
-geodesy.SK42.xyzInto[geodesy.PZ9002] = ellipsoid._fwdXYZ(sk42pz9002)
-geodesy.PZ9002.xyzInto[geodesy.SK42] = ellipsoid._bwdXYZ(sk42pz9002)
+_setTranslation_(geodesy.SK42, geodesy.PZ9002, 
+  {23.93, -141.03, -79.98; 0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6})
 
 --- Convert degrees to radians.
 --  @param d Degrees.
