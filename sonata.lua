@@ -45,6 +45,7 @@ use = {
   bigint    = "Int",
   complex   = "Comp",
   const     = "_C",
+  geodesy   = "Geo",
   gnuplot   = "Gp",
   graph     = "Graph",
   matrix    = "Mat",

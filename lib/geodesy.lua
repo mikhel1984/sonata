@@ -264,22 +264,23 @@ end
 -- PZ90 to WGS84
 _setTranslation_(geodesy.PZ90, geodesy.WGS84, 
   {-1.1, -0.3, -0.9; 0, 0, math.rad(-0.2/3600); -0.12E-6})
-
 -- PZ90 and PZ9002
 _setTranslation_(geodesy.PZ9002, geodesy.PZ90, 
   {1.07, 0.03, -0.02; 0, 0, math.rad(0.13/3600); 0.22E-6})
-
 -- PZ9002 and WGS84
 _setTranslation_(geodesy.PZ9002, geodesy.WGS84, 
   {-0.36, 0.08, 0.18; 0, 0, 0; 0})
-
 -- SK42 and PZ90
 _setTranslation_(geodesy.SK42, geodesy.PZ90, 
   {25, -141, -80; 0, math.rad(-0.35/3600), math.rad(-0.66/3600); 0})
-
 -- SK42 and PZ9002 
 _setTranslation_(geodesy.SK42, geodesy.PZ9002, 
   {23.93, -141.03, -79.98; 0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6})
+
+geodesy.xyzInto = 'A.xyzInto[B]'
+geodesy.about[geodesy.xyzInto] = {"A.xyzInto[B]", "Get function to transform coordinates from A to B system."}
+geodesy.blhInto = 'A.blhInto[B]'
+geodesy.about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geodetic coordinates from A to B system using the Molodensky method."}
 
 --- Convert degrees to radians.
 --  @param d Degrees.
@@ -298,7 +299,7 @@ geodesy.deg2dms = function (d)
   local sec = 3600 * (d - deg) - 60 * min
   return deg, min, sec
 end
-geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle degrees."}
+geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle degrees.", help.OTHER}
 
 -- Uncomment to remove descriptions
 --geodesy.about = nil
