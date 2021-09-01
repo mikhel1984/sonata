@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Environment
-Main_local = { version = '0.9.23' }
+Main_local = { version = '0.9.24' }
 
 -- Add path to the libraries
 if SONATA_ADD_PATH then

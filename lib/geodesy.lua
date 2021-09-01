@@ -75,7 +75,7 @@ local ellipsoid = {}
 ellipsoid.__index = ellipsoid
 
 -- temporary save here the function description
-local _about_ = help:new("Coordinate transformations and other geodetic tasks")
+local _about_ = help:new("Coordinate transformations and other geodetic tasks.")
 
 --- Ellipsoid object constructor.
 --  @param t Table with parameters, obligatory are semi-major axis, flattening.
@@ -288,7 +288,7 @@ geodesy.about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geo
 --  @param s Seconds (optional).
 --  @return Angle in radians.
 geodesy.dms2rad = function (d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
-geodesy.about[geodesy.dms2rad] = {"dms2rad(d[,m[,s]])", "Convert degrees, minutes and seconds to radians", help.OTHER}
+geodesy.about[geodesy.dms2rad] = {"dms2rad(d[,m[,s]])", "Convert degrees, minutes and seconds to radians.", help.OTHER}
 
 --- Convert degrees to degrees-minutes-seconds.
 --  @param d Angle in degrees.
@@ -299,7 +299,7 @@ geodesy.deg2dms = function (d)
   local sec = 3600 * (d - deg) - 60 * min
   return deg, min, sec
 end
-geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle degrees.", help.OTHER}
+geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
 -- Uncomment to remove descriptions
 --geodesy.about = nil
@@ -307,3 +307,6 @@ geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and sec
 return geodesy
 
 --======================================
+--TODO: check correctness
+--TODO: add methods
+--TODO: more examples

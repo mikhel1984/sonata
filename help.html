@@ -1,6 +1,6 @@
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Sonata LC Help</title>
+<title>Sonata Help</title>
 </head><body>
 <style type="text/css">
 H3 {text-align:center;}
@@ -17,6 +17,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Int">bigint</a></li>
 <li><a href="#Comp">complex</a></li>
 <li><a href="#_C">const</a></li>
+<li><a href="#Geo">geodesy</a></li>
 <li><a href="#Gp">gnuplot</a></li>
 <li><a href="#Graph">graph</a></li>
 <li><a href="#Mat">matrix</a></li>
@@ -30,7 +31,7 @@ DIV {margin-left: 10px;}
 </ul></div>
 <div><h3># About #</h3>
 <p><br>
-'Sonata LC' is a Lua based program for mathematical calculations.<br>
+'Sonata' is a Lua based program for mathematical calculations.<br>
 <br>
 <b>USAGE</b>:<br>
 	lua [-i] sonata.lua [flag] [arg1 arg2 ...]<br>
@@ -39,27 +40,37 @@ DIV {margin-left: 10px;}
 <b>FLAGS</b>:<br>
 	-h - Get this help message.<br>
 		{Development}<br>
-	--doc    - Creating/updating a documentation file.<br>
-	  (e.g. --doc ru)<br>
-	--lang   - Creating/updating a file for localization.<br>
-	  (e.g. --lang eo)<br>
-	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
-	  (e.g. --test array)<br>
 	--new    - Create a template for a new module.<br>
 	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
+	--doc    - Creating/updating a documentation file.<br>
+	  (e.g. --doc ru)<br>
+	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
+	  (e.g. --test array)<br>
+	--lang   - Creating/updating a file for localization.<br>
+	  (e.g. --lang eo)<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.22<br>
+<b>VERSION</b>: 0.9.23<br>
 <br>
-<b>MODULES</b>: matrix, array, graph, rational, complex, numeric, polynom, units, gnuplot, stat, special, quaternion, const, bigint.<br>
+<b>MODULES</b>: special, numeric, array, bigint, const, gnuplot, rational, units, matrix, geodesy, graph, stat, polynom, quaternion, complex.<br>
 <br>
-<b>BUGS</b>: mail to 'SonataLC@yandex.ru'<br>
+<b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
 </p>
 <p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
 <p class="descript">Lua based mathematics.</p>
-<p><b>_ans</b> - Result of the last operation.<br>
+<p><b>DsvRead(fName[,delim=','])</b> - Read delimiter separated data as Lua table.<br>
+<b>DsvWrite(fname,tbl[,delim=','])</b> - Save Lua table as delimiter separated data into file.<br>
+<b>Logging(flag)</b> - Save session into the log file. Use 'on'/true to start and 'off'/false to stop.<br>
+<b>Map(fn,tbl)</b> - Evaluate function for each table element.<br>
+<b>Print(...)</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
+<b>Range([from=1,]to[,step=1])</b> - Generate table with sequence of numbers.<br>
+<b>Round(x[,n=0])</b> - Round value, define number of decimal digits.<br>
+<b>Run(fName)</b> - Execute lua- or note-file.<br>
+<b>TblImport(fName)</b> - Import Lua table, saved into file.<br>
+<b>Type(t)</b> - Show type of the object.<br>
+<b>_ans</b> - Result of the last operation.<br>
 <b>_e</b> - Euler number.<br>
 <b>_pi</b> - Number pi.<br>
 <b>abs(x)</b> - Absolute value.<br>
@@ -72,16 +83,6 @@ DIV {margin-left: 10px;}
 <b>cos(x)</b> - Cosine x.<br>
 <b>cosh(x)</b> - Hyperbolic cosine.<br>
 <b>exp(x)</b> - Exponent.<br>
-<b>lc.dsvRead(fName[,delim=','])</b> - Read delimiter separated data as Lua table.<br>
-<b>lc.dsvWrite(fname,tbl[,delim=','])</b> - Save Lua table as delimiter separated data into file.<br>
-<b>lc.log(flag)</b> - Save session into the log file. Use 'on'/true to start and 'off'/false to stop.<br>
-<b>lc.map(fn,tbl)</b> - Evaluate function for each table element.<br>
-<b>lc.print(...)</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
-<b>lc.range([from=1,]to[,step=1])</b> - Generate table with sequence of numbers.<br>
-<b>lc.round(x[,n=0])</b> - Round value, define number of decimal digits.<br>
-<b>lc.run(fName)</b> - Execute lua- or note-file.<br>
-<b>lc.tblImport(fName)</b> - Import Lua table, saved into file.<br>
-<b>lc.type(t)</b> - Show type of the object.<br>
 <b>log(x)</b> - Natural logarithm.<br>
 <b>rand()</b> - Random number between 0 and 1.<br>
 <b>randi(N)</b> - Random integer in range from 1 to N.<br>
@@ -93,7 +94,7 @@ DIV {margin-left: 10px;}
 <b>tanh(x)</b> - Hyperbolic tangent.<br></p>
 <pre class="example">
 
-lc = require 'core.main'
+require 'core.main'
 
 -- constants starts from _
 ans = _pi                     --> math.pi
@@ -102,10 +103,10 @@ ans = _pi                     --> math.pi
 ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
 
 -- round number
-ans = lc.round(0.9)           --> 1.0
+ans = Round(0.9)           --> 1.0
 
 -- save 2 digits
-ans = lc.round(math.pi, 2)    --> 3.14
+ans = Round(math.pi, 2)    --> 3.14
 
 -- random between 0 and 1
 p = rand()
@@ -120,22 +121,22 @@ print(randn())
 
 -- get object type
 -- "knows" types for Sonata objects
-ans = lc.type(25)             --> 'integer'
+ans = Type(25)             --> 'integer'
 
 -- modified print function 
 a = {a=1,b=2, 3,4,5}
-lc.print(a, 0.123)
+Print(a, 0.123)
 
 -- generate 'sequence'
-b = lc.range(3)
+b = Range(3)
 ans = b[3]                    --> 3
 
 -- even numbers
-b = lc.range(2,10,2)
+b = Range(2,10,2)
 ans = b[2]                    --> 4
 
 -- calculate function values
-c = lc.map(sin, b)
+c = Map(sin, b)
 ans = c[1]                   --3> 0.909
 
 -- use Lua functions if need
@@ -149,18 +150,18 @@ nm = os.tmpname()
 -- save table 
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-lc.dsvWrite(nm, t, ';')
+DsvWrite(nm, t, ';')
 
 -- read table from file
 -- with separator ';'
-tt = lc.dsvRead(nm, ';')
+tt = DsvRead(nm, ';')
 ans = tt[2][2]                --> 5
 
 -- read table from file
 f = io.open(nm,'w')
 f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
 f:close()
-aa = lc.tblImport(nm)
+aa = TblImport(nm)
 ans = aa.b.c                  --> 'abc'
 
 --</pre>
@@ -545,9 +546,63 @@ ans = _C.myConst              --> nil
 
 --</pre>
 <a href="#Top">Top</a></div>
+<div><a name="Geo"></a>
+<h3># Geo (geodesy) #</h3>
+<p class="descript">Coordinate transformations and other geodetic tasks.</p>
+<p><b>A.blhInto[B]</b> - Get function to transform geodetic coordinates from A to B system using the Molodensky method.<br>
+<b>A.xyzInto[B]</b> - Get function to transform coordinates from A to B system.<br>
+<b>deg2dms(d)</b> - Return degrees, minutes and seconds for the given angle value.<br>
+<b>dms2rad(d[,m[,s]])</b> - Convert degrees, minutes and seconds to radians.<br>
+<b>toBLH(E,tXYZ)</b> - Transform Cartesian coordinates to Geodetic.<br>
+<b>toXYZ(E,tBLH)</b> - Transform Geodetic coordinates to Cartesian.<br></p>
+<pre class="example">
+
+-- use 'geodesy'
+Geo = require 'lib.geodesy'
+
+-- generate random from number -1 to 1
+rnd = function () return 2*math.random()-1 end
+-- random coordinates (degrees and meters)
+t0 = {B=rnd()*90, L=rnd()*180, H=rnd()*1000}
+print(t0.B, t0.L, t0.H)
+
+--test in WGS84
+wgs84 = Geo.WGS84
+-- BLH to XYZ
+t1 = wgs84:toXYZ(t0)
+print(t1.X, t1.Y, t1.Z)
+
+-- XYZ to BHL
+t2 = wgs84:toBLH(t1)
+print(t2.B, t2.L, t2.H)
+ans = t2.B                 --3> t0.B
+
+ans = t2.L                 --3> t0.L
+
+ans = t2.H                 --3> t0.H
+
+-- coordinate transformation function
+pz90 = Geo.PZ90
+xyz_wgs84_pz90 = wgs84.xyzInto[pz90]
+t3 = xyz_wgs84_pz90(t1) 
+print(t3.X, t3.Y, t3.Z)
+
+-- datum transformation
+blh_wgs84_pz90 = wgs84.blhInto[pz90]
+t4 = blh_wgs84_pz90(t0)
+print(t4.B, t4.L, t4.H)
+
+-- compare
+t5 = pz90:toXYZ(t4)
+print(t5.X, t5.Y, t5.Z)
+
+
+
+--</pre>
+<a href="#Top">Top</a></div>
 <div><a name="Gp"></a>
 <h3># Gp (gnuplot) #</h3>
-<p class="descript">Interface for calling Gnuplot from Sonata LC.</p>
+<p class="descript">Interface for calling Gnuplot from Sonata.</p>
 <p><b>Gp()</b> - Prepare Gnuplot object.<br>
 <b>add(tCurve)</b> - Add new curve to figure.<br>
 <b>copy(G)</b> - Get copy of the plot options.<br>
