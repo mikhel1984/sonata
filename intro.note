@@ -255,8 +255,8 @@ Quat.slerp(a,b,0.5)      -- use normalization inside
 -- If you have 'Gnuplot' system, it can be called
 -- from the Sonata LC.
 -- Plot data in Matlab style.
-a = lc.range(0,6,0.1)
-b = lc.map(sin,a)
+a = Range(0,6,0.1)
+b = Map(sin,a)
 plot(a,b)
 -- second argument can be function
 plot(a,sin,'sin', a,cos,'cos')
@@ -275,7 +275,7 @@ surf(a,a,fun)
 function fun(x)             \
   return {x,sin(x),cos(x)}  \
 end
-b = lc.map(fun, a)
+b = Map(fun, a)
 -- define x,y
 tplot(b,1,3)
 -- plot all by default
@@ -283,5 +283,5 @@ tpolar(b)
 -- PAUSE
 
 -- Use 'Gp' if you need more control.
-
+--
 -- We wish you a pleasant work with the program!

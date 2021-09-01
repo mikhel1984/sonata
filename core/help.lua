@@ -55,7 +55,7 @@ CBOLD = '',
 CNBOLD = '',
 CERROR = '',
 -- path
-LOCALE = (LC_ADD_PATH or '')..'locale',
+LOCALE = (SONATA_ADD_PATH or '')..'locale',
 }
 -- metamethods
 help.__index = help
@@ -112,7 +112,7 @@ help._funcList_ = function (tbl)
     -- only main description contains 'link'
     if not v.link then
       local category = v[CATEGORY] or help.BASE
-      local module = v[MODULE] or "Default"
+      local module = v[MODULE] or "Main"
       res[module] = res[module] or {}               -- create table for each module
       res[module][category] = res[module][category] or {}  -- add table for each category
       table.insert(res[module][category], v[TITLE])      -- insert function file into this table
@@ -194,14 +194,14 @@ help.localization = function (self,fName)
   if lng then
     getmetatable(self).locale = lng   -- save translation
     -- update functions in main.lua
-    local lc = lng.Main
+    local Sn = lng.Main
     for k,v in pairs(self) do
       if v.link then
         -- common description
-        self[k][MAIN] = lc[_MAIN_] or v[MAIN]
+        self[k][MAIN] = Sn[_MAIN_] or v[MAIN]
       else
         -- details
-        self[k][DESCRIPTION] = lc[v[TITLE]] or v[DESCRIPTION]
+        self[k][DESCRIPTION] = Sn[v[TITLE]] or v[DESCRIPTION]
         self[k][CATEGORY] = self:get(v[CATEGORY])
       end
     end
