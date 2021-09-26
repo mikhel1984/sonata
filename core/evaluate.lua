@@ -17,16 +17,24 @@ else
   Ver.loadStr = load
 end
 
+local function islist(v) return type(v) == 'table' and v.SONATA_INFO end
+
 local _update = function (ev, st, cmd, ans)
   ev._st = st
   ev._cmd = cmd
-  ev._ans = (ans ~= nil) and tostring(ans) or nil
+  if ans == nil then
+    ev._ans = nil
+  else
+    ev._ans = islist(ans) and ans or tostring(ans)
+  end
   return st
 end
 
-local print_err = function (msg)
+local function print_err (msg)
   print(string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
+
+
 
 --	MODULE
 
@@ -36,8 +44,9 @@ EV_RES = 1,   -- found result
 EV_CMD = 0,   -- continue expected 
 EV_ERR = -1,  -- error
 EV_QUIT = -2, -- command for quit
--- information types
-INFO_USE_LIST = 101,
+-- string formats
+FORMAT_V1 = '#v1',
+FORMAT_V2 = '#v2',
 -- log file name
 LOGNAME = 'log.note',
 -- state and result
@@ -105,7 +114,9 @@ evaluate.cli_loop = function (ev, invA, invB, isNote)
     if isNote and newLine == "" then break end
     local status = evaluate.eval(ev, newLine, not isNote)
     if status == evaluate.EV_RES then
-      if ev._ans ~= nil then print(ev._ans) end
+      if ev._ans ~= nil then
+        print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
+      end
       invite = invA
     elseif status == evaluate.EV_CMD then
       invite = invB
@@ -158,7 +169,9 @@ evaluate.note = function (ev, fname, full)
       io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
       local status = evaluate.eval(ev, line, false)
       if status == evaluate.EV_RES then
-        if ev._ans ~= nil then print(ev._ans) end
+        if ev._ans ~= nil then 
+          print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
+        end
       elseif status == evaluate.EV_CMD then
         -- skip
       else -- evaluate.EV_ERR 
@@ -167,6 +180,25 @@ evaluate.note = function (ev, fname, full)
       end
     end
   end
+end
+
+evaluate._toText = function (lst)
+  local i = 1
+  local res = {}
+  while i <= #lst do
+    local v = lst[i]
+    if v == evaluate.FORMAT_V1 then
+      res[#res+1] = string.format("%s%s%s", SonataHelp.CHELP, lst[i+1], SonataHelp.CRESET)
+      i = i + 1
+    elseif v == evaluate.FORMAT_V2 then
+      res[#res+1] = string.format("%s%s%s%s", SonataHelp.CHELP, SonataHelp.CBOLD, lst[i+1], SonataHelp.CRESET)
+      i = i + 1
+    else
+      res[#res+1] = v
+    end
+    i = i + 1
+  end
+  return table.concat(res)
 end
 
 evaluate.exit = function () 
