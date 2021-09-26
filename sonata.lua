@@ -26,14 +26,17 @@ if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
 
--- Table for program variables. Import base functions 
+-- Command evaluation.
+Sonata_eval = require('core.evaluate')
+
+-- Import base functions 
 Main = require('core.main')
 
 -- Text colors 
 Sonata_help.useColors(SONATA_USE_COLOR) 
 
 -- Quit the program
-quit = Main._exit_
+quit = Sonata_eval.exit
 
 -- Update random seed
 math.randomseed(os.time())
@@ -194,7 +197,7 @@ process = function (args)
   for i = 1,#args do 
     if string.find(args[i], '%.note$') then
       SONATA_DIALOG = true
-      Main.evalNote(args[i])
+      Sonata_eval.note(args[i])
     else
       dofile(args[i]) 
     end
@@ -270,7 +273,7 @@ if SONATA_DEFAULT_MODULES then
 end
 
 if arg[-1] ~= '-i' then
-  Main.evalDialog()
+  Sonata_eval.cli(Main)
 end
 
 --===============================================
