@@ -143,9 +143,9 @@ end
 
 --	INFO
 
--- Main_help
-Main_help = require "core.help"
-about = Main_help:new("Lua based mathematics.")
+-- Sonata_help
+Sonata_help = require "core.help"
+about = Sonata_help:new("Lua based mathematics.")
 
 --	MODULE
 
@@ -189,10 +189,10 @@ atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
 about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
-_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", Main_help.CONST}
-_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", Main_help.CONST}
+_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", Sonata_help.CONST}
+_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", Sonata_help.CONST}
 -- result 
-_ans = 0;   about[_ans] = {"_ans", "Result of the last operation.", Main_help.OTHER}
+_ans = 0;   about[_ans] = {"_ans", "Result of the last operation.", Sonata_help.OTHER}
 
 -- random
 rand = function () return math.random() end
@@ -227,7 +227,7 @@ Round = function (x,n)
   end
   return p / k
 end
-about[Round] = {'Round(x[,n=0])', 'Round value, define number of decimal digits.', Main_help.OTHER}
+about[Round] = {'Round(x[,n=0])', 'Round value, define number of decimal digits.', Sonata_help.OTHER}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -296,7 +296,7 @@ Print = function (...)
   end
   io.write('\n')
 end
-about[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", Main_help.OTHER}
+about[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", Sonata_help.OTHER}
 
 --- Show type of the object.
 --  @param t Some Lua or Sonata object.
@@ -310,7 +310,7 @@ function Type(t)
   end
   return v
 end
-about[Type] = {'Type(t)', 'Show type of the object.', Main_help.OTHER}
+about[Type] = {'Type(t)', 'Show type of the object.', Sonata_help.OTHER}
 
 --- Generate sequence of values.
 --  @param from Beginning of range (default is 1).
@@ -325,7 +325,7 @@ Range = function (from,to,step)
   for i = from,to,step do res[#res+1] = i end
   return res
 end
-about[Range] = {'Range([from=1,]to[,step=1])','Generate table with sequence of numbers.', Main_help.OTHER}
+about[Range] = {'Range([from=1,]to[,step=1])','Generate table with sequence of numbers.', Sonata_help.OTHER}
 
 --- Generate list of function values.
 --  @param fn Function to apply.
@@ -336,7 +336,7 @@ Map = function (fn, tbl)
   for _,v in ipairs(tbl) do res[#res+1] = fn(v) end
   return res
 end
-about[Map] = {'Map(fn,tbl)','Evaluate function for each table element.', Main_help.OTHER}
+about[Map] = {'Map(fn,tbl)','Evaluate function for each table element.', Sonata_help.OTHER}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -412,7 +412,7 @@ DsvRead = function (fName, delim)
 end
 about[DsvRead] = {"DsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
 
-TblImport = Main_help.tblImport
+TblImport = Sonata_help.tblImport
 about[TblImport] = {"TblImport(fName)", "Import Lua table, saved into file.", FILES}
 
 --- Session logging.
@@ -434,7 +434,7 @@ Logging = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
-about[Logging] = {'Logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", Main_help.OTHER}
+about[Logging] = {'Logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", Sonata_help.OTHER}
 
 --- Execute file inside the interpreter.
 --  @param fName Lua or note file name.
@@ -447,14 +447,14 @@ Run = function (fname)
     io.write('Expected .lua or .note!\n')
   end
 end
-about[Run] = {'Run(fName)', "Execute lua- or note-file.", Main_help.OTHER}
+about[Run] = {'Run(fName)', "Execute lua- or note-file.", Sonata_help.OTHER}
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
 main.evalDialog = function ()
-  local invA, invB = Main_help.CMAIN..'dp: '..Main_help.CRESET, Main_help.CMAIN..'..: '..Main_help.CRESET
+  local invA, invB = Sonata_help.CMAIN..'dp: '..Sonata_help.CRESET, Sonata_help.CMAIN..'..: '..Sonata_help.CRESET
   local invite, cmd = invA, ""
-  local ERROR = Main_help.CERROR.."ERROR: "
+  local ERROR = Sonata_help.CERROR.."ERROR: "
   -- start dialog
   while true do
     io.write(invite)
@@ -467,7 +467,7 @@ main.evalDialog = function ()
     elseif status == EV_CMD then
       invite = invB; cmd = res
     elseif status == EV_ERROR then
-      print(ERROR, res, Main_help.CRESET)
+      print(ERROR, res, Sonata_help.CRESET)
       invite = invA; cmd = ""
     else -- status == EV_QUIT
       break
@@ -490,9 +490,9 @@ end
 --  @param fname Script file name.
 main.evalNote = function (fname, full)
   full = (full ~= false)
-  local ERROR = Main_help.CERROR.."ERROR: "
+  local ERROR = Sonata_help.CERROR.."ERROR: "
   local cmd = ""
-  local templ = Main_help.CBOLD..'\t%1'..Main_help.CNBOLD
+  local templ = Sonata_help.CBOLD..'\t%1'..Sonata_help.CNBOLD
   local invA, invB = '?> ', '>> '
   -- read lines
   if full then io.write("Run file ", fname, "\n") end
@@ -517,7 +517,7 @@ main.evalNote = function (fname, full)
           elseif status == EV_CMD then
             invite = invB; lcmd = res
           elseif status == EV_ERROR then
-            print(ERROR, res, Main_help.CRESET)
+            print(ERROR, res, Sonata_help.CRESET)
             invite = invA; lcmd = ""
           else --  EV_QUIT
             lquit = true
@@ -530,12 +530,12 @@ main.evalNote = function (fname, full)
       if full then
         -- highlight line comments
         line = string.gsub(line, '\t(.+)', templ)
-        line = string.format("%s%s%s\n", Main_help.CHELP, line, Main_help.CRESET)
+        line = string.format("%s%s%s\n", Sonata_help.CHELP, line, Sonata_help.CRESET)
         io.write(line)
       end
     else
       -- print line and evaluate
-      io.write(Main_help.CMAIN, '@ ', Main_help.CRESET, line, '\n')
+      io.write(Sonata_help.CMAIN, '@ ', Sonata_help.CRESET, line, '\n')
       local status, res = _evaluate_(cmd, line)
       if status == EV_RES then
         if res ~= nil then print(res) end
@@ -543,7 +543,7 @@ main.evalNote = function (fname, full)
       elseif status == EV_CMD then
         cmd = res
       else -- EV_ERROR 
-        print(ERROR, res, Main_help.CRESET)
+        print(ERROR, res, Sonata_help.CRESET)
         break
       end
     end
@@ -561,7 +561,7 @@ main._updateHelp = function (fnNew, fnOld)
   main.about[fnOld] = nil
 end
 
-main._exit_ = function () print(Main_help.CMAIN.."\n             --======= Bye! =======--\n"..Main_help.CRESET); os.exit() end
+main._exit_ = function () print(Sonata_help.CMAIN.."\n             --======= Bye! =======--\n"..Sonata_help.CRESET); os.exit() end
 
 return main
 

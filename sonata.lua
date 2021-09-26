@@ -19,7 +19,7 @@
 --=====================  CODE  ========================
 
 -- Environment
-Main_local = { version = '0.9.24' }
+Sonata_local = { version = '0.9.24' }
 
 -- Add path to the libraries
 if SONATA_ADD_PATH then
@@ -30,7 +30,7 @@ end
 Main = require('core.main')
 
 -- Text colors 
-Main_help.useColors(SONATA_USE_COLOR) 
+Sonata_help.useColors(SONATA_USE_COLOR) 
 
 -- Quit the program
 quit = Main._exit_
@@ -59,16 +59,16 @@ use = {
 }
 
 -- Import actions 
-function Main_local.doimport(tbl,name)
+function Sonata_local.doimport(tbl,name)
   local var = tbl[name]
   if not var then
     -- try alias
-    if not Main_local.alias then 
-      Main_local.alias = {}
-      for k,v in pairs(use) do Main_local.alias[v] = k end
+    if not Sonata_local.alias then 
+      Sonata_local.alias = {}
+      for k,v in pairs(use) do Sonata_local.alias[v] = k end
     end
     var = name
-    name = assert(Main_local.alias[name], "Wrong module name: "..name.."!")
+    name = assert(Sonata_local.alias[name], "Wrong module name: "..name.."!")
   end
   if not _G[var] then
     local lib = require('lib.'..name)
@@ -87,29 +87,29 @@ setmetatable(use,
   __call = function (self, name)
     if not name then
       -- show loaded modules
-      io.write('\n', Main_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
+      io.write('\n', Sonata_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
       for k,v in pairs(use) do
         io.write(string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-')),'\n')
       end
-      io.write(about:get('use_import'), Main_help.CRESET, '\n\n')
+      io.write(about:get('use_import'), Sonata_help.CRESET, '\n\n')
     elseif name == 'all' then
       -- load all modules
-      for k,v in pairs(self) do Main_local.doimport(self,k) end
+      for k,v in pairs(self) do Sonata_local.doimport(self,k) end
     elseif type(name) == 'table' then
       -- load group of modules
       for _,v in ipairs(name) do use(v) end
     else
       -- load module
-      local var, nm = Main_local.doimport(self,name)
+      local var, nm = Sonata_local.doimport(self,name)
       if SONATA_DIALOG then
-        io.write(Main_help.CHELP)
-        print(string.format(about:get('alias'), Main_help.CBOLD..var..Main_help.CNBOLD, nm))
+        io.write(Sonata_help.CHELP)
+        print(string.format(about:get('alias'), Sonata_help.CBOLD..var..Sonata_help.CNBOLD, nm))
       end
     end
   end,
 })
 
---- Print Main_help information.
+--- Print Sonata_help information.
 --  @param fn Function name.
 help = function(fn)
   if fn then 
@@ -121,7 +121,7 @@ help = function(fn)
   else
     about:print(about)
   end
-  io.write(Main_help.CRESET)
+  io.write(Sonata_help.CRESET)
 end
 
 -- command line arguments of Sonata and their processing
@@ -205,11 +205,11 @@ exit = true},
 
 -- show help
 _args_['-h'] = {
-process = function () print(Main_local._arghelp_()) end,
+process = function () print(Sonata_local._arghelp_()) end,
 exit = true}
 
 -- string representation of the help info
-Main_local._arghelp_ = function ()
+Sonata_local._arghelp_ = function ()
   local txt = {  
     "\n'Sonata' is a Lua based program for mathematical calculations.",
     "",
@@ -230,7 +230,7 @@ Main_local._arghelp_ = function ()
     end
   end
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
-  txt[#txt+1] = "\nVERSION: "..Main_local.version
+  txt[#txt+1] = "\nVERSION: "..Sonata_local.version
   txt[#txt+1] = ""
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end
@@ -258,11 +258,11 @@ if SONATA_LOCALIZATION then
 end
 
 -- Run! 
-io.write(Main_help.CMAIN, '\n',
+io.write(Sonata_help.CMAIN, '\n',
 "   # #       --=====  Sonata  =====--       # #\n",
-"    # #        --==== ", Main_local.version, " ====--        # #\n\n",
-Main_help.CHELP)
-print(about:get('intro'), Main_help.CRESET)
+"    # #        --==== ", Sonata_local.version, " ====--        # #\n\n",
+Sonata_help.CHELP)
+print(about:get('intro'), Sonata_help.CRESET)
 
 -- Import default modules
 if SONATA_DEFAULT_MODULES then
