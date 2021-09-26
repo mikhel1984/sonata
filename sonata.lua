@@ -105,10 +105,8 @@ setmetatable(use,
     else
       -- load module
       local var, nm = Sonata.doimport(self,name)
-      if SONATA_DIALOG then
         io.write(SonataHelp.CHELP)
         print(string.format(About:get('alias'), SonataHelp.CBOLD..var..SonataHelp.CNBOLD, nm))
-      end
     end
   end,
 })
@@ -180,7 +178,6 @@ description = 'Creating/updating a file for localization.',
 example = '--lang eo',
 process = function (args)
   if args[2] then
-    SONATA_DIALOG = true -- load help info
     local Gen = require('core.generator')
     Gen.lang(args[2], use)
   else 
@@ -194,7 +191,6 @@ exit = true},
 description = 'Creating/updating a documentation file.',
 example = '--doc ru',
 process = function (args)
-  SONATA_DIALOG = true   -- load help info
   local Gen = require('core.generator')
   if args[2] then
     SONATA_LOCALIZATION = args[2]..'.lng'
@@ -219,7 +215,6 @@ exit = true},
 process = function (args) 
   for i = 1,#args do 
     if string.find(args[i], '%.note$') then
-      SONATA_DIALOG = true
       Sonata:note(args[i])
     else
       dofile(args[i]) 
@@ -274,9 +269,6 @@ if #arg > 0 then
   command.process(arg)
   if command.exit then os.exit() end
 end
-
--- Prepare for dialog mode
-SONATA_DIALOG = true
 
 -- Read localization file and update descriptions
 if SONATA_LOCALIZATION then 
