@@ -23,9 +23,14 @@ if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
 
--- Sonata help.
+-- Update random seed
+math.randomseed(os.time())
+
+-- Prepare help module.
 SonataHelp = require "core.help"
 About = SonataHelp:new("Lua based mathematics.")
+-- Text colors 
+SonataHelp.useColors(SONATA_USE_COLOR) 
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
@@ -34,14 +39,8 @@ Sonata.version = '0.9.24'
 -- Import base functions 
 Main = require('core.main')
 
--- Text colors 
-SonataHelp.useColors(SONATA_USE_COLOR) 
-
 -- Quit the program
 quit = Sonata.exit
-
--- Update random seed
-math.randomseed(os.time())
 
 -- Modules 
 use = {
@@ -284,7 +283,8 @@ if SONATA_LOCALIZATION then
   About:localization(SONATA_LOCALIZATION) 
 end
 
--- Run! 
+-- Run!!!
+
 io.write(SonataHelp.CMAIN, '\n',
 "   # #       --=====  Sonata  =====--       # #\n",
 "    # #        --==== ", Sonata.version, " ====--        # #\n\n",
