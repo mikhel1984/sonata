@@ -10,9 +10,6 @@
 
 --	LOCAL
 
-local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
-
-
 local Ver = {}
 if _VERSION < 'Lua 5.3' then
   Ver.loadStr = loadstring
@@ -22,18 +19,34 @@ end
 
 --	MODULE
 
-local evaluate = {}
+local evaluate = {
+-- status
+EV_RES = 1,   -- found result
+EV_CMD = 0,   -- continue expected 
+EV_ERR = -1,  -- error
+EV_QUIT = -2, -- command for quit
+-- state and result
+_cmd = "",    -- last request
+_ans = "",    -- last response
+_st  = 1,     -- last status
+}
+
+evaluate.reset = function (tbl)
+  tbl._cmd = ""
+  tbl._ans = ""
+  tbl._st  = evaluate.EV_RES
+end
 
 --- Process command string.
 --  @param cmd String with Lua expression.
 --  @return Status of processing and rest of command.
 evaluate.eval = function (cmd, nextCmd)
-  if nextCmd == 'quit' then return EV_QUIT end
+  if nextCmd == 'quit' then return evaluate.EV_QUIT end
   -- check if multiline
   local partCmd = string.match(nextCmd, "(.*)\\%s*")
   if partCmd ~= nil then
     -- expected next line 
-    return EV_CMD, string.format("%s%s\n", cmd, partCmd)
+    return evaluate.EV_CMD, string.format("%s%s\n", cmd, partCmd)
   end
   cmd = cmd..nextCmd
   -- 'parse'
@@ -43,15 +56,15 @@ evaluate.eval = function (cmd, nextCmd)
   end
   -- get result
   if err then
-    return EV_ERROR, err
+    return evaluate.EV_ERR, err
   else
     local ok, res = pcall(fn)
     if ok then 
       _ans = res       -- save last result
-       return EV_RES, res
+       return evaluate.EV_RES, res
     else
       -- evaluation error
-      return EV_ERROR, res
+      return evaluate.EV_ERR, res
     end
   end
 end
@@ -68,23 +81,23 @@ evaluate.cli = function (main)
     -- command processing
     local newLine = io.read()
     local status, res = evaluate.eval(cmd, newLine)
-    if status == EV_RES then
+    if status == evaluate.EV_RES then
       if res ~= nil then print(res) end
       invite = invA; cmd = ""
-    elseif status == EV_CMD then
+    elseif status == evaluate.EV_CMD then
       invite = invB; cmd = res
-    elseif status == EV_ERROR then
+    elseif status == evaluate.EV_ERR then
       print(ERROR, res, Sonata_help.CRESET)
       invite = invA; cmd = ""
-    else -- status == EV_QUIT
+    else -- status == evaluate.EV_QUIT
       break
     end
     -- logging
     if main._logFile_ then
       main._logFile_:write(newLine,'\n')
-      if status == EV_RES and res then 
+      if status == evaluate.EV_RES and res then 
         main._logFile_:write('--[[ ', res, ' ]]\n\n') 
-      elseif status == EV_ERROR then
+      elseif status == evaluate.EV_ERR then
         main._logFile_:write('--[[ ERROR ]]\n\n')
       end
     end
@@ -118,15 +131,15 @@ evaluate.note = function (fname, full)
           local newCmd = io.read()
           if newCmd == "" then break end  -- continue file evaluation
           local status, res = evaluate.eval(lcmd, newCmd)
-          if status == EV_RES then
+          if status == evaluate.EV_RES then
             if res ~= nil then print(res) end
             invite = invA; lcmd = ""
-          elseif status == EV_CMD then
+          elseif status == evaluate.EV_CMD then
             invite = invB; lcmd = res
-          elseif status == EV_ERROR then
+          elseif status == evaluate.EV_ERR then
             print(ERROR, res, Sonata_help.CRESET)
             invite = invA; lcmd = ""
-          else --  EV_QUIT
+          else --  evaluate.EV_QUIT
             lquit = true
             break
           end
@@ -144,12 +157,12 @@ evaluate.note = function (fname, full)
       -- print line and evaluate
       io.write(Sonata_help.CMAIN, '@ ', Sonata_help.CRESET, line, '\n')
       local status, res = evaluate.eval(cmd, line)
-      if status == EV_RES then
+      if status == evaluate.EV_RES then
         if res ~= nil then print(res) end
         cmd = ""
-      elseif status == EV_CMD then
+      elseif status == evaluate.EV_CMD then
         cmd = res
-      else -- EV_ERROR 
+      else -- evaluate.EV_ERR 
         print(ERROR, res, Sonata_help.CRESET)
         break
       end

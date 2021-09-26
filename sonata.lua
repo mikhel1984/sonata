@@ -26,6 +26,10 @@ if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
 
+-- Sonata_help.
+Sonata_help = require "core.help"
+About = Sonata_help:new("Lua based mathematics.")
+
 -- Command evaluation.
 Sonata_eval = require('core.evaluate')
 
@@ -77,7 +81,7 @@ function Sonata_local.doimport(tbl,name)
     local lib = require('lib.'..name)
     _G[var] = lib
     -- add description 
-    if lib.about then about:add(lib.about, var) end
+    if lib.about then About:add(lib.about, var) end
     -- do additional actions
     if lib.onImport then lib.onImport() end
   end
@@ -94,7 +98,7 @@ setmetatable(use,
       for k,v in pairs(use) do
         io.write(string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-')),'\n')
       end
-      io.write(about:get('use_import'), Sonata_help.CRESET, '\n\n')
+      io.write(About:get('use_import'), Sonata_help.CRESET, '\n\n')
     elseif name == 'all' then
       -- load all modules
       for k,v in pairs(self) do Sonata_local.doimport(self,k) end
@@ -106,7 +110,7 @@ setmetatable(use,
       local var, nm = Sonata_local.doimport(self,name)
       if SONATA_DIALOG then
         io.write(Sonata_help.CHELP)
-        print(string.format(about:get('alias'), Sonata_help.CBOLD..var..Sonata_help.CNBOLD, nm))
+        print(string.format(About:get('alias'), Sonata_help.CBOLD..var..Sonata_help.CNBOLD, nm))
       end
     end
   end,
@@ -119,10 +123,10 @@ help = function(fn)
     if fn == use then
       use()
     else
-      about:print(type(fn)=='table' and fn.about or fn) 
+      About:print(type(fn)=='table' and fn.about or fn) 
     end
   else
-    about:print(about)
+    About:print(About)
   end
   io.write(Sonata_help.CRESET)
 end
@@ -257,7 +261,7 @@ SONATA_DIALOG = true
 
 -- Read localization file and update descriptions
 if SONATA_LOCALIZATION then 
-  about:localization(SONATA_LOCALIZATION) 
+  About:localization(SONATA_LOCALIZATION) 
 end
 
 -- Run! 
@@ -265,7 +269,7 @@ io.write(Sonata_help.CMAIN, '\n',
 "   # #       --=====  Sonata  =====--       # #\n",
 "    # #        --==== ", Sonata_local.version, " ====--        # #\n\n",
 Sonata_help.CHELP)
-print(about:get('intro'), Sonata_help.CRESET)
+print(About:get('intro'), Sonata_help.CRESET)
 
 -- Import default modules
 if SONATA_DEFAULT_MODULES then
