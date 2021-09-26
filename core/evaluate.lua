@@ -42,16 +42,16 @@ end
 evaluate._update = function (ev, st, cmd, ans)
   ev._st = st
   ev._cmd = cmd
-  ev._ans = ans
+  ev._ans = (ans ~= nil) and tostring(ans) or nil
   return st
 end
 
 --- Process command string.
 --  @param cmd String with Lua expression.
 --  @return Status of processing and rest of command.
-evaluate.eval = function (ev, nextCmd)
+evaluate._eval_ = function (ev, nextCmd)
   if nextCmd == 'quit' then 
-    return evaluate._update(ev, evaluate.EV_QUIT, "", "")
+    return evaluate._update(ev, evaluate.EV_QUIT, "")
   end
   -- reset state
   if ev._st ~= evaluate.EV_CMD then evaluate.reset(ev) end
@@ -59,7 +59,7 @@ evaluate.eval = function (ev, nextCmd)
   local partCmd = string.match(nextCmd, "(.*)\\%s*")
   if partCmd ~= nil then
     -- expected next line 
-    return evaluate._update(ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd), "")
+    return evaluate._update(ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd))
   end
   local cmd = ev._cmd..nextCmd
   -- 'parse'
@@ -76,39 +76,52 @@ evaluate.eval = function (ev, nextCmd)
   end
 end
 
---- Read-Evaluate-Write circle as a Lua program.
---  Call 'quit' to exit this function.
-evaluate.cli = function (ev)
-  local invA, invB = Sonata_help.CMAIN..'dp: '..Sonata_help.CRESET, Sonata_help.CMAIN..'..: '..Sonata_help.CRESET
+evaluate.eval = function (ev, cmd, useLog)
+  local res = evaluate._eval_(ev, cmd) 
+  -- logging
+  if useLog and ev._logFile_ then
+    ev._logFile_:write(newLine,'\n')
+    if status == evaluate.EV_RES and ev._ans then 
+      ev._logFile_:write('--[[ ', ev._ans, ' ]]\n\n') 
+    elseif status == evaluate.EV_ERR then
+      ev._logFile_:write('--[[ ERROR ]]\n\n')
+    end
+  end
+  return res
+end
+
+evaluate.print_err = function (msg)
+  print(string.format("%sERROR: %s%s", Sonata_help.CERROR, msg, Sonata_help.CRESET))
+end
+
+evaluate.cli_loop = function (ev, invA, invB, isNote) 
   local invite = invA
-  local ERROR = Sonata_help.CERROR.."ERROR: "
   -- start dialog
   while true do
     io.write(invite)
     -- command processing
     local newLine = io.read()
-    local status = evaluate.eval(ev, newLine)
+    if isNote and newLine == "" then break end
+    local status = evaluate.eval(ev, newLine, not isNote)
     if status == evaluate.EV_RES then
       if ev._ans ~= nil then print(ev._ans) end
       invite = invA
     elseif status == evaluate.EV_CMD then
       invite = invB
     elseif status == evaluate.EV_ERR then
-      print(ERROR, ev._ans, Sonata_help.CRESET)
-      invite = invA; cmd = ""
+      evaluate.print_err(ev._ans)
+      invite = invA
     else -- status == evaluate.EV_QUIT
-      break
-    end
-    -- logging
-    if ev._logFile_ then
-      ev._logFile_:write(newLine,'\n')
-      if status == evaluate.EV_RES and ev._ans then 
-        ev._logFile_:write('--[[ ', ev._ans, ' ]]\n\n') 
-      elseif status == evaluate.EV_ERR then
-        ev._logFile_:write('--[[ ERROR ]]\n\n')
-      end
+      return evaluate.EV_QUIT
     end
   end
+end
+
+--- Read-Evaluate-Write circle as a Lua program.
+--  Call 'quit' to exit this function.
+evaluate.cli = function (ev)
+  local invA, invB = Sonata_help.CMAIN..'dp: '..Sonata_help.CRESET, Sonata_help.CMAIN..'..: '..Sonata_help.CRESET
+  evaluate.cli_loop(ev, invA, invB, false)
   if ev._logFile_ then ev._logFile_:close() end
   evaluate.exit()
 end
@@ -117,7 +130,6 @@ end
 --  @param fname Script file name.
 evaluate.note = function (ev, fname, full)
   full = (full ~= false)
-  local ERROR = Sonata_help.CERROR.."ERROR: "
   local templ = Sonata_help.CBOLD..'\t%1'..Sonata_help.CNBOLD
   local invA, invB = '?> ', '>> '
   -- read lines
@@ -129,28 +141,9 @@ evaluate.note = function (ev, fname, full)
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-%s*PAUSE') then
       if full then
-        -- call dialog
-        local lquit = false
-        local invite = invA
-        while true do
-          io.write(invite)
-          local newCmd = io.read()
-          if newCmd == "" then break end  -- continue file evaluation
-          local status = evaluate.eval(ev, newCmd)
-          if status == evaluate.EV_RES then
-            if ev._ans ~= nil then print(ev._ans) end
-            invite = invA
-          elseif status == evaluate.EV_CMD then
-            invite = invB
-          elseif status == evaluate.EV_ERR then
-            print(ERROR, ev._ans, Sonata_help.CRESET)
-            invite = invA
-          else --  evaluate.EV_QUIT
-            lquit = true
-            break
-          end
+        if evaluate.cli_loop(ev, invA, invB, true) == evaluate.EV_QUIT then
+          break
         end
-        if lquit then break end
       end
     elseif string.find(line, '^%s*%-%-') then
       -- highlight line comments
@@ -162,13 +155,13 @@ evaluate.note = function (ev, fname, full)
     else
       -- print line and evaluate
       io.write(Sonata_help.CMAIN, '@ ', Sonata_help.CRESET, line, '\n')
-      local status = evaluate.eval(ev, line)
+      local status = evaluate.eval(ev, line, false)
       if status == evaluate.EV_RES then
         if ev._ans ~= nil then print(ev._ans) end
       elseif status == evaluate.EV_CMD then
         -- skip
       else -- evaluate.EV_ERR 
-        print(ERROR, ev._ans, Sonata_help.CRESET)
+        evaluate.print_err(ev._ans)
         break
       end
     end
