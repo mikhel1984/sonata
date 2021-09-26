@@ -91,7 +91,7 @@ evaluate.eval = function (ev, cmd, useLog)
 end
 
 evaluate.print_err = function (msg)
-  print(string.format("%sERROR: %s%s", Sonata_help.CERROR, msg, Sonata_help.CRESET))
+  print(string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
 
 evaluate.cli_loop = function (ev, invA, invB, isNote) 
@@ -120,7 +120,7 @@ end
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
 evaluate.cli = function (ev)
-  local invA, invB = Sonata_help.CMAIN..'dp: '..Sonata_help.CRESET, Sonata_help.CMAIN..'..: '..Sonata_help.CRESET
+  local invA, invB = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET, SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
   evaluate.cli_loop(ev, invA, invB, false)
   if ev._logFile_ then ev._logFile_:close() end
   evaluate.exit()
@@ -130,7 +130,7 @@ end
 --  @param fname Script file name.
 evaluate.note = function (ev, fname, full)
   full = (full ~= false)
-  local templ = Sonata_help.CBOLD..'\t%1'..Sonata_help.CNBOLD
+  local templ = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
   local invA, invB = '?> ', '>> '
   -- read lines
   if full then io.write("Run file ", fname, "\n") end
@@ -149,12 +149,12 @@ evaluate.note = function (ev, fname, full)
       -- highlight line comments
       if full then
         line = string.gsub(line, '\t(.+)', templ)
-        line = string.format("%s%s%s\n", Sonata_help.CHELP, line, Sonata_help.CRESET)
+        line = string.format("%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
         io.write(line)
       end
     else
       -- print line and evaluate
-      io.write(Sonata_help.CMAIN, '@ ', Sonata_help.CRESET, line, '\n')
+      io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
       local status = evaluate.eval(ev, line, false)
       if status == evaluate.EV_RES then
         if ev._ans ~= nil then print(ev._ans) end
@@ -169,7 +169,7 @@ evaluate.note = function (ev, fname, full)
 end
 
 evaluate.exit = function () 
-  print(Sonata_help.CMAIN.."\n             --======= Bye! =======--\n"..Sonata_help.CRESET) 
+  print(SonataHelp.CMAIN.."\n             --======= Bye! =======--\n"..SonataHelp.CRESET) 
   os.exit() 
 end
 

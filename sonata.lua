@@ -18,29 +18,27 @@
 
 --=====================  CODE  ========================
 
--- Environment
-Sonata_local = { version = '0.9.24' }
-
 -- Add path to the libraries
 if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
 
--- Sonata_help.
-Sonata_help = require "core.help"
-About = Sonata_help:new("Lua based mathematics.")
+-- Sonata help.
+SonataHelp = require "core.help"
+About = SonataHelp:new("Lua based mathematics.")
 
 -- Command evaluation.
-Sonata_eval = require('core.evaluate')
+Sonata = require('core.evaluate')
+Sonata.version = '0.9.24'
 
 -- Import base functions 
 Main = require('core.main')
 
 -- Text colors 
-Sonata_help.useColors(SONATA_USE_COLOR) 
+SonataHelp.useColors(SONATA_USE_COLOR) 
 
 -- Quit the program
-quit = Sonata_eval.exit
+quit = Sonata.exit
 
 -- Update random seed
 math.randomseed(os.time())
@@ -66,16 +64,16 @@ use = {
 }
 
 -- Import actions 
-function Sonata_local.doimport(tbl,name)
+function Sonata.doimport(tbl,name)
   local var = tbl[name]
   if not var then
     -- try alias
-    if not Sonata_local.alias then 
-      Sonata_local.alias = {}
-      for k,v in pairs(use) do Sonata_local.alias[v] = k end
+    if not Sonata.alias then 
+      Sonata.alias = {}
+      for k,v in pairs(use) do Sonata.alias[v] = k end
     end
     var = name
-    name = assert(Sonata_local.alias[name], "Wrong module name: "..name.."!")
+    name = assert(Sonata.alias[name], "Wrong module name: "..name.."!")
   end
   if not _G[var] then
     local lib = require('lib.'..name)
@@ -94,30 +92,30 @@ setmetatable(use,
   __call = function (self, name)
     if not name then
       -- show loaded modules
-      io.write('\n', Sonata_help.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
+      io.write('\n', SonataHelp.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
       for k,v in pairs(use) do
         io.write(string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-')),'\n')
       end
-      io.write(About:get('use_import'), Sonata_help.CRESET, '\n\n')
+      io.write(About:get('use_import'), SonataHelp.CRESET, '\n\n')
     elseif name == 'all' then
       -- load all modules
-      for k,v in pairs(self) do Sonata_local.doimport(self,k) end
+      for k,v in pairs(self) do Sonata.doimport(self,k) end
     elseif type(name) == 'table' then
       -- load group of modules
       for _,v in ipairs(name) do use(v) end
     else
       -- load module
-      local var, nm = Sonata_local.doimport(self,name)
+      local var, nm = Sonata.doimport(self,name)
       if SONATA_DIALOG then
-        io.write(Sonata_help.CHELP)
-        print(string.format(About:get('alias'), Sonata_help.CBOLD..var..Sonata_help.CNBOLD, nm))
+        io.write(SonataHelp.CHELP)
+        print(string.format(About:get('alias'), SonataHelp.CBOLD..var..SonataHelp.CNBOLD, nm))
       end
     end
   end,
 })
 
---- Print Sonata_help information.
---  @param fn Function name.
+--- Print SonataHelp information.
+--  @param fn Function, module or nil.
 help = function(fn)
   if fn then 
     if fn == use then
@@ -128,29 +126,29 @@ help = function(fn)
   else
     About:print(About)
   end
-  io.write(Sonata_help.CRESET)
+  io.write(SonataHelp.CRESET)
 end
 
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
 Logging = function (flag)
   if flag == 'on' or flag == true then
-    if not Sonata_eval._logFile_ then
-      Sonata_eval._logFile_ = io.open(Sonata_eval.LOGNAME, 'a')
+    if not Sonata._logFile_ then
+      Sonata._logFile_ = io.open(Sonata.LOGNAME, 'a')
       local d = os.date('*t')
-      Sonata_eval._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
-      Sonata_eval._logFile_:write('-- ')  -- prepare comment for 'logging on'
+      Sonata._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
+      Sonata._logFile_:write('-- ')  -- prepare comment for 'logging on'
     end
   elseif flag == 'off' or flag == false then
-    if Sonata_eval._logFile_ then
-      Sonata_eval._logFile_:close() 
-      Sonata_eval._logFile_ = nil
+    if Sonata._logFile_ then
+      Sonata._logFile_:close() 
+      Sonata._logFile_ = nil
     end
   else
     io.write('Unexpected argument!\n')
   end
 end
-About[Logging] = {'Logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", Sonata_help.OTHER}
+About[Logging] = {'Logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", SonataHelp.OTHER}
 
 
 -- command line arguments of Sonata and their processing
@@ -223,7 +221,7 @@ process = function (args)
   for i = 1,#args do 
     if string.find(args[i], '%.note$') then
       SONATA_DIALOG = true
-      Sonata_eval:note(args[i])
+      Sonata:note(args[i])
     else
       dofile(args[i]) 
     end
@@ -234,11 +232,11 @@ exit = true},
 
 -- show help
 _args_['-h'] = {
-process = function () print(Sonata_local._arghelp_()) end,
+process = function () print(Sonata._arghelp_()) end,
 exit = true}
 
 -- string representation of the help info
-Sonata_local._arghelp_ = function ()
+Sonata._arghelp_ = function ()
   local txt = {  
     "\n'Sonata' is a Lua based program for mathematical calculations.",
     "",
@@ -259,7 +257,7 @@ Sonata_local._arghelp_ = function ()
     end
   end
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
-  txt[#txt+1] = "\nVERSION: "..Sonata_local.version
+  txt[#txt+1] = "\nVERSION: "..Sonata.version
   txt[#txt+1] = ""
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end
@@ -287,11 +285,11 @@ if SONATA_LOCALIZATION then
 end
 
 -- Run! 
-io.write(Sonata_help.CMAIN, '\n',
+io.write(SonataHelp.CMAIN, '\n',
 "   # #       --=====  Sonata  =====--       # #\n",
-"    # #        --==== ", Sonata_local.version, " ====--        # #\n\n",
-Sonata_help.CHELP)
-print(About:get('intro'), Sonata_help.CRESET)
+"    # #        --==== ", Sonata.version, " ====--        # #\n\n",
+SonataHelp.CHELP)
+print(About:get('intro'), SonataHelp.CRESET)
 
 -- Import default modules
 if SONATA_DEFAULT_MODULES then
@@ -299,7 +297,7 @@ if SONATA_DEFAULT_MODULES then
 end
 
 if arg[-1] ~= '-i' then
-  Sonata_eval:cli()
+  Sonata:cli()
 end
 
 --===============================================

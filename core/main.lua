@@ -146,10 +146,10 @@ atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
 About[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
-_pi = math.pi;   About[_pi] = {"_pi", "Number pi.", Sonata_help.CONST}
-_e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", Sonata_help.CONST}
+_pi = math.pi;   About[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
+_e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
 -- result 
-_ans = 0;   About[_ans] = {"_ans", "Result of the last operation.", Sonata_help.OTHER}
+_ans = 0;   About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
 
 -- random
 rand = function () return math.random() end
@@ -184,7 +184,7 @@ Round = function (x,n)
   end
   return p / k
 end
-About[Round] = {'Round(x[,n=0])', 'Round value, define number of decimal digits.', Sonata_help.OTHER}
+About[Round] = {'Round(x[,n=0])', 'Round value, define number of decimal digits.', SonataHelp.OTHER}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -253,7 +253,7 @@ Print = function (...)
   end
   io.write('\n')
 end
-About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", Sonata_help.OTHER}
+About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", SonataHelp.OTHER}
 
 --- Show type of the object.
 --  @param t Some Lua or Sonata object.
@@ -267,7 +267,7 @@ function Type(t)
   end
   return v
 end
-About[Type] = {'Type(t)', 'Show type of the object.', Sonata_help.OTHER}
+About[Type] = {'Type(t)', 'Show type of the object.', SonataHelp.OTHER}
 
 --- Generate sequence of values.
 --  @param from Beginning of range (default is 1).
@@ -282,7 +282,7 @@ Range = function (from,to,step)
   for i = from,to,step do res[#res+1] = i end
   return res
 end
-About[Range] = {'Range([from=1,]to[,step=1])','Generate table with sequence of numbers.', Sonata_help.OTHER}
+About[Range] = {'Range([from=1,]to[,step=1])','Generate table with sequence of numbers.', SonataHelp.OTHER}
 
 --- Generate list of function values.
 --  @param fn Function to apply.
@@ -293,7 +293,7 @@ Map = function (fn, tbl)
   for _,v in ipairs(tbl) do res[#res+1] = fn(v) end
   return res
 end
-About[Map] = {'Map(fn,tbl)','Evaluate function for each table element.', Sonata_help.OTHER}
+About[Map] = {'Map(fn,tbl)','Evaluate function for each table element.', SonataHelp.OTHER}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -369,7 +369,7 @@ DsvRead = function (fName, delim)
 end
 About[DsvRead] = {"DsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
 
-TblImport = Sonata_help.tblImport
+TblImport = SonataHelp.tblImport
 About[TblImport] = {"TblImport(fName)", "Import Lua table, saved into file.", FILES}
 
 
@@ -379,12 +379,12 @@ Run = function (fname)
   if string.find(fname, '%.lua$') then
     dofile(fname)
   elseif string.find(fname, '%.note$') then
-    Sonata_eval:note(fname, false)
+    Sonata:note(fname, false)
   else
     io.write('Expected .lua or .note!\n')
   end
 end
-About[Run] = {'Run(fName)', "Execute lua- or note-file.", Sonata_help.OTHER}
+About[Run] = {'Run(fName)', "Execute lua- or note-file.", SonataHelp.OTHER}
 
 -- save link to help info
 main.about = About
