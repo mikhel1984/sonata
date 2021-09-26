@@ -23,24 +23,21 @@ if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
 
--- Update random seed
-math.randomseed(os.time())
-
 -- Prepare help module.
 SonataHelp = require "core.help"
 About = SonataHelp:new("Lua based mathematics.")
 -- Text colors 
-SonataHelp.useColors(SONATA_USE_COLOR) 
+SonataHelp.useColors(SONATA_USE_COLOR)
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
 Sonata.version = '0.9.24'
 
--- Import base functions 
-Main = require('core.main')
-
 -- Quit the program
 quit = Sonata.exit
+
+-- Import base functions
+Main = require('core.main')
 
 -- Modules 
 use = {
@@ -209,6 +206,14 @@ process = function (args)
 end,
 exit = true},
 
+-- command line evaluation
+['-e'] = {
+process = function (args)
+  Sonata:eval(args[2] or '', false)
+  print(Sonata._ans)
+end,
+exit = true},
+
 -- process files
 ['default'] = {
 --description = 'Evaluate file(s).',
@@ -229,6 +234,7 @@ _args_['-h'] = {
 process = function () print(Sonata._arghelp_()) end,
 exit = true}
 
+
 -- string representation of the help info
 Sonata._arghelp_ = function ()
   local txt = {  
@@ -240,6 +246,8 @@ Sonata._arghelp_ = function ()
     "",
     "FLAGS:",
     "\t-h - Get this help message.",
+    "\t-e - Evaluate command line expression.",
+    '\t  (e.g. -e "2+2")',
     "\t\t{Development}",
   }
   for k,v in pairs(_args_) do 

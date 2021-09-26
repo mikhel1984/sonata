@@ -152,6 +152,8 @@ _e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
 _ans = 0;   About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
 
 -- random
+math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
+
 rand = function () return math.random() end
 About[rand] = {"rand()", "Random number between 0 and 1."}
 
