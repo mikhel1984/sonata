@@ -17,6 +17,17 @@ else
   Ver.loadStr = load
 end
 
+local _update = function (ev, st, cmd, ans)
+  ev._st = st
+  ev._cmd = cmd
+  ev._ans = (ans ~= nil) and tostring(ans) or nil
+  return st
+end
+
+local print_err = function (msg)
+  print(string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
+end
+
 --	MODULE
 
 local evaluate = {
@@ -25,11 +36,12 @@ EV_RES = 1,   -- found result
 EV_CMD = 0,   -- continue expected 
 EV_ERR = -1,  -- error
 EV_QUIT = -2, -- command for quit
+-- information types
+INFO_USE_LIST = 101,
 -- log file name
 LOGNAME = 'log.note',
 -- state and result
 _cmd = "",    -- last request
---_ans = "",    -- last response
 _st  = 1,     -- last status
 }
 
@@ -39,19 +51,12 @@ evaluate.reset = function (ev)
   ev._st  = evaluate.EV_RES
 end
 
-evaluate._update = function (ev, st, cmd, ans)
-  ev._st = st
-  ev._cmd = cmd
-  ev._ans = (ans ~= nil) and tostring(ans) or nil
-  return st
-end
-
 --- Process command string.
 --  @param cmd String with Lua expression.
 --  @return Status of processing and rest of command.
 evaluate._eval_ = function (ev, nextCmd)
   if nextCmd == 'quit' then 
-    return evaluate._update(ev, evaluate.EV_QUIT, "")
+    return _update(ev, evaluate.EV_QUIT, "")
   end
   -- reset state
   if ev._st ~= evaluate.EV_CMD then evaluate.reset(ev) end
@@ -59,7 +64,7 @@ evaluate._eval_ = function (ev, nextCmd)
   local partCmd = string.match(nextCmd, "(.*)\\%s*")
   if partCmd ~= nil then
     -- expected next line 
-    return evaluate._update(ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd))
+    return _update(ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd))
   end
   local cmd = ev._cmd..nextCmd
   -- 'parse'
@@ -69,10 +74,10 @@ evaluate._eval_ = function (ev, nextCmd)
   end
   -- get result
   if err then
-    return evaluate._update(ev, evaluate.EV_ERR, cmd, err)
+    return _update(ev, evaluate.EV_ERR, cmd, err)
   else
     local ok, res = pcall(fn)
-    return evaluate._update(ev, ok and evaluate.EV_RES or evaluate.EV_ERR, cmd, res)
+    return _update(ev, ok and evaluate.EV_RES or evaluate.EV_ERR, cmd, res)
   end
 end
 
@@ -90,10 +95,6 @@ evaluate.eval = function (ev, cmd, useLog)
   return res
 end
 
-evaluate.print_err = function (msg)
-  print(string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
-end
-
 evaluate.cli_loop = function (ev, invA, invB, isNote) 
   local invite = invA
   -- start dialog
@@ -109,7 +110,7 @@ evaluate.cli_loop = function (ev, invA, invB, isNote)
     elseif status == evaluate.EV_CMD then
       invite = invB
     elseif status == evaluate.EV_ERR then
-      evaluate.print_err(ev._ans)
+      print_err(ev._ans)
       invite = invA
     else -- status == evaluate.EV_QUIT
       return evaluate.EV_QUIT
@@ -161,7 +162,7 @@ evaluate.note = function (ev, fname, full)
       elseif status == evaluate.EV_CMD then
         -- skip
       else -- evaluate.EV_ERR 
-        evaluate.print_err(ev._ans)
+        print_err(ev._ans)
         break
       end
     end

@@ -98,12 +98,10 @@ setmetatable(use,
       for k,v in pairs(self) do Sonata.doimport(self,k) end
     elseif type(name) == 'table' then
       -- load group of modules
-      for _,v in ipairs(name) do use(v) end
+      for _,v in ipairs(name) do Sonata.doimport(self,v) end
     else
       -- load module
       local var, nm = Sonata.doimport(self,name)
-        io.write(SonataHelp.CHELP)
-        print(string.format(About:get('alias'), SonataHelp.CBOLD..var..SonataHelp.CNBOLD, nm))
     end
   end,
 })

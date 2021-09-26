@@ -67,14 +67,12 @@ intro = [[
 ---------- use([module]) = expand functionality -
 ----------------- quit() = exit -----------------
 ]],
---modules = 'Available modules:',
 done = 'Done.',
-alias = "Use alias '%s' for access to the '%s' module.",
 use_import = [[
 
 Call
   use 'module' OR use {'moduleA','moduleB' ...}
-to load modules.]],
+to load new modules.]],
 }
 
 --- Auxiliary function, which define colors for text elements.
