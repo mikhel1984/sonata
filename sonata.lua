@@ -131,6 +131,28 @@ help = function(fn)
   io.write(Sonata_help.CRESET)
 end
 
+--- Session logging.
+--  @param flat Value 'on'/true to start and 'off'/false to stop.
+Logging = function (flag)
+  if flag == 'on' or flag == true then
+    if not Sonata_eval._logFile_ then
+      Sonata_eval._logFile_ = io.open(Sonata_eval.LOGNAME, 'a')
+      local d = os.date('*t')
+      Sonata_eval._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
+      Sonata_eval._logFile_:write('-- ')  -- prepare comment for 'logging on'
+    end
+  elseif flag == 'off' or flag == false then
+    if Sonata_eval._logFile_ then
+      Sonata_eval._logFile_:close() 
+      Sonata_eval._logFile_ = nil
+    end
+  else
+    io.write('Unexpected argument!\n')
+  end
+end
+About[Logging] = {'Logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", Sonata_help.OTHER}
+
+
 -- command line arguments of Sonata and their processing
 local _args_ = {
 
@@ -201,7 +223,7 @@ process = function (args)
   for i = 1,#args do 
     if string.find(args[i], '%.note$') then
       SONATA_DIALOG = true
-      Sonata_eval.note(args[i])
+      Sonata_eval:note(args[i])
     else
       dofile(args[i]) 
     end
@@ -277,7 +299,7 @@ if SONATA_DEFAULT_MODULES then
 end
 
 if arg[-1] ~= '-i' then
-  Sonata_eval.cli(Main)
+  Sonata_eval:cli()
 end
 
 --===============================================

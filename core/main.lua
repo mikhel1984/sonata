@@ -88,7 +88,6 @@ ans = aa.b.c                  --> 'abc'
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
 local FILES = 'files'
-local LOGNAME = 'log.note'
 
 -- compatibility
 local Ver = {}
@@ -373,26 +372,6 @@ About[DsvRead] = {"DsvRead(fName[,delim=','])", "Read delimiter separated data a
 TblImport = Sonata_help.tblImport
 About[TblImport] = {"TblImport(fName)", "Import Lua table, saved into file.", FILES}
 
---- Session logging.
---  @param flat Value 'on'/true to start and 'off'/false to stop.
-Logging = function (flag)
-  if flag == 'on' or flag == true then
-    if not main._logFile_ then
-      main._logFile_ = io.open(LOGNAME, 'a')
-      local d = os.date('*t')
-      main._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
-      main._logFile_:write('-- ')  -- prepare comment for 'logging on'
-    end
-  elseif flag == 'off' or flag == false then
-    if main._logFile_ then
-      main._logFile_:close() 
-      main._logFile_ = nil
-    end
-  else
-    io.write('Unexpected argument!\n')
-  end
-end
-About[Logging] = {'Logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", Sonata_help.OTHER}
 
 --- Execute file inside the interpreter.
 --  @param fName Lua or note file name.
@@ -400,7 +379,7 @@ Run = function (fname)
   if string.find(fname, '%.lua$') then
     dofile(fname)
   elseif string.find(fname, '%.note$') then
-    Sonata_eval.note(fname, false)
+    Sonata_eval:note(fname, false)
   else
     io.write('Expected .lua or .note!\n')
   end
