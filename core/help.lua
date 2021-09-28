@@ -119,39 +119,40 @@ help._funcList_ = function (tbl)
   return res
 end
 
---- Print information about function or list of all possible functions.
+--- Prepare information about function or list of all possible functions.
 --  @param self Parent object.
 --  @param fn Function or module for getting manual.
-help.print = function (self,fn)
-  io.write(help.CHELP)
+help.make = function (self,fn)
   if fn then
     -- expected module or function description
-    local v = self[fn]
-    if not v then 
-      return print('No help for :',fn) 
-    end
+    local v = assert(self[fn], "No help for "..tostring(fn))
     if v.link then
       -- module common description
-      io.write('\n',v[MAIN],'\n\n')
+      local res = {SONATA_INFO=true, '\n', v[MAIN], '\n\n'}
       -- details
-      v.link:print()
+      for _,elt in ipairs(v.link:make()) do res[#res+1] = elt end
+      return res
     else
       -- function description
-      print(string.format("  :%s\n%s", v[TITLE], v[DESCRIPTION]))
+      return {SONATA_INFO=true, '  :', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
     end
   else
+    local res = {SONATA_INFO=true}
     -- sort functions
     local lst = help._funcList_(self)
     for mod, t in pairs(lst) do             -- for each module
-      io.write(help.CBOLD, '\t', mod, '\n', help.CNBOLD)
+      res[#res+1] = '\t'; res[#res+1] = Sonata.FORMAT_V2
+      res[#res+1] = mod ; res[#res+1] = '\n'
       for cat, n in pairs(t) do            -- for each category
-        io.write("    |", cat, ':\n')
+        res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
+        res[#res+1] = cat    ; res[#res+1] = ':\n'
         for i, v in ipairs(n) do           -- for each function
-          io.write(v, (i ~= #n and ', ' or '\n'))
+          res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
         end
       end 
-      io.write('\n')
+      res[#res+1] = '\n'
     end -- for
+    return res
   end -- if
 end
 

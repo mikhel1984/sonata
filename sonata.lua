@@ -89,7 +89,6 @@ setmetatable(use,
     if not name then
       local lst = {SONATA_INFO=true, Sonata.FORMAT_V1, string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
       -- show loaded modules
-      --io.write('\n', SonataHelp.CHELP, string.format("%-12s%-9s%s", "MODULE", "ALIAS", "USED"), '\n')
       for k,v in pairs(use) do
         lst[#lst+1] = string.format("%-13s%-10s", k, v)
         if _G[v] then
@@ -98,12 +97,10 @@ setmetatable(use,
         else
           lst[#lst+1] = '-\n'
         end
-        --io.write(string.format("%-13s%-10s%s", k, v, (_G[v] and 'v' or '-')),'\n')
       end
       lst[#lst+1] = Sonata.FORMAT_V1
       lst[#lst+1] = About:get('use_import')
       lst[#lst+1] = '\n'
-      --io.write(About:get('use_import'), SonataHelp.CRESET, '\n\n')
       return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == 'all' then
       -- load all modules
@@ -123,14 +120,15 @@ setmetatable(use,
 help = function(fn)
   if fn then 
     if fn == use then
-      use()
+      return use()
     else
-      About:print(type(fn)=='table' and fn.about or fn) 
+      local res = About:make(type(fn)=='table' and fn.about or fn)
+      return Sonata.inLua and Sonata._toText(res) or res
     end
   else
-    About:print(About)
+    local res = About:make(About)
+    return Sonata.inLua and Sonata._toText(res) or res
   end
-  io.write(SonataHelp.CRESET)
 end
 
 --- Session logging.
