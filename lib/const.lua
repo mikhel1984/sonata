@@ -116,7 +116,7 @@ const.add = function (name,val)
   -- add only new constants
   if _user_[name] then error('Cannot modify '..tostring(name)) end
   _user_[name] = val
-  io.write('Done\n')
+  return 'Done'
 end
 const.about[const.add] = {'add(name,value)','Create new constant.'}
 
@@ -125,7 +125,7 @@ const.about[const.add] = {'add(name,value)','Create new constant.'}
 const.remove = function (name)
   if _user_[name] then
     _user_[name] = nil
-    io.write('Done\n')
+    return 'Done'
   end
 end
 const.about[const.remove] = {'remove(name)','Delete constant.'}

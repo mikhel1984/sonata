@@ -128,7 +128,7 @@ help.make = function (self,fn)
     local v = assert(self[fn], "No help for "..tostring(fn))
     if v.link then
       -- module common description
-      local res = {SONATA_INFO=true, '\n', v[MAIN], '\n\n'}
+      local res = {SONATA_INFO=true, '\n', v[MAIN], '\n'}
       -- details
       for _,elt in ipairs(v.link:make()) do res[#res+1] = elt end
       return res
@@ -141,7 +141,7 @@ help.make = function (self,fn)
     -- sort functions
     local lst = help._funcList_(self)
     for mod, t in pairs(lst) do             -- for each module
-      res[#res+1] = '\t'; res[#res+1] = Sonata.FORMAT_V2
+      res[#res+1] = '\n\t'; res[#res+1] = Sonata.FORMAT_V2
       res[#res+1] = mod ; res[#res+1] = '\n'
       for cat, n in pairs(t) do            -- for each category
         res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
@@ -150,7 +150,7 @@ help.make = function (self,fn)
           res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
         end
       end 
-      res[#res+1] = '\n'
+      --res[#res+1] = '\n'
     end -- for
     return res
   end -- if

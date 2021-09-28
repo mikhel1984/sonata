@@ -10,13 +10,11 @@
 
 --	LOCAL
 
-local Ver = {}
-if _VERSION < 'Lua 5.3' then
-  Ver.loadStr = loadstring
-else 
-  Ver.loadStr = load
-end
+local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load 
 
+--- Check if the table is SONATA_INFO list.
+--  @param v Object.
+--  @return true if SONATA_INFO list is found.
 local function islist(v) return type(v) == 'table' and v.SONATA_INFO end
 
 local _update = function (ev, st, cmd, ans)
@@ -30,11 +28,11 @@ local _update = function (ev, st, cmd, ans)
   return st
 end
 
+--- Print formatted error message.
+--  @param msg Message string.
 local function print_err (msg)
   print(string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
-
-
 
 --	MODULE
 
@@ -77,9 +75,9 @@ evaluate._eval_ = function (ev, nextCmd)
   end
   local cmd = ev._cmd..nextCmd
   -- 'parse'
-  local fn, err = Ver.loadStr('return '..cmd)  -- either 'return expr'
+  local fn, err = loadStr('return '..cmd)  -- either 'return expr'
   if err then
-    fn, err = Ver.loadStr(cmd)                 -- or 'expr'
+    fn, err = loadStr(cmd)                 -- or 'expr'
   end
   -- get result
   if err then
