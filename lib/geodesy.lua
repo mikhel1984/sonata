@@ -56,7 +56,7 @@ print(t5.X, t5.Y, t5.Z)
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require "lib.versions"
+--local Ver = require "lib.versions"
 
 --- Check object type.
 --  @param t Object.
@@ -231,6 +231,39 @@ ellipsoid._bwdBLH = function (E1,E2,par)
   end
 end
 
+
+ellipsoid.projGK = function (E, t)
+  local zone = math.floor(t.L / 6.0 + 1)  -- index
+  local L0, B0 = math.rad(zone*6 - 3), 0  -- begining
+  local N0, E0 = 0, zone*1E6 + 500000.0   -- shifting
+  local B, L, n = math.rad(t.B), math.rad(t.L), (E.a-E.b) / (E.a + E.b)
+  local n2, n3
+  n2 = n * n; n3 = n2 * n
+  local M = E.b * ((1+n+5.0/4.0*n2+5.0/4.0*n3)*(B-B0)
+    -(3*n+3*n2+21.0/8.0*n3)*math.sin(B-B0)*math.cos(B+B0)
+    +(15.0/8.0*n2+15.0/8.0*n3)*math.sin(2*(B-B0))*math.cos(2*(B+B0))
+    - 35.0/24.0*n3*math.sin(3*(B-B0))*math.cos(3*(B+B0)))  
+  local sB, cB = math.sin(B), math.cos(B)
+  n = math.tan(B); n2 = n*n; n3 = n2*n2  -- reuse
+  local v, p = E.a/math.sqrt(1-E.e2*sB*sB), E.a*(1-E.e2)*(1-E.e2*sB*sB)^(-1.5)
+  local nn = v / p - 1
+  local coef = {M + N0, v/2*sB*cB, 
+    v/24*sB*(cB*cB*cB)*(5-(n2)+9*nn),
+    v/720*sB*(cB^5)*(61-58*(n2)+(n3)),
+    v*cB, 
+    v/6*(cB^3)*(v/p-(n2)),
+    v/120*(cB^5)*(5-18*(n2)+(n3)+14*nn-58*(n2)*nn)
+  }
+  local dL = L-L0 
+  local res = {
+    N = coef[1] + coef[2]*dL^2 + coef[3]*dL^4 + coef[4]*dL^6,
+    E = E0 + coef[5]*dL + coef[6]*dL^3 + coef[7]*dL^5
+  }
+  print("N", res.N, "E", res.E)
+  
+  
+end
+
 -- Collection of Geodetic methods
 local geodesy = {
 -- mark
@@ -304,8 +337,11 @@ geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and sec
 -- Uncomment to remove descriptions
 --geodesy.about = nil
 
-return geodesy
+--return geodesy
 
+sk = geodesy.SK42 
+sk:projGK({B=55.752, L=37.618})
+sk:projGK2({B=55.752, L=37.618})
 --======================================
 --TODO: check correctness
 --TODO: add methods
