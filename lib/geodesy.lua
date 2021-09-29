@@ -405,7 +405,26 @@ geodesy.deg2dms = function (d)
 end
 geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
+geodesy.toENU = function (g, r, p)
+  local sB, cB = math.sin(math.rad(g.B)), math.cos(math.rad(g.B))
+  local sL, cL = math.sin(math.rad(g.L)), math.cos(math.rad(g.L))
+  local dx, dy, dz = p.X-r.X, p.Y-r.Y, p.Z-r.Z
+  return {
+    X = -sL*dx + cL*dy,
+    Y = -sB*cL*dx - sB*sL*dy + cB*dz,
+    Z = cB*cL*dx + cB*sL*dy + sB*dz
+  }
+end
 
+geodesy.fromENU = function (g, r, l)
+  local sB, cB = math.sin(math.rad(g.B)), math.cos(math.rad(g.B))
+  local sL, cL = math.sin(math.rad(g.L)), math.cos(math.rad(g.L))
+  return {
+    X = r.X - sL*l.X - sB*cL*l.Y + cB*cL*l.Z,
+    Y = r.Y + cL*l.X - sB*sL*l.Y + cB*sL*l.Z,
+    Z = r.Z + cB*l.y + sB*l.Z
+  }
+end
 
 -- Uncomment to remove descriptions
 --geodesy.about = nil
