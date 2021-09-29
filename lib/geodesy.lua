@@ -259,6 +259,16 @@ ellipsoid.projGK = function (E, t)
   }
 end
 
+ellipsoid.projM = function (E, t, L0)
+  L0 = L0 or 0  -- initial meridian 
+  local C = E.a -- use equator radius 
+  local ex, sB = math.sqrt(E.e2), math.sin(math.rad(t.B))  
+  return {
+    N = C * (math.atan(sB) - ex*math.atan(ex*sB)),
+    E = C * math.rad(t.L - L0)
+  }
+end
+
 -- Collection of Geodetic methods
 local geodesy = {
 -- mark
