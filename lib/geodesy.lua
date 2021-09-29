@@ -251,7 +251,6 @@ ellipsoid.projGK = function (E, t)
     cB^5 * (5 + tB2 * (tB2 - 18 - 58*nn) + 14*nn) / 120.0,
     sB * cB^5 * (61 + tB2 * (tB2 - 58)) / 720.0
   }
-  
   L = L-L0; B = L * L  -- reuse  
   return {
     N = N0 + M + v*B*(coef[2] + B*(coef[4] + B*coef[6])),
@@ -268,6 +267,8 @@ ellipsoid.projM = function (E, t, L0)
     E = C * math.rad(t.L - L0)
   }
 end
+
+
 
 -- Collection of Geodetic methods
 local geodesy = {
@@ -338,6 +339,65 @@ geodesy.deg2dms = function (d)
   return deg, min, sec
 end
 geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
+
+-- Vincenty's formulae
+geodesy.solveInv = function (E, t1, t2)
+  -- reduced latitude
+  local U1 = math.atan((1-E.f)*math.tan(math.rad(t1.B)))
+  local U2 = math.atan((1-E.f)*math.tan(math.rad(t2.B)))
+  local cU1, cU2, sU1, sU2 = math.cos(U1), math.cos(U2), math.sin(U1), math.sin(U2)
+  -- prepare variables
+  local L = math.rad(t2.L) - math.rad(t1.L)
+  local lam, ssig, csig, sig, alcos2, csigm = L
+  -- iterative part
+  repeat
+    ssig = math.sqrt((cU2*math.sin(lam))^2 + (cU1*sU2-sU1*cU2*math.cos(lam))^2)
+    csig = sU1*sU2 + cU1*cU2*math.cos(lam) 
+    sig = Ver.atan2(ssig, csig)
+    local alsin = cU1*cU2*math.sin(lam) / ssin 
+    alcos2 = 1 - alsin*alsin
+    csigm = csig - 2*sU1*sU2 / alcos2 
+    local C = E.f / 16 * alcos2 * (4 + E.f*(4 - 3*alcos2)) 
+    local prev = lam
+    lam = L + (1-C)*E.f*alsin*(sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm)))
+  until math.abs(lam - prev) < 1E-12 
+  local u2 = alcos2*E.e2 
+  local A = 1 + u2*(4096 + u2*(-768 + u2*(320 - 175*u2)))/16384.0 
+  local B = u2*(256 + u2*(-128 + u2*(74 - 47*u2)))/1024.0 
+  local dsig = B*ssig*(csigm + B/4*(csig*(-1 + 2*csigm*csigm) - B/6*csigm*(-3 + 4*ssig*ssig)*(-3 + 4*csigm*csigm)))
+  local dist = E.b*A*(sig - dsig) 
+  local azimuth1 = Ver.atan2(cU2*math.sin(lam), cU1*sU2 - sU1*cU2*math.cos(lam))
+  local azimuth2 = Ver.atan2(cU1*math.sin(lam), -sU1*cU2 + cU1*sU2*math.cos(lam))
+  return dist, math.deg(azimuth1), math.deg(azimuth2)
+end
+
+geodesy.solveDir = function (E, t1, azimut1, dist)
+  local U1 = math.atan((1-E.f)*math.tan(math.rad(t1.B)))
+  local sU1, cU1 = math.sin(U1), math.cos(U1)
+  local ca1, sa1 = math.cos(math.rad(azimuth1)), math.sin(math.rad(azimuth1))
+  local sig1 = Ver.atan2(math.tan(U1), ca1)
+  local alsin = cU1*sa1 
+  local alcos2 = 1 - alsin*alsin 
+  local u2 = alcos2*E.e2 
+  local A = 1 + u2*(4096 + u2*(-768 + u2*(320 - 175*u2)))/16384.0 
+  local B = u2*(256 + u2*(-128 + u2*(74 - 47*u2)))/1024.0 
+  local sig, ssig = dist / (E.b * A)
+  repeat
+    sigm = 2*sig1 + sig
+    local csigm = math.cos(sigm)
+    ssig = math.sin(sig)
+    local dsig = B*ssig*(csigm + B/4*(math.cos(sig)*(-1 + 2*csigm*csigm) - B/6*csigm*(-3 + 4*ssig*ssig)*(-3 + 4*csigm*csigm)))
+    local prev = sig
+    sig = dist / (E.b * A) + dsig
+  until math.abs(prev - sig) < 1E-6
+  local csig = math.cos(sig)
+  local B2 = Ver.atan2(sU1*csig + cU1*ssig*ca1, (1-E.f)*math.sqrt(alsin*alsin+(sU1*ssig-cU1*csig*ca1)^2))
+  local lam = Ver.atan2(ssig*sa1, cU1*csig-sU1*ssig*sa1)
+  local C = E.f / 16 * alcos2 * (4 + E.f*(4 - 3*alcos2)) 
+  local L = lam - (1-C)*E.f*alsin*(sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm)))
+  local azimut2 = Ver.atan2(alsin, -sU1*ssig + cU1*csig*ca1)
+  return {B = math.deg(B2), L = t1.L + math.deg(L)}, math.deg(azimuth2)
+end
 
 -- Uncomment to remove descriptions
 --geodesy.about = nil
