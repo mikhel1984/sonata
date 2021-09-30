@@ -81,7 +81,7 @@ local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
 
 --	INFO
 
-local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -209,7 +209,7 @@ generator.doc = function (locName, tModules)
   res[#res+1] = '</ul></div>'
   res[#res+1] = '<div><h3># About #</h3>'
   -- program description
-  local base = string.gsub(Main_local._arghelp_(), '\n', '<br>\n')
+  local base = string.gsub(Sonata._arghelp_(), '\n', '<br>\n')
   base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
   res[#res+1] = string.format('<p>%s</p>', base)
   res[#res+1] = '<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>'

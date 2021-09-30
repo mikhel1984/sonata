@@ -146,7 +146,7 @@ local function sh (x) return 0.5*(math.exp(x)-math.exp(-x)) end
 
 --	INFO
 
-local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

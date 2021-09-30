@@ -39,20 +39,22 @@ DIV {margin-left: 10px;}
 <br>
 <b>FLAGS</b>:<br>
 	-h - Get this help message.<br>
+	-e - Evaluate command line expression.<br>
+	  (e.g. -e "2+2")<br>
 		{Development}<br>
 	--new    - Create a template for a new module.<br>
 	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	--doc    - Creating/updating a documentation file.<br>
 	  (e.g. --doc ru)<br>
-	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
-	  (e.g. --test array)<br>
 	--lang   - Creating/updating a file for localization.<br>
 	  (e.g. --lang eo)<br>
+	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
+	  (e.g. --test array)<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.23<br>
+<b>VERSION</b>: 0.9.24<br>
 <br>
-<b>MODULES</b>: special, numeric, array, bigint, const, gnuplot, rational, units, matrix, geodesy, graph, stat, polynom, quaternion, complex.<br>
+<b>MODULES</b>: quaternion, rational, matrix, stat, numeric, graph, complex, bigint, array, special, polynom, const, units, gnuplot, geodesy.<br>
 <br>
 <b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
 </p>
@@ -553,7 +555,14 @@ ans = _C.myConst              --> nil
 <b>A.xyzInto[B]</b> - Get function to transform coordinates from A to B system.<br>
 <b>deg2dms(d)</b> - Return degrees, minutes and seconds for the given angle value.<br>
 <b>dms2rad(d[,m[,s]])</b> - Convert degrees, minutes and seconds to radians.<br>
+<b>fromENU(tBLr,tXYZr,top)</b> - Get cartesian coordinates of a local point in reference frame.<br>
+<b>grav(B)</b> - International gravity formula, angle in degrees.<br>
+<b>projGK(E,tBL)</b> - Return north and east positions of the point after Gauss-Kruger projection.<br>
+<b>projM(E,tBL)</b> - Return north and east positions of the point after Mercator projectoin.<br>
+<b>solveDir(E,BLH,azimuth,dist)</b> - Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.<br>
+<b>solveInv(E,BLH1,BLH2)</b> - Solve inverse geodetic problem, find distance and azimuths for two points.<br>
 <b>toBLH(E,tXYZ)</b> - Transform Cartesian coordinates to Geodetic.<br>
+<b>toENU(tBLr,tXYZr,catr)</b> - Get topocentric coordinates of a point in reference frame.<br>
 <b>toXYZ(E,tBLH)</b> - Transform Geodetic coordinates to Cartesian.<br></p>
 <pre class="example">
 
@@ -581,22 +590,56 @@ ans = t2.L                 --3> t0.L
 
 ans = t2.H                 --3> t0.H
 
--- coordinate transformation function
+-- find topocentric coordinates
+tg = {X=t1.X+10, Y=t1.Y+20, Z=t1.Z+30}
+tc = Geo.toENU(t0, t1, tg)
+
+-- back to cartesian
+tg2 = Geo.fromENU(t0, t1, tc)
+ans = tg2.X                --3> tg.X
+
+-- transform XYZ from WGS84 to PZ90
 pz90 = Geo.PZ90
+-- get function
 xyz_wgs84_pz90 = wgs84.xyzInto[pz90]
 t3 = xyz_wgs84_pz90(t1) 
-print(t3.X, t3.Y, t3.Z)
+
+-- backward transformation
+xyz_pz90_wgs84 = pz90.xyzInto[wgs84]
+t4 = xyz_pz90_wgs84(t3)
+ans = t4.X                 --2> t1.X
 
 -- datum transformation
 blh_wgs84_pz90 = wgs84.blhInto[pz90]
-t4 = blh_wgs84_pz90(t0)
-print(t4.B, t4.L, t4.H)
+t5 = blh_wgs84_pz90(t0)
 
--- compare
-t5 = pz90:toXYZ(t4)
-print(t5.X, t5.Y, t5.Z)
+-- Gauss-Kruger projection
+sk = Geo.SK42
+pt = {B=55.752, L=37.618}
+t6 = sk:projGK(pt)
+ans = t6.N                  --2> 6181924.245
 
+ans = t6.E                  --2> 7413223.481
 
+-- Merkator projection
+-- methods can be called directly from Geo
+t7 = Geo.projM(wgs84, pt)
+print(t7.N, t7.E)
+
+-- inverse problem
+p1 = {B=rnd()*50, L=rnd()*50}
+p2 = {B=rnd()*50, L=rnd()*50}
+s, a1, a2 = wgs84:solveInv(p1,p2)
+ans = (s >= 0)               --> true
+
+-- direct problem 
+p3, a3 = wgs84:solveDir(p1,a1,s)
+ans = a3                    --2> a2
+
+ans = p3.B                  --2> p2.B
+
+-- equator acceleration 
+ans = Geo.grav(0)           --1> 9.78
 
 --</pre>
 <a href="#Top">Top</a></div>

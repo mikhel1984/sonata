@@ -88,14 +88,10 @@ ans = aa.b.c                  --> 'abc'
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
 local FILES = 'files'
-local LOGNAME = 'log.note'
-
-local EV_QUIT, EV_ERROR, EV_CMD, EV_RES = 1, 2, 3, 4
 
 -- compatibility
 local Ver = {}
 if _VERSION < 'Lua 5.3' then
-  Ver.loadStr = loadstring
   Ver.atan2 = math.atan2
   Ver.mathType = function (x)
     local n = tonumber(x)
@@ -104,102 +100,65 @@ if _VERSION < 'Lua 5.3' then
     return (p == 0.0) and 'integer' or 'float'
   end
 else
-  Ver.loadStr = load
   Ver.atan2 = math.atan
   Ver.mathType = math.type
 end
-
---- Process command string.
---  @param cmd String with Lua expression.
---  @return Status of processing and rest of command.
-local function _evaluate_(cmd, nextCmd)
-  if nextCmd == 'quit' then return EV_QUIT end
-  -- check if multiline
-  local partCmd = string.match(nextCmd, "(.*)\\%s*")
-  if partCmd ~= nil then
-    -- expected next line 
-    return EV_CMD, string.format("%s%s\n", cmd, partCmd)
-  end
-  cmd = cmd..nextCmd
-  -- 'parse'
-  local fn, err = Ver.loadStr('return '..cmd)  -- either 'return expr'
-  if err then
-    fn, err = Ver.loadStr(cmd)                 -- or 'expr'
-  end
-  -- get result
-  if err then
-    return EV_ERROR, err
-  else
-    local ok, res = pcall(fn)
-    if ok then 
-      _ans = res       -- save last result
-       return EV_RES, res
-    else
-      -- evaluation error
-      return EV_ERROR, res
-    end
-  end
-end
-
---	INFO
-
--- Main_help
-Main_help = require "core.help"
-about = Main_help:new("Lua based mathematics.")
 
 --	MODULE
 
 local main = {}
 
 -- Commonly used methods
-abs = math.abs;   about[abs] =  {"abs(x)", "Absolute value."}
-exp = math.exp;   about[exp] =  {"exp(x)", "Exponent."}
-log = math.log;   about[log] =  {"log(x)", "Natural logarithm."}
-sqrt = math.sqrt;  about[sqrt] = {"sqrt(a)", "Square root."}
+abs = math.abs;   About[abs] =  {"abs(x)", "Absolute value."}
+exp = math.exp;   About[exp] =  {"exp(x)", "Exponent."}
+log = math.log;   About[log] =  {"log(x)", "Natural logarithm."}
+sqrt = math.sqrt;  About[sqrt] = {"sqrt(a)", "Square root."}
 
 -- Trigonometrical
-sin = math.sin;   about[sin] =  {"sin(x)", "Sinus x.", TRIG}
-cos = math.cos;   about[cos] =  {"cos(x)", "Cosine x.", TRIG}
-tan = math.tan;   about[tan] =  {"tan(x)", "Tangent x.", TRIG}
-asin = math.asin;  about[asin] = {"asin(x)", "Inverse sine x.", TRIG}
-acos = math.acos;  about[acos] = {"acos(x)", "Inverse cosine x.", TRIG}
-atan = math.atan;  about[atan] = {"atan(x)", "Inverse tangent x.", TRIG}
+sin = math.sin;   About[sin] =  {"sin(x)", "Sinus x.", TRIG}
+cos = math.cos;   About[cos] =  {"cos(x)", "Cosine x.", TRIG}
+tan = math.tan;   About[tan] =  {"tan(x)", "Tangent x.", TRIG}
+asin = math.asin;  About[asin] = {"asin(x)", "Inverse sine x.", TRIG}
+acos = math.acos;  About[acos] = {"acos(x)", "Inverse cosine x.", TRIG}
+atan = math.atan;  About[atan] = {"atan(x)", "Inverse tangent x.", TRIG}
 
 atan2 = Ver.atan2 
-about[atan2] = {"atan2(y,x)", "Inverse tangent of y/x, use signs.", TRIG}
+About[atan2] = {"atan2(y,x)", "Inverse tangent of y/x, use signs.", TRIG}
 
 -- Hyperbolic
 cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
-about[cosh] = {"cosh(x)", "Hyperbolic cosine.", HYP}
+About[cosh] = {"cosh(x)", "Hyperbolic cosine.", HYP}
 
 sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end  
-about[sinh] = {"sinh(x)", "Hyperbolic sinus.", HYP}
+About[sinh] = {"sinh(x)", "Hyperbolic sinus.", HYP}
 
 tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
-about[tanh] = {"tanh(x)", "Hyperbolic tangent.", HYP}
+About[tanh] = {"tanh(x)", "Hyperbolic tangent.", HYP}
 
 -- Hyperbolic inverse 
 asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
-about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
+About[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
 
 acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
-about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
+About[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
 
 atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
-about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
+About[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
-_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", Main_help.CONST}
-_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", Main_help.CONST}
+_pi = math.pi;   About[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
+_e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
 -- result 
-_ans = 0;   about[_ans] = {"_ans", "Result of the last operation.", Main_help.OTHER}
+_ans = 0;   About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
 
 -- random
+math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
+
 rand = function () return math.random() end
-about[rand] = {"rand()", "Random number between 0 and 1."}
+About[rand] = {"rand()", "Random number between 0 and 1."}
 
 randi = function (N) return math.random(1,N) end
-about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
+About[randi] = {"randi(N)", "Random integer in range from 1 to N."}
 
 randn = function () 
   -- use Box-Muller transform
@@ -211,7 +170,7 @@ randn = function ()
   until s <= 1 and s > 0
   return u * math.sqrt(-2*math.log(s)/s)
 end
-about[randn] = {"randn()", "Normal distributed random value with 0 mean and variance 1."}
+About[randn] = {"randn()", "Normal distributed random value with 0 mean and variance 1."}
 
 --- Round to closest integer.
 --  @param x Real number.
@@ -227,7 +186,7 @@ Round = function (x,n)
   end
   return p / k
 end
-about[Round] = {'Round(x[,n=0])', 'Round value, define number of decimal digits.', Main_help.OTHER}
+About[Round] = {'Round(x[,n=0])', 'Round value, define number of decimal digits.', SonataHelp.OTHER}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -296,7 +255,7 @@ Print = function (...)
   end
   io.write('\n')
 end
-about[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", Main_help.OTHER}
+About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", SonataHelp.OTHER}
 
 --- Show type of the object.
 --  @param t Some Lua or Sonata object.
@@ -310,7 +269,7 @@ function Type(t)
   end
   return v
 end
-about[Type] = {'Type(t)', 'Show type of the object.', Main_help.OTHER}
+About[Type] = {'Type(t)', 'Show type of the object.', SonataHelp.OTHER}
 
 --- Generate sequence of values.
 --  @param from Beginning of range (default is 1).
@@ -325,7 +284,7 @@ Range = function (from,to,step)
   for i = from,to,step do res[#res+1] = i end
   return res
 end
-about[Range] = {'Range([from=1,]to[,step=1])','Generate table with sequence of numbers.', Main_help.OTHER}
+About[Range] = {'Range([from=1,]to[,step=1])','Generate table with sequence of numbers.', SonataHelp.OTHER}
 
 --- Generate list of function values.
 --  @param fn Function to apply.
@@ -336,7 +295,7 @@ Map = function (fn, tbl)
   for _,v in ipairs(tbl) do res[#res+1] = fn(v) end
   return res
 end
-about[Map] = {'Map(fn,tbl)','Evaluate function for each table element.', Main_help.OTHER}
+About[Map] = {'Map(fn,tbl)','Evaluate function for each table element.', SonataHelp.OTHER}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -384,7 +343,7 @@ DsvWrite = function (fName, tbl, delim)
   f:close()
   io.write('Done\n')
 end
-about[DsvWrite] = {"DsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", FILES}
+About[DsvWrite] = {"DsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
 --  @param fName File name.
@@ -410,31 +369,11 @@ DsvRead = function (fName, delim)
   f:close()
   return res
 end
-about[DsvRead] = {"DsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
+About[DsvRead] = {"DsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
 
-TblImport = Main_help.tblImport
-about[TblImport] = {"TblImport(fName)", "Import Lua table, saved into file.", FILES}
+TblImport = SonataHelp.tblImport
+About[TblImport] = {"TblImport(fName)", "Import Lua table, saved into file.", FILES}
 
---- Session logging.
---  @param flat Value 'on'/true to start and 'off'/false to stop.
-Logging = function (flag)
-  if flag == 'on' or flag == true then
-    if not main._logFile_ then
-      main._logFile_ = io.open(LOGNAME, 'a')
-      local d = os.date('*t')
-      main._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
-      main._logFile_:write('-- ')  -- prepare comment for 'logging on'
-    end
-  elseif flag == 'off' or flag == false then
-    if main._logFile_ then
-      main._logFile_:close() 
-      main._logFile_ = nil
-    end
-  else
-    io.write('Unexpected argument!\n')
-  end
-end
-about[Logging] = {'Logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", Main_help.OTHER}
 
 --- Execute file inside the interpreter.
 --  @param fName Lua or note file name.
@@ -442,116 +381,15 @@ Run = function (fname)
   if string.find(fname, '%.lua$') then
     dofile(fname)
   elseif string.find(fname, '%.note$') then
-    main.evalNote(fname, false)
+    Sonata:note(fname, false)
   else
     io.write('Expected .lua or .note!\n')
   end
 end
-about[Run] = {'Run(fName)', "Execute lua- or note-file.", Main_help.OTHER}
-
---- Read-Evaluate-Write circle as a Lua program.
---  Call 'quit' to exit this function.
-main.evalDialog = function ()
-  local invA, invB = Main_help.CMAIN..'dp: '..Main_help.CRESET, Main_help.CMAIN..'..: '..Main_help.CRESET
-  local invite, cmd = invA, ""
-  local ERROR = Main_help.CERROR.."ERROR: "
-  -- start dialog
-  while true do
-    io.write(invite)
-    -- command processing
-    local newLine = io.read()
-    local status, res = _evaluate_(cmd, newLine)
-    if status == EV_RES then
-      if res ~= nil then print(res) end
-      invite = invA; cmd = ""
-    elseif status == EV_CMD then
-      invite = invB; cmd = res
-    elseif status == EV_ERROR then
-      print(ERROR, res, Main_help.CRESET)
-      invite = invA; cmd = ""
-    else -- status == EV_QUIT
-      break
-    end
-    -- logging
-    if main._logFile_ then
-      main._logFile_:write(newLine,'\n')
-      if status == EV_RES and res then 
-        main._logFile_:write('--[[ ', res, ' ]]\n\n') 
-      elseif status == EV_ERROR then
-        main._logFile_:write('--[[ ERROR ]]\n\n')
-      end
-    end
-  end
-  if main._logFile_ then main._logFile_:close() end
-  main._exit_()
-end
-
---- Evaluate 'note'-file.
---  @param fname Script file name.
-main.evalNote = function (fname, full)
-  full = (full ~= false)
-  local ERROR = Main_help.CERROR.."ERROR: "
-  local cmd = ""
-  local templ = Main_help.CBOLD..'\t%1'..Main_help.CNBOLD
-  local invA, invB = '?> ', '>> '
-  -- read lines
-  if full then io.write("Run file ", fname, "\n") end
-  -- read
-  local f = assert(io.open(fname, 'r'))
-  local txt = f:read('*a'); f:close()
-  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
-  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
-    if string.find(line, '^%s*%-%-%s*PAUSE') then
-      if full then
-        -- call dialog
-        local lcmd, lquit = "", false
-        local invite = invA
-        while true do
-          io.write(invite)
-          local newCmd = io.read()
-          if newCmd == "" then break end  -- continue file evaluation
-          local status, res = _evaluate_(lcmd, newCmd)
-          if status == EV_RES then
-            if res ~= nil then print(res) end
-            invite = invA; lcmd = ""
-          elseif status == EV_CMD then
-            invite = invB; lcmd = res
-          elseif status == EV_ERROR then
-            print(ERROR, res, Main_help.CRESET)
-            invite = invA; lcmd = ""
-          else --  EV_QUIT
-            lquit = true
-            break
-          end
-        end
-        if lquit then break end
-      end
-    elseif string.find(line, '^%s*%-%-') then
-      if full then
-        -- highlight line comments
-        line = string.gsub(line, '\t(.+)', templ)
-        line = string.format("%s%s%s\n", Main_help.CHELP, line, Main_help.CRESET)
-        io.write(line)
-      end
-    else
-      -- print line and evaluate
-      io.write(Main_help.CMAIN, '@ ', Main_help.CRESET, line, '\n')
-      local status, res = _evaluate_(cmd, line)
-      if status == EV_RES then
-        if res ~= nil then print(res) end
-        cmd = ""
-      elseif status == EV_CMD then
-        cmd = res
-      else -- EV_ERROR 
-        print(ERROR, res, Main_help.CRESET)
-        break
-      end
-    end
-  end
-end
+About[Run] = {'Run(fName)', "Execute lua- or note-file.", SonataHelp.OTHER}
 
 -- save link to help info
-main.about = about
+main.about = About
 
 --- Update help reference when redefine function.
 --  @param fnNew New function.
@@ -560,8 +398,6 @@ main._updateHelp = function (fnNew, fnOld)
   main.about[fnNew] = main.about[fnOld]
   main.about[fnOld] = nil
 end
-
-main._exit_ = function () print(Main_help.CMAIN.."\n             --======= Bye! =======--\n"..Main_help.CRESET); os.exit() end
 
 return main
 

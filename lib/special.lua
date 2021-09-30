@@ -91,7 +91,7 @@ local ERR_INVARG = "Invalid arguments!"
 
 --	INFO
 
-local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

@@ -100,7 +100,7 @@ local function isquaternion(t) return type(t)=='table' and t.isquaternion end
 
 --	INFO
 
-local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 

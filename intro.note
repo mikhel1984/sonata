@@ -10,7 +10,7 @@ help()
 -- PAUSE
 
 -- Information about function can be obtained as
-help(round)
+help(Round)
 -- PAUSE
 
 -- By the way, this is an interactive mode.

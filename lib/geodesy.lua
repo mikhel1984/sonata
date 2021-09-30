@@ -34,22 +34,56 @@ ans = t2.L                 --3> t0.L
 
 ans = t2.H                 --3> t0.H
 
--- coordinate transformation function
+-- find topocentric coordinates
+tg = {X=t1.X+10, Y=t1.Y+20, Z=t1.Z+30}
+tc = Geo.toENU(t0, t1, tg)
+
+-- back to cartesian
+tg2 = Geo.fromENU(t0, t1, tc)
+ans = tg2.X                --3> tg.X
+
+-- transform XYZ from WGS84 to PZ90
 pz90 = Geo.PZ90
+-- get function
 xyz_wgs84_pz90 = wgs84.xyzInto[pz90]
 t3 = xyz_wgs84_pz90(t1) 
-print(t3.X, t3.Y, t3.Z)
+
+-- backward transformation
+xyz_pz90_wgs84 = pz90.xyzInto[wgs84]
+t4 = xyz_pz90_wgs84(t3)
+ans = t4.X                 --2> t1.X
 
 -- datum transformation
 blh_wgs84_pz90 = wgs84.blhInto[pz90]
-t4 = blh_wgs84_pz90(t0)
-print(t4.B, t4.L, t4.H)
+t5 = blh_wgs84_pz90(t0)
 
--- compare
-t5 = pz90:toXYZ(t4)
-print(t5.X, t5.Y, t5.Z)
+-- Gauss-Kruger projection
+sk = Geo.SK42
+pt = {B=55.752, L=37.618}
+t6 = sk:projGK(pt)
+ans = t6.N                  --2> 6181924.245
 
+ans = t6.E                  --2> 7413223.481
 
+-- Merkator projection
+-- methods can be called directly from Geo
+t7 = Geo.projM(wgs84, pt)
+print(t7.N, t7.E)
+
+-- inverse problem
+p1 = {B=rnd()*50, L=rnd()*50}
+p2 = {B=rnd()*50, L=rnd()*50}
+s, a1, a2 = wgs84:solveInv(p1,p2)
+ans = (s >= 0)               --> true
+
+-- direct problem 
+p3, a3 = wgs84:solveDir(p1,a1,s)
+ans = a3                    --2> a2
+
+ans = p3.B                  --2> p2.B
+
+-- equator acceleration 
+ans = Geo.grav(0)           --1> 9.78
 
 --]]
 
@@ -58,14 +92,21 @@ print(t5.X, t5.Y, t5.Z)
 -- Compatibility with previous versions
 local Ver = require "lib.versions"
 
+local PROB, TRANS, PROJ = "problems", "transform", "projection"
+
 --- Check object type.
 --  @param t Object.
 --  @return True if the object is geodesy.
 local function isgeodesy(t) return type(t)=='table' and t.isgeodesy end
 
+--- Inverse hyperbolic tangent.
+--  @param z Some number.
+--  @return Areatangent value.
+local function arth(z) return math.log((1+z)/(1-z)) / 2 end
+
 --	INFO
 
-local help = SONATA_DIALOG and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp and (require "core.help") or {new=function () return {} end}
 
 --	MODULE
 
@@ -73,9 +114,6 @@ local help = SONATA_DIALOG and (require "core.help") or {new=function () return 
 local ellipsoid = {}
 -- methametods
 ellipsoid.__index = ellipsoid
-
--- temporary save here the function description
-local _about_ = help:new("Coordinate transformations and other geodetic tasks.")
 
 --- Ellipsoid object constructor.
 --  @param t Table with parameters, obligatory are semi-major axis, flattening.
@@ -89,6 +127,16 @@ ellipsoid.new = function (self,t)
   return setmetatable(t, self)
 end
 
+ellipsoid._radiusMeridian_ = function (E, v)
+  local s = math.sin(v)
+  return E.a * (1 - E.e2) / (1 - E.e2*s*s)^1.5
+end
+
+ellipsoid._radiusVertical_ = function (E, v)
+  local s = math.sin(v)
+  return E.a / math.sqrt(1 - E.e2*s*s)
+end
+
 --- Transform Geodetic coordinats to Cartesian.
 --  @param E Reference ellipsoid object.
 --  @param t Dictionary with coordinates: B (deg), L (deg), H (m).
@@ -96,15 +144,13 @@ end
 ellipsoid.toXYZ = function (E, t)
   -- convert to radians
   local B, L, H = math.rad(t.B), math.rad(t.L), t.H
-  local sB = math.sin(B)
-  local N = E.a / math.sqrt(1 - E.e2 * sB * sB)
+  local N = ellipsoid._radiusVertical_(E, B)
   local NH = (N + H) * math.cos(B)
   return {
     X = NH * math.cos(L),
     Y = NH * math.sin(L),
-    Z = ((1-E.e2)*N + H) * sB }
+    Z = ((1-E.e2)*N + H) * math.sin(B) }
 end
-_about_[ellipsoid.toXYZ] = {"toXYZ(E,tBLH)", "Transform Geodetic coordinates to Cartesian."}
 
 --- Transform Cartesian coordinates to Geodetic.
 --  @param E Reference ellipsoid object.
@@ -130,10 +176,9 @@ ellipsoid.toBLH = function (E, t)
     end
     B = math.atan(tg)
     L = Ver.atan2(Y,X)
-    local sb = math.sin(B)
-    local N = E.a / math.sqrt(1 - E.e2 * sb * sb)
+    local N = ellipsoid._radiusVertical_(E, B)
     if math.abs(tg) > 1 then
-      H = Z / sb - (1 - E.e2) * N
+      H = Z / math.sin(B) - (1 - E.e2) * N
     else
       H = D / math.cos(B) - N
     end
@@ -143,7 +188,6 @@ ellipsoid.toBLH = function (E, t)
     L = math.deg(L),
     H = H }
 end
-_about_[ellipsoid.toBLH] = {"toBLH(E,tXYZ)", "Transform Cartesian coordinates to Geodetic."}
 
 --- Transform coordinates between two Cartesian systems, forward direction.
 --  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
@@ -184,12 +228,12 @@ end
 --  @param df Difference in flattening.
 --  @param t Coordinates of a point.
 --  @return Shift in B, L, H coordinates.
-ellipsoid._molodensky = function (E,dx,dy,dz,da,df,t)
+ellipsoid._molodensky_ = function (E,dx,dy,dz,da,df,t)
   local B, L = math.rad(t.B), math.rad(t.L)
   local sB, cB = math.sin(B), math.cos(B)
   local sL, cL = math.sin(L), math.cos(L)
-  local tmp, f1 = 1 - E.e2*sB*sB, 1 - E.f
-  local M, N = E.a * (1-E.e2) / tmp^1.5, E.a / math.sqrt(tmp)
+  local f1 = 1 - E.f
+  local M, N = ellipsoid._radiusMeridian_(E, B), ellipsoid._radiusVertical_(E, B)
   local dB = (-dx*sB*cL - dy*sB*sL + dz*cB + N*E.e2*sB*cB*da/E.a + sB*cB*(M/f1 + N*f1)*df) / (M + t.H)
   local dL = (-dx*sL + dy*cL) / ((N + t.H)*cB)
   local dH = dx*cB*cL + dy*cB*sL + dz*sL - E.a*da/N + N*f1*sB*sB*df
@@ -204,7 +248,7 @@ end
 ellipsoid._fwdBLH = function (E1,E2,par)
   local da, df = E2.a - E1.a, E2.f - E1.f
   return function (t)
-    local dB, dL, dH = ellipsoid._molodensky(E1, par[1], par[2], par[3], da, df, t)
+    local dB, dL, dH = ellipsoid._molodensky_(E1, par[1], par[2], par[3], da, df, t)
     return {
       B = t.B + dB,
       L = t.L + dL,
@@ -218,11 +262,10 @@ end
 --  @param E2 Src ellipsoid object.
 --  @param par Transformation parameters.
 --  @return Function for transformation.
-
 ellipsoid._bwdBLH = function (E1,E2,par)
   local da, df = E1.a - E2.a, E1.f - E2.f
   return function (t)
-    local dB, dL, dH = ellipsoid._molodensky(E2, -par[1], -par[2], -par[3], da, df, t)
+    local dB, dL, dH = ellipsoid._molodensky_(E2, -par[1], -par[2], -par[3], da, df, t)
     return {
       B = t.B + dB,
       L = t.L + dL,
@@ -231,22 +274,187 @@ ellipsoid._bwdBLH = function (E1,E2,par)
   end
 end
 
+--- Find Gauss-Kruger (transverse Mercator) projection of the geodetic point.
+--  @param E Ellipsoid object.
+--  @param t Table with longitude L and lattitude B.
+--  @return Table with North and East position (in meters).
+ellipsoid.projGK = function (E, t)
+  local zone, F = math.floor(t.L/6 + 1), 1.0  -- index and scale
+  local L0, B0 = math.rad(zone*6 - 3), 0  -- begining
+  local N0, E0 = 0, zone*1E6 + 500000.0   -- shifting
+  local B, L, n = math.rad(t.B), math.rad(t.L), (E.a - E.b)/(E.a + E.b)
+  local M = F * E.b * ( (1+n*(1+5.0/4*n*(1+n)))*(B-B0)
+    - 3*n*(1 + n*(1 + 7.0/8*n)) * math.sin(B-B0) * math.cos(B+B0)
+    + 15.0/8.0*n*n*(1+n) * math.sin(2*(B-B0)) * math.cos(2*(B+B0))
+    - 35.0/24.0*n^3 * math.sin(3*(B-B0)) * math.cos(3*(B+B0)))
+  local sB, cB, tB2 = math.sin(B), math.cos(B), math.tan(B)^2
+  local v, p = F*ellipsoid._radiusVertical_(E,B), F*ellipsoid._radiusMeridian_(E,B)
+  local nn = v / p - 1
+  local coef = {cB, 
+    sB*cB/2.0, 
+    cB^3 * (v/p - tB2) / 6.0,
+    sB * cB^3 * (5 - tB2 + 9*nn) / 24.0, 
+    cB^5 * (5 + tB2 * (tB2 - 18 - 58*nn) + 14*nn) / 120.0,
+    sB * cB^5 * (61 + tB2 * (tB2 - 58)) / 720.0
+  }
+  L = L-L0; B = L * L  -- reuse
+  return {
+    N = N0 + M + v*B*(coef[2] + B*(coef[4] + B*coef[6])),
+    E = E0 + v*L*(coef[1] + B*(coef[3] + B*coef[5]))
+  }
+end
+
+--- Find Mercator projection of the geodetic point.
+--  @param E Ellipsoid object.
+--  @param t Table with longitude L and lattitude B.
+--  @param L0 Initial meridian (0 by default).
+--  @return Table with North and East position (in meters).
+ellipsoid.projM = function (E, t, L0)
+  L0 = L0 or 0  -- initial meridian 
+  local C = E.a -- use equator radius 
+  local ex, sB = math.sqrt(E.e2), math.sin(math.rad(t.B))
+  return {
+    N = C * (arth(sB) - ex*arth(ex*sB)),
+    E = C * math.rad(t.L - L0)
+  }
+end
+
+--- Solve the inverse geodetic problem:
+--  find distance and azimuths for the two given points.
+--  Uses Vincenty's formulae.
+--  @param E Ellipsoid object.
+--  @param t1 First point (B,L).
+--  @param t2 Second point (B,L).
+--  @return distance (m), first and second azimuths (deg)
+ellipsoid.solveInv = function (E, t1, t2)
+  -- reduced latitude
+  local U1 = math.atan((1-E.f)*math.tan(math.rad(t1.B)))
+  local U2 = math.atan((1-E.f)*math.tan(math.rad(t2.B)))
+  local cU1, cU2, sU1, sU2 = math.cos(U1), math.cos(U2), math.sin(U1), math.sin(U2)
+  -- prepare variables
+  local L = math.rad(t2.L) - math.rad(t1.L)
+  local lam, ssig, csig, sig, alcos2, csigm = L
+  -- iterative part
+  repeat
+    ssig = math.sqrt((cU2*math.sin(lam))^2 + (cU1*sU2-sU1*cU2*math.cos(lam))^2)
+    csig = sU1*sU2 + cU1*cU2*math.cos(lam) 
+    sig = Ver.atan2(ssig, csig)
+    local alsin = cU1*cU2*math.sin(lam) / ssig 
+    alcos2 = 1 - alsin*alsin
+    csigm = csig - 2*sU1*sU2 / alcos2 
+    local C = E.f / 16 * alcos2 * (4 + E.f*(4 - 3*alcos2)) 
+    local prev = lam
+    lam = L + (1-C)*E.f*alsin*(sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm)))
+  until math.abs(lam - prev) < 1E-12
+  -- result
+  local A, B = ellipsoid._vincentyAB_(E.e2, alcos2)
+  local dsig = B*ssig*(csigm + B/4*(csig*(-1 + 2*csigm*csigm) - B/6*csigm*(-3 + 4*ssig*ssig)*(-3 + 4*csigm*csigm)))
+  local dist = E.b * A * (sig - dsig) 
+  local azimuth1 = Ver.atan2(cU2*math.sin(lam), cU1*sU2 - sU1*cU2*math.cos(lam))
+  local azimuth2 = Ver.atan2(cU1*math.sin(lam), -sU1*cU2 + cU1*sU2*math.cos(lam))
+  return dist, math.deg(azimuth1), math.deg(azimuth2)
+end
+
+--- Solve the direct geodetic problem:
+--  find the socond point and azimuth if the initial point, 
+--  its azimuth and distance are given. 
+--  Uses Vincenty's formulae. 
+--  @param E Ellipsoid object.
+--  @param t1 First point (B,L).
+--  @param a1 Azimuth in the first point.
+--  @param dist Distance to the second point.
+--  @return Second point position (B,L) and orientation (deg).
+ellipsoid.solveDir = function (E, t1, a1, dist)
+  -- transform arguments
+  local U1 = math.atan((1-E.f)*math.tan(math.rad(t1.B)))
+  local sU1, cU1 = math.sin(U1), math.cos(U1)
+  local ca1, sa1 = math.cos(math.rad(a1)), math.sin(math.rad(a1))
+  -- prepare iterations
+  local sig1 = Ver.atan2(math.tan(U1), ca1) * 2  -- multiplied sigma1
+  local alsin = cU1*sa1 
+  local alcos2 = 1 - alsin*alsin 
+  local A, B = ellipsoid._vincentyAB_(E.e2, alcos2)
+  A = dist / (E.b * A)  -- reuse
+  local sig, ssig, csigm = A
+  -- iterative part
+  repeat
+    csigm = math.cos(sig1 + sig)
+    ssig = math.sin(sig)
+    local dsig = B*ssig*(csigm + B/4*(math.cos(sig)*(-1 + 2*csigm*csigm) - B/6*csigm*(-3 + 4*ssig*ssig)*(-3 + 4*csigm*csigm)))
+    local prev = sig
+    sig = A + dsig
+  until math.abs(prev - sig) < 1E-9
+  -- result
+  local csig = math.cos(sig)
+  local B2 = Ver.atan2(sU1*csig + cU1*ssig*ca1, (1-E.f)*math.sqrt(1 - alcos2 + (sU1*ssig - cU1*csig*ca1)^2))
+  local C = E.f / 16 * alcos2 * (4 + E.f*(4 - 3*alcos2))
+  local L = Ver.atan2(ssig*sa1, cU1*csig-sU1*ssig*sa1) - (1-C)*E.f*alsin*(sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm))) -- lambda-...
+  local azimuth2 = Ver.atan2(alsin, -sU1*ssig + cU1*csig*ca1)
+  return {B = math.deg(B2), L = t1.L + math.deg(L)}, math.deg(azimuth2)
+end
+
+--- Find coefficients.
+--  @param e2 Square excentrisitet. 
+--  @param cosa2 Square cosine of the angle.
+--  @return A and B values. 
+ellipsoid._vincentyAB_ = function (e2, cosa2)
+  local u2 = e2 * cosa2 
+  local A = 1 + u2*(4096 + u2*(-768 + u2*(320 - 175*u2)))/16384.0 
+  local B = u2*(256 + u2*(-128 + u2*(74 - 47*u2)))/1024.0
+  return A, B
+end
+
 -- Collection of Geodetic methods
 local geodesy = {
 -- mark
 type = 'geodesy', isgeodesy = true,
 -- description
-about = _about_,
+about = help:new("Coordinate transformations and other geodetic tasks."),
 
 -- Ellipsoids
-WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563},
+WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563, 
+  -- additional parameters
+  Me = 5.98E24,  -- kg, mass of earth
+  G  = 6.67E-11, -- m^3/kg/s^2, gravitational constant
+  GMe = 3.986004418E14, -- m^3/s^2
+  omega = 7.292115E-5, -- rad/s, rotation rate
+  J2 = 1.081874E-3, -- dynamic form factor
+},
 -- russian systems
-PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784},
+PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784,
+  -- additional parameters
+  GMe = 398600.4418E9, -- m^3/s^2
+  omega = 7.292115E-5, -- rad/s, rotation rate
+  J2 = 1082.62575E-6, -- dynamic form factor
+},
 PZ9002 = ellipsoid:new {a = 6378136, f = 1/298.25784},
 SK42 = ellipsoid:new {a = 6378245, f = 1/298.3}
 }
 -- methametods
 geodesy.__index = geodesy
+
+-- Access to the ellipsoid object methods.
+geodesy.toXYZ = ellipsoid.toXYZ
+geodesy.about[geodesy.toXYZ] = {"toXYZ(E,tBLH)", "Transform Geodetic coordinates to Cartesian.", TRANS}
+
+geodesy.toBLH = ellipsoid.toBLH
+geodesy.about[geodesy.toBLH] = {"toBLH(E,tXYZ)", "Transform Cartesian coordinates to Geodetic.", TRANS}
+
+geodesy.projGK = ellipsoid.projGK
+geodesy.about[geodesy.projGK] = {"projGK(E,tBL)", "Return north and east positions of the point after Gauss-Kruger projection.", PROJ}
+
+geodesy.projM = ellipsoid.projM
+geodesy.about[geodesy.projM] = {"projM(E,tBL)", "Return north and east positions of the point after Mercator projectoin.", PROJ}
+
+geodesy.solveInv = ellipsoid.solveInv
+geodesy.about[geodesy.solveInv] = {"solveInv(E,BLH1,BLH2)", 
+  "Solve inverse geodetic problem, find distance and azimuths for two points.", PROB}
+
+-- ellipsoid.solveDir = function (E, t1, a1, dist)
+geodesy.solveDir = ellipsoid.solveDir
+geodesy.about[geodesy.solveDir] = {"solveDir(E,BLH,azimuth,dist)", 
+  "Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.", PROB}
+
 
 --- Simplify configuration of coordinate transformation between ellipsoids.
 --  @param E1 First ellipsoid object.
@@ -278,9 +486,9 @@ _setTranslation_(geodesy.SK42, geodesy.PZ9002,
   {23.93, -141.03, -79.98; 0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6})
 
 geodesy.xyzInto = 'A.xyzInto[B]'
-geodesy.about[geodesy.xyzInto] = {"A.xyzInto[B]", "Get function to transform coordinates from A to B system."}
+geodesy.about[geodesy.xyzInto] = {"A.xyzInto[B]", "Get function to transform coordinates from A to B system.", TRANS}
 geodesy.blhInto = 'A.blhInto[B]'
-geodesy.about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geodetic coordinates from A to B system using the Molodensky method."}
+geodesy.about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geodetic coordinates from A to B system using the Molodensky method.", TRANS}
 
 --- Convert degrees to radians.
 --  @param d Degrees.
@@ -301,12 +509,53 @@ geodesy.deg2dms = function (d)
 end
 geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
+--- Find topocentric coordinates of a point.
+--  @param g Geodetic coordinates of the reference point.
+--  @param r Cartesian coordinates of the reference point.
+--  @param p Cartesian coordinates of the observed point.
+--  @return Topocentric coordinates of the observed point. 
+geodesy.toENU = function (g, r, p)
+  local sB, cB = math.sin(math.rad(g.B)), math.cos(math.rad(g.B))
+  local sL, cL = math.sin(math.rad(g.L)), math.cos(math.rad(g.L))
+  local dx, dy, dz = p.X-r.X, p.Y-r.Y, p.Z-r.Z
+  return {
+    X = -sL*dx + cL*dy,
+    Y = -sB*cL*dx - sB*sL*dy + cB*dz,
+    Z = cB*cL*dx + cB*sL*dy + sB*dz
+  }
+end
+geodesy.about[geodesy.toENU] = {"toENU(tBLr,tXYZr,catr)", "Get topocentric coordinates of a point in reference frame.", TRANS}
+
+--- Find cartesian coordinates of a point with topocentric coordinates.
+--  @param g Geodetic coordinates of the reference point.
+--  @param r Cartesian coordinates of the reference point.
+--  @param l Topocentric coordinates of the observed point.
+--  @return Cartesian coordinates of the observed point.
+geodesy.fromENU = function (g, r, l)
+  local sB, cB = math.sin(math.rad(g.B)), math.cos(math.rad(g.B))
+  local sL, cL = math.sin(math.rad(g.L)), math.cos(math.rad(g.L))
+  return {
+    X = r.X - sL*l.X - sB*cL*l.Y + cB*cL*l.Z,
+    Y = r.Y + cL*l.X - sB*sL*l.Y + cB*sL*l.Z,
+    Z = r.Z + cB*l.Y + sB*l.Z
+  }
+end
+geodesy.about[geodesy.fromENU] = {"fromENU(tBLr,tXYZr,top)", "Get cartesian coordinates of a local point in reference frame.", TRANS}
+
+--- International gravity formula (WGS).
+--  @param B Latitude, deg.
+--  @return Acceleration value.
+geodesy.grav = function (B)
+  local s = math.sin(math.rad(B))
+  s = s * s  -- get square
+  return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
+end
+geodesy.about[geodesy.grav] = {"grav(B)", "International gravity formula, angle in degrees.", help.OTHER}
+
 -- Uncomment to remove descriptions
 --geodesy.about = nil
 
 return geodesy
 
 --======================================
---TODO: check correctness
---TODO: add methods
---TODO: more examples
+--TODO: check correctness (Merkator, Molodensky)
