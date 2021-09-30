@@ -82,6 +82,9 @@ ans = a3                    --2> a2
 
 ans = p3.B                  --2> p2.B
 
+-- equator acceleration 
+ans = Geo.grav(0)           --1> 9.78
+
 --]]
 
 --	LOCAL
@@ -124,6 +127,16 @@ ellipsoid.new = function (self,t)
   return setmetatable(t, self)
 end
 
+ellipsoid._radiusMeridian_ = function (E, v)
+  local s = math.sin(v)
+  return E.a * (1 - E.e2) / (1 - E.e2*s*s)^1.5
+end
+
+ellipsoid._radiusVertical_ = function (E, v)
+  local s = math.sin(v)
+  return E.a / math.sqrt(1 - E.e2*s*s)
+end
+
 --- Transform Geodetic coordinats to Cartesian.
 --  @param E Reference ellipsoid object.
 --  @param t Dictionary with coordinates: B (deg), L (deg), H (m).
@@ -131,13 +144,12 @@ end
 ellipsoid.toXYZ = function (E, t)
   -- convert to radians
   local B, L, H = math.rad(t.B), math.rad(t.L), t.H
-  local sB = math.sin(B)
-  local N = E.a / math.sqrt(1 - E.e2 * sB * sB)
+  local N = ellipsoid._radiusVertical_(E, B)
   local NH = (N + H) * math.cos(B)
   return {
     X = NH * math.cos(L),
     Y = NH * math.sin(L),
-    Z = ((1-E.e2)*N + H) * sB }
+    Z = ((1-E.e2)*N + H) * math.sin(B) }
 end
 
 --- Transform Cartesian coordinates to Geodetic.
@@ -164,10 +176,9 @@ ellipsoid.toBLH = function (E, t)
     end
     B = math.atan(tg)
     L = Ver.atan2(Y,X)
-    local sb = math.sin(B)
-    local N = E.a / math.sqrt(1 - E.e2 * sb * sb)
+    local N = ellipsoid._radiusVertical_(E, B)
     if math.abs(tg) > 1 then
-      H = Z / sb - (1 - E.e2) * N
+      H = Z / math.sin(B) - (1 - E.e2) * N
     else
       H = D / math.cos(B) - N
     end
@@ -217,12 +228,12 @@ end
 --  @param df Difference in flattening.
 --  @param t Coordinates of a point.
 --  @return Shift in B, L, H coordinates.
-ellipsoid._molodensky = function (E,dx,dy,dz,da,df,t)
+ellipsoid._molodensky_ = function (E,dx,dy,dz,da,df,t)
   local B, L = math.rad(t.B), math.rad(t.L)
   local sB, cB = math.sin(B), math.cos(B)
   local sL, cL = math.sin(L), math.cos(L)
-  local tmp, f1 = 1 - E.e2*sB*sB, 1 - E.f
-  local M, N = E.a * (1-E.e2) / tmp^1.5, E.a / math.sqrt(tmp)
+  local f1 = 1 - E.f
+  local M, N = ellipsoid._radiusMeridian_(E, B), ellipsoid._radiusVertical_(E, B)
   local dB = (-dx*sB*cL - dy*sB*sL + dz*cB + N*E.e2*sB*cB*da/E.a + sB*cB*(M/f1 + N*f1)*df) / (M + t.H)
   local dL = (-dx*sL + dy*cL) / ((N + t.H)*cB)
   local dH = dx*cB*cL + dy*cB*sL + dz*sL - E.a*da/N + N*f1*sB*sB*df
@@ -237,7 +248,7 @@ end
 ellipsoid._fwdBLH = function (E1,E2,par)
   local da, df = E2.a - E1.a, E2.f - E1.f
   return function (t)
-    local dB, dL, dH = ellipsoid._molodensky(E1, par[1], par[2], par[3], da, df, t)
+    local dB, dL, dH = ellipsoid._molodensky_(E1, par[1], par[2], par[3], da, df, t)
     return {
       B = t.B + dB,
       L = t.L + dL,
@@ -254,7 +265,7 @@ end
 ellipsoid._bwdBLH = function (E1,E2,par)
   local da, df = E1.a - E2.a, E1.f - E2.f
   return function (t)
-    local dB, dL, dH = ellipsoid._molodensky(E2, -par[1], -par[2], -par[3], da, df, t)
+    local dB, dL, dH = ellipsoid._molodensky_(E2, -par[1], -par[2], -par[3], da, df, t)
     return {
       B = t.B + dB,
       L = t.L + dL,
@@ -277,7 +288,7 @@ ellipsoid.projGK = function (E, t)
     + 15.0/8.0*n*n*(1+n) * math.sin(2*(B-B0)) * math.cos(2*(B+B0))
     - 35.0/24.0*n^3 * math.sin(3*(B-B0)) * math.cos(3*(B+B0)))
   local sB, cB, tB2 = math.sin(B), math.cos(B), math.tan(B)^2
-  local v, p = F*E.a/math.sqrt(1-E.e2*sB*sB), F*E.a*(1-E.e2)*(1-E.e2*sB*sB)^(-1.5)
+  local v, p = F*ellipsoid._radiusVertical_(E,B), F*ellipsoid._radiusMeridian_(E,B)
   local nn = v / p - 1
   local coef = {cB, 
     sB*cB/2.0, 
@@ -401,9 +412,21 @@ type = 'geodesy', isgeodesy = true,
 about = help:new("Coordinate transformations and other geodetic tasks."),
 
 -- Ellipsoids
-WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563},
+WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563, 
+  -- additional parameters
+  Me = 5.98E24,  -- kg, mass of earth
+  G  = 6.67E-11, -- m^3/kg/s^2, gravitational constant
+  GMe = 3.986004418E14, -- m^3/s^2
+  omega = 7.292115E-5, -- rad/s, rotation rate
+  J2 = 1.081874E-3, -- dynamic form factor
+},
 -- russian systems
-PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784},
+PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784,
+  -- additional parameters
+  GMe = 398600.4418E9, -- m^3/s^2
+  omega = 7.292115E-5, -- rad/s, rotation rate
+  J2 = 1082.62575E-6, -- dynamic form factor
+},
 PZ9002 = ellipsoid:new {a = 6378136, f = 1/298.25784},
 SK42 = ellipsoid:new {a = 6378245, f = 1/298.3}
 }
@@ -519,12 +542,20 @@ geodesy.fromENU = function (g, r, l)
 end
 geodesy.about[geodesy.fromENU] = {"fromENU(tBLr,tXYZr,top)", "Get cartesian coordinates of a local point in reference frame.", TRANS}
 
+--- International gravity formula (WGS).
+--  @param B Latitude, deg.
+--  @return Acceleration value.
+geodesy.grav = function (B)
+  local s = math.sin(math.rad(B))
+  s = s * s  -- get square
+  return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
+end
+geodesy.about[geodesy.grav] = {"grav(B)", "International gravity formula, angle in degrees.", help.OTHER}
+
 -- Uncomment to remove descriptions
 --geodesy.about = nil
 
 return geodesy
 
 --======================================
---TODO: check correctness
---TODO: add parameters and functions for wgs
---TODO: fix Merkator proj
+--TODO: check correctness (Merkator, Molodensky)
