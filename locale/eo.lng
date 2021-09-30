@@ -9,9 +9,12 @@ Dialog = {
 ---------- use([modulo]) = piliigi la funcionalidad
 ----------------- quit() = finu -------------------
 ]],
-["use_import"]           = [[Alvoku
+["use_import"]           = [[
+
+Alvoku
   use 'modulo' aǔ use {'moduloA','moduloB' ...}
-por akiri ekstrajn modulojn.]],
+por akiri ekstrajn modulojn.
+]],
 },
 ---------- main.lua ----------
 Main = {

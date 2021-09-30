@@ -100,7 +100,6 @@ setmetatable(use,
       end
       lst[#lst+1] = Sonata.FORMAT_V1
       lst[#lst+1] = About:get('use_import')
-      lst[#lst+1] = '\n'
       return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == 'all' then
       -- load all modules
