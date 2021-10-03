@@ -161,7 +161,7 @@ polynom.new = function (self, t)
       k = k + 1
     end
   end
-  return polynom._init_(self, p)
+  return polynom:_init_(p)
 end
 
 --- Calculate ratio and rest of 2 polynomials.
@@ -169,7 +169,7 @@ end
 --  @param P2 Second polynomial.
 --  @return Ratio and the rest.
 polynom._div_ = function (P1,P2)
-  local rest, res = polynom.copy(P1), polynom:_init_({})
+  local rest, res = polynom.copy(P1), polynom:_init_({[0]=0})
   -- update coefficients
   for k = 1,(#P1-#P2+1) do
     local tmp = rest[1]/P2[1]
@@ -199,7 +199,7 @@ polynom.__call = function (p,x) return polynom.val(p,x) end
 --- Create copy of object.
 --  @param P Initial polynomial.
 --  @return Deep copy.
-polynom.copy = function (P) return polynom:_init_(Ver.move(P,1,#P,1,{})) end
+polynom.copy = function (P) return polynom:_init_(Ver.move(P,0,#P,0,{})) end
 polynom.about[polynom.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
 
 --- P1 + P2
@@ -295,7 +295,7 @@ end
 polynom.__eq = function (P1,P2)
   if type(P1) ~= type(P2) or P1.type ~= P2.type then return false end
   if #P1 ~= #P2 then return false end
-  for i = 1, #P1 do
+  for i = 0, #P1 do
     if P1[i] ~= P2[i] then return false end
   end
   return true
@@ -311,10 +311,9 @@ polynom.about[polynom.comparison] = {polynom.comparison, "a==b, a~=b", help.META
 --  @param P Initial polynomial.
 --  @return Derivative polynomial (and its value).
 polynom.der = function (P)
-  if not ispolynom(P) then error("Polynomial is expected!") end
-  local der, pow = {}, #P
-  for i = 1, #P-1 do
-    table.insert(der, P[i]*(pow-i))
+  local der = {[0]=0}
+  for i = 1, #P do
+    der[i-1] = i * P[i]
   end
   return polynom:_init_(der)
 end
@@ -325,13 +324,10 @@ polynom.about[polynom.der] = {"der(P)", "Calculate derivative of polynomial."}
 --  @param x0 Free coefficient.
 --  @return Integral.
 polynom.int = function (P,x0)
-  if not ispolynom(P) then error("Polynomial is expected!") end
-  x0 = x0 or 0
-  local int, pow = {}, #P+1
-  for i = 1, #P do
-    table.insert(int, P[i]/(pow-i))
+  local int = {[0] = (x0 or 0)}
+  for i = 1, #P+1 do
+    int[i] = P[i-1] / i
   end
-  table.insert(int, x0)
   return polynom:_init_(int)
 end
 polynom.about[polynom.int] = {"int(P[,x0=0])", "Calculate integral, x0 - free coefficient."}
@@ -354,7 +350,11 @@ polynom.about[polynom.build] = {"build(root1,root2,...)", "Return polynomial wit
 --- String representation.
 --  @param P Polynomial object.
 --  @return String with coefficients.
-polynom.__tostring = function (P) return table.concat(P,' ') end
+polynom.__tostring = function (P) 
+  local t = {}
+  for i = #P, 0, -1 do table.insert(t, P[i]) end
+  return table.concat(t,' ') 
+end
 
 --- Represent polynomial in "natural" form.
 --  @param P Source polynomial.
