@@ -467,4 +467,5 @@ return polynom
 --===========================
 --TODO: polyroot
 --TODO: change order
+--TODO: use explicite equations for roots of 2nd, 3rd and 4th polynomials
 
