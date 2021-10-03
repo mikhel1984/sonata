@@ -20,6 +20,7 @@ local function islist(v) return type(v) == 'table' and v.SONATA_INFO end
 local _update = function (ev, st, cmd, ans)
   ev._st = st
   ev._cmd = cmd
+  _ans = ans       -- save global variable
   if ans == nil then
     ev._ans = nil
   else
@@ -205,3 +206,5 @@ evaluate.exit = function ()
 end
 
 return evaluate
+
+--================================= 
