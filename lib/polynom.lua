@@ -22,7 +22,7 @@ Poly = require 'lib.polynom'
 a = Poly {1,2,4,3}
 b = Poly {1,1}  
 -- polynomial value for x=0
-ans = a:val(0)                --> 3
+ans = Poly.val(a,0)           --> 3
 
 -- simplified call
 ans = a(0)                    --> 3
@@ -82,7 +82,7 @@ ans = d:str('s')              --> '2*s^2 -2*s +1'
 
 --	LOCAL
 
-local Ver = require "lib.versions"
+--local Ver = require "lib.versions"
 
 -- Check object type.
 local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
@@ -91,7 +91,7 @@ local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
 --  @param P Table of coefficients.
 --  @return Simplified polynomial.
 local function reduce (P)
-  while #P > 1 and  P[1] == 0 do table.remove(P, 1) end
+  while #P > 0 and P[#P] == 0 do table.remove(P) end
   return P
 end
 
@@ -137,18 +137,31 @@ end
 --  @param b Second object.
 --  @return Two polynomial objects.
 polynom._args_ = function (a,b)
-  a = ispolynom(a) and a or polynom:init({a})
-  b = ispolynom(b) and b or polynom:init({b})
+  a = ispolynom(a) and a or polynom:_init_({[0]=a})
+  b = ispolynom(b) and b or polynom:_init_({[0]=b})
   return a, b
 end
 
 --- Initialize polynomial from table.
 --  @param self Parent object.
---  @param t Table of coefficients.
+--  @param t Table of coefficients, from highest to lowest power.
 --  @return Polynomial object.
-polynom.init = function (self, t)
-  if #t == 0 then t[1] = 0 end
+polynom._init_ = function (self, t)
   return setmetatable(t, self)
+end
+
+polynom.new = function (self, t)
+  local p = {}
+  if #t == 0 then 
+    p[0] = 0
+  else 
+    local k = 0
+    for i = #t,1,-1 do
+      p[k] = t[i]  -- save in reverse order
+      k = k + 1
+    end
+  end
+  return polynom._init_(self, p)
 end
 
 --- Calculate ratio and rest of 2 polynomials.
@@ -156,7 +169,7 @@ end
 --  @param P2 Second polynomial.
 --  @return Ratio and the rest.
 polynom._div_ = function (P1,P2)
-  local rest, res = polynom.copy(P1), polynom:init({})
+  local rest, res = polynom.copy(P1), polynom:_init_({})
   -- update coefficients
   for k = 1,(#P1-#P2+1) do
     local tmp = rest[1]/P2[1]
@@ -174,8 +187,8 @@ end
 --  @param x Variable.
 --  @return Value in the given point.
 polynom.val = function (P,x)
-  local res = P[1] or 0
-  for i = 2, #P do res = res * x + P[i] end
+  local res = P[#P] 
+  for i = #P-1, 0, -1 do res = res * x + P[i] end
   return res
 end
 polynom.about[polynom.val] = {"val(P,x)", "Get value of polynomial P in point x."}
@@ -186,7 +199,7 @@ polynom.__call = function (p,x) return polynom.val(p,x) end
 --- Create copy of object.
 --  @param P Initial polynomial.
 --  @return Deep copy.
-polynom.copy = function (P) return polynom:init(Ver.move(P,1,#P,1,{})) end
+polynom.copy = function (P) return polynom:_init_(Ver.move(P,1,#P,1,{})) end
 polynom.about[polynom.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
 
 --- P1 + P2
@@ -197,12 +210,10 @@ polynom.__add = function (P1,P2)
   P1, P2 = polynom._args_(P1,P2)
   local t = {}
   -- get sum of equal powers
-  local i,j = #P1, #P2
-  for k = math.max(i,j),1,-1 do
-    t[k] = (P1[i] or 0) + (P2[j] or 0)
-    i, j = i-1, j-1
+  for i = 0, math.max(#P1,#P2) do
+    t[i] = (P1[i] or 0) + (P2[i] or 0)
   end
-  return polynom:init(t)
+  return polynom:_init_(t)
 end
 
 --- -P
@@ -210,15 +221,20 @@ end
 --  @return Polynomial with inverted signs.
 polynom.__unm = function (P)
   local res = {}
-  for i = 1, #P do res[i] = -P[i] end
-  return polynom:init(res)
+  for i = 0, #P do res[i] = -P[i] end
+  return polynom:_init_(res)
 end
 
 --- P1 - P2
 --  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
 --  @return Difference.
-polynom.__sub = function (P1,P2) return reduce(P1 + (-P2)) end
+polynom.__sub = function (P1,P2) 
+  local p = P1 + (-P2) 
+  -- reduce 
+  while p[#p] == 0 and #p > 0 do table.remove(p) end
+  return p
+end
 
 --- P1 * P2
 --  @param P1 First polynomial or number.
@@ -226,7 +242,7 @@ polynom.__sub = function (P1,P2) return reduce(P1 + (-P2)) end
 --  @return Product.
 polynom.__mul = function (P1,P2)
   P1,P2 = polynom._args_(P1,P2)
-  local res = polynom:init({})
+  local res = polynom:_init_({})
   -- get sum of coefficients
   for i = 1, #P1 do
     for j = 1, #P2 do
@@ -262,7 +278,7 @@ end
 polynom.__pow = function (P,n)
   n = assert(Ver.toInteger(n), "Integer power is expected!")
   if n <= 0 then error("Positive power is expected!") end
-  local res, acc = polynom:init({1}), polynom.copy(P)
+  local res, acc = polynom:_init_({1}), polynom.copy(P)
   local mul = polynom.__mul
   while n > 0 do
     if n%2 == 1 then res = mul(res,acc) end
@@ -300,7 +316,7 @@ polynom.der = function (P)
   for i = 1, #P-1 do
     table.insert(der, P[i]*(pow-i))
   end
-  return polynom:init(der)
+  return polynom:_init_(der)
 end
 polynom.about[polynom.der] = {"der(P)", "Calculate derivative of polynomial."}
 
@@ -316,7 +332,7 @@ polynom.int = function (P,x0)
     table.insert(int, P[i]/(pow-i))
   end
   table.insert(int, x0)
-  return polynom:init(int)
+  return polynom:_init_(int)
 end
 polynom.about[polynom.int] = {"int(P[,x0=0])", "Calculate integral, x0 - free coefficient."}
 
@@ -326,10 +342,10 @@ polynom.about[polynom.int] = {"int(P[,x0=0])", "Calculate integral, x0 - free co
 --  @return Polynomial object.
 polynom.build = function (...)
   local args = {...}
-  local res = polynom:init({1})
+  local res = polynom:_init_({1})
   local mul = polynom.__mul
   for i = 1, #args do
-    res = mul(res, polynom:init({1,-args[i]}))
+    res = mul(res, polynom:_init_({1,-args[i]}))
   end
   return res
 end
@@ -451,18 +467,18 @@ polynom.fit = function (X,Y,ord)
   local gaus = mat.rref(mat(acc))
   local res = {}
   for i = 1,ord+1 do res[i] = gaus:get(i,-1) end
-  return polynom:init(res)
+  return polynom:_init_(res)
 end
 polynom.about[polynom.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", help.OTHER}
 
-setmetatable(polynom, {__call = function (self, t) return polynom:init(Ver.move(t,1,#t,1,{})) end})
+setmetatable(polynom, {__call = function (self, t) return polynom:new(t) end})
 polynom.Poly = 'Poly'
 polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
 -- Uncomment to remove descriptions
 --polynom.about = nil
 
-return polynom
+--return polynom
 
 --===========================
 --TODO: polyroot
