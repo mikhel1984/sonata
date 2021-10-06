@@ -151,7 +151,7 @@ polynom._init_ = function (self, t)
   return setmetatable(t, self)
 end
 
-polynom.new = function (self, t)
+polynom.new = function (t)
   local p = {}
   if #t == 0 then 
     p[0] = 0
@@ -170,16 +170,19 @@ end
 --  @param P2 Second polynomial.
 --  @return Ratio and the rest.
 polynom._div_ = function (P1,P2)
-  local rest, res = polynom.copy(P1), polynom:_init_({[0]=0})
+  local rest, res = polynom.copy(P1), {}
+  local pmax = P2[#P2]
   -- update coefficients
-  for k = 1,(#P1-#P2+1) do
-    local tmp = rest[1]/P2[1]
-    res[k] = tmp
-    for j = 1,#P2 do rest[j] = rest[j] - tmp*P2[j] end
-    -- remove zero element
-    table.remove(rest,1)
+  for k = #P1, #P2, -1 do
+    local tmp = rest[#rest] / pmax
+    res[#res+1] = tmp
+    for j = #P2, 0, -1 do
+      local n = k - #P2 + j
+      rest[n] = rest[n] - tmp*P2[j]
+    end
+    table.remove(rest)
   end
-  return res, rest
+  return polynom.new(res), reduce(rest)
 end
 
 --- Polynomial value.
@@ -231,10 +234,7 @@ end
 --  @param P2 Second polynomial or number.
 --  @return Difference.
 polynom.__sub = function (P1,P2) 
-  local p = P1 + (-P2) 
-  -- reduce 
-  while p[#p] == 0 and #p > 0 do table.remove(p) end
-  return p
+  return reduce(P1 + (-P2))
 end
 
 --- P1 * P2
@@ -473,7 +473,7 @@ polynom.fit = function (X,Y,ord)
 end
 polynom.about[polynom.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", help.OTHER}
 
-setmetatable(polynom, {__call = function (self, t) return polynom:new(t) end})
+setmetatable(polynom, {__call = function (self, t) return polynom.new(t) end})
 polynom.Poly = 'Poly'
 polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
@@ -482,10 +482,9 @@ polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
 --return polynom
 
-a = polynom {1,2,1}
-b = polynom {1,2,1}
-c = a * b
-print(c)
+a = polynom {1,2,3}
+b = polynom {2,1}
+print(a % b)
 
 
 --===========================
