@@ -280,12 +280,11 @@ end
 polynom.__pow = function (P,n)
   n = assert(Ver.toInteger(n), "Integer power is expected!")
   if n <= 0 then error("Positive power is expected!") end
-  local res, acc = polynom:_init_({1}), polynom.copy(P)
-  local mul = polynom.__mul
-  while n > 0 do
-    if n%2 == 1 then res = mul(res,acc) end
-    if n ~= 1 then acc = mul(acc,acc) end
-    n = math.modf(n/2)
+  local res, acc = polynom:_init_({[0]=1}), polynom.copy(P)
+  while n >= 1 do
+    if n % 2 == 1 then res = polynom.__mul(res,acc) end
+    if n ~= 1 then acc = polynom.__mul(acc,acc) end
+    n = math.modf(n / 2)
   end
   return res
 end
@@ -340,10 +339,10 @@ polynom.about[polynom.int] = {"int(P[,x0=0])", "Calculate integral, x0 - free co
 --  @return Polynomial object.
 polynom.build = function (...)
   local args = {...}
-  local res = polynom:_init_({1})
+  local res = polynom:_init_({[0]=1})
   local mul = polynom.__mul
   for i = 1, #args do
-    res = mul(res, polynom:_init_({1,-args[i]}))
+    res = mul(res, polynom:_init_({1,[0]=-args[i]}))
   end
   return res
 end
@@ -483,8 +482,8 @@ polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 --return polynom
 
 a = polynom {1,2,3}
-b = polynom {2,1}
-print(a % b)
+b = polynom {1,1}
+print(polynom.build(1,-1))
 
 
 --===========================
