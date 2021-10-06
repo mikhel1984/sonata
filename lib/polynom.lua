@@ -83,6 +83,7 @@ ans = d:str('s')              --> '2*s^2 -2*s +1'
 --	LOCAL
 
 --local Ver = require "lib.versions"
+local Ver = require "versions"
 
 -- Check object type.
 local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
@@ -242,12 +243,13 @@ end
 --  @return Product.
 polynom.__mul = function (P1,P2)
   P1,P2 = polynom._args_(P1,P2)
-  local res = polynom:_init_({})
+  local res = polynom:_init_({[0]=0})
   -- get sum of coefficients
-  for i = 1, #P1 do
-    for j = 1, #P2 do
-      local k = i+j-1
-      res[k] = (res[k] or 0) + P1[i]*P2[j]
+  for i = 0, #P1 do
+    local pi = P1[i]
+    for j = 0, #P2 do
+      local k = i+j
+      res[k] = (res[k] or 0) + pi*P2[j]
     end
   end
   return res
@@ -479,6 +481,12 @@ polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 --polynom.about = nil
 
 --return polynom
+
+a = polynom {1,2,1}
+b = polynom {1,2,1}
+c = a * b
+print(c)
+
 
 --===========================
 --TODO: polyroot
