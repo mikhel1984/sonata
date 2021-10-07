@@ -3,7 +3,7 @@
 --- Manipulations with polynomials.
 --
 --  Object structure: </br>
---  <code>{pn ... p0} </code></br>
+--  <code>{[0]=p0, ... pn} </code></br>
 --  where each element <i>pk</i> corresponds to coefficient of <i>x^k</i>.
 --
 --  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
@@ -76,14 +76,13 @@ print(a)
 -- human-friendly print
 -- with variable 's' (default is 'x')
 d = Poly {2,-2,1}
-ans = d:str('s')              --> '2*s^2 -2*s +1'
+ans = d:str('s')              --> '2*s^2-2*s+1'
 
 --]]
 
 --	LOCAL
 
---local Ver = require "lib.versions"
-local Ver = require "versions"
+local Ver = require "lib.versions"
 
 -- Check object type.
 local function ispolynom(x) return type(x) == 'table' and x.ispolynom end
@@ -438,7 +437,7 @@ polynom.about[polynom.real] = {"real(p)", "Find real roots of the polynomial.", 
 polynom.fit = function (X,Y,ord)
   if not (ord > 0 and Ver.mathType(ord) == 'integer') then error('Wrong order!') end
   if #X ~= #Y then error('Wrong data size!') end
-  if #X <= ord then error('Too few data points!') end
+  if #X <= ord then error('Too few points!') end
   -- find sums
   local acc = Ver.move(X,1,#X,1,{})     -- accumulate powers
   local sX, sY = {}, {}              -- accumulate sums
@@ -466,7 +465,7 @@ polynom.fit = function (X,Y,ord)
   local gaus = mat.rref(mat(acc))
   local res = {}
   for i = 1,ord+1 do res[i] = gaus:get(i,-1) end
-  return polynom:_init_(res)
+  return polynom.new(res)
 end
 polynom.about[polynom.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", help.OTHER}
 
@@ -477,15 +476,9 @@ polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 -- Uncomment to remove descriptions
 --polynom.about = nil
 
---return polynom
-
-a = polynom {2,-1,0}
-b = polynom {1,1}
-print(a:str())
-
+return polynom
 
 --===========================
 --TODO: polyroot
---TODO: change order
 --TODO: use explicite equations for roots of 2nd, 3rd and 4th polynomials
 
