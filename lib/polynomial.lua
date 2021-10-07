@@ -332,6 +332,28 @@ polynomial.int = function (P,x0)
 end
 polynomial.about[polynomial.int] = {"int(P[,x0=0])", "Calculate integral, x0 - free coefficient."}
 
+-- P * (x - v), inplace
+polynomial._multXv_ = function (P,v)
+  local prev, cur = 0
+  for i = 0, #P do
+    cur = P[i]
+    P[i] = prev - cur * v
+    prev = cur
+  end
+  P[#P+1] = prev
+end
+
+-- P / (x - v)
+polynomial._divXv_ = function (P,v)
+  local rst = P[#P]
+  for i = #P-1,0,-1 do
+    rst = rst * v + P[i]
+    P[i] = rst
+  end
+  P[0] = table.remove(P,1)
+  return P, rst
+end
+
 --- Get polynomial from roots.
 --  Arguments are a sequence of roots.
 --  @param ... List of roots.
@@ -339,9 +361,8 @@ polynomial.about[polynomial.int] = {"int(P[,x0=0])", "Calculate integral, x0 - f
 polynomial.build = function (...)
   local args = {...}
   local res = polynomial:_init_({[0]=1})
-  local mul = polynomial.__mul
   for i = 1, #args do
-    res = mul(res, polynomial:_init_({1,[0]=-args[i]}))
+    polynomial._multXv_(res, args[i])
   end
   return res
 end
