@@ -363,21 +363,17 @@ end
 --  @return String with traditional form of equation.
 polynom.str = function (P,var)
   var = var or 'x'
-  local res, pow = {}, #P-1
-  for i = 1,#P-1 do
-    local a,b = P[i], P[i+1]
-    if a ~= 0 then                                    -- ignore coefficient = 0
-      if a ~= 1 then res[#res+1] = tostring(a)..'*' end           -- eliminate coefficient = 1
-      res[#res+1] = var                                -- variable name
-      if pow > 1 then res[#res+1] = '^'..tostring(pow) end         -- eliminate power=1
-      res[#res+1] = ' '
-    end 
+  local res, a, b = {}
+  for i = #P, 1, -1 do
+    a, b = P[i], P[i-1]
+    if a ~= 0 then
+      if a ~= 1 then res[#res+1] = tostring(a)..'*' end
+      res[#res+1] = var
+      if i > 1 then res[#res+1] = '^'..tostring(i) end
+    end
     if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
-    pow = pow-1  
   end
-  local c = P[#P]
-  if type(c) ~= 'number' or c ~= 0 then res[#res+1] = tostring(c) end    -- free coefficient
-    
+  if type(b) ~= 'number' or b ~= 0 then res[#res+1] = tostring(b) end
   return table.concat(res)
 end
 
@@ -411,20 +407,22 @@ end
 polynom.real = function (P)
   local pp, res = polynom.copy(P), {}
   -- zeros
-  while pp[#pp] == 0 do
-    pp[#pp] = nil
+  while #pp > 0 and pp[0] == 0 do
+    pp[0] = table.remove(pp,1)
     res[#res+1] = 0
   end
   -- if could have roots
   local n_r = polynom._NewtonRapson_ 
-  while #pp > 1 do
+  while #pp > 0 do
     local x, root = n_r(pp)
     if root then 
       -- save and remove the root
       res[#res+1] = x
       -- divide by (1-x)
-      for i = 2,#pp-1 do pp[i] = pp[i] + x*pp[i-1] end
-      pp[#pp] = nil
+      for i = #pp-1,1,-1 do pp[i] = pp[i] + x*pp[i+1] end
+      pp[0] = table.remove(pp,1)
+      --for i = 2,#pp-1 do pp[i] = pp[i] + x*pp[i-1] end
+      --pp[#pp] = nil
     else break
     end
   end
@@ -481,9 +479,9 @@ polynom.about[polynom.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
 --return polynom
 
-a = polynom {1,2,3}
+a = polynom {2,-1,0}
 b = polynom {1,1}
-print(polynom.build(1,-1))
+print(a:str())
 
 
 --===========================
