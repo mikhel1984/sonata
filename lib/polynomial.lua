@@ -343,17 +343,6 @@ polynomial._multXv_ = function (P,v)
   P[#P+1] = prev
 end
 
--- P / (x - v)
-polynomial._divXv_ = function (P,v)
-  local rst = P[#P]
-  for i = #P-1,0,-1 do
-    rst = rst * v + P[i]
-    P[i] = rst
-  end
-  P[0] = table.remove(P,1)
-  return P, rst
-end
-
 --- Get polynomial from roots.
 --  Arguments are a sequence of roots.
 --  @param ... List of roots.
@@ -432,17 +421,14 @@ polynomial.real = function (P)
     res[#res+1] = 0
   end
   -- if could have roots
-  local n_r = polynomial._NewtonRapson_ 
   while #pp > 0 do
-    local x, root = n_r(pp)
+    local x, root = polynomial._NewtonRapson_(pp)
     if root then 
       -- save and remove the root
       res[#res+1] = x
       -- divide by (1-x)
       for i = #pp-1,1,-1 do pp[i] = pp[i] + x*pp[i+1] end
       pp[0] = table.remove(pp,1)
-      --for i = 2,#pp-1 do pp[i] = pp[i] + x*pp[i-1] end
-      --pp[#pp] = nil
     else break
     end
   end
