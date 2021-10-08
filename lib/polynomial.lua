@@ -78,6 +78,13 @@ print(a)
 d = Poly {2,-2,1}
 ans = d:str('s')              --> '2*s^2-2*s+1'
 
+-- Lagrange polynomial 
+-- for tx(x)
+X = {-1.5, -0.75, 0, 0.75, 1.5}
+Y = {-14.101,-0.931596,0,0.931596,14.101}
+p = Poly.lagrange(X,Y)
+ans = p[3]                   --3> 4.83485
+
 --]]
 
 --	LOCAL
@@ -475,6 +482,33 @@ polynomial.fit = function (X,Y,ord)
   return polynomial.new(res)
 end
 polynomial.about[polynomial.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", help.OTHER}
+
+--- Find interpolation polinomial in the Lagrange form.
+--  @param X Set of variables.
+--  @param Y Set of variables.
+--  @return Interpolation polynomial.
+polynomial.lagrange = function (X,Y)
+  if #X ~= #Y then error('Wrong data size!') end
+  local res = polynomial:_init_({[0]=0})
+  for i = 1,#X do
+    -- find basis polynomial
+    local p = polynomial:_init_({[0]=1})
+    local den, v = 1, X[i]
+    for j = 1,#Y do
+      if i ~= j then
+        polynomial._multXv_(p, X[j])
+        den = den * (v - X[j])
+      end
+    end
+    -- add
+    v = Y[i] / den
+    for j = 0,#p do
+      res[j] = (res[j] or 0) + p[j]*v
+    end
+  end
+  return reduce(res)
+end
+polynomial.about[polynomial.lagrange] = {"lagrange(X,Y)", "Find interpolation polynomial in the Lagrange form.", help.OTHER}
 
 setmetatable(polynomial, {__call = function (self, t) return polynomial.new(t) end})
 polynomial.Poly = 'Poly'
