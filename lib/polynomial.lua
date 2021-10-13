@@ -52,6 +52,12 @@ ans = ader(1)                 --> 11
 -- build polynomial using roots
 ans = Poly.build(1,-1)        --> Poly {1,0,-1}
 
+-- use complex roots
+-- don't add conjugated toots
+Comp = require 'lib.complex'
+
+ans = Poly.build(1, Comp(2,3))  --> Poly {1, -5, 17, -13}
+
 -- make copy and compare
 c = a:copy()
 ans = (a == c)                --> true
@@ -93,6 +99,9 @@ local Ver = require "lib.versions"
 
 -- Check object type.
 local function ispolynomial(x) return type(x) == 'table' and x.ispolynomial end
+
+-- Check if the value is valid.
+local function isNaN(v) return type(v) == 'number' and v ~= v end
 
 --- Simplify polynomial, remove zeros from the begin.
 --  @param P Table of coefficients.
@@ -355,10 +364,14 @@ end
 --  @param ... List of roots.
 --  @return Polynomial object.
 polynomial.build = function (...)
-  local args = {...}
   local res = polynomial:_init_({[0]=1})
-  for i = 1, #args do
-    polynomial._multXv_(res, args[i])
+  for _,v in ipairs({...}) do
+    if type(v) == 'table' then
+      local p = polynomial:_init_({[0] = v.Re^2 + v.Im^2, -2*v.Re, 1})
+      res = polynomial.__mul(res, p)
+    else
+      polynomial._multXv_(res, v)
+    end
   end
   return res
 end
@@ -391,6 +404,41 @@ polynomial.str = function (P,var)
   end
   if type(b) ~= 'number' or b ~= 0 then res[#res+1] = tostring(b) end
   return table.concat(res)
+end
+
+polynomial._solve2_ = function (P)
+  local a, b = P[2], P[1]
+  local D = b*b - 4*a*P[0]
+  D = (sqrt and sqrt or math.sqrt)(D)
+  if isNaN(D) then 
+    return {}
+  else
+    return {(-b-D)/(2*a), (-b+D)/(2*a)}
+  end
+end
+
+-- Cardano's formula
+polynomial._solve3_ = function (P)
+  local t = P[3]
+  local a, b, c = P[2]/t, P[1]/t, P[0]/t
+  local Q, R = (a*a - 3*b)/9, (2*a^3 - 9*a*b + 27*c)/54
+  t = Q^3
+  if R*R < t then
+    -- all real roots
+    t = math.acos(R / math.sqrt(t)) / 3
+    Q = -2*math.sqrt(Q)   -- reuse
+    return {Q*math.cos(t)-a/3, Q*math.cos(t+2*math.pi/3)-a/3, Q*math.cos(t-2*math.pi/3)-a/3}
+  else
+    local A = (R > 0 and -1 or 1) * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
+    local B = (A == 0 and 0 or Q/A)
+    t = (sqrt and sqrt or math.sqrt)(-1.5 * (A-B))
+    Q = A + B            -- reuse
+    if isNaN(t) then
+      return {Q-a/3}
+    else 
+      return {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
+    end
+  end
 end
 
 --- Find closest root using Newton-Rapson technique
