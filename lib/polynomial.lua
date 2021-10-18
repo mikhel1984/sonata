@@ -446,23 +446,20 @@ end
 --  @param x0 Initial value of the root (optional).
 --  @param epx Tolerance
 --  @return Found value and flag about its correctness.
-polynomial._NewtonRapson_ = function (P,x0,eps)
-  eps = eps or 1e-6
-  x0 = x0 or math.random()
+polynomial._NR_ = function (P, x0, eps)
   -- prepare variables
-  local dp,n,max = P:der(), 0, 30
+  local dp, max = polynomial.der(P), 30
   local val = polynomial.val
-  while true do
-    -- polynomial value
+  for i = 1, max do
     local dx = val(P,x0) / val(dp,x0) 
-    if math.abs(dx) <= eps or n > max then break
+    if math.abs(dx) <= eps then
+      return true, x0
     else
-      -- update root value and number of iterations
+      -- next approximation
       x0 = x0 - dx
-      n = n+1
     end
   end
-  return x0, (n < max)
+  return false
 end
 
 --- Find real roots of the polynomial.
@@ -476,9 +473,14 @@ polynomial.real = function (P)
     res[#res+1] = 0
   end
   -- if could have roots
+  local p0 = polynomial.copy(pp)
   while #pp > 0 do
-    local x, root = polynomial._NewtonRapson_(pp)
+    -- rough estimate
+    local root, x = polynomial._NR_(pp, math.random(), 0.1)
     if root then 
+      -- correction 
+      root, x = polynomial._NR_(p0, x, 1E-6)
+      if not root then break end
       -- save and remove the root
       res[#res+1] = x
       -- divide by (1-x)
