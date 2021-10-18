@@ -406,7 +406,7 @@ polynomial.str = function (P,var)
   return table.concat(res)
 end
 
-polynomial._solve2_ = function (P)
+polynomial._roots2_ = function (P)
   local a, b = P[2], P[1]
   local D = b*b - 4*a*P[0]
   D = (sqrt and sqrt or math.sqrt)(D)
@@ -418,7 +418,7 @@ polynomial._solve2_ = function (P)
 end
 
 -- Cardano's formula
-polynomial._solve3_ = function (P)
+polynomial._roots3_ = function (P)
   local t = P[3]
   local a, b, c = P[2]/t, P[1]/t, P[0]/t
   local Q, R = (a*a - 3*b)/9, (2*a^3 - 9*a*b + 27*c)/54
@@ -452,7 +452,7 @@ polynomial._NR_ = function (P, x0, eps)
   local val = polynomial.val
   for i = 1, max do
     local dx = val(P,x0) / val(dp,x0) 
-    if math.abs(dx) <= eps then
+    if (type(dx) == 'number' and math.abs(dx) or dx:abs()) <= eps then
       return true, x0
     else
       -- next approximation
@@ -492,6 +492,21 @@ polynomial.real = function (P)
   return res
 end
 polynomial.about[polynomial.real] = {"real(p)", "Find real roots of the polynomial.", help.OTHER}
+
+polynomial.complex = function (P, P0, lst)
+  while #P > 0 do
+    local root, x = polynomial._NR_(P, Comp(math.random(),math.random()), 0.1)
+    if root then
+      _, x = polynomial._NR_(P0, x, 1E-6)
+      lst[#lst+1] = x
+      lst[#lst+1] = x:conj()
+      P = P / polynomial.build(x)
+    else
+      break
+    end
+  end
+  return lst
+end
 
 --- Find the best polynomial approximation for the line.
 --  @param X Set of independent variables.
