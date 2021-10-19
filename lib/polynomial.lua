@@ -27,6 +27,9 @@ ans = Poly.val(a,0)           --> 3
 -- simplified call
 ans = a(0)                    --> 3
 
+-- coefficient for x^3
+ans = a[3]                    --> 1
+
 -- arithmetic
 ans = a + b                   --> Poly {1,2,5,4}
 
@@ -68,6 +71,11 @@ ans = (b == c)                --> false
 -- find real roots
 e = a:real()
 ans = e[1]                   --1> -1.00
+
+-- find all roots
+g = Poly.build(2, Comp(3,4))
+e = g:roots()
+ans = e[2].Re                --1> 3
 
 -- fit curve with polynomial
 -- of order 2
@@ -412,32 +420,6 @@ polynomial.str = function (P,var)
   return table.concat(res)
 end
 
-polynomial._roots2_ = function (P)
-  local a, b = P[2], P[1]
-  local sD = polynomial.lc_complex.sqrt(b*b - 4*a*P[0])
-  return {(-b-sD)/(2*a), (-b+sD)/(2*a)}
-end
-
--- Cardano's formula
-polynomial._roots3_ = function (P)
-  local t = P[3]
-  local a, b, c = P[2]/t, P[1]/t, P[0]/t
-  local Q, R = (a*a - 3*b)/9, (2*a^3 - 9*a*b + 27*c)/54
-  t = Q^3
-  if R*R < t then
-    -- all real roots
-    t = math.acos(R / math.sqrt(t)) / 3
-    Q = -2*math.sqrt(Q)   -- reuse
-    return {Q*math.cos(t)-a/3, Q*math.cos(t+2*math.pi/3)-a/3, Q*math.cos(t-2*math.pi/3)-a/3}
-  else
-    local A = (R > 0 and -1 or 1) * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
-    local B = (A == 0 and 0 or Q/A)
-    t = polynomial.lc_complex(0, math.sqrt(3)/2 * (A-B))
-    Q = A + B            -- reuse
-    return {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
-  end
-end
-
 --- Find closest root using Newton-Rapson technique
 --  @param P Source polynomial.
 --  @param x0 Initial value of the root (optional).
@@ -490,21 +472,42 @@ polynomial.real = function (P)
 end
 polynomial.about[polynomial.real] = {"real(p)", "Find real roots of the polynomial.", help.OTHER}
 
-polynomial._complex_ = function (P, P0, lst)
-  while #P > 0 do
-    local root, x = polynomial._NR_(P, Comp(math.random(),math.random()), 0.1)
-    if root then
-      _, x = polynomial._NR_(P0, x, 1E-6)
-      lst[#lst+1] = x
-      lst[#lst+1] = x:conj()
-      P = P / polynomial.build(x)
-    else
-      break
-    end
-  end
-  return lst
+--- Find roots of 2nd order polynomial.
+--  @param P Source polynomial.
+--  @return Table with roots.
+polynomial._roots2_ = function (P)
+  local a, b = P[2], P[1]
+  local sD = polynomial.lc_complex.sqrt(b*b - 4*a*P[0])
+  return {(-b-sD)/(2*a), (-b+sD)/(2*a)}
 end
 
+--- Find roots of 2nd order polynomial.
+--  Use Cardano's formula.
+--  @param P Source polynomial.
+--  @return Table with roots.
+polynomial._roots3_ = function (P)
+  local t = P[3]
+  local a, b, c = P[2]/t, P[1]/t, P[0]/t
+  local Q, R = (a*a - 3*b)/9, (2*a^3 - 9*a*b + 27*c)/54
+  t = Q^3
+  if R*R < t then
+    -- only real roots
+    t = math.acos(R / math.sqrt(t)) / 3
+    Q = -2*math.sqrt(Q)   -- reuse
+    return {Q*math.cos(t)-a/3, Q*math.cos(t+2*math.pi/3)-a/3, Q*math.cos(t-2*math.pi/3)-a/3}
+  else
+    -- can have complex roots
+    local A = (R > 0 and -1 or 1) * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
+    local B = (A == 0 and 0 or Q/A)
+    t = polynomial.lc_complex(0, math.sqrt(3)/2 * (A-B))
+    Q = A + B            -- reuse
+    return {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
+  end
+end
+
+--- Find all the polynomial roots.
+--  @param P Source polynomial.
+--  @return Table with roots.
 polynomial.roots = function (P)
   -- exact solution
   if #P == 1 then 
@@ -534,6 +537,7 @@ polynomial.roots = function (P)
   end
   return r
 end
+polynomial.about[polynomial.roots] = {"roots(P)", "Find all the polynomial roots.", help.OTHER}
 
 --- Find the best polynomial approximation for the line.
 --  @param X Set of independent variables.
