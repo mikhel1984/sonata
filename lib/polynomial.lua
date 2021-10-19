@@ -147,6 +147,12 @@ if done then
 else
   print('WARNING >> Not available: fit()')
 end
+done, M = pcall(require, 'lib.complex')
+if done then 
+  polynomial.lc_complex = M
+else
+  print('WARNING >> Not available: roots()')
+end
 
 --- Correct arguments if need.
 --  @param a First object
@@ -408,13 +414,8 @@ end
 
 polynomial._roots2_ = function (P)
   local a, b = P[2], P[1]
-  local D = b*b - 4*a*P[0]
-  D = (sqrt and sqrt or math.sqrt)(D)
-  if isNaN(D) then 
-    return {}
-  else
-    return {(-b-D)/(2*a), (-b+D)/(2*a)}
-  end
+  local sD = polynomial.lc_complex.sqrt(b*b - 4*a*P[0])
+  return {(-b-sD)/(2*a), (-b+sD)/(2*a)}
 end
 
 -- Cardano's formula
@@ -431,13 +432,9 @@ polynomial._roots3_ = function (P)
   else
     local A = (R > 0 and -1 or 1) * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
     local B = (A == 0 and 0 or Q/A)
-    t = (sqrt and sqrt or math.sqrt)(-1.5 * (A-B))
+    t = polynomial.lc_complex(0, math.sqrt(3)/2 * (A-B))
     Q = A + B            -- reuse
-    if isNaN(t) then
-      return {Q-a/3}
-    else 
-      return {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
-    end
+    return {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
   end
 end
 
@@ -489,11 +486,11 @@ polynomial.real = function (P)
     else break
     end
   end
-  return res
+  return res, pp
 end
 polynomial.about[polynomial.real] = {"real(p)", "Find real roots of the polynomial.", help.OTHER}
 
-polynomial.complex = function (P, P0, lst)
+polynomial._complex_ = function (P, P0, lst)
   while #P > 0 do
     local root, x = polynomial._NR_(P, Comp(math.random(),math.random()), 0.1)
     if root then
@@ -506,6 +503,36 @@ polynomial.complex = function (P, P0, lst)
     end
   end
   return lst
+end
+
+polynomial.roots = function (P)
+  -- exact solution
+  if #P == 1 then 
+    return {-P[0] / P[1]}
+  elseif #P == 2 then
+    return polynomial._roots2_(P)
+  elseif #P == 3 then 
+    return polynomial._roots3_(P)
+  end
+  -- approximation
+  local r, pp = polynomial.real(P)
+  if #r == #P then  -- all roots are real
+    return r 
+  end
+  -- find complex roots
+  local comp = polynomial.lc_complex
+  while #pp > 0 do
+    local root, x = polynomial._NR_(pp, comp(math.random(), math.random()), 0.1)
+    if root then
+      _, x = polynomial._NR_(P, x, 1E-6)
+      r[#r+1] = x
+      r[#r+1] = x:conj()
+      pp = pp / polynomial.build(x)
+    else 
+      break 
+    end
+  end
+  return r
 end
 
 --- Find the best polynomial approximation for the line.
