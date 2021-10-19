@@ -143,9 +143,9 @@ end
 
 --- Combine all results.
 test.summary = function ()
-  test._print_(string.format('\n%-25s%-10s%-10s%-10s%s', 'Module', 'Succeed', 'Failed', 'Av.time', 'Done'))
+  test._print_(string.format('\n%-25s%-10s%-10s%-10s', 'Module', 'Succeed', 'Failed', 'Av.time'))
   for k,v in pairs(test.results) do
-    test._print_(string.format('%-27s%-10d%-9d%-10.3f%s', k, v[1], v[2], v[3]/(v[1]+v[2]), (v[2]==0 and 'v' or '-')))
+    test._print_(string.format('%-27s%-10d%-9d%-10.3f', k, v[1], v[2], v[3]/(v[1]+v[2])))
   end
   print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
 end
@@ -223,7 +223,7 @@ test.profile = function (fn,...)
   for _, res in ipairs(stat) do print(res[1], res[2]) end
 end
 
---- Check function execution time.
+--- Estimate the function execution time.
 --  @param fn Function to execute. After it write the list of arguments.
 --  @return Average time in msec.
 test.time = function (fn,...)
