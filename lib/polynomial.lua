@@ -99,6 +99,11 @@ Y = {-14.101,-0.931596,0,0.931596,14.101}
 p = Poly.lagrange(X,Y)
 ans = p[3]                   --3> 4.83485
 
+-- Taylor series
+-- for exp(x) near 0
+p = Poly.taylor(0, 1, 1, 1, 1)
+ans = p(0.3)                 --2> math.exp(0.3)
+
 --]]
 
 --	LOCAL
@@ -137,6 +142,8 @@ end
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+
+local FIT = 'approximation'
 
 --	MODULE
 
@@ -577,7 +584,7 @@ polynomial.fit = function (X,Y,ord)
   for i = 1,ord+1 do res[i] = gaus:get(i,-1) end
   return polynomial.new(res)
 end
-polynomial.about[polynomial.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", help.OTHER}
+polynomial.about[polynomial.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", FIT}
 
 --- Find interpolation polinomial in the Lagrange form.
 --  @param X Set of variables.
@@ -604,7 +611,27 @@ polynomial.lagrange = function (X,Y)
   end
   return reduce(res)
 end
-polynomial.about[polynomial.lagrange] = {"lagrange(X,Y)", "Find interpolation polynomial in the Lagrange form.", help.OTHER}
+polynomial.about[polynomial.lagrange] = {"lagrange(X,Y)", "Find interpolation polynomial in the Lagrange form.", FIT}
+
+--- Find Taylor series.
+--  @param x Argument value.
+--  @param f Function value in x.
+--  @param ... Sequence of derivatives f', f'' etc.
+--  @return Corresponding polynomial.
+polynomial.taylor = function (x,f,...)
+  local res = polynomial:_init_({[0]=f})
+  local p, k = polynomial:_init_({[0]=1}), 1
+  for i,v in ipairs({...}) do
+    polynomial._multXv_(p, x)
+    k = k * i
+    local w = v / k
+    for j = 0, #p do
+      res[j] = (res[j] or 0) + w * p[j]
+    end
+  end
+  return res
+end
+polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
 
 setmetatable(polynomial, {__call = function (self, t) return polynomial.new(t) end})
 polynomial.Poly = 'Poly'
@@ -616,6 +643,4 @@ polynomial.about[polynomial.Poly] = {"Poly(...)", "Create a polynomial.", help.N
 return polynomial
 
 --===========================
---TODO: polyroot
---TODO: use explicite equations for roots of 2nd, 3rd and 4th polynomials
 
