@@ -39,7 +39,7 @@ ans = b * b                   --> Poly {1,2,1}
 
 ans = a / b                   --> Poly {1,1,3}
 
-ans = a % b                   --> Poly {0}
+ans = a % b                   --> 0
 
 ans = b ^ 3                   --> Poly {1,3,3,1}
 
@@ -113,8 +113,8 @@ local Ver = require "lib.versions"
 -- Check object type.
 local function ispolynomial(x) return type(x) == 'table' and x.ispolynomial end
 
--- Check if the value is valid.
-local function isNaN(v) return type(v) == 'number' and v ~= v end
+-- Return number in trivial case.
+local function numpoly(p) return #p == 0 and p[0] or p end
 
 --- Simplify polynomial, remove zeros from the begin.
 --  @param P Table of coefficients.
@@ -218,7 +218,7 @@ polynomial._div_ = function (P1,P2)
     end
     table.remove(rest)
   end
-  return polynomial.new(res), reduce(rest)
+  return numpoly(polynomial.new(res)), numpoly(reduce(rest))
 end
 
 --- Polynomial value.
@@ -253,7 +253,7 @@ polynomial.__add = function (P1,P2)
   for i = 0, math.max(#P1,#P2) do
     t[i] = (P1[i] or 0) + (P2[i] or 0)
   end
-  return polynomial:_init_(t)
+  return numpoly(reduce(polynomial:_init_(t)))
 end
 
 --- -P
@@ -270,7 +270,7 @@ end
 --  @param P2 Second polynomial or number.
 --  @return Difference.
 polynomial.__sub = function (P1,P2) 
-  return reduce(P1 + (-P2))
+  return numpoly(reduce(P1 + (-P2)))
 end
 
 --- P1 * P2
@@ -288,7 +288,7 @@ polynomial.__mul = function (P1,P2)
       res[k] = (res[k] or 0) + pi*P2[j]
     end
   end
-  return res
+  return numpoly(reduce(res))
 end
 
 --- P1 / P2
@@ -352,7 +352,7 @@ polynomial.der = function (P)
   for i = 1, #P do
     der[i-1] = i * P[i]
   end
-  return polynomial:_init_(der)
+  return numpoly(polynomial:_init_(der))
 end
 polynomial.about[polynomial.der] = {"der(P)", "Calculate derivative of polynomial."}
 
@@ -369,7 +369,9 @@ polynomial.int = function (P,x0)
 end
 polynomial.about[polynomial.int] = {"int(P[,x0=0])", "Calculate integral, x0 - free coefficient."}
 
--- P * (x - v), inplace
+--- Simplify call P * (x - v), inplace
+--  @param P Polynomial object.
+--  @param v New root.
 polynomial._multXv_ = function (P,v)
   local prev, cur = 0
   for i = 0, #P do
@@ -609,7 +611,7 @@ polynomial.lagrange = function (X,Y)
       res[j] = (res[j] or 0) + p[j]*v
     end
   end
-  return reduce(res)
+  return numpoly(reduce(res))
 end
 polynomial.about[polynomial.lagrange] = {"lagrange(X,Y)", "Find interpolation polynomial in the Lagrange form.", FIT}
 
@@ -629,7 +631,7 @@ polynomial.taylor = function (x,f,...)
       res[j] = (res[j] or 0) + w * p[j]
     end
   end
-  return res
+  return numpoly(res)
 end
 polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
 
