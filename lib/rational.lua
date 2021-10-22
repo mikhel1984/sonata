@@ -31,9 +31,9 @@ ans = Rat(2*k,3*k)            --> Rat(2,3)
 -- arithmetic
 ans = a + b                   --> Rat(5,2)
 
-ans = 2 * a                   --> Rat(1)
+ans = 2 * a                   --> 1
 
-ans = Rat(2,3)*Rat(3,2)       --> Rat(1)
+ans = Rat(2,3)*Rat(3,2)       --> 1
 
 ans = a / Rat(1,3)            --> Rat(3,2)
 
@@ -77,6 +77,8 @@ local Ver = require('lib.versions')
 --  @return True for rational number.
 local function isrational(v) return type(v) == 'table' and v.isrational end
 
+local function numrat(r) return r[2] == 1 and r[1] or r end
+
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
@@ -111,7 +113,7 @@ rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common divis
 --  @param n Numerator.
 --  @param dn Denominator. Default is 1.
 --  @return New rational object.
-rational.new = function (self, n, dn)
+rational._new_ = function (self, n, dn)
   dn = dn or 1
   local g = rational.gcd(dn,n)         -- inverse order move sign to denominator
   return setmetatable({n/g, dn/g}, self)  
@@ -128,9 +130,9 @@ rational.about[rational.copy] = {"copy(R)", "Get copy of the rational number.", 
 --  @param b Second rational or natural number.
 --  @return Arguments as rational numbers.
 rational._args_ = function (a,b)
-  a = isrational(a) and a or rational:new(a)
+  a = isrational(a) and a or rational:_new_(a)
   if b then
-    b = isrational(b) and b or rational:new(b)
+    b = isrational(b) and b or rational:_new_(b)
   end
   return a,b
 end
@@ -141,7 +143,7 @@ end
 --  @return Sum.
 rational.__add = function (R1, R2)  
   R1,R2 = rational._args_(R1,R2)
-  return rational:new(R1[1]*R2[2]+R1[2]*R2[1], R1[2]*R2[2])
+  return numrat(rational:_new_(R1[1]*R2[2]+R1[2]*R2[1], R1[2]*R2[2]))
 end
 
 --- R1 - R2
@@ -150,7 +152,7 @@ end
 --  @return Difference.
 rational.__sub = function (R1, R2)  
   R1,R2 = rational._args_(R1,R2)
-  return rational:new(R1[1]*R2[2]-R1[2]*R2[1], R1[2]*R2[2])
+  return numrat(rational:_new_(R1[1]*R2[2]-R1[2]*R2[1], R1[2]*R2[2]))
 end
 
 --- R1 * R2
@@ -159,7 +161,7 @@ end
 --  @return Product.
 rational.__mul = function (R1, R2)
   R1,R2 = rational._args_(R1,R2)
-  return rational:new(R1[1]*R2[1], R1[2]*R2[2])
+  return numrat(rational:_new_(R1[1]*R2[1], R1[2]*R2[2]))
 end
 
 --- R1 / R2
@@ -168,13 +170,13 @@ end
 --  @return Ratio.
 rational.__div = function (R1, R2)
   R1,R2 = rational._args_(R1,R2)
-  return rational:new(R1[1]*R2[2], R1[2]*R2[1])
+  return numrat(rational:_new_(R1[1]*R2[2], R1[2]*R2[1]))
 end
 
 --- -R
 --  @param R Rational number.
 --  @preturn Opposite rational number.
-rational.__unm = function (R) return rational:new(-R[1], R[2]) end
+rational.__unm = function (R) return rational:_new_(-R[1], R[2]) end
 
 --- R1 ^ R2
 --  @param R1 Rational or real number.
@@ -186,7 +188,7 @@ rational.__pow = function (R1, R2)
     return R1^R2
   else
     if not (Ver.isInteger(R2) and R2 >= 0) then error("Power must be a non-negative integer") end
-    return rational:new((R1[1])^R2, (R1[2])^R2) 
+    return numrat(rational:_new_((R1[1])^R2, (R1[2])^R2))
   end
 end
 
@@ -249,7 +251,7 @@ rational.De = function (R) return R[2] end
 rational.about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 
 -- simplify constructor call
-setmetatable(rational, {__call = function (self, n, d) return rational:new(n,d) end})
+setmetatable(rational, {__call = function (self, n, d) return rational:_new_(n,d) end})
 rational.Rat = 'Rat'
 rational.about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
 
