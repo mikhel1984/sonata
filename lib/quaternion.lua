@@ -16,6 +16,8 @@
 
 -- use 'quaternion'
 Quat = require 'lib.quaternion'
+-- external dependencies, can be loaded implicitly
+require 'lib.matrix'
 
 -- new quaternion
 -- set {w,i,j,k}
@@ -121,9 +123,6 @@ quaternion.__newindex = function (t,k,v)
     t[keys[k]] = v
   end
 end
-
--- interaction with matrices
-quaternion.lc_matrix = require 'lib.matrix'
 
 --- Check arguments.
 --  @param q1 First quaternion or number.
@@ -235,10 +234,10 @@ quaternion.about[quaternion.rotate] = {'rotate(Q,vec)','Apply quaternion to rota
 --  @param Q Quaternion.
 --  @return Rotation matrix 3x3.
 quaternion.toRot = function (Q)
-  local mat = quaternion.lc_matrix
+  quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
   local s = 1 / quaternion._norm_(Q)
   local w,i,j,k = Q[1],Q[2],Q[3],Q[4]
-  return mat {
+  return quaternion.ext_matrix {
     {1-2*s*(j*j+k*k), 2*s*(i*j-k*w), 2*s*(i*k+j*w)},
     {2*s*(i*j+k*w), 1-2*s*(i*i+k*k), 2*s*(j*k-i*w)},
     {2*s*(i*k-j*w), 2*s*(j*k+i*w), 1-2*s*(i*i+j*j)}}
@@ -393,7 +392,8 @@ quaternion.about[quaternion.slerp] = {'slerp(Q1,Q2,t)','Spherical linear interpo
 --  @param Q Quaternion.
 --  @return Equivalent matrix representation.
 quaternion.mat = function (Q)
-  return quaternion.lc_matrix:init(4,4,
+  quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
+  return quaternion.ext_matrix:init(4,4,
     {{Q[1],-Q[2],-Q[3],-Q[4]},
      {Q[2], Q[1],-Q[4], Q[3]},
      {Q[3], Q[4], Q[1],-Q[2]},
