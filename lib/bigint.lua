@@ -116,7 +116,7 @@ ans = a:gcd(b):val()          --> 3
 
 --	LOCAL
 
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 local ZERO = string.byte('0')
 

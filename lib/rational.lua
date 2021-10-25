@@ -68,7 +68,7 @@ print(a)
 
 --	LOCAL
 
-local Ver = require('lib.versions')
+local Ver = require("lib.utils").versions
 
 --  NUM, DENOM = 1, 2
 

@@ -85,7 +85,7 @@ for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 --- Check object type.
 --  @param t Object.

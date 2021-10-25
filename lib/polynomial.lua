@@ -109,7 +109,7 @@ ans = p(0.3)                 --2> math.exp(0.3)
 
 --	LOCAL
 
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 -- Check object type.
 local function ispolynomial(x) return type(x) == 'table' and x.ispolynomial end

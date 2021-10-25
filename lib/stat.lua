@@ -69,7 +69,7 @@ ans = Stat.tpdf(2, 3.3)      --3> 0.0672
 
 --	LOCAL
 
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 local DISTRIB = 'distribution'
 

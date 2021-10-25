@@ -65,7 +65,7 @@ ans = y[#y][1]               --2> 2.56
 
 --	LOCAL
 
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 -- Runge-Kutta method.
 -- @param fn Function f(x,y).

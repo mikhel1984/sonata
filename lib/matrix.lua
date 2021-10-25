@@ -224,7 +224,7 @@ local fn_sub = function (x,y) return x-y end
 local fn_unm = function (x) return -x end
 
 -- compatibility
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 -- Metatable for new rows.
 local access = {

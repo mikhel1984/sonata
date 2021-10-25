@@ -121,7 +121,7 @@ print(a)
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 -- REAL, IMAG = 1, 2
 local keys = {Re=1, Im=2}

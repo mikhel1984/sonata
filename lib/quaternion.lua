@@ -86,7 +86,7 @@ print(d)
 
 --	LOCAL
 
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 local ROTATION = 'rotation'
 
