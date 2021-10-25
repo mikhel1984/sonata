@@ -12,6 +12,8 @@
 
 -- use 'stat'
 Stat = require 'lib.stat'
+-- external dependencies, can be loaded implicitly
+require 'lib.special'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -81,14 +83,6 @@ local stat = {
 -- description
 about = help:new("Statistical calculations. Data set must be a Lua table.")
 }
-
--- some functions depend of module 'special'
-local done, tmp = pcall(require,'lib.special')
-if done then
-  stat.lc_special = tmp
-else
-  print('WARNING >> Not available: tcdf(), tpdf()')
-end
 
 --- Sum of all elements.
 --  @param t Table with numbers.
@@ -299,8 +293,9 @@ stat.about[stat.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bin
 --   @param nu Degree of freedom.
 --   @return Cumulative value.
 stat.tcdf = function (x,nu)
+  stat.ext_special = stat.ext_special or require('lib.special')
   local tmp = nu/(nu+x*x)
-  return 1-0.5*stat.lc_special.betainc(tmp,0.5*nu,0.5)
+  return 1-0.5*stat.ext_special.betainc(tmp,0.5*nu,0.5)
 end
 stat.about[stat.tcdf] = {"tcdf(x,nu)", "Student's cumulative distribution.", DISTRIB}
 
@@ -309,7 +304,8 @@ stat.about[stat.tcdf] = {"tcdf(x,nu)", "Student's cumulative distribution.", DIS
 --   @param nu Degree of freedom.
 --   @return Density value.
 stat.tpdf = function (x,nu)
-  local tmp = math.sqrt(nu)*stat.lc_special.beta(0.5,0.5*nu)
+  stat.ext_special = stat.ext_special or require('lib.special')
+  local tmp = math.sqrt(nu)*stat.ext_special.beta(0.5,0.5*nu)
   return (1+x*x/nu)^(-0.5*(nu+1))/tmp
 end
 stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density.", DISTRIB}

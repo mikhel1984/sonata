@@ -17,6 +17,9 @@
 
 -- use 'polynomial'
 Poly = require 'lib.polynomial'
+-- external dependencies, can be loaded implicitly
+require 'lib.matrix'         -- in Poly.fit
+Comp = require 'lib.complex' -- for complex roots
 
 -- coefficients in ascendant order
 a = Poly {1,2,4,3}
@@ -57,8 +60,6 @@ ans = Poly.build(1,-1)        --> Poly {1,0,-1}
 
 -- use complex roots
 -- don't add conjugated toots
-Comp = require 'lib.complex'
-
 ans = Poly.build(1, Comp(2,3))  --> Poly {1, -5, 17, -13}
 
 -- make copy and compare
@@ -154,20 +155,6 @@ type = 'polynomial', ispolynomial = true,
 about = help:new("Operations with polynomials."),
 }
 polynomial.__index = polynomial
-
--- dependencies
-local done, M = pcall(require,'lib.matrix')
-if done then
-  polynomial.lc_matrix = M 
-else
-  print('WARNING >> Not available: fit()')
-end
-done, M = pcall(require, 'lib.complex')
-if done then 
-  polynomial.lc_complex = M
-else
-  print('WARNING >> Not available: roots()')
-end
 
 --- Correct arguments if need.
 --  @param a First object
@@ -484,7 +471,7 @@ polynomial.about[polynomial.real] = {"real(p)", "Find real roots of the polynomi
 --  @return Table with roots.
 polynomial._roots2_ = function (P)
   local a, b = P[2], P[1]
-  local sD = polynomial.lc_complex.sqrt(b*b - 4*a*P[0])
+  local sD = polynomial.ext_complex.sqrt(b*b - 4*a*P[0])
   return {(-b-sD)/(2*a), (-b+sD)/(2*a)}
 end
 
@@ -506,7 +493,7 @@ polynomial._roots3_ = function (P)
     -- can have complex roots
     local A = (R > 0 and -1 or 1) * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
     local B = (A == 0 and 0 or Q/A)
-    t = polynomial.lc_complex(0, math.sqrt(3)/2 * (A-B))
+    t = polynomial.ext_complex(0, math.sqrt(3)/2 * (A-B))
     Q = A + B            -- reuse
     return {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
   end
@@ -516,6 +503,7 @@ end
 --  @param P Source polynomial.
 --  @return Table with roots.
 polynomial.roots = function (P)
+  polynomial.ext_complex = polynomial.ext_complex or require('lib.complex')
   -- exact solution
   if #P == 1 then 
     return {-P[0] / P[1]}
@@ -530,7 +518,7 @@ polynomial.roots = function (P)
     return r 
   end
   -- find complex roots
-  local comp = polynomial.lc_complex
+  local comp = polynomial.ext_complex
   while #pp > 0 do
     local root, x = polynomial._NR_(pp, comp(math.random(), math.random()), 0.1)
     if root then
@@ -578,7 +566,8 @@ polynomial.fit = function (X,Y,ord)
   -- add sums to the last "column"
   for i = 1,#acc do table.insert(acc[i],sY[i]) end
   -- solve
-  local mat = polynomial.lc_matrix
+  polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
+  local mat = polynomial.ext_matrix
   local gaus = mat.rref(mat(acc))
   local res = {}
   for i = 1,ord+1 do res[i] = gaus:get(i,-1) end
