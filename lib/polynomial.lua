@@ -187,16 +187,14 @@ polynomial._init_ = function (self, t)
   return setmetatable(t, self)
 end
 
-polynomial.new = function (t)
-  local p = {}
-  if #t == 0 then 
-    p[0] = 0
-  else 
-    local k = 0
-    for i = #t,1,-1 do
-      p[k] = t[i]  -- save in reverse order
-      k = k + 1
-    end
+--- Change order of coefficients and make new polynomial.
+--  @param t Table of coefficients, from lowest to highest.
+--  @return Polynomial object.
+polynomial._reorder_ = function (t)
+  local p, k = {[0]=0}, 0
+  for i = #t,1,-1 do
+    p[k] = t[i]  -- save in reverse order
+    k = k + 1
   end
   return polynomial:_init_(p)
 end
@@ -218,7 +216,7 @@ polynomial._div_ = function (P1,P2)
     end
     table.remove(rest)
   end
-  return numpoly(polynomial.new(res)), numpoly(reduce(rest))
+  return numpoly(polynomial._reorder_(res)), numpoly(reduce(rest))
 end
 
 --- Polynomial value.
@@ -584,7 +582,7 @@ polynomial.fit = function (X,Y,ord)
   local gaus = mat.rref(mat(acc))
   local res = {}
   for i = 1,ord+1 do res[i] = gaus:get(i,-1) end
-  return polynomial.new(res)
+  return polynomial._reorder_(res)
 end
 polynomial.about[polynomial.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", FIT}
 
@@ -635,7 +633,7 @@ polynomial.taylor = function (x,f,...)
 end
 polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
 
-setmetatable(polynomial, {__call = function (self, t) return polynomial.new(t) end})
+setmetatable(polynomial, {__call = function (self, t) return polynomial._reorder_(t) end})
 polynomial.Poly = 'Poly'
 polynomial.about[polynomial.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
