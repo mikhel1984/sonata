@@ -241,6 +241,8 @@ local access = {
 --  @return True if the object is 'matrix'.
 local function ismatrix(m) return type(m) == 'table' and m.ismatrix end
 
+local function nummat(m) return m.rows == 1 and m.cols == 1 and m[1][1] or m end
+
 --- Correct range if possible.
 --  @param ind Positive or negative index value.
 --  @param nRange Available range of indexes. 
@@ -297,7 +299,7 @@ end
 --- Create new matrix from list of tables.
 --  @param M Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
-matrix.new = function (M)
+matrix._new_ = function (M)
   M = M or {}
   local cols, rows = 0, #M
   for i = 1, rows do
@@ -583,7 +585,7 @@ matrix.__mul = function (M1,M2)
       resr[c] = sum
     end
   end
-  return (res.cols == 1 and res.rows == 1) and res[1][1] or res
+  return nummat(res)
 end
 
 --- M1 / M2
@@ -1145,7 +1147,7 @@ end
 matrix.about[matrix.norm] = {"norm(M)", "Euclidean norm."}
 
 -- constructor call
-setmetatable(matrix, {__call = function (self,m) return matrix.new(m) end})
+setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
 matrix.Mat = 'Mat'
 matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
 
