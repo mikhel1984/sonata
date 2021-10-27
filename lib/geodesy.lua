@@ -559,3 +559,5 @@ return geodesy
 
 --======================================
 --TODO: check correctness (Merkator, Molodensky)
+--TODO: newEllipsoid to define own ellipsoid object
+--TODO: ellipsoid.__tostring

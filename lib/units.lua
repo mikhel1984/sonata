@@ -222,8 +222,8 @@ end
 --  @param b Second unit object or number.
 --  @return Arguments as units.
 units._args_ = function (a,b)
-  a = isunits(a) and a or units:new(a)
-  b = isunits(b) and b or units:new(b)
+  a = isunits(a) and a or units:_new_(a)
+  b = isunits(b) and b or units:_new_(b)
   return a,b
 end
 
@@ -315,7 +315,7 @@ end
 --  @param v Numerical value. Can be unit string.
 --  @param u String of units. Can be omitted.
 --  @return Unit object.
-units.new = function (self, v,u)
+units._new_ = function (self, v,u)
   if not u then 
     if type(v) == 'string' then v,u = 1,v else u = "" end
   end
@@ -329,7 +329,7 @@ end
 --  @param U Source object.
 --  @return Deep copy.
 units.copy = function (U)
-  local cp = units:new(U.value)
+  local cp = units:_new_(U.value)
   cp.key = U.key
   return cp
 end
@@ -414,7 +414,7 @@ end
 --  @param toKey Expected key.
 --  @return Converted object of <code>nil</nil>.
 units._unitConvert_ = function (U, toKey)
-  local res = units:new(1)
+  local res = units:_new_(1)
   res.key = toKey
   if units._isCompatible_(U.key, res.key) then
     res.value = units._valConvert_(U.value, U.key, res.key)
@@ -437,7 +437,7 @@ end
 units.convert = function (U, r)
   if type(r) == 'function' then return r(U)
   else
-    local res = units:new(1, r)
+    local res = units:_new_(1, r)
     return units._unitConvert_(U, res.key)
   end
 end
@@ -486,7 +486,7 @@ units.__mul = function (U1,U2)
   op['*'](ta,tb)
   ta = reduce(ta)
   if not next(ta) then return U1.value*U2.value end
-  local res = units:new(U1.value*U2.value)
+  local res = units:_new_(U1.value*U2.value)
   res.key = toKey(ta)
   return res.key == '' and res.value or res
 end
@@ -501,7 +501,7 @@ units.__div = function (U1,U2)
   op['/'](ta,tb)
   ta = reduce(ta)
   if not next(ta) then return U1.value/U2.value end
-  local res = units:new(U1.value/U2.value)
+  local res = units:_new_(U1.value/U2.value)
   res.key = toKey(ta)
   return res.key == '' and res.value or res
 end
@@ -512,7 +512,7 @@ end
 --  @return Power.
 units.__pow = function (U1,b)
   assert(not isunits(b), "Wrong power!")
-  local res = isunits(U1) and units.copy(U1) or units:new(U1)
+  local res = isunits(U1) and units.copy(U1) or units:_new_(U1)
   local ta = fromKey(res.key)
   op['^'](ta,b)
   res.value = (res.value)^b
@@ -620,7 +620,7 @@ units.simp = function (U)
   local val, t = units._simplify_(U.value, fromKey(U.key))
   t = reduce(t)
   if #t > 0 then
-    local res = units:new(val)
+    local res = units:_new_(val)
     res.key = toKey(t)
     return res
   else return val end
@@ -636,7 +636,7 @@ end
 units.about[units.add] = {'add(U,rule)', 'Add new rule for conversation.'}
 
 -- simplify constructor call
-setmetatable(units, {__call = function (self,v,u) return units:new(v,u) end })
+setmetatable(units, {__call = function (self,v,u) return units:_new_(v,u) end })
 units.Unit = 'Unit'
 units.about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
 

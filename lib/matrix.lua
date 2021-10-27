@@ -290,7 +290,7 @@ end
 --  @param nC Number of columns.
 --  @param M Table for initialization.
 --  @return Matrix object.
-matrix.init = function (self, nR, nC, M)
+matrix._init_ = function (self, nR, nC, M)
   if nR <= 0 or nC <= 0 then error("Wrong matrix size!") end
   M.cols, M.rows = nC, nR
   return setmetatable(M, self)
@@ -307,7 +307,7 @@ matrix._new_ = function (M)
     cols = (cols < #M[i]) and #M[i] or cols
     setmetatable(M[i], access)
   end
-  return matrix:init(rows, cols, M)
+  return matrix:_init_(rows, cols, M)
 end
 
 --- Set product of element to coefficient.
@@ -315,7 +315,7 @@ end
 --  @param m Matrix.
 --  @return Result of production.
 matrix._kProd_ = function (k, M)
-  local res = matrix:init(M.rows, M.cols, {})
+  local res = matrix:_init_(M.rows, M.cols, {})
   for r = 1, M.rows do
     local resr, mr = res[r], M[r]
     for c = 1, M.cols do resr[c] = k*mr[c] end
@@ -436,7 +436,7 @@ matrix.get = function (M,a,b)
   end
 
   -- fill matrix
-  local res = matrix:init(math.floor((a[2]-a[1])/a[3])+1, math.floor((b[2]-b[1])/b[3])+1, {})
+  local res = matrix:_init_(math.floor((a[2]-a[1])/a[3])+1, math.floor((b[2]-b[1])/b[3])+1, {})
   local i = 0
   for r = a[1],a[2],a[3] do
     i = i+1
@@ -458,7 +458,7 @@ matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
 --  @param M Initial matrix.
 --  @return Transposed matrix.
 matrix.transpose = function (M)
-  local res = matrix:init(M.cols, M.rows, {})
+  local res = matrix:_init_(M.cols, M.rows, {})
   for r = 1, M.rows do
     local mr = M[r]
     for c = 1, M.cols do res[c][r] = mr[c] end
@@ -504,7 +504,7 @@ matrix.about[matrix.size] = {"size(M)", "Return number or rows and columns."}
 --  @param fn Desired function.
 --  @return Matrix where each element is obtained based on desired function.
 matrix.map = function (M, fn) 
-  local res = matrix:init(M.rows, M.cols, {})
+  local res = matrix:_init_(M.rows, M.cols, {})
   for r = 1, res.rows do
     local resr, mr = res[r], M[r]
     for c = 1, res.cols do resr[c] = fn(mr[c],r,c) end
@@ -520,7 +520,7 @@ matrix.about[matrix.map] = {"map(M,fn)", "Apply the given function to all elemen
 --  @return Result of function evaluation.
 matrix._apply2_ = function (fn, M1, M2)
   if (M1.rows~=M2.rows or M1.cols~=M2.cols) then error("Different matrix size!") end
-  local res = matrix:init(M1.rows,M1.cols,{})
+  local res = matrix:_init_(M1.rows,M1.cols,{})
   for r = 1,res.rows do
     local resr, m1r, m2r = res[r], M1[r], M2[r]
     for c = 1,res.cols do resr[c] = fn(m1r[c], m2r[c]) end
@@ -539,7 +539,7 @@ matrix.apply = function (fn, ...)
   for i = 2,#arg do
     if arg[i].rows ~= rows or arg[i].cols ~= cols then error("Different size!") end
   end
-  local res, v = matrix:init(rows, cols, {}), {}
+  local res, v = matrix:_init_(rows, cols, {}), {}
   -- evaluate
   local upack = Ver.unpack
   for r = 1,res.rows do
@@ -558,7 +558,7 @@ matrix.about[matrix.apply] = {'apply(fn,M1,M2,...)','Apply function to the given
 --  @param M Source matrix.
 --  @return Deep copy.
 matrix.copy = function (M)
-  local res = matrix:init(M.rows,M.cols,{})
+  local res = matrix:_init_(M.rows,M.cols,{})
   for r = 1,M.rows do
     local resr, mr = res[r], M[r]
     for c = 1,M.cols do resr[c] = mr[c] end
@@ -575,7 +575,7 @@ matrix.__mul = function (M1,M2)
   if not ismatrix(M1) then return matrix._kProd_(M1, M2) end
   if not ismatrix(M2) then return matrix._kProd_(M2, M1) end
   if (M1.cols ~= M2.rows) then error("Impossible to get product: different size!") end
-  local res = matrix:init(M1.rows, M2.cols,{})
+  local res = matrix:_init_(M1.rows, M2.cols,{})
   local resCols, m1Cols = res.cols, M1.cols
   for r = 1, res.rows do
     local ar, resr = M1[r], res[r]
@@ -694,7 +694,7 @@ matrix.about[matrix.rref] = {"rref(M)", "Perform transformations using Gauss met
 matrix.vector = function (t)
   local res = {0,0,0}       -- prepare some memory
   for i = 1, #t do res[i] = {t[i]} end
-  return matrix:init(#t, 1, res)
+  return matrix:_init_(#t, 1, res)
 end
 matrix.about[matrix.vector] = {"vector({...})", "Create vector from list of numbers. The same as V().", help.NEW}
 matrix.V = matrix.vector
@@ -706,7 +706,7 @@ matrix.V = matrix.vector
 matrix.zeros = function (nR, nC)
   if ismatrix(nR) then nR,nC = nR.rows, nR.cols end  -- input is a matrix
   nC = nC or nR                          -- input is a number
-  return matrix:init(nR, nC, {})
+  return matrix:_init_(nR, nC, {})
 end
 matrix.about[matrix.vector] = {"zeros(rows[,cols=rows])", "Create matrix from zeros.", help.NEW}
 
@@ -715,7 +715,7 @@ matrix.about[matrix.vector] = {"zeros(rows[,cols=rows])", "Create matrix from ze
 --  @param cols Number of columns.
 --  @param fn Function which depends on element index.
 matrix.fill = function (rows, cols, fn)
-  local m = matrix:init(rows, cols, {})
+  local m = matrix:_init_(rows, cols, {})
   for r = 1, rows do
     local mr = {}
     for c = 1,cols do mr[c] = fn(r,c) end
@@ -786,7 +786,7 @@ matrix.eye = function (rows, cols, val)
   end
   cols = cols or rows
   val = val or 1
-  local m = matrix:init(rows, cols, {})
+  local m = matrix:_init_(rows, cols, {})
   for i = 1, math.min(rows, cols) do m[i][i] = val end
   return m
 end
@@ -802,10 +802,10 @@ matrix.concat = function (M1, M2, dir)
   local res = nil
   if dir == 'h' then
     if (M1.rows ~= M2.rows) then error("Different number of rows") end
-    res = matrix:init(M1.rows, M1.cols+M2.cols, {})
+    res = matrix:_init_(M1.rows, M1.cols+M2.cols, {})
   elseif dir == 'v' then
     if (M1.cols ~= M2.cols) then error("Different number of columns") end
-    res = matrix:init(M1.rows+M2.rows, M1.cols, {})
+    res = matrix:_init_(M1.rows+M2.rows, M1.cols, {})
   else
     error("Unexpected type of concatenation")
   end
@@ -887,7 +887,7 @@ matrix.pinv = function (M)
     local B = A:get({k,n},k)
     if r > 1 then 
       tmp = L:get({k,n},{1,r-1}) * L:get(k,{1,r-1}):transpose() 
-      tmp = ismatrix(tmp) and tmp or matrix:init(1,1,{{tmp}})      -- product can return a number
+      tmp = ismatrix(tmp) and tmp or matrix:_init_(1,1,{{tmp}})      -- product can return a number
       B = B - tmp
     end
     for i = k, n do L[i][r] = B[i-k+1][1] end  -- copy B to L
@@ -952,11 +952,11 @@ matrix.diag = function (M,n)
     else
       local z = (n < 0) and math.min(M.rows-k,M.cols) or math.min(M.cols-k,M.rows) 
       if z <= 0 then error("Wrong shift!") end
-      res = matrix:init(z,1, {})
+      res = matrix:_init_(z,1, {})
       for i = 1,z do res[i][1] = M[(n<0 and i+k or i)][(n<0 and i or i+k)] end
     end
   else
-    res = matrix:init(#M+k,#M+k, {})
+    res = matrix:_init_(#M+k,#M+k, {})
     for i = 1,#M do res[(n<0 and i+k or i)][(n<0 and i or i+k)] = M[i] end
   end
   return res
@@ -971,7 +971,7 @@ matrix.cross = function (V1,V2)
   if (V1.rows*V1.cols ~= 3 or V2.rows*V2.cols ~= 3) then error("Vector with 3 elements is expected!") end
   local x1,y1,z1 = V1:get(1), V1:get(2), V1:get(3)
   local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
-  return matrix:init(3,1, {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}})
+  return matrix:_init_(3,1, {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}})
 end
 matrix.about[matrix.cross] = {'cross(V1,V2)','Cross product or two 3-element vectors.'}
 
@@ -1113,7 +1113,7 @@ matrix.about[matrix.chol] = {"chol(M)", "Cholesky decomposition of positive defi
 matrix.reshape = function (M,nRows,nCols)
   nRows = nRows or (M.rows*M.cols)
   nCols = nCols or 1
-  local res = matrix:init(nRows,nCols,{})
+  local res = matrix:_init_(nRows,nCols,{})
   local newR, newC = 1, 1   -- temporary indices
   for r = 1, M.rows do
     local Mr = M[r]

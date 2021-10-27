@@ -118,7 +118,7 @@ array.__index = array
 --  @param self Pointer to object.
 --  @param tSize Table with array size.
 --  @return Empty array.
-array.new = function (self, tSize)
+array._new_ = function (self, tSize)
   -- prepare list of coefficients
   local k = {1}
   for i = 2, #tSize do k[i] = tSize[i-1]*k[i-1] end
@@ -184,7 +184,7 @@ array.about[array.set] = {"set(A,tInd,val)", "Set value to the array."}
 --  @param A Array object.
 --  @return Deep copy of the array.
 array.copy = function (A)
-  local cp = array:new(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
+  local cp = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
   return Ver.move(A, 1, array.capacity(A), 1, cp)             -- copy array elements
 end
 array.about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
@@ -212,7 +212,7 @@ array.about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTH
 --  @return New array where each element is result of the function evaluation func(A1[i],A2[i]).
 array._apply2_ = function (func, A1, A2)
   if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
-  local res, v = array:new(Ver.move(A1.size, 1, #A1.size, 1, {}))   -- prepare empty copy
+  local res, v = array:_new_(Ver.move(A1.size, 1, #A1.size, 1, {}))   -- prepare empty copy
   for i = 1, array.capacity(A1) do 
     v = func(A1[i] or 0, A2[i] or 0)                      -- elements can be empty
     if v ~= 0 then res[i] = v end                        -- save nonzero values
@@ -233,7 +233,7 @@ array.apply = function (func, ...)
   end
   -- prepare new
   local v, upack = {}, Ver.unpack
-  local res = array:new(Ver.move(a1.size, 1, #a1.size, 1, {}))
+  local res = array:_new_(Ver.move(a1.size, 1, #a1.size, 1, {}))
   for i = 1, array.capacity(a1) do
     -- collect
     for k = 1,#arg do v[k] = arg[k][i] or 0 end
@@ -250,7 +250,7 @@ array.about[array.apply] = {"apply(func, ...)", "Apply function of several argum
 --  @param func Function with 1 argument.
 --  @return New array where each element is result of the function evaluation func(a[i]).
 array.map = function (A, func)
-  local res, v = array:new(Ver.move(A.size, 1, #A.size, 1, {}))
+  local res, v = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))
   for i = 1, array.capacity(A) do
     v = func(A[i] or 0)                   -- elements can be empty
     if v ~= 0 then res[i] = v end         -- save nonzero values
@@ -301,7 +301,7 @@ array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b"
 --  @param tSize Size table.
 --  @return Array of the given size with random numbers from 0 to 1.
 array.rand = function (tSize)
-  local arr = array:new(tSize)
+  local arr = array:_new_(tSize)
   for i = 1, array.capacity(arr) do arr[i] = math.random() end
   return arr
 end
@@ -348,7 +348,7 @@ array.sub = function (A, tInd1, tInd2)
     newsize[i] = tInd2[i] - tInd1[i] + 1
     ind[i]     = 0
   end 
-  local res = array:new(newsize)
+  local res = array:_new_(newsize)
   -- fill
   local K, S = res.k, res.size
   local conv = array._pos_
@@ -380,7 +380,7 @@ array.concat = function (A1, A2, nAxis)
   local newsize = Ver.move(A1.size, 1, #A1.size, 1, {})
   newsize[nAxis] = newsize[nAxis] + A2.size[nAxis]
   -- combine
-  local res, ind1, ind2 = array:new(newsize), {}, {}
+  local res, ind1, ind2 = array:_new_(newsize), {}, {}
   local edge = A1.size[nAxis]
   local K, S = res.k, res.size
   local conv = array._pos_
@@ -415,7 +415,7 @@ setmetatable(array, {__call = function (self, tSize)
   assert(type(tSize) == 'table', "Table is expected!")
   for i = 1,#tSize do assert(tSize[i] > 0 and Ver.isInteger(tSize[i]), "Positive integer is expected!") end
   -- build
-  return array:new(tSize) 
+  return array:_new_(tSize) 
 end})
 array.Arr = 'Arr'
 array.about[array.Arr] = {"Arr(tSize)", "Create empty array with the given size.", help.NEW}

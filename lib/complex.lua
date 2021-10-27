@@ -181,19 +181,19 @@ end
 --  @param re Real part.
 --  @param im Imaginary part, default is 0.
 --  @return Complex number.
-complex._new_ = function (self, re, im)  return setmetatable({re or 0, im or 0}, self) end
+complex._init_ = function (self, re, im)  return setmetatable({re or 0, im or 0}, self) end
 
 --- Create complex number from trigonometric representation.
 --  @param mod Module.
 --  @param arg Argument.
 --  @return Complex number.
-complex.trig = function (mod,arg) return complex:_new_(mod*math.cos(arg), mod*math.sin(arg)) end
+complex.trig = function (mod,arg) return complex:_init_(mod*math.cos(arg), mod*math.sin(arg)) end
 complex.about[complex.trig] = {"trig(module,angle)", "Create complex number using module and angle."}
 
 --- Create copy of the complex number.
 --  @param C Source value.
 --  @return Complex number.
-complex.copy = function (Z) return complex:_new_(Z[1], Z[2]) end
+complex.copy = function (Z) return complex:_init_(Z[1], Z[2]) end
 complex.about[complex.copy] = {"copy(Z)", "Create copy of the complex number.", help.OTHER}
 
 --- Correct arguments.
@@ -201,9 +201,9 @@ complex.about[complex.copy] = {"copy(Z)", "Create copy of the complex number.", 
 --  @param b Real or complex number (optional).
 --  @return Complex number(s).
 complex._args_ = function (a,b)
-  a = iscomplex(a) and a or complex:_new_(a,0)
+  a = iscomplex(a) and a or complex:_init_(a,0)
   if b then
-    b = iscomplex(b) and b or complex:_new_(b,0)
+    b = iscomplex(b) and b or complex:_init_(b,0)
   end
   return a,b
 end
@@ -214,7 +214,7 @@ end
 --  @return Sum of numbers.
 complex.__add = function (Z1,Z2)
   Z1,Z2 = complex._args_(Z1,Z2)
-  return numcomp(complex:_new_(Z1[1]+Z2[1], Z1[2]+Z2[2]))
+  return numcomp(complex:_init_(Z1[1]+Z2[1], Z1[2]+Z2[2]))
 end
 
 --- Z1 - Z2 
@@ -223,7 +223,7 @@ end
 --  @return Difference of numbers.
 complex.__sub = function (Z1,Z2)
   Z1,Z2 = complex._args_(Z1,Z2)
-  return numcomp(complex:_new_(Z1[1]-Z2[1], Z1[2]-Z2[2]))
+  return numcomp(complex:_init_(Z1[1]-Z2[1], Z1[2]-Z2[2]))
 end
 
 --- Z1 * Z2
@@ -232,7 +232,7 @@ end
 --  @return Product of numbers.
 complex.__mul = function (Z1,Z2)
   Z1,Z2 = complex._args_(Z1,Z2)
-  return numcomp(complex:_new_(Z1[1]*Z2[1]-Z1[2]*Z2[2], Z1[1]*Z2[2]+Z1[2]*Z2[1]))
+  return numcomp(complex:_init_(Z1[1]*Z2[1]-Z1[2]*Z2[2], Z1[1]*Z2[2]+Z1[2]*Z2[1]))
 end
 
 --- Z1 / Z2
@@ -242,7 +242,7 @@ end
 complex.__div = function (Z1,Z2)
   Z1,Z2 = complex._args_(Z1,Z2)
   local denom = Z2[1]*Z2[1] + Z2[2]*Z2[2]
-  return numcomp(complex:_new_((Z1[1]*Z2[1]+Z1[2]*Z2[2])/denom, (Z1[2]*Z2[1]-Z1[1]*Z2[2])/denom))
+  return numcomp(complex:_init_((Z1[1]*Z2[1]+Z1[2]*Z2[2])/denom, (Z1[2]*Z2[1]-Z1[1]*Z2[2])/denom))
 end
 
 --- Z1 ^ Z2
@@ -255,13 +255,13 @@ complex.__pow = function (Z1,Z2)
   local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
   local abs = a0^(Z2[1])*math.exp(-a1*Z2[2])
   local arg = k*Z2[2]+Z2[1]*a1
-  return numcomp(complex:_new_(abs*math.cos(arg), abs*math.sin(arg)))
+  return numcomp(complex:_init_(abs*math.cos(arg), abs*math.sin(arg)))
 end
 
 --- -Z
 --  @param Z Complex number.
 --  @return Negative value.
-complex.__unm = function (Z) return complex:_new_(-Z[1], -Z[2]) end
+complex.__unm = function (Z) return complex:_init_(-Z[1], -Z[2]) end
 
 complex.arithmetic = 'arithmetic'
 complex.about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
@@ -293,7 +293,7 @@ complex.about[complex.abs] = {"abs(Z)", "Return module of complex number."}
 --- Conjunction.
 --  @param Z Complex number.
 --  @return Conjunction to the given number.
-complex.conj = function (Z) return complex:_new_(Z[1], -Z[2]) end
+complex.conj = function (Z) return complex:_init_(Z[1], -Z[2]) end
 complex.about[complex.conj] = {"conj(Z)", "Return the complex conjugate. Equal to ~Z.", help.OTHER}
 complex.__bnot = complex.conj
 
@@ -307,7 +307,7 @@ complex.__tostring = function (Z) return string.format("%.3f%+.3fi", Z[1], Z[2])
 --  @return Real or complex square root.
 complex.sqrt = function (Z) 
   if type(Z) == "number" then
-    return Z < 0 and complex:_new_(0,math.sqrt(-Z)) or math.sqrt(Z)
+    return Z < 0 and complex:_init_(0,math.sqrt(-Z)) or math.sqrt(Z)
   else
     return complex.__pow(Z, 0.5)
   end
@@ -319,7 +319,7 @@ complex.about[complex.sqrt] = {"sqrt(Z)", "Return square root. Result can be rea
 --  @return Complex exponent.
 complex.exp = function (Z)
   local r = math.exp(Z[1])
-  return numcomp(complex:_new_(r*math.cos(Z[2]), r*math.sin(Z[2])))
+  return numcomp(complex:_init_(r*math.cos(Z[2]), r*math.sin(Z[2])))
 end
 complex.about[complex.exp] = {"exp(Z)", "Return exponent in for complex argument.", FUNCTIONS}
 
@@ -328,9 +328,9 @@ complex.about[complex.exp] = {"exp(Z)", "Return exponent in for complex argument
 --  @return Real or complex logarithm.
 complex.log = function (Z)
   if type(Z) == "number" then
-    return Z <= 0 and complex:_new_(math.log(-Z),math.pi) or math.log(Z)
+    return Z <= 0 and complex:_init_(math.log(-Z),math.pi) or math.log(Z)
   else
-    return numcomp(complex:_new_(0.5*math.log(Z[1]^2+Z[2]^2), Ver.atan2(Z[2],Z[1])))
+    return numcomp(complex:_init_(0.5*math.log(Z[1]^2+Z[2]^2), Ver.atan2(Z[2],Z[1])))
   end
 end
 complex.about[complex.log] = {"log(Z)", "Complex logarithm.", FUNCTIONS}
@@ -339,7 +339,7 @@ complex.about[complex.log] = {"log(Z)", "Complex logarithm.", FUNCTIONS}
 --  @param Z Complex number.
 --  @return Complex sinus.
 complex.sin = function (Z)
-  return numcomp(complex:_new_(math.sin(Z[1])*ch(Z[2]), math.cos(Z[1])*sh(Z[2])))
+  return numcomp(complex:_init_(math.sin(Z[1])*ch(Z[2]), math.cos(Z[1])*sh(Z[2])))
 end
 complex.about[complex.sin] = {"sin(Z)", "Return sinus of a complex number.", FUNCTIONS}
 
@@ -347,7 +347,7 @@ complex.about[complex.sin] = {"sin(Z)", "Return sinus of a complex number.", FUN
 --  @param Z Complex number.
 --  @return Complex cosine.
 complex.cos = function (Z)
-  return numcomp(complex:_new_(math.cos(Z[1])*ch(Z[2]), -math.sin(Z[1])*sh(Z[2])))
+  return numcomp(complex:_init_(math.cos(Z[1])*ch(Z[2]), -math.sin(Z[1])*sh(Z[2])))
 end
 complex.about[complex.cos] = {"cos(Z)", "Return cosine of a complex number.", FUNCTIONS}
 
@@ -356,7 +356,7 @@ complex.about[complex.cos] = {"cos(Z)", "Return cosine of a complex number.", FU
 --  @return Complex tangent.
 complex.tan = function (Z)
   local den = math.cos(2*Z[1]) + ch(2*Z[2])
-  return numcomp(complex:_new_(math.sin(2*Z[1])/den, sh(2*Z[2])/den))
+  return numcomp(complex:_init_(math.sin(2*Z[1])/den, sh(2*Z[2])/den))
 end
 complex.about[complex.tan] = {"tan(Z)", "Return tangent of a complex number.", FUNCTIONS}
 
@@ -421,11 +421,11 @@ complex.atanh = function (Z) return 0.5*complex.log((1+Z)/(1-Z)) end
 complex.about[complex.atanh] = {"atanh(Z)", "Complex inverse hyperbolic tangent.", FUNCTIONS}
 
 -- Imaginary unit
-complex._i  = complex:_new_(0,1)
+complex._i  = complex:_init_(0,1)
 complex.about[complex._i] = {"_i", "Complex unit.", help.CONST}
 
 -- simplify constructor call
-setmetatable(complex, {__call = function (self, re, im) return complex:_new_(re,im) end })
+setmetatable(complex, {__call = function (self, re, im) return complex:_init_(re,im) end })
 complex.Comp = 'Comp'
 complex.about[complex.Comp] = {"Comp([re=0],[im=0])", "Create new complex number.", help.NEW}
 

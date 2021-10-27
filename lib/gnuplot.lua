@@ -242,7 +242,7 @@ end
 --  @param self Pointer to parent table.
 --  @param o Table with parameters or nil.
 --  @return New 'gnuplot' object.
-gnuplot.new = function (self) return setmetatable({}, self) end
+gnuplot._init_ = function (self) return setmetatable({}, self) end
 
 --- Add new curve to the plot.
 --  @param G Gnuplot object.
@@ -254,7 +254,7 @@ gnuplot.about[gnuplot.add] = {"add(tCurve)", "Add new curve to figure."}
 --  @param G Initial table.
 --  @return Copy of table.
 gnuplot.copy = function (G)
-  local cp = gnuplot:new()
+  local cp = gnuplot:_init_()
   for k,v in pairs(G) do
     if type(v) == 'table' then
       local tmp = {}
@@ -347,7 +347,7 @@ end
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
 gnuplot.plot = function (...)
   local ag = {...}
-  local cmd = gnuplot:new()
+  local cmd = gnuplot:_init_()
   local i, n = 1, 1
   repeat
     -- ag[i] have to be table
@@ -395,7 +395,7 @@ end
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tplot = function (t,...)
   local f, ag = gnuplot._vecPrepare_(t,...)
-  local cmd = gnuplot:new()
+  local cmd = gnuplot:_init_()
   if #ag > 1 then
     for i = 2,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
@@ -413,7 +413,7 @@ gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or d
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
 gnuplot.polarplot = function(...)
   local ag, i, n = {...}, 1, 1
-  local cmd = gnuplot:new()
+  local cmd = gnuplot:_init_()
   repeat
     local name = gnuplot._lst2file_(ag[i],ag[i+1])
     i = i + 2
@@ -438,7 +438,7 @@ gnuplot.about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,[x2,y2..]])', "Make pol
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tpolar = function (t,...)
   local f, ag = gnuplot._vecPrepare_(t,...)
-  local cmd = gnuplot:new()
+  local cmd = gnuplot:_init_()
   if #ag > 1 then
     for i = 2,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
@@ -457,7 +457,7 @@ gnuplot.about[gnuplot.tpolar] = {"tpolar(t,[x,y1,y2..])", "Polar plot for table,
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
 gnuplot.surfplot = function(...)
   local ag, i, n = {...}, 1, 1
-  local cmd = gnuplot:new()
+  local cmd = gnuplot:_init_()
   repeat
     local name = gnuplot._lst2file_(ag[i],ag[i+1],ag[i+2])
     i = i + 3
@@ -481,7 +481,7 @@ gnuplot.about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make s
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tsurf = function (t,...)
   local f, ag = gnuplot._vecPrepare_(t,...)
-  local cmd = gnuplot:new()
+  local cmd = gnuplot:_init_()
   if #ag > 2 then
     for i = 3,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[2],ag[i]},
@@ -496,7 +496,7 @@ end
 gnuplot.about[gnuplot.tsurf] = {"tsurf(t,[x1,y1,z1,z2..])", "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor
-setmetatable(gnuplot, {__call=function (self,v) return gnuplot:new(v) end})
+setmetatable(gnuplot, {__call=function (self) return gnuplot:_init_() end})
 gnuplot.Gp = 'Gp'
 gnuplot.about[gnuplot.Gp] = {"Gp()", "Prepare Gnuplot object.", help.NEW}
 
