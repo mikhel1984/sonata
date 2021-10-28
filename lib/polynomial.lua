@@ -622,17 +622,18 @@ polynomial.taylor = function (x,f,...)
 end
 polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
 
-polynomial.lin = function (tx,ty)
-  assert(#tx == #ty)
+polynomial.lin = function (tx,ty,vl,vh)
   local res = {}
   local xp, yp = tx[1], ty[1]
-  for i = 2,#xp do
+  if vl then res[1] = { xp, polynomial:_init_({[0] = vl}) } end
+  for i = 2,#tx do
     xi, yi = tx[i], ty[i]
     local k = (yi-yp)/(xi-xp)
     res[#res+1] = { xi, polynomial:_init_({[0]=yp-k*xp, k}) }
     xp, yp = xi, yi
   end
-  return res
+  if vl then res[#res+1] = { xp+1, polynomial:_init_({[0] = vh or vl}) } end
+  return setmetatable(res, polynomial._metapval_)
 end
 
 polynomial.pval = function (tP, x, n)
@@ -645,9 +646,9 @@ polynomial.pval = function (tP, x, n)
       n = #tP
     else
       local up, low = #tP-1, 1
-      n = math.floor((up + low) * 0.5)
+      n = math.ceil((up + low) * 0.5)
       while up - low > 1 do
-        n = math.floor((up+low)*0.5) 
+        n = math.ceil((up+low)*0.5) 
         local v = tP[n][1]
         if x >= v then low = n else up = n end
       end
@@ -655,6 +656,8 @@ polynomial.pval = function (tP, x, n)
     return polynomial.pval(tP, x, n)
   end
 end
+
+polynomial._metapval_ = {__call = polynomial.pval}
 
 setmetatable(polynomial, {__call = function (self, t) return polynomial._reorder_(t) end})
 polynomial.Poly = 'Poly'
