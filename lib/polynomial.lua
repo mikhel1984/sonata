@@ -622,6 +622,40 @@ polynomial.taylor = function (x,f,...)
 end
 polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
 
+polynomial.lin = function (tx,ty)
+  assert(#tx == #ty)
+  local res = {}
+  local xp, yp = tx[1], ty[1]
+  for i = 2,#xp do
+    xi, yi = tx[i], ty[i]
+    local k = (yi-yp)/(xi-xp)
+    res[#res+1] = { xi, polynomial:_init_({[0]=yp-k*xp, k}) }
+    xp, yp = xi, yi
+  end
+  return res
+end
+
+polynomial.pval = function (tP, x, n)
+  if n then
+    return tP[n][2](x), n
+  else
+    if x <= tP[1][1] then 
+      n = 1
+    elseif x > tP[#tP-1][1] then
+      n = #tP
+    else
+      local up, low = #tP-1, 1
+      n = math.floor((up + low) * 0.5)
+      while up - low > 1 do
+        n = math.floor((up+low)*0.5) 
+        local v = tP[n][1]
+        if x >= v then low = n else up = n end
+      end
+    end
+    return polynomial.pval(tP, x, n)
+  end
+end
+
 setmetatable(polynomial, {__call = function (self, t) return polynomial._reorder_(t) end})
 polynomial.Poly = 'Poly'
 polynomial.about[polynomial.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
