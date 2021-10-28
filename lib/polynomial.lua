@@ -640,18 +640,18 @@ polynomial.pval = function (tP, x, n)
   if n then
     return tP[n][2](x), n
   else
-    if x <= tP[1][1] then 
+    -- find index n
+    local up, low = #tP-1, 1
+    if x <= tP[low][1] then 
       n = 1
-    elseif x > tP[#tP-1][1] then
+    elseif x > tP[up][1] then
       n = #tP
     else
-      local up, low = #tP-1, 1
-      n = math.ceil((up + low) * 0.5)
-      while up - low > 1 do
+      repeat
         n = math.ceil((up+low)*0.5) 
         local v = tP[n][1]
         if x >= v then low = n else up = n end
-      end
+      until up - low <= 1
     end
     return polynomial.pval(tP, x, n)
   end
