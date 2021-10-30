@@ -281,7 +281,10 @@ Range = function (from,to,step)
   if not to then to = from; from = 1 end
   assert((to-from)*step > 0)
   local res = {}
-  for i = from,to,step do res[#res+1] = i end
+  for t = from,to,step do res[#res+1] = t end
+  if math.abs(res[#res] - to) >= math.abs(step)*0.1 then
+    res[#res+1] = to
+  end
   return res
 end
 About[Range] = {'Range([from=1,]to[,step=1])','Generate table with sequence of numbers.', SonataHelp.OTHER}

@@ -635,7 +635,6 @@ polynomial.spline = function (tx, ty, dDer1, dDerN)
     row[p] = h[p]; row[i] = 2*(h[p]+h[i]); row[i+1] = h[i]
     row[N+2] = 3*(ty[i+1]-ty[i])/h[i] - 3*(ty[i]-ty[p])/h[p]
   end
-  print(A)
   -- "remove" N-th column
   for i = 1, A.rows do A[i][N+1] = A[i][N+2] end
   -- "remove" frist column
@@ -643,7 +642,7 @@ polynomial.spline = function (tx, ty, dDer1, dDerN)
     local row = A[i]
     for j = 1, N do row[j] = row[j+1] end
   end
-  A.cols = A.cols - 2
+  A.cols = A.cols - 2  -- resize matrix
   -- solve 
   A = mat.rref(A)
   -- prepare 'b' elements
@@ -656,7 +655,6 @@ polynomial.spline = function (tx, ty, dDer1, dDerN)
     local hi, bi, di, xi = h[i], b[i], ty[i], tx[i]
     local ai = (b[i+1] - bi) / (3 * hi)
     local ci = (ty[i+1] - di) / hi - hi * (2*bi + b[i+1]) / 3
-    --print(di, ci, bi, ai)
     res[i] = {tx[i+1], polynomial:_init_({
        [0] = ((-ai*xi + bi) * xi - ci) * xi + di,
        (3*ai*xi - 2*bi)*xi + ci, 
