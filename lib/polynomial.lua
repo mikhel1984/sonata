@@ -625,50 +625,45 @@ polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor ser
 polynomial.spline = function (tx, ty, dDer1, dDerN)
   polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
   local mat, N = polynomial.ext_matrix, #tx-1
-  local h, A = {}, mat:_init_(N, N+1, {})
-  -- prepare matrices
+  local h, A = {}, mat:_init_(N-1, N+2, {})
+  -- prepare matrix
   h[1] = tx[2]-tx[1] 
-  A[1][1] = 2*h[1]; A[1][2] = h[1] 
-  A[1][N+1] = 3*(ty[2]-ty[1])/h[1] - 3*(dDer1 or 0)
-  for i = 2, N-1 do
+  for i = 2, N do
     h[i] = tx[i+1] - tx[i]
-    A[i][i-1] = h[i-1]; A[i][i] = 2*(h[i-1]+h[i]); A[i][i+1] = h[i]
-    A[i][N+1] = 3*(ty[i+1]-ty[i])/h[i] - 3*(ty[i]-ty[i-1])/h[i-1] 
+    local p = i-1
+    local row = A[p]
+    row[p] = h[p]; row[i] = 2*(h[p]+h[i]); row[i+1] = h[i]
+    row[N+2] = 3*(ty[i+1]-ty[i])/h[i] - 3*(ty[i]-ty[p])/h[p]
   end
-  h[N] = tx[#tx] - tx[N]
-  A[N][N-1] = 2*h[N]; A[N][N] = h[N]
-  A[N][N+1] = -3*(ty[#ty]-ty[N])/h[N] + 3*(dDerN or 0)
+  print(A)
+  -- "remove" N-th column
+  for i = 1, A.rows do A[i][N+1] = A[i][N+2] end
+  -- "remove" frist column
+  for i = 1, A.rows do 
+    local row = A[i]
+    for j = 1, N do row[j] = row[j+1] end
+  end
+  A.cols = A.cols - 2
   -- solve 
-  A = mat._GaussDown_(A)
-  -- to polynomials
-  local res, ai, bi, ci, di, xi = {}
-  local bi, bn, hi = A[1][N+1]
-  for i = 1, N-1 do
-    hi, xi, di = h[i], tx[i], ty[i]
-    bn = A[i+1][N+1]
-    ai = (bn - bi) / (3 * hi)
-    ci = (ty[i+1] - di) / hi - hi * (2 * bi + bn) / 3
+  A = mat.rref(A)
+  -- prepare 'b' elements
+  local b = {0}   -- "natural" condition, b1 = bn = 0
+  for i = 1, A.rows do b[#b+1] = A[i][N] end
+  b[#b+1] = 0
+  -- make polynomials
+  local res = {}
+  for i = 1, #b-1 do
+    local hi, bi, di, xi = h[i], b[i], ty[i], tx[i]
+    local ai = (b[i+1] - bi) / (3 * hi)
+    local ci = (ty[i+1] - di) / hi - hi * (2*bi + b[i+1]) / 3
+    --print(di, ci, bi, ai)
     res[i] = {tx[i+1], polynomial:_init_({
-       [0] = ((-a*xi + b) * xi - ci) * xi + d,
-       (3*ai*x - 2*b)*xi + c, 
-       -3*ai*xi + b, ai})
+       [0] = ((-ai*xi + bi) * xi - ci) * xi + di,
+       (3*ai*xi - 2*bi)*xi + ci, 
+       -3*ai*xi + bi, ai})
     }
-    bn = bi
   end
-  bi, di, xi, hi = bn, ty[N], tx[N], h[N]
-  if dDerN then 
-    ai = (dDerN*hi + bi*hi*(hi - 2) - ty[#ty] + di) / (2 * hi^3)
-    ci = dDerN - 2*bi - 3*ai*hi*hi
-  else
-    ai = -bi / (3 * hi)
-    ci = (ty[#ty] - di)/hi - 2/3*bi*hi
-  end
-  res[i] = {tx[i+1], polynomial:_init_({
-     [0] = ((-a*xi + b) * xi - ci) * xi + d,
-     (3*ai*x - 2*b)*xi + c, 
-     -3*ai*xi + b, ai})
-  }
-  return res
+  return setmetatable(res, polynomial._metapval_)
 end
 
 polynomial.lin = function (tx,ty,vl,vh)
