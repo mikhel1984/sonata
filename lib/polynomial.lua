@@ -655,10 +655,13 @@ polynomial.spline = function (tx, ty, dDer1, dDerN)
     local hi, bi, di, xi = h[i], b[i], ty[i], tx[i]
     local ai = (b[i+1] - bi) / (3 * hi)
     local ci = (ty[i+1] - di) / hi - hi * (2*bi + b[i+1]) / 3
+    --res[i] = {tx[i+1], polynomial:_init_({[0]=di, ci, bi, ai})}
     res[i] = {tx[i+1], polynomial:_init_({
-       [0] = ((-ai*xi + bi) * xi - ci) * xi + di,
-       (3*ai*xi - 2*bi)*xi + ci, 
-       -3*ai*xi + bi, ai})
+       [0] = -ai*xi^3 + bi*xi^2 - ci*xi + di,
+       3*ai*xi^2 - 2*bi*xi + ci,
+       -3*ai*xi + bi,
+       ai
+       })
     }
   end
   return setmetatable(res, polynomial._metapval_)
@@ -691,9 +694,9 @@ polynomial.pval = function (tP, x, n)
     else
       repeat
         n = math.ceil((up+low)*0.5) 
-        local v = tP[n][1]
-        if x >= v then low = n else up = n end
+        if x >= tP[n][1] then low = n else up = n end
       until up - low <= 1
+      n = up
     end
     return polynomial.pval(tP, x, n)
   end
