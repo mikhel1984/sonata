@@ -622,6 +622,55 @@ polynomial.taylor = function (x,f,...)
 end
 polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
 
+polynomial.spline = function (tx, ty, dDer1, dDerN)
+  polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
+  local mat, N = polynomial.ext_matrix, #tx-1
+  local h, A = {}, mat:_init_(N, N+1, {})
+  -- prepare matrices
+  h[1] = tx[2]-tx[1] 
+  A[1][1] = 2*h[1]; A[1][2] = h[1] 
+  A[1][N+1] = 3*(ty[2]-ty[1])/h[1] - 3*(dDer1 or 0)
+  for i = 2, N-1 do
+    h[i] = tx[i+1] - tx[i]
+    A[i][i-1] = h[i-1]; A[i][i] = 2*(h[i-1]+h[i]); A[i][i+1] = h[i]
+    A[i][N+1] = 3*(ty[i+1]-ty[i])/h[i] - 3*(ty[i]-ty[i-1])/h[i-1] 
+  end
+  h[N] = tx[#tx] - tx[N]
+  A[N][N-1] = 2*h[N]; A[N][N] = h[N]
+  A[N][N+1] = -3*(ty[#ty]-ty[N])/h[N] + 3*(dDerN or 0)
+  -- solve 
+  A = mat._GaussDown_(A)
+  -- to polynomials
+  local res, ai, bi, ci, di, xi = {}
+  local bi, bn, hi = A[1][N+1]
+  for i = 1, N-1 do
+    hi, xi, di = h[i], tx[i], ty[i]
+    bn = A[i+1][N+1]
+    ai = (bn - bi) / (3 * hi)
+    ci = (ty[i+1] - di) / hi - hi * (2 * bi + bn) / 3
+    res[i] = {tx[i+1], polynomial:_init_({
+       [0] = ((-a*xi + b) * xi - ci) * xi + d,
+       (3*ai*x - 2*b)*xi + c, 
+       -3*ai*xi + b, ai})
+    }
+    bn = bi
+  end
+  bi, di, xi, hi = bn, ty[N], tx[N], h[N]
+  if dDerN then 
+    ai = (dDerN*hi + bi*hi*(hi - 2) - ty[#ty] + di) / (2 * hi^3)
+    ci = dDerN - 2*bi - 3*ai*hi*hi
+  else
+    ai = -bi / (3 * hi)
+    ci = (ty[#ty] - di)/hi - 2/3*bi*hi
+  end
+  res[i] = {tx[i+1], polynomial:_init_({
+     [0] = ((-a*xi + b) * xi - ci) * xi + d,
+     (3*ai*x - 2*b)*xi + c, 
+     -3*ai*xi + b, ai})
+  }
+  return res
+end
+
 polynomial.lin = function (tx,ty,vl,vh)
   local res = {}
   local xp, yp = tx[1], ty[1]
