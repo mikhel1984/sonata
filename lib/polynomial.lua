@@ -622,7 +622,7 @@ polynomial.taylor = function (x,f,...)
 end
 polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
 
-polynomial.spline = function (tx, ty, dDer1, dDerN)
+polynomial.spline = function (tx, ty)
   polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
   local mat, N = polynomial.ext_matrix, #tx-1
   local h, A = {}, mat:_init_(N-1, N+2, {})
@@ -631,18 +631,18 @@ polynomial.spline = function (tx, ty, dDer1, dDerN)
   for i = 2, N do
     h[i] = tx[i+1] - tx[i]
     local p = i-1
-    local row = A[p]
-    row[p] = h[p]; row[i] = 2*(h[p]+h[i]); row[i+1] = h[i]
-    row[N+2] = 3*(ty[i+1]-ty[i])/h[i] - 3*(ty[i]-ty[p])/h[p]
+    local row, hp, hi = A[p], h[p], h[i]
+    row[p] = hp; row[i] = 2*(hp+hi); row[i+1] = hi
+    row[N+2] = 3*(ty[i+1]-ty[i])/hi - 3*(ty[i]-ty[p])/hp
   end
-  -- "remove" N-th column
+  -- "remove" penultimate column
   for i = 1, A.rows do A[i][N+1] = A[i][N+2] end
   -- "remove" frist column
   for i = 1, A.rows do 
     local row = A[i]
     for j = 1, N do row[j] = row[j+1] end
   end
-  A.cols = A.cols - 2  -- resize matrix
+  A.cols = N  -- resize matrix
   -- solve 
   A = mat.rref(A)
   -- prepare 'b' elements
@@ -651,20 +651,16 @@ polynomial.spline = function (tx, ty, dDer1, dDerN)
   b[#b+1] = 0
   -- make polynomials
   local res = {}
-  for i = 1, #b-1 do
+  for i = 1, N do
     local hi, bi, di, xi = h[i], b[i], ty[i], tx[i]
     local ai = (b[i+1] - bi) / (3 * hi)
     local ci = (ty[i+1] - di) / hi - hi * (2*bi + b[i+1]) / 3
-    --res[i] = {tx[i+1], polynomial:_init_({[0]=di, ci, bi, ai})}
-    res[i] = {tx[i+1], polynomial:_init_({
-       [0] = -ai*xi^3 + bi*xi^2 - ci*xi + di,
-       3*ai*xi^2 - 2*bi*xi + ci,
-       -3*ai*xi + bi,
-       ai
-       })
+    res[i] = {tx[i+1], polynomial:_init_({ 
+       [0] = ((-ai*xi + bi)*xi - ci)*xi + di,
+       xi*(3*ai*xi - 2*bi) + ci, -3*ai*xi + bi, ai })
     }
   end
-  return setmetatable(res, polynomial._metapval_)
+  return setmetatable(res, polynomial._metappval_)
 end
 
 polynomial.lin = function (tx,ty,vl,vh)
@@ -678,10 +674,10 @@ polynomial.lin = function (tx,ty,vl,vh)
     xp, yp = xi, yi
   end
   if vl then res[#res+1] = { xp+1, polynomial:_init_({[0] = vh or vl}) } end
-  return setmetatable(res, polynomial._metapval_)
+  return setmetatable(res, polynomial._metappval_)
 end
 
-polynomial.pval = function (tP, x, n)
+polynomial.ppval = function (tP, x, n)
   if n then
     return tP[n][2](x), n
   else
@@ -698,11 +694,11 @@ polynomial.pval = function (tP, x, n)
       until up - low <= 1
       n = up
     end
-    return polynomial.pval(tP, x, n)
+    return polynomial.ppval(tP, x, n)
   end
 end
 
-polynomial._metapval_ = {__call = polynomial.pval}
+polynomial._metappval_ = {__call = polynomial.ppval}
 
 setmetatable(polynomial, {__call = function (self, t) return polynomial._reorder_(t) end})
 polynomial.Poly = 'Poly'
@@ -714,4 +710,5 @@ polynomial.about[polynomial.Poly] = {"Poly(...)", "Create a polynomial.", help.N
 return polynomial
 
 --===========================
-
+--TODO: other types of splines
+--TODO: other conditions for cubic spline
