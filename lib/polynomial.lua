@@ -105,6 +105,23 @@ ans = p[3]                   --3> 4.83485
 p = Poly.taylor(0, 1, 1, 1, 1)
 ans = p(0.3)                 --2> math.exp(0.3)
 
+-- linear interpolation
+-- use constant values out the interval
+p = Poly.lin(X,Y, Y[1], Y[#Y]) 
+y1, n = Poly.ppval(p, 0.5)
+ans = y1                     --2> 0.621
+
+-- polynomial index
+ans = n                       --> 4
+
+-- simplify call when index is known
+ans = Poly.ppval(p, 0.5, n)  --2> y1
+
+-- cubic spline 
+p = Poly.spline(X, Y)
+-- can be called without 'ppval'
+ans = p(0.5)                 --2> -0.512
+
 --]]
 
 --	LOCAL
@@ -622,18 +639,23 @@ polynomial.taylor = function (x,f,...)
 end
 polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
 
-polynomial.spline = function (tx, ty)
+--- Cubic spline data interpolation.
+--  Use 'natural' boundary conditions. 
+--  @param tX Sequence of independent values.
+--  @param tY Sequence of dependent values.
+--  @return Table with polynomials for each interval.
+polynomial.spline = function (tX, tY)
   polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
-  local mat, N = polynomial.ext_matrix, #tx-1
+  local mat, N = polynomial.ext_matrix, #tX-1
   local h, A = {}, mat:_init_(N-1, N+2, {})
   -- prepare matrix
-  h[1] = tx[2]-tx[1] 
+  h[1] = tX[2]-tX[1] 
   for i = 2, N do
-    h[i] = tx[i+1] - tx[i]
+    h[i] = tX[i+1] - tX[i]
     local p = i-1
     local row, hp, hi = A[p], h[p], h[i]
     row[p] = hp; row[i] = 2*(hp+hi); row[i+1] = hi
-    row[N+2] = 3*(ty[i+1]-ty[i])/hi - 3*(ty[i]-ty[p])/hp
+    row[N+2] = 3*(tY[i+1]-tY[i])/hi - 3*(tY[i]-tY[p])/hp
   end
   -- "remove" penultimate column
   for i = 1, A.rows do A[i][N+1] = A[i][N+2] end
@@ -652,31 +674,42 @@ polynomial.spline = function (tx, ty)
   -- make polynomials
   local res = {}
   for i = 1, N do
-    local hi, bi, di, xi = h[i], b[i], ty[i], tx[i]
+    local hi, bi, di, xi = h[i], b[i], tY[i], tX[i]
     local ai = (b[i+1] - bi) / (3 * hi)
-    local ci = (ty[i+1] - di) / hi - hi * (2*bi + b[i+1]) / 3
-    res[i] = {tx[i+1], polynomial:_init_({ 
+    local ci = (tY[i+1] - di) / hi - hi * (2*bi + b[i+1]) / 3
+    res[i] = {tX[i+1], polynomial:_init_({ 
        [0] = ((-ai*xi + bi)*xi - ci)*xi + di,
        xi*(3*ai*xi - 2*bi) + ci, -3*ai*xi + bi, ai })
     }
   end
   return setmetatable(res, polynomial._metappval_)
 end
+polynomial.about[polynomial.spline] = {"spline(tX,tY)", "Cubic spline data interpolation. Return table with polynomials.", FIT}
 
-polynomial.lin = function (tx,ty,vl,vh)
+--- Linear data interpolation.
+--  @param tX Sequence of independent values.
+--  @param tY Sequence of dependent values.
+--  @return Table with polynomials for each interval.
+polynomial.lin = function (tX, tY, v0, vN)
   local res = {}
-  local xp, yp = tx[1], ty[1]
-  if vl then res[1] = { xp, polynomial:_init_({[0] = vl}) } end
-  for i = 2,#tx do
-    xi, yi = tx[i], ty[i]
+  local xp, yp = tX[1], tY[1]
+  if v0 then res[1] = { xp, polynomial:_init_({[0] = v0}) } end
+  for i = 2,#tX do
+    xi, yi = tX[i], tY[i]
     local k = (yi-yp)/(xi-xp)
     res[#res+1] = { xi, polynomial:_init_({[0]=yp-k*xp, k}) }
     xp, yp = xi, yi
   end
-  if vl then res[#res+1] = { xp+1, polynomial:_init_({[0] = vh or vl}) } end
+  if v0 then res[#res+1] = { xp+1, polynomial:_init_({[0] = vN or v0}) } end
   return setmetatable(res, polynomial._metappval_)
 end
+polynomial.about[polynomial.lin] = {"lin(tX,tY[,v0=0,vN=v0])", "Linear data interpolation. Return table with polynomials.", FIT}
 
+--- Evaluate value for table of polynomials (piecewise polynomial).
+--  @param tP Table of polynomials in form {{x1, p1}, {x2, p2} ...}.
+--  @param x Query point.
+--  @param n Index of polynomial in the table (optional).
+--  @return Found value and the polynomial index.
 polynomial.ppval = function (tP, x, n)
   if n then
     return tP[n][2](x), n
@@ -697,6 +730,7 @@ polynomial.ppval = function (tP, x, n)
     return polynomial.ppval(tP, x, n)
   end
 end
+polynomial.about[polynomial.ppval] = {"ppval(tP,x[,n]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT} 
 
 polynomial._metappval_ = {__call = polynomial.ppval}
 
