@@ -31,7 +31,7 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
-Sonata.version = '0.9.25'
+Sonata.version = '0.9.26'
 
 -- Quit the program
 quit = Sonata.exit
@@ -51,7 +51,7 @@ use = {
   graph     = "Graph",
   matrix    = "Mat",
   numeric   = "Num",
-  polynom   = "Poly",
+  polynomial = "Poly",
   quaternion = "Quat",
   rational  = "Rat",
   special   = "Spec",
@@ -100,7 +100,6 @@ setmetatable(use,
       end
       lst[#lst+1] = Sonata.FORMAT_V1
       lst[#lst+1] = About:get('use_import')
-      lst[#lst+1] = '\n'
       return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == 'all' then
       -- load all modules

@@ -90,7 +90,7 @@ ans = Geo.grav(0)           --1> 9.78
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 local PROB, TRANS, PROJ = "problems", "transform", "projection"
 
@@ -559,3 +559,5 @@ return geodesy
 
 --======================================
 --TODO: check correctness (Merkator, Molodensky)
+--TODO: newEllipsoid to define own ellipsoid object
+--TODO: ellipsoid.__tostring

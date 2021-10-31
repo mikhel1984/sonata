@@ -150,7 +150,7 @@ print(a)
 
 --	LOCAL
 
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 --	MODULE
 

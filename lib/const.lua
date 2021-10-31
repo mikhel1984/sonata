@@ -112,23 +112,25 @@ const.about[_math_.e] = {"math.e", "Base of the natural logarithm.", MATH}
 --- Make value "constant".
 --  @param name Name of constant.
 --  @param val  Value of constant.
-const.add = function (name,val)
+const.add = function (name,val,unit)
   -- add only new constants
   if _user_[name] then error('Cannot modify '..tostring(name)) end
   _user_[name] = val
+  _user_[name..'_u'] = unit
   return 'Done'
 end
-const.about[const.add] = {'add(name,value)','Create new constant.'}
+const.about[const.add] = {'add(name,value[,units])','Create new constant.'}
 
 --- Remove existing constant.
 --  @param name Name of constant.
 const.remove = function (name)
   if _user_[name] then
     _user_[name] = nil
+    _user_[name..'_u'] = nil
     return 'Done'
   end
 end
-const.about[const.remove] = {'remove(name)','Delete constant.'}
+const.about[const.remove] = {'remove(name)','Delete user-defined constant.'}
 
 -- Make objects "immutable"
 setmetatable(const,       {__newindex=modifyError, __index = function (t,k) return _user_[k] end})

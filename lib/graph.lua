@@ -200,7 +200,7 @@ graph.lc_struct = require 'lib.struct'
 --- Constructor example
 --  @param t Some value.
 --  @return New object of graph.
-graph.new = function (self,t)
+graph._new_ = function (self,t)
   local o = {}
   -- add nodes
   for _,elt in ipairs(t) do graph.add(o,elt) end
@@ -251,7 +251,7 @@ end
 graph.about[graph.remove] = {"remove(G,e)", "Remove node or edge from the graph G. Node is a single name, edge - table of names."}
 
 -- simplify constructor call
-setmetatable(graph, {__call = function (self,v) return graph:new(v) end})
+setmetatable(graph, {__call = function (self,v) return graph:_new_(v) end})
 graph.Graph = 'Graph'
 graph.about[graph.Graph] = {"Graph(t)", "Create new graph.", help.NEW}
 
@@ -295,7 +295,7 @@ graph.about[graph.edges] = {"edges(G)", "List of graph edges."}
 --  @param G Graph.
 --  @return Deep copy of the graph.
 graph.copy = function (G)
-  local res = graph:new({})
+  local res = graph:_new_({})
   for k,v in pairs(G) do
     local tmp = {}
     for n,w in pairs(v) do tmp[n] = w end

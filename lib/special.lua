@@ -66,7 +66,7 @@ ans = Spec.dawson(3.3)       --3> 0.1598
 
 --	LOCAL
 
-local Ver = require "lib.versions"
+local Ver = require("lib.utils").versions
 
 -- constants for gamma approximation
 local k_gamma = {676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,
