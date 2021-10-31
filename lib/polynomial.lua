@@ -732,6 +732,7 @@ polynomial.ppval = function (tP, x, n)
 end
 polynomial.about[polynomial.ppval] = {"ppval(tP,x[,n]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT} 
 
+-- Simplify ppval call.
 polynomial._metappval_ = {__call = polynomial.ppval}
 
 setmetatable(polynomial, {__call = function (self, t) return polynomial._reorder_(t) end})

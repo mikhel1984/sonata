@@ -45,12 +45,17 @@ a = {a=1,b=2, 3,4,5}
 Print(a, 0.123)
 
 -- generate 'sequence'
-b = Range(3)
+b = Range(1,3)
 ans = b[3]                    --> 3
 
 -- even numbers
 b = Range(2,10,2)
 ans = b[2]                    --> 4
+
+-- linear transformations
+-- with range Range objects
+b2 = 2*b + 4
+ans = b2[1]                   --> 8
 
 -- calculate function values
 c = Map(sin, b)
@@ -271,23 +276,63 @@ function Type(t)
 end
 About[Type] = {'Type(t)', 'Show type of the object.', SonataHelp.OTHER}
 
---- Generate sequence of values.
---  @param from Beginning of range (default is 1).
---  @param to End of range.
---  @param step Step value (default is 1).
---  @return Table with numbers.
-Range = function (from,to,step)
-  step = step or 1
-  if not to then to = from; from = 1 end
-  assert((to-from)*step > 0)
-  local res = {}
-  for t = from,to,step do res[#res+1] = t end
-  if math.abs(res[#res] - to) >= math.abs(step)*0.1 then
-    res[#res+1] = to
+-- Methametods for the range of numbers.
+local metharange = { type = 'range' }
+metharange.__index = metharange
+
+--- Add number (shift range).
+--  @param d Any number.
+--  @param tR Range table.
+--  @return Shifted range table.
+metharange.__add = function (d, tR)
+  if type(tR) == 'number' then
+    return metharange.__add(tR, d)
+  else
+    local res = {}
+    for _,v in ipairs(tR) do res[#res+1] = v + d end
+    return setmetatable(res, metharange)
   end
-  return res
 end
-About[Range] = {'Range([from=1,]to[,step=1])','Generate table with sequence of numbers.', SonataHelp.OTHER}
+
+--- Multiply to number (expand range).
+--  @param d Any number.
+--  @param tR Range table.
+--  @return Expanded range table.
+metharange.__mul = function (d, tR)
+  if type(tR) == 'number' then 
+    return metharange.__mul(tR, d)
+  else 
+    local res = {}
+    for _, v in ipairs(tR) do res[#res+1] = v * d end
+    return setmetatable(res, metharange)
+  end
+end
+
+--- Pretty print.
+--  @param tR Range table.
+--  @return String with the table representation.
+metharange.__tostring = function (tR)
+  return string.format("{%s}", 
+    (#tR <= 3) and table.concat(tR, ',') 
+               or string.format("%d,%d..%d", tR[1], tR[2], tR[#tR]))
+end
+
+--- Generate sequence of values.
+--  @param dBegin Beginning of range.
+--  @param dEnd End of range.
+--  @param dStep Step value (default is 1).
+--  @return Table with numbers, Range object.
+Range = function (dBegin, dEnd, dStep)
+  dStep = dStep or 1
+  assert((dEnd - dBegin) * dStep > 0)
+  local res = {}
+  for t = dBegin,dEnd,dStep do res[#res+1] = t end
+  if math.abs(res[#res] - dEnd) >= math.abs(dStep)*0.1 then
+    res[#res+1] = dEnd 
+  end
+  return setmetatable(res, metharange)
+end
+About[Range] = {'Range(dBegin,dEnd[,dStep=1])','Generate table with sequence of numbers.', SonataHelp.OTHER}
 
 --- Generate list of function values.
 --  @param fn Function to apply.
