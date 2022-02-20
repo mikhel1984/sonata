@@ -90,7 +90,7 @@ local Ver = require("lib.utils").versions
 --- Check object type.
 --  @param t Object.
 --  @return True if the object is array.
-local function isarray(t) return type(t) == 'table' and t.isarray end
+local function isarray(v) return type(v) == 'table' and v.isarray end
 
 --	INFO
 
@@ -173,12 +173,12 @@ array.about[array.get] = {"get(A,tInd)", "Get array element."}
 --- Set new value.
 --  @param A Array object.
 --  @param tInd Element index (table).
---  @param val New value.
-array.set = function (A, tInd, val)
+--  @param v New value.
+array.set = function (A, tInd, v)
   if not array._isIndex_(A, tInd) then error("Wrong index!") end
-  A[array._pos_(A,tInd)] = val 
+  A[array._pos_(A,tInd)] = v 
 end
-array.about[array.set] = {"set(A,tInd,val)", "Set value to the array."}
+array.about[array.set] = {"set(A,tInd,v)", "Set value to the array."}
 
 --- Get array copy.
 --  @param A Array object.
@@ -206,25 +206,25 @@ end
 array.about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTHER}
 
 --- Apply function of 2 arguments.
---  @param func Function with 2 arguments.
+--  @param fn Function with 2 arguments.
 --  @param A1 First array object.
 --  @param A2 Second array object.
 --  @return New array where each element is result of the function evaluation func(A1[i],A2[i]).
-array._apply2_ = function (func, A1, A2)
+array._apply2_ = function (fn, A1, A2)
   if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
   local res, v = array:_new_(Ver.move(A1.size, 1, #A1.size, 1, {}))   -- prepare empty copy
   for i = 1, array.capacity(A1) do 
-    v = func(A1[i] or 0, A2[i] or 0)                      -- elements can be empty
+    v = fn(A1[i] or 0, A2[i] or 0)                      -- elements can be empty
     if v ~= 0 then res[i] = v end                        -- save nonzero values
   end
   return res
 end
 
 --- Apply function of several arguments.
---  @param func Function with N arguments.
+--  @param fn Function with N arguments.
 --  @param ... List of arrays.
 --  @return New array where each element is result of the function evaluation.
-array.apply = function (func, ...)
+array.apply = function (fn, ...)
   local arg = {...}
   -- check arguments
   local eq, a1 = array.isEqual, arg[1]
@@ -238,26 +238,26 @@ array.apply = function (func, ...)
     -- collect
     for k = 1,#arg do v[k] = arg[k][i] or 0 end
     -- evaluate
-    local p = func(upack(v))
+    local p = fn(upack(v))
     if p ~= 0 then res[i] = p end
   end
   return res
 end
-array.about[array.apply] = {"apply(func, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
+array.about[array.apply] = {"apply(fn, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
 
 --- Apply function of 1 argument.
 --  @param A Array object.
---  @param func Function with 1 argument.
---  @return New array where each element is result of the function evaluation func(a[i]).
-array.map = function (A, func)
+--  @param fn Function with 1 argument.
+--  @return New array where each element is result of the function evaluation fn(a[i]).
+array.map = function (A, fn)
   local res, v = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))
   for i = 1, array.capacity(A) do
-    v = func(A[i] or 0)                   -- elements can be empty
-    if v ~= 0 then res[i] = v end         -- save nonzero values
+    v = fn(A[i] or 0)                   -- elements can be empty
+    if v ~= 0 then res[i] = v end       -- save nonzero values
   end
   return res
 end
-array.about[array.map] = {"map(A,func)", "Apply function of 1 argument. Return new array.", help.OTHER}
+array.about[array.map] = {"map(A,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
 
 --- A1 + A2
 --  @param A1 First array.
@@ -368,20 +368,20 @@ array.about[array.sub] = {"sub(A,tInd1,tInd2)", "Return sub array restricted by 
 --- Concatenate 2 arrays along given axes.
 --  @param A1 First array.
 --  @param A2 Second array.
---  @param nAxis Axis number.
+--  @param iAxis Axis number.
 --  @return New concatenated array.
-array.concat = function (A1, A2, nAxis)
+array.concat = function (A1, A2, iAxis)
   -- check size
-  if not (nAxis > 0 and nAxis <= #A1.size) then error("Wrong axis!") end
+  if not (iAxis > 0 and iAxis <= #A1.size) then error("Wrong axis!") end
   for i = 1, #A1.size do 
-    if not (A1.size[i] == A2.size[i] or i == nAxis) then error("Different size!") end
+    if not (A1.size[i] == A2.size[i] or i == iAxis) then error("Different size!") end
   end
   -- prepare new size
   local newsize = Ver.move(A1.size, 1, #A1.size, 1, {})
-  newsize[nAxis] = newsize[nAxis] + A2.size[nAxis]
+  newsize[iAxis] = newsize[iAxis] + A2.size[iAxis]
   -- combine
   local res, ind1, ind2 = array:_new_(newsize), {}, {}
-  local edge = A1.size[nAxis]
+  local edge = A1.size[iAxis]
   local K, S = res.k, res.size
   local conv = array._pos_
   for count = 1, array.capacity(res) do
@@ -391,13 +391,13 @@ array.concat = function (A1, A2, nAxis)
       ind2[i] = ind1[i]
     end
     -- get value
-    local second = ind1[nAxis] > edge
-    ind2[nAxis] = second and (ind2[nAxis]-edge) or ind2[nAxis]
+    local second = ind1[iAxis] > edge
+    ind2[iAxis] = second and (ind2[iAxis]-edge) or ind2[iAxis]
     res[conv(res,ind1)] = second and A2[conv(A2,ind2)] or A1[conv(A1,ind2)]
   end
   return res 
 end
-array.about[array.concat] = {"concat(A1,A2,nAxis)", "Array concatenation along the given axis."}
+array.about[array.concat] = {"concat(A1,A2,iAxis)", "Array concatenation along the given axis."}
 
 --- Method #
 --  @param A Array object.
@@ -427,10 +427,10 @@ array.next = function (A)
   local count, S, K, len = 0, A.size, A.k, array.capacity(A)
   return function ()
     if count == len then return nil, nil end
-    local res = {}
-    for i = 1, #S do res[i] = math.modf(count/K[i]) % S[i]+1 end
+    local index = {}
+    for i = 1, #S do index[i] = math.modf(count/K[i]) % S[i]+1 end
     count = count + 1
-    return res, A[count]
+    return index, A[count]
   end
 end
 array.about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}
