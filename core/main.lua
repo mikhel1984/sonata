@@ -69,15 +69,22 @@ ans = math.deg(_pi)
 -- prepare file name
 nm = os.tmpname()
 
--- save table 
+-- dsv write 
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
 DsvWrite(nm, t, ';')
 
--- read table from file
+-- dsv read
 -- with separator ';'
 tt = DsvRead(nm, ';')
 ans = tt[2][2]                --> 5
+
+-- csv write by columns
+DsvWrite(nm, t, ',', true)
+
+-- csv read by columns
+tt = DsvRead(nm, ',', true)
+ans = tt[1][3]                --> 3
 
 -- read table from file
 f = io.open(nm,'w')
@@ -381,12 +388,26 @@ end
 --  @param tbl Lua table.
 --  @param fName File name.
 --  @param delim Delimiter, default is coma.
-DsvWrite = function (fName, tbl, delim)
+DsvWrite = function (fName, tbl, delim, bCol)
   local f = assert(io.open(fName,'w'))
   delim = delim or ','
-  for _,v in ipairs(tbl) do
-    if type(v) == 'table' then v = table.concat(v,delim) end
-    f:write(v,'\n')
+  if bCol then
+    -- by columns
+    if type(tbl[1]) == 'table' then
+      for r = 1,#tbl[1] do
+        local tmp = {}
+        for c = 1,#tbl do tmp[#tmp+1] = tbl[c][r] end
+        f:write(table.concat(tmp,delim),'\n')
+      end
+    else
+      for r = 1,#tbl do f:write(tbl[i],'\n') end
+    end
+  else
+    -- by rows
+    for _,v in ipairs(tbl) do
+      if type(v) == 'table' then v = table.concat(v,delim) end
+      f:write(v,'\n')
+    end
   end
   f:close()
   io.write('Done\n')
@@ -397,21 +418,32 @@ About[DsvWrite] = {"DsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimit
 --  @param fName File name.
 --  @param delim Delimiter, default is coma.
 --  @return Lua table with data.
-DsvRead = function (fName, delim)
+DsvRead = function (fName, delim, bCol)
   local f = assert(io.open(fName, 'r'))
-  local Test = require('core.test')
   delim = delim or ','
+  local templ = '([^'..delim..']+)'
   local res = {}
   for s in f:lines('l') do
     -- read data
-    s = string.match(s,'^%s*(.*)%s*$')
+    if delim ~= '#' then
+      s = string.match(s, '([^#]+)')    -- skip comments
+    end
+    s = string.match(s,'^%s*(.*)%s*$')  -- strip line
     if #s > 0 then
       local tmp = {}
-      -- read string elements
-      for p in Test.split(s,delim) do
+      -- parse string
+      for p in string.gmatch(s, templ) do
         tmp[#tmp+1] = tonumber(p) or p
       end
-      res[#res+1] = tmp
+      -- save
+      if bCol then
+        if #res == 0 then  -- initialize
+          for i = 1,#tmp do res[#res+1] = {} end
+        end
+        for i = 1, #tmp do table.insert(res[i], tmp[i]) end
+      else
+        res[#res+1] = tmp
+      end
     end
   end
   f:close()
