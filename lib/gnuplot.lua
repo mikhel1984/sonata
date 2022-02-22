@@ -375,27 +375,27 @@ end
 gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Prepare arguments for table or matrix.
---  @param t Table, matrix or dat-file.
+--  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot._vecPrepare_ = function (t,...)
+gnuplot._vecPrepare_ = function (v,...)
   local ag = {...}
-  if type(t) == 'table' then
+  if type(v) == 'table' then
     if #ag == 0 then 
       -- show all
-      local n = t.ismatrix and t.cols or #t[1] -- column #
+      local n = v.ismatrix and v.cols or #v[1] -- column #
       ag = {}
       for i = 1,n do ag[#ag+1] = i end
     end
-    t = t.ismatrix and gnuplot._mat2file_(t) or gnuplot._tbl2file_(t)
+    v = v.ismatrix and gnuplot._mat2file_(v) or gnuplot._tbl2file_(v)
   end
-  return t, ag
+  return v, ag
 end
 
 --- Plot table of data file.
---  @param t Table, matrix or dat-file.
+--  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot.tplot = function (t,...)
-  local f, ag = gnuplot._vecPrepare_(t,...)
+gnuplot.tplot = function (v,...)
+  local f, ag = gnuplot._vecPrepare_(v,...)
   local cmd = gnuplot:_init_()
   if #ag > 1 then
     for i = 2,#ag do
@@ -408,7 +408,7 @@ gnuplot.tplot = function (t,...)
   cmd.grid = true
   cmd:show()
 end
-gnuplot.about[gnuplot.tplot] = {"tplot(t,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
+gnuplot.about[gnuplot.tplot] = {"tplot(v,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
 
 --- Polar plot.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
@@ -435,10 +435,10 @@ end
 gnuplot.about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,[x2,y2..]])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Polar plot table of data file.
---  @param t Table, matrix or dat-file.
+--  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot.tpolar = function (t,...)
-  local f, ag = gnuplot._vecPrepare_(t,...)
+gnuplot.tpolar = function (v,...)
+  local f, ag = gnuplot._vecPrepare_(v,...)
   local cmd = gnuplot:_init_()
   if #ag > 1 then
     for i = 2,#ag do
@@ -452,7 +452,7 @@ gnuplot.tpolar = function (t,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-gnuplot.about[gnuplot.tpolar] = {"tpolar(t,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
+gnuplot.about[gnuplot.tpolar] = {"tpolar(v,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 --- Surface plot.
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
@@ -478,10 +478,10 @@ end
 gnuplot.about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 --- Sufrace plot from table of data file.
---  @param t Table, matrix or dat-file.
+--  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot.tsurf = function (t,...)
-  local f, ag = gnuplot._vecPrepare_(t,...)
+gnuplot.tsurf = function (v,...)
+  local f, ag = gnuplot._vecPrepare_(v,...)
   local cmd = gnuplot:_init_()
   if #ag > 2 then
     for i = 3,#ag do
@@ -494,7 +494,7 @@ gnuplot.tsurf = function (t,...)
   cmd.surface = true
   cmd:show()
 end
-gnuplot.about[gnuplot.tsurf] = {"tsurf(t,[x1,y1,z1,z2..])", "Surface plot for table, matrix or data file. Optional elements define columns."}
+gnuplot.about[gnuplot.tsurf] = {"tsurf(v,[x1,y1,z1,z2..])", "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self) return gnuplot:_init_() end})
