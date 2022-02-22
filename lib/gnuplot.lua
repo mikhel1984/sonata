@@ -106,10 +106,10 @@ f:show()
 
 -- special commands
 local special = {
-  output = function (x) return string.format('set output "%s"', x) end,
-  xlabel = function (x) return string.format('set xlabel "%s"', x) end,
-  ylabel = function (x) return string.format('set ylabel "%s"', x) end,
-  title  = function (x) return string.format('set title "%s"', x) end,
+  output = function (s) return string.format('set output "%s"', s) end,
+  xlabel = function (s) return string.format('set xlabel "%s"', s) end,
+  ylabel = function (s) return string.format('set ylabel "%s"', s) end,
+  title  = function (s) return string.format('set title "%s"', s) end,
 }
 
 -- main commands
@@ -130,13 +130,13 @@ local function command (k,v)
 end
 
 --- Function option string
---  @param k Key.
+--  @param s Key.
 --  @param v Value.
 --  @return String, prepared for usage in function.
-local function prepare(k,v)
-  if k == 'title' then v = string.format('"%s"', v) end
-  if k == 'using' then v = table.concat(v,':') end
-  return k,v
+local function prepare(s,v)
+  if s == 'title' then v = string.format('"%s"', v) end
+  if s == 'using' then v = table.concat(v,':') end
+  return s,v
 end
 
 -- Quick plot category
@@ -192,18 +192,18 @@ end
 
 --- Save function result to tmp file.
 --  @param fn Lua function.
---  @param base Range and step.
+--  @param tBase Range and step.
 --  @return File name.
-gnuplot._fn2file_ = function (fn,base)
+gnuplot._fn2file_ = function (fn,tBase)
   local name = os.tmpname()
-  local xl = base.xrange and base.xrange[1] or (-10)
-  local xr = base.xrange and base.xrange[2] or 10
-  local N = base.samples or 100
+  local xl = tBase.xrange and tBase.xrange[1] or (-10)
+  local xr = tBase.xrange and tBase.xrange[2] or 10
+  local N = tBase.samples or 100
   local dx = (xr-xl)/N
   local f = io.open(name, 'w')
-  if base.surface then
-    local yl = base.yrange and base.yrange[1] or (-10)
-    local yr = base.yrange and base.yrange[2] or 10
+  if tBase.surface then
+    local yl = tBase.yrange and tBase.yrange[1] or (-10)
+    local yr = tBase.yrange and tBase.yrange[2] or 10
     local dy = (yr-yl)/N
     for x = xl,xr,dx do
       for y = yl,yr,dy do f:write(x,' ',y,' ',fn(x,y),'\n') end
@@ -221,13 +221,13 @@ end
 --  @param t Table with function definition.
 --  @param base Argument range.
 --  @return String representation of the plot command.
-gnuplot._graph_ = function (t,base)
+gnuplot._graph_ = function (t,tBase)
   -- function/file name
   local fn, str, nm = t[1], ''
   if type(fn) == 'table' then
     nm = fn.ismatrix and gnuplot._mat2file_(fn) or gnuplot._tbl2file_(fn)
   elseif type(fn) == 'function' then
-    nm = gnuplot._fn2file_(fn,base)
+    nm = gnuplot._fn2file_(fn,tBase)
   else -- type(fn) == 'string' !!
     nm = fn
   end
@@ -319,14 +319,15 @@ end
 --- Save one or two lists into tmp file
 --  @param t1 First Lua table (list).
 --  @param t2 Second Lua table (list) or nil.
+--  @param fn Function of two arguments.
 --  @return File name.
-gnuplot._lst2file_ = function (t1,t2,t3)
+gnuplot._lst2file_ = function (t1,t2,fn)
   local name = os.tmpname()
   local f = io.open(name, 'w')
-  if t3 then -- must be function
+  if fn then -- must be function
     for _,v1 in ipairs(t1) do
       for _,v2 in ipairs(t2) do
-        f:write(v1,' ',v2,' ',t3(v1,v2),'\n')
+        f:write(v1,' ',v2,' ',fn(v1,v2),'\n')
       end
     end
   elseif t2 then 
