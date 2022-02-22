@@ -110,27 +110,28 @@ const.about[_math_.pi] = {"math.pi", "Ratio of a circle's circumference to its d
 const.about[_math_.e] = {"math.e", "Base of the natural logarithm.", MATH}
 
 --- Make value "constant".
---  @param name Name of constant.
+--  @param sName Name of constant.
 --  @param val  Value of constant.
-const.add = function (name,val,unit)
+--  @param sUunit String with units.
+const.add = function (sName,val,sUnit)
   -- add only new constants
-  if _user_[name] then error('Cannot modify '..tostring(name)) end
-  _user_[name] = val
-  _user_[name..'_u'] = unit
+  if _user_[sName] then error('Cannot modify '..tostring(sName)) end
+  _user_[sName] = val
+  _user_[sName..'_u'] = sUnit
   return 'Done'
 end
-const.about[const.add] = {'add(name,value[,units])','Create new constant.'}
+const.about[const.add] = {'add(sName,value[,sUnits])','Create new constant.'}
 
 --- Remove existing constant.
---  @param name Name of constant.
-const.remove = function (name)
-  if _user_[name] then
-    _user_[name] = nil
-    _user_[name..'_u'] = nil
+--  @param sName Name of constant.
+const.remove = function (sName)
+  if _user_[sName] then
+    _user_[sName] = nil
+    _user_[sName..'_u'] = nil
     return 'Done'
   end
 end
-const.about[const.remove] = {'remove(name)','Delete user-defined constant.'}
+const.about[const.remove] = {'remove(sName)','Delete user-defined constant.'}
 
 -- Make objects "immutable"
 setmetatable(const,       {__newindex=modifyError, __index = function (t,k) return _user_[k] end})
