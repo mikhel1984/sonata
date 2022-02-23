@@ -31,15 +31,14 @@ ans = math.pi  --2> 355/113
 -- use letters for convenience
 local keys = {A=1, B=2, C=3, D=4}
 
+-- tolerance of comparison
+local TOL = 1E-8
+
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is 'lens'.
 local function islens(v) return type(v)=='table' and v.islens end
 
---- Check matrix type.
---  @param L Lens object.
---  @return True if the matrix is unit.
-local function isUnit(L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < 1E-6 end
 
 --	INFO
 
@@ -53,6 +52,8 @@ local about = help:new("Matrix methods in paraxial optics")
 local lens = {
 -- mark
 type = 'lens', islens = true,
+-- {A,B,C,D}
+keys = keys,
 }
 
 --- Call unknown key.
@@ -73,15 +74,22 @@ lens.__newindex = function (t,k,v)
   end
 end
 
+--- Check matrix type.
+--  @param L Lens object.
+--  @return True if the matrix is unit.
+lens.isUnit = function (L) 
+  return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL 
+end
+
 --- Object constructor.
 --  @param t ABCD table.
 --  @return 'Lens' object.
 lens._init_ = function(self,t) return setmetatable(t,self) end
 
---- Make component for transition.
+--- Make component for translation.
 --  @param dt Distance.
 --  @param dn Refractive index.
---  @return Transition matrix.
+--  @return Translational matrix.
 lens.trans = function (dt, dn)
   return lens:_init_({ 1, dt/dn, 0, 1 })
 end
@@ -105,7 +113,7 @@ end
 --- Make component for a curved mirror.
 --  @param dr Radius of a mirror surface.
 --  @param dn Refractive index.
---  @return Curved mirror matrix.
+--  @return Reflection matrix.
 lens.mirror = function (dr, dn)
   return lens:_init_({ 1, 0, 2*dn/dr, 1 })
 end
@@ -116,12 +124,24 @@ end
 --  @param L2 Second object.
 --  @return Concatenated object.
 lens.__concat = function (L1, L2)
-  if not (isUnit(L1) and isUnit(L2)) then error("Wrong system matrices") end
+  if not (lens.isUnit(L1) and lens.isUnit(L2)) then error("Wrong system matrices") end
   return lens:_init_({
     L2[1]*L1[1]+L2[2]*L1[3], L2[1]*L1[2]+L2[2]*L1[4],
     L2[3]*L1[1]+L2[4]*L1[3], L2[3]*L1[2]+L2[4]*L1[4]
   })
 end
+
+--- Compare two objects.
+--  @param L1 First object.
+--  @param L2 Second object.
+--  @return True if the objects are equal.
+lens.__eq = function (L1, L2)
+  return math.abs(L1[1]-L2[1]) < TOL and math.abs(L1[2]-L2[2]) < TOL 
+     and math.abs(L1[3]-L2[3]) < TOL and math.abs(L1[4]-L2[4]) < TOL
+end
+
+lens.operations = 'operations'
+about[lens.operations] = {lens.operations, "L1 == L2, L1 .. L2", help.META }
 
 --- String representation.
 --  @param L Lens object.
@@ -142,6 +162,37 @@ end
 -- Simplified call of transformation.
 lens.__call = lens.transform
 
+--- Transpose the component matrix.
+--  @param L Lens object.
+--  @return Transposed object.
+lens.T = function (L)
+  return lens:_init_({L[1], L[3], L[2], L[4]})
+end
+
+--- Find condition when fn(d).X == 0
+--  where X in {A,B,C,D}.
+--  @param fn System in form of function.
+--  @param ind Index of the matrix element. 
+--  @param d0 Initial estimation of the variable.
+--  @return The found parameter value.
+lens.solve = function (fn, ind, d0)
+  lens.ext_numeric = lens.ext_numeric or require('lib.numeric')
+  -- prepare 'equation'
+  local eqn = function (d)
+    local v = fn(d)
+    return v[ind]
+  end
+  -- try to solve
+  return lens.ext_numeric.Newton(eqn, d0)
+end
+
+--- Find the matrix determinant.
+--  @param L Lens object.
+--  @return Determinant value.
+lens.det = function (L)
+  return L[1]*L[4] - L[2]*L[3]
+end
+
 -- Create arbitrary object
 setmetatable(lens, {__call = function (self,t) 
   assert(#t == 4)
@@ -158,6 +209,48 @@ lens.copy = function (L)
 end
 about[lens.copy] = {"copy(L)", "Create a copy of the object."} 
 
+local mt_cardinal = {
+  -- mark
+  type = 'cardinal_points',
+  -- pretty pring
+  __tostring = function (self)
+    local txt = {}
+    txt[1] = 'From the input plane'
+    txt[2] = 'F1 at '..tostring(self[1]) 
+    txt[3] = 'H1 at '..tostring(self[2])
+    txt[4] = 'N1 at '..tostring(self[3]) 
+    txt[5] = 'From the output plane'
+    txt[6] = 'F2 at '..tostring(self[4])
+    txt[7] = 'H2 at '..tostring(self[5])
+    txt[8] = 'N2 at '..tostring(self[6])
+    return table.concat(txt, '\n')
+  end
+}
+
+--- Find cardinal points of the system.
+--  @param L Lens object.
+--  @param dn1 Input refractive index, default is 1.
+--  @param dn2 Output refractive index, default is 1.
+--  @return List of cardinal points location.
+lens.cardinal = function (L, dn1, dn2)
+  dn1 = dn1 or 1
+  dn2 = dn2 or 1
+  local txt, res = {}, {0,0,0;0,0,0}
+  local C = L[3]
+
+  local v = dn1 * L[4] / C      -- first focus point
+  res[1] = v 
+  res[2] = v - dn1 / C          -- first principal point 
+  res[3] = (L[4]*dn1 - dn2) / C -- first nodal point
+
+  v = -dn2 * L[1] / C           -- second focus point
+  res[4] = v
+  res[5] = v + dn2 / C          -- second principal point
+  res[6] = (dn1 - L[1]*dn2) / C -- second nodal point
+
+  return setmetatable(res, mt_cardinal)
+end
+
 -- Comment to remove descriptions
 lens.about = about
 
@@ -165,12 +258,3 @@ return lens
 
 --======================================
 
---[[
-n = 1.5
-a = lens.ref(0.2, 1, n) 
-b = lens.trans(0.005, n)
-c = lens.ref(-0.2, n, 1)
-
-sys = a..b..c
-print(sys(0.1, 0))
-]]

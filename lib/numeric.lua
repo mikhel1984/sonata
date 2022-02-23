@@ -91,10 +91,12 @@ local help = SonataHelp and (require "core.help") or {new=function () return {} 
 local numeric = {
 -- description
 about = help:new("Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL."),
+-- current tolerance
+TOL = 1E-3,
+-- max Newton algorithm attempts
+newton_max = 50,
 }
 
--- current tolerance
-numeric.TOL = 1e-3
 numeric.about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance.", "parameters"}
 
 --- Find root of equation at the given interval.
@@ -121,10 +123,11 @@ numeric.Newton = function (fn, d1)
   local h, k, x2 = 0.1, 0, d1
   repeat
     d1 = x2
-    x2 = d1 - fn(d1)*h/(fn(d1+h)-fn(d1))
+    local fd1 = fn(d1)
+    x2 = d1 - fd1*h/(fn(d1+h)-fd1)
     k, h = k+1, h*0.618
-    if k > 50 then error("Too many iterations!") end
-  until math.abs(fn(x2)-fn(d1)) < numeric.TOL 
+    if k > numeric.newton_max then error("Too many iterations!") end
+  until math.abs(fn(x2)-fd1) < numeric.TOL 
   return x2
 end
 numeric.about[numeric.Newton] = {"Newton(fn,d0)", "Find root of equation using Newton's rule with only one initial condition."}
