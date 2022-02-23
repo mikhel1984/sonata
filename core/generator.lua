@@ -77,7 +77,7 @@ ans = math.pi  --2> 355/113
 3L Check object type.
 --  @param t Object.
 --  @return True if the object is WORD2.
-local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
+local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
 
 --	INFO
 
@@ -134,7 +134,8 @@ return WORD2
   f = io.open(fName, 'w')
   f:write(txt)
   f:close()
-  io.write('File ', fName, ' is ready.\n')
+  io.write('File ', fName, ' is ready.\n',
+           "Add to the 'use' list in 'sonata.lua'.\n")
 end
 
 --================== HTML documentation ====================
