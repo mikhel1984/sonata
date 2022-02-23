@@ -87,7 +87,7 @@ lens.__concat = function (L1, L2)
 end
 
 lens.__tostring = function (L)
-  return string.format("A:%.2d B:%.2d\nC:%.2d D:%2d", L[1], L[2], L[3], L[4])
+  return string.format("A: %.2f   B: %.2f\nC: %.2f   D: %.2f", L[1], L[2], L[3], L[4])
 end
 
 -- dy position
@@ -107,16 +107,25 @@ lens.__call = lens.transform
 --  It is good idea to define method for the copy creation.
 --  @param t Initial object.
 --  @return Copy of the object.
-lens.copy = function (t)
+lens.copy = function (L)
   -- some logic
-  return lens:new(argument)
+  return lens:_new_({L[1],L[2],L[3],L[4]})
 end
-lens.about[lens.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
+lens.about[lens.copy] = {"copy(L)", "Create a copy of the object."} -- third element is optional, default is 'base'
 
 -- Uncomment to remove descriptions
 --lens.about = nil
 
-return lens
+--return lens
 
 --======================================
---TODO: write new functions
+
+--[[
+n = 1.5
+a = lens.ref(0.2, 1, n) 
+b = lens.trans(0.005, n)
+c = lens.ref(-0.2, n, 1)
+
+sys = a..b..c
+print(sys(0.1, 0))
+]]
