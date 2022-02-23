@@ -49,6 +49,7 @@ use = {
   geodesy   = "Geo",
   gnuplot   = "Gp",
   graph     = "Graph",
+  lens      = "Lens",
   matrix    = "Mat",
   numeric   = "Num",
   polynomial = "Poly",

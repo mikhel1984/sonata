@@ -82,14 +82,14 @@ local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("WORD5")
 
 --	MODULE
 
 local WORD2 = {
 -- mark
 type = 'WORD2', isWORD2 = true,
--- description
-about = help:new("WORD5"),
 }
 -- methametods
 WORD2.__index = WORD2
@@ -107,7 +107,7 @@ end
 -- simplify constructor call
 setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
 WORD2.WORD3 = 'WORD3'
-WORD2.about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
+about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
 
 3L Method example.
 --  It is good idea to define method for the copy creation.
@@ -117,10 +117,10 @@ WORD2.copy = function (t)
   -- some logic
   return WORD2:new(argument)
 end
-WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
+about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
 
--- Uncomment to remove descriptions
---WORD2.about = nil
+-- Comment to remove descriptions
+WORD2.about = about
 
 return WORD2
 
