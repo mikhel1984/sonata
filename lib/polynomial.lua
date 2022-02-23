@@ -129,10 +129,10 @@ ans = p(0.5)                 --2> -0.512
 local Ver = require("lib.utils").versions
 
 -- Check object type.
-local function ispolynomial(x) return type(x) == 'table' and x.ispolynomial end
+local function ispolynomial(v) return type(v) == 'table' and v.ispolynomial end
 
 -- Return number in trivial case.
-local function numpoly(p) return #p == 0 and p[0] or p end
+local function numpoly(P) return #P == 0 and P[0] or P end
 
 --- Simplify polynomial, remove zeros from the begin.
 --  @param P Table of coefficients.
