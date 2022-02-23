@@ -39,7 +39,6 @@ local TOL = 1E-8
 --  @return True if the object is 'lens'.
 local function islens(v) return type(v)=='table' and v.islens end
 
-
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
@@ -80,6 +79,7 @@ end
 lens.isUnit = function (L) 
   return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL 
 end
+about[lens.isUnit] = {"isUnit(L)", "Check if the system matrix is unit.", help.OTHER}
 
 --- Object constructor.
 --  @param t ABCD table.
@@ -93,6 +93,7 @@ lens._init_ = function(self,t) return setmetatable(t,self) end
 lens.trans = function (dt, dn)
   return lens:_init_({ 1, dt/dn, 0, 1 })
 end
+about[lens.trans] = {"trans(dt,dn)", "Find translation matrix for the given distance and refractive index.", help.NEW}
 
 --- Make component for refraction.
 --  @param dr Radius of a surface.
@@ -102,6 +103,7 @@ end
 lens.ref = function (dr, dn1, dn2)
   return lens:_init_({ 1,  0, -(dn2-dn1)/dr, 1 })
 end
+about[lens.ref] = {"ref(dr,dn1,dn2)", "Find refraction matrix for the given radius of surface and input and output refractive indeces.", help.NEW}
 
 --- Make component for a thin lens.
 --  @param df Focal length.
@@ -109,6 +111,7 @@ end
 lens.thin = function (df)
   return lens:_init_({ 1, 0, -1/df, 1 })
 end
+about[lens.thin] = {"thin(df)", "Find the thin lens system matrix for the given focal distance.", help.NEW}
 
 --- Make component for a curved mirror.
 --  @param dr Radius of a mirror surface.
@@ -117,6 +120,7 @@ end
 lens.mirror = function (dr, dn)
   return lens:_init_({ 1, 0, 2*dn/dr, 1 })
 end
+about[lens.mirror] = {"mirror(dr,dn)", "Find reflection matrix for the given radius and refractive index.", help.NEW}
 
 --- Concatenate components along the ray trace.
 --  Equal to matrix product in the opposite order.
@@ -159,6 +163,7 @@ end
 lens.transform = function (L, dy, dV)
   return (L[1]*dy + L[2]*dV), (L[3]*dy + L[4]*dV)
 end
+about[lens.transform] = {"transform(L,dy,dV)", "Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to call L(dy,dV)."}
 -- Simplified call of transformation.
 lens.__call = lens.transform
 
@@ -168,6 +173,7 @@ lens.__call = lens.transform
 lens.T = function (L)
   return lens:_init_({L[1], L[3], L[2], L[4]})
 end
+about[lens.T] = {"T(L)", "Get the transposed system matrix.", help.OTHER}
 
 --- Find condition when fn(d).X == 0
 --  where X in {A,B,C,D}.
@@ -185,6 +191,7 @@ lens.solve = function (fn, ind, d0)
   -- try to solve
   return lens.ext_numeric.Newton(eqn, d0)
 end
+about[lens.solve] = {"solve(fn,ind,d0)", "Find condition when component with the given index is equal to 0, d0 is the initial assumption."}
 
 --- Find the matrix determinant.
 --  @param L Lens object.
@@ -192,6 +199,7 @@ end
 lens.det = function (L)
   return L[1]*L[4] - L[2]*L[3]
 end
+about[lens.det] = {"det(L)", "Find determinant of the system matrix.", help.OTHER}
 
 -- Create arbitrary object
 setmetatable(lens, {__call = function (self,t) 
@@ -209,6 +217,7 @@ lens.copy = function (L)
 end
 about[lens.copy] = {"copy(L)", "Create a copy of the object."} 
 
+-- explain the vector of cardinal points
 local mt_cardinal = {
   -- mark
   type = 'cardinal_points',
@@ -250,6 +259,7 @@ lens.cardinal = function (L, dn1, dn2)
 
   return setmetatable(res, mt_cardinal)
 end
+about[lens.cardinal] = {"cardinal(L[,dn1=1,dn2=1])", "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return list of distances.", help.OTHER}
 
 -- Comment to remove descriptions
 lens.about = about
