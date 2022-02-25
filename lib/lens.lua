@@ -17,12 +17,71 @@
 
 -- use 'lens'
 Lens = require 'lib.lens'
+-- external dependencies, can be loaded implicitly 
+Num = require 'lib.numeric' -- for root searching
 
--- example
-a = Lens()
-ans = a.type   -->  'lens'
+-- define a simple lense 
+n1 = 1      -- air 
+n2 = 1.56   -- glass 
+-- radius 200 mm, thickness 5 mm
+lens1 = Lens.ref(200,n1,n2)..Lens.trans(5,n2)..Lens.ref(-200,n2,n1) 
+ans = lens1:isUnit()          --> true
 
-ans = math.pi  --2> 355/113
+-- get matrix element
+ans = lens1.D                --2> 1
+
+-- find cardinal points 
+pts = lens1:cardinal() 
+ans = pts[1]                 --2> -177.76
+
+-- print points
+print(pts)
+
+-- object is located 250 mm to the left 
+-- from the lens, find position of 
+-- the image 
+d1 = 250
+fn = function (d2)
+  return Lens.trans(d1,n1)..lens1..Lens.trans(d2,n1) 
+end
+-- solve for B = 0, initial guess dist = 100
+d2 = Lens.solve(fn, Lens.key.B, 100)  
+ans = d2                     --2>  623.21
+
+-- check solution 
+-- assume the lens it thin 
+f = -pts[1]
+ans = 1/d1 + 1/d2            --2> 1/f
+
+-- ray transformation 
+y1 = 10          -- mm, height   
+V1 = n1 * 0.05   -- optical angle
+sys1 = fn(d2) 
+y2, V2 = sys1(y1,V1)
+ans = y2                     --2> -24.83
+
+-- from image to object 
+sys2 = sys1:inv()  -- transpose
+ans, _ = sys2(y2, V2)        --3> y1
+
+-- system matrix determinant
+ans = lens1:det()            --3> 1
+
+-- create thin lens
+lens2 = Lens.thin(f)
+_, V3 = lens1(y1,V1)
+_, ans = lens2(y1,V1)        --2> V3
+
+-- flat mirror 
+lens3 = Lens.mirror(math.huge, n1)
+_, ans = lens3(y1,V1)        --2> V1
+
+-- arbitrary system matrix 
+lens4 = Lens {1, 0, -0.5, 1} 
+print(lens4)
+
+-- make copy 
+ans = lens1:copy()            --> lens1
 
 --]]
 
@@ -52,7 +111,7 @@ local lens = {
 -- mark
 type = 'lens', islens = true,
 -- {A,B,C,D}
-keys = keys,
+key = keys,
 }
 
 --- Call unknown key.
@@ -167,13 +226,14 @@ about[lens.transform] = {"transform(L,dy,dV)", "Find the output ray position 'dy
 -- Simplified call of transformation.
 lens.__call = lens.transform
 
---- Transpose the component matrix.
+--- Inverse the component matrix.
 --  @param L Lens object.
---  @return Transposed object.
-lens.T = function (L)
-  return lens:_init_({L[1], L[3], L[2], L[4]})
+--  @return Inverted matrix.
+lens.inv = function (L)
+  -- assume the unit matrix
+  return lens:_init_({L[4], -L[2], -L[3], L[1]})
 end
-about[lens.T] = {"T(L)", "Get the transposed system matrix.", help.OTHER}
+about[lens.inv] = {"inv(L)", "Get the inverted system matrix.", help.OTHER}
 
 --- Find condition when fn(d).X == 0
 --  where X in {A,B,C,D}.
