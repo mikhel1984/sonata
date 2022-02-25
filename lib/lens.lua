@@ -76,9 +76,14 @@ _, ans = lens2(y1,V1)        --2> V3
 lens3 = Lens.mirror(math.huge, n1)
 _, ans = lens3(y1,V1)        --2> V1
 
+-- afocal system 
+m = 10
+lens4 = Lens.afocal(m) 
+ans, _ = lens4(y1,V1)        --2> m*y1
+
 -- arbitrary system matrix 
-lens4 = Lens {1, 0, -0.5, 1} 
-print(lens4)
+lens5 = Lens {1, 0, -0.5, 1} 
+print(lens5)
 
 -- make copy 
 ans = lens1:copy()            --> lens1
@@ -180,6 +185,14 @@ lens.mirror = function (dr, dn)
   return lens:_init_({ 1, 0, 2*dn/dr, 1 })
 end
 about[lens.mirror] = {"mirror(dr,dn)", "Find reflection matrix for the given radius and refractive index.", help.NEW}
+
+--- Make component for afocal system.
+--  @param dm Transverse magnification.
+--  @return Afocal matrix.
+lens.afocal = function (dm)
+  return lens:_init_({dm, 0, 0, 1/dm}) 
+end
+about[lens.afocal] = {"afocal(dm)", "Find matrix for the afocal system.", help.NEW}
 
 --- Concatenate components along the ray trace.
 --  Equal to matrix product in the opposite order.
