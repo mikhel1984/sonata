@@ -135,11 +135,11 @@ local function ispolynomial(v) return type(v) == 'table' and v.ispolynomial end
 local function numpoly(P) return #P == 0 and P[0] or P end
 
 --- Simplify polynomial, remove zeros from the begin.
---  @param P Table of coefficients.
+--  @param t Table of coefficients.
 --  @return Simplified polynomial.
-local function reduce (P)
-  while #P > 0 and P[#P] == 0 do table.remove(P) end
-  return P
+local function reduce (t)
+  while #t > 0 and t[#t] == 0 do table.remove(t) end
+  return t
 end
 
 --- Get sum of the table elements.
@@ -174,13 +174,13 @@ about = help:new("Operations with polynomials."),
 polynomial.__index = polynomial
 
 --- Correct arguments if need.
---  @param a First object
---  @param b Second object.
+--  @param va First object
+--  @param vb Second object.
 --  @return Two polynomial objects.
-polynomial._args_ = function (a,b)
-  a = ispolynomial(a) and a or polynomial:_init_({[0]=a})
-  b = ispolynomial(b) and b or polynomial:_init_({[0]=b})
-  return a, b
+polynomial._args_ = function (va,vb)
+  va = ispolynomial(va) and va or polynomial:_init_({[0]=va})
+  vb = ispolynomial(vb) and vb or polynomial:_init_({[0]=vb})
+  return va, vb
 end
 
 --- Initialize polynomial from table.
@@ -226,14 +226,14 @@ end
 --- Polynomial value.
 --  Can be called with ().
 --  @param P Polynomial.
---  @param x Variable.
+--  @param v Variable.
 --  @return Value in the given point.
-polynomial.val = function (P,x)
+polynomial.val = function (P,v)
   local res = P[#P] 
-  for i = #P-1, 0, -1 do res = res * x + P[i] end
+  for i = #P-1, 0, -1 do res = res * v + P[i] end
   return res
 end
-polynomial.about[polynomial.val] = {"val(P,x)", "Get value of polynomial P in point x."}
+polynomial.about[polynomial.val] = {"val(P,v)", "Get value of polynomial P in point x."}
 
 -- simplify call
 polynomial.__call = function (p,x) return polynomial.val(p,x) end
@@ -313,16 +313,16 @@ end
 
 --- P ^ n
 --  @param P Polynomial object.
---  @param n Positive integer power.
+--  @param N Positive integer power.
 --  @return Polynomial in given power.
-polynomial.__pow = function (P,n)
-  n = assert(Ver.toInteger(n), "Integer power is expected!")
-  if n <= 0 then error("Positive power is expected!") end
+polynomial.__pow = function (P,N)
+  N = assert(Ver.toInteger(N), "Integer power is expected!")
+  if N <= 0 then error("Positive power is expected!") end
   local res, acc = polynomial:_init_({[0]=1}), polynomial.copy(P)
-  while n >= 1 do
-    if n % 2 == 1 then res = polynomial.__mul(res,acc) end
-    if n ~= 1 then acc = polynomial.__mul(acc,acc) end
-    n = math.modf(n / 2)
+  while N >= 1 do
+    if N % 2 == 1 then res = polynomial.__mul(res,acc) end
+    if N ~= 1 then acc = polynomial.__mul(acc,acc) end
+    N = math.modf(N / 2)
   end
   return res
 end
@@ -362,14 +362,14 @@ polynomial.about[polynomial.der] = {"der(P)", "Calculate derivative of polynomia
 --  @param P Initial polynomial.
 --  @param x0 Free coefficient.
 --  @return Integral.
-polynomial.int = function (P,x0)
-  local int = {[0] = (x0 or 0)}
+polynomial.int = function (P,d0)
+  local int = {[0] = (d0 or 0)}
   for i = 1, #P+1 do
     int[i] = P[i-1] / i
   end
   return polynomial:_init_(int)
 end
-polynomial.about[polynomial.int] = {"int(P[,x0=0])", "Calculate integral, x0 - free coefficient."}
+polynomial.about[polynomial.int] = {"int(P[,d0=0])", "Calculate integral, d0 - free coefficient."}
 
 --- Simplify call P * (x - v), inplace
 --  @param P Polynomial object.
@@ -413,16 +413,16 @@ end
 
 --- Represent polynomial in "natural" form.
 --  @param P Source polynomial.
---  @param var String variable (default is <code>x</code>).
+--  @param s String variable (default is 'x').
 --  @return String with traditional form of equation.
-polynomial.str = function (P,var)
-  var = var or 'x'
+polynomial.str = function (P,s)
+  s = s or 'x'
   local res, a, b = {}
   for i = #P, 1, -1 do
     a, b = P[i], P[i-1]
     if a ~= 0 then
       if a ~= 1 then res[#res+1] = tostring(a)..'*' end
-      res[#res+1] = var
+      res[#res+1] = s
       if i > 1 then res[#res+1] = '^'..tostring(i) end
     end
     if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
@@ -433,20 +433,20 @@ end
 
 --- Find closest root using Newton-Rapson technique
 --  @param P Source polynomial.
---  @param x0 Initial value of the root (optional).
---  @param epx Tolerance
+--  @param d0 Initial value of the root (optional).
+--  @param de Tolerance
 --  @return Found value and flag about its correctness.
-polynomial._NR_ = function (P, x0, eps)
+polynomial._NR_ = function (P, d0, de)
   -- prepare variables
   local dp, max = polynomial.der(P), 30
   local val = polynomial.val
   for i = 1, max do
-    local dx = val(P,x0) / val(dp,x0) 
-    if (type(dx) == 'number' and math.abs(dx) or dx:abs()) <= eps then
-      return true, x0
+    local dx = val(P,d0) / val(dp,d0) 
+    if (type(dx) == 'number' and math.abs(dx) or dx:abs()) <= de then
+      return true, d0
     else
       -- next approximation
-      x0 = x0 - dx
+      d0 = d0 - dx
     end
   end
   return false
@@ -481,7 +481,7 @@ polynomial.real = function (P)
   end
   return res, pp
 end
-polynomial.about[polynomial.real] = {"real(p)", "Find real roots of the polynomial.", help.OTHER}
+polynomial.about[polynomial.real] = {"real(P)", "Find real roots of the polynomial.", help.OTHER}
 
 --- Find roots of 2nd order polynomial.
 --  @param P Source polynomial.
@@ -556,30 +556,30 @@ polynomial.about[polynomial.roots] = {"roots(P)", "Find all the polynomial roots
 --  @param Y Set of dependent variables.
 --  @param ord Polynomial order.
 --  @return Polynomial object.
-polynomial.fit = function (X,Y,ord)
-  if not (ord > 0 and Ver.mathType(ord) == 'integer') then error('Wrong order!') end
-  if #X ~= #Y then error('Wrong data size!') end
-  if #X <= ord then error('Too few points!') end
+polynomial.fit = function (tX,tY,N)
+  if not (N > 0 and Ver.mathType(N) == 'integer') then error('Wrong order!') end
+  if #tX ~= #tY then error('Wrong data size!') end
+  if #tX <= N then error('Too few points!') end
   -- find sums
-  local acc = Ver.move(X,1,#X,1,{})     -- accumulate powers
+  local acc = Ver.move(tX,1,#tX,1,{})     -- accumulate powers
   local sX, sY = {}, {}              -- accumulate sums
-  local nY = ord
-  sY[nY+1] = getSum(Y) 
-  for nX = 2*ord,1,-1 do
+  local nY = N 
+  sY[nY+1] = getSum(tY) 
+  for nX = 2*N,1,-1 do
     sX[nX] = getSum(acc)
-    if nY > 0 then sY[nY] = getSum(acc, Y); nY = nY-1 end
+    if nY > 0 then sY[nY] = getSum(acc, tY); nY = nY-1 end
     if nX > 1 then
-      for i = 1,#acc do acc[i] = acc[i]*X[i] end
+      for i = 1,#acc do acc[i] = acc[i]*tX[i] end
     end -- if
   end -- for
-  sX[#sX+1] = #X
+  sX[#sX+1] = #tX
   -- prepare matrix, reuse accumulator
-  for k = 1,ord+1 do
+  for k = 1,N+1 do
     local mk = {}
-    for j = 1, ord+1 do mk[j] = sX[k+j-1] end
+    for j = 1, N+1 do mk[j] = sX[k+j-1] end
     acc[k] = mk
   end
-  for k = ord+2,#acc do acc[k] = nil end
+  for k = N+2,#acc do acc[k] = nil end
   -- add sums to the last "column"
   for i = 1,#acc do table.insert(acc[i],sY[i]) end
   -- solve
@@ -587,57 +587,57 @@ polynomial.fit = function (X,Y,ord)
   local mat = polynomial.ext_matrix
   local gaus = mat.rref(mat(acc))
   local res = {}
-  for i = 1,ord+1 do res[i] = gaus:get(i,-1) end
+  for i = 1,N+1 do res[i] = gaus:get(i,-1) end
   return polynomial._reorder_(res)
 end
-polynomial.about[polynomial.fit] = {"fit(X,Y,ord)", "Find polynomial approximation for the line.", FIT}
+polynomial.about[polynomial.fit] = {"fit(tX,tY,N)", "Find polynomial approximation for the line.", FIT}
 
 --- Find interpolation polinomial in the Lagrange form.
 --  @param X Set of variables.
 --  @param Y Set of variables.
 --  @return Interpolation polynomial.
-polynomial.lagrange = function (X,Y)
-  if #X ~= #Y then error('Wrong data size!') end
+polynomial.lagrange = function (tX,tY)
+  if #tX ~= #tY then error('Wrong data size!') end
   local res = polynomial:_init_({[0]=0})
-  for i = 1,#X do
+  for i = 1,#tX do
     -- find basis polynomial
     local p = polynomial:_init_({[0]=1})
-    local den, v = 1, X[i]
-    for j = 1,#Y do
+    local den, v = 1, tX[i]
+    for j = 1,#tY do
       if i ~= j then
-        polynomial._multXv_(p, X[j])
-        den = den * (v - X[j])
+        polynomial._multXv_(p, tX[j])
+        den = den * (v - tX[j])
       end
     end
     -- add
-    v = Y[i] / den
+    v = tY[i] / den
     for j = 0,#p do
       res[j] = (res[j] or 0) + p[j]*v
     end
   end
   return numpoly(reduce(res))
 end
-polynomial.about[polynomial.lagrange] = {"lagrange(X,Y)", "Find interpolation polynomial in the Lagrange form.", FIT}
+polynomial.about[polynomial.lagrange] = {"lagrange(tX,tY)", "Find interpolation polynomial in the Lagrange form.", FIT}
 
 --- Find Taylor series.
---  @param x Argument value.
---  @param f Function value in x.
---  @param ... Sequence of derivatives f', f'' etc.
+--  @param v Argument value.
+--  @param vF Function value in v.
+--  @param ... Sequence of derivatives fn', fn'' etc.
 --  @return Corresponding polynomial.
-polynomial.taylor = function (x,f,...)
-  local res = polynomial:_init_({[0]=f})
+polynomial.taylor = function (v,vF,...)
+  local res = polynomial:_init_({[0]=vF})
   local p, k = polynomial:_init_({[0]=1}), 1
-  for i,v in ipairs({...}) do
-    polynomial._multXv_(p, x)
+  for i,x in ipairs({...}) do
+    polynomial._multXv_(p, v)
     k = k * i
-    local w = v / k
+    local w = x / k
     for j = 0, #p do
       res[j] = (res[j] or 0) + w * p[j]
     end
   end
   return numpoly(res)
 end
-polynomial.about[polynomial.taylor] = {"taylor(x,f[,f',f''..])", "Get Taylor series.", FIT}
+polynomial.about[polynomial.taylor] = {"taylor(v,vF[,vF',vF''..])", "Get Taylor series.", FIT}
 
 --- Cubic spline data interpolation.
 --  Use 'natural' boundary conditions. 
@@ -710,27 +710,27 @@ polynomial.about[polynomial.lin] = {"lin(tX,tY[,v0=0,vN=v0])", "Linear data inte
 --  @param x Query point.
 --  @param n Index of polynomial in the table (optional).
 --  @return Found value and the polynomial index.
-polynomial.ppval = function (tP, x, n)
-  if n then
-    return tP[n][2](x), n
+polynomial.ppval = function (tP, d, N)
+  if N then
+    return tP[N][2](d), N
   else
     -- find index n
     local up, low = #tP-1, 1
-    if x <= tP[low][1] then 
-      n = 1
-    elseif x > tP[up][1] then
-      n = #tP
+    if d <= tP[low][1] then 
+      N = 1
+    elseif d > tP[up][1] then
+      N = #tP
     else
       repeat
-        n = math.ceil((up+low)*0.5) 
-        if x >= tP[n][1] then low = n else up = n end
+        N = math.ceil((up+low)*0.5) 
+        if d >= tP[N][1] then low = N else up = N end
       until up - low <= 1
-      n = up
+      N = up
     end
-    return polynomial.ppval(tP, x, n)
+    return polynomial.ppval(tP, d, N)
   end
 end
-polynomial.about[polynomial.ppval] = {"ppval(tP,x[,n]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT} 
+polynomial.about[polynomial.ppval] = {"ppval(tP,d[,N]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT} 
 
 -- Simplify ppval call.
 polynomial._metappval_ = {__call = polynomial.ppval}
