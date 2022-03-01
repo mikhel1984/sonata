@@ -77,7 +77,7 @@ local Ver = require("lib.utils").versions
 --  @return True for rational number.
 local function isrational(v) return type(v) == 'table' and v.isrational end
 
-local function numrat(r) return r[2] == 1 and r[1] or r end
+local function numrat(R) return R[2] == 1 and R[1] or R end
 
 --- Number representation.
 --  @param v Value.
@@ -101,22 +101,22 @@ about = help:new("Computations with rational numbers."),
 rational.__index = rational
 
 --- The greatest common divisor. 
---  @param a First integer.
---  @param b Second integer.
+--  @param va First integer.
+--  @param vb Second integer.
 --  @return Greatest common divisor.
-rational.gcd = function (a,b)
-  return (a == 0 or (type(a)=='table' and a:eq(0))) and b or rational.gcd(b % a, a)
+rational.gcd = function (va,vb)
+  return (va == 0 or (type(va)=='table' and va:eq(0))) and vb or rational.gcd(vb % va, va)
 end
-rational.about[rational.gcd] = {"gcd(a,b)", "Calculate the greatest common divisor for two integers.", help.OTHER}
+rational.about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Create new object, set metatable.
---  @param n Numerator.
---  @param dn Denominator. Default is 1.
+--  @param vn Numerator.
+--  @param vd Denominator. Default is 1.
 --  @return New rational object.
-rational._new_ = function (self, n, dn)
-  dn = dn or 1
-  local g = rational.gcd(dn,n)         -- inverse order move sign to denominator
-  return setmetatable({n/g, dn/g}, self)  
+rational._new_ = function (self, vn, vd)
+  vd = vd or 1
+  local g = rational.gcd(vd,vn)         -- inverse order move sign to denominator
+  return setmetatable({vn/g, vd/g}, self)  
 end
 
 --- Create copy of the rational number.
