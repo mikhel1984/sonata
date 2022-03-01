@@ -101,9 +101,9 @@ local keys = {w=1, i=2, j=3, k=4}
 --- Check object type.
 --  @param t Object.
 --  @return True if the object is quaternion.
-local function isquaternion(t) return type(t)=='table' and t.isquaternion end
+local function isquaternion(v) return type(v)=='table' and v.isquaternion end
 
-local function numquat(q) return q[2]==0 and q[3]==0 and q[4]==0 and q[1] or q end
+local function numquat(Q) return Q[2]==0 and Q[3]==0 and Q[4]==0 and Q[1] or Q end
 
 --	INFO
 
@@ -118,11 +118,12 @@ type = 'quaternion', isquaternion = true,
 about = help:new("Operations with quaternions."),
 }
 
--- 
+-- Get method or key 
 quaternion.__index = function (t,k)
   return quaternion[k] or rawget(t,keys[k] or '')
 end
 
+-- Set by key
 quaternion.__newindex = function (t,k,v)
   if keys[k] then 
     t[keys[k]] = v
@@ -130,15 +131,15 @@ quaternion.__newindex = function (t,k,v)
 end
 
 --- Check arguments.
---  @param q1 First quaternion or number.
---  @param q2 Second quaternion or number.
+--  @param Q1 First quaternion or number.
+--  @param Q2 Second quaternion or number.
 --  @return Two quaternions.
-quaternion._args_ = function (q1,q2)
-  q1 = isquaternion(q1) and q1 or quaternion:_new_({q1,0,0,0})
-  if q2 then
-    q2 = isquaternion(q2) and q2 or quaternion:_new_({q2,0,0,0})
+quaternion._args_ = function (Q1,Q2)
+  Q1 = isquaternion(Q1) and Q1 or quaternion:_new_({Q1,0,0,0})
+  if Q2 then
+    Q2 = isquaternion(Q2) and Q2 or quaternion:_new_({Q2,0,0,0})
   end
-  return q1, q2
+  return Q1, Q2
 end
 
 --- Quaternion constructor.
@@ -147,19 +148,19 @@ end
 quaternion._new_ = function(self,t) return setmetatable(t,self) end
 
 --- Build quaternion from angle-axis representation.
---  @param fAng Angle of rotation.
+--  @param dAng Angle of rotation.
 --  @param vAxe Axis in form of vector object or table with 3 elements.
 --  @return New quaternion.
-quaternion.fromAA = function (fAng, vAxe)
+quaternion.fromAA = function (dAng, vAxe)
   local x,y,z
-  if vAxe.ismatrix then
+  if vAxe.vsmatrix then
     x,y,z = vAxe(1), vAxe(2), vAxe(3)
   else
     x,y,z = vAxe[1], vAxe[2], vAxe[3] 
   end
   local d = math.sqrt(x*x+y*y+z*z)
-  if d > 0 then d = math.sin(fAng*0.5) / d end
-  return quaternion:_new_({math.cos(fAng*0.5), x*d, y*d, z*d})
+  if d > 0 then d = math.sin(dAng*0.5) / d end
+  return quaternion:_new_({math.cos(dAng*0.5), x*d, y*d, z*d})
 end
 quaternion.about[quaternion.fromAA] = {'fromAA(fAng,vAxe)','Create quaternion using angle and axis.',ROTATION}
 
@@ -309,24 +310,24 @@ end
 
 --- Q ^ k
 --  @param Q Quaternion.
---  @param k Any number for unit quaternion, -1 or positive integer for others.
+--  @param d Any number for unit quaternion, -1 or positive integer for others.
 --  @return Power value.
-quaternion.__pow = function (Q,k)
-  if k == -1 then
+quaternion.__pow = function (Q,d)
+  if d == -1 then
     return quaternion.inv(Q)
-  elseif k >= 0 and Ver.isInteger(k) then
+  elseif d >= 0 and Ver.isInteger(d) then
     -- positive integer use for all quaternions
     local res, acc = quaternion:_new_{1,0,0,0}, quaternion.copy(Q)
-    while k > 0 do
-      if k % 2 == 1 then res = quaternion.__mul(res, acc) end
-      k = math.modf(k * 0.5)
-      if k > 0 then acc = quaternion.__mul(acc, acc) end
+    while d > 0 do
+      if d % 2 == 1 then res = quaternion.__mul(res, acc) end
+      d = math.modf(d * 0.5)
+      if d > 0 then acc = quaternion.__mul(acc, acc) end
     end
     return res
   else
     if math.abs(quaternion._norm_(Q)-1) > 1E-4 then error("Can't apply power function!") end
     local angle, axis = quaternion.toAA(Q)
-    angle = 0.5 * k * angle   -- new angle
+    angle = 0.5 * d * angle   -- new angle
     local sa = math.sin(angle)
     return quaternion:_new_ {math.cos(angle), sa*axis[1], sa*axis[2], sa*axis[3]}
   end
@@ -370,9 +371,9 @@ quaternion.about[quaternion.imag] = {'imag(Q)', 'Get table of the imaginary part
 --- Spherical linear interpolation.
 --  @param Q1 Start quaternion.
 --  @param Q2 End quaternion.
---  @param t Part from 0 to 1.
+--  @param f Part from 0 to 1.
 --  @return Intermediate quaternion.
-quaternion.slerp = function (Q1,Q2,t)
+quaternion.slerp = function (Q1,Q2,f)
   -- assume quaternions are not unit
   local qa = quaternion.copy(Q1) 
   local qb = quaternion.copy(Q2)
@@ -382,16 +383,16 @@ quaternion.slerp = function (Q1,Q2,t)
   if dot < 0 then qb = -qb; dot = -dot end
   -- linear interpolation for close points
   if dot > 0.999 then
-    local res = qa + t*(qb-qa)
+    local res = qa + f*(qb-qa)
     quaternion.normalize(res)
     return res
   end
   -- calculate
   local theta = math.acos(dot)
   local sin_th = math.sin(theta)
-  return (math.sin((1-t)*theta)/sin_th) * qa + (math.sin(t*theta)/sin_th) * qb
+  return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
 end
-quaternion.about[quaternion.slerp] = {'slerp(Q1,Q2,t)','Spherical linear interpolation for part t.', help.OTHER}
+quaternion.about[quaternion.slerp] = {'slerp(Q1,Q2,f)','Spherical linear interpolation for part t.', help.OTHER}
 
 --- Get equivalent square matrix
 --  @param Q Quaternion.
