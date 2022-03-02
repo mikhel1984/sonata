@@ -96,34 +96,34 @@ stat.about[stat.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
 
 --- Average value.
 --  @param t Table with numbers.
---  @param w Table with weight. Can be omitted.
+--  @param tw Table with weight. Can be omitted.
 --  @return Average.
-stat.mean = function (t, w)
-  if w then
+stat.mean = function (t, tw)
+  if tw then
     local st, sw = 0, 0
     for i = 1, #t do
-      st = st + t[i]*w[i]
-      sw = sw + w[i]
+      st = st + t[i]*tw[i]
+      sw = sw + tw[i]
     end
     return st / sw
   else
     return stat.sum(t) / #t
   end
 end
-stat.about[stat.mean] = {"mean(t[,w])", "Calculate average value. Weights can be used.", }
+stat.about[stat.mean] = {"mean(t[,tw])", "Calculate average value. Weights can be used.", }
 
 --- Standard deviation and variance.
 --  @param t Table of numbers.
---  @param w Table of weights.
+--  @param tw Table of weights.
 --  @return Standard deviation, variance.
-stat.std = function (t, w)
-  local mean = stat.mean(t,w)
+stat.std = function (t, tw)
+  local mean = stat.mean(t,tw)
   local disp = 0
-  if w then
+  if tw then
     local sw = 0
     for i = 1,#t do
-      disp = disp + w[i]*(t[i]-mean)^2 
-      sw = sw + w[i]
+      disp = disp + tw[i]*(t[i]-mean)^2 
+      sw = sw + tw[i]
     end
     disp = disp / sw
   else
@@ -132,7 +132,7 @@ stat.std = function (t, w)
   end
   return math.sqrt(disp), disp 
 end
-stat.about[stat.std] = {"std(t[,w])", "Standard deviation and variance. Weights can be used.", }
+stat.about[stat.std] = {"std(t[,tw])", "Standard deviation and variance. Weights can be used.", }
 
 --- Maximum value.
 --  @param t Table of numbers.
@@ -160,14 +160,14 @@ stat.about[stat.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
 
 --- Geometrical mean.
 --  @param t Table of numbers.
---  @param w Table of weights. Can be omitted.
+--  @param tw Table of weights, optional.
 --  @return Geometrical mean.
-stat.geomean = function (t, w)
-  if w then
+stat.geomean = function (t, tw)
+  if tw then
     local st, sw = 0, 0
     for i = 1,#t do 
-      st = st + w[i]*math.log(t[i])
-      sw = sw + w[i]
+      st = st + tw[i]*math.log(t[i])
+      sw = sw + tw[i]
     end
     return math.exp(st / sw)
   else
@@ -176,18 +176,18 @@ stat.geomean = function (t, w)
     return p^(1/#t)
   end
 end
-stat.about[stat.geomean] = {"geomean(t[,w])", "Geometrical mean.", help.OTHER}
+stat.about[stat.geomean] = {"geomean(t[,tw])", "Geometrical mean.", help.OTHER}
 
 --- Harmonic mean.
 --  @param t Table of numbers.
---  @param w Table of weights. Can be omitted.
+--  @param tw Table of weights. Can be omitted.
 --  @return Harmonic mean.
-stat.harmmean = function (t, w)
-  if w then
+stat.harmmean = function (t, tw)
+  if tw then
     local st, sw = 0, 0
     for i = 1,#t do
-      st = st + w[i]/t[i]
-      sw = sw + w[i]
+      st = st + tw[i]/t[i]
+      sw = sw + tw[i]
     end
     return sw / st
   else
@@ -196,20 +196,20 @@ stat.harmmean = function (t, w)
     return #t / h
   end
 end
-stat.about[stat.harmmean] = {"harmmean(t[,w])", "Harmonic mean.", help.OTHER}
+stat.about[stat.harmmean] = {"harmmean(t[,tw])", "Harmonic mean.", help.OTHER}
 
 --- Find median.
---  @param p Table of numbers.
+--  @param t Table of numbers.
 --  @return Value of median.
-stat.median = function (p)
-  local len = #p
-  local t = Ver.move(p,1,len,1,{})
-  table.sort(t)
+stat.median = function (t)
+  local len = #t
+  local y = Ver.move(t,1,len,1,{})
+  table.sort(y)
   if len % 2 == 1 then 
-    return t[(len+1)/2]
+    return y[(len+1)/2]
   else
     len = len / 2
-    return (t[len] + t[len+1]) * 0.5
+    return (y[len] + y[len+1]) * 0.5
   end
 end
 stat.about[stat.median] = {"median(t)", "Median of the list."}
@@ -227,32 +227,32 @@ end
 stat.about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", }
 
 --- Central moment.
---  @param n Order of the moment.
---  @param x Table of numbers.
---  @param p Table of weights. Can be omitted.
+--  @param N Order of the moment.
+--  @param t Table of numbers.
+--  @param tw Table of weights. Can be omitted.
 --  @return Central moment value.
-stat.moment = function (n, x, p)
-  local pk, m = 1/#x, 0
-  for i = 1,#x do m = m + x[i]*(p and p[i] or pk) end
+stat.moment = function (N, t, tw)
+  local pk, m = 1/#t, 0
+  for i = 1,#t do m = m + t[i]*(tw and tw[i] or pk) end
   local mu = 0
-  for i = 1,#x do mu = mu + (x[i]-m)^n*(p and p[i] or pk) end
+  for i = 1,#t do mu = mu + (t[i]-m)^N*(tw and tw[i] or pk) end
   return mu
 end
-stat.about[stat.moment] = {"moment(n,x[,p])", "Central moment of x order n, p is a list of weights.", }
+stat.about[stat.moment] = {"moment(N,t[,tw])", "Central moment of t order N, tw is a list of weights.", }
 
 --- Number of elements in each bin.
---  @param x Data table.
+--  @param t Data table.
 --  @param rng Number of bins or table with edges.
 --  @return Two tables, with sum and edges.
-stat.histcounts = function (x, rng)
+stat.histcounts = function (t, rng)
   rng = rng or 10 
   local bins
   -- make copy and sort
-  local t = Ver.move(x,1,#x,1,{})
-  table.sort(t)
+  local y = Ver.move(t,1,#t,1,{})
+  table.sort(y)
   -- prepare edges
   if type(rng) == 'number' then
-    local vMin, vMax = t[1], t[#t]
+    local vMin, vMax = y[1], y[#y]
     bins = {}
     for v = vMin, vMax, (vMax-vMin)/rng do bins[#bins+1] = v end  
     bins[#bins] = vMax+(vMax-vMin)*0.001      
@@ -270,7 +270,7 @@ stat.histcounts = function (x, rng)
   for i = 1,#bins-1 do res[i] = 0 end
   --for i = 1, #bins-1 do res[i] = 0 end
   local p,upper = 1, bins[2]
-  for _,v in ipairs(t) do    
+  for _,v in ipairs(y) do    
     if v < bins[1] then
       -- just skip
     elseif v < upper then
@@ -289,26 +289,26 @@ stat.about[stat.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bin
 
 
 --- Student's cumulative distribution
---   @param x Value.
---   @param nu Degree of freedom.
+--   @param d Value.
+--   @param N Degree of freedom.
 --   @return Cumulative value.
-stat.tcdf = function (x,nu)
+stat.tcdf = function (d,N)
   stat.ext_special = stat.ext_special or require('lib.special')
-  local tmp = nu/(nu+x*x)
-  return 1-0.5*stat.ext_special.betainc(tmp,0.5*nu,0.5)
+  local tmp = N/(N+d*d)
+  return 1-0.5*stat.ext_special.betainc(tmp,0.5*N,0.5)
 end
-stat.about[stat.tcdf] = {"tcdf(x,nu)", "Student's cumulative distribution.", DISTRIB}
+stat.about[stat.tcdf] = {"tcdf(d,N)", "Student's cumulative distribution.", DISTRIB}
 
 --- Student's density function.
---   @param x Value.
---   @param nu Degree of freedom.
+--   @param d Value.
+--   @param N Degree of freedom.
 --   @return Density value.
-stat.tpdf = function (x,nu)
+stat.tpdf = function (d,N)
   stat.ext_special = stat.ext_special or require('lib.special')
-  local tmp = math.sqrt(nu)*stat.ext_special.beta(0.5,0.5*nu)
-  return (1+x*x/nu)^(-0.5*(nu+1))/tmp
+  local tmp = math.sqrt(N)*stat.ext_special.beta(0.5,0.5*N)
+  return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-stat.about[stat.tpdf] = {"tpdf(x,nu)", "Student's distribution density.", DISTRIB}
+stat.about[stat.tpdf] = {"tpdf(d,N)", "Student's distribution density.", DISTRIB}
 
 -- Uncomment to remove descriptions
 --stat.about = nil
