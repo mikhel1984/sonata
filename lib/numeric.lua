@@ -85,19 +85,19 @@ end
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL.")
 
 --	MODULE
 
 local numeric = {
--- description
-about = help:new("Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL."),
 -- current tolerance
 TOL = 1E-3,
 -- max Newton algorithm attempts
 newton_max = 50,
 }
 
-numeric.about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance.", "parameters"}
+about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance.", "parameters"}
 
 --- Find root of equation at the given interval.
 --  @param fn Function to analyze.
@@ -113,7 +113,7 @@ numeric.solve = function (fn, dA, dB)
   until math.abs(f1) < numeric.TOL
   return dB 
 end
-numeric.about[numeric.solve] = {"solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
+about[numeric.solve] = {"solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Another solution based on Newton's rule.
 --  @param fn Function to analyze.
@@ -130,7 +130,7 @@ numeric.Newton = function (fn, d1)
   until math.abs(fn(x2)-fd1) < numeric.TOL 
   return x2
 end
-numeric.about[numeric.Newton] = {"Newton(fn,d0)", "Find root of equation using Newton's rule with only one initial condition."}
+about[numeric.Newton] = {"Newton(fn,d0)", "Find root of equation using Newton's rule with only one initial condition."}
 
 --- Simple derivative.
 --  @param fn Function f(x).
@@ -145,7 +145,7 @@ numeric.der = function (fn, d)
   until math.abs(der-last) < numeric.TOL
   return der
 end
-numeric.about[numeric.der] = {"der(fn,x)", "Calculate the derivative value for given function."}
+about[numeric.der] = {"der(fn,x)", "Calculate the derivative value for given function."}
 
 --- Integration using trapeze method.
 --  @param fn Function f(x).
@@ -176,7 +176,7 @@ numeric.trapez = function (fn, dA, dB)
   until math.abs(I-last) < numeric.TOL
   return I
 end
-numeric.about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule."}
+about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule."}
 
 --- Differential equation solution (Runge-Kutta method).
 --  @param fn function f(t,y).
@@ -218,10 +218,10 @@ numeric.ode45 = function (fn,tDelta,dY0,tParam)
   end
   return res, res[#res][2]
 end
-numeric.about[numeric.ode45] = {"ode45(fn,tDelta,y0[,param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
+about[numeric.ode45] = {"ode45(fn,tDelta,y0[,param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
--- Uncomment to remove descriptions
---numeric.about = nil
+-- Comment to remove descriptions
+numeric.about = about
 
 return numeric
 

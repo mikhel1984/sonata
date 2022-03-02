@@ -95,7 +95,8 @@ local function isarray(v) return type(v) == 'table' and v.isarray end
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
-
+-- description
+local about = help:new("Manipulations with arrays of elements. Indices have form of tables. Indexation from 1.")
 --	MODULE
 
 local array = {
@@ -108,8 +109,6 @@ _unm_ = function (x) return -x end,
 _mul_ = function (x,y) return x*y end,
 _div_ = function (x,y) return x/y end,
 _pow_ = function (x,y) return x^y end,
--- description
-about = help:new("Manipulations with arrays of elements. Indices have form of tables. Indexation from 1.")
 }
 -- metamethods
 array.__index = array
@@ -158,7 +157,7 @@ array.capacity = function (A)
   local S,K = A.size, A.k
   return S[#S] * K[#K]
 end
-array.about[array.capacity] = {"capacity(A)", "Maximal number of elements in the array. The same as #A.", help.OTHER}
+about[array.capacity] = {"capacity(A)", "Maximal number of elements in the array. The same as #A.", help.OTHER}
 
 --- Get array element.
 --  @param A Array object.
@@ -168,7 +167,7 @@ array.get = function (A, tInd)
   if not array._isIndex_(A, tInd) then error("Wrong index!") end
   return A[array._pos_(A, tInd)]
 end
-array.about[array.get] = {"get(A,tInd)", "Get array element."}
+about[array.get] = {"get(A,tInd)", "Get array element."}
 
 --- Set new value.
 --  @param A Array object.
@@ -178,7 +177,7 @@ array.set = function (A, tInd, v)
   if not array._isIndex_(A, tInd) then error("Wrong index!") end
   A[array._pos_(A,tInd)] = v 
 end
-array.about[array.set] = {"set(A,tInd,v)", "Set value to the array."}
+about[array.set] = {"set(A,tInd,v)", "Set value to the array."}
 
 --- Get array copy.
 --  @param A Array object.
@@ -187,7 +186,7 @@ array.copy = function (A)
   local cp = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
   return Ver.move(A, 1, array.capacity(A), 1, cp)             -- copy array elements
 end
-array.about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
+about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
 
 --- Compare array size.
 --  @param A1 First array object.
@@ -203,7 +202,7 @@ array.isEqual = function (A1, A2)
   end
   return false
 end
-array.about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTHER}
+about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTHER}
 
 --- Apply function of 2 arguments.
 --  @param fn Function with 2 arguments.
@@ -243,7 +242,7 @@ array.apply = function (fn, ...)
   end
   return res
 end
-array.about[array.apply] = {"apply(fn, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
+about[array.apply] = {"apply(fn, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
 
 --- Apply function of 1 argument.
 --  @param A Array object.
@@ -257,7 +256,7 @@ array.map = function (A, fn)
   end
   return res
 end
-array.about[array.map] = {"map(A,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
+about[array.map] = {"map(A,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
 
 --- A1 + A2
 --  @param A1 First array.
@@ -295,7 +294,7 @@ array.__div = function (A1, A2) return array._apply2_(array._div_, A1, A2) end
 array.__pow = function (A1, A2) return array._apply2_(array._pow_, A1, A2) end
 
 array.arithmetic = 'arithmetic'
-array.about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.META}
+about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.META}
 
 --- Random array generator.
 --  @param tSize Size table.
@@ -305,7 +304,7 @@ array.rand = function (tSize)
   for i = 1, array.capacity(arr) do arr[i] = math.random() end
   return arr
 end
-array.about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
+about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
 
 --- a1 == A2
 --  @param A1 First array.
@@ -323,13 +322,13 @@ array.__eq = function (A1, A2)
 end
 
 array.comparison = 'comparison'
-array.about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
+about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
 
 --- Get array dimension.
 --  @param A Array object.
 --  @return Table with array size.
 array.dim = function (A) return Ver.move(A.size, 1, #A.size, 1, {}) end
-array.about[array.dim] = {"dim(A)", "Return size of the array."}
+about[array.dim] = {"dim(A)", "Return size of the array."}
 
 --- Get part of array between two indexes.
 --  @param A Array object.
@@ -363,7 +362,7 @@ array.sub = function (A, tInd1, tInd2)
   end
   return res
 end
-array.about[array.sub] = {"sub(A,tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
+about[array.sub] = {"sub(A,tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
 
 --- Concatenate 2 arrays along given axes.
 --  @param A1 First array.
@@ -397,7 +396,7 @@ array.concat = function (A1, A2, iAxis)
   end
   return res 
 end
-array.about[array.concat] = {"concat(A1,A2,iAxis)", "Array concatenation along the given axis."}
+about[array.concat] = {"concat(A1,A2,iAxis)", "Array concatenation along the given axis."}
 
 --- Method #
 --  @param A Array object.
@@ -418,7 +417,7 @@ setmetatable(array, {__call = function (self, tSize)
   return array:_new_(tSize) 
 end})
 array.Arr = 'Arr'
-array.about[array.Arr] = {"Arr(tSize)", "Create empty array with the given size.", help.NEW}
+about[array.Arr] = {"Arr(tSize)", "Create empty array with the given size.", help.NEW}
 
 --- Iterator across the array.
 --  @param A Array object.
@@ -433,10 +432,10 @@ array.next = function (A)
     return index, A[count]
   end
 end
-array.about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}
+about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}
 
--- Uncomment to remove descriptions
---array.about = nil
+-- Comment to remove descriptions
+array.about = about
 
 return array
 

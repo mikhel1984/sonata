@@ -89,14 +89,14 @@ end
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("Computations with rational numbers.")
 
 --	MODULE
 
 local rational = {
 -- mark
 type = 'rational', isrational = true,
--- description
-about = help:new("Computations with rational numbers."),
 }
 rational.__index = rational
 
@@ -107,7 +107,7 @@ rational.__index = rational
 rational.gcd = function (va,vb)
   return (va == 0 or (type(va)=='table' and va:eq(0))) and vb or rational.gcd(vb % va, va)
 end
-rational.about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
+about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Create new object, set metatable.
 --  @param vn Numerator.
@@ -123,7 +123,7 @@ end
 --  @param R Source value.
 --  @return Rational number.
 rational.copy = function (R) return setmetatable({R[1], R[2]}, rational) end
-rational.about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
+about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
 
 --- Argument type correction.
 --  @param a First rational or natural number.
@@ -193,7 +193,7 @@ rational.__pow = function (R1, R2)
 end
 
 rational.arithmetic = 'arithmetic'
-rational.about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} ", help.META}
+about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} ", help.META}
 
 --- R1 == R2
 --  @param R1 First number.
@@ -223,7 +223,7 @@ rational.__le = function (R1,R2)
 end
 
 rational.comparison = 'comparison'
-rational.about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
+about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
 
 --- String representation.
 --  @param R Rational number.
@@ -236,27 +236,27 @@ end
 --  @param R Rational number.
 --  @return Decimal fraction.
 rational.val = function (R) return R[1] / R[2] end
-rational.about[rational.val] = {"val(R)", "Return rational number as decimal."}
+about[rational.val] = {"val(R)", "Return rational number as decimal."}
 
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
 rational.Nu = function (R) return R[1] end
-rational.about[rational.Nu] = {"Nu(R)", "Return the numerator of rational number."}
+about[rational.Nu] = {"Nu(R)", "Return the numerator of rational number."}
 
 --- Get denominator.
 --  @param R Rational number.
 --  @return Denominator.
 rational.De = function (R) return R[2] end
-rational.about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
+about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 
 -- simplify constructor call
 setmetatable(rational, {__call = function (self, n, d) return rational:_new_(n,d) end})
 rational.Rat = 'Rat'
-rational.about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
+about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
 
--- Uncomment to remove descriptions
---rational.about = nil
+-- Comment to remove descriptions
+rational.about = about
 
 return rational
 

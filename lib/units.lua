@@ -151,14 +151,14 @@ end
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("Operations and conversations according the units.")
 
 --	MODULE
 
 local units = {
 -- mark
 type = 'units', isunits = true,
--- description
-about = help:new("Operations and conversations according the units."),
 -- save some results
 mem_parts = {},
 mem_keys = {},
@@ -190,7 +190,7 @@ units.prefix = {
   Z = 1e+21,  -- zetta
   Y = 1e+24,  -- yotta
 }
-units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
+about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 --- Get common part and difference between 2 strings.
 --  @param str1 First string.
@@ -333,7 +333,7 @@ units.copy = function (U)
   cp.key = U.key
   return cp
 end
-units.about[units.copy] = {'copy(U)', 'Create copy of the element.', help.OTHER}
+about[units.copy] = {'copy(U)', 'Create copy of the element.', help.OTHER}
 
 --- Check if 2 elements can be converted to each other.
 --  @param s1 First key.
@@ -441,7 +441,7 @@ units.convert = function (U, fn)
     return units._unitConvert_(U, res.key)
   end
 end
-units.about[units.convert] = {'convert(v, fn)','Convert one units to another, return new object or nil.', }
+about[units.convert] = {'convert(v, fn)','Convert one units to another, return new object or nil.', }
 
 --- -U
 --  @param U Units object.
@@ -521,7 +521,7 @@ units.__pow = function (U1,d)
 end
 
 units.arithmetic = 'arithmetic'
-units.about[units.arithmetic] = {units.arithmetic, 'U1+U2, U1-U2, U1*u2, U1/U2, U1^n', help.META}
+about[units.arithmetic] = {units.arithmetic, 'U1+U2, U1-U2, U1*u2, U1/U2, U1^n', help.META}
 
 --- U1 == b
 --  @param U1 First unit object.
@@ -558,7 +558,7 @@ units.__le = function (U1,U2)
 end
 
 units.comparison = 'comparison'
-units.about[units.comparison] = {units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2', help.META}
+about[units.comparison] = {units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2', help.META}
 
 --- Prepare units for print operation.
 --  @param str Units key.
@@ -633,15 +633,15 @@ units.add = function (U, rule)
   assert(isunits(rule), 'Units object is expected!')
   units.rules[U] = rule
 end
-units.about[units.add] = {'add(U,rule)', 'Add new rule for conversation.'}
+about[units.add] = {'add(U,rule)', 'Add new rule for conversation.'}
 
 -- simplify constructor call
 setmetatable(units, {__call = function (self,v,u) return units:_new_(v,u) end })
 units.Unit = 'Unit'
-units.about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
+about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
 
--- Uncomment to remove descriptions
---units.about = nil
+-- Comment to remove descriptions
+units.about = about
 
 return units
 

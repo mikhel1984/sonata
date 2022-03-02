@@ -107,6 +107,8 @@ local function arth(d) return math.log((1+d)/(1-d)) / 2 end
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("Coordinate transformations and other geodetic tasks.")
 
 --	MODULE
 
@@ -416,8 +418,6 @@ end
 local geodesy = {
 -- mark
 type = 'geodesy', isgeodesy = true,
--- description
-about = help:new("Coordinate transformations and other geodetic tasks."),
 
 -- Ellipsoids
 WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563, 
@@ -443,24 +443,24 @@ geodesy.__index = geodesy
 
 -- Access to the ellipsoid object methods.
 geodesy.toXYZ = ellipsoid.toXYZ
-geodesy.about[geodesy.toXYZ] = {"toXYZ(E,tBLH)", "Transform Geodetic coordinates to Cartesian.", TRANS}
+about[geodesy.toXYZ] = {"toXYZ(E,tBLH)", "Transform Geodetic coordinates to Cartesian.", TRANS}
 
 geodesy.toBLH = ellipsoid.toBLH
-geodesy.about[geodesy.toBLH] = {"toBLH(E,tXYZ)", "Transform Cartesian coordinates to Geodetic.", TRANS}
+about[geodesy.toBLH] = {"toBLH(E,tXYZ)", "Transform Cartesian coordinates to Geodetic.", TRANS}
 
 geodesy.projGK = ellipsoid.projGK
-geodesy.about[geodesy.projGK] = {"projGK(E,tBL)", "Return north and east positions of the point after Gauss-Kruger projection.", PROJ}
+about[geodesy.projGK] = {"projGK(E,tBL)", "Return north and east positions of the point after Gauss-Kruger projection.", PROJ}
 
 geodesy.projM = ellipsoid.projM
-geodesy.about[geodesy.projM] = {"projM(E,tBL)", "Return north and east positions of the point after Mercator projectoin.", PROJ}
+about[geodesy.projM] = {"projM(E,tBL)", "Return north and east positions of the point after Mercator projectoin.", PROJ}
 
 geodesy.solveInv = ellipsoid.solveInv
-geodesy.about[geodesy.solveInv] = {"solveInv(E,BLH1,BLH2)", 
+about[geodesy.solveInv] = {"solveInv(E,BLH1,BLH2)", 
   "Solve inverse geodetic problem, find distance and azimuths for two points.", PROB}
 
 -- ellipsoid.solveDir = function (E, t1, a1, dist)
 geodesy.solveDir = ellipsoid.solveDir
-geodesy.about[geodesy.solveDir] = {"solveDir(E,BLH,azimuth,dist)", 
+about[geodesy.solveDir] = {"solveDir(E,BLH,azimuth,dist)", 
   "Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.", PROB}
 
 
@@ -494,9 +494,9 @@ _setTranslation_(geodesy.SK42, geodesy.PZ9002,
   {23.93, -141.03, -79.98; 0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6})
 
 geodesy.xyzInto = 'A.xyzInto[B]'
-geodesy.about[geodesy.xyzInto] = {"A.xyzInto[B]", "Get function to transform coordinates from A to B system.", TRANS}
+about[geodesy.xyzInto] = {"A.xyzInto[B]", "Get function to transform coordinates from A to B system.", TRANS}
 geodesy.blhInto = 'A.blhInto[B]'
-geodesy.about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geodetic coordinates from A to B system using the Molodensky method.", TRANS}
+about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geodetic coordinates from A to B system using the Molodensky method.", TRANS}
 
 --- Convert degrees to radians.
 --  @param d Degrees.
@@ -504,7 +504,7 @@ geodesy.about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geo
 --  @param s Seconds (optional).
 --  @return Angle in radians.
 geodesy.dms2rad = function (d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
-geodesy.about[geodesy.dms2rad] = {"dms2rad(d[,m[,s]])", "Convert degrees, minutes and seconds to radians.", help.OTHER}
+about[geodesy.dms2rad] = {"dms2rad(d[,m[,s]])", "Convert degrees, minutes and seconds to radians.", help.OTHER}
 
 --- Convert degrees to degrees-minutes-seconds.
 --  @param d Angle in degrees.
@@ -515,7 +515,7 @@ geodesy.deg2dms = function (d)
   local sec = 3600 * (d - deg) - 60 * min
   return deg, min, sec
 end
-geodesy.about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
+about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
 --- Find topocentric coordinates of a point.
 --  @param g Geodetic coordinates of the reference point.
@@ -532,7 +532,7 @@ geodesy.toENU = function (tG, tR, tP)
     Z = cB*cL*dx + cB*sL*dy + sB*dz
   }
 end
-geodesy.about[geodesy.toENU] = {"toENU(tBLr,tXYZr,tCatr)", "Get topocentric coordinates of a point in reference frame.", TRANS}
+about[geodesy.toENU] = {"toENU(tBLr,tXYZr,tCatr)", "Get topocentric coordinates of a point in reference frame.", TRANS}
 
 --- Find cartesian coordinates of a point with topocentric coordinates.
 --  @param g Geodetic coordinates of the reference point.
@@ -548,7 +548,7 @@ geodesy.fromENU = function (tG, tR, tL)
     Z = tR.Z + cB*tL.Y + sB*tL.Z
   }
 end
-geodesy.about[geodesy.fromENU] = {"fromENU(tBLr,tXYZr,tTop)", "Get cartesian coordinates of a local point in reference frame.", TRANS}
+about[geodesy.fromENU] = {"fromENU(tBLr,tXYZr,tTop)", "Get cartesian coordinates of a local point in reference frame.", TRANS}
 
 --- International gravity formula (WGS).
 --  @param B Latitude, deg.
@@ -558,10 +558,10 @@ geodesy.grav = function (dB)
   s = s * s  -- get square
   return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
 end
-geodesy.about[geodesy.grav] = {"grav(dB)", "International gravity formula, angle in degrees.", help.OTHER}
+about[geodesy.grav] = {"grav(dB)", "International gravity formula, angle in degrees.", help.OTHER}
 
--- Uncomment to remove descriptions
---geodesy.about = nil
+-- Comment to remove descriptions
+geodesy.about = about
 
 return geodesy
 

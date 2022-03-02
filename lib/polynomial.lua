@@ -160,6 +160,8 @@ end
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("Operations with polynomials.")
 
 local FIT = 'approximation'
 
@@ -168,8 +170,6 @@ local FIT = 'approximation'
 local polynomial = {
 -- marker
 type = 'polynomial', ispolynomial = true,
--- description
-about = help:new("Operations with polynomials."),
 }
 polynomial.__index = polynomial
 
@@ -233,7 +233,7 @@ polynomial.val = function (P,v)
   for i = #P-1, 0, -1 do res = res * v + P[i] end
   return res
 end
-polynomial.about[polynomial.val] = {"val(P,v)", "Get value of polynomial P in point x."}
+about[polynomial.val] = {"val(P,v)", "Get value of polynomial P in point x."}
 
 -- simplify call
 polynomial.__call = function (p,x) return polynomial.val(p,x) end
@@ -242,7 +242,7 @@ polynomial.__call = function (p,x) return polynomial.val(p,x) end
 --  @param P Initial polynomial.
 --  @return Deep copy.
 polynomial.copy = function (P) return polynomial:_init_(Ver.move(P,0,#P,0,{})) end
-polynomial.about[polynomial.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
+about[polynomial.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
 
 --- P1 + P2
 --  @param P1 First polynomial or number.
@@ -341,10 +341,10 @@ polynomial.__eq = function (P1,P2)
 end
 
 polynomial.arithmetic = 'arithmetic'
-polynomial.about[polynomial.arithmetic] = {polynomial.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.META}
+about[polynomial.arithmetic] = {polynomial.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.META}
 
 polynomial.comparison = 'comparison'
-polynomial.about[polynomial.comparison] = {polynomial.comparison, "a==b, a~=b", help.META}
+about[polynomial.comparison] = {polynomial.comparison, "a==b, a~=b", help.META}
 
 --- Get derivative.
 --  @param P Initial polynomial.
@@ -356,7 +356,7 @@ polynomial.der = function (P)
   end
   return numpoly(polynomial:_init_(der))
 end
-polynomial.about[polynomial.der] = {"der(P)", "Calculate derivative of polynomial."}
+about[polynomial.der] = {"der(P)", "Calculate derivative of polynomial."}
 
 --- Get integral.
 --  @param P Initial polynomial.
@@ -369,7 +369,7 @@ polynomial.int = function (P,d0)
   end
   return polynomial:_init_(int)
 end
-polynomial.about[polynomial.int] = {"int(P[,d0=0])", "Calculate integral, d0 - free coefficient."}
+about[polynomial.int] = {"int(P[,d0=0])", "Calculate integral, d0 - free coefficient."}
 
 --- Simplify call P * (x - v), inplace
 --  @param P Polynomial object.
@@ -400,7 +400,7 @@ polynomial.build = function (...)
   end
   return res
 end
-polynomial.about[polynomial.build] = {"build(root1,root2,...)", "Return polynomial with given roots.", help.OTHER}
+about[polynomial.build] = {"build(root1,root2,...)", "Return polynomial with given roots.", help.OTHER}
 
 --- String representation.
 --  @param P Polynomial object.
@@ -481,7 +481,7 @@ polynomial.real = function (P)
   end
   return res, pp
 end
-polynomial.about[polynomial.real] = {"real(P)", "Find real roots of the polynomial.", help.OTHER}
+about[polynomial.real] = {"real(P)", "Find real roots of the polynomial.", help.OTHER}
 
 --- Find roots of 2nd order polynomial.
 --  @param P Source polynomial.
@@ -549,7 +549,7 @@ polynomial.roots = function (P)
   end
   return r
 end
-polynomial.about[polynomial.roots] = {"roots(P)", "Find all the polynomial roots.", help.OTHER}
+about[polynomial.roots] = {"roots(P)", "Find all the polynomial roots.", help.OTHER}
 
 --- Find the best polynomial approximation for the line.
 --  @param X Set of independent variables.
@@ -590,7 +590,7 @@ polynomial.fit = function (tX,tY,N)
   for i = 1,N+1 do res[i] = gaus:get(i,-1) end
   return polynomial._reorder_(res)
 end
-polynomial.about[polynomial.fit] = {"fit(tX,tY,N)", "Find polynomial approximation for the line.", FIT}
+about[polynomial.fit] = {"fit(tX,tY,N)", "Find polynomial approximation for the line.", FIT}
 
 --- Find interpolation polinomial in the Lagrange form.
 --  @param X Set of variables.
@@ -617,7 +617,7 @@ polynomial.lagrange = function (tX,tY)
   end
   return numpoly(reduce(res))
 end
-polynomial.about[polynomial.lagrange] = {"lagrange(tX,tY)", "Find interpolation polynomial in the Lagrange form.", FIT}
+about[polynomial.lagrange] = {"lagrange(tX,tY)", "Find interpolation polynomial in the Lagrange form.", FIT}
 
 --- Find Taylor series.
 --  @param v Argument value.
@@ -637,7 +637,7 @@ polynomial.taylor = function (v,vF,...)
   end
   return numpoly(res)
 end
-polynomial.about[polynomial.taylor] = {"taylor(v,vF[,vF',vF''..])", "Get Taylor series.", FIT}
+about[polynomial.taylor] = {"taylor(v,vF[,vF',vF''..])", "Get Taylor series.", FIT}
 
 --- Cubic spline data interpolation.
 --  Use 'natural' boundary conditions. 
@@ -684,7 +684,7 @@ polynomial.spline = function (tX, tY)
   end
   return setmetatable(res, polynomial._metappval_)
 end
-polynomial.about[polynomial.spline] = {"spline(tX,tY)", "Cubic spline data interpolation. Return table with polynomials.", FIT}
+about[polynomial.spline] = {"spline(tX,tY)", "Cubic spline data interpolation. Return table with polynomials.", FIT}
 
 --- Linear data interpolation.
 --  @param tX Sequence of independent values.
@@ -703,7 +703,7 @@ polynomial.lin = function (tX, tY, v0, vN)
   if v0 then res[#res+1] = { xp+1, polynomial:_init_({[0] = vN or v0}) } end
   return setmetatable(res, polynomial._metappval_)
 end
-polynomial.about[polynomial.lin] = {"lin(tX,tY[,v0=0,vN=v0])", "Linear data interpolation. Return table with polynomials.", FIT}
+about[polynomial.lin] = {"lin(tX,tY[,v0=0,vN=v0])", "Linear data interpolation. Return table with polynomials.", FIT}
 
 --- Evaluate value for table of polynomials (piecewise polynomial).
 --  @param tP Table of polynomials in form {{x1, p1}, {x2, p2} ...}.
@@ -730,17 +730,17 @@ polynomial.ppval = function (tP, d, N)
     return polynomial.ppval(tP, d, N)
   end
 end
-polynomial.about[polynomial.ppval] = {"ppval(tP,d[,N]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT} 
+about[polynomial.ppval] = {"ppval(tP,d[,N]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT} 
 
 -- Simplify ppval call.
 polynomial._metappval_ = {__call = polynomial.ppval}
 
 setmetatable(polynomial, {__call = function (self, t) return polynomial._reorder_(t) end})
 polynomial.Poly = 'Poly'
-polynomial.about[polynomial.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
+about[polynomial.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
 
--- Uncomment to remove descriptions
---polynomial.about = nil
+-- Comment to remove descriptions
+polynomial.about = about
 
 return polynomial
 

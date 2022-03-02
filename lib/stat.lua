@@ -76,13 +76,12 @@ local DISTRIB = 'distribution'
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("Statistical calculations. Data set must be a Lua table.")
 
 --	MODULE
 
-local stat = {
--- description
-about = help:new("Statistical calculations. Data set must be a Lua table.")
-}
+local stat = {}
 
 --- Sum of all elements.
 --  @param t Table with numbers.
@@ -92,7 +91,7 @@ stat.sum = function (t)
   for i = 1, #t do s = s+t[i] end
   return s
 end
-stat.about[stat.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
+about[stat.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
 
 --- Average value.
 --  @param t Table with numbers.
@@ -110,7 +109,7 @@ stat.mean = function (t, tw)
     return stat.sum(t) / #t
   end
 end
-stat.about[stat.mean] = {"mean(t[,tw])", "Calculate average value. Weights can be used.", }
+about[stat.mean] = {"mean(t[,tw])", "Calculate average value. Weights can be used.", }
 
 --- Standard deviation and variance.
 --  @param t Table of numbers.
@@ -132,7 +131,7 @@ stat.std = function (t, tw)
   end
   return math.sqrt(disp), disp 
 end
-stat.about[stat.std] = {"std(t[,tw])", "Standard deviation and variance. Weights can be used.", }
+about[stat.std] = {"std(t[,tw])", "Standard deviation and variance. Weights can be used.", }
 
 --- Maximum value.
 --  @param t Table of numbers.
@@ -144,7 +143,7 @@ stat.max = function (t)
   end
   return m,k
 end
-stat.about[stat.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
+about[stat.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
 
 --- Minimum value.
 --  @param t Table of numbers.
@@ -156,7 +155,7 @@ stat.min = function (t)
   end
   return m,k
 end
-stat.about[stat.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
+about[stat.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
 
 --- Geometrical mean.
 --  @param t Table of numbers.
@@ -176,7 +175,7 @@ stat.geomean = function (t, tw)
     return p^(1/#t)
   end
 end
-stat.about[stat.geomean] = {"geomean(t[,tw])", "Geometrical mean.", help.OTHER}
+about[stat.geomean] = {"geomean(t[,tw])", "Geometrical mean.", help.OTHER}
 
 --- Harmonic mean.
 --  @param t Table of numbers.
@@ -196,7 +195,7 @@ stat.harmmean = function (t, tw)
     return #t / h
   end
 end
-stat.about[stat.harmmean] = {"harmmean(t[,tw])", "Harmonic mean.", help.OTHER}
+about[stat.harmmean] = {"harmmean(t[,tw])", "Harmonic mean.", help.OTHER}
 
 --- Find median.
 --  @param t Table of numbers.
@@ -212,7 +211,7 @@ stat.median = function (t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
-stat.about[stat.median] = {"median(t)", "Median of the list."}
+about[stat.median] = {"median(t)", "Median of the list."}
 
 --- Frequency of elements.
 --  @param t Table of numbers.
@@ -224,7 +223,7 @@ stat.freq = function (t)
   end
   return tmp
 end
-stat.about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", }
+about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", }
 
 --- Central moment.
 --  @param N Order of the moment.
@@ -238,7 +237,7 @@ stat.moment = function (N, t, tw)
   for i = 1,#t do mu = mu + (t[i]-m)^N*(tw and tw[i] or pk) end
   return mu
 end
-stat.about[stat.moment] = {"moment(N,t[,tw])", "Central moment of t order N, tw is a list of weights.", }
+about[stat.moment] = {"moment(N,t[,tw])", "Central moment of t order N, tw is a list of weights.", }
 
 --- Number of elements in each bin.
 --  @param t Data table.
@@ -285,7 +284,7 @@ stat.histcounts = function (t, rng)
   end
   return res, bins
 end
-stat.about[stat.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bins. Edges can be either number or table."}
+about[stat.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bins. Edges can be either number or table."}
 
 
 --- Student's cumulative distribution
@@ -297,7 +296,7 @@ stat.tcdf = function (d,N)
   local tmp = N/(N+d*d)
   return 1-0.5*stat.ext_special.betainc(tmp,0.5*N,0.5)
 end
-stat.about[stat.tcdf] = {"tcdf(d,N)", "Student's cumulative distribution.", DISTRIB}
+about[stat.tcdf] = {"tcdf(d,N)", "Student's cumulative distribution.", DISTRIB}
 
 --- Student's density function.
 --   @param d Value.
@@ -308,10 +307,10 @@ stat.tpdf = function (d,N)
   local tmp = math.sqrt(N)*stat.ext_special.beta(0.5,0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-stat.about[stat.tpdf] = {"tpdf(d,N)", "Student's distribution density.", DISTRIB}
+about[stat.tpdf] = {"tpdf(d,N)", "Student's distribution density.", DISTRIB}
 
--- Uncomment to remove descriptions
---stat.about = nil
+-- Comment to remove descriptions
+stat.about = about
 
 return stat
 

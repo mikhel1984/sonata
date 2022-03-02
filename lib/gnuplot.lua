@@ -145,6 +145,8 @@ local GPPLOT = 'quick'
 --	INFO
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("Interface for calling Gnuplot from Sonata.")
 
 --	MODULE
 
@@ -155,8 +157,6 @@ options = {'terminal','output','parametric','size','polar','grid','key','title',
   'xlabel','ylabel','xrange','yrange','zrange','trange','samples'},
 -- basic function options
 foptions = {'using','title','with','linetype','linestyle','linewidth','ls','ln','lw'},
--- description
-about = help:new("Interface for calling Gnuplot from Sonata."),
 }
 -- metha
 gnuplot.__index = gnuplot
@@ -248,7 +248,7 @@ gnuplot._init_ = function (self) return setmetatable({}, self) end
 --  @param G Gnuplot object.
 --  @param tCurve Table with function/table and parameters.
 gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
-gnuplot.about[gnuplot.add] = {"add(tCurve)", "Add new curve to figure."}
+about[gnuplot.add] = {"add(tCurve)", "Add new curve to figure."}
 
 --- Get copy of graph options.
 --  @param G Initial table.
@@ -266,7 +266,7 @@ gnuplot.copy = function (G)
   end
   return cp
 end
-gnuplot.about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
+about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 
 --- Plot graphic.
 --  @param G Table with parameters of graphic.
@@ -296,7 +296,7 @@ gnuplot.show = function (G)
   handle:write(res,'\n')
   handle:close()
 end
-gnuplot.about[gnuplot.show] = {"show(G)", "Plot data, represented as Lua table." }
+about[gnuplot.show] = {"show(G)", "Plot data, represented as Lua table." }
 
 --- Represent parameters of the graphic.
 --  @param G Gnuplot object.
@@ -372,7 +372,7 @@ gnuplot.plot = function (...)
   cmd.grid = true
   cmd:show()
 end
-gnuplot.about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Prepare arguments for table or matrix.
 --  @param v Table, matrix or dat-file.
@@ -408,7 +408,7 @@ gnuplot.tplot = function (v,...)
   cmd.grid = true
   cmd:show()
 end
-gnuplot.about[gnuplot.tplot] = {"tplot(v,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
+about[gnuplot.tplot] = {"tplot(v,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
 
 --- Polar plot.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
@@ -432,7 +432,7 @@ gnuplot.polarplot = function(...)
   cmd.grid = 'polar'
   cmd:show()
 end
-gnuplot.about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,[x2,y2..]])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,[x2,y2..]])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Polar plot table of data file.
 --  @param v Table, matrix or dat-file.
@@ -452,7 +452,7 @@ gnuplot.tpolar = function (v,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-gnuplot.about[gnuplot.tpolar] = {"tpolar(v,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
+about[gnuplot.tpolar] = {"tpolar(v,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 --- Surface plot.
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
@@ -475,7 +475,7 @@ gnuplot.surfplot = function(...)
   cmd.surface = true
   cmd:show()
 end
-gnuplot.about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
+about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 --- Sufrace plot from table of data file.
 --  @param v Table, matrix or dat-file.
@@ -494,15 +494,15 @@ gnuplot.tsurf = function (v,...)
   cmd.surface = true
   cmd:show()
 end
-gnuplot.about[gnuplot.tsurf] = {"tsurf(v,[x1,y1,z1,z2..])", "Surface plot for table, matrix or data file. Optional elements define columns."}
+about[gnuplot.tsurf] = {"tsurf(v,[x1,y1,z1,z2..])", "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self) return gnuplot:_init_() end})
 gnuplot.Gp = 'Gp'
-gnuplot.about[gnuplot.Gp] = {"Gp()", "Prepare Gnuplot object.", help.NEW}
+about[gnuplot.Gp] = {"Gp()", "Prepare Gnuplot object.", help.NEW}
 
 gnuplot.keys = 'keys'
-gnuplot.about[gnuplot.keys] = {'keys',
+about[gnuplot.keys] = {'keys',
 [[  Options / examples:
 {math.sin, title='sin'}           -- plot using function, define in Lua; add legend
 {'sin.dat', ln=1, lw=2}           -- plot data from file, use given color and width
@@ -529,25 +529,25 @@ raw='set pm3d'                    -- set Gnuplot options manually
 --- Function for execution during the module import.
 gnuplot.onImport = function ()
   plot = gnuplot.plot
-  local hlp = gnuplot.about[plot]
+  local hlp = about[plot]
   Main.about[plot] = {hlp[1], hlp[2], GPPLOT}
   tplot = gnuplot.tplot 
-  hlp = gnuplot.about[tplot]
+  hlp = about[tplot]
   Main.about[tplot] = {hlp[1], hlp[2], GPPLOT}
   polar = gnuplot.polarplot
-  Main.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', gnuplot.about[polar][2], GPPLOT}
+  Main.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', about[polar][2], GPPLOT}
   tpolar = gnuplot.tpolar
-  hlp = gnuplot.about[tpolar]
+  hlp = about[tpolar]
   Main.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
   surf = gnuplot.surfplot
-  Main.about[surf] = {'surf(x1,y1,fn1,[nm,[x2,y2..]])', gnuplot.about[surf][2], GPPLOT}
+  Main.about[surf] = {'surf(x1,y1,fn1,[nm,[x2,y2..]])', about[surf][2], GPPLOT}
   tsurf = gnuplot.tsurf
-  hlp = gnuplot.about[tsurf]
+  hlp = about[tsurf]
   Main.about[tsurf] = {hlp[1], hlp[2], GPPLOT}
 end
 
--- Uncomment to remove descriptions
---gnuplot.about = nil
+-- Comment to remove descriptions
+gnuplot.about = about
 
 return gnuplot
 

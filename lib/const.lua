@@ -34,6 +34,8 @@ ans = _C.myConst              --> nil
 --	LOCAL
 
 local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+-- description
+local about = help:new("Collection of constants.")
 
 local PHY, ASTRO, MATH = "physics", "astronomy", "math"
 
@@ -83,31 +85,29 @@ local const = {
 phy = {},
 astro = {},
 math = {},
--- description
-about = help:new("Collection of constants."),
 }
 
 -- physics
-const.about[_phy_.G] = {"phy.G", "Gravitational constant.", PHY}
-const.about[_phy_.e] = {"phy.e", "Electron charge.", PHY}
-const.about[_phy_.mu0] = {"phy.mu0", "Permeability of free space.", PHY}
-const.about[_phy_.R] = {"phy.R", "Universal gas constant.", PHY}
-const.about[_phy_.Vm] = {"phy.Vm", "Volume of one mole of ideal gas.", PHY}
-const.about[_phy_.NA] = {"phy.NA", "Avogadro's number.", PHY}
-const.about[_phy_.k] = {"phy.k", "Boltzmann's constant.", PHY}
-const.about[_phy_.h] = {"phy.h", "Planck's constant.", PHY}
-const.about[_phy_.c] = {"phy.c", "Speed of light.", PHY}
-const.about[_phy_.g] = {"phy.g", "Acceleration of free fall.", PHY}
-const.about[_phy_.eps0] = {"phy.eps0", "Permittivity of free space.", PHY}
-const.about[_phy_.sigma] = {"phy.sigma", "Stefan-Boltzmann constant.", PHY}
-const.about[_phy_.Rinf] = {"phy.Rinf", "Rydberg constant.", PHY}
+about[_phy_.G] = {"phy.G", "Gravitational constant.", PHY}
+about[_phy_.e] = {"phy.e", "Electron charge.", PHY}
+about[_phy_.mu0] = {"phy.mu0", "Permeability of free space.", PHY}
+about[_phy_.R] = {"phy.R", "Universal gas constant.", PHY}
+about[_phy_.Vm] = {"phy.Vm", "Volume of one mole of ideal gas.", PHY}
+about[_phy_.NA] = {"phy.NA", "Avogadro's number.", PHY}
+about[_phy_.k] = {"phy.k", "Boltzmann's constant.", PHY}
+about[_phy_.h] = {"phy.h", "Planck's constant.", PHY}
+about[_phy_.c] = {"phy.c", "Speed of light.", PHY}
+about[_phy_.g] = {"phy.g", "Acceleration of free fall.", PHY}
+about[_phy_.eps0] = {"phy.eps0", "Permittivity of free space.", PHY}
+about[_phy_.sigma] = {"phy.sigma", "Stefan-Boltzmann constant.", PHY}
+about[_phy_.Rinf] = {"phy.Rinf", "Rydberg constant.", PHY}
 -- astronomy
-const.about[_astro_.pc] = {"astro.pc", "One parsec.", ASTRO}
-const.about[_astro_.ly] = {"astro.ly", "One light year.", ASTRO}
+about[_astro_.pc] = {"astro.pc", "One parsec.", ASTRO}
+about[_astro_.ly] = {"astro.ly", "One light year.", ASTRO}
 -- mathematics
-const.about[_math_.phi] = {"math.phi", "Golden ratio.", MATH}
-const.about[_math_.pi] = {"math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
-const.about[_math_.e] = {"math.e", "Base of the natural logarithm.", MATH}
+about[_math_.phi] = {"math.phi", "Golden ratio.", MATH}
+about[_math_.pi] = {"math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
+about[_math_.e] = {"math.e", "Base of the natural logarithm.", MATH}
 
 --- Make value "constant".
 --  @param sName Name of constant.
@@ -120,7 +120,7 @@ const.add = function (sName,val,sUnit)
   _user_[sName..'_u'] = sUnit
   return 'Done'
 end
-const.about[const.add] = {'add(sName,value[,sUnits])','Create new constant.'}
+about[const.add] = {'add(sName,value[,sUnits])','Create new constant.'}
 
 --- Remove existing constant.
 --  @param sName Name of constant.
@@ -131,16 +131,16 @@ const.remove = function (sName)
     return 'Done'
   end
 end
-const.about[const.remove] = {'remove(sName)','Delete user-defined constant.'}
+about[const.remove] = {'remove(sName)','Delete user-defined constant.'}
+
+-- Comment to remove descriptions
+const.about = about
 
 -- Make objects "immutable"
 setmetatable(const,       {__newindex=modifyError, __index = function (t,k) return _user_[k] end})
 setmetatable(const.phy,   {__newindex=modifyError, __index = function (t,k) return _phy_[k] end})
 setmetatable(const.astro, {__newindex=modifyError, __index = function (t,k) return _astro_[k] end})
 setmetatable(const.math,  {__newindex=modifyError, __index = function (t,k) return _math_[k] end})
-
--- Uncomment to remove descriptions
---const.about = nil
 
 return const
 
