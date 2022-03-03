@@ -107,7 +107,7 @@ local function numquat(Q) return Q[2]==0 and Q[3]==0 and Q[4]==0 and Q[1] or Q e
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
 -- description
 local about = help:new("Operations with quaternions.")
 

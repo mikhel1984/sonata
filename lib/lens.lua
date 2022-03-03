@@ -105,7 +105,7 @@ local function islens(v) return type(v)=='table' and v.islens end
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
 -- description
 local about = help:new("Matrix methods in paraxial optics")
 

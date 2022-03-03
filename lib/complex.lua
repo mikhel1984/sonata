@@ -151,7 +151,7 @@ local function sh (d) return 0.5*(math.exp(d)-math.exp(-d)) end
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
 -- description
 local about = help:new("Manipulations with complex numbers.")
 

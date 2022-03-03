@@ -75,7 +75,7 @@ local DISTRIB = 'distribution'
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
 -- description
 local about = help:new("Statistical calculations. Data set must be a Lua table.")
 

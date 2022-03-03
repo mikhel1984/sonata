@@ -144,7 +144,7 @@ local GPPLOT = 'quick'
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
 -- description
 local about = help:new("Interface for calling Gnuplot from Sonata.")
 

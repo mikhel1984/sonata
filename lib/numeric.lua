@@ -84,7 +84,7 @@ end
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
 -- description
 local about = help:new("Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL.")
 
