@@ -36,8 +36,6 @@ Sonata.version = '0.9.26'
 -- Quit the program
 quit = Sonata.exit
 
--- Import base functions
-Main = require('core.main')
 
 -- Modules 
 use = {
@@ -163,11 +161,7 @@ example = '--test array',
 process = function (args)
   local Test = require('core.test')
   if args[2] then
-    if args[2] == 'main' then
-      Test.module(string.format('%score/main.lua', (SONATA_ADD_PATH or '')))
-    else
-      Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
-    end
+    Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
   else
     for m in pairs(use) do
       Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), m))
@@ -277,6 +271,9 @@ Sonata._arghelp_ = function ()
 end
 
 --================== EXECUTION =================
+
+-- Try to import base functions
+_, Main = pcall(function () require('lib.main') end)
 
 -- Process command line arguments
 if #arg > 0 then

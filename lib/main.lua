@@ -11,7 +11,7 @@
 ---------------- Tests ---------------------
 --[[TEST
 
-require 'core.main'
+require 'lib.main'
 
 -- constants starts from _
 ans = _pi                     --> math.pi
@@ -102,23 +102,14 @@ local HYP = 'hyperbolic'
 local FILES = 'files'
 
 -- compatibility
-local Ver = {}
-if _VERSION < 'Lua 5.3' then
-  Ver.atan2 = math.atan2
-  Ver.mathType = function (x)
-    local n = tonumber(x)
-    if not n then return nil end
-    local _,p = math.modf(n)
-    return (p == 0.0) and 'integer' or 'float'
-  end
-else
-  Ver.atan2 = math.atan
-  Ver.mathType = math.type
-end
+local Ver = require("lib.utils").versions
 
 --	MODULE
 
 local main = {}
+-- update for standalone call
+About = About or {}
+SonataHelp = SonataHelp or {}
 
 -- Commonly used methods
 abs = math.abs;   About[abs] =  {"abs(x)", "Absolute value."}
@@ -454,7 +445,7 @@ end
 About[DsvRead] = {"DsvRead(sFile[,delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
 
 TblImport = SonataHelp.tblImport
-About[TblImport] = {"TblImport(sFile)", "Import Lua table, saved into file.", FILES}
+About[TblImport or 1] = {"TblImport(sFile)", "Import Lua table, saved into file.", FILES}
 
 
 --- Execute file inside the interpreter.

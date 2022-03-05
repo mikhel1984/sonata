@@ -146,7 +146,7 @@ end
 --  @param lng Localization table from existing file.
 --  @return String representation of all help information of the module.
 local function docLines(module, alias, lng)
-  local m = require((module == 'main' and 'core.' or 'lib.')..module)
+  local m = require('lib.' .. module)
   local lng_t = lng and lng[alias] or {}
   -- collect
   local fn, description = {}
@@ -226,7 +226,7 @@ generator.doc = function (locName, tModules)
   local functions, description = docLines('main','Main',lng)
   res[#res+1] = string.format('<p class="descript">%s</p>', description)
   res[#res+1] = string.format('<p>%s</p>', functions)
-  local fstr = Help.readAll(string.format('%score%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
+  local fstr = Help.readAll(string.format('%slib%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
   res[#res+1] = docExample(Test._getCode_(fstr))
   res[#res+1] = '<a href="#Top">Top</a></div>'
   -- other modules
@@ -262,7 +262,7 @@ end
 local function helpLines(module, alias, lng)
   -- get table and name
   local m = (type(module) == 'string') 
-             and require((module == 'main' and 'core.' or 'lib.') .. module)
+             and require('lib.' .. module)
              or module
   local mName = (type(module) == 'string') and (module .. '.lua') or 'dialog'
   -- choose existing data
