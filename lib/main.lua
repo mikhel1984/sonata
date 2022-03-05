@@ -20,10 +20,10 @@ ans = _pi                     --> math.pi
 ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
 
 -- round number
-ans = Round(0.9)           --> 1.0
+ans = Round(0.9)              --> 1.0
 
 -- save 2 digits
-ans = Round(math.pi, 2)    --> 3.14
+ans = Round(math.pi, 2)       --> 3.14
 
 -- random between 0 and 1
 p = rand()
@@ -38,7 +38,7 @@ print(randn())
 
 -- get object type
 -- "knows" types for Sonata objects
-ans = Type(25)             --> 'integer'
+ans = Type(25)                --> 'integer'
 
 -- modified print function 
 a = {a=1,b=2, 3,4,5}
