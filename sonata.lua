@@ -18,6 +18,27 @@
 
 --=====================  CODE  ========================
 
+-- Modules
+use = {
+--  name     alias
+  array     = "Arr",
+  bigint    = "Int",
+  complex   = "Comp",
+  const     = "_C",
+  geodesy   = "Geo",
+  gnuplot   = "Gp",
+  graph     = "Graph",
+  lens      = "Lens",
+  matrix    = "Mat",
+  numeric   = "Num",
+  polynomial = "Poly",
+  quaternion = "Quat",
+  rational  = "Rat",
+  special   = "Spec",
+  stat      = "Stat",
+  units     = "Unit",
+}
+
 -- Add path to the libraries
 if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)

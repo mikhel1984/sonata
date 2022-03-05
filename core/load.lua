@@ -1,3 +1,10 @@
+--[[		sonata/core/load.lua
+
+--- Prepare the main functionality of the program.
+
+	module 'load'
+]]
+
 -- Prepare help module.
 SonataHelp = require "core.help"
 About = SonataHelp:new("Lua based mathematics.")
@@ -10,28 +17,6 @@ Sonata.version = '0.9.26'
 
 -- Quit the program
 quit = Sonata.exit
-
-
--- Modules
-use = {
---  name     alias
-  array     = "Arr",
-  bigint    = "Int",
-  complex   = "Comp",
-  const     = "_C",
-  geodesy   = "Geo",
-  gnuplot   = "Gp",
-  graph     = "Graph",
-  lens      = "Lens",
-  matrix    = "Mat",
-  numeric   = "Num",
-  polynomial = "Poly",
-  quaternion = "Quat",
-  rational  = "Rat",
-  special   = "Spec",
-  stat      = "Stat",
-  units     = "Unit",
-}
 
 -- Import actions
 function Sonata.doimport(tbl,name)
@@ -210,7 +195,6 @@ exit = true},
 _args_['-h'] = {
 process = function () print(Sonata._arghelp_()) end,
 exit = true}
-
 
 -- string representation of the help info
 Sonata._arghelp_ = function ()
