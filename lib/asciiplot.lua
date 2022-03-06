@@ -75,36 +75,42 @@ end
 
 -- Add coordinate axes
 asciiplot._axes_ = function (F)
-  local vertical, horizontal = '-', '|'
-  local n = math.modf(F.width / 2) + 1
+  local vertical, horizontal = '|', '-'
+  -- vertical line
+  local int, frac = math.modf((F.width-1) * 0.5 + 1)
+  int = (frac > 0.5) and (int + 1) or int 
   for i = 1, F.heigth do
-    F.canvas[i][n] = horizontal
+    F.canvas[i][int] = vertical
   end
-  F.canvas[1][n] = 'A'
-  n = math.modf(F.heigth / 2) + 1
-  local row = F.canvas[n]
+  F.canvas[1][int] = 'A'
+  -- horizontal line
+  int, frac = math.modf((1-F.heigth) * 0.5 + F.heigth)
+  int = (frac > 0.5) and (int + 1) or int 
+  local row = F.canvas[int]
   for i = 1, F.width do 
-    row[i] = vertical
+    row[i] = horizontal
   end
-  row[#row] = '>'
+  row[F.width] = '>'
 end
 
 asciiplot._limits_ = function (F)
   -- horizontal 
-  local n = math.modf(F.heigth / 2) + 2
+  local int, frac = math.modf((1-F.heigth) * 0.5 + F.heigth + 1)
+  int = (frac > 0.5) and (int + 1) or int 
   local s = tostring(F.xrange[1]) 
-  local row = F.canvas[n]
+  local row = F.canvas[int]
   for i = 1, #s do
     row[i] = string.sub(s,i,i)
   end
   s = tostring(F.xrange[2])
-  row = F.canvas[n-2]
+  row = F.canvas[int-2]
   local beg = F.width - #s 
   for i = 1, #s do
     row[beg+i] = string.sub(s,i,i)
   end
   -- vertical 
-  beg = math.modf(F.width / 2) + 2
+  int, frac = math.modf((F.width-1) * 0.5 + 2)
+  beg = (frac > 0.5) and (int + 1) or int 
   s = tostring(F.yrange[2]) 
   row = F.canvas[1] 
   for i = 1, #s do
@@ -120,7 +126,17 @@ end
 
 -- add point
 asciiplot._add_ = function (F,dx,dy,s)
-  
+  local h, w = F.heigth, F.width
+  local nx = (dx - F.xrange[1]) / (F.xrange[2] - F.xrange[1]) 
+  local ny = (dy - F.yrange[1]) / (F.yrange[2] - F.yrange[1])
+  local int, frac = math.modf((w-1) * nx + 1)
+  nx = (frac > 0.5) and (int + 1) or int
+  int, frac = math.modf((1-h) * ny + h)
+  ny = (frac > 0.5) and (int + 1) or int
+  --print(nx, ny, F.width / 2, F.heigth / 2)
+  if nx >= 0 and nx <= w and ny >= 0 and ny <= h then
+    F.canvas[ny][nx] = s
+  end
 end
 
 asciiplot.__tostring = function (F)
@@ -158,10 +174,15 @@ asciiplot.about = about
 
 --======================================
 
-fig1 = asciiplot:new()
+fig1 = asciiplot:new(21,21)
+
 fig1.xrange = {-10,10}
 fig1.yrange = {-10,10}
 fig1:_reset_()
 fig1:_axes_()
 fig1:_limits_()
+for i = -10,10 do
+  fig1:_add_(i, i, '*')
+end
+--fig1:_add_(0,0,'*')
 print(fig1)
