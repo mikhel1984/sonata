@@ -134,8 +134,7 @@ return WORD2
   f = io.open(fName, 'w')
   f:write(txt)
   f:close()
-  io.write('File ', fName, ' is ready.\n',
-           "Add to the 'use' list in 'sonata.lua'.\n")
+  io.write('File ', fName, " is ready. Add it to the 'use' table in 'sonata.lua'.\n")
 end
 
 --================== HTML documentation ====================
