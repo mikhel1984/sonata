@@ -28,8 +28,6 @@ ans = math.pi  --2> 355/113
 --  @return True if the object is asciiplot.
 local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 
-local WHITE = '.'
-
 --	INFO
 
 local help = SonataHelp or {new=function () return {} end}
@@ -61,18 +59,63 @@ asciiplot.new = function(self,dwidth,dheight)
   return setmetatable(o,self)
 end
 
+-- Resize, clear
 asciiplot._reset_ = function (F)
-  -- resize, clear
+  local white = ' '
   for i = 1, F.heigth do
     local row = F.canvas[i] or {}
-    for j = 1, F.width do row[j] = WHITE end
+    for j = 1, F.width do row[j] = white end
     if #row > F.width then 
       for j = #row, F.width+1, -1 do row[j] = nil end
     end
     F.canvas[i] = row
   end
   F.legend = {}
+end
 
+-- Add coordinate axes
+asciiplot._axes_ = function (F)
+  local vertical, horizontal = '-', '|'
+  local n = math.modf(F.width / 2) + 1
+  for i = 1, F.heigth do
+    F.canvas[i][n] = horizontal
+  end
+  F.canvas[1][n] = 'A'
+  n = math.modf(F.heigth / 2) + 1
+  local row = F.canvas[n]
+  for i = 1, F.width do 
+    row[i] = vertical
+  end
+  row[#row] = '>'
+end
+
+asciiplot._limits_ = function (F)
+  -- horizontal 
+  local n = math.modf(F.heigth / 2) + 2
+  local s = tostring(F.xrange[1]) 
+  local row = F.canvas[n]
+  for i = 1, #s do
+    row[i] = string.sub(s,i,i)
+  end
+  s = tostring(F.xrange[2])
+  row = F.canvas[n-2]
+  local beg = F.width - #s 
+  for i = 1, #s do
+    row[beg+i] = string.sub(s,i,i)
+  end
+  -- vertical 
+  beg = math.modf(F.width / 2) + 2
+  s = tostring(F.yrange[2]) 
+  row = F.canvas[1] 
+  for i = 1, #s do
+    row[beg+i] = string.sub(s,i,i)
+  end
+  s = tostring(F.yrange[1]) 
+  beg = beg - 3 - #s 
+  row = F.canvas[F.heigth]
+  for i = 1, #s do
+    row[beg+i] = string.sub(s,i,i)
+  end
 end
 
 -- add point
@@ -81,6 +124,7 @@ asciiplot._add_ = function (F,dx,dy,s)
 end
 
 asciiplot.__tostring = function (F)
+  if #F.canvas == 0 then return '' end
   local acc = {}
   for i = 1, F.heigth do 
     acc[#acc+1] = table.concat(F.canvas[i])
@@ -90,6 +134,7 @@ asciiplot.__tostring = function (F)
   end
   return table.concat(acc,'\n')
 end
+
 
 -- simplify constructor call
 setmetatable(asciiplot, {__call = function (self,v) return asciiplot:new(v) end})
@@ -114,5 +159,9 @@ asciiplot.about = about
 --======================================
 
 fig1 = asciiplot:new()
+fig1.xrange = {-10,10}
+fig1.yrange = {-10,10}
 fig1:_reset_()
+fig1:_axes_()
+fig1:_limits_()
 print(fig1)
