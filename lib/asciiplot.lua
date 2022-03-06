@@ -54,13 +54,14 @@ asciiplot.new = function(self,dwidth,dheight)
     yrange = {-1,1}, 
     canvas = {},
     legend = {},
+    -- title can be added
   }
   -- return object
   return setmetatable(o,self)
 end
 
 -- Resize, clear
-asciiplot._reset_ = function (F)
+asciiplot._clear_ = function (F)
   local white = ' '
   for i = 1, F.heigth do
     local row = F.canvas[i] or {}
@@ -135,18 +136,32 @@ asciiplot._add_ = function (F,dx,dy,s)
   ny = (frac > 0.5) and (int + 1) or int
   --print(nx, ny, F.width / 2, F.heigth / 2)
   if nx >= 0 and nx <= w and ny >= 0 and ny <= h then
+    -- skip points out of range
     F.canvas[ny][nx] = s
   end
 end
 
 asciiplot.__tostring = function (F)
-  if #F.canvas == 0 then return '' end
+  if #F.canvas == 0 then return 'empty' end
   local acc = {}
+  -- title
+  if F.title then
+    assert(type(F.title) == 'string') 
+    -- to center
+    local s = F.title 
+    if #s < F.width then 
+      local n = math.modf((F.width - #s) / 2) 
+      acc[#acc+1] = string.rep(' ', n) .. s
+    end
+  end
+  -- figure
   for i = 1, F.heigth do 
     acc[#acc+1] = table.concat(F.canvas[i])
   end
-  for i = 1, #F.legend do
-    acc[#acc+1] = F.legend[i]
+  -- legend
+  for k, v in pairs(F.legend) do
+    assert(type(k) == 'string' and #k == 1 and type(v) == 'string')
+    acc[#acc+1] = string.format("  (%s) %s", k, v)
   end
   return table.concat(acc,'\n')
 end
@@ -174,13 +189,15 @@ asciiplot.about = about
 
 --======================================
 
-fig1 = asciiplot:new(21,21)
+fig1 = asciiplot:new()
 
 fig1.xrange = {-10,10}
 fig1.yrange = {-10,10}
-fig1:_reset_()
+fig1:_clear_()
 fig1:_axes_()
 fig1:_limits_()
+fig1.title = 'Example'
+fig1.legend['*'] = 'a line'
 for i = -10,10 do
   fig1:_add_(i, i, '*')
 end
