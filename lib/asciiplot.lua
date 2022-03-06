@@ -164,6 +164,23 @@ asciiplot._addTable_ = function (F, t, tInd)
   end
 end
 
+asciiplot._addXY_ = function (F, tX, tY, s)
+  for i = 1, #tX do
+    asciiplot._addPoint_(F, tX[i], tY[i], s)
+  end
+end
+
+asciiplot._fn2XY_ = function (F, fn)
+  local d, x0 = (F.xrange[2] - F.xrange[1]) / (F.width - 1), F.xrange[1]
+  local X, Y = {}, {}
+  for nx = 1, F.width do
+    local x = d * (nx - 1) + x0
+    X[#X+1] = x
+    Y[#Y+1] = fn(x)
+  end
+  return X, Y
+end
+
 asciiplot._defaultLegend_ = function (F, N)
   for i = 1, N do
     F.legend[asciiplot.char[i]] = 'line '..tostring(i)
@@ -200,7 +217,8 @@ asciiplot._findVectorRange_ = function (t)
   local vmin, vmax = math.huge, -math.huge
   for i = 1, #t do
     local v = t[i]
-    if v > vmax then vmax = v elseif v < vmin then vmin = v end
+    if v > vmax then vmax = v end 
+    if v < vmin then vmin = v end
   end
   return vmin, vmax
 end
@@ -223,7 +241,78 @@ asciiplot.tplot = function (F, t, tOpt)
   -- limits
   asciiplot._limits_(F)
   -- show
-  print(F)
+  return F
+end
+
+-- ... is "t1", "t1,t2", "fn", "t1,name", "t1,t2,name" etc.
+asciiplot.plot = function (F, ...)
+  local ag, acc = {...}, {}
+  local xmin, xmax = math.huge, -math.huge
+  local i = 1
+
+  -- collect data
+  repeat 
+    local tx, ty = ag[i], ag[i+1]
+    -- data 
+    if type(tx) == 'function' then
+      -- save funciton, check region later
+      ty = nil
+      i = i + 1
+    elseif type(tx) == 'table' then
+      if type(ty) == 'table' then 
+        i = i + 2
+      else
+        ty, tx = tx, {}
+        for i = 1, #ty do tx[i] = i end
+        i = i + 1
+      end
+      local a,b = asciiplot._findVectorRange_(tx)
+      if a < xmin then xmin = a end
+      if b > xmax then xmax = b end
+    else 
+      error('Unexpected argument with position '..tostring(i))
+    end
+    -- legend 
+    local legend = ag[i]
+    if type(legend) ~= 'string' then 
+      legend = 'line '..tostring(#acc+1)
+    else 
+      i = i + 1
+    end
+    -- save 
+    acc[#acc+1] = {tx, ty, legend}
+  until i > #ag
+  -- check if there are no tables
+  if xmin == math.huge then xmin = F.xrange[1] end
+  if xmax == -math.huge then xmax = F.xrange[2] end
+  F.xrange = {xmin,xmax}
+
+  -- update y range
+  local ymin, ymax = math.huge, -math.huge
+  for i = 1, #acc do 
+    local r = acc[i]
+    if type(r[1]) == 'function' then
+      r[1], r[2] = asciiplot._fn2XY_(F, r[1])
+    end
+    local a, b = asciiplot._findVectorRange_(r[2]) 
+    if a < ymin then ymin = a end
+    if b > ymax then ymax = b end
+  end
+  F.yrange = {ymin, ymax}
+
+  -- prepare 
+  asciiplot._clear_(F)
+  asciiplot._axes_(F)
+  -- 'plot' 
+  for i = 1, #acc do
+    local c = asciiplot.char[i] 
+    local r = acc[i]
+    asciiplot._addXY_(F, r[1], r[2], c)
+    F.legend[c] = r[3]
+  end
+  -- limits
+  asciiplot._limits_(F)
+  return F
 end
 
 -- find table from the list of functions
@@ -298,11 +387,13 @@ fig1:_clear_()
 fig1:_axes_()
 fig1:_limits_()
 fig1.title = 'Trigonomertics'
+ff = fig1:plot( math.sin, 'sin')
+print(ff)
 --for i = -10,10 do
 --  fig1:_addPoint_(i, i, '*')
 --end
-t = asciiplot.findTable(fig1, math.sin, math.cos)
+--t = asciiplot.findTable(fig1, math.sin, math.cos)
 --fig1:_addTable_(t)
 --fig1:_addPoint_(0,0,'*')
 --print(fig1)
-fig1:tplot(t,{3})
+--fig1:tplot(t,{3})
