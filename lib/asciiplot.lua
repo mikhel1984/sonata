@@ -153,15 +153,15 @@ asciiplot._addPoint_ = function (F,dx,dy,s)
   end
 end
 
-asciiplot._addTable_ = function (F, t)
-  for j = 2, #t[1] do
-    local c = asciiplot.char[j-1] 
+asciiplot._addTable_ = function (F, t, tInd)
+  for j = 1, #tInd do
+    local c, k = asciiplot.char[j], tInd[j]
     for i = 1, #t do
       local row = t[i]
-      asciiplot._addPoint_(F, row[1], row[j], c)
+      asciiplot._addPoint_(F, row[1], row[k], c)
     end
+    F.legend[c] = 'column '..tostring(k)
   end
-  asciiplot._defaultLegend_(F, #t[1]-1)
 end
 
 asciiplot._defaultLegend_ = function (F, N)
@@ -171,22 +171,59 @@ asciiplot._defaultLegend_ = function (F, N)
 end
 
 -- bounds of the table values
-asciiplot._findRange_ = function (t)
+asciiplot._findRange_ = function (t, tInd)
+  tInd = tInd or {}
   local xmax, ymax, xmin, ymin = -math.huge, -math.huge, math.huge, math.huge
   for i = 1, #t do
     local row = t[i] 
-    local v = t[1]
-    if     v > xmax then xmax = v 
-    elseif v < xmin then xmin = v 
-    end
-    for j = 2, #row do
-      v = row[j]
-      if     v > ymax then ymax = v
-      elseif v < ymin then ymin = v
+    local v = row[1]
+    if v > xmax then xmax = v end 
+    if v < xmin then xmin = v end
+    if #tInd > 0 then 
+      for j = 1, #tInd do
+        v = row[tInd[j]]
+        if v > ymax then ymax = v end 
+        if v < ymin then ymin = v end
+      end
+    else 
+      for j = 2, #row do
+        v = row[j]
+        if v > ymax then ymax = v end
+        if v < ymin then ymin = v end
       end
     end
   end
   return {xmin, xmax}, {ymin, ymax}
+end
+
+asciiplot._findVectorRange_ = function (t)
+  local vmin, vmax = math.huge, -math.huge
+  for i = 1, #t do
+    local v = t[i]
+    if v > vmax then vmax = v elseif v < vmin then vmin = v end
+  end
+  return vmin, vmax
+end
+
+asciiplot.tplot = function (F, t, tOpt)
+  tOpt = tOpt or {resize = true}
+  -- update range
+  if tOpt.resize then
+    F.xrange, F.yrange = asciiplot._findRange_(t, tOpt)
+  end
+  -- plot all by default
+  if #tOpt == 0 then 
+    for i = 2, #t[1] do tOpt[#tOpt+1] = i end
+  end
+  -- prepare 
+  asciiplot._clear_(F)
+  asciiplot._axes_(F)
+  -- fill 
+  asciiplot._addTable_(F, t, tOpt)
+  -- limits
+  asciiplot._limits_(F)
+  -- show
+  print(F)
 end
 
 -- find table from the list of functions
@@ -249,6 +286,9 @@ asciiplot.about = about
 --return asciiplot
 
 --======================================
+-- TODO plot functions without table
+-- TODO scale canvas
+-- TODO add title into tplot options
 
 local fig1 = asciiplot:new()
 
@@ -262,6 +302,7 @@ fig1.title = 'Trigonomertics'
 --  fig1:_addPoint_(i, i, '*')
 --end
 t = asciiplot.findTable(fig1, math.sin, math.cos)
-fig1:_addTable_(t)
+--fig1:_addTable_(t)
 --fig1:_addPoint_(0,0,'*')
-print(fig1)
+--print(fig1)
+fig1:tplot(t,{3})
