@@ -39,6 +39,8 @@ local about = help:new("Use pseudography for data visualization.")
 local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
+-- symbols
+char = {'+','o','*','#'}
 }
 -- methametods
 asciiplot.__index = asciiplot
@@ -72,6 +74,7 @@ asciiplot._clear_ = function (F)
     F.canvas[i] = row
   end
   F.legend = {}
+  F.title = nil
 end
 
 -- Add coordinate axes
@@ -125,8 +128,17 @@ asciiplot._limits_ = function (F)
   end
 end
 
+-- Prepare a clear canvas
+asciiplot.reset = function (F, bAxis, bLimits)
+  bAxis = bAxis or true
+  bLimits = bLimits or true
+  asciiplot._clear_(F)
+  if bAxis   then asciiplot._axes_(F) end
+  if bLimits then asciiplot._limits_(F) end
+end
+
 -- add point
-asciiplot._add_ = function (F,dx,dy,s)
+asciiplot._addPoint_ = function (F,dx,dy,s)
   local h, w = F.heigth, F.width
   local nx = (dx - F.xrange[1]) / (F.xrange[2] - F.xrange[1]) 
   local ny = (dy - F.yrange[1]) / (F.yrange[2] - F.yrange[1])
@@ -135,10 +147,59 @@ asciiplot._add_ = function (F,dx,dy,s)
   int, frac = math.modf((1-h) * ny + h)
   ny = (frac > 0.5) and (int + 1) or int
   --print(nx, ny, F.width / 2, F.heigth / 2)
-  if nx >= 0 and nx <= w and ny >= 0 and ny <= h then
+  if nx >= 1 and nx <= w and ny >= 1 and ny <= h then
     -- skip points out of range
     F.canvas[ny][nx] = s
   end
+end
+
+asciiplot._addTable_ = function (F, t)
+  for j = 2, #t[1] do
+    local c = asciiplot.char[j-1] 
+    for i = 1, #t do
+      local row = t[i]
+      asciiplot._addPoint_(F, row[1], row[j], c)
+    end
+  end
+  asciiplot._defaultLegend_(F, #t[1]-1)
+end
+
+asciiplot._defaultLegend_ = function (F, N)
+  for i = 1, N do
+    F.legend[asciiplot.char[i]] = 'line '..tostring(i)
+  end
+end
+
+-- bounds of the table values
+asciiplot._findRange_ = function (t)
+  local xmax, ymax, xmin, ymin = -math.huge, -math.huge, math.huge, math.huge
+  for i = 1, #t do
+    local row = t[i] 
+    local v = t[1]
+    if     v > xmax then xmax = v 
+    elseif v < xmin then xmin = v 
+    end
+    for j = 2, #row do
+      v = row[j]
+      if     v > ymax then ymax = v
+      elseif v < ymin then ymin = v
+      end
+    end
+  end
+  return {xmin, xmax}, {ymin, ymax}
+end
+
+-- find table from the list of functions
+asciiplot.findTable = function (F, ...)
+  local t, res = {...}, {}
+  local d, x0 = (F.xrange[2] - F.xrange[1]) / (F.width - 1), F.xrange[1] 
+  for nx = 1, F.width do 
+    local x = d * (nx - 1) + x0
+    local row = {x} 
+    for i = 1, #t do row[#row+1] = t[i](x) end
+    res[#res+1] = row
+  end
+  return res
 end
 
 asciiplot.__tostring = function (F)
@@ -189,17 +250,18 @@ asciiplot.about = about
 
 --======================================
 
-fig1 = asciiplot:new()
+local fig1 = asciiplot:new()
 
-fig1.xrange = {-10,10}
-fig1.yrange = {-10,10}
+fig1.xrange = {-4,4}
+fig1.yrange = {-1,1}
 fig1:_clear_()
 fig1:_axes_()
 fig1:_limits_()
-fig1.title = 'Example'
-fig1.legend['*'] = 'a line'
-for i = -10,10 do
-  fig1:_add_(i, i, '*')
-end
---fig1:_add_(0,0,'*')
+fig1.title = 'Trigonomertics'
+--for i = -10,10 do
+--  fig1:_addPoint_(i, i, '*')
+--end
+t = asciiplot.findTable(fig1, math.sin, math.cos)
+fig1:_addTable_(t)
+--fig1:_addPoint_(0,0,'*')
 print(fig1)
