@@ -34,6 +34,39 @@ print(fig1)
 -- define arbitrary figure size
 -- odd is preferable 
 fig2 = Ap(21,11)    -- width=21, height = 11
+print(fig2:plot(function (x) return 2*x end)) 
+
+-- show table 
+tbl = {}
+for x = 0, 3, 0.1 do
+  --             x      y1          y2
+  tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
+end
+print(fig2:tplot(tbl))
+
+-- plot only y2, don't rescale
+fig2.xrange = {-1, 4}
+fig2.yrange = {0, 1}
+print(fig2:tplot(tbl, {2, resize=false}))
+
+-- scale figure 
+fig1:scale(0.5)
+ans = fig1.width             --> 37
+
+-- horizontal concatenation 
+fig1.xrange = {0, 1.57}
+fig1:plot(sin, 'sin')
+fig1.title = 'First'
+print(fig1.height)
+fig2:scale(0.5)
+print(fig2.height)
+fig2.xrange = {0, 1.57}
+fig2:plot(cos, 'cos')
+fig2.title = 'Second'
+-- similar to fig1..fig2 for 2 objects
+print(Ap.concat(fig1, fig2))
+
+
 
 --]]
 
@@ -172,11 +205,11 @@ about[asciiplot.reset] = {"reset(F[,bAxis=true,bLimits=true])", "Prepare a clear
 --  @param factor Positive value.
 asciiplot.scale = function (F, factor)
   assert(factor > 0)
-  local int, frac = mmodf(F.xrange[1] * factor)
+  local int, frac = mmodf(WIDTH * factor)
   -- prefer odd numbers 
-  F.xrange[1] = (int % 2 == 1) and int or (int + 1)
-  int, frac = mmodf(F.xrange[2] * factor) 
-  F.xrange[2] = (int % 2 == 1) and int or (int + 1)
+  F.width = (int % 2 == 1) and int or (int + 1)
+  int, frac = mmodf(HEIGHT * factor) 
+  F.height = (int % 2 == 1) and int or (int + 1)
 end
 about[asciiplot.scale] = {"scale(F,factor)", "Change figure size w.r.t. default values."}
 
@@ -386,6 +419,31 @@ asciiplot.plot = function (F, ...)
 end
 about[asciiplot.plot] = {"plot(F,...)", "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
 
+--- Prepare string of the given length.
+--  @param s Source string.
+--  @param N Required length.
+--  @param bCentr Flag to put to central position.
+--  @param bLim   Flag to cut a long string.
+asciiplot._format_ = function (s, N, bCentr, bCut)
+  local res = ''
+  if #s < N then
+    local n = N - #s 
+    if bCentr then 
+      local n1 = mmodf(n / 2)
+      local n2 = n - n1
+      res = string.rep(' ', n1) .. s .. string.rep(' ', n2)
+    else
+      res = s .. string.rep(' ', n) 
+    end
+  else 
+    res = s
+  end
+  if #res > N and bCut then
+    res = string.sub(res,1,N)
+  end
+  return res
+end
+
 --- String representation of the object.
 --  @param F Figure object.
 --  @return String.
@@ -395,11 +453,7 @@ asciiplot.__tostring = function (F)
   -- title
   if F.title then
     -- to center
-    local s = F.title 
-    if #s < F.width then 
-      local n = mmodf((F.width - #s) / 2) 
-      acc[#acc+1] = string.rep(' ', n) .. s
-    end
+    acc[1] = asciiplot._format_(F.title, F.width, true, false)
   end
   -- figure
   for i = 1, F.height do 
@@ -408,7 +462,7 @@ asciiplot.__tostring = function (F)
   -- legend
   for k, v in pairs(F.legend) do
     assert(type(k) == 'string' and #k == 1 and type(v) == 'string')
-    acc[#acc+1] = string.format("  (%s) %s", k, v)
+    acc[#acc+1] = string.format("(%s) %s", k, v)
   end
   return table.concat(acc,'\n')
 end
@@ -448,12 +502,69 @@ asciiplot.copy = function (F)
 end
 about[asciiplot.copy] = {"copy(F)", "Create a copy of the object.", help.NEW} 
 
+--- Horizontal concatenation of figures.
+--  @param ... List of figure objects.
+--  @return String with figures.
+asciiplot.concat = function (...)
+  -- collect info
+  local ag = {...}
+  local nlegend = 0
+  for i,v in ipairs(ag) do
+    if not isasciiplot(v) then error("Not asciiplot objec at "..tostring(i)) end
+    if v.height ~= ag[1].height then error('Different height') end
+    if v.title then btitle = true end
+    local n = 0 
+    for k,_ in pairs(v.legend) do n = n + 1 end
+    if n > nlegend then nlegend = n end
+  end
+  -- data
+  local acc = {}
+  local gap = '  '
+  for i,v in ipairs(ag) do
+    local k = 1
+    -- title
+    local row = acc[k] or {}
+    row[#row+1] = asciiplot._format_(v.title or '', v.width, true, true)
+    row[#row+1] = gap
+    acc[k] = row; k = k + 1
+    -- content
+    for j = 1, v.height do
+      row = acc[k] or {} 
+      row[#row+1] = table.concat(v.canvas[j]) 
+      row[#row+1] = gap
+      acc[k] = row; k = k + 1
+    end
+    -- legend 
+    local n = 0
+    for u,w in pairs(v.legend) do
+      row = acc[k] or {}
+      row[#row+1] = asciiplot._format_(string.format('(%s) %s', u, w), v.width, false, true)
+      row[#row+1] = gap
+      acc[k] = row; k = k + 1
+      n = n + 1
+    end
+    -- add empty lines
+    for j = n+1, nlegend do 
+      row = acc[k] or {}
+      row[#row+1] = asciiplot._format_('', v.width, false, true)
+      row[#row+1] = gap
+      acc[k] = row; k = k + 1
+    end
+  end
+  -- get strings 
+  for i = 1, #acc do acc[i] = table.concat(acc[i]) end
+  return table.concat(acc, '\n')
+end
+about[asciiplot.concat] = {"concat(...)", "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.", help.OTHER}
+-- Simplify call for two objects.
+asciiplot.__concat = function (F1, F2) return asciiplot.concat(F1, F2) end
+
 -- Comment to remove descriptions
 asciiplot.about = about
 
 return asciiplot
 
 --======================================
--- TODO horizontal concatenation
 -- TODO on import
+-- TODO addPosition, addPoint
 
