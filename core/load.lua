@@ -232,7 +232,7 @@ end
 --================== EXECUTION =================
 
 -- Try to import base functions
-_, Main = pcall(function () require('lib.main') end)
+_, Main = pcall(require, 'lib.main')
 
 -- Process command line arguments
 if #arg > 0 then

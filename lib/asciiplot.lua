@@ -54,19 +54,34 @@ fig1:scale(0.5)
 ans = fig1.width             --> 37
 
 -- horizontal concatenation 
+-- first
 fig1.xrange = {0, 1.57}
 fig1:plot(sin, 'sin')
 fig1.title = 'First'
-print(fig1.height)
+-- second
 fig2:scale(0.5)
-print(fig2.height)
 fig2.xrange = {0, 1.57}
 fig2:plot(cos, 'cos')
 fig2.title = 'Second'
--- similar to fig1..fig2 for 2 objects
-print(Ap.concat(fig1, fig2))
+print(Ap.concat(fig1, fig2))   -- similar to fig1..fig2 for 2 objects
 
-
+-- 'manual' createion 
+fig3 = Ap() 
+fig3:scale(0.5)
+fig3.xrange = {-2,2}
+fig3.yrange = {-1,4}
+-- no axes and limits
+fig3:reset(false,false)
+-- add line
+for x = -1.2, 1.2, 0.1 do
+  fig3:addPoint(x, x*x-0.5, Ap.char[1])
+end
+-- add char by index
+fig3:addPose(3,13,'#')
+fig3:addPose(3,24,'#')
+-- add text 
+fig3:addString(2,3,'Hi!')
+print(fig3)
 
 --]]
 
@@ -81,6 +96,8 @@ local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 local WIDTH, HEIGHT = 75, 23
 
 local mmodf = math.modf
+
+local MANUAL = 'manual'
 
 --	INFO
 
@@ -192,13 +209,13 @@ end
 --  @param bAxis Set false to skip axes, true by default.
 --  @param bLimits Set false to skip limits, true by default.
 asciiplot.reset = function (F, bAxis, bLimits)
-  bAxis = bAxis or true
-  bLimits = bLimits or true
+  if bAxis == nil then bAxis = true end
+  if bLimits == nil then bLimits = true end
   asciiplot._clear_(F)
   if bAxis   then asciiplot._axes_(F) end
   if bLimits then asciiplot._limits_(F) end
 end
-about[asciiplot.reset] = {"reset(F[,bAxis=true,bLimits=true])", "Prepare a clear canvas, define elements to print.", help.OTHER}
+about[asciiplot.reset] = {"reset(F[,bAxis=true,bLimits=true])", "Prepare a clear canvas, define elements to print.", MANUAL}
 
 --- Scale xrange and yrange w.r.t. default values.
 --  @param F figure object.
@@ -218,7 +235,7 @@ about[asciiplot.scale] = {"scale(F,factor)", "Change figure size w.r.t. default 
 --  @param dx Coordinate x.
 --  @param dy Coordinate y.
 --  @param s Character.
-asciiplot._addPoint_ = function (F,dx,dy,s)
+asciiplot.addPoint = function (F,dx,dy,s)
   local h, w = F.height, F.width
   local nx = (dx - F.xrange[1]) / (F.xrange[2] - F.xrange[1]) 
   local ny = (dy - F.yrange[1]) / (F.yrange[2] - F.yrange[1])
@@ -226,11 +243,36 @@ asciiplot._addPoint_ = function (F,dx,dy,s)
   nx = (frac > 0.5) and (int + 1) or int
   int, frac = mmodf((1-h) * ny + h)
   ny = (frac > 0.5) and (int + 1) or int
-  if nx >= 1 and nx <= w and ny >= 1 and ny <= h then
+  if nx >= 1 and nx <= w and ny >= 1 and ny <= h and #s == 1 then
     -- skip points out of range
     F.canvas[ny][nx] = s
   end
 end
+about[asciiplot.addPoint] = {"addPoint(F,dx,dy,s)", "Add point (dx,dy) using char 's'.", MANUAL}
+
+--- Set character to direct position.
+--  @param F Figure object.
+--  @param ir Row index.
+--  @param ic Column index.
+--  @param s Character.
+asciiplot.addPose = function (F,ir,ic,s)
+  if ir >= 1 and ir <= F.height and ic > 0 and ic < F.width and #s == 1 then
+    F.canvas[ir][ic] = s
+  end
+end
+about[asciiplot.addPose] = {"addPose(F,ir,ic,s)", "Add character s to the given position.", MANUAL}
+
+--- Set string to the given position.
+--  @param F Figure object.
+--  @param ir Row index.
+--  @param ic Column index.
+--  @param s String.
+asciiplot.addString = function (F,ir,ic,s)
+  for i = 1, #s do
+    asciiplot.addPose(F, ir, ic+i-1, string.sub(s,i,i))
+  end
+end
+about[asciiplot.addString] = {"addString(F,ir,ic,s)", "Set string from the given position.", MANUAL}
 
 --- Add points from a table.
 --  First element of each row is x, the rest are yi. 
@@ -242,7 +284,7 @@ asciiplot._addTable_ = function (F, t, tInd)
     local c, k = asciiplot.char[j], tInd[j]
     for i = 1, #t do
       local row = t[i]
-      asciiplot._addPoint_(F, row[1], row[k], c)
+      asciiplot.addPoint(F, row[1], row[k], c)
     end
     F.legend[c] = 'column '..tostring(k)   -- default legend
   end
@@ -255,7 +297,7 @@ end
 --  @param s Character.
 asciiplot._addXY_ = function (F, tX, tY, s)
   for i = 1, #tX do
-    asciiplot._addPoint_(F, tX[i], tY[i], s)
+    asciiplot.addPoint(F, tX[i], tY[i], s)
   end
 end
 
@@ -559,12 +601,19 @@ about[asciiplot.concat] = {"concat(...)", "Horizontal concatenation of figures w
 -- Simplify call for two objects.
 asciiplot.__concat = function (F1, F2) return asciiplot.concat(F1, F2) end
 
+-- Export funcitons.
+asciiplot.onImport = function ()
+  Plot = function (...)
+    local f = Ap()
+    print(f:plot(...))
+  end
+  Main.about[Plot] = {"Plot(...)", "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", 'visualize' }
+end
+
 -- Comment to remove descriptions
 asciiplot.about = about
 
 return asciiplot
 
 --======================================
--- TODO on import
--- TODO addPosition, addPoint
 
