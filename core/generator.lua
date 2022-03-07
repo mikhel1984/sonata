@@ -75,7 +75,7 @@ ans = math.pi  --2> 355/113
 --	LOCAL
 
 3L Check object type.
---  @param t Object.
+--  @param v Object.
 --  @return True if the object is WORD2.
 local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
 

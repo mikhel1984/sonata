@@ -22,6 +22,7 @@
 use = {
 --  name     alias
   array     = "Arr",
+  asciiplot = "Ap",
   bigint    = "Int",
   complex   = "Comp",
   const     = "_C",
