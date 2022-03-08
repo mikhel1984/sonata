@@ -3,6 +3,7 @@
 --- Use pseudography for data visualization.
 
 --  @author Stanislav Mikhel, 2022
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2022.
 
 	module 'asciiplot'
 --]]
@@ -607,7 +608,7 @@ asciiplot.onImport = function ()
     local f = Ap()
     print(f:plot(...))
   end
-  Main.about[Plot] = {"Plot(...)", "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", 'visualize' }
+  Main.about[Plot] = {"Plot(...)", "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER }
 end
 
 -- Comment to remove descriptions
@@ -616,4 +617,5 @@ asciiplot.about = about
 return asciiplot
 
 --======================================
+-- TODO synchronize with Gp
 
