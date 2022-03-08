@@ -91,13 +91,13 @@ local ERR_INVARG = "Invalid arguments!"
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
+-- description
+local about = help:new("Special mathematical functions.")
 
 --	MODULE
 
 local special = {
--- description
-about = help:new("Special mathematical functions.")
 }
 special.__index = special
 
@@ -116,7 +116,7 @@ special.gamma = function (z)
     return math.sqrt(2*math.pi)*t^(z+0.5)*math.exp(-t)*x
   end
 end
-special.about[special.gamma] = {"gamma(z)", "Gamma function.", GAMMA}
+about[special.gamma] = {"gamma(z)", "Gamma function.", GAMMA}
 
 --- Logarithm of gamma function.
 --  @param z Positive number.
@@ -129,18 +129,18 @@ special.gammaln = function (z)
   for i = 1, #k_gammaln do y=y+1; ser = ser+k_gammaln[i]/y end
   return -tmp+math.log(2.5066282746310005*ser/x)
 end
-special.about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma function.", GAMMA}
+about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma function.", GAMMA}
 
 --- Series representation for incomplete gamma function P.
---  @param a Order.
+--  @param N Order.
 --  @param x Real value.
 --  @return Representation of P.
-special._gammaSer_ = function (a,x)
+special._gammaSer_ = function (N,x)
   local ITMAX,EPS = 100, 3E-7
   local gamser = 0.0
   if x <= 0 then assert(x == 0)
   else
-    local ap,del = a, 1.0/a
+    local ap,del = N, 1.0/N
     local sum = del
     local gammaln = special.gammaln
     for i = 1,ITMAX do
@@ -148,7 +148,7 @@ special._gammaSer_ = function (a,x)
       del = del*x/ap
       sum = sum+del
       if math.abs(del) < math.abs(sum)*EPS then
-        gamser = sum*math.exp(-x+a*math.log(x)-gammaln(a))
+        gamser = sum*math.exp(-x+N*math.log(x)-gammaln(N))
         break
       end
     end
@@ -157,57 +157,57 @@ special._gammaSer_ = function (a,x)
 end
 
 --- Continued fraction representation for incomplete gamma function Q.
---  @param a Order.
+--  @param N Order.
 --  @param x Real value.
 --  @return Representation of Q.
-special._gcf_ = function (a,x)
+special._gcf_ = function (N,x)
   local ITMAX,EPS,FPMIN = 100, 3E-7, 1E-30
-  local b,c = x+1.0-a, 1.0/FPMIN
+  local b,c = x+1.0-N, 1.0/FPMIN
   local d = 1.0/b
   local h,an,del = d
   for i = 1,ITMAX do
-    an,b = -i*(i-a), b+2.0
+    an,b = -i*(i-N), b+2.0
     d,c = 1.0/lowBound(an*d+b,FPMIN), lowBound(b+an/c,FPMIN)
     del = d*c
     h = h*del
     if math.abs(del-1.0) < EPS then break end
   end
-  return math.exp(-x+a*math.log(x)-special.gammaln(a))*h
+  return math.exp(-x+N*math.log(x)-special.gammaln(N))*h
 end
 
---- Incomplete gamma function P(a,x).
---  @param a Order.
+--- Incomplete gamma function P(N,x).
+--  @param N Order.
 --  @param x Non-negative value.
---  @return Value of P(a,x).
-special.gammp = function (a,x)
-  if x < 0.0 or a <= 0 then error(ERR_INVARG) end
-  return (x < a+1.0) and special._gammaSer_(a,x) or 1.0-special._gcf_(a,x)
+--  @return Value of P(N,x).
+special.gammp = function (N,x)
+  if x < 0.0 or N <= 0 then error(ERR_INVARG) end
+  return (x < N+1.0) and special._gammaSer_(N,x) or 1.0-special._gcf_(N,x)
 end
-special.about[special.gammp] = {"gammp(a,x)", "Incomplete gamma function P(a,x).", GAMMA}
+about[special.gammp] = {"gammp(N,x)", "Incomplete gamma function P(N,x).", GAMMA}
 
---- Incomplete gamma function Q(a,x).
---  @param a Order.
+--- Incomplete gamma function Q(N,x).
+--  @param N Order.
 --  @param x Non-negative value.
---  @return Value of Q(a.x).
-special.gammq = function (a,x)
-  if x < 0.0 or a <= 0 then error(ERR_INVARG) end
-  return (x < a+1.0) and 1-special._gammaSer_(a,x) or special._gcf_(a,x)
+--  @return Value of Q(N,x).
+special.gammq = function (N,x)
+  if x < 0.0 or N <= 0 then error(ERR_INVARG) end
+  return (x < N+1.0) and 1-special._gammaSer_(N,x) or special._gcf_(N,x)
 end
-special.about[special.gammq] = {"gammq(a,x)", "Incomplete gamma function Q(a,x) = 1-P(a,x).", GAMMA}
+about[special.gammq] = {"gammq(N,x)", "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
 
 --- Other syntax for incomplete gamma function.
 --  @param x Real value.
---  @param a Order.
+--  @param N Order.
 --  @param tp Type of function ('lower' of 'upper').
 --  @return Value of correspondent incomplete function.
-special.gammainc = function (x,a,tp)
+special.gammainc = function (x,N,tp)
   tp = tp or 'lower'
-  if     tp == 'lower' then return special.gammp(a,x)
-  elseif tp == 'upper' then return special.gammq(a,x)
+  if     tp == 'lower' then return special.gammp(N,x)
+  elseif tp == 'upper' then return special.gammq(N,x)
   else error('Unexpected type '..tostring(tp))
   end
 end
-special.about[special.gammainc] = {"gammainc(x,a[,type='lower')", "Incomplete gamma function, P (type='lower') or Q (type='upper').", GAMMA}
+about[special.gammainc] = {"gammainc(x,N[,type='lower'])", "Incomplete gamma function, P (type='lower') or Q (type='upper').", GAMMA}
 
 --- Beta function.
 --  @param z First value.
@@ -216,7 +216,7 @@ special.about[special.gammainc] = {"gammainc(x,a[,type='lower')", "Incomplete ga
 special.beta = function (z,w)
   return math.exp(special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w))
 end
-special.about[special.beta] = {"beta(z,w)", "Beta function.", BETA}
+about[special.beta] = {"beta(z,w)", "Beta function.", BETA}
 
 --- Logarithm of beta function.
 --  @param z First argument.
@@ -225,7 +225,7 @@ special.about[special.beta] = {"beta(z,w)", "Beta function.", BETA}
 special.betaln = function (z,w)
   return special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w)
 end
-special.about[special.betaln] = {"betaln(z,w)", "Natural logarithm of beta function.", BETA}
+about[special.betaln] = {"betaln(z,w)", "Natural logarithm of beta function.", BETA}
 
 --- Evaluates continued fraction for incomplete beta function by modified Lentz's method.
 --  @param a First bound.
@@ -266,7 +266,7 @@ special.betainc = function (x,a,b)
   end
   return (x < (a+1.0)/(a+b+2.0)) and (bt*special._betacf(a,b,x)/a) or (1.0-bt*special._betacf(b,a,1.0-x)/b)
 end
-special.about[special.betainc] = {"betainc(x,a,b)", "Incomplete beta function Ix(a,b).", BETA}
+about[special.betainc] = {"betainc(x,a,b)", "Incomplete beta function Ix(a,b).", BETA}
 
 --- Exponential integral.
 --  @param n Power.
@@ -309,7 +309,7 @@ special.expint = function (n,x)
   end -- if x
   error('Evaluation is failed!')
 end
-special.about[special.expint] = {"expint(n,x)", "Exponential integral En(x)."}
+about[special.expint] = {"expint(n,x)", "Exponential integral En(x)."}
 
 --- Complementary error function.
 --  @param x Real value.
@@ -321,13 +321,13 @@ special.erfc = function (x)
     (0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))))
   return (x >= 0.0) and ans or (2.0-ans)
 end
-special.about[special.erfc] = {"erfc(x)", "Complementary error function."}
+about[special.erfc] = {"erfc(x)", "Complementary error function."}
 
 --- Error function.
 --  @param x Real value.
 --  @return Error value.
 special.erf = function (x) return 1-special.erfc(x) end
-special.about[special.erf] = {"erf(x)", "Error function."}
+about[special.erf] = {"erf(x)", "Error function."}
 
 --- Legendre coefficient.
 --  @param n Total order.
@@ -367,7 +367,7 @@ special.legendre = function (n,x)
   for i = 1,n+1 do res[i] = plgndr(n,i-1,x) end
   return res
 end
-special.about[special.legendre] = {"legendre(n,x)","Return list of Legendre polynomial coefficients."}
+about[special.legendre] = {"legendre(n,x)","Return list of Legendre polynomial coefficients."}
 
 --- Dawson integral.
 --  @param x Real number.
@@ -396,7 +396,7 @@ special.dawson = function (x)
     return 0.5641895835*sum*(x>=0 and math.exp(-xp*xp) or -math.exp(-xp*xp))
   end
 end
-special.about[special.dawson] = {"dawson(x)", "Dawson integral."}
+about[special.dawson] = {"dawson(x)", "Dawson integral."}
 
 --***** Bessel functions ******
 
@@ -500,30 +500,30 @@ special.bessely = function (n,x)
   end
   return by
 end
-special.about[special.bessely] = {"bessely(n,x)","Bessel function of the second kind.", BESSEL}
+about[special.bessely] = {"bessely(n,x)","Bessel function of the second kind.", BESSEL}
 
 --- Bessel function of the first kind
---  @param n Polynomial order.
+--  @param N Polynomial order.
 --  @param x Real number.
 --  @return Polynomial value
-special.besselj = function (n,x)
-  if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
-  if n == 0 then return special._bessj0_(x) end
-  if n == 1 then return special._bessj1_(x) end
+special.besselj = function (N,x)
+  if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
+  if N == 0 then return special._bessj0_(x) end
+  if N == 1 then return special._bessj1_(x) end
   if x == 0 then return 0 end
   local ACC, BIGNO, BIGNI = 40, 1E10, 1E-10
   local ax = math.abs(x)
   local tox = 2.0/ax
   local bj, bjm, ans
-  if ax > n then
+  if ax > N then
     bjm = special._bessj0_(ax)
     bj = special._bessj1_(ax)
-    for i = 1,(n-1) do 
+    for i = 1,(N-1) do 
       bj, bjm = i*tox*bj-bjm, bm
     end
     ans = bj
   else
-    local m = math.floor((n+math.floor(math.sqrt(ACC*n)))/2)*2 
+    local m = math.floor((N+math.floor(math.sqrt(ACC*N)))/2)*2 
     local jsum, sum = false, 0
     local bjp = 0
     bj, ans = 1, 0
@@ -537,14 +537,14 @@ special.besselj = function (n,x)
       end
       if jsum then sum = sum+bj end
       jsum = not jsum
-      if i == n then ans = bjp end
+      if i == N then ans = bjp end
     end
     sum = 2.0*sum-bj
     ans = ans/sum
   end
-  return (x < 0.0 and (n % 2)==1) and -ans or ans
+  return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-special.about[special.besselj] = {"besselj(n,x)", "Bessel function of the first kind.", BESSEL}
+about[special.besselj] = {"besselj(N,x)", "Bessel function of the first kind.", BESSEL}
 
 --- Modified Bessel function I0.
 --  @param x Real number.
@@ -607,50 +607,50 @@ special._bessk1_ = function (x)
 end
 
 --- Modified Bessel function Kn.
---  @param n Order.
+--  @param N Order.
 --  @param x Positive value.
 --  @return Kn(x).
-special.besselk = function (n,x)
+special.besselk = function (N,x)
   if x <= 0 then error("Positive value is expected!") end
-  if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
-  if n == 0 then return special._bessk0_(x) end
-  if n == 1 then return special._bessk1_(x) end
+  if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
+  if N == 0 then return special._bessk0_(x) end
+  if N == 1 then return special._bessk1_(x) end
   local tox,bkm,bk = 2.0/x, special._bessk0_(x), special._bessk1_(x)
-  for j = 1,n-1 do
+  for j = 1,N-1 do
     bk, bkm = bkm+j*tox*bk, bk
   end
   return bk
 end
-special.about[special.besselk] = {"besselk(n,x)", "Modified Bessel function Kn(x).", BESSEL}
+about[special.besselk] = {"besselk(N,x)", "Modified Bessel function Kn(x).", BESSEL}
 
 --- Modified Bessel function In.
---  @param n Order.
+--  @param N Order.
 --  @param x Real number.
 --  @return In(x).
-special.besseli = function (n,x)
-  if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
-  if n == 0 then return special._bessi0_(x) end
-  if n == 1 then return special._bessi1_(x) end
+special.besseli = function (N,x)
+  if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
+  if N == 0 then return special._bessi0_(x) end
+  if N == 1 then return special._bessi1_(x) end
   if x == 0 then return 0.0 end
   local ACC,BIGNO,BIGNI = 40.0, 1E10, 1E-10
   local tox = 2.0/math.abs(x)
   local bip,ans,bi = 0.0, 0.0, 1.0
-  for j = 2*(n+math.floor(math.sqrt(ACC*n))),1,-1 do
+  for j = 2*(N+math.floor(math.sqrt(ACC*N))),1,-1 do
     bi, bip = bip+j*tox*bi, bi
     if math.abs(bi) > BIGNO then
       ans = ans*BIGNI
       bi = bi*BIGNI
       bip = bip*BIGNI
     end
-    if j == n then ans = bip end
+    if j == N then ans = bip end
   end
   ans = ans*special._bessi0_(x)/bi
-  return (x < 0.0 and (n % 2)==1) and -ans or ans
+  return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-special.about[special.besseli] = {"besseli(n,x)", "Modified Bessel function In(x).", BESSEL}
+about[special.besseli] = {"besseli(N,x)", "Modified Bessel function In(x).", BESSEL}
 
--- Uncomment to remove descriptions
---special.about = nil
+-- Comment to remove descriptions
+special.about = about
 
 return special
 

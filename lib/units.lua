@@ -92,14 +92,14 @@ local BASE, PREFIX = 1, 2
 --- Check object type.
 --  @param t Object to check.
 --  @return True if the object represents units.
-local function isunits(t) return type(t) == 'table' and t.isunits end
+local function isunits(v) return type(v) == 'table' and v.isunits end
 
 --- Comparison rule for unit sorting.
---  @param p1 First table of components.
---  @param p2 Second table of components.
---  @return True if p1 > p2.
-local function comp (p1,p2) 
-  return p1[1] > p2[1] or (p1[1] == p2[1] and string.reverse(p1[2]) < string.reverse(p2[2])) 
+--  @param t1 First table of components.
+--  @param t2 Second table of components.
+--  @return True if t1 > t2.
+local function comp (t1,t2) 
+  return t1[1] > t2[1] or (t1[1] == t2[1] and string.reverse(t1[2]) < string.reverse(t2[2])) 
 end
 
 --- Represent table of units as string.
@@ -141,24 +141,24 @@ local function reduce(t)
 end
 
 --- Check equality of float point numbers.
---  @param a First unit object.
---  @param b Second unit object.
+--  @param d1 First unit object.
+--  @param d2 Second unit object.
 --  @return True if the objects are equal.
-local function equal(a,b)
-  return math.abs(a-b) <= 1e-3*math.abs(a)
+local function equal(d1,d2)
+  return math.abs(d1-d2) <= 1e-3*math.abs(d1)
 end
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
+-- description
+local about = help:new("Operations and conversations according the units.")
 
 --	MODULE
 
 local units = {
 -- mark
 type = 'units', isunits = true,
--- description
-about = help:new("Operations and conversations according the units."),
 -- save some results
 mem_parts = {},
 mem_keys = {},
@@ -190,7 +190,7 @@ units.prefix = {
   Z = 1e+21,  -- zetta
   Y = 1e+24,  -- yotta
 }
-units.about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
+about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 --- Get common part and difference between 2 strings.
 --  @param str1 First string.
@@ -228,11 +228,11 @@ units._args_ = function (a,b)
 end
 
 --- Combine elements with common base.
---  @param val Initial value.
+--  @param d Initial value.
 --  @param t Table of units.
 --  @return New value and reduced table of units.
-units._simplify_ = function (val,t)
-  local acc,new,res = {}, {}, val
+units._simplify_ = function (d,t)
+  local acc,new,res = {}, {}, d 
   local udiff = units._diff_
   for k,v in pairs(t) do
     local previous = nil
@@ -313,16 +313,16 @@ end
 --- Create new unit object.
 --  @param self Parent object.
 --  @param v Numerical value. Can be unit string.
---  @param u String of units. Can be omitted.
+--  @param s String of units. Can be omitted.
 --  @return Unit object.
-units._new_ = function (self, v,u)
-  if not u then 
-    if type(v) == 'string' then v,u = 1,v else u = "" end
+units._new_ = function (self, v,s)
+  if not s then 
+    if type(v) == 'string' then v,s = 1,v else s = "" end
   end
-  if not units.mem_keys[u] then
-    units.mem_keys[u] = toKey(units._parse_(u))
+  if not units.mem_keys[s] then
+    units.mem_keys[s] = toKey(units._parse_(s))
   end
-  return setmetatable({value=v, key=units.mem_keys[u]}, self)
+  return setmetatable({value=v, key=units.mem_keys[s]}, self)
 end
 
 --- Create copy of the element.
@@ -333,18 +333,18 @@ units.copy = function (U)
   cp.key = U.key
   return cp
 end
-units.about[units.copy] = {'copy(U)', 'Create copy of the element.', help.OTHER}
+about[units.copy] = {'copy(U)', 'Create copy of the element.', help.OTHER}
 
 --- Check if 2 elements can be converted to each other.
---  @param k1 First key.
---  @param k2 Second key.
---  @return <code>true</code> if conversation is possible.
-units._isCompatible_ = function (k1,k2)
-  if k1 == k2 then return true end
-  if #k1 == 0 and #k2 ~= 0 then return false end
-  local fk2 = string.gmatch(k2, PART)
+--  @param s1 First key.
+--  @param s2 Second key.
+--  @return true if conversation is possible.
+units._isCompatible_ = function (s1,s2)
+  if s1 == s2 then return true end
+  if #s1 == 0 and #s2 ~= 0 then return false end
+  local fk2 = string.gmatch(s2, PART)
   local udiff = units._diff_
-  for v1,u1 in string.gmatch(k1, PART) do
+  for v1,u1 in string.gmatch(s1, PART) do
     local v2,u2 = fk2()
     -- compare powers and units
     if v1 ~= v2 then return false end
@@ -358,13 +358,13 @@ end
 
 --- Calculate value as the result of conversation.
 --  @param v Initial value.
---  @param from Initial key.
---  @param to Final key.
+--  @param sfrom Initial key.
+--  @param sto Final key.
 --  @return Result value of conversation.
-units._valConvert_ = function (v, from, to)
-  local f,res = string.gmatch(to, PART), v
+units._valConvert_ = function (v, sfrom, sto)
+  local f,res = string.gmatch(sto, PART), v
   local udiff = units._diff_
-  for v1,u1 in string.gmatch(from, PART) do
+  for v1,u1 in string.gmatch(sfrom, PART) do
     local _,u2 = f()
     local l,r = udiff(u1,u2)
     res = res*(units.prefix[l]/units.prefix[r])^tonumber(v1)
@@ -411,11 +411,11 @@ end
 
 --- Convert one unit to another using internal representation.
 --  @param U Initial unit object,
---  @param toKey Expected key.
---  @return Converted object of <code>nil</nil>.
-units._unitConvert_ = function (U, toKey)
+--  @param sto Expected key.
+--  @return Converted object of nil.
+units._unitConvert_ = function (U, sto)
   local res = units:_new_(1)
-  res.key = toKey
+  res.key = sto
   if units._isCompatible_(U.key, res.key) then
     res.value = units._valConvert_(U.value, U.key, res.key)
   else
@@ -432,16 +432,16 @@ end
 
 --- Convert one units to another.
 --  @param U Source unit object.
---  @param r Unit string of function f(u).
+--  @param fn Unit string of function f(u).
 --  @return Result of conversation of <code>nil</code>.
-units.convert = function (U, r)
-  if type(r) == 'function' then return r(U)
+units.convert = function (U, fn)
+  if type(fn) == 'function' then return fn(U)
   else
-    local res = units:_new_(1, r)
+    local res = units:_new_(1, fn)
     return units._unitConvert_(U, res.key)
   end
 end
-units.about[units.convert] = {'convert(v, units)','Convert one units to another, return new object or nil.', }
+about[units.convert] = {'convert(v, fn)','Convert one units to another, return new object or nil.', }
 
 --- -U
 --  @param U Units object.
@@ -508,20 +508,20 @@ end
 
 --- U1 ^ U2
 --  @param U1 Unit object.
---  @param b Number.
+--  @param d Number.
 --  @return Power.
-units.__pow = function (U1,b)
-  assert(not isunits(b), "Wrong power!")
+units.__pow = function (U1,d)
+  assert(not isunits(d), "Wrong power!")
   local res = isunits(U1) and units.copy(U1) or units:_new_(U1)
   local ta = fromKey(res.key)
-  op['^'](ta,b)
-  res.value = (res.value)^b
+  op['^'](ta,d)
+  res.value = (res.value)^d
   res.key = toKey(ta)
   return res
 end
 
 units.arithmetic = 'arithmetic'
-units.about[units.arithmetic] = {units.arithmetic, 'U1+U2, U1-U2, U1*u2, U1/U2, U1^n', help.META}
+about[units.arithmetic] = {units.arithmetic, 'U1+U2, U1-U2, U1*u2, U1/U2, U1^n', help.META}
 
 --- U1 == b
 --  @param U1 First unit object.
@@ -558,7 +558,7 @@ units.__le = function (U1,U2)
 end
 
 units.comparison = 'comparison'
-units.about[units.comparison] = {units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2', help.META}
+about[units.comparison] = {units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2', help.META}
 
 --- Prepare units for print operation.
 --  @param str Units key.
@@ -602,13 +602,13 @@ units.__len = units.val
 
 --- Convert using v['new_units'] notation.
 --  @param U Initial unit object.
---  @param k New Units.
+--  @param s New Units.
 --  @return Result of conversation of <code>nil</code>.
-units.__index = function (U,k)
-  if units[k] then
-    return units[k]
+units.__index = function (U,s)
+  if units[s] then
+    return units[s]
   else
-    local v = units.convert(U,k)
+    local v = units.convert(U,s)
     return v and v.value or nil
   end
 end
@@ -633,15 +633,15 @@ units.add = function (U, rule)
   assert(isunits(rule), 'Units object is expected!')
   units.rules[U] = rule
 end
-units.about[units.add] = {'add(U,rule)', 'Add new rule for conversation.'}
+about[units.add] = {'add(U,rule)', 'Add new rule for conversation.'}
 
 -- simplify constructor call
 setmetatable(units, {__call = function (self,v,u) return units:_new_(v,u) end })
 units.Unit = 'Unit'
-units.about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
+about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
 
--- Uncomment to remove descriptions
---units.about = nil
+-- Comment to remove descriptions
+units.about = about
 
 return units
 

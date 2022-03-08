@@ -75,21 +75,21 @@ ans = math.pi  --2> 355/113
 --	LOCAL
 
 3L Check object type.
---  @param t Object.
+--  @param v Object.
 --  @return True if the object is WORD2.
-local function isWORD2(t) return type(t)=='table' and t.isWORD2 end
+local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
 
 --	INFO
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
+-- description
+local about = help:new("WORD5")
 
 --	MODULE
 
 local WORD2 = {
 -- mark
 type = 'WORD2', isWORD2 = true,
--- description
-about = help:new("WORD5"),
 }
 -- methametods
 WORD2.__index = WORD2
@@ -107,7 +107,7 @@ end
 -- simplify constructor call
 setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
 WORD2.WORD3 = 'WORD3'
-WORD2.about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
+about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
 
 3L Method example.
 --  It is good idea to define method for the copy creation.
@@ -117,10 +117,10 @@ WORD2.copy = function (t)
   -- some logic
   return WORD2:new(argument)
 end
-WORD2.about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
+about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
 
--- Uncomment to remove descriptions
---WORD2.about = nil
+-- Comment to remove descriptions
+WORD2.about = about
 
 return WORD2
 
@@ -134,7 +134,7 @@ return WORD2
   f = io.open(fName, 'w')
   f:write(txt)
   f:close()
-  io.write('File ', fName, ' is ready.\n')
+  io.write('File ', fName, " is ready. Add it to the 'use' table in 'sonata.lua'.\n")
 end
 
 --================== HTML documentation ====================
@@ -145,7 +145,7 @@ end
 --  @param lng Localization table from existing file.
 --  @return String representation of all help information of the module.
 local function docLines(module, alias, lng)
-  local m = require((module == 'main' and 'core.' or 'lib.')..module)
+  local m = require('lib.' .. module)
   local lng_t = lng and lng[alias] or {}
   -- collect
   local fn, description = {}
@@ -225,7 +225,7 @@ generator.doc = function (locName, tModules)
   local functions, description = docLines('main','Main',lng)
   res[#res+1] = string.format('<p class="descript">%s</p>', description)
   res[#res+1] = string.format('<p>%s</p>', functions)
-  local fstr = Help.readAll(string.format('%score%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
+  local fstr = Help.readAll(string.format('%slib%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
   res[#res+1] = docExample(Test._getCode_(fstr))
   res[#res+1] = '<a href="#Top">Top</a></div>'
   -- other modules
@@ -261,7 +261,7 @@ end
 local function helpLines(module, alias, lng)
   -- get table and name
   local m = (type(module) == 'string') 
-             and require((module == 'main' and 'core.' or 'lib.') .. module)
+             and require('lib.' .. module)
              or module
   local mName = (type(module) == 'string') and (module .. '.lua') or 'dialog'
   -- choose existing data

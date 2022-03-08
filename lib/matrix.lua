@@ -239,86 +239,86 @@ local access = {
 --- Check object type.
 --  @param m Object to check.
 --  @return True if the object is 'matrix'.
-local function ismatrix(m) return type(m) == 'table' and m.ismatrix end
+local function ismatrix(v) return type(v) == 'table' and v.ismatrix end
 
-local function nummat(m) return m.rows == 1 and m.cols == 1 and m[1][1] or m end
+local function nummat(M) return M.rows == 1 and M.cols == 1 and M[1][1] or M end
 
 --- Correct range if possible.
---  @param ind Positive or negative index value.
+--  @param i Positive or negative index value.
 --  @param nRange Available range of indexes. 
 --  @return Corrected index or nil.
-local function toRange(ind,nRange)
-  if ind < 0 then ind = ind + nRange + 1 end
-  if ind <= 0 or ind > nRange then return nil end
-  return ind
+local function toRange(i,iRange)
+  if i < 0 then i = i + iRange + 1 end
+  if i <= 0 or i > iRange then return nil end
+  return i
 end
 
 --- Add new row to matrix
 --  @param t Table (matrix).
---  @param k Index.
+--  @param i Index.
 --  @return Matrix row.
-local function addRow(t,k)
+local function addRow(t,i)
   local row = setmetatable({}, access)
-  t[k] = row
+  t[i] = row
   return row
 end
 
 local TRANSFORM = 'transform'
 
 --	INFO
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
+-- description
+local about = help:new("Matrix operations. The matrices are spares by default.")
 
 --	MODULE
 
 local matrix = {
 -- mark object
 type = 'matrix', ismatrix = true,
--- description
-about = help:new("Matrix operations. The matrices are spares by default."),
 }
 
 --- Metametod for access to elements.
 --  @param t Table (object).
---  @param k Key.
+--  @param v Key.
 --  @return New matrix row or desired method.
-matrix.__index = function (t,k) 
-  return matrix[k] or (type(k)=='number' and addRow(t,k))
+matrix.__index = function (t,v) 
+  return matrix[v] or (type(v)=='number' and addRow(t,v))
 end
 
 --- Initialization of matrix with given size.
---  @param nR Number of rows.
---  @param nC Number of columns.
---  @param M Table for initialization.
+--  @param iR Number of rows.
+--  @param iC Number of columns.
+--  @param t Table for initialization.
 --  @return Matrix object.
-matrix._init_ = function (self, nR, nC, M)
-  if nR <= 0 or nC <= 0 then error("Wrong matrix size!") end
-  M.cols, M.rows = nC, nR
-  return setmetatable(M, self)
+matrix._init_ = function (self, iR, iC, t)
+  if iR <= 0 or iC <= 0 then error("Wrong matrix size!") end
+  t.cols, t.rows = iC, iR
+  return setmetatable(t, self)
 end
 
 --- Create new matrix from list of tables.
---  @param M Table, where each sub table is a raw of matrix.
+--  @param t Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
-matrix._new_ = function (M)
-  M = M or {}
-  local cols, rows = 0, #M
+matrix._new_ = function (t)
+  t = t or {}
+  local cols, rows = 0, #t
   for i = 1, rows do
-    if not type(M[i]) == 'table' then error('Row must be a table!') end
-    cols = (cols < #M[i]) and #M[i] or cols
-    setmetatable(M[i], access)
+    if not type(t[i]) == 'table' then error('Row must be a table!') end
+    cols = (cols < #t[i]) and #t[i] or cols
+    setmetatable(t[i], access)
   end
-  return matrix:_init_(rows, cols, M)
+  return matrix:_init_(rows, cols, t)
 end
 
 --- Set product of element to coefficient.
---  @param k Coefficient.
---  @param m Matrix.
+--  @param d Coefficient.
+--  @param M Matrix.
 --  @return Result of production.
-matrix._kProd_ = function (k, M)
+matrix._kProd_ = function (d, M)
   local res = matrix:_init_(M.rows, M.cols, {})
   for r = 1, M.rows do
     local resr, mr = res[r], M[r]
-    for c = 1, M.cols do resr[c] = k*mr[c] end
+    for c = 1, M.cols do resr[c] = d*mr[c] end
   end
   return res
 end
@@ -394,55 +394,55 @@ matrix.rank = function (M)
   end
   return i-1
 end
-matrix.about[matrix.rank] = {"rank(M)", "Find rank of the matrix."}
+about[matrix.rank] = {"rank(M)", "Find rank of the matrix."}
 
 --- Get element or sub matrix. 
 --  In case of sub matrix each index should be a table of 2 or 3 elements: [begin,end[,step]].
 --  @param M Source matrix.
---  @param a Raw index or array of indexes.
---  @param b Column index or array of indexes. In case of vector can be omitted.
+--  @param vR Raw index or array of indexes.
+--  @param vC Column index or array of indexes. In case of vector can be omitted.
 --  @return Element or sub array or nil in case of error.
-matrix.get = function (M,a,b)
-  if not b then
+matrix.get = function (M,vR,vC)
+  if not vC then
     -- vector call
-    if M.rows == 1 then b,a = a,1 else b = 1 end
+    if M.rows == 1 then vC,vR = vR,1 else vC = 1 end
   end
-  local numa = (type(a) == 'number')
-  local numb = (type(b) == 'number')
+  local numa = (type(vR) == 'number')
+  local numb = (type(vC) == 'number')
   -- check range
-  if numa then a = toRange(a, M.rows) end
-  if numb then b = toRange(b, M.cols) end
-  if not (a and b) then return nil end
+  if numa then vR = toRange(vR, M.rows) end
+  if numb then vC = toRange(vC, M.cols) end
+  if not (vR and vC) then return nil end
 
   -- both are numbers
-  if numa and numb then return M[a][b] end
+  if numa and numb then return M[vR][vC] end
 
   -- expected table
   if numa then
-    a = {a,a,1}
+    vR = {vR,vR,1}
   else
-    a[1] = toRange(a[1] or 1, M.rows)
-    a[2] = toRange(a[2] or M.rows, M.rows)
-    a[3] = a[3] or 1
-    if not (a[1] and a[2] and (a[2]-a[1])/a[3] >= 0) then return nil end
+    vR[1] = toRange(vR[1] or 1, M.rows)
+    vR[2] = toRange(vR[2] or M.rows, M.rows)
+    vR[3] = vR[3] or 1
+    if not (vR[1] and vR[2] and (vR[2]-vR[1])/vR[3] >= 0) then return nil end
   end
   if numb then
-    b = {b,b,1}
+    vC = {vC,vC,1}
   else
-    b[1] = toRange(b[1] or 1, M.cols)
-    b[2] = toRange(b[2] or M.cols, M.cols)
-    b[3] = b[3] or 1
-    if not (b[1] and b[2] and (b[2]-b[1])/b[3] >= 0) then return nil end
+    vC[1] = toRange(vC[1] or 1, M.cols)
+    vC[2] = toRange(vC[2] or M.cols, M.cols)
+    vC[3] = vC[3] or 1
+    if not (vC[1] and vC[2] and (vC[2]-vC[1])/vC[3] >= 0) then return nil end
   end
 
   -- fill matrix
-  local res = matrix:_init_(math.floor((a[2]-a[1])/a[3])+1, math.floor((b[2]-b[1])/b[3])+1, {})
+  local res = matrix:_init_(math.floor((vR[2]-vR[1])/vR[3])+1, math.floor((vC[2]-vC[1])/vC[3])+1, {})
   local i = 0
-  for r = a[1],a[2],a[3] do
+  for r = vR[1],vR[2],vR[3] do
     i = i+1
     local resi, mr = res[i], M[r]
     local j = 0
-    for c = b[1],b[2],b[3] do
+    for c = vC[1],vC[2],vC[3] do
       j = j+1
       resi[j] = mr[c]
     end
@@ -451,7 +451,7 @@ matrix.get = function (M,a,b)
 end
 
 -- simplify call of matrix.get()
-matrix.__call = function (m,r,c) return matrix.get(m,r,c) end
+matrix.__call = function (M,vR,vC) return matrix.get(M,vR,vC) end
 
 --- Transpose matrix.
 --  Can be called as T().
@@ -465,7 +465,7 @@ matrix.transpose = function (M)
   end
   return res
 end
-matrix.about[matrix.transpose] = {"transpose(M)", "Return matrix transpose. Shorten form is T().", TRANSFORM}
+about[matrix.transpose] = {"transpose(M)", "Return matrix transpose. Shorten form is T().", TRANSFORM}
 matrix.T = matrix.transpose
 
 --- M1 + M2
@@ -491,13 +491,13 @@ end
 --- - M
 --  @param M Matrix object.
 --  @return Matrix where each element has opposite sign.
-matrix.__unm = function (a) return matrix.map(a,fn_unm) end
+matrix.__unm = function (M) return matrix.map(M,fn_unm) end
 
 --- Get matrix size.
 --  @param M Matrix.
 --  @return Number of rows and columns.
 matrix.size = function (M) return M.rows, M.cols end
-matrix.about[matrix.size] = {"size(M)", "Return number or rows and columns."}
+about[matrix.size] = {"size(M)", "Return number or rows and columns."}
 
 --- Apply function to each element.
 --  @param M Source matrix.
@@ -511,7 +511,7 @@ matrix.map = function (M, fn)
   end
   return res
 end
-matrix.about[matrix.map] = {"map(M,fn)", "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).", TRANSFORM}
+about[matrix.map] = {"map(M,fn)", "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).", TRANSFORM}
 
 --- Apply function to each pair elements of given matrices.
 --  @param M1 First matrix.
@@ -552,7 +552,7 @@ matrix.apply = function (fn, ...)
   end
   return res
 end
-matrix.about[matrix.apply] = {'apply(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
+about[matrix.apply] = {'apply(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
 
 --- Create copy of matrix.
 --  @param M Source matrix.
@@ -565,7 +565,7 @@ matrix.copy = function (M)
   end
   return res
 end
-matrix.about[matrix.copy] = {"copy(M)", "Return copy of matrix.", help.OTHER}
+about[matrix.copy] = {"copy(M)", "Return copy of matrix.", help.OTHER}
 
 --- M1 * M2
 --  @param M1 First matrix or number.
@@ -601,22 +601,22 @@ end
 --  @param M Square matrix.
 --  @param n Natural power or -1.
 --  @return Power of the matrix.
-matrix.__pow = function (M,n)
-  n = assert(Ver.toInteger(n), "Integer is expected!")
+matrix.__pow = function (M,N)
+  N = assert(Ver.toInteger(N), "Integer is expected!")
   if (M.rows ~= M.cols) then error("Square matrix is expected!") end
-  if n == -1 then return matrix.inv(M) end
+  if N == -1 then return matrix.inv(M) end
   local res, acc = matrix.eye(M.rows), matrix.copy(M)
   local mul = matrix.__mul
-  while n > 0 do
-    if n%2 == 1 then res = mul(res, acc) end
-    n = math.modf(n*0.5)
-    if n > 0 then acc = mul(acc, acc) end
+  while N > 0 do
+    if N%2 == 1 then res = mul(res, acc) end
+    N = math.modf(N*0.5)
+    if N > 0 then acc = mul(acc, acc) end
   end
   return res
 end
 
 matrix.arithmetic = 'arithmetic'
-matrix.about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
+about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
 
 --- M1 == M2
 --  @param M1 First matrix.
@@ -635,7 +635,7 @@ matrix.__eq = function (M1,M2)
 end
 
 matrix.comparison = 'comparison'
-matrix.about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
+about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
 
 --- Find determinant.
 --  @param M Initial matrix.
@@ -645,7 +645,7 @@ matrix.det = function (M)
   local _, K = matrix._GaussDown_(matrix.copy(M))
   return K
 end
-matrix.about[matrix.det] = {"det(M)", "Calculate determinant."}
+about[matrix.det] = {"det(M)", "Calculate determinant."}
 
 --- Inverse matrix.
 --  @param M Initial matrix.
@@ -676,7 +676,7 @@ matrix.inv = function (M)
   res.cols = size
   return res
 end
-matrix.about[matrix.inv] = {"inv(M)", "Return inverse matrix.", TRANSFORM}
+about[matrix.inv] = {"inv(M)", "Return inverse matrix.", TRANSFORM}
 
 --- Solve system of equations using Gauss method.
 --  @param M Matrix representation for system of equations.
@@ -684,7 +684,7 @@ matrix.about[matrix.inv] = {"inv(M)", "Return inverse matrix.", TRANSFORM}
 matrix.rref = function (M)
   return matrix._GaussUp_(matrix._GaussDown_(M))
 end
-matrix.about[matrix.rref] = {"rref(M)", "Perform transformations using Gauss method."}
+about[matrix.rref] = {"rref(M)", "Perform transformations using Gauss method."}
 
 --- Create vector.
 --  Simplified vector constructor. 
@@ -696,65 +696,65 @@ matrix.vector = function (t)
   for i = 1, #t do res[i] = {t[i]} end
   return matrix:_init_(#t, 1, res)
 end
-matrix.about[matrix.vector] = {"vector({...})", "Create vector from list of numbers. The same as V().", help.NEW}
+about[matrix.vector] = {"vector({...})", "Create vector from list of numbers. The same as V().", help.NEW}
 matrix.V = matrix.vector
 
 --- Create matrix of zeros.
 --  @param nR Number of rows.
 --  @param nC Number of columns. Can be omitted in case of square matrix.
 --  @return Sparse matrix.
-matrix.zeros = function (nR, nC)
-  if ismatrix(nR) then nR,nC = nR.rows, nR.cols end  -- input is a matrix
-  nC = nC or nR                          -- input is a number
-  return matrix:_init_(nR, nC, {})
+matrix.zeros = function (iR, iC)
+  if ismatrix(iR) then iR,iC = iR.rows, iR.cols end  -- input is a matrix
+  iC = iC or iR                          -- input is a number
+  return matrix:_init_(iR, iC, {})
 end
-matrix.about[matrix.vector] = {"zeros(rows[,cols=rows])", "Create matrix from zeros.", help.NEW}
+about[matrix.vector] = {"zeros(rows[,cols=rows])", "Create matrix from zeros.", help.NEW}
 
 --- Create dense matrix using given rule.
---  @param rows Number of rows.
---  @param cols Number of columns.
+--  @param iR Number of rows.
+--  @param iC Number of columns.
 --  @param fn Function which depends on element index.
-matrix.fill = function (rows, cols, fn)
-  local m = matrix:_init_(rows, cols, {})
-  for r = 1, rows do
+matrix.fill = function (iR, iC, fn)
+  local m = matrix:_init_(iR, iC, {})
+  for r = 1, iR do
     local mr = {}
-    for c = 1,cols do mr[c] = fn(r,c) end
+    for c = 1,iC do mr[c] = fn(r,c) end
     m[r] = mr
   end
   return m
 end
-matrix.about[matrix.fill] = {"fill(rows,cols,fn)", "Create matrix, using function fn(r,c).", help.OTHER}
+about[matrix.fill] = {"fill(iRows,iCols,fn)", "Create matrix, using function fn(r,c).", help.OTHER}
 
 --- Matrix of constants.
---  @param rows Number of rows.
---  @param cols Number of columns. Can be omitted in case of square matrix.
+--  @param iR Number of rows.
+--  @param iC Number of columns. Can be omitted in case of square matrix.
 --  @param val Value to set. Default is 1.
 --  @return New matrix.
-matrix.ones = function (rows, cols, val)
-  if ismatrix(rows) then rows,cols,val = rows.rows, rows.cols, cols end
-  return matrix.fill(rows, cols or rows, function () return val or 1 end)
+matrix.ones = function (iR, iC, val)
+  if ismatrix(iR) then iR,iC,val = iR.rows, iR.cols, iC end
+  return matrix.fill(iR, iC or iR, function () return val or 1 end)
 end
-matrix.about[matrix.ones] = {"ones(rows[,cols=rows,val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
+about[matrix.ones] = {"ones(iRows[,iCols=iRows,val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
 
 --- Matrix with random values.
 --  @param rows Number of rows.
 --  @param cols Number of columns. Can be omitted in case of square matrix.
 --  @return New matrix.
-matrix.rand = function (rows, cols)
-  if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
-  return matrix.fill(rows, cols or rows, function () return math.random() end)
+matrix.rand = function (iR, iC)
+  if ismatrix(iR) then iR,iC = iR.rows, iR.cols end
+  return matrix.fill(iR, iC or iR, function () return math.random() end)
 end
-matrix.about[matrix.rand] = {"rand(rows[,cols=rows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
+about[matrix.rand] = {"rand(iRows[,iCols=iRows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
 
 --- Matrix with normally distributed random values.
 --  @param rows Number of rows.
 --  @param cols Number of columns. Can be omitted in case of square matrix.
 --  @return New matrix.
-matrix.randn = function (rows,cols)
-  if ismatrix(rows) then rows,cols = rows.rows, rows.cols end
-  return matrix.fill(rows, cols or rows, function () return randn() end)
+matrix.randn = function (iR,iC)
+  if ismatrix(iR) then iR,iC = iR.rows, iR.cols end
+  return matrix.fill(iR, iC or iR, function () return randn() end)
 end
-matrix.about[matrix.randn] = {"randn(rows[,cols=rows])","Create matrix with normally distributed values (0 mean and unit variance)", help.NEW}
+about[matrix.randn] = {"randn(iRows[,iCols=iRows])","Create matrix with normally distributed values (0 mean and unit variance)", help.NEW}
 
 --- Matrix with integer random values from 1 to defined max value.
 --  @param x1 Source matrix or upper limit.
@@ -772,25 +772,25 @@ matrix.randi = function (x1,x2,x3)
   end
   return matrix.fill(rows, cols, function () return math.random(1,N) end)
 end
-matrix.about[matrix.randi] = {"randi([M],N,[rows],[cols=rows])", "Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.", help.NEW}
+about[matrix.randi] = {"randi([M],N,[rows],[cols=rows])", "Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.", help.NEW}
 
 --- Identity matrix.
 --  @param rows Number of rows.
 --  @param cols Number of columns. Can be omitted in case of square matrix.
 --  @param val Diagonal value, default is 1.
 --  @return Diagonal matrix with ones.
-matrix.eye = function (rows, cols, val)
-  if ismatrix(rows) then 
-    val = cols or 1
-    rows,cols = rows.rows, rows.cols 
+matrix.eye = function (iR, iC, val)
+  if ismatrix(iR) then 
+    val = iC or 1
+    iR,iC = iR.rows, iR.cols 
   end
-  cols = cols or rows
+  iC = iC or iR 
   val = val or 1
-  local m = matrix:_init_(rows, cols, {})
-  for i = 1, math.min(rows, cols) do m[i][i] = val end
+  local m = matrix:_init_(iR, iC, {})
+  for i = 1, math.min(iR, iC) do m[i][i] = val end
   return m
 end
-matrix.about[matrix.eye] = {"eye(rows[,cols=rows,init=1])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
+about[matrix.eye] = {"eye(iRows[,iCols=iRows,val=1])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
 
 --- Matrix concatenation.
 --  Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
@@ -798,12 +798,12 @@ matrix.about[matrix.eye] = {"eye(rows[,cols=rows,init=1])", "Create identity mat
 --  @param M2 Second matrix.
 --  @param dir Direction of concatenation ('h' for horizontal, 'v' for vertical).
 --  @return Concatenated matrix.
-matrix.concat = function (M1, M2, dir)
+matrix.concat = function (M1, M2, sDir)
   local res = nil
-  if dir == 'h' then
+  if sDir == 'h' then
     if (M1.rows ~= M2.rows) then error("Different number of rows") end
     res = matrix:_init_(M1.rows, M1.cols+M2.cols, {})
-  elseif dir == 'v' then
+  elseif sDir == 'v' then
     if (M1.cols ~= M2.cols) then error("Different number of columns") end
     res = matrix:_init_(M1.rows+M2.rows, M1.cols, {})
   else
@@ -820,7 +820,7 @@ matrix.concat = function (M1, M2, dir)
   end
   return res
 end
-matrix.about[matrix.concat] = {"concat(M1,M2,dir)", 
+about[matrix.concat] = {"concat(M1,M2,sDir)", 
   "Concatenate two matrices, dir='h' - in horizontal direction, dir='v' - in vertical\nUse M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.",
   TRANSFORM}
 
@@ -860,7 +860,7 @@ matrix.tr = function (M)
   for i = 1,math.min(M.rows,M.cols) do sum = sum + M[i][i] end
   return sum
 end
-matrix.about[matrix.tr] = {"tr(M)", "Get trace of the matrix.", help.OTHER}
+about[matrix.tr] = {"tr(M)", "Get trace of the matrix.", help.OTHER}
 
 --- Quick pseudo inverse matrix.
 --  Based on "Fast computation of Moore-Penrose inverse matrices" paper by Pierre Courrieu.
@@ -913,7 +913,7 @@ matrix.pinv = function (M)
   end
   return L * K * K * Lt * Mt
 end
-matrix.about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", TRANSFORM}
+about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", TRANSFORM}
 
 --- Matrix to table.
 --  @param M Source matrix.
@@ -935,7 +935,7 @@ matrix.table = function (M)
   end
   return res
 end
-matrix.about[matrix.table] = {"table(M)", "Convert to simple Lua table.", help.OTHER}
+about[matrix.table] = {"table(M)", "Convert to simple Lua table.", help.OTHER}
 
 --- Get diagonal vector or create matrix with given elements.
 --  @param M Matrix, vector or table with numbers.
@@ -961,7 +961,7 @@ matrix.diag = function (M,n)
   end
   return res
 end
-matrix.about[matrix.diag] = {'diag(M[,n=0])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
+about[matrix.diag] = {'diag(M[,n=0])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
 
 --- V1 x V2
 --  @param V1 3-element vector.
@@ -973,7 +973,7 @@ matrix.cross = function (V1,V2)
   local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
   return matrix:_init_(3,1, {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}})
 end
-matrix.about[matrix.cross] = {'cross(V1,V2)','Cross product or two 3-element vectors.'}
+about[matrix.cross] = {'cross(V1,V2)','Cross product or two 3-element vectors.'}
 
 --- V1 . V2
 --  @param V1 3-element vector.
@@ -985,13 +985,13 @@ matrix.dot = function (V1,V2)
   local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
   return x1*x2+y1*y2+z1*z2
 end
-matrix.about[matrix.dot] = {'dot(V1,V2)', 'Scalar product of two 3-element vectors.'}
+about[matrix.dot] = {'dot(V1,V2)', 'Scalar product of two 3-element vectors.'}
 
 --- Auxiliary function for working with complex numbers.
 --  @param a Number.
 --  @return Absolute value.
-matrix._fabs_ = function (a)
-  return (type(a) == 'table' and a.iscomplex) and a:abs() or math.abs(a)
+matrix._fabs_ = function (v)
+  return (type(v) == 'table' and v.iscomplex) and v:abs() or math.abs(v)
 end
 
 --- Prepare LU transformation for other functions.
@@ -1073,7 +1073,7 @@ matrix.lu = function (M)
     matrix.map(a, function (M,r,c) return r <= c and M or 0 end),  -- upper
     p  -- permutations
 end
-matrix.about[matrix.lu] = {"lu(M)", "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}
+about[matrix.lu] = {"lu(M)", "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}
 
 --- Cholesky decomposition.
 --  @param M Positive definite symmetric matrix.
@@ -1103,33 +1103,33 @@ matrix.chol = function (M)
   end
   return a
 end
-matrix.about[matrix.chol] = {"chol(M)", "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
+about[matrix.chol] = {"chol(M)", "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
 
 --- Change matrix size.
 --  @param M Source matrix.
---  @param nRows New number of rows.
---  @param nCols New number of columns.
+--  @param iRows New number of rows.
+--  @param iCols New number of columns.
 --  @return Matrix with new size.
-matrix.reshape = function (M,nRows,nCols)
-  nRows = nRows or (M.rows*M.cols)
-  nCols = nCols or 1
-  local res = matrix:_init_(nRows,nCols,{})
+matrix.reshape = function (M,iRows,iCols)
+  iRows = iRows or (M.rows*M.cols)
+  iCols = iCols or 1
+  local res = matrix:_init_(iRows,iCols,{})
   local newR, newC = 1, 1   -- temporary indices
   for r = 1, M.rows do
     local Mr = M[r]
     for c = 1, M.cols do
       res[newR][newC] = Mr[c]
       newC = newC+1
-      if newC > nCols then
+      if newC > iCols then
         newC = 1
         newR = newR+1
       end
     end
-    if newR > nRows then break end
+    if newR > iRows then break end
   end
   return res
 end
-matrix.about[matrix.reshape] = {"reshape(M,nRows[=size],nCols[=1])","Change matrix size.",help.OTHER}
+about[matrix.reshape] = {"reshape(M,iRows[=size],iCols[=1])","Change matrix size.",help.OTHER}
 
 --- Euclidean norm of the matrix at whole.
 --  @param M Current matrix.
@@ -1144,12 +1144,12 @@ matrix.norm = function (M)
   end
   return math.sqrt(sum)
 end
-matrix.about[matrix.norm] = {"norm(M)", "Euclidean norm."}
+about[matrix.norm] = {"norm(M)", "Euclidean norm."}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
 matrix.Mat = 'Mat'
-matrix.about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
+about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
 
 --- Function for execution during the module import.
 matrix.onImport = function ()
@@ -1214,8 +1214,8 @@ matrix.onImport = function ()
   Main._updateHelp(atanh,_atanh)
 end
 
--- Uncomment to remove descriptions
---matrix.about = nil
+-- Comment to remove descriptions
+matrix.about = about
 
 return matrix
 

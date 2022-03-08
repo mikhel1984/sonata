@@ -25,6 +25,18 @@ If there are several modules, use
 to concatenate descriptions. In this case the 4-th entry will be added
 to sort help list according the module name.
 
+Function arguments are typically start from a letter according the convention:
+v - any value
+t - table
+d - any number
+f - float point number
+i - integer number
+b - boolean 
+s - string
+fn - function
+N - natural number
+capital - object
+
 --]]
 
 --	LOCAL

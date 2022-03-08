@@ -129,15 +129,15 @@ local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
 --	INFO 
 
-local help = SonataHelp and (require "core.help") or {new=function () return {} end}
+local help = SonataHelp or {new=function () return {} end}
+-- description
+local about = help:new("Operations with arbitrary long integers.")
 
 --	MODULE
 
 local bigint = {
 -- mark
 type='bigint', isbigint=true,
--- description
-about = help:new("Operations with arbitrary long integers."),
 }
 
 bigint.__index = bigint
@@ -195,8 +195,8 @@ bigint._args_ = function (num1, num2)
 end
 
 --- Main algorithm for division.
---  @param num1 First number representation.
---  @param num2 Second number representation.
+--  @param B1 First number representation.
+--  @param B2 Second number representation.
 --  @return The quotient and remainder.
 bigint._div_ = function (B1,B2)
   if #B2 == 1 and B2[1] == 0 then error("Divide by 0!") end
@@ -337,24 +337,24 @@ bigint._decr_ = function (B)
 end
 
 --- Absolute value of number.
---  @param v Bigint or integer number.
+--  @param B Bigint or integer number.
 --  @return Absolute value.
-bigint.abs = function (val)
-  local a = isbigint(val) and bigint.copy(val) or bigint:_new_(val)
+bigint.abs = function (B)
+  local a = isbigint(B) and bigint.copy(B) or bigint:_new_(B)
   a.sign = 1 
   return a
 end
-bigint.about[bigint.abs] = {"abs(v)", "Return module of arbitrary long number."}
+about[bigint.abs] = {"abs(B)", "Return module of arbitrary long number."}
 
 --- Copy of the object.
---  @param v Original bigint object.
+--  @param B Original bigint object.
 --  @return Deep copy.
 bigint.copy = function (B)
   local c = bigint:_new_({B[1], sign=B.sign, base=B._base_})
   for i = 2,#B do c[i] = B[i] end
   return c
 end
-bigint.about[bigint.copy] = {"copy(v)", "Return copy of given number.", help.OTHER}
+about[bigint.copy] = {"copy(B)", "Return copy of given number.", help.OTHER}
 
 --- B1 + B2
 --  @param B1 First bigint or integer.
@@ -464,7 +464,7 @@ bigint.eq = function (B1,B2)
   end
   return false
 end
-bigint.about[bigint.eq] = {"eq(a,b)", "Check equality of two values.", help.OTHER}
+about[bigint.eq] = {"eq(B1,B2)", "Check equality of two values.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
 
@@ -539,9 +539,9 @@ bigint.__pow = function (B1,B2)
 end
 
 bigint.arithmetic = 'arithmetic'
-bigint.about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.META}
+about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.META}
 bigint.comparison = 'comparison'
-bigint.about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.META}
+about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.META}
 
 --- String representation.
 --  @param B Bigint object.
@@ -560,7 +560,7 @@ bigint.__tostring = function (B)
 end
 
 --- Float number representation.
---  @param v Bigint object.
+--  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
 bigint.val = function (B)
   local d, v, sum = B._base_, 1, 0
@@ -570,7 +570,7 @@ bigint.val = function (B)
   end
   return B.sign >= 0 and sum or (-sum)
 end
-bigint.about[bigint.val] = {"val(N)", "Represent current big integer as number if it possible.", help.OTHER}
+about[bigint.val] = {"val(B)", "Represent current big integer as number if it possible.", help.OTHER}
 
 --- B!
 --  @param B Bigint object or integer.
@@ -587,54 +587,54 @@ bigint.fact = function (B)
   until #n == 1 and n[1] == 0
   return res
 end
-bigint.about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer n."}
+about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer B."}
 
 --- Divide elements in the list ot given number, find reminder
 --  @param t List of numbers.
---  @param bOld Initial bases.
---  @param bNew New bases.
+--  @param iOld Initial bases.
+--  @param iNew New bases.
 --  @return Quotient and reminder.
-bigint._divBase_ = function (t, bOld, bNew)
+bigint._divBase_ = function (t, iOld, iNew)
   local rest, set = 0, false
   for i = #t,1,-1 do
-    rest = rest * bOld + t[i]
-    local n,_ = math.modf(rest / bNew)
+    rest = rest * iOld + t[i]
+    local n,_ = math.modf(rest / iNew)
     if set or n > 0 then
       t[i] = n
       set = true
     else 
       t[i] = nil
     end
-    rest = rest - bNew * n
+    rest = rest - iNew * n
   end
   return t, rest
 end
 
 --- Change current numeric base.
 --  @param B Bigint object.
---  @param base New base. 
+--  @param N New base. 
 --  @return Copy with new base.
-bigint.rebase = function (B,base)
-  if base <= 0 then error("Wrong base "..tostring(base)) end
-  if B._base_ == base then return B:copy() end
-  local res = bigint:_new_({0,sign=B.sign, base=base})
+bigint.rebase = function (B, N)
+  if N <= 0 then error("Wrong base "..tostring(N)) end
+  if B._base_ == N then return B:copy() end
+  local res = bigint:_new_({0,sign=B.sign, base=N})
   res[1] = nil    -- remove zero
   -- reverse order
   local dig, n = {}, #B+1
   for i,v in ipairs(B) do dig[i] = v end
   repeat 
-    dig, n = bigint._divBase_(dig, B._base_, base)
+    dig, n = bigint._divBase_(dig, B._base_, N)
     res[#res+1] = n
   until #dig == 0
   return res
 end
-bigint.about[bigint.rebase] = {"rebase(B,base)","Convert number to the new numeric base."}
+about[bigint.rebase] = {"rebase(B,N)","Convert number to the new numeric base."}
 
 --- Get numeric base.
 --  @param B Bigint object.
 --  @return Base value.
 bigint.base = function (B) return B._base_ end
-bigint.about[bigint.base] = {"base(B)", "Current numeric base."}
+about[bigint.base] = {"base(B)", "Current numeric base."}
 
 --- Greatest common devision for bigint objects.
 --  @param B1 First value.
@@ -652,7 +652,7 @@ bigint.gcd = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
   return bigint._gcd_(B1,B2)
 end
-bigint.about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers.", NUMB}
+about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers.", NUMB}
 
 --- Generate random number.
 --  @param B Upper limit.
@@ -678,7 +678,7 @@ bigint.random = function (B)
   end
   return res
 end
-bigint.about[bigint.random] = {"random(B)","Generate pseudo-random value from 0 to B."}
+about[bigint.random] = {"random(B)","Generate pseudo-random value from 0 to B."}
 
 --- Estimate square root using Babylonian method.
 --  @param B Bigint object.
@@ -753,7 +753,7 @@ bigint.factorize = function (B)
   end
   return res
 end
-bigint.about[bigint.factorize] = {"factorize(B)", "Find the list of multipliers.", NUMB}
+about[bigint.factorize] = {"factorize(B)", "Find the list of multipliers.", NUMB}
 
 --- Check if it prime using the Fermat theorem.
 --  @param B Number.
@@ -774,26 +774,26 @@ end
 
 --- Check if the number is prime.
 --  @param B Number.
---  @param method Trivial search by default. Can be 'Fremat'.
+--  @param sMethod Trivial search by default. Can be 'Fremat'.
 --  @return true if prime.
-bigint.isPrime = function (B,method)
+bigint.isPrime = function (B, sMethod)
   B = isbigint(B) and B or bigint:_new_(B)
-  if method == 'Fermat' then
+  if sMethod == 'Fermat' then
     return bigint._primeFermat_(B)
   end
   -- default is a simple search
   local v1,v2 = bigint._trivialSearch_(B)
   return v1 == nil
 end
-bigint.about[bigint.isPrime] = {"isPrime(B[,method])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
+about[bigint.isPrime] = {"isPrime(B[,sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
 
 -- simplify constructor call
 setmetatable(bigint, {__call = function (self, v) return bigint:_new_(v) end})
 bigint.Int = 'Int'
-bigint.about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.NEW}
+about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.NEW}
 
--- Uncomment to remove descriptions
---bigint.about = nil
+-- Comment to remove descriptions
+bigint.about = about
 
 return bigint
 

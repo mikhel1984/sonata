@@ -11,7 +11,7 @@
 ---------------- Tests ---------------------
 --[[TEST
 
-require 'core.main'
+require 'lib.main'
 
 -- constants starts from _
 ans = _pi                     --> math.pi
@@ -20,10 +20,10 @@ ans = _pi                     --> math.pi
 ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
 
 -- round number
-ans = Round(0.9)           --> 1.0
+ans = Round(0.9)              --> 1.0
 
 -- save 2 digits
-ans = Round(math.pi, 2)    --> 3.14
+ans = Round(math.pi, 2)       --> 3.14
 
 -- random between 0 and 1
 p = rand()
@@ -38,7 +38,7 @@ print(randn())
 
 -- get object type
 -- "knows" types for Sonata objects
-ans = Type(25)             --> 'integer'
+ans = Type(25)                --> 'integer'
 
 -- modified print function 
 a = {a=1,b=2, 3,4,5}
@@ -69,15 +69,22 @@ ans = math.deg(_pi)
 -- prepare file name
 nm = os.tmpname()
 
--- save table 
+-- dsv write 
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
 DsvWrite(nm, t, ';')
 
--- read table from file
+-- dsv read
 -- with separator ';'
 tt = DsvRead(nm, ';')
 ans = tt[2][2]                --> 5
+
+-- csv write by columns
+DsvWrite(nm, t, ',', true)
+
+-- csv read by columns
+tt = DsvRead(nm, ',', true)
+ans = tt[1][3]                --> 3
 
 -- read table from file
 f = io.open(nm,'w')
@@ -95,23 +102,14 @@ local HYP = 'hyperbolic'
 local FILES = 'files'
 
 -- compatibility
-local Ver = {}
-if _VERSION < 'Lua 5.3' then
-  Ver.atan2 = math.atan2
-  Ver.mathType = function (x)
-    local n = tonumber(x)
-    if not n then return nil end
-    local _,p = math.modf(n)
-    return (p == 0.0) and 'integer' or 'float'
-  end
-else
-  Ver.atan2 = math.atan
-  Ver.mathType = math.type
-end
+local Ver = require("lib.utils").versions
 
 --	MODULE
 
 local main = {}
+-- update for standalone call
+About = About or {}
+SonataHelp = SonataHelp or {}
 
 -- Commonly used methods
 abs = math.abs;   About[abs] =  {"abs(x)", "Absolute value."}
@@ -178,12 +176,12 @@ end
 About[randn] = {"randn()", "Normal distributed random value with 0 mean and variance 1."}
 
 --- Round to closest integer.
---  @param x Real number.
---  @param n Number of decimal digits.
+--  @param f Real number.
+--  @param N Number of decimal digits.
 --  @return Rounded number.
-Round = function (x,n)
-  local k = 10^(n or 0)
-  local p,q = math.modf(x*k)
+Round = function (f,N)
+  local k = 10^(N or 0)
+  local p,q = math.modf(f*k)
   if q >= 0.5 then 
     p = p+1
   elseif q <= -0.5 then 
@@ -191,7 +189,7 @@ Round = function (x,n)
   end
   return p / k
 end
-About[Round] = {'Round(x[,n=0])', 'Round value, define number of decimal digits.', SonataHelp.OTHER}
+About[Round] = {'Round(f[,N=0])', 'Round value, define number of decimal digits.', SonataHelp.OTHER}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -263,18 +261,18 @@ end
 About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", SonataHelp.OTHER}
 
 --- Show type of the object.
---  @param t Some Lua or Sonata object.
+--  @param v Some Lua or Sonata object.
 --  @return String with type value.
-function Type(t)
-  local v = type(t)
-  if v == 'table' then
-    v = t.type or v
-  elseif v == 'number' then
-    v = Ver.mathType(t) 
+function Type(v)
+  local u = type(v)
+  if u == 'table' then
+    u = v.type or u
+  elseif u == 'number' then
+    u = Ver.mathType(v) 
   end
-  return v
+  return u
 end
-About[Type] = {'Type(t)', 'Show type of the object.', SonataHelp.OTHER}
+About[Type] = {'Type(v)', 'Show type of the object.', SonataHelp.OTHER}
 
 -- Methametods for the range of numbers.
 local metharange = { type = 'range' }
@@ -282,39 +280,39 @@ metharange.__index = metharange
 
 --- Add number (shift range).
 --  @param d Any number.
---  @param tR Range table.
+--  @param R Range object.
 --  @return Shifted range table.
-metharange.__add = function (d, tR)
-  if type(tR) == 'number' then
-    return metharange.__add(tR, d)
+metharange.__add = function (d, R)
+  if type(R) == 'number' then
+    return metharange.__add(R, d)
   else
     local res = {}
-    for _,v in ipairs(tR) do res[#res+1] = v + d end
+    for _,v in ipairs(R) do res[#res+1] = v + d end
     return setmetatable(res, metharange)
   end
 end
 
 --- Multiply to number (expand range).
 --  @param d Any number.
---  @param tR Range table.
+--  @param R Range object.
 --  @return Expanded range table.
-metharange.__mul = function (d, tR)
-  if type(tR) == 'number' then 
-    return metharange.__mul(tR, d)
+metharange.__mul = function (d, R)
+  if type(R) == 'number' then 
+    return metharange.__mul(R, d)
   else 
     local res = {}
-    for _, v in ipairs(tR) do res[#res+1] = v * d end
+    for _, v in ipairs(R) do res[#res+1] = v * d end
     return setmetatable(res, metharange)
   end
 end
 
 --- Pretty print.
---  @param tR Range table.
+--  @param R Range object.
 --  @return String with the table representation.
-metharange.__tostring = function (tR)
+metharange.__tostring = function (R)
   return string.format("{%s}", 
-    (#tR <= 3) and table.concat(tR, ',') 
-               or string.format("%d,%d..%d", tR[1], tR[2], tR[#tR]))
+    (#R <= 3) and table.concat(R, ',') 
+               or string.format("%d,%d..%d", R[1], R[2], R[#R]))
 end
 
 --- Generate sequence of values.
@@ -323,7 +321,7 @@ end
 --  @param dStep Step value (default is 1).
 --  @return Table with numbers, Range object.
 Range = function (dBegin, dEnd, dStep)
-  dStep = dStep or 1
+  dStep = dStep or (dEnd > dBegin) and 1 or -1
   assert((dEnd - dBegin) * dStep > 0)
   local res = {}
   for t = dBegin,dEnd,dStep do res[#res+1] = t end
@@ -332,18 +330,18 @@ Range = function (dBegin, dEnd, dStep)
   end
   return setmetatable(res, metharange)
 end
-About[Range] = {'Range(dBegin,dEnd[,dStep=1])','Generate table with sequence of numbers.', SonataHelp.OTHER}
+About[Range] = {'Range(dBegin,dEnd[,dStep])','Generate table with sequence of numbers.', SonataHelp.OTHER}
 
 --- Generate list of function values.
 --  @param fn Function to apply.
---  @param tbl Table with arguments.
+--  @param t Table with arguments.
 --  @return Table with result of evaluation.
-Map = function (fn, tbl)
+Map = function (fn, t)
   local res = {}
-  for _,v in ipairs(tbl) do res[#res+1] = fn(v) end
+  for _,v in ipairs(t) do res[#res+1] = fn(v) end
   return res
 end
-About[Map] = {'Map(fn,tbl)','Evaluate function for each table element.', SonataHelp.OTHER}
+About[Map] = {'Map(fn,t)','Evaluate function for each table element.', SonataHelp.OTHER}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -378,63 +376,90 @@ main.life = function (board)
 end
 
 --- Save Lua table in file, use given delimiter.
---  @param tbl Lua table.
---  @param fName File name.
---  @param delim Delimiter, default is coma.
-DsvWrite = function (fName, tbl, delim)
-  local f = assert(io.open(fName,'w'))
-  delim = delim or ','
-  for _,v in ipairs(tbl) do
-    if type(v) == 'table' then v = table.concat(v,delim) end
-    f:write(v,'\n')
+--  @param sFile File name.
+--  @param t Lua table.
+--  @param char Delimiter, default is coma.
+--  @param bCol Flag, reading elements by columns.
+DsvWrite = function (sFile, t, char, bCol)
+  local f = assert(io.open(sFile,'w'))
+  char = char or ','
+  if bCol then
+    -- by columns
+    if type(t[1]) == 'table' then
+      for r = 1,#t[1] do
+        local tmp = {}
+        for c = 1,#t do tmp[#tmp+1] = t[c][r] end
+        f:write(table.concat(tmp,char),'\n')
+      end
+    else
+      for r = 1,#t do f:write(t[i],'\n') end
+    end
+  else
+    -- by rows
+    for _,v in ipairs(t) do
+      if type(v) == 'table' then v = table.concat(v,char) end
+      f:write(v,'\n')
+    end
   end
   f:close()
   io.write('Done\n')
 end
-About[DsvWrite] = {"DsvWrite(fname,tbl[,delim=','])", "Save Lua table as delimiter separated data into file.", FILES}
+About[DsvWrite] = {"DsvWrite(sFile,t[,char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
---  @param fName File name.
---  @param delim Delimiter, default is coma.
+--  @param sFile File name.
+--  @param char Delimiter, default is coma.
+--  @param bCol Flag, reading elements by columns.
 --  @return Lua table with data.
-DsvRead = function (fName, delim)
-  local f = assert(io.open(fName, 'r'))
-  local Test = require('core.test')
-  delim = delim or ','
+DsvRead = function (sFile, char, bCol)
+  local f = assert(io.open(sFile, 'r'))
+  char = char or ','
+  local templ = '([^'..char..']+)'
   local res = {}
   for s in f:lines('l') do
     -- read data
-    s = string.match(s,'^%s*(.*)%s*$')
+    if char ~= '#' then
+      s = string.match(s, '([^#]+)')    -- skip comments
+    end
+    s = string.match(s,'^%s*(.*)%s*$')  -- strip line
     if #s > 0 then
       local tmp = {}
-      -- read string elements
-      for p in Test.split(s,delim) do
+      -- parse string
+      for p in string.gmatch(s, templ) do
         tmp[#tmp+1] = tonumber(p) or p
       end
-      res[#res+1] = tmp
+      -- save
+      if bCol then
+        if #res == 0 then  -- initialize
+          for i = 1,#tmp do res[#res+1] = {} end
+        end
+        for i = 1, #tmp do table.insert(res[i], tmp[i]) end
+      else
+        res[#res+1] = tmp
+      end
     end
   end
   f:close()
   return res
 end
-About[DsvRead] = {"DsvRead(fName[,delim=','])", "Read delimiter separated data as Lua table.", FILES}
+About[DsvRead] = {"DsvRead(sFile[,delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
 
 TblImport = SonataHelp.tblImport
-About[TblImport] = {"TblImport(fName)", "Import Lua table, saved into file.", FILES}
+About[TblImport or 1] = {"TblImport(sFile)", "Import Lua table, saved into file.", FILES}
 
 
 --- Execute file inside the interpreter.
---  @param fName Lua or note file name.
-Run = function (fname)
-  if string.find(fname, '%.lua$') then
-    dofile(fname)
-  elseif string.find(fname, '%.note$') then
-    Sonata:note(fname, false)
+--  @param sFile Lua or note file name.
+Run = function (sFile)
+  if string.find(sFile, '%.lua$') then
+    dofile(sFile)
+  elseif string.find(sFile, '%.note$') then
+    Sonata:note(sFile, false)
   else
     io.write('Expected .lua or .note!\n')
   end
 end
-About[Run] = {'Run(fName)', "Execute lua- or note-file.", SonataHelp.OTHER}
+About[Run] = {'Run(sFile)', "Execute lua- or note-file.", SonataHelp.OTHER}
 
 -- save link to help info
 main.about = About
