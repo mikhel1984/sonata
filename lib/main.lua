@@ -163,7 +163,9 @@ About[rand] = {"rand()", "Random number between 0 and 1."}
 randi = function (N) return math.random(1,N) end
 About[randi] = {"randi(N)", "Random integer in range from 1 to N."}
 
-randn = function () 
+randn = function (dMean, dev) 
+  dMean = dMean or 0
+  dev = dev or 1
   -- use Box-Muller transform
   local u,v,s
   repeat
@@ -171,9 +173,10 @@ randn = function ()
     v = 2*math.random()-1
     s = u*u + v*v
   until s <= 1 and s > 0
-  return u * math.sqrt(-2*math.log(s)/s)
+  local norm = u * math.sqrt(-2*math.log(s)/s)
+  return norm * dev + dMean
 end
-About[randn] = {"randn()", "Normal distributed random value with 0 mean and variance 1."}
+About[randn] = {"randn([dMean=0,dev=1])", "Normal distributed random value with the given mean and deviation."}
 
 --- Round to closest integer.
 --  @param f Real number.
