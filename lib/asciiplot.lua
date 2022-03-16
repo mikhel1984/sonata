@@ -29,6 +29,7 @@ y = {1,3,5,7,9}
 print(fig1:plot(x,y)) 
 
 -- combine different sources 
+fig1.yaxis = 'L'  -- left axis
 fig1:plot(x,'single',x,y,'pair',math.log, 'function')
 print(fig1) 
 
@@ -43,6 +44,7 @@ for x = 0, 3, 0.1 do
   --             x      y1          y2
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
+fig2.xaxis = 'D'  -- down
 print(fig2:tplot(tbl))
 
 -- plot only y2, don't rescale
@@ -57,6 +59,7 @@ ans = fig1.width             --> 37
 -- horizontal concatenation 
 -- first
 fig1.xrange = {0, 1.57}
+fig1.yaxis = 'C'; fig1.xaxis = 'D'
 fig1:plot(sin, 'sin')
 fig1.title = 'First'
 -- second
@@ -69,17 +72,18 @@ print(Ap.concat(fig1, fig2))   -- similar to fig1..fig2 for 2 objects
 -- 'manual' createion 
 fig3 = Ap() 
 fig3:scale(0.5)
-fig3.xrange = {-2,2}
+fig3.xrange = {-2,2} 
 fig3.yrange = {-1,4}
 -- no axes and limits
-fig3:reset(false,false)
+fig3.xaxis = nil; fig3.yaxis = nil
+fig3:reset()
 -- add line
 for x = -1.2, 1.2, 0.1 do
   fig3:addPoint(x, x*x-0.5, Ap.char[1])
 end
 -- add char by index
-fig3:addPose(3,13,'#')
-fig3:addPose(3,24,'#')
+fig3:addPose(3, 13, '#')
+fig3:addPose(3, 24, '#')
 -- add text 
 fig3:addString(2,3,'Hi!')
 print(fig3)
@@ -112,7 +116,7 @@ local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
 -- symbols
-char = {'+','o','*','#','%','~','a','c','e','n','s','u','z'}
+char = {'+','o','*','#','%','~','x','a','c','e','n','s','u','z'}
 }
 -- methametods
 asciiplot.__index = asciiplot
@@ -123,11 +127,18 @@ asciiplot.__index = asciiplot
 --  @return New object of asciiplot.
 asciiplot.new = function(self,dwidth,dheight)
   local o = {
+    -- size
     width  = dwidth or WIDTH,
     height = dheight or HEIGHT,
+    -- range
     xrange = {-1,1},
     yrange = {-1,1}, 
+    -- axes location
+    xaxis  = 'C',
+    yaxis  = 'C',
+    -- image
     canvas = {},
+    -- comments
     legend = {},
     -- title can be added
   }
@@ -151,72 +162,100 @@ asciiplot._clear_ = function (F)
   F.title = nil
 end
 
+--- Horizontal line central position
+--  @param F Figure object.
+--  @return Index.
+asciiplot._xcentral_ = function (F)
+  local int, frac = mmodf((1-F.height) * 0.5 + F.height)
+  return (frac > 0.5) and (int + 1) or int 
+end
+
+--- Vertical line central position
+--  @param F Figure object.
+--  @return Index.
+asciiplot._ycentral_ = function (F)
+  local int, frac = mmodf((F.width-1) * 0.5 + 1)
+  return (frac > 0.5) and (int + 1) or int 
+end
+
 --- Add coordinate axes.
 --  @param F Figure object.
 asciiplot._axes_ = function (F)
   local vertical, horizontal = '|', '-'
   -- vertical line
-  local int, frac = mmodf((F.width-1) * 0.5 + 1)
-  int = (frac > 0.5) and (int + 1) or int 
-  for i = 1, F.height do
-    F.canvas[i][int] = vertical
+  local n
+  if F.yaxis == 'C' then n = asciiplot._ycentral_(F)
+  elseif F.yaxis == 'L' then n = 1 
+  elseif F.yaxis == 'R' then n = F.width end
+  if n then
+    for i = 1, F.height do
+      F.canvas[i][n] = vertical
+    end
+    F.canvas[1][n] = 'A'
+    n = nil
   end
-  F.canvas[1][int] = 'A'
   -- horizontal line
-  int, frac = mmodf((1-F.height) * 0.5 + F.height)
-  int = (frac > 0.5) and (int + 1) or int 
-  local row = F.canvas[int]
-  for i = 1, F.width do 
-    row[i] = horizontal
+  if F.xaxis == 'C' then n = asciiplot._xcentral_(F)
+  elseif F.xaxis == 'U' then n = 1
+  elseif F.xaxis == 'D' then n = F.height end
+  if n then
+    local row = F.canvas[n]
+    for i = 1, F.width do 
+      row[i] = horizontal
+    end
+    row[F.width] = '>'
   end
-  row[F.width] = '>'
 end
 
 --- Add xrange and yrange.
 --  @param F Figure object.
 asciiplot._limits_ = function (F)
   -- horizontal 
-  local int, frac = mmodf((1-F.height) * 0.5 + F.height + 1)
-  int = (frac > 0.5) and (int + 1) or int 
-  local s = tostring(F.xrange[1]) 
-  local row = F.canvas[int]
-  for i = 1, #s do
-    row[i] = string.sub(s,i,i)
-  end
-  s = tostring(F.xrange[2])
-  row = F.canvas[int-2]
-  local beg = F.width - #s 
-  for i = 1, #s do
-    row[beg+i] = string.sub(s,i,i)
+  local n 
+  if F.xaxis == 'C' then n = asciiplot._xcentral_(F) + 1
+  elseif F.xaxis == 'U' then n = 1 
+  elseif F.xaxis == 'D' then n = F.height end
+  if n then
+    local row, beg = F.canvas[n], 0
+    local s = tostring(F.xrange[1]) 
+    for i = 1, #s do
+      row[beg+i] = string.sub(s,i,i)
+    end
+    s = tostring(F.xrange[2])
+    beg = F.width - #s - 1
+    for i = 1, #s do
+      row[beg+i] = string.sub(s,i,i)
+    end
+    n = nil
   end
   -- vertical 
-  int, frac = mmodf((F.width-1) * 0.5 + 2)
-  beg = (frac > 0.5) and (int + 1) or int 
-  s = tostring(F.yrange[2]) 
-  row = F.canvas[1] 
-  for i = 1, #s do
-    row[beg+i] = string.sub(s,i,i)
-  end
-  s = tostring(F.yrange[1]) 
-  beg = beg - 3 - #s 
-  row = F.canvas[F.height]
-  for i = 1, #s do
-    row[beg+i] = string.sub(s,i,i)
+  if F.yaxis == 'C' then n = asciiplot._ycentral_(F) 
+  elseif F.yaxis == 'L' then n = 1
+  elseif F.yaxis == 'R' then n = F.width end
+  if n then
+    local s = tostring(F.yrange[1])
+    local beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
+    local row = F.canvas[F.height-1]
+    for i = 1, #s do
+      row[beg+i] = string.sub(s,i,i)
+    end
+    s = tostring(F.yrange[2]) 
+    beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
+    row = F.canvas[2] 
+    for i = 1, #s do
+      row[beg+i] = string.sub(s,i,i)
+    end
   end
 end
 
 --- Prepare a clear canvas.
 --  @param F Figure object.
---  @param bAxis Set false to skip axes, true by default.
---  @param bLimits Set false to skip limits, true by default.
-asciiplot.reset = function (F, bAxis, bLimits)
-  if bAxis == nil then bAxis = true end
-  if bLimits == nil then bLimits = true end
+asciiplot.reset = function (F)
   asciiplot._clear_(F)
-  if bAxis   then asciiplot._axes_(F) end
-  if bLimits then asciiplot._limits_(F) end
+  asciiplot._axes_(F) 
+  asciiplot._limits_(F) 
 end
-about[asciiplot.reset] = {"reset(F[,bAxis=true,bLimits=true])", "Prepare a clear canvas, define elements to print.", MANUAL}
+about[asciiplot.reset] = {"reset(F)", "Prepare a clear canvas.", MANUAL}
 
 --- Scale xrange and yrange w.r.t. default values.
 --  @param F figure object.
@@ -618,4 +657,5 @@ return asciiplot
 
 --======================================
 -- TODO synchronize with Gp
+-- TODO axes location: left, center, right, no - for x and y
 
