@@ -562,7 +562,7 @@ end
 --- Absolute floating value of bigint number.
 --  @param B Bigint object.
 --  @return Absolute value.
-bigint._abs_ = function (B)
+bigint._norm_ = function (B)
   local d, v, sum = B._base_, 1, 0
   for i = 1,#B do
     sum = sum + B[i]*v
@@ -575,7 +575,7 @@ end
 --  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
 bigint.val = function (B)
-  local v = bigint._abs_(B)
+  local v = bigint._norm_(B)
   return B.sign >= 0 and v or (-v)
 end
 about[bigint.val] = {"val(B)", "Represent current big integer as number if it possible.", help.OTHER}

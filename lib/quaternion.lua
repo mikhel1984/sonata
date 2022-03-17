@@ -91,7 +91,9 @@ print(d)
 
 --	LOCAL
 
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Cross = Ver.cross
+Ver = Ver.versions
 
 local ROTATION = 'rotation'
 
@@ -183,10 +185,16 @@ about[quaternion.toAA] = {'toAA(Q)','Get angle and axis of rotation.',ROTATION}
 quaternion.copy = function (Q) return quaternion:_new_({Q[1],Q[2],Q[3],Q[4]}) end
 about[quaternion.copy] = {"copy(t)", "Create a copy of the quaternion.",help.OTHER}
 
+
+quaternion._norm_ = function (Q) 
+  return math.sqrt(Cross.norm(Q[1])^2 + Cross.norm(Q[2])^2 + 
+                   Cross.norm(Q[3])^2 + Cross.norm(Q[4])^2)
+end
+
 --- Find square norm.
 --  @param Q Quaternion.
 --  @return Value of norm.
-quaternion._norm_ = function (Q) return Q[1]*Q[1]+Q[2]*Q[2]+Q[3]*Q[3]+Q[4]*Q[4] end
+quaternion._norm2_ = function (Q) return Q[1]*Q[1]+Q[2]*Q[2]+Q[3]*Q[3]+Q[4]*Q[4] end
 
 --- Get conjugated quaternion.
 --  @param Q Quaternion.
@@ -195,16 +203,15 @@ quaternion.conj = function (Q) return quaternion:_new_({Q[1],-Q[2],-Q[3],-Q[4]})
 about[quaternion.conj] = {'conj(Q)','Get conjugation.'}
 
 --- Norm of the quaternion.
---  @param Q Quaternion.
 --  @return Value of norm.
-quaternion.abs = function (Q) return math.sqrt(quaternion._norm_(Q)) end
+quaternion.abs = quaternion._norm_ 
 about[quaternion.abs] = {'abs(Q)','Value of the norm.'}
 
 --- Get inversion.
 --  @param Q Quaternion.
 --  @return Inverted quaternion.
 quaternion.inv = function (Q) 
-  local k = 1 / quaternion._norm_(Q)
+  local k = 1 / quaternion._norm2_(Q)
   return quaternion:_new_({Q[1]*k, -Q[2]*k, -Q[3]*k, -Q[4]*k})
 end
 about[quaternion.inv] = {'inv(Q)','Find inverted quaternion.'}
@@ -212,7 +219,7 @@ about[quaternion.inv] = {'inv(Q)','Find inverted quaternion.'}
 --- Transform quaternion into unit 'vector' in-place.
 --  @param Q Quaternion.
 quaternion.normalize = function (Q)
-  local k = math.sqrt(quaternion._norm_(Q))
+  local k = math.sqrt(quaternion._norm2_(Q))
   if k > 0 then 
     for i = 1,4 do Q[i] = Q[i]/k end
   end
@@ -241,7 +248,7 @@ about[quaternion.rotate] = {'rotate(Q,vec)','Apply quaternion to rotate the vect
 --  @return Rotation matrix 3x3.
 quaternion.toRot = function (Q)
   quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
-  local s = 1 / quaternion._norm_(Q)
+  local s = 1 / quaternion._norm2_(Q)
   local w,i,j,k = Q[1],Q[2],Q[3],Q[4]
   return quaternion.ext_matrix {
     {1-2*s*(j*j+k*k), 2*s*(i*j-k*w), 2*s*(i*k+j*w)},
@@ -325,7 +332,7 @@ quaternion.__pow = function (Q,d)
     end
     return res
   else
-    if math.abs(quaternion._norm_(Q)-1) > 1E-4 then error("Can't apply power function!") end
+    if math.abs(quaternion._norm2_(Q)-1) > 1E-4 then error("Can't apply power function!") end
     local angle, axis = quaternion.toAA(Q)
     angle = 0.5 * d * angle   -- new angle
     local sa = math.sin(angle)

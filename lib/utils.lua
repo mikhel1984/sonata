@@ -81,8 +81,8 @@ local cross = {}
 cross.norm = function (v)
   if type(v) == 'number' then
     return math.abs(v)
-  elseif type(v) == 'table' and v._abs_ then
-    return v:_abs_()
+  elseif type(v) == 'table' and v._norm_ then
+    return v:_norm_()
   end
   return nil
 end

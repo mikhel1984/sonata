@@ -295,14 +295,13 @@ about[complex.angle] = {"angle(C)", "Return argument of complex number."}
 --- Find object norm.
 --  @param C Complex number.
 --  @return Numerical value.
-complex._abs_ = function (C)
+complex._norm_ = function (C)
   return math.sqrt(Cross.norm(C[1])^2 + Cross.norm(C[2])^2)
 end
 
 --- Module of complex number.
---  @param C Complex number.
 --  @return Module of the number.
-complex.abs = function (C) return math.sqrt(C[1]*C[1]+C[2]*C[2]) end
+complex.abs = complex._norm_
 about[complex.abs] = {"abs(C)", "Return module of complex number."}
 
 --- Conjunction.
