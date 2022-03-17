@@ -559,16 +559,24 @@ bigint.__tostring = function (B)
   return B.sign < 0 and ('-' .. s) or s
 end
 
---- Float number representation.
+--- Absolute floating value of bigint number.
 --  @param B Bigint object.
---  @return Integer if possible, otherwise float point number.
-bigint.val = function (B)
+--  @return Absolute value.
+bigint._abs_ = function (B)
   local d, v, sum = B._base_, 1, 0
   for i = 1,#B do
     sum = sum + B[i]*v
     v = v * d
   end
-  return B.sign >= 0 and sum or (-sum)
+  return sum
+end
+
+--- Float number representation.
+--  @param B Bigint object.
+--  @return Integer if possible, otherwise float point number.
+bigint.val = function (B)
+  local v = bigint._abs_(B)
+  return B.sign >= 0 and v or (-v)
 end
 about[bigint.val] = {"val(B)", "Represent current big integer as number if it possible.", help.OTHER}
 

@@ -121,7 +121,10 @@ print(a)
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+-- Inter-module functionality
+local Cross = Ver.cross
+Ver = Ver.versions
 
 -- REAL, IMAG = 1, 2
 local keys = {Re=1, Im=2}
@@ -288,6 +291,13 @@ about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META}
 --  @return Argument of the number.
 complex.angle = function (C) return Ver.atan2(C[2], C[1]) end
 about[complex.angle] = {"angle(C)", "Return argument of complex number."}
+
+--- Find object norm.
+--  @param C Complex number.
+--  @return Numerical value.
+complex._abs_ = function (C)
+  return math.sqrt(Cross.norm(C[1])^2 + Cross.norm(C[2])^2)
+end
 
 --- Module of complex number.
 --  @param C Complex number.

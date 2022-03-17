@@ -657,5 +657,3 @@ return asciiplot
 
 --======================================
 -- TODO synchronize with Gp
--- TODO axes location: left, center, right, no - for x and y
-

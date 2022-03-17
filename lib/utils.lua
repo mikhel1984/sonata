@@ -74,8 +74,22 @@ versions.atan2 = math.atan
 
 end
 
+--============= Cross-module functionality =========
+
+local cross = {}
+-- norm of numeric objects
+cross.norm = function (v)
+  if type(v) == 'number' then
+    return math.abs(v)
+  elseif type(v) == 'table' and v._abs_ then
+    return v:_abs_()
+  end
+  return nil
+end
+
 return {
   versions = versions,
+  cross = cross,
 }
 
 --===================================================
