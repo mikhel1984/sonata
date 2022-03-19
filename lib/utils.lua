@@ -104,6 +104,11 @@ cross.simp = function (v)
   return type(v) == 'table' and v._simp_ and v:_simp_() or v
 end
 
+-- get the object copy
+cross.copy = function (v)
+  return type(v) == 'table' and v.copy and v:copy() or v
+end
+
 
 return {
   versions = versions,

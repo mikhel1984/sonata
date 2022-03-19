@@ -126,7 +126,9 @@ end
 --- Create copy of the rational number.
 --  @param R Source value.
 --  @return Rational number.
-rational.copy = function (R) return setmetatable({R[1], R[2]}, rational) end
+rational.copy = function (R) return 
+  setmetatable({Cross.copy(R[1]), Cross.copy(R[2])}, rational) 
+end
 about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
 
 --- Argument type correction.
@@ -187,7 +189,7 @@ rational.__unm = function (R) return rational:_new_(-R[1], R[2]) end
 --  @param R2 Rational or real number.
 --  @return Power value.
 rational.__pow = function (R1, R2)
-  R2 = (type(R2) == "number") and R2 or (R2[1]/R2[2])  -- to float point
+  R2 = (type(R2) == "number") and R2 or R2:val()  -- to float point
   if type(R1) == "number" then
     return R1^R2
   else
