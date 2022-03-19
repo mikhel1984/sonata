@@ -2,8 +2,12 @@
 --[[TEST
 
 -- RATIONAL and BIGINT
+-----------------------------
 Rat = require 'lib.rational'
 Int = require 'lib.bigint'
+
+-- check '%' operation
+ans = Rat.gcd(Int(125), Int(65))  --> Int(5)
 
 a = Rat(Int(1), Int(2))
 b = Rat(Int(2))
@@ -36,6 +40,16 @@ ans = (a:Nu().type == d:Nu().type) --> true
 
 -- show
 print(a)
+
+
+-- RATIONAL and POLYNOMIAL
+-----------------------------------
+Poly = require 'lib.polynomial'
+
+-- check '%' operation
+ans = Rat.gcd(Poly{2,7,6}, Poly{3,10,8})  --> Poly{1,2}
+
+
 
 
 

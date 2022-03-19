@@ -332,12 +332,20 @@ end
 --  @param P2 Second (polynomial) object.
 --  @return True if the objects are equal
 polynomial.__eq = function (P1,P2)
-  if type(P1) ~= type(P2) or P1.type ~= P2.type then return false end
-  if #P1 ~= #P2 then return false end
-  for i = 0, #P1 do
-    if P1[i] ~= P2[i] then return false end
+  if ispolynomial(P1) then
+    if ispolynomial(P2) then
+      if #P1 ~= #P2 then return false end
+      for i = 0, #P1 do
+        if P1[i] ~= P2[i] then return false end
+      end
+      return true
+    else
+      return polynomial.__eq(P2,P1)
+    end
+  else 
+    -- only free coefficient
+    return #P2 == 0 and P2[0] == P1
   end
-  return true
 end
 
 polynomial.arithmetic = 'arithmetic'

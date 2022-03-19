@@ -118,7 +118,6 @@ about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for 
 --  @param vd Denominator. Default is 1.
 --  @return New rational object.
 rational._new_ = function (self, vn, vd)
-  vd = vd or 1
   local g = rational.gcd(vd,vn)         -- inverse order move sign to denominator
   return setmetatable({vn/g, vd/g}, self)  
 end
@@ -136,9 +135,9 @@ about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHE
 --  @param b Second rational or natural number.
 --  @return Arguments as rational numbers.
 rational._args_ = function (a,b)
-  a = isrational(a) and a or rational:_new_(a)
+  a = isrational(a) and a or rational:_new_(a, 1)
   if b then
-    b = isrational(b) and b or rational:_new_(b)
+    b = isrational(b) and b or rational:_new_(b, 1)
   end
   return a,b
 end
@@ -194,7 +193,7 @@ rational.__pow = function (R1, R2)
     return R1^R2
   else
     if not (Ver.isInteger(R2) and R2 >= 0) then error("Power must be a non-negative integer") end
-    return numrat(rational:_new_((R1[1])^R2, (R1[2])^R2))
+    return numrat(rational:_new_(R1[1]^R2, R1[2]^R2))
   end
 end
 
@@ -270,9 +269,9 @@ about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 -- call constructor, check arguments
 setmetatable(rational, {
 __call = function (self, n, d) 
+  d = d or 1
   assert(type(n) == 'number' or type(n) == 'table' and n.__mod, "Wrong numerator type")
-  assert(d == nil or type(d) == 'number' or type(d) == 'table' and d.__mod, 
-    "Wrong denomenator type")
+  assert(type(d) == 'number' or type(d) == 'table' and d.__mod, "Wrong denomenator type")
   return rational:_new_(n,d) 
 end})
 rational.Rat = 'Rat'
