@@ -68,7 +68,9 @@ print(a)
 
 --	LOCAL
 
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Cross = Ver.cross
+Ver = Ver.versions
 
 --  NUM, DENOM = 1, 2
 
@@ -77,7 +79,7 @@ local Ver = require("lib.utils").versions
 --  @return True for rational number.
 local function isrational(v) return type(v) == 'table' and v.isrational end
 
-local function numrat(R) return R[2] == 1 and R[1] or R end
+local function numrat(R) return Cross.eq(R[2],1) and Cross.simp(R[1]) or R end
 
 --- Number representation.
 --  @param v Value.
@@ -97,6 +99,8 @@ local about = help:new("Computations with rational numbers.")
 local rational = {
 -- mark
 type = 'rational', isrational = true,
+-- simplification
+_simp_ = numrat,
 }
 rational.__index = rational
 
@@ -105,7 +109,7 @@ rational.__index = rational
 --  @param vb Second integer.
 --  @return Greatest common divisor.
 rational.gcd = function (va,vb)
-  return (va == 0 or (type(va)=='table' and va:eq(0))) and vb or rational.gcd(vb % va, va)
+  return Cross.eq(va,0) and vb or rational.gcd(vb % va, va)
 end
 about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
 
@@ -199,10 +203,12 @@ about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, 
 --  @param R1 First number.
 --  @param R2 Second number.
 --  @return True if the numbers are equal.
-rational.__eq = function (R1,R2)
+rational.eq = function (R1,R2)
   R1,R2 = rational._args_(R1,R2)
-  return R1[1] == R2[1] and R1[2] == R2[2]
+  return Cross.eq(R1[1],R2[1]) and Cross.eq(R1[2],R2[2])
 end
+about[rational.eq] = {"eq(R1,R2)", "Compare two objects.", help.OTHER}
+rational.__eq = rational.eq
 
 --- R1 < R2
 --  @param R1 First number.
@@ -232,10 +238,19 @@ rational.__tostring = function (R)
   return string.format("%s/%s", numStr(R[1]), numStr(R[2])) 
 end
 
+--- Estimate absolute value.
+--  @param R Rational number.
+--  @return Decimal fraction.
+rational._norm_ = function (R)
+  return Cross.norm(R[1]) / Cross.norm(R[2])
+end
+
 --- Float point representation.
 --  @param R Rational number.
 --  @return Decimal fraction.
-rational.val = function (R) return R[1] / R[2] end
+rational.val = function (R) 
+  return (R[1] < 0 and -1 or 1) * rational._norm_(R)
+end
 about[rational.val] = {"val(R)", "Return rational number as decimal."}
 
 --- Get numerator.
@@ -250,8 +265,14 @@ about[rational.Nu] = {"Nu(R)", "Return the numerator of rational number."}
 rational.De = function (R) return R[2] end
 about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 
--- simplify constructor call
-setmetatable(rational, {__call = function (self, n, d) return rational:_new_(n,d) end})
+-- call constructor, check arguments
+setmetatable(rational, {
+__call = function (self, n, d) 
+  assert(type(n) == 'number' or type(n) == 'table' and n.__mod, "Wrong numerator type")
+  assert(d == nil or type(d) == 'number' or type(d) == 'table' and d.__mod, 
+    "Wrong denomenator type")
+  return rational:_new_(n,d) 
+end})
 rational.Rat = 'Rat'
 about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
 

@@ -448,7 +448,7 @@ bigint.__mod = function (B1, B2)
 end
 
 --- a == b.
---  In Lua v == 0 is always <code>false</code> because in the case of number
+--  In Lua v == 0 is always false because in the case of number
 --  the program tries to convert everything into number.
 --  For two bigint objects using of <code>==</code> is also possible.
 --  @param B1 First bigint object or integer.

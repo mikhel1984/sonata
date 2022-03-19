@@ -85,6 +85,8 @@ print(a)
 
 local PART = '([^%a]+)(%a+)'    -- highlight value and unit from string
 
+local Cross = require('lib.utils').cross
+
 -- possible signs
 local C_PROD, C_RAT, C_POW = string.byte('*'), string.byte('/'), string.byte('^')
 local BASE, PREFIX = 1, 2
@@ -591,6 +593,13 @@ units.__tostring = function (U)
   if #denom > 0 then num = num..'/' end
 
   return U.value .. ' ' .. num .. denom
+end
+
+--- Get absolute value.
+--  @param U Unit object.
+--  @return Absolute value.
+units._norm_ = function (U)
+  return Cross.norm(U.value)
 end
 
 --- Value of the unit object.

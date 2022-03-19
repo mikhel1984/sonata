@@ -74,9 +74,13 @@ versions.atan2 = math.atan
 
 end
 
+
+
+
 --============= Cross-module functionality =========
 
 local cross = {}
+
 -- norm of numeric objects
 cross.norm = function (v)
   if type(v) == 'number' then
@@ -86,6 +90,20 @@ cross.norm = function (v)
   end
   return nil
 end
+
+-- compare equality of two objects
+cross.eq = function (v1,v2)
+  return (v1 == v2) or   -- try default
+         (type(v1) == 'table' and v1.__eq and v1:__eq(v2)) or 
+         (type(v2) == 'table' and v2.__eq and v2:__eq(v1)) or 
+         false
+end
+
+-- apply simplification if possible 
+cross.simp = function (v)
+  return type(v) == 'table' and v._simp_ and v:_simp_() or v
+end
+
 
 return {
   versions = versions,
