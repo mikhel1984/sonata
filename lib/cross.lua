@@ -69,6 +69,36 @@ a = Poly{1,2,3}
 ans = Rat(5*a, 5)                   --> a
 
 
+-- POLYNOMIAL and BIGINT
+----------------------------------
+
+a = Poly{Int(1),Int(2),Int(3)}
+b = Poly{Int(1),Int(1)}
+ans = (a ~= nil) and (b ~= nil)  --> true
+
+ans = a(1)                       --> Int(6)
+
+ans = a[1]                       --> Int(2)
+
+ans = a + b                      --> Poly{Int(1),Int(3),Int(4)}
+
+ans = a - b                      --> Poly{Int(1),Int(1),Int(2)}
+
+ans = b * b                      --> Poly{Int(1),Int(2),Int(1)}
+
+ans = a / b                      --> Poly{Int(1),Int(1)}
+
+ans = a % b                      --> Int(2)
+
+ans = b ^ 2                      --> b * b
+
+ans = a:der()                    --> Poly{Int(2),Int(2)}
+
+ans = Poly.build(Int(1),Int(1))  --> Poly{Int(1),Int(-2),Int(1)}
+
+
+
+
 
 
 

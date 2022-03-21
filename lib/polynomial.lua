@@ -126,19 +126,21 @@ ans = p(0.5)                 --2> -0.512
 
 --	LOCAL
 
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Cross = Ver.cross
+Ver = Ver.versions
 
 -- Check object type.
 local function ispolynomial(v) return type(v) == 'table' and v.ispolynomial end
 
 -- Return number in trivial case.
-local function numpoly(P) return #P == 0 and P[0] or P end
+local function numpoly(P) return #P == 0 and Cross.simp(P[0]) or P end
 
 --- Simplify polynomial, remove zeros from the begin.
 --  @param t Table of coefficients.
 --  @return Simplified polynomial.
 local function reduce (t)
-  while #t > 0 and t[#t] == 0 do table.remove(t) end
+  while #t > 0 and Cross.eq(t[#t], 0) do table.remove(t) end
   return t
 end
 
@@ -170,6 +172,8 @@ local FIT = 'approximation'
 local polynomial = {
 -- marker
 type = 'polynomial', ispolynomial = true,
+-- simplification
+_simp_ = numpoly
 }
 polynomial.__index = polynomial
 
@@ -337,7 +341,7 @@ polynomial.__eq = function (P1,P2)
     if ispolynomial(P2) then
       if #P1 ~= #P2 then return false end
       for i = 0, #P1 do
-        if P1[i] ~= P2[i] then return false end
+        if not Cross.eq(P1[i], P2[i]) then return false end
       end
       return true
     else
@@ -400,7 +404,7 @@ end
 polynomial.build = function (...)
   local res = polynomial:_init_({[0]=1})
   for _,v in ipairs({...}) do
-    if type(v) == 'table' then
+    if type(v) == 'table' and v.Re then
       local p = polynomial:_init_({[0] = v.Re^2 + v.Im^2, -2*v.Re, 1})
       res = polynomial.__mul(res, p)
     else
@@ -416,7 +420,7 @@ about[polynomial.build] = {"build(root1,root2,...)", "Return polynomial with giv
 --  @return String with coefficients.
 polynomial.__tostring = function (P) 
   local t = {}
-  for i = #P, 0, -1 do table.insert(t, P[i]) end
+  for i = #P, 0, -1 do table.insert(t, tostring(P[i])) end
   return table.concat(t,' ') 
 end
 
