@@ -220,6 +220,7 @@ polynomial._div_ = function (P1,P2)
     end
     table.remove(rest)
   end
+  rest[0] = rest[0] or 0
   return numpoly(polynomial._reorder_(res)), numpoly(reduce(rest))
 end
 
