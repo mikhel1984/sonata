@@ -93,10 +93,13 @@ end
 
 -- compare equality of two objects
 cross.eq = function (v1,v2)
-  return (v1 == v2) or   -- try default
-         (type(v1) == 'table' and v1.__eq and v1:__eq(v2)) or 
-         (type(v2) == 'table' and v2.__eq and v2:__eq(v1)) or 
-         false
+  if     type(v1) == 'table' and v1.__eq then
+    return v1:__eq(v2) 
+  elseif type(v2) == 'table' and v2.__eq then
+    return v2:__eq(v1) 
+  else
+    return v1 == v2
+  end
 end
 
 -- apply simplification if possible 
@@ -107,6 +110,10 @@ end
 -- get the object copy
 cross.copy = function (v)
   return type(v) == 'table' and v.copy and v:copy() or v
+end
+
+cross.convertible = function (vMaster, vSlave)
+  return type(vMaster) == 'table' and vMaster._convertible_ and vMaster:_convertible_(vSlave)
 end
 
 

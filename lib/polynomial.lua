@@ -246,7 +246,13 @@ polynomial.__call = function (p,x) return polynomial.val(p,x) end
 --- Create copy of object.
 --  @param P Initial polynomial.
 --  @return Deep copy.
-polynomial.copy = function (P) return polynomial:_init_(Ver.move(P,0,#P,0,{})) end
+polynomial.copy = function (P)
+  local res = {}
+  for i = 0, #P do
+    res[i] = Cross.copy(P[i])
+  end
+  return polynomial:_init_(res)
+end
 about[polynomial.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
 
 --- P1 + P2
@@ -404,7 +410,7 @@ end
 polynomial.build = function (...)
   local res = polynomial:_init_({[0]=1})
   for _,v in ipairs({...}) do
-    if type(v) == 'table' and v.Re then
+    if type(v) == 'table' and v.iscomplex then
       local p = polynomial:_init_({[0] = v.Re^2 + v.Im^2, -2*v.Re, 1})
       res = polynomial.__mul(res, p)
     else

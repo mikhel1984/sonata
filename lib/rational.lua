@@ -130,15 +130,21 @@ rational.copy = function (R) return
 end
 about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
 
+--- An appropriate argument for rational number.
+--  @param v Object.
+--  @return True if the argument can be used.
+rational._convertible_ = function (v)
+  local tp = type(v)
+  return tp == 'number' or tp == 'table' and v.__mod
+end
+
 --- Argument type correction.
 --  @param a First rational or natural number.
 --  @param b Second rational or natural number.
 --  @return Arguments as rational numbers.
 rational._args_ = function (a,b)
   a = isrational(a) and a or rational:_new_(a, 1)
-  if b then
-    b = isrational(b) and b or rational:_new_(b, 1)
-  end
+  b = isrational(b) and b or rational:_new_(b, 1)
   return a,b
 end
 

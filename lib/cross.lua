@@ -96,6 +96,9 @@ ans = a:der()                    --> Poly{Int(2),Int(2)}
 
 ans = Poly.build(Int(1),Int(1))  --> Poly{Int(1),Int(-2),Int(1)}
 
+-- show
+print(a:str())
+
 
 
 
