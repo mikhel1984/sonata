@@ -50,7 +50,7 @@ ans = (a >= b)                --> false
 ans = Rat.gcd(125,65)         --> 5
 
 -- represent as decimal
-ans = a:val()                 --> 0.5
+ans = a:float()               --> 0.5
 
 -- numerator
 ans = b:Nu()                  --> 2
@@ -194,7 +194,7 @@ rational.__unm = function (R) return rational:_new_(-R[1], R[2]) end
 --  @param R2 Rational or real number.
 --  @return Power value.
 rational.__pow = function (R1, R2)
-  R2 = (type(R2) == "number") and R2 or R2:val()  -- to float point
+  R2 = (type(R2) == "number") and R2 or R2:float()  -- to float point
   if type(R1) == "number" then
     return R1^R2
   else
@@ -255,10 +255,10 @@ end
 --- Float point representation.
 --  @param R Rational number.
 --  @return Decimal fraction.
-rational.val = function (R) 
+rational.float = function (R) 
   return (R[1] < 0 and -1 or 1) * rational._norm_(R)
 end
-about[rational.val] = {"val(R)", "Return rational number as decimal."}
+about[rational.float] = {"float(R)", "Return rational number as decimal."}
 
 --- Get numerator.
 --  @param R Rational number.

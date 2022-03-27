@@ -19,39 +19,39 @@ Int = require 'lib.bigint'
 
 -- from integer
 a = Int(123)
-ans = a:val()                 --> 123
+ans = a:float()               --> 123
 
 -- from string
 b = Int('456')
-ans = b:val()                 --> 456
+ans = b:float()               --> 456
 
 -- from table 
 -- 'sign' and 'base' can be skipped
 g = Int {1,2,3,sign=-1,base=10}
-ans = g:val()                 --> -123
+ans = g:float()               --> -123
 
 -- check equality
 ans = (a == -g)               --> true
 
 -- arithmetical operations
-ans = Int.val(a+b)            --> 579
+ans = Int.float(a+b)          --> 579
 
-ans = Int.val(a-b)            --> -333
+ans = Int.float(a-b)          --> -333
 
-ans = Int.val(a*Int(2))       --> 246
+ans = Int.float(a*Int(2))     --> 246
 
-ans = Int.val(b/2)            --> 228
+ans = Int.float(b/2)          --> 228
 
-ans = Int.val(b%a)            --> 87
+ans = Int.float(b%a)          --> 87
 
-ans = Int.val(a^3)            --> 1860867
+ans = Int.float(a^3)          --> 1860867
 
 -- absolute value
-ans = Int.abs('-25'):val()    --> 25
+ans = Int.abs('-25'):float()  --> 25
 
 -- factorial
 c = Int(10):fact()
-ans = Int.val(c)              --> 3628800
+ans = Int.float(c)            --> 3628800
 
 -- make copy, comparison
 d = a:copy()
@@ -102,7 +102,7 @@ ans = #t                      --> 5
 -- check factorization
 ans = 1
 for i = 1,#t do
-  ans = ans * (t[i]:val())
+  ans = ans * (t[i]:float())
 end                           --> 456
 
 -- pseudo-random number
@@ -110,7 +110,7 @@ end                           --> 456
 print(b:random())
 
 -- greatest common divisor
-ans = a:gcd(b):val()          --> 3
+ans = a:gcd(b):float()          --> 3
 
 --]]
 
@@ -208,11 +208,11 @@ bigint._div_ = function (B1,B2)
   local rem = bigint:_new_({0,base=d}); rem[1] = nil
   local k = #B1-#B2+1
   Ver.move(B1,k+1,#B1,1,rem)  -- copy last elements
-  local v2, den, acc = B2:val(), B2:abs(), {}
+  local v2, den, acc = B2:float(), B2:abs(), {}
   for i = k,1,-1 do
     table.insert(rem,1,B1[i])
     if rem >= den then
-      local n = math.modf(rem:val() / v2)  -- estimate
+      local n = math.modf(rem:float() / v2)  -- estimate
       local tmp = rem - den * bigint:_new_({n,base=d})
       if tmp.sign < 0 then
         n = n - 1
@@ -574,11 +574,11 @@ end
 --- Float number representation.
 --  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
-bigint.val = function (B)
+bigint.float = function (B)
   local v = bigint._norm_(B)
   return B.sign >= 0 and v or (-v)
 end
-about[bigint.val] = {"val(B)", "Represent current big integer as number if it possible.", help.OTHER}
+about[bigint.float] = {"float(B)", "Represent current big integer as number if it possible.", help.OTHER}
 
 --- B!
 --  @param B Bigint object or integer.
@@ -772,7 +772,7 @@ bigint._primeFermat_ = function (B)
   for i = 1,5 do
     repeat 
       a = bigint.random(B)
-    until a:val() >= 2
+    until a:float() >= 2
     local v1 = pow(a,B,B)
     local _,v2 = div(a,B)
     if v1 ~= v2 then return false end
