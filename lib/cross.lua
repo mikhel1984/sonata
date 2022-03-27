@@ -13,7 +13,7 @@ a = Rat(Int(1), Int(2))
 b = Rat(Int(2))
 ans = (a ~= nil) and (b ~= nil)  --> true
 
-ans = (a + b):val()              --> 5/2
+ans = (a + b):float()            --> 5/2
 
 -- compare with default type
 ans = (a == Rat(1,2))            --> true
@@ -100,11 +100,32 @@ ans = Poly.build(Int(1),Int(1))  --> Poly{Int(1),Int(-2),Int(1)}
 print(a:str())
 
 
+-- POLYNOMIAL and RATIONAL 
+-----------------------------
+
+a = Poly{Rat(1,2),Rat(1,3),Rat(1,4)}
+b = Poly{Rat(2,3),Rat(4,5)} 
+ans = (a ~= nil) and (b ~= nil)  --> true
+
+ans = a(1)                      --> Rat(13,12) 
+
+ans = a + b                     --> Poly{Rat(1,2),Rat(1),Rat(21,20)}
+
+p = a / b
+q = a % b
+ans = p * b + q                 --> a
+
+ans = a:der()                   --> Poly{1, Rat(1,3)}
+
+ans = b:int()                   --> Poly{Rat(1,3),Rat(4,5),0}
+
+-- show 
+print(a:str())
 
 
-
-
-
+-- COMPLEX and BIGINT
+------------------------
+Comp = require 'lib.complex'
 
 
 
