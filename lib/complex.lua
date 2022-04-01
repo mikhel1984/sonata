@@ -142,8 +142,14 @@ local function iscomplex(v) return type(v) == 'table' and v.iscomplex end
 --  @return Simple number if possible.
 local function numcomp(C) return Cross.eq(C[2], 0) and Cross.simp(C[1]) or C end
 
+--- Get float point value if possible.
+--  @param v Real value.
+--  @return floating point number.
 local function tofloat(v) return type(v) == 'table' and v:float() or v end
 
+--- Find exponential with type conversation.
+--  @param v Value.
+--  @return exp(float(v))
 local function fexp(v) return math.exp(tofloat(v)) end
 
 --- Hyperbolic cosine.
@@ -156,8 +162,14 @@ local function ch (v) return 0.5*(fexp(v)+fexp(-v)) end
 --  @return Hyperbolic sine value.
 local function sh (v) return 0.5*(fexp(v)-fexp(-v)) end
 
+--- Find sinus with type conversation.
+--  @param v Real value.
+--  @return sin(float(v))
 local function fsin(v) return math.sin(tofloat(v)) end
 
+--- Find cosine with type conversation.
+--  @param v Real value.
+--  @return cos(float(v))
 local function fcos(v) return math.cos(tofloat(v)) end
 
 --	INFO
@@ -317,7 +329,7 @@ about[complex.abs] = {"abs(C)", "Return module of complex number."}
 --- Conjunction.
 --  @param C Complex number.
 --  @return Conjunction to the given number.
-complex.conj = function (C) return complex:_init_(C[1], -C[2]) end
+complex.conj = function (C) return complex:_init_(Cross.copy(C[1]), -Cross.copy(C[2])) end
 about[complex.conj] = {"conj(C)", "Return the complex conjugate. Equal to ~C.", help.OTHER}
 complex.__bnot = complex.conj
 

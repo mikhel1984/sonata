@@ -105,7 +105,17 @@ local keys = {w=1, i=2, j=3, k=4}
 --  @return True if the object is quaternion.
 local function isquaternion(v) return type(v)=='table' and v.isquaternion end
 
-local function numquat(Q) return Q[2]==0 and Q[3]==0 and Q[4]==0 and Q[1] or Q end
+--- Get float point value if possible.
+--  @param v Real value.
+--  @return floating point number.
+local function tofloat(v) return type(v) == 'table' and v:float() or v end
+
+--- Simplify output when possible.
+--  @param Q Quaternion object.
+--  @return Quaternion or value.
+local function numquat(Q) 
+  return Cross.eq(Q[2],0) and Cross.eq(Q[3],0) and Cross.eq(Q[4],0) and Cross.simp(Q[1]) or Q 
+end
 
 --	INFO
 
@@ -118,6 +128,8 @@ local about = help:new("Operations with quaternions.")
 local quaternion = {
 -- mark
 type = 'quaternion', isquaternion = true,
+-- simplify
+_simp_ = numquat
 }
 
 -- Get method or key 
@@ -417,11 +429,19 @@ about[quaternion.mat] = {'mat(Q)','Equivalent matrix representation.',help.OTHER
 -- simplify constructor call
 setmetatable(quaternion, 
 {__call = function (self,v) 
-  assert(type(v) == 'table')
+  assert(type(v) == 'table', "Table is expected")
   v[1] = v[1] or v.w or 0
   v[2] = v[2] or v.i or 0
   v[3] = v[3] or v.j or 0
   v[4] = v[4] or v.k or 0
+  local p = v[1]
+  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part w")
+  p = v[2]
+  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part i")
+  p = v[3]
+  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part j")
+  p = v[4]
+  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part k")
   return quaternion:_new_(v) 
 end
 })
@@ -435,3 +455,4 @@ quaternion.about = about
 return quaternion
 
 --======================================
+--TODO add math functions
