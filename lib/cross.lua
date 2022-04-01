@@ -143,6 +143,17 @@ ans = a:abs()                   --3> 2.236
 
 ans = a:angle()                 --3> 1.107
 
+ans = a:conj()                   --> Comp(Int(1),Int(-2))
+
+ans = (a^0.5).Re                --3> 1.272
+
+ans = Comp.log(a).Re            --3> 0.805
+
+ans = Comp.sin(a).Re            --3> 3.165
+
+-- show
+print(a)
+
 
 
 --]]
