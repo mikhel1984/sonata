@@ -127,6 +127,22 @@ print(a:str())
 ------------------------
 Comp = require 'lib.complex'
 
+a = Comp(Int(1),Int(2))
+b = Comp(0, Int(3))
+ans = (a ~= nil) and (b ~= nil)  --> true
+
+ans = a + b                      --> Comp(Int(1),Int(5))
+
+ans = b - b                      --> 0
+
+ans = a * b                      --> Comp(-6,3)
+
+ans = a / Comp._i                --> Comp(2, -1)
+
+ans = a:abs()                   --3> 2.236
+
+ans = a:angle()                 --3> 1.107
+
 
 
 --]]

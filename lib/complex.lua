@@ -140,7 +140,7 @@ local function iscomplex(v) return type(v) == 'table' and v.iscomplex end
 --- Check imaginary part.
 --  @param C complex number.
 --  @return Simple number if possible.
-local function numcomp(C) return C[2] == 0 and C[1] or C end
+local function numcomp(C) return Cross.eq(C[2], 0) and Cross.simp(C[1]) or C end
 
 --- Hyperbolic cosine.
 --  @param d Real number.
@@ -151,6 +151,8 @@ local function ch (d) return 0.5*(math.exp(d)+math.exp(-d)) end
 --  @param d Real number.
 --  @return Hyperbolic sine value.
 local function sh (d) return 0.5*(math.exp(d)-math.exp(-d)) end
+
+local tofloat(v) return type(v) == 'table' and v:float() or v end
 
 --	INFO
 
@@ -163,6 +165,8 @@ local about = help:new("Manipulations with complex numbers.")
 local complex = {
 -- mark
 type='complex', iscomplex=true,
+-- simplification
+_simp_ = numcomp,
 }
 
 --- Call unknown key. Use proxy to access the elements.
@@ -187,7 +191,7 @@ end
 --  @param vRe Real part.
 --  @param vIm Imaginary part, default is 0.
 --  @return Complex number.
-complex._init_ = function (self, vRe, vIm)  return setmetatable({vRe or 0, vIm or 0}, self) end
+complex._init_ = function (self, vRe, vIm)  return setmetatable({vRe, vIm}, self) end
 
 --- Create complex number from trigonometric representation.
 --  @param dMod Module.
@@ -280,7 +284,7 @@ about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", 
 --  @return True if the real and complex parts are the same.
 complex.__eq = function (C1, C2)
   C1,C2 = complex._args_(C1,C2)
-  return C1[1] == C2[1] and C1[2] == C2[2]
+  return Cross.eq(C1[1], C2[1]) and Cross.eq(C1[2], C2[2])
 end
 
 complex.comparison = 'comparison'
@@ -311,10 +315,17 @@ complex.conj = function (C) return complex:_init_(C[1], -C[2]) end
 about[complex.conj] = {"conj(C)", "Return the complex conjugate. Equal to ~C.", help.OTHER}
 complex.__bnot = complex.conj
 
+--- Number representation.
+--  @param v Value.
+--  @return String representation.
+local function numStr(v) 
+  return type(v) == 'number' and string.format('%+.3f', v) or tostring(v) 
+end
+
 --- String representation.
 --  @param C Complex number.
 --  @return String with complex number elements.
-complex.__tostring = function (C) return string.format("%.3f%+.3fi", C[1], C[2]) end
+complex.__tostring = function (C) return string.format("%s%si", numStr(C[1]), numStr(C[2])) end
 
 --- Square root with possibility of complex result.
 --  @param C Real or complex number.
@@ -439,7 +450,10 @@ complex._i  = complex:_init_(0,1)
 about[complex._i] = {"_i", "Complex unit.", help.CONST}
 
 -- simplify constructor call
-setmetatable(complex, {__call = function (self, re, im) return complex:_init_(re,im) end })
+setmetatable(complex, {
+__call = function (self, re, im)
+  return complex:_init_(re,im) 
+end })
 complex.Comp = 'Comp'
 about[complex.Comp] = {"Comp([vRe=0,vIm=0])", "Create new complex number.", help.NEW}
 
