@@ -278,6 +278,7 @@ __call = function (self, n, d)
   d = d or 1
   assert(type(n) == 'number' or type(n) == 'table' and n.__mod, "Wrong numerator type")
   assert(type(d) == 'number' or type(d) == 'table' and d.__mod, "Wrong denomenator type")
+  assert(not Cross.eq(d,0), "Wrond denomenator value")
   return rational:_new_(n,d) 
 end})
 rational.Rat = 'Rat'

@@ -271,9 +271,9 @@ complex.__pow = function (C1,C2)
   C1,C2 = complex._args_(C1,C2)
   local a0, a1 = complex.abs(C1), complex.angle(C1)
   local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
-  local abs = a0^(C2[1])*math.exp(-a1*C2[2])
+  local abs = a0^(tofloat(C2[1]))*fexp(-a1*C2[2])
   local arg = k*C2[2]+C2[1]*a1
-  return numcomp(complex:_init_(abs*math.cos(arg), abs*math.sin(arg)))
+  return numcomp(complex:_init_(abs*fcos(arg), abs*fsin(arg)))
 end
 
 --- -C

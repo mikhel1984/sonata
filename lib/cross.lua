@@ -155,5 +155,30 @@ ans = Comp.sin(a).Re            --3> 3.165
 print(a)
 
 
+-- COMPLEX and RATIONAL
+------------------------
+
+a = Comp(Rat(1,2),Rat(2,3))
+b = Comp(0, Rat(1,2))
+ans = (a ~= nil) and (b ~= nil) --> true
+
+ans = a + b                     --> Comp(Rat(1,2),Rat(7,6))
+
+ans = a / Comp._i               --> Comp(Rat(2,3),Rat(-1,2))
+
+ans = b:abs()                   --> 0.5
+
+ans = a:angle()                --3> 0.927
+
+ans = Comp.cos(a).Im           --3> -0.343
+
+ans = (a^0.3).Re               --2> 0.91
+
+-- show 
+print(a)
+
+
+
+
 
 --]]
