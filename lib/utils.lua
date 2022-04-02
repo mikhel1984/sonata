@@ -124,10 +124,10 @@ cross.same = function (v1,v2)
   return type(v1) == type(v2) and (type(v1) ~= 'table' or v1.type == v2.type)
 end
 
+-- convert slave into type of master
 cross.convert = function (vMaster, vSlave)
   return type(vMaster) == 'table' and vMaster._convert_ and vMaster._convert_(vSlave)
 end
-
 
 return {
   versions = versions,

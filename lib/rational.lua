@@ -64,6 +64,12 @@ ans = a:copy()                --> a
 -- show
 print(a)
 
+-- result is rational 
+ans = a + 1                   --> Rat(3,2)
+
+-- result is float
+ans = a + 0.5                 --> 1
+
 --]]
 
 --	LOCAL
@@ -132,7 +138,8 @@ about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHE
 
 
 rational._convert_ = function (v)
-  return (type(v) == 'number' or type(v) == 'table' and v.__mod) and rational:_new_(v,1)
+  return (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod) 
+         and rational:_new_(v,1)
 end
 
 --- R1 + R2
@@ -322,8 +329,10 @@ about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 setmetatable(rational, {
 __call = function (self, n, d) 
   d = d or 1
-  assert(type(n) == 'number' or type(n) == 'table' and n.__mod, "Wrong numerator type")
-  assert(type(d) == 'number' or type(d) == 'table' and d.__mod, "Wrong denomenator type")
+  assert(type(n) == 'number' and Ver.isInteger(n) or type(n) == 'table' and n.__mod, 
+         "Wrong numerator type")
+  assert(type(d) == 'number' and Ver.isInteger(n) or type(d) == 'table' and d.__mod, 
+         "Wrong denomenator type")
   assert(not Cross.eq(d,0), "Wrond denomenator value")
   return rational:_new_(n,d) 
 end})

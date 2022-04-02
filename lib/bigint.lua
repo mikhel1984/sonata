@@ -110,13 +110,21 @@ end                           --> 456
 print(b:random())
 
 -- greatest common divisor
-ans = a:gcd(b):float()          --> 3
+ans = a:gcd(b):float()        --> 3
+
+-- result is bigint
+ans = a + 1.0                 --> Int(124) 
+
+-- result is float
+ans = a - 0.5                 --> 122.5
 
 --]]
 
 --	LOCAL
 
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Cross = Ver.cross 
+Ver = Ver.versions
 
 local ZERO = string.byte('0')
 
@@ -192,6 +200,19 @@ bigint._args_ = function (num1, num2)
     num1 = num1:rebase(num2._base_)
   end
   return num1, num2
+end
+
+bigint._simbase_ = function (num1, num2)
+  if num1._base_ > num2._base_ then
+    num2 = num2:rebase(num1._base_)
+  elseif num1._base_ < num2._base_ then
+    num1 = num1:rebase(num2._base_)
+  end
+  return num1, num2
+end
+
+bigint._convert_ = function (v)
+  return Ver.isInteger(v) and bigint:_new_(v)
 end
 
 --- Main algorithm for division.
@@ -361,7 +382,17 @@ about[bigint.copy] = {"copy(B)", "Return copy of given number.", help.OTHER}
 --  @param B2 Second bigint or integer.
 --  @return Sum object.
 bigint.__add = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2) 
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 + p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p + B2) or (Cross.float(B1) + Cross.float(B2))
+    end
+  end
   if B1.sign > 0 then
     return (B2.sign > 0) and bigint._sum_(B1,B2) or bigint._sub_(B1,B2)
   else 
@@ -383,7 +414,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Difference object.
 bigint.__sub = function (B1, B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 - p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p - B2) or (Cross.float(B1) - Cross.float(B2))
+    end
+  end
   if B1.sign > 0 then
     return (B2.sign > 0) and bigint._sub_(B1,B2) or bigint._sum_(B1,B2)
   else
@@ -421,7 +462,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Product object.
 bigint.__mul = function (B1, B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 * p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p * B2) or (Cross.float(B1) * Cross.float(B2))
+    end
+  end
   local res = bigint._mul_(B1,B2)
   res.sign = B1.sign * B2.sign
   return res
@@ -432,7 +483,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Ratio object.
 bigint.__div = function (B1, B2)
-  B1, B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 / p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p / B2) or (Cross.float(B1) / Cross.float(B2))
+    end
+  end
   local res,_ = bigint._div_(B1,B2)
   return res
 end
@@ -442,7 +503,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Remainder object.
 bigint.__mod = function (B1, B2)
-  B1, B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 % p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p % B2) or (Cross.float(B1) % Cross.float(B2))
+    end
+  end
   local _,res = bigint._div_(B1,B2)
   return res
 end
@@ -455,7 +526,20 @@ end
 --  @param B2 Second bigint object or integer.
 --  @return <code>true</code> if numbers have the same values and signs.
 bigint.eq = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 == p
+    else 
+      p = Cross.convert(B2, B1)
+      if p then return p == B2
+      else
+        return Cross.float(B1) == Cross.float(B2)
+      end
+    end
+  end
   if #B1 == #B2 and B1.sign == B2.sign then
     for i = 1,#B1 do
       if B1[i] ~= B2[i] then return false end
@@ -473,7 +557,20 @@ bigint.__eq = bigint.eq
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 < p
+    else 
+      p = Cross.convert(B2, B1)
+      if p then return p < B2
+      else
+        return Cross.float(B1) < Cross.float(B2)
+      end
+    end
+  end
   if B1.sign < B2.sign then return true end
   if #B1 == #B2 then   -- equal length
     for i = #B1,1,-1 do
@@ -510,7 +607,20 @@ end
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less or equal to the second.
 bigint.__le = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 <= p
+    else 
+      p = Cross.convert(B2, B1)
+      if p then return p <= B2
+      else
+        return Cross.float(B1) <= Cross.float(B2)
+      end
+    end
+  end
   return not bigint._gt_(B1,B2)
 end
 
@@ -519,7 +629,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Power of the number.
 bigint.__pow = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 ^ p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p ^ B2) or (Cross.float(B1) ^ Cross.float(B2))
+    end
+  end
   if B2.sign < 0 then error('Negative power!') end
   local y, x = bigint:_new_({1,base=B1._base_}), B1
   if #B2 == 1 and B2[1] == 0 then
