@@ -41,6 +41,12 @@ ans = (a:Nu().type == d:Nu().type) --> true
 -- show
 print(a)
 
+-- rat & int 
+ans = Rat(1,2) + Int(1)            --> Rat(3,2)
+
+-- int & rat
+ans = Int(1) - Rat(1,2)            --> Rat(1,2)
+
 
 -- RATIONAL and POLYNOMIAL
 -----------------------------------

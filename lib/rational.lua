@@ -331,7 +331,7 @@ __call = function (self, n, d)
   d = d or 1
   assert(type(n) == 'number' and Ver.isInteger(n) or type(n) == 'table' and n.__mod, 
          "Wrong numerator type")
-  assert(type(d) == 'number' and Ver.isInteger(n) or type(d) == 'table' and d.__mod, 
+  assert(type(d) == 'number' and Ver.isInteger(d) or type(d) == 'table' and d.__mod, 
          "Wrong denomenator type")
   assert(not Cross.eq(d,0), "Wrond denomenator value")
   return rational:_new_(n,d) 
