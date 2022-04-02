@@ -105,6 +105,12 @@ ans = Poly.build(Int(1),Int(1))  --> Poly{Int(1),Int(-2),Int(1)}
 -- show
 print(a:str())
 
+-- poly & int
+ans = Poly{1,2,3} * Int(2)       --> Poly{Int(2),Int(4),Int(6)}
+
+-- int & poly
+ans = Int(1) - Poly{1,0}         --> Poly{-1,1}
+
 
 -- POLYNOMIAL and RATIONAL 
 -----------------------------

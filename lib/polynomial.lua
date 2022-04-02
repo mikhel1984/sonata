@@ -177,16 +177,6 @@ _simp_ = numpoly
 }
 polynomial.__index = polynomial
 
---- Correct arguments if need.
---  @param va First object
---  @param vb Second object.
---  @return Two polynomial objects.
-polynomial._args_ = function (va,vb)
-  va = ispolynomial(va) and va or polynomial:_init_({[0]=va})
-  vb = ispolynomial(vb) and vb or polynomial:_init_({[0]=vb})
-  return va, vb
-end
-
 --- Initialize polynomial from table.
 --  @param self Parent object.
 --  @param t Table of coefficients, from highest to lowest power.
@@ -260,7 +250,14 @@ about[polynomial.copy] = {"copy(P)", "Get copy of the polynomial.", help.OTHER}
 --  @param P2 Second polynomial or number.
 --  @return Sum.
 polynomial.__add = function (P1,P2)
-  P1, P2 = polynomial._args_(P1,P2)
+  if not (ispolynomial(P1) and ispolynomial(P2)) then
+    local p = Cross.convert(P1, P2)
+    if p then 
+      return P1 + p
+    else
+      return Cross.convert(P2, P1) + P2
+    end
+  end
   local t = {}
   -- get sum of equal powers
   for i = 0, math.max(#P1,#P2) do
@@ -283,7 +280,7 @@ end
 --  @param P2 Second polynomial or number.
 --  @return Difference.
 polynomial.__sub = function (P1,P2) 
-  return numpoly(reduce(P1 + (-P2)))
+  return P1 + (-P2)
 end
 
 --- P1 * P2
@@ -291,7 +288,14 @@ end
 --  @param P2 Second polynomial or number.
 --  @return Product.
 polynomial.__mul = function (P1,P2)
-  P1,P2 = polynomial._args_(P1,P2)
+  if not (ispolynomial(P1) and ispolynomial(P2)) then
+    local p = Cross.convert(P1, P2)
+    if p then 
+      return P1 * p
+    else
+      return Cross.convert(P2, P1) * P2
+    end
+  end
   local res = polynomial:_init_({[0]=0})
   -- get sum of coefficients
   for i = 0, #P1 do
@@ -309,7 +313,15 @@ end
 --  @param P2 Second polynomial or number.
 --  @param Ratio.
 polynomial.__div = function (P1,P2)
-  local res, _ = polynomial._div_(polynomial._args_(P1,P2))
+  if not (ispolynomial(P1) and ispolynomial(P2)) then
+    local p = Cross.convert(P1, P2)
+    if p then 
+      return P1 / p
+    else
+      return Cross.convert(P2, P1) / P2
+    end
+  end
+  local res, _ = polynomial._div_(P1,P2)
   return res
 end
 
@@ -318,7 +330,15 @@ end
 --  @param P2 Second polynomial or number.
 --  @return Rest.
 polynomial.__mod = function (P1,P2)
-  local _, res = polynomial._div_(polynomial._args_(P1,P2))
+  if not (ispolynomial(P1) and ispolynomial(P2)) then
+    local p = Cross.convert(P1, P2)
+    if p then 
+      return P1 % p
+    else
+      return Cross.convert(P2, P1) % P2
+    end
+  end
+  local _, res = polynomial._div_(P1,P2)
   return res
 end
 
@@ -754,9 +774,22 @@ about[polynomial.ppval] = {"ppval(tP,d[,N]", "Return value of a piecewise polyno
 -- Simplify ppval call.
 polynomial._metappval_ = {__call = polynomial.ppval}
 
-setmetatable(polynomial, {__call = function (self, t) return polynomial._reorder_(t) end})
+polynomial._convert_ = function (v)
+    return (type(v) == 'number' or type(v) == 'table' and v.__add and v.__mul and v.__div) 
+            and polynomial:_init_({[0]=v})
+end
+
+setmetatable(polynomial, {
+__call = function (self, t) 
+  for _,v in ipairs(t) do
+    if not (type(v) == 'number' or type(v) == 'table' and v.__add and v.__mul) then 
+      error("Wrong coefficient "..tostring(v))
+    end
+  end
+  return polynomial._reorder_(t) 
+end})
 polynomial.Poly = 'Poly'
-about[polynomial.Poly] = {"Poly(...)", "Create a polynomial.", help.NEW}
+about[polynomial.Poly] = {"Poly {...}", "Create a polynomial.", help.NEW}
 
 -- Comment to remove descriptions
 polynomial.about = about
