@@ -796,7 +796,10 @@ end
 about[bigint.isPrime] = {"isPrime(B[,sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
 
 -- simplify constructor call
-setmetatable(bigint, {__call = function (self, v) return bigint:_new_(v) end})
+setmetatable(bigint, {
+__call = function (self, v) 
+  return bigint:_new_(v) 
+end})
 bigint.Int = 'Int'
 about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.NEW}
 

@@ -130,22 +130,9 @@ rational.copy = function (R) return
 end
 about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
 
---- An appropriate argument for rational number.
---  @param v Object.
---  @return True if the argument can be used.
-rational._convertible_ = function (v)
-  local tp = type(v)
-  return tp == 'number' or tp == 'table' and v.__mod
-end
 
---- Argument type correction.
---  @param a First rational or natural number.
---  @param b Second rational or natural number.
---  @return Arguments as rational numbers.
-rational._args_ = function (a,b)
-  a = isrational(a) and a or rational:_new_(a, 1)
-  b = isrational(b) and b or rational:_new_(b, 1)
-  return a,b
+rational._convert_ = function (v)
+  return (type(v) == 'number' or type(v) == 'table' and v.__mod) and rational:_new_(v,1)
 end
 
 --- R1 + R2
@@ -153,7 +140,15 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Sum.
 rational.__add = function (R1, R2)  
-  R1,R2 = rational._args_(R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then 
+      return R1 + p
+    else
+      p = Cross.convert(R2, R1) 
+      return p and (p + R2) or (Cross.float(R1) + Cross.float(R2))
+    end
+  end
   return numrat(rational:_new_(R1[1]*R2[2]+R1[2]*R2[1], R1[2]*R2[2]))
 end
 
@@ -162,7 +157,14 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Difference.
 rational.__sub = function (R1, R2)  
-  R1,R2 = rational._args_(R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 - p
+    else
+      p = Cross.convert(R2, R1) 
+      return p and (p - R2) or (Cross.float(R1) - Cross.float(R2))
+    end
+  end
   return numrat(rational:_new_(R1[1]*R2[2]-R1[2]*R2[1], R1[2]*R2[2]))
 end
 
@@ -171,7 +173,14 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Product.
 rational.__mul = function (R1, R2)
-  R1,R2 = rational._args_(R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 * p
+    else
+      p = Cross.convert(R2, R1) 
+      return p and (p * R2) or (Cross.float(R1) * Cross.float(R2))
+    end
+  end
   return numrat(rational:_new_(R1[1]*R2[1], R1[2]*R2[2]))
 end
 
@@ -180,7 +189,14 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Ratio.
 rational.__div = function (R1, R2)
-  R1,R2 = rational._args_(R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 / p
+    else
+      p = Cross.convert(R2, R1) 
+      return p and (p / R2) or (Cross.float(R1) / Cross.float(R2))
+    end
+  end
   return numrat(rational:_new_(R1[1]*R2[2], R1[2]*R2[1]))
 end
 
@@ -194,7 +210,7 @@ rational.__unm = function (R) return rational:_new_(-R[1], R[2]) end
 --  @param R2 Rational or real number.
 --  @return Power value.
 rational.__pow = function (R1, R2)
-  R2 = (type(R2) == "number") and R2 or R2:float()  -- to float point
+  R2 = Cross.float(R2)
   if type(R1) == "number" then
     return R1^R2
   else
@@ -211,7 +227,17 @@ about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, 
 --  @param R2 Second number.
 --  @return True if the numbers are equal.
 rational.eq = function (R1,R2)
-  R1,R2 = rational._args_(R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 == p
+    else
+      p = Cross.convert(R2, R1) 
+      if p then return p == R2 
+      else 
+        return Cross.float(R1) == Cross.float(R2)
+      end
+    end
+  end
   return Cross.eq(R1[1],R2[1]) and Cross.eq(R1[2],R2[2])
 end
 about[rational.eq] = {"eq(R1,R2)", "Compare two objects.", help.OTHER}
@@ -222,7 +248,17 @@ rational.__eq = rational.eq
 --  @param R2 Second number.
 --  @return True if the first number is less.
 rational.__lt = function (R1,R2)
-  R1,R2 = rational._args_(R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 < p
+    else
+      p = Cross.convert(R2, R1) 
+      if p then return p < R2 
+      else 
+        return Cross.float(R1) < Cross.float(R2)
+      end
+    end
+  end
   return (R1[1]*R2[2]) < (R2[1]*R1[2])
 end
 
@@ -231,7 +267,17 @@ end
 --  @param R2 Second number.
 --  @return True in the first value is less or equal then the second one.
 rational.__le = function (R1,R2)
-  R1,R2 = rational._args_(R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 <= p
+    else
+      p = Cross.convert(R2, R1) 
+      if p then return p <= R2 
+      else 
+        return Cross.float(R1) <= Cross.float(R2)
+      end
+    end
+  end
   return (R1[1]*R2[2]) <= (R2[1]*R1[2])
 end
 

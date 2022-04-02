@@ -142,15 +142,10 @@ local function iscomplex(v) return type(v) == 'table' and v.iscomplex end
 --  @return Simple number if possible.
 local function numcomp(C) return Cross.eq(C[2], 0) and Cross.simp(C[1]) or C end
 
---- Get float point value if possible.
---  @param v Real value.
---  @return floating point number.
-local function tofloat(v) return type(v) == 'table' and v:float() or v end
-
 --- Find exponential with type conversation.
 --  @param v Value.
 --  @return exp(float(v))
-local function fexp(v) return math.exp(tofloat(v)) end
+local function fexp(v) return math.exp(Cross.float(v)) end
 
 --- Hyperbolic cosine.
 --  @param v Real value.
@@ -165,12 +160,12 @@ local function sh (v) return 0.5*(fexp(v)-fexp(-v)) end
 --- Find sinus with type conversation.
 --  @param v Real value.
 --  @return sin(float(v))
-local function fsin(v) return math.sin(tofloat(v)) end
+local function fsin(v) return math.sin(Cross.float(v)) end
 
 --- Find cosine with type conversation.
 --  @param v Real value.
 --  @return cos(float(v))
-local function fcos(v) return math.cos(tofloat(v)) end
+local function fcos(v) return math.cos(Cross.float(v)) end
 
 --	INFO
 
@@ -283,7 +278,7 @@ complex.__pow = function (C1,C2)
   C1,C2 = complex._args_(C1,C2)
   local a0, a1 = complex.abs(C1), complex.angle(C1)
   local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
-  local abs = a0^(tofloat(C2[1]))*fexp(-a1*C2[2])
+  local abs = a0^(Cross.float(C2[1]))*fexp(-a1*C2[2])
   local arg = k*C2[2]+C2[1]*a1
   return numcomp(complex:_init_(abs*fcos(arg), abs*fsin(arg)))
 end
@@ -311,7 +306,7 @@ about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META}
 --- Argument of complex number.
 --  @param C Complex number.
 --  @return Argument of the number.
-complex.angle = function (C) return Ver.atan2(tofloat(C[2]), tofloat(C[1])) end
+complex.angle = function (C) return Ver.atan2(Cross.float(C[2]), Cross.float(C[1])) end
 about[complex.angle] = {"angle(C)", "Return argument of complex number."}
 
 --- Find object norm.
@@ -377,8 +372,8 @@ complex.log = function (C)
     return C <= 0 and complex:_init_(math.log(-C),math.pi) or math.log(C)
   else
     return numcomp(complex:_init_(
-      0.5*math.log(tofloat(C[1]^2 + C[2]^2)), 
-      Ver.atan2(tofloat(C[2]),tofloat(C[1])))
+      0.5*math.log(Cross.float(C[1]^2 + C[2]^2)), 
+      Ver.atan2(Cross.float(C[2]),Cross.float(C[1])))
     )
   end
 end

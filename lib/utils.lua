@@ -79,7 +79,9 @@ end
 
 --============= Cross-module functionality =========
 
-local cross = {}
+local cross = {
+--NUMBER = 1, TABLE = 2, STRING = 3, OTHER = 4,
+}
 
 -- norm of numeric objects
 cross.norm = function (v)
@@ -112,8 +114,18 @@ cross.copy = function (v)
   return type(v) == 'table' and v.copy and v:copy() or v
 end
 
-cross.convertible = function (vMaster, vSlave)
-  return type(vMaster) == 'table' and vMaster._convertible_ and vMaster:_convertible_(vSlave)
+-- get float value when possible
+cross.float = function (v)
+  return type(v) == 'number' and v or type(v) == 'table' and v:float() or nil
+end
+
+-- check if the types are the same
+cross.same = function (v1,v2)
+  return type(v1) == type(v2) and (type(v1) ~= 'table' or v1.type == v2.type)
+end
+
+cross.convert = function (vMaster, vSlave)
+  return type(vMaster) == 'table' and vMaster._convert_ and vMaster._convert_(vSlave)
 end
 
 
