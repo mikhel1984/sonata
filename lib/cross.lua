@@ -166,6 +166,12 @@ ans = Comp.sin(a).Re            --3> 3.165
 -- show
 print(a)
 
+-- comp & big
+ans = Comp(1,2) + Int(3)         --> Comp(4,2)
+
+-- big & comp 
+ans = Int(2) * Comp(1,2)         --> Comp(2,4)
+
 
 -- COMPLEX and RATIONAL
 ------------------------

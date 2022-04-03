@@ -221,24 +221,19 @@ about[complex.trig] = {"trig(vModule,vAngle)", "Create complex number using modu
 complex.copy = function (C) return complex:_init_(Cross.copy(C[1]), Cross.copy(C[2])) end
 about[complex.copy] = {"copy(C)", "Create copy of the complex number.", help.OTHER}
 
---- Correct arguments.
---  @param a Real or complex number.
---  @param b Real or complex number (optional).
---  @return Complex number(s).
-complex._args_ = function (a,b)
-  a = iscomplex(a) and a or complex:_init_(a,0)
-  if b then
-    b = iscomplex(b) and b or complex:_init_(b,0)
-  end
-  return a,b
-end
-
 --- C1 + C2
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
 --  @return Sum of numbers.
 complex.__add = function (C1,C2)
-  C1,C2 = complex._args_(C1,C2)
+  if not (iscomplex(C1) and iscomplex(C2)) then
+    local p = Cross.convert(C1, C2)
+    if p then 
+      return C1 + p
+    else
+      return Cross.convert(C2, C1) + C2
+    end
+  end
   return numcomp(complex:_init_(C1[1]+C2[1], C1[2]+C2[2]))
 end
 
@@ -247,7 +242,14 @@ end
 --  @param C2 Real or complex number.
 --  @return Difference of numbers.
 complex.__sub = function (C1,C2)
-  C1,C2 = complex._args_(C1,C2)
+  if not (iscomplex(C1) and iscomplex(C2)) then
+    local p = Cross.convert(C1, C2)
+    if p then 
+      return C1 - p
+    else
+      return Cross.convert(C2, C1) - C2
+    end
+  end
   return numcomp(complex:_init_(C1[1]-C2[1], C1[2]-C2[2]))
 end
 
@@ -256,7 +258,14 @@ end
 --  @param C2 Real or complex number.
 --  @return Product of numbers.
 complex.__mul = function (C1,C2)
-  C1,C2 = complex._args_(C1,C2)
+  if not (iscomplex(C1) and iscomplex(C2)) then
+    local p = Cross.convert(C1, C2)
+    if p then 
+      return C1 * p
+    else
+      return Cross.convert(C2, C1) * C2
+    end
+  end
   return numcomp(complex:_init_(C1[1]*C2[1]-C1[2]*C2[2], C1[1]*C2[2]+C1[2]*C2[1]))
 end
 
@@ -265,7 +274,14 @@ end
 --  @param C2 Real or complex number.
 --  @return Ratio of numbers.
 complex.__div = function (C1,C2)
-  C1,C2 = complex._args_(C1,C2)
+  if not (iscomplex(C1) and iscomplex(C2)) then
+    local p = Cross.convert(C1, C2)
+    if p then 
+      return C1 / p
+    else
+      return Cross.convert(C2, C1) / C2
+    end
+  end
   local denom = C2[1]*C2[1] + C2[2]*C2[2]
   return numcomp(complex:_init_((C1[1]*C2[1]+C1[2]*C2[2])/denom, (C1[2]*C2[1]-C1[1]*C2[2])/denom))
 end
@@ -275,7 +291,14 @@ end
 --  @param C2 Real or complex number.
 --  @return Power.
 complex.__pow = function (C1,C2)
-  C1,C2 = complex._args_(C1,C2)
+  if not (iscomplex(C1) and iscomplex(C2)) then
+    local p = Cross.convert(C1, C2)
+    if p then 
+      return C1 ^ p
+    else
+      return Cross.convert(C2, C1) ^ C2
+    end
+  end
   local a0, a1 = complex.abs(C1), complex.angle(C1)
   local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
   local abs = a0^(Cross.float(C2[1]))*fexp(-a1*C2[2])
@@ -296,7 +319,14 @@ about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", 
 --  @param C2 Real or complex number.
 --  @return True if the real and complex parts are the same.
 complex.__eq = function (C1, C2)
-  C1,C2 = complex._args_(C1,C2)
+  if not (iscomplex(C1) and iscomplex(C2)) then
+    local p = Cross.convert(C1, C2)
+    if p then 
+      return C1 == p
+    else
+      return Cross.convert(C2, C1) == C2
+    end
+  end
   return Cross.eq(C1[1], C2[1]) and Cross.eq(C1[2], C2[2])
 end
 
@@ -467,6 +497,11 @@ about[complex.atanh] = {"atanh(C)", "Complex inverse hyperbolic tangent.", FUNCT
 -- Imaginary unit
 complex._i  = complex:_init_(0,1)
 about[complex._i] = {"_i", "Complex unit.", help.CONST}
+
+complex._convert_ = function (v)
+  return (type(v) == 'number' or type(v) == 'table' and v.float) 
+         and complex:_init_(v,0)
+end
 
 -- simplify constructor call
 setmetatable(complex, {
