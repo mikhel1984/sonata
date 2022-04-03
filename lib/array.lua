@@ -417,7 +417,7 @@ setmetatable(array, {__call = function (self, tSize)
   return array:_new_(tSize) 
 end})
 array.Arr = 'Arr'
-about[array.Arr] = {"Arr(tSize)", "Create empty array with the given size.", help.NEW}
+about[array.Arr] = {"Arr {n1,n2,..}", "Create empty array with the given size.", help.NEW}
 
 --- Iterator across the array.
 --  @param A Array object.

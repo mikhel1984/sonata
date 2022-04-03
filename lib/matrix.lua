@@ -1149,7 +1149,7 @@ about[matrix.norm] = {"norm(M)", "Euclidean norm."}
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
 matrix.Mat = 'Mat'
-about[matrix.Mat] = {"Mat(...)", "Create matrix from list of strings (tables).", help.NEW}
+about[matrix.Mat] = {"Mat {tRow1,tRow2,..}", "Create matrix from list of strings (tables).", help.NEW}
 
 --- Function for execution during the module import.
 matrix.onImport = function ()

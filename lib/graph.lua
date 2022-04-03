@@ -253,7 +253,7 @@ about[graph.remove] = {"remove(G,v)", "Remove node or edge from the graph G. Nod
 -- simplify constructor call
 setmetatable(graph, {__call = function (self,v) return graph:_new_(v) end})
 graph.Graph = 'Graph'
-about[graph.Graph] = {"Graph(t)", "Create new graph.", help.NEW}
+about[graph.Graph] = {"Graph {v1,v2,..}", "Create new graph.", help.NEW}
 
 --- Get graph nodes.
 --  @param G Graph.

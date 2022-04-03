@@ -789,7 +789,7 @@ __call = function (self, t)
   return polynomial._reorder_(t) 
 end})
 polynomial.Poly = 'Poly'
-about[polynomial.Poly] = {"Poly {...}", "Create a polynomial.", help.NEW}
+about[polynomial.Poly] = {"Poly {..,v1,v0}", "Create a polynomial.", help.NEW}
 
 -- Comment to remove descriptions
 polynomial.about = about

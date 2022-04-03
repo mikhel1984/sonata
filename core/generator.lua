@@ -241,7 +241,7 @@ generator.doc = function (locName, tModules)
     res[#res+1] = '<a href="#Top">Top</a></div>'
   end
 
-  res[#res+1] = '<div><p align="center"><i>2021, Stanislav Mikhel</i></p></div>'
+  res[#res+1] = '<div><p align="center"><i>2017-2022, Stanislav Mikhel</i></p></div>'
   res[#res+1] = '</body></html>'
 
   -- save

@@ -279,7 +279,7 @@ setmetatable(lens, {__call = function (self,t)
   return lens:_init_(t)
 end})
 lens.Lens = 'Lens'
-about[lens.Lens] = {"Lens(t)", "Make new lens component.", help.NEW}
+about[lens.Lens] = {"Lens {dA,dB,dC,dD}", "Make new lens component.", help.NEW}
 
 --- Make a copy.
 --  @param L Initial object.

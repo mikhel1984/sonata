@@ -553,7 +553,7 @@ end
 -- Simplify the constructor call.
 setmetatable(asciiplot, {__call = function (self,w,h) return asciiplot:new(w,h) end})
 asciiplot.Ap = 'Ap'
-about[asciiplot.Ap] = {"Ap(dwidth,dheight)", "Create new asciiplot.", help.NEW}
+about[asciiplot.Ap] = {"Ap([iWidth=75,iHeight=23])", "Create new asciiplot.", help.NEW}
 
 --- Make a copy.
 --  @param F Initial object.
