@@ -144,18 +144,6 @@ quaternion.__newindex = function (t,k,v)
   end
 end
 
---- Check arguments.
---  @param Q1 First quaternion or number.
---  @param Q2 Second quaternion or number.
---  @return Two quaternions.
-quaternion._args_ = function (Q1,Q2)
-  Q1 = isquaternion(Q1) and Q1 or quaternion:_new_({Q1,0,0,0})
-  if Q2 then
-    Q2 = isquaternion(Q2) and Q2 or quaternion:_new_({Q2,0,0,0})
-  end
-  return Q1, Q2
-end
-
 --- Quaternion constructor.
 --  @param t Table of coefficients (w-i-j-k)
 --  @return New quaternion.
@@ -296,7 +284,14 @@ about[quaternion.fromRot] = {'fromRot(M)','Convert rotation matrix to quaternion
 --  @param Q2 Second quaternion.
 --  @return Sum object.
 quaternion.__add = function (Q1,Q2)
-  Q1,Q2 = quaternion._args_(Q1,Q2)
+  if not (isquaternion(Q1) and isquaternion(Q2)) then
+    local p = Cross.convert(Q1, Q2)
+    if p then
+      return Q1 + p
+    else
+      return Cross.convert(Q2, Q1) + Q2
+    end
+  end
   return numquat(quaternion:_new_({Q1[1]+Q2[1],Q1[2]+Q2[2],Q1[3]+Q2[3],Q1[4]+Q2[4]}))
 end
 
@@ -305,7 +300,14 @@ end
 --  @param Q2 Second quaternion.
 --  @return Difference.
 quaternion.__sub = function (Q1,Q2)
-  Q1,Q2 = quaternion._args_(Q1,Q2)
+  if not (isquaternion(Q1) and isquaternion(Q2)) then
+    local p = Cross.convert(Q1, Q2)
+    if p then
+      return Q1 - p
+    else
+      return Cross.convert(Q2, Q1) - Q2
+    end
+  end
   return numquat(quaternion:_new_({Q1[1]-Q2[1],Q1[2]-Q2[2],Q1[3]-Q2[3],Q1[4]-Q2[4]}))
 end
 
@@ -319,7 +321,14 @@ quaternion.__unm = function (Q) return quaternion:_new_({-Q[1],-Q[2],-Q[3],-Q[4]
 --  @param Q2 Second quaternion.
 --  @return Product.
 quaternion.__mul = function (Q1,Q2)
-  Q1,Q2 = quaternion._args_(Q1,Q2)
+  if not (isquaternion(Q1) and isquaternion(Q2)) then
+    local p = Cross.convert(Q1, Q2)
+    if p then
+      return Q1 * p
+    else
+      return Cross.convert(Q2, Q1) * Q2
+    end
+  end
   return numquat(quaternion:_new_(
     {Q1[1]*Q2[1]-Q1[2]*Q2[2]-Q1[3]*Q2[3]-Q1[4]*Q2[4],
      Q1[1]*Q2[2]+Q1[2]*Q2[1]+Q1[3]*Q2[4]-Q1[4]*Q2[3],
@@ -360,8 +369,16 @@ about[quaternion.arithmetic] = {quaternion.arithmetic, 'a + b, a - b, a * b, a ^
 --  @param Q2 Second quaternion.
 --  @return True if the quaternions are equal.
 quaternion.eq = function (Q1,Q2)
-  Q1,Q2 = quaternion._args_(Q1,Q2)
-  return Q1[1]==Q2[1] and Q1[2]==Q2[2] and Q1[3]==Q2[3] and Q1[4]==Q2[4]
+  if not (isquaternion(Q1) and isquaternion(Q2)) then
+    local p = Cross.convert(Q1, Q2)
+    if p then
+      return Q1 == p
+    else
+      return Cross.convert(Q2, Q1) == Q2
+    end
+  end
+  return Cross.eq(Q1[1],Q2[1]) and Cross.eq(Q1[2],Q2[2]) and 
+         Cross.eq(Q1[3],Q2[3]) and Cross.eq(Q1[4],Q2[4])
 end
 quaternion.__eq = quaternion.eq
 
@@ -425,6 +442,11 @@ quaternion.mat = function (Q)
      {Q[4],-Q[3], Q[2], Q[1]}})
 end
 about[quaternion.mat] = {'mat(Q)','Equivalent matrix representation.',help.OTHER}
+
+quaternion._convert_ = function (v)
+  return (type(v) == 'number' or type(v) == 'table' and v.float) 
+         and quaternion:_new_({v,0,0,0})
+end
 
 -- simplify constructor call
 setmetatable(quaternion, 
