@@ -182,30 +182,32 @@ about[quaternion.toAA] = {'toAA(Q)','Get angle and axis of rotation.',ROTATION}
 --- Make copy.
 --  @param Q Initial object.
 --  @return Copy of the quaternion.
-quaternion.copy = function (Q) return quaternion:_new_({Q[1],Q[2],Q[3],Q[4]}) end
-about[quaternion.copy] = {"copy(t)", "Create a copy of the quaternion.",help.OTHER}
-
-
-quaternion._norm_ = function (Q) 
-  return math.sqrt(Cross.norm(Q[1])^2 + Cross.norm(Q[2])^2 + 
-                   Cross.norm(Q[3])^2 + Cross.norm(Q[4])^2)
+quaternion.copy = function (Q) 
+  return quaternion:_new_({Cross.copy(Q[1]),Cross.copy(Q[2]),
+                           Cross.copy(Q[3]),Cross.copy(Q[4])}) 
 end
+about[quaternion.copy] = {"copy(t)", "Create a copy of the quaternion.",help.OTHER}
 
 --- Find square norm.
 --  @param Q Quaternion.
 --  @return Value of norm.
-quaternion._norm2_ = function (Q) return Q[1]*Q[1]+Q[2]*Q[2]+Q[3]*Q[3]+Q[4]*Q[4] end
+quaternion._norm2_ = function (Q) 
+  return Cross.float(Q[1])^2 + Cross.float(Q[2])^2 + Cross.float(Q[3])^2 + Cross.float(Q[4])^2
+end
 
 --- Get conjugated quaternion.
 --  @param Q Quaternion.
 --  @return Conjugation.
-quaternion.conj = function (Q) return quaternion:_new_({Q[1],-Q[2],-Q[3],-Q[4]}) end
+quaternion.conj = function (Q) 
+  return quaternion:_new_({Cross.copy(Q[1]),-Q[2],-Q[3],-Q[4]}) 
+end
 about[quaternion.conj] = {'conj(Q)','Get conjugation.'}
 
 --- Norm of the quaternion.
 --  @return Value of norm.
-quaternion.abs = quaternion._norm_ 
+quaternion.abs = function (Q) return math.sqrt(quaternion._norm2_(Q)) end
 about[quaternion.abs] = {'abs(Q)','Value of the norm.'}
+quaternion._norm_ = quaternion.abs
 
 --- Get inversion.
 --  @param Q Quaternion.
@@ -353,7 +355,7 @@ quaternion.__pow = function (Q,d)
     end
     return res
   else
-    if math.abs(quaternion._norm2_(Q)-1) > 1E-4 then error("Can't apply power function!") end
+    if math.abs(quaternion._norm2_(Q)-1) > 1E-4 then error("Unit quaternion is required!") end
     local angle, axis = quaternion.toAA(Q)
     angle = 0.5 * d * angle   -- new angle
     local sa = math.sin(angle)
@@ -385,23 +387,35 @@ quaternion.__eq = quaternion.eq
 quaternion.comparison = 'comparison'
 about[quaternion.comparison] = {quaternion.comparison, 'a == b, a ~= b', help.META}
 
+--- Number representation.
+--  @param v Value.
+--  @return String representation.
+local function numStr(v) 
+  return type(v) == 'number' and string.format('%.3f', v) or tostring(v) 
+end
+
 --- String representation of the object.
 --  @param Q Quaternion.
 --  @return String with quaternion elements.
 quaternion.__tostring = function (Q)
-  return string.format("%.3f%+.3fi%+.3fj%+.3fk", Q[1], Q[2], Q[3], Q[4])
+  --return string.format("%.3f%+.3fi%+.3fj%+.3fk", Q[1], Q[2], Q[3], Q[4])
+  local i, j, k = numStr(Q[2]), numStr(Q[3]), numStr(Q[4]) 
+  return string.format("%s%s%si%s%sj%s%sk", numStr(Q[1]),
+          i:sub(1,1) == '-' and '' or '+', i, 
+          j:sub(1,1) == '-' and '' or '+', j,
+          k:sub(1,1) == '-' and '' or '+', k)
 end
 
 --- Get real part.
 --  @param Q Quaternion.
 --  @return Real element.
-quaternion.real = function(Q) return Q[1] end
+quaternion.real = function(Q) return Cross.copy(Q[1]) end
 about[quaternion.real] = {'real(Q)','Real part (same as Q.w).',help.OTHER}
 
 --- Get imaginary part.
 --  @param Q Quaternion.
 --  @return Table with imaginary elements.
-quaternion.imag = function (Q) return {Q[2],Q[3],Q[4]} end
+quaternion.imag = function (Q) return {Cross.copy(Q[2]),Cross.copy(Q[3]),Cross.copy(Q[4])} end
 about[quaternion.imag] = {'imag(Q)', 'Get table of the imaginary part.', help.OTHER}
 
 --- Spherical linear interpolation.
@@ -469,7 +483,7 @@ end
 })
 
 quaternion.Quat = 'Quat'
-about[quaternion.Quat] = {"Quat(t={0,0,0,0})", "Create new quaternion.", help.NEW}
+about[quaternion.Quat] = {"Quat {w,i,j,k}", "Create new quaternion.", help.NEW}
 
 -- Comment to remove descriptions
 quaternion.about = about
