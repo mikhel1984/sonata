@@ -19,39 +19,39 @@ Int = require 'lib.bigint'
 
 -- from integer
 a = Int(123)
-ans = a:val()                 --> 123
+ans = a:float()               --> 123
 
 -- from string
 b = Int('456')
-ans = b:val()                 --> 456
+ans = b:float()               --> 456
 
 -- from table 
 -- 'sign' and 'base' can be skipped
 g = Int {1,2,3,sign=-1,base=10}
-ans = g:val()                 --> -123
+ans = g:float()               --> -123
 
 -- check equality
 ans = (a == -g)               --> true
 
 -- arithmetical operations
-ans = Int.val(a+b)            --> 579
+ans = Int.float(a+b)          --> 579
 
-ans = Int.val(a-b)            --> -333
+ans = Int.float(a-b)          --> -333
 
-ans = Int.val(a*Int(2))       --> 246
+ans = Int.float(a*Int(2))     --> 246
 
-ans = Int.val(b/2)            --> 228
+ans = Int.float(b/2)          --> 228
 
-ans = Int.val(b%a)            --> 87
+ans = Int.float(b%a)          --> 87
 
-ans = Int.val(a^3)            --> 1860867
+ans = Int.float(a^3)          --> 1860867
 
 -- absolute value
-ans = Int.abs('-25'):val()    --> 25
+ans = Int.abs('-25'):float()  --> 25
 
 -- factorial
 c = Int(10):fact()
-ans = Int.val(c)              --> 3628800
+ans = Int.float(c)            --> 3628800
 
 -- make copy, comparison
 d = a:copy()
@@ -102,7 +102,7 @@ ans = #t                      --> 5
 -- check factorization
 ans = 1
 for i = 1,#t do
-  ans = ans * (t[i]:val())
+  ans = ans * (t[i]:float())
 end                           --> 456
 
 -- pseudo-random number
@@ -110,13 +110,21 @@ end                           --> 456
 print(b:random())
 
 -- greatest common divisor
-ans = a:gcd(b):val()          --> 3
+ans = a:gcd(b):float()        --> 3
+
+-- result is bigint
+ans = a + 1.0                 --> Int(124) 
+
+-- result is float
+ans = a - 0.5                 --> 122.5
 
 --]]
 
 --	LOCAL
 
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Cross = Ver.cross 
+Ver = Ver.versions
 
 local ZERO = string.byte('0')
 
@@ -194,6 +202,19 @@ bigint._args_ = function (num1, num2)
   return num1, num2
 end
 
+bigint._simbase_ = function (num1, num2)
+  if num1._base_ > num2._base_ then
+    num2 = num2:rebase(num1._base_)
+  elseif num1._base_ < num2._base_ then
+    num1 = num1:rebase(num2._base_)
+  end
+  return num1, num2
+end
+
+bigint._convert_ = function (v)
+  return Ver.isInteger(v) and bigint:_new_(v)
+end
+
 --- Main algorithm for division.
 --  @param B1 First number representation.
 --  @param B2 Second number representation.
@@ -208,11 +229,11 @@ bigint._div_ = function (B1,B2)
   local rem = bigint:_new_({0,base=d}); rem[1] = nil
   local k = #B1-#B2+1
   Ver.move(B1,k+1,#B1,1,rem)  -- copy last elements
-  local v2, den, acc = B2:val(), B2:abs(), {}
+  local v2, den, acc = B2:float(), B2:abs(), {}
   for i = k,1,-1 do
     table.insert(rem,1,B1[i])
     if rem >= den then
-      local n = math.modf(rem:val() / v2)  -- estimate
+      local n = math.modf(rem:float() / v2)  -- estimate
       local tmp = rem - den * bigint:_new_({n,base=d})
       if tmp.sign < 0 then
         n = n - 1
@@ -361,7 +382,17 @@ about[bigint.copy] = {"copy(B)", "Return copy of given number.", help.OTHER}
 --  @param B2 Second bigint or integer.
 --  @return Sum object.
 bigint.__add = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2) 
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 + p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p + B2) or (Cross.float(B1) + Cross.float(B2))
+    end
+  end
   if B1.sign > 0 then
     return (B2.sign > 0) and bigint._sum_(B1,B2) or bigint._sub_(B1,B2)
   else 
@@ -383,7 +414,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Difference object.
 bigint.__sub = function (B1, B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 - p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p - B2) or (Cross.float(B1) - Cross.float(B2))
+    end
+  end
   if B1.sign > 0 then
     return (B2.sign > 0) and bigint._sub_(B1,B2) or bigint._sum_(B1,B2)
   else
@@ -421,7 +462,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Product object.
 bigint.__mul = function (B1, B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 * p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p * B2) or (Cross.float(B1) * Cross.float(B2))
+    end
+  end
   local res = bigint._mul_(B1,B2)
   res.sign = B1.sign * B2.sign
   return res
@@ -432,7 +483,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Ratio object.
 bigint.__div = function (B1, B2)
-  B1, B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 / p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p / B2) or (Cross.float(B1) / Cross.float(B2))
+    end
+  end
   local res,_ = bigint._div_(B1,B2)
   return res
 end
@@ -442,20 +503,43 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Remainder object.
 bigint.__mod = function (B1, B2)
-  B1, B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 % p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p % B2) or (Cross.float(B1) % Cross.float(B2))
+    end
+  end
   local _,res = bigint._div_(B1,B2)
   return res
 end
 
 --- a == b.
---  In Lua v == 0 is always <code>false</code> because in the case of number
+--  In Lua v == 0 is always false because in the case of number
 --  the program tries to convert everything into number.
 --  For two bigint objects using of <code>==</code> is also possible.
 --  @param B1 First bigint object or integer.
 --  @param B2 Second bigint object or integer.
 --  @return <code>true</code> if numbers have the same values and signs.
 bigint.eq = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 == p
+    else 
+      p = Cross.convert(B2, B1)
+      if p then return p == B2
+      else
+        return Cross.float(B1) == Cross.float(B2)
+      end
+    end
+  end
   if #B1 == #B2 and B1.sign == B2.sign then
     for i = 1,#B1 do
       if B1[i] ~= B2[i] then return false end
@@ -473,7 +557,20 @@ bigint.__eq = bigint.eq
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 < p
+    else 
+      p = Cross.convert(B2, B1)
+      if p then return p < B2
+      else
+        return Cross.float(B1) < Cross.float(B2)
+      end
+    end
+  end
   if B1.sign < B2.sign then return true end
   if #B1 == #B2 then   -- equal length
     for i = #B1,1,-1 do
@@ -510,7 +607,20 @@ end
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less or equal to the second.
 bigint.__le = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 <= p
+    else 
+      p = Cross.convert(B2, B1)
+      if p then return p <= B2
+      else
+        return Cross.float(B1) <= Cross.float(B2)
+      end
+    end
+  end
   return not bigint._gt_(B1,B2)
 end
 
@@ -519,7 +629,17 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Power of the number.
 bigint.__pow = function (B1,B2)
-  B1,B2 = bigint._args_(B1,B2)
+  if isbigint(B1) and isbigint(B2) then 
+    B1, B2 = bigint._simbase_(B1, B2)
+  else
+    local p = Cross.convert(B1, B2)
+    if p then 
+      return B1 ^ p
+    else 
+      p = Cross.convert(B2, B1)
+      return p and (p ^ B2) or (Cross.float(B1) ^ Cross.float(B2))
+    end
+  end
   if B2.sign < 0 then error('Negative power!') end
   local y, x = bigint:_new_({1,base=B1._base_}), B1
   if #B2 == 1 and B2[1] == 0 then
@@ -559,18 +679,26 @@ bigint.__tostring = function (B)
   return B.sign < 0 and ('-' .. s) or s
 end
 
---- Float number representation.
+--- Absolute floating value of bigint number.
 --  @param B Bigint object.
---  @return Integer if possible, otherwise float point number.
-bigint.val = function (B)
+--  @return Absolute value.
+bigint._norm_ = function (B)
   local d, v, sum = B._base_, 1, 0
   for i = 1,#B do
     sum = sum + B[i]*v
     v = v * d
   end
-  return B.sign >= 0 and sum or (-sum)
+  return sum
 end
-about[bigint.val] = {"val(B)", "Represent current big integer as number if it possible.", help.OTHER}
+
+--- Float number representation.
+--  @param B Bigint object.
+--  @return Integer if possible, otherwise float point number.
+bigint.float = function (B)
+  local v = bigint._norm_(B)
+  return B.sign >= 0 and v or (-v)
+end
+about[bigint.float] = {"float(B)", "Represent current big integer as number if it possible.", help.OTHER}
 
 --- B!
 --  @param B Bigint object or integer.
@@ -764,7 +892,7 @@ bigint._primeFermat_ = function (B)
   for i = 1,5 do
     repeat 
       a = bigint.random(B)
-    until a:val() >= 2
+    until a:float() >= 2
     local v1 = pow(a,B,B)
     local _,v2 = div(a,B)
     if v1 ~= v2 then return false end
@@ -788,7 +916,10 @@ end
 about[bigint.isPrime] = {"isPrime(B[,sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
 
 -- simplify constructor call
-setmetatable(bigint, {__call = function (self, v) return bigint:_new_(v) end})
+setmetatable(bigint, {
+__call = function (self, v) 
+  return bigint:_new_(v) 
+end})
 bigint.Int = 'Int'
 about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.NEW}
 
