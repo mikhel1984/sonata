@@ -146,7 +146,7 @@ b = Int '56789'        -- or from string
 a - b
 a * b
 b^50 
-_ans:val()             -- decimal representation
+_ans:float()           -- decimal representation
 c = Int(50):fact()     -- factorial
 a:rebase(42)           -- get value in new numerical base
 -- PAUSE
@@ -210,7 +210,7 @@ a + b
 a * b
 a / b
 -- float point representation
-a:val()
+a:float()
 a:Nu()      -- numerator
 a:De()      -- denominator
 -- PAUSE
