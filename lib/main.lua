@@ -318,7 +318,8 @@ end
 --  @param R Range object.
 --  @return String with the table representation.
 metharange.__tostring = function (self)
-  return string.format("{%g, %g .. %g}", self._beg, self._beg+self._step, self._end)
+  return string.format("%s{%g, %g .. %g}", self._fn and "fn" or "", 
+    self._beg, self._beg+self._step, self._end)
 end
 
 --- Get number of elements.
@@ -334,11 +335,13 @@ end
 --  @return Number.
 metharange.__index = function (self, i)
   if Ver.isInteger(i) then
+    local v
     if i > 0 and i < self._N then
-      return self._beg + (i-1)*self._step
+      v = self._beg + (i-1)*self._step
     elseif i == self._N then
-      return self._end
+      v = self._end
     end
+    return v and self._fn and self._fn(v) or v
   end
   return metharange[i]
 end
@@ -346,6 +349,12 @@ end
 -- Block setting operation.
 metharange.__newindex = function (self, k, v)
   -- do nothing
+end
+
+metharange.map = function (self, fn)
+  return setmetatable(
+    {_beg=self._beg, _end=self._end, _step=self._step, _N=self._N, _fn=fn}, 
+    metharange)
 end
 
 --- Generate sequence of values.
@@ -370,9 +379,13 @@ About[Range] = {'Range(dBegin,dEnd[,dStep])','Generate range object.', SonataHel
 --  @param t Table with arguments.
 --  @return Table with result of evaluation.
 Map = function (fn, t)
-  local res = {}
-  for _,v in ipairs(t) do res[#res+1] = fn(v) end
-  return res
+  if type(t) == 'table' then
+    if t.map then return t:map(fn) end
+    local res = {}
+    for i,v in ipairs(t) do res[i] = fn(v) end
+    return res
+  end
+  return nil
 end
 About[Map] = {'Map(fn,t)','Evaluate function for each table element.', SonataHelp.OTHER}
 
