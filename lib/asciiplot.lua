@@ -53,17 +53,18 @@ fig2.yrange = {0, 1}
 print(fig2:tplot(tbl, {2, resize=false}))
 
 -- scale figure 
-fig1:scale(0.5)
-ans = fig1.width             --> 37
+fig1:scale(0.8)
+ans = fig1.width             --> 61
 
 -- horizontal concatenation 
 -- first
+fig1:scale(0.5, true)
 fig1.xrange = {0, 1.57}
 fig1.yaxis = 'C'; fig1.xaxis = 'D'
 fig1:plot(sin, 'sin')
 fig1.title = 'First'
 -- second
-fig2:scale(0.5)
+fig2:scale(0.5, true)
 fig2.xrange = {0, 1.57}
 fig2:plot(cos, 'cos')
 fig2.title = 'Second'
@@ -130,6 +131,8 @@ asciiplot.new = function(self,dwidth,dheight)
     -- size
     width  = dwidth or WIDTH,
     height = dheight or HEIGHT,
+    _w0 = dwidth or WIDTH,
+    _h0 = dheight or HEIGHT,
     -- range
     xrange = {-1,1},
     yrange = {-1,1}, 
@@ -257,18 +260,21 @@ asciiplot.reset = function (F)
 end
 about[asciiplot.reset] = {"reset(F)", "Prepare a clear canvas.", MANUAL}
 
---- Scale xrange and yrange w.r.t. default values.
+--- Scale xrange and yrange w.r.t. initial size.
 --  @param F figure object.
 --  @param factor Positive value.
-asciiplot.scale = function (F, factor)
+--  @param bDefault set true to use defauld size instead
+asciiplot.scale = function (F, factor, bDefault)
   assert(factor > 0)
-  local int, frac = mmodf(WIDTH * factor)
+  local w = bDefault and WIDTH or F._w0
+  local h = bDefault and HEIGHT or F._h0
+  local int, frac = mmodf(w * factor)
   -- prefer odd numbers 
   F.width = (int % 2 == 1) and int or (int + 1)
-  int, frac = mmodf(HEIGHT * factor) 
+  int, frac = mmodf(h * factor) 
   F.height = (int % 2 == 1) and int or (int + 1)
 end
-about[asciiplot.scale] = {"scale(F,factor)", "Change figure size w.r.t. default values."}
+about[asciiplot.scale] = {"scale(F,factor[,bDefault=false])", "Change figure size w.r.t. initial size."}
 
 --- Scale and add a point to the figure.
 --  @param F Figure object.
