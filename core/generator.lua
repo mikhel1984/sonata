@@ -1,9 +1,9 @@
 --[[		sonata/core/generator.lua
 
 --- Functions for a file generation.
-
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2021.
+--
+--  Authors: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
 
 	module 'generator'
 --]]

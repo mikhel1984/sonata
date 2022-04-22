@@ -7,7 +7,8 @@
 --    C, D }
 --  See, for example, "Introduction to matrix methods in optics" by A.Gerrard, J.M.Burch.
 --
---  @author Stanislav Mikhel
+--  Authors: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'lens'
 --]]

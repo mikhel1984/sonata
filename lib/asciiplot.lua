@@ -2,8 +2,8 @@
 
 --- Use pseudography for data visualization.
 
---  @author Stanislav Mikhel, 2022
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2022.
+--  Authors: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'asciiplot'
 --]]

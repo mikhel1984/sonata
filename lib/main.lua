@@ -1,9 +1,9 @@
 --[[		sonata/core/main.lua 
 
---- Define aliases for standard operations and add some new common functions.
+--- Default functions and objects.
 --
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2021.
+--  Authors: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'main'
 --]]
@@ -505,7 +505,7 @@ Run = function (sFile)
     io.write('Expected .lua or .note!\n')
   end
 end
-About[Run] = {'Run(sFile)', "Execute lua- or note-file.", SonataHelp.OTHER}
+About[Run] = {'Run(sFile)', "Execute lua- or note- file.", FILES}
 
 -- save link to help info
 main.about = About
