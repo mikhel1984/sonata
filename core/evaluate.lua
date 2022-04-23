@@ -144,7 +144,7 @@ evaluate.note = function (ev, fname, full)
   local templ = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
   local invA, invB = '?> ', '>> '
   -- read lines
-  if full then io.write("Run file ", fname, "\n") end
+  if full then io.write("Run: ", fname, "\n") end
   -- read
   local f = assert(io.open(fname, 'r'))
   local txt = f:read('*a'); f:close()
