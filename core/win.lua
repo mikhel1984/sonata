@@ -2,7 +2,7 @@
 
 --- Translate utf8 to Windows specific codes.
 -- 
---  Authors: Stanislav Mikhel
+--  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
 
 	module 'win'
@@ -37,8 +37,11 @@ for i = 0, 255 do code[cp866[i]] = i end
 
 end
 
--- 
+-- output
 return {
+--- Convert text into Windows compatible form.
+--  @param txt Source text.
+--  @return Converted text.
 convert = function (txt)
   local res = {}
   for _, c in utf8.codes(txt) do

@@ -5,7 +5,7 @@
 --  Object structure:
 --  all parameters of the plot are saved in form of table, each function is in separate subtable.
 --
---  Authors: Stanislav Mikhel
+--  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'gnuplot'

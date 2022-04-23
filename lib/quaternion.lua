@@ -6,7 +6,7 @@
 --  <code>{w,i,j,k} </code></br>
 --  where <i>w</i> is a real part, <i>i, j, k</i> are imaginary elements.
 --
---  Authors: Stanislav Mikhel
+--  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'quaternion'

@@ -6,7 +6,7 @@
 --  <code>{[0]=p0, ... pn} </code></br>
 --  where each element <i>pk</i> corresponds to coefficient of <i>x^k</i>.
 --
---  Authors: Stanislav Mikhel
+--  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'polynomial'

@@ -6,7 +6,7 @@
 --  <code> {sign=S,_base_=B, v1, ... vn} </code></br>
 --  where <code>S</code> is +1/-1, B is 10 by default, v1 - vn are digits of the number in reverse order. For example, number <code>123</code> is represented as <code>{sign=1, _base_=10, 3, 2, 1}</code>.
 --  
---  Authors: Stanislav Mikhel
+--  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'bigint'

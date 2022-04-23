@@ -1,8 +1,8 @@
 --[[		sonata/lib/geodesy.lua
 
---- Coordinate transformations and other geodetic tasks
+--- Coordinate transformations and other geodetic tasks.
 --
---  Authors: Stanislav Mikhel
+--  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'geodesy'

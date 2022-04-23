@@ -8,9 +8,9 @@
 --  array_size, index_coefficients}</code></br>
 --  i.e. all elements of the array are written sequentially, column by column. Position of one element is calculated as
 --  <code>C1*n1+C2*n2+...+Ck*nk</code>
---  where <code>{n1,n2,...nk}<code> - index, <code>C1...Ck</code> - size based coefficients.
+--  where <code>{n1,n2,...nk}</code> - index, <code>C1...Ck</code> - size based coefficients.
 --
---  Authors: Stanislav Mikhel
+--  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'array'

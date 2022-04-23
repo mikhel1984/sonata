@@ -1,11 +1,11 @@
 --[[		sonata/lib/versions.lua
 
---- Auxilary functions for compatiblity with Lua 5.1 and 5.2.
+--- Auxilary functions.
 --
---  Authors: Stanislav Mikhel
+--  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
-	module 'versions'
+	module 'utils'
 --]]
 
 --	MODULE
@@ -77,7 +77,9 @@ local cross = {
 --NUMBER = 1, TABLE = 2, STRING = 3, OTHER = 4,
 }
 
--- norm of numeric objects
+--- Norm of numeric object.
+--  @param v Some object.
+--  @return Norm or nil.
 cross.norm = function (v)
   if type(v) == 'number' then
     return math.abs(v)
@@ -87,7 +89,10 @@ cross.norm = function (v)
   return nil
 end
 
--- compare equality of two objects
+--- Compare equality of two objects.
+--  @param v1 First object.
+--  @param v2 Second object.
+--  @return True if the objects are equal.
 cross.eq = function (v1,v2)
   if     type(v1) == 'table' and v1.__eq then
     return v1:__eq(v2) 
@@ -98,22 +103,31 @@ cross.eq = function (v1,v2)
   end
 end
 
--- apply simplification if possible 
+--- Apply simplification if possible 
+--  @param v Sonata object.
+--  @return Number or the object itself.
 cross.simp = function (v)
   return type(v) == 'table' and v._simp_ and v:_simp_() or v
 end
 
--- get the object copy
+--- Get the object copy.
+--  @param v Object.
+--  @return Deep copy.
 cross.copy = function (v)
   return type(v) == 'table' and v.copy and v:copy() or v
 end
 
--- get float value when possible
+--- Get float value when possible.
+--  @param v Some object.
+--  @return Float number or nil.
 cross.float = function (v)
   return type(v) == 'number' and v or type(v) == 'table' and v:float() or nil
 end
 
--- convert slave into type of master
+--- Convert slave into type of master.
+--  @param vMaster Master object.
+--  @param vSlave Slave object.
+--  @return Converted slave of nil.
 cross.convert = function (vMaster, vSlave)
   return type(vMaster) == 'table' and vMaster._convert_ and vMaster._convert_(vSlave)
 end
