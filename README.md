@@ -10,13 +10,6 @@
 * Generating templates for new modules and localization files
 * Interactive execution of _note_-files
 
-## Dependencies 
-
-**Sonata** works in a standard **Lua 5.x** interpreter, version 5.3+ is preferable. 
-
-Module dependencies:
-* _gnuplot.lua_ requires [gnuplot](http://www.gnuplot.info/) program to be installed
-
 ## Getting started
 
 To run the **Sonata**, call
@@ -25,9 +18,27 @@ To run the **Sonata**, call
 
 To get a brief introduction, call
 
-    lua sonata.lua intro.note
+    lua sonata.lua notes/intro.note
 
 Use flag _-h_ to see additional options:
 
     lua sonata.lua -h
+
+## Structure 
+
+Main components:
+* _core_ - interpreter, help and test systems, other program specific elements 
+* _sonata.lua_ - program configuration and loading 
+
+Additional components:
+* _lib_ - collection of mathematical libraries 
+* _locale_ - localization files 
+* _notes_ - predefined _note_-files 
+
+## Dependencies 
+
+**Sonata** works in a standard **Lua 5.x** interpreter, version 5.3+ is preferable. 
+
+Module dependencies:
+* _gnuplot.lua_ requires [gnuplot](http://www.gnuplot.info/) program to be installed
 
