@@ -10,7 +10,9 @@
 
 --	LOCAL
 
-local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load 
+local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
+
+local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 --- Check if the table is SONATA_INFO list.
 --  @param v Object.
@@ -148,6 +150,7 @@ evaluate.note = function (ev, fname, full)
   -- read
   local f = assert(io.open(fname, 'r'))
   local txt = f:read('*a'); f:close()
+  txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-%s*PAUSE') then

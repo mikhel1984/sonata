@@ -183,6 +183,9 @@ exit = true},
 ['default'] = {
 --description = 'Evaluate file(s).',
 process = function (args)
+  if SONATA_LOCALIZATION then
+    About:localization(SONATA_LOCALIZATION)
+  end
   for i = 1,#args do
     if string.find(args[i], '%.note$') then
       Sonata:note(args[i])
