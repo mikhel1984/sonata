@@ -52,7 +52,7 @@ fig2.xrange = {-1, 4}
 fig2.yrange = {0, 1}
 print(fig2:tplot(tbl, {2, resize=false}))
 
--- scale figure 
+-- scale figure w.r.t. initial size
 fig1:scale(0.8)
 ans = fig1.width             --> 61
 
@@ -70,23 +70,21 @@ fig2:plot(cos, 'cos')
 fig2.title = 'Second'
 print(Ap.concat(fig1, fig2))   -- similar to fig1..fig2 for 2 objects
 
--- 'manual' createion 
-fig3 = Ap() 
-fig3:scale(0.5)
-fig3.xrange = {-2,2} 
+-- call 'API' functions
+fig3 = Ap():scale(0.5)
+fig3.xrange = {-2,2}
 fig3.yrange = {-1,4}
 -- no axes and limits
 fig3.xaxis = nil; fig3.yaxis = nil
 fig3:reset()
--- add line
+-- set function
 for x = -1.2, 1.2, 0.1 do
-  fig3:addPoint(x, x*x-0.5, Ap.char[1])
+  fig3:addPoint(x, x*x-0.5, Ap.char[1]) 
 end
--- add char by index
-fig3:addPose(3, 13, '#')
-fig3:addPose(3, 24, '#')
--- add text 
-fig3:addString(2,3,'Hi!')
+-- set to position
+fig3:addPose(3, 13, '#')   -- characters
+fig3:addPose(3, 24, '#') 
+fig3:addString(2,3,'Hi!')  -- text
 print(fig3)
 
 --]]
@@ -273,6 +271,7 @@ asciiplot.scale = function (F, factor, bDefault)
   F.width = (int % 2 == 1) and int or (int + 1)
   int, frac = mmodf(h * factor) 
   F.height = (int % 2 == 1) and int or (int + 1)
+  return F
 end
 about[asciiplot.scale] = {"scale(F,factor[,bDefault=false])", "Change figure size w.r.t. initial size."}
 

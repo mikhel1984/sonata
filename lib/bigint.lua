@@ -59,8 +59,6 @@ ans = (a == d)                --> true
 
 ans = (a > b)                 --> false
 
-ans = (a == b)                --> false
-
 -- compare with number
 ans = a:eq(123)               --> true
 
@@ -77,13 +75,13 @@ ans = g:base()                --> 10
 v = g:rebase(60)
 ans = tostring(v)             --> '-2|3'
 
--- still the same value
-ans = (v == g)                --> true
-
 -- operations with different bases
 -- transform to the biggest common base
 w = v + b
 ans = tostring(w)             --> '5|33'
+
+-- comparison
+ans = (v == g)                --> true
 
 -- simple print
 print(a)
@@ -112,6 +110,7 @@ print(b:random())
 -- greatest common divisor
 ans = a:gcd(b):float()        --> 3
 
+-- with numbers
 -- result is bigint
 ans = a + 1.0                 --> Int(124) 
 

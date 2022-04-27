@@ -36,8 +36,8 @@ ans = (p >= 1) and (p <= 10)  --> true
 -- normal distributed random
 print(randn())
 
--- get object type
--- "knows" types for Sonata objects
+-- get type
+-- "knows" Sonata objects
 ans = Type(25)                --> 'integer'
 
 -- modified print function 
@@ -66,10 +66,8 @@ ans = math.floor(_pi)
 
 ans = math.deg(_pi)
 
--- prepare file name
-nm = os.tmpname()
-
 -- dsv write 
+nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
 DsvWrite(nm, t, ';')

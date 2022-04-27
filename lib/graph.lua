@@ -97,9 +97,8 @@ ans = path[3]                 --> 'f'
 found,path = c:dfs('d','c')
 ans = found                   --> true
 
--- update weight
--- (default is 1)
--- use 'add' for it
+-- update weight (default is 1)
+-- use 'add' method
 c:add{'a','b',w=0.5}
 c:add{'b','e',w=0.4}
 c:add{'c','f',w=2}

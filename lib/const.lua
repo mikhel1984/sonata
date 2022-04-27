@@ -23,7 +23,7 @@ ans = _C.phy.e_u              --> 'C'
 _C.add('myConst', 10)
 ans = _C.myConst              --> 10
 
--- modification generate error
+-- modification generates error
 ans = pcall(function() _C.myConst = 0 end)  --> false
 
 -- remove constant
