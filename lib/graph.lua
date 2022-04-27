@@ -8,8 +8,8 @@
 --  {nodeN = {nodeP=weightP, nodeQ=weightQ, ...}}</code> </br>
 --  i.e. each node has links to adjucent nodes.
 --
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'graph'
 --]]
@@ -97,9 +97,8 @@ ans = path[3]                 --> 'f'
 found,path = c:dfs('d','c')
 ans = found                   --> true
 
--- update weight
--- (default is 1)
--- use 'add' for it
+-- update weight (default is 1)
+-- use 'add' method
 c:add{'a','b',w=0.5}
 c:add{'b','e',w=0.4}
 c:add{'c','f',w=2}
@@ -180,6 +179,26 @@ local function getPath(tPrev,v)
   return res
 end
 
+-- Make queue from two stacks 
+local Queue = {
+  -- create object
+  new = function () return {{},{}} end, 
+  -- add element
+  push = function (Q, v) table.insert(Q[1], v) end,
+  -- check content
+  isEmpty = function (Q) return #Q[2] == 0 and #Q[1] == 0 end
+}
+
+-- remove element
+function Queue.pop(Q)
+  if #Q[2] == 0 then
+    while #Q[1] > 0 do
+      table.insert(Q[2], table.remove(Q[1]))
+    end
+  end
+  return table.remove(Q[2])
+end
+
 --	INFO
 
 local help = SonataHelp or {new=function () return {} end}
@@ -193,9 +212,6 @@ type='graph', isgraph=true,
 }
 -- meta
 graph.__index = graph
-
--- external library
-graph.lc_struct = require 'lib.struct'
 
 --- Constructor example
 --  @param t Table with nodes and edges.
@@ -383,11 +399,11 @@ about[graph.isWeighted] = {'isWeighted(G)', 'Check if any edge has weight differ
 graph.bfs = function (G, vStart, vGoal)
   local pred = {[vStart]=vStart}
   -- use queue
-  local queue = graph.lc_struct.Queue()
-  queue:push(vStart)
+  local q = Queue.new()
+  Queue.push(q, vStart)
   -- run
   repeat 
-    local node = queue:pop()
+    local node = Queue.pop(q)
     if node == vGoal then 
       -- found
       return true, getPath(pred, vGoal) 
@@ -395,11 +411,11 @@ graph.bfs = function (G, vStart, vGoal)
     -- add successors
     for v in pairs(G[node]) do
       if not pred[v] then
-        queue:push(v) 
+        Queue.push(q, v) 
         pred[v] = node
       end
     end
-  until queue:isEmpty()
+  until Queue.isEmpty(q)
   return false
 end
 about[graph.bfs] = {"bfs(G,vStart,vGoal)","Breadth first search. Return result and found path.", SEARCH}
@@ -412,11 +428,11 @@ about[graph.bfs] = {"bfs(G,vStart,vGoal)","Breadth first search. Return result a
 graph.dfs = function (G, vStart, vGoal)
   local pred = {[vStart]=vStart}
   -- use stack
-  local stack = graph.lc_struct.Stack()
-  stack:push(vStart) 
+  local stack = {}
+  table.insert(stack, vStart) 
   -- run
   repeat
-    local node = stack:pop()
+    local node = table.remove(stack)
     if node == vGoal then 
       -- found
       return true, getPath(pred, vGoal) 
@@ -424,11 +440,11 @@ graph.dfs = function (G, vStart, vGoal)
     -- add successors
     for v in pairs(G[node]) do
       if not pred[v] then
-        stack:push(v)
+        table.insert(stack, v)
         pred[v] = node
       end
     end
-  until stack:isEmpty()
+  until #stack == 0
   return false
 end
 about[graph.dfs] = {"dfs(G,vStart,vGoal)","Depth first search. Return result and found path.", SEARCH}

@@ -1,0 +1,87 @@
+-- Welcome to "Sonata", Lua program for numerical computations!
+-- Here you can find some tips about it.
+-- Print 'quit' to exit the program. 
+-- Press "Enter" to continue...
+-- PAUSE
+
+--	BASICS
+-- Available functions can be listed using:
+help()
+-- PAUSE
+
+-- Information about function can be obtained as
+help(Round)
+-- PAUSE
+
+-- By the way, this is an interactive mode.
+-- You can enter Lua valid expression after '?>'
+-- and see the result. For example, try to get help
+-- for any other function. 
+-- PAUSE
+
+-- You can calculate arithmetical expressions
+-- and define variables. 
+x = 3
+2*x^2+3*x+5
+-- Available constants:
+_pi
+_e
+-- Last result is stored in the variable
+_ans
+-- PAUSE
+
+-- Multiline expressions should be divided with
+-- the backslash. For compatibility with Lua 
+-- it can be placed in the comments.
+1 + 2 + \
+3 + 4
+1 + 2 + --\
+3 + 4
+-- PAUSE 
+
+--	MODULES
+-- Additional modules can be loaded 
+-- with the help of "use" function.
+-- List of modules, aliases and the current status:
+help(use)
+-- PAUSE 
+
+-- In order to load module, enter 
+--    use 'name'
+-- Module is available for its alias.
+use 'matrix'
+a = Mat {{1,2},{3,4}}       -- new matrix
+-- Functions can be called as methods of class
+Mat.det(a)
+-- or object
+a:det()
+-- PAUSE
+
+-- Several modules could be loaded as
+--    use {'name1','name2'}
+use {'complex', 'asciiplot'}
+-- PAUSE
+
+-- It is possible to use alias instead of the module name
+use 'Num'
+-- PAUSE
+
+-- In order to load all modules, enter
+use 'all'
+-- Print 'use()' to check status
+
+-- PAUSE
+
+-- Some modules modify the program environment.
+-- For example, if the 'complex' is loaded,
+-- you can use the complex unit
+_i
+-- and some functions can work with it
+sqrt(-4)
+exp(3+_i*4)
+-- PAUSE
+
+-- Get more information about the available modules 
+-- with 'modules.note'
+
+-- We wish you pleasant work with the program!

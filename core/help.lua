@@ -2,8 +2,8 @@
 
 --- Function description management.
 --
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2021.
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
 
 	module 'help'
 --]]
@@ -40,6 +40,7 @@ capital - object
 --]]
 
 --	LOCAL
+local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
@@ -202,7 +203,7 @@ end
 --  @param fName Name of the file with translated text.
 help.localization = function (self,fName)
   fName = help.LOCALE..help.SEP..fName
-  local lng = help.tblImport(fName)
+  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
   if lng then
     getmetatable(self).locale = lng   -- save translation
     -- update functions in main.lua
@@ -218,7 +219,7 @@ help.localization = function (self,fName)
       end
     end
   else
-    io.write("File ", fName, " wasn't found.\n")
+    io.write("File ", fName, " not found.\n")
   end
 end
 
@@ -254,6 +255,18 @@ help.tblImport = function (fName)
   local str,f = help.readAll(fName)
   -- use Lua default import
   if str then f = loadStr('return '..str) end
+  return f and f() or nil
+end
+
+--- Load and encode Lua table from file.
+--  @param fName File name.
+--  @return Lua table or nil
+help.tblImportWin = function (fName)
+  local str,f = help.readAll(fName)
+  if str then
+    str = Win.convert(str)
+    f = loadStr('return '..str)
+  end
   return f and f() or nil
 end
 

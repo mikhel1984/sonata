@@ -1,13 +1,13 @@
 --[[		sonata/lib/rational.lua 
 
 --- Rational number operations support.
---  
+--
 --  Object structure: </br>
 --  <code>{numerator,denominator}</code></br>
 --  where both numbers are integers.
---  
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
+--
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'rational'
 --]]
@@ -298,18 +298,11 @@ rational.__tostring = function (R)
   return string.format("%s/%s", numStr(R[1]), numStr(R[2])) 
 end
 
---- Estimate absolute value.
---  @param R Rational number.
---  @return Decimal fraction.
-rational._norm_ = function (R)
-  return Cross.norm(R[1]) / Cross.norm(R[2])
-end
-
 --- Float point representation.
 --  @param R Rational number.
 --  @return Decimal fraction.
-rational.float = function (R) 
-  return (R[1] < 0 and -1 or 1) * rational._norm_(R)
+rational.float = function (R)
+  return (R[1] < 0 and -1 or 1) * (Cross.norm(R[1]) / Cross.norm(R[2]))
 end
 about[rational.float] = {"float(R)", "Return rational number as decimal."}
 

@@ -6,8 +6,8 @@
 --  <code>{value=number, key=string_of_units}</code></br>
 --  Key is represented in form "power1..unit1..power2..unit2...etc'.
 --
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> units._collect_ion, 2021.
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 		module 'units'
 --]]

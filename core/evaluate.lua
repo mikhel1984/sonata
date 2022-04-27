@@ -1,16 +1,18 @@
 --[[		sonata/core/evaluate.lua
 
 --- Evaluate user commands.
-
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2021.
+--
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
 
 	module 'evaluate'
 --]]
 
 --	LOCAL
 
-local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load 
+local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
+
+local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 --- Check if the table is SONATA_INFO list.
 --  @param v Object.
@@ -144,10 +146,11 @@ evaluate.note = function (ev, fname, full)
   local templ = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
   local invA, invB = '?> ', '>> '
   -- read lines
-  if full then io.write("Run file ", fname, "\n") end
+  if full then io.write("Run: ", fname, "\n") end
   -- read
   local f = assert(io.open(fname, 'r'))
   local txt = f:read('*a'); f:close()
+  txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-%s*PAUSE') then

@@ -1,80 +1,5 @@
--- Welcome to Sonata Lua Calculus!
--- Here you can find some tips about it.
--- Print 'quit' to exit the program. 
--- Press "Enter" to continue...
--- PAUSE
-
---	BASICS
--- Available functions can be listed using:
-help()
--- PAUSE
-
--- Information about function can be obtained as
-help(Round)
--- PAUSE
-
--- By the way, this is an interactive mode.
--- You can enter Lua valid expression after '?>'
--- and see the result. For example, try to get help
--- for any other function. 
--- PAUSE
-
--- You can calculate arithmetical expressions
--- and create variables. 
-x = 3
-2*x^2+3*x+5
--- Available constants:
-_pi
-_e
--- Last result is saved to variable
-_ans
--- PAUSE
-
---	MODULES
--- Additional modules could be loaded 
--- with the help of "use" function.
--- List of modules, aliases and the current status:
-help(use)
--- PAUSE 
-
--- In order to load module, enter 
---    use 'name'
--- or
---    use ('name1')
--- Module will be available for its alias.
-use 'array'
-a = Arr.rand {2,2,2}      -- new array with size 2x2x2
--- Functions can be called as methods of class
-Arr.get(a, {1,1,1})
--- or object
-a:get{1,1,1}              -- get element with index (1,1,1)
--- PAUSE
-
--- Several modules could be loaded as
---    use {'name1','name2'}
--- or 
---    use({'name1','name2'})
-use {'complex', 'bigint'}
--- PAUSE
-
--- It is possible to use alias instead of module name
-use 'Num'
--- PAUSE
-
--- In order to load all modules, enter
-use 'all'
--- PAUSE
-
--- Some modules modify the program environment.
--- For example, if the 'complex' is loaded,
--- you can can work with complex unit
-_i
--- and some functions can work with it
-sqrt(-4)
-exp(3+_i*4)
--- PAUSE
-
 --	Brief module overview
+use 'all'
 -- PAUSE
 --	COMPLEX
 -- Operations with complex numbers.
@@ -146,7 +71,7 @@ b = Int '56789'        -- or from string
 a - b
 a * b
 b^50 
-_ans:val()             -- decimal representation
+_ans:float()           -- decimal representation
 c = Int(50):fact()     -- factorial
 a:rebase(42)           -- get value in new numerical base
 -- PAUSE
@@ -210,7 +135,7 @@ a + b
 a * b
 a / b
 -- float point representation
-a:val()
+a:float()
 a:Nu()      -- numerator
 a:De()      -- denominator
 -- PAUSE
@@ -284,4 +209,4 @@ tpolar(b)
 
 -- Use 'Gp' if you need more control.
 --
--- We wish you a pleasant work with the program!
+

@@ -1,9 +1,9 @@
 --[[		sonata/core/main.lua 
 
---- Define aliases for standard operations and add some new common functions.
+--- Default functions and objects.
 --
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2021.
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'main'
 --]]
@@ -36,8 +36,8 @@ ans = (p >= 1) and (p <= 10)  --> true
 -- normal distributed random
 print(randn())
 
--- get object type
--- "knows" types for Sonata objects
+-- get type
+-- "knows" Sonata objects
 ans = Type(25)                --> 'integer'
 
 -- modified print function 
@@ -66,10 +66,8 @@ ans = math.floor(_pi)
 
 ans = math.deg(_pi)
 
--- prepare file name
-nm = os.tmpname()
-
 -- dsv write 
+nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
 DsvWrite(nm, t, ';')
@@ -279,7 +277,16 @@ About[Type] = {'Type(v)', 'Show type of the object.', SonataHelp.OTHER}
 
 -- Methametods for the range of numbers.
 local metharange = { type = 'range' }
-metharange.__index = metharange
+
+--- Initialize range object.
+--  @param dBeg First value.
+--  @param dEnd Last value.
+--  @param dStep Step value.
+--  @param iN Number of elements.
+--  @return Range object.
+metharange._init_ = function (dBeg,dEnd,dStep,iN)
+  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, metharange)
+end
 
 --- Add number (shift range).
 --  @param d Any number.
@@ -289,9 +296,7 @@ metharange.__add = function (d, R)
   if type(R) == 'number' then
     return metharange.__add(R, d)
   else
-    local res = {}
-    for _,v in ipairs(R) do res[#res+1] = v + d end
-    return setmetatable(res, metharange)
+    return metharange._init_(d+R._beg, d+R._end, R._step, R._N)
   end
 end
 
@@ -303,19 +308,51 @@ metharange.__mul = function (d, R)
   if type(R) == 'number' then 
     return metharange.__mul(R, d)
   else 
-    local res = {}
-    for _, v in ipairs(R) do res[#res+1] = v * d end
-    return setmetatable(res, metharange)
+    return metharange._init_(d*R._beg, d*R._end, d*R._step, R._N)
   end
 end
 
 --- Pretty print.
 --  @param R Range object.
 --  @return String with the table representation.
-metharange.__tostring = function (R)
-  return string.format("{%s}", 
-    (#R <= 3) and table.concat(R, ',') 
-               or string.format("%d,%d..%d", R[1], R[2], R[#R]))
+metharange.__tostring = function (self)
+  return string.format("%s{%g, %g .. %g}", self._fn and "fn" or "", 
+    self._beg, self._beg+self._step, self._end)
+end
+
+--- Get number of elements.
+--  @param self Range object.
+--  @return Element number.
+metharange.__len = function (self)
+  return self._N
+end
+
+--- Get i-th element.
+--  @param self Range object.
+--  @param i Element index.
+--  @return Number.
+metharange.__index = function (self, i)
+  if Ver.isInteger(i) then
+    local v
+    if i > 0 and i < self._N then
+      v = self._beg + (i-1)*self._step
+    elseif i == self._N then
+      v = self._end
+    end
+    return v and self._fn and self._fn(v) or v
+  end
+  return metharange[i]
+end
+
+-- Block setting operation.
+metharange.__newindex = function (self, k, v)
+  -- do nothing
+end
+
+metharange.map = function (self, fn)
+  return setmetatable(
+    {_beg=self._beg, _end=self._end, _step=self._step, _N=self._N, _fn=fn}, 
+    metharange)
 end
 
 --- Generate sequence of values.
@@ -325,24 +362,28 @@ end
 --  @return Table with numbers, Range object.
 Range = function (dBegin, dEnd, dStep)
   dStep = dStep or (dEnd > dBegin) and 1 or -1
-  assert((dEnd - dBegin) * dStep > 0)
-  local res = {}
-  for t = dBegin,dEnd,dStep do res[#res+1] = t end
-  if math.abs(res[#res] - dEnd) >= math.abs(dStep)*0.1 then
-    res[#res+1] = dEnd 
-  end
-  return setmetatable(res, metharange)
+  local diff = dEnd - dBegin
+  assert(diff * dStep > 0, "Wrong range or step")
+  -- check size
+  local n, _ = math.modf(diff / dStep)
+  if math.abs(n*dStep - dEnd) >= math.abs(dStep * 0.1) then n = n + 1 end
+  -- result
+  return metharange._init_(dBegin, dEnd, dStep, n)
 end
-About[Range] = {'Range(dBegin,dEnd[,dStep])','Generate table with sequence of numbers.', SonataHelp.OTHER}
+About[Range] = {'Range(dBegin,dEnd[,dStep])','Generate range object.', SonataHelp.NEW}
 
 --- Generate list of function values.
 --  @param fn Function to apply.
 --  @param t Table with arguments.
 --  @return Table with result of evaluation.
 Map = function (fn, t)
-  local res = {}
-  for _,v in ipairs(t) do res[#res+1] = fn(v) end
-  return res
+  if type(t) == 'table' then
+    if t.map then return t:map(fn) end
+    local res = {}
+    for i,v in ipairs(t) do res[i] = fn(v) end
+    return res
+  end
+  return nil
 end
 About[Map] = {'Map(fn,t)','Evaluate function for each table element.', SonataHelp.OTHER}
 
@@ -462,7 +503,7 @@ Run = function (sFile)
     io.write('Expected .lua or .note!\n')
   end
 end
-About[Run] = {'Run(sFile)', "Execute lua- or note-file.", SonataHelp.OTHER}
+About[Run] = {'Run(sFile)', "Execute lua- or note- file.", FILES}
 
 -- save link to help info
 main.about = About
@@ -480,3 +521,4 @@ return main
 --===============================
 
 --TODO don't print result when ; in the end
+--TODO __sub for Range

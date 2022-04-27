@@ -1,6 +1,9 @@
 --[[		sonata/core/load.lua
 
 --- Prepare the main functionality of the program.
+--
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
 
 	module 'load'
 ]]
@@ -13,7 +16,7 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
-Sonata.version = '0.9.28'
+Sonata.version = '0.9.29'
 
 -- Quit the program
 quit = Sonata.exit
@@ -180,6 +183,9 @@ exit = true},
 ['default'] = {
 --description = 'Evaluate file(s).',
 process = function (args)
+  if SONATA_LOCALIZATION then
+    About:localization(SONATA_LOCALIZATION)
+  end
   for i = 1,#args do
     if string.find(args[i], '%.note$') then
       Sonata:note(args[i])

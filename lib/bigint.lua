@@ -6,8 +6,8 @@
 --  <code> {sign=S,_base_=B, v1, ... vn} </code></br>
 --  where <code>S</code> is +1/-1, B is 10 by default, v1 - vn are digits of the number in reverse order. For example, number <code>123</code> is represented as <code>{sign=1, _base_=10, 3, 2, 1}</code>.
 --  
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'bigint'
 --]]
@@ -59,8 +59,6 @@ ans = (a == d)                --> true
 
 ans = (a > b)                 --> false
 
-ans = (a == b)                --> false
-
 -- compare with number
 ans = a:eq(123)               --> true
 
@@ -77,13 +75,13 @@ ans = g:base()                --> 10
 v = g:rebase(60)
 ans = tostring(v)             --> '-2|3'
 
--- still the same value
-ans = (v == g)                --> true
-
 -- operations with different bases
 -- transform to the biggest common base
 w = v + b
 ans = tostring(w)             --> '5|33'
+
+-- comparison
+ans = (v == g)                --> true
 
 -- simple print
 print(a)
@@ -112,6 +110,7 @@ print(b:random())
 -- greatest common divisor
 ans = a:gcd(b):float()        --> 3
 
+-- with numbers
 -- result is bigint
 ans = a + 1.0                 --> Int(124) 
 
@@ -679,24 +678,16 @@ bigint.__tostring = function (B)
   return B.sign < 0 and ('-' .. s) or s
 end
 
---- Absolute floating value of bigint number.
+--- Float number representation.
 --  @param B Bigint object.
---  @return Absolute value.
-bigint._norm_ = function (B)
+--  @return Integer if possible, otherwise float point number.
+bigint.float = function (B)
   local d, v, sum = B._base_, 1, 0
   for i = 1,#B do
     sum = sum + B[i]*v
     v = v * d
   end
-  return sum
-end
-
---- Float number representation.
---  @param B Bigint object.
---  @return Integer if possible, otherwise float point number.
-bigint.float = function (B)
-  local v = bigint._norm_(B)
-  return B.sign >= 0 and v or (-v)
+  return B.sign >= 0 and sum or (-sum)
 end
 about[bigint.float] = {"float(B)", "Represent current big integer as number if it possible.", help.OTHER}
 

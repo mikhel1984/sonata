@@ -1,0 +1,87 @@
+-- Bonvenon al la programo por matematikaj kalkuloj "Sonata"!
+-- Ĉi tio estas rapida komenca gvidilo.
+-- Tajpu 'quit' por eliri. 
+-- Premu "Enter" por daŭrigi...
+-- PAUSE
+
+--	BAZAĴOJ
+-- La listo de funkcioj estas akirita per la komando:
+help()
+-- PAUSE
+
+-- Por helpo pri funkcio, enigu ĝian nomon
+help(Round)
+-- PAUSE
+
+-- Cetere, ĉi tio estas interaga maniero de operacio.
+-- Vi povas enigi validan Lua-esprimon post la '?>'
+-- kaj ricevi la rezulton. Ekzemple, provu voki
+-- helpo por ajna funkcio.
+-- PAUSE
+
+-- La programo permesas kalkuli aritmetikajn esprimojn
+-- kaj uzu variablojn.
+x = 3
+2*x^2+3*x+5
+-- Konstantoj:
+_pi
+_e
+-- La rezulto de la lasta kalkulo estas konservita en
+_ans
+-- PAUSE
+
+-- Longa esprimo povas esti dividita tra pluraj linioj kun
+-- malantaŭa oblikvo. Por kongruo kun Lua vi povas 
+-- uzi komentojn
+1 + 2 + \
+3 + 4
+1 + 2 + --\
+3 + 4
+-- PAUSE 
+
+--	MODULOJ
+-- Pliaj moduloj povas esti ŝarĝitaj per la "use" funkcio.
+-- Jen listo de disponeblaj moduloj kun kaŝnomoj
+-- kaj aktuala stato:
+help(use)
+-- PAUSE 
+
+-- La modulo povas esti ŝarĝita per la komando 
+--    use 'nomo'
+-- Ĝi tiam fariĝas havebla per kaŝnomo.
+use 'matrix'
+a = Mat {{1,2},{3,4}}       -- nova matrico
+-- Funkcioj povas esti nomitaj kiel metodoj de klaso
+Mat.det(a)
+-- aŭ objekto
+a:det()
+-- PAUSE
+
+-- Pluraj moduloj povas esti ŝarĝitaj samtempe per la komando
+--    use {'nomo1','nomo2'}
+use {'complex', 'asciiplot'}
+-- PAUSE
+
+-- Vi ankaŭ povas uzi kaŝnomon por ŝargi
+use 'Num'
+-- PAUSE
+
+-- Por ŝargi ĉiujn modulojn, voku
+use 'all'
+-- Tajpu 'use()' por kontroli la nunan staton
+
+-- PAUSE
+
+-- Iuj moduloj ŝanĝas medion kiam ŝarĝitaj.
+-- Ekzemple, la "complex" modulo aldonas
+-- kompleksa variablo
+_i
+-- kaj ŝanĝas la konduton de kelkaj funkcioj
+sqrt(-4)
+exp(3+_i*4)
+-- PAUSE
+
+-- Pliaj informoj pri disponeblaj moduloj
+-- akireblas per 'moduloj.noto'.
+
+-- Ni deziras al vi agrablan laboron kun la programo!

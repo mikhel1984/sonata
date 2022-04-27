@@ -44,19 +44,19 @@ DIV {margin-left: 10px;}
 	-e - Evaluate command line expression.<br>
 	  (e.g. -e "2+2")<br>
 		{Development}<br>
-	--new    - Create a template for a new module.<br>
-	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
-	--lang   - Creating/updating a file for localization.<br>
-	  (e.g. --lang eo)<br>
 	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
 	  (e.g. --test array)<br>
 	--doc    - Creating/updating a documentation file.<br>
 	  (e.g. --doc ru)<br>
+	--lang   - Creating/updating a file for localization.<br>
+	  (e.g. --lang eo)<br>
+	--new    - Create a template for a new module.<br>
+	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.27<br>
+<b>VERSION</b>: 0.9.29<br>
 <br>
-<b>MODULES</b>: const, lens, array, gnuplot, stat, bigint, complex, graph, asciiplot, polynomial, numeric, special, geodesy, quaternion, rational, units, matrix.<br>
+<b>MODULES</b>: bigint, numeric, asciiplot, lens, rational, units, geodesy, gnuplot, graph, complex, const, array, polynomial, stat, special, quaternion, matrix.<br>
 <br>
 <b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
 </p>
@@ -69,9 +69,9 @@ DIV {margin-left: 10px;}
 <b>Logging(flag)</b> - Save session into the log file. Use 'on'/true to start and 'off'/false to stop.<br>
 <b>Map(fn,t)</b> - Evaluate function for each table element.<br>
 <b>Print(...)</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
-<b>Range(dBegin,dEnd[,dStep])</b> - Generate table with sequence of numbers.<br>
+<b>Range(dBegin,dEnd[,dStep])</b> - Generate range object.<br>
 <b>Round(f[,N=0])</b> - Round value, define number of decimal digits.<br>
-<b>Run(sFile)</b> - Execute lua- or note-file.<br>
+<b>Run(sFile)</b> - Execute lua- or note- file.<br>
 <b>TblImport(sFile)</b> - Import Lua table, saved into file.<br>
 <b>Type(v)</b> - Show type of the object.<br>
 <b>_ans</b> - Result of the last operation.<br>
@@ -123,8 +123,8 @@ ans = (p >= 1) and (p <= 10)  --> true
 -- normal distributed random
 print(randn())
 
--- get object type
--- "knows" types for Sonata objects
+-- get type
+-- "knows" Sonata objects
 ans = Type(25)                --> 'integer'
 
 -- modified print function 
@@ -153,10 +153,8 @@ ans = math.floor(_pi)
 
 ans = math.deg(_pi)
 
--- prepare file name
-nm = os.tmpname()
-
 -- dsv write 
+nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
 DsvWrite(nm, t, ';')
@@ -218,10 +216,11 @@ b = Arr.rand {5,2,1}
 -- max number of elements
 ans = #b                      --> 10
 
-ans = b:copy()                --> b
-
 -- compare sizes
 ans = b:isEqual(Arr.rand{5,2,1})  --> true
+
+-- compare elements 
+ans = (b == b:copy())          --> true
 
 -- arithmetical operations
 c = b + b
@@ -231,10 +230,9 @@ ans = c:get{1,1,1}            --> 2*b:get{1,1,1}
 g = a:sub({1,1,1},{-1,-1,2})
 ans = g:isEqual(Arr{2,3,2})   --> true
 
--- concatenate along the 3-rd axes
-d = Arr.concat(b,b,3)
--- size for given dimension
-ans = d:dim()[3]              --> 2
+-- apply function to all elements
+f = b:map(function (x) return 10*x end)
+ans = f:get{1,1,1}            --> b:get{1,1,1}*10
 
 -- apply function of several arguments
 a1 = Arr.rand{2,2}
@@ -244,24 +242,30 @@ fn = function (x,y,z) return x*y+z end
 a4 = Arr.apply(fn, a1,a2,a3)
 ans = a4:get{1,2}             --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
 
-
--- apply function of 1 argument
--- to get new array
-f = b:map(function (x) return 10*x end)
-ans = f:get{1,1,1}            --> b:get{1,1,1}*10
-
--- simple print
-print(a)
-
 -- iterate over array 
--- prepare 
 g = Arr {2,2}
 g:set({1,1}, 1)
 g:set({2,1}, 2)
 g:set({1,2}, 3)
 g:set({2,2}, 4)
 -- show
-for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
+for ind, val in g:next() do 
+  io.write('{',ind[1],',',ind[2],'}\t',val, '\n') 
+end
+
+-- simple iteration 
+n = g:capacity()   -- number of elements
+for i = 1,n do
+  io.write(i,':',g[i],'\n')
+end
+
+-- concatenate along the 3-rd axes
+d = Arr.concat(b,b,3)
+-- size for given dimension
+ans = d:dim()[3]              --> 2
+
+-- simple print
+print(a)
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -276,7 +280,7 @@ for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
 <b>copy(F)</b> - Create a copy of the object.<br>
 <b>plot(F,...)</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br>
 <b>reset(F)</b> - Prepare a clear canvas.<br>
-<b>scale(F,factor)</b> - Change figure size w.r.t. default values.<br>
+<b>scale(F,factor[,bDefault=false])</b> - Change figure size w.r.t. initial size.<br>
 <b>tplot(F,t[,tOpt={}])</b> - Plot the table data, choose columns if need.<br></p>
 <pre class="example">
 
@@ -322,40 +326,39 @@ fig2.xrange = {-1, 4}
 fig2.yrange = {0, 1}
 print(fig2:tplot(tbl, {2, resize=false}))
 
--- scale figure 
-fig1:scale(0.5)
-ans = fig1.width             --> 37
+-- scale figure w.r.t. initial size
+fig1:scale(0.8)
+ans = fig1.width             --> 61
 
 -- horizontal concatenation 
 -- first
+fig1:scale(0.5, true)
 fig1.xrange = {0, 1.57}
 fig1.yaxis = 'C'; fig1.xaxis = 'D'
 fig1:plot(sin, 'sin')
 fig1.title = 'First'
 -- second
-fig2:scale(0.5)
+fig2:scale(0.5, true)
 fig2.xrange = {0, 1.57}
 fig2:plot(cos, 'cos')
 fig2.title = 'Second'
 print(Ap.concat(fig1, fig2))   -- similar to fig1..fig2 for 2 objects
 
--- 'manual' createion 
-fig3 = Ap() 
-fig3:scale(0.5)
-fig3.xrange = {-2,2} 
+-- call 'API' functions
+fig3 = Ap():scale(0.5)
+fig3.xrange = {-2,2}
 fig3.yrange = {-1,4}
 -- no axes and limits
 fig3.xaxis = nil; fig3.yaxis = nil
 fig3:reset()
--- add line
+-- set function
 for x = -1.2, 1.2, 0.1 do
-  fig3:addPoint(x, x*x-0.5, Ap.char[1])
+  fig3:addPoint(x, x*x-0.5, Ap.char[1]) 
 end
--- add char by index
-fig3:addPose(3, 13, '#')
-fig3:addPose(3, 24, '#')
--- add text 
-fig3:addString(2,3,'Hi!')
+-- set to position
+fig3:addPose(3, 13, '#')   -- characters
+fig3:addPose(3, 24, '#') 
+fig3:addString(2,3,'Hi!')  -- text
 print(fig3)
 
 --</pre>
@@ -423,8 +426,6 @@ ans = (a == d)                --> true
 
 ans = (a > b)                 --> false
 
-ans = (a == b)                --> false
-
 -- compare with number
 ans = a:eq(123)               --> true
 
@@ -441,13 +442,13 @@ ans = g:base()                --> 10
 v = g:rebase(60)
 ans = tostring(v)             --> '-2|3'
 
--- still the same value
-ans = (v == g)                --> true
-
 -- operations with different bases
 -- transform to the biggest common base
 w = v + b
 ans = tostring(w)             --> '5|33'
+
+-- comparison
+ans = (v == g)                --> true
 
 -- simple print
 print(a)
@@ -476,6 +477,7 @@ print(b:random())
 -- greatest common divisor
 ans = a:gcd(b):float()        --> 3
 
+-- with numbers
 -- result is bigint
 ans = a + 1.0                 --> Int(124) 
 
@@ -654,7 +656,7 @@ ans = _C.phy.e_u              --> 'C'
 _C.add('myConst', 10)
 ans = _C.myConst              --> 10
 
--- modification generate error
+-- modification generates error
 ans = pcall(function() _C.myConst = 0 end)  --> false
 
 -- remove constant
@@ -981,9 +983,8 @@ ans = path[3]                 --> 'f'
 found,path = c:dfs('d','c')
 ans = found                   --> true
 
--- update weight
--- (default is 1)
--- use 'add' for it
+-- update weight (default is 1)
+-- use 'add' method
 c:add{'a','b',w=0.5}
 c:add{'b','e',w=0.4}
 c:add{'c','f',w=2}

@@ -8,10 +8,10 @@
 --  array_size, index_coefficients}</code></br>
 --  i.e. all elements of the array are written sequentially, column by column. Position of one element is calculated as
 --  <code>C1*n1+C2*n2+...+Ck*nk</code>
---  where <code>{n1,n2,...nk}<code> - index, <code>C1...Ck</code> - size based coefficients.
+--  where <code>{n1,n2,...nk}</code> - index, <code>C1...Ck</code> - size based coefficients.
 --
---  @author <a href="mailto:sonatalc@yandex.ru">Stanislav Mikhel</a>
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2021.
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'array'
 --]]
@@ -35,10 +35,11 @@ b = Arr.rand {5,2,1}
 -- max number of elements
 ans = #b                      --> 10
 
-ans = b:copy()                --> b
-
 -- compare sizes
 ans = b:isEqual(Arr.rand{5,2,1})  --> true
+
+-- compare elements 
+ans = (b == b:copy())          --> true
 
 -- arithmetical operations
 c = b + b
@@ -48,10 +49,9 @@ ans = c:get{1,1,1}            --> 2*b:get{1,1,1}
 g = a:sub({1,1,1},{-1,-1,2})
 ans = g:isEqual(Arr{2,3,2})   --> true
 
--- concatenate along the 3-rd axes
-d = Arr.concat(b,b,3)
--- size for given dimension
-ans = d:dim()[3]              --> 2
+-- apply function to all elements
+f = b:map(function (x) return 10*x end)
+ans = f:get{1,1,1}            --> b:get{1,1,1}*10
 
 -- apply function of several arguments
 a1 = Arr.rand{2,2}
@@ -61,24 +61,30 @@ fn = function (x,y,z) return x*y+z end
 a4 = Arr.apply(fn, a1,a2,a3)
 ans = a4:get{1,2}             --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
 
-
--- apply function of 1 argument
--- to get new array
-f = b:map(function (x) return 10*x end)
-ans = f:get{1,1,1}            --> b:get{1,1,1}*10
-
--- simple print
-print(a)
-
 -- iterate over array 
--- prepare 
 g = Arr {2,2}
 g:set({1,1}, 1)
 g:set({2,1}, 2)
 g:set({1,2}, 3)
 g:set({2,2}, 4)
 -- show
-for ind, val in g:next() do io.write('{',ind[1],',',ind[2],'}\t',val, '\n') end
+for ind, val in g:next() do 
+  io.write('{',ind[1],',',ind[2],'}\t',val, '\n') 
+end
+
+-- simple iteration 
+n = g:capacity()   -- number of elements
+for i = 1,n do
+  io.write(i,':',g[i],'\n')
+end
+
+-- concatenate along the 3-rd axes
+d = Arr.concat(b,b,3)
+-- size for given dimension
+ans = d:dim()[3]              --> 2
+
+-- simple print
+print(a)
 
 --]]
 
