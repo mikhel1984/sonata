@@ -18,7 +18,10 @@ require 'lib.special'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
-w = {1,1,0,1,2,2,1,1}
+-- weight
+w = {1,1,0}
+-- enought to define w[i] ~= 1
+w[5] = 2; w[6] = 2
 -- average
 ans = Stat.mean(X)           --3> 3.375
 
@@ -102,8 +105,9 @@ stat.mean = function (t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1, #t do
-      st = st + t[i]*tw[i]
-      sw = sw + tw[i]
+      local w = tw[i] or 1
+      st = st + t[i]*w
+      sw = sw + w
     end
     return st / sw
   else
@@ -122,8 +126,9 @@ stat.std = function (t, tw)
   if tw then
     local sw = 0
     for i = 1,#t do
-      disp = disp + tw[i]*(t[i]-mean)^2 
-      sw = sw + tw[i]
+      local w = tw[i] or 1
+      disp = disp + w*(t[i]-mean)^2 
+      sw = sw + w
     end
     disp = disp / sw
   else
@@ -165,9 +170,10 @@ about[stat.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
 stat.geomean = function (t, tw)
   if tw then
     local st, sw = 0, 0
-    for i = 1,#t do 
-      st = st + tw[i]*math.log(t[i])
-      sw = sw + tw[i]
+    for i = 1,#t do
+      local w = tw[i] or 1
+      st = st + w*math.log(t[i])
+      sw = sw + w
     end
     return math.exp(st / sw)
   else
@@ -186,8 +192,9 @@ stat.harmmean = function (t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1,#t do
-      st = st + tw[i]/t[i]
-      sw = sw + tw[i]
+      local w = tw[i]
+      st = st + w/t[i]
+      sw = sw + w
     end
     return sw / st
   else
@@ -232,11 +239,18 @@ about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", }
 --  @param tw Table of weights. Can be omitted.
 --  @return Central moment value.
 stat.moment = function (N, t, tw)
-  local pk, m = 1/#t, 0
-  for i = 1,#t do m = m + t[i]*(tw and tw[i] or pk) end
+  local m, n = 0, 0
+  for i = 1,#t do
+    local w = tw and tw[i] or 1
+    m = m + w * t[i]
+    n = n + w
+  end
+  m = m / n
   local mu = 0
-  for i = 1,#t do mu = mu + (t[i]-m)^N*(tw and tw[i] or pk) end
-  return mu
+  for i = 1,#t do
+    mu = mu + (tw and tw[i] or 1) * (t[i]-m)^N
+  end
+  return mu / n
 end
 about[stat.moment] = {"moment(N,t[,tw])", "Central moment of t order N, tw is a list of weights.", }
 
