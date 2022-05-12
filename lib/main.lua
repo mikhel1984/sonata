@@ -276,7 +276,7 @@ end
 About[Type] = {'Type(v)', 'Show type of the object.', SonataHelp.OTHER}
 
 -- Methametods for the range of numbers.
-local metharange = { type = 'range' }
+local metarange = { type = 'range' }
 
 --- Initialize range object.
 --  @param dBeg First value.
@@ -284,19 +284,19 @@ local metharange = { type = 'range' }
 --  @param dStep Step value.
 --  @param iN Number of elements.
 --  @return Range object.
-metharange._init_ = function (dBeg,dEnd,dStep,iN)
-  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, metharange)
+metarange._init_ = function (dBeg,dEnd,dStep,iN)
+  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, metarange)
 end
 
 --- Add number (shift range).
 --  @param d Any number.
 --  @param R Range object.
 --  @return Shifted range table.
-metharange.__add = function (d, R)
+metarange.__add = function (d, R)
   if type(R) == 'number' then
-    return metharange.__add(R, d)
+    return metarange.__add(R, d)
   else
-    return metharange._init_(d+R._beg, d+R._end, R._step, R._N)
+    return metarange._init_(d+R._beg, d+R._end, R._step, R._N)
   end
 end
 
@@ -304,18 +304,18 @@ end
 --  @param d Any number.
 --  @param R Range object.
 --  @return Expanded range table.
-metharange.__mul = function (d, R)
+metarange.__mul = function (d, R)
   if type(R) == 'number' then 
-    return metharange.__mul(R, d)
+    return metarange.__mul(R, d)
   else 
-    return metharange._init_(d*R._beg, d*R._end, d*R._step, R._N)
+    return metarange._init_(d*R._beg, d*R._end, d*R._step, R._N)
   end
 end
 
 --- Pretty print.
 --  @param R Range object.
 --  @return String with the table representation.
-metharange.__tostring = function (self)
+metarange.__tostring = function (self)
   return string.format("%s{%g, %g .. %g}", self._fn and "fn" or "", 
     self._beg, self._beg+self._step, self._end)
 end
@@ -323,7 +323,7 @@ end
 --- Get number of elements.
 --  @param self Range object.
 --  @return Element number.
-metharange.__len = function (self)
+metarange.__len = function (self)
   return self._N
 end
 
@@ -331,7 +331,7 @@ end
 --  @param self Range object.
 --  @param i Element index.
 --  @return Number.
-metharange.__index = function (self, i)
+metarange.__index = function (self, i)
   if Ver.isInteger(i) then
     local v
     if i > 0 and i < self._N then
@@ -341,18 +341,18 @@ metharange.__index = function (self, i)
     end
     return v and self._fn and self._fn(v) or v
   end
-  return metharange[i]
+  return metarange[i]
 end
 
 -- Block setting operation.
-metharange.__newindex = function (self, k, v)
+metarange.__newindex = function (self, k, v)
   -- do nothing
 end
 
-metharange.map = function (self, fn)
+metarange.map = function (self, fn)
   return setmetatable(
     {_beg=self._beg, _end=self._end, _step=self._step, _N=self._N, _fn=fn}, 
-    metharange)
+    metarange)
 end
 
 --- Generate sequence of values.
@@ -368,9 +368,50 @@ Range = function (dBegin, dEnd, dStep)
   local n, _ = math.modf(diff / dStep)
   if math.abs(n*dStep - dEnd) >= math.abs(dStep * 0.1) then n = n + 1 end
   -- result
-  return metharange._init_(dBegin, dEnd, dStep, n)
+  return metarange._init_(dBegin, dEnd, dStep, n)
 end
 About[Range] = {'Range(dBegin,dEnd[,dStep])','Generate range object.', SonataHelp.NEW}
+
+-- Get reference to data range in other table
+local metaref = { type = 'ref' }
+
+--- Number of elements in range.
+--  @param self Ref object.
+--  @return Length of the reference table.
+metaref.__len = function (self)
+  return self._end - self._beg
+end
+
+--- Get i-th element.
+--  @param self Ref object.
+--  @param i Element index.
+--  @return Table value.
+metaref.__index = function (self, i)
+  if Ver.isInteger(i) then
+    local n = i + self._beg 
+    if n > self._beg and n <= self._end then
+      return self._t[n]
+    end
+  end
+  return metaref[i]
+end
+
+-- Block setting
+metaref.__newindex = function (self, k, v)
+  -- do nothing
+end
+
+--- Create reference to other table.
+--  @param t Source table.
+--  @param iBeg Index of the first element.
+--  @param iEnd Index of the last element.
+--  @return Reference object. 
+Ref = function (t, iBeg, iEnd)
+  iBeg = iBeg or 1
+  iEnd = iEnd or #t
+  return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
+end
+About[Ref] = {'Ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', SonataHelp.NEW}
 
 --- Generate list of function values.
 --  @param fn Function to apply.
