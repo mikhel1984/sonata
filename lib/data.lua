@@ -97,10 +97,13 @@ ans = tt[1][3]                --> 3
 
 --	LOCAL
 
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Cross = Ver.cross
+Ver = Ver.versions
 
 local DISTRIB = 'distribution'
 local FILES = 'files'
+local FILTER = 'filter'
 
 --	INFO
 
@@ -417,6 +420,87 @@ data.readCsv = function (sFile, char, bCol)
   return res
 end
 about[data.readCsv] = {"readCsv(sFile,[delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
+
+--- Find elements using condition.
+--  @param t Table with data.
+--  @param vCond Either boolean function or table of weights.
+--  @return Table with the filtered elements.
+data.filter = function (t, vCond)
+  local res = {}
+  if type(vCond) == 'function' then
+    -- boolean function
+    for i = 1, #t do
+      local v = t[i] 
+      if fn(v) then res[#res+1] = v end
+    end
+  elseif type(vCond) == 'table' then
+    -- weights 
+    for i = 1, #t do
+      if vCond[i] ~= 0 then res[#res+1] = t[i] end
+    end
+  end
+  return res
+end
+about[data.filter] = {"filter(t,vCond)","Get result of the table filtering. Condition is either boolean function or table of weights.", FILTER}
+
+--- Find weights (1/0) based on condition.
+--  @param t Data table.
+--  @param fn Condition, boolean function.
+--  @return Table of 1 and 0.
+data.is = function (t, fn)
+  local res = {}
+  for i = 1, #t do
+    res[i] = fn(t[i]) and 1 or 0
+  end
+  return res
+end
+about[data.is] = {"is(t,fn)", "Find weights using boolean function.", FILTER}
+
+--- Find weights (1/0) based on inverted condition.
+--  @param t Data table.
+--  @param fn Condition, boolean function.
+--  @return Table of 1 and 0.
+data.isNot = function (t, fn)
+  local res = {}
+  for i = 1, #t do
+    res[i] = fn(t[i]) and 0 or 1
+  end
+  return res
+end
+about[data.isNot] = {"isNot(t,fn)", "Find inverted weights using boolean function.", FILTER}
+
+--- Condition: x < d
+--  @param d Upper limit. 
+--  @return Boolean function.
+data.xLt = function (d)
+  return (function (x) return x < d end)
+end
+about[data.xLt] = {"xLt(d)", "Return function for condition x < d.", FILTER}
+
+--- Condition: x > d
+--  @param d Lower limit.
+--  @return Boolean function.
+data.xGt = function (d)
+  return (function (x) return x > d end)
+end
+about[data.xGt] = {"xGt(d)", "Return function for condition x > d.", FILTER}
+
+--- Condition: d1 <= x <= d2.
+--  @param d1 Lower limit.
+--  @param d2 Upper limit.
+--  @return Boolean function.
+data.xIn = function (d1, d2)
+  return (function (x) return d1 <= x and x <= d2 end)
+end
+about[data.xIn] = {"xIn(d1,d2)", "Return function for condition d1 <= x <= d2.", FILTER}
+
+--- Condition: x == d.
+--  @param d Some value.
+--  @return Boolean function.
+data.xEq = function (d)
+  return (function (x) return Cross.eq(x,d) end)
+end
+about[data.xEq] = {"xEq(d)", "Return function for condition x == d.", FILTER}
 
 -- Get reference to data range in other table
 local metaref = { type = 'ref' }
