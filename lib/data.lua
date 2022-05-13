@@ -62,12 +62,36 @@ ans = b[1]                    --> 1
 
 -- define edges 
 a,b = Data.histcounts(X,{0,4,7})  
-ans = a[1]                    --> 5 
+ans = a[1]                    --> 5
+
+-- table range reference 
+a = Data.ref(X, 3, 6)
+ans = #a                      --> 4
+
+ans = a[1]                    --> X[3]
 
 -- Student cdf and pdf
 ans = Data.tcdf(4, 2.5)      --3> 0.9805
 
 ans = Data.tpdf(2, 3.3)      --3> 0.0672
+
+-- dsv write 
+nm = os.tmpname()
+-- separate elements with ';'
+t = {{1,2,3},{4,5,6}}
+Data.writeCsv(nm, t, ';')
+
+-- dsv read
+-- with separator ';'
+tt = Data.readCsv(nm, ';')
+ans = tt[2][2]                --> 5
+
+-- csv write by columns
+Data.writeCsv(nm, t, ',', true)
+
+-- csv read by columns
+tt = Data.readCsv(nm, ',', true)
+ans = tt[1][3]                --> 3
 
 --]]
 
@@ -76,6 +100,7 @@ ans = Data.tpdf(2, 3.3)      --3> 0.0672
 local Ver = require("lib.utils").versions
 
 local DISTRIB = 'distribution'
+local FILES = 'files'
 
 --	INFO
 
@@ -323,6 +348,116 @@ data.tpdf = function (d,N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
 about[data.tpdf] = {"tpdf(d,N)", "Student's distribution density.", DISTRIB}
+
+--- Save Lua table in file, use given delimiter.
+--  @param sFile File name.
+--  @param t Lua table.
+--  @param char Delimiter, default is coma.
+--  @param bCol Flag, reading elements by columns.
+data.writeCsv = function (sFile, t, char, bCol)
+  local f = assert(io.open(sFile,'w'))
+  char = char or ','
+  if bCol then
+    -- by columns
+    if type(t[1]) == 'table' then
+      for r = 1,#t[1] do
+        local tmp = {}
+        for c = 1,#t do tmp[#tmp+1] = t[c][r] end
+        f:write(table.concat(tmp,char),'\n')
+      end
+    else
+      for r = 1,#t do f:write(t[i],'\n') end
+    end
+  else
+    -- by rows
+    for _,v in ipairs(t) do
+      if type(v) == 'table' then v = table.concat(v,char) end
+      f:write(v,'\n')
+    end
+  end
+  f:close()
+  io.write('Done\n')
+end
+about[data.writeCsv] = {"writeCsv(sFile,t,[char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
+
+--- Import data from text file, use given delimiter.
+--  @param sFile File name.
+--  @param char Delimiter, default is coma.
+--  @param bCol Flag, reading elements by columns.
+--  @return Lua table with data.
+data.readCsv = function (sFile, char, bCol)
+  local f = assert(io.open(sFile, 'r'))
+  char = char or ','
+  local templ = '([^'..char..']+)'
+  local res = {}
+  for s in f:lines('l') do
+    -- read data
+    if char ~= '#' then
+      s = string.match(s, '([^#]+)')    -- skip comments
+    end
+    s = string.match(s,'^%s*(.*)%s*$')  -- strip line
+    if #s > 0 then
+      local tmp = {}
+      -- parse string
+      for p in string.gmatch(s, templ) do
+        tmp[#tmp+1] = tonumber(p) or p
+      end
+      -- save
+      if bCol then
+        if #res == 0 then  -- initialize
+          for i = 1,#tmp do res[#res+1] = {} end
+        end
+        for i = 1, #tmp do table.insert(res[i], tmp[i]) end
+      else
+        res[#res+1] = tmp
+      end
+    end
+  end
+  f:close()
+  return res
+end
+about[data.readCsv] = {"readCsv(sFile,[delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
+
+-- Get reference to data range in other table
+local metaref = { type = 'ref' }
+
+--- Number of elements in range.
+--  @param self Ref object.
+--  @return Length of the reference table.
+metaref.__len = function (self)
+  return self._end - self._beg
+end
+
+--- Get i-th element.
+--  @param self Ref object.
+--  @param i Element index.
+--  @return Table value.
+metaref.__index = function (self, i)
+  if Ver.isInteger(i) then
+    local n = i + self._beg 
+    if n > self._beg and n <= self._end then
+      return self._t[n]
+    end
+  end
+  return metaref[i]
+end
+
+-- Block setting
+metaref.__newindex = function (self, k, v)
+  -- do nothing
+end
+
+--- Create reference to other table.
+--  @param t Source table.
+--  @param iBeg Index of the first element.
+--  @param iEnd Index of the last element.
+--  @return Reference object. 
+data.ref = function (t, iBeg, iEnd)
+  iBeg = iBeg or 1
+  iEnd = iEnd or #t
+  return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
+end
+about[data.ref] = {'ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', SonataHelp.NEW}
 
 -- Comment to remove descriptions
 data.about = about

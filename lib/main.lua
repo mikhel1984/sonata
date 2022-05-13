@@ -66,25 +66,8 @@ ans = math.floor(_pi)
 
 ans = math.deg(_pi)
 
--- dsv write 
-nm = os.tmpname()
--- separate elements with ';'
-t = {{1,2,3},{4,5,6}}
-DsvWrite(nm, t, ';')
-
--- dsv read
--- with separator ';'
-tt = DsvRead(nm, ';')
-ans = tt[2][2]                --> 5
-
--- csv write by columns
-DsvWrite(nm, t, ',', true)
-
--- csv read by columns
-tt = DsvRead(nm, ',', true)
-ans = tt[1][3]                --> 3
-
 -- read table from file
+nm = os.tmpname()
 f = io.open(nm,'w')
 f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
 f:close()
@@ -275,6 +258,70 @@ function Type(v)
 end
 About[Type] = {'Type(v)', 'Show type of the object.', SonataHelp.OTHER}
 
+
+--- Generate list of function values.
+--  @param fn Function to apply.
+--  @param t Table with arguments.
+--  @return Table with result of evaluation.
+Map = function (fn, t)
+  if type(t) == 'table' then
+    if t.map then return t:map(fn) end
+    local res = {}
+    for i,v in ipairs(t) do res[i] = fn(v) end
+    return res
+  end
+  return nil
+end
+About[Map] = {'Map(fn,t)','Evaluate function for each table element.', SonataHelp.OTHER}
+
+-- "In the game of life the strong survive..." (Scorpions) ;)
+--  board - matrix with 'ones' as live cells
+main.life = function (board)
+  assert(board.type == 'matrix', 'Matrix is expected!')
+  local rows,cols = board:size() 
+  local src = board
+  local gen = 0
+  -- make decision about current cell
+  local islive = function (r,c)
+      local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c] + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
+      return (n==3 or n==2 and src[r][c]==1) and 1 or 0
+    end
+  -- evaluate
+  repeat
+    local new = board:zeros()   -- empty matrix of the same size
+    gen = gen+1
+    -- update 
+    for r = 1,rows do
+      for c = 1,cols do
+        new[r][c] = gen > 1 and islive(r,c) or src[r][c] ~= 0 and 1 or 0
+        io.write(new[r][c] == 1 and '*' or ' ')
+      end
+      io.write('|\n')
+    end
+    if gen > 1 and new == src then 
+      return print('~~ Game Over ~~') 
+    end
+    src = new
+    io.write(string.format('#%-3d continue? (y/n) ', gen))
+  until 'n' == io.read()
+end
+
+TblImport = SonataHelp.tblImport
+About[TblImport or 1] = {"TblImport(sFile)", "Import Lua table, saved into file.", FILES}
+
+--- Execute file inside the interpreter.
+--  @param sFile Lua or note file name.
+Run = function (sFile)
+  if string.find(sFile, '%.lua$') then
+    dofile(sFile)
+  elseif string.find(sFile, '%.note$') then
+    Sonata:note(sFile, false)
+  else
+    io.write('Expected .lua or .note!\n')
+  end
+end
+About[Run] = {'Run(sFile)', "Execute lua- or note- file.", FILES}
+
 -- Methametods for the range of numbers.
 local metarange = { type = 'range' }
 
@@ -372,179 +419,7 @@ Range = function (dBegin, dEnd, dStep)
 end
 About[Range] = {'Range(dBegin,dEnd[,dStep])','Generate range object.', SonataHelp.NEW}
 
--- Get reference to data range in other table
-local metaref = { type = 'ref' }
 
---- Number of elements in range.
---  @param self Ref object.
---  @return Length of the reference table.
-metaref.__len = function (self)
-  return self._end - self._beg
-end
-
---- Get i-th element.
---  @param self Ref object.
---  @param i Element index.
---  @return Table value.
-metaref.__index = function (self, i)
-  if Ver.isInteger(i) then
-    local n = i + self._beg 
-    if n > self._beg and n <= self._end then
-      return self._t[n]
-    end
-  end
-  return metaref[i]
-end
-
--- Block setting
-metaref.__newindex = function (self, k, v)
-  -- do nothing
-end
-
---- Create reference to other table.
---  @param t Source table.
---  @param iBeg Index of the first element.
---  @param iEnd Index of the last element.
---  @return Reference object. 
-Ref = function (t, iBeg, iEnd)
-  iBeg = iBeg or 1
-  iEnd = iEnd or #t
-  return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
-end
-About[Ref] = {'Ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', SonataHelp.NEW}
-
---- Generate list of function values.
---  @param fn Function to apply.
---  @param t Table with arguments.
---  @return Table with result of evaluation.
-Map = function (fn, t)
-  if type(t) == 'table' then
-    if t.map then return t:map(fn) end
-    local res = {}
-    for i,v in ipairs(t) do res[i] = fn(v) end
-    return res
-  end
-  return nil
-end
-About[Map] = {'Map(fn,t)','Evaluate function for each table element.', SonataHelp.OTHER}
-
--- "In the game of life the strong survive..." (Scorpions) ;)
---  board - matrix with 'ones' as live cells
-main.life = function (board)
-  assert(board.type == 'matrix', 'Matrix is expected!')
-  local rows,cols = board:size() 
-  local src = board
-  local gen = 0
-  -- make decision about current cell
-  local islive = function (r,c)
-      local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c] + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
-      return (n==3 or n==2 and src[r][c]==1) and 1 or 0
-    end
-  -- evaluate
-  repeat
-    local new = board:zeros()   -- empty matrix of the same size
-    gen = gen+1
-    -- update 
-    for r = 1,rows do
-      for c = 1,cols do
-        new[r][c] = gen > 1 and islive(r,c) or src[r][c] ~= 0 and 1 or 0
-        io.write(new[r][c] == 1 and '*' or ' ')
-      end
-      io.write('|\n')
-    end
-    if gen > 1 and new == src then 
-      return print('~~ Game Over ~~') 
-    end
-    src = new
-    io.write(string.format('#%-3d continue? (y/n) ', gen))
-  until 'n' == io.read()
-end
-
---- Save Lua table in file, use given delimiter.
---  @param sFile File name.
---  @param t Lua table.
---  @param char Delimiter, default is coma.
---  @param bCol Flag, reading elements by columns.
-DsvWrite = function (sFile, t, char, bCol)
-  local f = assert(io.open(sFile,'w'))
-  char = char or ','
-  if bCol then
-    -- by columns
-    if type(t[1]) == 'table' then
-      for r = 1,#t[1] do
-        local tmp = {}
-        for c = 1,#t do tmp[#tmp+1] = t[c][r] end
-        f:write(table.concat(tmp,char),'\n')
-      end
-    else
-      for r = 1,#t do f:write(t[i],'\n') end
-    end
-  else
-    -- by rows
-    for _,v in ipairs(t) do
-      if type(v) == 'table' then v = table.concat(v,char) end
-      f:write(v,'\n')
-    end
-  end
-  f:close()
-  io.write('Done\n')
-end
-About[DsvWrite] = {"DsvWrite(sFile,t[,char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
-
---- Import data from text file, use given delimiter.
---  @param sFile File name.
---  @param char Delimiter, default is coma.
---  @param bCol Flag, reading elements by columns.
---  @return Lua table with data.
-DsvRead = function (sFile, char, bCol)
-  local f = assert(io.open(sFile, 'r'))
-  char = char or ','
-  local templ = '([^'..char..']+)'
-  local res = {}
-  for s in f:lines('l') do
-    -- read data
-    if char ~= '#' then
-      s = string.match(s, '([^#]+)')    -- skip comments
-    end
-    s = string.match(s,'^%s*(.*)%s*$')  -- strip line
-    if #s > 0 then
-      local tmp = {}
-      -- parse string
-      for p in string.gmatch(s, templ) do
-        tmp[#tmp+1] = tonumber(p) or p
-      end
-      -- save
-      if bCol then
-        if #res == 0 then  -- initialize
-          for i = 1,#tmp do res[#res+1] = {} end
-        end
-        for i = 1, #tmp do table.insert(res[i], tmp[i]) end
-      else
-        res[#res+1] = tmp
-      end
-    end
-  end
-  f:close()
-  return res
-end
-About[DsvRead] = {"DsvRead(sFile[,delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
-
-TblImport = SonataHelp.tblImport
-About[TblImport or 1] = {"TblImport(sFile)", "Import Lua table, saved into file.", FILES}
-
-
---- Execute file inside the interpreter.
---  @param sFile Lua or note file name.
-Run = function (sFile)
-  if string.find(sFile, '%.lua$') then
-    dofile(sFile)
-  elseif string.find(sFile, '%.note$') then
-    Sonata:note(sFile, false)
-  else
-    io.write('Expected .lua or .note!\n')
-  end
-end
-About[Run] = {'Run(sFile)', "Execute lua- or note- file.", FILES}
 
 -- save link to help info
 main.about = About
