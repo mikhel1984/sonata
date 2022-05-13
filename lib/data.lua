@@ -1,18 +1,18 @@
---[[		sonata/lib/stat.lua 
+--[[		sonata/lib/data.lua 
 
---- Some statistical functions.
+--- Data processing and statistics.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
-	module 'stat'
+	module 'data'
 --]]
 
 -------------------- Tests -------------------
 --[[TEST
 
--- use 'stat'
-Stat = require 'lib.stat'
+-- use 'data'
+Data = require 'lib.data'
 -- external dependencies, can be loaded implicitly
 require 'lib.special'
 
@@ -23,51 +23,51 @@ w = {1,1,0}
 -- enought to define w[i] ~= 1
 w[5] = 2; w[6] = 2
 -- average
-ans = Stat.mean(X)           --3> 3.375
+ans = Data.mean(X)           --3> 3.375
 
 -- standard deviation
-ans, tmp = Stat.std(X,W)     --3> 1.495
+ans, tmp = Data.std(X,W)     --3> 1.495
 
 -- variance
 ans = tmp                    --3> 2.234
 
 -- maximum element and index
-_,ans = Stat.max(X)           --> 4 
+_,ans = Data.max(X)           --> 4 
 
 -- median
-ans = Stat.median(X)          --> 3
+ans = Data.median(X)          --> 3
 
 -- table of frequencies
-tmp = Stat.freq(X)
+tmp = Data.freq(X)
 ans = tmp[3]                  --> 3
 
 -- central moment
-ans = Stat.moment(2,X)       --3> 2.234
+ans = Data.moment(2,X)       --3> 2.234
 
 -- summ of elements
-ans = Stat.sum(X)             --> 27
+ans = Data.sum(X)             --> 27
 
 -- minimum value
-ans = Stat.min(X)             --> 1
+ans = Data.min(X)             --> 1
 
 -- geometrical mean
-ans = Stat.geomean(X)        --3> 2.995
+ans = Data.geomean(X)        --3> 2.995
 
 -- harmonic mean
-ans = Stat.harmmean(X,W)     --3> 2.567
+ans = Data.harmmean(X,W)     --3> 2.567
 
 -- find histogram
-a,b = Stat.histcounts(X, 3)
+a,b = Data.histcounts(X, 3)
 ans = b[1]                    --> 1
 
 -- define edges 
-a,b = Stat.histcounts(X,{0,4,7})  
+a,b = Data.histcounts(X,{0,4,7})  
 ans = a[1]                    --> 5 
 
 -- Student cdf and pdf
-ans = Stat.tcdf(4, 2.5)      --3> 0.9805
+ans = Data.tcdf(4, 2.5)      --3> 0.9805
 
-ans = Stat.tpdf(2, 3.3)      --3> 0.0672
+ans = Data.tpdf(2, 3.3)      --3> 0.0672
 
 --]]
 
@@ -81,27 +81,27 @@ local DISTRIB = 'distribution'
 
 local help = SonataHelp or {new=function () return {} end}
 -- description
-local about = help:new("Statistical calculations. Data set must be a Lua table.")
+local about = help:new("Data processing and statistics.")
 
 --	MODULE
 
-local stat = {}
+local data = {}
 
 --- Sum of all elements.
 --  @param t Table with numbers.
 --  @return Sum.
-stat.sum = function (t)
+data.sum = function (t)
   local s = 0
   for i = 1, #t do s = s+t[i] end
   return s
 end
-about[stat.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
+about[data.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
 
 --- Average value.
 --  @param t Table with numbers.
 --  @param tw Table with weight. Can be omitted.
 --  @return Average.
-stat.mean = function (t, tw)
+data.mean = function (t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1, #t do
@@ -111,17 +111,17 @@ stat.mean = function (t, tw)
     end
     return st / sw
   else
-    return stat.sum(t) / #t
+    return data.sum(t) / #t
   end
 end
-about[stat.mean] = {"mean(t[,tw])", "Calculate average value. Weights can be used.", }
+about[data.mean] = {"mean(t[,tw])", "Calculate average value. Weights can be used.", }
 
 --- Standard deviation and variance.
 --  @param t Table of numbers.
 --  @param tw Table of weights.
 --  @return Standard deviation, variance.
-stat.std = function (t, tw)
-  local mean = stat.mean(t,tw)
+data.std = function (t, tw)
+  local mean = data.mean(t,tw)
   local disp = 0
   if tw then
     local sw = 0
@@ -137,37 +137,37 @@ stat.std = function (t, tw)
   end
   return math.sqrt(disp), disp 
 end
-about[stat.std] = {"std(t[,tw])", "Standard deviation and variance. Weights can be used.", }
+about[data.std] = {"std(t[,tw])", "Standard deviation and variance. Weights can be used.", }
 
 --- Maximum value.
 --  @param t Table of numbers.
 --  @return Maximum value and its index.
-stat.max = function (t)
+data.max = function (t)
   local m, k = t[1], 1
   for i = 2, #t do
     if t[i] > m then m, k = t[i], i end
   end
   return m,k
 end
-about[stat.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
+about[data.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
 
 --- Minimum value.
 --  @param t Table of numbers.
 --  @return Minimum value and its index.
-stat.min = function (t)
+data.min = function (t)
   local m, k = t[1], 1
   for i = 2, #t do
     if t[i] < m then m, k = t[i], i end
   end
   return m,k
 end
-about[stat.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
+about[data.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
 
 --- Geometrical mean.
 --  @param t Table of numbers.
 --  @param tw Table of weights, optional.
 --  @return Geometrical mean.
-stat.geomean = function (t, tw)
+data.geomean = function (t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1,#t do
@@ -182,13 +182,13 @@ stat.geomean = function (t, tw)
     return p^(1/#t)
   end
 end
-about[stat.geomean] = {"geomean(t[,tw])", "Geometrical mean.", help.OTHER}
+about[data.geomean] = {"geomean(t[,tw])", "Geometrical mean.", help.OTHER}
 
 --- Harmonic mean.
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
 --  @return Harmonic mean.
-stat.harmmean = function (t, tw)
+data.harmmean = function (t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1,#t do
@@ -203,12 +203,12 @@ stat.harmmean = function (t, tw)
     return #t / h
   end
 end
-about[stat.harmmean] = {"harmmean(t[,tw])", "Harmonic mean.", help.OTHER}
+about[data.harmmean] = {"harmmean(t[,tw])", "Harmonic mean.", help.OTHER}
 
 --- Find median.
 --  @param t Table of numbers.
 --  @return Value of median.
-stat.median = function (t)
+data.median = function (t)
   local len = #t
   local y = Ver.move(t,1,len,1,{})
   table.sort(y)
@@ -219,26 +219,26 @@ stat.median = function (t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
-about[stat.median] = {"median(t)", "Median of the list."}
+about[data.median] = {"median(t)", "Median of the list."}
 
 --- Frequency of elements.
 --  @param t Table of numbers.
 --  @return Table where keys are elements and values are their frequencies.
-stat.freq = function (t)
+data.freq = function (t)
   local tmp = {}
   for _, v in ipairs(t) do
     tmp[v] = (tmp[v] or 0) + 1
   end
   return tmp
 end
-about[stat.freq] = {"freq(t)", "Return table with frequencies of elements.", }
+about[data.freq] = {"freq(t)", "Return table with frequencies of elements.", }
 
 --- Central moment.
 --  @param N Order of the moment.
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
 --  @return Central moment value.
-stat.moment = function (N, t, tw)
+data.moment = function (N, t, tw)
   local m, n = 0, 0
   for i = 1,#t do
     local w = tw and tw[i] or 1
@@ -252,13 +252,13 @@ stat.moment = function (N, t, tw)
   end
   return mu / n
 end
-about[stat.moment] = {"moment(N,t[,tw])", "Central moment of t order N, tw is a list of weights.", }
+about[data.moment] = {"moment(N,t[,tw])", "Central moment of t order N, tw is a list of weights.", }
 
 --- Number of elements in each bin.
 --  @param t Data table.
 --  @param rng Number of bins or table with edges.
 --  @return Two tables, with sum and edges.
-stat.histcounts = function (t, rng)
+data.histcounts = function (t, rng)
   rng = rng or 10 
   local bins
   -- make copy and sort
@@ -299,35 +299,35 @@ stat.histcounts = function (t, rng)
   end
   return res, bins
 end
-about[stat.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bins. Edges can be either number or table."}
+about[data.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bins. Edges can be either number or table."}
 
 
 --- Student's cumulative distribution
 --   @param d Value.
 --   @param N Degree of freedom.
 --   @return Cumulative value.
-stat.tcdf = function (d,N)
-  stat.ext_special = stat.ext_special or require('lib.special')
+data.tcdf = function (d,N)
+  data.ext_special = data.ext_special or require('lib.special')
   local tmp = N/(N+d*d)
-  return 1-0.5*stat.ext_special.betainc(tmp,0.5*N,0.5)
+  return 1-0.5*data.ext_special.betainc(tmp,0.5*N,0.5)
 end
-about[stat.tcdf] = {"tcdf(d,N)", "Student's cumulative distribution.", DISTRIB}
+about[data.tcdf] = {"tcdf(d,N)", "Student's cumulative distribution.", DISTRIB}
 
 --- Student's density function.
 --   @param d Value.
 --   @param N Degree of freedom.
 --   @return Density value.
-stat.tpdf = function (d,N)
-  stat.ext_special = stat.ext_special or require('lib.special')
-  local tmp = math.sqrt(N)*stat.ext_special.beta(0.5,0.5*N)
+data.tpdf = function (d,N)
+  data.ext_special = data.ext_special or require('lib.special')
+  local tmp = math.sqrt(N)*data.ext_special.beta(0.5,0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-about[stat.tpdf] = {"tpdf(d,N)", "Student's distribution density.", DISTRIB}
+about[data.tpdf] = {"tpdf(d,N)", "Student's distribution density.", DISTRIB}
 
 -- Comment to remove descriptions
-stat.about = about
+data.about = about
 
-return stat
+return data
 
 --====================================
 --TODO: add tinv
