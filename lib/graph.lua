@@ -482,7 +482,7 @@ graph.pathD = function(G,vStart,vGoal)
     return dist, prev
   end
 end
-about[graph.pathD] = {'pathD(G,vStart[,vGoal])', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.", SEARCH}
+about[graph.pathD] = {'pathD(G,vStart,[vGoal])', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.", SEARCH}
 
 --- Find shortest path with Bellman-Ford algorithm/
 --  @param G Graph.
@@ -523,7 +523,7 @@ graph.pathBF = function (G, vStart, vGoal)
     return dist, prev
   end
 end
-about[graph.pathBF] = {'pathBF(G,vStart[,vGoal])','Shortest path search using Bellman-Ford algorithm.', SEARCH}
+about[graph.pathBF] = {'pathBF(G,vStart,[vGoal])','Shortest path search using Bellman-Ford algorithm.', SEARCH}
 
 -- Comment to remove descriptions
 graph.about = about

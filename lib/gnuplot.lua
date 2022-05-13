@@ -372,7 +372,7 @@ gnuplot.plot = function (...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.plot] = {"plot(x1,[y1,[nm,[x2,..]]])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+about[gnuplot.plot] = {"plot(x1[,y1,nm,x2,..])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Prepare arguments for table or matrix.
 --  @param v Table, matrix or dat-file.
@@ -408,7 +408,7 @@ gnuplot.tplot = function (v,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.tplot] = {"tplot(v,[x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
+about[gnuplot.tplot] = {"tplot(v[,x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
 
 --- Polar plot.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
@@ -432,7 +432,7 @@ gnuplot.polarplot = function(...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,[x2,y2..]])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,x2,y2..])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Polar plot table of data file.
 --  @param v Table, matrix or dat-file.
@@ -475,7 +475,7 @@ gnuplot.surfplot = function(...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,[x2,y2..]])', "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
+about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,x2,y2..])', "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 --- Sufrace plot from table of data file.
 --  @param v Table, matrix or dat-file.
@@ -535,12 +535,12 @@ gnuplot.onImport = function ()
   hlp = about[tplot]
   Main.about[tplot] = {hlp[1], hlp[2], GPPLOT}
   polar = gnuplot.polarplot
-  Main.about[polar] = {'polar(x1,y1,[nm,[x2,y2..]])', about[polar][2], GPPLOT}
+  Main.about[polar] = {'polar(x1,y1,[nm,x2,y2..])', about[polar][2], GPPLOT}
   tpolar = gnuplot.tpolar
   hlp = about[tpolar]
   Main.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
   surf = gnuplot.surfplot
-  Main.about[surf] = {'surf(x1,y1,fn1,[nm,[x2,y2..]])', about[surf][2], GPPLOT}
+  Main.about[surf] = {'surf(x1,y1,fn1,[nm,x2,y2..])', about[surf][2], GPPLOT}
   tsurf = gnuplot.tsurf
   hlp = about[tsurf]
   Main.about[tsurf] = {hlp[1], hlp[2], GPPLOT}

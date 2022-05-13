@@ -904,7 +904,7 @@ bigint.isPrime = function (B, sMethod)
   local v1,v2 = bigint._trivialSearch_(B)
   return v1 == nil
 end
-about[bigint.isPrime] = {"isPrime(B[,sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
+about[bigint.isPrime] = {"isPrime(B,[sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
 
 -- simplify constructor call
 setmetatable(bigint, {

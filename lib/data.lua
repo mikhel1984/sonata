@@ -142,7 +142,7 @@ data.mean = function (t, tw)
     return data.sum(t) / #t
   end
 end
-about[data.mean] = {"mean(t[,tw])", "Calculate average value. Weights can be used.", }
+about[data.mean] = {"mean(t,[tw])", "Calculate average value. Weights can be used.", }
 
 --- Standard deviation and variance.
 --  @param t Table of numbers.
@@ -165,7 +165,7 @@ data.std = function (t, tw)
   end
   return math.sqrt(disp), disp 
 end
-about[data.std] = {"std(t[,tw])", "Standard deviation and variance. Weights can be used.", }
+about[data.std] = {"std(t,[tw])", "Standard deviation and variance. Weights can be used.", }
 
 --- Maximum value.
 --  @param t Table of numbers.
@@ -210,7 +210,7 @@ data.geomean = function (t, tw)
     return p^(1/#t)
   end
 end
-about[data.geomean] = {"geomean(t[,tw])", "Geometrical mean.", help.OTHER}
+about[data.geomean] = {"geomean(t,[tw])", "Geometrical mean.", help.OTHER}
 
 --- Harmonic mean.
 --  @param t Table of numbers.
@@ -231,7 +231,7 @@ data.harmmean = function (t, tw)
     return #t / h
   end
 end
-about[data.harmmean] = {"harmmean(t[,tw])", "Harmonic mean.", help.OTHER}
+about[data.harmmean] = {"harmmean(t,[tw])", "Harmonic mean.", help.OTHER}
 
 --- Find median.
 --  @param t Table of numbers.
@@ -280,7 +280,7 @@ data.moment = function (N, t, tw)
   end
   return mu / n
 end
-about[data.moment] = {"moment(N,t[,tw])", "Central moment of t order N, tw is a list of weights.", }
+about[data.moment] = {"moment(N,t,[tw])", "Central moment of t order N, tw is a list of weights.", }
 
 --- Number of elements in each bin.
 --  @param t Data table.
@@ -327,7 +327,7 @@ data.histcounts = function (t, rng)
   end
   return res, bins
 end
-about[data.histcounts] = {"histcounts(X[,rng=10])","Calculate amount of bins. Edges can be either number or table."}
+about[data.histcounts] = {"histcounts(X,[rng=10])","Calculate amount of bins. Edges can be either number or table."}
 
 
 --- Student's cumulative distribution
@@ -539,6 +539,7 @@ end
 data.ref = function (t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
+  assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
 end
 about[data.ref] = {'ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', SonataHelp.NEW}

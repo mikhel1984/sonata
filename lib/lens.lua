@@ -332,7 +332,7 @@ lens.cardinal = function (L, dn1, dn2)
 
   return setmetatable(res, mt_cardinal)
 end
-about[lens.cardinal] = {"cardinal(L[,dn1=1,dn2=1])", "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return list of distances.", help.OTHER}
+about[lens.cardinal] = {"cardinal(L,[dn1=1,dn2=1])", "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return list of distances.", help.OTHER}
 
 -- Comment to remove descriptions
 lens.about = about

@@ -218,7 +218,7 @@ numeric.ode45 = function (fn,tDelta,dY0,tParam)
   end
   return res, res[#res][2]
 end
-about[numeric.ode45] = {"ode45(fn,tDelta,y0[,param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
+about[numeric.ode45] = {"ode45(fn,tDelta,y0,[param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
 -- Comment to remove descriptions
 numeric.about = about

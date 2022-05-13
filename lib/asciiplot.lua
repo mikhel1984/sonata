@@ -273,7 +273,7 @@ asciiplot.scale = function (F, factor, bDefault)
   F.height = (int % 2 == 1) and int or (int + 1)
   return F
 end
-about[asciiplot.scale] = {"scale(F,factor[,bDefault=false])", "Change figure size w.r.t. initial size."}
+about[asciiplot.scale] = {"scale(F,factor,[bDefault=false])", "Change figure size w.r.t. initial size."}
 
 --- Scale and add a point to the figure.
 --  @param F Figure object.
@@ -429,7 +429,7 @@ asciiplot.tplot = function (F, t, tOpt)
   -- show
   return F
 end
-about[asciiplot.tplot] = {"tplot(F,t[,tOpt={}])", "Plot the table data, choose columns if need."}
+about[asciiplot.tplot] = {"tplot(F,t,[tOpt={}])", "Plot the table data, choose columns if need."}
 
 --- Generalized plot funciton.
 --  @param F Figure object.

@@ -647,7 +647,7 @@ about[units.add] = {'add(U,rule)', 'Add new rule for conversation.'}
 -- simplify constructor call
 setmetatable(units, {__call = function (self,v,u) return units:_new_(v,u) end })
 units.Unit = 'Unit'
-about[units.Unit] = {'Unit(v[,u])', 'Create new elements with units.', help.NEW}
+about[units.Unit] = {'Unit(v,[u])', 'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions
 units.about = about

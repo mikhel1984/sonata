@@ -173,7 +173,7 @@ Round = function (f,N)
   end
   return p / k
 end
-About[Round] = {'Round(f[,N=0])', 'Round value, define number of decimal digits.', SonataHelp.OTHER}
+About[Round] = {'Round(f,[N=0])', 'Round value, define number of decimal digits.', SonataHelp.OTHER}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -417,7 +417,7 @@ Range = function (dBegin, dEnd, dStep)
   -- result
   return metarange._init_(dBegin, dEnd, dStep, n)
 end
-About[Range] = {'Range(dBegin,dEnd[,dStep])','Generate range object.', SonataHelp.NEW}
+About[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', SonataHelp.NEW}
 
 
 

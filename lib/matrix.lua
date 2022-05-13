@@ -708,7 +708,7 @@ matrix.zeros = function (iR, iC)
   iC = iC or iR                          -- input is a number
   return matrix:_init_(iR, iC, {})
 end
-about[matrix.vector] = {"zeros(rows[,cols=rows])", "Create matrix from zeros.", help.NEW}
+about[matrix.vector] = {"zeros(rows,[cols=rows])", "Create matrix from zeros.", help.NEW}
 
 --- Create dense matrix using given rule.
 --  @param iR Number of rows.
@@ -734,7 +734,7 @@ matrix.ones = function (iR, iC, val)
   if ismatrix(iR) then iR,iC,val = iR.rows, iR.cols, iC end
   return matrix.fill(iR, iC or iR, function () return val or 1 end)
 end
-about[matrix.ones] = {"ones(iRows[,iCols=iRows,val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
+about[matrix.ones] = {"ones(iRows,[iCols=iRows,val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
 
 --- Matrix with random values.
 --  @param rows Number of rows.
@@ -744,7 +744,7 @@ matrix.rand = function (iR, iC)
   if ismatrix(iR) then iR,iC = iR.rows, iR.cols end
   return matrix.fill(iR, iC or iR, function () return math.random() end)
 end
-about[matrix.rand] = {"rand(iRows[,iCols=iRows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
+about[matrix.rand] = {"rand(iRows,[iCols=iRows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
 
 --- Matrix with normally distributed random values.
 --  @param rows Number of rows.
@@ -754,7 +754,7 @@ matrix.randn = function (iR,iC)
   if ismatrix(iR) then iR,iC = iR.rows, iR.cols end
   return matrix.fill(iR, iC or iR, function () return randn() end)
 end
-about[matrix.randn] = {"randn(iRows[,iCols=iRows])","Create matrix with normally distributed values (0 mean and unit variance)", help.NEW}
+about[matrix.randn] = {"randn(iRows,[iCols=iRows])","Create matrix with normally distributed values (0 mean and unit variance)", help.NEW}
 
 --- Matrix with integer random values from 1 to defined max value.
 --  @param x1 Source matrix or upper limit.
@@ -772,7 +772,7 @@ matrix.randi = function (x1,x2,x3)
   end
   return matrix.fill(rows, cols, function () return math.random(1,N) end)
 end
-about[matrix.randi] = {"randi([M],N,[rows],[cols=rows])", "Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.", help.NEW}
+about[matrix.randi] = {"randi([M],N,[rows,cols=rows])", "Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.", help.NEW}
 
 --- Identity matrix.
 --  @param rows Number of rows.
@@ -790,7 +790,7 @@ matrix.eye = function (iR, iC, val)
   for i = 1, math.min(iR, iC) do m[i][i] = val end
   return m
 end
-about[matrix.eye] = {"eye(iRows[,iCols=iRows,val=1])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
+about[matrix.eye] = {"eye(iRows,[iCols=iRows,val=1])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
 
 --- Matrix concatenation.
 --  Horizontal concatenation can be performed with <code>..</code>, vertical - <code>//</code>.
@@ -961,7 +961,7 @@ matrix.diag = function (M,n)
   end
   return res
 end
-about[matrix.diag] = {'diag(M[,n=0])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
+about[matrix.diag] = {'diag(M,[n=0])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
 
 --- V1 x V2
 --  @param V1 3-element vector.
@@ -1129,7 +1129,7 @@ matrix.reshape = function (M,iRows,iCols)
   end
   return res
 end
-about[matrix.reshape] = {"reshape(M,iRows[=size],iCols[=1])","Change matrix size.",help.OTHER}
+about[matrix.reshape] = {"reshape(M,[iRows=size,iCols=1])","Change matrix size.",help.OTHER}
 
 --- Euclidean norm of the matrix at whole.
 --  @param M Current matrix.

@@ -504,7 +504,7 @@ about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geodetic co
 --  @param s Seconds (optional).
 --  @return Angle in radians.
 geodesy.dms2rad = function (d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
-about[geodesy.dms2rad] = {"dms2rad(d[,m[,s]])", "Convert degrees, minutes and seconds to radians.", help.OTHER}
+about[geodesy.dms2rad] = {"dms2rad(d,[m=0,s=0])", "Convert degrees, minutes and seconds to radians.", help.OTHER}
 
 --- Convert degrees to degrees-minutes-seconds.
 --  @param d Angle in degrees.

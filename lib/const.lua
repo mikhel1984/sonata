@@ -121,7 +121,7 @@ const.add = function (sName,val,sUnit)
   _user_[sName..'_u'] = sUnit
   return 'Done'
 end
-about[const.add] = {'add(sName,value[,sUnits])','Create new constant.'}
+about[const.add] = {'add(sName,value,[sUnits])','Create new constant.'}
 
 --- Remove existing constant.
 --  @param sName Name of constant.

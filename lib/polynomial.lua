@@ -408,7 +408,7 @@ polynomial.int = function (P,d0)
   end
   return polynomial:_init_(int)
 end
-about[polynomial.int] = {"int(P[,d0=0])", "Calculate integral, d0 - free coefficient."}
+about[polynomial.int] = {"int(P,[d0=0])", "Calculate integral, d0 - free coefficient."}
 
 --- Simplify call P * (x - v), inplace
 --  @param P Polynomial object.
@@ -676,7 +676,7 @@ polynomial.taylor = function (v,vF,...)
   end
   return numpoly(res)
 end
-about[polynomial.taylor] = {"taylor(v,vF[,vF',vF''..])", "Get Taylor series.", FIT}
+about[polynomial.taylor] = {"taylor(v,vF,[vF',vF''..])", "Get Taylor series.", FIT}
 
 --- Cubic spline data interpolation.
 --  Use 'natural' boundary conditions. 
@@ -742,7 +742,7 @@ polynomial.lin = function (tX, tY, v0, vN)
   if v0 then res[#res+1] = { xp+1, polynomial:_init_({[0] = vN or v0}) } end
   return setmetatable(res, polynomial._metappval_)
 end
-about[polynomial.lin] = {"lin(tX,tY[,v0=0,vN=v0])", "Linear data interpolation. Return table with polynomials.", FIT}
+about[polynomial.lin] = {"lin(tX,tY,[v0=0,vN=v0])", "Linear data interpolation. Return table with polynomials.", FIT}
 
 --- Evaluate value for table of polynomials (piecewise polynomial).
 --  @param tP Table of polynomials in form {{x1, p1}, {x2, p2} ...}.
@@ -769,7 +769,7 @@ polynomial.ppval = function (tP, d, N)
     return polynomial.ppval(tP, d, N)
   end
 end
-about[polynomial.ppval] = {"ppval(tP,d[,N]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT} 
+about[polynomial.ppval] = {"ppval(tP,d,[N]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT} 
 
 -- Simplify ppval call.
 polynomial._metappval_ = {__call = polynomial.ppval}

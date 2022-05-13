@@ -330,7 +330,7 @@ __call = function (self, n, d)
   return rational:_new_(n,d) 
 end})
 rational.Rat = 'Rat'
-about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
+about[rational.Rat] = {"Rat(m,[n=1])", "Create rational number using num (and denom).", help.NEW}
 
 -- Comment to remove descriptions
 rational.about = about
