@@ -101,7 +101,7 @@ local Ver = require("lib.utils")
 local Cross = Ver.cross
 Ver = Ver.versions
 
-local DISTRIB = 'distribution'
+local STAT = 'statistics'
 local FILES = 'files'
 local FILTER = 'filter'
 
@@ -142,7 +142,7 @@ data.mean = function (t, tw)
     return data.sum(t) / #t
   end
 end
-about[data.mean] = {"mean(t,[tw])", "Calculate average value. Weights can be used.", }
+about[data.mean] = {"mean(t,[tw])", "Calculate average value. Weights can be used.", STAT}
 
 --- Standard deviation and variance.
 --  @param t Table of numbers.
@@ -165,7 +165,7 @@ data.std = function (t, tw)
   end
   return math.sqrt(disp), disp 
 end
-about[data.std] = {"std(t,[tw])", "Standard deviation and variance. Weights can be used.", }
+about[data.std] = {"std(t,[tw])", "Standard deviation and variance. Weights can be used.", STAT}
 
 --- Maximum value.
 --  @param t Table of numbers.
@@ -210,7 +210,7 @@ data.geomean = function (t, tw)
     return p^(1/#t)
   end
 end
-about[data.geomean] = {"geomean(t,[tw])", "Geometrical mean.", help.OTHER}
+about[data.geomean] = {"geomean(t,[tw])", "Geometrical mean.", STAT}
 
 --- Harmonic mean.
 --  @param t Table of numbers.
@@ -231,7 +231,7 @@ data.harmmean = function (t, tw)
     return #t / h
   end
 end
-about[data.harmmean] = {"harmmean(t,[tw])", "Harmonic mean.", help.OTHER}
+about[data.harmmean] = {"harmmean(t,[tw])", "Harmonic mean.", STAT}
 
 --- Find median.
 --  @param t Table of numbers.
@@ -247,7 +247,7 @@ data.median = function (t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
-about[data.median] = {"median(t)", "Median of the list."}
+about[data.median] = {"median(t)", "Median of the list.", STAT}
 
 --- Frequency of elements.
 --  @param t Table of numbers.
@@ -259,7 +259,7 @@ data.freq = function (t)
   end
   return tmp
 end
-about[data.freq] = {"freq(t)", "Return table with frequencies of elements.", }
+about[data.freq] = {"freq(t)", "Return table with frequencies of elements.", STAT}
 
 --- Central moment.
 --  @param N Order of the moment.
@@ -280,7 +280,7 @@ data.moment = function (N, t, tw)
   end
   return mu / n
 end
-about[data.moment] = {"moment(N,t,[tw])", "Central moment of t order N, tw is a list of weights.", }
+about[data.moment] = {"moment(N,t,[tw])", "Central moment of t order N, tw is a list of weights.", STAT}
 
 --- Number of elements in each bin.
 --  @param t Data table.
@@ -327,7 +327,43 @@ data.histcounts = function (t, rng)
   end
   return res, bins
 end
-about[data.histcounts] = {"histcounts(X,[rng=10])","Calculate amount of bins. Edges can be either number or table."}
+about[data.histcounts] = {"histcounts(X,[rng=10])","Calculate amount of bins. Edges can be either number or table.", STAT}
+
+--- Estimate covariance for two vectors.
+--  @param t1 First data vector.
+--  @param t2 Second data vector.
+--  @return Covariance value.
+data.cov2 = function (t1,t2)
+  if #t1 ~= #t2 then error("Different vector size") end
+  local m1 = data.mean(t1)
+  local m2 = data.mean(t2) 
+  local s = 0
+  for i = 1, #t1 do
+    s = s + (t1[i] - m1)*(t2[i] - m2)
+  end
+  return s / #t1
+end
+about[data.cov2] = {"cov2(t1,t2)", "Find covariance value for two vectors.", STAT}
+
+--- Estimate covariance matrix.
+--  @param t Table of data vectors.
+--  @return Covariance matrix.
+data.cov = function (t)
+  local N = #t
+  if N == 0 then error("Expected list of vectors") end
+  data.ext_matrix = data.ext_matrix or require('lib.matrix')
+  local m = data.ext_matrix.zeros(N, N) 
+  for i = 1, N do
+    local ti = t[i]
+    m[i][i] = data.cov2(ti, ti)
+    for j = i+1, N do
+      m[i][j] = data.cov2(ti, t[j])
+      m[j][i] = m[i][j]
+    end
+  end
+  return m
+end
+about[data.cov] = {"cov(t)", "Find covariance matrix for list of vectors.", STAT}
 
 
 --- Student's cumulative distribution
@@ -339,7 +375,7 @@ data.tcdf = function (d,N)
   local tmp = N/(N+d*d)
   return 1-0.5*data.ext_special.betainc(tmp,0.5*N,0.5)
 end
-about[data.tcdf] = {"tcdf(d,N)", "Student's cumulative distribution.", DISTRIB}
+about[data.tcdf] = {"tcdf(d,N)", "Student's cumulative distribution.", help.OTHER}
 
 --- Student's density function.
 --   @param d Value.
@@ -350,7 +386,7 @@ data.tpdf = function (d,N)
   local tmp = math.sqrt(N)*data.ext_special.beta(0.5,0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-about[data.tpdf] = {"tpdf(d,N)", "Student's distribution density.", DISTRIB}
+about[data.tpdf] = {"tpdf(d,N)", "Student's distribution density.", help.OTHER}
 
 --- Save Lua table in file, use given delimiter.
 --  @param sFile File name.
@@ -542,7 +578,7 @@ data.ref = function (t, iBeg, iEnd)
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
 end
-about[data.ref] = {'ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', SonataHelp.NEW}
+about[data.ref] = {'ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', help.OTHER}
 
 -- Comment to remove descriptions
 data.about = about
