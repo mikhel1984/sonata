@@ -15,6 +15,7 @@
 Data = require 'lib.data'
 -- external dependencies, can be loaded implicitly
 require 'lib.special'
+require 'lib.matrix'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -30,6 +31,15 @@ ans, tmp = Data.std(X,W)     --3> 1.495
 
 -- variance
 ans = tmp                    --3> 2.234
+
+-- covariance for two vectors
+Y = {0,2,1,3,7,5,8,4}
+a = Data.cov2(X,Y)
+ans = a                      --3> -0.65625
+
+-- covariance matrix 
+tmp = Data.cov({X,Y})
+ans = tmp[1][2]              --3> a
 
 -- maximum element and index
 _,ans = Data.max(X)           --> 4 
