@@ -89,18 +89,18 @@ ans = Data.tpdf(2, 3.3)      --3> 0.0672
 nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-Data.writeCsv(nm, t, ';')
+Data.csvwrite(nm, t, ';')
 
 -- dsv read
 -- with separator ';'
-tt = Data.readCsv(nm, ';')
+tt = Data.csvread(nm, ';')
 ans = tt[2][2]                --> 5
 
 -- csv write by columns
-Data.writeCsv(nm, t, ',', true)
+Data.csvwrite(nm, t, ',', true)
 
 -- csv read by columns
-tt = Data.readCsv(nm, ',', true)
+tt = Data.csvread(nm, ',', true)
 ans = tt[1][3]                --> 3
 
 --]]
@@ -403,7 +403,7 @@ about[data.tpdf] = {"tpdf(d,N)", "Student's distribution density.", help.OTHER}
 --  @param t Lua table.
 --  @param char Delimiter, default is coma.
 --  @param bCol Flag, reading elements by columns.
-data.writeCsv = function (sFile, t, char, bCol)
+data.csvwrite = function (sFile, t, char, bCol)
   local f = assert(io.open(sFile,'w'))
   char = char or ','
   if bCol then
@@ -427,14 +427,14 @@ data.writeCsv = function (sFile, t, char, bCol)
   f:close()
   io.write('Done\n')
 end
-about[data.writeCsv] = {"writeCsv(sFile,t,[char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
+about[data.csvwrite] = {"csvwrite(sFile,t,[char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
 --  @param sFile File name.
 --  @param char Delimiter, default is coma.
 --  @param bCol Flag, reading elements by columns.
 --  @return Lua table with data.
-data.readCsv = function (sFile, char, bCol)
+data.csvread = function (sFile, char, bCol)
   local f = assert(io.open(sFile, 'r'))
   char = char or ','
   local templ = '([^'..char..']+)'
@@ -465,7 +465,7 @@ data.readCsv = function (sFile, char, bCol)
   f:close()
   return res
 end
-about[data.readCsv] = {"readCsv(sFile,[delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
+about[data.csvread] = {"csvread(sFile,[delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
 
 --- Find elements using condition.
 --  @param t Table with data.

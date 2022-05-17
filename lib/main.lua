@@ -311,16 +311,16 @@ About[TblImport or 1] = {"TblImport(sFile)", "Import Lua table, saved into file.
 
 --- Execute file inside the interpreter.
 --  @param sFile Lua or note file name.
-Run = function (sFile)
+Run = function (sFile, bInt)
   if string.find(sFile, '%.lua$') then
     dofile(sFile)
   elseif string.find(sFile, '%.note$') then
-    Sonata:note(sFile, false)
+    Sonata:note(sFile, bInt==true)
   else
     io.write('Expected .lua or .note!\n')
   end
 end
-About[Run] = {'Run(sFile)', "Execute lua- or note- file.", FILES}
+About[Run] = {'Run(sFile,[bInt=false])', "Execute lua- or note- file. Set bInt for interaction.", FILES}
 
 -- Methametods for the range of numbers.
 local metarange = { type = 'range' }
