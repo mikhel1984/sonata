@@ -227,7 +227,7 @@ rational.__pow = function (R1, R2)
 end
 
 rational.arithmetic = 'arithmetic'
-about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} ", help.META}
+about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2", help.META}
 
 --- R1 == R2
 --  @param R1 First number.

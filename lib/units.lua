@@ -523,7 +523,7 @@ units.__pow = function (U1,d)
 end
 
 units.arithmetic = 'arithmetic'
-about[units.arithmetic] = {units.arithmetic, 'U1+U2, U1-U2, U1*u2, U1/U2, U1^n', help.META}
+about[units.arithmetic] = {units.arithmetic, 'U1+U2, U1-U2, U1*U2, U1/U2, U1^N', help.META}
 
 --- U1 == b
 --  @param U1 First unit object.

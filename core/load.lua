@@ -94,15 +94,15 @@ end
 
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
-Logging = function (flag)
-  if flag == 'on' or flag == true then
+Log = function (flag)
+  if flag == 'on' then
     if not Sonata._logFile_ then
       Sonata._logFile_ = io.open(Sonata.LOGNAME, 'a')
       local d = os.date('*t')
       Sonata._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
       Sonata._logFile_:write('-- ')  -- prepare comment for 'logging on'
     end
-  elseif flag == 'off' or flag == false then
+  elseif flag == 'off' then
     if Sonata._logFile_ then
       Sonata._logFile_:close()
       Sonata._logFile_ = nil
@@ -111,7 +111,7 @@ Logging = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
-About[Logging] = {'Logging(flag)', "Save session into the log file. Use 'on'/true to start and 'off'/false to stop.", SonataHelp.OTHER}
+About[Log] = {'Log(sFlag)', "Save session into the log file. Use 'on'/'off' to start/stop logging.", SonataHelp.OTHER}
 
 
 -- command line arguments of Sonata and their processing
@@ -231,7 +231,7 @@ Sonata._arghelp_ = function ()
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end
   txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
-  txt[#txt+1] = "BUGS: mail to 'sonatalc@yandex.ru'\n"
+  txt[#txt+1] = "BUGS: mail to 'mikhel.sk@gmail.com'\n"
   return table.concat(txt,'\n')
 end
 
