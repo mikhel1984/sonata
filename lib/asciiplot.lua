@@ -646,6 +646,51 @@ about[asciiplot.concat] = {"concat(...)", "Horizontal concatenation of figures w
 -- Simplify call for two objects.
 asciiplot.__concat = function (F1, F2) return asciiplot.concat(F1, F2) end
 
+asciiplot.bar = function (F, t)
+  -- size
+  local fld = mmodf(F.width * 0.3)
+  local step = 1
+  if #t > F.height then
+    local int, frac = mmodf(#t / F.height) 
+    step = (frac >= 0.5) and (int+1) or int
+  end
+  -- find limits
+  local min, max = math.huge, -math.huge 
+  for i = 1, #t do
+    local v = t[i][2] 
+    if v > max then max = v end 
+    if v < min then min = v end
+  end
+  local iL, i0, iR = fld+1, fld+1, F.width-fld
+  if min < 0 and max < 0 then
+    i0 = iR
+  elseif min < 0 and max > 0 then
+    i0 = iL + mmodf(-min / (max - min) * (iR - iL))
+  end
+  -- add values
+  asciiplot._clear_(F)
+  local r = 1
+  for i = 1, #t, step do
+    local val = t[i]
+    -- text 
+    local x = tostring(val[1]) 
+    for c = 1, math.min(fld, #x) do F.canvas[r][c] = string.sub(x,c,c) end 
+    -- line 
+    x = val[2] 
+    F.canvas[r][i0] = '*'
+    if x > 0 then 
+      for c = i0+1, i0 + mmodf(x / max * (iR - i0)) do F.canvas[r][c] = '*' end 
+    elseif x < 0 then 
+      for c = i0 - mmodf(x / min * (i0 - iL)), i0-1 do F.canvas[r][c] = '*' end
+    end
+    -- value 
+    x = tostring(x) 
+    for c = 1, math.min(fld, #x) do F.canvas[r][iR+c] = string.sub(x,c,c) end
+    r = r + 1
+  end
+  return F
+end
+
 -- Export funcitons.
 asciiplot.onImport = function ()
   Plot = function (...)
