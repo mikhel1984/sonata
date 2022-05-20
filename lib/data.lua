@@ -590,6 +590,47 @@ data.ref = function (t, iBeg, iEnd)
 end
 about[data.ref] = {'ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', help.OTHER}
 
+--- Apply function of n arguments to n lists.
+--  @param fn Function of multiple arguments.
+--  @param ... Sequence of lists.
+--  @return List of values fn(...).
+data.zip = function (fn, ...)
+  local ag, res = {...}, {}
+  local x, stop = {}, false
+  for i = 1, math.huge do
+    for j = 1, #ag do
+      local v = ag[j][i]
+      if v ~= nil then
+        x[j] = v
+      else 
+        stop = true
+        break 
+      end
+    end
+    if not stop then 
+      res[i] = fn(Ver.unpack(x))
+    else 
+      break 
+    end
+  end
+  return res 
+end
+about[data.zip] = {"zip(fn,...)", "Sequentially apply function to list of tables.", help.OTHER}
+
+--- Generate function from string.
+--  @param sExpr Expression for execution.
+--  @param iArg Number of arguments (optional).
+--  @return Function based on the expression.
+data.F = function (sExpr,iArg)
+  local arg = {}
+  for i = 1, (iArg or 2) do arg[i] = string.format("x%d", i) end
+  local fn = Ver.loadStr(
+    string.format("return function (%s) return %s end", table.concat(arg,','), sExpr)
+  )
+  return fn()
+end
+about[data.F] = {"F(sExpr,[iArg=2])", "Generate function from expression of x1, x2 etc.", help.OTHER}
+
 -- Comment to remove descriptions
 data.about = about
 
