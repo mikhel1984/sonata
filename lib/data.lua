@@ -305,9 +305,9 @@ data.histcounts = function (t, rng)
   -- prepare edges
   if type(rng) == 'number' then
     local vMin, vMax = y[1], y[#y]
+    local wid = (vMax - vMin) / (rng - 1)
     bins = {}
-    for v = vMin, vMax, (vMax-vMin)/rng do bins[#bins+1] = v end  
-    bins[#bins] = vMax+(vMax-vMin)*0.001      
+    for v = vMin + 0.5*wid, vMax, wid do bins[#bins+1] = v end  
   elseif type(rng) == 'table' then    
     bins = rng
   else
@@ -319,20 +319,15 @@ data.histcounts = function (t, rng)
   end  
   -- fill result
   local res = {}
-  for i = 1,#bins-1 do res[i] = 0 end
-  --for i = 1, #bins-1 do res[i] = 0 end
-  local p,upper = 1, bins[2]
-  for _,v in ipairs(y) do    
-    if v < bins[1] then
-      -- just skip
-    elseif v < upper then
-      res[p] = res[p]+1
+  for i = 1,#bins+1 do res[i] = 0 end
+  local p, i = 1, 1 
+  while i <= #y do
+    local v = y[i]
+    if p > #bins or v < bins[p] then
+        res[p] = res[p] + 1
+        i = i + 1
     else
-      -- next bin
-      while bins[p+1] and v >= bins[p+1] do p = p+1 end
-      if p >= #bins then break end
-      upper = bins[p+1]
-      res[p] = res[p]+1
+      p = p + 1
     end
   end
   return res, bins
