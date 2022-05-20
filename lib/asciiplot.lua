@@ -647,19 +647,20 @@ asciiplot.__concat = function (F1, F2) return asciiplot.concat(F1, F2) end
 
 --- Plot bar graph.
 --  @param F Figure object.
---  @param t Table with lines of {x,y} values.
---  @param iy Optional index of y values.
+--  @param t Data table ({x,y} or x).
+--  @param vy Index of y column or data table (optional).
 --  @param ix Optional index of x values. 
 --  @return Updated figure object.
-asciiplot.bar = function (F, t, iy, ix)
-  ix, iy = ix or 1, iy or 2
+asciiplot.bar = function (F, t, vy, ix)
+  ix, vy = ix or 1, vy or 2
+  local ytbl = (type(vy) == 'table')
   -- size
   local iL = mmodf(F.width * 0.2) 
   local iR = F.width - iL
   -- find limits
   local min, max = math.huge, -math.huge 
   for i = 1, #t do
-    local v = t[i][iy] 
+    local v = ytbl and vy[i] or t[i][vy] 
     if v > max then max = v end 
     if v < min then min = v end
   end
@@ -683,12 +684,11 @@ asciiplot.bar = function (F, t, iy, ix)
   asciiplot._clear_(F)
   local r = 1
   for i = 1, #t, step do
-    local val = t[i]
     -- text 
-    local x = tostring(val[ix]) 
+    local x = tostring(ytbl and t[i] or t[i][ix])
     for c = 1, math.min(iL-2, #x) do F.canvas[r][c] = string.sub(x,c,c) end 
     -- line 
-    x = val[iy] 
+    x = ytbl and vy[i] or t[i][vy]
     local i1, i2 = mmodf(x * dm + i0)
     if x >= 0 then 
       i2 = (i2 >= 0.5) and i1 + 1 or i1   -- right limit
@@ -697,7 +697,7 @@ asciiplot.bar = function (F, t, iy, ix)
       i1 = (i2 >= 0.5) and i1 - 1 or i1   -- left limit
       i2 = i0
     end
-    for c = i1, i2 do F.canvas[r][c] = '~' end
+    for c = i1, i2 do F.canvas[r][c] = '=' end
     -- value 
     x = tostring(x) 
     for c = 1, math.min(iL-2, #x) do F.canvas[r][iR+2+c] = string.sub(x,c,c) end
@@ -705,7 +705,7 @@ asciiplot.bar = function (F, t, iy, ix)
   end
   return F
 end
-about[asciiplot.bar] = {"bar(F,t,[iy=2,ix=1])", "Plot bar diargram for table of {x,y} paris."}
+about[asciiplot.bar] = {"bar(F,t,[vy=2,ix=1])", "Plot bar diargram for data. vy can be y index in t (optional) or table of y-s."}
 
 -- Export funcitons.
 asciiplot.onImport = function ()
