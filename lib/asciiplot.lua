@@ -439,7 +439,6 @@ asciiplot.plot = function (F, ...)
   local ag, acc = {...}, {}
   local xmin, xmax = math.huge, -math.huge
   local i = 1
-
   -- collect data
   repeat 
     local tx, ty = ag[i], ag[i+1]
@@ -646,26 +645,39 @@ about[asciiplot.concat] = {"concat(...)", "Horizontal concatenation of figures w
 -- Simplify call for two objects.
 asciiplot.__concat = function (F1, F2) return asciiplot.concat(F1, F2) end
 
-asciiplot.bar = function (F, t)
+--- Plot bar graph.
+--  @param F Figure object.
+--  @param t Table with lines of {x,y} values.
+--  @param iy Optional index of y values.
+--  @param ix Optional index of x values. 
+--  @return Updated figure object.
+asciiplot.bar = function (F, t, iy, ix)
+  ix, iy = ix or 1, iy or 2
   -- size
-  local fld = mmodf(F.width * 0.3)
-  local step = 1
-  if #t > F.height then
-    local int, frac = mmodf(#t / F.height) 
-    step = (frac >= 0.5) and (int+1) or int
-  end
+  local iL = mmodf(F.width * 0.2) 
+  local iR = F.width - iL
   -- find limits
   local min, max = math.huge, -math.huge 
   for i = 1, #t do
-    local v = t[i][2] 
+    local v = t[i][iy] 
     if v > max then max = v end 
     if v < min then min = v end
   end
-  local iL, i0, iR = fld+1, fld+1, F.width-fld
-  if min < 0 and max < 0 then
-    i0 = iR
+  local i0   
+  if min >= 0 and max >= 0 then
+    i0, min = iL, 0
+  elseif min <= 0 and max <= 0 then
+    i0, max = iR, 0
   elseif min < 0 and max > 0 then
-    i0 = iL + mmodf(-min / (max - min) * (iR - iL))
+    local int, frac = mmodf(iL - min / (max - min) * (iR - iL))
+    i0 = (frac > 0.5) and int + 1 or int
+  end
+  local dm = (iR - iL) / (max - min)
+  -- data step
+  local step = 1
+  if #t > F.height then
+    local int, frac = mmodf(#t / F.height) 
+    step = (frac > 0) and (int+1) or int
   end
   -- add values
   asciiplot._clear_(F)
@@ -673,23 +685,27 @@ asciiplot.bar = function (F, t)
   for i = 1, #t, step do
     local val = t[i]
     -- text 
-    local x = tostring(val[1]) 
-    for c = 1, math.min(fld, #x) do F.canvas[r][c] = string.sub(x,c,c) end 
+    local x = tostring(val[ix]) 
+    for c = 1, math.min(iL-2, #x) do F.canvas[r][c] = string.sub(x,c,c) end 
     -- line 
-    x = val[2] 
-    F.canvas[r][i0] = '*'
-    if x > 0 then 
-      for c = i0+1, i0 + mmodf(x / max * (iR - i0)) do F.canvas[r][c] = '*' end 
-    elseif x < 0 then 
-      for c = i0 - mmodf(x / min * (i0 - iL)), i0-1 do F.canvas[r][c] = '*' end
+    x = val[iy] 
+    local i1, i2 = mmodf(x * dm + i0)
+    if x >= 0 then 
+      i2 = (i2 >= 0.5) and i1 + 1 or i1   -- right limit
+      i1 = i0
+    else
+      i1 = (i2 >= 0.5) and i1 - 1 or i1   -- left limit
+      i2 = i0
     end
+    for c = i1, i2 do F.canvas[r][c] = '~' end
     -- value 
     x = tostring(x) 
-    for c = 1, math.min(fld, #x) do F.canvas[r][iR+c] = string.sub(x,c,c) end
+    for c = 1, math.min(iL-2, #x) do F.canvas[r][iR+2+c] = string.sub(x,c,c) end
     r = r + 1
   end
   return F
 end
+about[asciiplot.bar] = {"bar(F,t,[iy=2,ix=1])", "Plot bar diargram for table of {x,y} paris."}
 
 -- Export funcitons.
 asciiplot.onImport = function ()
