@@ -66,21 +66,13 @@ ans = math.floor(_pi)
 
 ans = math.deg(_pi)
 
--- read table from file
-nm = os.tmpname()
-f = io.open(nm,'w')
-f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
-f:close()
-aa = TblImport(nm)
-ans = aa.b.c                  --> 'abc'
-
 --]]
 
 --	LOCAL
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
-local FILES = 'files'
+local AUX = 'auxiliary'
 
 -- compatibility
 local Ver = require("lib.utils").versions
@@ -91,89 +83,6 @@ local main = {}
 -- update for standalone call
 About = About or {}
 SonataHelp = SonataHelp or {}
-
--- Commonly used methods
-abs = math.abs;   About[abs] =  {"abs(x)", "Absolute value."}
-exp = math.exp;   About[exp] =  {"exp(x)", "Exponent."}
-log = math.log;   About[log] =  {"log(x)", "Natural logarithm."}
-sqrt = math.sqrt;  About[sqrt] = {"sqrt(a)", "Square root."}
-
--- Trigonometrical
-sin = math.sin;   About[sin] =  {"sin(x)", "Sinus x.", TRIG}
-cos = math.cos;   About[cos] =  {"cos(x)", "Cosine x.", TRIG}
-tan = math.tan;   About[tan] =  {"tan(x)", "Tangent x.", TRIG}
-asin = math.asin;  About[asin] = {"asin(x)", "Inverse sine x.", TRIG}
-acos = math.acos;  About[acos] = {"acos(x)", "Inverse cosine x.", TRIG}
-atan = math.atan;  About[atan] = {"atan(x)", "Inverse tangent x.", TRIG}
-
-atan2 = Ver.atan2 
-About[atan2] = {"atan2(y,x)", "Inverse tangent of y/x, use signs.", TRIG}
-
--- Hyperbolic
-cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
-About[cosh] = {"cosh(x)", "Hyperbolic cosine.", HYP}
-
-sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end  
-About[sinh] = {"sinh(x)", "Hyperbolic sinus.", HYP}
-
-tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
-About[tanh] = {"tanh(x)", "Hyperbolic tangent.", HYP}
-
--- Hyperbolic inverse 
-asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
-About[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
-
-acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
-About[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
-
-atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
-About[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
-
--- Constants
-_pi = math.pi;   About[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
-_e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
--- result 
-_ans = 0;   About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
-
--- random
-math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
-
-rand = function () return math.random() end
-About[rand] = {"rand()", "Random number between 0 and 1."}
-
-randi = function (N) return math.random(1,N) end
-About[randi] = {"randi(N)", "Random integer in range from 1 to N."}
-
-randn = function (dMean, dev) 
-  dMean = dMean or 0
-  dev = dev or 1
-  -- use Box-Muller transform
-  local u,v,s
-  repeat
-    u = 2*math.random()-1
-    v = 2*math.random()-1
-    s = u*u + v*v
-  until s <= 1 and s > 0
-  local norm = u * math.sqrt(-2*math.log(s)/s)
-  return norm * dev + dMean
-end
-About[randn] = {"randn([dMean=0,dev=1])", "Normal distributed random value with the given mean and deviation."}
-
---- Round to closest integer.
---  @param f Real number.
---  @param N Number of decimal digits.
---  @return Rounded number.
-Round = function (f,N)
-  local k = 10^(N or 0)
-  local p,q = math.modf(f*k)
-  if q >= 0.5 then 
-    p = p+1
-  elseif q <= -0.5 then 
-    p = p-1
-  end
-  return p / k
-end
-About[Round] = {'Round(f,[N=0])', 'Round value, define number of decimal digits.', SonataHelp.OTHER}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -217,6 +126,89 @@ main._showTable_ = function (t)
   io.write(' }\n')
 end
 
+-- Commonly used methods
+abs = math.abs;   About[abs] =  {"abs(d)", "Absolute value."}
+exp = math.exp;   About[exp] =  {"exp(d)", "Exponent."}
+log = math.log;   About[log] =  {"log(dPos)", "Natural logarithm."}
+sqrt = math.sqrt;  About[sqrt] = {"sqrt(dPos)", "Square root."}
+
+-- Trigonometrical
+sin = math.sin;   About[sin] =  {"sin(d)", "Sinus x.", TRIG}
+cos = math.cos;   About[cos] =  {"cos(d)", "Cosine x.", TRIG}
+tan = math.tan;   About[tan] =  {"tan(d)", "Tangent x.", TRIG}
+asin = math.asin;  About[asin] = {"asin(d)", "Inverse sine x.", TRIG}
+acos = math.acos;  About[acos] = {"acos(d)", "Inverse cosine x.", TRIG}
+atan = math.atan;  About[atan] = {"atan(d)", "Inverse tangent x.", TRIG}
+
+atan2 = Ver.atan2 
+About[atan2] = {"atan2(dy,dx)", "Inverse tangent of dy/dx, use signs.", TRIG}
+
+-- Hyperbolic
+cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+About[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
+
+sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
+About[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
+
+tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
+About[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
+
+-- Hyperbolic inverse 
+asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
+About[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
+
+acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
+About[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
+
+atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
+About[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
+
+-- Constants
+_pi = math.pi;   About[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
+_e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
+-- result 
+_ans = 0;   About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
+
+-- random
+math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
+
+rand = function () return math.random() end
+About[rand] = {"rand()", "Random number between 0 and 1."}
+
+randi = function (N) return math.random(1,N) end
+About[randi] = {"randi(N)", "Random integer in range from 1 to N."}
+
+randn = function (dMean, dev) 
+  dMean = dMean or 0
+  dev = dev or 1
+  -- use Box-Muller transform
+  local u,v,s
+  repeat
+    u = 2*math.random()-1
+    v = 2*math.random()-1
+    s = u*u + v*v
+  until s <= 1 and s > 0
+  local norm = u * math.sqrt(-2*math.log(s)/s)
+  return norm * dev + dMean
+end
+About[randn] = {"randn([dMean=0,dev=1])", "Normal distributed random value with the given mean and deviation."}
+
+
+--- Generate list of function values.
+--  @param fn Function to apply.
+--  @param t Table with arguments.
+--  @return Table with result of evaluation.
+Map = function (fn, t)
+  if type(t) == 'table' then
+    if t.map then return t:map(fn) end
+    local res = {}
+    for i,v in ipairs(t) do res[i] = fn(v) end
+    return res
+  end
+  return nil
+end
+About[Map] = {'Map(fn,t)','Evaluate function for each table element.', AUX}
+
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
 Print = function (...)
@@ -242,12 +234,41 @@ Print = function (...)
   end
   io.write('\n')
 end
-About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", SonataHelp.OTHER}
+About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", AUX}
+
+--- Round to closest integer.
+--  @param f Real number.
+--  @param N Number of decimal digits.
+--  @return Rounded number.
+Round = function (f,N)
+  local k = 10^(N or 0)
+  local p,q = math.modf(f*k)
+  if q >= 0.5 then 
+    p = p+1
+  elseif q <= -0.5 then 
+    p = p-1
+  end
+  return p / k
+end
+About[Round] = {'Round(f,[N=0])', 'Round value, define number of decimal digits.', AUX}
+
+--- Execute file inside the interpreter.
+--  @param sFile Lua or note file name.
+Run = function (sFile, bInt)
+  if string.find(sFile, '%.lua$') then
+    dofile(sFile)
+  elseif string.find(sFile, '%.note$') then
+    Sonata:note(sFile, bInt==true)
+  else
+    io.write('Expected .lua or .note!\n')
+  end
+end
+About[Run] = {'Run(sFile,[bInt=false])', "Execute lua- or note- file. Set bInt for interaction.", AUX}
 
 --- Show type of the object.
 --  @param v Some Lua or Sonata object.
 --  @return String with type value.
-function Type(v)
+Type = function (v)
   local u = type(v)
   if u == 'table' then
     u = v.type or u
@@ -256,23 +277,7 @@ function Type(v)
   end
   return u
 end
-About[Type] = {'Type(v)', 'Show type of the object.', SonataHelp.OTHER}
-
-
---- Generate list of function values.
---  @param fn Function to apply.
---  @param t Table with arguments.
---  @return Table with result of evaluation.
-Map = function (fn, t)
-  if type(t) == 'table' then
-    if t.map then return t:map(fn) end
-    local res = {}
-    for i,v in ipairs(t) do res[i] = fn(v) end
-    return res
-  end
-  return nil
-end
-About[Map] = {'Map(fn,t)','Evaluate function for each table element.', SonataHelp.OTHER}
+About[Type] = {'Type(v)', 'Show type of the object.', AUX}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -306,22 +311,6 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
-TblImport = SonataHelp.tblImport
-About[TblImport or 1] = {"TblImport(sFile)", "Import Lua table, saved into file.", FILES}
-
---- Execute file inside the interpreter.
---  @param sFile Lua or note file name.
-Run = function (sFile, bInt)
-  if string.find(sFile, '%.lua$') then
-    dofile(sFile)
-  elseif string.find(sFile, '%.note$') then
-    Sonata:note(sFile, bInt==true)
-  else
-    io.write('Expected .lua or .note!\n')
-  end
-end
-About[Run] = {'Run(sFile,[bInt=false])', "Execute lua- or note- file. Set bInt for interaction.", FILES}
-
 -- Methametods for the range of numbers.
 local metarange = { type = 'range' }
 
@@ -344,6 +333,14 @@ metarange.__add = function (d, R)
     return metarange.__add(R, d)
   else
     return metarange._init_(d+R._beg, d+R._end, R._step, R._N)
+  end
+end
+
+metarange.__sub = function (R, d)
+  if type(R) == 'number' then   -- d is range
+    return R + (-1)*d 
+  else
+    return metarange._init_(R._beg-d, R._end-d, R._step, R._N)
   end
 end
 
@@ -417,9 +414,7 @@ Range = function (dBegin, dEnd, dStep)
   -- result
   return metarange._init_(dBegin, dEnd, dStep, n)
 end
-About[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', SonataHelp.NEW}
-
-
+About[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', AUX}
 
 -- save link to help info
 main.about = About
@@ -437,4 +432,3 @@ return main
 --===============================
 
 --TODO don't print result when ; in the end
---TODO __sub for Range
