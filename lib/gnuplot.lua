@@ -161,33 +161,22 @@ foptions = {'using','title','with','linetype','linestyle','linewidth','ls','ln',
 -- metha
 gnuplot.__index = gnuplot
 
---- Save table to tmp file.
---  @param t Lua table with numbers.
---  @return File name.
-gnuplot._tbl2file_ = function (t)
-  local name = os.tmpname()
-  local f = io.open(name, 'w')
-  for _, row in ipairs(t) do
-    for _, val in ipairs(row) do f:write(val,' ') end
-    f:write('\n')
+--- Represent parameters of the graphic.
+--  @param G Gnuplot object.
+--  @return String with object properties.
+gnuplot.__tostring = function (G)
+  local res = {}
+  for k,v in pairs(G) do
+    if type(v) == 'table' then
+      local tmp = {}
+      for p,q in pairs(v) do
+        tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q))
+      end
+      v = string.format('{%s}', table.concat(tmp,','))
+    end
+    res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
   end
-  f:close()
-  return name
-end
-
---- Save matrix to tmp file.
---  @param t Sonata matrix. 
---  @return File name.
-gnuplot._mat2file_ = function (t)
-  local name = os.tmpname()
-  local f = io.open(name, 'w')
-  for i = 1, t.rows do
-    local row = t[i]
-    for j = 1, t.cols do f:write(row[j],' ') end
-    f:write('\n')
-  end
-  f:close()
-  return name
+  return string.format('{\n%s\n}', table.concat(res, ',\n'))
 end
 
 --- Save function result to tmp file.
@@ -244,78 +233,6 @@ end
 --  @return New 'gnuplot' object.
 gnuplot._init_ = function (self) return setmetatable({}, self) end
 
---- Add new curve to the plot.
---  @param G Gnuplot object.
---  @param tCurve Table with function/table and parameters.
-gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
-about[gnuplot.add] = {"add(tCurve)", "Add new curve to figure."}
-
---- Get copy of graph options.
---  @param G Initial table.
---  @return Copy of table.
-gnuplot.copy = function (G)
-  local cp = gnuplot:_init_()
-  for k,v in pairs(G) do
-    if type(v) == 'table' then
-      local tmp = {}
-      for p,q in pairs(v) do tmp[p] = q end
-      cp[k] = tmp
-    else
-      cp[k] = v
-    end
-  end
-  return cp
-end
-about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
-
---- Plot graphic.
---  @param G Table with parameters of graphic.
---  @return Table which can be used for plotting.
-gnuplot.show = function (G)
-  -- open Gnuplot
-  local handle = assert(
-    io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'), 'Cannot open Gnuplot!')
-  -- save options
-  local cmd = {}
-  for _,k in ipairs(gnuplot.options) do
-    if G[k] ~= nil then cmd[#cmd+1] = command(k, G[k]) end
-  end
-  if G.raw then cmd[#cmd+1] = G.raw end
-  -- prepare functions
-  local fn = {}
-  for i,f in ipairs(G) do
-    fn[i] = string.format('"%s" %s', gnuplot._graph_(f,G))
-  end
-  -- command
-  if #fn > 0 then
-    local cmd_plot = G.surface and 'splot ' or 'plot '
-    cmd[#cmd+1] = cmd_plot .. table.concat(fn,',')
-  end
-  local res = table.concat(cmd, '\n')
-  -- send to Gnuplot
-  handle:write(res,'\n')
-  handle:close()
-end
-about[gnuplot.show] = {"show(G)", "Plot data, represented as Lua table." }
-
---- Represent parameters of the graphic.
---  @param G Gnuplot object.
---  @return String with object properties.
-gnuplot.__tostring = function (G)
-  local res = {}
-  for k,v in pairs(G) do
-    if type(v) == 'table' then
-      local tmp = {}
-      for p,q in pairs(v) do
-        tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q))
-      end
-      v = string.format('{%s}', table.concat(tmp,','))
-    end
-    res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
-  end
-  return string.format('{\n%s\n}', table.concat(res, ',\n'))
-end
-
 --- Save one or two lists into tmp file
 --  @param t1 First Lua table (list).
 --  @param t2 Second Lua table (list) or nil.
@@ -343,6 +260,76 @@ gnuplot._lst2file_ = function (t1,t2,fn)
   f:close()
   return name
 end
+
+--- Save matrix to tmp file.
+--  @param t Sonata matrix. 
+--  @return File name.
+gnuplot._mat2file_ = function (t)
+  local name = os.tmpname()
+  local f = io.open(name, 'w')
+  for i = 1, t.rows do
+    local row = t[i]
+    for j = 1, t.cols do f:write(row[j],' ') end
+    f:write('\n')
+  end
+  f:close()
+  return name
+end
+
+--- Save table to tmp file.
+--  @param t Lua table with numbers.
+--  @return File name.
+gnuplot._tbl2file_ = function (t)
+  local name = os.tmpname()
+  local f = io.open(name, 'w')
+  for _, row in ipairs(t) do
+    for _, val in ipairs(row) do f:write(val,' ') end
+    f:write('\n')
+  end
+  f:close()
+  return name
+end
+
+--- Prepare arguments for table or matrix.
+--  @param v Table, matrix or dat-file.
+--  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
+gnuplot._vecPrepare_ = function (v,...)
+  local ag = {...}
+  if type(v) == 'table' then
+    if #ag == 0 then 
+      -- show all
+      local n = v.ismatrix and v.cols or #v[1] -- column #
+      ag = {}
+      for i = 1,n do ag[#ag+1] = i end
+    end
+    v = v.ismatrix and gnuplot._mat2file_(v) or gnuplot._tbl2file_(v)
+  end
+  return v, ag
+end
+
+--- Add new curve to the plot.
+--  @param G Gnuplot object.
+--  @param tCurve Table with function/table and parameters.
+gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
+about[gnuplot.add] = {"add(tCurve)", "Add new curve to figure."}
+
+--- Get copy of graph options.
+--  @param G Initial table.
+--  @return Copy of table.
+gnuplot.copy = function (G)
+  local cp = gnuplot:_init_()
+  for k,v in pairs(G) do
+    if type(v) == 'table' then
+      local tmp = {}
+      for p,q in pairs(v) do tmp[p] = q end
+      cp[k] = tmp
+    else
+      cp[k] = v
+    end
+  end
+  return cp
+end
+about[gnuplot.copy] = {"copy(G)", "Get copy of the plot options."}
 
 --- Matlab-like plotting
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
@@ -374,42 +361,6 @@ gnuplot.plot = function (...)
 end
 about[gnuplot.plot] = {"plot(x1[,y1,nm,x2,..])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
---- Prepare arguments for table or matrix.
---  @param v Table, matrix or dat-file.
---  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot._vecPrepare_ = function (v,...)
-  local ag = {...}
-  if type(v) == 'table' then
-    if #ag == 0 then 
-      -- show all
-      local n = v.ismatrix and v.cols or #v[1] -- column #
-      ag = {}
-      for i = 1,n do ag[#ag+1] = i end
-    end
-    v = v.ismatrix and gnuplot._mat2file_(v) or gnuplot._tbl2file_(v)
-  end
-  return v, ag
-end
-
---- Plot table of data file.
---  @param v Table, matrix or dat-file.
---  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot.tplot = function (v,...)
-  local f, ag = gnuplot._vecPrepare_(v,...)
-  local cmd = gnuplot:_init_()
-  if #ag > 1 then
-    for i = 2,#ag do
-      cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
-        title=string.format("%d:%d",ag[1], ag[i])}
-    end
-  else 
-    cmd[#cmd+1] = {f, with='lines', title='1:2'}
-  end
-  cmd.grid = true
-  cmd:show()
-end
-about[gnuplot.tplot] = {"tplot(v[,x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
-
 --- Polar plot.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
 gnuplot.polarplot = function(...)
@@ -434,25 +385,35 @@ gnuplot.polarplot = function(...)
 end
 about[gnuplot.polarplot] = {'polarplot(x1,y1,[nm,x2,y2..])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
---- Polar plot table of data file.
---  @param v Table, matrix or dat-file.
---  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot.tpolar = function (v,...)
-  local f, ag = gnuplot._vecPrepare_(v,...)
-  local cmd = gnuplot:_init_()
-  if #ag > 1 then
-    for i = 2,#ag do
-      cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
-        title=string.format("%d:%d",ag[1], ag[i])}
-    end
-  else
-    cmd[#cmd+1] = {f, with='lines', title='1:2'}
+--- Plot graphic.
+--  @param G Table with parameters of graphic.
+--  @return Table which can be used for plotting.
+gnuplot.show = function (G)
+  -- open Gnuplot
+  local handle = assert(
+    io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'), 'Cannot open Gnuplot!')
+  -- save options
+  local cmd = {}
+  for _,k in ipairs(gnuplot.options) do
+    if G[k] ~= nil then cmd[#cmd+1] = command(k, G[k]) end
   end
-  cmd.polar = true
-  cmd.grid = 'polar'
-  cmd:show()
+  if G.raw then cmd[#cmd+1] = G.raw end
+  -- prepare functions
+  local fn = {}
+  for i,f in ipairs(G) do
+    fn[i] = string.format('"%s" %s', gnuplot._graph_(f,G))
+  end
+  -- command
+  if #fn > 0 then
+    local cmd_plot = G.surface and 'splot ' or 'plot '
+    cmd[#cmd+1] = cmd_plot .. table.concat(fn,',')
+  end
+  local res = table.concat(cmd, '\n')
+  -- send to Gnuplot
+  handle:write(res,'\n')
+  handle:close()
 end
-about[gnuplot.tpolar] = {"tpolar(v,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
+about[gnuplot.show] = {"show(G)", "Plot data, represented as Lua table." }
 
 --- Surface plot.
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
@@ -476,6 +437,45 @@ gnuplot.surfplot = function(...)
   cmd:show()
 end
 about[gnuplot.surfplot] = {'surfplot(x1,y1,fn1,[nm,x2,y2..])', "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
+
+--- Plot table of data file.
+--  @param v Table, matrix or dat-file.
+--  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
+gnuplot.tplot = function (v,...)
+  local f, ag = gnuplot._vecPrepare_(v,...)
+  local cmd = gnuplot:_init_()
+  if #ag > 1 then
+    for i = 2,#ag do
+      cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
+        title=string.format("%d:%d",ag[1], ag[i])}
+    end
+  else 
+    cmd[#cmd+1] = {f, with='lines', title='1:2'}
+  end
+  cmd.grid = true
+  cmd:show()
+end
+about[gnuplot.tplot] = {"tplot(v[,x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
+
+--- Polar plot table of data file.
+--  @param v Table, matrix or dat-file.
+--  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
+gnuplot.tpolar = function (v,...)
+  local f, ag = gnuplot._vecPrepare_(v,...)
+  local cmd = gnuplot:_init_()
+  if #ag > 1 then
+    for i = 2,#ag do
+      cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
+        title=string.format("%d:%d",ag[1], ag[i])}
+    end
+  else
+    cmd[#cmd+1] = {f, with='lines', title='1:2'}
+  end
+  cmd.polar = true
+  cmd.grid = 'polar'
+  cmd:show()
+end
+about[gnuplot.tpolar] = {"tpolar(v,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 --- Sufrace plot from table of data file.
 --  @param v Table, matrix or dat-file.

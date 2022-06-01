@@ -285,40 +285,93 @@ matrix.__index = function (t,v)
   return matrix[v] or (type(v)=='number' and addRow(t,v))
 end
 
---- Initialization of matrix with given size.
---  @param iR Number of rows.
---  @param iC Number of columns.
---  @param t Table for initialization.
---  @return Matrix object.
-matrix._init_ = function (self, iR, iC, t)
-  if iR <= 0 or iC <= 0 then error("Wrong matrix size!") end
-  t.cols, t.rows = iC, iR
-  return setmetatable(t, self)
+--- M1 + M2
+--  @param M1 First matrix or number.
+--  @param M2 Second matrix or number.
+--  @return Sum matrix.
+matrix.__add = function (M1,M2)
+  M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
+  M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
+  return matrix._apply2_(fn_sum,M1,M2)
 end
 
---- Create new matrix from list of tables.
---  @param t Table, where each sub table is a raw of matrix.
---  @return Matrix object.
-matrix._new_ = function (t)
-  t = t or {}
-  local cols, rows = 0, #t
-  for i = 1, rows do
-    if not type(t[i]) == 'table' then error('Row must be a table!') end
-    cols = (cols < #t[i]) and #t[i] or cols
-    setmetatable(t[i], access)
+--- M1 / M2
+--  @param M1 First matrix or number.
+--  @param M2 Second matrix or number.
+--  @return Matrix of ratio.
+matrix.__div = function (M1,M2)
+  if not ismatrix(M2) then return matrix._kProd_(1/M2, M1) end
+  return matrix.__mul(M1, matrix.inv(M2))
+end
+
+--- M1 * M2
+--  @param M1 First matrix or number.
+--  @param M2 Second matrix or number.
+--  @return Result of multiplication.
+matrix.__mul = function (M1,M2)
+  if not ismatrix(M1) then return matrix._kProd_(M1, M2) end
+  if not ismatrix(M2) then return matrix._kProd_(M2, M1) end
+  if (M1.cols ~= M2.rows) then error("Impossible to get product: different size!") end
+  local res = matrix:_init_(M1.rows, M2.cols,{})
+  local resCols, m1Cols = res.cols, M1.cols
+  for r = 1, res.rows do
+    local ar, resr = M1[r], res[r]
+    for c = 1, resCols do
+      local sum = 0
+      for i = 1, m1Cols do sum = sum + ar[i]*M2[i][c] end
+      resr[c] = sum
+    end
   end
-  return matrix:_init_(rows, cols, t)
+  return nummat(res)
 end
 
---- Set product of element to coefficient.
---  @param d Coefficient.
---  @param M Matrix.
---  @return Result of production.
-matrix._kProd_ = function (d, M)
-  local res = matrix:_init_(M.rows, M.cols, {})
-  for r = 1, M.rows do
-    local resr, mr = res[r], M[r]
-    for c = 1, M.cols do resr[c] = d*mr[c] end
+--- M ^ n
+--  @param M Square matrix.
+--  @param n Natural power or -1.
+--  @return Power of the matrix.
+matrix.__pow = function (M,N)
+  N = assert(Ver.toInteger(N), "Integer is expected!")
+  if (M.rows ~= M.cols) then error("Square matrix is expected!") end
+  if N == -1 then return matrix.inv(M) end
+  local res, acc = matrix.eye(M.rows), matrix.copy(M)
+  local mul = matrix.__mul
+  while N > 0 do
+    if N%2 == 1 then res = mul(res, acc) end
+    N = math.modf(N*0.5)
+    if N > 0 then acc = mul(acc, acc) end
+  end
+  return res
+end
+
+--- M1 - M2
+--  @param M1 First matrix or number.
+--  @param M2 Second matrix or number.
+--  @return Difference matrix.
+matrix.__sub = function (M1,M2)
+  M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
+  M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
+  return matrix._apply2_(fn_sub,M1,M2)
+end
+
+--- - M
+--  @param M Matrix object.
+--  @return Matrix where each element has opposite sign.
+matrix.__unm = function (M) return matrix.map(M,fn_unm) end
+
+matrix.arithmetic = 'arithmetic'
+about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
+
+--- Apply function to each pair elements of given matrices.
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @param fn Function from two arguments f(v1,v2).
+--  @return Result of function evaluation.
+matrix._apply2_ = function (fn, M1, M2)
+  if (M1.rows~=M2.rows or M1.cols~=M2.cols) then error("Different matrix size!") end
+  local res = matrix:_init_(M1.rows,M1.cols,{})
+  for r = 1,res.rows do
+    local resr, m1r, m2r = res[r], M1[r], M2[r]
+    for c = 1,res.cols do resr[c] = fn(m1r[c], m2r[c]) end
   end
   return res
 end
@@ -372,29 +425,82 @@ matrix._GaussUp_ = function (M)
   return M
 end
 
---- Matrix rank.
---  @param M Initial matrix.
---  @return Value of rank.
-matrix.rank = function (M)
-  local mat = matrix._GaussDown_(matrix.copy(M))
-  local i = 1
-  while i <= mat.rows do
-    local mati = mat[i]
-    if not mati then break end
-    -- find nonzero element
-    local zeros = true
-    for j = i,mat.cols do
-      if mati[j] ~= 0 then 
-        zeros = false 
-        break 
-      end
-    end
-    if zeros then break end
-    i = i+1
-  end
-  return i-1
+--- Initialization of matrix with given size.
+--  @param iR Number of rows.
+--  @param iC Number of columns.
+--  @param t Table for initialization.
+--  @return Matrix object.
+matrix._init_ = function (self, iR, iC, t)
+  if iR <= 0 or iC <= 0 then error("Wrong matrix size!") end
+  t.cols, t.rows = iC, iR
+  return setmetatable(t, self)
 end
-about[matrix.rank] = {"rank(M)", "Find rank of the matrix."}
+
+--- Set product of element to coefficient.
+--  @param d Coefficient.
+--  @param M Matrix.
+--  @return Result of production.
+matrix._kProd_ = function (d, M)
+  local res = matrix:_init_(M.rows, M.cols, {})
+  for r = 1, M.rows do
+    local resr, mr = res[r], M[r]
+    for c = 1, M.cols do resr[c] = d*mr[c] end
+  end
+  return res
+end
+
+--- Create new matrix from list of tables.
+--  @param t Table, where each sub table is a raw of matrix.
+--  @return Matrix object.
+matrix._new_ = function (t)
+  t = t or {}
+  local cols, rows = 0, #t
+  for i = 1, rows do
+    if not type(t[i]) == 'table' then error('Row must be a table!') end
+    cols = (cols < #t[i]) and #t[i] or cols
+    setmetatable(t[i], access)
+  end
+  return matrix:_init_(rows, cols, t)
+end
+
+--- Apply function element-wise to matrices.
+--  @param fn Function of several arguments.
+--  @param ... List of matrices.
+--  @return New found matrix.
+matrix.apply = function (fn, ...)
+  local arg = {...}
+  local rows, cols = arg[1].rows, arg[1].cols
+  -- check size
+  for i = 2,#arg do
+    if arg[i].rows ~= rows or arg[i].cols ~= cols then error("Different size!") end
+  end
+  local res, v = matrix:_init_(rows, cols, {}), {}
+  -- evaluate
+  local upack = Ver.unpack
+  for r = 1,res.rows do
+    for c = 1,res.cols do
+      -- collect
+      for k = 1,#arg do v[k] = arg[k][r][c] end
+      -- calc
+      res[r][c] = fn(upack(v))
+    end
+  end
+  return res
+end
+about[matrix.apply] = {'apply(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
+
+--- Create copy of matrix.
+--  @param M Source matrix.
+--  @return Deep copy.
+matrix.copy = function (M)
+  local res = matrix:_init_(M.rows,M.cols,{})
+  for r = 1,M.rows do
+    local resr, mr = res[r], M[r]
+    for c = 1,M.cols do resr[c] = mr[c] end
+  end
+  return res
+end
+about[matrix.copy] = {"copy(M)", "Return copy of matrix.", help.OTHER}
 
 --- Get element or sub matrix. 
 --  In case of sub matrix each index should be a table of 2 or 3 elements: [begin,end[,step]].
@@ -453,52 +559,6 @@ end
 -- simplify call of matrix.get()
 matrix.__call = function (M,vR,vC) return matrix.get(M,vR,vC) end
 
---- Transpose matrix.
---  Can be called as T().
---  @param M Initial matrix.
---  @return Transposed matrix.
-matrix.transpose = function (M)
-  local res = matrix:_init_(M.cols, M.rows, {})
-  for r = 1, M.rows do
-    local mr = M[r]
-    for c = 1, M.cols do res[c][r] = mr[c] end
-  end
-  return res
-end
-about[matrix.transpose] = {"transpose(M)", "Return matrix transpose. Shorten form is T().", TRANSFORM}
-matrix.T = matrix.transpose
-
---- M1 + M2
---  @param M1 First matrix or number.
---  @param M2 Second matrix or number.
---  @return Sum matrix.
-matrix.__add = function (M1,M2)
-  M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
-  M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
-  return matrix._apply2_(fn_sum,M1,M2)
-end
-
---- M1 - M2
---  @param M1 First matrix or number.
---  @param M2 Second matrix or number.
---  @return Difference matrix.
-matrix.__sub = function (M1,M2)
-  M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
-  M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
-  return matrix._apply2_(fn_sub,M1,M2)
-end
-
---- - M
---  @param M Matrix object.
---  @return Matrix where each element has opposite sign.
-matrix.__unm = function (M) return matrix.map(M,fn_unm) end
-
---- Get matrix size.
---  @param M Matrix.
---  @return Number of rows and columns.
-matrix.size = function (M) return M.rows, M.cols end
-about[matrix.size] = {"size(M)", "Return number or rows and columns."}
-
 --- Apply function to each element.
 --  @param M Source matrix.
 --  @param fn Desired function.
@@ -513,110 +573,50 @@ matrix.map = function (M, fn)
 end
 about[matrix.map] = {"map(M,fn)", "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).", TRANSFORM}
 
---- Apply function to each pair elements of given matrices.
---  @param M1 First matrix.
---  @param M2 Second matrix.
---  @param fn Function from two arguments f(v1,v2).
---  @return Result of function evaluation.
-matrix._apply2_ = function (fn, M1, M2)
-  if (M1.rows~=M2.rows or M1.cols~=M2.cols) then error("Different matrix size!") end
-  local res = matrix:_init_(M1.rows,M1.cols,{})
-  for r = 1,res.rows do
-    local resr, m1r, m2r = res[r], M1[r], M2[r]
-    for c = 1,res.cols do resr[c] = fn(m1r[c], m2r[c]) end
-  end
-  return res
-end
-
---- Apply function element-wise to matrices.
---  @param fn Function of several arguments.
---  @param ... List of matrices.
---  @return New found matrix.
-matrix.apply = function (fn, ...)
-  local arg = {...}
-  local rows, cols = arg[1].rows, arg[1].cols
-  -- check size
-  for i = 2,#arg do
-    if arg[i].rows ~= rows or arg[i].cols ~= cols then error("Different size!") end
-  end
-  local res, v = matrix:_init_(rows, cols, {}), {}
-  -- evaluate
-  local upack = Ver.unpack
-  for r = 1,res.rows do
-    for c = 1,res.cols do
-      -- collect
-      for k = 1,#arg do v[k] = arg[k][r][c] end
-      -- calc
-      res[r][c] = fn(upack(v))
+--- Matrix rank.
+--  @param M Initial matrix.
+--  @return Value of rank.
+matrix.rank = function (M)
+  local mat = matrix._GaussDown_(matrix.copy(M))
+  local i = 1
+  while i <= mat.rows do
+    local mati = mat[i]
+    if not mati then break end
+    -- find nonzero element
+    local zeros = true
+    for j = i,mat.cols do
+      if mati[j] ~= 0 then 
+        zeros = false 
+        break 
+      end
     end
+    if zeros then break end
+    i = i+1
+  end
+  return i-1
+end
+about[matrix.rank] = {"rank(M)", "Find rank of the matrix."}
+
+--- Get matrix size.
+--  @param M Matrix.
+--  @return Number of rows and columns.
+matrix.size = function (M) return M.rows, M.cols end
+about[matrix.size] = {"size(M)", "Return number or rows and columns."}
+
+--- Transpose matrix.
+--  Can be called as T().
+--  @param M Initial matrix.
+--  @return Transposed matrix.
+matrix.transpose = function (M)
+  local res = matrix:_init_(M.cols, M.rows, {})
+  for r = 1, M.rows do
+    local mr = M[r]
+    for c = 1, M.cols do res[c][r] = mr[c] end
   end
   return res
 end
-about[matrix.apply] = {'apply(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
-
---- Create copy of matrix.
---  @param M Source matrix.
---  @return Deep copy.
-matrix.copy = function (M)
-  local res = matrix:_init_(M.rows,M.cols,{})
-  for r = 1,M.rows do
-    local resr, mr = res[r], M[r]
-    for c = 1,M.cols do resr[c] = mr[c] end
-  end
-  return res
-end
-about[matrix.copy] = {"copy(M)", "Return copy of matrix.", help.OTHER}
-
---- M1 * M2
---  @param M1 First matrix or number.
---  @param M2 Second matrix or number.
---  @return Result of multiplication.
-matrix.__mul = function (M1,M2)
-  if not ismatrix(M1) then return matrix._kProd_(M1, M2) end
-  if not ismatrix(M2) then return matrix._kProd_(M2, M1) end
-  if (M1.cols ~= M2.rows) then error("Impossible to get product: different size!") end
-  local res = matrix:_init_(M1.rows, M2.cols,{})
-  local resCols, m1Cols = res.cols, M1.cols
-  for r = 1, res.rows do
-    local ar, resr = M1[r], res[r]
-    for c = 1, resCols do
-      local sum = 0
-      for i = 1, m1Cols do sum = sum + ar[i]*M2[i][c] end
-      resr[c] = sum
-    end
-  end
-  return nummat(res)
-end
-
---- M1 / M2
---  @param M1 First matrix or number.
---  @param M2 Second matrix or number.
---  @return Matrix of ratio.
-matrix.__div = function (M1,M2)
-  if not ismatrix(M2) then return matrix._kProd_(1/M2, M1) end
-  return matrix.__mul(M1, matrix.inv(M2))
-end
-
---- M ^ n
---  @param M Square matrix.
---  @param n Natural power or -1.
---  @return Power of the matrix.
-matrix.__pow = function (M,N)
-  N = assert(Ver.toInteger(N), "Integer is expected!")
-  if (M.rows ~= M.cols) then error("Square matrix is expected!") end
-  if N == -1 then return matrix.inv(M) end
-  local res, acc = matrix.eye(M.rows), matrix.copy(M)
-  local mul = matrix.__mul
-  while N > 0 do
-    if N%2 == 1 then res = mul(res, acc) end
-    N = math.modf(N*0.5)
-    if N > 0 then acc = mul(acc, acc) end
-  end
-  return res
-end
-
-matrix.arithmetic = 'arithmetic'
-about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
+about[matrix.transpose] = {"transpose(M)", "Return matrix transpose. Shorten form is T().", TRANSFORM}
+matrix.T = matrix.transpose
 
 --- M1 == M2
 --  @param M1 First matrix.
