@@ -233,7 +233,13 @@ end
 --  @param R Rational number.
 --  @return String with numerator and denominator.
 rational.__tostring = function (R) 
-  return string.format("%s/%s", numStr(R[1]), numStr(R[2])) 
+  if type(R[1]) == 'number' and type(R[2]) == 'number' and math.abs(R[1]) > R[2] then
+    local n = math.abs(R[1])       -- numerator
+    local v = math.modf(n / R[2]) 
+    return string.format("%s%d %d/%d", R[1] < 0 and '-' or '', v, n % v, R[2])
+  else
+    return string.format("%s/%s", numStr(R[1]), numStr(R[2])) 
+  end
 end
 
 --- -R
@@ -340,5 +346,4 @@ rational.about = about
 return rational
 
 --======================================
---TODO: string representation as true ratio (str)
 --TODO: use keys (num, den)
