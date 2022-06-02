@@ -52,6 +52,9 @@ ans = Rat.gcd(125,65)         --> 5
 -- represent as decimal
 ans = a:float()               --> 0.5
 
+-- make from decimal 
+ans = Rat.from(0.25)          --> Rat(1,4)
+
 -- numerator
 ans = b:Nu()                  --> 2
 
@@ -236,7 +239,7 @@ rational.__tostring = function (R)
   if type(R[1]) == 'number' and type(R[2]) == 'number' and math.abs(R[1]) > R[2] then
     local n = math.abs(R[1])       -- numerator
     local v = math.modf(n / R[2]) 
-    return string.format("%s%d %d/%d", R[1] < 0 and '-' or '', v, n % v, R[2])
+    return string.format("%s%d %d/%d", R[1] < 0 and '-' or '', v, n % R[2], R[2])
   else
     return string.format("%s/%s", numStr(R[1]), numStr(R[2])) 
   end
@@ -309,6 +312,19 @@ rational.float = function (R)
   return (R[1] < 0 and -1 or 1) * (Cross.norm(R[1]) / Cross.norm(R[2]))
 end
 about[rational.float] = {"float(R)", "Return rational number as decimal."}
+
+--- Get rational number from floating point.
+--  @param f Source number.
+--  @param N Number of digits after coma.
+--  @return Ratio estimation.
+rational.from = function (f, N)
+  N = N or 5   -- number of digits
+  assert(N > 0)
+  local den = math.pow(10, N)
+  local int = math.modf(f * den) 
+  return rational:_new_(int, den) 
+end
+about[rational.from] = {"from(F,[N=5])", "Estimate ratio from floating point value.", help.NEW}
 
 --- The greatest common divisor. 
 --  @param va First integer.
