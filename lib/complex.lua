@@ -189,24 +189,6 @@ type='complex', iscomplex=true,
 _simp_ = numcomp,
 }
 
---- Call unknown key. Use proxy to access the elements.
---  @param t Table.
---  @param k Key.
---  @return Value or method.
-complex.__index = function (t,k)
-  return complex[k] or rawget(t, keys[k] or '')
-end
-
---- Set unknown key. Use proxy to access the element.
---  @param t Table.
---  @param k Key.
---  @param v Value.
-complex.__newindex = function (t,k,v)
-  if keys[k] then 
-    t[keys[k]] = v
-  end
-end
-
 --- C1 + C2
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
@@ -256,8 +238,13 @@ complex.__eq = function (C1, C2)
   return Cross.eq(C1[1], C2[1]) and Cross.eq(C1[2], C2[2])
 end
 
-complex.comparison = 'comparison'
-about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META}
+--- Call unknown key. Use proxy to access the elements.
+--  @param t Table.
+--  @param k Key.
+--  @return Value or method.
+complex.__index = function (t,k)
+  return complex[k] or rawget(t, keys[k] or '')
+end
 
 --- C1 * C2
 --  @param C1 Real or complex number.
@@ -273,6 +260,16 @@ complex.__mul = function (C1,C2)
     end
   end
   return numcomp(complex:_init_(C1[1]*C2[1]-C1[2]*C2[2], C1[1]*C2[2]+C1[2]*C2[1]))
+end
+
+--- Set unknown key. Use proxy to access the element.
+--  @param t Table.
+--  @param k Key.
+--  @param v Value.
+complex.__newindex = function (t,k,v)
+  if keys[k] then 
+    t[keys[k]] = v
+  end
 end
 
 --- C1 ^ C2
@@ -326,6 +323,9 @@ complex.__unm = function (C) return complex:_init_(-C[1], -C[2]) end
 
 complex.arithmetic = 'arithmetic'
 about[complex.arithmetic] = {complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
+
+complex.comparison = 'comparison'
+about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META}
 
 --- Convert value into complex number.
 --  @param v Source value.

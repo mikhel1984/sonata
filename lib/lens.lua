@@ -119,14 +119,6 @@ type = 'lens', islens = true,
 key = keys,
 }
 
---- Call unknown key.
---  @param t Table.
---  @param k Key.
---  @return Value or method.
-lens.__index = function (t,k)
-  return lens[k] or rawget(t, keys[k] or '')
-end
-
 --- Concatenate components along the ray trace.
 --  Equal to matrix product in the opposite order.
 --  @param L1 First object.
@@ -149,8 +141,13 @@ lens.__eq = function (L1, L2)
      and math.abs(L1[3]-L2[3]) < TOL and math.abs(L1[4]-L2[4]) < TOL
 end
 
-lens.operations = 'operations'
-about[lens.operations] = {lens.operations, "L1 == L2, L1 .. L2", help.META }
+--- Call unknown key.
+--  @param t Table.
+--  @param k Key.
+--  @return Value or method.
+lens.__index = function (t,k)
+  return lens[k] or rawget(t, keys[k] or '')
+end
 
 --- Set unknown key.
 --  @param t Table.
@@ -168,6 +165,10 @@ end
 lens.__tostring = function (L)
   return string.format("A: %.2f   B: %.2f\nC: %.2f   D: %.2f", L[1], L[2], L[3], L[4])
 end
+
+lens.operations = 'operations'
+about[lens.operations] = {lens.operations, "L1 == L2, L1 .. L2", help.META }
+
 
 --- Object constructor.
 --  @param t ABCD table.

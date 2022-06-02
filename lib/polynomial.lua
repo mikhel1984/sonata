@@ -175,7 +175,6 @@ type = 'polynomial', ispolynomial = true,
 -- simplification
 _simp_ = numpoly
 }
-polynomial.__index = polynomial
 
 --- P1 + P2
 --  @param P1 First polynomial or number.
@@ -235,6 +234,9 @@ polynomial.__eq = function (P1,P2)
     return #P2 == 0 and P2[0] == P1
   end
 end
+
+-- methametods
+polynomial.__index = polynomial
 
 --- P1 % P2
 --  @param P1 First polynomial or number.

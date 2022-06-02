@@ -117,11 +117,12 @@ type = 'asciiplot', isasciiplot = true,
 -- symbols
 char = {'+','o','*','#','%','~','x','a','c','e','n','s','u','z'}
 }
--- methametods
-asciiplot.__index = asciiplot
 
 -- Simplify call for two objects.
 asciiplot.__concat = function (F1, F2) return asciiplot.concat(F1, F2) end
+
+-- methametods
+asciiplot.__index = asciiplot
 
 --- String representation of the object.
 --  @param F Figure object.

@@ -116,8 +116,6 @@ _mul_ = function (x,y) return x*y end,
 _div_ = function (x,y) return x/y end,
 _pow_ = function (x,y) return x^y end,
 }
--- metamethods
-array.__index = array
 
 --- A1 + A2
 --  @param A1 First array.
@@ -145,6 +143,9 @@ array.__eq = function (A1, A2)
   end
   return false
 end
+
+-- metamethods
+array.__index = array
 
 --- Method #
 --  @param A Array object.

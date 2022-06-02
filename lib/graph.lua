@@ -210,6 +210,7 @@ local about = help:new("Operations with graphs.")
 local graph = {
 type='graph', isgraph=true,
 }
+
 -- meta
 graph.__index = graph
 

@@ -114,6 +114,7 @@ local about = help:new("Coordinate transformations and other geodetic tasks.")
 
 -- Reference ellipsoid
 local ellipsoid = {}
+
 -- methametods
 ellipsoid.__index = ellipsoid
 
@@ -439,6 +440,7 @@ PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784,
 PZ9002 = ellipsoid:new {a = 6378136, f = 1/298.25784},
 SK42 = ellipsoid:new {a = 6378245, f = 1/298.3}
 }
+
 -- methametods
 geodesy.__index = geodesy
 

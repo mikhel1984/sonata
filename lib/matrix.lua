@@ -277,13 +277,6 @@ local matrix = {
 type = 'matrix', ismatrix = true,
 }
 
---- Metametod for access to elements.
---  @param t Table (object).
---  @param v Key.
---  @return New matrix row or desired method.
-matrix.__index = function (t,v) 
-  return matrix[v] or (type(v)=='number' and addRow(t,v))
-end
 
 --- M1 + M2
 --  @param M1 First matrix or number.
@@ -331,6 +324,14 @@ end
 --  @param M2 Second matrix.
 --  @return Concatenated matrix.
 matrix.__idiv = function (M1,M2) return matrix.concat(M1,M2,'v') end
+
+--- Metametod for access to elements.
+--  @param t Table (object).
+--  @param v Key.
+--  @return New matrix row or desired method.
+matrix.__index = function (t,v) 
+  return matrix[v] or (type(v)=='number' and addRow(t,v))
+end
 
 --- M1 * M2
 --  @param M1 First matrix or number.

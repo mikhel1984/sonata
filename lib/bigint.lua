@@ -147,8 +147,6 @@ local bigint = {
 type='bigint', isbigint=true,
 }
 
-bigint.__index = bigint
-
 --- B1 + B2
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
@@ -191,6 +189,9 @@ bigint.__div = function (B1, B2)
   local res,_ = bigint._div_(B1,B2)
   return res
 end
+
+-- methametods
+bigint.__index = bigint
 
 --- a <= b
 --  @param B1 First bigint or integer.
@@ -602,7 +603,7 @@ bigint._new_ = function (self, num)
     error('Wrong number '..tostring(num))
   end
   return setmetatable(acc, self)
-en
+end
 
 --- Find (B1 ^ B2) % B3
 --  @param B1 First bigint object.

@@ -158,6 +158,7 @@ options = {'terminal','output','parametric','size','polar','grid','key','title',
 -- basic function options
 foptions = {'using','title','with','linetype','linestyle','linewidth','ls','ln','lw'},
 }
+
 -- metha
 gnuplot.__index = gnuplot
 
