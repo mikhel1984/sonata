@@ -55,14 +55,9 @@ _cmd = "",    -- last request
 _st  = 1,     -- last status
 }
 
-evaluate.reset = function (ev)
-  ev._cmd = ""
-  ev._ans = nil
-  ev._st  = evaluate.EV_RES
-end
-
 --- Process command string.
---  @param cmd String with Lua expression.
+--  @param ev Accumulated string.
+--  @param nextCmd New string with Lua expression.
 --  @return Status of processing and rest of command.
 evaluate._eval_ = function (ev, nextCmd)
   if nextCmd == 'quit' then 
@@ -91,20 +86,44 @@ evaluate._eval_ = function (ev, nextCmd)
   end
 end
 
-evaluate.eval = function (ev, cmd, useLog)
-  local res = evaluate._eval_(ev, cmd) 
-  -- logging
-  if useLog and ev._logFile_ then
-    ev._logFile_:write(newLine,'\n')
-    if status == evaluate.EV_RES and ev._ans then 
-      ev._logFile_:write('--[[ ', ev._ans, ' ]]\n\n') 
-    elseif status == evaluate.EV_ERR then
-      ev._logFile_:write('--[[ ERROR ]]\n\n')
+--- Get string from list of elements.
+--  @param lst List of strings and commands.
+--  @return Text for visualization.
+evaluate._toText = function (lst)
+  local i = 1
+  local res = {}
+  while i <= #lst do
+    local v = lst[i]
+    if v == evaluate.FORMAT_V1 then
+      res[#res+1] = string.format("%s%s%s", SonataHelp.CHELP, lst[i+1], SonataHelp.CRESET)
+      i = i + 1
+    elseif v == evaluate.FORMAT_V2 then
+      res[#res+1] = string.format("%s%s%s%s", SonataHelp.CHELP, SonataHelp.CBOLD, lst[i+1], SonataHelp.CRESET)
+      i = i + 1
+    else
+      res[#res+1] = v
     end
+    i = i + 1
   end
-  return res
+  return table.concat(res)
 end
 
+--- Read-Evaluate-Write circle as a Lua program.
+--  Call 'quit' to exit this function.
+--  @param ev Evaluation environment.
+evaluate.cli = function (ev)
+  local invA, invB = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET, SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
+  evaluate.cli_loop(ev, invA, invB, false)
+  if ev._logFile_ then ev._logFile_:close() end
+  evaluate.exit()
+end
+
+--- Read input and evaluate it.
+--  @param ev Environment.
+--  @param invA First invite line.
+--  @param invB Second invite line.
+--  @param isNote Flag for note-file processing.
+--  @return Status of evaluation on exit.
 evaluate.cli_loop = function (ev, invA, invB, isNote) 
   local invite = invA
   -- start dialog
@@ -130,17 +149,35 @@ evaluate.cli_loop = function (ev, invA, invB, isNote)
   end
 end
 
---- Read-Evaluate-Write circle as a Lua program.
---  Call 'quit' to exit this function.
-evaluate.cli = function (ev)
-  local invA, invB = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET, SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
-  evaluate.cli_loop(ev, invA, invB, false)
-  if ev._logFile_ then ev._logFile_:close() end
-  evaluate.exit()
+--- Evaluate one expression.
+--  @param ev Environment.
+--  @param cmd Command.
+--  @param useLog Flag to write log.
+--  @return Result of evaluation.
+evaluate.eval = function (ev, cmd, useLog)
+  local res = evaluate._eval_(ev, cmd) 
+  -- logging
+  if useLog and ev._logFile_ then
+    ev._logFile_:write(newLine,'\n')
+    if status == evaluate.EV_RES and ev._ans then 
+      ev._logFile_:write('--[[ ', ev._ans, ' ]]\n\n') 
+    elseif status == evaluate.EV_ERR then
+      ev._logFile_:write('--[[ ERROR ]]\n\n')
+    end
+  end
+  return res
+end
+
+--- Show message and exit the program.
+evaluate.exit = function () 
+  print(SonataHelp.CMAIN.."\n             --======= Bye! =======--\n"..SonataHelp.CRESET) 
+  os.exit() 
 end
 
 --- Evaluate 'note'-file.
+--  @param ev Evaluate.
 --  @param fname Script file name.
+--  @param full Flag to work in interactive mode.
 evaluate.note = function (ev, fname, full)
   full = (full ~= false)
   local templ = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
@@ -184,28 +221,12 @@ evaluate.note = function (ev, fname, full)
   end
 end
 
-evaluate._toText = function (lst)
-  local i = 1
-  local res = {}
-  while i <= #lst do
-    local v = lst[i]
-    if v == evaluate.FORMAT_V1 then
-      res[#res+1] = string.format("%s%s%s", SonataHelp.CHELP, lst[i+1], SonataHelp.CRESET)
-      i = i + 1
-    elseif v == evaluate.FORMAT_V2 then
-      res[#res+1] = string.format("%s%s%s%s", SonataHelp.CHELP, SonataHelp.CBOLD, lst[i+1], SonataHelp.CRESET)
-      i = i + 1
-    else
-      res[#res+1] = v
-    end
-    i = i + 1
-  end
-  return table.concat(res)
-end
-
-evaluate.exit = function () 
-  print(SonataHelp.CMAIN.."\n             --======= Bye! =======--\n"..SonataHelp.CRESET) 
-  os.exit() 
+--- State reset.
+--  @param ev Environment.
+evaluate.reset = function (ev)
+  ev._cmd = ""
+  ev._ans = nil
+  ev._st  = evaluate.EV_RES
 end
 
 return evaluate
