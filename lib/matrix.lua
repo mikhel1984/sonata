@@ -1144,7 +1144,7 @@ matrix.zeros = function (iR, iC)
   iC = iC or iR                          -- input is a number
   return matrix:_init_(iR, iC, {})
 end
-about[matrix.vector] = {"zeros(rows,[cols=rows])", "Create matrix from zeros.", help.NEW}
+about[matrix.vector] = {"zeros(rows,[cols=rows])", "Create matrix of zeros.", help.NEW}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
