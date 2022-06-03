@@ -18,6 +18,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Int">bigint</a></li>
 <li><a href="#Comp">complex</a></li>
 <li><a href="#_C">const</a></li>
+<li><a href="#Data">data</a></li>
 <li><a href="#Geo">geodesy</a></li>
 <li><a href="#Gp">gnuplot</a></li>
 <li><a href="#Graph">graph</a></li>
@@ -28,7 +29,6 @@ DIV {margin-left: 10px;}
 <li><a href="#Quat">quaternion</a></li>
 <li><a href="#Rat">rational</a></li>
 <li><a href="#Spec">special</a></li>
-<li><a href="#Stat">stat</a></li>
 <li><a href="#Unit">units</a></li>
 </ul></div>
 <div><h3># About #</h3>
@@ -44,58 +44,55 @@ DIV {margin-left: 10px;}
 	-e - Evaluate command line expression.<br>
 	  (e.g. -e "2+2")<br>
 		{Development}<br>
-	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
-	  (e.g. --test array)<br>
-	--doc    - Creating/updating a documentation file.<br>
-	  (e.g. --doc ru)<br>
 	--lang   - Creating/updating a file for localization.<br>
 	  (e.g. --lang eo)<br>
+	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
+	  (e.g. --test array)<br>
 	--new    - Create a template for a new module.<br>
 	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
+	--doc    - Creating/updating a documentation file.<br>
+	  (e.g. --doc ru)<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.29<br>
+<b>VERSION</b>: 0.9.30<br>
 <br>
-<b>MODULES</b>: bigint, numeric, asciiplot, lens, rational, units, geodesy, gnuplot, graph, complex, const, array, polynomial, stat, special, quaternion, matrix.<br>
+<b>MODULES</b>: array, graph, complex, gnuplot, lens, rational, bigint, matrix, geodesy, numeric, special, units, asciiplot, polynomial, quaternion, data, const.<br>
 <br>
-<b>BUGS</b>: mail to 'sonatalc@yandex.ru'<br>
+<b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
 <p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
 <p class="descript">Lua based mathematics.</p>
-<p><b>DsvRead(sFile[,delim=',',bCol=false])</b> - Read delimiter separated data as Lua table.<br>
-<b>DsvWrite(sFile,t[,char=',',bCol=false])</b> - Save Lua table as delimiter separated data into file.<br>
-<b>Logging(flag)</b> - Save session into the log file. Use 'on'/true to start and 'off'/false to stop.<br>
+<p><b>Log(sFlag)</b> - Save session into the log file. Use 'on'/'off' to start/stop logging.<br>
 <b>Map(fn,t)</b> - Evaluate function for each table element.<br>
 <b>Print(...)</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
-<b>Range(dBegin,dEnd[,dStep])</b> - Generate range object.<br>
-<b>Round(f[,N=0])</b> - Round value, define number of decimal digits.<br>
-<b>Run(sFile)</b> - Execute lua- or note- file.<br>
-<b>TblImport(sFile)</b> - Import Lua table, saved into file.<br>
+<b>Range(dBegin,dEnd,[dStep])</b> - Generate range object.<br>
+<b>Round(f,[N=0])</b> - Round value, define number of decimal digits.<br>
+<b>Run(sFile,[bInt=false])</b> - Execute lua- or note- file. Set bInt for interaction.<br>
 <b>Type(v)</b> - Show type of the object.<br>
 <b>_ans</b> - Result of the last operation.<br>
 <b>_e</b> - Euler number.<br>
 <b>_pi</b> - Number pi.<br>
-<b>abs(x)</b> - Absolute value.<br>
-<b>acos(x)</b> - Inverse cosine x.<br>
+<b>abs(d)</b> - Absolute value.<br>
+<b>acos(d)</b> - Inverse cosine x.<br>
 <b>acosh(x)</b> - Hyperbolic arc cosine.<br>
-<b>asin(x)</b> - Inverse sine x.<br>
+<b>asin(d)</b> - Inverse sine x.<br>
 <b>asinh(x)</b> - Hyperbolic inverse sine.<br>
-<b>atan2(y,x)</b> - Inverse tangent of y/x, use signs.<br>
+<b>atan2(dy,dx)</b> - Inverse tangent of dy/dx, use signs.<br>
 <b>atanh(x)</b> - Hyperbolic inverse tangent.<br>
-<b>cos(x)</b> - Cosine x.<br>
-<b>cosh(x)</b> - Hyperbolic cosine.<br>
-<b>exp(x)</b> - Exponent.<br>
-<b>log(x)</b> - Natural logarithm.<br>
+<b>cos(d)</b> - Cosine x.<br>
+<b>cosh(d)</b> - Hyperbolic cosine.<br>
+<b>exp(d)</b> - Exponent.<br>
+<b>log(dPos)</b> - Natural logarithm.<br>
 <b>rand()</b> - Random number between 0 and 1.<br>
 <b>randi(N)</b> - Random integer in range from 1 to N.<br>
 <b>randn([dMean=0,dev=1])</b> - Normal distributed random value with the given mean and deviation.<br>
-<b>sin(x)</b> - Sinus x.<br>
-<b>sinh(x)</b> - Hyperbolic sinus.<br>
-<b>sqrt(a)</b> - Square root.<br>
-<b>tan(x)</b> - Tangent x.<br>
-<b>tanh(x)</b> - Hyperbolic tangent.<br></p>
+<b>sin(d)</b> - Sinus x.<br>
+<b>sinh(d)</b> - Hyperbolic sinus.<br>
+<b>sqrt(dPos)</b> - Square root.<br>
+<b>tan(d)</b> - Tangent x.<br>
+<b>tanh(d)</b> - Hyperbolic tangent.<br></p>
 <pre class="example">
 
 require 'lib.main'
@@ -152,31 +149,6 @@ ans = c[1]                   --3> 0.909
 ans = math.floor(_pi)
 
 ans = math.deg(_pi)
-
--- dsv write 
-nm = os.tmpname()
--- separate elements with ';'
-t = {{1,2,3},{4,5,6}}
-DsvWrite(nm, t, ';')
-
--- dsv read
--- with separator ';'
-tt = DsvRead(nm, ';')
-ans = tt[2][2]                --> 5
-
--- csv write by columns
-DsvWrite(nm, t, ',', true)
-
--- csv read by columns
-tt = DsvRead(nm, ',', true)
-ans = tt[1][3]                --> 3
-
--- read table from file
-f = io.open(nm,'w')
-f:write("{1,2.0,a='pqr',b={3,4,c='abc'}}")
-f:close()
-aa = TblImport(nm)
-ans = aa.b.c                  --> 'abc'
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -276,12 +248,13 @@ print(a)
 <b>addPoint(F,dx,dy,s)</b> - Add point (dx,dy) using char 's'.<br>
 <b>addPose(F,ir,ic,s)</b> - Add character s to the given position.<br>
 <b>addString(F,ir,ic,s)</b> - Set string from the given position.<br>
+<b>bar(F,t,[vy=2,ix=1])</b> - Plot bar diargram for data. vy can be y index in t (optional) or table of y-s.<br>
 <b>concat(...)</b> - Horizontal concatenation of figures with the same height. For two object operator '..' can be used.<br>
 <b>copy(F)</b> - Create a copy of the object.<br>
 <b>plot(F,...)</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br>
 <b>reset(F)</b> - Prepare a clear canvas.<br>
-<b>scale(F,factor[,bDefault=false])</b> - Change figure size w.r.t. initial size.<br>
-<b>tplot(F,t[,tOpt={}])</b> - Plot the table data, choose columns if need.<br></p>
+<b>scale(F,factor,[bDefault=false])</b> - Change figure size w.r.t. initial size.<br>
+<b>tplot(F,t,[tOpt={}])</b> - Plot the table data, choose columns if need.<br></p>
 <pre class="example">
 
 -- use 'asciiplot'
@@ -377,7 +350,7 @@ print(fig3)
 <b>factorize(B)</b> - Find the list of multipliers.<br>
 <b>float(B)</b> - Represent current big integer as number if it possible.<br>
 <b>gcd(B1,B2)</b> - Find the greatest common divisor for two integers.<br>
-<b>isPrime(B[,sMethod])</b> - Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.<br>
+<b>isPrime(B,[sMethod])</b> - Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.<br>
 <b>random(B)</b> - Generate pseudo-random value from 0 to B.<br>
 <b>rebase(B,N)</b> - Convert number to the new numeric base.<br></p>
 <pre class="example">
@@ -621,7 +594,7 @@ print(a)
 <div><a name="_C"></a>
 <h3># _C (const) #</h3>
 <p class="descript">Collection of constants.</p>
-<p><b>add(sName,value[,sUnits])</b> - Create new constant.<br>
+<p><b>add(sName,value,[sUnits])</b> - Create new constant.<br>
 <b>astro.ly</b> - One light year.<br>
 <b>astro.pc</b> - One parsec.<br>
 <b>math.e</b> - Base of the natural logarithm.<br>
@@ -665,13 +638,158 @@ ans = _C.myConst              --> nil
 
 --</pre>
 <a href="#Top">Top</a></div>
+<div><a name="Data"></a>
+<h3># Data (data) #</h3>
+<p class="descript">Data processing and statistics.</p>
+<p><b>Fn(sExpr,[iArg=2])</b> - Generate function from expression of x1, x2 etc.<br>
+<b>cov(t)</b> - Find covariance matrix for list of vectors.<br>
+<b>cov2(t1,t2)</b> - Find covariance value for two vectors.<br>
+<b>csvread(sFile,[delim=',',bCol=false])</b> - Read delimiter separated data as Lua table.<br>
+<b>csvwrite(sFile,t,[char=',',bCol=false])</b> - Save Lua table as delimiter separated data into file.<br>
+<b>filter(t,vCond)</b> - Get result of the table filtering. Condition is either boolean function or table of weights.<br>
+<b>freq(t)</b> - Return table with frequencies of elements.<br>
+<b>geomean(t,[tw])</b> - Geometrical mean.<br>
+<b>harmmean(t,[tw])</b> - Harmonic mean.<br>
+<b>histcounts(X,[rng=10])</b> - Calculate amount of bins. Edges can be either number or table.<br>
+<b>is(t,fn)</b> - Find weights using boolean function.<br>
+<b>isNot(t,fn)</b> - Find inverted weights using boolean function.<br>
+<b>max(t)</b> - Maximal element and its index.<br>
+<b>mean(t,[tw])</b> - Calculate average value. Weights can be used.<br>
+<b>median(t)</b> - Median of the list.<br>
+<b>min(t)</b> - Minimal element and its index.<br>
+<b>moment(N,t,[tw])</b> - Central moment of t order N, tw is a list of weights.<br>
+<b>ref(t,[iBeg=1,iEnd=#t])</b> - Return reference to the range of elements.<br>
+<b>std(t,[tw])</b> - Standard deviation and variance. Weights can be used.<br>
+<b>sum(t)</b> - Get sum of all elements.<br>
+<b>tcdf(d,N)</b> - Student's cumulative distribution.<br>
+<b>tpdf(d,N)</b> - Student's distribution density.<br>
+<b>xEq(d)</b> - Return function for condition x == d.<br>
+<b>xGt(d)</b> - Return function for condition x > d.<br>
+<b>xIn(d1,d2)</b> - Return function for condition d1 <= x <= d2.<br>
+<b>xLt(d)</b> - Return function for condition x < d.<br>
+<b>zip(fn,...)</b> - Sequentially apply function to list of tables.<br></p>
+<pre class="example">
+
+-- use 'data'
+Data = require 'lib.data'
+-- external dependencies, can be loaded implicitly
+require 'lib.special'
+require 'lib.matrix'
+
+-- initial data (tables)
+X = {3,2,5,6,3,4,3,1}
+-- weight
+w = {1,1,0}
+-- enought to define w[i] ~= 1
+w[5] = 2; w[6] = 2
+-- average
+ans = Data.mean(X)           --3> 3.375
+
+-- standard deviation
+ans, tmp = Data.std(X,W)     --3> 1.495
+
+-- variance
+ans = tmp                    --3> 2.234
+
+-- covariance for two vectors
+Y = {0,2,1,3,7,5,8,4}
+a = Data.cov2(X,Y)
+ans = a                      --3> -0.65625
+
+-- covariance matrix 
+tmp = Data.cov({X,Y})
+ans = tmp[1][2]              --3> a
+
+-- maximum element and index
+_,ans = Data.max(X)           --> 4 
+
+-- median
+ans = Data.median(X)          --> 3
+
+-- table of frequencies
+tmp = Data.freq(X)
+ans = tmp[3]                  --> 3
+
+-- central moment
+ans = Data.moment(2,X)       --3> 2.234
+
+-- summ of elements
+ans = Data.sum(X)             --> 27
+
+-- minimum value
+ans = Data.min(X)             --> 1
+
+-- geometrical mean
+ans = Data.geomean(X)        --3> 2.995
+
+-- harmonic mean
+ans = Data.harmmean(X,W)     --3> 2.567
+
+-- check if X[i] > 2
+a = Data.is(X, Data.xGt(2))
+ans = a[1]                    --> 1
+
+-- get elements X[i] > 2
+tmp = Data.filter(X, a)
+ans = tmp[1]                  --> X[1]
+
+-- filtration using explicit function 
+fn = function (x) return x > 2 end
+tmp = Data.filter(X, fn)
+ans = tmp[1]                  --> X[1]
+
+-- generate new list
+-- use 'lazy' function definition
+fn = Data.Fn "{x1-x2,x1+x2}"
+tmp = Data.zip(fn, X, Y)
+ans = tmp[1][2]               --> X[1]+Y[1]
+
+-- find histogram
+a,b = Data.histcounts(X, 3)
+ans = b[1]                    --> 2.25
+
+-- define edges 
+a,b = Data.histcounts(X,{2,4,7})
+ans = a[1]                    --> 1
+
+-- table range reference 
+a = Data.ref(X, 3, 6)
+ans = #a                      --> 4
+
+ans = a[1]                    --> X[3]
+
+-- Student cdf and pdf
+ans = Data.tcdf(4, 2.5)      --3> 0.9805
+
+ans = Data.tpdf(2, 3.3)      --3> 0.0672
+
+-- dsv write 
+nm = os.tmpname()
+-- separate elements with ';'
+t = {{1,2,3},{4,5,6}}
+Data.csvwrite(nm, t, ';')
+
+-- dsv read
+-- with separator ';'
+tt = Data.csvread(nm, ';')
+ans = tt[2][2]                --> 5
+
+-- csv write by columns
+Data.csvwrite(nm, t, ',', true)
+
+-- csv read by columns
+tt = Data.csvread(nm, ',', true)
+ans = tt[1][3]                --> 3
+
+--</pre>
+<a href="#Top">Top</a></div>
 <div><a name="Geo"></a>
 <h3># Geo (geodesy) #</h3>
 <p class="descript">Coordinate transformations and other geodetic tasks.</p>
 <p><b>A.blhInto[B]</b> - Get function to transform geodetic coordinates from A to B system using the Molodensky method.<br>
 <b>A.xyzInto[B]</b> - Get function to transform coordinates from A to B system.<br>
 <b>deg2dms(d)</b> - Return degrees, minutes and seconds for the given angle value.<br>
-<b>dms2rad(d[,m[,s]])</b> - Convert degrees, minutes and seconds to radians.<br>
+<b>dms2rad(d,[m=0,s=0])</b> - Convert degrees, minutes and seconds to radians.<br>
 <b>fromENU(tBLr,tXYZr,tTop)</b> - Get cartesian coordinates of a local point in reference frame.<br>
 <b>grav(dB)</b> - International gravity formula, angle in degrees.<br>
 <b>projGK(E,tBL)</b> - Return north and east positions of the point after Gauss-Kruger projection.<br>
@@ -787,11 +905,11 @@ surface=true                      -- plot surface in 3D<br>
 samples=200                       -- define number of points<br>
 raw='set pm3d'                    -- set Gnuplot options manually<br>
 <br>
-<b>plot(x1,[y1,[nm,[x2,..]]])</b> - 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
-<b>polarplot(x1,y1,[nm,[x2,y2..]])</b> - Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
+<b>plot(x1[,y1,nm,x2,..])</b> - 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
+<b>polarplot(x1,y1,[nm,x2,y2..])</b> - Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
 <b>show(G)</b> - Plot data, represented as Lua table.<br>
-<b>surfplot(x1,y1,fn1,[nm,[x2,y2..]])</b> - Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name.<br>
-<b>tplot(v,[x,y1,y2..])</b> - Plot table, matrix or data file. Optional elements define columns.<br>
+<b>surfplot(x1,y1,fn1,[nm,x2,y2..])</b> - Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name.<br>
+<b>tplot(v[,x,y1,y2..])</b> - Plot table, matrix or data file. Optional elements define columns.<br>
 <b>tpolar(v,[x,y1,y2..])</b> - Polar plot for table, matrix or data file. Optional elements define columns.<br>
 <b>tsurf(v,[x1,y1,z1,z2..])</b> - Surface plot for table, matrix or data file. Optional elements define columns.<br></p>
 <pre class="example">
@@ -898,8 +1016,8 @@ f:show()
 <b>isNegative(G)</b> - Check if the graph has negative edges.<br>
 <b>isWeighted(G)</b> - Check if any edge has weight different from 1.<br>
 <b>nodes(G)</b> - List of graph nodes.<br>
-<b>pathBF(G,vStart[,vGoal])</b> - Shortest path search using Bellman-Ford algorithm.<br>
-<b>pathD(G,vStart[,vGoal])</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
+<b>pathBF(G,vStart,[vGoal])</b> - Shortest path search using Bellman-Ford algorithm.<br>
+<b>pathD(G,vStart,[vGoal])</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
 <b>remove(G,v)</b> - Remove node or edge from the graph G. Node is a single name, edge - table of names.<br></p>
 <pre class="example">
 
@@ -1011,7 +1129,7 @@ print(b)
 <p class="descript">Matrix methods in paraxial optics</p>
 <p><b>Lens {dA,dB,dC,dD}</b> - Make new lens component.<br>
 <b>afocal(dm)</b> - Find matrix for the afocal system.<br>
-<b>cardinal(L[,dn1=1,dn2=1])</b> - Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return list of distances.<br>
+<b>cardinal(L,[dn1=1,dn2=1])</b> - Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return list of distances.<br>
 <b>copy(L)</b> - Create a copy of the object.<br>
 <b>det(L)</b> - Find determinant of the system matrix.<br>
 <b>inv(L)</b> - Get the inverted system matrix.<br>
@@ -1113,27 +1231,27 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>copy(M)</b> - Return copy of matrix.<br>
 <b>cross(V1,V2)</b> - Cross product or two 3-element vectors.<br>
 <b>det(M)</b> - Calculate determinant.<br>
-<b>diag(M[,n=0])</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.<br>
+<b>diag(M,[n=0])</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.<br>
 <b>dot(V1,V2)</b> - Scalar product of two 3-element vectors.<br>
-<b>eye(iRows[,iCols=iRows,val=1])</b> - Create identity matrix. Diagonal value (init) can be defined.<br>
+<b>eye(iRows,[iCols=iRows,val=1])</b> - Create identity matrix. Diagonal value (init) can be defined.<br>
 <b>fill(iRows,iCols,fn)</b> - Create matrix, using function fn(r,c).<br>
 <b>inv(M)</b> - Return inverse matrix.<br>
 <b>lu(M)</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
 <b>map(M,fn)</b> - Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).<br>
 <b>norm(M)</b> - Euclidean norm.<br>
-<b>ones(iRows[,iCols=iRows,val=1])</b> - Create matrix of given numbers (default is 1).<br>
+<b>ones(iRows,[iCols=iRows,val=1])</b> - Create matrix of given numbers (default is 1).<br>
 <b>pinv(M)</b> - Pseudo inverse matrix calculation.<br>
-<b>rand(iRows[,iCols=iRows])</b> - Create matrix with random numbers from 0 to 1.<br>
-<b>randi([M],N,[rows],[cols=rows])</b> - Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.<br>
-<b>randn(iRows[,iCols=iRows])</b> - Create matrix with normally distributed values (0 mean and unit variance)<br>
+<b>rand(iRows,[iCols=iRows])</b> - Create matrix with random numbers from 0 to 1.<br>
+<b>randi([M],N,[rows,cols=rows])</b> - Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.<br>
+<b>randn(iRows,[iCols=iRows])</b> - Create matrix with normally distributed values (0 mean and unit variance)<br>
 <b>rank(M)</b> - Find rank of the matrix.<br>
-<b>reshape(M,iRows[=size],iCols[=1])</b> - Change matrix size.<br>
+<b>reshape(M,[iRows=size,iCols=1])</b> - Change matrix size.<br>
 <b>rref(M)</b> - Perform transformations using Gauss method.<br>
 <b>size(M)</b> - Return number or rows and columns.<br>
 <b>table(M)</b> - Convert to simple Lua table.<br>
 <b>tr(M)</b> - Get trace of the matrix.<br>
 <b>transpose(M)</b> - Return matrix transpose. Shorten form is T().<br>
-<b>zeros(rows[,cols=rows])</b> - Create matrix from zeros.<br></p>
+<b>zeros(rows,[cols=rows])</b> - Create matrix of zeros.<br></p>
 <pre class="example">
 
 -- use 'matrix'
@@ -1342,7 +1460,7 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 <p><b>Newton(fn,d0)</b> - Find root of equation using Newton's rule with only one initial condition.<br>
 <b>TOL[=0.001]</b> - The solution tolerance.<br>
 <b>der(fn,x)</b> - Calculate the derivative value for given function.<br>
-<b>ode45(fn,tDelta,y0[,param])</b> - Numerical approximation of the ODE solution.<br>
+<b>ode45(fn,tDelta,y0,[param])</b> - Numerical approximation of the ODE solution.<br>
 First parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.<br>
 Return table of intermediate points and result yn.<br>
 <b>solve(fn,dA,dB)</b> - Find root of equation fn(x)=0 at interval [a,b].<br>
@@ -1411,14 +1529,14 @@ ans = y[#y][1]               --2> 2.56
 <b>copy(P)</b> - Get copy of the polynomial.<br>
 <b>der(P)</b> - Calculate derivative of polynomial.<br>
 <b>fit(tX,tY,N)</b> - Find polynomial approximation for the line.<br>
-<b>int(P[,d0=0])</b> - Calculate integral, d0 - free coefficient.<br>
+<b>int(P,[d0=0])</b> - Calculate integral, d0 - free coefficient.<br>
 <b>lagrange(tX,tY)</b> - Find interpolation polynomial in the Lagrange form.<br>
-<b>lin(tX,tY[,v0=0,vN=v0])</b> - Linear data interpolation. Return table with polynomials.<br>
-<b>ppval(tP,d[,N]</b> - Return value of a piecewise polynomial in the point and the polynomial index.<br>
+<b>lin(tX,tY,[v0=0,vN=v0])</b> - Linear data interpolation. Return table with polynomials.<br>
+<b>ppval(tP,d,[N]</b> - Return value of a piecewise polynomial in the point and the polynomial index.<br>
 <b>real(P)</b> - Find real roots of the polynomial.<br>
 <b>roots(P)</b> - Find all the polynomial roots.<br>
 <b>spline(tX,tY)</b> - Cubic spline data interpolation. Return table with polynomials.<br>
-<b>taylor(v,vF[,vF',vF''..])</b> - Get Taylor series.<br>
+<b>taylor(v,vF,[vF',vF''..])</b> - Get Taylor series.<br>
 <b>val(P,v)</b> - Get value of polynomial P in point x.<br></p>
 <pre class="example">
 
@@ -1633,12 +1751,13 @@ print(d)
 <p class="descript">Computations with rational numbers.</p>
 <p><b>De(R)</b> - Return the denominator of the rational number.<br>
 <b>Nu(R)</b> - Return the numerator of rational number.<br>
-<b>Rat(m[,n=1])</b> - Create rational number using num (and denom).<br>
-<b>arithmetic</b> - R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} <br>
+<b>Rat(m,[n=1])</b> - Create rational number using num (and denom).<br>
+<b>arithmetic</b> - R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2<br>
 <b>comparison</b> - R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2<br>
 <b>copy(R)</b> - Get copy of the rational number.<br>
 <b>eq(R1,R2)</b> - Compare two objects.<br>
 <b>float(R)</b> - Return rational number as decimal.<br>
+<b>from(F,[N=5])</b> - Estimate ratio from floating point value.<br>
 <b>gcd(va,vb)</b> - Calculate the greatest common divisor for two integers.<br></p>
 <pre class="example">
 
@@ -1679,6 +1798,9 @@ ans = Rat.gcd(125,65)         --> 5
 -- represent as decimal
 ans = a:float()               --> 0.5
 
+-- make from decimal 
+ans = Rat.from(0.25)          --> Rat(1,4)
+
 -- numerator
 ans = b:Nu()                  --> 2
 
@@ -1714,7 +1836,7 @@ ans = a + 0.5                 --> 1
 <b>erfc(x)</b> - Complementary error function.<br>
 <b>expint(n,x)</b> - Exponential integral En(x).<br>
 <b>gamma(z)</b> - Gamma function.<br>
-<b>gammainc(x,N[,type='lower'])</b> - Incomplete gamma function, P (type='lower') or Q (type='upper').<br>
+<b>gammainc(x,N,[type='lower'])</b> - Incomplete gamma function, P (type='lower') or Q (type='upper').<br>
 <b>gammaln(z)</b> - Natural logarithm of gamma function.<br>
 <b>gammp(N,x)</b> - Incomplete gamma function P(N,x).<br>
 <b>gammq(N,x)</b> - Incomplete gamma function Q(N,x) = 1-P(N,x).<br>
@@ -1772,87 +1894,12 @@ ans = Spec.dawson(3.3)       --3> 0.1598
 
 --</pre>
 <a href="#Top">Top</a></div>
-<div><a name="Stat"></a>
-<h3># Stat (stat) #</h3>
-<p class="descript">Statistical calculations. Data set must be a Lua table.</p>
-<p><b>freq(t)</b> - Return table with frequencies of elements.<br>
-<b>geomean(t[,tw])</b> - Geometrical mean.<br>
-<b>harmmean(t[,tw])</b> - Harmonic mean.<br>
-<b>histcounts(X[,rng=10])</b> - Calculate amount of bins. Edges can be either number or table.<br>
-<b>max(t)</b> - Maximal element and its index.<br>
-<b>mean(t[,tw])</b> - Calculate average value. Weights can be used.<br>
-<b>median(t)</b> - Median of the list.<br>
-<b>min(t)</b> - Minimal element and its index.<br>
-<b>moment(N,t[,tw])</b> - Central moment of t order N, tw is a list of weights.<br>
-<b>std(t[,tw])</b> - Standard deviation and variance. Weights can be used.<br>
-<b>sum(t)</b> - Get sum of all elements.<br>
-<b>tcdf(d,N)</b> - Student's cumulative distribution.<br>
-<b>tpdf(d,N)</b> - Student's distribution density.<br></p>
-<pre class="example">
-
--- use 'stat'
-Stat = require 'lib.stat'
--- external dependencies, can be loaded implicitly
-require 'lib.special'
-
--- initial data (tables)
-X = {3,2,5,6,3,4,3,1}
-w = {1,1,0,1,2,2,1,1}
--- average
-ans = Stat.mean(X)           --3> 3.375
-
--- standard deviation
-ans, tmp = Stat.std(X,W)     --3> 1.495
-
--- variance
-ans = tmp                    --3> 2.234
-
--- maximum element and index
-_,ans = Stat.max(X)           --> 4 
-
--- median
-ans = Stat.median(X)          --> 3
-
--- table of frequencies
-tmp = Stat.freq(X)
-ans = tmp[3]                  --> 3
-
--- central moment
-ans = Stat.moment(2,X)       --3> 2.234
-
--- summ of elements
-ans = Stat.sum(X)             --> 27
-
--- minimum value
-ans = Stat.min(X)             --> 1
-
--- geometrical mean
-ans = Stat.geomean(X)        --3> 2.995
-
--- harmonic mean
-ans = Stat.harmmean(X,W)     --3> 2.567
-
--- find histogram
-a,b = Stat.histcounts(X, 3)
-ans = b[1]                    --> 1
-
--- define edges 
-a,b = Stat.histcounts(X,{0,4,7})  
-ans = a[1]                    --> 5 
-
--- Student cdf and pdf
-ans = Stat.tcdf(4, 2.5)      --3> 0.9805
-
-ans = Stat.tpdf(2, 3.3)      --3> 0.0672
-
---</pre>
-<a href="#Top">Top</a></div>
 <div><a name="Unit"></a>
 <h3># Unit (units) #</h3>
 <p class="descript">Operations and conversations according the units.</p>
-<p><b>Unit(v[,u])</b> - Create new elements with units.<br>
+<p><b>Unit(v,[u])</b> - Create new elements with units.<br>
 <b>add(U,rule)</b> - Add new rule for conversation.<br>
-<b>arithmetic</b> - U1+U2, U1-U2, U1*u2, U1/U2, U1^n<br>
+<b>arithmetic</b> - U1+U2, U1-U2, U1*U2, U1/U2, U1^N<br>
 <b>comparison</b> - U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2<br>
 <b>convert(v, fn)</b> - Convert one units to another, return new object or nil.<br>
 <b>copy(U)</b> - Create copy of the element.<br>
