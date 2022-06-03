@@ -12,24 +12,26 @@
 
 --================ New version ================
 local versions = {
+  -- Arctangent with sign
+  atan2     = math.atan,
   -- Check if the number is integer
   isInteger = math.tointeger,
-  -- Return integer number or nil
-  toInteger = math.tointeger,
-  -- Move elements to new position (and table)
-  move      = table.move,
   -- Execute string code.
   loadStr   = load,
   -- Check type of the number.
   mathType  = math.type,
+  -- Move elements to new position (and table)
+  move      = table.move,
+  -- Return integer number or nil
+  toInteger = math.tointeger,
   -- Extract table values.
   unpack    = table.unpack,
-  -- Arctangent with sign
-  atan2     = math.atan,
 }
 
 --=============== Previous versions =======================
 if _VERSION < 'Lua 5.3' then 
+  -- Arctangent with sign
+  versions.atan2 = math.atan2
   -- Check if the number is integer
   versions.isInteger = function (x)
     if type(x) == 'string' then x = tonumber(x) end
@@ -37,11 +39,14 @@ if _VERSION < 'Lua 5.3' then
     local v,p = math.modf(x)
     return p == 0.0 and v >= -1E9 and v <= 1E9
   end
-  -- Return integer number or nil
-  versions.toInteger = function (x)
-    if type(x) == 'string' then x = tonumber(x) end
-    local p,q = math.modf(x)
-    return (q == 0.0) and p or nil
+  -- Execute string code
+  versions.loadStr = loadstring
+  -- Check type of the number
+  versions.mathType = function (x)
+    local n = tonumber(x)
+    if not n then return nil end
+    local _,p = math.modf(n)
+    return (p == 0.0) and 'integer' or 'float'
   end
   -- Move elements to new position (and table)
   versions.move = function (src,sfrom,sto,dfrom,dest)
@@ -56,19 +61,14 @@ if _VERSION < 'Lua 5.3' then
     end
     return dest
   end
-  -- Execute string code
-  versions.loadStr = loadstring
-  -- Check type of the number
-  versions.mathType = function (x)
-    local n = tonumber(x)
-    if not n then return nil end
-    local _,p = math.modf(n)
-    return (p == 0.0) and 'integer' or 'float'
+  -- Return integer number or nil
+  versions.toInteger = function (x)
+    if type(x) == 'string' then x = tonumber(x) end
+    local p,q = math.modf(x)
+    return (q == 0.0) and p or nil
   end
   -- Extract table values
   versions.unpack = unpack
-  -- Arctangent with sign
-  versions.atan2 = math.atan2
 end
 
 --============= Cross-module functionality =========
@@ -76,18 +76,6 @@ end
 local cross = {
 --NUMBER = 1, TABLE = 2, STRING = 3, OTHER = 4,
 }
-
---- Norm of numeric object.
---  @param v Some object.
---  @return Norm or nil.
-cross.norm = function (v)
-  if type(v) == 'number' then
-    return math.abs(v)
-  elseif type(v) == 'table' then
-    return v.float and math.abs(v:float()) or v._norm_ and v:_norm_() or nil
-  end
-  return nil
-end
 
 --- Compare equality of two objects.
 --  @param v1 First object.
@@ -103,11 +91,12 @@ cross.eq = function (v1,v2)
   end
 end
 
---- Apply simplification if possible 
---  @param v Sonata object.
---  @return Number or the object itself.
-cross.simp = function (v)
-  return type(v) == 'table' and v._simp_ and v:_simp_() or v
+--- Convert slave into type of master.
+--  @param vMaster Master object.
+--  @param vSlave Slave object.
+--  @return Converted slave of nil.
+cross.convert = function (vMaster, vSlave)
+  return type(vMaster) == 'table' and vMaster._convert_ and vMaster._convert_(vSlave)
 end
 
 --- Get the object copy.
@@ -124,12 +113,23 @@ cross.float = function (v)
   return type(v) == 'number' and v or type(v) == 'table' and v:float() or nil
 end
 
---- Convert slave into type of master.
---  @param vMaster Master object.
---  @param vSlave Slave object.
---  @return Converted slave of nil.
-cross.convert = function (vMaster, vSlave)
-  return type(vMaster) == 'table' and vMaster._convert_ and vMaster._convert_(vSlave)
+--- Norm of numeric object.
+--  @param v Some object.
+--  @return Norm or nil.
+cross.norm = function (v)
+  if type(v) == 'number' then
+    return math.abs(v)
+  elseif type(v) == 'table' then
+    return v.float and math.abs(v:float()) or v._norm_ and v:_norm_() or nil
+  end
+  return nil
+end
+
+--- Apply simplification if possible 
+--  @param v Sonata object.
+--  @return Number or the object itself.
+cross.simp = function (v)
+  return type(v) == 'table' and v._simp_ and v:_simp_() or v
 end
 
 return {

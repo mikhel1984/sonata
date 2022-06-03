@@ -27,115 +27,7 @@ local function eng2about()
   Help.english.about.about = nil
 end
 
---================== Module template =======================
-
 local generator = {}
-
---- Generate template for new module.
---  @param mName Module name.
---  @param alias Module short name.
---  @param description Short module description.
-generator.module = function (mName, alias, description)
-  if not (mName and alias) then 
-    return print('Expected: --new "name" "Alias" ["description"]')
-  end
-  local fName = string.format('%s%s%s.lua', LIB, Help.SEP, mName)
-  -- check existence
-  local f = io.open(fName) 
-  if f then 
-    f:close()
-    return print('File '..fName..' is already exists!')
-  end
-  -- write new file
-  description = description or "The module of your dream!"
-  local txt = 
-[=[--[[		sonata/WORD1
-
-3L WORD5
---  @author Your Name
-
-	WORD4 'WORD2'
---]]
-
--- Define here your tests, save results to 'ans', use --> for the strict equality 
--- and --n> for the n-digit precision in the case of floating numbers.
---[[TEST
-
--- use 'WORD2'
-WORD3 = require 'lib.WORD2'
-
--- example
-a = WORD3()
-ans = a.type   -->  'WORD2'
-
-ans = math.pi  --2> 355/113
-
---]]
-
---	LOCAL
-
-3L Check object type.
---  @param v Object.
---  @return True if the object is WORD2.
-local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
-
---	INFO
-
-local help = SonataHelp or {new=function () return {} end}
--- description
-local about = help:new("WORD5")
-
---	MODULE
-
-local WORD2 = {
--- mark
-type = 'WORD2', isWORD2 = true,
-}
--- methametods
-WORD2.__index = WORD2
-
-3L Constructor example.
---  @param t Some value.
---  @return New object of WORD2.
-WORD2.new = function(self,t)
-  local o = {}
-  -- your logic 
-  -- return object
-  return setmetatable(o,self)
-end
-
--- simplify constructor call
-setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
-WORD2.WORD3 = 'WORD3'
-about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
-
-3L Method example.
---  It is good idea to define method for the copy creation.
---  @param t Initial object.
---  @return Copy of the object.
-WORD2.copy = function (t)
-  -- some logic
-  return WORD2:new(argument)
-end
-about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
-
--- Comment to remove descriptions
-WORD2.about = about
-
-return WORD2
-
---======================================
---TODO: write new functions
-]=]
-  -- correct text
-  txt = string.gsub(txt, '3L', '---')     -- protect from creating failed documentation
-  txt = string.gsub(txt, '(WORD%d)', {WORD1=fName, WORD2=mName, WORD3=alias, WORD4='module', WORD5=description})
-  -- save
-  f = io.open(fName, 'w')
-  f:write(txt)
-  f:close()
-  io.write('File ', fName, " is ready. Add it to the 'use' table in 'sonata.lua'.\n")
-end
 
 --================== HTML documentation ====================
 
@@ -294,8 +186,6 @@ local function helpLines(module, alias, lng)
   return table.concat(res, '\n')
 end
 
-
-
 --- Prepare and save localization data.
 --  @param fName Language name, for example 'en' or 'it'.
 --  @param tModules Table with the list of existing modules.
@@ -322,6 +212,114 @@ generator.lang = function(fName, tModules)
   f:write('}')
   f:close()
   io.write('File ', fName, ' is saved!\n')
+end
+
+--================== Module template =======================
+
+--- Generate template for new module.
+--  @param mName Module name.
+--  @param alias Module short name.
+--  @param description Short module description.
+generator.module = function (mName, alias, description)
+  if not (mName and alias) then 
+    return print('Expected: --new "name" "Alias" ["description"]')
+  end
+  local fName = string.format('%s%s%s.lua', LIB, Help.SEP, mName)
+  -- check existence
+  local f = io.open(fName) 
+  if f then 
+    f:close()
+    return print('File '..fName..' is already exists!')
+  end
+  -- write new file
+  description = description or "The module of your dream!"
+  local txt = 
+[=[--[[		sonata/WORD1
+
+3L WORD5
+--  @author Your Name
+
+	WORD4 'WORD2'
+--]]
+
+-- Define here your tests, save results to 'ans', use --> for the strict equality 
+-- and --n> for the n-digit precision in the case of floating numbers.
+--[[TEST
+
+-- use 'WORD2'
+WORD3 = require 'lib.WORD2'
+
+-- example
+a = WORD3()
+ans = a.type   -->  'WORD2'
+
+ans = math.pi  --2> 355/113
+
+--]]
+
+--	LOCAL
+
+3L Check object type.
+--  @param v Object.
+--  @return True if the object is WORD2.
+local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
+
+--	INFO
+
+local help = SonataHelp or {new=function () return {} end}
+-- description
+local about = help:new("WORD5")
+
+--	MODULE
+
+local WORD2 = {
+-- mark
+type = 'WORD2', isWORD2 = true,
+}
+-- methametods
+WORD2.__index = WORD2
+
+3L Constructor example.
+--  @param t Some value.
+--  @return New object of WORD2.
+WORD2.new = function(self,t)
+  local o = {}
+  -- your logic 
+  -- return object
+  return setmetatable(o,self)
+end
+
+-- simplify constructor call
+setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
+WORD2.WORD3 = 'WORD3'
+about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
+
+3L Method example.
+--  It is good idea to define method for the copy creation.
+--  @param t Initial object.
+--  @return Copy of the object.
+WORD2.copy = function (t)
+  -- some logic
+  return WORD2:new(argument)
+end
+about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
+
+-- Comment to remove descriptions
+WORD2.about = about
+
+return WORD2
+
+--======================================
+--TODO: write new functions
+]=]
+  -- correct text
+  txt = string.gsub(txt, '3L', '---')     -- protect from creating failed documentation
+  txt = string.gsub(txt, '(WORD%d)', {WORD1=fName, WORD2=mName, WORD3=alias, WORD4='module', WORD5=description})
+  -- save
+  f = io.open(fName, 'w')
+  f:write(txt)
+  f:close()
+  io.write('File ', fName, " is ready. Add it to the 'use' table in 'sonata.lua'.\n")
 end
 
 return generator

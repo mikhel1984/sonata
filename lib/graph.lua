@@ -210,8 +210,22 @@ local about = help:new("Operations with graphs.")
 local graph = {
 type='graph', isgraph=true,
 }
+
 -- meta
 graph.__index = graph
+
+--- String representation
+--  @param G Graph object.
+--  @return String with compressed graph structure.
+graph.__tostring = function (G)
+  local nd = graph.nodes(G)
+  if #nd <= 5 then 
+    return string.format('Graph {%s}', table.concat(nd,','))
+  else
+    return string.format('Graph {%s -%d- %s}',
+      tostring(nd[1]), #nd-2, tostring(nd[#nd]))
+  end
+end
 
 --- Constructor example
 --  @param t Table with nodes and edges.
@@ -248,149 +262,6 @@ graph.add = function (G, v)
 end
 about[graph.add] = {"add(G,v)","Add new node or edge to graph G. Node denoted as a single name, edge is a table of names (and weights if need)."}
 
---- Remove node or edge.
---  @param G Graph.
---  @param v Element to remove.
-graph.remove = function (G, v)
-  if isEdge(v) then
-    local t1,t2 = v[1], v[2]
-    G[t1][t2] = nil
-    if not v.single then      -- change keyword ???
-      G[t2][t1] = nil
-    end
-  else
-    -- node
-    for _,u in pairs(G) do u[v] = nil end
-    G[v] = nil
-  end
-end
-about[graph.remove] = {"remove(G,v)", "Remove node or edge from the graph G. Node is a single name, edge - table of names."}
-
--- simplify constructor call
-setmetatable(graph, {__call = function (self,v) return graph:_new_(v) end})
-graph.Graph = 'Graph'
-about[graph.Graph] = {"Graph {v1,v2,..}", "Create new graph.", help.NEW}
-
---- Get graph nodes.
---  @param G Graph.
---  @return List of nodes.
-graph.nodes = function (G)
-  local res = {}
-  for k in pairs(G) do res[#res+1] = tostring(k) end
-  return res
-end
-about[graph.nodes] = {"nodes(G)","List of graph nodes."}
-
---- Get graph edges.
---  @param G Graph.
---  @return List of edges.
-graph.edges = function (G)
-  local nodes, res = graph.nodes(G), {}
-  for i = 1,#nodes do
-    local ni = nodes[i]
-    local Wi = G[ni]             -- what if node is not string?
-    for j = i,#nodes do
-      local nj = nodes[j]
-      local wij = Wi[nj]
-      local wji = G[nj][ni]
-      if wij and wji then
-        res[#res+1] = {ni,nj}
-        if wij ~= wji then res[#res+1] = {nj,ni} end
-      elseif wij then 
-        res[#res+1] = {ni,nj}
-      elseif wji then 
-        res[#res+1] = {nj,ni}
-      end
-    end
-  end
-  return res
-end
-about[graph.edges] = {"edges(G)", "List of graph edges."}
-
---- Make the graph copy.
---  @param G Graph.
---  @return Deep copy of the graph.
-graph.copy = function (G)
-  local res = graph:_new_({})
-  for k,v in pairs(G) do
-    local tmp = {}
-    for n,w in pairs(v) do tmp[n] = w end
-    res[k] = tmp
-  end
-  return res
-end
-about[graph.copy] = {"copy(G)", "Get copy of the graph."}
-
---- Get number of nodes.
---  @param G Graph object.
---  @return Number of nodes.
-graph.size = function (G) return tblLen(G) end
-graph.__len = size
-
---- String representation
---  @param G Graph object.
---  @return String with compressed graph structure.
-graph.__tostring = function (G)
-  local nd = graph.nodes(G)
-  if #nd <= 5 then 
-    return string.format('Graph {%s}', table.concat(nd,','))
-  else
-    return string.format('Graph {%s -%d- %s}',
-      tostring(nd[1]), #nd-2, tostring(nd[#nd]))
-  end
-end
-
---- Check graph completeness.
---  @param G Graph.
---  @return true if graph is complete.
-graph.isComplete = function (G)
-  local n = tblLen(G)
-  for _,v in pairs(G) do
-    if n ~= tblLen(v) then return false end
-  end
-  return true
-end
-about[graph.isComplete] = {'isComplete(G)', 'Check completeness of the graph.', help.OTHER}
-
---- Check if graph has negative weights.
---  @param G Graph object.
---  @return True if found at least one negative edge.
-graph.isNegative = function (G)
-  for _,adj in pairs(G) do
-    for _,v in pairs(adj) do
-      if v < 0 then return true end
-    end
-  end
-  return false
-end
-about[graph.isNegative] = {'isNegative(G)', 'Check if the graph has negative edges.', help.OTHER}
-
---- Check if the graph is directed.
---  @param G Graph object.
---  @return True if found directed edge.
-graph.isDirected = function (G)
-  for n1,adj in pairs(G) do
-    for n2,v in pairs(adj) do
-      if G[n2][n1] ~= v then return true end
-    end
-  end
-  return false
-end
-about[graph.isDirected] = {'isDirected(G)', 'Check if the graph has directed edges.', help.OTHER}
-
---- Check if the graph has weights different from default value.
---  @param G Graph object.
---  @return True if found edge not equal to 1.
-graph.isWeighted = function (G)
-  for _,adj in pairs(G) do
-    for _,v in pairs(adj) do
-      if v ~= 1 then return true end
-    end
-  end
-  return false
-end
-about[graph.isWeighted] = {'isWeighted(G)', 'Check if any edge has weight different from 1.', help.OTHER}
-
 --- Breadth first search.
 --  @param G Graph.
 --  @param start Initial node.
@@ -419,6 +290,20 @@ graph.bfs = function (G, vStart, vGoal)
   return false
 end
 about[graph.bfs] = {"bfs(G,vStart,vGoal)","Breadth first search. Return result and found path.", SEARCH}
+
+--- Make the graph copy.
+--  @param G Graph.
+--  @return Deep copy of the graph.
+graph.copy = function (G)
+  local res = graph:_new_({})
+  for k,v in pairs(G) do
+    local tmp = {}
+    for n,w in pairs(v) do tmp[n] = w end
+    res[k] = tmp
+  end
+  return res
+end
+about[graph.copy] = {"copy(G)", "Get copy of the graph."}
 
 --- Depth first search.
 --  @param G Graph.
@@ -449,40 +334,92 @@ graph.dfs = function (G, vStart, vGoal)
 end
 about[graph.dfs] = {"dfs(G,vStart,vGoal)","Depth first search. Return result and found path.", SEARCH}
 
---- Shortest path search using Dijkstra algorithm.
+--- Get graph edges.
 --  @param G Graph.
---  @param start Initial node.
---  @param goal Goal node.
---  @return Table of distances and predecessors or path and its length.
-graph.pathD = function(G,vStart,vGoal)
-  -- define local set 
-  local set = {}
-  for k in pairs(G) do set[k] = math.huge end
-  set[vStart] = 0
-  -- save results
-  local prev, dist = {[vStart]=vStart}, {}
-  -- run
-  while true do
-    local current, val = getMin(set)
-    if not current then break end
-    -- update minimal distance
-    dist[current] = val
-    for k,v in pairs(G[current]) do
-      local alt = val + v
-      if set[k] and set[k] > alt then
-        set[k] = alt 
-        prev[k] = current
-      end 
-    end -- for
+--  @return List of edges.
+graph.edges = function (G)
+  local nodes, res = graph.nodes(G), {}
+  for i = 1,#nodes do
+    local ni = nodes[i]
+    local Wi = G[ni]             -- what if node is not string?
+    for j = i,#nodes do
+      local nj = nodes[j]
+      local wij = Wi[nj]
+      local wji = G[nj][ni]
+      if wij and wji then
+        res[#res+1] = {ni,nj}
+        if wij ~= wji then res[#res+1] = {nj,ni} end
+      elseif wij then 
+        res[#res+1] = {ni,nj}
+      elseif wji then 
+        res[#res+1] = {nj,ni}
+      end
+    end
   end
-  -- result
-  if vGoal then
-    return dsit[vGoal], getPath(prev,vGoal)
-  else
-    return dist, prev
-  end
+  return res
 end
-about[graph.pathD] = {'pathD(G,vStart[,vGoal])', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.", SEARCH}
+about[graph.edges] = {"edges(G)", "List of graph edges."}
+
+--- Check graph completeness.
+--  @param G Graph.
+--  @return true if graph is complete.
+graph.isComplete = function (G)
+  local n = tblLen(G)
+  for _,v in pairs(G) do
+    if n ~= tblLen(v) then return false end
+  end
+  return true
+end
+about[graph.isComplete] = {'isComplete(G)', 'Check completeness of the graph.', help.OTHER}
+
+--- Check if the graph is directed.
+--  @param G Graph object.
+--  @return True if found directed edge.
+graph.isDirected = function (G)
+  for n1,adj in pairs(G) do
+    for n2,v in pairs(adj) do
+      if G[n2][n1] ~= v then return true end
+    end
+  end
+  return false
+end
+about[graph.isDirected] = {'isDirected(G)', 'Check if the graph has directed edges.', help.OTHER}
+
+--- Check if graph has negative weights.
+--  @param G Graph object.
+--  @return True if found at least one negative edge.
+graph.isNegative = function (G)
+  for _,adj in pairs(G) do
+    for _,v in pairs(adj) do
+      if v < 0 then return true end
+    end
+  end
+  return false
+end
+about[graph.isNegative] = {'isNegative(G)', 'Check if the graph has negative edges.', help.OTHER}
+
+--- Check if the graph has weights different from default value.
+--  @param G Graph object.
+--  @return True if found edge not equal to 1.
+graph.isWeighted = function (G)
+  for _,adj in pairs(G) do
+    for _,v in pairs(adj) do
+      if v ~= 1 then return true end
+    end
+  end
+  return false
+end
+about[graph.isWeighted] = {'isWeighted(G)', 'Check if any edge has weight different from 1.', help.OTHER}
+
+--- Get graph nodes.
+--  @param G Graph.
+--  @return List of nodes.
+graph.nodes = function (G)
+  local res = {}
+  for k in pairs(G) do res[#res+1] = tostring(k) end
+  return res
+end
+about[graph.nodes] = {"nodes(G)","List of graph nodes."}
 
 --- Find shortest path with Bellman-Ford algorithm/
 --  @param G Graph.
@@ -523,7 +460,71 @@ graph.pathBF = function (G, vStart, vGoal)
     return dist, prev
   end
 end
-about[graph.pathBF] = {'pathBF(G,vStart[,vGoal])','Shortest path search using Bellman-Ford algorithm.', SEARCH}
+about[graph.pathBF] = {'pathBF(G,vStart,[vGoal])','Shortest path search using Bellman-Ford algorithm.', SEARCH}
+
+--- Shortest path search using Dijkstra algorithm.
+--  @param G Graph.
+--  @param start Initial node.
+--  @param goal Goal node.
+--  @return Table of distances and predecessors or path and its length.
+graph.pathD = function(G,vStart,vGoal)
+  -- define local set 
+  local set = {}
+  for k in pairs(G) do set[k] = math.huge end
+  set[vStart] = 0
+  -- save results
+  local prev, dist = {[vStart]=vStart}, {}
+  -- run
+  while true do
+    local current, val = getMin(set)
+    if not current then break end
+    -- update minimal distance
+    dist[current] = val
+    for k,v in pairs(G[current]) do
+      local alt = val + v
+      if set[k] and set[k] > alt then
+        set[k] = alt 
+        prev[k] = current
+      end 
+    end -- for
+  end
+  -- result
+  if vGoal then
+    return dsit[vGoal], getPath(prev,vGoal)
+  else
+    return dist, prev
+  end
+end
+about[graph.pathD] = {'pathD(G,vStart,[vGoal])', "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.", SEARCH}
+
+--- Remove node or edge.
+--  @param G Graph.
+--  @param v Element to remove.
+graph.remove = function (G, v)
+  if isEdge(v) then
+    local t1,t2 = v[1], v[2]
+    G[t1][t2] = nil
+    if not v.single then      -- change keyword ???
+      G[t2][t1] = nil
+    end
+  else
+    -- node
+    for _,u in pairs(G) do u[v] = nil end
+    G[v] = nil
+  end
+end
+about[graph.remove] = {"remove(G,v)", "Remove node or edge from the graph G. Node is a single name, edge - table of names."}
+
+--- Get number of nodes.
+--  @param G Graph object.
+--  @return Number of nodes.
+graph.size = function (G) return tblLen(G) end
+graph.__len = size
+
+-- simplify constructor call
+setmetatable(graph, {__call = function (self,v) return graph:_new_(v) end})
+graph.Graph = 'Graph'
+about[graph.Graph] = {"Graph {v1,v2,..}", "Create new graph.", help.NEW}
 
 -- Comment to remove descriptions
 graph.about = about

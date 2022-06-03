@@ -52,6 +52,9 @@ ans = Rat.gcd(125,65)         --> 5
 -- represent as decimal
 ans = a:float()               --> 0.5
 
+-- make from decimal 
+ans = Rat.from(0.25)          --> Rat(1,4)
+
 -- numerator
 ans = b:Nu()                  --> 2
 
@@ -108,39 +111,6 @@ type = 'rational', isrational = true,
 -- simplification
 _simp_ = numrat,
 }
-rational.__index = rational
-
---- The greatest common divisor. 
---  @param va First integer.
---  @param vb Second integer.
---  @return Greatest common divisor.
-rational.gcd = function (va,vb)
-  return Cross.eq(va,0) and vb or rational.gcd(vb % va, va)
-end
-about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
-
---- Create new object, set metatable.
---  @param vn Numerator.
---  @param vd Denominator. Default is 1.
---  @return New rational object.
-rational._new_ = function (self, vn, vd)
-  local g = rational.gcd(vd,vn)         -- inverse order move sign to denominator
-  return setmetatable({vn/g, vd/g}, self)  
-end
-
---- Create copy of the rational number.
---  @param R Source value.
---  @return Rational number.
-rational.copy = function (R) return 
-  setmetatable({Cross.copy(R[1]), Cross.copy(R[2])}, rational) 
-end
-about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
-
-
-rational._convert_ = function (v)
-  return (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod) 
-         and rational:_new_(v,1)
-end
 
 --- R1 + R2
 --  @param R1 First rational or integer number.
@@ -159,20 +129,61 @@ rational.__add = function (R1, R2)
   return numrat(rational:_new_(R1[1]*R2[2]+R1[2]*R2[1], R1[2]*R2[2]))
 end
 
---- R1 - R2
+--- R1 / R2
 --  @param R1 First rational or integer number.
 --  @param R2 Second rational or integer number.
---  @return Difference.
-rational.__sub = function (R1, R2)  
+--  @return Ratio.
+rational.__div = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then 
     local p = Cross.convert(R1, R2) 
-    if p then return R1 - p
+    if p then return R1 / p
     else
       p = Cross.convert(R2, R1) 
-      return p and (p - R2) or (Cross.float(R1) - Cross.float(R2))
+      return p and (p / R2) or (Cross.float(R1) / Cross.float(R2))
     end
   end
-  return numrat(rational:_new_(R1[1]*R2[2]-R1[2]*R2[1], R1[2]*R2[2]))
+  return numrat(rational:_new_(R1[1]*R2[2], R1[2]*R2[1]))
+end
+
+-- methametods
+rational.__index = rational
+
+--- R1 <= R2
+--  @param R1 First number.
+--  @param R2 Second number.
+--  @return True in the first value is less or equal then the second one.
+rational.__le = function (R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 <= p
+    else
+      p = Cross.convert(R2, R1) 
+      if p then return p <= R2 
+      else 
+        return Cross.float(R1) <= Cross.float(R2)
+      end
+    end
+  end
+  return (R1[1]*R2[2]) <= (R2[1]*R1[2])
+end
+
+--- R1 < R2
+--  @param R1 First number.
+--  @param R2 Second number.
+--  @return True if the first number is less.
+rational.__lt = function (R1,R2)
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 < p
+    else
+      p = Cross.convert(R2, R1) 
+      if p then return p < R2 
+      else 
+        return Cross.float(R1) < Cross.float(R2)
+      end
+    end
+  end
+  return (R1[1]*R2[2]) < (R2[1]*R1[2])
 end
 
 --- R1 * R2
@@ -191,27 +202,6 @@ rational.__mul = function (R1, R2)
   return numrat(rational:_new_(R1[1]*R2[1], R1[2]*R2[2]))
 end
 
---- R1 / R2
---  @param R1 First rational or integer number.
---  @param R2 Second rational or integer number.
---  @return Ratio.
-rational.__div = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then 
-    local p = Cross.convert(R1, R2) 
-    if p then return R1 / p
-    else
-      p = Cross.convert(R2, R1) 
-      return p and (p / R2) or (Cross.float(R1) / Cross.float(R2))
-    end
-  end
-  return numrat(rational:_new_(R1[1]*R2[2], R1[2]*R2[1]))
-end
-
---- -R
---  @param R Rational number.
---  @preturn Opposite rational number.
-rational.__unm = function (R) return rational:_new_(-R[1], R[2]) end
-
 --- R1 ^ R2
 --  @param R1 Rational or real number.
 --  @param R2 Rational or real number.
@@ -226,8 +216,73 @@ rational.__pow = function (R1, R2)
   end
 end
 
+--- R1 - R2
+--  @param R1 First rational or integer number.
+--  @param R2 Second rational or integer number.
+--  @return Difference.
+rational.__sub = function (R1, R2)  
+  if not (isrational(R1) and isrational(R2)) then 
+    local p = Cross.convert(R1, R2) 
+    if p then return R1 - p
+    else
+      p = Cross.convert(R2, R1) 
+      return p and (p - R2) or (Cross.float(R1) - Cross.float(R2))
+    end
+  end
+  return numrat(rational:_new_(R1[1]*R2[2]-R1[2]*R2[1], R1[2]*R2[2]))
+end
+
+--- String representation.
+--  @param R Rational number.
+--  @return String with numerator and denominator.
+rational.__tostring = function (R) 
+  if type(R[1]) == 'number' and type(R[2]) == 'number' and math.abs(R[1]) > R[2] then
+    local n = math.abs(R[1])       -- numerator
+    local v = math.modf(n / R[2]) 
+    return string.format("%s%d %d/%d", R[1] < 0 and '-' or '', v, n % R[2], R[2])
+  else
+    return string.format("%s/%s", numStr(R[1]), numStr(R[2])) 
+  end
+end
+
+--- -R
+--  @param R Rational number.
+--  @preturn Opposite rational number.
+rational.__unm = function (R) return rational:_new_(-R[1], R[2]) end
+
 rational.arithmetic = 'arithmetic'
-about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2} ", help.META}
+about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2", help.META}
+
+rational.comparison = 'comparison'
+about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
+
+rational._convert_ = function (v)
+  return (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod) 
+         and rational:_new_(v,1)
+end
+
+--- Create new object, set metatable.
+--  @param vn Numerator.
+--  @param vd Denominator. Default is 1.
+--  @return New rational object.
+rational._new_ = function (self, vn, vd)
+  local g = rational.gcd(vd,vn)         -- inverse order move sign to denominator
+  return setmetatable({vn/g, vd/g}, self)  
+end
+
+--- Create copy of the rational number.
+--  @param R Source value.
+--  @return Rational number.
+rational.copy = function (R) return 
+  setmetatable({Cross.copy(R[1]), Cross.copy(R[2])}, rational) 
+end
+about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
+
+--- Get denominator.
+--  @param R Rational number.
+--  @return Denominator.
+rational.De = function (R) return R[2] end
+about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 
 --- R1 == R2
 --  @param R1 First number.
@@ -250,54 +305,6 @@ end
 about[rational.eq] = {"eq(R1,R2)", "Compare two objects.", help.OTHER}
 rational.__eq = rational.eq
 
---- R1 < R2
---  @param R1 First number.
---  @param R2 Second number.
---  @return True if the first number is less.
-rational.__lt = function (R1,R2)
-  if not (isrational(R1) and isrational(R2)) then 
-    local p = Cross.convert(R1, R2) 
-    if p then return R1 < p
-    else
-      p = Cross.convert(R2, R1) 
-      if p then return p < R2 
-      else 
-        return Cross.float(R1) < Cross.float(R2)
-      end
-    end
-  end
-  return (R1[1]*R2[2]) < (R2[1]*R1[2])
-end
-
---- R1 <= R2
---  @param R1 First number.
---  @param R2 Second number.
---  @return True in the first value is less or equal then the second one.
-rational.__le = function (R1,R2)
-  if not (isrational(R1) and isrational(R2)) then 
-    local p = Cross.convert(R1, R2) 
-    if p then return R1 <= p
-    else
-      p = Cross.convert(R2, R1) 
-      if p then return p <= R2 
-      else 
-        return Cross.float(R1) <= Cross.float(R2)
-      end
-    end
-  end
-  return (R1[1]*R2[2]) <= (R2[1]*R1[2])
-end
-
-rational.comparison = 'comparison'
-about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
-
---- String representation.
---  @param R Rational number.
---  @return String with numerator and denominator.
-rational.__tostring = function (R) 
-  return string.format("%s/%s", numStr(R[1]), numStr(R[2])) 
-end
-
 --- Float point representation.
 --  @param R Rational number.
 --  @return Decimal fraction.
@@ -306,17 +313,34 @@ rational.float = function (R)
 end
 about[rational.float] = {"float(R)", "Return rational number as decimal."}
 
+--- Get rational number from floating point.
+--  @param f Source number.
+--  @param N Number of digits after coma.
+--  @return Ratio estimation.
+rational.from = function (f, N)
+  N = N or 5   -- number of digits
+  assert(N > 0)
+  local den = math.pow(10, N)
+  local int = math.modf(f * den) 
+  return rational:_new_(int, den) 
+end
+about[rational.from] = {"from(F,[N=5])", "Estimate ratio from floating point value.", help.NEW}
+
+--- The greatest common divisor. 
+--  @param va First integer.
+--  @param vb Second integer.
+--  @return Greatest common divisor.
+rational.gcd = function (va,vb)
+  return Cross.eq(va,0) and vb or rational.gcd(vb % va, va)
+end
+about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
+
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
 rational.Nu = function (R) return R[1] end
 about[rational.Nu] = {"Nu(R)", "Return the numerator of rational number."}
 
---- Get denominator.
---  @param R Rational number.
---  @return Denominator.
-rational.De = function (R) return R[2] end
-about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
 
 -- call constructor, check arguments
 setmetatable(rational, {
@@ -330,7 +354,7 @@ __call = function (self, n, d)
   return rational:_new_(n,d) 
 end})
 rational.Rat = 'Rat'
-about[rational.Rat] = {"Rat(m[,n=1])", "Create rational number using num (and denom).", help.NEW}
+about[rational.Rat] = {"Rat(m,[n=1])", "Create rational number using num (and denom).", help.NEW}
 
 -- Comment to remove descriptions
 rational.about = about
@@ -338,5 +362,4 @@ rational.about = about
 return rational
 
 --======================================
---TODO: string representation as true ratio (str)
 --TODO: use keys (num, den)

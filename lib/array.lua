@@ -116,19 +116,89 @@ _mul_ = function (x,y) return x*y end,
 _div_ = function (x,y) return x/y end,
 _pow_ = function (x,y) return x^y end,
 }
+
+--- A1 + A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with element wise sum.
+array.__add = function (A1, A2) return array._apply2_(array._add_, A1, A2) end
+
+--- A1 / A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with element wise ratio.
+array.__div = function (A1, A2) return array._apply2_(array._div_, A1, A2) end
+
+--- a1 == A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return True if all elements are equal.
+array.__eq = function (A1, A2)
+  if array.isEqual(A1,A2) then
+    -- compare element wise
+    for i = 1, array.capacity(A1) do
+      if (A1[i] or 0) ~= (A2[i] or 0) then return false end
+    end
+    return true
+  end
+  return false
+end
+
 -- metamethods
 array.__index = array
 
---- Create new object, set metatable.
---  @param self Pointer to object.
---  @param tSize Table with array size.
---  @return Empty array.
-array._new_ = function (self, tSize)
-  -- prepare list of coefficients
-  local k = {1}
-  for i = 2, #tSize do k[i] = tSize[i-1]*k[i-1] end
-  -- return new object
-  return setmetatable({size=tSize, k=k}, self)
+--- Method #
+--  @param A Array object.
+--  @return Number of elements.
+array.__len = array.capacity
+
+--- A1 * A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with element wise product.
+array.__mul = function (A1, A2) return array._apply2_(array._mul_, A1, A2) end
+
+--- A1 ^ A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with element wise power.
+array.__pow = function (A1, A2) return array._apply2_(array._pow_, A1, A2) end
+
+--- A1 - A2
+--  @param A1 First array.
+--  @param A2 Second array.
+--  @return Array with element wise difference.
+array.__sub = function (A1, A2) return array._apply2_(array._sub_, A1, A2) end
+
+--- String representation.
+--  @param A Array.
+--  @return String representation of the array.
+array.__tostring = function (A) return 'Array ' .. table.concat(A.size, 'x') end
+
+--- -A
+--  @param A Array.
+--  @return Array with inverted sign.
+array.__unm = function (A) return array.map(A, array._unm_) end
+
+array.arithmetic = 'arithmetic'
+about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.META}
+
+array.comparison = 'comparison'
+about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
+
+--- Apply function of 2 arguments.
+--  @param fn Function with 2 arguments.
+--  @param A1 First array object.
+--  @param A2 Second array object.
+--  @return New array where each element is result of the function evaluation func(A1[i],A2[i]).
+array._apply2_ = function (fn, A1, A2)
+  if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
+  local res, v = array:_new_(Ver.move(A1.size, 1, #A1.size, 1, {}))   -- prepare empty copy
+  for i = 1, array.capacity(A1) do 
+    v = fn(A1[i] or 0, A2[i] or 0)                      -- elements can be empty
+    if v ~= 0 then res[i] = v end                        -- save nonzero values
+  end
+  return res
 end
 
 --- Check index correctness.
@@ -143,6 +213,18 @@ array._isIndex_ = function (A, tInd)
   return true
 end
 
+--- Create new object, set metatable.
+--  @param self Pointer to object.
+--  @param tSize Table with array size.
+--  @return Empty array.
+array._new_ = function (self, tSize)
+  -- prepare list of coefficients
+  local k = {1}
+  for i = 2, #tSize do k[i] = tSize[i-1]*k[i-1] end
+  -- return new object
+  return setmetatable({size=tSize, k=k}, self)
+end
+
 --- Transform index into single dimension representation.
 --  @param A Array.
 --  @param tInd Element index.
@@ -151,76 +233,6 @@ array._pos_ = function (A, tInd)
   local res, k = tInd[1], A.k
   for i = 2,#tInd do 
     res = res + (tInd[i]-1) * k[i]
-  end
-  return res
-end
-
---- Maximum number of elements in the array.
---  The same as #A.
---  @param A Array.
---  @return "Volume" of the array.
-array.capacity = function (A)
-  local S,K = A.size, A.k
-  return S[#S] * K[#K]
-end
-about[array.capacity] = {"capacity(A)", "Maximal number of elements in the array. The same as #A.", help.OTHER}
-
---- Get array element.
---  @param A Array object.
---  @param tInd Index of the element (table).
---  @return Element or error if index is wrong.
-array.get = function (A, tInd)
-  if not array._isIndex_(A, tInd) then error("Wrong index!") end
-  return A[array._pos_(A, tInd)]
-end
-about[array.get] = {"get(A,tInd)", "Get array element."}
-
---- Set new value.
---  @param A Array object.
---  @param tInd Element index (table).
---  @param v New value.
-array.set = function (A, tInd, v)
-  if not array._isIndex_(A, tInd) then error("Wrong index!") end
-  A[array._pos_(A,tInd)] = v 
-end
-about[array.set] = {"set(A,tInd,v)", "Set value to the array."}
-
---- Get array copy.
---  @param A Array object.
---  @return Deep copy of the array.
-array.copy = function (A)
-  local cp = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
-  return Ver.move(A, 1, array.capacity(A), 1, cp)             -- copy array elements
-end
-about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
-
---- Compare array size.
---  @param A1 First array object.
---  @param A2 Second array object.
---  @return True if size is the same.
-array.isEqual = function (A1, A2)
-  if isarray(A1) and isarray(A2) and #A1.size == #A2.size then
-    -- compare size
-    for i = 1, #A1.size do
-      if A1.size[i] ~= A2.size[i] then return false end
-    end
-    return true
-  end
-  return false
-end
-about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTHER}
-
---- Apply function of 2 arguments.
---  @param fn Function with 2 arguments.
---  @param A1 First array object.
---  @param A2 Second array object.
---  @return New array where each element is result of the function evaluation func(A1[i],A2[i]).
-array._apply2_ = function (fn, A1, A2)
-  if not array.isEqual(A1,A2) then error("Not compatible arrays!") end
-  local res, v = array:_new_(Ver.move(A1.size, 1, #A1.size, 1, {}))   -- prepare empty copy
-  for i = 1, array.capacity(A1) do 
-    v = fn(A1[i] or 0, A2[i] or 0)                      -- elements can be empty
-    if v ~= 0 then res[i] = v end                        -- save nonzero values
   end
   return res
 end
@@ -250,125 +262,15 @@ array.apply = function (fn, ...)
 end
 about[array.apply] = {"apply(fn, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
 
---- Apply function of 1 argument.
---  @param A Array object.
---  @param fn Function with 1 argument.
---  @return New array where each element is result of the function evaluation fn(a[i]).
-array.map = function (A, fn)
-  local res, v = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))
-  for i = 1, array.capacity(A) do
-    v = fn(A[i] or 0)                   -- elements can be empty
-    if v ~= 0 then res[i] = v end       -- save nonzero values
-  end
-  return res
-end
-about[array.map] = {"map(A,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
-
---- A1 + A2
---  @param A1 First array.
---  @param A2 Second array.
---  @return Array with element wise sum.
-array.__add = function (A1, A2) return array._apply2_(array._add_, A1, A2) end
-
---- A1 - A2
---  @param A1 First array.
---  @param A2 Second array.
---  @return Array with element wise difference.
-array.__sub = function (A1, A2) return array._apply2_(array._sub_, A1, A2) end
-
---- -A
+--- Maximum number of elements in the array.
+--  The same as #A.
 --  @param A Array.
---  @return Array with inverted sign.
-array.__unm = function (A) return array.map(A, array._unm_) end
-
---- A1 * A2
---  @param A1 First array.
---  @param A2 Second array.
---  @return Array with element wise product.
-array.__mul = function (A1, A2) return array._apply2_(array._mul_, A1, A2) end
-
---- A1 / A2
---  @param A1 First array.
---  @param A2 Second array.
---  @return Array with element wise ratio.
-array.__div = function (A1, A2) return array._apply2_(array._div_, A1, A2) end
-
---- A1 ^ A2
---  @param A1 First array.
---  @param A2 Second array.
---  @return Array with element wise power.
-array.__pow = function (A1, A2) return array._apply2_(array._pow_, A1, A2) end
-
-array.arithmetic = 'arithmetic'
-about[array.arithmetic] = {array.arithmetic, "a+b, a-b, a*b, a/b, -a, a^b", help.META}
-
---- Random array generator.
---  @param tSize Size table.
---  @return Array of the given size with random numbers from 0 to 1.
-array.rand = function (tSize)
-  local arr = array:_new_(tSize)
-  for i = 1, array.capacity(arr) do arr[i] = math.random() end
-  return arr
+--  @return "Volume" of the array.
+array.capacity = function (A)
+  local S,K = A.size, A.k
+  return S[#S] * K[#K]
 end
-about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
-
---- a1 == A2
---  @param A1 First array.
---  @param A2 Second array.
---  @return True if all elements are equal.
-array.__eq = function (A1, A2)
-  if array.isEqual(A1,A2) then
-    -- compare element wise
-    for i = 1, array.capacity(A1) do
-      if (A1[i] or 0) ~= (A2[i] or 0) then return false end
-    end
-    return true
-  end
-  return false
-end
-
-array.comparison = 'comparison'
-about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
-
---- Get array dimension.
---  @param A Array object.
---  @return Table with array size.
-array.dim = function (A) return Ver.move(A.size, 1, #A.size, 1, {}) end
-about[array.dim] = {"dim(A)", "Return size of the array."}
-
---- Get part of array between two indexes.
---  @param A Array object.
---  @param tInd1 Index of the lower bound.
---  @param tInd2 Index of the upper bound.
---  @return Array of elements restricted by the indices.
-array.sub = function (A, tInd1, tInd2)
-  -- negative index means the last element
-  for i = 1, #tInd2 do 
-    if tInd2[i] < 0 then tInd2[i] = tInd2[i] + A.size[i] + 1 end 
-  end
-  if not (array._isIndex_(A, tInd1) and array._isIndex_(A, tInd2)) then error("Wrong index!") end
-  -- prepare tables
-  local newsize, ind = {}, {}
-  for i = 1, #tInd1 do 
-    newsize[i] = tInd2[i] - tInd1[i] + 1
-    ind[i]     = 0
-  end 
-  local res = array:_new_(newsize)
-  -- fill
-  local K, S = res.k, res.size
-  local conv = array._pos_
-  for count = 1, array.capacity(res) do
-    -- calculate new temporary index
-    for i = 1, #ind do 
-      local tmp = math.modf(count/K[i]) % S[i]
-      tInd2[i] = tInd1[i] + tmp
-      ind[i] = tmp + 1
-    end
-    res[conv(res,ind)] = A[conv(A,tInd2)]
-  end
-  return res
-end
-about[array.sub] = {"sub(A,tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
+about[array.capacity] = {"capacity(A)", "Maximal number of elements in the array. The same as #A.", help.OTHER}
 
 --- Concatenate 2 arrays along given axes.
 --  @param A1 First array.
@@ -404,26 +306,60 @@ array.concat = function (A1, A2, iAxis)
 end
 about[array.concat] = {"concat(A1,A2,iAxis)", "Array concatenation along the given axis."}
 
---- Method #
+--- Get array copy.
 --  @param A Array object.
---  @return Number of elements.
-array.__len = array.capacity
+--  @return Deep copy of the array.
+array.copy = function (A)
+  local cp = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
+  return Ver.move(A, 1, array.capacity(A), 1, cp)             -- copy array elements
+end
+about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
 
---- String representation.
---  @param A Array.
---  @return String representation of the array.
-array.__tostring = function (A) return 'Array ' .. table.concat(A.size, 'x') end
+--- Get array dimension.
+--  @param A Array object.
+--  @return Table with array size.
+array.dim = function (A) return Ver.move(A.size, 1, #A.size, 1, {}) end
+about[array.dim] = {"dim(A)", "Return size of the array."}
 
--- Constructor
-setmetatable(array, {__call = function (self, tSize) 
-  -- check correctness
-  assert(type(tSize) == 'table', "Table is expected!")
-  for i = 1,#tSize do assert(tSize[i] > 0 and Ver.isInteger(tSize[i]), "Positive integer is expected!") end
-  -- build
-  return array:_new_(tSize) 
-end})
-array.Arr = 'Arr'
-about[array.Arr] = {"Arr {n1,n2,..}", "Create empty array with the given size.", help.NEW}
+--- Get array element.
+--  @param A Array object.
+--  @param tInd Index of the element (table).
+--  @return Element or error if index is wrong.
+array.get = function (A, tInd)
+  if not array._isIndex_(A, tInd) then error("Wrong index!") end
+  return A[array._pos_(A, tInd)]
+end
+about[array.get] = {"get(A,tInd)", "Get array element."}
+
+--- Compare array size.
+--  @param A1 First array object.
+--  @param A2 Second array object.
+--  @return True if size is the same.
+array.isEqual = function (A1, A2)
+  if isarray(A1) and isarray(A2) and #A1.size == #A2.size then
+    -- compare size
+    for i = 1, #A1.size do
+      if A1.size[i] ~= A2.size[i] then return false end
+    end
+    return true
+  end
+  return false
+end
+about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTHER}
+
+--- Apply function of 1 argument.
+--  @param A Array object.
+--  @param fn Function with 1 argument.
+--  @return New array where each element is result of the function evaluation fn(a[i]).
+array.map = function (A, fn)
+  local res, v = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))
+  for i = 1, array.capacity(A) do
+    v = fn(A[i] or 0)                   -- elements can be empty
+    if v ~= 0 then res[i] = v end       -- save nonzero values
+  end
+  return res
+end
+about[array.map] = {"map(A,fn)", "Apply function of 1 argument. Return new array.", help.OTHER}
 
 --- Iterator across the array.
 --  @param A Array object.
@@ -439,6 +375,71 @@ array.next = function (A)
   end
 end
 about[array.next] = {"next(A)", "Return iterator along all indexes.", help.OTHER}
+
+--- Random array generator.
+--  @param tSize Size table.
+--  @return Array of the given size with random numbers from 0 to 1.
+array.rand = function (tSize)
+  local arr = array:_new_(tSize)
+  for i = 1, array.capacity(arr) do arr[i] = math.random() end
+  return arr
+end
+about[array.rand] = {"rand(tSize)", "Return array with random numbers between 0 and 1.", help.NEW}
+
+--- Set new value.
+--  @param A Array object.
+--  @param tInd Element index (table).
+--  @param v New value.
+array.set = function (A, tInd, v)
+  if not array._isIndex_(A, tInd) then error("Wrong index!") end
+  A[array._pos_(A,tInd)] = v 
+end
+about[array.set] = {"set(A,tInd,v)", "Set value to the array."}
+
+--- Get part of array between two indexes.
+--  @param A Array object.
+--  @param tInd1 Index of the lower bound.
+--  @param tInd2 Index of the upper bound.
+--  @return Array of elements restricted by the indices.
+array.sub = function (A, tInd1, tInd2)
+  -- negative index means the last element
+  for i = 1, #tInd2 do 
+    if tInd2[i] < 0 then tInd2[i] = tInd2[i] + A.size[i] + 1 end 
+  end
+  if not (array._isIndex_(A, tInd1) and array._isIndex_(A, tInd2)) then error("Wrong index!") end
+  -- prepare tables
+  local newsize, ind = {}, {}
+  for i = 1, #tInd1 do 
+    newsize[i] = tInd2[i] - tInd1[i] + 1
+    ind[i]     = 0
+  end 
+  local res = array:_new_(newsize)
+  -- fill
+  local K, S = res.k, res.size
+  local conv = array._pos_
+  for count = 1, array.capacity(res) do
+    -- calculate new temporary index
+    for i = 1, #ind do 
+      local tmp = math.modf(count/K[i]) % S[i]
+      tInd2[i] = tInd1[i] + tmp
+      ind[i] = tmp + 1
+    end
+    res[conv(res,ind)] = A[conv(A,tInd2)]
+  end
+  return res
+end
+about[array.sub] = {"sub(A,tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
+
+-- Constructor
+setmetatable(array, {__call = function (self, tSize) 
+  -- check correctness
+  assert(type(tSize) == 'table', "Table is expected!")
+  for i = 1,#tSize do assert(tSize[i] > 0 and Ver.isInteger(tSize[i]), "Positive integer is expected!") end
+  -- build
+  return array:_new_(tSize) 
+end})
+array.Arr = 'Arr'
+about[array.Arr] = {"Arr {n1,n2,..}", "Create empty array with the given size.", help.NEW}
 
 -- Comment to remove descriptions
 array.about = about

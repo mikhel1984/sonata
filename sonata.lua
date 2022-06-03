@@ -30,6 +30,7 @@ use = {
   bigint    = "Int",
   complex   = "Comp",
   const     = "_C",
+  data      = "Data",
   geodesy   = "Geo",
   gnuplot   = "Gp",
   graph     = "Graph",
@@ -40,7 +41,6 @@ use = {
   quaternion = "Quat",
   rational  = "Rat",
   special   = "Spec",
-  stat      = "Stat",
   units     = "Unit",
 }
 

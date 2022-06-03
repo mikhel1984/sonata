@@ -46,6 +46,20 @@ local function modifyError () error('Constants are immutable!') end
 --	MODULE
 
 -- Set of constants
+
+-- astronomy
+local _astro_ = {
+pc_u='m',        pc = 3.08567758128E16,     -- one parsec
+ly_u='m',        ly = 9.4607304725808E15,   -- light year
+}
+
+-- math
+local _math_ = { 
+                phi = 1.6180339887498948482045868, -- golden ratio
+                 pi = 3.1415926535897932384626434, -- length to diameter
+                  e = 2.7182818284590452353602875, -- base of natural logarithm
+}
+
 -- physics
 local _phy_ = {
 G_u='N*m^2/kg^2', G = 6.672041E-11,       -- constant of gravitation
@@ -61,19 +75,6 @@ g_u='m/s^2',      g = 9.80665,            -- 'standard' acceleration of free fal
 eps0_u='F/m',  eps0 = 8.85418781871E-12,  -- permittivity of a vacuum
 sigma_u='W/(m^2*K^4)', sigma = 5.6704E-8, -- Stefan-Boltzmann constant
 Rinf_u='1/m',  Rinf = 10973731.56852773,  -- Rydberg constant
-}
-
--- astronomy
-local _astro_ = {
-pc_u='m',        pc = 3.08567758128E16,     -- one parsec
-ly_u='m',        ly = 9.4607304725808E15,   -- light year
-}
-
--- math
-local _math_ = { 
-                phi = 1.6180339887498948482045868, -- golden ratio
-                 pi = 3.1415926535897932384626434, -- length to diameter
-                  e = 2.7182818284590452353602875, -- base of natural logarithm
 }
 
 -- user defined
@@ -121,7 +122,7 @@ const.add = function (sName,val,sUnit)
   _user_[sName..'_u'] = sUnit
   return 'Done'
 end
-about[const.add] = {'add(sName,value[,sUnits])','Create new constant.'}
+about[const.add] = {'add(sName,value,[sUnits])','Create new constant.'}
 
 --- Remove existing constant.
 --  @param sName Name of constant.

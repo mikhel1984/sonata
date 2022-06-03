@@ -99,21 +99,20 @@ newton_max = 50,
 
 about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance.", "parameters"}
 
---- Find root of equation at the given interval.
---  @param fn Function to analyze.
---  @param a Lower bound.
---  @param b Upper bound.
---  @return Function root.
-numeric.solve = function (fn, dA, dB)
-  local f0, f1 = fn(dA), fn(dB)
-  if f0*f1 >= 0 then error("Boundary values must have different sign!") end
+--- Simple derivative.
+--  @param fn Function f(x).
+--  @param d Parameter.
+--  @return Numerical approximation of the derivative value.
+numeric.der = function (fn, d)
+  local dx = 2e-2
+  local der, last = (fn(d+dx)-fn(d-dx))/(2*dx)
   repeat
-    dB = dB - (dB-dA)*f1/(f1-f0)
-    f1 = fn(dB)
-  until math.abs(f1) < numeric.TOL
-  return dB 
+    dx = dx * 0.5
+    der, last = (fn(d+dx)-fn(d-dx))/(2*dx), der
+  until math.abs(der-last) < numeric.TOL
+  return der
 end
-about[numeric.solve] = {"solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
+about[numeric.der] = {"der(fn,x)", "Calculate the derivative value for given function."}
 
 --- Another solution based on Newton's rule.
 --  @param fn Function to analyze.
@@ -131,52 +130,6 @@ numeric.Newton = function (fn, d1)
   return x2
 end
 about[numeric.Newton] = {"Newton(fn,d0)", "Find root of equation using Newton's rule with only one initial condition."}
-
---- Simple derivative.
---  @param fn Function f(x).
---  @param d Parameter.
---  @return Numerical approximation of the derivative value.
-numeric.der = function (fn, d)
-  local dx = 2e-2
-  local der, last = (fn(d+dx)-fn(d-dx))/(2*dx)
-  repeat
-    dx = dx * 0.5
-    der, last = (fn(d+dx)-fn(d-dx))/(2*dx), der
-  until math.abs(der-last) < numeric.TOL
-  return der
-end
-about[numeric.der] = {"der(fn,x)", "Calculate the derivative value for given function."}
-
---- Integration using trapeze method.
---  @param fn Function f(x).
---  @param a Lower bound.
---  @param b Upper bound.
---  @return Numerical approximation of the integral.
-numeric.trapez = function (fn, dA, dB)
-  local N, sum = 10, 0
-  local fab = (fn(dA)+fn(dB)) * 0.5
-  local x, dx, N = dA, (dB-dA)/N, N-1
-  -- initial approximation
-  for i = 1, N do
-    x = x + dx
-    sum = sum + fn(x)
-  end
-  local I, last = (fab + sum) * dx
-  local Nsum, Nlast = 0, N
-  -- correct
-  repeat
-    last, x, N = I, dA + 0.5*dx, N+Nsum+1
-    Nsum = Nsum + Nlast
-    for i = 1, N do
-      sum = sum + fn(x)
-      x = x + dx
-    end
-    dx, Nlast = dx * 0.5, N
-    I = (fab + sum) * dx
-  until math.abs(I-last) < numeric.TOL
-  return I
-end
-about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule."}
 
 --- Differential equation solution (Runge-Kutta method).
 --  @param fn function f(t,y).
@@ -218,7 +171,54 @@ numeric.ode45 = function (fn,tDelta,dY0,tParam)
   end
   return res, res[#res][2]
 end
-about[numeric.ode45] = {"ode45(fn,tDelta,y0[,param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
+about[numeric.ode45] = {"ode45(fn,tDelta,y0,[param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
+
+--- Find root of equation at the given interval.
+--  @param fn Function to analyze.
+--  @param a Lower bound.
+--  @param b Upper bound.
+--  @return Function root.
+numeric.solve = function (fn, dA, dB)
+  local f0, f1 = fn(dA), fn(dB)
+  if f0*f1 >= 0 then error("Boundary values must have different sign!") end
+  repeat
+    dB = dB - (dB-dA)*f1/(f1-f0)
+    f1 = fn(dB)
+  until math.abs(f1) < numeric.TOL
+  return dB 
+end
+about[numeric.solve] = {"solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
+
+--- Integration using trapeze method.
+--  @param fn Function f(x).
+--  @param a Lower bound.
+--  @param b Upper bound.
+--  @return Numerical approximation of the integral.
+numeric.trapez = function (fn, dA, dB)
+  local N, sum = 10, 0
+  local fab = (fn(dA)+fn(dB)) * 0.5
+  local x, dx, N = dA, (dB-dA)/N, N-1
+  -- initial approximation
+  for i = 1, N do
+    x = x + dx
+    sum = sum + fn(x)
+  end
+  local I, last = (fab + sum) * dx
+  local Nsum, Nlast = 0, N
+  -- correct
+  repeat
+    last, x, N = I, dA + 0.5*dx, N+Nsum+1
+    Nsum = Nsum + Nlast
+    for i = 1, N do
+      sum = sum + fn(x)
+      x = x + dx
+    end
+    dx, Nlast = dx * 0.5, N
+    I = (fab + sum) * dx
+  until math.abs(I-last) < numeric.TOL
+  return I
+end
+about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule."}
 
 -- Comment to remove descriptions
 numeric.about = about
