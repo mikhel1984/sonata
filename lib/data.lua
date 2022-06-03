@@ -66,6 +66,25 @@ ans = Data.geomean(X)        --3> 2.995
 -- harmonic mean
 ans = Data.harmmean(X,W)     --3> 2.567
 
+-- check if X[i] > 2
+a = Data.is(X, Data.xGt(2))
+ans = a[1]                    --> 1
+
+-- get elements X[i] > 2
+tmp = Data.filter(X, a)
+ans = tmp[1]                  --> X[1]
+
+-- filtration using explicit function 
+fn = function (x) return x > 2 end
+tmp = Data.filter(X, fn)
+ans = tmp[1]                  --> X[1]
+
+-- generate new list
+-- use 'lazy' function definition
+fn = Data.Fn "{x1-x2,x1+x2}"
+tmp = Data.zip(fn, X, Y)
+ans = tmp[1][2]               --> X[1]+Y[1]
+
 -- find histogram
 a,b = Data.histcounts(X, 3)
 ans = b[1]                    --> 2.25
@@ -234,7 +253,7 @@ about[data.csvread] = {"csvread(sFile,[delim=',',bCol=false])", "Read delimiter 
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
-data.F = function (sExpr,iArg)
+data.Fn = function (sExpr,iArg)
   local arg = {}
   for i = 1, (iArg or 2) do arg[i] = string.format("x%d", i) end
   local fn = Ver.loadStr(
@@ -242,7 +261,7 @@ data.F = function (sExpr,iArg)
   )
   return fn()
 end
-about[data.F] = {"F(sExpr,[iArg=2])", "Generate function from expression of x1, x2 etc.", help.OTHER}
+about[data.Fn] = {"Fn(sExpr,[iArg=2])", "Generate function from expression of x1, x2 etc.", help.OTHER}
 
 --- Find elements using condition.
 --  @param t Table with data.
