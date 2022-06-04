@@ -417,7 +417,7 @@ data.max = function (t)
   end
   return m,k
 end
-about[data.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
+about[data.max] = {"max(t)", "Maximal element and its index.", STAT}
 
 --- Average value.
 --  @param t Table with numbers.
@@ -464,7 +464,7 @@ data.min = function (t)
   end
   return m,k
 end
-about[data.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
+about[data.min] = {"min(t)", "Minimal element and its index.", STAT}
 
 --- Central moment.
 --  @param N Order of the moment.

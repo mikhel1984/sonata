@@ -412,6 +412,38 @@ about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", he
 matrix.comparison = 'comparison'
 about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
 
+-- Determinants for simple cases
+matrix._det_ = {
+-- 1x1 
+function (M) return M[1][1] end,
+-- 2x2
+function (M) return M[1][1]*M[2][2] - M[2][1]*M[1][2] end,
+-- 3x3
+function (M)
+  local m1, m2, m3 = M[1], M[2], M[3]
+  return m1[1]*(m2[2]*m3[3]-m2[3]*m3[2]) -
+         m1[2]*(m2[1]*m3[3]-m2[3]*m3[1]) +
+         m1[3]*(m2[1]*m3[2]-m2[2]*m3[1])
+end
+}
+
+-- Inversion for simple cases 
+matrix._inv_ = {
+-- 1x1 
+function (M) return 1 end,
+-- 2x2 
+function (M) return matrix:_init_(2, 2, {{M[2][2],-M[1][2]},{-M[2][1],M[1][1]}} ) end,
+-- 3x3
+function (M) 
+  local m1, m2, m3 = M[1], M[2], M[3]
+  return matrix:_init_(3, 3, {
+    {m2[2]*m3[3]-m2[3]*m3[2], -(m1[2]*m3[3]-m1[3]*m3[2]), m1[2]*m2[3]-m1[3]*m2[2]},
+    {-(m2[1]*m3[3]-m2[3]*m3[1]), m1[1]*m3[3]-m1[3]*m3[1], -(m1[1]*m2[3]-m1[3]*m2[1])},
+    {m2[1]*m3[2]-m2[2]*m3[1], -(m1[1]*m3[2]-m1[2]*m3[1]), m1[1]*m2[2]-m1[2]*m2[1]}
+  })
+end
+}
+
 --- Auxiliary function for working with complex numbers.
 --  @param a Number.
 --  @return Absolute value.
@@ -662,6 +694,9 @@ about[matrix.cross] = {'cross(V1,V2)','Cross product or two 3-element vectors.'}
 --  @return Determinant.
 matrix.det = function (M)
   if (M.rows ~= M.cols) then error("Square matrix is expected!") end
+  local fn = matrix._det_[M.rows]
+  if fn then return fn(M) end
+  -- in other cases
   local _, K = matrix._GaussDown_(matrix.copy(M))
   return K
 end
@@ -723,7 +758,7 @@ matrix.eye = function (iR, iC, val)
 end
 about[matrix.eye] = {"eye(iRows,[iCols=iRows,val=1])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
 
---- Fill matric with some value.
+--- Fill matrix with some value.
 --  @param iR Number of rows.
 --  @param iC Number of columns.
 --  @param val Value to set. Default is 1.
@@ -802,6 +837,12 @@ matrix.__call = function (M,vR,vC) return matrix.get(M,vR,vC) end
 matrix.inv = function (M)
   if (M.rows ~= M.cols) then error("Square matrix is expected!") end
   local size = M.cols
+  -- check simple cases 
+  local fn = matrix._inv_[size]
+  if fn then
+    local det = matrix._det_[size](M) 
+    return (det ~= 0) and matrix._kProd_(1/det, fn(M)) or matrix.fill(size,size, math.huge)
+  end
   -- prepare matrix
   local res, det = matrix.copy(M)
   -- add "tail"
