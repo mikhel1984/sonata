@@ -104,7 +104,7 @@ ans = a:map(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
 -- apply function to matrices
 -- element-wise
 fn = function (x,y,z) return x*y+z end
-aa = Mat.apply(fn, b,b,b) 
+aa = Mat.zip(fn, b,b,b) 
 ans = aa[1][1]                --> 30
 
 -- use Gauss transform to solve equation
@@ -213,10 +213,8 @@ local Ver = require("lib.utils").versions
 local access = {
   -- 0 instead nil
   __index = function () return 0 end,
-  -- comment this function in order to work a little bit faster, but in this case matrix can become dense
-  __newindex = function (t,k,v) 
-    if v ~= 0 then rawset(t,k,v) end 
-  end,
+  -- uncomment this function to work with 'sparse' matrices but a little bit slower
+  --__newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
 }
 
 --- Check object type.
@@ -260,7 +258,6 @@ local matrix = {
 type = 'matrix', ismatrix = true,
 }
 
-
 --- M1 + M2
 --  @param M1 First matrix or number.
 --  @param M2 Second matrix or number.
@@ -268,7 +265,15 @@ type = 'matrix', ismatrix = true,
 matrix.__add = function (M1,M2)
   M1 = ismatrix(M1) and M1 or matrix.fill(M2.rows, M2.cols, M1)
   M2 = ismatrix(M2) and M2 or matrix.fill(M1.rows, M1.cols, M2)
-  return matrix._apply2_(fn_sum,M1,M2)
+  if (M1.rows~=M2.rows or M1.cols~=M2.cols) then error("Different matrix size!") end
+  local res = matrix:_init_(M1.rows,M1.cols,{})
+  for r = 1, M1.rows do
+    local rr, m1r, m2r = res[r], M1[r], M2[r]
+    for c = 1, M1.cols do
+      rr[c] = m1r[c] + m2r[c]
+    end
+  end
+  return res
 end
 
 --- Horizontal concatenation
@@ -362,7 +367,15 @@ end
 matrix.__sub = function (M1,M2)
   M1 = ismatrix(M1) and M1 or matrix.fill(M2.rows, M2.cols, M1)
   M2 = ismatrix(M2) and M2 or matrix.fill(M1.rows, M1.cols, M2)
-  return matrix._apply2_(fn_sub,M1,M2)
+  if (M1.rows~=M2.rows or M1.cols~=M2.cols) then error("Different matrix size!") end
+  local res = matrix:_init_(M1.rows,M1.cols,{})
+  for r = 1, M1.rows do
+    local rr, m1r, m2r = res[r], M1[r], M2[r]
+    for c = 1, M1.cols do
+      rr[c] = m1r[c] - m2r[c]
+    end
+  end
+  return res
 end
 
 --- String representation.
@@ -384,28 +397,20 @@ end
 --- - M
 --  @param M Matrix object.
 --  @return Matrix where each element has opposite sign.
-matrix.__unm = function (M) return matrix.map(M,fn_unm) end
+matrix.__unm = function (M)
+  local res = matrix:_init_(M.rows, M.cols, {})
+  for r = 1, M.rows do
+    local rr, mr = res[r], M[r]
+    for c = 1, M.cols do rr[c] = -mr[c] end
+  end
+  return res
+end
 
 matrix.arithmetic = 'arithmetic'
 about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
 
 matrix.comparison = 'comparison'
 about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
-
---- Apply function to each pair elements of given matrices.
---  @param M1 First matrix.
---  @param M2 Second matrix.
---  @param fn Function from two arguments f(v1,v2).
---  @return Result of function evaluation.
-matrix._apply2_ = function (fn, M1, M2)
-  if (M1.rows~=M2.rows or M1.cols~=M2.cols) then error("Different matrix size!") end
-  local res = matrix:_init_(M1.rows,M1.cols,{})
-  for r = 1,res.rows do
-    local resr, m1r, m2r = res[r], M1[r], M2[r]
-    for c = 1,res.cols do resr[c] = fn(m1r[c], m2r[c]) end
-  end
-  return res
-end
 
 --- Auxiliary function for working with complex numbers.
 --  @param a Number.
@@ -564,32 +569,6 @@ matrix._new_ = function (t)
   end
   return matrix:_init_(rows, cols, t)
 end
-
---- Apply function element-wise to matrices.
---  @param fn Function of several arguments.
---  @param ... List of matrices.
---  @return New found matrix.
-matrix.apply = function (fn, ...)
-  local arg = {...}
-  local rows, cols = arg[1].rows, arg[1].cols
-  -- check size
-  for i = 2,#arg do
-    if arg[i].rows ~= rows or arg[i].cols ~= cols then error("Different size!") end
-  end
-  local res, v = matrix:_init_(rows, cols, {}), {}
-  -- evaluate
-  local upack = Ver.unpack
-  for r = 1,res.rows do
-    for c = 1,res.cols do
-      -- collect
-      for k = 1,#arg do v[k] = arg[k][r][c] end
-      -- calc
-      res[r][c] = fn(upack(v))
-    end
-  end
-  return res
-end
-about[matrix.apply] = {'apply(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
 
 --- Cholesky decomposition.
 --  @param M Positive definite symmetric matrix.
@@ -1082,6 +1061,32 @@ matrix.zeros = function (iR, iC)
 end
 about[matrix.vector] = {"zeros(rows,[cols=rows])", "Create matrix of zeros.", help.NEW}
 
+--- Apply function element-wise to matrices.
+--  @param fn Function of N arguments.
+--  @param ... List of N matrices.
+--  @return New matrix.
+matrix.zip = function (fn, ...)
+  local arg = {...}
+  local rows, cols = arg[1].rows, arg[1].cols
+  -- check size
+  for i = 2,#arg do
+    if arg[i].rows ~= rows or arg[i].cols ~= cols then error("Different size!") end
+  end
+  local res, v = matrix:_init_(rows, cols, {}), {}
+  -- evaluate
+  local upack = Ver.unpack
+  for r = 1,res.rows do
+    for c = 1,res.cols do
+      -- collect
+      for k = 1,#arg do v[k] = arg[k][r][c] end
+      -- calc
+      res[r][c] = fn(upack(v))
+    end
+  end
+  return res
+end
+about[matrix.zip] = {'zip(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
+
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
 matrix.Mat = 'Mat'
@@ -1096,4 +1101,3 @@ return matrix
 --TODO: Fix sign in SVD transform
 --TODO: Redefine 'norm' method
 --TODO: change matrix print
---TODO: map and apply as common methods
