@@ -201,11 +201,6 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 
 --	LOCAL
 
--- to accelerate calculations
-local fn_sum = function (x,y) return x+y end
-local fn_sub = function (x,y) return x-y end
-local fn_unm = function (x) return -x end
-
 -- compatibility
 local Ver = require("lib.utils").versions
 
@@ -226,7 +221,7 @@ local function nummat(M) return M.rows == 1 and M.cols == 1 and M[1][1] or M end
 
 --- Correct range if possible.
 --  @param i Positive or negative index value.
---  @param nRange Available range of indexes. 
+--  @param iRange Available range of indexes. 
 --  @return Corrected index or nil.
 local function toRange(i,iRange)
   if i < 0 then i = i + iRange + 1 end
