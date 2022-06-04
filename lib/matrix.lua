@@ -84,19 +84,8 @@ ans = Mat.eye(a)              --> Mat {{1,0},
 ans = Mat.zeros(2,1)          --> Mat {{0},{0}}
 
 -- matrix of constants = 4
-ans = Mat.ones(2,3,4)         --> Mat {{4,4,4},
+ans = Mat.fill(2,3,4)         --> Mat {{4,4,4},
                                        {4,4,4}}
-
--- matrix of constants = 1
-ans = Mat.ones(a,3)           --> Mat {{3,3},{3,3}}
-
--- define rule to fill
--- result matrix is 'dense'
-fn = function (i,j) 
-  return i == j and 1 or 0 
-end
-ans = Mat.fill(2,3,fn)        --> Mat {{1,0,0},
-                                       {0,1,0}}
 
 -- horizontal concatenation
 ans = a .. b                  --> Mat {{1,2,5,6},
@@ -138,16 +127,10 @@ ans = g({2,-1},{2,3})         --> Mat {{5,6},
 ans = Mat.V({1,2,3}):norm()  --3> math.sqrt(14)
 
 -- random matrix
-h = Mat.rand(3,2)
+rnd = function () return math.random() end
+h = Mat.zeros(2,3):map(rnd)
 print(h)
 
--- random integer matrix
--- from 1 to 20
-print(h:randi(20))
-
--- random matrix with 
--- normal distribution
-print(Mat.randn(2,2))
 
 -- pseudo inverse matrix
 m = Mat {
@@ -203,7 +186,7 @@ m = a(-1,{})
 ans = m:get(2)                --> 4
 
 -- get rank
-ans = Mat.ones(2,3):rank()    --> 1
+ans = Mat.fill(2,3):rank()    --> 1
 
 -- change size
 tmp = Mat{
@@ -283,8 +266,8 @@ type = 'matrix', ismatrix = true,
 --  @param M2 Second matrix or number.
 --  @return Sum matrix.
 matrix.__add = function (M1,M2)
-  M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
-  M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
+  M1 = ismatrix(M1) and M1 or matrix.fill(M2.rows, M2.cols, M1)
+  M2 = ismatrix(M2) and M2 or matrix.fill(M1.rows, M1.cols, M2)
   return matrix._apply2_(fn_sum,M1,M2)
 end
 
@@ -377,8 +360,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Difference matrix.
 matrix.__sub = function (M1,M2)
-  M1 = ismatrix(M1) and M1 or matrix.ones(M2.rows, M2.cols, M1)
-  M2 = ismatrix(M2) and M2 or matrix.ones(M1.rows, M1.cols, M2)
+  M1 = ismatrix(M1) and M1 or matrix.fill(M2.rows, M2.cols, M1)
+  M2 = ismatrix(M2) and M2 or matrix.fill(M1.rows, M1.cols, M2)
   return matrix._apply2_(fn_sub,M1,M2)
 end
 
@@ -761,20 +744,22 @@ matrix.eye = function (iR, iC, val)
 end
 about[matrix.eye] = {"eye(iRows,[iCols=iRows,val=1])", "Create identity matrix. Diagonal value (init) can be defined.", help.NEW}
 
---- Create dense matrix using given rule.
+--- Fill matric with some value.
 --  @param iR Number of rows.
 --  @param iC Number of columns.
---  @param fn Function which depends on element index.
-matrix.fill = function (iR, iC, fn)
+--  @param val Value to set. Default is 1.
+--  @return New matrix.
+matrix.fill = function (iR, iC, val)
+  assert(iR > 0 and iC > 0)
+  val = val or 1
   local m = matrix:_init_(iR, iC, {})
   for r = 1, iR do
-    local mr = {}
-    for c = 1,iC do mr[c] = fn(r,c) end
-    m[r] = mr
+    local mr = m[r]
+    for c = 1, iC do mr[c] = val end
   end
   return m
 end
-about[matrix.fill] = {"fill(iRows,iCols,fn)", "Create matrix, using function fn(r,c).", help.OTHER}
+about[matrix.fill] = {"fill(iRows,iCols,[val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
 
 --- Get element or sub matrix. 
 --  In case of sub matrix each index should be a table of 2 or 3 elements: [begin,end[,step]].
@@ -847,7 +832,7 @@ matrix.inv = function (M)
   res.cols = 2*size
   res, det = matrix._GaussDown_(res)
   if det == 0 then 
-    return matrix.ones(size,size, math.huge)
+    return matrix.fill(size,size, math.huge)
   end
   res = matrix._GaussUp_(res)
   -- move result
@@ -909,17 +894,6 @@ matrix.norm = function (M)
 end
 about[matrix.norm] = {"norm(M)", "Euclidean norm."}
 
---- Matrix of constants.
---  @param iR Number of rows.
---  @param iC Number of columns. Can be omitted in case of square matrix.
---  @param val Value to set. Default is 1.
---  @return New matrix.
-matrix.ones = function (iR, iC, val)
-  if ismatrix(iR) then iR,iC,val = iR.rows, iR.cols, iC end
-  return matrix.fill(iR, iC or iR, function () return val or 1 end)
-end
-about[matrix.ones] = {"ones(iRows,[iCols=iRows,val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
-
 --- Quick pseudo inverse matrix.
 --  Based on "Fast computation of Moore-Penrose inverse matrices" paper by Pierre Courrieu.
 --  @param M Initial matrix.
@@ -972,44 +946,6 @@ matrix.pinv = function (M)
   return L * K * K * Lt * Mt
 end
 about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", TRANSFORM}
-
---- Matrix with random values.
---  @param rows Number of rows.
---  @param cols Number of columns. Can be omitted in case of square matrix.
---  @return New matrix.
-matrix.rand = function (iR, iC)
-  if ismatrix(iR) then iR,iC = iR.rows, iR.cols end
-  return matrix.fill(iR, iC or iR, function () return math.random() end)
-end
-about[matrix.rand] = {"rand(iRows,[iCols=iRows])", "Create matrix with random numbers from 0 to 1.", help.NEW}
-
---- Matrix with integer random values from 1 to defined max value.
---  @param x1 Source matrix or upper limit.
---  @param x2 Upper limit or number of rows.
---  @param x3 Number of columns (optional).
---  @return Matrix with integer random elements.
-matrix.randi = function (x1,x2,x3)
-  local N, rows, cols
-  if ismatrix(x1) then 
-    -- matrix, N
-    N, rows, cols = x2, x1.rows, x1.cols
-  else
-    -- N, rows [,cols]
-    N, rows, cols = x1, x2, x3 or x2
-  end
-  return matrix.fill(rows, cols, function () return math.random(1,N) end)
-end
-about[matrix.randi] = {"randi([M],N,[rows,cols=rows])", "Create matrix with random integer elements from 1 to N. Can be used as 'randi(M,N)' or 'randi(N,r,c)'.", help.NEW}
-
---- Matrix with normally distributed random values.
---  @param rows Number of rows.
---  @param cols Number of columns. Can be omitted in case of square matrix.
---  @return New matrix.
-matrix.randn = function (iR,iC)
-  if ismatrix(iR) then iR,iC = iR.rows, iR.cols end
-  return matrix.fill(iR, iC or iR, function () return randn() end)
-end
-about[matrix.randn] = {"randn(iRows,[iCols=iRows])","Create matrix with normally distributed values (0 mean and unit variance)", help.NEW}
 
 --- Matrix rank.
 --  @param M Initial matrix.
@@ -1150,69 +1086,6 @@ about[matrix.vector] = {"zeros(rows,[cols=rows])", "Create matrix of zeros.", he
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
 matrix.Mat = 'Mat'
 about[matrix.Mat] = {"Mat {tRow1,tRow2,..}", "Create matrix from list of strings (tables).", help.NEW}
-
---- Function for execution during the module import.
-matrix.onImport = function ()
-  -- basic
-  local _rand = rand
-  rand = function (a,...) return a and matrix.rand(a,...) or _rand(a,...) end
-  Main._updateHelp(rand,_rand)
-  local _randi = randi
-  randi = function (a,b,...) return b and matrix.randi(a,b,...) or _randi(a,b,...) end
-  Main._updateHelp(randi,_randi)
-  local _randn = randn
-  randn = function (a,...) return a and matrix.randn(a,...) or _rand(a,...) end
-  Main._updateHelp(randn,_randn)
-  local _abs = abs 
-  abs = function (a) return ismatrix(a) and matrix.map(a,_abs) or _abs(a) end
-  Main._updateHelp(abs,_abs)
-  local _sqrt = sqrt
-  sqrt = function (a) return ismatrix(a) and matrix.map(a,_sqrt) or _sqrt(a) end
-  Main._updateHelp(sqrt,_sqrt)
-  local _exp = exp
-  exp = function (a) return ismatrix(a) and matrix.map(a,_exp) or _exp(a) end
-  Main._updateHelp(exp,_exp)
-
-  -- trigonometric
-  local _sin = sin
-  sin = function (a) return ismatrix(a) and matrix.map(a,_sin) or _sin(a) end
-  Main._updateHelp(sin,_sin)
-  local _cos = cos
-  cos = function (a) return ismatrix(a) and matrix.map(a,_cos) or _cos(a) end
-  Main._updateHelp(cos,_cos)
-  local _tan = tan
-  tan = function (a) return ismatrix(a) and matrix.map(a,_tan) or _tan(a) end
-  Main._updateHelp(tan,_tan)
-  local _asin = asin
-  asin = function (a) return ismatrix(a) and matrix.map(a,_asin) or _asin(a) end
-  Main._updateHelp(asin,_asin)
-  local _acos = acos
-  acos = function (a) return ismatrix(a) and matrix.map(a,_acos) or _acos(a) end
-  Main._updateHelp(acos,_acos)
-  local _atan = atan
-  atan = function (a) return ismatrix(a) and matrix.map(a,_atan) or _atan(a) end
-  Main._updateHelp(atan,_atan)
-
-  -- hyperbolic
-  local _sinh = sinh
-  sinh = function (a) return ismatrix(a) and matrix.map(a,_sinh) or _sinh(a) end
-  Main._updateHelp(sinh,_sinh)
-  local _cosh = cosh
-  cosh = function (a) return ismatrix(a) and matrix.map(a,_cosh) or _cosh(a) end
-  Main._updateHelp(cosh,_cosh)
-  local _tanh = tanh
-  tanh = function (a) return ismatrix(a) and matrix.map(a,_tanh) or _tanh(a) end
-  Main._updateHelp(tanh,_tanh)
-  local _asinh = asinh
-  asinh = function (a) return ismatrix(a) and matrix.map(a,_asinh) or _asinh(a) end
-  Main._updateHelp(asinh,_asinh)
-  local _acosh = acosh
-  acosh = function (a) return ismatrix(a) and matrix.map(a,_acosh) or _acosh(a) end
-  Main._updateHelp(acosh,_acosh)
-  local _atanh = atanh
-  atanh = function (a) return ismatrix(a) and matrix.map(a,_atanh) or _atanh(a) end
-  Main._updateHelp(atanh,_atanh)
-end
 
 -- Comment to remove descriptions
 matrix.about = about
