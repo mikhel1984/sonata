@@ -81,8 +81,7 @@ ans = tmp[1]                  --> X[1]
 
 -- generate new list
 -- use 'lazy' function definition
-fn = Data.Fn "{x1-x2,x1+x2}"
-tmp = Data.zip(fn, X, Y)
+tmp = Data.zip("{x1-x2,x1+x2}", X, Y)
 ans = tmp[1][2]               --> X[1]+Y[1]
 
 -- find histogram
@@ -128,6 +127,7 @@ ans = tt[1][3]                --> 3
 
 local Ver = require("lib.utils")
 local Cross = Ver.cross
+local Utils = Ver.utils
 Ver = Ver.versions
 
 local STAT = 'statistics'
@@ -253,14 +253,7 @@ about[data.csvread] = {"csvread(sFile,[delim=',',bCol=false])", "Read delimiter 
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
-data.Fn = function (sExpr,iArg)
-  local arg = {}
-  for i = 1, (iArg or 2) do arg[i] = string.format("x%d", i) end
-  local fn = Ver.loadStr(
-    string.format("return function (%s) return %s end", table.concat(arg,','), sExpr)
-  )
-  return fn()
-end
+data.Fn = function (sExpr,iArg) return Utils.Fn(sExpr, iArg or 2) end
 about[data.Fn] = {"Fn(sExpr,[iArg=2])", "Generate function from expression of x1, x2 etc.", help.OTHER}
 
 --- Find elements using condition.
@@ -577,11 +570,12 @@ end
 about[data.xLt] = {"xLt(d)", "Return function for condition x < d.", FILTER}
 
 --- Apply function of n arguments to n lists.
---  @param fn Function of multiple arguments.
+--  @param fn Function of multiple arguments or string.
 --  @param ... Sequence of lists.
 --  @return List of values fn(...).
 data.zip = function (fn, ...)
   local ag, res = {...}, {}
+  if type(fn) == 'string' then fn = Utils.Fn(fn, #ag) end
   local x, stop = {}, false
   for i = 1, math.huge do
     for j = 1, #ag do

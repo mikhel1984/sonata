@@ -55,8 +55,8 @@ ans = f:get{2,2,2}            --> 1
 a1 = Arr{2,2}:map(rnd)
 a2 = Arr{2,2}:map(rnd)
 a3 = Arr{2,2}:map(rnd)
-fn = function (x,y,z) return x*y+z end
-a4 = Arr.zip(fn, a1,a2,a3)
+-- 'lazy' function definition
+a4 = Arr.zip('x1*x2+x3', a1,a2,a3)
 ans = a4:get{1,2}             --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
 
 -- iterate over array 
@@ -89,7 +89,9 @@ print(a)
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Utils = Ver.utils
+Ver = Ver.versions
 
 --- Check object type.
 --  @param t Object.
@@ -353,11 +355,12 @@ end
 about[array.sub] = {"sub(A,tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
 
 --- Apply function of several arguments.
---  @param fn Function with N arguments.
+--  @param fn Function with N arguments or expression.
 --  @param ... List of N arrays.
 --  @return New array where each element is result of the function evaluation.
 array.zip = function (fn, ...)
   local arg = {...}
+  if type(fn) == 'string' then fn = Utils.Fn(fn, #arg) end
   -- check arguments
   local eq, a1 = array.isEqual, arg[1]
   for i = 2,#arg do

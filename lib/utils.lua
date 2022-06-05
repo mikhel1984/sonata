@@ -132,9 +132,27 @@ cross.simp = function (v)
   return type(v) == 'table' and v._simp_ and v:_simp_() or v
 end
 
+--============== Utils ================
+
+local utils = {}
+
+--- Generate function from string.
+--  @param sExpr Expression for execution.
+--  @param iArg Number of arguments.
+--  @return Function based on the expression.
+utils.Fn = function (sExpr,iArg)
+  local arg = {}
+  for i = 1, iArg do arg[i] = string.format("x%d", i) end
+  local fn = versions.loadStr(
+    string.format("return function (%s) return %s end", table.concat(arg,','), sExpr)
+  )
+  return fn()
+end
+
 return {
   versions = versions,
   cross = cross,
+  utils = utils,
 }
 
 --===================================================
