@@ -235,7 +235,79 @@ ans = a + Int(1)                --> Quat{2,2,3,4}
 ans = Int(2) * b                --> Quat{6,0,10,0}
 
 
+-- COMPLEX and MATRIX
+---------------------
+Mat = require 'lib.matrix'
 
+-- prepare
+a = Mat{{1, Comp(2,3)},{Comp(4,5), 6}}
+b = Mat{{Comp(9,8), Comp(7,6)},{5, 4}}
+j = Comp._i
+
+-- transpose
+c = a:T()
+ans = c[2][1]                --> Comp(2,3)
+
+-- sum
+tmp = a + b
+ans = tmp[1][1]              --> Comp(10,8)
+
+-- add complex
+tmp = a + j
+ans = tmp[1][1]              --> Comp(1,1)
+
+-- product
+tmp = a * b
+ans = tmp[1][1]              --> b[1][1] + a[1][2]*b[2][1]
+
+-- multipy complex
+tmp = b * j
+ans = tmp[2][1]              --> Comp(0,5)
+
+-- determinant
+d = Mat {
+  {1, 2*j, 3, -4+5*j},
+  {7+8*j, 9, 10*j, 11},
+  {12-13*j, 14*j, 15, -16*j},
+  {17, 18, 19+20*j, 21}
+}
+tmp = d:det()
+ans = tmp.Re                --1> -29932.0
+
+-- inverse matrix
+d2 = d:inv()
+tmp = d * d2
+ans = tmp[1][1]             --3> 1.0
+
+-- ratio
+tmp = a / b
+ans = tmp[1][1].Im          --1> -0.6
+
+-- try to solve equation
+tmp = Mat.rref(a .. Mat.V{4,5})
+ans = tmp[1][2]             --3> 0.0
+
+-- pseudoinverse
+c = Mat{{1,2*j,3},{4*j,5,6*j}}
+cc = c:pinv()
+tmp = c * cc
+ans = tmp[2][2]             --3> 1.0
+
+-- LU
+l,u,p = a:lu()
+ans = u[2][1]               --3> 0.0
+
+-- Cholesky
+m = Mat{{3,j},{j,3}}
+mm = m:chol()
+tmp = mm * mm:T()
+ans = tmp[1][1]             --3> m[1][1]
+
+-- trace
+ans = b:tr()                 --> Comp(13,8)
+
+-- rank
+ans = a:rank()               --> 2
 
 
 --]]

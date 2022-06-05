@@ -202,7 +202,9 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 --	LOCAL
 
 -- compatibility
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Cross = Ver.cross
+Ver = Ver.versions
 
 -- Metatable for new rows.
 local access = {
@@ -439,13 +441,6 @@ function (M)
 end
 }
 
---- Auxiliary function for working with complex numbers.
---  @param a Number.
---  @return Absolute value.
-matrix._fabs_ = function (v)
-  return (type(v) == 'table' and v.iscomplex) and v:abs() or math.abs(v)
-end
-
 --- Transform matrix to upper triangle (in-place).
 --  @param M Initial matrix.
 --  @return Upper triangulated matrix and determinant.
@@ -531,7 +526,7 @@ matrix._luPrepare_ = function (M)
     local big,abig,v = 0,0
     local ar = a[r]
     for c = 1,a.cols do 
-      v = matrix._fabs_(ar[c])
+      v = Cross.norm(ar[c])
       if v > abig then
         big = ar[c]
         abig = v
@@ -556,9 +551,9 @@ matrix._luPrepare_ = function (M)
       local sum = ar[c]
       for k = 1,c-1 do sum = sum - ar[k]*a[k][c] end
       ar[c] = sum
-      sum = matrix._fabs_(sum)
+      sum = Cross.norm(sum)
       dum = vv[r]*sum
-      if matrix._fabs_(dum) >= matrix._fabs_(big) then big = dum; rmax = r end
+      if Cross.norm(dum) >= Cross.norm(big) then big = dum; rmax = r end
     end
     local ac = a[c]
     if c ~= rmax then
@@ -666,7 +661,7 @@ matrix.copy = function (M)
   local res = matrix:_init_(M.rows,M.cols,{})
   for r = 1,M.rows do
     local resr, mr = res[r], M[r]
-    for c = 1,M.cols do resr[c] = mr[c] end
+    for c = 1,M.cols do resr[c] = mr[c] end  -- use Cross.copy() - ?
   end
   return res
 end
@@ -923,8 +918,7 @@ matrix.pinv = function (M)
   end
   local tol = math.huge
   for i = 1, A.rows do 
-    local v = A[i][i]
-    if type(v) == 'table' and v.iscomplex then v = v:abs() end
+    local v = Cross.norm(A[i][i])
     tol = math.min(tol, (v > 0 and v or math.huge)) 
   end
   tol = tol * 1e-9
@@ -941,12 +935,12 @@ matrix.pinv = function (M)
     tmp = L[k][r]
     local iscomplex = (type(tmp)=='table') and tmp.iscomplex
     if iscomplex and tmp:abs() > tol then
-      L[k][r] = tmp:sqrt()
-      tmp = L[k][r]
+      tmp = tmp:sqrt()
+      L[k][r] = tmp
       for i = k+1, n do L[i][r] = L[i][r]/tmp end
     elseif not iscomplex and tmp > tol then
-      L[k][r] = math.sqrt(tmp)
-      tmp = L[k][r]
+      tmp = math.sqrt(Cross.float(tmp))
+      L[k][r] = tmp
       for i = k+1, n do L[i][r] = L[i][r]/tmp end
     else
       r = r - 1
