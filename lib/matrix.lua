@@ -719,16 +719,19 @@ end
 about[matrix.diag] = {'diag(M,[n=0])','Get diagonal of the matrix or create new matrix which diagonal elements are given. n is the diagonal index.', help.NEW}
 
 --- V1 . V2
---  @param V1 3-element vector.
---  @param V2 3-element vector.
+--  @param V1 First vector.
+--  @param V2 Second vector.
 --  @return Scalar product.
 matrix.dot = function (V1,V2)
-  if (V1.rows*V1.cols ~= 3 or V2.rows*V2.cols ~= 3) then error("Vector with 3 elements is expected!") end
-  local x1,y1,z1 = V1:get(1), V1:get(2), V1:get(3)
-  local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
-  return x1*x2+y1*y2+z1*z2
+  local n = V1.rows*V1.cols
+  if n ~= V2.rows*V2.cols then error("Different vector size") end
+  local s = 0
+  for i = 1, n do
+    s = s + V1:get(i)*V2:get(i)
+  end
+  return s
 end
-about[matrix.dot] = {'dot(V1,V2)', 'Scalar product of two 3-element vectors.'}
+about[matrix.dot] = {'dot(V1,V2)', 'Scalar product of two vectors.'}
 
 --- Identity matrix.
 --  @param rows Number of rows.

@@ -98,7 +98,7 @@ Mat = {
 ["concat(M1,M2,sDir)"]   = [[Kunmeti du matricoj, dir='h' - en horizontala directo, dir='v' - in vertikala direkto.
 Uzi M1 .. M2 por horizontala kunmeto, kaj M1 // M2 por vertikala.]],
 ["transpose(M)"]         = [[Redonas la transposta matrico. La sama al T().]],
-["dot(V1,V2)"]           = [[Skalara produkto de du 3-elementa vektoroj.]],
+["dot(V1,V2)"]           = [[Skalara produkto de du vektoroj.]],
 ["Mat {tRow1,tRow2,..}"] = [[Krei novan matricon de la listo de vicoj (tabloj).]],
 ["map(M,fn)"]            = [[Apliki la funkcion fn(row[,col,val]) al ĉiuj elementoj, redoni novan matricon.]],
 },

@@ -93,7 +93,8 @@ local function numrat(R) return Cross.eq(R[2],1) and Cross.simp(R[1]) or R end
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
-local function numStr(v) 
+local function numStr(v)
+  print(v)
   return type(v) == 'number' and string.format('%d', v) or tostring(v) 
 end
 
