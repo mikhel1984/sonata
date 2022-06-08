@@ -101,7 +101,7 @@ end
 
 --- Get the object copy.
 --  @param v Object.
---  @return Deep copy.
+--  @return Deep copy when possible.
 cross.copy = function (v)
   return type(v) == 'table' and v.copy and v:copy() or v
 end

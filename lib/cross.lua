@@ -193,7 +193,7 @@ print(a)
 Quat = require 'lib.quaternion'
 
 a = Quat{Int(1),Int(2),Int(3),Int(4)}
-b = Quat{w = Int(3), j = Int(5)}
+b = Quat{w = Int(3), y = Int(5)}
 ans = (a ~= nil) and (b ~= nil) --> true
 
 ans = a + b                     --> Quat{4,2,8,4}
@@ -205,16 +205,13 @@ ans = a + a:conj()              --> Int(2)
 ans = a:abs()                  --3> 5.477
 
 c = a * a:inv()
-ans = c.w                       --> 1
+ans = c:w()                     --> 1
 
-c = a:copy()
-ans = c.i                       --> Int(2)
-
-c:normalize()
+c = a:normalize()
 ans = c:abs()                  --3> 1.0
 
 d = c ^ 0.5
-ans = d.w                      --3> 0.768
+ans = d:w()                    --3> 0.768
 
 ans = a ^ 3                     --> Quat{-86,-52,-78,-104}
 
