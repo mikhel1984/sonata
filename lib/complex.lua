@@ -43,10 +43,10 @@ ans = a / Comp._i             --> Comp(2,-1)
 c = Comp(1,1)^Comp(2,-2)
 
 -- real part
-ans = c.Re                   --3> 6.147
+ans = c:re()                 --3> 6.147
 
 -- imaginary part
-ans = c.Im                   --1> 7.4
+ans = c:im()                 --1> 7.4
 
 -- comparison
 ans = (a == b)                --> false
@@ -65,53 +65,50 @@ ans = a:conj()                --> Comp(1,-2)
 -- some functions after import 
 -- become default, such as
 d = Comp.sqrt(-2)
-ans = d.Im                   --3> 1.414
+ans = d:im()                  --3> 1.414
 
 -- exp
-ans = Comp.exp(d).Re         --3> 0.156
+ans = Comp.exp(d):re()        --3> 0.156
 
 -- log
-ans = Comp.log(d).Re         --3> 0.3465
+ans = Comp.log(d):re()        --3> 0.3465
 
 -- sin 
-ans = Comp.sin(d).Im         --3> 1.935
+ans = Comp.sin(d):im()        --3> 1.935
 
 -- cos 
 ans = Comp.cos(d)            --3> 2.178
 
 -- tan
-ans = Comp.tan(d).Re         --1> 0
+ans = Comp.tan(d):re()       --1> 0
 
 -- sinh
-ans = Comp.sinh(d).Re        --1> 0
+ans = Comp.sinh(d):re()      --1> 0
 
 -- cosh
 ans = Comp.cosh(d)           --3> 0.156
 
 -- tanh
-ans = Comp.tanh(d).Im        --3> 6.334
+ans = Comp.tanh(d):im()      --3> 6.334
 
 -- asin
 z = Comp(2,3)
-ans = z:asin().Im            --3> 1.983
+ans = z:asin():im()          --3> 1.983
 
 -- acos 
-ans = z:acos().Re            --2> 1.000
+ans = z:acos():re()          --2> 1.000
 
 -- atan
-ans = z:atan().Im            --3> 0.229
+ans = z:atan():im()          --3> 0.229
 
 -- asinh
-ans = z:asinh().Re           --3> 1.968
+ans = z:asinh():re()         --3> 1.968
 
 -- acosh
-ans = z:acosh().Im           --1> 1.000
+ans = z:acosh():im()         --1> 1.000
 
 -- atanh
-ans = z:atanh().Re           --3> 0.146
-
--- make copy
-ans = a:copy()                --> a
+ans = z:atanh():re()         --3> 0.146
 
 -- show
 print(a)
@@ -127,7 +124,7 @@ local Cross = Ver.cross
 Ver = Ver.versions
 
 -- REAL, IMAG = 1, 2
-local keys = {Re=1, Im=2}
+--local keys = {Re=1, Im=2}
 
 -- help section 
 local FUNCTIONS = 'functions'
@@ -238,13 +235,8 @@ complex.__eq = function (C1, C2)
   return Cross.eq(C1[1], C2[1]) and Cross.eq(C1[2], C2[2])
 end
 
---- Call unknown key. Use proxy to access the elements.
---  @param t Table.
---  @param k Key.
---  @return Value or method.
-complex.__index = function (t,k)
-  return complex[k] or rawget(t, keys[k] or '')
-end
+-- methametods
+complex.__index = complex
 
 --- C1 * C2
 --  @param C1 Real or complex number.
@@ -266,11 +258,7 @@ end
 --  @param t Table.
 --  @param k Key.
 --  @param v Value.
-complex.__newindex = function (t,k,v)
-  if keys[k] then 
-    t[keys[k]] = v
-  end
-end
+complex.__newindex = function () error("Immutable object") end
 
 --- C1 ^ C2
 --  @param C1 Real or complex number.
@@ -412,12 +400,6 @@ complex.conj = function (C) return complex:_init_(Cross.copy(C[1]), -Cross.copy(
 about[complex.conj] = {"conj(C)", "Return the complex conjugate. Equal to ~C.", help.OTHER}
 complex.__bnot = complex.conj
 
---- Create copy of the complex number.
---  @param C Source value.
---  @return Complex number.
-complex.copy = function (C) return complex:_init_(Cross.copy(C[1]), Cross.copy(C[2])) end
-about[complex.copy] = {"copy(C)", "Create copy of the complex number.", help.OTHER}
-
 --- Cosine
 --  @param C Complex number.
 --  @return Complex cosine.
@@ -441,6 +423,12 @@ complex.exp = function (C)
 end
 about[complex.exp] = {"exp(C)", "Return exponent in for complex argument.", FUNCTIONS}
 
+--- Get imaginary part.
+--  @param C Complex number.
+--  @return Imaginary part.
+complex.im = function (C) return C[2] end
+about[complex.im] = {"im(C)", "Get imaginary part."}
+
 --- Natural logarithm
 --  @param C Real or complex number.
 --  @return Real or complex logarithm.
@@ -455,6 +443,12 @@ complex.log = function (C)
   end
 end
 about[complex.log] = {"log(C)", "Complex logarithm.", FUNCTIONS}
+
+--- Get real part.
+--  @param C Complex number.
+--  @return Real part.
+complex.re = function (C) return C[1] end
+about[complex.re] = {"re(C)", "Get real part."}
 
 --- Sinus
 --  @param C Complex number.

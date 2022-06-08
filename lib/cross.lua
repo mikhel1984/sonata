@@ -157,11 +157,11 @@ ans = a:angle()                 --3> 1.107
 
 ans = a:conj()                   --> Comp(Int(1),Int(-2))
 
-ans = (a^0.5).Re                --3> 1.272
+ans = (a^0.5):re()              --3> 1.272
 
-ans = Comp.log(a).Re            --3> 0.805
+ans = Comp.log(a):re()          --3> 0.805
 
-ans = Comp.sin(a).Re            --3> 3.165
+ans = Comp.sin(a):re()          --3> 3.165
 
 -- show
 print(a)
@@ -188,9 +188,9 @@ ans = b:abs()                   --> 0.5
 
 ans = a:angle()                --3> 0.927
 
-ans = Comp.cos(a).Im           --3> -0.343
+ans = Comp.cos(a):im()         --3> -0.343
 
-ans = (a^0.3).Re               --2> 0.91
+ans = (a^0.3):re()             --2> 0.91
 
 -- show 
 print(a)
@@ -272,7 +272,7 @@ d = Mat {
   {17, 18, 19+20*j, 21}
 }
 tmp = d:det()
-ans = tmp.Re                --1> -29932.0
+ans = tmp:re()              --1> -29932.0
 
 -- inverse matrix
 d2 = d:inv()
@@ -281,7 +281,7 @@ ans = tmp[1][1]             --3> 1.0
 
 -- ratio
 tmp = a / b
-ans = tmp[1][1].Im          --1> -0.6
+ans = tmp[1][1]:im()        --1> -0.6
 
 -- try to solve equation
 tmp = Mat.rref(a .. Mat.V{4,5})
