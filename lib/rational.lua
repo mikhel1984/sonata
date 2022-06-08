@@ -56,13 +56,10 @@ ans = a:float()               --> 0.5
 ans = Rat.from(0.25)          --> Rat(1,4)
 
 -- numerator
-ans = b:Nu()                  --> 2
+ans = b:nu()                  --> 2
 
 -- denominator
-ans = b:De()                  --> 1
-
--- make copy
-ans = a:copy()                --> a
+ans = b:de()                  --> 1
 
 -- show
 print(a)
@@ -203,6 +200,9 @@ rational.__mul = function (R1, R2)
   return numrat(rational:_new_(R1[1]*R2[1], R1[2]*R2[2]))
 end
 
+--- "Protect" from table modification.
+rational.__newindex = function () error("Immutable object") end
+
 --- R1 ^ R2
 --  @param R1 Rational or real number.
 --  @param R2 Rational or real number.
@@ -271,19 +271,11 @@ rational._new_ = function (self, vn, vd)
   return setmetatable({vn/g, vd/g}, self)  
 end
 
---- Create copy of the rational number.
---  @param R Source value.
---  @return Rational number.
-rational.copy = function (R) return 
-  setmetatable({Cross.copy(R[1]), Cross.copy(R[2])}, rational) 
-end
-about[rational.copy] = {"copy(R)", "Get copy of the rational number.", help.OTHER}
-
 --- Get denominator.
 --  @param R Rational number.
 --  @return Denominator.
-rational.De = function (R) return R[2] end
-about[rational.De] = {"De(R)", "Return the denominator of the rational number."}
+rational.de = function (R) return R[2] end
+about[rational.de] = {"de(R)", "Return the denominator of the rational number."}
 
 --- R1 == R2
 --  @param R1 First number.
@@ -339,8 +331,8 @@ about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for 
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
-rational.Nu = function (R) return R[1] end
-about[rational.Nu] = {"Nu(R)", "Return the numerator of rational number."}
+rational.nu = function (R) return R[1] end
+about[rational.nu] = {"nu(R)", "Return the numerator of rational number."}
 
 
 -- call constructor, check arguments

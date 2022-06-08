@@ -34,10 +34,6 @@ ans = (b == b)                   --> true
 
 ans = (a >= b)                   --> false
 
--- copy
-d = a:copy()
-ans = (a:Nu().type == d:Nu().type) --> true
-
 -- show
 print(a)
 
@@ -67,9 +63,6 @@ ans = a + 1                      --> Rat(Poly{1,4,4},Poly{2,3})
 
 a = Rat(Poly{1,1},Poly{1,2}) 
 ans = a ^ 2                      --> a * a
-
-d = a:copy() 
-ans = (a:Nu().type == d:Nu().type)  --> true
 
 a = Poly{1,2,3}
 ans = Rat(5*a, 5)                   --> a
