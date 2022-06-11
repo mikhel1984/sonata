@@ -149,6 +149,31 @@ utils.Fn = function (sExpr,iArg)
   return fn()
 end
 
+--- 'Smart' number to string conversation.
+--  @param d Number. 
+--  @return String representation.
+utils.numstr = function (d)
+  local int, frac = math.modf(d)
+  local a = math.abs(int)
+  -- short integer
+  if frac == 0 then 
+    if a < 1E-6 then
+      return string.format('%d', int) 
+    end
+  elseif int == 0 then
+    if math.abs(frac) >= 0.01 then
+      return string.format("%.3f", d)
+    end
+  elseif a < 10 then
+    return string.format('%.3f', d)
+  elseif a < 100 then 
+    return string.format('%.2f', d)
+  elseif a < 1000 then 
+    return string.format('%.1f', d)
+  end
+  return string.format('%.2E', d)
+end
+
 return {
   versions = versions,
   cross = cross,
