@@ -157,7 +157,7 @@ utils.numstr = function (d)
   local a = math.abs(int)
   -- short integer
   if frac == 0 then 
-    if a < 1E-6 then
+    if a < 1E5 then
       return string.format('%d', int) 
     end
   elseif int == 0 then
@@ -181,3 +181,4 @@ return {
 }
 
 --===================================================
+--TODO setup for number of digits

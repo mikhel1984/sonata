@@ -75,7 +75,9 @@ local HYP = 'hyperbolic'
 local AUX = 'auxiliary'
 
 -- compatibility
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Utils = Ver.utils
+Ver = Ver.versions
 
 --	MODULE
 
@@ -87,9 +89,8 @@ SonataHelp = SonataHelp or {}
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
 main._showElt_ = function (v)
-  local tp = Ver.mathType(v)
-  if tp == 'float' or tp == 'integer' and math.abs(v) >= 1000 then
-    return string.format('%.2E', v)  -- 'scientific' format
+  if type(v) == 'number' then
+    return Utils.numstr(v)
   else
     return tostring(v)
   end

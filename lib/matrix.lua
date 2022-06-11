@@ -203,6 +203,7 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 
 -- compatibility
 local Ver = require("lib.utils")
+local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
@@ -384,7 +385,7 @@ matrix.__tostring = function (M)
     local scol, mr = {}, M[r]
     for c = 1, M.cols do
       local tmp = mr[c]
-      table.insert(scol, type(tmp) == 'number' and string.format('%.3f',tmp) or tostring(mr[c]))
+      table.insert(scol, type(tmp) == 'number' and Utils.numstr(tmp) or tostring(tmp))
     end
     table.insert(srow, table.concat(scol, "  "))
   end

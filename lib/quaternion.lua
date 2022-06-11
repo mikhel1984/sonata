@@ -89,6 +89,7 @@ print(d)
 --	LOCAL
 
 local Ver = require("lib.utils")
+local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
@@ -116,7 +117,7 @@ end
 --  @param v Value.
 --  @return String representation.
 local function numStr(v) 
-  return type(v) == 'number' and string.format('%.3f', v) or tostring(v) 
+  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
 end
 
 --	INFO

@@ -121,6 +121,7 @@ print(a)
 local Ver = require("lib.utils")
 -- Inter-module functionality
 local Cross = Ver.cross
+local Utils = Ver.utils
 Ver = Ver.versions
 
 -- help section 
@@ -140,7 +141,7 @@ local function numcomp(C) return Cross.eq(C._v[2], 0) and Cross.simp(C._v[1]) or
 --  @param v Value.
 --  @return String representation.
 local function numStr(v) 
-  return type(v) == 'number' and string.format('%.3f', v) or tostring(v) 
+  return type(v) == 'number' and Utils.numstr(v) or tostring(v) 
 end
 
 --- Find exponential with type conversation.

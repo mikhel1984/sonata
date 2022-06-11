@@ -76,7 +76,7 @@ ans = e[1]                   --1> -1.00
 -- find all roots
 g = Poly.build(2, Comp(3,4))
 e = g:roots()
-ans = e[2].Re                --1> 3
+ans = e[2]:re()              --1> 3
 
 -- fit curve with polynomial
 -- of order 2
@@ -127,6 +127,7 @@ ans = p(0.5)                 --2> -0.512
 --	LOCAL
 
 local Ver = require("lib.utils")
+local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
@@ -309,7 +310,10 @@ end
 --  @return String with coefficients.
 polynomial.__tostring = function (P) 
   local t = {}
-  for i = #P, 0, -1 do table.insert(t, tostring(P[i])) end
+  for i = #P, 0, -1 do
+    local v = P[i]
+    table.insert(t, type(v) == 'number' and Utils.numstr(v) or tostring(v))
+  end
   return table.concat(t,' ') 
 end
 
@@ -449,7 +453,7 @@ polynomial.build = function (...)
   local res = polynomial:_init_({[0]=1})
   for _,v in ipairs({...}) do
     if type(v) == 'table' and v.iscomplex then
-      local p = polynomial:_init_({[0] = v.Re^2 + v.Im^2, -2*v.Re, 1})
+      local p = polynomial:_init_({[0] = v:re()^2 + v:im()^2, -2*v:re(), 1})
       res = polynomial.__mul(res, p)
     else
       polynomial._multXv_(res, v)

@@ -75,6 +75,7 @@ ans = a + 0.5                 --> 1
 --	LOCAL
 
 local Ver = require("lib.utils")
+local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
@@ -91,8 +92,7 @@ local function numrat(R) return Cross.eq(R._v[2],1) and Cross.simp(R._v[1]) or R
 --  @param v Value.
 --  @return String representation.
 local function numStr(v)
-  print(v)
-  return type(v) == 'number' and string.format('%d', v) or tostring(v) 
+  return type(v) == 'number' and Utils.numstr(v) or tostring(v) 
 end
 
 --	INFO
