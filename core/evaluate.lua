@@ -190,7 +190,7 @@ evaluate.note = function (ev, fname, full)
   txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
-    if string.find(line, '^%s*%-%-%s*PAUSE') then
+    if string.find(line, '^%s*%-%-%s*[Pp][Aa][Uu][Ss][Ee]') then
       if full then
         if evaluate.cli_loop(ev, invA, invB, true) == evaluate.EV_QUIT then
           break
