@@ -86,7 +86,15 @@ Ver = Ver.versions
 --  @return True for rational number.
 local function isrational(v) return type(v) == 'table' and v.isrational end
 
-local function numrat(R) return Cross.eq(R._v[2],1) and Cross.simp(R._v[1]) or R end
+local mabs = math.abs
+
+local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
+
+local function numrat(R) 
+  return Cross.eq(R._v[2],1) and Cross.simp(R._v[1])               -- x / 1
+    or (isbig(R._v[1]) or isbig(R._v[2])) and (R._v[1] / R._v[2])  -- float num or denom
+    or R 
+end
 
 --- Number representation.
 --  @param v Value.
@@ -245,8 +253,8 @@ end
 --  @return String with numerator and denominator.
 rational.__tostring = function (R) 
   local r = R._v
-  if type(r[1]) == 'number' and type(r[2]) == 'number' and math.abs(r[1]) > r[2] then
-    local n = math.abs(r[1])       -- numerator
+  if type(r[1]) == 'number' and type(r[2]) == 'number' and mabs(r[1]) > r[2] then
+    local n = mabs(r[1])       -- numerator
     local v = math.modf(n / r[2]) 
     return string.format("%s%d %d/%d", r[1] < 0 and '-' or '', v, n % r[2], r[2])
   else

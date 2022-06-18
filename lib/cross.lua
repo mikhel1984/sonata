@@ -225,7 +225,7 @@ ans = a + Int(1)                --> Quat{2,2,3,4}
 ans = Int(2) * b                --> Quat{6,0,10,0}
 
 
--- COMPLEX and MATRIX
+-- MATRIX and COMPLEX
 ---------------------
 Mat = require 'lib.matrix'
 
@@ -295,6 +295,78 @@ ans = tmp[1][1]             --3> m[1][1]
 
 -- trace
 ans = b:tr()                 --> Comp(13,8)
+
+-- rank
+ans = a:rank()               --> 2
+
+-- MATRIX and RATIONAL
+---------------------
+
+-- prepare
+a = Mat{{1, Rat(2,3)},{Rat(4,5), 6}}
+b = Mat{{Rat(1,2), Rat(1,3)},{5, 4}}
+
+-- transpose
+c = a:T()
+ans = c[2][1]                --> Rat(2,3)
+
+-- sum
+tmp = a + b
+ans = tmp[1][1]              --> a[1][1] + b[1][1]
+
+-- add rational
+tmp = a + Rat(1,3)
+ans = tmp[1][2]              --> 1
+
+-- product
+tmp = a * b
+ans = tmp[1][1]              --> b[1][1] + a[1][2]*b[2][1]
+
+-- multipy rational
+tmp = b * Rat(3,2)
+ans = tmp[1][2]              --> Rat(1,2)
+
+-- determinant
+d = Mat {
+  {Rat(1,2), 2, 3, Rat(1,2)},
+  {Rat(1,3), 9, 10, 11},
+  {-3, Rat(1,2), 15, 16},
+  {17, 18, Rat(1,3), 21}
+}
+tmp = d:det()
+ans = tmp:denom()            --> 18
+
+-- inverse matrix
+d2 = d:inv()
+tmp = d * d2
+ans = tmp[2][2]             --2> 1.0
+
+-- ratio
+tmp = a / b
+ans = tmp[1][1]             --1> 2.0
+
+-- try to solve equation
+tmp = Mat.rref(a .. Mat.V{4,5})
+ans = tmp[1][2]             --3> 0.0
+
+-- pseudoinverse
+c = Mat{{1,Rat(1,2),3},{Rat(1,2),5,Rat(1,3)}}
+cc = c:pinv()
+tmp = c * cc
+ans = tmp[2][2]             --3> 1.0
+
+-- LU
+l,u,p = a:lu()
+ans = u[2][1]               --3> 0.0
+
+-- Cholesky
+m = Mat{{3,Rat(1,2)},{Rat(1,3),3}}
+mm = m:chol()
+tmp = mm * mm:T()
+ans = tmp[1][1]             --3> m[1][1]
+
+-- trace
+ans = b:tr()                 --> Rat(9,2)
 
 -- rank
 ans = a:rank()               --> 2
