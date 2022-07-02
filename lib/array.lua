@@ -205,7 +205,7 @@ array.capacity = function (A)
   local S,K = A.size, A.k
   return S[#S] * K[#K]
 end
-about[array.capacity] = {"capacity(A)", "Maximal number of elements in the array. The same as #A.", help.OTHER}
+about[array.capacity] = {"capacity()", "Maximal number of elements in the array. The same as #A.", help.OTHER}
 
 --- Concatenate 2 arrays along given axes.
 --  @param A1 First array.
@@ -378,7 +378,7 @@ array.zip = function (self, fn, ...)
   end
   return res
 end
-about[array.zip] = {"Arr:zip(fn, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
+about[array.zip] = {"Arr:zip(fn, ...)", "Apply function of several arguments. Return new array.", help.STATIC}
 
 -- Constructor
 setmetatable(array, {__call = function (self, tSize) 
@@ -389,7 +389,7 @@ setmetatable(array, {__call = function (self, tSize)
   return array:_new_(tSize) 
 end})
 array.Arr = 'Arr'
-about[array.Arr] = {"Arr {n1,n2,..}", "Create empty array with the given size.", help.NEW}
+about[array.Arr] = {"Arr {n1,n2,..}", "Create empty array with the given size.", help.STATIC}
 
 -- Comment to remove descriptions
 array.about = about

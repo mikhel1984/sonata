@@ -101,7 +101,7 @@ end                           --> 456
 
 -- pseudo-random number
 -- from 0 to b
-print(b:random())
+print(Int:random(b))
 
 -- greatest common divisor
 ans = a:gcd(b):float()        --> 3
@@ -541,7 +541,7 @@ bigint._primeFermat_ = function (B)
   local div, pow = bigint._div_, bigint._powm_
   for i = 1, 5 do
     repeat 
-      a = bigint.random(B)
+      a = bigint:random(B)
     until a:float() >= 2
     local v1 = pow(a,B,B)
     local _,v2 = div(a,B)
@@ -749,17 +749,12 @@ end
 --  @param B Bigint or integer number.
 --  @return Absolute value.
 bigint.abs = function (B)
-  local a
-  if isbigint(B) then
-    a = bigint:_new_({0,base=B._base_})
-    a._v = B._v 
-  else 
-    a = bigint:_new_(B)
-  end
+  local a = bigint:_new_({0,base=B._base_})
+  a._v = B._v 
   a.sign = 1
   return a
 end
-about[bigint.abs] = {"abs(B)", "Return module of arbitrary long number."}
+about[bigint.abs] = {"abs()", "Return module of arbitrary long number."}
 
 --- Get digit.
 --  @param B Bigint object.
@@ -819,11 +814,11 @@ about[bigint.eq] = {"eq(B)", "Check equality with the second value.", help.OTHER
 bigint.__eq = bigint.eq
 
 --- B!
---  @param B Bigint object or integer.
+--  @param B Bigint object.
 --  @return Factorial of the number as bigint object.
 bigint.fact = function (B)
-  local n = isbigint(B) and B:_copy_() or bigint:_new_(B)
-  assert(n.sign > 0, "Non-negative value is expected!")
+  assert(B.sign > 0, "Non-negative value is expected!")
+  local n = B:_copy_()
   local res = bigint:_new_({1,base=B._base_})
   if #n._v == 1 and n._v[1] == 0 then return res end  -- 0! == 1
   local mul = bigint._mul_
@@ -884,7 +879,6 @@ about[bigint.gcd] = {"gcd(B)", "Find the greatest common divisor for two integer
 --  @param sMethod Trivial search by default. Can be 'Fremat'.
 --  @return true if prime.
 bigint.isPrime = function (B, sMethod)
-  B = isbigint(B) and B or bigint:_new_(B)
   if sMethod == 'Fermat' then
     return bigint._primeFermat_(B)
   end
@@ -895,9 +889,11 @@ end
 about[bigint.isPrime] = {"isPrime([sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
 
 --- Generate random number.
+--  @param self Do nothing.
 --  @param B Upper limit.
 --  @return Number from 0 to B.
-bigint.random = function (B)
+bigint.random = function (self,B)
+  B = isbigint(B) and B or bigint:_new_(B)
   local d, set, any, v = B._base_, false
   local res = bigint:_new_({0,sign=B.sign,base=d})
   local n = math.random(1,#B) 
@@ -919,7 +915,7 @@ bigint.random = function (B)
   end
   return res
 end
-about[bigint.random] = {"random()","Generate pseudo-random value from 0 to B."}
+about[bigint.random] = {"Int:random(B)","Generate pseudo-random value from 0 to B.", help.STATIC}
 
 --- Change current numeric base.
 --  @param B Bigint object.
@@ -948,7 +944,7 @@ __call = function (self, v)
   return bigint:_new_(v) 
 end})
 bigint.Int = 'Int'
-about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.NEW}
+about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.STATIC}
 
 -- Comment to remove descriptions
 bigint.about = about

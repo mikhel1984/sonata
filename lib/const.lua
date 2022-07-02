@@ -20,14 +20,14 @@ ans = _C.phy.e * 1E19        --3> 1.602
 ans = _C.phy.e_u              --> 'C'
 
 -- create "immutable" value
-_C.add('myConst', 10)
+_C:add('myConst', 10)
 ans = _C.myConst              --> 10
 
 -- modification generates error
 ans = pcall(function() _C.myConst = 0 end)  --> false
 
 -- remove constant
-_C.remove('myConst')
+_C:remove('myConst')
 ans = _C.myConst              --> nil
 
 --]]
@@ -112,28 +112,30 @@ about[_math_.pi] = {"math.pi", "Ratio of a circle's circumference to its diamete
 about[_math_.e] = {"math.e", "Base of the natural logarithm.", MATH}
 
 --- Make value "constant".
+--  @param self Do nothing.
 --  @param sName Name of constant.
 --  @param val  Value of constant.
 --  @param sUunit String with units.
-const.add = function (sName,val,sUnit)
+const.add = function (self,sName,val,sUnit)
   -- add only new constants
   if _user_[sName] then error('Cannot modify '..tostring(sName)) end
   _user_[sName] = val
   _user_[sName..'_u'] = sUnit
   return 'Done'
 end
-about[const.add] = {'add(sName,value,[sUnits])','Create new constant.'}
+about[const.add] = {'_C:add(sName,value,[sUnits])','Create new constant.', help.STATIC}
 
 --- Remove existing constant.
+--  @param self Do nothing.
 --  @param sName Name of constant.
-const.remove = function (sName)
+const.remove = function (self,sName)
   if _user_[sName] then
     _user_[sName] = nil
     _user_[sName..'_u'] = nil
     return 'Done'
   end
 end
-about[const.remove] = {'remove(sName)','Delete user-defined constant.'}
+about[const.remove] = {'_C:remove(sName)','Delete user-defined constant.'}
 
 -- Comment to remove descriptions
 const.about = about

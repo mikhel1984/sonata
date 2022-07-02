@@ -36,10 +36,10 @@ ans = t2.H                 --3> t0.H
 
 -- find topocentric coordinates
 tg = {X=t1.X+10, Y=t1.Y+20, Z=t1.Z+30}
-tc = Geo.toENU(t0, t1, tg)
+tc = Geo:toENU(t0, t1, tg)
 
 -- back to cartesian
-tg2 = Geo.fromENU(t0, t1, tc)
+tg2 = Geo:fromENU(t0, t1, tc)
 ans = tg2.X                --3> tg.X
 
 -- transform XYZ from WGS84 to PZ90
@@ -66,8 +66,7 @@ ans = t6.N                  --2> 6181924.245
 ans = t6.E                  --2> 7413223.481
 
 -- Merkator projection
--- methods can be called directly from Geo
-t7 = Geo.projM(wgs84, pt)
+t7 = wgs84:projM(pt)
 print(t7.N, t7.E)
 
 -- inverse problem
@@ -83,7 +82,7 @@ ans = a3                    --2> a2
 ans = p3.B                  --2> p2.B
 
 -- equator acceleration 
-ans = Geo.grav(0)           --1> 9.78
+ans = Geo:grav(0)           --1> 9.78
 
 --]]
 
@@ -445,55 +444,58 @@ SK42 = ellipsoid:new {a = 6378245, f = 1/298.3}
 geodesy.__index = geodesy
 
 --- Convert degrees to radians.
+--  @param self Do nothing.
 --  @param d Degrees.
 --  @param m Minutes (optional).
 --  @param s Seconds (optional).
 --  @return Angle in radians.
-geodesy.dms2rad = function (d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
-about[geodesy.dms2rad] = {"dms2rad(d,[m=0,s=0])", "Convert degrees, minutes and seconds to radians.", help.OTHER}
+geodesy.dms2rad = function (self,d,m,s) return math.rad(d + (m or 0) / 60 + (s or 0) / 3600) end
+about[geodesy.dms2rad] = {"Geo:dms2rad(d,[m=0,s=0])", "Convert degrees, minutes and seconds to radians.", help.OTHER}
 
 --- Convert degrees to degrees-minutes-seconds.
+--  @param self Do nothing.
 --  @param d Angle in degrees.
 --  @return Degrees, minutes, seconds.
-geodesy.deg2dms = function (d)
+geodesy.deg2dms = function (self,d)
   local deg = math.floor(d)
   local min = math.floor(60 * (d - deg))
   local sec = 3600 * (d - deg) - 60 * min
   return deg, min, sec
 end
-about[geodesy.deg2dms] = {"deg2dms(d)", "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
+about[geodesy.deg2dms] = {"Geo:deg2dms(d)", "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
 --- International gravity formula (WGS).
+--  @param self Do nothing.
 --  @param B Latitude, deg.
 --  @return Acceleration value.
-geodesy.grav = function (dB)
+geodesy.grav = function (self,dB)
   local s = math.sin(math.rad(dB))
   s = s * s  -- get square
   return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
 end
-about[geodesy.grav] = {"grav(dB)", "International gravity formula, angle in degrees.", help.OTHER}
+about[geodesy.grav] = {"Geo:grav(dB)", "International gravity formula, angle in degrees.", help.OTHER}
 
 
 -- Access to the ellipsoid object methods.
 geodesy.toXYZ = ellipsoid.toXYZ
-about[geodesy.toXYZ] = {"toXYZ(E,tBLH)", "Transform Geodetic coordinates to Cartesian.", TRANS}
+about[geodesy.toXYZ] = {"toXYZ(tBLH)", "Transform Geodetic coordinates to Cartesian.", TRANS}
 
 geodesy.toBLH = ellipsoid.toBLH
-about[geodesy.toBLH] = {"toBLH(E,tXYZ)", "Transform Cartesian coordinates to Geodetic.", TRANS}
+about[geodesy.toBLH] = {"toBLH(tXYZ)", "Transform Cartesian coordinates to Geodetic.", TRANS}
 
 geodesy.projGK = ellipsoid.projGK
-about[geodesy.projGK] = {"projGK(E,tBL)", "Return north and east positions of the point after Gauss-Kruger projection.", PROJ}
+about[geodesy.projGK] = {"projGK(tBL)", "Return north and east positions of the point after Gauss-Kruger projection.", PROJ}
 
 geodesy.projM = ellipsoid.projM
-about[geodesy.projM] = {"projM(E,tBL)", "Return north and east positions of the point after Mercator projectoin.", PROJ}
+about[geodesy.projM] = {"projM(tBL)", "Return north and east positions of the point after Mercator projectoin.", PROJ}
 
 geodesy.solveInv = ellipsoid.solveInv
-about[geodesy.solveInv] = {"solveInv(E,BLH1,BLH2)", 
+about[geodesy.solveInv] = {"solveInv(BLH1,BLH2)", 
   "Solve inverse geodetic problem, find distance and azimuths for two points.", PROB}
 
 -- ellipsoid.solveDir = function (E, t1, a1, dist)
 geodesy.solveDir = ellipsoid.solveDir
-about[geodesy.solveDir] = {"solveDir(E,BLH,azimuth,dist)", 
+about[geodesy.solveDir] = {"solveDir(BLH,azimuth,dist)", 
   "Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.", PROB}
 
 
@@ -532,11 +534,12 @@ geodesy.blhInto = 'A.blhInto[B]'
 about[geodesy.blhInto] = {"A.blhInto[B]", "Get function to transform geodetic coordinates from A to B system using the Molodensky method.", TRANS}
 
 --- Find topocentric coordinates of a point.
+--  @param self Do nothing.
 --  @param g Geodetic coordinates of the reference point.
 --  @param r Cartesian coordinates of the reference point.
 --  @param p Cartesian coordinates of the observed point.
 --  @return Topocentric coordinates of the observed point. 
-geodesy.toENU = function (tG, tR, tP)
+geodesy.toENU = function (self,tG, tR, tP)
   local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
   local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
   local dx, dy, dz = tP.X-tR.X, tP.Y-tR.Y, tP.Z-tR.Z
@@ -546,14 +549,15 @@ geodesy.toENU = function (tG, tR, tP)
     Z = cB*cL*dx + cB*sL*dy + sB*dz
   }
 end
-about[geodesy.toENU] = {"toENU(tBLr,tXYZr,tCatr)", "Get topocentric coordinates of a point in reference frame.", TRANS}
+about[geodesy.toENU] = {"Geo:toENU(tBLr,tXYZr,tCatr)", "Get topocentric coordinates of a point in reference frame.", TRANS}
 
 --- Find cartesian coordinates of a point with topocentric coordinates.
+--  @param self Do nothing.
 --  @param g Geodetic coordinates of the reference point.
 --  @param r Cartesian coordinates of the reference point.
 --  @param l Topocentric coordinates of the observed point.
 --  @return Cartesian coordinates of the observed point.
-geodesy.fromENU = function (tG, tR, tL)
+geodesy.fromENU = function (self,tG, tR, tL)
   local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
   local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
   return {
@@ -562,7 +566,7 @@ geodesy.fromENU = function (tG, tR, tL)
     Z = tR.Z + cB*tL.Y + sB*tL.Z
   }
 end
-about[geodesy.fromENU] = {"fromENU(tBLr,tXYZr,tTop)", "Get cartesian coordinates of a local point in reference frame.", TRANS}
+about[geodesy.fromENU] = {"Geo:fromENU(tBLr,tXYZr,tTop)", "Get cartesian coordinates of a local point in reference frame.", TRANS}
 
 -- Comment to remove descriptions
 geodesy.about = about

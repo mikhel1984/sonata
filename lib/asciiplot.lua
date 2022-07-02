@@ -518,7 +518,7 @@ asciiplot.concat = function (self, ...)
   for i = 1, #acc do acc[i] = table.concat(acc[i]) end
   return table.concat(acc, '\n')
 end
-about[asciiplot.concat] = {"Ap:concat(...)", "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.", help.OTHER}
+about[asciiplot.concat] = {"Ap:concat(...)", "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.", help.STATIC}
 
 --- Make a copy.
 --  @param F Initial object.
@@ -547,13 +547,13 @@ asciiplot.copy = function (F)
   end
   return setmetatable(o, asciiplot)
 end
-about[asciiplot.copy] = {"copy()", "Create a copy of the object.", help.NEW}
+about[asciiplot.copy] = {"copy()", "Create a copy of the object.", help.OTHER}
 
 --- Constructor example.
 --  @param dwidth Figure width.
 --  @param dheight Figure height.
 --  @return New object of asciiplot.
-asciiplot.new = function(self,dwidth,dheight)
+asciiplot._new_ = function(self,dwidth,dheight)
   local o = {
     -- size
     width  = dwidth or WIDTH,
@@ -705,9 +705,9 @@ end
 about[asciiplot.tplot] = {"tplot(t,[tOpt={}])", "Plot the table data, choose columns if need."}
 
 -- Simplify the constructor call.
-setmetatable(asciiplot, {__call = function (self,w,h) return asciiplot:new(w,h) end})
+setmetatable(asciiplot, {__call = function (self,w,h) return asciiplot:_new_(w,h) end})
 asciiplot.Ap = 'Ap'
-about[asciiplot.Ap] = {"Ap([iWidth=75,iHeight=23])", "Create new asciiplot.", help.NEW}
+about[asciiplot.Ap] = {"Ap([iWidth=75,iHeight=23])", "Create new asciiplot.", help.STATIC}
 
 -- Export funcitons.
 asciiplot.onImport = function ()
