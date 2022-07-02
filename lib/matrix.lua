@@ -808,6 +808,48 @@ matrix.H = function (M)
 end
 about[matrix.H] = {"H(M)", "Return conjugabe transpose. ", TRANSFORM}
 
+--- Insert values from another matrix.
+--  @param M1 Initial matrix, it is modified.
+--  @param tR Range of rows.
+--  @param tC Range of columns.
+--  @param M2 Matrix to insert.
+matrix.insert = function (M1, tR, tC, M2)
+  if type(tR) ~= 'table' or type(tC) ~= 'table' then error("Range is a table") end
+
+    -- update range
+  if #tR == 1 then
+    local r = toRange(tR[1], M1.rows)
+    tR = {r,r,1}
+  else
+    tR[1] = toRange(tR[1] or 1, M1.rows)
+    tR[2] = toRange(tR[2] or M1.rows, M1.rows)
+    tR[3] = tR[3] or 1
+    if not (tR[1] and tR[2] and (tR[2]-tR[1])/tR[3] >= 0) then return nil end
+  end
+  if #tC == 1 then
+    local c = toRange(tC[1], M1.cols)
+    tC = {c,c,1}
+  else
+    tC[1] = toRange(tC[1] or 1, M1.cols)
+    tC[2] = toRange(tC[2] or M1.cols, M1.cols)
+    tC[3] = tC[3] or 1
+    if not (tC[1] and tC[2] and (tC[2]-tC[1])/tC[3] >= 0) then return nil end
+  end
+
+  -- fill matrix
+  local i = 0
+  for r = tR[1],tR[2],tR[3] do
+    i = i+1
+    local mr, mi = M1[r], M2[i]
+    local j = 0
+    for c = tC[1],tC[2],tC[3] do
+      j = j+1
+      mr[c] = mi[j]
+    end
+  end
+end
+about[matrix.insert] = {"insert(M1,tR,tC,M2)", "Insert second matrix into the given range of indeces."}
+
 --- Inverse matrix.
 --  @param M Initial matrix.
 --  @return Result of inversion.
@@ -974,6 +1016,7 @@ matrix.qr = function (M)
   return Q, R
 end
 about[matrix.qr] = {"qr(M)", "QR decomposition of the matrix.", TRANSFORM}
+
 
 --- Get sub matrix. 
 --  In case of sub matrix each index should be a table of 2 or 3 elements: [begin,end[,step]].
