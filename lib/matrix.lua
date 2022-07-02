@@ -28,7 +28,7 @@ ans = a[2][2]                 --> 4
 b[1][1] = 5
 -- transpose
 c = a:T()
--- use () as alias for get()
+-- 'smart' getter
 ans = c(1,-1)                 --> 3
 
 -- matrix rows and columns
@@ -120,6 +120,7 @@ g = Mat {
   {4,5,6},
   {7,8,9}
 }
+-- same as g:range({2,-1},{2,3})
 ans = g({2,-1},{2,3})         --> Mat {{5,6},
                                        {8,9}}
 
@@ -183,7 +184,7 @@ ans = m(1)                    --> 1
 -- extract last column
 -- index can be negative 
 m = a(-1,{})
-ans = m:get(2)                --> 4
+ans = m(2)                    --> 4
 
 -- get rank
 ans = Mat.fill(2,3):rank()    --> 1
@@ -272,6 +273,28 @@ matrix.__add = function (M1,M2)
     end
   end
   return res
+end
+
+--- Simplify call of vectors and range.
+--  @param M Matrix.
+--  @param vR Row number or range.
+--  @param vC Column number or range (optional).
+--  @return Value or submatrix.
+matrix.__call = function (M,vR,vC) 
+  if not vC then 
+    if not vR then return nil end
+    if M.rows == 1 then vC, vR = vR, 1 else vC = 1 end
+  end
+  if type(vR) == 'number' then
+    if type(vC) == 'number' then
+      local r = toRange(vR, M.rows)
+      local c = toRange(vC, M.cols)
+      return r and c and M[r][c]
+    else vR = {vR} end
+  else
+    if type(vC) == 'number' then vC = {vC} end
+  end
+  return matrix.range(M,vR,vC) 
 end
 
 --- Horizontal concatenation
@@ -674,8 +697,8 @@ about[matrix.copy] = {"copy(M)", "Return copy of matrix.", help.OTHER}
 --  @return Cross product.
 matrix.cross = function (V1,V2)
   if (V1.rows*V1.cols ~= 3 or V2.rows*V2.cols ~= 3) then error("Vector with 3 elements is expected!") end
-  local x1,y1,z1 = V1:get(1), V1:get(2), V1:get(3)
-  local x2,y2,z2 = V2:get(1), V2:get(2), V2:get(3)
+  local x1,y1,z1 = V1(1), V1(2), V1(3)
+  local x2,y2,z2 = V2(1), V2(2), V2(3)
   return matrix:_init_(3,1, {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}})
 end
 about[matrix.cross] = {'cross(V1,V2)','Cross product or two 3-element vectors.'}
@@ -703,7 +726,7 @@ matrix.diag = function (M,n)
   if ismatrix(M) then
     if M.rows == 1 or M.cols == 1 then
       res = {}
-      for i = 1,math.max(M.rows,M.cols) do res[i] = M:get(i) end
+      for i = 1,math.max(M.rows,M.cols) do res[i] = M(i) end
       return matrix.diag(res,n)
     else
       local z = (n < 0) and math.min(M.rows-k,M.cols) or math.min(M.cols-k,M.rows) 
@@ -728,7 +751,7 @@ matrix.dot = function (V1,V2)
   if n ~= V2.rows*V2.cols then error("Different vector size") end
   local s = 0
   for i = 1, n do
-    s = s + V1:get(i)*V2:get(i)
+    s = s + V1(i)*V2(i)
   end
   return s
 end
@@ -768,62 +791,6 @@ matrix.fill = function (iR, iC, val)
   return m
 end
 about[matrix.fill] = {"fill(iRows,iCols,[val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
-
---- Get element or sub matrix. 
---  In case of sub matrix each index should be a table of 2 or 3 elements: [begin,end[,step]].
---  @param M Source matrix.
---  @param vR Raw index or array of indexes.
---  @param vC Column index or array of indexes. In case of vector can be omitted.
---  @return Element or sub array or nil in case of error.
-matrix.get = function (M,vR,vC)
-  if not vC then
-    -- vector call
-    if M.rows == 1 then vC,vR = vR,1 else vC = 1 end
-  end
-  local numa = (type(vR) == 'number')
-  local numb = (type(vC) == 'number')
-  -- check range
-  if numa then vR = toRange(vR, M.rows) end
-  if numb then vC = toRange(vC, M.cols) end
-  if not (vR and vC) then return nil end
-
-  -- both are numbers
-  if numa and numb then return M[vR][vC] end
-
-  -- expected table
-  if numa then
-    vR = {vR,vR,1}
-  else
-    vR[1] = toRange(vR[1] or 1, M.rows)
-    vR[2] = toRange(vR[2] or M.rows, M.rows)
-    vR[3] = vR[3] or 1
-    if not (vR[1] and vR[2] and (vR[2]-vR[1])/vR[3] >= 0) then return nil end
-  end
-  if numb then
-    vC = {vC,vC,1}
-  else
-    vC[1] = toRange(vC[1] or 1, M.cols)
-    vC[2] = toRange(vC[2] or M.cols, M.cols)
-    vC[3] = vC[3] or 1
-    if not (vC[1] and vC[2] and (vC[2]-vC[1])/vC[3] >= 0) then return nil end
-  end
-
-  -- fill matrix
-  local res = matrix:_init_(math.floor((vR[2]-vR[1])/vR[3])+1, math.floor((vC[2]-vC[1])/vC[3])+1, {})
-  local i = 0
-  for r = vR[1],vR[2],vR[3] do
-    i = i+1
-    local resi, mr = res[i], M[r]
-    local j = 0
-    for c = vC[1],vC[2],vC[3] do
-      j = j+1
-      resi[j] = mr[c]
-    end
-  end
-  return res
-end
--- simplify call of matrix.get()
-matrix.__call = function (M,vR,vC) return matrix.get(M,vR,vC) end
 
 --- Conjugate transpose.
 --  @param M Initial matrix.
@@ -945,9 +912,9 @@ matrix.pinv = function (M)
   local L, r, tmp = matrix.zeros(A:size()), 0
   for k = 1, n do
     r = r + 1
-    local B = A:get({k,n},k)
+    local B = A:range({k,n},{k})
     if r > 1 then 
-      tmp = L:get({k,n},{1,r-1}) * L:get(k,{1,r-1}):transpose() 
+      tmp = L:range({k,n},{1,r-1}) * L:range({k},{1,r-1}):transpose() 
       tmp = ismatrix(tmp) and tmp or matrix:_init_(1,1,{{tmp}})      -- product can return a number
       B = B - tmp
     end
@@ -986,7 +953,7 @@ matrix.qr = function (M)
   local R = matrix.copy(M)
   for j = 1, n do
     -- housholder transformation 
-    local v = R:get({j,m},j)
+    local v = R:range({j,m},{j})
     local norm = v:norm()
     local rjj = R[j][j]
     local s = (rjj > 0) and -1 or (rjj < 0) and 1 or 0  -- -sign()
@@ -995,11 +962,11 @@ matrix.qr = function (M)
     v[1][1] = 1
     local tauv = (-s * u1 / norm) * v
     -- update matrices
-    local dr = tauv * (v:T() * R:get({j,m},{1,n}))
+    local dr = tauv * (v:T() * R:range({j,m},{1,n}))
     for r = j, m do
       for c = 1, n do R[r][c] = R[r][c] - dr[r-j+1][c] end
     end
-    local dq = (Q:get({1,m},{j,m}) * v) * tauv:T()
+    local dq = (Q:range({1,m},{j,m}) * v) * tauv:T()
     for r = 1, m do
       for c = j, m do Q[r][c] = Q[r][c] - dq[r][c-j+1] end
     end
@@ -1007,6 +974,51 @@ matrix.qr = function (M)
   return Q, R
 end
 about[matrix.qr] = {"qr(M)", "QR decomposition of the matrix.", TRANSFORM}
+
+--- Get sub matrix. 
+--  In case of sub matrix each index should be a table of 2 or 3 elements: [begin,end[,step]].
+--  @param M Source matrix.
+--  @param tR Array of rows.
+--  @param tC Array of columns.
+--  @return Sub array or nil in case of error.
+matrix.range = function (M, tR, tC)
+  if type(tR) ~= 'table' or type(tC) ~= 'table' then error("Range is a table") end
+
+    -- update range
+  if #tR == 1 then
+    local r = toRange(tR[1], M.rows)
+    tR = {r,r,1}
+  else
+    tR[1] = toRange(tR[1] or 1, M.rows)
+    tR[2] = toRange(tR[2] or M.rows, M.rows)
+    tR[3] = tR[3] or 1
+    if not (tR[1] and tR[2] and (tR[2]-tR[1])/tR[3] >= 0) then return nil end
+  end
+  if #tC == 1 then
+    local c = toRange(tC[1], M.cols)
+    tC = {c,c,1}
+  else
+    tC[1] = toRange(tC[1] or 1, M.cols)
+    tC[2] = toRange(tC[2] or M.cols, M.cols)
+    tC[3] = tC[3] or 1
+    if not (tC[1] and tC[2] and (tC[2]-tC[1])/tC[3] >= 0) then return nil end
+  end
+
+  -- fill matrix
+  local res = matrix:_init_(math.floor((tR[2]-tR[1])/tR[3])+1, math.floor((tC[2]-tC[1])/tC[3])+1, {})
+  local i = 0
+  for r = tR[1],tR[2],tR[3] do
+    i = i+1
+    local resi, mr = res[i], M[r]
+    local j = 0
+    for c = tC[1],tC[2],tC[3] do
+      j = j+1
+      resi[j] = mr[c]
+    end
+  end
+  return res
+end
+about[matrix.range] = {"range(M,tR,tC)", "Get submatrix for the given range of rows and columnts."}
 
 --- Matrix rank.
 --  @param M Initial matrix.
