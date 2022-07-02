@@ -68,7 +68,7 @@ fig2:scale(0.5, true)
 fig2.xrange = {0, 1.57}
 fig2:plot(cos, 'cos')
 fig2.title = 'Second'
-print(Ap.concat(fig1, fig2))   -- similar to fig1..fig2 for 2 objects
+print(Ap:concat(fig1, fig2))   -- similar to fig1..fig2 for 2 objects
 
 -- call 'API' functions
 fig3 = Ap():scale(0.5)
@@ -119,7 +119,7 @@ char = {'+','o','*','#','%','~','x','a','c','e','n','s','u','z'}
 }
 
 -- Simplify call for two objects.
-asciiplot.__concat = function (F1, F2) return asciiplot.concat(F1, F2) end
+asciiplot.__concat = function (F1, F2) return asciiplot.concat(_, F1, F2) end
 
 -- methametods
 asciiplot.__index = asciiplot
@@ -376,7 +376,7 @@ asciiplot.addPoint = function (F,dx,dy,s)
     F.canvas[ny][nx] = s
   end
 end
-about[asciiplot.addPoint] = {"addPoint(F,dx,dy,s)", "Add point (dx,dy) using char 's'.", MANUAL}
+about[asciiplot.addPoint] = {"addPoint(dx,dy,s)", "Add point (dx,dy) using char 's'.", MANUAL}
 
 --- Set character to direct position.
 --  @param F Figure object.
@@ -388,7 +388,7 @@ asciiplot.addPose = function (F,ir,ic,s)
     F.canvas[ir][ic] = s
   end
 end
-about[asciiplot.addPose] = {"addPose(F,ir,ic,s)", "Add character s to the given position.", MANUAL}
+about[asciiplot.addPose] = {"addPose(ir,ic,s)", "Add character s to the given position.", MANUAL}
 
 --- Set string to the given position.
 --  @param F Figure object.
@@ -400,7 +400,7 @@ asciiplot.addString = function (F,ir,ic,s)
     asciiplot.addPose(F, ir, ic+i-1, string.sub(s,i,i))
   end
 end
-about[asciiplot.addString] = {"addString(F,ir,ic,s)", "Set string from the given position.", MANUAL}
+about[asciiplot.addString] = {"addString(ir,ic,s)", "Set string from the given position.", MANUAL}
 
 --- Plot bar graph.
 --  @param F Figure object.
@@ -462,12 +462,13 @@ asciiplot.bar = function (F, t, vy, ix)
   end
   return F
 end
-about[asciiplot.bar] = {"bar(F,t,[vy=2,ix=1])", "Plot bar diargram for data. vy can be y index in t (optional) or table of y-s."}
+about[asciiplot.bar] = {"bar(t,[vy=2,ix=1])", "Plot bar diargram for data. vy can be y index in t (optional) or table of y-s."}
 
 --- Horizontal concatenation of figures.
+--  @param self Do nothing.
 --  @param ... List of figure objects.
 --  @return String with figures.
-asciiplot.concat = function (...)
+asciiplot.concat = function (self, ...)
   -- collect info
   local ag = {...}
   local nlegend = 0
@@ -517,7 +518,7 @@ asciiplot.concat = function (...)
   for i = 1, #acc do acc[i] = table.concat(acc[i]) end
   return table.concat(acc, '\n')
 end
-about[asciiplot.concat] = {"concat(...)", "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.", help.OTHER}
+about[asciiplot.concat] = {"Ap:concat(...)", "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.", help.OTHER}
 
 --- Make a copy.
 --  @param F Initial object.
@@ -546,7 +547,7 @@ asciiplot.copy = function (F)
   end
   return setmetatable(o, asciiplot)
 end
-about[asciiplot.copy] = {"copy(F)", "Create a copy of the object.", help.NEW}
+about[asciiplot.copy] = {"copy()", "Create a copy of the object.", help.NEW}
 
 --- Constructor example.
 --  @param dwidth Figure width.
@@ -647,7 +648,7 @@ asciiplot.plot = function (F, ...)
   asciiplot._limits_(F)
   return F
 end
-about[asciiplot.plot] = {"plot(F,...)", "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
+about[asciiplot.plot] = {"plot(...)", "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
 
 --- Prepare a clear canvas.
 --  @param F Figure object.
@@ -656,7 +657,7 @@ asciiplot.reset = function (F)
   asciiplot._axes_(F) 
   asciiplot._limits_(F) 
 end
-about[asciiplot.reset] = {"reset(F)", "Prepare a clear canvas.", MANUAL}
+about[asciiplot.reset] = {"reset()", "Prepare a clear canvas.", MANUAL}
 
 --- Scale xrange and yrange w.r.t. initial size.
 --  @param F figure object.
@@ -673,7 +674,7 @@ asciiplot.scale = function (F, factor, bDefault)
   F.height = (int % 2 == 1) and int or (int + 1)
   return F
 end
-about[asciiplot.scale] = {"scale(F,factor,[bDefault=false])", "Change figure size w.r.t. initial size."}
+about[asciiplot.scale] = {"scale(factor,[bDefault=false])", "Change figure size w.r.t. initial size."}
 
 --- Plot data represented in form of table
 --  {{x1,y11,y12,...},{x2,y21,y22,...},...}
@@ -701,7 +702,7 @@ asciiplot.tplot = function (F, t, tOpt)
   -- show
   return F
 end
-about[asciiplot.tplot] = {"tplot(F,t,[tOpt={}])", "Plot the table data, choose columns if need."}
+about[asciiplot.tplot] = {"tplot(t,[tOpt={}])", "Plot the table data, choose columns if need."}
 
 -- Simplify the constructor call.
 setmetatable(asciiplot, {__call = function (self,w,h) return asciiplot:new(w,h) end})

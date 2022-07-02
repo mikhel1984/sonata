@@ -34,24 +34,24 @@ ans = g:float()               --> -123
 ans = (a == -g)               --> true
 
 -- arithmetical operations
-ans = Int.float(a+b)          --> 579
+ans = (a+b):float()           --> 579
 
-ans = Int.float(a-b)          --> -333
+ans = (a-b):float()           --> -333
 
-ans = Int.float(a*Int(2))     --> 246
+ans = (a*Int(2)):float()      --> 246
 
-ans = Int.float(b/2)          --> 228
+ans = (b/2):float()           --> 228
 
-ans = Int.float(b%a)          --> 87
+ans = (b%a):float()           --> 87
 
-ans = Int.float(a^3)          --> 1860867
+ans = (a^3):float()           --> 1860867
 
 -- absolute value
-ans = Int.abs('-25'):float()  --> 25
+ans = Int('-25'):abs():float()  --> 25
 
 -- factorial
 c = Int(10):fact()
-ans = Int.float(c)            --> 3628800
+ans = c:float()               --> 3628800
 
 ans = (a > b)                 --> false
 
@@ -84,10 +84,10 @@ print(a)
 
 -- check if it prime
 -- iterate though multipliers 
-ans = Int.isPrime(1229)       --> true
+ans = Int(1229):isPrime()       --> true
 
 -- Fermat theorem 
-ans = Int.isPrime(1229,'Fermat') --> true
+ans = Int(1229):isPrime('Fermat') --> true
 
 -- factorize 
 t = b:factorize()
@@ -766,13 +766,13 @@ about[bigint.abs] = {"abs(B)", "Return module of arbitrary long number."}
 --  @param N Index.
 --  @return Digit at the N-th position.
 bigint.at = function (B,N) return B._v[N] end
-about[bigint.at] = {"at(B,N)", "Get N-th digit.", help.OTHER}
+about[bigint.at] = {"at(N)", "Get N-th digit.", help.OTHER}
 
 --- Get numeric base.
 --  @param B Bigint object.
 --  @return Base value.
 bigint.base = function (B) return B._base_ end
-about[bigint.base] = {"base(B)", "Current numeric base."}
+about[bigint.base] = {"base()", "Current numeric base."}
 
 --- Deep copy of the object.
 --  @param B Original bigint object.
@@ -814,7 +814,7 @@ bigint.eq = function (B1,B2)
   end
   return false
 end
-about[bigint.eq] = {"eq(B1,B2)", "Check equality of two values.", help.OTHER}
+about[bigint.eq] = {"eq(B)", "Check equality with the second value.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
 
@@ -833,13 +833,12 @@ bigint.fact = function (B)
   until #n._v == 1 and n._v[1] == 0
   return res
 end
-about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer B."}
+about[bigint.fact] = {"fact()", "Return factorial of non-negative integer B."}
 
 --- Find multipliers for the number.
 --  @param B Integer number.
 --  @return List of prime numbers.
 bigint.factorize = function (B)
-  B = isbigint(B) and B or bigint:_new_(B)
   local v, res = B, {}
   if B.sign < 0 then res[1] = -1 end
   while true do
@@ -854,7 +853,7 @@ bigint.factorize = function (B)
   end
   return res
 end
-about[bigint.factorize] = {"factorize(B)", "Find the list of multipliers.", NUMB}
+about[bigint.factorize] = {"factorize()", "Find the list of multipliers.", NUMB}
 
 --- Float number representation.
 --  @param B Bigint object.
@@ -868,7 +867,7 @@ bigint.float = function (B)
   end
   return B.sign >= 0 and sum or (-sum)
 end
-about[bigint.float] = {"float(B)", "Represent current big integer as number if it possible.", help.OTHER}
+about[bigint.float] = {"float()", "Represent current big integer as number if it possible.", help.OTHER}
 
 --- Greatest common devision for two (big) numbers.
 --  @param B1 First value.
@@ -878,7 +877,7 @@ bigint.gcd = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
   return bigint._gcd_(B1,B2)
 end
-about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers.", NUMB}
+about[bigint.gcd] = {"gcd(B)", "Find the greatest common divisor for two integers.", NUMB}
 
 --- Check if the number is prime.
 --  @param B Number.
@@ -893,7 +892,7 @@ bigint.isPrime = function (B, sMethod)
   local v1,v2 = bigint._trivialSearch_(B)
   return v1 == nil
 end
-about[bigint.isPrime] = {"isPrime(B,[sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
+about[bigint.isPrime] = {"isPrime([sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
 
 --- Generate random number.
 --  @param B Upper limit.
@@ -920,7 +919,7 @@ bigint.random = function (B)
   end
   return res
 end
-about[bigint.random] = {"random(B)","Generate pseudo-random value from 0 to B."}
+about[bigint.random] = {"random()","Generate pseudo-random value from 0 to B."}
 
 --- Change current numeric base.
 --  @param B Bigint object.
@@ -941,7 +940,7 @@ bigint.rebase = function (B, N)
   until #dig == 0
   return res
 end
-about[bigint.rebase] = {"rebase(B,N)","Convert number to the new numeric base."}
+about[bigint.rebase] = {"rebase(N)","Convert number to the new numeric base."}
 
 -- simplify constructor call
 setmetatable(bigint, {

@@ -56,7 +56,7 @@ a1 = Arr{2,2}:map(rnd)
 a2 = Arr{2,2}:map(rnd)
 a3 = Arr{2,2}:map(rnd)
 -- 'lazy' function definition
-a4 = Arr.zip('x1*x2+x3', a1,a2,a3)
+a4 = Arr:zip('x1*x2+x3', a1,a2,a3)
 ans = a4:get{1,2}             --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
 
 -- iterate over array 
@@ -77,7 +77,7 @@ for i = 1,n do
 end
 
 -- concatenate along the 3-rd axes
-d = Arr.concat(b,b,3)
+d = b:concat(b,3)
 -- size for given dimension
 ans = d:dim()[3]              --> 2
 
@@ -239,7 +239,7 @@ array.concat = function (A1, A2, iAxis)
   end
   return res 
 end
-about[array.concat] = {"concat(A1,A2,iAxis)", "Array concatenation along the given axis."}
+about[array.concat] = {"concat(A,iAxis)", "Concatenate along the given array along the given axis."}
 
 --- Get array copy.
 --  @param A Array object.
@@ -248,13 +248,13 @@ array.copy = function (A)
   local cp = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
   return Ver.move(A, 1, array.capacity(A), 1, cp)             -- copy array elements
 end
-about[array.copy] = {"copy(A)", "Get copy of the array.", help.OTHER}
+about[array.copy] = {"copy()", "Get copy of the array.", help.OTHER}
 
 --- Get array dimension.
 --  @param A Array object.
 --  @return Table with array size.
 array.dim = function (A) return Ver.move(A.size, 1, #A.size, 1, {}) end
-about[array.dim] = {"dim(A)", "Return size of the array."}
+about[array.dim] = {"dim()", "Return size of the array."}
 
 --- Get array element.
 --  @param A Array object.
@@ -264,7 +264,7 @@ array.get = function (A, tInd)
   if not array._isIndex_(A, tInd) then error("Wrong index!") end
   return A[array._pos_(A, tInd)]
 end
-about[array.get] = {"get(A,tInd)", "Get array element."}
+about[array.get] = {"get(tInd)", "Get array element."}
 
 --- Iterator across the array.
 --  @param A Array object.
@@ -278,7 +278,7 @@ array.ipairs = function (A)
     return index, A[count]
   end
 end
-about[array.ipairs] = {"ipairs(A)", "Return iterator along all indexes.", help.OTHER}
+about[array.ipairs] = {"ipairs()", "Return iterator along all indexes.", help.OTHER}
 
 --- Compare array size.
 --  @param A1 First array object.
@@ -294,7 +294,7 @@ array.isEqual = function (A1, A2)
   end
   return false
 end
-about[array.isEqual] = {"isEqual(A1,A2)", "Check size equality.", help.OTHER}
+about[array.isEqual] = {"isEqual(A)", "Check size equality.", help.OTHER}
 
 --- Apply function of 1 argument.
 --  @param A Array object.
@@ -308,7 +308,7 @@ array.map = function (A, fn)
   end
   return res
 end
-about[array.map] = {"map(A,fn)", "Apply function fn(x,[ind]) to all elements, return new array.", help.OTHER}
+about[array.map] = {"map(fn)", "Apply function fn(x,[ind]) to all elements, return new array.", help.OTHER}
 
 --- Set new value.
 --  @param A Array object.
@@ -318,7 +318,7 @@ array.set = function (A, tInd, v)
   if not array._isIndex_(A, tInd) then error("Wrong index!") end
   A[array._pos_(A,tInd)] = v 
 end
-about[array.set] = {"set(A,tInd,v)", "Set value to the array."}
+about[array.set] = {"set(tInd,v)", "Set value to the array."}
 
 --- Get part of array between two indexes.
 --  @param A Array object.
@@ -352,13 +352,14 @@ array.sub = function (A, tInd1, tInd2)
   end
   return res
 end
-about[array.sub] = {"sub(A,tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
+about[array.sub] = {"sub(tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
 
 --- Apply function of several arguments.
+--  @param self Do nothing. 
 --  @param fn Function with N arguments or expression.
 --  @param ... List of N arrays.
 --  @return New array where each element is result of the function evaluation.
-array.zip = function (fn, ...)
+array.zip = function (self, fn, ...)
   local arg = {...}
   if type(fn) == 'string' then fn = Utils.Fn(fn, #arg) end
   -- check arguments
@@ -377,7 +378,7 @@ array.zip = function (fn, ...)
   end
   return res
 end
-about[array.zip] = {"zip(fn, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
+about[array.zip] = {"Arr:zip(fn, ...)", "Apply function of several arguments. Return new array.", help.OTHER}
 
 -- Constructor
 setmetatable(array, {__call = function (self, tSize) 
