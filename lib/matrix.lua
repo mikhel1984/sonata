@@ -976,6 +976,38 @@ matrix.pinv = function (M)
 end
 about[matrix.pinv] = {"pinv(M)", "Pseudo inverse matrix calculation.", TRANSFORM}
 
+--- QR transformation
+--  @param M Matrix, #rows >= #cols.
+--  @return Q and R matrices.
+matrix.qr = function (M)
+  local m, n = M.rows, M.cols
+  if n > m then error("Wrong matrix size") end
+  local Q = matrix.eye(m)
+  local R = matrix.copy(M)
+  for j = 1, n do
+    -- housholder transformation 
+    local v = R:get({j,m},j)
+    local norm = v:norm()
+    local rjj = R[j][j]
+    local s = (rjj > 0) and -1 or (rjj < 0) and 1 or 0  -- -sign()
+    local u1 = rjj - s*norm 
+    for r = 2, v.rows do v[r][1] = v[r][1] / u1 end
+    v[1][1] = 1
+    local tauv = (-s * u1 / norm) * v
+    -- update matrices
+    local dr = tauv * (v:T() * R:get({j,m},{1,n}))
+    for r = j, m do
+      for c = 1, n do R[r][c] = R[r][c] - dr[r-j+1][c] end
+    end
+    local dq = (Q:get({1,m},{j,m}) * v) * tauv:T()
+    for r = 1, m do
+      for c = j, m do Q[r][c] = Q[r][c] - dq[r][c-j+1] end
+    end
+  end
+  return Q, R
+end
+about[matrix.qr] = {"qr(M)", "QR decomposition of the matrix.", TRANSFORM}
+
 --- Matrix rank.
 --  @param M Initial matrix.
 --  @return Value of rank.
