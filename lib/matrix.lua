@@ -825,6 +825,22 @@ end
 -- simplify call of matrix.get()
 matrix.__call = function (M,vR,vC) return matrix.get(M,vR,vC) end
 
+--- Conjugate transpose.
+--  @param M Initial matrix.
+--  @return Transformed matrix.
+matrix.H = function (M)
+  local res = matrix:_init_(M.cols, M.rows, {})
+  for r = 1, M.rows do
+    local mr = M[r]
+    for c = 1, M.cols do
+      local v = mr[c]
+      res[c][r] = (type(v) == 'table') and v.conj and v:conj() or v
+    end
+  end
+  return res
+end
+about[matrix.H] = {"H(M)", "Return conjugabe transpose. ", TRANSFORM}
+
 --- Inverse matrix.
 --  @param M Initial matrix.
 --  @return Result of inversion.
