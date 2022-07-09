@@ -19,8 +19,8 @@
 Unit = require 'lib.units'
 
 -- add some rules
-Unit.add('h', Unit(60,'min'))
-Unit.add('min', Unit(60,'s'))
+Unit:add('h', Unit(60,'min'))
+Unit:add('min', Unit(60,'s'))
 
 -- define variable
 a = Unit(1,'m/s')
@@ -54,7 +54,7 @@ ans = (a < b)                 --> true
 ans = b ^ 3                   --> Unit(27, 'm^3/s^3')
 
 -- new rule
-Unit.add('snake', Unit(48, 'parrot'))
+Unit:add('snake', Unit(48, 'parrot'))
 -- define variable
 c = Unit(2,'snake')
 -- convert
@@ -563,13 +563,14 @@ units._valConvert_ = function (v, sfrom, sto)
 end
 
 --- Add new rule for unit transformation.
+--  @param self Main class.
 --  @param U String with units.
 --  @param rule Result represented as unit object.
-units.add = function (U, rule)
+units.add = function (self, U, rule)
   assert(isunits(rule), 'Units object is expected!')
-  units.rules[U] = rule
+  self.rules[U] = rule
 end
-about[units.add] = {'add(U,rule)', 'Add new rule for conversation.'}
+about[units.add] = {'Unit:add(U,rule)', 'Add new rule for conversation.'}
 
 --- Convert one units to another.
 --  @param U Source unit object.
@@ -582,7 +583,7 @@ units.convert = function (U, fn)
     return units._unitConvert_(U, res.key)
   end
 end
-about[units.convert] = {'convert(v, fn)','Convert one units to another, return new object or nil.', }
+about[units.convert] = {'convert(fn)','Convert one units to another, return new object or nil.', }
 
 --- Create copy of the element.
 --  @param U Source object.
@@ -592,7 +593,7 @@ units.copy = function (U)
   cp.key = U.key
   return cp
 end
-about[units.copy] = {'copy(U)', 'Create copy of the element.', help.OTHER}
+about[units.copy] = {'copy()', 'Create copy of the element.', help.OTHER}
 
 -- prefix list
 units.prefix = {

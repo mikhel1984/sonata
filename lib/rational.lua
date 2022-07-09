@@ -47,13 +47,13 @@ ans = (b == b)                --> true
 ans = (a >= b)                --> false
 
 -- greatest common division
-ans = Rat.gcd(125,65)         --> 5
+ans = Rat:gcd(125,65)         --> 5
 
 -- represent as decimal
 ans = a:float()               --> 0.5
 
 -- make from decimal 
-ans = Rat.from(0.25)          --> Rat(1,4)
+ans = Rat:from(0.25)          --> Rat(1,4)
 
 -- numerator
 ans = b:num()                 --> 2
@@ -283,7 +283,7 @@ end
 --  @param vd Denominator. Default is 1.
 --  @return New rational object.
 rational._new_ = function (self, vn, vd)
-  local g = rational.gcd(vd,vn)         -- inverse order move sign to denominator
+  local g = rational:gcd(vd,vn)         -- inverse order move sign to denominator
   return setmetatable({_v = {vn/g, vd/g}}, self)  
 end
 
@@ -291,7 +291,7 @@ end
 --  @param R Rational number.
 --  @return Denominator.
 rational.denom = function (R) return R._v[2] end
-about[rational.denom] = {"denom(R)", "Return the denominator of the rational number."}
+about[rational.denom] = {"denom()", "Return the denominator of the rational number."}
 
 --- R1 == R2
 --  @param R1 First number.
@@ -312,7 +312,7 @@ rational.eq = function (R1,R2)
   local r1, r2 = R1._v, R2._v
   return Cross.eq(r1[1],r2[1]) and Cross.eq(r1[2],r2[2])
 end
-about[rational.eq] = {"eq(R1,R2)", "Compare two objects.", help.OTHER}
+about[rational.eq] = {"eq(R)", "Compare two objects.", help.OTHER}
 rational.__eq = rational.eq
 
 --- Float point representation.
@@ -322,35 +322,37 @@ rational.float = function (R)
   local r = R._v
   return (r[1] < 0 and -1 or 1) * (Cross.norm(r[1]) / Cross.norm(r[2]))
 end
-about[rational.float] = {"float(R)", "Return rational number as decimal."}
+about[rational.float] = {"float()", "Return rational number as decimal."}
 
 --- Get rational number from floating point.
+--  @param self Do nothing.
 --  @param f Source number.
 --  @param N Number of digits after coma.
 --  @return Ratio estimation.
-rational.from = function (f, N)
+rational.from = function (self, f, N)
   N = N or 5   -- number of digits
   assert(N > 0)
   local den = math.pow(10, N)
   local int = math.modf(f * den) 
   return rational:_new_(int, den) 
 end
-about[rational.from] = {"from(F,[N=5])", "Estimate ratio from floating point value.", help.NEW}
+about[rational.from] = {"Rat:from(f,[N=5])", "Estimate ratio from floating point value.", help.NEW}
 
 --- The greatest common divisor. 
+--  @param self Do nothing.
 --  @param va First integer.
 --  @param vb Second integer.
 --  @return Greatest common divisor.
-rational.gcd = function (va,vb)
-  return Cross.eq(va,0) and vb or rational.gcd(vb % va, va)
+rational.gcd = function (self,va,vb)
+  return Cross.eq(va,0) and vb or rational:gcd(vb % va, va)
 end
-about[rational.gcd] = {"gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
+about[rational.gcd] = {"Rat:gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
 rational.num = function (R) return R._v[1] end
-about[rational.num] = {"num(R)", "Return the numerator of rational number."}
+about[rational.num] = {"num()", "Return the numerator of rational number."}
 
 
 -- call constructor, check arguments
