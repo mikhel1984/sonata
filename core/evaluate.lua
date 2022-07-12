@@ -55,6 +55,23 @@ _cmd = "",    -- last request
 _st  = 1,     -- last status
 }
 
+evaluate._blocks_ = function (txt)
+  local init = 1
+  local res = {}
+  while true do
+    --print('???')
+    local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
+    if i1 then 
+      res[#res+1] = string.sub(txt, init, i1-1)
+      init = i2+1
+      --print(res[#res])
+    else 
+      break 
+    end
+  end
+  return res
+end
+
 --- Process command string.
 --  @param ev Accumulated string.
 --  @param nextCmd New string with Lua expression.
@@ -189,32 +206,37 @@ evaluate.note = function (ev, fname, full)
   local txt = f:read('*a'); f:close()
   txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
-  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
-    if string.find(line, '^%s*%-%-%s*[Pp][Aa][Uu][Ss][Ee]') then
-      if full then
-        if evaluate.cli_loop(ev, invA, invB, true) == evaluate.EV_QUIT then
+  local block = evaluate._blocks_(txt)
+  for n, cell in ipairs(block) do
+    for line in string.gmatch(cell, '([^\n]+)\r?\n?') do
+      if string.find(line, '^%s*%-%-%s*[Pp][Aa][Uu][Ss][Ee]') then
+        
+      elseif string.find(line, '^%s*%-%-') then
+        -- highlight line comments
+        if full then
+          line = string.gsub(line, '\t(.+)', templ)
+          line = string.format("%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
+          io.write(line)
+        end
+      else
+        -- print line and evaluate
+        io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
+        local status = evaluate.eval(ev, line, false)
+        if status == evaluate.EV_RES then
+          if ev._ans ~= nil then 
+            print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
+          end
+        elseif status == evaluate.EV_CMD then
+          -- skip
+        else -- evaluate.EV_ERR 
+          print_err(ev._ans)
           break
         end
       end
-    elseif string.find(line, '^%s*%-%-') then
-      -- highlight line comments
-      if full then
-        line = string.gsub(line, '\t(.+)', templ)
-        line = string.format("%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
-        io.write(line)
-      end
-    else
-      -- print line and evaluate
-      io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
-      local status = evaluate.eval(ev, line, false)
-      if status == evaluate.EV_RES then
-        if ev._ans ~= nil then 
-          print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
-        end
-      elseif status == evaluate.EV_CMD then
-        -- skip
-      else -- evaluate.EV_ERR 
-        print_err(ev._ans)
+    end
+    io.write(SonataHelp.CMAIN, '@\t[', n, '/', #block, ']', SonataHelp.CRESET, '\n')
+    if full then
+      if evaluate.cli_loop(ev, invA, invB, true) == evaluate.EV_QUIT then
         break
       end
     end
