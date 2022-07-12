@@ -130,7 +130,7 @@ end
 --  @param ev Evaluation environment.
 evaluate.cli = function (ev)
   local invA, invB = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET, SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
-  evaluate.cli_loop(ev, invA, invB, false)
+  evaluate.cli_loop(ev, invA, invB)
   if ev._logFile_ then ev._logFile_:close() end
   evaluate.exit()
 end
@@ -139,17 +139,24 @@ end
 --  @param ev Environment.
 --  @param invA First invite line.
 --  @param invB Second invite line.
---  @param isNote Flag for note-file processing.
+--  @param noteIn Table to store user input.
 --  @return Status of evaluation on exit.
-evaluate.cli_loop = function (ev, invA, invB, isNote) 
+evaluate.cli_loop = function (ev, invA, invB, noteIn) 
   local invite = invA
   -- start dialog
   while true do
     io.write(invite)
     -- command processing
     local newLine = io.read()
-    if isNote and newLine == "" then break end
-    local status = evaluate.eval(ev, newLine, not isNote)
+    if noteIn then
+      if newLine == "" then break end
+      if string.find(newLine, "^%s*:") then
+        noteIn[1] = newLine
+        for w in string.gmatch(newLine, "%w+") do noteIn[#noteIn+1] = w end
+        break
+      end
+    end
+    local status = evaluate.eval(ev, newLine, not noteIn)
     if status == evaluate.EV_RES then
       if ev._ans ~= nil then
         print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
@@ -191,6 +198,33 @@ evaluate.exit = function ()
   os.exit() 
 end
 
+evaluate._evalBlock_ = function (ev, txt, full, templ)
+  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
+    if string.find(line, '^%s*%-%-') then
+      -- highlight line comments
+      if full then
+        line = string.gsub(line, '\t(.+)', templ)
+        line = string.format("%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
+        io.write(line)
+      end
+    else
+      -- print line and evaluate
+      io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
+      local status = evaluate.eval(ev, line, false)
+      if status == evaluate.EV_RES then
+        if ev._ans ~= nil then 
+          print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
+        end
+      elseif status == evaluate.EV_CMD then
+        -- skip
+      else -- evaluate.EV_ERR 
+        print_err(ev._ans)
+        break
+      end
+    end
+  end
+end
+
 --- Evaluate 'note'-file.
 --  @param ev Evaluate.
 --  @param fname Script file name.
@@ -207,35 +241,26 @@ evaluate.note = function (ev, fname, full)
   txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   local block = evaluate._blocks_(txt)
-  for n, cell in ipairs(block) do
-    for line in string.gmatch(cell, '([^\n]+)\r?\n?') do
-      if string.find(line, '^%s*%-%-') then
-        -- highlight line comments
-        if full then
-          line = string.gsub(line, '\t(.+)', templ)
-          line = string.format("%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
-          io.write(line)
-        end
-      else
-        -- print line and evaluate
-        io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
-        local status = evaluate.eval(ev, line, false)
-        if status == evaluate.EV_RES then
-          if ev._ans ~= nil then 
-            print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
-          end
-        elseif status == evaluate.EV_CMD then
-          -- skip
-        else -- evaluate.EV_ERR 
-          print_err(ev._ans)
-          break
-        end
+  local n = 1
+  while n <= #block do
+    evaluate._evalBlock_(ev, block[n], full, templ)  
+    io.write(SonataHelp.CMAIN, '\t[ ', n, ' / ', #block, ' ]', SonataHelp.CRESET, '\n')
+    -- user commands
+    local m = n
+    while m == n do
+      local input = {}
+      if full and evaluate.cli_loop(ev, invA, invB, input) == evaluate.EV_QUIT then
+        n = #block + 1
       end
-    end
-    io.write(SonataHelp.CMAIN, '@\t[ ', n, ' / ', #block, ' ]', SonataHelp.CRESET, '\n')
-    if full then
-      if evaluate.cli_loop(ev, invA, invB, true) == evaluate.EV_QUIT then
-        break
+      if #input > 0 then
+        local nNew = tonumber(input[2])
+        if nNew then
+            n = nNew
+            m = -1
+        end
+        --for i = 1, #input do print(input[i]) end
+      else
+        n = n + 1
       end
     end
   end
