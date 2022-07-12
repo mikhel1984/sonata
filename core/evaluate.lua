@@ -209,9 +209,7 @@ evaluate.note = function (ev, fname, full)
   local block = evaluate._blocks_(txt)
   for n, cell in ipairs(block) do
     for line in string.gmatch(cell, '([^\n]+)\r?\n?') do
-      if string.find(line, '^%s*%-%-%s*[Pp][Aa][Uu][Ss][Ee]') then
-        
-      elseif string.find(line, '^%s*%-%-') then
+      if string.find(line, '^%s*%-%-') then
         -- highlight line comments
         if full then
           line = string.gsub(line, '\t(.+)', templ)
@@ -234,7 +232,7 @@ evaluate.note = function (ev, fname, full)
         end
       end
     end
-    io.write(SonataHelp.CMAIN, '@\t[', n, '/', #block, ']', SonataHelp.CRESET, '\n')
+    io.write(SonataHelp.CMAIN, '@\t[ ', n, ' / ', #block, ' ]', SonataHelp.CRESET, '\n')
     if full then
       if evaluate.cli_loop(ev, invA, invB, true) == evaluate.EV_QUIT then
         break
