@@ -225,6 +225,41 @@ evaluate._evalBlock_ = function (ev, txt, full, templ)
   end
 end
 
+evaluate._dot_ls_ = function (blks)
+  for i = 1, #blks do
+    local s = ''
+    for line in string.gmatch(blks[i], '([^\n]+)\r?\n?') do
+      if string.find(line, "[^%s]+") then
+        s = line
+        break
+      end
+    end
+    io.write(string.format("%d   %s\n", i, s))
+  end
+end
+
+evaluate._userInput_ = function (ev, invA, invB, blk, full, n)
+  local m = n
+  repeat
+    local input = {}
+    if full and evaluate.cli_loop(ev, invA, invB, input) == evaluate.EV_QUIT then
+      n = #blk + 1
+    end
+    if #input > 0 then
+      if input[2] == 'ls' then
+        evaluate._dot_ls_(blk)
+      elseif input[2] == 'q' then
+        n = #blk + 1
+      else
+        n, m = (tonumber(input[2]) or n), -1
+      end
+    else
+      n = n + 1
+    end
+  until m ~= n
+  return n
+end
+
 --- Evaluate 'note'-file.
 --  @param ev Evaluate.
 --  @param fname Script file name.
@@ -241,28 +276,12 @@ evaluate.note = function (ev, fname, full)
   txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   local block = evaluate._blocks_(txt)
-  local n = 1
+  local n = evaluate._userInput_(ev, invA, invB, block, full, 0)
   while n <= #block do
     evaluate._evalBlock_(ev, block[n], full, templ)  
     io.write(SonataHelp.CMAIN, '\t[ ', n, ' / ', #block, ' ]', SonataHelp.CRESET, '\n')
     -- user commands
-    local m = n
-    while m == n do
-      local input = {}
-      if full and evaluate.cli_loop(ev, invA, invB, input) == evaluate.EV_QUIT then
-        n = #block + 1
-      end
-      if #input > 0 then
-        local nNew = tonumber(input[2])
-        if nNew then
-            n = nNew
-            m = -1
-        end
-        --for i = 1, #input do print(input[i]) end
-      else
-        n = n + 1
-      end
-    end
+    n = evaluate._userInput_(ev, invA, invB, block, full, n)
   end
 end
 
