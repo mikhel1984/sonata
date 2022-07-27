@@ -59,13 +59,15 @@ evaluate._blocks_ = function (txt)
   local init = 1
   local res = {}
   while true do
-    --print('???')
     local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
     if i1 then 
       res[#res+1] = string.sub(txt, init, i1-1)
       init = i2+1
-      --print(res[#res])
     else 
+      local last = string.sub(txt, init, #txt)
+      if string.find(last, "%w?") then
+        res[#res+1] = last
+      end
       break 
     end
   end
