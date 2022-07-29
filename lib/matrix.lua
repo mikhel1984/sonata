@@ -218,6 +218,8 @@ local access = {
   --__newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
 }
 
+local _container_ = {}
+
 --- Check object type.
 --  @param m Object to check.
 --  @return True if the object is 'matrix'.
@@ -435,6 +437,10 @@ about[matrix.arithmetic] = {matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", he
 matrix.comparison = 'comparison'
 about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
 
+matrix._convert_ = function (v)
+  return (v.float or v.iscomplex) and setmetatable({v}, _container_) or nil
+end
+
 -- Determinants for simple cases
 matrix._det_ = {
 -- 1x1 
@@ -532,6 +538,7 @@ end
 --  @param M Matrix.
 --  @return Result of production.
 matrix._kProd_ = function (d, M)
+  if getmetatable(d) == _container_ then d = d[1] end
   local res = matrix:_init_(M._rows, M._cols, {})
   for r = 1, M._rows do
     local resr, mr = res[r], M[r]
@@ -930,7 +937,7 @@ matrix.norm = function (M)
   for r = 1,M._rows do
     local mr = M[r]
     for c = 1,M._cols do
-      sum = sum+(mr[c])^2
+      sum = sum + Cross.norm(mr[c])^2
     end
   end
   return math.sqrt(sum)
@@ -1008,8 +1015,12 @@ matrix.qr = function (M)
     end
     v._rows = k - 1
     local norm = v:norm()
-    local rjj = R[j][j]
-    local s = (rjj > 0) and -1 or (rjj < 0) and 1 or 0  -- -sign()
+    local rjj, s = R[j][j]
+    if type(rjj) == 'table' and rjj.iscomplex then 
+      s = - (rjj / rjj:abs())                       -- -exp(-i*arg)
+    else
+      s = (rjj > 0) and -1 or (rjj < 0) and 1 or 0  -- -sign()
+    end
     local u1 = rjj - s*norm 
     for r = 2, v._rows do v[r][1] = v[r][1] / u1 end
     v[1][1] = 1
@@ -1252,3 +1263,4 @@ return matrix
 --TODO: Fix sign in SVD transform
 --TODO: Redefine 'norm' method
 --TODO: change matrix print
+--TODO: fix qr for complex numbers
