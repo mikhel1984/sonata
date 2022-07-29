@@ -997,9 +997,16 @@ matrix.qr = function (M)
   if n > m then error("Wrong matrix size") end
   local Q = matrix:eye(m)
   local R = matrix.copy(M)
+  local v = matrix:_init_(m,1,{})
   for j = 1, n do
     -- housholder transformation 
-    local v = R:range({j,m},{j})
+    -- get vector
+    local k = 1
+    for i = j,m do 
+      v[k][1] = R[i][j] 
+      k = k + 1
+    end
+    v._rows = k - 1
     local norm = v:norm()
     local rjj = R[j][j]
     local s = (rjj > 0) and -1 or (rjj < 0) and 1 or 0  -- -sign()
@@ -1012,17 +1019,15 @@ matrix.qr = function (M)
     for r = j, m do
       for c = 1, n do R[r][c] = R[r][c] - dr[r-j+1][c] end
     end
-    --local mr = R:range({j,m},{1,n})
-    --R:insert({j,m},{1,n}, mr - tauv * (v:T() * mr))
     local dq = (Q:range({1,m},{j,m}) * v) * tauv:T()
     for r = 1, m do
       for c = j, m do Q[r][c] = Q[r][c] - dq[r][c-j+1] end
     end
-    --print(Q)
-    --local mq = Q:range({1,m},{j,m})
-    --Q:insert({1,m},{j,m}, mq - (mq*v)* tauv:T())
   end
-  -- TODO set 0 in Q and R
+  -- set zeros to left lower part
+  for r = 2, m do
+    for c = 1, r-1 do R[r][c] = 0 end
+  end
   return Q, R
 end
 about[matrix.qr] = {"qr()", "QR decomposition of the matrix.", TRANSFORM}
