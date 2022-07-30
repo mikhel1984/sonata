@@ -266,8 +266,10 @@ type = 'matrix', ismatrix = true,
 --  @param M2 Second matrix or number.
 --  @return Sum matrix.
 matrix.__add = function (M1,M2)
-  M1 = ismatrix(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
-  M2 = ismatrix(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
+  M1 = ismatrix(M1) and M1 or matrix:fill(
+    M2._rows, M2._cols, getmetatable(M1) == _container_ and M1[1] or M1)
+  M2 = ismatrix(M2) and M2 or matrix:fill(
+    M1._rows, M1._cols, getmetatable(M2) == _container_ and M2[1] or M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then error("Different matrix size!") end
   local res = matrix:_init_(M1._rows,M1._cols,{})
   for r = 1, M1._rows do
@@ -390,8 +392,10 @@ end
 --  @param M2 Second matrix or number.
 --  @return Difference matrix.
 matrix.__sub = function (M1,M2)
-  M1 = ismatrix(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
-  M2 = ismatrix(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
+  M1 = ismatrix(M1) and M1 or matrix:fill(
+    M2._rows, M2._cols, getmetatable(M1) == _container_ and M1[1] or M1)
+  M2 = ismatrix(M2) and M2 or matrix:fill(
+    M1._rows, M1._cols, getmetatable(M2) == _container_ and M2[1] or M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then error("Different matrix size!") end
   local res = matrix:_init_(M1._rows,M1._cols,{})
   for r = 1, M1._rows do
