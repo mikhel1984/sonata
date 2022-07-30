@@ -1009,7 +1009,7 @@ matrix.qr = function (M)
   local Q = matrix:eye(m)
   local R = matrix.copy(M)
   local v = matrix:_init_(m,1,{})
-  for j = 1, n do
+  for j = 1, math.min(m-1,n) do
     -- housholder transformation 
     -- get vector
     local k = 1
@@ -1018,30 +1018,30 @@ matrix.qr = function (M)
       k = k + 1
     end
     v._rows = k - 1
-    local norm = v:norm()
-    local rjj, s = R[j][j]
-    if type(rjj) == 'table' and rjj.iscomplex then 
-      s = - (rjj / rjj:abs())                       -- -exp(-i*arg)
-    else
-      s = (rjj > 0) and -1 or (rjj < 0) and 1 or 0  -- -sign()
+    -- prepare v and v:T()
+    local v11 = v[1][1]
+    local v11abs = Cross.norm(v11)
+    local s = (v11abs > 0) and (v11 / v11abs) or 1
+    v[1][1] = v11 + s * v:norm()
+    local vnorm = v:norm()
+    for r = 1, v._rows do v[r][1] = v[r][1] / vnorm end
+    local vt = v:H() 
+    for r = 1, v._rows do v[r][1] = 2 * v[r][1] end
+    -- update R
+    local vvr = v * (vt * R:range({j,m},{j,n}))
+    local j1 = j - 1
+    for r = j,m do
+      for c = j,n do R[r][c] = R[r][c] - vvr[r-j1][c-j1] end
     end
-    local u1 = rjj - s*norm 
-    for r = 2, v._rows do v[r][1] = v[r][1] / u1 end
-    v[1][1] = 1
-    local tauv = (-s * u1 / norm) * v
-    -- update matrices
-    local dr = tauv * (v:T() * R:range({j,m},{1,n}))
-    for r = j, m do
-      for c = 1, n do R[r][c] = R[r][c] - dr[r-j+1][c] end
-    end
-    local dq = (Q:range({1,m},{j,m}) * v) * tauv:T()
-    for r = 1, m do
-      for c = j, m do Q[r][c] = Q[r][c] - dq[r][c-j+1] end
+    -- update Q
+    local qvv = (Q:range({1,m},{j,m}) * v) * vt
+    for r = 1,m do
+      for c = j,m do Q[r][c] = Q[r][c] - qvv[r][c-j1] end
     end
   end
-  -- set zeros to left lower part
-  for r = 2, m do
-    for c = 1, r-1 do R[r][c] = 0 end
+  -- set zeros 
+  for c = 1, n do
+    for r = c+1, m do R[r][c] = 0 end
   end
   return Q, R
 end
@@ -1268,3 +1268,4 @@ return matrix
 --TODO: Redefine 'norm' method
 --TODO: change matrix print
 --TODO: fix qr for complex numbers
+--TODO: matrix from list and size
