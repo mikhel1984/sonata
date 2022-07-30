@@ -807,6 +807,21 @@ matrix.fill = function (self, iR, iC, val)
 end
 about[matrix.fill] = {"Mat:fill(iRows,iCols,[val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
 
+matrix.filter = function(M, fTol)
+  fTol = fTol or 1E-8    -- TODO use matrix norm
+  for r = 1, M._rows do
+    local mr = M[r]
+    for c = 1, M._cols do
+      local v = mr[c] 
+      if Cross.norm(v) < fTol then 
+        mr[c] = 0
+      elseif type(v) == 'table' and v.iscomplex then
+        mr[c] = Cross.norm(v:im()) < fTol and v:re() or v:_init_(0, v:im())
+      end
+    end
+  end
+end
+
 --- Conjugate transpose.
 --  @param M Initial matrix.
 --  @return Transformed matrix.
@@ -1267,5 +1282,4 @@ return matrix
 --TODO: Fix sign in SVD transform
 --TODO: Redefine 'norm' method
 --TODO: change matrix print
---TODO: fix qr for complex numbers
 --TODO: matrix from list and size
