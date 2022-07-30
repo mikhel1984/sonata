@@ -174,6 +174,17 @@ utils.numstr = function (d)
   return string.format('%.2E', d)
 end
 
+--- Round float number for required number of digits.
+--  @param fArg Number for rounding.
+--  @param fTol Required tolerance (1E-k)
+utils.round = function (fArg, fTol)
+  local p, q = math.modf(fArg / fTol)
+  if     q >=  0.5 then  p = p + 1
+  elseif q <= -0.5 then p = p - 1
+  end
+  return p * fTol
+end
+
 return {
   versions = versions,
   cross = cross,
@@ -182,3 +193,4 @@ return {
 
 --===================================================
 --TODO setup for number of digits
+--TODO: fix 'round' for N - 1e-M

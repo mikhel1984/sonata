@@ -327,6 +327,13 @@ complex._convert_ = function (v)
          and complex:_init_(v,0)
 end
 
+--- Get deep copy of the complex number.
+--  @param C Complex number.
+--  @return Equal number.
+complex._copy_ = function (C)
+  return complex:_init_(C._v[1], C._v[2])
+end
+
 --- Create new object, set metatable
 --  @param vRe Real part.
 --  @param vIm Imaginary part, default is 0.
@@ -455,6 +462,20 @@ about[complex.log] = {"log()", "Complex logarithm.", FUNCTIONS}
 --  @return Real part.
 complex.re = function (C) return C._v[1] end
 about[complex.re] = {"re()", "Get real part."}
+
+--- Round real and imaginary parts to some number of digits in place.
+--  For non-float value round to 0.
+--  @param C Complex number.
+complex.round = function (C, N)
+  N = N or 6
+  local tol = 10^(-N)
+  local a, b = C._v[1], C._v[2]
+  C._v[1] = type(a) == 'number' and Utils.round(a, tol) or
+            Cross.norm(a) < tol and 0 or a
+  C._v[2] = type(b) == 'number' and Utils.round(b, tol) or
+            Cross.norm(b) < tol and 0 or b
+end
+about[complex.round] = {"round([N=6])", "Round in-place to specified number of digits."}
 
 --- Sinus
 --  @param C Complex number.

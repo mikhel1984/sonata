@@ -807,20 +807,29 @@ matrix.fill = function (self, iR, iC, val)
 end
 about[matrix.fill] = {"Mat:fill(iRows,iCols,[val=1])", "Create matrix of given numbers (default is 1).", help.NEW}
 
-matrix.filter = function(M, fTol)
-  fTol = fTol or 1E-8    -- TODO use matrix norm
+--- Round matrix elements in place.
+--  @param M Matrix object.
+--  @param N Number of digits.
+matrix.round = function(M, N)
+  N = N or 6
+  tol = 10^(-N)
   for r = 1, M._rows do
     local mr = M[r]
     for c = 1, M._cols do
       local v = mr[c] 
-      if Cross.norm(v) < fTol then 
+      if type(v) == 'number' then 
+        mr[c] = Utils.round(v, tol)
+      elseif v.iscomplex then  
+        local vv = v:_copy_()
+        vv:round(N) 
+        mr[c] = (vv:im() == 0) and vv:re() or vv
+      elseif Cross.norm(v) < tol then 
         mr[c] = 0
-      elseif type(v) == 'table' and v.iscomplex then
-        mr[c] = Cross.norm(v:im()) < fTol and v:re() or v:_init_(0, v:im())
-      end
+      end 
     end
   end
 end
+about[matrix.round] = {"found([N=6])", "Round elements in place.", help.OTHER}
 
 --- Conjugate transpose.
 --  @param M Initial matrix.
