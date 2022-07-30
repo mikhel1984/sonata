@@ -237,19 +237,13 @@ Print = function (...)
 end
 About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", AUX}
 
---- Round to closest integer.
+--- Round to some precision.
 --  @param f Real number.
 --  @param N Number of decimal digits.
 --  @return Rounded number.
 Round = function (f,N)
-  local k = 10^(N or 0)
-  local p,q = math.modf(f*k)
-  if q >= 0.5 then 
-    p = p+1
-  elseif q <= -0.5 then 
-    p = p-1
-  end
-  return p / k
+  N = N or 0
+  return Utils.round(f, 10^(-N))
 end
 About[Round] = {'Round(f,[N=0])', 'Round value, define number of decimal digits.', AUX}
 

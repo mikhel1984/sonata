@@ -115,8 +115,15 @@ local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
 -- symbols
-char = {'+','o','*','#','%','~','x','a','c','e','n','s','u','z'}
+char = {'+','o','*','#','%','~','x'}
 }
+
+if SONATA_USE_COLOR then
+  local char = asciiplot.char
+  for k,v in ipairs(char) do
+    char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
+  end
+end
 
 -- Simplify call for two objects.
 asciiplot.__concat = function (F1, F2) return asciiplot.concat(_, F1, F2) end
@@ -141,7 +148,7 @@ asciiplot.__tostring = function (F)
   end
   -- legend
   for k, v in pairs(F.legend) do
-    assert(type(k) == 'string' and #k == 1 and type(v) == 'string')
+    assert(type(k) == 'string' and type(v) == 'string' and (#k == 1 or SONATA_USE_COLOR))
     acc[#acc+1] = string.format("(%s) %s", k, v)
   end
   return table.concat(acc,'\n')
@@ -371,7 +378,7 @@ asciiplot.addPoint = function (F,dx,dy,s)
   nx = (frac > 0.5) and (int + 1) or int
   int, frac = mmodf((1-h) * ny + h)
   ny = (frac > 0.5) and (int + 1) or int
-  if nx >= 1 and nx <= w and ny >= 1 and ny <= h and #s == 1 then
+  if nx >= 1 and nx <= w and ny >= 1 and ny <= h and (#s == 1 or SONATA_USE_COLOR) then
     -- skip points out of range
     F.canvas[ny][nx] = s
   end
@@ -384,7 +391,7 @@ about[asciiplot.addPoint] = {"addPoint(dx,dy,s)", "Add point (dx,dy) using char 
 --  @param ic Column index.
 --  @param s Character.
 asciiplot.addPose = function (F,ir,ic,s)
-  if ir >= 1 and ir <= F.height and ic > 0 and ic < F.width and #s == 1 then
+  if ir >= 1 and ir <= F.height and ic > 0 and ic < F.width and (#s == 1 or SONATA_USE_COLOR) then
     F.canvas[ir][ic] = s
   end
 end
