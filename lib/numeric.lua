@@ -17,26 +17,26 @@ Num = require 'lib.numeric'
 -- define tolerance
 Num.TOL = 1e-4
 -- solve 'sin(x) = 0' for x in (pi/2...3*pi/2)
-a = Num.solve(math.sin, math.pi*0.5, math.pi*1.5)
+a = Num:solve(math.sin, math.pi*0.5, math.pi*1.5)
 ans = a                      --3> math.pi
 
 -- Newton method
 -- only one initial value
-d = Num.Newton(math.sin, math.pi*0.7)
+d = Num:Newton(math.sin, math.pi*0.7)
 ans = d                      --3> math.pi
 
 -- numeric derivative
-b = Num.der(math.sin, 0)
+b = Num:der(math.sin, 0)
 ans = b                      --0> 1
 
 -- numeric integral
-c = Num.trapez(math.sin, 0, math.pi)
+c = Num:trapez(math.sin, 0, math.pi)
 ans = c                      --0> 2
 
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl, yn = Num.ode45(function (x,y) return x*y end, 
+tbl, yn = Num:ode45(function (x,y) return x*y end, 
                     {0,3}, 1)
 ans = yn                     --2> 90.011
 
@@ -47,9 +47,9 @@ Mat = require 'lib.matrix'
 -- represent as: x1 = y, x2 = y'
 -- so: x1' = x2, x2' = 1+2*x2-2*x1
 myfun = function (t,x) 
-  return Mat.V {x(2), 1+2*x(2)-2*x(1)}
+  return Mat:V {x(2), 1+2*x(2)-2*x(1)}
 end
-_, xn = Num.ode45(myfun, {0,2}, Mat.V{3,2}, {dt=0.2}) 
+_, xn = Num:ode45(myfun, {0,2}, Mat:V{3,2}, {dt=0.2}) 
 ans = xn(1)                  --2>  -10.54
 
 -- define exit condition
@@ -58,7 +58,7 @@ cond = function (time,current,previous)
   return current < 0.1 
 end
 myfun = function (t,x) return -x end
-y = Num.ode45(myfun, {0,1E2}, 1, {exit=cond})
+y = Num:ode45(myfun, {0,1E2}, 1, {exit=cond})
 ans = y[#y][1]               --2> 2.56
 
 --]]
@@ -100,10 +100,11 @@ newton_max = 50,
 about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance.", "parameters"}
 
 --- Simple derivative.
+--  @param self Do nothing.
 --  @param fn Function f(x).
 --  @param d Parameter.
 --  @return Numerical approximation of the derivative value.
-numeric.der = function (fn, d)
+numeric.der = function (self, fn, d)
   local dx = 2e-2
   local der, last = (fn(d+dx)-fn(d-dx))/(2*dx)
   repeat
@@ -112,13 +113,14 @@ numeric.der = function (fn, d)
   until math.abs(der-last) < numeric.TOL
   return der
 end
-about[numeric.der] = {"der(fn,x)", "Calculate the derivative value for given function."}
+about[numeric.der] = {"Num:der(fn,x)", "Calculate the derivative value for given function."}
 
 --- Another solution based on Newton's rule.
+--  @param self Do nothing.
 --  @param fn Function to analyze.
 --  @param d1 Initial value of the root.
 --  @return Function root of <code>nil</code>.
-numeric.Newton = function (fn, d1)
+numeric.Newton = function (self, fn, d1)
   local h, k, x2 = 0.1, 0, d1
   repeat
     d1 = x2
@@ -129,15 +131,16 @@ numeric.Newton = function (fn, d1)
   until math.abs(fn(x2)-fd1) < numeric.TOL 
   return x2
 end
-about[numeric.Newton] = {"Newton(fn,d0)", "Find root of equation using Newton's rule with only one initial condition."}
+about[numeric.Newton] = {"Num:Newton(fn,d0)", "Find root of equation using Newton's rule with only one initial condition."}
 
 --- Differential equation solution (Runge-Kutta method).
+--  @param self Do nothing.
 --  @param fn function f(t,y).
 --  @param tDelta Time interval {t0,tn}
 --  @param y0 Function value at time t0.
 --  @param param Table of additional parameters: dt - time step, exit - exit condition
 --  @return Table of intermediate results and value in final point.
-numeric.ode45 = function (fn,tDelta,dY0,tParam)
+numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
   local MAX, MIN = 15*numeric.TOL, 0.1*numeric.TOL
   local xn = tDelta[2]
   local h = tParam and tParam.dt or (10*numeric.TOL)
@@ -171,14 +174,15 @@ numeric.ode45 = function (fn,tDelta,dY0,tParam)
   end
   return res, res[#res][2]
 end
-about[numeric.ode45] = {"ode45(fn,tDelta,y0,[param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
+about[numeric.ode45] = {"Num:ode45(fn,tDelta,y0,[param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
 --- Find root of equation at the given interval.
+--  @param self Do nothing
 --  @param fn Function to analyze.
 --  @param a Lower bound.
 --  @param b Upper bound.
 --  @return Function root.
-numeric.solve = function (fn, dA, dB)
+numeric.solve = function (self, fn, dA, dB)
   local f0, f1 = fn(dA), fn(dB)
   if f0*f1 >= 0 then error("Boundary values must have different sign!") end
   repeat
@@ -187,14 +191,15 @@ numeric.solve = function (fn, dA, dB)
   until math.abs(f1) < numeric.TOL
   return dB 
 end
-about[numeric.solve] = {"solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
+about[numeric.solve] = {"Num:solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Integration using trapeze method.
+--  @param self Do nothing.
 --  @param fn Function f(x).
 --  @param a Lower bound.
 --  @param b Upper bound.
 --  @return Numerical approximation of the integral.
-numeric.trapez = function (fn, dA, dB)
+numeric.trapez = function (self, fn, dA, dB)
   local N, sum = 10, 0
   local fab = (fn(dA)+fn(dB)) * 0.5
   local x, dx, N = dA, (dB-dA)/N, N-1
@@ -218,7 +223,7 @@ numeric.trapez = function (fn, dA, dB)
   until math.abs(I-last) < numeric.TOL
   return I
 end
-about[numeric.trapez] = {"trapez(fn,a,b)", "Get integral using trapezoidal rule."}
+about[numeric.trapez] = {"Num:trapez(fn,a,b)", "Get integral using trapezoidal rule."}
 
 -- Comment to remove descriptions
 numeric.about = about

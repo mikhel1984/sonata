@@ -24,102 +24,101 @@ w = {1,1,0}
 -- enought to define w[i] ~= 1
 w[5] = 2; w[6] = 2
 -- average
-ans = Data.mean(X)           --3> 3.375
+ans = Data:mean(X)           --3> 3.375
 
 -- standard deviation
-ans, tmp = Data.std(X,W)     --3> 1.495
+ans, tmp = Data:std(X,W)     --3> 1.495
 
 -- variance
 ans = tmp                    --3> 2.234
 
 -- covariance for two vectors
 Y = {0,2,1,3,7,5,8,4}
-a = Data.cov2(X,Y)
+a = Data:cov2(X,Y)
 ans = a                      --3> -0.65625
 
 -- covariance matrix 
-tmp = Data.cov({X,Y})
+tmp = Data:cov({X,Y})
 ans = tmp[1][2]              --3> a
 
 -- maximum element and index
-_,ans = Data.max(X)           --> 4 
+_,ans = Data:max(X)           --> 4 
 
 -- median
-ans = Data.median(X)          --> 3
+ans = Data:median(X)          --> 3
 
 -- table of frequencies
-tmp = Data.freq(X)
+tmp = Data:freq(X)
 ans = tmp[3]                  --> 3
 
 -- central moment
-ans = Data.moment(2,X)       --3> 2.234
+ans = Data:moment(2,X)       --3> 2.234
 
 -- summ of elements
-ans = Data.sum(X)             --> 27
+ans = Data:sum(X)             --> 27
 
 -- minimum value
-ans = Data.min(X)             --> 1
+ans = Data:min(X)             --> 1
 
 -- geometrical mean
-ans = Data.geomean(X)        --3> 2.995
+ans = Data:geomean(X)        --3> 2.995
 
 -- harmonic mean
-ans = Data.harmmean(X,W)     --3> 2.567
+ans = Data:harmmean(X,W)     --3> 2.567
 
 -- check if X[i] > 2
-a = Data.is(X, Data.xGt(2))
+a = Data:is(X, Data:xGt(2))
 ans = a[1]                    --> 1
 
 -- get elements X[i] > 2
-tmp = Data.filter(X, a)
+tmp = Data:filter(X, a)
 ans = tmp[1]                  --> X[1]
 
 -- filtration using explicit function 
 fn = function (x) return x > 2 end
-tmp = Data.filter(X, fn)
+tmp = Data:filter(X, fn)
 ans = tmp[1]                  --> X[1]
 
 -- generate new list
 -- use 'lazy' function definition
-fn = Data.Fn "{x1-x2,x1+x2}"
-tmp = Data.zip(fn, X, Y)
+tmp = Data:zip("{x1-x2,x1+x2}", X, Y)
 ans = tmp[1][2]               --> X[1]+Y[1]
 
 -- find histogram
-a,b = Data.histcounts(X, 3)
+a,b = Data:histcounts(X, 3)
 ans = b[1]                    --> 2.25
 
 -- define edges 
-a,b = Data.histcounts(X,{2,4,7})
+a,b = Data:histcounts(X,{2,4,7})
 ans = a[1]                    --> 1
 
 -- table range reference 
-a = Data.ref(X, 3, 6)
+a = Data:ref(X, 3, 6)
 ans = #a                      --> 4
 
 ans = a[1]                    --> X[3]
 
 -- Student cdf and pdf
-ans = Data.tcdf(4, 2.5)      --3> 0.9805
+ans = Data:tcdf(4, 2.5)      --3> 0.9805
 
-ans = Data.tpdf(2, 3.3)      --3> 0.0672
+ans = Data:tpdf(2, 3.3)      --3> 0.0672
 
 -- dsv write 
 nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-Data.csvwrite(nm, t, ';')
+Data:csvwrite(nm, t, ';')
 
 -- dsv read
 -- with separator ';'
-tt = Data.csvread(nm, ';')
+tt = Data:csvread(nm, ';')
 ans = tt[2][2]                --> 5
 
 -- csv write by columns
-Data.csvwrite(nm, t, ',', true)
+Data:csvwrite(nm, t, ',', true)
 
 -- csv read by columns
-tt = Data.csvread(nm, ',', true)
+tt = Data:csvread(nm, ',', true)
 ans = tt[1][3]                --> 3
 
 --]]
@@ -128,6 +127,7 @@ ans = tt[1][3]                --> 3
 
 local Ver = require("lib.utils")
 local Cross = Ver.cross
+local Utils = Ver.utils
 Ver = Ver.versions
 
 local STAT = 'statistics'
@@ -145,47 +145,50 @@ local about = help:new("Data processing and statistics.")
 local data = {}
 
 --- Estimate covariance for two vectors.
+--  @param self Do nothing.
 --  @param t1 First data vector.
 --  @param t2 Second data vector.
 --  @return Covariance value.
-data.cov2 = function (t1,t2)
+data.cov2 = function (self,t1,t2)
   if #t1 ~= #t2 then error("Different vector size") end
-  local m1 = data.mean(t1)
-  local m2 = data.mean(t2) 
+  local m1 = data:mean(t1)
+  local m2 = data:mean(t2) 
   local s = 0
   for i = 1, #t1 do
     s = s + (t1[i] - m1)*(t2[i] - m2)
   end
   return s / #t1
 end
-about[data.cov2] = {"cov2(t1,t2)", "Find covariance value for two vectors.", STAT}
+about[data.cov2] = {"Data:cov2(t1,t2)", "Find covariance value for two vectors.", STAT}
 
 --- Estimate covariance matrix.
+--  @param self Do nothing.
 --  @param t Table of data vectors.
 --  @return Covariance matrix.
-data.cov = function (t)
+data.cov = function (self, t)
   local N = #t
   if N == 0 then error("Expected list of vectors") end
   data.ext_matrix = data.ext_matrix or require('lib.matrix')
   local m = data.ext_matrix.zeros(N, N) 
   for i = 1, N do
     local ti = t[i]
-    m[i][i] = data.cov2(ti, ti)
+    m[i][i] = data:cov2(ti, ti)
     for j = i+1, N do
-      m[i][j] = data.cov2(ti, t[j])
+      m[i][j] = data:cov2(ti, t[j])
       m[j][i] = m[i][j]
     end
   end
   return m
 end
-about[data.cov] = {"cov(t)", "Find covariance matrix for list of vectors.", STAT}
+about[data.cov] = {"Data:cov(t)", "Find covariance matrix for list of vectors.", STAT}
 
 --- Save Lua table in file, use given delimiter.
+--  @param self Do nothing.
 --  @param sFile File name.
 --  @param t Lua table.
 --  @param char Delimiter, default is coma.
 --  @param bCol Flag, reading elements by columns.
-data.csvwrite = function (sFile, t, char, bCol)
+data.csvwrite = function (self,sFile, t, char, bCol)
   local f = assert(io.open(sFile,'w'))
   char = char or ','
   if bCol then
@@ -209,14 +212,15 @@ data.csvwrite = function (sFile, t, char, bCol)
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {"csvwrite(sFile,t,[char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
+about[data.csvwrite] = {"Data:csvwrite(sFile,t,[char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
+--  @param self Do nothing.
 --  @param sFile File name.
 --  @param char Delimiter, default is coma.
 --  @param bCol Flag, reading elements by columns.
 --  @return Lua table with data.
-data.csvread = function (sFile, char, bCol)
+data.csvread = function (self,sFile, char, bCol)
   local f = assert(io.open(sFile, 'r'))
   char = char or ','
   local templ = '([^'..char..']+)'
@@ -247,27 +251,22 @@ data.csvread = function (sFile, char, bCol)
   f:close()
   return res
 end
-about[data.csvread] = {"csvread(sFile,[delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
+about[data.csvread] = {"Data:csvread(sFile,[delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
 
 --- Generate function from string.
+--  @param self Do nothing.
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
-data.Fn = function (sExpr,iArg)
-  local arg = {}
-  for i = 1, (iArg or 2) do arg[i] = string.format("x%d", i) end
-  local fn = Ver.loadStr(
-    string.format("return function (%s) return %s end", table.concat(arg,','), sExpr)
-  )
-  return fn()
-end
-about[data.Fn] = {"Fn(sExpr,[iArg=2])", "Generate function from expression of x1, x2 etc.", help.OTHER}
+data.Fn = function (self,sExpr,iArg) return Utils.Fn(sExpr, iArg or 2) end
+about[data.Fn] = {"Data:Fn(sExpr,[iArg=2])", "Generate function from expression of x1, x2 etc.", help.OTHER}
 
 --- Find elements using condition.
+--  @param self Do nothing.
 --  @param t Table with data.
 --  @param vCond Either boolean function or table of weights.
 --  @return Table with the filtered elements.
-data.filter = function (t, vCond)
+data.filter = function (self, t, vCond)
   local res = {}
   if type(vCond) == 'function' then
     -- boolean function
@@ -283,25 +282,27 @@ data.filter = function (t, vCond)
   end
   return res
 end
-about[data.filter] = {"filter(t,vCond)","Get result of the table filtering. Condition is either boolean function or table of weights.", FILTER}
+about[data.filter] = {"Data:filter(t,vCond)","Get result of the table filtering. Condition is either boolean function or table of weights.", FILTER}
 
 --- Frequency of elements.
+--  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Table where keys are elements and values are their frequencies.
-data.freq = function (t)
+data.freq = function (self, t)
   local tmp = {}
   for _, v in ipairs(t) do
     tmp[v] = (tmp[v] or 0) + 1
   end
   return tmp
 end
-about[data.freq] = {"freq(t)", "Return table with frequencies of elements.", STAT}
+about[data.freq] = {"Data:freq(t)", "Return table with frequencies of elements.", STAT}
 
 --- Geometrical mean.
+--  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights, optional.
 --  @return Geometrical mean.
-data.geomean = function (t, tw)
+data.geomean = function (self, t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1,#t do
@@ -316,13 +317,14 @@ data.geomean = function (t, tw)
     return p^(1/#t)
   end
 end
-about[data.geomean] = {"geomean(t,[tw])", "Geometrical mean.", STAT}
+about[data.geomean] = {"Data:geomean(t,[tw])", "Geometrical mean.", STAT}
 
 --- Harmonic mean.
+--  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
 --  @return Harmonic mean.
-data.harmmean = function (t, tw)
+data.harmmean = function (self, t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1,#t do
@@ -337,13 +339,14 @@ data.harmmean = function (t, tw)
     return #t / h
   end
 end
-about[data.harmmean] = {"harmmean(t,[tw])", "Harmonic mean.", STAT}
+about[data.harmmean] = {"Data:harmmean(t,[tw])", "Harmonic mean.", STAT}
 
 --- Number of elements in each bin.
+--  @param self Do nothing.
 --  @param t Data table.
 --  @param rng Number of bins or table with edges.
 --  @return Two tables, with sum and edges.
-data.histcounts = function (t, rng)
+data.histcounts = function (self, t, rng)
   rng = rng or 10 
   local bins
   -- make copy and sort
@@ -379,51 +382,55 @@ data.histcounts = function (t, rng)
   end
   return res, bins
 end
-about[data.histcounts] = {"histcounts(X,[rng=10])","Calculate amount of bins. Edges can be either number or table.", STAT}
+about[data.histcounts] = {"Data:histcounts(X,[rng=10])","Calculate amount of bins. Edges can be either number or table.", STAT}
 
 --- Find weights (1/0) based on condition.
+--  @param self Do nothing.
 --  @param t Data table.
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
-data.is = function (t, fn)
+data.is = function (self, t, fn)
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 1 or 0
   end
   return res
 end
-about[data.is] = {"is(t,fn)", "Find weights using boolean function.", FILTER}
+about[data.is] = {"Data:is(t,fn)", "Find weights using boolean function.", FILTER}
 
 --- Find weights (1/0) based on inverted condition.
+--  @param self Do nothing.
 --  @param t Data table.
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
-data.isNot = function (t, fn)
+data.isNot = function (self, t, fn)
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 0 or 1
   end
   return res
 end
-about[data.isNot] = {"isNot(t,fn)", "Find inverted weights using boolean function.", FILTER}
+about[data.isNot] = {"Data:isNot(t,fn)", "Find inverted weights using boolean function.", FILTER}
 
 --- Maximum value.
+--  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Maximum value and its index.
-data.max = function (t)
+data.max = function (self, t)
   local m, k = t[1], 1
   for i = 2, #t do
     if t[i] > m then m, k = t[i], i end
   end
   return m,k
 end
-about[data.max] = {"max(t)", "Maximal element and its index.", help.OTHER}
+about[data.max] = {"Data:max(t)", "Maximal element and its index.", STAT}
 
 --- Average value.
+--  @param self Do nothing.
 --  @param t Table with numbers.
 --  @param tw Table with weight. Can be omitted.
 --  @return Average.
-data.mean = function (t, tw)
+data.mean = function (self, t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1, #t do
@@ -433,15 +440,16 @@ data.mean = function (t, tw)
     end
     return st / sw
   else
-    return data.sum(t) / #t
+    return data:sum(t) / #t
   end
 end
-about[data.mean] = {"mean(t,[tw])", "Calculate average value. Weights can be used.", STAT}
+about[data.mean] = {"Data:mean(t,[tw])", "Calculate average value. Weights can be used.", STAT}
 
 --- Find median.
+--  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Value of median.
-data.median = function (t)
+data.median = function (self, t)
   local len = #t
   local y = Ver.move(t,1,len,1,{})
   table.sort(y)
@@ -452,26 +460,28 @@ data.median = function (t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
-about[data.median] = {"median(t)", "Median of the list.", STAT}
+about[data.median] = {"Data:median(t)", "Median of the list.", STAT}
 
 --- Minimum value.
+--  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Minimum value and its index.
-data.min = function (t)
+data.min = function (self, t)
   local m, k = t[1], 1
   for i = 2, #t do
     if t[i] < m then m, k = t[i], i end
   end
   return m,k
 end
-about[data.min] = {"min(t)", "Minimal element and its index.", help.OTHER}
+about[data.min] = {"Data:min(t)", "Minimal element and its index.", STAT}
 
 --- Central moment.
+--  @param self Do nothing.
 --  @param N Order of the moment.
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
 --  @return Central moment value.
-data.moment = function (N, t, tw)
+data.moment = function (self, N, t, tw)
   local m, n = 0, 0
   for i = 1,#t do
     local w = tw and tw[i] or 1
@@ -485,25 +495,27 @@ data.moment = function (N, t, tw)
   end
   return mu / n
 end
-about[data.moment] = {"moment(N,t,[tw])", "Central moment of t order N, tw is a list of weights.", STAT}
+about[data.moment] = {"Data:moment(N,t,[tw])", "Central moment of t order N, tw is a list of weights.", STAT}
 
 
 --- Sum of all elements.
+--  @param self Do nothing.
 --  @param t Table with numbers.
 --  @return Sum.
-data.sum = function (t)
+data.sum = function (self,t)
   local s = 0
   for i = 1, #t do s = s+t[i] end
   return s
 end
-about[data.sum] = {"sum(t)", "Get sum of all elements.", help.OTHER}
+about[data.sum] = {"Data:sum(t)", "Get sum of all elements.", help.OTHER}
 
 --- Standard deviation and variance.
+--  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights.
 --  @return Standard deviation, variance.
-data.std = function (t, tw)
-  local mean = data.mean(t,tw)
+data.std = function (self, t, tw)
+  local mean = data:mean(t,tw)
   local disp = 0
   if tw then
     local sw = 0
@@ -519,69 +531,77 @@ data.std = function (t, tw)
   end
   return math.sqrt(disp), disp 
 end
-about[data.std] = {"std(t,[tw])", "Standard deviation and variance. Weights can be used.", STAT}
+about[data.std] = {"Data:std(t,[tw])", "Standard deviation and variance. Weights can be used.", STAT}
 
 --- Student's cumulative distribution
---   @param d Value.
---   @param N Degree of freedom.
---   @return Cumulative value.
-data.tcdf = function (d,N)
+--  @param self Do nothing.
+--  @param d Value.
+--  @param N Degree of freedom.
+--  @return Cumulative value.
+data.tcdf = function (self,d,N)
   data.ext_special = data.ext_special or require('lib.special')
   local tmp = N/(N+d*d)
-  return 1-0.5*data.ext_special.betainc(tmp,0.5*N,0.5)
+  return 1-0.5*data.ext_special:betainc(tmp,0.5*N,0.5)
 end
-about[data.tcdf] = {"tcdf(d,N)", "Student's cumulative distribution.", help.OTHER}
+about[data.tcdf] = {"Data:tcdf(d,N)", "Student's cumulative distribution.", help.OTHER}
 
 --- Student's density function.
---   @param d Value.
---   @param N Degree of freedom.
---   @return Density value.
-data.tpdf = function (d,N)
+--  @param self Do nothing.
+--  @param d Value.
+--  @param N Degree of freedom.
+--  @return Density value.
+data.tpdf = function (self,d,N)
   data.ext_special = data.ext_special or require('lib.special')
-  local tmp = math.sqrt(N)*data.ext_special.beta(0.5,0.5*N)
+  local tmp = math.sqrt(N)*data.ext_special:beta(0.5,0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-about[data.tpdf] = {"tpdf(d,N)", "Student's distribution density.", help.OTHER}
+about[data.tpdf] = {"Data:tpdf(d,N)", "Student's distribution density.", help.OTHER}
 
 --- Condition: x == d.
+--  @param self Do nothing.
 --  @param d Some value.
 --  @return Boolean function.
-data.xEq = function (d)
+data.xEq = function (self,d)
   return (function (x) return Cross.eq(x,d) end)
 end
-about[data.xEq] = {"xEq(d)", "Return function for condition x == d.", FILTER}
+about[data.xEq] = {"Data:xEq(d)", "Return function for condition x == d.", FILTER}
 
 --- Condition: x > d
+--  @param self Do nothing.
 --  @param d Lower limit.
 --  @return Boolean function.
-data.xGt = function (d)
+data.xGt = function (self,d)
   return (function (x) return x > d end)
 end
-about[data.xGt] = {"xGt(d)", "Return function for condition x > d.", FILTER}
+about[data.xGt] = {"Data:xGt(d)", "Return function for condition x > d.", FILTER}
 
 --- Condition: d1 <= x <= d2.
+--  @param self Do nothing.
 --  @param d1 Lower limit.
 --  @param d2 Upper limit.
 --  @return Boolean function.
-data.xIn = function (d1, d2)
+data.xIn = function (self, d1, d2)
   return (function (x) return d1 <= x and x <= d2 end)
 end
-about[data.xIn] = {"xIn(d1,d2)", "Return function for condition d1 <= x <= d2.", FILTER}
+about[data.xIn] = {"Data:xIn(d1,d2)", "Return function for condition d1 <= x <= d2.", FILTER}
 
 --- Condition: x < d
+--  @param self Do nothing.
 --  @param d Upper limit. 
 --  @return Boolean function.
-data.xLt = function (d)
+data.xLt = function (self,d)
   return (function (x) return x < d end)
 end
-about[data.xLt] = {"xLt(d)", "Return function for condition x < d.", FILTER}
+about[data.xLt] = {"Data:xLt(d)", "Return function for condition x < d.", FILTER}
 
 --- Apply function of n arguments to n lists.
---  @param fn Function of multiple arguments.
+--  @param self Do nothing.
+--  @param fn Function of multiple arguments or string.
 --  @param ... Sequence of lists.
 --  @return List of values fn(...).
-data.zip = function (fn, ...)
+data.zip = function (self,fn, ...)
   local ag, res = {...}, {}
+  if type(fn) == 'string' then fn = Utils.Fn(fn, #ag) end
   local x, stop = {}, false
   for i = 1, math.huge do
     for j = 1, #ag do
@@ -601,7 +621,7 @@ data.zip = function (fn, ...)
   end
   return res 
 end
-about[data.zip] = {"zip(fn,...)", "Sequentially apply function to list of tables.", help.OTHER}
+about[data.zip] = {"Data:zip(fn,...)", "Sequentially apply function to list of tables.", help.OTHER}
 
 -- Get reference to data range in other table
 local metaref = { type = 'ref' }
@@ -633,17 +653,18 @@ metaref.__newindex = function (self, k, v)
 end
 
 --- Create reference to other table.
+--  @param self Do nothing.
 --  @param t Source table.
 --  @param iBeg Index of the first element.
 --  @param iEnd Index of the last element.
 --  @return Reference object. 
-data.ref = function (t, iBeg, iEnd)
+data.ref = function (self, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
 end
-about[data.ref] = {'ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', help.OTHER}
+about[data.ref] = {'Data:ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', help.OTHER}
 
 -- Comment to remove descriptions
 data.about = about

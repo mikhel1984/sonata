@@ -101,7 +101,7 @@ end
 
 --- Get the object copy.
 --  @param v Object.
---  @return Deep copy.
+--  @return Deep copy when possible.
 cross.copy = function (v)
   return type(v) == 'table' and v.copy and v:copy() or v
 end
@@ -132,9 +132,65 @@ cross.simp = function (v)
   return type(v) == 'table' and v._simp_ and v:_simp_() or v
 end
 
+--============== Utils ================
+
+local utils = {}
+
+--- Generate function from string.
+--  @param sExpr Expression for execution.
+--  @param iArg Number of arguments.
+--  @return Function based on the expression.
+utils.Fn = function (sExpr,iArg)
+  local arg = {}
+  for i = 1, iArg do arg[i] = string.format("x%d", i) end
+  local fn = versions.loadStr(
+    string.format("return function (%s) return %s end", table.concat(arg,','), sExpr)
+  )
+  return fn()
+end
+
+--- 'Smart' number to string conversation.
+--  @param d Number. 
+--  @return String representation.
+utils.numstr = function (d)
+  local int, frac = math.modf(d)
+  local a = math.abs(int)
+  -- short integer
+  if frac == 0 then 
+    if a < 1E5 then
+      return string.format('%d', int) 
+    end
+  elseif int == 0 then
+    if math.abs(frac) >= 0.01 then
+      return string.format("%.3f", d)
+    end
+  elseif a < 10 then
+    return string.format('%.3f', d)
+  elseif a < 100 then 
+    return string.format('%.2f', d)
+  elseif a < 1000 then 
+    return string.format('%.1f', d)
+  end
+  return string.format('%.2E', d)
+end
+
+--- Round float number for required number of digits.
+--  @param fArg Number for rounding.
+--  @param fTol Required tolerance (1E-k)
+utils.round = function (fArg, fTol)
+  local p, q = math.modf(fArg / fTol)
+  if     q >=  0.5 then  p = p + 1
+  elseif q <= -0.5 then p = p - 1
+  end
+  return p * fTol
+end
+
 return {
   versions = versions,
   cross = cross,
+  utils = utils,
 }
 
 --===================================================
+--TODO setup for number of digits
+--TODO: fix 'round' for N - 1e-M

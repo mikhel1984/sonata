@@ -75,7 +75,9 @@ local HYP = 'hyperbolic'
 local AUX = 'auxiliary'
 
 -- compatibility
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Utils = Ver.utils
+Ver = Ver.versions
 
 --	MODULE
 
@@ -87,9 +89,8 @@ SonataHelp = SonataHelp or {}
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
 main._showElt_ = function (v)
-  local tp = Ver.mathType(v)
-  if tp == 'float' or tp == 'integer' and math.abs(v) >= 1000 then
-    return string.format('%.2E', v)  -- 'scientific' format
+  if type(v) == 'number' then
+    return Utils.numstr(v)
   else
     return tostring(v)
   end
@@ -236,19 +237,13 @@ Print = function (...)
 end
 About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", AUX}
 
---- Round to closest integer.
+--- Round to some precision.
 --  @param f Real number.
 --  @param N Number of decimal digits.
 --  @return Rounded number.
 Round = function (f,N)
-  local k = 10^(N or 0)
-  local p,q = math.modf(f*k)
-  if q >= 0.5 then 
-    p = p+1
-  elseif q <= -0.5 then 
-    p = p-1
-  end
-  return p / k
+  N = N or 0
+  return Utils.round(f, 10^(-N))
 end
 About[Round] = {'Round(f,[N=0])', 'Round value, define number of decimal digits.', AUX}
 

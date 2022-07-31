@@ -58,6 +58,7 @@ CONST = 'constants',
 OTHER = 'other',
 NEW = 'constructor',
 META = 'methods',
+STATIC = 'common',
 -- file name separator
 SEP = string.sub(package.config,1,1),
 -- colors

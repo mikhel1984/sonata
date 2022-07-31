@@ -51,10 +51,10 @@ help(use)
 -- Module is available for its alias.
 use 'matrix'
 a = Mat {{1,2},{3,4}}       -- new matrix
--- Functions can be called as methods of class
-Mat.det(a)
--- or object
+-- Fields can be called with dot, 
+-- functions with ':'
 a:det()
+Mat:eye(2,2)
 -- PAUSE
 
 -- Several modules could be loaded as
@@ -69,7 +69,6 @@ use 'Num'
 -- In order to load all modules, enter
 use 'all'
 -- Print 'use()' to check status
-
 -- PAUSE
 
 -- Some modules modify the program environment.
@@ -79,6 +78,14 @@ _i
 -- and some functions can work with it
 sqrt(-4)
 exp(3+_i*4)
+-- PAUSE
+
+-- Note-file is separated into parts 
+-- with 'pauses'. There are additional commands for
+-- intraction, in particular 
+-- :ls - show list of parts
+-- :N  - jump to N-th part
+-- Call ':13' to see this message once again.
 -- PAUSE
 
 -- Get more information about the available modules 

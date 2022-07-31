@@ -17,50 +17,50 @@
 Spec = require 'lib.special'
 
 -- beta functions
-ans = Spec.beta(3,4) * 1E2   --3> 1.667
+ans = Spec:beta(3,4) * 1E2   --3> 1.667
 
-ans = Spec.betaln(10,20)     --3> -19.115
+ans = Spec:betaln(10,20)     --3> -19.115
 
-ans = Spec.betainc(0.5, 2, 3.3)  --3> 0.7309
+ans = Spec:betainc(0.5, 2, 3.3)  --3> 0.7309
 
 -- error functions
-ans = Spec.erf(1)            --3> 0.8427
+ans = Spec:erf(1)            --3> 0.8427
 
-ans = Spec.erfc(0.5)         --3> 0.4795
+ans = Spec:erfc(0.5)         --3> 0.4795
 
 -- Ei(x)
-ans = Spec.expint(3.3) * 1E3     --3> 8.939
+ans = Spec:expint(3.3) * 1E3     --3> 8.939
 
 -- E3(x)
-ans = Spec.expint(2, 5) * 1E4    --3> 9.965
+ans = Spec:expint(2, 5) * 1E4    --3> 9.965
 
 -- gamma functions
-ans = Spec.gamma(-1.5)       --3> 2.3633
+ans = Spec:gamma(-1.5)       --3> 2.3633
 
-ans = Spec.gammaln(100)      --3> 359.1342
+ans = Spec:gammaln(100)      --3> 359.1342
 
-ans = Spec.gammp(7.7, 2.3) * 1E3 --2> 3.85
+ans = Spec:gammp(7.7, 2.3) * 1E3 --2> 3.85
 
-ans = Spec.gammq(1.5, 4.8) * 1E2 --2> 2.23
+ans = Spec:gammq(1.5, 4.8) * 1E2 --2> 2.23
 
 -- another syntax
-ans = Spec.gammainc(2.1, 0.3, 'upper') * 1E2 --3> 1.942
+ans = Spec:gammainc(2.1, 0.3, 'upper') * 1E2 --3> 1.942
 
 -- Bessel functions
-ans = Spec.besselj(3, 1.5) * 1E2 --3> 6.096
+ans = Spec:besselj(3, 1.5) * 1E2 --3> 6.096
 
-ans = Spec.bessely(4, 0.8)   --3> -78.751
+ans = Spec:bessely(4, 0.8)   --3> -78.751
 
-ans = Spec.besseli(2, -3.6)  --3> 4.254
+ans = Spec:besseli(2, -3.6)  --3> 4.254
 
-ans = Spec.besselk(5, 5) * 1E2   --3> 3.2706
+ans = Spec:besselk(5, 5) * 1E2   --3> 3.2706
 
 -- Legendre function
-lst = Spec.legendre(3, 0.5)
+lst = Spec:legendre(3, 0.5)
 ans = lst[1]                 --3> -0.4375
 
 -- Dawson function
-ans = Spec.dawson(3.3)       --3> 0.1598
+ans = Spec:dawson(3.3)       --3> 0.1598
 
 --]]
 
@@ -285,7 +285,7 @@ special._gammaSer_ = function (N,x)
       del = del*x/ap
       sum = sum+del
       if math.abs(del) < math.abs(sum)*EPS then
-        gamser = sum*math.exp(-x+N*math.log(x)-gammaln(N))
+        gamser = sum*math.exp(-x+N*math.log(x)-gammaln(0,N))
         break
       end
     end
@@ -309,7 +309,7 @@ special._gcf_ = function (N,x)
     h = h*del
     if math.abs(del-1.0) < EPS then break end
   end
-  return math.exp(-x+N*math.log(x)-special.gammaln(N))*h
+  return math.exp(-x+N*math.log(x)-special:gammaln(N))*h
 end
 
 --- Legendre coefficient.
@@ -340,10 +340,11 @@ special._plgndr_ = function (n,m,x)
 end
 
 --- Modified Bessel function In.
+--  @param self Do nothing.
 --  @param N Order.
 --  @param x Real number.
 --  @return In(x).
-special.besseli = function (N,x)
+special.besseli = function (self, N,x)
   if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessi0_(x) end
   if N == 1 then return special._bessi1_(x) end
@@ -363,13 +364,14 @@ special.besseli = function (N,x)
   ans = ans*special._bessi0_(x)/bi
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besseli] = {"besseli(N,x)", "Modified Bessel function In(x).", BESSEL}
+about[special.besseli] = {"Spec:besseli(N,x)", "Modified Bessel function In(x).", BESSEL}
 
 --- Bessel function of the first kind
+--  @param self Do nothing.
 --  @param N Polynomial order.
 --  @param x Real number.
 --  @return Polynomial value
-special.besselj = function (N,x)
+special.besselj = function (self, N,x)
   if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessj0_(x) end
   if N == 1 then return special._bessj1_(x) end
@@ -407,13 +409,14 @@ special.besselj = function (N,x)
   end
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besselj] = {"besselj(N,x)", "Bessel function of the first kind.", BESSEL}
+about[special.besselj] = {"Spec:besselj(N,x)", "Bessel function of the first kind.", BESSEL}
 
 --- Modified Bessel function Kn.
+--  @param self Do nothing.
 --  @param N Order.
 --  @param x Positive value.
 --  @return Kn(x).
-special.besselk = function (N,x)
+special.besselk = function (self, N,x)
   if x <= 0 then error("Positive value is expected!") end
   if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessk0_(x) end
@@ -424,13 +427,14 @@ special.besselk = function (N,x)
   end
   return bk
 end
-about[special.besselk] = {"besselk(N,x)", "Modified Bessel function Kn(x).", BESSEL}
+about[special.besselk] = {"Spec:besselk(N,x)", "Modified Bessel function Kn(x).", BESSEL}
 
 --- Bessel function of the second kind
+--  @param self Do nothing.
 --  @param n Polynomial order.
 --  @param x Non-negative real number.
 --  @return Polynomial value
-special.bessely = function (n,x)
+special.bessely = function (self, n,x)
   if x <= 0 then error('Positive value is expected!') end
   if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
   if n == 0 then return special._bessy0_(x) end
@@ -443,47 +447,51 @@ special.bessely = function (n,x)
   end
   return by
 end
-about[special.bessely] = {"bessely(n,x)","Bessel function of the second kind.", BESSEL}
+about[special.bessely] = {"Spec:bessely(n,x)","Bessel function of the second kind.", BESSEL}
 
 --- Beta function.
+--  @param self Do nothing.
 --  @param z First value.
 --  @param w Second value.
 --  @return B(z,w).
-special.beta = function (z,w)
-  return math.exp(special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w))
+special.beta = function (self, z,w)
+  return math.exp(special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w))
 end
-about[special.beta] = {"beta(z,w)", "Beta function.", BETA}
+about[special.beta] = {"Spec:beta(z,w)", "Beta function.", BETA}
 
 --- Incomplete beta function
+--  @param self Do nothing.
 --  @param x Value between 0 and 1.
 --  @param a First bound.
 --  @param b Second bound.
 --  @return Value of Ix(a,b).
-special.betainc = function (x,a,b)
+special.betainc = function (self,x,a,b)
   if x < 0.0 or x > 1.0 then error("Expected x between 0 and 1!") end
   local bt
   if x == 0 or x == 1 then 
     bt = 0.0
   else
-    bt = math.exp(special.gammaln(a+b)-special.gammaln(a)-special.gammaln(b)+a*math.log(x)+b*math.log(1.0-x))
+    bt = math.exp(special:gammaln(a+b)-special:gammaln(a)-special:gammaln(b)+a*math.log(x)+b*math.log(1.0-x))
   end
   return (x < (a+1.0)/(a+b+2.0)) and (bt*special._betacf(a,b,x)/a) or (1.0-bt*special._betacf(b,a,1.0-x)/b)
 end
-about[special.betainc] = {"betainc(x,a,b)", "Incomplete beta function Ix(a,b).", BETA}
+about[special.betainc] = {"Spec:betainc(x,a,b)", "Incomplete beta function Ix(a,b).", BETA}
 
 --- Logarithm of beta function.
+--  @param self Do nothing.
 --  @param z First argument.
 --  @param w Second argument.
 --  @return log(B(x)).
-special.betaln = function (z,w)
-  return special.gammaln(z)+special.gammaln(w)-special.gammaln(z+w)
+special.betaln = function (self,z,w)
+  return special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w)
 end
-about[special.betaln] = {"betaln(z,w)", "Natural logarithm of beta function.", BETA}
+about[special.betaln] = {"Spec:betaln(z,w)", "Natural logarithm of beta function.", BETA}
 
 --- Dawson integral.
+--  @param self Do nothing.
 --  @param x Real number.
 --  @return Integral value.
-special.dawson = function (x)
+special.dawson = function (self,x)
   local NMAX,H,A1,A2,A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
   if not special._c_dawson then 
     -- List of Dawson function coefficients.
@@ -507,31 +515,34 @@ special.dawson = function (x)
     return 0.5641895835*sum*(x>=0 and math.exp(-xp*xp) or -math.exp(-xp*xp))
   end
 end
-about[special.dawson] = {"dawson(x)", "Dawson integral."}
+about[special.dawson] = {"Spec:dawson(x)", "Dawson integral."}
 
 --- Error function.
+--  @param self Do nothing.
 --  @param x Real value.
 --  @return Error value.
-special.erf = function (x) return 1-special.erfc(x) end
-about[special.erf] = {"erf(x)", "Error function."}
+special.erf = function (self, x) return 1-special:erfc(x) end
+about[special.erf] = {"Spec:erf(x)", "Error function."}
 
 --- Complementary error function.
+--  @param self Do nothing.
 --  @param x Real value.
 --  @return Error value.
-special.erfc = function (x)
+special.erfc = function (self,x)
   local z = math.abs(x)
   local t = 1.0/(1+0.5*z)
   local ans = t*math.exp(-z*z-1.26551223+t*(1.00002368+t*(0.37409196+t*(0.09678418+t*(-0.18628806+t*
     (0.27886807+t*(-1.13520398+t*(1.48851587+t*(-0.82215223+t*0.17087277)))))))))
   return (x >= 0.0) and ans or (2.0-ans)
 end
-about[special.erfc] = {"erfc(x)", "Complementary error function."}
+about[special.erfc] = {"Spec:erfc(x)", "Complementary error function."}
 
 --- Exponential integral.
+--  @param self Do nothing.
 --  @param n Power.
 --  @param x Non-negative value.
 --  @return Value of En(x).
-special.expint = function (n,x)
+special.expint = function (self,n,x)
   if x == nil then n,x = 1,n end
   if not (n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1))) then error(ERR_INVARG) end
   if n == 0 then return math.exp(-x)/x end
@@ -568,15 +579,15 @@ special.expint = function (n,x)
   end -- if x
   error('Evaluation is failed!')
 end
-about[special.expint] = {"expint(n,x)", "Exponential integral En(x)."}
+about[special.expint] = {"Spec:expint(n,x)", "Exponential integral En(x)."}
 
 --- Gamma function.
---  Lanczos approximation (based on Wikipedia) for real numbers.
+--  @param self Do nothing.
 --  @param z Real number.
 --  @return G(z).
-special.gamma = function (z) 
+special.gamma = function (self, z) 
   if z < 0.5 then
-    return math.pi / (math.sin(math.pi*z) * special.gamma(1-z))
+    return math.pi / (math.sin(math.pi*z) * special:gamma(1-z))
   else
     z = z-1
     local x = 0.99999999999980993
@@ -585,26 +596,28 @@ special.gamma = function (z)
     return math.sqrt(2*math.pi)*t^(z+0.5)*math.exp(-t)*x
   end
 end
-about[special.gamma] = {"gamma(z)", "Gamma function.", GAMMA}
+about[special.gamma] = {"Spec:gamma(z)", "Gamma function.", GAMMA}
 
 --- Other syntax for incomplete gamma function.
+--  @param self Do nothing.
 --  @param x Real value.
 --  @param N Order.
 --  @param tp Type of function ('lower' of 'upper').
 --  @return Value of correspondent incomplete function.
-special.gammainc = function (x,N,tp)
+special.gammainc = function (self,x,N,tp)
   tp = tp or 'lower'
-  if     tp == 'lower' then return special.gammp(N,x)
-  elseif tp == 'upper' then return special.gammq(N,x)
+  if     tp == 'lower' then return special:gammp(N,x)
+  elseif tp == 'upper' then return special:gammq(N,x)
   else error('Unexpected type '..tostring(tp))
   end
 end
-about[special.gammainc] = {"gammainc(x,N,[type='lower'])", "Incomplete gamma function, P (type='lower') or Q (type='upper').", GAMMA}
+about[special.gammainc] = {"Spec:gammainc(x,N,[type='lower'])", "Incomplete gamma function, P (type='lower') or Q (type='upper').", GAMMA}
 
 --- Logarithm of gamma function.
+--  @param self Do nothing.
 --  @param z Positive number.
 --  @return log(gamma(z))
-special.gammaln = function (z)
+special.gammaln = function (self,z)
   local x,y = z,z
   local tmp = x+5.5
   tmp = tmp-(x+0.5)*math.log(tmp)
@@ -612,40 +625,43 @@ special.gammaln = function (z)
   for i = 1, #k_gammaln do y=y+1; ser = ser+k_gammaln[i]/y end
   return -tmp+math.log(2.5066282746310005*ser/x)
 end
-about[special.gammaln] = {"gammaln(z)", "Natural logarithm of gamma function.", GAMMA}
+about[special.gammaln] = {"Spec:gammaln(z)", "Natural logarithm of gamma function.", GAMMA}
 
 --- Incomplete gamma function P(N,x).
+--  @param self Do nothing.
 --  @param N Order.
 --  @param x Non-negative value.
 --  @return Value of P(N,x).
-special.gammp = function (N,x)
+special.gammp = function (self,N,x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and special._gammaSer_(N,x) or 1.0-special._gcf_(N,x)
 end
-about[special.gammp] = {"gammp(N,x)", "Incomplete gamma function P(N,x).", GAMMA}
+about[special.gammp] = {"Spec:gammp(N,x)", "Incomplete gamma function P(N,x).", GAMMA}
 
 --- Incomplete gamma function Q(N,x).
+--  @param self Do nothing.
 --  @param N Order.
 --  @param x Non-negative value.
 --  @return Value of Q(N,x).
-special.gammq = function (N,x)
+special.gammq = function (self,N,x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and 1-special._gammaSer_(N,x) or special._gcf_(N,x)
 end
-about[special.gammq] = {"gammq(N,x)", "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
+about[special.gammq] = {"Spec:gammq(N,x)", "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
 
 --- List of Legendre coefficients.
+--  @param self Do nothing.
 --  @param n Polynomial order.
 --  @param x Real number.
 --  @return Table with coefficients.
-special.legendre = function (n,x)
+special.legendre = function (self,n,x)
   if n < 0 or math.abs(x) > 1 then error(ERR_INVARG) end
   local res = {}
   local plgndr = special._plgndr_
   for i = 1,n+1 do res[i] = plgndr(n,i-1,x) end
   return res
 end
-about[special.legendre] = {"legendre(n,x)","Return list of Legendre polynomial coefficients."}
+about[special.legendre] = {"Spec:legendre(n,x)","Return list of Legendre polynomial coefficients."}
 
 -- Comment to remove descriptions
 special.about = about

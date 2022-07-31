@@ -20,10 +20,10 @@ Quat = require 'lib.quaternion'
 require 'lib.matrix'
 
 -- quaternion
--- set {w,i,j,k}
+-- set {w,x,y,z}
 a = Quat {1,2,3,4}
 -- part of elements
-b = Quat {w=3, i=4}
+b = Quat {w=3, x=4}
 ans = b                       --> Quat{3,4,0,0}
 
 -- conjugation
@@ -37,7 +37,7 @@ ans = b:abs()                --1> 5.000
 
 -- inversion
 c = a*a:inv()
-ans = c.w                    --1> 1.000
+ans = c:w()                  --1> 1.000
 
 -- arithmetic
 ans = a+b                     --> Quat{4,6,3,4}
@@ -50,27 +50,27 @@ ans = 3*b                     --> Quat{9,12,0,0}
 ans = b^3                     --> b * b * b
 
 -- unit quaternion
-a:normalize()
+a = a:normalize()
 ans = a:abs()                --1> 1.000
 
 -- unit power
 aa = a^1.5
-ans = aa.i                   --3> 0.324
+ans = aa:x()                 --3> 0.324
 
-ans = aa.j                   --3> 0.486
+ans = aa:y()                 --3> 0.486
 
-ans = aa.k                   --3> 0.648
+ans = aa:z()                 --3> 0.648
 
 -- rotation matrix
 m = a:toRot()
-d = Quat.fromRot(m)
-ans = Quat.abs(d-a)          --1> 0.000
+d = Quat:fromRot(m)
+ans = (d-a):abs()            --1> 0.000
 
 -- use angle 
 -- and axis
 ang = 0.5
 axis = {1,1,1}
-f = Quat.fromAA(ang,axis)
+f = Quat:fromAA(ang,axis)
 ans,_ = f:toAA()             --3> ang
 
 -- rotate vector
@@ -78,11 +78,8 @@ p = a:rotate({1,0,0})
 ans = p[1]                   --3> -0.667
 
 -- spherical interpolation
-d = Quat.slerp(a,b,0.5)
-ans = d.w                    --3> 0.467
-
--- make copy
-ans = d:copy()                --> d
+d = a:slerp(b,0.5)
+ans = d:w()                  --3> 0.467
 
 -- show 
 print(d)
@@ -92,13 +89,11 @@ print(d)
 --	LOCAL
 
 local Ver = require("lib.utils")
+local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
 local ROTATION = 'rotation'
-
--- indeces of components
-local keys = {w=1, i=2, j=3, k=4}
 
 --- Check object type.
 --  @param t Object.
@@ -114,14 +109,15 @@ local function tofloat(v) return type(v) == 'table' and v:float() or v end
 --  @param Q Quaternion object.
 --  @return Quaternion or value.
 local function numquat(Q) 
-  return Cross.eq(Q[2],0) and Cross.eq(Q[3],0) and Cross.eq(Q[4],0) and Cross.simp(Q[1]) or Q 
+  return Cross.eq(Q._v[2],0) and Cross.eq(Q._v[3],0) and Cross.eq(Q._v[4],0) 
+    and Cross.simp(Q._v[1]) or Q 
 end
 
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
 local function numStr(v) 
-  return type(v) == 'number' and string.format('%.3f', v) or tostring(v) 
+  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
 end
 
 --	INFO
@@ -152,20 +148,15 @@ quaternion.__add = function (Q1,Q2)
       return Cross.convert(Q2, Q1) + Q2
     end
   end
-  return numquat(quaternion:_new_({Q1[1]+Q2[1],Q1[2]+Q2[2],Q1[3]+Q2[3],Q1[4]+Q2[4]}))
+  local q1, q2 = Q1._v, Q2._v
+  return numquat(quaternion:_new_({q1[1]+q2[1],q1[2]+q2[2],q1[3]+q2[3],q1[4]+q2[4]}))
 end
 
--- Get method or key 
-quaternion.__index = function (t,k)
-  return quaternion[k] or rawget(t,keys[k] or '')
-end
+-- metamethods
+quaternion.__index = quaternion
 
 -- Set by key
-quaternion.__newindex = function (t,k,v)
-  if keys[k] then 
-    t[keys[k]] = v
-  end
-end
+quaternion.__newindex = function () error("Immutable object") end
 
 --- Q1 * Q2
 --  @param Q1 First quaternion.
@@ -180,11 +171,12 @@ quaternion.__mul = function (Q1,Q2)
       return Cross.convert(Q2, Q1) * Q2
     end
   end
+  local q1, q2 = Q1._v, Q2._v
   return numquat(quaternion:_new_(
-    {Q1[1]*Q2[1]-Q1[2]*Q2[2]-Q1[3]*Q2[3]-Q1[4]*Q2[4],
-     Q1[1]*Q2[2]+Q1[2]*Q2[1]+Q1[3]*Q2[4]-Q1[4]*Q2[3],
-     Q1[1]*Q2[3]-Q1[2]*Q2[4]+Q1[3]*Q2[1]+Q1[4]*Q2[2],
-     Q1[1]*Q2[4]+Q1[2]*Q2[3]-Q1[3]*Q2[2]+Q1[4]*Q2[1]}))
+    {q1[1]*q2[1]-q1[2]*q2[2]-q1[3]*q2[3]-q1[4]*q2[4],
+     q1[1]*q2[2]+q1[2]*q2[1]+q1[3]*q2[4]-q1[4]*q2[3],
+     q1[1]*q2[3]-q1[2]*q2[4]+q1[3]*q2[1]+q1[4]*q2[2],
+     q1[1]*q2[4]+q1[2]*q2[3]-q1[3]*q2[2]+q1[4]*q2[1]}))
 end
 
 --- Q ^ k
@@ -196,7 +188,7 @@ quaternion.__pow = function (Q,d)
     return quaternion.inv(Q)
   elseif d >= 0 and Ver.isInteger(d) then
     -- positive integer use for all quaternions
-    local res, acc = quaternion:_new_{1,0,0,0}, quaternion.copy(Q)
+    local res, acc = quaternion:_new_{1,0,0,0}, Q
     while d > 0 do
       if d % 2 == 1 then res = quaternion.__mul(res, acc) end
       d = math.modf(d * 0.5)
@@ -225,25 +217,28 @@ quaternion.__sub = function (Q1,Q2)
       return Cross.convert(Q2, Q1) - Q2
     end
   end
-  return numquat(quaternion:_new_({Q1[1]-Q2[1],Q1[2]-Q2[2],Q1[3]-Q2[3],Q1[4]-Q2[4]}))
+  local q1, q2 = Q1._v, Q2._v
+  return numquat(quaternion:_new_({q1[1]-q2[1],q1[2]-q2[2],q1[3]-q2[3],q1[4]-q2[4]}))
 end
 
 --- String representation of the object.
 --  @param Q Quaternion.
 --  @return String with quaternion elements.
 quaternion.__tostring = function (Q)
-  --return string.format("%.3f%+.3fi%+.3fj%+.3fk", Q[1], Q[2], Q[3], Q[4])
-  local i, j, k = numStr(Q[2]), numStr(Q[3]), numStr(Q[4]) 
-  return string.format("%s%s%si%s%sj%s%sk", numStr(Q[1]),
-          i:sub(1,1) == '-' and '' or '+', i, 
-          j:sub(1,1) == '-' and '' or '+', j,
-          k:sub(1,1) == '-' and '' or '+', k)
+  local x, y, z = numStr(Q._v[2]), numStr(Q._v[3]), numStr(Q._v[4]) 
+  return string.format("%s%s%si%s%sj%s%sk", numStr(Q._v[1]),
+          x:sub(1,1) == '-' and '' or '+', x, 
+          y:sub(1,1) == '-' and '' or '+', y,
+          z:sub(1,1) == '-' and '' or '+', z)
 end
 
 --- -Q
 --  @param Q Quaternion.
 --  @return Opposite quaternion.
-quaternion.__unm = function (Q) return quaternion:_new_({-Q[1],-Q[2],-Q[3],-Q[4]}) end
+quaternion.__unm = function (Q) 
+  local q = Q._v
+  return quaternion:_new_({-q[1],-q[2],-q[3],-q[4]}) 
+end
 
 quaternion.arithmetic = 'arithmetic'
 about[quaternion.arithmetic] = {quaternion.arithmetic, 'a + b, a - b, a * b, a ^ k, -a', help.META}
@@ -256,37 +251,30 @@ end
 --- Quaternion constructor.
 --  @param t Table of coefficients (w-i-j-k)
 --  @return New quaternion.
-quaternion._new_ = function(self,t) return setmetatable(t,self) end
+quaternion._new_ = function(self,t) return setmetatable({_v=t},self) end
 
 --- Find square norm.
 --  @param Q Quaternion.
 --  @return Value of norm.
 quaternion._norm2_ = function (Q) 
-  return Cross.float(Q[1])^2 + Cross.float(Q[2])^2 + Cross.float(Q[3])^2 + Cross.float(Q[4])^2
+  local q = Q._v
+  return Cross.float(q[1])^2 + Cross.float(q[2])^2 + Cross.float(q[3])^2 + Cross.float(q[4])^2
 end
 
 --- Norm of the quaternion.
 --  @return Value of norm.
 quaternion.abs = function (Q) return math.sqrt(quaternion._norm2_(Q)) end
-about[quaternion.abs] = {'abs(Q)','Value of the norm.'}
+about[quaternion.abs] = {'abs()','Value of the norm.'}
 quaternion._norm_ = quaternion.abs
 
 --- Get conjugated quaternion.
 --  @param Q Quaternion.
 --  @return Conjugation.
 quaternion.conj = function (Q) 
-  return quaternion:_new_({Cross.copy(Q[1]),-Q[2],-Q[3],-Q[4]}) 
+  local q = Q._v
+  return quaternion:_new_({q[1],-q[2],-q[3],-q[4]}) 
 end
-about[quaternion.conj] = {'conj(Q)','Get conjugation.'}
-
---- Make copy.
---  @param Q Initial object.
---  @return Copy of the quaternion.
-quaternion.copy = function (Q) 
-  return quaternion:_new_({Cross.copy(Q[1]),Cross.copy(Q[2]),
-                           Cross.copy(Q[3]),Cross.copy(Q[4])}) 
-end
-about[quaternion.copy] = {"copy(t)", "Create a copy of the quaternion.",help.OTHER}
+about[quaternion.conj] = {'conj()','Get conjugation.'}
 
 --- Check quality of two quaternions.
 --  @param Q1 First quaternion.
@@ -301,8 +289,9 @@ quaternion.eq = function (Q1,Q2)
       return Cross.convert(Q2, Q1) == Q2
     end
   end
-  return Cross.eq(Q1[1],Q2[1]) and Cross.eq(Q1[2],Q2[2]) and 
-         Cross.eq(Q1[3],Q2[3]) and Cross.eq(Q1[4],Q2[4])
+  local q1, q2 = Q1._v, Q2._v
+  return Cross.eq(q1[1],q2[1]) and Cross.eq(q1[2],q2[2]) and 
+         Cross.eq(q1[3],q2[3]) and Cross.eq(q1[4],q2[4])
 end
 quaternion.__eq = quaternion.eq
 
@@ -310,10 +299,11 @@ quaternion.comparison = 'comparison'
 about[quaternion.comparison] = {quaternion.comparison, 'a == b, a ~= b', help.META}
 
 --- Build quaternion from angle-axis representation.
+--  @param self Do nothing.
 --  @param dAng Angle of rotation.
 --  @param vAxe Axis in form of vector object or table with 3 elements.
 --  @return New quaternion.
-quaternion.fromAA = function (dAng, vAxe)
+quaternion.fromAA = function (self, dAng, vAxe)
   local x,y,z
   if vAxe.vsmatrix then
     x,y,z = vAxe(1), vAxe(2), vAxe(3)
@@ -324,12 +314,13 @@ quaternion.fromAA = function (dAng, vAxe)
   if d > 0 then d = math.sin(dAng*0.5) / d end
   return quaternion:_new_({math.cos(dAng*0.5), x*d, y*d, z*d})
 end
-about[quaternion.fromAA] = {'fromAA(fAng,vAxe)','Create quaternion using angle and axis.',ROTATION}
+about[quaternion.fromAA] = {'Quat:fromAA(fAng,vAxe)','Create quaternion using angle and axis.',ROTATION}
 
 --- Get quaternion from rotation matrix.
+--  @param self Do nothing.
 --  @param M Rotation matrix 3x3.
 --  @return Equal quaternion.
-quaternion.fromRot = function (M)
+quaternion.fromRot = function (self, M)
   assert(M.ismatrix)
   local tr = M[1][1] + M[2][2] + M[3][3]
   if tr > 0 then
@@ -346,51 +337,52 @@ quaternion.fromRot = function (M)
     return quaternion:_new_({(M[2][1]-M[1][2])/S, (M[1][3]+M[3][1])/S, (M[2][3]+M[3][2])/S, 0.25*S})
   end
 end
-about[quaternion.fromRot] = {'fromRot(M)','Convert rotation matrix to quaternion.',ROTATION}
+about[quaternion.fromRot] = {'Quat:fromRot(M)','Convert rotation matrix to quaternion.',ROTATION}
 
 --- Get imaginary part.
 --  @param Q Quaternion.
 --  @return Table with imaginary elements.
-quaternion.imag = function (Q) return {Cross.copy(Q[2]),Cross.copy(Q[3]),Cross.copy(Q[4])} end
-about[quaternion.imag] = {'imag(Q)', 'Get table of the imaginary part.', help.OTHER}
+quaternion.im = function (Q) return {Q._v[2], Q._v[3], Q._v[4]} end
+about[quaternion.im] = {'im()', 'Get table of the imaginary part.', help.OTHER}
 
 --- Get inversion.
 --  @param Q Quaternion.
 --  @return Inverted quaternion.
 quaternion.inv = function (Q) 
   local k = 1 / quaternion._norm2_(Q)
-  return quaternion:_new_({Q[1]*k, -Q[2]*k, -Q[3]*k, -Q[4]*k})
+  local q = Q._v
+  return quaternion:_new_({q[1]*k, -q[2]*k, -q[3]*k, -q[4]*k})
 end
-about[quaternion.inv] = {'inv(Q)','Find inverted quaternion.'}
+about[quaternion.inv] = {'inv()','Find inverted quaternion.'}
 
 --- Get equivalent square matrix
 --  @param Q Quaternion.
 --  @return Equivalent matrix representation.
 quaternion.mat = function (Q)
   quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
+  local q = Q._v
   return quaternion.ext_matrix:init(4,4,
-    {{Q[1],-Q[2],-Q[3],-Q[4]},
-     {Q[2], Q[1],-Q[4], Q[3]},
-     {Q[3], Q[4], Q[1],-Q[2]},
-     {Q[4],-Q[3], Q[2], Q[1]}})
+    {{q[1],-q[2],-q[3],-q[4]},
+     {q[2], q[1],-q[4], q[3]},
+     {q[3], q[4], q[1],-q[2]},
+     {q[4],-q[3], q[2], q[1]}})
 end
-about[quaternion.mat] = {'mat(Q)','Equivalent matrix representation.',help.OTHER}
+about[quaternion.mat] = {'mat()','Equivalent matrix representation.',help.OTHER}
 
 --- Transform quaternion into unit 'vector' in-place.
 --  @param Q Quaternion.
 quaternion.normalize = function (Q)
   local k = math.sqrt(quaternion._norm2_(Q))
-  if k > 0 then 
-    for i = 1,4 do Q[i] = Q[i]/k end
-  end
+  local q = Q._v
+  return k > 0 and  quaternion:_new_({q[1]/k, q[2]/k, q[3]/k, q[4]/k}) or Q
 end
-about[quaternion.normalize] = {'normalize(Q)','Make unit quaternion.',help.OTHER}
+about[quaternion.normalize] = {'normalize()','Return unit quaternion.',help.OTHER}
 
 --- Get real part.
 --  @param Q Quaternion.
 --  @return Real element.
-quaternion.real = function(Q) return Cross.copy(Q[1]) end
-about[quaternion.real] = {'real(Q)','Real part (same as Q.w).',help.OTHER}
+quaternion.re = function(Q) return Q._v[1] end
+about[quaternion.re] = {'re()','Real part.', help.OTHER}
 
 --- Apply quaternion to rotate the vector.
 --  @param Q Quaternion.
@@ -405,9 +397,9 @@ quaternion.rotate = function (Q,vec)
     p1 = quaternion:_new_({0,vec[1],vec[2],vec[3]})
   end
   p2 = Q*p1*quaternion.conj(Q) 
-  return {p2[2],p2[3],p2[4]}
+  return {p2._v[2],p2._v[3],p2._v[4]}
 end
-about[quaternion.rotate] = {'rotate(Q,vec)','Apply quaternion to rotate the vector.',ROTATION}
+about[quaternion.rotate] = {'rotate(vec)','Apply quaternion to rotate the vector.',ROTATION}
 
 --- Spherical linear interpolation.
 --  @param Q1 Start quaternion.
@@ -416,24 +408,21 @@ about[quaternion.rotate] = {'rotate(Q,vec)','Apply quaternion to rotate the vect
 --  @return Intermediate quaternion.
 quaternion.slerp = function (Q1,Q2,f)
   -- assume quaternions are not unit
-  local qa = quaternion.copy(Q1) 
-  local qb = quaternion.copy(Q2)
-  quaternion.normalize(qa); quaternion.normalize(qb)
-  local dot = qa[1]*qb[1]+qa[2]*qb[2]+qa[3]*qb[3]+qa[4]*qb[4]
+  local qa = quaternion.normalize(Q1) 
+  local qb = quaternion.normalize(Q2)
+  local dot = qa._v[1]*qb._v[1]+qa._v[2]*qb._v[2]+qa._v[3]*qb._v[3]+qa._v[4]*qb._v[4]
   -- should be positive
   if dot < 0 then qb = -qb; dot = -dot end
   -- linear interpolation for close points
   if dot > 0.999 then
-    local res = qa + f*(qb-qa)
-    quaternion.normalize(res)
-    return res
+    return quaternion.normalize(qa + f*(qb-qa))
   end
   -- calculate
   local theta = math.acos(dot)
   local sin_th = math.sin(theta)
   return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
 end
-about[quaternion.slerp] = {'slerp(Q1,Q2,f)','Spherical linear interpolation for part t.', help.OTHER}
+about[quaternion.slerp] = {'slerp(Q,f)','Spherical linear interpolation for part t.', help.OTHER}
 
 --- Get angle and axis of the quaternion.
 --  @param Q Quaternion.
@@ -441,12 +430,12 @@ about[quaternion.slerp] = {'slerp(Q1,Q2,f)','Spherical linear interpolation for 
 quaternion.toAA = function (Q)
   -- normalize
   local d = quaternion.abs(Q)
-  local w,x,y,z = Q[1]/d,Q[2]/d,Q[3]/d,Q[4]/d
+  local w,x,y,z = Q._v[1]/d, Q._v[2]/d, Q._v[3]/d, Q._v[4]/d
   -- get sin
   local v = math.sqrt(x*x+y*y+z*z)     -- what if v == 0 ?
   return 2*Ver.atan2(v,w), {x/v, y/v, z/v} 
 end
-about[quaternion.toAA] = {'toAA(Q)','Get angle and axis of rotation.',ROTATION}
+about[quaternion.toAA] = {'toAA()','Get angle and axis of rotation.',ROTATION}
 
 --- Get rotation matrix.
 --  @param Q Quaternion.
@@ -454,36 +443,60 @@ about[quaternion.toAA] = {'toAA(Q)','Get angle and axis of rotation.',ROTATION}
 quaternion.toRot = function (Q)
   quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
   local s = 1 / quaternion._norm2_(Q)
-  local w,i,j,k = Q[1],Q[2],Q[3],Q[4]
+  local w,x,y,z = Q._v[1], Q._v[2], Q._v[3], Q._v[4]
   return quaternion.ext_matrix {
-    {1-2*s*(j*j+k*k), 2*s*(i*j-k*w), 2*s*(i*k+j*w)},
-    {2*s*(i*j+k*w), 1-2*s*(i*i+k*k), 2*s*(j*k-i*w)},
-    {2*s*(i*k-j*w), 2*s*(j*k+i*w), 1-2*s*(i*i+j*j)}}
+    {1-2*s*(y*y+z*z), 2*s*(x*y-z*w), 2*s*(x*z+y*w)},
+    {2*s*(x*y+z*w), 1-2*s*(x*x+z*z), 2*s*(y*z-x*w)},
+    {2*s*(x*z-y*w), 2*s*(y*z+x*w), 1-2*s*(x*x+y*y)}}
 end
-about[quaternion.toRot] = {'toRot(Q)','Get equal rotation matrix.',ROTATION}
+about[quaternion.toRot] = {'toRot()','Get equal rotation matrix.',ROTATION}
+
+--- Get w component.
+--  @param Q Quaternion.
+--  @return w element.
+quaternion.w = function (Q) return Q._v[1] end
+about[quaternion.w] = {"w()", "Get w component.", help.OTHER}
+
+--- Get x component.
+--  @param Q Quaternion.
+--  @return x element.
+quaternion.x = function (Q) return Q._v[2] end
+about[quaternion.x] = {"x()", "Get x component.", help.OTHER}
+
+--- Get y component.
+--  @param Q Quaternion.
+--  @return y element.
+quaternion.y = function (Q) return Q._v[3] end
+about[quaternion.y] = {"y()", "Get y component.", help.OTHER}
+
+--- Get z component.
+--  @param Q Quaternion.
+--  @return z element.
+quaternion.z = function (Q) return Q._v[4] end
+about[quaternion.z] = {"z()", "Get z component.", help.OTHER}
 
 -- simplify constructor call
 setmetatable(quaternion, 
 {__call = function (self,v) 
   assert(type(v) == 'table', "Table is expected")
   v[1] = v[1] or v.w or 0
-  v[2] = v[2] or v.i or 0
-  v[3] = v[3] or v.j or 0
-  v[4] = v[4] or v.k or 0
+  v[2] = v[2] or v.x or 0
+  v[3] = v[3] or v.y or 0
+  v[4] = v[4] or v.z or 0
   local p = v[1]
   assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part w")
   p = v[2]
-  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part i")
+  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part x")
   p = v[3]
-  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part j")
+  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part y")
   p = v[4]
-  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part k")
+  assert(type(p) == 'number' or type(p) == 'table' and p.float, "Wrong part z")
   return quaternion:_new_(v) 
 end
 })
 
 quaternion.Quat = 'Quat'
-about[quaternion.Quat] = {"Quat {w,i,j,k}", "Create new quaternion.", help.NEW}
+about[quaternion.Quat] = {"Quat {w,x,y,z}", "Create new quaternion.", help.NEW}
 
 -- Comment to remove descriptions
 quaternion.about = about

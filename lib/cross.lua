@@ -34,10 +34,6 @@ ans = (b == b)                   --> true
 
 ans = (a >= b)                   --> false
 
--- copy
-d = a:copy()
-ans = (a:Nu().type == d:Nu().type) --> true
-
 -- show
 print(a)
 
@@ -67,9 +63,6 @@ ans = a + 1                      --> Rat(Poly{1,4,4},Poly{2,3})
 
 a = Rat(Poly{1,1},Poly{1,2}) 
 ans = a ^ 2                      --> a * a
-
-d = a:copy() 
-ans = (a:Nu().type == d:Nu().type)  --> true
 
 a = Poly{1,2,3}
 ans = Rat(5*a, 5)                   --> a
@@ -157,11 +150,11 @@ ans = a:angle()                 --3> 1.107
 
 ans = a:conj()                   --> Comp(Int(1),Int(-2))
 
-ans = (a^0.5).Re                --3> 1.272
+ans = (a^0.5):re()              --3> 1.272
 
-ans = Comp.log(a).Re            --3> 0.805
+ans = Comp.log(a):re()          --3> 0.805
 
-ans = Comp.sin(a).Re            --3> 3.165
+ans = Comp.sin(a):re()          --3> 3.165
 
 -- show
 print(a)
@@ -188,9 +181,9 @@ ans = b:abs()                   --> 0.5
 
 ans = a:angle()                --3> 0.927
 
-ans = Comp.cos(a).Im           --3> -0.343
+ans = Comp.cos(a):im()         --3> -0.343
 
-ans = (a^0.3).Re               --2> 0.91
+ans = (a^0.3):re()             --2> 0.91
 
 -- show 
 print(a)
@@ -200,7 +193,7 @@ print(a)
 Quat = require 'lib.quaternion'
 
 a = Quat{Int(1),Int(2),Int(3),Int(4)}
-b = Quat{w = Int(3), j = Int(5)}
+b = Quat{w = Int(3), y = Int(5)}
 ans = (a ~= nil) and (b ~= nil) --> true
 
 ans = a + b                     --> Quat{4,2,8,4}
@@ -212,16 +205,13 @@ ans = a + a:conj()              --> Int(2)
 ans = a:abs()                  --3> 5.477
 
 c = a * a:inv()
-ans = c.w                       --> 1
+ans = c:w()                     --> 1
 
-c = a:copy()
-ans = c.i                       --> Int(2)
-
-c:normalize()
+c = a:normalize()
 ans = c:abs()                  --3> 1.0
 
 d = c ^ 0.5
-ans = d.w                      --3> 0.768
+ans = d:w()                    --3> 0.768
 
 ans = a ^ 3                     --> Quat{-86,-52,-78,-104}
 
@@ -235,7 +225,151 @@ ans = a + Int(1)                --> Quat{2,2,3,4}
 ans = Int(2) * b                --> Quat{6,0,10,0}
 
 
+-- MATRIX and COMPLEX
+---------------------
+Mat = require 'lib.matrix'
 
+-- prepare
+a = Mat{{1, Comp(2,3)},{Comp(4,5), 6}}
+b = Mat{{Comp(9,8), Comp(7,6)},{5, 4}}
+j = Comp._i
+
+-- transpose
+c = a:T()
+ans = c[2][1]                --> Comp(2,3)
+
+-- sum
+tmp = a + b
+ans = tmp[1][1]              --> Comp(10,8)
+
+-- add complex
+tmp = a + j
+ans = tmp[1][1]              --> Comp(1,1)
+
+-- product
+tmp = a * b
+ans = tmp[1][1]              --> b[1][1] + a[1][2]*b[2][1]
+
+-- multipy complex
+tmp = b * j
+ans = tmp[2][1]              --> Comp(0,5)
+
+-- determinant
+d = Mat {
+  {1, 2*j, 3, -4+5*j},
+  {7+8*j, 9, 10*j, 11},
+  {12-13*j, 14*j, 15, -16*j},
+  {17, 18, 19+20*j, 21}
+}
+tmp = d:det()
+ans = tmp:re()              --1> -29932.0
+
+-- inverse matrix
+d2 = d:inv()
+tmp = d * d2
+ans = tmp[1][1]             --3> 1.0
+
+-- ratio
+tmp = a / b
+ans = tmp[1][1]:im()        --1> -0.6
+
+-- try to solve equation
+tmp = Mat.rref(a .. Mat.V{4,5})
+ans = tmp[1][2]             --3> 0.0
+
+-- pseudoinverse
+c = Mat{{1,2*j,3},{4*j,5,6*j}}
+cc = c:pinv()
+tmp = c * cc
+ans = tmp[2][2]             --3> 1.0
+
+-- LU
+l,u,p = a:lu()
+ans = u[2][1]               --3> 0.0
+
+-- Cholesky
+m = Mat{{3,j},{j,3}}
+mm = m:chol()
+tmp = mm * mm:T()
+ans = tmp[1][1]             --3> m[1][1]
+
+-- trace
+ans = b:tr()                 --> Comp(13,8)
+
+-- rank
+ans = a:rank()               --> 2
+
+-- MATRIX and RATIONAL
+---------------------
+
+-- prepare
+a = Mat{{1, Rat(2,3)},{Rat(4,5), 6}}
+b = Mat{{Rat(1,2), Rat(1,3)},{5, 4}}
+
+-- transpose
+c = a:T()
+ans = c[2][1]                --> Rat(2,3)
+
+-- sum
+tmp = a + b
+ans = tmp[1][1]              --> a[1][1] + b[1][1]
+
+-- add rational
+tmp = a + Rat(1,3)
+ans = tmp[1][2]              --> 1
+
+-- product
+tmp = a * b
+ans = tmp[1][1]              --> b[1][1] + a[1][2]*b[2][1]
+
+-- multipy rational
+tmp = b * Rat(3,2)
+ans = tmp[1][2]              --> Rat(1,2)
+
+-- determinant
+d = Mat {
+  {Rat(1,2), 2, 3, Rat(1,2)},
+  {Rat(1,3), 9, 10, 11},
+  {-3, Rat(1,2), 15, 16},
+  {17, 18, Rat(1,3), 21}
+}
+tmp = d:det()
+ans = tmp:denom()            --> 18
+
+-- inverse matrix
+d2 = d:inv()
+tmp = d * d2
+ans = tmp[2][2]             --2> 1.0
+
+-- ratio
+tmp = a / b
+ans = tmp[1][1]             --1> 2.0
+
+-- try to solve equation
+tmp = Mat.rref(a .. Mat.V{4,5})
+ans = tmp[1][2]             --3> 0.0
+
+-- pseudoinverse
+c = Mat{{1,Rat(1,2),3},{Rat(1,2),5,Rat(1,3)}}
+cc = c:pinv()
+tmp = c * cc
+ans = tmp[2][2]             --3> 1.0
+
+-- LU
+l,u,p = a:lu()
+ans = u[2][1]               --3> 0.0
+
+-- Cholesky
+m = Mat{{3,Rat(1,2)},{Rat(1,3),3}}
+mm = m:chol()
+tmp = mm * mm:T()
+ans = tmp[1][1]             --3> m[1][1]
+
+-- trace
+ans = b:tr()                 --> Rat(9,2)
+
+-- rank
+ans = a:rank()               --> 2
 
 
 --]]

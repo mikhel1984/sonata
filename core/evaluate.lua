@@ -55,6 +55,25 @@ _cmd = "",    -- last request
 _st  = 1,     -- last status
 }
 
+evaluate._blocks_ = function (txt)
+  local init = 1
+  local res = {}
+  while true do
+    local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
+    if i1 then 
+      res[#res+1] = string.sub(txt, init, i1-1)
+      init = i2+1
+    else      
+      break 
+    end
+  end
+  local last = string.sub(txt, init, #txt)
+  if string.find(last, "%w?") then
+    res[#res+1] = last
+  end
+  return res
+end
+
 --- Process command string.
 --  @param ev Accumulated string.
 --  @param nextCmd New string with Lua expression.
@@ -113,7 +132,7 @@ end
 --  @param ev Evaluation environment.
 evaluate.cli = function (ev)
   local invA, invB = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET, SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
-  evaluate.cli_loop(ev, invA, invB, false)
+  evaluate.cli_loop(ev, invA, invB)
   if ev._logFile_ then ev._logFile_:close() end
   evaluate.exit()
 end
@@ -122,17 +141,24 @@ end
 --  @param ev Environment.
 --  @param invA First invite line.
 --  @param invB Second invite line.
---  @param isNote Flag for note-file processing.
+--  @param noteIn Table to store user input.
 --  @return Status of evaluation on exit.
-evaluate.cli_loop = function (ev, invA, invB, isNote) 
+evaluate.cli_loop = function (ev, invA, invB, noteIn) 
   local invite = invA
   -- start dialog
   while true do
     io.write(invite)
     -- command processing
     local newLine = io.read()
-    if isNote and newLine == "" then break end
-    local status = evaluate.eval(ev, newLine, not isNote)
+    if noteIn then
+      if newLine == "" then break end
+      if string.find(newLine, "^%s*:") then
+        noteIn[1] = newLine
+        for w in string.gmatch(newLine, "%w+") do noteIn[#noteIn+1] = w end
+        break
+      end
+    end
+    local status = evaluate.eval(ev, newLine, not noteIn)
     if status == evaluate.EV_RES then
       if ev._ans ~= nil then
         print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
@@ -174,29 +200,9 @@ evaluate.exit = function ()
   os.exit() 
 end
 
---- Evaluate 'note'-file.
---  @param ev Evaluate.
---  @param fname Script file name.
---  @param full Flag to work in interactive mode.
-evaluate.note = function (ev, fname, full)
-  full = (full ~= false)
-  local templ = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
-  local invA, invB = '?> ', '>> '
-  -- read lines
-  if full then io.write("Run (interactive): ", fname, "\n") end
-  -- read
-  local f = assert(io.open(fname, 'r'))
-  local txt = f:read('*a'); f:close()
-  txt = Win and Win.convert(txt) or txt
-  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
+evaluate._evalBlock_ = function (ev, txt, full, templ)
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
-    if string.find(line, '^%s*%-%-%s*PAUSE') then
-      if full then
-        if evaluate.cli_loop(ev, invA, invB, true) == evaluate.EV_QUIT then
-          break
-        end
-      end
-    elseif string.find(line, '^%s*%-%-') then
+    if string.find(line, '^%s*%-%-') then
       -- highlight line comments
       if full then
         line = string.gsub(line, '\t(.+)', templ)
@@ -221,6 +227,65 @@ evaluate.note = function (ev, fname, full)
   end
 end
 
+evaluate._dot_ls_ = function (blks)
+  for i = 1, #blks do
+    local s = ''
+    for line in string.gmatch(blks[i], '([^\n]+)\r?\n?') do
+      if string.find(line, "[^%s]+") then
+        s = line
+        break
+      end
+    end
+    io.write(string.format("%d   %s\n", i, s))
+  end
+end
+
+evaluate._userInput_ = function (ev, invA, invB, blk, full, n)
+  local m = n
+  repeat
+    local input = {}
+    if full and evaluate.cli_loop(ev, invA, invB, input) == evaluate.EV_QUIT then
+      n = #blk + 1
+    end
+    if #input > 0 then
+      if input[2] == 'ls' then
+        evaluate._dot_ls_(blk)
+      elseif input[2] == 'q' then
+        n = #blk + 1
+      else
+        n, m = (tonumber(input[2]) or n), -1
+      end
+    else
+      n = n + 1
+    end
+  until m ~= n
+  return n
+end
+
+--- Evaluate 'note'-file.
+--  @param ev Evaluate.
+--  @param fname Script file name.
+--  @param full Flag to work in interactive mode.
+evaluate.note = function (ev, fname, full)
+  full = (full ~= false)
+  local templ = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
+  local invA, invB = '?> ', '>> '  
+  -- read
+  local f = assert(io.open(fname, 'r'))
+  local txt = f:read('*a'); f:close()
+  txt = Win and Win.convert(txt) or txt
+  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
+  local block = evaluate._blocks_(txt)
+  if full then io.write("Run '", fname, "'\t[ ", #block, " ]\n") end
+  local n = evaluate._userInput_(ev, invA, invB, block, full, 0)
+  while n <= #block do
+    evaluate._evalBlock_(ev, block[n], full, templ)  
+    io.write(SonataHelp.CMAIN, '\t[ ', n, ' / ', #block, ' ]', SonataHelp.CRESET, '\n')
+    -- user commands
+    n = evaluate._userInput_(ev, invA, invB, block, full, n)
+  end
+end
+
 --- State reset.
 --  @param ev Environment.
 evaluate.reset = function (ev)
@@ -232,3 +297,4 @@ end
 return evaluate
 
 --================================= 
+--TODO remove invB

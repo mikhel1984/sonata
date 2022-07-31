@@ -34,28 +34,24 @@ ans = g:float()               --> -123
 ans = (a == -g)               --> true
 
 -- arithmetical operations
-ans = Int.float(a+b)          --> 579
+ans = (a+b):float()           --> 579
 
-ans = Int.float(a-b)          --> -333
+ans = (a-b):float()           --> -333
 
-ans = Int.float(a*Int(2))     --> 246
+ans = (a*Int(2)):float()      --> 246
 
-ans = Int.float(b/2)          --> 228
+ans = (b/2):float()           --> 228
 
-ans = Int.float(b%a)          --> 87
+ans = (b%a):float()           --> 87
 
-ans = Int.float(a^3)          --> 1860867
+ans = (a^3):float()           --> 1860867
 
 -- absolute value
-ans = Int.abs('-25'):float()  --> 25
+ans = Int('-25'):abs():float()  --> 25
 
 -- factorial
 c = Int(10):fact()
-ans = Int.float(c)            --> 3628800
-
--- make copy, comparison
-d = a:copy()
-ans = (a == d)                --> true
+ans = c:float()               --> 3628800
 
 ans = (a > b)                 --> false
 
@@ -66,7 +62,7 @@ ans = a:eq(123)               --> true
 ans = #a                      --> 3
 
 -- 2nd digit (from the lowest)
-ans = a[2]                    --> 2
+ans = a:at(2)                 --> 2
 
 -- get numeric base 
 ans = g:base()                --> 10
@@ -88,10 +84,10 @@ print(a)
 
 -- check if it prime
 -- iterate though multipliers 
-ans = Int.isPrime(1229)       --> true
+ans = Int(1229):isPrime()       --> true
 
 -- Fermat theorem 
-ans = Int.isPrime(1229,'Fermat') --> true
+ans = Int(1229):isPrime('Fermat') --> true
 
 -- factorize 
 t = b:factorize()
@@ -105,7 +101,7 @@ end                           --> 456
 
 -- pseudo-random number
 -- from 0 to b
-print(b:random())
+print(Int:random(b))
 
 -- greatest common divisor
 ans = a:gcd(b):float()        --> 3
@@ -215,6 +211,8 @@ bigint.__le = function (B1,B2)
   return not bigint._gt_(B1,B2)
 end
 
+bigint.__len = function (B) return #B._v end
+
 --- B1 < B2
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
@@ -235,15 +233,16 @@ bigint.__lt = function (B1,B2)
     end
   end
   if B1.sign < B2.sign then return true end
-  if #B1 == #B2 then   -- equal length
-    for i = #B1,1,-1 do
-      if B1[i] ~= B2[i] then
-        return (B1.sign > 0 and B1[i] < B2[i]) or (B1.sign < 0 and B1[i] > B2[i])
+  local b1, b2 = B1._v, B2._v
+  if #b1 == #b2 then   -- equal length
+    for i = #b1,1,-1 do
+      if b1[i] ~= b2[i] then
+        return (B1.sign > 0 and b1[i] < b2[i]) or (B1.sign < 0 and b1[i] > b2[i])
       end
     end
     return false
   else                 -- different length
-    return (B1.sign > 0 and #B1 < #B2) or (B1.sign < 0 and #B1 > #B2)
+    return (B1.sign > 0 and #b1 < #b2) or (B1.sign < 0 and #b1 > #b2)
   end
 end
 
@@ -288,6 +287,8 @@ bigint.__mul = function (B1, B2)
   return res
 end
 
+bigint.__newindex = function () error("Immutable object") end
+
 --- B1 ^ B2
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
@@ -306,12 +307,12 @@ bigint.__pow = function (B1,B2)
   end
   if B2.sign < 0 then error('Negative power!') end
   local y, x = bigint:_new_({1,base=B1._base_}), B1
-  if #B2 == 1 and B2[1] == 0 then
-    assert(#B1 > 1 or B1[1] ~= 0, "Error: 0^0!")
+  if #B2 == 1 and B2._v[1] == 0 then
+    assert(#B1 > 1 or B1._v[1] ~= 0, "Error: 0^0!")
     return res
   end
   local dig, mul, rest = {}, bigint._mul_
-  for i = 1,#B2 do dig[i] = B2[i] end
+  for i = 1,#B2 do dig[i] = B2._v[i] end
   while #dig > 1 or #dig == 1 and dig[1] > 1 do
     dig, rest = bigint._divBase_(dig, B1._base_, 2)
     if rest == 1 then
@@ -349,8 +350,8 @@ end
 --  @param B Bigint object.
 --  @return Opposite value.
 bigint.__unm = function (B)
-  local res = B:copy()
-  res.sign = -res.sign
+  local res = bigint:_new_({base=B._base_,sign=-B.sign,0})
+  res._v = B._v
   return res
 end
 
@@ -361,11 +362,12 @@ bigint.__tostring = function (B)
   local s
   if B._base_ > 10 then
     s = {}
-    local n = #B+1
-    for i = 1,#B do s[i] = B[n-i] end
+    local b = B._v
+    local n = #b+1
+    for i = 1,#b do s[i] = b[n-i] end
     s = table.concat(s, '|')
   else
-    s = string.reverse(table.concat(B, (B._base_ == 10) and '' or '|'))
+    s = string.reverse(table.concat(B._v, (B._base_ == 10) and '' or '|'))
   end
   return B.sign < 0 and ('-' .. s) or s
 end
@@ -400,14 +402,15 @@ end
 --- In-place decrement for positive number.
 --  @param B Number to decrease by 1.
 bigint._decr_ = function (B)
-  if #B == 1 and B[1] == 0 then return end
+  local b = B._v
+  if #b == 1 and b[1] == 0 then return end
   local dif = 1
-  for i = 1,#B do
-    B[i] = B[i] - dif
-    if B[i] < 0 then
-      B[i] = B._base_ - 1
+  for i = 1,#b do
+    b[i] = b[i] - dif
+    if b[i] < 0 then
+      b[i] = B._base_ - 1
       dif = 1
-    elseif i == #B and B[i] == 0 then
+    elseif i == #b and b[i] == 0 then
       dif = 1
     else
       dif = 0
@@ -415,10 +418,10 @@ bigint._decr_ = function (B)
     end
   end
   if dif > 0 then
-    if #B > 1 then
-      B[#B] = nil
+    if #b > 1 then
+      b[#b] = nil
     else
-      B[1] = 0
+      b[1] = 0
     end
   end
 end
@@ -428,18 +431,20 @@ end
 --  @param B2 Second number representation.
 --  @return The quotient and remainder.
 bigint._div_ = function (B1,B2)
-  if #B2 == 1 and B2[1] == 0 then error("Divide by 0!") end
+  local b1, b2 = B1._v, B2._v
+  if #b2 == 1 and b2[1] == 0 then error("Divide by 0!") end
   local d = B1._base_
   local res = bigint:_new_({0,base=d})
-  if #B1 < #B2 then  -- too short
-    return res, B1:copy()
+  if #b1 < #b2 then  -- too short
+    return res, B1
   end
-  local rem = bigint:_new_({0,base=d}); rem[1] = nil
-  local k = #B1-#B2+1
-  Ver.move(B1,k+1,#B1,1,rem)  -- copy last elements
+  local rem = bigint:_new_({0,base=d}); 
+  rem._v[1] = nil
+  local k = #b1 - #b2 + 1
+  Ver.move(b1, k+1, #b1, 1, rem._v)  -- copy last elements
   local v2, den, acc = B2:float(), B2:abs(), {}
   for i = k,1,-1 do
-    table.insert(rem,1,B1[i])
+    table.insert(rem._v, 1, b1[i])
     if rem >= den then
       local n = math.modf(rem:float() / v2)  -- estimate
       local tmp = rem - den * bigint:_new_({n,base=d})
@@ -456,12 +461,12 @@ bigint._div_ = function (B1,B2)
       acc[#acc+1] = 0
     end
   end
-  for i,v in ipairs(acc) do res[#acc-i+1] = v end
+  for i,v in ipairs(acc) do res._v[#acc-i+1] = v end
   res.sign = B1.sign*B2.sign
   return res, rem
 end
 
---- Divide elements in the list ot given number, find reminder
+--- Divide elements in the list ot given number, find reminder.
 --  @param t List of numbers.
 --  @param iOld Initial bases.
 --  @param iNew New bases.
@@ -487,7 +492,7 @@ end
 --  @param B2 Second value.
 --  @return Bigint gcd.
 bigint._gcd_ = function (B1,B2)
-  return (#B1 == 1 and B1[1] == 0) and B2 or bigint._gcd_(B2 % B1, B1)
+  return (#B1._v == 1 and B1._v[1] == 0) and B2 or bigint._gcd_(B2 % B1, B1)
 end
 
 --- Check if the first number is greater then the second
@@ -496,15 +501,16 @@ end
 --  @return True if B1 > B2.
 bigint._gt_ = function (B1,B2)
   if B1.sign > B2.sign then return true end
-  if #B1 == #B2 then
-    for i = #B1,1,-1 do
-      if B1[i] ~= B2[i] then
-        return (B1.sign > 0 and B1[i] > B2[i]) or (B1.sign < 0 and B1[i] < B2[i])
+  local b1, b2 = B1._v, B2._v
+  if #b1 == #b2 then
+    for i = #b1,1,-1 do
+      if b1[i] ~= b2[i] then
+        return (B1.sign > 0 and b1[i] > b2[i]) or (B1.sign < 0 and b1[i] < b2[i])
       end
     end
     return false
   else
-    return (B1.sign > 0 and #B1 > #B2) or (B1.sign < 0 and #B1 < #B2)
+    return (B1.sign > 0 and #b1 > #b2) or (B1.sign < 0 and #b1 < #b2)
   end
 end
 
@@ -512,17 +518,18 @@ end
 --  @param B Number to increase by 1.
 bigint._incr_ = function (B)
   local add = 1
-  for i = 1,#B do
-    B[i] = B[i] + add
-    if B[i] == B._base_ then
-      B[i], add = 0, 1
+  local b = B._v
+  for i = 1,#b do
+    b[i] = b[i] + add
+    if b[i] == B._base_ then
+      b[i], add = 0, 1
     else
       add = 0
       break
     end
   end
   if add > 0 then
-    B[#B+1] = 1
+    b[#b+1] = 1
   end
 end
 
@@ -532,9 +539,9 @@ end
 bigint._primeFermat_ = function (B)
   local a
   local div, pow = bigint._div_, bigint._powm_
-  for i = 1,5 do
+  for i = 1, 5 do
     repeat 
-      a = bigint.random(B)
+      a = bigint:random(B)
     until a:float() >= 2
     local v1 = pow(a,B,B)
     local _,v2 = div(a,B)
@@ -549,22 +556,23 @@ end
 --  @return Product without sign. 
 bigint._mul_ = function (B1,B2)
   local sum = bigint:_new_({0, base=B1._base_})
+  local b1, b2, s = B1._v, B2._v, sum._v
   -- get products
-  for i = 0,#B1-1 do
-    local v = B1[i+1]
-    for j = 1,#B2 do
+  for i = 0, #b1-1 do
+    local v = b1[i+1]
+    for j = 1, #b2 do
       local pos = i+j
-      sum[pos] = (sum[pos] or 0) + v * B2[j]
+      s[pos] = (s[pos] or 0) + v * b2[j]
     end
   end
   -- rearrange
   local rest, d = 0, B1._base_
-  for i = 1,#sum do
-    sum[i] = sum[i] + rest
-    rest = math.modf(sum[i] / d)
-    sum[i] = sum[i] - rest * d
+  for i = 1, #s do
+    s[i] = s[i] + rest
+    rest = math.modf(s[i] / d)
+    s[i] = s[i] - rest * d
   end
-  if rest > 0 then sum[#sum+1] = rest end
+  if rest > 0 then s[#s+1] = rest end
   return sum
 end
 
@@ -572,24 +580,24 @@ end
 --  @param num Integer, string or table.
 --  @return Bigint object.
 bigint._new_ = function (self, num)
-  local acc = {_base_=10, sign=1}
+  local int, acc = {_base_=10, sign=1}, {}
   -- prepare
   if type(num) == 'table' then
-    acc._base_ = num.base or 10
-    acc.sign   = num.sign or 1
+    int._base_ = num.base or 10
+    int.sign   = num.sign or 1
     for i = #num,1,-1 do
       acc[#acc+1] = num[i] -- reverse
     end
   elseif type(num) == 'string' then
     local sign, s = string.match(num, '^([+-]?)(%d+)$')
-    if sign == '-' then acc.sign = -1 end
+    if sign == '-' then int.sign = -1 end
     s = string.reverse(s)
     for i = 1,#s do
       acc[i] = string.byte(s,i)-ZERO
     end
   elseif type(num) == 'number' and Ver.isInteger(num) then
     if num < 0 then
-      acc.sign = -1
+      int.sign = -1
       num = -num
     end
     repeat
@@ -602,7 +610,8 @@ bigint._new_ = function (self, num)
   if #acc == 0 then
     error('Wrong number '..tostring(num))
   end
-  return setmetatable(acc, self)
+  int._v = acc
+  return setmetatable(int, self)
 end
 
 --- Find (B1 ^ B2) % B3
@@ -613,11 +622,12 @@ end
 bigint._powm_ = function (B1,B2,B3)
   local div = bigint._div_
   _, B1 = div(B1,B3)
-  if #B1 == 1 and B1[1] == 0 then return bigint:_new_({0,base=B1._base_}) end
+  if #B1._v == 1 and B1._v[1] == 0 then return bigint:_new_({0,base=B1._base_}) end
   local y, x = bigint:_new_({1,base=B1._base_}), B1
-  local dig, mul, rest = bigint.copy(B2), bigint._mul_
-  while #dig > 1 or #dig == 1 and dig[1] > 1 do
-    dig, rest = bigint._divBase_(dig, B1._base_, 2)
+  local dig, mul, rest = bigint._copy_(B2), bigint._mul_
+  local d = dig._v
+  while #d > 1 or #d == 1 and d[1] > 1 do
+    d, rest = bigint._divBase_(d, B1._base_, 2)
     if rest == 1 then
       _,y = div(mul(y, x), B3)
     end
@@ -648,9 +658,9 @@ bigint._sqrt_ = function (B)
   local sum, div, sub = bigint._sum_, bigint._div_, bigint._sub_
   repeat
     local aii,_ = div(B,ai)
-    aii = bigint._divBase_(sum(ai,aii), B._base_, 2)
+    aii._v = bigint._divBase_(sum(ai,aii)._v, B._base_, 2)
     ai, aii = aii, sub(aii,ai)
-  until #aii == 1 and (aii[1] <= 1)   -- TODO: check and decrease if need
+  until #aii._v == 1 and (aii._v[1] <= 1)   -- TODO: check and decrease if need
   return ai
 end
 
@@ -661,33 +671,35 @@ end
 bigint._sub_ = function (B1,B2)
   local r, n, sub = 1, B1._base_, 0
   local res = bigint:_new_({0,base=n})
+  local b1, b2 = B1._v, B2._v
   -- find the bigger number
-  if #B1 < #B2 then
+  if #b1 < #b2 then
     r = -1
-  elseif #B1 == #B2 then
-    local i = #B1
+  elseif #b1 == #b2 then
+    local i = #b1
     -- find first difference
-    while i > 0 and B1[i] == B2[i] do i = i - 1 end
+    while i > 0 and b1[i] == b2[i] do i = i - 1 end
     if i == 0 then return res end
-    if i > 0 and B1[i] < B2[i] then r = -1 end
+    if i > 0 and b1[i] < b2[i] then r = -1 end
   end
   if r == -1 then
-    B1, B2 = B2, B1
+    b1, b2 = b2, b1
   end
   -- subtraction
-  for i = 1, math.max(#B1,#B2) do
-    local v = B1[i] - (B2[i] or 0) - sub
+  local rr = res._v
+  for i = 1, math.max(#b1,#b2) do
+    local v = b1[i] - (b2[i] or 0) - sub
     if v < 0 then
-      res[i] = v + n
+      rr[i] = v + n
       sub = 1
-    elseif v > 0 or (v == 0 and B1[i+1]) then
-      res[i] = v
+    elseif v > 0 or (v == 0 and b1[i+1]) then
+      rr[i] = v
       sub = 0
     end
   end
   -- simplify 
-  while #res > 1 and res[#res] == 0 do
-    res[#res] = nil
+  while #rr > 1 and rr[#rr] == 0 do
+    rr[#rr] = nil
   end
   res.sign = r
   return res
@@ -700,17 +712,18 @@ end
 bigint._sum_ = function (B1,B2)
   local n, add = B1._base_, 0
   local res = bigint:_new_({0,base=n})
-  for i = 1, math.max(#B1,#B2) do
-    local v = (B1[i] or 0) + (B2[i] or 0) + add
+  local b1, b2, rr = B1._v, B2._v, res._v
+  for i = 1, math.max(#b1,#b2) do
+    local v = (b1[i] or 0) + (b2[i] or 0) + add
     if v >= n then
-      res[i] = v - n
+      rr[i] = v - n
       add = 1
     else
-      res[i] = v
+      rr[i] = v
       add = 0
     end
   end
-  if add == 1 then res[#res+1] = 1 end
+  if add == 1 then rr[#rr+1] = 1 end
   return res
 end
 
@@ -722,9 +735,9 @@ bigint._trivialSearch_ = function (B)
   local n = bigint:_new_({1,base=B._base_})
   bigint._incr_(n)   -- n = 2
   local sq = bigint._sqrt_(B) 
-  while #sq > #n or not bigint._gt_(n,sq) do
+  while #sq._v > #n._v or not bigint._gt_(n,sq) do
     local v1,v2 = div(B,n)
-    if #v2 == 1 and v2[1] == 0 then
+    if #v2._v == 1 and v2._v[1] == 0 then
       return n, v1
     end
     bigint._incr_(n)
@@ -736,27 +749,34 @@ end
 --  @param B Bigint or integer number.
 --  @return Absolute value.
 bigint.abs = function (B)
-  local a = isbigint(B) and bigint.copy(B) or bigint:_new_(B)
-  a.sign = 1 
+  local a = bigint:_new_({0,base=B._base_})
+  a._v = B._v 
+  a.sign = 1
   return a
 end
-about[bigint.abs] = {"abs(B)", "Return module of arbitrary long number."}
+about[bigint.abs] = {"abs()", "Return module of arbitrary long number."}
+
+--- Get digit.
+--  @param B Bigint object.
+--  @param N Index.
+--  @return Digit at the N-th position.
+bigint.at = function (B,N) return B._v[N] end
+about[bigint.at] = {"at(N)", "Get N-th digit.", help.OTHER}
 
 --- Get numeric base.
 --  @param B Bigint object.
 --  @return Base value.
 bigint.base = function (B) return B._base_ end
-about[bigint.base] = {"base(B)", "Current numeric base."}
+about[bigint.base] = {"base()", "Current numeric base."}
 
---- Copy of the object.
+--- Deep copy of the object.
 --  @param B Original bigint object.
 --  @return Deep copy.
-bigint.copy = function (B)
-  local c = bigint:_new_({B[1], sign=B.sign, base=B._base_})
-  for i = 2,#B do c[i] = B[i] end
+bigint._copy_ = function (B)
+  local c = bigint:_new_({B._v[1], sign=B.sign, base=B._base_})
+  for i = 2,#B do c._v[i] = B._v[i] end
   return c
 end
-about[bigint.copy] = {"copy(B)", "Return copy of given number.", help.OTHER}
 
 --- a == b.
 --  In Lua v == 0 is always false because in the case of number
@@ -780,40 +800,40 @@ bigint.eq = function (B1,B2)
       end
     end
   end
-  if #B1 == #B2 and B1.sign == B2.sign then
-    for i = 1,#B1 do
-      if B1[i] ~= B2[i] then return false end
+  local b1, b2 = B1._v, B2._v
+  if #b1 == #b2 and B1.sign == B2.sign then
+    for i = 1,#b1 do
+      if b1[i] ~= b2[i] then return false end
     end
     return true
   end
   return false
 end
-about[bigint.eq] = {"eq(B1,B2)", "Check equality of two values.", help.OTHER}
+about[bigint.eq] = {"eq(B)", "Check equality with the second value.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
 
 --- B!
---  @param B Bigint object or integer.
+--  @param B Bigint object.
 --  @return Factorial of the number as bigint object.
 bigint.fact = function (B)
-  local n = isbigint(B) and B:copy() or bigint:_new_(B)
-  assert(n.sign > 0, "Non-negative value is expected!")
+  assert(B.sign > 0, "Non-negative value is expected!")
+  local n = B:_copy_()
   local res = bigint:_new_({1,base=B._base_})
-  if #n == 1 and n[1] == 0 then return res end  -- 0! == 1
+  if #n._v == 1 and n._v[1] == 0 then return res end  -- 0! == 1
   local mul = bigint._mul_
   repeat 
     res = mul(res, n)
     bigint._decr_(n)
-  until #n == 1 and n[1] == 0
+  until #n._v == 1 and n._v[1] == 0
   return res
 end
-about[bigint.fact] = {"fact(B)", "Return factorial of non-negative integer B."}
+about[bigint.fact] = {"fact()", "Return factorial of non-negative integer B."}
 
 --- Find multipliers for the number.
 --  @param B Integer number.
 --  @return List of prime numbers.
 bigint.factorize = function (B)
-  B = isbigint(B) and B or bigint:_new_(B)
   local v, res = B, {}
   if B.sign < 0 then res[1] = -1 end
   while true do
@@ -828,20 +848,21 @@ bigint.factorize = function (B)
   end
   return res
 end
-about[bigint.factorize] = {"factorize(B)", "Find the list of multipliers.", NUMB}
+about[bigint.factorize] = {"factorize()", "Find the list of multipliers.", NUMB}
 
 --- Float number representation.
 --  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (B)
   local d, v, sum = B._base_, 1, 0
-  for i = 1,#B do
-    sum = sum + B[i]*v
+  local b = B._v
+  for i = 1,#b do
+    sum = sum + b[i]*v
     v = v * d
   end
   return B.sign >= 0 and sum or (-sum)
 end
-about[bigint.float] = {"float(B)", "Represent current big integer as number if it possible.", help.OTHER}
+about[bigint.float] = {"float()", "Represent current big integer as number if it possible.", help.OTHER}
 
 --- Greatest common devision for two (big) numbers.
 --  @param B1 First value.
@@ -851,14 +872,13 @@ bigint.gcd = function (B1,B2)
   B1,B2 = bigint._args_(B1,B2)
   return bigint._gcd_(B1,B2)
 end
-about[bigint.gcd] = {"gcd(B1,B2)", "Find the greatest common divisor for two integers.", NUMB}
+about[bigint.gcd] = {"gcd(B)", "Find the greatest common divisor for two integers.", NUMB}
 
 --- Check if the number is prime.
 --  @param B Number.
 --  @param sMethod Trivial search by default. Can be 'Fremat'.
 --  @return true if prime.
 bigint.isPrime = function (B, sMethod)
-  B = isbigint(B) and B or bigint:_new_(B)
   if sMethod == 'Fermat' then
     return bigint._primeFermat_(B)
   end
@@ -866,33 +886,36 @@ bigint.isPrime = function (B, sMethod)
   local v1,v2 = bigint._trivialSearch_(B)
   return v1 == nil
 end
-about[bigint.isPrime] = {"isPrime(B,[sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
+about[bigint.isPrime] = {"isPrime([sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
 
 --- Generate random number.
+--  @param self Do nothing.
 --  @param B Upper limit.
 --  @return Number from 0 to B.
-bigint.random = function (B)
+bigint.random = function (self,B)
+  B = isbigint(B) and B or bigint:_new_(B)
   local d, set, any, v = B._base_, false
   local res = bigint:_new_({0,sign=B.sign,base=d})
   local n = math.random(1,#B) 
-  any = (n ~= #B)
+  local b, rr = B._v, res._v
+  any = (n ~= #b)
   for i = n,1,-1 do
     -- generate
     if any then
       v = math.random(1,d) - 1
     else
-      v = math.random(1,B[i]+1)-1
-      any = (v < B[i])
+      v = math.random(1,b[i]+1)-1
+      any = (v < b[i])
     end
     -- add
     if set or v > 0 then
-      res[i] = v
+      rr[i] = v
       set = true
     end
   end
   return res
 end
-about[bigint.random] = {"random(B)","Generate pseudo-random value from 0 to B."}
+about[bigint.random] = {"Int:random(B)","Generate pseudo-random value from 0 to B.", help.STATIC}
 
 --- Change current numeric base.
 --  @param B Bigint object.
@@ -900,19 +923,20 @@ about[bigint.random] = {"random(B)","Generate pseudo-random value from 0 to B."}
 --  @return Copy with new base.
 bigint.rebase = function (B, N)
   if N <= 0 then error("Wrong base "..tostring(N)) end
-  if B._base_ == N then return B:copy() end
+  if B._base_ == N then return B end
   local res = bigint:_new_({0,sign=B.sign, base=N})
-  res[1] = nil    -- remove zero
+  local b, rr = B._v, res._v
+  rr[1] = nil    -- remove zero
   -- reverse order
-  local dig, n = {}, #B+1
-  for i,v in ipairs(B) do dig[i] = v end
+  local dig, n = {}, #b+1
+  for i,v in ipairs(b) do dig[i] = v end
   repeat 
     dig, n = bigint._divBase_(dig, B._base_, N)
-    res[#res+1] = n
+    rr[#rr+1] = n
   until #dig == 0
   return res
 end
-about[bigint.rebase] = {"rebase(B,N)","Convert number to the new numeric base."}
+about[bigint.rebase] = {"rebase(N)","Convert number to the new numeric base."}
 
 -- simplify constructor call
 setmetatable(bigint, {
@@ -920,7 +944,7 @@ __call = function (self, v)
   return bigint:_new_(v) 
 end})
 bigint.Int = 'Int'
-about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.NEW}
+about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.STATIC}
 
 -- Comment to remove descriptions
 bigint.about = about
