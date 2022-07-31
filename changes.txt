@@ -1,0 +1,22 @@
+======== 0.9.31 ========
+Matrix 
+* Remove ones, rand, randn, randi, apply
+* Remove onImport
+* Explicit det and inv for small matrices
+* Rename 'get' to 'range', add 'insert'
+* Add H, qr, round
+Asciiplot
+* Colored plots
+Complex
+* Rename 'Comp' to '_Z'
+Utils
+* Add Fn method to construct function from string
+* 'Smart' number to string conversation
+* Add 'round' method, apply to matrices and complex numbers
+Notes
+* 'Pause' case insensitive
+* Print part number, list of parts, jump to the desired part
+Other 
+* Number types are immutable 
+* Replace 'apply' with 'zip' everywhere
+* Call function with ':', field with '.'
