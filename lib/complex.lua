@@ -16,31 +16,30 @@
 --[[TEST
 
 -- use 'complex'
-Comp = require 'lib.complex'
+_Z = require 'lib.complex'
 
 -- real and imaginary pars
-a = Comp(1,2)
+a = _Z(1,2)
 -- or just imaginary
-b = Comp(0,3)
+b = _Z(0,3)
 
 -- imaginary unit
-j = Comp._i
-ans = 3+4*j                   --> Comp(3,4)
+ans = 3+_Z:i(4)                --> _Z(3,4)
 
 -- use trigonometrical form
-ans = Comp:trig(2,0)          --> Comp(2,0)
+ans = _Z:trig(2,0)            --> _Z(2,0)
 
 -- arithmetic
-ans = a + b                   --> Comp(1,5)
+ans = a + b                   --> _Z(1,5)
 
-ans = Comp(0,3) - b           --> 0
+ans = _Z:i(3) - b             --> 0
 
-ans = a * b                   --> Comp(-6,3)
+ans = a * b                   --> _Z(-6,3)
 
-ans = a / Comp._i             --> Comp(2,-1)
+ans = a / _Z:i()              --> _Z(2,-1)
 
 -- power can be complex
-c = Comp(1,1)^Comp(2,-2)
+c = _Z(1,1)^_Z(2,-2)
 
 -- real part
 ans = c:re()                 --3> 6.147
@@ -56,15 +55,15 @@ ans = (a ~= b)                --> true
 -- absolute value
 ans = a:abs()                --3> 2.236
 
--- argument (angle)
-ans = a:angle()              --3> 1.107
+-- argument
+ans = a:arg()              --3> 1.107
 
 -- conjugated number
-ans = a:conj()                --> Comp(1,-2)
+ans = a:conj()                --> _Z(1,-2)
 
 -- some functions after import 
 -- become default, such as
-d = Comp(-2):sqrt()
+d = _Z(-2):sqrt()
 ans = d:im()                  --3> 1.414
 
 -- exp
@@ -92,7 +91,7 @@ ans = d:cosh():re()           --3> 0.156
 ans = d:tanh():im()           --3> 6.334
 
 -- asin
-z = Comp(2,3)
+z = _Z(2,3)
 ans = z:asin():im()          --3> 1.983
 
 -- acos 
@@ -275,7 +274,7 @@ complex.__pow = function (C1,C2)
       return Cross.convert(C2, C1) ^ C2
     end
   end
-  local a0, a1 = complex.abs(C1), complex.angle(C1)
+  local a0, a1 = complex.abs(C1), complex.arg(C1)
   local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
   local c1, c2 = C1._v, C2._v
   local abs = a0^(Cross.float(c2[1]))*fexp(-a1*c2[2])
@@ -347,10 +346,6 @@ complex._norm_ = function (C)
   return math.sqrt(Cross.norm(C._v[1])^2 + Cross.norm(C._v[2])^2)
 end
 
--- Imaginary unit
-complex._i  = complex:_init_(0,1)
-about[complex._i] = {"_i", "Complex unit.", help.CONST}
-
 --- Module of complex number.
 --  @return Module of the number.
 complex.abs = complex._norm_
@@ -359,7 +354,7 @@ about[complex.abs] = {"abs()", "Return module of complex number."}
 --- Inverse cosine.
 --  @param C Complex number.
 --  @return Complex inverse cosine.
-complex.acos = function (C) return -complex._i*complex.log(C+complex.sqrt(C*C-1)) end
+complex.acos = function (C) return -complex:i(1)*complex.log(C+complex.sqrt(C*C-1)) end
 about[complex.acos] = {"acos()", "Complex inverse cosine.", FUNCTIONS}
 
 --- Inverse hyperbolic cosine.
@@ -371,14 +366,14 @@ about[complex.acosh] = {"acosh()", "Complex inverse hyperbolic cosine.", FUNCTIO
 --- Argument of complex number.
 --  @param C Complex number.
 --  @return Argument of the number.
-complex.angle = function (C) return Ver.atan2(Cross.float(C._v[2]), Cross.float(C._v[1])) end
-about[complex.angle] = {"angle()", "Return argument of complex number."}
+complex.arg = function (C) return Ver.atan2(Cross.float(C._v[2]), Cross.float(C._v[1])) end
+about[complex.arg] = {"arg()", "Return argument of complex number."}
 
 --- Inverse sine.
 --  @param C Complex number.
 --  @return Complex inverse sine.
 complex.asin = function (C)
-  local j = complex._i
+  local j = complex:i(1)
   return -j*complex.log(j*C+complex.sqrt(1-C*C))
 end
 about[complex.asin] = {"asin()", "Complex inverse sine.", FUNCTIONS}
@@ -393,7 +388,7 @@ about[complex.asinh] = {"asinh()", "Complex inverse hyperbolic sine.", FUNCTIONS
 --  @param C Complex number.
 --  @return Complex inverse tangent.
 complex.atan = function (C)
-  local j = complex._i
+  local j = complex:i(1)
   return -0.5*j*complex.log((1+j*C)/(1-j*C))
 end
 about[complex.atan] = {"atan()", "Complex inverse tangent.", FUNCTIONS}
@@ -434,6 +429,10 @@ complex.exp = function (C)
   return numcomp(complex:_init_(r*fcos(C._v[2]), r*fsin(C._v[2])))
 end
 about[complex.exp] = {"exp()", "Return exponent in for complex argument.", FUNCTIONS}
+
+-- Imaginary unit
+complex.i = function (self, v) return complex:_init_(0, v or 1) end
+about[complex.i] = {"_Z:i([v=1])", "Return v*i.", help.STATIC}
 
 --- Get imaginary part.
 --  @param C Complex number.
@@ -528,7 +527,7 @@ about[complex.tanh] = {"tanh()", "Return hyperbolic tangent of a complex number.
 complex.trig = function (self,vMod,vArg) 
   return complex:_init_(vMod*fcos(vArg), vMod*fsin(vArg)) 
 end
-about[complex.trig] = {"Comp:trig(vModule,vAngle)", "Create complex number using module and angle.", help.STATIC}
+about[complex.trig] = {"_Z:trig(vModule,vAngle)", "Create complex number using module and angle.", help.STATIC}
 
 -- simplify constructor call
 setmetatable(complex, {
@@ -539,13 +538,13 @@ __call = function (self, re, im)
   assert(type(im) == 'number' or type(im) == 'table' and im.float, "Wrong imaginary part")
   return complex:_init_(re,im) 
 end })
-complex.Comp = 'Comp'
-about[complex.Comp] = {"Comp([vRe=0,vIm=0])", "Create new complex number.", help.STATIC}
+complex._Z = '_Z'
+about[complex._Z] = {"_Z([vRe=0,vIm=0])", "Create new complex number.", help.STATIC}
 
 --- Function for execution during the module import.
 complex.onImport = function ()
   -- basic
-  _i = complex._i
+  _i = complex:i(1)
   local _sqrt = sqrt
   sqrt = function (a) return (iscomplex(a) or type(a) == 'number') and complex.sqrt(a) or _sqrt(a) end
   Main._updateHelp(sqrt,_sqrt)
@@ -603,5 +602,3 @@ complex.about = about
 return complex
 
 --==========================
---TODO angle to arg
---TODO rename Comp to _Z 
