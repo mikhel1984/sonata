@@ -596,7 +596,7 @@ special.gamma = function (self, z)
     return math.sqrt(2*math.pi)*t^(z+0.5)*math.exp(-t)*x
   end
 end
-about[special.gamma] = {"Self:gamma(z)", "Gamma function.", GAMMA}
+about[special.gamma] = {"Spec:gamma(z)", "Gamma function.", GAMMA}
 
 --- Other syntax for incomplete gamma function.
 --  @param self Do nothing.

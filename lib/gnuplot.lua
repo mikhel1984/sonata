@@ -533,26 +533,6 @@ raw='set pm3d'                    -- set Gnuplot options manually
 ]]
 }
 
---- Function for execution during the module import.
-gnuplot.onImport = function ()
-  plot = gnuplot.plot
-  local hlp = about[plot]
-  Main.about[plot] = {hlp[1], hlp[2], GPPLOT}
-  tplot = gnuplot.tplot 
-  hlp = about[tplot]
-  Main.about[tplot] = {hlp[1], hlp[2], GPPLOT}
-  polar = gnuplot.polarplot
-  Main.about[polar] = {'polar(x1,y1,[nm,x2,y2..])', about[polar][2], GPPLOT}
-  tpolar = gnuplot.tpolar
-  hlp = about[tpolar]
-  Main.about[tpolar] = {hlp[1], hlp[2], GPPLOT}
-  surf = gnuplot.surfplot
-  Main.about[surf] = {'surf(x1,y1,fn1,[nm,x2,y2..])', about[surf][2], GPPLOT}
-  tsurf = gnuplot.tsurf
-  hlp = about[tsurf]
-  Main.about[tsurf] = {hlp[1], hlp[2], GPPLOT}
-end
-
 -- Comment to remove descriptions
 gnuplot.about = about
 

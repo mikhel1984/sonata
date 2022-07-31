@@ -3,7 +3,7 @@ use 'all'
 -- PAUSE
 --	COMPLEX
 -- Operations with complex numbers.
-a = Comp(1,2)          -- real and complex components
+a = _Z(1,2)            -- real and complex components
 b = 3+_i*4             -- use complex unit
 a / b                  
 a ^ b                  -- complex power
@@ -18,8 +18,8 @@ a = Mat({      \
 b = Mat {{5,6},{7,8}}  
 a[2][1]                -- get element (indexation from 1)
 a[2][1] = 5            -- set new value
-a:get(-1,-1)           -- function 'get' can work with negative indices
-a:get(1,{1,2})         -- and return submatrix
+a(-1,-1)           -- 'function' call can work with negative indices
+a(1,{1,2})         -- and return submatrix
 -- PAUSE
 a * b                  -- arithmetic is available 
 0.5 * a                -- combination with numbers
@@ -39,11 +39,11 @@ Num.TOL
 fn = function (x)          \
   return 2*sin(x)+sin(2*x) \
 end -- introduce some function
-Num.Newton(fn, _pi/3)  -- find root near the pi/3
-Num.der(fn, _pi/3)     -- estimate derivative in the point
-Num.trapez(fn, 0, _pi/3) -- find integral from 0 to pi/3
+Num:Newton(fn, _pi/3)  -- find root near the pi/3
+Num:der(fn, _pi/3)     -- estimate derivative in the point
+Num:trapez(fn, 0, _pi/3) -- find integral from 0 to pi/3
 -- Solve ODE 
-t,yn = Num.ode45(                               \
+t,yn = Num:ode45(                               \
   function(t,y) return t*y end,  -- y' = f(t,y) \
   {1,3},                         -- t = 1..3    \
   1)                             -- y(1) = 1
@@ -81,10 +81,10 @@ a:rebase(42)           -- get value in new numerical base
 -- i.e. multidimensional ordered sequence of elements.
 a = Arr {2,3,1}        -- create empty array of size 2x3x1
 a:set({1,2,1},3)       -- do a(1,2,1) = 3
-a:get{1,2,1}           -- get a(1,2,1) 
-b = Arr.rand{2,3,1}    -- random elements
-c = a+b                -- element-wise sum
-for ind, val in c:next() do    \
+a:get{1,2,1}           -- get a(1,2,1)
+-- random elements
+b = Arr{2,3,1}:map(function () return math.random() end)
+for ind, val in b:ipairs() do    \
   print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val)) \
 end
 -- PAUSE
@@ -95,10 +95,10 @@ _C.phy.G                  -- gravitational constant
 _C.phy.G_u                -- units of measurement are available with postfix '_u'
 -- It is possible to define own constant.
 -- It can't be modified.
-_C.add('foo',42)
+_C:add('foo',42)
 _C.foo
 -- ...and remove it
-_C.remove('foo')
+_C:remove('foo')
 -- PAUSE
 
 --	GRAPH
@@ -136,23 +136,23 @@ a * b
 a / b
 -- float point representation
 a:float()
-a:Nu()      -- numerator
-a:De()      -- denominator
+a:num()        -- numerator
+a:denom()      -- denominator
 -- PAUSE
 
 --	SPECIAL
 -- Some special functions.
-Spec.beta(1,3)
-Spec.erf(2)
-Spec.gamma(2.2)
-Spec.besselj(2, 0.5)
+Spec:beta(1,3)
+Spec:erf(2)
+Spec:gamma(2.2)
+Spec:besselj(2, 0.5)
 -- PAUSE
 
 --	UNITS
 -- Conversation between measurement units.
 -- Define rules
-Unit.add('h', Unit(60, 'min'))       -- 1 h = 60 min
-Unit.add('min', Unit(60, 'sec'))     -- 1 min = 60 sec
+Unit:add('h', Unit(60, 'min'))       -- 1 h = 60 min
+Unit:add('min', Unit(60, 'sec'))     -- 1 min = 60 sec
 -- new variable
 v = Unit(2, 'm/sec')
 -- convert to 'km/h'
@@ -173,27 +173,27 @@ a * b
 b + 1
 a:inv()
 -- slerp
-Quat.slerp(a,b,0.5)      -- use normalization inside
+a:slerp(b,0.5)      -- use normalization inside
 -- PAUSE 
 
 --	GNUPLOT
 -- If you have 'Gnuplot' system, it can be called
--- from the Sonata LC.
+-- from the Sonata.
 -- Plot data in Matlab style.
 a = Range(0,6,0.1)
 b = Map(sin,a)
-plot(a,b)
+Gp:plot(a,b)
 -- second argument can be function
-plot(a,sin,'sin', a,cos,'cos')
+Gp:plot(a,sin,'sin', a,cos,'cos')
 -- PAUSE
 
 -- You can make polar plot
-polar(a,sin,a,cos)
+Gp:polarplot(a,sin,a,cos)
 -- PAUSE
 
 -- or plot surface.
 function fun(x,y) return x*x + y*y end
-surf(a,a,fun)
+Gp:surfplot(a,a,fun)
 -- PAUSE
 
 -- Plot data from table, matrix or file.
@@ -202,11 +202,9 @@ function fun(x)             \
 end
 b = Map(fun, a)
 -- define x,y
-tplot(b,1,3)
+Gp:tplot(b,1,3)
 -- plot all by default
-tpolar(b)
--- PAUSE
+Gp:tpolar(b)
 
--- Use 'Gp' if you need more control.
---
+-- Use 'Gp' object to get more control.
 

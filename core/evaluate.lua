@@ -276,7 +276,7 @@ evaluate.note = function (ev, fname, full)
   txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   local block = evaluate._blocks_(txt)
-  if full then io.write("Run '", fname, "'\t[", #block, "]\n") end
+  if full then io.write("Run '", fname, "'\t[ ", #block, " ]\n") end
   local n = evaluate._userInput_(ev, invA, invB, block, full, 0)
   while n <= #block do
     evaluate._evalBlock_(ev, block[n], full, templ)  

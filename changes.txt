@@ -1,4 +1,5 @@
 ======== 0.9.31 ========
+
 Matrix 
 * Remove ones, rand, randn, randi, apply
 * Remove onImport
@@ -20,3 +21,4 @@ Other
 * Number types are immutable 
 * Replace 'apply' with 'zip' everywhere
 * Call function with ':', field with '.'
+* Gnuplot is not the default module for visualization any more

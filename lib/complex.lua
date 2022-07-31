@@ -410,7 +410,7 @@ about[complex.atanh] = {"atanh()", "Complex inverse hyperbolic tangent.", FUNCTI
 --  @param C Complex number.
 --  @return Conjunction to the given number.
 complex.conj = function (C) return complex:_init_(Cross.copy(C._v[1]), -Cross.copy(C._v[2])) end
-about[complex.conj] = {"conj()", "Return the complex conjugate. Equal to ~C.", help.OTHER}
+about[complex.conj] = {"conj()", "Return the complex conjugate. Equal to ~C."}
 complex.__bnot = complex.conj
 
 --- Cosine
