@@ -126,6 +126,11 @@ g = Mat {
 ans = g({2,-1},{2,3})         --> Mat {{5,6},
                                        {8,9}}
 
+-- insert elements
+gg = Mat:eye(3)
+gg:insert({1,2},{1,2}, a) 
+ans = gg:range({1,2},{1,2})   --> a
+
 -- euclidean norm
 ans = Mat:V({1,2,3}):norm()  --3> math.sqrt(14)
 
@@ -134,6 +139,11 @@ rnd = function () return math.random() end
 h = Mat:zeros(2,3):map(rnd)
 print(h)
 
+-- round elements 
+noize = function (v) return v + math.random()*1E-8 end 
+hh = a:map(noize)
+hh:round(3)
+ans = hh                      --> a
 
 -- pseudo inverse matrix
 m = Mat {
@@ -166,9 +176,15 @@ ans = x1:cross(x2)            --> Mat {{-3},{6},{-3}}
 -- dot product of 2 vectors
 ans = x1:dot(x2)              --> 32
 
--- LU transform
+-- LU decomposition
 l,u,p = b:lu()
 ans = l[2][1]                --3> 0.714
+
+-- QR decomposition
+q,r = m:qr()
+ans = (q*r)[2][2]            --3> m[2][2]
+
+ans = q:det()                --3> 1.0
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
@@ -210,7 +226,7 @@ local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
--- Metatable for new rows.
+--- Metatable for new rows.
 local access = {
   -- 0 instead nil
   __index = function () return 0 end,
@@ -218,6 +234,7 @@ local access = {
   --__newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
 }
 
+--- Metatable without any operations
 local _container_ = {}
 
 --- Check object type.
@@ -829,7 +846,7 @@ matrix.round = function(M, N)
     end
   end
 end
-about[matrix.round] = {"found([N=6])", "Round elements in place.", help.OTHER}
+about[matrix.round] = {"round([N=6])", "Round matrix elements in place.", help.OTHER}
 
 --- Conjugate transpose.
 --  @param M Initial matrix.

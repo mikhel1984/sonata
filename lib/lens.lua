@@ -253,7 +253,7 @@ lens.solve = function (self, fn, ind, d0)
     return v[ind]
   end
   -- try to solve
-  return lens.ext_numeric.Newton(eqn, d0)
+  return lens.ext_numeric:Newton(eqn, d0)
 end
 about[lens.solve] = {"Lens:solve(fn,ind,d0)", "Find condition when component with the given index is equal to 0, d0 is the initial assumption."}
 

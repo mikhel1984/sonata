@@ -109,6 +109,13 @@ ans = z:acosh():im()         --1> 1.000
 -- atanh
 ans = z:atanh():re()         --3> 0.146
 
+-- round in-place 
+z = _Z(1+1E-3, 2+1e-20)
+z = z:round(5)
+ans = z:re()                 --3> 1.001
+
+ans = z:im()                  --> 2
+
 -- show
 print(a)
 
@@ -431,7 +438,11 @@ end
 about[complex.exp] = {"exp()", "Return exponent in for complex argument.", FUNCTIONS}
 
 -- Imaginary unit
-complex.i = function (self, v) return complex:_init_(0, v or 1) end
+complex.i = function (self, v)
+  v = v or 1
+  assert(type(v) == 'number' or type(v) == 'table' and v.float, "Wrong number")
+  return complex:_init_(0, v) 
+end
 about[complex.i] = {"_Z:i([v=1])", "Return v*i.", help.STATIC}
 
 --- Get imaginary part.
@@ -469,10 +480,11 @@ complex.round = function (C, N)
   N = N or 6
   local tol = 10^(-N)
   local a, b = C._v[1], C._v[2]
-  C._v[1] = type(a) == 'number' and Utils.round(a, tol) or
+  a = type(a) == 'number' and Utils.round(a, tol) or
             Cross.norm(a) < tol and 0 or a
-  C._v[2] = type(b) == 'number' and Utils.round(b, tol) or
+  b = type(b) == 'number' and Utils.round(b, tol) or
             Cross.norm(b) < tol and 0 or b
+  return complex:_init_(a,b)
 end
 about[complex.round] = {"round([N=6])", "Round in-place to specified number of digits."}
 

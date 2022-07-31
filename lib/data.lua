@@ -541,7 +541,7 @@ about[data.std] = {"Data:std(t,[tw])", "Standard deviation and variance. Weights
 data.tcdf = function (self,d,N)
   data.ext_special = data.ext_special or require('lib.special')
   local tmp = N/(N+d*d)
-  return 1-0.5*data.ext_special.betainc(tmp,0.5*N,0.5)
+  return 1-0.5*data.ext_special:betainc(tmp,0.5*N,0.5)
 end
 about[data.tcdf] = {"Data:tcdf(d,N)", "Student's cumulative distribution.", help.OTHER}
 
@@ -552,7 +552,7 @@ about[data.tcdf] = {"Data:tcdf(d,N)", "Student's cumulative distribution.", help
 --  @return Density value.
 data.tpdf = function (self,d,N)
   data.ext_special = data.ext_special or require('lib.special')
-  local tmp = math.sqrt(N)*data.ext_special.beta(0.5,0.5*N)
+  local tmp = math.sqrt(N)*data.ext_special:beta(0.5,0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
 about[data.tpdf] = {"Data:tpdf(d,N)", "Student's distribution density.", help.OTHER}
