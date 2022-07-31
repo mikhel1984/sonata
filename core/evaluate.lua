@@ -63,13 +63,13 @@ evaluate._blocks_ = function (txt)
     if i1 then 
       res[#res+1] = string.sub(txt, init, i1-1)
       init = i2+1
-    else 
-      local last = string.sub(txt, init, #txt)
-      if string.find(last, "%w?") then
-        res[#res+1] = last
-      end
+    else      
       break 
     end
+  end
+  local last = string.sub(txt, init, #txt)
+  if string.find(last, "%w?") then
+    res[#res+1] = last
   end
   return res
 end
@@ -269,15 +269,14 @@ end
 evaluate.note = function (ev, fname, full)
   full = (full ~= false)
   local templ = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
-  local invA, invB = '?> ', '>> '
-  -- read lines
-  if full then io.write("Run (interactive): ", fname, "\n") end
+  local invA, invB = '?> ', '>> '  
   -- read
   local f = assert(io.open(fname, 'r'))
   local txt = f:read('*a'); f:close()
   txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   local block = evaluate._blocks_(txt)
+  if full then io.write("Run '", fname, "'\t[", #block, "]\n") end
   local n = evaluate._userInput_(ev, invA, invB, block, full, 0)
   while n <= #block do
     evaluate._evalBlock_(ev, block[n], full, templ)  
