@@ -837,8 +837,7 @@ matrix.round = function(M, N)
       if type(v) == 'number' then 
         mr[c] = Utils.round(v, tol)
       elseif v.iscomplex then  
-        local vv = v:_copy_()
-        vv:round(N) 
+        v = v:round(N)
         mr[c] = (vv:im() == 0) and vv:re() or vv
       elseif Cross.norm(v) < tol then 
         mr[c] = 0
