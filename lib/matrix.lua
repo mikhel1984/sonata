@@ -787,6 +787,29 @@ matrix.dot = function (V1,V2)
 end
 about[matrix.dot] = {'dot(V)', 'Scalar product of two vectors.'}
 
+--- Numerical estimation of eigenvalues.
+--  @param M Source matrix.
+--  @return list of eigenvalues.
+matrix.eigenvalues = function (M)
+  if (M._rows ~= M._cols) then error("Square matrix is expected!") end
+  local A = M
+  local nmax, bound = 30, 0.9999
+  for i = 1, nmax do
+    local q, r = matrix.qr(A)
+    A = r * q
+    local t = math.abs(q[1][1])
+    for j = 2, M._rows do
+      t = t * math.abs(q[j][j])
+    end
+    if t > bound then break end
+  end
+  local res = {}
+  for i = 1, M._rows do res[i] = A[i][i] end
+  return res
+end
+-- TODO check correctness 
+
+
 --- Identity matrix.
 --  @param self Do nothing.
 --  @param rows Number of rows.
