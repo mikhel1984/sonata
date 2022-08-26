@@ -494,6 +494,37 @@ function (M)
 end
 }
 
+matrix._firstMinor_ = function (M)
+  local det = matrix._det_[M._rows]
+  if det then 
+    return det(M)
+  else
+    local sum, k = 0, 1
+    for i = 1, M._cols do
+      if M[1][i] ~= 0 then
+        local m = matrix._firstMinorSub_(M, 1, i)
+        sum = sum + k * M[1][i] * matrix._firstMinor_(m)
+      end
+      k = -k
+    end
+    return sum
+  end
+end
+
+matrix._firstMinorSub_ = function (M, ir, ic)
+  local res = matrix:_init_(M._rows-1, M._cols-1, {})
+  for r = 1, ir-1 do
+    for c = 1, ic-1 do res[r][c] = M[r][c] end
+    for c = ic+1, M._cols do res[r][c-1] = M[r][c] end
+  end
+  for r = ir+1, M._rows do
+    local r1 = r-1
+    for c = 1, ic-1 do res[r1][c] = M[r][c] end
+    for c = ic+1, M._cols do res[r1][c-1] = M[r][c] end
+  end
+  return res
+end
+
 --- Transform matrix to upper triangle (in-place).
 --  @param M Initial matrix.
 --  @return Upper triangulated matrix and determinant.
@@ -996,6 +1027,16 @@ matrix.map = function (M, fn)
 end
 about[matrix.map] = {"map(fn)", "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).", TRANSFORM}
 
+matrix.minor = function (M, ir, ic)
+  assert(M._rows == M._cols)
+  if ir > 0 and ic > 0 and ir <= M._rows and ic <= M._cols then
+    return matrix._firstMinor_(matrix._firstMinorSub_(M, ir, ic))
+  else 
+    -- determinant via minors
+    return matrix._firstMinor_(M)
+  end
+end
+
 --- Euclidean norm of the matrix at whole.
 --  @param M Current matrix.
 --  @return Norm value.
@@ -1317,46 +1358,6 @@ end
 about[matrix.zip] = {'Mat:zip(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
 
 
-matrix._firstMinorSub_ = function (M, ir, ic)
-  local res = matrix:_init_(M._rows-1, M._cols-1, {})
-  for r = 1, ir-1 do
-    for c = 1, ic-1 do res[r][c] = M[r][c] end
-    for c = ic+1, M._cols do res[r][c-1] = M[r][c] end
-  end
-  for r = ir+1, M._rows do
-    local r1 = r-1
-    for c = 1, ic-1 do res[r1][c] = M[r][c] end
-    for c = ic+1, M._cols do res[r1][c-1] = M[r][c] end
-  end
-  return res
-end
-
-matrix._firstMinor_ = function (M)
-  local det = matrix._det_[M._rows]
-  if det then 
-    return det(M)
-  else
-    local sum, k = 0, 1
-    for i = 1, M._cols do
-      if M[1][i] ~= 0 then
-        local m = matrix._firstMinorSub_(M, 1, i)
-        sum = sum + k * M[1][i] * matrix._firstMinor_(m)
-      end
-      k = -k
-    end
-    return sum
-  end
-end
-
-matrix.minor = function (M, ir, ic)
-  assert(M._rows = M._cols)
-  if ir > 0 and ic > 0 and ir <= M._rows and ic <= M._cols then
-    return matrix._firstMinor_(matrix._firstMinorSub_(M, ir, ic))
-  else 
-    -- determinant via minors
-    return matrix._firstMinor_(M)
-  end
-end
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})

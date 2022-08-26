@@ -788,6 +788,14 @@ about[polynomial.val] = {"val(v)", "Get value of polynomial P in point x."}
 -- simplify call
 polynomial.__call = function (p,x) return polynomial.val(p,x) end
 
+polynomial.char = function (self, M)
+  local m = M:copy()
+  for i = 1, m:cols() do
+    m[i][i] = polynomial:_init_({[0]=m[i][i], -1})
+  end
+  return -m:minor(0,0)
+end
+
 
 -- Simplify ppval call.
 polynomial._metappval_ = {__call = function (...) return polynomial.ppval(0,...) end}
