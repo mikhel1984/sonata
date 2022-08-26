@@ -1316,6 +1316,46 @@ matrix.zip = function (self, fn, ...)
 end
 about[matrix.zip] = {'Mat:zip(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
 
+
+matrix._firstMinorSub_ = function (M, ir, ic)
+  local res = matrix:_init_(M._rows-1, M._cols-1, {})
+  for r = 1, ir-1 do
+    for c = 1, ic-1 do res[r][c] = M[r][c] end
+    for c = ic+1, M._cols do res[r][c-1] = M[r][c] end
+  end
+  for r = ir+1, M._rows do
+    local r1 = r-1
+    for c = 1, ic-1 do res[r1][c] = M[r][c] end
+    for c = ic+1, M._cols do res[r1][c-1] = M[r][c] end
+  end
+  return res
+end
+
+matrix._firstMinor_ = function (M)
+  if M._rows == 1 then
+    return M[1][1]
+  elseif M._rows == 2 then 
+    return M[1][1]*M[2][2] - M[1][2]*M[2][1]
+  else
+    local sum, k = 0, 1
+    for i = 1, M._cols do
+      if M[1][i] ~= 0 then
+        local m = matrix._firstMinorSub_(M, 1, i)
+        sum = sum + k * M[1][i] * matrix._firstMinor_(m)
+      end
+      k = -k
+    end
+    return sum
+  end
+end
+
+matrix.minor = function (M, ir, ic)
+  assert(M._rows = M._cols)
+  assert(ir > 0 and ic > 0 and ir <= M._rows and ic <= M._cols)
+  return matrix._firstMinor_(matrix._firstMinorSub_(M, ir, ic))
+end
+
+
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
 matrix.Mat = 'Mat'
