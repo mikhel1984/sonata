@@ -1332,10 +1332,9 @@ matrix._firstMinorSub_ = function (M, ir, ic)
 end
 
 matrix._firstMinor_ = function (M)
-  if M._rows == 1 then
-    return M[1][1]
-  elseif M._rows == 2 then 
-    return M[1][1]*M[2][2] - M[1][2]*M[2][1]
+  local det = matrix._det_[M._rows]
+  if det then 
+    return det(M)
   else
     local sum, k = 0, 1
     for i = 1, M._cols do
@@ -1351,10 +1350,13 @@ end
 
 matrix.minor = function (M, ir, ic)
   assert(M._rows = M._cols)
-  assert(ir > 0 and ic > 0 and ir <= M._rows and ic <= M._cols)
-  return matrix._firstMinor_(matrix._firstMinorSub_(M, ir, ic))
+  if ir > 0 and ic > 0 and ir <= M._rows and ic <= M._cols then
+    return matrix._firstMinor_(matrix._firstMinorSub_(M, ir, ic))
+  else 
+    -- determinant via minors
+    return matrix._firstMinor_(M)
+  end
 end
-
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
