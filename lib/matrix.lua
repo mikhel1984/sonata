@@ -818,29 +818,6 @@ matrix.dot = function (V1,V2)
 end
 about[matrix.dot] = {'dot(V)', 'Scalar product of two vectors.'}
 
---- Numerical estimation of eigenvalues.
---  @param M Source matrix.
---  @return list of eigenvalues.
-matrix.eigenvalues = function (M)
-  if (M._rows ~= M._cols) then error("Square matrix is expected!") end
-  local A = M
-  local nmax, bound = 30, 0.9999
-  for i = 1, nmax do
-    local q, r = matrix.qr(A)
-    A = r * q
-    local t = math.abs(q[1][1])
-    for j = 2, M._rows do
-      t = t * math.abs(q[j][j])
-    end
-    if t > bound then break end
-  end
-  local res = {}
-  for i = 1, M._rows do res[i] = A[i][i] end
-  return res
-end
--- TODO check correctness 
-
-
 --- Identity matrix.
 --  @param self Do nothing.
 --  @param rows Number of rows.
@@ -1357,6 +1334,43 @@ matrix.zip = function (self, fn, ...)
 end
 about[matrix.zip] = {'Mat:zip(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
 
+matrix._findEigenvector_ = function (M, v, eps)
+  -- (M - v * I)^-1
+  local iM = M:copy()
+  -- add 'noize'
+  v = (Cross.norm(v) > 0) and 1.01 * v or 1E-4
+  for i = 1, M._rows do iM[i][i] = M[i][i] - v end
+  iM = iM:inv()
+  -- random b
+  local b = M:zeros(M._rows, 1)
+  for i = 1, M._rows do b[i][1] = math.random() end
+  b = b / b:norm() 
+  -- find
+  local prev = b
+  for i = 1, 10 do
+    b = iM * b
+    b = b / b:norm()
+    if (b - prev):norm() < eps then break end
+    prev = b
+  end
+  return b
+end
+
+matrix.eig = function (M)
+  assert(M._rows == M._cols)
+  matrix.ext_poly = matrix.ext_poly or require("lib.polynomial")
+  local p = matrix.ext_poly:char(M)
+  local root = p:roots()
+  local P, lam = matrix:zeros(M._rows), matrix:zeros(M._rows)
+  for j = 1, #root do
+    local v = matrix._findEigenvector_(M, root[j], 1E-4)
+    -- save
+    for i = 1, M._rows do P[i][j] = v[i][1] end
+    lam[j][j] = root[j]
+  end
+  return P, lam
+end
+-- TODO check
 
 
 -- constructor call
@@ -1371,6 +1385,5 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
---TODO: Redefine 'norm' method
 --TODO: change matrix print
 --TODO: matrix from list and size

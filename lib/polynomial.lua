@@ -160,6 +160,21 @@ local function getSum(P1,P2)
   return res
 end
 
+--- Condition for the root sorting.
+--  @param v1 First element.
+--  @param v2 Second element.
+--  @return True when v1 goes before v2.
+local function sortRoots (v1, v2)
+  -- move complex back
+  if type(v1) == 'table' and v1.iscomplex and (type(v2) ~= 'table' or not v2.iscomplex) then
+    return false 
+  elseif type(v2) == 'table' and v2.iscomplex and (type(v1) ~= 'table' or not v1.iscomplex) then
+    return true 
+  else 
+    return Cross.norm(v1) > Cross.norm(v2)
+  end
+end
+
 --	INFO
 
 local help = SonataHelp or {new=function () return {} end}
@@ -418,7 +433,9 @@ end
 polynomial._roots2_ = function (P)
   local a, b = P[2], P[1]
   local sD = polynomial.ext_complex.sqrt(b*b - 4*a*P[0])
-  return {(-b-sD)/(2*a), (-b+sD)/(2*a)}
+  local res = {(-b-sD)/(2*a), (-b+sD)/(2*a)}
+  table.sort(res, sortRoots)
+  return res
 end
 
 --- Find roots of 2nd order polynomial.
@@ -430,19 +447,22 @@ polynomial._roots3_ = function (P)
   local a, b, c = P[2]/t, P[1]/t, P[0]/t
   local Q, R = (a*a - 3*b)/9, (2*a^3 - 9*a*b + 27*c)/54
   t = Q^3
+  local res 
   if R*R < t then
     -- only real roots
     t = math.acos(R / math.sqrt(t)) / 3
     Q = -2*math.sqrt(Q)   -- reuse
-    return {Q*math.cos(t)-a/3, Q*math.cos(t+2*math.pi/3)-a/3, Q*math.cos(t-2*math.pi/3)-a/3}
+    res = {Q*math.cos(t)-a/3, Q*math.cos(t+2*math.pi/3)-a/3, Q*math.cos(t-2*math.pi/3)-a/3}
   else
     -- can have complex roots
     local A = (R > 0 and -1 or 1) * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
     local B = (A == 0 and 0 or Q/A)
     t = polynomial.ext_complex(0, math.sqrt(3)/2 * (A-B))
     Q = A + B            -- reuse
-    return {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
+    res = {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
   end
+  table.sort(res, sortRoots)
+  return res
 end
 
 --- Get polynomial from roots.
@@ -463,6 +483,19 @@ polynomial.build = function (self,...)
   return res
 end
 about[polynomial.build] = {"Poly:build(root1,root2,...)", "Return polynomial with given roots.", help.OTHER}
+
+--- Find characteristic polinomial for the matrix.
+--  @param self Do nothing.
+--  @param M Source matrix.
+--  @return Characteristic polynomial.
+polynomial.char = function (self, M)
+  local m = M:copy()
+  for i = 1, m:cols() do
+    m[i][i] = polynomial:_init_({[0]=m[i][i], -1})
+  end
+  return m:minor(0,0)
+end
+about[polynomial.char] = {"Poly:char(M)", "Return characteristic polinomial for the given matrix."}
 
 --- Create copy of object.
 --  @param P Initial polynomial.
@@ -646,6 +679,7 @@ polynomial.real = function (P)
     else break
     end
   end
+  table.sort(res, function (a,b) return math.abs(a) > math.abs(b) end)
   return res, pp
 end
 about[polynomial.real] = {"real()", "Find real roots of the polynomial.", help.OTHER}
@@ -681,6 +715,7 @@ polynomial.roots = function (P)
       break 
     end
   end
+  table.sort(r, sortRoots)
   return r
 end
 about[polynomial.roots] = {"roots()", "Find all the polynomial roots.", help.OTHER}
@@ -787,15 +822,6 @@ end
 about[polynomial.val] = {"val(v)", "Get value of polynomial P in point x."}
 -- simplify call
 polynomial.__call = function (p,x) return polynomial.val(p,x) end
-
-polynomial.char = function (self, M)
-  local m = M:copy()
-  for i = 1, m:cols() do
-    m[i][i] = polynomial:_init_({[0]=m[i][i], -1})
-  end
-  return -m:minor(0,0)
-end
-
 
 -- Simplify ppval call.
 polynomial._metappval_ = {__call = function (...) return polynomial.ppval(0,...) end}
