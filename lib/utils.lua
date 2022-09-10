@@ -137,10 +137,8 @@ end
 --============== Utils ================
 
 local utils = {
-  LETTERS = '([%w_]*)',
-  SYMBOL  = '([+%-*/^()%[%]]?)',
+  TEMPL = '([%w_]*)%s*([^%w%s_]?)%s*',   -- var and symbol
 }
-utils.TEMPL = utils.LETTERS .. '%s*' .. utils.SYMBOL .. '%s*'
 
 --- Generate function from string.
 --  @param sExpr Expression for execution.
@@ -197,7 +195,9 @@ end
 utils.lex = function (s)
   local res = {}
   for x, y in string.gmatch(s, utils.TEMPL) do
-    if #x > 0 then res[#res+1] = x end
+    if #x > 0 then
+      res[#res+1] = tonumber(x) or x 
+    end
     if #y > 0 then res[#res+1] = y end
   end
   return res
