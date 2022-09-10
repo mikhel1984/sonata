@@ -1350,7 +1350,10 @@ matrix._findEigenvector_ = function (M, v, eps)
   for i = 1, 10 do
     b = iM * b
     b = b / b:norm()
-    if (b - prev):norm() < eps then break end
+    local diff = (b - prev):norm()
+    if diff < eps or diff > (2-eps) then 
+      break 
+    end
     prev = b
   end
   return b
