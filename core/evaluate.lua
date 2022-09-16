@@ -37,6 +37,14 @@ local function print_err (msg)
   print(string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
 
+local function balance(s)
+  local t = {}
+  string.gsub(s, '([(){}])', function (x) t[x] = (t[x] or 0) + 1 end)
+  local d1 = (t['('] or 0) - (t[')'] or 0)
+  local d2 = (t['{'] or 0) - (t['}'] or 0)
+  return (d1 < 0 or d2 < 0) and -1 or (d1 > 0 or d2 > 0) and 1 or 0
+end
+
 --	MODULE
 
 local evaluate = {

@@ -91,8 +91,8 @@ local mabs = math.abs
 local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
 local function numrat(R) 
-  return Cross.eq(R._v[2],1) and Cross.simp(R._v[1])               -- x / 1
-    or (isbig(R._v[1]) or isbig(R._v[2])) and (R._v[1] / R._v[2])  -- float num or denom
+  return Cross.eq(R._[2],1) and Cross.simp(R._[1])               -- x / 1
+    or (isbig(R._[1]) or isbig(R._[2])) and (R._[1] / R._[2])  -- float num or denom
     or R 
 end
 
@@ -132,7 +132,7 @@ rational.__add = function (R1, R2)
       return p and (p + R2) or (Cross.float(R1) + Cross.float(R2))
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return numrat(rational:_new_(r1[1]*r2[2]+r1[2]*r2[1], r1[2]*r2[2]))
 end
 
@@ -149,7 +149,7 @@ rational.__div = function (R1, R2)
       return p and (p / R2) or (Cross.float(R1) / Cross.float(R2))
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return numrat(rational:_new_(r1[1]*r2[2], r1[2]*r2[1]))
 end
 
@@ -172,7 +172,7 @@ rational.__le = function (R1,R2)
       end
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return (r1[1]*r2[2]) <= (r2[1]*r1[2])
 end
 
@@ -192,7 +192,7 @@ rational.__lt = function (R1,R2)
       end
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return (r1[1]*r2[2]) < (r2[1]*r1[2])
 end
 
@@ -209,7 +209,7 @@ rational.__mul = function (R1, R2)
       return p and (p * R2) or (Cross.float(R1) * Cross.float(R2))
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return numrat(rational:_new_(r1[1]*r2[1], r1[2]*r2[2]))
 end
 
@@ -226,7 +226,7 @@ rational.__pow = function (R1, R2)
     return R1^R2
   else
     if not (Ver.isInteger(R2) and R2 >= 0) then error("Power must be a non-negative integer") end
-    local r1 = R1._v
+    local r1 = R1._
     return numrat(rational:_new_(r1[1]^R2, r1[2]^R2))
   end
 end
@@ -244,7 +244,7 @@ rational.__sub = function (R1, R2)
       return p and (p - R2) or (Cross.float(R1) - Cross.float(R2))
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return numrat(rational:_new_(r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[2]))
 end
 
@@ -252,7 +252,7 @@ end
 --  @param R Rational number.
 --  @return String with numerator and denominator.
 rational.__tostring = function (R) 
-  local r = R._v
+  local r = R._
   if type(r[1]) == 'number' and type(r[2]) == 'number' and mabs(r[1]) > r[2] then
     local n = mabs(r[1])       -- numerator
     local v = math.modf(n / r[2]) 
@@ -265,7 +265,7 @@ end
 --- -R
 --  @param R Rational number.
 --  @preturn Opposite rational number.
-rational.__unm = function (R) return rational:_new_(-R._v[1], R._v[2]) end
+rational.__unm = function (R) return rational:_new_(-R._[1], R._[2]) end
 
 rational.arithmetic = 'arithmetic'
 about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2", help.META}
@@ -284,13 +284,13 @@ end
 --  @return New rational object.
 rational._new_ = function (self, vn, vd)
   local g = rational:gcd(vd,vn)         -- inverse order move sign to denominator
-  return setmetatable({_v = {vn/g, vd/g}}, self)  
+  return setmetatable({_ = {vn/g, vd/g}}, self)  
 end
 
 --- Get denominator.
 --  @param R Rational number.
 --  @return Denominator.
-rational.denom = function (R) return R._v[2] end
+rational.denom = function (R) return R._[2] end
 about[rational.denom] = {"denom()", "Return the denominator of the rational number."}
 
 --- R1 == R2
@@ -309,7 +309,7 @@ rational.eq = function (R1,R2)
       end
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return Cross.eq(r1[1],r2[1]) and Cross.eq(r1[2],r2[2])
 end
 about[rational.eq] = {"eq(R)", "Compare two objects.", help.OTHER}
@@ -319,7 +319,7 @@ rational.__eq = rational.eq
 --  @param R Rational number.
 --  @return Decimal fraction.
 rational.float = function (R)
-  local r = R._v
+  local r = R._
   return (r[1] < 0 and -1 or 1) * (Cross.norm(r[1]) / Cross.norm(r[2]))
 end
 about[rational.float] = {"float()", "Return rational number as decimal."}
@@ -351,7 +351,7 @@ about[rational.gcd] = {"Rat:gcd(va,vb)", "Calculate the greatest common divisor 
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
-rational.num = function (R) return R._v[1] end
+rational.num = function (R) return R._[1] end
 about[rational.num] = {"num()", "Return the numerator of rational number."}
 
 
