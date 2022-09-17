@@ -52,8 +52,8 @@ ans = Rat:gcd(125,65)         --> 5
 -- represent as decimal
 ans = a:float()               --> 0.5
 
--- make from decimal 
-ans = Rat:from(0.25)          --> Rat(1,4)
+-- from decimal 
+ans = Rat:from(math.pi)       --> Rat(333, 106)
 
 -- numerator
 ans = b:num()                 --> 2
@@ -350,19 +350,23 @@ rational.float = function (R)
 end
 about[rational.float] = {"float()", "Return rational number as decimal."}
 
---- Get rational number from floating point.
+--- Get rational number approximation.
 --  @param self Do nothing.
 --  @param f Source number.
---  @param N Number of digits after coma.
---  @return Ratio estimation.
-rational.from = function (self, f, N)
-  N = N or 5   -- number of digits
-  assert(N > 0)
-  local den = math.pow(10, N)
-  local int = math.modf(f * den) 
-  return rational:_new_(int, den) 
+--  @param fErr Precision, default is 0.001.
+rational.from = function (self, f, fErr)
+  fErr = fErr or 1E-3
+  local f0 = math.abs(f)
+  local c, acc = f0, {}
+  acc[0], c = math.modf(c)
+  local a, b = acc[0], 1
+  while c > 0 and math.abs(a/b - f0) > fErr do
+    acc[#acc+1], c = math.modf(1/c)
+    a, b = rational._cont2rat_(acc)
+  end
+  return rational:_new_(f >= 0 and a or -a, b)
 end
-about[rational.from] = {"Rat:from(f,[N=5])", "Estimate ratio from floating point value.", help.NEW}
+about[rational.from] = {"Rat:from(f,[fErr=1E-3])", "Estimate ratio from floating point value.", help.NEW}
 
 --- Get rational number from continued fraction coefficients.
 --  @param self Do nothing.
@@ -444,3 +448,4 @@ rational.about = about
 return rational
 
 --======================================
+-- TODO choose print format
