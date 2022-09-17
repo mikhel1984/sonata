@@ -103,6 +103,17 @@ local function numStr(v)
   return type(v) == 'number' and Utils.numstr(v) or tostring(v) 
 end
 
+-- Continued fraction printing
+local _continued_ = {
+__tostring = function (t)
+  local res = {tostring(t[0])}
+  for i = 1, #t do
+    res[#res+1] = '+/'..tostring(t[i])
+  end
+  return string.format("{%s}", table.concat(res))
+end
+}
+
 --	INFO
 
 local help = SonataHelp or {new=function () return {} end}
@@ -273,9 +284,24 @@ about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, 
 rational.comparison = 'comparison'
 about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
 
+--- Convert value to rational number.
+--  @param v Source value.
+--  @return Rational number of false.
 rational._convert_ = function (v)
   return (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod) 
          and rational:_new_(v,1)
+end
+
+--- Find rational number for the given continued fraction.
+--  @param t Continued fraction coefficients.
+--  @return Numerator and denomenator.
+rational._cont2rat_ = function (t)
+  local a, b = 0, 1
+  for i = #t, 1, -1 do
+    a = t[i] * b + a
+    a, b = b, a
+  end
+  return t[0] * b + a, b
 end
 
 --- Create new object, set metatable.
@@ -338,6 +364,30 @@ rational.from = function (self, f, N)
 end
 about[rational.from] = {"Rat:from(f,[N=5])", "Estimate ratio from floating point value.", help.NEW}
 
+--- Get rational number from continued fraction coefficients.
+--  @param self Do nothing.
+--  @param t List of coefficients.
+--  @return Rational number.
+rational.fromCont = function (self, t)
+  local check = {}
+  for i, v in ipairs(t) do
+    if (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod) and v > 0 then
+      check[i] = v
+    else error("Positive integer is expected") end
+  end
+  local t0 = t[0]
+  if t0 then
+    if (type(t0) == 'number' and Ver.isInteger(t0) or type(t0) == 'table' and t0.__mod) and t0 >= 0 then
+      check[0] = t0
+    else error("Positive integer is expected") end
+  else
+    for i = 0, #check-1 do check[i] = check[i+1] end
+    check[#check] = nil
+  end
+  return rational._new_(rational._cont2rat_(check))
+end
+about[rational.fromCont] = {"Rat:fromCont(t)", "Transform continued fraction to rational number.", help.NEW}
+
 --- The greatest common divisor. 
 --  @param self Do nothing.
 --  @param va First integer.
@@ -354,6 +404,25 @@ about[rational.gcd] = {"Rat:gcd(va,vb)", "Calculate the greatest common divisor 
 rational.num = function (R) return R._[1] end
 about[rational.num] = {"num()", "Return the numerator of rational number."}
 
+--- Find continued fraction coefficients.
+--  @param R Positive rational number.
+--  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/..)).
+rational.toCont = function (R)
+  local a, b, c = R._[1], R._[2], nil
+  if a < 0 then error("Positive is expected") end
+  local numbers = (type(a) == 'number' and type(b) == 'number')
+  local res = {}
+  for i = 0, math.huge do
+    c = numbers and math.modf(a / b) or (a / b)
+    res[i] = c 
+    a = a - b * c
+    if a <= 1 then break end
+    a, b = b, a
+  end
+  res[#res+1] = b
+  return setmetatable(res, _continued_)
+end
+about[rational.toCont] = {"toCont()", "Transform rational number to continued fraction.", help.OTHER}
 
 -- call constructor, check arguments
 setmetatable(rational, {
