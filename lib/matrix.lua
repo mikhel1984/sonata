@@ -494,6 +494,39 @@ function (M)
 end
 }
 
+--- Inverse iteration method for eigenvector calculation.
+--  @param M Source matrix.
+--  @param v Eigenvalue estimation.
+--  @param eps Error value.
+--  @return Eigenvector estimation.
+matrix._findEigenvector_ = function (M, v, eps)
+  -- (M - v * I)^-1
+  local iM = M:copy()
+  -- add 'noize'
+  v = (Cross.norm(v) > 0) and 1.01 * v or 1E-4
+  for i = 1, M._rows do iM[i][i] = M[i][i] - v end
+  iM = iM:inv()
+  -- random b
+  local b = M:zeros(M._rows, 1)
+  for i = 1, M._rows do b[i][1] = math.random() end
+  b = b / b:norm() 
+  -- find
+  local prev = b
+  for i = 1, 10 do
+    b = iM * b
+    b = b / b:norm()
+    local diff = (b - prev):norm()
+    if diff < eps or diff > (2-eps) then 
+      break 
+    end
+    prev = b
+  end
+  return b
+end
+
+--- Minor value calculation.
+--  @param M Source matrix.
+--  @return Minor value.
 matrix._firstMinor_ = function (M)
   local det = matrix._det_[M._rows]
   if det then 
@@ -511,6 +544,11 @@ matrix._firstMinor_ = function (M)
   end
 end
 
+--- Find sub-matrix for minor calculation.
+--  @param M Source matrix.
+--  @param ir Row index.
+--  @param ic Column index.
+--  @return Submatrix.
 matrix._firstMinorSub_ = function (M, ir, ic)
   local res = matrix:_init_(M._rows-1, M._cols-1, {})
   for r = 1, ir-1 do
@@ -817,6 +855,25 @@ matrix.dot = function (V1,V2)
   return s
 end
 about[matrix.dot] = {'dot(V)', 'Scalar product of two vectors.'}
+
+--- Find eigenvectors and eigenvalues.
+--  @param M Square matrix.
+--  @return Matrix with eigenvectors, matrix with eigenvalues in diagonal.
+matrix.eig = function (M)
+  assert(M._rows == M._cols)
+  matrix.ext_poly = matrix.ext_poly or require("lib.polynomial")
+  local p = matrix.ext_poly:char(M)
+  local root = p:roots()
+  local P, lam = matrix:zeros(M._rows), matrix:zeros(M._rows)
+  for j = 1, #root do
+    local v = matrix._findEigenvector_(M, root[j], 1E-4)
+    -- save
+    for i = 1, M._rows do P[i][j] = v[i][1] end
+    lam[j][j] = root[j]
+  end
+  return P, lam
+end
+about[matrix.eig] = {'eig()', 'Find matrices of eigenvectors and eigenvalues.'}
 
 --- Identity matrix.
 --  @param self Do nothing.
@@ -1334,48 +1391,6 @@ matrix.zip = function (self, fn, ...)
 end
 about[matrix.zip] = {'Mat:zip(fn,M1,M2,...)','Apply function to the given matrices element-wise.', TRANSFORM}
 
-matrix._findEigenvector_ = function (M, v, eps)
-  -- (M - v * I)^-1
-  local iM = M:copy()
-  -- add 'noize'
-  v = (Cross.norm(v) > 0) and 1.01 * v or 1E-4
-  for i = 1, M._rows do iM[i][i] = M[i][i] - v end
-  iM = iM:inv()
-  -- random b
-  local b = M:zeros(M._rows, 1)
-  for i = 1, M._rows do b[i][1] = math.random() end
-  b = b / b:norm() 
-  -- find
-  local prev = b
-  for i = 1, 10 do
-    b = iM * b
-    b = b / b:norm()
-    local diff = (b - prev):norm()
-    if diff < eps or diff > (2-eps) then 
-      break 
-    end
-    prev = b
-  end
-  return b
-end
-
-matrix.eig = function (M)
-  assert(M._rows == M._cols)
-  matrix.ext_poly = matrix.ext_poly or require("lib.polynomial")
-  local p = matrix.ext_poly:char(M)
-  local root = p:roots()
-  local P, lam = matrix:zeros(M._rows), matrix:zeros(M._rows)
-  for j = 1, #root do
-    local v = matrix._findEigenvector_(M, root[j], 1E-4)
-    -- save
-    for i = 1, M._rows do P[i][j] = v[i][1] end
-    lam[j][j] = root[j]
-  end
-  return P, lam
-end
--- TODO check
-
-
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new_(m) end})
 matrix.Mat = 'Mat'
@@ -1390,3 +1405,4 @@ return matrix
 --TODO: Fix sign in SVD transform
 --TODO: change matrix print
 --TODO: matrix from list and size
+--TODO: Fix eigenvectors for complex eigenvalues.
