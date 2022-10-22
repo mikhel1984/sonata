@@ -255,7 +255,9 @@ end
 --  @param U Unit object.
 --  @return Unit value in traditional form.
 units.__tostring = function (U)
-  return string.format('%s %s', tostring(U._value), units.key(U))
+  return string.format('%s %s', 
+    type(U._value) == 'number' and Utils.numstr(U._value) or tostring(U._value), 
+    units.key(U))
 end
 
 --- -U
@@ -405,8 +407,10 @@ units._getExpr_ = function (lst, n)
     local res, m = units._getTerm_(lst, n+1)
     assert(lst[m] == ')')
     return res, m+1
+  elseif v == 1 then
+    return {}, n+1
   elseif string.find(v, '^%a+$') then 
-    return {[v] = 1}, n+1
+    return {[v] = 1}, n+1  
   else 
     error("Wrong unit "..v)
   end
@@ -605,6 +609,4 @@ units.about = about
 return units
 
 --==================================================
---TODO: add '1/something'
---TODO: use utils to get print value in 'tostring'
 
