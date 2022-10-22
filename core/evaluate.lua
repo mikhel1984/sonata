@@ -14,10 +14,12 @@ local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
 local Win = SONATA_WIN_CODE and require('core.win') or nil
 
---- Check if the table is SONATA_INFO list.
+local SONATAINFO = {}
+
+--- Check if the table is SONATAINFO list.
 --  @param v Object.
---  @return true if SONATA_INFO list is found.
-local function islist(v) return type(v) == 'table' and v.SONATA_INFO end
+--  @return true if SONATAINFO list is found.
+local function islist(v) return type(v) == 'table' and getmetatable(v) == SONATAINFO end
 
 local _update = function (ev, st, cmd, ans)
   ev._st = st
@@ -62,6 +64,10 @@ LOGNAME = 'log.note',
 _cmd = "",    -- last request
 _st  = 1,     -- last status
 }
+
+evaluate.info = function (t)
+  return setmetatable(t, SONATAINFO)
+end
 
 evaluate._blocks_ = function (txt)
   local init = 1
@@ -166,6 +172,7 @@ evaluate.cli_loop = function (ev, invA, invB, noteIn)
         break
       end
     end
+    -- code processing
     local status = evaluate.eval(ev, newLine, not noteIn)
     if status == evaluate.EV_RES then
       if ev._ans ~= nil then

@@ -49,7 +49,7 @@ setmetatable(use,
 { -- load modules
   __call = function (self, name)
     if not name then
-      local lst = {SONATA_INFO=true, Sonata.FORMAT_V1, string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
+      local lst = Sonata.info {Sonata.FORMAT_V1, string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
       -- show loaded modules
       for k,v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)

@@ -179,12 +179,7 @@ end
 --  @param s New Units.
 --  @return Result of conversation of nil.
 units.__index = function (U,s)
-  if units[s] then
-    return units[s]
-  elseif type(s) == 'string' then
-    local v = units.convert(U,s)
-    return v and v._value or nil
-  end
+  return units[s] or (type(s) == 'string' and units.value(units.convert(U,s)))
 end
 
 --- U1 <= U2
@@ -585,7 +580,7 @@ about[units.setRule] = {'Unit:setRule(s,U)', 'Add new rule for conversation.'}
 --  The same as #U.
 --  @param U Unit object.
 --  @return Value.
-units.value = function (U) return U._value end
+units.value = function (U) return U and U._value or nil end
 about[units.value] = {'value()', 'Get object value. Same as #U.'}
 units.__len = units.value
 
