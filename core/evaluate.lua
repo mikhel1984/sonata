@@ -10,10 +10,13 @@
 
 --	LOCAL
 
+-- String evaluation method
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
+-- Code table for Windows
 local Win = SONATA_WIN_CODE and require('core.win') or nil
 
+-- Format marker
 local SONATAINFO = {}
 
 --- Check if the table is SONATAINFO list.
@@ -21,23 +24,12 @@ local SONATAINFO = {}
 --  @return true if SONATAINFO list is found.
 local function islist(v) return type(v) == 'table' and getmetatable(v) == SONATAINFO end
 
-local _update = function (ev, st, cmd, ans)
-  ev._st = st
-  ev._cmd = cmd
-  _ans = ans       -- save global variable
-  if ans == nil then
-    ev._ans = nil
-  else
-    ev._ans = islist(ans) and ans or tostring(ans)
-  end
-  return st
-end
-
 --- Print formatted error message.
 --  @param msg Message string.
 local function print_err (msg)
   print(string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
+
 
 local function balance(s)
   local t = {}
@@ -65,9 +57,7 @@ _cmd = "",    -- last request
 _st  = 1,     -- last status
 }
 
-evaluate.info = function (t)
-  return setmetatable(t, SONATAINFO)
-end
+
 
 evaluate._blocks_ = function (txt)
   local init = 1
@@ -88,13 +78,28 @@ evaluate._blocks_ = function (txt)
   return res
 end
 
+--- Print block list.
+--  @param blks Table with blocks of text.
+evaluate._dot_ls_ = function (blks)
+  for i = 1, #blks do
+    local s = ''
+    for line in string.gmatch(blks[i], '([^\n]+)\r?\n?') do
+      if string.find(line, "[^%s]+") then
+        s = line
+        break
+      end
+    end
+    io.write(string.format("%d   %s\n", i, s))
+  end
+end
+
 --- Process command string.
 --  @param ev Accumulated string.
 --  @param nextCmd New string with Lua expression.
 --  @return Status of processing and rest of command.
 evaluate._eval_ = function (ev, nextCmd)
   if nextCmd == 'quit' then 
-    return _update(ev, evaluate.EV_QUIT, "")
+    return evaluate._update_(ev, evaluate.EV_QUIT, "")
   end
   -- reset state
   if ev._st ~= evaluate.EV_CMD then evaluate.reset(ev) end
@@ -102,7 +107,7 @@ evaluate._eval_ = function (ev, nextCmd)
   local partCmd = string.match(nextCmd, "(.*)\\%s*")
   if partCmd ~= nil then
     -- expected next line 
-    return _update(ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd))
+    return evaluate._update_(ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd))
   end
   local cmd = ev._cmd..nextCmd
   -- 'parse'
@@ -112,33 +117,113 @@ evaluate._eval_ = function (ev, nextCmd)
   end
   -- get result
   if err then
-    return _update(ev, evaluate.EV_ERR, cmd, err)
+    return evaluate._update_(ev, evaluate.EV_ERR, cmd, err)
   else
     local ok, res = pcall(fn)
-    return _update(ev, ok and evaluate.EV_RES or evaluate.EV_ERR, cmd, res)
+    return evaluate._update_(ev, ok and evaluate.EV_RES or evaluate.EV_ERR, cmd, res)
+  end
+end
+
+--- Evaluate block of text.
+--  @param ev Evaluation environment.
+--  @param txt Block of text.
+--  @param full True when need to show comments.
+--  @param templ Header template string.
+evaluate._evalBlock_ = function (ev, txt, full, templ)
+  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
+    if string.find(line, '^%s*%-%-') then
+      -- highlight line comments
+      if full then
+        line = string.gsub(line, '\t(.+)', templ)
+        line = string.format("%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
+        io.write(line)
+      end
+    else
+      -- print line and evaluate
+      io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
+      local status = evaluate.eval(ev, line, false)
+      if status == evaluate.EV_RES then
+        if ev._ans ~= nil then 
+          print(islist(ev._ans) and evaluate._toText_(ev._ans) or ev._ans)
+        end
+      elseif status == evaluate.EV_CMD then
+        -- skip
+      else -- evaluate.EV_ERR 
+        print_err(ev._ans)
+        break
+      end
+    end
   end
 end
 
 --- Get string from list of elements.
 --  @param lst List of strings and commands.
 --  @return Text for visualization.
-evaluate._toText = function (lst)
+evaluate._toText_ = function (lst)
   local i = 1
   local res = {}
   while i <= #lst do
     local v = lst[i]
     if v == evaluate.FORMAT_V1 then
-      res[#res+1] = string.format("%s%s%s", SonataHelp.CHELP, lst[i+1], SonataHelp.CRESET)
       i = i + 1
+      res[#res+1] = string.format("%s%s%s", SonataHelp.CHELP, lst[i], SonataHelp.CRESET)
     elseif v == evaluate.FORMAT_V2 then
-      res[#res+1] = string.format("%s%s%s%s", SonataHelp.CHELP, SonataHelp.CBOLD, lst[i+1], SonataHelp.CRESET)
       i = i + 1
+      res[#res+1] = string.format("%s%s%s%s", SonataHelp.CHELP, SonataHelp.CBOLD, lst[i], SonataHelp.CRESET)
     else
       res[#res+1] = v
     end
     i = i + 1
   end
   return table.concat(res)
+end
+
+--- Update environment state.
+--  @param ev Evaluation environment.
+--  @param st Evaluation status.
+--  @param cmd Current command.
+--  @param ans Current answer.
+--  @return Updated environment.
+evaluate._update_ = function (ev, st, cmd, ans)
+  ev._st = st
+  ev._cmd = cmd
+  _ans = ans       -- save global variable
+  if ans == nil then
+    ev._ans = nil
+  else
+    ev._ans = islist(ans) and ans or tostring(ans)
+  end
+  return st
+end
+
+--- User input processing.
+--  @param ev Evaluation environment.
+--  @param invA Main invite string.
+--  @param invB Additional invite string.
+--  @param blk Block list.
+--  @param full True when all blocks are required.
+--  @param n Initial index.
+--  @return Next block index.
+evaluate._userInput_ = function (ev, invA, invB, blk, full, n)
+  local m = n
+  repeat
+    local input = {}
+    if full and evaluate.cli_loop(ev, invA, invB, input) == evaluate.EV_QUIT then
+      n = #blk + 1
+    end
+    if #input > 0 then
+      if input[2] == 'ls' then
+        evaluate._dot_ls_(blk)
+      elseif input[2] == 'q' then
+        n = #blk + 1
+      else
+        n, m = (tonumber(input[2]) or n), -1
+      end
+    else
+      n = n + 1
+    end
+  until m ~= n
+  return n
 end
 
 --- Read-Evaluate-Write circle as a Lua program.
@@ -176,7 +261,7 @@ evaluate.cli_loop = function (ev, invA, invB, noteIn)
     local status = evaluate.eval(ev, newLine, not noteIn)
     if status == evaluate.EV_RES then
       if ev._ans ~= nil then
-        print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
+        print(islist(ev._ans) and evaluate._toText_(ev._ans) or ev._ans)
       end
       invite = invA
     elseif status == evaluate.EV_CMD then
@@ -215,66 +300,11 @@ evaluate.exit = function ()
   os.exit() 
 end
 
-evaluate._evalBlock_ = function (ev, txt, full, templ)
-  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
-    if string.find(line, '^%s*%-%-') then
-      -- highlight line comments
-      if full then
-        line = string.gsub(line, '\t(.+)', templ)
-        line = string.format("%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
-        io.write(line)
-      end
-    else
-      -- print line and evaluate
-      io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
-      local status = evaluate.eval(ev, line, false)
-      if status == evaluate.EV_RES then
-        if ev._ans ~= nil then 
-          print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
-        end
-      elseif status == evaluate.EV_CMD then
-        -- skip
-      else -- evaluate.EV_ERR 
-        print_err(ev._ans)
-        break
-      end
-    end
-  end
-end
-
-evaluate._dot_ls_ = function (blks)
-  for i = 1, #blks do
-    local s = ''
-    for line in string.gmatch(blks[i], '([^\n]+)\r?\n?') do
-      if string.find(line, "[^%s]+") then
-        s = line
-        break
-      end
-    end
-    io.write(string.format("%d   %s\n", i, s))
-  end
-end
-
-evaluate._userInput_ = function (ev, invA, invB, blk, full, n)
-  local m = n
-  repeat
-    local input = {}
-    if full and evaluate.cli_loop(ev, invA, invB, input) == evaluate.EV_QUIT then
-      n = #blk + 1
-    end
-    if #input > 0 then
-      if input[2] == 'ls' then
-        evaluate._dot_ls_(blk)
-      elseif input[2] == 'q' then
-        n = #blk + 1
-      else
-        n, m = (tonumber(input[2]) or n), -1
-      end
-    else
-      n = n + 1
-    end
-  until m ~= n
-  return n
+--- Mark information about formatting.
+--  @param t Table to print.
+--  @return Table with marker.
+evaluate.info = function (t)
+  return setmetatable(t, SONATAINFO)
 end
 
 --- Evaluate 'note'-file.

@@ -62,7 +62,7 @@ setmetatable(use,
       end
       lst[#lst+1] = Sonata.FORMAT_V1
       lst[#lst+1] = About:get('use_import')
-      return Sonata.inLua and Sonata._toText(lst) or lst
+      return Sonata.inLua and Sonata._toText_(lst) or lst
     elseif name == 'all' then
       -- load all modules
       for k,v in pairs(self) do Sonata.doimport(self,k) end
@@ -84,11 +84,11 @@ help = function(fn)
       return use()
     else
       local res = About:make(type(fn)=='table' and fn.about or fn)
-      return Sonata.inLua and Sonata._toText(res) or res
+      return Sonata.inLua and Sonata._toText_(res) or res
     end
   else
     local res = About:make(About)
-    return Sonata.inLua and Sonata._toText(res) or res
+    return Sonata.inLua and Sonata._toText_(res) or res
   end
 end
 
