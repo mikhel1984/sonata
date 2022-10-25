@@ -20,12 +20,10 @@ a[2][1]                -- get element (indexation from 1)
 a[2][1] = 5            -- set new value
 a(-1,-1)           -- 'function' call can work with negative indices
 a(1,{1,2})         -- and return submatrix
--- PAUSE
-a * b                  -- arithmetic is available 
+a * b                  -- arithmetic is available
 0.5 * a                -- combination with numbers
 b:inv()                -- inverse matrix
 b:det()                -- determinant
--- PAUSE
 a .. b                 -- horizontal concatenation
 c = a // b             -- vertical concatenation
 c 
@@ -185,26 +183,11 @@ b = Map(sin,a)
 Gp:plot(a,b)
 -- second argument can be function
 Gp:plot(a,sin,'sin', a,cos,'cos')
--- PAUSE
-
 -- You can make polar plot
 Gp:polarplot(a,sin,a,cos)
--- PAUSE
-
 -- or plot surface.
 function fun(x,y) return x*x + y*y end
 Gp:surfplot(a,a,fun)
--- PAUSE
-
--- Plot data from table, matrix or file.
-function fun(x)             \
-  return {x,sin(x),cos(x)}  \
-end
-b = Map(fun, a)
--- define x,y
-Gp:tplot(b,1,3)
--- plot all by default
-Gp:tpolar(b)
 
 -- Use 'Gp' object to get more control.
 

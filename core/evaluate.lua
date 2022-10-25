@@ -93,6 +93,24 @@ evaluate._dot_ls_ = function (blks)
   end
 end
 
+--- Print next block title.
+--  @param blks Table with blocks of text.
+--  @param n Next block index.
+evaluate._dot_next_ = function (blks, n)
+  local s = ''
+  if n > #blks then
+    s = 'quit'
+  else
+    for line in string.gmatch(blks[n], '([^\n]+)\r?\n?') do
+      if string.find(line, "[^%s]+") then
+        s = line
+        break
+      end
+    end
+  end
+  io.write(string.format("%d %s\n", n, s))
+end
+
 --- Process command string.
 --  @param ev Accumulated string.
 --  @param nextCmd New string with Lua expression.
@@ -216,6 +234,8 @@ evaluate._userInput_ = function (ev, invA, invB, blk, full, n)
         evaluate._dot_ls_(blk)
       elseif input[2] == 'q' then
         n = #blk + 1
+      elseif input[2] == nil then
+        evaluate._dot_next_(blk, n+1)
       else
         n, m = (tonumber(input[2]) or n), -1
       end
