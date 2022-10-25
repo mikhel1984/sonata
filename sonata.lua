@@ -31,10 +31,7 @@ use = {
   complex   = "_Z",
   const     = "_C",
   data      = "Data",
-  geodesy   = "Geo",
-  gnuplot   = "Gp",
   graph     = "Graph",
-  lens      = "Lens",
   matrix    = "Mat",
   numeric   = "Num",
   polynomial = "Poly",
@@ -42,6 +39,10 @@ use = {
   rational  = "Rat",
   special   = "Spec",
   units     = "Unit",
+--
+  geodesy   = "Geo",
+  gnuplot   = "Gp",
+  lens      = "Lens",
 }
 
 -- Add path to the libraries
