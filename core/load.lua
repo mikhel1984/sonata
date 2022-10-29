@@ -55,7 +55,7 @@ setmetatable(use,
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
         if _G[v] then
           lst[#lst+1] = Sonata.FORMAT_V1
-          lst[#lst+1] = '+\n'
+          lst[#lst+1] = '++\n'
         else
           lst[#lst+1] = '\n'
         end

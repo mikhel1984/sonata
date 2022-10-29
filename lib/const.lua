@@ -122,10 +122,14 @@ about[_math_.phi] = {"math.phi", "Golden ratio.", MATH}
 about[_math_.pi] = {"math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
 about[_math_.e] = {"math.e", "Base of the natural logarithm.", MATH}
 
+--- Convert to Unit object.
+--  @param t Table with the constant.
+--  @param sKey The constant name.
+--  @return Unit object or nil.
 const._unit_ = function (t, sKey)
   if type(sKey) == 'string' and string.find(sKey, '_U$') then
     const.ext_units = const.ext_units or require('lib.units')
-    local name = string.match(sKey, '^(.+)_U$')
+    local name = string.sub(sKey, 1, -3)
     local val = t[name]
     return val and const.ext_units(val, t[name..'_u_'] or '') or nil
   end
@@ -169,4 +173,3 @@ setmetatable(const.math,  {__newindex=modifyError, __index = function (t,k) retu
 return const
 
 --============================================
---TODO to units object
