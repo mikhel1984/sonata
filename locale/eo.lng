@@ -1,5 +1,5 @@
+return {
 ---------- locale/eo.lng ----------
-{
 language = 'Esperanto',
 authors  = [[Stanislav Mikhel]],
 ---------- dialog ----------

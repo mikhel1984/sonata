@@ -252,9 +252,9 @@ end
 --  @param fName File name.
 --  @return Lua table or nil.
 help.tblImport = function (fName)
-  local str,f = help.readAll(fName)
+  local str,f = help.readAll(fName), nil
   -- use Lua default import
-  if str then f = loadStr('return '..str) end
+  if str then f = loadStr(str) end
   return f and f() or nil
 end
 
@@ -262,10 +262,10 @@ end
 --  @param fName File name.
 --  @return Lua table or nil
 help.tblImportWin = function (fName)
-  local str,f = help.readAll(fName)
+  local str,f = help.readAll(fName), nil
   if str then
     str = Win.convert(str)
-    f = loadStr('return '..str)
+    f = loadStr(str)
   end
   return f and f() or nil
 end
