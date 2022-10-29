@@ -51,6 +51,7 @@ local function modifyError () error('Constants are immutable!') end
 local _astro_ = {
 pc_u='m',        pc = 3.08567758128E16,     -- one parsec
 ly_u='m',        ly = 9.4607304725808E15,   -- light year
+au_u='m',        au = 149597870700,         -- astronomic unit
 }
 
 -- math
@@ -75,6 +76,7 @@ g_u='m/s^2',      g = 9.80665,            -- 'standard' acceleration of free fal
 eps0_u='F/m',  eps0 = 8.85418781871E-12,  -- permittivity of a vacuum
 sigma_u='W/(m^2*K^4)', sigma = 5.6704E-8, -- Stefan-Boltzmann constant
 Rinf_u='1/m',  Rinf = 10973731.56852773,  -- Rydberg constant
+Da_u='kg',       Da = 1,660539066605E-27, -- unified atomic mass unit (Dalton unit)
 }
 
 -- user defined
@@ -103,9 +105,11 @@ about[_phy_.g] = {"phy.g", "Acceleration of free fall.", PHY}
 about[_phy_.eps0] = {"phy.eps0", "Permittivity of free space.", PHY}
 about[_phy_.sigma] = {"phy.sigma", "Stefan-Boltzmann constant.", PHY}
 about[_phy_.Rinf] = {"phy.Rinf", "Rydberg constant.", PHY}
+about[_phy_.Da] = {"phi.Da", "Unified atomic mass unit.", PHY}
 -- astronomy
 about[_astro_.pc] = {"astro.pc", "One parsec.", ASTRO}
 about[_astro_.ly] = {"astro.ly", "One light year.", ASTRO}
+about[_astro_.au] = {"astro.au", "Astronomic unit.", ASTRO}
 -- mathematics
 about[_math_.phi] = {"math.phi", "Golden ratio.", MATH}
 about[_math_.pi] = {"math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
@@ -123,7 +127,7 @@ const.add = function (self,sName,val,sUnit)
   _user_[sName..'_u'] = sUnit
   return 'Done'
 end
-about[const.add] = {'_C:add(sName,value,[sUnits])','Create new constant.', help.STATIC}
+about[const.add] = {'_C:add(sName,value,[sUnits])','Create new constant.'}
 
 --- Remove existing constant.
 --  @param self Do nothing.
@@ -149,3 +153,4 @@ setmetatable(const.math,  {__newindex=modifyError, __index = function (t,k) retu
 return const
 
 --============================================
+--TODO to units object
