@@ -116,9 +116,6 @@ end
 --  @param nextCmd New string with Lua expression.
 --  @return Status of processing and rest of command.
 evaluate._eval_ = function (ev, nextCmd)
-  if nextCmd == 'quit' then 
-    return evaluate._update_(ev, evaluate.EV_QUIT, "")
-  end
   -- reset state
   if ev._st ~= evaluate.EV_CMD then evaluate.reset(ev) end
   -- check if multiline
