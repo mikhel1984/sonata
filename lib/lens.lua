@@ -99,6 +99,8 @@ local keys = {A=1, B=2, C=3, D=4}
 -- tolerance of comparison
 local TOL = 1E-8
 
+local LASER = 'laser'
+
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is 'lens'.
@@ -184,6 +186,21 @@ lens.afocal = function (self, dm)
 end
 about[lens.afocal] = {"Lens:afocal(dm)", "Find matrix for the afocal system.", help.NEW}
 
+--- Find Gaussian beam parameters after transformation.
+--  @param L Lens object.
+--  @param dW Input beam radius, m.
+--  @param dR Input beam curvature, m.
+--  @param dLam Wavelength, m.
+--  @return Output beam radius and curvature.
+lens.beam = function (L, dW, dR, dLam)
+  lens.ext_complex = lens.ext_complex or require("lib.complex")
+  local lampi = dLam / math.pi
+  local _1_q1 = lens.ext_complex(1/dR, lampi / (dW * dW))
+  local _1_q2 = (L[3] + L[4]*_1_q1) / (L[1] + L[2]*_1_q1)
+  return math.sqrt(lampi / _1_q2:im()), 1/_1_q2:re()
+end
+about[lens.beam] = {"beam(dW,dR,dLam)", "Find output beam radius and curvature.", LASER}
+
 --- Make a copy.
 --  @param L Initial object.
 --  @return Copy of the object.
@@ -199,6 +216,29 @@ lens.det = function (L)
   return L[1]*L[4] - L[2]*L[3]
 end
 about[lens.det] = {"det()", "Find determinant of the system matrix.", help.OTHER}
+
+--- Find Gaussian beam characterictics.
+--  @param self Do nothing.
+--  @param dW0 Beam waist, m.
+--  @param dLam Waveleight, m.
+--  @return Divergence angle and Raileigh range.
+lens.gaussParam = function (self, dW0, dLam)
+  local t = math.pi * dW0 / dLam
+  return 1/t, t * dW0
+end
+about[lens.gaussParam] = {"Lens:gausParam(dW0,dLam)", "Find divergence angle and Raileigh range for a Gaussian beam.", LASER}
+
+--- Find Gaussian beam propagation.
+--  @param self Do nothing.
+--  @param dW0 Beam waist, m.
+--  @param dLam Waveleight, m.
+--  @param dist Distance, m.
+--  @return Beam radius and curvature in pose dist.
+lens.gaussSize = function (self, dW0, dLam, dist)
+  local t = (math.pi * dW0 * dW0 / dLam / dist) ^ 2
+  return dW0 * math.sqrt(1 + 1/t), dist * (1 + t)
+end
+about[lens.gaussSize] = {"Lens:gaussSize(dW0,dLam,dist)", "Find Gaussian beam radius and curvature at some distance.", LASER}
 
 --- Inverse the component matrix.
 --  @param L Lens object.
@@ -332,41 +372,6 @@ lens.cardinal = function (L, dn1, dn2)
   return setmetatable(res, mt_cardinal)
 end
 about[lens.cardinal] = {"cardinal([dn1=1,dn2=1])", "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return list of distances.", help.OTHER}
-
---- Find Gaussian beam propagation.
---  @param self Do nothing.
---  @param dW0 Beam waist, m.
---  @param dLam Waveleight, m.
---  @param dist Distance, m.
---  @return Beam radius and curvature in pose dist.
-lens.gaussSize = function (self, dW0, dLam, dist)
-  local t = (math.pi * dW0 * dW0 / dLam / dist) ^ 2
-  return dW0 * math.sqrt(1 + 1/t), dist * (1 + t)
-end
-
---- Find Gaussian beam characterictics.
---  @param self Do nothing.
---  @param dW0 Beam waist, m.
---  @param dLam Waveleight, m.
---  @return Divergence angle and Raileigh range.
-lens.gaussParam = function (self, dW0, dLam)
-  local t = math.pi * dW0 / dLam
-  return 1/t, t * dW0
-end
-
---- Find Gaussian beam parameters after transformation.
---  @param L Lens object.
---  @param dW Input beam diameter, m.
---  @param dR Input beam curvature, m.
---  @param dLam Wavelength, m.
---  @return Output beam diameter and curvature.
-lens.beam = function (L, dW, dR, dLam)
-  lens.ext_complex = lens.ext_complex or require("lib.complex")
-  local lampi = dLam / math.pi
-  local _1_q1 = lens.ext_complex(1/dR, lampi / (dW * dW))
-  local _1_q2 = (L[3] + L[4]*_1_q1) / (L[1] + L[2]*_1_q1)
-  return math.sqrt(lampi / _1_q2:im()), 1/_1_q2:re()
-end
 
 -- Create arbitrary object
 setmetatable(lens, {__call = function (self,t) 
