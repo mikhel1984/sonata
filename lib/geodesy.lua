@@ -17,6 +17,7 @@ Geo = require 'lib.geodesy'
 rnd = function () return 2*math.random()-1 end
 -- random coordinates (degrees and meters)
 t0 = {B=rnd()*90, L=rnd()*180, H=rnd()*1000}
+-- latitude, longitude, height
 print(t0.B, t0.L, t0.H)
 
 --test in WGS84
@@ -83,6 +84,14 @@ ans = p3.B                  --2> p2.B
 
 -- equator acceleration 
 ans = Geo:grav(0)           --1> 9.78
+
+-- find geohash 
+h = Geo:hashEncode(p1, 7)
+print(h)
+
+-- position from geohash
+p4, _ = Geo:hashDecode(h)
+ans = p4.B                  --2> p1.B
 
 --]]
 
@@ -478,6 +487,85 @@ geodesy.grav = function (self,dB)
 end
 about[geodesy.grav] = {"Geo:grav(dB)", "International gravity formula, angle in degrees.", help.OTHER}
 
+--- Convert hash to corrdinates.
+--  @param self Do nothing.
+--  @param sHash Geohash string.
+--  @return Central point and range of the zone.
+geodesy.hashDecode = function (self, sHash)
+  sHash = string.lower(sHash)
+  -- find bounds
+  local evenBit = true
+  local latMin, latMax = -90, 90
+  local lonMin, lonMax = -180, 180
+  for k = 1, #sHash do
+    local idx, bt = -1, string.byte(sHash, k, k)
+    for i = 1, #geodesy.base32 do
+      if string.byte(geodesy.base32, i, i) == bt then 
+        idx = i-1
+        break
+      end
+    end
+    for n = 4, 0, -1 do
+      local bitN, _ = math.modf(idx / 2^n)
+      bitN = math.fmod(bitN, 2)
+      if evenBit then
+        -- longitude
+        local lonMid = (lonMin + lonMax) * 0.5
+        if bitN == 1 then lonMin = lonMid else lonMax = lonMid end
+      else
+        -- latitude
+        local latMid = (latMin + latMax) * 0.5
+        if bitN == 1 then latMin = latMid else latMax = latMid end
+      end
+      evenBit = not evenBit
+    end
+  end
+  -- center, range
+  return {B = (latMin+latMax)*0.5, L = (lonMin+lonMax)*0.5}, 
+         {latMax - latMin, lonMax - lonMin}
+end
+about[geodesy.hashDecode] = {"Geo:hashDecode(sHash)", "Find central point and range of the zone."}
+
+--- Geohash from coordinates
+--  Based on https://www.movable-type.co.uk/scripts/geohash.html
+--  @param self Do nothing.
+--  @param t Coordinates (lat, lon).
+--  @param N Number of letters (1-12, optional).
+--  @return String with hash.
+geodesy.hashEncode = function (self, t, N)
+  N = N or 6
+  local latMin, latMax = -90, 90
+  local lonMin, lonMax = -180, 180
+  local evenBit, idx, bit = true, 0, 0
+  local hash = {}
+  while #hash < N do
+    idx = idx * 2
+    if evenBit then
+      -- E-W longitude
+      local lonMid = (lonMin + lonMax) * 0.5
+      if t.L >= lonMid then
+        idx, lonMin = idx + 1, lonMid
+      else 
+        lonMax = lonMid 
+      end
+    else 
+      -- N-S latitude
+      local latMid = (latMin + latMax) * 0.5
+      if t.B >= latMid then
+        idx, latMin = idx+1, latMid
+      else
+        latMax = latMid
+      end
+    end 
+    evenBit, bit = not evenBit, bit+1
+    if bit == 5 then
+      hash[#hash+1] = string.sub(geodesy.base32, idx+1, idx+1)
+      bit, idx = 0, 0
+    end
+  end
+  return table.concat(hash)
+end
+about[geodesy.hashEncode] = {"Geo:hashEncode(t[,N=6])", "Find hash for the given point."}
 
 -- Access to the ellipsoid object methods.
 geodesy.toXYZ = ellipsoid.toXYZ
@@ -570,76 +658,6 @@ geodesy.fromENU = function (self,tG, tR, tL)
   }
 end
 about[geodesy.fromENU] = {"Geo:fromENU(tBLr,tXYZr,tTop)", "Get cartesian coordinates of a local point in reference frame.", TRANS}
-
--- Geohash calculation
--- Based on https://www.movable-type.co.uk/scripts/geohash.html
-geodesy.hashEncode = function (self, dLat, dLon, N)
-  N = N or 6
-  local latMin, latMax = -90, 90
-  local lonMin, lonMax = -180, 180
-  local evenBit, idx, bit = true, 0, 0
-  local hash = {}
-  while #hash < N do
-    idx = idx * 2
-    if evenBit then
-      -- E-W longitude
-      local lonMid = (lonMin + lonMax) * 0.5
-      if dLon >= lonMid then
-        idx, lonMin = idx + 1, lonMid
-      else 
-        lonMax = lonMid 
-      end
-    else 
-      -- N-S latitude
-      local latMid = (latMin + latMax) * 0.5
-      if dLat >= latMid then
-        idx, latMin = idx+1, latMid
-      else
-        latMax = latMid
-      end
-    end 
-    evenBit, bit = not evenBit, bit+1
-    if bit == 5 then
-      hash[#hash+1] = string.sub(geodesy.base32, idx+1, idx+1)
-      bit, idx = 0, 0
-    end
-  end
-  return table.concat(hash)
-end
-
-geodesy.hashDecode = function (self, sHash)
-  sHash = string.lower(sHash)
-  -- find bounds
-  local evenBit = true
-  local latMin, latMax = -90, 90
-  local lonMin, lonMax = -180, 180
-  for k = 1, #sHash do
-    local idx, bt = -1, string.byte(sHash, k, k)
-    for i = 1, #geodesy.base32 do
-      if string.byte(geodesy.base32, i, i) == bt then 
-        idx = i-1
-        break
-      end
-    end
-    for n = 4, 0, -1 do
-      local bitN, _ = math.modf(idx / 2^n)
-      bitN = math.fmod(bitN, 2)
-      if evenBit then
-        -- longitude
-        local lonMid = (lonMin + lonMax) * 0.5
-        if bitN == 1 then lonMin = lonMid else lonMax = lonMid end
-      else
-        -- latitude
-        local latMid = (latMin + latMax) * 0.5
-        if bitN == 1 then latMin = latMid else latMax = latMid end
-      end
-      evenBit = not evenBit
-    end
-  end
-  -- center
-  return (latMin+latMax)*0.5, (lonMin+lonMax)*0.5
-end
-
 
 -- Comment to remove descriptions
 geodesy.about = about
