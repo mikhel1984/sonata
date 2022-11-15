@@ -1,3 +1,27 @@
+======== 0.9.32 =========
+
+Matrix
+* Add eigenvalues and eigenvectors
+* Add minor
+Rational
+* Add continued fractions
+* Change decimal to rational conversation
+Polynomial
+* Calc characteristic polynomial for a matrix
+Utils
+* Lexer for arythmetical expressions
+Lens
+* Add gaussian beam propagation
+Geodesy
+* Geohash encode/decode
+Const
+* Direct conversation to Unit
+Other
+* Rename private elements
+* Rewrite module for units
+* Bug fixes
+* Rename 'Data' to '_D'
+
 ======== 0.9.31 ========
 
 Matrix 
@@ -23,19 +47,3 @@ Other
 * Call function with ':', field with '.'
 * Gnuplot is not the default module for visualization anymore
 
-======== 0.9.32 =========
-
-Matrix
-* Add eigenvalues and eigenvectors
-* Add minor
-Polynomial
-* Calc characteristic polynomial for a matrix
-Rational
-* Add continued fractions
-* Change decimal to rational conversation
-Utils
-* Lexer for arythmetical expressions
-Other
-* Rename private elements
-* Rewrite module for units
-* Bug fixes

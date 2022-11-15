@@ -18,7 +18,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Int">bigint</a></li>
 <li><a href="#_Z">complex</a></li>
 <li><a href="#_C">const</a></li>
-<li><a href="#Data">data</a></li>
+<li><a href="#_D">data</a></li>
 <li><a href="#Geo">geodesy</a></li>
 <li><a href="#Gp">gnuplot</a></li>
 <li><a href="#Graph">graph</a></li>
@@ -44,19 +44,19 @@ DIV {margin-left: 10px;}
 	-e - Evaluate command line expression.<br>
 	  (e.g. -e "2+2")<br>
 		{Development}<br>
+	--lang   - Creating/updating a file for localization.<br>
+	  (e.g. --lang eo)<br>
+	--doc    - Creating/updating a documentation file.<br>
+	  (e.g. --doc ru)<br>
 	--test   - Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
 	  (e.g. --test array)<br>
 	--new    - Create a template for a new module.<br>
 	  (e.g. --new  signal  Sig  "Signal processing functions.")<br>
-	--doc    - Creating/updating a documentation file.<br>
-	  (e.g. --doc ru)<br>
-	--lang   - Creating/updating a file for localization.<br>
-	  (e.g. --lang eo)<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.30<br>
+<b>VERSION</b>: 0.9.32<br>
 <br>
-<b>MODULES</b>: lens, polynomial, geodesy, data, bigint, const, complex, graph, units, gnuplot, asciiplot, array, special, rational, matrix, quaternion, numeric.<br>
+<b>MODULES</b>: asciiplot, data, bigint, const, polynomial, geodesy, rational, graph, complex, gnuplot, lens, quaternion, units, special, matrix, numeric, array.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -593,11 +593,13 @@ print(a)
 <p class="descript">Collection of constants.</p>
 <p><b>_C:add(sName,value,[sUnits])</b> - Create new constant.<br>
 <b>_C:remove(sName)</b> - Delete user-defined constant.<br>
+<b>astro.au</b> - Astronomic unit.<br>
 <b>astro.ly</b> - One light year.<br>
 <b>astro.pc</b> - One parsec.<br>
 <b>math.e</b> - Base of the natural logarithm.<br>
 <b>math.phi</b> - Golden ratio.<br>
 <b>math.pi</b> - Ratio of a circle's circumference to its diameter.<br>
+<b>phi.Da</b> - Unified atomic mass unit.<br>
 <b>phy.G</b> - Gravitational constant.<br>
 <b>phy.NA</b> - Avogadro's number.<br>
 <b>phy.R</b> - Universal gas constant.<br>
@@ -615,12 +617,18 @@ print(a)
 
 -- use 'const'
 _C = require 'lib.const'
+-- external dependencies, can be loaded implicitly
+require 'lib.units'  -- convert into Unit object
 
 -- charge of electron
 ans = _C.phy.e * 1E19        --3> 1.602
 
--- units have postfix _u
-ans = _C.phy.e_u              --> 'C'
+-- convert to Unit object (add _U)
+e = _C.phy.e_U
+ans = e:key()                 --> _C.phy.e_u_
+
+-- change units
+ans = e['nC']                --3> _C.phy.e * 1E9
 
 -- create "immutable" value
 _C:add('myConst', 10)
@@ -635,40 +643,40 @@ ans = _C.myConst              --> nil
 
 --</pre>
 <a href="#Top">Top</a></div>
-<div><a name="Data"></a>
-<h3># Data (data) #</h3>
+<div><a name="_D"></a>
+<h3># _D (data) #</h3>
 <p class="descript">Data processing and statistics.</p>
-<p><b>Data:Fn(sExpr,[iArg=2])</b> - Generate function from expression of x1, x2 etc.<br>
-<b>Data:cov(t)</b> - Find covariance matrix for list of vectors.<br>
-<b>Data:cov2(t1,t2)</b> - Find covariance value for two vectors.<br>
-<b>Data:csvread(sFile,[delim=',',bCol=false])</b> - Read delimiter separated data as Lua table.<br>
-<b>Data:csvwrite(sFile,t,[char=',',bCol=false])</b> - Save Lua table as delimiter separated data into file.<br>
-<b>Data:filter(t,vCond)</b> - Get result of the table filtering. Condition is either boolean function or table of weights.<br>
-<b>Data:freq(t)</b> - Return table with frequencies of elements.<br>
-<b>Data:geomean(t,[tw])</b> - Geometrical mean.<br>
-<b>Data:harmmean(t,[tw])</b> - Harmonic mean.<br>
-<b>Data:histcounts(X,[rng=10])</b> - Calculate amount of bins. Edges can be either number or table.<br>
-<b>Data:is(t,fn)</b> - Find weights using boolean function.<br>
-<b>Data:isNot(t,fn)</b> - Find inverted weights using boolean function.<br>
-<b>Data:max(t)</b> - Maximal element and its index.<br>
-<b>Data:mean(t,[tw])</b> - Calculate average value. Weights can be used.<br>
-<b>Data:median(t)</b> - Median of the list.<br>
-<b>Data:min(t)</b> - Minimal element and its index.<br>
-<b>Data:moment(N,t,[tw])</b> - Central moment of t order N, tw is a list of weights.<br>
-<b>Data:ref(t,[iBeg=1,iEnd=#t])</b> - Return reference to the range of elements.<br>
-<b>Data:std(t,[tw])</b> - Standard deviation and variance. Weights can be used.<br>
-<b>Data:sum(t)</b> - Get sum of all elements.<br>
-<b>Data:tcdf(d,N)</b> - Student's cumulative distribution.<br>
-<b>Data:tpdf(d,N)</b> - Student's distribution density.<br>
-<b>Data:xEq(d)</b> - Return function for condition x == d.<br>
-<b>Data:xGt(d)</b> - Return function for condition x > d.<br>
-<b>Data:xIn(d1,d2)</b> - Return function for condition d1 <= x <= d2.<br>
-<b>Data:xLt(d)</b> - Return function for condition x < d.<br>
-<b>Data:zip(fn,...)</b> - Sequentially apply function to list of tables.<br></p>
+<p><b>_D:Fn(sExpr,[iArg=2])</b> - Generate function from expression of x1, x2 etc.<br>
+<b>_D:cov(t)</b> - Find covariance matrix for list of vectors.<br>
+<b>_D:cov2(t1,t2)</b> - Find covariance value for two vectors.<br>
+<b>_D:csvread(sFile,[delim=',',bCol=false])</b> - Read delimiter separated data as Lua table.<br>
+<b>_D:csvwrite(sFile,t,[char=',',bCol=false])</b> - Save Lua table as delimiter separated data into file.<br>
+<b>_D:filter(t,vCond)</b> - Get result of the table filtering. Condition is either boolean function or table of weights.<br>
+<b>_D:freq(t)</b> - Return table with frequencies of elements.<br>
+<b>_D:geomean(t,[tw])</b> - Geometrical mean.<br>
+<b>_D:harmmean(t,[tw])</b> - Harmonic mean.<br>
+<b>_D:histcounts(X,[rng=10])</b> - Calculate amount of bins. Edges can be either number or table.<br>
+<b>_D:is(t,fn)</b> - Find weights using boolean function.<br>
+<b>_D:isNot(t,fn)</b> - Find inverted weights using boolean function.<br>
+<b>_D:max(t)</b> - Maximal element and its index.<br>
+<b>_D:mean(t,[tw])</b> - Calculate average value. Weights can be used.<br>
+<b>_D:median(t)</b> - Median of the list.<br>
+<b>_D:min(t)</b> - Minimal element and its index.<br>
+<b>_D:moment(N,t,[tw])</b> - Central moment of t order N, tw is a list of weights.<br>
+<b>_D:ref(t,[iBeg=1,iEnd=#t])</b> - Return reference to the range of elements.<br>
+<b>_D:std(t,[tw])</b> - Standard deviation and variance. Weights can be used.<br>
+<b>_D:sum(t)</b> - Get sum of all elements.<br>
+<b>_D:tcdf(d,N)</b> - Student's cumulative distribution.<br>
+<b>_D:tpdf(d,N)</b> - Student's distribution density.<br>
+<b>_D:xEq(d)</b> - Return function for condition x == d.<br>
+<b>_D:xGt(d)</b> - Return function for condition x > d.<br>
+<b>_D:xIn(d1,d2)</b> - Return function for condition d1 <= x <= d2.<br>
+<b>_D:xLt(d)</b> - Return function for condition x < d.<br>
+<b>_D:zip(fn,...)</b> - Sequentially apply function to list of tables.<br></p>
 <pre class="example">
 
 -- use 'data'
-Data = require 'lib.data'
+_D = require 'lib.data'
 -- external dependencies, can be loaded implicitly
 require 'lib.special'
 require 'lib.matrix'
@@ -680,101 +688,101 @@ w = {1,1,0}
 -- enought to define w[i] ~= 1
 w[5] = 2; w[6] = 2
 -- average
-ans = Data:mean(X)           --3> 3.375
+ans = _D:mean(X)           --3> 3.375
 
 -- standard deviation
-ans, tmp = Data:std(X,W)     --3> 1.495
+ans, tmp = _D:std(X,W)     --3> 1.495
 
 -- variance
 ans = tmp                    --3> 2.234
 
 -- covariance for two vectors
 Y = {0,2,1,3,7,5,8,4}
-a = Data:cov2(X,Y)
+a = _D:cov2(X,Y)
 ans = a                      --3> -0.65625
 
 -- covariance matrix 
-tmp = Data:cov({X,Y})
+tmp = _D:cov({X,Y})
 ans = tmp[1][2]              --3> a
 
 -- maximum element and index
-_,ans = Data:max(X)           --> 4 
+_,ans = _D:max(X)           --> 4 
 
 -- median
-ans = Data:median(X)          --> 3
+ans = _D:median(X)          --> 3
 
 -- table of frequencies
-tmp = Data:freq(X)
+tmp = _D:freq(X)
 ans = tmp[3]                  --> 3
 
 -- central moment
-ans = Data:moment(2,X)       --3> 2.234
+ans = _D:moment(2,X)       --3> 2.234
 
 -- summ of elements
-ans = Data:sum(X)             --> 27
+ans = _D:sum(X)             --> 27
 
 -- minimum value
-ans = Data:min(X)             --> 1
+ans = _D:min(X)             --> 1
 
 -- geometrical mean
-ans = Data:geomean(X)        --3> 2.995
+ans = _D:geomean(X)        --3> 2.995
 
 -- harmonic mean
-ans = Data:harmmean(X,W)     --3> 2.567
+ans = _D:harmmean(X,W)     --3> 2.567
 
 -- check if X[i] > 2
-a = Data:is(X, Data:xGt(2))
+a = _D:is(X, _D:xGt(2))
 ans = a[1]                    --> 1
 
 -- get elements X[i] > 2
-tmp = Data:filter(X, a)
+tmp = _D:filter(X, a)
 ans = tmp[1]                  --> X[1]
 
 -- filtration using explicit function 
 fn = function (x) return x > 2 end
-tmp = Data:filter(X, fn)
+tmp = _D:filter(X, fn)
 ans = tmp[1]                  --> X[1]
 
 -- generate new list
 -- use 'lazy' function definition
-tmp = Data:zip("{x1-x2,x1+x2}", X, Y)
+tmp = _D:zip("{x1-x2,x1+x2}", X, Y)
 ans = tmp[1][2]               --> X[1]+Y[1]
 
 -- find histogram
-a,b = Data:histcounts(X, 3)
+a,b = _D:histcounts(X, 3)
 ans = b[1]                    --> 2.25
 
 -- define edges 
-a,b = Data:histcounts(X,{2,4,7})
+a,b = _D:histcounts(X,{2,4,7})
 ans = a[1]                    --> 1
 
 -- table range reference 
-a = Data:ref(X, 3, 6)
+a = _D:ref(X, 3, 6)
 ans = #a                      --> 4
 
 ans = a[1]                    --> X[3]
 
 -- Student cdf and pdf
-ans = Data:tcdf(4, 2.5)      --3> 0.9805
+ans = _D:tcdf(4, 2.5)      --3> 0.9805
 
-ans = Data:tpdf(2, 3.3)      --3> 0.0672
+ans = _D:tpdf(2, 3.3)      --3> 0.0672
 
 -- dsv write 
 nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-Data:csvwrite(nm, t, ';')
+_D:csvwrite(nm, t, ';')
 
 -- dsv read
 -- with separator ';'
-tt = Data:csvread(nm, ';')
+tt = _D:csvread(nm, ';')
 ans = tt[2][2]                --> 5
 
 -- csv write by columns
-Data:csvwrite(nm, t, ',', true)
+_D:csvwrite(nm, t, ',', true)
 
 -- csv read by columns
-tt = Data:csvread(nm, ',', true)
+tt = _D:csvread(nm, ',', true)
 ans = tt[1][3]                --> 3
 
 --</pre>
@@ -788,6 +796,8 @@ ans = tt[1][3]                --> 3
 <b>Geo:dms2rad(d,[m=0,s=0])</b> - Convert degrees, minutes and seconds to radians.<br>
 <b>Geo:fromENU(tBLr,tXYZr,tTop)</b> - Get cartesian coordinates of a local point in reference frame.<br>
 <b>Geo:grav(dB)</b> - International gravity formula, angle in degrees.<br>
+<b>Geo:hashDecode(sHash)</b> - Find central point and range of the zone.<br>
+<b>Geo:hashEncode(t[,N=6])</b> - Find hash for the given point.<br>
 <b>Geo:toENU(tBLr,tXYZr,tCatr)</b> - Get topocentric coordinates of a point in reference frame.<br>
 <b>projGK(tBL)</b> - Return north and east positions of the point after Gauss-Kruger projection.<br>
 <b>projM(tBL)</b> - Return north and east positions of the point after Mercator projectoin.<br>
@@ -804,6 +814,7 @@ Geo = require 'lib.geodesy'
 rnd = function () return 2*math.random()-1 end
 -- random coordinates (degrees and meters)
 t0 = {B=rnd()*90, L=rnd()*180, H=rnd()*1000}
+-- latitude, longitude, height
 print(t0.B, t0.L, t0.H)
 
 --test in WGS84
@@ -870,6 +881,14 @@ ans = p3.B                  --2> p2.B
 
 -- equator acceleration 
 ans = Geo:grav(0)           --1> 9.78
+
+-- find geohash 
+h = Geo:hashEncode(p1, 7)
+print(h)
+
+-- position from geohash
+p4, _ = Geo:hashDecode(h)
+ans = p4.B                  --2> p1.B
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -1124,12 +1143,15 @@ print(b)
 <p class="descript">Matrix methods in paraxial optics</p>
 <p><b>Lens {dA,dB,dC,dD}</b> - Make new lens component.<br>
 <b>Lens:afocal(dm)</b> - Find matrix for the afocal system.<br>
+<b>Lens:gausParam(dW0,dLam)</b> - Find divergence angle and Raileigh range for a Gaussian beam.<br>
+<b>Lens:gaussSize(dW0,dLam,dist)</b> - Find Gaussian beam radius and curvature at some distance.<br>
 <b>Lens:mirror(dr,dn)</b> - Find reflection matrix for the given radius and refractive index.<br>
 <b>Lens:ref(dr,dn1,dn2)</b> - Find refraction matrix for the given radius of surface and input and output refractive indeces.<br>
 <b>Lens:solve(fn,ind,d0)</b> - Find condition when component with the given index is equal to 0, d0 is the initial assumption.<br>
 <b>Lens:thin(df)</b> - Find the thin lens system matrix for the given focal distance.<br>
 <b>Lens:trans(dt,dn)</b> - Find translation matrix for the given distance and refractive index.<br>
-<b>cardinal([dn1=1,dn2=1])</b> - Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return list of distances.<br>
+<b>beam(dW,dR,dLam)</b> - Find output beam radius and curvature.<br>
+<b>cardinal([dn1=1,dn2=1])</b> - Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.<br>
 <b>copy()</b> - Create a copy of the object.<br>
 <b>det()</b> - Find determinant of the system matrix.<br>
 <b>inv()</b> - Get the inverted system matrix.<br>
@@ -1155,7 +1177,7 @@ ans = lens1.D                --2> 1
 
 -- find cardinal points 
 pts = lens1:cardinal() 
-ans = pts[1]                 --2> -177.76
+ans = pts.F1                 --2> -177.76
 
 -- print points
 print(pts)
@@ -1173,7 +1195,7 @@ ans = d2                     --2>  623.21
 
 -- check solution 
 -- assume the lens it thin 
-f = -pts[1]
+f = -pts.F1
 ans = 1/d1 + 1/d2            --2> 1/f
 
 -- ray transformation 
@@ -1211,6 +1233,15 @@ print(lens5)
 -- make copy 
 ans = lens1:copy()            --> lens1
 
+-- gaussian beam parameters
+ans, _ = Lens:gaussParam(1E-3, 1.024E-6) --2> 3.26E-4 
+
+-- laser beam radius  
+ans, _ = Lens:gaussSize(1E-3, 1.024E-6, 100) --2> 0.033
+
+-- laser beam transformation 
+ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
+
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Mat"></a>
@@ -1235,6 +1266,7 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>det()</b> - Calculate determinant.<br>
 <b>diag()</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given.<br>
 <b>dot(V)</b> - Scalar product of two vectors.<br>
+<b>eig()</b> - Find matrices of eigenvectors and eigenvalues.<br>
 <b>insert(tR,tC,M)</b> - Insert second matrix into the given range of indeces.<br>
 <b>inv()</b> - Return inverse matrix.<br>
 <b>lu()</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
@@ -1524,6 +1556,7 @@ ans = y[#y][1]               --2> 2.56
 <p class="descript">Operations with polynomials.</p>
 <p><b>Poly {..,v1,v0}</b> - Create a polynomial.<br>
 <b>Poly:build(root1,root2,...)</b> - Return polynomial with given roots.<br>
+<b>Poly:char(M)</b> - Return characteristic polinomial for the given matrix.<br>
 <b>Poly:fit(tX,tY,N)</b> - Find polynomial approximation for the line.<br>
 <b>Poly:lagrange(tX,tY)</b> - Find interpolation polynomial in the Lagrange form.<br>
 <b>Poly:lin(tX,tY,[v0=0,vN=v0])</b> - Linear data interpolation. Return table with polynomials.<br>
@@ -1750,14 +1783,16 @@ print(d)
 <h3># Rat (rational) #</h3>
 <p class="descript">Computations with rational numbers.</p>
 <p><b>Rat(m,[n=1])</b> - Create rational number using num (and denom).<br>
-<b>Rat:from(f,[N=5])</b> - Estimate ratio from floating point value.<br>
+<b>Rat:from(f,[fErr=1E-3])</b> - Estimate ratio from floating point value.<br>
+<b>Rat:fromCont(t)</b> - Transform continued fraction to rational number.<br>
 <b>Rat:gcd(va,vb)</b> - Calculate the greatest common divisor for two integers.<br>
 <b>arithmetic</b> - R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2<br>
 <b>comparison</b> - R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2<br>
 <b>denom()</b> - Return the denominator of the rational number.<br>
 <b>eq(R)</b> - Compare two objects.<br>
 <b>float()</b> - Return rational number as decimal.<br>
-<b>num()</b> - Return the numerator of rational number.<br></p>
+<b>num()</b> - Return the numerator of rational number.<br>
+<b>toCont()</b> - Transform rational number to continued fraction.<br></p>
 <pre class="example">
 
 -- use 'rational'
@@ -1797,8 +1832,8 @@ ans = Rat:gcd(125,65)         --> 5
 -- represent as decimal
 ans = a:float()               --> 0.5
 
--- make from decimal 
-ans = Rat:from(0.25)          --> Rat(1,4)
+-- from decimal 
+ans = Rat:from(math.pi)       --> Rat(333, 106)
 
 -- numerator
 ans = b:num()                 --> 2
@@ -1820,8 +1855,7 @@ ans = a + 0.5                 --> 1
 <div><a name="Spec"></a>
 <h3># Spec (special) #</h3>
 <p class="descript">Special mathematical functions.</p>
-<p><b>Self:gamma(z)</b> - Gamma function.<br>
-<b>Spec:besseli(N,x)</b> - Modified Bessel function In(x).<br>
+<p><b>Spec:besseli(N,x)</b> - Modified Bessel function In(x).<br>
 <b>Spec:besselj(N,x)</b> - Bessel function of the first kind.<br>
 <b>Spec:besselk(N,x)</b> - Modified Bessel function Kn(x).<br>
 <b>Spec:bessely(n,x)</b> - Bessel function of the second kind.<br>
@@ -1832,6 +1866,7 @@ ans = a + 0.5                 --> 1
 <b>Spec:erf(x)</b> - Error function.<br>
 <b>Spec:erfc(x)</b> - Complementary error function.<br>
 <b>Spec:expint(n,x)</b> - Exponential integral En(x).<br>
+<b>Spec:gamma(z)</b> - Gamma function.<br>
 <b>Spec:gammainc(x,N,[type='lower'])</b> - Incomplete gamma function, P (type='lower') or Q (type='upper').<br>
 <b>Spec:gammaln(z)</b> - Natural logarithm of gamma function.<br>
 <b>Spec:gammp(N,x)</b> - Incomplete gamma function P(N,x).<br>
@@ -1893,30 +1928,35 @@ ans = Spec:dawson(3.3)       --3> 0.1598
 <div><a name="Unit"></a>
 <h3># Unit (units) #</h3>
 <p class="descript">Operations and conversations according the units.</p>
-<p><b>Unit(v,[u])</b> - Create new elements with units.<br>
-<b>Unit:add(U,rule)</b> - Add new rule for conversation.<br>
+<p><b>Unit([v,]s)</b> - Create new elements with units.<br>
+<b>Unit:setRule(s,U)</b> - Add new rule for conversation.<br>
 <b>arithmetic</b> - U1+U2, U1-U2, U1*U2, U1/U2, U1^N<br>
 <b>comparison</b> - U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2<br>
-<b>convert(fn)</b> - Convert one units to another, return new object or nil.<br>
+<b>convert(s)</b> - Convert one units to another, return new object or nil.<br>
 <b>copy()</b> - Create copy of the element.<br>
-<b>prefix</b> - Table of possible prefixes for units.<br></p>
+<b>key()</b> - Get units.<br>
+<b>prefix</b> - Table of possible prefixes for units.<br>
+<b>value()</b> - Get object value. Same as #U.<br></p>
 <pre class="example">
 
 -- use 'units'
 Unit = require 'lib.units'
 
 -- add some rules
-Unit:add('h', Unit(60,'min'))
-Unit:add('min', Unit(60,'s'))
+Unit:setRule('h', Unit(60,'min'))
+Unit:setRule('min', Unit(60,'s'))
 
 -- define variable
 a = Unit(1,'m/s')
 -- convert to km/h, get only value
-ans = a['km/h']               --> 3.6
+ans = a['km/h']              --2> 3.6
 
 -- get numerical value
 -- (the save as #a)
-ans = a:val()                 --> 1
+ans = a:value()               --> 1
+
+-- get units 
+ans = a:key()                 --> 'm/s'
 
 -- make copy
 cp = a:copy() 
@@ -1934,32 +1974,21 @@ ans = b - a                   --> Unit(2, 'm/s')
 
 ans = a * b                   --> Unit(3, 'm^2/s^2')
 
-ans = b / a                   --> Unit(3)
+ans = b / a                   --> Unit(3, '')
 
 ans = (a < b)                 --> true
 
 ans = b ^ 3                   --> Unit(27, 'm^3/s^3')
 
 -- new rule
-Unit:add('snake', Unit(48, 'parrot'))
+Unit:setRule('snake', Unit(48, 'parrot'))
 -- define variable
 c = Unit(2,'snake')
 -- convert
 ans = c['parrot']             --> 96
 
 -- convert using prefix
-ans = c['ksnake']             --> 0.002
-
--- complex rule
-d = Unit(1,'W')
--- define function for conversation, apply it
-lg = function (x) 
-  return math.log(x)/math.log(10) 
-end
-e = d:convert(function (x) 
-  return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') 
-end)
-ans = #e                     --0> 30
+ans = c['ksnake']            --3> 0.002
 
 -- another definition syntax
 ans = 2 * Unit('N')           --> Unit(2,'N')

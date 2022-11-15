@@ -149,8 +149,8 @@ Spec:besselj(2, 0.5)
 --	UNITS
 -- Conversation between measurement units.
 -- Define rules
-Unit:add('h', Unit(60, 'min'))       -- 1 h = 60 min
-Unit:add('min', Unit(60, 'sec'))     -- 1 min = 60 sec
+Unit:setRule('h', Unit(60, 'min'))       -- 1 h = 60 min
+Unit:setRule('min', Unit(60, 'sec'))     -- 1 min = 60 sec
 -- new variable
 v = Unit(2, 'm/sec')
 -- convert to 'km/h'
