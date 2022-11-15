@@ -437,7 +437,10 @@ PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784,
   J2 = 1082.62575E-6, -- dynamic form factor
 },
 PZ9002 = ellipsoid:new {a = 6378136, f = 1/298.25784},
-SK42 = ellipsoid:new {a = 6378245, f = 1/298.3}
+SK42 = ellipsoid:new {a = 6378245, f = 1/298.3},
+
+-- for geohash
+base32 = '0123456789bcdefghjkmnpqrstuvwxyz',
 }
 
 -- methametods
@@ -567,6 +570,76 @@ geodesy.fromENU = function (self,tG, tR, tL)
   }
 end
 about[geodesy.fromENU] = {"Geo:fromENU(tBLr,tXYZr,tTop)", "Get cartesian coordinates of a local point in reference frame.", TRANS}
+
+-- Geohash calculation
+-- Based on https://www.movable-type.co.uk/scripts/geohash.html
+geodesy.hashEncode = function (self, dLat, dLon, N)
+  N = N or 6
+  local latMin, latMax = -90, 90
+  local lonMin, lonMax = -180, 180
+  local evenBit, idx, bit = true, 0, 0
+  local hash = {}
+  while #hash < N do
+    idx = idx * 2
+    if evenBit then
+      -- E-W longitude
+      local lonMid = (lonMin + lonMax) * 0.5
+      if dLon >= lonMid then
+        idx, lonMin = idx + 1, lonMid
+      else 
+        lonMax = lonMid 
+      end
+    else 
+      -- N-S latitude
+      local latMid = (latMin + latMax) * 0.5
+      if dLat >= latMid then
+        idx, latMin = idx+1, latMid
+      else
+        latMax = latMid
+      end
+    end 
+    evenBit, bit = not evenBit, bit+1
+    if bit == 5 then
+      hash[#hash+1] = string.sub(geodesy.base32, idx+1, idx+1)
+      bit, idx = 0, 0
+    end
+  end
+  return table.concat(hash)
+end
+
+geodesy.hashDecode = function (self, sHash)
+  sHash = string.lower(sHash)
+  -- find bounds
+  local evenBit = true
+  local latMin, latMax = -90, 90
+  local lonMin, lonMax = -180, 180
+  for k = 1, #sHash do
+    local idx, bt = -1, string.byte(sHash, k, k)
+    for i = 1, #geodesy.base32 do
+      if string.byte(geodesy.base32, i, i) == bt then 
+        idx = i-1
+        break
+      end
+    end
+    for n = 4, 0, -1 do
+      local bitN, _ = math.modf(idx / 2^n)
+      bitN = math.fmod(bitN, 2)
+      if evenBit then
+        -- longitude
+        local lonMid = (lonMin + lonMax) * 0.5
+        if bitN == 1 then lonMin = lonMid else lonMax = lonMid end
+      else
+        -- latitude
+        local latMid = (latMin + latMax) * 0.5
+        if bitN == 1 then latMin = latMid else latMax = latMid end
+      end
+      evenBit = not evenBit
+    end
+  end
+  -- center
+  return (latMin+latMax)*0.5, (lonMin+lonMax)*0.5
+end
+
 
 -- Comment to remove descriptions
 geodesy.about = about
