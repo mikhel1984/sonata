@@ -10,6 +10,8 @@
 
 --	MODULE
 
+local mmodf = math.modf
+
 --================ New version ================
 local versions = {
   -- Arctangent with sign
@@ -36,7 +38,7 @@ if _VERSION < 'Lua 5.3' then
   versions.isInteger = function (x)
     if type(x) == 'string' then x = tonumber(x) end
     if not x then return false end
-    local v,p = math.modf(x)
+    local v,p = mmodf(x)
     return p == 0.0 and v >= -1E9 and v <= 1E9
   end
   -- Execute string code
@@ -45,7 +47,7 @@ if _VERSION < 'Lua 5.3' then
   versions.mathType = function (x)
     local n = tonumber(x)
     if not n then return nil end
-    local _,p = math.modf(n)
+    local _,p = mmodf(n)
     return (p == 0.0) and 'integer' or 'float'
   end
   -- Move elements to new position (and table)
@@ -64,7 +66,7 @@ if _VERSION < 'Lua 5.3' then
   -- Return integer number or nil
   versions.toInteger = function (x)
     if type(x) == 'string' then x = tonumber(x) end
-    local p,q = math.modf(x)
+    local p,q = mmodf(x)
     return (q == 0.0) and p or nil
   end
   -- Extract table values
@@ -134,7 +136,9 @@ end
 
 --============== Utils ================
 
-local utils = {}
+local utils = {
+  TEMPL = '([%w_]*)%s*([^%w%s_]?)%s*',   -- var and symbol
+}
 
 --- Generate function from string.
 --  @param sExpr Expression for execution.
@@ -153,7 +157,7 @@ end
 --  @param d Number. 
 --  @return String representation.
 utils.numstr = function (d)
-  local int, frac = math.modf(d)
+  local int, frac = mmodf(d)
   local a = math.abs(int)
   -- short integer
   if frac == 0 then 
@@ -178,11 +182,25 @@ end
 --  @param fArg Number for rounding.
 --  @param fTol Required tolerance (1E-k)
 utils.round = function (fArg, fTol)
-  local p, q = math.modf(fArg / fTol)
+  local p, q = mmodf(fArg / fTol)
   if     q >=  0.5 then  p = p + 1
   elseif q <= -0.5 then p = p - 1
   end
   return p * fTol
+end
+
+--- Simple lexer for algebraic expressions.
+--  @param s String to parse.
+--  @return List of tokens.
+utils.lex = function (s)
+  local res = {}
+  for x, y in string.gmatch(s, utils.TEMPL) do
+    if #x > 0 then
+      res[#res+1] = tonumber(x) or x 
+    end
+    if #y > 0 then res[#res+1] = y end
+  end
+  return res
 end
 
 return {

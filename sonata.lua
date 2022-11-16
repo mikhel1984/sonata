@@ -5,8 +5,8 @@
 
 --================= CONFIGURATION ====================
 
---	Path (optional, for bash alias, e.g. sonata='path/to/sonata.lua')
---SONATA_ADD_PATH = path/to/dir/
+--	Path ('sonata.lua' location, optional)
+--SONATA_ADD_PATH = 'path/to/dir/'
 
 --	Text coloring
 --SONATA_USE_COLOR = true
@@ -15,7 +15,7 @@
 --SONATA_DEFAULT_MODULES = {'matrix','numeric'}
 
 --	Uncomment to set the localization file
---SONATA_LOCALIZATION = "ru.lng"
+--SONATA_LOCALIZATION = 'ru.lng'
 
 --	Decode text for Windows
 --SONATA_WIN_CODE = 'cp866'
@@ -30,11 +30,8 @@ use = {
   bigint    = "Int",
   complex   = "_Z",
   const     = "_C",
-  data      = "Data",
-  geodesy   = "Geo",
-  gnuplot   = "Gp",
+  data      = "_D",
   graph     = "Graph",
-  lens      = "Lens",
   matrix    = "Mat",
   numeric   = "Num",
   polynomial = "Poly",
@@ -42,6 +39,10 @@ use = {
   rational  = "Rat",
   special   = "Spec",
   units     = "Unit",
+--
+  geodesy   = "Geo",
+  gnuplot   = "Gp",
+  lens      = "Lens",
 }
 
 -- Add path to the libraries

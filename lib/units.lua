@@ -3,8 +3,8 @@
 --- Operations and conversations with units.
 --
 --  Object structure:  </br>
---  <code>{value=number, key=string_of_units}</code></br>
---  Key is represented in form "power1..unit1..power2..unit2...etc'.
+--  <code>{_value=number, _key=table_of_units}</code></br>
+--  Table in represented in form key-power.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
@@ -19,17 +19,20 @@
 Unit = require 'lib.units'
 
 -- add some rules
-Unit:add('h', Unit(60,'min'))
-Unit:add('min', Unit(60,'s'))
+Unit:setRule('h', Unit(60,'min'))
+Unit:setRule('min', Unit(60,'s'))
 
 -- define variable
 a = Unit(1,'m/s')
 -- convert to km/h, get only value
-ans = a['km/h']               --> 3.6
+ans = a['km/h']              --2> 3.6
 
 -- get numerical value
 -- (the save as #a)
-ans = a:val()                 --> 1
+ans = a:value()               --> 1
+
+-- get units 
+ans = a:key()                 --> 'm/s'
 
 -- make copy
 cp = a:copy() 
@@ -47,32 +50,21 @@ ans = b - a                   --> Unit(2, 'm/s')
 
 ans = a * b                   --> Unit(3, 'm^2/s^2')
 
-ans = b / a                   --> Unit(3)
+ans = b / a                   --> Unit(3, '')
 
 ans = (a < b)                 --> true
 
 ans = b ^ 3                   --> Unit(27, 'm^3/s^3')
 
 -- new rule
-Unit:add('snake', Unit(48, 'parrot'))
+Unit:setRule('snake', Unit(48, 'parrot'))
 -- define variable
 c = Unit(2,'snake')
 -- convert
 ans = c['parrot']             --> 96
 
 -- convert using prefix
-ans = c['ksnake']             --> 0.002
-
--- complex rule
-d = Unit(1,'W')
--- define function for conversation, apply it
-lg = function (x) 
-  return math.log(x)/math.log(10) 
-end
-e = d:convert(function (x) 
-  return Unit( 10*lg((x/Unit('mW')):simp()), 'dBm') 
-end)
-ans = #e                     --0> 30
+ans = c['ksnake']            --3> 0.002
 
 -- another definition syntax
 ans = 2 * Unit('N')           --> Unit(2,'N')
@@ -83,64 +75,37 @@ print(a)
 
 --	LOCAL
 
-local PART = '([^%a]+)(%a+)'    -- highlight value and unit from string
-
-local Cross = require('lib.utils').cross
-
--- possible signs
-local C_PROD, C_RAT, C_POW = string.byte('*'), string.byte('/'), string.byte('^')
-local BASE, PREFIX = 1, 2
+local Ver = require('lib.utils')
+local Cross = Ver.cross
+local Utils = Ver.utils
+Ver = Ver.versions
 
 --- Check object type.
 --  @param t Object to check.
 --  @return True if the object represents units.
 local function isunits(v) return type(v) == 'table' and v.isunits end
 
---- Comparison rule for unit sorting.
---  @param t1 First table of components.
---  @param t2 Second table of components.
---  @return True if t1 > t2.
-local function comp (t1,t2) 
-  return t1[1] > t2[1] or (t1[1] == t2[1] and string.reverse(t1[2]) < string.reverse(t2[2])) 
-end
-
---- Represent table of units as string.
---  @param t Table of units.
---  @return Key string.
-local function toKey(t)
-  local s = {}
-  for k,v in pairs(t) do s[#s+1] = {v,k} end
-  table.sort(s, comp)
-  for i,v in ipairs(s) do s[i] = v[1] .. v[2] end
-  return table.concat(s)
-end
-
---- Convert internal string representation to the table.
---  @param s Key string.
---  @return Table of units.
-local function fromKey(s)
-  local t = {}
-  for v,k in string.gmatch(s, PART) do t[k] = tonumber(v) end
-  return t
+--- Combine common elements in tables, add power to the 
+--  first table, remove from the second one.
+--  @param t1 First key-value table.
+--  @param t2 Second key-value table.
+--  @param pos True when positive.
+local function eliminate(t1, t2, pos)
+  for k,v in pairs(t2) do
+    if t1[k] then
+      local vv = pos and (t1[k] + v) or (t1[k] - v)
+      t1[k] = (vv ~= 0) and vv or nil
+      t2[k] = nil
+    end
+  end
 end
 
 -- Operations with tables of units.
 local op = {
-['*'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) + v end end,
-['/'] = function(u,u1) for k,v in pairs(u1) do u[k] = (u[k] or 0) - v end end,
-['^'] = function(u,n)  for k,v in pairs(u)  do u[k] = v*n end end
+['*'] = function(u1, u2) for k,v in pairs(u2) do u1[k] = (u1[k] or 0) + v end end,
+['/'] = function(u1, u2) for k,v in pairs(u2) do u1[k] = (u1[k] or 0) - v end end,
+['^'] = function(u, n) for k,v in pairs(u) do u[k] = v*n end end
 }
-
---- Remove empty elements from table of units.
---  @param t Table with units.
---  @return Reduced table.
-local function reduce(t)
-  local tmp = {}
-  for k,v in pairs(t) do
-    if not(v == 0 or tonumber(k)) then tmp[k] = v end
-  end
-  return tmp
-end
 
 --- Check equality of float point numbers.
 --  @param d1 First unit object.
@@ -162,21 +127,20 @@ local units = {
 -- mark
 type = 'units', isunits = true,
 -- save some results
-mem_parts = {},
-mem_keys = {},
+_mem_keys_ = {},
 -- rules for unit conversation
-rules = {},
+_rules_ = {},
 }
 
 --- U1 + U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return Sum of unit objects.
-units.__add = function (U1,U2)
-  U1,U2 = units._args_(U1,U2)
-  local tmp = assert(units._unitConvert_(U2,U1.key), "Different units!")
+units.__add = function (U1, U2)
+  U1, U2 = units._args_(U1,U2)
+  local tmp = assert(units._convert_key_(U2, U1._key), "Different units!")
   local res = units.copy(U1)
-  res.value = res.value + tmp.value
+  res._value = res._value + tmp._value
   return res
 end
 
@@ -184,40 +148,38 @@ end
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return Ratio of unit objects.
-units.__div = function (U1,U2)
-  U1,U2 = units._args_(U1,U2)
-  local ta, tb = fromKey(U1.key), fromKey(U2.key)
-  op['/'](ta,tb)
-  ta = reduce(ta)
-  if not next(ta) then return U1.value/U2.value end
-  local res = units:_new_(U1.value/U2.value)
-  res.key = toKey(ta)
-  return res.key == '' and res.value or res
+units.__div = function (U1, U2)
+  U1, U2 = units._args_(U1,U2)
+  U1, U2 = units._deepcopy_(U1), units._deepcopy_(U2)
+  eliminate(U1._key, U2._key, false)
+  -- not empty
+  if next(U2._key) then
+    units._expand_(U1, U2)
+    eliminate(U1._key, U2._key, false)
+  end
+  -- add
+  for k, v in pairs(U2._key) do U1._key[k] = -v end
+  U1._value = U1._value / U2._value
+  return U1
 end
 
---- U1 == b
+--- U1 == U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return True if the objects are equal.
 units.__eq = function (U1,U2)
   if not (isunits(U1) and isunits(U2)) then return false end
-  if U1.key == U2.key then return equal(U1.value, U2.value) end
-  local tmp = units._unitConvert_(U2, U1.key)
+  local tmp = units._convert_key_(U2, U1._key)
   if tmp == nil then return false end
-  return equal(U1.value, tmp.value)
+  return equal(U1._value, tmp._value)
 end
 
 --- Convert using v['new_units'] notation.
 --  @param U Initial unit object.
 --  @param s New Units.
---  @return Result of conversation of <code>nil</code>.
+--  @return Result of conversation of nil.
 units.__index = function (U,s)
-  if units[s] then
-    return units[s]
-  else
-    local v = units.convert(U,s)
-    return v and v.value or nil
-  end
+  return units[s] or (type(s) == 'string' and units.value(units.convert(U,s)))
 end
 
 --- U1 <= U2
@@ -226,9 +188,8 @@ end
 --  @return Result of comparison.
 units.__le = function (U1,U2)
   assert(isunits(U1) and isunits(U2), 'Not compatible!')
-  if U1.key == U2.key then return U1.value <= U2.value end
-  local tmp = assert(units._unitConvert_(U2, U1.key), 'Not compatible!')
-  return U1.value <= U2.value 
+  local tmp = assert(units._convert_key_(U2, U1._key), "Different units!")
+  return U1._value <= tmp._value
 end
 
 --- U1 < U2
@@ -237,37 +198,38 @@ end
 --  @return Result of comparison.
 units.__lt = function (U1,U2)
   assert(isunits(U1) and isunits(U2), 'Not compatible!')
-  if U1.key == U2.key then return U1.value < U2.value end
-  local tmp = assert(units._unitConvert_(U2, U1.key), 'Not compatible!')
-  return U1.value < U2.value 
+  local tmp = assert(units._convert_key_(U2, U1._key), "Different units!")
+  return U1._value < tmp._value
 end
 
 --- U1 * U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return Product of unit objects.
-units.__mul = function (U1,U2)
-  U1,U2 = units._args_(U1,U2)
-  local ta, tb = fromKey(U1.key), fromKey(U2.key)
-  op['*'](ta,tb)
-  ta = reduce(ta)
-  if not next(ta) then return U1.value*U2.value end
-  local res = units:_new_(U1.value*U2.value)
-  res.key = toKey(ta)
-  return res.key == '' and res.value or res
+units.__mul = function (U1, U2)
+  U1, U2 = units._args_(U1,U2)
+  U1, U2 = units._deepcopy_(U1), units._deepcopy_(U2)
+  eliminate(U1._key, U2._key, true)
+  -- not empty
+  if next(U2._key) then
+    units._expand_(U1, U2)
+    eliminate(U1._key, U2._key, true)
+  end
+  -- add
+  for k, v in pairs(U2._key) do U1._key[k] = v end
+  U1._value = U1._value * U2._value
+  return U1
 end
 
---- U1 ^ U2
---  @param U1 Unit object.
+--- U ^ d
+--  @param U Unit object.
 --  @param d Number.
 --  @return Power.
-units.__pow = function (U1,d)
-  assert(not isunits(d), "Wrong power!")
-  local res = isunits(U1) and units.copy(U1) or units:_new_(U1)
-  local ta = fromKey(res.key)
-  op['^'](ta,d)
-  res.value = (res.value)^d
-  res.key = toKey(ta)
+units.__pow = function (U, d)
+  d = assert(Cross.float(d), "Wrong power")
+  local res = isunits(U) and units._deepcopy_(U) or units:_new_(U,'')
+  res._value = res._value ^ d
+  op['^'](res._key, d)
   return res
 end
 
@@ -276,25 +238,21 @@ end
 --  @param U2 Second unit object.
 --  @return Subtraction of objects with the same units.
 units.__sub = function (U1,U2)
-  U1,U2 = units._args_(U1,U2)
-  local tmp = assert(units._unitConvert_(U2,U1.key), "Different units!")
+  U1, U2 = units._args_(U1,U2)
+  local tmp = assert(units._convert_key_(U2, U1._key), "Different units!")
   local res = units.copy(U1)
-  res.value = res.value - tmp.value
+  res._value = res._value - tmp._value
   return res
 end
+
 
 --- Units representation as string.
 --  @param U Unit object.
 --  @return Unit value in traditional form.
 units.__tostring = function (U)
-  local num, denom = string.match(U.key, '([^%-]*)(.*)')
-  num = #num > 0 and units._collect_(num) or '1'
-  denom = #denom > 0 and units._collect_(denom) or ''
-
-  if string.find(denom, '*') then denom = '('..denom..')' end
-  if #denom > 0 then num = num..'/' end
-
-  return U.value .. ' ' .. num .. denom
+  return string.format('%s %s', 
+    type(U._value) == 'number' and Utils.numstr(U._value) or tostring(U._value), 
+    units.key(U))
 end
 
 --- -U
@@ -302,7 +260,7 @@ end
 --  @return Object with inverted sign.
 units.__unm = function (U)
   local res = units.copy(U)
-  res.value = -res.value
+  res._value = -res._value
   return res
 end
 
@@ -317,283 +275,270 @@ about[units.comparison] = {units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>
 --  @param b Second unit object or number.
 --  @return Arguments as units.
 units._args_ = function (a,b)
-  a = isunits(a) and a or units:_new_(a)
-  b = isunits(b) and b or units:_new_(b)
+  a = isunits(a) and a or units:_new_(a, '')
+  b = isunits(b) and b or units:_new_(b, '')
   return a,b
 end
 
---- Prepare units for print operation.
---  @param str Units key.
---  @return Traditional representation.
-units._collect_ = function (str)
-  local t = {}
-  for v,k in string.gmatch(str, PART) do 
-    local w = tonumber(v)
-    if w < 0 then w=-w end
-    t[w] = t[w] or {}
-    table.insert(t[w], k)
+--- Convert object to another units.
+--  @param U Unit object.
+--  @param t Table with desired units.
+--  @return New object or nil.
+units._convert_key_ = function (U, t)
+  local dst = units:_new_(1, '')
+  dst._key = t
+  local src = units._deepcopy_(U)
+  src._value = 1
+  local rat = units.__div(src, dst)
+  -- require to check rules
+  if next(rat._key) then
+    local u2 = units._expand_rules_(rat)
+    while u2 do
+      rat = units.__mul(rat, u2)
+      u2 = units._expand_rules_(rat)
+    end
   end
-  local g = {}
-  for n, f in pairs(t) do
-    local templ = n > 1 and (#f > 1 and '(%s)^%d' or '%s^%d') or '%s'
-    g[#g+1] = string.format(templ, table.concat(f,'*'), n)
+  if next(rat._key) then
+    -- can not find transformation
+    dst = nil
+  else
+    dst._value = U._value * rat._value 
   end
-  return table.concat(g,'*')
+  return dst
+end
+
+--- Copy all keys from the object.
+--  @param U Source object.
+--  @return Deep copy.
+units._deepcopy_ = function (U)
+  local keys = {}
+  for k,v in pairs(U._key) do keys[k] = v end
+  return setmetatable({_value=U._value, _key=keys}, units)
 end
 
 --- Get common part and difference between 2 strings.
 --  @param str1 First string.
 --  @param str2 Second string.
 --  @return First prefix, second prefix, common part.
-units._diff_ = function (str1, str2)
-  -- check memory
-  local p1, p2 = units.mem_parts[str1], units.mem_parts[str2]
-  if p1 and p2 then
-    if p1[BASE] == p2[BASE] then
-      return p1[PREFIX], p2[PREFIX], p1[BASE]
+units._diff_ = function (s1, s2)
+  local n1, n2 = #s1, #s2
+  while n1 > 0 and n2 > 0 and string.byte(s1, n1) == string.byte(s2, n2) do
+    n1 = n1 - 1
+    n2 = n2 - 1
+  end
+  return string.sub(s1, 1, n1), string.sub(s2, 1, n2), string.sub(s1, n1+1)
+end
+
+--- Expand prefixes in both objects in-place.
+--  @param U1 First unit value.
+--  @param U2 Second unit object.
+units._expand_ = function (U1, U2)
+  local q1, q2, com1, com2 = {}, {}, {}, {}
+  -- initialize q2
+  for k, v in pairs(U2._key) do q2[k] = v end
+  -- find common 
+  for k1, v1 in pairs(U1._key) do
+    local found = false
+    for k2, v2 in pairs(q2) do
+      local l, r, base = units._diff_(k1, k2)
+      -- apply changes
+      if #base > 0 and units.prefix[l] and units.prefix[r] then
+        U1._value = U1._value * (units.prefix[l] ^ v1)
+        U2._value = U2._value * (units.prefix[r] ^ v2)
+        com1[base], com2[base] = v1, v2
+        found, q2[k2] = true, nil
+        break
+      end
+    end
+    if not found then q1[k1] = v1 end
+  end
+  -- add common elements
+  for k,v in pairs(com1) do q1[k] = v end
+  for k,v in pairs(com2) do q2[k] = v end
+  U1._key, U2._key = q1, q2
+end
+
+--- Apply rule. When found exclude it from 
+--  the unit table.
+--  @param U Unit object.
+--  @return Found rule or nil.
+units._expand_rules_ = function (U)
+  local v, ku
+  for k1, u1 in pairs(units._rules_) do
+    -- check
+    if U._key[k1] then 
+      ku, v = k1, U._key[k1]
     else
-      return str1, str2, nil
+      for k2, v2 in pairs(U._key) do
+        local l, r, base = units._diff_(k1, k2)
+        if #base > 0 and l == '' and units.prefix[r] then
+          ku, v = k2, v2
+          break
+        end
+      end
+    end
+    -- get if it is found
+    if ku then
+      U._key[ku] = nil
+      local res = units._deepcopy_(u1)
+      res._value = res._value ^ v
+      for a, b in pairs(res._key) do
+        res._key[a] = b * v
+      end
+      return res
     end
   end
-  -- compare, add to memory 
-  local first, base, second = string.match(str1..'|'..str2, '^(.-)(.+)|(.-)%2$')
-  if base then
-    units.mem_parts[str1] = {base, first}
-    units.mem_parts[str2] = {base, second}
-    return first, second, base
-  else
-    return str1, str2, nil
-  end
+  return nil
 end
 
 --- Get value or evaluate expression in brackets.
---  @param str Expression.
---  @return Table of units and string rest.
-units._getExpr_ = function (str)
-  if #str == 0 then return {}, "" end
-  -- check for brackets
-  local expr, rest = string.match(str, '^(%b())(.*)')
-  if expr then
-    -- evaluate
-    local res = units._getTerm_(string.match(expr,'%((.+)%)'))
-    return res, rest
-  else
-    -- return table with units
-    expr, rest = string.match(str, '([^%(%)%*/%^]+)(.*)')
-    return {[expr]=1}, rest
+--  @param lst Token list.
+--  @param n Initial position.
+--  @return Table of units and next position.
+units._getExpr_ = function (lst, n)
+  local v = lst[n]
+  if v == '(' then
+    -- parse sub-expression
+    local res, m = units._getTerm_(lst, n+1)
+    assert(lst[m] == ')')
+    return res, m+1
+  elseif v == 1 then
+    return {}, n+1
+  elseif string.find(v, '^%a+$') then 
+    return {[v] = 1}, n+1  
+  else 
+    error("Wrong unit "..v)
   end
+end
+
+--- Get number in power.
+--  @param lst Token list.
+--  @param n Initial position.
+--  @return Number and the next position.
+units._getNum_ = function (lst, n)
+  local v = lst[n]
+  if v == '(' then
+    local res, m = units._getNum_(lst, n+1)
+    assert(lst[m] == ')')
+    return res, m+1
+  elseif v == '-' then 
+    local res, m = units._getNum_(lst, n+1)
+    return -res, m
+  elseif type(v) ~= 'number' then
+    error("Expected number for power")
+  end
+  return v, n+1
 end
 
 --- Evaluate expression a^b.
---  @param str Expression.
---  @return Table of units and string rest.
-units._getPow_ = function (str)
-  local res, rest, num = units._getExpr_(str)
-  if string.byte(rest) == C_POW then
-    -- get power and evaluate
-    num, rest = string.match(rest, '%^(-?[%d%.]+)(.*)')
-    op['^'](res, tonumber(num))
+--  @param lst Token list.
+--  @param n Initial position.
+--  @return Table of units and next position.
+units._getPow_ = function (lst, n)
+  local res, m  = units._getExpr_(lst, n)
+  if lst[m] == '^' then
+    local num
+    num, m = units._getNum_(lst, m+1)
+    op['^'](res, num)
   end
-  return res, rest
+  return res, m
 end
 
 --- Evaluate a * b.
---  @param str Expression.
---  @return Table of units and string rest.
-units._getTerm_ = function (str)
-  local res, rest = units._getPow_(str)
-  while string.byte(rest) == C_PROD or string.byte(rest) == C_RAT do
+--  @param lst Token list.
+--  @param n Initial position.
+--  @return Table of units and next position.
+units._getTerm_ = function (lst, n)
+  local res, m = units._getPow_(lst, n)
+  while lst[m] == '*' or lst[m] == '/' do
     -- while get * or / get terms and evaluate
-    local sign, tmp
-    sign, rest = string.match(rest, "([%*/])(.*)")
-    tmp, rest = units._getPow_(rest)
+    local sign, tmp = lst[m]
+    tmp, m = units._getPow_(lst, m+1)
     op[sign](res, tmp)
   end
-  return res, rest
-end
-
---- Check if 2 elements can be converted to each other.
---  @param s1 First key.
---  @param s2 Second key.
---  @return true if conversation is possible.
-units._isCompatible_ = function (s1,s2)
-  if s1 == s2 then return true end
-  if #s1 == 0 and #s2 ~= 0 then return false end
-  local fk2 = string.gmatch(s2, PART)
-  local udiff = units._diff_
-  for v1,u1 in string.gmatch(s1, PART) do
-    local v2,u2 = fk2()
-    -- compare powers and units
-    if v1 ~= v2 then return false end
-    if u1 ~= u2 then 
-      local l,r,base = udiff(u1,u2)
-      if not (base and units.prefix[l] and units.prefix[r]) then return false end
-    end
-  end
-  return true
+  return res, m
 end
 
 --- Create new unit object.
 --  @param self Parent object.
---  @param v Numerical value. Can be unit string.
---  @param s String of units. Can be omitted.
+--  @param v Numerical value. 
+--  @param s String of units.
 --  @return Unit object.
 units._new_ = function (self, v,s)
-  if not s then 
-    if type(v) == 'string' then v,s = 1,v else s = "" end
+  if not units._mem_keys_[s] then
+    units._mem_keys_[s] = units._parse_(s)
   end
-  if not units.mem_keys[s] then
-    units.mem_keys[s] = toKey(units._parse_(s))
-  end
-  return setmetatable({value=v, key=units.mem_keys[s]}, self)
+  return setmetatable({_value=v, _key=units._mem_keys_[s]}, self)
 end
 
 --- Get absolute value.
 --  @param U Unit object.
 --  @return Absolute value.
 units._norm_ = function (U)
-  return Cross.norm(U.value)
+  return Cross.norm(U._value)
 end
 
 --- Parse units expression.
 --  @param str Initial string with units.
 --  @return Reduced list of units.
 units._parse_ = function (str)
-  local res = units._getTerm_(str)
-  return reduce(res)
-end
-
---- Combine elements with common base.
---  @param d Initial value.
---  @param t Table of units.
---  @return New value and reduced table of units.
-units._simplify_ = function (d,t)
-  local acc,new,res = {}, {}, d 
-  local udiff = units._diff_
-  for k,v in pairs(t) do
-    local previous = nil
-    local l,r,base
-    for _,a in ipairs(acc) do
-      l,r,base = udiff(k,a)
-      if base then previous = a; break end
-    end
-    if previous then
-      new[previous] = new[previous] + v
-      res = res * (units.prefix[l]/units.prefix[r])^v
-    else
-      new[k] = v
-      acc[#acc+1] = k
-    end
-  end
-  return res, new
-end
-
---- Simplify units representation.
---  @param U Initial units object.
---  @return Replace all unit to its representation if it is possible.
-units._toAtom_ = function (U)
-  local t, res = fromKey(U.key), U.value
-  local kold, knew = "", U.key
-  local usimp, udiff = units._simplify_, units._diff_
-  while kold ~= knew do                   -- while can be expanded
-    kold = knew
-    for v1,u1 in string.gmatch(knew, PART) do    -- for every unit
-      local left,right,base,row            -- get common part and prefixes
-      if units.rules[u1] then
-        row = u1
-        left,right,base = '','',u1
-      else
-        for k in pairs(units.rules) do
-          left,right,base = udiff(k,u1)
-          if base and units.prefix[left] and units.prefix[right] then row=k; break end
-        end
-      end
-      if base then                     -- get common part
-        -- replace
-        local tmp = units.rules[row]
-        local add,num = fromKey(tmp.key), tonumber(v1)
-        t[u1] = nil
-        op['^'](add,num)
-        op['*'](t,add)
-        res = res*(tmp.value*units.prefix[right]/units.prefix[left])^num
-        res, t = usimp(res, t)
-        t = reduce(t)
-      end
-    end
-    knew = toKey(t)                    -- back to string
-  end
-  return res, knew
-end
-
---- Convert one unit to another using internal representation.
---  @param U Initial unit object,
---  @param sto Expected key.
---  @return Converted object of nil.
-units._unitConvert_ = function (U, sto)
-  local res = units:_new_(1)
-  res.key = sto
-  if units._isCompatible_(U.key, res.key) then
-    res.value = units._valConvert_(U.value, U.key, res.key)
-  else
-    local v1,u1 = units._toAtom_(U)
-    local v2,u2 = units._toAtom_(res)
-    if units._isCompatible_(u1,u2) then
-      res.value = units._valConvert_(v1/v2, u1, u2)
-    else
-      res = nil
-    end
-  end
+  if #str == 0 then return {} end
+  local tokens = Utils.lex(str)
+  assert(#tokens > 0)
+  -- get powers
+  local res, m = units._getTerm_(tokens, 1)
+  if m-1 ~= #tokens then error("Wrong format") end
   return res
 end
-
---- Calculate value as the result of conversation.
---  @param v Initial value.
---  @param sfrom Initial key.
---  @param sto Final key.
---  @return Result value of conversation.
-units._valConvert_ = function (v, sfrom, sto)
-  local f,res = string.gmatch(sto, PART), v
-  local udiff = units._diff_
-  for v1,u1 in string.gmatch(sfrom, PART) do
-    local _,u2 = f()
-    local l,r = udiff(u1,u2)
-    res = res*(units.prefix[l]/units.prefix[r])^tonumber(v1)
-  end
-  return res
-end
-
---- Add new rule for unit transformation.
---  @param self Main class.
---  @param U String with units.
---  @param rule Result represented as unit object.
-units.add = function (self, U, rule)
-  assert(isunits(rule), 'Units object is expected!')
-  self.rules[U] = rule
-end
-about[units.add] = {'Unit:add(U,rule)', 'Add new rule for conversation.'}
 
 --- Convert one units to another.
 --  @param U Source unit object.
---  @param fn Unit string of function f(u).
---  @return Result of conversation of <code>nil</code>.
-units.convert = function (U, fn)
-  if type(fn) == 'function' then return fn(U)
-  else
-    local res = units:_new_(1, fn)
-    return units._unitConvert_(U, res.key)
+--  @param s String with new units.
+--  @return Result of conversation of nil.
+units.convert = function (U, s)
+  if not units._mem_keys_[s] then
+    units._mem_keys_[s] = units._parse_(s)
   end
+  return units._convert_key_(U, units._mem_keys_[s])
 end
-about[units.convert] = {'convert(fn)','Convert one units to another, return new object or nil.', }
+about[units.convert] = {'convert(s)','Convert one units to another, return new object or nil.', }
 
 --- Create copy of the element.
 --  @param U Source object.
---  @return Deep copy.
+--  @return Shalow copy.
 units.copy = function (U)
-  local cp = units:_new_(U.value)
-  cp.key = U.key
-  return cp
+  return setmetatable({_value=U._value, _key=U._key}, units)
 end
 about[units.copy] = {'copy()', 'Create copy of the element.', help.OTHER}
+
+--- Convert table of units into string.
+--  @param U Units object.
+--  @return String with units.
+units.key = function (U)
+  local num, denom = {}, {}
+  for k, v in pairs(U._key) do
+    if v > 0 then
+      num[#num+1] = (v ~= 1) and string.format('%s^%s', k, tostring(v)) or k
+    else
+      denom[#denom+1] = (v ~= -1) and string.format('%s^%s', k, tostring(-v)) or k
+    end
+  end
+  if #num > 0 then
+    num = (#num > 1) and string.format(#denom > 0 and '(%s)' or '%s', table.concat(num, '*'))
+          or num[1]
+  else 
+    num = '' 
+  end
+  if #denom > 0 then
+    denom = (#denom > 1) and string.format('(%s)', table.concat(denom, '*')) 
+          or denom[1]
+    num = (#num > 0) and num..'/' or '1/'
+  else 
+    denom = ''
+  end
+  return num .. denom
+end
+about[units.key] = {'key()', 'Get units.'}
 
 -- prefix list
 units.prefix = {
@@ -621,30 +566,37 @@ units.prefix = {
 }
 about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
---- Reduce elements with common base part.
---  @param U Unit object.
---  @return Result of simplification.
-units.simp = function (U)
-  local val, t = units._simplify_(U.value, fromKey(U.key))
-  t = reduce(t)
-  if #t > 0 then
-    local res = units:_new_(val)
-    res.key = toKey(t)
-    return res
-  else return val end
+--- Add new rule for unit transformation.
+--  @param self Main class.
+--  @param s Unit name.
+--  @param U Equal unit object.
+units.setRule = function (self, s, U)
+  assert(isunits(U), 'Units object is expected!')
+  self._rules_[s] = U
 end
+about[units.setRule] = {'Unit:setRule(s,U)', 'Add new rule for conversation.'}
 
 --- Value of the unit object.
 --  The same as #U.
 --  @param U Unit object.
 --  @return Value.
-units.val = function (U) return U.value end
-units.__len = units.val
+units.value = function (U) return U and U._value or nil end
+about[units.value] = {'value()', 'Get object value. Same as #U.'}
+units.__len = units.value
 
 -- simplify constructor call
-setmetatable(units, {__call = function (self,v,u) return units:_new_(v,u) end })
+setmetatable(units, {
+__call = function (self,v,s)
+  if s then
+    assert(Cross.float(v), "Wrong value type")
+  else
+    v, s = 1, v
+  end
+  assert(type(s) == 'string', 'Wrong unit type')
+  return units:_new_(v, s) 
+end})
 units.Unit = 'Unit'
-about[units.Unit] = {'Unit(v,[u])', 'Create new elements with units.', help.NEW}
+about[units.Unit] = {'Unit([v,]s)', 'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions
 units.about = about
@@ -652,4 +604,4 @@ units.about = about
 return units
 
 --==================================================
---TODO: check and simplify
+

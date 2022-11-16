@@ -52,8 +52,8 @@ ans = Rat:gcd(125,65)         --> 5
 -- represent as decimal
 ans = a:float()               --> 0.5
 
--- make from decimal 
-ans = Rat:from(0.25)          --> Rat(1,4)
+-- from decimal 
+ans = Rat:from(math.pi)       --> Rat(333, 106)
 
 -- numerator
 ans = b:num()                 --> 2
@@ -91,8 +91,8 @@ local mabs = math.abs
 local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
 local function numrat(R) 
-  return Cross.eq(R._v[2],1) and Cross.simp(R._v[1])               -- x / 1
-    or (isbig(R._v[1]) or isbig(R._v[2])) and (R._v[1] / R._v[2])  -- float num or denom
+  return Cross.eq(R._[2],1) and Cross.simp(R._[1])               -- x / 1
+    or (isbig(R._[1]) or isbig(R._[2])) and (R._[1] / R._[2])  -- float num or denom
     or R 
 end
 
@@ -102,6 +102,17 @@ end
 local function numStr(v)
   return type(v) == 'number' and Utils.numstr(v) or tostring(v) 
 end
+
+-- Continued fraction printing
+local _continued_ = {
+__tostring = function (t)
+  local res = {tostring(t[0])}
+  for i = 1, #t do
+    res[#res+1] = '+/'..tostring(t[i])
+  end
+  return string.format("{%s}", table.concat(res))
+end
+}
 
 --	INFO
 
@@ -132,7 +143,7 @@ rational.__add = function (R1, R2)
       return p and (p + R2) or (Cross.float(R1) + Cross.float(R2))
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return numrat(rational:_new_(r1[1]*r2[2]+r1[2]*r2[1], r1[2]*r2[2]))
 end
 
@@ -149,7 +160,7 @@ rational.__div = function (R1, R2)
       return p and (p / R2) or (Cross.float(R1) / Cross.float(R2))
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return numrat(rational:_new_(r1[1]*r2[2], r1[2]*r2[1]))
 end
 
@@ -172,7 +183,7 @@ rational.__le = function (R1,R2)
       end
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return (r1[1]*r2[2]) <= (r2[1]*r1[2])
 end
 
@@ -192,7 +203,7 @@ rational.__lt = function (R1,R2)
       end
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return (r1[1]*r2[2]) < (r2[1]*r1[2])
 end
 
@@ -209,7 +220,7 @@ rational.__mul = function (R1, R2)
       return p and (p * R2) or (Cross.float(R1) * Cross.float(R2))
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return numrat(rational:_new_(r1[1]*r2[1], r1[2]*r2[2]))
 end
 
@@ -226,7 +237,7 @@ rational.__pow = function (R1, R2)
     return R1^R2
   else
     if not (Ver.isInteger(R2) and R2 >= 0) then error("Power must be a non-negative integer") end
-    local r1 = R1._v
+    local r1 = R1._
     return numrat(rational:_new_(r1[1]^R2, r1[2]^R2))
   end
 end
@@ -244,7 +255,7 @@ rational.__sub = function (R1, R2)
       return p and (p - R2) or (Cross.float(R1) - Cross.float(R2))
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return numrat(rational:_new_(r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[2]))
 end
 
@@ -252,7 +263,7 @@ end
 --  @param R Rational number.
 --  @return String with numerator and denominator.
 rational.__tostring = function (R) 
-  local r = R._v
+  local r = R._
   if type(r[1]) == 'number' and type(r[2]) == 'number' and mabs(r[1]) > r[2] then
     local n = mabs(r[1])       -- numerator
     local v = math.modf(n / r[2]) 
@@ -265,7 +276,7 @@ end
 --- -R
 --  @param R Rational number.
 --  @preturn Opposite rational number.
-rational.__unm = function (R) return rational:_new_(-R._v[1], R._v[2]) end
+rational.__unm = function (R) return rational:_new_(-R._[1], R._[2]) end
 
 rational.arithmetic = 'arithmetic'
 about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2", help.META}
@@ -273,9 +284,24 @@ about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, 
 rational.comparison = 'comparison'
 about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
 
+--- Convert value to rational number.
+--  @param v Source value.
+--  @return Rational number of false.
 rational._convert_ = function (v)
   return (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod) 
          and rational:_new_(v,1)
+end
+
+--- Find rational number for the given continued fraction.
+--  @param t Continued fraction coefficients.
+--  @return Numerator and denomenator.
+rational._cont2rat_ = function (t)
+  local a, b = 0, 1
+  for i = #t, 1, -1 do
+    a = t[i] * b + a
+    a, b = b, a
+  end
+  return t[0] * b + a, b
 end
 
 --- Create new object, set metatable.
@@ -284,13 +310,13 @@ end
 --  @return New rational object.
 rational._new_ = function (self, vn, vd)
   local g = rational:gcd(vd,vn)         -- inverse order move sign to denominator
-  return setmetatable({_v = {vn/g, vd/g}}, self)  
+  return setmetatable({_ = {vn/g, vd/g}}, self)  
 end
 
 --- Get denominator.
 --  @param R Rational number.
 --  @return Denominator.
-rational.denom = function (R) return R._v[2] end
+rational.denom = function (R) return R._[2] end
 about[rational.denom] = {"denom()", "Return the denominator of the rational number."}
 
 --- R1 == R2
@@ -309,7 +335,7 @@ rational.eq = function (R1,R2)
       end
     end
   end
-  local r1, r2 = R1._v, R2._v
+  local r1, r2 = R1._, R2._
   return Cross.eq(r1[1],r2[1]) and Cross.eq(r1[2],r2[2])
 end
 about[rational.eq] = {"eq(R)", "Compare two objects.", help.OTHER}
@@ -319,24 +345,52 @@ rational.__eq = rational.eq
 --  @param R Rational number.
 --  @return Decimal fraction.
 rational.float = function (R)
-  local r = R._v
+  local r = R._
   return (r[1] < 0 and -1 or 1) * (Cross.norm(r[1]) / Cross.norm(r[2]))
 end
 about[rational.float] = {"float()", "Return rational number as decimal."}
 
---- Get rational number from floating point.
+--- Get rational number approximation.
 --  @param self Do nothing.
 --  @param f Source number.
---  @param N Number of digits after coma.
---  @return Ratio estimation.
-rational.from = function (self, f, N)
-  N = N or 5   -- number of digits
-  assert(N > 0)
-  local den = math.pow(10, N)
-  local int = math.modf(f * den) 
-  return rational:_new_(int, den) 
+--  @param fErr Precision, default is 0.001.
+rational.from = function (self, f, fErr)
+  fErr = fErr or 1E-3
+  local f0 = math.abs(f)
+  local c, acc = f0, {}
+  acc[0], c = math.modf(c)
+  local a, b = acc[0], 1
+  while c > 0 and math.abs(a/b - f0) > fErr do
+    acc[#acc+1], c = math.modf(1/c)
+    a, b = rational._cont2rat_(acc)
+  end
+  return rational:_new_(f >= 0 and a or -a, b)
 end
-about[rational.from] = {"Rat:from(f,[N=5])", "Estimate ratio from floating point value.", help.NEW}
+about[rational.from] = {"Rat:from(f,[fErr=1E-3])", "Estimate ratio from floating point value.", help.NEW}
+
+--- Get rational number from continued fraction coefficients.
+--  @param self Do nothing.
+--  @param t List of coefficients.
+--  @return Rational number.
+rational.fromCont = function (self, t)
+  local check = {}
+  for i, v in ipairs(t) do
+    if (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod) and v > 0 then
+      check[i] = v
+    else error("Positive integer is expected") end
+  end
+  local t0 = t[0]
+  if t0 then
+    if (type(t0) == 'number' and Ver.isInteger(t0) or type(t0) == 'table' and t0.__mod) and t0 >= 0 then
+      check[0] = t0
+    else error("Positive integer is expected") end
+  else
+    for i = 0, #check-1 do check[i] = check[i+1] end
+    check[#check] = nil
+  end
+  return rational._new_(rational._cont2rat_(check))
+end
+about[rational.fromCont] = {"Rat:fromCont(t)", "Transform continued fraction to rational number.", help.NEW}
 
 --- The greatest common divisor. 
 --  @param self Do nothing.
@@ -351,9 +405,28 @@ about[rational.gcd] = {"Rat:gcd(va,vb)", "Calculate the greatest common divisor 
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
-rational.num = function (R) return R._v[1] end
+rational.num = function (R) return R._[1] end
 about[rational.num] = {"num()", "Return the numerator of rational number."}
 
+--- Find continued fraction coefficients.
+--  @param R Positive rational number.
+--  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/..)).
+rational.toCont = function (R)
+  local a, b, c = R._[1], R._[2], nil
+  if a < 0 then error("Positive is expected") end
+  local numbers = (type(a) == 'number' and type(b) == 'number')
+  local res = {}
+  for i = 0, math.huge do
+    c = numbers and math.modf(a / b) or (a / b)
+    res[i] = c 
+    a = a - b * c
+    if a <= 1 then break end
+    a, b = b, a
+  end
+  res[#res+1] = b
+  return setmetatable(res, _continued_)
+end
+about[rational.toCont] = {"toCont()", "Transform rational number to continued fraction.", help.OTHER}
 
 -- call constructor, check arguments
 setmetatable(rational, {
@@ -375,3 +448,4 @@ rational.about = about
 return rational
 
 --======================================
+-- TODO choose print format

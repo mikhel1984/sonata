@@ -143,16 +143,16 @@ help.make = function (self,fn)
     local v = assert(self[fn], "No help for "..tostring(fn))
     if v.link then
       -- module common description
-      local res = {SONATA_INFO=true, '\n', v[MAIN], '\n'}
+      local res = Sonata.info {'\n', v[MAIN], '\n'}
       -- details
       for _,elt in ipairs(v.link:make()) do res[#res+1] = elt end
       return res
     else
       -- function description
-      return {SONATA_INFO=true, '  :', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
+      return Sonata.info {'  :', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
     end
   else
-    local res = {SONATA_INFO=true}
+    local res = Sonata.info {}
     -- sort functions
     local lst = help._funcList_(self)
     for mod, t in pairs(lst) do             -- for each module
@@ -165,7 +165,6 @@ help.make = function (self,fn)
           res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
         end
       end 
-      --res[#res+1] = '\n'
     end -- for
     return res
   end -- if
@@ -253,9 +252,9 @@ end
 --  @param fName File name.
 --  @return Lua table or nil.
 help.tblImport = function (fName)
-  local str,f = help.readAll(fName)
+  local str,f = help.readAll(fName), nil
   -- use Lua default import
-  if str then f = loadStr('return '..str) end
+  if str then f = loadStr(str) end
   return f and f() or nil
 end
 
@@ -263,10 +262,10 @@ end
 --  @param fName File name.
 --  @return Lua table or nil
 help.tblImportWin = function (fName)
-  local str,f = help.readAll(fName)
+  local str,f = help.readAll(fName), nil
   if str then
     str = Win.convert(str)
-    f = loadStr('return '..str)
+    f = loadStr(str)
   end
   return f and f() or nil
 end

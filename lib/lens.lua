@@ -33,7 +33,7 @@ ans = lens1.D                --2> 1
 
 -- find cardinal points 
 pts = lens1:cardinal() 
-ans = pts[1]                 --2> -177.76
+ans = pts.F1                 --2> -177.76
 
 -- print points
 print(pts)
@@ -51,7 +51,7 @@ ans = d2                     --2>  623.21
 
 -- check solution 
 -- assume the lens it thin 
-f = -pts[1]
+f = -pts.F1
 ans = 1/d1 + 1/d2            --2> 1/f
 
 -- ray transformation 
@@ -89,6 +89,15 @@ print(lens5)
 -- make copy 
 ans = lens1:copy()            --> lens1
 
+-- gaussian beam parameters
+ans, _ = Lens:gaussParam(1E-3, 1.024E-6) --2> 3.26E-4 
+
+-- laser beam radius  
+ans, _ = Lens:gaussSize(1E-3, 1.024E-6, 100) --2> 0.033
+
+-- laser beam transformation 
+ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
+
 --]]
 
 --	LOCAL
@@ -98,6 +107,8 @@ local keys = {A=1, B=2, C=3, D=4}
 
 -- tolerance of comparison
 local TOL = 1E-8
+
+local LASER = 'laser'
 
 --- Check object type.
 --  @param v Object.
@@ -184,6 +195,21 @@ lens.afocal = function (self, dm)
 end
 about[lens.afocal] = {"Lens:afocal(dm)", "Find matrix for the afocal system.", help.NEW}
 
+--- Find Gaussian beam parameters after transformation.
+--  @param L Lens object.
+--  @param dW Input beam radius, m.
+--  @param dR Input beam curvature, m.
+--  @param dLam Wavelength, m.
+--  @return Output beam radius and curvature.
+lens.beam = function (L, dW, dR, dLam)
+  lens.ext_complex = lens.ext_complex or require("lib.complex")
+  local lampi = dLam / math.pi
+  local _1_q1 = lens.ext_complex(1/dR, lampi / (dW * dW))
+  local _1_q2 = (L[3] + L[4]*_1_q1) / (L[1] + L[2]*_1_q1)
+  return math.sqrt(lampi / _1_q2:im()), 1/_1_q2:re()
+end
+about[lens.beam] = {"beam(dW,dR,dLam)", "Find output beam radius and curvature.", LASER}
+
 --- Make a copy.
 --  @param L Initial object.
 --  @return Copy of the object.
@@ -199,6 +225,29 @@ lens.det = function (L)
   return L[1]*L[4] - L[2]*L[3]
 end
 about[lens.det] = {"det()", "Find determinant of the system matrix.", help.OTHER}
+
+--- Find Gaussian beam characterictics.
+--  @param self Do nothing.
+--  @param dW0 Beam waist, m.
+--  @param dLam Waveleight, m.
+--  @return Divergence angle and Raileigh range.
+lens.gaussParam = function (self, dW0, dLam)
+  local t = math.pi * dW0 / dLam
+  return 1/t, t * dW0
+end
+about[lens.gaussParam] = {"Lens:gausParam(dW0,dLam)", "Find divergence angle and Raileigh range for a Gaussian beam.", LASER}
+
+--- Find Gaussian beam propagation.
+--  @param self Do nothing.
+--  @param dW0 Beam waist, m.
+--  @param dLam Waveleight, m.
+--  @param dist Distance, m.
+--  @return Beam radius and curvature in pose dist.
+lens.gaussSize = function (self, dW0, dLam, dist)
+  local t = (math.pi * dW0 * dW0 / dLam / dist) ^ 2
+  return dW0 * math.sqrt(1 + 1/t), dist * (1 + t)
+end
+about[lens.gaussSize] = {"Lens:gaussSize(dW0,dLam,dist)", "Find Gaussian beam radius and curvature at some distance.", LASER}
 
 --- Inverse the component matrix.
 --  @param L Lens object.
@@ -297,13 +346,13 @@ local mt_cardinal = {
   __tostring = function (self)
     local txt = {}
     txt[1] = 'From the input plane'
-    txt[2] = 'F1 at '..tostring(self[1]) 
-    txt[3] = 'H1 at '..tostring(self[2])
-    txt[4] = 'N1 at '..tostring(self[3]) 
+    txt[2] = 'F1 at '..tostring(self.F1) 
+    txt[3] = 'H1 at '..tostring(self.H1)
+    txt[4] = 'N1 at '..tostring(self.N1) 
     txt[5] = 'From the output plane'
-    txt[6] = 'F2 at '..tostring(self[4])
-    txt[7] = 'H2 at '..tostring(self[5])
-    txt[8] = 'N2 at '..tostring(self[6])
+    txt[6] = 'F2 at '..tostring(self.F2)
+    txt[7] = 'H2 at '..tostring(self.H2)
+    txt[8] = 'N2 at '..tostring(self.N2)
     return table.concat(txt, '\n')
   end
 }
@@ -316,22 +365,22 @@ local mt_cardinal = {
 lens.cardinal = function (L, dn1, dn2)
   dn1 = dn1 or 1
   dn2 = dn2 or 1
-  local txt, res = {}, {0,0,0;0,0,0}
+  local txt, res = {}, {}
   local C = L[3]
 
   local v = dn1 * L[4] / C      -- first focus point
-  res[1] = v 
-  res[2] = v - dn1 / C          -- first principal point 
-  res[3] = (L[4]*dn1 - dn2) / C -- first nodal point
+  res.F1 = v 
+  res.H1 = v - dn1 / C          -- first principal point 
+  res.N1 = (L[4]*dn1 - dn2) / C -- first nodal point
 
   v = -dn2 * L[1] / C           -- second focus point
-  res[4] = v
-  res[5] = v + dn2 / C          -- second principal point
-  res[6] = (dn1 - L[1]*dn2) / C -- second nodal point
+  res.F2 = v
+  res.H2 = v + dn2 / C          -- second principal point
+  res.N2 = (dn1 - L[1]*dn2) / C -- second nodal point
 
   return setmetatable(res, mt_cardinal)
 end
-about[lens.cardinal] = {"cardinal([dn1=1,dn2=1])", "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return list of distances.", help.OTHER}
+about[lens.cardinal] = {"cardinal([dn1=1,dn2=1])", "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.", help.OTHER}
 
 -- Create arbitrary object
 setmetatable(lens, {__call = function (self,t) 

@@ -16,7 +16,7 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
-Sonata.version = '0.9.31'
+Sonata.version = '0.9.32'
 
 -- Quit the program
 quit = Sonata.exit
@@ -49,20 +49,20 @@ setmetatable(use,
 { -- load modules
   __call = function (self, name)
     if not name then
-      local lst = {SONATA_INFO=true, Sonata.FORMAT_V1, string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
+      local lst = Sonata.info {Sonata.FORMAT_V1, string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
       -- show loaded modules
       for k,v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
         if _G[v] then
           lst[#lst+1] = Sonata.FORMAT_V1
-          lst[#lst+1] = '+\n'
+          lst[#lst+1] = '++\n'
         else
           lst[#lst+1] = '\n'
         end
       end
       lst[#lst+1] = Sonata.FORMAT_V1
       lst[#lst+1] = About:get('use_import')
-      return Sonata.inLua and Sonata._toText(lst) or lst
+      return Sonata.inLua and Sonata._toText_(lst) or lst
     elseif name == 'all' then
       -- load all modules
       for k,v in pairs(self) do Sonata.doimport(self,k) end
@@ -84,11 +84,11 @@ help = function(fn)
       return use()
     else
       local res = About:make(type(fn)=='table' and fn.about or fn)
-      return Sonata.inLua and Sonata._toText(res) or res
+      return Sonata.inLua and Sonata._toText_(res) or res
     end
   else
     local res = About:make(About)
-    return Sonata.inLua and Sonata._toText(res) or res
+    return Sonata.inLua and Sonata._toText_(res) or res
   end
 end
 

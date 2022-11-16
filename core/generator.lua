@@ -195,8 +195,8 @@ generator.lang = function(fName, tModules)
   local lng = Help.tblImport(fName)
   local f = io.open(fName, 'w')
   -- save descriptions
+  f:write('return {\n')
   f:write(string.rep('-',10), string.format(' %s ', fName), string.rep('-',10), '\n')
-  f:write('{\n')
   -- language and authors
   f:write(string.format("language = '%s',", lng and lng.language or 'English'), '\n')
   f:write(string.format("authors  = [[%s]],", lng and lng.authors or 'Your Name'), '\n')

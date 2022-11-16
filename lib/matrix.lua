@@ -494,6 +494,75 @@ function (M)
 end
 }
 
+--- Inverse iteration method for eigenvector calculation.
+--  @param M Source matrix.
+--  @param v Eigenvalue estimation.
+--  @param eps Error value.
+--  @return Eigenvector estimation.
+matrix._findEigenvector_ = function (M, v, eps)
+  -- (M - v * I)^-1
+  local iM = M:copy()
+  -- add 'noize'
+  v = (Cross.norm(v) > 0) and 1.01 * v or 1E-4
+  for i = 1, M._rows do iM[i][i] = M[i][i] - v end
+  iM = iM:inv()
+  -- random b
+  local b = M:zeros(M._rows, 1)
+  for i = 1, M._rows do b[i][1] = math.random() end
+  b = b / b:norm() 
+  -- find
+  local prev = b
+  for i = 1, 10 do
+    b = iM * b
+    b = b / b:norm()
+    local diff = (b - prev):norm()
+    if diff < eps or diff > (2-eps) then 
+      break 
+    end
+    prev = b
+  end
+  return b
+end
+
+--- Minor value calculation.
+--  @param M Source matrix.
+--  @return Minor value.
+matrix._firstMinor_ = function (M)
+  local det = matrix._det_[M._rows]
+  if det then 
+    return det(M)
+  else
+    local sum, k = 0, 1
+    for i = 1, M._cols do
+      if M[1][i] ~= 0 then
+        local m = matrix._firstMinorSub_(M, 1, i)
+        sum = sum + k * M[1][i] * matrix._firstMinor_(m)
+      end
+      k = -k
+    end
+    return sum
+  end
+end
+
+--- Find sub-matrix for minor calculation.
+--  @param M Source matrix.
+--  @param ir Row index.
+--  @param ic Column index.
+--  @return Submatrix.
+matrix._firstMinorSub_ = function (M, ir, ic)
+  local res = matrix:_init_(M._rows-1, M._cols-1, {})
+  for r = 1, ir-1 do
+    for c = 1, ic-1 do res[r][c] = M[r][c] end
+    for c = ic+1, M._cols do res[r][c-1] = M[r][c] end
+  end
+  for r = ir+1, M._rows do
+    local r1 = r-1
+    for c = 1, ic-1 do res[r1][c] = M[r][c] end
+    for c = ic+1, M._cols do res[r1][c-1] = M[r][c] end
+  end
+  return res
+end
+
 --- Transform matrix to upper triangle (in-place).
 --  @param M Initial matrix.
 --  @return Upper triangulated matrix and determinant.
@@ -787,6 +856,25 @@ matrix.dot = function (V1,V2)
 end
 about[matrix.dot] = {'dot(V)', 'Scalar product of two vectors.'}
 
+--- Find eigenvectors and eigenvalues.
+--  @param M Square matrix.
+--  @return Matrix with eigenvectors, matrix with eigenvalues in diagonal.
+matrix.eig = function (M)
+  assert(M._rows == M._cols)
+  matrix.ext_poly = matrix.ext_poly or require("lib.polynomial")
+  local p = matrix.ext_poly:char(M)
+  local root = p:roots()
+  local P, lam = matrix:zeros(M._rows), matrix:zeros(M._rows)
+  for j = 1, #root do
+    local v = matrix._findEigenvector_(M, root[j], 1E-4)
+    -- save
+    for i = 1, M._rows do P[i][j] = v[i][1] end
+    lam[j][j] = root[j]
+  end
+  return P, lam
+end
+about[matrix.eig] = {'eig()', 'Find matrices of eigenvectors and eigenvalues.'}
+
 --- Identity matrix.
 --  @param self Do nothing.
 --  @param rows Number of rows.
@@ -972,6 +1060,16 @@ matrix.map = function (M, fn)
   return res
 end
 about[matrix.map] = {"map(fn)", "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).", TRANSFORM}
+
+matrix.minor = function (M, ir, ic)
+  assert(M._rows == M._cols)
+  if ir > 0 and ic > 0 and ir <= M._rows and ic <= M._cols then
+    return matrix._firstMinor_(matrix._firstMinorSub_(M, ir, ic))
+  else 
+    -- determinant via minors
+    return matrix._firstMinor_(M)
+  end
+end
 
 --- Euclidean norm of the matrix at whole.
 --  @param M Current matrix.
@@ -1305,6 +1403,6 @@ return matrix
 
 --=========================
 --TODO: Fix sign in SVD transform
---TODO: Redefine 'norm' method
 --TODO: change matrix print
 --TODO: matrix from list and size
+--TODO: Fix eigenvectors for complex eigenvalues.
