@@ -287,12 +287,9 @@ _parents_.sum.p_simp = function (S, bFull)
   -- update structure
   _common_.pair_simp(S, _parents_.product)
   -- empty list
-  if #S._ == 0 then 
-    _common_.copy(S, symbolic:_new_const_(0))
-    return
-  end
+  assert(#S._ > 0)
   -- remove zero constant
-  if _common_.iszero(S._[1][2]) then
+  if #S._ > 1 and _common_.iszero(S._[1][2]) then
     table.remove(S._, 1) 
     S._sign_ = nil
   end
@@ -313,15 +310,12 @@ _parents_.product.p_simp = function (S, bFull)
   end
   _common_.pair_simp(S, _parents_.power)
   -- empty list
-  if #S._ == 0 then
-    _common_.copy(S, symbolic:_new_const_(1))
-    return
-  end
+  assert(#S._ > 0)
   -- check constant 
   if _common_.iszero(S._[1][2]) then
     _common_.copy(S, symbolic:_new_const_(0))
     return
-  elseif _common_.isone(S._[1][2]) then 
+  elseif #S._ > 1 and _common_.isone(S._[1][2]) then 
     table.remove(S._, 1)
     S._sign_ = nil
   end
@@ -565,8 +559,8 @@ S1 = symbolic:_new_const_(1)
 S2 = symbolic:_new_const_(2)
 S3 = symbolic:_new_symbol_('c')
 S4 = symbolic:_new_symbol_('a')
+S5 = symbolic:_new_const_(-1)
 
-A = S3 + S4
-B = A + A
-print(B)
+A = S1 + S5 
+print(A)
 
