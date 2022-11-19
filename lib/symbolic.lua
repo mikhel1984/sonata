@@ -379,8 +379,8 @@ symbolic.__add = function (S1, S2)
   local res = symbolic:_new_sum_()
   -- S1
   if S1._parent_ == _parents_.sum then
-    for _, v in ipairs(S1._) do  -- TODO use move
-      table.insert(res._, v)
+    for i, v in ipairs(S1._) do  -- TODO use move
+      table.insert(res._, {v[1], v[2]})
     end
   else
     table.insert(res._, {1, S1})
@@ -388,7 +388,7 @@ symbolic.__add = function (S1, S2)
   -- S2
   if S2._parent_ == _parents_.sum then 
     for _, v in ipairs(S2._) do
-      table.insert(res._, v)
+      table.insert(res._, {v[1], v[2]})
     end
   else
     table.insert(res._, {1, S2})
@@ -404,7 +404,7 @@ symbolic.__sub = function (S1, S2)
   -- S1
   if S1._parent_ == _parents_.sum then
     for _, v in ipairs(S1._) do  -- TODO use move
-      table.insert(res._, v)
+      table.insert(res._, {v[1], v[2]})
     end
   else
     table.insert(res._, {1, S1})
@@ -426,7 +426,7 @@ symbolic.__mul = function (S1, S2)
   -- S1
   if S1._parent_ == _parents_.product then 
     for _, v in ipairs(S1._) do  -- TODO use move
-      table.insert(res._, v)
+      table.insert(res._, {v[1], v[2]})
     end
   else
     table.insert(res._, {1, S1})
@@ -434,7 +434,7 @@ symbolic.__mul = function (S1, S2)
   -- S2
   if S2._parent_ == _parents_.product then 
     for _, v in ipairs(S2._) do  -- TODO use move
-      table.insert(res._, v)
+      table.insert(res._, {v[1], v[2]})
     end
   else
     table.insert(res._, {1, S2})
@@ -450,7 +450,7 @@ symbolic.__div = function (S1, S2)
   -- S1
   if S1._parent_ == _parents_.product then 
     for _, v in ipairs(S1._) do  -- TODO use move
-      table.insert(res._, v)
+      table.insert(res._, {v[1], v[2]})
     end
   else
     table.insert(res._, {1, S1})
@@ -561,10 +561,12 @@ about[symbolic.Sym] = {"Sym(t)", "Create new symbolic.", help.NEW}
 symbolic.about = about
 
 --return symbolic
-S1 = symbolic:_new_const_('1')
-S2 = symbolic:_new_const_('2')
+S1 = symbolic:_new_const_(1)
+S2 = symbolic:_new_const_(2)
 S3 = symbolic:_new_symbol_('c')
+S4 = symbolic:_new_symbol_('a')
 
-A = S3 + S1 + S2 
-print(A)
+A = S3 + S4
+B = A + A
+print(B)
 
