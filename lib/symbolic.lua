@@ -52,11 +52,11 @@ local _common_ = {
     end
     if S._sign_ and not found then return false end
     local t = {}
-    for i = 1, #S do t[i] = S._[i]._sign_ end
+    for i = 1, #S._ do t[i] = S._[i]._sign_ end
     S._sign_ = string.format('(%s:%s)', S.p_char, table.concat(t, ';'))
     return true
   end,
-
+  
   signature_pairs = function (S)
     -- check elements
     local found = false
@@ -68,7 +68,7 @@ local _common_ = {
     local t = {}
     for i = 1, #S._ do t[i] = S._[i][2]._sign_ end
     S._sign_ = string.format('(%s:%s)', S.p_char, table.concat(t, ';'))
-    return S._sign_
+    return true
   end, 
   
   eq = function (S1, S2)
@@ -99,6 +99,8 @@ local _common_ = {
   
   empty = function (S) end,
   
+  skip = function (S) return false end,
+  
   simp = function (S, bFull)
     for _, v in ipairs(S._) do v:p_simp(bFull) end
   end,
@@ -110,32 +112,25 @@ local _common_ = {
   isone = function (v)
     return issymbolic(v) and v._ == 1 or v == 1
   end,
-
-  isconst = function (S)
-    return S._parent_ == _parents_.const
-  end,
+  
   
   copy = function (S, S0)
     S._parent_ = S0._parent_
     S._ = S0._
     S._name_ = S0._name_
-    S._sign_ = nil
+    S._sign_ = S0.p_isatom and S0._sign_ or nil
   end,
-
-
 
 }
 
 
 local _parents_ = {
+
 const = {
   -- S._ = value
   p_char = '',
-  p_signature = function (S)
-    if S._sign_ then return false end
-    S._sign_ = '.'
-    return true
-  end,
+  p_isatom = true,
+  p_signature = _common_.skip,
   p_eq = function (S1, S2) return S1._ == S2._ end,
   p_str = function (S) return tostring(S._) end,
   p_simp = _common_.empty,
@@ -144,11 +139,8 @@ const = {
 symbol = {
   -- S._ = name
   p_char = 'S',
-  p_signature = function (S)
-    if S._sign_ then return false end
-    S._sign_ = S._
-    return true
-  end,
+  p_isatom = true,
+  p_signature = _common_.skip,
   p_eq = function (S1, S2) return S1._ == S2._ end,
   p_str = function (S) return S._ end,
   p_simp = _common_.empty,
@@ -157,6 +149,7 @@ symbol = {
 sum = {
   -- S._ = {{k1, S1}, {k2, S2}, ...}
   p_char = '+',
+  p_isatom = false,
   p_signature = _common_.signature_pairs,
   p_eq = _common_.eq_pairs,
   p_str = function (S)
@@ -172,6 +165,7 @@ sum = {
 product = {
   -- S._ = {{pow1, S1}, {pow2, S2}, ...}
   p_sym = '*',  
+  p_isatom = false,
   p_signature = _common_.signature_pairs,
   p_eq = _common_.eq_pairs, 
   p_str = function (S)
@@ -187,6 +181,7 @@ product = {
 power = {
   -- S._ = {base, power}
   p_char = '^',
+  p_isatom = false,
   p_signature = _common_.signature,
   p_eq = _common_.eq,
   p_str = function (S) 
@@ -197,19 +192,20 @@ power = {
       S._[1]:p_simp(bFull)
       S._[2]:p_simp(bFull)
     end
-    if _common_.isone(S._[2]) then 
+    if _common_.isone(S._[2]) then       -- v^1
       _common_.copy(S, S._[1])
-    elseif _common_.iszero(S._[2]) then 
+    elseif _common_.iszero(S._[2]) then  -- v^0
       _common_.copy(S, symbolic:_new_const_(1))
-    elseif _common_.isone(S._[1]) or _common_.iszero(S._[1]) then
+    elseif _common_.isone(S._[1]) or _common_.iszero(S._[1]) then  -- 1^v or 0^v
       _common_.copy(S, S._[1])
     end
-  end
+  end,
 }, 
 
 func = {
   -- S._ = {arg1, arg2, ...}
   p_char = 'FN',  
+  p_isatom = false,
   p_signature = _common_.signature,
   p_eq = function (S1, S2) 
     return S1._name_ == S2._name_ and _common_.eq(S1, S2) 
@@ -375,14 +371,14 @@ symbolic.__tostring = function (S)
 end
 
 
-symbolic._args_ = function (v1, v2)
+symbolic._tosym_ = function (v1, v2)
   v1 = issymbolic(v1) and v1 or symbolic:_new_const_(v1)
   v2 = issymbolic(v2) and v2 or symbolic:_new_const_(v2)
   return v1, v2
 end
 
 symbolic.__add = function (S1, S2)
-  S1, S2 = symbolic._args_(S1, S2)
+  S1, S2 = symbolic._tosym_(S1, S2)
   local res = symbolic:_new_sum_()
   -- S1
   if S1._parent_ == _parents_.sum then
@@ -406,7 +402,7 @@ symbolic.__add = function (S1, S2)
 end
 
 symbolic.__sub = function (S1, S2)
-  S1, S2 = symbolic._args_(S1, S2)
+  S1, S2 = symbolic._tosym_(S1, S2)
   local res = symbolic:_new_sum_()
   -- S1
   if S1._parent_ == _parents_.sum then
@@ -428,7 +424,7 @@ symbolic.__sub = function (S1, S2)
 end
 
 symbolic.__mul = function (S1, S2)
-  S1, S2 = symbolic._args_(S1, S2)
+  S1, S2 = symbolic._tosym_(S1, S2)
   local res = symbolic:_new_prod_()
   -- S1
   if S1._parent_ == _parents_.product then 
@@ -452,7 +448,7 @@ symbolic.__mul = function (S1, S2)
 end
 
 symbolic.__div = function (S1, S2)
-  S1, S2 = symbolic._args_(S1, S2)
+  S1, S2 = symbolic._tosym_(S1, S2)
   local res = symbolic:_new_prod_()
   -- S1
   if S1._parent_ == _parents_.product then 
@@ -474,7 +470,7 @@ symbolic.__div = function (S1, S2)
 end
 
 symbolic.__pow = function (S1, S2)
-  S1, S2 = symbolic._args_(S1, S2)
+  S1, S2 = symbolic._tosym_(S1, S2)
   local res = symbolic:_new_pow_()
   if S1._parent_ == _parents_.power then
     res._[1] = S1._[1]
@@ -513,6 +509,7 @@ end
 symbolic._new_const_ = function (self, v)
   local o = {
     _parent_ = _parents_.const,
+    _sign_ = '.',
     _ = v,
   }
   return setmetatable(o, self)
@@ -521,6 +518,7 @@ end
 symbolic._new_symbol_ = function (self, nm)
   local o = {
     _parent_ = _parents_.symbol,
+    _sign_ = nm,
     _ = nm,
   }
   return setmetatable(o, self)
@@ -573,8 +571,8 @@ S1 = symbolic:_new_const_(1)
 S2 = symbolic:_new_const_(2)
 S3 = symbolic:_new_symbol_('c')
 S4 = symbolic:_new_symbol_('a')
-S5 = symbolic:_new_const_(0)
+S5 = symbolic:_new_const_(-2)
 
-A = S3 / S1
-print(A)
+A = S3^(S2 - S2)
+print(A, A._sign_)
 
