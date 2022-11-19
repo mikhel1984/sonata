@@ -187,19 +187,7 @@ power = {
   p_str = function (S) 
     return string.format('%s^%s', S._[1]:p_str(), S._[2]:p_str())
   end,
-  p_simp = function (S, bFull)
-    if bFull then
-      S._[1]:p_simp(bFull)
-      S._[2]:p_simp(bFull)
-    end
-    if _common_.isone(S._[2]) then       -- v^1
-      _common_.copy(S, S._[1])
-    elseif _common_.iszero(S._[2]) then  -- v^0
-      _common_.copy(S, symbolic:_new_const_(1))
-    elseif _common_.isone(S._[1]) or _common_.iszero(S._[1]) then  -- 1^v or 0^v
-      _common_.copy(S, S._[1])
-    end
-  end,
+  -- p_simp below
 }, 
 
 func = {
@@ -339,6 +327,22 @@ _parents_.product.p_simp = function (S, bFull)
   end
 end
 
+_parents_.power.p_simp = function (S, bFull)
+  if bFull then
+    S._[1]:p_simp(bFull)
+    S._[2]:p_simp(bFull)
+  end
+  if _common_.isone(S._[2]) then       -- v^1
+    _common_.copy(S, S._[1])
+  elseif _common_.iszero(S._[2]) then  -- v^0
+    _common_.copy(S, symbolic:_new_const_(1))
+  elseif _common_.isone(S._[1]) or _common_.iszero(S._[1]) then  -- 1^v or 0^v
+    _common_.copy(S, S._[1])
+  elseif S._[1]._parent_ == S._[2]._parent_ and S._[1]._parent_ == _parents_.const then
+    _common_.copy(S, symbolic:_new_const_(S._[1]._ ^ S._[2]._))
+  end
+end
+
 _parents_.product.p_get_const = function (S)
   local v = S._[1]
   if v[2]._parent_ == _parents_.const then 
@@ -382,17 +386,13 @@ symbolic.__add = function (S1, S2)
   local res = symbolic:_new_sum_()
   -- S1
   if S1._parent_ == _parents_.sum then
-    for i, v in ipairs(S1._) do  -- TODO use move
-      table.insert(res._, {v[1], v[2]})
-    end
+    for i, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
   -- S2
   if S2._parent_ == _parents_.sum then 
-    for _, v in ipairs(S2._) do
-      table.insert(res._, {v[1], v[2]})
-    end
+    for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S2})
   end
@@ -406,9 +406,7 @@ symbolic.__sub = function (S1, S2)
   local res = symbolic:_new_sum_()
   -- S1
   if S1._parent_ == _parents_.sum then
-    for _, v in ipairs(S1._) do  -- TODO use move
-      table.insert(res._, {v[1], v[2]})
-    end
+    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
@@ -428,17 +426,13 @@ symbolic.__mul = function (S1, S2)
   local res = symbolic:_new_prod_()
   -- S1
   if S1._parent_ == _parents_.product then 
-    for _, v in ipairs(S1._) do  -- TODO use move
-      table.insert(res._, {v[1], v[2]})
-    end
+    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
   -- S2
   if S2._parent_ == _parents_.product then 
-    for _, v in ipairs(S2._) do  -- TODO use move
-      table.insert(res._, {v[1], v[2]})
-    end
+    for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S2})
   end
@@ -452,9 +446,7 @@ symbolic.__div = function (S1, S2)
   local res = symbolic:_new_prod_()
   -- S1
   if S1._parent_ == _parents_.product then 
-    for _, v in ipairs(S1._) do  -- TODO use move
-      table.insert(res._, {v[1], v[2]})
-    end
+    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
@@ -489,9 +481,7 @@ symbolic.__unm = function (S)
   local res
   if S._parent_ == _parents_.sum then
     res = symbolic:_new_sum_()
-    for i, v in ipairs(S._) do
-      res._[i] = {-v[1], v[2]}
-    end
+    for i, v in ipairs(S._) do res._[i] = {-v[1], v[2]} end
   else 
     res = symbolic:_new_const_(-1) * S
   end
@@ -548,31 +538,29 @@ symbolic._new_pow_ = function (self)
   return setmetatable(o, self)
 end
 
---- Constructor example.
---  @param t Some value.
---  @return New object of symbolic.
-symbolic.new = function(self,t)
-  local o = {}
-  -- your logic 
-  -- return object
-  return setmetatable(o,self)
-end
-
 -- simplify constructor call
-setmetatable(symbolic, {__call = function (self,v) return symbolic:new(v) end})
+setmetatable(symbolic, {
+__call = function (self,v) 
+  if type(v) == 'string' then
+    return symbolic:_new_symbol_(v)  -- TODO check correctnes
+  elseif type(v) == 'number' then    -- TODO apply for other sonata types
+    return symbolic:_new_const_(v)
+  end
+  error("Wrong symbolic argument "..tostring(v))
+end})
 symbolic.Sym = 'Sym'
-about[symbolic.Sym] = {"Sym(t)", "Create new symbolic.", help.NEW}
+about[symbolic.Sym] = {"Sym(t)", "Create new symbolic variable.", help.NEW}
 
 -- Comment to remove descriptions
 symbolic.about = about
 
 --return symbolic
-S1 = symbolic:_new_const_(1)
-S2 = symbolic:_new_const_(2)
-S3 = symbolic:_new_symbol_('c')
-S4 = symbolic:_new_symbol_('a')
-S5 = symbolic:_new_const_(-2)
+S1 = symbolic(1)
+S2 = symbolic(2)
+S3 = symbolic('c')
+S4 = symbolic('a')
+S5 = symbolic(0)
 
-A = S3^(S2 - S2)
+A = S2 ^ S2
 print(A, A._sign_)
 
