@@ -238,6 +238,8 @@ equation = {
 }
 
 _common_.pair_simp = function (S, tParent)
+  -- be sure that signature is found
+  S:p_signature()
   -- get coefficients
   for i, v in ipairs(S._) do
     if v[2]._parent_ == tParent then
@@ -287,11 +289,17 @@ _parents_.sum.p_simp = function (S, bFull)
   -- update structure
   _common_.pair_simp(S, _parents_.product)
   -- empty list
-  assert(#S._ > 0)
-  -- remove zero constant
-  if #S._ > 1 and _common_.iszero(S._[1][2]) then
-    table.remove(S._, 1) 
-    S._sign_ = nil
+  if #S._ == 0 then
+    _common_.copy(S, symbolic:_new_const_(0))
+    return
+  end
+  -- sort and remove zero constant
+  if #S._ > 1 then 
+    table.sort(S._, _comp_lst_)
+    if _common_.iszero(S._[1][2]) then
+      table.remove(S._, 1) 
+      S._sign_ = nil
+    end
   end
   -- change type
   if #S._ == 1 then 
@@ -310,7 +318,12 @@ _parents_.product.p_simp = function (S, bFull)
   end
   _common_.pair_simp(S, _parents_.power)
   -- empty list
-  assert(#S._ > 0)
+  if #S._ == 0 then
+    _common_.copy(S, symbolic:_new_const_(1))
+    return
+  elseif #S._ > 1 then
+    table.sort(S._, _comp_lst_)
+  end
   -- check constant 
   if _common_.iszero(S._[1][2]) then
     _common_.copy(S, symbolic:_new_const_(0))
@@ -332,7 +345,7 @@ end
 
 _parents_.product.p_get_const = function (S)
   local v = S._[1]
-  if v[2]._parent_ == _parent_.const then 
+  if v[2]._parent_ == _parents_.const then 
     v = v[1] * v[2]._  -- coefficient * const
     table.remove(S._, 1)
     S._sign_ = nil
@@ -453,7 +466,7 @@ symbolic.__div = function (S1, S2)
   if S2._parent_ == _parents_.product then 
     for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
   else
-    table.insert(res._, {1, S2})
+    table.insert(res._, {-1, S2})
   end
   res:p_simp()
   res:p_signature()
@@ -534,6 +547,7 @@ symbolic._new_pow_ = function (self)
     _parent_ = _parents_.power,
     _ = {1, 1},
   }
+  return setmetatable(o, self)
 end
 
 --- Constructor example.
@@ -559,8 +573,8 @@ S1 = symbolic:_new_const_(1)
 S2 = symbolic:_new_const_(2)
 S3 = symbolic:_new_symbol_('c')
 S4 = symbolic:_new_symbol_('a')
-S5 = symbolic:_new_const_(-1)
+S5 = symbolic:_new_const_(0)
 
-A = S1 + S5 
+A = S3 / S1
 print(A)
 
