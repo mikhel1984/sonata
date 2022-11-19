@@ -121,6 +121,24 @@ local _common_ = {
     S._sign_ = S0.p_isatom and S0._sign_ or nil
   end,
 
+  eval_pairs = function (S, tEnv)
+    local res = symbolic:_new_sum_()
+    res._parent_ = S._parent_ 
+    for i, v in ipairs(S._) do
+      res._[i] = {v[1], v[2]:p_eval(tEnv)}
+    end
+    return res
+  end,
+
+  eval = function (S, tEnv)
+    local res = symbolic:_new_sum_()
+    res._parent_ = S._parent_
+    for i, v in ipairs(S._) do
+      res._[i] = v:p_eval(tEnv)
+    end
+    return res
+  end,
+
 }
 
 
@@ -134,6 +152,7 @@ const = {
   p_eq = function (S1, S2) return S1._ == S2._ end,
   p_str = function (S) return tostring(S._) end,
   p_simp = _common_.empty,
+  p_eval = function (S) return S end,
 },
 
 symbol = {
@@ -144,6 +163,10 @@ symbol = {
   p_eq = function (S1, S2) return S1._ == S2._ end,
   p_str = function (S) return S._ end,
   p_simp = _common_.empty,
+  p_eval = function (S, tEnv)
+    local v = tEnv[S._]
+    return v and (issymbolic(v) and v or symbolic:_new_const_(v)) or S
+  end,
 },
 
 sum = {
@@ -159,6 +182,7 @@ sum = {
     end
     return string.format('(%s)', table.concat(t, ' + '))
   end,
+  p_eval = _common_.eval_pairs,
   -- p_simp below
 },
 
@@ -175,6 +199,7 @@ product = {
     end
     return string.format('(%s)', table.concat(t, ' * '))
   end,
+  p_eval = _common_.eval_pairs,
   -- p_simp below
 },
 
@@ -187,6 +212,7 @@ power = {
   p_str = function (S) 
     return string.format('%s^%s', S._[1]:p_str(), S._[2]:p_str())
   end,
+  p_eval = _common_.eval,
   -- p_simp below
 }, 
 
@@ -204,6 +230,9 @@ func = {
     return string.format('%s(%s)', S._name_, table.concat(t, ','))
   end,
   p_simp = _common_.simp,
+  p_eval = function (S0, tEnv)
+    -- TODO define it
+  end
   
 },
 
@@ -538,6 +567,21 @@ symbolic._new_pow_ = function (self)
   return setmetatable(o, self)
 end
 
+symbolic.eval = function (S, tEnv)
+  local res = S:p_eval(tEnv)
+  res:p_simp(true)
+  res:p_signature()
+  return res
+end
+
+symbolic.name = function (S)
+  return S._parent_ == _parents_.symbol and S._ or nil
+end
+
+symbolic.value = function (S)
+  return S._parent_ == _parents_.const and S._ or nil
+end
+
 -- simplify constructor call
 setmetatable(symbolic, {
 __call = function (self,v) 
@@ -561,6 +605,12 @@ S3 = symbolic('c')
 S4 = symbolic('a')
 S5 = symbolic(0)
 
-A = S2 ^ S2
-print(A, A._sign_)
+t = {}
+t[S3:name()] = 3
+t[S4:name()] = 4
+A = S2*S3*S3 + S4*S4^S2*S2
+
+print(A)
+B = A:eval(t)
+print(B)
 
