@@ -43,7 +43,7 @@ local symbolic = {
 type = 'symbolic', issymbolic = true,
 }
 
-local _common_ = {
+local _COMMON_ = {
 
   signature = function (S)
     local found = false
@@ -117,13 +117,11 @@ local _common_ = {
   copy = function (S, S0)
     S._parent_ = S0._parent_
     S._ = S0._
-    S._name_ = S0._name_
     S._sign_ = S0.p_isatom and S0._sign_ or nil
   end,
 
   eval_pairs = function (S, tEnv)
-    local res = symbolic:_new_sum_()
-    res._parent_ = S._parent_ 
+    local res = symbolic:_new_obj_(S._parent_, {})
     for i, v in ipairs(S._) do
       res._[i] = {v[1], v[2]:p_eval(tEnv)}
     end
@@ -131,8 +129,7 @@ local _common_ = {
   end,
 
   eval = function (S, tEnv)
-    local res = symbolic:_new_sum_()
-    res._parent_ = S._parent_
+    local res = symbolic:_new_obj_(S._parent_, {})
     for i, v in ipairs(S._) do
       res._[i] = v:p_eval(tEnv)
     end
@@ -142,16 +139,16 @@ local _common_ = {
 }
 
 
-local _parents_ = {
+local _PARENTS_ = {
 
 const = {
   -- S._ = value
   p_char = '',
   p_isatom = true,
-  p_signature = _common_.skip,
+  p_signature = _COMMON_.skip,
   p_eq = function (S1, S2) return S1._ == S2._ end,
   p_str = function (S) return tostring(S._) end,
-  p_simp = _common_.empty,
+  p_simp = _COMMON_.empty,
   p_eval = function (S) return S end,
 },
 
@@ -159,10 +156,10 @@ symbol = {
   -- S._ = name
   p_char = 'S',
   p_isatom = true,
-  p_signature = _common_.skip,
+  p_signature = _COMMON_.skip,
   p_eq = function (S1, S2) return S1._ == S2._ end,
   p_str = function (S) return S._ end,
-  p_simp = _common_.empty,
+  p_simp = _COMMON_.empty,
   p_eval = function (S, tEnv)
     local v = tEnv[S._]
     return v and (issymbolic(v) and v or symbolic:_new_const_(v)) or S
@@ -173,8 +170,8 @@ sum = {
   -- S._ = {{k1, S1}, {k2, S2}, ...}
   p_char = '+',
   p_isatom = false,
-  p_signature = _common_.signature_pairs,
-  p_eq = _common_.eq_pairs,
+  p_signature = _COMMON_.signature_pairs,
+  p_eq = _COMMON_.eq_pairs,
   p_str = function (S)
     local t = {}
     for i, v in ipairs(S._) do
@@ -182,7 +179,7 @@ sum = {
     end
     return string.format('(%s)', table.concat(t, ' + '))
   end,
-  p_eval = _common_.eval_pairs,
+  p_eval = _COMMON_.eval_pairs,
   -- p_simp below
 },
 
@@ -190,8 +187,8 @@ product = {
   -- S._ = {{pow1, S1}, {pow2, S2}, ...}
   p_sym = '*',  
   p_isatom = false,
-  p_signature = _common_.signature_pairs,
-  p_eq = _common_.eq_pairs, 
+  p_signature = _COMMON_.signature_pairs,
+  p_eq = _COMMON_.eq_pairs, 
   p_str = function (S)
     local t = {}
     for i, v in ipairs(S._) do
@@ -199,7 +196,7 @@ product = {
     end
     return string.format('(%s)', table.concat(t, ' * '))
   end,
-  p_eval = _common_.eval_pairs,
+  p_eval = _COMMON_.eval_pairs,
   -- p_simp below
 },
 
@@ -207,50 +204,68 @@ power = {
   -- S._ = {base, power}
   p_char = '^',
   p_isatom = false,
-  p_signature = _common_.signature,
-  p_eq = _common_.eq,
+  p_signature = _COMMON_.signature,
+  p_eq = _COMMON_.eq,
   p_str = function (S) 
     return string.format('%s^%s', S._[1]:p_str(), S._[2]:p_str())
   end,
-  p_eval = _common_.eval,
+  p_eval = _COMMON_.eval,
   -- p_simp below
 }, 
 
 func = {
-  -- S._ = {arg1, arg2, ...}
+  -- S._ = name
   p_char = 'FN',  
-  p_isatom = false,
-  p_signature = _common_.signature,
-  p_eq = function (S1, S2) 
-    return S1._name_ == S2._name_ and _common_.eq(S1, S2) 
+  p_isatom = true,
+  p_signature = _COMMON_.skip,
+  p_eq = function (S1, S2) return S1._ == S2._ end,
+  p_str = function (S)
+    local nm = S._
+    local lst = symbolic._fn_list_[nm]
+    return string.format('%s(%s): %s', nm, table.concat(lst.args, ','), tostring(lst.body))
   end,
+  p_simp = _COMMON_.empty,
+  -- no p_eval ?
+  
+},
+
+func_value = {
+  -- S._ = {fn, arg1, arg2, ...}
+  p_char = 'FN',
+  p_isatom = false,
+  p_signature = _COMMON_.signature,
+  p_eq = _COMMON_.eq,
   p_str = function (S)
     local t = {}
-    for i, v in ipairs(S._) do t[i] = v:p_str() end
-    return string.format('%s(%s)', S._name_, table.concat(t, ','))
+    for i = 2, #S._ do t[#t+1] = S._[i]:p_str() end
+    return string.format('%s(%s)', S._[1]._, table.concat(t, '.'))
   end,
-  p_simp = _common_.simp,
-  p_eval = function (S0, tEnv)
-    -- TODO define it
-  end
-  
+  p_simp = _COMMON_.simp,
+  -- p_eval
+
+
 },
 
 --[[
 equation = {
   -- S._ = {lft, rht}
   p_char = 'EQ',
-  p_signature = _common_.signature,
-  p_eq = _common_.eq,
+  p_signature = _COMMON_.signature,
+  p_eq = _COMMON_.eq,
   p_str = function (S)
     return string.format('%s = %s', S._[1]:p_str(), S._[2]:p_str())
   end,
-  p_simp = _common_.simp,
+  p_simp = _COMMON_.simp,
 }
 ]]
 }
 
-_common_.pair_simp = function (S, tParent)
+symbolic._fn_list_ = {
+  sin = {args = {'x'}, body = math.sin},
+  cos = {args = {'x'}, body = math.cos},
+}
+
+_COMMON_.pair_simp = function (S, tParent)
   -- be sure that signature is found
   S:p_signature()
   -- get coefficients
@@ -266,15 +281,15 @@ _common_.pair_simp = function (S, tParent)
   -- combine elements
   for i, si in ipairs(S._) do
     if si[1] ~= 0 then
-      local iconst = (si[2]._parent_ == _parents_.const)
+      local iconst = (si[2]._parent_ == _PARENTS_.const)
       for j = i+1, #S._ do
         local sj = S._[j]
         if sj[1] ~= 0 then
-          if iconst and sj[2]._parent_ == _parents_.const then
+          if iconst and sj[2]._parent_ == _PARENTS_.const then
             -- combine constants
-            if tParent == _parents_.product then 
+            if tParent == _PARENTS_.product then 
               si[2]._ = si[1] * si[2]._ + sj[1] * sj[2]._
-            else -- _parents_.power 
+            else -- _PARENTS_.power 
               si[2]._ = si[2]._ ^ si[1] * sj[2]._ ^ sj[1]
             end
             si[1], sj[1] = 1, 0
@@ -295,21 +310,21 @@ _common_.pair_simp = function (S, tParent)
   end
 end
 
-_parents_.sum.p_simp = function (S, bFull)
+_PARENTS_.sum.p_simp = function (S, bFull)
   if bFull then
     for _, v in ipairs(S._) do v[2]:p_simp(bFull) end
   end
   -- update structure
-  _common_.pair_simp(S, _parents_.product)
+  _COMMON_.pair_simp(S, _PARENTS_.product)
   -- empty list
   if #S._ == 0 then
-    _common_.copy(S, symbolic:_new_const_(0))
+    _COMMON_.copy(S, symbolic:_new_const_(0))
     return
   end
   -- sort and remove zero constant
   if #S._ > 1 then 
     table.sort(S._, _comp_lst_)
-    if _common_.iszero(S._[1][2]) then
+    if _COMMON_.iszero(S._[1][2]) then
       table.remove(S._, 1) 
       S._sign_ = nil
     end
@@ -318,30 +333,30 @@ _parents_.sum.p_simp = function (S, bFull)
   if #S._ == 1 then 
     local v = S._[1]
     if v[1] ~= 1 then 
-      _common_.copy(S, symbolic:_new_const_(v[1]) * v[2])
+      _COMMON_.copy(S, symbolic:_new_const_(v[1]) * v[2])
     else 
-      _common_.copy(S, v[2])
+      _COMMON_.copy(S, v[2])
     end
   end
 end
 
-_parents_.product.p_simp = function (S, bFull)
+_PARENTS_.product.p_simp = function (S, bFull)
   if bFull then
     for _, v in ipairs(S._) do v[2]:p_simp(bFull) end
   end
-  _common_.pair_simp(S, _parents_.power)
+  _COMMON_.pair_simp(S, _PARENTS_.power)
   -- empty list
   if #S._ == 0 then
-    _common_.copy(S, symbolic:_new_const_(1))
+    _COMMON_.copy(S, symbolic:_new_const_(1))
     return
   elseif #S._ > 1 then
     table.sort(S._, _comp_lst_)
   end
   -- check constant 
-  if _common_.iszero(S._[1][2]) then
-    _common_.copy(S, symbolic:_new_const_(0))
+  if _COMMON_.iszero(S._[1][2]) then
+    _COMMON_.copy(S, symbolic:_new_const_(0))
     return
-  elseif #S._ > 1 and _common_.isone(S._[1][2]) then 
+  elseif #S._ > 1 and _COMMON_.isone(S._[1][2]) then 
     table.remove(S._, 1)
     S._sign_ = nil
   end
@@ -349,32 +364,51 @@ _parents_.product.p_simp = function (S, bFull)
   if #S._ == 1 then
     local v = S._[1]
     if v[1] ~= 1 then 
-      _common_.copy(S, v[2] ^ symbolic:_new_const_(v[1]))
+      _COMMON_.copy(S, v[2] ^ symbolic:_new_const_(v[1]))
     else 
-      _common_.copy(S, v[2])
+      _COMMON_.copy(S, v[2])
     end
   end
 end
 
-_parents_.power.p_simp = function (S, bFull)
+_PARENTS_.power.p_simp = function (S, bFull)
   if bFull then
     S._[1]:p_simp(bFull)
     S._[2]:p_simp(bFull)
   end
-  if _common_.isone(S._[2]) then       -- v^1
-    _common_.copy(S, S._[1])
-  elseif _common_.iszero(S._[2]) then  -- v^0
-    _common_.copy(S, symbolic:_new_const_(1))
-  elseif _common_.isone(S._[1]) or _common_.iszero(S._[1]) then  -- 1^v or 0^v
-    _common_.copy(S, S._[1])
-  elseif S._[1]._parent_ == S._[2]._parent_ and S._[1]._parent_ == _parents_.const then
-    _common_.copy(S, symbolic:_new_const_(S._[1]._ ^ S._[2]._))
+  if _COMMON_.isone(S._[2]) then       -- v^1
+    _COMMON_.copy(S, S._[1])
+  elseif _COMMON_.iszero(S._[2]) then  -- v^0
+    _COMMON_.copy(S, symbolic:_new_const_(1))
+  elseif _COMMON_.isone(S._[1]) or _COMMON_.iszero(S._[1]) then  -- 1^v or 0^v
+    _COMMON_.copy(S, S._[1])
+  elseif S._[1]._parent_ == S._[2]._parent_ and S._[1]._parent_ == _PARENTS_.const then
+    _COMMON_.copy(S, symbolic:_new_const_(S._[1]._ ^ S._[2]._))
   end
 end
 
-_parents_.product.p_get_const = function (S)
+_PARENTS_.func_value.p_eval = function (S, tEnv)
+  local t, val = {S._[1]}, {}
+  for i = 2, #S._ do
+    local v = S._[i]:p_eval(tEnv)
+    t[i] = v
+    if v._parent_ == _PARENTS_.const then
+      val[#val+1] = v._
+    end
+  end
+  local body = symbolic._fn_list_[S._[1]._]
+  if #val + 1 == #t then
+    -- evaluate
+    return symbolic:_new_const( body(table.unpack(val)) )
+  else 
+    local res = symbolic:_new_obj_(S._parent_, t)
+    return res
+  end
+end
+
+_PARENTS_.product.p_get_const = function (S)
   local v = S._[1]
-  if v[2]._parent_ == _parents_.const then 
+  if v[2]._parent_ == _PARENTS_.const then 
     v = v[1] * v[2]._  -- coefficient * const
     table.remove(S._, 1)
     S._sign_ = nil
@@ -383,11 +417,11 @@ _parents_.product.p_get_const = function (S)
   return 1
 end
 
-_parents_.power.p_get_const = function (S)
+_PARENTS_.power.p_get_const = function (S)
   local v = S._[2]
-  if v._parent_ == _parents_.const then
+  if v._parent_ == _PARENTS_.const then
     v = v._ 
-    _common_.copy(S, S._[1])
+    _COMMON_.copy(S, S._[1])
     return v
   end
   return 1
@@ -412,15 +446,15 @@ end
 
 symbolic.__add = function (S1, S2)
   S1, S2 = symbolic._tosym_(S1, S2)
-  local res = symbolic:_new_sum_()
+  local res = symbolic:_new_obj_(_PARENTS_.sum, {})
   -- S1
-  if S1._parent_ == _parents_.sum then
+  if S1._parent_ == _PARENTS_.sum then
     for i, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
   -- S2
-  if S2._parent_ == _parents_.sum then 
+  if S2._parent_ == _PARENTS_.sum then 
     for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S2})
@@ -432,15 +466,15 @@ end
 
 symbolic.__sub = function (S1, S2)
   S1, S2 = symbolic._tosym_(S1, S2)
-  local res = symbolic:_new_sum_()
+  local res = symbolic:_new_obj_(_PARENTS_.sum, {})
   -- S1
-  if S1._parent_ == _parents_.sum then
+  if S1._parent_ == _PARENTS_.sum then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
   -- S2
-  if S2._parent_ == _parents_.sum then 
+  if S2._parent_ == _PARENTS_.sum then 
     for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
   else
     table.insert(res._, {-1, S2})
@@ -452,15 +486,15 @@ end
 
 symbolic.__mul = function (S1, S2)
   S1, S2 = symbolic._tosym_(S1, S2)
-  local res = symbolic:_new_prod_()
+  local res = symbolic:_new_obj_(_PARENTS_.product, {})
   -- S1
-  if S1._parent_ == _parents_.product then 
+  if S1._parent_ == _PARENTS_.product then 
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
   -- S2
-  if S2._parent_ == _parents_.product then 
+  if S2._parent_ == _PARENTS_.product then 
     for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S2})
@@ -472,15 +506,15 @@ end
 
 symbolic.__div = function (S1, S2)
   S1, S2 = symbolic._tosym_(S1, S2)
-  local res = symbolic:_new_prod_()
+  local res = symbolic:_new_obj_(_PARENTS_.product, {})
   -- S1
-  if S1._parent_ == _parents_.product then 
+  if S1._parent_ == _PARENTS_.product then 
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
   -- S2
-  if S2._parent_ == _parents_.product then 
+  if S2._parent_ == _PARENTS_.product then 
     for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
   else
     table.insert(res._, {-1, S2})
@@ -492,14 +526,12 @@ end
 
 symbolic.__pow = function (S1, S2)
   S1, S2 = symbolic._tosym_(S1, S2)
-  local res = symbolic:_new_pow_()
-  if S1._parent_ == _parents_.power then
-    res._[1] = S1._[1]
-    res._[2] = S1._[2] * S2
+  local res = symbolic:_new_obj_(_PARENTS_.power)
+  if S1._parent_ == _PARENTS_.power then
+    res._ = {S1._[1], S1._[2] * S2}
     res._[2]:p_simp()  
   else 
-    res._[1] = S1
-    res._[2] = S2
+    res._ = {S1, S2}
   end
   res:p_simp()
   res:p_signature()
@@ -508,13 +540,13 @@ end
 
 symbolic.__unm = function (S)
   local res
-  if S._parent_ == _parents_.sum then
-    res = symbolic:_new_sum_()
+  if S._parent_ == _PARENTS_.sum then
+    res = symbolic:_new_obj_(_PARENTS_.sum, {})
     for i, v in ipairs(S._) do res._[i] = {-v[1], v[2]} end
   else 
     res = symbolic:_new_const_(-1) * S
   end
-  if S._parent_ == _parents_.product then
+  if S._parent_ == _PARENTS_.product then
     res:p_simp()
   end
   res:p_signature()
@@ -527,42 +559,65 @@ end
 
 symbolic._new_const_ = function (self, v)
   local o = {
-    _parent_ = _parents_.const,
+    _parent_ = _PARENTS_.const,
     _sign_ = '.',
     _ = v,
   }
   return setmetatable(o, self)
 end
 
-symbolic._new_symbol_ = function (self, nm)
+symbolic._new_symbol_ = function (self, sName)
   local o = {
-    _parent_ = _parents_.symbol,
-    _sign_ = nm,
-    _ = nm,
+    _parent_ = _PARENTS_.symbol,
+    _sign_ = sName,
+    _ = sName,
   }
   return setmetatable(o, self)
 end
 
+symbolic._new_obj_ = function (self, parent, v)
+  local o = {
+    _parent_ = parent,
+    _ = v,
+  }
+  return setmetatable(o, self)
+end
+
+--[[
 symbolic._new_sum_ = function (self)
   local o = {
-    _parent_ = _parents_.sum,
+    _parent_ = _PARENTS_.sum,
     _ = {},
   }
   return setmetatable(o, self)
 end
+]]
 
+--[[
 symbolic._new_prod_ = function (self)
   local o = {
-    _parent_ = _parents_.product,
+    _parent_ = _PARENTS_.product,
     _ = {},
   }
   return setmetatable(o, self)
 end
+]]
 
+--[[
 symbolic._new_pow_ = function (self)
   local o = {
-    _parent_ = _parents_.power,
+    _parent_ = _PARENTS_.power,
     _ = {1, 1},
+  }
+  return setmetatable(o, self)
+end
+]]
+
+symbolic._new_func_ = function (self, sName)
+  local o = {
+    _parent_ = _PARENTS_.func,
+    _ = sName,
+    _sign_ = sName..'()'
   }
   return setmetatable(o, self)
 end
@@ -575,11 +630,55 @@ symbolic.eval = function (S, tEnv)
 end
 
 symbolic.name = function (S)
-  return S._parent_ == _parents_.symbol and S._ or nil
+  return S._parent_ == _PARENTS_.symbol and S._ or nil
 end
 
 symbolic.value = function (S)
-  return S._parent_ == _parents_.const and S._ or nil
+  return S._parent_ == _PARENTS_.const and S._ or nil
+end
+
+-- sName - function name
+-- tArgs - list of arguments 
+-- S - function body, symbolical expression or function
+symbolic.def = function (self, sName, tArgs, S)
+  assert(type(sName) == 'string' and issymbolic(S), "Wrong arguments")
+  local t = {}
+  for i, v in ipairs(tArgs) do
+    if issymbolic(v) then
+      if v._parent_ == _PARENTS_.symbol then
+        t[i] = v._
+      else
+        error("Wrong arguments")
+      end
+    elseif type(v) == 'string' then 
+      t[i] = v
+    else
+      error("Wrong arguments") 
+    end
+  end
+  symbolic._fn_list_[sName] = {
+    args = t,
+    body = S,
+  }
+  return symbolic:_new_func_(sName)
+end
+
+symbolic.__call = function (S, ...)
+  if S._parent_ == _PARENTS_.func then
+    local t = {...}
+    local fn = symbolic._fn_list_[S._]
+    if #t ~= #fn.args then 
+      error(string.format("Expected %d arguments for %s", #fn.args, S._))
+    end
+    if type(fn.body) == 'function' then
+      table.insert(t, S, 1)
+      return symbolic:_new_obj_(_PARENTS_.func_value, t)
+    else -- expression
+      local env = {}
+      for i, k in ipairs(fn.args) do env[k] = t[i] end
+      return symbolic.eval(fn.body, env)
+    end
+  end
 end
 
 -- simplify constructor call
@@ -605,12 +704,9 @@ S3 = symbolic('c')
 S4 = symbolic('a')
 S5 = symbolic(0)
 
-t = {}
-t[S3:name()] = 3
-t[S4:name()] = 4
-A = S2*S3*S3 + S4*S4^S2*S2
+S6 = symbolic('x')
+S7 = symbolic('y')
 
-print(A)
-B = A:eval(t)
+f = symbolic:def('sum', {S6,'y'}, S6 + S7)
+B = f(S3, S4)
 print(B)
-
