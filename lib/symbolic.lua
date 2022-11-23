@@ -396,10 +396,10 @@ _PARENTS_.func_value.p_eval = function (S, tEnv)
       val[#val+1] = v._
     end
   end
-  local body = symbolic._fn_list_[S._[1]._]
   if #val + 1 == #t then
+    local body = symbolic._fn_list_[S._[1]._].body
     -- evaluate
-    return symbolic:_new_const( body(table.unpack(val)) )
+    return symbolic:_new_const_( body(table.unpack(val)) )
   else 
     local res = symbolic:_new_obj_(S._parent_, t)
     return res
@@ -623,7 +623,7 @@ symbolic._new_func_ = function (self, sName)
 end
 
 symbolic.eval = function (S, tEnv)
-  local res = S:p_eval(tEnv)
+  local res = S:p_eval(tEnv or {})
   res:p_simp(true)
   res:p_signature()
   return res
@@ -663,6 +663,10 @@ symbolic.def = function (self, sName, tArgs, S)
   return symbolic:_new_func_(sName)
 end
 
+symbolic.func = function (self, sName)
+  return symbolic._fn_list_[sName] and symbolic:_new_func_(sName) or nil
+end
+
 symbolic.__call = function (S, ...)
   if S._parent_ == _PARENTS_.func then
     local t = {...}
@@ -671,7 +675,7 @@ symbolic.__call = function (S, ...)
       error(string.format("Expected %d arguments for %s", #fn.args, S._))
     end
     if type(fn.body) == 'function' then
-      table.insert(t, S, 1)
+      table.insert(t, 1, S)
       return symbolic:_new_obj_(_PARENTS_.func_value, t)
     else -- expression
       local env = {}
@@ -685,7 +689,7 @@ end
 setmetatable(symbolic, {
 __call = function (self,v) 
   if type(v) == 'string' then
-    return symbolic:_new_symbol_(v)  -- TODO check correctnes
+    return symbolic:_new_symbol_(v)  -- TODO check name correctnes
   elseif type(v) == 'number' then    -- TODO apply for other sonata types
     return symbolic:_new_const_(v)
   end
@@ -707,6 +711,7 @@ S5 = symbolic(0)
 S6 = symbolic('x')
 S7 = symbolic('y')
 
-f = symbolic:def('sum', {S6,'y'}, S6 + S7)
-B = f(S3, S4)
-print(B)
+symbolic:def('sum', {S6,'y'}, S6 + S7)
+f = symbolic:func('sin')
+B = f(S5)
+print(B:eval())
