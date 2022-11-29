@@ -11,9 +11,29 @@
 -- use 'symbolic'
 Sym = require 'lib.symbolic'
 
--- example
-a = Sym()
-ans = a.type   -->  'symbolic'
+-- create variables
+x, y = Sym('x'), Sym('y')
+ans = (x == y)            --> false
+
+-- sum 
+ans = x + 2*y - x + y     --> 3*y
+
+-- product 
+ans = x * y^2 / x * y     --> y^3
+
+-- power
+ans = x^y * x^(2*y)       --> x^(3*y)
+
+-- evaluate 
+S = (x+y)*(x-y)
+ans = S:eval{x=2, y=1}    --> Sym(3) 
+
+-- define function 
+foo = Sym:def('foo', {x, y}, x^y)
+ans = foo(y, x)           --> y^x 
+
+-- numeric value
+ans = foo(Sym(2), Sym(3)) --> Sym(8)
 
 
 --]]
@@ -406,8 +426,12 @@ _PARENTS_.product.p_get_const = function (S)
   local v = S._[1]
   if v[2]._parent_ == _PARENTS_.const then 
     v = v[1] * v[2]._  -- coefficient * const
-    table.remove(S._, 1)
-    S._sign_ = nil
+    if #S._ == 2 and _COMMON_.isone(S._[2][1]) then    -- val^1
+      _COMMON_.copy(S, S._[2][2])
+    else
+      table.remove(S._, 1)
+      S._sign_ = nil
+    end
     return v
   end
   return 1
@@ -579,6 +603,10 @@ end
 symbolic.__mul = function (S1, S2)
   S1, S2 = symbolic._tosym_(S1, S2)
   local res = symbolic:_new_expr_(_PARENTS_.product, {})
+  if S1._parent_ == _PARENTS_.power and S2._parent_ == _PARENTS_.power and
+     S1._[1] == S2._[1] then
+     return symbolic.__pow(S1._[1], S1._[2] + S2._[2])
+  end
   -- S1
   if S1._parent_ == _PARENTS_.product then 
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
