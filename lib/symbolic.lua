@@ -1,7 +1,12 @@
 --[[		sonata/lib/symbolic.lua
 
---- Symbolical calculations.
---  @author Your Name
+--- Symbolical calculus.
+--
+--  Object structure <br>
+--  <code> {_=components, _parent_=parent, _sign_=signature} </code><br>
+--
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
 
 	module 'symbolic'
 --]]
@@ -244,7 +249,8 @@ local _PARENTS_ = {
     p_signature = _COMMON_.signature,
     p_eq = _COMMON_.eq,
     p_str = function (S) 
-      return string.format('%s^%s', S._[1]:p_str(), S._[2]:p_str())
+      return _COMMON_.isone(S._[2]) and S._[1]:p_str() or 
+        string.format('%s^%s', S._[1]:p_str(), S._[2]:p_str())
     end,
     p_eval = _COMMON_.eval,
     -- p_simp below
