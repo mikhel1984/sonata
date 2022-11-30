@@ -25,7 +25,6 @@
 -- Modules
 use = {
 --  name     alias
-  array     = "Arr",
   asciiplot = "Ap",
   bigint    = "Int",
   complex   = "_Z",
@@ -38,8 +37,10 @@ use = {
   quaternion = "Quat",
   rational  = "Rat",
   special   = "Spec",
+  symbolic  = "Sym",
   units     = "Unit",
 --
+  array     = "Arr",
   geodesy   = "Geo",
   gnuplot   = "Gp",
   lens      = "Lens",

@@ -233,7 +233,7 @@ local _PARENTS_ = {
     p_str = function (S)
       local t = {}
       for i = 2, #S._ do t[#t+1] = S._[i]:p_str() end
-      return string.format('%s(%s)', S._[1]._, table.concat(t, '.'))
+      return string.format('%s(%s)', S._[1]._, table.concat(t, ','))
     end,
     p_simp = function (S, bFull)
       for _, v in ipairs(S._) do v:p_simp(bFull) end
@@ -248,10 +248,6 @@ local _PARENTS_ = {
     p_isatom = false,
     p_signature = _COMMON_.signature,
     p_eq = _COMMON_.eq,
-    p_str = function (S) 
-      return _COMMON_.isone(S._[2]) and S._[1]:p_str() or 
-        string.format('%s^%s', S._[1]:p_str(), S._[2]:p_str())
-    end,
     p_eval = _COMMON_.eval,
     -- p_simp below
   }, 
@@ -263,13 +259,6 @@ local _PARENTS_ = {
     p_isatom = false,
     p_signature = _COMMON_.signature_pairs,
     p_eq = _COMMON_.eq_pairs, 
-    p_str = function (S)
-      local t = {}
-      for i, v in ipairs(S._) do
-        t[i] = string.format('%s^%s', v[2]:p_str(), tostring(v[1]))
-      end
-      return string.format('(%s)', table.concat(t, ' * '))
-    end,
     p_eval = _COMMON_.eval_pairs,
     -- p_simp below
   },
@@ -281,13 +270,6 @@ local _PARENTS_ = {
     p_isatom = false,
     p_signature = _COMMON_.signature_pairs,
     p_eq = _COMMON_.eq_pairs,
-    p_str = function (S)
-      local t = {}
-      for i, v in ipairs(S._) do
-        t[i] = string.format('%s*%s', tostring(v[1]), v[2]:p_str())
-      end
-      return string.format('(%s)', table.concat(t, ' + '))
-    end,
     p_eval = _COMMON_.eval_pairs,
     -- p_simp below
   },
@@ -321,6 +303,12 @@ local _PARENTS_ = {
   ]]
 } -- _PARENTS_
 
+--- List of elements for printing in brackets.
+_COMMON_.closed = {
+[_PARENTS_.sum] = true,
+[_PARENTS_.product] = true,
+--[_PARENTS_.power] = true,
+}
 
 --- Simplify list of pairs (in place).
 --  @param S Symbolic object.
@@ -425,6 +413,22 @@ _PARENTS_.power.p_simp = function (S, bFull)
   end
 end
 
+--- Power object to string translation.
+--  @param S Symbolic object.
+--  @return String representation.
+_PARENTS_.power.p_str = function (S) 
+  local base = S._[1]:p_str()
+  if _COMMON_.closed[S._[1]._parent_] then
+    base = string.format('(%s)', base)
+  end
+  --if _COMMON_.isone(S._[2]) then return base end
+  local pow = S._[2]:p_str()
+  if _COMMON_.closed[S._[2]._parent_] then
+    pow = string.format('(%s)', pow)
+  end
+  return string.format('%s^%s', base, pow)
+end
+
 --- Split product to numeric and symbolic parts.
 --  @param S Symbolic object.
 --  @return Constant value.
@@ -477,6 +481,30 @@ _PARENTS_.product.p_simp = function (S, bFull)
   end
 end
 
+--- Sum object to string translation.
+--  @param S Symbolic object.
+--  @return String representation.
+_PARENTS_.product.p_str = function (S)
+  local num, denom = {}, {}
+  for _, v in ipairs(S._) do
+    local v1, v2 = v[1], v[2]:p_str()
+    if #S._ > 1 and _COMMON_.closed[v[2]._parent_] then 
+      v2 = string.format('(%s)', v2)
+    end
+    if v1 > 0 then
+      num[#num+1] = (v1 == 1) and v2 or string.format('%s^%s', v2, tostring(v1))
+    else  -- v[1] < 0
+      denom[#denom+1] = (v1 == -1) and v2 or string.format('%s^%s', v2, tostring(-v1))
+    end
+  end
+  if #denom == 0 then
+    return table.concat(num, '*')
+  else
+    num = #num > 0 and table.concat(num, '*') or '1'  -- reuse
+    return string.format(#denom > 1 and "%s/(%s)" or "%s/%s", num, table.concat(denom, '*'))
+  end
+end
+
 --- Simplify sum (in place).
 --  @param S Symbolic object.
 --  @param bFull Flag for recursive simplification.
@@ -507,6 +535,26 @@ _PARENTS_.sum.p_simp = function (S, bFull)
     else 
       _COMMON_.copy(S, v[2])
     end
+  end
+end
+
+--- Product object to string translation.
+--  @param S Symbolic object.
+--  @return String representation.
+_PARENTS_.sum.p_str = function (S)
+  local plus, minus = {}, {}
+  for _, v in ipairs(S._) do
+    local v1, v2 = v[1], v[2]:p_str()
+    if v1 > 0 then 
+      plus[#plus+1] = (v1 == 1) and v2 or string.format('%s*%s', tostring(v1), v2)
+    else
+      minus[#minus+1] = (v1 == -1) and v2 or string.format('%s*%s', tostring(-v1), v2)
+    end
+  end
+  if #minus == 0 then
+    return table.concat(plus, '+')
+  else
+    return string.format('%s-%s', table.concat(plus, '+'), table.concat(minus, '-'))
   end
 end
 
