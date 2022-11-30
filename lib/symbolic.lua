@@ -870,8 +870,9 @@ end
 setmetatable(symbolic, {
 __call = function (self,v) 
   if type(v) == 'string' then
-    return symbolic:_new_symbol_(v)  -- TODO check name correctnes
-  elseif type(v) == 'number' then    -- TODO apply for other sonata types
+    return symbolic:_new_symbol_(
+      assert(v:match('^[_%a]+[_%w]*$'), 'Wrong name')) 
+  elseif type(v) == 'number' or type(v) == 'table' and v.__mul then   -- TODO other methods?
     return symbolic:_new_const_(v)
   end
   error("Wrong argument "..tostring(v))
