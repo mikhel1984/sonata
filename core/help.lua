@@ -207,7 +207,7 @@ help.localization = function (self,fName)
   if lng then
     getmetatable(self).locale = lng   -- save translation
     -- update functions in main.lua
-    local Sn = lng.Main
+    local Sn = lng.main
     for k,v in pairs(self) do
       if v.link then
         -- common description

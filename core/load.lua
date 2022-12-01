@@ -22,7 +22,7 @@ Sonata.version = '0.9.32'
 quit = Sonata.exit
 
 -- Import actions
-function Sonata.doimport(tbl,name)
+function Sonata.doimport(tbl, name)
   local var = tbl[name]
   if not var then
     -- try alias
@@ -37,7 +37,7 @@ function Sonata.doimport(tbl,name)
     local lib = require('lib.'..name)
     _G[var] = lib
     -- add description
-    if lib.about then About:add(lib.about, var) end
+    if lib.about then About:add(lib.about, name) end
     -- do additional actions
     if lib.onImport then lib.onImport() end
   end

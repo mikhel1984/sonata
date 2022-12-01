@@ -10,13 +10,14 @@ Dialog = {
 ----------------- quit() = finu -------------------
 ]],
 ["use_import"]           = [[
+
 Alvoku
   use 'modulo' aǔ use {'moduloA','moduloB' ...}
 por akiri ekstrajn modulojn.
 ]],
 },
 ---------- main.lua ----------
-Main = {
+main = {
 ["__module__"]           = [[Komputado sistemo bazita sur Lua.]],
 ["tan(d)"]               = [[La tangento de nombro d.]],
 ["Print(...)"]           = [[Presi Lua tablo en uzanta formato, usi 'scienca' formon de nombro.]],
@@ -49,7 +50,7 @@ Main = {
 ["asin(d)"]              = [[La sinusarko de nombro d.]],
 },
 ---------- special.lua ----------
-Spec = {
+special = {
 ["__module__"]           = [[Specialaj matematikaj funkcioj.]],
 ["Spec:bessely(n,x)"]    = [[Bessel-funkcio de la dua speco.]],
 ["Spec:gammq(N,x)"]      = [[Nekompleta gama-funkcio Q(N,x) = 1-P(N,x).]],
@@ -70,7 +71,7 @@ Spec = {
 ["Spec:erf(x)"]          = [[Eraro funkcio.]],
 },
 ---------- array.lua ----------
-Arr = {
+array = {
 ["__module__"]           = [[Manipuladoj kun la tabelo de elementoj. Indeksado komencoj de unu. Indico estas tablo.]],
 --["comparison"]           = [[a == b, a ~= b]],
 ["sub(tInd1,tInd2)"]     = [[Redonas la parton de tabelo limigita de 2 indicoj.]],
@@ -87,7 +88,7 @@ Arr = {
 ["Arr {n1,n2,..}"]       = [[Krei malplenan tabelon. Dimensio estas tablo.]],
 },
 ---------- rational.lua ----------
-Rat = {
+rational = {
 ["__module__"]           = [[Komputadoj kun la raciaj nombroj.]],
 --["comparison"]           = [[R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2]],
 ["denom()"]              = [[Denominatoro de racia nombro.]],
@@ -102,7 +103,7 @@ Rat = {
 ["Rat:fromCont(t)"]      = [[Transformi daŭra frakcio al racian nombron.]],
 },
 ---------- matrix.lua ----------
-Mat = {
+matrix = {
 ["__module__"]           = [[Operacioj kun matricoj. La matricoj estas maldensa defaǔlte.]],
 ["copy()"]               = [[Krei kopion de la matrico.]],
 ["Mat:fill(iRows,iCols,[val=1])"] = [[Krei matricon kun la donita nombroj.]],
@@ -141,7 +142,7 @@ Uzi M1 .. M2 por horizontala kunmeto, kaj M1 // M2 por vertikala.]],
 ["rref()"]               = [[PGaǔsa transformo.]],
 },
 ---------- numeric.lua ----------
-Num = {
+numeric = {
 ["__module__"]           = [[Grupo de funkcioj por la numeraj kalkuloj. Toleremo estas difinita per TOL.]],
 ["Num:ode45(fn,tDelta,y0,[param])"] = [[Nombra solvo de ODE.
 Se la paŝo dx ne estas specifita, tiam ĝi estas kalkulita aǔtomate laǔ la postulata precizeco.
@@ -153,7 +154,7 @@ Redonas liston de interaj punktoj kaj rezulton yn.]],
 ["Num:solve(fn,dA,dB)"]  = [[Trovu la radiko de ekvacio fn(x)=0 en la intervalo [a,b].]],
 },
 ---------- data.lua ----------
-_D = {
+data = {
 ["__module__"]           = [[Prilaborado de datumoj kaj statistiko.]],
 ["_D:xGt(d)"]            = [[Revenas funkcio por kondiĉo x > d.]],
 ["_D:cov2(t1,t2)"]       = [[Trovu kunvariancon por du vektoroj.]],
@@ -184,7 +185,7 @@ _D = {
 ["_D:freq(t)"]           = [[Revenas tablon kun la oftecoj de elementoj.]],
 },
 ---------- geodesy.lua ----------
-Geo = {
+geodesy = {
 ["__module__"]           = [[Kunordigi transformoj kaj aliaj geodeziaj taskoj.]],
 ["solveInv(BLH1,BLH2)"]  = [[Solvu inversan geodezian problemon, trovu distancon kaj azimutojn por du punktoj.]],
 ["Geo:fromENU(tBLr,tXYZr,tTop)"] = [[Akiru kartezajn koordinatojn de loka punkto en referenca kadro.]],
@@ -203,7 +204,7 @@ Geo = {
 ["Geo:hashEncode(t[,N=6])"] = [[Trovu haŝvaloro por la donita punkto.]],
 },
 ---------- graph.lua ----------
-Graph = {
+graph = {
 ["__module__"]           = [[Operacioj kun grafeoj. Nodo estas sola nomo. Rando estas tabulo de du nomoj.]],
 ["isWeighted()"]         = [[Kontrolu se la randoj havas pezon malsama al 1.]],
 ["pathD(vStart,[vGoal])"] = [[Trovi la plej mallongan vojon uzanta Dijkstra algoritmon.]],
@@ -221,7 +222,7 @@ Graph = {
 ["isComplete()"]         = [[Kontroli plenecon de la grafeo.]],
 },
 ---------- bigint.lua ----------
-Int = {
+bigint = {
 ["__module__"]           = [[Operacioj kun la arbitraj longaj entjeroj.]],
 ["at(N)"]                = [[Akiru N-an ciferon.]],
 --["comparison"]           = [[a<b, a<=b, a>b, a>=b, a==b, a~=b]],
@@ -239,7 +240,7 @@ Int = {
 ["fact()"]               = [[Revenas faktorialon de la ne indika entjera nombro n.]],
 },
 ---------- asciiplot.lua ----------
-Ap = {
+asciiplot = {
 ["__module__"]           = [[Vidigo de datumoj kun pseŭdografioj.]],
 ["addString(ir,ic,s)"]   = [[Aldonu vorton ĉe donita pozicio.]],
 ["addPoint(dx,dy,s)"]    = [[Aldonu punkton (dx,dy) per simbolo 's'.]],
@@ -254,7 +255,7 @@ Ap = {
 ["copy()"]               = [[Kreu kopion de objekto.]],
 },
 ---------- quaternion.lua ----------
-Quat = {
+quaternion = {
 ["__module__"]           = [[Operacioj kun kvaternionoj.]],
 ["abs()"]                = [[Valoro de la normo.]],
 --["comparison"]           = [[a == b, a ~= b]],
@@ -278,7 +279,7 @@ Quat = {
 ["mat()"]                = [[Ekvivalenta matrica reprezentado.]],
 },
 ---------- complex.lua ----------
-_Z = {
+complex = {
 ["__module__"]           = [[Operacioj kun la kompleksaj nombroj.]],
 --["comparison"]           = [[a==b, a~=b]],
 ["im()"]                 = [[Kompleksa parto.]],
@@ -308,7 +309,7 @@ _Z = {
 ["abs()"]                = [[Revenas la modulo de kompleksa nombro.]],
 },
 ---------- polynomial.lua ----------
-Poly = {
+polynomial = {
 ["__module__"]           = [[Operacioj kun polinomoj.]],
 --["comparison"]           = [[a==b, a~=b]],
 ["Poly:ppval(tP,d,[N]"]  = [[Revenas valoron de peceta polinomo en la punkto, kaj la polinoma indekso.]],
@@ -329,7 +330,7 @@ Poly = {
 ["Poly:taylor(v,vF,[vF',vF''..])"] = [[Akiru Taylor-serialon.]],
 },
 ---------- lens.lua ----------
-Lens = {
+lens = {
 ["__module__"]           = [[Matricaj metodoj en paraksiala optiko.]],
 ["Lens:mirror(dr,dn)"]   = [[Liveras la matricon por la spegulo.]],
 ["Lens:thin(df)"]        = [[Liveras la matricon por maldika lenso kun la donita fokusa distanco.]],
@@ -350,7 +351,7 @@ Lens = {
 --["operations"]           = [[L1 == L2, L1 .. L2]],
 },
 ---------- units.lua ----------
-Unit = {
+units = {
 ["__module__"]           = [[Operacioj kun unuoj de mezuroj.]],
 ["Unit:setRule(s,U)"]    = [[Aldoni regulon por konverti unuojn de mezuro.]],
 ["convert(s)"]           = [[Konvertu unu unuojn al alia, redonu novan objekton aŭ nulon.]],
@@ -363,7 +364,7 @@ Unit = {
 ["Unit([v,]s)"]          = [[Krei novan valoron kun unuoj de mezuro.]],
 },
 ---------- gnuplot.lua ----------
-Gp = {
+gnuplot = {
 ["__module__"]           = [[Interfaco por laborado kun Gnuplot de Lua.]],
 ["add(tCurve)"]          = [[Aldonu novan funkcion al la grafiko.]],
 ["Gp:polarplot(x1,y1,[nm,x2,y2..])"] = [[Grafikaĵo en polusaj koordinatoj. 'x' - listo de nombroj, 'y' - listo aŭ funkcio, 'nm' - kurba nomo.]],
@@ -398,7 +399,7 @@ raw='set pm3d'                               -- fiksi la Gnuplot parametrojn per
 ["Gp:tsurf(v,[x1,y1,z1,z2..])"] = [[Grafikaĵo surfacan funkcion surbaze de tablo, matrico aŭ dosiero. Laŭvolaj elementoj difinas kolumnojn.]],
 },
 ---------- const.lua ----------
-_C = {
+const = {
 ["__module__"]           = [[Iuj konstantaj valoroj.]],
 ["phi.Da"]               = [[Atommasunuo.]],
 ["astro.pc"]             = [[Unu parsek.]],
