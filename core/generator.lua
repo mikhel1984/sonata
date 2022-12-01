@@ -147,21 +147,21 @@ end
 
 --- Prepare strings with help information of the given module.
 --  @param module Module name or table.
---  @param alias Alias of the module name.
 --  @param lng Localization table from existing file.
 --  @return String representation of all help information of the module.
-local function helpLines(module, alias, lng)
+local function helpLines(module, lng)
   -- get table and name
   local m = (type(module) == 'string') 
              and require('lib.' .. module)
              or module
-  local mName = (type(module) == 'string') and (module .. '.lua') or 'dialog'
+  local mName = (type(module) == 'string') and module or 'Dialog'
+  local fName = (type(module) == 'string') and (module .. '.lua') or 'Dialog'
   -- choose existing data
-  local lng_t = lng and lng[alias] or {}
+  local lng_t = lng and lng[mName] or {}
   -- write to table
   local res = {
-    string.format('%s %s %s', string.rep('-',10), mName, string.rep('-',10)),
-    string.format('%s = {', alias)
+    string.format('%s %s %s', string.rep('-',10), fName, string.rep('-',10)),
+    string.format('%s = {', mName)
   }
   -- for all descriptions
   for _, elt in pairs(m.about) do
@@ -202,12 +202,12 @@ generator.lang = function(fName, tModules)
   f:write(string.format("authors  = [[%s]],", lng and lng.authors or 'Your Name'), '\n')
   -- dialog elements
   eng2about()
-  f:write(helpLines(Help.english,'Dialog',lng))
+  f:write(helpLines(Help.english, lng))
   -- main functions
-  f:write(helpLines('main','Main',lng))
+  f:write(helpLines('main', lng))
   -- other modules
   for k,v in pairs(tModules) do
-    f:write(helpLines(k,v,lng))
+    f:write(helpLines(k, lng))
   end
   f:write('}')
   f:close()
