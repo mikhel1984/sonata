@@ -105,17 +105,6 @@ end
 
 --================== Function help system ==================
 
---- Create new object, set metatable.
---  @param self Parent table.
---  @param str Module description.
---  @return Help object.
-help.new = function (self,str)
-  assert(type(str) == 'string', "Constructor must have a description!")
-  local o = {}
-  o[o] = {link=o, str}      -- save link to itself
-  return setmetatable(o, self)
-end
-
 --- Create list of functions, sort by module and category.
 --  @param tbl Table of pairs 'function - description'.
 --  @return Grouped descriptions.
@@ -134,9 +123,62 @@ help._funcList_ = function (tbl)
   return res
 end
 
+--- Include content of the other help table into current one.
+--  @param self Parent object.
+--  @param tbl Table to add.
+--  @param nm Name of the added module.
+help.add = function (self,tbl,nm)
+  assert(nm, "Module name is required!")
+  -- localization data
+  local mt = getmetatable(self)
+  local lng = mt.locale and mt.locale[nm]
+  -- prepare new 
+  for k, v in pairs(tbl) do 
+    if not v.link then v[MODULE] = nm end    -- no 'link' element in the function description
+    if lng then
+      -- set localization
+      if v.link then
+        -- common description
+        v[MAIN] = lng[_MAIN_] or v[MAIN]
+      else
+        -- details
+        v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
+        v[CATEGORY] = self:get(v[CATEGORY])
+      end 
+    end -- lng
+    self[k] = v                       -- add to the base table 
+  end
+  if lng then mt.locale[nm] = nil end -- free memory
+end
+
+--- Get translated string if possible.
+--  @param self Parent object.
+--  @param txt Text to seek.
+--  @return Translated or initial text.
+help.get = function (self,txt)
+  local mt = getmetatable(self)
+  local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localization table
+  return lng or help.english[txt] or txt
+end
+
+--- Read file with localization data and update main module.
+--  @param self Parent object.
+--  @param fName Name of the file with translated text.
+help.localization = function (self,fName)
+  fName = help.LOCALE..help.SEP..fName
+  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
+  if lng then
+    getmetatable(self).locale = lng   -- save translation
+    help.add(self, self, 'main')
+  else
+    io.write("File ", fName, " not found.\n")
+  end
+end
+
 --- Prepare information about function or list of all possible functions.
 --  @param self Parent object.
 --  @param fn Function or module for getting manual.
+--  @return String with information.
 help.make = function (self,fn)
   if fn then
     -- expected module or function description
@@ -170,69 +212,16 @@ help.make = function (self,fn)
   end -- if
 end
 
---- Include content of the other help table into current one.
---  @param self Parent object.
---  @param tbl Table to add.
---  @param nm Name of the added module.
-help.add = function (self,tbl,nm)
-  assert(nm, "Module name is required!")
-  -- localization data
-  local mt = getmetatable(self)
-  local lng = mt.locale and mt.locale[nm]
-  -- prepare new 
-  for k, v in pairs(tbl) do 
-    if not v.link then v[MODULE] = nm end    -- no 'link' element in the function description
-    if lng then
-      -- set localization
-      if v.link then
-        -- common description
-        v[MAIN] = lng[_MAIN_] or v[MAIN]
-      else
-        -- details
-        v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
-        v[CATEGORY] = self:get(v[CATEGORY])
-      end 
-    end -- lng
-    self[k] = v                       -- add to the base table 
-  end
-  if lng then mt.locale[nm] = nil end -- free memory
+--- Create new object, set metatable.
+--  @param self Parent table.
+--  @param str Module description.
+--  @return Help object.
+help.new = function (self,str)
+  assert(type(str) == 'string', "Constructor must have a description!")
+  local o = {}
+  o[o] = {link=o, str}      -- save link to itself
+  return setmetatable(o, self)
 end
-
---- Read file with localization data and update main module.
---  @param self Parent object.
---  @param fName Name of the file with translated text.
-help.localization = function (self,fName)
-  fName = help.LOCALE..help.SEP..fName
-  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
-  if lng then
-    getmetatable(self).locale = lng   -- save translation
-    -- update functions in main.lua
-    local Sn = lng.main
-    for k,v in pairs(self) do
-      if v.link then
-        -- common description
-        self[k][MAIN] = Sn[_MAIN_] or v[MAIN]
-      else
-        -- details
-        self[k][DESCRIPTION] = Sn[v[TITLE]] or v[DESCRIPTION]
-        self[k][CATEGORY] = self:get(v[CATEGORY])
-      end
-    end
-  else
-    io.write("File ", fName, " not found.\n")
-  end
-end
-
---- Get translated string if possible.
---  @param self Parent object.
---  @param txt Text to seek.
---  @return Translated or initial text.
-help.get = function (self,txt)
-  local mt = getmetatable(self)
-  local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localization table
-  return lng or help.english[txt] or txt
-end
-
 
 --================== Files ===================
 
