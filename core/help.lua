@@ -191,7 +191,7 @@ help.make = function (self,fn)
       return res
     else
       -- function description
-      return Sonata.info {'  :', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
+      return Sonata.info {'  ', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
     end
   else
     local res = Sonata.info {}
