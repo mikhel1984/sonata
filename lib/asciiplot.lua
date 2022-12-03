@@ -50,7 +50,7 @@ print(fig2:tplot(tbl))
 -- plot only y2, don't rescale
 fig2.xrange = {-1, 4}
 fig2.yrange = {0, 1}
-print(fig2:tplot(tbl, {2, resize=false}))
+print(fig2:tplot(tbl, {2, yfix=true}))
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
@@ -284,10 +284,10 @@ asciiplot._fn2XY_ = function (F, fn)
   return X, Y
 end
 
---- Find height for each pair (x,y). Update z range.
+--- Find height for each pair (x,y).
 --  @param F Figure object.
 --  @param fn Function f(x,y).
---  @return Vectors X, Y and 'matrix' Z.
+--  @return Vectors X, Y, 'matrix' Z, range of heights.
 asciiplot._fn2Z_ = function (F, fn)
   local dx, x0 = (F.xrange[2] - F.xrange[1]) / (F.width - 1), F.xrange[1]
   local dy, y0 = (F.yrange[1] - F.yrange[2]) / (F.height - 1), F.yrange[2] -- reverse
@@ -308,8 +308,7 @@ asciiplot._fn2Z_ = function (F, fn)
     Y[ny] = y
     Z[ny] = row
   end
-  F.zrange = {zmin, zmax}
-  return X, Y, Z
+  return X, Y, Z, {zmin, zmax}
 end
 
 --- Prepare string of the given length.
@@ -593,10 +592,14 @@ asciiplot.copy = function (F)
     height = F.height,
     xrange = {F.xrange[1], F.xrange[2]},
     yrange = {F.yrange[1], F.yrange[2]},
-    zrange = {F.zrange[1], F.zrange[2]},
+    zrange = {F.zrange[1], F.zrange[2]},    
+    title = F.title,
+    xaxis = F.xaxis,
+    yaxis = F.yaxis,
+    _w0 = F._w0,
+    _h0 = F._h0,
     canvas = {}, 
     legend = {},
-    title = F.title,
   }
   for k,v in pairs(F.legend) do
     o.legend[k] = v
@@ -718,12 +721,12 @@ about[asciiplot.scale] = {"scale(factor,[bDefault=false])", "Change figure size 
 --  {{x1,y11,y12,...},{x2,y21,y22,...},...}
 --  @param F Figure object.
 --  @param t Data table.
---  @param tOpt (Optional) Table of column indeces, key 'resize' allows to skip resizing.
+--  @param tOpt (Optional) Table of column indeces, key 'yfix' allows to skip resizing.
 --  @return The updated figure object.
 asciiplot.tplot = function (F, t, tOpt)
-  tOpt = tOpt or {resize = true}
+  tOpt = tOpt or {}
   -- update range
-  if tOpt.resize then
+  if not tOpt.yfix then
     F.xrange, F.yrange = asciiplot._findRange_(t, tOpt)
   end
   -- plot all by default
@@ -740,49 +743,136 @@ asciiplot.tplot = function (F, t, tOpt)
   -- show
   return F
 end
-about[asciiplot.tplot] = {"tplot(t,[{resize=true}])", "Plot the table data, choose columns if need."}
+about[asciiplot.tplot] = {"tplot(t,[{yfix=false}])", "Plot the table data, choose columns if need."}
 
 asciiplot.contour = function (F, fn, tOpt)
-  tOpt = tOpt or {} 
+  tOpt = tOpt or {}
   -- calculate
-  local X, Y, Z = asciiplot._fn2Z_(F, fn)
-  -- prepare 
-  asciiplot._clear_(F)
-  asciiplot._axes_(F)   -- update
-  -- fill values
-  local N = tOpt.level or 5
-  local dz, zlvl = 0, {}
-  if tOpt.minmax then
-    -- show minimum and maximum
-    dz = (F.zrange[2] - F.zrange[1]) / (N - 1)
-    zlvl[1] = F.zrange[1]
-  else
-    -- show intermediate positions
-    dz = (F.zrange[2] - F.zrange[1]) / (N + 1)
+  local X, Y, Z, zrng = asciiplot._fn2Z_(F, fn)
+  tOpt.level = tOpt.level or 5    -- TODO limit maximal and minimal values
+  tOpt.err = tOpt.err or 0.05     -- TODO check value
+  tOpt.view = tOpt.view or 'XY'
+  if not tOpt.zfix then
+    F.zrange = zrng
   end
-  for i = 1, N do zlvl[#zlvl+1] = F.zrange[1] + dz * i end
-  dz = dz * 0.05        -- set threshold
-  -- fill contours
+  local acc, view = {}, tOpt.view
+  if view == 'XY' or view == 'XYZ' then 
+    acc[#acc+1] = asciiplot._viewXY_(asciiplot.copy(F), X, Y, Z, tOpt)
+  end
+  if view == 'XZ' or view == 'XYZ' then
+    acc[#acc+1] = asciiplot._viewXZ_(asciiplot.copy(F), X, Y, Z, tOpt)
+  end
+  if view == 'ZY' or view == 'XYZ' then
+    acc[#acc+1] = asciiplot._viewZY_(asciiplot.copy(F), X, Y, Z, tOpt)
+  end
+  if view == 'XYZ' then
+    local txt = {asciiplot.concat(nil, acc[1], acc[3]), tostring(acc[2])}
+    return table.concat(txt, '\n')
+  end
+  return acc[1]
+end
+
+asciiplot._findPose_ = function (v1, vn, N, bScale, bInt)
+  local res, nn, h = {}, N, 0
+  if bScale then
+    nn = N - 1
+    h = (vn - v1) / nn
+    res[1] = v1
+  else
+    h = (vn - v1) / (N + 1)
+  end
+  for i = 1, nn do
+    if bInt then
+      local ind, rst = mmodf(1 + h * i)
+      res[#res+1] = (rst > 0.5) and ind+1 or ind
+    else
+      res[#res+1] = v1 + h * i
+    end
+  end
+  return res, h
+end
+
+-- X-Y
+asciiplot._viewXY_ = function (F, tX, tY, tZ, tOpt)
+  local N = tOpt.level 
+  local lvl, h = asciiplot._findPose_(F.zrange[1], F.zrange[2], N, tOpt.minmax, false)
+  h = h * tOpt.err
+    -- prepare 
+  asciiplot._clear_(F)
+  asciiplot._axes_(F)
+  -- fill
   for i = 1, F.height do
-    local row = Z[i]
+    local row = tZ[i]
     for j = 1, F.width do
       local z = row[j]
       for k = 1, N do
-        if math.abs(zlvl[k] - z) <= dz then
+        if math.abs(lvl[k] - z) <= h then
           F.canvas[i][j] = asciiplot.lvls[k]
           break
         end
       end
     end
   end
-  -- limits
   asciiplot._limits_(F)
+  -- legend
   local lines = {}
-  for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], zlvl[i]) end
-  F.legend[':'] = table.concat(lines, '  ')
-  -- show
-  return F  
+  for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i]) end
+  F.legend['Z'] = table.concat(lines, '  ')
+  F.title = 'X-Y view'
+  return F
 end
+
+-- X-Z
+asciiplot._viewXZ_ = function (F, tX, tY, tZ, tOpt)
+  local N = tOpt.level
+  local lvl, h = asciiplot._findPose_(1, F.height, N, tOpt.minmax, true)
+  F.yrange = F.zrange
+    -- prepare 
+  asciiplot._clear_(F)
+  asciiplot._axes_(F)
+  -- fill
+  for j = 1, N do
+    local row = tZ[lvl[j]]
+    local ch = asciiplot.lvls[N-j+1]
+    for i = 1, #tX do
+      asciiplot.addPoint(F, tX[i], row[i], ch)
+    end
+  end
+  asciiplot._limits_(F)
+  -- legend
+  local lines = {}
+  for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], tY[lvl[N-i+1]]) end
+  F.legend['Y'] = table.concat(lines, '  ')
+  F.title = 'X-Z view'
+  return F
+end
+
+-- X-Z
+asciiplot._viewZY_ = function (F, tX, tY, tZ, tOpt)
+  local N = tOpt.level 
+  local lvl, h = asciiplot._findPose_(1, F.width, N, tOpt.minmax, true)
+  F.xrange = F.zrange
+  -- prepare
+  asciiplot._clear_(F)
+  asciiplot._axes_(F)
+  -- fill
+  for i = 1, #tY do
+    local y = tY[i]
+    local zi = tZ[i]
+    for j = #lvl, 1, -1 do
+      asciiplot.addPoint(F, zi[lvl[j]], y, asciiplot.lvls[j])
+    end
+  end
+  asciiplot._limits_(F)
+  -- legend
+  local lines = {}
+  for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], tX[lvl[i]]) end
+  F.legend['X'] = table.concat(lines, '  ')
+  F.title = 'Z-Y view'
+  return F
+end
+
+
 
 -- Simplify the constructor call.
 setmetatable(asciiplot, {__call = function (self,w,h) return asciiplot:_new_(w,h) end})
