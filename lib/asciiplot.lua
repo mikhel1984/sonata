@@ -115,7 +115,8 @@ local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
 -- symbols
-char = {'+','o','*','#','%','~','x'}
+char = {'+','o','*','#','%','~','x'},
+lvls = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o'},
 }
 
 if SONATA_USE_COLOR then
@@ -277,10 +278,38 @@ asciiplot._fn2XY_ = function (F, fn)
   local X, Y = {}, {}
   for nx = 1, F.width do
     local x = d * (nx - 1) + x0
-    X[#X+1] = x
-    Y[#Y+1] = fn(x)
+    X[nx] = x
+    Y[nx] = fn(x)
   end
   return X, Y
+end
+
+--- Find height for each pair (x,y). Update z range.
+--  @param F Figure object.
+--  @param fn Function f(x,y).
+--  @return Vectors X, Y and 'matrix' Z.
+asciiplot._fn2Z_ = function (F, fn)
+  local dx, x0 = (F.xrange[2] - F.xrange[1]) / (F.width - 1), F.xrange[1]
+  local dy, y0 = (F.yrange[1] - F.yrange[2]) / (F.height - 1), F.yrange[2] -- reverse
+  local X, Y, Z = {}, {}, {}
+  for nx = 1, F.width do
+    X[nx] = dx * (nx - 1) + x0
+  end
+  local zmin, zmax = math.huge, -math.huge
+  for ny = 1, F.height do
+    local y = dy * (ny - 1) + y0
+    local row = {}
+    for nx = 1, F.width do
+      local z = fn(X[nx], y)
+      if z > zmax then zmax = z end
+      if z < zmin then zmin = z end
+      row[nx] = z
+    end
+    Y[ny] = y
+    Z[ny] = row
+  end
+  F.zrange = {zmin, zmax}
+  return X, Y, Z
 end
 
 --- Prepare string of the given length.
@@ -347,6 +376,34 @@ asciiplot._limits_ = function (F)
       row[beg+i] = string.sub(s,i,i)
     end
   end
+end
+
+--- Constructor example.
+--  @param dwidth Figure width.
+--  @param dheight Figure height.
+--  @return New object of asciiplot.
+asciiplot._new_ = function(self,dwidth,dheight)
+  local o = {
+    -- size
+    width  = dwidth or WIDTH,
+    height = dheight or HEIGHT,
+    _w0 = dwidth or WIDTH,
+    _h0 = dheight or HEIGHT,
+    -- range
+    xrange = {-1,1},
+    yrange = {-1,1},
+    zrange = {-1,1},
+    -- axes location
+    xaxis  = 'C',
+    yaxis  = 'C',
+    -- image
+    canvas = {},
+    -- comments
+    legend = {},
+    -- title can be added
+  }
+  -- return object
+  return setmetatable(o,self)
 end
 
 --- Horizontal line central position
@@ -536,6 +593,7 @@ asciiplot.copy = function (F)
     height = F.height,
     xrange = {F.xrange[1], F.xrange[2]},
     yrange = {F.yrange[1], F.yrange[2]},
+    zrange = {F.zrange[1], F.zrange[2]},
     canvas = {}, 
     legend = {},
     title = F.title,
@@ -555,33 +613,6 @@ asciiplot.copy = function (F)
   return setmetatable(o, asciiplot)
 end
 about[asciiplot.copy] = {"copy()", "Create a copy of the object.", help.OTHER}
-
---- Constructor example.
---  @param dwidth Figure width.
---  @param dheight Figure height.
---  @return New object of asciiplot.
-asciiplot._new_ = function(self,dwidth,dheight)
-  local o = {
-    -- size
-    width  = dwidth or WIDTH,
-    height = dheight or HEIGHT,
-    _w0 = dwidth or WIDTH,
-    _h0 = dheight or HEIGHT,
-    -- range
-    xrange = {-1,1},
-    yrange = {-1,1}, 
-    -- axes location
-    xaxis  = 'C',
-    yaxis  = 'C',
-    -- image
-    canvas = {},
-    -- comments
-    legend = {},
-    -- title can be added
-  }
-  -- return object
-  return setmetatable(o,self)
-end
 
 --- Generalized plot funciton.
 --  @param F Figure object.
@@ -709,7 +740,49 @@ asciiplot.tplot = function (F, t, tOpt)
   -- show
   return F
 end
-about[asciiplot.tplot] = {"tplot(t,[tOpt={}])", "Plot the table data, choose columns if need."}
+about[asciiplot.tplot] = {"tplot(t,[{resize=true}])", "Plot the table data, choose columns if need."}
+
+asciiplot.contour = function (F, fn, tOpt)
+  tOpt = tOpt or {} 
+  -- calculate
+  local X, Y, Z = asciiplot._fn2Z_(F, fn)
+  -- prepare 
+  asciiplot._clear_(F)
+  asciiplot._axes_(F)   -- update
+  -- fill values
+  local N = tOpt.level or 5
+  local dz, zlvl = 0, {}
+  if tOpt.minmax then
+    -- show minimum and maximum
+    dz = (F.zrange[2] - F.zrange[1]) / (N - 1)
+    zlvl[1] = F.zrange[1]
+  else
+    -- show intermediate positions
+    dz = (F.zrange[2] - F.zrange[1]) / (N + 1)
+  end
+  for i = 1, N do zlvl[#zlvl+1] = F.zrange[1] + dz * i end
+  dz = dz * 0.05        -- set threshold
+  -- fill contours
+  for i = 1, F.height do
+    local row = Z[i]
+    for j = 1, F.width do
+      local z = row[j]
+      for k = 1, N do
+        if math.abs(zlvl[k] - z) <= dz then
+          F.canvas[i][j] = asciiplot.lvls[k]
+          break
+        end
+      end
+    end
+  end
+  -- limits
+  asciiplot._limits_(F)
+  local lines = {}
+  for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], zlvl[i]) end
+  F.legend[':'] = table.concat(lines, '  ')
+  -- show
+  return F  
+end
 
 -- Simplify the constructor call.
 setmetatable(asciiplot, {__call = function (self,w,h) return asciiplot:_new_(w,h) end})
@@ -720,6 +793,7 @@ about[asciiplot.Ap] = {"Ap([iWidth=75,iHeight=23])", "Create new asciiplot.", he
 asciiplot.onImport = function ()
   Plot = function (...)
     local f = Ap()
+    f.xrange = {-5, 5}
     print(f:plot(...))
   end
   Main.about[Plot] = {"Plot(...)", "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER }
@@ -732,3 +806,4 @@ return asciiplot
 
 --======================================
 -- TODO synchronize with Gp
+-- TODO skip nil, limit range in case on inf
