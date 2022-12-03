@@ -129,11 +129,15 @@ local asciiplot = {
 type = 'asciiplot', isasciiplot = true,
 -- symbols
 char = {'+','o','*','#','%','~','x'},
-lvls = {'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o'},
+lvls = {'a','b','c','d','e','f','g','i','j','k'},
 }
 
 if SONATA_USE_COLOR then
   local char = asciiplot.char
+  for k,v in ipairs(char) do
+    char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
+  end
+  char = asciiplot.lvls
   for k,v in ipairs(char) do
     char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
   end
@@ -717,9 +721,9 @@ asciiplot.concat = function (self, ...)
     end
     -- legend 
     local n = 0
-    for u,w in pairs(v.legend) do
+    for u, w in pairs(v.legend) do
       row = acc[k] or {}
-      row[#row+1] = asciiplot._format_(string.format('(%s) %s', u, w), v.width, false, true)
+      row[#row+1] = asciiplot._format_(string.format('(%s) %s', u, w), v.width-1+#u, false, true)
       row[#row+1] = gap
       acc[k] = row; k = k + 1
       n = n + 1
@@ -956,5 +960,4 @@ asciiplot.about = about
 return asciiplot
 
 --======================================
--- TODO synchronize with Gp
--- TODO skip nil, limit range in case on inf
+-- FIX contour concatenation when use color
