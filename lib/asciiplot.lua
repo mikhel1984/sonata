@@ -93,6 +93,13 @@ fig4.xrange = {-5, 5}
 fig4.yrange = {-5, 5}
 print(fig4:contour(function (x,y) return x*x - y*y end))
 
+-- bar diagram
+data = {}
+k = 2*3.14/20
+for i = 1, 20 do data[#data+1] = {k*i, math.sin(k*i)} end
+fig5 = Ap()
+print(fig5:bar(data))
+
 --]]
 
 --	LOCAL
@@ -693,7 +700,7 @@ asciiplot.concat = function (self, ...)
   end
   -- data
   local acc = {}
-  local gap = '  '
+  local gap = '   '
   for i,v in ipairs(ag) do
     local k = 1
     -- title
@@ -760,7 +767,7 @@ asciiplot.contour = function (F, fn, tOpt)
   end
   if view == 'XYZ' then
     local txt = {asciiplot.concat(nil, acc[1], acc[3]), tostring(acc[2])}
-    return table.concat(txt, '\n')
+    return table.concat(txt, '\n\n')
   end
   return acc[1]
 end
