@@ -346,11 +346,11 @@ asciiplot._limits_ = function (F)
   elseif F.xaxis == 'D' then n = F.height end
   if n then
     local row, beg = F.canvas[n], 0
-    local s = tostring(F.xrange[1]) 
+    local s = string.format(' %s ',  tostring(F.xrange[1]))
     for i = 1, #s do
       row[beg+i] = string.sub(s,i,i)
     end
-    s = tostring(F.xrange[2])
+    s = string.format(' %s ', tostring(F.xrange[2]))
     beg = F.width - #s - 1
     for i = 1, #s do
       row[beg+i] = string.sub(s,i,i)
@@ -362,13 +362,13 @@ asciiplot._limits_ = function (F)
   elseif F.yaxis == 'L' then n = 1
   elseif F.yaxis == 'R' then n = F.width end
   if n then
-    local s = tostring(F.yrange[1])
+    local s = string.format(' %s ', tostring(F.yrange[1]))
     local beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
     local row = F.canvas[F.height-1]
     for i = 1, #s do
       row[beg+i] = string.sub(s,i,i)
     end
-    s = tostring(F.yrange[2]) 
+    s = string.format(' %s ', tostring(F.yrange[2]))
     beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
     row = F.canvas[2] 
     for i = 1, #s do
@@ -747,22 +747,25 @@ about[asciiplot.tplot] = {"tplot(t,[{yfix=false}])", "Plot the table data, choos
 
 asciiplot.contour = function (F, fn, tOpt)
   tOpt = tOpt or {}
-  -- calculate
-  local X, Y, Z, zrng = asciiplot._fn2Z_(F, fn)
   tOpt.level = tOpt.level or 5    -- TODO limit maximal and minimal values
   tOpt.err = tOpt.err or 0.05     -- TODO check value
-  tOpt.view = tOpt.view or 'XY'
+  local view = tOpt.view or 'XY'
+  -- calculate
+  if view == 'YZ' then 
+    F.width, F.height = F.height, F.width    -- increase resolution for default size
+  end
+  local X, Y, Z, zrng = asciiplot._fn2Z_(F, fn)
   if not tOpt.zfix then
     F.zrange = zrng
   end
-  local acc, view = {}, tOpt.view
+  local acc = {}
   if view == 'XY' or view == 'XYZ' then 
     acc[#acc+1] = asciiplot._viewXY_(asciiplot.copy(F), X, Y, Z, tOpt)
   end
   if view == 'XZ' or view == 'XYZ' then
     acc[#acc+1] = asciiplot._viewXZ_(asciiplot.copy(F), X, Y, Z, tOpt)
   end
-  if view == 'ZY' or view == 'XYZ' then
+  if view == 'YZ' or view == 'XYZ' then
     acc[#acc+1] = asciiplot._viewZY_(asciiplot.copy(F), X, Y, Z, tOpt)
   end
   if view == 'XYZ' then
@@ -772,7 +775,7 @@ asciiplot.contour = function (F, fn, tOpt)
   return acc[1]
 end
 
-asciiplot._findPose_ = function (v1, vn, N, bScale, bInt)
+asciiplot._surfRange_ = function (v1, vn, N, bScale, bInt)
   local res, nn, h = {}, N, 0
   if bScale then
     nn = N - 1
@@ -795,7 +798,7 @@ end
 -- X-Y
 asciiplot._viewXY_ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level 
-  local lvl, h = asciiplot._findPose_(F.zrange[1], F.zrange[2], N, tOpt.minmax, false)
+  local lvl, h = asciiplot._surfRange_(F.zrange[1], F.zrange[2], N, tOpt.minmax, false)
   h = h * tOpt.err
     -- prepare 
   asciiplot._clear_(F)
@@ -825,8 +828,8 @@ end
 -- X-Z
 asciiplot._viewXZ_ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, h = asciiplot._findPose_(1, F.height, N, tOpt.minmax, true)
-  F.yrange = F.zrange
+  local lvl, h = asciiplot._surfRange_(1, F.height, N, tOpt.minmax, true)
+  F.yrange = tOpt.view == 'XYZ' and {F.zrange[2], F.zrange[1]} or F.zrange
     -- prepare 
   asciiplot._clear_(F)
   asciiplot._axes_(F)
@@ -850,8 +853,15 @@ end
 -- X-Z
 asciiplot._viewZY_ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level 
-  local lvl, h = asciiplot._findPose_(1, F.width, N, tOpt.minmax, true)
-  F.xrange = F.zrange
+  local lvl, h = asciiplot._surfRange_(1, F.width, N, tOpt.minmax, true)
+  local rotate = (tOpt.view == 'XYZ')
+  if rotate then
+    F.xrange = F.zrange
+  else 
+    F.xrange = F.yrange
+    F.yrange = F.zrange
+    F.width, F.height = F.height, F.width
+  end
   -- prepare
   asciiplot._clear_(F)
   asciiplot._axes_(F)
@@ -860,7 +870,11 @@ asciiplot._viewZY_ = function (F, tX, tY, tZ, tOpt)
     local y = tY[i]
     local zi = tZ[i]
     for j = #lvl, 1, -1 do
-      asciiplot.addPoint(F, zi[lvl[j]], y, asciiplot.lvls[j])
+      if rotate then
+        asciiplot.addPoint(F, zi[lvl[j]], y, asciiplot.lvls[j])
+      else
+        asciiplot.addPoint(F, y, zi[lvl[j]], asciiplot.lvls[j])
+      end
     end
   end
   asciiplot._limits_(F)
@@ -868,7 +882,7 @@ asciiplot._viewZY_ = function (F, tX, tY, tZ, tOpt)
   local lines = {}
   for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], tX[lvl[i]]) end
   F.legend['X'] = table.concat(lines, '  ')
-  F.title = 'Z-Y view'
+  F.title = rotate and 'Z-Y view' or 'Y-Z view'
   return F
 end
 
