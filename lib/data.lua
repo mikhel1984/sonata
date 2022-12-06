@@ -1,4 +1,4 @@
---[[		sonata/lib/data.lua 
+--[[		sonata/lib/data.lua
 
 --- Data processing and statistics.
 --
@@ -37,12 +37,12 @@ Y = {0,2,1,3,7,5,8,4}
 a = _D:cov2(X,Y)
 ans = a                      --3> -0.65625
 
--- covariance matrix 
+-- covariance matrix
 tmp = _D:cov({X,Y})
 ans = tmp[1][2]              --3> a
 
 -- maximum element and index
-_,ans = _D:max(X)           --> 4 
+_,ans = _D:max(X)           --> 4
 
 -- median
 ans = _D:median(X)          --> 3
@@ -74,7 +74,7 @@ ans = a[1]                    --> 1
 tmp = _D:filter(X, a)
 ans = tmp[1]                  --> X[1]
 
--- filtration using explicit function 
+-- filtration using explicit function
 fn = function (x) return x > 2 end
 tmp = _D:filter(X, fn)
 ans = tmp[1]                  --> X[1]
@@ -88,11 +88,11 @@ ans = tmp[1][2]               --> X[1]+Y[1]
 a,b = _D:histcounts(X, 3)
 ans = b[1]                    --> 2.25
 
--- define edges 
+-- define edges
 a,b = _D:histcounts(X,{2,4,7})
 ans = a[1]                    --> 1
 
--- table range reference 
+-- table range reference
 a = _D:ref(X, 3, 6)
 ans = #a                      --> 4
 
@@ -103,7 +103,7 @@ ans = _D:tcdf(4, 2.5)      --3> 0.9805
 
 ans = _D:tpdf(2, 3.3)      --3> 0.0672
 
--- dsv write 
+-- dsv write
 nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
@@ -152,7 +152,7 @@ local data = {}
 data.cov2 = function (self,t1,t2)
   if #t1 ~= #t2 then error("Different vector size") end
   local m1 = data:mean(t1)
-  local m2 = data:mean(t2) 
+  local m2 = data:mean(t2)
   local s = 0
   for i = 1, #t1 do
     s = s + (t1[i] - m1)*(t2[i] - m2)
@@ -169,7 +169,7 @@ data.cov = function (self, t)
   local N = #t
   if N == 0 then error("Expected list of vectors") end
   data.ext_matrix = data.ext_matrix or require('lib.matrix')
-  local m = data.ext_matrix.zeros(N, N) 
+  local m = data.ext_matrix.zeros(N, N)
   for i = 1, N do
     local ti = t[i]
     m[i][i] = data:cov2(ti, ti)
@@ -271,11 +271,11 @@ data.filter = function (self, t, vCond)
   if type(vCond) == 'function' then
     -- boolean function
     for i = 1, #t do
-      local v = t[i] 
+      local v = t[i]
       if fn(v) then res[#res+1] = v end
     end
   elseif type(vCond) == 'table' then
-    -- weights 
+    -- weights
     for i = 1, #t do
       if vCond[i] ~= 0 then res[#res+1] = t[i] end
     end
@@ -347,7 +347,7 @@ about[data.harmmean] = {"_D:harmmean(t,[tw])", "Harmonic mean.", STAT}
 --  @param rng Number of bins or table with edges.
 --  @return Two tables, with sum and edges.
 data.histcounts = function (self, t, rng)
-  rng = rng or 10 
+  rng = rng or 10
   local bins
   -- make copy and sort
   local y = Ver.move(t,1,#t,1,{})
@@ -358,19 +358,19 @@ data.histcounts = function (self, t, rng)
     local wid = (vMax - vMin) / (rng - 1)
     bins = {}
     for v = vMin + 0.5*wid, vMax, wid do bins[#bins+1] = v end
-  elseif type(rng) == 'table' then    
+  elseif type(rng) == 'table' then
     bins = rng
   else
     error("Expected number or table")
   end
   -- check order
-  for i = 2,#bins do 
+  for i = 2,#bins do
     if bins[i] <= bins[i-1] then error("Wrong order") end
-  end  
+  end
   -- fill result
   local res = {}
   for i = 1,#bins+1 do res[i] = 0 end
-  local p, i = 1, 1 
+  local p, i = 1, 1
   while i <= #y do
     local v = y[i]
     if p > #bins or v < bins[p] then
@@ -453,7 +453,7 @@ data.median = function (self, t)
   local len = #t
   local y = Ver.move(t,1,len,1,{})
   table.sort(y)
-  if len % 2 == 1 then 
+  if len % 2 == 1 then
     return y[(len+1)/2]
   else
     len = len / 2
@@ -521,7 +521,7 @@ data.std = function (self, t, tw)
     local sw = 0
     for i = 1,#t do
       local w = tw[i] or 1
-      disp = disp + w*(t[i]-mean)^2 
+      disp = disp + w*(t[i]-mean)^2
       sw = sw + w
     end
     disp = disp / sw
@@ -529,7 +529,7 @@ data.std = function (self, t, tw)
     for i = 1,#t do disp = disp + (t[i]-mean)^2 end
     disp = disp / #t
   end
-  return math.sqrt(disp), disp 
+  return math.sqrt(disp), disp
 end
 about[data.std] = {"_D:std(t,[tw])", "Standard deviation and variance. Weights can be used.", STAT}
 
@@ -587,7 +587,7 @@ about[data.xIn] = {"_D:xIn(d1,d2)", "Return function for condition d1 <= x <= d2
 
 --- Condition: x < d
 --  @param self Do nothing.
---  @param d Upper limit. 
+--  @param d Upper limit.
 --  @return Boolean function.
 data.xLt = function (self,d)
   return (function (x) return x < d end)
@@ -608,18 +608,18 @@ data.zip = function (self,fn, ...)
       local v = ag[j][i]
       if v ~= nil then
         x[j] = v
-      else 
+      else
         stop = true
-        break 
+        break
       end
     end
-    if not stop then 
+    if not stop then
       res[i] = fn(Ver.unpack(x))
-    else 
-      break 
+    else
+      break
     end
   end
-  return res 
+  return res
 end
 about[data.zip] = {"_D:zip(fn,...)", "Sequentially apply function to list of tables.", help.OTHER}
 
@@ -639,7 +639,7 @@ end
 --  @return Table value.
 metaref.__index = function (self, i)
   if Ver.isInteger(i) then
-    local n = i + self._beg 
+    local n = i + self._beg
     if n > self._beg and n <= self._end then
       return self._t[n]
     end
@@ -657,7 +657,7 @@ end
 --  @param t Source table.
 --  @param iBeg Index of the first element.
 --  @param iEnd Index of the last element.
---  @return Reference object. 
+--  @return Reference object.
 data.ref = function (self, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t

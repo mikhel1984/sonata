@@ -1,5 +1,7 @@
 ======== 0.9.33 =========
 
+Asciiplot
+* Sufrace contours
 Other
 * Add 'symbolical' module
 

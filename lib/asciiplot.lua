@@ -17,28 +17,28 @@ Ap = require 'lib.asciiplot'
 fig1 = Ap()
 print(fig1.width, fig1.height)
 
--- print functions 
+-- print functions
 fig1.xrange = {-3.14, 3.14}   -- default is (-1,1)
 fig1:plot(math.sin, 'sin', math.cos, 'cos')
 fig1.title = 'Trigonometry'
-print(fig1) 
+print(fig1)
 
--- print data 
+-- print data
 x = {1,2,3,4,5}
 y = {1,3,5,7,9}
-print(fig1:plot(x,y)) 
+print(fig1:plot(x,y))
 
--- combine different sources 
+-- combine different sources
 fig1.yaxis = 'L'  -- left axis
 fig1:plot(x,'single',x,y,'pair',math.log, 'function')
-print(fig1) 
+print(fig1)
 
 -- define arbitrary figure size
--- odd is preferable 
+-- odd is preferable
 fig2 = Ap(21,11)    -- width=21, height = 11
-print(fig2:plot(function (x) return 2*x end)) 
+print(fig2:plot(function (x) return 2*x end))
 
--- show table 
+-- show table
 tbl = {}
 for x = 0, 3, 0.1 do
   --             x      y1          y2
@@ -56,7 +56,7 @@ print(fig2:tplot(tbl, {2, yfix=true}))
 fig1:scale(0.8)
 ans = fig1.width             --> 61
 
--- horizontal concatenation 
+-- horizontal concatenation
 -- first
 fig1:scale(0.5, true)
 fig1.xrange = {0, 1.57}
@@ -79,11 +79,11 @@ fig3.xaxis = nil; fig3.yaxis = nil
 fig3:reset()
 -- set function
 for x = -1.2, 1.2, 0.1 do
-  fig3:addPoint(x, x*x-0.5, Ap.char[1]) 
+  fig3:addPoint(x, x*x-0.5, Ap.char[1])
 end
 -- set to position
 fig3:addPose(3, 13, '#')   -- characters
-fig3:addPose(3, 24, '#') 
+fig3:addPose(3, 24, '#')
 fig3:addString(2,3,'Hi!')  -- text
 print(fig3)
 
@@ -158,10 +158,10 @@ asciiplot.__tostring = function (F)
   -- title
   if F.title then
     -- to center
-    acc[1] = asciiplot._format_(F.title, F.width, true, false)
+    acc[1] = asciiplot._format(F.title, F.width, true, false)
   end
   -- figure
-  for i = 1, F.height do 
+  for i = 1, F.height do
     acc[#acc+1] = table.concat(F.canvas[i])
   end
   -- legend
@@ -173,11 +173,11 @@ asciiplot.__tostring = function (F)
 end
 
 --- Add points from a table.
---  First element of each row is x, the rest are yi. 
+--  First element of each row is x, the rest are yi.
 --  @param F Figure object.
 --  @param t Table to print.
 --  @param tInd Allows to choose y columns.
-asciiplot._addTable_ = function (F, t, tInd)
+asciiplot._addTable = function (F, t, tInd)
   for j = 1, #tInd do
     local c, k = asciiplot.char[j], tInd[j]
     for i = 1, #t do
@@ -193,7 +193,7 @@ end
 --  @param tX List of x coordinates.
 --  @param tY List of y coordinates.
 --  @param s Character.
-asciiplot._addXY_ = function (F, tX, tY, s)
+asciiplot._addXY = function (F, tX, tY, s)
   for i = 1, #tX do
     asciiplot.addPoint(F, tX[i], tY[i], s)
   end
@@ -201,12 +201,12 @@ end
 
 --- Add coordinate axes.
 --  @param F Figure object.
-asciiplot._axes_ = function (F)
+asciiplot._axes = function (F)
   local vertical, horizontal = '|', '-'
   -- vertical line
   local n
-  if F.yaxis == 'C' then n = asciiplot._ycentral_(F)
-  elseif F.yaxis == 'L' then n = 1 
+  if F.yaxis == 'C' then n = asciiplot._ycentral(F)
+  elseif F.yaxis == 'L' then n = 1
   elseif F.yaxis == 'R' then n = F.width end
   if n then
     for i = 1, F.height do
@@ -220,12 +220,12 @@ asciiplot._axes_ = function (F)
     n = nil
   end
   -- horizontal line
-  if F.xaxis == 'C' then n = asciiplot._xcentral_(F)
+  if F.xaxis == 'C' then n = asciiplot._xcentral(F)
   elseif F.xaxis == 'U' then n = 1
   elseif F.xaxis == 'D' then n = F.height end
   if n then
     local row = F.canvas[n]
-    for i = 1, F.width do 
+    for i = 1, F.width do
       row[i] = horizontal
     end
     if F.xrange and F.xrange[2] < F.xrange[1] then
@@ -238,12 +238,12 @@ end
 
 --- Resize, clear canvas.
 --  @param F Figure object.
-asciiplot._clear_ = function (F)
+asciiplot._clear = function (F)
   local white = ' '
   for i = 1, F.height do
     local row = F.canvas[i] or {}
     for j = 1, F.width do row[j] = white end
-    if #row > F.width then 
+    if #row > F.width then
       for j = #row, F.width+1, -1 do row[j] = nil end
     end
     F.canvas[i] = row
@@ -256,21 +256,21 @@ end
 --  @param t Table {{x1,y11,y12...},{x2,y21,y22..},...}
 --  @param tInd Table of y column indeces.
 --  @return xrange, yrange
-asciiplot._findRange_ = function (t, tInd)
+asciiplot._findRange = function (t, tInd)
   tInd = tInd or {}
   local xmax, ymax, xmin, ymin = -math.huge, -math.huge, math.huge, math.huge
   for i = 1, #t do
-    local row = t[i] 
+    local row = t[i]
     local v = row[1]
-    if v > xmax then xmax = v end 
+    if v > xmax then xmax = v end
     if v < xmin then xmin = v end
-    if #tInd > 0 then 
+    if #tInd > 0 then
       for j = 1, #tInd do
         v = row[tInd[j]]
-        if v > ymax then ymax = v end 
+        if v > ymax then ymax = v end
         if v < ymin then ymin = v end
       end
-    else 
+    else
       for j = 2, #row do
         v = row[j]
         if v > ymax then ymax = v end
@@ -284,11 +284,11 @@ end
 --- Get bounds of the vector.
 --  @param t Table (vector).
 --  @return Minimal and maximal values.
-asciiplot._findVectorRange_ = function (t)
+asciiplot._findVectorRange = function (t)
   local vmin, vmax = math.huge, -math.huge
   for i = 1, #t do
     local v = t[i]
-    if v > vmax then vmax = v end 
+    if v > vmax then vmax = v end
     if v < vmin then vmin = v end
   end
   return vmin, vmax
@@ -298,7 +298,7 @@ end
 --  @param F Figure object.
 --  @param fn Function f(x).
 --  @return Lists of coordinates X and Y.
-asciiplot._fn2XY_ = function (F, fn)
+asciiplot._fn2XY = function (F, fn)
   local d, x0 = (F.xrange[2] - F.xrange[1]) / (F.width - 1), F.xrange[1]
   local X, Y = {}, {}
   for nx = 1, F.width do
@@ -313,7 +313,7 @@ end
 --  @param F Figure object.
 --  @param fn Function f(x,y).
 --  @return Vectors X, Y, 'matrix' Z, range of heights.
-asciiplot._fn2Z_ = function (F, fn)
+asciiplot._fn2Z = function (F, fn)
   local dx, x0 = (F.xrange[2] - F.xrange[1]) / (F.width - 1), F.xrange[1]
   local dy, y0 = (F.yrange[1] - F.yrange[2]) / (F.height - 1), F.yrange[2] -- reverse
   local X, Y, Z = {}, {}, {}
@@ -341,18 +341,18 @@ end
 --  @param N Required length.
 --  @param bCentr Flag to put to central position.
 --  @param bLim   Flag to cut a long string.
-asciiplot._format_ = function (s, N, bCentr, bCut)
+asciiplot._format = function (s, N, bCentr, bCut)
   local res = ''
   if #s < N then
-    local n = N - #s 
-    if bCentr then 
+    local n = N - #s
+    if bCentr then
       local n1 = mmodf(n / 2)
       local n2 = n - n1
       res = string.rep(' ', n1) .. s .. string.rep(' ', n2)
     else
-      res = s .. string.rep(' ', n) 
+      res = s .. string.rep(' ', n)
     end
-  else 
+  else
     res = s
   end
   if #res > N and bCut then
@@ -363,11 +363,11 @@ end
 
 --- Add xrange and yrange.
 --  @param F Figure object.
-asciiplot._limits_ = function (F)
-  -- horizontal 
-  local n 
-  if F.xaxis == 'C' then n = asciiplot._xcentral_(F) + 1
-  elseif F.xaxis == 'U' then n = 1 
+asciiplot._limits = function (F)
+  -- horizontal
+  local n
+  if F.xaxis == 'C' then n = asciiplot._xcentral(F) + 1
+  elseif F.xaxis == 'U' then n = 1
   elseif F.xaxis == 'D' then n = F.height end
   if n then
     local row, beg = F.canvas[n], 0
@@ -382,8 +382,8 @@ asciiplot._limits_ = function (F)
     end
     n = nil
   end
-  -- vertical 
-  if F.yaxis == 'C' then n = asciiplot._ycentral_(F) 
+  -- vertical
+  if F.yaxis == 'C' then n = asciiplot._ycentral(F)
   elseif F.yaxis == 'L' then n = 1
   elseif F.yaxis == 'R' then n = F.width end
   if n then
@@ -395,7 +395,7 @@ asciiplot._limits_ = function (F)
     end
     s = string.format(' %s ', tostring(F.yrange[2]))
     beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
-    row = F.canvas[2] 
+    row = F.canvas[2]
     for i = 1, #s do
       row[beg+i] = string.sub(s,i,i)
     end
@@ -406,7 +406,7 @@ end
 --  @param dwidth Figure width.
 --  @param dheight Figure height.
 --  @return New object of asciiplot.
-asciiplot._new_ = function(self,dwidth,dheight)
+asciiplot._new = function(self,dwidth,dheight)
   local o = {
     -- size
     width  = dwidth or WIDTH,
@@ -437,7 +437,7 @@ end
 --  @param bScale Flag to use bounds in calculation.
 --  @param bInt Flag for a number rounding.
 --  @return List of levels and step value.
-asciiplot._surfRange_ = function (v1, vn, N, bScale, bInt)
+asciiplot._surfRange = function (v1, vn, N, bScale, bInt)
   local res, nn, h = {}, N, 0
   if bScale then
     nn = N - 1
@@ -463,14 +463,14 @@ end
 --- @param tZ Table of z(x,y) values.
 --  @param tOpt List of options.
 --  @return Figure object.
-asciiplot._viewXY_ = function (F, tX, tY, tZ, tOpt)
+asciiplot._viewXY = function (F, tX, tY, tZ, tOpt)
   local ZERR = 0.05  -- deflection from expected level value
-  local N = tOpt.level 
-  local lvl, h = asciiplot._surfRange_(F.zrange[1], F.zrange[2], N, tOpt.minmax, false)
+  local N = tOpt.level
+  local lvl, h = asciiplot._surfRange(F.zrange[1], F.zrange[2], N, tOpt.minmax, false)
   h = h * ZERR
-    -- prepare 
-  asciiplot._clear_(F)
-  asciiplot._axes_(F)
+    -- prepare
+  asciiplot._clear(F)
+  asciiplot._axes(F)
   -- fill
   for i = 1, F.height do
     local row = tZ[i]
@@ -484,7 +484,7 @@ asciiplot._viewXY_ = function (F, tX, tY, tZ, tOpt)
       end
     end
   end
-  asciiplot._limits_(F)
+  asciiplot._limits(F)
   -- legend
   local lines = {}
   for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i]) end
@@ -499,13 +499,13 @@ end
 --- @param tZ Table of z(x,y) values.
 --  @param tOpt List of options.
 --  @return Figure object.
-asciiplot._viewXZ_ = function (F, tX, tY, tZ, tOpt)
+asciiplot._viewXZ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, h = asciiplot._surfRange_(1, F.height, N, tOpt.minmax, true)
+  local lvl, h = asciiplot._surfRange(1, F.height, N, tOpt.minmax, true)
   F.yrange = tOpt.view == 'XYZ' and {F.zrange[2], F.zrange[1]} or F.zrange
-    -- prepare 
-  asciiplot._clear_(F)
-  asciiplot._axes_(F)
+    -- prepare
+  asciiplot._clear(F)
+  asciiplot._axes(F)
   -- fill
   for j = 1, N do
     local row = tZ[lvl[j]]
@@ -514,7 +514,7 @@ asciiplot._viewXZ_ = function (F, tX, tY, tZ, tOpt)
       asciiplot.addPoint(F, tX[i], row[i], ch)
     end
   end
-  asciiplot._limits_(F)
+  asciiplot._limits(F)
   -- legend
   local lines = {}
   for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], tY[lvl[N-i+1]]) end
@@ -529,20 +529,20 @@ end
 --- @param tZ Table of z(x,y) values.
 --  @param tOpt List of options.
 --  @return Figure object.
-asciiplot._viewZY_ = function (F, tX, tY, tZ, tOpt)
-  local N = tOpt.level 
-  local lvl, h = asciiplot._surfRange_(1, F.width, N, tOpt.minmax, true)
+asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
+  local N = tOpt.level
+  local lvl, h = asciiplot._surfRange(1, F.width, N, tOpt.minmax, true)
   local rotate = (tOpt.view == 'XYZ')
   if rotate then
     F.xrange = F.zrange
-  else 
+  else
     F.xrange = F.yrange
     F.yrange = F.zrange
     F.width, F.height = F.height, F.width
   end
   -- prepare
-  asciiplot._clear_(F)
-  asciiplot._axes_(F)
+  asciiplot._clear(F)
+  asciiplot._axes(F)
   -- fill
   for i = 1, #tY do
     local y = tY[i]
@@ -555,7 +555,7 @@ asciiplot._viewZY_ = function (F, tX, tY, tZ, tOpt)
       end
     end
   end
-  asciiplot._limits_(F)
+  asciiplot._limits(F)
   -- legend
   local lines = {}
   for i = 1, N do lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], tX[lvl[i]]) end
@@ -567,17 +567,17 @@ end
 --- Horizontal line central position
 --  @param F Figure object.
 --  @return Index.
-asciiplot._xcentral_ = function (F)
+asciiplot._xcentral = function (F)
   local int, frac = mmodf((1-F.height) * 0.5 + F.height)
-  return (frac > 0.5) and (int + 1) or int 
+  return (frac > 0.5) and (int + 1) or int
 end
 
 --- Vertical line central position
 --  @param F Figure object.
 --  @return Index.
-asciiplot._ycentral_ = function (F)
+asciiplot._ycentral = function (F)
   local int, frac = mmodf((F.width-1) * 0.5 + 1)
-  return (frac > 0.5) and (int + 1) or int 
+  return (frac > 0.5) and (int + 1) or int
 end
 
 --- Scale and add a point to the figure.
@@ -587,7 +587,7 @@ end
 --  @param s Character.
 asciiplot.addPoint = function (F,dx,dy,s)
   local h, w = F.height, F.width
-  local nx = (dx - F.xrange[1]) / (F.xrange[2] - F.xrange[1]) 
+  local nx = (dx - F.xrange[1]) / (F.xrange[2] - F.xrange[1])
   local ny = (dy - F.yrange[1]) / (F.yrange[2] - F.yrange[1])
   local int, frac = mmodf((w-1) * nx + 1)
   nx = (frac > 0.5) and (int + 1) or int
@@ -628,22 +628,22 @@ about[asciiplot.addString] = {"addString(ir,ic,s)", "Set string from the given p
 --  @param F Figure object.
 --  @param t Data table ({x,y} or x).
 --  @param vy Index of y column or data table (optional).
---  @param ix Optional index of x values. 
+--  @param ix Optional index of x values.
 --  @return Updated figure object.
 asciiplot.bar = function (F, t, vy, ix)
   ix, vy = ix or 1, vy or 2
   local ytbl = (type(vy) == 'table')
   -- size
-  local iL = mmodf(F.width * 0.2) 
+  local iL = mmodf(F.width * 0.2)
   local iR = F.width - iL
   -- find limits
-  local min, max = math.huge, -math.huge 
+  local min, max = math.huge, -math.huge
   for i = 1, #t do
-    local v = ytbl and vy[i] or t[i][vy] 
-    if v > max then max = v end 
+    local v = ytbl and vy[i] or t[i][vy]
+    if v > max then max = v end
     if v < min then min = v end
   end
-  local i0   
+  local i0
   if min >= 0 and max >= 0 then
     i0, min = iL, 0
   elseif min <= 0 and max <= 0 then
@@ -656,20 +656,20 @@ asciiplot.bar = function (F, t, vy, ix)
   -- data step
   local step = 1
   if #t > F.height then
-    local int, frac = mmodf(#t / F.height) 
+    local int, frac = mmodf(#t / F.height)
     step = (frac > 0) and (int+1) or int
   end
   -- add values
-  asciiplot._clear_(F)
+  asciiplot._clear(F)
   local r = 1
   for i = 1, #t, step do
-    -- text 
+    -- text
     local x = tostring(ytbl and t[i] or t[i][ix])
-    for c = 1, math.min(iL-2, #x) do F.canvas[r][c] = string.sub(x,c,c) end 
-    -- line 
+    for c = 1, math.min(iL-2, #x) do F.canvas[r][c] = string.sub(x,c,c) end
+    -- line
     x = ytbl and vy[i] or t[i][vy]
     local i1, i2 = mmodf(x * dm + i0)
-    if x >= 0 then 
+    if x >= 0 then
       i2 = (i2 >= 0.5) and i1 + 1 or i1   -- right limit
       i1 = i0
     else
@@ -677,8 +677,8 @@ asciiplot.bar = function (F, t, vy, ix)
       i2 = i0
     end
     for c = i1, i2 do F.canvas[r][c] = '=' end
-    -- value 
-    x = tostring(x) 
+    -- value
+    x = tostring(x)
     for c = 1, math.min(iL-2, #x) do F.canvas[r][iR+2+c] = string.sub(x,c,c) end
     r = r + 1
   end
@@ -698,7 +698,7 @@ asciiplot.concat = function (self, ...)
     if not isasciiplot(v) then error("Not asciiplot objec at "..tostring(i)) end
     if v.height ~= ag[1].height then error('Different height') end
     if v.title then btitle = true end
-    local n = 0 
+    local n = 0
     for k,_ in pairs(v.legend) do n = n + 1 end
     if n > nlegend then nlegend = n end
   end
@@ -709,34 +709,34 @@ asciiplot.concat = function (self, ...)
     local k = 1
     -- title
     local row = acc[k] or {}
-    row[#row+1] = asciiplot._format_(v.title or '', v.width, true, true)
+    row[#row+1] = asciiplot._format(v.title or '', v.width, true, true)
     row[#row+1] = gap
     acc[k] = row; k = k + 1
     -- content
     for j = 1, v.height do
-      row = acc[k] or {} 
-      row[#row+1] = table.concat(v.canvas[j]) 
+      row = acc[k] or {}
+      row[#row+1] = table.concat(v.canvas[j])
       row[#row+1] = gap
       acc[k] = row; k = k + 1
     end
-    -- legend 
+    -- legend
     local n = 0
     for u, w in pairs(v.legend) do
       row = acc[k] or {}
-      row[#row+1] = asciiplot._format_(string.format('(%s) %s', u, w), v.width-1+#u, false, true)
+      row[#row+1] = asciiplot._format(string.format('(%s) %s', u, w), v.width-1+#u, false, true)
       row[#row+1] = gap
       acc[k] = row; k = k + 1
       n = n + 1
     end
     -- add empty lines
-    for j = n+1, nlegend do 
+    for j = n+1, nlegend do
       row = acc[k] or {}
-      row[#row+1] = asciiplot._format_('', v.width, false, true)
+      row[#row+1] = asciiplot._format('', v.width, false, true)
       row[#row+1] = gap
       acc[k] = row; k = k + 1
     end
   end
-  -- get strings 
+  -- get strings
   for i = 1, #acc do acc[i] = table.concat(acc[i]) end
   return table.concat(acc, '\n')
 end
@@ -752,22 +752,22 @@ asciiplot.contour = function (F, fn, tOpt)
   tOpt.level = tOpt.level or 5    -- TODO limit maximal and minimal values
   local view = tOpt.view or 'XY'
   -- calculate
-  if view == 'YZ' then 
+  if view == 'YZ' then
     F.width, F.height = F.height, F.width    -- increase resolution for default size
   end
-  local X, Y, Z, zrng = asciiplot._fn2Z_(F, fn)
+  local X, Y, Z, zrng = asciiplot._fn2Z(F, fn)
   if not tOpt.zfix then
     F.zrange = zrng
   end
   local acc = {}
-  if view == 'XY' or view == 'XYZ' then 
-    acc[#acc+1] = asciiplot._viewXY_(asciiplot.copy(F), X, Y, Z, tOpt)
+  if view == 'XY' or view == 'XYZ' then
+    acc[#acc+1] = asciiplot._viewXY(asciiplot.copy(F), X, Y, Z, tOpt)
   end
   if view == 'XZ' or view == 'XYZ' then
-    acc[#acc+1] = asciiplot._viewXZ_(asciiplot.copy(F), X, Y, Z, tOpt)
+    acc[#acc+1] = asciiplot._viewXZ(asciiplot.copy(F), X, Y, Z, tOpt)
   end
   if view == 'YZ' or view == 'XYZ' then
-    acc[#acc+1] = asciiplot._viewZY_(asciiplot.copy(F), X, Y, Z, tOpt)
+    acc[#acc+1] = asciiplot._viewYZ(asciiplot.copy(F), X, Y, Z, tOpt)
   end
   if view == 'XYZ' then
     local txt = {asciiplot.concat(nil, acc[1], acc[3]), tostring(acc[2])}
@@ -782,7 +782,7 @@ about[asciiplot.contour] = {"contour(F,fn,[{view='XY'}])", "Find contours of pro
 --  @return Copy of the object.
 asciiplot.copy = function (F)
   local o = {
-    width = F.width, 
+    width = F.width,
     height = F.height,
     xrange = {F.xrange[1], F.xrange[2]},
     yrange = {F.yrange[1], F.yrange[2]},
@@ -792,7 +792,7 @@ asciiplot.copy = function (F)
     yaxis = F.yaxis,
     _w0 = F._w0,
     _h0 = F._h0,
-    canvas = {}, 
+    canvas = {},
     legend = {},
   }
   for k,v in pairs(F.legend) do
@@ -820,35 +820,35 @@ asciiplot.plot = function (F, ...)
   local xmin, xmax = math.huge, -math.huge
   local i = 1
   -- collect data
-  repeat 
+  repeat
     local tx, ty = ag[i], ag[i+1]
-    -- data 
+    -- data
     if type(tx) == 'function' then
       -- save funciton, check region later
       ty = nil
       i = i + 1
     elseif type(tx) == 'table' then
-      if type(ty) == 'table' then 
+      if type(ty) == 'table' then
         i = i + 2
       else
         ty, tx = tx, {}
         for i = 1, #ty do tx[i] = i end
         i = i + 1
       end
-      local a,b = asciiplot._findVectorRange_(tx)
+      local a,b = asciiplot._findVectorRange(tx)
       if a < xmin then xmin = a end
      if b > xmax then xmax = b end
-    else 
+    else
       error('Unexpected argument with position '..tostring(i))
     end
-    -- legend 
+    -- legend
     local legend = ag[i]
-    if type(legend) ~= 'string' then 
+    if type(legend) ~= 'string' then
       legend = 'line '..tostring(#acc+1)
-    else 
+    else
       i = i + 1
     end
-    -- save 
+    -- save
     acc[#acc+1] = {tx, ty, legend}
   until i > #ag
   -- check if there are no tables
@@ -858,29 +858,29 @@ asciiplot.plot = function (F, ...)
 
   -- update y range
   local ymin, ymax = math.huge, -math.huge
-  for i = 1, #acc do 
+  for i = 1, #acc do
     local r = acc[i]
     if type(r[1]) == 'function' then
-      r[1], r[2] = asciiplot._fn2XY_(F, r[1])
+      r[1], r[2] = asciiplot._fn2XY(F, r[1])
     end
-    local a, b = asciiplot._findVectorRange_(r[2]) 
+    local a, b = asciiplot._findVectorRange(r[2])
     if a < ymin then ymin = a end
     if b > ymax then ymax = b end
   end
   F.yrange = {ymin, ymax}
 
-  -- prepare 
-  asciiplot._clear_(F)
-  asciiplot._axes_(F)
-  -- 'plot' 
+  -- prepare
+  asciiplot._clear(F)
+  asciiplot._axes(F)
+  -- 'plot'
   for i = 1, #acc do
-    local c = asciiplot.char[i] 
+    local c = asciiplot.char[i]
     local r = acc[i]
-    asciiplot._addXY_(F, r[1], r[2], c)
+    asciiplot._addXY(F, r[1], r[2], c)
     F.legend[c] = r[3]
   end
   -- limits
-  asciiplot._limits_(F)
+  asciiplot._limits(F)
   return F
 end
 about[asciiplot.plot] = {"plot(...)", "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
@@ -888,9 +888,9 @@ about[asciiplot.plot] = {"plot(...)", "Plot arguments in form 't', 't1,t1', 'fn,
 --- Prepare a clear canvas.
 --  @param F Figure object.
 asciiplot.reset = function (F)
-  asciiplot._clear_(F)
-  asciiplot._axes_(F) 
-  asciiplot._limits_(F) 
+  asciiplot._clear(F)
+  asciiplot._axes(F)
+  asciiplot._limits(F)
 end
 about[asciiplot.reset] = {"reset()", "Prepare a clear canvas.", MANUAL}
 
@@ -903,9 +903,9 @@ asciiplot.scale = function (F, factor, bDefault)
   local w = bDefault and WIDTH or F._w0
   local h = bDefault and HEIGHT or F._h0
   local int, frac = mmodf(w * factor)
-  -- prefer odd numbers 
+  -- prefer odd numbers
   F.width = (int % 2 == 1) and int or (int + 1)
-  int, frac = mmodf(h * factor) 
+  int, frac = mmodf(h * factor)
   F.height = (int % 2 == 1) and int or (int + 1)
   return F
 end
@@ -921,26 +921,26 @@ asciiplot.tplot = function (F, t, tOpt)
   tOpt = tOpt or {}
   -- update range
   if not tOpt.yfix then
-    F.xrange, F.yrange = asciiplot._findRange_(t, tOpt)
+    F.xrange, F.yrange = asciiplot._findRange(t, tOpt)
   end
   -- plot all by default
-  if #tOpt == 0 then 
+  if #tOpt == 0 then
     for i = 2, #t[1] do tOpt[#tOpt+1] = i end
   end
-  -- prepare 
-  asciiplot._clear_(F)
-  asciiplot._axes_(F)
-  -- fill 
-  asciiplot._addTable_(F, t, tOpt)
+  -- prepare
+  asciiplot._clear(F)
+  asciiplot._axes(F)
+  -- fill
+  asciiplot._addTable(F, t, tOpt)
   -- limits
-  asciiplot._limits_(F)
+  asciiplot._limits(F)
   -- show
   return F
 end
 about[asciiplot.tplot] = {"tplot(t,[{yfix=false}])", "Plot the table data, choose columns if need."}
 
 -- Simplify the constructor call.
-setmetatable(asciiplot, {__call = function (self,w,h) return asciiplot:_new_(w,h) end})
+setmetatable(asciiplot, {__call = function (self,w,h) return asciiplot:_new(w,h) end})
 asciiplot.Ap = 'Ap'
 about[asciiplot.Ap] = {"Ap([iWidth=75,iHeight=23])", "Create new asciiplot.", help.STATIC}
 

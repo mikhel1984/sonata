@@ -98,7 +98,7 @@ end
 --  @param vSlave Slave object.
 --  @return Converted slave of nil.
 cross.convert = function (vMaster, vSlave)
-  return type(vMaster) == 'table' and vMaster._convert_ and vMaster._convert_(vSlave)
+  return type(vMaster) == 'table' and vMaster._convert and vMaster._convert(vSlave)
 end
 
 --- Get the object copy.
@@ -131,7 +131,7 @@ end
 --  @param v Sonata object.
 --  @return Number or the object itself.
 cross.simp = function (v)
-  return type(v) == 'table' and v._simp_ and v:_simp_() or v
+  return type(v) == 'table' and v._simp and v:_simp() or v
 end
 
 --============== Utils ================

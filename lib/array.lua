@@ -1,10 +1,10 @@
---[[		sonata/lib/array.lua 
+--[[		sonata/lib/array.lua
 
 --- Manipulations with arrays of elements.
 --  Arrays are sparse as long as possible.
 --
 --  Object structure:</br>
---  <code>{a1...an, b1...bn, c1...cn, ...,</br> 
+--  <code>{a1...an, b1...bn, c1...cn, ...,</br>
 --  array_size, index_coefficients}</code></br>
 --  i.e. all elements of the array are written sequentially, column by column. Position of one element is calculated as
 --  <code>C1*n1+C2*n2+...+Ck*nk</code>
@@ -39,7 +39,7 @@ ans = #b                      --> 10
 -- compare sizes
 ans = b:isEqual(Arr{5,2,1})   --> true
 
--- compare elements 
+-- compare elements
 ans = (b == b:copy())         --> true
 
 -- get sub array
@@ -59,18 +59,18 @@ a3 = Arr{2,2}:map(rnd)
 a4 = Arr:zip('x1*x2+x3', a1,a2,a3)
 ans = a4:get{1,2}             --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
 
--- iterate over array 
+-- iterate over array
 g = Arr {2,2}
 g:set({1,1}, 1)
 g:set({2,1}, 2)
 g:set({1,2}, 3)
 g:set({2,2}, 4)
 -- show
-for ind, val in g:ipairs() do 
-  io.write('{',ind[1],',',ind[2],'}\t',val, '\n') 
+for ind, val in g:ipairs() do
+  io.write('{',ind[1],',',ind[2],'}\t',val, '\n')
 end
 
--- simple iteration 
+-- simple iteration
 n = g:capacity()   -- number of elements
 for i = 1,n do
   io.write(i,':',g[i],'\n')
@@ -108,13 +108,6 @@ local about = help:new("Manipulations with arrays of elements. Indices have form
 local array = {
 -- mark
 type='array', isarray=true,
--- elementary function definition
-_add_ = function (x,y) return x+y end,
-_sub_ = function (x,y) return x-y end,
-_unm_ = function (x) return -x end,
-_mul_ = function (x,y) return x*y end,
-_div_ = function (x,y) return x/y end,
-_pow_ = function (x,y) return x^y end,
 }
 
 --- a1 == A2
@@ -152,10 +145,10 @@ about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
 --  @param A Array object.
 --  @param N position.
 --  @return Index table.
-array._index_ = function (A, N)
+array._index = function (A, N)
   local index = {}
   local S, K = A.size, A.k
-  for i = 1, #S do 
+  for i = 1, #S do
     index[i] = math.modf(N / K[i]) % S[i]+1
   end
   return index
@@ -165,9 +158,9 @@ end
 --  @param A Array.
 --  @param tInd Index to check.
 --  @return True if the index is correct for the current array.
-array._isIndex_ = function (A, tInd)
+array._isIndex = function (A, tInd)
   if #A.size ~= #tInd then return false end
-  for i = 1,#tInd do 
+  for i = 1,#tInd do
     if tInd[i] > A.size[i] or tInd[i] < 1 then return false end
   end
   return true
@@ -177,7 +170,7 @@ end
 --  @param self Pointer to object.
 --  @param tSize Table with array size.
 --  @return Empty array.
-array._new_ = function (self, tSize)
+array._new = function (self, tSize)
   -- prepare list of coefficients
   local k = {1}
   for i = 2, #tSize do k[i] = tSize[i-1]*k[i-1] end
@@ -189,9 +182,9 @@ end
 --  @param A Array.
 --  @param tInd Element index.
 --  @return Position of the element in the array table.
-array._pos_ = function (A, tInd)
+array._pos = function (A, tInd)
   local res, k = tInd[1], A.k
-  for i = 2,#tInd do 
+  for i = 2,#tInd do
     res = res + (tInd[i]-1) * k[i]
   end
   return res
@@ -215,17 +208,17 @@ about[array.capacity] = {"capacity()", "Maximal number of elements in the array.
 array.concat = function (A1, A2, iAxis)
   -- check size
   if not (iAxis > 0 and iAxis <= #A1.size) then error("Wrong axis!") end
-  for i = 1, #A1.size do 
+  for i = 1, #A1.size do
     if not (A1.size[i] == A2.size[i] or i == iAxis) then error("Different size!") end
   end
   -- prepare new size
   local newsize = Ver.move(A1.size, 1, #A1.size, 1, {})
   newsize[iAxis] = newsize[iAxis] + A2.size[iAxis]
   -- combine
-  local res, ind1, ind2 = array:_new_(newsize), {}, {}
+  local res, ind1, ind2 = array:_new(newsize), {}, {}
   local edge = A1.size[iAxis]
   local K, S = res.k, res.size
-  local conv = array._pos_
+  local conv = array._pos
   for count = 1, array.capacity(res) do
     -- prepare index
     for i = 1, #newsize do
@@ -237,7 +230,7 @@ array.concat = function (A1, A2, iAxis)
     ind2[iAxis] = second and (ind2[iAxis]-edge) or ind2[iAxis]
     res[conv(res,ind1)] = second and A2[conv(A2,ind2)] or A1[conv(A1,ind2)]
   end
-  return res 
+  return res
 end
 about[array.concat] = {"concat(A,iAxis)", "Concatenate along the given array along the given axis."}
 
@@ -245,7 +238,7 @@ about[array.concat] = {"concat(A,iAxis)", "Concatenate along the given array alo
 --  @param A Array object.
 --  @return Deep copy of the array.
 array.copy = function (A)
-  local cp = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
+  local cp = array:_new(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
   return Ver.move(A, 1, array.capacity(A), 1, cp)             -- copy array elements
 end
 about[array.copy] = {"copy()", "Get copy of the array.", help.OTHER}
@@ -261,8 +254,8 @@ about[array.dim] = {"dim()", "Return size of the array."}
 --  @param tInd Index of the element (table).
 --  @return Element or error if index is wrong.
 array.get = function (A, tInd)
-  if not array._isIndex_(A, tInd) then error("Wrong index!") end
-  return A[array._pos_(A, tInd)]
+  if not array._isIndex(A, tInd) then error("Wrong index!") end
+  return A[array._pos(A, tInd)]
 end
 about[array.get] = {"get(tInd)", "Get array element."}
 
@@ -273,7 +266,7 @@ array.ipairs = function (A)
   local count, len = 0, array.capacity(A)
   return function ()
     if count == len then return nil, nil end
-    local index = array._index_(A, count)
+    local index = array._index(A, count)
     count = count + 1
     return index, A[count]
   end
@@ -301,9 +294,9 @@ about[array.isEqual] = {"isEqual(A)", "Check size equality.", help.OTHER}
 --  @param fn Function of value and (optional) index.
 --  @return New array where each element is result of the function evaluation fn(a[i]).
 array.map = function (A, fn)
-  local res, v = array:_new_(Ver.move(A.size, 1, #A.size, 1, {}))
+  local res, v = array:_new(Ver.move(A.size, 1, #A.size, 1, {}))
   for i = 1, array.capacity(A) do
-    v = fn(A[i], array._index_(A,i-1))
+    v = fn(A[i], array._index(A,i-1))
     res[i] = v
   end
   return res
@@ -315,8 +308,8 @@ about[array.map] = {"map(fn)", "Apply function fn(x,[ind]) to all elements, retu
 --  @param tInd Element index (table).
 --  @param v New value.
 array.set = function (A, tInd, v)
-  if not array._isIndex_(A, tInd) then error("Wrong index!") end
-  A[array._pos_(A,tInd)] = v 
+  if not array._isIndex(A, tInd) then error("Wrong index!") end
+  A[array._pos(A,tInd)] = v
 end
 about[array.set] = {"set(tInd,v)", "Set value to the array."}
 
@@ -327,23 +320,23 @@ about[array.set] = {"set(tInd,v)", "Set value to the array."}
 --  @return Array of elements restricted by the indices.
 array.sub = function (A, tInd1, tInd2)
   -- negative index means the last element
-  for i = 1, #tInd2 do 
-    if tInd2[i] < 0 then tInd2[i] = tInd2[i] + A.size[i] + 1 end 
+  for i = 1, #tInd2 do
+    if tInd2[i] < 0 then tInd2[i] = tInd2[i] + A.size[i] + 1 end
   end
-  if not (array._isIndex_(A, tInd1) and array._isIndex_(A, tInd2)) then error("Wrong index!") end
+  if not (array._isIndex(A, tInd1) and array._isIndex(A, tInd2)) then error("Wrong index!") end
   -- prepare tables
   local newsize, ind = {}, {}
-  for i = 1, #tInd1 do 
+  for i = 1, #tInd1 do
     newsize[i] = tInd2[i] - tInd1[i] + 1
     ind[i]     = 0
-  end 
-  local res = array:_new_(newsize)
+  end
+  local res = array:_new(newsize)
   -- fill
   local K, S = res.k, res.size
-  local conv = array._pos_
+  local conv = array._pos
   for count = 1, array.capacity(res) do
     -- calculate new temporary index
-    for i = 1, #ind do 
+    for i = 1, #ind do
       local tmp = math.modf(count/K[i]) % S[i]
       tInd2[i] = tInd1[i] + tmp
       ind[i] = tmp + 1
@@ -355,7 +348,7 @@ end
 about[array.sub] = {"sub(tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
 
 --- Apply function of several arguments.
---  @param self Do nothing. 
+--  @param self Do nothing.
 --  @param fn Function with N arguments or expression.
 --  @param ... List of N arrays.
 --  @return New array where each element is result of the function evaluation.
@@ -369,7 +362,7 @@ array.zip = function (self, fn, ...)
   end
   -- prepare new
   local v, upack = {}, Ver.unpack
-  local res = array:_new_(Ver.move(a1.size, 1, #a1.size, 1, {}))
+  local res = array:_new(Ver.move(a1.size, 1, #a1.size, 1, {}))
   for i = 1, array.capacity(a1) do
     -- collect
     for k = 1,#arg do v[k] = arg[k][i] end
@@ -381,12 +374,12 @@ end
 about[array.zip] = {"Arr:zip(fn, ...)", "Apply function of several arguments. Return new array.", help.STATIC}
 
 -- Constructor
-setmetatable(array, {__call = function (self, tSize) 
+setmetatable(array, {__call = function (self, tSize)
   -- check correctness
   assert(type(tSize) == 'table', "Table is expected!")
   for i = 1,#tSize do assert(tSize[i] > 0 and Ver.isInteger(tSize[i]), "Positive integer is expected!") end
   -- build
-  return array:_new_(tSize) 
+  return array:_new(tSize)
 end})
 array.Arr = 'Arr'
 about[array.Arr] = {"Arr {n1,n2,..}", "Create empty array with the given size.", help.STATIC}
