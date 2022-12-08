@@ -85,7 +85,7 @@ local function lowBound(a,b) return math.abs(a) > b and a or b end
 -- doc categories
 local GAMMA, BETA, BESSEL = 'gamma', 'beta', 'bessel'
 
--- error 
+-- error
 local ERR_POSINT = "Non-negative integer order is expected!"
 local ERR_INVARG = "Invalid arguments!"
 
@@ -104,7 +104,7 @@ special.__index = special
 --- Modified Bessel function I0.
 --  @param x Real number.
 --  @return I0(x).
-special._bessi0_ = function (x)
+special._bessi0 = function (x)
   local ax = math.abs(x)
   if ax < 3.75 then
     local y = x/3.75
@@ -120,7 +120,7 @@ end
 --- Modified Bessel function I1.
 --  @param x Real number.
 --  @return I1(x).
-special._bessi1_ = function (x)
+special._bessi1 = function (x)
   local ax,ans = math.abs(x)
   if ax < 3.75 then
     local y = x/3.75
@@ -138,7 +138,7 @@ end
 --- Bessel function J0.
 --  @param x Real number.
 --  @return J0(x).
-special._bessj0_ = function (x)
+special._bessj0 = function (x)
   local ax  = math.abs(x)
   local ans1, ans2, y
   if ax < 8.0 then
@@ -159,7 +159,7 @@ end
 --- Bessel function J1.
 --  @param x Real number.
 --  @return J1(x).
-special._bessj1_ = function (x)
+special._bessj1 = function (x)
   local ax = math.abs(x)
   local ans1, ans2, y
   if ax < 8.0 then
@@ -181,10 +181,10 @@ end
 --- Modified Bessel function K0.
 --  @param x Non-negative number.
 --  @return K0(x).
-special._bessk0_ = function (x)
+special._bessk0 = function (x)
   if x <= 2.0 then
     local y = x*x/4.0
-    return (-math.log(x/2.0)*special._bessi0_(x))+(-0.57721566+y*(0.42278420+y*(0.23069756+y*(0.3488590E-1+y*(0.262698E-2+y*(0.10750E-3+y*0.74E-5))))))
+    return (-math.log(x/2.0)*special._bessi0(x))+(-0.57721566+y*(0.42278420+y*(0.23069756+y*(0.3488590E-1+y*(0.262698E-2+y*(0.10750E-3+y*0.74E-5))))))
   else
     local y = 2.0/x
     return (math.exp(-x)/math.sqrt(x))*(1.25331414+y*(-0.7832358E-1+y*(0.2189568E-1+y*(-0.1062446E-1+y*(0.587872E-2+y*(-0.251540E-2+y*0.53208E-3))))))
@@ -194,10 +194,10 @@ end
 --- Modified Bessel function K1.
 --  @param x Non-negative number.
 --  @return K1(x).
-special._bessk1_ = function (x)
+special._bessk1 = function (x)
   if x <= 2.0 then
     local y = x*x/4.0
-    return (math.log(x/2.0)*special._bessi1_(x))+(1.0/x)*(1.0+y*(0.15443144+y*(-0.67278579+y*(-0.18156897+y*(-0.1919402E-1+y*(-0.110404E-2-y*0.4686E-4))))))
+    return (math.log(x/2.0)*special._bessi1(x))+(1.0/x)*(1.0+y*(0.15443144+y*(-0.67278579+y*(-0.18156897+y*(-0.1919402E-1+y*(-0.110404E-2-y*0.4686E-4))))))
   else
     local y = 2.0/x
     return (math.exp(-x)/math.sqrt(x))*(1.25331414+y*(0.23498619+y*(-0.3655620E-1+y*(0.1504268E-1+y*(-0.780353E-2+y*(0.325614E-2-y*0.68245E-3))))))
@@ -213,7 +213,7 @@ special._bessy0_ = function (x)
     y = x*x
     ans1 = -2957821389.0+y*(7062834065.0+y*(-512359803.6+y*(10879881.29+y*(-86327.92757+y*228.4622733))))
     ans2 = 40076544269.0+y*(745249964.8+y*(7189466.438+y*(47447.26470+y*(226.1030244+y))))
-    return ans1/ans2+0.636619772*special._bessj0_(x)*math.log(x)
+    return ans1/ans2+0.636619772*special._bessj0(x)*math.log(x)
   else
     local z = 8.0/x
     y = z*z
@@ -233,7 +233,7 @@ special._bessy1 = function (x)
     y = x*x
     ans1 = x*(-0.4900604943E13+y*(0.1275274390E13+y*(-0.5153438139E11+y*(0.7349264551E9+y*(-0.4237922726E7+y*0.8511937935E4)))))
     ans2 = 0.2499580570E14+y*(0.4244419664E12+y*(0.3733650367E10+y*(0.2245904002E8+y*(0.1020426050E6+y*(0.3549632885E3+y)))))
-    return ans1/ans2+0.636619772*(special._bessj1_(x)*math.log(x)-1.0/x)
+    return ans1/ans2+0.636619772*(special._bessj1(x)*math.log(x)-1.0/x)
   else
     local z = 8.0/x
     y = z*z
@@ -272,7 +272,7 @@ end
 --  @param N Order.
 --  @param x Real value.
 --  @return Representation of P.
-special._gammaSer_ = function (N,x)
+special._gammaSer = function (N,x)
   local ITMAX,EPS = 100, 3E-7
   local gamser = 0.0
   if x <= 0 then assert(x == 0)
@@ -297,7 +297,7 @@ end
 --  @param N Order.
 --  @param x Real value.
 --  @return Representation of Q.
-special._gcf_ = function (N,x)
+special._gcf = function (N,x)
   local ITMAX,EPS,FPMIN = 100, 3E-7, 1E-30
   local b,c = x+1.0-N, 1.0/FPMIN
   local d = 1.0/b
@@ -317,12 +317,12 @@ end
 --  @param m Current order.
 --  @param x Real number.
 --  @return Pn_m(x)
-special._plgndr_ = function (n,m,x)
+special._plgndr = function (n,m,x)
   local pmm = 1.0
   if m > 0 then
     local somx2 = math.sqrt((1-x)*(1+x))
     local fact = 1.0
-    for i = 1,m do 
+    for i = 1,m do
       pmm = pmm*(-fact)*somx2
       fact = fact+2.0
     end
@@ -346,8 +346,8 @@ end
 --  @return In(x).
 special.besseli = function (self, N,x)
   if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
-  if N == 0 then return special._bessi0_(x) end
-  if N == 1 then return special._bessi1_(x) end
+  if N == 0 then return special._bessi0(x) end
+  if N == 1 then return special._bessi1(x) end
   if x == 0 then return 0.0 end
   local ACC,BIGNO,BIGNI = 40.0, 1E10, 1E-10
   local tox = 2.0/math.abs(x)
@@ -361,7 +361,7 @@ special.besseli = function (self, N,x)
     end
     if j == N then ans = bip end
   end
-  ans = ans*special._bessi0_(x)/bi
+  ans = ans*special._bessi0(x)/bi
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
 about[special.besseli] = {"Spec:besseli(N,x)", "Modified Bessel function In(x).", BESSEL}
@@ -373,22 +373,22 @@ about[special.besseli] = {"Spec:besseli(N,x)", "Modified Bessel function In(x)."
 --  @return Polynomial value
 special.besselj = function (self, N,x)
   if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
-  if N == 0 then return special._bessj0_(x) end
-  if N == 1 then return special._bessj1_(x) end
+  if N == 0 then return special._bessj0(x) end
+  if N == 1 then return special._bessj1(x) end
   if x == 0 then return 0 end
   local ACC, BIGNO, BIGNI = 40, 1E10, 1E-10
   local ax = math.abs(x)
   local tox = 2.0/ax
   local bj, bjm, ans
   if ax > N then
-    bjm = special._bessj0_(ax)
-    bj = special._bessj1_(ax)
-    for i = 1,(N-1) do 
+    bjm = special._bessj0(ax)
+    bj = special._bessj1(ax)
+    for i = 1,(N-1) do
       bj, bjm = i*tox*bj-bjm, bm
     end
     ans = bj
   else
-    local m = math.floor((N+math.floor(math.sqrt(ACC*N)))/2)*2 
+    local m = math.floor((N+math.floor(math.sqrt(ACC*N)))/2)*2
     local jsum, sum = false, 0
     local bjp = 0
     bj, ans = 1, 0
@@ -419,9 +419,9 @@ about[special.besselj] = {"Spec:besselj(N,x)", "Bessel function of the first kin
 special.besselk = function (self, N,x)
   if x <= 0 then error("Positive value is expected!") end
   if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
-  if N == 0 then return special._bessk0_(x) end
-  if N == 1 then return special._bessk1_(x) end
-  local tox,bkm,bk = 2.0/x, special._bessk0_(x), special._bessk1_(x)
+  if N == 0 then return special._bessk0(x) end
+  if N == 1 then return special._bessk1(x) end
+  local tox,bkm,bk = 2.0/x, special._bessk0(x), special._bessk1(x)
   for j = 1,N-1 do
     bk, bkm = bkm+j*tox*bk, bk
   end
@@ -468,7 +468,7 @@ about[special.beta] = {"Spec:beta(z,w)", "Beta function.", BETA}
 special.betainc = function (self,x,a,b)
   if x < 0.0 or x > 1.0 then error("Expected x between 0 and 1!") end
   local bt
-  if x == 0 or x == 1 then 
+  if x == 0 or x == 1 then
     bt = 0.0
   else
     bt = math.exp(special:gammaln(a+b)-special:gammaln(a)-special:gammaln(b)+a*math.log(x)+b*math.log(1.0-x))
@@ -493,13 +493,13 @@ about[special.betaln] = {"Spec:betaln(z,w)", "Natural logarithm of beta function
 --  @return Integral value.
 special.dawson = function (self,x)
   local NMAX,H,A1,A2,A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
-  if not special._c_dawson then 
+  if not special._c_dawson then
     -- List of Dawson function coefficients.
     special._c_dawson = {0,0,0,0,0,0}
     for i = 1,NMAX do special._c_dawson[i] = math.exp(-((2.0*i-1.0)*H)^2) end
   end
   local xx = math.abs(x)
-  if xx < 0.2 then 
+  if xx < 0.2 then
     local x2 = x*x
     return x*(1.0-A1*x2*(1.0-A2*x2*(1.0-A3*x2)))
   else
@@ -566,8 +566,8 @@ special.expint = function (self,n,x)
     local fact, psy, del = 1.0
     for i = 1,MAXIT do
       fact = fact*(-x/i)
-      if i ~= nm1 then 
-        del = -fact/(i-nm1) 
+      if i ~= nm1 then
+        del = -fact/(i-nm1)
       else
         psy = -EULER
         for ii = 1,nm1 do psy = psy+1.0/ii end
@@ -585,7 +585,7 @@ about[special.expint] = {"Spec:expint(n,x)", "Exponential integral En(x)."}
 --  @param self Do nothing.
 --  @param z Real number.
 --  @return G(z).
-special.gamma = function (self, z) 
+special.gamma = function (self, z)
   if z < 0.5 then
     return math.pi / (math.sin(math.pi*z) * special:gamma(1-z))
   else
@@ -634,7 +634,7 @@ about[special.gammaln] = {"Spec:gammaln(z)", "Natural logarithm of gamma functio
 --  @return Value of P(N,x).
 special.gammp = function (self,N,x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
-  return (x < N+1.0) and special._gammaSer_(N,x) or 1.0-special._gcf_(N,x)
+  return (x < N+1.0) and special._gammaSer(N,x) or 1.0-special._gcf(N,x)
 end
 about[special.gammp] = {"Spec:gammp(N,x)", "Incomplete gamma function P(N,x).", GAMMA}
 
@@ -645,7 +645,7 @@ about[special.gammp] = {"Spec:gammp(N,x)", "Incomplete gamma function P(N,x).", 
 --  @return Value of Q(N,x).
 special.gammq = function (self,N,x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
-  return (x < N+1.0) and 1-special._gammaSer_(N,x) or special._gcf_(N,x)
+  return (x < N+1.0) and 1-special._gammaSer(N,x) or special._gcf(N,x)
 end
 about[special.gammq] = {"Spec:gammq(N,x)", "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
 
@@ -657,7 +657,7 @@ about[special.gammq] = {"Spec:gammq(N,x)", "Incomplete gamma function Q(N,x) = 1
 special.legendre = function (self,n,x)
   if n < 0 or math.abs(x) > 1 then error(ERR_INVARG) end
   local res = {}
-  local plgndr = special._plgndr_
+  local plgndr = special._plgndr
   for i = 1,n+1 do res[i] = plgndr(n,i-1,x) end
   return res
 end

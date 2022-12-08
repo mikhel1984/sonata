@@ -1,4 +1,4 @@
---[[		sonata/core/main.lua 
+--[[		sonata/core/main.lua
 
 --- Default functions and objects.
 --
@@ -16,7 +16,7 @@ require 'lib.main'
 -- constants starts from _
 ans = _pi                     --> math.pi
 
--- standard functions 
+-- standard functions
 ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
 
 -- round number
@@ -40,7 +40,7 @@ print(randn())
 -- "knows" Sonata objects
 ans = Type(25)                --> 'integer'
 
--- modified print function 
+-- modified print function
 a = {a=1,b=2, 3,4,5}
 Print(a, 0.123)
 
@@ -88,7 +88,7 @@ SonataHelp = SonataHelp or {}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
-main._showElt_ = function (v)
+main._showElt = function (v)
   if type(v) == 'number' then
     return Utils.numstr(v)
   else
@@ -98,7 +98,7 @@ end
 
 --- Show elements of the table.
 --  @param t Table to print.
-main._showTable_ = function (t)
+main._showTable = function (t)
   local N, nums = 10, {}
   -- dialog
   local function continue(n)
@@ -108,7 +108,7 @@ main._showTable_ = function (t)
   io.write('\n{ ')
   -- list elements
   for i,v in ipairs(t) do
-    io.write(main._showElt_(v), ', ')
+    io.write(main._showElt(v), ', ')
     nums[i] = true
     if i % N == 0 then
       io.write('\n')
@@ -119,7 +119,7 @@ main._showTable_ = function (t)
   local count = 0
   for k,v in pairs(t) do
     if not nums[k] then
-      io.write('\n', tostring(k), ' = ', main._showElt_(v), ', ')
+      io.write('\n', tostring(k), ' = ', main._showElt(v), ', ')
       count = count + 1
       if count % N == 0 and not continue("") then break end
     end
@@ -141,7 +141,7 @@ asin = math.asin;  About[asin] = {"asin(d)", "Inverse sine x.", TRIG}
 acos = math.acos;  About[acos] = {"acos(d)", "Inverse cosine x.", TRIG}
 atan = math.atan;  About[atan] = {"atan(d)", "Inverse tangent x.", TRIG}
 
-atan2 = Ver.atan2 
+atan2 = Ver.atan2
 About[atan2] = {"atan2(dy,dx)", "Inverse tangent of dy/dx, use signs.", TRIG}
 
 -- Hyperbolic
@@ -154,7 +154,7 @@ About[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
 tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
 About[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
 
--- Hyperbolic inverse 
+-- Hyperbolic inverse
 asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
 About[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
 
@@ -167,7 +167,7 @@ About[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 -- Constants
 _pi = math.pi;   About[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
 _e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
--- result 
+-- result
 _ans = 0;   About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
 
 -- random
@@ -179,7 +179,7 @@ About[rand] = {"rand()", "Random number between 0 and 1."}
 randi = function (N) return math.random(1,N) end
 About[randi] = {"randi(N)", "Random integer in range from 1 to N."}
 
-randn = function (dMean, dev) 
+randn = function (dMean, dev)
   dMean = dMean or 0
   dev = dev or 1
   -- use Box-Muller transform
@@ -226,11 +226,11 @@ Print = function (...)
         end
       else
         -- require representation
-        main._showTable_(v)
+        main._showTable(v)
       end
     else
       -- show value
-      io.write(main._showElt_(v), '\t')
+      io.write(main._showElt(v), '\t')
     end
   end
   io.write('\n')
@@ -268,7 +268,7 @@ Type = function (v)
   if u == 'table' then
     u = v.type or u
   elseif u == 'number' then
-    u = Ver.mathType(v) 
+    u = Ver.mathType(v)
   end
   return u
 end
@@ -278,7 +278,7 @@ About[Type] = {'Type(v)', 'Show type of the object.', AUX}
 --  board - matrix with 'ones' as live cells
 main.life = function (board)
   assert(board.type == 'matrix', 'Matrix is expected!')
-  local rows,cols = board:size() 
+  local rows,cols = board:size()
   local src = board
   local gen = 0
   -- make decision about current cell
@@ -290,7 +290,7 @@ main.life = function (board)
   repeat
     local new = board:zeros()   -- empty matrix of the same size
     gen = gen+1
-    -- update 
+    -- update
     for r = 1,rows do
       for c = 1,cols do
         new[r][c] = gen > 1 and islive(r,c) or src[r][c] ~= 0 and 1 or 0
@@ -298,8 +298,8 @@ main.life = function (board)
       end
       io.write('|\n')
     end
-    if gen > 1 and new == src then 
-      return print('~~ Game Over ~~') 
+    if gen > 1 and new == src then
+      return print('~~ Game Over ~~')
     end
     src = new
     io.write(string.format('#%-3d continue? (y/n) ', gen))
@@ -307,7 +307,7 @@ main.life = function (board)
 end
 
 -- Methametods for the range of numbers.
-local metarange = { type = 'range' }
+local mt_range = { type = 'range' }
 
 --- Initialize range object.
 --  @param dBeg First value.
@@ -315,27 +315,27 @@ local metarange = { type = 'range' }
 --  @param dStep Step value.
 --  @param iN Number of elements.
 --  @return Range object.
-metarange._init_ = function (dBeg,dEnd,dStep,iN)
-  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, metarange)
+mt_range._init = function (dBeg,dEnd,dStep,iN)
+  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, mt_range)
 end
 
 --- Add number (shift range).
 --  @param d Any number.
 --  @param R Range object.
 --  @return Shifted range table.
-metarange.__add = function (d, R)
+mt_range.__add = function (d, R)
   if type(R) == 'number' then
-    return metarange.__add(R, d)
+    return mt_range.__add(R, d)
   else
-    return metarange._init_(d+R._beg, d+R._end, R._step, R._N)
+    return mt_range._init(d+R._beg, d+R._end, R._step, R._N)
   end
 end
 
-metarange.__sub = function (R, d)
+mt_range.__sub = function (R, d)
   if type(R) == 'number' then   -- d is range
-    return R + (-1)*d 
+    return R + (-1)*d
   else
-    return metarange._init_(R._beg-d, R._end-d, R._step, R._N)
+    return mt_range._init(R._beg-d, R._end-d, R._step, R._N)
   end
 end
 
@@ -343,26 +343,26 @@ end
 --  @param d Any number.
 --  @param R Range object.
 --  @return Expanded range table.
-metarange.__mul = function (d, R)
-  if type(R) == 'number' then 
-    return metarange.__mul(R, d)
-  else 
-    return metarange._init_(d*R._beg, d*R._end, d*R._step, R._N)
+mt_range.__mul = function (d, R)
+  if type(R) == 'number' then
+    return mt_range.__mul(R, d)
+  else
+    return mt_range._init(d*R._beg, d*R._end, d*R._step, R._N)
   end
 end
 
 --- Pretty print.
 --  @param R Range object.
 --  @return String with the table representation.
-metarange.__tostring = function (self)
-  return string.format("%s{%g, %g .. %g}", self._fn and "fn" or "", 
+mt_range.__tostring = function (self)
+  return string.format("%s{%g, %g .. %g}", self._fn and "fn" or "",
     self._beg, self._beg+self._step, self._end)
 end
 
 --- Get number of elements.
 --  @param self Range object.
 --  @return Element number.
-metarange.__len = function (self)
+mt_range.__len = function (self)
   return self._N
 end
 
@@ -370,7 +370,7 @@ end
 --  @param self Range object.
 --  @param i Element index.
 --  @return Number.
-metarange.__index = function (self, i)
+mt_range.__index = function (self, i)
   if Ver.isInteger(i) then
     local v
     if i > 0 and i < self._N then
@@ -380,18 +380,18 @@ metarange.__index = function (self, i)
     end
     return v and self._fn and self._fn(v) or v
   end
-  return metarange[i]
+  return mt_range[i]
 end
 
 -- Block setting operation.
-metarange.__newindex = function (self, k, v)
+mt_range.__newindex = function (self, k, v)
   -- do nothing
 end
 
-metarange.map = function (self, fn)
+mt_range.map = function (self, fn)
   return setmetatable(
-    {_beg=self._beg, _end=self._end, _step=self._step, _N=self._N, _fn=fn}, 
-    metarange)
+    {_beg=self._beg, _end=self._end, _step=self._step, _N=self._N, _fn=fn},
+    mt_range)
 end
 
 --- Generate sequence of values.
@@ -407,7 +407,7 @@ Range = function (dBegin, dEnd, dStep)
   local n, _ = math.modf(diff / dStep)
   if math.abs(n*dStep - dEnd) >= math.abs(dStep * 0.1) then n = n + 1 end
   -- result
-  return metarange._init_(dBegin, dEnd, dStep, n)
+  return mt_range._init(dBegin, dEnd, dStep, n)
 end
 About[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', AUX}
 

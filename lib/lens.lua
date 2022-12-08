@@ -2,7 +2,7 @@
 
 --- Matrix methods in paraxial optics.
 --
---  Each element is represented in form of 2x2 unit matrix 
+--  Each element is represented in form of 2x2 unit matrix
 --  { A, B,
 --    C, D }
 --  See, for example, "Introduction to matrix methods in optics" by A.Gerrard, J.M.Burch.
@@ -18,50 +18,50 @@
 
 -- use 'lens'
 Lens = require 'lib.lens'
--- external dependencies, can be loaded implicitly 
+-- external dependencies, can be loaded implicitly
 Num = require 'lib.numeric' -- for root searching
 
--- define a simple lense 
-n1 = 1      -- air 
-n2 = 1.56   -- glass 
+-- define a simple lense
+n1 = 1      -- air
+n2 = 1.56   -- glass
 -- radius 200 mm, thickness 5 mm
-lens1 = Lens:ref(200,n1,n2)..Lens:trans(5,n2)..Lens:ref(-200,n2,n1) 
+lens1 = Lens:ref(200,n1,n2)..Lens:trans(5,n2)..Lens:ref(-200,n2,n1)
 ans = lens1:isUnit()          --> true
 
 -- get matrix element
 ans = lens1.D                --2> 1
 
--- find cardinal points 
-pts = lens1:cardinal() 
+-- find cardinal points
+pts = lens1:cardinal()
 ans = pts.F1                 --2> -177.76
 
 -- print points
 print(pts)
 
--- object is located 250 mm to the left 
--- from the lens, find position of 
--- the image 
+-- object is located 250 mm to the left
+-- from the lens, find position of
+-- the image
 d1 = 250
 fn = function (d2)
-  return Lens:trans(d1,n1)..lens1..Lens:trans(d2,n1) 
+  return Lens:trans(d1,n1)..lens1..Lens:trans(d2,n1)
 end
 -- solve for B = 0, initial guess dist = 100
-d2 = Lens:solve(fn, Lens.key.B, 100)  
+d2 = Lens:solve(fn, Lens.key.B, 100)
 ans = d2                     --2>  623.21
 
--- check solution 
--- assume the lens it thin 
+-- check solution
+-- assume the lens it thin
 f = -pts.F1
 ans = 1/d1 + 1/d2            --2> 1/f
 
--- ray transformation 
-y1 = 10          -- mm, height   
+-- ray transformation
+y1 = 10          -- mm, height
 V1 = n1 * 0.05   -- optical angle
-sys1 = fn(d2) 
+sys1 = fn(d2)
 y2, V2 = sys1(y1,V1)
 ans = y2                     --2> -24.83
 
--- from image to object 
+-- from image to object
 sys2 = sys1:inv()  -- transpose
 ans, _ = sys2(y2, V2)        --3> y1
 
@@ -73,29 +73,29 @@ lens2 = Lens:thin(f)
 _, V3 = lens1(y1,V1)
 _, ans = lens2(y1,V1)        --2> V3
 
--- flat mirror 
+-- flat mirror
 lens3 = Lens:mirror(math.huge, n1)
 _, ans = lens3(y1,V1)        --2> V1
 
--- afocal system 
+-- afocal system
 m = 10
-lens4 = Lens:afocal(m) 
+lens4 = Lens:afocal(m)
 ans, _ = lens4(y1,V1)        --2> m*y1
 
--- arbitrary system matrix 
-lens5 = Lens {1, 0, -0.5, 1} 
+-- arbitrary system matrix
+lens5 = Lens {1, 0, -0.5, 1}
 print(lens5)
 
--- make copy 
+-- make copy
 ans = lens1:copy()            --> lens1
 
 -- gaussian beam parameters
-ans, _ = Lens:gaussParam(1E-3, 1.024E-6) --2> 3.26E-4 
+ans, _ = Lens:gaussParam(1E-3, 1.024E-6) --2> 3.26E-4
 
--- laser beam radius  
+-- laser beam radius
 ans, _ = Lens:gaussSize(1E-3, 1.024E-6, 100) --2> 0.033
 
--- laser beam transformation 
+-- laser beam transformation
 ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
 
 --]]
@@ -137,7 +137,7 @@ key = keys,
 --  @return Concatenated object.
 lens.__concat = function (L1, L2)
   if not (lens.isUnit(L1) and lens.isUnit(L2)) then error("Wrong system matrices") end
-  return lens:_init_({
+  return lens:_init({
     L2[1]*L1[1]+L2[2]*L1[3], L2[1]*L1[2]+L2[2]*L1[4],
     L2[3]*L1[1]+L2[4]*L1[3], L2[3]*L1[2]+L2[4]*L1[4]
   })
@@ -148,7 +148,7 @@ end
 --  @param L2 Second object.
 --  @return True if the objects are equal.
 lens.__eq = function (L1, L2)
-  return math.abs(L1[1]-L2[1]) < TOL and math.abs(L1[2]-L2[2]) < TOL 
+  return math.abs(L1[1]-L2[1]) < TOL and math.abs(L1[2]-L2[2]) < TOL
      and math.abs(L1[3]-L2[3]) < TOL and math.abs(L1[4]-L2[4]) < TOL
 end
 
@@ -184,14 +184,14 @@ about[lens.operations] = {lens.operations, "L1 == L2, L1 .. L2", help.META }
 --- Object constructor.
 --  @param t ABCD table.
 --  @return 'Lens' object.
-lens._init_ = function(self,t) return setmetatable(t,self) end
+lens._init = function(self,t) return setmetatable(t,self) end
 
 --- Make component for afocal system.
 --  @param self Do nothing.
 --  @param dm Transverse magnification.
 --  @return Afocal matrix.
 lens.afocal = function (self, dm)
-  return lens:_init_({dm, 0, 0, 1/dm}) 
+  return lens:_init({dm, 0, 0, 1/dm})
 end
 about[lens.afocal] = {"Lens:afocal(dm)", "Find matrix for the afocal system.", help.NEW}
 
@@ -214,9 +214,9 @@ about[lens.beam] = {"beam(dW,dR,dLam)", "Find output beam radius and curvature."
 --  @param L Initial object.
 --  @return Copy of the object.
 lens.copy = function (L)
-  return lens:_init_({L[1],L[2],L[3],L[4]})
+  return lens:_init({L[1],L[2],L[3],L[4]})
 end
-about[lens.copy] = {"copy()", "Create a copy of the object."} 
+about[lens.copy] = {"copy()", "Create a copy of the object."}
 
 --- Find the matrix determinant.
 --  @param L Lens object.
@@ -254,15 +254,15 @@ about[lens.gaussSize] = {"Lens:gaussSize(dW0,dLam,dist)", "Find Gaussian beam ra
 --  @return Inverted matrix.
 lens.inv = function (L)
   -- assume the unit matrix
-  return lens:_init_({L[4], -L[2], -L[3], L[1]})
+  return lens:_init({L[4], -L[2], -L[3], L[1]})
 end
 about[lens.inv] = {"inv()", "Get the inverted system matrix.", help.OTHER}
 
 --- Check matrix type.
 --  @param L Lens object.
 --  @return True if the matrix is unit.
-lens.isUnit = function (L) 
-  return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL 
+lens.isUnit = function (L)
+  return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL
 end
 about[lens.isUnit] = {"isUnit()", "Check if the system matrix is unit.", help.OTHER}
 
@@ -272,7 +272,7 @@ about[lens.isUnit] = {"isUnit()", "Check if the system matrix is unit.", help.OT
 --  @param dn Refractive index.
 --  @return Reflection matrix.
 lens.mirror = function (self, dr, dn)
-  return lens:_init_({ 1, 0, 2*dn/dr, 1 })
+  return lens:_init({ 1, 0, 2*dn/dr, 1 })
 end
 about[lens.mirror] = {"Lens:mirror(dr,dn)", "Find reflection matrix for the given radius and refractive index.", help.NEW}
 
@@ -283,7 +283,7 @@ about[lens.mirror] = {"Lens:mirror(dr,dn)", "Find reflection matrix for the give
 --  @param dn2 Final refractive index.
 --  @return Refraction matrix.
 lens.ref = function (self, dr, dn1, dn2)
-  return lens:_init_({ 1,  0, -(dn2-dn1)/dr, 1 })
+  return lens:_init({ 1,  0, -(dn2-dn1)/dr, 1 })
 end
 about[lens.ref] = {"Lens:ref(dr,dn1,dn2)", "Find refraction matrix for the given radius of surface and input and output refractive indeces.", help.NEW}
 
@@ -291,7 +291,7 @@ about[lens.ref] = {"Lens:ref(dr,dn1,dn2)", "Find refraction matrix for the given
 --  where X in {A,B,C,D}.
 --  @param self Do nothing
 --  @param fn System in form of function.
---  @param ind Index of the matrix element. 
+--  @param ind Index of the matrix element.
 --  @param d0 Initial estimation of the variable.
 --  @return The found parameter value.
 lens.solve = function (self, fn, ind, d0)
@@ -302,7 +302,7 @@ lens.solve = function (self, fn, ind, d0)
     return v[ind]
   end
   -- try to solve
-  return lens.ext_numeric:Newton(eqn, d0)
+  return lens.ext_numeric:newton(eqn, d0)
 end
 about[lens.solve] = {"Lens:solve(fn,ind,d0)", "Find condition when component with the given index is equal to 0, d0 is the initial assumption."}
 
@@ -311,7 +311,7 @@ about[lens.solve] = {"Lens:solve(fn,ind,d0)", "Find condition when component wit
 --  @param df Focal length.
 --  @return Thin lens matrix.
 lens.thin = function (self,df)
-  return lens:_init_({ 1, 0, -1/df, 1 })
+  return lens:_init({ 1, 0, -1/df, 1 })
 end
 about[lens.thin] = {"Lens:thin(df)", "Find the thin lens system matrix for the given focal distance.", help.NEW}
 
@@ -321,11 +321,11 @@ about[lens.thin] = {"Lens:thin(df)", "Find the thin lens system matrix for the g
 --  @param dn Refractive index.
 --  @return Translational matrix.
 lens.trans = function (self, dt, dn)
-  return lens:_init_({ 1, dt/dn, 0, 1 })
+  return lens:_init({ 1, dt/dn, 0, 1 })
 end
 about[lens.trans] = {"Lens:trans(dt,dn)", "Find translation matrix for the given distance and refractive index.", help.NEW}
 
---- Find ray parameters after transformation. 
+--- Find ray parameters after transformation.
 --  Ray is represented with height 'y' and angle 'V' equal to v*n
 --  where v is geometrical angle and n is refractive index.
 --  @param dy Position.
@@ -346,9 +346,9 @@ local mt_cardinal = {
   __tostring = function (self)
     local txt = {}
     txt[1] = 'From the input plane'
-    txt[2] = 'F1 at '..tostring(self.F1) 
+    txt[2] = 'F1 at '..tostring(self.F1)
     txt[3] = 'H1 at '..tostring(self.H1)
-    txt[4] = 'N1 at '..tostring(self.N1) 
+    txt[4] = 'N1 at '..tostring(self.N1)
     txt[5] = 'From the output plane'
     txt[6] = 'F2 at '..tostring(self.F2)
     txt[7] = 'H2 at '..tostring(self.H2)
@@ -369,8 +369,8 @@ lens.cardinal = function (L, dn1, dn2)
   local C = L[3]
 
   local v = dn1 * L[4] / C      -- first focus point
-  res.F1 = v 
-  res.H1 = v - dn1 / C          -- first principal point 
+  res.F1 = v
+  res.H1 = v - dn1 / C          -- first principal point
   res.N1 = (L[4]*dn1 - dn2) / C -- first nodal point
 
   v = -dn2 * L[1] / C           -- second focus point
@@ -383,9 +383,9 @@ end
 about[lens.cardinal] = {"cardinal([dn1=1,dn2=1])", "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.", help.OTHER}
 
 -- Create arbitrary object
-setmetatable(lens, {__call = function (self,t) 
+setmetatable(lens, {__call = function (self,t)
   assert(#t == 4)
-  return lens:_init_(t)
+  return lens:_init(t)
 end})
 lens.Lens = 'Lens'
 about[lens.Lens] = {"Lens {dA,dB,dC,dD}", "Make new lens component.", help.NEW}

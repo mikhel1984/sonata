@@ -21,7 +21,7 @@
 Graph = require 'lib.graph'
 
 -- build graph
--- single name - node, names in brackets - edges 
+-- single name - node, names in brackets - edges
 -- letter w denotes weight of non directed edge
 -- numbers are weights of directed edges
 a = Graph {'a','b',
@@ -44,7 +44,7 @@ ans = #ed                     --> 4
 ans = a:isDirected()          --> true
 
 -- add node
-a:add('h') 
+a:add('h')
 -- add edge
 a:add {'a','d'}
 -- check size
@@ -62,7 +62,7 @@ ans = #ed                     --> 3
 -- directed edges
 -- second way to define
 -- from first to second node
-a:add {'c','p',w12=2} 
+a:add {'c','p',w12=2}
 -- and vise versa
 a:add {'c','q',w21=3}
 ed = a:edges()
@@ -71,7 +71,7 @@ ans = #ed                     --> 5
 -- make copy
 b = a:copy()
 
--- completeness 
+-- completeness
 ans = b:isComplete()          --> false
 
 -- prepare graph
@@ -86,7 +86,7 @@ c = Graph {
   {'e','g'}
 }
 
--- is it weighted 
+-- is it weighted
 ans = c:isWeighted()          --> false
 
 -- breadth first search
@@ -104,13 +104,13 @@ c:add{'b','e',w=0.4}
 c:add{'c','f',w=2}
 
 -- Dijkstra path search
-dist,prev = c:pathD('a') 
+dist,prev = c:pathD('a')
 ans = dist['g']               --> 1.9
 
 -- Bellman-Ford path search
 c:add{'f','h',w=-0.5}
 dist,prev = c:pathBF('a')
-ans = dist['h'] 
+ans = dist['h']
 
 -- check negative edges
 ans = c:isNegative()          --> true
@@ -128,10 +128,10 @@ local SEARCH = 'search'
 --  @param t Table of pairs {node, weight}.
 --  @return Node and correspondent weight.
 local function getMin(t)
-  local minval, key = math.huge 
+  local minval, key = math.huge
   -- find new minimal value
   for k,v in pairs(t) do
-    if v < minval then 
+    if v < minval then
       key, minval = k, v
     end
   end
@@ -153,7 +153,7 @@ local function isEdge(v) return type(v) == 'table' end
 --- Count elements in table.
 --  @param t Table to check.
 --  @return Total number of the elements.
-local function tblLen (t) 
+local function tblLen (t)
   local n = 0
   for k in pairs(t) do n = n+1 end
   return n
@@ -179,10 +179,10 @@ local function getPath(tPrev,v)
   return res
 end
 
--- Make queue from two stacks 
+-- Make queue from two stacks
 local Queue = {
   -- create object
-  new = function () return {{},{}} end, 
+  new = function () return {{},{}} end,
   -- add element
   push = function (Q, v) table.insert(Q[1], v) end,
   -- check content
@@ -219,7 +219,7 @@ graph.__index = graph
 --  @return String with compressed graph structure.
 graph.__tostring = function (G)
   local nd = graph.nodes(G)
-  if #nd <= 5 then 
+  if #nd <= 5 then
     return string.format('Graph {%s}', table.concat(nd,','))
   else
     return string.format('Graph {%s -%d- %s}',
@@ -230,7 +230,7 @@ end
 --- Constructor example
 --  @param t Table with nodes and edges.
 --  @return New object of graph.
-graph._new_ = function (self,t)
+graph._new = function (self,t)
   local o = {}
   -- add nodes
   for _,elt in ipairs(t) do graph.add(o,elt) end
@@ -247,12 +247,12 @@ graph.add = function (G, v)
     G[t1] = G[t1] or {}
     G[t2] = G[t2] or {}
     if w12 or w21 then
-      G[t1][t2] = w12 
+      G[t1][t2] = w12
       G[t2][t1] = w21
     else
       -- no weights
       local w = v.w or 1
-      G[t1][t2] = w 
+      G[t1][t2] = w
       G[t2][t1] = w
     end
   else
@@ -273,16 +273,16 @@ graph.bfs = function (G, vStart, vGoal)
   local q = Queue.new()
   Queue.push(q, vStart)
   -- run
-  repeat 
+  repeat
     local node = Queue.pop(q)
-    if node == vGoal then 
+    if node == vGoal then
       -- found
-      return true, getPath(pred, vGoal) 
+      return true, getPath(pred, vGoal)
     end
     -- add successors
     for v in pairs(G[node]) do
       if not pred[v] then
-        Queue.push(q, v) 
+        Queue.push(q, v)
         pred[v] = node
       end
     end
@@ -295,7 +295,7 @@ about[graph.bfs] = {"bfs(vStart,vGoal)","Breadth first search. Return result and
 --  @param G Graph.
 --  @return Deep copy of the graph.
 graph.copy = function (G)
-  local res = graph:_new_({})
+  local res = graph:_new({})
   for k,v in pairs(G) do
     local tmp = {}
     for n,w in pairs(v) do tmp[n] = w end
@@ -314,13 +314,13 @@ graph.dfs = function (G, vStart, vGoal)
   local pred = {[vStart]=vStart}
   -- use stack
   local stack = {}
-  table.insert(stack, vStart) 
+  table.insert(stack, vStart)
   -- run
   repeat
     local node = table.remove(stack)
-    if node == vGoal then 
+    if node == vGoal then
       -- found
-      return true, getPath(pred, vGoal) 
+      return true, getPath(pred, vGoal)
     end
     -- add successors
     for v in pairs(G[node]) do
@@ -349,9 +349,9 @@ graph.edges = function (G)
       if wij and wji then
         res[#res+1] = {ni,nj}
         if wij ~= wji then res[#res+1] = {nj,ni} end
-      elseif wij then 
+      elseif wij then
         res[#res+1] = {ni,nj}
-      elseif wji then 
+      elseif wji then
         res[#res+1] = {nj,ni}
       end
     end
@@ -439,9 +439,9 @@ graph.pathBF = function (G, vStart, vGoal)
       for v,d in pairs(G[u]) do
         local alt = dist[u] + d
         if alt < dist[v] then
-          dist[v] = alt 
+          dist[v] = alt
           prev[v] = u
-        end 
+        end
       end -- v,d
     end -- u
   end
@@ -468,7 +468,7 @@ about[graph.pathBF] = {'pathBF(vStart,[vGoal])','Shortest path search using Bell
 --  @param goal Goal node.
 --  @return Table of distances and predecessors or path and its length.
 graph.pathD = function(G,vStart,vGoal)
-  -- define local set 
+  -- define local set
   local set = {}
   for k in pairs(G) do set[k] = math.huge end
   set[vStart] = 0
@@ -483,9 +483,9 @@ graph.pathD = function(G,vStart,vGoal)
     for k,v in pairs(G[current]) do
       local alt = val + v
       if set[k] and set[k] > alt then
-        set[k] = alt 
+        set[k] = alt
         prev[k] = current
-      end 
+      end
     end -- for
   end
   -- result
@@ -519,10 +519,10 @@ about[graph.remove] = {"remove(v)", "Remove node or edge from the graph G. Node 
 --  @param G Graph object.
 --  @return Number of nodes.
 graph.size = function (G) return tblLen(G) end
-graph.__len = size
+graph.__len = graph.size
 
 -- simplify constructor call
-setmetatable(graph, {__call = function (self,v) return graph:_new_(v) end})
+setmetatable(graph, {__call = function (self,v) return graph:_new(v) end})
 graph.Graph = 'Graph'
 about[graph.Graph] = {"Graph {v1,v2,..}", "Create new graph.", help.NEW}
 
