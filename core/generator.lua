@@ -12,21 +12,10 @@ local Help = require('core.help')
 
 --	LOCAL
 
-local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
-local MAIN = 1
-local KEY_MODULE = '__module__'
+local TITLE, DESCRIPTION, CATEGORY = 1, 2, 3
 local S10 = string.rep('-', 10)
 
 local LIB = (SONATA_ADD_PATH or '')..'lib'
-
---- Add table 'about' into the 'eng' for saving into localization file.
-local function eng2about()
-  Help.english.about = {}
-  for k,v in pairs(Help.english) do
-    Help.english.about[k] = {k,v}
-  end
-  Help.english.about.about = nil
-end
 
 local generator = {}
 
@@ -112,18 +101,6 @@ generator.doc = function (locName, tModules)
   -- prepare new file
   local lng = Help.tblImport(fName) or {}
 
-  --eng2about()
---[[
-  res[#res+1] = '<div><a name="Main"></a>'
-  res[#res+1] = '<h3># Main (main) #</h3>'
-  local functions, description = docLines('main','Main',lng)
-  res[#res+1] = string.format('<p class="descript">%s</p>', description)
-  res[#res+1] = string.format('<p>%s</p>', functions)
-  local fstr = Help.readAll(
-    string.format('%slib%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
-  res[#res+1] = docExample(Test._getCode_(fstr))
-  res[#res+1] = '<a href="#Top">Top</a></div>'
-  ]]
   -- modules
   for _, val in ipairs(sortedModules) do
     local k,v = val[1], val[2]
@@ -150,6 +127,10 @@ end
 
 --================== Localization template =================
 
+--- Prepare text for dialog.
+--  @param tbl Table with descriptions.
+--  @param tLang Table with translation.
+--  @return Text with description.
 local makeDialog = function (tbl, tLang)
   local lng = tLang['Dialog'] or {}
   local res = {
@@ -168,6 +149,10 @@ local makeDialog = function (tbl, tLang)
   return table.concat(res, '\n')
 end
 
+--- Prepare text for module.
+--  @param sName Module name.
+--  @param tLang Table with translation.
+--  @return Text with description.
 local makeModule = function (sName, tLang)
   local m = require('lib.'..sName)
   local lng = tLang['Dialog'] or {}
@@ -193,6 +178,9 @@ local makeModule = function (sName, tLang)
   return table.concat(res, '\n')
 end
 
+--- Prepare and save localization data.
+--  @param fName Language name, for example 'en' or 'it'.
+--  @param tModules Table with the list of existing modules.
 generator.lang = function(fName, tModules)
   fName = string.format('%s%s%s.lng', Help.LOCALE, Help.SEP, fName)
   -- prepare new file
@@ -218,79 +206,6 @@ generator.lang = function(fName, tModules)
   io.write('File ', fName, ' is saved!\n')
 end
 
---- Prepare strings with help information of the given module.
---  @param module Module name or table.
---  @param lng Localization table from existing file.
---  @return String representation of all help information of the module.
-local function helpLines__(module, lng)
-  -- get table and name
-  local m = (type(module) == 'string')
-             and require('lib.' .. module)
-             or module
-  local mName = (type(module) == 'string') and module or 'Dialog'
-  local fName = (type(module) == 'string') and (module .. '.lua') or 'Dialog'
-  -- choose existing data
-  local lng_t = lng and lng[mName] or {}
-  -- write to table
-  local res = {
-    string.format('%s %s %s', string.rep('-',10), fName, string.rep('-',10)),
-    string.format('%s = {', mName)
-  }
-  -- for all descriptions
-  for _, elt in pairs(m.about) do
-    -- save
-    local title = elt.link and KEY_MODULE or elt[TITLE]
-    local pos = elt.link and MAIN or DESCRIPTION
-    local stitle = string.format('["%s"]', title)
-    local line = string.format(
-      '%-24s = [[%s]],', stitle, lng_t[title] or elt[pos])
-    -- comment if this data are new
-    if not lng_t[title] then
-      line = string.format((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
-    end
-    if elt.link then
-      -- set main description after the bracket
-      table.insert(res,3,line)
-    else
-      res[#res+1] = line
-    end
-  end
-  res[#res+1] = '},'
-  res[#res+1] = ''
-  return table.concat(res, '\n')
-end
-
---- Prepare and save localization data.
---  @param fName Language name, for example 'en' or 'it'.
---  @param tModules Table with the list of existing modules.
-generator.lang__ = function(fName, tModules)
-  fName = string.format('%s%s%s.lng', Help.LOCALE, Help.SEP, fName)
-  -- prepare new file
-  local lng = Help.tblImport(fName)
-  local f = io.open(fName, 'w')
-  -- save descriptions
-  f:write('return {\n')
-  f:write(
-    string.rep('-',10), string.format(' %s ', fName), string.rep('-',10), '\n')
-  -- language and authors
-  f:write(
-    string.format("language = '%s',", lng and lng.language or 'English'), '\n')
-  f:write(
-    string.format("authors  = [[%s]],", lng and lng.authors or 'Your Name'),
-    '\n')
-  -- dialog elements
-  eng2about()
-  f:write(helpLines(Help.english, lng))
-  -- main functions
-  f:write(helpLines('main', lng))
-  -- other modules
-  for k,v in pairs(tModules) do
-    f:write(helpLines(k, lng))
-  end
-  f:write('}')
-  f:close()
-  io.write('File ', fName, ' is saved!\n')
-end
 
 --================== Module template =======================
 
@@ -410,5 +325,4 @@ end
 return generator
 
 --=======================================
---TODO: update Help.english once, on import
 --FIX: lost white space in 'use_import' on file update

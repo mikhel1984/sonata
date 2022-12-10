@@ -10,8 +10,6 @@
 
 --[[    == About help system ==
 
-about = help:new("Module description*)  -- create new help object
-
 Each function description is represented as a table:
 about[function] =
 {
@@ -43,8 +41,7 @@ capital - object
 local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 -- internal parameters
-local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
-local MAIN = 1
+local TITLE, DESCRIPTION, CATEGORY = 1, 2, 3
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -104,31 +101,10 @@ end
 
 --================== Function help system ==================
 
---- Create list of functions, sort by module and category.
---  @param tbl Table of pairs 'function - description'.
---  @return Grouped descriptions.
-help._funcList__ = function (tbl)
-  local res = {}
-  for k, v in pairs(tbl) do
-    -- only main description contains 'link'
-    if not v.link then
-      local category = v[CATEGORY] or help.BASE
-      local module = v[MODULE] or "Main"
-      -- create table for each module
-      res[module] = res[module] or {}
-      -- add table for each category
-      res[module][category] = res[module][category] or {}
-      -- insert function file into this table
-      table.insert(res[module][category], v[TITLE])
-    end
-  end
-  return res
-end
-
-help.init = function ()
-  return setmetatable({_locale={}, _modules={}}, help)
-end
-
+--- Include content of the other help table into current one.
+--  @param dst Table to store data.
+--  @param tbl Source table.
+--  @param nm Name of the module.
 help.add = function (dst, tbl, nm)
   dst._modules[nm] = tbl
   -- update
@@ -144,12 +120,43 @@ help.add = function (dst, tbl, nm)
   if lng then dst._locale[nm] = nil end  -- free memory
 end
 
+--- Look for object description in the stored data.
+--  @param tbl Table with info.
+--  @param obj Something that we would like to find.
+--  @param tGlob Table with aliases.
+--  @return Description or nil.
+help.findObject = function (tbl, obj, tGlob)
+  -- check module
+  local hlp_module = (type(obj) == 'table') and obj.about
+  for nm, mod in pairs(tbl._modules) do
+    if mod == hlp_module then
+      return help.makeModule(mod, tGlob[nm])
+    elseif mod[obj] then
+      local t = mod[obj]
+      Sonata.info {'  ', Sonata.FORMAT_V1, t[TITLE], '\n', t[DESCRIPTION]}
+    end
+  end
+  return nil
+end
+
+--- Get translated string if possible.
+--  @param self Parent object.
+--  @param txt Text to seek.
+--  @return Translated or initial text.
 help.get = function (tbl, txt)
-  -- check in localization table
   local lng = tbl._locale.Dialog and tbl._locale.Dialog[txt]
   return lng or help.english[txt] or txt
 end
 
+--- Prepare main table for help info.
+--  @return New table.
+help.init = function ()
+  return setmetatable({_locale={}, _modules={}}, help)
+end
+
+--- Read file with localization data and update main module.
+--  @param self Parent object.
+--  @param fName Name of the file with translated text.
 help.localization = function (dst, fName)
   fName = help.LOCALE..help.SEP..fName
   local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
@@ -160,23 +167,25 @@ help.localization = function (dst, fName)
   end
 end
 
-help.findObject = function (tbl, obj, tGlob)
-  -- check module
-  local hlp_module = (type(obj) == 'table') and obj.about
-  for nm, mod in pairs(tbl._modules) do
-    if mod == hlp_module then
-      return help.makeModule(mod, tGlob[nm])
-    elseif mod[obj] then
-      return help.makeFunction(mod[obj])  -- TODO skip function
+--- Collect information for all modules.
+--  @param t Table with all modules.
+--  @param tGlob Table with aliases.
+--  @return List of strings.
+help.makeFull = function (t, tGlob)
+  local res = Sonata.info {}
+  for nm, mod in pairs(t._modules) do
+    local acc = help.makeModule(mod, tGlob[nm])
+    for _, v in ipairs(acc) do
+      res[#res+1] = v
     end
   end
-  return nil
+  return res
 end
 
-help.makeFunction = function (t)
-  return Sonata.info {'  ', Sonata.FORMAT_V1, t[TITLE], '\n', t[DESCRIPTION]}
-end
-
+--- Prepare description for module.
+--  @param t Table with functions.
+--  @param nm Module name.
+--  @return List of strings.
 help.makeModule = function (t, nm)
   -- sort by categories
   local acc, txt = {}, ''
@@ -200,124 +209,6 @@ help.makeModule = function (t, nm)
     end
   end
   return res
-end
-
-help.makeFull = function (t, tGlob)
-  local res = Sonata.info {}
-  for nm, mod in pairs(t._modules) do
-    local acc = help.makeModule(mod, tGlob[nm])
-    for _, v in ipairs(acc) do
-      res[#res+1] = v
-    end
-  end
-  return res
-end
-
-help.forModule = function (tbl, nm)
-  return tbl._locale[nm]
-end
-
---- Include content of the other help table into current one.
---  @param self Parent object.
---  @param tbl Table to add.
---  @param nm Name of the added module.
-help.add__ = function (self,tbl,nm)
-  assert(nm, "Module name is required!")
-  -- localization data
-  local mt = getmetatable(self)
-  local lng = mt.locale and mt.locale[nm]
-  -- prepare new
-  for k, v in pairs(tbl) do
-    -- no 'link' element in the function description
-    if not v.link then v[MODULE] = nm end
-    if lng then
-      -- set localization
-      if v.link then
-        -- common description
-        v[MAIN] = lng[KEY_MODULE] or v[MAIN]
-      else
-        -- details
-        v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
-        v[CATEGORY] = self:get(v[CATEGORY])
-      end
-    end -- lng
-    self[k] = v                       -- add to the base table
-  end
-  if lng then mt.locale[nm] = nil end -- free memory
-end
-
---- Get translated string if possible.
---  @param self Parent object.
---  @param txt Text to seek.
---  @return Translated or initial text.
-help.get__ = function (self,txt)
-  local mt = getmetatable(self)
-  -- check in localization table
-  local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]
-  return lng or help.english[txt] or txt
-end
-
---- Read file with localization data and update main module.
---  @param self Parent object.
---  @param fName Name of the file with translated text.
-help.localization__ = function (self,fName)
-  fName = help.LOCALE..help.SEP..fName
-  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
-  if lng then
-    getmetatable(self).locale = lng   -- save translation
-    help.add(self, self, 'main')
-  else
-    io.write("File ", fName, " not found.\n")
-  end
-end
-
---- Prepare information about function or list of all possible functions.
---  @param self Parent object.
---  @param fn Function or module for getting manual.
---  @return String with information.
-help.make__ = function (self,fn)
-  if fn then
-    -- expected module or function description
-    local v = assert(self[fn], "No help for "..tostring(fn))
-    if v.link then
-      -- module common description
-      local res = Sonata.info {'\n', v[MAIN], '\n'}
-      -- details
-      for _,elt in ipairs(v.link:make()) do res[#res+1] = elt end
-      return res
-    else
-      -- function description
-      return Sonata.info {
-        '  ', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
-    end
-  else
-    local res = Sonata.info {}
-    -- sort functions
-    local lst = help._funcList(self)
-    for mod, t in pairs(lst) do             -- for each module
-      res[#res+1] = '\n\t'; res[#res+1] = Sonata.FORMAT_V2
-      res[#res+1] = use[mod] or 'Main' ; res[#res+1] = '\n'
-      for cat, n in pairs(t) do            -- for each category
-        res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
-        res[#res+1] = cat    ; res[#res+1] = ':\n'
-        for i, v in ipairs(n) do           -- for each function
-          res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
-        end
-      end
-    end -- for
-    return res
-  end -- if
-end
-
---- Create new object, set metatable.
---  @param self Parent table.
---  @param str Module description.
---  @return Help object.
-help.new__ = function (self,str)
-  assert(type(str) == 'string', "Constructor must have a description!")
-  local o = {}
-  o[o] = {link=o, str}      -- save link to itself
-  return setmetatable(o, self)
 end
 
 --================== Files ===================
