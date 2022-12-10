@@ -115,9 +115,12 @@ help._funcList = function (tbl)
     if not v.link then
       local category = v[CATEGORY] or help.BASE
       local module = v[MODULE] or "Main"
-      res[module] = res[module] or {}               -- create table for each module
-      res[module][category] = res[module][category] or {}  -- add table for each category
-      table.insert(res[module][category], v[TITLE])      -- insert function file into this table
+      -- create table for each module
+      res[module] = res[module] or {}
+      -- add table for each category
+      res[module][category] = res[module][category] or {}
+      -- insert function file into this table
+      table.insert(res[module][category], v[TITLE])
     end
   end
   return res
@@ -134,7 +137,8 @@ help.add = function (self,tbl,nm)
   local lng = mt.locale and mt.locale[nm]
   -- prepare new
   for k, v in pairs(tbl) do
-    if not v.link then v[MODULE] = nm end    -- no 'link' element in the function description
+    -- no 'link' element in the function description
+    if not v.link then v[MODULE] = nm end
     if lng then
       -- set localization
       if v.link then
@@ -157,7 +161,8 @@ end
 --  @return Translated or initial text.
 help.get = function (self,txt)
   local mt = getmetatable(self)
-  local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localization table
+  -- check in localization table
+  local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]
   return lng or help.english[txt] or txt
 end
 
@@ -191,7 +196,8 @@ help.make = function (self,fn)
       return res
     else
       -- function description
-      return Sonata.info {'  ', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
+      return Sonata.info {
+        '  ', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
     end
   else
     local res = Sonata.info {}

@@ -38,7 +38,8 @@ local DELIM = '\r?\n[%s%c]*\n'
 local LOG_NAME = 'test.log'
 local CODE_TEMPLATE = '%-%-%[(=*)%[TEST(.-)%]%1%]'
 local TEST_TEMPLATE = '(.*)%-%-(%d?)>(.*)'
-local TOL = {['0']=1,['1']=1E1,['2']=1E2,['3']=1E3,['4']=1E4,['5']=1E5,['6']=1E6,['7']=1E7,['8']=1E8,['9']=1E9}
+local TOL = {['0']=1, ['1']=1E1, ['2']=1E2, ['3']=1E3, ['4']=1E4, ['5']=1E5,
+  ['6']=1E6, ['7']=1E7, ['8']=1E8, ['9']=1E9}
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -70,7 +71,8 @@ test._markTest = function (str, res, time)
   s = string.match(s, '^(.-)%s*$')
   if #s > MIN then s = string.sub(s, 1, MIN) end
   local rest = string.rep('.', (FULL-#s))
-  return string.format('%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'Failed'), time)
+  return string.format(
+    '%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'Failed'), time)
 end
 
 --- Save string to the file and simultaneously print to the screen.
@@ -137,7 +139,7 @@ test.module = function (fname)
       elseif not err then
         test.log:write(tostring(ans),' IS NOT ',tostring(arrow),' !!!\n')
       end
-      if not string.find(block, 'require') then -- 'require' takes too mach time
+      if not string.find(block, 'require') then -- 'require' takes mach time
         if res then succeed = succeed + 1 else failed = failed + 1 end
         fulltime = fulltime + time
       end
@@ -173,9 +175,11 @@ end
 
 --- Combine all results.
 test.summary = function ()
-  test._print(string.format('\n%-25s%-10s%-10s%-10s', 'Module', 'Succeed', 'Failed', 'Av.time'))
+  test._print(string.format(
+    '\n%-25s%-10s%-10s%-10s', 'Module', 'Succeed', 'Failed', 'Av.time'))
   for k,v in pairs(test.results) do
-    test._print(string.format('%-27s%-10d%-9d%-10.3f', k, v[1], v[2], v[3]/(v[1]+v[2])))
+    test._print(string.format(
+      '%-27s%-10d%-9d%-10.3f', k, v[1], v[2], v[3]/(v[1]+v[2])))
   end
   print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
 end
@@ -218,7 +222,9 @@ test.profile = function (fn,...)
   debug.sethook()         -- turn off
   -- process results
   local stat = {}
-  for f, c in pairs(counters) do stat[#stat+1] = {test._getName(names[f]), c} end
+  for f, c in pairs(counters) do
+    stat[#stat+1] = {test._getName(names[f]), c}
+  end
   table.sort(stat, function (a,b) return a[2] > b[2] end)
   -- show results
   for _, res in ipairs(stat) do print(res[1], res[2]) end

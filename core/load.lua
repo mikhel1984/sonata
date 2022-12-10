@@ -50,7 +50,9 @@ setmetatable(use,
 { -- load modules
   __call = function (self, name)
     if not name then
-      local lst = Sonata.info {Sonata.FORMAT_V1, string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
+      local lst = Sonata.info {
+        Sonata.FORMAT_V1,
+        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
       -- show loaded modules
       for k,v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
@@ -100,7 +102,10 @@ Log = function (flag)
     if not Sonata._logFile_ then
       Sonata._logFile_ = io.open(Sonata.LOGNAME, 'a')
       local d = os.date('*t')
-      Sonata._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
+      Sonata._logFile_:write(
+        string.format(
+          '\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
+          d.day, d.month, d.year, d.hour, d.min))
       Sonata._logFile_:write('-- ')  -- prepare comment for 'logging on'
     end
   elseif flag == 'off' then
@@ -112,8 +117,9 @@ Log = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
-About[Log] = {'Log(sFlag)', "Save session into the log file. Use 'on'/'off' to start/stop logging.", SonataHelp.OTHER}
-
+About[Log] = {'Log(sFlag)',
+  "Save session into the log file. Use 'on'/'off' to start/stop logging.",
+  SonataHelp.OTHER}
 
 -- command line arguments of Sonata and their processing
 local _args = {
@@ -125,7 +131,8 @@ example = '--test array',
 process = function (args)
   local Test = require('core.test')
   if args[2] then
-    Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
+    Test.module(
+      string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
   else
     for m in pairs(use) do
       Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), m))

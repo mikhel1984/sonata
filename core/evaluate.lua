@@ -22,12 +22,15 @@ local mt_sonatainfo = {}
 --- Check if the table is mt_sonatainfo list.
 --  @param v Object.
 --  @return true if mt_sonatainfo list is found.
-local function islist(v) return type(v) == 'table' and getmetatable(v) == mt_sonatainfo end
+local function islist(v)
+  return type(v) == 'table' and getmetatable(v) == mt_sonatainfo
+end
 
 --- Print formatted error message.
 --  @param msg Message string.
 local function print_err (msg)
-  print(string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
+  print(
+    string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
 
 
@@ -121,7 +124,8 @@ evaluate._eval = function (ev, nextCmd)
   local partCmd = string.match(nextCmd, "(.*)\\%s*")
   if partCmd ~= nil then
     -- expected next line
-    return evaluate._update(ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd))
+    return evaluate._update(
+      ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd))
   end
   local cmd = ev._cmd..nextCmd
   -- 'parse'
@@ -134,7 +138,8 @@ evaluate._eval = function (ev, nextCmd)
     return evaluate._update(ev, evaluate.EV_ERR, cmd, err)
   else
     local ok, res = pcall(fn)
-    return evaluate._update(ev, ok and evaluate.EV_RES or evaluate.EV_ERR, cmd, res)
+    return evaluate._update(
+      ev, ok and evaluate.EV_RES or evaluate.EV_ERR, cmd, res)
   end
 end
 
@@ -149,7 +154,8 @@ evaluate._evalBlock = function (ev, txt, full, templ)
       -- highlight line comments
       if full then
         line = string.gsub(line, '\t(.+)', templ)
-        line = string.format("%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
+        line = string.format(
+          "%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
         io.write(line)
       end
     else
@@ -180,10 +186,13 @@ evaluate._toText = function (lst)
     local v = lst[i]
     if v == evaluate.FORMAT_V1 then
       i = i + 1
-      res[#res+1] = string.format("%s%s%s", SonataHelp.CHELP, lst[i], SonataHelp.CRESET)
+      res[#res+1] = string.format(
+        "%s%s%s", SonataHelp.CHELP, lst[i], SonataHelp.CRESET)
     elseif v == evaluate.FORMAT_V2 then
       i = i + 1
-      res[#res+1] = string.format("%s%s%s%s", SonataHelp.CHELP, SonataHelp.CBOLD, lst[i], SonataHelp.CRESET)
+      res[#res+1] = string.format(
+        "%s%s%s%s",
+        SonataHelp.CHELP, SonataHelp.CBOLD, lst[i], SonataHelp.CRESET)
     else
       res[#res+1] = v
     end
@@ -246,7 +255,8 @@ end
 --  Call 'quit' to exit this function.
 --  @param ev Evaluation environment.
 evaluate.cli = function (ev)
-  local invA, invB = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET, SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
+  local invA = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET
+  local invB = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
   evaluate.cliLoop(ev, invA, invB)
   if ev._logFile_ then ev._logFile_:close() end
   evaluate.exit()
@@ -312,7 +322,8 @@ end
 
 --- Show message and exit the program.
 evaluate.exit = function ()
-  print(SonataHelp.CMAIN.."\n             --======= Bye! =======--\n"..SonataHelp.CRESET)
+  print(SonataHelp.CMAIN..
+    "\n             --======= Bye! =======--\n"..SonataHelp.CRESET)
   os.exit(true, true)
 end
 
@@ -341,7 +352,9 @@ evaluate.note = function (ev, fname, full)
   local n = evaluate._userInput(ev, invA, invB, block, full, 0)
   while n <= #block do
     evaluate._evalBlock(ev, block[n], full, templ)
-    io.write(SonataHelp.CMAIN, '\t[ ', n, ' / ', #block, ' ]', SonataHelp.CRESET, '\n')
+    io.write(
+      SonataHelp.CMAIN,
+      '\t[ ', n, ' / ', #block, ' ]', SonataHelp.CRESET, '\n')
     -- user commands
     n = evaluate._userInput(ev, invA, invB, block, full, n)
   end

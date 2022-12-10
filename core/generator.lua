@@ -104,7 +104,8 @@ generator.doc = function (locName, tModules)
   local base = string.gsub(Sonata._arghelp(), '\n', '<br>\n')
   base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
   res[#res+1] = string.format('<p>%s</p>', base)
-  res[#res+1] = '<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>'
+  res[#res+1] =
+    '<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>'
 
   local fName = string.format('%s%s%s', Help.LOCALE, Help.SEP, locName)
   -- prepare new file
@@ -117,7 +118,8 @@ generator.doc = function (locName, tModules)
   local functions, description = docLines('main','Main',lng)
   res[#res+1] = string.format('<p class="descript">%s</p>', description)
   res[#res+1] = string.format('<p>%s</p>', functions)
-  local fstr = Help.readAll(string.format('%slib%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
+  local fstr = Help.readAll(
+    string.format('%slib%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
   res[#res+1] = docExample(Test._getCode_(fstr))
   res[#res+1] = '<a href="#Top">Top</a></div>'
   -- other modules
@@ -133,7 +135,8 @@ generator.doc = function (locName, tModules)
     res[#res+1] = '<a href="#Top">Top</a></div>'
   end
 
-  res[#res+1] = '<div><p align="center"><i>2017-2022, Stanislav Mikhel</i></p></div>'
+  res[#res+1] =
+    '<div><p align="center"><i>2017-2022, Stanislav Mikhel</i></p></div>'
   res[#res+1] = '</body></html>'
 
   -- save
@@ -169,7 +172,8 @@ local function helpLines(module, lng)
     local title = elt.link and KEY_MODULE or elt[TITLE]
     local pos = elt.link and MAIN or DESCRIPTION
     local stitle = string.format('["%s"]', title)
-    local line = string.format('%-24s = [[%s]],', stitle, lng_t[title] or elt[pos])
+    local line = string.format(
+      '%-24s = [[%s]],', stitle, lng_t[title] or elt[pos])
     -- comment if this data are new
     if not lng_t[title] then
       line = string.format((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
@@ -196,10 +200,14 @@ generator.lang = function(fName, tModules)
   local f = io.open(fName, 'w')
   -- save descriptions
   f:write('return {\n')
-  f:write(string.rep('-',10), string.format(' %s ', fName), string.rep('-',10), '\n')
+  f:write(
+    string.rep('-',10), string.format(' %s ', fName), string.rep('-',10), '\n')
   -- language and authors
-  f:write(string.format("language = '%s',", lng and lng.language or 'English'), '\n')
-  f:write(string.format("authors  = [[%s]],", lng and lng.authors or 'Your Name'), '\n')
+  f:write(
+    string.format("language = '%s',", lng and lng.language or 'English'), '\n')
+  f:write(
+    string.format("authors  = [[%s]],", lng and lng.authors or 'Your Name'),
+    '\n')
   -- dialog elements
   eng2about()
   f:write(helpLines(Help.english, lng))
@@ -242,7 +250,8 @@ generator.module = function (mName, alias, description)
 	WORD4 'WORD2'
 --]]
 
--- Define here your tests, save results to 'ans', use --> for the strict equality
+-- Define here your tests, save results to 'ans',
+-- use --> for the strict equality
 -- and --n> for the n-digit precision in the case of floating numbers.
 --[[TEST
 
@@ -302,7 +311,8 @@ WORD2.copy = function (t)
   -- some logic
   return WORD2:new(argument)
 end
-about[WORD2.copy] = {"copy(t)", "Create a copy of the object."} -- third element is optional, default is 'base'
+about[WORD2.copy] = {"copy(t)",
+  "Create a copy of the object."} -- third element is optional, default is 'base'
 
 -- Comment to remove descriptions
 WORD2.about = about
@@ -313,13 +323,16 @@ return WORD2
 --TODO: write new functions
 ]=]
   -- correct text
-  txt = string.gsub(txt, '3L', '---')     -- protect from creating failed documentation
-  txt = string.gsub(txt, '(WORD%d)', {WORD1=fName, WORD2=mName, WORD3=alias, WORD4='module', WORD5=description})
+  -- protect from creating failed documentation
+  txt = string.gsub(txt, '3L', '---')
+  txt = string.gsub(txt, '(WORD%d)', {
+    WORD1=fName, WORD2=mName, WORD3=alias, WORD4='module', WORD5=description})
   -- save
   f = io.open(fName, 'w')
   f:write(txt)
   f:close()
-  io.write('File ', fName, " is ready. Add it to the 'use' table in 'sonata.lua'.\n")
+  io.write(
+    'File ', fName, " is ready. Add it to the 'use' table in 'sonata.lua'.\n")
 end
 
 return generator
