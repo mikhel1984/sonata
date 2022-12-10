@@ -9,13 +9,14 @@
 ]]
 
 -- Prepare help module.
-SonataHelp = require "core.help"
+SonataHelp = require("core.help")
 About = SonataHelp:new("Lua based mathematics.")
 -- Text colors
 SonataHelp.useColors(SONATA_USE_COLOR)
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
+-- current version
 Sonata.version = '0.9.32'
 
 -- Quit the program
@@ -115,7 +116,7 @@ About[Log] = {'Log(sFlag)', "Save session into the log file. Use 'on'/'off' to s
 
 
 -- command line arguments of Sonata and their processing
-local _args_ = {
+local _args = {
 
 -- run tests
 ['--test'] = {
@@ -198,12 +199,12 @@ exit = true},
 }
 
 -- show help
-_args_['-h'] = {
-process = function () print(Sonata._arghelp_()) end,
+_args['-h'] = {
+process = function () print(Sonata._arghelp()) end,
 exit = true}
 
 -- string representation of the help info
-Sonata._arghelp_ = function ()
+Sonata._arghelp = function ()
   local txt = {
     "\n'Sonata' is a Lua based program for mathematical calculations.",
     "",
@@ -217,7 +218,7 @@ Sonata._arghelp_ = function ()
     '\t\te.g. -e "2+2"',
     "",
   }
-  for k,v in pairs(_args_) do
+  for k,v in pairs(_args) do
     if v.description then
       txt[#txt+1] = string.format('\t%s\t%s', k, v.description)
       if v.example then
@@ -242,8 +243,8 @@ _, Main = pcall(require, 'lib.main')
 
 -- Process command line arguments
 if #arg > 0 then
-  local command = _args_[arg[1]]
-  if not command then command = _args_['default'] end
+  local command = _args[arg[1]]
+  if not command then command = _args['default'] end
   command.process(arg)
   if command.exit then os.exit(true, true) end
 end
@@ -266,6 +267,7 @@ if SONATA_DEFAULT_MODULES then
   use(SONATA_DEFAULT_MODULES)
 end
 
+-- choose interpreter
 if arg[-1] ~= '-i' then
   Sonata:cli()
 else
@@ -273,5 +275,5 @@ else
 end
 
 --===============================================
---note: all methods in _args_ require exit after execution...
+--note: all methods in _args require exit after execution...
 --TODO: fix help(Main)

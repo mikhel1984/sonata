@@ -1,7 +1,7 @@
 --[[		sonata/core/win.lua
 
 --- Translate utf8 to Windows specific codes.
--- 
+--
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
 
@@ -12,7 +12,7 @@ local code = {}
 
 if SONATA_WIN_CODE == 'cp866' then
 
--- source table 
+-- source table
 local cp866 = {
 --  0       1       2       3       4       5       6       7       8       9       A       B       C       D       E      F
  [0]=0,   0x01,   0x02,   0x03,   0x04,   0x05,   0x06,   0x07,   0x08,   0x09,   0x0A,   0x0B,   0x0C,   0x0D,   0x0E,   0x0F, -- 00  - from 1251
@@ -32,10 +32,10 @@ local cp866 = {
  0x440,  0x441,  0x442,  0x443,  0x444,  0x445,  0x446,  0x447,  0x448,  0x449,  0x44A,  0x44B,  0x44C,  0x44D,  0x44E,  0x44F, -- E0
  0x401,  0x451,  0x404,  0x454,  0x407,  0x457,  0x40E,  0x45E,   0xB0, 0x2219,   0xB7, 0x221A, 0x2116,   0xA4, 0x25A0,   0xA0 -- F0
 }
--- inverse 
+-- inverse
 for i = 0, 255 do code[cp866[i]] = i end
 
-end
+end -- if
 
 -- output
 return {

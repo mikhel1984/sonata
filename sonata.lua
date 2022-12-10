@@ -1,6 +1,6 @@
 #!/usr/local/bin/lua
 
--- Lua based calculator 
+-- Lua based calculator
 -- This file is a part of 'sonata.lib' collection, 2017 - 2022.
 
 --================= CONFIGURATION ====================
@@ -34,7 +34,6 @@ use = {
   matrix    = "Mat",
   numeric   = "Num",
   polynomial = "Poly",
-  quaternion = "Quat",
   rational  = "Rat",
   special   = "Spec",
   symbolic  = "Sym",
@@ -44,6 +43,7 @@ use = {
   geodesy   = "Geo",
   gnuplot   = "Gp",
   lens      = "Lens",
+  quaternion = "Quat",
 }
 
 -- Add path to the libraries

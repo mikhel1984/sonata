@@ -1,4 +1,4 @@
---[[		sonata/core/test.lua 
+--[[		sonata/core/test.lua
 
 --- Unit test system.
 --
@@ -15,7 +15,7 @@
 
   * Each block of test code must be separated with at leas 1 empty line.
 
-  * If the test have a result, it must be saved in the variable 'ans'. Write the right value after arrow '-->' to make checking. 
+  * If the test have a result, it must be saved in the variable 'ans'. Write the right value after arrow '-->' to make checking.
     In the case of float point number use '--n>' to define the number of digital signs n (0-9) for comparison.
 
   * Test can have no result. In this case '-->' can be omitted.
@@ -24,12 +24,12 @@
     test.module(file1)
     test.module(file2)
     etc.
-    
-  * Test summary includes information about the number of the passed and failed tests, average time per test unit (in milliseconds), memory size. Call 
+
+  * Test summary includes information about the number of the passed and failed tests, average time per test unit (in milliseconds), memory size. Call
     test.summary()
     to show all the results.
 
-  * The results and the error messages are saved to the 'test.log' file. 
+  * The results and the error messages are saved to the 'test.log' file.
 ]=]
 
 --	LOCAL
@@ -54,8 +54,8 @@ results = {},
 --- Extract test code from file.
 --  @param str File text.
 --  @return Strings with unit tests.
-test._getCode_ = function (str)
-  local _,q = string.match(str, CODE_TEMPLATE) 
+test._getCode = function (str)
+  local _,q = string.match(str, CODE_TEMPLATE)
   return q
 end
 
@@ -64,7 +64,7 @@ end
 --  @param res Boolean result of execution.
 --  @param time Time of execution, ms.
 --  @return String with test results.
-test._markTest_ = function (str, res, time)
+test._markTest = function (str, res, time)
   local MIN, FULL = 30, 34
   local s = string.match(str, '%C+')
   s = string.match(s, '^(.-)%s*$')
@@ -75,9 +75,14 @@ end
 
 --- Save string to the file and simultaneously print to the screen.
 --  @param str String for saving.
-test._print_ = function (str)
+test._print = function (str)
   print(str)
   test.log:write(str,'\n')
+end
+
+--- Remove old results
+test.clear = function ()
+  test.results = {}
 end
 
 --- Execute tests listed in module.
@@ -87,15 +92,15 @@ test.module = function (fname)
   local text = assert(help.readAll(fname), "Can't open file '"..fname.."'")
   test.log = test.log or io.open(LOG_NAME, 'w')
   -- write head
-  test._print_('\n\tModule: ' .. fname)
+  test._print('\n\tModule: ' .. fname)
   -- get test
-  text = test._getCode_(text)
+  text = test._getCode(text)
   if not text or #text == 0 then return end  -- no tests
   local succeed, failed = 0, 0
   local fulltime = 0
   -- parse
   for block in test.split(text, DELIM) do
-    if string.find(block, '%s') then 
+    if string.find(block, '%s') then
       local q,e,a = string.match(block, TEST_TEMPLATE)
       q = q or block   -- question
       a = a or ''      -- answer
@@ -111,22 +116,22 @@ test.module = function (fname)
           arrow = fq()
           if e == '' then
             return ans == arrow
-          else 
+          else
             -- approximately equal
             local tol = TOL[e]
-            if tol then 
+            if tol then
               return tol*math.abs(ans-arrow) < 1
             else
               io.write('Unexpected symbol ', e, '\n')
               return false
             end
-          end 
+          end
         else
           return true
         end
       end)
       local res = status and err
-      test._print_(test._markTest_(q,res,time)) 
+      test._print(test._markTest(q,res,time))
       if not status then
         test.log:write(err,'\n')
       elseif not err then
@@ -142,20 +147,6 @@ test.module = function (fname)
   test.log:flush()
 end
 
---- Combine all results.
-test.summary = function ()
-  test._print_(string.format('\n%-25s%-10s%-10s%-10s', 'Module', 'Succeed', 'Failed', 'Av.time'))
-  for k,v in pairs(test.results) do
-    test._print_(string.format('%-27s%-10d%-9d%-10.3f', k, v[1], v[2], v[3]/(v[1]+v[2])))
-  end
-  print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
-end
-
---- Remove old results
-test.clear = function ()
-  test.results = {}
-end
-
 --- Split string into substrings based on the given delimiter.
 --  @param str Initial string.
 --  @param delim Delimiter string.
@@ -164,8 +155,8 @@ test.split = function (str, delim)
   local i,j,k = 1,1,0
   -- return iterator
   return function ()
-    if not str or i > #str then 
-      return nil 
+    if not str or i > #str then
+      return nil
     end
     j,k = string.find(str, delim, k+1)
     local res
@@ -180,12 +171,21 @@ test.split = function (str, delim)
   end
 end
 
+--- Combine all results.
+test.summary = function ()
+  test._print(string.format('\n%-25s%-10s%-10s%-10s', 'Module', 'Succeed', 'Failed', 'Av.time'))
+  for k,v in pairs(test.results) do
+    test._print(string.format('%-27s%-10d%-9d%-10.3f', k, v[1], v[2], v[3]/(v[1]+v[2])))
+  end
+  print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
+end
+
 --============ Diagnostic methods =================
 
 --- Find function name
 --  @param dbg Structure with debug info.
 --  @return String with function name.
-test._getName_ = function (dbg)
+test._getName = function (dbg)
   if dbg.what == 'C' then return dbg.name end
   local lc = string.format("[%s]:%d", dbg.short_src, dbg.linedefined)
   if dbg.what ~= "main" and dbg.namewhat ~= "" then
@@ -205,10 +205,10 @@ test.profile = function (fn,...)
   local function hook()
     local f = debug.getinfo(2, "f").func
     local count = counters[f]
-    if count == nil then 
+    if count == nil then
       counters[f] = 1
       names[f] = debug.getinfo(2, "Sn")
-    else 
+    else
       counters[f] = count+1
     end
   end
@@ -218,7 +218,7 @@ test.profile = function (fn,...)
   debug.sethook()         -- turn off
   -- process results
   local stat = {}
-  for f, c in pairs(counters) do stat[#stat+1] = {test._getName_(names[f]), c} end
+  for f, c in pairs(counters) do stat[#stat+1] = {test._getName(names[f]), c} end
   table.sort(stat, function (a,b) return a[2] > b[2] end)
   -- show results
   for _, res in ipairs(stat) do print(res[1], res[2]) end

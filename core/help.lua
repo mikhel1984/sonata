@@ -1,4 +1,4 @@
---[[		sonata/core/help.lua 
+--[[		sonata/core/help.lua
 
 --- Function description management.
 --
@@ -31,7 +31,7 @@ t - table
 d - any number
 f - float point number
 i - integer number
-b - boolean 
+b - boolean
 s - string
 fn - function
 N - natural number
@@ -45,7 +45,7 @@ local Win = SONATA_WIN_CODE and require('core.win') or nil
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
-local _MAIN_ = '__module__'
+local KEY_MODULE = '__module__'
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -94,8 +94,8 @@ to load new modules.
 --  @param bUse Boolean flag of usage.
 help.useColors = function (bUse)
   if bUse then
-    help.CMAIN  = '\x1B[32m' 
-    help.CHELP  = '\x1B[33m' 
+    help.CMAIN  = '\x1B[32m'
+    help.CHELP  = '\x1B[33m'
     help.CRESET = '\x1B[0m'
     help.CBOLD  = '\x1B[1m'
     help.CNBOLD = '\x1B[22m'
@@ -108,7 +108,7 @@ end
 --- Create list of functions, sort by module and category.
 --  @param tbl Table of pairs 'function - description'.
 --  @return Grouped descriptions.
-help._funcList_ = function (tbl)
+help._funcList = function (tbl)
   local res = {}
   for k, v in pairs(tbl) do
     -- only main description contains 'link'
@@ -132,21 +132,21 @@ help.add = function (self,tbl,nm)
   -- localization data
   local mt = getmetatable(self)
   local lng = mt.locale and mt.locale[nm]
-  -- prepare new 
-  for k, v in pairs(tbl) do 
+  -- prepare new
+  for k, v in pairs(tbl) do
     if not v.link then v[MODULE] = nm end    -- no 'link' element in the function description
     if lng then
       -- set localization
       if v.link then
         -- common description
-        v[MAIN] = lng[_MAIN_] or v[MAIN]
+        v[MAIN] = lng[KEY_MODULE] or v[MAIN]
       else
         -- details
         v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
         v[CATEGORY] = self:get(v[CATEGORY])
-      end 
+      end
     end -- lng
-    self[k] = v                       -- add to the base table 
+    self[k] = v                       -- add to the base table
   end
   if lng then mt.locale[nm] = nil end -- free memory
 end
@@ -196,7 +196,7 @@ help.make = function (self,fn)
   else
     local res = Sonata.info {}
     -- sort functions
-    local lst = help._funcList_(self)
+    local lst = help._funcList(self)
     for mod, t in pairs(lst) do             -- for each module
       res[#res+1] = '\n\t'; res[#res+1] = Sonata.FORMAT_V2
       res[#res+1] = mod ; res[#res+1] = '\n'
@@ -206,7 +206,7 @@ help.make = function (self,fn)
         for i, v in ipairs(n) do           -- for each function
           res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
         end
-      end 
+      end
     end -- for
     return res
   end -- if

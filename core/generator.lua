@@ -10,11 +10,11 @@
 
 local Help = require('core.help')
 
---	LOCAL 
+--	LOCAL
 
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
-local _MAIN_ = '__module__'
+local KEY_MODULE = '__module__'
 
 local LIB = (SONATA_ADD_PATH or '')..'lib'
 
@@ -43,7 +43,7 @@ local function docLines(module, alias, lng)
   local fn, description = {}
   for _, elt in pairs(m.about) do
     if elt.link then
-      description = lng_t[_MAIN_] or elt[MAIN]
+      description = lng_t[KEY_MODULE] or elt[MAIN]
     else
       local title = elt[TITLE]
       local desc = lng_t[title] or elt[DESCRIPTION]
@@ -101,7 +101,7 @@ generator.doc = function (locName, tModules)
   res[#res+1] = '</ul></div>'
   res[#res+1] = '<div><h3># About #</h3>'
   -- program description
-  local base = string.gsub(Sonata._arghelp_(), '\n', '<br>\n')
+  local base = string.gsub(Sonata._arghelp(), '\n', '<br>\n')
   base = string.gsub(base, '(%u%u%u+)', '<b>%1</b>')
   res[#res+1] = string.format('<p>%s</p>', base)
   res[#res+1] = '<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>'
@@ -111,7 +111,7 @@ generator.doc = function (locName, tModules)
   local lng = Help.tblImport(fName)
 
   eng2about()
-  
+
   res[#res+1] = '<div><a name="Main"></a>'
   res[#res+1] = '<h3># Main (main) #</h3>'
   local functions, description = docLines('main','Main',lng)
@@ -151,7 +151,7 @@ end
 --  @return String representation of all help information of the module.
 local function helpLines(module, lng)
   -- get table and name
-  local m = (type(module) == 'string') 
+  local m = (type(module) == 'string')
              and require('lib.' .. module)
              or module
   local mName = (type(module) == 'string') and module or 'Dialog'
@@ -166,7 +166,7 @@ local function helpLines(module, lng)
   -- for all descriptions
   for _, elt in pairs(m.about) do
     -- save
-    local title = elt.link and _MAIN_ or elt[TITLE]
+    local title = elt.link and KEY_MODULE or elt[TITLE]
     local pos = elt.link and MAIN or DESCRIPTION
     local stitle = string.format('["%s"]', title)
     local line = string.format('%-24s = [[%s]],', stitle, lng_t[title] or elt[pos])
@@ -221,19 +221,19 @@ end
 --  @param alias Module short name.
 --  @param description Short module description.
 generator.module = function (mName, alias, description)
-  if not (mName and alias) then 
+  if not (mName and alias) then
     return print('Expected: --new "name" "Alias" ["description"]')
   end
   local fName = string.format('%s%s%s.lua', LIB, Help.SEP, mName)
   -- check existence
-  local f = io.open(fName) 
-  if f then 
+  local f = io.open(fName)
+  if f then
     f:close()
     return print('File '..fName..' is already exists!')
   end
   -- write new file
   description = description or "The module of your dream!"
-  local txt = 
+  local txt =
 [=[--[[		sonata/WORD1
 
 3L WORD5
@@ -242,7 +242,7 @@ generator.module = function (mName, alias, description)
 	WORD4 'WORD2'
 --]]
 
--- Define here your tests, save results to 'ans', use --> for the strict equality 
+-- Define here your tests, save results to 'ans', use --> for the strict equality
 -- and --n> for the n-digit precision in the case of floating numbers.
 --[[TEST
 
@@ -284,7 +284,7 @@ WORD2.__index = WORD2
 --  @return New object of WORD2.
 WORD2.new = function(self,t)
   local o = {}
-  -- your logic 
+  -- your logic
   -- return object
   return setmetatable(o,self)
 end
