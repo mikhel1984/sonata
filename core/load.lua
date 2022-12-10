@@ -257,6 +257,11 @@ end
 
 --================== EXECUTION =================
 
+-- Read localization file and update descriptions
+if SONATA_LOCALIZATION then
+  About:localization(SONATA_LOCALIZATION)
+end
+
 -- Try to import base functions
 pcall(use, 'main')
 
@@ -266,11 +271,6 @@ if #arg > 0 then
   if not command then command = _args['default'] end
   command.process(arg)
   if command.exit then os.exit(true, true) end
-end
-
--- Read localization file and update descriptions
-if SONATA_LOCALIZATION then
-  About:localization(SONATA_LOCALIZATION)
 end
 
 -- Run!!!
