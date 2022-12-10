@@ -163,8 +163,8 @@ exit = true},
 
 -- new module
 ['--new'] = {
-description = 'Create a template for a new module.',
-example = '--new  signal  Sig  "Signal processing functions."',
+description = 'Create template file for a new module.',
+example = '--new  matrices  Mat  "Matrix operations."',
 process = function (args)
   local Gen = require('core.generator')
   Gen.module(args[2],args[3],args[4])
@@ -212,16 +212,16 @@ Sonata._arghelp_ = function ()
     "(option '-i' can be used for working in native Lua interpreter)",
     "",
     "FLAGS:",
-    "\t-h - Get this help message.",
-    "\t-e - Evaluate command line expression.",
-    '\t  (e.g. -e "2+2")',
-    "\t\t{Development}",
+    "\t-h\tGet this help message.",
+    "\t-e\tEvaluate command line expression.",
+    '\t\te.g. -e "2+2"',
+    "",
   }
   for k,v in pairs(_args_) do
     if v.description then
-      txt[#txt+1] = string.format('\t%-8s - %s', k, v.description)
+      txt[#txt+1] = string.format('\t%s\t%s', k, v.description)
       if v.example then
-        txt[#txt+1] = string.format('\t  (e.g. %s)', v.example)
+        txt[#txt+1] = string.format('\t\te.g. %s', v.example)
       end
     end
   end
@@ -245,7 +245,7 @@ if #arg > 0 then
   local command = _args_[arg[1]]
   if not command then command = _args_['default'] end
   command.process(arg)
-  if command.exit then os.exit() end
+  if command.exit then os.exit(true, true) end
 end
 
 -- Read localization file and update descriptions

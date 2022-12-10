@@ -314,7 +314,7 @@ end
 --- Show message and exit the program.
 evaluate.exit = function () 
   print(SonataHelp.CMAIN.."\n             --======= Bye! =======--\n"..SonataHelp.CRESET) 
-  os.exit() 
+  os.exit(true, true) 
 end
 
 --- Mark information about formatting.
