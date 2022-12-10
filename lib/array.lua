@@ -102,9 +102,12 @@ local function isarray(v) return type(v) == 'table' and v.isarray end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Manipulations with arrays of elements. Indices have form of tables. Indexation from 1.")
+local about = {
+__module__ = "Manipulations with arrays of elements. Indices have form of tables. Indexation from 1."
+}
+--local about = help:new("Manipulations with arrays of elements. Indices have form of tables. Indexation from 1.")
 --	MODULE
 
 local array = {

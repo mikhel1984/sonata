@@ -45,7 +45,6 @@ local Win = SONATA_WIN_CODE and require('core.win') or nil
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
 local MAIN = 1
-local KEY_MODULE = '__module__'
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -108,7 +107,7 @@ end
 --- Create list of functions, sort by module and category.
 --  @param tbl Table of pairs 'function - description'.
 --  @return Grouped descriptions.
-help._funcList = function (tbl)
+help._funcList__ = function (tbl)
   local res = {}
   for k, v in pairs(tbl) do
     -- only main description contains 'link'
@@ -126,11 +125,96 @@ help._funcList = function (tbl)
   return res
 end
 
+help.init = function ()
+  return setmetatable({__locale__={}, __modules__={}}, help)
+end
+
+help.add = function (dst, tbl, nm)
+  dst.__modules__[nm] = tbl
+  -- update
+  local lng = dst.__locale__[nm] or {}
+  for k, v in pairs(tbl) do
+    if k == '__module__' then
+      tbl[k] = lng.__module__ or v              -- translate module description
+    else
+      v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION] -- translate description
+      v[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
+    end
+  end
+  if lng then dst.__locale__[nm] = nil end  -- free memory
+end
+
+help.get = function (tbl, txt)
+  -- check in localization table
+  local lng = tbl.__locale__.Dialog and tbl.__locale__.Dialog[txt]
+  return lng or help.english[txt] or txt
+end
+
+help.localization = function (dst, fName)
+  fName = help.LOCALE..help.SEP..fName
+  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
+  if lng then
+    dst.__locale__ = lng
+  else
+    io.write("File ", fName, " not found.\n")
+  end
+end
+
+help.findObject = function (tbl, obj, tGlob)
+  -- check module
+  local hlp_module = (type(obj) == 'table') and obj.about
+  for nm, mod in pairs(tbl.__modules__) do
+    if mod == hlp_module then
+      return help.makeModule(mod, tGlob[nm])
+    elseif mod[obj] then
+      return help.makeFunction(mod[obj])  -- TODO skip function
+    end
+  end
+  return nil
+end
+
+help.makeFunction = function (t)
+  return Sonata.info {'  ', Sonata.FORMAT_V1, t[TITLE], '\n', t[DESCRIPTION]}
+end
+
+help.makeModule = function (t, nm)
+  -- sort by categories
+  local acc = {}
+  for k, v in pairs(t) do
+    if k ~= '__module__' then  -- TODO to const
+      local cat = v[CATEGORY]
+      acc[cat] = acc[cat] or {}
+      table.insert(acc[cat], v[TITLE])
+    end
+  end
+  -- output
+  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm,'\n'}
+  for cat, n in pairs(acc) do          -- for each category
+    res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
+    res[#res+1] = cat    ; res[#res+1] = ':\n'
+    for i, v in ipairs(n) do           -- for each function
+      res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
+    end
+  end
+  return res
+end
+
+help.makeFull = function (t, tGlob)
+  local res = Sonata.info {}
+  for nm, mod in pairs(t.__modules__) do
+    local acc = help.makeModule(mod, tGlob[nm])
+    for _, v in ipairs(acc) do
+      res[#res+1] = v
+    end
+  end
+  return res
+end
+
 --- Include content of the other help table into current one.
 --  @param self Parent object.
 --  @param tbl Table to add.
 --  @param nm Name of the added module.
-help.add = function (self,tbl,nm)
+help.add__ = function (self,tbl,nm)
   assert(nm, "Module name is required!")
   -- localization data
   local mt = getmetatable(self)
@@ -159,7 +243,7 @@ end
 --  @param self Parent object.
 --  @param txt Text to seek.
 --  @return Translated or initial text.
-help.get = function (self,txt)
+help.get__ = function (self,txt)
   local mt = getmetatable(self)
   -- check in localization table
   local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]
@@ -169,7 +253,7 @@ end
 --- Read file with localization data and update main module.
 --  @param self Parent object.
 --  @param fName Name of the file with translated text.
-help.localization = function (self,fName)
+help.localization__ = function (self,fName)
   fName = help.LOCALE..help.SEP..fName
   local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
   if lng then
@@ -184,7 +268,7 @@ end
 --  @param self Parent object.
 --  @param fn Function or module for getting manual.
 --  @return String with information.
-help.make = function (self,fn)
+help.make__ = function (self,fn)
   if fn then
     -- expected module or function description
     local v = assert(self[fn], "No help for "..tostring(fn))
@@ -222,7 +306,7 @@ end
 --  @param self Parent table.
 --  @param str Module description.
 --  @return Help object.
-help.new = function (self,str)
+help.new__ = function (self,str)
   assert(type(str) == 'string', "Constructor must have a description!")
   local o = {}
   o[o] = {link=o, str}      -- save link to itself

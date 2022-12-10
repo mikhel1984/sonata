@@ -10,7 +10,8 @@
 
 -- Prepare help module.
 SonataHelp = require("core.help")
-About = SonataHelp:new("Lua based mathematics.")
+-- Collect all descriptions
+About = SonataHelp.init()
 -- Text colors
 SonataHelp.useColors(SONATA_USE_COLOR)
 
@@ -65,7 +66,7 @@ setmetatable(use,
       end
       lst[#lst+1] = Sonata.FORMAT_V1
       lst[#lst+1] = About:get('use_import')
-      return Sonata.inLua and Sonata._toText_(lst) or lst
+      return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == 'all' then
       -- load all modules
       for k,v in pairs(self) do Sonata.doimport(self,k) end
@@ -80,19 +81,30 @@ setmetatable(use,
 })
 
 --- Print SonataHelp information.
---  @param fn Function, module or nil.
-help = function(fn)
-  if fn then
+--  @param v Function, module or nil.
+help = function(v)
+  local res = nil
+  if v then
+    res = About:findObject(v, use)
+    if not res then
+      res = Sonata.info {Type and Type(v) or '', '\n', tostring(v) }
+    end
+  else
+    res = About:makeFull(use)
+  end
+  return Sonata.inLua and Sonata._toText(res) or res
+  --[[
     if fn == use then
       return use()
     else
       local res = About:make(type(fn)=='table' and fn.about or fn)
-      return Sonata.inLua and Sonata._toText_(res) or res
+      return Sonata.inLua and Sonata._toText(res) or res
     end
   else
     local res = About:make(About)
-    return Sonata.inLua and Sonata._toText_(res) or res
+    return Sonata.inLua and Sonata._toText(res) or res
   end
+  ]]
 end
 
 --- Session logging.
@@ -246,7 +258,8 @@ end
 --================== EXECUTION =================
 
 -- Try to import base functions
-_, Main = pcall(require, 'lib.main')
+pcall(use, 'main')
+--_, Main = pcall(require, 'lib.main')
 
 -- Process command line arguments
 if #arg > 0 then

@@ -31,6 +31,7 @@ use = {
   const     = "_C",
   data      = "_D",
   graph     = "Graph",
+  main      = "Main",
   matrix    = "Mat",
   numeric   = "Num",
   polynomial = "Poly",

@@ -79,12 +79,16 @@ local Ver = require("lib.utils")
 local Utils = Ver.utils
 Ver = Ver.versions
 
+--	INFO 
+
+local help = SonataHelp or {}
+-- description
+local about = {
+__module__ = "Lua based mathematics."
+}
 --	MODULE
 
 local main = {}
--- update for standalone call
-About = About or {}
-SonataHelp = SonataHelp or {}
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -128,57 +132,57 @@ main._showTable = function (t)
 end
 
 -- Commonly used methods
-abs = math.abs;   About[abs] =  {"abs(d)", "Absolute value."}
-exp = math.exp;   About[exp] =  {"exp(d)", "Exponent."}
-log = math.log;   About[log] =  {"log(dPos)", "Natural logarithm."}
-sqrt = math.sqrt;  About[sqrt] = {"sqrt(dPos)", "Square root."}
+abs = math.abs;   about[abs] =  {"abs(d)", "Absolute value."}
+exp = math.exp;   about[exp] =  {"exp(d)", "Exponent."}
+log = math.log;   about[log] =  {"log(dPos)", "Natural logarithm."}
+sqrt = math.sqrt;  about[sqrt] = {"sqrt(dPos)", "Square root."}
 
 -- Trigonometrical
-sin = math.sin;   About[sin] =  {"sin(d)", "Sinus x.", TRIG}
-cos = math.cos;   About[cos] =  {"cos(d)", "Cosine x.", TRIG}
-tan = math.tan;   About[tan] =  {"tan(d)", "Tangent x.", TRIG}
-asin = math.asin;  About[asin] = {"asin(d)", "Inverse sine x.", TRIG}
-acos = math.acos;  About[acos] = {"acos(d)", "Inverse cosine x.", TRIG}
-atan = math.atan;  About[atan] = {"atan(d)", "Inverse tangent x.", TRIG}
+sin = math.sin;   about[sin] =  {"sin(d)", "Sinus x.", TRIG}
+cos = math.cos;   about[cos] =  {"cos(d)", "Cosine x.", TRIG}
+tan = math.tan;   about[tan] =  {"tan(d)", "Tangent x.", TRIG}
+asin = math.asin;  about[asin] = {"asin(d)", "Inverse sine x.", TRIG}
+acos = math.acos;  about[acos] = {"acos(d)", "Inverse cosine x.", TRIG}
+atan = math.atan;  about[atan] = {"atan(d)", "Inverse tangent x.", TRIG}
 
 atan2 = Ver.atan2
-About[atan2] = {"atan2(dy,dx)", "Inverse tangent of dy/dx, use signs.", TRIG}
+about[atan2] = {"atan2(dy,dx)", "Inverse tangent of dy/dx, use signs.", TRIG}
 
 -- Hyperbolic
 cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
-About[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
+about[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
 
 sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
-About[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
+about[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
 
 tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
-About[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
+about[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
 
 -- Hyperbolic inverse
 asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
-About[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
+about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
 
 acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
-About[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
+about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
 
 atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
-About[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
+about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
-_pi = math.pi;   About[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
-_e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
+_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
+_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
 -- result
 _ans = 0;
-About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
+about[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
 
 -- random
 math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
 
 rand = function () return math.random() end
-About[rand] = {"rand()", "Random number between 0 and 1."}
+about[rand] = {"rand()", "Random number between 0 and 1."}
 
 randi = function (N) return math.random(1,N) end
-About[randi] = {"randi(N)", "Random integer in range from 1 to N."}
+about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
 
 randn = function (dMean, dev)
   dMean = dMean or 0
@@ -193,7 +197,7 @@ randn = function (dMean, dev)
   local norm = u * math.sqrt(-2*math.log(s)/s)
   return norm * dev + dMean
 end
-About[randn] = {"randn([dMean=0,dev=1])",
+about[randn] = {"randn([dMean=0,dev=1])",
   "Normal distributed random value with the given mean and deviation."}
 
 
@@ -210,7 +214,7 @@ Map = function (fn, t)
   end
   return nil
 end
-About[Map] = {'Map(fn,t)','Evaluate function for each table element.', AUX}
+about[Map] = {'Map(fn,t)','Evaluate function for each table element.', AUX}
 
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
@@ -237,7 +241,7 @@ Print = function (...)
   end
   io.write('\n')
 end
-About[Print] = {"Print(...)",
+about[Print] = {"Print(...)",
   "Extenden print function, it shows elements of tables and scientific form of numbers.",
   AUX}
 
@@ -249,7 +253,7 @@ Round = function (f,N)
   N = N or 0
   return Utils.round(f, 10^(-N))
 end
-About[Round] = {
+about[Round] = {
   'Round(f,[N=0])', 'Round value, define number of decimal digits.', AUX}
 
 --- Execute file inside the interpreter.
@@ -263,7 +267,7 @@ Run = function (sFile, bInt)
     io.write('Expected .lua or .note!\n')
   end
 end
-About[Run] = {'Run(sFile,[bInt=false])',
+about[Run] = {'Run(sFile,[bInt=false])',
   "Execute lua- or note- file. Set bInt for interaction.", AUX}
 
 --- Show type of the object.
@@ -278,7 +282,7 @@ Type = function (v)
   end
   return u
 end
-About[Type] = {'Type(v)', 'Show type of the object.', AUX}
+about[Type] = {'Type(v)', 'Show type of the object.', AUX}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -416,10 +420,10 @@ Range = function (dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-About[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', AUX}
+about[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', AUX}
 
 -- save link to help info
-main.about = About
+main.about = about
 
 --- Update help reference when redefine function.
 --  @param fnNew New function.
