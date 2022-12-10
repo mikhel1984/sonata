@@ -126,13 +126,13 @@ help._funcList__ = function (tbl)
 end
 
 help.init = function ()
-  return setmetatable({__locale__={}, __modules__={}}, help)
+  return setmetatable({_locale={}, _modules={}}, help)
 end
 
 help.add = function (dst, tbl, nm)
-  dst.__modules__[nm] = tbl
+  dst._modules[nm] = tbl
   -- update
-  local lng = dst.__locale__[nm] or {}
+  local lng = dst._locale[nm] or {}
   for k, v in pairs(tbl) do
     if k == '__module__' then
       tbl[k] = lng.__module__ or v              -- translate module description
@@ -141,12 +141,12 @@ help.add = function (dst, tbl, nm)
       v[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
     end
   end
-  if lng then dst.__locale__[nm] = nil end  -- free memory
+  if lng then dst._locale[nm] = nil end  -- free memory
 end
 
 help.get = function (tbl, txt)
   -- check in localization table
-  local lng = tbl.__locale__.Dialog and tbl.__locale__.Dialog[txt]
+  local lng = tbl._locale.Dialog and tbl._locale.Dialog[txt]
   return lng or help.english[txt] or txt
 end
 
@@ -154,7 +154,7 @@ help.localization = function (dst, fName)
   fName = help.LOCALE..help.SEP..fName
   local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
   if lng then
-    dst.__locale__ = lng
+    dst._locale = lng
   else
     io.write("File ", fName, " not found.\n")
   end
@@ -163,7 +163,7 @@ end
 help.findObject = function (tbl, obj, tGlob)
   -- check module
   local hlp_module = (type(obj) == 'table') and obj.about
-  for nm, mod in pairs(tbl.__modules__) do
+  for nm, mod in pairs(tbl._modules) do
     if mod == hlp_module then
       return help.makeModule(mod, tGlob[nm])
     elseif mod[obj] then
@@ -201,7 +201,7 @@ end
 
 help.makeFull = function (t, tGlob)
   local res = Sonata.info {}
-  for nm, mod in pairs(t.__modules__) do
+  for nm, mod in pairs(t._modules) do
     local acc = help.makeModule(mod, tGlob[nm])
     for _, v in ipairs(acc) do
       res[#res+1] = v

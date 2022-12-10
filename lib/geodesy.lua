@@ -114,9 +114,11 @@ local function arth(d) return math.log((1+d)/(1-d)) / 2 end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Coordinate transformations and other geodetic tasks.")
+local about = {
+__module__ = "Coordinate transformations and other geodetic tasks."
+}
 
 --	MODULE
 

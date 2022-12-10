@@ -258,7 +258,7 @@ evaluate.cli = function (ev)
   local invA = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET
   local invB = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
   evaluate.cliLoop(ev, invA, invB)
-  if ev._logFile_ then ev._logFile_:close() end
+  if ev._logFile then ev._logFile:close() end
   evaluate.exit()
 end
 
@@ -309,12 +309,12 @@ end
 evaluate.eval = function (ev, cmd, useLog)
   local res = evaluate._eval(ev, cmd)
   -- logging
-  if useLog and ev._logFile_ then
-    ev._logFile_:write(newLine,'\n')
+  if useLog and ev._logFile then
+    ev._logFile:write(newLine,'\n')
     if status == evaluate.EV_RES and ev._ans then
-      ev._logFile_:write('--[[ ', ev._ans, ' ]]\n\n')
+      ev._logFile:write('--[[ ', ev._ans, ' ]]\n\n')
     elseif status == evaluate.EV_ERR then
-      ev._logFile_:write('--[[ ERROR ]]\n\n')
+      ev._logFile:write('--[[ ERROR ]]\n\n')
     end
   end
   return res

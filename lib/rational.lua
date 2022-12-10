@@ -117,9 +117,11 @@ end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Computations with rational numbers.")
+local about = {
+__module__ = "Computations with rational numbers."
+}
 
 --	MODULE
 

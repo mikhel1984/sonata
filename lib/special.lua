@@ -93,9 +93,11 @@ local ERR_INVARG = "Invalid arguments!"
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Special mathematical functions.")
+local about = {
+__module__ = "Special mathematical functions."
+}
 
 --	MODULE
 

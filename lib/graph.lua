@@ -201,9 +201,11 @@ end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Operations with graphs.")
+local about = {
+__module__ = "Operations with graphs."
+}
 
 --	MODULE
 

@@ -17,6 +17,7 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
+
 -- current version
 Sonata.version = '0.9.32'
 
@@ -43,7 +44,6 @@ function Sonata.doimport(tbl, name)
     -- do additional actions
     if lib.onImport then lib.onImport() end
   end
-  return var, name
 end
 
 -- Add modules
@@ -75,7 +75,7 @@ setmetatable(use,
       for _,v in ipairs(name) do Sonata.doimport(self,v) end
     else
       -- load module
-      local var, nm = Sonata.doimport(self,name)
+      Sonata.doimport(self,name)
     end
   end,
 })
@@ -111,19 +111,19 @@ end
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
 Log = function (flag)
   if flag == 'on' then
-    if not Sonata._logFile_ then
-      Sonata._logFile_ = io.open(Sonata.LOGNAME, 'a')
+    if not Sonata._logFile then
+      Sonata._logFile = io.open(Sonata.LOGNAME, 'a')
       local d = os.date('*t')
-      Sonata._logFile_:write(
+      Sonata._logFile:write(
         string.format(
           '\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
           d.day, d.month, d.year, d.hour, d.min))
-      Sonata._logFile_:write('-- ')  -- prepare comment for 'logging on'
+      Sonata._logFile:write('-- ')  -- prepare comment for 'logging on'
     end
   elseif flag == 'off' then
-    if Sonata._logFile_ then
-      Sonata._logFile_:close()
-      Sonata._logFile_ = nil
+    if Sonata._logFile then
+      Sonata._logFile:close()
+      Sonata._logFile = nil
     end
   else
     io.write('Unexpected argument!\n')
@@ -259,7 +259,6 @@ end
 
 -- Try to import base functions
 pcall(use, 'main')
---_, Main = pcall(require, 'lib.main')
 
 -- Process command line arguments
 if #arg > 0 then
@@ -296,4 +295,3 @@ end
 
 --===============================================
 --note: all methods in _args require exit after execution...
---TODO: fix help(Main)

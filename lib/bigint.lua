@@ -135,9 +135,11 @@ local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Operations with arbitrary long integers.")
+local about = {
+__module__ = "Operations with arbitrary long integers."
+}
 
 --	MODULE
 

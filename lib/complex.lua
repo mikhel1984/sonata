@@ -179,9 +179,11 @@ local function fcos(v) return math.cos(Cross.float(v)) end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Manipulations with complex numbers.")
+local about = {
+__module__ = "Manipulations with complex numbers."
+}
 
 --	MODULE
 

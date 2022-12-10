@@ -136,9 +136,11 @@ local FILTER = 'filter'
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Data processing and statistics.")
+local about = {
+__module__ = "Data processing and statistics."
+}
 
 --	MODULE
 

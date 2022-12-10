@@ -121,9 +121,11 @@ end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Operations and conversations according the units.")
+local about = {
+__module__ = "Operations and conversations according the units."
+}
 
 --	MODULE
 

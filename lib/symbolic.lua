@@ -58,9 +58,11 @@ local compList = function (S1, S2) return S1[2]._sign < S2[2]._sign end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Symbolical calculations.")
+local about = {
+__module__ = "Symbolical calculations."
+}
 
 --	MODULE
 

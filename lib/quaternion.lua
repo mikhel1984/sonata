@@ -122,9 +122,11 @@ end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Operations with quaternions.")
+local about = {
+__module__ = "Operations with quaternions."
+}
 
 --	MODULE
 

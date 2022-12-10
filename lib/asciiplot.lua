@@ -118,9 +118,11 @@ local MANUAL = 'manual'
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Use pseudography for data visualization.")
+local about = {
+__module__ = "Use pseudography for data visualization."
+}
 
 --	MODULE
 

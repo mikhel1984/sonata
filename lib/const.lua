@@ -40,9 +40,11 @@ ans = _C.myConst              --> nil
 
 --	LOCAL
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Collection of constants.")
+local about = {
+__module__ = "Collection of constants."
+}
 
 local PHY, ASTRO, MATH = "physics", "astronomy", "math"
 

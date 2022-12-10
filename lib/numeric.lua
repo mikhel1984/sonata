@@ -84,10 +84,11 @@ end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new(
-  "Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL.")
+local about = { __module__ = 
+  "Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL."
+}
 
 --	MODULE
 
