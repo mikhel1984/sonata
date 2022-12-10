@@ -345,9 +345,11 @@ local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}  -- optional
 -- description
-local about = help:new("WORD5")
+local about = {
+__module__ = "WORD5"
+}
 
 --	MODULE
 
