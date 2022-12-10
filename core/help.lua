@@ -213,6 +213,10 @@ help.makeFull = function (t, tGlob)
   return res
 end
 
+help.forModule = function (tbl, nm)
+  return tbl._locale[nm]
+end
+
 --- Include content of the other help table into current one.
 --  @param self Parent object.
 --  @param tbl Table to add.
