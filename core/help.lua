@@ -179,16 +179,19 @@ end
 
 help.makeModule = function (t, nm)
   -- sort by categories
-  local acc = {}
+  local acc, txt = {}, ''
   for k, v in pairs(t) do
-    if k ~= '__module__' then  -- TODO to const
+    if k == '__module__' then
+      txt = v
+    else
       local cat = v[CATEGORY]
       acc[cat] = acc[cat] or {}
       table.insert(acc[cat], v[TITLE])
     end
   end
   -- output
-  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm,'\n'}
+  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm,'\n',
+    txt, '\n'}
   for cat, n in pairs(acc) do          -- for each category
     res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
     res[#res+1] = cat    ; res[#res+1] = ':\n'
