@@ -205,7 +205,7 @@ help.make = function (self,fn)
     local lst = help._funcList(self)
     for mod, t in pairs(lst) do             -- for each module
       res[#res+1] = '\n\t'; res[#res+1] = Sonata.FORMAT_V2
-      res[#res+1] = mod ; res[#res+1] = '\n'
+      res[#res+1] = use[mod] or 'Main' ; res[#res+1] = '\n'
       for cat, n in pairs(t) do            -- for each category
         res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
         res[#res+1] = cat    ; res[#res+1] = ':\n'
