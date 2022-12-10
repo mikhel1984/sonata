@@ -39,12 +39,12 @@ local generator = {}
 --  @return String representation of all help information of the module.
 local function docLines(module, alias, lng)
   local m = require('lib.' .. module)
-  local lng_t = lng and lng[alias] or {}
+  local lng_t = lng[module] or {}
   -- collect
   local fn, description = {}
-  for _, elt in pairs(m.about) do
-    if elt.link then
-      description = lng_t[KEY_MODULE] or elt[MAIN]
+  for k, elt in pairs(m.about) do
+    if k == '__module__' then
+      description = lng_t[k] or elt
     else
       local title = elt[TITLE]
       local desc = lng_t[title] or elt[DESCRIPTION]
@@ -110,10 +110,10 @@ generator.doc = function (locName, tModules)
 
   local fName = string.format('%s%s%s', Help.LOCALE, Help.SEP, locName)
   -- prepare new file
-  local lng = Help.tblImport(fName)
+  local lng = Help.tblImport(fName) or {}
 
-  eng2about()
-
+  --eng2about()
+--[[
   res[#res+1] = '<div><a name="Main"></a>'
   res[#res+1] = '<h3># Main (main) #</h3>'
   local functions, description = docLines('main','Main',lng)
@@ -123,7 +123,8 @@ generator.doc = function (locName, tModules)
     string.format('%slib%smain.lua', (SONATA_ADD_PATH or ''), Help.SEP))
   res[#res+1] = docExample(Test._getCode_(fstr))
   res[#res+1] = '<a href="#Top">Top</a></div>'
-  -- other modules
+  ]]
+  -- modules
   for _, val in ipairs(sortedModules) do
     local k,v = val[1], val[2]
     res[#res+1] = string.format('<div><a name="%s"></a>', v)
@@ -132,7 +133,7 @@ generator.doc = function (locName, tModules)
     res[#res+1] = string.format('<p class="descript">%s</p>', description)
     res[#res+1] = string.format('<p>%s</p>', functions)
     fstr = Help.readAll(string.format('%s%s%s.lua', LIB, Help.SEP, k))
-    res[#res+1] = docExample(Test._getCode_(fstr))
+    res[#res+1] = docExample(Test._getCode(fstr))
     res[#res+1] = '<a href="#Top">Top</a></div>'
   end
 
