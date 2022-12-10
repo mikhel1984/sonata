@@ -166,9 +166,11 @@ end
 --  @return True when v1 goes before v2.
 local function sortRoots (v1, v2)
   -- move complex back
-  if type(v1) == 'table' and v1.iscomplex and (type(v2) ~= 'table' or not v2.iscomplex) then
+  if type(v1) == 'table' and v1.iscomplex
+        and (type(v2) ~= 'table' or not v2.iscomplex) then
     return false
-  elseif type(v2) == 'table' and v2.iscomplex and (type(v1) ~= 'table' or not v1.iscomplex) then
+  elseif type(v2) == 'table' and v2.iscomplex
+        and (type(v1) ~= 'table' or not v1.iscomplex) then
     return true
   else
     return Cross.norm(v1) > Cross.norm(v2)
@@ -345,14 +347,16 @@ polynomial.__unm = function (P)
 end
 
 polynomial.arithmetic = 'arithmetic'
-about[polynomial.arithmetic] = {polynomial.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.META}
+about[polynomial.arithmetic] = {
+  polynomial.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.META}
 
 polynomial.comparison = 'comparison'
 about[polynomial.comparison] = {polynomial.comparison, "a==b, a~=b", help.META}
 
 polynomial._convert = function (v)
-    return (type(v) == 'number' or type(v) == 'table' and v.__add and v.__mul and v.__div)
-            and polynomial:_init({[0]=v})
+  return (type(v) == 'number' or
+          type(v) == 'table' and v.__add and v.__mul and v.__div)
+          and polynomial:_init({[0]=v})
 end
 
 --- Calculate ratio and rest of 2 polynomials.
@@ -455,10 +459,13 @@ polynomial._roots3 = function (P)
     -- only real roots
     t = math.acos(R / math.sqrt(t)) / 3
     Q = -2*math.sqrt(Q)   -- reuse
-    res = {Q*math.cos(t)-a/3, Q*math.cos(t+2*math.pi/3)-a/3, Q*math.cos(t-2*math.pi/3)-a/3}
+    res = {
+      Q*math.cos(t)-a/3, Q*math.cos(t+2*math.pi/3)-a/3,
+      Q*math.cos(t-2*math.pi/3)-a/3}
   else
     -- can have complex roots
-    local A = (R > 0 and -1 or 1) * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
+    local A = (R > 0 and -1 or 1)
+      * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
     local B = (A == 0 and 0 or Q/A)
     t = polynomial.ext_complex(0, math.sqrt(3)/2 * (A-B))
     Q = A + B            -- reuse
@@ -485,7 +492,8 @@ polynomial.build = function (self,...)
   end
   return res
 end
-about[polynomial.build] = {"Poly:build(root1,root2,...)", "Return polynomial with given roots.", help.OTHER}
+about[polynomial.build] = {"Poly:build(root1,root2,...)",
+  "Return polynomial with given roots.", help.OTHER}
 
 --- Find characteristic polinomial for the matrix.
 --  @param self Do nothing.
@@ -498,7 +506,8 @@ polynomial.char = function (self, M)
   end
   return m:minor(0,0)
 end
-about[polynomial.char] = {"Poly:char(M)", "Return characteristic polinomial for the given matrix."}
+about[polynomial.char] = {"Poly:char(M)",
+  "Return characteristic polinomial for the given matrix."}
 
 --- Create copy of object.
 --  @param P Initial polynomial.
@@ -531,7 +540,9 @@ about[polynomial.der] = {"der()", "Calculate derivative of polynomial."}
 --  @param ord Polynomial order.
 --  @return Polynomial object.
 polynomial.fit = function (self,tX,tY,N)
-  if not (N > 0 and Ver.mathType(N) == 'integer') then error('Wrong order!') end
+  if not (N > 0 and Ver.mathType(N) == 'integer') then
+    error('Wrong order!')
+  end
   if #tX ~= #tY then error('Wrong data size!') end
   if #tX <= N then error('Too few points!') end
   -- find sums
@@ -564,7 +575,8 @@ polynomial.fit = function (self,tX,tY,N)
   for i = 1,N+1 do res[i] = gaus(i,-1) end
   return polynomial._reorder(res)
 end
-about[polynomial.fit] = {"Poly:fit(tX,tY,N)", "Find polynomial approximation for the line.", FIT}
+about[polynomial.fit] = {
+  "Poly:fit(tX,tY,N)", "Find polynomial approximation for the line.", FIT}
 
 --- Get integral.
 --  @param P Initial polynomial.
@@ -577,7 +589,8 @@ polynomial.int = function (P,d0)
   end
   return polynomial:_init(int)
 end
-about[polynomial.int] = {"int([d0=0])", "Calculate integral, d0 - free coefficient."}
+about[polynomial.int] = {
+  "int([d0=0])", "Calculate integral, d0 - free coefficient."}
 
 --- Find interpolation polinomial in the Lagrange form.
 --  @param self Do nothing.
@@ -605,7 +618,8 @@ polynomial.lagrange = function (self,tX,tY)
   end
   return numpoly(reduce(res))
 end
-about[polynomial.lagrange] = {"Poly:lagrange(tX,tY)", "Find interpolation polynomial in the Lagrange form.", FIT}
+about[polynomial.lagrange] = {"Poly:lagrange(tX,tY)",
+  "Find interpolation polynomial in the Lagrange form.", FIT}
 
 --- Linear data interpolation.
 --  @param self Do nothing
@@ -625,7 +639,8 @@ polynomial.lin = function (self, tX, tY, v0, vN)
   if v0 then res[#res+1] = { xp+1, polynomial:_init({[0] = vN or v0}) } end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.lin] = {"Poly:lin(tX,tY,[v0=0,vN=v0])", "Linear data interpolation. Return table with polynomials.", FIT}
+about[polynomial.lin] = {"Poly:lin(tX,tY,[v0=0,vN=v0])",
+  "Linear data interpolation. Return table with polynomials.", FIT}
 
 --- Evaluate value for table of polynomials (piecewise polynomial).
 --  @param self Do nothing.
@@ -653,7 +668,9 @@ polynomial.ppval = function (self,tP, d, N)
     return polynomial:ppval(tP, d, N)
   end
 end
-about[polynomial.ppval] = {"Poly:ppval(tP,d,[N]", "Return value of a piecewise polynomial in the point and the polynomial index.", FIT}
+about[polynomial.ppval] = {"Poly:ppval(tP,d,[N]",
+  "Return value of a piecewise polynomial in the point and the polynomial index.",
+  FIT}
 
 --- Find real roots of the polynomial.
 --  @param P Source polynomial.
@@ -685,7 +702,8 @@ polynomial.real = function (P)
   table.sort(res, function (a,b) return math.abs(a) > math.abs(b) end)
   return res, pp
 end
-about[polynomial.real] = {"real()", "Find real roots of the polynomial.", help.OTHER}
+about[polynomial.real] = {
+  "real()", "Find real roots of the polynomial.", help.OTHER}
 
 --- Find all the polynomial roots.
 --  @param P Source polynomial.
@@ -721,7 +739,8 @@ polynomial.roots = function (P)
   table.sort(r, sortRoots)
   return r
 end
-about[polynomial.roots] = {"roots()", "Find all the polynomial roots.", help.OTHER}
+about[polynomial.roots] = {
+  "roots()", "Find all the polynomial roots.", help.OTHER}
 
 --- Cubic spline data interpolation.
 --  Use 'natural' boundary conditions.
@@ -769,7 +788,8 @@ polynomial.spline = function (self, tX, tY)
   end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.spline] = {"Poly:spline(tX,tY)", "Cubic spline data interpolation. Return table with polynomials.", FIT}
+about[polynomial.spline] = {"Poly:spline(tX,tY)",
+  "Cubic spline data interpolation. Return table with polynomials.", FIT}
 
 --- Represent polynomial in "natural" form.
 --  @param P Source polynomial.
@@ -810,7 +830,8 @@ polynomial.taylor = function (self,v,vF,...)
   end
   return numpoly(res)
 end
-about[polynomial.taylor] = {"Poly:taylor(v,vF,[vF',vF''..])", "Get Taylor series.", FIT}
+about[polynomial.taylor] = {
+  "Poly:taylor(v,vF,[vF',vF''..])", "Get Taylor series.", FIT}
 
 --- Polynomial value.
 --  Can be called with ().
@@ -830,7 +851,8 @@ polynomial.__call = function (p,x) return polynomial.val(p,x) end
 setmetatable(polynomial, {
 __call = function (self, t)
   for _,v in ipairs(t) do
-    if not (type(v) == 'number' or type(v) == 'table' and v.__add and v.__mul) then
+    if not (type(v) == 'number' or
+            type(v) == 'table' and v.__add and v.__mul) then
       error("Wrong coefficient "..tostring(v))
     end
   end

@@ -168,7 +168,8 @@ About[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 _pi = math.pi;   About[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
 _e  = 2.718281828459;   About[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
 -- result
-_ans = 0;   About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
+_ans = 0;
+About[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
 
 -- random
 math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
@@ -192,7 +193,8 @@ randn = function (dMean, dev)
   local norm = u * math.sqrt(-2*math.log(s)/s)
   return norm * dev + dMean
 end
-About[randn] = {"randn([dMean=0,dev=1])", "Normal distributed random value with the given mean and deviation."}
+About[randn] = {"randn([dMean=0,dev=1])",
+  "Normal distributed random value with the given mean and deviation."}
 
 
 --- Generate list of function values.
@@ -235,7 +237,9 @@ Print = function (...)
   end
   io.write('\n')
 end
-About[Print] = {"Print(...)", "Extenden print function, it shows elements of tables and scientific form of numbers.", AUX}
+About[Print] = {"Print(...)",
+  "Extenden print function, it shows elements of tables and scientific form of numbers.",
+  AUX}
 
 --- Round to some precision.
 --  @param f Real number.
@@ -245,7 +249,8 @@ Round = function (f,N)
   N = N or 0
   return Utils.round(f, 10^(-N))
 end
-About[Round] = {'Round(f,[N=0])', 'Round value, define number of decimal digits.', AUX}
+About[Round] = {
+  'Round(f,[N=0])', 'Round value, define number of decimal digits.', AUX}
 
 --- Execute file inside the interpreter.
 --  @param sFile Lua or note file name.
@@ -258,7 +263,8 @@ Run = function (sFile, bInt)
     io.write('Expected .lua or .note!\n')
   end
 end
-About[Run] = {'Run(sFile,[bInt=false])', "Execute lua- or note- file. Set bInt for interaction.", AUX}
+About[Run] = {'Run(sFile,[bInt=false])',
+  "Execute lua- or note- file. Set bInt for interaction.", AUX}
 
 --- Show type of the object.
 --  @param v Some Lua or Sonata object.
@@ -283,7 +289,8 @@ main.life = function (board)
   local gen = 0
   -- make decision about current cell
   local islive = function (r,c)
-      local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c] + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
+      local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
+        + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
       return (n==3 or n==2 and src[r][c]==1) and 1 or 0
     end
   -- evaluate

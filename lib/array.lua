@@ -6,9 +6,11 @@
 --  Object structure:</br>
 --  <code>{a1...an, b1...bn, c1...cn, ...,</br>
 --  array_size, index_coefficients}</code></br>
---  i.e. all elements of the array are written sequentially, column by column. Position of one element is calculated as
+--  i.e. all elements of the array are written sequentially, column by column.
+--  Position of one element is calculated as
 --  <code>C1*n1+C2*n2+...+Ck*nk</code>
---  where <code>{n1,n2,...nk}</code> - index, <code>C1...Ck</code> - size based coefficients.
+--  where <code>{n1,n2,...nk}</code> - index, <code>C1...Ck</code> - size based
+--  coefficients.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
@@ -136,7 +138,7 @@ array.__len = array.capacity
 --- String representation.
 --  @param A Array.
 --  @return String representation of the array.
-array.__tostring = function (A) return 'array ' .. table.concat(A.size, 'x') end
+array.__tostring = function (A) return 'array '..table.concat(A.size, 'x') end
 
 array.comparison = 'comparison'
 about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
@@ -198,7 +200,8 @@ array.capacity = function (A)
   local S,K = A.size, A.k
   return S[#S] * K[#K]
 end
-about[array.capacity] = {"capacity()", "Maximal number of elements in the array. The same as #A.", help.OTHER}
+about[array.capacity] = {"capacity()",
+  "Maximal number of elements in the array. The same as #A.", help.OTHER}
 
 --- Concatenate 2 arrays along given axes.
 --  @param A1 First array.
@@ -209,7 +212,9 @@ array.concat = function (A1, A2, iAxis)
   -- check size
   if not (iAxis > 0 and iAxis <= #A1.size) then error("Wrong axis!") end
   for i = 1, #A1.size do
-    if not (A1.size[i] == A2.size[i] or i == iAxis) then error("Different size!") end
+    if not (A1.size[i] == A2.size[i] or i == iAxis) then
+      error("Different size!")
+    end
   end
   -- prepare new size
   local newsize = Ver.move(A1.size, 1, #A1.size, 1, {})
@@ -232,14 +237,17 @@ array.concat = function (A1, A2, iAxis)
   end
   return res
 end
-about[array.concat] = {"concat(A,iAxis)", "Concatenate along the given array along the given axis."}
+about[array.concat] = {"concat(A,iAxis)",
+  "Concatenate along the given array along the given axis."}
 
 --- Get array copy.
 --  @param A Array object.
 --  @return Deep copy of the array.
 array.copy = function (A)
-  local cp = array:_new(Ver.move(A.size, 1, #A.size, 1, {}))   -- copy size, create new array
-  return Ver.move(A, 1, array.capacity(A), 1, cp)             -- copy array elements
+  -- copy size, create new array
+  local cp = array:_new(Ver.move(A.size, 1, #A.size, 1, {}))
+  -- copy array elements
+  return Ver.move(A, 1, array.capacity(A), 1, cp)
 end
 about[array.copy] = {"copy()", "Get copy of the array.", help.OTHER}
 
@@ -261,7 +269,7 @@ about[array.get] = {"get(tInd)", "Get array element."}
 
 --- Iterator across the array.
 --  @param A Array object.
---  @return Iterator which calculate index of the next array element and the element itself, <code>nil</code> at the end.
+--  @return Iterator which calculate index of the next array element and the element itself, nil at the end.
 array.ipairs = function (A)
   local count, len = 0, array.capacity(A)
   return function ()
@@ -271,7 +279,8 @@ array.ipairs = function (A)
     return index, A[count]
   end
 end
-about[array.ipairs] = {"ipairs()", "Return iterator along all indexes.", help.OTHER}
+about[array.ipairs] = {"ipairs()", "Return iterator along all indexes.",
+  help.OTHER}
 
 --- Compare array size.
 --  @param A1 First array object.
@@ -323,7 +332,9 @@ array.sub = function (A, tInd1, tInd2)
   for i = 1, #tInd2 do
     if tInd2[i] < 0 then tInd2[i] = tInd2[i] + A.size[i] + 1 end
   end
-  if not (array._isIndex(A, tInd1) and array._isIndex(A, tInd2)) then error("Wrong index!") end
+  if not (array._isIndex(A, tInd1) and array._isIndex(A, tInd2)) then
+    error("Wrong index!")
+  end
   -- prepare tables
   local newsize, ind = {}, {}
   for i = 1, #tInd1 do
@@ -345,7 +356,8 @@ array.sub = function (A, tInd1, tInd2)
   end
   return res
 end
-about[array.sub] = {"sub(tInd1,tInd2)", "Return sub array restricted by 2 indexes."}
+about[array.sub] = {"sub(tInd1,tInd2)",
+  "Return sub array restricted by 2 indexes."}
 
 --- Apply function of several arguments.
 --  @param self Do nothing.
@@ -371,18 +383,23 @@ array.zip = function (self, fn, ...)
   end
   return res
 end
-about[array.zip] = {"Arr:zip(fn, ...)", "Apply function of several arguments. Return new array.", help.STATIC}
+about[array.zip] = {"Arr:zip(fn, ...)",
+  "Apply function of several arguments. Return new array.", help.STATIC}
 
 -- Constructor
 setmetatable(array, {__call = function (self, tSize)
   -- check correctness
   assert(type(tSize) == 'table', "Table is expected!")
-  for i = 1,#tSize do assert(tSize[i] > 0 and Ver.isInteger(tSize[i]), "Positive integer is expected!") end
+  for i = 1,#tSize do
+    assert(tSize[i] > 0 and Ver.isInteger(tSize[i]),
+           "Positive integer is expected!")
+  end
   -- build
   return array:_new(tSize)
 end})
 array.Arr = 'Arr'
-about[array.Arr] = {"Arr {n1,n2,..}", "Create empty array with the given size.", help.STATIC}
+about[array.Arr] = {"Arr {n1,n2,..}",
+  "Create empty array with the given size.", help.STATIC}
 
 -- Comment to remove descriptions
 array.about = about

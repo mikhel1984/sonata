@@ -55,16 +55,16 @@ local function modifyError () error('Constants are immutable!') end
 
 -- astronomy
 local _astro = {
-pc_u_='m',        pc = 3.08567758128E16,     -- one parsec
-ly_u_='m',        ly = 9.4607304725808E15,   -- light year
-au_u_='m',        au = 149597870700,         -- astronomic unit
+pc_u_='m',    pc = 3.08567758128E16,     -- one parsec
+ly_u_='m',    ly = 9.4607304725808E15,   -- light year
+au_u_='m',    au = 149597870700,         -- astronomic unit
 }
 
 -- math
-local _math = { 
-                 phi = 1.6180339887498948482045868, -- golden ratio
-                  pi = 3.1415926535897932384626434, -- length to diameter
-                   e = 2.7182818284590452353602875, -- base of natural logarithm
+local _math = {
+             phi = 1.6180339887498948482045868, -- golden ratio
+              pi = 3.1415926535897932384626434, -- length to diameter
+               e = 2.7182818284590452353602875, -- base of natural logarithm
 }
 
 -- physics
@@ -119,7 +119,8 @@ about[_astro.ly] = {"astro.ly", "One light year.", ASTRO}
 about[_astro.au] = {"astro.au", "Astronomic unit.", ASTRO}
 -- mathematics
 about[_math.phi] = {"math.phi", "Golden ratio.", MATH}
-about[_math.pi] = {"math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
+about[_math.pi] = {
+  "math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
 about[_math.e] = {"math.e", "Base of the natural logarithm.", MATH}
 
 --- Convert to Unit object.
@@ -165,10 +166,14 @@ about[const.remove] = {'_C:remove(sName)','Delete user-defined constant.'}
 const.about = about
 
 -- Make objects "immutable"
-setmetatable(const,       {__newindex=modifyError, __index = function (t,k) return _user[k] or const._unit_(_user, k) end})
-setmetatable(const.phy,   {__newindex=modifyError, __index = function (t,k) return _phy[k]  or const._unit_(_phy, k) end})
-setmetatable(const.astro, {__newindex=modifyError, __index = function (t,k) return _astro[k] or const._unit_(_astro, k) end})
-setmetatable(const.math,  {__newindex=modifyError, __index = function (t,k) return _math[k] or const._unit_(_math, k) end})
+setmetatable(const,       {__newindex=modifyError,
+  __index = function (t,k) return _user[k] or const._unit_(_user, k) end})
+setmetatable(const.phy,   {__newindex=modifyError,
+  __index = function (t,k) return _phy[k]  or const._unit_(_phy, k) end})
+setmetatable(const.astro, {__newindex=modifyError,
+  __index = function (t,k) return _astro[k] or const._unit_(_astro, k) end})
+setmetatable(const.math,  {__newindex=modifyError,
+  __index = function (t,k) return _math[k] or const._unit_(_math, k) end})
 
 return const
 

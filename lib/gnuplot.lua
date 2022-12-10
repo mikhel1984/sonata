@@ -3,7 +3,8 @@
 --- Call Gnuplot from Sonata.
 --
 --  Object structure:
---  all parameters of the plot are saved in form of table, each function is in separate subtable.
+--  all parameters of the plot are saved in form of table,
+--  each function is in separate subtable.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
@@ -116,8 +117,12 @@ local special = {
 local main = {
   string  = function (x,y) return string.format('set %s %s', x, y) end,
   number  = function (x,y) return string.format('set %s %d', x, y) end,
-  table   = function (x,y) return string.format('set %s [%f:%f]', x, y[1],y[2]) end,
-  boolean = function (x,y) return string.format('%s %s', y and 'set' or 'unset', x) end,
+  table   = function (x,y)
+    return string.format('set %s [%f:%f]', x, y[1],y[2])
+  end,
+  boolean = function (x,y)
+   return string.format('%s %s', y and 'set' or 'unset', x)
+  end,
 }
 
 --- Prepare option string
@@ -153,10 +158,11 @@ local about = help:new("Interface for calling Gnuplot from Sonata.")
 local gnuplot = {
 type = 'gnuplot',
 -- basic common options
-options = {'terminal','output','parametric','size','polar','grid','key','title',
-  'xlabel','ylabel','xrange','yrange','zrange','trange','samples'},
+options = {'terminal','output','parametric','size','polar','grid','key',
+  'title', 'xlabel','ylabel','xrange','yrange','zrange','trange','samples'},
 -- basic function options
-foptions = {'using','title','with','linetype','linestyle','linewidth','ls','ln','lw'},
+foptions = {'using','title','with','linetype','linestyle','linewidth','ls',
+  'ln','lw'},
 }
 
 -- metha
@@ -361,7 +367,8 @@ gnuplot.plot = function (self,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.plot] = {"Gp:plot(x1[,y1,nm,x2,..])", "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+about[gnuplot.plot] = {"Gp:plot(x1[,y1,nm,x2,..])",
+  "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Polar plot.
 --  @param self Do nothing.
@@ -386,7 +393,8 @@ gnuplot.polarplot = function(self,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.polarplot] = {'Gp:polarplot(x1,y1,[nm,x2,y2..])', "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+about[gnuplot.polarplot] = {'Gp:polarplot(x1,y1,[nm,x2,y2..])',
+  "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Plot graphic.
 --  @param G Table with parameters of graphic.
@@ -394,7 +402,8 @@ about[gnuplot.polarplot] = {'Gp:polarplot(x1,y1,[nm,x2,y2..])', "Make polar plot
 gnuplot.show = function (G)
   -- open Gnuplot
   local handle = assert(
-    io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'), 'Cannot open Gnuplot!')
+    io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'),
+    'Cannot open Gnuplot!')
   -- save options
   local cmd = {}
   for _,k in ipairs(gnuplot.options) do
@@ -440,7 +449,8 @@ gnuplot.surfplot = function(self,...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.surfplot] = {'Gp:surfplot(x1,y1,fn1,[nm,x2,y2..])', "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
+about[gnuplot.surfplot] = {'Gp:surfplot(x1,y1,fn1,[nm,x2,y2..])',
+  "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 --- Plot table of data file.
 --  @param self Do nothing.
@@ -460,7 +470,8 @@ gnuplot.tplot = function (self,v,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.tplot] = {"Gp:tplot(v[,x,y1,y2..])", "Plot table, matrix or data file. Optional elements define columns."}
+about[gnuplot.tplot] = {"Gp:tplot(v[,x,y1,y2..])",
+  "Plot table, matrix or data file. Optional elements define columns."}
 
 --- Polar plot table of data file.
 --  @param self Do nothing.
@@ -481,7 +492,8 @@ gnuplot.tpolar = function (self,v,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.tpolar] = {"Gp:tpolar(v,[x,y1,y2..])", "Polar plot for table, matrix or data file. Optional elements define columns."}
+about[gnuplot.tpolar] = {"Gp:tpolar(v,[x,y1,y2..])",
+  "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 --- Sufrace plot from table of data file.
 --  @param self Do nothing.
@@ -501,7 +513,8 @@ gnuplot.tsurf = function (self,v,...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.tsurf] = {"Gp:tsurf(v,[x1,y1,z1,z2..])", "Surface plot for table, matrix or data file. Optional elements define columns."}
+about[gnuplot.tsurf] = {"Gp:tsurf(v,[x1,y1,z1,z2..])",
+  "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self) return gnuplot:_init() end})
@@ -511,25 +524,25 @@ about[gnuplot.Gp] = {"Gp()", "Prepare Gnuplot object.", help.NEW}
 gnuplot.keys = 'keys'
 about[gnuplot.keys] = {'keys',
 [[  Options / examples:
-{math.sin, title='sin'}           -- plot using function, define in Lua; add legend
-{'sin.dat', ln=1, lw=2}           -- plot data from file, use given color and width
-{tbl, with='lines'}               -- plot data from Lua table, use lines
-title='Graph name'                -- set title
-xrange={0,10}                     -- range of x from 0 to 10
-yrange={-2,2}                     -- range of y
-zrange={0,5}                      -- range of z
-trange={1,2}                      -- range for parametric functions
-xtitle='A', ytitle='B'            -- axes names
-terminal='jpeg'                   -- save result as jpeg image
-output='my_plot.jpg'              -- file name
-parametric=true                   -- create parametric plot
-size='square'                     -- set square size
-polar=true                        -- use polar coordinate system
-grid='polar'                      -- polar grid
-legend=false                      -- don't use legend
-surface=true                      -- plot surface in 3D
-samples=200                       -- define number of points
-raw='set pm3d'                    -- set Gnuplot options manually
+{math.sin, title='sin'}       -- plot using function, define in Lua; add legend
+{'sin.dat', ln=1, lw=2}       -- plot data from file, use given color and width
+{tbl, with='lines'}           -- plot data from Lua table, use lines
+title='Graph name'            -- set title
+xrange={0,10}                 -- range of x from 0 to 10
+yrange={-2,2}                 -- range of y
+zrange={0,5}                  -- range of z
+trange={1,2}                  -- range for parametric functions
+xtitle='A', ytitle='B'        -- axes names
+terminal='jpeg'               -- save result as jpeg image
+output='my_plot.jpg'          -- file name
+parametric=true               -- create parametric plot
+size='square'                 -- set square size
+polar=true                    -- use polar coordinate system
+grid='polar'                  -- polar grid
+legend=false                  -- don't use legend
+surface=true                  -- plot surface in 3D
+samples=200                   -- define number of points
+raw='set pm3d'                -- set Gnuplot options manually
 ]]
 }
 

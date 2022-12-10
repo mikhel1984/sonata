@@ -86,7 +86,8 @@ end
 
 local help = SonataHelp or {new=function () return {} end}
 -- description
-local about = help:new("Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL.")
+local about = help:new(
+  "Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL.")
 
 --	MODULE
 
@@ -113,7 +114,8 @@ numeric.der = function (self, fn, d)
   until math.abs(der-last) < numeric.TOL
   return der
 end
-about[numeric.der] = {"Num:der(fn,x)", "Calculate the derivative value for given function."}
+about[numeric.der] = {
+  "Num:der(fn,x)", "Calculate the derivative value for given function."}
 
 --- Another solution based on Newton's rule.
 --  @param self Do nothing.
@@ -131,7 +133,8 @@ numeric.newton = function (self, fn, d1)
   until math.abs(fn(x2)-fd1) < numeric.TOL
   return x2
 end
-about[numeric.newton] = {"Num:newton(fn,d0)", "Find root of equation using Newton's rule with only one initial condition."}
+about[numeric.newton] = {"Num:newton(fn,d0)",
+  "Find root of equation using Newton's rule with only one initial condition."}
 
 --- Differential equation solution (Runge-Kutta method).
 --  @param self Do nothing.
@@ -167,14 +170,18 @@ numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
         h = 2*h
       else
         -- save for current step
-        res[#res+1] = {x+h, y2}    -- use y2 instead y1 because it is probably more precise (?)
+        -- use y2 instead y1 because it is probably more precise (?)
+        res[#res+1] = {x+h, y2}
       end
     end
-    if exit(res[#res][1],res[#res][2], (#res>1) and res[#res-1][2]) then break end
+    if exit(res[#res][1],res[#res][2], (#res>1) and res[#res-1][2]) then
+      break
+    end
   end
   return res, res[#res][2]
 end
-about[numeric.ode45] = {"Num:ode45(fn,tDelta,y0,[param])", "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
+about[numeric.ode45] = {"Num:ode45(fn,tDelta,y0,[param])",
+  "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
 --- Find root of equation at the given interval.
 --  @param self Do nothing
@@ -191,7 +198,8 @@ numeric.solve = function (self, fn, dA, dB)
   until math.abs(f1) < numeric.TOL
   return dB
 end
-about[numeric.solve] = {"Num:solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
+about[numeric.solve] = {
+  "Num:solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Integration using trapeze method.
 --  @param self Do nothing.
@@ -223,7 +231,8 @@ numeric.trapez = function (self, fn, dA, dB)
   until math.abs(I-last) < numeric.TOL
   return I
 end
-about[numeric.trapez] = {"Num:trapez(fn,a,b)", "Get integral using trapezoidal rule."}
+about[numeric.trapez] = {
+  "Num:trapez(fn,a,b)", "Get integral using trapezoidal rule."}
 
 -- Comment to remove descriptions
 numeric.about = about

@@ -4,7 +4,10 @@
 --
 --  Object structure: </br>
 --  <code> {sign=S,_base_=B, v1, ... vn} </code></br>
---  where <code>S</code> is +1/-1, B is 10 by default, v1 - vn are digits of the number in reverse order. For example, number <code>123</code> is represented as <code>{sign=1, _base_=10, 3, 2, 1}</code>.
+--  where <code>S</code> is +1/-1, B is 10 by default,
+--  v1 - vn are digits of the number in reverse order.
+--  For example, number <code>123</code> is represented as
+--  <code>{sign=1, _base_=10, 3, 2, 1}</code>.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
@@ -237,7 +240,8 @@ bigint.__lt = function (B1,B2)
   if #b1 == #b2 then   -- equal length
     for i = #b1,1,-1 do
       if b1[i] ~= b2[i] then
-        return (B1.sign > 0 and b1[i] < b2[i]) or (B1.sign < 0 and b1[i] > b2[i])
+        return (B1.sign > 0 and b1[i] < b2[i]) or
+               (B1.sign < 0 and b1[i] > b2[i])
       end
     end
     return false
@@ -373,9 +377,11 @@ bigint.__tostring = function (B)
 end
 
 bigint.arithmetic = 'arithmetic'
-about[bigint.arithmetic] = {bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.META}
+about[bigint.arithmetic] = {
+  bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.META}
 bigint.comparison = 'comparison'
-about[bigint.comparison] = {bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.META}
+about[bigint.comparison] = {
+  bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.META}
 
 --- Correct function arguments if need.
 --  @param num1 First number representation.
@@ -514,7 +520,8 @@ bigint._gt = function (B1,B2)
   if #b1 == #b2 then
     for i = #b1,1,-1 do
       if b1[i] ~= b2[i] then
-        return (B1.sign > 0 and b1[i] > b2[i]) or (B1.sign < 0 and b1[i] < b2[i])
+        return (B1.sign > 0 and b1[i] > b2[i]) or
+               (B1.sign < 0 and b1[i] < b2[i])
       end
     end
     return false
@@ -631,7 +638,9 @@ end
 bigint._powm = function (B1,B2,B3)
   local div = bigint._div
   _, B1 = div(B1,B3)
-  if #B1._ == 1 and B1._[1] == 0 then return bigint:_new({0,base=B1._base_}) end
+  if #B1._ == 1 and B1._[1] == 0 then
+    return bigint:_new({0,base=B1._base_})
+  end
   local y, x = bigint:_new({1,base=B1._base_}), B1
   local dig, mul, rest = bigint._copy(B2), bigint._mul
   local d = dig._
@@ -810,7 +819,8 @@ bigint.eq = function (B1,B2)
   end
   return false
 end
-about[bigint.eq] = {"eq(B)", "Check equality with the second value.", help.OTHER}
+about[bigint.eq] = {
+  "eq(B)", "Check equality with the second value.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
 
@@ -849,7 +859,8 @@ bigint.factorize = function (B)
   end
   return res
 end
-about[bigint.factorize] = {"factorize()", "Find the list of multipliers.", NUMB}
+about[bigint.factorize] = {
+  "factorize()", "Find the list of multipliers.", NUMB}
 
 --- Float number representation.
 --  @param B Bigint object.
@@ -863,7 +874,8 @@ bigint.float = function (B)
   end
   return B.sign >= 0 and sum or (-sum)
 end
-about[bigint.float] = {"float()", "Represent current big integer as number if it possible.", help.OTHER}
+about[bigint.float] = {"float()",
+  "Represent current big integer as number if it possible.", help.OTHER}
 
 --- Greatest common devision for two (big) numbers.
 --  @param B1 First value.
@@ -873,7 +885,8 @@ bigint.gcd = function (B1,B2)
   B1,B2 = bigint._args(B1,B2)
   return bigint._gcd(B1,B2)
 end
-about[bigint.gcd] = {"gcd(B)", "Find the greatest common divisor for two integers.", NUMB}
+about[bigint.gcd] = {
+  "gcd(B)", "Find the greatest common divisor for two integers.", NUMB}
 
 --- Check if the number is prime.
 --  @param B Number.
@@ -887,7 +900,9 @@ bigint.isPrime = function (B, sMethod)
   local v1,v2 = bigint._trivialSearch(B)
   return v1 == nil
 end
-about[bigint.isPrime] = {"isPrime([sMethod])", "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.", NUMB}
+about[bigint.isPrime] = {"isPrime([sMethod])",
+  "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.",
+  NUMB}
 
 --- Generate random number.
 --  @param self Do nothing.
@@ -916,7 +931,8 @@ bigint.random = function (self,B)
   end
   return res
 end
-about[bigint.random] = {"Int:random(B)","Generate pseudo-random value from 0 to B.", help.STATIC}
+about[bigint.random] = {"Int:random(B)",
+  "Generate pseudo-random value from 0 to B.", help.STATIC}
 
 --- Change current numeric base.
 --  @param B Bigint object.
@@ -945,7 +961,8 @@ __call = function (self, v)
   return bigint:_new(v)
 end})
 bigint.Int = 'Int'
-about[bigint.Int] = {"Int(v)", "Create number from integer, string or table.", help.STATIC}
+about[bigint.Int] = {
+  "Int(v)", "Create number from integer, string or table.", help.STATIC}
 
 -- Comment to remove descriptions
 bigint.about = about

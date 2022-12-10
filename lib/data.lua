@@ -159,7 +159,8 @@ data.cov2 = function (self,t1,t2)
   end
   return s / #t1
 end
-about[data.cov2] = {"_D:cov2(t1,t2)", "Find covariance value for two vectors.", STAT}
+about[data.cov2] = {
+  "_D:cov2(t1,t2)", "Find covariance value for two vectors.", STAT}
 
 --- Estimate covariance matrix.
 --  @param self Do nothing.
@@ -180,7 +181,8 @@ data.cov = function (self, t)
   end
   return m
 end
-about[data.cov] = {"_D:cov(t)", "Find covariance matrix for list of vectors.", STAT}
+about[data.cov] = {
+  "_D:cov(t)", "Find covariance matrix for list of vectors.", STAT}
 
 --- Save Lua table in file, use given delimiter.
 --  @param self Do nothing.
@@ -212,7 +214,8 @@ data.csvwrite = function (self,sFile, t, char, bCol)
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {"_D:csvwrite(sFile,t,[char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
+about[data.csvwrite] = {"_D:csvwrite(sFile,t,[char=',',bCol=false])",
+  "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
 --  @param self Do nothing.
@@ -251,7 +254,8 @@ data.csvread = function (self,sFile, char, bCol)
   f:close()
   return res
 end
-about[data.csvread] = {"_D:csvread(sFile,[delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
+about[data.csvread] = {"_D:csvread(sFile,[delim=',',bCol=false])",
+  "Read delimiter separated data as Lua table.", FILES}
 
 --- Generate function from string.
 --  @param self Do nothing.
@@ -259,7 +263,8 @@ about[data.csvread] = {"_D:csvread(sFile,[delim=',',bCol=false])", "Read delimit
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
 data.Fn = function (self,sExpr,iArg) return Utils.Fn(sExpr, iArg or 2) end
-about[data.Fn] = {"_D:Fn(sExpr,[iArg=2])", "Generate function from expression of x1, x2 etc.", help.OTHER}
+about[data.Fn] = {"_D:Fn(sExpr,[iArg=2])",
+  "Generate function from expression of x1, x2 etc.", help.OTHER}
 
 --- Find elements using condition.
 --  @param self Do nothing.
@@ -282,7 +287,9 @@ data.filter = function (self, t, vCond)
   end
   return res
 end
-about[data.filter] = {"_D:filter(t,vCond)","Get result of the table filtering. Condition is either boolean function or table of weights.", FILTER}
+about[data.filter] = {"_D:filter(t,vCond)",
+  "Get result of the table filtering. Condition is either boolean function or table of weights.",
+  FILTER}
 
 --- Frequency of elements.
 --  @param self Do nothing.
@@ -295,7 +302,8 @@ data.freq = function (self, t)
   end
   return tmp
 end
-about[data.freq] = {"_D:freq(t)", "Return table with frequencies of elements.", STAT}
+about[data.freq] = {
+  "_D:freq(t)", "Return table with frequencies of elements.", STAT}
 
 --- Geometrical mean.
 --  @param self Do nothing.
@@ -382,7 +390,8 @@ data.histcounts = function (self, t, rng)
   end
   return res, bins
 end
-about[data.histcounts] = {"_D:histcounts(X,[rng=10])","Calculate amount of bins. Edges can be either number or table.", STAT}
+about[data.histcounts] = {"_D:histcounts(X,[rng=10])",
+  "Calculate amount of bins. Edges can be either number or table.", STAT}
 
 --- Find weights (1/0) based on condition.
 --  @param self Do nothing.
@@ -396,7 +405,8 @@ data.is = function (self, t, fn)
   end
   return res
 end
-about[data.is] = {"_D:is(t,fn)", "Find weights using boolean function.", FILTER}
+about[data.is] = {
+  "_D:is(t,fn)", "Find weights using boolean function.", FILTER}
 
 --- Find weights (1/0) based on inverted condition.
 --  @param self Do nothing.
@@ -410,7 +420,8 @@ data.isNot = function (self, t, fn)
   end
   return res
 end
-about[data.isNot] = {"_D:isNot(t,fn)", "Find inverted weights using boolean function.", FILTER}
+about[data.isNot] = {
+  "_D:isNot(t,fn)", "Find inverted weights using boolean function.", FILTER}
 
 --- Maximum value.
 --  @param self Do nothing.
@@ -443,7 +454,8 @@ data.mean = function (self, t, tw)
     return data:sum(t) / #t
   end
 end
-about[data.mean] = {"_D:mean(t,[tw])", "Calculate average value. Weights can be used.", STAT}
+about[data.mean] = {
+  "_D:mean(t,[tw])", "Calculate average value. Weights can be used.", STAT}
 
 --- Find median.
 --  @param self Do nothing.
@@ -495,7 +507,8 @@ data.moment = function (self, N, t, tw)
   end
   return mu / n
 end
-about[data.moment] = {"_D:moment(N,t,[tw])", "Central moment of t order N, tw is a list of weights.", STAT}
+about[data.moment] = {"_D:moment(N,t,[tw])",
+  "Central moment of t order N, tw is a list of weights.", STAT}
 
 
 --- Sum of all elements.
@@ -531,7 +544,8 @@ data.std = function (self, t, tw)
   end
   return math.sqrt(disp), disp
 end
-about[data.std] = {"_D:std(t,[tw])", "Standard deviation and variance. Weights can be used.", STAT}
+about[data.std] = {"_D:std(t,[tw])",
+  "Standard deviation and variance. Weights can be used.", STAT}
 
 --- Student's cumulative distribution
 --  @param self Do nothing.
@@ -543,7 +557,8 @@ data.tcdf = function (self,d,N)
   local tmp = N/(N+d*d)
   return 1-0.5*data.ext_special:betainc(tmp,0.5*N,0.5)
 end
-about[data.tcdf] = {"_D:tcdf(d,N)", "Student's cumulative distribution.", help.OTHER}
+about[data.tcdf] = {"_D:tcdf(d,N)",
+  "Student's cumulative distribution.", help.OTHER}
 
 --- Student's density function.
 --  @param self Do nothing.
@@ -555,7 +570,8 @@ data.tpdf = function (self,d,N)
   local tmp = math.sqrt(N)*data.ext_special:beta(0.5,0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-about[data.tpdf] = {"_D:tpdf(d,N)", "Student's distribution density.", help.OTHER}
+about[data.tpdf] = {
+  "_D:tpdf(d,N)", "Student's distribution density.", help.OTHER}
 
 --- Condition: x == d.
 --  @param self Do nothing.
@@ -564,7 +580,8 @@ about[data.tpdf] = {"_D:tpdf(d,N)", "Student's distribution density.", help.OTHE
 data.xEq = function (self,d)
   return (function (x) return Cross.eq(x,d) end)
 end
-about[data.xEq] = {"_D:xEq(d)", "Return function for condition x == d.", FILTER}
+about[data.xEq] = {
+  "_D:xEq(d)", "Return function for condition x == d.", FILTER}
 
 --- Condition: x > d
 --  @param self Do nothing.
@@ -583,7 +600,8 @@ about[data.xGt] = {"_D:xGt(d)", "Return function for condition x > d.", FILTER}
 data.xIn = function (self, d1, d2)
   return (function (x) return d1 <= x and x <= d2 end)
 end
-about[data.xIn] = {"_D:xIn(d1,d2)", "Return function for condition d1 <= x <= d2.", FILTER}
+about[data.xIn] = {
+  "_D:xIn(d1,d2)", "Return function for condition d1 <= x <= d2.", FILTER}
 
 --- Condition: x < d
 --  @param self Do nothing.
@@ -621,7 +639,8 @@ data.zip = function (self,fn, ...)
   end
   return res
 end
-about[data.zip] = {"_D:zip(fn,...)", "Sequentially apply function to list of tables.", help.OTHER}
+about[data.zip] = {"_D:zip(fn,...)",
+  "Sequentially apply function to list of tables.", help.OTHER}
 
 -- Get reference to data range in other table
 local metaref = { type = 'ref' }
@@ -664,7 +683,8 @@ data.ref = function (self, t, iBeg, iEnd)
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
 end
-about[data.ref] = {'_D:ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', help.OTHER}
+about[data.ref] = {'_D:ref(t,[iBeg=1,iEnd=#t])',
+  'Return reference to the range of elements.', help.OTHER}
 
 -- Comment to remove descriptions
 data.about = about

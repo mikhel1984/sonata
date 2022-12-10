@@ -92,7 +92,8 @@ local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
 local function numrat(R)
   return Cross.eq(R._[2],1) and Cross.simp(R._[1])               -- x / 1
-    or (isbig(R._[1]) or isbig(R._[2])) and (R._[1] / R._[2])  -- float num or denom
+    -- float num or denom
+    or (isbig(R._[1]) or isbig(R._[2])) and (R._[1] / R._[2])
     or R
 end
 
@@ -236,7 +237,9 @@ rational.__pow = function (R1, R2)
   if type(R1) == "number" then
     return R1^R2
   else
-    if not (Ver.isInteger(R2) and R2 >= 0) then error("Power must be a non-negative integer") end
+    if not (Ver.isInteger(R2) and R2 >= 0) then
+      error("Power must be a non-negative integer")
+    end
     local r1 = R1._
     return numrat(rational:_new(r1[1]^R2, r1[2]^R2))
   end
@@ -264,10 +267,12 @@ end
 --  @return String with numerator and denominator.
 rational.__tostring = function (R)
   local r = R._
-  if type(r[1]) == 'number' and type(r[2]) == 'number' and mabs(r[1]) > r[2] then
+  if type(r[1]) == 'number' and type(r[2]) == 'number'
+        and mabs(r[1]) > r[2] then
     local n = mabs(r[1])       -- numerator
     local v = math.modf(n / r[2])
-    return string.format("%s%d %d/%d", r[1] < 0 and '-' or '', v, n % r[2], r[2])
+    return string.format(
+      "%s%d %d/%d", r[1] < 0 and '-' or '', v, n % r[2], r[2])
   else
     return string.format("%s/%s", numStr(r[1]), numStr(r[2]))
   end
@@ -279,16 +284,19 @@ end
 rational.__unm = function (R) return rational:_new(-R._[1], R._[2]) end
 
 rational.arithmetic = 'arithmetic'
-about[rational.arithmetic] = {rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2", help.META}
+about[rational.arithmetic] = {
+  rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2", help.META}
 
 rational.comparison = 'comparison'
-about[rational.comparison] = {rational.comparison, "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
+about[rational.comparison] = { rational.comparison,
+  "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
 
 --- Convert value to rational number.
 --  @param v Source value.
 --  @return Rational number of false.
 rational._convert = function (v)
-  return (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod)
+  return (type(v) == 'number' and Ver.isInteger(v)
+            or type(v) == 'table' and v.__mod)
          and rational:_new(v,1)
 end
 
@@ -309,7 +317,7 @@ end
 --  @param vd Denominator. Default is 1.
 --  @return New rational object.
 rational._new = function (self, vn, vd)
-  local g = rational:gcd(vd,vn)         -- inverse order move sign to denominator
+  local g = rational:gcd(vd,vn)     -- inverse order move sign to denominator
   return setmetatable({_ = {vn/g, vd/g}}, self)
 end
 
@@ -317,7 +325,8 @@ end
 --  @param R Rational number.
 --  @return Denominator.
 rational.denom = function (R) return R._[2] end
-about[rational.denom] = {"denom()", "Return the denominator of the rational number."}
+about[rational.denom] = {
+  "denom()", "Return the denominator of the rational number."}
 
 --- R1 == R2
 --  @param R1 First number.
@@ -366,7 +375,8 @@ rational.from = function (self, f, fErr)
   end
   return rational:_new(f >= 0 and a or -a, b)
 end
-about[rational.from] = {"Rat:from(f,[fErr=1E-3])", "Estimate ratio from floating point value.", help.NEW}
+about[rational.from] = {"Rat:from(f,[fErr=1E-3])",
+  "Estimate ratio from floating point value.", help.NEW}
 
 --- Get rational number from continued fraction coefficients.
 --  @param self Do nothing.
@@ -375,13 +385,15 @@ about[rational.from] = {"Rat:from(f,[fErr=1E-3])", "Estimate ratio from floating
 rational.fromCont = function (self, t)
   local check = {}
   for i, v in ipairs(t) do
-    if (type(v) == 'number' and Ver.isInteger(v) or type(v) == 'table' and v.__mod) and v > 0 then
+    if (type(v) == 'number' and Ver.isInteger(v)
+          or type(v) == 'table' and v.__mod) and v > 0 then
       check[i] = v
     else error("Positive integer is expected") end
   end
   local t0 = t[0]
   if t0 then
-    if (type(t0) == 'number' and Ver.isInteger(t0) or type(t0) == 'table' and t0.__mod) and t0 >= 0 then
+    if (type(t0) == 'number' and Ver.isInteger(t0)
+          or type(t0) == 'table' and t0.__mod) and t0 >= 0 then
       check[0] = t0
     else error("Positive integer is expected") end
   else
@@ -390,7 +402,8 @@ rational.fromCont = function (self, t)
   end
   return rational._new(rational._cont2rat(check))
 end
-about[rational.fromCont] = {"Rat:fromCont(t)", "Transform continued fraction to rational number.", help.NEW}
+about[rational.fromCont] = {"Rat:fromCont(t)",
+  "Transform continued fraction to rational number.", help.NEW}
 
 --- The greatest common divisor.
 --  @param self Do nothing.
@@ -400,7 +413,8 @@ about[rational.fromCont] = {"Rat:fromCont(t)", "Transform continued fraction to 
 rational.gcd = function (self,va,vb)
   return Cross.eq(va,0) and vb or rational:gcd(vb % va, va)
 end
-about[rational.gcd] = {"Rat:gcd(va,vb)", "Calculate the greatest common divisor for two integers.", help.OTHER}
+about[rational.gcd] = {"Rat:gcd(va,vb)",
+  "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Get numerator.
 --  @param R Rational number.
@@ -426,21 +440,25 @@ rational.toCont = function (R)
   res[#res+1] = b
   return setmetatable(res, _continued_)
 end
-about[rational.toCont] = {"toCont()", "Transform rational number to continued fraction.", help.OTHER}
+about[rational.toCont] = {
+  "toCont()", "Transform rational number to continued fraction.", help.OTHER}
 
 -- call constructor, check arguments
 setmetatable(rational, {
 __call = function (self, n, d)
   d = d or 1
-  assert(type(n) == 'number' and Ver.isInteger(n) or type(n) == 'table' and n.__mod,
-         "Wrong numerator type")
-  assert(type(d) == 'number' and Ver.isInteger(d) or type(d) == 'table' and d.__mod,
-         "Wrong denomenator type")
+  assert(
+    type(n) == 'number' and Ver.isInteger(n) or type(n) == 'table' and n.__mod,
+    "Wrong numerator type")
+  assert(
+    type(d) == 'number' and Ver.isInteger(d) or type(d) == 'table' and d.__mod,
+    "Wrong denomenator type")
   assert(not Cross.eq(d,0), "Wrond denomenator value")
   return rational:_new(n,d)
 end})
 rational.Rat = 'Rat'
-about[rational.Rat] = {"Rat(m,[n=1])", "Create rational number using num (and denom).", help.NEW}
+about[rational.Rat] = {
+  "Rat(m,[n=1])", "Create rational number using num (and denom).", help.NEW}
 
 -- Comment to remove descriptions
 rational.about = about

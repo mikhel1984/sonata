@@ -31,7 +31,7 @@ local versions = {
 }
 
 --=============== Previous versions =======================
-if _VERSION < 'Lua 5.3' then 
+if _VERSION < 'Lua 5.3' then
   -- Arctangent with sign
   versions.atan2 = math.atan2
   -- Check if the number is integer
@@ -85,9 +85,9 @@ local cross = {
 --  @return True if the objects are equal.
 cross.eq = function (v1,v2)
   if     type(v1) == 'table' and v1.__eq then
-    return v1:__eq(v2) 
+    return v1:__eq(v2)
   elseif type(v2) == 'table' and v2.__eq then
-    return v2:__eq(v1) 
+    return v2:__eq(v1)
   else
     return v1 == v2
   end
@@ -98,7 +98,8 @@ end
 --  @param vSlave Slave object.
 --  @return Converted slave of nil.
 cross.convert = function (vMaster, vSlave)
-  return type(vMaster) == 'table' and vMaster._convert and vMaster._convert(vSlave)
+  return type(vMaster) == 'table' and vMaster._convert
+    and vMaster._convert(vSlave)
 end
 
 --- Get the object copy.
@@ -127,7 +128,7 @@ cross.norm = function (v)
   return nil
 end
 
---- Apply simplification if possible 
+--- Apply simplification if possible
 --  @param v Sonata object.
 --  @return Number or the object itself.
 cross.simp = function (v)
@@ -148,21 +149,21 @@ utils.Fn = function (sExpr,iArg)
   local arg = {}
   for i = 1, iArg do arg[i] = string.format("x%d", i) end
   local fn = versions.loadStr(
-    string.format("return function (%s) return %s end", table.concat(arg,','), sExpr)
-  )
+    string.format("return function (%s) return %s end",
+      table.concat(arg,','), sExpr))
   return fn()
 end
 
 --- 'Smart' number to string conversation.
---  @param d Number. 
+--  @param d Number.
 --  @return String representation.
 utils.numstr = function (d)
   local int, frac = mmodf(d)
   local a = math.abs(int)
   -- short integer
-  if frac == 0 then 
+  if frac == 0 then
     if a < 1E5 then
-      return string.format('%d', int) 
+      return string.format('%d', int)
     end
   elseif int == 0 then
     if math.abs(frac) >= 0.01 then
@@ -170,9 +171,9 @@ utils.numstr = function (d)
     end
   elseif a < 10 then
     return string.format('%.3f', d)
-  elseif a < 100 then 
+  elseif a < 100 then
     return string.format('%.2f', d)
-  elseif a < 1000 then 
+  elseif a < 1000 then
     return string.format('%.1f', d)
   end
   return string.format('%.2E', d)
@@ -196,7 +197,7 @@ utils.lex = function (s)
   local res = {}
   for x, y in string.gmatch(s, utils.TEMPL) do
     if #x > 0 then
-      res[#res+1] = tonumber(x) or x 
+      res[#res+1] = tonumber(x) or x
     end
     if #y > 0 then res[#res+1] = y end
   end

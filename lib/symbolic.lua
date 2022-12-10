@@ -218,7 +218,8 @@ local PARENTS = {
     p_str = function (S)
       local nm = S._
       local lst = symbolic._fnList[nm]
-      return string.format('%s(%s): %s', nm, table.concat(lst.args, ','), tostring(lst.body))
+      return string.format(
+        '%s(%s): %s', nm, table.concat(lst.args, ','), tostring(lst.body))
     end,
     p_simp = COMMON.empty,
   },
@@ -408,7 +409,8 @@ PARENTS.power.p_simp = function (S, bFull)
     COMMON.copy(S, symbolic:_newConst(1))
   elseif COMMON.isOne(S._[1]) or COMMON.isZero(S._[1]) then  -- 1^v or 0^v
     COMMON.copy(S, S._[1])
-  elseif S._[1]._parent == S._[2]._parent and S._[1]._parent == PARENTS.const then
+  elseif S._[1]._parent == S._[2]._parent and
+         S._[1]._parent == PARENTS.const then
     COMMON.copy(S, symbolic:_newConst(S._[1]._ ^ S._[2]._))
   end
 end
@@ -492,16 +494,19 @@ PARENTS.product.p_str = function (S)
       v2 = string.format('(%s)', v2)
     end
     if v1 > 0 then
-      num[#num+1] = (v1 == 1) and v2 or string.format('%s^%s', v2, tostring(v1))
+      num[#num+1] =
+        (v1 == 1) and v2 or string.format('%s^%s', v2, tostring(v1))
     else  -- v[1] < 0
-      denom[#denom+1] = (v1 == -1) and v2 or string.format('%s^%s', v2, tostring(-v1))
+      denom[#denom+1] =
+        (v1 == -1) and v2 or string.format('%s^%s', v2, tostring(-v1))
     end
   end
   if #denom == 0 then
     return table.concat(num, '*')
   else
     num = #num > 0 and table.concat(num, '*') or '1'  -- reuse
-    return string.format(#denom > 1 and "%s/(%s)" or "%s/%s", num, table.concat(denom, '*'))
+    return string.format(
+      #denom > 1 and "%s/(%s)" or "%s/%s", num, table.concat(denom, '*'))
   end
 end
 
@@ -546,15 +551,18 @@ PARENTS.sum.p_str = function (S)
   for _, v in ipairs(S._) do
     local v1, v2 = v[1], v[2]:p_str()
     if v1 > 0 then
-      plus[#plus+1] = (v1 == 1) and v2 or string.format('%s*%s', tostring(v1), v2)
+      plus[#plus+1] =
+        (v1 == 1) and v2 or string.format('%s*%s', tostring(v1), v2)
     else
-      minus[#minus+1] = (v1 == -1) and v2 or string.format('%s*%s', tostring(-v1), v2)
+      minus[#minus+1] =
+        (v1 == -1) and v2 or string.format('%s*%s', tostring(-v1), v2)
     end
   end
   if #minus == 0 then
     return table.concat(plus, '+')
   else
-    return string.format('%s-%s', table.concat(plus, '+'), table.concat(minus, '-'))
+    return string.format(
+      '%s-%s', table.concat(plus, '+'), table.concat(minus, '-'))
   end
 end
 

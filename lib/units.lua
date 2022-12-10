@@ -102,8 +102,12 @@ end
 
 -- Operations with tables of units.
 local op = {
-['*'] = function(u1, u2) for k,v in pairs(u2) do u1[k] = (u1[k] or 0) + v end end,
-['/'] = function(u1, u2) for k,v in pairs(u2) do u1[k] = (u1[k] or 0) - v end end,
+['*'] = function(u1, u2) for k,v in pairs(u2) do
+          u1[k] = (u1[k] or 0) + v end
+        end,
+['/'] = function(u1, u2) for k,v in pairs(u2) do
+          u1[k] = (u1[k] or 0) - v end
+        end,
 ['^'] = function(u, n) for k,v in pairs(u) do u[k] = v*n end end
 }
 
@@ -265,10 +269,12 @@ units.__unm = function (U)
 end
 
 units.arithmetic = 'arithmetic'
-about[units.arithmetic] = {units.arithmetic, 'U1+U2, U1-U2, U1*U2, U1/U2, U1^N', help.META}
+about[units.arithmetic] = {
+  units.arithmetic, 'U1+U2, U1-U2, U1*U2, U1/U2, U1^N', help.META}
 
 units.comparison = 'comparison'
-about[units.comparison] = {units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2', help.META}
+about[units.comparison] = {
+  units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2', help.META}
 
 --- Prepare arguments.
 --  @param a First unit object or number.
@@ -501,7 +507,8 @@ units.convert = function (U, s)
   end
   return units._convertKey(U, units._memKeys[s])
 end
-about[units.convert] = {'convert(s)','Convert one units to another, return new object or nil.', }
+about[units.convert] = {
+  'convert(s)','Convert one units to another, return new object or nil.', }
 
 --- Create copy of the element.
 --  @param U Source object.
@@ -520,12 +527,14 @@ units.key = function (U)
     if v > 0 then
       num[#num+1] = (v ~= 1) and string.format('%s^%s', k, tostring(v)) or k
     else
-      denom[#denom+1] = (v ~= -1) and string.format('%s^%s', k, tostring(-v)) or k
+      denom[#denom+1] =
+        (v ~= -1) and string.format('%s^%s', k, tostring(-v)) or k
     end
   end
   if #num > 0 then
-    num = (#num > 1) and string.format(#denom > 0 and '(%s)' or '%s', table.concat(num, '*'))
-          or num[1]
+    num = (#num > 1)
+      and string.format(#denom > 0 and '(%s)' or '%s', table.concat(num, '*'))
+      or num[1]
   else
     num = ''
   end
@@ -564,7 +573,8 @@ units.prefix = {
   Z = 1e+21,  -- zetta
   Y = 1e+24,  -- yotta
 }
-about[units.prefix] = {'prefix', 'Table of possible prefixes for units.', help.OTHER}
+about[units.prefix] = {
+  'prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 --- Add new rule for unit transformation.
 --  @param self Main class.
@@ -596,7 +606,8 @@ __call = function (self,v,s)
   return units:_new(v, s)
 end})
 units.Unit = 'Unit'
-about[units.Unit] = {'Unit([v,]s)', 'Create new elements with units.', help.NEW}
+about[units.Unit] = {
+  'Unit([v,]s)', 'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions
 units.about = about
