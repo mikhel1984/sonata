@@ -107,7 +107,6 @@ local help = SonataHelp or {}
 local about = {
 __module__ = "Manipulations with arrays of elements. Indices have form of tables. Indexation from 1."
 }
---local about = help:new("Manipulations with arrays of elements. Indices have form of tables. Indexation from 1.")
 --	MODULE
 
 local array = {

@@ -81,7 +81,6 @@ Ver = Ver.versions
 
 --	INFO 
 
-local help = SonataHelp or {}
 -- description
 local about = {
 __module__ = "Lua based mathematics."

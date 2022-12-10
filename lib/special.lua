@@ -93,7 +93,6 @@ local ERR_INVARG = "Invalid arguments!"
 
 --	INFO
 
-local help = SonataHelp or {}
 -- description
 local about = {
 __module__ = "Special mathematical functions."

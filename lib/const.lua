@@ -40,7 +40,6 @@ ans = _C.myConst              --> nil
 
 --	LOCAL
 
-local help = SonataHelp or {}
 -- description
 local about = {
 __module__ = "Collection of constants."
