@@ -129,9 +129,6 @@ Log = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
-About[Log] = {'Log(sFlag)',
-  "Save session into the log file. Use 'on'/'off' to start/stop logging.",
-  SonataHelp.OTHER}
 
 -- command line arguments of Sonata and their processing
 local _args = {

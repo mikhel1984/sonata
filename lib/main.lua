@@ -422,6 +422,12 @@ Range = function (dBegin, dEnd, dStep)
 end
 about[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', AUX}
 
+if Log then
+  about[Log] = {'Log(sFlag)',
+    "Save session into the log file. Use 'on'/'off' to start/stop logging.",
+    SonataHelp.OTHER}
+end
+
 -- save link to help info
 main.about = about
 
