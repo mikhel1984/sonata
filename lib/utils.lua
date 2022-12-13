@@ -139,7 +139,45 @@ end
 
 local utils = {
   TEMPL = '([%w_]*)%s*([^%w%s_]?)%s*',   -- var and symbol
+  NUM_FSM = {
+    ['^%d+$'] = {'%.'},
+    ['%.'] = {'^%d+$', '^%d+[eE]%d*$'},      -- use as start
+    ['^%d+[eE]%d*$'] = {'^[+-]$', '^%d+$'},
+    ['^[+-]$'] = {'^%d+$'},
+  },
+  FSM_START = '%.',
 }
+
+--- Transform sequence of strings to number.
+--  @param t Table with strings.
+--  @return Table with numbers when possible.
+utils._toNumbers = function (t)
+  local res, num = {}, {}
+  local s = utils.FSM_START
+  for _, v in ipairs(t) do
+    -- check expected element
+    local found = false
+    for _, tmpl in ipairs(utils.NUM_FSM[s]) do
+      if string.match(v, tmpl) then
+        s, found = tmpl, true
+        num[#num+1] = v
+        break
+      end
+    end
+    if not found then
+      -- save, update state
+      if #num > 0 then
+        res[#res+1] = tonumber(table.concat(num))  -- TODO process error
+        num, s = {}, utils.FSM_START
+      end
+      res[#res+1] = v
+    end
+  end
+  if #num > 0 then
+    res[#res+1] = tonumber(table.concat(num))
+  end
+  return res
+end
 
 --- Generate function from string.
 --  @param sExpr Expression for execution.
@@ -196,12 +234,10 @@ end
 utils.lex = function (s)
   local res = {}
   for x, y in string.gmatch(s, utils.TEMPL) do
-    if #x > 0 then
-      res[#res+1] = tonumber(x) or x
-    end
+    if #x > 0 then res[#res+1] = x end
     if #y > 0 then res[#res+1] = y end
   end
-  return res
+  return utils._toNumbers(res)
 end
 
 return {
