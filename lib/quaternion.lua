@@ -325,7 +325,7 @@ quaternion.fromAA = function (self, dAng, vAxe)
   return quaternion:_new({math.cos(dAng*0.5), x*d, y*d, z*d})
 end
 about[quaternion.fromAA] = {
-  'Quat:fromAA(fAng,vAxe)','Create quaternion using angle and axis.',ROTATION}
+  ':fromAA(fAng,vAxe)','Create quaternion using angle and axis.',ROTATION}
 
 --- Get quaternion from rotation matrix.
 --  @param self Do nothing.
@@ -353,7 +353,7 @@ quaternion.fromRot = function (self, M)
   end
 end
 about[quaternion.fromRot] = {
-  'Quat:fromRot(M)','Convert rotation matrix to quaternion.',ROTATION}
+  ':fromRot(M)','Convert rotation matrix to quaternion.',ROTATION}
 
 --- Get imaginary part.
 --  @param Q Quaternion.

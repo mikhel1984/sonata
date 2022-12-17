@@ -914,7 +914,7 @@ matrix.eye = function (self, iR, iC, val)
   return m
 end
 about[matrix.eye] = {
-  "Mat:eye(iRows,[iCols=iRows])", "Create identity matrix.", help.NEW}
+  ":eye(iRows,[iCols=iRows])", "Create identity matrix.", help.NEW}
 
 --- Fill matrix with some value.
 --  @param self Do nothing.
@@ -932,7 +932,7 @@ matrix.fill = function (self, iR, iC, val)
   end
   return m
 end
-about[matrix.fill] = {"Mat:fill(iRows,iCols,[val=1])",
+about[matrix.fill] = {":fill(iRows,iCols,[val=1])",
   "Create matrix of given numbers (default is 1).", help.NEW}
 
 --- Round matrix elements in place.
@@ -1392,7 +1392,7 @@ matrix.V = function (self,t)
   return matrix:_init(#t, 1, res)
 end
 about[matrix.V] = {
-  "Mat:V({...})", "Create vector from list of numbers.", help.NEW}
+  ":V({...})", "Create vector from list of numbers.", help.NEW}
 
 --- Create matrix of zeros.
 --  @param self Do nothing.
@@ -1405,7 +1405,7 @@ matrix.zeros = function (self, iR, iC)
   return matrix:_init(iR, iC, {})
 end
 about[matrix.zeros] = {
-  "Mat:zeros(rows,[cols=rows])", "Create matrix of zeros.", help.NEW}
+  ":zeros(rows,[cols=rows])", "Create matrix of zeros.", help.NEW}
 
 --- Apply function element-wise to matrices.
 --  @param self Do nothing.
@@ -1434,7 +1434,7 @@ matrix.zip = function (self, fn, ...)
   end
   return res
 end
-about[matrix.zip] = {'Mat:zip(fn,M1,M2,...)',
+about[matrix.zip] = {':zip(fn,M1,M2,...)',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
 -- constructor call

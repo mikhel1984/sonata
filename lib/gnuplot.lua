@@ -369,7 +369,7 @@ gnuplot.plot = function (self,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.plot] = {"Gp:plot(x1[,y1,nm,x2,..])",
+about[gnuplot.plot] = {":plot(x1[,y1,nm,x2,..])",
   "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Polar plot.
@@ -395,7 +395,7 @@ gnuplot.polarplot = function(self,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.polarplot] = {'Gp:polarplot(x1,y1,[nm,x2,y2..])',
+about[gnuplot.polarplot] = {':polarplot(x1,y1,[nm,x2,y2..])',
   "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Plot graphic.
@@ -451,7 +451,7 @@ gnuplot.surfplot = function(self,...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.surfplot] = {'Gp:surfplot(x1,y1,fn1,[nm,x2,y2..])',
+about[gnuplot.surfplot] = {':surfplot(x1,y1,fn1,[nm,x2,y2..])',
   "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 --- Plot table of data file.
@@ -472,7 +472,7 @@ gnuplot.tplot = function (self,v,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.tplot] = {"Gp:tplot(v[,x,y1,y2..])",
+about[gnuplot.tplot] = {":tplot(v[,x,y1,y2..])",
   "Plot table, matrix or data file. Optional elements define columns."}
 
 --- Polar plot table of data file.
@@ -494,7 +494,7 @@ gnuplot.tpolar = function (self,v,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.tpolar] = {"Gp:tpolar(v,[x,y1,y2..])",
+about[gnuplot.tpolar] = {":tpolar(v,[x,y1,y2..])",
   "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 --- Sufrace plot from table of data file.
@@ -515,7 +515,7 @@ gnuplot.tsurf = function (self,v,...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.tsurf] = {"Gp:tsurf(v,[x1,y1,z1,z2..])",
+about[gnuplot.tsurf] = {":tsurf(v,[x1,y1,z1,z2..])",
   "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor

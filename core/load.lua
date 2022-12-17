@@ -40,7 +40,7 @@ function Sonata.doimport(tbl, name)
     local lib = require('lib.'..name)
     _G[var] = lib
     -- add description
-    if lib.about then About:add(lib.about, name) end
+    if lib.about then About:add(lib.about, name, var) end
     -- do additional actions
     if lib.onImport then lib.onImport() end
   end

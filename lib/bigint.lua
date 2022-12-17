@@ -933,7 +933,7 @@ bigint.random = function (self,B)
   end
   return res
 end
-about[bigint.random] = {"Int:random(B)",
+about[bigint.random] = {":random(B)",
   "Generate pseudo-random value from 0 to B.", help.STATIC}
 
 --- Change current numeric base.

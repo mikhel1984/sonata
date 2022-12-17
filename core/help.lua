@@ -41,7 +41,8 @@ capital - object
 local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 -- internal parameters
-local TITLE, DESCRIPTION, CATEGORY = 1, 2, 3
+local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
+local COLON = string.byte(':', 1, 1)
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -105,7 +106,7 @@ end
 --  @param dst Table to store data.
 --  @param tbl Source table.
 --  @param nm Name of the module.
-help.add = function (dst, tbl, nm)
+help.add = function (dst, tbl, nm, alias)
   dst._modules[nm] = tbl
   -- update
   local lng = dst._locale[nm] or {}
@@ -113,8 +114,11 @@ help.add = function (dst, tbl, nm)
     if k == '__module__' then
       tbl[k] = lng.__module__ or v              -- translate module description
     else
-      v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION] -- translate description
+      local title = v[TITLE]
+      v[DESCRIPTION] = lng[title] or v[DESCRIPTION] -- translate description
       v[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
+      v[EXTEND] = string.byte(title, 1, 1) == COLON and 
+        alias..title or title
     end
   end
   if lng then dst._locale[nm] = nil end  -- free memory
@@ -133,7 +137,7 @@ help.findObject = function (tbl, obj, tGlob)
       return help.makeModule(mod, tGlob[nm])
     elseif mod[obj] then
       local t = mod[obj]
-      Sonata.info {'  ', Sonata.FORMAT_V1, t[TITLE], '\n', t[DESCRIPTION]}
+      Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], '\n', t[DESCRIPTION]}
     end
   end
   return nil
@@ -195,7 +199,7 @@ help.makeModule = function (t, nm)
     else
       local cat = v[CATEGORY]
       acc[cat] = acc[cat] or {}
-      table.insert(acc[cat], v[TITLE])
+      table.insert(acc[cat], v[EXTEND])
     end
   end
   -- output

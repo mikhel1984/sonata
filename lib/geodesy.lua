@@ -479,7 +479,7 @@ geodesy.__index = geodesy
 geodesy.dms2rad = function (self,d,m,s)
   return math.rad(d + (m or 0) / 60 + (s or 0) / 3600)
 end
-about[geodesy.dms2rad] = {"Geo:dms2rad(d,[m=0,s=0])",
+about[geodesy.dms2rad] = {":dms2rad(d,[m=0,s=0])",
   "Convert degrees, minutes and seconds to radians.", help.OTHER}
 
 --- Convert degrees to degrees-minutes-seconds.
@@ -492,7 +492,7 @@ geodesy.deg2dms = function (self,d)
   local sec = 3600 * (d - deg) - 60 * min
   return deg, min, sec
 end
-about[geodesy.deg2dms] = {"Geo:deg2dms(d)",
+about[geodesy.deg2dms] = {":deg2dms(d)",
   "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
 --- International gravity formula (WGS).
@@ -504,7 +504,7 @@ geodesy.grav = function (self,dB)
   s = s * s  -- get square
   return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
 end
-about[geodesy.grav] = {"Geo:grav(dB)",
+about[geodesy.grav] = {":grav(dB)",
   "International gravity formula, angle in degrees.", help.OTHER}
 
 --- Convert hash to corrdinates.
@@ -544,7 +544,7 @@ geodesy.hashDecode = function (self, sHash)
   return {B = (latMin+latMax)*0.5, L = (lonMin+lonMax)*0.5},
          {latMax - latMin, lonMax - lonMin}
 end
-about[geodesy.hashDecode] = {"Geo:hashDecode(sHash)",
+about[geodesy.hashDecode] = {":hashDecode(sHash)",
   "Find central point and range of the zone."}
 
 --- Geohash from coordinates
@@ -587,7 +587,7 @@ geodesy.hashEncode = function (self, t, N)
   return table.concat(hash)
 end
 about[geodesy.hashEncode] = {
-  "Geo:hashEncode(t[,N=6])", "Find hash for the given point."}
+  ":hashEncode(t[,N=6])", "Find hash for the given point."}
 
 -- Access to the ellipsoid object methods.
 geodesy.toXYZ = ellipsoid.toXYZ
@@ -674,7 +674,7 @@ geodesy.toENU = function (self,tG, tR, tP)
     Z = cB*cL*dx + cB*sL*dy + sB*dz
   }
 end
-about[geodesy.toENU] = {"Geo:toENU(tBLr,tXYZr,tCatr)",
+about[geodesy.toENU] = {":toENU(tBLr,tXYZr,tCatr)",
   "Get topocentric coordinates of a point in reference frame.", TRANS}
 
 --- Find cartesian coordinates of a point with topocentric coordinates.
@@ -692,7 +692,7 @@ geodesy.fromENU = function (self,tG, tR, tL)
     Z = tR.Z + cB*tL.Y + sB*tL.Z
   }
 end
-about[geodesy.fromENU] = {"Geo:fromENU(tBLr,tXYZr,tTop)",
+about[geodesy.fromENU] = {":fromENU(tBLr,tXYZr,tTop)",
   "Get cartesian coordinates of a local point in reference frame.", TRANS}
 
 -- Comment to remove descriptions

@@ -377,7 +377,7 @@ rational.from = function (self, f, fErr)
   end
   return rational:_new(f >= 0 and a or -a, b)
 end
-about[rational.from] = {"Rat:from(f,[fErr=1E-3])",
+about[rational.from] = {":from(f,[fErr=1E-3])",
   "Estimate ratio from floating point value.", help.NEW}
 
 --- Get rational number from continued fraction coefficients.
@@ -404,7 +404,7 @@ rational.fromCont = function (self, t)
   end
   return rational._new(rational._cont2rat(check))
 end
-about[rational.fromCont] = {"Rat:fromCont(t)",
+about[rational.fromCont] = {":fromCont(t)",
   "Transform continued fraction to rational number.", help.NEW}
 
 --- The greatest common divisor.
@@ -415,7 +415,7 @@ about[rational.fromCont] = {"Rat:fromCont(t)",
 rational.gcd = function (self,va,vb)
   return Cross.eq(va,0) and vb or rational:gcd(vb % va, va)
 end
-about[rational.gcd] = {"Rat:gcd(va,vb)",
+about[rational.gcd] = {":gcd(va,vb)",
   "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Get numerator.

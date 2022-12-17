@@ -494,7 +494,7 @@ polynomial.build = function (self,...)
   end
   return res
 end
-about[polynomial.build] = {"Poly:build(root1,root2,...)",
+about[polynomial.build] = {":build(root1,root2,...)",
   "Return polynomial with given roots.", help.OTHER}
 
 --- Find characteristic polinomial for the matrix.
@@ -508,7 +508,7 @@ polynomial.char = function (self, M)
   end
   return m:minor(0,0)
 end
-about[polynomial.char] = {"Poly:char(M)",
+about[polynomial.char] = {":char(M)",
   "Return characteristic polinomial for the given matrix."}
 
 --- Create copy of object.
@@ -578,7 +578,7 @@ polynomial.fit = function (self,tX,tY,N)
   return polynomial._reorder(res)
 end
 about[polynomial.fit] = {
-  "Poly:fit(tX,tY,N)", "Find polynomial approximation for the line.", FIT}
+  ":fit(tX,tY,N)", "Find polynomial approximation for the line.", FIT}
 
 --- Get integral.
 --  @param P Initial polynomial.
@@ -620,7 +620,7 @@ polynomial.lagrange = function (self,tX,tY)
   end
   return numpoly(reduce(res))
 end
-about[polynomial.lagrange] = {"Poly:lagrange(tX,tY)",
+about[polynomial.lagrange] = {":lagrange(tX,tY)",
   "Find interpolation polynomial in the Lagrange form.", FIT}
 
 --- Linear data interpolation.
@@ -641,7 +641,7 @@ polynomial.lin = function (self, tX, tY, v0, vN)
   if v0 then res[#res+1] = { xp+1, polynomial:_init({[0] = vN or v0}) } end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.lin] = {"Poly:lin(tX,tY,[v0=0,vN=v0])",
+about[polynomial.lin] = {":lin(tX,tY,[v0=0,vN=v0])",
   "Linear data interpolation. Return table with polynomials.", FIT}
 
 --- Evaluate value for table of polynomials (piecewise polynomial).
@@ -670,7 +670,7 @@ polynomial.ppval = function (self,tP, d, N)
     return polynomial:ppval(tP, d, N)
   end
 end
-about[polynomial.ppval] = {"Poly:ppval(tP,d,[N]",
+about[polynomial.ppval] = {":ppval(tP,d,[N]",
   "Return value of a piecewise polynomial in the point and the polynomial index.",
   FIT}
 
@@ -790,7 +790,7 @@ polynomial.spline = function (self, tX, tY)
   end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.spline] = {"Poly:spline(tX,tY)",
+about[polynomial.spline] = {":spline(tX,tY)",
   "Cubic spline data interpolation. Return table with polynomials.", FIT}
 
 --- Represent polynomial in "natural" form.
@@ -833,7 +833,7 @@ polynomial.taylor = function (self,v,vF,...)
   return numpoly(res)
 end
 about[polynomial.taylor] = {
-  "Poly:taylor(v,vF,[vF',vF''..])", "Get Taylor series.", FIT}
+  ":taylor(v,vF,[vF',vF''..])", "Get Taylor series.", FIT}
 
 --- Polynomial value.
 --  Can be called with ().

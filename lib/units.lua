@@ -586,7 +586,7 @@ units.setRule = function (self, s, U)
   assert(isunits(U), 'Units object is expected!')
   self._rules[s] = U
 end
-about[units.setRule] = {'Unit:setRule(s,U)', 'Add new rule for conversation.'}
+about[units.setRule] = {':setRule(s,U)', 'Add new rule for conversation.'}
 
 --- Value of the unit object.
 --  The same as #U.

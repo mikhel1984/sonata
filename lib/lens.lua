@@ -200,7 +200,7 @@ lens.afocal = function (self, dm)
   return lens:_init({dm, 0, 0, 1/dm})
 end
 about[lens.afocal] = {
-  "Lens:afocal(dm)", "Find matrix for the afocal system.", help.NEW}
+  ":afocal(dm)", "Find matrix for the afocal system.", help.NEW}
 
 --- Find Gaussian beam parameters after transformation.
 --  @param L Lens object.
@@ -244,7 +244,7 @@ lens.gaussParam = function (self, dW0, dLam)
   local t = math.pi * dW0 / dLam
   return 1/t, t * dW0
 end
-about[lens.gaussParam] = {"Lens:gausParam(dW0,dLam)",
+about[lens.gaussParam] = {":gausParam(dW0,dLam)",
   "Find divergence angle and Raileigh range for a Gaussian beam.", LASER}
 
 --- Find Gaussian beam propagation.
@@ -257,7 +257,7 @@ lens.gaussSize = function (self, dW0, dLam, dist)
   local t = (math.pi * dW0 * dW0 / dLam / dist) ^ 2
   return dW0 * math.sqrt(1 + 1/t), dist * (1 + t)
 end
-about[lens.gaussSize] = {"Lens:gaussSize(dW0,dLam,dist)",
+about[lens.gaussSize] = {":gaussSize(dW0,dLam,dist)",
   "Find Gaussian beam radius and curvature at some distance.", LASER}
 
 --- Inverse the component matrix.
@@ -286,7 +286,7 @@ about[lens.isUnit] = {
 lens.mirror = function (self, dr, dn)
   return lens:_init({ 1, 0, 2*dn/dr, 1 })
 end
-about[lens.mirror] = {"Lens:mirror(dr,dn)",
+about[lens.mirror] = {":mirror(dr,dn)",
   "Find reflection matrix for the given radius and refractive index.",
   help.NEW}
 
@@ -299,7 +299,7 @@ about[lens.mirror] = {"Lens:mirror(dr,dn)",
 lens.ref = function (self, dr, dn1, dn2)
   return lens:_init({ 1,  0, -(dn2-dn1)/dr, 1 })
 end
-about[lens.ref] = {"Lens:ref(dr,dn1,dn2)",
+about[lens.ref] = {":ref(dr,dn1,dn2)",
   "Find refraction matrix for the given radius of surface and input and output refractive indeces.",
   help.NEW}
 
@@ -320,7 +320,7 @@ lens.solve = function (self, fn, ind, d0)
   -- try to solve
   return lens.ext_numeric:newton(eqn, d0)
 end
-about[lens.solve] = {"Lens:solve(fn,ind,d0)",
+about[lens.solve] = {":solve(fn,ind,d0)",
   "Find condition when component with the given index is equal to 0, d0 is the initial assumption."}
 
 --- Make component for a thin lens.
@@ -330,7 +330,7 @@ about[lens.solve] = {"Lens:solve(fn,ind,d0)",
 lens.thin = function (self,df)
   return lens:_init({ 1, 0, -1/df, 1 })
 end
-about[lens.thin] = {"Lens:thin(df)",
+about[lens.thin] = {":thin(df)",
   "Find the thin lens system matrix for the given focal distance.", help.NEW}
 
 --- Make component for translation.
@@ -341,7 +341,7 @@ about[lens.thin] = {"Lens:thin(df)",
 lens.trans = function (self, dt, dn)
   return lens:_init({ 1, dt/dn, 0, 1 })
 end
-about[lens.trans] = {"Lens:trans(dt,dn)",
+about[lens.trans] = {":trans(dt,dn)",
   "Find translation matrix for the given distance and refractive index.",
   help.NEW}
 

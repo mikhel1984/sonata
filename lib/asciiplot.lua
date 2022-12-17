@@ -762,7 +762,7 @@ asciiplot.concat = function (self, ...)
   for i = 1, #acc do acc[i] = table.concat(acc[i]) end
   return table.concat(acc, '\n')
 end
-about[asciiplot.concat] = {"Ap:concat(...)",
+about[asciiplot.concat] = {":concat(...)",
   "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.",
   help.STATIC}
 

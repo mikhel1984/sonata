@@ -149,7 +149,7 @@ const.add = function (self,sName,val,sUnit)
   _user[sName..'_u_'] = sUnit
   return 'Done'
 end
-about[const.add] = {'_C:add(sName,value,[sUnits])','Create new constant.'}
+about[const.add] = {':add(sName,value,[sUnits])','Create new constant.'}
 
 --- Remove existing constant.
 --  @param self Do nothing.
@@ -161,7 +161,7 @@ const.remove = function (self,sName)
     return 'Done'
   end
 end
-about[const.remove] = {'_C:remove(sName)','Delete user-defined constant.'}
+about[const.remove] = {':remove(sName)','Delete user-defined constant.'}
 
 -- Comment to remove descriptions
 const.about = about

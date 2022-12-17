@@ -115,7 +115,7 @@ numeric.der = function (self, fn, d)
   return der
 end
 about[numeric.der] = {
-  "Num:der(fn,x)", "Calculate the derivative value for given function."}
+  ":der(fn,x)", "Calculate the derivative value for given function."}
 
 --- Another solution based on Newton's rule.
 --  @param self Do nothing.
@@ -133,7 +133,7 @@ numeric.newton = function (self, fn, d1)
   until math.abs(fn(x2)-fd1) < numeric.TOL
   return x2
 end
-about[numeric.newton] = {"Num:newton(fn,d0)",
+about[numeric.newton] = {":newton(fn,d0)",
   "Find root of equation using Newton's rule with only one initial condition."}
 
 --- Differential equation solution (Runge-Kutta method).
@@ -180,7 +180,7 @@ numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
   end
   return res, res[#res][2]
 end
-about[numeric.ode45] = {"Num:ode45(fn,tDelta,y0,[param])",
+about[numeric.ode45] = {":ode45(fn,tDelta,y0,[param])",
   "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
 --- Find root of equation at the given interval.
@@ -199,7 +199,7 @@ numeric.solve = function (self, fn, dA, dB)
   return dB
 end
 about[numeric.solve] = {
-  "Num:solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
+  ":solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Integration using trapeze method.
 --  @param self Do nothing.
@@ -232,7 +232,7 @@ numeric.trapez = function (self, fn, dA, dB)
   return I
 end
 about[numeric.trapez] = {
-  "Num:trapez(fn,a,b)", "Get integral using trapezoidal rule."}
+  ":trapez(fn,a,b)", "Get integral using trapezoidal rule."}
 
 -- Comment to remove descriptions
 numeric.about = about

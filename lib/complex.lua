@@ -463,7 +463,7 @@ complex.i = function (self, v)
   assert(type(v) == 'number' or type(v) == 'table' and v.float, "Wrong number")
   return complex:_init(0, v)
 end
-about[complex.i] = {"_Z:i([v=1])", "Return v*i.", help.STATIC}
+about[complex.i] = {":i([v=1])", "Return v*i.", help.STATIC}
 
 --- Get imaginary part.
 --  @param C Complex number.
@@ -564,7 +564,7 @@ about[complex.tanh] = {
 complex.trig = function (self,vMod,vArg)
   return complex:_init(vMod*fcos(vArg), vMod*fsin(vArg))
 end
-about[complex.trig] = {"_Z:trig(vModule,vAngle)",
+about[complex.trig] = {":trig(vModule,vAngle)",
   "Create complex number using module and angle.", help.STATIC}
 
 -- simplify constructor call

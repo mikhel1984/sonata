@@ -385,7 +385,7 @@ array.zip = function (self, fn, ...)
   end
   return res
 end
-about[array.zip] = {"Arr:zip(fn, ...)",
+about[array.zip] = {":zip(fn, ...)",
   "Apply function of several arguments. Return new array.", help.STATIC}
 
 -- Constructor
