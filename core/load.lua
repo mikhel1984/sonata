@@ -93,18 +93,6 @@ help = function(v)
     res = About:makeFull(use)
   end
   return Sonata.inLua and Sonata._toText(res) or res
-  --[[
-    if fn == use then
-      return use()
-    else
-      local res = About:make(type(fn)=='table' and fn.about or fn)
-      return Sonata.inLua and Sonata._toText(res) or res
-    end
-  else
-    local res = About:make(About)
-    return Sonata.inLua and Sonata._toText(res) or res
-  end
-  ]]
 end
 
 --- Session logging.

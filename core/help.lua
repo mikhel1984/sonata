@@ -134,8 +134,10 @@ help.findObject = function (tbl, obj, tGlob)
   local hlp_module = (type(obj) == 'table') and obj.about
   for nm, mod in pairs(tbl._modules) do
     if mod == hlp_module then
+      -- module description
       return help.makeModule(mod, tGlob[nm])
     elseif mod[obj] then
+      -- function description
       local t = mod[obj]
       Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], '\n', t[DESCRIPTION]}
     end
