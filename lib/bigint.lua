@@ -890,6 +890,7 @@ end
 about[bigint.gcd] = {
   "gcd(B)", "Find the greatest common divisor for two integers.", NUMB}
 
+-- TODO try https://en.wikipedia.org/wiki/Primality_test
 --- Check if the number is prime.
 --  @param B Number.
 --  @param sMethod Trivial search by default. Can be 'Fremat'.
