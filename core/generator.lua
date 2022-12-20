@@ -12,7 +12,7 @@ local Help = require('core.help')
 
 --	LOCAL
 
-local TITLE, DESCRIPTION, CATEGORY = 1, 2, 3
+local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
 local S10 = string.rep('-', 10)
 
 local LIB = (SONATA_ADD_PATH or '')..'lib'
@@ -37,7 +37,7 @@ local function docLines(module, alias, lng)
     else
       local title = elt[TITLE]
       local desc = lng_t[title] or elt[DESCRIPTION]
-      fn[#fn+1] = {title, string.gsub(desc, '\n', '<br>\n')}
+      fn[#fn+1] = {Help._toExtend(title, alias), string.gsub(desc, '\n', '<br>\n')}
     end
   end
   -- sort

@@ -102,6 +102,14 @@ end
 
 --================== Function help system ==================
 
+--- Extend function name if need.
+--  @param nm Name.
+--  @param alias Module alias name.
+--  @return 'name' or 'alias:name'
+help._toExtend = function(nm, alias)
+  return string.byte(nm, 1, 1) == COLON and alias..nm or nm
+end
+
 --- Include content of the other help table into current one.
 --  @param dst Table to store data.
 --  @param tbl Source table.
@@ -117,8 +125,7 @@ help.add = function (dst, tbl, nm, alias)
       local title = v[TITLE]
       v[DESCRIPTION] = lng[title] or v[DESCRIPTION] -- translate description
       v[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
-      v[EXTEND] = string.byte(title, 1, 1) == COLON and 
-        alias..title or title
+      v[EXTEND] = help._toExtend(title, alias)
     end
   end
   if lng then dst._locale[nm] = nil end  -- free memory
