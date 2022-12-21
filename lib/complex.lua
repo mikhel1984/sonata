@@ -578,9 +578,8 @@ __call = function (self, re, im)
     "Wrong imaginary part")
   return complex:_init(re,im)
 end })
-complex._Z = '_Z'
-about[complex._Z] = {
-  "_Z([vRe=0,vIm=0])", "Create new complex number.", help.STATIC}
+about[complex] = {
+  " ([vRe=0,vIm=0])", "Create new complex number.", help.STATIC}
 
 --- Function for execution during the module import.
 complex.onImport = function ()

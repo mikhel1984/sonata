@@ -411,8 +411,7 @@ __call = function (self,t)
   assert(#t == 4)
   return lens:_init(t)
 end})
-lens.Lens = 'Lens'
-about[lens.Lens] = {"Lens {dA,dB,dC,dD}", "Make new lens component.", help.NEW}
+about[lens] = {" {dA,dB,dC,dD}", "Make new lens component.", help.NEW}
 
 -- Comment to remove descriptions
 lens.about = about

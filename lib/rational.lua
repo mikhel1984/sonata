@@ -458,9 +458,8 @@ __call = function (self, n, d)
   assert(not Cross.eq(d,0), "Wrond denomenator value")
   return rational:_new(n,d)
 end})
-rational.Rat = 'Rat'
-about[rational.Rat] = {
-  "Rat(m,[n=1])", "Create rational number using num (and denom).", help.NEW}
+about[rational] = {
+  " (m,[n=1])", "Create rational number using num (and denom).", help.NEW}
 
 -- Comment to remove descriptions
 rational.about = about

@@ -515,8 +515,7 @@ setmetatable(quaternion,
 end
 })
 
-quaternion.Quat = 'Quat'
-about[quaternion.Quat] = {"Quat {w,x,y,z}", "Create new quaternion.", help.NEW}
+about[quaternion] = {" {w,x,y,z}", "Create new quaternion.", help.NEW}
 
 -- Comment to remove descriptions
 quaternion.about = about

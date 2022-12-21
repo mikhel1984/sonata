@@ -520,8 +520,7 @@ about[gnuplot.tsurf] = {":tsurf(v,[x1,y1,z1,z2..])",
 
 -- constructor
 setmetatable(gnuplot, {__call=function (self) return gnuplot:_init() end})
-gnuplot.Gp = 'Gp'
-about[gnuplot.Gp] = {"Gp()", "Prepare Gnuplot object.", help.NEW}
+about[gnuplot] = {" ()", "Prepare Gnuplot object.", help.NEW}
 
 gnuplot.keys = 'keys'
 about[gnuplot.keys] = {'keys',

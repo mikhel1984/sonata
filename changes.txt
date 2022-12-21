@@ -4,6 +4,9 @@ Asciiplot
 * Sufrace contours
 Other
 * Add 'symbolical' module
+* Allow arbitrary aliases for modules
+* Refactoring
+* Bug fixes
 
 ======== 0.9.32 =========
 

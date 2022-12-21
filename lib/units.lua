@@ -607,9 +607,8 @@ __call = function (self,v,s)
   assert(type(s) == 'string', 'Wrong unit type')
   return units:_new(v, s)
 end})
-units.Unit = 'Unit'
-about[units.Unit] = {
-  'Unit([v,]s)', 'Create new elements with units.', help.NEW}
+about[units] = {
+  ' ([v,]s)', 'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions
 units.about = about

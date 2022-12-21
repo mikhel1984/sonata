@@ -536,8 +536,7 @@ graph.__len = graph.size
 
 -- simplify constructor call
 setmetatable(graph, {__call = function (self,v) return graph:_new(v) end})
-graph.Graph = 'Graph'
-about[graph.Graph] = {"Graph {v1,v2,..}", "Create new graph.", help.NEW}
+about[graph] = {" {v1,v2,..}", "Create new graph.", help.NEW}
 
 -- Comment to remove descriptions
 graph.about = about

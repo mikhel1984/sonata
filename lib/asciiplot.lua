@@ -973,9 +973,8 @@ setmetatable(asciiplot, {
 __call = function (self,w,h)
   return asciiplot:_new(w,h)
 end})
-asciiplot.Ap = 'Ap'
-about[asciiplot.Ap] = {
-  "Ap([iWidth=75,iHeight=23])", "Create new asciiplot.", help.STATIC}
+about[asciiplot] = {
+  " ([iWidth=75,iHeight=23])", "Create new asciiplot.", help.STATIC}
 
 -- Export funcitons.
 asciiplot.onImport = function ()

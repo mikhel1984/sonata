@@ -887,8 +887,7 @@ __call = function (self,v)
   end
   error("Wrong argument "..tostring(v))
 end})
-symbolic.Sym = 'Sym'
-about[symbolic.Sym] = {"Sym(v)", "Create new symbolic variable.", help.NEW}
+about[symbolic] = {" (v)", "Create new symbolic variable.", help.NEW}
 
 -- Comment to remove descriptions
 symbolic.about = about

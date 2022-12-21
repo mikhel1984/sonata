@@ -399,8 +399,8 @@ setmetatable(array, {__call = function (self, tSize)
   -- build
   return array:_new(tSize)
 end})
-array.Arr = 'Arr'
-about[array.Arr] = {"Arr {n1,n2,..}",
+
+about[array] = {" {n1,n2,..}",
   "Create empty array with the given size.", help.STATIC}
 
 -- Comment to remove descriptions

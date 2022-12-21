@@ -42,7 +42,7 @@ local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
-local COLON = string.byte(':', 1, 1)
+local COLON, SPACE = string.byte(':', 1, 1), string.byte(' ', 1, 1)
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -107,7 +107,8 @@ end
 --  @param alias Module alias name.
 --  @return 'name' or 'alias:name'
 help._toExtend = function(nm, alias)
-  return string.byte(nm, 1, 1) == COLON and alias..nm or nm
+  local b = string.byte(nm, 1, 1)
+  return (b == COLON or b == SPACE) and alias..nm or nm
 end
 
 --- Include content of the other help table into current one.
@@ -138,15 +139,15 @@ end
 --  @return Description or nil.
 help.findObject = function (tbl, obj, tGlob)
   -- check module
-  local hlp_module = (type(obj) == 'table') and obj.about
+  local str = type(obj) == 'string'
   for nm, mod in pairs(tbl._modules) do
-    if mod == hlp_module then
+    if str and (nm == obj or tGlob[nm] == obj) then
       -- module description
       return help.makeModule(mod, tGlob[nm])
     elseif mod[obj] then
       -- function description
       local t = mod[obj]
-      Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], '\n', t[DESCRIPTION]}
+      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], '\n', t[DESCRIPTION]}
     end
   end
   return nil

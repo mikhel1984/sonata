@@ -1439,8 +1439,7 @@ about[matrix.zip] = {':zip(fn,M1,M2,...)',
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new(m) end})
-matrix.Mat = 'Mat'
-about[matrix.Mat] = {"Mat {tRow1,tRow2,..}",
+about[matrix] = {" {tRow1,tRow2,..}",
   "Create matrix from list of strings (tables).", help.NEW}
 
 -- Comment to remove descriptions
