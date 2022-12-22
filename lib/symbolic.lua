@@ -45,6 +45,11 @@ ans = foo(Sym(2), Sym(3)) --> Sym(8)
 
 --	LOCAL
 
+local Ver = require('lib.utils')
+local Cross = Ver.cross
+local Utils = Ver.utils
+Ver = Ver.versions
+
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is symbolic.
@@ -305,6 +310,108 @@ local PARENTS = {
   }
   ]]
 } -- PARENTS
+
+-- Parser elements
+PARSER = {} 
+
+--- Parse coma separated elements.
+--  @param lst List with tokens.
+--  @param n Element index.
+--  @return Table and next index.
+PARSER.args = function (lst, n)
+  local t = {}
+  t[1], n = PARSER.sum(lst, n)
+  while lst[n] == ',' do
+    t[#t+1], n = PARSER.sum(lst, n+1) 
+  end
+  return t, n
+end
+
+--- Parse sum or difference.
+--  @param lst List with tokens.
+--  @param n Element index.
+--  @return Table and next index.
+PARSER.sum = function (lst, n)
+  local res, n = PARSER.prod(lst, n)
+  while true do
+    if lst[n] == '+' then 
+      local tmp, m = PARSER.prod(lst, n+1)
+      res, n = res + tmp, m
+    elseif lst[n] == '-' then
+      local tmp, m = PARSER.prod(lst, n+1)
+      res, n = res - tmp, m
+    else break end
+  end
+  return res, n
+end
+
+--- Parse product or ratio.
+--  @param lst List with tokens.
+--  @param n Element index.
+--  @return Table and next index.
+PARSER.prod = function (lst, n)
+  local res, n = PARSER.pow(lst, n)
+  while true do 
+    if lst[n] == '*' then 
+      local tmp, m = PARSER.pow(lst, n+1)
+      res, n = res * tmp, m
+    elseif lst[n] == '/' then
+      local tmp, m = PARSER.pow(lst, n+1)
+      res, n = res / tmp, m
+    else break end
+  end
+  return res, n
+end
+
+--- Parse power.
+--  @param lst List with tokens.
+--  @param n Element index.
+--  @return Table and next index.
+PARSER.pow = function (lst, n)
+  local res, n = PARSER.prim(lst, n)
+  if lst[n] == '^' then  -- TODO add **
+    local tmp, m = PARSER.prim(lst, n+1)
+    res, n = res ^ tmp, m
+  end
+  return res, n
+end
+
+--- Parse number, symbol or function.
+--  @param lst List with tokens.
+--  @param n Element index.
+--  @return Table and next index.
+PARSER.prim = function (lst, n)
+  local v = lst[n]
+  if type(v) == 'number' then
+    return symbolic:_newConst(v), n+1
+  elseif v == '(' then
+    local res, n = PARSER.sum(lst, n+1)
+    if lst[n] ~= ')' then error("expected ')'") end
+    return res, n+1
+  elseif v == '-' then
+    local res, n = PARSER.prod(lst, n+1)
+    return -res, n
+  elseif string.find(v, '^[%a_]') ~= nil then
+    if lst[n+1] == '(' then
+      local t = nil
+      if lst[n+2] == ')' then
+        t, n = {}, n+2
+      else
+        t, n = PARSER.args(lst, n+2)
+      end
+      if lst[n] ~= ')' then error("expected ')'") end
+      table.insert(t, 1, symbolic:_newFunc(v))
+      return symbolic:_newExpr(PARENTS.funcValue, t), n+1
+    else
+      return symbolic:_newSymbol(v), n+1
+    end
+  else
+    error("unexpected symbol "..v)
+  end
+  return nil, n
+end
+
+
 
 --- List of elements for printing in brackets.
 COMMON.closed = {
@@ -867,6 +974,21 @@ end
 --  @return Variable name.
 symbolic.name = function (S)
   return S._parent == PARENTS.symbol and S._ or nil
+end
+
+--- Get symbolic expression from string.
+--  @param self Do nothing.
+--  @param str Expression string.
+--  @return One or several symbolic elements.
+symbolic.parse = function(self, str)
+  local tokens = Utils.lex(str)
+  assert(#tokens > 0)
+  local res = PARSER.args(tokens, 1)
+  if issymbolic(res) then
+    return res
+  else
+    return table.unpack(res)
+  end
 end
 
 --- Get value of constant.
