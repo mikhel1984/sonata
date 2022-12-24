@@ -267,6 +267,10 @@ local function addRow(t,i)
   return row
 end
 
+local function sign(d)
+  return (d > 0) and 1 or (d < 0) and -1 or 0
+end
+
 local TRANSFORM = 'transform'
 
 --	INFO
@@ -1436,6 +1440,151 @@ matrix.zip = function (self, fn, ...)
 end
 about[matrix.zip] = {':zip(fn,M1,M2,...)',
   'Apply function to the given matrices element-wise.', TRANSFORM}
+  
+
+-- Given's rotation.
+--    <i>Private function.</i>
+--    @return cos, sin
+matrix._givensRot0 = function (d1, d2)
+   -- return cos, sin; r is omitted
+   if d2 == 0 then
+     local c = sign(d1)
+     return (c == 0) and 1 or c, 0
+   elseif d1 == 0 then
+     return 0, sign(d2)
+   elseif math.abs(d1) > math.abs(d2) then
+     local t = d2 / d1
+     local u = sign(d1) * math.sqrt(1 + t*t)
+     return 1 / u, t / u
+   else
+     local t = d1 / d2
+     local u = sign(d2) * math.sqrt(1 + t*t)
+     return t / u, 1 / u
+   end
+   --[[
+   if f == 0 then
+      return 0, 1
+   elseif math.abs(f) > math.abs(g) then
+      local t = g / f
+      local t1 = math.sqrt(1 + t*t)
+      return 1/t1, t/t1
+   else
+      local t = f / g
+      local t1 = math.sqrt(1 + t*t)
+      return t/t1, 1/t1
+   end
+   ]]
+end
+
+matrix._householder = function (x, k)
+  local n = x._rows
+  local u = matrix:zeros(n, 1)
+  local sum = 0
+  for i = k, n do sum = sum + x[i][1]^2 end
+  u[k][1] = x[k][1] + sign(x[k][1]) * math.sqrt(sum)
+  -- copy rest
+  for i = k+1, n do u[i][1] = x[i][1] end
+  return matrix:eye(n) - (2 / u:dot(u)) * (u * u:T())
+end
+
+matrix._bidiagReduction = function (A)
+  local m, n = A._rows, A._cols
+  local B = matrix.copy(A)
+  local U, V = matrix:eye(m), matrix:eye(n)
+  for k = 1, math.min(m, n) do
+    -- set zero to column elements
+    local H1 = matrix._householder(B:range({1,-1},{k}), k)
+    B = H1 * B
+    U = U * H1:T()
+    if k < (math.min(m, n) - 1) then
+      local H2 = matrix._householder(B:range({k},{1,-1}):T(), k+1)
+      B = B * H2:T()
+      V = V * H2:T()
+    end
+  end
+  return U, B, V
+end
+
+matrix._givensRot = function (f, g)
+  local c, s, r = 0, 1, g
+  if f == 0 then
+    -- do nothing
+  elseif math.abs(f) > math.abs(g) then
+    local t = g / f
+    local t1 = math.sqrt(1 + t*t)
+    c = 1 / t1
+    s, r = t * c, f * t1
+  else
+    local t = f / g
+    local t1 = math.sqrt(1 + t*t)
+    s = 1 / t1
+    c, r = t * s, g * t1
+  end
+  return c, s, r
+end
+
+matrix._qrSweep = function (B)
+  local m, n = B._rows, B._cols 
+  local U, V = matrix:eye(m), matrix:eye(n)
+  local M = math.min(m, n)
+  for k = 1, M-1 do
+    c, s = matrix._givensRot(B[k][k], B[k][k+1])
+    local Q = matrix:eye(n)
+    Q:insert({k,k+1},{k,k+1}, matrix {{c,s},{-s,c}})
+    B = B * Q:T()
+    V = V * Q:T()
+    -- TODO use 'round'
+    for i = 1, B._rows do
+      for j = 1, B._cols do
+        if math.abs(B[i][j]) < 1E-13 then B[i][j] = 0 end
+      end
+    end
+    -- B can be checked here...
+    c, s = matrix._givensRot0(B[k][k], B[k+1][k])
+    Q = matrix:eye(m)
+    Q:insert({k,k+1},{k,k+1}, matrix {{c,s},{-s,c}})
+    B = Q * B
+    U = U * Q:T()
+    for i = 1, B._rows do
+      for j = 1, B._cols do
+        if math.abs(B[i][j]) < 1E-13 then B[i][j] = 0 end
+      end
+    end
+  end
+  local I = matrix:zeros(m, n)
+  local tmp = matrix:eye(M+1):range({2,M+1},{1,M})  -- shift ones to one line
+  I:insert({1,M},{1,M}, tmp)
+  local E = 0
+  for i = 1, B._rows do
+    for j = 1, B._cols do
+      E = E + math.abs(I[i][j] * B[i][j])
+    end
+  end
+  return U, B, V, E
+end
+
+matrix.svd = function (A)
+  local transpose = A._rows < A._cols
+  if transpose then A = A:T() end
+  local U1, B, V1 = matrix._bidiagReduction(A)
+  local U2 = matrix:eye(U1)
+  local V2 = matrix:eye(V1)
+  local E, U3, V3 = math.huge, nil, nil
+  while E > 1E-8 do
+    U3, B, V3, E = matrix._qrSweep(B)
+    U2 = U2 * U3
+    V2 = V2 * V3
+  end
+  U1 = U1 * U2
+  V1 = V1 * V2
+  if transpose then
+    U1, B, V1 = V1, B:T(), U1
+  end
+  -- clear non-diagonal 
+  local B1 = matrix:zeros(B._rows, B._cols)
+  for i = 1, math.min(B._rows, B._cols) do B1[i][i] = B[i][i] end
+  return U1, B1, V1
+end
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new(m) end})
