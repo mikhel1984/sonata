@@ -1443,37 +1443,23 @@ about[matrix.zip] = {':zip(fn,M1,M2,...)',
   
 
 -- Given's rotation.
---    <i>Private function.</i>
---    @return cos, sin
+--    @return cos, sin, r
 matrix._givensRot0 = function (d1, d2)
    -- return cos, sin; r is omitted
    if d2 == 0 then
      local c = sign(d1)
-     return (c == 0) and 1 or c, 0
+     return (c == 0) and 1 or c, 0, math.abs(d1)
    elseif d1 == 0 then
-     return 0, sign(d2)
+     return 0, sign(d2), math.abs(d2)
    elseif math.abs(d1) > math.abs(d2) then
      local t = d2 / d1
      local u = sign(d1) * math.sqrt(1 + t*t)
-     return 1 / u, t / u
+     return 1 / u, t / u, d1 * u
    else
      local t = d1 / d2
      local u = sign(d2) * math.sqrt(1 + t*t)
-     return t / u, 1 / u
+     return t / u, 1 / u, d2 * u
    end
-   --[[
-   if f == 0 then
-      return 0, 1
-   elseif math.abs(f) > math.abs(g) then
-      local t = g / f
-      local t1 = math.sqrt(1 + t*t)
-      return 1/t1, t/t1
-   else
-      local t = f / g
-      local t1 = math.sqrt(1 + t*t)
-      return t/t1, 1/t1
-   end
-   ]]
 end
 
 matrix._householder = function (x, k)
@@ -1540,7 +1526,7 @@ matrix._qrSweep = function (B)
       end
     end
     -- B can be checked here...
-    c, s = matrix._givensRot0(B[k][k], B[k+1][k])
+    c, s = matrix._givensRot(B[k][k], B[k+1][k])
     Q = matrix:eye(m)
     Q:insert({k,k+1},{k,k+1}, matrix {{c,s},{-s,c}})
     B = Q * B
@@ -1580,9 +1566,16 @@ matrix.svd = function (A)
   if transpose then
     U1, B, V1 = V1, B:T(), U1
   end
-  -- clear non-diagonal 
+  -- correct
   local B1 = matrix:zeros(B._rows, B._cols)
-  for i = 1, math.min(B._rows, B._cols) do B1[i][i] = B[i][i] end
+  for i = 1, math.min(B._rows, B._cols) do 
+    local s = B[i][i]
+    if s < 0 then
+      s = -s
+      V1:insert({1,-1},{i}, -V1:range({1,-1},{i}))
+    end
+    B1[i][i] = s
+  end
   return U1, B1, V1
 end
 
