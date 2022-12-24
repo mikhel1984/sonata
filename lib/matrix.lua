@@ -1444,7 +1444,7 @@ about[matrix.zip] = {':zip(fn,M1,M2,...)',
 
 -- Given's rotation.
 --    @return cos, sin, r
-matrix._givensRot0 = function (d1, d2)
+matrix.givensRot = function (d1, d2)
    -- return cos, sin; r is omitted
    if d2 == 0 then
      local c = sign(d1)
@@ -1474,39 +1474,19 @@ matrix._householder = function (x, k)
 end
 
 matrix._bidiagReduction = function (A)
-  local m, n = A._rows, A._cols
-  local B = matrix.copy(A)
+  local m, n, B = A._rows, A._cols, A
   local U, V = matrix:eye(m), matrix:eye(n)
-  for k = 1, math.min(m, n) do
+  local w = math.min(m, n)
+  for k = 1, w do
     -- set zero to column elements
-    local H1 = matrix._householder(B:range({1,-1},{k}), k)
-    B = H1 * B
-    U = U * H1:T()
-    if k < (math.min(m, n) - 1) then
-      local H2 = matrix._householder(B:range({k},{1,-1}):T(), k+1)
-      B = B * H2:T()
-      V = V * H2:T()
+    local H1 = matrix._householder(B:range({1,m}, {k}), k)
+    U, B = U * H1:T(), H1 * B
+    if k < (w - 1) then
+      local H2 = matrix._householder(B:range({k}, {1,n}):T(), k+1):T()
+      B, V = B * H2, V * H2    -- H2 is transposed!
     end
   end
   return U, B, V
-end
-
-matrix._givensRot = function (f, g)
-  local c, s, r = 0, 1, g
-  if f == 0 then
-    -- do nothing
-  elseif math.abs(f) > math.abs(g) then
-    local t = g / f
-    local t1 = math.sqrt(1 + t*t)
-    c = 1 / t1
-    s, r = t * c, f * t1
-  else
-    local t = f / g
-    local t1 = math.sqrt(1 + t*t)
-    s = 1 / t1
-    c, r = t * s, g * t1
-  end
-  return c, s, r
 end
 
 matrix._clearLess = function (M, dTol)
@@ -1523,16 +1503,16 @@ matrix._qrSweep = function (B)
   local w, TOL = math.min(m, n), 1E-13
   for k = 1, w-1 do
     -- V
-    local c, s = matrix._givensRot(B[k][k], B[k][k+1])
+    local c, s = matrix.givensRot(B[k][k], B[k][k+1])
     local Q = matrix:eye(n)    
-    Q[k][k]   = c; Q[k][k+1]   = -s
-    Q[k+1][k] = s; Q[k+1][k+1] = c
+    Q[k  ][k] = c; Q[k  ][k+1] = -s
+    Q[k+1][k] = s; Q[k+1][k+1] =  c
     B, V = B * Q, V * Q       -- Q is transposed!
     matrix._clearLess(B, TOL)
     -- U
-    c, s = matrix._givensRot(B[k][k], B[k+1][k])
+    c, s = matrix.givensRot(B[k][k], B[k+1][k])
     Q = matrix:eye(m)
-    Q[k][k]   =  c; Q[k][k+1]   = s
+    Q[k  ][k] =  c; Q[k  ][k+1] = s
     Q[k+1][k] = -s; Q[k+1][k+1] = c
     U, B = U * Q:T(), Q * B
     matrix._clearLess(B, TOL)
