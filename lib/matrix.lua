@@ -1509,70 +1509,64 @@ matrix._givensRot = function (f, g)
   return c, s, r
 end
 
+matrix._clearLess = function (M, dTol)
+  for i = 1, M._rows do
+    for j = 1, M._cols do
+      if math.abs(M[i][j]) < dTol then M[i][j] = 0 end
+    end
+  end
+end
+
 matrix._qrSweep = function (B)
   local m, n = B._rows, B._cols 
   local U, V = matrix:eye(m), matrix:eye(n)
-  local M = math.min(m, n)
-  for k = 1, M-1 do
-    c, s = matrix._givensRot(B[k][k], B[k][k+1])
-    local Q = matrix:eye(n)
-    Q:insert({k,k+1},{k,k+1}, matrix {{c,s},{-s,c}})
-    B = B * Q:T()
-    V = V * Q:T()
-    -- TODO use 'round'
-    for i = 1, B._rows do
-      for j = 1, B._cols do
-        if math.abs(B[i][j]) < 1E-13 then B[i][j] = 0 end
-      end
-    end
-    -- B can be checked here...
+  local w, TOL = math.min(m, n), 1E-13
+  for k = 1, w-1 do
+    -- V
+    local c, s = matrix._givensRot(B[k][k], B[k][k+1])
+    local Q = matrix:eye(n)    
+    Q[k][k]   = c; Q[k][k+1]   = -s
+    Q[k+1][k] = s; Q[k+1][k+1] = c
+    B, V = B * Q, V * Q       -- Q is transposed!
+    matrix._clearLess(B, TOL)
+    -- U
     c, s = matrix._givensRot(B[k][k], B[k+1][k])
     Q = matrix:eye(m)
-    Q:insert({k,k+1},{k,k+1}, matrix {{c,s},{-s,c}})
-    B = Q * B
-    U = U * Q:T()
-    for i = 1, B._rows do
-      for j = 1, B._cols do
-        if math.abs(B[i][j]) < 1E-13 then B[i][j] = 0 end
-      end
-    end
+    Q[k][k]   =  c; Q[k][k+1]   = s
+    Q[k+1][k] = -s; Q[k+1][k+1] = c
+    U, B = U * Q:T(), Q * B
+    matrix._clearLess(B, TOL)
   end
-  local I = matrix:zeros(m, n)
-  local tmp = matrix:eye(M+1):range({2,M+1},{1,M})  -- shift ones to one line
-  I:insert({1,M},{1,M}, tmp)
+  -- find error (upper diagonal of lenght w-1)
   local E = 0
-  for i = 1, B._rows do
-    for j = 1, B._cols do
-      E = E + math.abs(I[i][j] * B[i][j])
-    end
-  end
+  for i = 1, w-1 do E = E + math.abs(B[i][i+1]) end
   return U, B, V, E
 end
 
 matrix.svd = function (A)
   local transpose = A._rows < A._cols
   if transpose then A = A:T() end
+  -- main steps
   local U1, B, V1 = matrix._bidiagReduction(A)
-  local U2 = matrix:eye(U1)
-  local V2 = matrix:eye(V1)
+  local U2, V2 = matrix:eye(U1), matrix:eye(V1)
   local E, U3, V3 = math.huge, nil, nil
   while E > 1E-8 do
     U3, B, V3, E = matrix._qrSweep(B)
     U2 = U2 * U3
     V2 = V2 * V3
   end
-  U1 = U1 * U2
-  V1 = V1 * V2
+  U1, V1 = U1 * U2, V1 * V2
   if transpose then
     U1, B, V1 = V1, B:T(), U1
   end
-  -- correct
+  -- remove zeros
   local B1 = matrix:zeros(B._rows, B._cols)
-  for i = 1, math.min(B._rows, B._cols) do 
+  for i = 1, V1._rows do 
     local s = B[i][i]
-    if s < 0 then
-      s = -s
-      V1:insert({1,-1},{i}, -V1:range({1,-1},{i}))
+    if s < 0 then 
+      s = -s  -- correct sign (TODO try to avoid it)
+      --  and column elements
+      for j = 1, V1._rows do V1[j][i] = -V1[j][i] end
     end
     B1[i][i] = s
   end
