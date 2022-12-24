@@ -1463,14 +1463,14 @@ matrix.givensRot = function (d1, d2)
 end
 
 matrix._householder = function (x, k)
-  local n = x._rows
-  local u = matrix:zeros(n, 1)
-  local sum = 0
+  local n, sum = x._rows, 0
+  local u = matrix:zeros(1, n)   -- use row vector
+  -- fill vector
   for i = k, n do sum = sum + x[i][1]^2 end
-  u[k][1] = x[k][1] + sign(x[k][1]) * math.sqrt(sum)
-  -- copy rest
-  for i = k+1, n do u[i][1] = x[i][1] end
-  return matrix:eye(n) - (2 / u:dot(u)) * (u * u:T())
+  u[1][k] = x[k][1] + sign(x[k][1]) * math.sqrt(sum)
+  for i = k+1, n do u[1][i] = x[i][1] end
+  -- find matrix
+  return matrix:eye(n) - u:T() * ( (2 / u:dot(u)) * u)
 end
 
 matrix._bidiagReduction = function (A)
