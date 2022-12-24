@@ -240,6 +240,17 @@ utils.lex = function (s)
   return utils._toNumbers(res)
 end
 
+--- Check sign if possible.
+--  @param d Value to check.
+--  @return -1, 0 or 1
+utils.sign = function (d)
+  if type(d) == 'number' or type(d) == 'table' and d.__lt then
+    return (d > 0) and 1 or (d < 0) and -1 or 0
+  else
+    return 1
+  end
+end
+
 return {
   versions = versions,
   cross = cross,

@@ -187,6 +187,10 @@ ans = (q*r)[2][2]            --3> m[2][2]
 
 ans = q:det()                --3> 1.0
 
+-- SVD decomposition
+u,s,v = m:svd()
+ans = (u*s*v:T())[1][1]      --3> m[1][1]
+
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
@@ -243,6 +247,9 @@ local mt_container = {}
 --  @return True if the object is 'matrix'.
 local function ismatrix(v) return type(v) == 'table' and v.ismatrix end
 
+--- Simplify object when possible.
+--  @param M Matrix.
+--  @return Number in the case of single element.
 local function nummat(M)
   return M._rows == 1 and M._cols == 1 and M[1][1] or M
 end
@@ -265,10 +272,6 @@ local function addRow(t,i)
   local row = setmetatable({}, mt_access)
   t[i] = row
   return row
-end
-
-local function sign(d)
-  return (d > 0) and 1 or (d < 0) and -1 or 0
 end
 
 local TRANSFORM = 'transform'
@@ -788,9 +791,9 @@ matrix.bidiag = function (M)
   for k = 1, w do
     -- set zero to column elements
     local H1 = matrix.householder(B:range({1,m}, {k}), k)
-    U, B = U * H1:T(), H1 * B
+    U, B = U * H1:H(), H1 * B
     if k < (w - 1) then
-      local H2 = matrix.householder(B:range({k}, {1,n}):T(), k+1):T()
+      local H2 = matrix.householder(B:range({k}, {1,n}):T(), k+1):H()
       B, V = B * H2, V * H2    -- H2 is transposed!
     end
   end
@@ -1012,18 +1015,18 @@ about[matrix.fill] = {":fill(iRows,iCols,[val=1])",
 matrix.givensRot = function (d1, d2)
    -- return cos, sin; r is omitted
    if d2 == 0 then
-     local c = sign(d1)
-     return (c == 0) and 1 or c, 0, math.abs(d1)
+     local c = Utils.sign(d1)
+     return (c == 0) and 1 or c, 0, Cross.norm(d1)
    elseif d1 == 0 then
-     return 0, sign(d2), math.abs(d2)
-   elseif math.abs(d1) > math.abs(d2) then
+     return 0, Utils.sign(d2), Cross.norm(d2)
+   elseif Cross.norm(d1) > Cross.norm(d2) then
      local t = d2 / d1
-     local u = sign(d1) * math.sqrt(1 + t*t)
+     local u = Utils.sign(d1) * math.sqrt(1 + t*t)
      local c = 1 / u
      return c, t * c, d1 * u
    else
      local t = d1 / d2
-     local u = sign(d2) * math.sqrt(1 + t*t)
+     local u = Utils.sign(d2) * math.sqrt(1 + t*t)
      local s = 1 / u
      return t * s, s, d2 * u
    end
@@ -1039,11 +1042,11 @@ matrix.householder = function (V, ik)
   local r, sum = V._rows, 0
   local u = matrix:zeros(1, r)   -- use row vector
   -- fill vector
-  for i = ik, r do sum = sum + V[i][1]^2 end
-  u[1][ik] = V[ik][1] + sign(V[ik][1]) * math.sqrt(sum)
+  for i = ik, r do sum = sum + Cross.norm(V[i][1])^2 end
+  u[1][ik] = V[ik][1] + Utils.sign(V[ik][1]) * math.sqrt(sum)
   for i = ik+1, r do u[1][i] = V[i][1] end
   -- find matrix
-  return matrix:eye(r) - u:T() * ( (2 / u:dot(u)) * u)
+  return matrix:eye(r) - u:H() * ( (2 / (u:norm() ^ 2)) * u)
 end
 about[matrix.householder] = {"householder(V,ik)", 
   "Find householder matrix for the given vector.", TRANSFORM}
@@ -1449,6 +1452,41 @@ matrix.rref = function (M)
 end
 about[matrix.rref] = {"rref()", "Perform transformations using Gauss method."}
 
+--- Singular value decomposition for a matrix.
+--  Find U, S, V such that M = U*S*V' and 
+--  U, V are orthonormal, S is diagonal matrix.
+--  @param M Source matrix.
+--  @return Matrices U, S, V.
+matrix.svd = function (M)
+  local transpose = M._rows < M._cols
+  if transpose then M = M:T() end
+  -- main steps
+  local U1, B, V1 = matrix.bidiag(M)
+  local U2, V2 = matrix:eye(U1), matrix:eye(V1)
+  local E, U3, V3 = math.huge, nil, nil
+  while E > 1E-8 do
+    U3, B, V3, E = matrix._qrSweep(B)
+    U2, V2 = U2 * U3, V2 * V3
+  end
+  U1, V1 = U1 * U2, V1 * V2
+  if transpose then
+    U1, B, V1 = V1, B:T(), U1
+  end
+  -- remove zeros
+  local B1 = matrix:zeros(B._rows, B._cols)
+  for i = 1, V1._rows do 
+    local s = B[i][i]
+    if s < 0 then 
+      s = -s  -- correct sign (TODO try to avoid it)
+      --  and column elements
+      for j = 1, V1._rows do V1[j][i] = -V1[j][i] end
+    end
+    B1[i][i] = s
+  end
+  return U1, B1, V1
+end
+about[matrix.svd] = {"svd(M)", "Singular value decomposition, return U, S, V.", TRANSFORM}
+
 --- Matrix to table.
 --  @param M Source matrix.
 --  @return Table without metametods.
@@ -1550,42 +1588,6 @@ end
 about[matrix.zip] = {':zip(fn,M1,M2,...)',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
---- Singular value decomposition for a matrix.
---  Find U, S, V such that M = U*S*V' and 
---  U, V are orthonormal, S is diagonal matrix.
---  @param M Source matrix.
---  @return Matrices U, S, V.
-matrix.svd = function (M)
-  local transpose = M._rows < M._cols
-  if transpose then M = M:T() end
-  -- main steps
-  local U1, B, V1 = matrix.bidiag(M)
-  local U2, V2 = matrix:eye(U1), matrix:eye(V1)
-  local E, U3, V3 = math.huge, nil, nil
-  while E > 1E-8 do
-    U3, B, V3, E = matrix._qrSweep(B)
-    U2 = U2 * U3
-    V2 = V2 * V3
-  end
-  U1, V1 = U1 * U2, V1 * V2
-  if transpose then
-    U1, B, V1 = V1, B:T(), U1
-  end
-  -- remove zeros
-  local B1 = matrix:zeros(B._rows, B._cols)
-  for i = 1, V1._rows do 
-    local s = B[i][i]
-    if s < 0 then 
-      s = -s  -- correct sign (TODO try to avoid it)
-      --  and column elements
-      for j = 1, V1._rows do V1[j][i] = -V1[j][i] end
-    end
-    B1[i][i] = s
-  end
-  return U1, B1, V1
-end
-about[matrix.svd] = {"svd(M)", "Singular value decomposition, return U, S, V.", TRANSFORM}
-
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new(m) end})
 about[matrix] = {" {tRow1,tRow2,..}",
@@ -1597,6 +1599,7 @@ matrix.about = about
 return matrix
 
 --=========================
+--TODO: check SVD with complex numbers
 --TODO: change matrix print
 --TODO: matrix from list and size
 --TODO: Fix eigenvectors for complex eigenvalues.

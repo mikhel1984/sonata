@@ -2,30 +2,33 @@
 
 Asciiplot
 * Sufrace contours
+Matrix
+* Add SVD
 Other
 * Add 'symbolical' module
 * Allow arbitrary aliases for modules
+* Update help system
 * Refactoring
 * Bug fixes
 
 ======== 0.9.32 =========
 
+Const
+* Direct conversation to Unit
+Geodesy
+* Geohash encode/decode
+Lens
+* Add gaussian beam propagation
 Matrix
 * Add eigenvalues and eigenvectors
 * Add minor
+Polynomial
+* Calc characteristic polynomial for a matrix
 Rational
 * Add continued fractions
 * Change decimal to rational conversation
-Polynomial
-* Calc characteristic polynomial for a matrix
 Utils
 * Lexer for arythmetical expressions
-Lens
-* Add gaussian beam propagation
-Geodesy
-* Geohash encode/decode
-Const
-* Direct conversation to Unit
 Other
 * Rename private elements
 * Rewrite module for units
@@ -34,23 +37,23 @@ Other
 
 ======== 0.9.31 ========
 
+Asciiplot
+* Colored plots
+Complex
+* Rename 'Comp' to '_Z'
 Matrix 
 * Remove ones, rand, randn, randi, apply
 * Remove onImport
 * Explicit det and inv for small matrices
 * Rename 'get' to 'range', add 'insert'
 * Add H, qr, round
-Asciiplot
-* Colored plots
-Complex
-* Rename 'Comp' to '_Z'
+Notes
+* 'Pause' case insensitive
+* Print part number, list of parts, jump to the desired part
 Utils
 * Add Fn method to construct function from string
 * 'Smart' number to string conversation
 * Add 'round' method, apply to matrices and complex numbers
-Notes
-* 'Pause' case insensitive
-* Print part number, list of parts, jump to the desired part
 Other 
 * Number types are immutable 
 * Replace 'apply' with 'zip' everywhere
