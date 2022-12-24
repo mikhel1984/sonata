@@ -513,6 +513,17 @@ function (M)
 end
 }
 
+--- Remove to small elements in-place.
+--  @param M Source matrix.
+--  @param dTol Threshold value.
+matrix._clearLess = function (M, dTol)
+  for i = 1, M._rows do
+    for j = 1, M._cols do
+      if math.abs(M[i][j]) < dTol then M[i][j] = 0 end
+    end
+  end
+end
+
 --- Inverse iteration method for eigenvector calculation.
 --  @param M Source matrix.
 --  @param v Eigenvalue estimation.
@@ -734,6 +745,60 @@ matrix._new = function (t)
   return matrix:_init(rows, cols, t)
 end
 
+--- QR-type sweeps for SVD.
+--  Find such U, B, V that B = U*M*V:T() and 
+--  U, V are orthonormal, B is bidiagonal rectangular. Estimate error E.
+--  @param M Source matrix.
+--  @return Matrices U, B, V, value E
+matrix._qrSweep = function (M)
+  local m, n, B = M._rows, M._cols, M
+  local U, V = matrix:eye(m), matrix:eye(n)
+  local w, TOL = math.min(m, n), 1E-13
+  for k = 1, w-1 do
+    -- V
+    local c, s = matrix.givensRot(B[k][k], B[k][k+1])
+    local Q = matrix:eye(n)    
+    Q[k  ][k] = c; Q[k  ][k+1] = -s
+    Q[k+1][k] = s; Q[k+1][k+1] =  c
+    B, V = B * Q, V * Q       -- Q is transposed!
+    matrix._clearLess(B, TOL)
+    -- U
+    c, s = matrix.givensRot(B[k][k], B[k+1][k])
+    Q = matrix:eye(m)
+    Q[k  ][k] =  c; Q[k  ][k+1] = s
+    Q[k+1][k] = -s; Q[k+1][k+1] = c
+    U, B = U * Q:T(), Q * B
+    matrix._clearLess(B, TOL)
+  end
+  -- find error (upper diagonal of lenght w-1)
+  local e = 0
+  for i = 1, w-1 do e = e + math.abs(B[i][i+1]) end
+  return U, B, V, e
+end
+
+--- Bidiagonalization.
+--  Find such U, B, V that U*B*V:T() = M and 
+--  B is upper bidiagonal, U and V are ortogonal.
+--  @param M Source matrix.
+--  @return U, B, V
+matrix.bidiag = function (M)
+  local m, n, B = M._rows, M._cols, M
+  local U, V = matrix:eye(m), matrix:eye(n)
+  local w = math.min(m, n)
+  for k = 1, w do
+    -- set zero to column elements
+    local H1 = matrix.householder(B:range({1,m}, {k}), k)
+    U, B = U * H1:T(), H1 * B
+    if k < (w - 1) then
+      local H2 = matrix.householder(B:range({k}, {1,n}):T(), k+1):T()
+      B, V = B * H2, V * H2    -- H2 is transposed!
+    end
+  end
+  return U, B, V
+end
+about[matrix.bidiag] = {
+  "bidiag(M)", "Bidiagonalization of matrix, return U, B, V.", TRANSFORM}
+
 --- Cholesky decomposition.
 --  @param M Positive definite symmetric matrix.
 --  @return Lower part of the decomposition.
@@ -938,6 +1003,50 @@ matrix.fill = function (self, iR, iC, val)
 end
 about[matrix.fill] = {":fill(iRows,iCols,[val=1])",
   "Create matrix of given numbers (default is 1).", help.NEW}
+
+--- Given's rotation.
+--  Find such c, s, r that Mat{{c,s},{-s,c}} * Mat:V{d1,d2} = Mat:V{r,0}.
+--  @param d1 First vector element.
+--  @param d2 Second vector element.
+--  @return cos, sin, vector length
+matrix.givensRot = function (d1, d2)
+   -- return cos, sin; r is omitted
+   if d2 == 0 then
+     local c = sign(d1)
+     return (c == 0) and 1 or c, 0, math.abs(d1)
+   elseif d1 == 0 then
+     return 0, sign(d2), math.abs(d2)
+   elseif math.abs(d1) > math.abs(d2) then
+     local t = d2 / d1
+     local u = sign(d1) * math.sqrt(1 + t*t)
+     local c = 1 / u
+     return c, t * c, d1 * u
+   else
+     local t = d1 / d2
+     local u = sign(d2) * math.sqrt(1 + t*t)
+     local s = 1 / u
+     return t * s, s, d2 * u
+   end
+end
+about[matrix.givensRot] = {":givensRot(d1,d2)", 
+  "Find parameters of givens rotation (c,s,r).", help.OTHER}
+
+--- Householder transformation.
+--  @param V Vector for reflection.
+--  @param ik Index of start element.
+--  @return Householder matrix.
+matrix.householder = function (V, ik)
+  local r, sum = V._rows, 0
+  local u = matrix:zeros(1, r)   -- use row vector
+  -- fill vector
+  for i = ik, r do sum = sum + V[i][1]^2 end
+  u[1][ik] = V[ik][1] + sign(V[ik][1]) * math.sqrt(sum)
+  for i = ik+1, r do u[1][i] = V[i][1] end
+  -- find matrix
+  return matrix:eye(r) - u:T() * ( (2 / u:dot(u)) * u)
+end
+about[matrix.householder] = {"householder(V,ik)", 
+  "Find householder matrix for the given vector.", TRANSFORM}
 
 --- Round matrix elements in place.
 --  @param M Matrix object.
@@ -1440,94 +1549,17 @@ matrix.zip = function (self, fn, ...)
 end
 about[matrix.zip] = {':zip(fn,M1,M2,...)',
   'Apply function to the given matrices element-wise.', TRANSFORM}
-  
 
--- Given's rotation.
---    @return cos, sin, r
-matrix.givensRot = function (d1, d2)
-   -- return cos, sin; r is omitted
-   if d2 == 0 then
-     local c = sign(d1)
-     return (c == 0) and 1 or c, 0, math.abs(d1)
-   elseif d1 == 0 then
-     return 0, sign(d2), math.abs(d2)
-   elseif math.abs(d1) > math.abs(d2) then
-     local t = d2 / d1
-     local u = sign(d1) * math.sqrt(1 + t*t)
-     return 1 / u, t / u, d1 * u
-   else
-     local t = d1 / d2
-     local u = sign(d2) * math.sqrt(1 + t*t)
-     return t / u, 1 / u, d2 * u
-   end
-end
-
-matrix._householder = function (x, k)
-  local n, sum = x._rows, 0
-  local u = matrix:zeros(1, n)   -- use row vector
-  -- fill vector
-  for i = k, n do sum = sum + x[i][1]^2 end
-  u[1][k] = x[k][1] + sign(x[k][1]) * math.sqrt(sum)
-  for i = k+1, n do u[1][i] = x[i][1] end
-  -- find matrix
-  return matrix:eye(n) - u:T() * ( (2 / u:dot(u)) * u)
-end
-
-matrix._bidiagReduction = function (A)
-  local m, n, B = A._rows, A._cols, A
-  local U, V = matrix:eye(m), matrix:eye(n)
-  local w = math.min(m, n)
-  for k = 1, w do
-    -- set zero to column elements
-    local H1 = matrix._householder(B:range({1,m}, {k}), k)
-    U, B = U * H1:T(), H1 * B
-    if k < (w - 1) then
-      local H2 = matrix._householder(B:range({k}, {1,n}):T(), k+1):T()
-      B, V = B * H2, V * H2    -- H2 is transposed!
-    end
-  end
-  return U, B, V
-end
-
-matrix._clearLess = function (M, dTol)
-  for i = 1, M._rows do
-    for j = 1, M._cols do
-      if math.abs(M[i][j]) < dTol then M[i][j] = 0 end
-    end
-  end
-end
-
-matrix._qrSweep = function (B)
-  local m, n = B._rows, B._cols 
-  local U, V = matrix:eye(m), matrix:eye(n)
-  local w, TOL = math.min(m, n), 1E-13
-  for k = 1, w-1 do
-    -- V
-    local c, s = matrix.givensRot(B[k][k], B[k][k+1])
-    local Q = matrix:eye(n)    
-    Q[k  ][k] = c; Q[k  ][k+1] = -s
-    Q[k+1][k] = s; Q[k+1][k+1] =  c
-    B, V = B * Q, V * Q       -- Q is transposed!
-    matrix._clearLess(B, TOL)
-    -- U
-    c, s = matrix.givensRot(B[k][k], B[k+1][k])
-    Q = matrix:eye(m)
-    Q[k  ][k] =  c; Q[k  ][k+1] = s
-    Q[k+1][k] = -s; Q[k+1][k+1] = c
-    U, B = U * Q:T(), Q * B
-    matrix._clearLess(B, TOL)
-  end
-  -- find error (upper diagonal of lenght w-1)
-  local E = 0
-  for i = 1, w-1 do E = E + math.abs(B[i][i+1]) end
-  return U, B, V, E
-end
-
-matrix.svd = function (A)
-  local transpose = A._rows < A._cols
-  if transpose then A = A:T() end
+--- Singular value decomposition for a matrix.
+--  Find U, S, V such that M = U*S*V' and 
+--  U, V are orthonormal, S is diagonal matrix.
+--  @param M Source matrix.
+--  @return Matrices U, S, V.
+matrix.svd = function (M)
+  local transpose = M._rows < M._cols
+  if transpose then M = M:T() end
   -- main steps
-  local U1, B, V1 = matrix._bidiagReduction(A)
+  local U1, B, V1 = matrix.bidiag(M)
   local U2, V2 = matrix:eye(U1), matrix:eye(V1)
   local E, U3, V3 = math.huge, nil, nil
   while E > 1E-8 do
@@ -1552,6 +1584,7 @@ matrix.svd = function (A)
   end
   return U1, B1, V1
 end
+about[matrix.svd] = {"svd(M)", "Singular value decomposition, return U, S, V.", TRANSFORM}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self,m) return matrix._new(m) end})
@@ -1564,7 +1597,6 @@ matrix.about = about
 return matrix
 
 --=========================
---TODO: Add SVD transform, fix signs
 --TODO: change matrix print
 --TODO: matrix from list and size
 --TODO: Fix eigenvectors for complex eigenvalues.
