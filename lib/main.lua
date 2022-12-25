@@ -187,7 +187,7 @@ randn = function (dMean, dev)
   dMean = dMean or 0
   dev = dev or 1
   -- use Box-Muller transform
-  local u,v,s
+  local u, v, s = 0, 0, 0
   repeat
     u = 2*math.random()-1
     v = 2*math.random()-1
@@ -287,7 +287,7 @@ about[Type] = {'Type(v)', 'Show type of the object.', AUX}
 --  board - matrix with 'ones' as live cells
 main.life = function (board)
   assert(board.type == 'matrix', 'Matrix is expected!')
-  local rows,cols = board:size()
+  local rows, cols = board:size()
   local src = board
   local gen = 0
   -- make decision about current cell
@@ -382,7 +382,7 @@ end
 --  @return Number.
 mt_range.__index = function (self, i)
   if Ver.isInteger(i) then
-    local v
+    local v = 0
     if i > 0 and i < self._N then
       v = self._beg + (i-1)*self._step
     elseif i == self._N then

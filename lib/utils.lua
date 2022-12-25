@@ -38,7 +38,7 @@ if _VERSION < 'Lua 5.3' then
   versions.isInteger = function (x)
     if type(x) == 'string' then x = tonumber(x) end
     if not x then return false end
-    local v,p = mmodf(x)
+    local v, p = mmodf(x)
     return p == 0.0 and v >= -1E9 and v <= 1E9
   end
   -- Execute string code
@@ -47,7 +47,7 @@ if _VERSION < 'Lua 5.3' then
   versions.mathType = function (x)
     local n = tonumber(x)
     if not n then return nil end
-    local _,p = mmodf(n)
+    local _, p = mmodf(n)
     return (p == 0.0) and 'integer' or 'float'
   end
   -- Move elements to new position (and table)
@@ -66,7 +66,7 @@ if _VERSION < 'Lua 5.3' then
   -- Return integer number or nil
   versions.toInteger = function (x)
     if type(x) == 'string' then x = tonumber(x) end
-    local p,q = mmodf(x)
+    local p, q = mmodf(x)
     return (q == 0.0) and p or nil
   end
   -- Extract table values

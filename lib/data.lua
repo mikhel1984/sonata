@@ -337,7 +337,7 @@ about[data.geomean] = {":geomean(t,[tw])", "Geometrical mean.", STAT}
 data.harmmean = function (self, t, tw)
   if tw then
     local st, sw = 0, 0
-    for i = 1,#t do
+    for i = 1, #t do
       local w = tw[i]
       st = st + w/t[i]
       sw = sw + w
@@ -358,7 +358,7 @@ about[data.harmmean] = {":harmmean(t,[tw])", "Harmonic mean.", STAT}
 --  @return Two tables, with sum and edges.
 data.histcounts = function (self, t, rng)
   rng = rng or 10
-  local bins
+  local bins = nil
   -- make copy and sort
   local y = Ver.move(t,1,#t,1,{})
   table.sort(y)
@@ -465,7 +465,7 @@ about[data.mean] = {
 --  @return Value of median.
 data.median = function (self, t)
   local len = #t
-  local y = Ver.move(t,1,len,1,{})
+  local y = Ver.move(t, 1, len, 1, {})
   table.sort(y)
   if len % 2 == 1 then
     return y[(len+1)/2]

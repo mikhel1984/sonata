@@ -314,11 +314,11 @@ about[quaternion.comparison] = {
 --  @param vAxe Axis in form of vector object or table with 3 elements.
 --  @return New quaternion.
 quaternion.fromAA = function (self, dAng, vAxe)
-  local x,y,z
+  local x, y, z = nil, nil, nil
   if vAxe.vsmatrix then
-    x,y,z = vAxe(1), vAxe(2), vAxe(3)
+    x, y, z = vAxe(1), vAxe(2), vAxe(3)
   else
-    x,y,z = vAxe[1], vAxe[2], vAxe[3]
+    x, y, z = vAxe[1], vAxe[2], vAxe[3]
   end
   local d = math.sqrt(x*x+y*y+z*z)
   if d > 0 then d = math.sin(dAng*0.5) / d end
@@ -406,15 +406,15 @@ about[quaternion.re] = {'re()','Real part.', help.OTHER}
 --  @param Q Quaternion.
 --  @param vec Vector in form of matrix object or the table with 3 elements.
 --  @return Table with new orientation.
-quaternion.rotate = function (Q,vec)
+quaternion.rotate = function (Q, vec)
   assert(math.abs(quaternion.abs(Q)-1) < 1E-3)
-  local p1,p2
+  local p1 = nil
   if vec.ismatrix then
     p1 = quaternion:_new({0,vec(1),vec(2),vec(3)})
   else
     p1 = quaternion:_new({0,vec[1],vec[2],vec[3]})
   end
-  p2 = Q*p1*quaternion.conj(Q)
+  local p2 = Q*p1*quaternion.conj(Q)  -- TODO reuse p1
   return {p2._[2],p2._[3],p2._[4]}
 end
 about[quaternion.rotate] = {
@@ -450,7 +450,7 @@ about[quaternion.slerp] = {
 quaternion.toAA = function (Q)
   -- normalize
   local d = quaternion.abs(Q)
-  local w,x,y,z = Q._[1]/d, Q._[2]/d, Q._[3]/d, Q._[4]/d
+  local w, x, y, z = Q._[1]/d, Q._[2]/d, Q._[3]/d, Q._[4]/d
   -- get sin
   local v = math.sqrt(x*x+y*y+z*z)     -- what if v == 0 ?
   return 2*Ver.atan2(v,w), {x/v, y/v, z/v}
@@ -463,7 +463,7 @@ about[quaternion.toAA] = {'toAA()','Get angle and axis of rotation.',ROTATION}
 quaternion.toRot = function (Q)
   quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
   local s = 1 / quaternion._norm2(Q)
-  local w,x,y,z = Q._[1], Q._[2], Q._[3], Q._[4]
+  local w, x, y, z = Q._[1], Q._[2], Q._[3], Q._[4]
   return quaternion.ext_matrix {
     {1-2*s*(y*y+z*z), 2*s*(x*y-z*w), 2*s*(x*z+y*w)},
     {2*s*(x*y+z*w), 1-2*s*(x*x+z*z), 2*s*(y*z-x*w)},

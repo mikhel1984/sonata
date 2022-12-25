@@ -221,7 +221,7 @@ end
 --  @return String representation of the plot command.
 gnuplot._graph = function (t,tBase)
   -- function/file name
-  local fn, str, nm = t[1], ''
+  local fn, str, nm = t[1], '', nil
   if type(fn) == 'table' then
     nm = fn.ismatrix and gnuplot._mat2file(fn) or gnuplot._tbl2file(fn)
   elseif type(fn) == 'function' then
@@ -381,7 +381,7 @@ gnuplot.polarplot = function(self,...)
   repeat
     local name = gnuplot._lst2file(ag[i],ag[i+1])
     i = i + 2
-    local legend
+    local legend = nil
     if type(ag[i]) == 'string' then
       legend = ag[i]
       i = i + 1
@@ -438,7 +438,7 @@ gnuplot.surfplot = function(self,...)
   repeat
     local name = gnuplot._lst2file(ag[i],ag[i+1],ag[i+2])
     i = i + 3
-    local legend
+    local legend = nil
     if type(ag[i]) == 'string' then
       legend = ag[i]
       i = i + 1

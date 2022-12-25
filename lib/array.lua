@@ -199,7 +199,7 @@ end
 --  @param A Array.
 --  @return "Volume" of the array.
 array.capacity = function (A)
-  local S,K = A.size, A.k
+  local S, K = A.size, A.k
   return S[#S] * K[#K]
 end
 about[array.capacity] = {"capacity()",
@@ -233,7 +233,7 @@ array.concat = function (A1, A2, iAxis)
       ind2[i] = ind1[i]
     end
     -- get value
-    local second = ind1[iAxis] > edge
+    local second = (ind1[iAxis] > edge)
     ind2[iAxis] = second and (ind2[iAxis]-edge) or ind2[iAxis]
     res[conv(res,ind1)] = second and A2[conv(A2,ind2)] or A1[conv(A1,ind2)]
   end
@@ -305,7 +305,7 @@ about[array.isEqual] = {"isEqual(A)", "Check size equality.", help.OTHER}
 --  @param fn Function of value and (optional) index.
 --  @return New array where each element is result of the function evaluation fn(a[i]).
 array.map = function (A, fn)
-  local res, v = array:_new(Ver.move(A.size, 1, #A.size, 1, {}))
+  local res, v = array:_new(Ver.move(A.size, 1, #A.size, 1, {})), nil
   for i = 1, array.capacity(A) do
     v = fn(A[i], array._index(A,i-1))
     res[i] = v
@@ -409,5 +409,5 @@ array.about = about
 return array
 
 --=======================
---TODO: slice to matrix (square table)
---TODO: make row-by-row indexation
+-- TODO: slice to matrix (square table)
+-- TODO: make row-by-row indexation

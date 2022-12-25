@@ -128,7 +128,7 @@ local SEARCH = 'search'
 --  @param t Table of pairs {node, weight}.
 --  @return Node and correspondent weight.
 local function getMin(t)
-  local minval, key = math.huge
+  local minval, key = math.huge, nil
   -- find new minimal value
   for k,v in pairs(t) do
     if v < minval then
@@ -244,8 +244,8 @@ end
 --  @param v New element.
 graph.add = function (G, v)
   if isEdge(v) then
-    local t1,t2 = v[1], v[2]
-    local w12,w21 = (v[3] or v.w12), (v[4] or v.w21)
+    local t1, t2 = v[1], v[2]
+    local w12, w21 = (v[3] or v.w12), (v[4] or v.w21)
     G[t1] = G[t1] or {}
     G[t2] = G[t2] or {}
     if w12 or w21 then
@@ -514,7 +514,7 @@ about[graph.pathD] = {'pathD(vStart,[vGoal])',
 --  @param v Element to remove.
 graph.remove = function (G, v)
   if isEdge(v) then
-    local t1,t2 = v[1], v[2]
+    local t1, t2 = v[1], v[2]
     G[t1][t2] = nil
     if not v.single then      -- change keyword ???
       G[t2][t1] = nil

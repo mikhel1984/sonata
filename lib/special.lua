@@ -127,7 +127,7 @@ end
 --  @param x Real number.
 --  @return I1(x).
 special._bessi1 = function (x)
-  local ax,ans = math.abs(x)
+  local ax, ans = math.abs(x), 0
   if ax < 3.75 then
     local y = x/3.75
     y = y*y
@@ -148,7 +148,7 @@ end
 --  @return J0(x).
 special._bessj0 = function (x)
   local ax  = math.abs(x)
-  local ans1, ans2, y
+  local ans1, ans2, y = 0, 0, 0
   if ax < 8.0 then
     y = x*x
     ans1 = 57568490574.0 + y*(-13362590354.0 + y*(651619640.7
@@ -173,7 +173,7 @@ end
 --  @return J1(x).
 special._bessj1 = function (x)
   local ax = math.abs(x)
-  local ans1, ans2, y
+  local ans1, ans2, y = 0, 0, 0
   if ax < 8.0 then
     y = x*x
     ans1 = x*(72362614232.0 + y*(-7895059235.0 + y*(242396853.1 +
@@ -232,7 +232,7 @@ end
 --  @param x Non-negative number.
 --  @return Y0(x).
 special._bessy0_ = function (x)
-  local ans1, ans2, y
+  local ans1, ans2, y = 0, 0, 0
   if x < 8.0 then
     y = x*x
     ans1 = -2957821389.0 + y*(7062834065.0 + y*(-512359803.6 + y*(10879881.29
@@ -256,7 +256,7 @@ end
 --  @param x Non-negative number.
 --  @return Y1(x).
 special._bessy1 = function (x)
-  local ans1, ans2, y
+  local ans1, ans2, y = 0, 0, 0
   if x < 8.0 then
     y = x*x
     ans1 = x*(-0.4900604943E13 + y*(0.1275274390E13 + y*(-0.5153438139E11
@@ -283,10 +283,10 @@ end
 --  @param x Value between 0 and 1.
 --  @return Fraction value.
 special._betacf = function (a,b,x)
-  local MAXIT,EPS,FPMIN = 100, 3E-7, 1E-30
-  local qab,qap,qam = a+b, a+1.0, a-1.0
-  local c,d = 1.0, 1.0/lowBound(1.0-qab*x/qap,FPMIN)
-  local h,m2,aa,del = d
+  local MAXIT, EPS, FPMIN = 100, 3E-7, 1E-30
+  local qab, qap, qam = a+b, a+1.0, a-1.0
+  local c, d = 1.0, 1.0/lowBound(1.0-qab*x/qap,FPMIN)
+  local h, m2, aa, del = d, nil, nil, nil
   for m = 1,MAXIT do
     m2 = 2*m
     aa = m*(b-m)*x/((qam+m2)*(a+m2))
@@ -306,11 +306,11 @@ end
 --  @param x Real value.
 --  @return Representation of P.
 special._gammaSer = function (N,x)
-  local ITMAX,EPS = 100, 3E-7
+  local ITMAX, EPS = 100, 3E-7
   local gamser = 0.0
   if x <= 0 then assert(x == 0)
   else
-    local ap,del = N, 1.0/N
+    local ap, del = N, 1.0/N
     local sum = del
     local gammaln = special.gammaln
     for i = 1,ITMAX do
@@ -331,13 +331,13 @@ end
 --  @param x Real value.
 --  @return Representation of Q.
 special._gcf = function (N,x)
-  local ITMAX,EPS,FPMIN = 100, 3E-7, 1E-30
-  local b,c = x+1.0-N, 1.0/FPMIN
+  local ITMAX, EPS, FPMIN = 100, 3E-7, 1E-30
+  local b, c = x+1.0-N, 1.0/FPMIN
   local d = 1.0/b
-  local h,an,del = d
+  local h, an, del = d, nil, nil
   for i = 1,ITMAX do
-    an,b = -i*(i-N), b+2.0
-    d,c = 1.0/lowBound(an*d+b,FPMIN), lowBound(b+an/c,FPMIN)
+    an, b = -i*(i-N), b+2.0
+    d, c = 1.0/lowBound(an*d+b,FPMIN), lowBound(b+an/c,FPMIN)
     del = d*c
     h = h*del
     if math.abs(del-1.0) < EPS then break end
@@ -382,9 +382,9 @@ special.besseli = function (self, N,x)
   if N == 0 then return special._bessi0(x) end
   if N == 1 then return special._bessi1(x) end
   if x == 0 then return 0.0 end
-  local ACC,BIGNO,BIGNI = 40.0, 1E10, 1E-10
+  local ACC, BIGNO, BIGNI = 40.0, 1E10, 1E-10
   local tox = 2.0/math.abs(x)
-  local bip,ans,bi = 0.0, 0.0, 1.0
+  local bip, ans, bi = 0.0, 0.0, 1.0
   for j = 2*(N+math.floor(math.sqrt(ACC*N))),1,-1 do
     bi, bip = bip+j*tox*bi, bi
     if math.abs(bi) > BIGNO then
@@ -413,7 +413,7 @@ special.besselj = function (self, N,x)
   local ACC, BIGNO, BIGNI = 40, 1E10, 1E-10
   local ax = math.abs(x)
   local tox = 2.0/ax
-  local bj, bjm, ans
+  local bj, bjm, ans = nil, nil, nil
   if ax > N then
     bjm = special._bessj0(ax)
     bj = special._bessj1(ax)
@@ -456,7 +456,7 @@ special.besselk = function (self, N,x)
   if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessk0(x) end
   if N == 1 then return special._bessk1(x) end
-  local tox,bkm,bk = 2.0/x, special._bessk0(x), special._bessk1(x)
+  local tox, bkm, bk = 2.0/x, special._bessk0(x), special._bessk1(x)
   for j = 1,N-1 do
     bk, bkm = bkm+j*tox*bk, bk
   end
@@ -504,7 +504,7 @@ about[special.beta] = {":beta(z,w)", "Beta function.", BETA}
 --  @return Value of Ix(a,b).
 special.betainc = function (self,x,a,b)
   if x < 0.0 or x > 1.0 then error("Expected x between 0 and 1!") end
-  local bt
+  local bt = nil
   if x == 0 or x == 1 then
     bt = 0.0
   else
@@ -534,7 +534,7 @@ about[special.betaln] = {
 --  @param x Real number.
 --  @return Integral value.
 special.dawson = function (self,x)
-  local NMAX,H,A1,A2,A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
+  local NMAX, H, A1, A2, A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
   if not special._c_dawson then
     -- List of Dawson function coefficients.
     special._c_dawson = {0,0,0,0,0,0}
@@ -548,8 +548,8 @@ special.dawson = function (self,x)
     local n0 = 2*math.floor(0.5*xx/H+0.5)
     local xp = xx-n0*H
     local e1 = math.exp(2.0*xp*H)
-    local e2,d1 = e1*e1, n0+1
-    local d2,sum = d1-2.0, 0.0
+    local e2, d1 = e1*e1, n0+1
+    local d2, sum = d1-2.0, 0.0
     for i = 1,NMAX do
       sum = sum + special._c_dawson[i]*(e1/d1+1.0/(d2*e1))
       d1,d2,e1 = d1+2.0, d2-2.0, e1*e2
@@ -608,7 +608,7 @@ special.expint = function (self,n,x)
     end
   else
     local ans = (nm1 ~= 0) and 1.0/nm1 or -math.log(x)-EULER
-    local fact, psy, del = 1.0
+    local fact, psy, del = 1.0, nil, nil
     for i = 1,MAXIT do
       fact = fact*(-x/i)
       if i ~= nm1 then
@@ -664,7 +664,7 @@ about[special.gammainc] = {":gammainc(x,N,[type='lower'])",
 --  @param z Positive number.
 --  @return log(gamma(z))
 special.gammaln = function (self,z)
-  local x,y = z,z
+  local x, y = z, z
   local tmp = x+5.5
   tmp = tmp-(x+0.5)*math.log(tmp)
   local ser = 1.000000000190015

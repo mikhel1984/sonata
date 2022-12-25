@@ -322,7 +322,7 @@ ellipsoid.solveDir = function (E, t1, dA, dist)
   local alcos2 = 1 - alsin*alsin
   local A, B = ellipsoid._vincentyAB(E.e2, alcos2)
   A = dist / (E.b * A)  -- reuse
-  local sig, ssig, csigm = A
+  local sig, ssig, csigm = A, 0, 0
   -- iterative part
   repeat
     csigm = math.cos(sig1 + sig)
@@ -359,7 +359,7 @@ ellipsoid.solveInv = function (E, t1, t2)
   local sU1, sU2 = math.sin(U1), math.sin(U2)
   -- prepare variables
   local L = math.rad(t2.L) - math.rad(t1.L)
-  local lam, ssig, csig, sig, alcos2, csigm = L
+  local lam, ssig, csig, sig, alcos2, csigm = L, 0, 0, 0, 0, 0
   -- iterative part
   repeat
     ssig = math.sqrt((cU2*math.sin(lam))^2 + (cU1*sU2-sU1*cU2*math.cos(lam))^2)
@@ -392,7 +392,7 @@ end
 ellipsoid.toBLH = function (E, t)
   local X, Y, Z = t.X, t.Y, t.Z
   local D = math.sqrt(X*X + Y*Y)
-  local B, L, H  -- result in rad
+  local B, L, H = 0, 0, 0 -- result in rad
   if D < 1E-10 then
     B = (Z == 0 and 0 or (Z > 0 and 0.5 or -0.5)) * math.pi
     L = 0

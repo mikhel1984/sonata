@@ -207,8 +207,8 @@ end
 asciiplot._axes = function (F)
   local vertical, horizontal = '|', '-'
   -- vertical line
-  local n
-  if F.yaxis == 'C' then n = asciiplot._ycentral(F)
+  local n = nil
+  if     F.yaxis == 'C' then n = asciiplot._ycentral(F)
   elseif F.yaxis == 'L' then n = 1
   elseif F.yaxis == 'R' then n = F.width end
   if n then
@@ -369,7 +369,7 @@ end
 --  @param F Figure object.
 asciiplot._limits = function (F)
   -- horizontal
-  local n
+  local n = nil
   if F.xaxis == 'C' then n = asciiplot._xcentral(F) + 1
   elseif F.xaxis == 'U' then n = 1
   elseif F.xaxis == 'D' then n = F.height end
@@ -659,12 +659,12 @@ asciiplot.bar = function (F, t, vy, ix)
     if v > max then max = v end
     if v < min then min = v end
   end
-  local i0
+  local i0 = nil
   if min >= 0 and max >= 0 then
     i0, min = iL, 0
   elseif min <= 0 and max <= 0 then
     i0, max = iR, 0
-  elseif min < 0 and max > 0 then
+  else
     local int, frac = mmodf(iL - min / (max - min) * (iR - iL))
     i0 = (frac > 0.5) and int + 1 or int
   end
@@ -844,8 +844,8 @@ about[asciiplot.copy] = {"copy()", "Create a copy of the object.", help.OTHER}
 asciiplot.plot = function (F, ...)
   local ag, acc = {...}, {}
   local xmin, xmax = math.huge, -math.huge
-  local i = 1
   -- collect data
+  local i = 1
   repeat
     local tx, ty = ag[i], ag[i+1]
     -- data
@@ -861,7 +861,7 @@ asciiplot.plot = function (F, ...)
         for i = 1, #ty do tx[i] = i end
         i = i + 1
       end
-      local a,b = asciiplot._findVectorRange(tx)
+      local a, b = asciiplot._findVectorRange(tx)
       if a < xmin then xmin = a end
      if b > xmax then xmax = b end
     else
@@ -995,3 +995,4 @@ return asciiplot
 
 --======================================
 -- FIX contour concatenation when use color
+-- TODO bar - choose location of zero

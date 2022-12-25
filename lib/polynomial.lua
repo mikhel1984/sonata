@@ -394,7 +394,7 @@ end
 --  @param P Polynomial object.
 --  @param v New root.
 polynomial._multXv = function (P,v)
-  local prev, cur = 0
+  local prev, cur = 0, nil
   for i = 0, #P do
     cur = P[i]
     P[i] = prev - cur * v
@@ -456,7 +456,7 @@ polynomial._roots3 = function (P)
   local a, b, c = P[2]/t, P[1]/t, P[0]/t
   local Q, R = (a*a - 3*b)/9, (2*a^3 - 9*a*b + 27*c)/54
   t = Q^3
-  local res
+  local res = nil
   if R*R < t then
     -- only real roots
     t = math.acos(R / math.sqrt(t)) / 3
@@ -548,7 +548,7 @@ polynomial.fit = function (self,tX,tY,N)
   if #tX ~= #tY then error('Wrong data size!') end
   if #tX <= N then error('Too few points!') end
   -- find sums
-  local acc = Ver.move(tX,1,#tX,1,{})     -- accumulate powers
+  local acc = Ver.move(tX, 1, #tX, 1, {})     -- accumulate powers
   local sX, sY = {}, {}              -- accumulate sums
   local nY = N
   sY[nY+1] = getSum(tY)
@@ -799,7 +799,7 @@ about[polynomial.spline] = {":spline(tX,tY)",
 --  @return String with traditional form of equation.
 polynomial.str = function (P,s)
   s = s or 'x'
-  local res, a, b = {}
+  local res, a, b = {}, 0, 0
   for i = #P, 1, -1 do
     a, b = P[i], P[i-1]
     if a ~= 0 then

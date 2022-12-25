@@ -371,7 +371,7 @@ end
 --  @param U Unit object.
 --  @return Found rule or nil.
 units._expandRules = function (U)
-  local v, ku
+  local v, ku = nil, nil
   for k1, u1 in pairs(units._rules) do
     -- check
     if U._key[k1] then
@@ -445,7 +445,7 @@ end
 units._getPow = function (lst, n)
   local res, m  = units._getExpr(lst, n)
   if lst[m] == '^' then
-    local num
+    local num = nil
     num, m = units._getNum(lst, m+1)
     op['^'](res, num)
   end
@@ -460,7 +460,7 @@ units._getTerm = function (lst, n)
   local res, m = units._getPow(lst, n)
   while lst[m] == '*' or lst[m] == '/' do
     -- while get * or / get terms and evaluate
-    local sign, tmp = lst[m]
+    local sign, tmp = lst[m], nil
     tmp, m = units._getPow(lst, m+1)
     op[sign](res, tmp)
   end

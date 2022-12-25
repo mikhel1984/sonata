@@ -149,11 +149,11 @@ numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
   local h = tParam and tParam.dt or (10*numeric.TOL)
   local exit = tParam and tParam.exit or function () return false end
   -- evaluate
-  local res = {{tDelta[1],dY0}}        -- save intermediate points
+  local res = {{tDelta[1], dY0}}        -- save intermediate points
   local upack = Ver.unpack
   while res[#res][1] < xn do
   --repeat
-    local x,y = upack(res[#res])
+    local x, y = upack(res[#res])
     h = math.min(h, xn-x)
     -- correct step
     if tParam and tParam.dt then
@@ -210,13 +210,13 @@ about[numeric.solve] = {
 numeric.trapez = function (self, fn, dA, dB)
   local N, sum = 10, 0
   local fab = (fn(dA)+fn(dB)) * 0.5
-  local x, dx, N = dA, (dB-dA)/N, N-1
+  local x, dx, N = dA, (dB-dA)/N, N-1  -- TODO why redefine N?
   -- initial approximation
   for i = 1, N do
     x = x + dx
     sum = sum + fn(x)
   end
-  local I, last = (fab + sum) * dx
+  local I, last = (fab + sum) * dx, 0
   local Nsum, Nlast = 0, N
   -- correct
   repeat

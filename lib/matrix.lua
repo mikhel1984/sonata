@@ -302,7 +302,7 @@ matrix.__add = function (M1,M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
   end
-  local res = matrix:_init(M1._rows,M1._cols,{})
+  local res = matrix:_init(M1._rows, M1._cols, {})
   for r = 1, M1._rows do
     local rr, m1r, m2r = res[r], M1[r], M2[r]
     for c = 1, M1._cols do
@@ -432,7 +432,7 @@ matrix.__sub = function (M1,M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
   end
-  local res = matrix:_init(M1._rows,M1._cols,{})
+  local res = matrix:_init(M1._rows, M1._cols, {})
   for r = 1, M1._rows do
     local rr, m1r, m2r = res[r], M1[r], M2[r]
     for c = 1, M1._cols do
@@ -679,7 +679,7 @@ matrix._luPrepare = function (M)
   local vv = {}
   -- get scaling information
   for r = 1,a._rows do
-    local big,abig,v = 0,0
+    local big, abig, v = 0, 0, 0
     local ar = a[r]
     for c = 1,a._cols do
       v = Cross.norm(ar[c])
@@ -691,7 +691,7 @@ matrix._luPrepare = function (M)
     vv[r] = 1.0/big
   end
   -- Crout's method
-  local rmax, dum
+  local rmax, dum = nil, nil
   local TINY, d = 1e-20, 0
   local index = {}
   for c = 1,a._cols do
@@ -807,7 +807,7 @@ about[matrix.bidiag] = {
 --  @return Lower part of the decomposition.
 matrix.chol = function (M)
   if M._rows ~= M._cols then error("Square matrix is expected!") end
-  local a,p = matrix.copy(M), {}
+  local a, p = matrix.copy(M), {}
   -- calculate new values
   for r = 1,a._rows do
     local ar = a[r]
@@ -893,8 +893,8 @@ matrix.cross = function (V1,V2)
   if (V1._rows*V1._cols ~= 3 or V2._rows*V2._cols ~= 3) then
     error("Vector with 3 elements is expected!")
   end
-  local x1,y1,z1 = V1(1), V1(2), V1(3)
-  local x2,y2,z2 = V2(1), V2(2), V2(3)
+  local x1, y1, z1 = V1(1), V1(2), V1(3)
+  local x2, y2, z2 = V2(1), V2(2), V2(3)
   return matrix:_init(3,1, {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}})
 end
 about[matrix.cross] = {'cross(V)','Cross product or two 3-element vectors.'}
@@ -1149,7 +1149,7 @@ matrix.inv = function (M)
                        or matrix:fill(size,size, math.huge)
   end
   -- prepare matrix
-  local res, det = matrix.copy(M)
+  local res, det = matrix.copy(M), nil
   -- add "tail"
   for i = 1,size do
     res[i][i+size] = 1
@@ -1177,11 +1177,11 @@ about[matrix.inv] = {"inv()", "Return inverse matrix.", TRANSFORM}
 --  @param M Initial square matrix.
 --  @return L matrix, U matrix, permutations
 matrix.lu = function (M)
-  local a,_,d = matrix._luPrepare(M)
+  local a, _, d = matrix._luPrepare(M)
   local p = matrix:eye(M._rows,M._cols)
   local move = Ver.move
   while d > 0 do
-    local tmp = p[1]; move(p,2,p._rows,1); p[p._rows] = tmp  -- shift
+    local tmp = p[1]; move(p, 2, p._rows, 1); p[p._rows] = tmp  -- shift
     d = d-1
   end
   return
@@ -1241,8 +1241,8 @@ about[matrix.norm] = {"norm()", "Euclidean norm."}
 --  @param M Initial matrix.
 --  @return Pseudo inverse matrix.
 matrix.pinv = function (M)
-  local m,n,transp = M._rows, M._cols, false
-  local Mt, A = M:T()
+  local m, n, transp = M._rows, M._cols, false
+  local Mt, A = M:T(), nil
   if m < n then
     A, n, transp = matrix.__mul(M, Mt), m, true
   else
@@ -1254,7 +1254,7 @@ matrix.pinv = function (M)
     tol = math.min(tol, (v > 0 and v or math.huge))
   end
   tol = tol * 1e-9
-  local L, r, tmp = matrix:zeros(A._rows, A._cols), 0
+  local L, r, tmp = matrix:zeros(A._rows, A._cols), 0, nil
   for k = 1, n do
     r = r + 1
     local B = A:range({k,n},{k})

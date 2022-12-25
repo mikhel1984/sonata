@@ -187,7 +187,7 @@ bigint.__div = function (B1, B2)
       return p and (p / B2) or (Cross.float(B1) / Cross.float(B2))
     end
   end
-  local res,_ = bigint._div(B1,B2)
+  local res, _ = bigint._div(B1,B2)
   return res
 end
 
@@ -268,7 +268,7 @@ bigint.__mod = function (B1, B2)
       return p and (p % B2) or (Cross.float(B1) % Cross.float(B2))
     end
   end
-  local _,res = bigint._div(B1,B2)
+  local _, res = bigint._div(B1,B2)
   return res
 end
 
@@ -317,7 +317,7 @@ bigint.__pow = function (B1,B2)
     assert(#B1 > 1 or B1._[1] ~= 0, "Error: 0^0!")
     return res
   end
-  local dig, mul, rest = {}, bigint._mul
+  local dig, mul, rest = {}, bigint._mul, nil
   for i = 1,#B2 do dig[i] = B2._[i] end
   while #dig > 1 or #dig == 1 and dig[1] > 1 do
     dig, rest = bigint._divBase(dig, B1._base_, 2)
@@ -356,7 +356,7 @@ end
 --  @param B Bigint object.
 --  @return Opposite value.
 bigint.__unm = function (B)
-  local res = bigint:_new({base=B._base_,sign=-B.sign,0})
+  local res = bigint:_new({base=B._base_, sign=-B.sign, 0})
   res._ = B._
   return res
 end
@@ -365,12 +365,12 @@ end
 --  @param B Bigint object.
 --  @return String object.
 bigint.__tostring = function (B)
-  local s
+  local s = nil
   if B._base_ > 10 then
     s = {}
     local b = B._
     local n = #b+1
-    for i = 1,#b do s[i] = b[n-i] end
+    for i = 1, #b do s[i] = b[n-i] end
     s = table.concat(s, '|')
   else
     s = string.reverse(table.concat(B._, (B._base_ == 10) and '' or '|'))
@@ -464,7 +464,7 @@ bigint._div = function (B1,B2)
     table.insert(rem._, 1, b1[i])
     if rem >= den then
       local n = math.modf(rem:float() / v2)  -- estimate
-      local tmp = rem - den * bigint:_new({n,base=d})
+      local tmp = rem - den * bigint:_new({n, base=d})
       if tmp.sign < 0 then
         n = n - 1
         tmp = tmp + den
@@ -492,7 +492,7 @@ bigint._divBase = function (t, iOld, iNew)
   local rest, set = 0, false
   for i = #t,1,-1 do
     rest = rest * iOld + t[i]
-    local n,_ = math.modf(rest / iNew)
+    local n, _ = math.modf(rest / iNew)
     if set or n > 0 then
       t[i] = n
       set = true
@@ -555,14 +555,14 @@ end
 --  @param B Number.
 --  @return true if prime.
 bigint._primeFermat = function (B)
-  local a
+  local a = nil
   local div, pow = bigint._div, bigint._powm
   for i = 1, 5 do
     repeat
       a = bigint:random(B)
     until a:float() >= 2
     local v1 = pow(a,B,B)
-    local _,v2 = div(a,B)
+    local _, v2 = div(a,B)
     if v1 ~= v2 then return false end
   end
   return true
@@ -619,7 +619,7 @@ bigint._new = function (self, num)
       num = -num
     end
     repeat
-      local n,_ = math.modf(num / 10)
+      local n, _ = math.modf(num / 10)
       acc[#acc+1] = num - 10*n
       num = n
     until num == 0
@@ -644,7 +644,7 @@ bigint._powm = function (B1,B2,B3)
     return bigint:_new({0,base=B1._base_})
   end
   local y, x = bigint:_new({1,base=B1._base_}), B1
-  local dig, mul, rest = bigint._copy(B2), bigint._mul
+  local dig, mul, rest = bigint._copy(B2), bigint._mul, nil
   local d = dig._
   while #d > 1 or #d == 1 and d[1] > 1 do
     d, rest = bigint._divBase(d, B1._base_, 2)
@@ -674,7 +674,7 @@ end
 --  @param B Bigint object.
 --  @return Estimation of sqrt(B).
 bigint._sqrt = function (B)
-  local ai = bigint:_new({1,base=B._base_})
+  local ai = bigint:_new({1, base=B._base_})
   local sum, div, sub = bigint._sum, bigint._div, bigint._sub
   repeat
     local aii,_ = div(B,ai)
@@ -731,7 +731,7 @@ end
 --  @return Sum of the values.
 bigint._sum = function (B1,B2)
   local n, add = B1._base_, 0
-  local res = bigint:_new({0,base=n})
+  local res = bigint:_new({0, base=n})
   local b1, b2, rr = B1._, B2._, res._
   for i = 1, math.max(#b1,#b2) do
     local v = (b1[i] or 0) + (b2[i] or 0) + add
@@ -749,14 +749,14 @@ end
 
 --- Searching for prime factor.
 --  @param B Integer number.
---  @return Pair of multipliers of nil.
+--  @return Pair of multipliers or nil.
 bigint._trivialSearch = function (B)
   local div, sum = bigint._div, bigint._sum
-  local n = bigint:_new({1,base=B._base_})
+  local n = bigint:_new({1, base=B._base_})
   bigint._incr(n)   -- n = 2
   local sq = bigint._sqrt(B)
   while #sq._ > #n._ or not bigint._gt(n,sq) do
-    local v1,v2 = div(B,n)
+    local v1, v2 = div(B,n)
     if #v2._ == 1 and v2._[1] == 0 then
       return n, v1
     end
@@ -769,7 +769,7 @@ end
 --  @param B Bigint or integer number.
 --  @return Absolute value.
 bigint.abs = function (B)
-  local a = bigint:_new({0,base=B._base_})
+  local a = bigint:_new({0, base=B._base_})
   a._ = B._
   a.sign = 1
   return a
@@ -832,7 +832,7 @@ bigint.__eq = bigint.eq
 bigint.fact = function (B)
   assert(B.sign > 0, "Non-negative value is expected!")
   local n = B:_copy()
-  local res = bigint:_new({1,base=B._base_})
+  local res = bigint:_new({1, base=B._base_})
   if #n._ == 1 and n._[1] == 0 then return res end  -- 0! == 1
   local mul = bigint._mul
   repeat
@@ -870,7 +870,7 @@ about[bigint.factorize] = {
 bigint.float = function (B)
   local d, v, sum = B._base_, 1, 0
   local b = B._
-  for i = 1,#b do
+  for i = 1, #b do
     sum = sum + b[i]*v
     v = v * d
   end
@@ -900,7 +900,7 @@ bigint.isPrime = function (B, sMethod)
     return bigint._primeFermat(B)
   end
   -- default is a simple search
-  local v1,v2 = bigint._trivialSearch(B)
+  local v1, v2 = bigint._trivialSearch(B)
   return v1 == nil
 end
 about[bigint.isPrime] = {"isPrime([sMethod])",
@@ -913,11 +913,11 @@ about[bigint.isPrime] = {"isPrime([sMethod])",
 --  @return Number from 0 to B.
 bigint.random = function (self,B)
   B = isbigint(B) and B or bigint:_new(B)
-  local d, set, any, v = B._base_, false
-  local res = bigint:_new({0,sign=B.sign,base=d})
-  local n = math.random(1,#B)
+  local d, set, v = B._base_, false, 0
+  local res = bigint:_new({0, sign=B.sign, base=d})
+  local n = math.random(1, #B)
   local b, rr = B._, res._
-  any = (n ~= #b)
+  local any = (n ~= #b)
   for i = n,1,-1 do
     -- generate
     if any then
@@ -944,7 +944,7 @@ about[bigint.random] = {":random(B)",
 bigint.rebase = function (B, N)
   if N <= 0 then error("Wrong base "..tostring(N)) end
   if B._base_ == N then return B end
-  local res = bigint:_new({0,sign=B.sign, base=N})
+  local res = bigint:_new({0, sign=B.sign, base=N})
   local b, rr = B._, res._
   rr[1] = nil    -- remove zero
   -- reverse order
