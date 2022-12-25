@@ -31,6 +31,7 @@ ans = x^y * x^(2*y)       --> x^(3*y)
 
 -- evaluate
 S = (x+y)*(x-y)
+print(S)
 ans = S:eval{x=2, y=1}    --> Sym(3)
 
 -- define function
@@ -411,13 +412,11 @@ PARSER.prim = function (lst, n)
   return nil, n
 end
 
-
-
 --- List of elements for printing in brackets.
 COMMON.closed = {
 [PARENTS.sum] = true,
 [PARENTS.product] = true,
---[PARENTS.power] = true,
+-- [PARENTS.power] = true,
 }
 
 --- Simplify list of pairs (in place).
@@ -429,7 +428,7 @@ COMMON.simpPair = function (S, tParent)
   -- get coefficients
   for i, v in ipairs(S._) do
     if v[2]._parent == tParent then
-      local k, v2 = v[2]:p_getConst()
+      local k = v[2]:p_getConst()
       if k ~= 1 then
         v[1] = v[1] * k
         v[2]:p_signature()
@@ -447,7 +446,7 @@ COMMON.simpPair = function (S, tParent)
             -- combine constants
             if tParent == PARENTS.product then
               si[2]._ = si[1] * si[2]._ + sj[1] * sj[2]._
-            else -- PARENTS.power
+            else  -- PARENTS.power
               si[2]._ = si[2]._ ^ si[1] * sj[2]._ ^ sj[1]
             end
             si[1], sj[1] = 1, 0
@@ -486,8 +485,7 @@ PARENTS.funcValue.p_eval = function (S, tEnv)
     -- evaluate
     return symbolic:_newConst( body(table.unpack(val)) )
   else
-    local res = symbolic:_newExpr(S._parent, t)
-    return res
+    return symbolic:_newExpr(S._parent, t)
   end
 end
 
@@ -563,6 +561,7 @@ end
 --  @param bFull Flag for recursive simplification.
 PARENTS.product.p_simp = function (S, bFull)
   if bFull then
+    COMMON.simpPair(S, PARENTS.power)  -- check for similar terms
     for _, v in ipairs(S._) do v[2]:p_simp(bFull) end
   end
   COMMON.simpPair(S, PARENTS.power)
@@ -624,6 +623,7 @@ end
 --  @param bFull Flag for recursive simplification.
 PARENTS.sum.p_simp = function (S, bFull)
   if bFull then
+    COMMON.simpPair(S, PARENTS.product)  -- check for similar terms
     for _, v in ipairs(S._) do v[2]:p_simp(bFull) end
   end
   -- update structure
@@ -848,7 +848,7 @@ end
 --  @param S Symbolic object.
 --  @return Negative value.
 symbolic.__unm = function (S)
-  local res
+  local res = nil
   if S._parent == PARENTS.sum then
     res = symbolic:_newExpr(PARENTS.sum, {})
     for i, v in ipairs(S._) do res._[i] = {-v[1], v[2]} end
@@ -990,9 +990,8 @@ symbolic.parse = function(self, str)
   local res = PARSER.args(tokens, 1)
   if issymbolic(res) then
     return res
-  else
-    return table.unpack(res)
   end
+  return table.unpack(res)
 end
 about[symbolic.parse] = {":parse(str)", "Get simbolical expression from string."}
 
