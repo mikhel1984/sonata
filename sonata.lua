@@ -20,15 +20,15 @@
 --	Decode text for Windows
 --SONATA_WIN_CODE = 'cp866'
 
---=====================  CODE  ========================
+--===================  MODULES  =======================
 
--- Modules
+-- List of modules in the 'lib' library.
+-- Aliases can be changed.
 use = {
 --  name     alias
   asciiplot = "Ap",
   bigint    = "Int",
   complex   = "_Z",
-  const     = "_C",
   data      = "_D",
   graph     = "Graph",
   main      = "Main",
@@ -41,15 +41,16 @@ use = {
   units     = "Unit",
 --
   array     = "Arr",
+  const     = "_C",
   geodesy   = "Geo",
   gnuplot   = "Gp",
   lens      = "Lens",
   quaternion = "Quat",
 }
 
--- Add path to the libraries
+--=====================  RUN  =========================
+
 if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
-
 require('core.load')
