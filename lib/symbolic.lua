@@ -949,6 +949,8 @@ symbolic.def = function (self, sName, tArgs, S)
   symbolic._fnList[sName] = { args = t, body = S }
   return symbolic:_newFunc(sName)
 end
+about[symbolic.def] = {":def(sName,tArgs,S)", 
+  "Define symbolical function. S is either symbolical expression or a Lua function."}
 
 --- Find value for the given substitutions.
 --  @param S Symbolic object.
@@ -960,6 +962,7 @@ symbolic.eval = function (S, tEnv)
   res:p_signature()
   return res
 end
+about[symbolic.eval] = {"eval([tEnv])", "Evaluate symbolical expression with the given environment."}
 
 --- Find function using its name.
 --  @param self Do nothing.
@@ -968,6 +971,7 @@ end
 symbolic.func = function (self, sName)
   return symbolic._fnList[sName] and symbolic:_newFunc(sName) or nil
 end
+about[symbolic.func] = {":func(sName)", "Return symbolical function if it was defined."}
 
 --- Get name of variable.
 --  @param S Symbolic object.
@@ -990,6 +994,7 @@ symbolic.parse = function(self, str)
     return table.unpack(res)
   end
 end
+about[symbolic.parse] = {":parse(str)", "Get simbolical expression from string."}
 
 --- Get value of constant.
 --  @param S Symbolic object.
