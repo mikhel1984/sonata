@@ -801,7 +801,7 @@ asciiplot.contour = function (F, fn, tOpt)
   return acc[1]
 end
 about[asciiplot.contour] = {"contour(F,fn,[{view='XY'}])",
-  "Find contours of projection for a function fn(x,y)."}
+  "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ, XYZ."}
 
 --- Make a copy.
 --  @param F Initial object.

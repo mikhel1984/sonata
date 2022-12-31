@@ -172,7 +172,7 @@ local makeModule = function (sName, tLang)
     end
     local title = sformat('["%s"]', elt)
     local line = sformat('%-24s = [[%s]],', title, lng[elt] or desc)
-    if lnt[elt] then   -- found translation
+    if lng[elt] then   -- found translation
       res[#res+1] = line
     else
       new[#new+1] = sformat((line:find('%c') and '--[=[%s]=]' or '--%s'), line)

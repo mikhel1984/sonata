@@ -1049,7 +1049,7 @@ matrix.householder = function (V, ik)
   return matrix:eye(r) - u:H() * ( (2 / (u:norm() ^ 2)) * u)
 end
 about[matrix.householder] = {"householder(V,ik)", 
-  "Find householder matrix for the given vector.", TRANSFORM}
+  "Find Householder matrix for the given vector.", TRANSFORM}
 
 --- Round matrix elements in place.
 --  @param M Matrix object.
