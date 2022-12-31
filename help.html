@@ -46,19 +46,19 @@ DIV {margin-left: 10px;}
 	-e	Evaluate command line expression.<br>
 		e.g. -e "2+2"<br>
 <br>
-	--test	Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
-		e.g. --test array<br>
 	--doc	Creating/updating a documentation file.<br>
 		e.g. --doc ru<br>
-	--lang	Creating/updating a file for localization.<br>
-		e.g. --lang eo<br>
 	--new	Create template file for a new module.<br>
 		e.g. --new  matrices  Mat  "Matrix operations."<br>
+	--test	Apply the unit tests to the desired module. Call all modules if the name is not defined.<br>
+		e.g. --test array<br>
+	--lang	Creating/updating a file for localization.<br>
+		e.g. --lang eo<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.32<br>
+<b>VERSION</b>: 0.9.33<br>
 <br>
-<b>MODULES</b>: graph, rational, polynomial, complex, bigint, geodesy, asciiplot, special, matrix, const, array, gnuplot, data, quaternion, lens, numeric, symbolic, main, units.<br>
+<b>MODULES</b>: numeric, gnuplot, asciiplot, const, symbolic, main, bigint, matrix, rational, quaternion, geodesy, lens, array, units, special, data, complex, graph, polynomial.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -151,13 +151,13 @@ print(a)
 <div><a name="Ap"></a>
 <h3># Ap (asciiplot) #</h3>
 <p class="descript">Use pseudography for data visualization.</p>
-<p><b>Ap([iWidth=75,iHeight=23])</b> - Create new asciiplot.<br>
+<p><b>Ap ([iWidth=75,iHeight=23])</b> - Create new asciiplot.<br>
 <b>Ap:concat(...)</b> - Horizontal concatenation of figures with the same height. For two object operator '..' can be used.<br>
 <b>addPoint(dx,dy,s)</b> - Add point (dx,dy) using char 's'.<br>
 <b>addPose(ir,ic,s)</b> - Add character s to the given position.<br>
 <b>addString(ir,ic,s)</b> - Set string from the given position.<br>
 <b>bar(t,[vy=2,ix=1])</b> - Plot bar diargram for data. vy can be y index in t (optional) or table of y-s.<br>
-<b>contour(F,fn,[{view='XY'}])</b> - Find contours of projection for a function fn(x,y).<br>
+<b>contour(F,fn,[{view='XY'}])</b> - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ, XYZ.<br>
 <b>copy()</b> - Create a copy of the object.<br>
 <b>plot(...)</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br>
 <b>reset()</b> - Prepare a clear canvas.<br>
@@ -260,7 +260,7 @@ print(fig5:bar(data))
 <div><a name="Int"></a>
 <h3># Int (bigint) #</h3>
 <p class="descript">Operations with arbitrary long integers.</p>
-<p><b>Int(v)</b> - Create number from integer, string or table.<br>
+<p><b>Int (v)</b> - Create number from integer, string or table.<br>
 <b>Int:random(B)</b> - Generate pseudo-random value from 0 to B.<br>
 <b>abs()</b> - Return module of arbitrary long number.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
@@ -379,7 +379,7 @@ ans = a - 0.5                 --> 122.5
 <div><a name="_Z"></a>
 <h3># _Z (complex) #</h3>
 <p class="descript">Manipulations with complex numbers.</p>
-<p><b>_Z([vRe=0,vIm=0])</b> - Create new complex number.<br>
+<p><b>_Z ([vRe=0,vIm=0])</b> - Create new complex number.<br>
 <b>_Z:i([v=1])</b> - Return v*i.<br>
 <b>_Z:trig(vModule,vAngle)</b> - Create complex number using module and angle.<br>
 <b>abs()</b> - Return module of complex number.<br>
@@ -820,7 +820,7 @@ ans = p4.B                  --2> p1.B
 <div><a name="Gp"></a>
 <h3># Gp (gnuplot) #</h3>
 <p class="descript">Interface for calling Gnuplot from Sonata.</p>
-<p><b>Gp()</b> - Prepare Gnuplot object.<br>
+<p><b>Gp ()</b> - Prepare Gnuplot object.<br>
 <b>Gp:plot(x1[,y1,nm,x2,..])</b> - 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
 <b>Gp:polarplot(x1,y1,[nm,x2,y2..])</b> - Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name.<br>
 <b>Gp:surfplot(x1,y1,fn1,[nm,x2,y2..])</b> - Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name.<br>
@@ -1268,10 +1268,12 @@ ans = math.deg(_pi)
 <b>Mat:V({...})</b> - Create vector from list of numbers.<br>
 <b>Mat:eye(iRows,[iCols=iRows])</b> - Create identity matrix.<br>
 <b>Mat:fill(iRows,iCols,[val=1])</b> - Create matrix of given numbers (default is 1).<br>
+<b>Mat:givensRot(d1,d2)</b> - Find parameters of Givens rotation (c,s,r).<br>
 <b>Mat:zeros(rows,[cols=rows])</b> - Create matrix of zeros.<br>
 <b>Mat:zip(fn,M1,M2,...)</b> - Apply function to the given matrices element-wise.<br>
 <b>T()</b> - Return matrix transpose.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
+<b>bidiag(M)</b> - Bidiagonalization of matrix, return U, B, V.<br>
 <b>chol()</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
 <b>cols()</b> - Get number of columns.<br>
 <b>comparison</b> - a==b, a~=b<br>
@@ -1283,6 +1285,7 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>diag()</b> - Get diagonal of the matrix or create new matrix which diagonal elements are given.<br>
 <b>dot(V)</b> - Scalar product of two vectors.<br>
 <b>eig()</b> - Find matrices of eigenvectors and eigenvalues.<br>
+<b>householder(V,ik)</b> - Find Householder matrix for the given vector.<br>
 <b>insert(tR,tC,M)</b> - Insert second matrix into the given range of indeces.<br>
 <b>inv()</b> - Return inverse matrix.<br>
 <b>lu()</b> - LU decomposition for the matrix. Return L,U and P matrices.<br>
@@ -1296,6 +1299,7 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>round([N=6])</b> - Round matrix elements in place.<br>
 <b>rows()</b> - Get number of rows.<br>
 <b>rref()</b> - Perform transformations using Gauss method.<br>
+<b>svd(M)</b> - Singular value decomposition, return U, S, V.<br>
 <b>table()</b> - Convert to simple Lua table.<br>
 <b>tr()</b> - Get trace of the matrix.<br></p>
 <pre class="example">
@@ -1469,6 +1473,10 @@ q,r = m:qr()
 ans = (q*r)[2][2]            --3> m[2][2]
 
 ans = q:det()                --3> 1.0
+
+-- SVD decomposition
+u,s,v = m:svd()
+ans = (u*s*v:T())[1][1]      --3> m[1][1]
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
@@ -1798,7 +1806,7 @@ print(d)
 <div><a name="Rat"></a>
 <h3># Rat (rational) #</h3>
 <p class="descript">Computations with rational numbers.</p>
-<p><b>Rat(m,[n=1])</b> - Create rational number using num (and denom).<br>
+<p><b>Rat (m,[n=1])</b> - Create rational number using num (and denom).<br>
 <b>Rat:from(f,[fErr=1E-3])</b> - Estimate ratio from floating point value.<br>
 <b>Rat:fromCont(t)</b> - Transform continued fraction to rational number.<br>
 <b>Rat:gcd(va,vb)</b> - Calculate the greatest common divisor for two integers.<br>
@@ -1943,8 +1951,12 @@ ans = Spec:dawson(3.3)       --3> 0.1598
 <a href="#Top">Top</a></div>
 <div><a name="Sym"></a>
 <h3># Sym (symbolic) #</h3>
-<p class="descript">Symbolical calculations.</p>
-<p><b>Sym(v)</b> - Create new symbolic variable.<br></p>
+<p class="descript">Symbolic calculations.</p>
+<p><b>Sym (v)</b> - Create new symbolic variable.<br>
+<b>Sym:def(sName,tArgs,S)</b> - Define symbolical function. S is either symbolic expression or a Lua function.<br>
+<b>Sym:func(sName)</b> - Return symbolic function if it was defined.<br>
+<b>Sym:parse(str)</b> - Get simbolic expression from string.<br>
+<b>eval([tEnv])</b> - Evaluate symbolic expression with the given environment.<br></p>
 <pre class="example">
 
 -- use 'symbolic'
@@ -1965,6 +1977,7 @@ ans = x^y * x^(2*y)       --> x^(3*y)
 
 -- evaluate
 S = (x+y)*(x-y)
+print(S)
 ans = S:eval{x=2, y=1}    --> Sym(3)
 
 -- define function
@@ -1980,7 +1993,7 @@ ans = foo(Sym(2), Sym(3)) --> Sym(8)
 <div><a name="Unit"></a>
 <h3># Unit (units) #</h3>
 <p class="descript">Operations and conversations according the units.</p>
-<p><b>Unit([v,]s)</b> - Create new elements with units.<br>
+<p><b>Unit ([v,]s)</b> - Create new elements with units.<br>
 <b>Unit:setRule(s,U)</b> - Add new rule for conversation.<br>
 <b>arithmetic</b> - U1+U2, U1-U2, U1*U2, U1/U2, U1^N<br>
 <b>comparison</b> - U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2<br>
@@ -2049,5 +2062,5 @@ ans = 2 * Unit('N')           --> Unit(2,'N')
 print(a)
 --</pre>
 <a href="#Top">Top</a></div>
-<div><p align="center"><i>2017-2022, Stanislav Mikhel</i></p></div>
+<div><p align="center"><i>2017-2023, Stanislav Mikhel</i></p></div>
 </body></html>
