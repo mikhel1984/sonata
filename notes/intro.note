@@ -43,7 +43,7 @@ _ans
 -- Additional modules can be loaded 
 -- with the help of "use" function.
 -- List of modules, aliases and the current status:
-help(use)
+use()
 -- PAUSE 
 
 -- In order to load module, enter 
@@ -55,6 +55,8 @@ a = Mat {{1,2},{3,4}}       -- new matrix
 -- functions with ':'
 a:det()
 Mat:eye(2,2)
+-- List of functions in the module
+help 'matrix'
 -- PAUSE
 
 -- Several modules could be loaded as

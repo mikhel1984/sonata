@@ -43,7 +43,7 @@ _ans
 -- Pliaj moduloj povas esti ŝarĝitaj per la "use" funkcio.
 -- Jen listo de disponeblaj moduloj kun kaŝnomoj
 -- kaj aktuala stato:
-help(use)
+use()
 -- PAUSE 
 
 -- La modulo povas esti ŝarĝita per la komando 
@@ -55,6 +55,8 @@ a = Mat {{1,2},{3,4}}       -- nova matrico
 -- funkcioj por ':'
 a:det()
 Mat:eye(2,2)
+-- Listo de funkcioj en la modulo
+help 'matrix'
 -- PAUSE
 
 -- Pluraj moduloj povas esti ŝarĝitaj samtempe per la komando
