@@ -203,8 +203,11 @@ generator.lang = function(fName, tModules)
   -- dialog elements
   f:write(makeDialog(Help.english, lng))
   -- modules
-  for k,v in pairs(tModules) do
-    f:write(makeModule(k, lng))
+  local modules = {}
+  for k,_ in pairs(tModules) do table.insert(modules, k) end
+  table.sort(modules)
+  for _, v in ipairs(modules) do 
+    f:write(makeModule(v, lng))
   end
   f:write('}')
   f:close()

@@ -67,7 +67,7 @@ local compList = function (S1, S2) return S1[2]._sign < S2[2]._sign end
 local help = SonataHelp or {}
 -- description
 local about = {
-__module__ = "Symbolical calculations."
+__module__ = "Symbolic calculations."
 }
 
 --	MODULE
@@ -950,7 +950,7 @@ symbolic.def = function (self, sName, tArgs, S)
   return symbolic:_newFunc(sName)
 end
 about[symbolic.def] = {":def(sName,tArgs,S)", 
-  "Define symbolical function. S is either symbolical expression or a Lua function."}
+  "Define symbolical function. S is either symbolic expression or a Lua function."}
 
 --- Find value for the given substitutions.
 --  @param S Symbolic object.
@@ -962,7 +962,7 @@ symbolic.eval = function (S, tEnv)
   res:p_signature()
   return res
 end
-about[symbolic.eval] = {"eval([tEnv])", "Evaluate symbolical expression with the given environment."}
+about[symbolic.eval] = {"eval([tEnv])", "Evaluate symbolic expression with the given environment."}
 
 --- Find function using its name.
 --  @param self Do nothing.
@@ -971,7 +971,7 @@ about[symbolic.eval] = {"eval([tEnv])", "Evaluate symbolical expression with the
 symbolic.func = function (self, sName)
   return symbolic._fnList[sName] and symbolic:_newFunc(sName) or nil
 end
-about[symbolic.func] = {":func(sName)", "Return symbolical function if it was defined."}
+about[symbolic.func] = {":func(sName)", "Return symbolic function if it was defined."}
 
 --- Get name of variable.
 --  @param S Symbolic object.
@@ -993,7 +993,7 @@ symbolic.parse = function(self, str)
   end
   return table.unpack(res)
 end
-about[symbolic.parse] = {":parse(str)", "Get simbolical expression from string."}
+about[symbolic.parse] = {":parse(str)", "Get simbolic expression from string."}
 
 --- Get value of constant.
 --  @param S Symbolic object.

@@ -1032,7 +1032,7 @@ matrix.givensRot = function (d1, d2)
    end
 end
 about[matrix.givensRot] = {":givensRot(d1,d2)", 
-  "Find parameters of givens rotation (c,s,r).", help.OTHER}
+  "Find parameters of Givens rotation (c,s,r).", help.OTHER}
 
 --- Householder transformation.
 --  @param V Vector for reflection.
