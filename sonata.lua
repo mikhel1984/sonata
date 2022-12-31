@@ -1,7 +1,7 @@
 #!/usr/local/bin/lua
 
 -- Lua based calculator
--- This file is a part of 'sonata.lib' collection, 2017 - 2022.
+-- This file is a part of 'sonata.lib' collection, 2017 - 2023.
 
 --================= CONFIGURATION ====================
 

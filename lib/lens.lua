@@ -9,7 +9,7 @@
 --  "Introduction to matrix methods in optics" by A.Gerrard, J.M.Burch.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
 
 	module 'lens'
 --]]

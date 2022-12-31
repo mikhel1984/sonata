@@ -3,7 +3,7 @@
 --- Functions for a file generation.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2023.
 
 	module 'generator'
 --]]
@@ -115,7 +115,7 @@ generator.doc = function (locName, tModules)
   end
 
   res[#res+1] =
-    '<div><p align="center"><i>2017-2022, Stanislav Mikhel</i></p></div>'
+    '<div><p align="center"><i>2017-2023, Stanislav Mikhel</i></p></div>'
   res[#res+1] = '</body></html>'
 
   -- save
@@ -287,8 +287,7 @@ end
 
 -- simplify constructor call
 setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
-WORD2.WORD3 = 'WORD3'
-about[WORD2.WORD3] = {"WORD3(t)", "Create new WORD2.", help.NEW}
+about[WORD2] = {" (t)", "Create new WORD2.", help.NEW}
 
 3L Method example.
 --  It is good idea to define method for the copy creation.

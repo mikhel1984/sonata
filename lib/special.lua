@@ -6,7 +6,7 @@
 --  by W.H.Press, S.A.Teukolsky, W.T.Vetterling and B.P.Flannery
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
 
 	module 'special'
 --]]
