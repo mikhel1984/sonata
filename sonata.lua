@@ -1,7 +1,7 @@
 #!/usr/local/bin/lua
 
--- Lua based calculator 
--- This file is a part of 'sonata.lib' collection, 2017 - 2022.
+-- Lua based calculator
+-- This file is a part of 'sonata.lib' collection, 2017 - 2023.
 
 --================= CONFIGURATION ====================
 
@@ -20,34 +20,37 @@
 --	Decode text for Windows
 --SONATA_WIN_CODE = 'cp866'
 
---=====================  CODE  ========================
+--===================  MODULES  =======================
 
--- Modules
+-- List of modules in the 'lib' library.
+-- Aliases can be changed.
 use = {
 --  name     alias
-  array     = "Arr",
   asciiplot = "Ap",
   bigint    = "Int",
   complex   = "_Z",
-  const     = "_C",
   data      = "_D",
   graph     = "Graph",
+  main      = "Main",
   matrix    = "Mat",
   numeric   = "Num",
   polynomial = "Poly",
-  quaternion = "Quat",
   rational  = "Rat",
   special   = "Spec",
+  symbolic  = "Sym",
   units     = "Unit",
 --
+  array     = "Arr",
+  const     = "_C",
   geodesy   = "Geo",
   gnuplot   = "Gp",
   lens      = "Lens",
+  quaternion = "Quat",
 }
 
--- Add path to the libraries
+--=====================  RUN  =========================
+
 if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
-
 require('core.load')

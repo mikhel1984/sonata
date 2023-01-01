@@ -1,16 +1,14 @@
---[[		sonata/core/help.lua 
+--[[		sonata/core/help.lua
 
 --- Function description management.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2023.
 
 	module 'help'
 --]]
 
 --[[    == About help system ==
-
-about = help:new("Module description*)  -- create new help object
 
 Each function description is represented as a table:
 about[function] =
@@ -31,7 +29,7 @@ t - table
 d - any number
 f - float point number
 i - integer number
-b - boolean 
+b - boolean
 s - string
 fn - function
 N - natural number
@@ -43,9 +41,8 @@ capital - object
 local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 -- internal parameters
-local TITLE, DESCRIPTION, CATEGORY, MODULE = 1, 2, 3, 4
-local MAIN = 1
-local _MAIN_ = '__module__'
+local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
+local COLON, SPACE = string.byte(':', 1, 1), string.byte(' ', 1, 1)
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -94,8 +91,8 @@ to load new modules.
 --  @param bUse Boolean flag of usage.
 help.useColors = function (bUse)
   if bUse then
-    help.CMAIN  = '\x1B[32m' 
-    help.CHELP  = '\x1B[33m' 
+    help.CMAIN  = '\x1B[32m'
+    help.CHELP  = '\x1B[33m'
     help.CRESET = '\x1B[0m'
     help.CBOLD  = '\x1B[1m'
     help.CNBOLD = '\x1B[22m'
@@ -105,134 +102,128 @@ end
 
 --================== Function help system ==================
 
---- Create new object, set metatable.
---  @param self Parent table.
---  @param str Module description.
---  @return Help object.
-help.new = function (self,str)
-  assert(type(str) == 'string', "Constructor must have a description!")
-  local o = {}
-  o[o] = {link=o, str}      -- save link to itself
-  return setmetatable(o, self)
-end
-
---- Create list of functions, sort by module and category.
---  @param tbl Table of pairs 'function - description'.
---  @return Grouped descriptions.
-help._funcList_ = function (tbl)
-  local res = {}
-  for k, v in pairs(tbl) do
-    -- only main description contains 'link'
-    if not v.link then
-      local category = v[CATEGORY] or help.BASE
-      local module = v[MODULE] or "Main"
-      res[module] = res[module] or {}               -- create table for each module
-      res[module][category] = res[module][category] or {}  -- add table for each category
-      table.insert(res[module][category], v[TITLE])      -- insert function file into this table
-    end
-  end
-  return res
-end
-
---- Prepare information about function or list of all possible functions.
---  @param self Parent object.
---  @param fn Function or module for getting manual.
-help.make = function (self,fn)
-  if fn then
-    -- expected module or function description
-    local v = assert(self[fn], "No help for "..tostring(fn))
-    if v.link then
-      -- module common description
-      local res = Sonata.info {'\n', v[MAIN], '\n'}
-      -- details
-      for _,elt in ipairs(v.link:make()) do res[#res+1] = elt end
-      return res
-    else
-      -- function description
-      return Sonata.info {'  :', Sonata.FORMAT_V1, v[TITLE], '\n', v[DESCRIPTION]}
-    end
-  else
-    local res = Sonata.info {}
-    -- sort functions
-    local lst = help._funcList_(self)
-    for mod, t in pairs(lst) do             -- for each module
-      res[#res+1] = '\n\t'; res[#res+1] = Sonata.FORMAT_V2
-      res[#res+1] = mod ; res[#res+1] = '\n'
-      for cat, n in pairs(t) do            -- for each category
-        res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
-        res[#res+1] = cat    ; res[#res+1] = ':\n'
-        for i, v in ipairs(n) do           -- for each function
-          res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
-        end
-      end 
-    end -- for
-    return res
-  end -- if
+--- Extend function name if need.
+--  @param nm Name.
+--  @param alias Module alias name.
+--  @return 'name' or 'alias:name'
+help._toExtend = function(nm, alias)
+  local b = string.byte(nm, 1, 1)
+  return (b == COLON or b == SPACE) and alias..nm or nm
 end
 
 --- Include content of the other help table into current one.
---  @param self Parent object.
---  @param tbl Table to add.
---  @param nm Name of the added module.
-help.add = function (self,tbl,nm)
-  assert(nm, "Module name is required!")
-  -- localization data
-  local mt = getmetatable(self)
-  local lng = mt.locale and mt.locale[nm]
-  -- prepare new 
-  for k, v in pairs(tbl) do 
-    if not v.link then v[MODULE] = nm end    -- no 'link' element in the function description
-    if lng then
-      -- set localization
-      if v.link then
-        -- common description
-        v[MAIN] = lng[_MAIN_] or v[MAIN]
-      else
-        -- details
-        v[DESCRIPTION] = lng[v[TITLE]] or v[DESCRIPTION]
-        v[CATEGORY] = self:get(v[CATEGORY])
-      end 
-    end -- lng
-    self[k] = v                       -- add to the base table 
+--  @param dst Table to store data.
+--  @param tbl Source table.
+--  @param nm Name of the module.
+help.add = function (dst, tbl, nm, alias)
+  dst._modules[nm] = tbl
+  -- update
+  local lng = dst._locale[nm] or {}
+  for k, v in pairs(tbl) do
+    if k == '__module__' then
+      tbl[k] = lng.__module__ or v              -- translate module description
+    else
+      local title = v[TITLE]
+      v[DESCRIPTION] = lng[title] or v[DESCRIPTION] -- translate description
+      v[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
+      v[EXTEND] = help._toExtend(title, alias)
+    end
   end
-  if lng then mt.locale[nm] = nil end -- free memory
+  if lng then dst._locale[nm] = nil end  -- free memory
 end
 
---- Read file with localization data and update main module.
---  @param self Parent object.
---  @param fName Name of the file with translated text.
-help.localization = function (self,fName)
-  fName = help.LOCALE..help.SEP..fName
-  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
-  if lng then
-    getmetatable(self).locale = lng   -- save translation
-    -- update functions in main.lua
-    local Sn = lng.Main
-    for k,v in pairs(self) do
-      if v.link then
-        -- common description
-        self[k][MAIN] = Sn[_MAIN_] or v[MAIN]
-      else
-        -- details
-        self[k][DESCRIPTION] = Sn[v[TITLE]] or v[DESCRIPTION]
-        self[k][CATEGORY] = self:get(v[CATEGORY])
-      end
+--- Look for object description in the stored data.
+--  @param tbl Table with info.
+--  @param obj Something that we would like to find.
+--  @param tGlob Table with aliases.
+--  @return Description or nil.
+help.findObject = function (tbl, obj, tGlob)
+  -- check module
+  local str = type(obj) == 'string'
+  for nm, mod in pairs(tbl._modules) do
+    if str and (nm == obj or tGlob[nm] == obj) then
+      -- module description
+      return help.makeModule(mod, tGlob[nm])
+    elseif mod[obj] then
+      -- function description
+      local t = mod[obj]
+      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], '\n', t[DESCRIPTION]}
     end
-  else
-    io.write("File ", fName, " not found.\n")
   end
+  return nil
 end
 
 --- Get translated string if possible.
 --  @param self Parent object.
 --  @param txt Text to seek.
 --  @return Translated or initial text.
-help.get = function (self,txt)
-  local mt = getmetatable(self)
-  local lng = mt.locale and mt.locale.Dialog and mt.locale.Dialog[txt]  -- check in localization table
+help.get = function (tbl, txt)
+  local lng = tbl._locale.Dialog and tbl._locale.Dialog[txt]
   return lng or help.english[txt] or txt
 end
 
+--- Prepare main table for help info.
+--  @return New table.
+help.init = function ()
+  return setmetatable({_locale={}, _modules={}}, help)
+end
+
+--- Read file with localization data and update main module.
+--  @param self Parent object.
+--  @param fName Name of the file with translated text.
+help.localization = function (dst, fName)
+  fName = help.LOCALE..help.SEP..fName
+  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
+  if lng then
+    dst._locale = lng
+  else
+    io.write("File ", fName, " not found.\n")
+  end
+end
+
+--- Collect information for all modules.
+--  @param t Table with all modules.
+--  @param tGlob Table with aliases.
+--  @return List of strings.
+help.makeFull = function (t, tGlob)
+  local res = Sonata.info {}
+  for nm, mod in pairs(t._modules) do
+    local acc = help.makeModule(mod, tGlob[nm])
+    for _, v in ipairs(acc) do
+      res[#res+1] = v
+    end
+  end
+  return res
+end
+
+--- Prepare description for module.
+--  @param t Table with functions.
+--  @param nm Module name.
+--  @return List of strings.
+help.makeModule = function (t, nm)
+  -- sort by categories
+  local acc, txt = {}, ''
+  for k, v in pairs(t) do
+    if k == '__module__' then
+      txt = v
+    else
+      local cat = v[CATEGORY]
+      acc[cat] = acc[cat] or {}
+      table.insert(acc[cat], v[EXTEND])
+    end
+  end
+  -- output
+  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm,'\n',
+    txt, '\n'}
+  for cat, n in pairs(acc) do          -- for each category
+    res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
+    res[#res+1] = cat    ; res[#res+1] = ':\n'
+    for i, v in ipairs(n) do           -- for each function
+      res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
+    end
+  end
+  return res
+end
 
 --================== Files ===================
 

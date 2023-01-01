@@ -1,9 +1,9 @@
---[[		sonata/lib/data.lua 
+--[[		sonata/lib/data.lua
 
 --- Data processing and statistics.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2022.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
 
 	module 'data'
 --]]
@@ -37,12 +37,12 @@ Y = {0,2,1,3,7,5,8,4}
 a = _D:cov2(X,Y)
 ans = a                      --3> -0.65625
 
--- covariance matrix 
+-- covariance matrix
 tmp = _D:cov({X,Y})
 ans = tmp[1][2]              --3> a
 
 -- maximum element and index
-_,ans = _D:max(X)           --> 4 
+_,ans = _D:max(X)           --> 4
 
 -- median
 ans = _D:median(X)          --> 3
@@ -74,7 +74,7 @@ ans = a[1]                    --> 1
 tmp = _D:filter(X, a)
 ans = tmp[1]                  --> X[1]
 
--- filtration using explicit function 
+-- filtration using explicit function
 fn = function (x) return x > 2 end
 tmp = _D:filter(X, fn)
 ans = tmp[1]                  --> X[1]
@@ -88,11 +88,11 @@ ans = tmp[1][2]               --> X[1]+Y[1]
 a,b = _D:histcounts(X, 3)
 ans = b[1]                    --> 2.25
 
--- define edges 
+-- define edges
 a,b = _D:histcounts(X,{2,4,7})
 ans = a[1]                    --> 1
 
--- table range reference 
+-- table range reference
 a = _D:ref(X, 3, 6)
 ans = #a                      --> 4
 
@@ -103,7 +103,7 @@ ans = _D:tcdf(4, 2.5)      --3> 0.9805
 
 ans = _D:tpdf(2, 3.3)      --3> 0.0672
 
--- dsv write 
+-- dsv write
 nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
@@ -136,9 +136,11 @@ local FILTER = 'filter'
 
 --	INFO
 
-local help = SonataHelp or {new=function () return {} end}
+local help = SonataHelp or {}
 -- description
-local about = help:new("Data processing and statistics.")
+local about = {
+__module__ = "Data processing and statistics."
+}
 
 --	MODULE
 
@@ -152,14 +154,15 @@ local data = {}
 data.cov2 = function (self,t1,t2)
   if #t1 ~= #t2 then error("Different vector size") end
   local m1 = data:mean(t1)
-  local m2 = data:mean(t2) 
+  local m2 = data:mean(t2)
   local s = 0
   for i = 1, #t1 do
     s = s + (t1[i] - m1)*(t2[i] - m2)
   end
   return s / #t1
 end
-about[data.cov2] = {"_D:cov2(t1,t2)", "Find covariance value for two vectors.", STAT}
+about[data.cov2] = {
+  ":cov2(t1,t2)", "Find covariance value for two vectors.", STAT}
 
 --- Estimate covariance matrix.
 --  @param self Do nothing.
@@ -169,7 +172,7 @@ data.cov = function (self, t)
   local N = #t
   if N == 0 then error("Expected list of vectors") end
   data.ext_matrix = data.ext_matrix or require('lib.matrix')
-  local m = data.ext_matrix.zeros(N, N) 
+  local m = data.ext_matrix.zeros(N, N)
   for i = 1, N do
     local ti = t[i]
     m[i][i] = data:cov2(ti, ti)
@@ -180,7 +183,8 @@ data.cov = function (self, t)
   end
   return m
 end
-about[data.cov] = {"_D:cov(t)", "Find covariance matrix for list of vectors.", STAT}
+about[data.cov] = {
+  ":cov(t)", "Find covariance matrix for list of vectors.", STAT}
 
 --- Save Lua table in file, use given delimiter.
 --  @param self Do nothing.
@@ -212,7 +216,8 @@ data.csvwrite = function (self,sFile, t, char, bCol)
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {"_D:csvwrite(sFile,t,[char=',',bCol=false])", "Save Lua table as delimiter separated data into file.", FILES}
+about[data.csvwrite] = {":csvwrite(sFile,t,[char=',',bCol=false])",
+  "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
 --  @param self Do nothing.
@@ -251,7 +256,8 @@ data.csvread = function (self,sFile, char, bCol)
   f:close()
   return res
 end
-about[data.csvread] = {"_D:csvread(sFile,[delim=',',bCol=false])", "Read delimiter separated data as Lua table.", FILES}
+about[data.csvread] = {":csvread(sFile,[delim=',',bCol=false])",
+  "Read delimiter separated data as Lua table.", FILES}
 
 --- Generate function from string.
 --  @param self Do nothing.
@@ -259,7 +265,8 @@ about[data.csvread] = {"_D:csvread(sFile,[delim=',',bCol=false])", "Read delimit
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
 data.Fn = function (self,sExpr,iArg) return Utils.Fn(sExpr, iArg or 2) end
-about[data.Fn] = {"_D:Fn(sExpr,[iArg=2])", "Generate function from expression of x1, x2 etc.", help.OTHER}
+about[data.Fn] = {":Fn(sExpr,[iArg=2])",
+  "Generate function from expression of x1, x2 etc.", help.OTHER}
 
 --- Find elements using condition.
 --  @param self Do nothing.
@@ -271,18 +278,20 @@ data.filter = function (self, t, vCond)
   if type(vCond) == 'function' then
     -- boolean function
     for i = 1, #t do
-      local v = t[i] 
+      local v = t[i]
       if fn(v) then res[#res+1] = v end
     end
   elseif type(vCond) == 'table' then
-    -- weights 
+    -- weights
     for i = 1, #t do
       if vCond[i] ~= 0 then res[#res+1] = t[i] end
     end
   end
   return res
 end
-about[data.filter] = {"_D:filter(t,vCond)","Get result of the table filtering. Condition is either boolean function or table of weights.", FILTER}
+about[data.filter] = {":filter(t,vCond)",
+  "Get result of the table filtering. Condition is either boolean function or table of weights.",
+  FILTER}
 
 --- Frequency of elements.
 --  @param self Do nothing.
@@ -295,7 +304,8 @@ data.freq = function (self, t)
   end
   return tmp
 end
-about[data.freq] = {"_D:freq(t)", "Return table with frequencies of elements.", STAT}
+about[data.freq] = {
+  ":freq(t)", "Return table with frequencies of elements.", STAT}
 
 --- Geometrical mean.
 --  @param self Do nothing.
@@ -317,7 +327,7 @@ data.geomean = function (self, t, tw)
     return p^(1/#t)
   end
 end
-about[data.geomean] = {"_D:geomean(t,[tw])", "Geometrical mean.", STAT}
+about[data.geomean] = {":geomean(t,[tw])", "Geometrical mean.", STAT}
 
 --- Harmonic mean.
 --  @param self Do nothing.
@@ -327,7 +337,7 @@ about[data.geomean] = {"_D:geomean(t,[tw])", "Geometrical mean.", STAT}
 data.harmmean = function (self, t, tw)
   if tw then
     local st, sw = 0, 0
-    for i = 1,#t do
+    for i = 1, #t do
       local w = tw[i]
       st = st + w/t[i]
       sw = sw + w
@@ -339,7 +349,7 @@ data.harmmean = function (self, t, tw)
     return #t / h
   end
 end
-about[data.harmmean] = {"_D:harmmean(t,[tw])", "Harmonic mean.", STAT}
+about[data.harmmean] = {":harmmean(t,[tw])", "Harmonic mean.", STAT}
 
 --- Number of elements in each bin.
 --  @param self Do nothing.
@@ -347,8 +357,8 @@ about[data.harmmean] = {"_D:harmmean(t,[tw])", "Harmonic mean.", STAT}
 --  @param rng Number of bins or table with edges.
 --  @return Two tables, with sum and edges.
 data.histcounts = function (self, t, rng)
-  rng = rng or 10 
-  local bins
+  rng = rng or 10
+  local bins = nil
   -- make copy and sort
   local y = Ver.move(t,1,#t,1,{})
   table.sort(y)
@@ -358,19 +368,19 @@ data.histcounts = function (self, t, rng)
     local wid = (vMax - vMin) / (rng - 1)
     bins = {}
     for v = vMin + 0.5*wid, vMax, wid do bins[#bins+1] = v end
-  elseif type(rng) == 'table' then    
+  elseif type(rng) == 'table' then
     bins = rng
   else
     error("Expected number or table")
   end
   -- check order
-  for i = 2,#bins do 
+  for i = 2,#bins do
     if bins[i] <= bins[i-1] then error("Wrong order") end
-  end  
+  end
   -- fill result
   local res = {}
   for i = 1,#bins+1 do res[i] = 0 end
-  local p, i = 1, 1 
+  local p, i = 1, 1
   while i <= #y do
     local v = y[i]
     if p > #bins or v < bins[p] then
@@ -382,7 +392,8 @@ data.histcounts = function (self, t, rng)
   end
   return res, bins
 end
-about[data.histcounts] = {"_D:histcounts(X,[rng=10])","Calculate amount of bins. Edges can be either number or table.", STAT}
+about[data.histcounts] = {":histcounts(X,[rng=10])",
+  "Calculate amount of bins. Edges can be either number or table.", STAT}
 
 --- Find weights (1/0) based on condition.
 --  @param self Do nothing.
@@ -396,7 +407,8 @@ data.is = function (self, t, fn)
   end
   return res
 end
-about[data.is] = {"_D:is(t,fn)", "Find weights using boolean function.", FILTER}
+about[data.is] = {
+  ":is(t,fn)", "Find weights using boolean function.", FILTER}
 
 --- Find weights (1/0) based on inverted condition.
 --  @param self Do nothing.
@@ -410,7 +422,8 @@ data.isNot = function (self, t, fn)
   end
   return res
 end
-about[data.isNot] = {"_D:isNot(t,fn)", "Find inverted weights using boolean function.", FILTER}
+about[data.isNot] = {
+  ":isNot(t,fn)", "Find inverted weights using boolean function.", FILTER}
 
 --- Maximum value.
 --  @param self Do nothing.
@@ -423,7 +436,7 @@ data.max = function (self, t)
   end
   return m,k
 end
-about[data.max] = {"_D:max(t)", "Maximal element and its index.", STAT}
+about[data.max] = {":max(t)", "Maximal element and its index.", STAT}
 
 --- Average value.
 --  @param self Do nothing.
@@ -443,7 +456,8 @@ data.mean = function (self, t, tw)
     return data:sum(t) / #t
   end
 end
-about[data.mean] = {"_D:mean(t,[tw])", "Calculate average value. Weights can be used.", STAT}
+about[data.mean] = {
+  ":mean(t,[tw])", "Calculate average value. Weights can be used.", STAT}
 
 --- Find median.
 --  @param self Do nothing.
@@ -451,16 +465,16 @@ about[data.mean] = {"_D:mean(t,[tw])", "Calculate average value. Weights can be 
 --  @return Value of median.
 data.median = function (self, t)
   local len = #t
-  local y = Ver.move(t,1,len,1,{})
+  local y = Ver.move(t, 1, len, 1, {})
   table.sort(y)
-  if len % 2 == 1 then 
+  if len % 2 == 1 then
     return y[(len+1)/2]
   else
     len = len / 2
     return (y[len] + y[len+1]) * 0.5
   end
 end
-about[data.median] = {"_D:median(t)", "Median of the list.", STAT}
+about[data.median] = {":median(t)", "Median of the list.", STAT}
 
 --- Minimum value.
 --  @param self Do nothing.
@@ -473,7 +487,7 @@ data.min = function (self, t)
   end
   return m,k
 end
-about[data.min] = {"_D:min(t)", "Minimal element and its index.", STAT}
+about[data.min] = {":min(t)", "Minimal element and its index.", STAT}
 
 --- Central moment.
 --  @param self Do nothing.
@@ -495,7 +509,8 @@ data.moment = function (self, N, t, tw)
   end
   return mu / n
 end
-about[data.moment] = {"_D:moment(N,t,[tw])", "Central moment of t order N, tw is a list of weights.", STAT}
+about[data.moment] = {":moment(N,t,[tw])",
+  "Central moment of t order N, tw is a list of weights.", STAT}
 
 
 --- Sum of all elements.
@@ -507,7 +522,7 @@ data.sum = function (self,t)
   for i = 1, #t do s = s+t[i] end
   return s
 end
-about[data.sum] = {"_D:sum(t)", "Get sum of all elements.", help.OTHER}
+about[data.sum] = {":sum(t)", "Get sum of all elements.", help.OTHER}
 
 --- Standard deviation and variance.
 --  @param self Do nothing.
@@ -521,7 +536,7 @@ data.std = function (self, t, tw)
     local sw = 0
     for i = 1,#t do
       local w = tw[i] or 1
-      disp = disp + w*(t[i]-mean)^2 
+      disp = disp + w*(t[i]-mean)^2
       sw = sw + w
     end
     disp = disp / sw
@@ -529,9 +544,10 @@ data.std = function (self, t, tw)
     for i = 1,#t do disp = disp + (t[i]-mean)^2 end
     disp = disp / #t
   end
-  return math.sqrt(disp), disp 
+  return math.sqrt(disp), disp
 end
-about[data.std] = {"_D:std(t,[tw])", "Standard deviation and variance. Weights can be used.", STAT}
+about[data.std] = {":std(t,[tw])",
+  "Standard deviation and variance. Weights can be used.", STAT}
 
 --- Student's cumulative distribution
 --  @param self Do nothing.
@@ -543,7 +559,8 @@ data.tcdf = function (self,d,N)
   local tmp = N/(N+d*d)
   return 1-0.5*data.ext_special:betainc(tmp,0.5*N,0.5)
 end
-about[data.tcdf] = {"_D:tcdf(d,N)", "Student's cumulative distribution.", help.OTHER}
+about[data.tcdf] = {":tcdf(d,N)",
+  "Student's cumulative distribution.", help.OTHER}
 
 --- Student's density function.
 --  @param self Do nothing.
@@ -555,7 +572,8 @@ data.tpdf = function (self,d,N)
   local tmp = math.sqrt(N)*data.ext_special:beta(0.5,0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-about[data.tpdf] = {"_D:tpdf(d,N)", "Student's distribution density.", help.OTHER}
+about[data.tpdf] = {
+  ":tpdf(d,N)", "Student's distribution density.", help.OTHER}
 
 --- Condition: x == d.
 --  @param self Do nothing.
@@ -564,7 +582,8 @@ about[data.tpdf] = {"_D:tpdf(d,N)", "Student's distribution density.", help.OTHE
 data.xEq = function (self,d)
   return (function (x) return Cross.eq(x,d) end)
 end
-about[data.xEq] = {"_D:xEq(d)", "Return function for condition x == d.", FILTER}
+about[data.xEq] = {
+  ":xEq(d)", "Return function for condition x == d.", FILTER}
 
 --- Condition: x > d
 --  @param self Do nothing.
@@ -573,7 +592,7 @@ about[data.xEq] = {"_D:xEq(d)", "Return function for condition x == d.", FILTER}
 data.xGt = function (self,d)
   return (function (x) return x > d end)
 end
-about[data.xGt] = {"_D:xGt(d)", "Return function for condition x > d.", FILTER}
+about[data.xGt] = {":xGt(d)", "Return function for condition x > d.", FILTER}
 
 --- Condition: d1 <= x <= d2.
 --  @param self Do nothing.
@@ -583,16 +602,17 @@ about[data.xGt] = {"_D:xGt(d)", "Return function for condition x > d.", FILTER}
 data.xIn = function (self, d1, d2)
   return (function (x) return d1 <= x and x <= d2 end)
 end
-about[data.xIn] = {"_D:xIn(d1,d2)", "Return function for condition d1 <= x <= d2.", FILTER}
+about[data.xIn] = {
+  ":xIn(d1,d2)", "Return function for condition d1 <= x <= d2.", FILTER}
 
 --- Condition: x < d
 --  @param self Do nothing.
---  @param d Upper limit. 
+--  @param d Upper limit.
 --  @return Boolean function.
 data.xLt = function (self,d)
   return (function (x) return x < d end)
 end
-about[data.xLt] = {"_D:xLt(d)", "Return function for condition x < d.", FILTER}
+about[data.xLt] = {":xLt(d)", "Return function for condition x < d.", FILTER}
 
 --- Apply function of n arguments to n lists.
 --  @param self Do nothing.
@@ -608,20 +628,21 @@ data.zip = function (self,fn, ...)
       local v = ag[j][i]
       if v ~= nil then
         x[j] = v
-      else 
+      else
         stop = true
-        break 
+        break
       end
     end
-    if not stop then 
+    if not stop then
       res[i] = fn(Ver.unpack(x))
-    else 
-      break 
+    else
+      break
     end
   end
-  return res 
+  return res
 end
-about[data.zip] = {"_D:zip(fn,...)", "Sequentially apply function to list of tables.", help.OTHER}
+about[data.zip] = {":zip(fn,...)",
+  "Sequentially apply function to list of tables.", help.OTHER}
 
 -- Get reference to data range in other table
 local metaref = { type = 'ref' }
@@ -639,7 +660,7 @@ end
 --  @return Table value.
 metaref.__index = function (self, i)
   if Ver.isInteger(i) then
-    local n = i + self._beg 
+    local n = i + self._beg
     if n > self._beg and n <= self._end then
       return self._t[n]
     end
@@ -657,14 +678,15 @@ end
 --  @param t Source table.
 --  @param iBeg Index of the first element.
 --  @param iEnd Index of the last element.
---  @return Reference object. 
+--  @return Reference object.
 data.ref = function (self, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
 end
-about[data.ref] = {'_D:ref(t,[iBeg=1,iEnd=#t])', 'Return reference to the range of elements.', help.OTHER}
+about[data.ref] = {':ref(t,[iBeg=1,iEnd=#t])',
+  'Return reference to the range of elements.', help.OTHER}
 
 -- Comment to remove descriptions
 data.about = about

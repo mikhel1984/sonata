@@ -3,26 +3,29 @@
 --- Prepare the main functionality of the program.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2022.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2023.
 
 	module 'load'
 ]]
 
 -- Prepare help module.
-SonataHelp = require "core.help"
-About = SonataHelp:new("Lua based mathematics.")
+SonataHelp = require("core.help")
+-- Collect all descriptions
+About = SonataHelp.init()
 -- Text colors
 SonataHelp.useColors(SONATA_USE_COLOR)
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
-Sonata.version = '0.9.32'
+
+-- current version
+Sonata.version = '0.9.33'
 
 -- Quit the program
 quit = Sonata.exit
 
 -- Import actions
-function Sonata.doimport(tbl,name)
+function Sonata.doimport(tbl, name)
   local var = tbl[name]
   if not var then
     -- try alias
@@ -37,11 +40,10 @@ function Sonata.doimport(tbl,name)
     local lib = require('lib.'..name)
     _G[var] = lib
     -- add description
-    if lib.about then About:add(lib.about, var) end
+    if lib.about then About:add(lib.about, name, var) end
     -- do additional actions
     if lib.onImport then lib.onImport() end
   end
-  return var, name
 end
 
 -- Add modules
@@ -49,7 +51,9 @@ setmetatable(use,
 { -- load modules
   __call = function (self, name)
     if not name then
-      local lst = Sonata.info {Sonata.FORMAT_V1, string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
+      local lst = Sonata.info {
+        Sonata.FORMAT_V1,
+        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
       -- show loaded modules
       for k,v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
@@ -62,7 +66,7 @@ setmetatable(use,
       end
       lst[#lst+1] = Sonata.FORMAT_V1
       lst[#lst+1] = About:get('use_import')
-      return Sonata.inLua and Sonata._toText_(lst) or lst
+      return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == 'all' then
       -- load all modules
       for k,v in pairs(self) do Sonata.doimport(self,k) end
@@ -71,51 +75,51 @@ setmetatable(use,
       for _,v in ipairs(name) do Sonata.doimport(self,v) end
     else
       -- load module
-      local var, nm = Sonata.doimport(self,name)
+      Sonata.doimport(self,name)
     end
   end,
 })
 
 --- Print SonataHelp information.
---  @param fn Function, module or nil.
-help = function(fn)
-  if fn then
-    if fn == use then
-      return use()
-    else
-      local res = About:make(type(fn)=='table' and fn.about or fn)
-      return Sonata.inLua and Sonata._toText_(res) or res
+--  @param v Function, module or nil.
+help = function(v)
+  local res = nil
+  if v then
+    res = About:findObject(v, use)
+    if not res then
+      res = Sonata.info {Type and Type(v) or '', '\n', tostring(v) }
     end
   else
-    local res = About:make(About)
-    return Sonata.inLua and Sonata._toText_(res) or res
+    res = About:makeFull(use)
   end
+  return Sonata.inLua and Sonata._toText(res) or res
 end
 
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
 Log = function (flag)
   if flag == 'on' then
-    if not Sonata._logFile_ then
-      Sonata._logFile_ = io.open(Sonata.LOGNAME, 'a')
+    if not Sonata._logFile then
+      Sonata._logFile = io.open(Sonata.LOGNAME, 'a')
       local d = os.date('*t')
-      Sonata._logFile_:write(string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n', d.day, d.month, d.year, d.hour, d.min))
-      Sonata._logFile_:write('-- ')  -- prepare comment for 'logging on'
+      Sonata._logFile:write(
+        string.format(
+          '\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
+          d.day, d.month, d.year, d.hour, d.min))
+      Sonata._logFile:write('-- ')  -- prepare comment for 'logging on'
     end
   elseif flag == 'off' then
-    if Sonata._logFile_ then
-      Sonata._logFile_:close()
-      Sonata._logFile_ = nil
+    if Sonata._logFile then
+      Sonata._logFile:close()
+      Sonata._logFile = nil
     end
   else
     io.write('Unexpected argument!\n')
   end
 end
-About[Log] = {'Log(sFlag)', "Save session into the log file. Use 'on'/'off' to start/stop logging.", SonataHelp.OTHER}
-
 
 -- command line arguments of Sonata and their processing
-local _args_ = {
+local _args = {
 
 -- run tests
 ['--test'] = {
@@ -124,7 +128,8 @@ example = '--test array',
 process = function (args)
   local Test = require('core.test')
   if args[2] then
-    Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
+    Test.module(
+      string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
   else
     for m in pairs(use) do
       Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), m))
@@ -163,8 +168,8 @@ exit = true},
 
 -- new module
 ['--new'] = {
-description = 'Create a template for a new module.',
-example = '--new  signal  Sig  "Signal processing functions."',
+description = 'Create template file for a new module.',
+example = '--new  matrices  Mat  "Matrix operations."',
 process = function (args)
   local Gen = require('core.generator')
   Gen.module(args[2],args[3],args[4])
@@ -198,12 +203,12 @@ exit = true},
 }
 
 -- show help
-_args_['-h'] = {
-process = function () print(Sonata._arghelp_()) end,
+_args['-h'] = {
+process = function () print(Sonata._arghelp()) end,
 exit = true}
 
 -- string representation of the help info
-Sonata._arghelp_ = function ()
+Sonata._arghelp = function ()
   local txt = {
     "\n'Sonata' is a Lua based program for mathematical calculations.",
     "",
@@ -212,16 +217,16 @@ Sonata._arghelp_ = function ()
     "(option '-i' can be used for working in native Lua interpreter)",
     "",
     "FLAGS:",
-    "\t-h - Get this help message.",
-    "\t-e - Evaluate command line expression.",
-    '\t  (e.g. -e "2+2")',
-    "\t\t{Development}",
+    "\t-h\tGet this help message.",
+    "\t-e\tEvaluate command line expression.",
+    '\t\te.g. -e "2+2"',
+    "",
   }
-  for k,v in pairs(_args_) do
+  for k,v in pairs(_args) do
     if v.description then
-      txt[#txt+1] = string.format('\t%-8s - %s', k, v.description)
+      txt[#txt+1] = string.format('\t%s\t%s', k, v.description)
       if v.example then
-        txt[#txt+1] = string.format('\t  (e.g. %s)', v.example)
+        txt[#txt+1] = string.format('\t\te.g. %s', v.example)
       end
     end
   end
@@ -237,20 +242,20 @@ end
 
 --================== EXECUTION =================
 
--- Try to import base functions
-_, Main = pcall(require, 'lib.main')
-
--- Process command line arguments
-if #arg > 0 then
-  local command = _args_[arg[1]]
-  if not command then command = _args_['default'] end
-  command.process(arg)
-  if command.exit then os.exit() end
-end
-
 -- Read localization file and update descriptions
 if SONATA_LOCALIZATION then
   About:localization(SONATA_LOCALIZATION)
+end
+
+-- Try to import base functions
+pcall(use, 'main')
+
+-- Process command line arguments
+if #arg > 0 then
+  local command = _args[arg[1]]
+  if not command then command = _args['default'] end
+  command.process(arg)
+  if command.exit then os.exit(true, true) end
 end
 
 -- Run!!!
@@ -266,6 +271,7 @@ if SONATA_DEFAULT_MODULES then
   use(SONATA_DEFAULT_MODULES)
 end
 
+-- choose interpreter
 if arg[-1] ~= '-i' then
   Sonata:cli()
 else
@@ -273,5 +279,4 @@ else
 end
 
 --===============================================
---note: all methods in _args_ require exit after execution...
---TODO: fix help(Main)
+--note: all methods in _args require exit after execution...
