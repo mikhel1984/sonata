@@ -3,7 +3,7 @@
 --- Matrix operations. Indexation from 1.
 --
 --  Object structure: </br>
---  <code>{{x11...x1n},{x21...x2n}...{xm1...xmn}</br>
+--  <code>{{x11...x1n}, {x21...x2n}...{xm1...xmn}</br>
 --  _rows=m, _cols=n} </code></br>
 --  Internal elements can be empty tables, but anyway
 --  operation X[i][j] will return 0.
@@ -236,7 +236,7 @@ local mt_access = {
   -- 0 instead nil
   __index = function () return 0 end,
   -- work with 'sparse' matrices but a little bit slower
-  --__newindex = function (t,k,v) if v ~= 0 then rawset(t,k,v) end end,
+  --__newindex = function (t, k, v) if v ~= 0 then rawset(t, k, v) end end,
 }
 
 --- Metatable without any operations
@@ -258,7 +258,7 @@ end
 --  @param i Positive or negative index value.
 --  @param iRange Available range of indexes.
 --  @return Corrected index or nil.
-local function toRange(i,iRange)
+local function toRange(i, iRange)
   if i < 0 then i = i + iRange + 1 end
   if i <= 0 or i > iRange then return nil end
   return i
@@ -268,7 +268,7 @@ end
 --  @param t Table (matrix).
 --  @param i Index.
 --  @return Matrix row.
-local function addRow(t,i)
+local function addRow(t, i)
   local row = setmetatable({}, mt_access)
   t[i] = row
   return row
@@ -294,7 +294,7 @@ type = 'matrix', ismatrix = true,
 --  @param M1 First matrix or number.
 --  @param M2 Second matrix or number.
 --  @return Sum matrix.
-matrix.__add = function (M1,M2)
+matrix.__add = function (M1, M2)
   M1 = ismatrix(M1) and M1 or matrix:fill(
     M2._rows, M2._cols, getmetatable(M1) == mt_container and M1[1] or M1)
   M2 = ismatrix(M2) and M2 or matrix:fill(
@@ -317,7 +317,7 @@ end
 --  @param vR Row number or range.
 --  @param vC Column number or range (optional).
 --  @return Value or submatrix.
-matrix.__call = function (M,vR,vC)
+matrix.__call = function (M, vR, vC)
   if not vC then
     if not vR then return nil end
     if M._rows == 1 then vC, vR = vR, 1 else vC = 1 end
@@ -331,20 +331,20 @@ matrix.__call = function (M,vR,vC)
   else
     if type(vC) == 'number' then vC = {vC} end
   end
-  return matrix.range(M,vR,vC)
+  return matrix.range(M, vR, vC)
 end
 
 --- Horizontal concatenation
 --  @param M1 First matrix.
 --  @param M2 Second matrix.
 --  @return Concatenated matrix.
-matrix.__concat = function (M1,M2) return matrix.concat(M1,M2,'h') end
+matrix.__concat = function (M1, M2) return matrix.concat(M1, M2, 'h') end
 
 --- M1 / M2
 --  @param M1 First matrix or number.
 --  @param M2 Second matrix or number.
 --  @return Matrix of ratio.
-matrix.__div = function (M1,M2)
+matrix.__div = function (M1, M2)
   if not ismatrix(M2) then return matrix._kProd(1/M2, M1) end
   return matrix.__mul(M1, matrix.inv(M2))
 end
@@ -353,7 +353,7 @@ end
 --  @param M1 First matrix.
 --  @param M2 Second matrix.
 --  @return True if all elements are the same.
-matrix.__eq = function (M1,M2)
+matrix.__eq = function (M1, M2)
   if not (ismatrix(M1) and ismatrix(M2)) then return false end
   if M1._rows ~= M2._rows or M1._cols ~= M2._cols then return false end
   for r = 1, M1._rows do
@@ -369,27 +369,27 @@ end
 --  @param M1 First matrix.
 --  @param M2 Second matrix.
 --  @return Concatenated matrix.
-matrix.__idiv = function (M1,M2) return matrix.concat(M1,M2,'v') end
+matrix.__idiv = function (M1, M2) return matrix.concat(M1, M2, 'v') end
 
 --- Metametod for access to elements.
 --  @param t Table (object).
 --  @param v Key.
 --  @return New matrix row or desired method.
-matrix.__index = function (t,v)
-  return matrix[v] or (type(v)=='number' and addRow(t,v))
+matrix.__index = function (t, v)
+  return matrix[v] or (type(v)=='number' and addRow(t, v))
 end
 
 --- M1 * M2
 --  @param M1 First matrix or number.
 --  @param M2 Second matrix or number.
 --  @return Result of multiplication.
-matrix.__mul = function (M1,M2)
+matrix.__mul = function (M1, M2)
   if not ismatrix(M1) then return matrix._kProd(M1, M2) end
   if not ismatrix(M2) then return matrix._kProd(M2, M1) end
   if (M1._cols ~= M2._rows) then
     error("Impossible to get product: different size!")
   end
-  local res = matrix:_init(M1._rows, M2._cols,{})
+  local res = matrix:_init(M1._rows, M2._cols, {})
   local resCols, m1Cols = res._cols, M1._cols
   for r = 1, res._rows do
     local ar, resr = M1[r], res[r]
@@ -406,7 +406,7 @@ end
 --  @param M Square matrix.
 --  @param n Natural power or -1.
 --  @return Power of the matrix.
-matrix.__pow = function (M,N)
+matrix.__pow = function (M, N)
   N = assert(Ver.toInteger(N), "Integer is expected!")
   if (M._rows ~= M._cols) then error("Square matrix is expected!") end
   if N == -1 then return matrix.inv(M) end
@@ -424,7 +424,7 @@ end
 --  @param M1 First matrix or number.
 --  @param M2 Second matrix or number.
 --  @return Difference matrix.
-matrix.__sub = function (M1,M2)
+matrix.__sub = function (M1, M2)
   M1 = ismatrix(M1) and M1 or matrix:fill(
     M2._rows, M2._cols, getmetatable(M1) == mt_container and M1[1] or M1)
   M2 = ismatrix(M2) and M2 or matrix:fill(
@@ -503,7 +503,7 @@ matrix._invList = {
 function (M) return 1 end,
 -- 2x2
 function (M)
-  return matrix:_init(2, 2, {{M[2][2],-M[1][2]},{-M[2][1],M[1][1]}} )
+  return matrix:_init(2, 2, {{M[2][2], -M[1][2]}, {-M[2][1], M[1][1]}} )
 end,
 -- 3x3
 function (M)
@@ -605,7 +605,7 @@ matrix._gaussDown = function (M)
     -- look for nonzero element
     local i = k+1
     while M[k][k] == 0 and i <= M._rows do
-      if M[i][k] ~= 0 then M[i],M[k],A = M[k],M[i],-A end
+      if M[i][k] ~= 0 then M[i], M[k], A = M[k], M[i], -A end
       i = i+1
     end
     local coef = M[k][k]
@@ -634,7 +634,7 @@ end
 matrix._gaussUp = function (M)
   for k = M._rows, 1, -1 do
     local mk = M[k]
-    for r = k-1,1,-1 do
+    for r = k-1, 1, -1 do
       local mr = M[r]
       local v = mr[k]
       if v ~= 0 then
@@ -678,10 +678,10 @@ matrix._luPrepare = function (M)
   local a = matrix.copy(M)
   local vv = {}
   -- get scaling information
-  for r = 1,a._rows do
+  for r = 1, a._rows do
     local big, abig, v = 0, 0, 0
     local ar = a[r]
-    for c = 1,a._cols do
+    for c = 1, a._cols do
       v = Cross.norm(ar[c])
       if v > abig then
         big = ar[c]
@@ -694,18 +694,18 @@ matrix._luPrepare = function (M)
   local rmax, dum = nil, nil
   local TINY, d = 1e-20, 0
   local index = {}
-  for c = 1,a._cols do
-    for r = 1,c-1 do
+  for c = 1, a._cols do
+    for r = 1, c-1 do
       local ar = a[r]
       local sum = ar[c]
-      for k = 1,r-1 do sum = sum - ar[k]*a[k][c] end
+      for k = 1, r-1 do sum = sum - ar[k]*a[k][c] end
       ar[c] = sum
     end
     local big = 0        -- largest pivot element
-    for r=c,a._rows do
+    for r=c, a._rows do
       local ar = a[r]
       local sum = ar[c]
-      for k = 1,c-1 do sum = sum - ar[k]*a[k][c] end
+      for k = 1, c-1 do sum = sum - ar[k]*a[k][c] end
       ar[c] = sum
       sum = Cross.norm(sum)
       dum = vv[r]*sum
@@ -715,7 +715,7 @@ matrix._luPrepare = function (M)
     if c ~= rmax then
       local armax = a[rmax]
       -- interchange rows
-      for k = 1,a._rows do
+      for k = 1, a._rows do
         dum = armax[k]
         armax[k] = ac[k]
         ac[k] = dum
@@ -728,7 +728,7 @@ matrix._luPrepare = function (M)
     -- divide by pivot element
     if c ~= a._cols then
       dum = 1.0 / ac[c]
-      for r = c+1,a._rows do a[r][c] = dum*a[r][c] end
+      for r = c+1, a._rows do a[r][c] = dum*a[r][c] end
     end
   end
   return a, index, d
@@ -790,10 +790,10 @@ matrix.bidiag = function (M)
   local w = math.min(m, n)
   for k = 1, w do
     -- set zero to column elements
-    local H1 = matrix.householder(B:range({1,m}, {k}), k)
+    local H1 = matrix.householder(B:range({1, m}, {k}), k)
     U, B = U * H1:H(), H1 * B
     if k < (w - 1) then
-      local H2 = matrix.householder(B:range({k}, {1,n}):T(), k+1):H()
+      local H2 = matrix.householder(B:range({k}, {1, n}):T(), k+1):H()
       B, V = B * H2, V * H2    -- H2 is transposed!
     end
   end
@@ -809,11 +809,11 @@ matrix.chol = function (M)
   if M._rows ~= M._cols then error("Square matrix is expected!") end
   local a, p = matrix.copy(M), {}
   -- calculate new values
-  for r = 1,a._rows do
+  for r = 1, a._rows do
     local ar = a[r]
-    for c = r,a._cols do
+    for c = r, a._cols do
       local sum = ar[c]
-      for k = r-1,1,-1 do sum = sum - ar[k]*a[c][k] end
+      for k = r-1, 1, -1 do sum = sum - ar[k]*a[c][k] end
       if r == c then
         assert(sum >= 0, 'The matrix is not positive definite!')
         p[r] = math.sqrt(sum)
@@ -823,9 +823,9 @@ matrix.chol = function (M)
     end
   end
   -- insert zeros and the main diagonal elements
-  for r = 1,a._rows do
+  for r = 1, a._rows do
     local ar = a[r]
-    for c = r+1,a._cols do ar[c] = 0 end
+    for c = r+1, a._cols do ar[c] = 0 end
     ar[r] = p[r]
   end
   return a
@@ -876,10 +876,10 @@ about[matrix.concat] = {"concat(M,sDir)",
 --  @param M Source matrix.
 --  @return Deep copy.
 matrix.copy = function (M)
-  local res = matrix:_init(M._rows,M._cols,{})
-  for r = 1,M._rows do
+  local res = matrix:_init(M._rows, M._cols, {})
+  for r = 1, M._rows do
     local resr, mr = res[r], M[r]
-    for c = 1,M._cols do resr[c] = mr[c] end  -- use Cross.copy() - ?
+    for c = 1, M._cols do resr[c] = mr[c] end  -- use Cross.copy() - ?
   end
   return res
 end
@@ -889,15 +889,15 @@ about[matrix.copy] = {"copy()", "Return copy of matrix.", help.OTHER}
 --  @param V1 3-element vector.
 --  @param V2 3-element vector.
 --  @return Cross product.
-matrix.cross = function (V1,V2)
+matrix.cross = function (V1, V2)
   if (V1._rows*V1._cols ~= 3 or V2._rows*V2._cols ~= 3) then
     error("Vector with 3 elements is expected!")
   end
   local x1, y1, z1 = V1(1), V1(2), V1(3)
   local x2, y2, z2 = V2(1), V2(2), V2(3)
-  return matrix:_init(3,1, {{y1*z2-z1*y2},{z1*x2-x1*z2},{x1*y2-y1*x2}})
+  return matrix:_init(3, 1, {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
 end
-about[matrix.cross] = {'cross(V)','Cross product or two 3-element vectors.'}
+about[matrix.cross] = {'cross(V)', 'Cross product or two 3-element vectors.'}
 
 --- Find determinant.
 --  @param M Initial matrix.
@@ -916,7 +916,7 @@ about[matrix.det] = {"det()", "Calculate determinant."}
 --  @param M Matrix, vector or table with numbers.
 --  @param v Diagonal elements (optional).
 --  @return Vector of matrix.
-matrix.diag = function (M,v)
+matrix.diag = function (M, v)
   if M._rows and M._cols then
     local res = {}
     for i = 1, math.min(M._rows, M._cols) do
@@ -924,7 +924,7 @@ matrix.diag = function (M,v)
     end
     return matrix:_init(#res, 1, res)
   elseif type(v) == 'table' then
-    local res = matrix:_init(#v,#v, {})
+    local res = matrix:_init(#v, #v, {})
     for i = 1, #v do res[i][i] = v[i] end
     return res
   end
@@ -938,7 +938,7 @@ about[matrix.diag] = {'diag()',
 --  @param V1 First vector.
 --  @param V2 Second vector.
 --  @return Scalar product.
-matrix.dot = function (V1,V2)
+matrix.dot = function (V1, V2)
   local n = V1._rows*V1._cols
   if n ~= V2._rows*V2._cols then error("Different vector size") end
   local s = 0
@@ -977,7 +977,7 @@ about[matrix.eig] = {'eig()', 'Find matrices of eigenvectors and eigenvalues.'}
 matrix.eye = function (self, iR, iC, val)
   if ismatrix(iR) then
     val = iC or 1
-    iR,iC = iR._rows, iR._cols
+    iR, iC = iR._rows, iR._cols
   end
   iC = iC or iR
   val = val or 1
@@ -1103,7 +1103,7 @@ matrix.insert = function (M1, tR, tC, M2)
     -- update range
   if #tR == 1 then
     local r = toRange(tR[1], M1._rows)
-    tR = {r,r,1}
+    tR = {r, r, 1}
   else
     tR[1] = toRange(tR[1] or 1, M1._rows)
     tR[2] = toRange(tR[2] or M1._rows, M1._rows)
@@ -1112,7 +1112,7 @@ matrix.insert = function (M1, tR, tC, M2)
   end
   if #tC == 1 then
     local c = toRange(tC[1], M1._cols)
-    tC = {c,c,1}
+    tC = {c, c, 1}
   else
     tC[1] = toRange(tC[1] or 1, M1._cols)
     tC[2] = toRange(tC[2] or M1._cols, M1._cols)
@@ -1122,11 +1122,11 @@ matrix.insert = function (M1, tR, tC, M2)
 
   -- fill matrix
   local i = 0
-  for r = tR[1],tR[2],tR[3] do
+  for r = tR[1], tR[2], tR[3] do
     i = i+1
     local mr, mi = M1[r], M2[i]
     local j = 0
-    for c = tC[1],tC[2],tC[3] do
+    for c = tC[1], tC[2], tC[3] do
       j = j+1
       mr[c] = mi[j]
     end
@@ -1146,24 +1146,24 @@ matrix.inv = function (M)
   if fn then
     local det = matrix._detList[size](M)
     return (det ~= 0) and matrix._kProd(1/det, fn(M))
-                       or matrix:fill(size,size, math.huge)
+                       or matrix:fill(size, size, math.huge)
   end
   -- prepare matrix
   local res, det = matrix.copy(M), nil
   -- add "tail"
-  for i = 1,size do
+  for i = 1, size do
     res[i][i+size] = 1
   end
   res._cols = 2*size
   res, det = matrix._gaussDown(res)
   if det == 0 then
-    return matrix:fill(size,size, math.huge)
+    return matrix:fill(size, size, math.huge)
   end
   res = matrix._gaussUp(res)
   -- move result
-  for r = 1,size do
+  for r = 1, size do
     local resr = res[r]
-    for c = 1,size do
+    for c = 1, size do
       local p = size+c
       resr[c], resr[p] = resr[p], nil
     end
@@ -1178,7 +1178,7 @@ about[matrix.inv] = {"inv()", "Return inverse matrix.", TRANSFORM}
 --  @return L matrix, U matrix, permutations
 matrix.lu = function (M)
   local a, _, d = matrix._luPrepare(M)
-  local p = matrix:eye(M._rows,M._cols)
+  local p = matrix:eye(M._rows, M._cols)
   local move = Ver.move
   while d > 0 do
     local tmp = p[1]; move(p, 2, p._rows, 1); p[p._rows] = tmp  -- shift
@@ -1186,9 +1186,10 @@ matrix.lu = function (M)
   end
   return
     -- lower
-    matrix.map(a, function (M,r,c) return (r==c) and 1.0 or (r>c and M or 0) end),
+    matrix.map(a, 
+      function (M, r, c) return (r==c) and 1.0 or (r>c and M or 0) end),
     -- upper
-    matrix.map(a, function (M,r,c) return r <= c and M or 0 end),
+    matrix.map(a, function (M, r, c) return r <= c and M or 0 end),
     p  -- permutations
 end
 about[matrix.lu] = {"lu()",
@@ -1202,7 +1203,7 @@ matrix.map = function (M, fn)
   local res = matrix:_init(M._rows, M._cols, {})
   for r = 1, res._rows do
     local resr, mr = res[r], M[r]
-    for c = 1, res._cols do resr[c] = fn(mr[c],r,c) end
+    for c = 1, res._cols do resr[c] = fn(mr[c], r, c) end
   end
   return res
 end
@@ -1225,9 +1226,9 @@ end
 --  @return Norm value.
 matrix.norm = function (M)
   local sum = 0
-  for r = 1,M._rows do
+  for r = 1, M._rows do
     local mr = M[r]
-    for c = 1,M._cols do
+    for c = 1, M._cols do
       sum = sum + Cross.norm(mr[c])^2
     end
   end
@@ -1257,11 +1258,11 @@ matrix.pinv = function (M)
   local L, r, tmp = matrix:zeros(A._rows, A._cols), 0, nil
   for k = 1, n do
     r = r + 1
-    local B = A:range({k,n},{k})
+    local B = A:range({k, n}, {k})
     if r > 1 then
-      tmp = L:range({k,n},{1,r-1}) * L:range({k},{1,r-1}):T()
+      tmp = L:range({k, n}, {1, r-1}) * L:range({k}, {1, r-1}):T()
       -- product can return a number
-      tmp = ismatrix(tmp) and tmp or matrix:_init(1,1,{{tmp}})
+      tmp = ismatrix(tmp) and tmp or matrix:_init(1, 1, {{tmp}})
       B = B - tmp
     end
     for i = k, n do L[i][r] = B[i-k+1][1] end  -- copy B to L
@@ -1298,12 +1299,12 @@ matrix.qr = function (M)
   if n > m then error("Wrong matrix size") end
   local Q = matrix:eye(m)
   local R = matrix.copy(M)
-  local v = matrix:_init(m,1,{})
-  for j = 1, math.min(m-1,n) do
+  local v = matrix:_init(m, 1, {})
+  for j = 1, math.min(m-1, n) do
     -- housholder transformation
     -- get vector
     local k = 1
-    for i = j,m do
+    for i = j, m do
       v[k][1] = R[i][j]
       k = k + 1
     end
@@ -1318,15 +1319,15 @@ matrix.qr = function (M)
     local vt = v:H()
     for r = 1, v._rows do v[r][1] = 2 * v[r][1] end
     -- update R
-    local vvr = v * (vt * R:range({j,m},{j,n}))
+    local vvr = v * (vt * R:range({j, m}, {j, n}))
     local j1 = j - 1
-    for r = j,m do
-      for c = j,n do R[r][c] = R[r][c] - vvr[r-j1][c-j1] end
+    for r = j, m do
+      for c = j, n do R[r][c] = R[r][c] - vvr[r-j1][c-j1] end
     end
     -- update Q
-    local qvv = (Q:range({1,m},{j,m}) * v) * vt
-    for r = 1,m do
-      for c = j,m do Q[r][c] = Q[r][c] - qvv[r][c-j1] end
+    local qvv = (Q:range({1, m}, {j, m}) * v) * vt
+    for r = 1, m do
+      for c = j, m do Q[r][c] = Q[r][c] - qvv[r][c-j1] end
     end
   end
   -- set zeros
@@ -1352,7 +1353,7 @@ matrix.range = function (M, tR, tC)
   -- update range
   if #tR == 1 then
     local r = toRange(tR[1], M._rows)
-    tR = {r,r,1}
+    tR = {r, r, 1}
   else
     tR[1] = toRange(tR[1] or 1, M._rows)
     tR[2] = toRange(tR[2] or M._rows, M._rows)
@@ -1361,7 +1362,7 @@ matrix.range = function (M, tR, tC)
   end
   if #tC == 1 then
     local c = toRange(tC[1], M._cols)
-    tC = {c,c,1}
+    tC = {c, c, 1}
   else
     tC[1] = toRange(tC[1] or 1, M._cols)
     tC[2] = toRange(tC[2] or M._cols, M._cols)
@@ -1373,11 +1374,11 @@ matrix.range = function (M, tR, tC)
   local res = matrix:_init(
     math.floor((tR[2]-tR[1])/tR[3])+1, math.floor((tC[2]-tC[1])/tC[3])+1, {})
   local i = 0
-  for r = tR[1],tR[2],tR[3] do
+  for r = tR[1], tR[2], tR[3] do
     i = i+1
     local resi, mr = res[i], M[r]
     local j = 0
-    for c = tC[1],tC[2],tC[3] do
+    for c = tC[1], tC[2], tC[3] do
       j = j+1
       resi[j] = mr[c]
     end
@@ -1398,7 +1399,7 @@ matrix.rank = function (M)
     if not mati then break end
     -- find nonzero element
     local zeros = true
-    for j = i,mat._cols do
+    for j = i, mat._cols do
       if mati[j] ~= 0 then
         zeros = false
         break
@@ -1416,10 +1417,10 @@ about[matrix.rank] = {"rank()", "Find rank of the matrix."}
 --  @param iRows New number of rows.
 --  @param iCols New number of columns.
 --  @return Matrix with new size.
-matrix.reshape = function (M,iRows,iCols)
+matrix.reshape = function (M, iRows, iCols)
   iRows = iRows or (M._rows*M._cols)
   iCols = iCols or 1
-  local res = matrix:_init(iRows,iCols,{})
+  local res = matrix:_init(iRows, iCols, {})
   local newR, newC = 1, 1   -- temporary indices
   for r = 1, M._rows do
     local Mr = M[r]
@@ -1494,14 +1495,14 @@ matrix.table = function (M)
   local res = {}
   -- simplify 'vector' representation
   if M._rows == 1 then
-    for c = 1,M._cols do res[c] = M[1][c] end
+    for c = 1, M._cols do res[c] = M[1][c] end
   elseif M._cols == 1 then
-    for r = 1,M._rows do res[r] = M[r][1] end
+    for r = 1, M._rows do res[r] = M[r][1] end
   -- full matrix
   else
-    for r = 1,M._rows do
+    for r = 1, M._rows do
       local resr, mr = {}, M[r]
-      for c = 1,M._cols do resr[c] = mr[c] end
+      for c = 1, M._cols do resr[c] = mr[c] end
       res[r] = resr
     end
   end
@@ -1514,7 +1515,7 @@ about[matrix.table] = {"table()", "Convert to simple Lua table.", help.OTHER}
 --  @return Sum of elements of the main diagonal.
 matrix.tr = function (M)
   local sum = 0
-  for i = 1,math.min(M._rows,M._cols) do sum = sum + M[i][i] end
+  for i = 1, math.min(M._rows, M._cols) do sum = sum + M[i][i] end
   return sum
 end
 about[matrix.tr] = {"tr()", "Get trace of the matrix.", help.OTHER}
@@ -1537,8 +1538,8 @@ about[matrix.T] = {"T()", "Return matrix transpose.", TRANSFORM}
 --  @param self Do nothing.
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
-matrix.V = function (self,t)
-  local res = {0,0,0}       -- prepare some memory
+matrix.V = function (self, t)
+  local res = {0, 0, 0}       -- prepare some memory
   for i = 1, #t do res[i] = {t[i]} end
   return matrix:_init(#t, 1, res)
 end
@@ -1551,7 +1552,7 @@ about[matrix.V] = {
 --  @param nC Number of columns. Can be omitted in case of square matrix.
 --  @return Sparse matrix.
 matrix.zeros = function (self, iR, iC)
-  if ismatrix(iR) then iR,iC = iR._rows, iR._cols end  -- input is a matrix
+  if ismatrix(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
   iC = iC or iR                          -- input is a number
   return matrix:_init(iR, iC, {})
 end
@@ -1567,7 +1568,7 @@ matrix.zip = function (self, fn, ...)
   local arg = {...}
   local rows, cols = arg[1]._rows, arg[1]._cols
   -- check size
-  for i = 2,#arg do
+  for i = 2, #arg do
     if arg[i]._rows ~= rows or arg[i]._cols ~= cols then
       error("Different size!")
     end
@@ -1575,10 +1576,10 @@ matrix.zip = function (self, fn, ...)
   local res, v = matrix:_init(rows, cols, {}), {}
   -- evaluate
   local upack = Ver.unpack
-  for r = 1,res._rows do
-    for c = 1,res._cols do
+  for r = 1, res._rows do
+    for c = 1, res._cols do
       -- collect
-      for k = 1,#arg do v[k] = arg[k][r][c] end
+      for k = 1, #arg do v[k] = arg[k][r][c] end
       -- calc
       res[r][c] = fn(upack(v))
     end
@@ -1589,7 +1590,7 @@ about[matrix.zip] = {':zip(fn,M1,M2,...)',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
 -- constructor call
-setmetatable(matrix, {__call = function (self,m) return matrix._new(m) end})
+setmetatable(matrix, {__call = function (self, m) return matrix._new(m) end})
 about[matrix] = {" {tRow1,tRow2,..}",
   "Create matrix from list of strings (tables).", help.NEW}
 

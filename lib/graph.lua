@@ -130,7 +130,7 @@ local SEARCH = 'search'
 local function getMin(t)
   local minval, key = math.huge, nil
   -- find new minimal value
-  for k,v in pairs(t) do
+  for k, v in pairs(t) do
     if v < minval then
       key, minval = k, v
     end
@@ -163,7 +163,7 @@ end
 --  @param tPrev Table where each value is a previous element for the key.
 --  @param v Last node.
 --  @return Table with sequence of nodes.
-local function getPath(tPrev,v)
+local function getPath(tPrev, v)
   local res = {v}
   -- get sequence
   while tPrev[v] ~= v do
@@ -173,7 +173,7 @@ local function getPath(tPrev,v)
   -- invert
   local L = #res
   local n = math.modf(L/2)
-  for i = 1,n do
+  for i = 1, n do
     res[i], res[L-i+1] = res[L-i+1], res[i]
   end
   return res
@@ -182,7 +182,7 @@ end
 -- Make queue from two stacks
 local Queue = {
   -- create object
-  new = function () return {{},{}} end,
+  new = function () return {{}, {}} end,
   -- add element
   push = function (Q, v) table.insert(Q[1], v) end,
   -- check content
@@ -222,9 +222,9 @@ graph.__index = graph
 graph.__tostring = function (G)
   local nd = graph.nodes(G)
   if #nd <= 5 then
-    return string.format('Graph {%s}', table.concat(nd,','))
+    return string.format('Graph {%s}', table.concat(nd, ','))
   else
-    return string.format('Graph {%s -%d- %s}',
+    return string.format('Graph {%s -%d- %s}', 
       tostring(nd[1]), #nd-2, tostring(nd[#nd]))
   end
 end
@@ -232,11 +232,11 @@ end
 --- Constructor example
 --  @param t Table with nodes and edges.
 --  @return New object of graph.
-graph._new = function (self,t)
+graph._new = function (self, t)
   local o = {}
   -- add nodes
-  for _,elt in ipairs(t) do graph.add(o,elt) end
-  return setmetatable(o,self)
+  for _, elt in ipairs(t) do graph.add(o, elt) end
+  return setmetatable(o, self)
 end
 
 --- Add node or edge.
@@ -300,9 +300,9 @@ about[graph.bfs] = {"bfs(vStart,vGoal)",
 --  @return Deep copy of the graph.
 graph.copy = function (G)
   local res = graph:_new({})
-  for k,v in pairs(G) do
+  for k, v in pairs(G) do
     local tmp = {}
-    for n,w in pairs(v) do tmp[n] = w end
+    for n, w in pairs(v) do tmp[n] = w end
     res[k] = tmp
   end
   return res
@@ -344,20 +344,20 @@ about[graph.dfs] = {"dfs(vStart,vGoal)",
 --  @return List of edges.
 graph.edges = function (G)
   local nodes, res = graph.nodes(G), {}
-  for i = 1,#nodes do
+  for i = 1, #nodes do
     local ni = nodes[i]
     local Wi = G[ni]             -- what if node is not string?
-    for j = i,#nodes do
+    for j = i, #nodes do
       local nj = nodes[j]
       local wij = Wi[nj]
       local wji = G[nj][ni]
       if wij and wji then
-        res[#res+1] = {ni,nj}
-        if wij ~= wji then res[#res+1] = {nj,ni} end
+        res[#res+1] = {ni, nj}
+        if wij ~= wji then res[#res+1] = {nj, ni} end
       elseif wij then
-        res[#res+1] = {ni,nj}
+        res[#res+1] = {ni, nj}
       elseif wji then
-        res[#res+1] = {nj,ni}
+        res[#res+1] = {nj, ni}
       end
     end
   end
@@ -370,7 +370,7 @@ about[graph.edges] = {"edges()", "List of graph edges."}
 --  @return true if graph is complete.
 graph.isComplete = function (G)
   local n = tblLen(G)
-  for _,v in pairs(G) do
+  for _, v in pairs(G) do
     if n ~= tblLen(v) then return false end
   end
   return true
@@ -382,8 +382,8 @@ about[graph.isComplete] = {
 --  @param G Graph object.
 --  @return True if found directed edge.
 graph.isDirected = function (G)
-  for n1,adj in pairs(G) do
-    for n2,v in pairs(adj) do
+  for n1, adj in pairs(G) do
+    for n2, v in pairs(adj) do
       if G[n2][n1] ~= v then return true end
     end
   end
@@ -396,8 +396,8 @@ about[graph.isDirected] = {
 --  @param G Graph object.
 --  @return True if found at least one negative edge.
 graph.isNegative = function (G)
-  for _,adj in pairs(G) do
-    for _,v in pairs(adj) do
+  for _, adj in pairs(G) do
+    for _, v in pairs(adj) do
       if v < 0 then return true end
     end
   end
@@ -410,8 +410,8 @@ about[graph.isNegative] = {
 --  @param G Graph object.
 --  @return True if found edge not equal to 1.
 graph.isWeighted = function (G)
-  for _,adj in pairs(G) do
-    for _,v in pairs(adj) do
+  for _, adj in pairs(G) do
+    for _, v in pairs(adj) do
       if v ~= 1 then return true end
     end
   end
@@ -428,7 +428,7 @@ graph.nodes = function (G)
   for k in pairs(G) do res[#res+1] = tostring(k) end
   return res
 end
-about[graph.nodes] = {"nodes()","List of graph nodes."}
+about[graph.nodes] = {"nodes()", "List of graph nodes."}
 
 --- Find shortest path with Bellman-Ford algorithm/
 --  @param G Graph.
@@ -443,28 +443,28 @@ graph.pathBF = function (G, vStart, vGoal)
   for k in pairs(G) do dist[k] = math.huge; N = N+1 end
   dist[vStart] = 0
   -- relax
-  for i = 1,N-1 do
+  for i = 1, N-1 do
     for u in pairs(G) do
-      for v,d in pairs(G[u]) do
+      for v, d in pairs(G[u]) do
         local alt = dist[u] + d
         if alt < dist[v] then
           dist[v] = alt
           prev[v] = u
         end
-      end -- v,d
+      end -- v, d
     end -- u
   end
 --[[
   -- check for negative circles
   for u in pairs(G) do
-    for v,d in pairs(G[u]) do
+    for v, d in pairs(G[u]) do
       assert(dist[u] + d >= dist[v], 'Negative circle!')
     end
   end
 ]]
   -- result
   if vGoal then
-    return dist[vGoal], getPath(prev,vGoal)
+    return dist[vGoal], getPath(prev, vGoal)
   else
     return dist, prev
   end
@@ -477,7 +477,7 @@ about[graph.pathBF] = {'pathBF(vStart,[vGoal])',
 --  @param start Initial node.
 --  @param goal Goal node.
 --  @return Table of distances and predecessors or path and its length.
-graph.pathD = function(G,vStart,vGoal)
+graph.pathD = function(G, vStart, vGoal)
   -- define local set
   local set = {}
   for k in pairs(G) do set[k] = math.huge end
@@ -490,7 +490,7 @@ graph.pathD = function(G,vStart,vGoal)
     if not current then break end
     -- update minimal distance
     dist[current] = val
-    for k,v in pairs(G[current]) do
+    for k, v in pairs(G[current]) do
       local alt = val + v
       if set[k] and set[k] > alt then
         set[k] = alt
@@ -500,7 +500,7 @@ graph.pathD = function(G,vStart,vGoal)
   end
   -- result
   if vGoal then
-    return dsit[vGoal], getPath(prev,vGoal)
+    return dsit[vGoal], getPath(prev, vGoal)
   else
     return dist, prev
   end
@@ -521,7 +521,7 @@ graph.remove = function (G, v)
     end
   else
     -- node
-    for _,u in pairs(G) do u[v] = nil end
+    for _, u in pairs(G) do u[v] = nil end
     G[v] = nil
   end
 end
@@ -535,7 +535,7 @@ graph.size = function (G) return tblLen(G) end
 graph.__len = graph.size
 
 -- simplify constructor call
-setmetatable(graph, {__call = function (self,v) return graph:_new(v) end})
+setmetatable(graph, {__call = function (self, v) return graph:_new(v) end})
 about[graph] = {" {v1,v2,..}", "Create new graph.", help.NEW}
 
 -- Comment to remove descriptions

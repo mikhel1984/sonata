@@ -151,7 +151,7 @@ local data = {}
 --  @param t1 First data vector.
 --  @param t2 Second data vector.
 --  @return Covariance value.
-data.cov2 = function (self,t1,t2)
+data.cov2 = function (self, t1, t2)
   if #t1 ~= #t2 then error("Different vector size") end
   local m1 = data:mean(t1)
   local m2 = data:mean(t2)
@@ -192,25 +192,25 @@ about[data.cov] = {
 --  @param t Lua table.
 --  @param char Delimiter, default is coma.
 --  @param bCol Flag, reading elements by columns.
-data.csvwrite = function (self,sFile, t, char, bCol)
-  local f = assert(io.open(sFile,'w'))
+data.csvwrite = function (self, sFile, t, char, bCol)
+  local f = assert(io.open(sFile, 'w'))
   char = char or ','
   if bCol then
     -- by columns
     if type(t[1]) == 'table' then
-      for r = 1,#t[1] do
+      for r = 1, #t[1] do
         local tmp = {}
-        for c = 1,#t do tmp[#tmp+1] = t[c][r] end
-        f:write(table.concat(tmp,char),'\n')
+        for c = 1, #t do tmp[#tmp+1] = t[c][r] end
+        f:write(table.concat(tmp, char), '\n')
       end
     else
-      for r = 1,#t do f:write(t[i],'\n') end
+      for r = 1, #t do f:write(t[i], '\n') end
     end
   else
     -- by rows
-    for _,v in ipairs(t) do
-      if type(v) == 'table' then v = table.concat(v,char) end
-      f:write(v,'\n')
+    for _, v in ipairs(t) do
+      if type(v) == 'table' then v = table.concat(v, char) end
+      f:write(v, '\n')
     end
   end
   f:close()
@@ -225,7 +225,7 @@ about[data.csvwrite] = {":csvwrite(sFile,t,[char=',',bCol=false])",
 --  @param char Delimiter, default is coma.
 --  @param bCol Flag, reading elements by columns.
 --  @return Lua table with data.
-data.csvread = function (self,sFile, char, bCol)
+data.csvread = function (self, sFile, char, bCol)
   local f = assert(io.open(sFile, 'r'))
   char = char or ','
   local templ = '([^'..char..']+)'
@@ -235,7 +235,7 @@ data.csvread = function (self,sFile, char, bCol)
     if char ~= '#' then
       s = string.match(s, '([^#]+)')    -- skip comments
     end
-    s = string.match(s,'^%s*(.*)%s*$')  -- strip line
+    s = string.match(s, '^%s*(.*)%s*$')  -- strip line
     if #s > 0 then
       local tmp = {}
       -- parse string
@@ -245,7 +245,7 @@ data.csvread = function (self,sFile, char, bCol)
       -- save
       if bCol then
         if #res == 0 then  -- initialize
-          for i = 1,#tmp do res[#res+1] = {} end
+          for i = 1, #tmp do res[#res+1] = {} end
         end
         for i = 1, #tmp do table.insert(res[i], tmp[i]) end
       else
@@ -264,7 +264,7 @@ about[data.csvread] = {":csvread(sFile,[delim=',',bCol=false])",
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
-data.Fn = function (self,sExpr,iArg) return Utils.Fn(sExpr, iArg or 2) end
+data.Fn = function (self, sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
 about[data.Fn] = {":Fn(sExpr,[iArg=2])",
   "Generate function from expression of x1, x2 etc.", help.OTHER}
 
@@ -315,7 +315,7 @@ about[data.freq] = {
 data.geomean = function (self, t, tw)
   if tw then
     local st, sw = 0, 0
-    for i = 1,#t do
+    for i = 1, #t do
       local w = tw[i] or 1
       st = st + w*math.log(t[i])
       sw = sw + w
@@ -360,7 +360,7 @@ data.histcounts = function (self, t, rng)
   rng = rng or 10
   local bins = nil
   -- make copy and sort
-  local y = Ver.move(t,1,#t,1,{})
+  local y = Ver.move(t, 1, #t, 1, {})
   table.sort(y)
   -- prepare edges
   if type(rng) == 'number' then
@@ -374,12 +374,12 @@ data.histcounts = function (self, t, rng)
     error("Expected number or table")
   end
   -- check order
-  for i = 2,#bins do
+  for i = 2, #bins do
     if bins[i] <= bins[i-1] then error("Wrong order") end
   end
   -- fill result
   local res = {}
-  for i = 1,#bins+1 do res[i] = 0 end
+  for i = 1, #bins+1 do res[i] = 0 end
   local p, i = 1, 1
   while i <= #y do
     local v = y[i]
@@ -434,7 +434,7 @@ data.max = function (self, t)
   for i = 2, #t do
     if t[i] > m then m, k = t[i], i end
   end
-  return m,k
+  return m, k
 end
 about[data.max] = {":max(t)", "Maximal element and its index.", STAT}
 
@@ -485,7 +485,7 @@ data.min = function (self, t)
   for i = 2, #t do
     if t[i] < m then m, k = t[i], i end
   end
-  return m,k
+  return m, k
 end
 about[data.min] = {":min(t)", "Minimal element and its index.", STAT}
 
@@ -497,14 +497,14 @@ about[data.min] = {":min(t)", "Minimal element and its index.", STAT}
 --  @return Central moment value.
 data.moment = function (self, N, t, tw)
   local m, n = 0, 0
-  for i = 1,#t do
+  for i = 1, #t do
     local w = tw and tw[i] or 1
     m = m + w * t[i]
     n = n + w
   end
   m = m / n
   local mu = 0
-  for i = 1,#t do
+  for i = 1, #t do
     mu = mu + (tw and tw[i] or 1) * (t[i]-m)^N
   end
   return mu / n
@@ -517,7 +517,7 @@ about[data.moment] = {":moment(N,t,[tw])",
 --  @param self Do nothing.
 --  @param t Table with numbers.
 --  @return Sum.
-data.sum = function (self,t)
+data.sum = function (self, t)
   local s = 0
   for i = 1, #t do s = s+t[i] end
   return s
@@ -530,18 +530,18 @@ about[data.sum] = {":sum(t)", "Get sum of all elements.", help.OTHER}
 --  @param tw Table of weights.
 --  @return Standard deviation, variance.
 data.std = function (self, t, tw)
-  local mean = data:mean(t,tw)
+  local mean = data:mean(t, tw)
   local disp = 0
   if tw then
     local sw = 0
-    for i = 1,#t do
+    for i = 1, #t do
       local w = tw[i] or 1
       disp = disp + w*(t[i]-mean)^2
       sw = sw + w
     end
     disp = disp / sw
   else
-    for i = 1,#t do disp = disp + (t[i]-mean)^2 end
+    for i = 1, #t do disp = disp + (t[i]-mean)^2 end
     disp = disp / #t
   end
   return math.sqrt(disp), disp
@@ -554,10 +554,10 @@ about[data.std] = {":std(t,[tw])",
 --  @param d Value.
 --  @param N Degree of freedom.
 --  @return Cumulative value.
-data.tcdf = function (self,d,N)
+data.tcdf = function (self, d, N)
   data.ext_special = data.ext_special or require('lib.special')
   local tmp = N/(N+d*d)
-  return 1-0.5*data.ext_special:betainc(tmp,0.5*N,0.5)
+  return 1-0.5*data.ext_special:betainc(tmp, 0.5*N, 0.5)
 end
 about[data.tcdf] = {":tcdf(d,N)",
   "Student's cumulative distribution.", help.OTHER}
@@ -567,9 +567,9 @@ about[data.tcdf] = {":tcdf(d,N)",
 --  @param d Value.
 --  @param N Degree of freedom.
 --  @return Density value.
-data.tpdf = function (self,d,N)
+data.tpdf = function (self, d, N)
   data.ext_special = data.ext_special or require('lib.special')
-  local tmp = math.sqrt(N)*data.ext_special:beta(0.5,0.5*N)
+  local tmp = math.sqrt(N)*data.ext_special:beta(0.5, 0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
 about[data.tpdf] = {
@@ -579,8 +579,8 @@ about[data.tpdf] = {
 --  @param self Do nothing.
 --  @param d Some value.
 --  @return Boolean function.
-data.xEq = function (self,d)
-  return (function (x) return Cross.eq(x,d) end)
+data.xEq = function (self, d)
+  return (function (x) return Cross.eq(x, d) end)
 end
 about[data.xEq] = {
   ":xEq(d)", "Return function for condition x == d.", FILTER}
@@ -589,7 +589,7 @@ about[data.xEq] = {
 --  @param self Do nothing.
 --  @param d Lower limit.
 --  @return Boolean function.
-data.xGt = function (self,d)
+data.xGt = function (self, d)
   return (function (x) return x > d end)
 end
 about[data.xGt] = {":xGt(d)", "Return function for condition x > d.", FILTER}
@@ -609,7 +609,7 @@ about[data.xIn] = {
 --  @param self Do nothing.
 --  @param d Upper limit.
 --  @return Boolean function.
-data.xLt = function (self,d)
+data.xLt = function (self, d)
   return (function (x) return x < d end)
 end
 about[data.xLt] = {":xLt(d)", "Return function for condition x < d.", FILTER}
@@ -619,7 +619,7 @@ about[data.xLt] = {":xLt(d)", "Return function for condition x < d.", FILTER}
 --  @param fn Function of multiple arguments or string.
 --  @param ... Sequence of lists.
 --  @return List of values fn(...).
-data.zip = function (self,fn, ...)
+data.zip = function (self, fn, ...)
   local ag, res = {...}, {}
   if type(fn) == 'string' then fn = Utils.Fn(fn, #ag) end
   local x, stop = {}, false

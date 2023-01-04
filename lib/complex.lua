@@ -198,7 +198,7 @@ _simp = numcomp,
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
 --  @return Sum of numbers.
-complex.__add = function (C1,C2)
+complex.__add = function (C1, C2)
   if not (iscomplex(C1) and iscomplex(C2)) then
     local p = Cross.convert(C1, C2)
     if p then
@@ -215,7 +215,7 @@ end
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
 --  @return Ratio of numbers.
-complex.__div = function (C1,C2)
+complex.__div = function (C1, C2)
   if not (iscomplex(C1) and iscomplex(C2)) then
     local p = Cross.convert(C1, C2)
     if p then
@@ -254,7 +254,7 @@ complex.__index = complex
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
 --  @return Product of numbers.
-complex.__mul = function (C1,C2)
+complex.__mul = function (C1, C2)
   if not (iscomplex(C1) and iscomplex(C2)) then
     local p = Cross.convert(C1, C2)
     if p then
@@ -278,7 +278,7 @@ complex.__newindex = function () error("Immutable object") end
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
 --  @return Power.
-complex.__pow = function (C1,C2)
+complex.__pow = function (C1, C2)
   if not (iscomplex(C1) and iscomplex(C2)) then
     local p = Cross.convert(C1, C2)
     if p then
@@ -299,7 +299,7 @@ end
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
 --  @return Difference of numbers.
-complex.__sub = function (C1,C2)
+complex.__sub = function (C1, C2)
   if not (iscomplex(C1) and iscomplex(C2)) then
     local p = Cross.convert(C1, C2)
     if p then
@@ -317,7 +317,7 @@ end
 --  @return String with complex number elements.
 complex.__tostring = function (C)
   local a, b = numStr(C._[1]), numStr(C._[2])
-  return string.format("%s%s%si", a, (b:sub(1,1) == '-' and '' or '+'), b)
+  return string.format("%s%s%si", a, (b:sub(1, 1) == '-' and '' or '+'), b)
 end
 
 --- -C
@@ -337,7 +337,7 @@ about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META}
 --  @return Complex number if possible.
 complex._convert = function (v)
   return (type(v) == 'number' or type(v) == 'table' and v.float)
-         and complex:_init(v,0)
+         and complex:_init(v, 0)
 end
 
 --- Get deep copy of the complex number.
@@ -476,12 +476,12 @@ about[complex.im] = {"im()", "Get imaginary part."}
 --  @return Real or complex logarithm.
 complex.log = function (C)
   if type(C) == "number" then
-    return C <= 0 and complex:_init(math.log(-C),math.pi) or math.log(C)
+    return C <= 0 and complex:_init(math.log(-C), math.pi) or math.log(C)
   else
     local c = C._
     return numcomp(complex:_init(
       0.5*math.log(Cross.float(c[1]^2 + c[2]^2)),
-      Ver.atan2(Cross.float(c[2]),Cross.float(c[1])))
+      Ver.atan2(Cross.float(c[2]), Cross.float(c[1])))
     )
   end
 end
@@ -504,7 +504,7 @@ complex.round = function (C, N)
             Cross.norm(a) < tol and 0 or a
   b = type(b) == 'number' and Utils.round(b, tol) or
             Cross.norm(b) < tol and 0 or b
-  return complex:_init(a,b)
+  return complex:_init(a, b)
 end
 about[complex.round] = {
   "round([N=6])", "Round in-place to specified number of digits."}
@@ -530,7 +530,7 @@ about[complex.sinh] = {
 --  @return Real or complex square root.
 complex.sqrt = function (C)
   if type(C) == "number" then
-    return C < 0 and complex:_init(0,math.sqrt(-C)) or math.sqrt(C)
+    return C < 0 and complex:_init(0, math.sqrt(-C)) or math.sqrt(C)
   else
     return complex.__pow(C, 0.5)
   end
@@ -561,7 +561,7 @@ about[complex.tanh] = {
 --  @param vMod Module.
 --  @param vArg Argument.
 --  @return Complex number.
-complex.trig = function (self,vMod,vArg)
+complex.trig = function (self, vMod, vArg)
   return complex:_init(vMod*fcos(vArg), vMod*fsin(vArg))
 end
 about[complex.trig] = {":trig(vModule,vAngle)",
@@ -576,7 +576,7 @@ __call = function (self, re, im)
     "Wrong real part")
   assert(type(im) == 'number' or type(im) == 'table' and im.float,
     "Wrong imaginary part")
-  return complex:_init(re,im)
+  return complex:_init(re, im)
 end })
 about[complex] = {
   " ([vRe=0,vIm=0])", "Create new complex number.", help.STATIC}
@@ -590,61 +590,61 @@ complex.onImport = function ()
     return (iscomplex(a) or type(a) == 'number') and
             complex.sqrt(a) or _sqrt(a)
   end
-  Main._updateHelp(sqrt,_sqrt)
+  Main._updateHelp(sqrt, _sqrt)
   local _exp = exp
   exp = function (a) return iscomplex(a) and complex.exp(a) or _exp(a) end
-  Main._updateHelp(exp,_exp)
+  Main._updateHelp(exp, _exp)
   local _log = log
   log = function (a)
     return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
   end
-  Main._updateHelp(log,_log)
+  Main._updateHelp(log, _log)
 
   -- trigonometric
   local _sin = sin
   sin = function (a) return iscomplex(a) and complex.sin(a) or _sin(a) end
-  Main._updateHelp(sin,_sin)
+  Main._updateHelp(sin, _sin)
   local _cos = cos
   cos = function (a) return iscomplex(a) and complex.cos(a) or _cos(a) end
-  Main._updateHelp(sqrt,_sqrt)
+  Main._updateHelp(sqrt, _sqrt)
   local _tan = tan
   tan = function (a) return iscomplex(a) and complex.tan(a) or _tan(a) end
-  Main._updateHelp(tan,_tan)
+  Main._updateHelp(tan, _tan)
   local _asin = asin
   asin = function (a) return iscomplex(a) and complex.asin(a) or _asin(a) end
-  Main._updateHelp(asin,_asin)
+  Main._updateHelp(asin, _asin)
   local _acos = acos
   acos = function (a) return iscomplex(a) and complex.acos(a) or _acos(a) end
-  Main._updateHelp(acos,_acos)
+  Main._updateHelp(acos, _acos)
   local _atan = atan
   atan = function (a) return iscomplex(a) and complex.atan(a) or _atan(a) end
-  Main._updateHelp(atan,_atan)
+  Main._updateHelp(atan, _atan)
 
   -- hyperbolic
   local _sinh = sinh
   sinh = function (a) return iscomplex(a) and complex.sinh(a) or _sinh(a) end
-  Main._updateHelp(sinh,_sinh)
+  Main._updateHelp(sinh, _sinh)
   local _cosh = cosh
   cosh = function (a) return iscomplex(a) and complex.cosh(a) or _cosh(a) end
-  Main._updateHelp(cosh,_cosh)
+  Main._updateHelp(cosh, _cosh)
   local _tanh = tanh
   tanh = function (a) return iscomplex(a) and complex.tanh(a) or _tanh(a) end
-  Main._updateHelp(tanh,_tanh)
+  Main._updateHelp(tanh, _tanh)
   local _asinh = asinh
   asinh = function (a)
     return iscomplex(a) and complex.asinh(a) or _asinh(a)
   end
-  Main._updateHelp(asinh,_asinh)
+  Main._updateHelp(asinh, _asinh)
   local _acosh = acosh
   acosh = function (a)
     return iscomplex(a) and complex.acosh(a) or _acosh(a)
   end
-  Main._updateHelp(acosh,_acosh)
+  Main._updateHelp(acosh, _acosh)
   local _atanh = atanh
   atanh = function (a)
     return iscomplex(a) and complex.atanh(a) or _atanh(a)
   end
-  Main._updateHelp(atanh,_atanh)
+  Main._updateHelp(atanh, _atanh)
 end
 
 -- Comment to remove descriptions

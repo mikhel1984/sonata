@@ -51,15 +51,15 @@ if _VERSION < 'Lua 5.3' then
     return (p == 0.0) and 'integer' or 'float'
   end
   -- Move elements to new position (and table)
-  versions.move = function (src,sfrom,sto,dfrom,dest)
+  versions.move = function (src, sfrom, sto, dfrom, dest)
     if dest and dest ~= src then
       for i = sfrom, sto do
         dest[dfrom] = src[i]
         dfrom = dfrom + 1
       end
     else
-      local temp = versions.move(src,sfrom,sto,sfrom,{})
-      dest = versions.move(temp,sfrom,sto,dfrom,src)
+      local temp = versions.move(src, sfrom, sto, sfrom, {})
+      dest = versions.move(temp, sfrom, sto, dfrom, src)
     end
     return dest
   end
@@ -83,7 +83,7 @@ local cross = {
 --  @param v1 First object.
 --  @param v2 Second object.
 --  @return True if the objects are equal.
-cross.eq = function (v1,v2)
+cross.eq = function (v1, v2)
   if     type(v1) == 'table' and v1.__eq then
     return v1:__eq(v2)
   elseif type(v2) == 'table' and v2.__eq then
@@ -183,12 +183,12 @@ end
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments.
 --  @return Function based on the expression.
-utils.Fn = function (sExpr,iArg)
+utils.Fn = function (sExpr, iArg)
   local arg = {}
   for i = 1, iArg do arg[i] = string.format("x%d", i) end
   local fn = versions.loadStr(
     string.format("return function (%s) return %s end",
-      table.concat(arg,','), sExpr))
+      table.concat(arg, ','), sExpr))
   return fn()
 end
 

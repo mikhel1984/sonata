@@ -310,7 +310,7 @@ evaluate.eval = function (ev, cmd, useLog)
   local res = evaluate._eval(ev, cmd)
   -- logging
   if useLog and ev._logFile then
-    ev._logFile:write(newLine,'\n')
+    ev._logFile:write(newLine, '\n')
     if status == evaluate.EV_RES and ev._ans then
       ev._logFile:write('--[[ ', ev._ans, ' ]]\n\n')
     elseif status == evaluate.EV_ERR then

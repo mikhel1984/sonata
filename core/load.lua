@@ -31,7 +31,7 @@ function Sonata.doimport(tbl, name)
     -- try alias
     if not Sonata.alias then
       Sonata.alias = {}
-      for k,v in pairs(use) do Sonata.alias[v] = k end
+      for k, v in pairs(use) do Sonata.alias[v] = k end
     end
     var = name
     name = assert(Sonata.alias[name], "Wrong module name: "..name.."!")
@@ -55,7 +55,7 @@ setmetatable(use,
         Sonata.FORMAT_V1,
         string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
       -- show loaded modules
-      for k,v in pairs(use) do
+      for k, v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
         if _G[v] then
           lst[#lst+1] = Sonata.FORMAT_V1
@@ -69,13 +69,13 @@ setmetatable(use,
       return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == 'all' then
       -- load all modules
-      for k,v in pairs(self) do Sonata.doimport(self,k) end
+      for k, v in pairs(self) do Sonata.doimport(self, k) end
     elseif type(name) == 'table' then
       -- load group of modules
-      for _,v in ipairs(name) do Sonata.doimport(self,v) end
+      for _, v in ipairs(name) do Sonata.doimport(self, v) end
     else
       -- load module
-      Sonata.doimport(self,name)
+      Sonata.doimport(self, name)
     end
   end,
 })
@@ -172,7 +172,7 @@ description = 'Create template file for a new module.',
 example = '--new  matrices  Mat  "Matrix operations."',
 process = function (args)
   local Gen = require('core.generator')
-  Gen.module(args[2],args[3],args[4])
+  Gen.module(args[2], args[3], args[4])
 end,
 exit = true},
 
@@ -191,7 +191,7 @@ process = function (args)
   if SONATA_LOCALIZATION then
     About:localization(SONATA_LOCALIZATION)
   end
-  for i = 1,#args do
+  for i = 1, #args do
     if string.find(args[i], '%.note$') then
       Sonata:note(args[i])
     else
@@ -222,7 +222,7 @@ Sonata._arghelp = function ()
     '\t\te.g. -e "2+2"',
     "",
   }
-  for k,v in pairs(_args) do
+  for k, v in pairs(_args) do
     if v.description then
       txt[#txt+1] = string.format('\t%s\t%s', k, v.description)
       if v.example then
@@ -235,9 +235,9 @@ Sonata._arghelp = function ()
   txt[#txt+1] = ""
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end
-  txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
+  txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules, ', '))
   txt[#txt+1] = "BUGS: mail to 'mikhel.sk@gmail.com'\n"
-  return table.concat(txt,'\n')
+  return table.concat(txt, '\n')
 end
 
 --================== EXECUTION =================

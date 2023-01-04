@@ -4,12 +4,12 @@
 --  Arrays are sparse as long as possible.
 --
 --  Object structure:</br>
---  <code>{a1...an, b1...bn, c1...cn, ...,</br>
+--  <code>{a1...an, b1...bn, c1...cn, ..., </br>
 --  array_size, index_coefficients}</code></br>
 --  i.e. all elements of the array are written sequentially, column by column.
 --  Position of one element is calculated as
 --  <code>C1*n1+C2*n2+...+Ck*nk</code>
---  where <code>{n1,n2,...nk}</code> - index, <code>C1...Ck</code> - size based
+--  where <code>{n1, n2,...nk}</code> - index, <code>C1...Ck</code> - size based
 --  coefficients.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
@@ -119,7 +119,7 @@ type='array', isarray=true,
 --  @param A2 Second array.
 --  @return True if all elements are equal.
 array.__eq = function (A1, A2)
-  if array.isEqual(A1,A2) then
+  if array.isEqual(A1, A2) then
     -- compare element wise
     for i = 1, array.capacity(A1) do
       if (A1[i] or 0) ~= (A2[i] or 0) then return false end
@@ -164,7 +164,7 @@ end
 --  @return True if the index is correct for the current array.
 array._isIndex = function (A, tInd)
   if #A.size ~= #tInd then return false end
-  for i = 1,#tInd do
+  for i = 1, #tInd do
     if tInd[i] > A.size[i] or tInd[i] < 1 then return false end
   end
   return true
@@ -188,7 +188,7 @@ end
 --  @return Position of the element in the array table.
 array._pos = function (A, tInd)
   local res, k = tInd[1], A.k
-  for i = 2,#tInd do
+  for i = 2, #tInd do
     res = res + (tInd[i]-1) * k[i]
   end
   return res
@@ -235,7 +235,7 @@ array.concat = function (A1, A2, iAxis)
     -- get value
     local second = (ind1[iAxis] > edge)
     ind2[iAxis] = second and (ind2[iAxis]-edge) or ind2[iAxis]
-    res[conv(res,ind1)] = second and A2[conv(A2,ind2)] or A1[conv(A1,ind2)]
+    res[conv(res, ind1)] = second and A2[conv(A2, ind2)] or A1[conv(A1, ind2)]
   end
   return res
 end
@@ -307,7 +307,7 @@ about[array.isEqual] = {"isEqual(A)", "Check size equality.", help.OTHER}
 array.map = function (A, fn)
   local res, v = array:_new(Ver.move(A.size, 1, #A.size, 1, {})), nil
   for i = 1, array.capacity(A) do
-    v = fn(A[i], array._index(A,i-1))
+    v = fn(A[i], array._index(A, i-1))
     res[i] = v
   end
   return res
@@ -320,7 +320,7 @@ about[array.map] = {"map(fn)", "Apply function fn(x,[ind]) to all elements, retu
 --  @param v New value.
 array.set = function (A, tInd, v)
   if not array._isIndex(A, tInd) then error("Wrong index!") end
-  A[array._pos(A,tInd)] = v
+  A[array._pos(A, tInd)] = v
 end
 about[array.set] = {"set(tInd,v)", "Set value to the array."}
 
@@ -354,7 +354,7 @@ array.sub = function (A, tInd1, tInd2)
       tInd2[i] = tInd1[i] + tmp
       ind[i] = tmp + 1
     end
-    res[conv(res,ind)] = A[conv(A,tInd2)]
+    res[conv(res, ind)] = A[conv(A, tInd2)]
   end
   return res
 end
@@ -371,7 +371,7 @@ array.zip = function (self, fn, ...)
   if type(fn) == 'string' then fn = Utils.Fn(fn, #arg) end
   -- check arguments
   local eq, a1 = array.isEqual, arg[1]
-  for i = 2,#arg do
+  for i = 2, #arg do
     if not eq(arg[i], a1) then error("Not compatible arrays!") end
   end
   -- prepare new
@@ -379,7 +379,7 @@ array.zip = function (self, fn, ...)
   local res = array:_new(Ver.move(a1.size, 1, #a1.size, 1, {}))
   for i = 1, array.capacity(a1) do
     -- collect
-    for k = 1,#arg do v[k] = arg[k][i] end
+    for k = 1, #arg do v[k] = arg[k][i] end
     -- evaluate
     res[i] = fn(upack(v))
   end
@@ -392,7 +392,7 @@ about[array.zip] = {":zip(fn, ...)",
 setmetatable(array, {__call = function (self, tSize)
   -- check correctness
   assert(type(tSize) == 'table', "Table is expected!")
-  for i = 1,#tSize do
+  for i = 1, #tSize do
     assert(tSize[i] > 0 and Ver.isInteger(tSize[i]),
            "Positive integer is expected!")
   end

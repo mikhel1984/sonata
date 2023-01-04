@@ -63,27 +63,27 @@ au_u_='m',    au = 149597870700,         -- astronomic unit
 
 -- math
 local _math = {
-             phi = 1.6180339887498948482045868, -- golden ratio
-              pi = 3.1415926535897932384626434, -- length to diameter
-               e = 2.7182818284590452353602875, -- base of natural logarithm
+             phi = 1.6180339887498948482045868,  -- golden ratio
+              pi = 3.1415926535897932384626434,  -- length to diameter
+               e = 2.7182818284590452353602875,  -- base of natural logarithm
 }
 
 -- physics
 local _phy = {
-G_u_='N*m^2/kg^2', G = 6.672041E-11,       -- constant of gravitation
-e_u_='C',          e = 1.602189246E-19,    -- charge of electron
-mu0_u_='N/A^2',  mu0 = 4E-7*math.pi,       -- magnetic constant
-R_u_='J/(mol*K)',  R = 8.31441,            -- molar gas constant
-Vm_u_='m^3/mol',  Vm = 22.41383E-3,        -- volume of one mole of the ideal gas
-NA_u_='1/mol',    NA = 6.02204531E23,      -- Avogadro's number
-k_u_='J/K',        k = 1.38066244E-23,     -- Boltzmann constant
-h_u_='J*s',        h = 6.62617636E-34,     -- Planck's constant
-c_u_='m/s',        c = 2.99792458E8,       -- speed of light
-g_u_='m/s^2',      g = 9.80665,            -- 'standard' acceleration of free fall
-eps0_u_='F/m',  eps0 = 8.85418781871E-12,  -- permittivity of a vacuum
-sigma_u_='W/(m^2*K^4)', sigma = 5.6704E-8, -- Stefan-Boltzmann constant
-Rinf_u_='1/m',  Rinf = 10973731.56852773,  -- Rydberg constant
-Da_u_='kg',       Da = 1,660539066605E-27, -- unified atomic mass unit (Dalton unit)
+G_u_='N*m^2/kg^2', G = 6.672041E-11,        -- constant of gravitation
+e_u_='C',          e = 1.602189246E-19,     -- charge of electron
+mu0_u_='N/A^2',  mu0 = 4E-7*math.pi,        -- magnetic constant
+R_u_='J/(mol*K)',  R = 8.31441,             -- molar gas constant
+Vm_u_='m^3/mol',  Vm = 22.41383E-3,         -- volume of one mole of the ideal gas
+NA_u_='1/mol',    NA = 6.02204531E23,       -- Avogadro's number
+k_u_='J/K',        k = 1.38066244E-23,      -- Boltzmann constant
+h_u_='J*s',        h = 6.62617636E-34,      -- Planck's constant
+c_u_='m/s',        c = 2.99792458E8,        -- speed of light
+g_u_='m/s^2',      g = 9.80665,             -- 'standard' acceleration of free fall
+eps0_u_='F/m',  eps0 = 8.85418781871E-12,   -- permittivity of a vacuum
+sigma_u_='W/(m^2*K^4)', sigma = 5.6704E-8,  -- Stefan-Boltzmann constant
+Rinf_u_='1/m',  Rinf = 10973731.56852773,   -- Rydberg constant
+Da_u_='kg',       Da = 1,660539066605E-27,  -- unified atomic mass unit (Dalton unit)
 }
 
 -- user defined
@@ -142,39 +142,39 @@ end
 --  @param sName Name of constant.
 --  @param val  Value of constant.
 --  @param sUunit String with units.
-const.add = function (self,sName,val,sUnit)
+const.add = function (self, sName, val, sUnit)
   -- add only new constants
   if _user[sName] then error('Cannot modify '..tostring(sName)) end
   _user[sName] = val
   _user[sName..'_u_'] = sUnit
   return 'Done'
 end
-about[const.add] = {':add(sName,value,[sUnits])','Create new constant.'}
+about[const.add] = {':add(sName,value,[sUnits])', 'Create new constant.'}
 
 --- Remove existing constant.
 --  @param self Do nothing.
 --  @param sName Name of constant.
-const.remove = function (self,sName)
+const.remove = function (self, sName)
   if _user[sName] then
     _user[sName] = nil
     _user[sName..'_u_'] = nil
     return 'Done'
   end
 end
-about[const.remove] = {':remove(sName)','Delete user-defined constant.'}
+about[const.remove] = {':remove(sName)', 'Delete user-defined constant.'}
 
 -- Comment to remove descriptions
 const.about = about
 
 -- Make objects "immutable"
 setmetatable(const,       {__newindex=modifyError,
-  __index = function (t,k) return _user[k] or const._unit_(_user, k) end})
+  __index = function (t, k) return _user[k] or const._unit_(_user, k) end})
 setmetatable(const.phy,   {__newindex=modifyError,
-  __index = function (t,k) return _phy[k]  or const._unit_(_phy, k) end})
+  __index = function (t, k) return _phy[k]  or const._unit_(_phy, k) end})
 setmetatable(const.astro, {__newindex=modifyError,
-  __index = function (t,k) return _astro[k] or const._unit_(_astro, k) end})
+  __index = function (t, k) return _astro[k] or const._unit_(_astro, k) end})
 setmetatable(const.math,  {__newindex=modifyError,
-  __index = function (t,k) return _math[k] or const._unit_(_math, k) end})
+  __index = function (t, k) return _math[k] or const._unit_(_math, k) end})
 
 return const
 

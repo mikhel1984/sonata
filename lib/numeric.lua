@@ -143,7 +143,7 @@ about[numeric.newton] = {":newton(fn,d0)",
 --  @param y0 Function value at time t0.
 --  @param param Table of additional parameters: dt - time step, exit - exit condition
 --  @return Table of intermediate results and value in final point.
-numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
+numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   local MAX, MIN = 15*numeric.TOL, 0.1*numeric.TOL
   local xn = tDelta[2]
   local h = tParam and tParam.dt or (10*numeric.TOL)
@@ -157,12 +157,12 @@ numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
     h = math.min(h, xn-x)
     -- correct step
     if tParam and tParam.dt then
-      res[#res+1] = {x+h, rk(fn,x,y,h)}
+      res[#res+1] = {x+h, rk(fn, x, y, h)}
     else
       -- step correction
       local h2 = 0.5*h
       local y1 =  rk(fn, x, y, h)
-      local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
+      local y2 =  rk(fn, x+h2, rk(fn, x, y, h2), h2)
       local dy = (type(y1) == 'table') and (y2-y1):norm() or math.abs(y2-y1)
       if dy > MAX then
         h = h2
@@ -174,7 +174,7 @@ numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
         res[#res+1] = {x+h, y2}
       end
     end
-    if exit(res[#res][1],res[#res][2], (#res>1) and res[#res-1][2]) then
+    if exit(res[#res][1], res[#res][2], (#res>1) and res[#res-1][2]) then
       break
     end
   end

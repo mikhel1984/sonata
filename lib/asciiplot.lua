@@ -130,17 +130,17 @@ local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
 -- symbols
-char = {'+','o','*','#','%','~','x'},
-lvls = {'a','b','c','d','e','f','g','i','j','k'},
+char = {'+', 'o', '*', '#', '%', '~', 'x'},
+lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'i', 'j', 'k'},
 }
 
 if SONATA_USE_COLOR then
   local char = asciiplot.char
-  for k,v in ipairs(char) do
+  for k, v in ipairs(char) do
     char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
   end
   char = asciiplot.lvls
-  for k,v in ipairs(char) do
+  for k, v in ipairs(char) do
     char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
   end
 end
@@ -172,7 +172,7 @@ asciiplot.__tostring = function (F)
            and (#k == 1 or SONATA_USE_COLOR))
     acc[#acc+1] = string.format("(%s) %s", k, v)
   end
-  return table.concat(acc,'\n')
+  return table.concat(acc, '\n')
 end
 
 --- Add points from a table.
@@ -256,7 +256,7 @@ asciiplot._clear = function (F)
 end
 
 --- Get bounds of the table values.
---  @param t Table {{x1,y11,y12...},{x2,y21,y22..},...}
+--  @param t Table {{x1,y11,y12...}, {x2,y21,y22..}, ...}
 --  @param tInd Table of y column indeces.
 --  @return xrange, yrange
 asciiplot._findRange = function (t, tInd)
@@ -312,7 +312,7 @@ asciiplot._fn2XY = function (F, fn)
   return X, Y
 end
 
---- Find height for each pair (x,y).
+--- Find height for each pair (x, y).
 --  @param F Figure object.
 --  @param fn Function f(x,y).
 --  @return Vectors X, Y, 'matrix' Z, range of heights.
@@ -360,7 +360,7 @@ asciiplot._format = function (s, N, bCentr, bCut)
     res = s
   end
   if #res > N and bCut then
-    res = string.sub(res,1,N)
+    res = string.sub(res, 1, N)
   end
   return res
 end
@@ -377,12 +377,12 @@ asciiplot._limits = function (F)
     local row, beg = F.canvas[n], 0
     local s = string.format(' %s ',  tostring(F.xrange[1]))
     for i = 1, #s do
-      row[beg+i] = string.sub(s,i,i)
+      row[beg+i] = string.sub(s, i, i)
     end
     s = string.format(' %s ', tostring(F.xrange[2]))
     beg = F.width - #s - 1
     for i = 1, #s do
-      row[beg+i] = string.sub(s,i,i)
+      row[beg+i] = string.sub(s, i, i)
     end
     n = nil
   end
@@ -395,13 +395,13 @@ asciiplot._limits = function (F)
     local beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
     local row = F.canvas[F.height-1]
     for i = 1, #s do
-      row[beg+i] = string.sub(s,i,i)
+      row[beg+i] = string.sub(s, i, i)
     end
     s = string.format(' %s ', tostring(F.yrange[2]))
     beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
     row = F.canvas[2]
     for i = 1, #s do
-      row[beg+i] = string.sub(s,i,i)
+      row[beg+i] = string.sub(s, i, i)
     end
   end
 end
@@ -410,7 +410,7 @@ end
 --  @param dwidth Figure width.
 --  @param dheight Figure height.
 --  @return New object of asciiplot.
-asciiplot._new = function(self,dwidth,dheight)
+asciiplot._new = function(self, dwidth, dheight)
   local o = {
     -- size
     width  = dwidth or WIDTH,
@@ -418,9 +418,9 @@ asciiplot._new = function(self,dwidth,dheight)
     _w0 = dwidth or WIDTH,
     _h0 = dheight or HEIGHT,
     -- range
-    xrange = {-1,1},
-    yrange = {-1,1},
-    zrange = {-1,1},
+    xrange = {-1, 1},
+    yrange = {-1, 1},
+    zrange = {-1, 1}, 
     -- axes location
     xaxis  = 'C',
     yaxis  = 'C',
@@ -431,7 +431,7 @@ asciiplot._new = function(self,dwidth,dheight)
     -- title can be added
   }
   -- return object
-  return setmetatable(o,self)
+  return setmetatable(o, self)
 end
 
 --- Find range of levels for surface plot.
@@ -596,7 +596,7 @@ end
 --  @param dx Coordinate x.
 --  @param dy Coordinate y.
 --  @param s Character.
-asciiplot.addPoint = function (F,dx,dy,s)
+asciiplot.addPoint = function (F, dx, dy, s)
   local h, w = F.height, F.width
   local nx = (dx - F.xrange[1]) / (F.xrange[2] - F.xrange[1])
   local ny = (dy - F.yrange[1]) / (F.yrange[2] - F.yrange[1])
@@ -618,7 +618,7 @@ about[asciiplot.addPoint] = {
 --  @param ir Row index.
 --  @param ic Column index.
 --  @param s Character.
-asciiplot.addPose = function (F,ir,ic,s)
+asciiplot.addPose = function (F, ir, ic, s)
   if ir >= 1 and ir <= F.height and ic > 0 and ic < F.width
              and (#s == 1 or SONATA_USE_COLOR) then
     F.canvas[ir][ic] = s
@@ -632,9 +632,9 @@ about[asciiplot.addPose] = {
 --  @param ir Row index.
 --  @param ic Column index.
 --  @param s String.
-asciiplot.addString = function (F,ir,ic,s)
+asciiplot.addString = function (F, ir, ic, s)
   for i = 1, #s do
-    asciiplot.addPose(F, ir, ic+i-1, string.sub(s,i,i))
+    asciiplot.addPose(F, ir, ic+i-1, string.sub(s, i, i))
   end
 end
 about[asciiplot.addString] = {
@@ -681,7 +681,7 @@ asciiplot.bar = function (F, t, vy, ix)
   for i = 1, #t, step do
     -- text
     local x = tostring(ytbl and t[i] or t[i][ix])
-    for c = 1, math.min(iL-2, #x) do F.canvas[r][c] = string.sub(x,c,c) end
+    for c = 1, math.min(iL-2, #x) do F.canvas[r][c] = string.sub(x, c, c) end
     -- line
     x = ytbl and vy[i] or t[i][vy]
     local i1, i2 = mmodf(x * dm + i0)
@@ -696,7 +696,7 @@ asciiplot.bar = function (F, t, vy, ix)
     -- value
     x = tostring(x)
     for c = 1, math.min(iL-2, #x) do
-      F.canvas[r][iR+2+c] = string.sub(x,c,c)
+      F.canvas[r][iR+2+c] = string.sub(x, c, c)
     end
     r = r + 1
   end
@@ -713,20 +713,20 @@ asciiplot.concat = function (self, ...)
   -- collect info
   local ag = {...}
   local nlegend = 0
-  for i,v in ipairs(ag) do
+  for i, v in ipairs(ag) do
     if not isasciiplot(v) then
       error("Not asciiplot objec at "..tostring(i))
     end
     if v.height ~= ag[1].height then error('Different height') end
     if v.title then btitle = true end
     local n = 0
-    for k,_ in pairs(v.legend) do n = n + 1 end
+    for k, _ in pairs(v.legend) do n = n + 1 end
     if n > nlegend then nlegend = n end
   end
   -- data
   local acc = {}
   local gap = '   '
-  for i,v in ipairs(ag) do
+  for i, v in ipairs(ag) do
     local k = 1
     -- title
     local row = acc[k] or {}
@@ -821,7 +821,7 @@ asciiplot.copy = function (F)
     canvas = {},
     legend = {},
   }
-  for k,v in pairs(F.legend) do
+  for k, v in pairs(F.legend) do
     o.legend[k] = v
   end
   for i = 1, #F.canvas do
@@ -880,7 +880,7 @@ asciiplot.plot = function (F, ...)
   -- check if there are no tables
   if xmin == math.huge then xmin = F.xrange[1] end
   if xmax == -math.huge then xmax = F.xrange[2] end
-  F.xrange = {xmin,xmax}
+  F.xrange = {xmin, xmax}
 
   -- update y range
   local ymin, ymax = math.huge, -math.huge
@@ -940,7 +940,7 @@ about[asciiplot.scale] = {"scale(factor,[bDefault=false])",
   "Change figure size w.r.t. initial size."}
 
 --- Plot data represented in form of table
---  {{x1,y11,y12,...},{x2,y21,y22,...},...}
+--  {{x1,y11,y12,...}, {x2,y21,y22,...}, ...}
 --  @param F Figure object.
 --  @param t Data table.
 --  @param tOpt (Optional) Table of column indeces, key 'yfix' allows to skip resizing.
@@ -970,8 +970,8 @@ about[asciiplot.tplot] = {
 
 -- Simplify the constructor call.
 setmetatable(asciiplot, {
-__call = function (self,w,h)
-  return asciiplot:_new(w,h)
+__call = function (self, w, h)
+  return asciiplot:_new(w, h)
 end})
 about[asciiplot] = {
   " ([iWidth=75,iHeight=23])", "Create new asciiplot.", help.STATIC}

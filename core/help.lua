@@ -57,7 +57,7 @@ NEW = 'constructor',
 META = 'methods',
 STATIC = 'common',
 -- file name separator
-SEP = string.sub(package.config,1,1),
+SEP = string.sub(package.config, 1, 1),
 -- colors
 CMAIN = '',
 CHELP = '',
@@ -213,7 +213,7 @@ help.makeModule = function (t, nm)
     end
   end
   -- output
-  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm,'\n',
+  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm, '\n',
     txt, '\n'}
   for cat, n in pairs(acc) do          -- for each category
     res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
@@ -243,7 +243,7 @@ end
 --  @param fName File name.
 --  @return Lua table or nil.
 help.tblImport = function (fName)
-  local str,f = help.readAll(fName), nil
+  local str, f = help.readAll(fName), nil
   -- use Lua default import
   if str then f = loadStr(str) end
   return f and f() or nil
@@ -253,7 +253,7 @@ end
 --  @param fName File name.
 --  @return Lua table or nil
 help.tblImportWin = function (fName)
-  local str,f = help.readAll(fName), nil
+  local str, f = help.readAll(fName), nil
   if str then
     str = Win.convert(str)
     f = loadStr(str)

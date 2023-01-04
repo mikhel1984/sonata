@@ -133,7 +133,7 @@ ellipsoid.__index = ellipsoid
 --  @param E2 Src ellipsoid object.
 --  @param par Transformation parameters.
 --  @return Function for transformation.
-ellipsoid._bwdBLH = function (E1,E2,tPar)
+ellipsoid._bwdBLH = function (E1, E2, tPar)
   local da, df = E1.a - E2.a, E1.f - E2.f
   return function (t)
     local dB, dL, dH = ellipsoid._molodensky(E2, -tPar[1], -tPar[2], -tPar[3], da, df, t)
@@ -165,7 +165,7 @@ end
 --  @param E2 Dst ellipsoid object.
 --  @param par Transformation parameters.
 --  @return Function for transformation.
-ellipsoid._fwdBLH = function (E1,E2,tPar)
+ellipsoid._fwdBLH = function (E1, E2, tPar)
   local da, df = E2.a - E1.a, E2.f - E1.f
   return function (t)
     local dB, dL, dH = ellipsoid._molodensky(
@@ -202,7 +202,7 @@ end
 --  @param df Difference in flattening.
 --  @param t Coordinates of a point.
 --  @return Shift in B, L, H coordinates.
-ellipsoid._molodensky = function (E,dx,dy,dz,da,df,t)
+ellipsoid._molodensky = function (E, dx, dy, dz, da, df, t)
   local B, L = math.rad(t.B), math.rad(t.L)
   local sB, cB = math.sin(B), math.cos(B)
   local sL, cL = math.sin(L), math.cos(L)
@@ -247,7 +247,7 @@ end
 --- Ellipsoid object constructor.
 --  @param t Table with parameters, obligatory are semi-major axis, flattening.
 --  @return New ellipsoid.
-ellipsoid.new = function (self,t)
+ellipsoid.new = function (self, t)
   local f = t.f
   t.e2 = f*(2-f)
   t.b = t.a*(1-f)
@@ -270,8 +270,8 @@ ellipsoid.projGK = function (E, t)
     + 15.0/8.0*n*n*(1+n) * math.sin(2*(B-B0)) * math.cos(2*(B+B0))
     - 35.0/24.0*n^3 * math.sin(3*(B-B0)) * math.cos(3*(B+B0)))
   local sB, cB, tB2 = math.sin(B), math.cos(B), math.tan(B)^2
-  local v = F*ellipsoid._radiusVertical(E,B)
-  local p = F*ellipsoid._radiusMeridian(E,B)
+  local v = F*ellipsoid._radiusVertical(E, B)
+  local p = F*ellipsoid._radiusMeridian(E, B)
   local nn = v / p - 1
   local coef = {cB,
     sB*cB/2.0,
@@ -402,14 +402,14 @@ ellipsoid.toBLH = function (E, t)
     local e22 = E.e2 / (1 - E.e2)
     -- initial value for tan(B)
     local tg = Z / D * (1 + e22 * E.b / math.sqrt(X*X + Y*Y + Z*Z))
-    for i = 1,2 do       -- TODO: use tol estimation
+    for i = 1, 2 do       -- TODO: use tol estimation
       tg = tg * (1 - E.f)    -- get tan(theta)
       local theta = math.atan(tg)
       tg = (Z + e22 * E.b * math.sin(theta)^3) /
         (D - E.e2 * E.a * math.cos(theta)^3)
     end
     B = math.atan(tg)
-    L = Ver.atan2(Y,X)
+    L = Ver.atan2(Y, X)
     local N = ellipsoid._radiusVertical(E, B)
     if math.abs(tg) > 1 then
       H = Z / math.sin(B) - (1 - E.e2) * N
@@ -447,18 +447,18 @@ type = 'geodesy', isgeodesy = true,
 -- Ellipsoids
 WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563,
   -- additional parameters
-  Me = 5.98E24,  -- kg, mass of earth
-  G  = 6.67E-11, -- m^3/kg/s^2, gravitational constant
-  GMe = 3.986004418E14, -- m^3/s^2
-  omega = 7.292115E-5, -- rad/s, rotation rate
-  J2 = 1.081874E-3, -- dynamic form factor
+  Me = 5.98E24,          -- kg, mass of earth
+  G  = 6.67E-11,         -- m^3/kg/s^2, gravitational constant
+  GMe = 3.986004418E14,  -- m^3/s^2
+  omega = 7.292115E-5,   -- rad/s, rotation rate
+  J2 = 1.081874E-3,      -- dynamic form factor
 },
 -- russian systems
 PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784,
   -- additional parameters
-  GMe = 398600.4418E9, -- m^3/s^2
-  omega = 7.292115E-5, -- rad/s, rotation rate
-  J2 = 1082.62575E-6, -- dynamic form factor
+  GMe = 398600.4418E9,  -- m^3/s^2
+  omega = 7.292115E-5,  -- rad/s, rotation rate
+  J2 = 1082.62575E-6,   -- dynamic form factor
 },
 PZ9002 = ellipsoid:new {a = 6378136, f = 1/298.25784},
 SK42 = ellipsoid:new {a = 6378245, f = 1/298.3},
@@ -476,7 +476,7 @@ geodesy.__index = geodesy
 --  @param m Minutes (optional).
 --  @param s Seconds (optional).
 --  @return Angle in radians.
-geodesy.dms2rad = function (self,d,m,s)
+geodesy.dms2rad = function (self, d, m, s)
   return math.rad(d + (m or 0) / 60 + (s or 0) / 3600)
 end
 about[geodesy.dms2rad] = {":dms2rad(d,[m=0,s=0])",
@@ -486,7 +486,7 @@ about[geodesy.dms2rad] = {":dms2rad(d,[m=0,s=0])",
 --  @param self Do nothing.
 --  @param d Angle in degrees.
 --  @return Degrees, minutes, seconds.
-geodesy.deg2dms = function (self,d)
+geodesy.deg2dms = function (self, d)
   local deg = math.floor(d)
   local min = math.floor(60 * (d - deg))
   local sec = 3600 * (d - deg) - 60 * min
@@ -499,7 +499,7 @@ about[geodesy.deg2dms] = {":deg2dms(d)",
 --  @param self Do nothing.
 --  @param B Latitude, deg.
 --  @return Acceleration value.
-geodesy.grav = function (self,dB)
+geodesy.grav = function (self, dB)
   local s = math.sin(math.rad(dB))
   s = s * s  -- get square
   return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
@@ -664,7 +664,7 @@ about[geodesy.blhInto] = {"A.blhInto[B]",
 --  @param r Cartesian coordinates of the reference point.
 --  @param p Cartesian coordinates of the observed point.
 --  @return Topocentric coordinates of the observed point.
-geodesy.toENU = function (self,tG, tR, tP)
+geodesy.toENU = function (self, tG, tR, tP)
   local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
   local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
   local dx, dy, dz = tP.X-tR.X, tP.Y-tR.Y, tP.Z-tR.Z
@@ -683,7 +683,7 @@ about[geodesy.toENU] = {":toENU(tBLr,tXYZr,tCatr)",
 --  @param r Cartesian coordinates of the reference point.
 --  @param l Topocentric coordinates of the observed point.
 --  @return Cartesian coordinates of the observed point.
-geodesy.fromENU = function (self,tG, tR, tL)
+geodesy.fromENU = function (self, tG, tR, tL)
   local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
   local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
   return {

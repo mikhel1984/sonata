@@ -110,7 +110,7 @@ main._showTable = function (t)
   end
   io.write('\n{ ')
   -- list elements
-  for i,v in ipairs(t) do
+  for i, v in ipairs(t) do
     io.write(main._showElt(v), ', ')
     nums[i] = true
     if i % N == 0 then
@@ -120,7 +120,7 @@ main._showTable = function (t)
   end
   -- hash table elements
   local count = 0
-  for k,v in pairs(t) do
+  for k, v in pairs(t) do
     if not nums[k] then
       io.write('\n', tostring(k), ' = ', main._showElt(v), ', ')
       count = count + 1
@@ -180,7 +180,7 @@ math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
 rand = function () return math.random() end
 about[rand] = {"rand()", "Random number between 0 and 1."}
 
-randi = function (N) return math.random(1,N) end
+randi = function (N) return math.random(1, N) end
 about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
 
 randn = function (dMean, dev)
@@ -208,7 +208,7 @@ Map = function (fn, t)
   if type(t) == 'table' then
     if t.map then return t:map(fn) end
     local res = {}
-    for i,v in ipairs(t) do res[i] = fn(v) end
+    for i, v in ipairs(t) do res[i] = fn(v) end
     return res
   end
   return nil
@@ -218,13 +218,13 @@ about[Map] = {'Map(fn,t)','Evaluate function for each table element.', AUX}
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
 Print = function (...)
-  for i,v in ipairs({...}) do
+  for i, v in ipairs({...}) do
     if type(v) == 'table' then
       local mt = getmetatable(v)
       if mt and mt.__tostring then
         -- has representation
         local tmp = tostring(v)
-        if string.find(tmp,'\n') then
+        if string.find(tmp, '\n') then
           io.write('\n', tmp, '\n')
         else
           io.write(tmp, '\t')
@@ -248,7 +248,7 @@ about[Print] = {"Print(...)",
 --  @param f Real number.
 --  @param N Number of decimal digits.
 --  @return Rounded number.
-Round = function (f,N)
+Round = function (f, N)
   N = N or 0
   return Utils.round(f, 10^(-N))
 end
@@ -291,7 +291,7 @@ main.life = function (board)
   local src = board
   local gen = 0
   -- make decision about current cell
-  local islive = function (r,c)
+  local islive = function (r, c)
       local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
         + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
       return (n==3 or n==2 and src[r][c]==1) and 1 or 0
@@ -301,9 +301,9 @@ main.life = function (board)
     local new = board:zeros()   -- empty matrix of the same size
     gen = gen+1
     -- update
-    for r = 1,rows do
-      for c = 1,cols do
-        new[r][c] = gen > 1 and islive(r,c) or src[r][c] ~= 0 and 1 or 0
+    for r = 1, rows do
+      for c = 1, cols do
+        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
         io.write(new[r][c] == 1 and '*' or ' ')
       end
       io.write('|\n')
@@ -325,7 +325,7 @@ local mt_range = { type = 'range' }
 --  @param dStep Step value.
 --  @param iN Number of elements.
 --  @return Range object.
-mt_range._init = function (dBeg,dEnd,dStep,iN)
+mt_range._init = function (dBeg, dEnd, dStep, iN)
   return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, mt_range)
 end
 
@@ -419,7 +419,7 @@ Range = function (dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-about[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', AUX}
+about[Range] = {'Range(dBegin,dEnd,[dStep])', 'Generate range object.', AUX}
 
 if Log then
   about[Log] = {'Log(sFlag)',

@@ -1004,7 +1004,7 @@ end
 
 -- simplify constructor call
 setmetatable(symbolic, {
-__call = function (self,v)
+__call = function (self, v)
   if type(v) == 'string' then
     return symbolic:_newSymbol(
       assert(v:match('^[_%a]+[_%w]*$'), 'Wrong name'))

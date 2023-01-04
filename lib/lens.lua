@@ -129,7 +129,7 @@ __module__ = "Matrix methods in paraxial optics."
 local lens = {
 -- mark
 type = 'lens', islens = true,
--- {A,B,C,D}
+-- {A, B, C, D}
 key = keys,
 }
 
@@ -161,7 +161,7 @@ end
 --  @param t Table.
 --  @param k Key.
 --  @return Value or method.
-lens.__index = function (t,k)
+lens.__index = function (t, k)
   return lens[k] or rawget(t, keys[k] or '')
 end
 
@@ -169,7 +169,7 @@ end
 --  @param t Table.
 --  @param k Key.
 --  @param v Value.
-lens.__newindex = function (t,k,v)
+lens.__newindex = function (t, k, v)
   if keys[k] then
     t[keys[k]] = v
   end
@@ -190,7 +190,7 @@ about[lens.operations] = {lens.operations, "L1 == L2, L1 .. L2", help.META }
 --- Object constructor.
 --  @param t ABCD table.
 --  @return 'Lens' object.
-lens._init = function(self,t) return setmetatable(t,self) end
+lens._init = function(self, t) return setmetatable(t, self) end
 
 --- Make component for afocal system.
 --  @param self Do nothing.
@@ -222,7 +222,7 @@ about[lens.beam] = {
 --  @param L Initial object.
 --  @return Copy of the object.
 lens.copy = function (L)
-  return lens:_init({L[1],L[2],L[3],L[4]})
+  return lens:_init({L[1], L[2], L[3], L[4]})
 end
 about[lens.copy] = {"copy()", "Create a copy of the object."}
 
@@ -304,7 +304,7 @@ about[lens.ref] = {":ref(dr,dn1,dn2)",
   help.NEW}
 
 --- Find condition when fn(d).X == 0
---  where X in {A,B,C,D}.
+--  where X in {A, B, C, D}.
 --  @param self Do nothing
 --  @param fn System in form of function.
 --  @param ind Index of the matrix element.
@@ -327,7 +327,7 @@ about[lens.solve] = {":solve(fn,ind,d0)",
 --  @param self Do nothing.
 --  @param df Focal length.
 --  @return Thin lens matrix.
-lens.thin = function (self,df)
+lens.thin = function (self, df)
   return lens:_init({ 1, 0, -1/df, 1 })
 end
 about[lens.thin] = {":thin(df)",
@@ -407,7 +407,7 @@ about[lens.cardinal] = {"cardinal([dn1=1,dn2=1])",
 
 -- Create arbitrary object
 setmetatable(lens, {
-__call = function (self,t)
+__call = function (self, t)
   assert(#t == 4)
   return lens:_init(t)
 end})

@@ -44,9 +44,9 @@ local function docLines(module, alias, lng)
     end
   end
   -- sort
-  table.sort(fn, function (a,b) return a[1] < b[1] end)
+  table.sort(fn, function (a, b) return a[1] < b[1] end)
   -- format
-  for i,v in ipairs(fn) do
+  for i, v in ipairs(fn) do
     fn[i] = sformat("<b>%s</b> - %s<br>", v[1], v[2])
   end
   return tconcat(fn, "\n"), description
@@ -84,11 +84,11 @@ generator.doc = function (locName, tModules)
   }
   -- prepare module list
   local sortedModules = {}
-  for k,v in pairs(tModules) do sortedModules[#sortedModules+1] = {k,v} end
-  table.sort(sortedModules, function (a,b) return a[1] < b[1] end)
+  for k, v in pairs(tModules) do sortedModules[#sortedModules+1] = {k, v} end
+  table.sort(sortedModules, function (a, b) return a[1] < b[1] end)
   -- add content
   res[#res+1] = '<ul>'
-  for _,val in ipairs(sortedModules) do
+  for _, val in ipairs(sortedModules) do
     res[#res+1] = sformat('<li><a href="#%s">%s</a></li>', val[2], val[1])
   end
   res[#res+1] = '</ul></div>'
@@ -106,7 +106,7 @@ generator.doc = function (locName, tModules)
 
   -- modules
   for _, val in ipairs(sortedModules) do
-    local k,v = val[1], val[2]
+    local k, v = val[1], val[2]
     res[#res+1] = sformat('<div><a name="%s"></a>', v)
     res[#res+1] = sformat('<h3># %s (%s) #</h3>', v, k)
     functions, description = docLines(k, v, lng)
@@ -122,8 +122,8 @@ generator.doc = function (locName, tModules)
   res[#res+1] = '</body></html>'
 
   -- save
-  local f = io.open('help.html','w')
-  f:write(tconcat(res,'\n'))
+  local f = io.open('help.html', 'w')
+  f:write(tconcat(res, '\n'))
   f:close()
   io.write("File 'help.html' is saved!\n")
 end
@@ -204,7 +204,7 @@ generator.lang = function(fName, tModules)
   f:write(makeDialog(Help.english, lng))
   -- modules
   local modules = {}
-  for k,_ in pairs(tModules) do table.insert(modules, k) end
+  for k, _ in pairs(tModules) do table.insert(modules, k) end
   table.sort(modules)
   for _, v in ipairs(modules) do 
     f:write(makeModule(v, lng))
@@ -286,15 +286,15 @@ WORD2.__index = WORD2
 3L Constructor example.
 --  @param t Some value.
 --  @return New object of WORD2.
-WORD2.new = function(self,t)
+WORD2.new = function(self, t)
   local o = {}
   -- your logic
   -- return object
-  return setmetatable(o,self)
+  return setmetatable(o, self)
 end
 
 -- simplify constructor call
-setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
+setmetatable(WORD2, {__call = function (self, v) return WORD2:new(v) end})
 about[WORD2] = {" (t)", "Create new WORD2.", help.NEW}
 
 3L Method example.

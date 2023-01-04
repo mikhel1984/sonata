@@ -56,7 +56,7 @@ results = {},
 --  @param str File text.
 --  @return Strings with unit tests.
 test._getCode = function (str)
-  local _,q = string.match(str, CODE_TEMPLATE)
+  local _, q = string.match(str, CODE_TEMPLATE)
   return q
 end
 
@@ -79,7 +79,7 @@ end
 --  @param str String for saving.
 test._print = function (str)
   print(str)
-  test.log:write(str,'\n')
+  test.log:write(str, '\n')
 end
 
 --- Remove old results
@@ -103,10 +103,10 @@ test.module = function (fname)
   -- parse
   for block in test.split(text, DELIM) do
     if string.find(block, '%s') then
-      local q,e,a = string.match(block, TEST_TEMPLATE)
+      local q, e, a = string.match(block, TEST_TEMPLATE)
       q = q or block   -- question
       a = a or ''      -- answer
-      local arrow, time
+      local arrow, time = 0, 0
       -- evaluate
       local status, err = pcall(function ()
         local fq = loadStr(q)
@@ -133,11 +133,11 @@ test.module = function (fname)
         end
       end)
       local res = status and err
-      test._print(test._markTest(q,res,time))
+      test._print(test._markTest(q, res, time))
       if not status then
-        test.log:write(err,'\n')
+        test.log:write(err, '\n')
       elseif not err then
-        test.log:write(tostring(ans),' IS NOT ',tostring(arrow),' !!!\n')
+        test.log:write(tostring(ans), ' IS NOT ', tostring(arrow), ' !!!\n')
       end
       if not string.find(block, 'require') then -- 'require' takes mach time
         if res then succeed = succeed + 1 else failed = failed + 1 end
@@ -154,13 +154,13 @@ end
 --  @param delim Delimiter string.
 --  @return Iterator over substrings.
 test.split = function (str, delim)
-  local i,j,k = 1,1,0
+  local i, j, k = 1, 1, 0
   -- return iterator
   return function ()
     if not str or i > #str then
       return nil
     end
-    j,k = string.find(str, delim, k+1)
+    j, k = string.find(str, delim, k+1)
     local res
     if j then
       res = string.sub(str, i, j-1)
@@ -177,7 +177,7 @@ end
 test.summary = function ()
   test._print(string.format(
     '\n%-25s%-10s%-10s%-10s', 'Module', 'Succeed', 'Failed', 'Av.time'))
-  for k,v in pairs(test.results) do
+  for k, v in pairs(test.results) do
     test._print(string.format(
       '%-27s%-10d%-9d%-10.3f', k, v[1], v[2], v[3]/(v[1]+v[2])))
   end
@@ -203,7 +203,7 @@ end
 --  Based on example from "Programming in Lua" by Roberto Ierusalimschy.
 --  @param fn Function to check.
 --  @param ... List of arguments.
-test.profile = function (fn,...)
+test.profile = function (fn, ...)
   -- prepare storage
   local counters, names = {}, {}
   local function hook()
@@ -225,7 +225,7 @@ test.profile = function (fn,...)
   for f, c in pairs(counters) do
     stat[#stat+1] = {test._getName(names[f]), c}
   end
-  table.sort(stat, function (a,b) return a[2] > b[2] end)
+  table.sort(stat, function (a, b) return a[2] > b[2] end)
   -- show results
   for _, res in ipairs(stat) do print(res[1], res[2]) end
 end
@@ -233,9 +233,9 @@ end
 --- Estimate the function execution time.
 --  @param fn Function to execute. After it write the list of arguments.
 --  @return Average time in msec.
-test.time = function (fn,...)
+test.time = function (fn, ...)
   local n, sum, t = 10, 0, 0
-  for i = 1,n do
+  for i = 1, n do
     t = os.clock(); fn(...); t = os.clock() - t
     sum = sum + t
   end
