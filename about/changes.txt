@@ -1,3 +1,9 @@
+======== 0.9.34 =========
+
+Other
+* Add 'about' directory
+* Define code style elements
+
 ======== 0.9.33 =========
 
 Asciiplot
