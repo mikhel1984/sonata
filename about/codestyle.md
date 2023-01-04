@@ -8,7 +8,6 @@ This file contains rules to make the system more homogeneous, readable and reusa
 * use camelCase naming style
 * avoid global variables
 * always initialize variables
-* use LuaDoc comments
 * avoid trailing whitespaces
 * use whitespace after a coma symbol
 
@@ -25,3 +24,7 @@ This file contains rules to make the system more homogeneous, readable and reusa
 * public function should return either a deep copy or a new value 
 * the function that modifies the internal state of an object should not return reference to it
 
+## Comments
+
+* use LuaDoc comments
+* at least 2 whitespaces between code and line comment
