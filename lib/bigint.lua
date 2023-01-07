@@ -312,7 +312,8 @@ bigint.__pow = function (B1, B2)
     end
   end
   if B2.sign < 0 then error('Negative power!') end
-  local y, x = bigint:_new({1, base=B1._base}), B1
+  local y, x = bigint._1, B1
+  y._base = B1._base
   if #B2 == 1 and B2._[1] == 0 then
     assert(#B1 > 1 or B1._[1] ~= 0, "Error: 0^0!")
     return res
@@ -586,9 +587,9 @@ bigint._mul = function (B1, B2)
   -- rearrange
   local rest, d = 0, B1._base
   for i = 1, #s do
-    s[i] = s[i] + rest
-    rest = math.modf(s[i] / d)
-    s[i] = s[i] - rest * d
+    local si = s[i] + rest
+    rest = math.modf(si / d)
+    s[i] = si - rest * d
   end
   if rest > 0 then s[#s+1] = rest end
   return sum
@@ -643,7 +644,8 @@ bigint._powm = function (B1, B2, B3)
   if #B1._ == 1 and B1._[1] == 0 then
     return bigint:_new({0, base=B1._base})
   end
-  local y, x = bigint:_new({1, base=B1._base}), B1
+  local y, x = bigint._1, B1
+  y._base = B1._base
   local dig, mul, rest = bigint._copy(B2), bigint._mul, nil
   local d = dig._
   while #d > 1 or #d == 1 and d[1] > 1 do
@@ -765,6 +767,9 @@ bigint._trivialSearch = function (B)
   return nil  -- not found
 end
 
+--bigint._0 = bigint:_new({0})
+bigint._1 = bigint:_new({1})
+
 --- Absolute value of number.
 --  @param B Bigint or integer number.
 --  @return Absolute value.
@@ -832,11 +837,10 @@ bigint.__eq = bigint.eq
 bigint.fact = function (B)
   assert(B.sign > 0, "Non-negative value is expected!")
   local n = B:_copy()
-  local res = bigint:_new({1, base=B._base})
-  if #n._ == 1 and n._[1] == 0 then return res end  -- 0! == 1
-  local mul = bigint._mul
+  local res = bigint._1; res._base = B._base
+  if #n._ == 1 and n._[1] <= 1 then return res end  -- 0! == 1
   repeat
-    res = mul(res, n)
+    res = bigint._mul(res, n)
     bigint._decr(n)
   until #n._ == 1 and n._[1] == 0
   return res
@@ -873,6 +877,11 @@ bigint.float = function (B)
   for i = 1, #b do
     sum = sum + b[i]*v
     v = v * d
+    if v > 1E18 then
+      local b1 = #b-1
+      sum = (b[#b] + b[b1]/d) * d^b1
+      break
+    end
   end
   return B.sign >= 0 and sum or (-sum)
 end

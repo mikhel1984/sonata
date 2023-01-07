@@ -25,7 +25,7 @@ Sonata.version = '0.9.33'
 quit = Sonata.exit
 
 -- Import actions
-function Sonata.doimport(tbl, name)
+Sonata.doimport = function (tbl, name)
   local var = tbl[name]
   if not var then
     -- try alias
@@ -69,7 +69,7 @@ setmetatable(use,
       return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == 'all' then
       -- load all modules
-      for k, v in pairs(self) do Sonata.doimport(self, k) end
+      for k, _ in  pairs(self) do Sonata.doimport(self, k) end
     elseif type(name) == 'table' then
       -- load group of modules
       for _, v in ipairs(name) do Sonata.doimport(self, v) end

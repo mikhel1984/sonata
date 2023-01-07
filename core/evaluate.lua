@@ -58,6 +58,10 @@ LOGNAME = 'log.note',
 -- state and result
 _cmd = "",    -- last request
 _st  = 1,     -- last status
+-- predefine variables
+version = 0,
+doimport = 0,
+_arghelp = 0,
 }
 
 
