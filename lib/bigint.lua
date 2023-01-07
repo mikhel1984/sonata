@@ -53,8 +53,8 @@ ans = (a^3):float()           --> 1860867
 ans = Int('-25'):abs():float()  --> 25
 
 -- factorial
-c = Int(10):fact()
-ans = c:float()               --> 3628800
+c = Int(50):fact()
+ans = c:float()               --1> 3E64
 
 ans = (a > b)                 --> false
 
@@ -423,24 +423,18 @@ bigint._decr = function (B)
   local b = B._
   if #b == 1 and b[1] == 0 then return end
   local dif = 1
-  for i = 1, #b do
+  for i = 1, #b-1 do
     b[i] = b[i] - dif
     if b[i] < 0 then
       b[i] = B._base - 1
-      dif = 1
-    elseif i == #b and b[i] == 0 then
-      dif = 1
     else
       dif = 0
       break
     end
   end
   if dif > 0 then
-    if #b > 1 then
-      b[#b] = nil
-    else
-      b[1] = 0
-    end
+    local bb = b[#b]
+    b[#b] = (bb > 1) and (bb - 1) or (#b == 1) and 0 or nil
   end
 end
 
