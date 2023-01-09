@@ -745,14 +745,14 @@ end
 
 --- Searching for prime factor.
 --  @param B Integer number.
+--  @param B0 Initial multiplier.
 --  @return Pair of multipliers or nil.
-bigint._trivialSearch = function (B)
-  local div, sum = bigint._div, bigint._sum
-  local n = bigint:_new({1, base=B._base})
-  bigint._incr(n)   -- n = 2
+bigint._trivialSearch = function (B, B0)
+  local n = B0 and B0:_copy() or bigint:_new({2})
+  n = n:rebase(B._base)
   local sq = bigint._sqrt(B)
   while #sq._ > #n._ or not bigint._gt(n, sq) do
-    local v1, v2 = div(B, n)
+    local v1, v2 = bigint._div(B, n)
     if #v2._ == 1 and v2._[1] == 0 then
       return n, v1
     end
@@ -847,8 +847,9 @@ about[bigint.fact] = {"fact()", "Return factorial of non-negative integer B."}
 bigint.factorize = function (B)
   local v, res = B, {}
   if B.sign < 0 then res[1] = -1 end
+  local n, q = nil, nil
   while true do
-    local n, q = bigint._trivialSearch(v)
+    n, q = bigint._trivialSearch(v, n)
     if n == nil then
       res[#res+1] = v
       break
