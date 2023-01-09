@@ -530,8 +530,7 @@ end
 --- In-place increment for positive number.
 --  @param B Number to increase by 1.
 bigint._incr = function (B)
-  local add = 1
-  local b = B._
+  local add, b = 1, B._
   for i = 1, #b do
     b[i] = b[i] + add
     if b[i] == B._base then
@@ -568,7 +567,7 @@ end
 --  @param B2 Second bigint multiplier.
 --  @return Product without sign.
 bigint._mul = function (B1, B2)
-  local sum = bigint:_new({0, base=B1._base})
+  local sum = bigint:_zero(B1._base, 1)
   local b1, b2, s = B1._, B2._, sum._
   -- get products
   for i = 0, #b1-1 do
@@ -627,6 +626,8 @@ bigint._new = function (self, num)
   return setmetatable(int, self)
 end
 
+
+
 --- Find (B1 ^ B2) % B3
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
@@ -636,7 +637,8 @@ bigint._powm = function (B1, B2, B3)
   local div = bigint._div
   _, B1 = div(B1, B3)
   if #B1._ == 1 and B1._[1] == 0 then
-    return bigint:_new({0, base=B1._base})
+    --return bigint:_new({0, base=B1._base})
+    return bigint:_zero(B1._base, 1)
   end
   local y, x = bigint._1, B1
   y._base = B1._base
@@ -685,10 +687,10 @@ end
 --  @param B2 Second bigint object.
 --  @return Difference of the values.
 bigint._sub = function (B1, B2)
-  local r, n, sub = 1, B1._base, 0
-  local res = bigint:_new({0, base=n})
+  local r, n = 1, B1._base
+  local res = bigint:_zero(n, 1)
   local b1, b2 = B1._, B2._
-  -- find the bigger number
+  -- find the biggest number
   if #b1 < #b2 then
     r = -1
   elseif #b1 == #b2 then
@@ -696,27 +698,23 @@ bigint._sub = function (B1, B2)
     -- find first difference
     while i > 0 and b1[i] == b2[i] do i = i - 1 end
     if i == 0 then return res end
-    if i > 0 and b1[i] < b2[i] then r = -1 end
+    if b1[i] < b2[i] then r = -1 end
   end
   if r == -1 then
     b1, b2 = b2, b1
   end
   -- subtraction
-  local rr = res._
+  local rr, sub = res._, 0
   for i = 1, math.max(#b1, #b2) do
     local v = b1[i] - (b2[i] or 0) - sub
     if v < 0 then
-      rr[i] = v + n
-      sub = 1
-    elseif v > 0 or (v == 0 and b1[i+1]) then
-      rr[i] = v
-      sub = 0
+      rr[i], sub = v + n, 1
+    else
+      rr[i], sub = v, 0
     end
   end
   -- simplify
-  while #rr > 1 and rr[#rr] == 0 do
-    rr[#rr] = nil
-  end
+  while #rr > 1 and rr[#rr] == 0 do rr[#rr] = nil end
   res.sign = r
   return res
 end
@@ -727,16 +725,14 @@ end
 --  @return Sum of the values.
 bigint._sum = function (B1, B2)
   local n, add = B1._base, 0
-  local res = bigint:_new({0, base=n})
+  local res = bigint:_zero(n, 1)
   local b1, b2, rr = B1._, B2._, res._
   for i = 1, math.max(#b1, #b2) do
     local v = (b1[i] or 0) + (b2[i] or 0) + add
     if v >= n then
-      rr[i] = v - n
-      add = 1
+      rr[i], add = v - n, 1
     else
-      rr[i] = v
-      add = 0
+      rr[i], add = v, 0
     end
   end
   if add == 1 then rr[#rr+1] = 1 end
@@ -761,16 +757,22 @@ bigint._trivialSearch = function (B, B0)
   return nil  -- not found
 end
 
---bigint._0 = bigint:_new({0})
+--- Create zero element.
+--  @param nBase Base value.
+--  @param iSign Sign value.
+--  @return Zero number.
+bigint._zero = function (self, nBase, iSign)
+  return setmetatable({_={0}, _base=nBase, sign=iSign}, self)
+end
+
 bigint._1 = bigint:_new({1})
 
 --- Absolute value of number.
 --  @param B Bigint or integer number.
 --  @return Absolute value.
 bigint.abs = function (B)
-  local a = bigint:_new({0, base=B._base})
+  local a = bigint:_zero(B._base, 1)
   a._ = B._
-  a.sign = 1
   return a
 end
 about[bigint.abs] = {"abs()", "Return module of arbitrary long number."}
@@ -918,7 +920,7 @@ about[bigint.isPrime] = {"isPrime([sMethod])",
 bigint.random = function (self, B)
   B = isbigint(B) and B or bigint:_new(B)
   local d, set, v = B._base, false, 0
-  local res = bigint:_new({0, sign=B.sign, base=d})
+  local res = bigint:_zero(d, B.sign)
   local n = math.random(1, #B)
   local b, rr = B._, res._
   local any = (n ~= #b)
@@ -948,7 +950,7 @@ about[bigint.random] = {":random(B)",
 bigint.rebase = function (B, N)
   if N <= 0 then error("Wrong base "..tostring(N)) end
   if B._base == N then return B end
-  local res = bigint:_new({0, sign=B.sign, base=N})
+  local res = bigint:_zero(N, B.sign)
   local b, rr = B._, res._
   rr[1] = nil    -- remove zero
   -- reverse order
