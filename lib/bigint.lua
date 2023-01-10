@@ -572,9 +572,13 @@ bigint._mul = function (B1, B2)
   -- get products
   for i = 0, #b1-1 do
     local v = b1[i+1]
-    for j = 1, #b2 do
-      local pos = i+j
-      s[pos] = (s[pos] or 0) + v * b2[j]
+    if v > 0 then
+      for j = 1, #b2 do
+        local pos = i+j
+        s[pos] = (s[pos] or 0) + v * b2[j]
+      end
+    else
+      s[i+1] = s[i+1] or 0
     end
   end
   -- rearrange
@@ -826,6 +830,31 @@ about[bigint.eq] = {
   "eq(B)", "Check equality with the second value.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
+
+bigint.fact1 = function (B)
+  assert(B.sign > 0, "Non-negative value is expected!")
+  local N = B:float()
+  if N <= 1 then return bigint._1 end
+  if N == 2 then return B end  
+  local n, m = math.modf((N-2) * 0.5)
+  local B0 = bigint._1; B0._base = B._base 
+  local S, d = bigint._mul(B, B0), B - B0
+  local acc = bigint:_zero(B._base, 1); acc._ = S._ 
+  local k = bigint:_zero(B._base, 1)
+  for i = 1, n do
+    S = bigint._sub(S, k)
+    S = bigint._sum(S, d)
+    bigint._incr(k)
+    S = bigint._sub(S, k)
+    acc = bigint._mul(acc, S)
+  end
+  if m > 1E-3 then
+    bigint._incr(k)
+    local v = bigint._sum(B0, k)
+    acc = bigint._mul(acc, v)
+  end
+  return acc
+end
 
 --- B!
 --  @param B Bigint object.
