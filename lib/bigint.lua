@@ -831,44 +831,31 @@ about[bigint.eq] = {
 -- redefine equality
 bigint.__eq = bigint.eq
 
-bigint.fact1 = function (B)
+--- B!
+--  Use fact that n*(n-1)*...*2*1 = (n*1)*((n-1)*2)*...
+--  @param B Bigint object.
+--  @return Factorial of the number as bigint object.
+bigint.fact = function (B)
   assert(B.sign > 0, "Non-negative value is expected!")
   local N = B:float()
   if N <= 1 then return bigint._1 end
   if N == 2 then return B end  
   local n, m = math.modf((N-2) * 0.5)
-  local B0 = bigint._1; B0._base = B._base 
-  local S, d = bigint._mul(B, B0), B - B0
-  local acc = bigint:_zero(B._base, 1); acc._ = S._ 
-  local k = bigint:_zero(B._base, 1)
+  local S, d = B, bigint._sub(B, bigint._1)
+  local acc, k = B, bigint:_zero(B._base, 1)
   for i = 1, n do
-    S = bigint._sub(S, k)
     S = bigint._sum(S, d)
+    S = bigint._sub(S, k)
     bigint._incr(k)
     S = bigint._sub(S, k)
     acc = bigint._mul(acc, S)
   end
-  if m > 1E-3 then
+  if m > 1E-3 then   -- m > 0
     bigint._incr(k)
-    local v = bigint._sum(B0, k)
-    acc = bigint._mul(acc, v)
+    bigint._incr(k)
+    acc = bigint._mul(acc, k)
   end
   return acc
-end
-
---- B!
---  @param B Bigint object.
---  @return Factorial of the number as bigint object.
-bigint.fact = function (B)
-  assert(B.sign > 0, "Non-negative value is expected!")
-  local n = B:_copy()
-  local res = bigint._1; res._base = B._base
-  if #n._ == 1 and n._[1] <= 1 then return res end  -- 0! == 1
-  repeat
-    res = bigint._mul(res, n)
-    bigint._decr(n)
-  until #n._ == 1 and n._[1] == 0
-  return res
 end
 about[bigint.fact] = {"fact()", "Return factorial of non-negative integer B."}
 
