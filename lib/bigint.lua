@@ -841,19 +841,16 @@ bigint.fact = function (B)
   if N <= 1 then return bigint._1 end
   if N == 2 then return B end  
   local n, m = math.modf((N-2) * 0.5)
-  local S, d = B, bigint._sub(B, bigint._1)
-  local acc, k = B, bigint:_zero(B._base, 1)
+  local two = bigint:_new(2):rebase(B._base)
+  local S, d, acc = B, B, B
   for i = 1, n do
+    d = bigint._sub(d, two)
     S = bigint._sum(S, d)
-    S = bigint._sub(S, k)
-    bigint._incr(k)
-    S = bigint._sub(S, k)
     acc = bigint._mul(acc, S)
   end
   if m > 1E-3 then   -- m > 0
-    bigint._incr(k)
-    bigint._incr(k)
-    acc = bigint._mul(acc, k)
+    local v = n + two
+    acc = bigint._mul(acc, v)
   end
   return acc
 end
