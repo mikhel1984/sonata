@@ -64,6 +64,18 @@ ans = b:denom()               --> 1
 -- show
 print(a)
 
+-- continued fraction to rational
+-- 1 + 1/(2+1/(3+1/4)) 
+c = Rat:fromCont {[0]=1, 2, 3, 4}
+ans = c                       --> Rat(43,30)
+
+-- rational to continued fraction
+d = c:toCont()
+ans = d[1]                    --> 2
+
+-- show continued fraction
+print(d)
+
 -- result is rational
 ans = a + 1                   --> Rat(3,2)
 
@@ -109,7 +121,7 @@ local _continued = {
 __tostring = function (t)
   local res = {tostring(t[0])}
   for i = 1, #t do
-    res[#res+1] = '+/'..tostring(t[i])
+    res[#res+1] = '+L'..tostring(t[i])
   end
   return string.format("{%s}", table.concat(res))
 end
@@ -392,17 +404,12 @@ rational.fromCont = function (self, t)
       check[i] = v
     else error("Positive integer is expected") end
   end
-  local t0 = t[0]
-  if t0 then
-    if (type(t0) == 'number' and Ver.isInteger(t0)
-          or type(t0) == 'table' and t0.__mod) and t0 >= 0 then
-      check[0] = t0
-    else error("Positive integer is expected") end
-  else
-    for i = 0, #check-1 do check[i] = check[i+1] end
-    check[#check] = nil
-  end
-  return rational._new(rational._cont2rat(check))
+  local t0 = t[0] or 0
+  if (type(t0) == 'number' and Ver.isInteger(t0)
+        or type(t0) == 'table' and t0.__mod) then
+    check[0] = t0
+  else error("Integer is expected") end
+  return rational:_new(rational._cont2rat(check))
 end
 about[rational.fromCont] = {":fromCont(t)",
   "Transform continued fraction to rational number.", help.NEW}
@@ -426,7 +433,7 @@ about[rational.num] = {"num()", "Return the numerator of rational number."}
 
 --- Find continued fraction coefficients.
 --  @param R Positive rational number.
---  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/..)).
+--  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/...
 rational.toCont = function (R)
   local a, b, c = R._[1], R._[2], nil
   if a < 0 then error("Positive is expected") end
@@ -439,7 +446,7 @@ rational.toCont = function (R)
     if a <= 1 then break end
     a, b = b, a
   end
-  res[#res+1] = b
+  res[#res+1] = math.modf(b)
   return setmetatable(res, _continued)
 end
 about[rational.toCont] = {
