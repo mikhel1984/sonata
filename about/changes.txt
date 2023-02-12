@@ -1,5 +1,10 @@
 ======== 0.9.34 =========
 
+Geo
+* Add UTM coordinates
+* Remove progM and projGK
+Int
+* Minor improvements
 Other
 * Add 'about' directory
 * Define code style elements

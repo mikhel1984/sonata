@@ -58,17 +58,20 @@ ans = t4.X                 --2> t1.X
 blh_wgs84_pz90 = wgs84.blhInto[pz90]
 t5 = blh_wgs84_pz90(t0)
 
--- Gauss-Kruger projection
-sk = Geo.SK42
-pt = {B=55.752, L=37.618}
-t6 = sk:projGK(pt)
-ans = t6.N                  --2> 6181924.245
+-- UTM to lat/lon
+utm = {N=5601281, E=625394, zone=42, hs='N'}
+ll = wgs84:utm2ll(utm)
+ans = ll.B                 --2> 50.55 
 
-ans = t6.E                  --2> 7413223.481
+ans = ll.L                 --2> 70.77
 
--- Merkator projection
-t7 = wgs84:projM(pt)
-print(t7.N, t7.E)
+-- lat/lon to UTM
+utm1 = wgs84:ll2utm(ll)
+ans = utm1.N               --2> utm.N
+
+ans = utm1.E               --2> utm.E
+
+ans = utm1.zone            --> utm.zone
 
 -- inverse problem
 p1 = {B=rnd()*50, L=rnd()*50}
@@ -236,75 +239,6 @@ ellipsoid._radiusVertical = function (E, d)
   return E.a / math.sqrt(1 - E.e2*s*s)
 end
 
---- Find coefficients.
---  @param e2 Square excentrisitet.
---  @param cosa2 Square cosine of the angle.
---  @return A and B values.
-ellipsoid._vincentyAB = function (e2, cosa2)
-  local u2 = e2 * cosa2
-  local A = 1 + u2*(4096 + u2*(-768 + u2*(320 - 175*u2)))/16384.0
-  local B = u2*(256 + u2*(-128 + u2*(74 - 47*u2)))/1024.0
-  return A, B
-end
-
---- Ellipsoid object constructor.
---  @param t Table with parameters, obligatory are semi-major axis, flattening.
---  @return New ellipsoid.
-ellipsoid.new = function (self, t)
-  local f = t.f
-  t.e2 = f*(2-f)
-  t.b = t.a*(1-f)
-  t.xyzInto = {}  -- cartesian coordinates transformation
-  t.blhInto = {}  -- datum transformation
-  return setmetatable(t, self)
-end
-
---- Find Gauss-Kruger (transverse Mercator) projection of the geodetic point.
---  @param E Ellipsoid object.
---  @param t Table with longitude L and lattitude B.
---  @return Table with North and East position (in meters).
-ellipsoid.projGK = function (E, t)
-  local zone, F = math.floor(t.L/6 + 1), 1.0  -- index and scale
-  local L0, B0 = math.rad(zone*6 - 3), 0  -- begining
-  local N0, E0 = 0, zone*1E6 + 500000.0   -- shifting
-  local B, L, n = math.rad(t.B), math.rad(t.L), (E.a - E.b)/(E.a + E.b)
-  local M = F * E.b * ( (1+n*(1+5.0/4*n*(1+n)))*(B-B0)
-    - 3*n*(1 + n*(1 + 7.0/8*n)) * math.sin(B-B0) * math.cos(B+B0)
-    + 15.0/8.0*n*n*(1+n) * math.sin(2*(B-B0)) * math.cos(2*(B+B0))
-    - 35.0/24.0*n^3 * math.sin(3*(B-B0)) * math.cos(3*(B+B0)))
-  local sB, cB, tB2 = math.sin(B), math.cos(B), math.tan(B)^2
-  local v = F*ellipsoid._radiusVertical(E, B)
-  local p = F*ellipsoid._radiusMeridian(E, B)
-  local nn = v / p - 1
-  local coef = {cB,
-    sB*cB/2.0,
-    cB^3 * (v/p - tB2) / 6.0,
-    sB * cB^3 * (5 - tB2 + 9*nn) / 24.0,
-    cB^5 * (5 + tB2 * (tB2 - 18 - 58*nn) + 14*nn) / 120.0,
-    sB * cB^5 * (61 + tB2 * (tB2 - 58)) / 720.0
-  }
-  L = L-L0; B = L * L  -- reuse
-  return {
-    N = N0 + M + v*B*(coef[2] + B*(coef[4] + B*coef[6])),
-    E = E0 + v*L*(coef[1] + B*(coef[3] + B*coef[5]))
-  }
-end
-
---- Find Mercator projection of the geodetic point.
---  @param E Ellipsoid object.
---  @param t Table with longitude L and lattitude B.
---  @param iL Initial meridian (0 by default).
---  @return Table with North and East position (in meters).
-ellipsoid.projM = function (E, t, iL)
-  iL = iL or 0  -- initial meridian
-  local C = E.a -- use equator radius
-  local ex, sB = math.sqrt(E.e2), math.sin(math.rad(t.B))
-  return {
-    N = C * (arth(sB) - ex*arth(ex*sB)),
-    E = C * math.rad(t.L - iL)
-  }
-end
-
 --- Prepare coefficients for UTM transformations.
 --  @param E Ellipsoid object.
 ellipsoid._setUtmArrays = function (E)
@@ -330,11 +264,22 @@ ellipsoid._setUtmArrays = function (E)
   E.utmA = 0.9996 * E.a/(1+n[1]) * (1 + n[2]/4.0 + n[4]/64.0 + n[6]/256.0)
 end
 
+--- Find coefficients.
+--  @param e2 Square excentrisitet.
+--  @param cosa2 Square cosine of the angle.
+--  @return A and B values.
+ellipsoid._vincentyAB = function (e2, cosa2)
+  local u2 = e2 * cosa2
+  local A = 1 + u2*(4096 + u2*(-768 + u2*(320 - 175*u2)))/16384.0
+  local B = u2*(256 + u2*(-128 + u2*(74 - 47*u2)))/1024.0
+  return A, B
+end
+
 --- Convert lat/lon to UTM coordinates.
 --  Based on Karney's method and 
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
 --  @param E Ellipsoid object.
---  @param t Table of coordinates {B=,L=}.
+--  @param t Table with longitude L and lattitude B
 --  @return Table {N=,E=,hs=,zone=} and scale value.
 ellipsoid.ll2utm = function (E, t)
   if not (-80 <= t.B and t.B <= 84) then
@@ -388,52 +333,16 @@ ellipsoid.ll2utm = function (E, t)
   return pose, scale
 end
 
---- Convert UTM coordinates to lat/lon.
---  Based on Karney's method and 
---  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
---  @param E Ellipsoid object.
---  @param t Table of coordinates {N=,E=,hs=,zone=}.
---  @return Table {B=,L=,H=0} and scale value.
-ellipsoid.utm2ll = function (E, t)
-  -- substract false easting and northing
-  local x, y = t.E - 500e3, t.hs == 'S' and t.N - 10000e3 or t.N
-  if not E.utmA then E:_setUtmArrays() end
-  local beta, e = E.utmBeta, math.sqrt(E.e2)
-  local eta, xi = x / E.utmA, y / E.utmA
-  local xi1, eta1, p, q = xi, eta, 1, 0
-  for j = 1, 6 do
-    local sxi, cxi = math.sin(2*j*xi), math.cos(2*j*xi)
-    local seta, ceta = Calc.sinh(2*j*eta), Calc.cosh(2*j*eta)
-    xi1  = xi1 - beta[j] * sxi * ceta
-    eta1 = eta1 - beta[j] * cxi * seta
-    p    = p - 2*j*beta[j] * cxi * ceta
-    q    = q - 2*j*beta[j] * sxi * seta
-  end
-  local sheta1 = Calc.sinh(eta1)
-  local cxi1 =  math.cos(xi1)
-  local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
-  local taui = tau1
-  -- find latitude
-  repeat 
-    local sqrti = math.sqrt(1 + taui*taui)
-    local si = Calc.sinh( e*Calc.atanh(e*taui/sqrti) )
-    local taui1 = taui*math.sqrt(1+si*si) - si*sqrti
-    local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) * 
-      (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)
-    taui = taui + diff
-  until math.abs(diff) < 1E-12
-  -- convert result
-  local lat = math.atan(taui)
-  local slat = math.sin(lat)
-  local scale = E.utmA / E.a * math.sqrt(
-    (p*p + q*q)*(1-e*e*slat*slat)*(1+taui*taui) *(sheta1*sheta1 + cxi1*cxi1))
-  local l0 = (t.zone-1)*6 - 177
-  local res = {
-    B = math.deg(lat), 
-    L = math.deg(Ver.atan2(sheta1, cxi1)) + l0,
-    H = 0 
-  }
-  return res, scale
+--- Ellipsoid object constructor.
+--  @param t Table with parameters, obligatory are semi-major axis, flattening.
+--  @return New ellipsoid.
+ellipsoid.new = function (self, t)
+  local f = t.f
+  t.e2 = f*(2-f)
+  t.b = t.a*(1-f)
+  t.xyzInto = {}  -- cartesian coordinates transformation
+  t.blhInto = {}  -- datum transformation
+  return setmetatable(t, self)
 end
 
 --- Solve the direct geodetic problem:
@@ -570,6 +479,54 @@ ellipsoid.toXYZ = function (E, t)
     X = NH * math.cos(L),
     Y = NH * math.sin(L),
     Z = ((1-E.e2)*N + H) * math.sin(B) }
+end
+
+--- Convert UTM coordinates to lat/lon.
+--  Based on Karney's method and 
+--  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
+--  @param E Ellipsoid object.
+--  @param t Table of coordinates {N=,E=,hs=,zone=}.
+--  @return Table with longitude/lattitude and scale value.
+ellipsoid.utm2ll = function (E, t)
+  -- substract false easting and northing
+  local x, y = t.E - 500e3, t.hs == 'S' and t.N - 10000e3 or t.N
+  if not E.utmA then E:_setUtmArrays() end
+  local beta, e = E.utmBeta, math.sqrt(E.e2)
+  local eta, xi = x / E.utmA, y / E.utmA
+  local xi1, eta1, p, q = xi, eta, 1, 0
+  for j = 1, 6 do
+    local sxi, cxi = math.sin(2*j*xi), math.cos(2*j*xi)
+    local seta, ceta = Calc.sinh(2*j*eta), Calc.cosh(2*j*eta)
+    xi1  = xi1 - beta[j] * sxi * ceta
+    eta1 = eta1 - beta[j] * cxi * seta
+    p    = p - 2*j*beta[j] * cxi * ceta
+    q    = q - 2*j*beta[j] * sxi * seta
+  end
+  local sheta1 = Calc.sinh(eta1)
+  local cxi1 =  math.cos(xi1)
+  local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
+  local taui = tau1
+  -- find latitude
+  repeat 
+    local sqrti = math.sqrt(1 + taui*taui)
+    local si = Calc.sinh( e*Calc.atanh(e*taui/sqrti) )
+    local taui1 = taui*math.sqrt(1+si*si) - si*sqrti
+    local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) * 
+      (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)
+    taui = taui + diff
+  until math.abs(diff) < 1E-12
+  -- convert result
+  local lat = math.atan(taui)
+  local slat = math.sin(lat)
+  local scale = E.utmA / E.a * math.sqrt(
+    (p*p + q*q)*(1-e*e*slat*slat)*(1+taui*taui) *(sheta1*sheta1 + cxi1*cxi1))
+  local l0 = (t.zone-1)*6 - 177
+  local res = {
+    B = math.deg(lat), 
+    L = math.deg(Ver.atan2(sheta1, cxi1)) + l0,
+    H = 0 
+  }
+  return res, scale
 end
 
 
@@ -732,15 +689,14 @@ geodesy.toBLH = ellipsoid.toBLH
 about[geodesy.toBLH] = {
   "toBLH(tXYZ)", "Transform Cartesian coordinates to Geodetic.", TRANS}
 
-geodesy.projGK = ellipsoid.projGK
-about[geodesy.projGK] = {"projGK(tBL)",
-  "Return north and east positions of the point after Gauss-Kruger projection.",
+geodesy.utm2ll = ellipsoid.utm2ll
+about[geodesy.utm2ll] = {
+  "utm2ll(tNE)", "Find Geodetic coordinates for the given UTM pose and zone",
   PROJ}
 
-geodesy.projM = ellipsoid.projM
-about[geodesy.projM] = {"projM(tBL)",
-  "Return north and east positions of the point after Mercator projectoin.",
-  PROJ}
+geodesy.ll2utm = ellipsoid.ll2utm
+about[geodesy.ll2utm] = {
+  "ll2utm(tBLH)", "Find UTM projection for the given coordinates.", PROJ}
 
 geodesy.solveInv = ellipsoid.solveInv
 about[geodesy.solveInv] = {"solveInv(BLH1,BLH2)",
@@ -835,6 +791,6 @@ geodesy.about = about
 return geodesy
 
 --======================================
---TODO: check correctness (Merkator, Molodensky)
+--TODO: check correctness (Molodensky)
 --TODO: newEllipsoid to define own ellipsoid object
 --TODO: ellipsoid.__tostring
