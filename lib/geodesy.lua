@@ -98,7 +98,9 @@ ans = p4.B                  --2> p1.B
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Calc = Ver.calc
+Ver = Ver.versions
 
 local PROB, TRANS, PROJ = "problems", "transform", "projection"
 
@@ -123,7 +125,8 @@ __module__ = "Coordinate transformations and other geodetic tasks."
 --	MODULE
 
 -- Reference ellipsoid
-local ellipsoid = {}
+local ellipsoid = {
+}
 
 -- methametods
 ellipsoid.__index = ellipsoid
@@ -300,6 +303,68 @@ ellipsoid.projM = function (E, t, iL)
     N = C * (arth(sB) - ex*arth(ex*sB)),
     E = C * math.rad(t.L - iL)
   }
+end
+
+
+ellipsoid.ll2utm = function (E, t)
+  if not (-80 <= t.B and t.B <= 84) then
+    error('Latitude outside UTM limits')
+  end
+  local zone = math.floor((t.L + 180)/6.0) + 1
+  local l0 = (zone-1)*6 - 180 + 3  -- lon of central meridian
+  -- Norway / Svalbard exception
+  if 31 <= zone and zone <= 36 then
+    local bands = 'CDEFGHJKLMNPQRSTUVWXX'
+    local pos = math.floor(t.B/8.0 + 10) + 1
+    local latBand = string.sub(bands, pos, pos)
+    if latBand == 'V' then
+      if zone == 31 and t.L >= 3  then zone, l0 = zone + 1, l0 + 6 end
+    elseif latBand == 'X' then
+      if zone == 32 and t.L < 9   then zone, l0 = zone - 1, l0 - 6 end
+      if zone == 32 and t.L >= 9  then zone, l0 = zone + 1, l0 + 6 end
+      if zone == 34 and t.L < 21  then zone, l0 = zone - 1, l0 - 6 end
+      if zone == 34 and t.L >= 21 then zone, l0 = zone + 1, l0 + 6 end
+      if zone == 36 and t.L < 33  then zone, l0 = zone - 1, l0 - 6 end
+      if zone == 36 and t.L >= 33 then zone, l0 = zone + 1, l0 + 6 end
+    end
+  end
+  local lat, lon = math.rad(t.B), math.rad(t.L - l0)
+  local n1, e = E.f / (2 - E.f), math.sqrt(E.e2)
+  local n = {n1, n1*n1, n1^3, n1^4, n1^5, n1^6} 
+  local alpha = {
+    0.5*n[1] - 2.0/3*n[2] + 5.0/16*n[3] + 41.0/180*n[4] - 127.0/288*n[5] + 7891.0/37800*n[6],
+    13.0/48*n[2] - 3.0/5*n[3] + 557.0/1440*n[4] + 281.0/630*n[5] - 1983433.0/1935360*n[6],
+    61.0/240*n[3] - 103.0/140*n[4] + 15061.0/26880*n[5] + 167603.0/181440*n[6],
+    49561.0/161280*n[4] - 179.0/168*n[5] + 6601661.0/7257600*n[6],
+    34729.0/80640*n[5] - 3418889.0/1995840*n[6],
+    212378941.0/319334400*n[6]}
+  local clon = math.cos(lon)
+  local tau, slat = math.tan(lat), math.sin(lat)
+  n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )  -- reuse
+  local tau1 = tau*math.sqrt(1+n1*n1) - n1*math.sqrt(1+tau*tau)
+  local xi1 = Ver.atan2(tau1, clon)
+  local eta1 = Calc.asinh(math.sin(lon) / math.sqrt(tau1*tau1 + clon*clon))
+  local xi, eta, p1, q1 = xi1, eta1, 1, 0
+  for i = 1, 6 do
+    local sxi, cxi = math.sin(2*i*xi1), math.cos(2*i*xi1)
+    local seta, ceta = Calc.sinh(2*i*eta1), Calc.cosh(2*i*eta1)
+    xi  =  xi + alpha[i] * sxi * ceta
+    eta = eta + alpha[i] * cxi * seta
+    p1  =  p1 + 2*i*alpha[i] * cxi * ceta
+    q1  =  q1 + 2*i*alpha[i] * sxi * seta
+  end
+  -- use UTM scale for the central meridian 0.9996
+  local A = 0.9996 * E.a/(1+n[1]) * (1 + n[2]/4.0 + n[4]/64.0 + n[6]/256.0)
+  local pose = {
+    E = A * eta + 500e3,  -- add false easting
+    N = A * xi,
+    zone = zone,
+    hemisphere = t.B >= 0 and 'N' or 'S'
+  }
+  if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing 
+  local scale = A / E.a * math.sqrt(
+    (p1*p1 + q1*q1)*(1-e*e*slat*slat)*(1+tau*tau) / (tau1*tau1 + clon*clon))
+  return pose, scale
 end
 
 --- Solve the direct geodetic problem:
