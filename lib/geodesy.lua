@@ -359,12 +359,60 @@ ellipsoid.ll2utm = function (E, t)
     E = A * eta + 500e3,  -- add false easting
     N = A * xi,
     zone = zone,
-    hemisphere = t.B >= 0 and 'N' or 'S'
+    hs = t.B >= 0 and 'N' or 'S',  -- hemisphere
   }
   if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing 
   local scale = A / E.a * math.sqrt(
     (p1*p1 + q1*q1)*(1-e*e*slat*slat)*(1+tau*tau) / (tau1*tau1 + clon*clon))
   return pose, scale
+end
+
+ellipsoid.utm2ll = function (E, t)
+  -- substract false easting and northing
+  local x, y = t.E - 500e3, t.hs == 'S' and t.N - 10000e3 or t.N
+  local n1, e = E.f / (2 - E.f), math.sqrt(E.e2)
+  local n = {n1, n1*n1, n1^3, n1^4, n1^5, n1^6} 
+  local A = 0.9996 * E.a/(1+n[1]) * (1 + n[2]/4.0 + n[4]/64.0 + n[6]/256.0)
+  local eta, xi = x / A, y / A
+  local beta = {
+    0.5*n[1] - 2.0/3*n[2] + 37.0/96*n[3] - 0.1/36*n[4] - 81.0/512*n[5] + 961.99/6048*n[6],
+    1.0/48*n[2] + 1.0/15*n[3] - 43.7/144*n[4] + 46.0/105*n[5] - 111871.1/387072*n[6],
+    1.7/48*n[3] - 3.7/84*n[4] - 20.9/448*n[5] + 556.9/9072*n[6],
+    439.7/16128*n[4] - 11.0/504*n[5] - 8302.51/72576*n[6],
+    458.3/16128*n[5] - 10884.7/399168*n[6],
+    206486.93/6386688*n[6]}
+  local xi1, eta1, p, q = xi, eta, 1, 0
+  for j = 1, 6 do
+    local sxi, cxi = math.sin(2*j*xi), math.cos(2*j*xi)
+    local seta, ceta = Calc.sinh(2*j*eta), Calc.cosh(2*j*eta)
+    xi1  = xi1 - beta[j]*sxi*ceta
+    eta1 = eta1 - beta[j]*cxi*seta
+    p    = p - 2*j*beta[j]*cxi*ceta
+    q    = q - 2*j*beta[j]*sxi*seta
+  end
+  local sheta1 = Calc.sinh(eta1)
+  local cxi1 =  math.cos(xi1)
+  local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
+  local taui = tau1
+  repeat 
+    local sqrti = math.sqrt(1 + taui*taui)
+    local si = Calc.sinh( e*Calc.atanh(e*taui/sqrti) )
+    local taui1 = taui*math.sqrt(1+si*si) - si*sqrti
+    local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) * 
+      (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)
+    taui = taui + diff
+  until math.abs(diff) < 1E-12
+  local lat = math.atan(taui)
+  local slat = math.sin(lat)
+  local scale = A / E.a * math.sqrt(
+    (p*p + q*q)*(1-e*e*slat*slat)*(1+taui*taui) *(sheta1*sheta1 + cxi1*cxi1))
+  local l0 = (t.zone-1)*6 - 177
+  local res = {
+    B = math.deg(lat), 
+    L = math.deg(Ver.atan2(sheta1, cxi1)) + l0,
+    H = 0
+  }
+  return res, scale
 end
 
 --- Solve the direct geodetic problem:
