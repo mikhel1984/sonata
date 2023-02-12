@@ -305,21 +305,49 @@ ellipsoid.projM = function (E, t, iL)
   }
 end
 
+--- Prepare coefficients for UTM transformations.
+--  @param E Ellipsoid object.
+ellipsoid._setUtmArrays = function (E)
+  local n1 = E.f / (2 - E.f)
+  local n = {n1, n1*n1, n1^3, n1^4, n1^5, n1^6}
+  -- LL to UTM
+  E.utmAlpha = {
+    0.5*n[1] - 2.0/3*n[2] + 5.0/16*n[3] + 4.1/18*n[4] - 127.0/288*n[5] + 78.91/378*n[6],
+    13.0/48*n[2] - 3.0/5*n[3] + 55.7/144*n[4] + 28.1/63*n[5] - 198343.3/193536*n[6],
+    6.1/24*n[3] - 10.3/14*n[4] + 1506.1/2688*n[5] + 16760.3/18144*n[6],
+    4956.1/16128*n[4] - 179.0/168*n[5] + 66016.61/72576*n[6],
+    3472.9/8064*n[5] - 341888.9/199584*n[6],
+    2123789.41/3193344*n[6]}
+  -- UTM to LL
+  E.utmBeta = {
+    0.5*n[1] - 2.0/3*n[2] + 37.0/96*n[3] - 0.1/36*n[4] - 81.0/512*n[5] + 961.99/6048*n[6],
+    1.0/48*n[2] + 1.0/15*n[3] - 43.7/144*n[4] + 46.0/105*n[5] - 111871.1/387072*n[6],
+    1.7/48*n[3] - 3.7/84*n[4] - 20.9/448*n[5] + 556.9/9072*n[6],
+    439.7/16128*n[4] - 11.0/504*n[5] - 8302.51/72576*n[6],
+    458.3/16128*n[5] - 10884.7/399168*n[6],
+    206486.93/6386688*n[6]}
+  -- amplitude
+  E.utmA = 0.9996 * E.a/(1+n[1]) * (1 + n[2]/4.0 + n[4]/64.0 + n[6]/256.0)
+end
 
+--- Convert lat/lon to UTM coordinates.
+--  Based on Karney's method and 
+--  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
+--  @param E Ellipsoid object.
+--  @param t Table of coordinates {B=,L=}.
+--  @return Table {N=,E=,hs=,zone=} and scale value.
 ellipsoid.ll2utm = function (E, t)
   if not (-80 <= t.B and t.B <= 84) then
     error('Latitude outside UTM limits')
   end
   local zone = math.floor((t.L + 180)/6.0) + 1
-  local l0 = (zone-1)*6 - 180 + 3  -- lon of central meridian
+  local l0 = (zone-1)*6 - 177  -- lon of central meridian
   -- Norway / Svalbard exception
   if 31 <= zone and zone <= 36 then
-    local bands = 'CDEFGHJKLMNPQRSTUVWXX'
-    local pos = math.floor(t.B/8.0 + 10) + 1
-    local latBand = string.sub(bands, pos, pos)
-    if latBand == 'V' then
+    local pos = math.floor(t.B/8.0 + 10) 
+    if pos == 17 then  -- 'V'
       if zone == 31 and t.L >= 3  then zone, l0 = zone + 1, l0 + 6 end
-    elseif latBand == 'X' then
+    elseif pos > 18 then  -- 'X'
       if zone == 32 and t.L < 9   then zone, l0 = zone - 1, l0 - 6 end
       if zone == 32 and t.L >= 9  then zone, l0 = zone + 1, l0 + 6 end
       if zone == 34 and t.L < 21  then zone, l0 = zone - 1, l0 - 6 end
@@ -329,15 +357,9 @@ ellipsoid.ll2utm = function (E, t)
     end
   end
   local lat, lon = math.rad(t.B), math.rad(t.L - l0)
-  local n1, e = E.f / (2 - E.f), math.sqrt(E.e2)
-  local n = {n1, n1*n1, n1^3, n1^4, n1^5, n1^6} 
-  local alpha = {
-    0.5*n[1] - 2.0/3*n[2] + 5.0/16*n[3] + 41.0/180*n[4] - 127.0/288*n[5] + 7891.0/37800*n[6],
-    13.0/48*n[2] - 3.0/5*n[3] + 557.0/1440*n[4] + 281.0/630*n[5] - 1983433.0/1935360*n[6],
-    61.0/240*n[3] - 103.0/140*n[4] + 15061.0/26880*n[5] + 167603.0/181440*n[6],
-    49561.0/161280*n[4] - 179.0/168*n[5] + 6601661.0/7257600*n[6],
-    34729.0/80640*n[5] - 3418889.0/1995840*n[6],
-    212378941.0/319334400*n[6]}
+  -- find projection
+  if not E.utmA then E:_setUtmArrays() end
+  local alpha, e = E.utmAlpha, math.sqrt(E.e2)
   local clon = math.cos(lon)
   local tau, slat = math.tan(lat), math.sin(lat)
   n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )  -- reuse
@@ -354,46 +376,44 @@ ellipsoid.ll2utm = function (E, t)
     q1  =  q1 + 2*i*alpha[i] * sxi * seta
   end
   -- use UTM scale for the central meridian 0.9996
-  local A = 0.9996 * E.a/(1+n[1]) * (1 + n[2]/4.0 + n[4]/64.0 + n[6]/256.0)
   local pose = {
-    E = A * eta + 500e3,  -- add false easting
-    N = A * xi,
+    E = E.utmA * eta + 500e3,  -- add false easting
+    N = E.utmA * xi,
     zone = zone,
     hs = t.B >= 0 and 'N' or 'S',  -- hemisphere
   }
   if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing 
-  local scale = A / E.a * math.sqrt(
+  local scale = E.utmA / E.a * math.sqrt(
     (p1*p1 + q1*q1)*(1-e*e*slat*slat)*(1+tau*tau) / (tau1*tau1 + clon*clon))
   return pose, scale
 end
 
+--- Convert UTM coordinates to lat/lon.
+--  Based on Karney's method and 
+--  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
+--  @param E Ellipsoid object.
+--  @param t Table of coordinates {N=,E=,hs=,zone=}.
+--  @return Table {B=,L=,H=0} and scale value.
 ellipsoid.utm2ll = function (E, t)
   -- substract false easting and northing
   local x, y = t.E - 500e3, t.hs == 'S' and t.N - 10000e3 or t.N
-  local n1, e = E.f / (2 - E.f), math.sqrt(E.e2)
-  local n = {n1, n1*n1, n1^3, n1^4, n1^5, n1^6} 
-  local A = 0.9996 * E.a/(1+n[1]) * (1 + n[2]/4.0 + n[4]/64.0 + n[6]/256.0)
-  local eta, xi = x / A, y / A
-  local beta = {
-    0.5*n[1] - 2.0/3*n[2] + 37.0/96*n[3] - 0.1/36*n[4] - 81.0/512*n[5] + 961.99/6048*n[6],
-    1.0/48*n[2] + 1.0/15*n[3] - 43.7/144*n[4] + 46.0/105*n[5] - 111871.1/387072*n[6],
-    1.7/48*n[3] - 3.7/84*n[4] - 20.9/448*n[5] + 556.9/9072*n[6],
-    439.7/16128*n[4] - 11.0/504*n[5] - 8302.51/72576*n[6],
-    458.3/16128*n[5] - 10884.7/399168*n[6],
-    206486.93/6386688*n[6]}
+  if not E.utmA then E:_setUtmArrays() end
+  local beta, e = E.utmBeta, math.sqrt(E.e2)
+  local eta, xi = x / E.utmA, y / E.utmA
   local xi1, eta1, p, q = xi, eta, 1, 0
   for j = 1, 6 do
     local sxi, cxi = math.sin(2*j*xi), math.cos(2*j*xi)
     local seta, ceta = Calc.sinh(2*j*eta), Calc.cosh(2*j*eta)
-    xi1  = xi1 - beta[j]*sxi*ceta
-    eta1 = eta1 - beta[j]*cxi*seta
-    p    = p - 2*j*beta[j]*cxi*ceta
-    q    = q - 2*j*beta[j]*sxi*seta
+    xi1  = xi1 - beta[j] * sxi * ceta
+    eta1 = eta1 - beta[j] * cxi * seta
+    p    = p - 2*j*beta[j] * cxi * ceta
+    q    = q - 2*j*beta[j] * sxi * seta
   end
   local sheta1 = Calc.sinh(eta1)
   local cxi1 =  math.cos(xi1)
   local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
   local taui = tau1
+  -- find latitude
   repeat 
     local sqrti = math.sqrt(1 + taui*taui)
     local si = Calc.sinh( e*Calc.atanh(e*taui/sqrti) )
@@ -402,15 +422,16 @@ ellipsoid.utm2ll = function (E, t)
       (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)
     taui = taui + diff
   until math.abs(diff) < 1E-12
+  -- convert result
   local lat = math.atan(taui)
   local slat = math.sin(lat)
-  local scale = A / E.a * math.sqrt(
+  local scale = E.utmA / E.a * math.sqrt(
     (p*p + q*q)*(1-e*e*slat*slat)*(1+taui*taui) *(sheta1*sheta1 + cxi1*cxi1))
   local l0 = (t.zone-1)*6 - 177
   local res = {
     B = math.deg(lat), 
     L = math.deg(Ver.atan2(sheta1, cxi1)) + l0,
-    H = 0
+    H = 0 
   }
   return res, scale
 end
