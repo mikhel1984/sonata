@@ -328,7 +328,7 @@ end
 evaluate.exit = function ()
   print(SonataHelp.CMAIN..
     "\n             --======= Bye! =======--\n"..SonataHelp.CRESET)
-  os.exit(true, true)
+  os.exit()
 end
 
 --- Mark information about formatting.

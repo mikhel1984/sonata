@@ -77,6 +77,7 @@ local AUX = 'auxiliary'
 -- compatibility
 local Ver = require("lib.utils")
 local Utils = Ver.utils
+local Calc = Ver.calc
 Ver = Ver.versions
 
 --	INFO 
@@ -148,24 +149,14 @@ atan2 = Ver.atan2
 about[atan2] = {"atan2(dy,dx)", "Inverse tangent of dy/dx, use signs.", TRIG}
 
 -- Hyperbolic
-cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
-about[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
-
-sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
-about[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
-
-tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
-about[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
+cosh = Calc.cosh; about[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
+sinh = Calc.sinh; about[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
+tanh = Calc.tanh; about[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
 
 -- Hyperbolic inverse
-asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
-about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
-
-acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
-about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
-
-atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
-about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
+asinh = Calc.asinh; about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
+acosh = Calc.acosh; about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
+atanh = Calc.atanh; about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
 _pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}

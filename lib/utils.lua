@@ -251,10 +251,45 @@ utils.sign = function (d)
   end
 end
 
+--============== Calc ================
+
+local calc = {}
+
+--- Hyperbolic cosine.
+--  @param x Float number.
+--  @return Hyperbolic cosine value.
+calc.cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+
+--- Hyperbolic sine.
+--  @param x Float number.
+--  @return Hyperbolic sine value.
+calc.sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
+
+--- Hyperbolic tangent.
+--  @param x Float number.
+--  @return Hyperbolic tangent value.
+calc.tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
+
+--- Inverse hyperbolic sine.
+--  @param x Float number.
+--  @return Inverse hyperbolic sine value.
+calc.asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
+
+--- Inverse hyperbolic cosine.
+--  @param x Float number.
+--  @return Inverse hyperbolic cosine value.
+calc.acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
+
+--- Inverse hyperbolic tangent.
+--  @param x Float number.
+--  @return Inverse hyperbolic tangent value.
+calc.atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
+
 return {
   versions = versions,
   cross = cross,
   utils = utils,
+  calc = calc,
 }
 
 --===================================================
