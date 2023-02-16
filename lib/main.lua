@@ -80,6 +80,21 @@ local Utils = Ver.utils
 local Calc = Ver.calc
 Ver = Ver.versions
 
+--- Call default or module-specific function.
+--  @param fn Function.
+--  @param s Function name.
+--  @return Function equal to fn(x).
+local _call = function (fn, s)
+  return function (v)
+    if type(v) == 'table' then
+      local method = v[s]
+      return method and method(v) or fn(v:float())
+    else
+      return fn(v)
+    end
+  end
+end
+
 --	INFO 
 
 -- description
@@ -87,6 +102,7 @@ local about = {
 __module__ = "Lua based mathematics."
 }
 --	MODULE
+
 
 local main = {}
 
@@ -132,31 +148,46 @@ main._showTable = function (t)
 end
 
 -- Commonly used methods
-abs = math.abs;   about[abs] =  {"abs(d)", "Absolute value."}
-exp = math.exp;   about[exp] =  {"exp(d)", "Exponent."}
-log = math.log;   about[log] =  {"log(dPos)", "Natural logarithm."}
-sqrt = math.sqrt;  about[sqrt] = {"sqrt(dPos)", "Square root."}
+abs = _call(math.abs, 'abs')
+about[abs] = {"abs(d)", "Absolute value."}
+exp = _call(math.exp, 'exp')
+about[exp] = {"exp(d)", "Exponent."}
+log = _call(math.log, 'log')
+about[log] = {"log(dPos)", "Natural logarithm."}
+sqrt = _call(math.sqrt, 'sqrt')
+about[sqrt] = {"sqrt(dPos)", "Square root."}
 
 -- Trigonometrical
-sin = math.sin;   about[sin] =  {"sin(d)", "Sinus x.", TRIG}
-cos = math.cos;   about[cos] =  {"cos(d)", "Cosine x.", TRIG}
-tan = math.tan;   about[tan] =  {"tan(d)", "Tangent x.", TRIG}
-asin = math.asin;  about[asin] = {"asin(d)", "Inverse sine x.", TRIG}
-acos = math.acos;  about[acos] = {"acos(d)", "Inverse cosine x.", TRIG}
-atan = math.atan;  about[atan] = {"atan(d)", "Inverse tangent x.", TRIG}
-
-atan2 = Ver.atan2
+sin = _call(math.sin, 'sin')
+about[sin] = {"sin(d)", "Sinus d.", TRIG}
+cos = _call(math.cos, 'cos')
+about[cos] = {"cos(d)", "Cosine x.", TRIG}
+tan = _call(math.tan, 'tan')
+about[tan] = {"tan(d)", "Tangent x.", TRIG}
+asin = _call(math.asin, 'asin')
+about[asin] = {"asin(d)", "Inverse sine x.", TRIG}
+acos = _call(math.acos, 'acos')
+about[acos] = {"acos(d)", "Inverse cosine x.", TRIG}
+atan = _call(math.atan, 'atan')
+about[atan] = {"atan(d)", "Inverse tangent x.", TRIG}
+atan2 = _call(Ver.atan2, 'atan2')
 about[atan2] = {"atan2(dy,dx)", "Inverse tangent of dy/dx, use signs.", TRIG}
 
 -- Hyperbolic
-cosh = Calc.cosh; about[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
-sinh = Calc.sinh; about[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
-tanh = Calc.tanh; about[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
+cosh = _call(Calc.cosh, 'cosh')
+about[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
+sinh = _call(Calc.sinh, 'sinh')
+about[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
+tanh = _call(Calc.tanh, 'tanh')
+about[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
 
 -- Hyperbolic inverse
-asinh = Calc.asinh; about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
-acosh = Calc.acosh; about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
-atanh = Calc.atanh; about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
+asinh = _call(Calc.asinh, 'asinh')
+about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
+acosh = _call(Calc.acosh, 'acosh')
+about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
+atanh = _call(Calc.atanh, 'atanh')
+about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
 _pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}

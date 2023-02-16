@@ -41,8 +41,6 @@ Sonata.doimport = function (tbl, name)
     _G[var] = lib
     -- add description
     if lib.about then About:add(lib.about, name, var) end
-    -- do additional actions
-    if lib.onImport then lib.onImport() end
   end
 end
 

@@ -581,70 +581,23 @@ end })
 about[complex] = {
   " ([vRe=0,vIm=0])", "Create new complex number.", help.STATIC}
 
---- Function for execution during the module import.
-complex.onImport = function ()
-  -- basic
-  _i = complex:i(1)
-  local _sqrt = sqrt
-  sqrt = function (a)
-    return (iscomplex(a) or type(a) == 'number') and
-            complex.sqrt(a) or _sqrt(a)
-  end
-  Main._updateHelp(sqrt, _sqrt)
-  local _exp = exp
-  exp = function (a) return iscomplex(a) and complex.exp(a) or _exp(a) end
-  Main._updateHelp(exp, _exp)
-  local _log = log
-  log = function (a)
-    return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
-  end
-  Main._updateHelp(log, _log)
+if Sonata then
 
-  -- trigonometric
-  local _sin = sin
-  sin = function (a) return iscomplex(a) and complex.sin(a) or _sin(a) end
-  Main._updateHelp(sin, _sin)
-  local _cos = cos
-  cos = function (a) return iscomplex(a) and complex.cos(a) or _cos(a) end
-  Main._updateHelp(sqrt, _sqrt)
-  local _tan = tan
-  tan = function (a) return iscomplex(a) and complex.tan(a) or _tan(a) end
-  Main._updateHelp(tan, _tan)
-  local _asin = asin
-  asin = function (a) return iscomplex(a) and complex.asin(a) or _asin(a) end
-  Main._updateHelp(asin, _asin)
-  local _acos = acos
-  acos = function (a) return iscomplex(a) and complex.acos(a) or _acos(a) end
-  Main._updateHelp(acos, _acos)
-  local _atan = atan
-  atan = function (a) return iscomplex(a) and complex.atan(a) or _atan(a) end
-  Main._updateHelp(atan, _atan)
+-- complex unit
+_i = complex:i(1)
 
-  -- hyperbolic
-  local _sinh = sinh
-  sinh = function (a) return iscomplex(a) and complex.sinh(a) or _sinh(a) end
-  Main._updateHelp(sinh, _sinh)
-  local _cosh = cosh
-  cosh = function (a) return iscomplex(a) and complex.cosh(a) or _cosh(a) end
-  Main._updateHelp(cosh, _cosh)
-  local _tanh = tanh
-  tanh = function (a) return iscomplex(a) and complex.tanh(a) or _tanh(a) end
-  Main._updateHelp(tanh, _tanh)
-  local _asinh = asinh
-  asinh = function (a)
-    return iscomplex(a) and complex.asinh(a) or _asinh(a)
-  end
-  Main._updateHelp(asinh, _asinh)
-  local _acosh = acosh
-  acosh = function (a)
-    return iscomplex(a) and complex.acosh(a) or _acosh(a)
-  end
-  Main._updateHelp(acosh, _acosh)
-  local _atanh = atanh
-  atanh = function (a)
-    return iscomplex(a) and complex.atanh(a) or _atanh(a)
-  end
-  Main._updateHelp(atanh, _atanh)
+-- redefine square root
+local _sqrt = sqrt
+sqrt = function (a)
+  return (iscomplex(a) or type(a) == 'number') and complex.sqrt(a) or _sqrt(a)
+end
+
+-- redefine logarithm
+local _log = log
+log = function (a)
+  return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
+end
+
 end
 
 -- Comment to remove descriptions
