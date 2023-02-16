@@ -976,16 +976,15 @@ end})
 about[asciiplot] = {
   " ([iWidth=75,iHeight=23])", "Create new asciiplot.", help.STATIC}
 
--- Export funcitons.
-asciiplot.onImport = function ()
-  Plot = function (...)
-    local f = Ap()
-    f.xrange = {-5, 5}
-    print(f:plot(...))
-  end
-  about[Plot] = {"Plot(...)",
-    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.",
-    help.OTHER}
+if Sonata then
+-- Define simplified function call
+Plot = function (...)
+  local f = Ap()
+  f.xrange = {-5, 5}
+  print(f:plot(...))
+end
+about[Plot] = {"Plot(...)",
+  "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
 end
 
 -- Comment to remove descriptions
@@ -995,5 +994,4 @@ return asciiplot
 
 --======================================
 -- FIX contour concatenation when use color
--- FIX help for onImport functions
 -- TODO bar - choose location of zero
