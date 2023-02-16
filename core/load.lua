@@ -85,10 +85,8 @@ setmetatable(use,
 help = function(v)
   local res = nil
   if v then
-    res = About:findObject(v, use)
-    if not res then
-      res = Sonata.info {Type and Type(v) or '', '\n', tostring(v) }
-    end
+    res = About:findObject(v, use) or Sonata.info {
+      string.format('<%s>', Type and Type(v) or type(v)), '\n', tostring(v) }
   else
     res = About:makeFull(use)
   end

@@ -983,7 +983,7 @@ asciiplot.onImport = function ()
     f.xrange = {-5, 5}
     print(f:plot(...))
   end
-  Main.about[Plot] = {"Plot(...)",
+  about[Plot] = {"Plot(...)",
     "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.",
     help.OTHER}
 end
@@ -995,4 +995,5 @@ return asciiplot
 
 --======================================
 -- FIX contour concatenation when use color
+-- FIX help for onImport functions
 -- TODO bar - choose location of zero
