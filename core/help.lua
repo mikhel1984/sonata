@@ -79,12 +79,6 @@ intro = [[
 ----------------- quit() = exit -----------------
 ]],
 done = 'Done.',
-use_import = [[
-
-Call
-  use 'module' OR use {'moduleA','moduleB' ...}
-to load new modules.
-]],
 }
 
 --- Auxiliary function, which define colors for text elements.

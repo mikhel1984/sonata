@@ -1,5 +1,6 @@
 ======== 0.9.34 =========
-
+Main
+* Call elementary functions for complex objects
 Geo
 * Add UTM coordinates
 * Remove progM and projGK
@@ -8,6 +9,8 @@ Int
 Other
 * Add 'about' directory
 * Define code style elements
+* Remove onImport call
+* Add Calc table with common functions
 
 ======== 0.9.33 =========
 
