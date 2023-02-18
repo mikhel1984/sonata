@@ -278,7 +278,7 @@ local PARENTS = {
   -- expression (product)
   product = {
     -- S._ = {{pow1, S1}, {pow2, S2}, ...}
-    p_sym = '*',
+    p_char = '*',
     p_isatom = false,
     p_signature = COMMON.signaturePairs,
     p_eq = COMMON.eqPairs,
@@ -478,9 +478,9 @@ COMMON.simpPair = function (S, tParent)
           if iconst and sj[2]._parent == PARENTS.const then
             -- combine constants
             if tParent == PARENTS.product then
-              si[2]._ = si[1] * si[2]._ + sj[1] * sj[2]._
+              si[2] = symbolic:_newConst(si[1] * si[2]._ + sj[1] * sj[2]._)
             else  -- PARENTS.power
-              si[2]._ = si[2]._ ^ si[1] * sj[2]._ ^ sj[1]
+              si[2] = symbolic:_newConst(si[2]._ ^ si[1] * sj[2]._ ^ sj[1])
             end
             si[1], sj[1] = 1, 0
           elseif si[2]:p_eq(sj[2]) then
