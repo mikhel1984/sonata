@@ -513,7 +513,7 @@ PARENTS.power.p_simp = function (S, bFull)
   if COMMON.isOne(S._[2]) then       -- v^1
     COMMON.copy(S, S._[1])
   elseif COMMON.isZero(S._[2]) then  -- v^0
-    COMMON.copy(S, symbolic:_newConst(1))
+    COMMON.copy(S, symbolic._1)
   elseif COMMON.isOne(S._[1]) or COMMON.isZero(S._[1]) then  -- 1^v or 0^v
     COMMON.copy(S, S._[1])
   elseif S._[1]._parent == S._[2]._parent and
@@ -567,14 +567,14 @@ PARENTS.product.p_simp = function (S, bFull)
   COMMON.simpPair(S, PARENTS.power)
   -- empty list
   if #S._ == 0 then
-    COMMON.copy(S, symbolic:_newConst(1))
+    COMMON.copy(S, symbolic._1)
     return
   elseif #S._ > 1 then
     table.sort(S._, compList)
   end
   -- check constant
   if COMMON.isZero(S._[1][2]) then
-    COMMON.copy(S, symbolic:_newConst(0))
+    COMMON.copy(S, symbolic._0)
     return
   elseif #S._ > 1 and COMMON.isOne(S._[1][2]) then
     table.remove(S._, 1)
@@ -630,7 +630,7 @@ PARENTS.sum.p_simp = function (S, bFull)
   COMMON.simpPair(S, PARENTS.product)
   -- empty list
   if #S._ == 0 then
-    COMMON.copy(S, symbolic:_newConst(0))
+    COMMON.copy(S, symbolic._0)
     return
   end
   -- sort and remove zero constant
@@ -924,6 +924,9 @@ symbolic._toSym = function (v1, v2)
   return v1, v2
 end
 
+symbolic._0 = symbolic:_newConst(0)
+symbolic._1 = symbolic:_newConst(1)
+
 --- Define (redefine) function.
 --  @param self Do nothing.
 --  @param sName Function name.
@@ -1014,6 +1017,7 @@ __call = function (self, v)
   error("Wrong argument "..tostring(v))
 end})
 about[symbolic] = {" (v)", "Create new symbolic variable.", help.NEW}
+
 
 -- Comment to remove descriptions
 symbolic.about = about
