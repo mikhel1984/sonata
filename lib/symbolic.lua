@@ -215,6 +215,9 @@ local PARENTS = {
     p_simp = COMMON.empty,
     p_eval = function (S) return S end,
     p_diff = function (S1, S2) return symbolic._0 end,
+    p_internal = function (S, n) 
+      return string.format('%s%s', string.rep(' ', n), tostring(S._)) 
+    end,
   },
 
   -- function object
@@ -231,6 +234,9 @@ local PARENTS = {
         '%s(%s): %s', nm, table.concat(lst.args, ','), tostring(lst.body))
     end,
     p_simp = COMMON.empty,
+    p_internal = function (S, n)
+      return string.format('%sFN: %s', string.rep(' ', n), tostring(S._))
+    end,
   },
 
   -- expression (function value)
@@ -248,6 +254,11 @@ local PARENTS = {
     p_simp = function (S, bFull)
       for _, v in ipairs(S._) do v:p_simp(bFull) end
     end,
+    p_internal = function (S, n)
+      local t = {S._[1]:p_internal(n)}
+      for i = 2, #S._ do t[#t+1] = S._[i]:p_internal(n+2) end
+      return table.concat(t, '\n')
+    end,
   },
 
   -- expression (power)
@@ -258,6 +269,10 @@ local PARENTS = {
     p_signature = COMMON.signature,
     p_eq = COMMON.eq,
     p_eval = COMMON.eval,
+    p_internal = function (S, n)
+      return string.format('%sPOWER:\n%s\n%s', 
+        string.rep(' ', n), S._[1]:p_internal(n+2), S._[2]:p_internal(n+2))
+    end,
   },
 
   -- expression (product)
@@ -268,6 +283,15 @@ local PARENTS = {
     p_signature = COMMON.signaturePairs,
     p_eq = COMMON.eqPairs,
     p_eval = COMMON.evalPairs,
+    p_internal = function (S, n)
+      local t = {string.format('%sPROD:', string.rep(' ', n))}
+      local offset = string.rep(' ', n+2)
+      for _, v in ipairs(S._) do
+        t[#t+1] = v[2]:p_internal(n+2)
+        t[#t+1] = string.format('%s[^ %s]', offset, tostring(v[1]))
+      end
+      return table.concat(t, '\n')
+    end,
   },
 
   -- expresion (sum)
@@ -278,6 +302,15 @@ local PARENTS = {
     p_signature = COMMON.signaturePairs,
     p_eq = COMMON.eqPairs,
     p_eval = COMMON.evalPairs,
+    p_internal = function (S, n)
+      local t = {string.format('%sSUM:', string.rep(' ', n))}
+      local offset = string.rep(' ', n+2)
+      for _, v in ipairs(S._) do
+        t[#t+1] = string.format('%s[%s *]', offset, tostring(v[1]))
+        t[#t+1] = v[2]:p_internal(n+2)
+      end
+      return table.concat(t, '\n')
+    end
   },
 
   -- variable
@@ -292,6 +325,9 @@ local PARENTS = {
     p_eval = function (S, tEnv)
       local v = tEnv[S._]
       return v and (issymbolic(v) and v or symbolic:_newConst(v)) or S
+    end,
+    p_internal = function (S, n)
+      return string.format('%s%s', string.rep(' ', n), S._)
     end,
   },
 
@@ -1042,6 +1078,9 @@ __call = function (self, v)
 end})
 about[symbolic] = {" (v)", "Create new symbolic variable.", help.NEW}
 
+symbolic.introspect = function (S)
+  return S:p_internal(0)
+end
 
 -- Comment to remove descriptions
 symbolic.about = about
