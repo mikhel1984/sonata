@@ -214,6 +214,7 @@ local PARENTS = {
     p_str = function (S) return tostring(S._) end,
     p_simp = COMMON.empty,
     p_eval = function (S) return S end,
+    p_diff = function (S1, S2) return symbolic._0 end,
   },
 
   -- function object
@@ -247,7 +248,6 @@ local PARENTS = {
     p_simp = function (S, bFull)
       for _, v in ipairs(S._) do v:p_simp(bFull) end
     end,
-    -- p_eval
   },
 
   -- expression (power)
@@ -258,7 +258,6 @@ local PARENTS = {
     p_signature = COMMON.signature,
     p_eq = COMMON.eq,
     p_eval = COMMON.eval,
-    -- p_simp below
   },
 
   -- expression (product)
@@ -269,7 +268,6 @@ local PARENTS = {
     p_signature = COMMON.signaturePairs,
     p_eq = COMMON.eqPairs,
     p_eval = COMMON.evalPairs,
-    -- p_simp below
   },
 
   -- expresion (sum)
@@ -280,7 +278,6 @@ local PARENTS = {
     p_signature = COMMON.signaturePairs,
     p_eq = COMMON.eqPairs,
     p_eval = COMMON.evalPairs,
-    -- p_simp below
   },
 
   -- variable
@@ -618,6 +615,17 @@ PARENTS.product.p_str = function (S)
   end
 end
 
+PARENTS.product.p_diff = function (S1, S2)
+  local res = symbolic._0 
+  for _, v in ipairs(S1._) do
+    local k = v[1]
+    v[1] = 0  -- exclude element
+    res = res + S1 * v[2]:p_diff(S2)
+    v[1] = k  -- set back
+  end
+  return res
+end
+
 --- Simplify sum (in place).
 --  @param S Symbolic object.
 --  @param bFull Flag for recursive simplification.
@@ -673,6 +681,21 @@ PARENTS.sum.p_str = function (S)
     return string.format(
       '%s-%s', table.concat(plus, '+'), table.concat(minus, '-'))
   end
+end
+
+PARENTS.sum.p_diff = function (S1, S2)
+  local res = symbolic:_newExpr(PARENTS.sum, {})
+  for i, v in ipairs(S1._) do 
+    table.insert(res._, {v[1], v[2]:p_diff(S2)}) 
+  end
+  res:p_simp()
+  res:p_signature()
+  return res
+end
+
+PARENTS.symbol.p_diff = function (S1, S2)
+  return S1._ == S2._ and symbolic._1 
+    or symbolic:_newExpr(PARENTS.funcValue, {symbolic._DIFF, S1, S2})
 end
 
 --- List of 'sybolic' functions.
@@ -926,6 +949,7 @@ end
 
 symbolic._0 = symbolic:_newConst(0)
 symbolic._1 = symbolic:_newConst(1)
+symbolic._DIFF = symbolic:_newFunc('diff')
 
 --- Define (redefine) function.
 --  @param self Do nothing.
