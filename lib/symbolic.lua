@@ -228,7 +228,8 @@ about[symbolic.eval] = {"eval([tEnv])", "Evaluate symbolic expression with the g
 --  @param sName Function name.
 --  @return Function object or nil.
 symbolic.func = function (self, sName)
-  return symbolic._fnList[sName] and symbolic:_newFunc(sName) or nil
+  return symbolic._fnInit[sName] or 
+    symbolic._fnList[sName] and symbolic:_newFunc(sName) or nil
 end
 about[symbolic.func] = {":func(sName)", "Return symbolic function if it was defined."}
 

@@ -33,10 +33,13 @@ local PARENTS = {}
 local symbolic = {
 -- mark
 type = 'symbolic', issymbolic = true,
--- functions
-_fnList = {},
 -- main types
-_parentList = PARENTS
+_parentList = PARENTS,
+-- 'standard' functions
+}
+-- predefine some functions
+symbolic._fnList = {
+  log = {args = {'x'}, body = math.sin},
 }
 
 -- Combine 'common' methods
@@ -362,6 +365,22 @@ PARENTS.power.p_internal = function (S, n)
     string.rep(' ', n), S._[1]:p_internal(n+2), S._[2]:p_internal(n+2))
 end
 
+PARENTS.power.p_diff = function (S1, S2)
+  local res = nil
+  local a, b = S1._[1], S1._[2]
+  local dx = a:p_diff(S2) 
+  -- da/dx
+  if not COMMON.isZero(dx) then
+    res = b * a ^ (b - symbolic._1) * dx
+  end
+  dx = b:p_diff(S2)
+  if not COMMON.isZero(dx) then
+    local prod = S1 * symbolic._fnInit.log(a) 
+    res = res and (res + prod) or prod
+  end
+  return res
+end
+
 -- ============ PRODUCT ============
 
 PARENTS.product = {
@@ -426,14 +445,8 @@ PARENTS.product.p_simp = function (S, bFull)
     S._sign = nil
   end
   -- change type
-  if #S._ == 1 then
-    local v = S._[1]
-    --if v[1] ~= 1 then
-    --  COMMON.copy(S, v[2] ^ symbolic:_newConst(v[1]))
-    --else
-    if v[1] == 1 then
-      COMMON.copy(S, v[2])
-    end
+  if #S._ == 1 and S._[1][1] == 1 then
+    COMMON.copy(S, S._[1][2])
   end
 end
 
@@ -843,6 +856,11 @@ end
 
 symbolic._0 = symbolic:_newConst(0)
 symbolic._1 = symbolic:_newConst(1)
+
+symbolic._fnInit = {
+  log = symbolic:_newFunc('log'),
+}
+
 symbolic._DIFF = symbolic:_newFunc('diff')
 
 return symbolic
