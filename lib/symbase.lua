@@ -369,9 +369,19 @@ PARENTS.product = {
   p_char = '*',
   p_isatom = false,
   p_signature = COMMON.signaturePairs,
-  p_eq = COMMON.eqPairs,
+  --p_eq = COMMON.eqPairs,
   p_eval = COMMON.evalPairs,
 }
+
+PARENTS.product.p_eq = function (S1, S2)
+  return COMMON.eqPairs(S1, S2) or 
+    #S1._ == 1 and S2._parent == PARENTS.power and 
+    --    S2:p_eq(S1._[1][2] ^ S1._[1][1])
+    -- compare power
+    S2._[2]._parent == PARENTS.const and S1._[1][1] == S2._[2]._ and 
+    -- compare base
+    S1._[1][2]:p_eq(S2._[1])
+end
 
 --- Split product to numeric and symbolic parts.
 --  @param S Symbolic object.
@@ -418,9 +428,10 @@ PARENTS.product.p_simp = function (S, bFull)
   -- change type
   if #S._ == 1 then
     local v = S._[1]
-    if v[1] ~= 1 then
-      COMMON.copy(S, v[2] ^ symbolic:_newConst(v[1]))
-    else
+    --if v[1] ~= 1 then
+    --  COMMON.copy(S, v[2] ^ symbolic:_newConst(v[1]))
+    --else
+    if v[1] == 1 then
       COMMON.copy(S, v[2])
     end
   end
@@ -456,10 +467,13 @@ end
 PARENTS.product.p_diff = function (S1, S2)
   local res = symbolic._0 
   for _, v in ipairs(S1._) do
-    local k = v[1]
-    v[1] = 0  -- exclude element
-    res = res + S1 * v[2]:p_diff(S2)
-    v[1] = k  -- set back
+    local dx = v[2]:p_diff(S2)
+    if not COMMON.isZero(dx) then
+      local k = v[1]
+      v[1] = k - 1  -- reduce power
+      res = res + (k * dx) * S1  -- TODO k * dx directly into table
+      v[1] = k      -- set back
+    end
   end
   return res
 end
@@ -484,6 +498,26 @@ PARENTS.sum = {
   p_eq = COMMON.eqPairs,
   p_eval = COMMON.evalPairs,
 }
+
+PARENTS.sum.p_diff = function (S1, S2)
+  local res = symbolic:_newExpr(PARENTS.sum, {})
+  for _, v in ipairs(S1._) do 
+    table.insert(res._, {v[1], v[2]:p_diff(S2)}) 
+  end
+  res:p_simp()
+  res:p_signature()
+  return res
+end
+
+PARENTS.sum.p_internal = function (S, n)
+  local t = {string.format('%sSUM:', string.rep(' ', n))}
+  local offset = string.rep(' ', n+2)
+  for _, v in ipairs(S._) do
+    t[#t+1] = string.format('%s[%s *]', offset, tostring(v[1]))
+    t[#t+1] = v[2]:p_internal(n+2)
+  end
+  return table.concat(t, '\n')
+end
 
 --- Simplify sum (in place).
 --  @param S Symbolic object.
@@ -542,25 +576,6 @@ PARENTS.sum.p_str = function (S)
   end
 end
 
-PARENTS.sum.p_diff = function (S1, S2)
-  local res = symbolic:_newExpr(PARENTS.sum, {})
-  for i, v in ipairs(S1._) do 
-    table.insert(res._, {v[1], v[2]:p_diff(S2)}) 
-  end
-  res:p_simp()
-  res:p_signature()
-  return res
-end
-
-PARENTS.sum.p_internal = function (S, n)
-  local t = {string.format('%sSUM:', string.rep(' ', n))}
-  local offset = string.rep(' ', n+2)
-  for _, v in ipairs(S._) do
-    t[#t+1] = string.format('%s[%s *]', offset, tostring(v[1]))
-    t[#t+1] = v[2]:p_internal(n+2)
-  end
-  return table.concat(t, '\n')
-end
 
 -- ============ SYMBOL ============
 
@@ -575,6 +590,9 @@ PARENTS.symbol = {
   p_internal = function (S, n)
     return string.format('%s%s', string.rep(' ', n), S._)
   end,
+  p_diff = function (S1, S2)
+    return S1._ == S2._ and symbolic._1 or symbolic._0
+  end,
 }
 
 PARENTS.symbol.p_eval = function (S, tEnv)
@@ -582,10 +600,6 @@ PARENTS.symbol.p_eval = function (S, tEnv)
   return v and (issym(v) and v or symbolic:_newConst(v)) or S
 end
 
-PARENTS.symbol.p_diff = function (S1, S2)
-  return S1._ == S2._ and symbolic._1 
-    or symbolic:_newExpr(PARENTS.funcValue, {symbolic._DIFF, S1, S2})
-end
 
 --- List of elements for printing in brackets.
 COMMON.closed = {
