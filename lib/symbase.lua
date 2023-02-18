@@ -37,11 +37,6 @@ type = 'symbolic', issymbolic = true,
 _parentList = PARENTS,
 -- 'standard' functions
 }
--- predefine some functions
-symbolic._fnList = {
-  log = {args = {'x'}, body = math.sin},
-}
-
 -- Combine 'common' methods
 local COMMON = {
 
@@ -246,6 +241,9 @@ PARENTS.func = {
   end,
 }
 
+PARENTS.func.p_diff = function (S)
+end
+
 PARENTS.func.p_str = function (S)
   local nm = S._
   local lst = symbolic._fnList[nm]
@@ -253,7 +251,7 @@ PARENTS.func.p_str = function (S)
     '%s(%s): %s', nm, table.concat(lst.args, ','), tostring(lst.body))
 end
 
--- ============ FUNCTION WITH ARGUMENTS ============
+-- ============ FUNCTION CALL ============
 
 PARENTS.funcValue = {
   -- S._ = {fn, arg1, arg2, ...}
@@ -265,6 +263,9 @@ PARENTS.funcValue = {
     for _, v in ipairs(S._) do v:p_simp(bFull) end
   end,
 }
+
+PARENTS.funcValue.p_diff = function (S1, S2)
+end
 
 --- Evaluate function value.
 --  @param S Symbolic object.
@@ -835,8 +836,8 @@ end
 symbolic._newFunc = function (self, sName)
   local o = {
     _parent = PARENTS.func,
+    _sign = sName..'()',
     _ = sName,
-    _sign = sName..'()'
   }
   return setmetatable(o, self)
 end
@@ -857,10 +858,27 @@ end
 symbolic._0 = symbolic:_newConst(0)
 symbolic._1 = symbolic:_newConst(1)
 
+-- predefine some functions
+symbolic._fnList = {
+  sin = {args = {'x'}, body = math.sin},
+  cos = {args = {'x'}, body = math.cos},
+  log = {args = {'x'}, body = math.sin},
+
+}
+
 symbolic._fnInit = {
   log = symbolic:_newFunc('log'),
+  sin = symbolic:_newFunc('sin'),
+  cos = symbolic:_newFunc('cos'),
+}
+
+symbolic._fnDiff = {
+  log = {x = function (x) return symbolic._1 / x end},
+  sin = {x = function (x) return symbolic._fnInit.cos(x) end},
+  cos = {x = function (x) return -symbolic._fnInit.sin(x) end},
 }
 
 symbolic._DIFF = symbolic:_newFunc('diff')
+
 
 return symbolic

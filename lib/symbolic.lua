@@ -168,10 +168,6 @@ end
 
 --	MODULE
 
---- List of 'sybolic' functions.
-local fnList = symbolic._fnList
-fnList.sin = {args = {'x'}, body = math.sin}
-fnList.cos = {args = {'x'}, body = math.cos}
 
 --- Convert arguments to symbolic if need.
 --  @param v2 First value.
