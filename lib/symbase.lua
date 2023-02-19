@@ -227,30 +227,6 @@ PARENTS.const = {
   end,
 }
 
--- ============ FUNCTION ============
-
-PARENTS.func = {
-  -- S._ = name
-  p_char = 'FN',
-  p_isatom = true,
-  p_signature = COMMON.skip,
-  p_eq = function (S1, S2) return S1._ == S2._ end,
-  p_simp = COMMON.empty,
-  p_internal = function (S, n)
-    return string.format('%sFN: %s', string.rep(' ', n), tostring(S._))
-  end,
-}
-
-PARENTS.func.p_diff = function (S)
-end
-
-PARENTS.func.p_str = function (S)
-  local nm = S._
-  local lst = symbolic._fnList[nm]
-  return string.format(
-    '%s(%s): %s', nm, table.concat(lst.args, ','), tostring(lst.body))
-end
-
 -- ============ FUNCTION CALL ============
 
 PARENTS.funcValue = {
@@ -599,10 +575,10 @@ PARENTS.symbol = {
   p_isatom = true,
   p_signature = COMMON.skip,
   p_eq = function (S1, S2) return S1._ == S2._ end,
-  p_str = function (S) return S._ end,
   p_simp = COMMON.empty,
   p_internal = function (S, n)
-    return string.format('%s%s', string.rep(' ', n), S._)
+    return string.format('%s%s%s', 
+      string.rep(' ', n), S._, symbolic._fnList[S._] and '()' or '')
   end,
   p_diff = function (S1, S2)
     return S1._ == S2._ and symbolic._1 or symbolic._0
@@ -614,6 +590,12 @@ PARENTS.symbol.p_eval = function (S, tEnv)
   return v and (issym(v) and v or symbolic:_newConst(v)) or S
 end
 
+PARENTS.symbol.p_str = function (S) 
+  local nm = S._
+  local lst = symbolic._fnList[nm]
+  return lst and string.format(
+    '%s(%s): %s', nm, table.concat(lst.args, ','), tostring(lst.body)) or nm
+end
 
 --- List of elements for printing in brackets.
 COMMON.closed = {
@@ -651,7 +633,7 @@ end
 --  @param ... List of arguments.
 --  @return Function value (symbolic object).
 symbolic.__call = function (S, ...)
-  if S._parent == PARENTS.func then
+  if S:_isfn() then
     local t = {...}
     local fn = symbolic._fnList[S._]
     if #t ~= #fn.args then
@@ -829,19 +811,6 @@ symbolic._newExpr = function (self, parent, v)
   return setmetatable(o, self)
 end
 
---- Create function object.
---  @param self Symbolic table.
---  @param sName Function name.
---  @return Symbolic object.
-symbolic._newFunc = function (self, sName)
-  local o = {
-    _parent = PARENTS.func,
-    _sign = sName..'()',
-    _ = sName,
-  }
-  return setmetatable(o, self)
-end
-
 --- Create symbolic variable.
 --  @param self Symbolic table.
 --  @param sName Variable name.
@@ -867,9 +836,9 @@ symbolic._fnList = {
 }
 
 symbolic._fnInit = {
-  log = symbolic:_newFunc('log'),
-  sin = symbolic:_newFunc('sin'),
-  cos = symbolic:_newFunc('cos'),
+  log = symbolic:_newSymbol('log'),
+  sin = symbolic:_newSymbol('sin'),
+  cos = symbolic:_newSymbol('cos'),
 }
 
 symbolic._fnDiff = {
@@ -878,7 +847,10 @@ symbolic._fnDiff = {
   cos = {x = function (x) return -symbolic._fnInit.sin(x) end},
 }
 
-symbolic._DIFF = symbolic:_newFunc('diff')
+symbolic._DIFF = symbolic:_newSymbol('diff')
 
+symbolic._isfn = function (S)
+  return S._parent == PARENTS.symbol and symbolic._fnList[S._]
+end
 
 return symbolic

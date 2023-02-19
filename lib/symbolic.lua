@@ -155,7 +155,7 @@ PARSER.prim = function (lst, n)
         t, n = PARSER.args(lst, n+2)
       end
       if lst[n] ~= ')' then error("expected ')'") end
-      table.insert(t, 1, symbolic:_newFunc(v))
+      table.insert(t, 1, symbolic:_newSymbol(v))
       return symbolic:_newExpr(symbolic._parentList.funcValue, t), n+1
     else
       return symbolic:_newSymbol(v), n+1
@@ -202,7 +202,7 @@ symbolic.def = function (self, sName, tArgs, S)
     end
   end
   symbolic._fnList[sName] = { args = t, body = S }
-  return symbolic:_newFunc(sName)
+  return symbolic:_newSymbol(sName)
 end
 about[symbolic.def] = {":def(sName,tArgs,S)", 
   "Define symbolical function. S is either symbolic expression or a Lua function."}
@@ -225,7 +225,7 @@ about[symbolic.eval] = {"eval([tEnv])", "Evaluate symbolic expression with the g
 --  @return Function object or nil.
 symbolic.func = function (self, sName)
   return symbolic._fnInit[sName] or 
-    symbolic._fnList[sName] and symbolic:_newFunc(sName) or nil
+    symbolic._fnList[sName] and symbolic:_newSymbol(sName) or nil
 end
 about[symbolic.func] = {":func(sName)", "Return symbolic function if it was defined."}
 
