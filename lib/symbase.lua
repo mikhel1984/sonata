@@ -808,7 +808,7 @@ symbolic.__unm = function (S)
     res = symbolic:_newExpr(PARENTS.sum, {})
     for i, v in ipairs(S._) do res._[i] = {-v[1], v[2]} end
   else
-    res = symbolic:_newConst(-1) * S
+    res = symbolic._m1 * S
   end
   if S._parent == PARENTS.product then
     res:p_simp()
@@ -857,15 +857,24 @@ symbolic._newSymbol = function (self, sName)
 end
 
 -- Often used constants
+symbolic._m1 = symbolic:_newConst(-1)
 symbolic._0 = symbolic:_newConst(0)
 symbolic._1 = symbolic:_newConst(1)
+symbolic._2 = symbolic:_newConst(2)
 
 -- predefine some functions
+local singleArg = {'x'}
 symbolic._fnList = {
-  sin = {args = {'x'}, body = math.sin},
-  cos = {args = {'x'}, body = math.cos},
-  log = {args = {'x'}, body = math.sin},
-
+  sqrt = {args = singleArg, body = math.sqrt},
+  log = {args = singleArg, body = math.sin},
+  exp = {args = singleArg, body = math.exp},
+  sin = {args = singleArg, body = math.sin},
+  cos = {args = singleArg, body = math.cos},
+  tan = {args = singleArg, body = math.tan},
+  asin = {args = singleArg, body = math.asin},
+  acos = {args = singleArg, body = math.acos},
+  atan = {args = singleArg, body = math.atan},
+  --
   diff = {args = {'y','x'}},
 }
 
@@ -878,9 +887,19 @@ end
 -- list of derivatives
 -- i-th position of a table corresponds to df/dxi
 symbolic._fnDiff = {
+  sqrt = {
+    function (x) return symbolic._1 / symbolic._fnInit.sqrt(x) / symbolic._2 end},
   log = {function (x) return symbolic._1 / x end},
+  exp = {function (x) return symbolic._fnInit.exp(x) end},
   sin = {function (x) return symbolic._fnInit.cos(x) end},
   cos = {function (x) return -symbolic._fnInit.sin(x) end},
+  tan = {
+    function (x) return symbolic._1 / symbolic._fnInit.cos(x)^symbolic._2 end},
+  asin = {function (x) 
+    return symbolic._1 / symbolic._fnInit.sqrt(symbolic._1 - x^symbolic._2) end},
+  acos = {function (x)
+    return -symbolic._1 / symbolic._fnInit.sqrt(symbolic._1 - x^symbolic._2) end},
+  atan = {function (x) return symbolic._1 / (symbolic._1 + x^symbolic._2) end},
 }
 
 --- Check if the object is function.
