@@ -46,10 +46,8 @@ ans = foo(Sym(2), Sym(3)) --> Sym(8)
 
 --	LOCAL
 
---local Ver = require('lib.utils')
---local Cross = Ver.cross
---local Utils = Ver.utils
---Ver = Ver.versions
+local Utils = require('lib.utils')
+Utils = Utils.utils
 
 local symbolic = require('lib.symbase')
 
@@ -155,6 +153,10 @@ PARSER.prim = function (lst, n)
         t, n = PARSER.args(lst, n+2)
       end
       if lst[n] ~= ')' then error("expected ')'") end
+      -- add function
+      if not symbolic._fnList[v] then
+        symbolic._fnList[v] = {}
+      end
       table.insert(t, 1, symbolic:_newSymbol(v))
       return symbolic:_newExpr(symbolic._parentList.funcValue, t), n+1
     else

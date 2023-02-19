@@ -241,6 +241,27 @@ PARENTS.funcValue = {
 }
 
 PARENTS.funcValue.p_diff = function (S1, S2)
+  local res = symbolic._0
+  local args = {}
+  for i = 2, #S1._ do args[#args+1] = S1._[i] end
+  local diffs = S1._[1]:p_diff(S2)
+  if diffs then
+    -- found predefined derivatives
+    if #args ~= #diffs then error('Wrong arguments number') end
+    for i, fn in ipairs(diffs) do
+      local dx = args[i]:p_diff(S2)
+      if not COMMON.isZero(dx) then res = res + fn(table.unpack(args)) * dx end
+    end
+  else
+    -- derivative not defined
+    local df = symbolic:_newExpr(
+      PARENTS.funcValue, {symbolic._fnInit.diff, S1._[1], S2})
+    for _, v in ipairs(args) do
+      local dx = v:p_diff(S2)
+      if not COMMON.isZero(dx) then res = res + df * dx end
+    end
+  end
+  return res
 end
 
 --- Evaluate function value.
@@ -266,8 +287,10 @@ PARENTS.funcValue.p_eval = function (S, tEnv)
 end
 
 PARENTS.funcValue.p_internal = function (S, n)
-  local t = {S._[1]:p_internal(n)}
-  for i = 2, #S._ do t[#t+1] = S._[i]:p_internal(n+2) end
+  local t = {string.format('%sCALL', string.rep(' ', n))}
+  for _, v in ipairs(S._) do
+    t[#t+1] = v:p_internal(n+2)
+  end
   return table.concat(t, '\n')
 end
 
@@ -580,21 +603,30 @@ PARENTS.symbol = {
     return string.format('%s%s%s', 
       string.rep(' ', n), S._, symbolic._fnList[S._] and '()' or '')
   end,
-  p_diff = function (S1, S2)
-    return S1._ == S2._ and symbolic._1 or symbolic._0
-  end,
 }
+
+PARENTS.symbol.p_diff = function (S1, S2)
+  if symbolic._fnList[S1._] then
+    return symbolic._fnDiff[S1._] or nil
+  else
+    return S1._ == S2._ and symbolic._1 or symbolic._0
+  end
+end
 
 PARENTS.symbol.p_eval = function (S, tEnv)
   local v = tEnv[S._]
   return v and (issym(v) and v or symbolic:_newConst(v)) or S
 end
 
-PARENTS.symbol.p_str = function (S) 
+PARENTS.symbol.p_str = function (S, isFull) 
   local nm = S._
   local lst = symbolic._fnList[nm]
-  return lst and string.format(
-    '%s(%s): %s', nm, table.concat(lst.args, ','), tostring(lst.body)) or nm
+  if isFull then
+    return lst and string.format('%s(%s): %s', 
+      nm, table.concat(lst.args or {}, ','), tostring(lst.body or '')) 
+  else
+    return lst and nm..'()' or nm
+  end
 end
 
 --- List of elements for printing in brackets.
@@ -764,7 +796,7 @@ end
 --  @param S Symbolic object.
 --  @return String.
 symbolic.__tostring = function (S)
-  return S._parent.p_str(S)
+  return S._parent.p_str(S, true)  -- true for full version of fn
 end
 
 --- -S
@@ -824,6 +856,7 @@ symbolic._newSymbol = function (self, sName)
   return setmetatable(o, self)
 end
 
+-- Often used constants
 symbolic._0 = symbolic:_newConst(0)
 symbolic._1 = symbolic:_newConst(1)
 
@@ -833,22 +866,26 @@ symbolic._fnList = {
   cos = {args = {'x'}, body = math.cos},
   log = {args = {'x'}, body = math.sin},
 
+  diff = {args = {'y','x'}},
 }
 
-symbolic._fnInit = {
-  log = symbolic:_newSymbol('log'),
-  sin = symbolic:_newSymbol('sin'),
-  cos = symbolic:_newSymbol('cos'),
-}
+-- add objects for main functions
+symbolic._fnInit = {}
+for k, _ in pairs(symbolic._fnList) do
+  symbolic._fnInit[k] = symbolic:_newSymbol(k)
+end
 
+-- list of derivatives
+-- i-th position of a table corresponds to df/dxi
 symbolic._fnDiff = {
-  log = {x = function (x) return symbolic._1 / x end},
-  sin = {x = function (x) return symbolic._fnInit.cos(x) end},
-  cos = {x = function (x) return -symbolic._fnInit.sin(x) end},
+  log = {function (x) return symbolic._1 / x end},
+  sin = {function (x) return symbolic._fnInit.cos(x) end},
+  cos = {function (x) return -symbolic._fnInit.sin(x) end},
 }
 
-symbolic._DIFF = symbolic:_newSymbol('diff')
-
+--- Check if the object is function.
+--  @param S Symbolic object.
+--  @return True if it is found in function list.
 symbolic._isfn = function (S)
   return S._parent == PARENTS.symbol and symbolic._fnList[S._]
 end
