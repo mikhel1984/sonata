@@ -170,7 +170,6 @@ end
 
 --	MODULE
 
-
 --- Convert arguments to symbolic if need.
 --  @param v2 First value.
 --  @param v2 Second value.
@@ -209,6 +208,16 @@ end
 about[symbolic.def] = {":def(sName,tArgs,S)", 
   "Define symbolical function. S is either symbolic expression or a Lua function."}
 
+--- Find derivative dS1/dS2.
+--  @param S1 Symbolic expression or function.
+--  @param S2 Variable.
+--  @return Derivative.
+symbolic.diff = function (S1, S2)
+  if S1:_isfn() then error('Undefined arguments') end
+  return S1:p_diff(S2)
+end
+about[symbolic.diff] = {"diff(S1,S2)", "Find symbolic derivative."}
+
 --- Find value for the given substitutions.
 --  @param S Symbolic object.
 --  @param tEnv Table of substitutions (key - value).
@@ -225,11 +234,25 @@ about[symbolic.eval] = {"eval([tEnv])", "Evaluate symbolic expression with the g
 --  @param self Do nothing.
 --  @param sName Function name.
 --  @return Function object or nil.
-symbolic.func = function (self, sName)
+symbolic.fn = function (self, sName)
   return symbolic._fnInit[sName] or 
     symbolic._fnList[sName] and symbolic:_newSymbol(sName) or nil
 end
-about[symbolic.func] = {":func(sName)", "Return symbolic function if it was defined."}
+about[symbolic.fn] = {":fn(sName)", "Return symbolic function if it is defined."}
+
+--- Show internal structure of expression.
+--  @param S Symbolic expression.
+--  @return String with structure.
+symbolic.introspect = function (S)
+  return S:p_internal(0)
+end
+about[symbolic.introspect] = {"introspect(S)", "Show the internal structure."}
+
+--- Check if the symbol is function.
+--  @param S Symbolic variable.
+--  @return true when it is function.
+symbolic.isFn = function (S) return S:_isfn() end
+about[symbolic.isFn] = {'isFn()', 'Return true if the symbol is function.'}
 
 --- Get name of variable.
 --  @param S Symbolic object.
@@ -273,9 +296,6 @@ __call = function (self, v)
 end})
 about[symbolic] = {" (v)", "Create new symbolic variable.", help.NEW}
 
-symbolic.introspect = function (S)
-  return S:p_internal(0)
-end
 
 -- Comment to remove descriptions
 symbolic.about = about
