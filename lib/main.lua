@@ -149,45 +149,45 @@ end
 
 -- Commonly used methods
 abs = _call(math.abs, 'abs')
-about[abs] = {"abs(d)", "Absolute value."}
+about[abs] = {"abs(x) --> num", "Absolute value."}
 exp = _call(math.exp, 'exp')
-about[exp] = {"exp(d)", "Exponent."}
+about[exp] = {"exp(x) --> y", "Exponent."}
 log = _call(math.log, 'log')
-about[log] = {"log(dPos)", "Natural logarithm."}
+about[log] = {"log(x) --> y", "Natural logarithm."}
 sqrt = _call(math.sqrt, 'sqrt')
-about[sqrt] = {"sqrt(dPos)", "Square root."}
+about[sqrt] = {"sqrt(x) --> y", "Square root."}
 
 -- Trigonometrical
 sin = _call(math.sin, 'sin')
-about[sin] = {"sin(d)", "Sinus d.", TRIG}
+about[sin] = {"sin(x) --> y", "Sine.", TRIG}
 cos = _call(math.cos, 'cos')
-about[cos] = {"cos(d)", "Cosine x.", TRIG}
+about[cos] = {"cos(x) --> y", "Cosine.", TRIG}
 tan = _call(math.tan, 'tan')
-about[tan] = {"tan(d)", "Tangent x.", TRIG}
+about[tan] = {"tan(x) --> y", "Tangent.", TRIG}
 asin = _call(math.asin, 'asin')
-about[asin] = {"asin(d)", "Inverse sine x.", TRIG}
+about[asin] = {"asin(x) --> y", "Inverse sine.", TRIG}
 acos = _call(math.acos, 'acos')
-about[acos] = {"acos(d)", "Inverse cosine x.", TRIG}
+about[acos] = {"acos(x) --> y", "Inverse cosine x.", TRIG}
 atan = _call(math.atan, 'atan')
-about[atan] = {"atan(d)", "Inverse tangent x.", TRIG}
-atan2 = _call(Ver.atan2, 'atan2')
-about[atan2] = {"atan2(dy,dx)", "Inverse tangent of dy/dx, use signs.", TRIG}
+about[atan] = {"atan(x) --> y", "Inverse tangent x.", TRIG}
+atan2 = Ver.atan2
+about[atan2] = {"atan2(y_d,x_d) --> num", "Inverse tangent of dy/dx, use signs.", TRIG}
 
 -- Hyperbolic
 cosh = _call(Calc.cosh, 'cosh')
-about[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
+about[cosh] = {"cosh(x) --> y", "Hyperbolic cosine.", HYP}
 sinh = _call(Calc.sinh, 'sinh')
-about[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
+about[sinh] = {"sinh(x) --> y", "Hyperbolic sinus.", HYP}
 tanh = _call(Calc.tanh, 'tanh')
-about[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
+about[tanh] = {"tanh(x) --> y", "Hyperbolic tangent.", HYP}
 
 -- Hyperbolic inverse
 asinh = _call(Calc.asinh, 'asinh')
-about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
+about[asinh] = {"asinh(x) --> y", "Hyperbolic inverse sine.", HYP}
 acosh = _call(Calc.acosh, 'acosh')
-about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
+about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", HYP}
 atanh = _call(Calc.atanh, 'atanh')
-about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
+about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
 _pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
@@ -200,10 +200,10 @@ about[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
 math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
 
 rand = function () return math.random() end
-about[rand] = {"rand()", "Random number between 0 and 1."}
+about[rand] = {"rand() --> float", "Random number between 0 and 1."}
 
 randi = function (N) return math.random(1, N) end
-about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
+about[randi] = {"randi(N) -> int", "Random integer in range from 1 to N."}
 
 randn = function (dMean, dev)
   dMean = dMean or 0
@@ -218,7 +218,7 @@ randn = function (dMean, dev)
   local norm = u * math.sqrt(-2*math.log(s)/s)
   return norm * dev + dMean
 end
-about[randn] = {"randn([dMean=0,dev=1])",
+about[randn] = {"randn([mean_d=0,dev_d=1]) --> float",
   "Normal distributed random value with the given mean and deviation."}
 
 
@@ -235,7 +235,7 @@ Map = function (fn, t)
   end
   return nil
 end
-about[Map] = {'Map(fn,t)','Evaluate function for each table element.', AUX}
+about[Map] = {'Map(fn,inList_t) --> outList_t','Evaluate function for each table element.', AUX}
 
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
@@ -262,7 +262,7 @@ Print = function (...)
   end
   io.write('\n')
 end
-about[Print] = {"Print(...)",
+about[Print] = {"Print(...) --> nil",
   "Extenden print function, it shows elements of tables and scientific form of numbers.",
   AUX}
 
@@ -275,7 +275,7 @@ Round = function (f, N)
   return Utils.round(f, 10^(-N))
 end
 about[Round] = {
-  'Round(f,[N=0])', 'Round value, define number of decimal digits.', AUX}
+  'Round(x_d,[N=0]) --> num', 'Round value, define number of decimal digits.', AUX}
 
 --- Execute file inside the interpreter.
 --  @param sFile Lua or note file name.
@@ -288,8 +288,8 @@ Run = function (sFile, bInt)
     io.write('Expected .lua or .note!\n')
   end
 end
-about[Run] = {'Run(sFile,[bInt=false])',
-  "Execute lua- or note- file. Set bInt for interaction.", AUX}
+about[Run] = {'Run(name_s,[isInt=false]) --> nil',
+  "Execute lua- or note- file. Set isInt for interaction.", AUX}
 
 --- Show type of the object.
 --  @param v Some Lua or Sonata object.
@@ -303,7 +303,7 @@ Type = function (v)
   end
   return u
 end
-about[Type] = {'Type(v)', 'Show type of the object.', AUX}
+about[Type] = {'Type(x) --> str', 'Show type of the object.', AUX}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -441,17 +441,17 @@ Range = function (dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-about[Range] = {'Range(dBegin,dEnd,[dStep])', 'Generate range object.', AUX}
+about[Range] = {'Range(begin_d,end_d,[step_d]) --> new_R', 'Generate range object.', AUX}
 
 -- Sonata specific functions
 
 if Sonata then
-about[Log] = {'Log(sFlag)',
+about[Log] = {'Log(flag_s) --> nil',
   "Save session into the log file. Use 'on'/'off' to start/stop logging.", AUX}
-about[use] = {'use([sModule])',
+about[use] = {'use([module_s]) --> str|nil',
   "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
-about[help] = {"help([fn='main'])", "Show information about the function.", AUX}
-about[quit] = {'quit()', "Quit the program.", AUX}
+about[help] = {"help([fn='main']) --> str", "Show information about the function.", AUX}
+about[quit] = {'quit() --> nil', "Quit the program.", AUX}
 end
 
 -- save link to help info

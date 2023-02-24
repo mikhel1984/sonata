@@ -630,8 +630,6 @@ bigint._new = function (self, num)
   return setmetatable(int, self)
 end
 
-
-
 --- Find (B1 ^ B2) % B3
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
@@ -779,20 +777,20 @@ bigint.abs = function (B)
   a._ = B._
   return a
 end
-about[bigint.abs] = {"abs()", "Return module of arbitrary long number."}
+about[bigint.abs] = {"B:abs() --> num", "Return module of arbitrary long number."}
 
 --- Get digit.
 --  @param B Bigint object.
 --  @param N Index.
 --  @return Digit at the N-th position.
 bigint.at = function (B, N) return B._[N] end
-about[bigint.at] = {"at(N)", "Get N-th digit.", help.OTHER}
+about[bigint.at] = {"B:at(N) --> int", "Get N-th digit.", help.OTHER}
 
 --- Get numeric base.
 --  @param B Bigint object.
 --  @return Base value.
 bigint.base = function (B) return B._base end
-about[bigint.base] = {"base()", "Current numeric base."}
+about[bigint.base] = {"B:base() --> int", "Current numeric base."}
 
 
 --- a == b.
@@ -827,7 +825,7 @@ bigint.eq = function (B1, B2)
   return false
 end
 about[bigint.eq] = {
-  "eq(B)", "Check equality with the second value.", help.OTHER}
+  "B:eq(x) --> bool", "Check equality with the second value.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
 
@@ -854,7 +852,8 @@ bigint.fact = function (B)
   end
   return acc
 end
-about[bigint.fact] = {"fact()", "Return factorial of non-negative integer B."}
+about[bigint.fact] = {
+  "B:fact() --> B!", "Return factorial of non-negative integer B."}
 
 --- Find multipliers for the number.
 --  @param B Integer number.
@@ -876,7 +875,7 @@ bigint.factorize = function (B)
   return res
 end
 about[bigint.factorize] = {
-  "factorize()", "Find the list of multipliers.", NUMB}
+  "B:factorize() --> primeBs_t", "Find the list of multipliers.", NUMB}
 
 --- Float number representation.
 --  @param B Bigint object.
@@ -895,7 +894,7 @@ bigint.float = function (B)
   end
   return B.sign >= 0 and sum or (-sum)
 end
-about[bigint.float] = {"float()",
+about[bigint.float] = {"B:float() --> num",
   "Represent current big integer as number if it possible.", help.OTHER}
 
 --- Greatest common devision for two (big) numbers.
@@ -907,7 +906,7 @@ bigint.gcd = function (B1, B2)
   return bigint._gcd(B1, B2)
 end
 about[bigint.gcd] = {
-  "gcd(B)", "Find the greatest common divisor for two integers.", NUMB}
+  "B:gcd(B2) --> B3", "Find the greatest common divisor for two integers.", NUMB}
 
 -- TODO try https://en.wikipedia.org/wiki/Primality_test
 --- Check if the number is prime.
@@ -922,7 +921,7 @@ bigint.isPrime = function (B, sMethod)
   local v1, v2 = bigint._trivialSearch(B)
   return v1 == nil
 end
-about[bigint.isPrime] = {"isPrime([sMethod])",
+about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
   "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.",
   NUMB}
 
@@ -953,7 +952,7 @@ bigint.random = function (self, B)
   end
   return res
 end
-about[bigint.random] = {":random(B)",
+about[bigint.random] = {":random(B) --> rand_B",
   "Generate pseudo-random value from 0 to B.", help.STATIC}
 
 --- Change current numeric base.
@@ -975,7 +974,8 @@ bigint.rebase = function (B, N)
   until #dig == 0
   return res
 end
-about[bigint.rebase] = {"rebase(N)", "Convert number to the new numeric base."}
+about[bigint.rebase] = {
+  "B:rebase(N) --> upd_B", "Convert number to the new numeric base."}
 
 -- simplify constructor call
 setmetatable(bigint, {
@@ -983,7 +983,7 @@ __call = function (self, v)
   return bigint:_new(v)
 end})
 about[bigint] = {
-  " (v)", "Create number from integer, string or table.", help.STATIC}
+  " (var) --> new_B", "Create number from integer, string or table.", help.STATIC}
 
 -- Comment to remove descriptions
 bigint.about = about

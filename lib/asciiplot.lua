@@ -610,8 +610,8 @@ asciiplot.addPoint = function (F, dx, dy, s)
     F.canvas[ny][nx] = s
   end
 end
-about[asciiplot.addPoint] = {
-  "addPoint(dx,dy,s)", "Add point (dx,dy) using char 's'.", MANUAL}
+about[asciiplot.addPoint] = {"F:addPoint(x_d,y_d,char_s) --> F", 
+  "Add point (x,y) using char.", MANUAL}
 
 --- Set character to direct position.
 --  @param F Figure object.
@@ -624,8 +624,8 @@ asciiplot.addPose = function (F, ir, ic, s)
     F.canvas[ir][ic] = s
   end
 end
-about[asciiplot.addPose] = {
-  "addPose(ir,ic,s)", "Add character s to the given position.", MANUAL}
+about[asciiplot.addPose] = {"F:addPose(row_N,col_N,char_s) --> F", 
+  "Add character to the given position.", MANUAL}
 
 --- Set string to the given position.
 --  @param F Figure object.
@@ -637,8 +637,8 @@ asciiplot.addString = function (F, ir, ic, s)
     asciiplot.addPose(F, ir, ic+i-1, string.sub(s, i, i))
   end
 end
-about[asciiplot.addString] = {
-  "addString(ir,ic,s)", "Set string from the given position.", MANUAL}
+about[asciiplot.addString] = {"F:addString(row_N,col_N,str) --> F",
+  "Set string from the given position.", MANUAL}
 
 --- Plot bar graph.
 --  @param F Figure object.
@@ -648,7 +648,7 @@ about[asciiplot.addString] = {
 --  @return Updated figure object.
 asciiplot.bar = function (F, t, vy, ix)
   ix, vy = ix or 1, vy or 2
-  local ytbl = (type(vy) == 'table')
+  local ytbl = (type(vy) == 'table')   -- TODO Split into 2 functions
   -- size
   local iL = mmodf(F.width * 0.2)
   local iR = F.width - iL
@@ -702,7 +702,7 @@ asciiplot.bar = function (F, t, vy, ix)
   end
   return F
 end
-about[asciiplot.bar] = {"bar(t,[vy=2,ix=1])",
+about[asciiplot.bar] = {"F:bar(t,[vy=2,x_N=1]) --> F",
   "Plot bar diargram for data. vy can be y index in t (optional) or table of y-s."}
 
 --- Horizontal concatenation of figures.
@@ -762,7 +762,7 @@ asciiplot.concat = function (self, ...)
   for i = 1, #acc do acc[i] = table.concat(acc[i]) end
   return table.concat(acc, '\n')
 end
-about[asciiplot.concat] = {":concat(...)",
+about[asciiplot.concat] = {":concat(...) --> str",
   "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.",
   help.STATIC}
 
@@ -800,7 +800,7 @@ asciiplot.contour = function (F, fn, tOpt)
   end
   return acc[1]
 end
-about[asciiplot.contour] = {"contour(F,fn,[{view='XY'}])",
+about[asciiplot.contour] = {"F:contour(fn,[{view='XY'}]) --> F|str",
   "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ, XYZ."}
 
 --- Make a copy.
@@ -835,7 +835,8 @@ asciiplot.copy = function (F)
   end
   return setmetatable(o, asciiplot)
 end
-about[asciiplot.copy] = {"copy()", "Create a copy of the object.", help.OTHER}
+about[asciiplot.copy] = {
+  "F:copy() --> cpy_F", "Create a copy of the object.", help.OTHER}
 
 --- Generalized plot funciton.
 --  @param F Figure object.
@@ -909,7 +910,7 @@ asciiplot.plot = function (F, ...)
   asciiplot._limits(F)
   return F
 end
-about[asciiplot.plot] = {"plot(...)",
+about[asciiplot.plot] = {"F:plot(...) --> F",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
 
 --- Prepare a clear canvas.
@@ -919,7 +920,7 @@ asciiplot.reset = function (F)
   asciiplot._axes(F)
   asciiplot._limits(F)
 end
-about[asciiplot.reset] = {"reset()", "Prepare a clear canvas.", MANUAL}
+about[asciiplot.reset] = {"F:reset() --> nil", "Prepare a clear canvas.", MANUAL}
 
 --- Scale xrange and yrange w.r.t. initial size.
 --  @param F figure object.
@@ -936,7 +937,7 @@ asciiplot.scale = function (F, factor, bDefault)
   F.height = (int % 2 == 1) and int or (int + 1)
   return F
 end
-about[asciiplot.scale] = {"scale(factor,[bDefault=false])",
+about[asciiplot.scale] = {"F:scale(factor_d,[isDefault=false]) --> F",
   "Change figure size w.r.t. initial size."}
 
 --- Plot data represented in form of table
@@ -966,7 +967,7 @@ asciiplot.tplot = function (F, t, tOpt)
   return F
 end
 about[asciiplot.tplot] = {
-  "tplot(t,[{yfix=false}])", "Plot the table data, choose columns if need."}
+  "F:tplot(data_t,[{yfix=false}]) --> F", "Plot the table data, choose columns if need."}
 
 -- Simplify the constructor call.
 setmetatable(asciiplot, {
@@ -974,7 +975,7 @@ __call = function (self, w, h)
   return asciiplot:_new(w, h)
 end})
 about[asciiplot] = {
-  " ([iWidth=75,iHeight=23])", "Create new asciiplot.", help.STATIC}
+  " ([width_i=75,height_i=23]) --> new_F", "Create new asciiplot.", help.STATIC}
 
 if Sonata then
 -- Define simplified function call
@@ -983,7 +984,7 @@ Plot = function (...)
   f.xrange = {-5, 5}
   print(f:plot(...))
 end
-about[Plot] = {"Plot(...)",
+about[Plot] = {"Plot(...) --> nil",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
 end
 
