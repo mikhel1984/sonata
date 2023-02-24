@@ -80,11 +80,12 @@ setmetatable(use,
 --  @param v Function, module or nil.
 help = function(v)
   local res = nil
-  if v then
+  v = v or 'main'
+  if v == 'all' then
+    res = About:makeFull(use)
+  else
     res = About:findObject(v, use) or Sonata.info {
       string.format('<%s>', Type and Type(v) or type(v)), '\n', tostring(v) }
-  else
-    res = About:makeFull(use)
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end

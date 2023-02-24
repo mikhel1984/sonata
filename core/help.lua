@@ -212,9 +212,9 @@ help.makeModule = function (t, nm)
   for cat, n in pairs(acc) do          -- for each category
     res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
     res[#res+1] = cat    ; res[#res+1] = ':\n'
-    for i, v in ipairs(n) do           -- for each function
-      res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
-    end
+    table.sort(n)
+    res[#res+1] = table.concat(n, '\n')
+    res[#res+1] = '\n'
   end
   return res
 end

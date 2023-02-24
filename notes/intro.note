@@ -6,7 +6,7 @@
 
 --	BASICS
 -- Available functions can be listed using:
-help()
+help 'all' 
 -- PAUSE
 
 -- Information about function can be obtained as

@@ -450,7 +450,7 @@ about[Log] = {'Log(sFlag)',
   "Save session into the log file. Use 'on'/'off' to start/stop logging.", AUX}
 about[use] = {'use([sModule])',
   "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
-about[help] = {'help([fn])', "Show information about the function.", AUX}
+about[help] = {"help([fn='main'])", "Show information about the function.", AUX}
 about[quit] = {'quit()', "Quit the program.", AUX}
 end
 

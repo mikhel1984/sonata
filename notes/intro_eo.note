@@ -6,7 +6,7 @@
 
 --	BAZAĴOJ
 -- La listo de funkcioj estas akirita per la komando:
-help()
+help 'all'
 -- PAUSE
 
 -- Por helpo pri funkcio, enigu ĝian nomon
