@@ -570,7 +570,7 @@ geodesy.__index = geodesy
 geodesy.dms2rad = function (self, d, m, s)
   return math.rad(d + (m or 0) / 60 + (s or 0) / 3600)
 end
-about[geodesy.dms2rad] = {":dms2rad(d,[m=0,s=0])",
+about[geodesy.dms2rad] = {":dms2rad(deg_d,[min_d=0,sec_d=0]) --> num",
   "Convert degrees, minutes and seconds to radians.", help.OTHER}
 
 --- Convert degrees to degrees-minutes-seconds.
@@ -583,7 +583,7 @@ geodesy.deg2dms = function (self, d)
   local sec = 3600 * (d - deg) - 60 * min
   return deg, min, sec
 end
-about[geodesy.deg2dms] = {":deg2dms(d)",
+about[geodesy.deg2dms] = {":deg2dms(deg_d) --> num",
   "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
 --- International gravity formula (WGS).
@@ -595,7 +595,7 @@ geodesy.grav = function (self, dB)
   s = s * s  -- get square
   return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
 end
-about[geodesy.grav] = {":grav(dB)",
+about[geodesy.grav] = {":grav(latitude) --> num",
   "International gravity formula, angle in degrees.", help.OTHER}
 
 --- Convert hash to corrdinates.
@@ -635,7 +635,7 @@ geodesy.hashDecode = function (self, sHash)
   return {B = (latMin+latMax)*0.5, L = (lonMin+lonMax)*0.5},
          {latMax - latMin, lonMax - lonMin}
 end
-about[geodesy.hashDecode] = {":hashDecode(sHash)",
+about[geodesy.hashDecode] = {":hashDecode(hash_s) --> coord_t, range_t",
   "Find central point and range of the zone."}
 
 --- Geohash from coordinates
@@ -677,35 +677,34 @@ geodesy.hashEncode = function (self, t, N)
   end
   return table.concat(hash)
 end
-about[geodesy.hashEncode] = {
-  ":hashEncode(t[,N=6])", "Find hash for the given point."}
+about[geodesy.hashEncode] = {":hashEncode(coord_t,[letter_N=6]) --> hash_s", 
+  "Find hash for the given point."}
 
 -- Access to the ellipsoid object methods.
 geodesy.toXYZ = ellipsoid.toXYZ
-about[geodesy.toXYZ] = {
-  "toXYZ(tBLH)", "Transform Geodetic coordinates to Cartesian.", TRANS}
+about[geodesy.toXYZ] = {"E:toXYZ(blh_t) --> xyz_t", 
+  "Transform Geodetic coordinates to Cartesian.", TRANS}
 
 geodesy.toBLH = ellipsoid.toBLH
-about[geodesy.toBLH] = {
-  "toBLH(tXYZ)", "Transform Cartesian coordinates to Geodetic.", TRANS}
+about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t", 
+  "Transform Cartesian coordinates to Geodetic.", TRANS}
 
 geodesy.utm2ll = ellipsoid.utm2ll
-about[geodesy.utm2ll] = {
-  "utm2ll(tNE)", "Find Geodetic coordinates for the given UTM pose and zone",
-  PROJ}
+about[geodesy.utm2ll] = {"E:utm2ll(utm_t) --> blh_t", 
+  "Find Geodetic coordinates for the given UTM pose and zone", PROJ}
 
 geodesy.ll2utm = ellipsoid.ll2utm
-about[geodesy.ll2utm] = {
-  "ll2utm(tBLH)", "Find UTM projection for the given coordinates.", PROJ}
+about[geodesy.ll2utm] = {"E:ll2utm(blh_t) --> utm_t", 
+  "Find UTM projection for the given coordinates.", PROJ}
 
 geodesy.solveInv = ellipsoid.solveInv
-about[geodesy.solveInv] = {"solveInv(BLH1,BLH2)",
+about[geodesy.solveInv] = {"E:solveInv(blh1_t,blh2_t) --> dist_d, az1_d, az2_d",
   "Solve inverse geodetic problem, find distance and azimuths for two points.",
   PROB}
 
 -- ellipsoid.solveDir = function (E, t1, a1, dist)
 geodesy.solveDir = ellipsoid.solveDir
-about[geodesy.solveDir] = {"solveDir(BLH,azimuth,dist)",
+about[geodesy.solveDir] = {"E:solveDir(blh_t,az1_d,dist_d) --> blh_t, az2_d",
   "Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.",
   PROB}
 
@@ -741,10 +740,10 @@ _setTranslation(geodesy.SK42, geodesy.PZ9002,
    0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6})
 
 geodesy.xyzInto = 'A.xyzInto[B]'
-about[geodesy.xyzInto] = {"A.xyzInto[B]",
-  "Get function to transform coordinates from A to B system.", TRANS}
+about[geodesy.xyzInto] = {"E.xyzInto[E2]",
+  "Get function to transform coordinates from E to E2 system.", TRANS}
 geodesy.blhInto = 'A.blhInto[B]'
-about[geodesy.blhInto] = {"A.blhInto[B]",
+about[geodesy.blhInto] = {"E.blhInto[E2]",
   "Get function to transform geodetic coordinates from A to B system using the Molodensky method.",
   TRANS}
 
@@ -764,7 +763,7 @@ geodesy.toENU = function (self, tG, tR, tP)
     Z = cB*cL*dx + cB*sL*dy + sB*dz
   }
 end
-about[geodesy.toENU] = {":toENU(tBLr,tXYZr,tCatr)",
+about[geodesy.toENU] = {":toENU(blRef_t,xyzRef_t,xyzObs_t) --> top_t",
   "Get topocentric coordinates of a point in reference frame.", TRANS}
 
 --- Find cartesian coordinates of a point with topocentric coordinates.
@@ -782,7 +781,7 @@ geodesy.fromENU = function (self, tG, tR, tL)
     Z = tR.Z + cB*tL.Y + sB*tL.Z
   }
 end
-about[geodesy.fromENU] = {":fromENU(tBLr,tXYZr,tTop)",
+about[geodesy.fromENU] = {":fromENU(blRef_t,xyzRef_t,top_t) --> xyzObs_t",
   "Get cartesian coordinates of a local point in reference frame.", TRANS}
 
 -- Comment to remove descriptions

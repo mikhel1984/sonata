@@ -235,7 +235,7 @@ Map = function (fn, t)
   end
   return nil
 end
-about[Map] = {'Map(fn,inList_t) --> outList_t','Evaluate function for each table element.', AUX}
+about[Map] = {'Map(fn,in_t) --> out_t','Evaluate function for each table element.', AUX}
 
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.

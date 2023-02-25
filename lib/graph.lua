@@ -262,7 +262,7 @@ graph.add = function (G, v)
     G[v] = G[v] or {}
   end
 end
-about[graph.add] = {"add(v)",
+about[graph.add] = {"G:add(var) --> nil",
   "Add new node or edge to graph G. Node denoted as a single name, edge is a table of names (and weights if need)."}
 
 --- Breadth first search.
@@ -292,7 +292,7 @@ graph.bfs = function (G, vStart, vGoal)
   until Queue.isEmpty(q)
   return false
 end
-about[graph.bfs] = {"bfs(vStart,vGoal)",
+about[graph.bfs] = {"G:bfs(startNode,goalNode) --> isFound, path_t",
   "Breadth first search. Return result and found path.", SEARCH}
 
 --- Make the graph copy.
@@ -307,7 +307,7 @@ graph.copy = function (G)
   end
   return res
 end
-about[graph.copy] = {"copy()", "Get copy of the graph."}
+about[graph.copy] = {"G:copy() --> cpy_G", "Get copy of the graph."}
 
 --- Depth first search.
 --  @param G Graph.
@@ -336,7 +336,7 @@ graph.dfs = function (G, vStart, vGoal)
   until #stack == 0
   return false
 end
-about[graph.dfs] = {"dfs(vStart,vGoal)",
+about[graph.dfs] = {"G:dfs(startNote,goalNode) --> isFound, path_t",
   "Depth first search. Return result and found path.", SEARCH}
 
 --- Get graph edges.
@@ -363,7 +363,7 @@ graph.edges = function (G)
   end
   return res
 end
-about[graph.edges] = {"edges()", "List of graph edges."}
+about[graph.edges] = {"G:edges() --> edges_t", "List of graph edges."}
 
 --- Check graph completeness.
 --  @param G Graph.
@@ -375,8 +375,8 @@ graph.isComplete = function (G)
   end
   return true
 end
-about[graph.isComplete] = {
-  'isComplete()', 'Check completeness of the graph.', help.OTHER}
+about[graph.isComplete] = {'G:isComplete() --> bool', 
+  'Check completeness of the graph.', help.OTHER}
 
 --- Check if the graph is directed.
 --  @param G Graph object.
@@ -389,8 +389,8 @@ graph.isDirected = function (G)
   end
   return false
 end
-about[graph.isDirected] = {
-  'isDirected()', 'Check if the graph has directed edges.', help.OTHER}
+about[graph.isDirected] = {'G:isDirected() --> bool', 
+  'Check if the graph has directed edges.', help.OTHER}
 
 --- Check if graph has negative weights.
 --  @param G Graph object.
@@ -403,8 +403,8 @@ graph.isNegative = function (G)
   end
   return false
 end
-about[graph.isNegative] = {
-  'isNegative()', 'Check if the graph has negative edges.', help.OTHER}
+about[graph.isNegative] = {'G:isNegative() --> bool', 
+  'Check if the graph has negative edges.', help.OTHER}
 
 --- Check if the graph has weights different from default value.
 --  @param G Graph object.
@@ -417,8 +417,8 @@ graph.isWeighted = function (G)
   end
   return false
 end
-about[graph.isWeighted] = {
-  'isWeighted()', 'Check if any edge has weight different from 1.', help.OTHER}
+about[graph.isWeighted] = {'G:isWeighted() --> bool', 
+  'Check if any edge has weight different from 1.', help.OTHER}
 
 --- Get graph nodes.
 --  @param G Graph.
@@ -428,7 +428,7 @@ graph.nodes = function (G)
   for k in pairs(G) do res[#res+1] = tostring(k) end
   return res
 end
-about[graph.nodes] = {"nodes()", "List of graph nodes."}
+about[graph.nodes] = {"G:nodes() --> node_t", "List of graph nodes."}
 
 --- Find shortest path with Bellman-Ford algorithm/
 --  @param G Graph.
@@ -469,7 +469,7 @@ graph.pathBF = function (G, vStart, vGoal)
     return dist, prev
   end
 end
-about[graph.pathBF] = {'pathBF(vStart,[vGoal])',
+about[graph.pathBF] = {'G:pathBF(startNode,[goalNode]) --> dist_d, path_t|prev_t',
   'Shortest path search using Bellman-Ford algorithm.', SEARCH}
 
 --- Shortest path search using Dijkstra algorithm.
@@ -505,7 +505,7 @@ graph.pathD = function(G, vStart, vGoal)
     return dist, prev
   end
 end
-about[graph.pathD] = {'pathD(vStart,[vGoal])',
+about[graph.pathD] = {'G:pathD(startNode,[goalNode]) --> dist_d, path_t|prev_t',
   "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.",
   SEARCH}
 
@@ -525,7 +525,7 @@ graph.remove = function (G, v)
     G[v] = nil
   end
 end
-about[graph.remove] = {"remove(v)",
+about[graph.remove] = {"G:remove(var) --> nil",
   "Remove node or edge from the graph G. Node is a single name, edge - table of names."}
 
 --- Get number of nodes.
@@ -536,7 +536,7 @@ graph.__len = graph.size
 
 -- simplify constructor call
 setmetatable(graph, {__call = function (self, v) return graph:_new(v) end})
-about[graph] = {" {v1,v2,..}", "Create new graph.", help.NEW}
+about[graph] = {" {v1,v2,..} --> new_G", "Create new graph.", help.NEW}
 
 -- Comment to remove descriptions
 graph.about = about

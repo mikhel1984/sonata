@@ -365,7 +365,7 @@ end
 --- Module of complex number.
 --  @return Module of the number.
 complex.abs = complex._norm
-about[complex.abs] = {"abs()", "Return module of complex number."}
+about[complex.abs] = {"Z:abs() --> float", "Return module of complex number."}
 
 --- Inverse cosine.
 --  @param C Complex number.
@@ -373,14 +373,14 @@ about[complex.abs] = {"abs()", "Return module of complex number."}
 complex.acos = function (C)
   return -complex:i(1)*complex.log(C+complex.sqrt(C*C-1))
 end
-about[complex.acos] = {"acos()", "Complex inverse cosine.", FUNCTIONS}
+about[complex.acos] = {"Z:acos() --> y_Z", "Complex inverse cosine.", FUNCTIONS}
 
 --- Inverse hyperbolic cosine.
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic cosine.
 complex.acosh = function (C) return complex.log(C+complex.sqrt(C*C-1)) end
-about[complex.acosh] = {
-  "acosh()", "Complex inverse hyperbolic cosine.", FUNCTIONS}
+about[complex.acosh] = {"Z:acosh() --> y_Z", 
+  "Complex inverse hyperbolic cosine.", FUNCTIONS}
 
 --- Argument of complex number.
 --  @param C Complex number.
@@ -388,7 +388,7 @@ about[complex.acosh] = {
 complex.arg = function (C)
   return Ver.atan2(Cross.float(C._[2]), Cross.float(C._[1]))
 end
-about[complex.arg] = {"arg()", "Return argument of complex number."}
+about[complex.arg] = {"Z:arg() --> float", "Return argument of complex number."}
 
 --- Inverse sine.
 --  @param C Complex number.
@@ -397,14 +397,14 @@ complex.asin = function (C)
   local j = complex:i(1)
   return -j*complex.log(j*C+complex.sqrt(1-C*C))
 end
-about[complex.asin] = {"asin()", "Complex inverse sine.", FUNCTIONS}
+about[complex.asin] = {"Z:asin() --> y_Z", "Complex inverse sine.", FUNCTIONS}
 
 --- Inverse hyperbolic sine.
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic sine.
 complex.asinh = function (C) return complex.log(C+complex.sqrt(C*C+1)) end
-about[complex.asinh] = {
-  "asinh()", "Complex inverse hyperbolic sine.", FUNCTIONS}
+about[complex.asinh] = {"Z:asinh() --> y_Z", 
+  "Complex inverse hyperbolic sine.", FUNCTIONS}
 
 --- Inverse tangent.
 --  @param C Complex number.
@@ -413,14 +413,15 @@ complex.atan = function (C)
   local j = complex:i(1)
   return -0.5*j*complex.log((1+j*C)/(1-j*C))
 end
-about[complex.atan] = {"atan()", "Complex inverse tangent.", FUNCTIONS}
+about[complex.atan] = {"Z:atan() --> y_Z", 
+  "Complex inverse tangent.", FUNCTIONS}
 
 --- Inverse hyperbolic tangent.
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic tangent.
 complex.atanh = function (C) return 0.5*complex.log((1+C)/(1-C)) end
-about[complex.atanh] = {
-  "atanh()", "Complex inverse hyperbolic tangent.", FUNCTIONS}
+about[complex.atanh] = {"Z:atanh() --> y_Z", 
+  "Complex inverse hyperbolic tangent.", FUNCTIONS}
 
 --- Conjunction.
 --  @param C Complex number.
@@ -428,7 +429,8 @@ about[complex.atanh] = {
 complex.conj = function (C)
   return complex:_init(Cross.copy(C._[1]), -Cross.copy(C._[2]))
 end
-about[complex.conj] = {"conj()", "Return the complex conjugate. Equal to ~C."}
+about[complex.conj] = {"Z:conj() --> conj_Z", 
+  "Return the complex conjugate. Equal to ~C."}
 complex.__bnot = complex.conj
 
 --- Cosine
@@ -438,14 +440,15 @@ complex.cos = function (C)
   local c = C._
   return numcomp(complex:_init(fcos(c[1])*ch(c[2]), -fsin(c[1])*sh(c[2])))
 end
-about[complex.cos] = {"cos()", "Return cosine of a complex number.", FUNCTIONS}
+about[complex.cos] = {"Z:cos() --> y_Z", 
+  "Return cosine of a complex number.", FUNCTIONS}
 
 --- Hyperbolic cosine
 --  @param C Complex number.
 --  @return Complex hyperbolic cosine.
 complex.cosh = function (C) return 0.5*(complex.exp(C)+complex.exp(-C)) end
-about[complex.cosh] = {
-  "cosh()", "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
+about[complex.cosh] = {"Z:cosh() --> y_Z", 
+  "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
 
 --- Exponent
 --  @param C Complex number.
@@ -454,8 +457,8 @@ complex.exp = function (C)
   local r = fexp(C._[1])
   return numcomp(complex:_init(r*fcos(C._[2]), r*fsin(C._[2])))
 end
-about[complex.exp] = {
-  "exp()", "Return exponent in for complex argument.", FUNCTIONS}
+about[complex.exp] = {"Z:exp() --> y_Z", 
+  "Return exponent in for complex argument.", FUNCTIONS}
 
 -- Imaginary unit
 complex.i = function (self, v)
@@ -463,13 +466,13 @@ complex.i = function (self, v)
   assert(type(v) == 'number' or type(v) == 'table' and v.float, "Wrong number")
   return complex:_init(0, v)
 end
-about[complex.i] = {":i([v=1])", "Return v*i.", help.STATIC}
+about[complex.i] = {":i([x=1]) --> new_Z", "Return x*i.", help.STATIC}
 
 --- Get imaginary part.
 --  @param C Complex number.
 --  @return Imaginary part.
 complex.im = function (C) return C._[2] end
-about[complex.im] = {"im()", "Get imaginary part."}
+about[complex.im] = {"Z:im() --> var", "Get imaginary part."}
 
 --- Natural logarithm
 --  @param C Real or complex number.
@@ -485,13 +488,13 @@ complex.log = function (C)
     )
   end
 end
-about[complex.log] = {"log()", "Complex logarithm.", FUNCTIONS}
+about[complex.log] = {"Z:log() --> y_Z", "Complex logarithm.", FUNCTIONS}
 
 --- Get real part.
 --  @param C Complex number.
 --  @return Real part.
 complex.re = function (C) return C._[1] end
-about[complex.re] = {"re()", "Get real part."}
+about[complex.re] = {"Z:re() --> var", "Get real part."}
 
 --- Round real and imaginary parts to some number of digits in place.
 --  For non-float value round to 0.
@@ -506,8 +509,8 @@ complex.round = function (C, N)
             Cross.norm(b) < tol and 0 or b
   return complex:_init(a, b)
 end
-about[complex.round] = {
-  "round([N=6])", "Round in-place to specified number of digits."}
+about[complex.round] = {"Z:round([N=6]) --> rounded_Z", 
+  "Round in-place to specified number of digits."}
 
 --- Sinus
 --  @param C Complex number.
@@ -516,14 +519,14 @@ complex.sin = function (C)
   local c = C._
   return numcomp(complex:_init(fsin(c[1])*ch(c[2]), fcos(c[1])*sh(c[2])))
 end
-about[complex.sin] = {"sin()", "Return sinus of a complex number.", FUNCTIONS}
+about[complex.sin] = {"Z:sin() --> y_Z", "Return sinus of a complex number.", FUNCTIONS}
 
 --- Hyperbolic sinus
 --  @param C Complex number.
 --  @return Complex hyperbolic sinus.
 complex.sinh = function (C) return 0.5*(complex.exp(C)-complex.exp(-C)) end
-about[complex.sinh] = {
-  "sinh()", "Return hyperbolic sinus of a complex number.", FUNCTIONS}
+about[complex.sinh] = {"Z:sinh() --> y_Z", 
+  "Return hyperbolic sinus of a complex number.", FUNCTIONS}
 
 --- Square root with possibility of complex result.
 --  @param C Real or complex number.
@@ -535,8 +538,8 @@ complex.sqrt = function (C)
     return complex.__pow(C, 0.5)
   end
 end
-about[complex.sqrt] = {
-  "sqrt()", "Return square root. Result can be real of complex.", FUNCTIONS}
+about[complex.sqrt] = {"Z:sqrt() --> y_Z", 
+  "Return square root. Result can be real of complex.", FUNCTIONS}
 
 --- Tangent
 --  @param C Complex number.
@@ -546,15 +549,15 @@ complex.tan = function (C)
   local den = fcos(2*c[1]) + ch(2*c[2])
   return numcomp(complex:_init(fsin(2*c[1])/den, sh(2*c[2])/den))
 end
-about[complex.tan] = {
-  "tan()", "Return tangent of a complex number.", FUNCTIONS}
+about[complex.tan] = {"Z:tan() --> y_Z", 
+  "Return tangent of a complex number.", FUNCTIONS}
 
 --- Hyperbolic tangent
 --  @param C Complex number.
 --  @return Complex hyperbolic tangent.
 complex.tanh = function (C) return complex.sinh(C) / complex.cosh(C) end
-about[complex.tanh] = {
-  "tanh()", "Return hyperbolic tangent of a complex number.", FUNCTIONS}
+about[complex.tanh] = {"Z:tanh() --> y_Z", 
+  "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
 --- Create complex number from trigonometric representation.
 --  @param self Do nothing.
@@ -564,7 +567,7 @@ about[complex.tanh] = {
 complex.trig = function (self, vMod, vArg)
   return complex:_init(vMod*fcos(vArg), vMod*fsin(vArg))
 end
-about[complex.trig] = {":trig(vModule,vAngle)",
+about[complex.trig] = {":trig(module,angle) --> new_Z",
   "Create complex number using module and angle.", help.STATIC}
 
 -- simplify constructor call
@@ -579,9 +582,9 @@ __call = function (self, re, im)
   return complex:_init(re, im)
 end })
 about[complex] = {
-  " ([vRe=0,vIm=0])", "Create new complex number.", help.STATIC}
+  " ([re=0,im=0]) --> new_Z", "Create new complex number.", help.STATIC}
 
-if Sonata then
+if Sonata then  -- redefine some functions
 
 -- complex unit
 _i = complex:i(1)
