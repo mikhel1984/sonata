@@ -28,3 +28,18 @@ This file contains rules to make the system more homogeneous, readable and reusa
 
 * use LuaDoc comments
 * at least 2 whitespaces between code and line comment
+
+## Function help
+
+* consists of table with elements: short description, description, category
+
+Short descriptoin contains information about the function name, argument list and return value. The following rules are used
+
+* type of variable is defined with postfix if need, except the names that already define type, such as num, str, tbl, bool, fn, etc.
+* \_d, num - Lua numbers, \_f - float, \_i - int
+* \_s, str - Lua string
+* \_t, tbl - Lua table
+* \_N - natural number
+* \_fn, fn - function
+* \_v, var - several types can be used
+* capital letter usually means the Sonata object
