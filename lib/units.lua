@@ -509,8 +509,7 @@ units.convert = function (U, s)
   end
   return units._convertKey(U, units._memKeys[s])
 end
-about[units.convert] = {
-  'convert(s)','Convert one units to another, return new object or nil.', }
+about[units.convert] = {'U:convert(new_s) --> upd_U','Convert one units to another, return new object or nil.', }
 
 --- Create copy of the element.
 --  @param U Source object.
@@ -518,7 +517,7 @@ about[units.convert] = {
 units.copy = function (U)
   return setmetatable({_value=U._value, _key=U._key}, units)
 end
-about[units.copy] = {'copy()', 'Create copy of the element.', help.OTHER}
+about[units.copy] = {'U:copy() --> cpy_U', 'Create copy of the element.', help.OTHER}
 
 --- Convert table of units into string.
 --  @param U Units object.
@@ -549,7 +548,7 @@ units.key = function (U)
   end
   return num .. denom
 end
-about[units.key] = {'key()', 'Get units.'}
+about[units.key] = {'U:key() --> str', 'Get units.'}
 
 -- prefix list
 units.prefix = {
@@ -586,14 +585,16 @@ units.setRule = function (self, s, U)
   assert(isunits(U), 'Units object is expected!')
   self._rules[s] = U
 end
-about[units.setRule] = {':setRule(s,U)', 'Add new rule for conversation.'}
+about[units.setRule] = {':setRule(name_s,val_U) --> nil', 
+  'Add new rule for conversation.'}
 
 --- Value of the unit object.
 --  The same as #U.
 --  @param U Unit object.
 --  @return Value.
 units.value = function (U) return U and U._value or nil end
-about[units.value] = {'value()', 'Get object value. Same as #U.'}
+about[units.value] = {'U:value() --> var', 
+  'Get object value. Same as #U.'}
 units.__len = units.value
 
 -- simplify constructor call
@@ -607,8 +608,8 @@ __call = function (self, v, s)
   assert(type(s) == 'string', 'Wrong unit type')
   return units:_new(v, s)
 end})
-about[units] = {
-  ' ([v,]s)', 'Create new elements with units.', help.NEW}
+about[units] = {' ([v,]s) --> new_U', 
+  'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions
 units.about = about

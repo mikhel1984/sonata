@@ -339,8 +339,7 @@ end
 --  @param R Rational number.
 --  @return Denominator.
 rational.denom = function (R) return R._[2] end
-about[rational.denom] = {
-  "denom()", "Return the denominator of the rational number."}
+about[rational.denom] = {"R:denom() --> var", "Return the denominator of the rational number."}
 
 --- R1 == R2
 --  @param R1 First number.
@@ -361,7 +360,7 @@ rational.eq = function (R1, R2)
   local r1, r2 = R1._, R2._
   return Cross.eq(r1[1], r2[1]) and Cross.eq(r1[2], r2[2])
 end
-about[rational.eq] = {"eq(R)", "Compare two objects.", help.OTHER}
+about[rational.eq] = {"R:eq(x) --> bool", "Compare two objects.", help.OTHER}
 rational.__eq = rational.eq
 
 --- Float point representation.
@@ -371,7 +370,7 @@ rational.float = function (R)
   local r = R._
   return (r[1] < 0 and -1 or 1) * (Cross.norm(r[1]) / Cross.norm(r[2]))
 end
-about[rational.float] = {"float()", "Return rational number as decimal."}
+about[rational.float] = {"R:float() --> num", "Return rational number as decimal."}
 
 --- Get rational number approximation.
 --  @param self Do nothing.
@@ -389,7 +388,7 @@ rational.from = function (self, f, fErr)
   end
   return rational:_new(f >= 0 and a or -a, b)
 end
-about[rational.from] = {":from(f,[fErr=1E-3])",
+about[rational.from] = {":from(src_f,[err_f=1E-3]) --> R",
   "Estimate ratio from floating point value.", help.NEW}
 
 --- Get rational number from continued fraction coefficients.
@@ -411,7 +410,7 @@ rational.fromCont = function (self, t)
   else error("Integer is expected") end
   return rational:_new(rational._cont2rat(check))
 end
-about[rational.fromCont] = {":fromCont(t)",
+about[rational.fromCont] = {":fromCont(coeff_t) --> R",
   "Transform continued fraction to rational number.", help.NEW}
 
 --- The greatest common divisor.
@@ -422,14 +421,14 @@ about[rational.fromCont] = {":fromCont(t)",
 rational.gcd = function (self, va, vb)
   return Cross.eq(va, 0) and vb or rational:gcd(vb % va, va)
 end
-about[rational.gcd] = {":gcd(va,vb)",
+about[rational.gcd] = {":gcd(a_f,b_f) --> num",
   "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
 rational.num = function (R) return R._[1] end
-about[rational.num] = {"num()", "Return the numerator of rational number."}
+about[rational.num] = {"R:num() --> num", "Return the numerator of rational number."}
 
 --- Find continued fraction coefficients.
 --  @param R Positive rational number.
@@ -449,8 +448,8 @@ rational.toCont = function (R)
   res[#res+1] = math.modf(b)
   return setmetatable(res, _continued)
 end
-about[rational.toCont] = {
-  "toCont()", "Transform rational number to continued fraction.", help.OTHER}
+about[rational.toCont] = {"R:toCont() --> coeff_t", 
+  "Transform rational number to continued fraction.", help.OTHER}
 
 -- call constructor, check arguments
 setmetatable(rational, {
@@ -465,8 +464,8 @@ __call = function (self, n, d)
   assert(not Cross.eq(d, 0), "Wrond denomenator value")
   return rational:_new(n, d)
 end})
-about[rational] = {
-  " (m,[n=1])", "Create rational number using num (and denom).", help.NEW}
+about[rational] = {" (m,[n=1]) --> new_R", 
+  "Create rational number using num (and denom).", help.NEW}
 
 -- Comment to remove descriptions
 rational.about = about

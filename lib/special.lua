@@ -397,8 +397,8 @@ special.besseli = function (self, N, x)
   ans = ans*special._bessi0(x)/bi
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besseli] = {
-  ":besseli(N,x)", "Modified Bessel function In(x).", BESSEL}
+about[special.besseli] = {":besseli(order_N,x_d) --> num", 
+  "Modified Bessel function In(x).", BESSEL}
 
 --- Bessel function of the first kind
 --  @param self Do nothing.
@@ -443,8 +443,8 @@ special.besselj = function (self, N,x)
   end
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besselj] = {
-  ":besselj(N,x)", "Bessel function of the first kind.", BESSEL}
+about[special.besselj] = {":besselj(order_N,x_d) --> num", 
+  "Bessel function of the first kind.", BESSEL}
 
 --- Modified Bessel function Kn.
 --  @param self Do nothing.
@@ -462,8 +462,8 @@ special.besselk = function (self, N, x)
   end
   return bk
 end
-about[special.besselk] = {
-  ":besselk(N,x)", "Modified Bessel function Kn(x).", BESSEL}
+about[special.besselk] = {":besselk(order_N,x_d) --> num", 
+  "Modified Bessel function Kn(x).", BESSEL}
 
 --- Bessel function of the second kind
 --  @param self Do nothing.
@@ -483,8 +483,8 @@ special.bessely = function (self, n, x)
   end
   return by
 end
-about[special.bessely] = {
-  ":bessely(n,x)", "Bessel function of the second kind.", BESSEL}
+about[special.bessely] = {":bessely(order_N,x_d) --> num", 
+  "Bessel function of the second kind.", BESSEL}
 
 --- Beta function.
 --  @param self Do nothing.
@@ -494,7 +494,7 @@ about[special.bessely] = {
 special.beta = function (self, z, w)
   return math.exp(special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w))
 end
-about[special.beta] = {":beta(z,w)", "Beta function.", BETA}
+about[special.beta] = {":beta(z_d,w_d) --> num", "Beta function.", BETA}
 
 --- Incomplete beta function
 --  @param self Do nothing.
@@ -515,8 +515,8 @@ special.betainc = function (self, x, a, b)
          and (bt*special._betacf(a, b, x)/a)
          or (1.0-bt*special._betacf(b, a, 1.0-x)/b)
 end
-about[special.betainc] = {
-  ":betainc(x,a,b)", "Incomplete beta function Ix(a,b).", BETA}
+about[special.betainc] = {":betainc(x_d,a_d,b_d) --> num", 
+  "Incomplete beta function Ix(a,b).", BETA}
 
 --- Logarithm of beta function.
 --  @param self Do nothing.
@@ -526,8 +526,8 @@ about[special.betainc] = {
 special.betaln = function (self, z, w)
   return special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w)
 end
-about[special.betaln] = {
-  ":betaln(z,w)", "Natural logarithm of beta function.", BETA}
+about[special.betaln] = {":betaln(z_d,w_d) --> num", 
+  "Natural logarithm of beta function.", BETA}
 
 --- Dawson integral.
 --  @param self Do nothing.
@@ -557,14 +557,14 @@ special.dawson = function (self, x)
     return 0.5641895835*sum*(x>=0 and math.exp(-xp*xp) or -math.exp(-xp*xp))
   end
 end
-about[special.dawson] = {":dawson(x)", "Dawson integral."}
+about[special.dawson] = {":dawson(x_d) --> num", "Dawson integral."}
 
 --- Error function.
 --  @param self Do nothing.
 --  @param x Real value.
 --  @return Error value.
 special.erf = function (self, x) return 1-special:erfc(x) end
-about[special.erf] = {":erf(x)", "Error function."}
+about[special.erf] = {":erf(x_d) --> num", "Error function."}
 
 --- Complementary error function.
 --  @param self Do nothing.
@@ -578,7 +578,7 @@ special.erfc = function (self, x)
     + t*(1.48851587 + t*(-0.82215223 + t*0.17087277)))))))))
   return (x >= 0.0) and ans or (2.0 - ans)
 end
-about[special.erfc] = {":erfc(x)", "Complementary error function."}
+about[special.erfc] = {":erfc(x_d) --> num", "Complementary error function."}
 
 --- Exponential integral.
 --  @param self Do nothing.
@@ -624,7 +624,7 @@ special.expint = function (self, n, x)
   end -- if x
   error('Evaluation is failed!')
 end
-about[special.expint] = {":expint(n,x)", "Exponential integral En(x)."}
+about[special.expint] = {":expint(pow_N,x_d) --> num", "Exponential integral En(x)."}
 
 --- Gamma function.
 --  @param self Do nothing.
@@ -641,7 +641,7 @@ special.gamma = function (self, z)
     return math.sqrt(2*math.pi)*t^(z+0.5)*math.exp(-t)*x
   end
 end
-about[special.gamma] = {":gamma(z)", "Gamma function.", GAMMA}
+about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", GAMMA}
 
 --- Other syntax for incomplete gamma function.
 --  @param self Do nothing.
@@ -656,7 +656,7 @@ special.gammainc = function (self, x, N, tp)
   else error('Unexpected type '..tostring(tp))
   end
 end
-about[special.gammainc] = {":gammainc(x,N,[type='lower'])",
+about[special.gammainc] = {":gammainc(x_d,order_N,[type_s='lower']) --> num",
   "Incomplete gamma function, P (type='lower') or Q (type='upper').", GAMMA}
 
 --- Logarithm of gamma function.
@@ -671,8 +671,8 @@ special.gammaln = function (self, z)
   for i = 1, #k_gammaln do y=y+1; ser = ser+k_gammaln[i]/y end
   return -tmp+math.log(2.5066282746310005*ser/x)
 end
-about[special.gammaln] = {
-  ":gammaln(z)", "Natural logarithm of gamma function.", GAMMA}
+about[special.gammaln] = {":gammaln(x_d) --> num", 
+  "Natural logarithm of gamma function.", GAMMA}
 
 --- Incomplete gamma function P(N,x).
 --  @param self Do nothing.
@@ -683,8 +683,7 @@ special.gammp = function (self, N, x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and special._gammaSer(N, x) or 1.0-special._gcf(N, x)
 end
-about[special.gammp] = {
-  ":gammp(N,x)", "Incomplete gamma function P(N,x).", GAMMA}
+about[special.gammp] = {":gammp(order_N,x_d) --> num", "Incomplete gamma function P(N,x).", GAMMA}
 
 --- Incomplete gamma function Q(N,x).
 --  @param self Do nothing.
@@ -695,8 +694,8 @@ special.gammq = function (self, N, x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and 1-special._gammaSer(N, x) or special._gcf(N, x)
 end
-about[special.gammq] = {
-  ":gammq(N,x)", "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
+about[special.gammq] = {":gammq(order_N,x_d) --> num", 
+  "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
 
 --- List of Legendre coefficients.
 --  @param self Do nothing.
@@ -710,7 +709,7 @@ special.legendre = function (self, n, x)
   for i = 1, n+1 do res[i] = plgndr(n, i-1, x) end
   return res
 end
-about[special.legendre] = {":legendre(n,x)",
+about[special.legendre] = {":legendre(order_N,x_d) --> coeff_t",
   "Return list of Legendre polynomial coefficients."}
 
 -- Comment to remove descriptions

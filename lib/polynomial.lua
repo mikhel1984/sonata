@@ -494,7 +494,7 @@ polynomial.build = function (self, ...)
   end
   return res
 end
-about[polynomial.build] = {":build(root1,root2,...)",
+about[polynomial.build] = {":build(root1,root2,...) --> P",
   "Return polynomial with given roots.", help.OTHER}
 
 --- Find characteristic polinomial for the matrix.
@@ -508,7 +508,7 @@ polynomial.char = function (self, M)
   end
   return m:minor(0, 0)
 end
-about[polynomial.char] = {":char(M)",
+about[polynomial.char] = {":char(M) --> P",
   "Return characteristic polinomial for the given matrix."}
 
 --- Create copy of object.
@@ -521,7 +521,8 @@ polynomial.copy = function (P)
   end
   return polynomial:_init(res)
 end
-about[polynomial.copy] = {"copy()", "Get copy of the polynomial.", help.OTHER}
+about[polynomial.copy] = {"P:copy() --> cpy_P", 
+  "Get copy of the polynomial.", help.OTHER}
 
 --- Get derivative.
 --  @param P Initial polynomial.
@@ -533,7 +534,8 @@ polynomial.der = function (P)
   end
   return numpoly(polynomial:_init(der))
 end
-about[polynomial.der] = {"der()", "Calculate derivative of polynomial."}
+about[polynomial.der] = {"P:der() --> der_P", 
+  "Calculate derivative of polynomial."}
 
 --- Find the best polynomial approximation for the line.
 --  @param self Do nothing.
@@ -577,8 +579,8 @@ polynomial.fit = function (self, tX, tY, N)
   for i = 1, N+1 do res[i] = gaus(i, -1) end
   return polynomial._reorder(res)
 end
-about[polynomial.fit] = {
-  ":fit(tX,tY,N)", "Find polynomial approximation for the line.", FIT}
+about[polynomial.fit] = {":fit(xs_t,ys_t,order_N) --> P", 
+  "Find polynomial approximation for the line.", FIT}
 
 --- Get integral.
 --  @param P Initial polynomial.
@@ -591,8 +593,8 @@ polynomial.int = function (P, d0)
   end
   return polynomial:_init(int)
 end
-about[polynomial.int] = {
-  "int([d0=0])", "Calculate integral, d0 - free coefficient."}
+about[polynomial.int] = {"P:int([x0_d=0]) --> int_P", 
+  "Calculate integral, d0 - free coefficient."}
 
 --- Find interpolation polinomial in the Lagrange form.
 --  @param self Do nothing.
@@ -620,7 +622,7 @@ polynomial.lagrange = function (self, tX, tY)
   end
   return numpoly(reduce(res))
 end
-about[polynomial.lagrange] = {":lagrange(tX,tY)",
+about[polynomial.lagrange] = {":lagrange(xs_t,ys_t) --> P",
   "Find interpolation polynomial in the Lagrange form.", FIT}
 
 --- Linear data interpolation.
@@ -641,7 +643,7 @@ polynomial.lin = function (self, tX, tY, v0, vN)
   if v0 then res[#res+1] = { xp+1, polynomial:_init({[0] = vN or v0}) } end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.lin] = {":lin(tX,tY,[v0=0,vN=v0])",
+about[polynomial.lin] = {":lin(xs_t,ys_t,[yBefore_d=0,yAfter_d=y0]) --> P",
   "Linear data interpolation. Return table with polynomials.", FIT}
 
 --- Evaluate value for table of polynomials (piecewise polynomial).
@@ -670,7 +672,7 @@ polynomial.ppval = function (self, tP, d, N)
     return polynomial:ppval(tP, d, N)
   end
 end
-about[polynomial.ppval] = {":ppval(tP,d,[N]",
+about[polynomial.ppval] = {":ppval(Ps_t,x_d,[index_N] --> num",
   "Return value of a piecewise polynomial in the point and the polynomial index.",
   FIT}
 
@@ -704,8 +706,8 @@ polynomial.real = function (P)
   table.sort(res, function (a, b) return math.abs(a) > math.abs(b) end)
   return res, pp
 end
-about[polynomial.real] = {
-  "real()", "Find real roots of the polynomial.", help.OTHER}
+about[polynomial.real] = {"P:real() --> roots_t", 
+  "Find real roots of the polynomial.", help.OTHER}
 
 --- Find all the polynomial roots.
 --  @param P Source polynomial.
@@ -741,8 +743,8 @@ polynomial.roots = function (P)
   table.sort(r, sortRoots)
   return r
 end
-about[polynomial.roots] = {
-  "roots()", "Find all the polynomial roots.", help.OTHER}
+about[polynomial.roots] = {"P:roots() --> roots_t", 
+  "Find all the polynomial roots.", help.OTHER}
 
 --- Cubic spline data interpolation.
 --  Use 'natural' boundary conditions.
@@ -790,7 +792,7 @@ polynomial.spline = function (self, tX, tY)
   end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.spline] = {":spline(tX,tY)",
+about[polynomial.spline] = {":spline(xs_t,ys_t) --> Ps_t",
   "Cubic spline data interpolation. Return table with polynomials.", FIT}
 
 --- Represent polynomial in "natural" form.
@@ -832,8 +834,8 @@ polynomial.taylor = function (self, v, vF, ...)
   end
   return numpoly(res)
 end
-about[polynomial.taylor] = {
-  ":taylor(v,vF,[vF',vF''..])", "Get Taylor series.", FIT}
+about[polynomial.taylor] = {":taylor(x_d,fx_d,[fx'_d,fx''_d,..]) --> P", 
+  "Get Taylor series.", FIT}
 
 --- Polynomial value.
 --  Can be called with ().
@@ -845,7 +847,8 @@ polynomial.val = function (P, v)
   for i = #P-1, 0, -1 do res = res * v + P[i] end
   return res
 end
-about[polynomial.val] = {"val(v)", "Get value of polynomial P in point x."}
+about[polynomial.val] = {"P:val(x) --> y", 
+  "Get value of polynomial P in point x."}
 -- simplify call
 polynomial.__call = function (p, x) return polynomial.val(p, x) end
 
@@ -860,7 +863,7 @@ __call = function (self, t)
   end
   return polynomial._reorder(t)
 end})
-about[polynomial] = {" {..,v1,v0}", "Create a polynomial.", help.NEW}
+about[polynomial] = {" {..,v1,v0} --> new_P", "Create a polynomial.", help.NEW}
 
 -- Comment to remove descriptions
 polynomial.about = about

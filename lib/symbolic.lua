@@ -205,7 +205,7 @@ symbolic.def = function (self, sName, tArgs, S)
   symbolic._fnList[sName] = { args = t, body = S }
   return symbolic:_newSymbol(sName)
 end
-about[symbolic.def] = {":def(sName,tArgs,S)", 
+about[symbolic.def] = {":def(name_s,args_t,expr_S) --> fn_S", 
   "Define symbolical function. S is either symbolic expression or a Lua function."}
 
 --- Find derivative dS1/dS2.
@@ -216,7 +216,7 @@ symbolic.diff = function (S1, S2)
   if S1:_isfn() then error('Undefined arguments') end
   return S1:p_diff(S2)
 end
-about[symbolic.diff] = {"diff(S1,S2)", "Find symbolic derivative."}
+about[symbolic.diff] = {"S:diff(var_S) --> derivative_S", "Find symbolic derivative."}
 
 --- Find value for the given substitutions.
 --  @param S Symbolic object.
@@ -228,7 +228,8 @@ symbolic.eval = function (S, tEnv)
   res:p_signature()
   return res
 end
-about[symbolic.eval] = {"eval([tEnv])", "Evaluate symbolic expression with the given environment."}
+about[symbolic.eval] = {"S:eval([env_t={}]) --> upd_S|num", 
+  "Evaluate symbolic expression with the given environment."}
 
 --- Find function using its name.
 --  @param self Do nothing.
@@ -238,7 +239,8 @@ symbolic.fn = function (self, sName)
   return symbolic._fnInit[sName] or 
     symbolic._fnList[sName] and symbolic:_newSymbol(sName) or nil
 end
-about[symbolic.fn] = {":fn(sName)", "Return symbolic function if it is defined."}
+about[symbolic.fn] = {":fn(name_s) --> fn_S", 
+  "Return symbolic function if it is defined."}
 
 --- Show internal structure of expression.
 --  @param S Symbolic expression.
@@ -246,13 +248,13 @@ about[symbolic.fn] = {":fn(sName)", "Return symbolic function if it is defined."
 symbolic.introspect = function (S)
   return S:p_internal(0)
 end
-about[symbolic.introspect] = {"introspect(S)", "Show the internal structure."}
+about[symbolic.introspect] = {"S:introspect() --> str", "Show the internal structure."}
 
 --- Check if the symbol is function.
 --  @param S Symbolic variable.
 --  @return true when it is function.
 symbolic.isFn = function (S) return S:_isfn() end
-about[symbolic.isFn] = {'isFn()', 'Return true if the symbol is function.'}
+about[symbolic.isFn] = {'S:isFn() --> bool', 'Return true if the symbol is function.'}
 
 --- Get name of variable.
 --  @param S Symbolic object.
@@ -274,7 +276,7 @@ symbolic.parse = function(self, str)
   end
   return table.unpack(res)
 end
-about[symbolic.parse] = {":parse(str)", "Get simbolic expression from string."}
+about[symbolic.parse] = {":parse(expr_s) --> S1,S2,..", "Get simbolic expression from string."}
 
 --- Get value of constant.
 --  @param S Symbolic object.
@@ -294,7 +296,7 @@ __call = function (self, v)
   end
   error("Wrong argument "..tostring(v))
 end})
-about[symbolic] = {" (v)", "Create new symbolic variable.", help.NEW}
+about[symbolic] = {" (var) --> new_S", "Create new symbolic variable.", help.NEW}
 
 
 -- Comment to remove descriptions
