@@ -141,7 +141,7 @@ local makeDialog = function (tbl, tLang)
   }
   for k, v in pairs(tbl) do
     local title = sformat('["%s"]', k)
-    local line = sformat('%-24s = [[%s]],', title, lng[k] or v)
+    local line = sformat('%-26s = [[%s]],', title, lng[k] or v)
     if not lng[k] then
       line = sformat((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
     end
@@ -171,7 +171,7 @@ local makeModule = function (sName, tLang)
       elt, desc = v[TITLE], v[DESCRIPTION]
     end
     local title = sformat('["%s"]', elt)
-    local line = sformat('%-24s = [[%s]],', title, lng[elt] or desc)
+    local line = sformat('%-26s = [[%s]],', title, lng[elt] or desc)
     if lng[elt] then   -- found translation
       res[#res+1] = line
     else
