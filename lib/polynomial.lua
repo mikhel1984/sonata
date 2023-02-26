@@ -672,7 +672,7 @@ polynomial.ppval = function (self, tP, d, N)
     return polynomial:ppval(tP, d, N)
   end
 end
-about[polynomial.ppval] = {":ppval(Ps_t,x_d,[index_N] --> num",
+about[polynomial.ppval] = {":ppval(Ps_t,x_d,[index_N]) --> num",
   "Return value of a piecewise polynomial in the point and the polynomial index.",
   FIT}
 
@@ -814,6 +814,8 @@ polynomial.str = function (P, s)
   if type(b) ~= 'number' or b ~= 0 then res[#res+1] = tostring(b) end
   return table.concat(res)
 end
+about[polynomial.str] = {"P:str(char_s='x') --> str", 
+  "Pretty print for polynomial.", help.OTHER}
 
 --- Find Taylor series.
 --  @param self Do nothing.
@@ -874,3 +876,4 @@ return polynomial
 --TODO: other types of splines
 --TODO: other conditions for cubic spline
 --TODO: remove Poly:ppval
+--TODO: Newton polynomial

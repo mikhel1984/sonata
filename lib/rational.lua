@@ -428,7 +428,7 @@ about[rational.gcd] = {":gcd(a_f,b_f) --> num",
 --  @param R Rational number.
 --  @return Numerator.
 rational.num = function (R) return R._[1] end
-about[rational.num] = {"R:num() --> num", "Return the numerator of rational number."}
+about[rational.num] = {"R:num() --> var", "Return the numerator of rational number."}
 
 --- Find continued fraction coefficients.
 --  @param R Positive rational number.
@@ -464,7 +464,7 @@ __call = function (self, n, d)
   assert(not Cross.eq(d, 0), "Wrond denomenator value")
   return rational:_new(n, d)
 end})
-about[rational] = {" (m,[n=1]) --> new_R", 
+about[rational] = {" (num,[denom=1]) --> new_R", 
   "Create rational number using num (and denom).", help.NEW}
 
 -- Comment to remove descriptions

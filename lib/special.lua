@@ -643,22 +643,6 @@ special.gamma = function (self, z)
 end
 about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", GAMMA}
 
---- Other syntax for incomplete gamma function.
---  @param self Do nothing.
---  @param x Real value.
---  @param N Order.
---  @param tp Type of function ('lower' of 'upper').
---  @return Value of correspondent incomplete function.
-special.gammainc = function (self, x, N, tp)
-  tp = tp or 'lower'
-  if     tp == 'lower' then return special:gammp(N, x)
-  elseif tp == 'upper' then return special:gammq(N, x)
-  else error('Unexpected type '..tostring(tp))
-  end
-end
-about[special.gammainc] = {":gammainc(x_d,order_N,[type_s='lower']) --> num",
-  "Incomplete gamma function, P (type='lower') or Q (type='upper').", GAMMA}
-
 --- Logarithm of gamma function.
 --  @param self Do nothing.
 --  @param z Positive number.

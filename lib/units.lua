@@ -102,13 +102,15 @@ end
 
 -- Operations with tables of units.
 local op = {
-['*'] = function(u1, u2) for k, v in pairs(u2) do
-          u1[k] = (u1[k] or 0) + v end
+['*'] = function(u1, u2) 
+          for k, v in pairs(u2) do u1[k] = (u1[k] or 0) + v end
         end,
-['/'] = function(u1, u2) for k, v in pairs(u2) do
-          u1[k] = (u1[k] or 0) - v end
+['/'] = function(u1, u2) 
+          for k, v in pairs(u2) do u1[k] = (u1[k] or 0) - v end
         end,
-['^'] = function(u, n) for k, v in pairs(u) do u[k] = v*n end end
+['^'] = function(u, n) 
+          for k, v in pairs(u) do u[k] = v*n end 
+        end
 }
 
 --- Check equality of float point numbers.
@@ -250,7 +252,6 @@ units.__sub = function (U1, U2)
   res._value = res._value - tmp._value
   return res
 end
-
 
 --- Units representation as string.
 --  @param U Unit object.
@@ -509,7 +510,7 @@ units.convert = function (U, s)
   end
   return units._convertKey(U, units._memKeys[s])
 end
-about[units.convert] = {'U:convert(new_s) --> upd_U','Convert one units to another, return new object or nil.', }
+about[units.convert] = {'U:convert(new_s) --> upd_U|nil','Convert one units to another, return new object or nil.', }
 
 --- Create copy of the element.
 --  @param U Source object.
@@ -593,8 +594,7 @@ about[units.setRule] = {':setRule(name_s,val_U) --> nil',
 --  @param U Unit object.
 --  @return Value.
 units.value = function (U) return U and U._value or nil end
-about[units.value] = {'U:value() --> var', 
-  'Get object value. Same as #U.'}
+about[units.value] = {'U:value() --> var', 'Get object value. Same as #U.'}
 units.__len = units.value
 
 -- simplify constructor call
@@ -608,7 +608,7 @@ __call = function (self, v, s)
   assert(type(s) == 'string', 'Wrong unit type')
   return units:_new(v, s)
 end})
-about[units] = {' ([v,]s) --> new_U', 
+about[units] = {' ([val=1],name_s) --> new_U', 
   'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions

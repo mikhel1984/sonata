@@ -161,8 +161,8 @@ data.cov2 = function (self, t1, t2)
   end
   return s / #t1
 end
-about[data.cov2] = {
-  ":cov2(t1,t2) --> float", "Find covariance value for two vectors.", STAT}
+about[data.cov2] = {":cov2(xs_t,ys_t) --> float", 
+  "Find covariance value for two vectors.", STAT}
 
 --- Estimate covariance matrix.
 --  @param self Do nothing.
@@ -183,8 +183,8 @@ data.cov = function (self, t)
   end
   return m
 end
-about[data.cov] = {
-  ":cov(t) --> cov_M", "Find covariance matrix for list of vectors.", STAT}
+about[data.cov] = {":cov(data_t) --> cov_M", 
+  "Find covariance matrix for list of vectors.", STAT}
 
 --- Save Lua table in file, use given delimiter.
 --  @param self Do nothing.
@@ -216,7 +216,7 @@ data.csvwrite = function (self, sFile, t, char, bCol)
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {":csvwrite(file_s,t,[char=',',isCol=false]) --> nil",
+about[data.csvwrite] = {":csvwrite(file_s,data_t,[char=',',isCol=false]) --> nil",
   "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
@@ -394,7 +394,7 @@ data.histcounts = function (self, t, rng)
   end
   return res, bins
 end
-about[data.histcounts] = {":histcounts(data_t,[rng=10]) --> sum_t, edges_t",
+about[data.histcounts] = {":histcounts(data_t,[rng_v=10]) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", STAT}
 
 --- Find weights (1/0) based on condition.

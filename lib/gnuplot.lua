@@ -320,7 +320,7 @@ end
 --  @param G Gnuplot object.
 --  @param tCurve Table with function/table and parameters.
 gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
-about[gnuplot.add] = {"G:add(curve) --> nil", "Add new curve to figure."}
+about[gnuplot.add] = {"G:add(curve_v) --> nil", "Add new curve to figure."}
 
 --- Get copy of graph options.
 --  @param G Initial table.

@@ -239,7 +239,7 @@ symbolic.fn = function (self, sName)
   return symbolic._fnInit[sName] or 
     symbolic._fnList[sName] and symbolic:_newSymbol(sName) or nil
 end
-about[symbolic.fn] = {":fn(name_s) --> fn_S", 
+about[symbolic.fn] = {":fn(name_s) --> fn_S|nil", 
   "Return symbolic function if it is defined."}
 
 --- Show internal structure of expression.
@@ -276,7 +276,7 @@ symbolic.parse = function(self, str)
   end
   return table.unpack(res)
 end
-about[symbolic.parse] = {":parse(expr_s) --> S1,S2,..", "Get simbolic expression from string."}
+about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..", "Get simbolic expression from string."}
 
 --- Get value of constant.
 --  @param S Symbolic object.

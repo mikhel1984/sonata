@@ -199,7 +199,7 @@ lens._init = function(self, t) return setmetatable(t, self) end
 lens.afocal = function (self, dm)
   return lens:_init({dm, 0, 0, 1/dm})
 end
-about[lens.afocal] = {":afocal(magn_d) --> new_L", 
+about[lens.afocal] = {":afocal(magn_d) --> L", 
   "Find matrix for the afocal system.", help.NEW}
 
 --- Find Gaussian beam parameters after transformation.
@@ -232,7 +232,7 @@ about[lens.copy] = {"L:copy() --> cpy_L", "Create a copy of the object."}
 lens.det = function (L)
   return L[1]*L[4] - L[2]*L[3]
 end
-about[lens.det] = {"L:det() --> det_d", 
+about[lens.det] = {"L:det() --> determinant_d", 
   "Find determinant of the system matrix.", help.OTHER}
 
 --- Find Gaussian beam characterictics.
@@ -244,7 +244,7 @@ lens.gaussParam = function (self, dW0, dLam)
   local t = math.pi * dW0 / dLam
   return 1/t, t * dW0
 end
-about[lens.gaussParam] = {":gausParam(waist_d,lambda_d) --> div_d, range_d",
+about[lens.gaussParam] = {":gaussParam(waist_d,lambda_d) --> div_d, range_d",
   "Find divergence angle and Raileigh range for a Gaussian beam.", LASER}
 
 --- Find Gaussian beam propagation.
@@ -286,7 +286,7 @@ about[lens.isUnit] = {"L:isUnit() --> bool",
 lens.mirror = function (self, dr, dn)
   return lens:_init({ 1, 0, 2*dn/dr, 1 })
 end
-about[lens.mirror] = {":mirror(rad_d,n_d) --> new_L",
+about[lens.mirror] = {":mirror(rad_d,n_d) --> L",
   "Find reflection matrix for the given radius and refractive index.",
   help.NEW}
 
@@ -299,7 +299,7 @@ about[lens.mirror] = {":mirror(rad_d,n_d) --> new_L",
 lens.ref = function (self, dr, dn1, dn2)
   return lens:_init({ 1,  0, -(dn2-dn1)/dr, 1 })
 end
-about[lens.ref] = {":ref(rad_d,n1_d,n2_d) --> new_L",
+about[lens.ref] = {":ref(rad_d,n1_d,n2_d) --> L",
   "Find refraction matrix for the given radius of surface and input and output refractive indeces.",
   help.NEW}
 
@@ -330,7 +330,7 @@ about[lens.solve] = {":solve(fn,index_N,initial_d) --> found_d",
 lens.thin = function (self, df)
   return lens:_init({ 1, 0, -1/df, 1 })
 end
-about[lens.thin] = {":thin(focalDist_d) --> new_L",
+about[lens.thin] = {":thin(focalDist_d) --> L",
   "Find the thin lens system matrix for the given focal distance.", help.NEW}
 
 --- Make component for translation.
@@ -341,7 +341,7 @@ about[lens.thin] = {":thin(focalDist_d) --> new_L",
 lens.trans = function (self, dt, dn)
   return lens:_init({ 1, dt/dn, 0, 1 })
 end
-about[lens.trans] = {":trans(dist_d,n_d) --> new_L",
+about[lens.trans] = {":trans(dist_d,n_d) --> L",
   "Find translation matrix for the given distance and refractive index.",
   help.NEW}
 
@@ -401,7 +401,7 @@ lens.cardinal = function (L, dn1, dn2)
 
   return setmetatable(res, mt_cardinal)
 end
-about[lens.cardinal] = {"L:cardinal([nLft_d=1,nRht_d=1])",
+about[lens.cardinal] = {"L:cardinal([nLft_d=1,nRht_d=1]) --> points_t",
   "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.",
   help.OTHER}
 
@@ -411,7 +411,7 @@ __call = function (self, t)
   assert(#t == 4)
   return lens:_init(t)
 end})
-about[lens] = {" {dA,dB,dC,dD} --> new_L", "Make new lens component.", help.NEW}
+about[lens] = {" {A_d,B_d,C_d,D_d} --> new_L", "Make new lens component.", help.NEW}
 
 -- Comment to remove descriptions
 lens.about = about
@@ -419,4 +419,4 @@ lens.about = about
 return lens
 
 --======================================
-
+--TODO rename ref -> R, trans -> T

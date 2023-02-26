@@ -595,7 +595,7 @@ geodesy.grav = function (self, dB)
   s = s * s  -- get square
   return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
 end
-about[geodesy.grav] = {":grav(latitude) --> num",
+about[geodesy.grav] = {":grav(latitude_d) --> num",
   "International gravity formula, angle in degrees.", help.OTHER}
 
 --- Convert hash to corrdinates.
@@ -697,17 +697,15 @@ geodesy.ll2utm = ellipsoid.ll2utm
 about[geodesy.ll2utm] = {"E:ll2utm(blh_t) --> utm_t", 
   "Find UTM projection for the given coordinates.", PROJ}
 
-geodesy.solveInv = ellipsoid.solveInv
-about[geodesy.solveInv] = {"E:solveInv(blh1_t,blh2_t) --> dist_d, az1_d, az2_d",
-  "Solve inverse geodetic problem, find distance and azimuths for two points.",
-  PROB}
-
--- ellipsoid.solveDir = function (E, t1, a1, dist)
 geodesy.solveDir = ellipsoid.solveDir
 about[geodesy.solveDir] = {"E:solveDir(blh_t,az1_d,dist_d) --> blh_t, az2_d",
   "Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.",
   PROB}
 
+geodesy.solveInv = ellipsoid.solveInv
+about[geodesy.solveInv] = {"E:solveInv(blh1_t,blh2_t) --> dist_d, az1_d, az2_d",
+  "Solve inverse geodetic problem, find distance and azimuths for two points.",
+  PROB}
 
 --- Simplify configuration of coordinate transformation between ellipsoids.
 --  @param E1 First ellipsoid object.
@@ -747,6 +745,24 @@ about[geodesy.blhInto] = {"E.blhInto[E2]",
   "Get function to transform geodetic coordinates from A to B system using the Molodensky method.",
   TRANS}
 
+--- Find cartesian coordinates of a point with topocentric coordinates.
+--  @param self Do nothing.
+--  @param g Geodetic coordinates of the reference point.
+--  @param r Cartesian coordinates of the reference point.
+--  @param l Topocentric coordinates of the observed point.
+--  @return Cartesian coordinates of the observed point.
+geodesy.fromENU = function (self, tG, tR, tL)
+  local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
+  local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
+  return {
+    X = tR.X - sL*tL.X - sB*cL*tL.Y + cB*cL*tL.Z,
+    Y = tR.Y + cL*tL.X - sB*sL*tL.Y + cB*sL*tL.Z,
+    Z = tR.Z + cB*tL.Y + sB*tL.Z
+  }
+end
+about[geodesy.fromENU] = {":fromENU(blRef_t,xyzRef_t,top_t) --> xyzObs_t",
+  "Get cartesian coordinates of a local point in reference frame.", TRANS}
+
 --- Find topocentric coordinates of a point.
 --  @param self Do nothing.
 --  @param g Geodetic coordinates of the reference point.
@@ -765,24 +781,6 @@ geodesy.toENU = function (self, tG, tR, tP)
 end
 about[geodesy.toENU] = {":toENU(blRef_t,xyzRef_t,xyzObs_t) --> top_t",
   "Get topocentric coordinates of a point in reference frame.", TRANS}
-
---- Find cartesian coordinates of a point with topocentric coordinates.
---  @param self Do nothing.
---  @param g Geodetic coordinates of the reference point.
---  @param r Cartesian coordinates of the reference point.
---  @param l Topocentric coordinates of the observed point.
---  @return Cartesian coordinates of the observed point.
-geodesy.fromENU = function (self, tG, tR, tL)
-  local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
-  local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
-  return {
-    X = tR.X - sL*tL.X - sB*cL*tL.Y + cB*cL*tL.Z,
-    Y = tR.Y + cL*tL.X - sB*sL*tL.Y + cB*sL*tL.Z,
-    Z = tR.Z + cB*tL.Y + sB*tL.Z
-  }
-end
-about[geodesy.fromENU] = {":fromENU(blRef_t,xyzRef_t,top_t) --> xyzObs_t",
-  "Get cartesian coordinates of a local point in reference frame.", TRANS}
 
 -- Comment to remove descriptions
 geodesy.about = about

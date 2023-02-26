@@ -830,7 +830,7 @@ matrix.chol = function (M)
   end
   return a
 end
-about[matrix.chol] = {"M_chol() --> lower_M",
+about[matrix.chol] = {"M:chol() --> lower_M",
   "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
 
 --- Get number of columns.
@@ -990,7 +990,7 @@ matrix.eye = function (self, iR, iC, val)
   for i = 1, math.min(iR, iC) do m[i][i] = val end
   return m
 end
-about[matrix.eye] = {":eye(row_N,[col_N=row_N]) --> new_M", 
+about[matrix.eye] = {":eye(row_N,[col_N=row_N]) --> M", 
   "Create identity matrix.", help.NEW}
 
 --- Fill matrix with some value.
@@ -1009,7 +1009,7 @@ matrix.fill = function (self, iR, iC, val)
   end
   return m
 end
-about[matrix.fill] = {":fill(row_N,col_N,[val=1]) --> new_M",
+about[matrix.fill] = {":fill(row_N,col_N,[val=1]) --> M",
   "Create matrix of given numbers (default is 1).", help.NEW}
 
 --- Given's rotation.
@@ -1138,7 +1138,7 @@ matrix.insert = function (M1, tR, tC, M2)
     end
   end
 end
-about[matrix.insert] = {"insert(rows_t,cols_t,M) --> nil", 
+about[matrix.insert] = {"M:insert(rows_t,cols_t,M2) --> nil", 
   "Insert second matrix into the given range of indeces."}
 
 --- Inverse matrix.
@@ -1217,6 +1217,11 @@ about[matrix.map] = {"M:map(fn) --> found_M",
   "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).",
   TRANSFORM}
 
+--- Find minor for the matrix element.
+--  @param M Source matrix.
+--  @param ir Row index.
+--  @param ic Column index.
+--  @return minor matrix.
 matrix.minor = function (M, ir, ic)
   assert(M._rows == M._cols)
   if ir > 0 and ic > 0 and ir <= M._rows and ic <= M._cols then
@@ -1226,6 +1231,8 @@ matrix.minor = function (M, ir, ic)
     return matrix._firstMinor(M)
   end
 end
+about[matrix.minor] = {"M:minor(row_N,col_N) --> minor_M", 
+  "Find minor for the matrix element."}
 
 --- Euclidean norm of the matrix at whole.
 --  @param M Current matrix.
@@ -1528,7 +1535,7 @@ matrix.tr = function (M)
   for i = 1, math.min(M._rows, M._cols) do sum = sum + M[i][i] end
   return sum
 end
-about[matrix.tr] = {"M:tr() --> var", "Get trace of the matrix.", help.OTHER}
+about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix.", help.OTHER}
 
 --- Transpose matrix.
 --  @param M Initial matrix.
@@ -1567,7 +1574,7 @@ matrix.zeros = function (self, iR, iC)
   iC = iC or iR                          -- input is a number
   return matrix:_init(iR, iC, {})
 end
-about[matrix.zeros] = {":zeros(row_N,[col_N=row_N]) --> new_M", 
+about[matrix.zeros] = {":zeros(row_N,[col_N=row_N]) --> M", 
   "Create matrix of zeros.", help.NEW}
 
 --- Apply function element-wise to matrices.

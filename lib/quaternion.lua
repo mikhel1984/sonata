@@ -324,7 +324,7 @@ quaternion.fromAA = function (self, dAng, vAxe)
   if d > 0 then d = math.sin(dAng*0.5) / d end
   return quaternion:_new({math.cos(dAng*0.5), x*d, y*d, z*d})
 end
-about[quaternion.fromAA] = {':fromAA(angle_f,axis_f) --> Q','Create quaternion using angle and axis.', ROTATION}
+about[quaternion.fromAA] = {':fromAA(angle_d,axis_d) --> Q','Create quaternion using angle and axis.', ROTATION}
 
 --- Get quaternion from rotation matrix.
 --  @param self Do nothing.
@@ -416,7 +416,7 @@ quaternion.rotate = function (Q, vec)
   local p2 = Q*p1*quaternion.conj(Q)  -- TODO reuse p1
   return {p2._[2], p2._[3], p2._[4]}
 end
-about[quaternion.rotate] = {'Q:rotate(vec) --> outVec_t', 
+about[quaternion.rotate] = {'Q:rotate(inVec) --> outVec_t', 
   'Apply quaternion to rotate the vector.', ROTATION}
 
 --- Spherical linear interpolation.
@@ -524,3 +524,4 @@ return quaternion
 
 --======================================
 --TODO add math functions
+--TODO remove re, im
