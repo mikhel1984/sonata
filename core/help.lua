@@ -25,7 +25,6 @@ local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
-local COLON, SPACE = string.byte(':', 1, 1), string.byte(' ', 1, 1)
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -84,8 +83,7 @@ end
 --  @param alias Module alias name.
 --  @return 'name' or 'alias:name'
 help._toExtend = function(nm, alias)
-  local b = string.byte(nm, 1, 1)
-  return (b == COLON or b == SPACE) and alias..nm or nm
+  return (string.find(nm, '^[%a_]') == nil) and alias..nm or nm
 end
 
 --- Include content of the other help table into current one.

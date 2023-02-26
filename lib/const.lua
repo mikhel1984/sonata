@@ -100,29 +100,29 @@ ext_units = false,
 }
 
 -- physics
-about[_phy.G] = {"phy.G", "Gravitational constant.", PHY}
-about[_phy.e] = {"phy.e", "Electron charge.", PHY}
-about[_phy.mu0] = {"phy.mu0", "Permeability of free space.", PHY}
-about[_phy.R] = {"phy.R", "Universal gas constant.", PHY}
-about[_phy.Vm] = {"phy.Vm", "Volume of one mole of ideal gas.", PHY}
-about[_phy.NA] = {"phy.NA", "Avogadro's number.", PHY}
-about[_phy.k] = {"phy.k", "Boltzmann's constant.", PHY}
-about[_phy.h] = {"phy.h", "Planck's constant.", PHY}
-about[_phy.c] = {"phy.c", "Speed of light.", PHY}
-about[_phy.g] = {"phy.g", "Acceleration of free fall.", PHY}
-about[_phy.eps0] = {"phy.eps0", "Permittivity of free space.", PHY}
-about[_phy.sigma] = {"phy.sigma", "Stefan-Boltzmann constant.", PHY}
-about[_phy.Rinf] = {"phy.Rinf", "Rydberg constant.", PHY}
-about[_phy.Da] = {"phi.Da", "Unified atomic mass unit.", PHY}
+about[_phy.G] = {".phy.G", "Gravitational constant.", PHY}
+about[_phy.e] = {".phy.e", "Electron charge.", PHY}
+about[_phy.mu0] = {".phy.mu0", "Permeability of free space.", PHY}
+about[_phy.R] = {".phy.R", "Universal gas constant.", PHY}
+about[_phy.Vm] = {".phy.Vm", "Volume of one mole of ideal gas.", PHY}
+about[_phy.NA] = {".phy.NA", "Avogadro's number.", PHY}
+about[_phy.k] = {".phy.k", "Boltzmann's constant.", PHY}
+about[_phy.h] = {".phy.h", "Planck's constant.", PHY}
+about[_phy.c] = {".phy.c", "Speed of light.", PHY}
+about[_phy.g] = {".phy.g", "Acceleration of free fall.", PHY}
+about[_phy.eps0] = {".phy.eps0", "Permittivity of free space.", PHY}
+about[_phy.sigma] = {".phy.sigma", "Stefan-Boltzmann constant.", PHY}
+about[_phy.Rinf] = {".phy.Rinf", "Rydberg constant.", PHY}
+about[_phy.Da] = {".phi.Da", "Unified atomic mass unit.", PHY}
 -- astronomy
-about[_astro.pc] = {"astro.pc", "One parsec.", ASTRO}
-about[_astro.ly] = {"astro.ly", "One light year.", ASTRO}
-about[_astro.au] = {"astro.au", "Astronomic unit.", ASTRO}
+about[_astro.pc] = {".astro.pc", "One parsec.", ASTRO}
+about[_astro.ly] = {".astro.ly", "One light year.", ASTRO}
+about[_astro.au] = {".astro.au", "Astronomic unit.", ASTRO}
 -- mathematics
-about[_math.phi] = {"math.phi", "Golden ratio.", MATH}
+about[_math.phi] = {".math.phi", "Golden ratio.", MATH}
 about[_math.pi] = {
-  "math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
-about[_math.e] = {"math.e", "Base of the natural logarithm.", MATH}
+  ".math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
+about[_math.e] = {".math.e", "Base of the natural logarithm.", MATH}
 
 --- Convert to Unit object.
 --  @param t Table with the constant.
@@ -147,9 +147,8 @@ const.add = function (self, sName, val, sUnit)
   if _user[sName] then error('Cannot modify '..tostring(sName)) end
   _user[sName] = val
   _user[sName..'_u_'] = sUnit
-  return 'Done'
 end
-about[const.add] = {':add(sName,value,[sUnits])', 'Create new constant.'}
+about[const.add] = {':add(name_s,value,[units_s=nil]) --> nil', 'Create new constant.'}
 
 --- Remove existing constant.
 --  @param self Do nothing.
@@ -158,10 +157,11 @@ const.remove = function (self, sName)
   if _user[sName] then
     _user[sName] = nil
     _user[sName..'_u_'] = nil
-    return 'Done'
+    return true
   end
+  return false
 end
-about[const.remove] = {':remove(sName)', 'Delete user-defined constant.'}
+about[const.remove] = {':remove(name_s) --> bool', 'Delete user-defined constant.'}
 
 -- Comment to remove descriptions
 const.about = about
