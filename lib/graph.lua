@@ -292,7 +292,7 @@ graph.bfs = function (G, vStart, vGoal)
   until Queue.isEmpty(q)
   return false
 end
-about[graph.bfs] = {"G:bfs(startNode,goalNode) --> isFound, path_t",
+about[graph.bfs] = {"G:bfs(startNode, goalNode) --> isFound, path_t",
   "Breadth first search. Return result and found path.", SEARCH}
 
 --- Make the graph copy.
@@ -336,7 +336,7 @@ graph.dfs = function (G, vStart, vGoal)
   until #stack == 0
   return false
 end
-about[graph.dfs] = {"G:dfs(startNote,goalNode) --> isFound, path_t",
+about[graph.dfs] = {"G:dfs(startNote, goalNode) --> isFound, path_t",
   "Depth first search. Return result and found path.", SEARCH}
 
 --- Get graph edges.
@@ -469,7 +469,7 @@ graph.pathBF = function (G, vStart, vGoal)
     return dist, prev
   end
 end
-about[graph.pathBF] = {'G:pathBF(startNode,[goalNode]) --> dist_d, path_t|prev_t',
+about[graph.pathBF] = {'G:pathBF(startNode, [goalNode]) --> dist_d, path_t|prev_t',
   'Shortest path search using Bellman-Ford algorithm.', SEARCH}
 
 --- Shortest path search using Dijkstra algorithm.
@@ -505,7 +505,7 @@ graph.pathD = function(G, vStart, vGoal)
     return dist, prev
   end
 end
-about[graph.pathD] = {'G:pathD(startNode,[goalNode]) --> dist_d, path_t|prev_t',
+about[graph.pathD] = {'G:pathD(startNode, [goalNode]) --> dist_d, path_t|prev_t',
   "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.",
   SEARCH}
 
@@ -536,7 +536,7 @@ graph.__len = graph.size
 
 -- simplify constructor call
 setmetatable(graph, {__call = function (self, v) return graph:_new(v) end})
-about[graph] = {" {v1,v2,..} --> new_G", "Create new graph.", help.NEW}
+about[graph] = {" {v1, v2,..} --> new_G", "Create new graph.", help.NEW}
 
 -- Comment to remove descriptions
 graph.about = about

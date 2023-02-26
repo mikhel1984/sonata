@@ -215,7 +215,7 @@ lens.beam = function (L, dW, dR, dLam)
   local _1_q2 = (L[3] + L[4]*_1_q1) / (L[1] + L[2]*_1_q1)
   return math.sqrt(lampi / _1_q2:im()), 1/_1_q2:re()
 end
-about[lens.beam] = {"L:beam(inRad_d,inCurv_d,lambda_d) --> outRad_d, outCurv_d", 
+about[lens.beam] = {"L:beam(inRad_d, inCurv_d, lambda_d) --> outRad_d, outCurv_d", 
   "Find output beam radius and curvature.", LASER}
 
 --- Make a copy.
@@ -244,7 +244,7 @@ lens.gaussParam = function (self, dW0, dLam)
   local t = math.pi * dW0 / dLam
   return 1/t, t * dW0
 end
-about[lens.gaussParam] = {":gaussParam(waist_d,lambda_d) --> div_d, range_d",
+about[lens.gaussParam] = {":gaussParam(waist_d, lambda_d) --> div_d, range_d",
   "Find divergence angle and Raileigh range for a Gaussian beam.", LASER}
 
 --- Find Gaussian beam propagation.
@@ -257,7 +257,7 @@ lens.gaussSize = function (self, dW0, dLam, dist)
   local t = (math.pi * dW0 * dW0 / dLam / dist) ^ 2
   return dW0 * math.sqrt(1 + 1/t), dist * (1 + t)
 end
-about[lens.gaussSize] = {":gaussSize(waist_d,lambda_d,dist_d) --> rad_d, curv_d",
+about[lens.gaussSize] = {":gaussSize(waist_d, lambda_d, dist_d) --> rad_d, curv_d",
   "Find Gaussian beam radius and curvature at some distance.", LASER}
 
 --- Inverse the component matrix.
@@ -286,7 +286,7 @@ about[lens.isUnit] = {"L:isUnit() --> bool",
 lens.mirror = function (self, dr, dn)
   return lens:_init({ 1, 0, 2*dn/dr, 1 })
 end
-about[lens.mirror] = {":mirror(rad_d,n_d) --> L",
+about[lens.mirror] = {":mirror(rad_d, n_d) --> L",
   "Find reflection matrix for the given radius and refractive index.",
   help.NEW}
 
@@ -299,7 +299,7 @@ about[lens.mirror] = {":mirror(rad_d,n_d) --> L",
 lens.ref = function (self, dr, dn1, dn2)
   return lens:_init({ 1,  0, -(dn2-dn1)/dr, 1 })
 end
-about[lens.ref] = {":ref(rad_d,n1_d,n2_d) --> L",
+about[lens.ref] = {":ref(rad_d, n1_d, n2_d) --> L",
   "Find refraction matrix for the given radius of surface and input and output refractive indeces.",
   help.NEW}
 
@@ -320,7 +320,7 @@ lens.solve = function (self, fn, ind, d0)
   -- try to solve
   return lens.ext_numeric:newton(eqn, d0)
 end
-about[lens.solve] = {":solve(fn,index_N,initial_d) --> found_d",
+about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
   "Find condition when component with the given index is equal to 0, use initial assumption."}
 
 --- Make component for a thin lens.
@@ -341,7 +341,7 @@ about[lens.thin] = {":thin(focalDist_d) --> L",
 lens.trans = function (self, dt, dn)
   return lens:_init({ 1, dt/dn, 0, 1 })
 end
-about[lens.trans] = {":trans(dist_d,n_d) --> L",
+about[lens.trans] = {":trans(dist_d, n_d) --> L",
   "Find translation matrix for the given distance and refractive index.",
   help.NEW}
 
@@ -354,7 +354,7 @@ about[lens.trans] = {":trans(dist_d,n_d) --> L",
 lens.transform = function (L, dy, dV)
   return (L[1]*dy + L[2]*dV), (L[3]*dy + L[4]*dV)
 end
-about[lens.transform] = {"L:transform(yIn_d,VIn_d) --> yOut_d, VOut_d",
+about[lens.transform] = {"L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d",
   "Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to call L(dy,dV)."}
 -- Simplified call of transformation.
 lens.__call = lens.transform
@@ -401,7 +401,7 @@ lens.cardinal = function (L, dn1, dn2)
 
   return setmetatable(res, mt_cardinal)
 end
-about[lens.cardinal] = {"L:cardinal([nLft_d=1,nRht_d=1]) --> points_t",
+about[lens.cardinal] = {"L:cardinal(nLft_d=1, nRht_d=1) --> points_t",
   "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.",
   help.OTHER}
 
@@ -411,7 +411,7 @@ __call = function (self, t)
   assert(#t == 4)
   return lens:_init(t)
 end})
-about[lens] = {" {A_d,B_d,C_d,D_d} --> new_L", "Make new lens component.", help.NEW}
+about[lens] = {" {A_d, B_d, C_d, D_d} --> new_L", "Make new lens component.", help.NEW}
 
 -- Comment to remove descriptions
 lens.about = about

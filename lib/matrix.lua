@@ -869,7 +869,7 @@ matrix.concat = function (M1, M2, sDir)
   end
   return res
 end
-about[matrix.concat] = {"M:concat(M2,dir_s) --> comb_M",
+about[matrix.concat] = {"M:concat(M2, dir_s) --> comb_M",
   "Concatenate two matrices, dir='h' - in horizontal direction, dir='v' - in vertical\nUse M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.",
   TRANSFORM}
 
@@ -990,7 +990,7 @@ matrix.eye = function (self, iR, iC, val)
   for i = 1, math.min(iR, iC) do m[i][i] = val end
   return m
 end
-about[matrix.eye] = {":eye(row_N,[col_N=row_N]) --> M", 
+about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M", 
   "Create identity matrix.", help.NEW}
 
 --- Fill matrix with some value.
@@ -1009,7 +1009,7 @@ matrix.fill = function (self, iR, iC, val)
   end
   return m
 end
-about[matrix.fill] = {":fill(row_N,col_N,[val=1]) --> M",
+about[matrix.fill] = {":fill(row_N, col_N, val=1) --> M",
   "Create matrix of given numbers (default is 1).", help.NEW}
 
 --- Given's rotation.
@@ -1036,7 +1036,7 @@ matrix.givensRot = function (d1, d2)
      return t * s, s, d2 * u
    end
 end
-about[matrix.givensRot] = {":givensRot(elt1_v,elt2_v) --> cos_d, sin_d, len_d", 
+about[matrix.givensRot] = {":givensRot(x, y) --> cos_d, sin_d, len_d", 
   "Find parameters of Givens rotation (c,s,r).", help.OTHER}
 
 --- Householder transformation.
@@ -1053,7 +1053,7 @@ matrix.householder = function (V, ik)
   -- find matrix
   return matrix:eye(r) - u:H() * ( (2 / (u:norm() ^ 2)) * u)
 end
-about[matrix.householder] = {"M:householder(V,start_N) --> hh_M", 
+about[matrix.householder] = {"M:householder(V, start_N) --> hh_M", 
   "Find Householder matrix for the given vector.", TRANSFORM}
 
 --- Round matrix elements in place.
@@ -1077,7 +1077,7 @@ matrix.round = function(M, N)
     end
   end
 end
-about[matrix.round] = {"M:round([N=6]) --> nil", 
+about[matrix.round] = {"M:round(N=6) --> nil", 
   "Round matrix elements in place.", help.OTHER}
 
 --- Conjugate transpose.
@@ -1138,7 +1138,7 @@ matrix.insert = function (M1, tR, tC, M2)
     end
   end
 end
-about[matrix.insert] = {"M:insert(rows_t,cols_t,M2) --> nil", 
+about[matrix.insert] = {"M:insert(rows_t, cols_t, M2) --> nil", 
   "Insert second matrix into the given range of indeces."}
 
 --- Inverse matrix.
@@ -1231,7 +1231,7 @@ matrix.minor = function (M, ir, ic)
     return matrix._firstMinor(M)
   end
 end
-about[matrix.minor] = {"M:minor(row_N,col_N) --> minor_M", 
+about[matrix.minor] = {"M:minor(row_N, col_N) --> minor_M", 
   "Find minor for the matrix element."}
 
 --- Euclidean norm of the matrix at whole.
@@ -1399,7 +1399,7 @@ matrix.range = function (M, tR, tC)
   end
   return res
 end
-about[matrix.range] = {"M:range(rows_t,cols_t) --> range_M",
+about[matrix.range] = {"M:range(rows_t, cols_t) --> range_M",
   "Get submatrix for the given range of rows and columnts."}
 
 --- Matrix rank.
@@ -1450,7 +1450,7 @@ matrix.reshape = function (M, iRows, iCols)
   end
   return res
 end
-about[matrix.reshape] = {"M:reshape([row_N=size,col_N=1]) --> upd_M",
+about[matrix.reshape] = {"M:reshape(row_N=size, col_N=1) --> upd_M",
   "Get matrix with changed size.", help.OTHER}
 
 --- Get number or rows.
@@ -1561,7 +1561,7 @@ matrix.V = function (self, t)
   for i = 1, #t do res[i] = {t[i]} end
   return matrix:_init(#t, 1, res)
 end
-about[matrix.V] = {":V{...} --> new_V", 
+about[matrix.V] = {":V {...} --> new_V", 
   "Create vector from list of numbers.", help.NEW}
 
 --- Create matrix of zeros.
@@ -1574,7 +1574,7 @@ matrix.zeros = function (self, iR, iC)
   iC = iC or iR                          -- input is a number
   return matrix:_init(iR, iC, {})
 end
-about[matrix.zeros] = {":zeros(row_N,[col_N=row_N]) --> M", 
+about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M", 
   "Create matrix of zeros.", help.NEW}
 
 --- Apply function element-wise to matrices.
@@ -1604,12 +1604,12 @@ matrix.zip = function (self, fn, ...)
   end
   return res
 end
-about[matrix.zip] = {':zip(fn,M1,M2,...) --> res_M',
+about[matrix.zip] = {':zip(fn, M1, M2,..) --> res_M',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
 -- constructor call
 setmetatable(matrix, {__call = function (self, m) return matrix._new(m) end})
-about[matrix] = {" {row1_t,row2_t,..} --> new_M",
+about[matrix] = {" {row1_t, row2_t,..} --> new_M",
   "Create matrix from list of strings (tables).", help.NEW}
 
 -- Comment to remove descriptions

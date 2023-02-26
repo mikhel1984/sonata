@@ -570,7 +570,7 @@ geodesy.__index = geodesy
 geodesy.dms2rad = function (self, d, m, s)
   return math.rad(d + (m or 0) / 60 + (s or 0) / 3600)
 end
-about[geodesy.dms2rad] = {":dms2rad(deg_d,[min_d=0,sec_d=0]) --> num",
+about[geodesy.dms2rad] = {":dms2rad(deg_d, min_d=0, sec_d=0) --> num",
   "Convert degrees, minutes and seconds to radians.", help.OTHER}
 
 --- Convert degrees to degrees-minutes-seconds.
@@ -677,7 +677,7 @@ geodesy.hashEncode = function (self, t, N)
   end
   return table.concat(hash)
 end
-about[geodesy.hashEncode] = {":hashEncode(coord_t,[letter_N=6]) --> hash_s", 
+about[geodesy.hashEncode] = {":hashEncode(coord_t, letter_N=6) --> hash_s", 
   "Find hash for the given point."}
 
 -- Access to the ellipsoid object methods.
@@ -698,12 +698,12 @@ about[geodesy.ll2utm] = {"E:ll2utm(blh_t) --> utm_t",
   "Find UTM projection for the given coordinates.", PROJ}
 
 geodesy.solveDir = ellipsoid.solveDir
-about[geodesy.solveDir] = {"E:solveDir(blh_t,az1_d,dist_d) --> blh_t, az2_d",
+about[geodesy.solveDir] = {"E:solveDir(blh_t, az1_d, dist_d) --> blh_t, az2_d",
   "Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.",
   PROB}
 
 geodesy.solveInv = ellipsoid.solveInv
-about[geodesy.solveInv] = {"E:solveInv(blh1_t,blh2_t) --> dist_d, az1_d, az2_d",
+about[geodesy.solveInv] = {"E:solveInv(blh1_t, blh2_t) --> dist_d, az1_d, az2_d",
   "Solve inverse geodetic problem, find distance and azimuths for two points.",
   PROB}
 
@@ -760,7 +760,7 @@ geodesy.fromENU = function (self, tG, tR, tL)
     Z = tR.Z + cB*tL.Y + sB*tL.Z
   }
 end
-about[geodesy.fromENU] = {":fromENU(blRef_t,xyzRef_t,top_t) --> xyzObs_t",
+about[geodesy.fromENU] = {":fromENU(blRef_t, xyzRef_t, top_t) --> xyzObs_t",
   "Get cartesian coordinates of a local point in reference frame.", TRANS}
 
 --- Find topocentric coordinates of a point.
@@ -779,7 +779,7 @@ geodesy.toENU = function (self, tG, tR, tP)
     Z = cB*cL*dx + cB*sL*dy + sB*dz
   }
 end
-about[geodesy.toENU] = {":toENU(blRef_t,xyzRef_t,xyzObs_t) --> top_t",
+about[geodesy.toENU] = {":toENU(blRef_t, xyzRef_t, xyzObs_t) --> top_t",
   "Get topocentric coordinates of a point in reference frame.", TRANS}
 
 -- Comment to remove descriptions

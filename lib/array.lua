@@ -239,7 +239,7 @@ array.concat = function (A1, A2, iAxis)
   end
   return res
 end
-about[array.concat] = {"A:concat(A2,axis_N) --> A3",
+about[array.concat] = {"A:concat(A2, axis_N) --> A3",
   "Concatenate along the given array along the given axis."}
 
 --- Get array copy.
@@ -322,7 +322,7 @@ array.set = function (A, tInd, v)
   if not array._isIndex(A, tInd) then error("Wrong index!") end
   A[array._pos(A, tInd)] = v
 end
-about[array.set] = {"A:set(ind_t,var) --> nil", "Set value to the array."}
+about[array.set] = {"A:set(ind_t, var) --> nil", "Set value to the array."}
 
 --- Get part of array between two indexes.
 --  @param A Array object.
@@ -358,7 +358,7 @@ array.sub = function (A, tInd1, tInd2)
   end
   return res
 end
-about[array.sub] = {"A:sub(ind1_t,ind2_t) --> range_A",
+about[array.sub] = {"A:sub(ind1_t, ind2_t) --> range_A",
   "Return sub array restricted by 2 indexes."}
 
 --- Apply function of several arguments.
@@ -400,7 +400,7 @@ setmetatable(array, {__call = function (self, tSize)
   return array:_new(tSize)
 end})
 
-about[array] = {" {n1,n2,..} --> new_A",
+about[array] = {" {size1_N, [size2_N, ..]} --> new_A",
   "Create empty array with the given size.", help.STATIC}
 
 -- Comment to remove descriptions

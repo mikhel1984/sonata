@@ -98,7 +98,7 @@ TOL = 1E-3,
 newton_max = 50,
 }
 
-about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance.", "parameters"}
+about[numeric.TOL] = {".TOL=0.001", "The solution tolerance.", "parameters"}
 
 --- Simple derivative.
 --  @param self Do nothing.
@@ -114,7 +114,7 @@ numeric.der = function (self, fn, d)
   until math.abs(der-last) < numeric.TOL
   return der
 end
-about[numeric.der] = {":der(fn,x_d) --> num", 
+about[numeric.der] = {":der(fn, x_d) --> num", 
   "Calculate the derivative value for given function."}
 
 --- Another solution based on Newton's rule.
@@ -133,7 +133,7 @@ numeric.newton = function (self, fn, d1)
   until math.abs(fn(x2)-fd1) < numeric.TOL
   return x2
 end
-about[numeric.newton] = {":newton(fn,x0_d) --> num",
+about[numeric.newton] = {":newton(fn, x0_d) --> num",
   "Find root of equation using Newton's rule with only one initial condition."}
 
 --- Differential equation solution (Runge-Kutta method).
@@ -180,7 +180,7 @@ numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   end
   return res, res[#res][2]
 end
-about[numeric.ode45] = {":ode45(fn,interval_t,y0,[{dt,exit}]) --> ys_t, yLast",
+about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys_t, yLast",
   "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
 --- Find root of equation at the given interval.
@@ -198,7 +198,7 @@ numeric.solve = function (self, fn, dA, dB)
   until math.abs(f1) < numeric.TOL
   return dB
 end
-about[numeric.solve] = {":solve(fn,xLow_d,xUp_d) --> num", 
+about[numeric.solve] = {":solve(fn, xLow_d, xUp_d) --> num", 
   "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Integration using trapeze method.
@@ -231,7 +231,7 @@ numeric.trapez = function (self, fn, dA, dB)
   until math.abs(I-last) < numeric.TOL
   return I
 end
-about[numeric.trapez] = {":trapez(fn,x1_d,x2_d) --> num", 
+about[numeric.trapez] = {":trapez(fn, x1_d, x2_d) --> num", 
   "Get integral using trapezoidal rule."}
 
 -- Comment to remove descriptions

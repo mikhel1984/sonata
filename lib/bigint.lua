@@ -982,8 +982,8 @@ setmetatable(bigint, {
 __call = function (self, v)
   return bigint:_new(v)
 end})
-about[bigint] = {
-  " (var) --> new_B", "Create number from integer, string or table.", help.STATIC}
+about[bigint] = {" (var) --> new_B", 
+  "Create number from integer, string or table.", help.STATIC}
 
 -- Comment to remove descriptions
 bigint.about = about

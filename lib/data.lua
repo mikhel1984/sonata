@@ -161,7 +161,7 @@ data.cov2 = function (self, t1, t2)
   end
   return s / #t1
 end
-about[data.cov2] = {":cov2(xs_t,ys_t) --> float", 
+about[data.cov2] = {":cov2(xs_t, ys_t) --> float", 
   "Find covariance value for two vectors.", STAT}
 
 --- Estimate covariance matrix.
@@ -216,7 +216,7 @@ data.csvwrite = function (self, sFile, t, char, bCol)
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {":csvwrite(file_s,data_t,[char=',',isCol=false]) --> nil",
+about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',', isCol=false) --> nil",
   "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
@@ -256,7 +256,7 @@ data.csvread = function (self, sFile, char, bCol)
   f:close()
   return res
 end
-about[data.csvread] = {":csvread(file_s,[delim_s=',',isCol=false]) --> tbl",
+about[data.csvread] = {":csvread(file_s, delim_s=',', isCol=false) --> tbl",
   "Read delimiter separated data as Lua table.", FILES}
 
 --- Generate function from string.
@@ -265,7 +265,7 @@ about[data.csvread] = {":csvread(file_s,[delim_s=',',isCol=false]) --> tbl",
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
 data.Fn = function (self, sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
-about[data.Fn] = {":Fn(expr_s,[arg_N=2]) --> fn",
+about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
   "Generate function from expression of x1, x2 etc.", help.OTHER}
 
 --- Find elements using condition.
@@ -289,7 +289,7 @@ data.filter = function (self, t, vCond)
   end
   return res
 end
-about[data.filter] = {":filter(in_t,condition) --> out_t",
+about[data.filter] = {":filter(in_t, condition) --> out_t",
   "Get result of the table filtering. Condition is either boolean function or table of weights.",
   FILTER}
 
@@ -327,7 +327,7 @@ data.geomean = function (self, t, tw)
     return p^(1/#t)
   end
 end
-about[data.geomean] = {":geomean(data_t,[weigh_t]) --> num", 
+about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num", 
   "Geometrical mean.", STAT}
 
 --- Harmonic mean.
@@ -350,7 +350,7 @@ data.harmmean = function (self, t, tw)
     return #t / h
   end
 end
-about[data.harmmean] = {":harmmean(data_t,[weigh_t]) --> num", 
+about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num", 
   "Harmonic mean.", STAT}
 
 --- Number of elements in each bin.
@@ -394,7 +394,7 @@ data.histcounts = function (self, t, rng)
   end
   return res, bins
 end
-about[data.histcounts] = {":histcounts(data_t,[rng_v=10]) --> sum_t, edges_t",
+about[data.histcounts] = {":histcounts(data_t, rng_v=10) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", STAT}
 
 --- Find weights (1/0) based on condition.
@@ -409,7 +409,7 @@ data.is = function (self, t, fn)
   end
   return res
 end
-about[data.is] = {":is(data_t,cond_fn) --> yesno_t",
+about[data.is] = {":is(data_t, cond_fn) --> yesno_t",
   "Find weights using boolean function.", FILTER}
 
 --- Find weights (1/0) based on inverted condition.
@@ -424,7 +424,7 @@ data.isNot = function (self, t, fn)
   end
   return res
 end
-about[data.isNot] = {":isNot(data_t,cond_fn) --> yesno_t", 
+about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t", 
   "Find inverted weights using boolean function.", FILTER}
 
 --- Maximum value.
@@ -459,7 +459,7 @@ data.mean = function (self, t, tw)
     return data:sum(t) / #t
   end
 end
-about[data.mean] = {":mean(data_t,[wight_t]) --> num", 
+about[data.mean] = {":mean(data_t, [wight_t]) --> num", 
   "Calculate average value. Weights can be used.", STAT}
 
 --- Find median.
@@ -514,7 +514,7 @@ data.moment = function (self, N, t, tw)
   end
   return mu / n
 end
-about[data.moment] = {":moment(order_N,data_t,[weigth_t]) --> num",
+about[data.moment] = {":moment(order_N, data_t, [weigth_t]) --> num",
   "Central moment of t order N, tw is a list of weights.", STAT}
 
 
@@ -552,7 +552,7 @@ data.std = function (self, t, tw)
   end
   return math.sqrt(disp), disp
 end
-about[data.std] = {":std(data_t,[weight_t]) --> dev_f, var_f",
+about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
   "Standard deviation and variance. Weights can be used.", STAT}
 
 --- Student's cumulative distribution
@@ -565,7 +565,7 @@ data.tcdf = function (self, d, N)
   local tmp = N/(N+d*d)
   return 1-0.5*data.ext_special:betainc(tmp, 0.5*N, 0.5)
 end
-about[data.tcdf] = {":tcdf(x_d,deg_N) --> num",
+about[data.tcdf] = {":tcdf(x_d, deg_N) --> num",
   "Student's cumulative distribution.", help.OTHER}
 
 --- Student's density function.
@@ -578,7 +578,7 @@ data.tpdf = function (self, d, N)
   local tmp = math.sqrt(N)*data.ext_special:beta(0.5, 0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-about[data.tpdf] = {":tpdf(x_d,deg_N) --> num", 
+about[data.tpdf] = {":tpdf(x_d, deg_N) --> num", 
   "Student's distribution density.", help.OTHER}
 
 --- Condition: x == d.
@@ -608,7 +608,7 @@ about[data.xGt] = {":xGt(num) --> cond_fn", "Return function for condition x > d
 data.xIn = function (self, d1, d2)
   return (function (x) return d1 <= x and x <= d2 end)
 end
-about[data.xIn] = {":xIn(num1,num2) --> cond_fn", 
+about[data.xIn] = {":xIn(num1, num2) --> cond_fn", 
   "Return function for condition d1 <= x <= d2.", FILTER}
 
 --- Condition: x < d
@@ -691,7 +691,7 @@ data.ref = function (self, t, iBeg, iEnd)
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
 end
-about[data.ref] = {':ref(src_t,[begin_N=1,end_N=#t]) --> new_R',
+about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
   'Return reference to the range of elements.', help.OTHER}
 
 -- Comment to remove descriptions

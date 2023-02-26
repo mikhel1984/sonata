@@ -388,7 +388,7 @@ rational.from = function (self, f, fErr)
   end
   return rational:_new(f >= 0 and a or -a, b)
 end
-about[rational.from] = {":from(src_f,[err_f=1E-3]) --> R",
+about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
   "Estimate ratio from floating point value.", help.NEW}
 
 --- Get rational number from continued fraction coefficients.
@@ -421,7 +421,7 @@ about[rational.fromCont] = {":fromCont(coeff_t) --> R",
 rational.gcd = function (self, va, vb)
   return Cross.eq(va, 0) and vb or rational:gcd(vb % va, va)
 end
-about[rational.gcd] = {":gcd(a_f,b_f) --> num",
+about[rational.gcd] = {":gcd(a_f, b_f) --> num",
   "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Get numerator.
@@ -464,7 +464,7 @@ __call = function (self, n, d)
   assert(not Cross.eq(d, 0), "Wrond denomenator value")
   return rational:_new(n, d)
 end})
-about[rational] = {" (num,[denom=1]) --> new_R", 
+about[rational] = {" (num, denom=1) --> new_R", 
   "Create rational number using num (and denom).", help.NEW}
 
 -- Comment to remove descriptions

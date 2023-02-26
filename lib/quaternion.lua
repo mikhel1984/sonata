@@ -324,7 +324,7 @@ quaternion.fromAA = function (self, dAng, vAxe)
   if d > 0 then d = math.sin(dAng*0.5) / d end
   return quaternion:_new({math.cos(dAng*0.5), x*d, y*d, z*d})
 end
-about[quaternion.fromAA] = {':fromAA(angle_d,axis_d) --> Q','Create quaternion using angle and axis.', ROTATION}
+about[quaternion.fromAA] = {':fromAA(angle_d, axis_d) --> Q','Create quaternion using angle and axis.', ROTATION}
 
 --- Get quaternion from rotation matrix.
 --  @param self Do nothing.
@@ -440,7 +440,7 @@ quaternion.slerp = function (Q1, Q2, f)
   local sin_th = math.sin(theta)
   return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
 end
-about[quaternion.slerp] = {'Q:slerp(end_Q,rat_f) --> rat_Q', 
+about[quaternion.slerp] = {'Q:slerp(end_Q, rat_f) --> rat_Q', 
   'Spherical linear interpolation for part t.', help.OTHER}
 
 --- Get angle and axis of the quaternion.
@@ -515,7 +515,7 @@ setmetatable(quaternion,
 end
 })
 
-about[quaternion] = {" {w,x,y,z} --> new_Q", "Create new quaternion.", help.NEW}
+about[quaternion] = {" {w, x, y, z} --> new_Q", "Create new quaternion.", help.NEW}
 
 -- Comment to remove descriptions
 quaternion.about = about

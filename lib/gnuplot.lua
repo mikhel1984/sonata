@@ -369,7 +369,7 @@ gnuplot.plot = function (self,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.plot] = {":plot(x1_t,[y1_t,nm_s,x2_t,..]) --> nil",
+about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..]) --> nil",
   "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Polar plot.
@@ -395,7 +395,7 @@ gnuplot.polarplot = function(self,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.polarplot] = {':polarplot(x1_t,y1_t,[nm_s,x2_t,y2_t..]) --> nil',
+about[gnuplot.polarplot] = {':polarplot(x1_t, y1_t, [nm_s, x2_t, y2_t,..]) --> nil',
   "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 --- Plot graphic.
@@ -451,7 +451,7 @@ gnuplot.surfplot = function(self,...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.surfplot] = {':surfplot(x1_t,y1_t,fn1,[nm_s,x2_t,y2_t..]) --> nil',
+about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..]) --> nil',
   "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 --- Plot table of data file.
@@ -472,7 +472,7 @@ gnuplot.tplot = function (self,v,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.tplot] = {":tplot(var,[x_N,y1_N,y2_N..]) --> nil",
+about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..]) --> nil",
   "Plot table, matrix or data file. Optional elements define columns."}
 
 --- Polar plot table of data file.
@@ -494,7 +494,7 @@ gnuplot.tpolar = function (self,v,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.tpolar] = {":tpolar(var,[x_N,y1_N,y2_N..]) --> nil",
+about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..]) --> nil",
   "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 --- Sufrace plot from table of data file.
@@ -515,7 +515,7 @@ gnuplot.tsurf = function (self,v,...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.tsurf] = {":tsurf(var,[x_N,y_N,z1_N,z2_N..]) --> nil",
+about[gnuplot.tsurf] = {":tsurf(var, [x_N, y_N, z1_N, z2_N,..]) --> nil",
   "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 -- constructor
@@ -523,7 +523,7 @@ setmetatable(gnuplot, {__call=function (self) return gnuplot:_init() end})
 about[gnuplot] = {" () --> new_G", "Prepare Gnuplot object.", help.NEW}
 
 gnuplot.keys = 'keys'
-about[gnuplot.keys] = {'keys',
+about[gnuplot.keys] = {'.keys',
 [[  Options / examples:
 {math.sin, title='sin'}       -- plot using function, define in Lua; add legend
 {'sin.dat', ln=1, lw=2}       -- plot data from file, use given color and width

@@ -171,7 +171,7 @@ about[acos] = {"acos(x) --> y", "Inverse cosine x.", TRIG}
 atan = _call(math.atan, 'atan')
 about[atan] = {"atan(x) --> y", "Inverse tangent x.", TRIG}
 atan2 = Ver.atan2
-about[atan2] = {"atan2(y_d,x_d) --> num", "Inverse tangent of dy/dx, use signs.", TRIG}
+about[atan2] = {"atan2(y_d, x_d) --> num", "Inverse tangent of dy/dx, use signs.", TRIG}
 
 -- Hyperbolic
 cosh = _call(Calc.cosh, 'cosh')
@@ -218,7 +218,7 @@ randn = function (dMean, dev)
   local norm = u * math.sqrt(-2*math.log(s)/s)
   return norm * dev + dMean
 end
-about[randn] = {"randn([mean_d=0,dev_d=1]) --> float",
+about[randn] = {"randn(mean_d=0, dev_d=1) --> float",
   "Normal distributed random value with the given mean and deviation."}
 
 
@@ -235,7 +235,7 @@ Map = function (fn, t)
   end
   return nil
 end
-about[Map] = {'Map(fn,in_t) --> out_t','Evaluate function for each table element.', AUX}
+about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table element.', AUX}
 
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
@@ -275,7 +275,7 @@ Round = function (f, N)
   return Utils.round(f, 10^(-N))
 end
 about[Round] = {
-  'Round(x_d,[N=0]) --> num', 'Round value, define number of decimal digits.', AUX}
+  'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
 
 --- Execute file inside the interpreter.
 --  @param sFile Lua or note file name.
@@ -288,7 +288,7 @@ Run = function (sFile, bInt)
     io.write('Expected .lua or .note!\n')
   end
 end
-about[Run] = {'Run(name_s,[isInt=false]) --> nil',
+about[Run] = {'Run(name_s, isInt=false) --> nil',
   "Execute lua- or note- file. Set isInt for interaction.", AUX}
 
 --- Show type of the object.
@@ -441,7 +441,7 @@ Range = function (dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-about[Range] = {'Range(begin_d,end_d,[step_d]) --> new_R', 'Generate range object.', AUX}
+about[Range] = {'Range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.', AUX}
 
 -- Sonata specific functions
 
@@ -450,7 +450,7 @@ about[Log] = {'Log(flag_s) --> nil',
   "Save session into the log file. Use 'on'/'off' to start/stop logging.", AUX}
 about[use] = {'use([module_s]) --> str|nil',
   "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
-about[help] = {"help([fn='main']) --> str", "Show information about the function.", AUX}
+about[help] = {"help(fn='main') --> str", "Show information about the function.", AUX}
 about[quit] = {'quit() --> nil', "Quit the program.", AUX}
 end
 

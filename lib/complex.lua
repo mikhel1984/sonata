@@ -466,7 +466,7 @@ complex.i = function (self, v)
   assert(type(v) == 'number' or type(v) == 'table' and v.float, "Wrong number")
   return complex:_init(0, v)
 end
-about[complex.i] = {":i([x=1]) --> new_Z", "Return x*i.", help.STATIC}
+about[complex.i] = {":i(x=1) --> new_Z", "Return x*i.", help.STATIC}
 
 --- Get imaginary part.
 --  @param C Complex number.
@@ -509,7 +509,7 @@ complex.round = function (C, N)
             Cross.norm(b) < tol and 0 or b
   return complex:_init(a, b)
 end
-about[complex.round] = {"Z:round([N=6]) --> rounded_Z", 
+about[complex.round] = {"Z:round(N=6) --> rounded_Z", 
   "Round in-place to specified number of digits."}
 
 --- Sinus
@@ -567,7 +567,7 @@ about[complex.tanh] = {"Z:tanh() --> y_Z",
 complex.trig = function (self, vMod, vArg)
   return complex:_init(vMod*fcos(vArg), vMod*fsin(vArg))
 end
-about[complex.trig] = {":trig(module,angle) --> new_Z",
+about[complex.trig] = {":trig(module, angle) --> new_Z",
   "Create complex number using module and angle.", help.STATIC}
 
 -- simplify constructor call
@@ -581,8 +581,8 @@ __call = function (self, re, im)
     "Wrong imaginary part")
   return complex:_init(re, im)
 end })
-about[complex] = {
-  " ([re=0,im=0]) --> new_Z", "Create new complex number.", help.STATIC}
+about[complex] = {" (re=0, im=0) --> new_Z", 
+  "Create new complex number.", help.STATIC}
 
 if Sonata then  -- redefine some functions
 

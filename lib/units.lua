@@ -576,7 +576,7 @@ units.prefix = {
   Y = 1e+24,  -- yotta
 }
 about[units.prefix] = {
-  'prefix', 'Table of possible prefixes for units.', help.OTHER}
+  '.prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 --- Add new rule for unit transformation.
 --  @param self Main class.
@@ -586,7 +586,7 @@ units.setRule = function (self, s, U)
   assert(isunits(U), 'Units object is expected!')
   self._rules[s] = U
 end
-about[units.setRule] = {':setRule(name_s,val_U) --> nil', 
+about[units.setRule] = {':setRule(name_s, val_U) --> nil', 
   'Add new rule for conversation.'}
 
 --- Value of the unit object.
@@ -608,7 +608,7 @@ __call = function (self, v, s)
   assert(type(s) == 'string', 'Wrong unit type')
   return units:_new(v, s)
 end})
-about[units] = {' ([val=1],name_s) --> new_U', 
+about[units] = {' (val=1, name_s) --> new_U', 
   'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions

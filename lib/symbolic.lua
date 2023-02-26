@@ -205,7 +205,7 @@ symbolic.def = function (self, sName, tArgs, S)
   symbolic._fnList[sName] = { args = t, body = S }
   return symbolic:_newSymbol(sName)
 end
-about[symbolic.def] = {":def(name_s,args_t,expr_S) --> fn_S", 
+about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S", 
   "Define symbolical function. S is either symbolic expression or a Lua function."}
 
 --- Find derivative dS1/dS2.
@@ -228,7 +228,7 @@ symbolic.eval = function (S, tEnv)
   res:p_signature()
   return res
 end
-about[symbolic.eval] = {"S:eval([env_t={}]) --> upd_S|num", 
+about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num", 
   "Evaluate symbolic expression with the given environment."}
 
 --- Find function using its name.
@@ -296,7 +296,7 @@ __call = function (self, v)
   end
   error("Wrong argument "..tostring(v))
 end})
-about[symbolic] = {" (var) --> new_S", "Create new symbolic variable.", help.NEW}
+about[symbolic] = {" (num|str) --> new_S", "Create new symbolic variable.", help.NEW}
 
 
 -- Comment to remove descriptions
