@@ -1,16 +1,22 @@
 ======== 0.9.34 =========
-Main
-* Call elementary functions for complex objects
+
 Geo
 * Add UTM coordinates
 * Remove progM and projGK
 Int
 * Minor improvements
+Main
+* Call elementary functions for complex objects
+Sym
+* Add derivatives
+* Bug fixes
 Other
 * Add 'about' directory
 * Define code style elements
 * Remove onImport call
 * Add Calc table with common functions
+* Rename lng to lua files
+* Update help info format
 
 ======== 0.9.33 =========
 

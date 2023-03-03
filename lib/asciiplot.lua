@@ -131,7 +131,7 @@ local asciiplot = {
 type = 'asciiplot', isasciiplot = true,
 -- symbols
 char = {'+', 'o', '*', '#', '%', '~', 'x'},
-lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'i', 'j', 'k'},
+lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'i', 'j'},
 }
 
 if SONATA_USE_COLOR then
@@ -167,10 +167,11 @@ asciiplot.__tostring = function (F)
     acc[#acc+1] = table.concat(F.canvas[i])
   end
   -- legend
-  for k, v in pairs(F.legend) do
-    assert(type(k) == 'string' and type(v) == 'string'
-           and (#k == 1 or SONATA_USE_COLOR))
-    acc[#acc+1] = string.format("(%s) %s", k, v)
+  local sym = {}
+  for k, _ in pairs(F.legend) do sym[#sym+1] = k end
+  if #sym > 0 then table.sort(sym) end
+  for _, k in ipairs(sym) do
+    acc[#acc+1] = string.format("(%s) %s", k, F.legend[k])
   end
   return table.concat(acc, '\n')
 end
@@ -346,7 +347,7 @@ end
 --  @param bCentr Flag to put to central position.
 --  @param bLim   Flag to cut a long string.
 asciiplot._format = function (s, N, bCentr, bCut)
-  local res = ''
+  local res = s
   if #s < N then
     local n = N - #s
     if bCentr then
@@ -356,8 +357,6 @@ asciiplot._format = function (s, N, bCentr, bCut)
     else
       res = s .. string.rep(' ', n)
     end
-  else
-    res = s
   end
   if #res > N and bCut then
     res = string.sub(res, 1, N)
@@ -461,6 +460,22 @@ asciiplot._surfRange = function (v1, vn, N, bScale, bInt)
   return res, h
 end
 
+asciiplot._cntLegend = function (F, s, lvl)
+  local j = 1
+  local line = {}
+  for i = 1, #lvl do
+    line[#line+1] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i])
+    if i % 3 == 0 then
+      F.legend[s..tostring(j)] = table.concat(line, '  ')
+      j = j + 1
+      line = {}
+    end
+  end
+  if #line > 0 then
+    F.legend[s..tostring(j)] = table.concat(line, '  ')
+  end
+end
+
 --- Find XY projection of a contour.
 --  @param tX X range table.
 --  @param tY Y range table.
@@ -491,11 +506,7 @@ asciiplot._viewXY = function (F, tX, tY, tZ, tOpt)
   end
   asciiplot._limits(F)
   -- legend
-  local lines = {}
-  for i = 1, N do
-    lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i])
-  end
-  F.legend['Z'] = table.concat(lines, '  ')
+  asciiplot._cntLegend(F, 'Z', lvl)
   F.title = 'X-Y view'
   return F
 end
@@ -523,11 +534,9 @@ asciiplot._viewXZ = function (F, tX, tY, tZ, tOpt)
   end
   asciiplot._limits(F)
   -- legend
-  local lines = {}
-  for i = 1, N do
-    lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], tY[lvl[N-i+1]])
-  end
-  F.legend['Y'] = table.concat(lines, '  ')
+  local lvlXZ = {}
+  for i = 1, N do lvlXZ[i] = tY[lvl[N-i+1]] end
+  asciiplot._cntLegend(F, 'Y', lvlXZ)
   F.title = 'X-Z view'
   return F
 end
@@ -566,11 +575,9 @@ asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   end
   asciiplot._limits(F)
   -- legend
-  local lines = {}
-  for i = 1, N do
-    lines[i] = string.format('%s(%.2f)', asciiplot.lvls[i], tX[lvl[i]])
-  end
-  F.legend['X'] = table.concat(lines, '  ')
+  local lvlZY = {}
+  for i = 1, N do lvlZY[i] = tX[lvl[i]] end
+  asciiplot._cntLegend(F, 'X', lvlZY)
   F.title = rotate and 'Z-Y view' or 'Y-Z view'
   return F
 end
@@ -742,10 +749,13 @@ asciiplot.concat = function (self, ...)
     end
     -- legend
     local n = 0
-    for u, w in pairs(v.legend) do
+    local sym = {}
+    for k, _ in pairs(v.legend) do sym[#sym+1] = k end
+    if #sym > 0 then table.sort(sym) end
+    for _, u in ipairs(sym) do
       row = acc[k] or {}
       row[#row+1] = asciiplot._format(
-        string.format('(%s) %s', u, w), v.width-1+#u, false, true)
+        string.format('(%s) %s', u, v.legend[u]), v.width-1+#u, false, true)
       row[#row+1] = gap
       acc[k] = row; k = k + 1
       n = n + 1
@@ -774,6 +784,9 @@ about[asciiplot.concat] = {":concat(...) --> str",
 asciiplot.contour = function (F, fn, tOpt)
   tOpt = tOpt or {}
   tOpt.level = tOpt.level or 5    -- TODO limit maximal and minimal values
+  if tOpt.level > #asciiplot.lvls then 
+    error('Max levle is '..tostring(#asciiplot.lvls)) 
+  end
   local view = tOpt.view or 'XY'
   -- calculate
   if view == 'YZ' then
