@@ -33,19 +33,19 @@ local cp866 = {
  0x401,  0x451,  0x404,  0x454,  0x407,  0x457,  0x40E,  0x45E,   0xB0, 0x2219,   0xB7, 0x221A, 0x2116,   0xA4, 0x25A0,   0xA0 -- F0
 }
 -- inverse
-for i = 0, 255 do code[cp866[i]] = i end
+for i = 0, 255 do code[cp866[i]] = string.char(i) end
 
 end -- if
 
 -- output
 return {
---- Convert text into Windows compatible form.
+--- Convert text into a Windows console compatible form.
 --  @param txt Source text.
 --  @return Converted text.
 convert = function (txt)
   local res = {}
   for _, c in utf8.codes(txt) do
-    res[#res+1] = string.char(code[c])
+    res[#res+1] = code[c]
   end
   return table.concat(res)
 end

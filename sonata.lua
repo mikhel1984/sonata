@@ -15,10 +15,10 @@
 --SONATA_DEFAULT_MODULES = {'matrix','numeric'}
 
 --	Uncomment to set the localization file
-SONATA_LOCALIZATION = 'ru.lua'
+--SONATA_LOCALIZATION = 'ru.lua'
 
 --	Decode text for Windows
-SONATA_WIN_CODE = 'cp866'
+--SONATA_WIN_CODE = 'cp866'
 
 --===================  MODULES  =======================
 
