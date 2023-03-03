@@ -187,13 +187,14 @@ end
 --  @param fName Language name, for example 'en' or 'it'.
 --  @param tModules Table with the list of existing modules.
 generator.lang = function(fName, tModules)
-  fName = sformat('%s%s%s.lng', Help.LOCALE, Help.SEP, fName)
+  fName = sformat('%s%s%s.lua', Help.LOCALE, Help.SEP, fName)
   -- prepare new file
   local lng = Help.tblImport(fName) or {}
   local f = io.open(fName, 'w')
   -- save descriptions
+  f:write(S10, sformat(' %s ', fName), S10, '\n\n')
   f:write('return {\n')
-  f:write(S10, sformat(' %s ', fName), S10, '\n')
+  f:write('----------\n')
   -- language and authors
   f:write(
     sformat("language = '%s',", lng.language or 'English'), '\n')
