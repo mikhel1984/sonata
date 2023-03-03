@@ -26,8 +26,6 @@ local Win = SONATA_WIN_CODE and require('core.win') or nil
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
 
-local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
-
 --	MODULE
 
 local help = {
@@ -148,7 +146,7 @@ end
 --  @param fName Name of the file with translated text.
 help.localization = function (dst, fName)
   fName = help.LOCALE..help.SEP..fName
-  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
+  local lng = help.lngImport(fName)
   if lng then
     dst._locale = lng
   else
@@ -214,26 +212,21 @@ help.readAll = function (fName)
   return str
 end
 
---- Load Lua table from file.
---  @param fName File name.
+--- Load localization tables from file, 
+--  decode if need.
+--  @param fName File path and name.
 --  @return Lua table or nil.
-help.tblImport = function (fName)
-  local str, f = help.readAll(fName), nil
-  -- use Lua default import
-  if str then f = loadStr(str) end
-  return f and f() or nil
-end
-
---- Load and encode Lua table from file.
---  @param fName File name.
---  @return Lua table or nil
-help.tblImportWin = function (fName)
-  local str, f = help.readAll(fName), nil
-  if str then
-    str = Win.convert(str)
-    f = loadStr(str)
+help.lngImport = function (fName)
+  local ok, res = pcall(dofile, fName)
+  if not ok then return nil end
+  if Win then
+    for _, elt in pairs(res) do
+      if type(elt) == 'table' then
+        for k, v in pairs(elt) do elt[k] = Win.convert(v) end
+      end
+    end
   end
-  return f and f() or nil
+  return res
 end
 
 return help

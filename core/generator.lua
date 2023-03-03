@@ -102,7 +102,7 @@ generator.doc = function (locName, tModules)
 
   local fName = sformat('%s%s%s', Help.LOCALE, Help.SEP, locName)
   -- prepare new file
-  local lng = Help.tblImport(fName) or {}
+  local lng = Help.lngImport(fName) or {}
 
   -- modules
   for _, val in ipairs(sortedModules) do
@@ -189,7 +189,7 @@ end
 generator.lang = function(fName, tModules)
   fName = sformat('%s%s%s.lua', Help.LOCALE, Help.SEP, fName)
   -- prepare new file
-  local lng = Help.tblImport(fName) or {}
+  local lng = Help.lngImport(fName) or {}
   local f = io.open(fName, 'w')
   -- save descriptions
   f:write(S10, sformat(' %s ', fName), S10, '\n\n')

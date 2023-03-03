@@ -18,7 +18,7 @@
 SONATA_LOCALIZATION = 'ru.lua'
 
 --	Decode text for Windows
---SONATA_WIN_CODE = 'cp866'
+SONATA_WIN_CODE = 'cp866'
 
 --===================  MODULES  =======================
 
