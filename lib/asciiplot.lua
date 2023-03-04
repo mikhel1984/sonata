@@ -112,6 +112,8 @@ local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 -- default figure size
 local WIDTH, HEIGHT = 75, 23
 
+local log10 = math.log(10)
+
 local mmodf = math.modf
 
 local MANUAL = 'manual'
@@ -131,7 +133,7 @@ local asciiplot = {
 type = 'asciiplot', isasciiplot = true,
 -- symbols
 char = {'+', 'o', '*', '#', '%', '~', 'x'},
-lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'i', 'j'},
+lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 }
 
 if SONATA_USE_COLOR then
@@ -254,6 +256,25 @@ asciiplot._clear = function (F)
   end
   F.legend = {}
   F.title = nil
+end
+
+--- Fill legend for contour object.
+--  @param F Figure object.
+--  @param s Axis name.
+--  @param lvl List of levels.
+asciiplot._cntLegend = function (F, s, lvl)
+  local j, line = 1, {}
+  for i = 1, #lvl do
+    -- group levels
+    line[#line+1] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i])
+    if i % 3 == 0 then
+      F.legend[s..tostring(j)] = table.concat(line, '  ')
+      j, line = j + 1, {}
+    end
+  end
+  if #line > 0 then
+    F.legend[s..tostring(j)] = table.concat(line, '  ')
+  end
 end
 
 --- Get bounds of the table values.
@@ -433,6 +454,24 @@ asciiplot._new = function(self, dwidth, dheight)
   return setmetatable(o, self)
 end
 
+--- Find closest outer bounds, update range.
+--  @param t Table {min, max}.
+asciiplot._roundRange = function (t)
+  local p = math.log(t[2] - t[1]) / log10
+  local n = (p >= 0) and math.floor(p) or math.ceil(p)
+  local tol = 10^(n-1)
+  local v, rest = mmodf(t[1] / tol)
+  if rest ~= 0 then
+    rest = (rest > 0) and 0 or 1
+    t[1] = (v - rest) * tol
+  end
+  v, rest = mmodf(t[2] / tol)
+  if rest ~= 0 then
+    rest = (rest < 0) and 0 or 1
+    t[2] = (v + rest) * tol
+  end
+end
+
 --- Find range of levels for surface plot.
 --  @param v1 Begin of range.
 --  @param vn End of range.
@@ -458,22 +497,6 @@ asciiplot._surfRange = function (v1, vn, N, bScale, bInt)
     end
   end
   return res, h
-end
-
-asciiplot._cntLegend = function (F, s, lvl)
-  local j = 1
-  local line = {}
-  for i = 1, #lvl do
-    line[#line+1] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i])
-    if i % 3 == 0 then
-      F.legend[s..tostring(j)] = table.concat(line, '  ')
-      j = j + 1
-      line = {}
-    end
-  end
-  if #line > 0 then
-    F.legend[s..tostring(j)] = table.concat(line, '  ')
-  end
 end
 
 --- Find XY projection of a contour.
