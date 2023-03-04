@@ -918,6 +918,7 @@ asciiplot.plot = function (F, ...)
   if xmin == math.huge then xmin = F.xrange[1] end
   if xmax == -math.huge then xmax = F.xrange[2] end
   F.xrange = {xmin, xmax}
+  asciiplot._roundRange(F.xrange)
 
   -- update y range
   local ymin, ymax = math.huge, -math.huge
@@ -931,6 +932,7 @@ asciiplot.plot = function (F, ...)
     if b > ymax then ymax = b end
   end
   F.yrange = {ymin, ymax}
+  asciiplot._roundRange(F.yrange)
 
   -- prepare
   asciiplot._clear(F)
@@ -988,6 +990,8 @@ asciiplot.tplot = function (F, t, tOpt)
   if not tOpt.yfix then
     F.xrange, F.yrange = asciiplot._findRange(t, tOpt)
   end
+  asciiplot._roundRange(F.xrange)
+  asciiplot._roundRange(F.yrange)
   -- plot all by default
   if #tOpt == 0 then
     for i = 2, #t[1] do tOpt[#tOpt+1] = i end
