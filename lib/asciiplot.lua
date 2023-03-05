@@ -110,7 +110,7 @@ print(fig5:bar(data))
 local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 
 -- default figure size
-local WIDTH, HEIGHT = 75, 23
+local WIDTH, HEIGHT = 73, 21
 
 local log10 = math.log(10)
 
@@ -239,6 +239,35 @@ asciiplot._axes = function (F)
     else
       row[F.width] = '>'
     end
+  end
+  asciiplot._axesScale(F)
+end
+
+asciiplot._axesScale = function (F)
+  local mark = '+'
+  local dmin = 4
+  -- vertical
+  local n = nil
+  if     F.yaxis == 'mid' then n = asciiplot._ycentral(F)
+  elseif F.yaxis == 'min' then n = 1
+  elseif F.yaxis == 'max' then n = F.width end
+  if n then
+    -- find step
+    local d = F.height - 1
+    while d > dmin and d % 2 == 0 do d = d / 2 end
+    -- add 
+    for i = d+1, F.height-1, d do F.canvas[i][n] = mark end
+    n = nil
+  end
+  -- horizontal 
+  if F.xaxis == 'mid' then n = asciiplot._xcentral(F)
+  elseif F.xaxis == 'max' then n = 1
+  elseif F.xaxis == 'min' then n = F.height end
+  if n then
+    local d = F.width - 1
+    while d > dmin and d % 2 == 0 do d = d / 2 end
+    local row = F.canvas[n]
+    for i = d+1, F.width-1, d do row[i] = mark end
   end
 end
 
