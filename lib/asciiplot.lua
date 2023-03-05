@@ -211,7 +211,7 @@ asciiplot._axes = function (F)
   local vertical, horizontal = '|', '-'
   -- vertical line
   local n = nil
-  if     F.yaxis == 'mid' then n = asciiplot._ycentral(F)
+  if     F.yaxis == 'mid' then n = (F.width+1) / 2
   elseif F.yaxis == 'min' then n = 1
   elseif F.yaxis == 'max' then n = F.width end
   if n then
@@ -226,7 +226,7 @@ asciiplot._axes = function (F)
     n = nil
   end
   -- horizontal line
-  if F.xaxis == 'mid' then n = asciiplot._xcentral(F)
+  if F.xaxis == 'mid' then n = (F.height+1) / 2
   elseif F.xaxis == 'max' then n = 1
   elseif F.xaxis == 'min' then n = F.height end
   if n then
@@ -248,7 +248,7 @@ asciiplot._axesScale = function (F)
   local dmin = 4
   -- vertical
   local n = nil
-  if     F.yaxis == 'mid' then n = asciiplot._ycentral(F)
+  if     F.yaxis == 'mid' then n = (F.width+1) / 2
   elseif F.yaxis == 'min' then n = 1
   elseif F.yaxis == 'max' then n = F.width end
   if n then
@@ -260,7 +260,7 @@ asciiplot._axesScale = function (F)
     n = nil
   end
   -- horizontal 
-  if F.xaxis == 'mid' then n = asciiplot._xcentral(F)
+  if F.xaxis == 'mid' then n = (F.height+1) / 2
   elseif F.xaxis == 'max' then n = 1
   elseif F.xaxis == 'min' then n = F.height end
   if n then
@@ -419,7 +419,7 @@ end
 asciiplot._limits = function (F)
   -- horizontal
   local n = nil
-  if F.xaxis == 'mid' then n = asciiplot._xcentral(F) + 1
+  if F.xaxis == 'mid' then n = (F.height+1) / 2 + 1
   elseif F.xaxis == 'max' then n = 1
   elseif F.xaxis == 'min' then n = F.height end
   if n then
@@ -433,12 +433,12 @@ asciiplot._limits = function (F)
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
     s = string.format(' %s ', tostring(0.5*(F.xrange[1]+F.xrange[2])))
-    beg = asciiplot._ycentral(F) 
+    beg = (F.width+1) / 2
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     n = nil
   end
   -- vertical
-  if F.yaxis == 'mid' then n = asciiplot._ycentral(F)
+  if F.yaxis == 'mid' then n = (F.width+1) / 2
   elseif F.yaxis == 'min' then n = 1
   elseif F.yaxis == 'max' then n = F.width end
   if n then
@@ -452,7 +452,7 @@ asciiplot._limits = function (F)
     row = F.canvas[2]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
-    row = F.canvas[asciiplot._xcentral(F)]
+    row = F.canvas[(F.height+1) / 2]
     s = string.format(' %s ', tostring(0.5*(F.yrange[1]+F.yrange[2])))
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
   end
@@ -634,22 +634,6 @@ asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   asciiplot._cntLegend(F, 'X', lvlZY)
   F.title = rotate and 'Z-Y view' or 'Y-Z view'
   return F
-end
-
---- Horizontal line central position
---  @param F Figure object.
---  @return Index.
-asciiplot._xcentral = function (F)
-  local int, frac = mmodf((1-F.height) * 0.5 + F.height)
-  return (frac > 0.5) and (int + 1) or int
-end
-
---- Vertical line central position
---  @param F Figure object.
---  @return Index.
-asciiplot._ycentral = function (F)
-  local int, frac = mmodf((F.width-1) * 0.5 + 1)
-  return (frac > 0.5) and (int + 1) or int
 end
 
 --- Scale and add a point to the figure.
@@ -1060,7 +1044,7 @@ __call = function (self, w, h)
   end
   return asciiplot:_new(w, h)
 end})
-about[asciiplot] = {" (width_N=75, height_N=23) --> new_F", 
+about[asciiplot] = {" (width_N=73, height_N=21) --> new_F", 
   "Create new asciiplot.", help.STATIC}
 
 if Sonata then
