@@ -29,7 +29,7 @@ y = {1,3,5,7,9}
 print(fig1:plot(x,y))
 
 -- combine different sources
-fig1.yaxis = 'L'  -- left axis
+fig1.yaxis = 'min'  -- left axis
 fig1:plot(x,'single',x,y,'pair',math.log, 'function')
 print(fig1)
 
@@ -44,7 +44,7 @@ for x = 0, 3, 0.1 do
   --             x      y1          y2
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
-fig2.xaxis = 'D'  -- down
+fig2.xaxis = 'min'  -- down
 print(fig2:tplot(tbl))
 
 -- plot only y2, don't rescale
@@ -60,7 +60,7 @@ ans = fig1.width             --> 61
 -- first
 fig1:scale(0.5, true)
 fig1.xrange = {0, 1.57}
-fig1.yaxis = 'C'; fig1.xaxis = 'D'
+fig1.yaxis = 'mid'; fig1.xaxis = 'min'
 fig1:plot(sin, 'sin')
 fig1.title = 'First'
 -- second
@@ -132,7 +132,7 @@ local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
 -- symbols
-char = {'+', 'o', '*', '#', '%', '~', 'x'},
+char = {'*', 'o', '#', '%', '~', 'x'},
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 }
 
@@ -211,9 +211,9 @@ asciiplot._axes = function (F)
   local vertical, horizontal = '|', '-'
   -- vertical line
   local n = nil
-  if     F.yaxis == 'C' then n = asciiplot._ycentral(F)
-  elseif F.yaxis == 'L' then n = 1
-  elseif F.yaxis == 'R' then n = F.width end
+  if     F.yaxis == 'mid' then n = asciiplot._ycentral(F)
+  elseif F.yaxis == 'min' then n = 1
+  elseif F.yaxis == 'max' then n = F.width end
   if n then
     for i = 1, F.height do
       F.canvas[i][n] = vertical
@@ -226,9 +226,9 @@ asciiplot._axes = function (F)
     n = nil
   end
   -- horizontal line
-  if F.xaxis == 'C' then n = asciiplot._xcentral(F)
-  elseif F.xaxis == 'U' then n = 1
-  elseif F.xaxis == 'D' then n = F.height end
+  if F.xaxis == 'mid' then n = asciiplot._xcentral(F)
+  elseif F.xaxis == 'max' then n = 1
+  elseif F.xaxis == 'min' then n = F.height end
   if n then
     local row = F.canvas[n]
     for i = 1, F.width do
@@ -390,9 +390,9 @@ end
 asciiplot._limits = function (F)
   -- horizontal
   local n = nil
-  if F.xaxis == 'C' then n = asciiplot._xcentral(F) + 1
-  elseif F.xaxis == 'U' then n = 1
-  elseif F.xaxis == 'D' then n = F.height end
+  if F.xaxis == 'mid' then n = asciiplot._xcentral(F) + 1
+  elseif F.xaxis == 'max' then n = 1
+  elseif F.xaxis == 'min' then n = F.height end
   if n then
     local row, beg = F.canvas[n], 0
     local s = string.format(' %s ',  tostring(F.xrange[1]))
@@ -407,9 +407,9 @@ asciiplot._limits = function (F)
     n = nil
   end
   -- vertical
-  if F.yaxis == 'C' then n = asciiplot._ycentral(F)
-  elseif F.yaxis == 'L' then n = 1
-  elseif F.yaxis == 'R' then n = F.width end
+  if F.yaxis == 'mid' then n = asciiplot._ycentral(F)
+  elseif F.yaxis == 'min' then n = 1
+  elseif F.yaxis == 'max' then n = F.width end
   if n then
     local s = string.format(' %s ', tostring(F.yrange[1]))
     local beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
@@ -432,9 +432,8 @@ end
 --  @return New object of asciiplot.
 asciiplot._new = function(self, dwidth, dheight)
   local o = {
-    -- size
-    width  = dwidth or WIDTH,
-    height = dheight or HEIGHT,
+    width = dwidth,
+    height = dheight,
     _w0 = dwidth or WIDTH,
     _h0 = dheight or HEIGHT,
     -- range
@@ -442,8 +441,8 @@ asciiplot._new = function(self, dwidth, dheight)
     yrange = {-1, 1},
     zrange = {-1, 1}, 
     -- axes location
-    xaxis  = 'C',
-    yaxis  = 'C',
+    xaxis  = 'mid',
+    yaxis  = 'mid',
     -- image
     canvas = {},
     -- comments
@@ -1012,6 +1011,21 @@ about[asciiplot.tplot] = {"F:tplot(data_t, {yfix=false}) --> F",
 -- Simplify the constructor call.
 setmetatable(asciiplot, {
 __call = function (self, w, h)
+  -- size
+  w = w or WIDTH
+  h = h or HEIGHT
+  if w < 9 then
+    w = 9 ; print('Warn: set width 9')
+  end
+  if h < 9 then
+    h = 9 ; print('Warn: set height 9')
+  end
+  if w % 2 == 0 then
+    w = w + 1 ; print('Warn: set width', w)
+  end
+  if h % 2 == 0 then
+    h = h + 1 ; print('Warn: set height', h)
+  end
   return asciiplot:_new(w, h)
 end})
 about[asciiplot] = {" (width_N=75, height_N=23) --> new_F", 
