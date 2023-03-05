@@ -394,16 +394,18 @@ asciiplot._limits = function (F)
   elseif F.xaxis == 'max' then n = 1
   elseif F.xaxis == 'min' then n = F.height end
   if n then
+    -- min
     local row, beg = F.canvas[n], 0
     local s = string.format(' %s ',  tostring(F.xrange[1]))
-    for i = 1, #s do
-      row[beg+i] = string.sub(s, i, i)
-    end
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    -- max
     s = string.format(' %s ', tostring(F.xrange[2]))
     beg = F.width - #s - 1
-    for i = 1, #s do
-      row[beg+i] = string.sub(s, i, i)
-    end
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    -- mid
+    s = string.format(' %s ', tostring(0.5*(F.xrange[1]+F.xrange[2])))
+    beg = asciiplot._ycentral(F) 
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     n = nil
   end
   -- vertical
@@ -411,18 +413,19 @@ asciiplot._limits = function (F)
   elseif F.yaxis == 'min' then n = 1
   elseif F.yaxis == 'max' then n = F.width end
   if n then
+    -- min
     local s = string.format(' %s ', tostring(F.yrange[1]))
-    local beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
+    local beg = (n == F.width) and (F.width - #s - 1) or (n )
     local row = F.canvas[F.height-1]
-    for i = 1, #s do
-      row[beg+i] = string.sub(s, i, i)
-    end
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    -- max
     s = string.format(' %s ', tostring(F.yrange[2]))
-    beg = (n == F.width) and (F.width - #s - 1) or (n + 1)
     row = F.canvas[2]
-    for i = 1, #s do
-      row[beg+i] = string.sub(s, i, i)
-    end
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    -- mid
+    row = F.canvas[asciiplot._xcentral(F)]
+    s = string.format(' %s ', tostring(0.5*(F.yrange[1]+F.yrange[2])))
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
   end
 end
 
