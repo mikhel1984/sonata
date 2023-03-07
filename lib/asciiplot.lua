@@ -54,7 +54,7 @@ print(fig2:tplot(tbl, {2, yfix=true}))
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
-ans = fig1.width             --> 61
+ans = fig1.width             --> 59 
 
 -- horizontal concatenation
 -- first
@@ -111,6 +111,7 @@ local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 
 -- default figure size
 local WIDTH, HEIGHT = 73, 21
+local STR_NORM, STR_LOG = ' %s ', ' 10^%d '
 
 local log10 = math.log(10)
 
@@ -252,11 +253,11 @@ asciiplot._axesScale = function (F)
   elseif F.yaxis == 'min' then n = 1
   elseif F.yaxis == 'max' then n = F.width end
   if n then
-    -- find step
-    local d = F.height - 1
-    while d > dmin and d % 2 == 0 do d = d / 2 end
-    -- add 
-    for i = d+1, F.height-1, d do F.canvas[i][n] = mark end
+      -- find step
+      local d = F.height - 1
+      while d > dmin and d % 2 == 0 do d = d / 2 end
+      -- add 
+      for i = d+1, F.height-1, d do F.canvas[i][n] = mark end
     n = nil
   end
   -- horizontal 
@@ -425,14 +426,18 @@ asciiplot._limits = function (F)
   if n then
     -- min
     local row, beg = F.canvas[n], 0
-    local s = string.format(' %s ',  tostring(F.xrange[1]))
+    local s = F.xlog and string.format(STR_LOG, F.xrange[1]) 
+      or string.format(STR_NORM,  tostring(F.xrange[1]))
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
-    s = string.format(' %s ', tostring(F.xrange[2]))
+    s = F.xlog and string.format(STR_LOG, F.xrange[2]) 
+      or string.format(STR_NORM, tostring(F.xrange[2]))
     beg = F.width - #s - 1
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
-    s = string.format(' %s ', tostring(0.5*(F.xrange[1]+F.xrange[2])))
+    local mid = (F.xrange[1] + F.xrange[2]) / 2
+    s = F.xlog and string.format(' 10^%f ', mid) 
+      or string.format(STR_NORM, tostring(mid))
     beg = (F.width+1) / 2
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     n = nil
@@ -443,17 +448,21 @@ asciiplot._limits = function (F)
   elseif F.yaxis == 'max' then n = F.width end
   if n then
     -- min
-    local s = string.format(' %s ', tostring(F.yrange[1]))
+    local s = F.ylog and string.format(STR_LOG, F.yrange[1]) 
+      or string.format(STR_NORM, tostring(F.yrange[1]))
     local beg = (n == F.width) and (F.width - #s - 1) or (n )
     local row = F.canvas[F.height-1]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
-    s = string.format(' %s ', tostring(F.yrange[2]))
+    s = F.ylog and string.format(STR_LOG, F.yrange[2]) 
+      or string.format(' %s ', tostring(F.yrange[2]))
     row = F.canvas[2]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
+    local mid = (F.yrange[1] + F.yrange[2]) / 2
     row = F.canvas[(F.height+1) / 2]
-    s = string.format(' %s ', tostring(0.5*(F.yrange[1]+F.yrange[2])))
+    s = F.ylog and string.format(' 10^%f ', mid) 
+      or string.format(' %s ', tostring(mid))
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
   end
 end
@@ -487,19 +496,30 @@ end
 
 --- Find closest outer bounds, update range.
 --  @param t Table {min, max}.
-asciiplot._roundRange = function (t)
-  local p = math.log(t[2] - t[1]) / log10
-  local n = (p >= 0) and math.floor(p) or math.ceil(p)
-  local tol = 10^(n-1)
-  local v, rest = mmodf(t[1] / tol)
-  if rest ~= 0 then
-    rest = (rest > 0) and 0 or 1
-    t[1] = (v - rest) * tol
-  end
-  v, rest = mmodf(t[2] / tol)
-  if rest ~= 0 then
-    rest = (rest < 0) and 0 or 1
-    t[2] = (v + rest) * tol
+--  @param isLog Set for logarithmic scale.
+asciiplot._roundRange = function (t, isLog)
+  if isLog then
+    local p1 = math.log(t[1]) / log10
+    p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
+    local p2 = math.log(t[2]) / log10
+    p2 = (p2 > 0) and math.ceil(p2) or math.floor(p2)
+    -- expected even number of intervals, add empty if need
+    --if (p2 - p1) % 2 == 1 then p1 = p1 - 1 end
+    t[1], t[2] = p1, p2
+  else
+    local p = math.log(t[2] - t[1]) / log10
+    local n = (p >= 0) and math.floor(p) or math.ceil(p)
+    local tol = 10^(n-1)
+    local v, rest = mmodf(t[1] / tol)
+    if rest ~= 0 then
+      rest = (rest > 0) and 0 or 1
+      t[1] = (v - rest) * tol
+    end
+    v, rest = mmodf(t[2] / tol)
+    if rest ~= 0 then
+      rest = (rest < 0) and 0 or 1
+      t[2] = (v + rest) * tol
+    end
   end
 end
 
@@ -643,6 +663,8 @@ end
 --  @param s Character.
 asciiplot.addPoint = function (F, dx, dy, s)
   local h, w = F.height, F.width
+  dx = F.xlog and (math.log(dx)/log10) or dx
+  dy = F.ylog and (math.log(dy)/log10) or dy
   local nx = (dx - F.xrange[1]) / (F.xrange[2] - F.xrange[1])
   local ny = (dy - F.yrange[1]) / (F.yrange[2] - F.yrange[1])
   local int, frac = mmodf((w-1) * nx + 1)
@@ -867,6 +889,9 @@ asciiplot.copy = function (F)
     title = F.title,
     xaxis = F.xaxis,
     yaxis = F.yaxis,
+    xlog = F.xlog,
+    ylog = F.ylog,
+    zlog = F.zlog,
     _w0 = F._w0,
     _h0 = F._h0,
     canvas = {},
