@@ -113,7 +113,6 @@ local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 local WIDTH, HEIGHT = 73, 21
 local STR_NORM, STR_LOG = ' %s ', ' 10^%d '
 
-local log10 = math.log(10)
 
 local mmodf = math.modf
 
@@ -128,6 +127,84 @@ __module__ = "Use pseudography for data visualization."
 }
 
 --	MODULE
+
+local axis = {
+  log10 = math.log(10)
+}
+axis.__index = axis 
+
+axis.new = function (A, N)
+  if N < 9 then 
+    print('Set minimal axis size:', N)
+    N = 9
+  elseif N % 2 == 0 then
+    print('Change to odd size')
+    return asis.new(A, N+1)
+  end
+  local a = {size=N, range={-1,1}, diff = 2}
+  return setmetatable(a, axis)
+end
+
+axis.setRange = function (A, t)
+  if A.log then
+    local p1 = math.log(t[1]) / axis.log10
+    p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
+    local p2 = math.log(t[2]) / axis.log10
+    p2 = (p2 > 0) and math.ceil(p2) or math.floor(p2)
+    -- expected even number of intervals, add empty if need
+    --if (p2 - p1) % 2 == 1 then p1 = p1 - 1 end
+    A.range[1], A.range[2] = p1, p2
+  else
+    local p = math.log(t[2] - t[1]) / axis.log10
+    local n = (p >= 0) and math.floor(p) or math.ceil(p)
+    local tol = 10^(n-1)
+    local v, rest = mmodf(t[1] / tol)
+    if rest ~= 0 then
+      rest = (rest > 0) and 0 or 1
+      A.range[1] = (v - rest) * tol
+    else
+      A.range[1] = t[1]
+    end
+    v, rest = mmodf(t[2] / tol)
+    if rest ~= 0 then
+      rest = (rest < 0) and 0 or 1
+      A.range[2] = (v + rest) * tol
+    else
+      A.range[2] = t[1]
+    end
+  end
+  A.diff = A.range[2] - A.range[1]
+end
+
+axis.setLog = function (A, isLog)
+  if isLog and not A.log or not isLog and A.log then
+    A.log = isLog
+    A:setRange(A.range)  -- update limits
+  end
+end
+
+asix.copy = function (A)
+  local new = {
+    size = A.size,
+    log = A.log,
+    range = {A.range[1], A.range[2]},
+    diff = A.diff,
+  }
+  return setmetatable(new, axis)
+end
+
+axis.proj = function (A, d, isX)
+  d = A.log and math.log(d)/axis.log10 or d
+  if d < A.range[1] or d > A.range[2] then return nil end
+  local dx = (d - A.range[1]) / A.diff
+  local int, frac = nil, nil
+  if isX then
+    int, frac = mmodf((A.size-1) * dx + 1)
+  else
+    int, frac = mmodf((1-A.size) * dx + A.size)
+  end
+  return (frac > 0.5) and (int + 1) or int
+end
 
 local asciiplot = {
 -- mark
