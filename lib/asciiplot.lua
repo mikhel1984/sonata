@@ -206,6 +206,33 @@ axis.proj = function (A, d, isX)
   return (frac > 0.5) and (int + 1) or int
 end
 
+axis.invProj = function (A, n, isX)
+  local x = (n - 1) * A.diff / (A.size - 1) + A.range[1]
+  return A.log and math.pow(10,x) or x
+end
+
+axis.limit = function (A. s)
+  local v = nil
+  if s == 'min' then
+    v = A.range[1]
+  elseif s == 'max' then
+    v = A.range[2]
+  elseif s == 'mid' then
+    v = (A.range[1]+A.range[2]) / 2
+  else
+    return nil
+  end
+  return A.log and string.format(' 10^%f ', v) 
+    or string.format(' %s ', tostring(v))
+end
+
+axis.markerInterval = function (A)
+  local dmin = 4
+  local d = A.size - 1
+  while d > dmin and d % 2 == 0 do d = d / 2 end
+  return d
+end
+
 local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
@@ -286,7 +313,7 @@ end
 --- Add coordinate axes.
 --  @param F Figure object.
 asciiplot._axes = function (F)
-  local vertical, horizontal = '|', '-'
+  local vertical, horizontal, mark = '|', '-', '+'
   -- vertical line
   local n = nil
   if     F.yaxis == 'mid' then n = (F.width+1) / 2
@@ -296,11 +323,10 @@ asciiplot._axes = function (F)
     for i = 1, F.height do
       F.canvas[i][n] = vertical
     end
-    if F.yrange and F.yrange[2] < F.yrange[1] then
-      F.canvas[F.height][n] = 'V'
-    else
-      F.canvas[1][n] = 'A'
-    end
+    F.canvas[1][n] = 'A'
+    -- markers
+    local d = F._y:markerInterval()
+    for i = d+1, F._y.size-1, d do F.canvas[i][n] = mark end
     n = nil
   end
   -- horizontal line
@@ -312,52 +338,22 @@ asciiplot._axes = function (F)
     for i = 1, F.width do
       row[i] = horizontal
     end
-    if F.xrange and F.xrange[2] < F.xrange[1] then
-      row[1] = '<'
-    else
-      row[F.width] = '>'
-    end
-  end
-  asciiplot._axesScale(F)
-end
-
-asciiplot._axesScale = function (F)
-  local mark = '+'
-  local dmin = 4
-  -- vertical
-  local n = nil
-  if     F.yaxis == 'mid' then n = (F.width+1) / 2
-  elseif F.yaxis == 'min' then n = 1
-  elseif F.yaxis == 'max' then n = F.width end
-  if n then
-      -- find step
-      local d = F.height - 1
-      while d > dmin and d % 2 == 0 do d = d / 2 end
-      -- add 
-      for i = d+1, F.height-1, d do F.canvas[i][n] = mark end
-    n = nil
-  end
-  -- horizontal 
-  if F.xaxis == 'mid' then n = (F.height+1) / 2
-  elseif F.xaxis == 'max' then n = 1
-  elseif F.xaxis == 'min' then n = F.height end
-  if n then
-    local d = F.width - 1
-    while d > dmin and d % 2 == 0 do d = d / 2 end
-    local row = F.canvas[n]
-    for i = d+1, F.width-1, d do row[i] = mark end
+    row[F.width] = '>'
+    -- markers
+    local d = F._x:markerInterval()
+    for i = d+1, F._x.size-1, d do row[i] = mark end
   end
 end
 
 --- Resize, clear canvas.
 --  @param F Figure object.
 asciiplot._clear = function (F)
-  local white = ' '
-  for i = 1, F.height do
+  local white, width = ' ', F._x.size
+  for i = 1, F._y.size do
     local row = F.canvas[i] or {}
-    for j = 1, F.width do row[j] = white end
-    if #row > F.width then
-      for j = #row, F.width+1, -1 do row[j] = nil end
+    for j = 1, width do row[j] = white end
+    if #row > width then
+      for j = #row, width+1, -1 do row[j] = nil end
     end
     F.canvas[i] = row
   end
@@ -431,10 +427,9 @@ end
 --  @param fn Function f(x).
 --  @return Lists of coordinates X and Y.
 asciiplot._fn2XY = function (F, fn)
-  local d, x0 = (F.xrange[2] - F.xrange[1]) / (F.width - 1), F.xrange[1]
   local X, Y = {}, {}
-  for nx = 1, F.width do
-    local x = d * (nx - 1) + x0
+  for nx = 1, F._x.size do
+    local x = F._x:invProj(nx)
     X[nx] = x
     Y[nx] = fn(x)
   end
@@ -497,49 +492,41 @@ end
 asciiplot._limits = function (F)
   -- horizontal
   local n = nil
-  if F.xaxis == 'mid' then n = (F.height+1) / 2 + 1
+  if F.xaxis == 'mid' then n = (F._y.size+1) / 2 + 1
   elseif F.xaxis == 'max' then n = 1
-  elseif F.xaxis == 'min' then n = F.height end
+  elseif F.xaxis == 'min' then n = F._y.size end
   if n then
     -- min
     local row, beg = F.canvas[n], 0
-    local s = F.xlog and string.format(STR_LOG, F.xrange[1]) 
-      or string.format(STR_NORM,  tostring(F.xrange[1]))
+    local s = F._x.limit('min')
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
-    s = F.xlog and string.format(STR_LOG, F.xrange[2]) 
-      or string.format(STR_NORM, tostring(F.xrange[2]))
+    s = F._x.limit('max')
     beg = F.width - #s - 1
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
-    local mid = (F.xrange[1] + F.xrange[2]) / 2
-    s = F.xlog and string.format(' 10^%f ', mid) 
-      or string.format(STR_NORM, tostring(mid))
+    s = F._x.limit('mid')
     beg = (F.width+1) / 2
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     n = nil
   end
   -- vertical
-  if F.yaxis == 'mid' then n = (F.width+1) / 2
+  if F.yaxis == 'mid' then n = (F._x.size+1) / 2
   elseif F.yaxis == 'min' then n = 1
-  elseif F.yaxis == 'max' then n = F.width end
+  elseif F.yaxis == 'max' then n = F._x.size end
   if n then
     -- min
-    local s = F.ylog and string.format(STR_LOG, F.yrange[1]) 
-      or string.format(STR_NORM, tostring(F.yrange[1]))
+    local s = F._y.limit('min')
     local beg = (n == F.width) and (F.width - #s - 1) or (n )
     local row = F.canvas[F.height-1]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
-    s = F.ylog and string.format(STR_LOG, F.yrange[2]) 
-      or string.format(' %s ', tostring(F.yrange[2]))
+    s = F._y.limit('max')
     row = F.canvas[2]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
-    local mid = (F.yrange[1] + F.yrange[2]) / 2
+    s = F._y.limit('mid')
     row = F.canvas[(F.height+1) / 2]
-    s = F.ylog and string.format(' 10^%f ', mid) 
-      or string.format(' %s ', tostring(mid))
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
   end
 end
@@ -550,14 +537,10 @@ end
 --  @return New object of asciiplot.
 asciiplot._new = function(self, dwidth, dheight)
   local o = {
-    width = dwidth,
-    height = dheight,
-    _w0 = dwidth or WIDTH,
-    _h0 = dheight or HEIGHT,
-    -- range
-    xrange = {-1, 1},
-    yrange = {-1, 1},
-    zrange = {-1, 1}, 
+    _x = axis.new(dwidth),
+    _y = axis.new(dheight)
+    --_w0 = dwidth or WIDTH,
+    --_h0 = dheight or HEIGHT,
     -- axes location
     xaxis  = 'mid',
     yaxis  = 'mid',
@@ -569,35 +552,6 @@ asciiplot._new = function(self, dwidth, dheight)
   }
   -- return object
   return setmetatable(o, self)
-end
-
---- Find closest outer bounds, update range.
---  @param t Table {min, max}.
---  @param isLog Set for logarithmic scale.
-asciiplot._roundRange = function (t, isLog)
-  if isLog then
-    local p1 = math.log(t[1]) / log10
-    p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
-    local p2 = math.log(t[2]) / log10
-    p2 = (p2 > 0) and math.ceil(p2) or math.floor(p2)
-    -- expected even number of intervals, add empty if need
-    --if (p2 - p1) % 2 == 1 then p1 = p1 - 1 end
-    t[1], t[2] = p1, p2
-  else
-    local p = math.log(t[2] - t[1]) / log10
-    local n = (p >= 0) and math.floor(p) or math.ceil(p)
-    local tol = 10^(n-1)
-    local v, rest = mmodf(t[1] / tol)
-    if rest ~= 0 then
-      rest = (rest > 0) and 0 or 1
-      t[1] = (v - rest) * tol
-    end
-    v, rest = mmodf(t[2] / tol)
-    if rest ~= 0 then
-      rest = (rest < 0) and 0 or 1
-      t[2] = (v + rest) * tol
-    end
-  end
 end
 
 --- Find range of levels for surface plot.
