@@ -56,7 +56,7 @@ a = Mat {{1,2},{3,4}}       -- new matrix
 a:det()
 Mat:eye(2,2)
 -- List of functions in the module
-help 'matrix'
+help 'matrix'   -- or help 'Mat'
 -- PAUSE
 
 -- Several modules could be loaded as

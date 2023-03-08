@@ -1,5 +1,9 @@
 ======== 0.9.34 =========
 
+Ap
+* Axis as a separate class
+* Modification via functions
+* Add log scale
 Geo
 * Add UTM coordinates
 * Remove progM and projGK
@@ -7,6 +11,7 @@ Int
 * Minor improvements
 Main
 * Call elementary functions for complex objects
+* Fix ipairs for Range object
 Sym
 * Add derivatives
 * Bug fixes

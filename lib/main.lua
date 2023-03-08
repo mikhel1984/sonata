@@ -62,9 +62,7 @@ c = Map(sin, b)
 ans = c[1]                   --3> 0.909
 
 -- use Lua functions if need
-ans = math.floor(_pi)
-
-ans = math.deg(_pi)
+ans = math.deg(_pi)          --2> 180.0
 
 --]]
 
@@ -403,16 +401,15 @@ end
 --  @param i Element index.
 --  @return Number.
 mt_range.__index = function (self, i)
-  if Ver.isInteger(i) then
+  if Ver.isInteger(i) and i > 0 and i <= self._N then
     local v = 0
-    if i > 0 and i < self._N then
+    if i < self._N then
       v = self._beg + (i-1)*self._step
-    elseif i == self._N then
+    else
       v = self._end
     end
     return v and self._fn and self._fn(v) or v
   end
-  return mt_range[i]
 end
 
 -- Block setting operation.

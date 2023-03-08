@@ -258,7 +258,7 @@ gnuplot._lst2file = function (t1,t2,fn)
     end
   elseif t2 then
     if type(t2) == 'table' then
-      assert(#t1 == #t2, 'Different talbe length!')
+      assert(#t1 == #t2, 'Different table length!')
       for i, v1 in ipairs(t1) do f:write(v1, ' ', t2[i], '\n') end
     else -- must be function
       for i, v1 in ipairs(t1) do f:write(v1, ' ', t2(v1), '\n') end

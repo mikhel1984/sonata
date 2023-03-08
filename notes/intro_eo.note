@@ -56,7 +56,7 @@ a = Mat {{1,2},{3,4}}       -- nova matrico
 a:det()
 Mat:eye(2,2)
 -- Listo de funkcioj en la modulo
-help 'matrix'
+help 'matrix'   -- aŭ help 'Mat'
 -- PAUSE
 
 -- Pluraj moduloj povas esti ŝarĝitaj samtempe per la komando
