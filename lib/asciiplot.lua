@@ -135,11 +135,59 @@ __module__ = "Use pseudography for data visualization."
 
 --	MODULE
 
+-- Axis object
 local axis = {
   log10 = math.log(10)
 }
-axis.__index = axis 
+axis.__index = axis
 
+--- Make a copy.
+--  @param A Source axis object.
+--  @return Axis copy.
+axis.copy = function (A)
+  local new = {
+    size = A.size,
+    log = A.log,
+    range = {A.range[1], A.range[2]},
+    diff = A.diff,
+    _init = {A._init[1], A._init[2]},
+    _size = A._size,
+  }
+  return setmetatable(new, axis)
+end
+
+--- Transform number to string.
+--  @param A Axis object.
+--  @param s Required value (min, mid, max).
+--  @return Value as string or nil.
+axis.limit = function (A, s)
+  local v = nil
+  if s == 'min' then
+    v = A.range[1]
+  elseif s == 'max' then
+    v = A.range[2]
+  elseif s == 'mid' then
+    v = (A.range[1]+A.range[2]) / 2
+  else
+    return nil
+  end
+  return A.log and string.format(' 10^%f ', v) 
+    or string.format(' %s ', tostring(v))
+end
+
+--- Find available interval to show markers.
+--  @param A Axis object.
+--  @return Interval value.
+axis.markerInterval = function (A)
+  local dmin = 4
+  local d = A.size - 1
+  while d > dmin and d % 2 == 0 do d = d / 2 end
+  return d
+end
+
+--- Create new axis.
+--  @param N Required width.
+--  @return axis object.
 axis.new = function (N)
   if N < 9 then 
     print('Set minimal axis size:', N)
@@ -150,15 +198,37 @@ axis.new = function (N)
   end
   local x1, x2 = -1, 1
   local a = {
-    size = N, 
-    range = {x1, x2}, 
-    diff = x2-x1, 
-    _init = {x1, x2},
-    _size = N,
+    size = N,          -- current width
+    range = {x1, x2},  -- current range
+    diff = x2-x1,      -- range amplitude
+    _init = {x1, x2},  -- initial range
+    _size = N,         -- initial width
   }
   return setmetatable(a, axis)
 end
 
+--- Find number position maping on the axis.
+--  @param A Axis object.
+--  @param d Number for projection.
+--  @param isX Flag of direct projection.
+--  @return Position (index) or nil if out of range.
+axis.proj = function (A, d, isX)
+  d = A.log and math.log(d)/axis.log10 or d
+  if d < A.range[1] or d > A.range[2] then return nil end
+  local dx = (d - A.range[1]) / A.diff
+  local int, frac = nil, nil
+  if isX then
+    int, frac = mmodf((A.size-1) * dx + 1)
+  else
+    int, frac = mmodf((1-A.size) * dx + A.size)
+  end
+  int = (frac > 0.5) and (int + 1) or int
+  return (1 <= int and int <= A.size) and int or nil  -- TODO return int?
+end
+
+--- Update axis width.
+--  @param A Axis object.
+--  @param N New size.
 axis.resize = function (A, N)
   if N < 9 then 
     print('Set minimal axis size:', N)
@@ -171,6 +241,9 @@ axis.resize = function (A, N)
   A._size = N
 end
 
+--- Update axis range.
+--  @param A Axis object.
+--  @param t New range {min, max}.
 axis.setRange = function (A, t)
   A._init[1], A._init[2] = t[1], t[2]  -- exact limits
   if A.log then
@@ -200,44 +273,28 @@ axis.setRange = function (A, t)
   A.diff = A.range[2] - A.range[1]
 end
 
+--- Apply logarithmic scale for the axis.
+--  @param A Axis object.
+--  @param isLog Flag to set scale type.
 axis.setLog = function (A, isLog)
   if isLog and not A.log or not isLog and A.log then
     A.log = isLog
-    A:setRange(A._init)  -- update limits
+    A:setRange(A._init)    -- update limits
   end
 end
 
-axis.copy = function (A)
-  local new = {
-    size = A.size,
-    log = A.log,
-    range = {A.range[1], A.range[2]},
-    diff = A.diff,
-    _init = {A._init[1], A._init[2]},
-    _size = A._size,
-  }
-  return setmetatable(new, axis)
-end
-
+--- Change size w.r.t initial value.
+--  @param A Axis object.
+--  @param factor Positive multiplier.
 axis.scale = function (A, factor)
   local int, frac = mmodf(A._size * factor)
   axis.resize(A, (int % 2 == 1) and int or (int + 1))
 end
 
-axis.proj = function (A, d, isX)
-  d = A.log and math.log(d)/axis.log10 or d
-  if d < A.range[1] or d > A.range[2] then return nil end
-  local dx = (d - A.range[1]) / A.diff
-  local int, frac = nil, nil
-  if isX then
-    int, frac = mmodf((A.size-1) * dx + 1)
-  else
-    int, frac = mmodf((1-A.size) * dx + A.size)
-  end
-  int = (frac > 0.5) and (int + 1) or int
-  return (1 <= int and int <= A.size) and int or nil
-end
-
+--- Move over the axis elements.
+--  @param A Axis object.
+--  @param isX Flag of direct iteration.
+--  @return Iterator, it gives index and value.
 axis.values = function (A, isX)
   local x0 = isX and A.range[1] or A.range[2]
   local k  = isX and A.diff / (A.size - 1) or -A.diff / (A.size - 1)
@@ -252,28 +309,7 @@ axis.values = function (A, isX)
   end
 end
 
-axis.limit = function (A, s)
-  local v = nil
-  if s == 'min' then
-    v = A.range[1]
-  elseif s == 'max' then
-    v = A.range[2]
-  elseif s == 'mid' then
-    v = (A.range[1]+A.range[2]) / 2
-  else
-    return nil
-  end
-  return A.log and string.format(' 10^%f ', v) 
-    or string.format(' %s ', tostring(v))
-end
-
-axis.markerInterval = function (A)
-  local dmin = 4
-  local d = A.size - 1
-  while d > dmin and d % 2 == 0 do d = d / 2 end
-  return d
-end
-
+-- Data visualization.
 local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
@@ -285,6 +321,7 @@ lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
 }
 
+-- update markers
 if SONATA_USE_COLOR then
   local char = asciiplot.char
   for k, v in ipairs(char) do
@@ -773,6 +810,28 @@ end
 about[asciiplot.addString] = {"F:addString(row_N, col_N, str) --> nil",
   "Set string from the given position.", MANUAL}
 
+--- Get information about axes.
+--  @param F Figure object.
+--  @return Table with parameters.
+asciiplot.axes = function (F)
+  local res = {}
+  local key = asciiplot.keys
+  for i = 1, 3 do
+    local a = F[key[i]]
+    res[key[i+3]] = {
+      size = a.size,
+      log = a.log or false,
+      range = {
+        a.log and math.pow(10, a.range[1]) or a.range[1],
+        a.log and math.pow(10, a.range[2]) or a.range[2],
+      }
+    }
+  end
+  return res
+end
+about[asciiplot.axes] = {"F:axes() --> tbl",
+  "Get {size, log, range} for each size."}
+
 --- Plot bar graph.
 --  @param F Figure object.
 --  @param t Data table ({x,y} or x).
@@ -967,6 +1026,24 @@ end
 about[asciiplot.copy] = {
   "F:copy() --> cpy_F", "Create a copy of the object.", help.OTHER}
 
+--- Change x axis type.
+--  @param F Figure object.
+--  @param isLog Flag to apply logarithmic scale.
+asciiplot.logX = function (F, isLog) F._x:setLog(isLog) end
+about[asciiplot.logX] = {"F:logX(isLog) --> nil", "Change X axis type to logarithmic."}
+
+--- Change y axis type.
+--  @param F Figure object.
+--  @param isLog Flag to apply logarithmic scale.
+asciiplot.logY = function (F, isLog) F._y:setLog(isLog) end
+about[asciiplot.logY] = {"F:logY(isLog) --> nil", "Change Y axis type to logarithmic."}
+
+--- Change z axis type.
+--  @param F Figure object.
+--  @param isLog Flag to apply logarithmic scale.
+asciiplot.logZ = function (F, isLog) F._z:setLog(isLog) end
+about[asciiplot.logZ] = {"F:logZ(isLog) --> nil", "Change Z axis type to logarithmic."}
+
 --- Generalized plot funciton.
 --  @param F Figure object.
 --  @param ... is "t1", "t1,t2", "fn", "t1,name", "t1,t2,name" etc.
@@ -1063,6 +1140,24 @@ end
 about[asciiplot.scale] = {"F:scale(factor_d, isDefault=false) --> F",
   "Change figure size w.r.t. initial size."}
 
+--- Update x range.
+--  @param F Figure object.
+--  @param t New range {min, max).
+asciiplot.setX = function (F, t) F._x:setRange(t) end
+about[asciiplot.setX] = {"F:setX(range_t) --> nil", "Update X range."}
+
+--- Update y range.
+--  @param F Figure object.
+--  @param t New range {min, max).
+asciiplot.setY = function (F, t) F._y:setRange(t) end
+about[asciiplot.setY] = {"F:setY(range_t) --> nil", "Update Y range."}
+
+--- Update z range.
+--  @param F Figure object.
+--  @param t New range {min, max).
+asciiplot.setZ = function (F, t) F._z:setRange(t) end
+about[asciiplot.setZ] = {"F:setZ(range_t) --> nil", "Update Z range."}
+
 --- Plot data represented in form of table
 --  {{x1,y11,y12,...}, {x2,y21,y22,...}, ...}
 --  @param F Figure object.
@@ -1101,34 +1196,8 @@ end})
 about[asciiplot] = {" (width_N=73, height_N=21) --> new_F", 
   "Create new asciiplot.", help.STATIC}
 
-asciiplot.setX = function (F, t) F._x:setRange(t) end
 
-asciiplot.setY = function (F, t) F._y:setRange(t) end
 
-asciiplot.setZ = function (F, t) F._z:setRange(t) end
-
-asciiplot.logX = function (F, isLog) F._x:setLog(isLog) end
-
-asciiplot.logY = function (F, isLog) F._y:setLog(isLog) end
-
-asciiplot.logZ = function (F, isLog) F._z:setLog(isLog) end
-
-asciiplot.axes = function (F)
-  local res = {}
-  local key = asciiplot.keys
-  for i = 1, 3 do
-    local a = F[key[i]]
-    res[key[i+3]] = {
-      size = a.size,
-      log = a.log or false,
-      range = {
-        a.log and math.pow(10, a.range[1]) or a.range[1],
-        a.log and math.pow(10, a.range[2]) or a.range[2],
-      }
-    }
-  end
-  return res
-end
 
 asciiplot.resize = function (F, w, h)
   if isasciiplot(w) then
