@@ -163,6 +163,7 @@ axis.setRange = function (A, t)
     --if (p2 - p1) % 2 == 1 then p1 = p1 - 1 end
     A.range[1], A.range[2] = p1, p2
   else
+    A.range[1], A.range[2] = t[1], t[2]
     local p = math.log(t[2] - t[1]) / axis.log10
     local n = (p >= 0) and math.floor(p) or math.ceil(p)
     local tol = 10^(n-1)
@@ -170,15 +171,11 @@ axis.setRange = function (A, t)
     if rest ~= 0 then
       rest = (rest > 0) and 0 or 1
       A.range[1] = (v - rest) * tol
-    else
-      A.range[1] = t[1]
     end
     v, rest = mmodf(t[2] / tol)
     if rest ~= 0 then
       rest = (rest < 0) and 0 or 1
       A.range[2] = (v + rest) * tol
-    else
-      A.range[2] = t[1]
     end
   end
   A.diff = A.range[2] - A.range[1]
@@ -218,7 +215,8 @@ axis.proj = function (A, d, isX)
   else
     int, frac = mmodf((1-A.size) * dx + A.size)
   end
-  return (frac > 0.5) and (int + 1) or int
+  int = (frac > 0.5) and (int + 1) or int
+  return (1 <= int and int <= A.size) and int or nil
 end
 
 axis.values = function (A, isX)
@@ -708,10 +706,11 @@ asciiplot.addPoint = function (F, dx, dy, s)
   local nx = F._x:proj(dx, true)
   local ny = F._y:proj(dy, false)
   if nx and ny and (#s == 1 or SONATA_USE_COLOR) then
+    print(nx, ny)
     F.canvas[ny][nx] = s
   end
 end
-about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> F", 
+about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil", 
   "Add point (x,y) using char.", MANUAL}
 
 --- Set character to direct position.
@@ -725,7 +724,7 @@ asciiplot.addPose = function (F, ir, ic, s)
     F.canvas[ir][ic] = s
   end
 end
-about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> F", 
+about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> nil", 
   "Add character to the given position.", MANUAL}
 
 --- Set string to the given position.
@@ -738,7 +737,7 @@ asciiplot.addString = function (F, ir, ic, s)
     asciiplot.addPose(F, ir, ic+i-1, string.sub(s, i, i))
   end
 end
-about[asciiplot.addString] = {"F:addString(row_N, col_N, str) --> F",
+about[asciiplot.addString] = {"F:addString(row_N, col_N, str) --> nil",
   "Set string from the given position.", MANUAL}
 
 --- Plot bar graph.
@@ -801,9 +800,8 @@ asciiplot.bar = function (F, t, vy, ix)
     end
     r = r + 1
   end
-  return F
 end
-about[asciiplot.bar] = {"F:bar(t, vy=2, x_N=1) --> F",
+about[asciiplot.bar] = {"F:bar(t, vy=2, x_N=1) --> nil",
   "Plot bar diargram for data. vy can be y index in t (optional) or table of y-s."}
 
 --- Horizontal concatenation of figures.
@@ -1010,9 +1008,8 @@ asciiplot.plot = function (F, ...)
   end
   -- limits
   asciiplot._limits(F)
-  return F
 end
-about[asciiplot.plot] = {"F:plot(...) --> F",
+about[asciiplot.plot] = {"F:plot(...) --> nil",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
 
 --- Prepare a clear canvas.
@@ -1062,10 +1059,8 @@ asciiplot.tplot = function (F, t, tOpt)
   asciiplot._addTable(F, t, tOpt)
   -- limits
   asciiplot._limits(F)
-  -- show
-  return F
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, {yfix=false}) --> F", 
+about[asciiplot.tplot] = {"F:tplot(data_t, {yfix=false}) --> nil", 
   "Plot the table data, choose columns if need."}
 
 -- Simplify the constructor call.
