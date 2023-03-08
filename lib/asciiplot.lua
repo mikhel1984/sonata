@@ -15,10 +15,10 @@ Ap = require 'lib.asciiplot'
 
 -- figure with default size
 fig1 = Ap()
-print(fig1.width, fig1.height)
+--print(fig1.width, fig1.height)
 
 -- print functions
-fig1.xrange = {-3.14, 3.14}   -- default is (-1,1)
+fig1:setX {-3.14, 3.14}   -- default is {-1, 1}
 fig1:plot(math.sin, 'sin', math.cos, 'cos')
 fig1.title = 'Trigonometry'
 print(fig1)
@@ -133,13 +133,13 @@ local axis = {
 }
 axis.__index = axis 
 
-axis.new = function (A, N)
+axis.new = function (N)
   if N < 9 then 
     print('Set minimal axis size:', N)
     N = 9
   elseif N % 2 == 0 then
     print('Change to odd size')
-    return asis.new(A, N+1)
+    return asis.new(N+1)
   end
   local x1, x2 = -1, 1
   local a = {
@@ -191,7 +191,7 @@ axis.setLog = function (A, isLog)
   end
 end
 
-asix.copy = function (A)
+axis.copy = function (A)
   local new = {
     size = A.size,
     log = A.log,
@@ -205,7 +205,7 @@ end
 
 axis.scale = function (A, factor)
   local int, frac = mmodf(A._size * factor)
-  F.size = (int % 2 == 1) and int or (int + 1)
+  A.size = (int % 2 == 1) and int or (int + 1)
 end
 
 axis.proj = function (A, d, isX)
@@ -223,7 +223,7 @@ end
 
 axis.values = function (A, isX)
   local x0 = isX and A.range[1] or A.range[2]
-  local k = isX and A.diff / (A.size - 1) or -A.diff / (A.size - 1)
+  local k  = isX and A.diff / (A.size - 1) or -A.diff / (A.size - 1)
   local ind = 1
   return function ()
     if ind <= A.size then
@@ -235,7 +235,7 @@ axis.values = function (A, isX)
   end
 end
 
-axis.limit = function (A. s)
+axis.limit = function (A, s)
   local v = nil
   if s == 'min' then
     v = A.range[1]
@@ -291,10 +291,10 @@ asciiplot.__tostring = function (F)
   -- title
   if F.title then
     -- to center
-    acc[1] = asciiplot._format(F.title, F.width, true, false)
+    acc[1] = asciiplot._format(F.title, F._x.size, true, false)
   end
   -- figure
-  for i = 1, F.height do
+  for i = 1, F._y.size do
     acc[#acc+1] = table.concat(F.canvas[i])
   end
   -- legend
@@ -340,11 +340,11 @@ asciiplot._axes = function (F)
   local vertical, horizontal, mark = '|', '-', '+'
   -- vertical line
   local n = nil
-  if     F.yaxis == 'mid' then n = (F.width+1) / 2
+  if     F.yaxis == 'mid' then n = (F._x.size+1) / 2
   elseif F.yaxis == 'min' then n = 1
-  elseif F.yaxis == 'max' then n = F.width end
+  elseif F.yaxis == 'max' then n = F._x.size end
   if n then
-    for i = 1, F.height do
+    for i = 1, F._y.size do
       F.canvas[i][n] = vertical
     end
     F.canvas[1][n] = 'A'
@@ -354,15 +354,15 @@ asciiplot._axes = function (F)
     n = nil
   end
   -- horizontal line
-  if F.xaxis == 'mid' then n = (F.height+1) / 2
+  if F.xaxis == 'mid' then n = (F._y.size+1) / 2
   elseif F.xaxis == 'max' then n = 1
-  elseif F.xaxis == 'min' then n = F.height end
+  elseif F.xaxis == 'min' then n = F._y.size end
   if n then
     local row = F.canvas[n]
-    for i = 1, F.width do
+    for i = 1, F._x.size do
       row[i] = horizontal
     end
-    row[F.width] = '>'
+    row[F._x.size] = '>'
     -- markers
     local d = F._x:markerInterval()
     for i = d+1, F._x.size-1, d do row[i] = mark end
@@ -508,42 +508,43 @@ end
 --  @param F Figure object.
 asciiplot._limits = function (F)
   -- horizontal
+  local width, height = F._x.size, F._y.size
   local n = nil
-  if F.xaxis == 'mid' then n = (F._y.size+1) / 2 + 1
+  if F.xaxis == 'mid' then n = (height+1) / 2 + 1
   elseif F.xaxis == 'max' then n = 1
-  elseif F.xaxis == 'min' then n = F._y.size end
+  elseif F.xaxis == 'min' then n = height end
   if n then
     -- min
     local row, beg = F.canvas[n], 0
-    local s = F._x.limit('min')
+    local s = F._x:limit('min')
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
-    s = F._x.limit('max')
-    beg = F.width - #s - 1
+    s = F._x:limit('max')
+    beg = width - #s - 1
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
-    s = F._x.limit('mid')
-    beg = (F.width+1) / 2
+    s = F._x:limit('mid')
+    beg = (width + 1) / 2
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     n = nil
   end
   -- vertical
-  if F.yaxis == 'mid' then n = (F._x.size+1) / 2
+  if F.yaxis == 'mid' then n = (width + 1) / 2
   elseif F.yaxis == 'min' then n = 1
-  elseif F.yaxis == 'max' then n = F._x.size end
+  elseif F.yaxis == 'max' then n = width end
   if n then
     -- min
-    local s = F._y.limit('min')
-    local beg = (n == F.width) and (F.width - #s - 1) or (n )
-    local row = F.canvas[F.height-1]
+    local s = F._y:limit('min')
+    local beg = (n == width) and (width - #s - 1) or n
+    local row = F.canvas[height-1]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
-    s = F._y.limit('max')
+    s = F._y:limit('max')
     row = F.canvas[2]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
-    s = F._y.limit('mid')
-    row = F.canvas[(F.height+1) / 2]
+    s = F._y:limit('mid')
+    row = F.canvas[(height + 1) / 2]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
   end
 end
