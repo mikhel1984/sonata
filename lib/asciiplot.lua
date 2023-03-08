@@ -638,9 +638,10 @@ asciiplot._viewXY = function (F, tX, tY, tZ, tOpt)
   asciiplot._clear(F)
   asciiplot._axes(F)
   -- fill
+  local width = F._x.size
   for i = 1, F._y.size do
     local row = tZ[i]
-    for j = 1, F._x.size do
+    for j = 1, width do
       local z = row[j]
       for k = 1, N do
         if math.abs(lvl[k] - z) <= h then
@@ -665,7 +666,7 @@ end
 --  @return Figure object.
 asciiplot._viewXZ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, h = asciiplot._surfRange(1, F._y.size, N, tOpt.minmax, true)
+  local lvl, _ = asciiplot._surfRange(1, F._y.size, N, tOpt.minmax, true)
   F.yrange = (tOpt.view == 'XYZ') and {F._z.range[2], F._z.range[1]} 
     or F._z.range
     -- prepare
@@ -696,7 +697,7 @@ end
 --  @return Figure object.
 asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, h = asciiplot._surfRange(1, F._x.size, N, tOpt.minmax, true)
+  local lvl, _ = asciiplot._surfRange(1, F._x.size, N, tOpt.minmax, true)
   local rotate = (tOpt.view == 'concat')
   -- update ranges
   if rotate then
