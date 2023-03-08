@@ -358,7 +358,7 @@ asciiplot.__index = asciiplot
 --  @param F Figure object.
 --  @return String.
 asciiplot.__tostring = function (F)
-  if #F.canvas == 0 then return 'empty figure' end
+  if #F._canvas == 0 then return 'empty figure' end
   local acc = {}
   -- title
   if F._title then
@@ -367,7 +367,7 @@ asciiplot.__tostring = function (F)
   end
   -- figure
   for i = 1, F._y.size do
-    acc[#acc+1] = table.concat(F.canvas[i])
+    acc[#acc+1] = table.concat(F._canvas[i])
   end
   -- legend
   local sym = {}
@@ -417,12 +417,12 @@ asciiplot._axes = function (F)
   elseif F._yaxis == 'max' then n = F._x.size end
   if n then
     for i = 1, F._y.size do
-      F.canvas[i][n] = vertical
+      F._canvas[i][n] = vertical
     end
-    F.canvas[1][n] = 'A'
+    F._canvas[1][n] = 'A'
     -- markers
     local d = F._y:markerInterval()
-    for i = d+1, F._y.size-1, d do F.canvas[i][n] = mark end
+    for i = d+1, F._y.size-1, d do F._canvas[i][n] = mark end
     n = nil
   end
   -- horizontal line
@@ -430,7 +430,7 @@ asciiplot._axes = function (F)
   elseif F._xaxis == 'max' then n = 1
   elseif F._xaxis == 'min' then n = F._y.size end
   if n then
-    local row = F.canvas[n]
+    local row = F._canvas[n]
     for i = 1, F._x.size do
       row[i] = horizontal
     end
@@ -441,17 +441,17 @@ asciiplot._axes = function (F)
   end
 end
 
---- Resize, clear canvas.
+--- Resize, clear _canvas.
 --  @param F Figure object.
 asciiplot._clear = function (F)
   local white, width = ' ', F._x.size
   for i = 1, F._y.size do
-    local row = F.canvas[i] or {}
+    local row = F._canvas[i] or {}
     for j = 1, width do row[j] = white end
     if #row > width then
       for j = #row, width+1, -1 do row[j] = nil end
     end
-    F.canvas[i] = row
+    F._canvas[i] = row
   end
   F.legend = {}
   F._title = nil
@@ -587,7 +587,7 @@ asciiplot._limits = function (F)
   elseif F._xaxis == 'min' then n = height end
   if n then
     -- min
-    local row, beg = F.canvas[n], 0
+    local row, beg = F._canvas[n], 0
     local s = F._x:limit('min')
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
@@ -610,16 +610,16 @@ asciiplot._limits = function (F)
     -- min
     local s = F._y:limit('min')
     local beg = (n == width) and (width - #s - 1) or n
-    local row = F.canvas[height-1]
+    local row = F._canvas[height-1]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
     s = F._y:limit('max')
-    row = F.canvas[2]
+    row = F._canvas[2]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
     if height > 11 then
       s = F._y:limit('mid')
-      row = F.canvas[(height + 1) / 2]
+      row = F._canvas[(height + 1) / 2]
       for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     end
   end
@@ -640,7 +640,7 @@ asciiplot._new = function(self, dwidth, dheight)
     _yaxis = pos,
     _zaxis = pos,
     -- image
-    canvas = {},
+    _canvas = {},
     -- comments
     legend = {},
     -- title can be added
@@ -699,7 +699,7 @@ asciiplot._viewXY = function (F, tX, tY, tZ, tOpt)
       local z = row[j]
       for k = 1, N do
         if math.abs(lvl[k] - z) <= h then
-          F.canvas[i][j] = asciiplot.lvls[k]
+          F._canvas[i][j] = asciiplot.lvls[k]
           break
         end
       end
@@ -721,8 +721,10 @@ end
 asciiplot._viewXZ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level
   local lvl, _ = asciiplot._surfRange(1, F._y.size, N, tOpt.minmax, true)
-  F.yrange = (tOpt.view == 'XYZ') and {F._z.range[2], F._z.range[1]} 
-    or F._z.range
+  -- copy settings
+  F._y:setRange(F._z._init)
+  F._y:setLog(F._z.log)
+  F._yaxis = F._zaxis
     -- prepare
   asciiplot._clear(F)
   asciiplot._axes(F)
@@ -755,11 +757,18 @@ asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   local rotate = (tOpt.view == 'concat')
   -- update ranges
   if rotate then
+    -- Z-Y
     F._x:setRange(F._z._init)
+    F._x:setLog(F._z.log)
+    F._xaxis = F._zaxis
   else
+    -- Y-Z
     F._x:setRange(F._y._init)
+    F._x:setLog(F._y.log)
     F._y:setRange(F._z._init)
+    F._y:setLog(F._z.log)
     F._x.size, F._y.size = F._y.size, F._x.size
+    F._xaxis, F._yaxis = F._yaxis, F._zaxis
   end
   -- prepare
   asciiplot._clear(F)
@@ -794,7 +803,7 @@ asciiplot.addPoint = function (F, dx, dy, s)
   local nx = F._x:proj(dx, true)
   local ny = F._y:proj(dy, false)
   if nx and ny and (#s == 1 or SONATA_USE_COLOR) then
-    F.canvas[ny][nx] = s
+    F._canvas[ny][nx] = s
   end
 end
 about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil", 
@@ -808,7 +817,7 @@ about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil",
 asciiplot.addPose = function (F, ir, ic, s)
   if ir > 0 and ir <= F._y.size and ic > 0 and ic <= F._x.size
              and (#s == 1 or SONATA_USE_COLOR) then
-    F.canvas[ir][ic] = s
+    F._canvas[ir][ic] = s
   end
 end
 about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> nil", 
@@ -890,7 +899,7 @@ asciiplot.bar = function (F, t, vy, ix)
   for i = 1, #t, step do
     -- text
     local x = tostring(ytbl and t[i] or t[i][ix])
-    for c = 1, math.min(iL-2, #x) do F.canvas[r][c] = string.sub(x, c, c) end
+    for c = 1, math.min(iL-2, #x) do F._canvas[r][c] = string.sub(x, c, c) end
     -- line
     x = ytbl and vy[i] or t[i][vy]
     local i1, i2 = mmodf(x * dm + i0)
@@ -901,11 +910,11 @@ asciiplot.bar = function (F, t, vy, ix)
       i1 = (i2 >= 0.5) and i1 - 1 or i1   -- left limit
       i2 = i0
     end
-    for c = i1, i2 do F.canvas[r][c] = '=' end
+    for c = i1, i2 do F._canvas[r][c] = '=' end
     -- value
     x = tostring(x)
     for c = 1, math.min(iL-2, #x) do
-      F.canvas[r][iR+2+c] = string.sub(x, c, c)
+      F._canvas[r][iR+2+c] = string.sub(x, c, c)
     end
     r = r + 1
   end
@@ -943,7 +952,7 @@ asciiplot.concat = function (self, ...)
     -- content
     for j = 1, v._y.size do
       row = acc[k] or {}
-      row[#row+1] = table.concat(v.canvas[j])
+      row[#row+1] = table.concat(v._canvas[j])
       row[#row+1] = gap
       acc[k] = row; k = k + 1
     end
@@ -1009,8 +1018,8 @@ asciiplot.contour = function (F, fn, tOpt)
   if view == 'XZ' then asciiplot._viewXZ(F, X, Y, Z, tOpt) end
   if view == 'YZ' then asciiplot._viewYZ(F, X, Y, Z, tOpt) end
 end
-about[asciiplot.contour] = {"F:contour(fn, {view='XY'}) --> F|str",
-  "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ, XYZ."}
+about[asciiplot.contour] = {"F:contour(fn, {view='XY'}) --> nil|str",
+  "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output."}
 
 --- Make a copy.
 --  @param F Initial object.
@@ -1024,20 +1033,20 @@ asciiplot.copy = function (F)
     _xaxis = F._xaxis,
     _yaxis = F._yaxis,
     _zaxis = F._zaxis,
-    canvas = {},
+    _canvas = {},
     legend = {},
   }
   for k, v in pairs(F.legend) do
     o.legend[k] = v
   end
-  for i = 1, #F.canvas do
+  for i = 1, #F._canvas do
     local row = {}
     -- TODO use Ver.move
-    local src = F.canvas[i]
+    local src = F._canvas[i]
     for j = 1, F._x.size do
       row[j] = src[j]
     end
-    o.canvas[i] = row
+    o._canvas[i] = row
   end
   return setmetatable(o, asciiplot)
 end
