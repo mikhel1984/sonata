@@ -171,7 +171,7 @@ axis.limit = function (A, s)
   else
     return nil
   end
-  return A.log and string.format(' 10^%f ', v) 
+  return A.log and string.format(' 10^%.1f ', v) 
     or string.format(' %s ', tostring(v))
 end
 
@@ -245,31 +245,50 @@ end
 --  @param A Axis object.
 --  @param t New range {min, max}.
 axis.setRange = function (A, t)
-  A._init[1], A._init[2] = t[1], t[2]  -- exact limits
+  local a, b = t[1], t[2]
+  -- check limits
+  if a == b then
+    b = (a == 0) and (a+1) or 2*a
+  end
+  if a > b then
+    a, b = b, a
+  end
   if A.log then
-    local p1 = math.log(t[1]) / axis.log10
+    -- lorarithm mode
+    if b <= 0 then
+      b = 1
+    end
+    if a <= 0 then
+      a = b / 10
+    end
+    local p1 = math.log(a) / axis.log10
     p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
-    local p2 = math.log(t[2]) / axis.log10
+    local p2 = math.log(b) / axis.log10
     p2 = (p2 > 0) and math.ceil(p2) or math.floor(p2)
     -- expected even number of intervals, add empty if need
     --if (p2 - p1) % 2 == 1 then p1 = p1 - 1 end
     A.range[1], A.range[2] = p1, p2
   else
-    A.range[1], A.range[2] = t[1], t[2]
-    local p = math.log(t[2] - t[1]) / axis.log10
+    -- normal mode
+    A.range[1], A.range[2] = a, b
+    local p = math.log(b - a) / axis.log10
     local n = (p >= 0) and math.floor(p) or math.ceil(p)
     local tol = 10^(n-1)
-    local v, rest = mmodf(t[1] / tol)
+    local v, rest = mmodf(a / tol)
     if rest ~= 0 then
       rest = (rest > 0) and 0 or 1
       A.range[1] = (v - rest) * tol
     end
-    v, rest = mmodf(t[2] / tol)
+    v, rest = mmodf(b / tol)
     if rest ~= 0 then
       rest = (rest < 0) and 0 or 1
       A.range[2] = (v + rest) * tol
     end
   end
+  if a ~= t[1] or b ~= t[2] then
+    print('Change limits to', a, b)
+  end
+  A._init[1], A._init[2] = a, b  -- exact limits
   A.diff = A.range[2] - A.range[1]
 end
 
