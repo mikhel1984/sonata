@@ -1127,6 +1127,21 @@ asciiplot.reset = function (F)
 end
 about[asciiplot.reset] = {"F:reset() --> nil", "Prepare a clear canvas.", MANUAL}
 
+--- Update size of the canvas.
+--  @param F Figure object.
+--  @param w Width or source figure.
+--  @param h Height.
+asciiplot.resize = function (F, w, h)
+  if isasciiplot(w) then
+    h = w._y.size
+    w = w._x.size
+  end
+  F._x:resize(w)
+  F._y:resize(h)
+end
+about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N)) --> nil", 
+  "Update size of canvas."}
+
 --- Scale xrange and yrange w.r.t. initial size.
 --  @param F figure object.
 --  @param factor Positive value.
@@ -1195,18 +1210,6 @@ __call = function (self, w, h)
 end})
 about[asciiplot] = {" (width_N=73, height_N=21) --> new_F", 
   "Create new asciiplot.", help.STATIC}
-
-
-
-
-asciiplot.resize = function (F, w, h)
-  if isasciiplot(w) then
-    h = w._y.size
-    w = w._x.size
-  end
-  F._x:resize(w)
-  F._y:resize(h)
-end
 
 if Sonata then
 
