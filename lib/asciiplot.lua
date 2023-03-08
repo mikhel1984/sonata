@@ -16,7 +16,10 @@ Ap = require 'lib.asciiplot'
 -- figure with default size
 fig1 = Ap()
 info = fig1:axes()
-print(info.x.size, info.y.size)
+ans = info.x.size             --> Ap.WIDTH
+
+-- default axis position
+ans = info.x.pose             --> 'mid'
 
 -- print functions
 fig1:setX {-3.14, 3.14}   -- default is {-1, 1}
@@ -59,7 +62,7 @@ print(fig2)
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
-ans = fig1:axes().x.size        --> 59 
+ans = fig1:axes().x.size      --> 59 
 
 -- horizontal concatenation
 -- first
@@ -107,6 +110,13 @@ for i = 1, 20 do data[#data+1] = {k*i, math.sin(k*i)} end
 fig5 = Ap()
 fig5:bar(data)
 print(fig5)
+
+-- use log scale 
+fig6 = Ap()
+fig6:setX {-10, 10}
+fig6:logY(true)
+fig6:plot(math.exp)
+print(fig6)
 
 --]]
 
@@ -850,13 +860,14 @@ asciiplot.axes = function (F)
       range = {
         a.log and math.pow(10, a.range[1]) or a.range[1],
         a.log and math.pow(10, a.range[2]) or a.range[2],
-      }
+      },
+      pose = F[key[i]..'axis'],
     }
   end
   return res
 end
 about[asciiplot.axes] = {"F:axes() --> tbl",
-  "Get {size, log, range} for each size.", help.OTHER}
+  "Get {size, log, range, pose} for each size.", help.OTHER}
 
 --- Plot bar graph.
 --  @param F Figure object.
