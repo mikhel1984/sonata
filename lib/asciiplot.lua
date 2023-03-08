@@ -697,10 +697,15 @@ end
 asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level
   local lvl, h = asciiplot._surfRange(1, F._x.size, N, tOpt.minmax, true)
+  local rotate = (tOpt.view == 'concat')
   -- update ranges
-  F._x.setRange(F._y._init)
-  F._y.setRange(F._z._init)
-  F._x.size, F._y.size = F._y.size, F._x.size
+  if rotate then
+    F._x:setRange(F._z._init)
+  else
+    F._x:setRange(F._y._init)
+    F._y:setRange(F._z._init)
+    F._x.size, F._y.size = F._y.size, F._x.size
+  end
   -- prepare
   asciiplot._clear(F)
   asciiplot._axes(F)
@@ -709,7 +714,11 @@ asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
     local y = tY[i]
     local zi = tZ[i]
     for j = #lvl, 1, -1 do
-      asciiplot.addPoint(F, y, zi[lvl[j]], asciiplot.lvls[j])
+      if rotate then
+        asciiplot.addPoint(F, zi[lvl[j]], y, asciiplot.lvls[j])
+      else
+        asciiplot.addPoint(F, y, zi[lvl[j]], asciiplot.lvls[j])
+      end
     end
   end
   asciiplot._limits(F)
@@ -717,7 +726,7 @@ asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   local lvlZY = {}
   for i = 1, N do lvlZY[i] = tX[lvl[i]] end
   asciiplot._cntLegend(F, 'X', lvlZY)
-  F.title = 'Y-Z view'
+  F.title = rotate and 'Z-Y view' or 'Y-Z view'
   return F
 end
 
@@ -893,7 +902,7 @@ about[asciiplot.concat] = {":concat(...) --> str",
 --- Plot function of two arguments using contours.
 --  @param F Figure object.
 --  @param fn Function f(x,y).
---  @param tOpt Table of options: level - number of lines, zfix - flag for rescale, view - projection ('XY', 'XZ', 'YZ', 'XYZ' for its combination).
+--  @param tOpt Table of options: level - number of lines, zfix - flag for rescale, view - projection ('XY', 'XZ', 'YZ', 'concat' for its combination).
 --  @return Figure object for single view or string for 'XYZ'.
 asciiplot.contour = function (F, fn, tOpt)
   tOpt = tOpt or {}
@@ -911,21 +920,17 @@ asciiplot.contour = function (F, fn, tOpt)
   if not tOpt.zfix then
     F._z:setRange(zrng)
   end
-  local acc = {}
-  if view == 'XY' or view == 'XYZ' then
-    acc[#acc+1] = asciiplot._viewXY(asciiplot.copy(F), X, Y, Z, tOpt)
-  end
-  if view == 'XZ' or view == 'XYZ' then
-    acc[#acc+1] = asciiplot._viewXZ(asciiplot.copy(F), X, Y, Z, tOpt)
-  end
-  if view == 'YZ' or view == 'XYZ' then
-    acc[#acc+1] = asciiplot._viewYZ(asciiplot.copy(F), X, Y, Z, tOpt)
-  end
-  if view == 'XYZ' then
-    local txt = {asciiplot.concat(nil, acc[1], acc[3]), tostring(acc[2])}
+  if view == 'concat' then
+    local XY = asciiplot._viewXY(asciiplot.copy(F), X, Y, Z, tOpt)
+    local XZ = asciiplot._viewXZ(asciiplot.copy(F), X, Y, Z, tOpt)
+    local YZ = asciiplot._viewYZ(asciiplot.copy(F), X, Y, Z, tOpt)
+    local txt = {asciiplot.concat(nil, XY, YZ), tostring(XZ)}
     return table.concat(txt, '\n\n')
   end
-  return acc[1]
+  local acc = {}
+  if view == 'XY' then asciiplot._viewXY(F, X, Y, Z, tOpt) end
+  if view == 'XZ' then asciiplot._viewXZ(F, X, Y, Z, tOpt) end
+  if view == 'YZ' then asciiplot._viewYZ(F, X, Y, Z, tOpt) end
 end
 about[asciiplot.contour] = {"F:contour(fn, {view='XY'}) --> F|str",
   "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ, XYZ."}
