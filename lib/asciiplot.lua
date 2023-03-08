@@ -141,11 +141,19 @@ axis.new = function (A, N)
     print('Change to odd size')
     return asis.new(A, N+1)
   end
-  local a = {size=N, range={-1,1}, diff = 2}
+  local x1, x2 = -1, 1
+  local a = {
+    size = N, 
+    range = {x1, x2}, 
+    diff = x2-x1, 
+    _init = {x1, x2},
+    _size = N,
+  }
   return setmetatable(a, axis)
 end
 
 axis.setRange = function (A, t)
+  A._init[1], A._init[2] = t[1], t[2]  -- exact limits
   if A.log then
     local p1 = math.log(t[1]) / axis.log10
     p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
@@ -179,7 +187,7 @@ end
 axis.setLog = function (A, isLog)
   if isLog and not A.log or not isLog and A.log then
     A.log = isLog
-    A:setRange(A.range)  -- update limits
+    A:setRange(A._init)  -- update limits
   end
 end
 
@@ -189,8 +197,15 @@ asix.copy = function (A)
     log = A.log,
     range = {A.range[1], A.range[2]},
     diff = A.diff,
+    _init = {A._init[1], A._init[2]},
+    _size = A._size,
   }
   return setmetatable(new, axis)
+end
+
+axis.scale = function (A, factor)
+  local int, frac = mmodf(A._size * factor)
+  F.size = (int % 2 == 1) and int or (int + 1)
 end
 
 axis.proj = function (A, d, isX)
@@ -206,9 +221,18 @@ axis.proj = function (A, d, isX)
   return (frac > 0.5) and (int + 1) or int
 end
 
-axis.invProj = function (A, n, isX)
-  local x = (n - 1) * A.diff / (A.size - 1) + A.range[1]
-  return A.log and math.pow(10,x) or x
+axis.values = function (A, isX)
+  local x0 = isX and A.range[1] or A.range[2]
+  local k = isX and A.diff / (A.size - 1) or -A.diff / (A.size - 1)
+  local ind = 1
+  return function ()
+    if ind <= A.size then
+      local x = (ind - 1) * k + x0
+      local i = ind
+      ind, x = ind + 1, A.log and math.pow(10, x) or x
+      return i, x
+    end
+  end
 end
 
 axis.limit = function (A. s)
@@ -428,10 +452,9 @@ end
 --  @return Lists of coordinates X and Y.
 asciiplot._fn2XY = function (F, fn)
   local X, Y = {}, {}
-  for nx = 1, F._x.size do
-    local x = F._x:invProj(nx)
-    X[nx] = x
-    Y[nx] = fn(x)
+  for i, x in F._x:values(true) do
+    X[i] = x
+    Y[i] = fn(x)
   end
   return X, Y
 end
@@ -441,18 +464,12 @@ end
 --  @param fn Function f(x,y).
 --  @return Vectors X, Y, 'matrix' Z, range of heights.
 asciiplot._fn2Z = function (F, fn)
-  local dx, x0 = (F.xrange[2] - F.xrange[1]) / (F.width - 1), F.xrange[1]
-  -- reverse
-  local dy, y0 = (F.yrange[1] - F.yrange[2]) / (F.height - 1), F.yrange[2]
   local X, Y, Z = {}, {}, {}
-  for nx = 1, F.width do
-    X[nx] = dx * (nx - 1) + x0
-  end
+  for i, x in F._x:values(true) do X[i] = x end
   local zmin, zmax = math.huge, -math.huge
-  for ny = 1, F.height do
-    local y = dy * (ny - 1) + y0
+  for ny, y in F._y:values(false) do
     local row = {}
-    for nx = 1, F.width do
+    for nx = 1, #X do
       local z = fn(X[nx], y)
       if z > zmax then zmax = z end
       if z < zmin then zmin = z end
@@ -538,7 +555,8 @@ end
 asciiplot._new = function(self, dwidth, dheight)
   local o = {
     _x = axis.new(dwidth),
-    _y = axis.new(dheight)
+    _y = axis.new(dheight),
+    _z = axis.new(dwidth),
     --_w0 = dwidth or WIDTH,
     --_h0 = dheight or HEIGHT,
     -- axes location
@@ -590,16 +608,16 @@ end
 asciiplot._viewXY = function (F, tX, tY, tZ, tOpt)
   local ZERR = 0.05  -- deflection from expected level value
   local N = tOpt.level
-  local lvl, h = asciiplot._surfRange(F.zrange[1], F.zrange[2], N,
-    tOpt.minmax, false)
+  local lvl, h = asciiplot._surfRange(
+    F._z.range[1], F._z.range[2], N, tOpt.minmax, false)
   h = h * ZERR
     -- prepare
   asciiplot._clear(F)
   asciiplot._axes(F)
   -- fill
-  for i = 1, F.height do
+  for i = 1, F._y.size do
     local row = tZ[i]
-    for j = 1, F.width do
+    for j = 1, F._x.size do
       local z = row[j]
       for k = 1, N do
         if math.abs(lvl[k] - z) <= h then
@@ -624,8 +642,9 @@ end
 --  @return Figure object.
 asciiplot._viewXZ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, h = asciiplot._surfRange(1, F.height, N, tOpt.minmax, true)
-  F.yrange = tOpt.view == 'XYZ' and {F.zrange[2], F.zrange[1]} or F.zrange
+  local lvl, h = asciiplot._surfRange(1, F._y.size, N, tOpt.minmax, true)
+  F.yrange = (tOpt.view == 'XYZ') and {F._z.range[2], F._z.range[1]} 
+    or F._z.range
     -- prepare
   asciiplot._clear(F)
   asciiplot._axes(F)
@@ -654,15 +673,11 @@ end
 --  @return Figure object.
 asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, h = asciiplot._surfRange(1, F.width, N, tOpt.minmax, true)
-  local rotate = (tOpt.view == 'XYZ')
-  if rotate then
-    F.xrange = F.zrange
-  else
-    F.xrange = F.yrange
-    F.yrange = F.zrange
-    F.width, F.height = F.height, F.width
-  end
+  local lvl, h = asciiplot._surfRange(1, F._x.size, N, tOpt.minmax, true)
+  -- update ranges
+  F._x.setRange(F._y._init)
+  F._y.setRange(F._z._init)
+  F._x.size, F._y.size = F._y.size, F._x.size
   -- prepare
   asciiplot._clear(F)
   asciiplot._axes(F)
@@ -671,11 +686,7 @@ asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
     local y = tY[i]
     local zi = tZ[i]
     for j = #lvl, 1, -1 do
-      if rotate then
-        asciiplot.addPoint(F, zi[lvl[j]], y, asciiplot.lvls[j])
-      else
-        asciiplot.addPoint(F, y, zi[lvl[j]], asciiplot.lvls[j])
-      end
+      asciiplot.addPoint(F, y, zi[lvl[j]], asciiplot.lvls[j])
     end
   end
   asciiplot._limits(F)
@@ -683,7 +694,7 @@ asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   local lvlZY = {}
   for i = 1, N do lvlZY[i] = tX[lvl[i]] end
   asciiplot._cntLegend(F, 'X', lvlZY)
-  F.title = rotate and 'Z-Y view' or 'Y-Z view'
+  F.title = 'Y-Z view'
   return F
 end
 
@@ -693,18 +704,9 @@ end
 --  @param dy Coordinate y.
 --  @param s Character.
 asciiplot.addPoint = function (F, dx, dy, s)
-  local h, w = F.height, F.width
-  dx = F.xlog and (math.log(dx)/log10) or dx
-  dy = F.ylog and (math.log(dy)/log10) or dy
-  local nx = (dx - F.xrange[1]) / (F.xrange[2] - F.xrange[1])
-  local ny = (dy - F.yrange[1]) / (F.yrange[2] - F.yrange[1])
-  local int, frac = mmodf((w-1) * nx + 1)
-  nx = (frac > 0.5) and (int + 1) or int
-  int, frac = mmodf((1-h) * ny + h)
-  ny = (frac > 0.5) and (int + 1) or int
-  if nx >= 1 and nx <= w and ny >= 1 and ny <= h
-             and (#s == 1 or SONATA_USE_COLOR) then
-    -- skip points out of range
+  local nx = F._x:proj(dx, true)
+  local ny = F._y:proj(dy, false)
+  if nx and ny and (#s == 1 or SONATA_USE_COLOR) then
     F.canvas[ny][nx] = s
   end
 end
@@ -717,7 +719,7 @@ about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> F",
 --  @param ic Column index.
 --  @param s Character.
 asciiplot.addPose = function (F, ir, ic, s)
-  if ir >= 1 and ir <= F.height and ic > 0 and ic < F.width
+  if ir > 0 and ir <= F._y.size and ic > 0 and ic <= F._x.size
              and (#s == 1 or SONATA_USE_COLOR) then
     F.canvas[ir][ic] = s
   end
@@ -748,8 +750,8 @@ asciiplot.bar = function (F, t, vy, ix)
   ix, vy = ix or 1, vy or 2
   local ytbl = (type(vy) == 'table')   -- TODO Split into 2 functions
   -- size
-  local iL = mmodf(F.width * 0.2)
-  local iR = F.width - iL
+  local iL = mmodf(F._x.size * 0.2)
+  local iR = F._x.size - iL
   -- find limits
   local min, max = math.huge, -math.huge
   for i = 1, #t do
@@ -769,8 +771,8 @@ asciiplot.bar = function (F, t, vy, ix)
   local dm = (iR - iL) / (max - min)
   -- data step
   local step = 1
-  if #t > F.height then
-    local int, frac = mmodf(#t / F.height)
+  if #t > F._y.size then
+    local int, frac = mmodf(#t / F._y.size)
     step = (frac > 0) and (int+1) or int
   end
   -- add values
@@ -813,10 +815,9 @@ asciiplot.concat = function (self, ...)
   local nlegend = 0
   for i, v in ipairs(ag) do
     if not isasciiplot(v) then
-      error("Not asciiplot objec at "..tostring(i))
+      error("Not asciiplot object at "..tostring(i))
     end
-    if v.height ~= ag[1].height then error('Different height') end
-    if v.title then btitle = true end
+    if v._y.size ~= ag[1]._y.size then error('Different height') end
     local n = 0
     for k, _ in pairs(v.legend) do n = n + 1 end
     if n > nlegend then nlegend = n end
@@ -825,10 +826,10 @@ asciiplot.concat = function (self, ...)
   local acc = {}
   local gap = '   '
   for i, v in ipairs(ag) do
-    local k = 1
+    local k, width = 1, v._x.size
     -- title
     local row = acc[k] or {}
-    row[#row+1] = asciiplot._format(v.title or '', v.width, true, true)
+    row[#row+1] = asciiplot._format(v.title or '', width, true, true)
     row[#row+1] = gap
     acc[k] = row; k = k + 1
     -- content
@@ -846,7 +847,7 @@ asciiplot.concat = function (self, ...)
     for _, u in ipairs(sym) do
       row = acc[k] or {}
       row[#row+1] = asciiplot._format(
-        string.format('(%s) %s', u, v.legend[u]), v.width-1+#u, false, true)
+        string.format('(%s) %s', u, v.legend[u]), width-1+#u, false, true)
       row[#row+1] = gap
       acc[k] = row; k = k + 1
       n = n + 1
@@ -854,7 +855,7 @@ asciiplot.concat = function (self, ...)
     -- add empty lines
     for j = n+1, nlegend do
       row = acc[k] or {}
-      row[#row+1] = asciiplot._format('', v.width, false, true)
+      row[#row+1] = asciiplot._format('', width, false, true)
       row[#row+1] = gap
       acc[k] = row; k = k + 1
     end
@@ -882,11 +883,11 @@ asciiplot.contour = function (F, fn, tOpt)
   -- calculate
   if view == 'YZ' then
     -- increase resolution for default size
-    F.width, F.height = F.height, F.width
+    F._x.size, F._y.size = F._y.size, F._x.size
   end
   local X, Y, Z, zrng = asciiplot._fn2Z(F, fn)
   if not tOpt.zfix then
-    F.zrange = zrng
+    F._z:setRange(zrng)
   end
   local acc = {}
   if view == 'XY' or view == 'XYZ' then
@@ -912,19 +913,12 @@ about[asciiplot.contour] = {"F:contour(fn, {view='XY'}) --> F|str",
 --  @return Copy of the object.
 asciiplot.copy = function (F)
   local o = {
-    width = F.width,
-    height = F.height,
-    xrange = {F.xrange[1], F.xrange[2]},
-    yrange = {F.yrange[1], F.yrange[2]},
-    zrange = {F.zrange[1], F.zrange[2]},
+    _x = F._x:copy(),
+    _y = F._y:copy(),
+    _z = F._z:copy(),
     title = F.title,
     xaxis = F.xaxis,
     yaxis = F.yaxis,
-    xlog = F.xlog,
-    ylog = F.ylog,
-    zlog = F.zlog,
-    _w0 = F._w0,
-    _h0 = F._h0,
     canvas = {},
     legend = {},
   }
@@ -935,7 +929,7 @@ asciiplot.copy = function (F)
     local row = {}
     -- TODO use Ver.move
     local src = F.canvas[i]
-    for j = 1, F.width do
+    for j = 1, F._x.size do
       row[j] = src[j]
     end
     o.canvas[i] = row
@@ -986,10 +980,9 @@ asciiplot.plot = function (F, ...)
     acc[#acc+1] = {tx, ty, legend}
   until i > #ag
   -- check if there are no tables
-  if xmin == math.huge then xmin = F.xrange[1] end
-  if xmax == -math.huge then xmax = F.xrange[2] end
-  F.xrange = {xmin, xmax}
-  asciiplot._roundRange(F.xrange)
+  if xmin == math.huge then xmin = F._x._init[1] end
+  if xmax == -math.huge then xmax = F._x._init[2] end
+  F._x:setRange({xmin, xmax})
 
   -- update y range
   local ymin, ymax = math.huge, -math.huge
@@ -1002,8 +995,7 @@ asciiplot.plot = function (F, ...)
     if a < ymin then ymin = a end
     if b > ymax then ymax = b end
   end
-  F.yrange = {ymin, ymax}
-  asciiplot._roundRange(F.yrange)
+  F._y:setRange({ymin, ymax})
 
   -- prepare
   asciiplot._clear(F)
@@ -1034,16 +1026,11 @@ about[asciiplot.reset] = {"F:reset() --> nil", "Prepare a clear canvas.", MANUAL
 --- Scale xrange and yrange w.r.t. initial size.
 --  @param F figure object.
 --  @param factor Positive value.
---  @param bDefault set true to use defauld size instead
-asciiplot.scale = function (F, factor, bDefault)
+--  @return Updated figure object.
+asciiplot.scale = function (F, factor)
   assert(factor > 0)
-  local w = bDefault and WIDTH or F._w0
-  local h = bDefault and HEIGHT or F._h0
-  local int, frac = mmodf(w * factor)
-  -- prefer odd numbers
-  F.width = (int % 2 == 1) and int or (int + 1)
-  int, frac = mmodf(h * factor)
-  F.height = (int % 2 == 1) and int or (int + 1)
+  F._x:scale(factor)
+  F._y:scale(factor)
   return F
 end
 about[asciiplot.scale] = {"F:scale(factor_d, isDefault=false) --> F",
@@ -1059,10 +1046,10 @@ asciiplot.tplot = function (F, t, tOpt)
   tOpt = tOpt or {}
   -- update range
   if not tOpt.yfix then
-    F.xrange, F.yrange = asciiplot._findRange(t, tOpt)
+    local rx, ry = asciiplot._findRange(t, tOpt)
+    F._x:setRange(rx)
+    F._y:setRange(ry)
   end
-  asciiplot._roundRange(F.xrange)
-  asciiplot._roundRange(F.yrange)
   -- plot all by default
   if #tOpt == 0 then
     for i = 2, #t[1] do tOpt[#tOpt+1] = i end
@@ -1084,34 +1071,47 @@ about[asciiplot.tplot] = {"F:tplot(data_t, {yfix=false}) --> F",
 setmetatable(asciiplot, {
 __call = function (self, w, h)
   -- size
-  w = w or WIDTH
-  h = h or HEIGHT
-  if w < 9 then
-    w = 9 ; print('Warn: set width 9')
-  end
-  if h < 9 then
-    h = 9 ; print('Warn: set height 9')
-  end
-  if w % 2 == 0 then
-    w = w + 1 ; print('Warn: set width', w)
-  end
-  if h % 2 == 0 then
-    h = h + 1 ; print('Warn: set height', h)
-  end
-  return asciiplot:_new(w, h)
+  return asciiplot:_new(w or WIDTH, h or HEIGHT)
 end})
 about[asciiplot] = {" (width_N=73, height_N=21) --> new_F", 
   "Create new asciiplot.", help.STATIC}
 
+asciiplot.setX = function (F, t) F._x:setRange(t) end
+
+asciiplot.setY = function (F, t) F._y:setRange(t) end
+
+asciiplot.setZ = function (F, t) F._z:setRange(t) end
+
+asciiplot.logX = function (F, isLog) F._x:setLog(isLog) end
+
+asciiplot.logY = function (F, isLog) F._y:setLog(isLog) end
+
+asciiplot.logZ = function (F, isLog) F._z:setLog(isLog) end
+
+asciiplot.axis = function (F, s)
+  local a = F['_' .. string.lower(s)]
+  if a then 
+    local res = {
+      a.size,
+      a.log and math.pow(10, a.range[1]) or a.range[1],
+      a.log and math.pow(10, a.range[2]) or a.range[2],
+      a.log or false,
+    }
+    return res
+  end
+end
+
 if Sonata then
+
 -- Define simplified function call
 Plot = function (...)
   local f = Ap()
-  f.xrange = {-5, 5}
+  f._x:setRange({-5, 5})
   print(f:plot(...))
 end
 about[Plot] = {"Plot(...) --> nil",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
+
 end
 
 -- Comment to remove descriptions
