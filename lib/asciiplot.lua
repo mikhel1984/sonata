@@ -21,7 +21,7 @@ print(info.x.size, info.y.size)
 -- print functions
 fig1:setX {-3.14, 3.14}   -- default is {-1, 1}
 fig1:plot(math.sin, 'sin', math.cos, 'cos')
-fig1.title = 'Trigonometry'
+fig1:title 'Trigonometry'
 print(fig1)
 
 -- print data
@@ -31,7 +31,7 @@ fig1:plot(x,y)
 print(fig1)
 
 -- combine different sources
-fig1.yaxis = 'min'  -- left axis
+fig1:showY 'min'  -- left axis
 fig1:plot(x,'single',x,y,'pair',math.log, 'function')
 print(fig1)
 
@@ -47,7 +47,7 @@ for x = 0, 3, 0.1 do
   --             x      y1          y2
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
-fig2.xaxis = 'min'  -- down
+fig2:showX 'min'  -- down
 fig2:tplot(tbl)
 print(fig2)
 
@@ -65,23 +65,23 @@ ans = fig1:axes().x.size        --> 59
 -- first
 fig1:scale(0.5)   -- half of initial size
 fig1:setX {0, 1.57}
-fig1.yaxis = 'mid'; fig1.xaxis = 'min'
+fig1:showY('mid'); fig1:showX('min')
 fig1:plot(sin, 'sin')
-fig1.title = 'First'
+fig1:title 'First'
 -- second
 fig2:resize(fig1)      -- set equal size
 fig2:setX {0, 1.57}
 fig2:plot(cos, 'cos')
-fig2.title = 'Second'
+fig2:title 'Second'
 str = Ap:concat(fig1, fig2)   -- similar to fig1..fig2 for 2 objects
 print(str)
 
 -- call 'API' functions
 fig3 = Ap():scale(0.5)
-fig3.xrange = {-2,2}
-fig3.yrange = {-1,4}
+fig3:setX {-2,2}
+fig3:setY {-1,4}
 -- no axes and limits
-fig3.xaxis = nil; fig3.yaxis = nil
+fig3:showX(nil); fig3:showY(false)
 fig3:reset()
 -- set function
 for x = -1.2, 1.2, 0.1 do
@@ -97,8 +97,8 @@ print(fig3)
 fig4 = Ap()
 fig4:setX {-5, 5}
 fig4:setY {-5, 5}
-cnt = fig4:contour(function (x,y) return x*x - y*y end)
-print(cnt)
+fig4:contour(function (x,y) return x*x - y*y end)
+print(fig4)
 
 -- bar diagram
 data = {}
@@ -117,13 +117,9 @@ print(fig5)
 --  @return True if the object is asciiplot.
 local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 
--- default figure size
-local STR_NORM, STR_LOG = ' %s ', ' 10^%d '
-
-
 local mmodf = math.modf
 
-local MANUAL = 'manual'
+local MANUAL, CONF = 'manual', 'settings'
 
 --	INFO
 
@@ -365,9 +361,9 @@ asciiplot.__tostring = function (F)
   if #F.canvas == 0 then return 'empty figure' end
   local acc = {}
   -- title
-  if F.title then
+  if F._title then
     -- to center
-    acc[1] = asciiplot._format(F.title, F._x.size, true, false)
+    acc[1] = asciiplot._format(F._title, F._x.size, true, false)
   end
   -- figure
   for i = 1, F._y.size do
@@ -416,9 +412,9 @@ asciiplot._axes = function (F)
   local vertical, horizontal, mark = '|', '-', '+'
   -- vertical line
   local n = nil
-  if     F.yaxis == 'mid' then n = (F._x.size+1) / 2
-  elseif F.yaxis == 'min' then n = 1
-  elseif F.yaxis == 'max' then n = F._x.size end
+  if     F._yaxis == 'mid' then n = (F._x.size+1) / 2
+  elseif F._yaxis == 'min' then n = 1
+  elseif F._yaxis == 'max' then n = F._x.size end
   if n then
     for i = 1, F._y.size do
       F.canvas[i][n] = vertical
@@ -430,9 +426,9 @@ asciiplot._axes = function (F)
     n = nil
   end
   -- horizontal line
-  if F.xaxis == 'mid' then n = (F._y.size+1) / 2
-  elseif F.xaxis == 'max' then n = 1
-  elseif F.xaxis == 'min' then n = F._y.size end
+  if F._xaxis == 'mid' then n = (F._y.size+1) / 2
+  elseif F._xaxis == 'max' then n = 1
+  elseif F._xaxis == 'min' then n = F._y.size end
   if n then
     local row = F.canvas[n]
     for i = 1, F._x.size do
@@ -458,7 +454,7 @@ asciiplot._clear = function (F)
     F.canvas[i] = row
   end
   F.legend = {}
-  F.title = nil
+  F._title = nil
 end
 
 --- Fill legend for contour object.
@@ -586,9 +582,9 @@ asciiplot._limits = function (F)
   -- horizontal
   local width, height = F._x.size, F._y.size
   local n = nil
-  if F.xaxis == 'mid' then n = (height+1) / 2 + 1
-  elseif F.xaxis == 'max' then n = 1
-  elseif F.xaxis == 'min' then n = height end
+  if F._xaxis == 'mid' then n = (height+1) / 2 + 1
+  elseif F._xaxis == 'max' then n = 1
+  elseif F._xaxis == 'min' then n = height end
   if n then
     -- min
     local row, beg = F.canvas[n], 0
@@ -607,9 +603,9 @@ asciiplot._limits = function (F)
     n = nil
   end
   -- vertical
-  if F.yaxis == 'mid' then n = (width + 1) / 2
-  elseif F.yaxis == 'min' then n = 1
-  elseif F.yaxis == 'max' then n = width end
+  if F._yaxis == 'mid' then n = (width + 1) / 2
+  elseif F._yaxis == 'min' then n = 1
+  elseif F._yaxis == 'max' then n = width end
   if n then
     -- min
     local s = F._y:limit('min')
@@ -634,13 +630,15 @@ end
 --  @param dheight Figure height.
 --  @return New object of asciiplot.
 asciiplot._new = function(self, dwidth, dheight)
+  local pos = 'mid'
   local o = {
     _x = axis.new(dwidth),
     _y = axis.new(dheight),
     _z = axis.new(dwidth),
     -- axes location
-    xaxis  = 'mid',
-    yaxis  = 'mid',
+    _xaxis = pos,
+    _yaxis = pos,
+    _zaxis = pos,
     -- image
     canvas = {},
     -- comments
@@ -710,7 +708,7 @@ asciiplot._viewXY = function (F, tX, tY, tZ, tOpt)
   asciiplot._limits(F)
   -- legend
   asciiplot._cntLegend(F, 'Z', lvl)
-  F.title = 'X-Y view'
+  F._title = 'X-Y view'
   return F
 end
 
@@ -741,7 +739,7 @@ asciiplot._viewXZ = function (F, tX, tY, tZ, tOpt)
   local lvlXZ = {}
   for i = 1, N do lvlXZ[i] = tY[lvl[N-i+1]] end
   asciiplot._cntLegend(F, 'Y', lvlXZ)
-  F.title = 'X-Z view'
+  F._title = 'X-Z view'
   return F
 end
 
@@ -783,7 +781,7 @@ asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
   local lvlZY = {}
   for i = 1, N do lvlZY[i] = tX[lvl[i]] end
   asciiplot._cntLegend(F, 'X', lvlZY)
-  F.title = rotate and 'Z-Y view' or 'Y-Z view'
+  F._title = rotate and 'Z-Y view' or 'Y-Z view'
   return F
 end
 
@@ -849,7 +847,7 @@ asciiplot.axes = function (F)
   return res
 end
 about[asciiplot.axes] = {"F:axes() --> tbl",
-  "Get {size, log, range} for each size."}
+  "Get {size, log, range} for each size.", help.OTHER}
 
 --- Plot bar graph.
 --  @param F Figure object.
@@ -939,7 +937,7 @@ asciiplot.concat = function (self, ...)
     local k, width = 1, v._x.size
     -- title
     local row = acc[k] or {}
-    row[#row+1] = asciiplot._format(v.title or '', width, true, true)
+    row[#row+1] = asciiplot._format(v._title or '', width, true, true)
     row[#row+1] = gap
     acc[k] = row; k = k + 1
     -- content
@@ -1022,9 +1020,10 @@ asciiplot.copy = function (F)
     _x = F._x:copy(),
     _y = F._y:copy(),
     _z = F._z:copy(),
-    title = F.title,
-    xaxis = F.xaxis,
-    yaxis = F.yaxis,
+    _title = F._title,
+    _xaxis = F._xaxis,
+    _yaxis = F._yaxis,
+    _zaxis = F._zaxis,
     canvas = {},
     legend = {},
   }
@@ -1049,19 +1048,19 @@ about[asciiplot.copy] = {
 --  @param F Figure object.
 --  @param isLog Flag to apply logarithmic scale.
 asciiplot.logX = function (F, isLog) F._x:setLog(isLog) end
-about[asciiplot.logX] = {"F:logX(isLog) --> nil", "Change X axis type to logarithmic."}
+about[asciiplot.logX] = {"F:logX(isLog) --> nil", "Change X axis type to logarithmic.", CONF}
 
 --- Change y axis type.
 --  @param F Figure object.
 --  @param isLog Flag to apply logarithmic scale.
 asciiplot.logY = function (F, isLog) F._y:setLog(isLog) end
-about[asciiplot.logY] = {"F:logY(isLog) --> nil", "Change Y axis type to logarithmic."}
+about[asciiplot.logY] = {"F:logY(isLog) --> nil", "Change Y axis type to logarithmic.", CONF}
 
 --- Change z axis type.
 --  @param F Figure object.
 --  @param isLog Flag to apply logarithmic scale.
 asciiplot.logZ = function (F, isLog) F._z:setLog(isLog) end
-about[asciiplot.logZ] = {"F:logZ(isLog) --> nil", "Change Z axis type to logarithmic."}
+about[asciiplot.logZ] = {"F:logZ(isLog) --> nil", "Change Z axis type to logarithmic.", CONF}
 
 --- Generalized plot funciton.
 --  @param F Figure object.
@@ -1159,7 +1158,7 @@ asciiplot.resize = function (F, w, h)
   F._y:resize(h)
 end
 about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N)) --> nil", 
-  "Update size of canvas."}
+  "Update size of canvas.", CONF}
 
 --- Scale xrange and yrange w.r.t. initial size.
 --  @param F figure object.
@@ -1172,25 +1171,49 @@ asciiplot.scale = function (F, factor)
   return F
 end
 about[asciiplot.scale] = {"F:scale(factor_d, isDefault=false) --> F",
-  "Change figure size w.r.t. initial size."}
+  "Change figure size w.r.t. initial size.", CONF}
 
 --- Update x range.
 --  @param F Figure object.
 --  @param t New range {min, max).
 asciiplot.setX = function (F, t) F._x:setRange(t) end
-about[asciiplot.setX] = {"F:setX(range_t) --> nil", "Update X range."}
+about[asciiplot.setX] = {"F:setX(range_t) --> nil", "Update X range.", CONF}
 
 --- Update y range.
 --  @param F Figure object.
 --  @param t New range {min, max).
 asciiplot.setY = function (F, t) F._y:setRange(t) end
-about[asciiplot.setY] = {"F:setY(range_t) --> nil", "Update Y range."}
+about[asciiplot.setY] = {"F:setY(range_t) --> nil", "Update Y range.", CONF}
 
 --- Update z range.
 --  @param F Figure object.
 --  @param t New range {min, max).
 asciiplot.setZ = function (F, t) F._z:setRange(t) end
-about[asciiplot.setZ] = {"F:setZ(range_t) --> nil", "Update Z range."}
+about[asciiplot.setZ] = {"F:setZ(range_t) --> nil", "Update Z range.", CONF}
+
+--- Define position of X axis.
+--  @param F Figure object.
+--  @param s Position name (min, mid, max) or nil/false.
+asciiplot.showX = function (F, s) F._xaxis = s and s or nil end
+about[asciiplot.showX] = {"F:showX(pos_s|nil) --> nil", "Define X axis position.", CONF}
+
+--- Define position of Y axis.
+--  @param F Figure object.
+--  @param s Position name (min, mid, max) or nil/false.
+asciiplot.showY = function (F, s) F._yaxis = s and s or nil end
+about[asciiplot.showY] = {"F:showY(pos_s|nil) --> nil", "Define Y axis position.", CONF}
+
+--- Define position of Z axis.
+--  @param F Figure object.
+--  @param s Position name (min, mid, max) or nil/false.
+asciiplot.showZ = function (F, s) F._zaxis = s and s or nil end
+about[asciiplot.showZ] = {"F:showZ(pos_s|nil) --> nil", "Define Z axis position.", CONF}
+
+--- Set title.
+--  @param F Figure object.
+--  @param s New title.
+asciiplot.title = function (F, s) F._title = s end
+about[asciiplot.title] = {"F:title(str) --> nil", "Set new title.", CONF}
 
 --- Plot data represented in form of table
 --  {{x1,y11,y12,...}, {x2,y21,y22,...}, ...}
