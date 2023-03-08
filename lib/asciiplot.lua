@@ -15,7 +15,8 @@ Ap = require 'lib.asciiplot'
 
 -- figure with default size
 fig1 = Ap()
---print(fig1.width, fig1.height)
+info = fig1:axes()
+print(info.x.size, info.y.size)
 
 -- print functions
 fig1:setX {-3.14, 3.14}   -- default is {-1, 1}
@@ -26,7 +27,8 @@ print(fig1)
 -- print data
 x = {1,2,3,4,5}
 y = {1,3,5,7,9}
-print(fig1:plot(x,y))
+fig1:plot(x,y)
+print(fig1)
 
 -- combine different sources
 fig1.yaxis = 'min'  -- left axis
@@ -36,7 +38,8 @@ print(fig1)
 -- define arbitrary figure size
 -- odd is preferable
 fig2 = Ap(21,11)    -- width=21, height = 11
-print(fig2:plot(function (x) return 2*x end))
+fig2:plot(function (x) return 2*x end)
+print(fig2)
 
 -- show table
 tbl = {}
@@ -45,30 +48,33 @@ for x = 0, 3, 0.1 do
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
 fig2.xaxis = 'min'  -- down
-print(fig2:tplot(tbl))
+fig2:tplot(tbl)
+print(fig2)
 
 -- plot only y2, don't rescale
-fig2.xrange = {-1, 4}
-fig2.yrange = {0, 1}
-print(fig2:tplot(tbl, {2, yfix=true}))
+fig2:setX {-1, 4}
+fig2:setY {0, 1}
+fig2:tplot(tbl, {2, yfix=true})
+print(fig2)
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
-ans = fig1.width             --> 59 
+ans = fig1:axes().x.size        --> 59 
 
 -- horizontal concatenation
 -- first
-fig1:scale(0.5, true)
-fig1.xrange = {0, 1.57}
+fig1:scale(0.5)   -- half of initial size
+fig1:setX {0, 1.57}
 fig1.yaxis = 'mid'; fig1.xaxis = 'min'
 fig1:plot(sin, 'sin')
 fig1.title = 'First'
 -- second
-fig2:scale(0.5, true)
-fig2.xrange = {0, 1.57}
+fig2:resize(fig1)      -- set equal size
+fig2:setX {0, 1.57}
 fig2:plot(cos, 'cos')
 fig2.title = 'Second'
-print(Ap:concat(fig1, fig2))   -- similar to fig1..fig2 for 2 objects
+str = Ap:concat(fig1, fig2)   -- similar to fig1..fig2 for 2 objects
+print(str)
 
 -- call 'API' functions
 fig3 = Ap():scale(0.5)
@@ -89,16 +95,18 @@ print(fig3)
 
 -- print surface contours
 fig4 = Ap()
-fig4.xrange = {-5, 5}
-fig4.yrange = {-5, 5}
-print(fig4:contour(function (x,y) return x*x - y*y end))
+fig4:setX {-5, 5}
+fig4:setY {-5, 5}
+cnt = fig4:contour(function (x,y) return x*x - y*y end)
+print(cnt)
 
 -- bar diagram
 data = {}
 k = 2*3.14/20
 for i = 1, 20 do data[#data+1] = {k*i, math.sin(k*i)} end
 fig5 = Ap()
-print(fig5:bar(data))
+fig5:bar(data)
+print(fig5)
 
 --]]
 
@@ -110,7 +118,6 @@ print(fig5:bar(data))
 local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 
 -- default figure size
-local WIDTH, HEIGHT = 73, 21
 local STR_NORM, STR_LOG = ' %s ', ' 10^%d '
 
 
@@ -150,6 +157,18 @@ axis.new = function (N)
     _size = N,
   }
   return setmetatable(a, axis)
+end
+
+axis.resize = function (A, N)
+  if N < 9 then 
+    print('Set minimal axis size:', N)
+    N = 9
+  elseif N % 2 == 0 then
+    print('Change to odd size')
+    return asis.resize(A, N+1)
+  end
+  A.size = N 
+  A._size = N
 end
 
 axis.setRange = function (A, t)
@@ -202,7 +221,7 @@ end
 
 axis.scale = function (A, factor)
   local int, frac = mmodf(A._size * factor)
-  A.size = (int % 2 == 1) and int or (int + 1)
+  axis.resize(A, (int % 2 == 1) and int or (int + 1))
 end
 
 axis.proj = function (A, d, isX)
@@ -258,9 +277,12 @@ end
 local asciiplot = {
 -- mark
 type = 'asciiplot', isasciiplot = true,
+-- const
+WIDTH = 73, HEIGHT = 21,
 -- symbols
 char = {'*', 'o', '#', '%', '~', 'x'},
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
+keys = {'_x','_y','_z','x','y','z'},
 }
 
 if SONATA_USE_COLOR then
@@ -284,7 +306,7 @@ asciiplot.__index = asciiplot
 --  @param F Figure object.
 --  @return String.
 asciiplot.__tostring = function (F)
-  if #F.canvas == 0 then return 'empty' end
+  if #F.canvas == 0 then return 'empty figure' end
   local acc = {}
   -- title
   if F.title then
@@ -521,9 +543,11 @@ asciiplot._limits = function (F)
     beg = width - #s - 1
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
-    s = F._x:limit('mid')
-    beg = (width + 1) / 2
-    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    if width > 21 then
+      s = F._x:limit('mid')
+      beg = (width + 1) / 2
+      for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    end
     n = nil
   end
   -- vertical
@@ -541,9 +565,11 @@ asciiplot._limits = function (F)
     row = F.canvas[2]
     for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
-    s = F._y:limit('mid')
-    row = F.canvas[(height + 1) / 2]
-    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    if height > 11 then
+      s = F._y:limit('mid')
+      row = F.canvas[(height + 1) / 2]
+      for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    end
   end
 end
 
@@ -556,8 +582,6 @@ asciiplot._new = function(self, dwidth, dheight)
     _x = axis.new(dwidth),
     _y = axis.new(dheight),
     _z = axis.new(dwidth),
-    --_w0 = dwidth or WIDTH,
-    --_h0 = dheight or HEIGHT,
     -- axes location
     xaxis  = 'mid',
     yaxis  = 'mid',
@@ -706,7 +730,6 @@ asciiplot.addPoint = function (F, dx, dy, s)
   local nx = F._x:proj(dx, true)
   local ny = F._y:proj(dy, false)
   if nx and ny and (#s == 1 or SONATA_USE_COLOR) then
-    print(nx, ny)
     F.canvas[ny][nx] = s
   end
 end
@@ -832,7 +855,7 @@ asciiplot.concat = function (self, ...)
     row[#row+1] = gap
     acc[k] = row; k = k + 1
     -- content
-    for j = 1, v.height do
+    for j = 1, v._y.size do
       row = acc[k] or {}
       row[#row+1] = table.concat(v.canvas[j])
       row[#row+1] = gap
@@ -1067,7 +1090,7 @@ about[asciiplot.tplot] = {"F:tplot(data_t, {yfix=false}) --> nil",
 setmetatable(asciiplot, {
 __call = function (self, w, h)
   -- size
-  return asciiplot:_new(w or WIDTH, h or HEIGHT)
+  return asciiplot:_new(w or asciiplot.WIDTH, h or asciiplot.HEIGHT)
 end})
 about[asciiplot] = {" (width_N=73, height_N=21) --> new_F", 
   "Create new asciiplot.", help.STATIC}
@@ -1084,17 +1107,30 @@ asciiplot.logY = function (F, isLog) F._y:setLog(isLog) end
 
 asciiplot.logZ = function (F, isLog) F._z:setLog(isLog) end
 
-asciiplot.axis = function (F, s)
-  local a = F['_' .. string.lower(s)]
-  if a then 
-    local res = {
-      a.size,
-      a.log and math.pow(10, a.range[1]) or a.range[1],
-      a.log and math.pow(10, a.range[2]) or a.range[2],
-      a.log or false,
+asciiplot.axes = function (F)
+  local res = {}
+  local key = asciiplot.keys
+  for i = 1, 3 do
+    local a = F[key[i]]
+    res[key[i+3]] = {
+      size = a.size,
+      log = a.log or false,
+      range = {
+        a.log and math.pow(10, a.range[1]) or a.range[1],
+        a.log and math.pow(10, a.range[2]) or a.range[2],
+      }
     }
-    return res
   end
+  return res
+end
+
+asciiplot.resize = function (F, w, h)
+  if isasciiplot(w) then
+    h = w._y.size
+    w = w._x.size
+  end
+  F._x:resize(w)
+  F._y:resize(h)
 end
 
 if Sonata then
