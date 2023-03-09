@@ -738,10 +738,10 @@ _setTranslation(geodesy.SK42, geodesy.PZ9002,
    0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6})
 
 geodesy.xyzInto = 'A.xyzInto[B]'
-about[geodesy.xyzInto] = {"E.xyzInto[E2]",
+about[geodesy.xyzInto] = {"E.xyzInto[E2] --> fn",
   "Get function to transform coordinates from E to E2 system.", TRANS}
 geodesy.blhInto = 'A.blhInto[B]'
-about[geodesy.blhInto] = {"E.blhInto[E2]",
+about[geodesy.blhInto] = {"E.blhInto[E2] --> fn",
   "Get function to transform geodetic coordinates from A to B system using the Molodensky method.",
   TRANS}
 

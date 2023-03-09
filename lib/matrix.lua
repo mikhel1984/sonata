@@ -916,26 +916,34 @@ end
 about[matrix.det] = {"M:det() --> num", 
   "Calculate determinant."}
 
---- Get diagonal vector or create matrix with given elements.
---  @param M Matrix, vector or table with numbers.
+--- Get diagonal vector.
+--  @param M Matrix.
 --  @param v Diagonal elements (optional).
 --  @return Vector of matrix.
-matrix.diag = function (M, v)
-  if M._rows and M._cols then  -- TODO split into 2 functions
-    local res = {}
-    for i = 1, math.min(M._rows, M._cols) do
-      res[i] = {M[i][i]}
-    end
-    return matrix:_init(#res, 1, res)
-  elseif type(v) == 'table' then
-    local res = matrix:_init(#v, #v, {})
-    for i = 1, #v do res[i][i] = v[i] end
+matrix.diag = function (M)
+  local res = {}
+  for i = 1, math.min(M._rows, M._cols) do
+    res[i] = {M[i][i]}
+  end
+  return matrix:_init(#res, 1, res)
+end
+about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
+
+--- Create matrix with given diagonal elements.
+--  @param M Do nothing.
+--  @param v List of elements.
+matrix.diagonal = function (M, v)
+  local vec = ismatrix(v)
+  if vec and (v._rows == 1 or v._cols == 1) or type(v) == 'table' then
+    local n = vec and v._rows * v._cols or #v
+    local res = matrix:_init(n, n, {})
+    for i = 1, n do res[i][i] = vec and v(i) or v[i] end
     return res
   end
   return nil
 end
-about[matrix.diag] = {'diag()',
-  'Get diagonal of the matrix or create new matrix which diagonal elements are given.',
+about[matrix.diagonal] = {':diagonal(list_v) --> M',
+  'Create new matrix with the given diagonal elements.',
   help.NEW}
 
 --- V1 . V2
