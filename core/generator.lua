@@ -130,6 +130,25 @@ end
 
 --================== Localization template =================
 
+--- Find translation.
+--  @param tLang Table with translations.
+--  @param key Function signature.
+--  @return translation or nil.
+local findVal = function (tLang, key)
+  local val = tLang[key]
+  if not val then
+    -- check if signature is modified
+    local name = string.match(key, "(%w+)%(")
+    if name then
+      name = '[^%a]?'..name..'%('    -- make template
+      for k, v in pairs(tLang) do
+        if string.find(k, name) then return v end
+      end
+    end
+  end
+  return val
+end
+
 --- Prepare text for dialog.
 --  @param tbl Table with descriptions.
 --  @param tLang Table with translation.
@@ -171,8 +190,9 @@ local makeModule = function (sName, tLang)
       elt, desc = v[TITLE], v[DESCRIPTION]
     end
     local title = sformat('["%s"]', elt)
-    local line = sformat('%-26s = [[%s]],', title, lng[elt] or desc)
-    if lng[elt] then   -- found translation
+    local value = findVal(lng, elt)
+    local line = sformat('%-26s = [[%s]],', title, value or desc)
+    if value then   -- found translation
       res[#res+1] = line
     else
       new[#new+1] = sformat((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
