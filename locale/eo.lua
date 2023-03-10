@@ -26,7 +26,7 @@ array = {
 ["A:isEqual(A2) --> bool"] = [[Kontroli egalecon de dimensioj.]],
 ["A:capacity() --> int"]   = [[Maksimuma nombro da elementoj en la tabelo. La sama kiel #A.]],
 ["A:copy() --> cpy_A"]     = [[Kreu kopion de la tabelo.]],
---[" {size1_N, [size2_N, ..]} --> new_A"] = [[Create empty array with the given size.]],
+[" {size1_N, [size2_N, ..]} --> new_A"] = [[Krei malplenan tabelon. Dimensio estas tablo.]],
 --["comparison"]             = [[a == b, a ~= b]],
 },
 ---------- asciiplot.lua ----------
@@ -50,7 +50,7 @@ asciiplot = {
 --["F:showX(pos_s|nil) --> nil"] = [[Define X axis position.]],
 --["F:title(str) --> nil"]   = [[Set new title.]],
 --["F:logY(isLog) --> nil"]  = [[Change Y axis type to logarithmic.]],
---[" (width_N=73, height_N=21) --> new_F"] = [[Create new asciiplot.]],
+[" (width_N=73, height_N=21) --> new_F"] = [[Kreu novan diagramon.]],
 --["F:showZ(pos_s|nil) --> nil"] = [[Define Z axis position.]],
 --["F:logX(isLog) --> nil"]  = [[Change X axis type to logarithmic.]],
 --["F:setZ(range_t) --> nil"] = [[Update Z range.]],
@@ -177,8 +177,8 @@ geodesy = {
 ["E:solveDir(blh_t, az1_d, dist_d) --> blh_t, az2_d"] = [[Solvu rektan geodezian problemon, trovu duan punktan pozicion kaj ĝian orientiĝon se la unua punkto, azimuto kaj distanco estas donitaj.]],
 [":grav(latitude_d) --> num"] = [[Internacia gravita formulo, angulo en gradoj.]],
 ["E:toXYZ(blh_t) --> xyz_t"] = [[Konvertado de geodeziaj koordinatoj al karteziaj koordinatoj.]],
---["E.blhInto[E2] --> fn"]   = [[Get function to transform geodetic coordinates from A to B system using the Molodensky method.]],
---["E.xyzInto[E2] --> fn"]   = [[Get function to transform coordinates from E to E2 system.]],
+["E.blhInto[E2] --> fn"]   = [[Revenas funkcion por konverti geodeziajn koordinatojn de sistemo A al B per la Molodensky metodo.]],
+["E.xyzInto[E2] --> fn"]   = [[Revenas funkcion por konverti koordinatojn de sistemo A al B.]],
 --["E:ll2utm(blh_t) --> utm_t"] = [[Find UTM projection for the given coordinates.]],
 --["E:utm2ll(utm_t) --> blh_t"] = [[Find Geodetic coordinates for the given UTM pose and zone]],
 },
@@ -195,27 +195,27 @@ gnuplot = {
 [":plot(x1_t, [y1_t, nm_s, x2_t,..]) --> nil"] = [['x' - listo de nombroj, 'y' - listo aŭ funkcio, 'nm' - kurba nomo.]],
 [":tsurf(var, [x_N, y_N, z1_N, z2_N,..]) --> nil"] = [[Grafikaĵo surfacan funkcion surbaze de tablo, matrico aŭ dosiero. Laŭvolaj elementoj difinas kolumnojn.]],
 ["__module__"]             = [[Interfaco por laborado kun Gnuplot de Lua.]],
---[=[[".keys"]                  = [[  Options / examples:
-{math.sin, title='sin'}       -- plot using function, define in Lua; add legend
-{'sin.dat', ln=1, lw=2}       -- plot data from file, use given color and width
-{tbl, with='lines'}           -- plot data from Lua table, use lines
-title='Graph name'            -- set title
-xrange={0,10}                 -- range of x from 0 to 10
-yrange={-2,2}                 -- range of y
-zrange={0,5}                  -- range of z
-trange={1,2}                  -- range for parametric functions
-xtitle='A', ytitle='B'        -- axes names
-terminal='jpeg'               -- save result as jpeg image
-output='my_plot.jpg'          -- file name
-parametric=true               -- create parametric plot
-size='square'                 -- set square size
-polar=true                    -- use polar coordinate system
-grid='polar'                  -- polar grid
-legend=false                  -- don't use legend
-surface=true                  -- plot surface in 3D
-samples=200                   -- define number of points
-raw='set pm3d'                -- set Gnuplot options manually
-]],]=]
+[".keys"]                  = [[  Priskribo de parametroj:
+{math.sin, title='sin'}                      -- grafeon por Lua funkcio, aldoni priskribon
+{'sin.dat', ln=1, lw=2}                      -- grafeon por datumndosieron, specifi koloron kaj dikecon
+{tbl, with='lines'}                          -- grafeon por Lua tabulo, uzi linioj
+title='Graph name'                           -- apudskribo
+xrange={0,10}                                -- gamo x de 0 ĝis 10
+yrange={-2,2}                                -- gamo y
+zrange={0,5}                                 -- gamo z
+trange={1,2}                                 -- gamo por parametria funkcio
+xtitle='A', ytitle='B'                       -- aksaj nomoj
+terminal='jpeg'                              -- savi la rezulton kiel jpeg bildon
+output='my_plot.jpg'                         -- dosiernomo
+parametric=true                              -- parametria grafeo
+size='square'                                -- kvadrata bildo
+polar=true                                   -- uzi polusa grafeo
+grid='polar'                                 -- polusa koordinata sistemo
+legend=false                                 -- malebligi priskribon
+surface=true                                 -- tridimensia grafeo
+samples=200                                  -- nombro da punktoj
+raw='set pm3d'                               -- fiksi la Gnuplot parametrojn permane 
+]],
 },
 ---------- graph.lua ----------
 graph = {
@@ -288,7 +288,7 @@ main = {
 ["Type(x) --> str"]        = [[Montri objektan tipon.]],
 ["acos(x) --> y"]          = [[La kosinusarko de nombro d.]],
 ["cos(x) --> y"]           = [[La kosinuso de nombro d.]],
---["use([module_s]) --> str|nil"] = [[Call use('module') or use{'module1','module2'} to load new functions.]],
+["use([module_s]) --> str|nil"] = [[Alvoku use('modulo') aǔ use{'moduloA','moduloB'} por akiri ekstrajn modulojn.]],
 --["help(fn='main') --> str"] = [[Show information about the function.]],
 --["atan(x) --> y"]          = [[Inverse tangent x.]],
 --["quit() --> nil"]         = [[Quit the program.]],
@@ -315,7 +315,7 @@ matrix = {
 ["M:T() --> transpose_M"]  = [[Redonas la transposta matrico.]],
 ["M:tr() --> sum"]         = [[Spuro de matrico.]],
 ["M:table() --> tbl"]      = [[Konverti al la simpla Lua tablo.]],
-["M:diag() --> V"]         = [[Bidiagonaligo de matrico, revenas U, B, V.]],
+["M:diag() --> V"]         = [[Ĉerpti la diagonalajn elementojn.]],
 ["M:concat(M2, dir_s) --> comb_M"] = [[Kunmeti du matricoj, dir='h' - en horizontala directo, dir='v' - in vertikala direkto.
 Uzi M1 .. M2 por horizontala kunmeto, kaj M1 // M2 por vertikala.]],
 ["M:eig() --> vectors_M, values_M"] = [[Trovu proprajn vektorojn kaj proprajn valorojn (matricoj).]],
@@ -334,7 +334,7 @@ Uzi M1 .. M2 por horizontala kunmeto, kaj M1 // M2 por vertikala.]],
 ["M:reshape(row_N=size, col_N=1) --> upd_M"] = [[Ŝanĝu matricon.]],
 ["M:rank() --> N"]         = [[Trovi rangon de la matrico.]],
 --["arithmetic"]             = [[a+b, a-b, a*b, a/b, a^b, -a]],
---[":diagonal(list_v) --> M"] = [[Create new matrix with the given diagonal elements.]],
+[":diagonal(list_v) --> M"] = [[krei novan matricon kun donita diagonalo.]],
 --["comparison"]             = [[a==b, a~=b]],
 --["M:minor(row_N, col_N) --> minor_M"] = [[Find minor for the matrix element.]],
 },
@@ -438,7 +438,7 @@ symbolic = {
 ["__module__"]             = [[Simbolaj kalkuloj.]],
 [":parse(expr_s) --> S1, S2, .."] = [[Akiru simbolan esprimon el linio.]],
 ["S:eval(env_t={}) --> upd_S|num"] = [[Taksi simbolan esprimon kun la donita medio.]],
---[" (num|str) --> new_S"]   = [[Create new symbolic variable.]],
+[" (num|str) --> new_S"]   = [[Kreu novan simbolan variablon.]],
 --["S:isFn() --> bool"]      = [[Return true if the symbol is function.]],
 --["S:introspect() --> str"] = [[Show the internal structure.]],
 --["S:diff(var_S) --> derivative_S"] = [[Find symbolic derivative.]],
@@ -453,7 +453,7 @@ units = {
 ["U:copy() --> cpy_U"]     = [[Krei kopion de objecto.]],
 --[".prefix"]                = [[Table of possible prefixes for units.]],
 --["comparison"]             = [[U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2]],
---[" (val=1, name_s) --> new_U"] = [[Create new elements with units.]],
+[" (val=1, name_s) --> new_U"] = [[Krei novan valoron kun unuoj de mezuro.]],
 --["arithmetic"]             = [[U1+U2, U1-U2, U1*U2, U1/U2, U1^N]],
 },
 }

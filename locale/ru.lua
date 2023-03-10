@@ -26,7 +26,7 @@ array = {
 ["A:set(ind_t, var) --> nil"] = [[Присваивание значения заданному элементу.]],
 ["A:dim() --> int"]        = [[Возвращает размерность массива.]],
 ["A:capacity() --> int"]   = [[Возвращает максимальное число элементов в массиве. Эквивалентно #A.]],
---[" {size1_N, [size2_N, ..]} --> new_A"] = [[Create empty array with the given size.]],
+[" {size1_N, [size2_N, ..]} --> new_A"] = [[Создаёт пустой массив заданного размера.]],
 --["comparison"]             = [[a == b, a ~= b]],
 },
 ---------- asciiplot.lua ----------
@@ -43,7 +43,7 @@ asciiplot = {
 ["__module__"]             = [[Визуализация данных с помощью псевдо-графики.]],
 ["F:bar(t, vy=2, x_N=1) --> nil"] = [[Столбчатая диаграмма. vy может быть индексом y в таблице t либо списком y-в.]],
 [":concat(...) --> str"]   = [[Горизонтальное объединение графиков равного размера. Для двух объектов можно использовать оператор '..' .]],
---[" (width_N=73, height_N=21) --> new_F"] = [[Create new asciiplot.]],
+[" (width_N=73, height_N=21) --> new_F"] = [[Новый график.]],
 --["F:setX(range_t) --> nil"] = [[Update X range.]],
 --["F:showX(pos_s|nil) --> nil"] = [[Define X axis position.]],
 --["F:title(str) --> nil"]   = [[Set new title.]],
@@ -177,8 +177,8 @@ geodesy = {
 ["E:solveDir(blh_t, az1_d, dist_d) --> blh_t, az2_d"] = [[Решение прямой задачи геодезии, поиск положения и азимута второй точки при заданных начальной точке, направлении и расстоянии.]],
 [":grav(latitude_d) --> num"] = [[Международная формула гравитации, аргумент в радианах.]],
 [":dms2rad(deg_d, min_d=0, sec_d=0) --> num"] = [[Преобразует градусы, минуты и секунды в радианы.]],
---["E.blhInto[E2] --> fn"]   = [[Get function to transform geodetic coordinates from A to B system using the Molodensky method.]],
---["E.xyzInto[E2] --> fn"]   = [[Get function to transform coordinates from E to E2 system.]],
+["E.blhInto[E2] --> fn"]   = [[Возвращает функцию для преобразования геодезических координат из A в B с помощью метода Молоденского.]],
+["E.xyzInto[E2] --> fn"]   = [[Возвращает функцию для преобразования геоцентрических координат из системы A в B.]],
 --["E:utm2ll(utm_t) --> blh_t"] = [[Find Geodetic coordinates for the given UTM pose and zone]],
 --["E:ll2utm(blh_t) --> utm_t"] = [[Find UTM projection for the given coordinates.]],
 },
@@ -195,27 +195,27 @@ gnuplot = {
 [":polarplot(x1_t, y1_t, [nm_s, x2_t, y2_t,..]) --> nil"] = [[График в полярных координатах. 'x' - список чисел, 'y' - список либо функция, 'nm' - имя кривой.]],
 [":tsurf(var, [x_N, y_N, z1_N, z2_N,..]) --> nil"] = [[Построение графика поверхности на основе таблицы, матрицы или файла. Опциональные элементы определяют необходимые столбцы.]],
 ["G:add(curve_v) --> nil"] = [[Добавить функцию для построения.]],
---[=[[".keys"]                  = [[  Options / examples:
-{math.sin, title='sin'}       -- plot using function, define in Lua; add legend
-{'sin.dat', ln=1, lw=2}       -- plot data from file, use given color and width
-{tbl, with='lines'}           -- plot data from Lua table, use lines
-title='Graph name'            -- set title
-xrange={0,10}                 -- range of x from 0 to 10
-yrange={-2,2}                 -- range of y
-zrange={0,5}                  -- range of z
-trange={1,2}                  -- range for parametric functions
-xtitle='A', ytitle='B'        -- axes names
-terminal='jpeg'               -- save result as jpeg image
-output='my_plot.jpg'          -- file name
-parametric=true               -- create parametric plot
-size='square'                 -- set square size
-polar=true                    -- use polar coordinate system
-grid='polar'                  -- polar grid
-legend=false                  -- don't use legend
-surface=true                  -- plot surface in 3D
-samples=200                   -- define number of points
-raw='set pm3d'                -- set Gnuplot options manually
-]],]=]
+[".keys"]                  = [[  Описание параметров:
+{math.sin, title='sin'}                      -- строит график для Lua функции, добавляет текст в легенду
+{'sin.dat', ln=1, lw=2}                      -- строит график для файла с учётом цвета и толщины маркеров
+{tbl, with='lines'}                          -- строит график для Lua таблицы с помощью линий
+title='Graph name'                           -- имя графика в целом
+xrange={0,10}                                -- диапазон x от 0 до 10
+yrange={-2,2}                                -- диапазон y
+zrange={0,5}                                 -- диапазон z
+trange={1,2}                                 -- изменение параметра в случае параметрической функции
+xtitle='A', ytitle='B'                       -- имена осей
+terminal='jpeg'                              -- сохранение результата в файл
+output='my_plot.jpg'                         -- имя файла для вывода результата
+parametric=true                              -- параметрическое представление функции
+size='square'                                -- установить квадратный размер изображения
+polar=true                                   -- график в полярных координатах
+grid='polar'                                 -- изменить тип сетки на полярный
+legend=false                                 -- отключить легенду
+surface=true                                 -- построение трёхмерного графика
+samples=200                                  -- задать число точек на графике
+raw='set pm3d'                               -- позволяет написать команды Gnuplot в явном виде
+]],
 },
 ---------- graph.lua ----------
 graph = {
@@ -288,7 +288,7 @@ main = {
 ["cosh(x) --> y"]          = [[Гиперболический косинус.]],
 ["Map(fn, in_t) --> out_t"] = [[Вычисляет функцию для всех элементов списка (таблицы), возвращает новый список.]],
 ["Type(x) --> str"]        = [[Печатает тип объекта, распознаёт типы, заданные в Sonata.]],
---["use([module_s]) --> str|nil"] = [[Call use('module') or use{'module1','module2'} to load new functions.]],
+["use([module_s]) --> str|nil"] = [[Используйте use('модуль') или use{'модульA','модульB'} для подключения дополнительных модулей.]],
 --["help(fn='main') --> str"] = [[Show information about the function.]],
 --["atan(x) --> y"]          = [[Inverse tangent x.]],
 --["quit() --> nil"]         = [[Quit the program.]],
@@ -325,7 +325,7 @@ matrix = {
 ["M:det() --> num"]        = [[Определитель матрицы.]],
 ["M:householder(V, start_N) --> hh_M"] = [[Возвращает матрицу преобразования Хаусхолдера.]],
 ["M:norm() --> num"]       = [[Евклидова норма.]],
-["M:diag() --> V"]         = [[Бидиагонализация матрицы, возвращает U, B, V.]],
+["M:diag() --> V"]         = [[Извлекает диагональные элементы матрицы.]],
 ["M:round(N=6) --> nil"]   = [[Округлить все элементы матрицы до заданного числа знаков.]],
 ["__module__"]             = [[Операции с матрицами. На нулевые элементы память не расходуется. Индексация с единицы.]],
 ["M:lu() --> L_M, U_M, perm_M"] = [[LU преобразование матрицы. Возвращает L, U и P.]],
@@ -335,7 +335,7 @@ matrix = {
 --[":V {...} --> new_V"]     = [[Create vector from list of numbers.]],
 --["arithmetic"]             = [[a+b, a-b, a*b, a/b, a^b, -a]],
 --["M:minor(row_N, col_N) --> minor_M"] = [[Find minor for the matrix element.]],
---[":diagonal(list_v) --> M"] = [[Create new matrix with the given diagonal elements.]],
+[":diagonal(list_v) --> M"] = [[Формирует новую матрицу из вектора.]],
 --["comparison"]             = [[a==b, a~=b]],
 },
 ---------- numeric.lua ----------
@@ -392,7 +392,7 @@ quaternion = {
 ["Q:w() --> var"]          = [[Действительная часть w.]],
 ["Q:rotate(inVec) --> outVec_t"] = [[Возвращает вектор, полученный при вращении с помощью заданного кватерниона.]],
 ["__module__"]             = [[Операции над кватернионами.]],
---[" {w, x, y, z} --> new_Q"] = [[Create new quaternion.]],
+[" {w, x, y, z} --> new_Q"] = [[Создаёт новый кватернион.]],
 --["arithmetic"]             = [[a + b, a - b, a * b, a ^ k, -a]],
 --["comparison"]             = [[a == b, a ~= b]],
 },
@@ -440,7 +440,7 @@ symbolic = {
 [":def(name_s, args_t, expr_S) --> fn_S"] = [[Создаёт символьную функцию. S либо символьное выражение, либо Lua функция.]],
 --["S:diff(var_S) --> derivative_S"] = [[Find symbolic derivative.]],
 --["S:isFn() --> bool"]      = [[Return true if the symbol is function.]],
---[" (num|str) --> new_S"]   = [[Create new symbolic variable.]],
+[" (num|str) --> new_S"]   = [[Символьная переменная или константа.]],
 --["S:introspect() --> str"] = [[Show the internal structure.]],
 },
 ---------- units.lua ----------
@@ -454,6 +454,6 @@ units = {
 ["__module__"]             = [[Операции с единицами измерения.]],
 --["arithmetic"]             = [[U1+U2, U1-U2, U1*U2, U1/U2, U1^N]],
 --["comparison"]             = [[U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2]],
---[".prefix"]                = [[Table of possible prefixes for units.]],
+[".prefix"]                = [[Тарлица приставок.]],
 },
 }
