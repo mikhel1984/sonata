@@ -156,7 +156,7 @@ end
 local makeDialog = function (tbl, tLang)
   local lng = tLang['Dialog'] or {}
   local res = {
-    sformat('%s dialog %s', S10, sName, S10), 'Dialog = {',
+    sformat('%s dialog %s', S10, S10), 'Dialog = {',
   }
   for k, v in pairs(tbl) do
     local title = sformat('["%s"]', k)
