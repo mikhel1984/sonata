@@ -162,7 +162,7 @@ k = k:table()
 ans = k[2][1]                 --> 0
 
 -- make diagonal matrix
-ans = Mat:diag({1,2,3})       --> Mat {{1,0,0},
+ans = Mat:diagonal({1,2,3})   --> Mat {{1,0,0},
                                        {0,2,0},
                                        {0,0,3}}
 

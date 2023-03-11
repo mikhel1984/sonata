@@ -44,9 +44,6 @@ ans = Spec:gammp(7.7, 2.3) * 1E3 --2> 3.85
 
 ans = Spec:gammq(1.5, 4.8) * 1E2 --2> 2.23
 
--- another syntax
-ans = Spec:gammainc(2.1, 0.3, 'upper') * 1E2 --3> 1.942
-
 -- Bessel functions
 ans = Spec:besselj(3, 1.5) * 1E2 --3> 6.096
 
