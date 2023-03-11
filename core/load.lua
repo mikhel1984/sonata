@@ -118,7 +118,7 @@ local _args = {
 
 -- run tests
 ['--test'] = {
-description = 'Apply the unit tests to the desired module. Call all modules if the name is not defined.',
+description = 'Run unit tests for a given module. Execute for all modules if no name is specified.',
 example = '--test array',
 process = function (args)
   local Test = require('core.test')
@@ -136,7 +136,7 @@ exit = true},
 
 -- localization file
 ['--lang'] = {
-description = 'Creating/updating a file for localization.',
+description = 'Generation or updating of the localization file.',
 example = '--lang eo',
 process = function (args)
   if args[2] then
@@ -150,7 +150,7 @@ exit = true},
 
 -- generate 'help.html'
 ['--doc'] = {
-description = 'Creating/updating a documentation file.',
+description = 'Generating a documentation page.',
 example = '--doc ru',
 process = function (args)
   local Gen = require('core.generator')
@@ -163,7 +163,7 @@ exit = true},
 
 -- new module
 ['--new'] = {
-description = 'Create template file for a new module.',
+description = 'Generating a template for a new module.',
 example = '--new  matrices  Mat  "Matrix operations."',
 process = function (args)
   local Gen = require('core.generator')
@@ -205,7 +205,7 @@ exit = true}
 -- string representation of the help info
 Sonata._arghelp = function ()
   local txt = {
-    "\n'Sonata' is a Lua based program for mathematical calculations.",
+    "\nSonata is a Lua based program for mathematical calculations.",
     "",
     "USAGE:",
     "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
