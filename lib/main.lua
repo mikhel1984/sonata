@@ -62,9 +62,7 @@ c = Map(sin, b)
 ans = c[1]                   --3> 0.909
 
 -- use Lua functions if need
-ans = math.floor(_pi)
-
-ans = math.deg(_pi)
+ans = math.deg(_pi)          --2> 180.0
 
 --]]
 
@@ -77,7 +75,23 @@ local AUX = 'auxiliary'
 -- compatibility
 local Ver = require("lib.utils")
 local Utils = Ver.utils
+local Calc = Ver.calc
 Ver = Ver.versions
+
+--- Call default or module-specific function.
+--  @param fn Function.
+--  @param s Function name.
+--  @return Function equal to fn(x).
+local _call = function (fn, s)
+  return function (v)
+    if type(v) == 'table' then
+      local method = v[s]
+      return method and method(v) or fn(v:float())
+    else
+      return fn(v)
+    end
+  end
+end
 
 --	INFO 
 
@@ -86,6 +100,7 @@ local about = {
 __module__ = "Lua based mathematics."
 }
 --	MODULE
+
 
 local main = {}
 
@@ -110,7 +125,7 @@ main._showTable = function (t)
   end
   io.write('\n{ ')
   -- list elements
-  for i,v in ipairs(t) do
+  for i, v in ipairs(t) do
     io.write(main._showElt(v), ', ')
     nums[i] = true
     if i % N == 0 then
@@ -120,7 +135,7 @@ main._showTable = function (t)
   end
   -- hash table elements
   local count = 0
-  for k,v in pairs(t) do
+  for k, v in pairs(t) do
     if not nums[k] then
       io.write('\n', tostring(k), ' = ', main._showElt(v), ', ')
       count = count + 1
@@ -131,41 +146,46 @@ main._showTable = function (t)
 end
 
 -- Commonly used methods
-abs = math.abs;   about[abs] =  {"abs(d)", "Absolute value."}
-exp = math.exp;   about[exp] =  {"exp(d)", "Exponent."}
-log = math.log;   about[log] =  {"log(dPos)", "Natural logarithm."}
-sqrt = math.sqrt;  about[sqrt] = {"sqrt(dPos)", "Square root."}
+abs = _call(math.abs, 'abs')
+about[abs] = {"abs(x) --> num", "Absolute value."}
+exp = _call(math.exp, 'exp')
+about[exp] = {"exp(x) --> y", "Exponent."}
+log = _call(math.log, 'log')
+about[log] = {"log(x) --> y", "Natural logarithm."}
+sqrt = _call(math.sqrt, 'sqrt')
+about[sqrt] = {"sqrt(x) --> y", "Square root."}
 
 -- Trigonometrical
-sin = math.sin;   about[sin] =  {"sin(d)", "Sinus x.", TRIG}
-cos = math.cos;   about[cos] =  {"cos(d)", "Cosine x.", TRIG}
-tan = math.tan;   about[tan] =  {"tan(d)", "Tangent x.", TRIG}
-asin = math.asin;  about[asin] = {"asin(d)", "Inverse sine x.", TRIG}
-acos = math.acos;  about[acos] = {"acos(d)", "Inverse cosine x.", TRIG}
-atan = math.atan;  about[atan] = {"atan(d)", "Inverse tangent x.", TRIG}
-
+sin = _call(math.sin, 'sin')
+about[sin] = {"sin(x) --> y", "Sine.", TRIG}
+cos = _call(math.cos, 'cos')
+about[cos] = {"cos(x) --> y", "Cosine.", TRIG}
+tan = _call(math.tan, 'tan')
+about[tan] = {"tan(x) --> y", "Tangent.", TRIG}
+asin = _call(math.asin, 'asin')
+about[asin] = {"asin(x) --> y", "Inverse sine.", TRIG}
+acos = _call(math.acos, 'acos')
+about[acos] = {"acos(x) --> y", "Inverse cosine x.", TRIG}
+atan = _call(math.atan, 'atan')
+about[atan] = {"atan(x) --> y", "Inverse tangent x.", TRIG}
 atan2 = Ver.atan2
-about[atan2] = {"atan2(dy,dx)", "Inverse tangent of dy/dx, use signs.", TRIG}
+about[atan2] = {"atan2(y_d, x_d) --> num", "Inverse tangent of dy/dx, use signs.", TRIG}
 
 -- Hyperbolic
-cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
-about[cosh] = {"cosh(d)", "Hyperbolic cosine.", HYP}
-
-sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
-about[sinh] = {"sinh(d)", "Hyperbolic sinus.", HYP}
-
-tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
-about[tanh] = {"tanh(d)", "Hyperbolic tangent.", HYP}
+cosh = _call(Calc.cosh, 'cosh')
+about[cosh] = {"cosh(x) --> y", "Hyperbolic cosine.", HYP}
+sinh = _call(Calc.sinh, 'sinh')
+about[sinh] = {"sinh(x) --> y", "Hyperbolic sinus.", HYP}
+tanh = _call(Calc.tanh, 'tanh')
+about[tanh] = {"tanh(x) --> y", "Hyperbolic tangent.", HYP}
 
 -- Hyperbolic inverse
-asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
-about[asinh] = {"asinh(x)", "Hyperbolic inverse sine.", HYP}
-
-acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
-about[acosh] = {"acosh(x)", "Hyperbolic arc cosine.", HYP}
-
-atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
-about[atanh] = {"atanh(x)", "Hyperbolic inverse tangent.", HYP}
+asinh = _call(Calc.asinh, 'asinh')
+about[asinh] = {"asinh(x) --> y", "Hyperbolic inverse sine.", HYP}
+acosh = _call(Calc.acosh, 'acosh')
+about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", HYP}
+atanh = _call(Calc.atanh, 'atanh')
+about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
 _pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
@@ -178,10 +198,10 @@ about[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
 math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
 
 rand = function () return math.random() end
-about[rand] = {"rand()", "Random number between 0 and 1."}
+about[rand] = {"rand() --> float", "Random number between 0 and 1."}
 
-randi = function (N) return math.random(1,N) end
-about[randi] = {"randi(N)", "Random integer in range from 1 to N."}
+randi = function (N) return math.random(1, N) end
+about[randi] = {"randi(N) -> int", "Random integer in range from 1 to N."}
 
 randn = function (dMean, dev)
   dMean = dMean or 0
@@ -196,7 +216,7 @@ randn = function (dMean, dev)
   local norm = u * math.sqrt(-2*math.log(s)/s)
   return norm * dev + dMean
 end
-about[randn] = {"randn([dMean=0,dev=1])",
+about[randn] = {"randn(mean_d=0, dev_d=1) --> float",
   "Normal distributed random value with the given mean and deviation."}
 
 
@@ -208,23 +228,23 @@ Map = function (fn, t)
   if type(t) == 'table' then
     if t.map then return t:map(fn) end
     local res = {}
-    for i,v in ipairs(t) do res[i] = fn(v) end
+    for i, v in ipairs(t) do res[i] = fn(v) end
     return res
   end
   return nil
 end
-about[Map] = {'Map(fn,t)','Evaluate function for each table element.', AUX}
+about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table element.', AUX}
 
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
 Print = function (...)
-  for i,v in ipairs({...}) do
+  for i, v in ipairs({...}) do
     if type(v) == 'table' then
       local mt = getmetatable(v)
       if mt and mt.__tostring then
         -- has representation
         local tmp = tostring(v)
-        if string.find(tmp,'\n') then
+        if string.find(tmp, '\n') then
           io.write('\n', tmp, '\n')
         else
           io.write(tmp, '\t')
@@ -240,7 +260,7 @@ Print = function (...)
   end
   io.write('\n')
 end
-about[Print] = {"Print(...)",
+about[Print] = {"Print(...) --> nil",
   "Extenden print function, it shows elements of tables and scientific form of numbers.",
   AUX}
 
@@ -248,12 +268,12 @@ about[Print] = {"Print(...)",
 --  @param f Real number.
 --  @param N Number of decimal digits.
 --  @return Rounded number.
-Round = function (f,N)
+Round = function (f, N)
   N = N or 0
   return Utils.round(f, 10^(-N))
 end
 about[Round] = {
-  'Round(f,[N=0])', 'Round value, define number of decimal digits.', AUX}
+  'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
 
 --- Execute file inside the interpreter.
 --  @param sFile Lua or note file name.
@@ -266,8 +286,8 @@ Run = function (sFile, bInt)
     io.write('Expected .lua or .note!\n')
   end
 end
-about[Run] = {'Run(sFile,[bInt=false])',
-  "Execute lua- or note- file. Set bInt for interaction.", AUX}
+about[Run] = {'Run(name_s, isInt=false) --> nil',
+  "Execute lua- or note- file. Set isInt for interaction.", AUX}
 
 --- Show type of the object.
 --  @param v Some Lua or Sonata object.
@@ -281,7 +301,7 @@ Type = function (v)
   end
   return u
 end
-about[Type] = {'Type(v)', 'Show type of the object.', AUX}
+about[Type] = {'Type(x) --> str', 'Show type of the object.', AUX}
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -291,7 +311,7 @@ main.life = function (board)
   local src = board
   local gen = 0
   -- make decision about current cell
-  local islive = function (r,c)
+  local islive = function (r, c)
       local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
         + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
       return (n==3 or n==2 and src[r][c]==1) and 1 or 0
@@ -301,9 +321,9 @@ main.life = function (board)
     local new = board:zeros()   -- empty matrix of the same size
     gen = gen+1
     -- update
-    for r = 1,rows do
-      for c = 1,cols do
-        new[r][c] = gen > 1 and islive(r,c) or src[r][c] ~= 0 and 1 or 0
+    for r = 1, rows do
+      for c = 1, cols do
+        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
         io.write(new[r][c] == 1 and '*' or ' ')
       end
       io.write('|\n')
@@ -325,7 +345,7 @@ local mt_range = { type = 'range' }
 --  @param dStep Step value.
 --  @param iN Number of elements.
 --  @return Range object.
-mt_range._init = function (dBeg,dEnd,dStep,iN)
+mt_range._init = function (dBeg, dEnd, dStep, iN)
   return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, mt_range)
 end
 
@@ -381,16 +401,15 @@ end
 --  @param i Element index.
 --  @return Number.
 mt_range.__index = function (self, i)
-  if Ver.isInteger(i) then
+  if Ver.isInteger(i) and i > 0 and i <= self._N then
     local v = 0
-    if i > 0 and i < self._N then
+    if i < self._N then
       v = self._beg + (i-1)*self._step
-    elseif i == self._N then
+    else
       v = self._end
     end
     return v and self._fn and self._fn(v) or v
   end
-  return mt_range[i]
 end
 
 -- Block setting operation.
@@ -419,12 +438,17 @@ Range = function (dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-about[Range] = {'Range(dBegin,dEnd,[dStep])','Generate range object.', AUX}
+about[Range] = {'Range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.', AUX}
 
-if Log then
-  about[Log] = {'Log(sFlag)',
-    "Save session into the log file. Use 'on'/'off' to start/stop logging.",
-    SonataHelp.OTHER}
+-- Sonata specific functions
+
+if Sonata then
+about[Log] = {'Log(flag_s) --> nil',
+  "Save session into the log file. Use 'on'/'off' to start/stop logging.", AUX}
+about[use] = {'use([module_s]) --> str|nil',
+  "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
+about[help] = {"help(fn='main') --> str", "Show information about the function.", AUX}
+about[quit] = {'quit() --> nil', "Quit the program.", AUX}
 end
 
 -- save link to help info

@@ -44,9 +44,9 @@ local function docLines(module, alias, lng)
     end
   end
   -- sort
-  table.sort(fn, function (a,b) return a[1] < b[1] end)
+  table.sort(fn, function (a, b) return a[1] < b[1] end)
   -- format
-  for i,v in ipairs(fn) do
+  for i, v in ipairs(fn) do
     fn[i] = sformat("<b>%s</b> - %s<br>", v[1], v[2])
   end
   return tconcat(fn, "\n"), description
@@ -84,11 +84,11 @@ generator.doc = function (locName, tModules)
   }
   -- prepare module list
   local sortedModules = {}
-  for k,v in pairs(tModules) do sortedModules[#sortedModules+1] = {k,v} end
-  table.sort(sortedModules, function (a,b) return a[1] < b[1] end)
+  for k, v in pairs(tModules) do sortedModules[#sortedModules+1] = {k, v} end
+  table.sort(sortedModules, function (a, b) return a[1] < b[1] end)
   -- add content
   res[#res+1] = '<ul>'
-  for _,val in ipairs(sortedModules) do
+  for _, val in ipairs(sortedModules) do
     res[#res+1] = sformat('<li><a href="#%s">%s</a></li>', val[2], val[1])
   end
   res[#res+1] = '</ul></div>'
@@ -102,11 +102,11 @@ generator.doc = function (locName, tModules)
 
   local fName = sformat('%s%s%s', Help.LOCALE, Help.SEP, locName)
   -- prepare new file
-  local lng = Help.tblImport(fName) or {}
+  local lng = Help.lngImport(fName) or {}
 
   -- modules
   for _, val in ipairs(sortedModules) do
-    local k,v = val[1], val[2]
+    local k, v = val[1], val[2]
     res[#res+1] = sformat('<div><a name="%s"></a>', v)
     res[#res+1] = sformat('<h3># %s (%s) #</h3>', v, k)
     functions, description = docLines(k, v, lng)
@@ -122,13 +122,32 @@ generator.doc = function (locName, tModules)
   res[#res+1] = '</body></html>'
 
   -- save
-  local f = io.open('help.html','w')
-  f:write(tconcat(res,'\n'))
+  local f = io.open('help.html', 'w')
+  f:write(tconcat(res, '\n'))
   f:close()
   io.write("File 'help.html' is saved!\n")
 end
 
 --================== Localization template =================
+
+--- Find translation.
+--  @param tLang Table with translations.
+--  @param key Function signature.
+--  @return translation or nil.
+local findVal = function (tLang, key)
+  local val = tLang[key]
+  if not val then
+    -- check if signature is modified
+    local name = string.match(key, "(%w+)%(")
+    if name then
+      name = '[^%a]?'..name..'%('    -- make template
+      for k, v in pairs(tLang) do
+        if string.find(k, name) then return v end
+      end
+    end
+  end
+  return val
+end
 
 --- Prepare text for dialog.
 --  @param tbl Table with descriptions.
@@ -137,11 +156,11 @@ end
 local makeDialog = function (tbl, tLang)
   local lng = tLang['Dialog'] or {}
   local res = {
-    sformat('%s dialog %s', S10, sName, S10), 'Dialog = {',
+    sformat('%s dialog %s', S10, S10), 'Dialog = {',
   }
   for k, v in pairs(tbl) do
     local title = sformat('["%s"]', k)
-    local line = sformat('%-24s = [[%s]],', title, lng[k] or v)
+    local line = sformat('%-26s = [[%s]],', title, lng[k] or v)
     if not lng[k] then
       line = sformat((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
     end
@@ -171,8 +190,9 @@ local makeModule = function (sName, tLang)
       elt, desc = v[TITLE], v[DESCRIPTION]
     end
     local title = sformat('["%s"]', elt)
-    local line = sformat('%-24s = [[%s]],', title, lng[elt] or desc)
-    if lng[elt] then   -- found translation
+    local value = findVal(lng, elt)
+    local line = sformat('%-26s = [[%s]],', title, value or desc)
+    if value then   -- found translation
       res[#res+1] = line
     else
       new[#new+1] = sformat((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
@@ -187,13 +207,14 @@ end
 --  @param fName Language name, for example 'en' or 'it'.
 --  @param tModules Table with the list of existing modules.
 generator.lang = function(fName, tModules)
-  fName = sformat('%s%s%s.lng', Help.LOCALE, Help.SEP, fName)
+  fName = sformat('%s%s%s.lua', Help.LOCALE, Help.SEP, fName)
   -- prepare new file
-  local lng = Help.tblImport(fName) or {}
+  local lng = Help.lngImport(fName) or {}
   local f = io.open(fName, 'w')
   -- save descriptions
+  f:write(S10, sformat(' %s ', fName), S10, '\n\n')
   f:write('return {\n')
-  f:write(S10, sformat(' %s ', fName), S10, '\n')
+  f:write('----------\n')
   -- language and authors
   f:write(
     sformat("language = '%s',", lng.language or 'English'), '\n')
@@ -204,7 +225,7 @@ generator.lang = function(fName, tModules)
   f:write(makeDialog(Help.english, lng))
   -- modules
   local modules = {}
-  for k,_ in pairs(tModules) do table.insert(modules, k) end
+  for k, _ in pairs(tModules) do table.insert(modules, k) end
   table.sort(modules)
   for _, v in ipairs(modules) do 
     f:write(makeModule(v, lng))
@@ -286,15 +307,15 @@ WORD2.__index = WORD2
 3L Constructor example.
 --  @param t Some value.
 --  @return New object of WORD2.
-WORD2.new = function(self,t)
+WORD2.new = function(self, t)
   local o = {}
   -- your logic
   -- return object
-  return setmetatable(o,self)
+  return setmetatable(o, self)
 end
 
 -- simplify constructor call
-setmetatable(WORD2, {__call = function (self,v) return WORD2:new(v) end})
+setmetatable(WORD2, {__call = function (self, v) return WORD2:new(v) end})
 about[WORD2] = {" (t)", "Create new WORD2.", help.NEW}
 
 3L Method example.

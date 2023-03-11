@@ -91,7 +91,7 @@ local function isunits(v) return type(v) == 'table' and v.isunits end
 --  @param t2 Second key-value table.
 --  @param pos True when positive.
 local function eliminate(t1, t2, pos)
-  for k,v in pairs(t2) do
+  for k, v in pairs(t2) do
     if t1[k] then
       local vv = pos and (t1[k] + v) or (t1[k] - v)
       t1[k] = (vv ~= 0) and vv or nil
@@ -102,20 +102,22 @@ end
 
 -- Operations with tables of units.
 local op = {
-['*'] = function(u1, u2) for k,v in pairs(u2) do
-          u1[k] = (u1[k] or 0) + v end
+['*'] = function(u1, u2) 
+          for k, v in pairs(u2) do u1[k] = (u1[k] or 0) + v end
         end,
-['/'] = function(u1, u2) for k,v in pairs(u2) do
-          u1[k] = (u1[k] or 0) - v end
+['/'] = function(u1, u2) 
+          for k, v in pairs(u2) do u1[k] = (u1[k] or 0) - v end
         end,
-['^'] = function(u, n) for k,v in pairs(u) do u[k] = v*n end end
+['^'] = function(u, n) 
+          for k, v in pairs(u) do u[k] = v*n end 
+        end
 }
 
 --- Check equality of float point numbers.
 --  @param d1 First unit object.
 --  @param d2 Second unit object.
 --  @return True if the objects are equal.
-local function equal(d1,d2)
+local function equal(d1, d2)
   return math.abs(d1-d2) <= 1e-3*math.abs(d1)
 end
 
@@ -143,7 +145,7 @@ _rules = {},
 --  @param U2 Second unit object.
 --  @return Sum of unit objects.
 units.__add = function (U1, U2)
-  U1, U2 = units._args(U1,U2)
+  U1, U2 = units._args(U1, U2)
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   local res = units.copy(U1)
   res._value = res._value + tmp._value
@@ -155,7 +157,7 @@ end
 --  @param U2 Second unit object.
 --  @return Ratio of unit objects.
 units.__div = function (U1, U2)
-  U1, U2 = units._args(U1,U2)
+  U1, U2 = units._args(U1, U2)
   U1, U2 = units._deepCopy(U1), units._deepCopy(U2)
   eliminate(U1._key, U2._key, false)
   -- not empty
@@ -173,7 +175,7 @@ end
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return True if the objects are equal.
-units.__eq = function (U1,U2)
+units.__eq = function (U1, U2)
   if not (isunits(U1) and isunits(U2)) then return false end
   local tmp = units._convertKey(U2, U1._key)
   if tmp == nil then return false end
@@ -184,15 +186,15 @@ end
 --  @param U Initial unit object.
 --  @param s New Units.
 --  @return Result of conversation of nil.
-units.__index = function (U,s)
-  return units[s] or (type(s) == 'string' and units.value(units.convert(U,s)))
+units.__index = function (U, s)
+  return units[s] or (type(s) == 'string' and units.value(units.convert(U, s)))
 end
 
 --- U1 <= U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return Result of comparison.
-units.__le = function (U1,U2)
+units.__le = function (U1, U2)
   assert(isunits(U1) and isunits(U2), 'Not compatible!')
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   return U1._value <= tmp._value
@@ -202,7 +204,7 @@ end
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return Result of comparison.
-units.__lt = function (U1,U2)
+units.__lt = function (U1, U2)
   assert(isunits(U1) and isunits(U2), 'Not compatible!')
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   return U1._value < tmp._value
@@ -213,7 +215,7 @@ end
 --  @param U2 Second unit object.
 --  @return Product of unit objects.
 units.__mul = function (U1, U2)
-  U1, U2 = units._args(U1,U2)
+  U1, U2 = units._args(U1, U2)
   U1, U2 = units._deepCopy(U1), units._deepCopy(U2)
   eliminate(U1._key, U2._key, true)
   -- not empty
@@ -233,7 +235,7 @@ end
 --  @return Power.
 units.__pow = function (U, d)
   d = assert(Cross.float(d), "Wrong power")
-  local res = isunits(U) and units._deepCopy(U) or units:_new(U,'')
+  local res = isunits(U) and units._deepCopy(U) or units:_new(U, '')
   res._value = res._value ^ d
   op['^'](res._key, d)
   return res
@@ -243,14 +245,13 @@ end
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
 --  @return Subtraction of objects with the same units.
-units.__sub = function (U1,U2)
-  U1, U2 = units._args(U1,U2)
+units.__sub = function (U1, U2)
+  U1, U2 = units._args(U1, U2)
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   local res = units.copy(U1)
   res._value = res._value - tmp._value
   return res
 end
-
 
 --- Units representation as string.
 --  @param U Unit object.
@@ -282,10 +283,10 @@ about[units.comparison] = {
 --  @param a First unit object or number.
 --  @param b Second unit object or number.
 --  @return Arguments as units.
-units._args = function (a,b)
+units._args = function (a, b)
   a = isunits(a) and a or units:_new(a, '')
   b = isunits(b) and b or units:_new(b, '')
-  return a,b
+  return a, b
 end
 
 --- Convert object to another units.
@@ -320,7 +321,7 @@ end
 --  @return Deep copy.
 units._deepCopy = function (U)
   local keys = {}
-  for k,v in pairs(U._key) do keys[k] = v end
+  for k, v in pairs(U._key) do keys[k] = v end
   return setmetatable({_value=U._value, _key=keys}, units)
 end
 
@@ -361,8 +362,8 @@ units._expand = function (U1, U2)
     if not found then q1[k1] = v1 end
   end
   -- add common elements
-  for k,v in pairs(com1) do q1[k] = v end
-  for k,v in pairs(com2) do q2[k] = v end
+  for k, v in pairs(com1) do q1[k] = v end
+  for k, v in pairs(com2) do q2[k] = v end
   U1._key, U2._key = q1, q2
 end
 
@@ -472,7 +473,7 @@ end
 --  @param v Numerical value.
 --  @param s String of units.
 --  @return Unit object.
-units._new = function (self, v,s)
+units._new = function (self, v, s)
   if not units._memKeys[s] then
     units._memKeys[s] = units._parse(s)
   end
@@ -509,8 +510,7 @@ units.convert = function (U, s)
   end
   return units._convertKey(U, units._memKeys[s])
 end
-about[units.convert] = {
-  'convert(s)','Convert one units to another, return new object or nil.', }
+about[units.convert] = {'U:convert(new_s) --> upd_U|nil','Convert one units to another, return new object or nil.', }
 
 --- Create copy of the element.
 --  @param U Source object.
@@ -518,7 +518,7 @@ about[units.convert] = {
 units.copy = function (U)
   return setmetatable({_value=U._value, _key=U._key}, units)
 end
-about[units.copy] = {'copy()', 'Create copy of the element.', help.OTHER}
+about[units.copy] = {'U:copy() --> cpy_U', 'Create copy of the element.', help.OTHER}
 
 --- Convert table of units into string.
 --  @param U Units object.
@@ -549,7 +549,7 @@ units.key = function (U)
   end
   return num .. denom
 end
-about[units.key] = {'key()', 'Get units.'}
+about[units.key] = {'U:key() --> str', 'Get units.'}
 
 -- prefix list
 units.prefix = {
@@ -576,7 +576,7 @@ units.prefix = {
   Y = 1e+24,  -- yotta
 }
 about[units.prefix] = {
-  'prefix', 'Table of possible prefixes for units.', help.OTHER}
+  '.prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 --- Add new rule for unit transformation.
 --  @param self Main class.
@@ -586,19 +586,20 @@ units.setRule = function (self, s, U)
   assert(isunits(U), 'Units object is expected!')
   self._rules[s] = U
 end
-about[units.setRule] = {':setRule(s,U)', 'Add new rule for conversation.'}
+about[units.setRule] = {':setRule(name_s, val_U) --> nil', 
+  'Add new rule for conversation.'}
 
 --- Value of the unit object.
 --  The same as #U.
 --  @param U Unit object.
 --  @return Value.
 units.value = function (U) return U and U._value or nil end
-about[units.value] = {'value()', 'Get object value. Same as #U.'}
+about[units.value] = {'U:value() --> var', 'Get object value. Same as #U.'}
 units.__len = units.value
 
 -- simplify constructor call
 setmetatable(units, {
-__call = function (self,v,s)
+__call = function (self, v, s)
   if s then
     assert(Cross.float(v), "Wrong value type")
   else
@@ -607,8 +608,8 @@ __call = function (self,v,s)
   assert(type(s) == 'string', 'Wrong unit type')
   return units:_new(v, s)
 end})
-about[units] = {
-  ' ([v,]s)', 'Create new elements with units.', help.NEW}
+about[units] = {' (val=1, name_s) --> new_U', 
+  'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions
 units.about = about

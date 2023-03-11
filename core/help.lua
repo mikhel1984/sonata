@@ -18,23 +18,6 @@ about[function] =
   function_category (can be skipped)
 }
 
-If there are several modules, use
-  about:add(table, module_name)
-to concatenate descriptions. In this case the 4-th entry will be added
-to sort help list according the module name.
-
-Function arguments are typically start from a letter according the convention:
-v - any value
-t - table
-d - any number
-f - float point number
-i - integer number
-b - boolean
-s - string
-fn - function
-N - natural number
-capital - object
-
 --]]
 
 --	LOCAL
@@ -42,9 +25,6 @@ local Win = SONATA_WIN_CODE and require('core.win') or nil
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
-local COLON, SPACE = string.byte(':', 1, 1), string.byte(' ', 1, 1)
-
-local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
 --	MODULE
 
@@ -57,7 +37,7 @@ NEW = 'constructor',
 META = 'methods',
 STATIC = 'common',
 -- file name separator
-SEP = string.sub(package.config,1,1),
+SEP = string.sub(package.config, 1, 1),
 -- colors
 CMAIN = '',
 CHELP = '',
@@ -79,12 +59,6 @@ intro = [[
 ----------------- quit() = exit -----------------
 ]],
 done = 'Done.',
-use_import = [[
-
-Call
-  use 'module' OR use {'moduleA','moduleB' ...}
-to load new modules.
-]],
 }
 
 --- Auxiliary function, which define colors for text elements.
@@ -107,8 +81,7 @@ end
 --  @param alias Module alias name.
 --  @return 'name' or 'alias:name'
 help._toExtend = function(nm, alias)
-  local b = string.byte(nm, 1, 1)
-  return (b == COLON or b == SPACE) and alias..nm or nm
+  return (string.find(nm, '^[%a_]') == nil) and alias..nm or nm
 end
 
 --- Include content of the other help table into current one.
@@ -173,7 +146,7 @@ end
 --  @param fName Name of the file with translated text.
 help.localization = function (dst, fName)
   fName = help.LOCALE..help.SEP..fName
-  local lng = Win and help.tblImportWin(fName) or help.tblImport(fName)
+  local lng = help.lngImport(fName)
   if lng then
     dst._locale = lng
   else
@@ -213,14 +186,14 @@ help.makeModule = function (t, nm)
     end
   end
   -- output
-  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm,'\n',
+  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm, '\n',
     txt, '\n'}
   for cat, n in pairs(acc) do          -- for each category
     res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
     res[#res+1] = cat    ; res[#res+1] = ':\n'
-    for i, v in ipairs(n) do           -- for each function
-      res[#res+1] = v; res[#res+1] = (i ~= #n and ', ' or '\n')
-    end
+    table.sort(n)
+    res[#res+1] = table.concat(n, '\n')
+    res[#res+1] = '\n'
   end
   return res
 end
@@ -239,26 +212,21 @@ help.readAll = function (fName)
   return str
 end
 
---- Load Lua table from file.
---  @param fName File name.
+--- Load localization tables from file, 
+--  decode if need.
+--  @param fName File path and name.
 --  @return Lua table or nil.
-help.tblImport = function (fName)
-  local str,f = help.readAll(fName), nil
-  -- use Lua default import
-  if str then f = loadStr(str) end
-  return f and f() or nil
-end
-
---- Load and encode Lua table from file.
---  @param fName File name.
---  @return Lua table or nil
-help.tblImportWin = function (fName)
-  local str,f = help.readAll(fName), nil
-  if str then
-    str = Win.convert(str)
-    f = loadStr(str)
+help.lngImport = function (fName)
+  local ok, res = pcall(dofile, fName)
+  if not ok then return nil end
+  if Win then
+    for _, elt in pairs(res) do
+      if type(elt) == 'table' then
+        for k, v in pairs(elt) do elt[k] = Win.convert(v) end
+      end
+    end
   end
-  return f and f() or nil
+  return res
 end
 
 return help

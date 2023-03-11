@@ -98,7 +98,7 @@ TOL = 1E-3,
 newton_max = 50,
 }
 
-about[numeric.TOL] = {"TOL[=0.001]", "The solution tolerance.", "parameters"}
+about[numeric.TOL] = {".TOL=0.001", "The solution tolerance.", "parameters"}
 
 --- Simple derivative.
 --  @param self Do nothing.
@@ -114,8 +114,8 @@ numeric.der = function (self, fn, d)
   until math.abs(der-last) < numeric.TOL
   return der
 end
-about[numeric.der] = {
-  ":der(fn,x)", "Calculate the derivative value for given function."}
+about[numeric.der] = {":der(fn, x_d) --> num", 
+  "Calculate the derivative value for given function."}
 
 --- Another solution based on Newton's rule.
 --  @param self Do nothing.
@@ -133,7 +133,7 @@ numeric.newton = function (self, fn, d1)
   until math.abs(fn(x2)-fd1) < numeric.TOL
   return x2
 end
-about[numeric.newton] = {":newton(fn,d0)",
+about[numeric.newton] = {":newton(fn, x0_d) --> num",
   "Find root of equation using Newton's rule with only one initial condition."}
 
 --- Differential equation solution (Runge-Kutta method).
@@ -143,7 +143,7 @@ about[numeric.newton] = {":newton(fn,d0)",
 --  @param y0 Function value at time t0.
 --  @param param Table of additional parameters: dt - time step, exit - exit condition
 --  @return Table of intermediate results and value in final point.
-numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
+numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   local MAX, MIN = 15*numeric.TOL, 0.1*numeric.TOL
   local xn = tDelta[2]
   local h = tParam and tParam.dt or (10*numeric.TOL)
@@ -157,12 +157,12 @@ numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
     h = math.min(h, xn-x)
     -- correct step
     if tParam and tParam.dt then
-      res[#res+1] = {x+h, rk(fn,x,y,h)}
+      res[#res+1] = {x+h, rk(fn, x, y, h)}
     else
       -- step correction
       local h2 = 0.5*h
       local y1 =  rk(fn, x, y, h)
-      local y2 =  rk(fn, x+h2, rk(fn,x,y,h2), h2)
+      local y2 =  rk(fn, x+h2, rk(fn, x, y, h2), h2)
       local dy = (type(y1) == 'table') and (y2-y1):norm() or math.abs(y2-y1)
       if dy > MAX then
         h = h2
@@ -174,13 +174,13 @@ numeric.ode45 = function (self,fn,tDelta,dY0,tParam)
         res[#res+1] = {x+h, y2}
       end
     end
-    if exit(res[#res][1],res[#res][2], (#res>1) and res[#res-1][2]) then
+    if exit(res[#res][1], res[#res][2], (#res>1) and res[#res-1][2]) then
       break
     end
   end
   return res, res[#res][2]
 end
-about[numeric.ode45] = {":ode45(fn,tDelta,y0,[param])",
+about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys_t, yLast",
   "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
 --- Find root of equation at the given interval.
@@ -198,8 +198,8 @@ numeric.solve = function (self, fn, dA, dB)
   until math.abs(f1) < numeric.TOL
   return dB
 end
-about[numeric.solve] = {
-  ":solve(fn,dA,dB)", "Find root of equation fn(x)=0 at interval [a,b]."}
+about[numeric.solve] = {":solve(fn, xLow_d, xUp_d) --> num", 
+  "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Integration using trapeze method.
 --  @param self Do nothing.
@@ -231,8 +231,8 @@ numeric.trapez = function (self, fn, dA, dB)
   until math.abs(I-last) < numeric.TOL
   return I
 end
-about[numeric.trapez] = {
-  ":trapez(fn,a,b)", "Get integral using trapezoidal rule."}
+about[numeric.trapez] = {":trapez(fn, x1_d, x2_d) --> num", 
+  "Get integral using trapezoidal rule."}
 
 -- Comment to remove descriptions
 numeric.about = about

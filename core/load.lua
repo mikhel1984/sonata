@@ -19,19 +19,19 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 Sonata = require('core.evaluate')
 
 -- current version
-Sonata.version = '0.9.33'
+Sonata.version = '0.9.34'
 
 -- Quit the program
 quit = Sonata.exit
 
 -- Import actions
-function Sonata.doimport(tbl, name)
+Sonata.doimport = function (tbl, name)
   local var = tbl[name]
   if not var then
     -- try alias
     if not Sonata.alias then
       Sonata.alias = {}
-      for k,v in pairs(use) do Sonata.alias[v] = k end
+      for k, v in pairs(use) do Sonata.alias[v] = k end
     end
     var = name
     name = assert(Sonata.alias[name], "Wrong module name: "..name.."!")
@@ -41,8 +41,6 @@ function Sonata.doimport(tbl, name)
     _G[var] = lib
     -- add description
     if lib.about then About:add(lib.about, name, var) end
-    -- do additional actions
-    if lib.onImport then lib.onImport() end
   end
 end
 
@@ -55,7 +53,7 @@ setmetatable(use,
         Sonata.FORMAT_V1,
         string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
       -- show loaded modules
-      for k,v in pairs(use) do
+      for k, v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
         if _G[v] then
           lst[#lst+1] = Sonata.FORMAT_V1
@@ -64,18 +62,16 @@ setmetatable(use,
           lst[#lst+1] = '\n'
         end
       end
-      lst[#lst+1] = Sonata.FORMAT_V1
-      lst[#lst+1] = About:get('use_import')
       return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == 'all' then
       -- load all modules
-      for k,v in pairs(self) do Sonata.doimport(self,k) end
+      for k, _ in  pairs(self) do Sonata.doimport(self, k) end
     elseif type(name) == 'table' then
       -- load group of modules
-      for _,v in ipairs(name) do Sonata.doimport(self,v) end
+      for _, v in ipairs(name) do Sonata.doimport(self, v) end
     else
       -- load module
-      Sonata.doimport(self,name)
+      Sonata.doimport(self, name)
     end
   end,
 })
@@ -84,13 +80,12 @@ setmetatable(use,
 --  @param v Function, module or nil.
 help = function(v)
   local res = nil
-  if v then
-    res = About:findObject(v, use)
-    if not res then
-      res = Sonata.info {Type and Type(v) or '', '\n', tostring(v) }
-    end
-  else
+  v = v or 'main'
+  if v == 'all' then
     res = About:makeFull(use)
+  else
+    res = About:findObject(v, use) or Sonata.info {
+      string.format('<%s>', Type and Type(v) or type(v)), '\n', tostring(v) }
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end
@@ -123,7 +118,7 @@ local _args = {
 
 -- run tests
 ['--test'] = {
-description = 'Apply the unit tests to the desired module. Call all modules if the name is not defined.',
+description = 'Run unit tests for a given module. Execute for all modules if no name is specified.',
 example = '--test array',
 process = function (args)
   local Test = require('core.test')
@@ -141,7 +136,7 @@ exit = true},
 
 -- localization file
 ['--lang'] = {
-description = 'Creating/updating a file for localization.',
+description = 'Generation or updating of the localization file.',
 example = '--lang eo',
 process = function (args)
   if args[2] then
@@ -155,7 +150,7 @@ exit = true},
 
 -- generate 'help.html'
 ['--doc'] = {
-description = 'Creating/updating a documentation file.',
+description = 'Generating a documentation page.',
 example = '--doc ru',
 process = function (args)
   local Gen = require('core.generator')
@@ -168,11 +163,11 @@ exit = true},
 
 -- new module
 ['--new'] = {
-description = 'Create template file for a new module.',
+description = 'Generating a template for a new module.',
 example = '--new  matrices  Mat  "Matrix operations."',
 process = function (args)
   local Gen = require('core.generator')
-  Gen.module(args[2],args[3],args[4])
+  Gen.module(args[2], args[3], args[4])
 end,
 exit = true},
 
@@ -191,7 +186,7 @@ process = function (args)
   if SONATA_LOCALIZATION then
     About:localization(SONATA_LOCALIZATION)
   end
-  for i = 1,#args do
+  for i = 1, #args do
     if string.find(args[i], '%.note$') then
       Sonata:note(args[i])
     else
@@ -210,7 +205,7 @@ exit = true}
 -- string representation of the help info
 Sonata._arghelp = function ()
   local txt = {
-    "\n'Sonata' is a Lua based program for mathematical calculations.",
+    "\nSonata is a Lua based program for mathematical calculations.",
     "",
     "USAGE:",
     "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
@@ -222,7 +217,7 @@ Sonata._arghelp = function ()
     '\t\te.g. -e "2+2"',
     "",
   }
-  for k,v in pairs(_args) do
+  for k, v in pairs(_args) do
     if v.description then
       txt[#txt+1] = string.format('\t%s\t%s', k, v.description)
       if v.example then
@@ -235,9 +230,9 @@ Sonata._arghelp = function ()
   txt[#txt+1] = ""
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end
-  txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules,', '))
+  txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules, ', '))
   txt[#txt+1] = "BUGS: mail to 'mikhel.sk@gmail.com'\n"
-  return table.concat(txt,'\n')
+  return table.concat(txt, '\n')
 end
 
 --================== EXECUTION =================

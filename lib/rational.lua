@@ -64,6 +64,18 @@ ans = b:denom()               --> 1
 -- show
 print(a)
 
+-- continued fraction to rational
+-- 1 + 1/(2+1/(3+1/4)) 
+c = Rat:fromCont {[0]=1, 2, 3, 4}
+ans = c                       --> Rat(43,30)
+
+-- rational to continued fraction
+d = c:toCont()
+ans = d[1]                    --> 2
+
+-- show continued fraction
+print(d)
+
 -- result is rational
 ans = a + 1                   --> Rat(3,2)
 
@@ -91,7 +103,7 @@ local mabs = math.abs
 local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
 local function numrat(R)
-  return Cross.eq(R._[2],1) and Cross.simp(R._[1])               -- x / 1
+  return Cross.eq(R._[2], 1) and Cross.simp(R._[1])               -- x / 1
     -- float num or denom
     or (isbig(R._[1]) or isbig(R._[2])) and (R._[1] / R._[2])
     or R
@@ -105,11 +117,11 @@ local function numStr(v)
 end
 
 -- Continued fraction printing
-local _continued_ = {
+local _continued = {
 __tostring = function (t)
   local res = {tostring(t[0])}
   for i = 1, #t do
-    res[#res+1] = '+/'..tostring(t[i])
+    res[#res+1] = '+L'..tostring(t[i])
   end
   return string.format("{%s}", table.concat(res))
 end
@@ -174,7 +186,7 @@ rational.__index = rational
 --  @param R1 First number.
 --  @param R2 Second number.
 --  @return True in the first value is less or equal then the second one.
-rational.__le = function (R1,R2)
+rational.__le = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then return R1 <= p
@@ -194,7 +206,7 @@ end
 --  @param R1 First number.
 --  @param R2 Second number.
 --  @return True if the first number is less.
-rational.__lt = function (R1,R2)
+rational.__lt = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then return R1 < p
@@ -299,7 +311,7 @@ about[rational.comparison] = { rational.comparison,
 rational._convert = function (v)
   return (type(v) == 'number' and Ver.isInteger(v)
             or type(v) == 'table' and v.__mod)
-         and rational:_new(v,1)
+         and rational:_new(v, 1)
 end
 
 --- Find rational number for the given continued fraction.
@@ -319,7 +331,7 @@ end
 --  @param vd Denominator. Default is 1.
 --  @return New rational object.
 rational._new = function (self, vn, vd)
-  local g = rational:gcd(vd,vn)     -- inverse order move sign to denominator
+  local g = rational:gcd(vd, vn)     -- inverse order move sign to denominator
   return setmetatable({_ = {vn/g, vd/g}}, self)
 end
 
@@ -327,14 +339,13 @@ end
 --  @param R Rational number.
 --  @return Denominator.
 rational.denom = function (R) return R._[2] end
-about[rational.denom] = {
-  "denom()", "Return the denominator of the rational number."}
+about[rational.denom] = {"R:denom() --> var", "Return the denominator of the rational number."}
 
 --- R1 == R2
 --  @param R1 First number.
 --  @param R2 Second number.
 --  @return True if the numbers are equal.
-rational.eq = function (R1,R2)
+rational.eq = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then return R1 == p
@@ -347,9 +358,9 @@ rational.eq = function (R1,R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return Cross.eq(r1[1],r2[1]) and Cross.eq(r1[2],r2[2])
+  return Cross.eq(r1[1], r2[1]) and Cross.eq(r1[2], r2[2])
 end
-about[rational.eq] = {"eq(R)", "Compare two objects.", help.OTHER}
+about[rational.eq] = {"R:eq(x) --> bool", "Compare two objects.", help.OTHER}
 rational.__eq = rational.eq
 
 --- Float point representation.
@@ -359,7 +370,7 @@ rational.float = function (R)
   local r = R._
   return (r[1] < 0 and -1 or 1) * (Cross.norm(r[1]) / Cross.norm(r[2]))
 end
-about[rational.float] = {"float()", "Return rational number as decimal."}
+about[rational.float] = {"R:float() --> num", "Return rational number as decimal."}
 
 --- Get rational number approximation.
 --  @param self Do nothing.
@@ -377,7 +388,7 @@ rational.from = function (self, f, fErr)
   end
   return rational:_new(f >= 0 and a or -a, b)
 end
-about[rational.from] = {":from(f,[fErr=1E-3])",
+about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
   "Estimate ratio from floating point value.", help.NEW}
 
 --- Get rational number from continued fraction coefficients.
@@ -392,19 +403,14 @@ rational.fromCont = function (self, t)
       check[i] = v
     else error("Positive integer is expected") end
   end
-  local t0 = t[0]
-  if t0 then
-    if (type(t0) == 'number' and Ver.isInteger(t0)
-          or type(t0) == 'table' and t0.__mod) and t0 >= 0 then
-      check[0] = t0
-    else error("Positive integer is expected") end
-  else
-    for i = 0, #check-1 do check[i] = check[i+1] end
-    check[#check] = nil
-  end
-  return rational._new(rational._cont2rat(check))
+  local t0 = t[0] or 0
+  if (type(t0) == 'number' and Ver.isInteger(t0)
+        or type(t0) == 'table' and t0.__mod) then
+    check[0] = t0
+  else error("Integer is expected") end
+  return rational:_new(rational._cont2rat(check))
 end
-about[rational.fromCont] = {":fromCont(t)",
+about[rational.fromCont] = {":fromCont(coeff_t) --> R",
   "Transform continued fraction to rational number.", help.NEW}
 
 --- The greatest common divisor.
@@ -412,21 +418,21 @@ about[rational.fromCont] = {":fromCont(t)",
 --  @param va First integer.
 --  @param vb Second integer.
 --  @return Greatest common divisor.
-rational.gcd = function (self,va,vb)
-  return Cross.eq(va,0) and vb or rational:gcd(vb % va, va)
+rational.gcd = function (self, va, vb)
+  return Cross.eq(va, 0) and vb or rational:gcd(vb % va, va)
 end
-about[rational.gcd] = {":gcd(va,vb)",
+about[rational.gcd] = {":gcd(a_f, b_f) --> num",
   "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
 rational.num = function (R) return R._[1] end
-about[rational.num] = {"num()", "Return the numerator of rational number."}
+about[rational.num] = {"R:num() --> var", "Return the numerator of rational number."}
 
 --- Find continued fraction coefficients.
 --  @param R Positive rational number.
---  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/..)).
+--  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/...
 rational.toCont = function (R)
   local a, b, c = R._[1], R._[2], nil
   if a < 0 then error("Positive is expected") end
@@ -439,11 +445,11 @@ rational.toCont = function (R)
     if a <= 1 then break end
     a, b = b, a
   end
-  res[#res+1] = b
-  return setmetatable(res, _continued_)
+  res[#res+1] = math.modf(b)
+  return setmetatable(res, _continued)
 end
-about[rational.toCont] = {
-  "toCont()", "Transform rational number to continued fraction.", help.OTHER}
+about[rational.toCont] = {"R:toCont() --> coeff_t", 
+  "Transform rational number to continued fraction.", help.OTHER}
 
 -- call constructor, check arguments
 setmetatable(rational, {
@@ -455,11 +461,11 @@ __call = function (self, n, d)
   assert(
     type(d) == 'number' and Ver.isInteger(d) or type(d) == 'table' and d.__mod,
     "Wrong denomenator type")
-  assert(not Cross.eq(d,0), "Wrond denomenator value")
-  return rational:_new(n,d)
+  assert(not Cross.eq(d, 0), "Wrond denomenator value")
+  return rational:_new(n, d)
 end})
-about[rational] = {
-  " (m,[n=1])", "Create rational number using num (and denom).", help.NEW}
+about[rational] = {" (num, denom=1) --> new_R", 
+  "Create rational number using num (and denom).", help.NEW}
 
 -- Comment to remove descriptions
 rational.about = about

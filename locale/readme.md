@@ -1,4 +1,4 @@
-# Sonata LC Localization Files
+# Localization Files
 
 Language files for **Sonata**. 
 
@@ -15,5 +15,4 @@ Generate new file using command
 
     lua sonata.lua --lang xx
 
-where "xx" is the language short name. Then open the file locale/xx.lang, uncomment desired (or all) strings and replace english sentences with your translation.
-
+where "xx" is the language short name. Then open the file locale/xx.lng, uncomment desired strings and replace English text with your translation.

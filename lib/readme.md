@@ -1,7 +1,7 @@
-# Sonata Mathematical Library
+# Mathematical Library
 
 This folder contais **Lua** modules for working with different mathematical objects.
-They can be used in the **Sonata** program or independently.
+They can be used either in the **Sonata** program or independently.
 
 ## Available modules 
 

@@ -37,7 +37,7 @@ Num.TOL
 fn = function (x)          \
   return 2*sin(x)+sin(2*x) \
 end -- introduce some function
-Num:Newton(fn, _pi/3)  -- find root near the pi/3
+Num:newton(fn, _pi/3)  -- find root near the pi/3
 Num:der(fn, _pi/3)     -- estimate derivative in the point
 Num:trapez(fn, 0, _pi/3) -- find integral from 0 to pi/3
 -- Solve ODE 
@@ -70,7 +70,7 @@ a - b
 a * b
 b^50 
 _ans:float()           -- decimal representation
-c = Int(50):fact()     -- factorial
+Int(50):fact()         -- factorial
 a:rebase(42)           -- get value in new numerical base
 -- PAUSE
 
@@ -178,16 +178,16 @@ a:slerp(b,0.5)      -- use normalization inside
 -- If you have 'Gnuplot' system, it can be called
 -- from the Sonata.
 -- Plot data in Matlab style.
-a = Range(0,6,0.1)
-b = Map(sin,a)
+a = Range(0, 6, 0.1)
+b = Map(math.sin, a)
 Gp:plot(a,b)
 -- second argument can be function
-Gp:plot(a,sin,'sin', a,cos,'cos')
+Gp:plot(a, sin, 'sin', a, cos, 'cos')
 -- You can make polar plot
-Gp:polarplot(a,sin,a,cos)
+Gp:polarplot(a, sin, a, cos)
 -- or plot surface.
-function fun(x,y) return x*x + y*y end
-Gp:surfplot(a,a,fun)
+function fun(x, y) return x*x + y*y end
+Gp:surfplot(a, a, fun)
 
 -- Use 'Gp' object to get more control.
 

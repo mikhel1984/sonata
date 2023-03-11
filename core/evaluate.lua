@@ -58,6 +58,10 @@ LOGNAME = 'log.note',
 -- state and result
 _cmd = "",    -- last request
 _st  = 1,     -- last status
+-- predefine variables
+version = 0,
+doimport = 0,
+_arghelp = 0,
 }
 
 
@@ -310,7 +314,7 @@ evaluate.eval = function (ev, cmd, useLog)
   local res = evaluate._eval(ev, cmd)
   -- logging
   if useLog and ev._logFile then
-    ev._logFile:write(newLine,'\n')
+    ev._logFile:write(newLine, '\n')
     if status == evaluate.EV_RES and ev._ans then
       ev._logFile:write('--[[ ', ev._ans, ' ]]\n\n')
     elseif status == evaluate.EV_ERR then
@@ -324,7 +328,7 @@ end
 evaluate.exit = function ()
   print(SonataHelp.CMAIN..
     "\n             --======= Bye! =======--\n"..SonataHelp.CRESET)
-  os.exit(true, true)
+  os.exit()
 end
 
 --- Mark information about formatting.
