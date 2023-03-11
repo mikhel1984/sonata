@@ -7,8 +7,8 @@
 
 * Pure Lua code
 * Variety of modules
-* Generating templates for new modules and localization files
-* Interactive execution of _note_-files
+* Template generation for new modules and localization files
+* Mathematical modules can be used independently
 
 ## Getting started
 
@@ -27,13 +27,14 @@ Use flag _-h_ to see additional options:
 ## Structure 
 
 Main components:
-* _core_ - interpreter, help and test systems, other program specific elements 
-* _sonata.lua_ - program configuration and loading 
+* _core_ - interpreter, help and test systems, other program specific elements
+* _lib_ - collection of mathematical libraries
+* _sonata.lua_ - program configuration and loading
 
 Additional components:
-* _lib_ - collection of mathematical libraries 
-* _locale_ - localization files 
-* _notes_ - predefined _note_-files 
+* _about_ - system info
+* _locale_ - localization files
+* _notes_ - predefined interactive files
 
 ## Dependencies 
 
