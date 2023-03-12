@@ -5,14 +5,14 @@
 
 --================= CONFIGURATION ====================
 
---	Path ('sonata.lua' location, optional)
+--	Path ('sonata.lua' location)
 --SONATA_ADD_PATH = 'path/to/dir/'
 
 --	Text coloring
 --SONATA_USE_COLOR = true
 
---	Load after start (optional)
---SONATA_DEFAULT_MODULES = {'matrix','numeric'}
+--	Load after start
+--SONATA_DEFAULT_MODULES = {'matrix','asciiplot'}
 
 --	Uncomment to set the localization file
 --SONATA_LOCALIZATION = 'ru.lua'

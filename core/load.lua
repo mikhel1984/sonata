@@ -19,7 +19,7 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 Sonata = require('core.evaluate')
 
 -- current version
-Sonata.version = '0.9.34'
+Sonata.version = '0.9.35'
 
 -- Quit the program
 quit = Sonata.exit
