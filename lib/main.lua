@@ -417,14 +417,6 @@ end
 -- save link to help info
 main.about = about
 
---- Update help reference when redefine function.
---  @param fnNew New function.
---  @param fnOld Old function.
-main._updateHelp = function (fnNew, fnOld)
-  main.about[fnNew] = main.about[fnOld]
-  main.about[fnOld] = nil
-end
-
 return main
 
 --===============================

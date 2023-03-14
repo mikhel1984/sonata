@@ -313,21 +313,24 @@ WORD2.new = function(self, t)
   -- return object
   return setmetatable(o, self)
 end
+about[WORD2.new] = {":new(t) --> WORD6", "Explicit constructor.", help.NEW}
+-- begin from ':' to get 'WORD3:new(t)'
 
 -- simplify constructor call
 setmetatable(WORD2, {__call = function (self, v) return WORD2:new(v) end})
-about[WORD2] = {" (t)", "Create new WORD2.", help.NEW}
+about[WORD2] = {" (t) --> WORD6", "Create new WORD2.", help.NEW}
+-- begin from ' ' to get 'WORD3 ()'
 
 3L Method example.
 --  It is good idea to define method for the copy creation.
---  @param t Initial object.
 --  @return Copy of the object.
-WORD2.copy = function (t)
+WORD2.copy = function (self)
   -- some logic
   return WORD2:new(argument)
 end
-about[WORD2.copy] = {"copy(t)",
+about[WORD2.copy] = {"WORD6:copy() --> cpy_WORD6",
   "Create a copy of the object."} -- third element is optional, default is 'base'
+-- don't modify since start from letter
 
 -- Comment to remove descriptions
 WORD2.about = about
@@ -341,7 +344,8 @@ return WORD2
   -- protect from creating failed documentation
   txt = sgsub(txt, '3L', '---')
   txt = sgsub(txt, '(WORD%d)', {
-    WORD1=fName, WORD2=mName, WORD3=alias, WORD4='module', WORD5=description})
+    WORD1=fName, WORD2=mName, WORD3=alias, WORD4='module', 
+    WORD5=description, WORD6=alias:sub(1,1)})
   -- save
   f = io.open(fName, 'w')
   f:write(txt)
