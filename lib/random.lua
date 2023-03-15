@@ -26,12 +26,12 @@ v = Rand:int(10)
 ans = (1 <= v and v <= 10)    --> true
 
 -- 'normal' distribution
--- with mean 1 and dispertion 2
+-- with mean 1 and deviation 0.1
 v = 0
 for i = 1, 10 do
-  v = v + Rand:norm(1, 2)
+  v = v + Rand:norm(1, 0.1)
 end
-ans = v / 10                  --0> 1.0
+ans = v / 10                  --1> 1.0
 
 -- new generator
 rnd = Rand:new()
@@ -39,9 +39,18 @@ rnd = Rand:new()
 v = rnd()
 ans = (0 <= v and v <= 1)     --> true 
 
--- get integer from 1 to 10
+-- call the same methods
+-- as Rand has
 v = rnd:int(10)
 ans = (1 <= v and v <= 10)    --> true
+
+-- random order iterator
+a = {1, 2, 3, 4, 5}
+for i, v in Rand:ipairs(a) do print(i, v) end
+
+-- change order in place
+Rand:shuffle(a)
+for i, v in ipairs(a) do print(i, v) end
 
 --]]
 
@@ -91,7 +100,7 @@ random.new = function(self)
     _fnRng = random._fnRng,
     _seed = 0,
   }
-  return setmetatable(o, self)
+  return setmetatable(o, random)
 end
 about[random.new] = {":new() --> R", "Create generator object."}
 
@@ -118,8 +127,29 @@ random.seed = function (R, N)
   end
   R._seed = N
 end
-about[random.seed] = {":seed() --> nil", "Set random generator seed."}
+about[random.seed] = {":seed(N) --> nil", "Set random generator seed."}
 
+random.shuffle = function (R, t)
+  local N = #t
+  for i = 1, N do
+    local j = math.random(1, N)
+    t[i], t[j] = t[j], t[i]
+  end
+end
+
+random.ipairs = function (R, t)
+  local ind, n = {}, 1
+  for i = 1, #t do ind[i] = i end
+  random.shuffle(R, ind)
+  -- iterator
+  return function ()
+    local k = ind[n]
+    if k then
+      n = n + 1
+      return k, t[k]
+    end
+  end
+end
 
 -- simplify constructor call
 setmetatable(random, {__call = function (self) return random._fn(self) end})
@@ -131,4 +161,3 @@ random.about = about
 return random
 
 --======================================
---TODO: write new functions
