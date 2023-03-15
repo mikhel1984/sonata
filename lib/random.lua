@@ -1,7 +1,9 @@
 --[[		sonata/lib/random.lua
 
---- Random number generators
---  @author Your Name
+--- Random number generators.
+--
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
 
 	module 'random'
 --]]
@@ -11,11 +13,35 @@
 -- use 'random'
 Rand = require 'lib.random'
 
--- example
-a = Rand()
-ans = a.type   -->  'random'
+-- random from 0 to 1
+v = Rand()
+ans = (0 <= v and v <= 1)     --> true 
 
-ans = math.pi  --2> 355/113
+-- get random true/false
+v = Rand:flip()
+ans = type(v)                 --> 'boolean'
+
+-- get integer from 1 to 10
+v = Rand:int(10)
+ans = (1 <= v and v <= 10)    --> true
+
+-- 'normal' distribution
+-- with mean 1 and dispertion 2
+v = 0
+for i = 1, 10 do
+  v = v + Rand:norm(1, 2)
+end
+ans = v / 10                  --0> 1.0
+
+-- new generator
+rnd = Rand:new()
+-- from 0 to 1
+v = rnd()
+ans = (0 <= v and v <= 1)     --> true 
+
+-- get integer from 1 to 10
+v = rnd:int(10)
+ans = (1 <= v and v <= 10)    --> true
 
 --]]
 
@@ -40,33 +66,20 @@ local random = {
 -- mark
 type = 'random', israndom = true,
 -- components
-_fn = math.random,
-_fnRng = math.random,
+_fn = function (self) return math.random() end,
+_fnRng = function (self, a, b) return math.random(a, b) end,
 _seed = 0,
 }
 
-random.__call = function (R) return R._fn() end
+random.__call = function (R) return R:_fn() end
 
 -- methametods
 random.__index = random
 
---- Get copy of object.
---  @param R Generator object.
---  @return Copy of the object.
-random.copy = function (R)
-  local cpy = {
-    _fn = R._fn,
-    _fnRng = R._fnRng,
-    _seed = R._seed,
-  }
-  return setmetatable(cpy, random)
-end
-about[random.copy] = {"R:copy() --> cpy_R", "Create a copy of the object."}
-
-random.flip = function (R) return R._fn() >= 0.5 end
+random.flip = function (R) return R:_fn() >= 0.5 end
 about[random.flip] = {":flip() --> bool", "Uniform distributed binary value."}
 
-random.int = function (R, N) return R._fnRng(1, N) end
+random.int = function (R, N) return R:_fnRng(1, N) end
 about[random.int] = {":int(N) -> int", "Uniform distributed random integer in range from 1 to N."}
 
 --- Constructor example.
@@ -74,8 +87,8 @@ about[random.int] = {":int(N) -> int", "Uniform distributed random integer in ra
 --  @return New object of random.
 random.new = function(self)
   local o = {
-    _fn = math.random,
-    _fnRng = math.random,
+    _fn = random._fn,
+    _fnRng = random._fnRng,
     _seed = 0,
   }
   return setmetatable(o, self)
@@ -87,10 +100,9 @@ random.norm = function (R, dMean, dev)
   dev = dev or 1
   -- use Box-Muller transform
   local u, v, s = 0, 0, 0
-  local fn = R._fn
   repeat
-    u = 2*fn()-1
-    v = 2*fn()-1
+    u = 2*R:_fn()-1
+    v = 2*R:_fn()-1
     s = u*u + v*v
   until s <= 1 and s > 0
   local norm = u * math.sqrt(-2*math.log(s)/s)
@@ -101,15 +113,16 @@ about[random.norm] = {":norm(mean_d=0, dev_d=1) --> float",
 
 random.seed = function (R, N)
   N = N or os.time()  -- set 'arbitrary' value by default
-  if R._fn == math.random then
+  if rawget(R, 'israndom') then
     math.randomseed(N)
   end
   R._seed = N
 end
 about[random.seed] = {":seed() --> nil", "Set random generator seed."}
 
+
 -- simplify constructor call
-setmetatable(random, {__call = function (self) return random._fn() end})
+setmetatable(random, {__call = function (self) return random._fn(self) end})
 about[random] = {" () --> float", "Uniform distributed random number between 0 and 1."}
 
 -- Comment to remove descriptions

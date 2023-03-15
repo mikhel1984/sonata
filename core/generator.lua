@@ -259,7 +259,7 @@ generator.module = function (mName, alias, description)
 [=[--[[		sonata/WORD1
 
 3L WORD5
---  @author Your Name
+--  </br></br><b>Authors</b>: Your Name
 
 	WORD4 'WORD2'
 --]]
@@ -274,9 +274,11 @@ WORD3 = require 'lib.WORD2'
 
 -- example
 a = WORD3()
-ans = a.type   -->  'WORD2'
+-- check equality
+ans = a.type                  -->  'WORD2' 
 
-ans = math.pi  --2> 355/113
+-- check relative equality ( ~10^(-2) )
+ans = math.pi                --2> 355/113
 
 --]]
 
