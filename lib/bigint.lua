@@ -53,7 +53,7 @@ ans = (a^3):float()           --> 1860867
 ans = Int('-25'):abs():float()  --> 25
 
 -- factorial
-c = Int(50):fact()
+c = Int(50):F()
 ans = c:float()               --1> 3E64
 
 ans = (a > b)                 --> false
@@ -830,10 +830,10 @@ about[bigint.eq] = {
 bigint.__eq = bigint.eq
 
 --- B!
---  Use fact that n*(n-1)*...*2*1 = (n*1)*((n-1)*2)*...
+--  Use the fact that n*(n-1)*...*2*1 = (n*1)*((n-1)*2)*...
 --  @param B Bigint object.
 --  @return Factorial of the number as bigint object.
-bigint.fact = function (B)
+bigint.F = function (B)
   assert(B.sign > 0, "Non-negative value is expected!")
   local N = B:float()
   if N <= 1 then return bigint._1 end
@@ -846,14 +846,13 @@ bigint.fact = function (B)
     S = bigint._sum(S, d)
     acc = bigint._mul(acc, S)
   end
-  if m > 1E-3 then   -- m > 0
-    local v = n + two
-    acc = bigint._mul(acc, v)
+  if m > 1E-3 then   -- i.e. m > 0
+    acc = bigint._mul(acc, n + two)
   end
   return acc
 end
-about[bigint.fact] = {
-  "B:fact() --> B!", "Return factorial of non-negative integer B."}
+about[bigint.F] = {
+  "B:F() --> B!", "Return factorial of non-negative integer B."}
 
 --- Find multipliers for the number.
 --  @param B Integer number.
