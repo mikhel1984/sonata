@@ -21,7 +21,6 @@ about[function] =
 --]]
 
 --	LOCAL
-local Win = SONATA_DOS_PAGE and require('core.win') or nil
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
@@ -218,15 +217,7 @@ end
 --  @return Lua table or nil.
 help.lngImport = function (fName)
   local ok, res = pcall(dofile, fName)
-  if not ok then return nil end
-  if Win then
-    for _, elt in pairs(res) do
-      if type(elt) == 'table' then
-        for k, v in pairs(elt) do elt[k] = Win.convert(v) end
-      end
-    end
-  end
-  return res
+  return ok and res or nil
 end
 
 return help

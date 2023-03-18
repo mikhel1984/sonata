@@ -2,7 +2,7 @@
 
 Other
 * New module 'random'
-* DOS page for Esperanto
+* Remove DOS code pages
 
 ======== 0.9.34 =========
 

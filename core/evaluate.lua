@@ -13,9 +13,6 @@
 -- String evaluation method
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
--- Code table for Windows
-local Win = SONATA_DOS_PAGE and require('core.win') or nil
-
 -- Format marker
 local mt_sonatainfo = {}
 
@@ -349,7 +346,6 @@ evaluate.note = function (ev, fname, full)
   -- read
   local f = assert(io.open(fname, 'r'))
   local txt = f:read('*a'); f:close()
-  txt = Win and Win.convert(txt) or txt
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
   local block = evaluate._blocks(txt)
   if full then io.write("Name: '", fname, "'\tBlocks: ", #block, "\n") end

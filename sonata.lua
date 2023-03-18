@@ -16,9 +16,9 @@
 
 --	Uncomment to set the localization file
 --SONATA_LOCALIZATION = 'ru.lua'
-
---	Decode text for Windows terminal
---SONATA_DOS_PAGE = 866
+-- Windows: call first
+--   chcp 65001 
+-- in console to use Unicode symbols
 
 --===================  MODULES  =======================
 
