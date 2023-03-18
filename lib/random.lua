@@ -56,6 +56,12 @@ for i, v in ipairs(a) do print(i, v) end
 
 --	LOCAL
 
+local NTAB = 32
+local IA, IQ = 16807, 127773, 
+local IR, IM = 2836, 2147483647
+local NDIV = math.modf(1 + (IM-1)/NTAB)
+local AM, RNMAX = 1.0 / IM, 1.0 - 1.2E-7
+
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is random.
@@ -103,6 +109,31 @@ random.new = function(self)
   return setmetatable(o, random)
 end
 about[random.new] = {":new() --> R", "Create generator object."}
+
+random._genPM = function (t)
+  local state = t._state
+  local k = math.modf(state / IQ)
+  state = IA*(state - k*IQ) - IR*k
+  t._state = (state < 0) and (state + IM) or state
+  local j = math.modf(t._iy / NDIV + 1)
+  t._iy = t._iv[j]
+  t._iv[j] = state
+  local tmp = AM * t._iy
+  return tmp > RNMAX and RNMAX or tmp
+end
+
+random._genPMInit = function (t, seed)
+  if seed < 1 then seed = 1 end
+  local iv = {}
+  for j = 1, NTAB+8 do
+    local k = math.modf(seed / IQ)
+    seed = IA*(seed - k*IQ) - IR*k
+    if seed < 0 then seed = seed + IM end
+    if j > 8 then iv[j-8] = seed end   -- 8 warm-ups
+  end
+  t._state = seed
+  t._iv, t._iy = iv, iv[#iv]
+end
 
 random.norm = function (R, dMean, dev)
   dMean, dev = dMean or 0.0, dev or 1.0
