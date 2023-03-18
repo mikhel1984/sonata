@@ -1,24 +1,26 @@
 ======== 0.9.35 =========
 
+Gnuplot
+* Fix errors in Windows
 Other
 * New module 'random'
 * Remove DOS code pages
 
 ======== 0.9.34 =========
 
-Ap
+Asciiplot
 * Axis as a separate class
 * Modification via functions
 * Add log scale
-Geo
+Geodesy
 * Add UTM coordinates
 * Remove progM and projGK
-Int
+Bigint
 * Minor improvements
 Main
 * Call elementary functions for complex objects
 * Fix ipairs for Range object
-Sym
+Symbolic
 * Add derivatives
 * Bug fixes
 Other
