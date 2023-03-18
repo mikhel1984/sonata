@@ -105,12 +105,15 @@ f:show()
 
 --	LOCAL
 
+local isWindows = package.config:sub(1,1) == '\\'
+local TEMP = '\\AppData\\Local\\VirtualStore'
+
 -- special commands
 local special = {
-  output = function (s) return string.format('set output "%s"', s) end,
-  xlabel = function (s) return string.format('set xlabel "%s"', s) end,
-  ylabel = function (s) return string.format('set ylabel "%s"', s) end,
-  title  = function (s) return string.format('set title "%s"', s) end,
+  output = function (s) return string.format("set output '%s'", s) end,
+  xlabel = function (s) return string.format("set xlabel '%s'", s) end,
+  ylabel = function (s) return string.format("set ylabel '%s'", s) end,
+  title  = function (s) return string.format("set title '%s'", s) end,
 }
 
 -- main commands
@@ -139,7 +142,7 @@ end
 --  @param v Value.
 --  @return String, prepared for usage in function.
 local function prepare(s,v)
-  if s == 'title' then v = string.format('"%s"', v) end
+  if s == 'title' then v = string.format("'%s'", v) end
   if s == 'using' then v = table.concat(v,':') end
   return s,v
 end
@@ -212,6 +215,10 @@ gnuplot._fn2file = function (fn,tBase)
     end
   end
   f:close()
+  if isWindows then
+    name = string.format(
+      '%s%s%s', os.getenv('userprofile'), TEMP, name)
+  end
   return name
 end
 
@@ -267,6 +274,10 @@ gnuplot._lst2file = function (t1,t2,fn)
     for i, v1 in ipairs(t1) do f:write(i, ' ', v1, '\n') end
   end
   f:close()
+  if isWindows then
+    name = string.format(
+      '%s%s%s', os.getenv('userprofile'), TEMP, name)
+  end
   return name
 end
 
@@ -282,6 +293,10 @@ gnuplot._mat2file = function (t)
     f:write('\n')
   end
   f:close()
+  if isWindows then
+    name = string.format(
+      '%s%s%s', os.getenv('userprofile'), TEMP, name)
+  end
   return name
 end
 
@@ -296,6 +311,10 @@ gnuplot._tbl2file = function (t)
     f:write('\n')
   end
   f:close()
+  if isWindows then
+    name = string.format(
+      '%s%s%s', os.getenv('userprofile'), TEMP, name)
+  end
   return name
 end
 
@@ -415,7 +434,7 @@ gnuplot.show = function (G)
   -- prepare functions
   local fn = {}
   for i,f in ipairs(G) do
-    fn[i] = string.format('"%s" %s', gnuplot._graph(f,G))
+    fn[i] = string.format("'%s' %s", gnuplot._graph(f,G))
   end
   -- command
   if #fn > 0 then
