@@ -18,7 +18,7 @@
 --SONATA_LOCALIZATION = 'ru.lua'
 
 --	Decode text for Windows terminal
---SONATA_DOS_CODE = 866
+--SONATA_DOS_PAGE = 866
 
 --===================  MODULES  =======================
 

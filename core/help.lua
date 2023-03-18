@@ -21,7 +21,7 @@ about[function] =
 --]]
 
 --	LOCAL
-local Win = SONATA_DOS_CODE and require('core.win') or nil
+local Win = SONATA_DOS_PAGE and require('core.win') or nil
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4

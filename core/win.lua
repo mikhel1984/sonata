@@ -25,7 +25,7 @@ local cp437 = {
 for i = 0, 127 do code[cp437[i]] = string.char(i) end
 
 
-if SONATA_DOS_CODE == 866 then  -- Cyrillic symbols
+if SONATA_DOS_PAGE == 866 then  -- Cyrillic symbols
 
 local cp866 = {
 --   0       1       2       3       4       5       6       7       8       9       A       B       C       D       E      F
@@ -40,7 +40,7 @@ local cp866 = {
 }
 for i = 0, 127 do code[cp866[i]] = string.char(i+128) end
 
-elseif SONATA_DOS_CODE == 853 then  -- Esperanto symbols
+elseif SONATA_DOS_PAGE == 853 then  -- Esperanto symbols
 
 local cp853 = {
 --   0       1       2       3       4       5       6       7       8      9       A       B       C       D       E      F

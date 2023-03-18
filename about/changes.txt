@@ -1,3 +1,9 @@
+======== 0.9.35 =========
+
+Other
+* New module 'random'
+* DOS page for Esperanto
+
 ======== 0.9.34 =========
 
 Ap
@@ -30,7 +36,7 @@ Asciiplot
 Matrix
 * Add SVD
 Other
-* Add 'symbolical' module
+* New module 'symbolical'
 * Allow arbitrary aliases for modules
 * Update help system
 * Generate sorted lang files
