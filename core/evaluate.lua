@@ -14,7 +14,7 @@
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
 -- Code table for Windows
-local Win = SONATA_WIN_CODE and require('core.win') or nil
+local Win = SONATA_DOS_CODE and require('core.win') or nil
 
 -- Format marker
 local mt_sonatainfo = {}

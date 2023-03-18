@@ -17,8 +17,8 @@
 --	Uncomment to set the localization file
 --SONATA_LOCALIZATION = 'ru.lua'
 
---	Decode text for Windows
---SONATA_WIN_CODE = 'cp866'
+--	Decode text for Windows terminal
+--SONATA_DOS_CODE = 866
 
 --===================  MODULES  =======================
 
