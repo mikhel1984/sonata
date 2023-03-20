@@ -651,12 +651,12 @@ about[data.zip] = {":zip(fn,...) --> tbl",
   "Sequentially apply function to list of tables.", help.OTHER}
 
 -- Get reference to data range in other table
-local metaref = { type = 'ref' }
+local mt_ref = { type = 'ref' }
 
 --- Number of elements in range.
 --  @param self Ref object.
 --  @return Length of the reference table.
-metaref.__len = function (self)
+mt_ref.__len = function (self)
   return self._end - self._beg
 end
 
@@ -664,19 +664,24 @@ end
 --  @param self Ref object.
 --  @param i Element index.
 --  @return Table value.
-metaref.__index = function (self, i)
+mt_ref.__index = function (self, i)
   if Ver.isInteger(i) then
     local n = i + self._beg
-    if n > self._beg and n <= self._end then
+    if self._beg < n and n <= self._end then
       return self._t[n]
     end
   end
-  return metaref[i]
+  return mt_ref[i]
 end
 
--- Block setting
-metaref.__newindex = function (self, k, v)
-  -- do nothing
+--- Set k-th value.
+--  @param self Ref object.
+--  @param k Index.
+--  @param v Value.
+mt_ref.__newindex = function (self, k, v)
+  if Ver.isInteger(k) and self._beg < k and k <= self._end then
+    self._t[self._beg + k] = v
+  end
 end
 
 --- Create reference to other table.
@@ -689,10 +694,82 @@ data.ref = function (self, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
-  return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
+  return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, mt_ref)
 end
 about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
   'Return reference to the range of elements.', help.OTHER}
+
+-- Get reference to 'transposed' data
+-- i.e. t[i][j] returns t[j][i]
+local mt_transpose = {type = 'transpose'}
+
+--- Get access to k-th element.
+--  @param self T-ref object. 
+--  @param k Table index.
+--  @return Empty table with mt_transpose_k metatable.
+mt_transpose.__index = function (self, k)
+  self._tbl._n = k
+  return self._tbl
+end
+
+--- Get table 'length'.
+--  @param self T-ref object.
+--  @return Expected table length.
+mt_transpose.__len = function (self)
+  return #self._tbl._src[1] 
+end
+
+--- Transform ref object into pure table.
+--  @param self T-ref object.
+--  @return Lua table.
+mt_transpose._table = function (self)
+  local res, src = {}, self._tbl._src
+  for i = 1, #src[1] do
+    local row = {}
+    for j = 1, #src do row[j] = src[j][i] end
+    res[i] = row
+  end
+  return res 
+end
+
+-- Metatable for internal table.
+local mt_transpose_k = {}
+
+--- Get table element.
+--  @param self Internal T-ref object.
+--  @param k Element index.
+mt_transpose_k.__index = function (self, k)
+  local v = self._src[k]
+  return v and v[self._n] or nil
+end
+
+--- Set table element.
+--  @param self Internal T-ref object.
+--  @param k Element index.
+--  @param v New value.
+mt_transpose_k.__newindex = function (self, k, v)
+  self._src[k][self._n] = v
+end
+
+--- Get length of 'internal' table.
+--  @param self Internal T-ref object.
+--  @return Table length.
+mt_transpose_k.__len = function (self) return #self._src end
+
+--- Get reference to 'transposed' table.
+--  @param self Do nothing.
+--  @param src Source table.
+--  @return Reference object.
+data.T = function (self, src)
+  if #src == 0 or type(src[1]) ~= 'table' then
+    return src  -- don't need in reference
+  end
+  local o = {
+    _tbl = setmetatable({_src = src, _n = 0}, mt_transpose_k),
+  }
+  return setmetatable(o, mt_transpose)
+end
+about[data.T] = {":T(src_t) --> TR", "Get reference to 'transposed' table."}
 
 -- Comment to remove descriptions
 data.about = about
