@@ -1294,3 +1294,4 @@ return asciiplot
 --======================================
 -- FIX contour concatenation when use color
 -- TODO bar - choose location of zero
+-- TODO fix asix scale - to settings, settings via table

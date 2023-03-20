@@ -74,10 +74,10 @@ __module__ = "Random number generators."
 local random = {
 -- mark
 type = 'random', israndom = true,
--- components
+-- from 0 to 1
 _fn = function (self) return math.random() end,
+-- from a to b
 _fnRng = function (self, a, b) return math.random(a, b) end,
-_seed = 0,
 }
 
 random.__call = function (R) return R:_fn() end
@@ -97,7 +97,7 @@ about[random.int] = {":int(N) -> int", "Uniform distributed random integer in ra
 random.new = function(self)
   local o = {
     _fn = random._rand,
-    _fnRng = random._fnRng,
+    _fnRng = random._randRng,
   }
   random._init(o, 0)
   return setmetatable(o, random)
@@ -108,11 +108,12 @@ random._genPM = function (t, rmax)
   rmax = rmax or 0.9999998
   local state = t._state
   local k = math.floor(state / 127773)
-  state = 16807*(state - k*127773) - 2836*k
+  state = 16807*(state - k*127773) - 2836*k   -- (16807*state + 2836) % 127773
   state = (state < 0) and (state + 2147483647) or state
   local j = math.floor(t._iy / 69273666) + 1  -- 1 to 32
-  t._iy, t._iv[j], t._state = t._iv[j], state, state
-  local tmp = 4.65661287E-10 * t._iy
+  t._iy, t._iv[j] = t._iv[j], state
+  t._state = state
+  local tmp = 4.65661287E-10 * t._iy   -- y / 2147483647
   return tmp > rmax and rmax or tmp
 end
 
@@ -132,6 +133,11 @@ end
 random._init = random._genPMInit
 
 random._rand = random._genPM
+
+random._randRng = function (R, a, b)
+  local p, q = math.modf((b - a)*R:_rand())
+  return a + (q < 0.5 and p or p + 1) 
+end
 
 random.norm = function (R, dMean, dev)
   dMean, dev = dMean or 0.0, dev or 1.0
@@ -268,11 +274,12 @@ end
 random.seed = function (R, N)
   N = N or os.time()  -- set 'arbitrary' value by default
   if rawget(R, 'israndom') then
-    math.randomseed(N)
+    math.randomseed(N)   -- common rand
+  else
+    random._init(R, N)   -- object specific rand
   end
-  R._seed = N
 end
-about[random.seed] = {":seed(N) --> nil", "Set random generator seed."}
+about[random.seed] = {":seed([N]) --> nil", "Set random generator seed."}
 
 random.shuffle = function (R, t)
   local N = #t
