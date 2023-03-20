@@ -130,6 +130,7 @@ Ver = Ver.versions
 local STAT = 'statistics'
 local FILES = 'files'
 local FILTER = 'filter'
+local REF = 'reference'
 
 --	INFO
 
@@ -671,7 +672,7 @@ data.ref = function (self, t, iBeg, iEnd)
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, mt_ref)
 end
 about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
-  'Return reference to the range of elements.', help.OTHER}
+  'Return reference to the range of elements.', REF}
 
 -- Get reference to 'transposed' data
 -- i.e. t[i][j] returns t[j][i]
@@ -743,7 +744,7 @@ data.T = function (self, src)
   }
   return setmetatable(o, mt_transpose)
 end
-about[data.T] = {":T(src_t) --> TR", "Get reference to 'transposed' table."}
+about[data.T] = {":T(src_t) --> TR", "Get reference to 'transposed' table.", REF}
 
 -- Comment to remove descriptions
 data.about = about

@@ -188,8 +188,8 @@ help.makeModule = function (t, nm)
   local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm, '\n',
     txt, '\n'}
   for cat, n in pairs(acc) do          -- for each category
-    res[#res+1] = '    |'; res[#res+1] = Sonata.FORMAT_V1
-    res[#res+1] = cat    ; res[#res+1] = ':\n'
+    res[#res+1] = '\t'; res[#res+1] = Sonata.FORMAT_V1
+    res[#res+1] = cat    ; res[#res+1] = '\n'
     table.sort(n)
     res[#res+1] = table.concat(n, '\n')
     res[#res+1] = '\n'
