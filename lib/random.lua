@@ -56,12 +56,6 @@ for i, v in ipairs(a) do print(i, v) end
 
 --	LOCAL
 
-local NTAB = 32
-local IA, IQ = 16807, 127773, 
-local IR, IM = 2836, 2147483647
-local NDIV = math.modf(1 + (IM-1)/NTAB)
-local AM, RNMAX = 1.0 / IM, 1.0 - 1.2E-7
-
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is random.
@@ -102,38 +96,42 @@ about[random.int] = {":int(N) -> int", "Uniform distributed random integer in ra
 --  @return New object of random.
 random.new = function(self)
   local o = {
-    _fn = random._fn,
+    _fn = random._rand,
     _fnRng = random._fnRng,
-    _seed = 0,
   }
+  random._init(o, 0)
   return setmetatable(o, random)
 end
 about[random.new] = {":new() --> R", "Create generator object."}
 
-random._genPM = function (t)
+random._genPM = function (t, rmax)
+  rmax = rmax or 0.9999998
   local state = t._state
-  local k = math.modf(state / IQ)
-  state = IA*(state - k*IQ) - IR*k
-  t._state = (state < 0) and (state + IM) or state
-  local j = math.modf(t._iy / NDIV + 1)
-  t._iy = t._iv[j]
-  t._iv[j] = state
-  local tmp = AM * t._iy
-  return tmp > RNMAX and RNMAX or tmp
+  local k = math.floor(state / 127773)
+  state = 16807*(state - k*127773) - 2836*k
+  state = (state < 0) and (state + 2147483647) or state
+  local j = math.floor(t._iy / 69273666) + 1  -- 1 to 32
+  t._iy, t._iv[j], t._state = t._iv[j], state, state
+  local tmp = 4.65661287E-10 * t._iy
+  return tmp > rmax and rmax or tmp
 end
 
 random._genPMInit = function (t, seed)
   if seed < 1 then seed = 1 end
   local iv = {}
-  for j = 1, NTAB+8 do
-    local k = math.modf(seed / IQ)
-    seed = IA*(seed - k*IQ) - IR*k
-    if seed < 0 then seed = seed + IM end
-    if j > 8 then iv[j-8] = seed end   -- 8 warm-ups
+  for j = -4, 32 do
+    local k = math.floor(seed / 127773)
+    seed = 16807*(seed - k*127773) - 2836*k
+    if seed < 0 then seed = seed + 2147483647 end
+    if j > 0 then iv[j] = seed end   
   end
   t._state = seed
   t._iv, t._iy = iv, iv[#iv]
 end
+
+random._init = random._genPMInit
+
+random._rand = random._genPM
 
 random.norm = function (R, dMean, dev)
   dMean, dev = dMean or 0.0, dev or 1.0
