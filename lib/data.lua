@@ -81,7 +81,7 @@ ans = tmp[1]                  --> X[1]
 
 -- generate new list
 -- use 'lazy' function definition
-tmp = _D:zip("{x1-x2,x1+x2}", X, Y)
+tmp = _D:zip("{x1-x2, x1+x2}", X, Y)
 ans = tmp[1][2]               --> X[1]+Y[1]
 
 -- find histogram
@@ -99,9 +99,9 @@ ans = #a                      --> 4
 ans = a[1]                    --> X[3]
 
 -- Student cdf and pdf
-ans = _D:tcdf(4, 2.5)      --3> 0.9805
+ans = _D:tcdf(4, 2.5)        --3> 0.9805
 
-ans = _D:tpdf(2, 3.3)      --3> 0.0672
+ans = _D:tpdf(2, 3.3)        --3> 0.0672
 
 -- dsv write
 nm = os.tmpname()
@@ -112,14 +112,11 @@ _D:csvwrite(nm, t, ';')
 -- dsv read
 -- with separator ';'
 tt = _D:csvread(nm, ';')
-ans = tt[2][2]                --> 5
+ans = tt[2][2]                --> t[2][2]
 
--- csv write by columns
-_D:csvwrite(nm, t, ',', true)
-
--- csv read by columns
-tt = _D:csvread(nm, ',', true)
-ans = tt[1][3]                --> 3
+-- reference to 'transposed' table
+b = _D:T(t)
+ans = b[3][2]                 --> t[2][3]
 
 --]]
 
@@ -191,41 +188,25 @@ about[data.cov] = {":cov(data_t) --> cov_M",
 --  @param sFile File name.
 --  @param t Lua table.
 --  @param char Delimiter, default is coma.
---  @param bCol Flag, reading elements by columns.
-data.csvwrite = function (self, sFile, t, char, bCol)
+data.csvwrite = function (self, sFile, t, char)
   local f = assert(io.open(sFile, 'w'))
   char = char or ','
-  if bCol then
-    -- by columns
-    if type(t[1]) == 'table' then
-      for r = 1, #t[1] do
-        local tmp = {}
-        for c = 1, #t do tmp[#tmp+1] = t[c][r] end
-        f:write(table.concat(tmp, char), '\n')
-      end
-    else
-      for r = 1, #t do f:write(t[i], '\n') end
-    end
-  else
-    -- by rows
-    for _, v in ipairs(t) do
-      if type(v) == 'table' then v = table.concat(v, char) end
-      f:write(v, '\n')
-    end
+  for _, v in ipairs(t) do
+    if type(v) == 'table' then v = table.concat(v, char) end
+    f:write(v, '\n')
   end
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',', isCol=false) --> nil",
+about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',') --> nil",
   "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
 --  @param self Do nothing.
 --  @param sFile File name.
 --  @param char Delimiter, default is coma.
---  @param bCol Flag, reading elements by columns.
 --  @return Lua table with data.
-data.csvread = function (self, sFile, char, bCol)
+data.csvread = function (self, sFile, char)
   local f = assert(io.open(sFile, 'r'))
   char = char or ','
   local templ = '([^'..char..']+)'
@@ -243,20 +224,13 @@ data.csvread = function (self, sFile, char, bCol)
         tmp[#tmp+1] = tonumber(p) or p
       end
       -- save
-      if bCol then
-        if #res == 0 then  -- initialize
-          for i = 1, #tmp do res[#res+1] = {} end
-        end
-        for i = 1, #tmp do table.insert(res[i], tmp[i]) end
-      else
-        res[#res+1] = tmp
-      end
+      res[#res+1] = tmp
     end
   end
   f:close()
   return res
 end
-about[data.csvread] = {":csvread(file_s, delim_s=',', isCol=false) --> tbl",
+about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
   "Read delimiter separated data as Lua table.", FILES}
 
 --- Generate function from string.
