@@ -881,16 +881,16 @@ about[asciiplot.axes] = {"F:axes() --> tbl",
 --- Plot bar graph.
 --  @param F Figure object.
 --  @param t Data table {{x1,y1},{x2,y2}...}.
---  @param iy Index of y column.
---  @param ix Optional index of x values.
+--  @param iy Index of y column (optional).
+--  @param ix Index of x column (optional). 
 asciiplot.bar = function (F, t, iy, ix)
   ix, iy = ix or 1, iy or 2
   -- size
   local iL = mmodf(F._x.size * 0.2)
   if iL % 2 == 1 then iL = iL - 1 end
   local iR = F._x.size - iL
-  local ax = F._x:copy()  -- local copy
-  ax:resize(F._x.size - 2*iL)
+  local ax = F._x:copy()  -- temporary axis object
+  ax:resize(iR - iL)
   -- find limits
   if not F._xfix then
     local min, max = math.huge, -math.huge
@@ -910,41 +910,34 @@ asciiplot.bar = function (F, t, iy, ix)
   -- add values
   asciiplot._clear(F)
   local ch, r = '=', 1
-  --local pos = F._yaxis == 'min' and -1 or F._yaxis == 'max' and 1 or (ax.size + 1)/2
-  local lim = F._yaxis == 'min' and 1 or F._yaxis == 'max' and ax.size or (ax.size + 1)/2
+  local lim = F._yaxis == 'min' and 1 or 
+    F._yaxis == 'max' and ax.size or (ax.size + 1)/2
   for i = 1, #t, step do
+    local canvas = F._canvas[r]
     -- text
     local x = tostring(t[i][ix])
-    for c = 1, math.min(iL-2, #x) do F._canvas[r][c] = string.sub(x, c, c) end
-    x = t[i][iy]
+    for c = 1, math.min(iL-2, #x) do canvas[c] = string.sub(x, c, c) end
     -- show
+    x = t[i][iy]
     local p = ax:proj(x, true)
-    if p then
-      if p <= lim then
-        for c = p, lim do
-	  F._canvas[r][iL + c] = ch
-	end
-      else
-        for c = lim, p do
-	  F._canvas[r][iL + c] = ch
-	end
-      end
+    if not p then 
+      p = (x < ax.range[1]) and ax.range[1] or ax.range[2]  -- set limit
+    end
+    if p <= lim then
+      for c = p, lim do canvas[iL + c] = ch end
+    else
+      for c = lim, p do canvas[iL + c] = ch end
     end
     -- value
     x = tostring(x)
     for c = 1, math.min(iL-2, #x) do
-      F._canvas[r][iR+2+c] = string.sub(x, c, c)
+      canvas[iR+2+c] = string.sub(x, c, c)
     end
     r = r + 1
-    
   end
-
-
-
-
 end
 about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1) --> nil",
-  "Plot bar diargram for data. vy can be y index in t (optional) or table of y-s."}
+  "Plot bar diargram for data."}
 
 --- Horizontal concatenation of figures.
 --  @param self Do nothing.
@@ -1311,5 +1304,3 @@ return asciiplot
 
 --======================================
 -- FIX contour concatenation when use color
--- TODO bar - choose location of zero
--- TODO fix asix scale - to settings, settings via table
