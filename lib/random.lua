@@ -12,10 +12,136 @@
 
 -- use 'random'
 Rand = require 'lib.random'
+Ap = require 'lib.asciiplot'
+_D = require 'lib.data'
+-- prepare for data generation
+N = 100
+normalize = function (lst, step)
+  local d = step * N
+  for i, v in ipairs(lst) do lst[i] = v / d end
+end
 
--- random from 0 to 1
-v = Rand()
-ans = (0 <= v and v <= 1)     --> true 
+-- default generator
+lst = {}
+for i = 1, N do
+  lst[i] = Rand()  -- 0 to 1
+end
+
+-- visualize
+ts, te = _D:histcounts(lst, 10)
+normalize(ts)
+fig = Ap()
+fig:setY {view='min'}
+v = _D:T({te, ts})  -- to list of pairs
+fig:bar(v)
+print(fig)
+
+-- custom generator
+rnd = Rand:new()
+for i = 1, N do
+  lst[i] = rnd()  -- 0 to 1
+end
+
+-- visualize renerated data
+ts, te = _D:histcounts(lst, 10)
+normalize(ts)
+v = _D:T({te, ts})  -- to list of pairs
+fig:bar(v)
+print(fig)
+
+-- normal distribution
+mu, sig = 1, 0.5
+for i = 1, N do
+  lst[i] = rnd:norm(mu, sig)
+end
+
+-- visualize normal distribution
+step = 4*sig / 10.0
+lim = {}
+for x = (mu-2*sig), (mu+2*sig), step do lim[#lim+1] = x end
+ts, te = _D:histcounts(lst, lim)
+normalize(ts)
+fig = Ap(53, 19)
+fig:setX {view='min'}
+pdf = function (x) 
+  return math.exp(-0.5*(x-mu)^2/sig^2) / (sig*math.sqrt(2*math.pi)) 
+end
+fig:plot(te, ts, 'random', pdf, 'pdf')
+print(fig)
+
+-- exponential distribution
+lam = 0.5
+for i = 1, N do
+  lst[i] = Rand:exp(lam)
+end
+
+-- visualize
+lim = {}
+step = 0.5
+for x = 0, 10*step, step do lim[#lim+1] = x end
+ts, te = _D:histcounts(lst, lim)
+normalize(ts)
+-- pdf for normal distribution
+pdf = function (x) return  lam*math.exp(-lam*x) end
+fig:plot(te, ts, 'random', pdf, 'pdf')
+print(fig)
+
+-- logistic distribution
+mu = 2; sig = 2
+for i = 1, N do
+  lst[i] = Rand:logistic(mu, sig)
+end
+
+-- visualize
+lim = {}
+step = 8*sig / 10.0
+for x = mu-4*sig, mu+4*sig, step do lim[#lim+1] = x end
+ts, te = _D:histcounts(lst, lim)
+normalize(ts, step)
+-- pdf for normal distribution
+pdf = function (x) 
+  local v = math.exp(-(x-mu)/sig)
+  return v / sig / (1 + v)^2
+end
+fig:plot(te, ts, 'random', pdf, 'pdf')
+print(fig)
+
+-- Raileigh distribution
+sig = 0.5
+for i = 1, N do
+  lst[i] = rnd:rayleigh(sig)
+end
+
+-- visualize
+lim = {}
+step = 4*sig / 10.0
+for x = 0, 4*sig, step do lim[#lim+1] = x end
+ts, te = _D:histcounts(lst, lim)
+normalize(ts, step)
+pdf = function (x) 
+  return x/sig^2*math.exp(-0.5*x^2/sig^2)
+end
+fig:plot(te, ts, 'random', pdf, 'pdf')
+print(fig)
+
+-- Cauchy distribution
+mu = 0; sig = 1
+for i = 1, N do
+  lst[i] = Rand:cauchy(mu, sig)
+end
+
+-- visualize
+lim = {}
+step = 6*sig / 10.0
+for x = mu-3*sig, mu+3*sig, step do lim[#lim+1] = x end
+ts, te = _D:histcounts(lst, lim)
+normalize(ts, step)
+pdf = function (x) 
+  return 1/(math.pi*sig)/(1+(x-mu)^2/sig^2)
+end
+fig:plot(te, ts, 'random', pdf, 'pdf')
+print(fig)
+
 
 -- get random true/false
 v = Rand:flip()
@@ -25,24 +151,7 @@ ans = type(v)                 --> 'boolean'
 v = Rand:int(10)
 ans = (1 <= v and v <= 10)    --> true
 
--- 'normal' distribution
--- with mean 1 and deviation 0.1
-v = 0
-for i = 1, 10 do
-  v = v + Rand:norm(1, 0.1)
-end
-ans = v / 10                  --1> 1.0
 
--- new generator
-rnd = Rand:new()
--- from 0 to 1
-v = rnd()
-ans = (0 <= v and v <= 1)     --> true 
-
--- call the same methods
--- as Rand has
-v = rnd:int(10)
-ans = (1 <= v and v <= 10)    --> true
 
 -- random order iterator
 a = {1, 2, 3, 4, 5}
@@ -94,12 +203,12 @@ about[random.int] = {":int(N) -> int", "Uniform distributed random integer in ra
 --- Constructor example.
 --  @param t Some value.
 --  @return New object of random.
-random.new = function(self)
+random.new = function(self, seed)
   local o = {
     _fn = random._rand,
     _fnRng = random._randRng,
   }
-  random._init(o, 0)
+  random._init(o, seed or 0)
   return setmetatable(o, random)
 end
 about[random.new] = {":new() --> R", "Create generator object."}
@@ -148,8 +257,7 @@ random.norm = function (R, dMean, dev)
     v = 2*R:_fn()-1
     s = u*u + v*v
   until 0 < s and s <= 1
-  local norm = u * math.sqrt(-2*math.log(s)/s)
-  return norm * dev + dMean
+  return dMean + dev * u * math.sqrt(-2*math.log(s)/s)
 end
 about[random.norm] = {":norm(mean_d=0, dev_d=1) --> float",
   "Normal distributed random value with the given mean and deviation."}
@@ -167,20 +275,17 @@ random.logistic = function (R, dMu, dSigma)
   return dMu + 0.551328895421792050*dSigma*math.log(s /(1.0 - s))
 end
 
-random.rayleigh = function (R)
+random.rayleigh = function (R, dSigma)
   local s = 0
   repeat s = R:_fn() until 0 < s and s < 1
-  return math.sqrt(-2*math.log(s))
+  return dSigma*math.sqrt(-2*math.log(s))
 end
 
 random.cauchy = function (R, dMu, dSigma)
   dMu, dSigma = dMu or 0.0, dSigma or 1.0
-  local v1, v2 = 0, 0
-  repeat
-    v1 = 2*R:_fn() - 1
-    v2 = R:_fn()
-  until v2 > 0 and (v1*v1 + v2*v2) < 1
-  return dMu + dSigma*v1/v2
+  local u = 0
+  repeat u = R:_fn() until 0 < u and u < 1
+  return math.tan(math.pi*(u-0.5))*dSigma + dMu
 end
 
 random.gamma = function (R, iAlpha)
