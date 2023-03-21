@@ -880,33 +880,27 @@ about[asciiplot.axes] = {"F:axes() --> tbl",
 
 --- Plot bar graph.
 --  @param F Figure object.
---  @param t Data table ({x,y} or x).
---  @param vy Index of y column or data table (optional).
+--  @param t Data table {{x1,y1},{x2,y2}...}.
+--  @param iy Index of y column.
 --  @param ix Optional index of x values.
---  @return Updated figure object.
-asciiplot.bar = function (F, t, vy, ix)
-  ix, vy = ix or 1, vy or 2
-  local ytbl = (type(vy) == 'table')   -- TODO Split into 2 functions
+asciiplot.bar = function (F, t, iy, ix)
+  ix, iy = ix or 1, iy or 2
   -- size
   local iL = mmodf(F._x.size * 0.2)
+  if iL % 2 == 1 then iL = iL - 1 end
   local iR = F._x.size - iL
+  local ax = F._x:copy()  -- local copy
+  ax:resize(F._x.size - 2*iL)
   -- find limits
-  local min, max = math.huge, -math.huge
-  for i = 1, #t do
-    local v = ytbl and vy[i] or t[i][vy]
-    if v > max then max = v end
-    if v < min then min = v end
+  if not F._xfix then
+    local min, max = math.huge, -math.huge
+    for i = 1, #t do
+      local v = t[i][iy]
+      if v > max then max = v end
+      if v < min then min = v end
+    end
+    ax:setRange({min, max})
   end
-  local i0 = nil
-  if min >= 0 and max >= 0 then
-    i0, min = iL, 0
-  elseif min <= 0 and max <= 0 then
-    i0, max = iR, 0
-  else
-    local int, frac = mmodf(iL - min / (max - min) * (iR - iL))
-    i0 = (frac > 0.5) and int + 1 or int
-  end
-  local dm = (iR - iL) / (max - min)
   -- data step
   local step = 1
   if #t > F._y.size then
@@ -915,31 +909,41 @@ asciiplot.bar = function (F, t, vy, ix)
   end
   -- add values
   asciiplot._clear(F)
-  local r = 1
+  local ch, r = '=', 1
+  --local pos = F._yaxis == 'min' and -1 or F._yaxis == 'max' and 1 or (ax.size + 1)/2
+  local lim = F._yaxis == 'min' and 1 or F._yaxis == 'max' and ax.size or (ax.size + 1)/2
   for i = 1, #t, step do
     -- text
-    local x = tostring(ytbl and t[i] or t[i][ix])
+    local x = tostring(t[i][ix])
     for c = 1, math.min(iL-2, #x) do F._canvas[r][c] = string.sub(x, c, c) end
-    -- line
-    x = ytbl and vy[i] or t[i][vy]
-    local i1, i2 = mmodf(x * dm + i0)
-    if x >= 0 then
-      i2 = (i2 >= 0.5) and i1 + 1 or i1   -- right limit
-      i1 = i0
-    else
-      i1 = (i2 >= 0.5) and i1 - 1 or i1   -- left limit
-      i2 = i0
+    x = t[i][iy]
+    -- show
+    local p = ax:proj(x, true)
+    if p then
+      if p <= lim then
+        for c = p, lim do
+	  F._canvas[r][iL + c] = ch
+	end
+      else
+        for c = lim, p do
+	  F._canvas[r][iL + c] = ch
+	end
+      end
     end
-    for c = i1, i2 do F._canvas[r][c] = '=' end
     -- value
     x = tostring(x)
     for c = 1, math.min(iL-2, #x) do
       F._canvas[r][iR+2+c] = string.sub(x, c, c)
     end
     r = r + 1
+    
   end
+
+
+
+
 end
-about[asciiplot.bar] = {"F:bar(t, vy=2, x_N=1) --> nil",
+about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1) --> nil",
   "Plot bar diargram for data. vy can be y index in t (optional) or table of y-s."}
 
 --- Horizontal concatenation of figures.
