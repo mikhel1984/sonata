@@ -1,5 +1,8 @@
 ======== 0.9.35 =========
 
+Data
+* Add reference to 'transposed' table
+* Remove column based operations with csv
 Gnuplot
 * Fix errors in Windows
 Other

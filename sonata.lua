@@ -35,11 +35,12 @@ use = {
   matrix    = "Mat",
   numeric   = "Num",
   polynomial = "Poly",
+  random    = "Rand",
   rational  = "Rat",
   special   = "Spec",
   symbolic  = "Sym",
   units     = "Unit",
---
+-------------------
   array     = "Arr",
   const     = "_C",
   geodesy   = "Geo",

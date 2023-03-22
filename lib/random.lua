@@ -12,41 +12,42 @@
 
 -- use 'random'
 Rand = require 'lib.random'
-Ap = require 'lib.asciiplot'
-_D = require 'lib.data'
-Spec = require 'lib.special'
+Ap = require 'lib.asciiplot'     -- for visualization
+_D = require 'lib.data'          -- hystogram
+Spec = require 'lib.special'     -- gamma function
 -- prepare for data generation
-N = 100
-funciton normalize (lst, step)
+N = 100  -- number of points
+-- normalize hystograms
+function normalize (lst, step)
   local d = step * N
   for i, v in ipairs(lst) do lst[i] = v / d end
 end
 
--- default generator
+-- default generator (0 to 1)
 lst = {}
 for i = 1, N do
-  lst[i] = Rand()  -- 0 to 1
+  lst[i] = Rand()
 end
 
 -- visualize
 ts, te = _D:histcounts(lst, 10)
-normalize(ts)
+normalize(ts, 1)
 fig = Ap()
-fig:setY {view='min'}
-v = _D:T({te, ts})  -- to list of pairs
+fig:setY {view='min'}; fig:setX {range={0, 0.5}, fix=true}
+v = _D:T({te, ts})  -- get list of pairs
 fig:bar(v)
 print(fig)
 
--- custom generator
+-- custom generator (0 to 1)
 rnd = Rand:new()
 for i = 1, N do
-  lst[i] = rnd()  -- 0 to 1
+  lst[i] = rnd()
 end
 
 -- visualize renerated data
 ts, te = _D:histcounts(lst, 10)
-normalize(ts)
-v = _D:T({te, ts})  -- to list of pairs
+normalize(ts, 1)
+v = _D:T({te, ts})   -- list of pairs
 fig:bar(v)
 print(fig)
 
@@ -59,6 +60,7 @@ end
 -- show normal distribution
 fig = Ap(53, 19)
 fig:setX {view='min'}
+-- simplify visualization
 function visualize (data, a, b, step, fn)
   local lim = {}
   for x = a, b, step do lim[#lim+1] = x end
@@ -67,8 +69,9 @@ function visualize (data, a, b, step, fn)
   fig:plot(te, ts, 'random', fn, 'pdf')
   print(fig)
 end
-pdf = function (x) 
-  return math.exp(-0.5*(x-mu)^2/sig^2) / (sig*math.sqrt(2*math.pi)) 
+-- probability density function
+pdf = function (x)
+  return math.exp(-0.5*(x-mu)^2/sig^2) / (sig*math.sqrt(2*math.pi))
 end
 visualize(lst, mu-2*sig, mu+2*sig, 4*sig/10, pdf)
 
@@ -90,7 +93,7 @@ for i = 1, N do
 end
 
 -- show logistic distribution
-pdf = function (x) 
+pdf = function (x)
   local v = math.exp(-(x-mu)/sig)
   return v / sig / (1 + v)^2
 end
@@ -103,7 +106,7 @@ for i = 1, N do
 end
 
 -- show Raileigh distribution
-pdf = function (x) 
+pdf = function (x)
   return x/sig^2*math.exp(-0.5*x^2/sig^2)
 end
 visualize(lst, 0, 4*sig, 4*sig/10, pdf)
@@ -115,7 +118,7 @@ for i = 1, N do
 end
 
 -- show Cauchy distribution
-pdf = function (x) 
+pdf = function (x)
   return 1/(math.pi*sig)/(1+(x-mu)^2/sig^2)
 end
 visualize(lst, mu-3*sig, mu+3*sig, 6*sig/10, pdf)
@@ -128,7 +131,7 @@ end
 
 -- show gamma distribution
 gamma = Spec:gamma(alpha)
-pdf = function (x) 
+pdf = function (x)
   return beta^alpha * x^(alpha-1) * math.exp(-beta*x)/gamma
 end
 visualize(lst, 2, 14, 1.2, pdf)
@@ -140,13 +143,14 @@ for i = 1, N do
 end
 
 -- show Poisson distribution
-function fact(n) 
+-- find factorial
+function fact(n)
   local p = 1
   for k = 2, n do p = p * k end
   return p
 end
-pmf = function (x) 
-  x = math.floor(x) -- to 'integer'  
+pmf = function (x)
+  x = math.floor(x)  -- to 'integer'
   return lambda^x * math.exp(-lambda) / fact(x)
 end
 visualize(lst, 0, 10, 1, pmf)
@@ -158,12 +162,11 @@ for i = 1, N do
 end
 
 -- show binomial distribution
-pmf = function (x) 
-  x = math.floor(x) -- to 'integer'  
+pmf = function (x)
+  x = math.floor(x)  -- to 'integer'
   return fact(n) * p^x * (1-p)^(n-x) / fact(x) / fact(n-x)
 end
 visualize(lst, 0, n, n/10, pmf)
-
 
 -- get random true/false
 v = Rand:flip()
@@ -173,26 +176,35 @@ ans = type(v)                 --> 'boolean'
 v = Rand:int(10)
 ans = (1 <= v and v <= 10)    --> true
 
-
-
 -- random order iterator
 a = {1, 2, 3, 4, 5}
 for i, v in Rand:ipairs(a) do print(i, v) end
 
+-- random choice
+v, i = Rand:choice(a)
+ans = v                       --> a[i]
+
 -- change order in place
 Rand:shuffle(a)
 for i, v in ipairs(a) do print(i, v) end
+
+-- random chars
+print(rnd:bytes(8))
+
+-- same seed
+r1 = Rand:new(1)
+r2 = Rand:new(1)
+ans = (r1() == r2())            --> true
+
+-- change seed
+r2:seed(2)
+ans = (r1() ~= r2())            --> true
 
 --]]
 
 --	LOCAL
 
 DIST = 'distribution'
-
---- Check object type.
---  @param v Object.
---  @return True if the object is random.
-local function israndom(v) return type(v)=='table' and v.israndom end
 
 --	INFO
 
@@ -218,7 +230,7 @@ random.__call = function (R) return R:_fn() end
 -- methametods
 random.__index = random
 
---- Generate random from 0 to 1. Use generator of Park and Miller with 
+--- Generate random from 0 to 1. Use generator of Park and Miller with
 --  Bays-Durham shuffle ("Numerical recipes in C")
 --  @param t Random object.
 --  @param rmax Maximal value less or equal to 1.0.
@@ -246,7 +258,7 @@ random._genPMInit = function (t, seed)
     local k = math.floor(seed / 127773)
     seed = 16807*(seed - k*127773) - 2836*k
     if seed < 0 then seed = seed + 2147483647 end
-    if j > 0 then iv[j] = seed end   
+    if j > 0 then iv[j] = seed end
   end
   t._state = seed
   t._iv, t._iy = iv, iv[#iv]
@@ -262,7 +274,7 @@ random._rand = random._genPM
 --  @return Integer value.
 random._randRng = function (R, a, b)
   local p, q = math.modf((b - a)*R:_rand())
-  return a + (q < 0.5 and p or p + 1) 
+  return a + (q < 0.5 and p or p + 1)
 end
 
 --- Binomial distribution.
@@ -299,13 +311,14 @@ random.binomial = function (R, dp, N)
       until 0.0 <= em and em < (N + 1)
       em = math.floor(em)
       local t = 1.2*sq*(1 + y*y)*math.exp(
-        og - gln(nil, em + 1) - gln(nil, N - em + 1) + em*plog + (N - em)*pclog)
+        og - gln(nil, em+1) - gln(nil, N-em+1) + em*plog + (N-em)*pclog)
     until R:_fn() <= t
     bnl = em
   end
   return (p ~= dp) and (N - bnl) or bnl
 end
-about[random.binomial] = {":binomial(p_d, N) --> int", "Binomial distributed random values.", DIST}
+about[random.binomial] = {":binomial(p_d, N) --> int",
+  "Binomial distributed random values.", DIST}
 
 --- Generate sequence of bytes.
 --  @param R Random generator.
@@ -328,7 +341,8 @@ random.cauchy = function (R, dMu, dSigma)
   repeat u = R:_fn() until 0 < u and u < 1
   return math.tan(math.pi*(u-0.5))*dSigma + dMu
 end
-about[random.cauchy] = {":cauchy(mu_d=0, sigma_d=1) --> float", "Cauchy distributed random numbers.", DIST}
+about[random.cauchy] = {":cauchy(mu_d=0, sigma_d=1) --> float",
+  "Cauchy distributed random numbers.", DIST}
 
 --- Get random element from the list.
 --  @param R Random generator.
@@ -338,7 +352,8 @@ random.choice = function (R, t)
   local i = R:_fnRng(1, #t)
   return t[i], i
 end
-about[random.choice] = {":choice(tbl) --> element, index_N", "Get random table element."}
+about[random.choice] = {":choice(tbl) --> element, index_N",
+  "Get random table element."}
 
 --- Exponential distribution.
 --  @param R Random generator.
@@ -349,14 +364,16 @@ random.exp = function (R, dLam)
   repeat s = R:_fn() until s > 0
   return -math.log(s) / (dLam or 1.0)
 end
-about[random.exp] = {":exp(lambda_d=1) --> float", "Exponential distributed random values.", DIST}
+about[random.exp] = {":exp(lambda_d=1) --> float",
+  "Exponential distributed random values.", DIST}
 
 --- Get random binary value.
 --  @param R Random generator.
 --  @param p Probability of 'true'.
 --  @return True of false.
 random.flip = function (R, p) return R:_fn() <= (p or 0.5) end
-about[random.flip] = {":flip(p=0.5) --> bool", "Uniform distributed binary value."}
+about[random.flip] = {":flip(p=0.5) --> bool",
+  "Uniform distributed binary value."}
 
 --- Gamma distribution.
 --  @param R Random generator.
@@ -388,18 +405,20 @@ random.gamma = function (R, iAlpha, dBeta)
   end
   return x / (dBeta or 1)
 end
-about[random.gamma] = {":gamma(alpha_N, beta_d=1) --> float", "Gamma distributed random values.", DIST}
+about[random.gamma] = {":gamma(alpha_N, beta_d=1) --> float",
+  "Gamma distributed random values.", DIST}
 
 --- Get random integer.
 --  @param R Random generator.
 --  @param N1 Lower bound or total number.
 --  @param N2 Upper bound or nil.
 --  @return Integer value.
-random.int = function (R, N1, N2) 
+random.int = function (R, N1, N2)
   N1, N2 = (N2 and N1 or 1), (N2 or N1)
-  return R:_fnRng(N1, N2) 
+  return R:_fnRng(N1, N2)
 end
-about[random.int] = {":int([lower_i=1], upper_i) -> int", "Uniform distributed random integer in the given range."}
+about[random.int] = {":int([lower_i=1], upper_i) -> int",
+  "Uniform distributed random integer in the given range.", DIST}
 
 --- Iterate randomly without repeat.
 --  @param R Random generator.
@@ -418,7 +437,8 @@ random.ipairs = function (R, t)
     end
   end
 end
-about[random.ipairs] = {":ipairs(tbl) --> fn", "Random iterator over the table elements."}
+about[random.ipairs] = {":ipairs(tbl) --> fn",
+  "Random iterator over the table elements."}
 
 --- Logistic distribution.
 --  @param R Random generator.
@@ -430,7 +450,8 @@ random.logistic = function (R, dMu, dSigma)
   repeat s = R:_fn() until 0 < s and s < 1
   return dMu + 0.551328895421792050*dSigma*math.log(s /(1.0 - s))
 end
-about[random.logistic] = function(":logistic(mu_d=0, sigma_d=1) --> float", "Logistic distributed random value.", DIST}
+about[random.logistic] = {":logistic(mu_d=0, sigma_d=1) --> float",
+  "Logistic distributed random value.", DIST}
 
 --- Constructor example.
 --  @param self Do nothing.
@@ -444,7 +465,8 @@ random.new = function(self, seed)
   random._init(o, seed or 0)
   return setmetatable(o, random)
 end
-about[random.new] = {":new(seed_i=0) --> R", "Create random generator object."}
+about[random.new] = {":new(seed_i=0) --> R",
+  "Create random generator object.", help.NEW}
 
 --- Get Gaussian distribution.
 --  @param R Random generator.
@@ -493,7 +515,8 @@ random.poisson = function (R, dLam)
   end
   return em
 end
-about[random.poisson] = {":poisson(lambda_d) --> int", "Poisson distributed random values.", DIST}
+about[random.poisson] = {":poisson(lambda_d) --> int",
+  "Poisson distributed random values.", DIST}
 
 --- Rayleigh distribution.
 --  @param R Random generator.
@@ -504,7 +527,8 @@ random.rayleigh = function (R, dSigma)
   repeat s = R:_fn() until 0 < s and s < 1
   return dSigma*math.sqrt(-2*math.log(s))
 end
-about[random.rayleigh] = {":rayleigh(sigma_d) --> float", "Rayleigh distributed random values.", DIST}
+about[random.rayleigh] = {":rayleigh(sigma_d) --> float",
+  "Rayleigh distributed random values.", DIST}
 
 --- Update random generator seed.
 --  @param R Random generator.
@@ -533,7 +557,8 @@ about[random.shuffle] = {":shuffle(tbl) --> nil", "Change order of elements."}
 
 -- simplify constructor call
 setmetatable(random, {__call = function (self) return random._fn(self) end})
-about[random] = {" () --> float", "Uniform distributed random number between 0 and 1."}
+about[random] = {" () --> float",
+  "Uniform distributed random number between 0 and 1."}
 
 -- Comment to remove descriptions
 random.about = about
@@ -541,3 +566,4 @@ random.about = about
 return random
 
 --======================================
+-- TODO add another custom generator
