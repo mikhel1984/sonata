@@ -127,6 +127,7 @@ Ver = Ver.versions
 local ZERO = string.byte('0')
 
 local NUMB = 'numbers'
+local COMB = 'combinations'
 
 --- Check object type.
 --  @param v Object.
@@ -792,6 +793,17 @@ about[bigint.at] = {"B:at(N) --> int", "Get N-th digit.", help.OTHER}
 bigint.base = function (B) return B._base end
 about[bigint.base] = {"B:base() --> int", "Current numeric base."}
 
+--- Find number of combinations.
+--  @param self Do nothing.
+--  @param n Total number of elements.
+--  @param k Group size.
+--  @return Bigint for combination number.
+bigint.C = function (self, n, k)
+  n, k = bigint._args(n, k)
+  return bigint.ratF(n, k) / bigint.F(n-k)
+end
+about[bigint.C] = {":C(n_B, k_B) --> B", 
+  "Number of combinations C(n,k)."}
 
 --- a == b.
 --  In Lua v == 0 is always false because in the case of number
@@ -851,50 +863,8 @@ bigint.F = function (B)
   end
   return acc
 end
-about[bigint.F] = {
-  "B:F() --> B!", "Return factorial of non-negative integer B."}
-
-bigint.ratF = function (B, B2)
-  local N1, N2 = B:float(), B2:float()
-  if N1 < N2 then return bigint:_zero(B._base, 1) end
-  if N1 == N2 then return bigint._1 end
-  if N1 == N2 + 1 then return B end
-  local acc = B * (B2 + bigint._1)
-  if N1 == N2+2 then return acc end
-  local S, diff = acc, B - B2
-  local two = bigint:_new(2):rebase(B._base)
-  local n, m = math.modf((N1+N2-2) * 0.5)
-  for i = N2+1, n do
-    diff = bigint._sub(diff, two)
-    S = bigint._sum(S, diff)
-    acc = bigint._mul(acc, S)
-  end
-  if m > 1E-3 then   -- i.e. m > 0
-    acc = bigint._mul(acc, bigint:_new(n+2))
-  end
-  return acc
-end
-
--- double factorial
-bigint.FF = function (B) 
-  local two = bigint:new(2):rebase(B._base)
-  local k, v = bigint._div(B, two)
-  if v:eq(0) then
-    return two^k * bigint.F(k)
-  else
-    k = k + 1
-    return bigint.ratF(2*k, k) / two^k
-  end
-end
-
-bigint.combination = function (self, n, k)
-  return bigint.ratF(n, k) / bigint.F(n-k)
-end
-
---- permutations without repetition
-bigint.permutation = function (self, n, k)
-  return bigint.ratF(n, n-k)
-end
+about[bigint.F] = {"B:F() --> B!", 
+  "Return factorial of non-negative integer B.", COMB}
 
 --- Find multipliers for the number.
 --  @param B Integer number.
@@ -963,6 +933,18 @@ about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
   "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.",
   NUMB}
 
+--- Permutations without repetition.
+--  @param self Do nothing.
+--  @param n Number of elements.
+--  @param k Size of group.
+--  @return Number of permutations.
+bigint.P = function (self, n, k) 
+  n, k = bigint._args(n, k)
+  return bigint.ratF(n, n-k) 
+end
+about[bigint.P] = {":P(n_B, k_B) --> B", 
+  "Find permutations without repetition.", COMB}
+
 --- Generate random number.
 --  @param self Do nothing.
 --  @param B Upper limit.
@@ -992,6 +974,34 @@ bigint.random = function (self, B)
 end
 about[bigint.random] = {":random(B) --> rand_B",
   "Generate pseudo-random value from 0 to B.", help.STATIC}
+  
+--- Find ratio of factorials n!/k!
+--  @param B Numerator.
+--  @param B2 Denominator.
+--  @return Bigint for ration.
+bigint.ratF = function (B, B2)
+  assert(B.sign > 0 and B2.sign > 0, "Non-negative expected")
+  local N1, N2 = B:float(), B2:float()
+  if N1 < N2 then return bigint:_zero(B._base, 1) end
+  if N1 == N2 then return bigint._1 end
+  if N1 == N2 + 1 then return B end
+  local acc = B * (B2 + bigint._1)
+  if N1 == N2+2 then return acc end
+  local S, diff = acc, B - B2
+  local two = bigint:_new(2):rebase(B._base)
+  local n, m = math.modf((N1+N2-2) * 0.5)
+  for i = N2+1, n do
+    diff = bigint._sub(diff, two)
+    S = bigint._sum(S, diff)
+    acc = bigint._mul(acc, S)
+  end
+  if m > 1E-3 then   -- i.e. m > 0
+    acc = bigint._mul(acc, bigint:_new(n+2))
+  end
+  return acc
+end
+about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!", 
+  "Find ratio of factorials dum!/denom!.", COMB}
 
 --- Change current numeric base.
 --  @param B Bigint object.
