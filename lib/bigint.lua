@@ -882,6 +882,7 @@ bigint.FF = function (B)
   if v:eq(0) then
     return two^k * bigint.F(k)
   else
+    k = k + 1
     return bigint.ratF(2*k, k) / two^k
   end
 end
