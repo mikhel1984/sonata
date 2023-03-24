@@ -854,6 +854,27 @@ end
 about[bigint.F] = {
   "B:F() --> B!", "Return factorial of non-negative integer B."}
 
+bigint.ratF = function (B, B2)
+  local N1, N2 = B:float(), B2:float()
+  if N1 < N2 then return bigint:_zero(B._base, 1) end
+  if N1 == N2 then return bigint._1 end
+  if N1 == N2 + 1 then return B end
+  local acc = B * (B2 + bigint._1)
+  if N1 == N2+2 then return acc end
+  local S, diff = acc, B - B2
+  local two = bigint:_new(2):rebase(B._base)
+  local n, m = math.modf((N1+N2-2) * 0.5)
+  for i = N2+1, n do
+    diff = bigint._sub(diff, two)
+    S = bigint._sum(S, diff)
+    acc = bigint._mul(acc, S)
+  end
+  if m > 1E-3 then   -- i.e. m > 0
+    acc = bigint._mul(acc, bigint:_new(n+2))
+  end
+  return acc
+end
+
 --- Find multipliers for the number.
 --  @param B Integer number.
 --  @return List of prime numbers.
