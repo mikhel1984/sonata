@@ -30,7 +30,7 @@ ans = b:float()               --> 456
 
 -- from table
 -- 'sign' and 'base' can be skipped
-g = Int {1,2,3,sign=-1,base=10}
+g = Int {-1,2,3, base=10}
 ans = g:float()               --> -123
 
 -- check equality
@@ -85,9 +85,15 @@ ans = (v == g)                --> true
 -- simple print
 print(a)
 
+-- find permutations 
+ans = Int:P(10, 5)            --> Int(30240)
+
+-- find combinations 
+ans = Int:C(10, 3)            --> Int(120)
+
 -- check if it prime
 -- iterate though multipliers
-ans = Int(1229):isPrime()       --> true
+ans = Int(1229):isPrime()     --> true
 
 -- Fermat theorem
 ans = Int(1229):isPrime('Fermat') --> true
@@ -601,9 +607,13 @@ bigint._new = function (self, num)
   -- prepare
   if type(num) == 'table' then
     int._base = num.base or 10
-    int.sign   = num.sign or 1
+    int.sign  = num.sign or 1
     for i = #num, 1, -1 do
       acc[#acc+1] = num[i] -- reverse
+    end
+    if num[1] < 0 then 
+      acc[#acc] = -num[1] 
+      int.sign = -1
     end
   elseif type(num) == 'string' then
     local sign, s = string.match(num, '^([+-]?)(%d+)$')
@@ -802,8 +812,8 @@ bigint.C = function (self, n, k)
   n, k = bigint._args(n, k)
   return bigint.ratF(n, k) / bigint.F(n-k)
 end
-about[bigint.C] = {":C(n_B, k_B) --> B", 
-  "Number of combinations C(n,k)."}
+about[bigint.C] = {":C(n, k) --> combinations_B", 
+  "Number of combinations C(n,k).", COMB}
 
 --- a == b.
 --  In Lua v == 0 is always false because in the case of number
@@ -942,7 +952,7 @@ bigint.P = function (self, n, k)
   n, k = bigint._args(n, k)
   return bigint.ratF(n, n-k) 
 end
-about[bigint.P] = {":P(n_B, k_B) --> B", 
+about[bigint.P] = {":P(n, k) --> permutaions_B", 
   "Find permutations without repetition.", COMB}
 
 --- Generate random number.
