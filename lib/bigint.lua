@@ -901,14 +901,11 @@ about[bigint.factorize] = {
 --  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (B)
-  local d, v, sum = B._base, 1, 0
-  local b = B._
-  for i = 1, #b do
-    sum = sum + b[i]*v
-    v = v * d
-    if v > 1E18 then
-      local b1 = #b-1
-      sum = (b[#b] + b[b1]/d) * d^b1
+  local sum, base, b = 0, B._base, B._
+  for i = #b, 1, -1 do
+    sum = sum * base + b[i]
+    if sum > 1E+10 then
+      sum = (b[#b] + b[#b-1]/base) * base^(#b-1)
       break
     end
   end
