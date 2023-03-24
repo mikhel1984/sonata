@@ -875,6 +875,17 @@ bigint.ratF = function (B, B2)
   return acc
 end
 
+-- double factorial
+bigint.FF = function (B) 
+  local two = bigint:new(2):rebase(B._base)
+  local k, v = bigint._div(B, two)
+  if v:eq(0) then
+    return two^k * bigint.F(k)
+  else
+    return bigint.ratF(2*k, k) / two^k
+  end
+end
+
 bigint.combination = function (self, n, k)
   return bigint.ratF(n, k) / bigint.F(n-k)
 end
