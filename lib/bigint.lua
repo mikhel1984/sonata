@@ -875,6 +875,15 @@ bigint.ratF = function (B, B2)
   return acc
 end
 
+bigint.combination = function (self, n, k)
+  return bigint.ratF(n, k) / bigint.F(n-k)
+end
+
+--- permutations without repetition
+bigint.permutation = function (self, n, k)
+  return bigint.ratF(n, n-k)
+end
+
 --- Find multipliers for the number.
 --  @param B Integer number.
 --  @return List of prime numbers.
