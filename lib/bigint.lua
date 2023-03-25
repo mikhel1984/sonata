@@ -427,24 +427,30 @@ bigint._copy = function (B)
   return c
 end
 
---- In-place decrement for positive number.
+--- In-place decrement for number.
 --  @param B Number to decrease by 1.
-bigint._decr = function (B)
-  local b = B._
-  if #b == 1 and b[1] == 0 then return end
-  local dif = 1
-  for i = 1, #b-1 do
-    b[i] = b[i] - dif
-    if b[i] < 0 then
-      b[i] = B._base - 1
-    else
-      dif = 0
-      break
-    end
+--  @param forced Flag to skip sign check.
+bigint._decr = function (B, forced)
+  local base, b = B._base, B._
+  if not forced and (B.sign < 0 or #b == 1 and b[1] == 0) then 
+    B.sign = -1
+    return bigint._incr(B, true)
   end
-  if dif > 0 then
-    local bb = b[#b]
-    b[#b] = (bb > 1) and (bb - 1) or (#b == 1) and 0 or nil
+  local i, donext = 1, true
+  while donext do
+    local v = b[i] - 1
+    if v < 0 then
+      v = base - 1
+    else 
+      donext = false
+    end
+    b[i] = v
+    i = i + 1
+  end
+  if #b > 1 and b[#b] <= 0 then
+    table.remove(b)
+  elseif #b == 1 and b[1] == 0 then
+    B.sign = 1
   end
 end
 
@@ -537,21 +543,24 @@ bigint._gt = function (B1, B2)
   end
 end
 
---- In-place increment for positive number.
+--- In-place increment for number.
 --  @param B Number to increase by 1.
-bigint._incr = function (B)
-  local add, b = 1, B._
-  for i = 1, #b do
-    b[i] = b[i] + add
-    if b[i] == B._base then
-      b[i], add = 0, 1
-    else
-      add = 0
-      break
-    end
+--  @param forced Flag to skip sign check.
+bigint._incr = function (B, forced)
+  local base, b = B._base, B._
+  if not forced and (B.sign < 0) then
+    return bigint._decr(B, true)
   end
-  if add > 0 then
-    b[#b+1] = 1
+  local i, donext = 1, true
+  while donext do
+    local v = (b[i] or 0) + 1
+    if v == base then
+      v = 0
+    else 
+      donext = false
+    end
+    b[i] = v
+    i = i + 1
   end
 end
 
