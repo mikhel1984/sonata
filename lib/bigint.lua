@@ -877,15 +877,15 @@ bigint.F = function (B)
     return bigint:_new(v)
   end
   local n, m = math.modf((N-2) * 0.5)
-  local two = bigint:_new(2):rebase(B._base)
-  local S, d, acc = B, B, B
+  local S, d, acc = B, B:_copy(), B
   for i = 1, n do
-    d = bigint._sub(d, two)
+    bigint._decr(d)
+    bigint._decr(d)
     S = bigint._sum(S, d)
     acc = bigint._mul(acc, S)
   end
   if m > 1E-3 then   -- i.e. m > 0
-    acc = bigint._mul(acc, n + two)
+    acc = bigint._mul(acc, bigint:_new(n + 2):rebase(B._base))
   end
   return acc
 end
@@ -1016,10 +1016,10 @@ bigint.ratF = function (B, B2)
   local acc = B * (B2 + bigint._1)
   if N1 == N2+2 then return acc end
   local S, diff = acc, B - B2
-  local two = bigint:_new(2):rebase(B._base)
   local n, m = math.modf((N1+N2-2) * 0.5)
   for i = N2+1, n do
-    diff = bigint._sub(diff, two)
+    bigint._decr(diff)
+    bigint._decr(diff)
     S = bigint._sum(S, diff)
     acc = bigint._mul(acc, S)
   end
@@ -1036,7 +1036,7 @@ about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
 --  @param N New base.
 --  @return Copy with new base.
 bigint.rebase = function (B, N)
-  if N <= 0 then error("Wrong base "..tostring(N)) end
+  if N <= 1 then error("Wrong base "..tostring(N)) end
   if B._base == N then return B end
   local res = bigint:_zero(N, B.sign)
   local b, rr = B._, res._
