@@ -436,16 +436,15 @@ bigint._decr = function (B, forced)
     B.sign = -1
     return bigint._incr(B, true)
   end
-  local i, donext = 1, true
-  while donext do
+  for i = 1, math.huge do
     local v = b[i] - 1
     if v < 0 then
       v = base - 1
     else 
-      donext = false
+      b[i] = v
+      break
     end
     b[i] = v
-    i = i + 1
   end
   if #b > 1 and b[#b] <= 0 then
     table.remove(b)
@@ -551,16 +550,15 @@ bigint._incr = function (B, forced)
   if not forced and (B.sign < 0) then
     return bigint._decr(B, true)
   end
-  local i, donext = 1, true
-  while donext do
+  for i = 1, math.huge do
     local v = (b[i] or 0) + 1
     if v == base then
       v = 0
     else 
-      donext = false
+      b[i] = v
+      break
     end
     b[i] = v
-    i = i + 1
   end
 end
 
