@@ -179,8 +179,6 @@ about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 -- Constants
 _pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
 _e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
--- result
-_ans = 0; about[_ans] = {"_ans", "Result of the last operation."}
 
 --- Generate list of function values.
 --  @param fn Function to apply.

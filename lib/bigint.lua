@@ -135,6 +135,7 @@ local ZERO = string.byte('0')
 local NUMB = 'numbers'
 local COMB = 'combinations'
 
+
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is a big integer.
@@ -153,6 +154,8 @@ __module__ = "Operations with arbitrary long integers."
 local bigint = {
 -- mark
 type='bigint', isbigint=true,
+-- logarithm of a base
+_ln = {},
 }
 
 --- B1 + B2
@@ -858,8 +861,14 @@ bigint.__eq = bigint.eq
 bigint.F = function (B)
   assert(B.sign > 0, "Non-negative value is expected!")
   local N = B:float()
-  if N <= 1 then return bigint._1 end
-  if N == 2 then return B end  
+  if     N <= 1 then return bigint._1
+  elseif N == 2 then return B
+  elseif N <= 10 then
+    -- default numbers
+    local v = 1
+    for i = 2, N do v = v * i end
+    return bigint:_new(v)
+  end
   local n, m = math.modf((N-2) * 0.5)
   local two = bigint:_new(2):rebase(B._base)
   local S, d, acc = B, B, B
@@ -903,11 +912,13 @@ about[bigint.factorize] = {
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (B)
   local sum, base, b = 0, B._base, B._
-  for i = #b, 1, -1 do
-    sum = sum * base + b[i]
-    if sum > 1E+10 then
-      sum = (b[#b] + b[#b-1]/base) * base^(#b-1)
-      break
+  local ln = bigint._ln
+  ln[base] = ln[base] or math.log(base)
+  if #b * ln[base] > 21 then       -- log(1E+9)
+    sum = (b[#b]*base + b[#b-1]) * base^(#b-2)
+  else
+    for i = #b, 1, -1 do
+      sum = sum * base + b[i]
     end
   end
   return B.sign >= 0 and sum or (-sum)
