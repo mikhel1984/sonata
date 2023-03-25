@@ -870,11 +870,6 @@ bigint.F = function (B)
   local N = B:float()
   if     N <= 1 then return bigint._1
   elseif N == 2 then return B
-  elseif N <= 10 then
-    -- default numbers
-    local v = 1
-    for i = 2, N do v = v * i end
-    return bigint:_new(v)
   end
   local n, m = math.modf((N-2) * 0.5)
   local S, d, acc = B, B:_copy(), B
