@@ -14,6 +14,9 @@
 --	Load after start
 --SONATA_DEFAULT_MODULES = {'matrix','asciiplot'}
 
+--	Unicode symbols for function plot
+--SONATA_ASCIIPLOT_UNICODE = true
+
 --	Uncomment to set the localization file
 --SONATA_LOCALIZATION = 'ru.lua'
 -- Windows: call first

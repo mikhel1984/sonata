@@ -344,7 +344,7 @@ type = 'asciiplot', isasciiplot = true,
 -- const
 WIDTH = 73, HEIGHT = 21,
 -- symbols
-char = {'*', 'o', '#', '%', '~', 'x'},
+char = {'*', 'o', '#', '+', '~', 'x'},
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
 }
@@ -422,7 +422,10 @@ end
 --- Add coordinate axes.
 --  @param F Figure object.
 asciiplot._axes = function (F)
-  local vertical, horizontal, mark = '|', '-', '+'
+  local vertical, horizontal, mark, up, right = '|', '-', '+', 'A', '>'
+  if SONATA_ASCIIPLOT_UNICODE then
+    vertical, horizontal, mark, up, right = '│', '─', '┼', '▲', '▶'
+  end
   -- vertical line
   local n = nil
   if     F._yaxis == 'mid' then n = (F._x.size+1) / 2
@@ -432,14 +435,14 @@ asciiplot._axes = function (F)
     for i = 1, F._y.size do
       F._canvas[i][n] = vertical
     end
-    F._canvas[1][n] = 'A'
+    F._canvas[1][n] = up
     -- markers
     local d = F._y:markerInterval()
     for i = d+1, F._y.size-1, d do F._canvas[i][n] = mark end
     n = nil
   end
   -- horizontal line
-  if F._xaxis == 'mid' then n = (F._y.size+1) / 2
+  if     F._xaxis == 'mid' then n = (F._y.size+1) / 2
   elseif F._xaxis == 'max' then n = 1
   elseif F._xaxis == 'min' then n = F._y.size end
   if n then
@@ -447,7 +450,7 @@ asciiplot._axes = function (F)
     for i = 1, F._x.size do
       row[i] = horizontal
     end
-    row[F._x.size] = '>'
+    row[F._x.size] = right
     -- markers
     local d = F._x:markerInterval()
     for i = d+1, F._x.size-1, d do row[i] = mark end

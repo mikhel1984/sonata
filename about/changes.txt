@@ -1,5 +1,11 @@
 ======== 0.9.35 =========
 
+Asciiplot
+* Change axis configuration method
+* Axis location in bar function
+* Use Unicode for axis view
+Bigint 
+* Add combinatorial methods
 Data
 * Add reference to 'transposed' table
 * Remove column based operations with csv
