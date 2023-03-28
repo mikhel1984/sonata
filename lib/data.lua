@@ -118,6 +118,16 @@ ans = tt[2][2]                --> t[2][2]
 b = _D:T(t)
 ans = b[3][2]                 --> t[2][3]
 
+-- pretty print for a table
+print(_D:table(t)) 
+
+-- add column names and some processing 
+fn = function (v)
+  return {v[1]^2, 0.5*(v[2]+v[2])}
+end
+c = _D:table(t, {'sq', 'avg'}, fn)
+print(c)
+
 --]]
 
 --	LOCAL
@@ -529,6 +539,49 @@ data.std = function (self, t, tw)
 end
 about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
   "Standard deviation and variance. Weights can be used.", STAT}
+
+--- Show data in Markdown-like table form.
+--  @param self Do nothing.
+--  @param data_t Table of form {row1, row2, etc.}.
+--  @param names_t Table of column names (optional).
+--  @param fn Table that generates new column from the given (optional).
+--  @return String with table representation.
+data.table = function (self, data_t, names_t, fn)
+  local acc, line, head, len = {}, {}, {}, {}
+  -- data to stings
+  for i, v in ipairs(data_t) do
+    local row = {}
+    for j, w in ipairs(fn and fn(v) or v) do
+      row[j] = tostring(w)
+      len[j] = math.max(len[j] or 0, #row[j])
+    end
+    acc[i] = row
+  end
+  -- names
+  if names_t then
+    assert(#names_t == #acc[1], "Wrong column number")
+    for j, w in ipairs(names_t) do
+      head[j] = tostring(w)
+      len[j] = math.max(len[j], #head[j])
+    end
+  end
+  -- collect
+  for j = 1, #acc[1] do
+    local templ = string.format('%%-%ds', len[j])
+    for i = 1, #acc do acc[i][j] = string.format(templ, acc[i][j]) end
+    line[j] = string.rep('-', len[j])
+    if names_t then head[j] = string.format(templ, head[j]) end
+  end
+  local res, templ = {}, '| %s |'
+  if names_t then res[1] = string.format(templ, table.concat(head, ' | ')) end
+  res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
+  for _, v in ipairs(acc) do
+    res[#res+1] = string.format(templ, table.concat(v, ' | ')) 
+  end
+  return table.concat(res, '\n')
+end
+about[data.table] = {":table(data_t, names_t=nil, row_fn=nil) --> str", 
+  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
 
 --- Student's cumulative distribution
 --  @param self Do nothing.
