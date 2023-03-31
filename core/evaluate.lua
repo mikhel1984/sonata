@@ -30,14 +30,13 @@ local function print_err (msg)
     string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
 
-
-local function balance(s)
-  local t = {}
-  string.gsub(s, '([(){}])', function (x) t[x] = (t[x] or 0) + 1 end)
-  local d1 = (t['('] or 0) - (t[')'] or 0)
-  local d2 = (t['{'] or 0) - (t['}'] or 0)
-  return (d1 < 0 or d2 < 0) and -1 or (d1 > 0 or d2 > 0) and 1 or 0
-end
+-- local function balance(s)
+--   local t = {}
+--   string.gsub(s, '([(){}])', function (x) t[x] = (t[x] or 0) + 1 end)
+--   local d1 = (t['('] or 0) - (t[')'] or 0)
+--   local d2 = (t['{'] or 0) - (t['}'] or 0)
+--   return (d1 < 0 or d2 < 0) and -1 or (d1 > 0 or d2 > 0) and 1 or 0
+-- end
 
 --	MODULE
 
@@ -311,12 +310,13 @@ evaluate.eval = function (ev, cmd, useLog)
   local res = evaluate._eval(ev, cmd)
   -- logging
   if useLog and ev._logFile then
-    ev._logFile:write(newLine, '\n')
-    if status == evaluate.EV_RES and ev._ans then
-      ev._logFile:write('--[[ ', ev._ans, ' ]]\n\n')
-    elseif status == evaluate.EV_ERR then
-      ev._logFile:write('--[[ ERROR ]]\n\n')
-    end
+    ev._logFile:write(cmd, '\n')
+    -- TODO: Update it
+    -- if status == evaluate.EV_RES and ev._ans then
+    --   ev._logFile:write('--[[ ', ev._ans, ' ]]\n\n')
+    -- elseif status == evaluate.EV_ERR then
+    --   ev._logFile:write('--[[ ERROR ]]\n\n')
+    -- end
   end
   return res
 end

@@ -119,9 +119,9 @@ b = _D:T(t)
 ans = b[3][2]                 --> t[2][3]
 
 -- pretty print for a table
-print(_D:table(t)) 
+print(_D:table(t))
 
--- add column names and some processing 
+-- add column names and some processing
 fn = function (v)
   return {v[1]^2, 0.5*(v[2]+v[2])}
 end
@@ -169,7 +169,7 @@ data.cov2 = function (self, t1, t2)
   end
   return s / #t1
 end
-about[data.cov2] = {":cov2(xs_t, ys_t) --> float", 
+about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
   "Find covariance value for two vectors.", STAT}
 
 --- Estimate covariance matrix.
@@ -191,7 +191,7 @@ data.cov = function (self, t)
   end
   return m
 end
-about[data.cov] = {":cov(data_t) --> cov_M", 
+about[data.cov] = {":cov(data_t) --> cov_M",
   "Find covariance matrix for list of vectors.", STAT}
 
 --- Save Lua table in file, use given delimiter.
@@ -264,7 +264,7 @@ data.filter = function (self, t, vCond)
     -- boolean function
     for i = 1, #t do
       local v = t[i]
-      if fn(v) then res[#res+1] = v end
+      if vCond(v) then res[#res+1] = v end
     end
   elseif type(vCond) == 'table' then
     -- weights
@@ -289,7 +289,7 @@ data.freq = function (self, t)
   end
   return tmp
 end
-about[data.freq] = {":freq(data_t) --> tbl", 
+about[data.freq] = {":freq(data_t) --> tbl",
   "Return table with frequencies of elements.", STAT}
 
 --- Geometrical mean.
@@ -312,7 +312,7 @@ data.geomean = function (self, t, tw)
     return p^(1/#t)
   end
 end
-about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num", 
+about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num",
   "Geometrical mean.", STAT}
 
 --- Harmonic mean.
@@ -335,7 +335,7 @@ data.harmmean = function (self, t, tw)
     return #t / h
   end
 end
-about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num", 
+about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num",
   "Harmonic mean.", STAT}
 
 --- Number of elements in each bin.
@@ -409,7 +409,7 @@ data.isNot = function (self, t, fn)
   end
   return res
 end
-about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t", 
+about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
   "Find inverted weights using boolean function.", FILTER}
 
 --- Maximum value.
@@ -423,7 +423,7 @@ data.max = function (self, t)
   end
   return m, k
 end
-about[data.max] = {":max(data_t) --> var, ind_N", 
+about[data.max] = {":max(data_t) --> var, ind_N",
   "Maximal element and its index.", STAT}
 
 --- Average value.
@@ -444,7 +444,7 @@ data.mean = function (self, t, tw)
     return data:sum(t) / #t
   end
 end
-about[data.mean] = {":mean(data_t, [wight_t]) --> num", 
+about[data.mean] = {":mean(data_t, [wight_t]) --> num",
   "Calculate average value. Weights can be used.", STAT}
 
 --- Find median.
@@ -462,7 +462,7 @@ data.median = function (self, t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
-about[data.median] = {":median(data_t) --> num", 
+about[data.median] = {":median(data_t) --> num",
   "Median of the list.", STAT}
 
 --- Minimum value.
@@ -476,7 +476,7 @@ data.min = function (self, t)
   end
   return m, k
 end
-about[data.min] = {":min(data_t) --> var, ind_N", 
+about[data.min] = {":min(data_t) --> var, ind_N",
   "Minimal element and its index.", STAT}
 
 --- Central moment.
@@ -512,7 +512,7 @@ data.sum = function (self, t)
   for i = 1, #t do s = s+t[i] end
   return s
 end
-about[data.sum] = {":sum(data_t) --> var", 
+about[data.sum] = {":sum(data_t) --> var",
   "Get sum of all elements.", help.OTHER}
 
 --- Standard deviation and variance.
@@ -576,11 +576,11 @@ data.table = function (self, data_t, names_t, fn)
   if names_t then res[1] = string.format(templ, table.concat(head, ' | ')) end
   res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
   for _, v in ipairs(acc) do
-    res[#res+1] = string.format(templ, table.concat(v, ' | ')) 
+    res[#res+1] = string.format(templ, table.concat(v, ' | '))
   end
   return table.concat(res, '\n')
 end
-about[data.table] = {":table(data_t, names_t=nil, row_fn=nil) --> str", 
+about[data.table] = {":table(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
 
 --- Student's cumulative distribution
@@ -606,7 +606,7 @@ data.tpdf = function (self, d, N)
   local tmp = math.sqrt(N)*data.ext_special:beta(0.5, 0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-about[data.tpdf] = {":tpdf(x_d, deg_N) --> num", 
+about[data.tpdf] = {":tpdf(x_d, deg_N) --> num",
   "Student's distribution density.", help.OTHER}
 
 --- Condition: x == d.
@@ -636,7 +636,7 @@ about[data.xGt] = {":xGt(num) --> cond_fn", "Return function for condition x > d
 data.xIn = function (self, d1, d2)
   return (function (x) return d1 <= x and x <= d2 end)
 end
-about[data.xIn] = {":xIn(num1, num2) --> cond_fn", 
+about[data.xIn] = {":xIn(num1, num2) --> cond_fn",
   "Return function for condition d1 <= x <= d2.", FILTER}
 
 --- Condition: x < d
@@ -732,7 +732,7 @@ about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
 local mt_transpose = {type = 'transpose'}
 
 --- Get access to k-th element.
---  @param self T-ref object. 
+--  @param self T-ref object.
 --  @param k Table index.
 --  @return Empty table with mt_transpose_k metatable.
 mt_transpose.__index = function (self, k)
@@ -744,7 +744,7 @@ end
 --  @param self T-ref object.
 --  @return Expected table length.
 mt_transpose.__len = function (self)
-  return #self._tbl._src[1] 
+  return #self._tbl._src[1]
 end
 
 --- Transform ref object into pure table.
@@ -757,7 +757,7 @@ mt_transpose._table = function (self)
     for j = 1, #src do row[j] = src[j][i] end
     res[i] = row
   end
-  return res 
+  return res
 end
 
 -- Metatable for internal table.

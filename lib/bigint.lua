@@ -85,10 +85,10 @@ ans = (v == g)                --> true
 -- simple print
 print(a)
 
--- find permutations 
+-- find permutations
 ans = Int:P(10, 5)            --> Int(30240)
 
--- find combinations 
+-- find combinations
 ans = Int:C(10, 3)            --> Int(120)
 
 -- check if it prime
@@ -326,7 +326,7 @@ bigint.__pow = function (B1, B2)
   y._base = B1._base
   if #B2 == 1 and B2._[1] == 0 then
     assert(#B1 > 1 or B1._[1] ~= 0, "Error: 0^0!")
-    return res
+    return bigint._1
   end
   local dig, mul, rest = {}, bigint._mul, nil
   for i = 1, #B2 do dig[i] = B2._[i] end
@@ -432,7 +432,7 @@ end
 --  @param forced Flag to skip sign check.
 bigint._decr = function (B, forced)
   local base, b = B._base, B._
-  if not forced and (B.sign < 0 or #b == 1 and b[1] == 0) then 
+  if not forced and (B.sign < 0 or #b == 1 and b[1] == 0) then
     B.sign = -1
     return bigint._incr(B, true)
   end
@@ -440,7 +440,7 @@ bigint._decr = function (B, forced)
     local v = b[i] - 1
     if v < 0 then
       v = base - 1
-    else 
+    else
       b[i] = v
       break
     end
@@ -554,7 +554,7 @@ bigint._incr = function (B, forced)
     local v = (b[i] or 0) + 1
     if v == base then
       v = 0
-    else 
+    else
       b[i] = v
       break
     end
@@ -621,8 +621,8 @@ bigint._new = function (self, num)
     for i = #num, 1, -1 do
       acc[#acc+1] = num[i] -- reverse
     end
-    if num[1] < 0 then 
-      acc[#acc] = -num[1] 
+    if num[1] < 0 then
+      acc[#acc] = -num[1]
       int.sign = -1
     end
   elseif type(num) == 'string' then
@@ -822,7 +822,7 @@ bigint.C = function (self, n, k)
   n, k = bigint._args(n, k)
   return bigint.ratF(n, k) / bigint.F(n-k)
 end
-about[bigint.C] = {":C(n, k) --> combinations_B", 
+about[bigint.C] = {":C(n, k) --> combinations_B",
   "Number of combinations C(n,k).", COMB}
 
 --- a == b.
@@ -884,7 +884,7 @@ bigint.F = function (B)
   end
   return acc
 end
-about[bigint.F] = {"B:F() --> B!", 
+about[bigint.F] = {"B:F() --> B!",
   "Return factorial of non-negative integer B.", COMB}
 
 --- Find multipliers for the number.
@@ -949,7 +949,7 @@ bigint.isPrime = function (B, sMethod)
     return bigint._primeFermat(B)
   end
   -- default is a simple search
-  local v1, v2 = bigint._trivialSearch(B)
+  local v1, _ = bigint._trivialSearch(B)
   return v1 == nil
 end
 about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
@@ -961,11 +961,11 @@ about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
 --  @param n Number of elements.
 --  @param k Size of group.
 --  @return Number of permutations.
-bigint.P = function (self, n, k) 
+bigint.P = function (self, n, k)
   n, k = bigint._args(n, k)
-  return bigint.ratF(n, n-k) 
+  return bigint.ratF(n, n-k)
 end
-about[bigint.P] = {":P(n, k) --> permutaions_B", 
+about[bigint.P] = {":P(n, k) --> permutaions_B",
   "Find permutations without repetition.", COMB}
 
 --- Generate random number.
@@ -997,7 +997,7 @@ bigint.random = function (self, B)
 end
 about[bigint.random] = {":random(B) --> rand_B",
   "Generate pseudo-random value from 0 to B.", help.STATIC}
-  
+
 --- Find ratio of factorials n!/k!
 --  @param B Numerator.
 --  @param B2 Denominator.
@@ -1023,7 +1023,7 @@ bigint.ratF = function (B, B2)
   end
   return acc
 end
-about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!", 
+about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
   "Find ratio of factorials dum!/denom!.", COMB}
 
 --- Change current numeric base.
@@ -1053,7 +1053,7 @@ setmetatable(bigint, {
 __call = function (self, v)
   return bigint:_new(v)
 end})
-about[bigint] = {" (var) --> new_B", 
+about[bigint] = {" (var) --> new_B",
   "Create number from integer, string or table.", help.STATIC}
 
 -- Comment to remove descriptions

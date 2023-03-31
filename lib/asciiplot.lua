@@ -62,7 +62,7 @@ print(fig2)
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
-ans = fig1:axes().x.size      --> 59 
+ans = fig1:axes().x.size      --> 59
 
 -- horizontal concatenation
 -- first
@@ -110,7 +110,7 @@ fig5 = Ap()
 fig5:bar(data)
 print(fig5)
 
--- use log scale 
+-- use log scale
 fig6 = Ap()
 fig6:setX {range={-10, 10}}
 fig6:setY {log=true}
@@ -180,7 +180,7 @@ axis.limit = function (A, s)
   else
     return nil
   end
-  return A.log and string.format(' 10^%.1f ', v) 
+  return A.log and string.format(' 10^%.1f ', v)
     or string.format(' %s ', tostring(v))
 end
 
@@ -198,12 +198,12 @@ end
 --  @param N Required width.
 --  @return axis object.
 axis.new = function (N)
-  if N < 9 then 
+  if N < 9 then
     print('Set minimal axis size:', N)
     N = 9
   elseif N % 2 == 0 then
     print('Change to odd size')
-    return asis.new(N+1)
+    return axis.new(N+1)
   end
   local x1, x2 = -1, 1
   local a = {
@@ -239,14 +239,14 @@ end
 --  @param A Axis object.
 --  @param N New size.
 axis.resize = function (A, N)
-  if N < 9 then 
+  if N < 9 then
     print('Set minimal axis size:', N)
     N = 9
   elseif N % 2 == 0 then
     print('Change to odd size')
-    return asis.resize(A, N+1)
+    return axis.resize(A, N+1)
   end
-  A.size = N 
+  A.size = N
   A._size = N
 end
 
@@ -331,7 +331,7 @@ axis.values = function (A, isX)
     if ind <= A.size then
       local x = (ind - 1) * k + x0
       local i = ind
-      ind, x = ind + 1, A.log and math.pow(10, x) or x
+      ind, x = ind + 1, A.log and (10^x) or x
       return i, x
     end
   end
@@ -656,7 +656,7 @@ asciiplot._new = function(self, dwidth, dheight)
     _yaxis = pos,
     _zaxis = pos,
     -- automatic change scale
-    _xfix = false, 
+    _xfix = false,
     _yfix = false,
     _zfix = false,
     -- image
@@ -826,7 +826,7 @@ asciiplot.addPoint = function (F, dx, dy, s)
     F._canvas[ny][nx] = s
   end
 end
-about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil", 
+about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil",
   "Add point (x,y) using char.", MANUAL}
 
 --- Set character to direct position.
@@ -840,7 +840,7 @@ asciiplot.addPose = function (F, ir, ic, s)
     F._canvas[ir][ic] = s
   end
 end
-about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> nil", 
+about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> nil",
   "Add character to the given position.", MANUAL}
 
 --- Set string to the given position.
@@ -869,8 +869,8 @@ asciiplot.axes = function (F)
       size = a.size,
       log = a.log or false,
       range = {
-        a.log and math.pow(10, a.range[1]) or a.range[1],
-        a.log and math.pow(10, a.range[2]) or a.range[2],
+        a.log and (10^a.range[1]) or a.range[1],
+        a.log and (10^a.range[2]) or a.range[2],
       },
       pose = F[k..'axis'],
       fix = F[k..'fix'],
@@ -885,7 +885,7 @@ about[asciiplot.axes] = {"F:axes() --> tbl",
 --  @param F Figure object.
 --  @param t Data table {{x1,y1},{x2,y2}...}.
 --  @param iy Index of y column (optional).
---  @param ix Index of x column (optional). 
+--  @param ix Index of x column (optional).
 asciiplot.bar = function (F, t, iy, ix)
   ix, iy = ix or 1, iy or 2
   -- size
@@ -913,7 +913,7 @@ asciiplot.bar = function (F, t, iy, ix)
   -- add values
   asciiplot._clear(F)
   local ch, r = '=', 1
-  local lim = F._yaxis == 'min' and 1 or 
+  local lim = F._yaxis == 'min' and 1 or
     F._yaxis == 'max' and ax.size or (ax.size + 1)/2
   for i = 1, #t, step do
     local canvas = F._canvas[r]
@@ -923,7 +923,7 @@ asciiplot.bar = function (F, t, iy, ix)
     -- show
     x = t[i][iy]
     local p = ax:proj(x, true)
-    if not p then 
+    if not p then
       p = (x < ax.range[1]) and ax.range[1] or ax.range[2]  -- set limit
     end
     if p <= lim then
@@ -956,13 +956,13 @@ asciiplot.concat = function (self, ...)
     end
     if v._y.size ~= ag[1]._y.size then error('Different height') end
     local n = 0
-    for k, _ in pairs(v.legend) do n = n + 1 end
+    for _ in pairs(v.legend) do n = n + 1 end
     if n > nlegend then nlegend = n end
   end
   -- data
   local acc = {}
   local gap = '   '
-  for i, v in ipairs(ag) do
+  for _, v in ipairs(ag) do
     local k, width = 1, v._x.size
     -- title
     local row = acc[k] or {}
@@ -979,7 +979,7 @@ asciiplot.concat = function (self, ...)
     -- legend
     local n = 0
     local sym = {}
-    for k, _ in pairs(v.legend) do sym[#sym+1] = k end
+    for q, _ in pairs(v.legend) do sym[#sym+1] = q end
     if #sym > 0 then table.sort(sym) end
     for _, u in ipairs(sym) do
       row = acc[k] or {}
@@ -990,7 +990,7 @@ asciiplot.concat = function (self, ...)
       n = n + 1
     end
     -- add empty lines
-    for j = n+1, nlegend do
+    for _ = n+1, nlegend do
       row = acc[k] or {}
       row[#row+1] = asciiplot._format('', width, false, true)
       row[#row+1] = gap
@@ -1013,8 +1013,8 @@ about[asciiplot.concat] = {":concat(...) --> str",
 asciiplot.contour = function (F, fn, tOpt)
   tOpt = tOpt or {}
   tOpt.level = tOpt.level or 5    -- TODO limit maximal and minimal values
-  if tOpt.level > #asciiplot.lvls then 
-    error('Max levle is '..tostring(#asciiplot.lvls)) 
+  if tOpt.level > #asciiplot.lvls then
+    error('Max levle is '..tostring(#asciiplot.lvls))
   end
   local view = tOpt.view or 'XY'
   -- calculate
@@ -1122,8 +1122,8 @@ asciiplot.plot = function (F, ...)
 
   -- update y range
   local ymin, ymax = math.huge, -math.huge
-  for i = 1, #acc do
-    local r = acc[i]
+  for j = 1, #acc do
+    local r = acc[j]
     if type(r[1]) == 'function' then
       r[1], r[2] = asciiplot._fn2XY(F, r[1])
     end
@@ -1139,9 +1139,9 @@ asciiplot.plot = function (F, ...)
   asciiplot._clear(F)
   asciiplot._axes(F)
   -- 'plot'
-  for i = 1, #acc do
-    local c = asciiplot.char[i]
-    local r = acc[i]
+  for j = 1, #acc do
+    local c = asciiplot.char[j]
+    local r = acc[j]
     asciiplot._addXY(F, r[1], r[2], c)
     F.legend[c] = r[3]
   end
@@ -1172,7 +1172,7 @@ asciiplot.resize = function (F, w, h)
   F._x:resize(w)
   F._y:resize(h)
 end
-about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N)) --> nil", 
+about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N)) --> nil",
   "Update size of canvas.", CONF}
 
 --- Scale xrange and yrange w.r.t. initial size.
@@ -1202,7 +1202,7 @@ asciiplot.setX = function (F, t)
   -- fix scale
   if t.fix ~= nil then F._xfix = t.fix end
 end
-about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix}) --> nil", 
+about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix}) --> nil",
   "X axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), ragne fix (true/false).",
   CONF}
 
@@ -1220,7 +1220,7 @@ asciiplot.setY = function (F, t)
   -- fix scale
   if t.fix ~= nil then F._yfix = t.fix end
 end
-about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix}) --> nil", 
+about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix}) --> nil",
   "Y axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
   CONF}
 
@@ -1238,7 +1238,7 @@ asciiplot.setZ = function (F, t)
   -- fix scale
   if t.fix ~= nil then F._zfix = t.fix end
 end
-about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix}) --> nil", 
+about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix}) --> nil",
   "Z axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
   CONF}
 
@@ -1274,7 +1274,7 @@ asciiplot.tplot = function (F, t, tOpt)
   -- limits
   asciiplot._limits(F)
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={}) --> nil", 
+about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={}) --> nil",
   "Plot the table data, choose columns if need."}
 
 -- Simplify the constructor call.
@@ -1283,14 +1283,15 @@ __call = function (self, w, h)
   -- size
   return asciiplot:_new(w or asciiplot.WIDTH, h or asciiplot.HEIGHT)
 end})
-about[asciiplot] = {" (width_N=73, height_N=21) --> new_F", 
+about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", help.STATIC}
 
 if Sonata then
 
 -- Define simplified function call
 Plot = function (...)
-  local f = Ap()
+  local lib = Ap or require('lib.asciiplot')
+  local f = lib()
   f._x:setRange({-5, 5})
   f:plot(...)
   print(f)

@@ -38,7 +38,7 @@ local DELIM = '\r?\n[%s%c]*\n'
 local LOG_NAME = 'test.log'
 local CODE_TEMPLATE = '%-%-%[(=*)%[TEST(.-)%]%1%]'
 local TEST_TEMPLATE = '(.*)%-%-(%d?)>(.*)'
-local TOL = {['0']=1, ['1']=1E+1, ['2']=1E+2, ['3']=1E+3, ['4']=1E+4, 
+local TOL = {['0']=1, ['1']=1E+1, ['2']=1E+2, ['3']=1E+3, ['4']=1E+4,
   ['5']=1E+5, ['6']=1E+6, ['7']=1E+7, ['8']=1E+8, ['9']=1E+9}
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
@@ -110,7 +110,7 @@ test.module = function (fname)
         -- check result
         if #a > 0 then
           fq = loadStr('return '..a)
-          arrow = fq()
+          arrow = fq and fq()
           if e == '' then
             return ans == arrow
           else

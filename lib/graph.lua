@@ -224,7 +224,7 @@ graph.__tostring = function (G)
   if #nd <= 5 then
     return string.format('Graph {%s}', table.concat(nd, ','))
   else
-    return string.format('Graph {%s -%d- %s}', 
+    return string.format('Graph {%s -%d- %s}',
       tostring(nd[1]), #nd-2, tostring(nd[#nd]))
   end
 end
@@ -375,7 +375,7 @@ graph.isComplete = function (G)
   end
   return true
 end
-about[graph.isComplete] = {'G:isComplete() --> bool', 
+about[graph.isComplete] = {'G:isComplete() --> bool',
   'Check completeness of the graph.', help.OTHER}
 
 --- Check if the graph is directed.
@@ -389,7 +389,7 @@ graph.isDirected = function (G)
   end
   return false
 end
-about[graph.isDirected] = {'G:isDirected() --> bool', 
+about[graph.isDirected] = {'G:isDirected() --> bool',
   'Check if the graph has directed edges.', help.OTHER}
 
 --- Check if graph has negative weights.
@@ -403,7 +403,7 @@ graph.isNegative = function (G)
   end
   return false
 end
-about[graph.isNegative] = {'G:isNegative() --> bool', 
+about[graph.isNegative] = {'G:isNegative() --> bool',
   'Check if the graph has negative edges.', help.OTHER}
 
 --- Check if the graph has weights different from default value.
@@ -417,7 +417,7 @@ graph.isWeighted = function (G)
   end
   return false
 end
-about[graph.isWeighted] = {'G:isWeighted() --> bool', 
+about[graph.isWeighted] = {'G:isWeighted() --> bool',
   'Check if any edge has weight different from 1.', help.OTHER}
 
 --- Get graph nodes.
@@ -500,7 +500,7 @@ graph.pathD = function(G, vStart, vGoal)
   end
   -- result
   if vGoal then
-    return dsit[vGoal], getPath(prev, vGoal)
+    return dist[vGoal], getPath(prev, vGoal)
   else
     return dist, prev
   end

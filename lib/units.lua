@@ -102,14 +102,14 @@ end
 
 -- Operations with tables of units.
 local op = {
-['*'] = function(u1, u2) 
+['*'] = function(u1, u2)
           for k, v in pairs(u2) do u1[k] = (u1[k] or 0) + v end
         end,
-['/'] = function(u1, u2) 
+['/'] = function(u1, u2)
           for k, v in pairs(u2) do u1[k] = (u1[k] or 0) - v end
         end,
-['^'] = function(u, n) 
-          for k, v in pairs(u) do u[k] = v*n end 
+['^'] = function(u, n)
+          for k, v in pairs(u) do u[k] = v*n end
         end
 }
 
@@ -533,6 +533,7 @@ units.key = function (U)
         (v ~= -1) and string.format('%s^%s', k, tostring(-v)) or k
     end
   end
+  -- reuse num, denom
   if #num > 0 then
     num = (#num > 1)
       and string.format(#denom > 0 and '(%s)' or '%s', table.concat(num, '*'))
@@ -586,7 +587,7 @@ units.setRule = function (self, s, U)
   assert(isunits(U), 'Units object is expected!')
   self._rules[s] = U
 end
-about[units.setRule] = {':setRule(name_s, val_U) --> nil', 
+about[units.setRule] = {':setRule(name_s, val_U) --> nil',
   'Add new rule for conversation.'}
 
 --- Value of the unit object.
@@ -608,7 +609,7 @@ __call = function (self, v, s)
   assert(type(s) == 'string', 'Wrong unit type')
   return units:_new(v, s)
 end})
-about[units] = {' (val=1, name_s) --> new_U', 
+about[units] = {' (val=1, name_s) --> new_U',
   'Create new elements with units.', help.NEW}
 
 -- Comment to remove descriptions

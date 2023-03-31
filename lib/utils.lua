@@ -194,7 +194,7 @@ utils.Fn = function (sExpr, iArg)
   local fn = versions.loadStr(
     string.format("return function (%s) return %s end",
       table.concat(arg, ','), sExpr))
-  return fn()
+  return fn and fn()
 end
 
 --- 'Smart' number to string conversation.
@@ -300,3 +300,4 @@ return {
 --===================================================
 --TODO setup for number of digits
 --TODO: fix 'round' for N - 1e-M
+--TODO: math.pow for 5.4 and more

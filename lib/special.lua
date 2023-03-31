@@ -315,7 +315,7 @@ special._gammaSer = function (N, x)
       del = del*x/ap
       sum = sum+del
       if math.abs(del) < math.abs(sum)*EPS then
-        gamser = sum*math.exp(-x+N*math.log(x)-gammaln(0, N))
+        gamser = sum*math.exp(-x+N*math.log(x)-gammaln(nil, N))
         break
       end
     end
@@ -394,7 +394,7 @@ special.besseli = function (self, N, x)
   ans = ans*special._bessi0(x)/bi
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besseli] = {":besseli(order_N,x_d) --> num", 
+about[special.besseli] = {":besseli(order_N,x_d) --> num",
   "Modified Bessel function In(x).", BESSEL}
 
 --- Bessel function of the first kind
@@ -415,7 +415,7 @@ special.besselj = function (self, N,x)
     bjm = special._bessj0(ax)
     bj = special._bessj1(ax)
     for i = 1, (N-1) do
-      bj, bjm = i*tox*bj-bjm, bm
+      bj, bjm = i*tox*bj-bjm, bj
     end
     ans = bj
   else
@@ -440,7 +440,7 @@ special.besselj = function (self, N,x)
   end
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besselj] = {":besselj(order_N, x_d) --> num", 
+about[special.besselj] = {":besselj(order_N, x_d) --> num",
   "Bessel function of the first kind.", BESSEL}
 
 --- Modified Bessel function Kn.
@@ -459,7 +459,7 @@ special.besselk = function (self, N, x)
   end
   return bk
 end
-about[special.besselk] = {":besselk(order_N, x_d) --> num", 
+about[special.besselk] = {":besselk(order_N, x_d) --> num",
   "Modified Bessel function Kn(x).", BESSEL}
 
 --- Bessel function of the second kind
@@ -480,7 +480,7 @@ special.bessely = function (self, n, x)
   end
   return by
 end
-about[special.bessely] = {":bessely(order_N, x_d) --> num", 
+about[special.bessely] = {":bessely(order_N, x_d) --> num",
   "Bessel function of the second kind.", BESSEL}
 
 --- Beta function.
@@ -512,7 +512,7 @@ special.betainc = function (self, x, a, b)
          and (bt*special._betacf(a, b, x)/a)
          or (1.0-bt*special._betacf(b, a, 1.0-x)/b)
 end
-about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num", 
+about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
   "Incomplete beta function Ix(a,b).", BETA}
 
 --- Logarithm of beta function.
@@ -523,7 +523,7 @@ about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
 special.betaln = function (self, z, w)
   return special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w)
 end
-about[special.betaln] = {":betaln(z_d, w_d) --> num", 
+about[special.betaln] = {":betaln(z_d, w_d) --> num",
   "Natural logarithm of beta function.", BETA}
 
 --- Dawson integral.
@@ -652,7 +652,7 @@ special.gammaln = function (self, z)
   for i = 1, #k_gammaln do y=y+1; ser = ser+k_gammaln[i]/y end
   return -tmp+math.log(2.5066282746310005*ser/x)
 end
-about[special.gammaln] = {":gammaln(x_d) --> num", 
+about[special.gammaln] = {":gammaln(x_d) --> num",
   "Natural logarithm of gamma function.", GAMMA}
 
 --- Incomplete gamma function P(N,x).
@@ -675,7 +675,7 @@ special.gammq = function (self, N, x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and 1-special._gammaSer(N, x) or special._gcf(N, x)
 end
-about[special.gammq] = {":gammq(order_N, x_d) --> num", 
+about[special.gammq] = {":gammq(order_N, x_d) --> num",
   "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
 
 --- List of Legendre coefficients.

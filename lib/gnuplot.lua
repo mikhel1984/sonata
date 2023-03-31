@@ -201,7 +201,7 @@ gnuplot._fn2file = function (fn,tBase)
   local xr = tBase.xrange and tBase.xrange[2] or 10
   local N = tBase.samples or 100
   local dx = (xr-xl)/N
-  local f = io.open(name, 'w')
+  local f = assert(io.open(name, 'w'), "Can't save to file")
   if tBase.surface then
     local yl = tBase.yrange and tBase.yrange[1] or (-10)
     local yr = tBase.yrange and tBase.yrange[2] or 10
@@ -256,7 +256,7 @@ gnuplot._init = function (self) return setmetatable({}, self) end
 --  @return File name.
 gnuplot._lst2file = function (t1,t2,fn)
   local name = os.tmpname()
-  local f = io.open(name, 'w')
+  local f = assert(io.open(name, 'w'), "Can't save to file")
   if fn then -- must be function
     for _,v1 in ipairs(t1) do
       for _,v2 in ipairs(t2) do
@@ -286,7 +286,7 @@ end
 --  @return File name.
 gnuplot._mat2file = function (t)
   local name = os.tmpname()
-  local f = io.open(name, 'w')
+  local f = assert(io.open(name, 'w'), "Can't save to file")
   for i = 1, t.rows do
     local row = t[i]
     for j = 1, t.cols do f:write(row[j],' ') end
@@ -305,7 +305,7 @@ end
 --  @return File name.
 gnuplot._tbl2file = function (t)
   local name = os.tmpname()
-  local f = io.open(name, 'w')
+  local f = assert(io.open(name, 'w'), "Can't save to file")
   for _, row in ipairs(t) do
     for _, val in ipairs(row) do f:write(val,' ') end
     f:write('\n')
