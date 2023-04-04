@@ -324,12 +324,12 @@ bigint.__pow = function (B1, B2)
   if B2.sign < 0 then error('Negative power!') end
   local y, x = bigint._1, B1
   y._base = B1._base
-  if #B2 == 1 and B2._[1] == 0 then
-    assert(#B1 > 1 or B1._[1] ~= 0, "Error: 0^0!")
+  if #B2._ == 1 and B2._[1] == 0 then
+    assert(#B1._ > 1 or B1._[1] ~= 0, "Error: 0^0!")
     return bigint._1
   end
   local dig, mul, rest = {}, bigint._mul, nil
-  for i = 1, #B2 do dig[i] = B2._[i] end
+  for i = 1, #B2._ do dig[i] = B2._[i] end
   while #dig > 1 or #dig == 1 and dig[1] > 1 do
     dig, rest = bigint._divBase(dig, B1._base, 2)
     if rest == 1 then
@@ -423,7 +423,7 @@ end
 --  @return Deep copy.
 bigint._copy = function (B)
   local c = bigint:_new({B._[1], sign=B.sign, base=B._base})
-  for i = 2, #B do c._[i] = B._[i] end
+  for i = 2, #B._ do c._[i] = B._[i] end
   return c
 end
 
@@ -976,7 +976,7 @@ bigint.random = function (self, B)
   B = isbigint(B) and B or bigint:_new(B)
   local d, set, v = B._base, false, 0
   local res = bigint:_zero(d, B.sign)
-  local n = math.random(1, #B)
+  local n = math.random(1, #B._)
   local b, rr = B._, res._
   local any = (n ~= #b)
   for i = n, 1, -1 do
