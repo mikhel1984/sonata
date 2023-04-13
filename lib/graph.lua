@@ -106,6 +106,8 @@ print(b)
 
 local SEARCH = 'search'
 
+local VIEWER = 'xdot'
+
 --- Get key with minimum value, remove it
 --  @param t Table of pairs {node, weight}.
 --  @return Node and correspondent weight.
@@ -126,11 +128,6 @@ end
 --  @param t Object to check.
 --  @return True if the object is graph.
 local function isgraph(v) return type(v)=='table' and v.isgraph end
-
---- Check if the element is edge.
---  @param v Element to check.
---  @return True in case of edge.
---local function isEdge(v) return type(v) == 'table' end
 
 --- Count elements in table.
 --  @param t Table to check.
@@ -365,6 +362,34 @@ graph.edges = function (G)
 end
 about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 
+--- Show graph structure in dot notation.
+--  @param G Graph object.
+--  @return String with structure.
+graph.dot = function (G)
+  local txt = {G._dir and "digraph {" or "graph {"} 
+  local line = G._dir and "->" or "--"
+  local visit = {}
+  -- edges
+  for n1, adj in pairs(G._) do
+    local nstr = tostring(n1)
+    for n2, v in pairs(adj) do
+      if v then 
+        txt[#txt+1] = string.format("  %s %s %s;", nstr, line, tostring(n2))
+        visit[n2] = true
+        visit[n1] = true
+      end
+    end
+  end
+  -- single nodes 
+  for n1 in pairs(G._) do
+    if not visit[n1] then
+      txt[#txt+1] = string.format("  %s;", tostring(n1))
+    end
+  end
+  txt[#txt+1] = "}"
+  return table.concat(txt, '\n')
+end
+
 --- Check graph completeness.
 --  @param G Graph.
 --  @return true if graph is complete.
@@ -482,6 +507,29 @@ graph.remove = function (G, n1, n2)
 end
 about[graph.remove] = {"G:remove(n1, [n2]) --> nil",
   "Remove node or edge from the graph."}
+
+--- Save graph as svg image.
+--  @param G Graph object.
+--  @param name File name.
+graph.toSvg = function (G, name)
+  local cmd = string.format('dot -Tsvg -o %s.svg', name)
+  local handle = assert(io.popen(cmd, 'w'), "Can't open dot!") 
+  handle:write(graph.dot(G))
+  handle:close()
+end
+about[graph.toSvg] = {"G:toSvg(name_s) --> nil", 
+  "Convert graph to SVG image using Graphviz."}
+
+--- Open graph in viewer.
+--  @param G Graph object.
+graph.view = function (G)
+  local name = os.tmpname()
+  graph.dotWrite(G, name) 
+  name = name..'.dot'
+  os.execute(string.format('%s %s', VIEWER, name))
+end
+about[graph.view] = {"G:view() --> nil", 
+  "Open graph in viewer if it available."}
 
 --- Get number of nodes.
 --  @param G Graph object.

@@ -233,7 +233,7 @@ gnuplot._graph = function (t,tBase)
     nm = fn.ismatrix and gnuplot._mat2file(fn) or gnuplot._tbl2file(fn)
   elseif type(fn) == 'function' then
     nm = gnuplot._fn2file(fn,tBase)
-  else -- type(fn) == 'string' !!
+  else  -- type(fn) == 'string' !!
     nm = fn
   end
   -- prepare options
