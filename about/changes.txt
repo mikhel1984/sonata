@@ -11,6 +11,9 @@ Data
 * Remove column based operations with csv
 Gnuplot
 * Fix errors in Windows
+Graph
+* Rewrite module
+* Add export to DOT and SVG
 Other
 * New module 'random'
 * Remove DOS code pages

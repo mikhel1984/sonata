@@ -42,4 +42,5 @@ Additional components:
 
 Module dependencies:
 * _gnuplot.lua_ requires [gnuplot](http://www.gnuplot.info/) program to be installed
+* _graph.lua_ uses [graphviz](https://graphviz.org/) for image generation
 

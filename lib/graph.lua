@@ -520,17 +520,6 @@ end
 about[graph.toSvg] = {"G:toSvg(name_s) --> nil", 
   "Convert graph to SVG image using Graphviz."}
 
---- Open graph in viewer.
---  @param G Graph object.
-graph.view = function (G)
-  local name = os.tmpname()
-  graph.dotWrite(G, name) 
-  name = name..'.dot'
-  os.execute(string.format('%s %s', VIEWER, name))
-end
-about[graph.view] = {"G:view() --> nil", 
-  "Open graph in viewer if it available."}
-
 --- Get number of nodes.
 --  @param G Graph object.
 --  @return Number of nodes.
