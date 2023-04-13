@@ -212,17 +212,19 @@ graph.__tostring = function (G)
   end
 end
 
+--- Prepare empty undirected graph.
+--  @param self Do nothing.
+--  @return Undirected graph.
 graph._new = function (self)
   local o = {_={}, _dir=false}
   return setmetatable(o, graph)
 end
 
-graph.dir = function (self)
-  local res = graph._new(self)
-  res._dir = true
-  return res
-end
-
+--- Add node or edge.
+--  @param G Graph object.
+--  @param n1 Node.
+--  @param n2 Second node in the edge.
+--  @param w Edge weight.
 graph.add = function (G, n1, n2, w)
   local g = G._
   g[n1] = g[n1] or {}
@@ -233,34 +235,26 @@ graph.add = function (G, n1, n2, w)
     g[n2][n1] = G._dir and g[n2][n1] or false
   end
 end
+about[graph.add] = {"G:add(n1, n2=nil, w_d=1) --> nil", "Add new node or edge."}
 
+--- Import edges from list.
+--  @param G Graph object.
+--  @param t List with edges in form {node1, node2, weight}.
+graph.addEdges = function (G, t)
+  for _, v in ipairs(t) do graph.add(G, v[1], v[2], v[3]) end
+end
+about[graph.addEdges] = {"G:addEdges(list_t) --> nil", 
+  "Import edges and weights from list."}
+
+--- Import nodes from list.
+--  @param G Graph object.
+--  @param t List with nodes.
 graph.addNodes = function (G, t)
   local g = G._
   for _, v in ipairs(t) do g[v] = g[v] or {} end
 end
-
-graph.addEdges = function (G, t)
-  for _, v in ipairs(t) do graph.add(G, v[1], v[2], v[3]) end
-end
-
-graph.edge = function (G, n1, n2)
-  local g = G._
-  return g[n1][n2] or (not G._dir and g[n2][n1]) or nil
-end
-
-
---- Constructor example
---  @param t Table with nodes and edges.
---  @return New object of graph.
---graph._new = function (self, t)
---  local o = {}
---  -- add nodes
---  for _, elt in ipairs(t) do graph.add(o, elt) end
---  return setmetatable(o, self)
---end
-
---about[graph.add] = {"G:add(var) --> nil",
---  "Add new node or edge to graph G. Node denoted as a single name, edge is a table of names (and weights if need)."}
+about[graph.addNodes] = {"G:addNodes(list_t) --> nil", 
+  "Import nodes from list."}
 
 --- Breadth first search.
 --  @param G Graph.
@@ -336,6 +330,30 @@ end
 about[graph.dfs] = {"G:dfs(startNote, goalNode) --> isFound, path_t",
   "Depth first search. Return result and found path.", SEARCH}
 
+--- Prepare empty directed graph.
+--  @param self Do nothing.
+--  @return Directed graph.
+graph.dir = function (self)
+  local res = graph._new(self)
+  res._dir = true
+  return res
+end
+about[graph.dir] = {":dir() --> new_G", "Create directed graph.", help.NEW}
+
+--- Get edge weight.
+--  @param G Graph object.
+--  @param n1 First node.
+--  @param n2 Second node.
+--  @return Weight or nil.
+graph.edge = function (G, n1, n2)
+  local g = G._
+  return g[n1][n2] or (not G._dir and g[n2][n1]) or nil
+end
+about[graph.edge] = {"G:edge() --> weight_d|nil", "Get weight of the edge."}
+
+--- Get list of edges.
+--  @param G Graph object.
+--  @return List of node pairs.
 graph.edges = function (G)
   local res = {}
   for n, adj in pairs(G._) do
@@ -345,7 +363,7 @@ graph.edges = function (G)
   end
   return res
 end
-about[graph.edges] = {"G:edges() --> edges_t", "List of graph edges."}
+about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 
 --- Check graph completeness.
 --  @param G Graph.
@@ -368,7 +386,7 @@ graph.isDirected = function (G)
   return G._dir
 end
 about[graph.isDirected] = {'G:isDirected() --> bool',
-  'Check if the graph has directed edges.', help.OTHER}
+  'Check if the graph is directed.', help.OTHER}
 
 --- Check if graph has negative weights.
 --  @param G Graph object.
@@ -406,7 +424,7 @@ graph.nodes = function (G)
   for k in pairs(G._) do res[#res+1] = k end
   return res
 end
-about[graph.nodes] = {"G:nodes() --> node_t", "List of graph nodes."}
+about[graph.nodes] = {"G:nodes() --> node_t", "List of nodes."}
 
 --- Shortest path search using Dijkstra algorithm.
 --  @param G Graph.
@@ -447,6 +465,8 @@ about[graph.pathD] = {'G:pathD(startNode, [goalNode]) --> dist_d, path_t|prev_t'
 
 --- Remove node or edge.
 --  @param G Graph.
+--  @param n1 Node.
+--  @param n2 Second node.
 graph.remove = function (G, n1, n2)
   if n2 then 
     -- edge
@@ -460,18 +480,19 @@ graph.remove = function (G, n1, n2)
     G._[n1] = nil
   end
 end
-about[graph.remove] = {"G:remove(var) --> nil",
-  "Remove node or edge from the graph G. Node is a single name, edge - table of names."}
+about[graph.remove] = {"G:remove(n1, [n2]) --> nil",
+  "Remove node or edge from the graph."}
 
 --- Get number of nodes.
 --  @param G Graph object.
 --  @return Number of nodes.
 graph.size = function (G) return tblLen(G._) end
 graph.__len = graph.size
+about[graph.size] = {"G:size() --> nodes_N", "Get node number.", help.OTHER}
 
 -- simplify constructor call
 setmetatable(graph, {__call = function (self, v) return graph:_new(v) end})
-about[graph] = {" {v1, v2,..} --> new_G", "Create new graph.", help.NEW}
+about[graph] = {" () --> new_G", "Create undirected graph.", help.NEW}
 
 -- Comment to remove descriptions
 graph.about = about
