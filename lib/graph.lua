@@ -54,8 +54,7 @@ d = Graph:dir()
 d:add('c', 'p', 2)
 -- and vise versa
 d:add('p', 'c', 3)
-ed = d:edges()
-ans = #ed                     --> 2
+ans = d:edge('c', 'p')        --> 2
 
 -- make copy
 b = a:copy()
@@ -75,9 +74,14 @@ c:addEdges {
   {'f','h'},
   {'e','g'}
 }
-
 -- is it weighted
 ans = c:isWeighted()          --> false
+
+-- print in 'dot' notation
+print(c:dot())
+
+-- save svg image
+c:toSvg('test_c')
 
 -- breadth first search
 _,path = c:bfs('e','h')
@@ -337,31 +341,6 @@ graph.dir = function (self)
 end
 about[graph.dir] = {":dir() --> new_G", "Create directed graph.", help.NEW}
 
---- Get edge weight.
---  @param G Graph object.
---  @param n1 First node.
---  @param n2 Second node.
---  @return Weight or nil.
-graph.edge = function (G, n1, n2)
-  local g = G._
-  return g[n1][n2] or (not G._dir and g[n2][n1]) or nil
-end
-about[graph.edge] = {"G:edge() --> weight_d|nil", "Get weight of the edge."}
-
---- Get list of edges.
---  @param G Graph object.
---  @return List of node pairs.
-graph.edges = function (G)
-  local res = {}
-  for n, adj in pairs(G._) do
-    for m, v in pairs(adj) do
-      if v then res[#res+1] = {n, m} end
-    end
-  end
-  return res
-end
-about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
-
 --- Show graph structure in dot notation.
 --  @param G Graph object.
 --  @return String with structure.
@@ -389,6 +368,33 @@ graph.dot = function (G)
   txt[#txt+1] = "}"
   return table.concat(txt, '\n')
 end
+about[graph.dot] = {"G:dot() --> str", 
+  "Return graph structure in dot notation."}
+
+--- Get edge weight.
+--  @param G Graph object.
+--  @param n1 First node.
+--  @param n2 Second node.
+--  @return Weight or nil.
+graph.edge = function (G, n1, n2)
+  local g = G._
+  return g[n1][n2] or (not G._dir and g[n2][n1]) or nil
+end
+about[graph.edge] = {"G:edge() --> weight_d|nil", "Get weight of the edge."}
+
+--- Get list of edges.
+--  @param G Graph object.
+--  @return List of node pairs.
+graph.edges = function (G)
+  local res = {}
+  for n, adj in pairs(G._) do
+    for m, v in pairs(adj) do
+      if v then res[#res+1] = {n, m} end
+    end
+  end
+  return res
+end
+about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 
 --- Check graph completeness.
 --  @param G Graph.
