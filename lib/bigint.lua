@@ -1024,7 +1024,7 @@ bigint.ratF = function (B, B2)
   return acc
 end
 about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
-  "Find ratio of factorials dum!/denom!.", COMB}
+  "Find ratio of factorials num!/denom!.", COMB}
 
 --- Change current numeric base.
 --  @param B Bigint object.
