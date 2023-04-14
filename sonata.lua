@@ -18,10 +18,9 @@
 --SONATA_ASCIIPLOT_UNICODE = true
 
 --	Uncomment to set the localization file
---SONATA_LOCALIZATION = 'eo.lua'
--- Windows: call first
---   chcp 65001 
--- in console to use Unicode symbols
+--  Windows: to use Unicode symbols call in console
+--    chcp 65001
+--SONATA_LOCALIZATION = 'ru.lua'
 
 --===================  MODULES  =======================
 
