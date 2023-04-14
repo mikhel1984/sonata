@@ -9,6 +9,7 @@ Bigint
 Data
 * Add reference to 'transposed' table
 * Remove column based operations with csv
+* Add pretty print
 Gnuplot
 * Fix errors in Windows
 Graph
