@@ -197,7 +197,7 @@ _simp = numpoly
 }
 
 -- Simplify ppval call.
-local mt_ppval = {__call = function (...) return polynomial.ppval(0, ...) end}
+local mt_ppval = {__call = function (...) return polynomial.ppval(nil, ...) end}
 
 --- P1 + P2
 --  @param P1 First polynomial or number.
@@ -467,7 +467,7 @@ polynomial._roots3 = function (P)
   else
     -- can have complex roots
     local A = (R > 0 and -1 or 1)
-      * math.pow(math.abs(R) + math.sqrt(R*R-t), 1/3)
+      * (math.abs(R) + math.sqrt(R*R-t))^(1/3)
     local B = (A == 0 and 0 or Q/A)
     t = polynomial.ext_complex(0, math.sqrt(3)/2 * (A-B))
     Q = A + B            -- reuse
@@ -521,7 +521,7 @@ polynomial.copy = function (P)
   end
   return polynomial:_init(res)
 end
-about[polynomial.copy] = {"P:copy() --> cpy_P", 
+about[polynomial.copy] = {"P:copy() --> cpy_P",
   "Get copy of the polynomial.", help.OTHER}
 
 --- Get derivative.
@@ -534,7 +534,7 @@ polynomial.der = function (P)
   end
   return numpoly(polynomial:_init(der))
 end
-about[polynomial.der] = {"P:der() --> der_P", 
+about[polynomial.der] = {"P:der() --> der_P",
   "Calculate derivative of polynomial."}
 
 --- Find the best polynomial approximation for the line.
@@ -579,7 +579,7 @@ polynomial.fit = function (self, tX, tY, N)
   for i = 1, N+1 do res[i] = gaus(i, -1) end
   return polynomial._reorder(res)
 end
-about[polynomial.fit] = {":fit(xs_t, ys_t, order_N) --> P", 
+about[polynomial.fit] = {":fit(xs_t, ys_t, order_N) --> P",
   "Find polynomial approximation for the line.", FIT}
 
 --- Get integral.
@@ -593,7 +593,7 @@ polynomial.int = function (P, d0)
   end
   return polynomial:_init(int)
 end
-about[polynomial.int] = {"P:int(x0_d=0) --> int_P", 
+about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
   "Calculate integral, d0 - free coefficient."}
 
 --- Find interpolation polinomial in the Lagrange form.
@@ -706,7 +706,7 @@ polynomial.real = function (P)
   table.sort(res, function (a, b) return math.abs(a) > math.abs(b) end)
   return res, pp
 end
-about[polynomial.real] = {"P:real() --> roots_t", 
+about[polynomial.real] = {"P:real() --> roots_t",
   "Find real roots of the polynomial.", help.OTHER}
 
 --- Find all the polynomial roots.
@@ -743,7 +743,7 @@ polynomial.roots = function (P)
   table.sort(r, sortRoots)
   return r
 end
-about[polynomial.roots] = {"P:roots() --> roots_t", 
+about[polynomial.roots] = {"P:roots() --> roots_t",
   "Find all the polynomial roots.", help.OTHER}
 
 --- Cubic spline data interpolation.
@@ -814,7 +814,7 @@ polynomial.str = function (P, s)
   if type(b) ~= 'number' or b ~= 0 then res[#res+1] = tostring(b) end
   return table.concat(res)
 end
-about[polynomial.str] = {"P:str(char_s='x') --> str", 
+about[polynomial.str] = {"P:str(char_s='x') --> str",
   "Pretty print for polynomial.", help.OTHER}
 
 --- Find Taylor series.
@@ -836,7 +836,7 @@ polynomial.taylor = function (self, v, vF, ...)
   end
   return numpoly(res)
 end
-about[polynomial.taylor] = {":taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P", 
+about[polynomial.taylor] = {":taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P",
   "Get Taylor series.", FIT}
 
 --- Polynomial value.
@@ -849,7 +849,7 @@ polynomial.val = function (P, v)
   for i = #P-1, 0, -1 do res = res * v + P[i] end
   return res
 end
-about[polynomial.val] = {"P:val(x) --> y", 
+about[polynomial.val] = {"P:val(x) --> y",
   "Get value of polynomial P in point x."}
 -- simplify call
 polynomial.__call = function (p, x) return polynomial.val(p, x) end

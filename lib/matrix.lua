@@ -749,7 +749,7 @@ matrix._new = function (t)
 end
 
 --- QR-type sweeps for SVD.
---  Find such U, B, V that B = U*M*V:T() and 
+--  Find such U, B, V that B = U*M*V:T() and
 --  U, V are orthonormal, B is bidiagonal rectangular. Estimate error E.
 --  @param M Source matrix.
 --  @return Matrices U, B, V, value E
@@ -760,7 +760,7 @@ matrix._qrSweep = function (M)
   for k = 1, w-1 do
     -- V
     local c, s = matrix.givensRot(B[k][k], B[k][k+1])
-    local Q = matrix:eye(n)    
+    local Q = matrix:eye(n)
     Q[k  ][k] = c; Q[k  ][k+1] = -s
     Q[k+1][k] = s; Q[k+1][k+1] =  c
     B, V = B * Q, V * Q       -- Q is transposed!
@@ -780,7 +780,7 @@ matrix._qrSweep = function (M)
 end
 
 --- Bidiagonalization.
---  Find such U, B, V that U*B*V:T() = M and 
+--  Find such U, B, V that U*B*V:T() = M and
 --  B is upper bidiagonal, U and V are ortogonal.
 --  @param M Source matrix.
 --  @return U, B, V
@@ -799,7 +799,7 @@ matrix.bidiag = function (M)
   end
   return U, B, V
 end
-about[matrix.bidiag] = {"M:bidiag() --> U_M, B_M, V_M", 
+about[matrix.bidiag] = {"M:bidiag() --> U_M, B_M, V_M",
   "Bidiagonalization of matrix, return U, B, V.", TRANSFORM}
 
 --- Cholesky decomposition.
@@ -837,7 +837,7 @@ about[matrix.chol] = {"M:chol() --> lower_M",
 --  @param M Matrix.
 --  @return Number of columns.
 matrix.cols = function (M) return M._cols end
-about[matrix.cols] = {"M:cols() --> N", 
+about[matrix.cols] = {"M:cols() --> N",
   "Get number of columns."}
 
 --- Matrix concatenation.
@@ -884,7 +884,7 @@ matrix.copy = function (M)
   end
   return res
 end
-about[matrix.copy] = {"M:copy() --> cpy_M", 
+about[matrix.copy] = {"M:copy() --> cpy_M",
   "Return copy of matrix.", help.OTHER}
 
 --- V1 x V2
@@ -899,7 +899,7 @@ matrix.cross = function (V1, V2)
   local x2, y2, z2 = V2(1), V2(2), V2(3)
   return matrix:_init(3, 1, {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
 end
-about[matrix.cross] = {'V:cross(V2) --> V3', 
+about[matrix.cross] = {'V:cross(V2) --> V3',
   'Cross product or two 3-element vectors.'}
 
 --- Find determinant.
@@ -913,7 +913,7 @@ matrix.det = function (M)
   local _, K = matrix._gaussDown(matrix.copy(M))
   return K
 end
-about[matrix.det] = {"M:det() --> num", 
+about[matrix.det] = {"M:det() --> num",
   "Calculate determinant."}
 
 --- Get diagonal vector.
@@ -978,7 +978,7 @@ matrix.eig = function (M)
   end
   return P, lam
 end
-about[matrix.eig] = {'M:eig() --> vectors_M, values_M', 
+about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
   'Find matrices of eigenvectors and eigenvalues.'}
 
 --- Identity matrix.
@@ -998,7 +998,7 @@ matrix.eye = function (self, iR, iC, val)
   for i = 1, math.min(iR, iC) do m[i][i] = val end
   return m
 end
-about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M", 
+about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
   "Create identity matrix.", help.NEW}
 
 --- Fill matrix with some value.
@@ -1044,7 +1044,7 @@ matrix.givensRot = function (d1, d2)
      return t * s, s, d2 * u
    end
 end
-about[matrix.givensRot] = {":givensRot(x, y) --> cos_d, sin_d, len_d", 
+about[matrix.givensRot] = {":givensRot(x, y) --> cos_d, sin_d, len_d",
   "Find parameters of Givens rotation (c,s,r).", help.OTHER}
 
 --- Householder transformation.
@@ -1061,7 +1061,7 @@ matrix.householder = function (V, ik)
   -- find matrix
   return matrix:eye(r) - u:H() * ( (2 / (u:norm() ^ 2)) * u)
 end
-about[matrix.householder] = {"M:householder(V, start_N) --> hh_M", 
+about[matrix.householder] = {"M:householder(V, start_N) --> hh_M",
   "Find Householder matrix for the given vector.", TRANSFORM}
 
 --- Round matrix elements in place.
@@ -1078,14 +1078,14 @@ matrix.round = function(M, N)
         mr[c] = Utils.round(v, tol)
       elseif v.iscomplex then
         v = v:round(N)
-        mr[c] = (vv:im() == 0) and vv:re() or vv
+        mr[c] = (v:im() == 0) and v:re() or v
       elseif Cross.norm(v) < tol then
         mr[c] = 0
       end
     end
   end
 end
-about[matrix.round] = {"M:round(N=6) --> nil", 
+about[matrix.round] = {"M:round(N=6) --> nil",
   "Round matrix elements in place.", help.OTHER}
 
 --- Conjugate transpose.
@@ -1102,7 +1102,7 @@ matrix.H = function (M)
   end
   return res
 end
-about[matrix.H] = {"M:H() --> conj_M", 
+about[matrix.H] = {"M:H() --> conj_M",
   "Return conjugabe transpose. ", TRANSFORM}
 
 --- Insert values from another matrix.
@@ -1146,7 +1146,7 @@ matrix.insert = function (M1, tR, tC, M2)
     end
   end
 end
-about[matrix.insert] = {"M:insert(rows_t, cols_t, M2) --> nil", 
+about[matrix.insert] = {"M:insert(rows_t, cols_t, M2) --> nil",
   "Insert second matrix into the given range of indeces."}
 
 --- Inverse matrix.
@@ -1200,7 +1200,7 @@ matrix.lu = function (M)
   end
   return
     -- lower
-    matrix.map(a, 
+    matrix.map(a,
       function (M, r, c) return (r==c) and 1.0 or (r>c and M or 0) end),
     -- upper
     matrix.map(a, function (M, r, c) return r <= c and M or 0 end),
@@ -1239,7 +1239,7 @@ matrix.minor = function (M, ir, ic)
     return matrix._firstMinor(M)
   end
 end
-about[matrix.minor] = {"M:minor(row_N, col_N) --> minor_M", 
+about[matrix.minor] = {"M:minor(row_N, col_N) --> minor_M",
   "Find minor for the matrix element."}
 
 --- Euclidean norm of the matrix at whole.
@@ -1309,7 +1309,7 @@ matrix.pinv = function (M)
   end
   return L * K * K * Lt * Mt
 end
-about[matrix.pinv] = {"M:pinv() --> inv_M", 
+about[matrix.pinv] = {"M:pinv() --> inv_M",
   "Pseudo inverse matrix calculation.", TRANSFORM}
 
 --- QR transformation
@@ -1357,7 +1357,7 @@ matrix.qr = function (M)
   end
   return Q, R
 end
-about[matrix.qr] = {"M:qr() --> Q_M, R_M", 
+about[matrix.qr] = {"M:qr() --> Q_M, R_M",
   "QR decomposition of the matrix.", TRANSFORM}
 
 
@@ -1473,11 +1473,11 @@ about[matrix.rows] = {"M:rows() --> N", "Get number of rows."}
 matrix.rref = function (M)
   return matrix._gaussUp(matrix._gaussDown(M))
 end
-about[matrix.rref] = {"M:rref() --> upd_M", 
+about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method."}
 
 --- Singular value decomposition for a matrix.
---  Find U, S, V such that M = U*S*V' and 
+--  Find U, S, V such that M = U*S*V' and
 --  U, V are orthonormal, S is diagonal matrix.
 --  @param M Source matrix.
 --  @return Matrices U, S, V.
@@ -1498,9 +1498,9 @@ matrix.svd = function (M)
   end
   -- remove zeros
   local B1 = matrix:zeros(B._rows, B._cols)
-  for i = 1, V1._rows do 
+  for i = 1, V1._rows do
     local s = B[i][i]
-    if s < 0 then 
+    if s < 0 then
       s = -s  -- correct sign (TODO try to avoid it)
       --  and column elements
       for j = 1, V1._rows do V1[j][i] = -V1[j][i] end
@@ -1509,7 +1509,7 @@ matrix.svd = function (M)
   end
   return U1, B1, V1
 end
-about[matrix.svd] = {"M:svd() --> U_M, S_M, V_M", 
+about[matrix.svd] = {"M:svd() --> U_M, S_M, V_M",
   "Singular value decomposition, return U, S, V.", TRANSFORM}
 
 --- Matrix to table.
@@ -1532,7 +1532,7 @@ matrix.table = function (M)
   end
   return res
 end
-about[matrix.table] = {"M:table() --> tbl", 
+about[matrix.table] = {"M:table() --> tbl",
   "Convert to simple Lua table.", help.OTHER}
 
 --- Get trace of the matrix.
@@ -1556,7 +1556,7 @@ matrix.T = function (M)
   end
   return res
 end
-about[matrix.T] = {"M:T() --> transpose_M", 
+about[matrix.T] = {"M:T() --> transpose_M",
   "Return matrix transpose.", TRANSFORM}
 
 --- Create vector.
@@ -1569,7 +1569,7 @@ matrix.V = function (self, t)
   for i = 1, #t do res[i] = {t[i]} end
   return matrix:_init(#t, 1, res)
 end
-about[matrix.V] = {":V {...} --> new_V", 
+about[matrix.V] = {":V {...} --> new_V",
   "Create vector from list of numbers.", help.NEW}
 
 --- Create matrix of zeros.
@@ -1582,7 +1582,7 @@ matrix.zeros = function (self, iR, iC)
   iC = iC or iR                          -- input is a number
   return matrix:_init(iR, iC, {})
 end
-about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M", 
+about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
   "Create matrix of zeros.", help.NEW}
 
 --- Apply function element-wise to matrices.

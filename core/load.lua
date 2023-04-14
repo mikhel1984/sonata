@@ -19,7 +19,7 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 Sonata = require('core.evaluate')
 
 -- current version
-Sonata.version = '0.9.34'
+Sonata.version = '0.9.35'
 
 -- Quit the program
 quit = Sonata.exit
@@ -95,7 +95,7 @@ end
 Log = function (flag)
   if flag == 'on' then
     if not Sonata._logFile then
-      Sonata._logFile = io.open(Sonata.LOGNAME, 'a')
+      Sonata._logFile = assert(io.open(Sonata.LOGNAME, 'a'), "Can't open log file")
       local d = os.date('*t')
       Sonata._logFile:write(
         string.format(
@@ -250,7 +250,7 @@ if #arg > 0 then
   local command = _args[arg[1]]
   if not command then command = _args['default'] end
   command.process(arg)
-  if command.exit then os.exit(true, true) end
+  if command.exit then os.exit() end
 end
 
 -- Run!!!

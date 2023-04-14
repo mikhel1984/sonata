@@ -38,8 +38,8 @@ local DELIM = '\r?\n[%s%c]*\n'
 local LOG_NAME = 'test.log'
 local CODE_TEMPLATE = '%-%-%[(=*)%[TEST(.-)%]%1%]'
 local TEST_TEMPLATE = '(.*)%-%-(%d?)>(.*)'
-local TOL = {['0']=1, ['1']=1E1, ['2']=1E2, ['3']=1E3, ['4']=1E4, ['5']=1E5,
-  ['6']=1E6, ['7']=1E7, ['8']=1E8, ['9']=1E9}
+local TOL = {['0']=1, ['1']=1E+1, ['2']=1E+2, ['3']=1E+3, ['4']=1E+4,
+  ['5']=1E+5, ['6']=1E+6, ['7']=1E+7, ['8']=1E+8, ['9']=1E+9}
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
@@ -72,7 +72,7 @@ test._markTest = function (str, res, time)
   if #s > MIN then s = string.sub(s, 1, MIN) end
   local rest = string.rep('.', (FULL-#s))
   return string.format(
-    '%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'Failed'), time)
+    '%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'FAILED'), time)
 end
 
 --- Save string to the file and simultaneously print to the screen.
@@ -80,11 +80,6 @@ end
 test._print = function (str)
   print(str)
   test.log:write(str, '\n')
-end
-
---- Remove old results
-test.clear = function ()
-  test.results = {}
 end
 
 --- Execute tests listed in module.
@@ -115,7 +110,7 @@ test.module = function (fname)
         -- check result
         if #a > 0 then
           fq = loadStr('return '..a)
-          arrow = fq()
+          arrow = fq and fq()
           if e == '' then
             return ans == arrow
           else

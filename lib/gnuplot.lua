@@ -105,12 +105,15 @@ f:show()
 
 --	LOCAL
 
+local isWindows = package.config:sub(1,1) == '\\'
+local TEMP = '\\AppData\\Local\\VirtualStore'
+
 -- special commands
 local special = {
-  output = function (s) return string.format('set output "%s"', s) end,
-  xlabel = function (s) return string.format('set xlabel "%s"', s) end,
-  ylabel = function (s) return string.format('set ylabel "%s"', s) end,
-  title  = function (s) return string.format('set title "%s"', s) end,
+  output = function (s) return string.format("set output '%s'", s) end,
+  xlabel = function (s) return string.format("set xlabel '%s'", s) end,
+  ylabel = function (s) return string.format("set ylabel '%s'", s) end,
+  title  = function (s) return string.format("set title '%s'", s) end,
 }
 
 -- main commands
@@ -139,7 +142,7 @@ end
 --  @param v Value.
 --  @return String, prepared for usage in function.
 local function prepare(s,v)
-  if s == 'title' then v = string.format('"%s"', v) end
+  if s == 'title' then v = string.format("'%s'", v) end
   if s == 'using' then v = table.concat(v,':') end
   return s,v
 end
@@ -198,7 +201,7 @@ gnuplot._fn2file = function (fn,tBase)
   local xr = tBase.xrange and tBase.xrange[2] or 10
   local N = tBase.samples or 100
   local dx = (xr-xl)/N
-  local f = io.open(name, 'w')
+  local f = assert(io.open(name, 'w'), "Can't save to file")
   if tBase.surface then
     local yl = tBase.yrange and tBase.yrange[1] or (-10)
     local yr = tBase.yrange and tBase.yrange[2] or 10
@@ -212,6 +215,10 @@ gnuplot._fn2file = function (fn,tBase)
     end
   end
   f:close()
+  if isWindows then
+    name = string.format(
+      '%s%s%s', os.getenv('userprofile'), TEMP, name)
+  end
   return name
 end
 
@@ -226,7 +233,7 @@ gnuplot._graph = function (t,tBase)
     nm = fn.ismatrix and gnuplot._mat2file(fn) or gnuplot._tbl2file(fn)
   elseif type(fn) == 'function' then
     nm = gnuplot._fn2file(fn,tBase)
-  else -- type(fn) == 'string' !!
+  else  -- type(fn) == 'string' !!
     nm = fn
   end
   -- prepare options
@@ -249,7 +256,7 @@ gnuplot._init = function (self) return setmetatable({}, self) end
 --  @return File name.
 gnuplot._lst2file = function (t1,t2,fn)
   local name = os.tmpname()
-  local f = io.open(name, 'w')
+  local f = assert(io.open(name, 'w'), "Can't save to file")
   if fn then -- must be function
     for _,v1 in ipairs(t1) do
       for _,v2 in ipairs(t2) do
@@ -267,6 +274,10 @@ gnuplot._lst2file = function (t1,t2,fn)
     for i, v1 in ipairs(t1) do f:write(i, ' ', v1, '\n') end
   end
   f:close()
+  if isWindows then
+    name = string.format(
+      '%s%s%s', os.getenv('userprofile'), TEMP, name)
+  end
   return name
 end
 
@@ -275,13 +286,17 @@ end
 --  @return File name.
 gnuplot._mat2file = function (t)
   local name = os.tmpname()
-  local f = io.open(name, 'w')
+  local f = assert(io.open(name, 'w'), "Can't save to file")
   for i = 1, t.rows do
     local row = t[i]
     for j = 1, t.cols do f:write(row[j],' ') end
     f:write('\n')
   end
   f:close()
+  if isWindows then
+    name = string.format(
+      '%s%s%s', os.getenv('userprofile'), TEMP, name)
+  end
   return name
 end
 
@@ -290,12 +305,16 @@ end
 --  @return File name.
 gnuplot._tbl2file = function (t)
   local name = os.tmpname()
-  local f = io.open(name, 'w')
+  local f = assert(io.open(name, 'w'), "Can't save to file")
   for _, row in ipairs(t) do
     for _, val in ipairs(row) do f:write(val,' ') end
     f:write('\n')
   end
   f:close()
+  if isWindows then
+    name = string.format(
+      '%s%s%s', os.getenv('userprofile'), TEMP, name)
+  end
   return name
 end
 
@@ -415,7 +434,7 @@ gnuplot.show = function (G)
   -- prepare functions
   local fn = {}
   for i,f in ipairs(G) do
-    fn[i] = string.format('"%s" %s', gnuplot._graph(f,G))
+    fn[i] = string.format("'%s' %s", gnuplot._graph(f,G))
   end
   -- command
   if #fn > 0 then

@@ -13,7 +13,7 @@
 
 require 'lib.main'
 
--- constants starts from _
+-- constants starts from '_'
 ans = _pi                     --> math.pi
 
 -- standard functions
@@ -24,17 +24,6 @@ ans = Round(0.9)              --> 1.0
 
 -- save 2 digits
 ans = Round(math.pi, 2)       --> 3.14
-
--- random between 0 and 1
-p = rand()
-ans = (p >= 0) and (p <= 1)   --> true
-
--- random integer (1 to 10)
-p = randi(10)
-ans = (p >= 1) and (p <= 10)  --> true
-
--- normal distributed random
-print(randn())
 
 -- get type
 -- "knows" Sonata objects
@@ -190,35 +179,6 @@ about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 -- Constants
 _pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
 _e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
--- result
-_ans = 0;
-about[_ans] = {"_ans", "Result of the last operation.", SonataHelp.OTHER}
-
--- random
-math.randomseed(os.time()) -- comment to get repeatable 'random' numbers
-
-rand = function () return math.random() end
-about[rand] = {"rand() --> float", "Random number between 0 and 1."}
-
-randi = function (N) return math.random(1, N) end
-about[randi] = {"randi(N) -> int", "Random integer in range from 1 to N."}
-
-randn = function (dMean, dev)
-  dMean = dMean or 0
-  dev = dev or 1
-  -- use Box-Muller transform
-  local u, v, s = 0, 0, 0
-  repeat
-    u = 2*math.random()-1
-    v = 2*math.random()-1
-    s = u*u + v*v
-  until s <= 1 and s > 0
-  local norm = u * math.sqrt(-2*math.log(s)/s)
-  return norm * dev + dMean
-end
-about[randn] = {"randn(mean_d=0, dev_d=1) --> float",
-  "Normal distributed random value with the given mean and deviation."}
-
 
 --- Generate list of function values.
 --  @param fn Function to apply.
@@ -454,16 +414,6 @@ end
 -- save link to help info
 main.about = about
 
---- Update help reference when redefine function.
---  @param fnNew New function.
---  @param fnOld Old function.
-main._updateHelp = function (fnNew, fnOld)
-  main.about[fnNew] = main.about[fnOld]
-  main.about[fnOld] = nil
-end
-
 return main
 
 --===============================
-
---TODO don't print result when ; in the end

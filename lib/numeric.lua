@@ -85,7 +85,7 @@ end
 --	INFO
 
 -- description
-local about = { __module__ = 
+local about = { __module__ =
   "Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL."
 }
 
@@ -107,14 +107,14 @@ about[numeric.TOL] = {".TOL=0.001", "The solution tolerance.", "parameters"}
 --  @return Numerical approximation of the derivative value.
 numeric.der = function (self, fn, d)
   local dx = 2e-2
-  local der, last = (fn(d+dx)-fn(d-dx))/(2*dx)
+  local der, last = (fn(d+dx)-fn(d-dx))/(2*dx), nil
   repeat
     dx = dx * 0.5
     der, last = (fn(d+dx)-fn(d-dx))/(2*dx), der
   until math.abs(der-last) < numeric.TOL
   return der
 end
-about[numeric.der] = {":der(fn, x_d) --> num", 
+about[numeric.der] = {":der(fn, x_d) --> num",
   "Calculate the derivative value for given function."}
 
 --- Another solution based on Newton's rule.
@@ -198,7 +198,7 @@ numeric.solve = function (self, fn, dA, dB)
   until math.abs(f1) < numeric.TOL
   return dB
 end
-about[numeric.solve] = {":solve(fn, xLow_d, xUp_d) --> num", 
+about[numeric.solve] = {":solve(fn, xLow_d, xUp_d) --> num",
   "Find root of equation fn(x)=0 at interval [a,b]."}
 
 --- Integration using trapeze method.
@@ -231,7 +231,7 @@ numeric.trapez = function (self, fn, dA, dB)
   until math.abs(I-last) < numeric.TOL
   return I
 end
-about[numeric.trapez] = {":trapez(fn, x1_d, x2_d) --> num", 
+about[numeric.trapez] = {":trapez(fn, x1_d, x2_d) --> num",
   "Get integral using trapezoidal rule."}
 
 -- Comment to remove descriptions

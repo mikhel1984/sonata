@@ -1,18 +1,39 @@
+======== 0.9.35 =========
+
+Asciiplot
+* Change axis configuration method
+* Axis location in bar function
+* Use Unicode for axis view
+Bigint 
+* Add combinatorial methods
+Data
+* Add reference to 'transposed' table
+* Remove column based operations with csv
+* Add pretty print
+Gnuplot
+* Fix errors in Windows
+Graph
+* Rewrite module
+* Add export to DOT and SVG
+Other
+* New module 'random'
+* Remove DOS code pages
+
 ======== 0.9.34 =========
 
-Ap
+Asciiplot
 * Axis as a separate class
 * Modification via functions
 * Add log scale
-Geo
+Geodesy
 * Add UTM coordinates
 * Remove progM and projGK
-Int
+Bigint
 * Minor improvements
 Main
 * Call elementary functions for complex objects
 * Fix ipairs for Range object
-Sym
+Symbolic
 * Add derivatives
 * Bug fixes
 Other
@@ -30,7 +51,7 @@ Asciiplot
 Matrix
 * Add SVD
 Other
-* Add 'symbolical' module
+* New module 'symbolical'
 * Allow arbitrary aliases for modules
 * Update help system
 * Generate sorted lang files

@@ -7,6 +7,7 @@
 --  { ... } </br>
 --  {nodeN = {nodeP=weightP, nodeQ=weightQ, ...}}</code> </br>
 --  i.e. each node has links to adjucent nodes.
+--  "false" is used to mark paired of absent edges.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
@@ -20,53 +21,40 @@
 -- use 'graph'
 Graph = require 'lib.graph'
 
--- build graph
--- single name - node, names in brackets - edges
--- letter w denotes weight of non directed edge
--- numbers are weights of directed edges
-a = Graph {'a','b',
-  {'a','c'},
-  {'d','e',w=2},
-  {'d','b',4,3}
-}
-
+-- build undirected graph
+a = Graph()
+a:addNodes {'a', 'b', 'c', 'd', 'e'}
 -- list of nodes
 nd = a:nodes()
 ans = #nd                     --> 5
 
 -- list of edges
--- if an edge has different weight for different sizes
--- it is represented twice
 ed = a:edges()
-ans = #ed                     --> 4
+ans = #ed                     --> 0
 
 -- has directed edges
-ans = a:isDirected()          --> true
+ans = a:isDirected()          --> false
 
 -- add node
 a:add('h')
 -- add edge
-a:add {'a','d'}
+a:add('a', 'd')
 -- check size
 -- (same as #a)
 ans = a:size()                --> 6
 
--- remove edge
-a:remove {'a','d'}
 -- remove node
 a:remove('a')
 -- new edge number
 ed = a:edges()
-ans = #ed                     --> 3
+ans = #ed                     --> 0
 
--- directed edges
--- second way to define
--- from first to second node
-a:add {'c','p',w12=2}
+-- directed graph
+d = Graph:dir()
+d:add('c', 'p', 2)
 -- and vise versa
-a:add {'c','q',w21=3}
-ed = a:edges()
-ans = #ed                     --> 5
+d:add('p', 'c', 3)
+ans = d:edge('c', 'p')        --> 2
 
 -- make copy
 b = a:copy()
@@ -75,7 +63,8 @@ b = a:copy()
 ans = b:isComplete()          --> false
 
 -- prepare graph
-c = Graph {
+c = Graph() 
+c:addEdges {
   {'a','b'},
   {'a','c'},
   {'b','d'},
@@ -85,9 +74,14 @@ c = Graph {
   {'f','h'},
   {'e','g'}
 }
-
 -- is it weighted
 ans = c:isWeighted()          --> false
+
+-- print in 'dot' notation
+print(c:dot())
+
+-- save svg image
+c:toSvg('test_c')
 
 -- breadth first search
 _,path = c:bfs('e','h')
@@ -99,21 +93,13 @@ ans = found                   --> true
 
 -- update weight (default is 1)
 -- use 'add' method
-c:add{'a','b',w=0.5}
-c:add{'b','e',w=0.4}
-c:add{'c','f',w=2}
+c:add('a','b',0.5)
+c:add('b','e',0.4)
+c:add('c','f',2)
 
 -- Dijkstra path search
 dist,prev = c:pathD('a')
 ans = dist['g']               --> 1.9
-
--- Bellman-Ford path search
-c:add{'f','h',w=-0.5}
-dist,prev = c:pathBF('a')
-ans = dist['h']
-
--- check negative edges
-ans = c:isNegative()          --> true
 
 -- show
 print(b)
@@ -123,6 +109,8 @@ print(b)
 --	LOCAL
 
 local SEARCH = 'search'
+
+local VIEWER = 'xdot'
 
 --- Get key with minimum value, remove it
 --  @param t Table of pairs {node, weight}.
@@ -145,17 +133,12 @@ end
 --  @return True if the object is graph.
 local function isgraph(v) return type(v)=='table' and v.isgraph end
 
---- Check if the element is edge.
---  @param v Element to check.
---  @return True in case of edge.
-local function isEdge(v) return type(v) == 'table' end
-
 --- Count elements in table.
 --  @param t Table to check.
 --  @return Total number of the elements.
 local function tblLen (t)
   local n = 0
-  for k in pairs(t) do n = n+1 end
+  for _ in pairs(t) do n = n+1 end
   return n
 end
 
@@ -221,49 +204,58 @@ graph.__index = graph
 --  @return String with compressed graph structure.
 graph.__tostring = function (G)
   local nd = graph.nodes(G)
+  local nm = G._dir and 'Digraph' or 'Graph'
   if #nd <= 5 then
-    return string.format('Graph {%s}', table.concat(nd, ','))
+    return string.format('%s {%s}', nm, table.concat(nd, ','))
   else
-    return string.format('Graph {%s -%d- %s}', 
-      tostring(nd[1]), #nd-2, tostring(nd[#nd]))
+    return string.format('%s {%s -%d- %s}', 
+      nm, tostring(nd[1]), #nd-2, tostring(nd[#nd]))
   end
 end
 
---- Constructor example
---  @param t Table with nodes and edges.
---  @return New object of graph.
-graph._new = function (self, t)
-  local o = {}
-  -- add nodes
-  for _, elt in ipairs(t) do graph.add(o, elt) end
-  return setmetatable(o, self)
+--- Prepare empty undirected graph.
+--  @param self Do nothing.
+--  @return Undirected graph.
+graph._new = function (self)
+  local o = {_={}, _dir=false}
+  return setmetatable(o, graph)
 end
 
 --- Add node or edge.
---  @param G Graph.
---  @param v New element.
-graph.add = function (G, v)
-  if isEdge(v) then
-    local t1, t2 = v[1], v[2]
-    local w12, w21 = (v[3] or v.w12), (v[4] or v.w21)
-    G[t1] = G[t1] or {}
-    G[t2] = G[t2] or {}
-    if w12 or w21 then
-      G[t1][t2] = w12
-      G[t2][t1] = w21
-    else
-      -- no weights
-      local w = v.w or 1
-      G[t1][t2] = w
-      G[t2][t1] = w
-    end
-  else
-    -- node
-    G[v] = G[v] or {}
+--  @param G Graph object.
+--  @param n1 Node.
+--  @param n2 Second node in the edge.
+--  @param w Edge weight.
+graph.add = function (G, n1, n2, w)
+  local g = G._
+  g[n1] = g[n1] or {}
+  if n2 then
+    w = w or 1
+    g[n2] = g[n2] or {}
+    g[n1][n2] = w
+    g[n2][n1] = G._dir and g[n2][n1] or false
   end
 end
-about[graph.add] = {"G:add(var) --> nil",
-  "Add new node or edge to graph G. Node denoted as a single name, edge is a table of names (and weights if need)."}
+about[graph.add] = {"G:add(n1, n2=nil, w_d=1) --> nil", "Add new node or edge."}
+
+--- Import edges from list.
+--  @param G Graph object.
+--  @param t List with edges in form {node1, node2, weight}.
+graph.addEdges = function (G, t)
+  for _, v in ipairs(t) do graph.add(G, v[1], v[2], v[3]) end
+end
+about[graph.addEdges] = {"G:addEdges(list_t) --> nil", 
+  "Import edges and weights from list."}
+
+--- Import nodes from list.
+--  @param G Graph object.
+--  @param t List with nodes.
+graph.addNodes = function (G, t)
+  local g = G._
+  for _, v in ipairs(t) do g[v] = g[v] or {} end
+end
+about[graph.addNodes] = {"G:addNodes(list_t) --> nil", 
+  "Import nodes from list."}
 
 --- Breadth first search.
 --  @param G Graph.
@@ -283,7 +275,7 @@ graph.bfs = function (G, vStart, vGoal)
       return true, getPath(pred, vGoal)
     end
     -- add successors
-    for v in pairs(G[node]) do
+    for v in pairs(G._[node]) do
       if not pred[v] then
         Queue.push(q, v)
         pred[v] = node
@@ -299,11 +291,11 @@ about[graph.bfs] = {"G:bfs(startNode, goalNode) --> isFound, path_t",
 --  @param G Graph.
 --  @return Deep copy of the graph.
 graph.copy = function (G)
-  local res = graph:_new({})
-  for k, v in pairs(G) do
+  local res = G._dir and graph:dir() or graph:_new()
+  for k, v in pairs(G._) do
     local tmp = {}
     for n, w in pairs(v) do tmp[n] = w end
-    res[k] = tmp
+    res._[k] = tmp
   end
   return res
 end
@@ -327,7 +319,7 @@ graph.dfs = function (G, vStart, vGoal)
       return true, getPath(pred, vGoal)
     end
     -- add successors
-    for v in pairs(G[node]) do
+    for v in pairs(G._[node]) do
       if not pred[v] then
         table.insert(stack, v)
         pred[v] = node
@@ -339,85 +331,120 @@ end
 about[graph.dfs] = {"G:dfs(startNote, goalNode) --> isFound, path_t",
   "Depth first search. Return result and found path.", SEARCH}
 
---- Get graph edges.
---  @param G Graph.
---  @return List of edges.
-graph.edges = function (G)
-  local nodes, res = graph.nodes(G), {}
-  for i = 1, #nodes do
-    local ni = nodes[i]
-    local Wi = G[ni]             -- what if node is not string?
-    for j = i, #nodes do
-      local nj = nodes[j]
-      local wij = Wi[nj]
-      local wji = G[nj][ni]
-      if wij and wji then
-        res[#res+1] = {ni, nj}
-        if wij ~= wji then res[#res+1] = {nj, ni} end
-      elseif wij then
-        res[#res+1] = {ni, nj}
-      elseif wji then
-        res[#res+1] = {nj, ni}
+--- Prepare empty directed graph.
+--  @param self Do nothing.
+--  @return Directed graph.
+graph.dir = function (self)
+  local res = graph._new(self)
+  res._dir = true
+  return res
+end
+about[graph.dir] = {":dir() --> new_G", "Create directed graph.", help.NEW}
+
+--- Show graph structure in dot notation.
+--  @param G Graph object.
+--  @return String with structure.
+graph.dot = function (G)
+  local txt = {G._dir and "digraph {" or "graph {"} 
+  local line = G._dir and "->" or "--"
+  local visit = {}
+  -- edges
+  for n1, adj in pairs(G._) do
+    local nstr = tostring(n1)
+    for n2, v in pairs(adj) do
+      if v then 
+        txt[#txt+1] = string.format("  %s %s %s;", nstr, line, tostring(n2))
+        visit[n2] = true
+        visit[n1] = true
       end
+    end
+  end
+  -- single nodes 
+  for n1 in pairs(G._) do
+    if not visit[n1] then
+      txt[#txt+1] = string.format("  %s;", tostring(n1))
+    end
+  end
+  txt[#txt+1] = "}"
+  return table.concat(txt, '\n')
+end
+about[graph.dot] = {"G:dot() --> str", 
+  "Return graph structure in dot notation."}
+
+--- Get edge weight.
+--  @param G Graph object.
+--  @param n1 First node.
+--  @param n2 Second node.
+--  @return Weight or nil.
+graph.edge = function (G, n1, n2)
+  local g = G._
+  return g[n1][n2] or (not G._dir and g[n2][n1]) or nil
+end
+about[graph.edge] = {"G:edge() --> weight_d|nil", "Get weight of the edge."}
+
+--- Get list of edges.
+--  @param G Graph object.
+--  @return List of node pairs.
+graph.edges = function (G)
+  local res = {}
+  for n, adj in pairs(G._) do
+    for m, v in pairs(adj) do
+      if v then res[#res+1] = {n, m} end
     end
   end
   return res
 end
-about[graph.edges] = {"G:edges() --> edges_t", "List of graph edges."}
+about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 
 --- Check graph completeness.
 --  @param G Graph.
 --  @return true if graph is complete.
 graph.isComplete = function (G)
-  local n = tblLen(G)
-  for _, v in pairs(G) do
+  if G._dir then return false end
+  local n = tblLen(G._)
+  for _, v in pairs(G._) do
     if n ~= tblLen(v) then return false end
   end
   return true
 end
-about[graph.isComplete] = {'G:isComplete() --> bool', 
+about[graph.isComplete] = {'G:isComplete() --> bool',
   'Check completeness of the graph.', help.OTHER}
 
 --- Check if the graph is directed.
 --  @param G Graph object.
 --  @return True if found directed edge.
 graph.isDirected = function (G)
-  for n1, adj in pairs(G) do
-    for n2, v in pairs(adj) do
-      if G[n2][n1] ~= v then return true end
-    end
-  end
-  return false
+  return G._dir
 end
-about[graph.isDirected] = {'G:isDirected() --> bool', 
-  'Check if the graph has directed edges.', help.OTHER}
+about[graph.isDirected] = {'G:isDirected() --> bool',
+  'Check if the graph is directed.', help.OTHER}
 
 --- Check if graph has negative weights.
 --  @param G Graph object.
 --  @return True if found at least one negative edge.
 graph.isNegative = function (G)
-  for _, adj in pairs(G) do
+  for _, adj in pairs(G._) do
     for _, v in pairs(adj) do
-      if v < 0 then return true end
+      if v and v < 0 then return true end
     end
   end
   return false
 end
-about[graph.isNegative] = {'G:isNegative() --> bool', 
+about[graph.isNegative] = {'G:isNegative() --> bool',
   'Check if the graph has negative edges.', help.OTHER}
 
 --- Check if the graph has weights different from default value.
 --  @param G Graph object.
 --  @return True if found edge not equal to 1.
 graph.isWeighted = function (G)
-  for _, adj in pairs(G) do
+  for _, adj in pairs(G._) do
     for _, v in pairs(adj) do
-      if v ~= 1 then return true end
+      if v and v ~= 1 then return true end
     end
   end
   return false
 end
-about[graph.isWeighted] = {'G:isWeighted() --> bool', 
+about[graph.isWeighted] = {'G:isWeighted() --> bool',
   'Check if any edge has weight different from 1.', help.OTHER}
 
 --- Get graph nodes.
@@ -425,52 +452,10 @@ about[graph.isWeighted] = {'G:isWeighted() --> bool',
 --  @return List of nodes.
 graph.nodes = function (G)
   local res = {}
-  for k in pairs(G) do res[#res+1] = tostring(k) end
+  for k in pairs(G._) do res[#res+1] = k end
   return res
 end
-about[graph.nodes] = {"G:nodes() --> node_t", "List of graph nodes."}
-
---- Find shortest path with Bellman-Ford algorithm/
---  @param G Graph.
---  @param start Initial node.
---  @param goal Goal node.
---  @return Table of distances and predecessors or path and its length.
-graph.pathBF = function (G, vStart, vGoal)
-  -- initialize
-  local prev, dist = {[vStart]=vStart}, {}
-  local N = 0    -- number of nodes
-  -- initialize
-  for k in pairs(G) do dist[k] = math.huge; N = N+1 end
-  dist[vStart] = 0
-  -- relax
-  for i = 1, N-1 do
-    for u in pairs(G) do
-      for v, d in pairs(G[u]) do
-        local alt = dist[u] + d
-        if alt < dist[v] then
-          dist[v] = alt
-          prev[v] = u
-        end
-      end -- v, d
-    end -- u
-  end
---[[
-  -- check for negative circles
-  for u in pairs(G) do
-    for v, d in pairs(G[u]) do
-      assert(dist[u] + d >= dist[v], 'Negative circle!')
-    end
-  end
-]]
-  -- result
-  if vGoal then
-    return dist[vGoal], getPath(prev, vGoal)
-  else
-    return dist, prev
-  end
-end
-about[graph.pathBF] = {'G:pathBF(startNode, [goalNode]) --> dist_d, path_t|prev_t',
-  'Shortest path search using Bellman-Ford algorithm.', SEARCH}
+about[graph.nodes] = {"G:nodes() --> node_t", "List of nodes."}
 
 --- Shortest path search using Dijkstra algorithm.
 --  @param G Graph.
@@ -480,7 +465,7 @@ about[graph.pathBF] = {'G:pathBF(startNode, [goalNode]) --> dist_d, path_t|prev_
 graph.pathD = function(G, vStart, vGoal)
   -- define local set
   local set = {}
-  for k in pairs(G) do set[k] = math.huge end
+  for k in pairs(G._) do set[k] = math.huge end
   set[vStart] = 0
   -- save results
   local prev, dist = {[vStart]=vStart}, {}
@@ -490,8 +475,8 @@ graph.pathD = function(G, vStart, vGoal)
     if not current then break end
     -- update minimal distance
     dist[current] = val
-    for k, v in pairs(G[current]) do
-      local alt = val + v
+    for k, v in pairs(G._[current]) do
+      local alt = val + (v or G._[k][current])
       if set[k] and set[k] > alt then
         set[k] = alt
         prev[k] = current
@@ -500,7 +485,7 @@ graph.pathD = function(G, vStart, vGoal)
   end
   -- result
   if vGoal then
-    return dsit[vGoal], getPath(prev, vGoal)
+    return dist[vGoal], getPath(prev, vGoal)
   else
     return dist, prev
   end
@@ -511,32 +496,46 @@ about[graph.pathD] = {'G:pathD(startNode, [goalNode]) --> dist_d, path_t|prev_t'
 
 --- Remove node or edge.
 --  @param G Graph.
---  @param v Element to remove.
-graph.remove = function (G, v)
-  if isEdge(v) then
-    local t1, t2 = v[1], v[2]
-    G[t1][t2] = nil
-    if not v.single then      -- change keyword ???
-      G[t2][t1] = nil
-    end
+--  @param n1 Node.
+--  @param n2 Second node.
+graph.remove = function (G, n1, n2)
+  if n2 then 
+    -- edge
+    G._[n1][n2] = nil
+    G._[n2][n1] = nil
   else
     -- node
-    for _, u in pairs(G) do u[v] = nil end
-    G[v] = nil
+    for n3 in pairs(G._[n1]) do
+      G._[n3][n1] = nil
+    end
+    G._[n1] = nil
   end
 end
-about[graph.remove] = {"G:remove(var) --> nil",
-  "Remove node or edge from the graph G. Node is a single name, edge - table of names."}
+about[graph.remove] = {"G:remove(n1, [n2]) --> nil",
+  "Remove node or edge from the graph."}
+
+--- Save graph as svg image.
+--  @param G Graph object.
+--  @param name File name.
+graph.toSvg = function (G, name)
+  local cmd = string.format('dot -Tsvg -o %s.svg', name)
+  local handle = assert(io.popen(cmd, 'w'), "Can't open dot!") 
+  handle:write(graph.dot(G))
+  handle:close()
+end
+about[graph.toSvg] = {"G:toSvg(name_s) --> nil", 
+  "Convert graph to SVG image using Graphviz."}
 
 --- Get number of nodes.
 --  @param G Graph object.
 --  @return Number of nodes.
-graph.size = function (G) return tblLen(G) end
+graph.size = function (G) return tblLen(G._) end
 graph.__len = graph.size
+about[graph.size] = {"G:size() --> nodes_N", "Get node number.", help.OTHER}
 
 -- simplify constructor call
 setmetatable(graph, {__call = function (self, v) return graph:_new(v) end})
-about[graph] = {" {v1, v2,..} --> new_G", "Create new graph.", help.NEW}
+about[graph] = {" () --> new_G", "Create undirected graph.", help.NEW}
 
 -- Comment to remove descriptions
 graph.about = about

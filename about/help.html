@@ -28,6 +28,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Num">numeric</a></li>
 <li><a href="#Poly">polynomial</a></li>
 <li><a href="#Quat">quaternion</a></li>
+<li><a href="#Rand">random</a></li>
 <li><a href="#Rat">rational</a></li>
 <li><a href="#Spec">special</a></li>
 <li><a href="#Sym">symbolic</a></li>
@@ -46,19 +47,19 @@ Sonata is a Lua based program for mathematical calculations.<br>
 	-e	Evaluate command line expression.<br>
 		e.g. -e "2+2"<br>
 <br>
-	--lang	Generation or updating of the localization file.<br>
-		e.g. --lang eo<br>
-	--test	Run unit tests for a given module. Execute for all modules if no name is specified.<br>
-		e.g. --test array<br>
 	--doc	Generating a documentation page.<br>
 		e.g. --doc ru<br>
+	--lang	Generation or updating of the localization file.<br>
+		e.g. --lang eo<br>
 	--new	Generating a template for a new module.<br>
 		e.g. --new  matrices  Mat  "Matrix operations."<br>
+	--test	Run unit tests for a given module. Execute for all modules if no name is specified.<br>
+		e.g. --test array<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.34<br>
+<b>VERSION</b>: 0.9.35<br>
 <br>
-<b>MODULES</b>: lens, special, polynomial, geodesy, symbolic, bigint, units, gnuplot, complex, graph, numeric, asciiplot, main, const, rational, data, matrix, quaternion, array.<br>
+<b>MODULES</b>: polynomial, geodesy, matrix, random, numeric, special, complex, rational, bigint, quaternion, data, lens, gnuplot, array, const, units, symbolic, main, graph, asciiplot.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -157,24 +158,18 @@ print(a)
 <b>F:addPose(row_N, col_N, char_s) --> nil</b> - Add character to the given position.<br>
 <b>F:addString(row_N, col_N, str) --> nil</b> - Set string from the given position.<br>
 <b>F:axes() --> tbl</b> - Get {size, log, range, pose} for each size.<br>
-<b>F:bar(t, vy=2, x_N=1) --> nil</b> - Plot bar diargram for data. vy can be y index in t (optional) or table of y-s.<br>
-<b>F:contour(fn, {view='XY'}) --> nil|str</b> - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output.<br>
+<b>F:bar(t, y_N=2, x_N=1) --> nil</b> - Plot bar diargram for data.<br>
+<b>F:contour(fn, {level=5, view='XY'}) --> nil|str</b> - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output.<br>
 <b>F:copy() --> cpy_F</b> - Create a copy of the object.<br>
-<b>F:logX(isLog) --> nil</b> - Change X axis type to logarithmic.<br>
-<b>F:logY(isLog) --> nil</b> - Change Y axis type to logarithmic.<br>
-<b>F:logZ(isLog) --> nil</b> - Change Z axis type to logarithmic.<br>
 <b>F:plot(...) --> nil</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br>
 <b>F:reset() --> nil</b> - Prepare a clear canvas.<br>
 <b>F:resize(src_F | (width_N, height_N)) --> nil</b> - Update size of canvas.<br>
 <b>F:scale(factor_d, isDefault=false) --> F</b> - Change figure size w.r.t. initial size.<br>
-<b>F:setX(range_t) --> nil</b> - Update X range.<br>
-<b>F:setY(range_t) --> nil</b> - Update Y range.<br>
-<b>F:setZ(range_t) --> nil</b> - Update Z range.<br>
-<b>F:showX(pos_s|nil) --> nil</b> - Define X axis position.<br>
-<b>F:showY(pos_s|nil) --> nil</b> - Define Y axis position.<br>
-<b>F:showZ(pos_s|nil) --> nil</b> - Define Z axis position.<br>
+<b>F:setX(par_t={range,view,log,fix}) --> nil</b> - X axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), ragne fix (true/false).<br>
+<b>F:setY(par_t={range,view,log,fix}) --> nil</b> - Y axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).<br>
+<b>F:setZ(par_t={range,view,log,fix}) --> nil</b> - Z axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).<br>
 <b>F:title(str) --> nil</b> - Set new title.<br>
-<b>F:tplot(data_t, {yfix=false}) --> nil</b> - Plot the table data, choose columns if need.<br>
+<b>F:tplot(data_t, cols_N={}) --> nil</b> - Plot the table data, choose columns if need.<br>
 <b>Plot(...) --> nil</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br></p>
 <pre class="example">
 
@@ -190,7 +185,7 @@ ans = info.x.size             --> Ap.WIDTH
 ans = info.x.pose             --> 'mid'
 
 -- print functions
-fig1:setX {-3.14, 3.14}   -- default is {-1, 1}
+fig1:setX {range={-3.14, 3.14}}   -- default is {-1, 1}
 fig1:plot(math.sin, 'sin', math.cos, 'cos')
 fig1:title 'Trigonometry'
 print(fig1)
@@ -202,8 +197,8 @@ fig1:plot(x,y)
 print(fig1)
 
 -- combine different sources
-fig1:showY 'min'  -- left axis
-fig1:plot(x,'single',x,y,'pair',math.log, 'function')
+fig1:setY {view='min'}  -- left axis
+fig1:plot(x,'single',x,y,'pair',math.log,'function')
 print(fig1)
 
 -- define arbitrary figure size
@@ -218,30 +213,30 @@ for x = 0, 3, 0.1 do
   --             x      y1          y2
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
-fig2:showX 'min'  -- down
+fig2:setX {view='min'}  -- down
 fig2:tplot(tbl)
 print(fig2)
 
 -- plot only y2, don't rescale
-fig2:setX {-1, 4}
-fig2:setY {0, 1}
+fig2:setX {range={-1, 4}}
+fig2:setY {range={0, 1}}
 fig2:tplot(tbl, {2, yfix=true})
 print(fig2)
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
-ans = fig1:axes().x.size      --> 59 
+ans = fig1:axes().x.size      --> 59
 
 -- horizontal concatenation
 -- first
 fig1:scale(0.5)   -- half of initial size
-fig1:setX {0, 1.57}
-fig1:showY('mid'); fig1:showX('min')
+fig1:setX {range={0, 1.57}, view='min'}
+fig1:setY {view='mid'}
 fig1:plot(sin, 'sin')
 fig1:title 'First'
 -- second
 fig2:resize(fig1)      -- set equal size
-fig2:setX {0, 1.57}
+fig2:setX {range={0, 1.57}}
 fig2:plot(cos, 'cos')
 fig2:title 'Second'
 str = Ap:concat(fig1, fig2)   -- similar to fig1..fig2 for 2 objects
@@ -249,10 +244,9 @@ print(str)
 
 -- call 'API' functions
 fig3 = Ap():scale(0.5)
-fig3:setX {-2,2}
-fig3:setY {-1,4}
 -- no axes and limits
-fig3:showX(nil); fig3:showY(false)
+fig3:setX {range={-2,2}, view=false}
+fig3:setY {range={-1,4}, view=false}
 fig3:reset()
 -- set function
 for x = -1.2, 1.2, 0.1 do
@@ -266,8 +260,8 @@ print(fig3)
 
 -- print surface contours
 fig4 = Ap()
-fig4:setX {-5, 5}
-fig4:setY {-5, 5}
+fig4:setX {range={-5, 5}}
+fig4:setY {range={-5, 5}}
 fig4:contour(function (x,y) return x*x - y*y end)
 print(fig4)
 
@@ -279,30 +273,37 @@ fig5 = Ap()
 fig5:bar(data)
 print(fig5)
 
--- use log scale 
+-- use log scale
 fig6 = Ap()
-fig6:setX {-10, 10}
-fig6:logY(true)
+fig6:setX {range={-10, 10}}
+fig6:setY {log=true}
 fig6:plot(math.exp)
 print(fig6)
+
+-- simplified call, use range -1...1
+-- change it via table if need
+Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Int"></a>
 <h3># Int (bigint) #</h3>
 <p class="descript">Operations with arbitrary long integers.</p>
-<p><b>B:abs() --> num</b> - Return module of arbitrary long number.<br>
+<p><b>B:F() --> B!</b> - Return factorial of non-negative integer B.<br>
+<b>B:abs() --> num</b> - Return module of arbitrary long number.<br>
 <b>B:at(N) --> int</b> - Get N-th digit.<br>
 <b>B:base() --> int</b> - Current numeric base.<br>
 <b>B:eq(x) --> bool</b> - Check equality with the second value.<br>
-<b>B:fact() --> B!</b> - Return factorial of non-negative integer B.<br>
 <b>B:factorize() --> primeBs_t</b> - Find the list of multipliers.<br>
 <b>B:float() --> num</b> - Represent current big integer as number if it possible.<br>
 <b>B:gcd(B2) --> B3</b> - Find the greatest common divisor for two integers.<br>
 <b>B:isPrime([method_s]) --> bool</b> - Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.<br>
 <b>B:rebase(N) --> upd_B</b> - Convert number to the new numeric base.<br>
 <b>Int (var) --> new_B</b> - Create number from integer, string or table.<br>
+<b>Int:C(n, k) --> combinations_B</b> - Number of combinations C(n,k).<br>
+<b>Int:P(n, k) --> permutaions_B</b> - Find permutations without repetition.<br>
 <b>Int:random(B) --> rand_B</b> - Generate pseudo-random value from 0 to B.<br>
+<b>Int:ratF(num_B, denom_B) --> num!/denom!</b> - Find ratio of factorials num!/denom!.<br>
 <b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
 <b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br></p>
 <pre class="example">
@@ -319,7 +320,7 @@ ans = b:float()               --> 456
 
 -- from table
 -- 'sign' and 'base' can be skipped
-g = Int {1,2,3,sign=-1,base=10}
+g = Int {-1,2,3, base=10}
 ans = g:float()               --> -123
 
 -- check equality
@@ -342,7 +343,7 @@ ans = (a^3):float()           --> 1860867
 ans = Int('-25'):abs():float()  --> 25
 
 -- factorial
-c = Int(50):fact()
+c = Int(50):F()
 ans = c:float()               --1> 3E64
 
 ans = (a > b)                 --> false
@@ -374,9 +375,15 @@ ans = (v == g)                --> true
 -- simple print
 print(a)
 
+-- find permutations
+ans = Int:P(10, 5)            --> Int(30240)
+
+-- find combinations
+ans = Int:C(10, 3)            --> Int(120)
+
 -- check if it prime
 -- iterate though multipliers
-ans = Int(1229):isPrime()       --> true
+ans = Int(1229):isPrime()     --> true
 
 -- Fermat theorem
 ans = Int(1229):isPrime('Fermat') --> true
@@ -603,10 +610,11 @@ ans = _C.myConst              --> nil
 <h3># _D (data) #</h3>
 <p class="descript">Data processing and statistics.</p>
 <p><b>_D:Fn(expr_s, arg_N=2) --> fn</b> - Generate function from expression of x1, x2 etc.<br>
+<b>_D:T(src_t) --> TR</b> - Get reference to 'transposed' table.<br>
 <b>_D:cov(data_t) --> cov_M</b> - Find covariance matrix for list of vectors.<br>
 <b>_D:cov2(xs_t, ys_t) --> float</b> - Find covariance value for two vectors.<br>
-<b>_D:csvread(file_s, delim_s=',', isCol=false) --> tbl</b> - Read delimiter separated data as Lua table.<br>
-<b>_D:csvwrite(file_s, data_t, char=',', isCol=false) --> nil</b> - Save Lua table as delimiter separated data into file.<br>
+<b>_D:csvread(file_s, delim_s=',') --> tbl</b> - Read delimiter separated data as Lua table.<br>
+<b>_D:csvwrite(file_s, data_t, char=',') --> nil</b> - Save Lua table as delimiter separated data into file.<br>
 <b>_D:filter(in_t, condition) --> out_t</b> - Get result of the table filtering. Condition is either boolean function or table of weights.<br>
 <b>_D:freq(data_t) --> tbl</b> - Return table with frequencies of elements.<br>
 <b>_D:geomean(data_t, [weigh_t]) --> num</b> - Geometrical mean.<br>
@@ -622,6 +630,7 @@ ans = _C.myConst              --> nil
 <b>_D:ref(src_t, begin_N=1, end_N=#src_t) --> new_R</b> - Return reference to the range of elements.<br>
 <b>_D:std(data_t, [weight_t]) --> dev_f, var_f</b> - Standard deviation and variance. Weights can be used.<br>
 <b>_D:sum(data_t) --> var</b> - Get sum of all elements.<br>
+<b>_D:table(data_t, names_t=nil, row_fn=nil) --> str</b> - Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.<br>
 <b>_D:tcdf(x_d, deg_N) --> num</b> - Student's cumulative distribution.<br>
 <b>_D:tpdf(x_d, deg_N) --> num</b> - Student's distribution density.<br>
 <b>_D:xEq(num) --> cond_fn</b> - Return function for condition x == d.<br>
@@ -701,7 +710,7 @@ ans = tmp[1]                  --> X[1]
 
 -- generate new list
 -- use 'lazy' function definition
-tmp = _D:zip("{x1-x2,x1+x2}", X, Y)
+tmp = _D:zip("{x1-x2, x1+x2}", X, Y)
 ans = tmp[1][2]               --> X[1]+Y[1]
 
 -- find histogram
@@ -719,9 +728,9 @@ ans = #a                      --> 4
 ans = a[1]                    --> X[3]
 
 -- Student cdf and pdf
-ans = _D:tcdf(4, 2.5)      --3> 0.9805
+ans = _D:tcdf(4, 2.5)        --3> 0.9805
 
-ans = _D:tpdf(2, 3.3)      --3> 0.0672
+ans = _D:tpdf(2, 3.3)        --3> 0.0672
 
 -- dsv write
 nm = os.tmpname()
@@ -732,14 +741,21 @@ _D:csvwrite(nm, t, ';')
 -- dsv read
 -- with separator ';'
 tt = _D:csvread(nm, ';')
-ans = tt[2][2]                --> 5
+ans = tt[2][2]                --> t[2][2]
 
--- csv write by columns
-_D:csvwrite(nm, t, ',', true)
+-- reference to 'transposed' table
+b = _D:T(t)
+ans = b[3][2]                 --> t[2][3]
 
--- csv read by columns
-tt = _D:csvread(nm, ',', true)
-ans = tt[1][3]                --> 3
+-- pretty print for a table
+print(_D:table(t))
+
+-- add column names and some processing
+fn = function (v)
+  return {v[1]^2, 0.5*(v[2]+v[2])}
+end
+c = _D:table(t, {'sq', 'avg'}, fn)
+print(c)
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -978,72 +994,65 @@ f:show()
 <div><a name="Graph"></a>
 <h3># Graph (graph) #</h3>
 <p class="descript">Operations with graphs.</p>
-<p><b>G:add(var) --> nil</b> - Add new node or edge to graph G. Node denoted as a single name, edge is a table of names (and weights if need).<br>
+<p><b>G:add(n1, n2=nil, w_d=1) --> nil</b> - Add new node or edge.<br>
+<b>G:addEdges(list_t) --> nil</b> - Import edges and weights from list.<br>
+<b>G:addNodes(list_t) --> nil</b> - Import nodes from list.<br>
 <b>G:bfs(startNode, goalNode) --> isFound, path_t</b> - Breadth first search. Return result and found path.<br>
 <b>G:copy() --> cpy_G</b> - Get copy of the graph.<br>
 <b>G:dfs(startNote, goalNode) --> isFound, path_t</b> - Depth first search. Return result and found path.<br>
-<b>G:edges() --> edges_t</b> - List of graph edges.<br>
+<b>G:dot() --> str</b> - Return graph structure in dot notation.<br>
+<b>G:edge() --> weight_d|nil</b> - Get weight of the edge.<br>
+<b>G:edges() --> edges_t</b> - Get list of edges.<br>
 <b>G:isComplete() --> bool</b> - Check completeness of the graph.<br>
-<b>G:isDirected() --> bool</b> - Check if the graph has directed edges.<br>
+<b>G:isDirected() --> bool</b> - Check if the graph is directed.<br>
 <b>G:isNegative() --> bool</b> - Check if the graph has negative edges.<br>
 <b>G:isWeighted() --> bool</b> - Check if any edge has weight different from 1.<br>
-<b>G:nodes() --> node_t</b> - List of graph nodes.<br>
-<b>G:pathBF(startNode, [goalNode]) --> dist_d, path_t|prev_t</b> - Shortest path search using Bellman-Ford algorithm.<br>
+<b>G:nodes() --> node_t</b> - List of nodes.<br>
 <b>G:pathD(startNode, [goalNode]) --> dist_d, path_t|prev_t</b> - Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.<br>
-<b>G:remove(var) --> nil</b> - Remove node or edge from the graph G. Node is a single name, edge - table of names.<br>
-<b>Graph {v1, v2,..} --> new_G</b> - Create new graph.<br></p>
+<b>G:remove(n1, [n2]) --> nil</b> - Remove node or edge from the graph.<br>
+<b>G:size() --> nodes_N</b> - Get node number.<br>
+<b>G:toSvg(name_s) --> nil</b> - Convert graph to SVG image using Graphviz.<br>
+<b>Graph () --> new_G</b> - Create undirected graph.<br>
+<b>Graph:dir() --> new_G</b> - Create directed graph.<br></p>
 <pre class="example">
 
 -- use 'graph'
 Graph = require 'lib.graph'
 
--- build graph
--- single name - node, names in brackets - edges
--- letter w denotes weight of non directed edge
--- numbers are weights of directed edges
-a = Graph {'a','b',
-  {'a','c'},
-  {'d','e',w=2},
-  {'d','b',4,3}
-}
-
+-- build undirected graph
+a = Graph()
+a:addNodes {'a', 'b', 'c', 'd', 'e'}
 -- list of nodes
 nd = a:nodes()
 ans = #nd                     --> 5
 
 -- list of edges
--- if an edge has different weight for different sizes
--- it is represented twice
 ed = a:edges()
-ans = #ed                     --> 4
+ans = #ed                     --> 0
 
 -- has directed edges
-ans = a:isDirected()          --> true
+ans = a:isDirected()          --> false
 
 -- add node
 a:add('h')
 -- add edge
-a:add {'a','d'}
+a:add('a', 'd')
 -- check size
 -- (same as #a)
 ans = a:size()                --> 6
 
--- remove edge
-a:remove {'a','d'}
 -- remove node
 a:remove('a')
 -- new edge number
 ed = a:edges()
-ans = #ed                     --> 3
+ans = #ed                     --> 0
 
--- directed edges
--- second way to define
--- from first to second node
-a:add {'c','p',w12=2}
+-- directed graph
+d = Graph:dir()
+d:add('c', 'p', 2)
 -- and vise versa
-a:add {'c','q',w21=3}
-ed = a:edges()
-ans = #ed                     --> 5
+d:add('p', 'c', 3)
+ans = d:edge('c', 'p')        --> 2
 
 -- make copy
 b = a:copy()
@@ -1052,7 +1061,8 @@ b = a:copy()
 ans = b:isComplete()          --> false
 
 -- prepare graph
-c = Graph {
+c = Graph() 
+c:addEdges {
   {'a','b'},
   {'a','c'},
   {'b','d'},
@@ -1062,9 +1072,14 @@ c = Graph {
   {'f','h'},
   {'e','g'}
 }
-
 -- is it weighted
 ans = c:isWeighted()          --> false
+
+-- print in 'dot' notation
+print(c:dot())
+
+-- save svg image
+c:toSvg('test_c')
 
 -- breadth first search
 _,path = c:bfs('e','h')
@@ -1076,21 +1091,13 @@ ans = found                   --> true
 
 -- update weight (default is 1)
 -- use 'add' method
-c:add{'a','b',w=0.5}
-c:add{'b','e',w=0.4}
-c:add{'c','f',w=2}
+c:add('a','b',0.5)
+c:add('b','e',0.4)
+c:add('c','f',2)
 
 -- Dijkstra path search
 dist,prev = c:pathD('a')
 ans = dist['g']               --> 1.9
-
--- Bellman-Ford path search
-c:add{'f','h',w=-0.5}
-dist,prev = c:pathBF('a')
-ans = dist['h']
-
--- check negative edges
-ans = c:isNegative()          --> true
 
 -- show
 print(b)
@@ -1213,7 +1220,6 @@ ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
 <b>Round(x_d, N=0) --> num</b> - Round value, define number of decimal digits.<br>
 <b>Run(name_s, isInt=false) --> nil</b> - Execute lua- or note- file. Set isInt for interaction.<br>
 <b>Type(x) --> str</b> - Show type of the object.<br>
-<b>_ans</b> - Result of the last operation.<br>
 <b>_e</b> - Euler number.<br>
 <b>_pi</b> - Number pi.<br>
 <b>abs(x) --> num</b> - Absolute value.<br>
@@ -1230,9 +1236,6 @@ ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
 <b>help(fn='main') --> str</b> - Show information about the function.<br>
 <b>log(x) --> y</b> - Natural logarithm.<br>
 <b>quit() --> nil</b> - Quit the program.<br>
-<b>rand() --> float</b> - Random number between 0 and 1.<br>
-<b>randi(N) -> int</b> - Random integer in range from 1 to N.<br>
-<b>randn(mean_d=0, dev_d=1) --> float</b> - Normal distributed random value with the given mean and deviation.<br>
 <b>sin(x) --> y</b> - Sine.<br>
 <b>sinh(x) --> y</b> - Hyperbolic sinus.<br>
 <b>sqrt(x) --> y</b> - Square root.<br>
@@ -1243,7 +1246,7 @@ ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
 
 require 'lib.main'
 
--- constants starts from _
+-- constants starts from '_'
 ans = _pi                     --> math.pi
 
 -- standard functions
@@ -1254,17 +1257,6 @@ ans = Round(0.9)              --> 1.0
 
 -- save 2 digits
 ans = Round(math.pi, 2)       --> 3.14
-
--- random between 0 and 1
-p = rand()
-ans = (p >= 0) and (p <= 1)   --> true
-
--- random integer (1 to 10)
-p = randi(10)
-ans = (p >= 1) and (p <= 10)  --> true
-
--- normal distributed random
-print(randn())
 
 -- get type
 -- "knows" Sonata objects
@@ -1487,7 +1479,7 @@ k = k:table()
 ans = k[2][1]                 --> 0
 
 -- make diagonal matrix
-ans = Mat:diag({1,2,3})       --> Mat {{1,0,0},
+ans = Mat:diagonal({1,2,3})   --> Mat {{1,0,0},
                                        {0,2,0},
                                        {0,0,3}}
 
@@ -1842,6 +1834,220 @@ print(d)
 
 --</pre>
 <a href="#Top">Top</a></div>
+<div><a name="Rand"></a>
+<h3># Rand (random) #</h3>
+<p class="descript">Random number generators.</p>
+<p><b>Rand () --> float</b> - Uniform distributed random number between 0 and 1.<br>
+<b>Rand:binomial(p_d, N) --> int</b> - Binomial distributed random values.<br>
+<b>Rand:bytes(N) --> str</b> - Get sequence of random bytes.<br>
+<b>Rand:cauchy(mu_d=0, sigma_d=1) --> float</b> - Cauchy distributed random numbers.<br>
+<b>Rand:choice(tbl) --> element, index_N</b> - Get random table element.<br>
+<b>Rand:exp(lambda_d=1) --> float</b> - Exponential distributed random values.<br>
+<b>Rand:flip(p=0.5) --> bool</b> - Uniform distributed binary value.<br>
+<b>Rand:gamma(alpha_N, beta_d=1) --> float</b> - Gamma distributed random values.<br>
+<b>Rand:int([lower_i=1], upper_i) -> int</b> - Uniform distributed random integer in the given range.<br>
+<b>Rand:ipairs(tbl) --> fn</b> - Random iterator over the table elements.<br>
+<b>Rand:logistic(mu_d=0, sigma_d=1) --> float</b> - Logistic distributed random value.<br>
+<b>Rand:new(seed_i=0) --> R</b> - Create random generator object.<br>
+<b>Rand:norm(mean_d=0, dev_d=1) --> float</b> - Normal distributed random value with the given mean and deviation.<br>
+<b>Rand:poisson(lambda_d) --> int</b> - Poisson distributed random values.<br>
+<b>Rand:rayleigh(sigma_d) --> float</b> - Rayleigh distributed random values.<br>
+<b>Rand:seed(N=os.time) --> nil</b> - Set random generator seed.<br>
+<b>Rand:shuffle(tbl) --> nil</b> - Change order of elements.<br></p>
+<pre class="example">
+
+-- use 'random'
+Rand = require 'lib.random'
+Ap = require 'lib.asciiplot'     -- for visualization
+_D = require 'lib.data'          -- hystogram
+Spec = require 'lib.special'     -- gamma function
+-- prepare for data generation
+N = 100  -- number of points
+-- normalize hystograms
+function normalize (lst, step)
+  local d = step * N
+  for i, v in ipairs(lst) do lst[i] = v / d end
+end
+
+-- default generator (0 to 1)
+lst = {}
+for i = 1, N do
+  lst[i] = Rand()
+end
+
+-- visualize
+ts, te = _D:histcounts(lst, 10)
+normalize(ts, 1)
+fig = Ap()
+fig:setY {view='min'}; fig:setX {range={0, 0.5}, fix=true}
+v = _D:T({te, ts})  -- get list of pairs
+fig:bar(v)
+print(fig)
+
+-- custom generator (0 to 1)
+rnd = Rand:new()
+for i = 1, N do
+  lst[i] = rnd()
+end
+
+-- visualize renerated data
+ts, te = _D:histcounts(lst, 10)
+normalize(ts, 1)
+v = _D:T({te, ts})   -- list of pairs
+fig:bar(v)
+print(fig)
+
+-- normal distribution
+mu, sig = 1, 0.5
+for i = 1, N do
+  lst[i] = rnd:norm(mu, sig)
+end
+
+-- show normal distribution
+fig = Ap(53, 19)
+fig:setX {view='min'}
+-- simplify visualization
+function visualize (data, a, b, step, fn)
+  local lim = {}
+  for x = a, b, step do lim[#lim+1] = x end
+  local ts, te = _D:histcounts(data, lim)
+  normalize(ts, step)
+  fig:plot(te, ts, 'random', fn, 'pdf')
+  print(fig)
+end
+-- probability density function
+pdf = function (x)
+  return math.exp(-0.5*(x-mu)^2/sig^2) / (sig*math.sqrt(2*math.pi))
+end
+visualize(lst, mu-2*sig, mu+2*sig, 4*sig/10, pdf)
+
+-- exponential distribution
+lam = 0.5
+for i = 1, N do
+  lst[i] = Rand:exp(lam)
+end
+
+-- show exponential distribution
+pdf = function (x) return  lam*math.exp(-lam*x) end
+step = 0.5
+visualize(lst, 0, 10*step, step, pdf)
+
+-- logistic distribution
+mu = 2; sig = 2
+for i = 1, N do
+  lst[i] = Rand:logistic(mu, sig)
+end
+
+-- show logistic distribution
+pdf = function (x)
+  local v = math.exp(-(x-mu)/sig)
+  return v / sig / (1 + v)^2
+end
+visualize(lst, mu-4*sig, mu+4*sig, 8*sig/10, pdf)
+
+-- Raileigh distribution
+sig = 0.5
+for i = 1, N do
+  lst[i] = rnd:rayleigh(sig)
+end
+
+-- show Raileigh distribution
+pdf = function (x)
+  return x/sig^2*math.exp(-0.5*x^2/sig^2)
+end
+visualize(lst, 0, 4*sig, 4*sig/10, pdf)
+
+-- Cauchy distribution
+mu = 0; sig = 1
+for i = 1, N do
+  lst[i] = Rand:cauchy(mu, sig)
+end
+
+-- show Cauchy distribution
+pdf = function (x)
+  return 1/(math.pi*sig)/(1+(x-mu)^2/sig^2)
+end
+visualize(lst, mu-3*sig, mu+3*sig, 6*sig/10, pdf)
+
+-- gamma distribution
+alpha = 7; beta = 1
+for i = 1, N do
+  lst[i] = rnd:gamma(alpha, beta)
+end
+
+-- show gamma distribution
+gamma = Spec:gamma(alpha)
+pdf = function (x)
+  return beta^alpha * x^(alpha-1) * math.exp(-beta*x)/gamma
+end
+visualize(lst, 2, 14, 1.2, pdf)
+
+-- Poisson distribution
+lambda = 4
+for i = 1, N do
+  lst[i] = Rand:poisson(lambda)
+end
+
+-- show Poisson distribution
+-- find factorial
+function fact(n)
+  local p = 1
+  for k = 2, n do p = p * k end
+  return p
+end
+pmf = function (x)
+  x = math.floor(x)  -- to 'integer'
+  return lambda^x * math.exp(-lambda) / fact(x)
+end
+visualize(lst, 0, 10, 1, pmf)
+
+-- binomial distribution
+n = 20; p = 0.4
+for i = 1, N do
+  lst[i] = Rand:binomial(p, n)
+end
+
+-- show binomial distribution
+pmf = function (x)
+  x = math.floor(x)  -- to 'integer'
+  return fact(n) * p^x * (1-p)^(n-x) / fact(x) / fact(n-x)
+end
+visualize(lst, 0, n, n/10, pmf)
+
+-- get random true/false
+v = Rand:flip()
+ans = type(v)                 --> 'boolean'
+
+-- get integer from 1 to 10
+v = Rand:int(10)
+ans = (1 <= v and v <= 10)    --> true
+
+-- random order iterator
+a = {1, 2, 3, 4, 5}
+for i, v in Rand:ipairs(a) do print(i, v) end
+
+-- random choice
+v, i = Rand:choice(a)
+ans = v                       --> a[i]
+
+-- change order in place
+Rand:shuffle(a)
+for i, v in ipairs(a) do print(i, v) end
+
+-- random chars
+print(rnd:bytes(8))
+
+-- same seed
+r1 = Rand:new(1)
+r2 = Rand:new(1)
+ans = (r1() == r2())            --> true
+
+-- change seed
+r2:seed(2)
+ans = (r1() ~= r2())            --> true
+
+--</pre>
+<a href="#Top">Top</a></div>
 <div><a name="Rat"></a>
 <h3># Rat (rational) #</h3>
 <p class="descript">Computations with rational numbers.</p>
@@ -1853,7 +2059,6 @@ print(d)
 <b>Rat (num, denom=1) --> new_R</b> - Create rational number using num (and denom).<br>
 <b>Rat:from(src_f, err_f=1E-3) --> R</b> - Estimate ratio from floating point value.<br>
 <b>Rat:fromCont(coeff_t) --> R</b> - Transform continued fraction to rational number.<br>
-<b>Rat:gcd(a_f, b_f) --> num</b> - Calculate the greatest common divisor for two integers.<br>
 <b>arithmetic</b> - R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2<br>
 <b>comparison</b> - R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2<br></p>
 <pre class="example">
@@ -1888,9 +2093,6 @@ ans = 2 ^ a                  --3> 1.414
 ans = (b == b)                --> true
 
 ans = (a >= b)                --> false
-
--- greatest common division
-ans = Rat:gcd(125,65)         --> 5
 
 -- represent as decimal
 ans = a:float()               --> 0.5
@@ -1977,9 +2179,6 @@ ans = Spec:gammaln(100)      --3> 359.1342
 ans = Spec:gammp(7.7, 2.3) * 1E3 --2> 3.85
 
 ans = Spec:gammq(1.5, 4.8) * 1E2 --2> 2.23
-
--- another syntax
-ans = Spec:gammainc(2.1, 0.3, 'upper') * 1E2 --3> 1.942
 
 -- Bessel functions
 ans = Spec:besselj(3, 1.5) * 1E2 --3> 6.096

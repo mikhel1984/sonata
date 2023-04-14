@@ -46,9 +46,6 @@ ans = (b == b)                --> true
 
 ans = (a >= b)                --> false
 
--- greatest common division
-ans = Rat:gcd(125,65)         --> 5
-
 -- represent as decimal
 ans = a:float()               --> 0.5
 
@@ -331,7 +328,7 @@ end
 --  @param vd Denominator. Default is 1.
 --  @return New rational object.
 rational._new = function (self, vn, vd)
-  local g = rational:gcd(vd, vn)     -- inverse order move sign to denominator
+  local g = rational._gcd(vd, vn)     -- inverse order move sign to denominator
   return setmetatable({_ = {vn/g, vd/g}}, self)
 end
 
@@ -414,15 +411,12 @@ about[rational.fromCont] = {":fromCont(coeff_t) --> R",
   "Transform continued fraction to rational number.", help.NEW}
 
 --- The greatest common divisor.
---  @param self Do nothing.
 --  @param va First integer.
 --  @param vb Second integer.
 --  @return Greatest common divisor.
-rational.gcd = function (self, va, vb)
-  return Cross.eq(va, 0) and vb or rational:gcd(vb % va, va)
+rational._gcd = function (va, vb)
+  return Cross.eq(va, 0) and vb or rational._gcd(vb % va, va)
 end
-about[rational.gcd] = {":gcd(a_f, b_f) --> num",
-  "Calculate the greatest common divisor for two integers.", help.OTHER}
 
 --- Get numerator.
 --  @param R Rational number.

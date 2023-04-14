@@ -81,7 +81,7 @@ ans = tmp[1]                  --> X[1]
 
 -- generate new list
 -- use 'lazy' function definition
-tmp = _D:zip("{x1-x2,x1+x2}", X, Y)
+tmp = _D:zip("{x1-x2, x1+x2}", X, Y)
 ans = tmp[1][2]               --> X[1]+Y[1]
 
 -- find histogram
@@ -99,9 +99,9 @@ ans = #a                      --> 4
 ans = a[1]                    --> X[3]
 
 -- Student cdf and pdf
-ans = _D:tcdf(4, 2.5)      --3> 0.9805
+ans = _D:tcdf(4, 2.5)        --3> 0.9805
 
-ans = _D:tpdf(2, 3.3)      --3> 0.0672
+ans = _D:tpdf(2, 3.3)        --3> 0.0672
 
 -- dsv write
 nm = os.tmpname()
@@ -112,14 +112,21 @@ _D:csvwrite(nm, t, ';')
 -- dsv read
 -- with separator ';'
 tt = _D:csvread(nm, ';')
-ans = tt[2][2]                --> 5
+ans = tt[2][2]                --> t[2][2]
 
--- csv write by columns
-_D:csvwrite(nm, t, ',', true)
+-- reference to 'transposed' table
+b = _D:T(t)
+ans = b[3][2]                 --> t[2][3]
 
--- csv read by columns
-tt = _D:csvread(nm, ',', true)
-ans = tt[1][3]                --> 3
+-- pretty print for a table
+print(_D:table(t))
+
+-- add column names and some processing
+fn = function (v)
+  return {v[1]^2, 0.5*(v[2]+v[2])}
+end
+c = _D:table(t, {'sq', 'avg'}, fn)
+print(c)
 
 --]]
 
@@ -133,6 +140,7 @@ Ver = Ver.versions
 local STAT = 'statistics'
 local FILES = 'files'
 local FILTER = 'filter'
+local REF = 'reference'
 
 --	INFO
 
@@ -161,7 +169,7 @@ data.cov2 = function (self, t1, t2)
   end
   return s / #t1
 end
-about[data.cov2] = {":cov2(xs_t, ys_t) --> float", 
+about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
   "Find covariance value for two vectors.", STAT}
 
 --- Estimate covariance matrix.
@@ -183,7 +191,7 @@ data.cov = function (self, t)
   end
   return m
 end
-about[data.cov] = {":cov(data_t) --> cov_M", 
+about[data.cov] = {":cov(data_t) --> cov_M",
   "Find covariance matrix for list of vectors.", STAT}
 
 --- Save Lua table in file, use given delimiter.
@@ -191,41 +199,25 @@ about[data.cov] = {":cov(data_t) --> cov_M",
 --  @param sFile File name.
 --  @param t Lua table.
 --  @param char Delimiter, default is coma.
---  @param bCol Flag, reading elements by columns.
-data.csvwrite = function (self, sFile, t, char, bCol)
+data.csvwrite = function (self, sFile, t, char)
   local f = assert(io.open(sFile, 'w'))
   char = char or ','
-  if bCol then
-    -- by columns
-    if type(t[1]) == 'table' then
-      for r = 1, #t[1] do
-        local tmp = {}
-        for c = 1, #t do tmp[#tmp+1] = t[c][r] end
-        f:write(table.concat(tmp, char), '\n')
-      end
-    else
-      for r = 1, #t do f:write(t[i], '\n') end
-    end
-  else
-    -- by rows
-    for _, v in ipairs(t) do
-      if type(v) == 'table' then v = table.concat(v, char) end
-      f:write(v, '\n')
-    end
+  for _, v in ipairs(t) do
+    if type(v) == 'table' then v = table.concat(v, char) end
+    f:write(v, '\n')
   end
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',', isCol=false) --> nil",
+about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',') --> nil",
   "Save Lua table as delimiter separated data into file.", FILES}
 
 --- Import data from text file, use given delimiter.
 --  @param self Do nothing.
 --  @param sFile File name.
 --  @param char Delimiter, default is coma.
---  @param bCol Flag, reading elements by columns.
 --  @return Lua table with data.
-data.csvread = function (self, sFile, char, bCol)
+data.csvread = function (self, sFile, char)
   local f = assert(io.open(sFile, 'r'))
   char = char or ','
   local templ = '([^'..char..']+)'
@@ -243,20 +235,13 @@ data.csvread = function (self, sFile, char, bCol)
         tmp[#tmp+1] = tonumber(p) or p
       end
       -- save
-      if bCol then
-        if #res == 0 then  -- initialize
-          for i = 1, #tmp do res[#res+1] = {} end
-        end
-        for i = 1, #tmp do table.insert(res[i], tmp[i]) end
-      else
-        res[#res+1] = tmp
-      end
+      res[#res+1] = tmp
     end
   end
   f:close()
   return res
 end
-about[data.csvread] = {":csvread(file_s, delim_s=',', isCol=false) --> tbl",
+about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
   "Read delimiter separated data as Lua table.", FILES}
 
 --- Generate function from string.
@@ -279,7 +264,7 @@ data.filter = function (self, t, vCond)
     -- boolean function
     for i = 1, #t do
       local v = t[i]
-      if fn(v) then res[#res+1] = v end
+      if vCond(v) then res[#res+1] = v end
     end
   elseif type(vCond) == 'table' then
     -- weights
@@ -304,7 +289,7 @@ data.freq = function (self, t)
   end
   return tmp
 end
-about[data.freq] = {":freq(data_t) --> tbl", 
+about[data.freq] = {":freq(data_t) --> tbl",
   "Return table with frequencies of elements.", STAT}
 
 --- Geometrical mean.
@@ -327,7 +312,7 @@ data.geomean = function (self, t, tw)
     return p^(1/#t)
   end
 end
-about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num", 
+about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num",
   "Geometrical mean.", STAT}
 
 --- Harmonic mean.
@@ -350,7 +335,7 @@ data.harmmean = function (self, t, tw)
     return #t / h
   end
 end
-about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num", 
+about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num",
   "Harmonic mean.", STAT}
 
 --- Number of elements in each bin.
@@ -424,7 +409,7 @@ data.isNot = function (self, t, fn)
   end
   return res
 end
-about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t", 
+about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
   "Find inverted weights using boolean function.", FILTER}
 
 --- Maximum value.
@@ -438,7 +423,7 @@ data.max = function (self, t)
   end
   return m, k
 end
-about[data.max] = {":max(data_t) --> var, ind_N", 
+about[data.max] = {":max(data_t) --> var, ind_N",
   "Maximal element and its index.", STAT}
 
 --- Average value.
@@ -459,7 +444,7 @@ data.mean = function (self, t, tw)
     return data:sum(t) / #t
   end
 end
-about[data.mean] = {":mean(data_t, [wight_t]) --> num", 
+about[data.mean] = {":mean(data_t, [wight_t]) --> num",
   "Calculate average value. Weights can be used.", STAT}
 
 --- Find median.
@@ -477,7 +462,7 @@ data.median = function (self, t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
-about[data.median] = {":median(data_t) --> num", 
+about[data.median] = {":median(data_t) --> num",
   "Median of the list.", STAT}
 
 --- Minimum value.
@@ -491,7 +476,7 @@ data.min = function (self, t)
   end
   return m, k
 end
-about[data.min] = {":min(data_t) --> var, ind_N", 
+about[data.min] = {":min(data_t) --> var, ind_N",
   "Minimal element and its index.", STAT}
 
 --- Central moment.
@@ -527,7 +512,7 @@ data.sum = function (self, t)
   for i = 1, #t do s = s+t[i] end
   return s
 end
-about[data.sum] = {":sum(data_t) --> var", 
+about[data.sum] = {":sum(data_t) --> var",
   "Get sum of all elements.", help.OTHER}
 
 --- Standard deviation and variance.
@@ -555,6 +540,49 @@ end
 about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
   "Standard deviation and variance. Weights can be used.", STAT}
 
+--- Show data in Markdown-like table form.
+--  @param self Do nothing.
+--  @param data_t Table of form {row1, row2, etc.}.
+--  @param names_t Table of column names (optional).
+--  @param fn Table that generates new column from the given (optional).
+--  @return String with table representation.
+data.table = function (self, data_t, names_t, fn)
+  local acc, line, head, len = {}, {}, {}, {}
+  -- data to stings
+  for i, v in ipairs(data_t) do
+    local row = {}
+    for j, w in ipairs(fn and fn(v) or v) do
+      row[j] = tostring(w)
+      len[j] = math.max(len[j] or 0, #row[j])
+    end
+    acc[i] = row
+  end
+  -- names
+  if names_t then
+    assert(#names_t == #acc[1], "Wrong column number")
+    for j, w in ipairs(names_t) do
+      head[j] = tostring(w)
+      len[j] = math.max(len[j], #head[j])
+    end
+  end
+  -- collect
+  for j = 1, #acc[1] do
+    local templ = string.format('%%-%ds', len[j])
+    for i = 1, #acc do acc[i][j] = string.format(templ, acc[i][j]) end
+    line[j] = string.rep('-', len[j])
+    if names_t then head[j] = string.format(templ, head[j]) end
+  end
+  local res, templ = {}, '| %s |'
+  if names_t then res[1] = string.format(templ, table.concat(head, ' | ')) end
+  res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
+  for _, v in ipairs(acc) do
+    res[#res+1] = string.format(templ, table.concat(v, ' | '))
+  end
+  return table.concat(res, '\n')
+end
+about[data.table] = {":table(data_t, names_t=nil, row_fn=nil) --> str",
+  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
+
 --- Student's cumulative distribution
 --  @param self Do nothing.
 --  @param d Value.
@@ -578,7 +606,7 @@ data.tpdf = function (self, d, N)
   local tmp = math.sqrt(N)*data.ext_special:beta(0.5, 0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end
-about[data.tpdf] = {":tpdf(x_d, deg_N) --> num", 
+about[data.tpdf] = {":tpdf(x_d, deg_N) --> num",
   "Student's distribution density.", help.OTHER}
 
 --- Condition: x == d.
@@ -608,7 +636,7 @@ about[data.xGt] = {":xGt(num) --> cond_fn", "Return function for condition x > d
 data.xIn = function (self, d1, d2)
   return (function (x) return d1 <= x and x <= d2 end)
 end
-about[data.xIn] = {":xIn(num1, num2) --> cond_fn", 
+about[data.xIn] = {":xIn(num1, num2) --> cond_fn",
   "Return function for condition d1 <= x <= d2.", FILTER}
 
 --- Condition: x < d
@@ -651,12 +679,12 @@ about[data.zip] = {":zip(fn,...) --> tbl",
   "Sequentially apply function to list of tables.", help.OTHER}
 
 -- Get reference to data range in other table
-local metaref = { type = 'ref' }
+local mt_ref = { type = 'ref' }
 
 --- Number of elements in range.
 --  @param self Ref object.
 --  @return Length of the reference table.
-metaref.__len = function (self)
+mt_ref.__len = function (self)
   return self._end - self._beg
 end
 
@@ -664,19 +692,24 @@ end
 --  @param self Ref object.
 --  @param i Element index.
 --  @return Table value.
-metaref.__index = function (self, i)
+mt_ref.__index = function (self, i)
   if Ver.isInteger(i) then
     local n = i + self._beg
-    if n > self._beg and n <= self._end then
+    if self._beg < n and n <= self._end then
       return self._t[n]
     end
   end
-  return metaref[i]
+  return mt_ref[i]
 end
 
--- Block setting
-metaref.__newindex = function (self, k, v)
-  -- do nothing
+--- Set k-th value.
+--  @param self Ref object.
+--  @param k Index.
+--  @param v Value.
+mt_ref.__newindex = function (self, k, v)
+  if Ver.isInteger(k) and self._beg < k and k <= self._end then
+    self._t[self._beg + k] = v
+  end
 end
 
 --- Create reference to other table.
@@ -689,10 +722,82 @@ data.ref = function (self, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
-  return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, metaref)
+  return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, mt_ref)
 end
 about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
-  'Return reference to the range of elements.', help.OTHER}
+  'Return reference to the range of elements.', REF}
+
+-- Get reference to 'transposed' data
+-- i.e. t[i][j] returns t[j][i]
+local mt_transpose = {type = 'transpose'}
+
+--- Get access to k-th element.
+--  @param self T-ref object.
+--  @param k Table index.
+--  @return Empty table with mt_transpose_k metatable.
+mt_transpose.__index = function (self, k)
+  self._tbl._n = k
+  return self._tbl
+end
+
+--- Get table 'length'.
+--  @param self T-ref object.
+--  @return Expected table length.
+mt_transpose.__len = function (self)
+  return #self._tbl._src[1]
+end
+
+--- Transform ref object into pure table.
+--  @param self T-ref object.
+--  @return Lua table.
+mt_transpose._table = function (self)
+  local res, src = {}, self._tbl._src
+  for i = 1, #src[1] do
+    local row = {}
+    for j = 1, #src do row[j] = src[j][i] end
+    res[i] = row
+  end
+  return res
+end
+
+-- Metatable for internal table.
+local mt_transpose_k = {}
+
+--- Get table element.
+--  @param self Internal T-ref object.
+--  @param k Element index.
+mt_transpose_k.__index = function (self, k)
+  local v = self._src[k]
+  return v and v[self._n] or nil
+end
+
+--- Set table element.
+--  @param self Internal T-ref object.
+--  @param k Element index.
+--  @param v New value.
+mt_transpose_k.__newindex = function (self, k, v)
+  self._src[k][self._n] = v
+end
+
+--- Get length of 'internal' table.
+--  @param self Internal T-ref object.
+--  @return Table length.
+mt_transpose_k.__len = function (self) return #self._src end
+
+--- Get reference to 'transposed' table.
+--  @param self Do nothing.
+--  @param src Source table.
+--  @return Reference object.
+data.T = function (self, src)
+  if #src == 0 or type(src[1]) ~= 'table' then
+    return src  -- don't need in reference
+  end
+  local o = {
+    _tbl = setmetatable({_src = src, _n = 0}, mt_transpose_k),
+  }
+  return setmetatable(o, mt_transpose)
+end
+about[data.T] = {":T(src_t) --> TR", "Get reference to 'transposed' table.", REF}
 
 -- Comment to remove descriptions
 data.about = about

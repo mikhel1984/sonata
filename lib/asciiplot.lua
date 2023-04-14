@@ -22,7 +22,7 @@ ans = info.x.size             --> Ap.WIDTH
 ans = info.x.pose             --> 'mid'
 
 -- print functions
-fig1:setX {-3.14, 3.14}   -- default is {-1, 1}
+fig1:setX {range={-3.14, 3.14}}   -- default is {-1, 1}
 fig1:plot(math.sin, 'sin', math.cos, 'cos')
 fig1:title 'Trigonometry'
 print(fig1)
@@ -34,8 +34,8 @@ fig1:plot(x,y)
 print(fig1)
 
 -- combine different sources
-fig1:showY 'min'  -- left axis
-fig1:plot(x,'single',x,y,'pair',math.log, 'function')
+fig1:setY {view='min'}  -- left axis
+fig1:plot(x,'single',x,y,'pair',math.log,'function')
 print(fig1)
 
 -- define arbitrary figure size
@@ -50,30 +50,30 @@ for x = 0, 3, 0.1 do
   --             x      y1          y2
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
-fig2:showX 'min'  -- down
+fig2:setX {view='min'}  -- down
 fig2:tplot(tbl)
 print(fig2)
 
 -- plot only y2, don't rescale
-fig2:setX {-1, 4}
-fig2:setY {0, 1}
+fig2:setX {range={-1, 4}}
+fig2:setY {range={0, 1}}
 fig2:tplot(tbl, {2, yfix=true})
 print(fig2)
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
-ans = fig1:axes().x.size      --> 59 
+ans = fig1:axes().x.size      --> 59
 
 -- horizontal concatenation
 -- first
 fig1:scale(0.5)   -- half of initial size
-fig1:setX {0, 1.57}
-fig1:showY('mid'); fig1:showX('min')
+fig1:setX {range={0, 1.57}, view='min'}
+fig1:setY {view='mid'}
 fig1:plot(sin, 'sin')
 fig1:title 'First'
 -- second
 fig2:resize(fig1)      -- set equal size
-fig2:setX {0, 1.57}
+fig2:setX {range={0, 1.57}}
 fig2:plot(cos, 'cos')
 fig2:title 'Second'
 str = Ap:concat(fig1, fig2)   -- similar to fig1..fig2 for 2 objects
@@ -81,10 +81,9 @@ print(str)
 
 -- call 'API' functions
 fig3 = Ap():scale(0.5)
-fig3:setX {-2,2}
-fig3:setY {-1,4}
 -- no axes and limits
-fig3:showX(nil); fig3:showY(false)
+fig3:setX {range={-2,2}, view=false}
+fig3:setY {range={-1,4}, view=false}
 fig3:reset()
 -- set function
 for x = -1.2, 1.2, 0.1 do
@@ -98,8 +97,8 @@ print(fig3)
 
 -- print surface contours
 fig4 = Ap()
-fig4:setX {-5, 5}
-fig4:setY {-5, 5}
+fig4:setX {range={-5, 5}}
+fig4:setY {range={-5, 5}}
 fig4:contour(function (x,y) return x*x - y*y end)
 print(fig4)
 
@@ -111,12 +110,16 @@ fig5 = Ap()
 fig5:bar(data)
 print(fig5)
 
--- use log scale 
+-- use log scale
 fig6 = Ap()
-fig6:setX {-10, 10}
-fig6:logY(true)
+fig6:setX {range={-10, 10}}
+fig6:setY {log=true}
 fig6:plot(math.exp)
 print(fig6)
+
+-- simplified call, use range -1...1
+-- change it via table if need
+Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 
 --]]
 
@@ -177,7 +180,7 @@ axis.limit = function (A, s)
   else
     return nil
   end
-  return A.log and string.format(' 10^%.1f ', v) 
+  return A.log and string.format(' 10^%.1f ', v)
     or string.format(' %s ', tostring(v))
 end
 
@@ -195,12 +198,12 @@ end
 --  @param N Required width.
 --  @return axis object.
 axis.new = function (N)
-  if N < 9 then 
+  if N < 9 then
     print('Set minimal axis size:', N)
     N = 9
   elseif N % 2 == 0 then
     print('Change to odd size')
-    return asis.new(N+1)
+    return axis.new(N+1)
   end
   local x1, x2 = -1, 1
   local a = {
@@ -236,14 +239,14 @@ end
 --  @param A Axis object.
 --  @param N New size.
 axis.resize = function (A, N)
-  if N < 9 then 
+  if N < 9 then
     print('Set minimal axis size:', N)
     N = 9
   elseif N % 2 == 0 then
     print('Change to odd size')
-    return asis.resize(A, N+1)
+    return axis.resize(A, N+1)
   end
-  A.size = N 
+  A.size = N
   A._size = N
 end
 
@@ -328,7 +331,7 @@ axis.values = function (A, isX)
     if ind <= A.size then
       local x = (ind - 1) * k + x0
       local i = ind
-      ind, x = ind + 1, A.log and math.pow(10, x) or x
+      ind, x = ind + 1, A.log and (10^x) or x
       return i, x
     end
   end
@@ -341,7 +344,7 @@ type = 'asciiplot', isasciiplot = true,
 -- const
 WIDTH = 73, HEIGHT = 21,
 -- symbols
-char = {'*', 'o', '#', '%', '~', 'x'},
+char = {'*', 'o', '#', '+', '~', 'x'},
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
 }
@@ -419,7 +422,10 @@ end
 --- Add coordinate axes.
 --  @param F Figure object.
 asciiplot._axes = function (F)
-  local vertical, horizontal, mark = '|', '-', '+'
+  local vertical, horizontal, mark, up, right = '|', '-', '+', 'A', '>'
+  if SONATA_ASCIIPLOT_UNICODE then
+    vertical, horizontal, mark, up, right = '│', '─', '┼', '▲', '▶'
+  end
   -- vertical line
   local n = nil
   if     F._yaxis == 'mid' then n = (F._x.size+1) / 2
@@ -429,14 +435,14 @@ asciiplot._axes = function (F)
     for i = 1, F._y.size do
       F._canvas[i][n] = vertical
     end
-    F._canvas[1][n] = 'A'
+    F._canvas[1][n] = up
     -- markers
     local d = F._y:markerInterval()
     for i = d+1, F._y.size-1, d do F._canvas[i][n] = mark end
     n = nil
   end
   -- horizontal line
-  if F._xaxis == 'mid' then n = (F._y.size+1) / 2
+  if     F._xaxis == 'mid' then n = (F._y.size+1) / 2
   elseif F._xaxis == 'max' then n = 1
   elseif F._xaxis == 'min' then n = F._y.size end
   if n then
@@ -444,7 +450,7 @@ asciiplot._axes = function (F)
     for i = 1, F._x.size do
       row[i] = horizontal
     end
-    row[F._x.size] = '>'
+    row[F._x.size] = right
     -- markers
     local d = F._x:markerInterval()
     for i = d+1, F._x.size-1, d do row[i] = mark end
@@ -649,6 +655,10 @@ asciiplot._new = function(self, dwidth, dheight)
     _xaxis = pos,
     _yaxis = pos,
     _zaxis = pos,
+    -- automatic change scale
+    _xfix = false,
+    _yfix = false,
+    _zfix = false,
     -- image
     _canvas = {},
     -- comments
@@ -816,7 +826,7 @@ asciiplot.addPoint = function (F, dx, dy, s)
     F._canvas[ny][nx] = s
   end
 end
-about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil", 
+about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil",
   "Add point (x,y) using char.", MANUAL}
 
 --- Set character to direct position.
@@ -830,7 +840,7 @@ asciiplot.addPose = function (F, ir, ic, s)
     F._canvas[ir][ic] = s
   end
 end
-about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> nil", 
+about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> nil",
   "Add character to the given position.", MANUAL}
 
 --- Set string to the given position.
@@ -853,15 +863,17 @@ asciiplot.axes = function (F)
   local res = {}
   local key = asciiplot.keys
   for i = 1, 3 do
-    local a = F[key[i]]
+    local k = key[i]
+    local a = F[k]
     res[key[i+3]] = {
       size = a.size,
       log = a.log or false,
       range = {
-        a.log and math.pow(10, a.range[1]) or a.range[1],
-        a.log and math.pow(10, a.range[2]) or a.range[2],
+        a.log and (10^a.range[1]) or a.range[1],
+        a.log and (10^a.range[2]) or a.range[2],
       },
-      pose = F[key[i]..'axis'],
+      pose = F[k..'axis'],
+      fix = F[k..'fix'],
     }
   end
   return res
@@ -871,33 +883,27 @@ about[asciiplot.axes] = {"F:axes() --> tbl",
 
 --- Plot bar graph.
 --  @param F Figure object.
---  @param t Data table ({x,y} or x).
---  @param vy Index of y column or data table (optional).
---  @param ix Optional index of x values.
---  @return Updated figure object.
-asciiplot.bar = function (F, t, vy, ix)
-  ix, vy = ix or 1, vy or 2
-  local ytbl = (type(vy) == 'table')   -- TODO Split into 2 functions
+--  @param t Data table {{x1,y1},{x2,y2}...}.
+--  @param iy Index of y column (optional).
+--  @param ix Index of x column (optional).
+asciiplot.bar = function (F, t, iy, ix)
+  ix, iy = ix or 1, iy or 2
   -- size
   local iL = mmodf(F._x.size * 0.2)
+  if iL % 2 == 1 then iL = iL - 1 end
   local iR = F._x.size - iL
+  local ax = F._x:copy()  -- temporary axis object
+  ax:resize(iR - iL)
   -- find limits
-  local min, max = math.huge, -math.huge
-  for i = 1, #t do
-    local v = ytbl and vy[i] or t[i][vy]
-    if v > max then max = v end
-    if v < min then min = v end
+  if not F._xfix then
+    local min, max = math.huge, -math.huge
+    for i = 1, #t do
+      local v = t[i][iy]
+      if v > max then max = v end
+      if v < min then min = v end
+    end
+    ax:setRange({min, max})
   end
-  local i0 = nil
-  if min >= 0 and max >= 0 then
-    i0, min = iL, 0
-  elseif min <= 0 and max <= 0 then
-    i0, max = iR, 0
-  else
-    local int, frac = mmodf(iL - min / (max - min) * (iR - iL))
-    i0 = (frac > 0.5) and int + 1 or int
-  end
-  local dm = (iR - iL) / (max - min)
   -- data step
   local step = 1
   if #t > F._y.size then
@@ -906,32 +912,35 @@ asciiplot.bar = function (F, t, vy, ix)
   end
   -- add values
   asciiplot._clear(F)
-  local r = 1
+  local ch, r = '=', 1
+  local lim = F._yaxis == 'min' and 1 or
+    F._yaxis == 'max' and ax.size or (ax.size + 1)/2
   for i = 1, #t, step do
+    local canvas = F._canvas[r]
     -- text
-    local x = tostring(ytbl and t[i] or t[i][ix])
-    for c = 1, math.min(iL-2, #x) do F._canvas[r][c] = string.sub(x, c, c) end
-    -- line
-    x = ytbl and vy[i] or t[i][vy]
-    local i1, i2 = mmodf(x * dm + i0)
-    if x >= 0 then
-      i2 = (i2 >= 0.5) and i1 + 1 or i1   -- right limit
-      i1 = i0
-    else
-      i1 = (i2 >= 0.5) and i1 - 1 or i1   -- left limit
-      i2 = i0
+    local x = tostring(t[i][ix])
+    for c = 1, math.min(iL-2, #x) do canvas[c] = string.sub(x, c, c) end
+    -- show
+    x = t[i][iy]
+    local p = ax:proj(x, true)
+    if not p then
+      p = (x < ax.range[1]) and ax.range[1] or ax.range[2]  -- set limit
     end
-    for c = i1, i2 do F._canvas[r][c] = '=' end
+    if p <= lim then
+      for c = p, lim do canvas[iL + c] = ch end
+    else
+      for c = lim, p do canvas[iL + c] = ch end
+    end
     -- value
     x = tostring(x)
     for c = 1, math.min(iL-2, #x) do
-      F._canvas[r][iR+2+c] = string.sub(x, c, c)
+      canvas[iR+2+c] = string.sub(x, c, c)
     end
     r = r + 1
   end
 end
-about[asciiplot.bar] = {"F:bar(t, vy=2, x_N=1) --> nil",
-  "Plot bar diargram for data. vy can be y index in t (optional) or table of y-s."}
+about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1) --> nil",
+  "Plot bar diargram for data."}
 
 --- Horizontal concatenation of figures.
 --  @param self Do nothing.
@@ -947,13 +956,13 @@ asciiplot.concat = function (self, ...)
     end
     if v._y.size ~= ag[1]._y.size then error('Different height') end
     local n = 0
-    for k, _ in pairs(v.legend) do n = n + 1 end
+    for _ in pairs(v.legend) do n = n + 1 end
     if n > nlegend then nlegend = n end
   end
   -- data
   local acc = {}
   local gap = '   '
-  for i, v in ipairs(ag) do
+  for _, v in ipairs(ag) do
     local k, width = 1, v._x.size
     -- title
     local row = acc[k] or {}
@@ -970,7 +979,7 @@ asciiplot.concat = function (self, ...)
     -- legend
     local n = 0
     local sym = {}
-    for k, _ in pairs(v.legend) do sym[#sym+1] = k end
+    for q, _ in pairs(v.legend) do sym[#sym+1] = q end
     if #sym > 0 then table.sort(sym) end
     for _, u in ipairs(sym) do
       row = acc[k] or {}
@@ -981,7 +990,7 @@ asciiplot.concat = function (self, ...)
       n = n + 1
     end
     -- add empty lines
-    for j = n+1, nlegend do
+    for _ = n+1, nlegend do
       row = acc[k] or {}
       row[#row+1] = asciiplot._format('', width, false, true)
       row[#row+1] = gap
@@ -999,13 +1008,13 @@ about[asciiplot.concat] = {":concat(...) --> str",
 --- Plot function of two arguments using contours.
 --  @param F Figure object.
 --  @param fn Function f(x,y).
---  @param tOpt Table of options: level - number of lines, zfix - flag for rescale, view - projection ('XY', 'XZ', 'YZ', 'concat' for its combination).
+--  @param tOpt Table of options: level - number of lines, view - projection ('XY', 'XZ', 'YZ', 'concat' for its combination).
 --  @return Figure object for single view or string for 'XYZ'.
 asciiplot.contour = function (F, fn, tOpt)
   tOpt = tOpt or {}
   tOpt.level = tOpt.level or 5    -- TODO limit maximal and minimal values
-  if tOpt.level > #asciiplot.lvls then 
-    error('Max levle is '..tostring(#asciiplot.lvls)) 
+  if tOpt.level > #asciiplot.lvls then
+    error('Max levle is '..tostring(#asciiplot.lvls))
   end
   local view = tOpt.view or 'XY'
   -- calculate
@@ -1014,9 +1023,7 @@ asciiplot.contour = function (F, fn, tOpt)
     F._x.size, F._y.size = F._y.size, F._x.size
   end
   local X, Y, Z, zrng = asciiplot._fn2Z(F, fn)
-  if not tOpt.zfix then
-    F._z:setRange(zrng)
-  end
+  if not F._zfix then F._z:setRange(zrng) end
   if view == 'concat' then
     local XY = asciiplot._viewXY(asciiplot.copy(F), X, Y, Z, tOpt)
     local XZ = asciiplot._viewXZ(asciiplot.copy(F), X, Y, Z, tOpt)
@@ -1024,12 +1031,12 @@ asciiplot.contour = function (F, fn, tOpt)
     local txt = {asciiplot.concat(nil, XY, YZ), tostring(XZ)}
     return table.concat(txt, '\n\n')
   end
-  local acc = {}
+  -- specific projection
   if view == 'XY' then asciiplot._viewXY(F, X, Y, Z, tOpt) end
   if view == 'XZ' then asciiplot._viewXZ(F, X, Y, Z, tOpt) end
   if view == 'YZ' then asciiplot._viewYZ(F, X, Y, Z, tOpt) end
 end
-about[asciiplot.contour] = {"F:contour(fn, {view='XY'}) --> nil|str",
+about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'}) --> nil|str",
   "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output."}
 
 --- Make a copy.
@@ -1044,6 +1051,9 @@ asciiplot.copy = function (F)
     _xaxis = F._xaxis,
     _yaxis = F._yaxis,
     _zaxis = F._zaxis,
+    _xfix = F._xfix,
+    _yfix = F._yfix,
+    _zfix = F._zfix,
     _canvas = {},
     legend = {},
   }
@@ -1063,24 +1073,6 @@ asciiplot.copy = function (F)
 end
 about[asciiplot.copy] = {
   "F:copy() --> cpy_F", "Create a copy of the object.", help.OTHER}
-
---- Change x axis type.
---  @param F Figure object.
---  @param isLog Flag to apply logarithmic scale.
-asciiplot.logX = function (F, isLog) F._x:setLog(isLog) end
-about[asciiplot.logX] = {"F:logX(isLog) --> nil", "Change X axis type to logarithmic.", CONF}
-
---- Change y axis type.
---  @param F Figure object.
---  @param isLog Flag to apply logarithmic scale.
-asciiplot.logY = function (F, isLog) F._y:setLog(isLog) end
-about[asciiplot.logY] = {"F:logY(isLog) --> nil", "Change Y axis type to logarithmic.", CONF}
-
---- Change z axis type.
---  @param F Figure object.
---  @param isLog Flag to apply logarithmic scale.
-asciiplot.logZ = function (F, isLog) F._z:setLog(isLog) end
-about[asciiplot.logZ] = {"F:logZ(isLog) --> nil", "Change Z axis type to logarithmic.", CONF}
 
 --- Generalized plot funciton.
 --  @param F Figure object.
@@ -1122,15 +1114,16 @@ asciiplot.plot = function (F, ...)
     -- save
     acc[#acc+1] = {tx, ty, legend}
   until i > #ag
-  -- check if there are no tables
-  if xmin == math.huge then xmin = F._x._init[1] end
-  if xmax == -math.huge then xmax = F._x._init[2] end
-  F._x:setRange({xmin, xmax})
+  if not F._xfix then
+    if xmin == math.huge then xmin = F._x._init[1] end
+    if xmax == -math.huge then xmax = F._x._init[2] end
+    F._x:setRange({xmin, xmax})
+  end
 
   -- update y range
   local ymin, ymax = math.huge, -math.huge
-  for i = 1, #acc do
-    local r = acc[i]
+  for j = 1, #acc do
+    local r = acc[j]
     if type(r[1]) == 'function' then
       r[1], r[2] = asciiplot._fn2XY(F, r[1])
     end
@@ -1138,15 +1131,17 @@ asciiplot.plot = function (F, ...)
     if a < ymin then ymin = a end
     if b > ymax then ymax = b end
   end
-  F._y:setRange({ymin, ymax})
+  if not F._yfix then
+    F._y:setRange({ymin, ymax})
+  end
 
   -- prepare
   asciiplot._clear(F)
   asciiplot._axes(F)
   -- 'plot'
-  for i = 1, #acc do
-    local c = asciiplot.char[i]
-    local r = acc[i]
+  for j = 1, #acc do
+    local c = asciiplot.char[j]
+    local r = acc[j]
     asciiplot._addXY(F, r[1], r[2], c)
     F.legend[c] = r[3]
   end
@@ -1177,7 +1172,7 @@ asciiplot.resize = function (F, w, h)
   F._x:resize(w)
   F._y:resize(h)
 end
-about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N)) --> nil", 
+about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N)) --> nil",
   "Update size of canvas.", CONF}
 
 --- Scale xrange and yrange w.r.t. initial size.
@@ -1193,41 +1188,59 @@ end
 about[asciiplot.scale] = {"F:scale(factor_d, isDefault=false) --> F",
   "Change figure size w.r.t. initial size.", CONF}
 
---- Update x range.
+--- X axis settings.
 --  @param F Figure object.
---  @param t New range {min, max).
-asciiplot.setX = function (F, t) F._x:setRange(t) end
-about[asciiplot.setX] = {"F:setX(range_t) --> nil", "Update X range.", CONF}
+--  @param t Table with parameters {range, log, view, fix}.
+asciiplot.setX = function (F, t)
+  -- range
+  if t.range then F._x:setRange(t.range) end
+  -- logarithmic scale
+  if t.log ~= nil then F._x:setLog(t.log) end
+  -- visualize
+  local view = t.view
+  if view ~= nil then F._xaxis = view and view or nil end
+  -- fix scale
+  if t.fix ~= nil then F._xfix = t.fix end
+end
+about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix}) --> nil",
+  "X axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), ragne fix (true/false).",
+  CONF}
 
---- Update y range.
+--- Y axis settings.
 --  @param F Figure object.
---  @param t New range {min, max).
-asciiplot.setY = function (F, t) F._y:setRange(t) end
-about[asciiplot.setY] = {"F:setY(range_t) --> nil", "Update Y range.", CONF}
+--  @param t Table with parameters {range, log, view, fix}.
+asciiplot.setY = function (F, t)
+  -- range
+  if t.range then F._y:setRange(t.range) end
+  -- logarithmic scale
+  if t.log ~= nil then F._y:setLog(t.log) end
+  -- visualize
+  local view = t.view
+  if view ~= nil then F._yaxis = view and view or nil end
+  -- fix scale
+  if t.fix ~= nil then F._yfix = t.fix end
+end
+about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix}) --> nil",
+  "Y axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
+  CONF}
 
---- Update z range.
+--- Z axis settings.
 --  @param F Figure object.
---  @param t New range {min, max).
-asciiplot.setZ = function (F, t) F._z:setRange(t) end
-about[asciiplot.setZ] = {"F:setZ(range_t) --> nil", "Update Z range.", CONF}
-
---- Define position of X axis.
---  @param F Figure object.
---  @param s Position name (min, mid, max) or nil/false.
-asciiplot.showX = function (F, s) F._xaxis = s and s or nil end
-about[asciiplot.showX] = {"F:showX(pos_s|nil) --> nil", "Define X axis position.", CONF}
-
---- Define position of Y axis.
---  @param F Figure object.
---  @param s Position name (min, mid, max) or nil/false.
-asciiplot.showY = function (F, s) F._yaxis = s and s or nil end
-about[asciiplot.showY] = {"F:showY(pos_s|nil) --> nil", "Define Y axis position.", CONF}
-
---- Define position of Z axis.
---  @param F Figure object.
---  @param s Position name (min, mid, max) or nil/false.
-asciiplot.showZ = function (F, s) F._zaxis = s and s or nil end
-about[asciiplot.showZ] = {"F:showZ(pos_s|nil) --> nil", "Define Z axis position.", CONF}
+--  @param t Table with parameters {range, log, view, fix}.
+asciiplot.setZ = function (F, t)
+  -- range
+  if t.range then F._z:setRange(t.range) end
+  -- logarithmic scale
+  if t.log ~= nil then F._z:setLog(t.log) end
+  -- visualize
+  local view = t.view
+  if view ~= nil then F._zaxis = view and view or nil end
+  -- fix scale
+  if t.fix ~= nil then F._zfix = t.fix end
+end
+about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix}) --> nil",
+  "Z axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
+  CONF}
 
 --- Set title.
 --  @param F Figure object.
@@ -1239,12 +1252,12 @@ about[asciiplot.title] = {"F:title(str) --> nil", "Set new title.", CONF}
 --  {{x1,y11,y12,...}, {x2,y21,y22,...}, ...}
 --  @param F Figure object.
 --  @param t Data table.
---  @param tOpt (Optional) Table of column indeces, key 'yfix' allows to skip resizing.
+--  @param tOpt (Optional) Table of column indeces.
 --  @return The updated figure object.
 asciiplot.tplot = function (F, t, tOpt)
   tOpt = tOpt or {}
   -- update range
-  if not tOpt.yfix then
+  if not F._yfix then
     local rx, ry = asciiplot._findRange(t, tOpt)
     F._x:setRange(rx)
     F._y:setRange(ry)
@@ -1261,7 +1274,7 @@ asciiplot.tplot = function (F, t, tOpt)
   -- limits
   asciiplot._limits(F)
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, {yfix=false}) --> nil", 
+about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={}) --> nil",
   "Plot the table data, choose columns if need."}
 
 -- Simplify the constructor call.
@@ -1270,16 +1283,18 @@ __call = function (self, w, h)
   -- size
   return asciiplot:_new(w or asciiplot.WIDTH, h or asciiplot.HEIGHT)
 end})
-about[asciiplot] = {" (width_N=73, height_N=21) --> new_F", 
+about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", help.STATIC}
 
 if Sonata then
 
 -- Define simplified function call
 Plot = function (...)
-  local f = Ap()
+  local lib = Ap or require('lib.asciiplot')
+  local f = lib()
   f._x:setRange({-5, 5})
-  print(f:plot(...))
+  f:plot(...)
+  print(f)
 end
 about[Plot] = {"Plot(...) --> nil",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
@@ -1293,4 +1308,3 @@ return asciiplot
 
 --======================================
 -- FIX contour concatenation when use color
--- TODO bar - choose location of zero

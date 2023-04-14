@@ -30,7 +30,7 @@ ans = b:float()               --> 456
 
 -- from table
 -- 'sign' and 'base' can be skipped
-g = Int {1,2,3,sign=-1,base=10}
+g = Int {-1,2,3, base=10}
 ans = g:float()               --> -123
 
 -- check equality
@@ -53,7 +53,7 @@ ans = (a^3):float()           --> 1860867
 ans = Int('-25'):abs():float()  --> 25
 
 -- factorial
-c = Int(50):fact()
+c = Int(50):F()
 ans = c:float()               --1> 3E64
 
 ans = (a > b)                 --> false
@@ -85,9 +85,15 @@ ans = (v == g)                --> true
 -- simple print
 print(a)
 
+-- find permutations
+ans = Int:P(10, 5)            --> Int(30240)
+
+-- find combinations
+ans = Int:C(10, 3)            --> Int(120)
+
 -- check if it prime
 -- iterate though multipliers
-ans = Int(1229):isPrime()       --> true
+ans = Int(1229):isPrime()     --> true
 
 -- Fermat theorem
 ans = Int(1229):isPrime('Fermat') --> true
@@ -127,6 +133,8 @@ Ver = Ver.versions
 local ZERO = string.byte('0')
 
 local NUMB = 'numbers'
+local COMB = 'combinations'
+
 
 --- Check object type.
 --  @param v Object.
@@ -146,6 +154,8 @@ __module__ = "Operations with arbitrary long integers."
 local bigint = {
 -- mark
 type='bigint', isbigint=true,
+-- logarithm of a base
+_ln = {},
 }
 
 --- B1 + B2
@@ -314,12 +324,12 @@ bigint.__pow = function (B1, B2)
   if B2.sign < 0 then error('Negative power!') end
   local y, x = bigint._1, B1
   y._base = B1._base
-  if #B2 == 1 and B2._[1] == 0 then
-    assert(#B1 > 1 or B1._[1] ~= 0, "Error: 0^0!")
-    return res
+  if #B2._ == 1 and B2._[1] == 0 then
+    assert(#B1._ > 1 or B1._[1] ~= 0, "Error: 0^0!")
+    return bigint._1
   end
   local dig, mul, rest = {}, bigint._mul, nil
-  for i = 1, #B2 do dig[i] = B2._[i] end
+  for i = 1, #B2._ do dig[i] = B2._[i] end
   while #dig > 1 or #dig == 1 and dig[1] > 1 do
     dig, rest = bigint._divBase(dig, B1._base, 2)
     if rest == 1 then
@@ -413,28 +423,33 @@ end
 --  @return Deep copy.
 bigint._copy = function (B)
   local c = bigint:_new({B._[1], sign=B.sign, base=B._base})
-  for i = 2, #B do c._[i] = B._[i] end
+  for i = 2, #B._ do c._[i] = B._[i] end
   return c
 end
 
---- In-place decrement for positive number.
+--- In-place decrement for number.
 --  @param B Number to decrease by 1.
-bigint._decr = function (B)
-  local b = B._
-  if #b == 1 and b[1] == 0 then return end
-  local dif = 1
-  for i = 1, #b-1 do
-    b[i] = b[i] - dif
-    if b[i] < 0 then
-      b[i] = B._base - 1
+--  @param forced Flag to skip sign check.
+bigint._decr = function (B, forced)
+  local base, b = B._base, B._
+  if not forced and (B.sign < 0 or #b == 1 and b[1] == 0) then
+    B.sign = -1
+    return bigint._incr(B, true)
+  end
+  for i = 1, math.huge do
+    local v = b[i] - 1
+    if v < 0 then
+      v = base - 1
     else
-      dif = 0
+      b[i] = v
       break
     end
+    b[i] = v
   end
-  if dif > 0 then
-    local bb = b[#b]
-    b[#b] = (bb > 1) and (bb - 1) or (#b == 1) and 0 or nil
+  if #b > 1 and b[#b] <= 0 then
+    table.remove(b)
+  elseif #b == 1 and b[1] == 0 then
+    B.sign = 1
   end
 end
 
@@ -527,21 +542,23 @@ bigint._gt = function (B1, B2)
   end
 end
 
---- In-place increment for positive number.
+--- In-place increment for number.
 --  @param B Number to increase by 1.
-bigint._incr = function (B)
-  local add, b = 1, B._
-  for i = 1, #b do
-    b[i] = b[i] + add
-    if b[i] == B._base then
-      b[i], add = 0, 1
+--  @param forced Flag to skip sign check.
+bigint._incr = function (B, forced)
+  local base, b = B._base, B._
+  if not forced and (B.sign < 0) then
+    return bigint._decr(B, true)
+  end
+  for i = 1, math.huge do
+    local v = (b[i] or 0) + 1
+    if v == base then
+      v = 0
     else
-      add = 0
+      b[i] = v
       break
     end
-  end
-  if add > 0 then
-    b[#b+1] = 1
+    b[i] = v
   end
 end
 
@@ -600,9 +617,13 @@ bigint._new = function (self, num)
   -- prepare
   if type(num) == 'table' then
     int._base = num.base or 10
-    int.sign   = num.sign or 1
+    int.sign  = num.sign or 1
     for i = #num, 1, -1 do
       acc[#acc+1] = num[i] -- reverse
+    end
+    if num[1] < 0 then
+      acc[#acc] = -num[1]
+      int.sign = -1
     end
   elseif type(num) == 'string' then
     local sign, s = string.match(num, '^([+-]?)(%d+)$')
@@ -792,6 +813,17 @@ about[bigint.at] = {"B:at(N) --> int", "Get N-th digit.", help.OTHER}
 bigint.base = function (B) return B._base end
 about[bigint.base] = {"B:base() --> int", "Current numeric base."}
 
+--- Find number of combinations.
+--  @param self Do nothing.
+--  @param n Total number of elements.
+--  @param k Group size.
+--  @return Bigint for combination number.
+bigint.C = function (self, n, k)
+  n, k = bigint._args(n, k)
+  return bigint.ratF(n, k) / bigint.F(n-k)
+end
+about[bigint.C] = {":C(n, k) --> combinations_B",
+  "Number of combinations C(n,k).", COMB}
 
 --- a == b.
 --  In Lua v == 0 is always false because in the case of number
@@ -830,30 +862,30 @@ about[bigint.eq] = {
 bigint.__eq = bigint.eq
 
 --- B!
---  Use fact that n*(n-1)*...*2*1 = (n*1)*((n-1)*2)*...
+--  Use the fact that n*(n-1)*...*2*1 = (n*1)*((n-1)*2)*...
 --  @param B Bigint object.
 --  @return Factorial of the number as bigint object.
-bigint.fact = function (B)
+bigint.F = function (B)
   assert(B.sign > 0, "Non-negative value is expected!")
   local N = B:float()
-  if N <= 1 then return bigint._1 end
-  if N == 2 then return B end  
+  if     N <= 1 then return bigint._1
+  elseif N == 2 then return B
+  end
   local n, m = math.modf((N-2) * 0.5)
-  local two = bigint:_new(2):rebase(B._base)
-  local S, d, acc = B, B, B
+  local S, d, acc = B, B:_copy(), B
   for i = 1, n do
-    d = bigint._sub(d, two)
+    bigint._decr(d)
+    bigint._decr(d)
     S = bigint._sum(S, d)
     acc = bigint._mul(acc, S)
   end
-  if m > 1E-3 then   -- m > 0
-    local v = n + two
-    acc = bigint._mul(acc, v)
+  if m > 1E-3 then   -- i.e. m > 0
+    acc = bigint._mul(acc, bigint:_new(n + 2):rebase(B._base))
   end
   return acc
 end
-about[bigint.fact] = {
-  "B:fact() --> B!", "Return factorial of non-negative integer B."}
+about[bigint.F] = {"B:F() --> B!",
+  "Return factorial of non-negative integer B.", COMB}
 
 --- Find multipliers for the number.
 --  @param B Integer number.
@@ -881,15 +913,14 @@ about[bigint.factorize] = {
 --  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (B)
-  local d, v, sum = B._base, 1, 0
-  local b = B._
-  for i = 1, #b do
-    sum = sum + b[i]*v
-    v = v * d
-    if v > 1E18 then
-      local b1 = #b-1
-      sum = (b[#b] + b[b1]/d) * d^b1
-      break
+  local sum, base, b = 0, B._base, B._
+  local ln = bigint._ln
+  ln[base] = ln[base] or math.log(base)
+  if #b * ln[base] > 21 then       -- log(1E+9)
+    sum = (b[#b]*base + b[#b-1]) * base^(#b-2)
+  else
+    for i = #b, 1, -1 do
+      sum = sum * base + b[i]
     end
   end
   return B.sign >= 0 and sum or (-sum)
@@ -918,12 +949,24 @@ bigint.isPrime = function (B, sMethod)
     return bigint._primeFermat(B)
   end
   -- default is a simple search
-  local v1, v2 = bigint._trivialSearch(B)
+  local v1, _ = bigint._trivialSearch(B)
   return v1 == nil
 end
 about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
   "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.",
   NUMB}
+
+--- Permutations without repetition.
+--  @param self Do nothing.
+--  @param n Number of elements.
+--  @param k Size of group.
+--  @return Number of permutations.
+bigint.P = function (self, n, k)
+  n, k = bigint._args(n, k)
+  return bigint.ratF(n, n-k)
+end
+about[bigint.P] = {":P(n, k) --> permutaions_B",
+  "Find permutations without repetition.", COMB}
 
 --- Generate random number.
 --  @param self Do nothing.
@@ -933,7 +976,7 @@ bigint.random = function (self, B)
   B = isbigint(B) and B or bigint:_new(B)
   local d, set, v = B._base, false, 0
   local res = bigint:_zero(d, B.sign)
-  local n = math.random(1, #B)
+  local n = math.random(1, #B._)
   local b, rr = B._, res._
   local any = (n ~= #b)
   for i = n, 1, -1 do
@@ -955,12 +998,40 @@ end
 about[bigint.random] = {":random(B) --> rand_B",
   "Generate pseudo-random value from 0 to B.", help.STATIC}
 
+--- Find ratio of factorials n!/k!
+--  @param B Numerator.
+--  @param B2 Denominator.
+--  @return Bigint for ration.
+bigint.ratF = function (B, B2)
+  assert(B.sign > 0 and B2.sign > 0, "Non-negative expected")
+  local N1, N2 = B:float(), B2:float()
+  if N1 < N2 then return bigint:_zero(B._base, 1) end
+  if N1 == N2 then return bigint._1 end
+  if N1 == N2 + 1 then return B end
+  local acc = B * (B2 + bigint._1)
+  if N1 == N2+2 then return acc end
+  local S, diff = acc, B - B2
+  local n, m = math.modf((N1+N2-2) * 0.5)
+  for i = N2+1, n do
+    bigint._decr(diff)
+    bigint._decr(diff)
+    S = bigint._sum(S, diff)
+    acc = bigint._mul(acc, S)
+  end
+  if m > 1E-3 then   -- i.e. m > 0
+    acc = bigint._mul(acc, bigint:_new(n+2))
+  end
+  return acc
+end
+about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
+  "Find ratio of factorials num!/denom!.", COMB}
+
 --- Change current numeric base.
 --  @param B Bigint object.
 --  @param N New base.
 --  @return Copy with new base.
 bigint.rebase = function (B, N)
-  if N <= 0 then error("Wrong base "..tostring(N)) end
+  if N <= 1 then error("Wrong base "..tostring(N)) end
   if B._base == N then return B end
   local res = bigint:_zero(N, B.sign)
   local b, rr = B._, res._
@@ -982,7 +1053,7 @@ setmetatable(bigint, {
 __call = function (self, v)
   return bigint:_new(v)
 end})
-about[bigint] = {" (var) --> new_B", 
+about[bigint] = {" (var) --> new_B",
   "Create number from integer, string or table.", help.STATIC}
 
 -- Comment to remove descriptions

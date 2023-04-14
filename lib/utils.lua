@@ -137,15 +137,20 @@ end
 
 --============== Utils ================
 
+local NUM_DOT = '%.'
+local NUM_DIG = '^%d+$'
+local NUM_EXP = '^%d+[eE]%d*$'
+local NUM_SGN = '^[+-]$'
+
 local utils = {
   TEMPL = '([%w_]*)%s*([^%w%s_]?)%s*',   -- var and symbol
+  -- parse number
   NUM_FSM = {
-    ['^%d+$'] = {'%.'},
-    ['%.'] = {'^%d+$', '^%d+[eE]%d*$'},      -- use as start
-    ['^%d+[eE]%d*$'] = {'^[+-]$', '^%d+$'},
-    ['^[+-]$'] = {'^%d+$'},
+    [NUM_DIG] = {NUM_DOT},
+    [NUM_DOT] = {NUM_DIG, NUM_EXP},      -- use as start
+    [NUM_EXP] = {NUM_SGN, NUM_DIG},
+    [NUM_SGN] = {NUM_DIG},
   },
-  FSM_START = '%.',
 }
 
 --- Transform sequence of strings to number.
@@ -153,7 +158,7 @@ local utils = {
 --  @return Table with numbers when possible.
 utils._toNumbers = function (t)
   local res, num = {}, {}
-  local s = utils.FSM_START
+  local s = NUM_DOT
   for _, v in ipairs(t) do
     -- check expected element
     local found = false
@@ -168,7 +173,7 @@ utils._toNumbers = function (t)
       -- save, update state
       if #num > 0 then
         res[#res+1] = tonumber(table.concat(num))  -- TODO process error
-        num, s = {}, utils.FSM_START
+        num, s = {}, NUM_DOT
       end
       res[#res+1] = v
     end
@@ -189,7 +194,7 @@ utils.Fn = function (sExpr, iArg)
   local fn = versions.loadStr(
     string.format("return function (%s) return %s end",
       table.concat(arg, ','), sExpr))
-  return fn()
+  return fn and fn()
 end
 
 --- 'Smart' number to string conversation.
@@ -295,3 +300,4 @@ return {
 --===================================================
 --TODO setup for number of digits
 --TODO: fix 'round' for N - 1e-M
+--TODO: math.pow for 5.4 and more
