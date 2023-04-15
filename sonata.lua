@@ -3,6 +3,7 @@
 -- Lua based calculator
 -- This file is a part of 'sonata.lib' collection, 2017 - 2023.
 
+
 --================= CONFIGURATION ====================
 
 --	Path ('sonata.lua' location)
@@ -21,6 +22,7 @@
 --  Windows: to use Unicode symbols call in console
 --    chcp 65001
 --SONATA_LOCALIZATION = 'ru.lua'
+
 
 --===================  MODULES  =======================
 
@@ -50,6 +52,7 @@ use = {
   quaternion = "Quat",
   special    = "Spec",
 }
+
 
 --=====================  RUN  =========================
 

@@ -24,6 +24,7 @@ Sonata.version = '0.9.36'
 -- Quit the program
 quit = Sonata.exit
 
+
 -- Import actions
 Sonata.doimport = function (tbl, name)
   local var = tbl[name]
@@ -43,6 +44,7 @@ Sonata.doimport = function (tbl, name)
     if lib.about then About:add(lib.about, name, var) end
   end
 end
+
 
 -- Add modules
 setmetatable(use,
@@ -76,6 +78,7 @@ setmetatable(use,
   end,
 })
 
+
 --- Print SonataHelp information.
 --  @param v Function, module or nil.
 help = function(v)
@@ -89,6 +92,7 @@ help = function(v)
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end
+
 
 --- Session logging.
 --  @param flat Value 'on'/true to start and 'off'/false to stop.
@@ -112,6 +116,7 @@ Log = function (flag)
     io.write('Unexpected argument!\n')
   end
 end
+
 
 -- command line arguments of Sonata and their processing
 local _args = {
@@ -235,6 +240,7 @@ Sonata._arghelp = function ()
   return table.concat(txt, '\n')
 end
 
+
 --================== EXECUTION =================
 
 -- Read localization file and update descriptions
@@ -242,8 +248,10 @@ if SONATA_LOCALIZATION then
   About:localization(SONATA_LOCALIZATION)
 end
 
+
 -- Try to import base functions
 pcall(use, 'main')
+
 
 -- Process command line arguments
 if #arg > 0 then
@@ -252,6 +260,7 @@ if #arg > 0 then
   command.process(arg)
   if command.exit then os.exit() end
 end
+
 
 -- Run!!!
 

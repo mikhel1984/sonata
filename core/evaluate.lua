@@ -8,13 +8,16 @@
 	module 'evaluate'
 --]]
 
+
 --	LOCAL
 
 -- String evaluation method
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
+
 -- Format marker
 local mt_sonatainfo = {}
+
 
 --- Check if the table is mt_sonatainfo list.
 --  @param v Object.
@@ -23,12 +26,14 @@ local function islist(v)
   return type(v) == 'table' and getmetatable(v) == mt_sonatainfo
 end
 
+
 --- Print formatted error message.
 --  @param msg Message string.
 local function print_err (msg)
   print(
     string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
+
 
 -- local function balance(s)
 --   local t = {}
@@ -37,6 +42,7 @@ end
 --   local d2 = (t['{'] or 0) - (t['}'] or 0)
 --   return (d1 < 0 or d2 < 0) and -1 or (d1 > 0 or d2 > 0) and 1 or 0
 -- end
+
 
 --	MODULE
 
@@ -80,6 +86,7 @@ evaluate._blocks = function (txt)
   return res
 end
 
+
 --- Print block list.
 --  @param blks Table with blocks of text.
 evaluate._dotLs = function (blks)
@@ -94,6 +101,7 @@ evaluate._dotLs = function (blks)
     io.write(string.format("%d   %s\n", i, s))
   end
 end
+
 
 --- Print next block title.
 --  @param blks Table with blocks of text.
@@ -112,6 +120,7 @@ evaluate._dotNext = function (blks, n)
   end
   io.write(string.format("%d %s\n", n, s))
 end
+
 
 --- Process command string.
 --  @param ev Accumulated string.
@@ -142,6 +151,7 @@ evaluate._eval = function (ev, nextCmd)
       ev, ok and evaluate.EV_RES or evaluate.EV_ERR, cmd, res)
   end
 end
+
 
 --- Evaluate block of text.
 --  @param ev Evaluation environment.
@@ -176,6 +186,7 @@ evaluate._evalBlock = function (ev, txt, full, templ)
   end
 end
 
+
 --- Get string from list of elements.
 --  @param lst List of strings and commands.
 --  @return Text for visualization.
@@ -201,6 +212,7 @@ evaluate._toText = function (lst)
   return table.concat(res)
 end
 
+
 --- Update environment state.
 --  @param ev Evaluation environment.
 --  @param st Evaluation status.
@@ -218,6 +230,7 @@ evaluate._update = function (ev, st, cmd, ans)
   end
   return st
 end
+
 
 --- User input processing.
 --  @param ev Evaluation environment.
@@ -251,6 +264,7 @@ evaluate._userInput = function (ev, invA, invB, blk, full, n)
   return n
 end
 
+
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
 --  @param ev Evaluation environment.
@@ -261,6 +275,7 @@ evaluate.cli = function (ev)
   if ev._logFile then ev._logFile:close() end
   evaluate.exit()
 end
+
 
 --- Read input and evaluate it.
 --  @param ev Environment.
@@ -301,6 +316,7 @@ evaluate.cliLoop = function (ev, invA, invB, noteIn)
   end
 end
 
+
 --- Evaluate one expression.
 --  @param ev Environment.
 --  @param cmd Command.
@@ -321,6 +337,7 @@ evaluate.eval = function (ev, cmd, useLog)
   return res
 end
 
+
 --- Show message and exit the program.
 evaluate.exit = function ()
   print(SonataHelp.CMAIN..
@@ -328,12 +345,14 @@ evaluate.exit = function ()
   os.exit()
 end
 
+
 --- Mark information about formatting.
 --  @param t Table to print.
 --  @return Table with marker.
 evaluate.info = function (t)
   return setmetatable(t, mt_sonatainfo)
 end
+
 
 --- Evaluate 'note'-file.
 --  @param ev Evaluate.
@@ -360,6 +379,7 @@ evaluate.note = function (ev, fname, full)
   end
 end
 
+
 --- State reset.
 --  @param ev Environment.
 evaluate.reset = function (ev)
@@ -367,6 +387,7 @@ evaluate.reset = function (ev)
   ev._ans = nil
   ev._st  = evaluate.EV_RES
 end
+
 
 return evaluate
 

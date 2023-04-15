@@ -8,9 +8,10 @@
 	module 'generator'
 --]]
 
-local Help = require('core.help')
 
 --	LOCAL
+
+local Help = require('core.help')
 
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
 local S10 = string.rep('-', 10)
@@ -21,6 +22,7 @@ local sformat, sgsub = string.format, string.gsub
 local tconcat = table.concat
 
 local generator = {}
+
 
 --================== HTML documentation ====================
 
@@ -52,6 +54,7 @@ local function docLines(module, alias, lng)
   return tconcat(fn, "\n"), description
 end
 
+
 --- Prepare module example for html generation.
 --  @param str Example text.
 --  @return String representation with tags.
@@ -59,6 +62,7 @@ local function docExample (str)
   if not str then return nil end
   return sformat('<pre class="example">%s</pre>', str)
 end
+
 
 --- Generate html file with documentation.
 --  @param locName Name of locale.
@@ -128,6 +132,7 @@ generator.doc = function (locName, tModules)
   io.write("File 'help.html' is saved!\n")
 end
 
+
 --================== Localization template =================
 
 --- Find translation.
@@ -149,6 +154,7 @@ local findVal = function (tLang, key)
   return val
 end
 
+
 --- Prepare text for dialog.
 --  @param tbl Table with descriptions.
 --  @param tLang Table with translation.
@@ -169,6 +175,7 @@ local makeDialog = function (tbl, tLang)
   res[#res+1] = '},\n'
   return tconcat(res, '\n')
 end
+
 
 --- Prepare text for module.
 --  @param sName Module name.
@@ -202,6 +209,7 @@ local makeModule = function (sName, tLang)
   res[#res+1] = '},\n'
   return tconcat(res, '\n')
 end
+
 
 --- Prepare and save localization data.
 --  @param fName Language name, for example 'en' or 'it'.
@@ -282,12 +290,14 @@ ans = math.pi                --2> 355/113
 
 --]]
 
+
 --	LOCAL
 
 3L Check object type.
 --  @param v Object.
 --  @return True if the object is WORD2.
 local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
+
 
 --	INFO
 
@@ -297,6 +307,7 @@ local about = {
 __module__ = "WORD5"
 }
 
+
 --	MODULE
 
 local WORD2 = {
@@ -305,6 +316,7 @@ type = 'WORD2', isWORD2 = true,
 }
 -- methametods
 WORD2.__index = WORD2
+
 
 3L Constructor example.
 --  @param t Some value.
@@ -318,10 +330,12 @@ end
 about[WORD2.new] = {":new(t) --> WORD6", "Explicit constructor.", help.NEW}
 -- begin from ':' to get 'WORD3:new(t)'
 
+
 -- simplify constructor call
 setmetatable(WORD2, {__call = function (self, v) return WORD2:new(v) end})
 about[WORD2] = {" (t) --> WORD6", "Create new WORD2.", help.NEW}
 -- begin from ' ' to get 'WORD3 ()'
+
 
 3L Method example.
 --  It is good idea to define method for the copy creation.
@@ -333,6 +347,7 @@ end
 about[WORD2.copy] = {"WORD6:copy() --> cpy_WORD6",
   "Create a copy of the object."} -- third element is optional, default is 'base'
 -- don't modify since start from letter
+
 
 -- Comment to remove descriptions
 WORD2.about = about
@@ -355,6 +370,7 @@ return WORD2
   io.write(
     'File ', fName, " is ready. Add it to the 'use' table in 'sonata.lua'.\n")
 end
+
 
 return generator
 

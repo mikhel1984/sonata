@@ -8,6 +8,7 @@
 	module 'test'
 --]]
 
+
 --[=[
 	Rules for the test writing.
 
@@ -32,6 +33,7 @@
   * The results and the error messages are saved to the 'test.log' file.
 ]=]
 
+
 --	LOCAL
 
 local DELIM = '\r?\n[%s%c]*\n'
@@ -45,12 +47,14 @@ local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
 local help = require('core.help')
 
+
 --	MODULE
 
 local test = {
 -- test results
 results = {},
 }
+
 
 --- Extract test code from file.
 --  @param str File text.
@@ -59,6 +63,7 @@ test._getCode = function (str)
   local _, q = string.match(str, CODE_TEMPLATE)
   return q
 end
+
 
 --- Prepare test code preview.
 --  @param str Source string.
@@ -75,12 +80,14 @@ test._markTest = function (str, res, time)
     '%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'FAILED'), time)
 end
 
+
 --- Save string to the file and simultaneously print to the screen.
 --  @param str String for saving.
 test._print = function (str)
   print(str)
   test.log:write(str, '\n')
 end
+
 
 --- Execute tests listed in module.
 --  @param fname Lua file name.
@@ -144,6 +151,7 @@ test.module = function (fname)
   test.log:flush()
 end
 
+
 --- Split string into substrings based on the given delimiter.
 --  @param str Initial string.
 --  @param delim Delimiter string.
@@ -168,6 +176,7 @@ test.split = function (str, delim)
   end
 end
 
+
 --- Combine all results.
 test.summary = function ()
   test._print(string.format(
@@ -178,6 +187,7 @@ test.summary = function ()
   end
   print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
 end
+
 
 --============ Diagnostic methods =================
 
@@ -193,6 +203,7 @@ test._getName = function (dbg)
     return lc
   end
 end
+
 
 --- Count internal calls inside function.
 --  Based on example from "Programming in Lua" by Roberto Ierusalimschy.
@@ -225,6 +236,7 @@ test.profile = function (fn, ...)
   for _, res in ipairs(stat) do print(res[1], res[2]) end
 end
 
+
 --- Estimate the function execution time.
 --  @param fn Function to execute. After it write the list of arguments.
 --  @return Average time in msec.
@@ -236,6 +248,7 @@ test.time = function (fn, ...)
   end
   return sum * 1000/ n
 end
+
 
 return test
 
