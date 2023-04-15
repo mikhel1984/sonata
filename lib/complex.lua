@@ -12,6 +12,7 @@
 	module 'complex'
 --]]
 
+
 ---------------- Tests --------------
 --[[TEST
 
@@ -121,6 +122,7 @@ print(a)
 
 --]]
 
+
 --	LOCAL
 
 -- Compatibility with previous versions
@@ -130,13 +132,16 @@ local Cross = Ver.cross
 local Utils = Ver.utils
 Ver = Ver.versions
 
+
 -- help section
 local FUNCTIONS = 'functions'
+
 
 --- Check object type.
 --  @param c Object.
 --  @return True if the object is a complex number.
 local function iscomplex(v) return type(v) == 'table' and v.iscomplex end
+
 
 --- Check imaginary part.
 --  @param C complex number.
@@ -145,6 +150,7 @@ local function numcomp(C)
   return Cross.eq(C._[2], 0) and Cross.simp(C._[1]) or C
 end
 
+
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
@@ -152,30 +158,36 @@ local function numStr(v)
   return type(v) == 'number' and Utils.numstr(v) or tostring(v)
 end
 
+
 --- Find exponential with type conversation.
 --  @param v Value.
 --  @return exp(float(v))
 local function fexp(v) return math.exp(Cross.float(v)) end
+
 
 --- Hyperbolic cosine.
 --  @param v Real value.
 --  @return Hyperbolic cosine value.
 local function ch (v) return 0.5*(fexp(v)+fexp(-v)) end
 
+
 --- Hyperbolic sine.
 --  @param v Real value.
 --  @return Hyperbolic sine value.
 local function sh (v) return 0.5*(fexp(v)-fexp(-v)) end
+
 
 --- Find sinus with type conversation.
 --  @param v Real value.
 --  @return sin(float(v))
 local function fsin(v) return math.sin(Cross.float(v)) end
 
+
 --- Find cosine with type conversation.
 --  @param v Real value.
 --  @return cos(float(v))
 local function fcos(v) return math.cos(Cross.float(v)) end
+
 
 --	INFO
 
@@ -185,6 +197,7 @@ local about = {
 __module__ = "Manipulations with complex numbers."
 }
 
+
 --	MODULE
 
 local complex = {
@@ -193,6 +206,7 @@ type='complex', iscomplex=true,
 -- simplification
 _simp = numcomp,
 }
+
 
 --- C1 + C2
 --  @param C1 Real or complex number.
@@ -210,6 +224,7 @@ complex.__add = function (C1, C2)
   local c1, c2 = C1._, C2._
   return numcomp(complex:_init(c1[1]+c2[1], c1[2]+c2[2]))
 end
+
 
 --- C1 / C2
 --  @param C1 Real or complex number.
@@ -230,6 +245,7 @@ complex.__div = function (C1, C2)
     (c1[1]*c2[1]+c1[2]*c2[2])/denom, (c1[2]*c2[1]-c1[1]*c2[2])/denom))
 end
 
+
 --- C1 == C2
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
@@ -247,8 +263,10 @@ complex.__eq = function (C1, C2)
   return Cross.eq(c1[1], c2[1]) and Cross.eq(c1[2], c2[2])
 end
 
+
 -- methametods
 complex.__index = complex
+
 
 --- C1 * C2
 --  @param C1 Real or complex number.
@@ -268,11 +286,13 @@ complex.__mul = function (C1, C2)
     complex:_init(c1[1]*c2[1]-c1[2]*c2[2], c1[1]*c2[2]+c1[2]*c2[1]))
 end
 
+
 --- Set unknown key. Use proxy to access the element.
 --  @param t Table.
 --  @param k Key.
 --  @param v Value.
 complex.__newindex = function () error("Immutable object") end
+
 
 --- C1 ^ C2
 --  @param C1 Real or complex number.
@@ -295,6 +315,7 @@ complex.__pow = function (C1, C2)
   return numcomp(complex:_init(abs*fcos(arg), abs*fsin(arg)))
 end
 
+
 --- C1 - C2
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
@@ -312,6 +333,7 @@ complex.__sub = function (C1, C2)
   return numcomp(complex:_init(c1[1]-c2[1], c1[2]-c2[2]))
 end
 
+
 --- String representation.
 --  @param C Complex number.
 --  @return String with complex number elements.
@@ -320,17 +342,21 @@ complex.__tostring = function (C)
   return string.format("%s%s%si", a, (b:sub(1, 1) == '-' and '' or '+'), b)
 end
 
+
 --- -C
 --  @param C Complex number.
 --  @return Negative value.
 complex.__unm = function (C) return complex:_init(-C._[1], -C._[2]) end
 
+
 complex.arithmetic = 'arithmetic'
 about[complex.arithmetic] = {
   complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
 
+
 complex.comparison = 'comparison'
 about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META}
+
 
 --- Convert value into complex number.
 --  @param v Source value.
@@ -340,12 +366,14 @@ complex._convert = function (v)
          and complex:_init(v, 0)
 end
 
+
 --- Get deep copy of the complex number.
 --  @param C Complex number.
 --  @return Equal number.
 complex._copy = function (C)
   return complex:_init(C._[1], C._[2])
 end
+
 
 --- Create new object, set metatable
 --  @param vRe Real part.
@@ -355,6 +383,7 @@ complex._init = function (self, vRe, vIm)
   return setmetatable({_={vRe, vIm}}, self)
 end
 
+
 --- Find object norm.
 --  @param C Complex number.
 --  @return Numerical value.
@@ -362,10 +391,12 @@ complex._norm = function (C)
   return math.sqrt(Cross.norm(C._[1])^2 + Cross.norm(C._[2])^2)
 end
 
+
 --- Module of complex number.
 --  @return Module of the number.
 complex.abs = complex._norm
 about[complex.abs] = {"Z:abs() --> float", "Return module of complex number."}
+
 
 --- Inverse cosine.
 --  @param C Complex number.
@@ -375,12 +406,14 @@ complex.acos = function (C)
 end
 about[complex.acos] = {"Z:acos() --> y_Z", "Complex inverse cosine.", FUNCTIONS}
 
+
 --- Inverse hyperbolic cosine.
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic cosine.
 complex.acosh = function (C) return complex.log(C+complex.sqrt(C*C-1)) end
 about[complex.acosh] = {"Z:acosh() --> y_Z", 
   "Complex inverse hyperbolic cosine.", FUNCTIONS}
+
 
 --- Argument of complex number.
 --  @param C Complex number.
@@ -389,6 +422,7 @@ complex.arg = function (C)
   return Ver.atan2(Cross.float(C._[2]), Cross.float(C._[1]))
 end
 about[complex.arg] = {"Z:arg() --> float", "Return argument of complex number."}
+
 
 --- Inverse sine.
 --  @param C Complex number.
@@ -399,12 +433,14 @@ complex.asin = function (C)
 end
 about[complex.asin] = {"Z:asin() --> y_Z", "Complex inverse sine.", FUNCTIONS}
 
+
 --- Inverse hyperbolic sine.
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic sine.
 complex.asinh = function (C) return complex.log(C+complex.sqrt(C*C+1)) end
 about[complex.asinh] = {"Z:asinh() --> y_Z", 
   "Complex inverse hyperbolic sine.", FUNCTIONS}
+
 
 --- Inverse tangent.
 --  @param C Complex number.
@@ -416,12 +452,14 @@ end
 about[complex.atan] = {"Z:atan() --> y_Z", 
   "Complex inverse tangent.", FUNCTIONS}
 
+
 --- Inverse hyperbolic tangent.
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic tangent.
 complex.atanh = function (C) return 0.5*complex.log((1+C)/(1-C)) end
 about[complex.atanh] = {"Z:atanh() --> y_Z", 
   "Complex inverse hyperbolic tangent.", FUNCTIONS}
+
 
 --- Conjunction.
 --  @param C Complex number.
@@ -433,6 +471,7 @@ about[complex.conj] = {"Z:conj() --> conj_Z",
   "Return the complex conjugate. Equal to ~C."}
 complex.__bnot = complex.conj
 
+
 --- Cosine
 --  @param C Complex number.
 --  @return Complex cosine.
@@ -443,12 +482,14 @@ end
 about[complex.cos] = {"Z:cos() --> y_Z", 
   "Return cosine of a complex number.", FUNCTIONS}
 
+
 --- Hyperbolic cosine
 --  @param C Complex number.
 --  @return Complex hyperbolic cosine.
 complex.cosh = function (C) return 0.5*(complex.exp(C)+complex.exp(-C)) end
 about[complex.cosh] = {"Z:cosh() --> y_Z", 
   "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
+
 
 --- Exponent
 --  @param C Complex number.
@@ -460,6 +501,7 @@ end
 about[complex.exp] = {"Z:exp() --> y_Z", 
   "Return exponent in for complex argument.", FUNCTIONS}
 
+
 -- Imaginary unit
 complex.i = function (self, v)
   v = v or 1
@@ -468,11 +510,13 @@ complex.i = function (self, v)
 end
 about[complex.i] = {":i(x=1) --> new_Z", "Return x*i.", help.STATIC}
 
+
 --- Get imaginary part.
 --  @param C Complex number.
 --  @return Imaginary part.
 complex.im = function (C) return C._[2] end
 about[complex.im] = {"Z:im() --> var", "Get imaginary part."}
+
 
 --- Natural logarithm
 --  @param C Real or complex number.
@@ -490,11 +534,13 @@ complex.log = function (C)
 end
 about[complex.log] = {"Z:log() --> y_Z", "Complex logarithm.", FUNCTIONS}
 
+
 --- Get real part.
 --  @param C Complex number.
 --  @return Real part.
 complex.re = function (C) return C._[1] end
 about[complex.re] = {"Z:re() --> var", "Get real part."}
+
 
 --- Round real and imaginary parts to some number of digits in place.
 --  For non-float value round to 0.
@@ -512,6 +558,7 @@ end
 about[complex.round] = {"Z:round(N=6) --> rounded_Z", 
   "Round in-place to specified number of digits."}
 
+
 --- Sinus
 --  @param C Complex number.
 --  @return Complex sinus.
@@ -521,12 +568,14 @@ complex.sin = function (C)
 end
 about[complex.sin] = {"Z:sin() --> y_Z", "Return sinus of a complex number.", FUNCTIONS}
 
+
 --- Hyperbolic sinus
 --  @param C Complex number.
 --  @return Complex hyperbolic sinus.
 complex.sinh = function (C) return 0.5*(complex.exp(C)-complex.exp(-C)) end
 about[complex.sinh] = {"Z:sinh() --> y_Z", 
   "Return hyperbolic sinus of a complex number.", FUNCTIONS}
+
 
 --- Square root with possibility of complex result.
 --  @param C Real or complex number.
@@ -541,6 +590,7 @@ end
 about[complex.sqrt] = {"Z:sqrt() --> y_Z", 
   "Return square root. Result can be real of complex.", FUNCTIONS}
 
+
 --- Tangent
 --  @param C Complex number.
 --  @return Complex tangent.
@@ -552,12 +602,14 @@ end
 about[complex.tan] = {"Z:tan() --> y_Z", 
   "Return tangent of a complex number.", FUNCTIONS}
 
+
 --- Hyperbolic tangent
 --  @param C Complex number.
 --  @return Complex hyperbolic tangent.
 complex.tanh = function (C) return complex.sinh(C) / complex.cosh(C) end
 about[complex.tanh] = {"Z:tanh() --> y_Z", 
   "Return hyperbolic tangent of a complex number.", FUNCTIONS}
+
 
 --- Create complex number from trigonometric representation.
 --  @param self Do nothing.
@@ -569,6 +621,7 @@ complex.trig = function (self, vMod, vArg)
 end
 about[complex.trig] = {":trig(module, angle) --> new_Z",
   "Create complex number using module and angle.", help.STATIC}
+
 
 -- simplify constructor call
 setmetatable(complex, {
@@ -584,7 +637,8 @@ end })
 about[complex] = {" (re=0, im=0) --> new_Z", 
   "Create new complex number.", help.STATIC}
 
-if Sonata then  -- redefine some functions
+
+if Sonata then  -- SET GLOBAL
 
 -- complex unit
 _i = complex:i(1)
@@ -601,7 +655,8 @@ log = function (a)
   return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
 end
 
-end
+end   -- SET GLOBAL
+
 
 -- Comment to remove descriptions
 complex.about = about

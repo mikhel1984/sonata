@@ -95,10 +95,12 @@ local Ver = require("lib.utils")
 local Utils = Ver.utils
 Ver = Ver.versions
 
+
 --- Check object type.
 --  @param t Object.
 --  @return True if the object is array.
 local function isarray(v) return type(v) == 'table' and v.isarray end
+
 
 --	INFO
 
@@ -107,12 +109,11 @@ local help = SonataHelp or {}
 local about = {
 __module__ = "Manipulations with arrays of elements. Indices have form of tables. Indexation from 1."
 }
+
 --	MODULE
 
-local array = {
--- mark
-type='array', isarray=true,
-}
+local array = { type='array', isarray=true }
+
 
 --- a1 == A2
 --  @param A1 First array.
@@ -129,21 +130,26 @@ array.__eq = function (A1, A2)
   return false
 end
 
+
 -- metamethods
 array.__index = array
+
 
 --- Method #
 --  @param A Array object.
 --  @return Number of elements.
 array.__len = array.capacity
 
+
 --- String representation.
 --  @param A Array.
 --  @return String representation of the array.
 array.__tostring = function (A) return 'array '..table.concat(A.size, 'x') end
 
+
 array.comparison = 'comparison'
 about[array.comparison] = {array.comparison, "a == b, a ~= b", help.META}
+
 
 --- Get index from position number.
 --  @param A Array object.
@@ -158,6 +164,7 @@ array._index = function (A, N)
   return index
 end
 
+
 --- Check index correctness.
 --  @param A Array.
 --  @param tInd Index to check.
@@ -169,6 +176,7 @@ array._isIndex = function (A, tInd)
   end
   return true
 end
+
 
 --- Create new object, set metatable.
 --  @param self Pointer to object.
@@ -182,6 +190,7 @@ array._new = function (self, tSize)
   return setmetatable({size=tSize, k=k}, self)
 end
 
+
 --- Transform index into single dimension representation.
 --  @param A Array.
 --  @param tInd Element index.
@@ -194,6 +203,7 @@ array._pos = function (A, tInd)
   return res
 end
 
+
 --- Maximum number of elements in the array.
 --  The same as #A.
 --  @param A Array.
@@ -204,6 +214,7 @@ array.capacity = function (A)
 end
 about[array.capacity] = {"A:capacity() --> int",
   "Maximal number of elements in the array. The same as #A.", help.OTHER}
+
 
 --- Concatenate 2 arrays along given axes.
 --  @param A1 First array.
@@ -242,6 +253,7 @@ end
 about[array.concat] = {"A:concat(A2, axis_N) --> A3",
   "Concatenate along the given array along the given axis."}
 
+
 --- Get array copy.
 --  @param A Array object.
 --  @return Deep copy of the array.
@@ -253,11 +265,13 @@ array.copy = function (A)
 end
 about[array.copy] = {"A:copy() --> cpy_A", "Get copy of the array.", help.OTHER}
 
+
 --- Get array dimension.
 --  @param A Array object.
 --  @return Table with array size.
 array.dim = function (A) return Ver.move(A.size, 1, #A.size, 1, {}) end
 about[array.dim] = {"A:dim() --> int", "Return size of the array."}
+
 
 --- Get array element.
 --  @param A Array object.
@@ -268,6 +282,7 @@ array.get = function (A, tInd)
   return A[array._pos(A, tInd)]
 end
 about[array.get] = {"A:get(ind_t) --> var", "Get array element."}
+
 
 --- Iterator across the array.
 --  @param A Array object.
@@ -283,6 +298,7 @@ array.ipairs = function (A)
 end
 about[array.ipairs] = {"A:ipairs() --> iter_fn", "Return iterator along all indexes.",
   help.OTHER}
+
 
 --- Compare array size.
 --  @param A1 First array object.
@@ -300,6 +316,7 @@ array.isEqual = function (A1, A2)
 end
 about[array.isEqual] = {"A:isEqual(A2) --> bool", "Check size equality.", help.OTHER}
 
+
 --- Apply function of 1 argument.
 --  @param A Array object.
 --  @param fn Function of value and (optional) index.
@@ -314,6 +331,7 @@ array.map = function (A, fn)
 end
 about[array.map] = {"A:map(fn) --> out_A", "Apply function fn(x,[ind]) to all elements, return new array.", help.OTHER}
 
+
 --- Set new value.
 --  @param A Array object.
 --  @param tInd Element index (table).
@@ -323,6 +341,7 @@ array.set = function (A, tInd, v)
   A[array._pos(A, tInd)] = v
 end
 about[array.set] = {"A:set(ind_t, var) --> nil", "Set value to the array."}
+
 
 --- Get part of array between two indexes.
 --  @param A Array object.
@@ -361,6 +380,7 @@ end
 about[array.sub] = {"A:sub(ind1_t, ind2_t) --> range_A",
   "Return sub array restricted by 2 indexes."}
 
+
 --- Apply function of several arguments.
 --  @param self Do nothing.
 --  @param fn Function with N arguments or expression.
@@ -388,6 +408,7 @@ end
 about[array.zip] = {":zip(fn, ...) --> A",
   "Apply function of several arguments. Return new array.", help.STATIC}
 
+
 -- Constructor
 setmetatable(array, {__call = function (self, tSize)
   -- check correctness
@@ -399,9 +420,9 @@ setmetatable(array, {__call = function (self, tSize)
   -- build
   return array:_new(tSize)
 end})
-
 about[array] = {" {size1_N, [size2_N, ..]} --> new_A",
   "Create empty array with the given size.", help.STATIC}
+
 
 -- Comment to remove descriptions
 array.about = about

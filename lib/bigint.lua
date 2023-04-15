@@ -15,6 +15,7 @@
 	module 'bigint'
 --]]
 
+
 ---------------- Tests -----------------
 --[[TEST
 -- use 'bigint'
@@ -130,8 +131,8 @@ local Ver = require("lib.utils")
 local Cross = Ver.cross
 Ver = Ver.versions
 
-local ZERO = string.byte('0')
 
+local ZERO = string.byte('0')
 local NUMB = 'numbers'
 local COMB = 'combinations'
 
@@ -141,6 +142,7 @@ local COMB = 'combinations'
 --  @return True if the object is a big integer.
 local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -148,6 +150,7 @@ local help = SonataHelp or {}
 local about = {
 __module__ = "Operations with arbitrary long integers."
 }
+
 
 --	MODULE
 
@@ -157,6 +160,7 @@ type='bigint', isbigint=true,
 -- logarithm of a base
 _ln = {},
 }
+
 
 --- B1 + B2
 --  @param B1 First bigint or integer.
@@ -181,6 +185,7 @@ bigint.__add = function (B1, B2)
   end
 end
 
+
 --- B1 / B1
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
@@ -201,8 +206,10 @@ bigint.__div = function (B1, B2)
   return res
 end
 
+
 -- methametods
 bigint.__index = bigint
+
 
 --- a <= b
 --  @param B1 First bigint or integer.
@@ -226,7 +233,10 @@ bigint.__le = function (B1, B2)
   return not bigint._gt(B1, B2)
 end
 
+
+--- #B
 bigint.__len = function (B) return #B._ end
+
 
 --- B1 < B2
 --  @param B1 First bigint or integer.
@@ -262,6 +272,7 @@ bigint.__lt = function (B1, B2)
   end
 end
 
+
 --- B1 % B2
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
@@ -281,6 +292,7 @@ bigint.__mod = function (B1, B2)
   local _, res = bigint._div(B1, B2)
   return res
 end
+
 
 --- B1 * B2
 --  @param B1 First bigint or integer.
@@ -303,7 +315,10 @@ bigint.__mul = function (B1, B2)
   return res
 end
 
+
+--- Block B[x] = y
 bigint.__newindex = function () error("Immutable object") end
+
 
 --- B1 ^ B2
 --  @param B1 First bigint or integer.
@@ -340,6 +355,7 @@ bigint.__pow = function (B1, B2)
   return mul(x, y)
 end
 
+
 --- B1 - B2
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
@@ -363,6 +379,7 @@ bigint.__sub = function (B1, B2)
   end
 end
 
+
 --- - B
 --  @param B Bigint object.
 --  @return Opposite value.
@@ -371,6 +388,7 @@ bigint.__unm = function (B)
   res._ = B._
   return res
 end
+
 
 --- String representation.
 --  @param B Bigint object.
@@ -389,12 +407,14 @@ bigint.__tostring = function (B)
   return B.sign < 0 and ('-' .. s) or s
 end
 
+
 bigint.arithmetic = 'arithmetic'
 about[bigint.arithmetic] = {
   bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.META}
 bigint.comparison = 'comparison'
 about[bigint.comparison] = {
   bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.META}
+
 
 --- Correct function arguments if need.
 --  @param num1 First number representation.
@@ -411,12 +431,14 @@ bigint._args = function (num1, num2)
   return num1, num2
 end
 
+
 --- Try to convert object into bigint.
 --  @param v Source objec.
 --  @return Int object.
 bigint._convert = function (v)
   return Ver.isInteger(v) and bigint:_new(v)
 end
+
 
 --- Deep copy of the object.
 --  @param B Original bigint object.
@@ -426,6 +448,7 @@ bigint._copy = function (B)
   for i = 2, #B._ do c._[i] = B._[i] end
   return c
 end
+
 
 --- In-place decrement for number.
 --  @param B Number to decrease by 1.
@@ -452,6 +475,7 @@ bigint._decr = function (B, forced)
     B.sign = 1
   end
 end
+
 
 --- Main algorithm for division.
 --  @param B1 First number representation.
@@ -493,6 +517,7 @@ bigint._div = function (B1, B2)
   return res, rem
 end
 
+
 --- Divide elements in the list ot given number, find reminder.
 --  @param t List of numbers.
 --  @param iOld Initial bases.
@@ -514,6 +539,7 @@ bigint._divBase = function (t, iOld, iNew)
   return t, rest
 end
 
+
 --- Greatest common devision for bigint objects.
 --  @param B1 First value.
 --  @param B2 Second value.
@@ -521,6 +547,7 @@ end
 bigint._gcd = function (B1, B2)
   return (#B1._ == 1 and B1._[1] == 0) and B2 or bigint._gcd(B2 % B1, B1)
 end
+
 
 --- Check if the first number is greater then the second
 --  @param B1 First number.
@@ -542,6 +569,7 @@ bigint._gt = function (B1, B2)
   end
 end
 
+
 --- In-place increment for number.
 --  @param B Number to increase by 1.
 --  @param forced Flag to skip sign check.
@@ -562,6 +590,7 @@ bigint._incr = function (B, forced)
   end
 end
 
+
 --- Check if it prime using the Fermat theorem.
 --  @param B Number.
 --  @return true if prime.
@@ -578,6 +607,7 @@ bigint._primeFermat = function (B)
   end
   return true
 end
+
 
 --- Straightforward product algorithm.
 --  @param B1 First bigint multiplier.
@@ -608,6 +638,7 @@ bigint._mul = function (B1, B2)
   if rest > 0 then s[#s+1] = rest end
   return sum
 end
+
 
 --- Create new object, set metatable.
 --  @param num Integer, string or table.
@@ -651,6 +682,7 @@ bigint._new = function (self, num)
   return setmetatable(int, self)
 end
 
+
 --- Find (B1 ^ B2) % B3
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
@@ -678,6 +710,7 @@ bigint._powm = function (B1, B2, B3)
   return rest
 end
 
+
 --- Transform numbers into the same base.
 --  @param num1 First object.
 --  @param num2 Second object.
@@ -690,6 +723,7 @@ bigint._simbase = function (num1, num2)
   end
   return num1, num2
 end
+
 
 --- Estimate square root using Babylonian method.
 --  @param B Bigint object.
@@ -704,6 +738,7 @@ bigint._sqrt = function (B)
   until #aii._ == 1 and (aii._[1] <= 1)   -- TODO: check and decrease if need
   return ai
 end
+
 
 --- Get subtraction for two positive bigint numbers.
 --  @param B1 First bigint object.
@@ -742,6 +777,7 @@ bigint._sub = function (B1, B2)
   return res
 end
 
+
 --- Get sum of the two positive big numbers.
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
@@ -762,6 +798,7 @@ bigint._sum = function (B1, B2)
   return res
 end
 
+
 --- Searching for prime factor.
 --  @param B Integer number.
 --  @param B0 Initial multiplier.
@@ -780,6 +817,7 @@ bigint._trivialSearch = function (B, B0)
   return nil  -- not found
 end
 
+
 --- Create zero element.
 --  @param nBase Base value.
 --  @param iSign Sign value.
@@ -788,7 +826,10 @@ bigint._zero = function (self, nBase, iSign)
   return setmetatable({_={0}, _base=nBase, sign=iSign}, self)
 end
 
+
+--- Constant for 1
 bigint._1 = bigint:_new({1})
+
 
 --- Absolute value of number.
 --  @param B Bigint or integer number.
@@ -800,6 +841,7 @@ bigint.abs = function (B)
 end
 about[bigint.abs] = {"B:abs() --> num", "Return module of arbitrary long number."}
 
+
 --- Get digit.
 --  @param B Bigint object.
 --  @param N Index.
@@ -807,11 +849,13 @@ about[bigint.abs] = {"B:abs() --> num", "Return module of arbitrary long number.
 bigint.at = function (B, N) return B._[N] end
 about[bigint.at] = {"B:at(N) --> int", "Get N-th digit.", help.OTHER}
 
+
 --- Get numeric base.
 --  @param B Bigint object.
 --  @return Base value.
 bigint.base = function (B) return B._base end
 about[bigint.base] = {"B:base() --> int", "Current numeric base."}
+
 
 --- Find number of combinations.
 --  @param self Do nothing.
@@ -824,6 +868,7 @@ bigint.C = function (self, n, k)
 end
 about[bigint.C] = {":C(n, k) --> combinations_B",
   "Number of combinations C(n,k).", COMB}
+
 
 --- a == b.
 --  In Lua v == 0 is always false because in the case of number
@@ -861,6 +906,7 @@ about[bigint.eq] = {
 -- redefine equality
 bigint.__eq = bigint.eq
 
+
 --- B!
 --  Use the fact that n*(n-1)*...*2*1 = (n*1)*((n-1)*2)*...
 --  @param B Bigint object.
@@ -887,6 +933,7 @@ end
 about[bigint.F] = {"B:F() --> B!",
   "Return factorial of non-negative integer B.", COMB}
 
+
 --- Find multipliers for the number.
 --  @param B Integer number.
 --  @return List of prime numbers.
@@ -909,6 +956,7 @@ end
 about[bigint.factorize] = {
   "B:factorize() --> primeBs_t", "Find the list of multipliers.", NUMB}
 
+
 --- Float number representation.
 --  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
@@ -928,6 +976,7 @@ end
 about[bigint.float] = {"B:float() --> num",
   "Represent current big integer as number if it possible.", help.OTHER}
 
+
 --- Greatest common devision for two (big) numbers.
 --  @param B1 First value.
 --  @param B2 Second value.
@@ -938,6 +987,7 @@ bigint.gcd = function (B1, B2)
 end
 about[bigint.gcd] = {
   "B:gcd(B2) --> B3", "Find the greatest common divisor for two integers.", NUMB}
+
 
 -- TODO try https://en.wikipedia.org/wiki/Primality_test
 --- Check if the number is prime.
@@ -956,6 +1006,7 @@ about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
   "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.",
   NUMB}
 
+
 --- Permutations without repetition.
 --  @param self Do nothing.
 --  @param n Number of elements.
@@ -967,6 +1018,7 @@ bigint.P = function (self, n, k)
 end
 about[bigint.P] = {":P(n, k) --> permutaions_B",
   "Find permutations without repetition.", COMB}
+
 
 --- Generate random number.
 --  @param self Do nothing.
@@ -998,6 +1050,7 @@ end
 about[bigint.random] = {":random(B) --> rand_B",
   "Generate pseudo-random value from 0 to B.", help.STATIC}
 
+
 --- Find ratio of factorials n!/k!
 --  @param B Numerator.
 --  @param B2 Denominator.
@@ -1026,6 +1079,7 @@ end
 about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
   "Find ratio of factorials num!/denom!.", COMB}
 
+
 --- Change current numeric base.
 --  @param B Bigint object.
 --  @param N New base.
@@ -1048,6 +1102,7 @@ end
 about[bigint.rebase] = {
   "B:rebase(N) --> upd_B", "Convert number to the new numeric base."}
 
+
 -- simplify constructor call
 setmetatable(bigint, {
 __call = function (self, v)
@@ -1056,9 +1111,11 @@ end})
 about[bigint] = {" (var) --> new_B",
   "Create number from integer, string or table.", help.STATIC}
 
+
 -- Comment to remove descriptions
 bigint.about = about
 
 return bigint
 
 --=================================
+-- TODO common internal base
