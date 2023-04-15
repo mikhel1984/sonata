@@ -8,6 +8,7 @@
 	module 'const'
 --]]
 
+
 --[[TEST
 
 -- use 'const'
@@ -38,6 +39,7 @@ ans = _C.myConst              --> nil
 
 --]]
 
+
 --	LOCAL
 
 -- description
@@ -45,14 +47,15 @@ local about = {
 __module__ = "Collection of constants."
 }
 
+
 local PHY, ASTRO, MATH = "physics", "astronomy", "math"
+
 
 --- Call error when user try to modify constant value
 local function modifyError () error('Constants are immutable!') end
 
---	MODULE
 
--- Set of constants
+--	MODULE
 
 -- astronomy
 local _astro = {
@@ -61,12 +64,14 @@ ly_u_='m',    ly = 9.4607304725808E15,   -- light year
 au_u_='m',    au = 149597870700,         -- astronomic unit
 }
 
+
 -- math
 local _math = {
              phi = 1.6180339887498948482045868,  -- golden ratio
               pi = 3.1415926535897932384626434,  -- length to diameter
                e = 2.7182818284590452353602875,  -- base of natural logarithm
 }
+
 
 -- physics
 local _phy = {
@@ -86,10 +91,12 @@ Rinf_u_='1/m',  Rinf = 10973731.56852773,   -- Rydberg constant
 Da_u_='kg',       Da = 1,660539066605E-27,  -- unified atomic mass unit (Dalton unit)
 }
 
+
 -- user defined
 local _user = {
 the_answer_to_the_ultimate_question_of_life_the_universe_and_everything = 42,
 }
+
 
 -- Interface
 local const = {
@@ -98,6 +105,7 @@ astro = {},
 math = {},
 ext_units = false,
 }
+
 
 -- physics
 about[_phy.G] = {".phy.G", "Gravitational constant.", PHY}
@@ -124,6 +132,7 @@ about[_math.pi] = {
   ".math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
 about[_math.e] = {".math.e", "Base of the natural logarithm.", MATH}
 
+
 --- Convert to Unit object.
 --  @param t Table with the constant.
 --  @param sKey The constant name.
@@ -136,6 +145,7 @@ const._unit_ = function (t, sKey)
     return val and const.ext_units(val, t[name..'_u_'] or '') or nil
   end
 end
+
 
 --- Make value "constant".
 --  @param self Do nothing.
@@ -150,6 +160,7 @@ const.add = function (self, sName, val, sUnit)
 end
 about[const.add] = {':add(name_s, value, [units_s]) --> nil', 'Create new constant.'}
 
+
 --- Remove existing constant.
 --  @param self Do nothing.
 --  @param sName Name of constant.
@@ -163,8 +174,6 @@ const.remove = function (self, sName)
 end
 about[const.remove] = {':remove(name_s) --> bool', 'Delete user-defined constant.'}
 
--- Comment to remove descriptions
-const.about = about
 
 -- Make objects "immutable"
 setmetatable(const,       {__newindex=modifyError,
@@ -175,6 +184,10 @@ setmetatable(const.astro, {__newindex=modifyError,
   __index = function (t, k) return _astro[k] or const._unit_(_astro, k) end})
 setmetatable(const.math,  {__newindex=modifyError,
   __index = function (t, k) return _math[k] or const._unit_(_math, k) end})
+
+
+-- Comment to remove descriptions
+const.about = about
 
 return const
 

@@ -1339,7 +1339,7 @@ about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", help.STATIC}
 
 
-if Sonata then
+if Sonata then  -- GLOBAL
 
 -- Define simplified function call
 Plot = function (...)
@@ -1352,7 +1352,7 @@ end
 about[Plot] = {"Plot(...) --> nil",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
 
-end
+end  -- GLOBAL
 
 
 -- Comment to remove descriptions

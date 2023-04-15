@@ -11,6 +11,7 @@
 	module 'special'
 --]]
 
+
 --------------- Tests --------------
 --[[TEST
 
@@ -62,18 +63,22 @@ ans = Spec:dawson(3.3)       --3> 0.1598
 
 --]]
 
+
 --	LOCAL
 
 local Ver = require("lib.utils").versions
+
 
 -- constants for gamma approximation
 local k_gamma = {676.5203681218851, -1259.1392167224028, 771.32342877765313,
   -176.61502916214059, 12.507343278686905, -0.13857109526572012,
   9.9843695780195716E-6, 1.5056327351493116E-7}
 
+
 -- constants for ln(gamma) approximation
 local k_gammaln = {76.18009172947146, -86.50532032941677, 24.01409824083091,
   -1.231739572450155, 0.1208650973866179E-2, -0.5395239384953E-5}
+
 
 --- Fixed lower bound based on absolute value.
 --  @param a Value to return.
@@ -81,12 +86,15 @@ local k_gammaln = {76.18009172947146, -86.50532032941677, 24.01409824083091,
 --  @return Second argument if first is too small.
 local function lowBound(a, b) return math.abs(a) > b and a or b end
 
+
 -- doc categories
 local GAMMA, BETA, BESSEL = 'gamma', 'beta', 'bessel'
+
 
 -- error
 local ERR_POSINT = "Non-negative integer order is expected!"
 local ERR_INVARG = "Invalid arguments!"
+
 
 --	INFO
 
@@ -95,11 +103,12 @@ local about = {
 __module__ = "Special mathematical functions."
 }
 
+
 --	MODULE
 
-local special = {
-}
+local special = {}
 special.__index = special
+
 
 --- Modified Bessel function I0.
 --  @param x Real number.
@@ -120,6 +129,7 @@ special._bessi0 = function (x)
   end
 end
 
+
 --- Modified Bessel function I1.
 --  @param x Real number.
 --  @return I1(x).
@@ -139,6 +149,7 @@ special._bessi1 = function (x)
   end
   return (x < 0) and -ans or ans
 end
+
 
 --- Bessel function J0.
 --  @param x Real number.
@@ -164,6 +175,7 @@ special._bessj0 = function (x)
     return math.sqrt(0.636619772/ax)*(math.cos(xx)*ans1 - z*math.sin(xx)*ans2)
   end
 end
+
 
 --- Bessel function J1.
 --  @param x Real number.
@@ -191,6 +203,7 @@ special._bessj1 = function (x)
   end
 end
 
+
 --- Modified Bessel function K0.
 --  @param x Non-negative number.
 --  @return K0(x).
@@ -208,6 +221,7 @@ special._bessk0 = function (x)
   end
 end
 
+
 --- Modified Bessel function K1.
 --  @param x Non-negative number.
 --  @return K1(x).
@@ -224,6 +238,7 @@ special._bessk1 = function (x)
       - y*0.68245E-3))))))
   end
 end
+
 
 --- Bessel function Y0.
 --  @param x Non-negative number.
@@ -249,6 +264,7 @@ special._bessy0_ = function (x)
   end
 end
 
+
 --- Bessel function Y1.
 --  @param x Non-negative number.
 --  @return Y1(x).
@@ -272,6 +288,7 @@ special._bessy1 = function (x)
     return math.sqrt(0.636619772/x)*(math.sin(xx)*ans1 + z*math.cos(xx)*ans2)
   end
 end
+
 
 --- Evaluates continued fraction for incomplete beta function
 --  by modified Lentz's method.
@@ -298,6 +315,7 @@ special._betacf = function (a, b, x)
   return h
 end
 
+
 --- Series representation for incomplete gamma function P.
 --  @param N Order.
 --  @param x Real value.
@@ -323,6 +341,7 @@ special._gammaSer = function (N, x)
   return gamser
 end
 
+
 --- Continued fraction representation for incomplete gamma function Q.
 --  @param N Order.
 --  @param x Real value.
@@ -341,6 +360,7 @@ special._gcf = function (N, x)
   end
   return math.exp(-x+N*math.log(x)-special:gammaln(N))*h
 end
+
 
 --- Legendre coefficient.
 --  @param n Total order.
@@ -369,6 +389,7 @@ special._plgndr = function (n, m, x)
   end
 end
 
+
 --- Modified Bessel function In.
 --  @param self Do nothing.
 --  @param N Order.
@@ -396,6 +417,7 @@ special.besseli = function (self, N, x)
 end
 about[special.besseli] = {":besseli(order_N,x_d) --> num",
   "Modified Bessel function In(x).", BESSEL}
+
 
 --- Bessel function of the first kind
 --  @param self Do nothing.
@@ -443,6 +465,7 @@ end
 about[special.besselj] = {":besselj(order_N, x_d) --> num",
   "Bessel function of the first kind.", BESSEL}
 
+
 --- Modified Bessel function Kn.
 --  @param self Do nothing.
 --  @param N Order.
@@ -461,6 +484,7 @@ special.besselk = function (self, N, x)
 end
 about[special.besselk] = {":besselk(order_N, x_d) --> num",
   "Modified Bessel function Kn(x).", BESSEL}
+
 
 --- Bessel function of the second kind
 --  @param self Do nothing.
@@ -483,6 +507,7 @@ end
 about[special.bessely] = {":bessely(order_N, x_d) --> num",
   "Bessel function of the second kind.", BESSEL}
 
+
 --- Beta function.
 --  @param self Do nothing.
 --  @param z First value.
@@ -492,6 +517,7 @@ special.beta = function (self, z, w)
   return math.exp(special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w))
 end
 about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", BETA}
+
 
 --- Incomplete beta function
 --  @param self Do nothing.
@@ -515,6 +541,7 @@ end
 about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
   "Incomplete beta function Ix(a,b).", BETA}
 
+
 --- Logarithm of beta function.
 --  @param self Do nothing.
 --  @param z First argument.
@@ -525,6 +552,7 @@ special.betaln = function (self, z, w)
 end
 about[special.betaln] = {":betaln(z_d, w_d) --> num",
   "Natural logarithm of beta function.", BETA}
+
 
 --- Dawson integral.
 --  @param self Do nothing.
@@ -556,12 +584,14 @@ special.dawson = function (self, x)
 end
 about[special.dawson] = {":dawson(x_d) --> num", "Dawson integral."}
 
+
 --- Error function.
 --  @param self Do nothing.
 --  @param x Real value.
 --  @return Error value.
 special.erf = function (self, x) return 1-special:erfc(x) end
 about[special.erf] = {":erf(x_d) --> num", "Error function."}
+
 
 --- Complementary error function.
 --  @param self Do nothing.
@@ -576,6 +606,7 @@ special.erfc = function (self, x)
   return (x >= 0.0) and ans or (2.0 - ans)
 end
 about[special.erfc] = {":erfc(x_d) --> num", "Complementary error function."}
+
 
 --- Exponential integral.
 --  @param self Do nothing.
@@ -623,6 +654,7 @@ special.expint = function (self, n, x)
 end
 about[special.expint] = {":expint(pow_N, x_d) --> num", "Exponential integral En(x)."}
 
+
 --- Gamma function.
 --  @param self Do nothing.
 --  @param z Real number.
@@ -640,6 +672,7 @@ special.gamma = function (self, z)
 end
 about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", GAMMA}
 
+
 --- Logarithm of gamma function.
 --  @param self Do nothing.
 --  @param z Positive number.
@@ -655,6 +688,7 @@ end
 about[special.gammaln] = {":gammaln(x_d) --> num",
   "Natural logarithm of gamma function.", GAMMA}
 
+
 --- Incomplete gamma function P(N,x).
 --  @param self Do nothing.
 --  @param N Order.
@@ -665,6 +699,7 @@ special.gammp = function (self, N, x)
   return (x < N+1.0) and special._gammaSer(N, x) or 1.0-special._gcf(N, x)
 end
 about[special.gammp] = {":gammp(order_N, x_d) --> num", "Incomplete gamma function P(N,x).", GAMMA}
+
 
 --- Incomplete gamma function Q(N,x).
 --  @param self Do nothing.
@@ -677,6 +712,7 @@ special.gammq = function (self, N, x)
 end
 about[special.gammq] = {":gammq(order_N, x_d) --> num",
   "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
+
 
 --- List of Legendre coefficients.
 --  @param self Do nothing.
@@ -692,6 +728,7 @@ special.legendre = function (self, n, x)
 end
 about[special.legendre] = {":legendre(order_N, x_d) --> coeff_t",
   "Return list of Legendre polynomial coefficients."}
+
 
 -- Comment to remove descriptions
 special.about = about

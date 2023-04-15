@@ -12,6 +12,7 @@
 	module 'polynomial'
 --]]
 
+
 -------------------- Tests -------------------
 --[[TEST
 
@@ -131,11 +132,14 @@ local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
+
 -- Check object type.
 local function ispolynomial(v) return type(v) == 'table' and v.ispolynomial end
 
+
 -- Return number in trivial case.
 local function numpoly(P) return #P == 0 and Cross.simp(P[0]) or P end
+
 
 --- Simplify polynomial, remove zeros from the begin.
 --  @param t Table of coefficients.
@@ -144,6 +148,7 @@ local function reduce (t)
   while #t > 0 and Cross.eq(t[#t], 0) do table.remove(t) end
   return t
 end
+
 
 --- Get sum of the table elements.
 --  Use product if need.
@@ -159,6 +164,7 @@ local function getSum(P1, P2)
   end
   return res
 end
+
 
 --- Condition for the root sorting.
 --  @param v1 First element.
@@ -177,6 +183,7 @@ local function sortRoots (v1, v2)
   end
 end
 
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -185,7 +192,9 @@ local about = {
 __module__ = "Operations with polynomials."
 }
 
+
 local FIT = 'approximation'
+
 
 --	MODULE
 
@@ -196,8 +205,10 @@ type = 'polynomial', ispolynomial = true,
 _simp = numpoly
 }
 
+
 -- Simplify ppval call.
 local mt_ppval = {__call = function (...) return polynomial.ppval(nil, ...) end}
+
 
 --- P1 + P2
 --  @param P1 First polynomial or number.
@@ -220,6 +231,7 @@ polynomial.__add = function (P1, P2)
   return numpoly(reduce(polynomial:_init(t)))
 end
 
+
 --- P1 / P2
 --  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
@@ -236,6 +248,7 @@ polynomial.__div = function (P1, P2)
   local res, _ = polynomial._div(P1, P2)
   return res
 end
+
 
 --- P1 == P2
 --  @param P1 First (polynomial) object.
@@ -258,8 +271,10 @@ polynomial.__eq = function (P1, P2)
   end
 end
 
+
 -- methametods
 polynomial.__index = polynomial
+
 
 --- P1 % P2
 --  @param P1 First polynomial or number.
@@ -277,6 +292,7 @@ polynomial.__mod = function (P1, P2)
   local _, res = polynomial._div(P1, P2)
   return res
 end
+
 
 --- P1 * P2
 --  @param P1 First polynomial or number.
@@ -303,6 +319,7 @@ polynomial.__mul = function (P1, P2)
   return numpoly(reduce(res))
 end
 
+
 --- P ^ n
 --  @param P Polynomial object.
 --  @param N Positive integer power.
@@ -319,6 +336,7 @@ polynomial.__pow = function (P, N)
   return res
 end
 
+
 --- P1 - P2
 --  @param P1 First polynomial or number.
 --  @param P2 Second polynomial or number.
@@ -326,6 +344,7 @@ end
 polynomial.__sub = function (P1, P2)
   return P1 + (-P2)
 end
+
 
 --- String representation.
 --  @param P Polynomial object.
@@ -339,6 +358,7 @@ polynomial.__tostring = function (P)
   return table.concat(t, ' ')
 end
 
+
 --- -P
 --  @param P Polynomial object.
 --  @return Polynomial with inverted signs.
@@ -348,18 +368,22 @@ polynomial.__unm = function (P)
   return polynomial:_init(res)
 end
 
+
 polynomial.arithmetic = 'arithmetic'
 about[polynomial.arithmetic] = {
   polynomial.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.META}
 
+
 polynomial.comparison = 'comparison'
 about[polynomial.comparison] = {polynomial.comparison, "a==b, a~=b", help.META}
+
 
 polynomial._convert = function (v)
   return (type(v) == 'number' or
           type(v) == 'table' and v.__add and v.__mul and v.__div)
           and polynomial:_init({[0]=v})
 end
+
 
 --- Calculate ratio and rest of 2 polynomials.
 --  @param P1 First polynomial.
@@ -382,6 +406,7 @@ polynomial._div = function (P1, P2)
   return numpoly(polynomial._reorder(res)), numpoly(reduce(rest))
 end
 
+
 --- Initialize polynomial from table.
 --  @param self Parent object.
 --  @param t Table of coefficients, from highest to lowest power.
@@ -389,6 +414,7 @@ end
 polynomial._init = function (self, t)
   return setmetatable(t, self)
 end
+
 
 --- Simplify call P * (x - v), inplace
 --  @param P Polynomial object.
@@ -402,6 +428,7 @@ polynomial._multXv = function (P, v)
   end
   P[#P+1] = prev
 end
+
 
 --- Find closest root using Newton-Rapson technique
 --  @param P Source polynomial.
@@ -424,6 +451,7 @@ polynomial._nr = function (P, d0, de)
   return false
 end
 
+
 --- Change order of coefficients and make new polynomial.
 --  @param t Table of coefficients, from lowest to highest.
 --  @return Polynomial object.
@@ -436,6 +464,7 @@ polynomial._reorder = function (t)
   return polynomial:_init(p)
 end
 
+
 --- Find roots of 2nd order polynomial.
 --  @param P Source polynomial.
 --  @return Table with roots.
@@ -446,6 +475,7 @@ polynomial._roots2 = function (P)
   table.sort(res, sortRoots)
   return res
 end
+
 
 --- Find roots of 2nd order polynomial.
 --  Use Cardano's formula.
@@ -477,6 +507,7 @@ polynomial._roots3 = function (P)
   return res
 end
 
+
 --- Get polynomial from roots.
 --  Arguments are a sequence of roots.
 --  @param self Do nothing.
@@ -497,6 +528,7 @@ end
 about[polynomial.build] = {":build(root1, [root2,..]) --> P",
   "Return polynomial with given roots.", help.OTHER}
 
+
 --- Find characteristic polinomial for the matrix.
 --  @param self Do nothing.
 --  @param M Source matrix.
@@ -511,6 +543,7 @@ end
 about[polynomial.char] = {":char(M) --> P",
   "Return characteristic polinomial for the given matrix."}
 
+
 --- Create copy of object.
 --  @param P Initial polynomial.
 --  @return Deep copy.
@@ -524,6 +557,7 @@ end
 about[polynomial.copy] = {"P:copy() --> cpy_P",
   "Get copy of the polynomial.", help.OTHER}
 
+
 --- Get derivative.
 --  @param P Initial polynomial.
 --  @return Derivative polynomial (and its value).
@@ -536,6 +570,7 @@ polynomial.der = function (P)
 end
 about[polynomial.der] = {"P:der() --> der_P",
   "Calculate derivative of polynomial."}
+
 
 --- Find the best polynomial approximation for the line.
 --  @param self Do nothing.
@@ -582,6 +617,7 @@ end
 about[polynomial.fit] = {":fit(xs_t, ys_t, order_N) --> P",
   "Find polynomial approximation for the line.", FIT}
 
+
 --- Get integral.
 --  @param P Initial polynomial.
 --  @param x0 Free coefficient.
@@ -595,6 +631,7 @@ polynomial.int = function (P, d0)
 end
 about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
   "Calculate integral, d0 - free coefficient."}
+
 
 --- Find interpolation polinomial in the Lagrange form.
 --  @param self Do nothing.
@@ -625,6 +662,7 @@ end
 about[polynomial.lagrange] = {":lagrange(xs_t, ys_t) --> P",
   "Find interpolation polynomial in the Lagrange form.", FIT}
 
+
 --- Linear data interpolation.
 --  @param self Do nothing
 --  @param tX Sequence of independent values.
@@ -645,6 +683,7 @@ polynomial.lin = function (self, tX, tY, v0, vN)
 end
 about[polynomial.lin] = {":lin(xs_t, ys_t, yBefore_d=0, yAfter_d=y0) --> P",
   "Linear data interpolation. Return table with polynomials.", FIT}
+
 
 --- Evaluate value for table of polynomials (piecewise polynomial).
 --  @param self Do nothing.
@@ -675,6 +714,7 @@ end
 about[polynomial.ppval] = {":ppval(Ps_t, x_d, [index_N]) --> num",
   "Return value of a piecewise polynomial in the point and the polynomial index.",
   FIT}
+
 
 --- Find real roots of the polynomial.
 --  @param P Source polynomial.
@@ -708,6 +748,7 @@ polynomial.real = function (P)
 end
 about[polynomial.real] = {"P:real() --> roots_t",
   "Find real roots of the polynomial.", help.OTHER}
+
 
 --- Find all the polynomial roots.
 --  @param P Source polynomial.
@@ -745,6 +786,7 @@ polynomial.roots = function (P)
 end
 about[polynomial.roots] = {"P:roots() --> roots_t",
   "Find all the polynomial roots.", help.OTHER}
+
 
 --- Cubic spline data interpolation.
 --  Use 'natural' boundary conditions.
@@ -795,6 +837,7 @@ end
 about[polynomial.spline] = {":spline(xs_t, ys_t) --> Ps_t",
   "Cubic spline data interpolation. Return table with polynomials.", FIT}
 
+
 --- Represent polynomial in "natural" form.
 --  @param P Source polynomial.
 --  @param s String variable (default is 'x').
@@ -817,6 +860,7 @@ end
 about[polynomial.str] = {"P:str(char_s='x') --> str",
   "Pretty print for polynomial.", help.OTHER}
 
+
 --- Find Taylor series.
 --  @param self Do nothing.
 --  @param v Argument value.
@@ -838,6 +882,7 @@ polynomial.taylor = function (self, v, vF, ...)
 end
 about[polynomial.taylor] = {":taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P",
   "Get Taylor series.", FIT}
+
 
 --- Polynomial value.
 --  Can be called with ().
@@ -866,6 +911,7 @@ __call = function (self, t)
   return polynomial._reorder(t)
 end})
 about[polynomial] = {" {.., v1, v0} --> new_P", "Create a polynomial.", help.NEW}
+
 
 -- Comment to remove descriptions
 polynomial.about = about

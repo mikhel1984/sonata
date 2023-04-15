@@ -8,6 +8,7 @@
 	module 'numeric'
 --]]
 
+
 -------------------- Tests -------------------
 --[[TEST
 
@@ -63,9 +64,11 @@ ans = y[#y][1]               --2> 2.56
 
 --]]
 
+
 --	LOCAL
 
 local Ver = require("lib.utils").versions
+
 
 -- Runge-Kutta method.
 -- @param fn Function f(x,y).
@@ -82,12 +85,14 @@ local function rk(fn, dX, dY, dH)
   return dY+dH*(k1+2*(k2+k3)+k4)/6
 end
 
+
 --	INFO
 
 -- description
 local about = { __module__ =
   "Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL."
 }
+
 
 --	MODULE
 
@@ -97,8 +102,8 @@ TOL = 1E-3,
 -- max Newton algorithm attempts
 newton_max = 50,
 }
-
 about[numeric.TOL] = {".TOL=0.001", "The solution tolerance.", "parameters"}
+
 
 --- Simple derivative.
 --  @param self Do nothing.
@@ -116,6 +121,7 @@ numeric.der = function (self, fn, d)
 end
 about[numeric.der] = {":der(fn, x_d) --> num",
   "Calculate the derivative value for given function."}
+
 
 --- Another solution based on Newton's rule.
 --  @param self Do nothing.
@@ -135,6 +141,7 @@ numeric.newton = function (self, fn, d1)
 end
 about[numeric.newton] = {":newton(fn, x0_d) --> num",
   "Find root of equation using Newton's rule with only one initial condition."}
+
 
 --- Differential equation solution (Runge-Kutta method).
 --  @param self Do nothing.
@@ -183,6 +190,7 @@ end
 about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys_t, yLast",
   "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
 
+
 --- Find root of equation at the given interval.
 --  @param self Do nothing
 --  @param fn Function to analyze.
@@ -200,6 +208,7 @@ numeric.solve = function (self, fn, dA, dB)
 end
 about[numeric.solve] = {":solve(fn, xLow_d, xUp_d) --> num",
   "Find root of equation fn(x)=0 at interval [a,b]."}
+
 
 --- Integration using trapeze method.
 --  @param self Do nothing.
@@ -233,6 +242,7 @@ numeric.trapez = function (self, fn, dA, dB)
 end
 about[numeric.trapez] = {":trapez(fn, x1_d, x2_d) --> num",
   "Get integral using trapezoidal rule."}
+
 
 -- Comment to remove descriptions
 numeric.about = about

@@ -12,6 +12,7 @@
 	module 'rational'
 --]]
 
+
 -------------------- Tests -------------------
 --[[TEST
 
@@ -88,16 +89,18 @@ local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
---  NUM, DENOM = 1, 2
 
 --- Check object type.
 --  @param v Test object.
 --  @return True for rational number.
 local function isrational(v) return type(v) == 'table' and v.isrational end
 
+
 local mabs = math.abs
 
+
 local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
+
 
 local function numrat(R)
   return Cross.eq(R._[2], 1) and Cross.simp(R._[1])               -- x / 1
@@ -106,12 +109,14 @@ local function numrat(R)
     or R
 end
 
+
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
 local function numStr(v)
   return type(v) == 'number' and Utils.numstr(v) or tostring(v)
 end
+
 
 -- Continued fraction printing
 local _continued = {
@@ -124,6 +129,7 @@ __tostring = function (t)
 end
 }
 
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -131,6 +137,7 @@ local help = SonataHelp or {}
 local about = {
 __module__ = "Computations with rational numbers."
 }
+
 
 --	MODULE
 
@@ -140,6 +147,7 @@ type = 'rational', isrational = true,
 -- simplification
 _simp = numrat,
 }
+
 
 --- R1 + R2
 --  @param R1 First rational or integer number.
@@ -159,6 +167,7 @@ rational.__add = function (R1, R2)
   return numrat(rational:_new(r1[1]*r2[2]+r1[2]*r2[1], r1[2]*r2[2]))
 end
 
+
 --- R1 / R2
 --  @param R1 First rational or integer number.
 --  @param R2 Second rational or integer number.
@@ -176,8 +185,10 @@ rational.__div = function (R1, R2)
   return numrat(rational:_new(r1[1]*r2[2], r1[2]*r2[1]))
 end
 
+
 -- methametods
 rational.__index = rational
+
 
 --- R1 <= R2
 --  @param R1 First number.
@@ -199,6 +210,7 @@ rational.__le = function (R1, R2)
   return (r1[1]*r2[2]) <= (r2[1]*r1[2])
 end
 
+
 --- R1 < R2
 --  @param R1 First number.
 --  @param R2 Second number.
@@ -219,6 +231,7 @@ rational.__lt = function (R1, R2)
   return (r1[1]*r2[2]) < (r2[1]*r1[2])
 end
 
+
 --- R1 * R2
 --  @param R1 First rational or integer number.
 --  @param R2 Second rational or integer number.
@@ -236,8 +249,10 @@ rational.__mul = function (R1, R2)
   return numrat(rational:_new(r1[1]*r2[1], r1[2]*r2[2]))
 end
 
+
 --- "Protect" from table modification.
 rational.__newindex = function () error("Immutable object") end
+
 
 --- R1 ^ R2
 --  @param R1 Rational or real number.
@@ -256,6 +271,7 @@ rational.__pow = function (R1, R2)
   end
 end
 
+
 --- R1 - R2
 --  @param R1 First rational or integer number.
 --  @param R2 Second rational or integer number.
@@ -273,6 +289,7 @@ rational.__sub = function (R1, R2)
   return numrat(rational:_new(r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[2]))
 end
 
+
 --- String representation.
 --  @param R Rational number.
 --  @return String with numerator and denominator.
@@ -289,18 +306,22 @@ rational.__tostring = function (R)
   end
 end
 
+
 --- -R
 --  @param R Rational number.
 --  @preturn Opposite rational number.
 rational.__unm = function (R) return rational:_new(-R._[1], R._[2]) end
 
+
 rational.arithmetic = 'arithmetic'
 about[rational.arithmetic] = {
   rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2", help.META}
 
+
 rational.comparison = 'comparison'
 about[rational.comparison] = { rational.comparison,
   "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
+
 
 --- Convert value to rational number.
 --  @param v Source value.
@@ -310,6 +331,7 @@ rational._convert = function (v)
             or type(v) == 'table' and v.__mod)
          and rational:_new(v, 1)
 end
+
 
 --- Find rational number for the given continued fraction.
 --  @param t Continued fraction coefficients.
@@ -323,6 +345,7 @@ rational._cont2rat = function (t)
   return t[0] * b + a, b
 end
 
+
 --- Create new object, set metatable.
 --  @param vn Numerator.
 --  @param vd Denominator. Default is 1.
@@ -332,11 +355,13 @@ rational._new = function (self, vn, vd)
   return setmetatable({_ = {vn/g, vd/g}}, self)
 end
 
+
 --- Get denominator.
 --  @param R Rational number.
 --  @return Denominator.
 rational.denom = function (R) return R._[2] end
 about[rational.denom] = {"R:denom() --> var", "Return the denominator of the rational number."}
+
 
 --- R1 == R2
 --  @param R1 First number.
@@ -360,6 +385,7 @@ end
 about[rational.eq] = {"R:eq(x) --> bool", "Compare two objects.", help.OTHER}
 rational.__eq = rational.eq
 
+
 --- Float point representation.
 --  @param R Rational number.
 --  @return Decimal fraction.
@@ -368,6 +394,7 @@ rational.float = function (R)
   return (r[1] < 0 and -1 or 1) * (Cross.norm(r[1]) / Cross.norm(r[2]))
 end
 about[rational.float] = {"R:float() --> num", "Return rational number as decimal."}
+
 
 --- Get rational number approximation.
 --  @param self Do nothing.
@@ -387,6 +414,7 @@ rational.from = function (self, f, fErr)
 end
 about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
   "Estimate ratio from floating point value.", help.NEW}
+
 
 --- Get rational number from continued fraction coefficients.
 --  @param self Do nothing.
@@ -410,6 +438,7 @@ end
 about[rational.fromCont] = {":fromCont(coeff_t) --> R",
   "Transform continued fraction to rational number.", help.NEW}
 
+
 --- The greatest common divisor.
 --  @param va First integer.
 --  @param vb Second integer.
@@ -418,11 +447,13 @@ rational._gcd = function (va, vb)
   return Cross.eq(va, 0) and vb or rational._gcd(vb % va, va)
 end
 
+
 --- Get numerator.
 --  @param R Rational number.
 --  @return Numerator.
 rational.num = function (R) return R._[1] end
 about[rational.num] = {"R:num() --> var", "Return the numerator of rational number."}
+
 
 --- Find continued fraction coefficients.
 --  @param R Positive rational number.
@@ -445,6 +476,7 @@ end
 about[rational.toCont] = {"R:toCont() --> coeff_t", 
   "Transform rational number to continued fraction.", help.OTHER}
 
+
 -- call constructor, check arguments
 setmetatable(rational, {
 __call = function (self, n, d)
@@ -460,6 +492,7 @@ __call = function (self, n, d)
 end})
 about[rational] = {" (num, denom=1) --> new_R", 
   "Create rational number using num (and denom).", help.NEW}
+
 
 -- Comment to remove descriptions
 rational.about = about

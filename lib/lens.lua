@@ -14,6 +14,7 @@
 	module 'lens'
 --]]
 
+
 ----------------------- Tests ----------------------
 --[[TEST
 
@@ -101,6 +102,7 @@ ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
 
 --]]
 
+
 --	LOCAL
 
 -- use letters for convenience
@@ -108,13 +110,14 @@ local keys = {A=1, B=2, C=3, D=4}
 
 -- tolerance of comparison
 local TOL = 1E-8
-
 local LASER = 'laser'
+
 
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is 'lens'.
 local function islens(v) return type(v)=='table' and v.islens end
+
 
 --	INFO
 
@@ -124,6 +127,7 @@ local about = {
 __module__ = "Matrix methods in paraxial optics."
 }
 
+
 --	MODULE
 
 local lens = {
@@ -132,6 +136,7 @@ type = 'lens', islens = true,
 -- {A, B, C, D}
 key = keys,
 }
+
 
 --- Concatenate components along the ray trace.
 --  Equal to matrix product in the opposite order.
@@ -148,6 +153,7 @@ lens.__concat = function (L1, L2)
   })
 end
 
+
 --- Compare two objects.
 --  @param L1 First object.
 --  @param L2 Second object.
@@ -157,6 +163,7 @@ lens.__eq = function (L1, L2)
      and math.abs(L1[3]-L2[3]) < TOL and math.abs(L1[4]-L2[4]) < TOL
 end
 
+
 --- Call unknown key.
 --  @param t Table.
 --  @param k Key.
@@ -164,6 +171,7 @@ end
 lens.__index = function (t, k)
   return lens[k] or rawget(t, keys[k] or '')
 end
+
 
 --- Set unknown key.
 --  @param t Table.
@@ -175,6 +183,7 @@ lens.__newindex = function (t, k, v)
   end
 end
 
+
 --- String representation.
 --  @param L Lens object.
 --  @return Equal string.
@@ -182,6 +191,7 @@ lens.__tostring = function (L)
   return string.format(
     "A: %.2f   B: %.2f\nC: %.2f   D: %.2f", L[1], L[2], L[3], L[4])
 end
+
 
 lens.operations = 'operations'
 about[lens.operations] = {lens.operations, "L1 == L2, L1 .. L2", help.META }
@@ -192,6 +202,7 @@ about[lens.operations] = {lens.operations, "L1 == L2, L1 .. L2", help.META }
 --  @return 'Lens' object.
 lens._init = function(self, t) return setmetatable(t, self) end
 
+
 --- Make component for afocal system.
 --  @param self Do nothing.
 --  @param dm Transverse magnification.
@@ -201,6 +212,7 @@ lens.afocal = function (self, dm)
 end
 about[lens.afocal] = {":afocal(magn_d) --> L", 
   "Find matrix for the afocal system.", help.NEW}
+
 
 --- Find Gaussian beam parameters after transformation.
 --  @param L Lens object.
@@ -218,6 +230,7 @@ end
 about[lens.beam] = {"L:beam(inRad_d, inCurv_d, lambda_d) --> outRad_d, outCurv_d", 
   "Find output beam radius and curvature.", LASER}
 
+
 --- Make a copy.
 --  @param L Initial object.
 --  @return Copy of the object.
@@ -225,6 +238,7 @@ lens.copy = function (L)
   return lens:_init({L[1], L[2], L[3], L[4]})
 end
 about[lens.copy] = {"L:copy() --> cpy_L", "Create a copy of the object."}
+
 
 --- Find the matrix determinant.
 --  @param L Lens object.
@@ -234,6 +248,7 @@ lens.det = function (L)
 end
 about[lens.det] = {"L:det() --> determinant_d", 
   "Find determinant of the system matrix.", help.OTHER}
+
 
 --- Find Gaussian beam characterictics.
 --  @param self Do nothing.
@@ -246,6 +261,7 @@ lens.gaussParam = function (self, dW0, dLam)
 end
 about[lens.gaussParam] = {":gaussParam(waist_d, lambda_d) --> div_d, range_d",
   "Find divergence angle and Raileigh range for a Gaussian beam.", LASER}
+
 
 --- Find Gaussian beam propagation.
 --  @param self Do nothing.
@@ -260,6 +276,7 @@ end
 about[lens.gaussSize] = {":gaussSize(waist_d, lambda_d, dist_d) --> rad_d, curv_d",
   "Find Gaussian beam radius and curvature at some distance.", LASER}
 
+
 --- Inverse the component matrix.
 --  @param L Lens object.
 --  @return Inverted matrix.
@@ -269,6 +286,7 @@ lens.inv = function (L)
 end
 about[lens.inv] = {"L:inv() --> inv_L", "Get the inverted system matrix.", help.OTHER}
 
+
 --- Check matrix type.
 --  @param L Lens object.
 --  @return True if the matrix is unit.
@@ -277,6 +295,7 @@ lens.isUnit = function (L)
 end
 about[lens.isUnit] = {"L:isUnit() --> bool", 
   "Check if the system matrix is unit.", help.OTHER}
+
 
 --- Make component for a curved mirror.
 --  @param self Do nothing.
@@ -290,6 +309,7 @@ about[lens.mirror] = {":mirror(rad_d, n_d) --> L",
   "Find reflection matrix for the given radius and refractive index.",
   help.NEW}
 
+
 --- Make component for refraction.
 --  @param self Do nothing.
 --  @param dr Radius of a surface.
@@ -302,6 +322,7 @@ end
 about[lens.ref] = {":ref(rad_d, n1_d, n2_d) --> L",
   "Find refraction matrix for the given radius of surface and input and output refractive indeces.",
   help.NEW}
+
 
 --- Find condition when fn(d).X == 0
 --  where X in {A, B, C, D}.
@@ -323,6 +344,7 @@ end
 about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
   "Find condition when component with the given index is equal to 0, use initial assumption."}
 
+
 --- Make component for a thin lens.
 --  @param self Do nothing.
 --  @param df Focal length.
@@ -332,6 +354,7 @@ lens.thin = function (self, df)
 end
 about[lens.thin] = {":thin(focalDist_d) --> L",
   "Find the thin lens system matrix for the given focal distance.", help.NEW}
+
 
 --- Make component for translation.
 --  @param self Do nothing.
@@ -344,6 +367,7 @@ end
 about[lens.trans] = {":trans(dist_d, n_d) --> L",
   "Find translation matrix for the given distance and refractive index.",
   help.NEW}
+
 
 --- Find ray parameters after transformation.
 --  Ray is represented with height 'y' and angle 'V' equal to v*n
@@ -358,6 +382,7 @@ about[lens.transform] = {"L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d",
   "Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to call L(dy,dV)."}
 -- Simplified call of transformation.
 lens.__call = lens.transform
+
 
 -- explain the vector of cardinal points
 local mt_cardinal = {
@@ -377,6 +402,7 @@ local mt_cardinal = {
     return table.concat(txt, '\n')
   end
 }
+
 
 --- Find cardinal points of the system.
 --  @param L Lens object.
@@ -405,6 +431,7 @@ about[lens.cardinal] = {"L:cardinal(nLft_d=1, nRht_d=1) --> points_t",
   "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.",
   help.OTHER}
 
+
 -- Create arbitrary object
 setmetatable(lens, {
 __call = function (self, t)
@@ -412,6 +439,7 @@ __call = function (self, t)
   return lens:_init(t)
 end})
 about[lens] = {" {A_d, B_d, C_d, D_d} --> new_L", "Make new lens component.", help.NEW}
+
 
 -- Comment to remove descriptions
 lens.about = about

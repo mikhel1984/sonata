@@ -8,6 +8,7 @@
 	module 'main'
 --]]
 
+
 ---------------- Tests ---------------------
 --[[TEST
 
@@ -55,17 +56,20 @@ ans = math.deg(_pi)          --2> 180.0
 
 --]]
 
+
 --	LOCAL
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
 local AUX = 'auxiliary'
 
+
 -- compatibility
 local Ver = require("lib.utils")
 local Utils = Ver.utils
 local Calc = Ver.calc
 Ver = Ver.versions
+
 
 --- Call default or module-specific function.
 --  @param fn Function.
@@ -82,16 +86,19 @@ local _call = function (fn, s)
   end
 end
 
+
 --	INFO 
 
 -- description
 local about = {
 __module__ = "Lua based mathematics."
 }
+
+
 --	MODULE
 
-
 local main = {}
+
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
@@ -102,6 +109,7 @@ main._showElt = function (v)
     return tostring(v)
   end
 end
+
 
 --- Show elements of the table.
 --  @param t Table to print.
@@ -133,6 +141,7 @@ main._showTable = function (t)
   end
   io.write(' }\n')
 end
+
 
 -- Commonly used methods
 abs = _call(math.abs, 'abs')
@@ -180,6 +189,7 @@ about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 _pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
 _e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
 
+
 --- Generate list of function values.
 --  @param fn Function to apply.
 --  @param t Table with arguments.
@@ -194,6 +204,7 @@ Map = function (fn, t)
   return nil
 end
 about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table element.', AUX}
+
 
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
@@ -224,6 +235,7 @@ about[Print] = {"Print(...) --> nil",
   "Extenden print function, it shows elements of tables and scientific form of numbers.",
   AUX}
 
+
 --- Round to some precision.
 --  @param f Real number.
 --  @param N Number of decimal digits.
@@ -234,6 +246,7 @@ Round = function (f, N)
 end
 about[Round] = {
   'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
+
 
 --- Execute file inside the interpreter.
 --  @param sFile Lua or note file name.
@@ -249,6 +262,7 @@ end
 about[Run] = {'Run(name_s, isInt=false) --> nil',
   "Execute lua- or note- file. Set isInt for interaction.", AUX}
 
+
 --- Show type of the object.
 --  @param v Some Lua or Sonata object.
 --  @return String with type value.
@@ -262,6 +276,7 @@ Type = function (v)
   return u
 end
 about[Type] = {'Type(x) --> str', 'Show type of the object.', AUX}
+
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
@@ -296,8 +311,10 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
+
 -- Methametods for the range of numbers.
 local mt_range = { type = 'range' }
+
 
 --- Initialize range object.
 --  @param dBeg First value.
@@ -308,6 +325,7 @@ local mt_range = { type = 'range' }
 mt_range._init = function (dBeg, dEnd, dStep, iN)
   return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, mt_range)
 end
+
 
 --- Add number (shift range).
 --  @param d Any number.
@@ -321,6 +339,7 @@ mt_range.__add = function (d, R)
   end
 end
 
+
 mt_range.__sub = function (R, d)
   if type(R) == 'number' then   -- d is range
     return R + (-1)*d
@@ -328,6 +347,7 @@ mt_range.__sub = function (R, d)
     return mt_range._init(R._beg-d, R._end-d, R._step, R._N)
   end
 end
+
 
 --- Multiply to number (expand range).
 --  @param d Any number.
@@ -341,6 +361,7 @@ mt_range.__mul = function (d, R)
   end
 end
 
+
 --- Pretty print.
 --  @param R Range object.
 --  @return String with the table representation.
@@ -349,12 +370,14 @@ mt_range.__tostring = function (self)
     self._beg, self._beg+self._step, self._end)
 end
 
+
 --- Get number of elements.
 --  @param self Range object.
 --  @return Element number.
 mt_range.__len = function (self)
   return self._N
 end
+
 
 --- Get i-th element.
 --  @param self Range object.
@@ -372,16 +395,19 @@ mt_range.__index = function (self, i)
   end
 end
 
+
 -- Block setting operation.
 mt_range.__newindex = function (self, k, v)
   -- do nothing
 end
+
 
 mt_range.map = function (self, fn)
   return setmetatable(
     {_beg=self._beg, _end=self._end, _step=self._step, _N=self._N, _fn=fn},
     mt_range)
 end
+
 
 --- Generate sequence of values.
 --  @param dBegin Beginning of range.
@@ -400,16 +426,20 @@ Range = function (dBegin, dEnd, dStep)
 end
 about[Range] = {'Range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.', AUX}
 
+
 -- Sonata specific functions
 
-if Sonata then
+if Sonata then  -- SPECIFIC
+
 about[Log] = {'Log(flag_s) --> nil',
   "Save session into the log file. Use 'on'/'off' to start/stop logging.", AUX}
 about[use] = {'use([module_s]) --> str|nil',
   "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
 about[help] = {"help(fn='main') --> str", "Show information about the function.", AUX}
 about[quit] = {'quit() --> nil', "Quit the program.", AUX}
-end
+
+end  -- SPECIFIC
+
 
 -- save link to help info
 main.about = about

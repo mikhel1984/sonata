@@ -8,6 +8,7 @@
 	module 'data'
 --]]
 
+
 -------------------- Tests -------------------
 --[[TEST
 
@@ -130,6 +131,7 @@ print(c)
 
 --]]
 
+
 --	LOCAL
 
 local Ver = require("lib.utils")
@@ -137,10 +139,12 @@ local Cross = Ver.cross
 local Utils = Ver.utils
 Ver = Ver.versions
 
+
 local STAT = 'statistics'
 local FILES = 'files'
 local FILTER = 'filter'
 local REF = 'reference'
+
 
 --	INFO
 
@@ -150,9 +154,11 @@ local about = {
 __module__ = "Data processing and statistics."
 }
 
+
 --	MODULE
 
 local data = {}
+
 
 --- Estimate covariance for two vectors.
 --  @param self Do nothing.
@@ -171,6 +177,7 @@ data.cov2 = function (self, t1, t2)
 end
 about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
   "Find covariance value for two vectors.", STAT}
+
 
 --- Estimate covariance matrix.
 --  @param self Do nothing.
@@ -194,6 +201,7 @@ end
 about[data.cov] = {":cov(data_t) --> cov_M",
   "Find covariance matrix for list of vectors.", STAT}
 
+
 --- Save Lua table in file, use given delimiter.
 --  @param self Do nothing.
 --  @param sFile File name.
@@ -211,6 +219,7 @@ data.csvwrite = function (self, sFile, t, char)
 end
 about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',') --> nil",
   "Save Lua table as delimiter separated data into file.", FILES}
+
 
 --- Import data from text file, use given delimiter.
 --  @param self Do nothing.
@@ -244,6 +253,7 @@ end
 about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
   "Read delimiter separated data as Lua table.", FILES}
 
+
 --- Generate function from string.
 --  @param self Do nothing.
 --  @param sExpr Expression for execution.
@@ -252,6 +262,7 @@ about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 data.Fn = function (self, sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
 about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
   "Generate function from expression of x1, x2 etc.", help.OTHER}
+
 
 --- Find elements using condition.
 --  @param self Do nothing.
@@ -278,6 +289,7 @@ about[data.filter] = {":filter(in_t, condition) --> out_t",
   "Get result of the table filtering. Condition is either boolean function or table of weights.",
   FILTER}
 
+
 --- Frequency of elements.
 --  @param self Do nothing.
 --  @param t Table of numbers.
@@ -291,6 +303,7 @@ data.freq = function (self, t)
 end
 about[data.freq] = {":freq(data_t) --> tbl",
   "Return table with frequencies of elements.", STAT}
+
 
 --- Geometrical mean.
 --  @param self Do nothing.
@@ -315,6 +328,7 @@ end
 about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num",
   "Geometrical mean.", STAT}
 
+
 --- Harmonic mean.
 --  @param self Do nothing.
 --  @param t Table of numbers.
@@ -337,6 +351,7 @@ data.harmmean = function (self, t, tw)
 end
 about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num",
   "Harmonic mean.", STAT}
+
 
 --- Number of elements in each bin.
 --  @param self Do nothing.
@@ -382,6 +397,7 @@ end
 about[data.histcounts] = {":histcounts(data_t, rng_v=10) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", STAT}
 
+
 --- Find weights (1/0) based on condition.
 --  @param self Do nothing.
 --  @param t Data table.
@@ -396,6 +412,7 @@ data.is = function (self, t, fn)
 end
 about[data.is] = {":is(data_t, cond_fn) --> yesno_t",
   "Find weights using boolean function.", FILTER}
+
 
 --- Find weights (1/0) based on inverted condition.
 --  @param self Do nothing.
@@ -412,6 +429,7 @@ end
 about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
   "Find inverted weights using boolean function.", FILTER}
 
+
 --- Maximum value.
 --  @param self Do nothing.
 --  @param t Table of numbers.
@@ -425,6 +443,7 @@ data.max = function (self, t)
 end
 about[data.max] = {":max(data_t) --> var, ind_N",
   "Maximal element and its index.", STAT}
+
 
 --- Average value.
 --  @param self Do nothing.
@@ -447,6 +466,7 @@ end
 about[data.mean] = {":mean(data_t, [wight_t]) --> num",
   "Calculate average value. Weights can be used.", STAT}
 
+
 --- Find median.
 --  @param self Do nothing.
 --  @param t Table of numbers.
@@ -465,6 +485,7 @@ end
 about[data.median] = {":median(data_t) --> num",
   "Median of the list.", STAT}
 
+
 --- Minimum value.
 --  @param self Do nothing.
 --  @param t Table of numbers.
@@ -478,6 +499,7 @@ data.min = function (self, t)
 end
 about[data.min] = {":min(data_t) --> var, ind_N",
   "Minimal element and its index.", STAT}
+
 
 --- Central moment.
 --  @param self Do nothing.
@@ -503,6 +525,7 @@ about[data.moment] = {":moment(order_N, data_t, [weigth_t]) --> num",
   "Central moment of t order N, tw is a list of weights.", STAT}
 
 
+
 --- Sum of all elements.
 --  @param self Do nothing.
 --  @param t Table with numbers.
@@ -514,6 +537,7 @@ data.sum = function (self, t)
 end
 about[data.sum] = {":sum(data_t) --> var",
   "Get sum of all elements.", help.OTHER}
+
 
 --- Standard deviation and variance.
 --  @param self Do nothing.
@@ -539,6 +563,7 @@ data.std = function (self, t, tw)
 end
 about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
   "Standard deviation and variance. Weights can be used.", STAT}
+
 
 --- Show data in Markdown-like table form.
 --  @param self Do nothing.
@@ -583,6 +608,7 @@ end
 about[data.table] = {":table(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
 
+
 --- Student's cumulative distribution
 --  @param self Do nothing.
 --  @param d Value.
@@ -595,6 +621,7 @@ data.tcdf = function (self, d, N)
 end
 about[data.tcdf] = {":tcdf(x_d, deg_N) --> num",
   "Student's cumulative distribution.", help.OTHER}
+
 
 --- Student's density function.
 --  @param self Do nothing.
@@ -609,6 +636,7 @@ end
 about[data.tpdf] = {":tpdf(x_d, deg_N) --> num",
   "Student's distribution density.", help.OTHER}
 
+
 --- Condition: x == d.
 --  @param self Do nothing.
 --  @param d Some value.
@@ -619,6 +647,7 @@ end
 about[data.xEq] = {":xEq(num) --> cond_fn",
   "Return function for condition x == d.", FILTER}
 
+
 --- Condition: x > d
 --  @param self Do nothing.
 --  @param d Lower limit.
@@ -627,6 +656,7 @@ data.xGt = function (self, d)
   return (function (x) return x > d end)
 end
 about[data.xGt] = {":xGt(num) --> cond_fn", "Return function for condition x > d.", FILTER}
+
 
 --- Condition: d1 <= x <= d2.
 --  @param self Do nothing.
@@ -639,6 +669,7 @@ end
 about[data.xIn] = {":xIn(num1, num2) --> cond_fn",
   "Return function for condition d1 <= x <= d2.", FILTER}
 
+
 --- Condition: x < d
 --  @param self Do nothing.
 --  @param d Upper limit.
@@ -647,6 +678,7 @@ data.xLt = function (self, d)
   return (function (x) return x < d end)
 end
 about[data.xLt] = {":xLt(num) --> cond_fn", "Return function for condition x < d.", FILTER}
+
 
 --- Apply function of n arguments to n lists.
 --  @param self Do nothing.
@@ -678,8 +710,10 @@ end
 about[data.zip] = {":zip(fn,...) --> tbl",
   "Sequentially apply function to list of tables.", help.OTHER}
 
+
 -- Get reference to data range in other table
 local mt_ref = { type = 'ref' }
+
 
 --- Number of elements in range.
 --  @param self Ref object.
@@ -687,6 +721,7 @@ local mt_ref = { type = 'ref' }
 mt_ref.__len = function (self)
   return self._end - self._beg
 end
+
 
 --- Get i-th element.
 --  @param self Ref object.
@@ -702,6 +737,7 @@ mt_ref.__index = function (self, i)
   return mt_ref[i]
 end
 
+
 --- Set k-th value.
 --  @param self Ref object.
 --  @param k Index.
@@ -711,6 +747,7 @@ mt_ref.__newindex = function (self, k, v)
     self._t[self._beg + k] = v
   end
 end
+
 
 --- Create reference to other table.
 --  @param self Do nothing.
@@ -727,9 +764,11 @@ end
 about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
   'Return reference to the range of elements.', REF}
 
+
 -- Get reference to 'transposed' data
 -- i.e. t[i][j] returns t[j][i]
 local mt_transpose = {type = 'transpose'}
+
 
 --- Get access to k-th element.
 --  @param self T-ref object.
@@ -740,12 +779,14 @@ mt_transpose.__index = function (self, k)
   return self._tbl
 end
 
+
 --- Get table 'length'.
 --  @param self T-ref object.
 --  @return Expected table length.
 mt_transpose.__len = function (self)
   return #self._tbl._src[1]
 end
+
 
 --- Transform ref object into pure table.
 --  @param self T-ref object.
@@ -760,8 +801,10 @@ mt_transpose._table = function (self)
   return res
 end
 
+
 -- Metatable for internal table.
 local mt_transpose_k = {}
+
 
 --- Get table element.
 --  @param self Internal T-ref object.
@@ -771,6 +814,7 @@ mt_transpose_k.__index = function (self, k)
   return v and v[self._n] or nil
 end
 
+
 --- Set table element.
 --  @param self Internal T-ref object.
 --  @param k Element index.
@@ -779,10 +823,12 @@ mt_transpose_k.__newindex = function (self, k, v)
   self._src[k][self._n] = v
 end
 
+
 --- Get length of 'internal' table.
 --  @param self Internal T-ref object.
 --  @return Table length.
 mt_transpose_k.__len = function (self) return #self._src end
+
 
 --- Get reference to 'transposed' table.
 --  @param self Do nothing.
@@ -798,6 +844,7 @@ data.T = function (self, src)
   return setmetatable(o, mt_transpose)
 end
 about[data.T] = {":T(src_t) --> TR", "Get reference to 'transposed' table.", REF}
+
 
 -- Comment to remove descriptions
 data.about = about

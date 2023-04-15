@@ -638,7 +638,7 @@ about[complex] = {" (re=0, im=0) --> new_Z",
   "Create new complex number.", help.STATIC}
 
 
-if Sonata then  -- SET GLOBAL
+if Sonata then  -- GLOBAL
 
 -- complex unit
 _i = complex:i(1)
@@ -655,7 +655,7 @@ log = function (a)
   return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
 end
 
-end   -- SET GLOBAL
+end   -- GLOBAL
 
 
 -- Comment to remove descriptions

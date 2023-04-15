@@ -14,6 +14,7 @@
 	module 'matrix'
 --]]
 
+
 -------------------- Tests -------------------
 --[[TEST
 
@@ -223,6 +224,7 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 
 --]]
 
+
 --	LOCAL
 
 -- compatibility
@@ -230,6 +232,7 @@ local Ver = require("lib.utils")
 local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
+
 
 --- Metatable for new rows.
 local mt_access = {
@@ -239,13 +242,16 @@ local mt_access = {
   --__newindex = function (t, k, v) if v ~= 0 then rawset(t, k, v) end end,
 }
 
+
 --- Metatable without any operations
 local mt_container = {}
+
 
 --- Check object type.
 --  @param m Object to check.
 --  @return True if the object is 'matrix'.
 local function ismatrix(v) return type(v) == 'table' and v.ismatrix end
+
 
 --- Simplify object when possible.
 --  @param M Matrix.
@@ -253,6 +259,7 @@ local function ismatrix(v) return type(v) == 'table' and v.ismatrix end
 local function nummat(M)
   return M._rows == 1 and M._cols == 1 and M[1][1] or M
 end
+
 
 --- Correct range if possible.
 --  @param i Positive or negative index value.
@@ -264,6 +271,7 @@ local function toRange(i, iRange)
   return i
 end
 
+
 --- Add new row to matrix
 --  @param t Table (matrix).
 --  @param i Index.
@@ -274,21 +282,23 @@ local function addRow(t, i)
   return row
 end
 
+
 local TRANSFORM = 'transform'
 
+
 --	INFO
+
 local help = SonataHelp or {}
 -- description
 local about = {
 __module__ = "Matrix operations. The matrices are spares by default."
 }
 
+
 --	MODULE
 
-local matrix = {
--- mark object
-type = 'matrix', ismatrix = true,
-}
+local matrix = { type = 'matrix', ismatrix = true }
+
 
 --- M1 + M2
 --  @param M1 First matrix or number.
@@ -312,6 +322,7 @@ matrix.__add = function (M1, M2)
   return res
 end
 
+
 --- Simplify call of vectors and range.
 --  @param M Matrix.
 --  @param vR Row number or range.
@@ -334,11 +345,13 @@ matrix.__call = function (M, vR, vC)
   return matrix.range(M, vR, vC)
 end
 
+
 --- Horizontal concatenation
 --  @param M1 First matrix.
 --  @param M2 Second matrix.
 --  @return Concatenated matrix.
 matrix.__concat = function (M1, M2) return matrix.concat(M1, M2, 'h') end
+
 
 --- M1 / M2
 --  @param M1 First matrix or number.
@@ -348,6 +361,7 @@ matrix.__div = function (M1, M2)
   if not ismatrix(M2) then return matrix._kProd(1/M2, M1) end
   return matrix.__mul(M1, matrix.inv(M2))
 end
+
 
 --- M1 == M2
 --  @param M1 First matrix.
@@ -365,11 +379,13 @@ matrix.__eq = function (M1, M2)
   return true
 end
 
+
 --- Vertical concatenation.
 --  @param M1 First matrix.
 --  @param M2 Second matrix.
 --  @return Concatenated matrix.
 matrix.__idiv = function (M1, M2) return matrix.concat(M1, M2, 'v') end
+
 
 --- Metametod for access to elements.
 --  @param t Table (object).
@@ -378,6 +394,7 @@ matrix.__idiv = function (M1, M2) return matrix.concat(M1, M2, 'v') end
 matrix.__index = function (t, v)
   return matrix[v] or (type(v)=='number' and addRow(t, v))
 end
+
 
 --- M1 * M2
 --  @param M1 First matrix or number.
@@ -402,6 +419,7 @@ matrix.__mul = function (M1, M2)
   return nummat(res)
 end
 
+
 --- M ^ n
 --  @param M Square matrix.
 --  @param n Natural power or -1.
@@ -419,6 +437,7 @@ matrix.__pow = function (M, N)
   end
   return res
 end
+
 
 --- M1 - M2
 --  @param M1 First matrix or number.
@@ -442,6 +461,7 @@ matrix.__sub = function (M1, M2)
   return res
 end
 
+
 --- String representation.
 --  @param M Matrix.
 --  @return String.
@@ -459,6 +479,7 @@ matrix.__tostring = function (M)
   return table.concat(srow, "\n")
 end
 
+
 --- - M
 --  @param M Matrix object.
 --  @return Matrix where each element has opposite sign.
@@ -471,16 +492,20 @@ matrix.__unm = function (M)
   return res
 end
 
+
 matrix.arithmetic = 'arithmetic'
 about[matrix.arithmetic] = {
   matrix.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
 
+
 matrix.comparison = 'comparison'
 about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
+
 
 matrix._convert_ = function (v)
   return (v.float or v.iscomplex) and setmetatable({v}, mt_container) or nil
 end
+
 
 -- Determinants for simple cases
 matrix._detList = {
@@ -496,6 +521,7 @@ function (M)
          m1[3]*(m2[1]*m3[2]-m2[2]*m3[1])
 end
 }
+
 
 -- Inversion for simple cases
 matrix._invList = {
@@ -516,6 +542,7 @@ function (M)
 end
 }
 
+
 --- Remove to small elements in-place.
 --  @param M Source matrix.
 --  @param dTol Threshold value.
@@ -526,6 +553,7 @@ matrix._clearLess = function (M, dTol)
     end
   end
 end
+
 
 --- Inverse iteration method for eigenvector calculation.
 --  @param M Source matrix.
@@ -557,6 +585,7 @@ matrix._findEigenvector = function (M, v, eps)
   return b
 end
 
+
 --- Minor value calculation.
 --  @param M Source matrix.
 --  @return Minor value.
@@ -577,6 +606,7 @@ matrix._firstMinor = function (M)
   end
 end
 
+
 --- Find sub-matrix for minor calculation.
 --  @param M Source matrix.
 --  @param ir Row index.
@@ -595,6 +625,7 @@ matrix._firstMinorSub = function (M, ir, ic)
   end
   return res
 end
+
 
 --- Transform matrix to upper triangle (in-place).
 --  @param M Initial matrix.
@@ -628,6 +659,7 @@ matrix._gaussDown = function (M)
   return M, A
 end
 
+
 --- Transform triangle matrix to identity matrix (in-place).
 --  @param M Initial matrix
 --  @return Matrix with diagonal zeros.
@@ -645,6 +677,7 @@ matrix._gaussUp = function (M)
   return M
 end
 
+
 --- Initialization of matrix with given size.
 --  @param iR Number of rows.
 --  @param iC Number of columns.
@@ -655,6 +688,7 @@ matrix._init = function (self, iR, iC, t)
   t._cols, t._rows = iC, iR
   return setmetatable(t, self)
 end
+
 
 --- Set product of element to coefficient.
 --  @param d Coefficient.
@@ -669,6 +703,7 @@ matrix._kProd = function (d, M)
   end
   return res
 end
+
 
 --- Prepare LU transformation for other functions.
 --  @param M Initial square matrix.
@@ -734,6 +769,7 @@ matrix._luPrepare = function (M)
   return a, index, d
 end
 
+
 --- Create new matrix from list of tables.
 --  @param t Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
@@ -747,6 +783,7 @@ matrix._new = function (t)
   end
   return matrix:_init(rows, cols, t)
 end
+
 
 --- QR-type sweeps for SVD.
 --  Find such U, B, V that B = U*M*V:T() and
@@ -779,6 +816,7 @@ matrix._qrSweep = function (M)
   return U, B, V, e
 end
 
+
 --- Bidiagonalization.
 --  Find such U, B, V that U*B*V:T() = M and
 --  B is upper bidiagonal, U and V are ortogonal.
@@ -801,6 +839,7 @@ matrix.bidiag = function (M)
 end
 about[matrix.bidiag] = {"M:bidiag() --> U_M, B_M, V_M",
   "Bidiagonalization of matrix, return U, B, V.", TRANSFORM}
+
 
 --- Cholesky decomposition.
 --  @param M Positive definite symmetric matrix.
@@ -833,12 +872,14 @@ end
 about[matrix.chol] = {"M:chol() --> lower_M",
   "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
 
+
 --- Get number of columns.
 --  @param M Matrix.
 --  @return Number of columns.
 matrix.cols = function (M) return M._cols end
 about[matrix.cols] = {"M:cols() --> N",
   "Get number of columns."}
+
 
 --- Matrix concatenation.
 --  Horizontal concatenation can be performed with
@@ -873,6 +914,7 @@ about[matrix.concat] = {"M:concat(M2, dir_s) --> comb_M",
   "Concatenate two matrices, dir='h' - in horizontal direction, dir='v' - in vertical\nUse M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.",
   TRANSFORM}
 
+
 --- Create copy of matrix.
 --  @param M Source matrix.
 --  @return Deep copy.
@@ -886,6 +928,7 @@ matrix.copy = function (M)
 end
 about[matrix.copy] = {"M:copy() --> cpy_M",
   "Return copy of matrix.", help.OTHER}
+
 
 --- V1 x V2
 --  @param V1 3-element vector.
@@ -902,6 +945,7 @@ end
 about[matrix.cross] = {'V:cross(V2) --> V3',
   'Cross product or two 3-element vectors.'}
 
+
 --- Find determinant.
 --  @param M Initial matrix.
 --  @return Determinant.
@@ -916,6 +960,7 @@ end
 about[matrix.det] = {"M:det() --> num",
   "Calculate determinant."}
 
+
 --- Get diagonal vector.
 --  @param M Matrix.
 --  @param v Diagonal elements (optional).
@@ -928,6 +973,7 @@ matrix.diag = function (M)
   return matrix:_init(#res, 1, res)
 end
 about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
+
 
 --- Create matrix with given diagonal elements.
 --  @param M Do nothing.
@@ -946,6 +992,7 @@ about[matrix.diagonal] = {':diagonal(list_v) --> M',
   'Create new matrix with the given diagonal elements.',
   help.NEW}
 
+
 --- V1 . V2
 --  @param V1 First vector.
 --  @param V2 Second vector.
@@ -960,6 +1007,7 @@ matrix.dot = function (V1, V2)
   return s
 end
 about[matrix.dot] = {'V:dot(V2) --> num', 'Scalar product of two vectors.'}
+
 
 --- Find eigenvectors and eigenvalues.
 --  @param M Square matrix.
@@ -981,6 +1029,7 @@ end
 about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
   'Find matrices of eigenvectors and eigenvalues.'}
 
+
 --- Identity matrix.
 --  @param self Do nothing.
 --  @param rows Number of rows.
@@ -1001,6 +1050,7 @@ end
 about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
   "Create identity matrix.", help.NEW}
 
+
 --- Fill matrix with some value.
 --  @param self Do nothing.
 --  @param iR Number of rows.
@@ -1019,6 +1069,7 @@ matrix.fill = function (self, iR, iC, val)
 end
 about[matrix.fill] = {":fill(row_N, col_N, val=1) --> M",
   "Create matrix of given numbers (default is 1).", help.NEW}
+
 
 --- Given's rotation.
 --  Find such c, s, r that Mat{{c,s},{-s,c}} * Mat:V{d1,d2} = Mat:V{r,0}.
@@ -1047,6 +1098,7 @@ end
 about[matrix.givensRot] = {":givensRot(x, y) --> cos_d, sin_d, len_d",
   "Find parameters of Givens rotation (c,s,r).", help.OTHER}
 
+
 --- Householder transformation.
 --  @param V Vector for reflection.
 --  @param ik Index of start element.
@@ -1063,6 +1115,7 @@ matrix.householder = function (V, ik)
 end
 about[matrix.householder] = {"M:householder(V, start_N) --> hh_M",
   "Find Householder matrix for the given vector.", TRANSFORM}
+
 
 --- Round matrix elements in place.
 --  @param M Matrix object.
@@ -1088,6 +1141,7 @@ end
 about[matrix.round] = {"M:round(N=6) --> nil",
   "Round matrix elements in place.", help.OTHER}
 
+
 --- Conjugate transpose.
 --  @param M Initial matrix.
 --  @return Transformed matrix.
@@ -1104,6 +1158,7 @@ matrix.H = function (M)
 end
 about[matrix.H] = {"M:H() --> conj_M",
   "Return conjugabe transpose. ", TRANSFORM}
+
 
 --- Insert values from another matrix.
 --  @param M1 Initial matrix, it is modified.
@@ -1149,6 +1204,7 @@ end
 about[matrix.insert] = {"M:insert(rows_t, cols_t, M2) --> nil",
   "Insert second matrix into the given range of indeces."}
 
+
 --- Inverse matrix.
 --  @param M Initial matrix.
 --  @return Result of inversion.
@@ -1187,6 +1243,7 @@ matrix.inv = function (M)
 end
 about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix.", TRANSFORM}
 
+
 --- LU transform
 --  @param M Initial square matrix.
 --  @return L matrix, U matrix, permutations
@@ -1209,6 +1266,7 @@ end
 about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
   "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}
 
+
 --- Apply function to each element.
 --  @param M Source matrix.
 --  @param fn Desired function.
@@ -1224,6 +1282,7 @@ end
 about[matrix.map] = {"M:map(fn) --> found_M",
   "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).",
   TRANSFORM}
+
 
 --- Find minor for the matrix element.
 --  @param M Source matrix.
@@ -1242,6 +1301,7 @@ end
 about[matrix.minor] = {"M:minor(row_N, col_N) --> minor_M",
   "Find minor for the matrix element."}
 
+
 --- Euclidean norm of the matrix at whole.
 --  @param M Current matrix.
 --  @return Norm value.
@@ -1256,6 +1316,7 @@ matrix.norm = function (M)
   return math.sqrt(sum)
 end
 about[matrix.norm] = {"M:norm() --> num", "Euclidean norm."}
+
 
 --- Quick pseudo inverse matrix.
 --  Based on "Fast computation of Moore-Penrose inverse matrices"
@@ -1311,6 +1372,7 @@ matrix.pinv = function (M)
 end
 about[matrix.pinv] = {"M:pinv() --> inv_M",
   "Pseudo inverse matrix calculation.", TRANSFORM}
+
 
 --- QR transformation
 --  @param M Matrix, #rows >= #cols.
@@ -1410,6 +1472,7 @@ end
 about[matrix.range] = {"M:range(rows_t, cols_t) --> range_M",
   "Get submatrix for the given range of rows and columnts."}
 
+
 --- Matrix rank.
 --  @param M Initial matrix.
 --  @return Value of rank.
@@ -1433,6 +1496,7 @@ matrix.rank = function (M)
   return i-1
 end
 about[matrix.rank] = {"M:rank() --> N", "Find rank of the matrix."}
+
 
 --- Change matrix size.
 --  @param M Source matrix.
@@ -1461,11 +1525,13 @@ end
 about[matrix.reshape] = {"M:reshape(row_N=size, col_N=1) --> upd_M",
   "Get matrix with changed size.", help.OTHER}
 
+
 --- Get number or rows.
 --  @param M Matrix.
 --  @return Number of rows.
 matrix.rows = function (M) return M._rows end
 about[matrix.rows] = {"M:rows() --> N", "Get number of rows."}
+
 
 --- Solve system of equations using Gauss method.
 --  @param M Matrix representation for system of equations.
@@ -1475,6 +1541,7 @@ matrix.rref = function (M)
 end
 about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method."}
+
 
 --- Singular value decomposition for a matrix.
 --  Find U, S, V such that M = U*S*V' and
@@ -1512,6 +1579,7 @@ end
 about[matrix.svd] = {"M:svd() --> U_M, S_M, V_M",
   "Singular value decomposition, return U, S, V.", TRANSFORM}
 
+
 --- Matrix to table.
 --  @param M Source matrix.
 --  @return Table without metametods.
@@ -1535,6 +1603,7 @@ end
 about[matrix.table] = {"M:table() --> tbl",
   "Convert to simple Lua table.", help.OTHER}
 
+
 --- Get trace of the matrix.
 --  @param m Source matrix.
 --  @return Sum of elements of the main diagonal.
@@ -1544,6 +1613,7 @@ matrix.tr = function (M)
   return sum
 end
 about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix.", help.OTHER}
+
 
 --- Transpose matrix.
 --  @param M Initial matrix.
@@ -1559,6 +1629,7 @@ end
 about[matrix.T] = {"M:T() --> transpose_M",
   "Return matrix transpose.", TRANSFORM}
 
+
 --- Create vector.
 --  Simplified vector constructor.
 --  @param self Do nothing.
@@ -1572,6 +1643,7 @@ end
 about[matrix.V] = {":V {...} --> new_V",
   "Create vector from list of numbers.", help.NEW}
 
+
 --- Create matrix of zeros.
 --  @param self Do nothing.
 --  @param nR Number of rows.
@@ -1584,6 +1656,7 @@ matrix.zeros = function (self, iR, iC)
 end
 about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
   "Create matrix of zeros.", help.NEW}
+
 
 --- Apply function element-wise to matrices.
 --  @param self Do nothing.
@@ -1615,10 +1688,12 @@ end
 about[matrix.zip] = {':zip(fn, M1, M2,..) --> res_M',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
+
 -- constructor call
 setmetatable(matrix, {__call = function (self, m) return matrix._new(m) end})
 about[matrix] = {" {row1_t, row2_t,..} --> new_M",
   "Create matrix from list of strings (tables).", help.NEW}
+
 
 -- Comment to remove descriptions
 matrix.about = about
