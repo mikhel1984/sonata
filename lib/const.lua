@@ -175,6 +175,10 @@ end
 about[const.remove] = {':remove(name_s) --> bool', 'Delete user-defined constant.'}
 
 
+-- Comment to remove descriptions
+const.about = about
+
+
 -- Make objects "immutable"
 setmetatable(const,       {__newindex=modifyError,
   __index = function (t, k) return _user[k] or const._unit_(_user, k) end})
@@ -185,9 +189,6 @@ setmetatable(const.astro, {__newindex=modifyError,
 setmetatable(const.math,  {__newindex=modifyError,
   __index = function (t, k) return _math[k] or const._unit_(_math, k) end})
 
-
--- Comment to remove descriptions
-const.about = about
 
 return const
 
