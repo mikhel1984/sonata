@@ -18,6 +18,18 @@ a:get{1,2,1}        -- get element
 b = a:map(funciton (x) return x and 1 or 0 end) 
 ```
 
+### asciiplot (Ap)
+
+Visualize data with pseudographic.
+
+```lua
+fig = Ap()    -- create figure
+fig:setX {range={-3.14, 3.14}               -- axis configuration
+fig:plot(math.sin, 'sin', math.cos, 'cos')  -- add data
+fig:title('Trigonometry')                   -- set title
+print(fig)    -- get as string
+```
+
 ### bigint (Int) 
 
 Operations with arbitrary long integers.
@@ -29,14 +41,14 @@ b = a * Int{4,5,6}  -- table can be used
 c = b:rebase(20)    -- get representation with base = 20
 ```
 
-### complex (Comp)
+### complex (_Z)
 
 Operatoins with complex numbers. 
 
 ```lua
-a = Comp(1,2)       -- first number
-b = 3 + 4*Comp._i   -- second number
-c = a ^ b           -- complex power
+a = _Z(1,2)       -- first number
+b = 3 + 4*_Z:i()  -- second number
+c = a ^ b         -- complex power
 ```
 
 ### const (_C) 
@@ -48,7 +60,15 @@ _C.phy.e             -- electron charge
 _C.phy.e_u           -- charge units
 _C.add("foo",-1/12)  -- add own value, call with _C.foo
 ```
+### data (_D)
 
+Data processing and statistics.
+
+```lua
+X = {1, 2, 3, 4, 5, 6}  -- data
+a = _D:moment(X, 2)     -- central moment
+b = _D:filter(X, _D:xGt(3))  -- get X[i] > 2
+```
 ### geodesy (Geo)
 
 Coordinate transformations and other geodetic tasks.
@@ -76,9 +96,31 @@ a:show()
 Operations with graphs.
 
 ```lua
-a = Graph {{'a','b'},{'a','c'},{'c','d',w=2}}  -- define graph
-a:nodes()            -- list of nodes
-a:isComplete()       -- check completenes
+a = Graph()       -- undirected graph
+a:addEdges {{'a','b'},{'a','c'},{'c','d',2}}  -- set edges
+a:nodes()         -- list of nodes
+a:isComplete()    -- check completenes
+```
+
+### lens (Lens)
+
+Matrix methods in paraxial optics.
+
+```lua
+-- define system structure
+sys = Lens:ref(200,1,1.56)..Lens:trans(5,1.56)..Lens:ref(-200,1.56)
+y, V = sys(5, 0.1)    -- ray transformation
+pts = sys:cardinal()  -- find cardinal points
+```
+
+### main ()
+
+Basic functions.
+
+```lua
+a = Round(_pi, 2)   -- round number
+b = cosh(_e * 0.1)  -- hyperbolic cosine
+c = Range(1,9,2)    -- create range of numbers
 ```
 
 ### matrix (Mat)
@@ -96,10 +138,10 @@ c = a:inv()          -- matrix inversion
 Functions for numerical calculations. 
 
 ```lua
-a = Num.solve(math.sin, 3, 4) -- find root in range
-b = Num.trapez(math.sin, 0, 1) -- numerical integration
+a = Num:solve(math.sin, 3, 4) -- find root in range
+b = Num:trapez(math.sin, 0, 1) -- numerical integration
 -- solve ode x' = x*y for x = {0,3} and y(0) = 1
-tbl, yn = Num.ode45(function (x,y) return x*y end, {0,3}, 1)
+tbl, yn = Num:ode45(function (x,y) return x*y end, {0,3}, 1)
 ```
 
 ### polynom (Poly)
@@ -122,6 +164,16 @@ b = Quat {w=2,k=1}   -- using names
 c = a * b
 ```
 
+### random (Rand)
+
+Random number generator.
+
+```lua
+a = Rand()   -- get value from 0 to 1
+b = Rand:norm()  -- normal distributed number
+c = Rand:new()   -- custom uniform generator
+```
+
 ### rational (Rat)
 
 Computations with rational numbers.
@@ -129,6 +181,7 @@ Computations with rational numbers.
 ```lua
 a = Rat(1,2)         -- 1/2
 b = a / Rat(4,8)
+c = Rat:fromCont{2,3,4,5}  -- from continuated fraction
 ```
 
 ### special (Spec)
@@ -136,28 +189,27 @@ b = a / Rat(4,8)
 Special functions.
 
 ```lua
-a = Spec.beta(3,4)   -- beta-function 
-b = Spec.gamma(-1.5) -- gamma-funciton
-c = Spec.besselj(3, 1.5) -- Bessel's function
+a = Spec:beta(3,4)   -- beta-function 
+b = Spec:gamma(-1.5) -- gamma-funciton
+c = Spec:besselj(3, 1.5) -- Bessel's function
 ```
 
-### stat (Stat)
+### symbolic (Sym)
 
-Statistical calculations.
+Symbolic variables.
 
 ```lua
-a = Stat.mean({1,2,3,1,4,2}) 
-b = Stat.max({2,6,1,3,2})
-c = Stat.histcounts({2,5,1,2,6,3},3) -- find histrogram values
+a = Sym:parse('x^2+2*x+1')  -- from equation
+b = a:diff(Sym('x'))   -- find derivative
+c = a + b              -- some calculations
 ```
-
 ### units (Unit)
 
 Units conversation.
 
 ```lua
-Unit.add('h', Unit(60,'min'))  -- first rule
-Unit.add('min', Unit(60,'s'))  -- second rule
+Unit:setRule('h', Unit(60,'min'))  -- first rule
+Unit:setRule('min', Unit(60,'s'))  -- second rule
 a = Unit(1, 'm/s')   -- set variable
 b = a['km/h']        -- get value in km/h
 ```
