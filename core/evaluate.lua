@@ -185,6 +185,7 @@ local function evalCode()
   end
 end
 
+--[[
 while true do 
   if input then
     if iscmd(input) then
@@ -200,6 +201,7 @@ while true do
     ind = ind + 1
   end
 end
+]]
 
 --- Evaluate block of text.
 --  @param ev Evaluation environment.
@@ -322,6 +324,15 @@ end
 --  evaluate.exit()
 --end
 
+local function getCmd (str)
+  local res = {}
+  if string.find(str, "^%s:") then
+    for w in string.gmatch(str, "%w+") do res[#res+1] = w end
+  end
+  return res
+end
+
+
 evaluate.cli = function ()
   local invA = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET
   local invB = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
@@ -336,8 +347,18 @@ evaluate.cli = function ()
       -- pocess command
     else
       local _, status, res = coroutine.resume(co, input)
+      if status == evaluate.EV_RES then
+        if res ~= nil then
+          print(islist(res) and evaluate._toText(res) or res)
+        end
+        invite = invA
+      elseif status == evaluate.EV_CMD then
+        invite = invB
+      elseif status == evaluate.EV_ERR then
+        print_err(res)
+        invite = invA
+      end
     end
-    
   end
 end
 
@@ -379,14 +400,6 @@ end
 --    end
 --  end
 --end
-
-local function getCmd (str)
-  local res = {}
-  if string.find(str, "^%s:") then
-    for w in string.gmatch(str, "%w+") do res[#res+1] = w end
-  end
-  return res
-end
 
 --- Evaluate one expression.
 --  @param ev Environment.
