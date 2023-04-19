@@ -72,10 +72,23 @@ INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
 NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD,
 }
 
-local function print_res (msg)
-  if msg ~= nil then
-    print(islist(msg) and evaluate._toText(msg) or msg)
+--local function print_res (msg)
+--  if msg ~= nil then
+--    print(islist(msg) and evaluate._toText(msg) or msg)
+--  end
+--end
+
+local function showAndNext(status, res)
+  if status == evaluate.EV_RES then
+    if res ~= nil then
+      print(islist(res) and evaluate._toText(res) or res)
+    end
+  elseif status == evaluate.EV_CMD then
+    return evaluate.INV_CONT
+  elseif status == evaluate.EV_ERR then
+    print_err(res)
   end
+  return evaluate.INV_MAIN
 end
 
 
@@ -212,17 +225,8 @@ evaluate._evalBlock = function (co, txt)
       -- print line and evaluate
       io.write(evaluate.INV_NOTE, line, '\n')
       local _, status, res = coroutine.resume(co, line)
-      if status == evaluate.EV_RES then
-        print_res(res)
-        --if res ~= nil then
-        --  print(islist(res) and evaluate._toText(res) or res)
-        --end
-      elseif status == evaluate.EV_CMD then
-        -- skip
-      else -- evaluate.EV_ERR
-        print_err(res)
-        break
-      end
+      showAndNext(status, res)
+      if status == evaluate.EV_ERR then break end
     end
   end
 end
@@ -315,9 +319,45 @@ end
 --  evaluate.exit()
 --end
 
+local commands = {
+
+q = function (arg, env)
+  evaluate.exit()  
+end,
+
+ls = function (arg, env)
+  for i = 1, #env.notes do
+    local s = ''
+    for line in string.gmatch(env.notes[i], '([^\n]+)\r?\n?') do
+      if string.find(line, "[^%s]+") then
+        s = line
+        break
+      end
+    end
+    io.write(string.format("%d   %s\n", i, s))
+  end
+end,
+
+
+}
+
+local function goTo (arg, env)
+  local num = tonumber(arg[1])
+  if not num then
+    print_err("Not a number")
+  end
+  -- TODO to integer
+  local lim = #env.notes
+  if lim > 0 then
+    env.index = (num < 0) and 1 or (num > lim) and lim or num
+  else
+    env.index = 1
+  end
+end
+
 local function getCmd (str)
   local res = {}
-  if string.find(str, "^%s:") then
+  if string.find(str, "^%s*:") then
     for w in string.gmatch(str, "%w+") do res[#res+1] = w end
   end
   return res
@@ -334,20 +374,12 @@ evaluate.cli = function (noteList)
     local cmd = getCmd(input)
     if #cmd > 0 then
       -- pocess command
+      --for i, v in ipairs(cmd) do print(v) end
+      local fn = commands[cmd[1]] or goTo
+      fn(cmd, env)
     elseif #input > 0 then
       local _, status, res = coroutine.resume(co, input)
-      if status == evaluate.EV_RES then
-        print_res(res)
-        --if res ~= nil then
-        --  print(islist(res) and evaluate._toText(res) or res)
-        --end
-        invite = evaluate.INV_MAIN
-      elseif status == evaluate.EV_CMD then
-        invite = evaluate.INV_CONT
-      elseif status == evaluate.EV_ERR then
-        print_err(res)
-        invite = evaluate.INV_MAIN
-      end
+      invite = showAndNext(status, res)
     elseif env.index <= #env.notes then
       evaluate._evalBlock(co, env.notes[env.index])
       env.index = env.index + 1
