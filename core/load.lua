@@ -177,12 +177,12 @@ end,
 exit = true},
 
 -- command line evaluation
-['-e'] = {
-process = function (args)
-  Sonata:eval(args[2] or '', false)
-  print(Sonata._ans)
-end,
-exit = true},
+--['-e'] = {
+--process = function (args)
+--  Sonata:eval(args[2] or '', false)
+--  print(Sonata._ans)
+--end,
+--exit = true},
 
 -- process files
 ['default'] = {
@@ -193,7 +193,9 @@ process = function (args)
   end
   for i = 1, #args do
     if string.find(args[i], '%.note$') then
-      Sonata:note(args[i])
+      local blk = Sonata._toBlocks(args[i])
+      Sonata.cli(blk)
+      --Sonata:note(args[i])
     else
       dofile(args[i])
     end
@@ -277,7 +279,7 @@ end
 
 -- choose interpreter
 if arg[-1] ~= '-i' then
-  Sonata:cli()
+  Sonata.cli()
 else
   Sonata.inLua = true
 end

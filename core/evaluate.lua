@@ -64,27 +64,19 @@ _st  = 1,     -- last status
 version = 0,
 doimport = 0,
 _arghelp = 0,
+-- 
+INV_MAIN = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET,
+INV_CONT = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET,
+INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
+
+NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD,
 }
 
-
---evaluate._blocks = function (txt)
---  local init = 1
---  local res = {}
---  while true do
---    local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
---    if i1 then
---      res[#res+1] = string.sub(txt, init, i1-1)
---      init = i2+1
---    else
---      break
---    end
---  end
---  local last = string.sub(txt, init, #txt)
---  if string.find(last, "%w?") then
---    res[#res+1] = last
---  end
---  return res
---end
+local function print_res (msg)
+  if msg ~= nil then
+    print(islist(msg) and evaluate._toText(msg) or msg)
+  end
+end
 
 
 --- Print block list.
@@ -208,33 +200,32 @@ end
 --  @param txt Block of text.
 --  @param full True when need to show comments.
 --  @param templ Header template string.
---evaluate._evalBlock = function (ev, txt, full, templ)
---  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
---    if string.find(line, '^%s*%-%-') then
---      -- highlight line comments
---      if full then
---        line = string.gsub(line, '\t(.+)', templ)
---        line = string.format(
---          "%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
---        io.write(line)
---      end
---    else
---      -- print line and evaluate
---      io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
---      local status = evaluate.eval(ev, line, false)
---      if status == evaluate.EV_RES then
---        if ev._ans ~= nil then
---          print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
---        end
---      elseif status == evaluate.EV_CMD then
---        -- skip
---      else -- evaluate.EV_ERR
---        print_err(ev._ans)
---        break
---      end
---    end
---  end
---end
+evaluate._evalBlock = function (co, txt)
+  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
+    if string.find(line, '^%s*%-%-') then
+      -- highlight line comments
+      line = string.gsub(line, '\t(.+)', evaluate.NOTE_TEMPL)
+      line = string.format(
+        "%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
+      io.write(line)
+    else
+      -- print line and evaluate
+      io.write(evaluate.INV_NOTE, line, '\n')
+      local _, status, res = coroutine.resume(co, line)
+      if status == evaluate.EV_RES then
+        print_res(res)
+        --if res ~= nil then
+        --  print(islist(res) and evaluate._toText(res) or res)
+        --end
+      elseif status == evaluate.EV_CMD then
+        -- skip
+      else -- evaluate.EV_ERR
+        print_err(res)
+        break
+      end
+    end
+  end
+end
 
 
 --- Get string from list of elements.
@@ -332,11 +323,9 @@ local function getCmd (str)
   return res
 end
 
-
-evaluate.cli = function ()
-  local invA = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET
-  local invB = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
-  local invite = invA
+evaluate.cli = function (noteList)
+  local invite = evaluate.INV_MAIN
+  local env = {notes=noteList or {}, index=1}
   local co = coroutine.create(evalCode)
   coroutine.resume(co)
   while true do
@@ -345,19 +334,25 @@ evaluate.cli = function ()
     local cmd = getCmd(input)
     if #cmd > 0 then
       -- pocess command
-    else
+    elseif #input > 0 then
       local _, status, res = coroutine.resume(co, input)
       if status == evaluate.EV_RES then
-        if res ~= nil then
-          print(islist(res) and evaluate._toText(res) or res)
-        end
-        invite = invA
+        print_res(res)
+        --if res ~= nil then
+        --  print(islist(res) and evaluate._toText(res) or res)
+        --end
+        invite = evaluate.INV_MAIN
       elseif status == evaluate.EV_CMD then
-        invite = invB
+        invite = evaluate.INV_CONT
       elseif status == evaluate.EV_ERR then
         print_err(res)
-        invite = invA
+        invite = evaluate.INV_MAIN
       end
+    elseif env.index <= #env.notes then
+      evaluate._evalBlock(co, env.notes[env.index])
+      env.index = env.index + 1
+    elseif noteList then
+      break
     end
   end
 end
@@ -433,9 +428,9 @@ end
 --- Mark information about formatting.
 --  @param t Table to print.
 --  @return Table with marker.
---evaluate.info = function (t)
---  return setmetatable(t, mt_sonatainfo)
---end
+evaluate.info = function (t)
+  return setmetatable(t, mt_sonatainfo)
+end
 
 
 --- Evaluate 'note'-file.
@@ -462,6 +457,49 @@ end
 --    n = evaluate._userInput(ev, invA, invB, block, full, n)
 --  end
 --end
+
+evaluate._toBlocks = function (fname)
+  local f = assert(io.open(fname, 'r'))
+  local txt = f:read('*a'); f:close()
+  -- remove long comments
+  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  
+  local init, res = 1, {}
+  while true do
+    local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
+    if i1 then
+      res[#res+1] = string.sub(txt, init, i1 - 1)
+      init = i2 + 1
+    else
+      break
+    end
+  end
+  local last = string.sub(txt, init, #txt)
+  if string.find(last, "%w?") then
+    res[#res+1] = last
+  end
+  return res
+end
+
+--evaluate._blocks = function (txt)
+--  local init = 1
+--  local res = {}
+--  while true do
+--    local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
+--    if i1 then
+--      res[#res+1] = string.sub(txt, init, i1-1)
+--      init = i2+1
+--    else
+--      break
+--    end
+--  end
+--  local last = string.sub(txt, init, #txt)
+--  if string.find(last, "%w?") then
+--    res[#res+1] = last
+--  end
+--  return res
+--end
+
+
 
 
 --- State reset.
