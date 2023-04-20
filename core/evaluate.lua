@@ -14,6 +14,8 @@
 -- String evaluation method
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
+local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
+
 
 -- Format marker
 local mt_sonatainfo = {}
@@ -51,38 +53,25 @@ local evaluate = {
 EV_RES = 1,   -- found result
 EV_CMD = 0,   -- continue expected
 EV_ERR = -1,  -- error
-EV_QUIT = -2, -- command for quit
 -- string formats
 FORMAT_V1 = '#v1',
 FORMAT_V2 = '#v2',
 -- log file name
 LOGNAME = 'log.note',
--- state and result
---_cmd = "",    -- last request
---_st  = 1,     -- last status
--- predefine variables
---version = 0,
---doimport = 0,
---_arghelp = 0,
 -- 
 INV_MAIN = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET,
 INV_CONT = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET,
 INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
 
-NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD,
 }
 
---local function print_res (msg)
---  if msg ~= nil then
---    print(islist(msg) and evaluate._toText(msg) or msg)
---  end
---end
 
 local function showAndNext(status, res)
   if status == evaluate.EV_RES then
     if res ~= nil then
       print(islist(res) and evaluate._toText(res) or res)
     end
+    _ans = res
   elseif status == evaluate.EV_CMD then
     return evaluate.INV_CONT
   elseif status == evaluate.EV_ERR then
@@ -184,7 +173,7 @@ evaluate._evalBlock = function (co, txt)
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-') then
       -- highlight line comments
-      line = string.gsub(line, '\t(.+)', evaluate.NOTE_TEMPL)
+      line = string.gsub(line, '\t(.+)', NOTE_TEMPL)
       line = string.format(
         "%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
       io.write(line)
@@ -222,58 +211,6 @@ evaluate._toText = function (lst)
   return table.concat(res)
 end
 
-
---- Update environment state.
---  @param ev Evaluation environment.
---  @param st Evaluation status.
---  @param cmd Current command.
---  @param ans Current answer.
---  @return Updated environment.
---evaluate._update = function (ev, st, cmd, ans)
---  ev._st = st
---  ev._cmd = cmd
---  _ans = ans       -- save global variable
---  if ans == nil then
---    ev._ans = nil
---  else
---    ev._ans = islist(ans) and ans or tostring(ans)
---  end
---  return st
---end
-
-
---- User input processing.
---  @param ev Evaluation environment.
---  @param invA Main invite string.
---  @param invB Additional invite string.
---  @param blk Block list.
---  @param full True when all blocks are required.
---  @param n Initial index.
---  @return Next block index.
---evaluate._userInput = function (ev, invA, invB, blk, full, n)
---  local m = n
---  repeat
---    local input = {}
---    if full and evaluate.cliLoop(ev, invA, invB, input) == evaluate.EV_QUIT then
---      n = #blk + 1
---    end
---    if #input > 0 then
---      if input[2] == 'ls' then
---        evaluate._dotLs(blk)
---      elseif input[2] == 'q' then
---        n = #blk + 1
---      elseif input[2] == nil then
---        evaluate._dotNext(blk, n+1)
---      else
---        n, m = (tonumber(input[2]) or n), -1
---      end
---    else
---      n = n + 1
---    end
---  until m ~= n
---  return n
---end
---
 
 --- Read-Evaluate-Write circle as a Lua program.
 --  Call 'quit' to exit this function.
