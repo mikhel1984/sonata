@@ -197,7 +197,8 @@ end
 --- Evaluate block of text.
 --  @param co Coroutine object.
 --  @param txt Block of text.
-evaluate._evalBlock = function (co, txt)
+evaluate._evalBlock = function (co, env)
+  local txt = env.notes[env.index]
   for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
     if string.find(line, '^%s*%-%-') then
       -- highlight line comments
@@ -213,6 +214,7 @@ evaluate._evalBlock = function (co, txt)
       if status == evaluate.EV_ERR then break end
     end
   end
+  env.index = env.index+1
 end
 
 
@@ -287,8 +289,7 @@ evaluate.cli = function (noteList)
       local _, status, res = coroutine.resume(co, input)
       invite = showAndNext(status, res)
     elseif env.index <= #env.notes then
-      evaluate._evalBlock(co, env.notes[env.index])
-      env.index = env.index + 1
+      evaluate._evalBlock(co, env)
       env.read = true
     elseif noteList then
       break
