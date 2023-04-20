@@ -62,11 +62,11 @@ end
 --  @param str Input string.
 --  @return Table with commands (if any).
 local function getCmd (str)
-  local res = {}
   if string.find(str, "^%s*:") then
-    for w in string.gmatch(str, "%w+") do res[#res+1] = w end
+    local cmd, args = string.match(str, "(%w+)%s*(.*)")
+    return {cmd, args}
   end
-  return res
+  return nil
 end
 
 
@@ -113,6 +113,18 @@ ls = function (arg, env)
       if string.find(line, "[^%s]+") then s = line; break end
     end
     io.write(string.format("%d   %s\n", i, s))
+  end
+end,
+
+--- Open 'note' file
+o = function (arg, env)
+  local blk = evaluate._toBlocks(arg[2])
+  if blk then
+    env.notes = blk
+    env.index = 1
+    io.write("Name: '", arg[2], "'\tBlocks: ", #blk, "\n")
+  else
+    print_err("Can't open file "..arg[2])
   end
 end,
 
@@ -175,25 +187,6 @@ local function showAndNext(status, res)
 end
 
 
---- Print next block title.
---  @param blks Table with blocks of text.
---  @param n Next block index.
---evaluate._dotNext = function (blks, n)
---  local s = ''
---  if n > #blks then
---    s = 'quit'
---  else
---    for line in string.gmatch(blks[n], '([^\n]+)\r?\n?') do
---      if string.find(line, "[^%s]+") then
---        s = line
---        break
---      end
---    end
---  end
---  io.write(string.format("%d %s\n", n, s))
---end
-
-
 --- Evaluate block of text.
 --  @param co Coroutine object.
 --  @param txt Block of text.
@@ -214,6 +207,8 @@ evaluate._evalBlock = function (co, env)
       if status == evaluate.EV_ERR then break end
     end
   end
+  io.write(SonataHelp.CMAIN,
+    '\t[ ', env.index, ' / ', #env.notes, ' ]', SonataHelp.CRESET, '\n')
   env.index = env.index+1
 end
 
@@ -223,7 +218,8 @@ end
 --  @param fname File name.
 --  @return table with the text blocks.
 evaluate._toBlocks = function (fname)
-  local f = assert(io.open(fname, 'r'))
+  local f = io.open(fname, 'r')
+  if not f then return nil end
   local txt = f:read('*a'); f:close()
   -- remove long comments
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  
@@ -282,7 +278,7 @@ evaluate.cli = function (noteList)
       input = io.read()
     end
     local cmd = getCmd(input)
-    if #cmd > 0 then
+    if cmd then
       local fn = commands[cmd[1]] or goTo
       fn(cmd, env)
     elseif #input > 0 then
