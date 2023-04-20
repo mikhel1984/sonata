@@ -58,12 +58,12 @@ FORMAT_V2 = '#v2',
 -- log file name
 LOGNAME = 'log.note',
 -- state and result
-_cmd = "",    -- last request
-_st  = 1,     -- last status
+--_cmd = "",    -- last request
+--_st  = 1,     -- last status
 -- predefine variables
-version = 0,
-doimport = 0,
-_arghelp = 0,
+--version = 0,
+--doimport = 0,
+--_arghelp = 0,
 -- 
 INV_MAIN = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET,
 INV_CONT = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET,
@@ -90,22 +90,6 @@ local function showAndNext(status, res)
   end
   return evaluate.INV_MAIN
 end
-
-
---- Print block list.
---  @param blks Table with blocks of text.
---evaluate._dotLs = function (blks)
---  for i = 1, #blks do
---    local s = ''
---    for line in string.gmatch(blks[i], '([^\n]+)\r?\n?') do
---      if string.find(line, "[^%s]+") then
---        s = line
---        break
---      end
---    end
---    io.write(string.format("%d   %s\n", i, s))
---  end
---end
 
 
 --- Print next block title.
@@ -190,23 +174,6 @@ local function evalCode()
   end
 end
 
---[[
-while true do 
-  if input then
-    if iscmd(input) then
-      docmd(input)
-    else
-      eval(input)
-    end
-  else
-    if ind <= #buf then
-      for _, s in ipairs(buf[ind]) do
-      eval(s)
-    end
-    ind = ind + 1
-  end
-end
-]]
 
 --- Evaluate block of text.
 --  @param ev Evaluation environment.
@@ -350,6 +317,7 @@ local function goTo (arg, env)
   local lim = #env.notes
   if lim > 0 then
     env.index = (num < 0) and 1 or (num > lim) and lim or num
+    env.read = false
   else
     env.index = 1
   end
@@ -365,12 +333,15 @@ end
 
 evaluate.cli = function (noteList)
   local invite = evaluate.INV_MAIN
-  local env = {notes=noteList or {}, index=1}
+  local env = {notes=noteList or {}, index=1, read = true}
   local co = coroutine.create(evalCode)
   coroutine.resume(co)
   while true do
-    io.write(invite)
-    local input = io.read()
+    local input = ''
+    if env.read then
+      io.write(invite)
+      input = io.read()
+    end
     local cmd = getCmd(input)
     if #cmd > 0 then
       -- pocess command
@@ -383,50 +354,12 @@ evaluate.cli = function (noteList)
     elseif env.index <= #env.notes then
       evaluate._evalBlock(co, env.notes[env.index])
       env.index = env.index + 1
+      env.read = true
     elseif noteList then
       break
     end
   end
 end
-
---- Read input and evaluate it.
---  @param ev Environment.
---  @param invA First invite line.
---  @param invB Second invite line.
---  @param noteIn Table to store user input.
---  @return Status of evaluation on exit.
---evaluate.cliLoop = function (ev, invA, invB, noteIn)
---  local invite = invA
---  -- start dialog
---  while true do
---    io.write(invite)
---    -- command processing
---    local newLine = io.read()
---    if noteIn then
---      if newLine == "" then break end
---      if string.find(newLine, "^%s*:") then
---        noteIn[1] = newLine
---        for w in string.gmatch(newLine, "%w+") do noteIn[#noteIn+1] = w end
---        break
---      end
---    end
---    -- code processing
---    local status = evaluate.eval(ev, newLine, not noteIn)
---    if status == evaluate.EV_RES then
---      if ev._ans ~= nil then
---        print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
---      end
---      invite = invA
---    elseif status == evaluate.EV_CMD then
---      invite = invB
---    elseif status == evaluate.EV_ERR then
---      print_err(ev._ans)
---      invite = invA
---    else -- status == evaluate.EV_QUIT
---      return evaluate.EV_QUIT
---    end
---  end
---end
 
 --- Evaluate one expression.
 --  @param ev Environment.
@@ -511,36 +444,6 @@ evaluate._toBlocks = function (fname)
   end
   return res
 end
-
---evaluate._blocks = function (txt)
---  local init = 1
---  local res = {}
---  while true do
---    local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
---    if i1 then
---      res[#res+1] = string.sub(txt, init, i1-1)
---      init = i2+1
---    else
---      break
---    end
---  end
---  local last = string.sub(txt, init, #txt)
---  if string.find(last, "%w?") then
---    res[#res+1] = last
---  end
---  return res
---end
-
-
-
-
---- State reset.
---  @param ev Environment.
---evaluate.reset = function (ev)
---  ev._cmd = ""
---  ev._ans = nil
---  ev._st  = evaluate.EV_RES
---end
 
 
 return evaluate
