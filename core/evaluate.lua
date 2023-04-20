@@ -268,11 +268,16 @@ local function getCmd (str)
   return res
 end
 
+evaluate.evalThread = function ()
+  local co = coroutine.create(evalCode)
+  coroutine.resume(co)
+  return co
+end
+
 evaluate.cli = function (noteList)
   local invite = evaluate.INV_MAIN
   local env = {notes=noteList or {}, index=1, read = true}
-  local co = coroutine.create(evalCode)
-  coroutine.resume(co)
+  local co = evaluate.evalThread()
   while true do
     local input = ''
     if env.read then

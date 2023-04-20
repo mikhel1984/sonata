@@ -177,12 +177,12 @@ end,
 exit = true},
 
 -- command line evaluation
---['-e'] = {
---process = function (args)
---  Sonata:eval(args[2] or '', false)
---  print(Sonata._ans)
---end,
---exit = true},
+['-e'] = {
+process = function (args)
+  local _, _, ans = coroutine.resume(Sonata.evalThread(), args[2] or '')
+  print(ans)
+end,
+exit = true},
 
 -- process files
 ['default'] = {
