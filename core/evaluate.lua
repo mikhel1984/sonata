@@ -17,6 +17,8 @@ local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
 -- Highlight "header" in a "note" file
 local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
+-- File to save logs
+local LOGNAME = 'log.note'
 
 
 -- Format marker
@@ -89,8 +91,6 @@ EV_ERR = -1,  -- error
 -- string formats
 FORMAT_V1 = '#v1',
 FORMAT_V2 = '#v2',
--- log file name
-LOGNAME = 'log.note',
 -- Variants of invite
 INV_MAIN = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET,
 INV_CONT = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET,
@@ -125,6 +125,28 @@ o = function (arg, env)
     io.write("Name: '", arg[2], "'\tBlocks: ", #blk, "\n")
   else
     print_err("Can't open file "..arg[2])
+  end
+end,
+
+--- Save session to log
+log = function (arg, env)
+  if arg[2] == 'on' then
+    if not env.log then
+      env.log = io.open(LOGNAME, 'a')
+      if not env.log then print_err("Can't open log file") end
+      local d = os.date('*t')
+      env.log:write(
+        string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
+          d.day, d.month, d.year, d.hour, d.min)
+      )
+    end
+  elseif arg[2] == 'off' then
+    if env.log then
+      env.log:close()
+      env.log = nil
+    end
+  else
+    print_err('Unexpected argument!')
   end
 end,
 
@@ -172,16 +194,19 @@ end
 --  @param status Status of evaluation.
 --  @param res Result of evaluation.
 --  @return Invite string.
-local function showAndNext(status, res)
+local function showAndNext(status, res, log)
   if status == evaluate.EV_RES then
     if res ~= nil then
-      print(islist(res) and evaluate._toText(res) or res)
+      local out = islist(res) and evaluate._toText(res) or res
+      print(out)
+      if log then log:write('--[[ ', out, ' ]]\n') end
     end
     _ans = res
   elseif status == evaluate.EV_CMD then
     return evaluate.INV_CONT
   elseif status == evaluate.EV_ERR then
     print_err(res)
+    if log then log:write('--[[ ERROR ]]\n') end
   end
   return evaluate.INV_MAIN
 end
@@ -282,8 +307,9 @@ evaluate.cli = function (noteList)
       local fn = commands[cmd[1]] or goTo
       fn(cmd, env)
     elseif #input > 0 then
+      if env.log then env.log:write(input, '\n') end
       local _, status, res = coroutine.resume(co, input)
-      invite = showAndNext(status, res)
+      invite = showAndNext(status, res, env.log)
     elseif env.index <= #env.notes then
       evaluate._evalBlock(co, env)
       env.read = true

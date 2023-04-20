@@ -94,30 +94,6 @@ help = function(v)
 end
 
 
---- Session logging.
---  @param flat Value 'on'/true to start and 'off'/false to stop.
-Log = function (flag)
-  if flag == 'on' then
-    if not Sonata._logFile then
-      Sonata._logFile = assert(io.open(Sonata.LOGNAME, 'a'), "Can't open log file")
-      local d = os.date('*t')
-      Sonata._logFile:write(
-        string.format(
-          '\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
-          d.day, d.month, d.year, d.hour, d.min))
-      Sonata._logFile:write('-- ')  -- prepare comment for 'logging on'
-    end
-  elseif flag == 'off' then
-    if Sonata._logFile then
-      Sonata._logFile:close()
-      Sonata._logFile = nil
-    end
-  else
-    io.write('Unexpected argument!\n')
-  end
-end
-
-
 -- command line arguments of Sonata and their processing
 local _args = {
 

@@ -248,21 +248,6 @@ about[Round] = {
   'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
 
 
---- Execute file inside the interpreter.
---  @param sFile Lua or note file name.
-Run = function (sFile, bInt)
-  if string.find(sFile, '%.lua$') then
-    dofile(sFile)
-  elseif string.find(sFile, '%.note$') then
-    Sonata:note(sFile, bInt==true)
-  else
-    io.write('Expected .lua or .note!\n')
-  end
-end
-about[Run] = {'Run(name_s, isInt=false) --> nil',
-  "Execute lua- or note- file. Set isInt for interaction.", AUX}
-
-
 --- Show type of the object.
 --  @param v Some Lua or Sonata object.
 --  @return String with type value.
@@ -431,8 +416,6 @@ about[Range] = {'Range(begin_d, end_d, [step_d]) --> new_R', 'Generate range obj
 
 if Sonata then  -- SPECIFIC
 
-about[Log] = {'Log(flag_s) --> nil',
-  "Save session into the log file. Use 'on'/'off' to start/stop logging.", AUX}
 about[use] = {'use([module_s]) --> str|nil',
   "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
 about[help] = {"help(fn='main') --> str", "Show information about the function.", AUX}
