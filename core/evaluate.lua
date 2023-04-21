@@ -89,6 +89,7 @@ EV_RES = 1,   -- found result
 EV_CMD = 0,   -- continue expected
 EV_ERR = -1,  -- error
 EV_ASK = 2,   -- print question
+EV_WRN = 3,
 -- string formats
 FORMAT_V1 = '#v1',
 FORMAT_V2 = '#v2',
@@ -100,6 +101,10 @@ INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
 
 evaluate.ask = function (inv, res)
   return coroutine.yield(evaluate.EV_ASK, {inv, res})
+end
+
+evaluate.say = function (txt)
+  coroutine.yield(evaluate.EV_WRN, txt)
 end
 
 
@@ -199,13 +204,13 @@ end
 --  @param status Status of evaluation.
 --  @param res Result of evaluation.
 --  @return Invite string.
-local function showAndNext(status, res, log)
+local function showAndNext(status, res, env)
   if status == evaluate.EV_RES then
     -- finish evaluation
     if res ~= nil then
       local out = islist(res) and evaluate._toText(res) or res
       print(out)
-      if log then log:write('--[[ ', out, ' ]]\n') end
+      if env.log then env.log:write('--[[ ', out, ' ]]\n') end
     end
     _ans = res
   elseif status == evaluate.EV_CMD then
@@ -214,14 +219,17 @@ local function showAndNext(status, res, log)
   elseif status == evaluate.EV_ERR then
     -- error found
     print_err(res)
-    if log then log:write('--[[ ERROR ]]\n') end
+    if env.log then env.log:write('--[[ ERROR ]]\n') end
   elseif status == evaluate.EV_ASK then
     -- system question
     if res[2] then
       print(res[2])
-      if log then log:write('--[[ ', res[2], ' ]]\n') end
+      if env.log then env.log:write('--[[ ', res[2], ' ]]\n') end
     end
     return res[1]
+  elseif status == evaluate.EV_WRN then
+    io.write('Sonata: ', res, '\n')
+    env.read, env.info = false, true
   end
   return evaluate.INV_MAIN
 end
@@ -243,7 +251,7 @@ evaluate._evalBlock = function (co, env)
       -- print line and evaluate
       io.write(evaluate.INV_NOTE, line, '\n')
       local _, status, res = coroutine.resume(co, line)
-      showAndNext(status, res)
+      showAndNext(status, res, {})
       if status == evaluate.EV_ERR then break end
     end
   end
@@ -309,7 +317,8 @@ end
 --  @param noteList Table with text blocks.
 evaluate.cli = function (noteList)
   local invite = evaluate.INV_MAIN
-  local env = {notes=noteList or {}, index=1, read = true}
+  local env = {notes=noteList or {}, index=1, 
+    read = true, info=false}
   local co = evaluate.evalThread()
   while true do
     local input = ''
@@ -321,10 +330,11 @@ evaluate.cli = function (noteList)
     if cmd then
       local fn = commands[cmd[1]] or goTo
       fn(cmd, env)
-    elseif #input > 0 then
+    elseif #input > 0 or env.info then
+      env.read, env.info = true, false
       if env.log then env.log:write(input, '\n') end
       local _, status, res = coroutine.resume(co, input)
-      invite = showAndNext(status, res, env.log)
+      invite = showAndNext(status, res, env)
     elseif env.index <= #env.notes then
       evaluate._evalBlock(co, env)
       env.read = true
@@ -352,27 +362,6 @@ evaluate.exit = function ()
 end
 
 
---- Evaluate one expression.
---  @param ev Environment.
---  @param cmd Command.
---  @param useLog Flag to write log.
---  @return Result of evaluation.
---evaluate.eval = function (ev, cmd, useLog)
---  local res = evaluate._eval(ev, cmd)
---  -- logging
---  if useLog and ev._logFile then
---    ev._logFile:write(cmd, '\n')
---    -- TODO: Update it
---    -- if status == evaluate.EV_RES and ev._ans then
---    --   ev._logFile:write('--[[ ', ev._ans, ' ]]\n\n')
---    -- elseif status == evaluate.EV_ERR then
---    --   ev._logFile:write('--[[ ERROR ]]\n\n')
---    -- end
---  end
---  return res
---end
-
-
 --- Mark information about formatting.
 --  @param t Table to print.
 --  @return Table with marker.
@@ -384,5 +373,3 @@ end
 return evaluate
 
 --=================================
---TODO fix logs
---TODO open/add/clear notes

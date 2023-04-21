@@ -131,6 +131,10 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 --  @return True if the object is asciiplot.
 local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 
+local function inform(txt)
+  if Sonata then Sonata.say(txt) else print(txt) end
+end
+
 
 local mmodf = math.modf
 local MANUAL, CONF = 'manual', 'settings'
@@ -206,10 +210,10 @@ end
 --  @return axis object.
 axis.new = function (N)
   if N < 9 then
-    print('Set minimal axis size:', N)
+    inform('Set minimal axis size:'..tostring(N))
     N = 9
   elseif N % 2 == 0 then
-    print('Change to odd size')
+    inform('Change to odd size')
     return axis.new(N+1)
   end
   local x1, x2 = -1, 1
@@ -249,10 +253,10 @@ end
 --  @param N New size.
 axis.resize = function (A, N)
   if N < 9 then
-    print('Set minimal axis size:', N)
+    inform('Set minimal axis size:'..tostring(N))
     N = 9
   elseif N % 2 == 0 then
-    print('Change to odd size')
+    inform('Change to odd size')
     return axis.resize(A, N+1)
   end
   A.size = N
@@ -305,7 +309,7 @@ axis.setRange = function (A, t)
     end
   end
   if a ~= t[1] or b ~= t[2] then
-    print('Change limits to', a, b)
+    inform(string.format('Change limits to %f %f', a, b))
   end
   A._init[1], A._init[2] = a, b  -- exact limits
   A.diff = A.range[2] - A.range[1]
