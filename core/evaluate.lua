@@ -88,6 +88,7 @@ local evaluate = {
 EV_RES = 1,   -- found result
 EV_CMD = 0,   -- continue expected
 EV_ERR = -1,  -- error
+EV_ASK = 2,   -- print question
 -- string formats
 FORMAT_V1 = '#v1',
 FORMAT_V2 = '#v2',
@@ -96,6 +97,10 @@ INV_MAIN = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET,
 INV_CONT = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET,
 INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
 }
+
+evaluate.ask = function (inv, res)
+  return coroutine.yield(evaluate.EV_ASK, {inv, res})
+end
 
 
 local commands = {
@@ -196,6 +201,7 @@ end
 --  @return Invite string.
 local function showAndNext(status, res, log)
   if status == evaluate.EV_RES then
+    -- finish evaluation
     if res ~= nil then
       local out = islist(res) and evaluate._toText(res) or res
       print(out)
@@ -203,10 +209,19 @@ local function showAndNext(status, res, log)
     end
     _ans = res
   elseif status == evaluate.EV_CMD then
+    -- continue input
     return evaluate.INV_CONT
   elseif status == evaluate.EV_ERR then
+    -- error found
     print_err(res)
     if log then log:write('--[[ ERROR ]]\n') end
+  elseif status == evaluate.EV_ASK then
+    -- system question
+    if res[2] then
+      print(res[2])
+      if log then log:write('--[[ ', res[2], ' ]]\n') end
+    end
+    return res[1]
   end
   return evaluate.INV_MAIN
 end

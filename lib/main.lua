@@ -114,32 +114,44 @@ end
 --- Show elements of the table.
 --  @param t Table to print.
 main._showTable = function (t)
-  local N, nums = 10, {}
+  local N, nums, out = 10, {}, {'\n{ '}
   -- dialog
-  local function continue(n)
-    io.write(n, ' continue? (y/n) ')
-    return string.lower(io.read()) == 'y'
+  local function continue(n, res)
+    local txt = tostring(n) .. ' continue? (y/n/) '
+    if Sonata then
+      txt = Sonata.ask(txt, res)
+    else
+      io.write(res, '\n', txt)
+      txt = io.read()
+    end
+    return string.lower(txt) == 'y'
   end
-  io.write('\n{ ')
   -- list elements
   for i, v in ipairs(t) do
-    io.write(main._showElt(v), ', ')
+    out[#out+1] = main._showElt(v); out[#out+1] = ', '
     nums[i] = true
     if i % N == 0 then
-      io.write('\n')
-      if not continue(i) then break end
+      out[#out+1] = '\n'
+      local data = table.concat(out)
+      out = {'\n'}
+      if not continue(i, data) then break end
     end
   end
   -- hash table elements
   local count = 0
   for k, v in pairs(t) do
     if not nums[k] then
-      io.write('\n', tostring(k), ' = ', main._showElt(v), ', ')
+      out[#out+1] = string.format('\n%s = %s, ', tostring(k), main._showElt(v))
       count = count + 1
-      if count % N == 0 and not continue("") then break end
+      if count % N == 0 then
+        local data = table.concat(out)
+        out = {'\n'}
+        if not continue('', data) then break end
+      end
     end
   end
-  io.write(' }\n')
+  out[#out+1] = ' }\n'
+  return table.concat(out)
 end
 
 
@@ -209,6 +221,7 @@ about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table elemen
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
 Print = function (...)
+  local out = {}
   for i, v in ipairs({...}) do
     if type(v) == 'table' then
       local mt = getmetatable(v)
@@ -216,22 +229,27 @@ Print = function (...)
         -- has representation
         local tmp = tostring(v)
         if string.find(tmp, '\n') then
-          io.write('\n', tmp, '\n')
+          out[#out+1] = '\n'
+          out[#out+1] = tmp
+          out[#out+1] = '\n'
         else
-          io.write(tmp, '\t')
+          out[#out+1] = tmp
+          out[#out+1] = '\t'
         end
       else
         -- require representation
-        main._showTable(v)
+        out[#out+1] = main._showTable(v)
       end
     else
       -- show value
-      io.write(main._showElt(v), '\t')
+      out[#out+1] = main._showElt(v)
+      out[#out+1] = '\t'
     end
   end
-  io.write('\n')
+  --io.write('\n')
+  return table.concat(out)
 end
-about[Print] = {"Print(...) --> nil",
+about[Print] = {"Print(...) --> str",
   "Extenden print function, it shows elements of tables and scientific form of numbers.",
   AUX}
 
