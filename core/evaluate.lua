@@ -99,14 +99,6 @@ INV_CONT = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET,
 INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
 }
 
-evaluate.ask = function (inv, res)
-  return coroutine.yield(evaluate.EV_ASK, {inv, res})
-end
-
-evaluate.say = function (txt)
-  coroutine.yield(evaluate.EV_WRN, txt)
-end
-
 
 local commands = {
 
@@ -147,8 +139,7 @@ log = function (arg, env)
       local d = os.date('*t')
       env.log:write(
         string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
-          d.day, d.month, d.year, d.hour, d.min)
-      )
+          d.day, d.month, d.year, d.hour, d.min))
     end
   elseif arg[2] == 'off' then
     if env.log then
@@ -159,7 +150,6 @@ log = function (arg, env)
     print_err('Unexpected argument!')
   end
 end,
-
 
 }
 
@@ -313,6 +303,15 @@ evaluate._toText = function (lst)
 end
 
 
+--- Allow functions to ask user.
+--  @param question Question to user, print as invite string.
+--  @param res Current result if any.
+--  @return user input.
+evaluate.ask = function (question, res)
+  return coroutine.yield(evaluate.EV_ASK, {question, res})
+end
+
+
 --- Sonata evaluation loop.
 --  @param noteList Table with text blocks.
 evaluate.cli = function (noteList)
@@ -367,6 +366,13 @@ end
 --  @return Table with marker.
 evaluate.info = function (t)
   return setmetatable(t, mt_sonatainfo)
+end
+
+
+--- Send info/warning to user.
+--  @param txt Text to print.
+evaluate.say = function (txt)
+  coroutine.yield(evaluate.EV_WRN, txt)
 end
 
 

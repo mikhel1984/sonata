@@ -1,5 +1,9 @@
 ======== 0.9.36 =========
 
+Other
+* Change evaluate loop logic
+* Add warnings and program questions
+
 ======== 0.9.35 =========
 
 Asciiplot
