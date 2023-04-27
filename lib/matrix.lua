@@ -247,12 +247,6 @@ local mt_access = {
 local mt_container = {}
 
 
---- Check object type.
---  @param m Object to check.
---  @return True if the object is 'matrix'.
-local function ismatrix(v) return type(v) == 'table' and v.ismatrix end
-
-
 --- Simplify object when possible.
 --  @param M Matrix.
 --  @return Number in the case of single element.
@@ -267,8 +261,7 @@ end
 --  @return Corrected index or nil.
 local function toRange(i, iRange)
   if i < 0 then i = i + iRange + 1 end
-  if i <= 0 or i > iRange then return nil end
-  return i
+  return i > 0 and i <= iRange and i or nil
 end
 
 
@@ -297,8 +290,12 @@ __module__ = "Matrix operations. The matrices are spares by default."
 
 --	MODULE
 
-local matrix = { type = 'matrix', ismatrix = true }
+local matrix = { type = 'matrix' }
 
+--- Check object type.
+--  @param v Object to check.
+--  @return True if the object is 'matrix'.
+local function ismatrix(v) return getmetatable(v) == matrix end
 
 --- M1 + M2
 --  @param M1 First matrix or number.
@@ -312,7 +309,7 @@ matrix.__add = function (M1, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
   end
-  local res = matrix:_init(M1._rows, M1._cols, {})
+  local res = matrix._init(M1._rows, M1._cols, {})
   for r = 1, M1._rows do
     local rr, m1r, m2r = res[r], M1[r], M2[r]
     for c = 1, M1._cols do
@@ -406,7 +403,7 @@ matrix.__mul = function (M1, M2)
   if (M1._cols ~= M2._rows) then
     error("Impossible to get product: different size!")
   end
-  local res = matrix:_init(M1._rows, M2._cols, {})
+  local res = matrix._init(M1._rows, M2._cols, {})
   local resCols, m1Cols = res._cols, M1._cols
   for r = 1, res._rows do
     local ar, resr = M1[r], res[r]
@@ -451,7 +448,7 @@ matrix.__sub = function (M1, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
   end
-  local res = matrix:_init(M1._rows, M1._cols, {})
+  local res = matrix._init(M1._rows, M1._cols, {})
   for r = 1, M1._rows do
     local rr, m1r, m2r = res[r], M1[r], M2[r]
     for c = 1, M1._cols do
@@ -484,7 +481,7 @@ end
 --  @param M Matrix object.
 --  @return Matrix where each element has opposite sign.
 matrix.__unm = function (M)
-  local res = matrix:_init(M._rows, M._cols, {})
+  local res = matrix._init(M._rows, M._cols, {})
   for r = 1, M._rows do
     local rr, mr = res[r], M[r]
     for c = 1, M._cols do rr[c] = -mr[c] end
@@ -529,12 +526,12 @@ matrix._invList = {
 function (M) return 1 end,
 -- 2x2
 function (M)
-  return matrix:_init(2, 2, {{M[2][2], -M[1][2]}, {-M[2][1], M[1][1]}} )
+  return matrix._init(2, 2, {{M[2][2], -M[1][2]}, {-M[2][1], M[1][1]}} )
 end,
 -- 3x3
 function (M)
   local m1, m2, m3 = M[1], M[2], M[3]
-  return matrix:_init(3, 3, {
+  return matrix._init(3, 3, {
     {m2[2]*m3[3]-m2[3]*m3[2], -(m1[2]*m3[3]-m1[3]*m3[2]), m1[2]*m2[3]-m1[3]*m2[2]},
     {-(m2[1]*m3[3]-m2[3]*m3[1]), m1[1]*m3[3]-m1[3]*m3[1], -(m1[1]*m2[3]-m1[3]*m2[1])},
     {m2[1]*m3[2]-m2[2]*m3[1], -(m1[1]*m3[2]-m1[2]*m3[1]), m1[1]*m2[2]-m1[2]*m2[1]}
@@ -548,8 +545,9 @@ end
 --  @param dTol Threshold value.
 matrix._clearLess = function (M, dTol)
   for i = 1, M._rows do
+    local mi = M[i]
     for j = 1, M._cols do
-      if math.abs(M[i][j]) < dTol then M[i][j] = 0 end
+      if math.abs(mi[j]) < dTol then mi[j] = 0 end
     end
   end
 end
@@ -613,7 +611,7 @@ end
 --  @param ic Column index.
 --  @return Submatrix.
 matrix._firstMinorSub = function (M, ir, ic)
-  local res = matrix:_init(M._rows-1, M._cols-1, {})
+  local res = matrix._init(M._rows-1, M._cols-1, {})
   for r = 1, ir-1 do
     for c = 1, ic-1 do res[r][c] = M[r][c] end
     for c = ic+1, M._cols do res[r][c-1] = M[r][c] end
@@ -683,10 +681,10 @@ end
 --  @param iC Number of columns.
 --  @param t Table for initialization.
 --  @return Matrix object.
-matrix._init = function (self, iR, iC, t)
+matrix._init = function (iR, iC, t)
   if iR <= 0 or iC <= 0 then error("Wrong matrix size!") end
   t._cols, t._rows = iC, iR
-  return setmetatable(t, self)
+  return setmetatable(t, matrix)
 end
 
 
@@ -696,7 +694,7 @@ end
 --  @return Result of production.
 matrix._kProd = function (d, M)
   if getmetatable(d) == mt_container then d = d[1] end
-  local res = matrix:_init(M._rows, M._cols, {})
+  local res = matrix._init(M._rows, M._cols, {})
   for r = 1, M._rows do
     local resr, mr = res[r], M[r]
     for c = 1, M._cols do resr[c] = d*mr[c] end
@@ -781,7 +779,7 @@ matrix._new = function (t)
     cols = (cols < #t[i]) and #t[i] or cols
     setmetatable(t[i], mt_access)
   end
-  return matrix:_init(rows, cols, t)
+  return matrix._init(rows, cols, t)
 end
 
 
@@ -892,10 +890,10 @@ matrix.concat = function (M1, M2, sDir)
   local res = nil
   if sDir == 'h' then
     if (M1._rows ~= M2._rows) then error("Different number of rows") end
-    res = matrix:_init(M1._rows, M1._cols+M2._cols, {})
+    res = matrix._init(M1._rows, M1._cols+M2._cols, {})
   elseif sDir == 'v' then
     if (M1._cols ~= M2._cols) then error("Different number of columns") end
-    res = matrix:_init(M1._rows+M2._rows, M1._cols, {})
+    res = matrix._init(M1._rows+M2._rows, M1._cols, {})
   else
     error("Unexpected type of concatenation")
   end
@@ -919,7 +917,7 @@ about[matrix.concat] = {"M:concat(M2, dir_s) --> comb_M",
 --  @param M Source matrix.
 --  @return Deep copy.
 matrix.copy = function (M)
-  local res = matrix:_init(M._rows, M._cols, {})
+  local res = matrix._init(M._rows, M._cols, {})
   for r = 1, M._rows do
     local resr, mr = res[r], M[r]
     for c = 1, M._cols do resr[c] = mr[c] end  -- use Cross.copy() - ?
@@ -940,7 +938,7 @@ matrix.cross = function (V1, V2)
   end
   local x1, y1, z1 = V1(1), V1(2), V1(3)
   local x2, y2, z2 = V2(1), V2(2), V2(3)
-  return matrix:_init(3, 1, {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
+  return matrix._init(3, 1, {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
 end
 about[matrix.cross] = {'V:cross(V2) --> V3',
   'Cross product or two 3-element vectors.'}
@@ -970,7 +968,7 @@ matrix.diag = function (M)
   for i = 1, math.min(M._rows, M._cols) do
     res[i] = {M[i][i]}
   end
-  return matrix:_init(#res, 1, res)
+  return matrix._init(#res, 1, res)
 end
 about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
 
@@ -982,7 +980,7 @@ matrix.diagonal = function (M, v)
   local vec = ismatrix(v)
   if vec and (v._rows == 1 or v._cols == 1) or type(v) == 'table' then
     local n = vec and v._rows * v._cols or #v
-    local res = matrix:_init(n, n, {})
+    local res = matrix._init(n, n, {})
     for i = 1, n do res[i][i] = vec and v(i) or v[i] end
     return res
   end
@@ -1034,17 +1032,15 @@ about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
 --  @param self Do nothing.
 --  @param rows Number of rows.
 --  @param cols Number of columns. Can be omitted in case of square matrix.
---  @param val Diagonal value, default is 1.
 --  @return Diagonal matrix with ones.
-matrix.eye = function (self, iR, iC, val)
+matrix.eye = function (self, iR, iC)
   if ismatrix(iR) then
-    val = iC or 1
     iR, iC = iR._rows, iR._cols
+  else
+    iC = iC or iR
   end
-  iC = iC or iR
-  val = val or 1
-  local m = matrix:_init(iR, iC, {})
-  for i = 1, math.min(iR, iC) do m[i][i] = val end
+  local m = matrix._init(iR, iC, {})
+  for i = 1, math.min(iR, iC) do m[i][i] = 1 end
   return m
 end
 about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
@@ -1060,7 +1056,7 @@ about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
 matrix.fill = function (self, iR, iC, val)
   assert(iR > 0 and iC > 0)
   val = val or 1
-  local m = matrix:_init(iR, iC, {})
+  local m = matrix._init(iR, iC, {})
   for r = 1, iR do
     local mr = m[r]
     for c = 1, iC do mr[c] = val end
@@ -1146,7 +1142,7 @@ about[matrix.round] = {"M:round(N=6) --> nil",
 --  @param M Initial matrix.
 --  @return Transformed matrix.
 matrix.H = function (M)
-  local res = matrix:_init(M._cols, M._rows, {})
+  local res = matrix._init(M._cols, M._rows, {})
   for r = 1, M._rows do
     local mr = M[r]
     for c = 1, M._cols do
@@ -1272,7 +1268,7 @@ about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
 --  @param fn Desired function.
 --  @return Matrix where each element is obtained based on desired function.
 matrix.map = function (M, fn)
-  local res = matrix:_init(M._rows, M._cols, {})
+  local res = matrix._init(M._rows, M._cols, {})
   for r = 1, res._rows do
     local resr, mr = res[r], M[r]
     for c = 1, res._cols do resr[c] = fn(mr[c], r, c) end
@@ -1344,7 +1340,7 @@ matrix.pinv = function (M)
     if r > 1 then
       tmp = L:range({k, n}, {1, r-1}) * L:range({k}, {1, r-1}):T()
       -- product can return a number
-      tmp = ismatrix(tmp) and tmp or matrix:_init(1, 1, {{tmp}})
+      tmp = ismatrix(tmp) and tmp or matrix._init(1, 1, {{tmp}})
       B = B - tmp
     end
     for i = k, n do L[i][r] = B[i-k+1][1] end  -- copy B to L
@@ -1382,7 +1378,7 @@ matrix.qr = function (M)
   if n > m then error("Wrong matrix size") end
   local Q = matrix:eye(m)
   local R = matrix.copy(M)
-  local v = matrix:_init(m, 1, {})
+  local v = matrix._init(m, 1, {})
   for j = 1, math.min(m-1, n) do
     -- housholder transformation
     -- get vector
@@ -1455,7 +1451,7 @@ matrix.range = function (M, tR, tC)
   end
 
   -- fill matrix
-  local res = matrix:_init(
+  local res = matrix._init(
     math.floor((tR[2]-tR[1])/tR[3])+1, math.floor((tC[2]-tC[1])/tC[3])+1, {})
   local i = 0
   for r = tR[1], tR[2], tR[3] do
@@ -1506,7 +1502,7 @@ about[matrix.rank] = {"M:rank() --> N", "Find rank of the matrix."}
 matrix.reshape = function (M, iRows, iCols)
   iRows = iRows or (M._rows*M._cols)
   iCols = iCols or 1
-  local res = matrix:_init(iRows, iCols, {})
+  local res = matrix._init(iRows, iCols, {})
   local newR, newC = 1, 1   -- temporary indices
   for r = 1, M._rows do
     local Mr = M[r]
@@ -1619,7 +1615,7 @@ about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix.", help.OTHER}
 --  @param M Initial matrix.
 --  @return Transposed matrix.
 matrix.T = function (M)
-  local res = matrix:_init(M._cols, M._rows, {})
+  local res = matrix._init(M._cols, M._rows, {})
   for r = 1, M._rows do
     local mr = M[r]
     for c = 1, M._cols do res[c][r] = mr[c] end
@@ -1638,7 +1634,7 @@ about[matrix.T] = {"M:T() --> transpose_M",
 matrix.V = function (self, t)
   local res = {0, 0, 0}       -- prepare some memory
   for i = 1, #t do res[i] = {t[i]} end
-  return matrix:_init(#t, 1, res)
+  return matrix._init(#t, 1, res)
 end
 about[matrix.V] = {":V {...} --> new_V",
   "Create vector from list of numbers.", help.NEW}
@@ -1652,7 +1648,7 @@ about[matrix.V] = {":V {...} --> new_V",
 matrix.zeros = function (self, iR, iC)
   if ismatrix(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
   iC = iC or iR                          -- input is a number
-  return matrix:_init(iR, iC, {})
+  return matrix._init(iR, iC, {})
 end
 about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
   "Create matrix of zeros.", help.NEW}
@@ -1672,7 +1668,7 @@ matrix.zip = function (self, fn, ...)
       error("Different size!")
     end
   end
-  local res, v = matrix:_init(rows, cols, {}), {}
+  local res, v = matrix._init(rows, cols, {}), {}
   -- evaluate
   local upack = Ver.unpack
   for r = 1, res._rows do
