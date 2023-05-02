@@ -133,8 +133,6 @@ local Cross = Ver.cross
 Ver = Ver.versions
 
 
--- Check object type.
-local function ispolynomial(v) return type(v) == 'table' and v.ispolynomial end
 
 
 -- Return number in trivial case.
@@ -200,10 +198,14 @@ local FIT = 'approximation'
 
 local polynomial = {
 -- marker
-type = 'polynomial', ispolynomial = true,
+type = 'polynomial', 
 -- simplification
 _simp = numpoly
 }
+
+
+-- Check object type.
+local function ispolynomial(v) return getmetatable(v) == polynomial end
 
 
 -- Simplify ppval call.
@@ -228,7 +230,7 @@ polynomial.__add = function (P1, P2)
   for i = 0, math.max(#P1, #P2) do
     t[i] = (P1[i] or 0) + (P2[i] or 0)
   end
-  return numpoly(reduce(polynomial:_init(t)))
+  return numpoly(reduce(polynomial._init(t)))
 end
 
 
@@ -307,7 +309,7 @@ polynomial.__mul = function (P1, P2)
       return Cross.convert(P2, P1) * P2
     end
   end
-  local res = polynomial:_init({[0]=0})
+  local res = polynomial._init({[0]=0})
   -- get sum of coefficients
   for i = 0, #P1 do
     local pi = P1[i]
@@ -327,7 +329,7 @@ end
 polynomial.__pow = function (P, N)
   N = assert(Ver.toInteger(N), "Integer power is expected!")
   if N <= 0 then error("Positive power is expected!") end
-  local res, acc = polynomial:_init({[0]=1}), polynomial.copy(P)
+  local res, acc = polynomial._init({[0]=1}), polynomial.copy(P)
   while N >= 1 do
     if N % 2 == 1 then res = polynomial.__mul(res, acc) end
     if N ~= 1 then acc = polynomial.__mul(acc, acc) end
@@ -365,7 +367,7 @@ end
 polynomial.__unm = function (P)
   local res = {}
   for i = 0, #P do res[i] = -P[i] end
-  return polynomial:_init(res)
+  return polynomial._init(res)
 end
 
 
@@ -381,7 +383,7 @@ about[polynomial.comparison] = {polynomial.comparison, "a==b, a~=b", help.META}
 polynomial._convert = function (v)
   return (type(v) == 'number' or
           type(v) == 'table' and v.__add and v.__mul and v.__div)
-          and polynomial:_init({[0]=v})
+          and polynomial._init({[0]=v})
 end
 
 
@@ -408,11 +410,10 @@ end
 
 
 --- Initialize polynomial from table.
---  @param self Parent object.
 --  @param t Table of coefficients, from highest to lowest power.
 --  @return Polynomial object.
-polynomial._init = function (self, t)
-  return setmetatable(t, self)
+polynomial._init = function (t)
+  return setmetatable(t, polynomial)
 end
 
 
@@ -461,7 +462,7 @@ polynomial._reorder = function (t)
     p[k] = t[i]  -- save in reverse order
     k = k + 1
   end
-  return polynomial:_init(p)
+  return polynomial._init(p)
 end
 
 
@@ -514,10 +515,10 @@ end
 --  @param ... List of roots.
 --  @return Polynomial object.
 polynomial.build = function (self, ...)
-  local res = polynomial:_init({[0]=1})
+  local res = polynomial._init({[0]=1})
   for _, v in ipairs({...}) do
     if type(v) == 'table' and v.iscomplex then
-      local p = polynomial:_init({[0] = v:re()^2 + v:im()^2, -2*v:re(), 1})
+      local p = polynomial._init({[0] = v:re()^2 + v:im()^2, -2*v:re(), 1})
       res = polynomial.__mul(res, p)
     else
       polynomial._multXv(res, v)
@@ -536,7 +537,7 @@ about[polynomial.build] = {":build(root1, [root2,..]) --> P",
 polynomial.char = function (self, M)
   local m = M:copy()
   for i = 1, m:cols() do
-    m[i][i] = polynomial:_init({[0]=m[i][i], -1})
+    m[i][i] = polynomial._init({[0]=m[i][i], -1})
   end
   return m:minor(0, 0)
 end
@@ -552,7 +553,7 @@ polynomial.copy = function (P)
   for i = 0, #P do
     res[i] = Cross.copy(P[i])
   end
-  return polynomial:_init(res)
+  return polynomial._init(res)
 end
 about[polynomial.copy] = {"P:copy() --> cpy_P",
   "Get copy of the polynomial.", help.OTHER}
@@ -566,7 +567,7 @@ polynomial.der = function (P)
   for i = 1, #P do
     der[i-1] = i * P[i]
   end
-  return numpoly(polynomial:_init(der))
+  return numpoly(polynomial._init(der))
 end
 about[polynomial.der] = {"P:der() --> der_P",
   "Calculate derivative of polynomial."}
@@ -627,7 +628,7 @@ polynomial.int = function (P, d0)
   for i = 1, #P+1 do
     int[i] = P[i-1] / i
   end
-  return polynomial:_init(int)
+  return polynomial._init(int)
 end
 about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
   "Calculate integral, d0 - free coefficient."}
@@ -640,10 +641,10 @@ about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
 --  @return Interpolation polynomial.
 polynomial.lagrange = function (self, tX, tY)
   if #tX ~= #tY then error('Wrong data size!') end
-  local res = polynomial:_init({[0]=0})
+  local res = polynomial._init({[0]=0})
   for i = 1, #tX do
     -- find basis polynomial
-    local p = polynomial:_init({[0]=1})
+    local p = polynomial._init({[0]=1})
     local den, v = 1, tX[i]
     for j = 1, #tY do
       if i ~= j then
@@ -671,14 +672,14 @@ about[polynomial.lagrange] = {":lagrange(xs_t, ys_t) --> P",
 polynomial.lin = function (self, tX, tY, v0, vN)
   local res = {}
   local xp, yp = tX[1], tY[1]
-  if v0 then res[1] = { xp, polynomial:_init({[0] = v0}) } end
+  if v0 then res[1] = { xp, polynomial._init({[0] = v0}) } end
   for i = 2, #tX do
     xi, yi = tX[i], tY[i]
     local k = (yi-yp)/(xi-xp)
-    res[#res+1] = { xi, polynomial:_init({[0]=yp-k*xp, k}) }
+    res[#res+1] = { xi, polynomial._init({[0]=yp-k*xp, k}) }
     xp, yp = xi, yi
   end
-  if v0 then res[#res+1] = { xp+1, polynomial:_init({[0] = vN or v0}) } end
+  if v0 then res[#res+1] = { xp+1, polynomial._init({[0] = vN or v0}) } end
   return setmetatable(res, mt_ppval)
 end
 about[polynomial.lin] = {":lin(xs_t, ys_t, yBefore_d=0, yAfter_d=y0) --> P",
@@ -797,7 +798,7 @@ about[polynomial.roots] = {"P:roots() --> roots_t",
 polynomial.spline = function (self, tX, tY)
   polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
   local mat, N = polynomial.ext_matrix, #tX-1
-  local h, A = {}, mat:_init(N-1, N+2, {})
+  local h, A = {}, mat._init(N-1, N+2, {})
   -- prepare matrix
   h[1] = tX[2]-tX[1]
   for i = 2, N do
@@ -827,7 +828,7 @@ polynomial.spline = function (self, tX, tY)
     local hi, bi, di, xi = h[i], b[i], tY[i], tX[i]
     local ai = (b[i+1] - bi) / (3 * hi)
     local ci = (tY[i+1] - di) / hi - hi * (2*bi + b[i+1]) / 3
-    res[i] = {tX[i+1], polynomial:_init({
+    res[i] = {tX[i+1], polynomial._init({
        [0] = ((-ai*xi + bi)*xi - ci)*xi + di,
        xi*(3*ai*xi - 2*bi) + ci, -3*ai*xi + bi, ai })
     }
@@ -868,8 +869,8 @@ about[polynomial.str] = {"P:str(char_s='x') --> str",
 --  @param ... Sequence of derivatives fn', fn'' etc.
 --  @return Corresponding polynomial.
 polynomial.taylor = function (self, v, vF, ...)
-  local res = polynomial:_init({[0]=vF})
-  local p, k = polynomial:_init({[0]=1}), 1
+  local res = polynomial._init({[0]=vF})
+  local p, k = polynomial._init({[0]=1}), 1
   for i, x in ipairs({...}) do
     polynomial._multXv(p, v)
     k = k * i

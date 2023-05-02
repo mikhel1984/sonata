@@ -137,10 +137,6 @@ local NUMB = 'numbers'
 local COMB = 'combinations'
 
 
---- Check object type.
---  @param v Object.
---  @return True if the object is a big integer.
-local function isbigint(v) return type(v) == 'table' and v.isbigint end
 
 
 --	INFO
@@ -156,11 +152,15 @@ __module__ = "Operations with arbitrary long integers."
 
 local bigint = {
 -- mark
-type='bigint', isbigint=true,
+type='bigint', 
 -- logarithm of a base
 _ln = {},
 }
 
+--- Check object type.
+--  @param v Object.
+--  @return True if the object is a big integer.
+local function isbigint(v) return getmetatable(v) == bigint end
 
 --- B1 + B2
 --  @param B1 First bigint or integer.
@@ -384,7 +384,7 @@ end
 --  @param B Bigint object.
 --  @return Opposite value.
 bigint.__unm = function (B)
-  local res = bigint:_new({base=B._base, sign=-B.sign, 0})
+  local res = bigint._new({base=B._base, sign=-B.sign, 0})
   res._ = B._
   return res
 end
@@ -421,8 +421,8 @@ about[bigint.comparison] = {
 --  @param num2 Second number representation (optional).
 --  @return Bigint objects with the same numeric bases.
 bigint._args = function (num1, num2)
-  num1 = isbigint(num1) and num1 or bigint:_new(num1)
-  num2 = isbigint(num2) and num2 or bigint:_new(num2)
+  num1 = isbigint(num1) and num1 or bigint._new(num1)
+  num2 = isbigint(num2) and num2 or bigint._new(num2)
   if num1._base > num2._base then
     num2 = num2:rebase(num1._base)
   elseif num1._base < num2._base then
@@ -436,7 +436,7 @@ end
 --  @param v Source objec.
 --  @return Int object.
 bigint._convert = function (v)
-  return Ver.isInteger(v) and bigint:_new(v)
+  return Ver.isInteger(v) and bigint._new(v)
 end
 
 
@@ -444,7 +444,7 @@ end
 --  @param B Original bigint object.
 --  @return Deep copy.
 bigint._copy = function (B)
-  local c = bigint:_new({B._[1], sign=B.sign, base=B._base})
+  local c = bigint._new({B._[1], sign=B.sign, base=B._base})
   for i = 2, #B._ do c._[i] = B._[i] end
   return c
 end
@@ -485,11 +485,11 @@ bigint._div = function (B1, B2)
   local b1, b2 = B1._, B2._
   if #b2 == 1 and b2[1] == 0 then error("Divide by 0!") end
   local d = B1._base
-  local res = bigint:_new({0, base=d})
+  local res = bigint._new({0, base=d})
   if #b1 < #b2 then  -- too short
     return res, B1
   end
-  local rem = bigint:_new({0, base=d});
+  local rem = bigint._new({0, base=d});
   rem._[1] = nil
   local k = #b1 - #b2 + 1
   Ver.move(b1, k+1, #b1, 1, rem._)  -- copy last elements
@@ -498,7 +498,7 @@ bigint._div = function (B1, B2)
     table.insert(rem._, 1, b1[i])
     if rem >= den then
       local n = math.modf(rem:float() / v2)  -- estimate
-      local tmp = rem - den * bigint:_new({n, base=d})
+      local tmp = rem - den * bigint._new({n, base=d})
       if tmp.sign < 0 then
         n = n - 1
         tmp = tmp + den
@@ -643,7 +643,7 @@ end
 --- Create new object, set metatable.
 --  @param num Integer, string or table.
 --  @return Bigint object.
-bigint._new = function (self, num)
+bigint._new = function (num)
   local int, acc = {_base=10, sign=1}, {}
   -- prepare
   if type(num) == 'table' then
@@ -679,7 +679,7 @@ bigint._new = function (self, num)
     error('Wrong number '..tostring(num))
   end
   int._ = acc
-  return setmetatable(int, self)
+  return setmetatable(int, bigint)
 end
 
 
@@ -692,7 +692,6 @@ bigint._powm = function (B1, B2, B3)
   local div = bigint._div
   _, B1 = div(B1, B3)
   if #B1._ == 1 and B1._[1] == 0 then
-    --return bigint:_new({0, base=B1._base})
     return bigint:_zero(B1._base, 1)
   end
   local y, x = bigint._1, B1
@@ -729,7 +728,7 @@ end
 --  @param B Bigint object.
 --  @return Estimation of sqrt(B).
 bigint._sqrt = function (B)
-  local ai = bigint:_new({1, base=B._base})
+  local ai = bigint._new({1, base=B._base})
   local sum, div, sub = bigint._sum, bigint._div, bigint._sub
   repeat
     local aii, _ = div(B, ai)
@@ -804,7 +803,7 @@ end
 --  @param B0 Initial multiplier.
 --  @return Pair of multipliers or nil.
 bigint._trivialSearch = function (B, B0)
-  local n = B0 and B0:_copy() or bigint:_new({2})
+  local n = B0 and B0:_copy() or bigint._new({2})
   n = n:rebase(B._base)
   local sq = bigint._sqrt(B)
   while #sq._ > #n._ or not bigint._gt(n, sq) do
@@ -828,7 +827,7 @@ end
 
 
 --- Constant for 1
-bigint._1 = bigint:_new({1})
+bigint._1 = bigint._new({1})
 
 
 --- Absolute value of number.
@@ -926,7 +925,7 @@ bigint.F = function (B)
     acc = bigint._mul(acc, S)
   end
   if m > 1E-3 then   -- i.e. m > 0
-    acc = bigint._mul(acc, bigint:_new(n + 2):rebase(B._base))
+    acc = bigint._mul(acc, bigint._new(n + 2):rebase(B._base))
   end
   return acc
 end
@@ -1025,7 +1024,7 @@ about[bigint.P] = {":P(n, k) --> permutaions_B",
 --  @param B Upper limit.
 --  @return Number from 0 to B.
 bigint.random = function (self, B)
-  B = isbigint(B) and B or bigint:_new(B)
+  B = isbigint(B) and B or bigint._new(B)
   local d, set, v = B._base, false, 0
   local res = bigint:_zero(d, B.sign)
   local n = math.random(1, #B._)
@@ -1072,7 +1071,7 @@ bigint.ratF = function (B, B2)
     acc = bigint._mul(acc, S)
   end
   if m > 1E-3 then   -- i.e. m > 0
-    acc = bigint._mul(acc, bigint:_new(n+2))
+    acc = bigint._mul(acc, bigint._new(n+2))
   end
   return acc
 end
@@ -1106,7 +1105,7 @@ about[bigint.rebase] = {
 -- simplify constructor call
 setmetatable(bigint, {
 __call = function (self, v)
-  return bigint:_new(v)
+  return bigint._new(v)
 end})
 about[bigint] = {" (var) --> new_B",
   "Create number from integer, string or table.", help.STATIC}

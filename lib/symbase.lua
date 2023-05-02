@@ -16,10 +16,6 @@ local Utils = Ver.utils
 Ver = Ver.versions
 
 
---- Check object type.
---  @param v Object.
---  @return True if the object is symbolic.
-local function issym(v) return type(v)=='table' and v.issymbolic end
 
 
 --- Condition for element sorting.
@@ -36,11 +32,17 @@ local PARENTS = {}
 
 local symbolic = {
 -- mark
-type = 'symbolic', issymbolic = true,
+type = 'symbolic', 
 -- main types
 _parentList = PARENTS,
 -- 'standard' functions
 }
+
+
+--- Check object type.
+--  @param v Object.
+--  @return True if the object is symbolic.
+local function issym(v) return getmetatable(v) == symbolic end
 
 
 -- Combine 'common' methods

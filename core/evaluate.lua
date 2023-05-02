@@ -159,6 +159,7 @@ end,
 --  It takes code line and return status and evaluation result.
 local function evalCode()
   local state, cmd, res = evaluate.EV_RES, '', nil
+  local in_coroutine = true  -- set marker
   while true do
     -- next line of code
     local input = coroutine.yield(state, res)
@@ -372,7 +373,9 @@ end
 --- Send info/warning to user.
 --  @param txt Text to print.
 evaluate.say = function (txt)
-  coroutine.yield(evaluate.EV_WRN, txt)
+  if in_coroutine then
+    coroutine.yield(evaluate.EV_WRN, txt)
+  else print(txt) end
 end
 
 

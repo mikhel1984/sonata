@@ -254,10 +254,9 @@ end
 
 
 --- Create new object, set metatable.
---  @param self Pointer to parent table.
 --  @param o Table with parameters or nil.
 --  @return New 'gnuplot' object.
-gnuplot._init = function (self) return setmetatable({}, self) end
+gnuplot._new = function () return setmetatable({}, gnuplot) end
 
 
 --- Save one or two lists into tmp file
@@ -361,7 +360,7 @@ about[gnuplot.add] = {"G:add(curve_v) --> nil", "Add new curve to figure."}
 --  @param G Initial table.
 --  @return Copy of table.
 gnuplot.copy = function (G)
-  local cp = gnuplot:_init()
+  local cp = gnuplot._new()
   for k,v in pairs(G) do
     if type(v) == 'table' then
       local tmp = {}
@@ -381,7 +380,7 @@ about[gnuplot.copy] = {"G:copy() --> cpy_G", "Get copy of the plot options."}
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
 gnuplot.plot = function (self,...)
   local ag = {...}
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   local i, n = 1, 1
   repeat
     -- ag[i] have to be table
@@ -414,7 +413,7 @@ about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..]) --> nil",
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
 gnuplot.polarplot = function(self,...)
   local ag, i, n = {...}, 1, 1
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   repeat
     local name = gnuplot._lst2file(ag[i],ag[i+1])
     i = i + 2
@@ -473,7 +472,7 @@ about[gnuplot.show] = {"G:show() --> nil", "Plot data, represented as Lua table.
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
 gnuplot.surfplot = function(self,...)
   local ag, i, n = {...}, 1, 1
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   repeat
     local name = gnuplot._lst2file(ag[i],ag[i+1],ag[i+2])
     i = i + 3
@@ -500,7 +499,7 @@ about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..]) --
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tplot = function (self,v,...)
   local f, ag = gnuplot._vecPrepare(v,...)
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   if #ag > 1 then
     for i = 2,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
@@ -522,7 +521,7 @@ about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..]) --> nil",
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tpolar = function (self,v,...)
   local f, ag = gnuplot._vecPrepare(v,...)
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   if #ag > 1 then
     for i = 2,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
@@ -545,7 +544,7 @@ about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..]) --> nil",
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tsurf = function (self,v,...)
   local f, ag = gnuplot._vecPrepare(v,...)
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   if #ag > 2 then
     for i = 3,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[2],ag[i]},
@@ -562,7 +561,7 @@ about[gnuplot.tsurf] = {":tsurf(var, [x_N, y_N, z1_N, z2_N,..]) --> nil",
 
 
 -- constructor
-setmetatable(gnuplot, {__call=function (self) return gnuplot:_init() end})
+setmetatable(gnuplot, {__call=function (self) return gnuplot._new() end})
 about[gnuplot] = {" () --> new_G", "Prepare Gnuplot object.", help.NEW}
 
 

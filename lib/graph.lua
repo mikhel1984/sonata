@@ -130,12 +130,6 @@ local function getMin(t)
 end
 
 
---- Check object type.
---  @param t Object to check.
---  @return True if the object is graph.
-local function isgraph(v) return type(v)=='table' and v.isgraph end
-
-
 --- Count elements in table.
 --  @param t Table to check.
 --  @return Total number of the elements.
@@ -200,7 +194,7 @@ __module__ = "Operations with graphs."
 
 --	MODULE
 
-local graph = { type='graph', isgraph=true }
+local graph = { type='graph'  }
 
 
 -- meta
@@ -223,9 +217,8 @@ end
 
 
 --- Prepare empty undirected graph.
---  @param self Do nothing.
 --  @return Undirected graph.
-graph._new = function (self)
+graph._new = function ()
   local o = {_={}, _dir=false}
   return setmetatable(o, graph)
 end
@@ -305,7 +298,7 @@ about[graph.bfs] = {"G:bfs(startNode, goalNode) --> isFound, path_t",
 --  @param G Graph.
 --  @return Deep copy of the graph.
 graph.copy = function (G)
-  local res = G._dir and graph:dir() or graph:_new()
+  local res = G._dir and graph:dir() or graph._new()
   for k, v in pairs(G._) do
     local tmp = {}
     for n, w in pairs(v) do tmp[n] = w end
@@ -351,7 +344,7 @@ about[graph.dfs] = {"G:dfs(startNote, goalNode) --> isFound, path_t",
 --  @param self Do nothing.
 --  @return Directed graph.
 graph.dir = function (self)
-  local res = graph._new(self)
+  local res = graph._new()
   res._dir = true
   return res
 end
@@ -558,7 +551,7 @@ about[graph.size] = {"G:size() --> nodes_N", "Get node number.", help.OTHER}
 
 
 -- simplify constructor call
-setmetatable(graph, {__call = function (self) return graph:_new() end})
+setmetatable(graph, {__call = function (self) return graph._new() end})
 about[graph] = {" () --> new_G", "Create undirected graph.", help.NEW}
 
 

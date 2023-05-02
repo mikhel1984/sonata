@@ -96,10 +96,6 @@ local Utils = Ver.utils
 Ver = Ver.versions
 
 
---- Check object type.
---  @param t Object.
---  @return True if the object is array.
-local function isarray(v) return type(v) == 'table' and v.isarray end
 
 
 --	INFO
@@ -112,8 +108,12 @@ __module__ = "Manipulations with arrays of elements. Indices have form of tables
 
 --	MODULE
 
-local array = { type='array', isarray=true }
+local array = { type='array' }
 
+--- Check object type.
+--  @param t Object.
+--  @return True if the object is array.
+local function isarray(v) return getmetatable(v) == array end
 
 --- a1 == A2
 --  @param A1 First array.
@@ -179,15 +179,14 @@ end
 
 
 --- Create new object, set metatable.
---  @param self Pointer to object.
 --  @param tSize Table with array size.
 --  @return Empty array.
-array._new = function (self, tSize)
+array._new = function (tSize)
   -- prepare list of coefficients
   local k = {1}
   for i = 2, #tSize do k[i] = tSize[i-1]*k[i-1] end
   -- return new object
-  return setmetatable({size=tSize, k=k}, self)
+  return setmetatable({size=tSize, k=k}, array)
 end
 
 
@@ -233,7 +232,7 @@ array.concat = function (A1, A2, iAxis)
   local newsize = Ver.move(A1.size, 1, #A1.size, 1, {})
   newsize[iAxis] = newsize[iAxis] + A2.size[iAxis]
   -- combine
-  local res, ind1, ind2 = array:_new(newsize), {}, {}
+  local res, ind1, ind2 = array._new(newsize), {}, {}
   local edge = A1.size[iAxis]
   local K, S = res.k, res.size
   local conv = array._pos
@@ -259,7 +258,7 @@ about[array.concat] = {"A:concat(A2, axis_N) --> A3",
 --  @return Deep copy of the array.
 array.copy = function (A)
   -- copy size, create new array
-  local cp = array:_new(Ver.move(A.size, 1, #A.size, 1, {}))
+  local cp = array._new(Ver.move(A.size, 1, #A.size, 1, {}))
   -- copy array elements
   return Ver.move(A, 1, array.capacity(A), 1, cp)
 end
@@ -322,7 +321,7 @@ about[array.isEqual] = {"A:isEqual(A2) --> bool", "Check size equality.", help.O
 --  @param fn Function of value and (optional) index.
 --  @return New array where each element is result of the function evaluation fn(a[i]).
 array.map = function (A, fn)
-  local res, v = array:_new(Ver.move(A.size, 1, #A.size, 1, {})), nil
+  local res, v = array._new(Ver.move(A.size, 1, #A.size, 1, {})), nil
   for i = 1, array.capacity(A) do
     v = fn(A[i], array._index(A, i-1))
     res[i] = v
@@ -362,7 +361,7 @@ array.sub = function (A, tInd1, tInd2)
     newsize[i] = tInd2[i] - tInd1[i] + 1
     ind[i]     = 0
   end
-  local res = array:_new(newsize)
+  local res = array._new(newsize)
   -- fill
   local K, S = res.k, res.size
   local conv = array._pos
@@ -396,7 +395,7 @@ array.zip = function (self, fn, ...)
   end
   -- prepare new
   local v, upack = {}, Ver.unpack
-  local res = array:_new(Ver.move(a1.size, 1, #a1.size, 1, {}))
+  local res = array._new(Ver.move(a1.size, 1, #a1.size, 1, {}))
   for i = 1, array.capacity(a1) do
     -- collect
     for k = 1, #arg do v[k] = arg[k][i] end
@@ -418,7 +417,7 @@ setmetatable(array, {__call = function (self, tSize)
            "Positive integer is expected!")
   end
   -- build
-  return array:_new(tSize)
+  return array._new(tSize)
 end})
 about[array] = {" {size1_N, [size2_N, ..]} --> new_A",
   "Create empty array with the given size.", help.STATIC}

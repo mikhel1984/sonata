@@ -126,10 +126,6 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 
 --	LOCAL
 
---- Check object type.
---  @param v Object.
---  @return True if the object is asciiplot.
-local function isasciiplot(v) return type(v)=='table' and v.isasciiplot end
 
 local function inform(txt)
   if Sonata then Sonata.say(txt) else print(txt) end
@@ -358,7 +354,7 @@ end
 -- Data visualization.
 local asciiplot = {
 -- mark
-type = 'asciiplot', isasciiplot = true,
+type = 'asciiplot', 
 -- const
 WIDTH = 73, HEIGHT = 21,
 -- symbols
@@ -367,6 +363,10 @@ lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
 }
 
+--- Check object type.
+--  @param v Object.
+--  @return True if the object is asciiplot.
+local function isasciiplot(v) return getmetatable(v) == asciiplot end
 
 -- update markers
 if SONATA_USE_COLOR then
@@ -679,7 +679,7 @@ end
 --  @param dwidth Figure width.
 --  @param dheight Figure height.
 --  @return New object of asciiplot.
-asciiplot._new = function(self, dwidth, dheight)
+asciiplot._new = function(dwidth, dheight)
   local pos = 'mid'
   local o = {
     _x = axis.new(dwidth),
@@ -700,7 +700,7 @@ asciiplot._new = function(self, dwidth, dheight)
     -- title can be added
   }
   -- return object
-  return setmetatable(o, self)
+  return setmetatable(o, asciiplot)
 end
 
 
@@ -1337,7 +1337,7 @@ about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={}) --> nil",
 setmetatable(asciiplot, {
 __call = function (self, w, h)
   -- size
-  return asciiplot:_new(w or asciiplot.WIDTH, h or asciiplot.HEIGHT)
+  return asciiplot._new(w or asciiplot.WIDTH, h or asciiplot.HEIGHT)
 end})
 about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", help.STATIC}

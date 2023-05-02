@@ -83,10 +83,6 @@ local Utils = Ver.utils
 Ver = Ver.versions
 
 
---- Check object type.
---  @param t Object to check.
---  @return True if the object represents units.
-local function isunits(v) return type(v) == 'table' and v.isunits end
 
 
 --- Combine common elements in tables, add power to the
@@ -147,6 +143,12 @@ _memKeys = {},
 -- rules for unit conversation
 _rules = {},
 }
+
+
+--- Check object type.
+--  @param t Object to check.
+--  @return True if the object represents units.
+local function isunits(v) return getmetatable(v) == units end
 
 
 --- U1 + U2
@@ -251,7 +253,7 @@ end
 --  @return Power.
 units.__pow = function (U, d)
   d = assert(Cross.float(d), "Wrong power")
-  local res = isunits(U) and units._deepCopy(U) or units:_new(U, '')
+  local res = isunits(U) and units._deepCopy(U) or units._new(U, '')
   res._value = res._value ^ d
   op['^'](res._key, d)
   return res
@@ -306,8 +308,8 @@ about[units.comparison] = {
 --  @param b Second unit object or number.
 --  @return Arguments as units.
 units._args = function (a, b)
-  a = isunits(a) and a or units:_new(a, '')
-  b = isunits(b) and b or units:_new(b, '')
+  a = isunits(a) and a or units._new(a, '')
+  b = isunits(b) and b or units._new(b, '')
   return a, b
 end
 
@@ -317,7 +319,7 @@ end
 --  @param t Table with desired units.
 --  @return New object or nil.
 units._convertKey = function (U, t)
-  local dst = units:_new(1, '')
+  local dst = units._new(1, '')
   dst._key = t
   local src = units._deepCopy(U)
   src._value = 1
@@ -501,15 +503,14 @@ end
 
 
 --- Create new unit object.
---  @param self Parent object.
 --  @param v Numerical value.
 --  @param s String of units.
 --  @return Unit object.
-units._new = function (self, v, s)
+units._new = function (v, s)
   if not units._memKeys[s] then
     units._memKeys[s] = units._parse(s)
   end
-  return setmetatable({_value=v, _key=units._memKeys[s]}, self)
+  return setmetatable({_value=v, _key=units._memKeys[s]}, units)
 end
 
 
@@ -648,7 +649,7 @@ __call = function (self, v, s)
     v, s = 1, v
   end
   assert(type(s) == 'string', 'Wrong unit type')
-  return units:_new(v, s)
+  return units._new(v, s)
 end})
 about[units] = {' (val=1, name_s) --> new_U',
   'Create new elements with units.', help.NEW}

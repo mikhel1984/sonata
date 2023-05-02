@@ -290,7 +290,7 @@ __module__ = "Matrix operations. The matrices are spares by default."
 
 --	MODULE
 
-local matrix = { type = 'matrix' }
+local matrix = { type = 'matrix', ismatrix=true }
 
 --- Check object type.
 --  @param v Object to check.

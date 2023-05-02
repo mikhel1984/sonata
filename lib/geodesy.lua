@@ -111,12 +111,6 @@ Ver = Ver.versions
 local PROB, TRANS, PROJ = "problems", "transform", "projection"
 
 
---- Check object type.
---  @param v Object.
---  @return True if the object is geodesy.
-local function isgeodesy(v) return type(v)=='table' and v.isgeodesy end
-
-
 --- Inverse hyperbolic tangent.
 --  @param d Some number.
 --  @return Areatangent value.
@@ -556,7 +550,7 @@ end
 -- Collection of Geodetic methods
 local geodesy = {
 -- mark
-type = 'geodesy', isgeodesy = true,
+type = 'geodesy', 
 
 -- Ellipsoids
 WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563,

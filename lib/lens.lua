@@ -130,7 +130,7 @@ __module__ = "Matrix methods in paraxial optics."
 
 local lens = {
 -- mark
-type = 'lens', islens = true,
+type = 'lens', 
 -- {A, B, C, D}
 key = keys,
 }

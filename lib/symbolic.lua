@@ -58,7 +58,7 @@ local symbolic = require('lib.symbase')
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is symbolic.
-local function issymbolic(v) return type(v)=='table' and v.issymbolic end
+local function issymbolic(v) return getmetatable(v) == symbolic end
 
 
 --	INFO
