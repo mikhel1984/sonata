@@ -1,5 +1,9 @@
 ======== 0.9.36 =========
 
+Matrix
+* calculated matrices are dense
+* improve performance
+
 Other
 * Change evaluate loop logic
 * Add warnings and program questions

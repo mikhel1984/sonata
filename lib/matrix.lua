@@ -163,7 +163,7 @@ k = k:table()
 ans = k[2][1]                 --> 0
 
 -- make diagonal matrix
-ans = Mat:diagonal({1,2,3})   --> Mat {{1,0,0},
+ans = Mat:D({1,2,3})   --> Mat {{1,0,0},
                                        {0,2,0},
                                        {0,0,3}}
 
@@ -229,16 +229,13 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 
 -- compatibility
 local Ver = require("lib.utils")
+local Cnorm, Cfloat = Ver.cross.norm, Ver.cross.float
 local Utils = Ver.utils
-local Cross = Ver.cross
 Ver = Ver.versions
 
 
---- Metatable for new rows.
-local mt_access = {
-  -- 0 instead nil
-  __index = function () return 0 end,
-}
+--- 0 instead nil
+local mt_access = { __index = function () return 0 end }
 
 
 --- Metatable without any operations
@@ -290,10 +287,12 @@ __module__ = "Matrix operations. The matrices are spares by default."
 
 local matrix = { type = 'matrix', ismatrix=true }
 
+
 --- Check object type.
 --  @param v Object to check.
 --  @return True if the object is 'matrix'.
 local function ismatrix(v) return getmetatable(v) == matrix end
+
 
 --- M1 + M2
 --  @param M1 First matrix or number.
@@ -318,25 +317,24 @@ end
 
 
 --- Simplify call of vectors and range.
---  @param M Matrix.
 --  @param vR Row number or range.
 --  @param vC Column number or range (optional).
 --  @return Value or submatrix.
-matrix.__call = function (M, vR, vC)
+matrix.__call = function (self, vR, vC)
   if not vC then
     if not vR then return nil end
-    if M._rows == 1 then vC, vR = vR, 1 else vC = 1 end
+    if self._rows == 1 then vC, vR = vR, 1 else vC = 1 end
   end
   if type(vR) == 'number' then
     if type(vC) == 'number' then
-      local r = toRange(vR, M._rows)
-      local c = toRange(vC, M._cols)
-      return r and c and M[r][c]
+      local r = toRange(vR, self._rows)
+      local c = toRange(vC, self._cols)
+      return r and c and self[r][c]
     else vR = {vR} end
   else
     if type(vC) == 'number' then vC = {vC} end
   end
-  return matrix.range(M, vR, vC)
+  return matrix.range(self, vR, vC)
 end
 
 
@@ -382,11 +380,10 @@ matrix.__idiv = function (M1, M2) return matrix.concat(M1, M2, 'v') end
 
 
 --- Metametod for access to elements.
---  @param t Table (object).
 --  @param v Key.
 --  @return New matrix row or desired method.
-matrix.__index = function (t, v)
-  return matrix[v] or (type(v)=='number' and addRow(t, v))
+matrix.__index = function (self, v)
+  return matrix[v] or (type(v)=='number' and addRow(self, v))
 end
 
 
@@ -416,14 +413,13 @@ end
 
 
 --- M ^ n
---  @param M Square matrix.
 --  @param n Natural power or -1.
 --  @return Power of the matrix.
-matrix.__pow = function (M, N)
+matrix.__pow = function (self, N)
   N = assert(Ver.toInteger(N), "Integer is expected!")
-  if (M._rows ~= M._cols) then error("Square matrix is expected!") end
-  if N == -1 then return matrix.inv(M) end
-  local res, acc = matrix:eye(M._rows), matrix.copy(M)
+  if (self._rows ~= self._cols) then error("Square matrix is expected!") end
+  if N == -1 then return matrix.inv(self) end
+  local res, acc = matrix:eye(self._rows), matrix.copy(self)
   local mul = matrix.__mul
   while N > 0 do
     if N%2 == 1 then res = mul(res, acc) end
@@ -457,13 +453,12 @@ end
 
 
 --- String representation.
---  @param M Matrix.
 --  @return String.
-matrix.__tostring = function (M)
+matrix.__tostring = function (self)
   local srow = {}
-  for r = 1, M._rows do
-    local scol, mr = {}, M[r]
-    for c = 1, M._cols do
+  for r = 1, self._rows do
+    local scol, mr = {}, self[r]
+    for c = 1, self._cols do
       local tmp = mr[c]
       table.insert(
         scol, type(tmp) == 'number' and Utils.numstr(tmp) or tostring(tmp))
@@ -475,12 +470,11 @@ end
 
 
 --- - M
---  @param M Matrix object.
 --  @return Matrix where each element has opposite sign.
-matrix.__unm = function (M)
-  local res, Mcols = {}, M._cols
-  for r = 1, M._rows do
-    local rr, mr = {}, M[r]
+matrix.__unm = function (self)
+  local res, Mcols = {}, self._cols
+  for r = 1, self._rows do
+    local rr, mr = {}, self[r]
     for c = 1, Mcols do rr[c] = -mr[c] end
     res[r] = rr
   end
@@ -495,11 +489,6 @@ about[matrix.arithmetic] = {
 
 matrix.comparison = 'comparison'
 about[matrix.comparison] = {matrix.comparison, "a==b, a~=b", help.META}
-
-
-matrix._convert_ = function (v)
-  return (v.float or v.iscomplex) and setmetatable({v}, mt_container) or nil
-end
 
 
 -- Determinants for simple cases
@@ -560,7 +549,7 @@ matrix._findEigenvector = function (M, v, eps)
   -- (M - v * I)^-1
   local iM = M:copy()
   -- add 'noize'
-  v = (Cross.norm(v) > 0) and 1.01 * v or 1E-4
+  v = (Cnorm(v) > 0) and 1.01 * v or 1E-4
   for i = 1, M._rows do iM[i][i] = M[i][i] - v end
   iM = iM:inv()
   -- random b
@@ -590,11 +579,11 @@ matrix._firstMinor = function (M)
   if det then
     return det(M)
   else
-    local sum, k = 0, 1
+    local sum, k, M1 = 0, 1, M[1]
     for i = 1, M._cols do
-      if M[1][i] ~= 0 then
+      if M1[i] ~= 0 then
         local m = matrix._firstMinorSub(M, 1, i)
-        sum = sum + k * M[1][i] * matrix._firstMinor(m)
+        sum = sum + (k * M1[i]) * matrix._firstMinor(m)
       end
       k = -k
     end
@@ -623,6 +612,55 @@ matrix._firstMinorSub = function (M, ir, ic)
     res[r-1] = rr
   end
   return matrix._init(M._rows-1, M._cols-1, res)
+end
+
+
+--- Fill second matrix with elements of the first one
+--  using index tables.
+--  @param from Source matrix.
+--  @param tR Table with rows.
+--  @param tC Table with columns.
+--  @param to Destination matrix.
+--  @return Obtained matrix.
+matrix._fromTo = function (from, tR, tC, to)
+  if type(tR) ~= 'table' or type(tC) ~= 'table' then
+    error("Range is a table")
+  end
+  local dst = to or from
+  -- update range
+  if #tR == 1 then
+    local r = toRange(tR[1], dst._rows)
+    tR = {r, r, 1}
+  else
+    tR[1] = toRange(tR[1] or 1, dst._rows)
+    tR[2] = toRange(tR[2] or dst._rows, dst._rows)
+    tR[3] = tR[3] or 1
+    if not (tR[1] and tR[2] and (tR[2]-tR[1])/tR[3] >= 0) then return nil end
+  end
+  if #tC == 1 then
+    local c = toRange(tC[1], dst._cols)
+    tC = {c, c, 1}
+  else
+    tC[1] = toRange(tC[1] or 1, dst._cols)
+    tC[2] = toRange(tC[2] or dst._cols, dst._cols)
+    tC[3] = tC[3] or 1
+    if not (tC[1] and tC[2] and (tC[2]-tC[1])/tC[3] >= 0) then return nil end
+  end
+
+  -- fill matrix
+  to = to or {}
+  local i = 0
+  for r = tR[1], tR[2], tR[3] do
+    i = i+1
+    local resi, mr = to[i] or {}, from[r]
+    local j = 0
+    for c = tC[1], tC[2], tC[3] do
+      j = j+1
+      resi[j] = mr[c]
+    end
+    to[i] = resi
+  end
+  return to
 end
 
 
@@ -717,7 +755,7 @@ matrix._luPrepare = function (M)
     local big, abig, v = 0, 0, 0
     local ar = a[r]
     for c = 1, a._cols do
-      v = Cross.norm(ar[c])
+      v = Cnorm(ar[c])
       if v > abig then
         big = ar[c]
         abig = v
@@ -742,9 +780,9 @@ matrix._luPrepare = function (M)
       local sum = ar[c]
       for k = 1, c-1 do sum = sum - ar[k]*a[k][c] end
       ar[c] = sum
-      sum = Cross.norm(sum)
+      sum = Cnorm(sum)
       dum = vv[r]*sum
-      if Cross.norm(dum) >= Cross.norm(big) then big = dum; rmax = r end
+      if Cnorm(dum) >= Cnorm(big) then big = dum; rmax = r end
     end
     local ac = a[c]
     if c ~= rmax then
@@ -977,9 +1015,8 @@ about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
 
 
 --- Create matrix with given diagonal elements.
---  @param M Do nothing.
 --  @param v List of elements.
-matrix.diagonal = function (M, v)
+matrix.D = function (self, v)
   local vec = ismatrix(v)
   if vec and (v._rows == 1 or v._cols == 1) or type(v) == 'table' then
     local n = vec and v._rows * v._cols or #v
@@ -989,7 +1026,7 @@ matrix.diagonal = function (M, v)
   end
   return nil
 end
-about[matrix.diagonal] = {':diagonal(list_v) --> M',
+about[matrix.D] = {':D(list_v) --> M',
   'Create new matrix with the given diagonal elements.',
   help.NEW}
 
@@ -1032,7 +1069,6 @@ about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
 
 
 --- Identity matrix.
---  @param self Do nothing.
 --  @param rows Number of rows.
 --  @param cols Number of columns. Can be omitted in case of square matrix.
 --  @return Diagonal matrix with ones.
@@ -1051,7 +1087,6 @@ about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
 
 
 --- Fill matrix with some value.
---  @param self Do nothing.
 --  @param iR Number of rows.
 --  @param iC Number of columns.
 --  @param val Value to set. Default is 1.
@@ -1080,10 +1115,10 @@ matrix.givensRot = function (d1, d2)
    -- return cos, sin; r is omitted
    if d2 == 0 then
      local c = Utils.sign(d1)
-     return (c == 0) and 1 or c, 0, Cross.norm(d1)
+     return (c == 0) and 1 or c, 0, Cnorm(d1)
    elseif d1 == 0 then
-     return 0, Utils.sign(d2), Cross.norm(d2)
-   elseif Cross.norm(d1) > Cross.norm(d2) then
+     return 0, Utils.sign(d2), Cnorm(d2)
+   elseif Cnorm(d1) > Cnorm(d2) then
      local t = d2 / d1
      local u = Utils.sign(d1) * math.sqrt(1 + t*t)
      local c = 1 / u
@@ -1107,7 +1142,7 @@ matrix.householder = function (V, ik)
   local r, sum = V._rows, 0
   local u = matrix:zeros(1, r)   -- use row vector
   -- fill vector
-  for i = ik, r do sum = sum + Cross.norm(V[i][1])^2 end
+  for i = ik, r do sum = sum + Cnorm(V[i][1])^2 end
   u[1][ik] = V[ik][1] + Utils.sign(V[ik][1]) * math.sqrt(sum)
   for i = ik+1, r do u[1][i] = V[i][1] end
   -- find matrix
@@ -1132,7 +1167,7 @@ matrix.round = function(M, N)
       elseif v.iscomplex then
         v = v:round(N)
         mr[c] = (v:im() == 0) and v:re() or v
-      elseif Cross.norm(v) < tol then
+      elseif Cnorm(v) < tol then
         mr[c] = 0
       end
     end
@@ -1167,40 +1202,7 @@ about[matrix.H] = {"M:H() --> conj_M",
 --  @param tC Range of columns.
 --  @param M2 Matrix to insert.
 matrix.insert = function (M1, tR, tC, M2)
-  if type(tR) ~= 'table' or type(tC) ~= 'table' then
-    error("Range is a table")
-  end
-    -- update range
-  if #tR == 1 then
-    local r = toRange(tR[1], M1._rows)
-    tR = {r, r, 1}
-  else
-    tR[1] = toRange(tR[1] or 1, M1._rows)
-    tR[2] = toRange(tR[2] or M1._rows, M1._rows)
-    tR[3] = tR[3] or 1
-    if not (tR[1] and tR[2] and (tR[2]-tR[1])/tR[3] >= 0) then return nil end
-  end
-  if #tC == 1 then
-    local c = toRange(tC[1], M1._cols)
-    tC = {c, c, 1}
-  else
-    tC[1] = toRange(tC[1] or 1, M1._cols)
-    tC[2] = toRange(tC[2] or M1._cols, M1._cols)
-    tC[3] = tC[3] or 1
-    if not (tC[1] and tC[2] and (tC[2]-tC[1])/tC[3] >= 0) then return nil end
-  end
-
-  -- fill matrix
-  local i = 0
-  for r = tR[1], tR[2], tR[3] do
-    i = i+1
-    local mr, mi = M1[r], M2[i]
-    local j = 0
-    for c = tC[1], tC[2], tC[3] do
-      j = j+1
-      mr[c] = mi[j]
-    end
-  end
+  matrix._fromTo(M2, tR, tC, M1)
 end
 about[matrix.insert] = {"M:insert(rows_t, cols_t, M2) --> nil",
   "Insert second matrix into the given range of indeces."}
@@ -1312,7 +1314,7 @@ matrix.norm = function (M)
   for r = 1, M._rows do
     local mr = M[r]
     for c = 1, M._cols do
-      sum = sum + Cross.norm(mr[c])^2
+      sum = sum + Cnorm(mr[c])^2
     end
   end
   return math.sqrt(sum)
@@ -1335,7 +1337,7 @@ matrix.pinv = function (M)
   end
   local tol = math.huge
   for i = 1, A._rows do
-    local v = Cross.norm(A[i][i])
+    local v = Cnorm(A[i][i])
     tol = math.min(tol, (v > 0 and v or math.huge))
   end
   tol = tol * 1e-9
@@ -1357,7 +1359,7 @@ matrix.pinv = function (M)
       L[k][r] = tmp
       for i = k+1, n do L[i][r] = L[i][r]/tmp end
     elseif not iscomplex and tmp > tol then
-      tmp = math.sqrt(Cross.float(tmp))
+      tmp = math.sqrt(Cfloat(tmp))
       L[k][r] = tmp
       for i = k+1, n do L[i][r] = L[i][r]/tmp end
     else
@@ -1396,7 +1398,7 @@ matrix.qr = function (M)
     v._rows = k - 1
     -- prepare v and v:T()
     local v11 = v[1][1]
-    local v11abs = Cross.norm(v11)
+    local v11abs = Cnorm(v11)
     local s = (v11abs > 0) and (v11 / v11abs) or 1
     v[1][1] = v11 + s * v:norm()
     local vnorm = v:norm()
@@ -1433,42 +1435,7 @@ about[matrix.qr] = {"M:qr() --> Q_M, R_M",
 --  @param tC Array of columns.
 --  @return Sub array or nil in case of error.
 matrix.range = function (M, tR, tC)
-  if type(tR) ~= 'table' or type(tC) ~= 'table' then
-    error("Range is a table")
-  end
-  -- update range
-  if #tR == 1 then
-    local r = toRange(tR[1], M._rows)
-    tR = {r, r, 1}
-  else
-    tR[1] = toRange(tR[1] or 1, M._rows)
-    tR[2] = toRange(tR[2] or M._rows, M._rows)
-    tR[3] = tR[3] or 1
-    if not (tR[1] and tR[2] and (tR[2]-tR[1])/tR[3] >= 0) then return nil end
-  end
-  if #tC == 1 then
-    local c = toRange(tC[1], M._cols)
-    tC = {c, c, 1}
-  else
-    tC[1] = toRange(tC[1] or 1, M._cols)
-    tC[2] = toRange(tC[2] or M._cols, M._cols)
-    tC[3] = tC[3] or 1
-    if not (tC[1] and tC[2] and (tC[2]-tC[1])/tC[3] >= 0) then return nil end
-  end
-
-  -- fill matrix
-  local res = {}
-  local i = 0
-  for r = tR[1], tR[2], tR[3] do
-    i = i+1
-    local resi, mr = {}, M[r]
-    local j = 0
-    for c = tC[1], tC[2], tC[3] do
-      j = j+1
-      resi[j] = mr[c]
-    end
-    res[i] = resi
-  end
+  local res = matrix._fromTo(M, tR, tC)
   return matrix._init(#res, #res[1], res)
 end
 about[matrix.range] = {"M:range(rows_t, cols_t) --> range_M",
@@ -1635,7 +1602,6 @@ about[matrix.T] = {"M:T() --> transpose_M",
 
 --- Create vector.
 --  Simplified vector constructor.
---  @param self Do nothing.
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
 matrix.V = function (self, t)
@@ -1648,7 +1614,6 @@ about[matrix.V] = {":V {...} --> new_V",
 
 
 --- Create matrix of zeros.
---  @param self Do nothing.
 --  @param nR Number of rows.
 --  @param nC Number of columns. Can be omitted in case of square matrix.
 --  @return Sparse matrix.
@@ -1662,7 +1627,6 @@ about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
 
 
 --- Apply function element-wise to matrices.
---  @param self Do nothing.
 --  @param fn Function of N arguments.
 --  @param ... List of N matrices.
 --  @return New matrix.
