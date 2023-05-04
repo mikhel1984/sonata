@@ -235,12 +235,11 @@ axis.proj = function (A, d, isX)
   local dx = (d - A.range[1]) / A.diff
   local int, frac = nil, nil
   if isX then
-    int, frac = mmodf((A.size-1) * dx + 1)
+    int, frac = mmodf((A.size - 1)*dx + 1)
   else
-    int, frac = mmodf((1-A.size) * dx + A.size)
+    int, frac = mmodf(dx - A.size*(dx - 1))
   end
-  int = (frac > 0.5) and (int + 1) or int
-  return (1 <= int and int <= A.size) and int or nil  -- TODO return int?
+  return (frac > 0.5) and (int + 1) or int
 end
 
 
@@ -266,32 +265,24 @@ end
 axis.setRange = function (A, t)
   local a, b = t[1], t[2]
   -- check limits
-  if a == b then
-    b = (a == 0) and (a+1) or 2*a
-  end
+  if a == b then error('Wrong range') end
   if a > b then
     a, b = b, a
   end
   if A.log then
     -- lorarithm mode
-    if b <= 0 then
-      b = 1
-    end
-    if a <= 0 then
-      a = b / 10
-    end
+    if b <= 0 then b = 1 end
+    if a <= 0 then a = b / 10 end
     local p1 = math.log(a) / axis.log10
     p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
     local p2 = math.log(b) / axis.log10
     p2 = (p2 > 0) and math.ceil(p2) or math.floor(p2)
-    -- expected even number of intervals, add empty if need
-    --if (p2 - p1) % 2 == 1 then p1 = p1 - 1 end
     A.range[1], A.range[2] = p1, p2
   else
     -- normal mode
     A.range[1], A.range[2] = a, b
-    local p = math.log(b - a) / axis.log10
-    local n = (p >= 0) and math.floor(p) or math.ceil(p)
+    local n = math.log(b - a) / axis.log10
+    n = (n >= 0) and math.floor(n) or math.ceil(n)
     local tol = 10^(n-1)
     local v, rest = mmodf(a / tol)
     if rest ~= 0 then
@@ -339,13 +330,11 @@ end
 axis.values = function (A, isX)
   local x0 = isX and A.range[1] or A.range[2]
   local k  = isX and A.diff / (A.size - 1) or -A.diff / (A.size - 1)
-  local ind = 1
+  local ind, x = 0, x0 - k
   return function ()
-    if ind <= A.size then
-      local x = (ind - 1) * k + x0
-      local i = ind
-      ind, x = ind + 1, A.log and (10^x) or x
-      return i, x
+    if ind < A.size then
+      ind, x = ind + 1, x + k
+      return ind, A.log and (10^x) or x
     end
   end
 end
@@ -861,8 +850,8 @@ end
 asciiplot.addPoint = function (F, dx, dy, s)
   local nx = F._x:proj(dx, true)
   local ny = F._y:proj(dy, false)
-  if nx and ny and (#s == 1 or SONATA_USE_COLOR) then
-    F._canvas[ny][nx] = s
+  if nx and ny then
+    F._canvas[ny][nx] = s or '*'
   end
 end
 about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil",
