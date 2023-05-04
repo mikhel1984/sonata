@@ -112,7 +112,7 @@ aa = Mat:zip(fn, b,b,b)
 ans = aa[1][1]                --> 30
 
 -- use Gauss transform to solve equation
-ans = (a .. Mat{{5},{11}}):rref()            --> Mat {{1,0,1},
+ans = (a .. Mat:V{5,11}):rref()            --> Mat {{1,0,1},
                                                         {0,1,2}}
 
 -- create vector
@@ -811,13 +811,12 @@ end
 --- Create new matrix from list of tables.
 --  @param t Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
-matrix._new = function (t)
-  t = t or {}
+matrix._new = function (self, t)
   local cols, rows = 0, #t
-  for i = 1, rows do
-    if not type(t[i]) == 'table' then error('Row must be a table!') end
-    cols = (cols < #t[i]) and #t[i] or cols
-    setmetatable(t[i], mt_access)
+  for i, v in ipairs(t) do
+    if not type(v) == 'table' then error('Row must be a table!') end
+    cols = (cols < #v) and #v or cols
+    setmetatable(v, mt_access)
   end
   return matrix._init(rows, cols, t)
 end
@@ -1212,7 +1211,7 @@ about[matrix.insert] = {"M:insert(rows_t, cols_t, M2) --> nil",
 --  @param M Initial matrix.
 --  @return Result of inversion.
 matrix.inv = function (M)
-  if (M._rows ~= M._cols) then error("Square matrix is expected!") end
+  if M._rows ~= M._cols then error("Square matrix is expected!") end
   local size = M._cols
   -- check simple cases
   local fn = matrix._invList[size]
@@ -1225,7 +1224,9 @@ matrix.inv = function (M)
   local res, det = matrix.copy(M), nil
   -- add "tail"
   for i = 1, size do
-    res[i][i+size] = 1
+    local resi = res[i]
+    setmetatable(resi, mt_access)
+    resi[i+size] = 1
   end
   res._cols = 2*size
   res, det = matrix._gaussDown(res)
@@ -1659,7 +1660,7 @@ about[matrix.zip] = {':zip(fn, M1, M2,..) --> res_M',
 
 
 -- constructor call
-setmetatable(matrix, {__call = function (self, m) return matrix._new(m) end})
+setmetatable(matrix, {__call = matrix._new})
 about[matrix] = {" {row1_t, row2_t,..} --> new_M",
   "Create matrix from list of strings (tables).", help.NEW}
 
