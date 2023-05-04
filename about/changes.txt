@@ -3,10 +3,10 @@
 Matrix
 * calculated matrices are dense
 * improve performance
-
 Other
 * Change evaluate loop logic
-* Add warnings and program questions
+* Add warnings and program messages
+* Remove 'array'
 
 ======== 0.9.35 =========
 

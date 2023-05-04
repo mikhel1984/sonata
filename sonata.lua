@@ -44,7 +44,6 @@ use = {
   symbolic   = "Sym",
   units      = "Unit",
 --------------------
-  array      = "Arr",
   const      = "_C",
   geodesy    = "Geo",
   gnuplot    = "Gp",
