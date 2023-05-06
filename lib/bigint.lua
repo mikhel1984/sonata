@@ -384,9 +384,7 @@ end
 --  @param B Bigint object.
 --  @return Opposite value.
 bigint.__unm = function (B)
-  local res = bigint._new({base=B._base, sign=-B.sign, 0})
-  res._ = B._
-  return res
+  return bigint._newTable(B._, B._base, -B.sign)
 end
 
 
@@ -421,8 +419,8 @@ about[bigint.comparison] = {
 --  @param num2 Second number representation (optional).
 --  @return Bigint objects with the same numeric bases.
 bigint._args = function (num1, num2)
-  num1 = isbigint(num1) and num1 or bigint._new(num1)
-  num2 = isbigint(num2) and num2 or bigint._new(num2)
+  num1 = isbigint(num1) and num1 or bigint._newNumber(num1)
+  num2 = isbigint(num2) and num2 or bigint._newNumber(num2)
   if num1._base > num2._base then
     num2 = num2:rebase(num1._base)
   elseif num1._base < num2._base then
@@ -436,7 +434,7 @@ end
 --  @param v Source objec.
 --  @return Int object.
 bigint._convert = function (v)
-  return Ver.isInteger(v) and bigint._new(v)
+  return Ver.isInteger(v) and bigint._newNumber(v)
 end
 
 
@@ -444,8 +442,8 @@ end
 --  @param B Original bigint object.
 --  @return Deep copy.
 bigint._copy = function (B)
-  local c = bigint._new({B._[1], sign=B.sign, base=B._base})
-  for i = 2, #B._ do c._[i] = B._[i] end
+  local c = bigint._newTable({}, B._base, B.sign)
+  for i = 1, #B._ do c._[i] = B._[i] end
   return c
 end
 
@@ -485,11 +483,11 @@ bigint._div = function (B1, B2)
   local b1, b2 = B1._, B2._
   if #b2 == 1 and b2[1] == 0 then error("Divide by 0!") end
   local d = B1._base
-  local res = bigint._new({0, base=d})
+  local res = bigint._newTable({0}, d, 1)
   if #b1 < #b2 then  -- too short
     return res, B1
   end
-  local rem = bigint._new({0, base=d});
+  local rem = bigint._newTable({0}, d, 1)
   rem._[1] = nil
   local k = #b1 - #b2 + 1
   Ver.move(b1, k+1, #b1, 1, rem._)  -- copy last elements
@@ -498,7 +496,7 @@ bigint._div = function (B1, B2)
     table.insert(rem._, 1, b1[i])
     if rem >= den then
       local n = math.modf(rem:float() / v2)  -- estimate
-      local tmp = rem - den * bigint._new({n, base=d})
+      local tmp = rem - den * bigint._newTable({n}, d, 1)
       if tmp.sign < 0 then
         n = n - 1
         tmp = tmp + den
@@ -614,7 +612,7 @@ end
 --  @param B2 Second bigint multiplier.
 --  @return Product without sign.
 bigint._mul = function (B1, B2)
-  local sum = bigint:_zero(B1._base, 1)
+  local sum = bigint._newTable({0}, B1._base, 1)
   local b1, b2, s = B1._, B2._, sum._
   -- get products
   for i = 0, #b1-1 do
@@ -644,44 +642,64 @@ end
 --  @param num Integer, string or table.
 --  @return Bigint object.
 bigint._new = function (num)
-  local int, acc = {_base=10, sign=1}, {}
+  local base, sign, acc = 10, 1, {}
   -- prepare
   if type(num) == 'table' then
-    int._base = num.base or 10
-    int.sign  = num.sign or 1
+    base = num.base or 10
+    sign  = num.sign or 1
     for i = #num, 1, -1 do
       acc[#acc+1] = num[i] -- reverse
     end
     if num[1] < 0 then
-      acc[#acc] = -num[1]
-      int.sign = -1
+      acc[#acc], sign = -num[1], -1
     end
+    return bigint._newTable(acc, base, sign)
   elseif type(num) == 'string' then
-    local sign, s = string.match(num, '^([+-]?)(%d+)$')
-    if sign == '-' then int.sign = -1 end
+    local sn, s = string.match(num, '^([+-]?)(%d+)$')
+    if sn == '-' then sign = -1 end
     s = string.reverse(s)
     for i = 1, #s do
       acc[i] = string.byte(s, i)-ZERO
     end
   elseif type(num) == 'number' and Ver.isInteger(num) then
-    if num < 0 then
-      int.sign = -1
-      num = -num
-    end
-    repeat
-      local n, _ = math.modf(num / 10)
-      acc[#acc+1] = num - 10*n
-      num = n
-    until num == 0
+    return bigint._newNumber(num)
   end
   -- check result
   if #acc == 0 then
     error('Wrong number '..tostring(num))
   end
-  int._ = acc
-  return setmetatable(int, bigint)
+  --int._ = acc
+  --return setmetatable(int, bigint)
+  return setmetatable({_=acc, _base=base, sign=sign}, bigint)
 end
 
+
+--- Make bigint from number.
+--  @param num Integer number.
+--  @return new bigint.
+bigint._newNumber = function (num)
+   local acc, sign = {}, 1
+   if num < 0 then
+     sign, num = -1, -num
+   end
+   repeat
+     --local n, _ = math.modf(num / 10)
+     local n = math.floor(num * 0.1)
+     acc[#acc+1] = num - 10*n
+     num = n
+   until num == 0
+   return setmetatable({_=acc, sign=sign, _base=10}, bigint)
+end
+
+
+--- Make bigint from table.
+--  @param t Digits in reverse order.
+--  @param base Desired base.
+--  @param sn Sign (+1/-1).
+--  @return new bigint.
+bigint._newTable = function (t, base, sn)
+  return setmetatable({_=t, _base=base, sign=sn}, bigint)
+end
 
 --- Find (B1 ^ B2) % B3
 --  @param B1 First bigint object.
@@ -692,7 +710,8 @@ bigint._powm = function (B1, B2, B3)
   local div = bigint._div
   _, B1 = div(B1, B3)
   if #B1._ == 1 and B1._[1] == 0 then
-    return bigint:_zero(B1._base, 1)
+    --return bigint._zero(B1._base, 1)
+    return bigint._newTable({0}, B1._base, 1)
   end
   local y, x = bigint._1, B1
   y._base = B1._base
@@ -728,7 +747,7 @@ end
 --  @param B Bigint object.
 --  @return Estimation of sqrt(B).
 bigint._sqrt = function (B)
-  local ai = bigint._new({1, base=B._base})
+  local ai = bigint._newTable({1}, B._base, 1)
   local sum, div, sub = bigint._sum, bigint._div, bigint._sub
   repeat
     local aii, _ = div(B, ai)
@@ -745,7 +764,8 @@ end
 --  @return Difference of the values.
 bigint._sub = function (B1, B2)
   local r, n = 1, B1._base
-  local res = bigint:_zero(n, 1)
+  --local res = bigint._zero(n, 1)
+  local res = bigint._newTable({0}, n, 1)
   local b1, b2 = B1._, B2._
   -- find the biggest number
   if #b1 < #b2 then
@@ -783,7 +803,8 @@ end
 --  @return Sum of the values.
 bigint._sum = function (B1, B2)
   local n, add = B1._base, 0
-  local res = bigint:_zero(n, 1)
+  --local res = bigint._zero(n, 1)
+  local res = bigint._newTable({0}, n, 1)
   local b1, b2, rr = B1._, B2._, res._
   for i = 1, math.max(#b1, #b2) do
     local v = (b1[i] or 0) + (b2[i] or 0) + add
@@ -803,7 +824,7 @@ end
 --  @param B0 Initial multiplier.
 --  @return Pair of multipliers or nil.
 bigint._trivialSearch = function (B, B0)
-  local n = B0 and B0:_copy() or bigint._new({2})
+  local n = B0 and B0:_copy() or bigint._newTable({2}, 10, 1)
   n = n:rebase(B._base)
   local sq = bigint._sqrt(B)
   while #sq._ > #n._ or not bigint._gt(n, sq) do
@@ -821,22 +842,20 @@ end
 --  @param nBase Base value.
 --  @param iSign Sign value.
 --  @return Zero number.
-bigint._zero = function (self, nBase, iSign)
-  return setmetatable({_={0}, _base=nBase, sign=iSign}, self)
+bigint._zero = function (nBase, iSign)
+  return setmetatable({_={0}, _base=nBase, sign=iSign}, bigint)
 end
 
 
 --- Constant for 1
-bigint._1 = bigint._new({1})
+bigint._1 = bigint._newTable({1}, 10, 1)
 
 
 --- Absolute value of number.
 --  @param B Bigint or integer number.
 --  @return Absolute value.
 bigint.abs = function (B)
-  local a = bigint:_zero(B._base, 1)
-  a._ = B._
-  return a
+  return bigint._newTable(B._, B._base, 1)
 end
 about[bigint.abs] = {"B:abs() --> num", "Return module of arbitrary long number."}
 
@@ -925,7 +944,7 @@ bigint.F = function (B)
     acc = bigint._mul(acc, S)
   end
   if m > 1E-3 then   -- i.e. m > 0
-    acc = bigint._mul(acc, bigint._new(n + 2):rebase(B._base))
+    acc = bigint._mul(acc, bigint._newNumber(n + 2):rebase(B._base))
   end
   return acc
 end
@@ -1026,7 +1045,8 @@ about[bigint.P] = {":P(n, k) --> permutaions_B",
 bigint.random = function (self, B)
   B = isbigint(B) and B or bigint._new(B)
   local d, set, v = B._base, false, 0
-  local res = bigint:_zero(d, B.sign)
+  --local res = bigint._zero(d, B.sign)
+  local res = bigint._newTable({0}, d, B.sign)
   local n = math.random(1, #B._)
   local b, rr = B._, res._
   local any = (n ~= #b)
@@ -1057,7 +1077,7 @@ about[bigint.random] = {":random(B) --> rand_B",
 bigint.ratF = function (B, B2)
   assert(B.sign > 0 and B2.sign > 0, "Non-negative expected")
   local N1, N2 = B:float(), B2:float()
-  if N1 < N2 then return bigint:_zero(B._base, 1) end
+  if N1 < N2 then return bigint._newTable({0}, B._base, 1) end --bigint._zero(B._base, 1) end
   if N1 == N2 then return bigint._1 end
   if N1 == N2 + 1 then return B end
   local acc = B * (B2 + bigint._1)
@@ -1071,7 +1091,7 @@ bigint.ratF = function (B, B2)
     acc = bigint._mul(acc, S)
   end
   if m > 1E-3 then   -- i.e. m > 0
-    acc = bigint._mul(acc, bigint._new(n+2))
+    acc = bigint._mul(acc, bigint._newNumber(n+2))
   end
   return acc
 end
@@ -1086,7 +1106,8 @@ about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
 bigint.rebase = function (B, N)
   if N <= 1 then error("Wrong base "..tostring(N)) end
   if B._base == N then return B end
-  local res = bigint:_zero(N, B.sign)
+  --local res = bigint._zero(N, B.sign)
+  local res = bigint._newTable({0}, N, B.sign)
   local b, rr = B._, res._
   rr[1] = nil    -- remove zero
   -- reverse order
