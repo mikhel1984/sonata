@@ -42,10 +42,10 @@ end
 
 
 --- Set position for the next block in 'note' file.
---  @param arg List of arguments.
+--  @param args List of arguments.
 --  @param env Evaluation parameters.
-local function goTo (arg, env)
-  local num = tonumber(arg[1])
+local function goTo (args, env)
+  local num = tonumber(args[1])
   if not num then
     print_err("Not a number")
   end
@@ -94,21 +94,22 @@ EV_WRN = 3,
 FORMAT_V1 = '#v1',
 FORMAT_V2 = '#v2',
 -- Variants of invite
-INV_MAIN = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET,
-INV_CONT = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET,
+INV_MAIN = SonataHelp.CMAIN..'## '..SonataHelp.CRESET,
+INV_CONT = SonataHelp.CMAIN..'.. '..SonataHelp.CRESET,
 INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
 }
 
 
+local cmd_info = {}
 local commands = {
 
 --- Quit the program.
-q = function (arg, env)
-  evaluate.exit()  
+q = function (args, env)
+  evaluate.exit()
 end,
 
 --- Print list of blocks
-ls = function (arg, env)
+ls = function (args, env)
   for i = 1, #env.notes do
     local s = ''
     for line in string.gmatch(env.notes[i], '[^\n\r]+') do
@@ -119,20 +120,20 @@ ls = function (arg, env)
 end,
 
 --- Open 'note' file
-o = function (arg, env)
-  local blk = evaluate._toBlocks(arg[2])
+o = function (args, env)
+  local blk = evaluate._toBlocks(args[2])
   if blk then
     env.notes = blk
     env.index = 1
-    io.write("Name: '", arg[2], "'\tBlocks: ", #blk, "\n")
+    io.write("Name: '", args[2], "'\tBlocks: ", #blk, "\n")
   else
-    print_err("Can't open file "..arg[2])
+    print_err("Can't open file "..args[2])
   end
 end,
 
 --- Save session to log
-log = function (arg, env)
-  if arg[2] == 'on' then
+log = function (args, env)
+  if args[2] == 'on' then
     if not env.log then
       env.log = io.open(LOGNAME, 'a')
       if not env.log then print_err("Can't open log file") end
@@ -141,7 +142,7 @@ log = function (arg, env)
         string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
           d.day, d.month, d.year, d.hour, d.min))
     end
-  elseif arg[2] == 'off' then
+  elseif args[2] == 'off' then
     if env.log then
       env.log:close()
       env.log = nil
@@ -151,7 +152,41 @@ log = function (arg, env)
   end
 end,
 
-}
+}  -- commands
+
+
+--- Show list of commands
+commands.help = function (args, env)
+  if cmd_info[args[2]] then
+    cmd_info._print(args[2])
+  else
+    for k, _ in pairs(commands) do
+      cmd_info._print(k)
+    end
+    cmd_info._print('number')
+  end
+end
+
+
+-- Command description
+cmd_info.q = {"Quit"}
+cmd_info.ls = {"Show list of blocks for execution"}
+cmd_info.o = {"Open note-file", "filename"}
+cmd_info.log = {"Turn on/off logging.", "on/off"}
+cmd_info.help = {"Show this help"}
+cmd_info.number = {"Go to N-th block"}
+
+
+--- Show command description.
+--  @param k Command name.
+cmd_info._print = function (k) 
+  local info = cmd_info[k]
+  if info then
+    print(string.format("  %s %s - %s", k, info[2] or '', info[1]))
+  else 
+    print("Unknown key: ", k)
+  end
+end
 
 
 --- Evaluate string of Lua code.
