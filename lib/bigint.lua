@@ -55,33 +55,32 @@ ans = Int('-25'):abs():float()  --> 25
 
 -- factorial
 c = Int(50):F()
-ans = c:float()               --1> 3E64
+ans = c:float() / 3E64       --1> 1.0
 
 ans = (a > b)                 --> false
 
 -- compare with number
 ans = a:eq(123)               --> true
 
--- number of digits
-ans = #a                      --> 3
-
--- 2nd digit (from the lowest)
-ans = a:at(2)                 --> 2
-
--- get numeric base
-ans = g:base()                --> 10
-
--- change numeric base
-v = g:rebase(60)
+-- digits for custom numeric base
+v = g:base(60)
 ans = tostring(v)             --> '-2|3'
 
--- operations with different bases
--- transform to the biggest common base
-w = v + b
-ans = tostring(w)             --> '5|33'
+-- result of rebase is table
+ans = v.base == 60 and v.sign == -1
+  and v[1] == 3 and v[2] == 2  --> true
+
+-- print digits
+print(v)
+
+-- number of digits (BASE=10)
+ans = #a                      --> 3
+
+-- 2nd digit (from the lowest, BASE=10)
+ans = a:at(2)                 --> 2
 
 -- comparison
-ans = (v == g)                --> true
+ans = (a ~= g)                --> true
 
 -- simple print
 print(a)
@@ -135,7 +134,7 @@ Ver = Ver.versions
 local ZERO = string.byte('0')
 local NUMB = 'numbers'
 local COMB = 'combinations'
-local BASE = 16 
+local BASE = 10 
 
 
 --	INFO
@@ -424,7 +423,7 @@ end
 --  @param v Source objec.
 --  @return Int object.
 bigint._convert = function (v)
-  return Ver.isInteger(v) and bigint._newNumber(v)
+  return Ver.isInteger(v) and bigint._newNumber(v) or nil
 end
 
 
@@ -432,9 +431,9 @@ end
 --  @param B Original bigint object.
 --  @return Deep copy.
 bigint._copy = function (B)
-  local c = bigint._newTable({}, B.sign)
-  for i = 1, #B._ do c._[i] = B._[i] end
-  return c
+  local c, b = {}, B._
+  for i = 1, #b do c[i] = b[i] end
+  return bigint._newTable(c, B.sign)
 end
 
 
@@ -476,8 +475,8 @@ bigint._div = function (B1, B2)
   if #b1 < #b2 then  -- too short
     return res, B1
   end
-  local rem = bigint._newTable({}, 1)
   local k = #b1 - #b2 + 1
+  local rem = bigint._newTable({}, 1)
   Ver.move(b1, k+1, #b1, 1, rem._)  -- copy last elements
   local v2, den, acc = B2:float(), B2:abs(), {}
   for i = k, 1, -1 do
@@ -657,7 +656,8 @@ bigint._new = function (num)
     for i = 1, #s do
       acc[i] = string.byte(s, i)-ZERO
     end
-    return bigint._newTable(acc, sign)
+    return bigint._newTable(
+      bigint._rebase(acc, 10, BASE), sign)
   elseif type(num) == 'number' and Ver.isInteger(num) then
     return bigint._newNumber(num)
   end
@@ -789,7 +789,7 @@ end
 --  @param B2 Second bigint object.
 --  @return Sum of the values.
 bigint._sum = function (B1, B2)
-  local add = 
+  local add = 0
   local res = bigint._newTable({0}, 1)
   local b1, b2, rr = B1._, B2._, res._
   for i = 1, math.max(#b1, #b2) do
@@ -850,6 +850,21 @@ about[bigint.at] = {"B:at(N) --> int", "Get N-th digit.", help.OTHER}
 --  @return Base value.
 --bigint.base = function (B) return B._base end
 --about[bigint.base] = {"B:base() --> int", "Current numeric base."}
+
+bigint.base = function (B, N)
+  N = N or BASE
+  assert(Ver.isInteger(N) and N > 0, "Wrong base")
+  local res, b = nil, B._
+  if N == BASE then
+    res = {}
+    for i = 1, #b do res[i] = b[i] end
+    res.base = BASE
+  else
+    res = bigint._rebase(b, BASE, N)
+  end
+  res.sign = B.sign
+  return setmetatable(res, mt_digits)
+end
 
 
 --- Find number of combinations.
@@ -966,6 +981,9 @@ bigint.float = function (B)
 end
 about[bigint.float] = {"B:float() --> num",
   "Represent current big integer as number if it possible.", help.OTHER}
+
+
+bigint.getBase = function () return BASE end
 
 
 --- Greatest common devision for two (big) numbers.
