@@ -293,11 +293,7 @@ ans = math.pi                --2> 355/113
 
 --	LOCAL
 
-3L Check object type.
---  @param v Object.
---  @return True if the object is WORD2.
-local function isWORD2(v) return type(v)=='table' and v.isWORD2 end
-
+local FOO = 42
 
 --	INFO
 
@@ -316,6 +312,12 @@ type = 'WORD2', isWORD2 = true,
 }
 -- methametods
 WORD2.__index = WORD2
+
+
+3L Check object type.
+--  @param v Object.
+--  @return True if the object is WORD2.
+local function isWORD2(v) return getmetatable(v) == WORD2 end
 
 
 3L Constructor example.
