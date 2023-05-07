@@ -66,7 +66,7 @@ ans = a:eq(123)               --> true
 
 -- digits for a different numeric base
 v = g:to(60)
-ans = tostring(v)             --> '-2|3'
+ans = tostring(v)             --> '-2,3:60'
 
 -- result of rebase is table
 ans = v.base == 60 and v.sign == -1
@@ -159,22 +159,36 @@ __module__ = "Operations with arbitrary long integers."
 
 local mt_digits = {
 
-__tostring = function (t)
-  local s = nil
-  if t.base > 10 then
-    s = {}
-    local n = #t+1
-    for i = 1, #t do s[i] = t[n-i] end
-    s = table.concat(s, '|')
-  else
-    s = string.reverse(table.concat(t, (t.base == 10) and '' or '|'))
-  end
-  return t.sign < 0 and ('-' .. s) or s
-end
+map = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', [0]='0'},
+mapChar = {},
 
 }  -- mt_digits
 
 
+-- Fill inverted mapping
+for i, v in ipairs(mt_digits.map) do mt_digits.mapChar[v] = i end
+
+
+--- String representation.
+--  @param t List of digits.
+--  @return string.
+mt_digits.__tostring = function (t)
+  local s, n = nil, #t + 1
+  if t.base <= 16 then
+    local acc = {}
+    for i = 1, #t do acc[i] = mt_digits.map[ t[n-i] ] end
+    s = table.concat(acc, '')
+  else
+    local acc = {}
+    for i = 1, #t do acc[i] = t[n-i] end
+    s = table.concat(acc, ',')
+  end
+  local rst = (t.base == 10) and '' or string.format(':%d', t.base)
+  return string.format('%s%s%s', t.sign < 0 and '-' or '', s, rst)
+end
+
+
+-- Main module
 local bigint = { type='bigint' }
 
 
@@ -388,9 +402,7 @@ end
 --- - B
 --  @param B Bigint object.
 --  @return Opposite value.
-bigint.__unm = function (B)
-  return bigint._newTable(B._, -B._sign)
-end
+bigint.__unm = function (B) return bigint._newTable(B._, -B._sign) end
 
 
 --- String representation.
@@ -682,9 +694,7 @@ bigint._newString = function (s)
   else
     -- sequential digits without separation for small bases
     for dig in string.gmatch(body, '.') do 
-      local v = tonumber(dig, 16) 
-      assert(v and v < base)
-      acc[#acc+1] = v
+      acc[#acc+1] = assert(mt_digits.mapChar[dig])
     end
   end
   -- reverse 
