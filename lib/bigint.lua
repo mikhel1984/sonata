@@ -62,8 +62,8 @@ ans = (a > b)                 --> false
 -- compare with number
 ans = a:eq(123)               --> true
 
--- digits for custom numeric base
-v = g:base(60)
+-- digits for a different numeric base
+v = g:to(60)
 ans = tostring(v)             --> '-2|3'
 
 -- result of rebase is table
@@ -130,12 +130,13 @@ local Ver = require("lib.utils")
 local Cross = Ver.cross
 Ver = Ver.versions
 
-
 local ZERO = string.byte('0')
 local NUMB = 'numbers'
 local COMB = 'combinations'
 local BASE = 10 
 
+-- limit to switch float algorithm
+local NDIGITS = math.floor(math.log(1E9) / math.log(BASE))
 
 --	INFO
 
@@ -166,12 +167,7 @@ end
 }  -- mt_digits
 
 
-local bigint = {
--- mark
-type='bigint', 
--- logarithm of a base
-_lnBase = math.log(BASE),
-}
+local bigint = { type='bigint' }
 
 
 --- Check object type.
@@ -845,13 +841,16 @@ bigint.at = function (B, N) return B._[N] end
 about[bigint.at] = {"B:at(N) --> int", "Get N-th digit.", help.OTHER}
 
 
---- Get numeric base.
---  @param B Bigint object.
+--- Get default numeric base.
 --  @return Base value.
---bigint.base = function (B) return B._base end
---about[bigint.base] = {"B:base() --> int", "Current numeric base."}
+bigint.base = function () return BASE end
+about[bigint.base] = {":base() --> int", "Current numeric base."}
 
-bigint.base = function (B, N)
+bigint.sign = function (self) return self._sign end
+about[bigint.sign] = {"B:sign() --> int", "Return 1, 0 or -1."}
+
+
+bigint.to = function (B, N)
   N = N or BASE
   assert(Ver.isInteger(N) and N > 0, "Wrong base")
   local res, b = nil, B._
@@ -970,7 +969,7 @@ about[bigint.factorize] = {
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (B)
   local sum, b = 0, B._
-  if #b * bigint._lnBase > 21 then       -- log(1E+9)
+  if #b > NDIGITS then  
     sum = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
   else
     for i = #b, 1, -1 do
@@ -981,9 +980,6 @@ bigint.float = function (B)
 end
 about[bigint.float] = {"B:float() --> num",
   "Represent current big integer as number if it possible.", help.OTHER}
-
-
-bigint.getBase = function () return BASE end
 
 
 --- Greatest common devision for two (big) numbers.
@@ -999,6 +995,7 @@ about[bigint.gcd] = {
 
 
 -- TODO try https://en.wikipedia.org/wiki/Primality_test
+
 --- Check if the number is prime.
 --  @param B Number.
 --  @param sMethod Trivial search by default. Can be 'Fremat'.
