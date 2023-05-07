@@ -144,7 +144,7 @@ local COMB = 'combinations'
 local BASE = 10 
 
 -- limit to switch float algorithm
-local NDIGITS = math.floor(math.log(1E9) / math.log(BASE))
+local NDIGITS = math.floor(math.log(1E6) / math.log(BASE))
 
 --	INFO
 
@@ -698,9 +698,11 @@ bigint._newString = function (s)
     end
   end
   -- reverse 
-  local tmp = {}
-  for i = 1, #acc do tmp[i] = acc[#acc+1-i] end
-  return bigint._newTable(bigint._rebase(tmp, base, BASE), sgn == '-' and -1 or 1)
+  for i = 1, math.floor(#acc / 2) do
+    local j = #acc+1-i
+    acc[i], acc[j] = acc[j], acc[i]
+  end
+  return bigint._newTable(bigint._rebase(acc, base, BASE), sgn == '-' and -1 or 1)
 end
 
 
@@ -743,14 +745,13 @@ end
 --  @param B Number.
 --  @return true if prime.
 bigint._primeFermat = function (B)
-  local a = nil
-  local div, pow = bigint._div, bigint._powm
   for i = 1, 5 do
+    local a = nil
     repeat
       a = bigint:random(B)
     until a:float() >= 2
-    local v1 = pow(a, B, B)
-    local _, v2 = div(a, B)
+    local v1 = bigint._powm(a, B, B)
+    local _, v2 = bigint._div(a, B)
     if v1 ~= v2 then return false end
   end
   return true
@@ -766,11 +767,10 @@ bigint._rebase = function (t, Nfrom, Nto)
   if Nfrom == Nto then return t end
   local res = {base=Nto}
   -- reverse order
-  local dig, n = {}, 0
+  local dig = {}
   for i, v in ipairs(t) do dig[i] = v end
   repeat
-    dig, n = bigint._divBase(dig, Nfrom, Nto)
-    res[#res+1] = n
+    dig, res[#res+1] = bigint._divBase(dig, Nfrom, Nto)
   until #dig == 0
   return res
 end
@@ -780,10 +780,10 @@ end
 --  @param B Bigint object.
 --  @return Estimation of sqrt(B).
 bigint._sqrt = function (B)
-  local ai = bigint._newTable({1}, 1)
-  local sum, div, sub = bigint._sum, bigint._div, bigint._sub
+  local ai = bigint._1
+  local sum, sub = bigint._sum, bigint._sub
   repeat
-    local aii, _ = div(B, ai)
+    local aii, _ = bigint._div(B, ai)
     aii._ = bigint._divBase(sum(ai, aii)._, BASE, 2)
     ai, aii = aii, sub(aii, ai)
   until #aii._ == 1 and (aii._[1] <= 1)   -- TODO: check and decrease if need
@@ -876,9 +876,7 @@ bigint._0 = bigint._newTable({0}, 10, 1)
 --- Absolute value of number.
 --  @param B Bigint or integer number.
 --  @return Absolute value.
-bigint.abs = function (B)
-  return bigint._newTable(B._, 1)
-end
+bigint.abs = function (B) return bigint._newTable(B._, 1) end
 about[bigint.abs] = {"B:abs() --> num", "Return module of arbitrary long number."}
 
 
@@ -920,8 +918,7 @@ bigint.to = function (B, N)
   res.sign = B._sign
   return setmetatable(res, mt_digits)
 end
-about[bigint.to] = {
-  "B:to(N) --> tbl", "Convert number to the new numeric base."}
+about[bigint.to] = {"B:to(N) --> tbl", "Convert number to the new numeric base."}
 
 
 --- Find number of combinations.
@@ -1122,7 +1119,7 @@ about[bigint.random] = {":random(B) --> rand_B",
 bigint.ratF = function (B, B2)
   assert(B._sign > 0 and B2._sign > 0, "Non-negative expected")
   local N1, N2 = B:float(), B2:float()
-  if N1 < N2 then return bigint._newTable({0}, 1) end 
+  if N1 < N2 then return bigint._0 end 
   if N1 == N2 then return bigint._1 end
   if N1 == N2 + 1 then return B end
   local acc = B * (B2 + bigint._1)

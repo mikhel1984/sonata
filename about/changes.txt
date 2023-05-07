@@ -1,5 +1,9 @@
 ======== 0.9.36 =========
 
+Bigint
+* change print and parse strings
+* common internal numerical base
+* improve prerformance
 Matrix
 * calculated matrices are dense
 * improve performance
