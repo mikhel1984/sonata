@@ -29,9 +29,11 @@ ans = a:float()               --> 123
 b = Int('456')
 ans = b:float()               --> 456
 
--- from table
--- 'sign' and 'base' can be skipped
-g = Int {-1,2,3, base=10}
+-- 'default' form for base <= 16
+ans = Int('0xABC')            --> Int('10,11,12:16')
+
+-- define base explicitly
+g = Int('-1,2,3:10')
 ans = g:float()               --> -123
 
 -- check equality
@@ -72,6 +74,9 @@ ans = v.base == 60 and v.sign == -1
 
 -- print digits
 print(v)
+
+-- back to bigint 
+ans = Int(v)                  --> g
 
 -- number of digits (BASE=10)
 ans = #a                      --> 3
@@ -131,8 +136,11 @@ local Cross = Ver.cross
 Ver = Ver.versions
 
 local ZERO = string.byte('0')
+local SEP = ','
 local NUMB = 'numbers'
 local COMB = 'combinations'
+
+-- numerical base for internal representation
 local BASE = 10 
 
 -- limit to switch float algorithm
@@ -572,24 +580,6 @@ bigint._incr = function (B, forced)
 end
 
 
---- Check if it prime using the Fermat theorem.
---  @param B Number.
---  @return true if prime.
-bigint._primeFermat = function (B)
-  local a = nil
-  local div, pow = bigint._div, bigint._powm
-  for i = 1, 5 do
-    repeat
-      a = bigint:random(B)
-    until a:float() >= 2
-    local v1 = pow(a, B, B)
-    local _, v2 = div(a, B)
-    if v1 ~= v2 then return false end
-  end
-  return true
-end
-
-
 --- Straightforward product algorithm.
 --  @param B1 First bigint multiplier.
 --  @param B2 Second bigint multiplier.
@@ -625,35 +615,21 @@ end
 --  @param num Integer, string or table.
 --  @return Bigint object.
 bigint._new = function (num)
-  local base, sign, acc = 10, 1, {}
   -- prepare
   if type(num) == 'table' then
-    -- TODO mt_digits
-    base = num.base or 10
-    assert(base > 0 and Ver.isInteger(base), "Wrong base")
     assert(#num > 0, "Wrong input")
-    sign  = num.sign or 1
-    for i = #num, 1, -1 do
-      acc[#acc+1] = num[i] -- reverse
-    end
-    if num[1] < 0 then
-      acc[#acc], sign = -num[1], -1
-    end
-    for i, v in ipairs(acc) do
+    local base = num.base
+    assert(base and base > 0 and Ver.isInteger(base), "Wrong base")
+    assert(num.sign, "Wrong sign")
+    local acc = {}
+    for i, v in ipairs(num) do
       if v < 0 or v >= base then error("Wrong digit at "..tostring(i)) end
+      acc[i] = v
     end
     return bigint._newTable(
-      bigint._rebase(acc, base, BASE), sign)
+      bigint._rebase(acc, base, BASE), num.sign)
   elseif type(num) == 'string' then
-    -- TODO parse string to separate method
-    local sn, s = string.match(num, '^([+-]?)(%d+)$')
-    if sn == '-' then sign = -1 end
-    s = string.reverse(s)
-    for i = 1, #s do
-      acc[i] = string.byte(s, i)-ZERO
-    end
-    return bigint._newTable(
-      bigint._rebase(acc, 10, BASE), sign)
+    return bigint._newString(num)
   elseif type(num) == 'number' and Ver.isInteger(num) then
     return bigint._newNumber(num)
   end
@@ -678,14 +654,54 @@ bigint._newNumber = function (num)
 end
 
 
+--- Parse string representation, get integer number.
+--  @param s Iput string.
+--  @return new bigint.
+bigint._newString = function (s)
+  local sgn, body, sbase = string.match(s, "^([+-]?)([^:]+):?(%d*)$")
+  -- check base 
+  local base = 10
+  if #sbase == 0 then
+    if     string.find(body, '^0x') then 
+      base, body = 16, string.sub(body, 3, -1)
+    elseif string.find(body, '^0b') then
+      base, body = 2, string.sub(body, 3, -1)
+    end
+  else
+    base = tonumber(sbase)
+  end
+  -- get digits
+  local acc = {}
+  if string.find(body, SEP) or base > 16 then
+    -- all digits in decimal form
+    for dig in string.gmatch(body, '%d+') do 
+      local v = tonumber(dig) 
+      assert(v and v < base)
+      acc[#acc+1] = v
+    end
+  else
+    -- sequential digits without separation for small bases
+    for dig in string.gmatch(body, '.') do 
+      local v = tonumber(dig, 16) 
+      assert(v and v < base)
+      acc[#acc+1] = v
+    end
+  end
+  -- reverse 
+  local tmp = {}
+  for i = 1, #acc do tmp[i] = acc[#acc+1-i] end
+  return bigint._newTable(bigint._rebase(tmp, base, BASE), sgn == '-' and -1 or 1)
+end
+
+
 --- Make bigint from table.
 --  @param t Digits in reverse order.
---  @param base Desired base.
 --  @param sn Sign (+1/-1).
 --  @return new bigint.
 bigint._newTable = function (t, sn)
   return setmetatable({_=t, _sign=sn}, bigint)
 end
+
 
 --- Find (B1 ^ B2) % B3
 --  @param B1 First bigint object.
@@ -713,18 +729,41 @@ bigint._powm = function (B1, B2, B3)
 end
 
 
---- Transform numbers into the same base.
---  @param num1 First object.
---  @param num2 Second object.
---  @return Save numbers in common base.
---bigint._simbase = function (num1, num2)
---  if num1._base > num2._base then
---    num2 = num2:rebase(num1._base)
---  elseif num1._base < num2._base then
---    num1 = num1:rebase(num2._base)
---  end
---  return num1, num2
---end
+--- Check if it prime using the Fermat theorem.
+--  @param B Number.
+--  @return true if prime.
+bigint._primeFermat = function (B)
+  local a = nil
+  local div, pow = bigint._div, bigint._powm
+  for i = 1, 5 do
+    repeat
+      a = bigint:random(B)
+    until a:float() >= 2
+    local v1 = pow(a, B, B)
+    local _, v2 = div(a, B)
+    if v1 ~= v2 then return false end
+  end
+  return true
+end
+
+
+--- Change numeric base.
+--  @param t Table with digits.
+--  @param Nfrom Source base.
+--  @param Nto Destination base.
+--  @return result of conversation.
+bigint._rebase = function (t, Nfrom, Nto)
+  if Nfrom == Nto then return t end
+  local res = {base=Nto}
+  -- reverse order
+  local dig, n = {}, 0
+  for i, v in ipairs(t) do dig[i] = v end
+  repeat
+    dig, n = bigint._divBase(dig, Nfrom, Nto)
+    res[#res+1] = n
+  until #dig == 0
+  return res
+end
 
 
 --- Estimate square root using Babylonian method.
@@ -842,14 +881,21 @@ about[bigint.at] = {"B:at(N) --> int", "Get N-th digit.", help.OTHER}
 
 
 --- Get default numeric base.
---  @return Base value.
+--  @return base value.
 bigint.base = function () return BASE end
 about[bigint.base] = {":base() --> int", "Current numeric base."}
 
+
+--- Get sign of the number.
+--  @return sign in form -1/0/+1.
 bigint.sign = function (self) return self._sign end
-about[bigint.sign] = {"B:sign() --> int", "Return 1, 0 or -1."}
+about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
 
 
+--- Change current numeric base.
+--  @param B Bigint object.
+--  @param N New base.
+--  @return Table with digits of the found number.
 bigint.to = function (B, N)
   N = N or BASE
   assert(Ver.isInteger(N) and N > 0, "Wrong base")
@@ -864,6 +910,8 @@ bigint.to = function (B, N)
   res.sign = B._sign
   return setmetatable(res, mt_digits)
 end
+about[bigint.to] = {
+  "B:to(N) --> tbl", "Convert number to the new numeric base."}
 
 
 --- Find number of combinations.
@@ -1084,44 +1132,6 @@ bigint.ratF = function (B, B2)
 end
 about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
   "Find ratio of factorials num!/denom!.", COMB}
-
-
---- Change current numeric base.
---  @param B Bigint object.
---  @param N New base.
---  @return Copy with new base.
---bigint.rebase = function (B, N)
---  if N <= 1 then error("Wrong base "..tostring(N)) end
---  if B._base == N then return B end
---  --local res = bigint._zero(N, B.sign)
---  local res = bigint._newTable({0}, N, B.sign)
---  local b, rr = B._, res._
---  rr[1] = nil    -- remove zero
---  -- reverse order
---  local dig, n = {}, #b+1
---  for i, v in ipairs(b) do dig[i] = v end
---  repeat
---    dig, n = bigint._divBase(dig, B._base, N)
---    rr[#rr+1] = n
---  until #dig == 0
---  return res
---end
---about[bigint.rebase] = {
---  "B:rebase(N) --> upd_B", "Convert number to the new numeric base."}
-
-
-bigint._rebase = function (t, Nfrom, Nto)
-  if Nfrom == Nto then return t end
-  local res = {base=Nto}
-  -- reverse order
-  local dig, n = {}, 0
-  for i, v in ipairs(t) do dig[i] = v end
-  repeat
-    dig, n = bigint._divBase(dig, Nfrom, Nto)
-    res[#res+1] = n
-  until #dig == 0
-  return res
-end
 
 
 -- simplify constructor call
