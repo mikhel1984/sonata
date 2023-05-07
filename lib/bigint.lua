@@ -3,11 +3,11 @@
 --- Operations with arbitrary long integer numbers.
 --
 --  Object structure: </br>
---  <code> {sign=S, _={v1, ... vn}} </code></br>
+--  <code> {_sign=S, _={v1, ... vn}} </code></br>
 --  where <code>S</code> is +1/-1, B is 10 by default,
 --  v1 - vn are digits of the number in reverse order.
 --  For example, number <code>123</code> is represented as
---  <code>{sign=1, _={3, 2, 1}}</code>.
+--  <code>{_sign=1, _={3, 2, 1}}</code>.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
@@ -194,10 +194,10 @@ bigint.__add = function (B1, B2)
       return p and (p + B2) or (Cross.float(B1) + Cross.float(B2))
     end
   end
-  if B1.sign > 0 then
-    return (B2.sign > 0) and bigint._sum(B1, B2) or bigint._sub(B1, B2)
+  if B1._sign > 0 then
+    return (B2._sign > 0) and bigint._sum(B1, B2) or bigint._sub(B1, B2)
   else
-    return (B2.sign > 0) and bigint._sub(B2, B1) or -bigint._sum(B1, B2)
+    return (B2._sign > 0) and bigint._sub(B2, B1) or -bigint._sum(B1, B2)
   end
 end
 
@@ -267,18 +267,18 @@ bigint.__lt = function (B1, B2)
       end
     end
   end
-  if B1.sign < B2.sign then return true end
+  if B1._sign < B2._sign then return true end
   local b1, b2 = B1._, B2._
   if #b1 == #b2 then   -- equal length
     for i = #b1, 1, -1 do
       if b1[i] ~= b2[i] then
-        return (B1.sign > 0 and b1[i] < b2[i]) or
-               (B1.sign < 0 and b1[i] > b2[i])
+        return (B1._sign > 0 and b1[i] < b2[i]) or
+               (B1._sign < 0 and b1[i] > b2[i])
       end
     end
     return false
   else                 -- different length
-    return (B1.sign > 0 and #b1 < #b2) or (B1.sign < 0 and #b1 > #b2)
+    return (B1._sign > 0 and #b1 < #b2) or (B1._sign < 0 and #b1 > #b2)
   end
 end
 
@@ -317,7 +317,7 @@ bigint.__mul = function (B1, B2)
     end
   end
   local res = bigint._mul(B1, B2)
-  res.sign = B1.sign * B2.sign
+  res._sign = B1._sign * B2._sign
   return res
 end
 
@@ -340,7 +340,7 @@ bigint.__pow = function (B1, B2)
       return p and (p ^ B2) or (Cross.float(B1) ^ Cross.float(B2))
     end
   end
-  if B2.sign < 0 then error('Negative power!') end
+  if B2._sign < 0 then error('Negative power!') end
   local y, x = bigint._1, B1
   if #B2._ == 1 and B2._[1] == 0 then
     assert(#B1._ > 1 or B1._[1] ~= 0, "Error: 0^0!")
@@ -373,10 +373,10 @@ bigint.__sub = function (B1, B2)
       return p and (p - B2) or (Cross.float(B1) - Cross.float(B2))
     end
   end
-  if B1.sign > 0 then
-    return (B2.sign > 0) and bigint._sub(B1, B2) or bigint._sum(B1, B2)
+  if B1._sign > 0 then
+    return (B2._sign > 0) and bigint._sub(B1, B2) or bigint._sum(B1, B2)
   else
-    return (B2.sign > 0) and -bigint._sum(B1, B2) or bigint._sub(B2, B1)
+    return (B2._sign > 0) and -bigint._sum(B1, B2) or bigint._sub(B2, B1)
   end
 end
 
@@ -385,7 +385,7 @@ end
 --  @param B Bigint object.
 --  @return Opposite value.
 bigint.__unm = function (B)
-  return bigint._newTable(B._, -B.sign)
+  return bigint._newTable(B._, -B._sign)
 end
 
 
@@ -395,7 +395,7 @@ end
 bigint.__tostring = function (B)
   local t = B._
   t.base = BASE
-  t.sign = B.sign
+  t.sign = B._sign
   return mt_digits.__tostring(t)
 end
 
@@ -433,7 +433,7 @@ end
 bigint._copy = function (B)
   local c, b = {}, B._
   for i = 1, #b do c[i] = b[i] end
-  return bigint._newTable(c, B.sign)
+  return bigint._newTable(c, B._sign)
 end
 
 
@@ -442,8 +442,8 @@ end
 --  @param forced Flag to skip sign check.
 bigint._decr = function (B, forced)
   local b = B._
-  if not forced and (B.sign < 0 or #b == 1 and b[1] == 0) then
-    B.sign = -1
+  if not forced and (B._sign < 0 or #b == 1 and b[1] == 0) then
+    B._sign = -1
     return bigint._incr(B, true)
   end
   for i = 1, math.huge do
@@ -459,7 +459,7 @@ bigint._decr = function (B, forced)
   if #b > 1 and b[#b] <= 0 then
     table.remove(b)
   elseif #b == 1 and b[1] == 0 then
-    B.sign = 1
+    B._sign = 1
   end
 end
 
@@ -484,7 +484,7 @@ bigint._div = function (B1, B2)
     if rem >= den then
       local n = math.modf(rem:float() / v2)  -- estimate
       local tmp = rem - den * bigint._newTable({n}, 1)
-      if tmp.sign < 0 then
+      if tmp._sign < 0 then
         n = n - 1
         tmp = tmp + den
       elseif tmp > den then
@@ -498,7 +498,7 @@ bigint._div = function (B1, B2)
     end
   end
   for i, v in ipairs(acc) do res._[#acc-i+1] = v end
-  res.sign = B1.sign*B2.sign
+  res._sign = B1._sign*B2._sign
   return res, rem
 end
 
@@ -539,18 +539,18 @@ end
 --  @param B2 Second number.
 --  @return True if B1 > B2.
 bigint._gt = function (B1, B2)
-  if B1.sign > B2.sign then return true end
+  if B1._sign > B2._sign then return true end
   local b1, b2 = B1._, B2._
   if #b1 == #b2 then
     for i = #b1, 1, -1 do
       if b1[i] ~= b2[i] then
-        return (B1.sign > 0 and b1[i] > b2[i]) or
-               (B1.sign < 0 and b1[i] < b2[i])
+        return (B1._sign > 0 and b1[i] > b2[i]) or
+               (B1._sign < 0 and b1[i] < b2[i])
       end
     end
     return false
   else
-    return (B1.sign > 0 and #b1 > #b2) or (B1.sign < 0 and #b1 < #b2)
+    return (B1._sign > 0 and #b1 > #b2) or (B1._sign < 0 and #b1 < #b2)
   end
 end
 
@@ -560,7 +560,7 @@ end
 --  @param forced Flag to skip sign check.
 bigint._incr = function (B, forced)
   local b = B._
-  if not forced and (B.sign < 0) then
+  if not forced and (B._sign < 0) then
     return bigint._decr(B, true)
   end
   for i = 1, math.huge do
@@ -688,7 +688,7 @@ end
 --  @param sn Sign (+1/-1).
 --  @return new bigint.
 bigint._newTable = function (t, sn)
-  return setmetatable({_=t, sign=sn}, bigint)
+  return setmetatable({_=t, _sign=sn}, bigint)
 end
 
 --- Find (B1 ^ B2) % B3
@@ -779,7 +779,7 @@ bigint._sub = function (B1, B2)
   end
   -- simplify
   while #rr > 1 and rr[#rr] == 0 do rr[#rr] = nil end
-  res.sign = r
+  res._sign = r
   return res
 end
 
@@ -862,7 +862,7 @@ bigint.base = function (B, N)
   else
     res = bigint._rebase(b, BASE, N)
   end
-  res.sign = B.sign
+  res.sign = B._sign
   return setmetatable(res, mt_digits)
 end
 
@@ -901,7 +901,7 @@ bigint.eq = function (B1, B2)
     end
   end
   local b1, b2 = B1._, B2._
-  if #b1 == #b2 and B1.sign == B2.sign then
+  if #b1 == #b2 and B1._sign == B2._sign then
     for i = 1, #b1 do
       if b1[i] ~= b2[i] then return false end
     end
@@ -920,7 +920,7 @@ bigint.__eq = bigint.eq
 --  @param B Bigint object.
 --  @return Factorial of the number as bigint object.
 bigint.F = function (B)
-  assert(B.sign > 0, "Non-negative value is expected!")
+  assert(B._sign > 0, "Non-negative value is expected!")
   local N = B:float()
   if     N <= 1 then return bigint._1
   elseif N == 2 then return B
@@ -947,7 +947,7 @@ about[bigint.F] = {"B:F() --> B!",
 --  @return List of prime numbers.
 bigint.factorize = function (B)
   local v, res = B, {}
-  if B.sign < 0 then res[1] = -1 end
+  if B._sign < 0 then res[1] = -1 end
   local n, q = nil, nil
   while true do
     n, q = bigint._trivialSearch(v, n)
@@ -977,7 +977,7 @@ bigint.float = function (B)
       sum = sum * BASE + b[i]
     end
   end
-  return B.sign >= 0 and sum or (-sum)
+  return B._sign >= 0 and sum or (-sum)
 end
 about[bigint.float] = {"B:float() --> num",
   "Represent current big integer as number if it possible.", help.OTHER}
@@ -1036,7 +1036,7 @@ about[bigint.P] = {":P(n, k) --> permutaions_B",
 bigint.random = function (self, B)
   B = isbigint(B) and B or bigint._new(B)
   local set, v = false, 0
-  local res = bigint._newTable({0}, B.sign)
+  local res = bigint._newTable({0}, B._sign)
   local n = math.random(1, #B._)
   local b, rr = B._, res._
   local any = (n ~= #b)
@@ -1065,7 +1065,7 @@ about[bigint.random] = {":random(B) --> rand_B",
 --  @param B2 Denominator.
 --  @return Bigint for ration.
 bigint.ratF = function (B, B2)
-  assert(B.sign > 0 and B2.sign > 0, "Non-negative expected")
+  assert(B._sign > 0 and B2._sign > 0, "Non-negative expected")
   local N1, N2 = B:float(), B2:float()
   if N1 < N2 then return bigint._newTable({0}, 1) end 
   if N1 == N2 then return bigint._1 end
