@@ -103,18 +103,14 @@ local main = {}
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
 main._showElt = function (v)
-  if type(v) == 'number' then
-    return Utils.numstr(v)
-  else
-    return tostring(v)
-  end
+  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
 end
 
 
 --- Show elements of the table.
 --  @param t Table to print.
 main._showTable = function (t)
-  local N, nums, out = 10, {}, {'\n{ '}
+  local N, nums, out = 10, {}, {'{ '}
   -- dialog
   local function continue(n, res)
     local txt = tostring(n) .. ' continue? (y/n/) '
@@ -197,8 +193,9 @@ about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", HYP}
 atanh = _call(Calc.atanh, 'atanh')
 about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
+
 -- Constants
-_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
+_pi = math.pi;          about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
 _e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
 
 
@@ -246,10 +243,10 @@ Print = function (...)
       out[#out+1] = '\t'
     end
   end
-  --io.write('\n')
-  return table.concat(out)
+  local res = table.concat(out)
+  if Sonata then Sonata.say(res) else print(res) end
 end
-about[Print] = {"Print(...) --> str",
+about[Print] = {"Print(...) --> nil",
   "Extenden print function, it shows elements of tables and scientific form of numbers.",
   AUX}
 
@@ -289,11 +286,11 @@ main.life = function (board)
   local src = board
   local gen = 0
   -- make decision about current cell
-  local islive = function (r, c)
-      local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
-        + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
-      return (n==3 or n==2 and src[r][c]==1) and 1 or 0
-    end
+  local function islive (r, c)
+    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
+      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
+    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
+  end
   -- evaluate
   repeat
     local new = board:zeros()   -- empty matrix of the same size
@@ -325,8 +322,8 @@ local mt_range = { type = 'range' }
 --  @param dStep Step value.
 --  @param iN Number of elements.
 --  @return Range object.
-mt_range._init = function (dBeg, dEnd, dStep, iN)
-  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, mt_range)
+mt_range._init = function (dBeg, dEnd, dStep, iN, fn)
+  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN, _fn=fn}, mt_range)
 end
 
 
@@ -343,6 +340,10 @@ mt_range.__add = function (d, R)
 end
 
 
+--- Substract number.
+--  @param R Range object.
+--  @param d Any number.
+--  @return Shifted range table.
 mt_range.__sub = function (R, d)
   if type(R) == 'number' then   -- d is range
     return R + (-1)*d
@@ -395,20 +396,26 @@ mt_range.__index = function (self, i)
       v = self._end
     end
     return v and self._fn and self._fn(v) or v
+  else
+    return mt_range[i]
   end
 end
 
 
--- Block setting operation.
-mt_range.__newindex = function (self, k, v)
-  -- do nothing
-end
+-- Don't set new elements
+mt_range.__newindex = function (self, k, v) end
 
 
+--- Apply function to range of numbers.
+--  @param fn Function f(x).
+--  @return modified range of numbers.
 mt_range.map = function (self, fn)
-  return setmetatable(
-    {_beg=self._beg, _end=self._end, _step=self._step, _N=self._N, _fn=fn},
-    mt_range)
+  if self._fn then
+    local fn1 = function (x) return fn(self._fn(x)) end  -- combine functions
+    return mt_range._init(self._beg, self._end, self._step, self._N, fn1)
+  else
+    return mt_range._init(self._beg, self._end, self._step, self._N, fn)
+  end
 end
 
 
