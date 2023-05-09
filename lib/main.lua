@@ -195,8 +195,8 @@ about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
 
 -- Constants
-_pi = math.pi;          about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
-_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
+_pi = math.pi;         about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
+_e  = 2.718281828459;  about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
 
 
 --- Generate list of function values.
@@ -227,12 +227,9 @@ Print = function (...)
         local tmp = tostring(v)
         if string.find(tmp, '\n') then
           out[#out+1] = '\n'
-          out[#out+1] = tmp
-          out[#out+1] = '\n'
-        else
-          out[#out+1] = tmp
-          out[#out+1] = '\t'
         end
+        out[#out+1] = tmp
+        out[#out+1] = '\t'
       else
         -- require representation
         out[#out+1] = main._showTable(v)

@@ -319,17 +319,25 @@ end
 --- Simplify call of vectors and range.
 --  @param vR Row number or range.
 --  @param vC Column number or range (optional).
---  @return Value or submatrix.
+--  @return Matrix element or submatrix.
 matrix.__call = function (self, vR, vC)
   if not vC then
-    if not vR then return nil end
-    if self._rows == 1 then vC, vR = vR, 1 else vC = 1 end
+    -- vector call
+    if type(vR) == 'number' then
+      return self._cols == 1 and self[toRange(vR,self._rows)][1] 
+        or self[1][toRange(vR,self._cols)]
+    else
+      vC = {1}
+      return self._cols == 1 and matrix.range(self, vR, vC) 
+        or matrix.range(self, vC, vR)
+    end
   end
+  -- matrix call
   if type(vR) == 'number' then
     if type(vC) == 'number' then
-      local r = toRange(vR, self._rows)
-      local c = toRange(vC, self._cols)
-      return r and c and self[r][c]
+      vR = toRange(vR, self._rows)
+      vC = toRange(vC, self._cols)
+      return vR and vC and self[vR][vC]
     else vR = {vR} end
   else
     if type(vC) == 'number' then vC = {vC} end

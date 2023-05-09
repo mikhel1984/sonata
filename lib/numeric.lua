@@ -37,9 +37,9 @@ ans = c                      --0> 2
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl, yn = Num:ode45(function (x,y) return x*y end,
-                    {0,3}, 1)
-ans = yn                     --2> 90.011
+tbl = Num:ode45(function (x,y) return x*y end,
+                {0,3}, 1)
+ans = tbl[#tbl][2]           --2> 90.011
 
 -- use matrices for high order equations
 Mat = require 'lib.matrix'
@@ -50,16 +50,18 @@ Mat = require 'lib.matrix'
 myfun = function (t,x)
   return Mat:V {x(2), 1+2*x(2)-2*x(1)}
 end
-_, xn = Num:ode45(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
+res = Num:ode45(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
+xn = res[#res][2]  -- last element
 ans = xn(1)                  --2>  -10.54
 
 -- define exit condition
--- from time, current and previous results
-cond = function (time,current,previous)
-  return current < 0.1
+cond = function (states)
+  -- check current value
+  return states[#states][2] < 0.1
 end
 myfun = function (t,x) return -x end
 y = Num:ode45(myfun, {0,1E2}, 1, {exit=cond})
+-- time of execution break
 ans = y[#y][1]               --2> 2.56
 
 --]]
@@ -67,7 +69,9 @@ ans = y[#y][1]               --2> 2.56
 
 --	LOCAL
 
-local Ver = require("lib.utils").versions
+local Ver = require("lib.utils")
+local Cnorm = Ver.cross.norm
+Ver = Ver.versions
 
 
 -- Runge-Kutta method.
@@ -82,7 +86,7 @@ local function rk(fn, dX, dY, dH)
   local k2 = fn(dX+h2, dY+h2*k1)
   local k3 = fn(dX+h2, dY+h2*k2)
   local k4 = fn(dX+dH, dY+dH*k3)
-  return dY+dH*(k1+2*(k2+k3)+k4)/6
+  return dY + (k1 + 2*(k2 + k3) + k4)*(dH / 6)
 end
 
 
@@ -149,46 +153,43 @@ about[numeric.newton] = {":newton(fn, x0_d) --> num",
 --  @param tDelta Time interval {t0,tn}
 --  @param y0 Function value at time t0.
 --  @param param Table of additional parameters: dt - time step, exit - exit condition
---  @return Table of intermediate results and value in final point.
+--  @return Table of intermediate results.
 numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   local MAX, MIN = 15*numeric.TOL, 0.1*numeric.TOL
   local xn = tDelta[2]
-  local h = tParam and tParam.dt or (10*numeric.TOL)
-  local exit = tParam and tParam.exit or function () return false end
+  tParam = tParam or {}
+  local h = tParam.dt or (10*numeric.TOL)
+  local exit = tParam.exit or function () return false end
   -- evaluate
-  local res = {{tDelta[1], dY0}}        -- save intermediate points
+  local res = {{tDelta[1], dY0}}        -- save initial points
   local upack = Ver.unpack
-  while res[#res][1] < xn do
-  --repeat
+  while not exit(res) do
     local x, y = upack(res[#res])
+    if x >= xn then break end
     h = math.min(h, xn-x)
     -- correct step
-    if tParam and tParam.dt then
+    if tParam.dt then
       res[#res+1] = {x+h, rk(fn, x, y, h)}
     else
       -- step correction
       local h2 = 0.5*h
       local y1 =  rk(fn, x, y, h)
       local y2 =  rk(fn, x+h2, rk(fn, x, y, h2), h2)
-      local dy = (type(y1) == 'table') and (y2-y1):norm() or math.abs(y2-y1)
+      local dy = Cnorm(y2 - y1)
       if dy > MAX then
         h = h2
       elseif dy < MIN then
         h = 2*h
       else
-        -- save for current step
-        -- use y2 instead y1 because it is probably more precise (?)
+        -- use y2 instead y1 because it is should be more precise (?)
         res[#res+1] = {x+h, y2}
       end
     end
-    if exit(res[#res][1], res[#res][2], (#res>1) and res[#res-1][2]) then
-      break
-    end
   end
-  return res, res[#res][2]
+  return res
 end
-about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys_t, yLast",
-  "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points and result yn."}
+about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys_t",
+  "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points in form {t, x(t)}."}
 
 
 --- Find root of equation at the given interval.
