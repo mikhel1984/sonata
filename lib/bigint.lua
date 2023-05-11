@@ -417,8 +417,8 @@ end
 
 
 about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", 
-  nil, help.META}
-about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
+  '', help.META}
+about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", '', help.META}
 
 
 --- Correct function arguments if need.

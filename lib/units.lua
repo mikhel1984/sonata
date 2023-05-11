@@ -293,8 +293,8 @@ units.__unm = function (U)
 end
 
 
-about['_ar'] = {'arithmetic: a+b, a-b, a*b, a/b, a^N', nil, help.META}
-about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', nil, help.META}
+about['_ar'] = {'arithmetic: a+b, a-b, a*b, a/b, a^N', '', help.META}
+about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', '', help.META}
 
 
 --- Prepare arguments.
