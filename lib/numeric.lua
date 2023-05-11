@@ -159,7 +159,7 @@ numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   local xn = tDelta[2]
   tParam = tParam or {}
   local h = tParam.dt or (10*numeric.TOL)
-  local exit = tParam.exit or function () return false end
+  local exit = tParam.exit or function (_) return false end
   -- evaluate
   local res = {{tDelta[1], dY0}}        -- save initial points
   local upack = Ver.unpack

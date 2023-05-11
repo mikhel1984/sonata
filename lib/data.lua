@@ -187,7 +187,7 @@ data.cov = function (self, t)
   local N = #t
   if N == 0 then error("Expected list of vectors") end
   data.ext_matrix = data.ext_matrix or require('lib.matrix')
-  local m = data.ext_matrix.zeros(N, N)
+  local m = data.ext_matrix:zeros(N, N)
   for i = 1, N do
     local ti = t[i]
     m[i][i] = data:cov2(ti, ti)

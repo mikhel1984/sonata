@@ -62,7 +62,7 @@ t5 = blh_wgs84_pz90(t0)
 -- UTM to lat/lon
 utm = {N=5601281, E=625394, zone=42, hs='N'}
 ll = wgs84:utm2ll(utm)
-ans = ll.B                 --2> 50.55 
+ans = ll.B                 --2> 50.55
 
 ans = ll.L                 --2> 70.77
 
@@ -287,7 +287,7 @@ end
 
 
 --- Convert lat/lon to UTM coordinates.
---  Based on Karney's method and 
+--  Based on Karney's method and
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
 --  @param E Ellipsoid object.
 --  @param t Table with longitude L and lattitude B
@@ -300,7 +300,7 @@ ellipsoid.ll2utm = function (E, t)
   local l0 = (zone-1)*6 - 177  -- lon of central meridian
   -- Norway / Svalbard exception
   if 31 <= zone and zone <= 36 then
-    local pos = math.floor(t.B/8.0 + 10) 
+    local pos = math.floor(t.B/8.0 + 10)
     if pos == 17 then  -- 'V'
       if zone == 31 and t.L >= 3  then zone, l0 = zone + 1, l0 + 6 end
     elseif pos > 18 then  -- 'X'
@@ -318,7 +318,7 @@ ellipsoid.ll2utm = function (E, t)
   local alpha, e = E.utmAlpha, math.sqrt(E.e2)
   local clon = math.cos(lon)
   local tau, slat = math.tan(lat), math.sin(lat)
-  n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )  -- reuse
+  local n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
   local tau1 = tau*math.sqrt(1+n1*n1) - n1*math.sqrt(1+tau*tau)
   local xi1 = Ver.atan2(tau1, clon)
   local eta1 = Calc.asinh(math.sin(lon) / math.sqrt(tau1*tau1 + clon*clon))
@@ -338,7 +338,7 @@ ellipsoid.ll2utm = function (E, t)
     zone = zone,
     hs = t.B >= 0 and 'N' or 'S',  -- hemisphere
   }
-  if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing 
+  if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing
   local scale = E.utmA / E.a * math.sqrt(
     (p1*p1 + q1*q1)*(1-e*e*slat*slat)*(1+tau*tau) / (tau1*tau1 + clon*clon))
   return pose, scale
@@ -499,7 +499,7 @@ end
 
 
 --- Convert UTM coordinates to lat/lon.
---  Based on Karney's method and 
+--  Based on Karney's method and
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
 --  @param E Ellipsoid object.
 --  @param t Table of coordinates {N=,E=,hs=,zone=}.
@@ -524,11 +524,11 @@ ellipsoid.utm2ll = function (E, t)
   local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
   local taui = tau1
   -- find latitude
-  repeat 
+  repeat
     local sqrti = math.sqrt(1 + taui*taui)
     local si = Calc.sinh( e*Calc.atanh(e*taui/sqrti) )
     local taui1 = taui*math.sqrt(1+si*si) - si*sqrti
-    local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) * 
+    local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) *
       (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)
     taui = taui + diff
   until math.abs(diff) < 1E-12
@@ -539,9 +539,9 @@ ellipsoid.utm2ll = function (E, t)
     (p*p + q*q)*(1-e*e*slat*slat)*(1+taui*taui) *(sheta1*sheta1 + cxi1*cxi1))
   local l0 = (t.zone-1)*6 - 177
   local res = {
-    B = math.deg(lat), 
+    B = math.deg(lat),
     L = math.deg(Ver.atan2(sheta1, cxi1)) + l0,
-    H = 0 
+    H = 0
   }
   return res, scale
 end
@@ -550,7 +550,7 @@ end
 -- Collection of Geodetic methods
 local geodesy = {
 -- mark
-type = 'geodesy', 
+type = 'geodesy',
 
 -- Ellipsoids
 WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563,
@@ -700,28 +700,28 @@ geodesy.hashEncode = function (self, t, N)
   end
   return table.concat(hash)
 end
-about[geodesy.hashEncode] = {":hashEncode(coord_t, letter_N=6) --> hash_s", 
+about[geodesy.hashEncode] = {":hashEncode(coord_t, letter_N=6) --> hash_s",
   "Find hash for the given point."}
 
 
 -- Access to the ellipsoid object methods.
 geodesy.toXYZ = ellipsoid.toXYZ
-about[geodesy.toXYZ] = {"E:toXYZ(blh_t) --> xyz_t", 
+about[geodesy.toXYZ] = {"E:toXYZ(blh_t) --> xyz_t",
   "Transform Geodetic coordinates to Cartesian.", TRANS}
 
 
 geodesy.toBLH = ellipsoid.toBLH
-about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t", 
+about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t",
   "Transform Cartesian coordinates to Geodetic.", TRANS}
 
 
 geodesy.utm2ll = ellipsoid.utm2ll
-about[geodesy.utm2ll] = {"E:utm2ll(utm_t) --> blh_t", 
+about[geodesy.utm2ll] = {"E:utm2ll(utm_t) --> blh_t",
   "Find Geodetic coordinates for the given UTM pose and zone", PROJ}
 
 
 geodesy.ll2utm = ellipsoid.ll2utm
-about[geodesy.ll2utm] = {"E:ll2utm(blh_t) --> utm_t", 
+about[geodesy.ll2utm] = {"E:ll2utm(blh_t) --> utm_t",
   "Find UTM projection for the given coordinates.", PROJ}
 
 

@@ -198,7 +198,7 @@ local FIT = 'approximation'
 
 local polynomial = {
 -- marker
-type = 'polynomial', 
+type = 'polynomial',
 -- simplification
 _simp = numpoly
 }
@@ -674,7 +674,7 @@ polynomial.lin = function (self, tX, tY, v0, vN)
   local xp, yp = tX[1], tY[1]
   if v0 then res[1] = { xp, polynomial._init({[0] = v0}) } end
   for i = 2, #tX do
-    xi, yi = tX[i], tY[i]
+    local xi, yi = tX[i], tY[i]
     local k = (yi-yp)/(xi-xp)
     res[#res+1] = { xi, polynomial._init({[0]=yp-k*xp, k}) }
     xp, yp = xi, yi

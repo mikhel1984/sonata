@@ -324,11 +324,11 @@ matrix.__call = function (self, vR, vC)
   if not vC then
     -- vector call
     if type(vR) == 'number' then
-      return self._cols == 1 and self[toRange(vR,self._rows)][1] 
+      return self._cols == 1 and self[toRange(vR,self._rows)][1]
         or self[1][toRange(vR,self._cols)]
     else
       vC = {1}
-      return self._cols == 1 and matrix.range(self, vR, vC) 
+      return self._cols == 1 and matrix.range(self, vR, vC)
         or matrix.range(self, vC, vR)
     end
   end
@@ -486,7 +486,7 @@ matrix.__unm = function (self)
     for c = 1, Mcols do rr[c] = -mr[c] end
     res[r] = rr
   end
-  return matrix._init(#rows, Mcols, res)
+  return matrix._init(#res, Mcols, res)
 end
 
 
@@ -967,7 +967,7 @@ matrix.copy = function (M)
   local res, Mcols = {}, M._cols
   for r = 1, M._rows do
     local rr, mr = {}, M[r]
-    for c = 1, Mcols do rr[c] = mr[c] end  
+    for c = 1, Mcols do rr[c] = mr[c] end
     res[r] = rr
   end
   return matrix._init(#res, Mcols, res)
@@ -1164,7 +1164,7 @@ about[matrix.householder] = {"M:householder(V, start_N) --> hh_M",
 --  @param N Number of digits.
 matrix.round = function(M, N)
   N = N or 6
-  tol = 10^(-N)
+  local tol = 10^(-N)
   for r = 1, M._rows do
     local mr = M[r]
     for c = 1, M._cols do
@@ -1191,7 +1191,7 @@ matrix.H = function (M)
   local res, Mrows = {}, M._rows
   for c = 1, M._cols do
     local row = {}
-    for r = 1, Mrows do 
+    for r = 1, Mrows do
       local v = M[r][c]
       row[r] = (type(v) == 'table') and v.conj and v:conj() or v
     end

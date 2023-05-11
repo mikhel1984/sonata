@@ -340,7 +340,7 @@ end
 -- Data visualization.
 local asciiplot = {
 -- mark
-type = 'asciiplot', 
+type = 'asciiplot',
 -- const
 WIDTH = 73, HEIGHT = 21,
 -- symbols
@@ -619,7 +619,7 @@ asciiplot._limits = function (F)
   -- horizontal
   local width, height = F._x.size, F._y.size
   local n = nil
-  if F._xaxis == 'mid' then n = (height + 3) / 2 
+  if F._xaxis == 'mid' then n = (height + 3) / 2
   elseif F._xaxis == 'max' then n = 1
   elseif F._xaxis == 'min' then n = height end
   if n then
@@ -739,7 +739,7 @@ end
 --- Find XY projection of a contour.
 --  @param tX X range table.
 --  @param tY Y range table.
---- @param tZ Table of z(x,y) values.
+--  @param tZ Table of z(x,y) values.
 --  @param tOpt List of options.
 --  @return Figure object.
 asciiplot._viewXY = function (F, tX, tY, tZ, tOpt)
@@ -776,7 +776,7 @@ end
 --- Find XZ projection of a contour.
 --  @param tX X range table.
 --  @param tY Y range table.
---- @param tZ Table of z(x,y) values.
+--  @param tZ Table of z(x,y) values.
 --  @param tOpt List of options.
 --  @return Figure object.
 asciiplot._viewXZ = function (F, tX, tY, tZ, tOpt)
@@ -810,7 +810,7 @@ end
 --- Find YZ projection of a contour.
 --  @param tX X range table.
 --  @param tY Y range table.
---- @param tZ Table of z(x,y) values.
+--  @param tZ Table of z(x,y) values.
 --  @param tOpt List of options.
 --  @return Figure object.
 asciiplot._viewYZ = function (F, tX, tY, tZ, tOpt)
@@ -1144,7 +1144,7 @@ asciiplot.plot = function (F, ...)
       if type(ty) == 'table' then
         i = i + 1
       else
-        -- only Y's 
+        -- only Y's
         ty, tx = tx, {}
         for j = 1, #ty do tx[j] = j end
       end

@@ -75,7 +75,7 @@ ans = v.base == 60 and v.sign == -1
 -- print digits
 print(v)
 
--- back to bigint 
+-- back to bigint
 ans = Int(v)                  --> g
 
 -- number of digits (BASE=10)
@@ -141,7 +141,7 @@ local NUMB = 'numbers'
 local COMB = 'combinations'
 
 -- numerical base for internal representation
-local BASE = 10 
+local BASE = 10
 
 -- limit to switch float algorithm
 local NDIGITS = math.floor(math.log(1E6) / math.log(BASE))
@@ -671,33 +671,34 @@ end
 --  @return new bigint.
 bigint._newString = function (s)
   local sgn, body, sbase = string.match(s, "^([+-]?)([^:]+):?(%d*)$")
-  -- check base 
+  -- check base
   local base = 10
   if #sbase == 0 then
-    if     string.find(body, '^0x') then 
+    if     string.find(body, '^0x') then
       base, body = 16, string.sub(body, 3, -1)
     elseif string.find(body, '^0b') then
       base, body = 2, string.sub(body, 3, -1)
     end
   else
     base = tonumber(sbase)
+    assert(base and base > 10, "Wrong base")
   end
   -- get digits
   local acc = {}
   if string.find(body, SEP) or base > 16 then
     -- all digits in decimal form
-    for dig in string.gmatch(body, '%d+') do 
-      local v = tonumber(dig) 
+    for dig in string.gmatch(body, '%d+') do
+      local v = tonumber(dig)
       assert(v and v < base)
       acc[#acc+1] = v
     end
   else
     -- sequential digits without separation for small bases
-    for dig in string.gmatch(body, '.') do 
+    for dig in string.gmatch(body, '.') do
       acc[#acc+1] = assert(mt_digits.mapChar[dig])
     end
   end
-  -- reverse 
+  -- reverse
   for i = 1, math.floor(#acc / 2) do
     local j = #acc+1-i
     acc[i], acc[j] = acc[j], acc[i]
@@ -869,8 +870,8 @@ end
 
 
 --- Common return values
-bigint._1 = bigint._newTable({1}, 10, 1)
-bigint._0 = bigint._newTable({0}, 10, 1)
+bigint._1 = bigint._newTable({1}, 1)
+bigint._0 = bigint._newTable({0}, 1)
 
 
 --- Absolute value of number.
@@ -1024,7 +1025,7 @@ about[bigint.factorize] = {
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (B)
   local sum, b = 0, B._
-  if #b > NDIGITS then  
+  if #b > NDIGITS then
     sum = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
   else
     for i = #b, 1, -1 do
@@ -1119,7 +1120,7 @@ about[bigint.random] = {":random(B) --> rand_B",
 bigint.ratF = function (B, B2)
   assert(B._sign > 0 and B2._sign > 0, "Non-negative expected")
   local N1, N2 = B:float(), B2:float()
-  if N1 < N2 then return bigint._0 end 
+  if N1 < N2 then return bigint._0 end
   if N1 == N2 then return bigint._1 end
   if N1 == N2 + 1 then return B end
   local acc = B * (B2 + bigint._1)
