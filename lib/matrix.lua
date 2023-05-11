@@ -490,8 +490,8 @@ matrix.__unm = function (self)
 end
 
 
-about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", '', help.META}
-about['_cmp'] = {"comparison: a==b, a~=b", '', help.META}
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, help.META}
+about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
 -- Determinants for simple cases

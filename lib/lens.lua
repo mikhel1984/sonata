@@ -195,7 +195,7 @@ lens.__tostring = function (L)
 end
 
 
-about['_op'] = {"operations: L1 == L2, L1 .. L2", '', help.META }
+about['_op'] = {"operations: L1 == L2, L1 .. L2", nil, help.META }
 
 
 --- Object constructor.

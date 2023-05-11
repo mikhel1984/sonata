@@ -199,10 +199,12 @@ local makeModule = function (sName, tLang)
     local title = sformat('["%s"]', elt)
     local value = findVal(lng, elt)
     local line = sformat('%-26s = [[%s]],', title, value or desc)
-    if value then   -- found translation
-      res[#res+1] = line
-    else
-      new[#new+1] = sformat((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
+    if elt and desc then
+      if value then   -- found translation
+        res[#res+1] = line
+      else
+        new[#new+1] = sformat((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
+      end
     end
   end
   for _, v in ipairs(new) do res[#res+1] = v end

@@ -266,8 +266,8 @@ quaternion.__unm = function (Q)
 end
 
 
-about['_ar'] = {'arithmetic: a+b, a-b, a*b, a^k, -a', '', help.META}
-about['_cmp'] = {'comparison: a==b, a~=b', '', help.META}
+about['_ar'] = {'arithmetic: a+b, a-b, a*b, a^k, -a', nil, help.META}
+about['_cmp'] = {'comparison: a==b, a~=b', nil, help.META}
 
 
 quaternion._convert = function (v)

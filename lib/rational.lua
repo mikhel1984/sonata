@@ -315,8 +315,8 @@ end
 rational.__unm = function (R) return rational._new(-R._[1], R._[2]) end
 
 
-about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, -a, a^b", '', help.META}
-about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", '', help.META}
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, -a, a^b", nil, help.META}
+about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
 
 
 --- Convert value to rational number.
