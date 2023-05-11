@@ -293,14 +293,8 @@ units.__unm = function (U)
 end
 
 
-units.arithmetic = 'arithmetic'
-about[units.arithmetic] = {
-  units.arithmetic, 'U1+U2, U1-U2, U1*U2, U1/U2, U1^N', help.META}
-
-
-units.comparison = 'comparison'
-about[units.comparison] = {
-  units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2', help.META}
+about['_ar'] = {'arithmetic: a+b, a-b, a*b, a/b, a^N', nil, help.META}
+about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', nil, help.META}
 
 
 --- Prepare arguments.

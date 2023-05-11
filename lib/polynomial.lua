@@ -371,13 +371,8 @@ polynomial.__unm = function (P)
 end
 
 
-polynomial.arithmetic = 'arithmetic'
-about[polynomial.arithmetic] = {
-  polynomial.arithmetic, "a+b, a-b, a*b, a/b, a^n, -a", help.META}
-
-
-polynomial.comparison = 'comparison'
-about[polynomial.comparison] = {polynomial.comparison, "a==b, a~=b", help.META}
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^n, -a", nil, help.META}
+about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
 polynomial._convert = function (v)

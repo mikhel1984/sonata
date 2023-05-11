@@ -266,9 +266,8 @@ quaternion.__unm = function (Q)
 end
 
 
-quaternion.arithmetic = 'arithmetic'
-about[quaternion.arithmetic] = {
-  quaternion.arithmetic, 'a + b, a - b, a * b, a ^ k, -a', help.META}
+about['_ar'] = {'arithmetic: a+b, a-b, a*b, a^k, -a', nil, help.META}
+about['_cmp'] = {'comparison: a==b, a~=b', nil, help.META}
 
 
 quaternion._convert = function (v)
@@ -329,11 +328,6 @@ quaternion.eq = function (Q1, Q2)
          Cross.eq(q1[3], q2[3]) and Cross.eq(q1[4], q2[4])
 end
 quaternion.__eq = quaternion.eq
-
-
-quaternion.comparison = 'comparison'
-about[quaternion.comparison] = {
-  quaternion.comparison, 'a == b, a ~= b', help.META}
 
 
 --- Build quaternion from angle-axis representation.

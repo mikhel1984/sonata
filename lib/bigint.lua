@@ -416,12 +416,9 @@ bigint.__tostring = function (B)
 end
 
 
-bigint.arithmetic = 'arithmetic'
-about[bigint.arithmetic] = {
-  bigint.arithmetic, "a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", help.META}
-bigint.comparison = 'comparison'
-about[bigint.comparison] = {
-  bigint.comparison, "a<b, a<=b, a>b, a>=b, a==b, a~=b", help.META}
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", 
+  nil, help.META}
+about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
 
 
 --- Correct function arguments if need.

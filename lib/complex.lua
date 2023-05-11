@@ -330,14 +330,8 @@ end
 --  @return Negative value.
 complex.__unm = function (C) return complex._new(-C._[1], -C._[2]) end
 
-
-complex.arithmetic = 'arithmetic'
-about[complex.arithmetic] = {
-  complex.arithmetic, "a+b, a-b, a*b, a/b, a^b, -a", help.META}
-
-
-complex.comparison = 'comparison'
-about[complex.comparison] = {complex.comparison, "a==b, a~=b", help.META}
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, help.META}
+about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
 --- Convert value into complex number.
