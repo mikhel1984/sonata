@@ -61,7 +61,7 @@ cond = function (states)
 end
 myfun = function (t,x) return -x end
 y = Num:ode45(myfun, {0,1E2}, 1, {exit=cond})
--- time of execution break
+-- time of execution before break
 ans = y[#y][1]               --2> 2.56
 
 --]]
@@ -155,20 +155,22 @@ about[numeric.newton] = {":newton(fn, x0_d) --> num",
 --  @param param Table of additional parameters: dt - time step, exit - exit condition
 --  @return Table of intermediate results.
 numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
-  local MAX, MIN = 15*numeric.TOL, 0.1*numeric.TOL
+  local MAX, MIN = 10*numeric.TOL, 0.1*numeric.TOL
   local xn = tDelta[2]
   tParam = tParam or {}
   local h = tParam.dt or (10*numeric.TOL)
   local exit = tParam.exit or function (_) return false end
   -- evaluate
-  local res = {{tDelta[1], dY0}}        -- save initial points
+  local res, last = {{tDelta[1], dY0}}, false
   local upack = Ver.unpack
   while not exit(res) do
     local x, y = upack(res[#res])
-    if x >= xn then break end
-    h = math.min(h, xn-x)
+    if x >= xn then break
+    elseif x + h > xn then
+      h, last = xn-x, true
+    end
     -- correct step
-    if tParam.dt then
+    if tParam.dt or last then
       res[#res+1] = {x+h, rk(fn, x, y, h)}
     else
       -- step correction
@@ -181,7 +183,7 @@ numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
       elseif dy < MIN then
         h = 2*h
       else
-        -- use y2 instead y1 because it is should be more precise (?)
+        -- use y2 because it is should be more precise (?)
         res[#res+1] = {x+h, y2}
       end
     end
@@ -251,4 +253,3 @@ numeric.about = about
 return numeric
 
 --===============================
--- TODO: check ode solver
