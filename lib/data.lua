@@ -129,6 +129,19 @@ end
 c = _D:table(t, {'sq', 'avg'}, fn)
 print(c)
 
+-- even numbers
+b = _D:range(2,10,2)
+ans = b[2]                    --> 4
+
+-- linear transformations
+-- with range Range objects
+b2 = 2*b + 4
+ans = b2[1]                   --> 8
+
+-- apply function 
+c = b:map(math.sin)
+ans = c[1]                   --3> 0.909
+
 --]]
 
 
@@ -709,6 +722,131 @@ data.zip = function (self, fn, ...)
 end
 about[data.zip] = {":zip(fn,...) --> tbl",
   "Sequentially apply function to list of tables.", help.OTHER}
+
+
+-- Methametods for the range of numbers.
+local mt_range = { type = 'range' }
+
+
+--- Initialize range object.
+--  @param dBeg First value.
+--  @param dEnd Last value.
+--  @param dStep Step value.
+--  @param iN Number of elements.
+--  @return Range object.
+mt_range._init = function (dBeg, dEnd, dStep, iN, fn)
+  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN, _fn=fn}, mt_range)
+end
+
+
+--- Add number (shift range).
+--  @param d Any number.
+--  @param R Range object.
+--  @return Shifted range table.
+mt_range.__add = function (d, R)
+  if type(R) == 'number' then
+    return mt_range.__add(R, d)
+  else
+    return mt_range._init(d+R._beg, d+R._end, R._step, R._N)
+  end
+end
+
+
+--- Substract number.
+--  @param R Range object.
+--  @param d Any number.
+--  @return Shifted range table.
+mt_range.__sub = function (R, d)
+  if type(R) == 'number' then   -- d is range
+    return R + (-1)*d
+  else
+    return mt_range._init(R._beg-d, R._end-d, R._step, R._N)
+  end
+end
+
+
+--- Multiply to number (expand range).
+--  @param d Any number.
+--  @param R Range object.
+--  @return Expanded range table.
+mt_range.__mul = function (d, R)
+  if type(R) == 'number' then
+    return mt_range.__mul(R, d)
+  else
+    return mt_range._init(d*R._beg, d*R._end, d*R._step, R._N)
+  end
+end
+
+
+--- Pretty print.
+--  @param R Range object.
+--  @return String with the table representation.
+mt_range.__tostring = function (self)
+  return string.format("%s{%g, %g .. %g}", self._fn and "fn" or "",
+    self._beg, self._beg+self._step, self._end)
+end
+
+
+--- Get number of elements.
+--  @param self Range object.
+--  @return Element number.
+mt_range.__len = function (self)
+  return self._N
+end
+
+
+--- Get i-th element.
+--  @param self Range object.
+--  @param i Element index.
+--  @return Number.
+mt_range.__index = function (self, i)
+  if Ver.isInteger(i) and i > 0 and i <= self._N then
+    local v = 0
+    if i < self._N then
+      v = self._beg + (i-1)*self._step
+    else
+      v = self._end
+    end
+    return v and self._fn and self._fn(v) or v
+  else
+    return mt_range[i]
+  end
+end
+
+
+-- Don't set new elements
+mt_range.__newindex = function (self, k, v) end
+
+
+--- Apply function to range of numbers.
+--  @param fn Function f(x).
+--  @return modified range of numbers.
+mt_range.map = function (self, fn)
+  if self._fn then
+    local fn1 = function (x) return fn(self._fn(x)) end  -- combine functions
+    return mt_range._init(self._beg, self._end, self._step, self._N, fn1)
+  else
+    return mt_range._init(self._beg, self._end, self._step, self._N, fn)
+  end
+end
+
+
+--- Generate sequence of values.
+--  @param dBegin Beginning of range.
+--  @param dEnd End of range.
+--  @param dStep Step value (default is 1).
+--  @return Table with numbers, Range object.
+data.range = function (self, dBegin, dEnd, dStep)
+  dStep = dStep or (dEnd > dBegin) and 1 or -1
+  local diff = dEnd - dBegin
+  assert(diff * dStep > 0, "Wrong range or step")
+  -- check size
+  local n, _ = math.modf(diff / dStep)
+  if math.abs(n*dStep - dEnd) >= math.abs(dStep * 0.1) then n = n + 1 end
+  -- result
+  return mt_range._init(dBegin, dEnd, dStep, n)
+end
+about[data.range] = {':range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.'}
 
 
 -- Get reference to data range in other table
