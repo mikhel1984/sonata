@@ -125,6 +125,11 @@ cross.float = function (v)
 end
 
 
+cross.isZero = function (v)
+  return type(v) == 'table' and v._isZero and v:_isZero() or (v == 0)
+end
+
+
 --- Norm of numeric object.
 --  @param v Some object.
 --  @return Norm or nil.

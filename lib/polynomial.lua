@@ -143,7 +143,7 @@ local function numpoly(P) return #P == 0 and Cross.simp(P[0]) or P end
 --  @param t Table of coefficients.
 --  @return Simplified polynomial.
 local function reduce (t)
-  while #t > 0 and Cross.eq(t[#t], 0) do table.remove(t) end
+  while #t > 0 and Cross.isZero(t[#t]) do table.remove(t) end
   return t
 end
 
@@ -169,12 +169,12 @@ end
 --  @param v2 Second element.
 --  @return True when v1 goes before v2.
 local function sortRoots (v1, v2)
+  local is1 = type(v1) == 'table'
+  local is2 = type(v2) == 'table'
   -- move complex back
-  if type(v1) == 'table' and v1.iscomplex
-        and (type(v2) ~= 'table' or not v2.iscomplex) then
+  if is1 and v1.iscomplex and not (is2 and v2.iscomplex) then
     return false
-  elseif type(v2) == 'table' and v2.iscomplex
-        and (type(v1) ~= 'table' or not v1.iscomplex) then
+  elseif is2 and v2.iscomplex and not (is1 and v1.iscomplex) then
     return true
   else
     return Cross.norm(v1) > Cross.norm(v2)
@@ -412,7 +412,12 @@ polynomial._init = function (t)
 end
 
 
---- Simplify call P * (x - v), inplace
+polynomial._isZero = function (P)
+  return #P == 0 and Cross.isZero(P[0])
+end
+
+
+--- Simplify call P * (x - v), in-place
 --  @param P Polynomial object.
 --  @param v New root.
 polynomial._multXv = function (P, v)
@@ -563,7 +568,7 @@ polynomial.der = function (P)
   for i = 1, #P do
     der[i-1] = i * P[i]
   end
-  return numpoly(polynomial._init(der))
+  return #der == 0 and Cross.simp(der[0]) or polynomial._init(der)
 end
 about[polynomial.der] = {"P:der() --> der_P",
   "Calculate derivative of polynomial."}
@@ -774,8 +779,7 @@ polynomial.roots = function (P)
       r[#r+1] = x
       r[#r+1] = x:conj()
       pp = pp / polynomial:build(x)
-    else
-      break
+    else break
     end
   end
   table.sort(r, sortRoots)

@@ -142,7 +142,7 @@ local FUNCTIONS = 'functions'
 --  @param C complex number.
 --  @return Simple number if possible.
 local function numcomp(C)
-  return Ceq(C._[2], 0) and Cross.simp(C._[1]) or C
+  return Cross.isZero(C._[2]) and Cross.simp(C._[1]) or C
 end
 
 
@@ -209,6 +209,12 @@ _simp = numcomp,
 --  @return True if the object is a complex number.
 local function iscomplex(v) return getmetatable(v) == complex end
 
+
+local function numOrComp(a, b)
+  return Cross.isZero(b) and Cross.simp(a) or complex._new(a, b)
+end
+
+
 --- C1 + C2
 --  @param C1 Real or complex number.
 --  @param C2 Real or complex number.
@@ -219,7 +225,7 @@ complex.__add = function (C1, C2)
     return p and (C1 + p) or (Cross.convert(C2, C1) + C2)
   end
   local c1, c2 = C1._, C2._
-  return numcomp(complex._new(c1[1]+c2[1], c1[2]+c2[2]))
+  return numOrComp(c1[1]+c2[1], c1[2]+c2[2])
 end
 
 
@@ -235,8 +241,8 @@ complex.__div = function (C1, C2)
   local c11, c12 = Ver.unpack(C1._)
   local c21, c22 = Ver.unpack(C2._)
   local denom = c21*c21 + c22*c22
-  return numcomp(complex._new(
-    (c11*c21 + c12*c22)/denom, (c12*c21 - c11*c22)/denom))
+  return numOrComp(
+    (c11*c21 + c12*c22)/denom, (c12*c21 - c11*c22)/denom)
 end
 
 
@@ -272,8 +278,7 @@ complex.__mul = function (C1, C2)
     return p and (C1 * p) or (Cross.convert(C2, C1) * C2)
   end
   local c1, c2 = C1._, C2._
-  return numcomp(
-    complex._new(c1[1]*c2[1] - c1[2]*c2[2], c1[1]*c2[2] + c1[2]*c2[1]))
+  return numOrComp(c1[1]*c2[1] - c1[2]*c2[2], c1[1]*c2[2] + c1[2]*c2[1])
 end
 
 
@@ -298,7 +303,7 @@ complex.__pow = function (C1, C2)
   local c1, c2 = C1._, C2._
   local abs = a0^(Cfloat(c2[1]))*math.exp(-a1*c2[2])
   local arg = k*c2[2]+c2[1]*a1
-  return numcomp(complex._new(abs*fcos(arg), abs*fsin(arg)))
+  return numOrComp(abs*fcos(arg), abs*fsin(arg))
 end
 
 
@@ -312,7 +317,7 @@ complex.__sub = function (C1, C2)
     return p and (C1 - p) or (Cross.convert(C2, C1) - C2)
   end
   local c1, c2 = C1._, C2._
-  return numcomp(complex._new(c1[1]-c2[1], c1[2]-c2[2]))
+  return numOrComp(c1[1]-c2[1], c1[2]-c2[2])
 end
 
 
@@ -364,11 +369,17 @@ end
 complex._i = complex._new(0, 1)
 
 
+complex._isZero = function (C)
+  return complex.isZero(C._[1]) and complex.isZero(C._[2])
+end
+
+
 --- Find object norm.
 --  @param C Complex number.
 --  @return Numerical value.
 complex._norm = function (C)
-  return math.sqrt(Cfloat(C._[1])^2 + Cfloat(C._[2])^2)
+  local a, b = Cfloat(C._[1]), Cfloat(C._[2])
+  return math.sqrt(a*a + b*b)
 end
 
 
@@ -457,7 +468,7 @@ complex.__bnot = complex.conj
 --  @return Complex cosine.
 complex.cos = function (C)
   local c = C._
-  return numcomp(complex._new(fcos(c[1])*ch(c[2]), -fsin(c[1])*sh(c[2])))
+  return numOrComp(fcos(c[1])*ch(c[2]), -fsin(c[1])*sh(c[2]))
 end
 about[complex.cos] = {"Z:cos() --> y_Z", 
   "Return cosine of a complex number.", FUNCTIONS}
@@ -476,7 +487,7 @@ about[complex.cosh] = {"Z:cosh() --> y_Z",
 --  @return Complex exponent.
 complex.exp = function (C)
   local r = fexp(C._[1])
-  return numcomp(complex._new(r*fcos(C._[2]), r*fsin(C._[2])))
+  return numOrComp(r*fcos(C._[2]), r*fsin(C._[2]))
 end
 about[complex.exp] = {"Z:exp() --> y_Z", 
   "Return exponent in for complex argument.", FUNCTIONS}
@@ -508,7 +519,7 @@ complex.log = function (C)
     return C <= 0 and complex._new(math.log(-C), math.pi) or math.log(C)
   else
     local c1, c2 = Cfloat(C._[1]), Cfloat(C._[2])
-    return numcomp(complex._new(0.5*math.log(c1*c1 + c2*c2), Ver.atan2(c2, c1)))
+    return numOrComp(0.5*math.log(c1*c1 + c2*c2), Ver.atan2(c2, c1))
   end
 end
 about[complex.log] = {"Z:log() --> y_Z", "Complex logarithm.", FUNCTIONS}
@@ -543,7 +554,7 @@ about[complex.round] = {"Z:round(N=6) --> rounded_Z",
 --  @return Complex sinus.
 complex.sin = function (C)
   local c = C._
-  return numcomp(complex._new(fsin(c[1])*ch(c[2]), fcos(c[1])*sh(c[2])))
+  return numOrComp(fsin(c[1])*ch(c[2]), fcos(c[1])*sh(c[2]))
 end
 about[complex.sin] = {"Z:sin() --> y_Z", "Return sinus of a complex number.", FUNCTIONS}
 
@@ -576,7 +587,7 @@ about[complex.sqrt] = {"Z:sqrt() --> y_Z",
 complex.tan = function (C)
   local c = C._
   local den = fcos(2*c[1]) + ch(2*c[2])
-  return numcomp(complex._new(fsin(2*c[1])/den, sh(2*c[2])/den))
+  return numOrComp(fsin(2*c[1])/den, sh(2*c[2])/den)
 end
 about[complex.tan] = {"Z:tan() --> y_Z", 
   "Return tangent of a complex number.", FUNCTIONS}

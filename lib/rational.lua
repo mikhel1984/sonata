@@ -342,6 +342,11 @@ rational._cont2rat = function (t)
 end
 
 
+rational._isZero = function (R)
+  return Cross.isZero(R._[1])
+end
+
+
 --- Create new object, set metatable.
 --  @param vn Numerator.
 --  @param vd Denominator. Default is 1.

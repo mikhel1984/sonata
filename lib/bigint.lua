@@ -589,6 +589,11 @@ bigint._incr = function (B, forced)
 end
 
 
+bigint._isZero = function (B)
+  return #B._ == 1 and Cross.isZero(B._[1])
+end
+
+
 --- Straightforward product algorithm.
 --  @param B1 First bigint multiplier.
 --  @param B2 Second bigint multiplier.
