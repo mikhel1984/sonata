@@ -437,7 +437,8 @@ polynomial._nr = function (P, d0, de)
   local val = polynomial.val
   for i = 1, max do
     local dx = val(P, d0) / val(dp, d0)
-    if (type(dx) == 'number' and math.abs(dx) or dx:abs()) <= de then
+    if Cross.norm(dx) <= de then
+    --if (type(dx) == 'number' and math.abs(dx) or dx:abs()) <= de then
       return true, d0
     else
       -- next approximation
@@ -766,13 +767,13 @@ polynomial.roots = function (P)
   end
   -- find complex roots
   local comp = polynomial.ext_complex
-  while #pp > 0 do
+  while ispolynomial(pp) and #pp > 0 do
     local root, x = polynomial._nr(pp, comp(math.random(), math.random()), 0.1)
     if root then
       _, x = polynomial._nr(P, x, 1E-6)
       r[#r+1] = x
       r[#r+1] = x:conj()
-      pp = pp / polynomial.build(x)
+      pp = pp / polynomial:build(x)
     else
       break
     end
