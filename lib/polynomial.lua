@@ -57,11 +57,11 @@ ader = a:der()
 ans = ader(1)                 --> 11
 
 -- build polynomial using roots
-ans = Poly:build(1,-1)        --> Poly {1,0,-1}
+ans = Poly:build{1,-1}        --> Poly {1,0,-1}
 
 -- use complex roots
 -- don't add conjugated toots
-ans = Poly:build(1, Comp(2,3))  --> Poly {1, -5, 17, -13}
+ans = Poly:build{1, Comp(2,3)}  --> Poly {1, -5, 17, -13}
 
 -- make copy and compare
 c = a:copy()
@@ -75,7 +75,7 @@ e = a:real()
 ans = e[1]                   --1> -1.00
 
 -- find all roots
-g = Poly:build(2, Comp(3,4))
+g = Poly:build{2, Comp(3,4)}
 e = g:roots()
 ans = e[2]:re()              --1> 3
 
@@ -441,9 +441,9 @@ polynomial._nr = function (P, d0, de)
   local dp, max = polynomial.der(P), 30
   local val = polynomial.val
   for i = 1, max do
-    local dx = val(P, d0) / val(dp, d0)
+    local der = ispolynomial(dp) and val(dp, d0) or dp
+    local dx = val(P, d0) / der
     if Cross.norm(dx) <= de then
-    --if (type(dx) == 'number' and math.abs(dx) or dx:abs()) <= de then
       return true, d0
     else
       -- next approximation
@@ -513,11 +513,11 @@ end
 --- Get polynomial from roots.
 --  Arguments are a sequence of roots.
 --  @param self Do nothing.
---  @param ... List of roots.
+--  @param t List of roots.
 --  @return Polynomial object.
-polynomial.build = function (self, ...)
+polynomial.build = function (self, t)
   local res = polynomial._init({[0]=1})
-  for _, v in ipairs({...}) do
+  for _, v in ipairs(t) do
     if type(v) == 'table' and v.iscomplex then
       local p = polynomial._init({[0] = v:re()^2 + v:im()^2, -2*v:re(), 1})
       res = polynomial.__mul(res, p)
@@ -527,7 +527,7 @@ polynomial.build = function (self, ...)
   end
   return res
 end
-about[polynomial.build] = {":build(root1, [root2,..]) --> P",
+about[polynomial.build] = {":build(roots_t) --> P",
   "Return polynomial with given roots.", help.OTHER}
 
 
@@ -710,7 +710,7 @@ polynomial.ppval = function (self, tP, d, N)
       until up - low <= 1
       N = up
     end
-    return polynomial:ppval(tP, d, N)
+    return tP[N][2](d), N
   end
 end
 about[polynomial.ppval] = {":ppval(Ps_t, x_d, [index_N]) --> num",
@@ -771,14 +771,14 @@ polynomial.roots = function (P)
     return r
   end
   -- find complex roots
-  local comp = polynomial.ext_complex
+  local Z = polynomial.ext_complex
   while ispolynomial(pp) and #pp > 0 do
-    local root, x = polynomial._nr(pp, comp(math.random(), math.random()), 0.1)
+    local root, x = polynomial._nr(pp, Z(math.random(), math.random()), 0.1)
     if root then
       _, x = polynomial._nr(P, x, 1E-6)
       r[#r+1] = x
       r[#r+1] = x:conj()
-      pp = pp / polynomial:build(x)
+      pp = pp / polynomial:build({x})
     else break
     end
   end
@@ -798,7 +798,7 @@ about[polynomial.roots] = {"P:roots() --> roots_t",
 polynomial.spline = function (self, tX, tY)
   polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
   local mat, N = polynomial.ext_matrix, #tX-1
-  local h, A = {}, mat._init(N-1, N+2, {})
+  local h, A = {}, mat:zeros(N-1, N+2)
   -- prepare matrix
   h[1] = tX[2]-tX[1]
   for i = 2, N do
