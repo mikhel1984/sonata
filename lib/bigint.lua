@@ -144,7 +144,7 @@ local COMB = 'combinations'
 local BASE = 10
 
 -- limit to switch float algorithm
-local NDIGITS = math.floor(math.log(1E6) / math.log(BASE))
+local NDIGITS = math.floor(math.log(1E7) / math.log(BASE))
 
 --	INFO
 
@@ -683,7 +683,7 @@ bigint._newString = function (s)
     end
   else
     base = tonumber(sbase)
-    assert(base and base > 10, "Wrong base")
+    assert(base and base > 1, "Wrong base")
   end
   -- get digits
   local acc = {}
