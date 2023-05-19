@@ -1019,15 +1019,6 @@ about[bigint.factorize] = {
 --  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (B)
-  --local sum, b = 0, B._
-  -- if #b > NDIGITS then
-  --   sum = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
-  -- else
-  --   for i = #b, 1, -1 do
-  --     sum = sum * BASE + b[i]
-  --   end
-  -- end
-  -- return B._sign >= 0 and sum or (-sum)
   local b, res = B._, 0
   if #b > 1 then
     res = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
