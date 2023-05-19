@@ -68,21 +68,20 @@ ans = a:eq(123)               --> true
 v = g:to(60)
 ans = tostring(v)             --> '-2,3:60'
 
--- result of rebase is table
-ans = v.base == 60 and v.sign == -1
-  and v[1] == 3 and v[2] == 2  --> true
+-- number of digits
+ans = #v                      --> 2
+
+-- 2nd digit (from the lowest)
+ans = v[2]                    --> 2
+
+-- base and sign
+ans = v.base == 60 and v.sign == -1  --> true
 
 -- print digits
 print(v)
 
 -- back to bigint
 ans = Int(v)                  --> g
-
--- number of digits (BASE=10)
-ans = #a                      --> 3
-
--- 2nd digit (from the lowest, BASE=10)
-ans = a:at(2)                 --> 2
 
 -- comparison
 ans = (a ~= g)                --> true
@@ -135,16 +134,13 @@ local Ver = require("lib.utils")
 local Cross = Ver.cross
 Ver = Ver.versions
 
-local ZERO = string.byte('0')
 local SEP = ','
 local NUMB = 'numbers'
 local COMB = 'combinations'
 
--- numerical base for internal representation
-local BASE = 10
+-- max number for one position
+local BASE = 100000
 
--- limit to switch float algorithm
-local NDIGITS = math.floor(math.log(1E7) / math.log(BASE))
 
 --	INFO
 
@@ -262,10 +258,6 @@ bigint.__le = function (B1, B2)
   end
   return not bigint._gt(B1, B2)
 end
-
-
---- #B
-bigint.__len = function (B) return #B._ end
 
 
 --- B1 < B2
@@ -409,14 +401,15 @@ bigint.__unm = function (B) return bigint._newTable(B._, -B._sign) end
 --  @param B Bigint object.
 --  @return String object.
 bigint.__tostring = function (B)
-  local t = B._
-  t.base = BASE
-  t.sign = B._sign
-  return mt_digits.__tostring(t)
+  local t = {B._sign < 0 and '-' or ''}
+  for i = #B._, 1, -1 do
+    t[#t+1] = tonumber(B._[i])
+  end
+  return table.concat(t, '')
 end
 
 
-about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a", 
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a",
   nil, help.META}
 about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
 
@@ -1026,15 +1019,22 @@ about[bigint.factorize] = {
 --  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (B)
-  local sum, b = 0, B._
-  if #b > NDIGITS then
-    sum = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
+  --local sum, b = 0, B._
+  -- if #b > NDIGITS then
+  --   sum = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
+  -- else
+  --   for i = #b, 1, -1 do
+  --     sum = sum * BASE + b[i]
+  --   end
+  -- end
+  -- return B._sign >= 0 and sum or (-sum)
+  local b, res = B._, 0
+  if #b > 1 then
+    res = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
   else
-    for i = #b, 1, -1 do
-      sum = sum * BASE + b[i]
-    end
+    res = b[1]
   end
-  return B._sign >= 0 and sum or (-sum)
+  return B._sign >= 0 and res or (-res)
 end
 about[bigint.float] = {"B:float() --> num",
   "Represent current big integer as number if it possible.", help.OTHER}
