@@ -4,10 +4,10 @@
 --
 --  Object structure: </br>
 --  <code> {_sign=S, _={v1, ... vn}} </code></br>
---  where <code>S</code> is +1/-1, B is 10 by default,
+--  where <code>S</code> is +1/-1, 
 --  v1 - vn are digits of the number in reverse order.
 --  For example, number <code>123</code> is represented as
---  <code>{_sign=1, _={3, 2, 1}}</code>.
+--  <code>{_sign=1, _={3, 2, 1}}</code> when BASE is 10.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
@@ -332,7 +332,7 @@ bigint.__mul = function (B1, B2)
 end
 
 
---- Block B[x] = y
+--- Don't allow B[x] = y
 bigint.__newindex = function () error("Immutable object") end
 
 
@@ -352,13 +352,13 @@ bigint.__pow = function (B1, B2)
   end
   if B2._sign < 0 then error('Negative power!') end
   local y, x = bigint._1, B1
-  if #B2._ == 1 and B2._[1] == 0 then
-    assert(#B1._ > 1 or B1._[1] ~= 0, "Error: 0^0!")
+  if bigint._isZero(B2) then
+    assert(not bigint._isZero(B1), "Error: 0^0!")
     return bigint._1
   end
   local dig, mul, rest = {}, bigint._mul, nil
   for i = 1, #B2._ do dig[i] = B2._[i] end
-  while #dig > 1 or #dig == 1 and dig[1] > 1 do
+  while #dig > 1 or dig[1] > 1 do
     dig, rest = bigint._divBase(dig, BASE, 2)
     if rest == 1 then
       y = mul(y, x)
@@ -476,7 +476,7 @@ end
 --  @return The quotient and remainder.
 bigint._div = function (B1, B2)
   local b1, b2 = B1._, B2._
-  if #b2 == 1 and b2[1] == 0 then error("Divide by 0!") end
+  if bigint._isZero(B2) then error("Divide by 0!") end
   local res = bigint._newTable({0}, 1)
   if #b1 < #b2 then  -- too short
     return res, B1
@@ -536,7 +536,7 @@ end
 --  @param B2 Second value.
 --  @return Bigint gcd.
 bigint._gcd = function (B1, B2)
-  return (#B1._ == 1 and B1._[1] == 0) and B2 or bigint._gcd(B2 % B1, B1)
+  return bigint._isZero(B1) and B2 or bigint._gcd(B2 % B1, B1)
 end
 
 
@@ -561,14 +561,14 @@ bigint._gt = function (B1, B2)
 end
 
 
---- In-place increment for number.
+--- In-place increment.
 --  @param B Number to increase by 1.
 --  @param forced Flag to skip sign check.
 bigint._incr = function (B, forced)
-  local b = B._
   if not forced and (B._sign < 0) then
     return bigint._decr(B, true)
   end
+  local b = B._
   for i = 1, math.huge do
     local v = (b[i] or 0) + 1
     if v == BASE then
@@ -582,9 +582,10 @@ bigint._incr = function (B, forced)
 end
 
 
-bigint._isZero = function (B)
-  return #B._ == 1 and Cross.isZero(B._[1])
-end
+--- Check for zero value.
+--  @param B Bigint number.
+--  @return true when B == 0
+bigint._isZero = function (B) return #B._ == 1 and B._[1] == 0 end
 
 
 --- Straightforward product algorithm.
@@ -599,7 +600,7 @@ bigint._mul = function (B1, B2)
     local v = b1[i+1]
     if v > 0 then
       for j = 1, #b2 do
-        local pos = i+j
+        local pos = i + j
         s[pos] = (s[pos] or 0) + v * b2[j]
       end
     else
@@ -652,12 +653,12 @@ bigint._newNumber = function (num)
    if num < 0 then
      sign, num = -1, -num
    end
+   local ibase = 1.0 / BASE
    repeat
-     local n = math.floor(num * 0.1)
-     acc[#acc+1] = num - 10*n
-     num = n
+     acc[#acc+1] = num % BASE
+     num = math.floor(num * ibase)
    until num == 0
-   return bigint._newTable(bigint._rebase(acc, 10, BASE), sign)
+   return bigint._newTable(acc, sign)
 end
 
 
@@ -719,13 +720,11 @@ end
 bigint._powm = function (B1, B2, B3)
   local div = bigint._div
   _, B1 = div(B1, B3)
-  if #B1._ == 1 and B1._[1] == 0 then
-    return bigint._0
-  end
+  if bigint._isZero(B1) then return bigint._0 end
   local y, x = bigint._1, B1
   local dig, mul, rest = bigint._copy(B2), bigint._mul, nil
   local d = dig._
-  while #d > 1 or #d == 1 and d[1] > 1 do
+  while #d > 1 or d[1] > 1 do
     d, rest = bigint._divBase(d, BASE, 2)
     if rest == 1 then
       _, y = div(mul(y, x), B3)
@@ -851,11 +850,11 @@ end
 --  @param B0 Initial multiplier.
 --  @return Pair of multipliers or nil.
 bigint._trivialSearch = function (B, B0)
-  local n = B0 and B0:_copy() or bigint._newNumber(2)
+  local n = B0 and B0:_copy() or bigint._newTable({2}, 1) 
   local sq = bigint._sqrt(B)
   while #sq._ > #n._ or not bigint._gt(n, sq) do
     local v1, v2 = bigint._div(B, n)
-    if #v2._ == 1 and v2._[1] == 0 then
+    if bigint._isZero(v2) then 
       return n, v1
     end
     bigint._incr(n)
@@ -876,20 +875,6 @@ bigint.abs = function (B) return bigint._newTable(B._, 1) end
 about[bigint.abs] = {"B:abs() --> num", "Return module of arbitrary long number."}
 
 
---- Get digit.
---  @param B Bigint object.
---  @param N Index.
---  @return Digit at the N-th position.
-bigint.at = function (B, N) return B._[N] end
-about[bigint.at] = {"B:at(N) --> int", "Get N-th digit.", help.OTHER}
-
-
---- Get default numeric base.
---  @return base value.
-bigint.base = function () return BASE end
-about[bigint.base] = {":base() --> int", "Current numeric base."}
-
-
 --- Get sign of the number.
 --  @return sign in form -1/0/+1.
 bigint.sign = function (self) return self._sign end
@@ -903,14 +888,8 @@ about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
 bigint.to = function (B, N)
   N = N or BASE
   assert(Ver.isInteger(N) and N > 0, "Wrong base")
-  local res, b = nil, B._
-  if N == BASE then
-    res = {}
-    for i = 1, #b do res[i] = b[i] end
-    res.base = BASE
-  else
-    res = bigint._rebase(b, BASE, N)
-  end
+  local b = B._
+  local res = bigint._rebase(b, BASE, N)
   res.sign = B._sign
   return setmetatable(res, mt_digits)
 end
@@ -1150,4 +1129,4 @@ bigint.about = about
 return bigint
 
 --=================================
--- TODO common internal base
+-- TODO check F and ratF for different float() 
