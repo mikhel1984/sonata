@@ -53,13 +53,15 @@ setmetatable(use,
     if not name then
       local lst = Sonata.info {
         Sonata.FORMAT_V1,
-        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
+        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"), 
+        Sonata.FORMAT_CLR}
       -- show loaded modules
       for k, v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
         if _G[v] then
           lst[#lst+1] = Sonata.FORMAT_V1
           lst[#lst+1] = '++\n'
+          lst[#lst+1] = Sonata.FORMAT_CLR
         else
           lst[#lst+1] = '\n'
         end

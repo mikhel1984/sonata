@@ -35,7 +35,7 @@ end
 
 --- Print formatted error message.
 --  @param msg Message string.
-local function print_err (msg)
+local function printErr (msg)
   print(
     string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
@@ -47,7 +47,7 @@ end
 local function goTo (args, env)
   local num = tonumber(args[1])
   if not num then
-    print_err("Not a number")
+    printErr("Not a number")
   end
   -- TODO to integer
   local lim = #env.notes
@@ -91,8 +91,9 @@ EV_ERR = -1,  -- error
 EV_ASK = 2,   -- print question
 EV_WRN = 3,
 -- string formats
-FORMAT_V1 = '#v1',
-FORMAT_V2 = '#v2',
+FORMAT_V1 = '#v_1',
+FORMAT_V2 = '#v_2',
+FORMAT_CLR = '#v_clr',
 -- Variants of invite
 INV_MAIN = SonataHelp.CMAIN..'## '..SonataHelp.CRESET,
 INV_CONT = SonataHelp.CMAIN..'.. '..SonataHelp.CRESET,
@@ -100,7 +101,15 @@ INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
 }
 
 
-local cmd_info = {}
+-- Format to representation mapping
+local txtCodes = {
+  [evaluate.FORMAT_V1] = SonataHelp.CHELP,
+  [evaluate.FORMAT_V2] = SonataHelp.CHELP .. SonataHelp.CBOLD,
+  [evaluate.FORMAT_CLR] = SonataHelp.CRESET,
+}
+
+
+local cmdInfo = {}
 local commands = {
 
 --- Quit the program.
@@ -127,7 +136,7 @@ o = function (args, env)
     env.index = 1
     io.write("Name: '", args[2], "'\tBlocks: ", #blk, "\n")
   else
-    print_err("Can't open file "..args[2])
+    printErr("Can't open file "..args[2])
   end
 end,
 
@@ -136,7 +145,7 @@ log = function (args, env)
   if args[2] == 'on' then
     if not env.log then
       env.log = io.open(LOGNAME, 'a')
-      if not env.log then print_err("Can't open log file") end
+      if not env.log then printErr("Can't open log file") end
       local d = os.date('*t')
       env.log:write(
         string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
@@ -148,7 +157,7 @@ log = function (args, env)
       env.log = nil
     end
   else
-    print_err('Unexpected argument!')
+    printErr('Unexpected argument!')
   end
 end,
 
@@ -157,30 +166,30 @@ end,
 
 --- Show list of commands
 commands.help = function (args, env)
-  if cmd_info[args[2]] then
-    cmd_info._print(args[2])
+  if cmdInfo[args[2]] then
+    cmdInfo._print(args[2])
   else
     for k, _ in pairs(commands) do
-      cmd_info._print(k)
+      cmdInfo._print(k)
     end
-    cmd_info._print('number')
+    cmdInfo._print('number')
   end
 end
 
 
 -- Command description
-cmd_info.q = {"Quit"}
-cmd_info.ls = {"Show list of blocks for execution"}
-cmd_info.o = {"Open note-file", "filename"}
-cmd_info.log = {"Turn on/off logging.", "on/off"}
-cmd_info.help = {"Show this help"}
-cmd_info.number = {"Go to N-th block"}
+cmdInfo.q = {"Quit"}
+cmdInfo.ls = {"Show list of blocks for execution"}
+cmdInfo.o = {"Open note-file", "filename"}
+cmdInfo.log = {"Turn on/off logging.", "on/off"}
+cmdInfo.help = {"Show this help"}
+cmdInfo.number = {"Go to N-th block"}
 
 
 --- Show command description.
 --  @param k Command name.
-cmd_info._print = function (k) 
-  local info = cmd_info[k]
+cmdInfo._print = function (k) 
+  local info = cmdInfo[k]
   if info then
     print(string.format("  %s %s - %s", k, info[2] or '', info[1]))
   else 
@@ -244,7 +253,7 @@ local function showAndNext(status, res, env)
     return evaluate.INV_CONT
   elseif status == evaluate.EV_ERR then
     -- error found
-    print_err(res)
+    printErr(res)
     if env.log then env.log:write('--[[ ERROR ]]\n') end
   elseif status == evaluate.EV_ASK then
     -- system question
@@ -319,23 +328,10 @@ end
 --  @param lst List of strings and commands.
 --  @return Text for visualization.
 evaluate._toText = function (lst)
-  local res, i = {}, 1
-  while i <= #lst do
-    local v = lst[i]
-    if v == evaluate.FORMAT_V1 then
-      i = i + 1
-      res[#res+1] = string.format("%s%s%s", 
-        SonataHelp.CHELP, lst[i], SonataHelp.CRESET)
-    elseif v == evaluate.FORMAT_V2 then
-      i = i + 1
-      res[#res+1] = string.format("%s%s%s%s",
-        SonataHelp.CHELP, SonataHelp.CBOLD, lst[i], SonataHelp.CRESET)
-    else
-      res[#res+1] = v
-    end
-    i = i + 1
+  for i, v in ipairs(lst) do
+    lst[i] = txtCodes[v] or v
   end
-  return table.concat(res)
+  return table.concat(lst)
 end
 
 
