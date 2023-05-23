@@ -393,7 +393,7 @@ about[quaternion.inv] = {'Q:inv() --> inv_Q', 'Find inverted quaternion.'}
 --- Get equivalent square matrix
 --  @param Q Quaternion.
 --  @return Equivalent matrix representation.
-quaternion.mat = function (Q)
+quaternion.matrix = function (Q)
   quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
   local q = Q._
   return quaternion.ext_matrix:init(4, 4,
@@ -402,7 +402,7 @@ quaternion.mat = function (Q)
      {q[3],  q[4],  q[1], -q[2]},
      {q[4], -q[3],  q[2],  q[1]}})
 end
-about[quaternion.mat] = {'Q:mat() --> M', 
+about[quaternion.matrix] = {'Q:matrix() --> M', 
   'Equivalent matrix representation.', help.OTHER}
 
 
@@ -487,12 +487,14 @@ about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t|nil',
 --  @return Rotation matrix 3x3.
 quaternion.toRot = function (Q)
   quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
-  local s = 1 / quaternion._norm2(Q)
-  local w, x, y, z = Q._[1], Q._[2], Q._[3], Q._[4]
+  if math.abs(quaternion._norm2(Q)-1) > 1E-4 then
+      error("Unit quaternion is required!")
+  end
+  local w, x, y, z = Ver.unpack(Q._)
   return quaternion.ext_matrix {
-    {1-2*s*(y*y+z*z), 2*s*(x*y-z*w), 2*s*(x*z+y*w)},
-    {2*s*(x*y+z*w), 1-2*s*(x*x+z*z), 2*s*(y*z-x*w)},
-    {2*s*(x*z-y*w), 2*s*(y*z+x*w), 1-2*s*(x*x+y*y)}}
+    {1-2*(y*y+z*z), 2*(x*y-z*w), 2*(x*z+y*w)},
+    {2*(x*y+z*w), 1-2*(x*x+z*z), 2*(y*z-x*w)},
+    {2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)}}
 end
 about[quaternion.toRot] = {'Q:toRot() --> M', 'Get equal rotation matrix.', ROTATION}
 
