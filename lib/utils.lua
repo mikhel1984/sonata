@@ -121,7 +121,8 @@ end
 --  @param v Some object.
 --  @return Float number or nil.
 cross.float = function (v)
-  return type(v) == 'number' and v or type(v) == 'table' and v:float() or nil
+  local tp = type(v)
+  return tp == 'number' and v or tp == 'table' and v:float() or nil
 end
 
 
@@ -134,9 +135,10 @@ end
 --  @param v Some object.
 --  @return Norm or nil.
 cross.norm = function (v)
-  if type(v) == 'number' then
+  local tp = type(v)
+  if tp == 'number' then
     return math.abs(v)
-  elseif type(v) == 'table' then
+  elseif tp == 'table' then
     return v.float and math.abs(v:float()) or v._norm and v:_norm() or nil
   end
   return nil

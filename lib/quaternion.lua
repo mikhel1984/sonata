@@ -110,7 +110,7 @@ local function tofloat(v) return type(v) == 'table' and v:float() or v end
 --  @param Q Quaternion object.
 --  @return Quaternion or value.
 local function numquat(Q)
-  return Cross.eq(Q._[2], 0) and Cross.eq(Q._[3], 0) and Cross.eq(Q._[4], 0)
+  return Cross.isZero(Q._[2]) and Cross.isZero(Q._[3]) and Cross.isZero(Q._[4])
     and Cross.simp(Q._[1]) or Q
 end
 
@@ -148,6 +148,12 @@ _simp = numquat
 local function isquaternion(v) return getmetatable(v) == quaternion end
 
 
+local function numOrQuat(w, x, y, z)
+  return Cross.isZero(x) and Cross.isZero(y) and Cross.isZero(z) and w 
+    or quaternion._new(w, x, y, z)
+end
+
+
 --- Q1 + Q2
 --  @param Q1 First quaternion.
 --  @param Q2 Second quaternion.
@@ -162,8 +168,7 @@ quaternion.__add = function (Q1, Q2)
     end
   end
   local q1, q2 = Q1._, Q2._
-  return numquat(
-    quaternion._new(q1[1]+q2[1], q1[2]+q2[2], q1[3]+q2[3], q1[4]+q2[4]))
+  return numOrQuat(q1[1]+q2[1], q1[2]+q2[2], q1[3]+q2[3], q1[4]+q2[4])
 end
 
 
@@ -189,11 +194,11 @@ quaternion.__mul = function (Q1, Q2)
     end
   end
   local q1, q2 = Q1._, Q2._
-  return numquat(quaternion._new(
+  return numOrQuat(
     q1[1]*q2[1]-q1[2]*q2[2]-q1[3]*q2[3]-q1[4]*q2[4],
      q1[1]*q2[2]+q1[2]*q2[1]+q1[3]*q2[4]-q1[4]*q2[3],
      q1[1]*q2[3]-q1[2]*q2[4]+q1[3]*q2[1]+q1[4]*q2[2],
-     q1[1]*q2[4]+q1[2]*q2[3]-q1[3]*q2[2]+q1[4]*q2[1]))
+     q1[1]*q2[4]+q1[2]*q2[3]-q1[3]*q2[2]+q1[4]*q2[1])
 end
 
 
@@ -214,10 +219,8 @@ quaternion.__pow = function (Q, d)
     end
     return res
   else
-    if math.abs(quaternion._norm2(Q)-1) > 1E-4 then
-      error("Unit quaternion is required!")
-    end
     local angle, axis = quaternion.toAA(Q)
+    if not axis then return 1.0 end  -- no imaginary part
     angle = 0.5 * d * angle   -- new angle
     local sa = math.sin(angle)
     return quaternion._new (
@@ -240,8 +243,7 @@ quaternion.__sub = function (Q1, Q2)
     end
   end
   local q1, q2 = Q1._, Q2._
-  return numquat(
-    quaternion._new(q1[1]-q2[1], q1[2]-q2[2], q1[3]-q2[3], q1[4]-q2[4]))
+  return numOrQuat(q1[1]-q2[1], q1[2]-q2[2], q1[3]-q2[3], q1[4]-q2[4])
 end
 
 
@@ -409,7 +411,7 @@ about[quaternion.mat] = {'Q:mat() --> M',
 quaternion.normalize = function (Q)
   local k = math.sqrt(quaternion._norm2(Q))
   local q = Q._
-  return k > 0 and  quaternion._new(q[1]/k, q[2]/k, q[3]/k, q[4]/k) or Q
+  return k > 0 and quaternion._new(q[1]/k, q[2]/k, q[3]/k, q[4]/k) or Q
 end
 about[quaternion.normalize] = {'Q:normalize() --> unit_Q', 
   'Return unit quaternion.', help.OTHER}
@@ -464,13 +466,19 @@ about[quaternion.slerp] = {'Q:slerp(end_Q, rat_f) --> rat_Q',
 --  @return Angle and table with unit vector of direction.
 quaternion.toAA = function (Q)
   -- normalize
-  local d = quaternion.abs(Q)
-  local w, x, y, z = Q._[1]/d, Q._[2]/d, Q._[3]/d, Q._[4]/d
+  if math.abs(quaternion._norm2(Q)-1) > 1E-4 then
+      error("Unit quaternion is required!")
+  end
+  local w, x, y, z = Ver.unpack(Q._)
   -- get sin
-  local v = math.sqrt(x*x+y*y+z*z)     -- what if v == 0 ?
-  return 2*Ver.atan2(v, w), {x/v, y/v, z/v}
+  local v = math.sqrt(x*x+y*y+z*z)
+  if math.abs(v) < 1E-16 then
+    return 1.0, nil
+  else
+    return 2*Ver.atan2(v, w), {x/v, y/v, z/v}
+  end
 end
-about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t', 
+about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t|nil', 
   'Get angle and axis of rotation.', ROTATION}
 
 
@@ -522,14 +530,14 @@ setmetatable(quaternion,
 {__call = function (self, v)
   assert(type(v) == 'table', "Table is expected")
   local w = v[1] or v.w or 0
-  local i = v[2] or v.x or 0
-  local j = v[3] or v.y or 0
-  local k = v[4] or v.z or 0
+  local x = v[2] or v.x or 0
+  local y = v[3] or v.y or 0
+  local z = v[4] or v.z or 0
   assert(type(w) == 'number' or type(w) == 'table' and w.float, "Wrong part w")
-  assert(type(i) == 'number' or type(i) == 'table' and i.float, "Wrong part x")
-  assert(type(j) == 'number' or type(j) == 'table' and j.float, "Wrong part y")
-  assert(type(k) == 'number' or type(k) == 'table' and k.float, "Wrong part z")
-  return quaternion._new(w, i, j, k)
+  assert(type(x) == 'number' or type(x) == 'table' and x.float, "Wrong part x")
+  assert(type(y) == 'number' or type(y) == 'table' and y.float, "Wrong part y")
+  assert(type(z) == 'number' or type(z) == 'table' and z.float, "Wrong part z")
+  return quaternion._new(w, x, y, z)
 end
 })
 about[quaternion] = {" {w, x, y, z} --> new_Q", "Create new quaternion.", help.NEW}
