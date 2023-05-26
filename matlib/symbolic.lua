@@ -6,7 +6,7 @@
 --  <code> {_=components, _parent=parent, _sign=signature} </code><br>
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'symbolic'
 --]]
@@ -15,7 +15,7 @@
 --[[TEST
 
 -- use 'symbolic'
-Sym = require 'lib.symbolic'
+Sym = require 'matlib.symbolic'
 
 -- create variables
 x, y = Sym('x'), Sym('y')
@@ -48,11 +48,9 @@ ans = foo(Sym(2), Sym(3)) --> Sym(8)
 
 --	LOCAL
 
-local Utils = require('lib.utils')
+local Utils = require('matlib.utils')
 Utils = Utils.utils
-
-
-local symbolic = require('lib.symbase')
+local symbolic = require('matlib.symbase')
 
 
 --- Check object type.

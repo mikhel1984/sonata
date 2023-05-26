@@ -17,7 +17,7 @@
 --[[TEST
 
 -- use 'units'
-Unit = require 'lib.units'
+Unit = require 'matlib.units'
 
 -- add some rules
 Unit:setRule('h', Unit(60,'min'))
@@ -77,7 +77,7 @@ print(a)
 
 --	LOCAL
 
-local Ver = require('lib.utils')
+local Ver = require('matlib.utils')
 local Cross = Ver.cross
 local Utils = Ver.utils
 Ver = Ver.versions

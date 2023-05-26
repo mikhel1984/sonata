@@ -10,7 +10,7 @@
 --  <code>{_sign=1, _={3, 2, 1}}</code> when BASE is 10.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'bigint'
 --]]
@@ -19,7 +19,7 @@
 ---------------- Tests -----------------
 --[[TEST
 -- use 'bigint'
-Int = require 'lib.bigint'
+Int = require 'matlib.bigint'
 
 -- from integer
 a = Int(123)
@@ -130,7 +130,7 @@ ans = a - 0.5                 --> 122.5
 
 --	LOCAL
 
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Cross = Ver.cross
 Ver = Ver.versions
 

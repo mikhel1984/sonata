@@ -7,7 +7,7 @@
 --  where <i>w</i> is a real part, <i>i, j, k</i> are imaginary elements.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'quaternion'
 --]]
@@ -16,9 +16,9 @@
 --[[TEST
 
 -- use 'quaternion'
-Quat = require 'lib.quaternion'
+Quat = require 'matlib.quaternion'
 -- external dependencies, can be loaded implicitly
-require 'lib.matrix'
+require 'matlib.matrix'
 
 -- quaternion
 -- set {w,x,y,z}
@@ -89,7 +89,7 @@ print(d)
 
 --	LOCAL
 
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
@@ -394,7 +394,7 @@ about[quaternion.inv] = {'Q:inv() --> inv_Q', 'Find inverted quaternion.'}
 --  @param Q Quaternion.
 --  @return Equivalent matrix representation.
 quaternion.matrix = function (Q)
-  quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
+  quaternion.ext_matrix = quaternion.ext_matrix or require('matlib.matrix')
   local q = Q._
   return quaternion.ext_matrix:init(4, 4,
     {{q[1], -q[2], -q[3], -q[4]},
@@ -486,7 +486,7 @@ about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t|nil',
 --  @param Q Quaternion.
 --  @return Rotation matrix 3x3.
 quaternion.toRot = function (Q)
-  quaternion.ext_matrix = quaternion.ext_matrix or require('lib.matrix')
+  quaternion.ext_matrix = quaternion.ext_matrix or require('matlib.matrix')
   if math.abs(quaternion._norm2(Q)-1) > 1E-4 then
       error("Unit quaternion is required!")
   end

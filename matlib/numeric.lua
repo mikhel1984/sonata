@@ -3,7 +3,7 @@
 --- Numerical solutions for some mathematical problems.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'numeric'
 --]]
@@ -13,7 +13,9 @@
 --[[TEST
 
 -- use 'numeric'
-Num = require 'lib.numeric'
+Num = require 'matlib.numeric'
+-- use matrices for high order equations
+Mat = require 'matlib.matrix'
 
 -- define tolerance
 Num.TOL = 1e-4
@@ -41,9 +43,6 @@ tbl = Num:ode45(function (x,y) return x*y end,
                 {0,3}, 1)
 ans = tbl[#tbl][2]           --2> 90.011
 
--- use matrices for high order equations
-Mat = require 'lib.matrix'
-
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
 -- so: x1' = x2, x2' = 1+2*x2-2*x1
@@ -69,7 +68,7 @@ ans = y[#y][1]               --2> 2.56
 
 --	LOCAL
 
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Cnorm = Ver.cross.norm
 Ver = Ver.versions
 

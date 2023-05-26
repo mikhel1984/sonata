@@ -3,7 +3,7 @@
 --- Coordinate transformations and other geodetic tasks.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'geodesy'
 --]]
@@ -12,7 +12,7 @@
 --[[TEST
 
 -- use 'geodesy'
-Geo = require 'lib.geodesy'
+Geo = require 'matlib.geodesy'
 
 -- generate random from number -1 to 1
 rnd = function () return 2*math.random()-1 end
@@ -103,7 +103,7 @@ ans = p4.B                  --2> p1.B
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Calc = Ver.calc
 Ver = Ver.versions
 

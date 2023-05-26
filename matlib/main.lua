@@ -3,7 +3,7 @@
 --- Default functions and objects.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'main'
 --]]
@@ -12,7 +12,7 @@
 ---------------- Tests ---------------------
 --[[TEST
 
-require 'lib.main'
+require 'matlib.main'
 
 -- constants starts from '_'
 ans = _pi                     --> math.pi
@@ -53,7 +53,7 @@ local AUX = 'auxiliary'
 
 
 -- compatibility
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Utils = Ver.utils
 local Calc = Ver.calc
 Ver = Ver.versions

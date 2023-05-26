@@ -3,7 +3,7 @@
 --- Data processing and statistics.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'data'
 --]]
@@ -13,10 +13,10 @@
 --[[TEST
 
 -- use 'data'
-_D = require 'lib.data'
+_D = require 'matlib.data'
 -- external dependencies, can be loaded implicitly
-require 'lib.special'
-require 'lib.matrix'
+require 'matlib.special'
+require 'matlib.matrix'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -147,7 +147,7 @@ ans = c[1]                   --3> 0.909
 
 --	LOCAL
 
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Cross = Ver.cross
 local Utils = Ver.utils
 Ver = Ver.versions
@@ -199,7 +199,7 @@ about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
 data.cov = function (self, t)
   local N = #t
   if N == 0 then error("Expected list of vectors") end
-  data.ext_matrix = data.ext_matrix or require('lib.matrix')
+  data.ext_matrix = data.ext_matrix or require('matlib.matrix')
   local m = data.ext_matrix:zeros(N, N)
   for i = 1, N do
     local ti = t[i]
@@ -628,7 +628,7 @@ about[data.table] = {":table(data_t, names_t=nil, row_fn=nil) --> str",
 --  @param N Degree of freedom.
 --  @return Cumulative value.
 data.tcdf = function (self, d, N)
-  data.ext_special = data.ext_special or require('lib.special')
+  data.ext_special = data.ext_special or require('matlib.special')
   local tmp = N/(N+d*d)
   return 1-0.5*data.ext_special:betainc(tmp, 0.5*N, 0.5)
 end
@@ -642,7 +642,7 @@ about[data.tcdf] = {":tcdf(x_d, deg_N) --> num",
 --  @param N Degree of freedom.
 --  @return Density value.
 data.tpdf = function (self, d, N)
-  data.ext_special = data.ext_special or require('lib.special')
+  data.ext_special = data.ext_special or require('matlib.special')
   local tmp = math.sqrt(N)*data.ext_special:beta(0.5, 0.5*N)
   return (1+d*d/N)^(-0.5*(N+1))/tmp
 end

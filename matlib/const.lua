@@ -3,7 +3,7 @@
 --- Collection of constants.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'const'
 --]]
@@ -12,9 +12,9 @@
 --[[TEST
 
 -- use 'const'
-_C = require 'lib.const'
+_C = require 'matlib.const'
 -- external dependencies, can be loaded implicitly
-require 'lib.units'  -- convert into Unit object
+require 'matlib.units'  -- convert into Unit object
 
 -- charge of electron
 ans = _C.phy.e * 1E19        --3> 1.602
@@ -139,7 +139,7 @@ about[_math.e] = {".math.e", "Base of the natural logarithm.", MATH}
 --  @return Unit object or nil.
 const._unit_ = function (t, sKey)
   if type(sKey) == 'string' and string.find(sKey, '_U$') then
-    const.ext_units = const.ext_units or require('lib.units')
+    const.ext_units = const.ext_units or require('matlib.units')
     local name = string.sub(sKey, 1, -3)
     local val = t[name]
     return val and const.ext_units(val, t[name..'_u_'] or '') or nil

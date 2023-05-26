@@ -9,7 +9,7 @@
 --  operation X[i][j] will return 0.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'matrix'
 --]]
@@ -19,7 +19,7 @@
 --[[TEST
 
 -- use 'matrix'
-Mat = require 'lib.matrix'
+Mat = require 'matlib.matrix'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}
@@ -228,7 +228,7 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 --	LOCAL
 
 -- compatibility
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Cnorm, Cfloat = Ver.cross.norm, Ver.cross.float
 local Utils = Ver.utils
 Ver = Ver.versions
@@ -1054,7 +1054,7 @@ about[matrix.dot] = {'V:dot(V2) --> num', 'Scalar product of two vectors.'}
 --  @return Matrix with eigenvectors, matrix with eigenvalues in diagonal.
 matrix.eig = function (M)
   assert(M._rows == M._cols)
-  matrix.ext_poly = matrix.ext_poly or require("lib.polynomial")
+  matrix.ext_poly = matrix.ext_poly or require("matlib.polynomial")
   local p = matrix.ext_poly:char(M)
   local root = p:roots()
   local P, lam = matrix:zeros(M._rows), matrix:zeros(M._rows)

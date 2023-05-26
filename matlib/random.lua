@@ -3,7 +3,7 @@
 --- Random number generators.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'random'
 --]]
@@ -12,10 +12,10 @@
 --[[TEST
 
 -- use 'random'
-Rand = require 'lib.random'
-Ap = require 'lib.asciiplot'     -- for visualization
-_D = require 'lib.data'          -- hystogram
-Spec = require 'lib.special'     -- gamma function
+Rand = require 'matlib.random'
+Ap = require 'matlib.asciiplot'     -- for visualization
+_D = require 'matlib.data'          -- hystogram
+Spec = require 'matlib.special'     -- gamma function
 -- prepare for data generation
 N = 100  -- number of points
 -- normalize hystograms
@@ -295,7 +295,7 @@ end
 --  @param N Total number of attempts.
 --  @return Random value.
 random.binomial = function (R, dp, N)
-  random.ext_special = random.ext_special or require('lib.special')
+  random.ext_special = random.ext_special or require('matlib.special')
   local gln = random.ext_special.gammaln
   local p = (dp < 0.5) and dp or (1 - dp)
   local bnl, am = 0, p*N
@@ -515,7 +515,7 @@ about[random.norm] = {":norm(mean_d=0, dev_d=1) --> float",
 --  @param dLam Lambda.
 --  @return random number.
 random.poisson = function (R, dLam)
-  random.ext_special = random.ext_special or require('lib.special')
+  random.ext_special = random.ext_special or require('matlib.special')
   local gln = random.ext_special.gammaln
   local em = -1
   if dLam < 12 then

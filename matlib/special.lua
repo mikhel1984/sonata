@@ -6,7 +6,7 @@
 --  by W.H.Press, S.A.Teukolsky, W.T.Vetterling and B.P.Flannery
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'special'
 --]]
@@ -16,7 +16,7 @@
 --[[TEST
 
 -- use 'special'
-Spec = require 'lib.special'
+Spec = require 'matlib.special'
 
 -- beta functions
 ans = Spec:beta(3,4) * 1E2   --3> 1.667
@@ -66,7 +66,7 @@ ans = Spec:dawson(3.3)       --3> 0.1598
 
 --	LOCAL
 
-local Ver = require("lib.utils").versions
+local Ver = require("matlib.utils").versions
 
 
 -- constants for gamma approximation

@@ -7,7 +7,7 @@
 --  i.e. complex number is a table which consists of two elements.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'complex'
 --]]
@@ -17,7 +17,7 @@
 --[[TEST
 
 -- use 'complex'
-_Z = require 'lib.complex'
+_Z = require 'matlib.complex'
 
 -- real and imaginary pars
 a = _Z(1,2)
@@ -126,7 +126,7 @@ print(a)
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 -- Inter-module functionality
 local Cross = Ver.cross
 local Utils = Ver.utils

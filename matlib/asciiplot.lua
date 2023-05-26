@@ -3,7 +3,7 @@
 --- Use pseudography for data visualization.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'asciiplot'
 --]]
@@ -12,7 +12,7 @@
 --[[TEST
 
 -- use 'asciiplot'
-Ap = require 'lib.asciiplot'
+Ap = require 'matlib.asciiplot'
 
 -- figure with default size
 fig1 = Ap()
@@ -1321,7 +1321,7 @@ if Sonata then  -- GLOBAL
 
 -- Define simplified function call
 Plot = function (...)
-  local lib = Ap or require('lib.asciiplot')
+  local lib = Ap or require('matlib.asciiplot')
   local f = lib()
   f._x:setRange({-5, 5})
   f:plot(...)

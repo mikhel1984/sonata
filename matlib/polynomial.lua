@@ -7,7 +7,7 @@
 --  where each element <i>pk</i> corresponds to coefficient of <i>x^k</i>.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'polynomial'
 --]]
@@ -17,10 +17,10 @@
 --[[TEST
 
 -- use 'polynomial'
-Poly = require 'lib.polynomial'
+Poly = require 'matlib.polynomial'
 -- external dependencies, can be loaded implicitly
-require 'lib.matrix'         -- in Poly.fit
-Comp = require 'lib.complex' -- for complex roots
+require 'matlib.matrix'         -- in Poly.fit
+Comp = require 'matlib.complex' -- for complex roots
 
 -- coefficients in ascendant order
 a = Poly {1,2,4,3}
@@ -127,7 +127,7 @@ ans = p(0.5)                 --2> -0.512
 
 --	LOCAL
 
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
@@ -609,7 +609,7 @@ polynomial.fit = function (self, tX, tY, N)
   -- add sums to the last "column"
   for i = 1, #acc do table.insert(acc[i], sY[i]) end
   -- solve
-  polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
+  polynomial.ext_matrix = polynomial.ext_matrix or require('matlib.matrix')
   local mat = polynomial.ext_matrix
   local gaus = mat(acc):rref()
   local res = {}
@@ -756,7 +756,7 @@ about[polynomial.real] = {"P:real() --> roots_t",
 --  @param P Source polynomial.
 --  @return Table with roots.
 polynomial.roots = function (P)
-  polynomial.ext_complex = polynomial.ext_complex or require('lib.complex')
+  polynomial.ext_complex = polynomial.ext_complex or require('matlib.complex')
   -- exact solution
   if #P == 1 then
     return {-P[0] / P[1]}
@@ -796,7 +796,7 @@ about[polynomial.roots] = {"P:roots() --> roots_t",
 --  @param tY Sequence of dependent values.
 --  @return Table with polynomials for each interval.
 polynomial.spline = function (self, tX, tY)
-  polynomial.ext_matrix = polynomial.ext_matrix or require('lib.matrix')
+  polynomial.ext_matrix = polynomial.ext_matrix or require('matlib.matrix')
   local mat, N = polynomial.ext_matrix, #tX-1
   local h, A = {}, mat:zeros(N-1, N+2)
   -- prepare matrix

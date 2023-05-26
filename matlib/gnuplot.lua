@@ -7,7 +7,7 @@
 --  each function is in separate subtable.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'gnuplot'
 --]]
@@ -17,7 +17,7 @@
 --[[TEST
 
 -- use 'gnuplot'
-Gp = require 'lib.gnuplot'
+Gp = require 'matlib.gnuplot'
 Gp.testmode = true -- just for testing
 
 -- simple plot

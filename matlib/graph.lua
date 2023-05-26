@@ -10,7 +10,7 @@
 --  "false" is used to mark paired of absent edges.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'graph'
 --]]
@@ -20,7 +20,7 @@
 --[[TEST
 
 -- use 'graph'
-Graph = require 'lib.graph'
+Graph = require 'matlib.graph'
 
 -- build undirected graph
 a = Graph()

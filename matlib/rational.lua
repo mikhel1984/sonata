@@ -7,7 +7,7 @@
 --  where both numbers are integers.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'rational'
 --]]
@@ -17,7 +17,7 @@
 --[[TEST
 
 -- use 'rational'
-Rat = require 'lib.rational'
+Rat = require 'matlib.rational'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -84,7 +84,7 @@ ans = a + 0.5                 --> 1
 
 --	LOCAL
 
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions

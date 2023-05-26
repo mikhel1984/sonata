@@ -16,7 +16,7 @@ local Help = require('core.help')
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
 local S10 = string.rep('-', 10)
 
-local LIB = (SONATA_ADD_PATH or '')..'lib'
+local LIB = (SONATA_ADD_PATH or '')..'matlib'
 
 local sformat, sgsub = string.format, string.gsub
 local tconcat = table.concat
@@ -32,7 +32,7 @@ local generator = {}
 --  @param lng Localization table from existing file.
 --  @return String representation of all help information of the module.
 local function docLines(module, alias, lng)
-  local m = require('lib.' .. module)
+  local m = require('matlib.' .. module)
   local lng_t = lng[module] or {}
   -- collect
   local fn, description = {}, nil
@@ -182,7 +182,7 @@ end
 --  @param tLang Table with translation.
 --  @return Text with description.
 local makeModule = function (sName, tLang)
-  local m = require('lib.'..sName)
+  local m = require('matlib.'..sName)
   local lng = tLang[sName] or {}
   local res = {
     sformat('%s %s.lua %s', S10, sName, S10),

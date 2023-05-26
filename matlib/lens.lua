@@ -9,7 +9,7 @@
 --  "Introduction to matrix methods in optics" by A.Gerrard, J.M.Burch.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'lens'
 --]]
@@ -19,10 +19,10 @@
 --[[TEST
 
 -- use 'lens'
-Lens = require 'lib.lens'
+Lens = require 'matlib.lens'
 -- external dependencies, can be loaded implicitly
-require 'lib.numeric'  -- for root searching
-require 'lib.complex'  -- for beam transformation
+require 'matlib.numeric'  -- for root searching
+require 'matlib.complex'  -- for beam transformation
 
 -- define a simple lense
 n1 = 1      -- air
@@ -222,7 +222,7 @@ about[lens.afocal] = {":afocal(magn_d) --> L",
 --  @param dLam Wavelength, nm.
 --  @return Output beam radius and curvature.
 lens.beam = function (L, dW, dR, dLam)
-  lens.ext_complex = lens.ext_complex or require("lib.complex")
+  lens.ext_complex = lens.ext_complex or require("matlib.complex")
   local lampi = dLam * 1E-9 / math.pi
   local _1_q1 = lens.ext_complex(1/dR, lampi / (dW * dW))
   local _1_q2 = (L[3] + L[4]*_1_q1) / (L[1] + L[2]*_1_q1)
@@ -335,7 +335,7 @@ about[lens.ref] = {":ref(rad_d, n1_d, n2_d) --> L",
 --  @param d0 Initial estimation of the variable.
 --  @return The found parameter value.
 lens.solve = function (self, fn, ind, d0)
-  lens.ext_numeric = lens.ext_numeric or require('lib.numeric')
+  lens.ext_numeric = lens.ext_numeric or require('matlib.numeric')
   -- prepare 'equation'
   local eqn = function (d)
     local v = fn(d)

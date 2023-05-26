@@ -38,7 +38,7 @@ Sonata.doimport = function (tbl, name)
     name = assert(Sonata.alias[name], "Wrong module name: "..name.."!")
   end
   if not _G[var] then
-    local lib = require('lib.'..name)
+    local lib = require('matlib.'..name)
     _G[var] = lib
     -- add description
     if lib.about then About:add(lib.about, name, var) end
@@ -107,10 +107,10 @@ process = function (args)
   local Test = require('core.test')
   if args[2] then
     Test.module(
-      string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
+      string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
   else
     for m in pairs(use) do
-      Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), m))
+      Test.module(string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), m))
     end
   end
   Test.summary()
