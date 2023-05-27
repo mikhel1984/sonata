@@ -64,11 +64,11 @@ print(a)
 
 -- continued fraction to rational
 -- 1 + 1/(2+1/(3+1/4)) 
-c = Rat:fromCont {[0]=1, 2, 3, 4}
+c = Rat:fromCF {[0]=1, 2, 3, 4}
 ans = c                       --> Rat(43,30)
 
 -- rational to continued fraction
-d = c:toCont()
+d = c:toCF()
 ans = d[1]                    --> 2
 
 -- show continued fraction
@@ -99,9 +99,10 @@ local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
 
 local function numrat(R)
-  return Cross.eq(R._[2], 1) and Cross.simp(R._[1])               -- x / 1
+  local a, b = R._[1], R._[2]
+  return Cross.eq(b, 1) and Cross.simp(a)               -- x / 1
     -- float num or denom
-    or (isbig(R._[1]) or isbig(R._[2])) and (R._[1] / R._[2])
+    or (isbig(a) or isbig(b)) and (a / b)
     or R
 end
 
@@ -349,7 +350,7 @@ end
 
 --- Create new object, set metatable.
 --  @param vn Numerator.
---  @param vd Denominator. Default is 1.
+--  @param vd Denominator. 
 --  @return New rational object.
 rational._new = function (vn, vd)
   local g = rational._gcd(vd, vn)     -- inverse order move sign to denominator
@@ -403,9 +404,8 @@ about[rational.float] = {"R:float() --> num", "Return rational number as decimal
 --  @param fErr Precision, default is 0.001.
 rational.from = function (self, f, fErr)
   fErr = fErr or 1E-3
-  local f0 = math.abs(f)
-  local c, acc = f0, {}
-  acc[0], c = math.modf(c)
+  local f0, acc, c = math.abs(f), {}, nil
+  acc[0], c = math.modf(f0)
   local a, b = acc[0], 1
   while c > 0 and math.abs(a/b - f0) > fErr do
     acc[#acc+1], c = math.modf(1/c)
@@ -421,22 +421,24 @@ about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
 --  @param self Do nothing.
 --  @param t List of coefficients.
 --  @return Rational number.
-rational.fromCont = function (self, t)
+rational.fromCF = function (self, t)
   local check = {}
   for i, v in ipairs(t) do
     if (type(v) == 'number' and Ver.isInteger(v)
-          or type(v) == 'table' and v.__mod) and v > 0 then
+          or type(v) == 'table' and v.__mod) and v > 0 
+    then
       check[i] = v
     else error("Positive integer is expected") end
   end
   local t0 = t[0] or 0
   if (type(t0) == 'number' and Ver.isInteger(t0)
-        or type(t0) == 'table' and t0.__mod) then
+        or type(t0) == 'table' and t0.__mod) 
+  then
     check[0] = t0
   else error("Integer is expected") end
   return rational._new(rational._cont2rat(check))
 end
-about[rational.fromCont] = {":fromCont(coeff_t) --> R",
+about[rational.fromCF] = {":fromCF(coeff_t) --> R",
   "Transform continued fraction to rational number.", help.NEW}
 
 
@@ -445,7 +447,7 @@ about[rational.fromCont] = {":fromCont(coeff_t) --> R",
 --  @param vb Second integer.
 --  @return Greatest common divisor.
 rational._gcd = function (va, vb)
-  return Cross.eq(va, 0) and vb or rational._gcd(vb % va, va)
+  return Cross.isZero(va) and vb or rational._gcd(vb % va, va)
 end
 
 
@@ -459,7 +461,7 @@ about[rational.num] = {"R:num() --> var", "Return the numerator of rational numb
 --- Find continued fraction coefficients.
 --  @param R Positive rational number.
 --  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/...
-rational.toCont = function (R)
+rational.toCF = function (R)
   local a, b, c = R._[1], R._[2], nil
   if a < 0 then error("Positive is expected") end
   local numbers = (type(a) == 'number' and type(b) == 'number')
@@ -474,7 +476,7 @@ rational.toCont = function (R)
   res[#res+1] = math.modf(b)
   return setmetatable(res, _continued)
 end
-about[rational.toCont] = {"R:toCont() --> coeff_t", 
+about[rational.toCF] = {"R:toCF() --> coeff_t", 
   "Transform rational number to continued fraction.", help.OTHER}
 
 
@@ -488,7 +490,7 @@ __call = function (self, n, d)
   assert(
     type(d) == 'number' and Ver.isInteger(d) or type(d) == 'table' and d.__mod,
     "Wrong denomenator type")
-  assert(not Cross.eq(d, 0), "Wrond denomenator value")
+  assert(not Cross.isZero(d), "Wrond denomenator value")
   return rational._new(n, d)
 end})
 about[rational] = {" (num, denom=1) --> new_R", 
