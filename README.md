@@ -1,4 +1,4 @@
-# so/\/ata
+# so/\\/ata
 
 **Sonata** is a mathematical library and console based interpreter for solving different problems. The program is written in pure **Lua** language and can be called on each platform where the **Lua** is installed. It is designed to be a handy tool for simple calculations and modeling.
 
