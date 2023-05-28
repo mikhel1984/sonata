@@ -13,7 +13,6 @@ DIV {margin-left: 10px;}
 <a name="Top"></a>
 <div><h1 align="center">Sonata Lua Calculus</h1>
 <ul>
-<li><a href="#Arr">array</a></li>
 <li><a href="#Ap">asciiplot</a></li>
 <li><a href="#Int">bigint</a></li>
 <li><a href="#_Z">complex</a></li>
@@ -32,7 +31,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Rat">rational</a></li>
 <li><a href="#Spec">special</a></li>
 <li><a href="#Sym">symbolic</a></li>
-<li><a href="#Unit">units</a></li>
+<li><a href="#_U">units</a></li>
 </ul></div>
 <div><h3># About #</h3>
 <p><br>
@@ -47,108 +46,23 @@ Sonata is a Lua based program for mathematical calculations.<br>
 	-e	Evaluate command line expression.<br>
 		e.g. -e "2+2"<br>
 <br>
-	--doc	Generating a documentation page.<br>
-		e.g. --doc ru<br>
 	--lang	Generation or updating of the localization file.<br>
 		e.g. --lang eo<br>
 	--new	Generating a template for a new module.<br>
 		e.g. --new  matrices  Mat  "Matrix operations."<br>
 	--test	Run unit tests for a given module. Execute for all modules if no name is specified.<br>
 		e.g. --test array<br>
+	--doc	Generating a documentation page.<br>
+		e.g. --doc ru<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.35<br>
+<b>VERSION</b>: 0.9.36<br>
 <br>
-<b>MODULES</b>: polynomial, geodesy, matrix, random, numeric, special, complex, rational, bigint, quaternion, data, lens, gnuplot, array, const, units, symbolic, main, graph, asciiplot.<br>
+<b>MODULES</b>: random, main, const, complex, units, geodesy, gnuplot, symbolic, special, graph, quaternion, numeric, matrix, rational, asciiplot, bigint, polynomial, lens, data.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
 <p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>
-<div><a name="Arr"></a>
-<h3># Arr (array) #</h3>
-<p class="descript">Manipulations with arrays of elements. Indices have form of tables. Indexation from 1.</p>
-<p><b>A:capacity() --> int</b> - Maximal number of elements in the array. The same as #A.<br>
-<b>A:concat(A2, axis_N) --> A3</b> - Concatenate along the given array along the given axis.<br>
-<b>A:copy() --> cpy_A</b> - Get copy of the array.<br>
-<b>A:dim() --> int</b> - Return size of the array.<br>
-<b>A:get(ind_t) --> var</b> - Get array element.<br>
-<b>A:ipairs() --> iter_fn</b> - Return iterator along all indexes.<br>
-<b>A:isEqual(A2) --> bool</b> - Check size equality.<br>
-<b>A:map(fn) --> out_A</b> - Apply function fn(x,[ind]) to all elements, return new array.<br>
-<b>A:set(ind_t, var) --> nil</b> - Set value to the array.<br>
-<b>A:sub(ind1_t, ind2_t) --> range_A</b> - Return sub array restricted by 2 indexes.<br>
-<b>Arr {size1_N, [size2_N, ..]} --> new_A</b> - Create empty array with the given size.<br>
-<b>Arr:zip(fn, ...) --> A</b> - Apply function of several arguments. Return new array.<br>
-<b>comparison</b> - a == b, a ~= b<br></p>
-<pre class="example">
-
--- use 'array'
-Arr = require 'lib.array'
-
--- empty array
-a = Arr {2,3,4}
-ans = a:get{1,2,1}            --> nil
-
--- set values
-a:set({1,2,1},4)
-ans = a:get{1,2,1}            --> 4
-
--- random array
-rnd = function () return math.random() end
-b = Arr{5,2,1}:map(rnd)
--- max number of elements
-ans = #b                      --> 10
-
--- compare sizes
-ans = b:isEqual(Arr{5,2,1})   --> true
-
--- compare elements
-ans = (b == b:copy())         --> true
-
--- get sub array
-g = a:sub({1,1,1},{-1,-1,2})
-ans = g:isEqual(Arr{2,3,2})   --> true
-
--- apply function with indeces
-eye = function (x,t) return (t[1]==t[2] and t[1]==t[3]) and 1 or 0 end
-f = Arr{3,3,3}:map(eye)
-ans = f:get{2,2,2}            --> 1
-
--- apply function of several arguments
-a1 = Arr{2,2}:map(rnd)
-a2 = Arr{2,2}:map(rnd)
-a3 = Arr{2,2}:map(rnd)
--- 'lazy' function definition
-a4 = Arr:zip('x1*x2+x3', a1,a2,a3)
-ans = a4:get{1,2}             --> a1:get{1,2}*a2:get{1,2}+a3:get{1,2}
-
--- iterate over array
-g = Arr {2,2}
-g:set({1,1}, 1)
-g:set({2,1}, 2)
-g:set({1,2}, 3)
-g:set({2,2}, 4)
--- show
-for ind, val in g:ipairs() do
-  io.write('{',ind[1],',',ind[2],'}\t',val, '\n')
-end
-
--- simple iteration
-n = g:capacity()   -- number of elements
-for i = 1,n do
-  io.write(i,':',g[i],'\n')
-end
-
--- concatenate along the 3-rd axes
-d = b:concat(b,3)
--- size for given dimension
-ans = d:dim()[3]              --> 2
-
--- simple print
-print(a)
-
---</pre>
-<a href="#Top">Top</a></div>
 <div><a name="Ap"></a>
 <h3># Ap (asciiplot) #</h3>
 <p class="descript">Use pseudography for data visualization.</p>
@@ -174,7 +88,7 @@ print(a)
 <pre class="example">
 
 -- use 'asciiplot'
-Ap = require 'lib.asciiplot'
+Ap = require 'matlib.asciiplot'
 
 -- figure with default size
 fig1 = Ap()
@@ -291,24 +205,21 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 <p class="descript">Operations with arbitrary long integers.</p>
 <p><b>B:F() --> B!</b> - Return factorial of non-negative integer B.<br>
 <b>B:abs() --> num</b> - Return module of arbitrary long number.<br>
-<b>B:at(N) --> int</b> - Get N-th digit.<br>
-<b>B:base() --> int</b> - Current numeric base.<br>
+<b>B:base(N) --> tbl</b> - Convert number to the new numeric base.<br>
 <b>B:eq(x) --> bool</b> - Check equality with the second value.<br>
 <b>B:factorize() --> primeBs_t</b> - Find the list of multipliers.<br>
 <b>B:float() --> num</b> - Represent current big integer as number if it possible.<br>
 <b>B:gcd(B2) --> B3</b> - Find the greatest common divisor for two integers.<br>
 <b>B:isPrime([method_s]) --> bool</b> - Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.<br>
-<b>B:rebase(N) --> upd_B</b> - Convert number to the new numeric base.<br>
+<b>B:sign() --> int</b> - Return +1/0/-1.<br>
 <b>Int (var) --> new_B</b> - Create number from integer, string or table.<br>
 <b>Int:C(n, k) --> combinations_B</b> - Number of combinations C(n,k).<br>
 <b>Int:P(n, k) --> permutaions_B</b> - Find permutations without repetition.<br>
 <b>Int:random(B) --> rand_B</b> - Generate pseudo-random value from 0 to B.<br>
-<b>Int:ratF(num_B, denom_B) --> num!/denom!</b> - Find ratio of factorials num!/denom!.<br>
-<b>arithmetic</b> - a+b, a-b, a*b, a/b, a%b, a^b, -a, #a<br>
-<b>comparison</b> - a<b, a<=b, a>b, a>=b, a==b, a~=b<br></p>
+<b>Int:ratF(num_B, denom_B) --> num!/denom!</b> - Find ratio of factorials num!/denom!.<br></p>
 <pre class="example">
 -- use 'bigint'
-Int = require 'lib.bigint'
+Int = require 'matlib.bigint'
 
 -- from integer
 a = Int(123)
@@ -318,9 +229,11 @@ ans = a:float()               --> 123
 b = Int('456')
 ans = b:float()               --> 456
 
--- from table
--- 'sign' and 'base' can be skipped
-g = Int {-1,2,3, base=10}
+-- 'default' form for base <= 16
+ans = Int('0xABC')            --> Int('10,11,12:16')
+
+-- define base explicitly
+g = Int('-1,2,3:10')
 ans = g:float()               --> -123
 
 -- check equality
@@ -344,33 +257,34 @@ ans = Int('-25'):abs():float()  --> 25
 
 -- factorial
 c = Int(50):F()
-ans = c:float()               --1> 3E64
+ans = c:float() / 3E64       --1> 1.0
 
 ans = (a > b)                 --> false
 
 -- compare with number
 ans = a:eq(123)               --> true
 
+-- digits for a different numeric base
+v = g:base(60)
+ans = tostring(v)             --> '-2,3:60'
+
 -- number of digits
-ans = #a                      --> 3
+ans = #v                      --> 2
 
 -- 2nd digit (from the lowest)
-ans = a:at(2)                 --> 2
+ans = v[2]                    --> 2
 
--- get numeric base
-ans = g:base()                --> 10
+-- base and sign
+ans = v.base == 60 and v.sign == -1  --> true
 
--- change numeric base
-v = g:rebase(60)
-ans = tostring(v)             --> '-2|3'
+-- print digits
+print(v)
 
--- operations with different bases
--- transform to the biggest common base
-w = v + b
-ans = tostring(w)             --> '5|33'
+-- back to bigint
+ans = Int(v)                  --> g
 
 -- comparison
-ans = (v == g)                --> true
+ans = (a ~= g)                --> true
 
 -- simple print
 print(a)
@@ -440,13 +354,11 @@ ans = a - 0.5                 --> 122.5
 <b>Z:tanh() --> y_Z</b> - Return hyperbolic tangent of a complex number.<br>
 <b>_Z (re=0, im=0) --> new_Z</b> - Create new complex number.<br>
 <b>_Z:i(x=1) --> new_Z</b> - Return x*i.<br>
-<b>_Z:trig(module, angle) --> new_Z</b> - Create complex number using module and angle.<br>
-<b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
-<b>comparison</b> - a==b, a~=b<br></p>
+<b>_Z:trig(module, angle) --> new_Z</b> - Create complex number using module and angle.<br></p>
 <pre class="example">
 
 -- use 'complex'
-_Z = require 'lib.complex'
+_Z = require 'matlib.complex'
 
 -- real and imaginary pars
 a = _Z(1,2)
@@ -579,9 +491,9 @@ print(a)
 <pre class="example">
 
 -- use 'const'
-_C = require 'lib.const'
+_C = require 'matlib.const'
 -- external dependencies, can be loaded implicitly
-require 'lib.units'  -- convert into Unit object
+require 'matlib.units'  -- convert into Unit object
 
 -- charge of electron
 ans = _C.phy.e * 1E19        --3> 1.602
@@ -627,6 +539,7 @@ ans = _C.myConst              --> nil
 <b>_D:median(data_t) --> num</b> - Median of the list.<br>
 <b>_D:min(data_t) --> var, ind_N</b> - Minimal element and its index.<br>
 <b>_D:moment(order_N, data_t, [weigth_t]) --> num</b> - Central moment of t order N, tw is a list of weights.<br>
+<b>_D:range(begin_d, end_d, [step_d]) --> new_R</b> - Generate range object.<br>
 <b>_D:ref(src_t, begin_N=1, end_N=#src_t) --> new_R</b> - Return reference to the range of elements.<br>
 <b>_D:std(data_t, [weight_t]) --> dev_f, var_f</b> - Standard deviation and variance. Weights can be used.<br>
 <b>_D:sum(data_t) --> var</b> - Get sum of all elements.<br>
@@ -641,10 +554,10 @@ ans = _C.myConst              --> nil
 <pre class="example">
 
 -- use 'data'
-_D = require 'lib.data'
+_D = require 'matlib.data'
 -- external dependencies, can be loaded implicitly
-require 'lib.special'
-require 'lib.matrix'
+require 'matlib.special'
+require 'matlib.matrix'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -757,6 +670,19 @@ end
 c = _D:table(t, {'sq', 'avg'}, fn)
 print(c)
 
+-- even numbers
+b = _D:range(2,10,2)
+ans = b[2]                    --> 4
+
+-- linear transformations
+-- with range Range objects
+b2 = 2*b + 4
+ans = b2[1]                   --> 8
+
+-- apply function 
+c = b:map(math.sin)
+ans = c[1]                   --3> 0.909
+
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Geo"></a>
@@ -780,7 +706,7 @@ print(c)
 <pre class="example">
 
 -- use 'geodesy'
-Geo = require 'lib.geodesy'
+Geo = require 'matlib.geodesy'
 
 -- generate random from number -1 to 1
 rnd = function () return 2*math.random()-1 end
@@ -830,7 +756,7 @@ t5 = blh_wgs84_pz90(t0)
 -- UTM to lat/lon
 utm = {N=5601281, E=625394, zone=42, hs='N'}
 ll = wgs84:utm2ll(utm)
-ans = ll.B                 --2> 50.55 
+ans = ll.B                 --2> 50.55
 
 ans = ll.L                 --2> 70.77
 
@@ -904,7 +830,7 @@ raw='set pm3d'                -- set Gnuplot options manually<br>
 <pre class="example">
 
 -- use 'gnuplot'
-Gp = require 'lib.gnuplot'
+Gp = require 'matlib.gnuplot'
 Gp.testmode = true -- just for testing
 
 -- simple plot
@@ -1017,7 +943,7 @@ f:show()
 <pre class="example">
 
 -- use 'graph'
-Graph = require 'lib.graph'
+Graph = require 'matlib.graph'
 
 -- build undirected graph
 a = Graph()
@@ -1114,7 +1040,7 @@ print(b)
 <b>L:inv() --> inv_L</b> - Get the inverted system matrix.<br>
 <b>L:isUnit() --> bool</b> - Check if the system matrix is unit.<br>
 <b>L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d</b> - Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to call L(dy,dV).<br>
-<b>Lens {A_d, B_d, C_d, D_d} --> new_L</b> - Make new lens component.<br>
+<b>Lens (A_d, B_d, C_d, D_d) --> new_L</b> - Make new lens component.<br>
 <b>Lens:afocal(magn_d) --> L</b> - Find matrix for the afocal system.<br>
 <b>Lens:gaussParam(waist_d, lambda_d) --> div_d, range_d</b> - Find divergence angle and Raileigh range for a Gaussian beam.<br>
 <b>Lens:gaussSize(waist_d, lambda_d, dist_d) --> rad_d, curv_d</b> - Find Gaussian beam radius and curvature at some distance.<br>
@@ -1122,20 +1048,22 @@ print(b)
 <b>Lens:ref(rad_d, n1_d, n2_d) --> L</b> - Find refraction matrix for the given radius of surface and input and output refractive indeces.<br>
 <b>Lens:solve(fn, index_N, initial_d) --> found_d</b> - Find condition when component with the given index is equal to 0, use initial assumption.<br>
 <b>Lens:thin(focalDist_d) --> L</b> - Find the thin lens system matrix for the given focal distance.<br>
-<b>Lens:trans(dist_d, n_d) --> L</b> - Find translation matrix for the given distance and refractive index.<br>
-<b>operations</b> - L1 == L2, L1 .. L2<br></p>
+<b>Lens:trans(dist_d, n_d=1) --> L</b> - Find translation matrix for the given distance and refractive index.<br></p>
 <pre class="example">
 
 -- use 'lens'
-Lens = require 'lib.lens'
+Lens = require 'matlib.lens'
 -- external dependencies, can be loaded implicitly
-Num = require 'lib.numeric' -- for root searching
+require 'matlib.numeric'  -- for root searching
+require 'matlib.complex'  -- for beam transformation
 
 -- define a simple lense
 n1 = 1      -- air
 n2 = 1.56   -- glass
 -- radius 200 mm, thickness 5 mm
-lens1 = Lens:ref(200,n1,n2)..Lens:trans(5,n2)..Lens:ref(-200,n2,n1)
+lens1 = Lens:ref(200,n1,n2)
+        ..Lens:trans(5,n2)
+        ..Lens:ref(-200,n2,n1)
 ans = lens1:isUnit()          --> true
 
 -- get matrix element
@@ -1153,7 +1081,7 @@ print(pts)
 -- the image
 d1 = 250
 fn = function (d2)
-  return Lens:trans(d1,n1)..lens1..Lens:trans(d2,n1)
+  return Lens:trans(d1)..lens1..Lens:trans(d2)
 end
 -- solve for B = 0, initial guess dist = 100
 d2 = Lens:solve(fn, Lens.key.B, 100)
@@ -1192,33 +1120,31 @@ m = 10
 lens4 = Lens:afocal(m)
 ans, _ = lens4(y1,V1)        --2> m*y1
 
--- arbitrary system matrix
-lens5 = Lens {1, 0, -0.5, 1}
+-- arbitrary system matrix (ABCD)
+lens5 = Lens(1, 0, -0.5, 1)
 print(lens5)
 
 -- make copy
 ans = lens1:copy()            --> lens1
 
 -- gaussian beam parameters
-ans, _ = Lens:gaussParam(1E-3, 1.024E-6) --2> 3.26E-4
+lambda = 1024   -- nm, YAG-Nd laser
+ans, _ = Lens:gaussParam(1E-3, lambda) --2> 3.26E-4
 
 -- laser beam radius
-ans, _ = Lens:gaussSize(1E-3, 1.024E-6, 100) --2> 0.033
+ans, _ = Lens:gaussSize(1E-3, lambda, 100) --2> 0.033
 
 -- laser beam transformation
-ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
+ans, _ = lens1:beam(1E-3, 1E3, lambda)  --2> 1.44E-3
 
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
 <p class="descript">Lua based mathematics.</p>
-<p><b>Log(flag_s) --> nil</b> - Save session into the log file. Use 'on'/'off' to start/stop logging.<br>
-<b>Map(fn, in_t) --> out_t</b> - Evaluate function for each table element.<br>
+<p><b>Map(fn, in_t) --> out_t</b> - Evaluate function for each table element.<br>
 <b>Print(...) --> nil</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
-<b>Range(begin_d, end_d, [step_d]) --> new_R</b> - Generate range object.<br>
 <b>Round(x_d, N=0) --> num</b> - Round value, define number of decimal digits.<br>
-<b>Run(name_s, isInt=false) --> nil</b> - Execute lua- or note- file. Set isInt for interaction.<br>
 <b>Type(x) --> str</b> - Show type of the object.<br>
 <b>_e</b> - Euler number.<br>
 <b>_pi</b> - Number pi.<br>
@@ -1244,7 +1170,7 @@ ans, _ = lens1:beam(1E-3, 1E3, 1.024E-6)  --2> 1.44E-3
 <b>use([module_s]) --> str|nil</b> - Call use('module') or use{'module1','module2'} to load new functions.<br></p>
 <pre class="example">
 
-require 'lib.main'
+require 'matlib.main'
 
 -- constants starts from '_'
 ans = _pi                     --> math.pi
@@ -1266,21 +1192,9 @@ ans = Type(25)                --> 'integer'
 a = {a=1,b=2, 3,4,5}
 Print(a, 0.123)
 
--- generate 'sequence'
-b = Range(1,3)
-ans = b[3]                    --> 3
-
--- even numbers
-b = Range(2,10,2)
-ans = b[2]                    --> 4
-
--- linear transformations
--- with range Range objects
-b2 = 2*b + 4
-ans = b2[1]                   --> 8
 
 -- calculate function values
-c = Map(sin, b)
+c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3> 0.909
 
 -- use Lua functions if need
@@ -1321,21 +1235,19 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>M:table() --> tbl</b> - Convert to simple Lua table.<br>
 <b>M:tr() --> sum</b> - Get trace of the matrix.<br>
 <b>Mat {row1_t, row2_t,..} --> new_M</b> - Create matrix from list of strings (tables).<br>
+<b>Mat:D(list_v) --> M</b> - Create new matrix with the given diagonal elements.<br>
 <b>Mat:V {...} --> new_V</b> - Create vector from list of numbers.<br>
-<b>Mat:diagonal(list_v) --> M</b> - Create new matrix with the given diagonal elements.<br>
 <b>Mat:eye(row_N, col_N=row_N) --> M</b> - Create identity matrix.<br>
 <b>Mat:fill(row_N, col_N, val=1) --> M</b> - Create matrix of given numbers (default is 1).<br>
 <b>Mat:givensRot(x, y) --> cos_d, sin_d, len_d</b> - Find parameters of Givens rotation (c,s,r).<br>
 <b>Mat:zeros(row_N, col_N=row_N) --> M</b> - Create matrix of zeros.<br>
 <b>Mat:zip(fn, M1, M2,..) --> res_M</b> - Apply function to the given matrices element-wise.<br>
 <b>V:cross(V2) --> V3</b> - Cross product or two 3-element vectors.<br>
-<b>V:dot(V2) --> num</b> - Scalar product of two vectors.<br>
-<b>arithmetic</b> - a+b, a-b, a*b, a/b, a^b, -a<br>
-<b>comparison</b> - a==b, a~=b<br></p>
+<b>V:dot(V2) --> num</b> - Scalar product of two vectors.<br></p>
 <pre class="example">
 
 -- use 'matrix'
-Mat = require 'lib.matrix'
+Mat = require 'matlib.matrix'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}
@@ -1428,7 +1340,7 @@ aa = Mat:zip(fn, b,b,b)
 ans = aa[1][1]                --> 30
 
 -- use Gauss transform to solve equation
-ans = (a .. Mat{{5},{11}}):rref()            --> Mat {{1,0,1},
+ans = (a .. Mat:V{5,11}):rref()            --> Mat {{1,0,1},
                                                         {0,1,2}}
 
 -- create vector
@@ -1479,7 +1391,7 @@ k = k:table()
 ans = k[2][1]                 --> 0
 
 -- make diagonal matrix
-ans = Mat:diagonal({1,2,3})   --> Mat {{1,0,0},
+ans = Mat:D({1,2,3})   --> Mat {{1,0,0},
                                        {0,2,0},
                                        {0,0,3}}
 
@@ -1546,15 +1458,17 @@ ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
 <p><b>Num.TOL=0.001</b> - The solution tolerance.<br>
 <b>Num:der(fn, x_d) --> num</b> - Calculate the derivative value for given function.<br>
 <b>Num:newton(fn, x0_d) --> num</b> - Find root of equation using Newton's rule with only one initial condition.<br>
-<b>Num:ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys_t, yLast</b> - Numerical approximation of the ODE solution.<br>
+<b>Num:ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys_t</b> - Numerical approximation of the ODE solution.<br>
 First parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.<br>
-Return table of intermediate points and result yn.<br>
+Return table of intermediate points in form {t, x(t)}.<br>
 <b>Num:solve(fn, xLow_d, xUp_d) --> num</b> - Find root of equation fn(x)=0 at interval [a,b].<br>
 <b>Num:trapez(fn, x1_d, x2_d) --> num</b> - Get integral using trapezoidal rule.<br></p>
 <pre class="example">
 
 -- use 'numeric'
-Num = require 'lib.numeric'
+Num = require 'matlib.numeric'
+-- use matrices for high order equations
+Mat = require 'matlib.matrix'
 
 -- define tolerance
 Num.TOL = 1e-4
@@ -1578,12 +1492,9 @@ ans = c                      --0> 2
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl, yn = Num:ode45(function (x,y) return x*y end,
-                    {0,3}, 1)
-ans = yn                     --2> 90.011
-
--- use matrices for high order equations
-Mat = require 'lib.matrix'
+tbl = Num:ode45(function (x,y) return x*y end,
+                {0,3}, 1)
+ans = tbl[#tbl][2]           --2> 90.011
 
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
@@ -1591,16 +1502,18 @@ Mat = require 'lib.matrix'
 myfun = function (t,x)
   return Mat:V {x(2), 1+2*x(2)-2*x(1)}
 end
-_, xn = Num:ode45(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
+res = Num:ode45(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
+xn = res[#res][2]  -- last element
 ans = xn(1)                  --2>  -10.54
 
 -- define exit condition
--- from time, current and previous results
-cond = function (time,current,previous)
-  return current < 0.1
+cond = function (states)
+  -- check current value
+  return states[#states][2] < 0.1
 end
 myfun = function (t,x) return -x end
 y = Num:ode45(myfun, {0,1E2}, 1, {exit=cond})
+-- time of execution before break
 ans = y[#y][1]               --2> 2.56
 
 --</pre>
@@ -1616,23 +1529,21 @@ ans = y[#y][1]               --2> 2.56
 <b>P:str(char_s='x') --> str</b> - Pretty print for polynomial.<br>
 <b>P:val(x) --> y</b> - Get value of polynomial P in point x.<br>
 <b>Poly {.., v1, v0} --> new_P</b> - Create a polynomial.<br>
-<b>Poly:build(root1, [root2,..]) --> P</b> - Return polynomial with given roots.<br>
+<b>Poly:build(roots_t) --> P</b> - Return polynomial with given roots.<br>
 <b>Poly:char(M) --> P</b> - Return characteristic polinomial for the given matrix.<br>
 <b>Poly:fit(xs_t, ys_t, order_N) --> P</b> - Find polynomial approximation for the line.<br>
 <b>Poly:lagrange(xs_t, ys_t) --> P</b> - Find interpolation polynomial in the Lagrange form.<br>
 <b>Poly:lin(xs_t, ys_t, yBefore_d=0, yAfter_d=y0) --> P</b> - Linear data interpolation. Return table with polynomials.<br>
 <b>Poly:ppval(Ps_t, x_d, [index_N]) --> num</b> - Return value of a piecewise polynomial in the point and the polynomial index.<br>
 <b>Poly:spline(xs_t, ys_t) --> Ps_t</b> - Cubic spline data interpolation. Return table with polynomials.<br>
-<b>Poly:taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P</b> - Get Taylor series.<br>
-<b>arithmetic</b> - a+b, a-b, a*b, a/b, a^n, -a<br>
-<b>comparison</b> - a==b, a~=b<br></p>
+<b>Poly:taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P</b> - Get Taylor series.<br></p>
 <pre class="example">
 
 -- use 'polynomial'
-Poly = require 'lib.polynomial'
+Poly = require 'matlib.polynomial'
 -- external dependencies, can be loaded implicitly
-require 'lib.matrix'         -- in Poly.fit
-Comp = require 'lib.complex' -- for complex roots
+require 'matlib.matrix'         -- in Poly.fit
+Comp = require 'matlib.complex' -- for complex roots
 
 -- coefficients in ascendant order
 a = Poly {1,2,4,3}
@@ -1669,11 +1580,11 @@ ader = a:der()
 ans = ader(1)                 --> 11
 
 -- build polynomial using roots
-ans = Poly:build(1,-1)        --> Poly {1,0,-1}
+ans = Poly:build{1,-1}        --> Poly {1,0,-1}
 
 -- use complex roots
 -- don't add conjugated toots
-ans = Poly:build(1, Comp(2,3))  --> Poly {1, -5, 17, -13}
+ans = Poly:build{1, Comp(2,3)}  --> Poly {1, -5, 17, -13}
 
 -- make copy and compare
 c = a:copy()
@@ -1687,7 +1598,7 @@ e = a:real()
 ans = e[1]                   --1> -1.00
 
 -- find all roots
-g = Poly:build(2, Comp(3,4))
+g = Poly:build{2, Comp(3,4)}
 e = g:roots()
 ans = e[2]:re()              --1> 3
 
@@ -1742,14 +1653,12 @@ ans = p(0.5)                 --2> -0.512
 <p class="descript">Operations with quaternions.</p>
 <p><b>Q:abs() --> num</b> - Value of the norm.<br>
 <b>Q:conj() --> conj_Q</b> - Get conjugation.<br>
-<b>Q:im() --> imaginary_t</b> - Get table of the imaginary part.<br>
 <b>Q:inv() --> inv_Q</b> - Find inverted quaternion.<br>
-<b>Q:mat() --> M</b> - Equivalent matrix representation.<br>
+<b>Q:matrix() --> M</b> - Equivalent matrix representation.<br>
 <b>Q:normalize() --> unit_Q</b> - Return unit quaternion.<br>
-<b>Q:re() --> var</b> - Real part.<br>
 <b>Q:rotate(inVec) --> outVec_t</b> - Apply quaternion to rotate the vector.<br>
 <b>Q:slerp(end_Q, rat_f) --> rat_Q</b> - Spherical linear interpolation for part t.<br>
-<b>Q:toAA() --> angle_d, axis_t</b> - Get angle and axis of rotation.<br>
+<b>Q:toAA() --> angle_d, axis_t|nil</b> - Get angle and axis of rotation.<br>
 <b>Q:toRot() --> M</b> - Get equal rotation matrix.<br>
 <b>Q:w() --> var</b> - Get w component.<br>
 <b>Q:x() --> var</b> - Get x component.<br>
@@ -1757,15 +1666,13 @@ ans = p(0.5)                 --2> -0.512
 <b>Q:z() --> var</b> - Get z component.<br>
 <b>Quat {w, x, y, z} --> new_Q</b> - Create new quaternion.<br>
 <b>Quat:fromAA(angle_d, axis_d) --> Q</b> - Create quaternion using angle and axis.<br>
-<b>Quat:fromRot(M) --> Q</b> - Convert rotation matrix to quaternion.<br>
-<b>arithmetic</b> - a + b, a - b, a * b, a ^ k, -a<br>
-<b>comparison</b> - a == b, a ~= b<br></p>
+<b>Quat:fromRot(M) --> Q</b> - Convert rotation matrix to quaternion.<br></p>
 <pre class="example">
 
 -- use 'quaternion'
-Quat = require 'lib.quaternion'
+Quat = require 'matlib.quaternion'
 -- external dependencies, can be loaded implicitly
-require 'lib.matrix'
+require 'matlib.matrix'
 
 -- quaternion
 -- set {w,x,y,z}
@@ -1857,10 +1764,10 @@ print(d)
 <pre class="example">
 
 -- use 'random'
-Rand = require 'lib.random'
-Ap = require 'lib.asciiplot'     -- for visualization
-_D = require 'lib.data'          -- hystogram
-Spec = require 'lib.special'     -- gamma function
+Rand = require 'matlib.random'
+Ap = require 'matlib.asciiplot'     -- for visualization
+_D = require 'matlib.data'          -- hystogram
+Spec = require 'matlib.special'     -- gamma function
 -- prepare for data generation
 N = 100  -- number of points
 -- normalize hystograms
@@ -2055,16 +1962,14 @@ ans = (r1() ~= r2())            --> true
 <b>R:eq(x) --> bool</b> - Compare two objects.<br>
 <b>R:float() --> num</b> - Return rational number as decimal.<br>
 <b>R:num() --> var</b> - Return the numerator of rational number.<br>
-<b>R:toCont() --> coeff_t</b> - Transform rational number to continued fraction.<br>
+<b>R:toCF() --> coeff_t</b> - Transform rational number to continued fraction.<br>
 <b>Rat (num, denom=1) --> new_R</b> - Create rational number using num (and denom).<br>
 <b>Rat:from(src_f, err_f=1E-3) --> R</b> - Estimate ratio from floating point value.<br>
-<b>Rat:fromCont(coeff_t) --> R</b> - Transform continued fraction to rational number.<br>
-<b>arithmetic</b> - R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2<br>
-<b>comparison</b> - R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2<br></p>
+<b>Rat:fromCF(coeff_t) --> R</b> - Transform continued fraction to rational number.<br></p>
 <pre class="example">
 
 -- use 'rational'
-Rat = require 'lib.rational'
+Rat = require 'matlib.rational'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -2111,11 +2016,11 @@ print(a)
 
 -- continued fraction to rational
 -- 1 + 1/(2+1/(3+1/4)) 
-c = Rat:fromCont {[0]=1, 2, 3, 4}
+c = Rat:fromCF {[0]=1, 2, 3, 4}
 ans = c                       --> Rat(43,30)
 
 -- rational to continued fraction
-d = c:toCont()
+d = c:toCF()
 ans = d[1]                    --> 2
 
 -- show continued fraction
@@ -2151,7 +2056,7 @@ ans = a + 0.5                 --> 1
 <pre class="example">
 
 -- use 'special'
-Spec = require 'lib.special'
+Spec = require 'matlib.special'
 
 -- beta functions
 ans = Spec:beta(3,4) * 1E2   --3> 1.667
@@ -2212,7 +2117,7 @@ ans = Spec:dawson(3.3)       --3> 0.1598
 <pre class="example">
 
 -- use 'symbolic'
-Sym = require 'lib.symbolic'
+Sym = require 'matlib.symbolic'
 
 -- create variables
 x, y = Sym('x'), Sym('y')
@@ -2242,29 +2147,28 @@ ans = foo(Sym(2), Sym(3)) --> Sym(8)
 
 --</pre>
 <a href="#Top">Top</a></div>
-<div><a name="Unit"></a>
-<h3># Unit (units) #</h3>
+<div><a name="_U"></a>
+<h3># _U (units) #</h3>
 <p class="descript">Operations and conversations according the units.</p>
 <p><b>U:convert(new_s) --> upd_U|nil</b> - Convert one units to another, return new object or nil.<br>
 <b>U:copy() --> cpy_U</b> - Create copy of the element.<br>
 <b>U:key() --> str</b> - Get units.<br>
 <b>U:value() --> var</b> - Get object value. Same as #U.<br>
-<b>Unit (val=1, name_s) --> new_U</b> - Create new elements with units.<br>
-<b>Unit.prefix</b> - Table of possible prefixes for units.<br>
-<b>Unit:setRule(name_s, val_U) --> nil</b> - Add new rule for conversation.<br>
-<b>arithmetic</b> - U1+U2, U1-U2, U1*U2, U1/U2, U1^N<br>
-<b>comparison</b> - U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2<br></p>
+<b>_U (val=1, name_s) --> new_U</b> - Create new elements with units.<br>
+<b>_U.prefix</b> - Table of possible prefixes for units.<br>
+<b>_U:rules() --> str</b> - Show list of rules.<br>
+<b>_U:setRule(name_s, val_U) --> nil</b> - Add new rule for conversation.<br></p>
 <pre class="example">
 
 -- use 'units'
-Unit = require 'lib.units'
+_U = require 'matlib.units'
 
 -- add some rules
-Unit:setRule('h', Unit(60,'min'))
-Unit:setRule('min', Unit(60,'s'))
+_U:setRule('h', _U(60,'min'))
+_U:setRule('min', _U(60,'s'))
 
 -- define variable
-a = Unit(1,'m/s')
+a = _U(1,'m/s')
 -- convert to km/h, get only value
 ans = a['km/h']              --2> 3.6
 
@@ -2277,41 +2181,44 @@ ans = a:key()                 --> 'm/s'
 
 -- make copy
 cp = a:copy()
-ans = cp                      --> Unit(1,'m/s')
+ans = cp                      --> _U(1,'m/s')
 
 -- get converted variable
 b = a:convert('km/h')
-ans = b                       --> Unit(3.6, 'km/h')
+ans = b                       --> _U(3.6, 'km/h')
 
 -- arithmetic
 b = 3 * b
-ans = a + b                   --> Unit(4, 'm/s')
+ans = a + b                   --> _U(4, 'm/s')
 
-ans = b - a                   --> Unit(2, 'm/s')
+ans = b - a                   --> _U(2, 'm/s')
 
-ans = a * b                   --> Unit(3, 'm^2/s^2')
+ans = a * b                   --> _U(3, 'm^2/s^2')
 
-ans = b / a                   --> Unit(3, '')
+ans = b / a                   --> _U(3, '')
 
 ans = (a < b)                 --> true
 
-ans = b ^ 3                   --> Unit(27, 'm^3/s^3')
+ans = b ^ 3                   --> _U(27, 'm^3/s^3')
 
 -- new rule
-Unit:setRule('snake', Unit(48, 'parrot'))
+_U:setRule('snake', _U(38, 'parrot'))
 -- define variable
-c = Unit(2,'snake')
+c = _U(2,'snake')
 -- convert
-ans = c['parrot']             --> 96
+ans = c['parrot']             --> 76
 
 -- convert using prefix
 ans = c['ksnake']            --3> 0.002
 
 -- another definition syntax
-ans = 2 * Unit('N')           --> Unit(2,'N')
+ans = 2 * _U('N')           --> _U(2,'N')
 
 -- show result
 print(a)
+
+-- list of rules
+print(_U:rules())
 --</pre>
 <a href="#Top">Top</a></div>
 <div><p align="center"><i>2017-2023, Stanislav Mikhel</i></p></div>

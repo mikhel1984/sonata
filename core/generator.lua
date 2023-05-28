@@ -42,7 +42,9 @@ local function docLines(module, alias, lng)
     else
       local title = elt[TITLE]
       local desc = lng_t[title] or elt[DESCRIPTION]
-      fn[#fn+1] = {Help._toExtend(title, alias), sgsub(desc, '\n', '<br>\n')}
+      if desc then
+        fn[#fn+1] = {Help._toExtend(title, alias), sgsub(desc, '\n', '<br>\n')}
+      end
     end
   end
   -- sort
