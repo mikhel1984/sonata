@@ -8,6 +8,9 @@ Bigint
 Matrix
 * calculated matrices are dense
 * improve performance
+Units
+* rename module
+* add rule list
 Other
 * Change evaluate loop logic
 * Add warnings and program messages

@@ -42,7 +42,7 @@ use = {
   random     = "Rand",
   rational   = "Rat",
   symbolic   = "Sym",
-  units      = "Unit",
+  units      = "_U",
 --------------------
   const      = "_C",
   geodesy    = "Geo",

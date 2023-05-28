@@ -17,14 +17,14 @@
 --[[TEST
 
 -- use 'units'
-Unit = require 'matlib.units'
+_U = require 'matlib.units'
 
 -- add some rules
-Unit:setRule('h', Unit(60,'min'))
-Unit:setRule('min', Unit(60,'s'))
+_U:setRule('h', _U(60,'min'))
+_U:setRule('min', _U(60,'s'))
 
 -- define variable
-a = Unit(1,'m/s')
+a = _U(1,'m/s')
 -- convert to km/h, get only value
 ans = a['km/h']              --2> 3.6
 
@@ -37,41 +37,44 @@ ans = a:key()                 --> 'm/s'
 
 -- make copy
 cp = a:copy()
-ans = cp                      --> Unit(1,'m/s')
+ans = cp                      --> _U(1,'m/s')
 
 -- get converted variable
 b = a:convert('km/h')
-ans = b                       --> Unit(3.6, 'km/h')
+ans = b                       --> _U(3.6, 'km/h')
 
 -- arithmetic
 b = 3 * b
-ans = a + b                   --> Unit(4, 'm/s')
+ans = a + b                   --> _U(4, 'm/s')
 
-ans = b - a                   --> Unit(2, 'm/s')
+ans = b - a                   --> _U(2, 'm/s')
 
-ans = a * b                   --> Unit(3, 'm^2/s^2')
+ans = a * b                   --> _U(3, 'm^2/s^2')
 
-ans = b / a                   --> Unit(3, '')
+ans = b / a                   --> _U(3, '')
 
 ans = (a < b)                 --> true
 
-ans = b ^ 3                   --> Unit(27, 'm^3/s^3')
+ans = b ^ 3                   --> _U(27, 'm^3/s^3')
 
 -- new rule
-Unit:setRule('snake', Unit(48, 'parrot'))
+_U:setRule('snake', _U(38, 'parrot'))
 -- define variable
-c = Unit(2,'snake')
+c = _U(2,'snake')
 -- convert
-ans = c['parrot']             --> 96
+ans = c['parrot']             --> 76
 
 -- convert using prefix
 ans = c['ksnake']            --3> 0.002
 
 -- another definition syntax
-ans = 2 * Unit('N')           --> Unit(2,'N')
+ans = 2 * _U('N')           --> _U(2,'N')
 
 -- show result
 print(a)
+
+-- list of rules
+print(_U:rules())
 --]]
 
 
@@ -610,7 +613,6 @@ about[units.prefix] = {
 
 
 --- Add new rule for unit transformation.
---  @param self Main class.
 --  @param s Unit name.
 --  @param U Equal unit object.
 units.setRule = function (self, s, U)
@@ -619,6 +621,18 @@ units.setRule = function (self, s, U)
 end
 about[units.setRule] = {':setRule(name_s, val_U) --> nil',
   'Add new rule for conversation.'}
+
+
+--- Show list of known rules
+--  @return text with rules
+units.rules = function (self)
+  local t = {}
+  for k, v in pairs(self._rules) do 
+    t[#t+1] = string.format('%s\t-> %s', k, tostring(v))
+  end
+  return table.concat(t, '\n')
+end
+about[units.rules] = {":rules() --> str", "Show list of rules."}
 
 
 --- Value of the unit object.
