@@ -205,7 +205,8 @@ local makeModule = function (sName, tLang)
       if value then   -- found translation
         res[#res+1] = line
       else
-        new[#new+1] = sformat((line:find('%c') and '--[=[%s]=]' or '--%s'), line)
+        new[#new+1] = sformat(
+          (line:find('%c') and '--[=[%s]=]' or '--%s'), line)
       end
     end
   end

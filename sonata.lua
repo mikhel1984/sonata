@@ -10,7 +10,7 @@
 --SONATA_ADD_PATH = 'path/to/dir/'
 
 --	Text coloring
-SONATA_USE_COLOR = true
+--SONATA_USE_COLOR = true
 
 --	Load after start
 --SONATA_DEFAULT_MODULES = {'matrix','asciiplot'}
@@ -21,7 +21,7 @@ SONATA_USE_COLOR = true
 --	Uncomment to set the localization file
 --  Windows: to use Unicode symbols call in console
 --    chcp 65001
-SONATA_LOCALIZATION = 'ru.lua'
+--SONATA_LOCALIZATION = 'ru.lua'
 
 
 --===================  MODULES  =======================
