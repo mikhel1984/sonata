@@ -83,8 +83,6 @@ local Utils = Ver.utils
 Ver = Ver.versions
 
 
-
-
 --- Combine common elements in tables, add power to the
 --  first table, remove from the second one.
 --  @param t1 First key-value table.
@@ -352,11 +350,11 @@ end
 --  @return First prefix, second prefix, common part.
 units._diff = function (s1, s2)
   local n1, n2 = #s1, #s2
-  while n1 > 0 and n2 > 0 and string.byte(s1, n1) == string.byte(s2, n2) do
-    n1 = n1 - 1
-    n2 = n2 - 1
+  local ssub, sbyte = string.sub, string.byte
+  while n1 > 0 and n2 > 0 and sbyte(s1, n1) == sbyte(s2, n2) do
+    n1, n2 = n1 - 1, n2 - 1
   end
-  return string.sub(s1, 1, n1), string.sub(s2, 1, n2), string.sub(s1, n1+1)
+  return ssub(s1, 1, n1), ssub(s2, 1, n2), ssub(s1, n1+1)
 end
 
 
@@ -433,15 +431,14 @@ units._getExpr = function (lst, n)
   if v == '(' then
     -- parse sub-expression
     local res, m = units._getTerm(lst, n+1)
-    assert(lst[m] == ')')
+    if lst[m] ~= ')' then error('Expected )') end
     return res, m+1
   elseif v == 1 then
     return {}, n+1
   elseif string.find(v, '^%a+$') then
     return {[v] = 1}, n+1
-  else
-    error("Wrong unit "..v)
   end
+  error("Wrong unit "..v)
 end
 
 
@@ -522,8 +519,7 @@ end
 units._parse = function (str)
   if #str == 0 then return {} end
   local tokens = Utils.lex(str)
-  assert(#tokens > 0)
-  -- get powers
+  if #tokens == 0 then error("Wrong format") end
   local res, m = units._getTerm(tokens, 1)
   if m-1 ~= #tokens then error("Wrong format") end
   return res
