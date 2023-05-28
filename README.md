@@ -2,14 +2,14 @@
 
 **Sonata** is a mathematical library and console based interpreter for solving different problems. The program is written in pure **Lua** language and can be called on each platform where the **Lua** is installed. It is designed to be a handy tool for simple calculations and modeling.
 
-![Screenshot](https://user-images.githubusercontent.com/20392522/51679461-17989b00-1ff0-11e9-83f8-922a3356f505.png)
+![Screenshot](about/sonata.png)
 
 ## Features
 
 * Pure Lua code
 * Variety of modules
 * Template generation for new modules and localization files
-* Mathematical library can be used independently
+* Independent mathematical library
 
 ## Getting started
 

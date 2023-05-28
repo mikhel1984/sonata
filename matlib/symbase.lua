@@ -16,8 +16,6 @@ local Utils = Ver.utils
 Ver = Ver.versions
 
 
-
-
 --- Condition for element sorting.
 --  @param S1 Symbolic object.
 --  @param S2 Symbolic object.

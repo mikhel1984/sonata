@@ -65,7 +65,7 @@ ans = (a > b)                 --> false
 ans = a:eq(123)               --> true
 
 -- digits for a different numeric base
-v = g:to(60)
+v = g:base(60)
 ans = tostring(v)             --> '-2,3:60'
 
 -- number of digits
@@ -885,7 +885,7 @@ about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
 --  @param B Bigint object.
 --  @param N New base.
 --  @return Table with digits of the found number.
-bigint.to = function (B, N)
+bigint.base = function (B, N)
   N = N or BASE
   assert(Ver.isInteger(N) and N > 0, "Wrong base")
   local b = B._
@@ -893,7 +893,7 @@ bigint.to = function (B, N)
   res.sign = B._sign
   return setmetatable(res, mt_digits)
 end
-about[bigint.to] = {"B:to(N) --> tbl", "Convert number to the new numeric base."}
+about[bigint.base] = {"B:base(N) --> tbl", "Convert number to the new numeric base."}
 
 
 --- Find number of combinations.
