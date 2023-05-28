@@ -70,21 +70,8 @@ a - b
 a * b
 b^50 
 _ans:float()           -- decimal representation
-Int(50):fact()         -- factorial
-a:rebase(42)           -- get value in new numerical base
--- PAUSE
-
---	ARRAY
--- Provides basic operations with arrays,
--- i.e. multidimensional ordered sequence of elements.
-a = Arr {2,3,1}        -- create empty array of size 2x3x1
-a:set({1,2,1},3)       -- do a(1,2,1) = 3
-a:get{1,2,1}           -- get a(1,2,1)
--- random elements
-b = Arr{2,3,1}:map(function () return math.random() end)
-for ind, val in b:ipairs() do    \
-  print(string.format("c(%d,%d,%d)=%s", ind[1],ind[2],ind[3],val)) \
-end
+Int(50):F()         -- factorial
+a:base(42)           -- get value in new numerical base
 -- PAUSE
 
 --	CONST
@@ -102,7 +89,9 @@ _C:remove('foo')
 --	GRAPH
 -- Manipulations with graphs.
 -- Define graph with edges 'ab' and 'bc' and node 'd'
-g = Graph {{'a','b'},{'b','c'},'d'}
+g = Graph()
+g:addEdges {{'a','b'}, {'b','c'}}
+g:add('d')
 -- nodes:
 for _,v in ipairs(g:nodes()) do \
   print(v)                      \
@@ -112,9 +101,9 @@ for _,v in ipairs(g:edges()) do \
   print(v[1],v[2])              \
 end
 -- default weight is 1
-g['a']['b']
+g:edge('a','b')
 -- you can add weighted edges
-g:add {'b','e',w=2}
+g:add ('b','e', 2)
 g:add ('f')
 -- find path
 found, path = g:bfs('a','c')
@@ -149,14 +138,14 @@ Spec:besselj(2, 0.5)
 --	UNITS
 -- Conversation between measurement units.
 -- Define rules
-Unit:setRule('h', Unit(60, 'min'))       -- 1 h = 60 min
-Unit:setRule('min', Unit(60, 'sec'))     -- 1 min = 60 sec
+_U:setRule('h', _U(60, 'min'))       -- 1 h = 60 min
+_U:setRule('min', _U(60, 'sec'))     -- 1 min = 60 sec
 -- new variable
-v = Unit(2, 'm/sec')
+v = _U(2, 'm/sec')
 -- convert to 'km/h'
 v['km/h']
 -- arithmetic is possible
-t = Unit(10,'sec')
+t = _U(10,'sec')
 s = v * t
 s
 -- PAUSE
@@ -174,20 +163,13 @@ a:inv()
 a:slerp(b,0.5)      -- use normalization inside
 -- PAUSE 
 
---	GNUPLOT
--- If you have 'Gnuplot' system, it can be called
--- from the Sonata.
+--	ASCIIPLOT
 -- Plot data in Matlab style.
-a = Range(0, 6, 0.1)
+a = _D:range(0, 6, 0.1)
 b = Map(math.sin, a)
-Gp:plot(a,b)
+fig = Ap()
+fig:plot(a,b)
+fig
 -- second argument can be function
-Gp:plot(a, sin, 'sin', a, cos, 'cos')
--- You can make polar plot
-Gp:polarplot(a, sin, a, cos)
--- or plot surface.
-function fun(x, y) return x*x + y*y end
-Gp:surfplot(a, a, fun)
-
--- Use 'Gp' object to get more control.
-
+fig:plot(a, b, 'sin', math.cos, 'cos')
+fig

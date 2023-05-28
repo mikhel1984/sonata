@@ -225,6 +225,7 @@ local function evalCode()
         state, res = ok and evaluate.EV_RES or evaluate.EV_ERR, nil
         if ans ~= nil then
           res = islist(ans) and ans or tostring(ans)
+          _ans = ans  -- set global var
         end
       end
     else
@@ -247,7 +248,6 @@ local function showAndNext(status, res, env)
       print(out)
       if env.log then env.log:write('--[[ ', out, ' ]]\n') end
     end
-    _ans = res
   elseif status == evaluate.EV_CMD then
     -- continue input
     return evaluate.INV_CONT

@@ -14,7 +14,7 @@ help(Round)
 -- PAUSE
 
 -- By the way, this is an interactive mode.
--- You can enter Lua valid expression after '?>'
+-- You can enter Lua valid expression after '##'
 -- and see the result. For example, try to get help
 -- for any other function. 
 -- PAUSE
@@ -82,8 +82,7 @@ sqrt(-4)
 exp(3+_i*4)
 -- PAUSE
 
--- Note-file is separated into parts 
--- with 'pauses'. There are additional commands for
+-- There are additional commands for
 -- intraction, in particular 
 -- :ls - show list of parts
 -- :N  - jump to N-th part
