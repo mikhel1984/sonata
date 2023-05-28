@@ -6,15 +6,16 @@
 --  <code> {_=components, _parent=parent, _sign=signature} </code><br>
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'symbolic'
 --]]
 
+
 --[[TEST
 
 -- use 'symbolic'
-Sym = require 'lib.symbolic'
+Sym = require 'matlib.symbolic'
 
 -- create variables
 x, y = Sym('x'), Sym('y')
@@ -44,17 +45,19 @@ ans = foo(Sym(2), Sym(3)) --> Sym(8)
 
 --]]
 
+
 --	LOCAL
 
-local Utils = require('lib.utils')
+local Utils = require('matlib.utils')
 Utils = Utils.utils
+local symbolic = require('matlib.symbase')
 
-local symbolic = require('lib.symbase')
 
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is symbolic.
-local function issymbolic(v) return type(v)=='table' and v.issymbolic end
+local function issymbolic(v) return getmetatable(v) == symbolic end
+
 
 --	INFO
 
@@ -64,8 +67,10 @@ local about = {
 __module__ = "Symbolic calculations."
 }
 
+
 -- Parser elements
 PARSER = {} 
+
 
 --- Parse coma separated elements.
 --  @param lst List with tokens.
@@ -79,6 +84,7 @@ PARSER.args = function (lst, n)
   end
   return t, n
 end
+
 
 --- Parse sum or difference.
 --  @param lst List with tokens.
@@ -98,6 +104,7 @@ PARSER.sum = function (lst, n)
   return res, n
 end
 
+
 --- Parse product or ratio.
 --  @param lst List with tokens.
 --  @param n Element index.
@@ -116,6 +123,7 @@ PARSER.prod = function (lst, n)
   return res, n
 end
 
+
 --- Parse power.
 --  @param lst List with tokens.
 --  @param n Element index.
@@ -128,6 +136,7 @@ PARSER.pow = function (lst, n)
   end
   return res, n
 end
+
 
 --- Parse number, symbol or function.
 --  @param lst List with tokens.
@@ -168,6 +177,7 @@ PARSER.prim = function (lst, n)
   return nil, n
 end
 
+
 --	MODULE
 
 --- Convert arguments to symbolic if need.
@@ -179,6 +189,7 @@ symbolic._toSym = function (v1, v2)
   v2 = issymbolic(v2) and v2 or symbolic:_newConst(v2)
   return v1, v2
 end
+
 
 --- Define (redefine) function.
 --  @param self Do nothing.
@@ -208,6 +219,7 @@ end
 about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S", 
   "Define symbolical function. S is either symbolic expression or a Lua function."}
 
+
 --- Find derivative dS1/dS2.
 --  @param S1 Symbolic expression or function.
 --  @param S2 Variable.
@@ -217,6 +229,7 @@ symbolic.diff = function (S1, S2)
   return S1:p_diff(S2)
 end
 about[symbolic.diff] = {"S:diff(var_S) --> derivative_S", "Find symbolic derivative."}
+
 
 --- Find value for the given substitutions.
 --  @param S Symbolic object.
@@ -231,6 +244,7 @@ end
 about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num", 
   "Evaluate symbolic expression with the given environment."}
 
+
 --- Find function using its name.
 --  @param self Do nothing.
 --  @param sName Function name.
@@ -242,6 +256,7 @@ end
 about[symbolic.fn] = {":fn(name_s) --> fn_S|nil", 
   "Return symbolic function if it is defined."}
 
+
 --- Show internal structure of expression.
 --  @param S Symbolic expression.
 --  @return String with structure.
@@ -250,11 +265,13 @@ symbolic.introspect = function (S)
 end
 about[symbolic.introspect] = {"S:introspect() --> str", "Show the internal structure."}
 
+
 --- Check if the symbol is function.
 --  @param S Symbolic variable.
 --  @return true when it is function.
 symbolic.isFn = function (S) return S:_isfn() end
 about[symbolic.isFn] = {'S:isFn() --> bool', 'Return true if the symbol is function.'}
+
 
 --- Get name of variable.
 --  @param S Symbolic object.
@@ -262,6 +279,7 @@ about[symbolic.isFn] = {'S:isFn() --> bool', 'Return true if the symbol is funct
 symbolic.name = function (S)
   return S._parent == symbolic._parentList.symbol and S._ or nil
 end
+
 
 --- Get symbolic expression from string.
 --  @param self Do nothing.
@@ -278,12 +296,14 @@ symbolic.parse = function(self, str)
 end
 about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..", "Get simbolic expression from string."}
 
+
 --- Get value of constant.
 --  @param S Symbolic object.
 --  @return Constant value.
 symbolic.value = function (S)
   return S._parent == symbolic._parentList.const and S._ or nil
 end
+
 
 -- simplify constructor call
 setmetatable(symbolic, {

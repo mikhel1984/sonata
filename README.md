@@ -1,14 +1,15 @@
-# Sonata
-**Sonata** is a **Lua** based program for mathematical computations. It is also a library of objects and functions for solving different mathematical tasks. Each module is independent of others and can be used standalone.
+# so/\\/ata
 
-![Screenshot](https://user-images.githubusercontent.com/20392522/51679461-17989b00-1ff0-11e9-83f8-922a3356f505.png)
+**Sonata** is a mathematical library and console based interpreter for solving different problems. The program is written in pure **Lua** language and can be called on each platform where the **Lua** is installed. It is designed to be a handy tool for simple calculations and modeling.
+
+![Screenshot](about/sonata.png)
 
 ## Features
 
 * Pure Lua code
 * Variety of modules
 * Template generation for new modules and localization files
-* Mathematical modules can be used independently
+* Independent mathematical library
 
 ## Getting started
 
@@ -28,7 +29,7 @@ Use flag _-h_ to see additional options:
 
 Main components:
 * _core_ - interpreter, help and test systems, other program specific elements
-* _lib_ - collection of mathematical libraries
+* _matlib_ - collection of mathematical modules 
 * _sonata.lua_ - program configuration and loading
 
 Additional components:

@@ -3,6 +3,7 @@
 -- Lua based calculator
 -- This file is a part of 'sonata.lib' collection, 2017 - 2023.
 
+
 --================= CONFIGURATION ====================
 
 --	Path ('sonata.lua' location)
@@ -18,10 +19,10 @@
 --SONATA_ASCIIPLOT_UNICODE = true
 
 --	Uncomment to set the localization file
---SONATA_LOCALIZATION = 'eo.lua'
--- Windows: call first
---   chcp 65001 
--- in console to use Unicode symbols
+--  Windows: to use Unicode symbols call in console
+--    chcp 65001
+--SONATA_LOCALIZATION = 'ru.lua'
+
 
 --===================  MODULES  =======================
 
@@ -41,9 +42,8 @@ use = {
   random     = "Rand",
   rational   = "Rat",
   symbolic   = "Sym",
-  units      = "Unit",
+  units      = "_U",
 --------------------
-  array      = "Arr",
   const      = "_C",
   geodesy    = "Geo",
   gnuplot    = "Gp",
@@ -51,6 +51,7 @@ use = {
   quaternion = "Quat",
   special    = "Spec",
 }
+
 
 --=====================  RUN  =========================
 

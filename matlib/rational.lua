@@ -7,16 +7,17 @@
 --  where both numbers are integers.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'rational'
 --]]
+
 
 -------------------- Tests -------------------
 --[[TEST
 
 -- use 'rational'
-Rat = require 'lib.rational'
+Rat = require 'matlib.rational'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -63,11 +64,11 @@ print(a)
 
 -- continued fraction to rational
 -- 1 + 1/(2+1/(3+1/4)) 
-c = Rat:fromCont {[0]=1, 2, 3, 4}
+c = Rat:fromCF {[0]=1, 2, 3, 4}
 ans = c                       --> Rat(43,30)
 
 -- rational to continued fraction
-d = c:toCont()
+d = c:toCF()
 ans = d[1]                    --> 2
 
 -- show continued fraction
@@ -83,28 +84,28 @@ ans = a + 0.5                 --> 1
 
 --	LOCAL
 
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
---  NUM, DENOM = 1, 2
 
---- Check object type.
---  @param v Test object.
---  @return True for rational number.
-local function isrational(v) return type(v) == 'table' and v.isrational end
+
 
 local mabs = math.abs
 
+
 local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
+
 local function numrat(R)
-  return Cross.eq(R._[2], 1) and Cross.simp(R._[1])               -- x / 1
+  local a, b = R._[1], R._[2]
+  return Cross.eq(b, 1) and Cross.simp(a)               -- x / 1
     -- float num or denom
-    or (isbig(R._[1]) or isbig(R._[2])) and (R._[1] / R._[2])
+    or (isbig(a) or isbig(b)) and (a / b)
     or R
 end
+
 
 --- Number representation.
 --  @param v Value.
@@ -112,6 +113,7 @@ end
 local function numStr(v)
   return type(v) == 'number' and Utils.numstr(v) or tostring(v)
 end
+
 
 -- Continued fraction printing
 local _continued = {
@@ -124,6 +126,7 @@ __tostring = function (t)
 end
 }
 
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -132,14 +135,22 @@ local about = {
 __module__ = "Computations with rational numbers."
 }
 
+
 --	MODULE
 
 local rational = {
 -- mark
-type = 'rational', isrational = true,
+type = 'rational', 
 -- simplification
 _simp = numrat,
 }
+
+
+--- Check object type.
+--  @param v Test object.
+--  @return True for rational number.
+local function isrational(v) return getmetatable(v) == rational end
+
 
 --- R1 + R2
 --  @param R1 First rational or integer number.
@@ -156,8 +167,9 @@ rational.__add = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return numrat(rational:_new(r1[1]*r2[2]+r1[2]*r2[1], r1[2]*r2[2]))
+  return numrat(rational._new(r1[1]*r2[2]+r1[2]*r2[1], r1[2]*r2[2]))
 end
+
 
 --- R1 / R2
 --  @param R1 First rational or integer number.
@@ -173,11 +185,13 @@ rational.__div = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return numrat(rational:_new(r1[1]*r2[2], r1[2]*r2[1]))
+  return numrat(rational._new(r1[1]*r2[2], r1[2]*r2[1]))
 end
+
 
 -- methametods
 rational.__index = rational
+
 
 --- R1 <= R2
 --  @param R1 First number.
@@ -199,6 +213,7 @@ rational.__le = function (R1, R2)
   return (r1[1]*r2[2]) <= (r2[1]*r1[2])
 end
 
+
 --- R1 < R2
 --  @param R1 First number.
 --  @param R2 Second number.
@@ -219,6 +234,7 @@ rational.__lt = function (R1, R2)
   return (r1[1]*r2[2]) < (r2[1]*r1[2])
 end
 
+
 --- R1 * R2
 --  @param R1 First rational or integer number.
 --  @param R2 Second rational or integer number.
@@ -233,11 +249,13 @@ rational.__mul = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return numrat(rational:_new(r1[1]*r2[1], r1[2]*r2[2]))
+  return numrat(rational._new(r1[1]*r2[1], r1[2]*r2[2]))
 end
+
 
 --- "Protect" from table modification.
 rational.__newindex = function () error("Immutable object") end
+
 
 --- R1 ^ R2
 --  @param R1 Rational or real number.
@@ -252,9 +270,10 @@ rational.__pow = function (R1, R2)
       error("Power must be a non-negative integer")
     end
     local r1 = R1._
-    return numrat(rational:_new(r1[1]^R2, r1[2]^R2))
+    return numrat(rational._new(r1[1]^R2, r1[2]^R2))
   end
 end
+
 
 --- R1 - R2
 --  @param R1 First rational or integer number.
@@ -270,8 +289,9 @@ rational.__sub = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return numrat(rational:_new(r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[2]))
+  return numrat(rational._new(r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[2]))
 end
+
 
 --- String representation.
 --  @param R Rational number.
@@ -289,18 +309,16 @@ rational.__tostring = function (R)
   end
 end
 
+
 --- -R
 --  @param R Rational number.
 --  @preturn Opposite rational number.
-rational.__unm = function (R) return rational:_new(-R._[1], R._[2]) end
+rational.__unm = function (R) return rational._new(-R._[1], R._[2]) end
 
-rational.arithmetic = 'arithmetic'
-about[rational.arithmetic] = {
-  rational.arithmetic, "R1+R2, R1-R2, R1*R2, R1/R2, -R, R1^R2", help.META}
 
-rational.comparison = 'comparison'
-about[rational.comparison] = { rational.comparison,
-  "R1<R2, R1<=R2, R1>R2, R1>=R2, R1==R2, R1~=R2", help.META}
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, -a, a^b", nil, help.META}
+about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
+
 
 --- Convert value to rational number.
 --  @param v Source value.
@@ -308,8 +326,9 @@ about[rational.comparison] = { rational.comparison,
 rational._convert = function (v)
   return (type(v) == 'number' and Ver.isInteger(v)
             or type(v) == 'table' and v.__mod)
-         and rational:_new(v, 1)
+         and rational._new(v, 1)
 end
+
 
 --- Find rational number for the given continued fraction.
 --  @param t Continued fraction coefficients.
@@ -323,20 +342,28 @@ rational._cont2rat = function (t)
   return t[0] * b + a, b
 end
 
+
+rational._isZero = function (R)
+  return Cross.isZero(R._[1])
+end
+
+
 --- Create new object, set metatable.
 --  @param vn Numerator.
---  @param vd Denominator. Default is 1.
+--  @param vd Denominator. 
 --  @return New rational object.
-rational._new = function (self, vn, vd)
+rational._new = function (vn, vd)
   local g = rational._gcd(vd, vn)     -- inverse order move sign to denominator
-  return setmetatable({_ = {vn/g, vd/g}}, self)
+  return setmetatable({_ = {vn/g, vd/g}}, rational)
 end
+
 
 --- Get denominator.
 --  @param R Rational number.
 --  @return Denominator.
 rational.denom = function (R) return R._[2] end
 about[rational.denom] = {"R:denom() --> var", "Return the denominator of the rational number."}
+
 
 --- R1 == R2
 --  @param R1 First number.
@@ -360,6 +387,7 @@ end
 about[rational.eq] = {"R:eq(x) --> bool", "Compare two objects.", help.OTHER}
 rational.__eq = rational.eq
 
+
 --- Float point representation.
 --  @param R Rational number.
 --  @return Decimal fraction.
@@ -369,54 +397,59 @@ rational.float = function (R)
 end
 about[rational.float] = {"R:float() --> num", "Return rational number as decimal."}
 
+
 --- Get rational number approximation.
 --  @param self Do nothing.
 --  @param f Source number.
 --  @param fErr Precision, default is 0.001.
 rational.from = function (self, f, fErr)
   fErr = fErr or 1E-3
-  local f0 = math.abs(f)
-  local c, acc = f0, {}
-  acc[0], c = math.modf(c)
+  local f0, acc, c = math.abs(f), {}, nil
+  acc[0], c = math.modf(f0)
   local a, b = acc[0], 1
   while c > 0 and math.abs(a/b - f0) > fErr do
     acc[#acc+1], c = math.modf(1/c)
     a, b = rational._cont2rat(acc)
   end
-  return rational:_new(f >= 0 and a or -a, b)
+  return rational._new(f >= 0 and a or -a, b)
 end
 about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
   "Estimate ratio from floating point value.", help.NEW}
+
 
 --- Get rational number from continued fraction coefficients.
 --  @param self Do nothing.
 --  @param t List of coefficients.
 --  @return Rational number.
-rational.fromCont = function (self, t)
+rational.fromCF = function (self, t)
   local check = {}
   for i, v in ipairs(t) do
     if (type(v) == 'number' and Ver.isInteger(v)
-          or type(v) == 'table' and v.__mod) and v > 0 then
+          or type(v) == 'table' and v.__mod) and v > 0 
+    then
       check[i] = v
     else error("Positive integer is expected") end
   end
   local t0 = t[0] or 0
   if (type(t0) == 'number' and Ver.isInteger(t0)
-        or type(t0) == 'table' and t0.__mod) then
+        or type(t0) == 'table' and t0.__mod) 
+  then
     check[0] = t0
   else error("Integer is expected") end
-  return rational:_new(rational._cont2rat(check))
+  return rational._new(rational._cont2rat(check))
 end
-about[rational.fromCont] = {":fromCont(coeff_t) --> R",
+about[rational.fromCF] = {":fromCF(coeff_t) --> R",
   "Transform continued fraction to rational number.", help.NEW}
+
 
 --- The greatest common divisor.
 --  @param va First integer.
 --  @param vb Second integer.
 --  @return Greatest common divisor.
 rational._gcd = function (va, vb)
-  return Cross.eq(va, 0) and vb or rational._gcd(vb % va, va)
+  return Cross.isZero(va) and vb or rational._gcd(vb % va, va)
 end
+
 
 --- Get numerator.
 --  @param R Rational number.
@@ -424,10 +457,11 @@ end
 rational.num = function (R) return R._[1] end
 about[rational.num] = {"R:num() --> var", "Return the numerator of rational number."}
 
+
 --- Find continued fraction coefficients.
 --  @param R Positive rational number.
 --  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/...
-rational.toCont = function (R)
+rational.toCF = function (R)
   local a, b, c = R._[1], R._[2], nil
   if a < 0 then error("Positive is expected") end
   local numbers = (type(a) == 'number' and type(b) == 'number')
@@ -442,8 +476,9 @@ rational.toCont = function (R)
   res[#res+1] = math.modf(b)
   return setmetatable(res, _continued)
 end
-about[rational.toCont] = {"R:toCont() --> coeff_t", 
+about[rational.toCF] = {"R:toCF() --> coeff_t", 
   "Transform rational number to continued fraction.", help.OTHER}
+
 
 -- call constructor, check arguments
 setmetatable(rational, {
@@ -455,11 +490,12 @@ __call = function (self, n, d)
   assert(
     type(d) == 'number' and Ver.isInteger(d) or type(d) == 'table' and d.__mod,
     "Wrong denomenator type")
-  assert(not Cross.eq(d, 0), "Wrond denomenator value")
-  return rational:_new(n, d)
+  assert(not Cross.isZero(d), "Wrond denomenator value")
+  return rational._new(n, d)
 end})
 about[rational] = {" (num, denom=1) --> new_R", 
   "Create rational number using num (and denom).", help.NEW}
+
 
 -- Comment to remove descriptions
 rational.about = about

@@ -8,6 +8,7 @@
 	module 'help'
 --]]
 
+
 --[[    == About help system ==
 
 Each function description is represented as a table:
@@ -20,10 +21,12 @@ about[function] =
 
 --]]
 
+
 --	LOCAL
 
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
+
 
 --	MODULE
 
@@ -50,6 +53,7 @@ LOCALE = (SONATA_ADD_PATH or '')..'locale',
 -- metamethods
 help.__index = help
 
+
 -- English version of some interface strings
 help.english = {
 intro = [[
@@ -59,6 +63,7 @@ intro = [[
 ]],
 done = 'Done.',
 }
+
 
 --- Auxiliary function, which define colors for text elements.
 --  @param bUse Boolean flag of usage.
@@ -73,6 +78,7 @@ help.useColors = function (bUse)
   end
 end
 
+
 --================== Function help system ==================
 
 --- Extend function name if need.
@@ -82,6 +88,7 @@ end
 help._toExtend = function(nm, alias)
   return (string.find(nm, '^[%a_]') == nil) and alias..nm or nm
 end
+
 
 --- Include content of the other help table into current one.
 --  @param dst Table to store data.
@@ -104,6 +111,7 @@ help.add = function (dst, tbl, nm, alias)
   if lng then dst._locale[nm] = nil end  -- free memory
 end
 
+
 --- Look for object description in the stored data.
 --  @param tbl Table with info.
 --  @param obj Something that we would like to find.
@@ -119,11 +127,13 @@ help.findObject = function (tbl, obj, tGlob)
     elseif mod[obj] then
       -- function description
       local t = mod[obj]
-      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], '\n', t[DESCRIPTION]}
+      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR, 
+        '\n', t[DESCRIPTION]}
     end
   end
   return nil
 end
+
 
 --- Get translated string if possible.
 --  @param self Parent object.
@@ -134,11 +144,13 @@ help.get = function (tbl, txt)
   return lng or help.english[txt] or txt
 end
 
+
 --- Prepare main table for help info.
 --  @return New table.
 help.init = function ()
   return setmetatable({_locale={}, _modules={}}, help)
 end
+
 
 --- Read file with localization data and update main module.
 --  @param self Parent object.
@@ -152,6 +164,7 @@ help.localization = function (dst, fName)
     io.write("File ", fName, " not found.\n")
   end
 end
+
 
 --- Collect information for all modules.
 --  @param t Table with all modules.
@@ -167,6 +180,7 @@ help.makeFull = function (t, tGlob)
   end
   return res
 end
+
 
 --- Prepare description for module.
 --  @param t Table with functions.
@@ -185,17 +199,19 @@ help.makeModule = function (t, nm)
     end
   end
   -- output
-  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm, '\n',
-    txt, '\n'}
+  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm, Sonata.FORMAT_CLR,
+    '\n', txt, '\n'}
   for cat, n in pairs(acc) do          -- for each category
-    res[#res+1] = '\t'; res[#res+1] = Sonata.FORMAT_V1
-    res[#res+1] = cat    ; res[#res+1] = '\n'
+    res[#res+1] = '\t'
+    res[#res+1] = Sonata.FORMAT_V1; res[#res+1] = cat
+    res[#res+1] = Sonata.FORMAT_CLR; res[#res+1] = '\n'
     table.sort(n)
     res[#res+1] = table.concat(n, '\n')
     res[#res+1] = '\n'
   end
   return res
 end
+
 
 --================== Files ===================
 
@@ -211,6 +227,7 @@ help.readAll = function (fName)
   return str
 end
 
+
 --- Load localization tables from file, 
 --  decode if need.
 --  @param fName File path and name.
@@ -219,6 +236,7 @@ help.lngImport = function (fName)
   local ok, res = pcall(dofile, fName)
   return ok and res or nil
 end
+
 
 return help
 

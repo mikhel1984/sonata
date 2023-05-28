@@ -3,15 +3,16 @@
 --- Coordinate transformations and other geodetic tasks.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'geodesy'
 --]]
 
+
 --[[TEST
 
 -- use 'geodesy'
-Geo = require 'lib.geodesy'
+Geo = require 'matlib.geodesy'
 
 -- generate random from number -1 to 1
 rnd = function () return 2*math.random()-1 end
@@ -61,7 +62,7 @@ t5 = blh_wgs84_pz90(t0)
 -- UTM to lat/lon
 utm = {N=5601281, E=625394, zone=42, hs='N'}
 ll = wgs84:utm2ll(utm)
-ans = ll.B                 --2> 50.55 
+ans = ll.B                 --2> 50.55
 
 ans = ll.L                 --2> 70.77
 
@@ -98,24 +99,23 @@ ans = p4.B                  --2> p1.B
 
 --]]
 
+
 --	LOCAL
 
 -- Compatibility with previous versions
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Calc = Ver.calc
 Ver = Ver.versions
 
+
 local PROB, TRANS, PROJ = "problems", "transform", "projection"
 
---- Check object type.
---  @param v Object.
---  @return True if the object is geodesy.
-local function isgeodesy(v) return type(v)=='table' and v.isgeodesy end
 
 --- Inverse hyperbolic tangent.
 --  @param d Some number.
 --  @return Areatangent value.
 local function arth(d) return math.log((1+d)/(1-d)) / 2 end
+
 
 --	INFO
 
@@ -125,14 +125,16 @@ local about = {
 __module__ = "Coordinate transformations and other geodetic tasks."
 }
 
+
 --	MODULE
 
 -- Reference ellipsoid
-local ellipsoid = {
-}
+local ellipsoid = {}
+
 
 -- methametods
 ellipsoid.__index = ellipsoid
+
 
 --- Datum transformation from E2 to E1.
 --  @param E1 Dst ellipsoid object.
@@ -151,6 +153,7 @@ ellipsoid._bwdBLH = function (E1, E2, tPar)
   end
 end
 
+
 --- Transform coordinates between two Cartesian systems, backward direction.
 --  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
 --  @return Function for coordinate transformation.
@@ -165,6 +168,7 @@ ellipsoid._bwdXYZ = function (tPar)
     }
   end
 end
+
 
 --- Datum transformation from E1 to E2.
 --  @param E1 Src ellipsoid object.
@@ -184,6 +188,7 @@ ellipsoid._fwdBLH = function (E1, E2, tPar)
   end
 end
 
+
 --- Transform coordinates between two Cartesian systems, forward direction.
 --  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
 --  @return Function for coordinate transformation.
@@ -198,6 +203,7 @@ ellipsoid._fwdXYZ = function (tPar)
     }
   end
 end
+
 
 --- Molodensky transformation. Axis are assumed to be parallel to each other.
 --  @param E Ellipsoid object.
@@ -221,6 +227,7 @@ ellipsoid._molodensky = function (E, dx, dy, dz, da, df, t)
   return math.deg(dB), math.deg(dL), dH
 end
 
+
 --- Find the meridian radius
 --  @param E Ellipsoid object.
 --  @param d
@@ -230,6 +237,7 @@ ellipsoid._radiusMeridian = function (E, d)
   return E.a * (1 - E.e2) / (1 - E.e2*s*s)^1.5
 end
 
+
 --- Find the vertical radius
 --  @param E Ellipsoid object.
 --  @paramd d
@@ -238,6 +246,7 @@ ellipsoid._radiusVertical = function (E, d)
   local s = math.sin(d)
   return E.a / math.sqrt(1 - E.e2*s*s)
 end
+
 
 --- Prepare coefficients for UTM transformations.
 --  @param E Ellipsoid object.
@@ -264,6 +273,7 @@ ellipsoid._setUtmArrays = function (E)
   E.utmA = 0.9996 * E.a/(1+n[1]) * (1 + n[2]/4.0 + n[4]/64.0 + n[6]/256.0)
 end
 
+
 --- Find coefficients.
 --  @param e2 Square excentrisitet.
 --  @param cosa2 Square cosine of the angle.
@@ -275,8 +285,9 @@ ellipsoid._vincentyAB = function (e2, cosa2)
   return A, B
 end
 
+
 --- Convert lat/lon to UTM coordinates.
---  Based on Karney's method and 
+--  Based on Karney's method and
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
 --  @param E Ellipsoid object.
 --  @param t Table with longitude L and lattitude B
@@ -289,7 +300,7 @@ ellipsoid.ll2utm = function (E, t)
   local l0 = (zone-1)*6 - 177  -- lon of central meridian
   -- Norway / Svalbard exception
   if 31 <= zone and zone <= 36 then
-    local pos = math.floor(t.B/8.0 + 10) 
+    local pos = math.floor(t.B/8.0 + 10)
     if pos == 17 then  -- 'V'
       if zone == 31 and t.L >= 3  then zone, l0 = zone + 1, l0 + 6 end
     elseif pos > 18 then  -- 'X'
@@ -307,7 +318,7 @@ ellipsoid.ll2utm = function (E, t)
   local alpha, e = E.utmAlpha, math.sqrt(E.e2)
   local clon = math.cos(lon)
   local tau, slat = math.tan(lat), math.sin(lat)
-  n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )  -- reuse
+  local n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
   local tau1 = tau*math.sqrt(1+n1*n1) - n1*math.sqrt(1+tau*tau)
   local xi1 = Ver.atan2(tau1, clon)
   local eta1 = Calc.asinh(math.sin(lon) / math.sqrt(tau1*tau1 + clon*clon))
@@ -327,11 +338,12 @@ ellipsoid.ll2utm = function (E, t)
     zone = zone,
     hs = t.B >= 0 and 'N' or 'S',  -- hemisphere
   }
-  if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing 
+  if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing
   local scale = E.utmA / E.a * math.sqrt(
     (p1*p1 + q1*q1)*(1-e*e*slat*slat)*(1+tau*tau) / (tau1*tau1 + clon*clon))
   return pose, scale
 end
+
 
 --- Ellipsoid object constructor.
 --  @param t Table with parameters, obligatory are semi-major axis, flattening.
@@ -344,6 +356,7 @@ ellipsoid.new = function (self, t)
   t.blhInto = {}  -- datum transformation
   return setmetatable(t, self)
 end
+
 
 --- Solve the direct geodetic problem:
 --  find the socond point and azimuth if the initial point,
@@ -387,6 +400,7 @@ ellipsoid.solveDir = function (E, t1, dA, dist)
   return {B = math.deg(B2), L = t1.L + math.deg(L)}, math.deg(azimuth2)
 end
 
+
 --- Solve the inverse geodetic problem:
 --  find distance and azimuths for the two given points.
 --  Uses Vincenty's formulae.
@@ -428,6 +442,7 @@ ellipsoid.solveInv = function (E, t1, t2)
   return dist, math.deg(azimuth1), math.deg(azimuth2)
 end
 
+
 --- Transform Cartesian coordinates to Geodetic.
 --  @param E Reference ellipsoid object.
 --  @param t Dictionary with coordinates in meters: X, Y, Z.
@@ -466,6 +481,7 @@ ellipsoid.toBLH = function (E, t)
     H = H }
 end
 
+
 --- Transform Geodetic coordinats to Cartesian.
 --  @param E Reference ellipsoid object.
 --  @param t Dictionary with coordinates: B (deg), L (deg), H (m).
@@ -481,8 +497,9 @@ ellipsoid.toXYZ = function (E, t)
     Z = ((1-E.e2)*N + H) * math.sin(B) }
 end
 
+
 --- Convert UTM coordinates to lat/lon.
---  Based on Karney's method and 
+--  Based on Karney's method and
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
 --  @param E Ellipsoid object.
 --  @param t Table of coordinates {N=,E=,hs=,zone=}.
@@ -507,11 +524,11 @@ ellipsoid.utm2ll = function (E, t)
   local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
   local taui = tau1
   -- find latitude
-  repeat 
+  repeat
     local sqrti = math.sqrt(1 + taui*taui)
     local si = Calc.sinh( e*Calc.atanh(e*taui/sqrti) )
     local taui1 = taui*math.sqrt(1+si*si) - si*sqrti
-    local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) * 
+    local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) *
       (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)
     taui = taui + diff
   until math.abs(diff) < 1E-12
@@ -522,9 +539,9 @@ ellipsoid.utm2ll = function (E, t)
     (p*p + q*q)*(1-e*e*slat*slat)*(1+taui*taui) *(sheta1*sheta1 + cxi1*cxi1))
   local l0 = (t.zone-1)*6 - 177
   local res = {
-    B = math.deg(lat), 
+    B = math.deg(lat),
     L = math.deg(Ver.atan2(sheta1, cxi1)) + l0,
-    H = 0 
+    H = 0
   }
   return res, scale
 end
@@ -533,7 +550,7 @@ end
 -- Collection of Geodetic methods
 local geodesy = {
 -- mark
-type = 'geodesy', isgeodesy = true,
+type = 'geodesy',
 
 -- Ellipsoids
 WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563,
@@ -558,8 +575,10 @@ SK42 = ellipsoid:new {a = 6378245, f = 1/298.3},
 base32 = '0123456789bcdefghjkmnpqrstuvwxyz',
 }
 
+
 -- methametods
 geodesy.__index = geodesy
+
 
 --- Convert degrees to radians.
 --  @param self Do nothing.
@@ -572,6 +591,7 @@ geodesy.dms2rad = function (self, d, m, s)
 end
 about[geodesy.dms2rad] = {":dms2rad(deg_d, min_d=0, sec_d=0) --> num",
   "Convert degrees, minutes and seconds to radians.", help.OTHER}
+
 
 --- Convert degrees to degrees-minutes-seconds.
 --  @param self Do nothing.
@@ -586,6 +606,7 @@ end
 about[geodesy.deg2dms] = {":deg2dms(deg_d) --> num",
   "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
+
 --- International gravity formula (WGS).
 --  @param self Do nothing.
 --  @param B Latitude, deg.
@@ -597,6 +618,7 @@ geodesy.grav = function (self, dB)
 end
 about[geodesy.grav] = {":grav(latitude_d) --> num",
   "International gravity formula, angle in degrees.", help.OTHER}
+
 
 --- Convert hash to corrdinates.
 --  @param self Do nothing.
@@ -638,6 +660,7 @@ end
 about[geodesy.hashDecode] = {":hashDecode(hash_s) --> coord_t, range_t",
   "Find central point and range of the zone."}
 
+
 --- Geohash from coordinates
 --  Based on https://www.movable-type.co.uk/scripts/geohash.html
 --  @param self Do nothing.
@@ -677,35 +700,42 @@ geodesy.hashEncode = function (self, t, N)
   end
   return table.concat(hash)
 end
-about[geodesy.hashEncode] = {":hashEncode(coord_t, letter_N=6) --> hash_s", 
+about[geodesy.hashEncode] = {":hashEncode(coord_t, letter_N=6) --> hash_s",
   "Find hash for the given point."}
+
 
 -- Access to the ellipsoid object methods.
 geodesy.toXYZ = ellipsoid.toXYZ
-about[geodesy.toXYZ] = {"E:toXYZ(blh_t) --> xyz_t", 
+about[geodesy.toXYZ] = {"E:toXYZ(blh_t) --> xyz_t",
   "Transform Geodetic coordinates to Cartesian.", TRANS}
 
+
 geodesy.toBLH = ellipsoid.toBLH
-about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t", 
+about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t",
   "Transform Cartesian coordinates to Geodetic.", TRANS}
 
+
 geodesy.utm2ll = ellipsoid.utm2ll
-about[geodesy.utm2ll] = {"E:utm2ll(utm_t) --> blh_t", 
+about[geodesy.utm2ll] = {"E:utm2ll(utm_t) --> blh_t",
   "Find Geodetic coordinates for the given UTM pose and zone", PROJ}
 
+
 geodesy.ll2utm = ellipsoid.ll2utm
-about[geodesy.ll2utm] = {"E:ll2utm(blh_t) --> utm_t", 
+about[geodesy.ll2utm] = {"E:ll2utm(blh_t) --> utm_t",
   "Find UTM projection for the given coordinates.", PROJ}
+
 
 geodesy.solveDir = ellipsoid.solveDir
 about[geodesy.solveDir] = {"E:solveDir(blh_t, az1_d, dist_d) --> blh_t, az2_d",
   "Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.",
   PROB}
 
+
 geodesy.solveInv = ellipsoid.solveInv
 about[geodesy.solveInv] = {"E:solveInv(blh1_t, blh2_t) --> dist_d, az1_d, az2_d",
   "Solve inverse geodetic problem, find distance and azimuths for two points.",
   PROB}
+
 
 --- Simplify configuration of coordinate transformation between ellipsoids.
 --  @param E1 First ellipsoid object.
@@ -719,6 +749,7 @@ local _setTranslation = function (E1, E2, tPar)
   E1.blhInto[E2] = ellipsoid._fwdBLH(E1, E2, tPar)
   E2.blhInto[E1] = ellipsoid._bwdBLH(E1, E2, tPar)
 end
+
 
 -- PZ90 to WGS84
 _setTranslation(geodesy.PZ90, geodesy.WGS84,
@@ -737,6 +768,7 @@ _setTranslation(geodesy.SK42, geodesy.PZ9002,
   {23.93, -141.03, -79.98;
    0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6})
 
+
 geodesy.xyzInto = 'A.xyzInto[B]'
 about[geodesy.xyzInto] = {"E.xyzInto[E2] --> fn",
   "Get function to transform coordinates from E to E2 system.", TRANS}
@@ -744,6 +776,7 @@ geodesy.blhInto = 'A.blhInto[B]'
 about[geodesy.blhInto] = {"E.blhInto[E2] --> fn",
   "Get function to transform geodetic coordinates from A to B system using the Molodensky method.",
   TRANS}
+
 
 --- Find cartesian coordinates of a point with topocentric coordinates.
 --  @param self Do nothing.
@@ -763,6 +796,7 @@ end
 about[geodesy.fromENU] = {":fromENU(blRef_t, xyzRef_t, top_t) --> xyzObs_t",
   "Get cartesian coordinates of a local point in reference frame.", TRANS}
 
+
 --- Find topocentric coordinates of a point.
 --  @param self Do nothing.
 --  @param g Geodetic coordinates of the reference point.
@@ -781,6 +815,7 @@ geodesy.toENU = function (self, tG, tR, tP)
 end
 about[geodesy.toENU] = {":toENU(blRef_t, xyzRef_t, xyzObs_t) --> top_t",
   "Get topocentric coordinates of a point in reference frame.", TRANS}
+
 
 -- Comment to remove descriptions
 geodesy.about = about

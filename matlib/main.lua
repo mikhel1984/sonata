@@ -3,15 +3,16 @@
 --- Default functions and objects.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'main'
 --]]
 
+
 ---------------- Tests ---------------------
 --[[TEST
 
-require 'lib.main'
+require 'matlib.main'
 
 -- constants starts from '_'
 ans = _pi                     --> math.pi
@@ -33,21 +34,9 @@ ans = Type(25)                --> 'integer'
 a = {a=1,b=2, 3,4,5}
 Print(a, 0.123)
 
--- generate 'sequence'
-b = Range(1,3)
-ans = b[3]                    --> 3
-
--- even numbers
-b = Range(2,10,2)
-ans = b[2]                    --> 4
-
--- linear transformations
--- with range Range objects
-b2 = 2*b + 4
-ans = b2[1]                   --> 8
 
 -- calculate function values
-c = Map(sin, b)
+c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3> 0.909
 
 -- use Lua functions if need
@@ -55,17 +44,20 @@ ans = math.deg(_pi)          --2> 180.0
 
 --]]
 
+
 --	LOCAL
 
 local TRIG = 'trigonometry'
 local HYP = 'hyperbolic'
 local AUX = 'auxiliary'
 
+
 -- compatibility
-local Ver = require("lib.utils")
+local Ver = require("matlib.utils")
 local Utils = Ver.utils
 local Calc = Ver.calc
 Ver = Ver.versions
+
 
 --- Call default or module-specific function.
 --  @param fn Function.
@@ -82,57 +74,70 @@ local _call = function (fn, s)
   end
 end
 
+
 --	INFO 
 
 -- description
 local about = {
 __module__ = "Lua based mathematics."
 }
+
+
 --	MODULE
 
-
 local main = {}
+
 
 --- Print element, use 'scientific' form for float numbers.
 --  @param v Value to print.
 main._showElt = function (v)
-  if type(v) == 'number' then
-    return Utils.numstr(v)
-  else
-    return tostring(v)
-  end
+  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
 end
+
 
 --- Show elements of the table.
 --  @param t Table to print.
 main._showTable = function (t)
-  local N, nums = 10, {}
+  local N, nums, out = 10, {}, {'{ '}
   -- dialog
-  local function continue(n)
-    io.write(n, ' continue? (y/n) ')
-    return string.lower(io.read()) == 'y'
+  local function continue(n, res)
+    local txt = tostring(n) .. ' continue? (y/n/) '
+    if Sonata then
+      txt = Sonata.ask(txt, res)
+    else
+      io.write(res, '\n', txt)
+      txt = io.read()
+    end
+    return string.lower(txt) == 'y'
   end
-  io.write('\n{ ')
   -- list elements
   for i, v in ipairs(t) do
-    io.write(main._showElt(v), ', ')
+    out[#out+1] = main._showElt(v); out[#out+1] = ', '
     nums[i] = true
     if i % N == 0 then
-      io.write('\n')
-      if not continue(i) then break end
+      out[#out+1] = '\n'
+      local data = table.concat(out)
+      out = {'\n'}
+      if not continue(i, data) then break end
     end
   end
   -- hash table elements
   local count = 0
   for k, v in pairs(t) do
     if not nums[k] then
-      io.write('\n', tostring(k), ' = ', main._showElt(v), ', ')
+      out[#out+1] = string.format('\n%s = %s, ', tostring(k), main._showElt(v))
       count = count + 1
-      if count % N == 0 and not continue("") then break end
+      if count % N == 0 then
+        local data = table.concat(out)
+        out = {'\n'}
+        if not continue('', data) then break end
+      end
     end
   end
-  io.write(' }\n')
+  out[#out+1] = ' }\n'
+  return table.concat(out)
 end
+
 
 -- Commonly used methods
 abs = _call(math.abs, 'abs')
@@ -176,9 +181,11 @@ about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", HYP}
 atanh = _call(Calc.atanh, 'atanh')
 about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
+
 -- Constants
-_pi = math.pi;   about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
-_e  = 2.718281828459;   about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
+_pi = math.pi;         about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
+_e  = 2.718281828459;  about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
+
 
 --- Generate list of function values.
 --  @param fn Function to apply.
@@ -195,9 +202,11 @@ Map = function (fn, t)
 end
 about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table element.', AUX}
 
+
 --- Show table content and scientific form of numbers.
 --  @param ... List of arguments.
 Print = function (...)
+  local out = {}
   for i, v in ipairs({...}) do
     if type(v) == 'table' then
       local mt = getmetatable(v)
@@ -205,24 +214,27 @@ Print = function (...)
         -- has representation
         local tmp = tostring(v)
         if string.find(tmp, '\n') then
-          io.write('\n', tmp, '\n')
-        else
-          io.write(tmp, '\t')
+          out[#out+1] = '\n'
         end
+        out[#out+1] = tmp
+        out[#out+1] = '\t'
       else
         -- require representation
-        main._showTable(v)
+        out[#out+1] = main._showTable(v)
       end
     else
       -- show value
-      io.write(main._showElt(v), '\t')
+      out[#out+1] = main._showElt(v)
+      out[#out+1] = '\t'
     end
   end
-  io.write('\n')
+  local res = table.concat(out)
+  if Sonata then Sonata.say(res) else print(res) end
 end
 about[Print] = {"Print(...) --> nil",
   "Extenden print function, it shows elements of tables and scientific form of numbers.",
   AUX}
+
 
 --- Round to some precision.
 --  @param f Real number.
@@ -235,19 +247,6 @@ end
 about[Round] = {
   'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
 
---- Execute file inside the interpreter.
---  @param sFile Lua or note file name.
-Run = function (sFile, bInt)
-  if string.find(sFile, '%.lua$') then
-    dofile(sFile)
-  elseif string.find(sFile, '%.note$') then
-    Sonata:note(sFile, bInt==true)
-  else
-    io.write('Expected .lua or .note!\n')
-  end
-end
-about[Run] = {'Run(name_s, isInt=false) --> nil',
-  "Execute lua- or note- file. Set isInt for interaction.", AUX}
 
 --- Show type of the object.
 --  @param v Some Lua or Sonata object.
@@ -263,6 +262,7 @@ Type = function (v)
 end
 about[Type] = {'Type(x) --> str', 'Show type of the object.', AUX}
 
+
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
 main.life = function (board)
@@ -271,11 +271,11 @@ main.life = function (board)
   local src = board
   local gen = 0
   -- make decision about current cell
-  local islive = function (r, c)
-      local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
-        + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
-      return (n==3 or n==2 and src[r][c]==1) and 1 or 0
-    end
+  local function islive (r, c)
+    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
+      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
+    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
+  end
   -- evaluate
   repeat
     local new = board:zeros()   -- empty matrix of the same size
@@ -296,120 +296,18 @@ main.life = function (board)
   until 'n' == io.read()
 end
 
--- Methametods for the range of numbers.
-local mt_range = { type = 'range' }
-
---- Initialize range object.
---  @param dBeg First value.
---  @param dEnd Last value.
---  @param dStep Step value.
---  @param iN Number of elements.
---  @return Range object.
-mt_range._init = function (dBeg, dEnd, dStep, iN)
-  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN}, mt_range)
-end
-
---- Add number (shift range).
---  @param d Any number.
---  @param R Range object.
---  @return Shifted range table.
-mt_range.__add = function (d, R)
-  if type(R) == 'number' then
-    return mt_range.__add(R, d)
-  else
-    return mt_range._init(d+R._beg, d+R._end, R._step, R._N)
-  end
-end
-
-mt_range.__sub = function (R, d)
-  if type(R) == 'number' then   -- d is range
-    return R + (-1)*d
-  else
-    return mt_range._init(R._beg-d, R._end-d, R._step, R._N)
-  end
-end
-
---- Multiply to number (expand range).
---  @param d Any number.
---  @param R Range object.
---  @return Expanded range table.
-mt_range.__mul = function (d, R)
-  if type(R) == 'number' then
-    return mt_range.__mul(R, d)
-  else
-    return mt_range._init(d*R._beg, d*R._end, d*R._step, R._N)
-  end
-end
-
---- Pretty print.
---  @param R Range object.
---  @return String with the table representation.
-mt_range.__tostring = function (self)
-  return string.format("%s{%g, %g .. %g}", self._fn and "fn" or "",
-    self._beg, self._beg+self._step, self._end)
-end
-
---- Get number of elements.
---  @param self Range object.
---  @return Element number.
-mt_range.__len = function (self)
-  return self._N
-end
-
---- Get i-th element.
---  @param self Range object.
---  @param i Element index.
---  @return Number.
-mt_range.__index = function (self, i)
-  if Ver.isInteger(i) and i > 0 and i <= self._N then
-    local v = 0
-    if i < self._N then
-      v = self._beg + (i-1)*self._step
-    else
-      v = self._end
-    end
-    return v and self._fn and self._fn(v) or v
-  end
-end
-
--- Block setting operation.
-mt_range.__newindex = function (self, k, v)
-  -- do nothing
-end
-
-mt_range.map = function (self, fn)
-  return setmetatable(
-    {_beg=self._beg, _end=self._end, _step=self._step, _N=self._N, _fn=fn},
-    mt_range)
-end
-
---- Generate sequence of values.
---  @param dBegin Beginning of range.
---  @param dEnd End of range.
---  @param dStep Step value (default is 1).
---  @return Table with numbers, Range object.
-Range = function (dBegin, dEnd, dStep)
-  dStep = dStep or (dEnd > dBegin) and 1 or -1
-  local diff = dEnd - dBegin
-  assert(diff * dStep > 0, "Wrong range or step")
-  -- check size
-  local n, _ = math.modf(diff / dStep)
-  if math.abs(n*dStep - dEnd) >= math.abs(dStep * 0.1) then n = n + 1 end
-  -- result
-  return mt_range._init(dBegin, dEnd, dStep, n)
-end
-about[Range] = {'Range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.', AUX}
 
 -- Sonata specific functions
 
-if Sonata then
-about[Log] = {'Log(flag_s) --> nil',
-  "Save session into the log file. Use 'on'/'off' to start/stop logging.", AUX}
+if Sonata then  -- SPECIFIC
+
 about[use] = {'use([module_s]) --> str|nil',
   "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
 about[help] = {"help(fn='main') --> str", "Show information about the function.", AUX}
 about[quit] = {'quit() --> nil', "Quit the program.", AUX}
-end
+
+end  -- SPECIFIC
+
 
 -- save link to help info
 main.about = about

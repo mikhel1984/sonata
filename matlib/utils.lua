@@ -8,9 +8,11 @@
 	module 'utils'
 --]]
 
+
 --	MODULE
 
 local mmodf = math.modf
+
 
 --================ New version ================
 local versions = {
@@ -29,6 +31,7 @@ local versions = {
   -- Extract table values.
   unpack    = table.unpack,
 }
+
 
 --=============== Previous versions =======================
 if _VERSION < 'Lua 5.3' then
@@ -73,11 +76,13 @@ if _VERSION < 'Lua 5.3' then
   versions.unpack = unpack
 end
 
+
 --============= Cross-module functionality =========
 
 local cross = {
 --NUMBER = 1, TABLE = 2, STRING = 3, OTHER = 4,
 }
+
 
 --- Compare equality of two objects.
 --  @param v1 First object.
@@ -93,6 +98,7 @@ cross.eq = function (v1, v2)
   end
 end
 
+
 --- Convert slave into type of master.
 --  @param vMaster Master object.
 --  @param vSlave Slave object.
@@ -102,6 +108,7 @@ cross.convert = function (vMaster, vSlave)
     and vMaster._convert(vSlave)
 end
 
+
 --- Get the object copy.
 --  @param v Object.
 --  @return Deep copy when possible.
@@ -109,24 +116,34 @@ cross.copy = function (v)
   return type(v) == 'table' and v.copy and v:copy() or v
 end
 
+
 --- Get float value when possible.
 --  @param v Some object.
 --  @return Float number or nil.
 cross.float = function (v)
-  return type(v) == 'number' and v or type(v) == 'table' and v:float() or nil
+  local tp = type(v)
+  return tp == 'number' and v or tp == 'table' and v:float() or nil
 end
+
+
+cross.isZero = function (v)
+  return type(v) == 'table' and v._isZero and v:_isZero() or (v == 0)
+end
+
 
 --- Norm of numeric object.
 --  @param v Some object.
 --  @return Norm or nil.
 cross.norm = function (v)
-  if type(v) == 'number' then
+  local tp = type(v)
+  if tp == 'number' then
     return math.abs(v)
-  elseif type(v) == 'table' then
+  elseif tp == 'table' then
     return v.float and math.abs(v:float()) or v._norm and v:_norm() or nil
   end
   return nil
 end
+
 
 --- Apply simplification if possible
 --  @param v Sonata object.
@@ -135,12 +152,14 @@ cross.simp = function (v)
   return type(v) == 'table' and v._simp and v:_simp() or v
 end
 
+
 --============== Utils ================
 
 local NUM_DOT = '%.'
 local NUM_DIG = '^%d+$'
 local NUM_EXP = '^%d+[eE]%d*$'
 local NUM_SGN = '^[+-]$'
+
 
 local utils = {
   TEMPL = '([%w_]*)%s*([^%w%s_]?)%s*',   -- var and symbol
@@ -152,6 +171,7 @@ local utils = {
     [NUM_SGN] = {NUM_DIG},
   },
 }
+
 
 --- Transform sequence of strings to number.
 --  @param t Table with strings.
@@ -184,6 +204,7 @@ utils._toNumbers = function (t)
   return res
 end
 
+
 --- Generate function from string.
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments.
@@ -196,6 +217,7 @@ utils.Fn = function (sExpr, iArg)
       table.concat(arg, ','), sExpr))
   return fn and fn()
 end
+
 
 --- 'Smart' number to string conversation.
 --  @param d Number.
@@ -222,6 +244,7 @@ utils.numstr = function (d)
   return string.format('%.2E', d)
 end
 
+
 --- Round float number for required number of digits.
 --  @param fArg Number for rounding.
 --  @param fTol Required tolerance (1E-k)
@@ -232,6 +255,7 @@ utils.round = function (fArg, fTol)
   end
   return p * fTol
 end
+
 
 --- Simple lexer for algebraic expressions.
 --  @param s String to parse.
@@ -245,6 +269,7 @@ utils.lex = function (s)
   return utils._toNumbers(res)
 end
 
+
 --- Check sign if possible.
 --  @param d Value to check.
 --  @return -1, 0 or 1
@@ -256,39 +281,47 @@ utils.sign = function (d)
   end
 end
 
+
 --============== Calc ================
 
 local calc = {}
+
 
 --- Hyperbolic cosine.
 --  @param x Float number.
 --  @return Hyperbolic cosine value.
 calc.cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
 
+
 --- Hyperbolic sine.
 --  @param x Float number.
 --  @return Hyperbolic sine value.
 calc.sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
+
 
 --- Hyperbolic tangent.
 --  @param x Float number.
 --  @return Hyperbolic tangent value.
 calc.tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
 
+
 --- Inverse hyperbolic sine.
 --  @param x Float number.
 --  @return Inverse hyperbolic sine value.
 calc.asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
+
 
 --- Inverse hyperbolic cosine.
 --  @param x Float number.
 --  @return Inverse hyperbolic cosine value.
 calc.acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
 
+
 --- Inverse hyperbolic tangent.
 --  @param x Float number.
 --  @return Inverse hyperbolic tangent value.
 calc.atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
+
 
 return {
   versions = versions,

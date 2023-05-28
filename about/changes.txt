@@ -1,3 +1,22 @@
+======== 0.9.36 =========
+
+Bigint
+* change print and parse strings
+* common internal numerical base
+* improve prerformance
+* use numbers instead of digits
+Matrix
+* calculated matrices are dense
+* improve performance
+Units
+* rename module
+* add rule list
+Other
+* Change evaluate loop logic
+* Add warnings and program messages
+* Change logo and invitation
+* Remove 'array'
+
 ======== 0.9.35 =========
 
 Asciiplot

@@ -8,13 +8,22 @@
 	module 'evaluate'
 --]]
 
+
 --	LOCAL
 
 -- String evaluation method
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
+
+-- Highlight "header" in a "note" file
+local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
+-- File to save logs
+local LOGNAME = 'log.note'
+
+
 -- Format marker
 local mt_sonatainfo = {}
+
 
 --- Check if the table is mt_sonatainfo list.
 --  @param v Object.
@@ -23,12 +32,45 @@ local function islist(v)
   return type(v) == 'table' and getmetatable(v) == mt_sonatainfo
 end
 
+
 --- Print formatted error message.
 --  @param msg Message string.
-local function print_err (msg)
+local function printErr (msg)
   print(
     string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
 end
+
+
+--- Set position for the next block in 'note' file.
+--  @param args List of arguments.
+--  @param env Evaluation parameters.
+local function goTo (args, env)
+  local num = tonumber(args[1])
+  if not num then
+    printErr("Not a number")
+  end
+  -- TODO to integer
+  local lim = #env.notes
+  if lim > 0 then
+    env.index = (num < 0) and 1 or (num > lim) and lim or num
+    env.read = false
+  else
+    env.index = 1
+  end
+end
+
+
+--- Parse string to get command parameters.
+--  @param str Input string.
+--  @return Table with commands (if any).
+local function getCmd (str)
+  if string.find(str, "^%s*:") then
+    local cmd, args = string.match(str, "(%w+)%s*(.*)")
+    return {cmd, args}
+  end
+  return nil
+end
+
 
 -- local function balance(s)
 --   local t = {}
@@ -38,6 +80,7 @@ end
 --   return (d1 < 0 or d2 < 0) and -1 or (d1 > 0 or d2 > 0) and 1 or 0
 -- end
 
+
 --	MODULE
 
 local evaluate = {
@@ -45,30 +88,230 @@ local evaluate = {
 EV_RES = 1,   -- found result
 EV_CMD = 0,   -- continue expected
 EV_ERR = -1,  -- error
-EV_QUIT = -2, -- command for quit
+EV_ASK = 2,   -- print question
+EV_WRN = 3,
 -- string formats
-FORMAT_V1 = '#v1',
-FORMAT_V2 = '#v2',
--- log file name
-LOGNAME = 'log.note',
--- state and result
-_cmd = "",    -- last request
-_st  = 1,     -- last status
--- predefine variables
-version = 0,
-doimport = 0,
-_arghelp = 0,
+FORMAT_V1 = '#v_1',
+FORMAT_V2 = '#v_2',
+FORMAT_CLR = '#v_clr',
+-- Variants of invite
+INV_MAIN = SonataHelp.CMAIN..'## '..SonataHelp.CRESET,
+INV_CONT = SonataHelp.CMAIN..'.. '..SonataHelp.CRESET,
+INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
 }
 
 
-evaluate._blocks = function (txt)
-  local init = 1
-  local res = {}
+-- Format to representation mapping
+local txtCodes = {
+  [evaluate.FORMAT_V1] = SonataHelp.CHELP,
+  [evaluate.FORMAT_V2] = SonataHelp.CHELP .. SonataHelp.CBOLD,
+  [evaluate.FORMAT_CLR] = SonataHelp.CRESET,
+}
+
+
+local cmdInfo = {}
+local commands = {
+
+--- Quit the program.
+q = function (args, env)
+  evaluate.exit()
+end,
+
+--- Print list of blocks
+ls = function (args, env)
+  for i = 1, #env.notes do
+    local s = ''
+    for line in string.gmatch(env.notes[i], '[^\n\r]+') do
+      if string.find(line, "[^%s]+") then s = line; break end
+    end
+    io.write(string.format("%d   %s\n", i, s))
+  end
+end,
+
+--- Open 'note' file
+o = function (args, env)
+  local blk = evaluate._toBlocks(args[2])
+  if blk then
+    env.notes = blk
+    env.index = 1
+    io.write("Name: '", args[2], "'\tBlocks: ", #blk, "\n")
+  else
+    printErr("Can't open file "..args[2])
+  end
+end,
+
+--- Save session to log
+log = function (args, env)
+  if args[2] == 'on' then
+    if not env.log then
+      env.log = io.open(LOGNAME, 'a')
+      if not env.log then printErr("Can't open log file") end
+      local d = os.date('*t')
+      env.log:write(
+        string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
+          d.day, d.month, d.year, d.hour, d.min))
+    end
+  elseif args[2] == 'off' then
+    if env.log then
+      env.log:close()
+      env.log = nil
+    end
+  else
+    printErr('Unexpected argument!')
+  end
+end,
+
+}  -- commands
+
+
+--- Show list of commands
+commands.help = function (args, env)
+  if cmdInfo[args[2]] then
+    cmdInfo._print(args[2])
+  else
+    for k, _ in pairs(commands) do
+      cmdInfo._print(k)
+    end
+    cmdInfo._print('number')
+  end
+end
+
+
+-- Command description
+cmdInfo.q = {"Quit"}
+cmdInfo.ls = {"Show list of blocks for execution"}
+cmdInfo.o = {"Open note-file", "filename"}
+cmdInfo.log = {"Turn on/off logging.", "on/off"}
+cmdInfo.help = {"Show this help"}
+cmdInfo.number = {"Go to N-th block"}
+
+
+--- Show command description.
+--  @param k Command name.
+cmdInfo._print = function (k) 
+  local info = cmdInfo[k]
+  if info then
+    print(string.format("  %s %s - %s", k, info[2] or '', info[1]))
+  else 
+    print("Unknown key: ", k)
+  end
+end
+
+
+--- Evaluate string of Lua code.
+--  The function should work in coroutine.
+--  It takes code line and return status and evaluation result.
+local function evalCode()
+  local state, cmd, res = evaluate.EV_RES, '', nil
+  local in_coroutine = true  -- set marker
+  while true do
+    -- next line of code
+    local input = coroutine.yield(state, res)
+    cmd = (state == evaluate.EV_CMD) and cmd or ''
+    -- check if multiline
+    local partCmd = string.match(input, "(.*)\\%s*$")
+    if partCmd == nil then
+      cmd = cmd..input
+      -- 'parse'
+      local fn, err = loadStr('return '..cmd)  -- either 'return expr'
+      if err then
+        fn, err = loadStr(cmd)                 -- or 'expr'
+      end
+      -- get result
+      if err then
+        state, res = evaluate.EV_ERR, err
+      else
+        local ok, ans = pcall(fn)
+        state, res = ok and evaluate.EV_RES or evaluate.EV_ERR, nil
+        if ans ~= nil then
+          res = islist(ans) and ans or tostring(ans)
+          _ans = ans  -- set global var
+        end
+      end
+    else
+      cmd = string.format("%s%s\n", cmd, partCmd)
+      state, res = evaluate.EV_CMD, nil
+    end
+  end
+end
+
+
+--- Show result and choose the next invite string.
+--  @param status Status of evaluation.
+--  @param res Result of evaluation.
+--  @return Invite string.
+local function showAndNext(status, res, env)
+  if status == evaluate.EV_RES then
+    -- finish evaluation
+    if res ~= nil then
+      local out = islist(res) and evaluate._toText(res) or res
+      print(out)
+      if env.log then env.log:write('--[[ ', out, ' ]]\n') end
+    end
+  elseif status == evaluate.EV_CMD then
+    -- continue input
+    return evaluate.INV_CONT
+  elseif status == evaluate.EV_ERR then
+    -- error found
+    printErr(res)
+    if env.log then env.log:write('--[[ ERROR ]]\n') end
+  elseif status == evaluate.EV_ASK then
+    -- system question
+    if res[2] then
+      print(res[2])
+      if env.log then env.log:write('--[[ ', res[2], ' ]]\n') end
+    end
+    return res[1]
+  elseif status == evaluate.EV_WRN then
+    io.write('Sonata: ', res, '\n')
+    env.read, env.info = false, true
+  end
+  return evaluate.INV_MAIN
+end
+
+
+--- Evaluate block of text.
+--  @param co Coroutine object.
+--  @param txt Block of text.
+evaluate._evalBlock = function (co, env)
+  local txt = env.notes[env.index]
+  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
+    if string.find(line, '^%s*%-%-') then
+      -- highlight line comments
+      line = string.gsub(line, '\t(.+)', NOTE_TEMPL)
+      line = string.format(
+        "%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
+      io.write(line)
+    else
+      -- print line and evaluate
+      io.write(evaluate.INV_NOTE, line, '\n')
+      local _, status, res = coroutine.resume(co, line)
+      showAndNext(status, res, {})
+      if status == evaluate.EV_ERR then break end
+    end
+  end
+  io.write(SonataHelp.CMAIN,
+    '\t[ ', env.index, ' / ', #env.notes, ' ]', SonataHelp.CRESET, '\n')
+  env.index = env.index+1
+end
+
+
+--- Read file, split into text blocks. 
+--  Separator is the "pause" word.
+--  @param fname File name.
+--  @return table with the text blocks.
+evaluate._toBlocks = function (fname)
+  local f = io.open(fname, 'r')
+  if not f then return nil end
+  local txt = f:read('*a'); f:close()
+  -- remove long comments
+  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  
+  local init, res = 1, {}
   while true do
     local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
     if i1 then
-      res[#res+1] = string.sub(txt, init, i1-1)
-      init = i2+1
+      res[#res+1] = string.sub(txt, init, i1 - 1)
+      init = i2 + 1
     else
       break
     end
@@ -80,246 +323,67 @@ evaluate._blocks = function (txt)
   return res
 end
 
---- Print block list.
---  @param blks Table with blocks of text.
-evaluate._dotLs = function (blks)
-  for i = 1, #blks do
-    local s = ''
-    for line in string.gmatch(blks[i], '([^\n]+)\r?\n?') do
-      if string.find(line, "[^%s]+") then
-        s = line
-        break
-      end
-    end
-    io.write(string.format("%d   %s\n", i, s))
-  end
-end
-
---- Print next block title.
---  @param blks Table with blocks of text.
---  @param n Next block index.
-evaluate._dotNext = function (blks, n)
-  local s = ''
-  if n > #blks then
-    s = 'quit'
-  else
-    for line in string.gmatch(blks[n], '([^\n]+)\r?\n?') do
-      if string.find(line, "[^%s]+") then
-        s = line
-        break
-      end
-    end
-  end
-  io.write(string.format("%d %s\n", n, s))
-end
-
---- Process command string.
---  @param ev Accumulated string.
---  @param nextCmd New string with Lua expression.
---  @return Status of processing and rest of command.
-evaluate._eval = function (ev, nextCmd)
-  -- reset state
-  if ev._st ~= evaluate.EV_CMD then evaluate.reset(ev) end
-  -- check if multiline
-  local partCmd = string.match(nextCmd, "(.*)\\%s*")
-  if partCmd ~= nil then
-    -- expected next line
-    return evaluate._update(
-      ev, evaluate.EV_CMD, string.format("%s%s\n", ev._cmd, partCmd))
-  end
-  local cmd = ev._cmd..nextCmd
-  -- 'parse'
-  local fn, err = loadStr('return '..cmd)  -- either 'return expr'
-  if err then
-    fn, err = loadStr(cmd)                 -- or 'expr'
-  end
-  -- get result
-  if err then
-    return evaluate._update(ev, evaluate.EV_ERR, cmd, err)
-  else
-    local ok, res = pcall(fn)
-    return evaluate._update(
-      ev, ok and evaluate.EV_RES or evaluate.EV_ERR, cmd, res)
-  end
-end
-
---- Evaluate block of text.
---  @param ev Evaluation environment.
---  @param txt Block of text.
---  @param full True when need to show comments.
---  @param templ Header template string.
-evaluate._evalBlock = function (ev, txt, full, templ)
-  for line in string.gmatch(txt, '([^\n]+)\r?\n?') do
-    if string.find(line, '^%s*%-%-') then
-      -- highlight line comments
-      if full then
-        line = string.gsub(line, '\t(.+)', templ)
-        line = string.format(
-          "%s%s%s\n", SonataHelp.CHELP, line, SonataHelp.CRESET)
-        io.write(line)
-      end
-    else
-      -- print line and evaluate
-      io.write(SonataHelp.CMAIN, '@ ', SonataHelp.CRESET, line, '\n')
-      local status = evaluate.eval(ev, line, false)
-      if status == evaluate.EV_RES then
-        if ev._ans ~= nil then
-          print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
-        end
-      elseif status == evaluate.EV_CMD then
-        -- skip
-      else -- evaluate.EV_ERR
-        print_err(ev._ans)
-        break
-      end
-    end
-  end
-end
 
 --- Get string from list of elements.
 --  @param lst List of strings and commands.
 --  @return Text for visualization.
 evaluate._toText = function (lst)
-  local i = 1
-  local res = {}
-  while i <= #lst do
-    local v = lst[i]
-    if v == evaluate.FORMAT_V1 then
-      i = i + 1
-      res[#res+1] = string.format(
-        "%s%s%s", SonataHelp.CHELP, lst[i], SonataHelp.CRESET)
-    elseif v == evaluate.FORMAT_V2 then
-      i = i + 1
-      res[#res+1] = string.format(
-        "%s%s%s%s",
-        SonataHelp.CHELP, SonataHelp.CBOLD, lst[i], SonataHelp.CRESET)
-    else
-      res[#res+1] = v
-    end
-    i = i + 1
+  for i, v in ipairs(lst) do
+    lst[i] = txtCodes[v] or v
   end
-  return table.concat(res)
+  return table.concat(lst)
 end
 
---- Update environment state.
---  @param ev Evaluation environment.
---  @param st Evaluation status.
---  @param cmd Current command.
---  @param ans Current answer.
---  @return Updated environment.
-evaluate._update = function (ev, st, cmd, ans)
-  ev._st = st
-  ev._cmd = cmd
-  _ans = ans       -- save global variable
-  if ans == nil then
-    ev._ans = nil
-  else
-    ev._ans = islist(ans) and ans or tostring(ans)
-  end
-  return st
+
+--- Allow functions to ask user.
+--  @param question Question to user, print as invite string.
+--  @param res Current result if any.
+--  @return user input.
+evaluate.ask = function (question, res)
+  return coroutine.yield(evaluate.EV_ASK, {question, res})
 end
 
---- User input processing.
---  @param ev Evaluation environment.
---  @param invA Main invite string.
---  @param invB Additional invite string.
---  @param blk Block list.
---  @param full True when all blocks are required.
---  @param n Initial index.
---  @return Next block index.
-evaluate._userInput = function (ev, invA, invB, blk, full, n)
-  local m = n
-  repeat
-    local input = {}
-    if full and evaluate.cliLoop(ev, invA, invB, input) == evaluate.EV_QUIT then
-      n = #blk + 1
-    end
-    if #input > 0 then
-      if input[2] == 'ls' then
-        evaluate._dotLs(blk)
-      elseif input[2] == 'q' then
-        n = #blk + 1
-      elseif input[2] == nil then
-        evaluate._dotNext(blk, n+1)
-      else
-        n, m = (tonumber(input[2]) or n), -1
-      end
-    else
-      n = n + 1
-    end
-  until m ~= n
-  return n
-end
 
---- Read-Evaluate-Write circle as a Lua program.
---  Call 'quit' to exit this function.
---  @param ev Evaluation environment.
-evaluate.cli = function (ev)
-  local invA = SonataHelp.CMAIN..'dp: '..SonataHelp.CRESET
-  local invB = SonataHelp.CMAIN..'..: '..SonataHelp.CRESET
-  evaluate.cliLoop(ev, invA, invB)
-  if ev._logFile then ev._logFile:close() end
-  evaluate.exit()
-end
-
---- Read input and evaluate it.
---  @param ev Environment.
---  @param invA First invite line.
---  @param invB Second invite line.
---  @param noteIn Table to store user input.
---  @return Status of evaluation on exit.
-evaluate.cliLoop = function (ev, invA, invB, noteIn)
-  local invite = invA
-  -- start dialog
+--- Sonata evaluation loop.
+--  @param noteList Table with text blocks.
+evaluate.cli = function (noteList)
+  local invite = evaluate.INV_MAIN
+  local env = {notes=noteList or {}, index=1, 
+    read = true, info=false}
+  local co = evaluate.evalThread()
   while true do
-    io.write(invite)
-    -- command processing
-    local newLine = io.read()
-    if noteIn then
-      if newLine == "" then break end
-      if string.find(newLine, "^%s*:") then
-        noteIn[1] = newLine
-        for w in string.gmatch(newLine, "%w+") do noteIn[#noteIn+1] = w end
-        break
-      end
+    local input = ''
+    if env.read then
+      io.write(invite)
+      input = io.read()
     end
-    -- code processing
-    local status = evaluate.eval(ev, newLine, not noteIn)
-    if status == evaluate.EV_RES then
-      if ev._ans ~= nil then
-        print(islist(ev._ans) and evaluate._toText(ev._ans) or ev._ans)
-      end
-      invite = invA
-    elseif status == evaluate.EV_CMD then
-      invite = invB
-    elseif status == evaluate.EV_ERR then
-      print_err(ev._ans)
-      invite = invA
-    else -- status == evaluate.EV_QUIT
-      return evaluate.EV_QUIT
+    local cmd = getCmd(input)
+    if cmd then
+      local fn = commands[cmd[1]] or goTo
+      fn(cmd, env)
+    elseif #input > 0 or env.info then
+      env.read, env.info = true, false
+      if env.log then env.log:write(input, '\n') end
+      local _, status, res = coroutine.resume(co, input)
+      invite = showAndNext(status, res, env)
+    elseif env.index <= #env.notes then
+      evaluate._evalBlock(co, env)
+      env.read = true
+    elseif noteList then
+      break
     end
   end
 end
 
---- Evaluate one expression.
---  @param ev Environment.
---  @param cmd Command.
---  @param useLog Flag to write log.
---  @return Result of evaluation.
-evaluate.eval = function (ev, cmd, useLog)
-  local res = evaluate._eval(ev, cmd)
-  -- logging
-  if useLog and ev._logFile then
-    ev._logFile:write(cmd, '\n')
-    -- TODO: Update it
-    -- if status == evaluate.EV_RES and ev._ans then
-    --   ev._logFile:write('--[[ ', ev._ans, ' ]]\n\n')
-    -- elseif status == evaluate.EV_ERR then
-    --   ev._logFile:write('--[[ ERROR ]]\n\n')
-    -- end
-  end
-  return res
+
+--- Get coroutine for evaluation.
+--  @return coroutine object.
+evaluate.evalThread = function ()
+  local co = coroutine.create(evalCode)
+  coroutine.resume(co)
+  return co
 end
+
 
 --- Show message and exit the program.
 evaluate.exit = function ()
@@ -328,6 +392,7 @@ evaluate.exit = function ()
   os.exit()
 end
 
+
 --- Mark information about formatting.
 --  @param t Table to print.
 --  @return Table with marker.
@@ -335,40 +400,16 @@ evaluate.info = function (t)
   return setmetatable(t, mt_sonatainfo)
 end
 
---- Evaluate 'note'-file.
---  @param ev Evaluate.
---  @param fname Script file name.
---  @param full Flag to work in interactive mode.
-evaluate.note = function (ev, fname, full)
-  full = (full ~= false)
-  local templ = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
-  local invA, invB = '?> ', '>> '
-  -- read
-  local f = assert(io.open(fname, 'r'))
-  local txt = f:read('*a'); f:close()
-  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  -- remove long comments
-  local block = evaluate._blocks(txt)
-  if full then io.write("Name: '", fname, "'\tBlocks: ", #block, "\n") end
-  local n = evaluate._userInput(ev, invA, invB, block, full, 0)
-  while n <= #block do
-    evaluate._evalBlock(ev, block[n], full, templ)
-    io.write(
-      SonataHelp.CMAIN,
-      '\t[ ', n, ' / ', #block, ' ]', SonataHelp.CRESET, '\n')
-    -- user commands
-    n = evaluate._userInput(ev, invA, invB, block, full, n)
-  end
+
+--- Send info/warning to user.
+--  @param txt Text to print.
+evaluate.say = function (txt)
+  if in_coroutine then
+    coroutine.yield(evaluate.EV_WRN, txt)
+  else print(txt) end
 end
 
---- State reset.
---  @param ev Environment.
-evaluate.reset = function (ev)
-  ev._cmd = ""
-  ev._ans = nil
-  ev._st  = evaluate.EV_RES
-end
 
 return evaluate
 
 --=================================
---TODO remove invB

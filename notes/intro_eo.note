@@ -14,7 +14,7 @@ help(Round)
 -- PAUSE
 
 -- Cetere, ĉi tio estas interaga maniero de operacio.
--- Vi povas enigi validan Lua-esprimon post la '?>'
+-- Vi povas enigi validan Lua-esprimon post la '##'
 -- kaj ricevi la rezulton. Ekzemple, provu voki
 -- helpo por ajna funkcio.
 -- PAUSE
@@ -83,8 +83,7 @@ sqrt(-4)
 exp(3+_i*4)
 -- PAUSE
 
--- Note-dosiero estas apartigita en partojn
--- kun 'paŭzoj'. Estas pliaj komandoj por
+-- Estas pliaj komandoj por
 -- altiro, precipe
 -- :ls - montri liston de komponantoj
 -- :N - saltu al N-a parto

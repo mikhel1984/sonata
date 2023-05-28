@@ -7,16 +7,17 @@
 --  each function is in separate subtable.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'gnuplot'
 --]]
+
 
 --------------- Tests ---------------
 --[[TEST
 
 -- use 'gnuplot'
-Gp = require 'lib.gnuplot'
+Gp = require 'matlib.gnuplot'
 Gp.testmode = true -- just for testing
 
 -- simple plot
@@ -103,10 +104,12 @@ f:show()
 
 --]]
 
+
 --	LOCAL
 
 local isWindows = package.config:sub(1,1) == '\\'
 local TEMP = '\\AppData\\Local\\VirtualStore'
+
 
 -- special commands
 local special = {
@@ -115,6 +118,7 @@ local special = {
   ylabel = function (s) return string.format("set ylabel '%s'", s) end,
   title  = function (s) return string.format("set title '%s'", s) end,
 }
+
 
 -- main commands
 local main = {
@@ -128,6 +132,7 @@ local main = {
   end,
 }
 
+
 --- Prepare option string
 --  @param k Key.
 --  @param v Value.
@@ -136,6 +141,7 @@ local function command (k,v)
   local spc = special[k]
   return spc and spc(v) or main[type(v)](k,v)
 end
+
 
 --- Function option string
 --  @param s Key.
@@ -147,8 +153,6 @@ local function prepare(s,v)
   return s,v
 end
 
--- Quick plot category
-local GPPLOT = 'quick'
 
 --	INFO
 
@@ -157,6 +161,7 @@ local help = SonataHelp or {}
 local about = {
 __module__ = "Interface for calling Gnuplot from Sonata."
 }
+
 
 --	MODULE
 
@@ -170,8 +175,10 @@ foptions = {'using','title','with','linetype','linestyle','linewidth','ls',
   'ln','lw'},
 }
 
+
 -- metha
 gnuplot.__index = gnuplot
+
 
 --- Represent parameters of the graphic.
 --  @param G Gnuplot object.
@@ -190,6 +197,7 @@ gnuplot.__tostring = function (G)
   end
   return string.format('{\n%s\n}', table.concat(res, ',\n'))
 end
+
 
 --- Save function result to tmp file.
 --  @param fn Lua function.
@@ -222,6 +230,7 @@ gnuplot._fn2file = function (fn,tBase)
   return name
 end
 
+
 --- Add function parameters
 --  @param t Table with function definition.
 --  @param base Argument range.
@@ -243,11 +252,12 @@ gnuplot._graph = function (t,tBase)
   return nm, str
 end
 
+
 --- Create new object, set metatable.
---  @param self Pointer to parent table.
 --  @param o Table with parameters or nil.
 --  @return New 'gnuplot' object.
-gnuplot._init = function (self) return setmetatable({}, self) end
+gnuplot._new = function () return setmetatable({}, gnuplot) end
+
 
 --- Save one or two lists into tmp file
 --  @param t1 First Lua table (list).
@@ -281,6 +291,7 @@ gnuplot._lst2file = function (t1,t2,fn)
   return name
 end
 
+
 --- Save matrix to tmp file.
 --  @param t Sonata matrix.
 --  @return File name.
@@ -300,6 +311,7 @@ gnuplot._mat2file = function (t)
   return name
 end
 
+
 --- Save table to tmp file.
 --  @param t Lua table with numbers.
 --  @return File name.
@@ -318,6 +330,7 @@ gnuplot._tbl2file = function (t)
   return name
 end
 
+
 --- Prepare arguments for table or matrix.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
@@ -335,17 +348,19 @@ gnuplot._vecPrepare = function (v,...)
   return v, ag
 end
 
+
 --- Add new curve to the plot.
 --  @param G Gnuplot object.
 --  @param tCurve Table with function/table and parameters.
 gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
 about[gnuplot.add] = {"G:add(curve_v) --> nil", "Add new curve to figure."}
 
+
 --- Get copy of graph options.
 --  @param G Initial table.
 --  @return Copy of table.
 gnuplot.copy = function (G)
-  local cp = gnuplot:_init()
+  local cp = gnuplot._new()
   for k,v in pairs(G) do
     if type(v) == 'table' then
       local tmp = {}
@@ -359,12 +374,13 @@ gnuplot.copy = function (G)
 end
 about[gnuplot.copy] = {"G:copy() --> cpy_G", "Get copy of the plot options."}
 
+
 --- Matlab-like plotting
 --  @param Do nothing.
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
 gnuplot.plot = function (self,...)
   local ag = {...}
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   local i, n = 1, 1
   repeat
     -- ag[i] have to be table
@@ -391,12 +407,13 @@ end
 about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..]) --> nil",
   "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
+
 --- Polar plot.
 --  @param self Do nothing.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
 gnuplot.polarplot = function(self,...)
   local ag, i, n = {...}, 1, 1
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   repeat
     local name = gnuplot._lst2file(ag[i],ag[i+1])
     i = i + 2
@@ -416,6 +433,7 @@ gnuplot.polarplot = function(self,...)
 end
 about[gnuplot.polarplot] = {':polarplot(x1_t, y1_t, [nm_s, x2_t, y2_t,..]) --> nil',
   "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
+
 
 --- Plot graphic.
 --  @param G Table with parameters of graphic.
@@ -448,12 +466,13 @@ gnuplot.show = function (G)
 end
 about[gnuplot.show] = {"G:show() --> nil", "Plot data, represented as Lua table." }
 
+
 --- Surface plot.
 --  @param self Do nothing.
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
 gnuplot.surfplot = function(self,...)
   local ag, i, n = {...}, 1, 1
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   repeat
     local name = gnuplot._lst2file(ag[i],ag[i+1],ag[i+2])
     i = i + 3
@@ -473,13 +492,14 @@ end
 about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..]) --> nil',
   "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
+
 --- Plot table of data file.
 --  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tplot = function (self,v,...)
   local f, ag = gnuplot._vecPrepare(v,...)
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   if #ag > 1 then
     for i = 2,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
@@ -494,13 +514,14 @@ end
 about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..]) --> nil",
   "Plot table, matrix or data file. Optional elements define columns."}
 
+
 --- Polar plot table of data file.
 --  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tpolar = function (self,v,...)
   local f, ag = gnuplot._vecPrepare(v,...)
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   if #ag > 1 then
     for i = 2,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
@@ -516,13 +537,14 @@ end
 about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..]) --> nil",
   "Polar plot for table, matrix or data file. Optional elements define columns."}
 
+
 --- Sufrace plot from table of data file.
 --  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tsurf = function (self,v,...)
   local f, ag = gnuplot._vecPrepare(v,...)
-  local cmd = gnuplot:_init()
+  local cmd = gnuplot._new()
   if #ag > 2 then
     for i = 3,#ag do
       cmd[#cmd+1] = {f, using={ag[1],ag[2],ag[i]},
@@ -537,9 +559,11 @@ end
 about[gnuplot.tsurf] = {":tsurf(var, [x_N, y_N, z1_N, z2_N,..]) --> nil",
   "Surface plot for table, matrix or data file. Optional elements define columns."}
 
+
 -- constructor
-setmetatable(gnuplot, {__call=function (self) return gnuplot:_init() end})
+setmetatable(gnuplot, {__call=function (self) return gnuplot._new() end})
 about[gnuplot] = {" () --> new_G", "Prepare Gnuplot object.", help.NEW}
+
 
 gnuplot.keys = 'keys'
 about[gnuplot.keys] = {'.keys',
@@ -565,6 +589,7 @@ samples=200                   -- define number of points
 raw='set pm3d'                -- set Gnuplot options manually
 ]]
 }
+
 
 -- Comment to remove descriptions
 gnuplot.about = about

@@ -12,18 +12,19 @@
 		module 'units'
 --]]
 
+
 -------------------- Tests -------------------
 --[[TEST
 
 -- use 'units'
-Unit = require 'lib.units'
+_U = require 'matlib.units'
 
 -- add some rules
-Unit:setRule('h', Unit(60,'min'))
-Unit:setRule('min', Unit(60,'s'))
+_U:setRule('h', _U(60,'min'))
+_U:setRule('min', _U(60,'s'))
 
 -- define variable
-a = Unit(1,'m/s')
+a = _U(1,'m/s')
 -- convert to km/h, get only value
 ans = a['km/h']              --2> 3.6
 
@@ -36,54 +37,54 @@ ans = a:key()                 --> 'm/s'
 
 -- make copy
 cp = a:copy()
-ans = cp                      --> Unit(1,'m/s')
+ans = cp                      --> _U(1,'m/s')
 
 -- get converted variable
 b = a:convert('km/h')
-ans = b                       --> Unit(3.6, 'km/h')
+ans = b                       --> _U(3.6, 'km/h')
 
 -- arithmetic
 b = 3 * b
-ans = a + b                   --> Unit(4, 'm/s')
+ans = a + b                   --> _U(4, 'm/s')
 
-ans = b - a                   --> Unit(2, 'm/s')
+ans = b - a                   --> _U(2, 'm/s')
 
-ans = a * b                   --> Unit(3, 'm^2/s^2')
+ans = a * b                   --> _U(3, 'm^2/s^2')
 
-ans = b / a                   --> Unit(3, '')
+ans = b / a                   --> _U(3, '')
 
 ans = (a < b)                 --> true
 
-ans = b ^ 3                   --> Unit(27, 'm^3/s^3')
+ans = b ^ 3                   --> _U(27, 'm^3/s^3')
 
 -- new rule
-Unit:setRule('snake', Unit(48, 'parrot'))
+_U:setRule('snake', _U(38, 'parrot'))
 -- define variable
-c = Unit(2,'snake')
+c = _U(2,'snake')
 -- convert
-ans = c['parrot']             --> 96
+ans = c['parrot']             --> 76
 
 -- convert using prefix
 ans = c['ksnake']            --3> 0.002
 
 -- another definition syntax
-ans = 2 * Unit('N')           --> Unit(2,'N')
+ans = 2 * _U('N')           --> _U(2,'N')
 
 -- show result
 print(a)
+
+-- list of rules
+print(_U:rules())
 --]]
+
 
 --	LOCAL
 
-local Ver = require('lib.utils')
+local Ver = require('matlib.utils')
 local Cross = Ver.cross
 local Utils = Ver.utils
 Ver = Ver.versions
 
---- Check object type.
---  @param t Object to check.
---  @return True if the object represents units.
-local function isunits(v) return type(v) == 'table' and v.isunits end
 
 --- Combine common elements in tables, add power to the
 --  first table, remove from the second one.
@@ -100,6 +101,7 @@ local function eliminate(t1, t2, pos)
   end
 end
 
+
 -- Operations with tables of units.
 local op = {
 ['*'] = function(u1, u2)
@@ -113,6 +115,7 @@ local op = {
         end
 }
 
+
 --- Check equality of float point numbers.
 --  @param d1 First unit object.
 --  @param d2 Second unit object.
@@ -121,6 +124,7 @@ local function equal(d1, d2)
   return math.abs(d1-d2) <= 1e-3*math.abs(d1)
 end
 
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -128,6 +132,7 @@ local help = SonataHelp or {}
 local about = {
 __module__ = "Operations and conversations according the units."
 }
+
 
 --	MODULE
 
@@ -140,6 +145,13 @@ _memKeys = {},
 _rules = {},
 }
 
+
+--- Check object type.
+--  @param t Object to check.
+--  @return True if the object represents units.
+local function isunits(v) return getmetatable(v) == units end
+
+
 --- U1 + U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
@@ -151,6 +163,7 @@ units.__add = function (U1, U2)
   res._value = res._value + tmp._value
   return res
 end
+
 
 --- U1 / U2
 --  @param U1 First unit object.
@@ -171,6 +184,7 @@ units.__div = function (U1, U2)
   return U1
 end
 
+
 --- U1 == U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
@@ -182,6 +196,7 @@ units.__eq = function (U1, U2)
   return equal(U1._value, tmp._value)
 end
 
+
 --- Convert using v['new_units'] notation.
 --  @param U Initial unit object.
 --  @param s New Units.
@@ -189,6 +204,7 @@ end
 units.__index = function (U, s)
   return units[s] or (type(s) == 'string' and units.value(units.convert(U, s)))
 end
+
 
 --- U1 <= U2
 --  @param U1 First unit object.
@@ -200,6 +216,7 @@ units.__le = function (U1, U2)
   return U1._value <= tmp._value
 end
 
+
 --- U1 < U2
 --  @param U1 First unit object.
 --  @param U2 Second unit object.
@@ -209,6 +226,7 @@ units.__lt = function (U1, U2)
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   return U1._value < tmp._value
 end
+
 
 --- U1 * U2
 --  @param U1 First unit object.
@@ -229,17 +247,19 @@ units.__mul = function (U1, U2)
   return U1
 end
 
+
 --- U ^ d
 --  @param U Unit object.
 --  @param d Number.
 --  @return Power.
 units.__pow = function (U, d)
   d = assert(Cross.float(d), "Wrong power")
-  local res = isunits(U) and units._deepCopy(U) or units:_new(U, '')
+  local res = isunits(U) and units._deepCopy(U) or units._new(U, '')
   res._value = res._value ^ d
   op['^'](res._key, d)
   return res
 end
+
 
 --- U1 - U2
 --  @param U1 First unit object.
@@ -253,6 +273,7 @@ units.__sub = function (U1, U2)
   return res
 end
 
+
 --- Units representation as string.
 --  @param U Unit object.
 --  @return Unit value in traditional form.
@@ -261,6 +282,7 @@ units.__tostring = function (U)
     type(U._value) == 'number' and Utils.numstr(U._value) or tostring(U._value),
     units.key(U))
 end
+
 
 --- -U
 --  @param U Units object.
@@ -271,30 +293,28 @@ units.__unm = function (U)
   return res
 end
 
-units.arithmetic = 'arithmetic'
-about[units.arithmetic] = {
-  units.arithmetic, 'U1+U2, U1-U2, U1*U2, U1/U2, U1^N', help.META}
 
-units.comparison = 'comparison'
-about[units.comparison] = {
-  units.comparison, 'U1==U2, U1~=U2, U1<U2, U1<=U2, U1>U2, U1>=U2', help.META}
+about['_ar'] = {'arithmetic: a+b, a-b, a*b, a/b, a^N', nil, help.META}
+about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', nil, help.META}
+
 
 --- Prepare arguments.
 --  @param a First unit object or number.
 --  @param b Second unit object or number.
 --  @return Arguments as units.
 units._args = function (a, b)
-  a = isunits(a) and a or units:_new(a, '')
-  b = isunits(b) and b or units:_new(b, '')
+  a = isunits(a) and a or units._new(a, '')
+  b = isunits(b) and b or units._new(b, '')
   return a, b
 end
+
 
 --- Convert object to another units.
 --  @param U Unit object.
 --  @param t Table with desired units.
 --  @return New object or nil.
 units._convertKey = function (U, t)
-  local dst = units:_new(1, '')
+  local dst = units._new(1, '')
   dst._key = t
   local src = units._deepCopy(U)
   src._value = 1
@@ -316,6 +336,7 @@ units._convertKey = function (U, t)
   return dst
 end
 
+
 --- Copy all keys from the object.
 --  @param U Source object.
 --  @return Deep copy.
@@ -325,18 +346,20 @@ units._deepCopy = function (U)
   return setmetatable({_value=U._value, _key=keys}, units)
 end
 
+
 --- Get common part and difference between 2 strings.
 --  @param str1 First string.
 --  @param str2 Second string.
 --  @return First prefix, second prefix, common part.
 units._diff = function (s1, s2)
   local n1, n2 = #s1, #s2
-  while n1 > 0 and n2 > 0 and string.byte(s1, n1) == string.byte(s2, n2) do
-    n1 = n1 - 1
-    n2 = n2 - 1
+  local ssub, sbyte = string.sub, string.byte
+  while n1 > 0 and n2 > 0 and sbyte(s1, n1) == sbyte(s2, n2) do
+    n1, n2 = n1 - 1, n2 - 1
   end
-  return string.sub(s1, 1, n1), string.sub(s2, 1, n2), string.sub(s1, n1+1)
+  return ssub(s1, 1, n1), ssub(s2, 1, n2), ssub(s1, n1+1)
 end
+
 
 --- Expand prefixes in both objects in-place.
 --  @param U1 First unit value.
@@ -366,6 +389,7 @@ units._expand = function (U1, U2)
   for k, v in pairs(com2) do q2[k] = v end
   U1._key, U2._key = q1, q2
 end
+
 
 --- Apply rule. When found exclude it from
 --  the unit table.
@@ -400,6 +424,7 @@ units._expandRules = function (U)
   return nil
 end
 
+
 --- Get value or evaluate expression in brackets.
 --  @param lst Token list.
 --  @param n Initial position.
@@ -409,16 +434,16 @@ units._getExpr = function (lst, n)
   if v == '(' then
     -- parse sub-expression
     local res, m = units._getTerm(lst, n+1)
-    assert(lst[m] == ')')
+    if lst[m] ~= ')' then error('Expected )') end
     return res, m+1
   elseif v == 1 then
     return {}, n+1
   elseif string.find(v, '^%a+$') then
     return {[v] = 1}, n+1
-  else
-    error("Wrong unit "..v)
   end
+  error("Wrong unit "..v)
 end
+
 
 --- Get number in power.
 --  @param lst Token list.
@@ -439,6 +464,7 @@ units._getNum = function (lst, n)
   return v, n+1
 end
 
+
 --- Evaluate expression a^b.
 --  @param lst Token list.
 --  @param n Initial position.
@@ -452,6 +478,7 @@ units._getPow = function (lst, n)
   end
   return res, m
 end
+
 
 --- Evaluate a * b.
 --  @param lst Token list.
@@ -468,17 +495,18 @@ units._getTerm = function (lst, n)
   return res, m
 end
 
+
 --- Create new unit object.
---  @param self Parent object.
 --  @param v Numerical value.
 --  @param s String of units.
 --  @return Unit object.
-units._new = function (self, v, s)
+units._new = function (v, s)
   if not units._memKeys[s] then
     units._memKeys[s] = units._parse(s)
   end
-  return setmetatable({_value=v, _key=units._memKeys[s]}, self)
+  return setmetatable({_value=v, _key=units._memKeys[s]}, units)
 end
+
 
 --- Get absolute value.
 --  @param U Unit object.
@@ -487,18 +515,19 @@ units._norm = function (U)
   return Cross.norm(U._value)
 end
 
+
 --- Parse units expression.
 --  @param str Initial string with units.
 --  @return Reduced list of units.
 units._parse = function (str)
   if #str == 0 then return {} end
   local tokens = Utils.lex(str)
-  assert(#tokens > 0)
-  -- get powers
+  if #tokens == 0 then error("Wrong format") end
   local res, m = units._getTerm(tokens, 1)
   if m-1 ~= #tokens then error("Wrong format") end
   return res
 end
+
 
 --- Convert one units to another.
 --  @param U Source unit object.
@@ -512,6 +541,7 @@ units.convert = function (U, s)
 end
 about[units.convert] = {'U:convert(new_s) --> upd_U|nil','Convert one units to another, return new object or nil.', }
 
+
 --- Create copy of the element.
 --  @param U Source object.
 --  @return Shalow copy.
@@ -519,6 +549,7 @@ units.copy = function (U)
   return setmetatable({_value=U._value, _key=U._key}, units)
 end
 about[units.copy] = {'U:copy() --> cpy_U', 'Create copy of the element.', help.OTHER}
+
 
 --- Convert table of units into string.
 --  @param U Units object.
@@ -552,6 +583,7 @@ units.key = function (U)
 end
 about[units.key] = {'U:key() --> str', 'Get units.'}
 
+
 -- prefix list
 units.prefix = {
   y = 1e-24,  -- yocto
@@ -579,8 +611,8 @@ units.prefix = {
 about[units.prefix] = {
   '.prefix', 'Table of possible prefixes for units.', help.OTHER}
 
+
 --- Add new rule for unit transformation.
---  @param self Main class.
 --  @param s Unit name.
 --  @param U Equal unit object.
 units.setRule = function (self, s, U)
@@ -590,6 +622,19 @@ end
 about[units.setRule] = {':setRule(name_s, val_U) --> nil',
   'Add new rule for conversation.'}
 
+
+--- Show list of known rules
+--  @return text with rules
+units.rules = function (self)
+  local t = {}
+  for k, v in pairs(self._rules) do 
+    t[#t+1] = string.format('%s\t-> %s', k, tostring(v))
+  end
+  return table.concat(t, '\n')
+end
+about[units.rules] = {":rules() --> str", "Show list of rules."}
+
+
 --- Value of the unit object.
 --  The same as #U.
 --  @param U Unit object.
@@ -597,6 +642,7 @@ about[units.setRule] = {':setRule(name_s, val_U) --> nil',
 units.value = function (U) return U and U._value or nil end
 about[units.value] = {'U:value() --> var', 'Get object value. Same as #U.'}
 units.__len = units.value
+
 
 -- simplify constructor call
 setmetatable(units, {
@@ -607,10 +653,11 @@ __call = function (self, v, s)
     v, s = 1, v
   end
   assert(type(s) == 'string', 'Wrong unit type')
-  return units:_new(v, s)
+  return units._new(v, s)
 end})
 about[units] = {' (val=1, name_s) --> new_U',
   'Create new elements with units.', help.NEW}
+
 
 -- Comment to remove descriptions
 units.about = about
@@ -618,4 +665,4 @@ units.about = about
 return units
 
 --==================================================
-
+--TODO add some predefined rules, get list of rules

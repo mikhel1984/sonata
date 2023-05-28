@@ -10,6 +10,7 @@ This file contains rules to make the system more homogeneous, readable and reusa
 * always initialize variables
 * avoid trailing whitespaces
 * use whitespace after a coma symbol
+* use 2 blank lines between functions
 
 ## Object elements
 

@@ -3,18 +3,19 @@
 --- Random number generators.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
 
 	module 'random'
 --]]
 
+
 --[[TEST
 
 -- use 'random'
-Rand = require 'lib.random'
-Ap = require 'lib.asciiplot'     -- for visualization
-_D = require 'lib.data'          -- hystogram
-Spec = require 'lib.special'     -- gamma function
+Rand = require 'matlib.random'
+Ap = require 'matlib.asciiplot'     -- for visualization
+_D = require 'matlib.data'          -- hystogram
+Spec = require 'matlib.special'     -- gamma function
 -- prepare for data generation
 N = 100  -- number of points
 -- normalize hystograms
@@ -202,9 +203,11 @@ ans = (r1() ~= r2())            --> true
 
 --]]
 
+
 --	LOCAL
 
 DIST = 'distribution'
+
 
 --	INFO
 
@@ -213,6 +216,7 @@ local help = SonataHelp or {}  -- optional
 local about = {
 __module__ = "Random number generators."
 }
+
 
 --	MODULE
 
@@ -225,10 +229,14 @@ _fn = function (self) return math.random() end,
 _fnRng = function (self, a, b) return math.random(a, b) end,
 }
 
+
+-- make object callable
 random.__call = function (R) return R:_fn() end
+
 
 -- methametods
 random.__index = random
+
 
 --- Generate random from 0 to 1. Use generator of Park and Miller with
 --  Bays-Durham shuffle ("Numerical recipes in C")
@@ -248,6 +256,7 @@ random._genPM = function (t, rmax)
   return tmp > rmax and rmax or tmp
 end
 
+
 --- Initialize Park-Miller generator.
 --  @param t Generator object.
 --  @param seed Integer value.
@@ -264,8 +273,10 @@ random._genPMInit = function (t, seed)
   t._iv, t._iy = iv, iv[#iv]
 end
 
+
 random._init = random._genPMInit
 random._rand = random._genPM
+
 
 --- Get random integer from range.
 --  @param R Random generator.
@@ -277,13 +288,14 @@ random._randRng = function (R, a, b)
   return a + (q < 0.5 and p or p + 1)
 end
 
+
 --- Binomial distribution.
 --  @param R Random generator.
 --  @param dp Probability (p).
 --  @param N Total number of attempts.
 --  @return Random value.
 random.binomial = function (R, dp, N)
-  random.ext_special = random.ext_special or require('lib.special')
+  random.ext_special = random.ext_special or require('matlib.special')
   local gln = random.ext_special.gammaln
   local p = (dp < 0.5) and dp or (1 - dp)
   local bnl, am = 0, p*N
@@ -320,6 +332,7 @@ end
 about[random.binomial] = {":binomial(p_d, N) --> int",
   "Binomial distributed random values.", DIST}
 
+
 --- Generate sequence of bytes.
 --  @param R Random generator.
 --  @param N Sequence length.
@@ -330,6 +343,7 @@ random.bytes = function (R, N)
   return table.concat(res)
 end
 about[random.bytes] = {":bytes(N) --> str", "Get sequence of random bytes."}
+
 
 --- Cauchy distribution.
 --  @param dMu Mean value.
@@ -344,6 +358,7 @@ end
 about[random.cauchy] = {":cauchy(mu_d=0, sigma_d=1) --> float",
   "Cauchy distributed random numbers.", DIST}
 
+
 --- Get random element from the list.
 --  @param R Random generator.
 --  @param t Source table.
@@ -354,6 +369,7 @@ random.choice = function (R, t)
 end
 about[random.choice] = {":choice(tbl) --> element, index_N",
   "Get random table element."}
+
 
 --- Exponential distribution.
 --  @param R Random generator.
@@ -367,6 +383,7 @@ end
 about[random.exp] = {":exp(lambda_d=1) --> float",
   "Exponential distributed random values.", DIST}
 
+
 --- Get random binary value.
 --  @param R Random generator.
 --  @param p Probability of 'true'.
@@ -374,6 +391,7 @@ about[random.exp] = {":exp(lambda_d=1) --> float",
 random.flip = function (R, p) return R:_fn() <= (p or 0.5) end
 about[random.flip] = {":flip(p=0.5) --> bool",
   "Uniform distributed binary value."}
+
 
 --- Gamma distribution.
 --  @param R Random generator.
@@ -408,6 +426,7 @@ end
 about[random.gamma] = {":gamma(alpha_N, beta_d=1) --> float",
   "Gamma distributed random values.", DIST}
 
+
 --- Get random integer.
 --  @param R Random generator.
 --  @param N1 Lower bound or total number.
@@ -419,6 +438,7 @@ random.int = function (R, N1, N2)
 end
 about[random.int] = {":int([lower_i=1], upper_i) -> int",
   "Uniform distributed random integer in the given range.", DIST}
+
 
 --- Iterate randomly without repeat.
 --  @param R Random generator.
@@ -440,6 +460,7 @@ end
 about[random.ipairs] = {":ipairs(tbl) --> fn",
   "Random iterator over the table elements."}
 
+
 --- Logistic distribution.
 --  @param R Random generator.
 --  @param dMu Mean value.
@@ -452,6 +473,7 @@ random.logistic = function (R, dMu, dSigma)
 end
 about[random.logistic] = {":logistic(mu_d=0, sigma_d=1) --> float",
   "Logistic distributed random value.", DIST}
+
 
 --- Constructor example.
 --  @param self Do nothing.
@@ -467,6 +489,7 @@ random.new = function(self, seed)
 end
 about[random.new] = {":new(seed_i=0) --> R",
   "Create random generator object.", help.NEW}
+
 
 --- Get Gaussian distribution.
 --  @param R Random generator.
@@ -487,11 +510,12 @@ end
 about[random.norm] = {":norm(mean_d=0, dev_d=1) --> float",
   "Normal distributed random value with the given mean and deviation.", DIST}
 
+
 --- Poisson distribution.
 --  @param dLam Lambda.
 --  @return random number.
 random.poisson = function (R, dLam)
-  random.ext_special = random.ext_special or require('lib.special')
+  random.ext_special = random.ext_special or require('matlib.special')
   local gln = random.ext_special.gammaln
   local em = -1
   if dLam < 12 then
@@ -518,6 +542,7 @@ end
 about[random.poisson] = {":poisson(lambda_d) --> int",
   "Poisson distributed random values.", DIST}
 
+
 --- Rayleigh distribution.
 --  @param R Random generator.
 --  @param dSigma Scale.
@@ -529,6 +554,7 @@ random.rayleigh = function (R, dSigma)
 end
 about[random.rayleigh] = {":rayleigh(sigma_d) --> float",
   "Rayleigh distributed random values.", DIST}
+
 
 --- Update random generator seed.
 --  @param R Random generator.
@@ -543,6 +569,7 @@ random.seed = function (R, N)
 end
 about[random.seed] = {":seed(N=os.time) --> nil", "Set random generator seed."}
 
+
 --- Change elements order in the table.
 --  @param R Random generator.
 --  @param t Table.
@@ -555,10 +582,12 @@ random.shuffle = function (R, t)
 end
 about[random.shuffle] = {":shuffle(tbl) --> nil", "Change order of elements."}
 
+
 -- simplify constructor call
 setmetatable(random, {__call = function (self) return random._fn(self) end})
 about[random] = {" () --> float",
   "Uniform distributed random number between 0 and 1."}
+
 
 -- Comment to remove descriptions
 random.about = about

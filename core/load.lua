@@ -19,10 +19,11 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 Sonata = require('core.evaluate')
 
 -- current version
-Sonata.version = '0.9.35'
+Sonata.version = '0.9.36'
 
 -- Quit the program
 quit = Sonata.exit
+
 
 -- Import actions
 Sonata.doimport = function (tbl, name)
@@ -37,12 +38,13 @@ Sonata.doimport = function (tbl, name)
     name = assert(Sonata.alias[name], "Wrong module name: "..name.."!")
   end
   if not _G[var] then
-    local lib = require('lib.'..name)
+    local lib = require('matlib.'..name)
     _G[var] = lib
     -- add description
     if lib.about then About:add(lib.about, name, var) end
   end
 end
+
 
 -- Add modules
 setmetatable(use,
@@ -51,13 +53,15 @@ setmetatable(use,
     if not name then
       local lst = Sonata.info {
         Sonata.FORMAT_V1,
-        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED")}
+        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"), 
+        Sonata.FORMAT_CLR}
       -- show loaded modules
       for k, v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
         if _G[v] then
           lst[#lst+1] = Sonata.FORMAT_V1
           lst[#lst+1] = '++\n'
+          lst[#lst+1] = Sonata.FORMAT_CLR
         else
           lst[#lst+1] = '\n'
         end
@@ -76,6 +80,7 @@ setmetatable(use,
   end,
 })
 
+
 --- Print SonataHelp information.
 --  @param v Function, module or nil.
 help = function(v)
@@ -90,28 +95,6 @@ help = function(v)
   return Sonata.inLua and Sonata._toText(res) or res
 end
 
---- Session logging.
---  @param flat Value 'on'/true to start and 'off'/false to stop.
-Log = function (flag)
-  if flag == 'on' then
-    if not Sonata._logFile then
-      Sonata._logFile = assert(io.open(Sonata.LOGNAME, 'a'), "Can't open log file")
-      local d = os.date('*t')
-      Sonata._logFile:write(
-        string.format(
-          '\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
-          d.day, d.month, d.year, d.hour, d.min))
-      Sonata._logFile:write('-- ')  -- prepare comment for 'logging on'
-    end
-  elseif flag == 'off' then
-    if Sonata._logFile then
-      Sonata._logFile:close()
-      Sonata._logFile = nil
-    end
-  else
-    io.write('Unexpected argument!\n')
-  end
-end
 
 -- command line arguments of Sonata and their processing
 local _args = {
@@ -124,10 +107,10 @@ process = function (args)
   local Test = require('core.test')
   if args[2] then
     Test.module(
-      string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
+      string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
   else
     for m in pairs(use) do
-      Test.module(string.format('%slib/%s.lua', (SONATA_ADD_PATH or ''), m))
+      Test.module(string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), m))
     end
   end
   Test.summary()
@@ -174,8 +157,8 @@ exit = true},
 -- command line evaluation
 ['-e'] = {
 process = function (args)
-  Sonata:eval(args[2] or '', false)
-  print(Sonata._ans)
+  local _, _, ans = coroutine.resume(Sonata.evalThread(), args[2] or '')
+  print(ans)
 end,
 exit = true},
 
@@ -188,7 +171,9 @@ process = function (args)
   end
   for i = 1, #args do
     if string.find(args[i], '%.note$') then
-      Sonata:note(args[i])
+      local blk = Sonata._toBlocks(args[i])
+      Sonata.cli(blk)
+      --Sonata:note(args[i])
     else
       dofile(args[i])
     end
@@ -235,6 +220,7 @@ Sonata._arghelp = function ()
   return table.concat(txt, '\n')
 end
 
+
 --================== EXECUTION =================
 
 -- Read localization file and update descriptions
@@ -242,8 +228,10 @@ if SONATA_LOCALIZATION then
   About:localization(SONATA_LOCALIZATION)
 end
 
+
 -- Try to import base functions
 pcall(use, 'main')
+
 
 -- Process command line arguments
 if #arg > 0 then
@@ -253,10 +241,11 @@ if #arg > 0 then
   if command.exit then os.exit() end
 end
 
+
 -- Run!!!
 
 io.write(SonataHelp.CMAIN, '\n',
-"   # #       --=====  Sonata  =====--       # #\n",
+"   # #      --=====  so/\\/ata  =====--       # #\n",
 "    # #        --==== ", Sonata.version, " ====--        # #\n\n",
 SonataHelp.CHELP)
 print(About:get('intro'), SonataHelp.CRESET)
@@ -268,7 +257,7 @@ end
 
 -- choose interpreter
 if arg[-1] ~= '-i' then
-  Sonata:cli()
+  Sonata.cli()
 else
   Sonata.inLua = true
 end
