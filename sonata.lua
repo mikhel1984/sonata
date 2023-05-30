@@ -30,26 +30,26 @@
 -- Aliases can be changed.
 use = {
 --  name       alias
-  asciiplot  = "Ap",
-  bigint     = "Int",
-  complex    = "_Z",
-  data       = "_D",
-  graph      = "Graph",
-  main       = "Main",
-  matrix     = "Mat",
-  numeric    = "Num",
-  polynomial = "Poly",
-  random     = "Rand",
-  rational   = "Rat",
-  symbolic   = "Sym",
-  units      = "_U",
+  asciiplot  = "Ap",     -- use pseudo-graphic to print figures
+  bigint     = "Int",    -- manipulations with integers
+  complex    = "_Z",     -- complex numbers
+  data       = "_D",     -- data processing
+  graph      = "Graph",  -- operations with graphs
+  main       = "Main",   -- common functions
+  matrix     = "Mat",    -- matrices and linear algebra
+  numeric    = "Num",    -- numeric algorithms
+  polynomial = "Poly",   -- operations with polynomials and splines
+  random     = "Rand",   -- random number generators
+  rational   = "Rat",    -- rational numbers and continued fractions
+  symbolic   = "Sym",    -- some symbolic methods
+  units      = "_U",     -- units conversation
 --------------------
-  const      = "_C",
-  geodesy    = "Geo",
-  gnuplot    = "Gp",
-  lens       = "Lens",
-  quaternion = "Quat",
-  special    = "Spec",
+  const      = "_C",     -- physical and other constants
+  geodesy    = "Geo",    -- geodesy transformations
+  gnuplot    = "Gp",     -- GnuPlot 'binding'
+  lens       = "Lens",   -- paraxial optics and laser beams
+  quaternion = "Quat",   -- working with quaternions
+  special    = "Spec",   -- list of 'special' functions
 }
 
 
