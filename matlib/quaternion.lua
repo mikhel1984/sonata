@@ -352,7 +352,6 @@ about[quaternion.fromAA] = {':fromAA(angle_d, axis_d) --> Q','Create quaternion 
 
 
 --- Get quaternion from rotation matrix.
---  @param self Do nothing.
 --  @param M Rotation matrix 3x3.
 --  @return Equal quaternion.
 quaternion.fromRot = function (self, M)
@@ -377,6 +376,27 @@ quaternion.fromRot = function (self, M)
   end
 end
 about[quaternion.fromRot] = {':fromRot(M) --> Q', 'Convert rotation matrix to quaternion.', ROTATION}
+
+
+--- Obtain quaternion from the Euler angles.
+--  @param roll Angle w.r.t. X
+--  @param pitch Angle w.r.t. Y
+--  @param yaw Angle w.r.t. Z
+--  @return Equal quaternion.
+quaternion.fromRPY = function (self, roll, pitch, yaw)
+  local cr = math.cos(roll * 0.5)
+  local sr = math.sin(roll * 0.5)
+  local cp = math.cos(pitch * 0.5)
+  local sp = math.sin(pitch * 0.5)
+  local cy = math.cos(yaw * 0.5)
+  local sy = math.sin(yaw * 0.5)
+  return quaternion._new(
+    cr * cp * cy + sr * sp * sy,
+    sr * cp * cy - cr * sp * sy,
+    cr * sp * cy + sr * cp * sy,
+    cr * cp * sy - sr * sp * cy)
+end
+about[quaternion.fromRPY] = {":fromRPY(roll_d, pitch_d, yaw_d) --> Q", "Convert Euler angles to quaternion.", ROTATION}
 
 
 --- Get inversion.
@@ -497,6 +517,22 @@ quaternion.toRot = function (Q)
     {2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)}}
 end
 about[quaternion.toRot] = {'Q:toRot() --> M', 'Get equal rotation matrix.', ROTATION}
+
+
+--- Get Euler angles.
+--  @param Q Unit quaternion.
+--  @return roll, pitch, yaw
+quaternion.toRPY = function (Q)
+  if math.abs(quaternion._norm2(Q)-1) > 1E-4 then
+      error("Unit quaternion is required!")
+  end
+  local w, x, y, z = Ver.unpack(Q._)
+  local roll  = Ver.atan2(2*(w*x + y*z), 1 - 2*(x*x + y*y))
+  local pitch = math.asin(2*(w*y - z*x))
+  local yaw   = Ver.atan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
+  return roll, pitch, yaw
+end
+about[quaternion.toRPY] = {"Q:toRPY() --> roll_d, pitch_d, yaw_d", "Get Euler angles.", ROTATION}
 
 
 --- Get w component.
