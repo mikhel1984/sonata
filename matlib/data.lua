@@ -119,14 +119,14 @@ ans = tt[2][2]                --> t[2][2]
 b = _D:T(t)
 ans = b[3][2]                 --> t[2][3]
 
--- pretty print for a table
-print(_D:table(t))
+-- Markdown-like print for a table
+print(_D:md(t))
 
 -- add column names and some processing
 fn = function (v)
-  return {v[1]^2, 0.5*(v[2]+v[2])}
+  return {v[1]^2, 0.5*(v[2]+v[3])}
 end
-c = _D:table(t, {'sq', 'avg'}, fn)
+c = _D:md(t, {'sq', 'avg'}, fn)
 print(c)
 
 -- even numbers
@@ -584,7 +584,7 @@ about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
 --  @param names_t Table of column names (optional).
 --  @param fn Table that generates new column from the given (optional).
 --  @return String with table representation.
-data.table = function (self, data_t, names_t, fn)
+data.md = function (self, data_t, names_t, fn)
   local acc, line, head, len = {}, {}, {}, {}
   -- data to stings
   for i, v in ipairs(data_t) do
@@ -618,7 +618,7 @@ data.table = function (self, data_t, names_t, fn)
   end
   return table.concat(res, '\n')
 end
-about[data.table] = {":table(data_t, names_t=nil, row_fn=nil) --> str",
+about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
 
 
