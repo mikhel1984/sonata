@@ -13,7 +13,7 @@
 
 -- String evaluation method
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
-
+local Test = nil
 
 -- Highlight "header" in a "note" file
 local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
@@ -161,6 +161,22 @@ log = function (args, env)
   end
 end,
 
+-- Trace function
+trace = function (args, env)
+  local a = args[2]
+  Test = Test or require('core.test')
+  if a then
+    local fn, err = loadStr('return '..a)
+    if fn then
+      print(Test.profile(fn()))
+    else
+      printErr(err)
+    end
+  else
+    printErr("Unexpected argument!")
+  end
+end
+
 }  -- commands
 
 
@@ -181,9 +197,10 @@ end
 cmdInfo.q = {"Quit"}
 cmdInfo.ls = {"Show list of blocks for execution"}
 cmdInfo.o = {"Open note-file", "filename"}
-cmdInfo.log = {"Turn on/off logging.", "on/off"}
+cmdInfo.log = {"Turn on/off logging", "on/off"}
 cmdInfo.help = {"Show this help"}
 cmdInfo.number = {"Go to N-th block"}
+cmdInfo.trace = {"Profiling for the function", "func"}
 
 
 --- Show command description.

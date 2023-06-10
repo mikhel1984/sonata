@@ -233,7 +233,8 @@ test.profile = function (fn, ...)
   end
   table.sort(stat, function (a, b) return a[2] > b[2] end)
   -- show results
-  for _, res in ipairs(stat) do print(res[1], res[2]) end
+  for i, res in ipairs(stat) do stat[i] = string.format('%s\t- %d', res[1], res[2]) end
+  return table.concat(stat, '\n')
 end
 
 
