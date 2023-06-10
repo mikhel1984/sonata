@@ -65,8 +65,7 @@ end
 --  @return Table with commands (if any).
 local function getCmd (str)
   if string.find(str, "^%s*:") then
-    local cmd, args = string.match(str, "(%w+)%s*(.*)")
-    return {cmd, args}
+    return { string.match(str, "(%w+)%s*(.*)") }
   end
   return nil
 end
@@ -163,12 +162,26 @@ end,
 
 -- Trace function
 trace = function (args, env)
-  local a = args[2]
   Test = Test or require('core.test')
-  if a then
-    local fn, err = loadStr('return '..a)
+  if args[2] then
+    local fn, err = loadStr('return '..args[2])
     if fn then
       print(Test.profile(fn()))
+    else
+      printErr(err)
+    end
+  else
+    printErr("Unexpected argument!")
+  end
+end, 
+
+-- Average time
+time = function (args, env)
+  Test = Test or require('core.test')
+  if args[2] then
+    local fn, err = loadStr('return '..args[2])
+    if fn then
+      print(string.format('%.4f ms', Test.time(fn())))
     else
       printErr(err)
     end
@@ -188,7 +201,7 @@ commands.help = function (args, env)
     for k, _ in pairs(commands) do
       cmdInfo._print(k)
     end
-    cmdInfo._print('number')
+    cmdInfo._print('N')
   end
 end
 
@@ -199,8 +212,9 @@ cmdInfo.ls = {"Show list of blocks for execution"}
 cmdInfo.o = {"Open note-file", "filename"}
 cmdInfo.log = {"Turn on/off logging", "on/off"}
 cmdInfo.help = {"Show this help"}
-cmdInfo.number = {"Go to N-th block"}
+cmdInfo.N = {"Go to N-th block"}
 cmdInfo.trace = {"Profiling for the function", "func"}
+cmdInfo.time = {"Estimate average time", "func"}
 
 
 --- Show command description.
@@ -208,7 +222,7 @@ cmdInfo.trace = {"Profiling for the function", "func"}
 cmdInfo._print = function (k) 
   local info = cmdInfo[k]
   if info then
-    print(string.format("  %s %s - %s", k, info[2] or '', info[1]))
+    print(string.format("%s\t%s\t- %s", k, info[2] or '', info[1]))
   else 
     print("Unknown key: ", k)
   end
