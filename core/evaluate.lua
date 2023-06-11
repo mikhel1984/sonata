@@ -111,12 +111,12 @@ local txtCodes = {
 local cmdInfo = {}
 local commands = {
 
---- Quit the program.
+-- Quit the program.
 q = function (args, env)
   evaluate.exit()
 end,
 
---- Print list of blocks
+-- Print list of blocks
 ls = function (args, env)
   for i = 1, #env.notes do
     local s = ''
@@ -127,19 +127,26 @@ ls = function (args, env)
   end
 end,
 
---- Open 'note' file
+-- Add 'note' file to the list
 o = function (args, env)
   local blk = evaluate._toBlocks(args[2])
   if blk then
-    env.notes = blk
-    env.index = 1
+    for _, v in ipairs(blk) do
+      table.insert(env.notes, v)
+    end
     io.write("Name: '", args[2], "'\tBlocks: ", #blk, "\n")
   else
     printErr("Can't open file "..args[2])
   end
+end, 
+
+-- Clear notes
+rm = function (args, env)
+  env.notes = {}
+  env.index = 1
 end,
 
---- Save session to log
+-- Save session to log
 log = function (args, env)
   if args[2] == 'on' then
     if not env.log then
@@ -198,23 +205,37 @@ commands.help = function (args, env)
   if cmdInfo[args[2]] then
     cmdInfo._print(args[2])
   else
+    -- combine
+    local group = {}
     for k, _ in pairs(commands) do
-      cmdInfo._print(k)
+      local tp = cmdInfo[k][3]
+      if tp then
+        group[tp] = group[tp] or {}
+        table.insert(group[tp], k)
+      else
+        cmdInfo._print(k)  -- basic command
+      end
     end
+    -- rest
     cmdInfo._print('N')
+    for t, lst in pairs(group) do
+      print(string.format("\t%s", t))
+      for _, v in ipairs(lst) do cmdInfo._print(v) end
+    end
   end
 end
 
 
 -- Command description
-cmdInfo.q = {"Quit"}
-cmdInfo.ls = {"Show list of blocks for execution"}
-cmdInfo.o = {"Open note-file", "filename"}
+cmdInfo.q = {"Quit", ""}
 cmdInfo.log = {"Turn on/off logging", "on/off"}
-cmdInfo.help = {"Show this help"}
-cmdInfo.N = {"Go to N-th block"}
-cmdInfo.trace = {"Profiling for the function", "func"}
-cmdInfo.time = {"Estimate average time", "func"}
+cmdInfo.help = {"Show this help", ""}
+cmdInfo.N = {"Go to N-th block", ""}
+cmdInfo.ls = {"Show list of blocks for execution", "", "Note-files"}
+cmdInfo.o = {"Open note-file", "filename", "Note-files"}
+cmdInfo.rm = {"Clear list of notes", "", "Note-files"}
+cmdInfo.trace = {"Profiling for the function", "func", "Debug"}
+cmdInfo.time = {"Estimate average time", "func", "Debug"}
 
 
 --- Show command description.
@@ -222,7 +243,7 @@ cmdInfo.time = {"Estimate average time", "func"}
 cmdInfo._print = function (k) 
   local info = cmdInfo[k]
   if info then
-    print(string.format("%s\t%s\t- %s", k, info[2] or '', info[1]))
+    print(string.format("%s\t%s\t- %s", k, info[2], info[1]))
   else 
     print("Unknown key: ", k)
   end
