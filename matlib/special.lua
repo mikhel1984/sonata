@@ -391,7 +391,6 @@ end
 
 
 --- Modified Bessel function In.
---  @param self Do nothing.
 --  @param N Order.
 --  @param x Real number.
 --  @return In(x).
@@ -420,7 +419,6 @@ about[special.besseli] = {":besseli(order_N,x_d) --> num",
 
 
 --- Bessel function of the first kind
---  @param self Do nothing.
 --  @param N Polynomial order.
 --  @param x Real number.
 --  @return Polynomial value
@@ -467,7 +465,6 @@ about[special.besselj] = {":besselj(order_N, x_d) --> num",
 
 
 --- Modified Bessel function Kn.
---  @param self Do nothing.
 --  @param N Order.
 --  @param x Positive value.
 --  @return Kn(x).
@@ -487,7 +484,6 @@ about[special.besselk] = {":besselk(order_N, x_d) --> num",
 
 
 --- Bessel function of the second kind
---  @param self Do nothing.
 --  @param n Polynomial order.
 --  @param x Non-negative real number.
 --  @return Polynomial value
@@ -509,7 +505,6 @@ about[special.bessely] = {":bessely(order_N, x_d) --> num",
 
 
 --- Beta function.
---  @param self Do nothing.
 --  @param z First value.
 --  @param w Second value.
 --  @return B(z,w).
@@ -520,7 +515,6 @@ about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", BETA}
 
 
 --- Incomplete beta function
---  @param self Do nothing.
 --  @param x Value between 0 and 1.
 --  @param a First bound.
 --  @param b Second bound.
@@ -543,7 +537,6 @@ about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
 
 
 --- Logarithm of beta function.
---  @param self Do nothing.
 --  @param z First argument.
 --  @param w Second argument.
 --  @return log(B(x)).
@@ -555,7 +548,6 @@ about[special.betaln] = {":betaln(z_d, w_d) --> num",
 
 
 --- Dawson integral.
---  @param self Do nothing.
 --  @param x Real number.
 --  @return Integral value.
 special.dawson = function (self, x)
@@ -586,7 +578,6 @@ about[special.dawson] = {":dawson(x_d) --> num", "Dawson integral."}
 
 
 --- Error function.
---  @param self Do nothing.
 --  @param x Real value.
 --  @return Error value.
 special.erf = function (self, x) return 1-special:erfc(x) end
@@ -594,7 +585,6 @@ about[special.erf] = {":erf(x_d) --> num", "Error function."}
 
 
 --- Complementary error function.
---  @param self Do nothing.
 --  @param x Real value.
 --  @return Error value.
 special.erfc = function (self, x)
@@ -609,7 +599,6 @@ about[special.erfc] = {":erfc(x_d) --> num", "Complementary error function."}
 
 
 --- Exponential integral.
---  @param self Do nothing.
 --  @param n Power.
 --  @param x Non-negative value.
 --  @return Value of En(x).
@@ -656,7 +645,6 @@ about[special.expint] = {":expint(pow_N, x_d) --> num", "Exponential integral En
 
 
 --- Gamma function.
---  @param self Do nothing.
 --  @param z Real number.
 --  @return G(z).
 special.gamma = function (self, z)
@@ -674,7 +662,6 @@ about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", GAMMA}
 
 
 --- Logarithm of gamma function.
---  @param self Do nothing.
 --  @param z Positive number.
 --  @return log(gamma(z))
 special.gammaln = function (self, z)
@@ -690,7 +677,6 @@ about[special.gammaln] = {":gammaln(x_d) --> num",
 
 
 --- Incomplete gamma function P(N,x).
---  @param self Do nothing.
 --  @param N Order.
 --  @param x Non-negative value.
 --  @return Value of P(N,x).
@@ -702,7 +688,6 @@ about[special.gammp] = {":gammp(order_N, x_d) --> num", "Incomplete gamma functi
 
 
 --- Incomplete gamma function Q(N,x).
---  @param self Do nothing.
 --  @param N Order.
 --  @param x Non-negative value.
 --  @return Value of Q(N,x).
@@ -715,7 +700,6 @@ about[special.gammq] = {":gammq(order_N, x_d) --> num",
 
 
 --- List of Legendre coefficients.
---  @param self Do nothing.
 --  @param n Polynomial order.
 --  @param x Real number.
 --  @return Table with coefficients.

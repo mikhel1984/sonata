@@ -148,7 +148,6 @@ end
 
 
 --- Make value "constant".
---  @param self Do nothing.
 --  @param sName Name of constant.
 --  @param val  Value of constant.
 --  @param sUunit String with units.
@@ -162,7 +161,6 @@ about[const.add] = {':add(name_s, value, [units_s]) --> nil', 'Create new consta
 
 
 --- Remove existing constant.
---  @param self Do nothing.
 --  @param sName Name of constant.
 const.remove = function (self, sName)
   if _user[sName] then

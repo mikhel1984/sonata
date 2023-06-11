@@ -376,7 +376,6 @@ about[gnuplot.copy] = {"G:copy() --> cpy_G", "Get copy of the plot options."}
 
 
 --- Matlab-like plotting
---  @param Do nothing.
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
 gnuplot.plot = function (self,...)
   local ag = {...}
@@ -409,7 +408,6 @@ about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..]) --> nil",
 
 
 --- Polar plot.
---  @param self Do nothing.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
 gnuplot.polarplot = function(self,...)
   local ag, i, n = {...}, 1, 1
@@ -468,7 +466,6 @@ about[gnuplot.show] = {"G:show() --> nil", "Plot data, represented as Lua table.
 
 
 --- Surface plot.
---  @param self Do nothing.
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
 gnuplot.surfplot = function(self,...)
   local ag, i, n = {...}, 1, 1
@@ -494,7 +491,6 @@ about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..]) --
 
 
 --- Plot table of data file.
---  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tplot = function (self,v,...)
@@ -516,7 +512,6 @@ about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..]) --> nil",
 
 
 --- Polar plot table of data file.
---  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tpolar = function (self,v,...)
@@ -539,7 +534,6 @@ about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..]) --> nil",
 
 
 --- Sufrace plot from table of data file.
---  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tsurf = function (self,v,...)

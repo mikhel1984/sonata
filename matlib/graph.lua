@@ -341,7 +341,6 @@ about[graph.dfs] = {"G:dfs(startNote, goalNode) --> isFound, path_t",
 
 
 --- Prepare empty directed graph.
---  @param self Do nothing.
 --  @return Directed graph.
 graph.dir = function (self)
   local res = graph._new()

@@ -192,7 +192,6 @@ end
 
 
 --- Define (redefine) function.
---  @param self Do nothing.
 --  @param sName Function name.
 --  @param tArgs List of arguments (symbolic objects).
 --  @param S Function body, symbolical expression or Lua function.
@@ -246,7 +245,6 @@ about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
 
 
 --- Find function using its name.
---  @param self Do nothing.
 --  @param sName Function name.
 --  @return Function object or nil.
 symbolic.fn = function (self, sName)
@@ -282,7 +280,6 @@ end
 
 
 --- Get symbolic expression from string.
---  @param self Do nothing.
 --  @param str Expression string.
 --  @return One or several symbolic elements.
 symbolic.parse = function(self, str)

@@ -512,7 +512,6 @@ end
 
 --- Get polynomial from roots.
 --  Arguments are a sequence of roots.
---  @param self Do nothing.
 --  @param t List of roots.
 --  @return Polynomial object.
 polynomial.build = function (self, t)
@@ -532,7 +531,6 @@ about[polynomial.build] = {":build(roots_t) --> P",
 
 
 --- Find characteristic polinomial for the matrix.
---  @param self Do nothing.
 --  @param M Source matrix.
 --  @return Characteristic polynomial.
 polynomial.char = function (self, M)
@@ -575,7 +573,6 @@ about[polynomial.der] = {"P:der() --> der_P",
 
 
 --- Find the best polynomial approximation for the line.
---  @param self Do nothing.
 --  @param X Set of independent variables.
 --  @param Y Set of dependent variables.
 --  @param ord Polynomial order.
@@ -636,7 +633,6 @@ about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
 
 
 --- Find interpolation polinomial in the Lagrange form.
---  @param self Do nothing.
 --  @param X Set of variables.
 --  @param Y Set of variables.
 --  @return Interpolation polynomial.
@@ -666,7 +662,6 @@ about[polynomial.lagrange] = {":lagrange(xs_t, ys_t) --> P",
 
 
 --- Linear data interpolation.
---  @param self Do nothing
 --  @param tX Sequence of independent values.
 --  @param tY Sequence of dependent values.
 --  @return Table with polynomials for each interval.
@@ -688,7 +683,6 @@ about[polynomial.lin] = {":lin(xs_t, ys_t, yBefore_d=0, yAfter_d=y0) --> P",
 
 
 --- Evaluate value for table of polynomials (piecewise polynomial).
---  @param self Do nothing.
 --  @param tP Table of polynomials in form {{x1, p1}, {x2, p2} ...}.
 --  @param x Query point.
 --  @param n Index of polynomial in the table (optional).
@@ -791,7 +785,6 @@ about[polynomial.roots] = {"P:roots() --> roots_t",
 
 --- Cubic spline data interpolation.
 --  Use 'natural' boundary conditions.
---  @param self Do nothing.
 --  @param tX Sequence of independent values.
 --  @param tY Sequence of dependent values.
 --  @return Table with polynomials for each interval.
@@ -863,7 +856,6 @@ about[polynomial.str] = {"P:str(char_s='x') --> str",
 
 
 --- Find Taylor series.
---  @param self Do nothing.
 --  @param v Argument value.
 --  @param vF Function value in v.
 --  @param ... Sequence of derivatives fn', fn'' etc.

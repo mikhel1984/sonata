@@ -333,7 +333,6 @@ quaternion.__eq = quaternion.eq
 
 
 --- Build quaternion from angle-axis representation.
---  @param self Do nothing.
 --  @param dAng Angle of rotation.
 --  @param vAxe Axis in form of vector object or table with 3 elements.
 --  @return New quaternion.

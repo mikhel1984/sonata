@@ -897,7 +897,6 @@ about[bigint.base] = {"B:base(N) --> tbl", "Convert number to the new numeric ba
 
 
 --- Find number of combinations.
---  @param self Do nothing.
 --  @param n Total number of elements.
 --  @param k Group size.
 --  @return Bigint for combination number.
@@ -1042,7 +1041,6 @@ about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
 
 
 --- Permutations without repetition.
---  @param self Do nothing.
 --  @param n Number of elements.
 --  @param k Size of group.
 --  @return Number of permutations.
@@ -1055,7 +1053,6 @@ about[bigint.P] = {":P(n, k) --> permutaions_B",
 
 
 --- Generate random number.
---  @param self Do nothing.
 --  @param B Upper limit.
 --  @return Number from 0 to B.
 bigint.random = function (self, B)

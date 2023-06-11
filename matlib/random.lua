@@ -476,7 +476,6 @@ about[random.logistic] = {":logistic(mu_d=0, sigma_d=1) --> float",
 
 
 --- Constructor example.
---  @param self Do nothing.
 --  @param seed Random value.
 --  @return New random generator.
 random.new = function(self, seed)

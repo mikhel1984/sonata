@@ -174,7 +174,6 @@ local data = {}
 
 
 --- Estimate covariance for two vectors.
---  @param self Do nothing.
 --  @param t1 First data vector.
 --  @param t2 Second data vector.
 --  @return Covariance value.
@@ -193,7 +192,6 @@ about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
 
 
 --- Estimate covariance matrix.
---  @param self Do nothing.
 --  @param t Table of data vectors.
 --  @return Covariance matrix.
 data.cov = function (self, t)
@@ -216,7 +214,6 @@ about[data.cov] = {":cov(data_t) --> cov_M",
 
 
 --- Save Lua table in file, use given delimiter.
---  @param self Do nothing.
 --  @param sFile File name.
 --  @param t Lua table.
 --  @param char Delimiter, default is coma.
@@ -235,7 +232,6 @@ about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',') --> nil",
 
 
 --- Import data from text file, use given delimiter.
---  @param self Do nothing.
 --  @param sFile File name.
 --  @param char Delimiter, default is coma.
 --  @return Lua table with data.
@@ -268,7 +264,6 @@ about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 
 
 --- Generate function from string.
---  @param self Do nothing.
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
@@ -278,7 +273,6 @@ about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
 
 
 --- Find elements using condition.
---  @param self Do nothing.
 --  @param t Table with data.
 --  @param vCond Either boolean function or table of weights.
 --  @return Table with the filtered elements.
@@ -304,7 +298,6 @@ about[data.filter] = {":filter(in_t, condition) --> out_t",
 
 
 --- Frequency of elements.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Table where keys are elements and values are their frequencies.
 data.freq = function (self, t)
@@ -319,7 +312,6 @@ about[data.freq] = {":freq(data_t) --> tbl",
 
 
 --- Geometrical mean.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights, optional.
 --  @return Geometrical mean.
@@ -343,7 +335,6 @@ about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num",
 
 
 --- Harmonic mean.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
 --  @return Harmonic mean.
@@ -367,7 +358,6 @@ about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num",
 
 
 --- Number of elements in each bin.
---  @param self Do nothing.
 --  @param t Data table.
 --  @param rng Number of bins or table with edges.
 --  @return Two tables, with sum and edges.
@@ -412,7 +402,6 @@ about[data.histcounts] = {":histcounts(data_t, rng_v=10) --> sum_t, edges_t",
 
 
 --- Find weights (1/0) based on condition.
---  @param self Do nothing.
 --  @param t Data table.
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
@@ -428,7 +417,6 @@ about[data.is] = {":is(data_t, cond_fn) --> yesno_t",
 
 
 --- Find weights (1/0) based on inverted condition.
---  @param self Do nothing.
 --  @param t Data table.
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
@@ -444,7 +432,6 @@ about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
 
 
 --- Maximum value.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Maximum value and its index.
 data.max = function (self, t)
@@ -459,7 +446,6 @@ about[data.max] = {":max(data_t) --> var, ind_N",
 
 
 --- Average value.
---  @param self Do nothing.
 --  @param t Table with numbers.
 --  @param tw Table with weight. Can be omitted.
 --  @return Average.
@@ -481,7 +467,6 @@ about[data.mean] = {":mean(data_t, [wight_t]) --> num",
 
 
 --- Find median.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Value of median.
 data.median = function (self, t)
@@ -500,7 +485,6 @@ about[data.median] = {":median(data_t) --> num",
 
 
 --- Minimum value.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Minimum value and its index.
 data.min = function (self, t)
@@ -515,7 +499,6 @@ about[data.min] = {":min(data_t) --> var, ind_N",
 
 
 --- Central moment.
---  @param self Do nothing.
 --  @param N Order of the moment.
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
@@ -540,7 +523,6 @@ about[data.moment] = {":moment(order_N, data_t, [weigth_t]) --> num",
 
 
 --- Sum of all elements.
---  @param self Do nothing.
 --  @param t Table with numbers.
 --  @return Sum.
 data.sum = function (self, t)
@@ -553,7 +535,6 @@ about[data.sum] = {":sum(data_t) --> var",
 
 
 --- Standard deviation and variance.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights.
 --  @return Standard deviation, variance.
@@ -579,7 +560,6 @@ about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
 
 
 --- Show data in Markdown-like table form.
---  @param self Do nothing.
 --  @param data_t Table of form {row1, row2, etc.}.
 --  @param names_t Table of column names (optional).
 --  @param fn Table that generates new column from the given (optional).
@@ -623,7 +603,6 @@ about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
 
 
 --- Student's cumulative distribution
---  @param self Do nothing.
 --  @param d Value.
 --  @param N Degree of freedom.
 --  @return Cumulative value.
@@ -637,7 +616,6 @@ about[data.tcdf] = {":tcdf(x_d, deg_N) --> num",
 
 
 --- Student's density function.
---  @param self Do nothing.
 --  @param d Value.
 --  @param N Degree of freedom.
 --  @return Density value.
@@ -651,7 +629,6 @@ about[data.tpdf] = {":tpdf(x_d, deg_N) --> num",
 
 
 --- Condition: x == d.
---  @param self Do nothing.
 --  @param d Some value.
 --  @return Boolean function.
 data.xEq = function (self, d)
@@ -662,7 +639,6 @@ about[data.xEq] = {":xEq(num) --> cond_fn",
 
 
 --- Condition: x > d
---  @param self Do nothing.
 --  @param d Lower limit.
 --  @return Boolean function.
 data.xGt = function (self, d)
@@ -672,7 +648,6 @@ about[data.xGt] = {":xGt(num) --> cond_fn", "Return function for condition x > d
 
 
 --- Condition: d1 <= x <= d2.
---  @param self Do nothing.
 --  @param d1 Lower limit.
 --  @param d2 Upper limit.
 --  @return Boolean function.
@@ -684,7 +659,6 @@ about[data.xIn] = {":xIn(num1, num2) --> cond_fn",
 
 
 --- Condition: x < d
---  @param self Do nothing.
 --  @param d Upper limit.
 --  @return Boolean function.
 data.xLt = function (self, d)
@@ -694,7 +668,6 @@ about[data.xLt] = {":xLt(num) --> cond_fn", "Return function for condition x < d
 
 
 --- Apply function of n arguments to n lists.
---  @param self Do nothing.
 --  @param fn Function of multiple arguments or string.
 --  @param ... Sequence of lists.
 --  @return List of values fn(...).
@@ -888,7 +861,6 @@ end
 
 
 --- Create reference to other table.
---  @param self Do nothing.
 --  @param t Source table.
 --  @param iBeg Index of the first element.
 --  @param iEnd Index of the last element.
@@ -969,7 +941,6 @@ mt_transpose_k.__len = function (self) return #self._src end
 
 
 --- Get reference to 'transposed' table.
---  @param self Do nothing.
 --  @param src Source table.
 --  @return Reference object.
 data.T = function (self, src)

@@ -399,7 +399,6 @@ about[rational.float] = {"R:float() --> num", "Return rational number as decimal
 
 
 --- Get rational number approximation.
---  @param self Do nothing.
 --  @param f Source number.
 --  @param fErr Precision, default is 0.001.
 rational.from = function (self, f, fErr)
@@ -418,7 +417,6 @@ about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
 
 
 --- Get rational number from continued fraction coefficients.
---  @param self Do nothing.
 --  @param t List of coefficients.
 --  @return Rational number.
 rational.fromCF = function (self, t)

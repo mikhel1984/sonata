@@ -602,7 +602,6 @@ about[complex.tanh] = {"Z:tanh() --> y_Z",
 
 
 --- Create complex number from trigonometric representation.
---  @param self Do nothing.
 --  @param vMod Module.
 --  @param vArg Argument.
 --  @return Complex number.

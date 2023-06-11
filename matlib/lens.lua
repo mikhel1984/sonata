@@ -205,7 +205,6 @@ lens._init = function(t) return setmetatable(t, lens) end
 
 
 --- Make component for afocal system.
---  @param self Do nothing.
 --  @param dm Transverse magnification.
 --  @return Afocal matrix.
 lens.afocal = function (self, dm)
@@ -252,7 +251,6 @@ about[lens.det] = {"L:det() --> determinant_d",
 
 
 --- Find Gaussian beam characterictics.
---  @param self Do nothing.
 --  @param dW0 Beam waist, m.
 --  @param dLam Waveleight, nm.
 --  @return Divergence angle and Raileigh range.
@@ -266,7 +264,6 @@ about[lens.gaussParam] = {":gaussParam(waist_d, lambda_d) --> div_d, range_d",
 
 
 --- Find Gaussian beam propagation.
---  @param self Do nothing.
 --  @param dW0 Beam waist, m.
 --  @param dLam Waveleight, nm.
 --  @param dist Distance, m.
@@ -301,7 +298,6 @@ about[lens.isUnit] = {"L:isUnit() --> bool",
 
 
 --- Make component for a curved mirror.
---  @param self Do nothing.
 --  @param dr Radius of a mirror surface.
 --  @param dn Refractive index.
 --  @return Reflection matrix.
@@ -314,7 +310,6 @@ about[lens.mirror] = {":mirror(rad_d, n_d) --> L",
 
 
 --- Make component for refraction.
---  @param self Do nothing.
 --  @param dr Radius of a surface.
 --  @param dn1 Initial refractive index.
 --  @param dn2 Final refractive index.
@@ -329,7 +324,6 @@ about[lens.ref] = {":ref(rad_d, n1_d, n2_d) --> L",
 
 --- Find condition when fn(d).X == 0
 --  where X in {A, B, C, D}.
---  @param self Do nothing
 --  @param fn System in form of function.
 --  @param ind Index of the matrix element.
 --  @param d0 Initial estimation of the variable.
@@ -349,7 +343,6 @@ about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
 
 
 --- Make component for a thin lens.
---  @param self Do nothing.
 --  @param df Focal length.
 --  @return Thin lens matrix.
 lens.thin = function (self, df)
@@ -360,7 +353,6 @@ about[lens.thin] = {":thin(focalDist_d) --> L",
 
 
 --- Make component for translation.
---  @param self Do nothing.
 --  @param dt Distance.
 --  @param dn Refractive index.
 --  @return Translational matrix.

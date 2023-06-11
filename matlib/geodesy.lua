@@ -581,7 +581,6 @@ geodesy.__index = geodesy
 
 
 --- Convert degrees to radians.
---  @param self Do nothing.
 --  @param d Degrees.
 --  @param m Minutes (optional).
 --  @param s Seconds (optional).
@@ -594,7 +593,6 @@ about[geodesy.dms2rad] = {":dms2rad(deg_d, min_d=0, sec_d=0) --> num",
 
 
 --- Convert degrees to degrees-minutes-seconds.
---  @param self Do nothing.
 --  @param d Angle in degrees.
 --  @return Degrees, minutes, seconds.
 geodesy.deg2dms = function (self, d)
@@ -608,7 +606,6 @@ about[geodesy.deg2dms] = {":deg2dms(deg_d) --> num",
 
 
 --- International gravity formula (WGS).
---  @param self Do nothing.
 --  @param B Latitude, deg.
 --  @return Acceleration value.
 geodesy.grav = function (self, dB)
@@ -621,7 +618,6 @@ about[geodesy.grav] = {":grav(latitude_d) --> num",
 
 
 --- Convert hash to corrdinates.
---  @param self Do nothing.
 --  @param sHash Geohash string.
 --  @return Central point and range of the zone.
 geodesy.hashDecode = function (self, sHash)
@@ -663,7 +659,6 @@ about[geodesy.hashDecode] = {":hashDecode(hash_s) --> coord_t, range_t",
 
 --- Geohash from coordinates
 --  Based on https://www.movable-type.co.uk/scripts/geohash.html
---  @param self Do nothing.
 --  @param t Coordinates (lat, lon).
 --  @param N Number of letters (1-12, optional).
 --  @return String with hash.
@@ -779,7 +774,6 @@ about[geodesy.blhInto] = {"E.blhInto[E2] --> fn",
 
 
 --- Find cartesian coordinates of a point with topocentric coordinates.
---  @param self Do nothing.
 --  @param g Geodetic coordinates of the reference point.
 --  @param r Cartesian coordinates of the reference point.
 --  @param l Topocentric coordinates of the observed point.
@@ -798,7 +792,6 @@ about[geodesy.fromENU] = {":fromENU(blRef_t, xyzRef_t, top_t) --> xyzObs_t",
 
 
 --- Find topocentric coordinates of a point.
---  @param self Do nothing.
 --  @param g Geodetic coordinates of the reference point.
 --  @param r Cartesian coordinates of the reference point.
 --  @param p Cartesian coordinates of the observed point.
