@@ -998,8 +998,7 @@ matrix.det = function (M)
   local _, K = matrix._gaussDown(matrix.copy(M))
   return K
 end
-about[matrix.det] = {"M:det() --> num",
-  "Calculate determinant."}
+about[matrix.det] = {"M:det() --> num", "Calculate determinant."}
 
 
 --- Get diagonal vector.
@@ -1152,6 +1151,28 @@ matrix.householder = function (V, ik)
 end
 about[matrix.householder] = {"M:householder(V, start_N) --> hh_M",
   "Find Householder matrix for the given vector.", TRANSFORM}
+
+
+--- Kronecker product.
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @return matrix, obtained with Kronecker product.
+matrix.kron = function (M1, M2)
+  local res = matrix._init(M1._rows*M2._rows, M1._cols*M2._cols, {})
+  for i = 1, M1._rows do
+    for j = 1, M1._cols do
+      local v = M1[i][j]
+      local rr, cc = (i-1)*M2._rows, (j-1)*M2._cols
+      for p = 1, M2._rows do
+        local mp = M2[p]
+        local resr = res[rr + p]
+        for q = 1, M2._cols do resr[cc + q] = v * mp[q] end
+      end
+    end
+  end
+  return res
+end
+about[matrix.kron] = {"M:kron(M2) --> M3", "Find Kronecker product."}
 
 
 --- Round matrix elements in place.
