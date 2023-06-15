@@ -59,6 +59,10 @@ _sign = {
 -- methametods
 qubit.__index = qubit
 
+local qgate = {
+  type = 'qgate'
+}
+qgate.__index = qgate
 
 --- Check object type.
 --  @param v Object.
@@ -165,6 +169,9 @@ end
 
 qubit.__concat = function(Q1, Q2) return qubit.combine(Q1, Q2) end
 
+qubit.size = function (Q) return Q.n end
+qubit.__len = qubit.size
+
 -- simplify constructor call
 setmetatable(qubit, {
 __call = function (self, state) 
@@ -193,10 +200,11 @@ qubit.about = about
 --return qubit
 
 --======================================
-
+-- https://en.wikipedia.org/wiki/Quantum_logic_gate 
 a = qubit('|1>')
 b = qubit('|0>')
 c = (0.5 * a + 0.5 * b) .. (0.4 * a + 0.6 * b)
 c:_randomize()
 print(c.vec)
 print(c.vec:norm())
+print(#c)
