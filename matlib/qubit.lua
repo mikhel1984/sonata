@@ -59,10 +59,6 @@ _sign = {
 -- methametods
 qubit.__index = qubit
 
-local qgate = {
-  type = 'qgate'
-}
-qgate.__index = qgate
 
 --- Check object type.
 --  @param v Object.
@@ -135,7 +131,7 @@ end
 about[qubit.new] = {":new(t) --> Q", "Explicit constructor.", help.NEW}
 -- begin from ':' to get 'Qb:new(t)'
 
-qubit._init = function (v, tp, n)
+qubit._new = function (v, tp, n)
   return setmetatable({vec=v, type=tp, n=n}, qubit)
 end
 
@@ -143,14 +139,14 @@ qubit.__mul = function (C, Q)
   if isqubit(C) and not isqubit(Q) then
     return qubit.__mul(Q, C)
   end
-  return qubit._init(C*Q.vec, Q.type, Q.n)
+  return qubit._new(C*Q.vec, Q.type, Q.n)
 end
 
 qubit.__add = function (Q1, Q2)
   if not (isqubit(Q1) and isqubit(Q2)) then error("Unexpected operation") end
   if Q1.type ~= Q2.type then error("Different bases") end
   if Q1.n ~= Q2.n then error("Different size") end
-  return qubit._init(Q1.vec + Q2.vec, Q1.type, Q1.n)
+  return qubit._new(Q1.vec + Q2.vec, Q1.type, Q1.n)
 end
 
 qubit.combine = function (...)
@@ -164,7 +160,7 @@ qubit.combine = function (...)
     v = v:kron(qi.vec)
     n = n + qi.n
   end
-  return qubit._init(v, q1.type, n)
+  return qubit._new(v, q1.type, n)
 end
 
 qubit.__concat = function(Q1, Q2) return qubit.combine(Q1, Q2) end
@@ -175,7 +171,7 @@ qubit.__len = qubit.size
 -- simplify constructor call
 setmetatable(qubit, {
 __call = function (self, state) 
-  return qubit._init(qubit._parse(state))
+  return qubit._new(qubit._parse(state))
 end
 })
 about[qubit] = {" (t) --> Q", "Create new qubit.", help.NEW}
@@ -187,12 +183,64 @@ about[qubit] = {" (t) --> Q", "Create new qubit.", help.NEW}
 --  @return Copy of the object.
 qubit.copy = function (Q)
   -- some logic
-  return qubit._init(Q.vec * 1, Q.type, Q.n)
+  return qubit._new(Q.vec * 1, Q.type, Q.n)
 end
 about[qubit.copy] = {"Q:copy() --> cpy_Q",
   "Create a copy of the object."} -- third element is optional, default is 'base'
--- don't modify since start from letter
 
+local qgate = {
+  type = 'qgate', 
+}
+qgate.__index = qgate
+
+
+qgate._I22 = Matrix:eye(2)
+qgate._X22 = Matrix{{0,1},{1,0}}
+qgate._H22 = Matrix{{1,1},{1,-1}}  -- multipy 1/sqrt(2)
+
+qgate._new = function (n)
+  local txt = {}
+  for i = n-1, 0, -1 do txt[#txt+1] = string.format('x%d ', i) end
+  return setmetatable({n=n, mat=nil, txt=txt}, qgate)
+end
+
+qgate._fill = function (G, lst, s)
+  local txt, res = G.txt, nil
+  for i = G.n, 1, -1 do
+    local gi = g[i]
+    if gi then
+      txt[i] = string.format('%s %s ', txt[i], s)
+    else
+      txt[i] = string.format('%s - ', txt[i])
+      gi = qgate._I22
+    end
+    res = res and res:kron(gi) or gi
+  end
+  G.mat = G.mat and (G.mat * res) or res
+end
+
+qgate._gateX = function (G, ...)
+  local g = {}
+  for _, i in ipairs({...}) do g[i] = qgate._X22 end
+  if #g == 0 then 
+    for i = 1, G.n do g[i] = qgate._X22 end  
+  end
+  qgate._fill(G, g, 'X')
+  return G
+end
+
+qgate._gateH = function (G, ...)
+  local g = {}
+  for _, i in ipairs({...}) do g[i] = qgate._H22 end
+  local p = #g
+  if p == 0 then
+    for i = 1, G.n do g[i] = qgate._H22 end
+    p = G.n
+  end
+  qgate._fill(G, g, 'H')
+  G.mat = G.mat * math.pow(2, -0.5*p)
+  return G
+end
 
 -- Comment to remove descriptions
 qubit.about = about

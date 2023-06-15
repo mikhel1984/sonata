@@ -1162,11 +1162,13 @@ matrix.kron = function (M1, M2)
   for i = 1, M1._rows do
     for j = 1, M1._cols do
       local v = M1[i][j]
-      local rr, cc = (i-1)*M2._rows, (j-1)*M2._cols
-      for p = 1, M2._rows do
-        local mp = M2[p]
-        local resr = res[rr + p]
-        for q = 1, M2._cols do resr[cc + q] = v * mp[q] end
+      if v ~= 0 then
+        local rr, cc = (i-1)*M2._rows, (j-1)*M2._cols
+        for p = 1, M2._rows do
+          local mp = M2[p]
+          local resr = res[rr + p]
+          for q = 1, M2._cols do resr[cc + q] = v * mp[q] end
+        end
       end
     end
   end
