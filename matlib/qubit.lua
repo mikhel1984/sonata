@@ -6,9 +6,6 @@
 	module 'qubit'
 --]]
 
--- Define here your tests, save results to 'ans',
--- use --> for the strict equality
--- and --n> for the n-digit precision in the case of floating numbers.
 --[[TEST
 
 -- use 'qubit'
@@ -119,18 +116,6 @@ qubit._parse = function (state)
   return res, base, n
 end
 
---- Constructor example.
---  @param t Some value.
---  @return New object of qubit.
-qubit.new = function(self, t)
-  local o = {}
-  -- your logic
-  -- return object
-  return setmetatable(o, self)
-end
-about[qubit.new] = {":new(t) --> Q", "Explicit constructor.", help.NEW}
--- begin from ':' to get 'Qb:new(t)'
-
 qubit._new = function (v, tp, n)
   return setmetatable({vec=v, type=tp, n=n}, qubit)
 end
@@ -200,7 +185,7 @@ qgate._H22 = Matrix{{1,1},{1,-1}}  -- multipy 1/sqrt(2)
 
 qgate._new = function (n)
   local txt = {}
-  for i = n-1, 0, -1 do txt[#txt+1] = string.format('x%d ', i) end
+  for i = n-1, 0, -1 do txt[#txt+1] = string.format('|x%d> -', i) end
   return setmetatable({n=n, mat=nil, txt=txt}, qgate)
 end
 
@@ -209,9 +194,9 @@ qgate._fill = function (G, lst, s)
   for i = G.n, 1, -1 do
     local gi = g[i]
     if gi then
-      txt[i] = string.format('%s %s ', txt[i], s)
+      txt[i] = string.format('%s %s', txt[i], s)
     else
-      txt[i] = string.format('%s - ', txt[i])
+      txt[i] = string.format('%s -', txt[i])
       gi = qgate._I22
     end
     res = res and res:kron(gi) or gi
@@ -221,7 +206,7 @@ end
 
 qgate._gateX = function (G, ...)
   local g = {}
-  for _, i in ipairs({...}) do g[i] = qgate._X22 end
+  for _, i in ipairs({...}) do g[i+1] = qgate._X22 end
   if #g == 0 then 
     for i = 1, G.n do g[i] = qgate._X22 end  
   end
@@ -231,7 +216,7 @@ end
 
 qgate._gateH = function (G, ...)
   local g = {}
-  for _, i in ipairs({...}) do g[i] = qgate._H22 end
+  for _, i in ipairs({...}) do g[i+1] = qgate._H22 end
   local p = #g
   if p == 0 then
     for i = 1, G.n do g[i] = qgate._H22 end
@@ -239,6 +224,44 @@ qgate._gateH = function (G, ...)
   end
   qgate._fill(G, g, 'H')
   G.mat = G.mat * math.pow(2, -0.5*p)
+  return G
+end
+
+qgate._cnot = function (G, slave_i, master_i)
+  slave_i, master_i = slave_i + 1, master_i + 1
+  local nmax = 2^(G.n)
+  local mat = Matrix:zeros(nmax, nmax)
+  local bits = {}
+  for k = 0, nmax-1 do
+    -- to 'bits'
+    local v, rst = k, 0
+    for i = 1, G.n do
+      v, rst = math.modf(v / 2.0)
+      bits[i] = (rst > 0.1)  -- use true/false
+    end
+    -- correct
+    if bits[master_i] then
+      bits[slave_i] = not bits[slave_i]
+    end
+    -- to column
+    v = 1  -- reuse
+    for i, b in ipairs(bits) do
+      if b then v = v + 2^(i-1) end
+    end
+    mat[v][k] = 1
+  end
+  G.mat = G.mat and (G.mat * mat) or mat
+  -- update view
+  local txt = G.txt
+  for i = 1, #txt do
+    local s = '-'
+    if i == slave_i then 
+      s = 'X'
+    elseif i == master_i then
+      s = '*'
+    end
+    txt[i] = string.format('%s %s', txt[i], s)  
+  end
   return G
 end
 
