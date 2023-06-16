@@ -181,11 +181,15 @@ qgate.__index = qgate
 
 qgate._I22 = Matrix:eye(2)
 qgate._X22 = Matrix{{0,1},{1,0}}
+qgate._Y22 = Matrix{{0,Complex:i(-1)}, {Complex:i(1), 0}}
+qgate._Z22 = Matrix{{1, 0}, {0, -1}}
+qgate._S22 = Matrix{{1, 0}, {0, Complex:i(1)}}
+qgate._T22 = Matrix{{1, 0}, {0, Complex:trig(1, math.pi/4)}}
 qgate._H22 = Matrix{{1,1},{1,-1}}  -- multipy 1/sqrt(2)
 
 qgate._new = function (n)
   local txt = {}
-  for i = n-1, 0, -1 do txt[#txt+1] = string.format('|x%d> -', i) end
+  for i = 1, n do txt[i] = '' end  -- inverted order
   return setmetatable({n=n, mat=nil, txt=txt}, qgate)
 end
 
@@ -193,11 +197,10 @@ qgate._fill = function (G, lst, s)
   local txt, res = G.txt, nil
   for i = G.n, 1, -1 do
     local gi = lst[i]
-    local ii = G.n - i + 1
     if gi then
-      txt[ii] = string.format('%s %s', txt[ii], s)
+      txt[i] = string.format('%s %s', txt[i], s)
     else
-      txt[ii] = string.format('%s -', txt[ii])
+      txt[i] = string.format('%s -', txt[i])
       gi = qgate._I22
     end
     res = res and res:kron(gi) or gi
@@ -205,20 +208,22 @@ qgate._fill = function (G, lst, s)
   G.mat = G.mat and (G.mat * res) or res
 end
 
-qgate._gateX = function (G, ...)
-  local ind = {...}
-  local g = {}
-  for _, i in ipairs(ind) do g[i+1] = qgate._X22 end
-  if #ind == 0 then 
-    for i = 1, G.n do g[i] = qgate._X22 end  
+qgate._makeGate = function (M, s)
+  return function (G, ...)
+    local ind, g = {...}, {}
+    for _, i in ipairs(ind) do g[i+1] = M end
+    if #ind == 0 then 
+      for i = 1, G.n do g[i] = M end  
+    end
+    qgate._fill(G, g, s)
+    return G
   end
-  qgate._fill(G, g, 'X')
-  return G
 end
 
+qgate._gateX = qgate._makeGate(qgate._X22, 'X')
+
 qgate._gateH = function (G, ...)
-  local g = {}
-  local ind = {...}
+  local g, ind = {}, {...}
   for _, i in ipairs(ind) do g[i+1] = qgate._H22 end
   local p = #ind
   if p == 0 then
@@ -230,22 +235,19 @@ qgate._gateH = function (G, ...)
   return G
 end
 
-qgate._gateCnot = function (G, slave_i, master_i)
-  slave_i, master_i = slave_i + 1, master_i + 1
-  local nmax = 2^(G.n)
+qgate._matrixFor = function (n, rule, ...)
+  local nmax = 2^n
   local mat = Matrix:zeros(nmax, nmax)
   local bits = {}
   for k = 0, nmax-1 do
     -- to 'bits'
     local v, rst = k, 0
-    for i = 1, G.n do
+    for i = 1, n do
       v, rst = math.modf(v / 2.0)
       bits[i] = (rst > 0.1)  -- use true/false
     end
-    -- correct
-    if bits[master_i] then
-      bits[slave_i] = not bits[slave_i]
-    end
+    -- apply rule
+    rule(bits, ...)
     -- to column
     v = 1  -- reuse
     for i, b in ipairs(bits) do
@@ -253,6 +255,39 @@ qgate._gateCnot = function (G, slave_i, master_i)
     end
     mat[v][k+1] = 1
   end
+  return mat
+end
+
+qgate._ruleCnot = function (bits, slave, master)
+  if bits[master] then
+    bits[slave] = not bits[slave]
+  end
+end
+
+qgate._gateCnot = function (G, slave_i, master_i)
+  slave_i, master_i = slave_i + 1, master_i + 1
+  local mat = qgate._matrixFor(G.n, qgate._ruleCnot, slave_i, master_i)
+  --local nmax = 2^(G.n)
+  --local mat = Matrix:zeros(nmax, nmax)
+  --local bits = {}
+  --for k = 0, nmax-1 do
+  --  -- to 'bits'
+  --  local v, rst = k, 0
+  --  for i = 1, G.n do
+  --    v, rst = math.modf(v / 2.0)
+  --    bits[i] = (rst > 0.1)  -- use true/false
+  --  end
+  --  -- correct
+  --  if bits[master_i] then
+  --    bits[slave_i] = not bits[slave_i]
+  --  end
+  --  -- to column
+  --  v = 1  -- reuse
+  --  for i, b in ipairs(bits) do
+  --    if b then v = v + 2^(i-1) end
+  --  end
+  --  mat[v][k+1] = 1
+  --end
   G.mat = G.mat and (G.mat * mat) or mat
   -- update view
   local txt = G.txt
@@ -263,10 +298,50 @@ qgate._gateCnot = function (G, slave_i, master_i)
     elseif i == master_i then
       s = 'o'
     end
-    local ii = G.n - i + 1
-    txt[ii] = string.format('%s %s', txt[ii], s)  
+    txt[i] = string.format('%s %s', txt[i], s)  
   end
   return G
+end
+
+qgate._ruleSwap = function (bits, i1, i2)
+  bits[i1], bits[i2] = bits[i2], bits[i1]
+end
+
+qgate._gateSwap = function (G, i1, i2)
+  i1, i2 = i1 + 1, i2 + 1
+  local mat = qgate._matrixFor(G.n, qgate._ruleSwap, i1, i2)
+  G.mat = G.mat and (G.mat * mat) or mat
+  local txt = G.txt
+  if i1 > i2 then
+    i1, i2 = i2, i1
+  end
+  for i = 1, #txt do
+    local s = '-'
+    if i == i1 then 
+      s = '^'
+    elseif i == i2 then
+      s = 'v'
+    end
+    txt[i] = string.format('%s %s', txt[i], s)
+  end
+  return G
+end
+
+qgate.__tostring = function (G)
+  local acc = {}
+  for i = G.n, 1, -1 do
+    acc[#acc+1] = string.format('|x%d> %s', i-1, G.txt[i])
+  end
+  return table.concat(acc, '\n')
+end
+
+qgate._inverse = function (G)
+  local res = qgate._new(G.n)
+  res.mat = G.mat:H()
+  for i = 1, G.n do
+    res.txt[i] = string.reverse(G.txt[i])
+  end
+  return res
 end
 
 -- Comment to remove descriptions
@@ -277,9 +352,12 @@ qubit.about = about
 --======================================
 -- https://en.wikipedia.org/wiki/Quantum_logic_gate 
 
+-- inverse gates
+
 gt = qgate._new(3)
-gt:_gateCnot(0,2)
+gt:_gateSwap(0,2)
+gt2 = gt:_inverse()
 print(gt.mat)
-for i = 1, gt.n do
-  print(gt.txt[i])
-end
+print(gt)
+print(gt2.mat)
+print(gt2)
