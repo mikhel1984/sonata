@@ -192,11 +192,12 @@ end
 qgate._fill = function (G, lst, s)
   local txt, res = G.txt, nil
   for i = G.n, 1, -1 do
-    local gi = g[i]
+    local gi = lst[i]
+    local ii = G.n - i + 1
     if gi then
-      txt[i] = string.format('%s %s', txt[i], s)
+      txt[ii] = string.format('%s %s', txt[ii], s)
     else
-      txt[i] = string.format('%s -', txt[i])
+      txt[ii] = string.format('%s -', txt[ii])
       gi = qgate._I22
     end
     res = res and res:kron(gi) or gi
@@ -205,9 +206,10 @@ qgate._fill = function (G, lst, s)
 end
 
 qgate._gateX = function (G, ...)
+  local ind = {...}
   local g = {}
-  for _, i in ipairs({...}) do g[i+1] = qgate._X22 end
-  if #g == 0 then 
+  for _, i in ipairs(ind) do g[i+1] = qgate._X22 end
+  if #ind == 0 then 
     for i = 1, G.n do g[i] = qgate._X22 end  
   end
   qgate._fill(G, g, 'X')
@@ -216,8 +218,9 @@ end
 
 qgate._gateH = function (G, ...)
   local g = {}
-  for _, i in ipairs({...}) do g[i+1] = qgate._H22 end
-  local p = #g
+  local ind = {...}
+  for _, i in ipairs(ind) do g[i+1] = qgate._H22 end
+  local p = #ind
   if p == 0 then
     for i = 1, G.n do g[i] = qgate._H22 end
     p = G.n
@@ -227,7 +230,7 @@ qgate._gateH = function (G, ...)
   return G
 end
 
-qgate._cnot = function (G, slave_i, master_i)
+qgate._gateCnot = function (G, slave_i, master_i)
   slave_i, master_i = slave_i + 1, master_i + 1
   local nmax = 2^(G.n)
   local mat = Matrix:zeros(nmax, nmax)
@@ -248,7 +251,7 @@ qgate._cnot = function (G, slave_i, master_i)
     for i, b in ipairs(bits) do
       if b then v = v + 2^(i-1) end
     end
-    mat[v][k] = 1
+    mat[v][k+1] = 1
   end
   G.mat = G.mat and (G.mat * mat) or mat
   -- update view
@@ -258,9 +261,10 @@ qgate._cnot = function (G, slave_i, master_i)
     if i == slave_i then 
       s = 'X'
     elseif i == master_i then
-      s = '*'
+      s = 'o'
     end
-    txt[i] = string.format('%s %s', txt[i], s)  
+    local ii = G.n - i + 1
+    txt[ii] = string.format('%s %s', txt[ii], s)  
   end
   return G
 end
@@ -272,10 +276,10 @@ qubit.about = about
 
 --======================================
 -- https://en.wikipedia.org/wiki/Quantum_logic_gate 
-a = qubit('|1>')
-b = qubit('|0>')
-c = (0.5 * a + 0.5 * b) .. (0.4 * a + 0.6 * b)
-c:_randomize()
-print(c.vec)
-print(c.vec:norm())
-print(#c)
+
+gt = qgate._new(3)
+gt:_gateCnot(0,2)
+print(gt.mat)
+for i = 1, gt.n do
+  print(gt.txt[i])
+end
