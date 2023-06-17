@@ -15,6 +15,9 @@
 Qb = require 'matlib.qubit'
 
 a = 0.2*Qb'|0>' + 0.98*Qb'|1>'
+print(a)
+
+print(a:prob '|1>')
 
 --]]
 
@@ -47,6 +50,10 @@ local function ruleSwap (bits, i1, i2)
   bits[i1], bits[i2] = bits[i2], bits[i1]
 end
 
+
+local function square (v)
+  return (getmetatable(v) == Complex) and (v:re()^2 + v:im()^2) or (v*v)
+end
 
 --	INFO
 
@@ -91,23 +98,38 @@ qubit.__add = function (Q1, Q2)
 end
 
 
---- k * Q
---  @param C Coefficient.
---  @param Q State.
---  @return Scaled state.
-qubit.__mul = function (C, Q)
-  if isqubit(C) and not isqubit(Q) then
-    return qubit.__mul(Q, C)
-  end
-  return qubit._new(C*Q.vec, Q.type, Q.n)
-end
-
-
 --- Q1 .. Q2
 --  @param Q1 First state.
 --  @param Q2 Second state.
 --  @return Combination of states.
 qubit.__concat = function(Q1, Q2) return qubit.combine(Q1, Q2) end
+
+
+--- k * Q
+--  @param C Coefficient.
+--  @param Q State.
+--  @return Scaled state.
+qubit.__mul = function (C, Q)
+  if isqubit(C) then
+    if isqubit(Q) then
+      if C.type ~= Q.type then error("Different base") end
+      if C.n ~= Q.n then error('Different size') end
+      return qubit._new(Q.vec:H() * C.vec, Q.type, Q.n)
+    else
+      return qubit.__mul(Q, C)
+    end
+  end
+  return qubit._new(C*Q.vec, Q.type, Q.n)
+end
+
+
+--- Text representation of qubits.
+--  @param Q State.
+--  @return string with description.
+qubit.__tostring = function (Q)
+  local base = (Q.type == 1) and 'default' or 'Hadamar'
+  return string.format("%d qb in %s: %s", Q.n, base, tostring(Q.vec:T()))
+end
 
 
 --- Initialize new qubit system.
@@ -193,17 +215,25 @@ qubit.normalize = function (Q)
   local s = 0
   local vec = Q.vec
   for i = 1, vec:rows() do
-    local v = vec[i][1]
-    if getmetatable(v) == Complex then
-      s = s + Cross.float(v * v:conj())
-    else
-      s = s + Cross.float(v)^2
-    end
+    s = s + square(vec[i][1])
   end
   s = math.sqrt(s)
   for i = 1, vec:rows() do
     vec[i][1] = vec[i][1] / s
   end
+end
+
+
+qubit.prob = function (Q, state_s)
+  local v, tp, n = qubit._parse(state_s)
+  if n ~= Q.n then error('Different size') end
+  if tp ~= Q.type then error('Different type') end
+  for i = 1, v:rows() do
+    if v[i][1] > 0.9 then  -- equal to 1
+      return square(Q.vec[i][1])
+    end
+  end
+  return 0
 end
 
 
