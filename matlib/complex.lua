@@ -56,7 +56,7 @@ ans = (a ~= b)                --> true
 -- absolute value
 ans = a:abs()                --3> 2.236
 
--- argument
+-- argument (angle, rad)
 ans = a:arg()              --3> 1.107
 
 -- conjugated number
@@ -119,6 +119,15 @@ ans = z:im()                  --> 2
 
 -- show
 print(a)
+
+-- update env on import 
+-- add complex unit
+ans = 2*_i                   --> _Z:i(2)
+
+-- update some methods 
+ans = sqrt(-1)               --> _i
+
+ans = log(-1):im()           --3> math.pi
 
 --]]
 
@@ -608,7 +617,7 @@ about[complex.tanh] = {"Z:tanh() --> y_Z",
 complex.trig = function (self, vMod, vArg)
   return complex._new(vMod*fcos(vArg), vMod*fsin(vArg))
 end
-about[complex.trig] = {":trig(module, angle) --> new_Z",
+about[complex.trig] = {":trig(module, angle) --> module*exp(i*angle)",
   "Create complex number using module and angle.", help.STATIC}
 
 

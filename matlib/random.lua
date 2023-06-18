@@ -403,7 +403,7 @@ random.gamma = function (R, iAlpha, dBeta)
   local x = 1.0
   if iAlpha < 6 then
     for i = 1, iAlpha do x = x * R:_fn() end
-    x = -math.log(x)  -- TODO check for 0
+    x = -math.log(x)  -- TODO can be 0?
   else
     local y, s= 0, 0
     iAlpha = iAlpha - 1  -- reuse

@@ -639,7 +639,7 @@ about[units.rules] = {":rules() --> str", "Show list of rules."}
 --  The same as #U.
 --  @param U Unit object.
 --  @return Value.
-units.value = function (U) return U and U._value or nil end
+units.value = function (U) return U._value end
 about[units.value] = {'U:value() --> var', 'Get object value. Same as #U.'}
 units.__len = units.value
 
@@ -665,4 +665,4 @@ units.about = about
 return units
 
 --==================================================
---TODO add some predefined rules, get list of rules
+--TODO add some predefined rules

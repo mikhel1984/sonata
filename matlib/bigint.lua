@@ -36,6 +36,9 @@ ans = Int('0xABC')            --> Int('10,11,12:16')
 g = Int('-1,2,3:10')
 ans = g:float()               --> -123
 
+-- check positive/negative
+ans = g:sign()                --> -1
+
 -- check equality
 ans = (a == -g)               --> true
 
@@ -60,6 +63,9 @@ c = Int(50):F()
 ans = c:float() / 3E64       --1> 1.0
 
 ans = (a > b)                 --> false
+
+-- ratio of factorials
+ans = Int:ratF(Int(50), Int(49))  --> Int(50)
 
 -- compare with number
 ans = a:eq(123)               --> true
@@ -902,7 +908,7 @@ about[bigint.base] = {"B:base(N) --> tbl", "Convert number to the new numeric ba
 --  @return Bigint for combination number.
 bigint.C = function (self, n, k)
   n, k = bigint._args(n, k)
-  return bigint.ratF(n, k) / bigint.F(n-k)
+  return bigint:ratF(n, k) / bigint.F(n-k)
 end
 about[bigint.C] = {":C(n, k) --> combinations_B",
   "Number of combinations C(n,k).", COMB}
@@ -1046,7 +1052,7 @@ about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
 --  @return Number of permutations.
 bigint.P = function (self, n, k)
   n, k = bigint._args(n, k)
-  return bigint.ratF(n, n-k)
+  return bigint:ratF(n, n-k)
 end
 about[bigint.P] = {":P(n, k) --> permutaions_B",
   "Find permutations without repetition.", COMB}
@@ -1086,7 +1092,7 @@ about[bigint.random] = {":random(B) --> rand_B",
 --  @param B Numerator.
 --  @param B2 Denominator.
 --  @return Bigint for ration.
-bigint.ratF = function (B, B2)
+bigint.ratF = function (self, B, B2)
   assert(B._sign > 0 and B2._sign > 0, "Non-negative expected")
   local N1, N2 = B:float(), B2:float()
   if N1 < N2 then return bigint._0 end

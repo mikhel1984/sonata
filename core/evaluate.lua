@@ -47,7 +47,7 @@ end
 local function goTo (args, env)
   local num = tonumber(args[1])
   if not num then
-    printErr("Not a number")
+    printErr("Unknown command "..args[1])
   end
   -- TODO to integer
   local lim = #env.notes
@@ -219,7 +219,7 @@ commands.help = function (args, env)
     -- rest
     cmdInfo._print('N')
     for t, lst in pairs(group) do
-      print(string.format("\t%s", t))
+      print(string.format("--\t%s", t))
       for _, v in ipairs(lst) do cmdInfo._print(v) end
     end
   end
