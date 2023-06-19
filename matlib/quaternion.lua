@@ -338,7 +338,7 @@ quaternion.__eq = quaternion.eq
 --  @return New quaternion.
 quaternion.fromAA = function (self, dAng, vAxe)
   local x, y, z = nil, nil, nil
-  if vAxe.vsmatrix then
+  if vAxe.ismatrix then
     x, y, z = vAxe(1), vAxe(2), vAxe(3)
   else
     x, y, z = vAxe[1], vAxe[2], vAxe[3]
