@@ -245,7 +245,7 @@ end
 -- Run!!!
 
 io.write(SonataHelp.CMAIN, '\n',
-"   # #      --=====  so/\\/ata  =====--       # #\n",
+"   # #      --=====  so/\\/ata  =====--      # #\n",
 "    # #        --==== ", Sonata.version, " ====--        # #\n\n",
 SonataHelp.CHELP)
 print(About:get('intro'), SonataHelp.CRESET)
