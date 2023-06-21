@@ -316,7 +316,7 @@ about[qubit] = {" (t) --> Q", "Create new qubit.", help.NEW}
 --	QGATE
 
 local qgate = {
-  type = 'qgate',
+  type = 'qgate', isqgate = true,
 }
 qgate.__index = qgate
 
@@ -378,6 +378,7 @@ end
 --  @return function f(G,...)
 qgate._makeGate = function (M, s)
   return function (G, ...)
+    if getmetatable(G) ~= qgate then error('Not a gate object') end
     local ind, g = {...}, {}
     for _, i in ipairs(ind) do g[i+1] = M end
     if #ind == 0 then 
@@ -434,6 +435,7 @@ end
 --  @param master_i Index to check.
 --  @return updated object.
 qgate.CNOT = function (G, slave_i, master_i)
+  if getmetatable(G) ~= qgate then error('Not a gate object') end
   slave_i, master_i = slave_i + 1, master_i + 1
   local mat = G:_matrixFor(ruleCnot, slave_i, master_i)
   G.mat = G.mat and (G.mat * mat) or mat
@@ -450,6 +452,8 @@ qgate.CNOT = function (G, slave_i, master_i)
   end
   return G
 end
+qubit.CNOT = qgate.CNOT
+about[qubit.CNOT] = {"G:CNOT(slave_i, master_i) --> upd_G", "Add CNOT gate.", GATES}
 
 
 --- Add gate H.
@@ -457,6 +461,7 @@ end
 --  @param ... Qubit indices to add gate.
 --  @return updated object.
 qgate.H = function (G, ...)
+  if getmetatable(G) ~= qgate then error('Not a gate object') end
   local g, ind = {}, {...}
   for _, i in ipairs(ind) do g[i+1] = qgate._H22 end
   local p = #ind
@@ -468,12 +473,15 @@ qgate.H = function (G, ...)
   G.mat = G.mat * math.pow(2, -0.5*p)
   return G
 end
+qubit.H = qgate.H
+about[qubit.H] = {"G:H([i1,i2,..]) --> upd_G", "Add Hadamard gate.", GATES}
 
 
 --- Inverse gate system.
 --  @param G Initial system.
 --  @return inverted version.
 qgate.inverse = function (G)
+  if getmetatable(G) ~= qgate then error('Not a gate object') end
   local res = qgate._new(G.n)
   res.mat = G.mat:H()
   for i = 1, G.n do
@@ -481,6 +489,8 @@ qgate.inverse = function (G)
   end
   return res
 end
+qubit.inverse = qgate.inverse
+about[qubit.inverse] = {"G:inverse() --> inv_G", "Get inverted gate sequence", GATES}
 
 
 --- Get matrix representation.
@@ -497,6 +507,7 @@ end
 --  @param i2 Second index.
 --  @return updated object.
 qgate.SWAP = function (G, i1, i2)
+  if getmetatable(G) ~= qgate then error('Not a gate object') end
   i1, i2 = i1 + 1, i2 + 1
   local mat = G:_matrixFor(ruleSwap, i1, i2)
   G.mat = G.mat and (G.mat * mat) or mat
@@ -515,6 +526,54 @@ qgate.SWAP = function (G, i1, i2)
   end
   return G
 end
+qubit.SWAP = qgate.SWAP
+about[qubit.SWAP] = {"G:SWAP(ind1, ind2) --> upd_G", "Add gate to swap 2 qubits.", GATES}
+
+
+--- Add gate S.
+--  @param G Gate system.
+--  @param ... Qubit indices to add gate.
+--  @return updated object.
+qgate.S = qgate._makeGate(qgate._S22, 'S')
+qubit.S = qgate.S
+about[qubit.S] = {"G:S([ind1,ind2,..]) --> upd_G", "Add S gate.", GATES}
+
+
+--- Add gate T.
+--  @param G Gate system.
+--  @param ... Qubit indices to add gate.
+--  @return updated object.
+qgate.T = qgate._makeGate(qgate._T22, 'T')
+qubit.T = qgate.T
+about[qubit.T] = {"G:T([ind1,ind2,..]) --> upd_G", "Add T gate.", GATES}
+
+
+--- Add gate X.
+--  @param G Gate system.
+--  @param ... Qubit indices to add gate.
+--  @return updated object.
+qgate.X = qgate._makeGate(qgate._X22, 'X')
+qgate.NOT = qgate.X
+qubit.X = qgate.X
+about[qubit.X] = {"G:X([ind1,ind2,..]) --> upd_G", "Add X gate.", GATES}
+
+
+--- Add gate Y.
+--  @param G Gate system.
+--  @param ... Qubit indices to add gate.
+--  @return updated object.
+qgate.Y = qgate._makeGate(qgate._Y22, 'Y')
+qubit.Y = qgate.Y
+about[qubit.Y] = {"G:Y([ind1,ind2,..]) --> upd_G", "Add Y gate.", GATES}
+
+
+--- Add gate Z.
+--  @param G Gate system.
+--  @param ... Qubit indices to add gate.
+--  @return updated object.
+qgate.Z = qgate._makeGate(qgate._Z22, 'Z')
+qubit.Z = qgate.Z
+about[qubit.Z] = {"G:Z([ind1,ind2,..]) --> upd_G", "Add Z gate.", GATES}
 
 
 -- Transform qubit state using gates
@@ -525,12 +584,6 @@ __call = function (G, Q)
 end
 })
 
-
---- Add gate X.
---  @param G Gate system.
---  @param ... Qubit indices to add gate.
---  @return updated object.
-qgate.X = qgate._makeGate(qgate._X22, 'X')
 
 -- Comment to remove descriptions
 qubit.about = about

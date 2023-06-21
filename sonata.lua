@@ -49,6 +49,7 @@ use = {
   gnuplot    = "Gp",     -- GnuPlot 'binding'
   lens       = "Lens",   -- paraxial optics and laser beams
   quaternion = "Quat",   -- working with quaternions
+  qubit      = "Qb",     -- emulate quantum computations
   special    = "Spec",   -- list of 'special' functions
 }
 
