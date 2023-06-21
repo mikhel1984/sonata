@@ -14,14 +14,68 @@
 -- use 'qubit'
 Qb = require 'matlib.qubit'
 
+-- define state
 a = 0.2*Qb'|0>' + 0.98*Qb'|1>'
-print(a)
+-- get number of qubits in system
+ans = #a                      --> 1
 
---
-print(a:prob '|0>')
+-- get equal vector
+av = a:matrix()
+ans = av(1)                  --2> 0.2
 
---
-print(a:meas())
+-- norm
+ans = a * a                  --2> 1.0
+
+-- projection to |+>
+k = 1 / math.sqrt(2)
+plus = k*Qb'|0>' + k*Qb'|1>'
+ans = plus * a               --2> (0.2+0.98)*k
+
+-- system of qubits
+b = Qb'|00>' + Qb'|11>'
+b:normalize()
+-- probability of the state |00>
+ans = b:prob '|00>'          --2> 0.5
+
+-- combine qubits
+-- (same as a..b)
+c = Qb:combine(a, b)
+print(c)
+
+-- do 'measurement'
+-- result is calculated using probabilities
+print(c:meas())
+
+-- define Hadamard gate for 2 qubits
+g1 = Qb:gates(2):H()
+ans = #g1                     --> 2
+
+-- show
+print(g1)
+
+-- as matrix
+g1m = g1:matrix()
+ans = g1m[1][1]              --2> 0.5
+
+-- apply to qubits
+d = g1(Qb'|00>')
+-- check projection
+ans = (plus..plus) * d       --2> 1.0
+
+-- add X to 0-th, Y to 1-st and Z to both
+-- indexation from zero
+g1:X(0):Y(1):Z()
+print(g1)
+
+-- 3 qubit system
+-- CNOT on 0 (2 for control), then swap 1 and 2
+g2 = Qb:gates(3):CNOT(0,2):SWAP(1,2)
+print(g2)
+
+-- inverse system
+g3 = g2:inverse()
+mm = g2:matrix() * g3:matrix()
+ans = mm[4][4]               --2> 1.0
 
 --]]
 
@@ -30,7 +84,7 @@ print(a:meas())
 local Ver = require('matlib.utils')
 local Cross = Ver.cross
 local Utils = Ver.utils
-Ver = Ver.version
+Ver = Ver.versions
 
 local Matrix = require('matlib.matrix')
 local Complex = require('matlib.complex')
@@ -113,7 +167,7 @@ end
 --  @param Q1 First state.
 --  @param Q2 Second state.
 --  @return Combination of states.
-qubit.__concat = function(Q1, Q2) return qubit.combine(Q1, Q2) end
+qubit.__concat = function(Q1, Q2) return qubit.combine(nil, Q1, Q2) end
 
 
 --- k * Q
@@ -123,9 +177,8 @@ qubit.__concat = function(Q1, Q2) return qubit.combine(Q1, Q2) end
 qubit.__mul = function (C, Q)
   if isqubit(C) then
     if isqubit(Q) then
-      if C.type ~= Q.type then error("Different base") end
       if C.n ~= Q.n then error('Different size') end
-      return qubit._new(Q.vec:H() * C.vec, Q.type, Q.n)
+      return C.vec:H() * Q.vec
     else
       return qubit.__mul(Q, C)
     end
@@ -144,13 +197,15 @@ qubit.__tostring = function (Q)
   local b0 = (Q.type == 1) and '0' or '+'
   local b1 = (Q.type == 1) and '1' or '-'
   for k = 0, Q.vec:rows()-1 do
-    if not Cross.isZero(Q.vec[k+1][1]) then
+    local vk = Q.vec[k+1][1]
+    if not Cross.isZero(vk) then
       local v, rst = k, 0
       for i = n, 1, -1 do
         v, rst = math.modf(v / 2.0)
         bits[i] = (rst > 0.1) and b1 or b0
       end
-      acc[#acc+1] = string.format('(%s)|%s>', tostring(Q.vec[k+1][1]), table.concat(bits))
+      vk = (type(vk) == 'number') and Utils.numstr(vk) or tostring(vk)
+      acc[#acc+1] = string.format('(%s)|%s>', vk, table.concat(bits))
     end
   end
   return table.concat(acc, ' + ')
@@ -210,7 +265,7 @@ end
 --- Combine qubits into the system.
 --  @param ... Sequence of subsystems.
 --  @return combined state.
-qubit.combine = function (...)
+qubit.combine = function (self, ...)
   local qs = {...}
   local q1 = qs[1]
   if #qs <= 1 then return q1 end
@@ -223,6 +278,7 @@ qubit.combine = function (...)
   end
   return qubit._new(v, q1.type, n)
 end
+about[qubit.combine] = {":combine([Q1,Q2,..]) --> Q|nil", "Make a system of qubits. Same as Q1..Q2."}
 
 
 --- Getting copy.
@@ -328,6 +384,12 @@ qubit.gates = function (self, n)
   return qgate._new(n)
 end
 about[qubit.gates] = {":gates(input_n) --> G", "Initialize gates for the given numer of inputs.", GATES}
+
+
+qgate.__call = function (G, Q)
+  if G.n ~= Q.n then error('Different number of qubits') end
+  return qubit._new(G.mat * Q.vec, Q.type, Q.n)
+end
 
 
 --- Print gates.
@@ -501,6 +563,13 @@ qgate.matrix = function (G)
 end
 
 
+--- Get number of inputs/outputs
+--  @param Gate system.
+--  @return input number
+qgate.size = function (G) return G.n end
+qgate.__len = qgate.size
+
+
 --- Swap qubits.
 --  @param G Gate system.
 --  @param i1 First index.
@@ -518,9 +587,9 @@ qgate.SWAP = function (G, i1, i2)
   for i = 1, #txt do
     local s = '-'
     if i == i1 then 
-      s = '^'
+      s = '/'
     elseif i == i2 then
-      s = 'v'
+      s = '\\'
     end
     txt[i] = string.format('%s %s', txt[i], s)
   end
@@ -574,15 +643,6 @@ about[qubit.Y] = {"G:Y([ind1,ind2,..]) --> upd_G", "Add Y gate.", GATES}
 qgate.Z = qgate._makeGate(qgate._Z22, 'Z')
 qubit.Z = qgate.Z
 about[qubit.Z] = {"G:Z([ind1,ind2,..]) --> upd_G", "Add Z gate.", GATES}
-
-
--- Transform qubit state using gates
-setmetatable(qgate, {
-__call = function (G, Q)
-  if G.n ~= Q.n then error('Different number of qubits') end
-  return qubit._new(G.mat * Q.vec, Q.type, Q.n)
-end
-})
 
 
 -- Comment to remove descriptions
