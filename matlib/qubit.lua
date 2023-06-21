@@ -35,6 +35,8 @@ Ver = Ver.version
 local Matrix = require('matlib.matrix')
 local Complex = require('matlib.complex')
 
+local GATES = 'gates'
+
 
 --- Rule for CNOT operation.
 --  @param bits List of booleans.
@@ -231,6 +233,15 @@ end
 about[qubit.copy] = {"Q:copy() --> cpy_Q", "Create a copy of the object."}
 
 
+--- Get corresponding vector.
+--  @param Q Qubit system.
+--  @return state vector.
+qubit.matrix = function (Q)
+  return Q.vec:copy()
+end
+about[qubit.matrix] = {"Q:matrix() --> M", "Get matrix representation."}
+
+
 --- 'Measure' the qubit system state.
 --  @param Q Qubit system.
 --  @return found state.
@@ -293,7 +304,7 @@ qubit.size = function (Q) return Q.n end
 qubit.__len = qubit.size
 
 
--- simplify constructor call
+-- constructor call
 setmetatable(qubit, {
 __call = function (self, state) 
   return qubit._new(qubit._parse(state))
@@ -308,6 +319,15 @@ local qgate = {
   type = 'qgate',
 }
 qgate.__index = qgate
+
+
+--- Initialize gate sequence.
+--  @param n Number of inputs.
+qubit.gates = function (self, n)
+  if n <= 0 or not Ver.isInteger(n) then error('Wrong input number') end
+  return qgate._new(n)
+end
+about[qubit.gates] = {":gates(input_n) --> G", "Initialize gates for the given numer of inputs.", GATES}
 
 
 --- Print gates.
@@ -463,6 +483,14 @@ qgate.inverse = function (G)
 end
 
 
+--- Get matrix representation.
+--  @param G Gate system.
+--  @return corresponding matrix.
+qgate.matrix = function (G)
+  return G.mat:copy()
+end
+
+
 --- Swap qubits.
 --  @param G Gate system.
 --  @param i1 First index.
@@ -487,6 +515,15 @@ qgate.SWAP = function (G, i1, i2)
   end
   return G
 end
+
+
+-- Transform qubit state using gates
+setmetatable(qgate, {
+__call = function (G, Q)
+  if G.n ~= Q.n then error('Different number of qubits') end
+  return qubit._new(G.mat * Q.vec, Q.type, Q.n)
+end
+})
 
 
 --- Add gate X.
