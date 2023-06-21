@@ -17,7 +17,11 @@ Qb = require 'matlib.qubit'
 a = 0.2*Qb'|0>' + 0.98*Qb'|1>'
 print(a)
 
-print(a:prob '|1>')
+--
+print(a:prob '|0>')
+
+--
+print(a:meas())
 
 --]]
 
@@ -25,6 +29,7 @@ print(a:prob '|1>')
 
 local Ver = require('matlib.utils')
 local Cross = Ver.cross
+local Utils = Ver.utils
 Ver = Ver.version
 
 local Matrix = require('matlib.matrix')
@@ -51,9 +56,13 @@ local function ruleSwap (bits, i1, i2)
 end
 
 
+--- Find square value.
+--  @param v Real or complex number.
+--  @return v^2
 local function square (v)
   return (getmetatable(v) == Complex) and (v:re()^2 + v:im()^2) or (v*v)
 end
+
 
 --	INFO
 
@@ -127,8 +136,22 @@ end
 --  @param Q State.
 --  @return string with description.
 qubit.__tostring = function (Q)
-  local base = (Q.type == 1) and 'default' or 'Hadamar'
-  return string.format("%d qb in %s: %s", Q.n, base, tostring(Q.vec:T()))
+  local bits, n = {}, Q.n
+  for i = 1, n do bits[i] = 0 end
+  local acc = {}
+  local b0 = (Q.type == 1) and '0' or '+'
+  local b1 = (Q.type == 1) and '1' or '-'
+  for k = 0, Q.vec:rows()-1 do
+    if not Cross.isZero(Q.vec[k+1][1]) then
+      local v, rst = k, 0
+      for i = n, 1, -1 do
+        v, rst = math.modf(v / 2.0)
+        bits[i] = (rst > 0.1) and b1 or b0
+      end
+      acc[#acc+1] = string.format('(%s)|%s>', tostring(Q.vec[k+1][1]), table.concat(bits))
+    end
+  end
+  return table.concat(acc, ' + ')
 end
 
 
@@ -203,10 +226,30 @@ end
 --- Getting copy.
 --  @return Copy of the object.
 qubit.copy = function (Q)
-  -- some logic
   return qubit._new(Q.vec * 1, Q.type, Q.n)
 end
 about[qubit.copy] = {"Q:copy() --> cpy_Q", "Create a copy of the object."}
+
+
+--- 'Measure' the qubit system state.
+--  @param Q Qubit system.
+--  @return found state.
+qubit.meas = function (Q)
+  local acc = {}
+  for i = 1, Q.vec:rows() do
+    local v = Q.vec[i][1]
+    if not Cross.isZero(v) then
+      local sum = (#acc > 0 and acc[#acc][1] or 0) + square(v)
+      acc[#acc+1] = {sum, i}
+    end
+  end
+  local _, pair = Utils.binsearch(acc, acc[#acc][1]*math.random(),
+    function (t) return t[1] end)
+  local vec = Matrix:zeros(Q.vec)
+  vec[ pair[2] ][1] = 1
+  return qubit._new(vec, Q.type, Q.n)
+end
+about[qubit.meas] = {"Q:meas() --> state_Q", "Qubit state measurement."}
 
 
 --- Normalize coefficients to unit vector.
@@ -222,8 +265,13 @@ qubit.normalize = function (Q)
     vec[i][1] = vec[i][1] / s
   end
 end
+about[qubit.normalize] = {"Q:normalize()", "Make norm equal to 1."}
 
 
+--- Get probability of the given state.
+--  @param Q Qubit system.
+--  @param state_s - String with the state description.
+--  @return Probability.
 qubit.prob = function (Q, state_s)
   local v, tp, n = qubit._parse(state_s)
   if n ~= Q.n then error('Different size') end
@@ -235,6 +283,7 @@ qubit.prob = function (Q, state_s)
   end
   return 0
 end
+about[qubit.prob] = {"Q:prob(state_s) --> probatility_d", "Get probability for the given state."}
 
 
 --- Get number of qubits.

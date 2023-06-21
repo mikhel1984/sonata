@@ -205,6 +205,31 @@ utils._toNumbers = function (t)
 end
 
 
+--- Find element that equal or bigger then the given one.
+--  @param t Table with sorted data.
+--  @param val Value for search.
+--  @param fn Function to extract element from table (optional).
+--  @return index and value of the element.
+utils.binsearch = function (t, val, fn)
+  fn = fn or function (x) return x end
+  local istart, iend = 1, #t
+  if val <= fn(t[1]) then return 1, t[1] end
+  if val >= fn(t[iend]) then return iend, t[iend] end
+  while (iend - istart) > 1 do
+    local imid = math.floor((istart+iend) * 0.5)
+    local vm = fn(t[imid])
+    if val < vm then
+      iend = imid
+    elseif val > vm then
+      istart = imid
+    else  -- val == vm
+      return imid, vm
+    end
+  end
+  return iend, t[iend]
+end
+
+
 --- Generate function from string.
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments.
