@@ -134,12 +134,6 @@ __module__ = "Quantum computing simulation"
 local qubit = {
 -- mark
 type = 'qubit', isqubit = true,
--- bases
-_sign = {
--- basic
-['0'] = 1, ['1'] = 1, 
--- hadamar
-['+'] = 2, ['-'] = 2}
 }
 -- methametods
 qubit.__index = qubit
@@ -157,9 +151,8 @@ local function isqubit(v) return getmetatable(v) == qubit end
 --  @return Combined state.
 qubit.__add = function (Q1, Q2)
   if not (isqubit(Q1) and isqubit(Q2)) then error("Unexpected operation") end
-  if Q1.type ~= Q2.type then error("Different bases") end
   if Q1.n ~= Q2.n then error("Different size") end
-  return qubit._new(Q1.vec + Q2.vec, Q1.type, Q1.n)
+  return qubit._new(Q1.vec + Q2.vec, Q1.n)
 end
 
 
@@ -183,7 +176,7 @@ qubit.__mul = function (C, Q)
       return qubit.__mul(Q, C)
     end
   end
-  return qubit._new(C*Q.vec, Q.type, Q.n)
+  return qubit._new(C*Q.vec, Q.n)
 end
 
 
@@ -194,15 +187,13 @@ qubit.__tostring = function (Q)
   local bits, n = {}, Q.n
   for i = 1, n do bits[i] = 0 end
   local acc = {}
-  local b0 = (Q.type == 1) and '0' or '+'
-  local b1 = (Q.type == 1) and '1' or '-'
   for k = 0, Q.vec:rows()-1 do
     local vk = Q.vec[k+1][1]
     if not Cross.isZero(vk) then
       local v, rst = k, 0
       for i = n, 1, -1 do
         v, rst = math.modf(v / 2.0)
-        bits[i] = (rst > 0.1) and b1 or b0
+        bits[i] = (rst > 0.1) and '1' or '0'
       end
       vk = (type(vk) == 'number') and Utils.numstr(vk) or tostring(vk)
       acc[#acc+1] = string.format('(%s)|%s>', vk, table.concat(bits))
@@ -217,8 +208,8 @@ end
 --  @param tp Type of basis.
 --  @param n Number of qubits.
 --  @return new object.
-qubit._new = function (v, tp, n)
-  return setmetatable({vec=v, type=tp, n=n}, qubit)
+qubit._new = function (v, n)
+  return setmetatable({vec=v, n=n}, qubit)
 end
 
 
@@ -226,24 +217,22 @@ end
 --  @param state String of the form '|xxx>'.
 --  @return vector, base type, size
 qubit._parse = function (state)
-  k = k or 1
   local s = string.match(state, '^|(.+)>$')
   if not s then error("|..> is expected") end
-  local n, sum, base = 0, 1, nil
+  local n, sum = 0, 1
   for w in string.gmatch(s, ".") do
-    if not base then
-      base = qubit._sign[w]
-    else
-      if qubit._sign[w] ~= base then error('wrong base') end
-    end
-    if w == '1' or w == '-' then
+    if w == '1' then
       sum = sum + 2^n
+    elseif w == '0' then
+      -- skip
+    else
+      error('Expected 0 or 1')
     end
     n = n + 1
   end
   local res = Matrix:zeros(2^n, 1)
   res[sum][1] = 1
-  return res, base, n
+  return res, n
 end
 
 
@@ -272,11 +261,10 @@ qubit.combine = function (self, ...)
   local v, n = q1.vec, q1.n
   for i = 2, #qs do
     local qi = qs[i]
-    if not isqubit(qi) or qi.type ~= q1.type then error("Can't combine") end
     v = v:kron(qi.vec)
     n = n + qi.n
   end
-  return qubit._new(v, q1.type, n)
+  return qubit._new(v, n)
 end
 about[qubit.combine] = {":combine([Q1,Q2,..]) --> Q|nil", "Make a system of qubits. Same as Q1..Q2."}
 
@@ -284,7 +272,7 @@ about[qubit.combine] = {":combine([Q1,Q2,..]) --> Q|nil", "Make a system of qubi
 --- Getting copy.
 --  @return Copy of the object.
 qubit.copy = function (Q)
-  return qubit._new(Q.vec * 1, Q.type, Q.n)
+  return qubit._new(Q.vec * 1, Q.n)
 end
 about[qubit.copy] = {"Q:copy() --> cpy_Q", "Create a copy of the object."}
 
@@ -314,7 +302,7 @@ qubit.meas = function (Q)
     function (t) return t[1] end)
   local vec = Matrix:zeros(Q.vec)
   vec[ pair[2] ][1] = 1
-  return qubit._new(vec, Q.type, Q.n)
+  return qubit._new(vec, Q.n)
 end
 about[qubit.meas] = {"Q:meas() --> state_Q", "Qubit state measurement."}
 
@@ -340,9 +328,8 @@ about[qubit.normalize] = {"Q:normalize()", "Make norm equal to 1."}
 --  @param state_s - String with the state description.
 --  @return Probability.
 qubit.prob = function (Q, state_s)
-  local v, tp, n = qubit._parse(state_s)
+  local v, n = qubit._parse(state_s)
   if n ~= Q.n then error('Different size') end
-  if tp ~= Q.type then error('Different type') end
   for i = 1, v:rows() do
     if v[i][1] > 0.9 then  -- equal to 1
       return square(Q.vec[i][1])
@@ -388,7 +375,7 @@ about[qubit.gates] = {":gates(input_n) --> G", "Initialize gates for the given n
 
 qgate.__call = function (G, Q)
   if G.n ~= Q.n then error('Different number of qubits') end
-  return qubit._new(G.mat * Q.vec, Q.type, Q.n)
+  return qubit._new(G.mat * Q.vec, Q.n)
 end
 
 
@@ -652,3 +639,7 @@ return qubit
 
 --======================================
 -- https://en.wikipedia.org/wiki/Quantum_logic_gate 
+-- TODO horizontal concatenation for gates using *, vertical with ..
+-- TODO | and > are optional
+-- TODO gate from truth table (get truth table from gate as well?)
+-- TODO qubit equality
