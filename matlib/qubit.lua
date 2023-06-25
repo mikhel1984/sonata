@@ -32,10 +32,11 @@ plus = k*Qb'|0>' + k*Qb'|1>'
 ans = plus * a               --2> (0.2+0.98)*k
 
 -- system of qubits
-b = Qb'|00>' + Qb'|11>'
+-- allow to skip |>
+b = Qb'00' + Qb'11'
 b:normalize()
 -- probability of the state |00>
-ans = b:prob '|00>'          --2> 0.5
+ans = b:prob '00'            --2> 0.5
 
 -- combine qubits
 -- (same as a..b)
@@ -52,6 +53,9 @@ ans = #g1                     --> 2
 
 -- show
 print(g1)
+
+-- check if it is unary
+ans = g1:isUnitary()         --> true
 
 -- as matrix
 g1m = g1:matrix()
@@ -218,7 +222,7 @@ end
 --  @return vector, base type, size
 qubit._parse = function (state)
   local s = string.match(state, '^|(.+)>$')
-  if not s then error("|..> is expected") end
+  if not s then s = state end  -- try string directly
   local n, sum = 0, 1
   for w in string.gmatch(s, ".") do
     if w == '1' then
@@ -233,21 +237,6 @@ qubit._parse = function (state)
   local res = Matrix:zeros(2^n, 1)
   res[sum][1] = 1
   return res, n
-end
-
-
-qubit._randomize = function (Q)
-  local vec = Q.vec
-  local sum = 0
-  for i = 1, vec:rows() do
-    local v = Complex(2*math.random()-1, 2*math.random()-1)
-    vec[i][1] = v
-    sum = sum + v:re()^2 + v:im()^2
-  end
-  sum = math.sqrt(sum)
-  for i = 1, vec:rows() do
-    vec[i][1] = vec[i][1] / sum
-  end
 end
 
 
@@ -542,6 +531,22 @@ qubit.inverse = qgate.inverse
 about[qubit.inverse] = {"G:inverse() --> inv_G", "Get inverted gate sequence", GATES}
 
 
+--- Check gate.
+--  @param G Gate system.
+--  @return true if the matrix is unitary.
+qgate.isUnitary = function (G)
+  if not G.mat then return false end
+  local U = G.mat * G.mat:H()
+  for i = 1, U:rows() do
+    U[i][i] = U[i][i] - 1
+  end
+  return U:norm() < 1E-6
+end
+qubit.isUnitary = qgate.isUnitary
+about[qubit.isUnitary] = {"G:isUnitary() --> bool", 
+  "Check if the matrix is unitary", GATES}
+
+
 --- Get matrix representation.
 --  @param G Gate system.
 --  @return corresponding matrix.
@@ -640,6 +645,5 @@ return qubit
 --======================================
 -- https://en.wikipedia.org/wiki/Quantum_logic_gate 
 -- TODO horizontal concatenation for gates using *, vertical with ..
--- TODO | and > are optional
 -- TODO gate from truth table (get truth table from gate as well?)
 -- TODO qubit equality
