@@ -190,18 +190,25 @@ end
 qubit.__tostring = function (Q)
   local bits, n = {}, Q.n
   for i = 1, n do bits[i] = 0 end
-  local acc = {}
+  local acc, vs = {}, {}
   for k = 0, Q.vec:rows()-1 do
     local vk = Q.vec[k+1][1]
     if not Cross.isZero(vk) then
       local v, rst = k, 0
       for i = n, 1, -1 do
-        v, rst = math.modf(v / 2.0)
+        v, rst = math.modf(v * 0.5)
         bits[i] = (rst > 0.1) and '1' or '0'
       end
-      vk = (type(vk) == 'number') and Utils.numstr(vk) or tostring(vk)
-      acc[#acc+1] = string.format('(%s)|%s>', vk, table.concat(bits))
+      vs[#vs+1] = (type(vk) == 'number') and Utils.numstr(vk) 
+        or tostring(vk)
+      acc[#acc+1] = table.concat(bits)
     end
+  end
+  -- exact value
+  if #acc == 1 then return string.format('|%s>', acc[1]) end
+  -- general
+  for i, v in ipairs(vs) do
+    acc[i] = string.format('(%s)|%s>', v, acc[i])
   end
   return table.concat(acc, ' + ')
 end
