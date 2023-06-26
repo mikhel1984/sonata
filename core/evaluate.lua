@@ -97,6 +97,9 @@ FORMAT_CLR = '#v_clr',
 INV_MAIN = SonataHelp.CMAIN..'## '..SonataHelp.CRESET,
 INV_CONT = SonataHelp.CMAIN..'.. '..SonataHelp.CRESET,
 INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
+-- common vars
+alias = {},
+_modules = {},
 }
 
 
@@ -138,7 +141,7 @@ o = function (args, env)
   else
     printErr("Can't open file "..args[2])
   end
-end, 
+end,
 
 -- Clear notes
 rm = function (args, env)
@@ -180,7 +183,7 @@ trace = function (args, env)
   else
     printErr("Unexpected argument!")
   end
-end, 
+end,
 
 -- Average time
 time = function (args, env)
@@ -240,11 +243,11 @@ cmdInfo.time = {"Estimate average time", "func", "Debug"}
 
 --- Show command description.
 --  @param k Command name.
-cmdInfo._print = function (k) 
+cmdInfo._print = function (k)
   local info = cmdInfo[k]
   if info then
     print(string.format("%s\t%s\t- %s", k, info[2], info[1]))
-  else 
+  else
     print("Unknown key: ", k)
   end
 end
@@ -348,7 +351,7 @@ evaluate._evalBlock = function (co, env)
 end
 
 
---- Read file, split into text blocks. 
+--- Read file, split into text blocks.
 --  Separator is the "pause" word.
 --  @param fname File name.
 --  @return table with the text blocks.
@@ -357,7 +360,7 @@ evaluate._toBlocks = function (fname)
   if not f then return nil end
   local txt = f:read('*a'); f:close()
   -- remove long comments
-  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  
+  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')
   local init, res = 1, {}
   while true do
     local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
@@ -400,7 +403,7 @@ end
 --  @param noteList Table with text blocks.
 evaluate.cli = function (noteList)
   local invite = evaluate.INV_MAIN
-  local env = {notes=noteList or {}, index=1, 
+  local env = {notes=noteList or {}, index=1,
     read = true, info=false}
   local co = evaluate.evalThread()
   while true do

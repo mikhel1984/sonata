@@ -18,11 +18,28 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 -- Command evaluation.
 Sonata = require('core.evaluate')
 
--- current version
+-- Current version
 Sonata.version = '0.9.37'
 
 -- Quit the program
 quit = Sonata.exit
+
+-- Get list of aliases
+for k, v in pairs(use) do Sonata.alias[v] = k end
+-- protect names
+setmetatable(_G, {
+-- protect aliases
+__newindex = function (t, k, v)
+  if Sonata.alias[k] then
+    error(string.format('%s is reserved for %s module', k, Sonata.alias[k]))
+  end
+  rawset(t, k, v)
+end,
+-- store into the hidden table
+__index = function (_, k)
+  return Sonata._modules[k] or nil
+end,
+})
 
 
 -- Import actions
@@ -30,16 +47,12 @@ Sonata.doimport = function (tbl, name)
   local var = tbl[name]
   if not var then
     -- try alias
-    if not Sonata.alias then
-      Sonata.alias = {}
-      for k, v in pairs(use) do Sonata.alias[v] = k end
-    end
     var = name
     name = assert(Sonata.alias[name], "Wrong module name: "..name.."!")
   end
-  if not _G[var] then
+  if not Sonata._modules[var] then
     local lib = require('matlib.'..name)
-    _G[var] = lib
+    Sonata._modules[var] = lib
     -- add description
     if lib.about then About:add(lib.about, name, var) end
   end
@@ -53,7 +66,7 @@ setmetatable(use,
     if not name then
       local lst = Sonata.info {
         Sonata.FORMAT_V1,
-        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"), 
+        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"),
         Sonata.FORMAT_CLR}
       -- show loaded modules
       for k, v in pairs(use) do
