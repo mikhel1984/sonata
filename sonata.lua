@@ -18,6 +18,9 @@
 --	Unicode symbols for function plot
 --SONATA_ASCIIPLOT_UNICODE = true
 
+--      Reserve aliases (keywords)
+--SONATA_PROTECT_ALIAS = true
+
 --	Uncomment to set the localization file
 --  Windows: to use Unicode symbols call in console
 --    chcp 65001

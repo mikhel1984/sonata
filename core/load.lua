@@ -30,7 +30,7 @@ for k, v in pairs(use) do Sonata.alias[v] = k end
 setmetatable(_G, {
 -- protect aliases
 __newindex = function (t, k, v)
-  if Sonata.alias[k] then
+  if SONATA_PROTECT_ALIAS and Sonata.alias[k] then
     error(string.format('%s is reserved for %s module', k, Sonata.alias[k]))
   end
   rawset(t, k, v)
@@ -51,6 +51,7 @@ Sonata.doimport = function (tbl, name)
   if not Sonata._modules[var] then
     local lib = require('matlib.'..name)
     Sonata._modules[var] = lib
+    if not SONATA_PROTECT_ALIAS then _G[var] = lib end
     -- add description
     if lib.about then About:add(lib.about, name, var) end
   end
@@ -116,6 +117,7 @@ description = 'Run unit tests for a given module. Execute for all modules if no 
 example = '--test array',
 process = function (args)
   local Test = require('core.test')
+  SONATA_PROTECT_ALIAS = false
   if args[2] then
     Test.module(
       string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
