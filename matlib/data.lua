@@ -25,84 +25,84 @@ w = {1,1,0}
 -- enought to define w[i] ~= 1
 w[5] = 2; w[6] = 2
 -- average
-ans = D:mean(X)              --3> 3.375
+ans = D:mean(X)              --3>  3.375
 
 -- standard deviation
-ans, tmp = D:std(X,W)        --3> 1.495
+ans, tmp = D:std(X,W)        --3>  1.495
 
 -- variance
-ans = tmp                    --3> 2.234
+ans = tmp                    --3>  2.234
 
 -- covariance for two vectors
 Y = {0,2,1,3,7,5,8,4}
 a = D:cov2(X,Y)
-ans = a                      --3> -0.65625
+ans = a                      --3>  -0.65625
 
 -- covariance matrix
 tmp = D:cov({X,Y})
-ans = tmp[1][2]              --3> a
+ans = tmp[1][2]              --3>  a
 
 -- maximum element and index
-_,ans = D:max(X)              --> 4
+_,ans = D:max(X)              -->  4
 
 -- median
-ans = D:median(X)             --> 3
+ans = D:median(X)             -->  3
 
 -- table of frequencies
 tmp = D:freq(X)
-ans = tmp[3]                  --> 3
+ans = tmp[3]                  -->  3
 
 -- central moment
-ans = D:moment(2,X)          --3> 2.234
+ans = D:moment(2,X)          --3>  2.234
 
 -- summ of elements
-ans = D:sum(X)                --> 27
+ans = D:sum(X)                -->  27
 
 -- minimum value
-ans = D:min(X)                --> 1
+ans = D:min(X)                -->  1
 
 -- geometrical mean
-ans = D:geomean(X)           --3> 2.995
+ans = D:geomean(X)           --3>  2.995
 
 -- harmonic mean
-ans = D:harmmean(X,W)        --3> 2.567
+ans = D:harmmean(X,W)        --3>  2.567
 
 -- check if X[i] > 2
 a = D:is(X, D:xGt(2))
-ans = a[1]                    --> 1
+ans = a[1]                    -->  1
 
 -- get elements X[i] > 2
 tmp = D:filter(X, a)
-ans = tmp[1]                  --> X[1]
+ans = tmp[1]                  -->  X[1]
 
 -- filtration using explicit function
 fn = function (x) return x > 2 end
 tmp = D:filter(X, fn)
-ans = tmp[1]                  --> X[1]
+ans = tmp[1]                  -->  X[1]
 
 -- generate new list
 -- use 'lazy' function definition
 tmp = D:zip("{x1-x2, x1+x2}", X, Y)
-ans = tmp[1][2]               --> X[1]+Y[1]
+ans = tmp[1][2]               -->  X[1]+Y[1]
 
 -- find histogram
 a,b = D:histcounts(X, 3)
-ans = b[1]                    --> 2.25
+ans = b[1]                    -->  2.25
 
 -- define edges
 a,b = D:histcounts(X,{2,4,7})
-ans = a[1]                    --> 1
+ans = a[1]                    -->  1
 
 -- table range reference
 a = D:ref(X, 3, 6)
-ans = #a                      --> 4
+ans = #a                      -->  4
 
-ans = a[1]                    --> X[3]
+ans = a[1]                    -->  X[3]
 
 -- Student cdf and pdf
-ans = D:tcdf(4, 2.5)         --3> 0.9805
+ans = D:tcdf(4, 2.5)         --3>  0.9805
 
-ans = D:tpdf(2, 3.3)         --3> 0.0672
+ans = D:tpdf(2, 3.3)         --3>  0.0672
 
 -- dsv write
 nm = os.tmpname()
@@ -113,11 +113,11 @@ D:csvwrite(nm, t, ';')
 -- dsv read
 -- with separator ';'
 tt = D:csvread(nm, ';')
-ans = tt[2][2]                --> t[2][2]
+ans = tt[2][2]                -->  t[2][2]
 
 -- reference to 'transposed' table
 b = D:T(t)
-ans = b[3][2]                 --> t[2][3]
+ans = b[3][2]                 -->  t[2][3]
 
 -- Markdown-like print for a table
 print(D:md(t))
@@ -131,16 +131,16 @@ print(c)
 
 -- even numbers
 b = D:range(2,10,2)
-ans = b[2]                    --> 4
+ans = b[2]                    -->  4
 
 -- linear transformations
 -- with range Range objects
 b2 = 2*b + 4
-ans = b2[1]                   --> 8
+ans = b2[1]                   -->  8
 
 -- apply function 
 c = b:map(math.sin)
-ans = c[1]                   --3> 0.909
+ans = c[1]                   --3>  0.909
 
 --]]
 
@@ -227,7 +227,7 @@ data.csvwrite = function (self, sFile, t, char)
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',') --> nil",
+about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',')",
   "Save Lua table as delimiter separated data into file.", FILES}
 
 

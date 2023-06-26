@@ -25,62 +25,62 @@ require 'matlib.matrix'
 a = Quat {1,2,3,4}
 -- part of elements
 b = Quat {w=3, x=4}
-ans = b                       --> Quat{3,4,0,0}
+ans = b                       -->  Quat{3,4,0,0}
 
 -- conjugation
-ans = a:conj()                --> Quat{1,-2,-3,-4}
+ans = a:conj()                -->  Quat{1,-2,-3,-4}
 
 -- real when imaginary are zeros
-ans = a + a:conj()            --> 2
+ans = a + a:conj()            -->  2
 
 -- norm
-ans = b:abs()                --1> 5.000
+ans = b:abs()                --1>  5.000
 
 -- inversion
 c = a*a:inv()
-ans = c:w()                  --1> 1.000
+ans = c:w()                  --1>  1.000
 
 -- arithmetic
-ans = a+b                     --> Quat{4,6,3,4}
+ans = a+b                     -->  Quat{4,6,3,4}
 
-ans = a*b                     --> Quat{-5,10,25}
+ans = a*b                     -->  Quat{-5,10,25}
 
-ans = 3*b                     --> Quat{9,12,0,0}
+ans = 3*b                     -->  Quat{9,12,0,0}
 
 -- power
-ans = b^3                     --> b * b * b
+ans = b^3                     -->  b * b * b
 
 -- unit quaternion
 a = a:normalize()
-ans = a:abs()                --1> 1.000
+ans = a:abs()                --1>  1.000
 
 -- unit power
 aa = a^1.5
-ans = aa:x()                 --3> 0.324
+ans = aa:x()                 --3>  0.324
 
-ans = aa:y()                 --3> 0.486
+ans = aa:y()                 --3>  0.486
 
-ans = aa:z()                 --3> 0.648
+ans = aa:z()                 --3>  0.648
 
 -- rotation matrix
 m = a:toRot()
 d = Quat:fromRot(m)
-ans = (d-a):abs()            --1> 0.000
+ans = (d-a):abs()            --1>  0.000
 
 -- use angle
 -- and axis
 ang = 0.5
 axis = {1,1,1}
 f = Quat:fromAA(ang,axis)
-ans,_ = f:toAA()             --3> ang
+ans,_ = f:toAA()             --3>  ang
 
 -- rotate vector
 p = a:rotate({1,0,0})
-ans = p[1]                   --3> -0.667
+ans = p[1]                   --3>  -0.667
 
 -- spherical interpolation
 d = a:slerp(b,0.5)
-ans = d:w()                  --3> 0.467
+ans = d:w()                  --3>  0.467
 
 -- show
 print(d)

@@ -26,49 +26,49 @@ U:setRule('min', U(60,'s'))
 -- define variable
 a = U(1,'m/s')
 -- convert to km/h, get only value
-ans = a['km/h']              --2> 3.6
+ans = a['km/h']              --2>  3.6
 
 -- get numerical value
 -- (the save as #a)
-ans = a:value()               --> 1
+ans = a:value()               -->  1
 
 -- get units
-ans = a:key()                 --> 'm/s'
+ans = a:key()                 -->  'm/s'
 
 -- make copy
 cp = a:copy()
-ans = cp                      --> U(1,'m/s')
+ans = cp                      -->  U(1,'m/s')
 
 -- get converted variable
 b = a:convert('km/h')
-ans = b                       --> U(3.6, 'km/h')
+ans = b                       -->  U(3.6, 'km/h')
 
 -- arithmetic
 b = 3 * b
-ans = a + b                   --> U(4, 'm/s')
+ans = a + b                   -->  U(4, 'm/s')
 
-ans = b - a                   --> U(2, 'm/s')
+ans = b - a                   -->  U(2, 'm/s')
 
-ans = a * b                   --> U(3, 'm^2/s^2')
+ans = a * b                   -->  U(3, 'm^2/s^2')
 
-ans = b / a                   --> U(3, '')
+ans = b / a                   -->  U(3, '')
 
-ans = (a < b)                 --> true
+ans = (a < b)                 -->  true
 
-ans = b ^ 3                   --> U(27, 'm^3/s^3')
+ans = b ^ 3                   -->  U(27, 'm^3/s^3')
 
 -- new rule
 U:setRule('snake', U(38, 'parrot'))
 -- define variable
 c = U(2,'snake')
 -- convert
-ans = c['parrot']             --> 76
+ans = c['parrot']             -->  76
 
 -- convert using prefix
-ans = c['ksnake']            --3> 0.002
+ans = c['ksnake']            --3>  0.002
 
 -- another definition syntax
-ans = 2 * U('N')           --> U(2,'N')
+ans = 2 * U('N')              -->  U(2,'N')
 
 -- show result
 print(a)
@@ -619,7 +619,7 @@ units.setRule = function (self, s, U)
   assert(isunits(U), 'Units object is expected!')
   self._rules[s] = U
 end
-about[units.setRule] = {':setRule(name_s, val_U) --> nil',
+about[units.setRule] = {':setRule(name_s, val_U)',
   'Add new rule for conversation.'}
 
 

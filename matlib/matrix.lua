@@ -25,98 +25,98 @@ Mat = require 'matlib.matrix'
 a = Mat {{1,2},{3,4}}
 b = Mat {{5,6},{7,8}}
 -- call in typical way
-ans = a[2][2]                 --> 4
+ans = a[2][2]                 -->  4
 
 b[1][1] = 5
 -- transpose
 c = a:T()
 -- 'smart' getter
-ans = c(1,-1)                 --> 3
+ans = c(1,-1)                 -->  3
 
 -- matrix columns and rows
-ans = a:cols()                --> 2
+ans = a:cols()                -->  2
 
-ans = a:rows()                --> 2
+ans = a:rows()                -->  2
 
 -- arithmetical operations
-ans = a + b                   --> Mat {{6,8},{10,12}}
+ans = a + b                   -->  Mat {{6,8},{10,12}}
 
-ans = b - a                   --> Mat {{4,4},{4,4}}
+ans = b - a                   -->  Mat {{4,4},{4,4}}
 
-ans = a * b                   --> Mat {{19,22},{43,50}}
+ans = a * b                   -->  Mat {{19,22},{43,50}}
 
 ans = a / b
 -- determinant
-ans = ans:det()              --2> 1
+ans = ans:det()              --2>  1
 
 -- multiply to scalar
-ans = 2 * a                   --> Mat {{2,4},{6,8}}
+ans = 2 * a                   -->  Mat {{2,4},{6,8}}
 
 -- add scalar (to all elements)
-ans = a - 1                   --> Mat {{0,1},{2,3}}
+ans = a - 1                   -->  Mat {{0,1},{2,3}}
 
-ans = a ^ 2                   --> Mat {{7,10},{15,22}}
+ans = a ^ 2                   -->  Mat {{7,10},{15,22}}
 
 -- determinant
-ans = a:det()                 --> -2
+ans = a:det()                 -->  -2
 
 -- inverse matrix
 e = a:inv()
-ans = e(2,1)                  --> 1.5
+ans = e(2,1)                  -->  1.5
 
 -- another call of inversion
 e = a^-1
-ans = e(2,1)                  --> 1.5
+ans = e(2,1)                  -->  1.5
 
 -- object copy
 -- (it doesn't copy zeros)
 f = a:copy()
-ans = (f == a)                --> true
+ans = (f == a)                -->  true
 
 -- element-wise comparison
-ans = (a == b)                --> false
+ans = (a == b)                -->  false
 
 -- identity matrix
-ans = Mat:eye(2)              --> Mat {{1,0},
-                                       {0,1}}
+ans = Mat:eye(2)              -->  Mat {{1,0},
+                                        {0,1}}
 
 -- matrix argument
-ans = Mat:eye(a)              --> Mat {{1,0},
-                                       {0,1}}
+ans = Mat:eye(a)              -->  Mat {{1,0},
+                                        {0,1}}
 
 -- matrix of zeros
-ans = Mat:zeros(2,1)          --> Mat {{0},{0}}
+ans = Mat:zeros(2,1)          -->  Mat {{0},{0}}
 
 -- matrix of constants = 4
-ans = Mat:fill(2,3,4)         --> Mat {{4,4,4},
-                                       {4,4,4}}
+ans = Mat:fill(2,3,4)         -->  Mat {{4,4,4},
+                                        {4,4,4}}
 
 -- horizontal concatenation
-ans = a .. b                  --> Mat {{1,2,5,6},
-                                       {3,4,7,8}}
+ans = a .. b                  -->  Mat {{1,2,5,6},
+                                        {3,4,7,8}}
 
 -- vertical concatenation
 -- (a // b - for short)
-ans = a:concat(b,'v')         --> Mat {{1,2},{3,4},{5,6},{7,8}}
+ans = a:concat(b,'v')         -->  Mat {{1,2},{3,4},{5,6},{7,8}}
 
 -- apply function of 1 argument
-ans = a:map(function (x) return x^2 end)       --> Mat {{1,4},{9,16}}
+ans = a:map(function (x) return x^2 end)       -->  Mat {{1,4},{9,16}}
 
 -- apply function which depends on index too
-ans = a:map(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
+ans = a:map(function (x,r,c) return x-r-c end) -->  Mat {{-1,-1},{-0,-0}}
 
 -- apply function to matrices
 -- element-wise
 fn = function (x,y,z) return x*y+z end
 aa = Mat:zip(fn, b,b,b)
-ans = aa[1][1]                --> 30
+ans = aa[1][1]                -->  30
 
 -- use Gauss transform to solve equation
-ans = (a .. Mat:V{5,11}):rref()            --> Mat {{1,0,1},
-                                                        {0,1,2}}
+ans = (a .. Mat:V{5,11}):rref()            -->  Mat {{1,0,1},
+                                                     {0,1,2}}
 
 -- create vector
-ans = Mat:V {1,2,3}           --> Mat {{1},{2},{3}}
+ans = Mat:V {1,2,3}           -->  Mat {{1},{2},{3}}
 
 -- get submatrix
 g = Mat {
@@ -125,16 +125,16 @@ g = Mat {
   {7,8,9}
 }
 -- same as g:range({2,-1},{2,3})
-ans = g({2,-1},{2,3})         --> Mat {{5,6},
-                                       {8,9}}
+ans = g({2,-1},{2,3})         -->  Mat {{5,6},
+                                        {8,9}}
 
 -- insert elements
 gg = Mat:eye(3)
 gg:insert({1,2},{1,2}, a)
-ans = gg:range({1,2},{1,2})   --> a
+ans = gg:range({1,2},{1,2})   -->  a
 
 -- euclidean norm
-ans = Mat:V({1,2,3}):norm()  --3> math.sqrt(14)
+ans = Mat:V({1,2,3}):norm()  --3>  math.sqrt(14)
 
 -- random matrix
 rnd = function () return math.random() end
@@ -145,7 +145,7 @@ print(h)
 noize = function (v) return v + math.random()*1E-8 end
 hh = a:map(noize)
 hh:round(3)
-ans = hh                      --> a
+ans = hh                      -->  a
 
 -- pseudo inverse matrix
 m = Mat {
@@ -154,64 +154,64 @@ m = Mat {
   {5,6}
 }
 n = m:pinv()
-ans = n(2,2)                 --3> 0.333
+ans = n(2,2)                 --3>  0.333
 
 -- copy as Lua table
 -- (without methametods)
 k = Mat:eye(3)
 k = k:table()
-ans = k[2][1]                 --> 0
+ans = k[2][1]                 -->  0
 
 -- make diagonal matrix
-ans = Mat:D({1,2,3})   --> Mat {{1,0,0},
-                                       {0,2,0},
-                                       {0,0,3}}
+ans = Mat:D({1,2,3})          -->  Mat {{1,0,0},
+                                        {0,2,0},
+                                        {0,0,3}}
 
 -- get diagonal
-ans = g:diag()               --> Mat {{1},{5},{9}}
+ans = g:diag()                -->  Mat {{1},{5},{9}}
 
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
-ans = x1:cross(x2)            --> Mat {{-3},{6},{-3}}
+ans = x1:cross(x2)            -->  Mat {{-3},{6},{-3}}
 
 -- dot product of 2 vectors
-ans = x1:dot(x2)              --> 32
+ans = x1:dot(x2)              -->  32
 
 -- LU decomposition
 l,u,p = b:lu()
-ans = l[2][1]                --3> 0.714
+ans = l[2][1]                --3>  0.714
 
 -- QR decomposition
 q,r = m:qr()
-ans = (q*r)[2][2]            --3> m[2][2]
+ans = (q*r)[2][2]            --3>  m[2][2]
 
-ans = q:det()                --3> 1.0
+ans = q:det()                --3>  1.0
 
 -- SVD decomposition
 u,s,v = m:svd()
-ans = (u*s*v:T())[1][1]      --3> m[1][1]
+ans = (u*s*v:T())[1][1]      --3>  m[1][1]
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
-ans = m[2][2]                --3> 1.633
+ans = m[2][2]                --3>  1.633
 
 -- matrix trace
-ans = a:tr()                  --> 5
+ans = a:tr()                  -->  5
 
 -- extract first row
 m = a({},1)
 -- vector doesn't need in 2 indices
-ans = m(1)                    --> 1
+ans = m(1)                    -->  1
 
 -- extract last column
 -- index can be negative
 m = a(-1,{})
-ans = m(2)                    --> 4
+ans = m(2)                    -->  4
 
 -- get rank
-ans = Mat:fill(2,3):rank()    --> 1
+ans = Mat:fill(2,3):rank()    -->  1
 
 -- change size
 tmp = Mat{
@@ -219,8 +219,8 @@ tmp = Mat{
   {3,4},
   {5,6}
 }
-ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
-                                       {4,5,6}}
+ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
+                                        {4,5,6}}
 
 --]]
 
@@ -1198,7 +1198,7 @@ matrix.round = function(M, N)
     end
   end
 end
-about[matrix.round] = {"M:round(N=6) --> nil",
+about[matrix.round] = {"M:round(N=6)",
   "Round matrix elements in place.", help.OTHER}
 
 
@@ -1229,7 +1229,7 @@ about[matrix.H] = {"M:H() --> conj_M",
 matrix.insert = function (M1, tR, tC, M2)
   matrix._fromTo(M2, tR, tC, M1)
 end
-about[matrix.insert] = {"M:insert(rows_t, cols_t, M2) --> nil",
+about[matrix.insert] = {"M:insert(rows_t, cols_t, M2)",
   "Insert second matrix into the given range of indeces."}
 
 

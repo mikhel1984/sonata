@@ -23,114 +23,114 @@ Int = require 'matlib.bigint'
 
 -- from integer
 a = Int(123)
-ans = a:float()               --> 123
+ans = a:float()               -->  123
 
 -- from string
 b = Int('456')
-ans = b:float()               --> 456
+ans = b:float()               -->  456
 
 -- 'default' form for base <= 16
-ans = Int('0xABC')            --> Int('10,11,12:16')
+ans = Int('0xABC')            -->  Int('10,11,12:16')
 
 -- define base explicitly
 g = Int('-1,2,3:10')
-ans = g:float()               --> -123
+ans = g:float()               -->  -123
 
 -- check positive/negative
-ans = g:sign()                --> -1
+ans = g:sign()                -->  -1
 
 -- check equality
-ans = (a == -g)               --> true
+ans = (a == -g)               -->  true
 
 -- arithmetical operations
-ans = (a+b):float()           --> 579
+ans = (a+b):float()           -->  579
 
-ans = (a-b):float()           --> -333
+ans = (a-b):float()           -->  -333
 
-ans = (a*Int(2)):float()      --> 246
+ans = (a*Int(2)):float()      -->  246
 
-ans = (b/2):float()           --> 228
+ans = (b/2):float()           -->  228
 
-ans = (b%a):float()           --> 87
+ans = (b%a):float()           -->  87
 
-ans = (a^3):float()           --> 1860867
+ans = (a^3):float()           -->  1860867
 
 -- absolute value
-ans = Int('-25'):abs():float()  --> 25
+ans = Int('-25'):abs():float()  -->  25
 
 -- factorial
 c = Int(50):F()
-ans = c:float() / 3E64       --1> 1.0
+ans = c:float() / 3E64       --1>  1.0
 
-ans = (a > b)                 --> false
+ans = (a > b)                 -->  false
 
 -- ratio of factorials
-ans = Int:ratF(Int(50), Int(49))  --> Int(50)
+ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
 
 -- compare with number
-ans = a:eq(123)               --> true
+ans = a:eq(123)               -->  true
 
 -- digits for a different numeric base
 v = g:base(60)
-ans = tostring(v)             --> '-2,3:60'
+ans = tostring(v)             -->  '-2,3:60'
 
 -- number of digits
-ans = #v                      --> 2
+ans = #v                      -->  2
 
 -- 2nd digit (from the lowest)
-ans = v[2]                    --> 2
+ans = v[2]                    -->  2
 
 -- base and sign
-ans = v.base == 60 and v.sign == -1  --> true
+ans = v.base == 60 and v.sign == -1  -->  true
 
 -- print digits
 print(v)
 
 -- back to bigint
-ans = Int(v)                  --> g
+ans = Int(v)                  -->  g
 
 -- comparison
-ans = (a ~= g)                --> true
+ans = (a ~= g)                -->  true
 
 -- simple print
 print(a)
 
 -- find permutations
-ans = Int:P(10, 5)            --> Int(30240)
+ans = Int:P(10, 5)            -->  Int(30240)
 
 -- find combinations
-ans = Int:C(10, 3)            --> Int(120)
+ans = Int:C(10, 3)            -->  Int(120)
 
 -- check if it prime
 -- iterate though multipliers
-ans = Int(1229):isPrime()     --> true
+ans = Int(1229):isPrime()     -->  true
 
 -- Fermat theorem
-ans = Int(1229):isPrime('Fermat') --> true
+ans = Int(1229):isPrime('Fermat') -->  true
 
 -- factorize
 t = b:factorize()
-ans = #t                      --> 5
+ans = #t                      -->  5
 
 -- check factorization
 ans = 1
 for i = 1,#t do
   ans = ans * (t[i]:float())
-end                           --> 456
+end                           -->  456
 
 -- pseudo-random number
 -- from 0 to b
 print(Int:random(b))
 
 -- greatest common divisor
-ans = a:gcd(b):float()        --> 3
+ans = a:gcd(b):float()        -->  3
 
 -- with numbers
 -- result is bigint
-ans = a + 1.0                 --> Int(124)
+ans = a + 1.0                 -->  Int(124)
 
 -- result is float
-ans = a - 0.5                 --> 122.5
+ans = a - 0.5                 -->  122.5
 
 --]]
 
@@ -943,8 +943,8 @@ bigint.eq = function (B1, B2)
   end
   return false
 end
-about[bigint.eq] = {
-  "B:eq(x) --> bool", "Check equality with the second value.", help.OTHER}
+about[bigint.eq] = {"B:eq(x) --> bool", 
+  "Check equality with the second value.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
 
@@ -995,8 +995,8 @@ bigint.factorize = function (B)
   end
   return res
 end
-about[bigint.factorize] = {
-  "B:factorize() --> primeBs_t", "Find the list of multipliers.", NUMB}
+about[bigint.factorize] = {"B:factorize() --> primeBs_t", 
+  "Find the list of multipliers.", NUMB}
 
 
 --- Float number representation.
@@ -1023,8 +1023,8 @@ bigint.gcd = function (B1, B2)
   B1, B2 = bigint._args(B1, B2)
   return bigint._gcd(B1, B2)
 end
-about[bigint.gcd] = {
-  "B:gcd(B2) --> B3", "Find the greatest common divisor for two integers.", NUMB}
+about[bigint.gcd] = {"B:gcd(B2) --> B3", 
+  "Find the greatest common divisor for two integers.", NUMB}
 
 
 -- TODO try https://en.wikipedia.org/wiki/Primality_test

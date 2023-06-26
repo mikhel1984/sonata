@@ -17,10 +17,10 @@ Ap = require 'matlib.asciiplot'
 -- figure with default size
 fig1 = Ap()
 info = fig1:axes()
-ans = info.x.size             --> Ap.WIDTH
+ans = info.x.size             -->  Ap.WIDTH
 
 -- default axis position
-ans = info.x.pose             --> 'mid'
+ans = info.x.pose             -->  'mid'
 
 -- print functions
 fig1:setX {range={-3.14, 3.14}}   -- default is {-1, 1}
@@ -63,7 +63,7 @@ print(fig2)
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
-ans = fig1:axes().x.size      --> 59
+ans = fig1:axes().x.size      -->  59
 
 -- horizontal concatenation
 -- first
@@ -869,7 +869,7 @@ asciiplot.addPoint = function (F, dx, dy, s)
     F._canvas[ny][nx] = s or '*'
   end
 end
-about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil",
+about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s)",
   "Add point (x,y) using char.", MANUAL}
 
 
@@ -884,7 +884,7 @@ asciiplot.addPose = function (F, ir, ic, s)
     F._canvas[ir][ic] = s
   end
 end
-about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> nil",
+about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s)",
   "Add character to the given position.", MANUAL}
 
 
@@ -898,7 +898,7 @@ asciiplot.addString = function (F, ir, ic, s)
     asciiplot.addPose(F, ir, ic+i-1, string.sub(s, i, i))
   end
 end
-about[asciiplot.addString] = {"F:addString(row_N, col_N, str) --> nil",
+about[asciiplot.addString] = {"F:addString(row_N, col_N, str)",
   "Set string from the given position.", MANUAL}
 
 
@@ -986,7 +986,7 @@ asciiplot.bar = function (F, t, iy, ix)
     r = r + 1
   end
 end
-about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1) --> nil",
+about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)",
   "Plot bar diargram for data."}
 
 
@@ -1121,8 +1121,8 @@ asciiplot.copy = function (F)
   end
   return setmetatable(o, asciiplot)
 end
-about[asciiplot.copy] = {
-  "F:copy() --> cpy_F", "Create a copy of the object.", help.OTHER}
+about[asciiplot.copy] = {"F:copy() --> cpy_F", 
+  "Create a copy of the object.", help.OTHER}
 
 
 --- Generalized plot funciton.
@@ -1199,7 +1199,7 @@ asciiplot.plot = function (F, ...)
   -- limits
   asciiplot._limits(F)
 end
-about[asciiplot.plot] = {"F:plot(...) --> nil",
+about[asciiplot.plot] = {"F:plot(...)",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
 
 
@@ -1210,7 +1210,7 @@ asciiplot.reset = function (F)
   asciiplot._axes(F)
   asciiplot._limits(F)
 end
-about[asciiplot.reset] = {"F:reset() --> nil", "Prepare a clear canvas.", MANUAL}
+about[asciiplot.reset] = {"F:reset()", "Prepare a clear canvas.", MANUAL}
 
 
 --- Update size of the canvas.
@@ -1225,7 +1225,7 @@ asciiplot.resize = function (F, w, h)
   F._x:resize(w)
   F._y:resize(h)
 end
-about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N)) --> nil",
+about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N))",
   "Update size of canvas.", CONF}
 
 
@@ -1247,7 +1247,7 @@ about[asciiplot.scale] = {"F:scale(factor_d, isDefault=false) --> F",
 --  @param F Figure object.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setX = function (F, t) asciiplot._setAxis(F, t, '_x') end
-about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix}) --> nil",
+about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix})",
   "X axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), ragne fix (true/false).",
   CONF}
 
@@ -1256,7 +1256,7 @@ about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix}) --> nil",
 --  @param F Figure object.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setY = function (F, t) asciiplot._setAxis(F, t, '_y') end
-about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix}) --> nil",
+about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix})",
   "Y axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
   CONF}
 
@@ -1265,7 +1265,7 @@ about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix}) --> nil",
 --  @param F Figure object.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setZ = function (F, t) asciiplot._setAxis(F, t, '_z') end
-about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix}) --> nil",
+about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix})",
   "Z axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
   CONF}
 
@@ -1274,7 +1274,7 @@ about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix}) --> nil",
 --  @param F Figure object.
 --  @param s New title.
 asciiplot.title = function (F, s) F._title = s end
-about[asciiplot.title] = {"F:title(str) --> nil", "Set new title.", CONF}
+about[asciiplot.title] = {"F:title(str)", "Set new title.", CONF}
 
 
 --- Plot data represented in form of table
@@ -1303,7 +1303,7 @@ asciiplot.tplot = function (F, t, tOpt)
   -- limits
   asciiplot._limits(F)
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={}) --> nil",
+about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={})",
   "Plot the table data, choose columns if need."}
 
 
@@ -1327,7 +1327,7 @@ Plot = function (...)
   f:plot(...)
   print(f)
 end
-about[Plot] = {"Plot(...) --> nil",
+about[Plot] = {"Plot(...)",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
 
 end  -- GLOBAL

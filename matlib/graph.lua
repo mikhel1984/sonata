@@ -27,14 +27,14 @@ a = Graph()
 a:addNodes {'a', 'b', 'c', 'd', 'e'}
 -- list of nodes
 nd = a:nodes()
-ans = #nd                     --> 5
+ans = #nd                     -->  5
 
 -- list of edges
 ed = a:edges()
-ans = #ed                     --> 0
+ans = #ed                     -->  0
 
 -- has directed edges
-ans = a:isDirected()          --> false
+ans = a:isDirected()          -->  false
 
 -- add node
 a:add('h')
@@ -42,26 +42,26 @@ a:add('h')
 a:add('a', 'd')
 -- check size
 -- (same as #a)
-ans = a:size()                --> 6
+ans = a:size()                -->  6
 
 -- remove node
 a:remove('a')
 -- new edge number
 ed = a:edges()
-ans = #ed                     --> 0
+ans = #ed                     -->  0
 
 -- directed graph
 d = Graph:dir()
 d:add('c', 'p', 2)
 -- and vise versa
 d:add('p', 'c', 3)
-ans = d:edge('c', 'p')        --> 2
+ans = d:edge('c', 'p')        -->  2
 
 -- make copy
 b = a:copy()
 
 -- completeness
-ans = b:isComplete()          --> false
+ans = b:isComplete()          -->  false
 
 -- prepare graph
 c = Graph() 
@@ -76,7 +76,7 @@ c:addEdges {
   {'e','g'}
 }
 -- is it weighted
-ans = c:isWeighted()          --> false
+ans = c:isWeighted()          -->  false
 
 -- print in 'dot' notation
 print(c:dot())
@@ -86,11 +86,11 @@ c:toSvg('test_c')
 
 -- breadth first search
 _,path = c:bfs('e','h')
-ans = path[3]                 --> 'f'
+ans = path[3]                 -->  'f'
 
 -- depth first search
 found,path = c:dfs('d','c')
-ans = found                   --> true
+ans = found                   -->  true
 
 -- update weight (default is 1)
 -- use 'add' method
@@ -100,7 +100,7 @@ c:add('c','f',2)
 
 -- Dijkstra path search
 dist,prev = c:pathD('a')
-ans = dist['g']               --> 1.9
+ans = dist['g']               -->  1.9
 
 -- show
 print(b)
@@ -239,7 +239,7 @@ graph.add = function (G, n1, n2, w)
     g[n2][n1] = G._dir and g[n2][n1] or false
   end
 end
-about[graph.add] = {"G:add(n1, n2=nil, w_d=1) --> nil", "Add new node or edge."}
+about[graph.add] = {"G:add(n1, n2=nil, w_d=1)", "Add new node or edge."}
 
 
 --- Import edges from list.
@@ -248,7 +248,7 @@ about[graph.add] = {"G:add(n1, n2=nil, w_d=1) --> nil", "Add new node or edge."}
 graph.addEdges = function (G, t)
   for _, v in ipairs(t) do graph.add(G, v[1], v[2], v[3]) end
 end
-about[graph.addEdges] = {"G:addEdges(list_t) --> nil", 
+about[graph.addEdges] = {"G:addEdges(list_t)", 
   "Import edges and weights from list."}
 
 
@@ -259,7 +259,7 @@ graph.addNodes = function (G, t)
   local g = G._
   for _, v in ipairs(t) do g[v] = g[v] or {} end
 end
-about[graph.addNodes] = {"G:addNodes(list_t) --> nil", 
+about[graph.addNodes] = {"G:addNodes(list_t)", 
   "Import nodes from list."}
 
 
@@ -524,7 +524,7 @@ graph.remove = function (G, n1, n2)
     G._[n1] = nil
   end
 end
-about[graph.remove] = {"G:remove(n1, [n2]) --> nil",
+about[graph.remove] = {"G:remove(n1, [n2])",
   "Remove node or edge from the graph."}
 
 
@@ -537,7 +537,7 @@ graph.toSvg = function (G, name)
   handle:write(graph.dot(G))
   handle:close()
 end
-about[graph.toSvg] = {"G:toSvg(name_s) --> nil", 
+about[graph.toSvg] = {"G:toSvg(name_s)", 
   "Convert graph to SVG image using Graphviz."}
 
 

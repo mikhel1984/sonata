@@ -19,28 +19,28 @@ Sym = require 'matlib.symbolic'
 
 -- create variables
 x, y = Sym('x'), Sym('y')
-ans = (x == y)            --> false
+ans = (x == y)                -->  false
 
 -- sum
-ans = x + 2*y - x + y     --> 3*y
+ans = x + 2*y - x + y         -->  3*y
 
 -- product
-ans = x * y^2 / x * y     --> y^3
+ans = x * y^2 / x * y         -->  y^3
 
 -- power
-ans = x^y * x^(2*y)       --> x^(3*y)
+ans = x^y * x^(2*y)           -->  x^(3*y)
 
 -- evaluate
 S = (x+y)*(x-y)
 print(S)
-ans = S:eval{x=2, y=1}    --> Sym(3)
+ans = S:eval{x=2, y=1}        -->  Sym(3)
 
 -- define function
 foo = Sym:def('foo', {x, y}, x^y)
-ans = foo(y, x)           --> y^x
+ans = foo(y, x)               -->  y^x
 
 -- numeric value
-ans = foo(Sym(2), Sym(3)) --> Sym(8)
+ans = foo(Sym(2), Sym(3))     -->  Sym(8)
 
 
 --]]

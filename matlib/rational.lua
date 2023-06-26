@@ -23,41 +23,41 @@ Rat = require 'matlib.rational'
 a = Rat(1,2)
 -- only numerator
 b = Rat(2)
-ans = b                       --> Rat(2,1)
+ans = b                       -->  Rat(2,1)
 
 -- simplification
 k = 234781
-ans = Rat(2*k,3*k)            --> Rat(2,3)
+ans = Rat(2*k,3*k)            -->  Rat(2,3)
 
 -- arithmetic
-ans = a + b                   --> Rat(5,2)
+ans = a + b                   -->  Rat(5,2)
 
-ans = 2 * a                   --> 1
+ans = 2 * a                   -->  1
 
-ans = Rat(2,3)*Rat(3,2)       --> 1
+ans = Rat(2,3)*Rat(3,2)       -->  1
 
-ans = a / Rat(1,3)            --> Rat(3,2)
+ans = a / Rat(1,3)            -->  Rat(3,2)
 
-ans = a ^ 3                   --> Rat(1,8)
+ans = a ^ 3                   -->  Rat(1,8)
 
-ans = 2 ^ a                  --3> 1.414
+ans = 2 ^ a                  --3>  1.414
 
 -- comparison
-ans = (b == b)                --> true
+ans = (b == b)                -->  true
 
-ans = (a >= b)                --> false
+ans = (a >= b)                -->  false
 
 -- represent as decimal
-ans = a:float()               --> 0.5
+ans = a:float()               -->  0.5
 
 -- from decimal
-ans = Rat:from(math.pi)       --> Rat(333, 106)
+ans = Rat:from(math.pi)       -->  Rat(333, 106)
 
 -- numerator
-ans = b:num()                 --> 2
+ans = b:num()                 -->  2
 
 -- denominator
-ans = b:denom()               --> 1
+ans = b:denom()               -->  1
 
 -- show
 print(a)
@@ -65,20 +65,20 @@ print(a)
 -- continued fraction to rational
 -- 1 + 1/(2+1/(3+1/4)) 
 c = Rat:fromCF {[0]=1, 2, 3, 4}
-ans = c                       --> Rat(43,30)
+ans = c                       -->  Rat(43,30)
 
 -- rational to continued fraction
 d = c:toCF()
-ans = d[1]                    --> 2
+ans = d[1]                    -->  2
 
 -- show continued fraction
 print(d)
 
 -- result is rational
-ans = a + 1                   --> Rat(3,2)
+ans = a + 1                   -->  Rat(3,2)
 
 -- result is float
-ans = a + 0.5                 --> 1
+ans = a + 0.5                 -->  1
 
 --]]
 

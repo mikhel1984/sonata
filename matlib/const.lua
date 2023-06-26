@@ -17,25 +17,25 @@ C = require 'matlib.const'
 require 'matlib.units'  -- convert into Unit object
 
 -- charge of electron
-ans = C.phy.e * 1E19         --3> 1.602
+ans = C.phy.e * 1E19         --3>  1.602
 
 -- convert to Unit object (add _U)
 e = C.phy.e_U
-ans = e:key()                 --> C.phy.e_u_
+ans = e:key()                 -->  C.phy.e_u_
 
 -- change units
-ans = e['nC']                --3> C.phy.e * 1E9
+ans = e['nC']                --3>  C.phy.e * 1E9
 
 -- create "immutable" value
 C:add('myConst', 10)
-ans = C.myConst               --> 10
+ans = C.myConst               -->  10
 
 -- modification generates error
-ans = pcall(function() C.myConst = 0 end)  --> false
+ans = pcall(function() C.myConst = 0 end)  -->  false
 
 -- remove constant
 C:remove('myConst')
-ans = C.myConst               --> nil
+ans = C.myConst               -->  nil
 
 --]]
 
@@ -157,7 +157,7 @@ const.add = function (self, sName, val, sUnit)
   _user[sName] = val
   _user[sName..'_u_'] = sUnit
 end
-about[const.add] = {':add(name_s, value, [units_s]) --> nil', 'Create new constant.'}
+about[const.add] = {':add(name_s, value, [units_s])', 'Create new constant.'}
 
 
 --- Remove existing constant.

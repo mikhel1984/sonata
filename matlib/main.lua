@@ -15,20 +15,20 @@
 require 'matlib.main'
 
 -- constants starts from '_'
-ans = _pi                     --> math.pi
+ans = _pi                     -->  math.pi
 
 -- standard functions
-ans = exp(0)+sin(_pi/2)+cosh(0)  --1> 3.0
+ans = exp(0)+sin(_pi/2)+cosh(0)  --1>  3.0
 
 -- round number
-ans = Round(0.9)              --> 1.0
+ans = Round(0.9)              -->  1.0
 
 -- save 2 digits
-ans = Round(math.pi, 2)       --> 3.14
+ans = Round(math.pi, 2)       -->  3.14
 
 -- get type
 -- "knows" Sonata objects
-ans = Type(25)                --> 'integer'
+ans = Type(25)                -->  'integer'
 
 -- modified print function
 a = {a=1,b=2, 3,4,5}
@@ -37,10 +37,10 @@ Print(a, 0.123)
 
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
-ans = c[1]                   --3> 0.909
+ans = c[1]                   --3>  0.909
 
 -- use Lua functions if need
-ans = math.deg(_pi)          --2> 180.0
+ans = math.deg(_pi)          --2>  180.0
 
 --]]
 
@@ -231,7 +231,7 @@ Print = function (...)
   local res = table.concat(out)
   if Sonata then Sonata.say(res) else print(res) end
 end
-about[Print] = {"Print(...) --> nil",
+about[Print] = {"Print(...)",
   "Extenden print function, it shows elements of tables and scientific form of numbers.",
   AUX}
 
@@ -304,7 +304,7 @@ if Sonata then  -- SPECIFIC
 about[use] = {'use([module_s]) --> str|nil',
   "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
 about[help] = {"help(fn='main') --> str", "Show information about the function.", AUX}
-about[quit] = {'quit() --> nil', "Quit the program.", AUX}
+about[quit] = {'quit()', "Quit the program.", AUX}
 
 end  -- SPECIFIC
 

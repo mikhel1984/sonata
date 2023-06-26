@@ -26,65 +26,65 @@ Comp = require 'matlib.complex' -- for complex roots
 a = Poly {1,2,4,3}
 b = Poly {1,1}
 -- polynomial value for x=0
-ans = a:val(0)                --> 3
+ans = a:val(0)                -->  3
 
 -- simplified call
-ans = a(0)                    --> 3
+ans = a(0)                    -->  3
 
 -- coefficient for x^3
-ans = a[3]                    --> 1
+ans = a[3]                    -->  1
 
 -- arithmetic
-ans = a + b                   --> Poly {1,2,5,4}
+ans = a + b                   -->  Poly {1,2,5,4}
 
-ans = a - b                   --> Poly {1,2,3,2}
+ans = a - b                   -->  Poly {1,2,3,2}
 
-ans = b * b                   --> Poly {1,2,1}
+ans = b * b                   -->  Poly {1,2,1}
 
-ans = a / b                   --> Poly {1,1,3}
+ans = a / b                   -->  Poly {1,1,3}
 
-ans = a % b                   --> 0
+ans = a % b                   -->  0
 
-ans = b ^ 3                   --> Poly {1,3,3,1}
+ans = b ^ 3                   -->  Poly {1,3,3,1}
 
 -- integration
 -- free coefficient is 0
-ans = b:int()                 --> Poly {0.5,1,0}
+ans = b:int()                 -->  Poly {0.5,1,0}
 
 -- derivative
 ader = a:der()
 -- and its value for x=1
-ans = ader(1)                 --> 11
+ans = ader(1)                 -->  11
 
 -- build polynomial using roots
-ans = Poly:build{1,-1}        --> Poly {1,0,-1}
+ans = Poly:build{1,-1}        -->  Poly {1,0,-1}
 
 -- use complex roots
 -- don't add conjugated toots
-ans = Poly:build{1, Comp(2,3)}  --> Poly {1, -5, 17, -13}
+ans = Poly:build{1, Comp(2,3)}  -->  Poly {1, -5, 17, -13}
 
 -- make copy and compare
 c = a:copy()
-ans = (a == c)                --> true
+ans = (a == c)                -->  true
 
 -- not equal
-ans = (b == c)                --> false
+ans = (b == c)                -->  false
 
 -- find real roots
 e = a:real()
-ans = e[1]                   --1> -1.00
+ans = e[1]                   --1>  -1.00
 
 -- find all roots
 g = Poly:build{2, Comp(3,4)}
 e = g:roots()
-ans = e[2]:re()              --1> 3
+ans = e[2]:re()              --1>  3
 
 -- fit curve with polynomial
 -- of order 2
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly:fit(A,B,2)
-ans = p(10)                  --0> 227.0
+ans = p(10)                  --0>  227.0
 
 -- simple print
 print(a)
@@ -92,36 +92,36 @@ print(a)
 -- human-friendly print
 -- with variable 's' (default is 'x')
 d = Poly {2,-2,1}
-ans = d:str('s')              --> '2*s^2-2*s+1'
+ans = d:str('s')              -->  '2*s^2-2*s+1'
 
 -- Lagrange polynomial
 -- for tx(x)
 X = {-1.5, -0.75, 0, 0.75, 1.5}
 Y = {-14.101,-0.931596,0,0.931596,14.101}
 p = Poly:lagrange(X,Y)
-ans = p[3]                   --3> 4.83485
+ans = p[3]                   --3>  4.83485
 
 -- Taylor series
 -- for exp(x) near 0
 p = Poly:taylor(0, 1, 1, 1, 1)
-ans = p(0.3)                 --2> math.exp(0.3)
+ans = p(0.3)                 --2>  math.exp(0.3)
 
 -- linear interpolation
 -- use constant values out the interval
 p = Poly:lin(X,Y, Y[1], Y[#Y])
 y1, n = Poly:ppval(p, 0.5)
-ans = y1                     --2> 0.621
+ans = y1                     --2>  0.621
 
 -- polynomial index
-ans = n                       --> 4
+ans = n                       -->  4
 
 -- simplify call when index is known
-ans = Poly:ppval(p, 0.5, n)  --2> y1
+ans = Poly:ppval(p, 0.5, n)  --2>  y1
 
 -- cubic spline
 p = Poly:spline(X, Y)
 -- can be called without 'ppval'
-ans = p(0.5)                 --2> -0.512
+ans = p(0.5)                 --2>  -0.512
 
 --]]
 

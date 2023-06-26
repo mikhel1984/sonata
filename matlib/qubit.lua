@@ -17,26 +17,26 @@ Qb = require 'matlib.qubit'
 -- define state
 a = 0.2*Qb'|0>' + 0.98*Qb'|1>'
 -- get number of qubits in system
-ans = #a                      --> 1
+ans = #a                      -->  1
 
 -- get equal vector
 av = a:matrix()
-ans = av(1)                  --2> 0.2
+ans = av(1)                  --2>  0.2
 
 -- norm
-ans = a * a                  --2> 1.0
+ans = a * a                  --2>  1.0
 
 -- projection to |+>
 k = 1 / math.sqrt(2)
 plus = k*Qb'|0>' + k*Qb'|1>'
-ans = plus * a               --2> (0.2+0.98)*k
+ans = plus * a               --2>  (0.2+0.98)*k
 
 -- system of qubits
 -- allow to skip |>
 b = Qb'00' + Qb'11'
 b:normalize()
 -- probability of the state |00>
-ans = b:prob '00'            --2> 0.5
+ans = b:prob '00'            --2>  0.5
 
 -- combine qubits
 -- (same as a..b)
@@ -49,22 +49,22 @@ print(c:meas())
 
 -- define Hadamard gate for 2 qubits
 g1 = Qb:gates(2):H()
-ans = #g1                     --> 2
+ans = #g1                     -->  2
 
 -- show
 print(g1)
 
 -- check if it is unary
-ans = g1:isUnitary()         --> true
+ans = g1:isUnitary()          -->  true
 
 -- as matrix
 g1m = g1:matrix()
-ans = g1m[1][1]              --2> 0.5
+ans = g1m[1][1]              --2>  0.5
 
 -- apply to qubits
 d = g1(Qb'|00>')
 -- check projection
-ans = (plus..plus) * d       --2> 1.0
+ans = (plus..plus) * d       --2>  1.0
 
 -- add X to 0-th, Y to 1-st and Z to both
 -- indexation from zero
@@ -79,7 +79,7 @@ print(g2)
 -- inverse system
 g3 = g2:inverse()
 mm = g2:matrix() * g3:matrix()
-ans = mm[4][4]               --2> 1.0
+ans = mm[4][4]               --2>  1.0
 
 --]]
 
