@@ -32,8 +32,8 @@ use = {
 --  name       alias
   asciiplot  = "Ap",     -- use pseudo-graphic to print figures
   bigint     = "Int",    -- manipulations with integers
-  complex    = "_Z",     -- complex numbers
-  data       = "_D",     -- data processing
+  complex    = "Z",      -- complex numbers
+  data       = "D",      -- data processing
   graph      = "Graph",  -- operations with graphs
   main       = "Main",   -- common functions
   matrix     = "Mat",    -- matrices and linear algebra
@@ -42,9 +42,9 @@ use = {
   random     = "Rand",   -- random number generators
   rational   = "Rat",    -- rational numbers and continued fractions
   symbolic   = "Sym",    -- some symbolic methods
-  units      = "_U",     -- units conversation
+  units      = "U",      -- units conversation
 --------------------
-  const      = "_C",     -- physical and other constants
+  const      = "C",      -- physical and other constants
   geodesy    = "Geo",    -- geodesy transformations
   gnuplot    = "Gp",     -- GnuPlot 'binding'
   lens       = "Lens",   -- paraxial optics and laser beams

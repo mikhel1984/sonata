@@ -17,14 +17,14 @@
 --[[TEST
 
 -- use 'units'
-_U = require 'matlib.units'
+U = require 'matlib.units'
 
 -- add some rules
-_U:setRule('h', _U(60,'min'))
-_U:setRule('min', _U(60,'s'))
+U:setRule('h', U(60,'min'))
+U:setRule('min', U(60,'s'))
 
 -- define variable
-a = _U(1,'m/s')
+a = U(1,'m/s')
 -- convert to km/h, get only value
 ans = a['km/h']              --2> 3.6
 
@@ -37,30 +37,30 @@ ans = a:key()                 --> 'm/s'
 
 -- make copy
 cp = a:copy()
-ans = cp                      --> _U(1,'m/s')
+ans = cp                      --> U(1,'m/s')
 
 -- get converted variable
 b = a:convert('km/h')
-ans = b                       --> _U(3.6, 'km/h')
+ans = b                       --> U(3.6, 'km/h')
 
 -- arithmetic
 b = 3 * b
-ans = a + b                   --> _U(4, 'm/s')
+ans = a + b                   --> U(4, 'm/s')
 
-ans = b - a                   --> _U(2, 'm/s')
+ans = b - a                   --> U(2, 'm/s')
 
-ans = a * b                   --> _U(3, 'm^2/s^2')
+ans = a * b                   --> U(3, 'm^2/s^2')
 
-ans = b / a                   --> _U(3, '')
+ans = b / a                   --> U(3, '')
 
 ans = (a < b)                 --> true
 
-ans = b ^ 3                   --> _U(27, 'm^3/s^3')
+ans = b ^ 3                   --> U(27, 'm^3/s^3')
 
 -- new rule
-_U:setRule('snake', _U(38, 'parrot'))
+U:setRule('snake', U(38, 'parrot'))
 -- define variable
-c = _U(2,'snake')
+c = U(2,'snake')
 -- convert
 ans = c['parrot']             --> 76
 
@@ -68,13 +68,13 @@ ans = c['parrot']             --> 76
 ans = c['ksnake']            --3> 0.002
 
 -- another definition syntax
-ans = 2 * _U('N')           --> _U(2,'N')
+ans = 2 * U('N')           --> U(2,'N')
 
 -- show result
 print(a)
 
 -- list of rules
-print(_U:rules())
+print(U:rules())
 --]]
 
 

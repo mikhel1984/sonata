@@ -12,30 +12,30 @@
 --[[TEST
 
 -- use 'const'
-_C = require 'matlib.const'
+C = require 'matlib.const'
 -- external dependencies, can be loaded implicitly
 require 'matlib.units'  -- convert into Unit object
 
 -- charge of electron
-ans = _C.phy.e * 1E19        --3> 1.602
+ans = C.phy.e * 1E19         --3> 1.602
 
 -- convert to Unit object (add _U)
-e = _C.phy.e_U
-ans = e:key()                 --> _C.phy.e_u_
+e = C.phy.e_U
+ans = e:key()                 --> C.phy.e_u_
 
 -- change units
-ans = e['nC']                --3> _C.phy.e * 1E9
+ans = e['nC']                --3> C.phy.e * 1E9
 
 -- create "immutable" value
-_C:add('myConst', 10)
-ans = _C.myConst              --> 10
+C:add('myConst', 10)
+ans = C.myConst               --> 10
 
 -- modification generates error
-ans = pcall(function() _C.myConst = 0 end)  --> false
+ans = pcall(function() C.myConst = 0 end)  --> false
 
 -- remove constant
-_C:remove('myConst')
-ans = _C.myConst              --> nil
+C:remove('myConst')
+ans = C.myConst               --> nil
 
 --]]
 

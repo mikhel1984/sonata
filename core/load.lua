@@ -36,9 +36,7 @@ __newindex = function (t, k, v)
   rawset(t, k, v)
 end,
 -- store into the hidden table
-__index = function (_, k)
-  return Sonata._modules[k] or nil
-end,
+__index = Sonata._modules
 })
 
 
@@ -71,7 +69,7 @@ setmetatable(use,
       -- show loaded modules
       for k, v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
-        if _G[v] then
+        if Sonata._modules[v] then
           lst[#lst+1] = Sonata.FORMAT_V1
           lst[#lst+1] = '++\n'
           lst[#lst+1] = Sonata.FORMAT_CLR

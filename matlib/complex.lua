@@ -17,30 +17,30 @@
 --[[TEST
 
 -- use 'complex'
-_Z = require 'matlib.complex'
+Z = require 'matlib.complex'
 
 -- real and imaginary pars
-a = _Z(1,2)
+a = Z(1,2)
 -- or just imaginary
-b = _Z(0,3)
+b = Z(0,3)
 
 -- imaginary unit
-ans = 3+_Z:i(4)                --> _Z(3,4)
+ans = 3+Z:i(4)                --> Z(3,4)
 
 -- use trigonometrical form
-ans = _Z:trig(2,0)            --> _Z(2,0)
+ans = Z:trig(2,0)             --> Z(2,0)
 
 -- arithmetic
-ans = a + b                   --> _Z(1,5)
+ans = a + b                   --> Z(1,5)
 
-ans = _Z:i(3) - b             --> 0
+ans = Z:i(3) - b              --> 0
 
-ans = a * b                   --> _Z(-6,3)
+ans = a * b                   --> Z(-6,3)
 
-ans = a / _Z:i()              --> _Z(2,-1)
+ans = a / Z:i()               --> Z(2,-1)
 
 -- power can be complex
-c = _Z(1,1)^_Z(2,-2)
+c = Z(1,1)^Z(2,-2)
 
 -- real part
 ans = c:re()                 --3> 6.147
@@ -57,42 +57,42 @@ ans = (a ~= b)                --> true
 ans = a:abs()                --3> 2.236
 
 -- argument (angle, rad)
-ans = a:arg()              --3> 1.107
+ans = a:arg()                --3> 1.107
 
 -- conjugated number
-ans = a:conj()                --> _Z(1,-2)
+ans = a:conj()                --> Z(1,-2)
 
 -- some functions after import
 -- become default, such as
-d = _Z(-2):sqrt()
-ans = d:im()                  --3> 1.414
+d = Z(-2):sqrt()
+ans = d:im()                 --3> 1.414
 
 -- exp
-ans = d:exp():re()            --3> 0.156
+ans = d:exp():re()           --3> 0.156
 
 -- log
-ans = d:log():re()            --3> 0.3465
+ans = d:log():re()           --3> 0.3465
 
 -- sin
-ans = d:sin():im()            --3> 1.935
+ans = d:sin():im()           --3> 1.935
 
 -- cos
-ans = d:cos():re()            --3> 2.178
+ans = d:cos():re()           --3> 2.178
 
 -- tan
-ans = d:tan():re()            --1> 0
+ans = d:tan():re()           --1> 0
 
 -- sinh
-ans = d:sinh():re()           --1> 0
+ans = d:sinh():re()          --1> 0
 
 -- cosh
-ans = d:cosh():re()           --3> 0.156
+ans = d:cosh():re()          --3> 0.156
 
 -- tanh
-ans = d:tanh():im()           --3> 6.334
+ans = d:tanh():im()          --3> 6.334
 
 -- asin
-z = _Z(2,3)
+z = Z(2,3)
 ans = z:asin():im()          --3> 1.983
 
 -- acos
@@ -111,7 +111,7 @@ ans = z:acosh():im()         --1> 1.000
 ans = z:atanh():re()         --3> 0.146
 
 -- round in-place
-z = _Z(1+1E-3, 2+1e-20)
+z = Z(1+1E-3, 2+1e-20)
 z = z:round(5)
 ans = z:re()                 --3> 1.001
 
@@ -122,10 +122,10 @@ print(a)
 
 -- update env on import 
 -- add complex unit
-ans = 2*_i                   --> _Z:i(2)
+ans = 2*_i                    --> Z:i(2)
 
 -- update some methods 
-ans = sqrt(-1)               --> _i
+ans = sqrt(-1)                --> _i
 
 ans = log(-1):im()           --3> math.pi
 
