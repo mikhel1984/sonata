@@ -226,7 +226,7 @@ end
 
 --- Get state from the string representation.
 --  @param state String of the form '|xxx>'.
---  @return vector, base type, size
+--  @return vector, size, index of 1
 qubit._parse = function (state)
   local s = string.match(state, '^|(.+)>$')
   if not s then s = state end  -- try string directly
@@ -243,7 +243,7 @@ qubit._parse = function (state)
   end
   local res = Matrix:zeros(2^n, 1)
   res[sum][1] = 1
-  return res, n
+  return res, n, sum
 end
 
 
@@ -501,6 +501,59 @@ qubit.CNOT = qgate.CNOT
 about[qubit.CNOT] = {"G:CNOT(slave_i, master_i) --> upd_G", "Add CNOT gate.", GATES}
 
 
+--- Transform matrix to gate object.
+--  @param G Gate object.
+--  @param m Matrix or the table of lists.
+--  @return Updated gate object.
+qgate.fromMatrix = function (G, m)
+  m = (getmetatable(m) == Matrix) and m or Matrix(m)
+  local n = 2 ^ G.n
+  if m:rows() ~= m:cols() or m:rows() ~= n then
+    error(string.format('Expected %dx%d matrix', n, n))
+  end
+  local tmp = qgate._new(G.n)
+  tmp.mat = m
+  if not qgate.isUnitary(tmp) then
+    error("Unitary matrix is expected")
+  end
+  G.mat = G.mat and (G.mat * m) or m
+  return G
+end
+qubit.fromMatrix = qgate.fromMatrix
+about[qubit.fromMatrix] = {"G:fromMatrix(mat) --> upd_G", 
+  "Make gate from matrix.", GATES}
+
+
+--- Transform truth table to gate object.
+--  @param G Gate object.
+--  @param t Table of string pairs.
+--  @return Updated gate object.
+qgate.fromTable = function (G, t)
+  local acc = {}
+  local n = 2 ^ G.n
+  local mat = Matrix:zeros(n, n)
+  for _, p in ipairs(t) do
+    local _, n1, ind1 = qubit._parse(p[1])
+    if n1 ~= G.n then error("Wrong size") end
+    if acc[ind1] then error(string.format('State %s is not unique', p[1])) end
+    local _, n2, ind2 = qubit._parse(p[2])
+    if n2 ~= G.n then error("Wrong size") end
+    mat[ind2][ind1] = 1
+    acc[ind1] = true
+  end
+  for i = 1, n do
+    if not acc[i] then 
+      error('Unknown column '..tostring(i))
+    end
+  end
+  G.mat = G.mat and (G.mat * m) or m
+  return G
+end
+qubit.fromTable = qgate.fromTable
+about[qubit.fromTable] = {"G:fromTable(truth_t) --> upd_G", 
+  "Make gate from truth table.", GATES}
+
+
 --- Add gate H.
 --  @param G Gate system.
 --  @param ... Qubit indices to add gate.
@@ -652,5 +705,4 @@ return qubit
 --======================================
 -- https://en.wikipedia.org/wiki/Quantum_logic_gate 
 -- TODO horizontal concatenation for gates using *, vertical with ..
--- TODO gate from truth table (get truth table from gate as well?)
 -- TODO qubit equality
