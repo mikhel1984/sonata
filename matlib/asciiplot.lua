@@ -57,9 +57,14 @@ print(fig2)
 
 -- plot only y2, don't rescale
 fig2:setX {range={-1, 4}}
-fig2:setY {range={0, 1}}
-fig2:tplot(tbl, {2, yfix=true})
+fig2:setY {range={0, 1}, fix=true}
+fig2:tplot(tbl, {2})
 print(fig2)
+
+-- polar plot 
+fig7 = Ap()
+fig7:tplot(tbl, {polar=true})
+print(fig7)
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
@@ -300,6 +305,14 @@ axis.setRange = function (A, t)
 end
 
 
+--- Compare range to the initial, set the largest values.
+--  @param A Axis object.
+--  @param t Pair {minlim, maxlim}.
+axis.setMaxRange = function (A, t)
+  axis.setRange(A, {math.min(A._init[1], t[1]), math.max(A._init[2], t[2])})
+end
+
+
 --- Apply logarithmic scale for the axis.
 --  @param A Axis object.
 --  @param isLog Flag to set scale type.
@@ -400,6 +413,45 @@ asciiplot.__tostring = function (F)
     acc[#acc+1] = string.format("(%s) %s", k, F.legend[k])
   end
   return table.concat(acc, '\n')
+end
+
+
+--- Transform points to polar system, add to figure.
+--  @param F Figure object.
+--  @param t Data table.
+--  @param tOpt List of column numbers.
+asciiplot._addPolar = function (F, t, tOpt)
+  local acc = {}
+  -- transform data
+  for i, row in ipairs(t) do
+    local s, c = math.sin(row[1]), math.cos(row[1])
+    for j, ind in ipairs(tOpt) do
+      local curr = acc[j] or {}
+      curr[i] = {row[ind]*c, row[ind]*s}
+      acc[j] = curr
+    end
+  end
+  -- update range
+  if not F._yfix then
+    for j = 1, #tOpt do
+      local rx, ry = asciiplot._findRange(acc[j], {})
+      F._x:setMaxRange(rx)
+      F._y:setMaxRange(ry)
+    end
+  end
+  -- prepare
+  asciiplot._clear(F)
+  asciiplot._axes(F)
+  -- fill 
+  for j = 1, #tOpt do
+    local xy, c = acc[j], asciiplot.char[j]
+    for _, v in ipairs(xy) do
+      asciiplot.addPoint(F, v[1], v[2], c)
+    end
+    F.legend[c] = 'column '..tostring(tOpt[j]) 
+  end
+  -- limits
+  asciiplot._limits(F)
 end
 
 
@@ -1285,15 +1337,19 @@ about[asciiplot.title] = {"F:title(str)", "Set new title.", CONF}
 --  @return The updated figure object.
 asciiplot.tplot = function (F, t, tOpt)
   tOpt = tOpt or {}
+  -- plot all by default
+  if #tOpt == 0 then
+    for i = 2, #t[1] do tOpt[#tOpt+1] = i end
+  end
+  -- check type
+  if tOpt.polar then
+    return asciiplot._addPolar(F, t, tOpt)
+  end
   -- update range
   if not F._yfix then
     local rx, ry = asciiplot._findRange(t, tOpt)
     F._x:setRange(rx)
     F._y:setRange(ry)
-  end
-  -- plot all by default
-  if #tOpt == 0 then
-    for i = 2, #t[1] do tOpt[#tOpt+1] = i end
   end
   -- prepare
   asciiplot._clear(F)

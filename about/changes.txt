@@ -1,7 +1,11 @@
 ======== 0.9.37 =========
 
+Asciiplot
+* Add polar plots
 Other
-* Improve command help
+* New module 'qubit'
+* Improve help for commands
+* Protect aliases from change
 
 ======== 0.9.36 =========
 
