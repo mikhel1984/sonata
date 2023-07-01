@@ -20,7 +20,7 @@ info = fig1:axes()
 ans = info.x.size             -->  Ap.WIDTH
 
 -- default axis position
-ans = info.x.pose             -->  'mid'
+ans = info.x.view             -->  'mid'
 
 -- print functions
 fig1:setX {range={-3.14, 3.14}}   -- default is {-1, 1}
@@ -61,9 +61,10 @@ fig2:setY {range={0, 1}, fix=true}
 fig2:tplot(tbl, {2})
 print(fig2)
 
--- polar plot 
+-- polar plot for the table
 fig7 = Ap()
 fig7:tplot(tbl, {polar=true})
+fig7:legend {'sin', 'cos'}
 print(fig7)
 
 -- scale figure w.r.t. initial size
@@ -407,10 +408,10 @@ asciiplot.__tostring = function (F)
   end
   -- legend
   local sym = {}
-  for k, _ in pairs(F.legend) do sym[#sym+1] = k end
+  for k, _ in pairs(F._legend) do sym[#sym+1] = k end
   if #sym > 0 then table.sort(sym) end
   for _, k in ipairs(sym) do
-    acc[#acc+1] = string.format("(%s) %s", k, F.legend[k])
+    acc[#acc+1] = string.format("(%s) %s", k, F._legend[k])
   end
   return table.concat(acc, '\n')
 end
@@ -448,7 +449,7 @@ asciiplot._addPolar = function (F, t, tOpt)
     for _, v in ipairs(xy) do
       asciiplot.addPoint(F, v[1], v[2], c)
     end
-    F.legend[c] = 'column '..tostring(tOpt[j]) 
+    F._legend[c] = 'column '..tostring(tOpt[j]) 
   end
   -- limits
   asciiplot._limits(F)
@@ -467,7 +468,7 @@ asciiplot._addTable = function (F, t, tInd)
       local row = t[i]
       asciiplot.addPoint(F, row[1], row[k], c)
     end
-    F.legend[c] = 'column '..tostring(k)   -- default legend
+    F._legend[c] = 'column '..tostring(k)   -- default legend
   end
 end
 
@@ -535,7 +536,7 @@ asciiplot._clear = function (F)
     end
     F._canvas[i] = row
   end
-  F.legend = {}
+  F._legend = {}
   F._title = nil
 end
 
@@ -550,12 +551,12 @@ asciiplot._cntLegend = function (F, s, lvl)
     -- group levels
     line[#line+1] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i])
     if i % 3 == 0 then
-      F.legend[s..tostring(j)] = table.concat(line, '  ')
+      F._legend[s..tostring(j)] = table.concat(line, '  ')
       j, line = j + 1, {}
     end
   end
   if #line > 0 then
-    F.legend[s..tostring(j)] = table.concat(line, '  ')
+    F._legend[s..tostring(j)] = table.concat(line, '  ')
   end
 end
 
@@ -736,7 +737,7 @@ asciiplot._new = function(dwidth, dheight)
     -- image
     _canvas = {},
     -- comments
-    legend = {},
+    _legend = {},
     -- title can be added
   }
   -- return object
@@ -970,14 +971,14 @@ asciiplot.axes = function (F)
         a.log and (10^a.range[1]) or a.range[1],
         a.log and (10^a.range[2]) or a.range[2],
       },
-      pose = F[k..'axis'],
+      view = F[k..'axis'],
       fix = F[k..'fix'],
     }
   end
   return res
 end
 about[asciiplot.axes] = {"F:axes() --> tbl",
-  "Get {size, log, range, pose} for each size.", help.OTHER}
+  "Get {size, log, range, view, fix} for each axis.", help.OTHER}
 
 
 --- Plot bar graph.
@@ -1056,7 +1057,7 @@ asciiplot.concat = function (self, ...)
     end
     if v._y.size ~= ag[1]._y.size then error('Different height') end
     local n = 0
-    for _ in pairs(v.legend) do n = n + 1 end
+    for _ in pairs(v._legend) do n = n + 1 end
     if n > nlegend then nlegend = n end
   end
   -- data
@@ -1079,12 +1080,12 @@ asciiplot.concat = function (self, ...)
     -- legend
     local n = 0
     local sym = {}
-    for q, _ in pairs(v.legend) do sym[#sym+1] = q end
+    for q, _ in pairs(v._legend) do sym[#sym+1] = q end
     if #sym > 0 then table.sort(sym) end
     for _, u in ipairs(sym) do
       row = acc[k] or {}
       row[#row+1] = asciiplot._format(
-        string.format('(%s) %s', u, v.legend[u]), width-1+#u, false, true)
+        string.format('(%s) %s', u, v._legend[u]), width-1+#u, false, true)
       row[#row+1] = gap
       acc[k] = row; k = k + 1
       n = n + 1
@@ -1157,10 +1158,10 @@ asciiplot.copy = function (F)
     _yfix = F._yfix,
     _zfix = F._zfix,
     _canvas = {},
-    legend = {},
+    _legend = {},
   }
-  for k, v in pairs(F.legend) do
-    o.legend[k] = v
+  for k, v in pairs(F._legend) do
+    o._legend[k] = v
   end
   for i = 1, #F._canvas do
     local row = {}
@@ -1175,6 +1176,20 @@ asciiplot.copy = function (F)
 end
 about[asciiplot.copy] = {"F:copy() --> cpy_F", 
   "Create a copy of the object.", help.OTHER}
+
+
+--- Update legend.
+--  @param F Figure object.
+--  @param str_t Table with strings.
+asciiplot.legend = function (F, str_t)
+  for i, c in ipairs(asciiplot.char) do
+    local li = F._legend[c]
+    if li then
+      F._legend[c] = str_t[i] or li
+    else break end
+  end
+end
+about[asciiplot.legend] = {"F:legend(str_t)", "Update legend.", CONF}
 
 
 --- Generalized plot funciton.
@@ -1246,7 +1261,7 @@ asciiplot.plot = function (F, ...)
     local c = asciiplot.char[j]
     local r = acc[j]
     asciiplot._addXY(F, r[1], r[2], c)
-    F.legend[c] = r[3]
+    F._legend[c] = r[3]
   end
   -- limits
   asciiplot._limits(F)
