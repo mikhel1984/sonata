@@ -1177,6 +1177,19 @@ end
 about[matrix.kron] = {"M:kron(M2) --> M3", "Find Kronecker product."}
 
 
+--- Kronecker sum.
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @return matrix, obtained with Kronecker sum.
+matrix.kronSum = function (M1, M2)
+  if M1._rows ~= M1._cols or M2._rows ~= M2._cols then
+    error('Square matrices expected')
+  end
+  return matrix.kron(M1, matrix:eye(M2)) + matrix.kron(matrix:eye(M1), M2)
+end
+about[matrix.kronSum] = {"M:kronSum(M2) --> M3", "Find Kronecker sum."}
+
+
 --- Round matrix elements in place.
 --  @param M Matrix object.
 --  @param N Number of digits.
@@ -1638,6 +1651,22 @@ matrix.V = function (self, t)
 end
 about[matrix.V] = {":V {...} --> new_V",
   "Create vector from list of numbers.", help.NEW}
+
+
+--- Stack columns into the single vector.
+--  @param M Source matrix.
+--  @return column vector.
+matrix.vectorize = function (M)
+  local res = {}
+  for c = 1, M._cols do
+    for r = 1, M._rows do
+      res[#res+1] = {M[r][c]}  -- TODO save nonzero only?
+    end
+  end
+  return matrix._init(#res, 1, res)
+end
+about[matrix.vectorize] = {"M:vectorize() --> V", 
+  "Create vector as a stack of columns.", TRANSFORM}
 
 
 --- Create matrix of zeros.

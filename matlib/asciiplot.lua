@@ -747,7 +747,7 @@ end
 
 --- Set axis settings.
 --  @param F Figure object.
---  @param t Table with parameters {range, log, view, fix}.
+--  @param t Table with parameters {range, log, view, fix, size}.
 --  @param pref Prefix string.
 asciiplot._setAxis = function (F, t, pref)
   -- range
@@ -758,6 +758,8 @@ asciiplot._setAxis = function (F, t, pref)
   if t.view ~= nil then F[pref..'axis'] = t.view end
   -- fix scale
   if t.fix ~= nil then F[pref..'fix'] = t.fix end
+  -- length
+  if t.size ~= nil then F[pref]:resize(t.size) end
 end
 
 
