@@ -80,10 +80,13 @@ print(U:rules())
 
 --	LOCAL
 
-local Ver = require('matlib.utils')
-local Cross = Ver.cross
-local Utils = Ver.utils
-Ver = Ver.versions
+local Cfloat, Cnorm, Ulex, Unumstr do
+  local lib = require('matlib.utils')
+  Cfloat = lib.cross.float
+  Cnorm = lib.cross.norm
+  Ulex = lib.utils.lex
+  Unumstr = lib.utils.numstr
+end
 
 
 --- Combine common elements in tables, add power to the
@@ -253,7 +256,7 @@ end
 --  @param d Number.
 --  @return Power.
 units.__pow = function (U, d)
-  d = assert(Cross.float(d), "Wrong power")
+  d = assert(Cfloat(d), "Wrong power")
   local res = isunits(U) and units._deepCopy(U) or units._new(U, '')
   res._value = res._value ^ d
   op['^'](res._key, d)
@@ -279,7 +282,7 @@ end
 --  @return Unit value in traditional form.
 units.__tostring = function (U)
   return string.format('%s %s',
-    type(U._value) == 'number' and Utils.numstr(U._value) or tostring(U._value),
+    type(U._value) == 'number' and Unumstr(U._value) or tostring(U._value),
     units.key(U))
 end
 
@@ -512,7 +515,7 @@ end
 --  @param U Unit object.
 --  @return Absolute value.
 units._norm = function (U)
-  return Cross.norm(U._value)
+  return Cnorm(U._value)
 end
 
 
@@ -521,7 +524,7 @@ end
 --  @return Reduced list of units.
 units._parse = function (str)
   if #str == 0 then return {} end
-  local tokens = Utils.lex(str)
+  local tokens = Ulex(str)
   if #tokens == 0 then error("Wrong format") end
   local res, m = units._getTerm(tokens, 1)
   if m-1 ~= #tokens then error("Wrong format") end
@@ -648,7 +651,7 @@ units.__len = units.value
 setmetatable(units, {
 __call = function (self, v, s)
   if s then
-    assert(Cross.float(v), "Wrong value type")
+    assert(Cfloat(v), "Wrong value type")
   else
     v, s = 1, v
   end

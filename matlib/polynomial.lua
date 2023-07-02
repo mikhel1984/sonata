@@ -128,11 +128,9 @@ ans = p(0.5)                 --2>  -0.512
 --	LOCAL
 
 local Ver = require("matlib.utils")
-local Utils = Ver.utils
+local Unumstr = Ver.utils.numstr
 local Cross = Ver.cross
 Ver = Ver.versions
-
-
 
 
 -- Return number in trivial case.
@@ -355,7 +353,7 @@ polynomial.__tostring = function (P)
   local t = {}
   for i = #P, 0, -1 do
     local v = P[i]
-    table.insert(t, type(v) == 'number' and Utils.numstr(v) or tostring(v))
+    table.insert(t, type(v) == 'number' and Unumstr(v) or tostring(v))
   end
   return table.concat(t, ' ')
 end

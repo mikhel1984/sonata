@@ -90,14 +90,12 @@ print(d)
 --	LOCAL
 
 local Ver = require("matlib.utils")
-local Utils = Ver.utils
+local Unumstr = Ver.utils.numstr
 local Cross = Ver.cross
 Ver = Ver.versions
 
-
+-- categories
 local ROTATION = 'rotation'
-
-
 
 
 --- Get float point value if possible.
@@ -119,7 +117,7 @@ end
 --  @param v Value.
 --  @return String representation.
 local function numStr(v)
-  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
+  return type(v) == 'number' and Unumstr(v) or tostring(v)
 end
 
 

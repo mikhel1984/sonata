@@ -206,6 +206,7 @@ ans = (r1() ~= r2())          -->  true
 
 --	LOCAL
 
+-- categories
 DIST = 'distribution'
 
 

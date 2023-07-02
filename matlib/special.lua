@@ -66,7 +66,10 @@ ans = Spec:dawson(3.3)       --3>  0.1598
 
 --	LOCAL
 
-local Ver = require("matlib.utils").versions
+local Vinteger do
+  local lib = require("matlib.utils")
+  Vinteger = lib.versions.isInteger
+end
 
 
 -- constants for gamma approximation
@@ -395,7 +398,7 @@ end
 --  @param x Real number.
 --  @return In(x).
 special.besseli = function (self, N, x)
-  if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
+  if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessi0(x) end
   if N == 1 then return special._bessi1(x) end
   if x == 0 then return 0.0 end
@@ -423,7 +426,7 @@ about[special.besseli] = {":besseli(order_N,x_d) --> num",
 --  @param x Real number.
 --  @return Polynomial value
 special.besselj = function (self, N,x)
-  if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
+  if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessj0(x) end
   if N == 1 then return special._bessj1(x) end
   if x == 0 then return 0 end
@@ -470,7 +473,7 @@ about[special.besselj] = {":besselj(order_N, x_d) --> num",
 --  @return Kn(x).
 special.besselk = function (self, N, x)
   if x <= 0 then error("Positive value is expected!") end
-  if not (N >= 0 and Ver.isInteger(N)) then error(ERR_POSINT) end
+  if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessk0(x) end
   if N == 1 then return special._bessk1(x) end
   local tox, bkm, bk = 2.0/x, special._bessk0(x), special._bessk1(x)
@@ -489,7 +492,7 @@ about[special.besselk] = {":besselk(order_N, x_d) --> num",
 --  @return Polynomial value
 special.bessely = function (self, n, x)
   if x <= 0 then error('Positive value is expected!') end
-  if not (n >= 0 and Ver.isInteger(n)) then error(ERR_POSINT) end
+  if not (n >= 0 and Vinteger(n)) then error(ERR_POSINT) end
   if n == 0 then return special._bessy0_(x) end
   if n == 1 then return special._bessy1(x) end
   local tox = 2.0/x

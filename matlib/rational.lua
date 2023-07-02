@@ -84,20 +84,24 @@ ans = a + 0.5                 -->  1
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Utils = Ver.utils
-local Cross = Ver.cross
-Ver = Ver.versions
-
-
-
-
+local Vinteger, Unumstr, Cross do
+  local lib = require("matlib.utils")
+  Vinteger = lib.versions.isInteger
+  Unumstr = lib.utils.numstr
+  Cross = lib.cross
+end
 local mabs = math.abs
 
 
+--- Check if the element is huge
+--  @param v Variable.
+--  @return true for big input.
 local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
 
+--- Simplify rational when possible.
+--  @param R Rational number.
+--  @return same object or some number
 local function numrat(R)
   local a, b = R._[1], R._[2]
   return Cross.eq(b, 1) and Cross.simp(a)               -- x / 1
@@ -111,7 +115,7 @@ end
 --  @param v Value.
 --  @return String representation.
 local function numStr(v)
-  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
+  return type(v) == 'number' and Unumstr(v) or tostring(v)
 end
 
 
@@ -266,7 +270,7 @@ rational.__pow = function (R1, R2)
   if type(R1) == "number" then
     return R1^R2
   else
-    if not (Ver.isInteger(R2) and R2 >= 0) then
+    if not (Vinteger(R2) and R2 >= 0) then
       error("Power must be a non-negative integer")
     end
     local r1 = R1._
@@ -324,7 +328,7 @@ about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
 --  @param v Source value.
 --  @return Rational number of false.
 rational._convert = function (v)
-  return (type(v) == 'number' and Ver.isInteger(v)
+  return (type(v) == 'number' and Vinteger(v)
             or type(v) == 'table' and v.__mod)
          and rational._new(v, 1)
 end
@@ -422,14 +426,14 @@ about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
 rational.fromCF = function (self, t)
   local check = {}
   for i, v in ipairs(t) do
-    if (type(v) == 'number' and Ver.isInteger(v)
+    if (type(v) == 'number' and Vinteger(v)
           or type(v) == 'table' and v.__mod) and v > 0 
     then
       check[i] = v
     else error("Positive integer is expected") end
   end
   local t0 = t[0] or 0
-  if (type(t0) == 'number' and Ver.isInteger(t0)
+  if (type(t0) == 'number' and Vinteger(t0)
         or type(t0) == 'table' and t0.__mod) 
   then
     check[0] = t0
@@ -483,10 +487,10 @@ setmetatable(rational, {
 __call = function (self, n, d)
   d = d or 1
   assert(
-    type(n) == 'number' and Ver.isInteger(n) or type(n) == 'table' and n.__mod,
+    type(n) == 'number' and Vinteger(n) or type(n) == 'table' and n.__mod,
     "Wrong numerator type")
   assert(
-    type(d) == 'number' and Ver.isInteger(d) or type(d) == 'table' and d.__mod,
+    type(d) == 'number' and Vinteger(d) or type(d) == 'table' and d.__mod,
     "Wrong denomenator type")
   assert(not Cross.isZero(d), "Wrond denomenator value")
   return rational._new(n, d)

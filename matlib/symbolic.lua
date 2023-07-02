@@ -48,8 +48,11 @@ ans = foo(Sym(2), Sym(3))     -->  Sym(8)
 
 --	LOCAL
 
-local Utils = require('matlib.utils')
-Utils = Utils.utils
+local Ulex do
+  local lib = require('matlib.utils')
+  Ulex = lib.utils.lex
+end
+
 local symbolic = require('matlib.symbase')
 
 
@@ -283,7 +286,7 @@ end
 --  @param str Expression string.
 --  @return One or several symbolic elements.
 symbolic.parse = function(self, str)
-  local tokens = Utils.lex(str)
+  local tokens = Ulex(str)
   assert(#tokens > 0)
   local res = PARSER.args(tokens, 1)
   if issymbolic(res) then

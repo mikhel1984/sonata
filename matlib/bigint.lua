@@ -136,9 +136,13 @@ ans = a - 0.5                 -->  122.5
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Cross = Ver.cross
-Ver = Ver.versions
+local Vinteger, Vmove, Cfloat, Cconvert do
+  local lib = require("matlib.utils")
+  Vinteger = lib.versions.isInteger
+  Vmove = lib.versions.move
+  Cfloat = lib.cross.float
+  Cconvert = lib.cross.convert
+end
 
 local SEP = ','
 local NUMB = 'numbers'
@@ -206,12 +210,12 @@ local function isbigint(v) return getmetatable(v) == bigint end
 --  @return Sum object.
 bigint.__add = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 + p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p + B2) or (Cross.float(B1) + Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p + B2) or (Cfloat(B1) + Cfloat(B2))
     end
   end
   if B1._sign > 0 then
@@ -228,12 +232,12 @@ end
 --  @return Ratio object.
 bigint.__div = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 / p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p / B2) or (Cross.float(B1) / Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p / B2) or (Cfloat(B1) / Cfloat(B2))
     end
   end
   local res, _ = bigint._div(B1, B2)
@@ -251,14 +255,14 @@ bigint.__index = bigint
 --  @return True if the first value is less or equal to the second.
 bigint.__le = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 <= p
     else
-      p = Cross.convert(B2, B1)
+      p = Cconvert(B2, B1)
       if p then return p <= B2
       else
-        return Cross.float(B1) <= Cross.float(B2)
+        return Cfloat(B1) <= Cfloat(B2)
       end
     end
   end
@@ -272,14 +276,14 @@ end
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 < p
     else
-      p = Cross.convert(B2, B1)
+      p = Cconvert(B2, B1)
       if p then return p < B2
       else
-        return Cross.float(B1) < Cross.float(B2)
+        return Cfloat(B1) < Cfloat(B2)
       end
     end
   end
@@ -305,12 +309,12 @@ end
 --  @return Remainder object.
 bigint.__mod = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 % p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p % B2) or (Cross.float(B1) % Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p % B2) or (Cfloat(B1) % Cfloat(B2))
     end
   end
   local _, res = bigint._div(B1, B2)
@@ -324,12 +328,12 @@ end
 --  @return Product object.
 bigint.__mul = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 * p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p * B2) or (Cross.float(B1) * Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p * B2) or (Cfloat(B1) * Cfloat(B2))
     end
   end
   local res = bigint._mul(B1, B2)
@@ -348,12 +352,12 @@ bigint.__newindex = function () error("Immutable object") end
 --  @return Power of the number.
 bigint.__pow = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 ^ p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p ^ B2) or (Cross.float(B1) ^ Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p ^ B2) or (Cfloat(B1) ^ Cfloat(B2))
     end
   end
   if B2._sign < 0 then error('Negative power!') end
@@ -381,12 +385,12 @@ end
 --  @return Difference object.
 bigint.__sub = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 - p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p - B2) or (Cross.float(B1) - Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p - B2) or (Cfloat(B1) - Cfloat(B2))
     end
   end
   if B1._sign > 0 then
@@ -435,7 +439,7 @@ end
 --  @param v Source objec.
 --  @return Int object.
 bigint._convert = function (v)
-  return Ver.isInteger(v) and bigint._newNumber(v) or nil
+  return Vinteger(v) and bigint._newNumber(v) or nil
 end
 
 
@@ -489,7 +493,7 @@ bigint._div = function (B1, B2)
   end
   local k = #b1 - #b2 + 1
   local rem = bigint._newTable({}, 1)
-  Ver.move(b1, k+1, #b1, 1, rem._)  -- copy last elements
+  Vmove(b1, k+1, #b1, 1, rem._)  -- copy last elements
   local v2, den, acc = B2:float(), B2:abs(), {}
   for i = k, 1, -1 do
     table.insert(rem._, 1, b1[i])
@@ -633,7 +637,7 @@ bigint._new = function (num)
   if type(num) == 'table' then
     assert(#num > 0, "Wrong input")
     local base = num.base
-    assert(base and base > 0 and Ver.isInteger(base), "Wrong base")
+    assert(base and base > 0 and Vinteger(base), "Wrong base")
     assert(num.sign, "Wrong sign")
     local acc = {}
     for i, v in ipairs(num) do
@@ -644,7 +648,7 @@ bigint._new = function (num)
       bigint._rebase(acc, base, BASE), num.sign)
   elseif type(num) == 'string' then
     return bigint._newString(num)
-  elseif type(num) == 'number' and Ver.isInteger(num) then
+  elseif type(num) == 'number' and Vinteger(num) then
     return bigint._newNumber(num)
   end
   error("Wrong number: "..tostring(num))
@@ -893,7 +897,7 @@ about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
 --  @return Table with digits of the found number.
 bigint.base = function (B, N)
   N = N or BASE
-  assert(Ver.isInteger(N) and N > 0, "Wrong base")
+  assert(Vinteger(N) and N > 0, "Wrong base")
   local b = B._
   local res = bigint._rebase(b, BASE, N)
   res.sign = B._sign
@@ -923,14 +927,14 @@ about[bigint.C] = {":C(n, k) --> combinations_B",
 --  @return True if numbers have the same values and signs.
 bigint.eq = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 == p
     else
-      p = Cross.convert(B2, B1)
+      p = Cconvert(B2, B1)
       if p then return p == B2
       else
-        return Cross.float(B1) == Cross.float(B2)
+        return Cfloat(B1) == Cfloat(B2)
       end
     end
   end

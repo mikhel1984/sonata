@@ -85,14 +85,19 @@ ans = mm[4][4]               --2>  1.0
 
 --	LOCAL
 
-local Ver = require('matlib.utils')
-local Cross = Ver.cross
-local Utils = Ver.utils
-Ver = Ver.versions
+local Vinteger, Czero, Unumstr, Ubinsearch do
+  local lib = require('matlib.utils')
+  Vinteger = lib.versions.isInteger
+  Czero = lib.cross.isZero
+  Unumstr = lib.utils.numstr
+  Ubinsearch = lib.utils.binsearch
+end
 
+-- dependencies
 local Matrix = require('matlib.matrix')
 local Complex = require('matlib.complex')
 
+-- categories
 local GATES = 'gates'
 
 
@@ -193,13 +198,13 @@ qubit.__tostring = function (Q)
   local acc, vs = {}, {}
   for k = 0, Q.vec:rows()-1 do
     local vk = Q.vec[k+1][1]
-    if not Cross.isZero(vk) then
+    if not Czero(vk) then
       local v, rst = k, 0
       for i = n, 1, -1 do
         v, rst = math.modf(v * 0.5)
         bits[i] = (rst > 0.1) and '1' or '0'
       end
-      vs[#vs+1] = (type(vk) == 'number') and Utils.numstr(vk) 
+      vs[#vs+1] = (type(vk) == 'number') and Unumstr(vk) 
         or tostring(vk)
       acc[#acc+1] = table.concat(bits)
     end
@@ -289,12 +294,12 @@ qubit.meas = function (Q)
   local acc = {}
   for i = 1, Q.vec:rows() do
     local v = Q.vec[i][1]
-    if not Cross.isZero(v) then
+    if not Czero(v) then
       local sum = (#acc > 0 and acc[#acc][1] or 0) + square(v)
       acc[#acc+1] = {sum, i}
     end
   end
-  local _, pair = Utils.binsearch(acc, acc[#acc][1]*math.random(),
+  local _, pair = Ubinsearch(acc, acc[#acc][1]*math.random(),
     function (t) return t[1] end)
   local vec = Matrix:zeros(Q.vec)
   vec[ pair[2] ][1] = 1
@@ -363,7 +368,7 @@ qgate.__index = qgate
 --- Initialize gate sequence.
 --  @param n Number of inputs.
 qubit.gates = function (self, n)
-  if n <= 0 or not Ver.isInteger(n) then error('Wrong input number') end
+  if n <= 0 or not Vinteger(n) then error('Wrong input number') end
   return qgate._new(n)
 end
 about[qubit.gates] = {":gates(input_n) --> G", "Initialize gates for the given numer of inputs.", GATES}

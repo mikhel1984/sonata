@@ -102,19 +102,20 @@ ans = p4.B                   --2>  p1.B
 
 --	LOCAL
 
--- Compatibility with previous versions
-local Ver = require("matlib.utils")
-local Calc = Ver.calc
-Ver = Ver.versions
+local Vatan2, Calc do
+  local lib = require("matlib.utils")
+  Vatan2 = lib.versions.atan2
+  Calc = lib.calc
+end
 
-
+-- categories
 local PROB, TRANS, PROJ = "problems", "transform", "projection"
 
 
 --- Inverse hyperbolic tangent.
 --  @param d Some number.
 --  @return Areatangent value.
-local function arth(d) return math.log((1+d)/(1-d)) / 2 end
+local function arth(d) return math.log((1+d)/(1-d)) * 0.5 end
 
 
 --	INFO
@@ -320,7 +321,7 @@ ellipsoid.ll2utm = function (E, t)
   local tau, slat = math.tan(lat), math.sin(lat)
   local n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
   local tau1 = tau*math.sqrt(1+n1*n1) - n1*math.sqrt(1+tau*tau)
-  local xi1 = Ver.atan2(tau1, clon)
+  local xi1 = Vatan2(tau1, clon)
   local eta1 = Calc.asinh(math.sin(lon) / math.sqrt(tau1*tau1 + clon*clon))
   local xi, eta, p1, q1 = xi1, eta1, 1, 0
   for i = 1, 6 do
@@ -373,7 +374,7 @@ ellipsoid.solveDir = function (E, t1, dA, dist)
   local sU1, cU1 = math.sin(U1), math.cos(U1)
   local ca1, sa1 = math.cos(math.rad(dA)), math.sin(math.rad(dA))
   -- prepare iterations
-  local sig1 = Ver.atan2(math.tan(U1), ca1) * 2  -- multiplied sigma1
+  local sig1 = Vatan2(math.tan(U1), ca1) * 2  -- multiplied sigma1
   local alsin = cU1*sa1
   local alcos2 = 1 - alsin*alsin
   local A, B = ellipsoid._vincentyAB(E.e2, alcos2)
@@ -390,13 +391,13 @@ ellipsoid.solveDir = function (E, t1, dA, dist)
   until math.abs(prev - sig) < 1E-9
   -- result
   local csig = math.cos(sig)
-  local B2 = Ver.atan2(
+  local B2 = Vatan2(
     sU1*csig + cU1*ssig*ca1,
     (1-E.f)*math.sqrt(1 - alcos2 + (sU1*ssig - cU1*csig*ca1)^2))
   local C = E.f / 16 * alcos2 * (4 + E.f*(4 - 3*alcos2))
-  local L = Ver.atan2(ssig*sa1, cU1*csig-sU1*ssig*sa1)
+  local L = Vatan2(ssig*sa1, cU1*csig-sU1*ssig*sa1)
     -(1-C)*E.f*alsin*(sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm))) -- lambda-...
-  local azimuth2 = Ver.atan2(alsin, -sU1*ssig + cU1*csig*ca1)
+  local azimuth2 = Vatan2(alsin, -sU1*ssig + cU1*csig*ca1)
   return {B = math.deg(B2), L = t1.L + math.deg(L)}, math.deg(azimuth2)
 end
 
@@ -421,7 +422,7 @@ ellipsoid.solveInv = function (E, t1, t2)
   repeat
     ssig = math.sqrt((cU2*math.sin(lam))^2 + (cU1*sU2-sU1*cU2*math.cos(lam))^2)
     csig = sU1*sU2 + cU1*cU2*math.cos(lam)
-    sig = Ver.atan2(ssig, csig)
+    sig = Vatan2(ssig, csig)
     local alsin = cU1*cU2*math.sin(lam) / ssig
     alcos2 = 1 - alsin*alsin
     csigm = csig - 2*sU1*sU2 / alcos2
@@ -435,9 +436,9 @@ ellipsoid.solveInv = function (E, t1, t2)
   local dsig = B*ssig*(csigm + B/4*(csig*(-1 + 2*csigm*csigm)
     -B/6*csigm*(-3 + 4*ssig*ssig)*(-3 + 4*csigm*csigm)))
   local dist = E.b * A * (sig - dsig)
-  local azimuth1 = Ver.atan2(
+  local azimuth1 = Vatan2(
     cU2*math.sin(lam), cU1*sU2 - sU1*cU2*math.cos(lam))
-  local azimuth2 = Ver.atan2(
+  local azimuth2 = Vatan2(
     cU1*math.sin(lam), -sU1*cU2 + cU1*sU2*math.cos(lam))
   return dist, math.deg(azimuth1), math.deg(azimuth2)
 end
@@ -467,7 +468,7 @@ ellipsoid.toBLH = function (E, t)
         (D - E.e2 * E.a * math.cos(theta)^3)
     end
     B = math.atan(tg)
-    L = Ver.atan2(Y, X)
+    L = Vatan2(Y, X)
     local N = ellipsoid._radiusVertical(E, B)
     if math.abs(tg) > 1 then
       H = Z / math.sin(B) - (1 - E.e2) * N
@@ -540,7 +541,7 @@ ellipsoid.utm2ll = function (E, t)
   local l0 = (t.zone-1)*6 - 177
   local res = {
     B = math.deg(lat),
-    L = math.deg(Ver.atan2(sheta1, cxi1)) + l0,
+    L = math.deg(Vatan2(sheta1, cxi1)) + l0,
     H = 0
   }
   return res, scale

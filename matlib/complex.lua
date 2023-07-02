@@ -464,7 +464,6 @@ about[complex.atanh] = {"Z:atanh() --> y_Z",
 --  @param C Complex number.
 --  @return Conjunction to the given number.
 complex.conj = function (C)
-  --return complex._new(Cross.copy(C._[1]), -Cross.copy(C._[2]))
   return complex._new(C._[1], -C._[2])
 end
 about[complex.conj] = {"Z:conj() --> conj_Z", 

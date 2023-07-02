@@ -72,9 +72,11 @@ ans = y[#y][1]               --2>  2.56
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Cnorm = Ver.cross.norm
-Ver = Ver.versions
+local Vunpack, Cnorm do
+  local lib = require("matlib.utils")
+  Vunpack = lib.versions.unpack
+  Cnorm = lib.cross.norm
+end
 
 
 -- Runge-Kutta method.
@@ -204,7 +206,7 @@ numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   local exit = tParam.exit or function (_) return false end
   -- evaluate
   local res, last = {{tDelta[1], dY0}}, false
-  local upack = Ver.unpack
+  local upack = Vunpack
   while not exit(res) do
     local x, y = upack(res[#res])
     if x >= xn then break
