@@ -204,7 +204,7 @@ qubit.__tostring = function (Q)
         v, rst = math.modf(v * 0.5)
         bits[i] = (rst > 0.1) and '1' or '0'
       end
-      vs[#vs+1] = (type(vk) == 'number') and Unumstr(vk) 
+      vs[#vs+1] = (type(vk) == 'number') and Unumstr(vk)
         or tostring(vk)
       acc[#acc+1] = table.concat(bits)
     end
@@ -350,7 +350,7 @@ qubit.__len = qubit.size
 
 -- constructor call
 setmetatable(qubit, {
-__call = function (self, state) 
+__call = function (self, state)
   return qubit._new(qubit._parse(state))
 end
 })
@@ -431,8 +431,8 @@ qgate._makeGate = function (M, s)
     if getmetatable(G) ~= qgate then error('Not a gate object') end
     local ind, g = {...}, {}
     for _, i in ipairs(ind) do g[i+1] = M end
-    if #ind == 0 then 
-      for i = 1, G.n do g[i] = M end  
+    if #ind == 0 then
+      for i = 1, G.n do g[i] = M end
     end
     qgate._fill(G, g, s)
     return G
@@ -493,7 +493,7 @@ qgate.CNOT = function (G, slave_i, master_i)
   local txt = G.txt
   for i = 1, #txt do
     local s = '-'
-    if i == slave_i then 
+    if i == slave_i then
       s = 'X'
     elseif i == master_i then
       s = 'o'
@@ -525,7 +525,7 @@ qgate.fromMatrix = function (G, m)
   return G
 end
 qubit.fromMatrix = qgate.fromMatrix
-about[qubit.fromMatrix] = {"G:fromMatrix(mat) --> upd_G", 
+about[qubit.fromMatrix] = {"G:fromMatrix(mat) --> upd_G",
   "Make gate from matrix.", GATES}
 
 
@@ -547,15 +547,15 @@ qgate.fromTable = function (G, t)
     acc[ind1] = true
   end
   for i = 1, n do
-    if not acc[i] then 
+    if not acc[i] then
       error('Unknown column '..tostring(i))
     end
   end
-  G.mat = G.mat and (G.mat * m) or m
+  G.mat = G.mat and (G.mat * mat) or mat
   return G
 end
 qubit.fromTable = qgate.fromTable
-about[qubit.fromTable] = {"G:fromTable(truth_t) --> upd_G", 
+about[qubit.fromTable] = {"G:fromTable(truth_t) --> upd_G",
   "Make gate from truth table.", GATES}
 
 
@@ -573,7 +573,7 @@ qgate.H = function (G, ...)
     p = G.n
   end
   qgate._fill(G, g, 'H')
-  G.mat = G.mat * math.pow(2, -0.5*p)
+  G.mat = G.mat * 2^(-0.5*p)
   return G
 end
 qubit.H = qgate.H
@@ -608,7 +608,7 @@ qgate.isUnitary = function (G)
   return U:norm() < 1E-6
 end
 qubit.isUnitary = qgate.isUnitary
-about[qubit.isUnitary] = {"G:isUnitary() --> bool", 
+about[qubit.isUnitary] = {"G:isUnitary() --> bool",
   "Check if the matrix is unitary", GATES}
 
 
@@ -643,7 +643,7 @@ qgate.SWAP = function (G, i1, i2)
   end
   for i = 1, #txt do
     local s = '-'
-    if i == i1 then 
+    if i == i1 then
       s = '/'
     elseif i == i2 then
       s = '\\'
@@ -708,6 +708,6 @@ qubit.about = about
 return qubit
 
 --======================================
--- https://en.wikipedia.org/wiki/Quantum_logic_gate 
+-- https://en.wikipedia.org/wiki/Quantum_logic_gate
 -- TODO horizontal concatenation for gates using *, vertical with ..
 -- TODO qubit equality

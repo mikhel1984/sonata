@@ -384,7 +384,7 @@ end
 
 
 -- Simplify call for two objects.
-asciiplot.__concat = function (F1, F2) return asciiplot.concat(_, F1, F2) end
+asciiplot.__concat = function (F1, F2) return asciiplot.concat(nil, F1, F2) end
 
 
 -- methametods
@@ -443,13 +443,13 @@ asciiplot._addPolar = function (F, t, tOpt)
   -- prepare
   asciiplot._clear(F)
   asciiplot._axes(F)
-  -- fill 
+  -- fill
   for j = 1, #tOpt do
     local xy, c = acc[j], asciiplot.char[j]
     for _, v in ipairs(xy) do
       asciiplot.addPoint(F, v[1], v[2], c)
     end
-    F._legend[c] = 'column '..tostring(tOpt[j]) 
+    F._legend[c] = 'column '..tostring(tOpt[j])
   end
   -- limits
   asciiplot._limits(F)
@@ -1176,7 +1176,7 @@ asciiplot.copy = function (F)
   end
   return setmetatable(o, asciiplot)
 end
-about[asciiplot.copy] = {"F:copy() --> cpy_F", 
+about[asciiplot.copy] = {"F:copy() --> cpy_F",
   "Create a copy of the object.", help.OTHER}
 
 
