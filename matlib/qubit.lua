@@ -234,8 +234,10 @@ end
 --  @return vector, size, index of 1
 qubit._parse = function (state)
   local s = string.match(state, '^|(.+)>$')
-  if not s then s = state end  -- try string directly
+  s = string.reverse(s or state)
+  --if not s then s = state end  -- try string directly
   local n, sum = 0, 1
+  --s = string.reverse(s)
   for w in string.gmatch(s, ".") do
     if w == '1' then
       sum = sum + 2^n
@@ -418,7 +420,7 @@ qgate._fill = function (G, lst, s)
     end
     res = res and res:kron(gi) or gi
   end
-  G.mat = G.mat and (G.mat * res) or res
+  G.mat = G.mat and (res * G.mat) or res
 end
 
 
@@ -488,7 +490,7 @@ qgate.CNOT = function (G, slave_i, master_i)
   if getmetatable(G) ~= qgate then error('Not a gate object') end
   slave_i, master_i = slave_i + 1, master_i + 1
   local mat = G:_matrixFor(ruleCnot, slave_i, master_i)
-  G.mat = G.mat and (G.mat * mat) or mat
+  G.mat = G.mat and (mat * G.mat) or mat
   -- update view
   local txt = G.txt
   for i = 1, #txt do
@@ -521,7 +523,11 @@ qgate.fromMatrix = function (G, m)
   if not qgate.isUnitary(tmp) then
     error("Unitary matrix is expected")
   end
-  G.mat = G.mat and (G.mat * m) or m
+  local txt = G.txt
+  for i = 1, #txt do
+    txt[i] = string.format('%s U', txt[i])
+  end
+  G.mat = G.mat and (m * G.mat) or m
   return G
 end
 qubit.fromMatrix = qgate.fromMatrix
@@ -551,7 +557,12 @@ qgate.fromTable = function (G, t)
       error('Unknown column '..tostring(i))
     end
   end
-  G.mat = G.mat and (G.mat * mat) or mat
+  -- TODO check unitary
+  G.mat = G.mat and (mat * G.mat) or mat
+  local txt = G.txt
+  for i = 1, #txt do
+    txt[i] = string.format('%s U', txt[i])
+  end
   return G
 end
 qubit.fromTable = qgate.fromTable
@@ -636,7 +647,7 @@ qgate.SWAP = function (G, i1, i2)
   if getmetatable(G) ~= qgate then error('Not a gate object') end
   i1, i2 = i1 + 1, i2 + 1
   local mat = G:_matrixFor(ruleSwap, i1, i2)
-  G.mat = G.mat and (G.mat * mat) or mat
+  G.mat = G.mat and (mat * G.mat) or mat
   local txt = G.txt
   if i1 > i2 then
     i1, i2 = i2, i1
