@@ -172,6 +172,15 @@ end
 qubit.__concat = function(Q1, Q2) return qubit.combine(nil, Q1, Q2) end
 
 
+--- Q1 == Q2
+--  @param Q1 First state.
+--  @param Q2 Second state.
+--  @return true on equal states.
+qubit.__eq = function (Q1, Q2)
+  return Q1.n == Q2.n and (Q1.vec - Q2.vec):norm() < 1E-6
+end
+
+
 --- k * Q
 --  @param C Coefficient.
 --  @param Q State.
@@ -216,6 +225,36 @@ qubit.__tostring = function (Q)
     acc[i] = string.format('(%s)|%s>', v, acc[i])
   end
   return table.concat(acc, ' + ')
+end
+
+
+--- Measure on qubit from the system.
+--  Update system state.
+--  @param Q Qubit system.
+--  @param pos Qubit index.
+--  @return Qubit state.
+qubit._measOne = function (Q, pos)
+  local sum0, sum1 = 0, 0
+  local ones = {}
+  for k = 0, Q.vec:rows()-1 do
+    local v, rst = k, 0
+    for j = 0, pos do
+      v, rst = math.modf(v * 0.5)  -- TODO use shift
+    end
+    if rst > 0.1 then 
+      sum1 = sum1 + Q.vec[k+1][1]
+      ones[#ones+1] = true
+    else
+      sum0 = sum0 + Q.vec[k+1][1]
+      ones[#ones+1] = false
+    end
+  end
+  local isOne = (math.random()*(sum0+sum1) > sum0)
+  for i, v in ipairs(ones) do
+    if (isOne and not v) or (not isOne and v) then Q.vec[i][1] = 0 end
+  end
+  qubit.normalize(Q)
+  return qubit._new(isOne and Matrix:V{0, 1} or Matrix:V{1, 0}, 1)
 end
 
 
@@ -289,10 +328,12 @@ end
 about[qubit.matrix] = {"Q:matrix() --> M", "Get matrix representation."}
 
 
---- 'Measure' the qubit system state.
+--- 'Measure' the qubit system state. Update current object.
 --  @param Q Qubit system.
+--  @param ind Qubit to measure.
 --  @return found state.
-qubit.meas = function (Q)
+qubit.meas = function (Q, ind)
+  if ind then return qubit._measOne(Q, ind) end
   local acc = {}
   for i = 1, Q.vec:rows() do
     local v = Q.vec[i][1]
@@ -303,11 +344,12 @@ qubit.meas = function (Q)
   end
   local _, pair = Ubinsearch(acc, acc[#acc][1]*math.random(),
     function (t) return t[1] end)
-  local vec = Matrix:zeros(Q.vec)
-  vec[ pair[2] ][1] = 1
-  return qubit._new(vec, Q.n)
+  for i = 1, Q.vec:rows() do
+    Q.vec[i][1] = (i == pair[2]) and 1 or 0
+  end
+  return Q
 end
-about[qubit.meas] = {"Q:meas() --> state_Q", "Qubit state measurement."}
+about[qubit.meas] = {"Q:meas([index]) --> Q", "Qubit state measurement."}
 
 
 --- Normalize coefficients to unit vector.
@@ -376,9 +418,36 @@ end
 about[qubit.gates] = {":gates(input_n) --> G", "Initialize gates for the given numer of inputs.", GATES}
 
 
+--- Apply transformation to qubit system.
+--  @param G Gate system.
+--  @parma Q Qubit system.
 qgate.__call = function (G, Q)
   if G.n ~= Q.n then error('Different number of qubits') end
   return qubit._new(G.mat * Q.vec, Q.n)
+end
+
+
+--- Horizontal concatenation.
+--  @param G1 Left gate system.
+--  @param G2 Right gate system.
+--  @return concatenated gates.
+qgate.__mul = function (G1, G2)
+  if getmetatable(G1) ~= qgate or getmetatable(G2) ~= qgate then
+    error('Undefined')
+  end
+  if G1.n ~= G2.n then error('Differen size') end
+  local res = qgate._new(G1.n)
+  if     not G1.mat then 
+    res.mat, res.txt = G2.mat, G2.txt
+  elseif not G2.mat then
+    res.mat, res.txt = G1.mat, G1.txt
+  else
+    res.mat = G2.mat * G1.mat
+    for i = 1, #res.txt do
+      res.txt[i] = G1.txt[i]..G2.txt[i]
+    end
+  end
+  return res
 end
 
 
@@ -513,6 +582,7 @@ about[qubit.CNOT] = {"G:CNOT(slave_i, master_i) --> upd_G", "Add CNOT gate.", GA
 --  @param m Matrix or the table of lists.
 --  @return Updated gate object.
 qgate.fromMatrix = function (G, m)
+  if getmetatable(G) ~= qgate then error('Not a gate object') end
   m = (getmetatable(m) == Matrix) and m or Matrix(m)
   local n = 2 ^ G.n
   if m:rows() ~= m:cols() or m:rows() ~= n then
@@ -521,6 +591,7 @@ qgate.fromMatrix = function (G, m)
   local tmp = qgate._new(G.n)
   tmp.mat = m
   if not qgate.isUnitary(tmp) then
+    -- TODO to warning
     error("Unitary matrix is expected")
   end
   local txt = G.txt
@@ -540,6 +611,7 @@ about[qubit.fromMatrix] = {"G:fromMatrix(mat) --> upd_G",
 --  @param t Table of string pairs.
 --  @return Updated gate object.
 qgate.fromTable = function (G, t)
+  if getmetatable(G) ~= qgate then error('Not a gate object') end
   local acc = {}
   local n = 2 ^ G.n
   local mat = Matrix:zeros(n, n)
@@ -557,13 +629,7 @@ qgate.fromTable = function (G, t)
       error('Unknown column '..tostring(i))
     end
   end
-  -- TODO check unitary
-  G.mat = G.mat and (mat * G.mat) or mat
-  local txt = G.txt
-  for i = 1, #txt do
-    txt[i] = string.format('%s U', txt[i])
-  end
-  return G
+  return qgate.fromMatrix(G, mat)
 end
 qubit.fromTable = qgate.fromTable
 about[qubit.fromTable] = {"G:fromTable(truth_t) --> upd_G",
@@ -720,5 +786,6 @@ return qubit
 
 --======================================
 -- https://en.wikipedia.org/wiki/Quantum_logic_gate
--- TODO horizontal concatenation for gates using *, vertical with ..
+-- TODO vertical concatenation with ..
 -- TODO qubit equality
+-- TODO qubit from vector
