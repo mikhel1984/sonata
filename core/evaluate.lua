@@ -13,7 +13,7 @@
 
 -- String evaluation method
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
-
+local Test = nil
 
 -- Highlight "header" in a "note" file
 local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
@@ -47,7 +47,7 @@ end
 local function goTo (args, env)
   local num = tonumber(args[1])
   if not num then
-    printErr("Not a number")
+    printErr("Unknown command "..args[1])
   end
   -- TODO to integer
   local lim = #env.notes
@@ -65,8 +65,7 @@ end
 --  @return Table with commands (if any).
 local function getCmd (str)
   if string.find(str, "^%s*:") then
-    local cmd, args = string.match(str, "(%w+)%s*(.*)")
-    return {cmd, args}
+    return { string.match(str, "(%w+)%s*(.*)") }
   end
   return nil
 end
@@ -98,6 +97,9 @@ FORMAT_CLR = '#v_clr',
 INV_MAIN = SonataHelp.CMAIN..'## '..SonataHelp.CRESET,
 INV_CONT = SonataHelp.CMAIN..'.. '..SonataHelp.CRESET,
 INV_NOTE = SonataHelp.CMAIN..'>>> '..SonataHelp.CRESET,
+-- common vars
+alias = {},
+_modules = {},
 }
 
 
@@ -112,12 +114,12 @@ local txtCodes = {
 local cmdInfo = {}
 local commands = {
 
---- Quit the program.
+-- Quit the program.
 q = function (args, env)
   evaluate.exit()
 end,
 
---- Print list of blocks
+-- Print list of blocks
 ls = function (args, env)
   for i = 1, #env.notes do
     local s = ''
@@ -128,19 +130,26 @@ ls = function (args, env)
   end
 end,
 
---- Open 'note' file
+-- Add 'note' file to the list
 o = function (args, env)
   local blk = evaluate._toBlocks(args[2])
   if blk then
-    env.notes = blk
-    env.index = 1
+    for _, v in ipairs(blk) do
+      table.insert(env.notes, v)
+    end
     io.write("Name: '", args[2], "'\tBlocks: ", #blk, "\n")
   else
     printErr("Can't open file "..args[2])
   end
 end,
 
---- Save session to log
+-- Clear notes
+rm = function (args, env)
+  env.notes = {}
+  env.index = 1
+end,
+
+-- Save session to log
 log = function (args, env)
   if args[2] == 'on' then
     if not env.log then
@@ -161,6 +170,36 @@ log = function (args, env)
   end
 end,
 
+-- Trace function
+trace = function (args, env)
+  Test = Test or require('core.test')
+  if args[2] then
+    local fn, err = loadStr('return '..args[2])
+    if fn then
+      print(Test.profile(fn()))
+    else
+      printErr(err)
+    end
+  else
+    printErr("Unexpected argument!")
+  end
+end,
+
+-- Average time
+time = function (args, env)
+  Test = Test or require('core.test')
+  if args[2] then
+    local fn, err = loadStr('return '..args[2])
+    if fn then
+      print(string.format('%.4f ms', Test.time(fn())))
+    else
+      printErr(err)
+    end
+  else
+    printErr("Unexpected argument!")
+  end
+end
+
 }  -- commands
 
 
@@ -169,30 +208,46 @@ commands.help = function (args, env)
   if cmdInfo[args[2]] then
     cmdInfo._print(args[2])
   else
+    -- combine
+    local group = {}
     for k, _ in pairs(commands) do
-      cmdInfo._print(k)
+      local tp = cmdInfo[k][3]
+      if tp then
+        group[tp] = group[tp] or {}
+        table.insert(group[tp], k)
+      else
+        cmdInfo._print(k)  -- basic command
+      end
     end
-    cmdInfo._print('number')
+    -- rest
+    cmdInfo._print('N')
+    for t, lst in pairs(group) do
+      print(string.format("--\t%s", t))
+      for _, v in ipairs(lst) do cmdInfo._print(v) end
+    end
   end
 end
 
 
 -- Command description
-cmdInfo.q = {"Quit"}
-cmdInfo.ls = {"Show list of blocks for execution"}
-cmdInfo.o = {"Open note-file", "filename"}
-cmdInfo.log = {"Turn on/off logging.", "on/off"}
-cmdInfo.help = {"Show this help"}
-cmdInfo.number = {"Go to N-th block"}
+cmdInfo.q = {"Quit", ""}
+cmdInfo.log = {"Turn on/off logging", "on/off"}
+cmdInfo.help = {"Show this help", ""}
+cmdInfo.N = {"Go to N-th block", ""}
+cmdInfo.ls = {"Show list of blocks for execution", "", "Note-files"}
+cmdInfo.o = {"Open note-file", "filename", "Note-files"}
+cmdInfo.rm = {"Clear list of notes", "", "Note-files"}
+cmdInfo.trace = {"Profiling for the function", "func", "Debug"}
+cmdInfo.time = {"Estimate average time", "func", "Debug"}
 
 
 --- Show command description.
 --  @param k Command name.
-cmdInfo._print = function (k) 
+cmdInfo._print = function (k)
   local info = cmdInfo[k]
   if info then
-    print(string.format("  %s %s - %s", k, info[2] or '', info[1]))
-  else 
+    print(string.format("%s\t%s\t- %s", k, info[2], info[1]))
+  else
     print("Unknown key: ", k)
   end
 end
@@ -296,7 +351,7 @@ evaluate._evalBlock = function (co, env)
 end
 
 
---- Read file, split into text blocks. 
+--- Read file, split into text blocks.
 --  Separator is the "pause" word.
 --  @param fname File name.
 --  @return table with the text blocks.
@@ -305,7 +360,7 @@ evaluate._toBlocks = function (fname)
   if not f then return nil end
   local txt = f:read('*a'); f:close()
   -- remove long comments
-  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')  
+  txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')
   local init, res = 1, {}
   while true do
     local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
@@ -348,7 +403,7 @@ end
 --  @param noteList Table with text blocks.
 evaluate.cli = function (noteList)
   local invite = evaluate.INV_MAIN
-  local env = {notes=noteList or {}, index=1, 
+  local env = {notes=noteList or {}, index=1,
     read = true, info=false}
   local co = evaluate.evalThread()
   while true do

@@ -19,28 +19,28 @@ Sym = require 'matlib.symbolic'
 
 -- create variables
 x, y = Sym('x'), Sym('y')
-ans = (x == y)            --> false
+ans = (x == y)                -->  false
 
 -- sum
-ans = x + 2*y - x + y     --> 3*y
+ans = x + 2*y - x + y         -->  3*y
 
 -- product
-ans = x * y^2 / x * y     --> y^3
+ans = x * y^2 / x * y         -->  y^3
 
 -- power
-ans = x^y * x^(2*y)       --> x^(3*y)
+ans = x^y * x^(2*y)           -->  x^(3*y)
 
 -- evaluate
 S = (x+y)*(x-y)
 print(S)
-ans = S:eval{x=2, y=1}    --> Sym(3)
+ans = S:eval{x=2, y=1}        -->  Sym(3)
 
 -- define function
 foo = Sym:def('foo', {x, y}, x^y)
-ans = foo(y, x)           --> y^x
+ans = foo(y, x)               -->  y^x
 
 -- numeric value
-ans = foo(Sym(2), Sym(3)) --> Sym(8)
+ans = foo(Sym(2), Sym(3))     -->  Sym(8)
 
 
 --]]
@@ -48,8 +48,11 @@ ans = foo(Sym(2), Sym(3)) --> Sym(8)
 
 --	LOCAL
 
-local Utils = require('matlib.utils')
-Utils = Utils.utils
+local Ulex do
+  local lib = require('matlib.utils')
+  Ulex = lib.utils.lex
+end
+
 local symbolic = require('matlib.symbase')
 
 
@@ -192,7 +195,6 @@ end
 
 
 --- Define (redefine) function.
---  @param self Do nothing.
 --  @param sName Function name.
 --  @param tArgs List of arguments (symbolic objects).
 --  @param S Function body, symbolical expression or Lua function.
@@ -246,7 +248,6 @@ about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
 
 
 --- Find function using its name.
---  @param self Do nothing.
 --  @param sName Function name.
 --  @return Function object or nil.
 symbolic.fn = function (self, sName)
@@ -282,11 +283,10 @@ end
 
 
 --- Get symbolic expression from string.
---  @param self Do nothing.
 --  @param str Expression string.
 --  @return One or several symbolic elements.
 symbolic.parse = function(self, str)
-  local tokens = Utils.lex(str)
+  local tokens = Ulex(str)
   assert(#tokens > 0)
   local res = PARSER.args(tokens, 1)
   if issymbolic(res) then

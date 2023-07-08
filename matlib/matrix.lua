@@ -25,98 +25,98 @@ Mat = require 'matlib.matrix'
 a = Mat {{1,2},{3,4}}
 b = Mat {{5,6},{7,8}}
 -- call in typical way
-ans = a[2][2]                 --> 4
+ans = a[2][2]                 -->  4
 
 b[1][1] = 5
 -- transpose
 c = a:T()
 -- 'smart' getter
-ans = c(1,-1)                 --> 3
+ans = c(1,-1)                 -->  3
 
 -- matrix columns and rows
-ans = a:cols()                --> 2
+ans = a:cols()                -->  2
 
-ans = a:rows()                --> 2
+ans = a:rows()                -->  2
 
 -- arithmetical operations
-ans = a + b                   --> Mat {{6,8},{10,12}}
+ans = a + b                   -->  Mat {{6,8},{10,12}}
 
-ans = b - a                   --> Mat {{4,4},{4,4}}
+ans = b - a                   -->  Mat {{4,4},{4,4}}
 
-ans = a * b                   --> Mat {{19,22},{43,50}}
+ans = a * b                   -->  Mat {{19,22},{43,50}}
 
 ans = a / b
 -- determinant
-ans = ans:det()              --2> 1
+ans = ans:det()              --2>  1
 
 -- multiply to scalar
-ans = 2 * a                   --> Mat {{2,4},{6,8}}
+ans = 2 * a                   -->  Mat {{2,4},{6,8}}
 
 -- add scalar (to all elements)
-ans = a - 1                   --> Mat {{0,1},{2,3}}
+ans = a - 1                   -->  Mat {{0,1},{2,3}}
 
-ans = a ^ 2                   --> Mat {{7,10},{15,22}}
+ans = a ^ 2                   -->  Mat {{7,10},{15,22}}
 
 -- determinant
-ans = a:det()                 --> -2
+ans = a:det()                 -->  -2
 
 -- inverse matrix
 e = a:inv()
-ans = e(2,1)                  --> 1.5
+ans = e(2,1)                  -->  1.5
 
 -- another call of inversion
 e = a^-1
-ans = e(2,1)                  --> 1.5
+ans = e(2,1)                  -->  1.5
 
 -- object copy
 -- (it doesn't copy zeros)
 f = a:copy()
-ans = (f == a)                --> true
+ans = (f == a)                -->  true
 
 -- element-wise comparison
-ans = (a == b)                --> false
+ans = (a == b)                -->  false
 
 -- identity matrix
-ans = Mat:eye(2)              --> Mat {{1,0},
-                                       {0,1}}
+ans = Mat:eye(2)              -->  Mat {{1,0},
+                                        {0,1}}
 
 -- matrix argument
-ans = Mat:eye(a)              --> Mat {{1,0},
-                                       {0,1}}
+ans = Mat:eye(a)              -->  Mat {{1,0},
+                                        {0,1}}
 
 -- matrix of zeros
-ans = Mat:zeros(2,1)          --> Mat {{0},{0}}
+ans = Mat:zeros(2,1)          -->  Mat {{0},{0}}
 
 -- matrix of constants = 4
-ans = Mat:fill(2,3,4)         --> Mat {{4,4,4},
-                                       {4,4,4}}
+ans = Mat:fill(2,3,4)         -->  Mat {{4,4,4},
+                                        {4,4,4}}
 
 -- horizontal concatenation
-ans = a .. b                  --> Mat {{1,2,5,6},
-                                       {3,4,7,8}}
+ans = a .. b                  -->  Mat {{1,2,5,6},
+                                        {3,4,7,8}}
 
 -- vertical concatenation
 -- (a // b - for short)
-ans = a:concat(b,'v')         --> Mat {{1,2},{3,4},{5,6},{7,8}}
+ans = a:concat(b,'v')         -->  Mat {{1,2},{3,4},{5,6},{7,8}}
 
 -- apply function of 1 argument
-ans = a:map(function (x) return x^2 end)       --> Mat {{1,4},{9,16}}
+ans = a:map(function (x) return x^2 end)       -->  Mat {{1,4},{9,16}}
 
 -- apply function which depends on index too
-ans = a:map(function (x,r,c) return x-r-c end) --> Mat {{-1,-1},{-0,-0}}
+ans = a:map(function (x,r,c) return x-r-c end) -->  Mat {{-1,-1},{-0,-0}}
 
 -- apply function to matrices
 -- element-wise
 fn = function (x,y,z) return x*y+z end
 aa = Mat:zip(fn, b,b,b)
-ans = aa[1][1]                --> 30
+ans = aa[1][1]                -->  30
 
 -- use Gauss transform to solve equation
-ans = (a .. Mat:V{5,11}):rref()            --> Mat {{1,0,1},
-                                                        {0,1,2}}
+ans = (a .. Mat:V{5,11}):rref()            -->  Mat {{1,0,1},
+                                                     {0,1,2}}
 
 -- create vector
-ans = Mat:V {1,2,3}           --> Mat {{1},{2},{3}}
+ans = Mat:V {1,2,3}           -->  Mat {{1},{2},{3}}
 
 -- get submatrix
 g = Mat {
@@ -125,16 +125,16 @@ g = Mat {
   {7,8,9}
 }
 -- same as g:range({2,-1},{2,3})
-ans = g({2,-1},{2,3})         --> Mat {{5,6},
-                                       {8,9}}
+ans = g({2,-1},{2,3})         -->  Mat {{5,6},
+                                        {8,9}}
 
 -- insert elements
 gg = Mat:eye(3)
 gg:insert({1,2},{1,2}, a)
-ans = gg:range({1,2},{1,2})   --> a
+ans = gg:range({1,2},{1,2})   -->  a
 
 -- euclidean norm
-ans = Mat:V({1,2,3}):norm()  --3> math.sqrt(14)
+ans = Mat:V({1,2,3}):norm()  --3>  math.sqrt(14)
 
 -- random matrix
 rnd = function () return math.random() end
@@ -145,7 +145,7 @@ print(h)
 noize = function (v) return v + math.random()*1E-8 end
 hh = a:map(noize)
 hh:round(3)
-ans = hh                      --> a
+ans = hh                      -->  a
 
 -- pseudo inverse matrix
 m = Mat {
@@ -154,64 +154,64 @@ m = Mat {
   {5,6}
 }
 n = m:pinv()
-ans = n(2,2)                 --3> 0.333
+ans = n(2,2)                 --3>  0.333
 
 -- copy as Lua table
 -- (without methametods)
 k = Mat:eye(3)
 k = k:table()
-ans = k[2][1]                 --> 0
+ans = k[2][1]                 -->  0
 
 -- make diagonal matrix
-ans = Mat:D({1,2,3})   --> Mat {{1,0,0},
-                                       {0,2,0},
-                                       {0,0,3}}
+ans = Mat:D({1,2,3})          -->  Mat {{1,0,0},
+                                        {0,2,0},
+                                        {0,0,3}}
 
 -- get diagonal
-ans = g:diag()               --> Mat {{1},{5},{9}}
+ans = g:diag()                -->  Mat {{1},{5},{9}}
 
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
-ans = x1:cross(x2)            --> Mat {{-3},{6},{-3}}
+ans = x1:cross(x2)            -->  Mat {{-3},{6},{-3}}
 
 -- dot product of 2 vectors
-ans = x1:dot(x2)              --> 32
+ans = x1:dot(x2)              -->  32
 
 -- LU decomposition
 l,u,p = b:lu()
-ans = l[2][1]                --3> 0.714
+ans = l[2][1]                --3>  0.714
 
 -- QR decomposition
 q,r = m:qr()
-ans = (q*r)[2][2]            --3> m[2][2]
+ans = (q*r)[2][2]            --3>  m[2][2]
 
-ans = q:det()                --3> 1.0
+ans = q:det()                --3>  1.0
 
 -- SVD decomposition
 u,s,v = m:svd()
-ans = (u*s*v:T())[1][1]      --3> m[1][1]
+ans = (u*s*v:T())[1][1]      --3>  m[1][1]
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
-ans = m[2][2]                --3> 1.633
+ans = m[2][2]                --3>  1.633
 
 -- matrix trace
-ans = a:tr()                  --> 5
+ans = a:tr()                  -->  5
 
 -- extract first row
 m = a({},1)
 -- vector doesn't need in 2 indices
-ans = m(1)                    --> 1
+ans = m(1)                    -->  1
 
 -- extract last column
 -- index can be negative
 m = a(-1,{})
-ans = m(2)                    --> 4
+ans = m(2)                    -->  4
 
 -- get rank
-ans = Mat:fill(2,3):rank()    --> 1
+ans = Mat:fill(2,3):rank()    -->  1
 
 -- change size
 tmp = Mat{
@@ -219,8 +219,8 @@ tmp = Mat{
   {3,4},
   {5,6}
 }
-ans = tmp:reshape(2,3)        --> Mat {{1,2,3},
-                                       {4,5,6}}
+ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
+                                        {4,5,6}}
 
 --]]
 
@@ -233,10 +233,11 @@ local Cnorm, Cfloat = Ver.cross.norm, Ver.cross.float
 local Utils = Ver.utils
 Ver = Ver.versions
 
+-- Matrix transformations
+local tf = require("matlib.matrix_tf")
 
 --- 0 instead nil
 local mt_access = { __index = function () return 0 end }
-
 
 --- Metatable without any operations
 local mt_container = {}
@@ -272,6 +273,7 @@ end
 
 
 local TRANSFORM = 'transform'
+local VECTOR = 'vector'
 
 
 --	INFO
@@ -494,130 +496,6 @@ about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, help.META}
 about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
--- Determinants for simple cases
-matrix._detList = {
--- 1x1
-function (M) return M[1][1] end,
--- 2x2
-function (M) return M[1][1]*M[2][2] - M[2][1]*M[1][2] end,
--- 3x3
-function (M)
-  local m1, m2, m3 = M[1], M[2], M[3]
-  return m1[1]*(m2[2]*m3[3]-m2[3]*m3[2]) -
-         m1[2]*(m2[1]*m3[3]-m2[3]*m3[1]) +
-         m1[3]*(m2[1]*m3[2]-m2[2]*m3[1])
-end
-}
-
-
--- Inversion for simple cases
-matrix._invList = {
--- 1x1
-function (M) return 1 end,
--- 2x2
-function (M)
-  return matrix._init(2, 2, {{M[2][2], -M[1][2]}, {-M[2][1], M[1][1]}} )
-end,
--- 3x3
-function (M)
-  local m1, m2, m3 = M[1], M[2], M[3]
-  return matrix._init(3, 3, {
-    {m2[2]*m3[3]-m2[3]*m3[2], -(m1[2]*m3[3]-m1[3]*m3[2]), m1[2]*m2[3]-m1[3]*m2[2]},
-    {-(m2[1]*m3[3]-m2[3]*m3[1]), m1[1]*m3[3]-m1[3]*m3[1], -(m1[1]*m2[3]-m1[3]*m2[1])},
-    {m2[1]*m3[2]-m2[2]*m3[1], -(m1[1]*m3[2]-m1[2]*m3[1]), m1[1]*m2[2]-m1[2]*m2[1]}
-  })
-end
-}
-
-
---- Remove to small elements in-place.
---  @param M Source matrix.
---  @param dTol Threshold value.
-matrix._clearLess = function (M, dTol)
-  for i = 1, M._rows do
-    local mi = M[i]
-    for j = 1, M._cols do
-      if math.abs(mi[j]) < dTol then mi[j] = 0 end
-    end
-  end
-end
-
-
---- Inverse iteration method for eigenvector calculation.
---  @param M Source matrix.
---  @param v Eigenvalue estimation.
---  @param eps Error value.
---  @return Eigenvector estimation.
-matrix._findEigenvector = function (M, v, eps)
-  -- (M - v * I)^-1
-  local iM = M:copy()
-  -- add 'noize'
-  v = (Cnorm(v) > 0) and 1.01 * v or 1E-4
-  for i = 1, M._rows do iM[i][i] = M[i][i] - v end
-  iM = iM:inv()
-  -- random b
-  local b = M:zeros(M._rows, 1)
-  for i = 1, M._rows do b[i][1] = math.random() end
-  b = b / b:norm()
-  -- find
-  local prev = b
-  for i = 1, 10 do
-    b = iM * b
-    b = b / b:norm()
-    local diff = (b - prev):norm()
-    if diff < eps or diff > (2-eps) then
-      break
-    end
-    prev = b
-  end
-  return b
-end
-
-
---- Minor value calculation.
---  @param M Source matrix.
---  @return Minor value.
-matrix._firstMinor = function (M)
-  local det = matrix._detList[M._rows]
-  if det then
-    return det(M)
-  else
-    local sum, k, M1 = 0, 1, M[1]
-    for i = 1, M._cols do
-      if M1[i] ~= 0 then
-        local m = matrix._firstMinorSub(M, 1, i)
-        sum = sum + (k * M1[i]) * matrix._firstMinor(m)
-      end
-      k = -k
-    end
-    return sum
-  end
-end
-
-
---- Find sub-matrix for minor calculation.
---  @param M Source matrix.
---  @param ir Row index.
---  @param ic Column index.
---  @return Submatrix.
-matrix._firstMinorSub = function (M, ir, ic)
-  local res = {}
-  for r = 1, ir-1 do
-    local rr, mr = {}, M[r]
-    for c = 1, ic-1 do rr[c] = mr[c] end
-    for c = ic+1, M._cols do rr[c-1] = mr[c] end
-    res[r] = rr
-  end
-  for r = ir+1, M._rows do
-    local rr, mr = {}, M[r]
-    for c = 1, ic-1 do rr[c] = mr[c] end
-    for c = ic+1, M._cols do rr[c-1] = mr[c] end
-    res[r-1] = rr
-  end
-  return matrix._init(M._rows-1, M._cols-1, res)
-end
-
-
 --- Fill second matrix with elements of the first one
 --  using index tables.
 --  @param from Source matrix.
@@ -667,57 +545,6 @@ matrix._fromTo = function (from, tR, tC, to)
 end
 
 
---- Transform matrix to upper triangle (in-place).
---  @param M Initial matrix.
---  @return Upper triangulated matrix and determinant.
-matrix._gaussDown = function (M)
-  local A = 1
-  for k = 1, M._rows do
-    -- look for nonzero element
-    local i = k+1
-    while M[k][k] == 0 and i <= M._rows do
-      if M[i][k] ~= 0 then M[i], M[k], A = M[k], M[i], -A end
-      i = i+1
-    end
-    local coef = M[k][k]
-    A = A * coef
-    if coef ~= 0 then
-      -- normalization
-      coef = 1/coef
-      local mk = M[k]
-      for c = k, M._cols do mk[c] = mk[c]*coef end
-      -- subtraction
-      for r = (k+1), M._rows do
-        local mr = M[r]
-        local v = mr[k]
-        if v ~= 0 then
-          for c = k, M._cols do mr[c] = mr[c]-v*mk[c] end
-        end -- if
-      end -- for
-    end -- if
-  end -- for
-  return M, A
-end
-
-
---- Transform triangle matrix to identity matrix (in-place).
---  @param M Initial matrix
---  @return Matrix with diagonal zeros.
-matrix._gaussUp = function (M)
-  for k = M._rows, 1, -1 do
-    local mk = M[k]
-    for r = k-1, 1, -1 do
-      local mr = M[r]
-      local v = mr[k]
-      if v ~= 0 then
-        for c = k, M._cols do mr[c] = mr[c]-v*mk[c] end
-      end -- if
-    end -- for
-  end -- for
-  return M
-end
-
-
 --- Initialization of matrix with given size.
 --  @param iR Number of rows.
 --  @param iC Number of columns.
@@ -746,71 +573,6 @@ matrix._kProd = function (d, M)
 end
 
 
---- Prepare LU transformation for other functions.
---  @param M Initial square matrix.
---  @return "Compressed" LU, indexes, number of permutations
-matrix._luPrepare = function (M)
-  if M._rows ~= M._cols then error("Square matrix is expected!") end
-  local a = matrix.copy(M)
-  local vv = {}
-  -- get scaling information
-  for r = 1, a._rows do
-    local big, abig, v = 0, 0, 0
-    local ar = a[r]
-    for c = 1, a._cols do
-      v = Cnorm(ar[c])
-      if v > abig then
-        big = ar[c]
-        abig = v
-      end
-    end
-    vv[r] = 1.0/big
-  end
-  -- Crout's method
-  local rmax, dum = nil, nil
-  local TINY, d = 1e-20, 0
-  local index = {}
-  for c = 1, a._cols do
-    for r = 1, c-1 do
-      local ar = a[r]
-      local sum = ar[c]
-      for k = 1, r-1 do sum = sum - ar[k]*a[k][c] end
-      ar[c] = sum
-    end
-    local big = 0        -- largest pivot element
-    for r=c, a._rows do
-      local ar = a[r]
-      local sum = ar[c]
-      for k = 1, c-1 do sum = sum - ar[k]*a[k][c] end
-      ar[c] = sum
-      sum = Cnorm(sum)
-      dum = vv[r]*sum
-      if Cnorm(dum) >= Cnorm(big) then big = dum; rmax = r end
-    end
-    local ac = a[c]
-    if c ~= rmax then
-      local armax = a[rmax]
-      -- interchange rows
-      for k = 1, a._rows do
-        dum = armax[k]
-        armax[k] = ac[k]
-        ac[k] = dum
-      end
-      d = d+1
-      vv[rmax] = vv[c]
-    end
-    index[c] = rmax
-    if ac[c] == 0 then ac[c] = TINY end
-    -- divide by pivot element
-    if c ~= a._cols then
-      dum = 1.0 / ac[c]
-      for r = c+1, a._rows do a[r][c] = dum*a[r][c] end
-    end
-  end
-  return a, index, d
-end
-
-
 --- Create new matrix from list of tables.
 --  @param t Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
@@ -825,38 +587,6 @@ matrix._new = function (self, t)
 end
 
 
---- QR-type sweeps for SVD.
---  Find such U, B, V that B = U*M*V:T() and
---  U, V are orthonormal, B is bidiagonal rectangular. Estimate error E.
---  @param M Source matrix.
---  @return Matrices U, B, V, value E
-matrix._qrSweep = function (M)
-  local m, n, B = M._rows, M._cols, M
-  local U, V = matrix:eye(m), matrix:eye(n)
-  local w, TOL = math.min(m, n), 1E-13
-  for k = 1, w-1 do
-    -- V
-    local c, s = matrix.givensRot(B[k][k], B[k][k+1])
-    local Q = matrix:eye(n)
-    Q[k  ][k] = c; Q[k  ][k+1] = -s
-    Q[k+1][k] = s; Q[k+1][k+1] =  c
-    B, V = B * Q, V * Q       -- Q is transposed!
-    matrix._clearLess(B, TOL)
-    -- U
-    c, s = matrix.givensRot(B[k][k], B[k+1][k])
-    Q = matrix:eye(m)
-    Q[k  ][k] =  c; Q[k  ][k+1] = s
-    Q[k+1][k] = -s; Q[k+1][k+1] = c
-    U, B = U * Q:T(), Q * B
-    matrix._clearLess(B, TOL)
-  end
-  -- find error (upper diagonal of lenght w-1)
-  local e = 0
-  for i = 1, w-1 do e = e + math.abs(B[i][i+1]) end
-  return U, B, V, e
-end
-
-
 --- Bidiagonalization.
 --  Find such U, B, V that U*B*V:T() = M and
 --  B is upper bidiagonal, U and V are ortogonal.
@@ -868,10 +598,10 @@ matrix.bidiag = function (M)
   local w = math.min(m, n)
   for k = 1, w do
     -- set zero to column elements
-    local H1 = matrix.householder(B:range({1, m}, {k}), k)
+    local H1 = tf.householder(B:range({1, m}, {k}), k)
     U, B = U * H1:H(), H1 * B
     if k < (w - 1) then
-      local H2 = matrix.householder(B:range({k}, {1, n}):T(), k+1):H()
+      local H2 = tf.householder(B:range({k}, {1, n}):T(), k+1):H()
       B, V = B * H2, V * H2    -- H2 is transposed!
     end
   end
@@ -984,7 +714,7 @@ matrix.cross = function (V1, V2)
   return matrix._init(3, 1, {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
 end
 about[matrix.cross] = {'V:cross(V2) --> V3',
-  'Cross product or two 3-element vectors.'}
+  'Cross product or two 3-element vectors.', VECTOR}
 
 
 --- Find determinant.
@@ -992,14 +722,13 @@ about[matrix.cross] = {'V:cross(V2) --> V3',
 --  @return Determinant.
 matrix.det = function (M)
   if (M._rows ~= M._cols) then error("Square matrix is expected!") end
-  local fn = matrix._detList[M._rows]
+  local fn = tf.detList[M._rows]
   if fn then return fn(M) end
   -- in other cases
-  local _, K = matrix._gaussDown(matrix.copy(M))
+  local _, K = tf.gaussDown(matrix.copy(M))
   return K
 end
-about[matrix.det] = {"M:det() --> num",
-  "Calculate determinant."}
+about[matrix.det] = {"M:det() --> num", "Calculate determinant."}
 
 
 --- Get diagonal vector.
@@ -1046,7 +775,8 @@ matrix.dot = function (V1, V2)
   end
   return s
 end
-about[matrix.dot] = {'V:dot(V2) --> num', 'Scalar product of two vectors.'}
+about[matrix.dot] = {'V:dot(V2) --> num', 
+  'Scalar product of two vectors.', VECTOR}
 
 
 --- Find eigenvectors and eigenvalues.
@@ -1059,7 +789,7 @@ matrix.eig = function (M)
   local root = p:roots()
   local P, lam = matrix:zeros(M._rows), matrix:zeros(M._rows)
   for j = 1, #root do
-    local v = matrix._findEigenvector(M, root[j], 1E-4)
+    local v = tf.findEigenvector(M, root[j], 1E-4)
     -- save
     for i = 1, M._rows do P[i][j] = v[i][1] end
     lam[j][j] = root[j]
@@ -1108,50 +838,41 @@ about[matrix.fill] = {":fill(row_N, col_N, val=1) --> M",
   "Create matrix of given numbers (default is 1).", help.NEW}
 
 
---- Given's rotation.
---  Find such c, s, r that Mat{{c,s},{-s,c}} * Mat:V{d1,d2} = Mat:V{r,0}.
---  @param d1 First vector element.
---  @param d2 Second vector element.
---  @return cos, sin, vector length
-matrix.givensRot = function (d1, d2)
-   -- return cos, sin; r is omitted
-   if d2 == 0 then
-     local c = Utils.sign(d1)
-     return (c == 0) and 1 or c, 0, Cnorm(d1)
-   elseif d1 == 0 then
-     return 0, Utils.sign(d2), Cnorm(d2)
-   elseif Cnorm(d1) > Cnorm(d2) then
-     local t = d2 / d1
-     local u = Utils.sign(d1) * math.sqrt(1 + t*t)
-     local c = 1 / u
-     return c, t * c, d1 * u
-   else
-     local t = d1 / d2
-     local u = Utils.sign(d2) * math.sqrt(1 + t*t)
-     local s = 1 / u
-     return t * s, s, d2 * u
-   end
+--- Kronecker product.
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @return matrix, obtained with Kronecker product.
+matrix.kron = function (M1, M2)
+  local res = matrix._init(M1._rows*M2._rows, M1._cols*M2._cols, {})
+  for i = 1, M1._rows do
+    for j = 1, M1._cols do
+      local v = M1[i][j]
+      if v ~= 0 then
+        local rr, cc = (i-1)*M2._rows, (j-1)*M2._cols
+        for p = 1, M2._rows do
+          local mp = M2[p]
+          local resr = res[rr + p]
+          for q = 1, M2._cols do resr[cc + q] = v * mp[q] end
+        end
+      end
+    end
+  end
+  return res
 end
-about[matrix.givensRot] = {":givensRot(x, y) --> cos_d, sin_d, len_d",
-  "Find parameters of Givens rotation (c,s,r).", help.OTHER}
+about[matrix.kron] = {"M:kron(M2) --> M3", "Find Kronecker product."}
 
 
---- Householder transformation.
---  @param V Vector for reflection.
---  @param ik Index of start element.
---  @return Householder matrix.
-matrix.householder = function (V, ik)
-  local r, sum = V._rows, 0
-  local u = matrix:zeros(1, r)   -- use row vector
-  -- fill vector
-  for i = ik, r do sum = sum + Cnorm(V[i][1])^2 end
-  u[1][ik] = V[ik][1] + Utils.sign(V[ik][1]) * math.sqrt(sum)
-  for i = ik+1, r do u[1][i] = V[i][1] end
-  -- find matrix
-  return matrix:eye(r) - u:H() * ( (2 / (u:norm() ^ 2)) * u)
+--- Kronecker sum.
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @return matrix, obtained with Kronecker sum.
+matrix.kronSum = function (M1, M2)
+  if M1._rows ~= M1._cols or M2._rows ~= M2._cols then
+    error('Square matrices expected')
+  end
+  return matrix.kron(M1, matrix:eye(M2)) + matrix.kron(matrix:eye(M1), M2)
 end
-about[matrix.householder] = {"M:householder(V, start_N) --> hh_M",
-  "Find Householder matrix for the given vector.", TRANSFORM}
+about[matrix.kronSum] = {"M:kronSum(M2) --> M3", "Find Kronecker sum."}
 
 
 --- Round matrix elements in place.
@@ -1175,7 +896,7 @@ matrix.round = function(M, N)
     end
   end
 end
-about[matrix.round] = {"M:round(N=6) --> nil",
+about[matrix.round] = {"M:round(N=6)",
   "Round matrix elements in place.", help.OTHER}
 
 
@@ -1206,7 +927,7 @@ about[matrix.H] = {"M:H() --> conj_M",
 matrix.insert = function (M1, tR, tC, M2)
   matrix._fromTo(M2, tR, tC, M1)
 end
-about[matrix.insert] = {"M:insert(rows_t, cols_t, M2) --> nil",
+about[matrix.insert] = {"M:insert(rows_t, cols_t, M2)",
   "Insert second matrix into the given range of indeces."}
 
 
@@ -1217,9 +938,9 @@ matrix.inv = function (M)
   if M._rows ~= M._cols then error("Square matrix is expected!") end
   local size = M._cols
   -- check simple cases
-  local fn = matrix._invList[size]
+  local fn = tf.invList[size]
   if fn then
-    local det = matrix._detList[size](M)
+    local det = tf.detList[size](M)
     return (det ~= 0) and matrix._kProd(1/det, fn(M))
                        or matrix:fill(size, size, math.huge)
   end
@@ -1232,11 +953,11 @@ matrix.inv = function (M)
     resi[i+size] = 1
   end
   res._cols = 2*size
-  res, det = matrix._gaussDown(res)
+  res, det = tf.gaussDown(res)
   if det == 0 then
     return matrix:fill(size, size, math.huge)
   end
-  res = matrix._gaussUp(res)
+  res = tf.gaussUp(res)
   -- move result
   for r = 1, size do
     local resr = res[r]
@@ -1255,7 +976,7 @@ about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix.", TRANSFORM}
 --  @param M Initial square matrix.
 --  @return L matrix, U matrix, permutations
 matrix.lu = function (M)
-  local a, _, d = matrix._luPrepare(M)
+  local a, _, d = tf.luPrepare(M)
   local p = matrix:eye(M._rows, M._cols)
   local move = Ver.move
   while d > 0 do
@@ -1300,10 +1021,10 @@ about[matrix.map] = {"M:map(fn) --> found_M",
 matrix.minor = function (M, ir, ic)
   assert(M._rows == M._cols)
   if ir > 0 and ic > 0 and ir <= M._rows and ic <= M._cols then
-    return matrix._firstMinor(matrix._firstMinorSub(M, ir, ic))
+    return tf.firstMinor(tf.firstMinorSub(M, ir, ic))
   else
     -- determinant via minors
-    return matrix._firstMinor(M)
+    return tf.firstMinor(M)
   end
 end
 about[matrix.minor] = {"M:minor(row_N, col_N) --> minor_M",
@@ -1450,7 +1171,7 @@ about[matrix.range] = {"M:range(rows_t, cols_t) --> range_M",
 --  @param M Initial matrix.
 --  @return Value of rank.
 matrix.rank = function (M)
-  local mat = matrix._gaussDown(matrix.copy(M))
+  local mat = tf.gaussDown(matrix.copy(M))
   local i = 1
   while i <= mat._rows do
     local mati = mat[i]
@@ -1510,7 +1231,7 @@ about[matrix.rows] = {"M:rows() --> N", "Get number of rows."}
 --  @param M Matrix representation for system of equations.
 --  @return Transformed matrix.
 matrix.rref = function (M)
-  return matrix._gaussUp(matrix._gaussDown(M))
+  return tf.gaussUp(tf.gaussDown(M))
 end
 about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method."}
@@ -1529,7 +1250,7 @@ matrix.svd = function (M)
   local U2, V2 = matrix:eye(U1), matrix:eye(V1)
   local E, U3, V3 = math.huge, nil, nil
   while E > 1E-8 do
-    U3, B, V3, E = matrix._qrSweep(B)
+    U3, B, V3, E = tf.qrSweep(B)
     U2, V2 = U2 * U3, V2 * V3
   end
   U1, V1 = U1 * U2, V1 * V2
@@ -1617,6 +1338,22 @@ about[matrix.V] = {":V {...} --> new_V",
   "Create vector from list of numbers.", help.NEW}
 
 
+--- Stack columns into the single vector.
+--  @param M Source matrix.
+--  @return column vector.
+matrix.vectorize = function (M)
+  local res = {}
+  for c = 1, M._cols do
+    for r = 1, M._rows do
+      res[#res+1] = {M[r][c]}  -- TODO save nonzero only?
+    end
+  end
+  return matrix._init(#res, 1, res)
+end
+about[matrix.vectorize] = {"M:vectorize() --> V", 
+  "Create vector as a stack of columns.", TRANSFORM}
+
+
 --- Create matrix of zeros.
 --  @param nR Number of rows.
 --  @param nC Number of columns. Can be omitted in case of square matrix.
@@ -1678,3 +1415,4 @@ return matrix
 --TODO: change matrix print
 --TODO: matrix from list and size
 --TODO: Fix eigenvectors for complex eigenvalues.
+--TODO: single Householder algorithm

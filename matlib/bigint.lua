@@ -23,116 +23,126 @@ Int = require 'matlib.bigint'
 
 -- from integer
 a = Int(123)
-ans = a:float()               --> 123
+ans = a:float()               -->  123
 
 -- from string
 b = Int('456')
-ans = b:float()               --> 456
+ans = b:float()               -->  456
 
 -- 'default' form for base <= 16
-ans = Int('0xABC')            --> Int('10,11,12:16')
+ans = Int('0xABC')            -->  Int('10,11,12:16')
 
 -- define base explicitly
 g = Int('-1,2,3:10')
-ans = g:float()               --> -123
+ans = g:float()               -->  -123
+
+-- check positive/negative
+ans = g:sign()                -->  -1
 
 -- check equality
-ans = (a == -g)               --> true
+ans = (a == -g)               -->  true
 
 -- arithmetical operations
-ans = (a+b):float()           --> 579
+ans = (a+b):float()           -->  579
 
-ans = (a-b):float()           --> -333
+ans = (a-b):float()           -->  -333
 
-ans = (a*Int(2)):float()      --> 246
+ans = (a*Int(2)):float()      -->  246
 
-ans = (b/2):float()           --> 228
+ans = (b/2):float()           -->  228
 
-ans = (b%a):float()           --> 87
+ans = (b%a):float()           -->  87
 
-ans = (a^3):float()           --> 1860867
+ans = (a^3):float()           -->  1860867
 
 -- absolute value
-ans = Int('-25'):abs():float()  --> 25
+ans = Int('-25'):abs():float()  -->  25
 
 -- factorial
 c = Int(50):F()
-ans = c:float() / 3E64       --1> 1.0
+ans = c:float() / 3E64       --1>  1.0
 
-ans = (a > b)                 --> false
+ans = (a > b)                 -->  false
+
+-- ratio of factorials
+ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
 
 -- compare with number
-ans = a:eq(123)               --> true
+ans = a:eq(123)               -->  true
 
 -- digits for a different numeric base
 v = g:base(60)
-ans = tostring(v)             --> '-2,3:60'
+ans = tostring(v)             -->  '-2,3:60'
 
 -- number of digits
-ans = #v                      --> 2
+ans = #v                      -->  2
 
 -- 2nd digit (from the lowest)
-ans = v[2]                    --> 2
+ans = v[2]                    -->  2
 
 -- base and sign
-ans = v.base == 60 and v.sign == -1  --> true
+ans = v.base == 60 and v.sign == -1  -->  true
 
 -- print digits
 print(v)
 
 -- back to bigint
-ans = Int(v)                  --> g
+ans = Int(v)                  -->  g
 
 -- comparison
-ans = (a ~= g)                --> true
+ans = (a ~= g)                -->  true
 
 -- simple print
 print(a)
 
 -- find permutations
-ans = Int:P(10, 5)            --> Int(30240)
+ans = Int:P(10, 5)            -->  Int(30240)
 
 -- find combinations
-ans = Int:C(10, 3)            --> Int(120)
+ans = Int:C(10, 3)            -->  Int(120)
 
 -- check if it prime
 -- iterate though multipliers
-ans = Int(1229):isPrime()     --> true
+ans = Int(1229):isPrime()     -->  true
 
 -- Fermat theorem
-ans = Int(1229):isPrime('Fermat') --> true
+ans = Int(1229):isPrime('Fermat') -->  true
 
 -- factorize
 t = b:factorize()
-ans = #t                      --> 5
+ans = #t                      -->  5
 
 -- check factorization
 ans = 1
 for i = 1,#t do
   ans = ans * (t[i]:float())
-end                           --> 456
+end                           -->  456
 
 -- pseudo-random number
 -- from 0 to b
 print(Int:random(b))
 
 -- greatest common divisor
-ans = a:gcd(b):float()        --> 3
+ans = a:gcd(b):float()        -->  3
 
 -- with numbers
 -- result is bigint
-ans = a + 1.0                 --> Int(124)
+ans = a + 1.0                 -->  Int(124)
 
 -- result is float
-ans = a - 0.5                 --> 122.5
+ans = a - 0.5                 -->  122.5
 
 --]]
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Cross = Ver.cross
-Ver = Ver.versions
+local Vinteger, Vmove, Cfloat, Cconvert do
+  local lib = require("matlib.utils")
+  Vinteger = lib.versions.isInteger
+  Vmove = lib.versions.move
+  Cfloat = lib.cross.float
+  Cconvert = lib.cross.convert
+end
 
 local SEP = ','
 local NUMB = 'numbers'
@@ -200,12 +210,12 @@ local function isbigint(v) return getmetatable(v) == bigint end
 --  @return Sum object.
 bigint.__add = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 + p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p + B2) or (Cross.float(B1) + Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p + B2) or (Cfloat(B1) + Cfloat(B2))
     end
   end
   if B1._sign > 0 then
@@ -222,12 +232,12 @@ end
 --  @return Ratio object.
 bigint.__div = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 / p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p / B2) or (Cross.float(B1) / Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p / B2) or (Cfloat(B1) / Cfloat(B2))
     end
   end
   local res, _ = bigint._div(B1, B2)
@@ -245,14 +255,14 @@ bigint.__index = bigint
 --  @return True if the first value is less or equal to the second.
 bigint.__le = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 <= p
     else
-      p = Cross.convert(B2, B1)
+      p = Cconvert(B2, B1)
       if p then return p <= B2
       else
-        return Cross.float(B1) <= Cross.float(B2)
+        return Cfloat(B1) <= Cfloat(B2)
       end
     end
   end
@@ -266,14 +276,14 @@ end
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 < p
     else
-      p = Cross.convert(B2, B1)
+      p = Cconvert(B2, B1)
       if p then return p < B2
       else
-        return Cross.float(B1) < Cross.float(B2)
+        return Cfloat(B1) < Cfloat(B2)
       end
     end
   end
@@ -299,12 +309,12 @@ end
 --  @return Remainder object.
 bigint.__mod = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 % p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p % B2) or (Cross.float(B1) % Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p % B2) or (Cfloat(B1) % Cfloat(B2))
     end
   end
   local _, res = bigint._div(B1, B2)
@@ -318,12 +328,12 @@ end
 --  @return Product object.
 bigint.__mul = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 * p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p * B2) or (Cross.float(B1) * Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p * B2) or (Cfloat(B1) * Cfloat(B2))
     end
   end
   local res = bigint._mul(B1, B2)
@@ -342,12 +352,12 @@ bigint.__newindex = function () error("Immutable object") end
 --  @return Power of the number.
 bigint.__pow = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 ^ p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p ^ B2) or (Cross.float(B1) ^ Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p ^ B2) or (Cfloat(B1) ^ Cfloat(B2))
     end
   end
   if B2._sign < 0 then error('Negative power!') end
@@ -375,12 +385,12 @@ end
 --  @return Difference object.
 bigint.__sub = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 - p
     else
-      p = Cross.convert(B2, B1)
-      return p and (p - B2) or (Cross.float(B1) - Cross.float(B2))
+      p = Cconvert(B2, B1)
+      return p and (p - B2) or (Cfloat(B1) - Cfloat(B2))
     end
   end
   if B1._sign > 0 then
@@ -429,7 +439,7 @@ end
 --  @param v Source objec.
 --  @return Int object.
 bigint._convert = function (v)
-  return Ver.isInteger(v) and bigint._newNumber(v) or nil
+  return Vinteger(v) and bigint._newNumber(v) or nil
 end
 
 
@@ -483,7 +493,7 @@ bigint._div = function (B1, B2)
   end
   local k = #b1 - #b2 + 1
   local rem = bigint._newTable({}, 1)
-  Ver.move(b1, k+1, #b1, 1, rem._)  -- copy last elements
+  Vmove(b1, k+1, #b1, 1, rem._)  -- copy last elements
   local v2, den, acc = B2:float(), B2:abs(), {}
   for i = k, 1, -1 do
     table.insert(rem._, 1, b1[i])
@@ -627,7 +637,7 @@ bigint._new = function (num)
   if type(num) == 'table' then
     assert(#num > 0, "Wrong input")
     local base = num.base
-    assert(base and base > 0 and Ver.isInteger(base), "Wrong base")
+    assert(base and base > 0 and Vinteger(base), "Wrong base")
     assert(num.sign, "Wrong sign")
     local acc = {}
     for i, v in ipairs(num) do
@@ -638,7 +648,7 @@ bigint._new = function (num)
       bigint._rebase(acc, base, BASE), num.sign)
   elseif type(num) == 'string' then
     return bigint._newString(num)
-  elseif type(num) == 'number' and Ver.isInteger(num) then
+  elseif type(num) == 'number' and Vinteger(num) then
     return bigint._newNumber(num)
   end
   error("Wrong number: "..tostring(num))
@@ -887,7 +897,7 @@ about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
 --  @return Table with digits of the found number.
 bigint.base = function (B, N)
   N = N or BASE
-  assert(Ver.isInteger(N) and N > 0, "Wrong base")
+  assert(Vinteger(N) and N > 0, "Wrong base")
   local b = B._
   local res = bigint._rebase(b, BASE, N)
   res.sign = B._sign
@@ -897,13 +907,12 @@ about[bigint.base] = {"B:base(N) --> tbl", "Convert number to the new numeric ba
 
 
 --- Find number of combinations.
---  @param self Do nothing.
 --  @param n Total number of elements.
 --  @param k Group size.
 --  @return Bigint for combination number.
 bigint.C = function (self, n, k)
   n, k = bigint._args(n, k)
-  return bigint.ratF(n, k) / bigint.F(n-k)
+  return bigint:ratF(n, k) / bigint.F(n-k)
 end
 about[bigint.C] = {":C(n, k) --> combinations_B",
   "Number of combinations C(n,k).", COMB}
@@ -918,14 +927,14 @@ about[bigint.C] = {":C(n, k) --> combinations_B",
 --  @return True if numbers have the same values and signs.
 bigint.eq = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cross.convert(B1, B2)
+    local p = Cconvert(B1, B2)
     if p then
       return B1 == p
     else
-      p = Cross.convert(B2, B1)
+      p = Cconvert(B2, B1)
       if p then return p == B2
       else
-        return Cross.float(B1) == Cross.float(B2)
+        return Cfloat(B1) == Cfloat(B2)
       end
     end
   end
@@ -938,8 +947,8 @@ bigint.eq = function (B1, B2)
   end
   return false
 end
-about[bigint.eq] = {
-  "B:eq(x) --> bool", "Check equality with the second value.", help.OTHER}
+about[bigint.eq] = {"B:eq(x) --> bool", 
+  "Check equality with the second value.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
 
@@ -990,8 +999,8 @@ bigint.factorize = function (B)
   end
   return res
 end
-about[bigint.factorize] = {
-  "B:factorize() --> primeBs_t", "Find the list of multipliers.", NUMB}
+about[bigint.factorize] = {"B:factorize() --> primeBs_t", 
+  "Find the list of multipliers.", NUMB}
 
 
 --- Float number representation.
@@ -1018,8 +1027,8 @@ bigint.gcd = function (B1, B2)
   B1, B2 = bigint._args(B1, B2)
   return bigint._gcd(B1, B2)
 end
-about[bigint.gcd] = {
-  "B:gcd(B2) --> B3", "Find the greatest common divisor for two integers.", NUMB}
+about[bigint.gcd] = {"B:gcd(B2) --> B3", 
+  "Find the greatest common divisor for two integers.", NUMB}
 
 
 -- TODO try https://en.wikipedia.org/wiki/Primality_test
@@ -1042,20 +1051,18 @@ about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
 
 
 --- Permutations without repetition.
---  @param self Do nothing.
 --  @param n Number of elements.
 --  @param k Size of group.
 --  @return Number of permutations.
 bigint.P = function (self, n, k)
   n, k = bigint._args(n, k)
-  return bigint.ratF(n, n-k)
+  return bigint:ratF(n, n-k)
 end
 about[bigint.P] = {":P(n, k) --> permutaions_B",
   "Find permutations without repetition.", COMB}
 
 
 --- Generate random number.
---  @param self Do nothing.
 --  @param B Upper limit.
 --  @return Number from 0 to B.
 bigint.random = function (self, B)
@@ -1089,7 +1096,7 @@ about[bigint.random] = {":random(B) --> rand_B",
 --  @param B Numerator.
 --  @param B2 Denominator.
 --  @return Bigint for ration.
-bigint.ratF = function (B, B2)
+bigint.ratF = function (self, B, B2)
   assert(B._sign > 0 and B2._sign > 0, "Non-negative expected")
   local N1, N2 = B:float(), B2:float()
   if N1 < N2 then return bigint._0 end

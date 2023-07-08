@@ -25,62 +25,62 @@ require 'matlib.matrix'
 a = Quat {1,2,3,4}
 -- part of elements
 b = Quat {w=3, x=4}
-ans = b                       --> Quat{3,4,0,0}
+ans = b                       -->  Quat{3,4,0,0}
 
 -- conjugation
-ans = a:conj()                --> Quat{1,-2,-3,-4}
+ans = a:conj()                -->  Quat{1,-2,-3,-4}
 
 -- real when imaginary are zeros
-ans = a + a:conj()            --> 2
+ans = a + a:conj()            -->  2
 
 -- norm
-ans = b:abs()                --1> 5.000
+ans = b:abs()                --1>  5.000
 
 -- inversion
 c = a*a:inv()
-ans = c:w()                  --1> 1.000
+ans = c:w()                  --1>  1.000
 
 -- arithmetic
-ans = a+b                     --> Quat{4,6,3,4}
+ans = a+b                     -->  Quat{4,6,3,4}
 
-ans = a*b                     --> Quat{-5,10,25}
+ans = a*b                     -->  Quat{-5,10,25}
 
-ans = 3*b                     --> Quat{9,12,0,0}
+ans = 3*b                     -->  Quat{9,12,0,0}
 
 -- power
-ans = b^3                     --> b * b * b
+ans = b^3                     -->  b * b * b
 
 -- unit quaternion
 a = a:normalize()
-ans = a:abs()                --1> 1.000
+ans = a:abs()                --1>  1.000
 
 -- unit power
 aa = a^1.5
-ans = aa:x()                 --3> 0.324
+ans = aa:x()                 --3>  0.324
 
-ans = aa:y()                 --3> 0.486
+ans = aa:y()                 --3>  0.486
 
-ans = aa:z()                 --3> 0.648
+ans = aa:z()                 --3>  0.648
 
 -- rotation matrix
 m = a:toRot()
 d = Quat:fromRot(m)
-ans = (d-a):abs()            --1> 0.000
+ans = (d-a):abs()            --1>  0.000
 
 -- use angle
 -- and axis
 ang = 0.5
 axis = {1,1,1}
 f = Quat:fromAA(ang,axis)
-ans,_ = f:toAA()             --3> ang
+ans,_ = f:toAA()             --3>  ang
 
 -- rotate vector
 p = a:rotate({1,0,0})
-ans = p[1]                   --3> -0.667
+ans = p[1]                   --3>  -0.667
 
 -- spherical interpolation
 d = a:slerp(b,0.5)
-ans = d:w()                  --3> 0.467
+ans = d:w()                  --3>  0.467
 
 -- show
 print(d)
@@ -90,14 +90,12 @@ print(d)
 --	LOCAL
 
 local Ver = require("matlib.utils")
-local Utils = Ver.utils
+local Unumstr = Ver.utils.numstr
 local Cross = Ver.cross
 Ver = Ver.versions
 
-
+-- categories
 local ROTATION = 'rotation'
-
-
 
 
 --- Get float point value if possible.
@@ -119,7 +117,7 @@ end
 --  @param v Value.
 --  @return String representation.
 local function numStr(v)
-  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
+  return type(v) == 'number' and Unumstr(v) or tostring(v)
 end
 
 
@@ -333,13 +331,12 @@ quaternion.__eq = quaternion.eq
 
 
 --- Build quaternion from angle-axis representation.
---  @param self Do nothing.
 --  @param dAng Angle of rotation.
 --  @param vAxe Axis in form of vector object or table with 3 elements.
 --  @return New quaternion.
 quaternion.fromAA = function (self, dAng, vAxe)
   local x, y, z = nil, nil, nil
-  if vAxe.vsmatrix then
+  if vAxe.ismatrix then
     x, y, z = vAxe(1), vAxe(2), vAxe(3)
   else
     x, y, z = vAxe[1], vAxe[2], vAxe[3]
@@ -352,7 +349,6 @@ about[quaternion.fromAA] = {':fromAA(angle_d, axis_d) --> Q','Create quaternion 
 
 
 --- Get quaternion from rotation matrix.
---  @param self Do nothing.
 --  @param M Rotation matrix 3x3.
 --  @return Equal quaternion.
 quaternion.fromRot = function (self, M)
@@ -377,6 +373,27 @@ quaternion.fromRot = function (self, M)
   end
 end
 about[quaternion.fromRot] = {':fromRot(M) --> Q', 'Convert rotation matrix to quaternion.', ROTATION}
+
+
+--- Obtain quaternion from the Euler angles.
+--  @param roll Angle w.r.t. X
+--  @param pitch Angle w.r.t. Y
+--  @param yaw Angle w.r.t. Z
+--  @return Equal quaternion.
+quaternion.fromRPY = function (self, roll, pitch, yaw)
+  local cr = math.cos(roll * 0.5)
+  local sr = math.sin(roll * 0.5)
+  local cp = math.cos(pitch * 0.5)
+  local sp = math.sin(pitch * 0.5)
+  local cy = math.cos(yaw * 0.5)
+  local sy = math.sin(yaw * 0.5)
+  return quaternion._new(
+    cr * cp * cy + sr * sp * sy,
+    sr * cp * cy - cr * sp * sy,
+    cr * sp * cy + sr * cp * sy,
+    cr * cp * sy - sr * sp * cy)
+end
+about[quaternion.fromRPY] = {":fromRPY(roll_d, pitch_d, yaw_d) --> Q", "Convert Euler angles to quaternion.", ROTATION}
 
 
 --- Get inversion.
@@ -497,6 +514,22 @@ quaternion.toRot = function (Q)
     {2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)}}
 end
 about[quaternion.toRot] = {'Q:toRot() --> M', 'Get equal rotation matrix.', ROTATION}
+
+
+--- Get Euler angles.
+--  @param Q Unit quaternion.
+--  @return roll, pitch, yaw
+quaternion.toRPY = function (Q)
+  if math.abs(quaternion._norm2(Q)-1) > 1E-4 then
+      error("Unit quaternion is required!")
+  end
+  local w, x, y, z = Ver.unpack(Q._)
+  local roll  = Ver.atan2(2*(w*x + y*z), 1 - 2*(x*x + y*y))
+  local pitch = math.asin(2*(w*y - z*x))
+  local yaw   = Ver.atan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
+  return roll, pitch, yaw
+end
+about[quaternion.toRPY] = {"Q:toRPY() --> roll_d, pitch_d, yaw_d", "Get Euler angles.", ROTATION}
 
 
 --- Get w component.

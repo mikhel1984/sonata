@@ -271,7 +271,8 @@ generator.module = function (mName, alias, description)
   local txt =
 [=[--[[		sonata/WORD1
 
-3L WORD5
+3L WORD5.
+--
 --  </br></br><b>Authors</b>: Your Name
 
 	WORD4 'WORD2'
@@ -283,7 +284,7 @@ generator.module = function (mName, alias, description)
 --[[TEST
 
 -- use 'WORD2'
-WORD3 = require 'lib.WORD2'
+WORD3 = require 'matlib.WORD2'
 
 -- example
 a = WORD3()

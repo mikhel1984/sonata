@@ -13,7 +13,7 @@
 --[[TEST
 
 -- use 'data'
-_D = require 'matlib.data'
+D = require 'matlib.data'
 -- external dependencies, can be loaded implicitly
 require 'matlib.special'
 require 'matlib.matrix'
@@ -25,122 +25,122 @@ w = {1,1,0}
 -- enought to define w[i] ~= 1
 w[5] = 2; w[6] = 2
 -- average
-ans = _D:mean(X)           --3> 3.375
+ans = D:mean(X)              --3>  3.375
 
 -- standard deviation
-ans, tmp = _D:std(X,W)     --3> 1.495
+ans, tmp = D:std(X,W)        --3>  1.495
 
 -- variance
-ans = tmp                    --3> 2.234
+ans = tmp                    --3>  2.234
 
 -- covariance for two vectors
 Y = {0,2,1,3,7,5,8,4}
-a = _D:cov2(X,Y)
-ans = a                      --3> -0.65625
+a = D:cov2(X,Y)
+ans = a                      --3>  -0.65625
 
 -- covariance matrix
-tmp = _D:cov({X,Y})
-ans = tmp[1][2]              --3> a
+tmp = D:cov({X,Y})
+ans = tmp[1][2]              --3>  a
 
 -- maximum element and index
-_,ans = _D:max(X)           --> 4
+_,ans = D:max(X)              -->  4
 
 -- median
-ans = _D:median(X)          --> 3
+ans = D:median(X)             -->  3
 
 -- table of frequencies
-tmp = _D:freq(X)
-ans = tmp[3]                  --> 3
+tmp = D:freq(X)
+ans = tmp[3]                  -->  3
 
 -- central moment
-ans = _D:moment(2,X)       --3> 2.234
+ans = D:moment(2,X)          --3>  2.234
 
 -- summ of elements
-ans = _D:sum(X)             --> 27
+ans = D:sum(X)                -->  27
 
 -- minimum value
-ans = _D:min(X)             --> 1
+ans = D:min(X)                -->  1
 
 -- geometrical mean
-ans = _D:geomean(X)        --3> 2.995
+ans = D:geomean(X)           --3>  2.995
 
 -- harmonic mean
-ans = _D:harmmean(X,W)     --3> 2.567
+ans = D:harmmean(X,W)        --3>  2.567
 
 -- check if X[i] > 2
-a = _D:is(X, _D:xGt(2))
-ans = a[1]                    --> 1
+a = D:is(X, D:xGt(2))
+ans = a[1]                    -->  1
 
 -- get elements X[i] > 2
-tmp = _D:filter(X, a)
-ans = tmp[1]                  --> X[1]
+tmp = D:filter(X, a)
+ans = tmp[1]                  -->  X[1]
 
 -- filtration using explicit function
 fn = function (x) return x > 2 end
-tmp = _D:filter(X, fn)
-ans = tmp[1]                  --> X[1]
+tmp = D:filter(X, fn)
+ans = tmp[1]                  -->  X[1]
 
 -- generate new list
 -- use 'lazy' function definition
-tmp = _D:zip("{x1-x2, x1+x2}", X, Y)
-ans = tmp[1][2]               --> X[1]+Y[1]
+tmp = D:zip("{x1-x2, x1+x2}", X, Y)
+ans = tmp[1][2]               -->  X[1]+Y[1]
 
 -- find histogram
-a,b = _D:histcounts(X, 3)
-ans = b[1]                    --> 2.25
+a,b = D:histcounts(X, 3)
+ans = b[1]                    -->  2.25
 
 -- define edges
-a,b = _D:histcounts(X,{2,4,7})
-ans = a[1]                    --> 1
+a,b = D:histcounts(X,{2,4,7})
+ans = a[1]                    -->  1
 
 -- table range reference
-a = _D:ref(X, 3, 6)
-ans = #a                      --> 4
+a = D:ref(X, 3, 6)
+ans = #a                      -->  4
 
-ans = a[1]                    --> X[3]
+ans = a[1]                    -->  X[3]
 
 -- Student cdf and pdf
-ans = _D:tcdf(4, 2.5)        --3> 0.9805
+ans = D:tcdf(4, 2.5)         --3>  0.9805
 
-ans = _D:tpdf(2, 3.3)        --3> 0.0672
+ans = D:tpdf(2, 3.3)         --3>  0.0672
 
 -- dsv write
 nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-_D:csvwrite(nm, t, ';')
+D:csvwrite(nm, t, ';')
 
 -- dsv read
 -- with separator ';'
-tt = _D:csvread(nm, ';')
-ans = tt[2][2]                --> t[2][2]
+tt = D:csvread(nm, ';')
+ans = tt[2][2]                -->  t[2][2]
 
 -- reference to 'transposed' table
-b = _D:T(t)
-ans = b[3][2]                 --> t[2][3]
+b = D:T(t)
+ans = b[3][2]                 -->  t[2][3]
 
--- pretty print for a table
-print(_D:table(t))
+-- Markdown-like print for a table
+print(D:md(t))
 
 -- add column names and some processing
 fn = function (v)
-  return {v[1]^2, 0.5*(v[2]+v[2])}
+  return {v[1]^2, 0.5*(v[2]+v[3])}
 end
-c = _D:table(t, {'sq', 'avg'}, fn)
+c = D:md(t, {'sq', 'avg'}, fn)
 print(c)
 
 -- even numbers
-b = _D:range(2,10,2)
-ans = b[2]                    --> 4
+b = D:range(2,10,2)
+ans = b[2]                    -->  4
 
 -- linear transformations
 -- with range Range objects
 b2 = 2*b + 4
-ans = b2[1]                   --> 8
+ans = b2[1]                   -->  8
 
 -- apply function 
 c = b:map(math.sin)
-ans = c[1]                   --3> 0.909
+ans = c[1]                   --3>  0.909
 
 --]]
 
@@ -174,7 +174,6 @@ local data = {}
 
 
 --- Estimate covariance for two vectors.
---  @param self Do nothing.
 --  @param t1 First data vector.
 --  @param t2 Second data vector.
 --  @return Covariance value.
@@ -193,7 +192,6 @@ about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
 
 
 --- Estimate covariance matrix.
---  @param self Do nothing.
 --  @param t Table of data vectors.
 --  @return Covariance matrix.
 data.cov = function (self, t)
@@ -216,7 +214,6 @@ about[data.cov] = {":cov(data_t) --> cov_M",
 
 
 --- Save Lua table in file, use given delimiter.
---  @param self Do nothing.
 --  @param sFile File name.
 --  @param t Lua table.
 --  @param char Delimiter, default is coma.
@@ -230,12 +227,11 @@ data.csvwrite = function (self, sFile, t, char)
   f:close()
   io.write('Done\n')
 end
-about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',') --> nil",
+about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',')",
   "Save Lua table as delimiter separated data into file.", FILES}
 
 
 --- Import data from text file, use given delimiter.
---  @param self Do nothing.
 --  @param sFile File name.
 --  @param char Delimiter, default is coma.
 --  @return Lua table with data.
@@ -268,7 +264,6 @@ about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 
 
 --- Generate function from string.
---  @param self Do nothing.
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
@@ -278,7 +273,6 @@ about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
 
 
 --- Find elements using condition.
---  @param self Do nothing.
 --  @param t Table with data.
 --  @param vCond Either boolean function or table of weights.
 --  @return Table with the filtered elements.
@@ -304,7 +298,6 @@ about[data.filter] = {":filter(in_t, condition) --> out_t",
 
 
 --- Frequency of elements.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Table where keys are elements and values are their frequencies.
 data.freq = function (self, t)
@@ -319,7 +312,6 @@ about[data.freq] = {":freq(data_t) --> tbl",
 
 
 --- Geometrical mean.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights, optional.
 --  @return Geometrical mean.
@@ -343,7 +335,6 @@ about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num",
 
 
 --- Harmonic mean.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
 --  @return Harmonic mean.
@@ -367,7 +358,6 @@ about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num",
 
 
 --- Number of elements in each bin.
---  @param self Do nothing.
 --  @param t Data table.
 --  @param rng Number of bins or table with edges.
 --  @return Two tables, with sum and edges.
@@ -412,7 +402,6 @@ about[data.histcounts] = {":histcounts(data_t, rng_v=10) --> sum_t, edges_t",
 
 
 --- Find weights (1/0) based on condition.
---  @param self Do nothing.
 --  @param t Data table.
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
@@ -428,7 +417,6 @@ about[data.is] = {":is(data_t, cond_fn) --> yesno_t",
 
 
 --- Find weights (1/0) based on inverted condition.
---  @param self Do nothing.
 --  @param t Data table.
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
@@ -444,7 +432,6 @@ about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
 
 
 --- Maximum value.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Maximum value and its index.
 data.max = function (self, t)
@@ -459,7 +446,6 @@ about[data.max] = {":max(data_t) --> var, ind_N",
 
 
 --- Average value.
---  @param self Do nothing.
 --  @param t Table with numbers.
 --  @param tw Table with weight. Can be omitted.
 --  @return Average.
@@ -481,7 +467,6 @@ about[data.mean] = {":mean(data_t, [wight_t]) --> num",
 
 
 --- Find median.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Value of median.
 data.median = function (self, t)
@@ -500,7 +485,6 @@ about[data.median] = {":median(data_t) --> num",
 
 
 --- Minimum value.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @return Minimum value and its index.
 data.min = function (self, t)
@@ -515,7 +499,6 @@ about[data.min] = {":min(data_t) --> var, ind_N",
 
 
 --- Central moment.
---  @param self Do nothing.
 --  @param N Order of the moment.
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
@@ -540,7 +523,6 @@ about[data.moment] = {":moment(order_N, data_t, [weigth_t]) --> num",
 
 
 --- Sum of all elements.
---  @param self Do nothing.
 --  @param t Table with numbers.
 --  @return Sum.
 data.sum = function (self, t)
@@ -553,7 +535,6 @@ about[data.sum] = {":sum(data_t) --> var",
 
 
 --- Standard deviation and variance.
---  @param self Do nothing.
 --  @param t Table of numbers.
 --  @param tw Table of weights.
 --  @return Standard deviation, variance.
@@ -579,12 +560,11 @@ about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
 
 
 --- Show data in Markdown-like table form.
---  @param self Do nothing.
 --  @param data_t Table of form {row1, row2, etc.}.
 --  @param names_t Table of column names (optional).
 --  @param fn Table that generates new column from the given (optional).
 --  @return String with table representation.
-data.table = function (self, data_t, names_t, fn)
+data.md = function (self, data_t, names_t, fn)
   local acc, line, head, len = {}, {}, {}, {}
   -- data to stings
   for i, v in ipairs(data_t) do
@@ -618,12 +598,11 @@ data.table = function (self, data_t, names_t, fn)
   end
   return table.concat(res, '\n')
 end
-about[data.table] = {":table(data_t, names_t=nil, row_fn=nil) --> str",
+about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
 
 
 --- Student's cumulative distribution
---  @param self Do nothing.
 --  @param d Value.
 --  @param N Degree of freedom.
 --  @return Cumulative value.
@@ -637,7 +616,6 @@ about[data.tcdf] = {":tcdf(x_d, deg_N) --> num",
 
 
 --- Student's density function.
---  @param self Do nothing.
 --  @param d Value.
 --  @param N Degree of freedom.
 --  @return Density value.
@@ -651,7 +629,6 @@ about[data.tpdf] = {":tpdf(x_d, deg_N) --> num",
 
 
 --- Condition: x == d.
---  @param self Do nothing.
 --  @param d Some value.
 --  @return Boolean function.
 data.xEq = function (self, d)
@@ -662,7 +639,6 @@ about[data.xEq] = {":xEq(num) --> cond_fn",
 
 
 --- Condition: x > d
---  @param self Do nothing.
 --  @param d Lower limit.
 --  @return Boolean function.
 data.xGt = function (self, d)
@@ -672,7 +648,6 @@ about[data.xGt] = {":xGt(num) --> cond_fn", "Return function for condition x > d
 
 
 --- Condition: d1 <= x <= d2.
---  @param self Do nothing.
 --  @param d1 Lower limit.
 --  @param d2 Upper limit.
 --  @return Boolean function.
@@ -684,7 +659,6 @@ about[data.xIn] = {":xIn(num1, num2) --> cond_fn",
 
 
 --- Condition: x < d
---  @param self Do nothing.
 --  @param d Upper limit.
 --  @return Boolean function.
 data.xLt = function (self, d)
@@ -694,7 +668,6 @@ about[data.xLt] = {":xLt(num) --> cond_fn", "Return function for condition x < d
 
 
 --- Apply function of n arguments to n lists.
---  @param self Do nothing.
 --  @param fn Function of multiple arguments or string.
 --  @param ... Sequence of lists.
 --  @return List of values fn(...).
@@ -888,7 +861,6 @@ end
 
 
 --- Create reference to other table.
---  @param self Do nothing.
 --  @param t Source table.
 --  @param iBeg Index of the first element.
 --  @param iEnd Index of the last element.
@@ -969,7 +941,6 @@ mt_transpose_k.__len = function (self) return #self._src end
 
 
 --- Get reference to 'transposed' table.
---  @param self Do nothing.
 --  @param src Source table.
 --  @return Reference object.
 data.T = function (self, src)

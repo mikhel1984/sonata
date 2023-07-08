@@ -17,10 +17,10 @@ Ap = require 'matlib.asciiplot'
 -- figure with default size
 fig1 = Ap()
 info = fig1:axes()
-ans = info.x.size             --> Ap.WIDTH
+ans = info.x.size             -->  Ap.WIDTH
 
 -- default axis position
-ans = info.x.pose             --> 'mid'
+ans = info.x.view             -->  'mid'
 
 -- print functions
 fig1:setX {range={-3.14, 3.14}}   -- default is {-1, 1}
@@ -57,13 +57,19 @@ print(fig2)
 
 -- plot only y2, don't rescale
 fig2:setX {range={-1, 4}}
-fig2:setY {range={0, 1}}
-fig2:tplot(tbl, {2, yfix=true})
+fig2:setY {range={0, 1}, fix=true}
+fig2:tplot(tbl, {2})
 print(fig2)
+
+-- polar plot for the table
+fig7 = Ap()
+fig7:tplot(tbl, {polar=true})
+fig7:legend {'sin', 'cos'}
+print(fig7)
 
 -- scale figure w.r.t. initial size
 fig1:scale(0.8)
-ans = fig1:axes().x.size      --> 59
+ans = fig1:axes().x.size      -->  59
 
 -- horizontal concatenation
 -- first
@@ -300,6 +306,14 @@ axis.setRange = function (A, t)
 end
 
 
+--- Compare range to the initial, set the largest values.
+--  @param A Axis object.
+--  @param t Pair {minlim, maxlim}.
+axis.setMaxRange = function (A, t)
+  axis.setRange(A, {math.min(A._init[1], t[1]), math.max(A._init[2], t[2])})
+end
+
+
 --- Apply logarithmic scale for the axis.
 --  @param A Axis object.
 --  @param isLog Flag to set scale type.
@@ -370,7 +384,7 @@ end
 
 
 -- Simplify call for two objects.
-asciiplot.__concat = function (F1, F2) return asciiplot.concat(_, F1, F2) end
+asciiplot.__concat = function (F1, F2) return asciiplot.concat(nil, F1, F2) end
 
 
 -- methametods
@@ -394,12 +408,51 @@ asciiplot.__tostring = function (F)
   end
   -- legend
   local sym = {}
-  for k, _ in pairs(F.legend) do sym[#sym+1] = k end
+  for k, _ in pairs(F._legend) do sym[#sym+1] = k end
   if #sym > 0 then table.sort(sym) end
   for _, k in ipairs(sym) do
-    acc[#acc+1] = string.format("(%s) %s", k, F.legend[k])
+    acc[#acc+1] = string.format("(%s) %s", k, F._legend[k])
   end
   return table.concat(acc, '\n')
+end
+
+
+--- Transform points to polar system, add to figure.
+--  @param F Figure object.
+--  @param t Data table.
+--  @param tOpt List of column numbers.
+asciiplot._addPolar = function (F, t, tOpt)
+  local acc = {}
+  -- transform data
+  for i, row in ipairs(t) do
+    local s, c = math.sin(row[1]), math.cos(row[1])
+    for j, ind in ipairs(tOpt) do
+      local curr = acc[j] or {}
+      curr[i] = {row[ind]*c, row[ind]*s}
+      acc[j] = curr
+    end
+  end
+  -- update range
+  if not F._yfix then
+    for j = 1, #tOpt do
+      local rx, ry = asciiplot._findRange(acc[j], {})
+      F._x:setMaxRange(rx)
+      F._y:setMaxRange(ry)
+    end
+  end
+  -- prepare
+  asciiplot._clear(F)
+  asciiplot._axes(F)
+  -- fill
+  for j = 1, #tOpt do
+    local xy, c = acc[j], asciiplot.char[j]
+    for _, v in ipairs(xy) do
+      asciiplot.addPoint(F, v[1], v[2], c)
+    end
+    F._legend[c] = 'column '..tostring(tOpt[j])
+  end
+  -- limits
+  asciiplot._limits(F)
 end
 
 
@@ -415,7 +468,7 @@ asciiplot._addTable = function (F, t, tInd)
       local row = t[i]
       asciiplot.addPoint(F, row[1], row[k], c)
     end
-    F.legend[c] = 'column '..tostring(k)   -- default legend
+    F._legend[c] = 'column '..tostring(k)   -- default legend
   end
 end
 
@@ -483,7 +536,7 @@ asciiplot._clear = function (F)
     end
     F._canvas[i] = row
   end
-  F.legend = {}
+  F._legend = {}
   F._title = nil
 end
 
@@ -498,12 +551,12 @@ asciiplot._cntLegend = function (F, s, lvl)
     -- group levels
     line[#line+1] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i])
     if i % 3 == 0 then
-      F.legend[s..tostring(j)] = table.concat(line, '  ')
+      F._legend[s..tostring(j)] = table.concat(line, '  ')
       j, line = j + 1, {}
     end
   end
   if #line > 0 then
-    F.legend[s..tostring(j)] = table.concat(line, '  ')
+    F._legend[s..tostring(j)] = table.concat(line, '  ')
   end
 end
 
@@ -684,7 +737,7 @@ asciiplot._new = function(dwidth, dheight)
     -- image
     _canvas = {},
     -- comments
-    legend = {},
+    _legend = {},
     -- title can be added
   }
   -- return object
@@ -694,7 +747,7 @@ end
 
 --- Set axis settings.
 --  @param F Figure object.
---  @param t Table with parameters {range, log, view, fix}.
+--  @param t Table with parameters {range, log, view, fix, size}.
 --  @param pref Prefix string.
 asciiplot._setAxis = function (F, t, pref)
   -- range
@@ -705,6 +758,8 @@ asciiplot._setAxis = function (F, t, pref)
   if t.view ~= nil then F[pref..'axis'] = t.view end
   -- fix scale
   if t.fix ~= nil then F[pref..'fix'] = t.fix end
+  -- length
+  if t.size ~= nil then F[pref]:resize(t.size) end
 end
 
 
@@ -869,7 +924,7 @@ asciiplot.addPoint = function (F, dx, dy, s)
     F._canvas[ny][nx] = s or '*'
   end
 end
-about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s) --> nil",
+about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s)",
   "Add point (x,y) using char.", MANUAL}
 
 
@@ -884,7 +939,7 @@ asciiplot.addPose = function (F, ir, ic, s)
     F._canvas[ir][ic] = s
   end
 end
-about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s) --> nil",
+about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s)",
   "Add character to the given position.", MANUAL}
 
 
@@ -898,7 +953,7 @@ asciiplot.addString = function (F, ir, ic, s)
     asciiplot.addPose(F, ir, ic+i-1, string.sub(s, i, i))
   end
 end
-about[asciiplot.addString] = {"F:addString(row_N, col_N, str) --> nil",
+about[asciiplot.addString] = {"F:addString(row_N, col_N, str)",
   "Set string from the given position.", MANUAL}
 
 
@@ -918,14 +973,14 @@ asciiplot.axes = function (F)
         a.log and (10^a.range[1]) or a.range[1],
         a.log and (10^a.range[2]) or a.range[2],
       },
-      pose = F[k..'axis'],
+      view = F[k..'axis'],
       fix = F[k..'fix'],
     }
   end
   return res
 end
 about[asciiplot.axes] = {"F:axes() --> tbl",
-  "Get {size, log, range, pose} for each size.", help.OTHER}
+  "Get {size, log, range, view, fix} for each axis.", help.OTHER}
 
 
 --- Plot bar graph.
@@ -986,7 +1041,7 @@ asciiplot.bar = function (F, t, iy, ix)
     r = r + 1
   end
 end
-about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1) --> nil",
+about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)",
   "Plot bar diargram for data."}
 
 
@@ -1004,7 +1059,7 @@ asciiplot.concat = function (self, ...)
     end
     if v._y.size ~= ag[1]._y.size then error('Different height') end
     local n = 0
-    for _ in pairs(v.legend) do n = n + 1 end
+    for _ in pairs(v._legend) do n = n + 1 end
     if n > nlegend then nlegend = n end
   end
   -- data
@@ -1027,12 +1082,12 @@ asciiplot.concat = function (self, ...)
     -- legend
     local n = 0
     local sym = {}
-    for q, _ in pairs(v.legend) do sym[#sym+1] = q end
+    for q, _ in pairs(v._legend) do sym[#sym+1] = q end
     if #sym > 0 then table.sort(sym) end
     for _, u in ipairs(sym) do
       row = acc[k] or {}
       row[#row+1] = asciiplot._format(
-        string.format('(%s) %s', u, v.legend[u]), width-1+#u, false, true)
+        string.format('(%s) %s', u, v._legend[u]), width-1+#u, false, true)
       row[#row+1] = gap
       acc[k] = row; k = k + 1
       n = n + 1
@@ -1105,10 +1160,10 @@ asciiplot.copy = function (F)
     _yfix = F._yfix,
     _zfix = F._zfix,
     _canvas = {},
-    legend = {},
+    _legend = {},
   }
-  for k, v in pairs(F.legend) do
-    o.legend[k] = v
+  for k, v in pairs(F._legend) do
+    o._legend[k] = v
   end
   for i = 1, #F._canvas do
     local row = {}
@@ -1121,8 +1176,22 @@ asciiplot.copy = function (F)
   end
   return setmetatable(o, asciiplot)
 end
-about[asciiplot.copy] = {
-  "F:copy() --> cpy_F", "Create a copy of the object.", help.OTHER}
+about[asciiplot.copy] = {"F:copy() --> cpy_F",
+  "Create a copy of the object.", help.OTHER}
+
+
+--- Update legend.
+--  @param F Figure object.
+--  @param str_t Table with strings.
+asciiplot.legend = function (F, str_t)
+  for i, c in ipairs(asciiplot.char) do
+    local li = F._legend[c]
+    if li then
+      F._legend[c] = str_t[i] or li
+    else break end
+  end
+end
+about[asciiplot.legend] = {"F:legend(str_t)", "Update legend.", CONF}
 
 
 --- Generalized plot funciton.
@@ -1194,12 +1263,12 @@ asciiplot.plot = function (F, ...)
     local c = asciiplot.char[j]
     local r = acc[j]
     asciiplot._addXY(F, r[1], r[2], c)
-    F.legend[c] = r[3]
+    F._legend[c] = r[3]
   end
   -- limits
   asciiplot._limits(F)
 end
-about[asciiplot.plot] = {"F:plot(...) --> nil",
+about[asciiplot.plot] = {"F:plot(...)",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
 
 
@@ -1210,7 +1279,7 @@ asciiplot.reset = function (F)
   asciiplot._axes(F)
   asciiplot._limits(F)
 end
-about[asciiplot.reset] = {"F:reset() --> nil", "Prepare a clear canvas.", MANUAL}
+about[asciiplot.reset] = {"F:reset()", "Prepare a clear canvas.", MANUAL}
 
 
 --- Update size of the canvas.
@@ -1225,7 +1294,7 @@ asciiplot.resize = function (F, w, h)
   F._x:resize(w)
   F._y:resize(h)
 end
-about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N)) --> nil",
+about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N))",
   "Update size of canvas.", CONF}
 
 
@@ -1247,7 +1316,7 @@ about[asciiplot.scale] = {"F:scale(factor_d, isDefault=false) --> F",
 --  @param F Figure object.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setX = function (F, t) asciiplot._setAxis(F, t, '_x') end
-about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix}) --> nil",
+about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix})",
   "X axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), ragne fix (true/false).",
   CONF}
 
@@ -1256,7 +1325,7 @@ about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix}) --> nil",
 --  @param F Figure object.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setY = function (F, t) asciiplot._setAxis(F, t, '_y') end
-about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix}) --> nil",
+about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix})",
   "Y axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
   CONF}
 
@@ -1265,7 +1334,7 @@ about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix}) --> nil",
 --  @param F Figure object.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setZ = function (F, t) asciiplot._setAxis(F, t, '_z') end
-about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix}) --> nil",
+about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix})",
   "Z axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
   CONF}
 
@@ -1274,7 +1343,7 @@ about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix}) --> nil",
 --  @param F Figure object.
 --  @param s New title.
 asciiplot.title = function (F, s) F._title = s end
-about[asciiplot.title] = {"F:title(str) --> nil", "Set new title.", CONF}
+about[asciiplot.title] = {"F:title(str)", "Set new title.", CONF}
 
 
 --- Plot data represented in form of table
@@ -1285,15 +1354,19 @@ about[asciiplot.title] = {"F:title(str) --> nil", "Set new title.", CONF}
 --  @return The updated figure object.
 asciiplot.tplot = function (F, t, tOpt)
   tOpt = tOpt or {}
+  -- plot all by default
+  if #tOpt == 0 then
+    for i = 2, #t[1] do tOpt[#tOpt+1] = i end
+  end
+  -- check type
+  if tOpt.polar then
+    return asciiplot._addPolar(F, t, tOpt)
+  end
   -- update range
   if not F._yfix then
     local rx, ry = asciiplot._findRange(t, tOpt)
     F._x:setRange(rx)
     F._y:setRange(ry)
-  end
-  -- plot all by default
-  if #tOpt == 0 then
-    for i = 2, #t[1] do tOpt[#tOpt+1] = i end
   end
   -- prepare
   asciiplot._clear(F)
@@ -1303,7 +1376,7 @@ asciiplot.tplot = function (F, t, tOpt)
   -- limits
   asciiplot._limits(F)
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={}) --> nil",
+about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={})",
   "Plot the table data, choose columns if need."}
 
 
@@ -1327,7 +1400,7 @@ Plot = function (...)
   f:plot(...)
   print(f)
 end
-about[Plot] = {"Plot(...) --> nil",
+about[Plot] = {"Plot(...)",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
 
 end  -- GLOBAL

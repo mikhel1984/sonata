@@ -17,73 +17,76 @@
 --[[TEST
 
 -- use 'units'
-_U = require 'matlib.units'
+U = require 'matlib.units'
 
 -- add some rules
-_U:setRule('h', _U(60,'min'))
-_U:setRule('min', _U(60,'s'))
+U:setRule('h', U(60,'min'))
+U:setRule('min', U(60,'s'))
 
 -- define variable
-a = _U(1,'m/s')
+a = U(1,'m/s')
 -- convert to km/h, get only value
-ans = a['km/h']              --2> 3.6
+ans = a['km/h']              --2>  3.6
 
 -- get numerical value
 -- (the save as #a)
-ans = a:value()               --> 1
+ans = a:value()               -->  1
 
 -- get units
-ans = a:key()                 --> 'm/s'
+ans = a:key()                 -->  'm/s'
 
 -- make copy
 cp = a:copy()
-ans = cp                      --> _U(1,'m/s')
+ans = cp                      -->  U(1,'m/s')
 
 -- get converted variable
 b = a:convert('km/h')
-ans = b                       --> _U(3.6, 'km/h')
+ans = b                       -->  U(3.6, 'km/h')
 
 -- arithmetic
 b = 3 * b
-ans = a + b                   --> _U(4, 'm/s')
+ans = a + b                   -->  U(4, 'm/s')
 
-ans = b - a                   --> _U(2, 'm/s')
+ans = b - a                   -->  U(2, 'm/s')
 
-ans = a * b                   --> _U(3, 'm^2/s^2')
+ans = a * b                   -->  U(3, 'm^2/s^2')
 
-ans = b / a                   --> _U(3, '')
+ans = b / a                   -->  U(3, '')
 
-ans = (a < b)                 --> true
+ans = (a < b)                 -->  true
 
-ans = b ^ 3                   --> _U(27, 'm^3/s^3')
+ans = b ^ 3                   -->  U(27, 'm^3/s^3')
 
 -- new rule
-_U:setRule('snake', _U(38, 'parrot'))
+U:setRule('snake', U(38, 'parrot'))
 -- define variable
-c = _U(2,'snake')
+c = U(2,'snake')
 -- convert
-ans = c['parrot']             --> 76
+ans = c['parrot']             -->  76
 
 -- convert using prefix
-ans = c['ksnake']            --3> 0.002
+ans = c['ksnake']            --3>  0.002
 
 -- another definition syntax
-ans = 2 * _U('N')           --> _U(2,'N')
+ans = 2 * U('N')              -->  U(2,'N')
 
 -- show result
 print(a)
 
 -- list of rules
-print(_U:rules())
+print(U:rules())
 --]]
 
 
 --	LOCAL
 
-local Ver = require('matlib.utils')
-local Cross = Ver.cross
-local Utils = Ver.utils
-Ver = Ver.versions
+local Cfloat, Cnorm, Ulex, Unumstr do
+  local lib = require('matlib.utils')
+  Cfloat = lib.cross.float
+  Cnorm = lib.cross.norm
+  Ulex = lib.utils.lex
+  Unumstr = lib.utils.numstr
+end
 
 
 --- Combine common elements in tables, add power to the
@@ -253,7 +256,7 @@ end
 --  @param d Number.
 --  @return Power.
 units.__pow = function (U, d)
-  d = assert(Cross.float(d), "Wrong power")
+  d = assert(Cfloat(d), "Wrong power")
   local res = isunits(U) and units._deepCopy(U) or units._new(U, '')
   res._value = res._value ^ d
   op['^'](res._key, d)
@@ -279,7 +282,7 @@ end
 --  @return Unit value in traditional form.
 units.__tostring = function (U)
   return string.format('%s %s',
-    type(U._value) == 'number' and Utils.numstr(U._value) or tostring(U._value),
+    type(U._value) == 'number' and Unumstr(U._value) or tostring(U._value),
     units.key(U))
 end
 
@@ -512,7 +515,7 @@ end
 --  @param U Unit object.
 --  @return Absolute value.
 units._norm = function (U)
-  return Cross.norm(U._value)
+  return Cnorm(U._value)
 end
 
 
@@ -521,7 +524,7 @@ end
 --  @return Reduced list of units.
 units._parse = function (str)
   if #str == 0 then return {} end
-  local tokens = Utils.lex(str)
+  local tokens = Ulex(str)
   if #tokens == 0 then error("Wrong format") end
   local res, m = units._getTerm(tokens, 1)
   if m-1 ~= #tokens then error("Wrong format") end
@@ -619,7 +622,7 @@ units.setRule = function (self, s, U)
   assert(isunits(U), 'Units object is expected!')
   self._rules[s] = U
 end
-about[units.setRule] = {':setRule(name_s, val_U) --> nil',
+about[units.setRule] = {':setRule(name_s, val_U)',
   'Add new rule for conversation.'}
 
 
@@ -639,7 +642,7 @@ about[units.rules] = {":rules() --> str", "Show list of rules."}
 --  The same as #U.
 --  @param U Unit object.
 --  @return Value.
-units.value = function (U) return U and U._value or nil end
+units.value = function (U) return U._value end
 about[units.value] = {'U:value() --> var', 'Get object value. Same as #U.'}
 units.__len = units.value
 
@@ -648,7 +651,7 @@ units.__len = units.value
 setmetatable(units, {
 __call = function (self, v, s)
   if s then
-    assert(Cross.float(v), "Wrong value type")
+    assert(Cfloat(v), "Wrong value type")
   else
     v, s = 1, v
   end
@@ -665,4 +668,4 @@ units.about = about
 return units
 
 --==================================================
---TODO add some predefined rules, get list of rules
+--TODO add some predefined rules

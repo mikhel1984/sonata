@@ -21,27 +21,31 @@ Mat = require 'matlib.matrix'
 Num.TOL = 1e-4
 -- solve 'sin(x) = 0' for x in (pi/2...3*pi/2)
 a = Num:solve(math.sin, math.pi*0.5, math.pi*1.5)
-ans = a                      --3> math.pi
+ans = a                      --3>  math.pi
 
 -- Newton method
 -- only one initial value
 d = Num:newton(math.sin, math.pi*0.7)
-ans = d                      --3> math.pi
+ans = d                      --3>  math.pi
 
 -- numeric derivative
 b = Num:der(math.sin, 0)
-ans = b                      --0> 1
+ans = b                      --0>  1
+
+-- numeric limit
+fn = function (x) return math.sin(x) / x end
+ans = Num:lim(fn, 0)         --3>  1.0
 
 -- numeric integral
 c = Num:trapez(math.sin, 0, math.pi)
-ans = c                      --0> 2
+ans = c                      --0>  2
 
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
 tbl = Num:ode45(function (x,y) return x*y end,
                 {0,3}, 1)
-ans = tbl[#tbl][2]           --2> 90.011
+ans = tbl[#tbl][2]           --2>  90.011
 
 -- y''-2*y'+2*y = 1
 -- represent as: x1 = y, x2 = y'
@@ -51,7 +55,7 @@ myfun = function (t,x)
 end
 res = Num:ode45(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
 xn = res[#res][2]  -- last element
-ans = xn(1)                  --2>  -10.54
+ans = xn(1)                  --2>   -10.54
 
 -- define exit condition
 cond = function (states)
@@ -61,16 +65,18 @@ end
 myfun = function (t,x) return -x end
 y = Num:ode45(myfun, {0,1E2}, 1, {exit=cond})
 -- time of execution before break
-ans = y[#y][1]               --2> 2.56
+ans = y[#y][1]               --2>  2.56
 
 --]]
 
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Cnorm = Ver.cross.norm
-Ver = Ver.versions
+local Vunpack, Cnorm do
+  local lib = require("matlib.utils")
+  Vunpack = lib.versions.unpack
+  Cnorm = lib.cross.norm
+end
 
 
 -- Runge-Kutta method.
@@ -104,12 +110,12 @@ local numeric = {
 TOL = 1E-3,
 -- max Newton algorithm attempts
 newton_max = 50,
+SMALL = 1E-20,
 }
 about[numeric.TOL] = {".TOL=0.001", "The solution tolerance.", "parameters"}
 
 
 --- Simple derivative.
---  @param self Do nothing.
 --  @param fn Function f(x).
 --  @param d Parameter.
 --  @return Numerical approximation of the derivative value.
@@ -119,15 +125,55 @@ numeric.der = function (self, fn, d)
   repeat
     dx = dx * 0.5
     der, last = (fn(d+dx)-fn(d-dx))/(2*dx), der
-  until math.abs(der-last) < numeric.TOL
+  until dx < numeric.SMALL or Cnorm(der-last) < numeric.TOL
   return der
 end
 about[numeric.der] = {":der(fn, x_d) --> num",
   "Calculate the derivative value for given function."}
 
 
+--- Estimate lim(fn(x)) for x -> xn.
+--  @param fn Function.
+--  @param xn Value to approach.
+--  @return The result and flag of success.
+numeric.lim = function (self, fn, xn, isPositive)
+  local prev = nil
+  if -math.huge < xn and xn < math.huge then
+    -- limited number
+    local del = 1
+    while del > numeric.SMALL do
+      local curr = isPositive and fn(xn + del) or fn(xn - del)
+      if prev and Cnorm(curr - prev) < numeric.TOL then
+        return curr, true
+      end
+      del, prev = del*1E-3, curr
+    end
+  elseif xn < math.huge then   -- -inf
+    xn = -1
+    while xn > -math.huge do
+      local curr = fn(xn)
+      if prev and Cnorm(curr - prev) < numeric.TOL then
+        return curr, true
+      end
+      xn, prev = xn * 1E3, curr
+    end
+  else    -- inf
+    xn = 1
+    while xn < math.huge do
+      local curr = fn(xn)
+      if prev and Cnorm(curr - prev) < numeric.TOL then
+        return curr, true
+      end
+      xn, prev = xn * 1E3, curr
+    end
+  end
+  return prev, false
+end
+about[numeric.lim] = {":lim(fn, xn_d, isPositive) --> y, isFound", 
+  "Estimate limit of a function."}
+
+
 --- Another solution based on Newton's rule.
---  @param self Do nothing.
 --  @param fn Function to analyze.
 --  @param d1 Initial value of the root.
 --  @return Function root of <code>nil</code>.
@@ -147,7 +193,6 @@ about[numeric.newton] = {":newton(fn, x0_d) --> num",
 
 
 --- Differential equation solution (Runge-Kutta method).
---  @param self Do nothing.
 --  @param fn function f(t,y).
 --  @param tDelta Time interval {t0,tn}
 --  @param y0 Function value at time t0.
@@ -161,7 +206,7 @@ numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   local exit = tParam.exit or function (_) return false end
   -- evaluate
   local res, last = {{tDelta[1], dY0}}, false
-  local upack = Ver.unpack
+  local upack = Vunpack
   while not exit(res) do
     local x, y = upack(res[#res])
     if x >= xn then break
@@ -194,7 +239,6 @@ about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys
 
 
 --- Find root of equation at the given interval.
---  @param self Do nothing
 --  @param fn Function to analyze.
 --  @param a Lower bound.
 --  @param b Upper bound.
@@ -213,7 +257,6 @@ about[numeric.solve] = {":solve(fn, xLow_d, xUp_d) --> num",
 
 
 --- Integration using trapeze method.
---  @param self Do nothing.
 --  @param fn Function f(x).
 --  @param a Lower bound.
 --  @param b Upper bound.

@@ -171,11 +171,11 @@ visualize(lst, 0, n, n/10, pmf)
 
 -- get random true/false
 v = Rand:flip()
-ans = type(v)                 --> 'boolean'
+ans = type(v)                 -->  'boolean'
 
 -- get integer from 1 to 10
 v = Rand:int(10)
-ans = (1 <= v and v <= 10)    --> true
+ans = (1 <= v and v <= 10)    -->  true
 
 -- random order iterator
 a = {1, 2, 3, 4, 5}
@@ -183,7 +183,7 @@ for i, v in Rand:ipairs(a) do print(i, v) end
 
 -- random choice
 v, i = Rand:choice(a)
-ans = v                       --> a[i]
+ans = v                       -->  a[i]
 
 -- change order in place
 Rand:shuffle(a)
@@ -195,17 +195,18 @@ print(rnd:bytes(8))
 -- same seed
 r1 = Rand:new(1)
 r2 = Rand:new(1)
-ans = (r1() == r2())            --> true
+ans = (r1() == r2())          -->  true
 
 -- change seed
 r2:seed(2)
-ans = (r1() ~= r2())            --> true
+ans = (r1() ~= r2())          -->  true
 
 --]]
 
 
 --	LOCAL
 
+-- categories
 DIST = 'distribution'
 
 
@@ -403,7 +404,7 @@ random.gamma = function (R, iAlpha, dBeta)
   local x = 1.0
   if iAlpha < 6 then
     for i = 1, iAlpha do x = x * R:_fn() end
-    x = -math.log(x)  -- TODO check for 0
+    x = -math.log(x)  -- TODO can be 0?
   else
     local y, s= 0, 0
     iAlpha = iAlpha - 1  -- reuse
@@ -476,7 +477,6 @@ about[random.logistic] = {":logistic(mu_d=0, sigma_d=1) --> float",
 
 
 --- Constructor example.
---  @param self Do nothing.
 --  @param seed Random value.
 --  @return New random generator.
 random.new = function(self, seed)
@@ -567,7 +567,7 @@ random.seed = function (R, N)
     random._init(R, N)   -- custom rand
   end
 end
-about[random.seed] = {":seed(N=os.time) --> nil", "Set random generator seed."}
+about[random.seed] = {":seed(N=os.time)", "Set random generator seed."}
 
 
 --- Change elements order in the table.
@@ -580,7 +580,7 @@ random.shuffle = function (R, t)
     t[i], t[j] = t[j], t[i]
   end
 end
-about[random.shuffle] = {":shuffle(tbl) --> nil", "Change order of elements."}
+about[random.shuffle] = {":shuffle(tbl)", "Change order of elements."}
 
 
 -- simplify constructor call

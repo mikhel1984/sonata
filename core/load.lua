@@ -18,11 +18,26 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 -- Command evaluation.
 Sonata = require('core.evaluate')
 
--- current version
-Sonata.version = '0.9.36'
+-- Current version
+Sonata.version = '0.9.37'
 
 -- Quit the program
 quit = Sonata.exit
+
+-- Get list of aliases
+for k, v in pairs(use) do Sonata.alias[v] = k end
+-- protect names
+setmetatable(_G, {
+-- protect aliases
+__newindex = function (t, k, v)
+  if SONATA_PROTECT_ALIAS and Sonata.alias[k] then
+    error(string.format('%s is reserved for %s module', k, Sonata.alias[k]))
+  end
+  rawset(t, k, v)
+end,
+-- store into the hidden table
+__index = Sonata._modules
+})
 
 
 -- Import actions
@@ -30,16 +45,13 @@ Sonata.doimport = function (tbl, name)
   local var = tbl[name]
   if not var then
     -- try alias
-    if not Sonata.alias then
-      Sonata.alias = {}
-      for k, v in pairs(use) do Sonata.alias[v] = k end
-    end
     var = name
     name = assert(Sonata.alias[name], "Wrong module name: "..name.."!")
   end
-  if not _G[var] then
+  if not Sonata._modules[var] then
     local lib = require('matlib.'..name)
-    _G[var] = lib
+    Sonata._modules[var] = lib
+    if not SONATA_PROTECT_ALIAS then _G[var] = lib end
     -- add description
     if lib.about then About:add(lib.about, name, var) end
   end
@@ -53,12 +65,12 @@ setmetatable(use,
     if not name then
       local lst = Sonata.info {
         Sonata.FORMAT_V1,
-        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"), 
+        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"),
         Sonata.FORMAT_CLR}
       -- show loaded modules
       for k, v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
-        if _G[v] then
+        if Sonata._modules[v] then
           lst[#lst+1] = Sonata.FORMAT_V1
           lst[#lst+1] = '++\n'
           lst[#lst+1] = Sonata.FORMAT_CLR
@@ -105,6 +117,7 @@ description = 'Run unit tests for a given module. Execute for all modules if no 
 example = '--test array',
 process = function (args)
   local Test = require('core.test')
+  SONATA_PROTECT_ALIAS = false
   if args[2] then
     Test.module(
       string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
@@ -245,7 +258,7 @@ end
 -- Run!!!
 
 io.write(SonataHelp.CMAIN, '\n',
-"   # #      --=====  so/\\/ata  =====--       # #\n",
+"   # #      --=====  so/\\/ata  =====--      # #\n",
 "    # #        --==== ", Sonata.version, " ====--        # #\n\n",
 SonataHelp.CHELP)
 print(About:get('intro'), SonataHelp.CRESET)

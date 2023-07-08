@@ -17,108 +17,117 @@
 --[[TEST
 
 -- use 'complex'
-_Z = require 'matlib.complex'
+Z = require 'matlib.complex'
 
 -- real and imaginary pars
-a = _Z(1,2)
+a = Z(1,2)
 -- or just imaginary
-b = _Z(0,3)
+b = Z(0,3)
 
 -- imaginary unit
-ans = 3+_Z:i(4)                --> _Z(3,4)
+ans = 3+Z:i(4)                -->  Z(3,4)
 
 -- use trigonometrical form
-ans = _Z:trig(2,0)            --> _Z(2,0)
+ans = Z:trig(2,0)             -->  Z(2,0)
 
 -- arithmetic
-ans = a + b                   --> _Z(1,5)
+ans = a + b                   -->  Z(1,5)
 
-ans = _Z:i(3) - b             --> 0
+ans = Z:i(3) - b              -->  0
 
-ans = a * b                   --> _Z(-6,3)
+ans = a * b                   -->  Z(-6,3)
 
-ans = a / _Z:i()              --> _Z(2,-1)
+ans = a / Z:i()               -->  Z(2,-1)
 
 -- power can be complex
-c = _Z(1,1)^_Z(2,-2)
+c = Z(1,1)^Z(2,-2)
 
 -- real part
-ans = c:re()                 --3> 6.147
+ans = c:re()                 --3>  6.147
 
 -- imaginary part
-ans = c:im()                 --1> 7.4
+ans = c:im()                 --1>  7.4
 
 -- comparison
-ans = (a == b)                --> false
+ans = (a == b)                -->  false
 
-ans = (a ~= b)                --> true
+ans = (a ~= b)                -->  true
 
 -- absolute value
-ans = a:abs()                --3> 2.236
+ans = a:abs()                --3>  2.236
 
--- argument
-ans = a:arg()              --3> 1.107
+-- argument (angle, rad)
+ans = a:arg()                --3>  1.107
 
 -- conjugated number
-ans = a:conj()                --> _Z(1,-2)
+ans = a:conj()                -->  Z(1,-2)
 
 -- some functions after import
 -- become default, such as
-d = _Z(-2):sqrt()
-ans = d:im()                  --3> 1.414
+d = Z(-2):sqrt()
+ans = d:im()                 --3>  1.414
 
 -- exp
-ans = d:exp():re()            --3> 0.156
+ans = d:exp():re()           --3>  0.156
 
 -- log
-ans = d:log():re()            --3> 0.3465
+ans = d:log():re()           --3>  0.3465
 
 -- sin
-ans = d:sin():im()            --3> 1.935
+ans = d:sin():im()           --3>  1.935
 
 -- cos
-ans = d:cos():re()            --3> 2.178
+ans = d:cos():re()           --3>  2.178
 
 -- tan
-ans = d:tan():re()            --1> 0
+ans = d:tan():re()           --1>  0
 
 -- sinh
-ans = d:sinh():re()           --1> 0
+ans = d:sinh():re()          --1>  0
 
 -- cosh
-ans = d:cosh():re()           --3> 0.156
+ans = d:cosh():re()          --3>  0.156
 
 -- tanh
-ans = d:tanh():im()           --3> 6.334
+ans = d:tanh():im()          --3>  6.334
 
 -- asin
-z = _Z(2,3)
-ans = z:asin():im()          --3> 1.983
+z = Z(2,3)
+ans = z:asin():im()          --3>  1.983
 
 -- acos
-ans = z:acos():re()          --2> 1.000
+ans = z:acos():re()          --2>  1.000
 
 -- atan
-ans = z:atan():im()          --3> 0.229
+ans = z:atan():im()          --3>  0.229
 
 -- asinh
-ans = z:asinh():re()         --3> 1.968
+ans = z:asinh():re()         --3>  1.968
 
 -- acosh
-ans = z:acosh():im()         --1> 1.000
+ans = z:acosh():im()         --1>  1.000
 
 -- atanh
-ans = z:atanh():re()         --3> 0.146
+ans = z:atanh():re()         --3>  0.146
 
 -- round in-place
-z = _Z(1+1E-3, 2+1e-20)
+z = Z(1+1E-3, 2+1e-20)
 z = z:round(5)
-ans = z:re()                 --3> 1.001
+ans = z:re()                 --3>  1.001
 
-ans = z:im()                  --> 2
+ans = z:im()                  -->  2
 
 -- show
 print(a)
+
+-- update env on import 
+-- add complex unit
+ans = 2*_i                    -->  Z:i(2)
+
+-- update some methods 
+ans = sqrt(-1)                -->  _i
+
+ans = log(-1):im()           --3>  math.pi
 
 --]]
 
@@ -455,7 +464,6 @@ about[complex.atanh] = {"Z:atanh() --> y_Z",
 --  @param C Complex number.
 --  @return Conjunction to the given number.
 complex.conj = function (C)
-  --return complex._new(Cross.copy(C._[1]), -Cross.copy(C._[2]))
   return complex._new(C._[1], -C._[2])
 end
 about[complex.conj] = {"Z:conj() --> conj_Z", 
@@ -602,14 +610,13 @@ about[complex.tanh] = {"Z:tanh() --> y_Z",
 
 
 --- Create complex number from trigonometric representation.
---  @param self Do nothing.
 --  @param vMod Module.
 --  @param vArg Argument.
 --  @return Complex number.
 complex.trig = function (self, vMod, vArg)
   return complex._new(vMod*fcos(vArg), vMod*fsin(vArg))
 end
-about[complex.trig] = {":trig(module, angle) --> new_Z",
+about[complex.trig] = {":trig(module, angle) --> module*exp(i*angle)",
   "Create complex number using module and angle.", help.STATIC}
 
 

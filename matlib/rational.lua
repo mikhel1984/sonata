@@ -23,41 +23,41 @@ Rat = require 'matlib.rational'
 a = Rat(1,2)
 -- only numerator
 b = Rat(2)
-ans = b                       --> Rat(2,1)
+ans = b                       -->  Rat(2,1)
 
 -- simplification
 k = 234781
-ans = Rat(2*k,3*k)            --> Rat(2,3)
+ans = Rat(2*k,3*k)            -->  Rat(2,3)
 
 -- arithmetic
-ans = a + b                   --> Rat(5,2)
+ans = a + b                   -->  Rat(5,2)
 
-ans = 2 * a                   --> 1
+ans = 2 * a                   -->  1
 
-ans = Rat(2,3)*Rat(3,2)       --> 1
+ans = Rat(2,3)*Rat(3,2)       -->  1
 
-ans = a / Rat(1,3)            --> Rat(3,2)
+ans = a / Rat(1,3)            -->  Rat(3,2)
 
-ans = a ^ 3                   --> Rat(1,8)
+ans = a ^ 3                   -->  Rat(1,8)
 
-ans = 2 ^ a                  --3> 1.414
+ans = 2 ^ a                  --3>  1.414
 
 -- comparison
-ans = (b == b)                --> true
+ans = (b == b)                -->  true
 
-ans = (a >= b)                --> false
+ans = (a >= b)                -->  false
 
 -- represent as decimal
-ans = a:float()               --> 0.5
+ans = a:float()               -->  0.5
 
 -- from decimal
-ans = Rat:from(math.pi)       --> Rat(333, 106)
+ans = Rat:from(math.pi)       -->  Rat(333, 106)
 
 -- numerator
-ans = b:num()                 --> 2
+ans = b:num()                 -->  2
 
 -- denominator
-ans = b:denom()               --> 1
+ans = b:denom()               -->  1
 
 -- show
 print(a)
@@ -65,39 +65,43 @@ print(a)
 -- continued fraction to rational
 -- 1 + 1/(2+1/(3+1/4)) 
 c = Rat:fromCF {[0]=1, 2, 3, 4}
-ans = c                       --> Rat(43,30)
+ans = c                       -->  Rat(43,30)
 
 -- rational to continued fraction
 d = c:toCF()
-ans = d[1]                    --> 2
+ans = d[1]                    -->  2
 
 -- show continued fraction
 print(d)
 
 -- result is rational
-ans = a + 1                   --> Rat(3,2)
+ans = a + 1                   -->  Rat(3,2)
 
 -- result is float
-ans = a + 0.5                 --> 1
+ans = a + 0.5                 -->  1
 
 --]]
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Utils = Ver.utils
-local Cross = Ver.cross
-Ver = Ver.versions
-
-
-
-
+local Vinteger, Unumstr, Cross do
+  local lib = require("matlib.utils")
+  Vinteger = lib.versions.isInteger
+  Unumstr = lib.utils.numstr
+  Cross = lib.cross
+end
 local mabs = math.abs
 
 
+--- Check if the element is huge
+--  @param v Variable.
+--  @return true for big input.
 local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
 
+--- Simplify rational when possible.
+--  @param R Rational number.
+--  @return same object or some number
 local function numrat(R)
   local a, b = R._[1], R._[2]
   return Cross.eq(b, 1) and Cross.simp(a)               -- x / 1
@@ -111,7 +115,7 @@ end
 --  @param v Value.
 --  @return String representation.
 local function numStr(v)
-  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
+  return type(v) == 'number' and Unumstr(v) or tostring(v)
 end
 
 
@@ -266,7 +270,7 @@ rational.__pow = function (R1, R2)
   if type(R1) == "number" then
     return R1^R2
   else
-    if not (Ver.isInteger(R2) and R2 >= 0) then
+    if not (Vinteger(R2) and R2 >= 0) then
       error("Power must be a non-negative integer")
     end
     local r1 = R1._
@@ -324,7 +328,7 @@ about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
 --  @param v Source value.
 --  @return Rational number of false.
 rational._convert = function (v)
-  return (type(v) == 'number' and Ver.isInteger(v)
+  return (type(v) == 'number' and Vinteger(v)
             or type(v) == 'table' and v.__mod)
          and rational._new(v, 1)
 end
@@ -399,7 +403,6 @@ about[rational.float] = {"R:float() --> num", "Return rational number as decimal
 
 
 --- Get rational number approximation.
---  @param self Do nothing.
 --  @param f Source number.
 --  @param fErr Precision, default is 0.001.
 rational.from = function (self, f, fErr)
@@ -418,20 +421,19 @@ about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
 
 
 --- Get rational number from continued fraction coefficients.
---  @param self Do nothing.
 --  @param t List of coefficients.
 --  @return Rational number.
 rational.fromCF = function (self, t)
   local check = {}
   for i, v in ipairs(t) do
-    if (type(v) == 'number' and Ver.isInteger(v)
+    if (type(v) == 'number' and Vinteger(v)
           or type(v) == 'table' and v.__mod) and v > 0 
     then
       check[i] = v
     else error("Positive integer is expected") end
   end
   local t0 = t[0] or 0
-  if (type(t0) == 'number' and Ver.isInteger(t0)
+  if (type(t0) == 'number' and Vinteger(t0)
         or type(t0) == 'table' and t0.__mod) 
   then
     check[0] = t0
@@ -485,10 +487,10 @@ setmetatable(rational, {
 __call = function (self, n, d)
   d = d or 1
   assert(
-    type(n) == 'number' and Ver.isInteger(n) or type(n) == 'table' and n.__mod,
+    type(n) == 'number' and Vinteger(n) or type(n) == 'table' and n.__mod,
     "Wrong numerator type")
   assert(
-    type(d) == 'number' and Ver.isInteger(d) or type(d) == 'table' and d.__mod,
+    type(d) == 'number' and Vinteger(d) or type(d) == 'table' and d.__mod,
     "Wrong denomenator type")
   assert(not Cross.isZero(d), "Wrond denomenator value")
   return rational._new(n, d)

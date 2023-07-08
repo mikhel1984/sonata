@@ -353,7 +353,7 @@ end
 --  @param G Gnuplot object.
 --  @param tCurve Table with function/table and parameters.
 gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
-about[gnuplot.add] = {"G:add(curve_v) --> nil", "Add new curve to figure."}
+about[gnuplot.add] = {"G:add(curve_v)", "Add new curve to figure."}
 
 
 --- Get copy of graph options.
@@ -376,7 +376,6 @@ about[gnuplot.copy] = {"G:copy() --> cpy_G", "Get copy of the plot options."}
 
 
 --- Matlab-like plotting
---  @param Do nothing.
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
 gnuplot.plot = function (self,...)
   local ag = {...}
@@ -404,12 +403,11 @@ gnuplot.plot = function (self,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..]) --> nil",
+about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..])",
   "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 
 --- Polar plot.
---  @param self Do nothing.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
 gnuplot.polarplot = function(self,...)
   local ag, i, n = {...}, 1, 1
@@ -431,7 +429,7 @@ gnuplot.polarplot = function(self,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.polarplot] = {':polarplot(x1_t, y1_t, [nm_s, x2_t, y2_t,..]) --> nil',
+about[gnuplot.polarplot] = {':polarplot(x1_t, y1_t, [nm_s, x2_t, y2_t,..])',
   "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 
@@ -464,11 +462,10 @@ gnuplot.show = function (G)
   handle:write(res,'\n')
   handle:close()
 end
-about[gnuplot.show] = {"G:show() --> nil", "Plot data, represented as Lua table." }
+about[gnuplot.show] = {"G:show()", "Plot data, represented as Lua table." }
 
 
 --- Surface plot.
---  @param self Do nothing.
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
 gnuplot.surfplot = function(self,...)
   local ag, i, n = {...}, 1, 1
@@ -489,12 +486,11 @@ gnuplot.surfplot = function(self,...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..]) --> nil',
+about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..])',
   "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 
 --- Plot table of data file.
---  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tplot = function (self,v,...)
@@ -511,12 +507,11 @@ gnuplot.tplot = function (self,v,...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..]) --> nil",
+about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..])",
   "Plot table, matrix or data file. Optional elements define columns."}
 
 
 --- Polar plot table of data file.
---  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tpolar = function (self,v,...)
@@ -534,12 +529,11 @@ gnuplot.tpolar = function (self,v,...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..]) --> nil",
+about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..])",
   "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 
 --- Sufrace plot from table of data file.
---  @param self Do nothing.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tsurf = function (self,v,...)
@@ -556,7 +550,7 @@ gnuplot.tsurf = function (self,v,...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.tsurf] = {":tsurf(var, [x_N, y_N, z1_N, z2_N,..]) --> nil",
+about[gnuplot.tsurf] = {":tsurf(var, [x_N, y_N, z1_N, z2_N,..])",
   "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 

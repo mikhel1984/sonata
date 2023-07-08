@@ -18,6 +18,9 @@
 --	Unicode symbols for function plot
 --SONATA_ASCIIPLOT_UNICODE = true
 
+--      Reserve aliases (keywords)
+--SONATA_PROTECT_ALIAS = true
+
 --	Uncomment to set the localization file
 --  Windows: to use Unicode symbols call in console
 --    chcp 65001
@@ -30,26 +33,27 @@
 -- Aliases can be changed.
 use = {
 --  name       alias
-  asciiplot  = "Ap",
-  bigint     = "Int",
-  complex    = "_Z",
-  data       = "_D",
-  graph      = "Graph",
-  main       = "Main",
-  matrix     = "Mat",
-  numeric    = "Num",
-  polynomial = "Poly",
-  random     = "Rand",
-  rational   = "Rat",
-  symbolic   = "Sym",
-  units      = "_U",
+  asciiplot  = "Ap",     -- use pseudo-graphic to print figures
+  bigint     = "Int",    -- manipulations with integers
+  complex    = "Z",      -- complex numbers
+  data       = "D",      -- data processing
+  graph      = "Graph",  -- operations with graphs
+  main       = "Main",   -- common functions
+  matrix     = "Mat",    -- matrices and linear algebra
+  numeric    = "Num",    -- numeric algorithms
+  polynomial = "Poly",   -- operations with polynomials and splines
+  random     = "Rand",   -- random number generators
+  rational   = "Rat",    -- rational numbers and continued fractions
+  symbolic   = "Sym",    -- some symbolic methods
+  units      = "U",      -- units conversation
 --------------------
-  const      = "_C",
-  geodesy    = "Geo",
-  gnuplot    = "Gp",
-  lens       = "Lens",
-  quaternion = "Quat",
-  special    = "Spec",
+  const      = "C",      -- physical and other constants
+  geodesy    = "Geo",    -- geodesy transformations
+  gnuplot    = "Gp",     -- GnuPlot 'binding'
+  lens       = "Lens",   -- paraxial optics and laser beams
+  quaternion = "Quat",   -- working with quaternions
+  qubit      = "Qb",     -- emulate quantum computations
+  special    = "Spec",   -- list of 'special' functions
 }
 
 
