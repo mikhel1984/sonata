@@ -3,7 +3,7 @@ use 'all'
 -- PAUSE
 --	COMPLEX
 -- Operations with complex numbers.
-a = _Z(1,2)            -- real and complex components
+a = Z(1,2)            -- real and complex components
 b = 3+_i*4             -- use complex unit
 a / b                  
 a ^ b                  -- complex power
@@ -76,14 +76,14 @@ a:base(42)           -- get value in new numerical base
 
 --	CONST
 -- Some useful constants.
-_C.phy.G                  -- gravitational constant
-_C.phy.G_u                -- units of measurement are available with postfix '_u'
+C.phy.G                  -- gravitational constant
+C.phy.G_u                -- units of measurement are available with postfix '_u'
 -- It is possible to define own constant.
 -- It can't be modified.
-_C:add('foo',42)
-_C.foo
+C:add('foo',42)
+C.foo
 -- ...and remove it
-_C:remove('foo')
+C:remove('foo')
 -- PAUSE
 
 --	GRAPH
@@ -138,14 +138,14 @@ Spec:besselj(2, 0.5)
 --	UNITS
 -- Conversation between measurement units.
 -- Define rules
-_U:setRule('h', _U(60, 'min'))       -- 1 h = 60 min
-_U:setRule('min', _U(60, 'sec'))     -- 1 min = 60 sec
+U:setRule('h', U(60, 'min'))       -- 1 h = 60 min
+U:setRule('min', U(60, 'sec'))     -- 1 min = 60 sec
 -- new variable
-v = _U(2, 'm/sec')
+v = U(2, 'm/sec')
 -- convert to 'km/h'
 v['km/h']
 -- arithmetic is possible
-t = _U(10,'sec')
+t = U(10,'sec')
 s = v * t
 s
 -- PAUSE
@@ -165,7 +165,7 @@ a:slerp(b,0.5)      -- use normalization inside
 
 --	ASCIIPLOT
 -- Plot data in Matlab style.
-a = _D:range(0, 6, 0.1)
+a = D:range(0, 6, 0.1)
 b = Map(math.sin, a)
 fig = Ap()
 fig:plot(a,b)
