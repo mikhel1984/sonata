@@ -2,6 +2,10 @@
 
 Asciiplot
 * Add polar plots
+* Update legend input
+Matrix
+* Split into 2 files
+* Kronecker product and sum
 Other
 * New module 'qubit'
 * Improve help for commands
@@ -10,16 +14,16 @@ Other
 ======== 0.9.36 =========
 
 Bigint
-* change print and parse strings
-* common internal numerical base
-* improve prerformance
-* use numbers instead of digits
+* Change print and parse strings
+* Common internal numerical base
+* Improve prerformance
+* Use numbers instead of digits
 Matrix
-* calculated matrices are dense
-* improve performance
+* Calculated matrices are dense
+* Improve performance
 Units
-* rename module
-* add rule list
+* Rename module
+* Add rule list
 Other
 * Change evaluate loop logic
 * Add warnings and program messages
