@@ -13,13 +13,15 @@
 
 -- use 'qubit'
 Qb = require 'matlib.qubit'
+-- for oracle definition
+Mat = require 'matlib.matrix'
 
 -- define state
 a = 0.2*Qb'|0>' + 0.98*Qb'|1>'
 -- get number of qubits in system
 ans = #a                      -->  1
 
--- get equal vector
+-- qubit as vector
 av = a:matrix()
 ans = av(1)                  --2>  0.2
 
@@ -43,7 +45,7 @@ ans = b:prob '00'            --2>  0.5
 c = Qb:combine(a, b)
 print(c)
 
--- do 'measurement'
+-- do 'measurement' of all states
 -- result is calculated using probabilities
 print(c:meas())
 
@@ -80,6 +82,38 @@ print(g2)
 g3 = g2:inverse()
 mm = g2:matrix() * g3:matrix()
 ans = mm[4][4]               --2>  1.0
+
+-- Deutsch-Jozsa algorithm
+-- check for function f(x) = x, 1 is expected as output
+g4 = Qb:gates(2):H()
+-- oracle from table
+g4:fromTable({
+--  in   out
+  {'00','00'},
+  {'01','01'},
+  {'10','11'},
+  {'11','10'}
+}):H()
+-- apply for 01, measure at index 1
+ans = g4(Qb'01'):meas(1)      -->  Qb'1'
+
+-- Grover's algorithm
+-- check funciton f(101) = 1, f(x) = 0 for others
+g5 = Qb:gates(3):H()
+-- oracle from matrix
+mat_fn = Mat:eye(8); mat_fn[6][6] = -1
+-- for the Groover diffusion gate (2|0><0| - 1)
+mat_df = -Mat:eye(8); mat_df[1][1] = 1
+-- combine 
+oracle_diffuse = Qb:gates(3)
+  :fromMatrix(mat_fn)
+  :H()
+  :fromMatrix(mat_df)
+  :H()
+-- apply 2 times (~ sqrt(8)*pi/4)
+g5 = g5 * oracle_diffuse^2
+-- check result (it is random)
+ans = g5(Qb'000'):meas()      --> Qb'101'
 
 --]]
 
@@ -451,6 +485,28 @@ qgate.__mul = function (G1, G2)
 end
 
 
+--- Q ^ n
+--  @param G Gate system.
+--  @parma n Integer power.
+--  @return n times concatenated gates.
+qgate.__pow = function (G, n)
+  if not Vinteger(n) then error('Integer is expected') end
+  if n < -1 then error("Wrong power") end
+  if not G.mat and n ~= 0 then return qgate.__pow(G, 0) end
+  if n == -1 and G.mat then return qgate.inverse(G) end
+  local res = qgate._new(G.n)
+  local txt = res.txt
+  if n > 0 then
+    res.mat = G.mat ^ n
+    for i = 1, #txt do txt[i] = string.rep(G.txt[i], n) end
+  else
+    res.mat = Matrix:eye(2^G.n)
+    for i = 1, #txt do txt[i] = ' -' end
+  end
+  return res
+end
+
+
 --- Print gates.
 --  @param G System of gates.
 --  @return string representation.
@@ -789,3 +845,4 @@ return qubit
 -- TODO vertical concatenation with ..
 -- TODO qubit equality
 -- TODO qubit from vector
+-- TODO power for gates
