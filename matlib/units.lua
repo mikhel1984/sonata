@@ -14,7 +14,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'units'
 U = require 'matlib.units'

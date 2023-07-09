@@ -17,7 +17,7 @@
 
 
 --------------- Tests ------------
---[[TEST
+--[[TEST_IT
 
 -- use 'graph'
 Graph = require 'matlib.graph'

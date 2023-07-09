@@ -17,7 +17,7 @@
 
 
 ---------------- Tests -----------------
---[[TEST
+--[[TEST_IT
 -- use 'bigint'
 Int = require 'matlib.bigint'
 

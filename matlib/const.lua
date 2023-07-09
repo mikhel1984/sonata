@@ -9,7 +9,7 @@
 --]]
 
 
---[[TEST
+--[[TEST_IT
 
 -- use 'const'
 C = require 'matlib.const'

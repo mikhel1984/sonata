@@ -9,7 +9,7 @@
 --]]
 
 
---[[TEST
+--[[TEST_IT
 
 -- use 'asciiplot'
 Ap = require 'matlib.asciiplot'

@@ -16,7 +16,7 @@
 
 
 ----------------------- Tests ----------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'lens'
 Lens = require 'matlib.lens'

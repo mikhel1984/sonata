@@ -12,7 +12,7 @@
 --]]
 
 
---[[TEST
+--[[TEST_IT
 
 -- use 'symbolic'
 Sym = require 'matlib.symbolic'

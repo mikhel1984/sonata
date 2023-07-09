@@ -9,7 +9,7 @@
 --]]
 
 
---[[TEST
+--[[TEST_IT
 
 -- use 'geodesy'
 Geo = require 'matlib.geodesy'

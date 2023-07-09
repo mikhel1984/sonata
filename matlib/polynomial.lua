@@ -14,7 +14,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'polynomial'
 Poly = require 'matlib.polynomial'

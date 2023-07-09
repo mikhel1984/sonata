@@ -10,7 +10,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'data'
 D = require 'matlib.data'

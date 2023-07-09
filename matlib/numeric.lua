@@ -10,7 +10,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'numeric'
 Num = require 'matlib.numeric'

@@ -16,7 +16,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'matrix'
 Mat = require 'matlib.matrix'

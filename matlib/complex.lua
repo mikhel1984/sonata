@@ -14,7 +14,7 @@
 
 
 ---------------- Tests --------------
---[[TEST
+--[[TEST_IT
 
 -- use 'complex'
 Z = require 'matlib.complex'

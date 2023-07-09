@@ -13,7 +13,7 @@
 --]]
 
 
---[[TEST
+--[[TEST_IT
 
 -- use 'quaternion'
 Quat = require 'matlib.quaternion'

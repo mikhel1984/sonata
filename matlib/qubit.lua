@@ -9,7 +9,7 @@
 --]]
 
 ---------------- Tests --------------
---[[TEST
+--[[TEST_IT
 
 -- use 'qubit'
 Qb = require 'matlib.qubit'

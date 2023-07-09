@@ -10,7 +10,7 @@
 
 
 ---------------- Tests ---------------------
---[[TEST
+--[[TEST_IT
 
 require 'matlib.main'
 

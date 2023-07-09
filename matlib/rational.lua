@@ -14,7 +14,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'rational'
 Rat = require 'matlib.rational'

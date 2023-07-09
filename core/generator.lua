@@ -281,7 +281,7 @@ generator.module = function (mName, alias, description)
 -- Define here your tests, save results to 'ans',
 -- use --> for the strict equality
 -- and --n> for the n-digit precision in the case of floating numbers.
---[[TEST
+--[[TEST_IT
 
 -- use 'WORD2'
 WORD3 = require 'matlib.WORD2'

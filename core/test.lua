@@ -12,7 +12,7 @@
 --[=[
 	Rules for the test writing.
 
-  * Tests should be encapsulated in --[[TEST ... ]], i.e. in multi string comments with signs '!!'.
+  * Tests should be encapsulated in --[[TEST_IT ... ]], i.e. in multi string comments with signs '!!'.
 
   * Each block of test code must be separated with at leas 1 empty line.
 
@@ -38,7 +38,7 @@
 
 local DELIM = '\r?\n[%s%c]*\n'
 local LOG_NAME = 'test.log'
-local CODE_TEMPLATE = '%-%-%[(=*)%[TEST(.-)%]%1%]'
+local CODE_TEMPLATE = '%-%-%[(=*)%[TEST_IT(.-)%]%1%]'
 local TEST_TEMPLATE = '(.*)%-%-(%d?)>(.*)'
 local TOL = {['0']=1, ['1']=1E+1, ['2']=1E+2, ['3']=1E+3, ['4']=1E+4,
   ['5']=1E+5, ['6']=1E+6, ['7']=1E+7, ['8']=1E+8, ['9']=1E+9}

@@ -1,5 +1,5 @@
 ------------ Test cross-module functionality --------------
---[[TEST
+--[[TEST_IT
 
 -- RATIONAL and BIGINT
 -----------------------------
