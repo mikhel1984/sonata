@@ -14,66 +14,52 @@
 local mmodf = math.modf
 
 
---================ New version ================
+--=============== Choose versions =======================
+
 local versions = {
   -- Arctangent with sign
-  atan2     = math.atan,
-  -- Check if the number is integer
-  isInteger = math.tointeger,
+  atan2 = math.atan2 or math.atan,
   -- Execute string code.
-  loadStr   = load,
-  -- Check type of the number.
-  mathType  = math.type,
-  -- Move elements to new position (and table)
-  move      = table.move,
-  -- Return integer number or nil
-  toInteger = math.tointeger,
+  loadStr = loadstring or load,
   -- Extract table values.
-  unpack    = table.unpack,
+  unpack = unpack or table.unpack
 }
 
+-- Check if the number is integer
+versions.isInteger = math.tointeger or function (x)
+  if type(x) == 'string' then x = tonumber(x) end
+  if not x then return false end
+  local v, p = mmodf(x)
+  return p == 0.0 and v >= -1E9 and v <= 1E9
+end
 
---=============== Previous versions =======================
-if _VERSION < 'Lua 5.3' then
-  -- Arctangent with sign
-  versions.atan2 = math.atan2
-  -- Check if the number is integer
-  versions.isInteger = function (x)
-    if type(x) == 'string' then x = tonumber(x) end
-    if not x then return false end
-    local v, p = mmodf(x)
-    return p == 0.0 and v >= -1E9 and v <= 1E9
-  end
-  -- Execute string code
-  versions.loadStr = loadstring
-  -- Check type of the number
-  versions.mathType = function (x)
-    local n = tonumber(x)
-    if not n then return nil end
-    local _, p = mmodf(n)
-    return (p == 0.0) and 'integer' or 'float'
-  end
-  -- Move elements to new position (and table)
-  versions.move = function (src, sfrom, sto, dfrom, dest)
-    if dest and dest ~= src then
-      for i = sfrom, sto do
-        dest[dfrom] = src[i]
-        dfrom = dfrom + 1
-      end
-    else
-      local temp = versions.move(src, sfrom, sto, sfrom, {})
-      dest = versions.move(temp, sfrom, sto, dfrom, src)
+-- Check type of the number
+versions.mathType  = math.type or function (x)
+  local n = tonumber(x)
+  if not n then return nil end
+  local _, p = mmodf(n)
+  return (p == 0.0) and 'integer' or 'float'
+end
+
+-- Move elements to new position (and table)
+versions.move = table.move or function (src, sfrom, sto, dfrom, dest)
+  if dest and dest ~= src then
+    for i = sfrom, sto do
+      dest[dfrom] = src[i]
+      dfrom = dfrom + 1
     end
-    return dest
+  else
+    local temp = versions.move(src, sfrom, sto, sfrom, {})
+    dest = versions.move(temp, sfrom, sto, dfrom, src)
   end
-  -- Return integer number or nil
-  versions.toInteger = function (x)
-    if type(x) == 'string' then x = tonumber(x) end
-    local p, q = mmodf(x)
-    return (q == 0.0) and p or nil
-  end
-  -- Extract table values
-  versions.unpack = unpack
+  return dest
+end
+
+-- Return integer number or nil
+versions.toInteger = math.tointeger or function (x)
+  if type(x) == 'string' then x = tonumber(x) end
+  local p, q = mmodf(x)
+  return (q == 0.0) and p or nil
 end
 
 
