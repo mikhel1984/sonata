@@ -41,33 +41,33 @@ b = a * Int{4,5,6}  -- table can be used
 c = b:rebase(20)    -- get representation with base = 20
 ```
 
-### complex (_Z)
+### complex (Z)
 
 Operatoins with complex numbers. 
 
 ```lua
-a = _Z(1,2)       -- first number
-b = 3 + 4*_Z:i()  -- second number
+a = Z(1,2)       -- first number
+b = 3 + 4*Z:i()  -- second number
 c = a ^ b         -- complex power
 ```
 
-### const (_C) 
+### const (C)
 
 Collection of scientific constants. 
 
 ```lua
-_C.phy.e             -- electron charge
-_C.phy.e_u           -- charge units
-_C.add("foo",-1/12)  -- add own value, call with _C.foo
+C.phy.e             -- electron charge
+C.phy.e_u           -- charge units
+C.add("foo",-1/12)  -- add own value, call with _C.foo
 ```
-### data (_D)
+### data (D)
 
 Data processing and statistics.
 
 ```lua
 X = {1, 2, 3, 4, 5, 6}  -- data
-a = _D:moment(X, 2)     -- central moment
-b = _D:filter(X, _D:xGt(3))  -- get X[i] > 2
+a = D:moment(X, 2)     -- central moment
+b = D:filter(X, D:xGt(3))  -- get X[i] > 2
 ```
 ### geodesy (Geo)
 
@@ -111,16 +111,6 @@ Matrix methods in paraxial optics.
 sys = Lens:ref(200,1,1.56)..Lens:trans(5,1.56)..Lens:ref(-200,1.56)
 y, V = sys(5, 0.1)    -- ray transformation
 pts = sys:cardinal()  -- find cardinal points
-```
-
-### main ()
-
-Basic functions.
-
-```lua
-a = Round(_pi, 2)   -- round number
-b = cosh(_e * 0.1)  -- hyperbolic cosine
-c = Range(1,9,2)    -- create range of numbers
 ```
 
 ### matrix (Mat)

@@ -37,7 +37,8 @@ ans = Z:i(3) - b              -->  0
 
 ans = a * b                   -->  Z(-6,3)
 
-ans = a / Z:i()               -->  Z(2,-1)
+_i = Z:i()
+ans = a / _i                  -->  Z(2,-1)
 
 -- power can be complex
 c = Z(1,1)^Z(2,-2)
@@ -120,10 +121,7 @@ ans = z:im()                  -->  2
 -- show
 print(a)
 
--- update env on import 
--- add complex unit
-ans = 2*_i                    -->  Z:i(2)
-
+-- update env on import
 -- update some methods 
 ans = sqrt(-1)                -->  _i
 
@@ -212,6 +210,7 @@ iscomplex=true,
 -- simplification
 _simp = numcomp,
 }
+
 
 --- Check object type.
 --  @param c Object.
@@ -636,9 +635,6 @@ about[complex] = {" (re=0, im=0) --> new_Z",
 
 
 if Sonata then  -- GLOBAL
-
--- complex unit
-_i = complex._i
 
 -- redefine square root
 local _sqrt = sqrt

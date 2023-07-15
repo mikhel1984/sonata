@@ -14,11 +14,8 @@
 
 require 'matlib.main'
 
--- constants starts from '_'
-ans = _pi                     -->  math.pi
-
 -- standard functions
-ans = exp(0)+sin(_pi/2)+cosh(0)  --1>  3.0
+ans = exp(0)+sin(pi/2)+cosh(0)  --1>  3.0
 
 -- round number
 ans = Round(0.9)              -->  1.0
@@ -40,7 +37,7 @@ c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3>  0.909
 
 -- use Lua functions if need
-ans = math.deg(_pi)          --2>  180.0
+ans = math.deg(pi)           --2>  180.0
 
 --]]
 
@@ -181,10 +178,9 @@ about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", HYP}
 atanh = _call(Calc.atanh, 'atanh')
 about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
-
 -- Constants
-_pi = math.pi;         about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
-_e  = 2.718281828459;  about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
+pi = math.pi
+about[pi] = {"pi", "Number pi.", AUX}
 
 
 --- Generate list of function values.

@@ -23,9 +23,6 @@ help(Round)
 -- and define variables. 
 x = 3
 2*x^2+3*x+5
--- Available constants:
-_pi
-_e
 -- Last result is stored in the variable
 _ans
 -- PAUSE

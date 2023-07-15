@@ -401,7 +401,7 @@ end
 
 --- Sonata evaluation loop.
 --  @param noteList Table with text blocks.
-evaluate.cli = function (noteList)
+evaluate.repl = function (noteList)
   local invite = evaluate.INV_MAIN
   local env = {notes=noteList or {}, index=1,
     read = true, info=false}

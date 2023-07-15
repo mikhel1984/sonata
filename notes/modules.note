@@ -37,9 +37,9 @@ Num.TOL
 fn = function (x)          \
   return 2*sin(x)+sin(2*x) \
 end -- introduce some function
-Num:newton(fn, _pi/3)  -- find root near the pi/3
-Num:der(fn, _pi/3)     -- estimate derivative in the point
-Num:trapez(fn, 0, _pi/3) -- find integral from 0 to pi/3
+Num:newton(fn, pi/3)  -- find root near the pi/3
+Num:der(fn, pi/3)     -- estimate derivative in the point
+Num:trapez(fn, 0, pi/3) -- find integral from 0 to pi/3
 -- Solve ODE 
 t,yn = Num:ode45(                               \
   function(t,y) return t*y end,  -- y' = f(t,y) \

@@ -23,9 +23,6 @@ help(Round)
 -- kaj uzu variablojn.
 x = 3
 2*x^2+3*x+5
--- Konstantoj:
-_pi
-_e
 -- La rezulto de la lasta kalkulo estas konservita en
 _ans
 -- PAUSE

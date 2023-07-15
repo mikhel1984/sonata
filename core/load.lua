@@ -185,7 +185,7 @@ process = function (args)
   for i = 1, #args do
     if string.find(args[i], '%.note$') then
       local blk = Sonata._toBlocks(args[i])
-      Sonata.cli(blk)
+      Sonata.repl(blk)
       --Sonata:note(args[i])
     else
       dofile(args[i])
@@ -242,8 +242,8 @@ if SONATA_LOCALIZATION then
 end
 
 
--- Try to import base functions
-pcall(use, 'main')
+-- Call default module
+use('main')
 
 
 -- Process command line arguments
@@ -270,9 +270,9 @@ end
 
 -- choose interpreter
 if arg[-1] ~= '-i' then
-  Sonata.cli()
+  Sonata.repl()           -- use Sonata REPL
 else
-  Sonata.inLua = true
+  Sonata.inLua = true    -- use Lua REPL
 end
 
 --===============================================
