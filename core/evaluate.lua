@@ -12,7 +12,7 @@
 --	LOCAL
 
 -- String evaluation method
-local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
+local loadStr = loadstring or load
 local Test = nil
 
 -- Highlight "header" in a "note" file
@@ -41,6 +41,14 @@ local function printErr (msg)
 end
 
 
+local function wrapIndex (n, env)
+  local lim = #env.notes 
+  if n < 0 then n = lim + n + 1 end
+  if n > 0 and n <= lim then return n end
+  return nil  
+end
+
+
 --- Set position for the next block in 'note' file.
 --  @param args List of arguments.
 --  @param env Evaluation parameters.
@@ -49,14 +57,34 @@ local function goTo (args, env)
   if not num then
     printErr("Unknown command "..args[1])
   end
+  env.index = 1
+  env.queue = {}
+  if #env.notes == 0 then return end
   -- TODO to integer
-  local lim = #env.notes
-  if lim > 0 then
-    env.index = (num < 0) and 1 or (num > lim) and lim or num
-    env.read = false
-  else
-    env.index = 1
+  local nextInd = wrapIndex(num, env)
+  if nextInd then 
+     env.index = nextInd
+     env.read = false
+     table.insert(env.queue, nextInd)
+  else 
+     return
   end
+  for p, d in string.gmatch(args[2], "([,:])%s*(%-?%d+)") do
+    if not (p and d) then return end
+    nextInd = wrapIndex(tonumber(d), env)
+    if nextInd then 
+      if p == ',' then
+        table.insert(env.queue, nextInd)
+      else
+        for i = env.queue[#env.queue]+1, nextInd do 
+          table.insert(env.queue, i)
+        end
+      end
+    else
+      break
+    end    
+  end
+  table.remove(env.queue, 1)
 end
 
 
@@ -83,6 +111,10 @@ end
 --	MODULE
 
 local evaluate = {
+
+-- current version 
+version = '0.9.38',
+
 -- status
 EV_RES = 1,   -- found result
 EV_CMD = 0,   -- continue expected
@@ -146,6 +178,7 @@ end,
 -- Clear notes
 rm = function (args, env)
   env.notes = {}
+  env.queue = {}
   env.index = 1
 end,
 
@@ -347,7 +380,11 @@ evaluate._evalBlock = function (co, env)
   end
   io.write(SonataHelp.CMAIN,
     '\t[ ', env.index, ' / ', #env.notes, ' ]', SonataHelp.CRESET, '\n')
-  env.index = env.index+1
+  if #env.queue > 0 then
+    env.index = table.remove(env.queue, 1)
+  else
+    env.index = env.index+1
+  end
 end
 
 
@@ -404,7 +441,7 @@ end
 evaluate.repl = function (noteList)
   local invite = evaluate.INV_MAIN
   local env = {notes=noteList or {}, index=1,
-    read = true, info=false}
+    read = true, info=false, queue={}}
   local co = evaluate.evalThread()
   while true do
     local input = ''
