@@ -262,6 +262,12 @@ qubit.__tostring = function (Q)
 end
 
 
+-- Metamethods
+about['_ar'] = {"arithmetic: Q1+Q2, k*Q, G1*G2, G^n, G()", nil, help.META}
+about['_cmp'] = {"comparison: Q1==Q2, Q1~=Q2", nil, help.META}
+about['_obj'] = {"object: Q1..Q2, #Q, #G", nil, help.META}
+
+
 --- Measure on qubit from the system.
 --  Update system state.
 --  @param Q Qubit system.
@@ -841,8 +847,5 @@ qubit.about = about
 return qubit
 
 --======================================
--- https://en.wikipedia.org/wiki/Quantum_logic_gate
 -- TODO vertical concatenation with ..
--- TODO qubit equality
 -- TODO qubit from vector
--- TODO power for gates

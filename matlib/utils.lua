@@ -139,6 +139,18 @@ cross.simp = function (v)
 end
 
 
+--- Reduce number of digits
+--  @param v Number object.
+--  @param tol Tolerance (1E-k)
+--  @return Updated object.
+cross.strip = function (v, tol)
+  if type(v) == 'number' then
+    return v - v % tol
+  end
+  return type(v) == 'table' and v._strip and v:_strip() or v
+end
+
+
 --============== Utils ================
 
 local NUM_DOT = '%.'
