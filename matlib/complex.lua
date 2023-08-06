@@ -393,6 +393,13 @@ complex._norm = function (C)
 end
 
 
+complex._strip = function (C, tol)
+  C._[1] = Utils.strip(C._[1], tol)
+  C._[2] = Utils.strip(C._[2], tol)
+  return numcomp(C)
+end
+
+
 --- Module of complex number.
 --  @return Module of the number.
 complex.abs = complex._norm

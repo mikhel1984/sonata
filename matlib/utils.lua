@@ -147,7 +147,7 @@ cross.strip = function (v, tol)
   if type(v) == 'number' then
     return v - v % tol
   end
-  return type(v) == 'table' and v._strip and v:_strip() or v
+  return type(v) == 'table' and v._strip and v:_strip(tol) or v
 end
 
 

@@ -587,6 +587,15 @@ matrix._new = function (self, t)
 end
 
 
+matrix._strip = function (M, tol)
+  for r = 1, M._rows do
+    local mr = M[r]
+    for c = 1, M._cols do
+      mr[c] = Utils.strip(mr[c], tol)
+    end
+  end
+end
+
 --- Bidiagonalization.
 --  Find such U, B, V that U*B*V:T() = M and
 --  B is upper bidiagonal, U and V are ortogonal.

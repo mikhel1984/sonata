@@ -508,6 +508,12 @@ polynomial._roots3 = function (P)
 end
 
 
+polynomial._strip = function (P, tol)
+  for i = 0, #P do
+    P[i] = Utils.strip(P[i], tol)
+  end
+end
+
 --- Get polynomial from roots.
 --  Arguments are a sequence of roots.
 --  @param t List of roots.
