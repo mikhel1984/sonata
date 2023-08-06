@@ -49,7 +49,7 @@ use = {
 --------------------
   const      = "C",      -- physical and other constants
   geodesy    = "Geo",    -- geodesy transformations
-  --gnuplot    = "Gp",     -- GnuPlot 'binding'
+  gnuplot    = "Gp",     -- GnuPlot 'binding'
   lens       = "Lens",   -- paraxial optics and laser beams
   quaternion = "Quat",   -- working with quaternions
   qubit      = "Qb",     -- emulate quantum computations

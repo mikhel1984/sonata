@@ -90,8 +90,8 @@ end
 --  @param vSlave Slave object.
 --  @return Converted slave of nil.
 cross.convert = function (vMaster, vSlave)
-  return type(vMaster) == 'table' and vMaster._convert
-    and vMaster._convert(vSlave)
+  local mt = getmetatable(vMaster) 
+  return mt and mt._convert and mt._convert(vSlave)
 end
 
 
@@ -99,7 +99,8 @@ end
 --  @param v Object.
 --  @return Deep copy when possible.
 cross.copy = function (v)
-  return type(v) == 'table' and v.copy and v:copy() or v
+  local mt = getmetatable(v)
+  return mt and mt.copy and mt.copy(v) or v
 end
 
 
@@ -112,8 +113,15 @@ cross.float = function (v)
 end
 
 
+--- Check if the number equal 0.
+--  @param v Some object.
+--  @return true when v == 0
 cross.isZero = function (v)
-  return type(v) == 'table' and v._isZero and v:_isZero() or (v == 0)
+  local mt = getmetatable(v) 
+  if mt and mt._isZero then
+    return mt._isZero(v)
+  end
+  return v == 0
 end
 
 
@@ -135,7 +143,8 @@ end
 --  @param v Sonata object.
 --  @return Number or the object itself.
 cross.simp = function (v)
-  return type(v) == 'table' and v._simp and v:_simp() or v
+  local mt = getmetatable(v)
+  return mt and mt._simp and mt._simp(v) or v
 end
 
 
@@ -297,7 +306,8 @@ end
 --  @param d Value to check.
 --  @return -1, 0 or 1
 utils.sign = function (d)
-  if type(d) == 'number' or type(d) == 'table' and d.__lt then
+  local tp = type(d)
+  if tp == 'number' or tp == 'table' and d.__lt then
     return (d > 0) and 1 or (d < 0) and -1 or 0
   else
     return 1
