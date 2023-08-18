@@ -131,7 +131,6 @@ local txtCodes = {
   [evaluate.FORMAT_CLR] = SonataHelp.CRESET,
 }
 
-
 --- Evaluate string of Lua code.
 --  The function should work in coroutine.
 --  It takes code line and return status and evaluation result.
@@ -179,7 +178,7 @@ local function showAndNext(status, res, env)
     -- finish evaluation
     if res ~= nil then
       local out = islist(res) and evaluate._toText(res) or res
-      print(out)
+      io.write(tostring(out), "\n")
       if env.log then env.log:write('--[[ ', out, ' ]]\n') end
     end
   elseif status == evaluate.EV_CMD then
@@ -192,7 +191,7 @@ local function showAndNext(status, res, env)
   elseif status == evaluate.EV_ASK then
     -- system question
     if res[2] then
-      print(res[2])
+      io.write(res[2], "\n")
       if env.log then env.log:write('--[[ ', res[2], ' ]]\n') end
     end
     return res[1]
@@ -325,8 +324,8 @@ end
 
 --- Show message and exit the program.
 evaluate.exit = function ()
-  print(SonataHelp.CMAIN..
-    "\n             --======= Bye! =======--\n"..SonataHelp.CRESET)
+  io.write(SonataHelp.CMAIN,
+    "\n             --======= Bye! =======--\n", SonataHelp.CRESET, "\n")
   os.exit()
 end
 
@@ -342,8 +341,9 @@ end
 --- Print formatted error message.
 --  @param msg Message string.
 evaluate.printErr = function (msg)
-  print(
-    string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
+  io.write(
+    string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET),
+    "\n")
 end
 
 
@@ -352,7 +352,7 @@ end
 evaluate.say = function (txt)
   if in_coroutine then
     coroutine.yield(evaluate.EV_WRN, txt)
-  else print(txt) end
+  else io.write(txt, "\n") end
 end
 
 

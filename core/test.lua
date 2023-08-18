@@ -84,7 +84,7 @@ end
 --- Save string to the file and simultaneously print to the screen.
 --  @param str String for saving.
 test._print = function (str)
-  print(str)
+  io.write(str, '\n')
   test.log:write(str, '\n')
 end
 
@@ -185,7 +185,7 @@ test.summary = function ()
     test._print(string.format(
       '%-27s%-10d%-9d%-10.3f', k, v[1], v[2], v[3]/(v[1]+v[2])))
   end
-  print(string.format('Memory in use: %.1f kB', collectgarbage('count')))
+  io.write(string.format('Memory in use: %.1f kB\n', collectgarbage('count')))
 end
 
 

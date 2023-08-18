@@ -28,9 +28,9 @@ local cmdInfo = {}
 cmdInfo._print = function (k)
   local info = cmdInfo[k]
   if info then
-    print(string.format("%s\t%s\t- %s", k, info[2], info[1]))
+    io.write(string.format("%s\t%s\t- %s\n", k, info[2], info[1]))
   else
-    print("Unknown key: ", k)
+    io.write("Unknown key: ", k, "\n")
   end
 end
 
@@ -54,7 +54,7 @@ commands.help = function (args, env)
     -- rest
     cmdInfo._print('N')
     for t, lst in pairs(group) do
-      print(string.format("--\t%s", t))
+      io.write(string.format("--\t%s\n", t))
       for _, v in ipairs(lst) do cmdInfo._print(v) end
     end
   end
@@ -132,7 +132,7 @@ commands.time = function (args, env)
   if args[2] then
     local fn, err = loadStr('return '..args[2])
     if fn then
-      print(string.format('%.4f ms', Test.time(fn())))
+      io.write(string.format('%.4f ms\n', Test.time(fn())))
     else
       env.evaluate.printErr(err)
     end
@@ -149,7 +149,7 @@ commands.trace = function (args, env)
   if args[2] then
     local fn, err = loadStr('return '..args[2])
     if fn then
-      print(Test.profile(fn()))
+      io.write(tostring(Test.profile(fn())), "\n")
     else
       env.evaluate.printErr(err)
     end

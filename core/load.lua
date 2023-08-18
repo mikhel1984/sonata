@@ -136,7 +136,7 @@ process = function (args)
     local Gen = require('core.generator')
     Gen.lang(args[2], use)
   else
-    print('Current localization file: ', SONATA_LOCALIZATION)
+    io.write('Current localization file:\t', SONATA_LOCALIZATION or 'en', '\n')
   end
 end,
 exit = true},
@@ -168,7 +168,7 @@ exit = true},
 ['-e'] = {
 process = function (args)
   local _, _, ans = coroutine.resume(Sonata.evalThread(), args[2] or '')
-  print(ans)
+  io.write(ans, "\n")
 end,
 exit = true},
 
@@ -194,7 +194,7 @@ exit = true},
 
 -- show help
 _args['-h'] = {
-process = function () print(Sonata._arghelp()) end,
+process = function () io.write(Sonata._arghelp(), "\n") end,
 exit = true}
 
 -- string representation of the help info
@@ -258,7 +258,7 @@ io.write(SonataHelp.CMAIN, '\n',
 "   # #      --=====  so/\\/ata  =====--      # #\n",
 "    # #        --==== ", Sonata.version, " ====--        # #\n\n",
 SonataHelp.CHELP)
-print(About:get('intro'), SonataHelp.CRESET)
+io.write(About:get('intro'), SonataHelp.CRESET, "\n")
 
 -- Import default modules
 if SONATA_DEFAULT_MODULES then

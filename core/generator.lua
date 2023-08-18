@@ -257,14 +257,14 @@ end
 --  @param description Short module description.
 generator.module = function (mName, alias, description)
   if not (mName and alias) then
-    return print('Expected: --new "name" "Alias" ["description"]')
+    return io.write('Expected: --new "name" "Alias" ["description"]\n')
   end
   local fName = sformat('%s%s%s.lua', LIB, Help.SEP, mName)
   -- check existence
   local f = io.open(fName)
   if f then
     f:close()
-    return print('File '..fName..' is already exists!')
+    return io.write('File ', fName, ' is already exists!\n')
   end
   -- write new file
   description = description or "The module of your dream!"
