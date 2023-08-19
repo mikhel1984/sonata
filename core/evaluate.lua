@@ -36,10 +36,10 @@ end
 --  @param env Environment table.
 --  @return Corrected index or nil.
 local function wrapIndex (n, env)
-  local lim = #env.notes 
+  local lim = #env.notes
   if n < 0 then n = lim + n + 1 end
   if n > 0 and n <= lim then return n end
-  return nil  
+  return nil
 end
 
 
@@ -56,22 +56,22 @@ local function goTo (args, env)
   if #env.notes == 0 then return end
   -- TODO to integer
   local nextInd = wrapIndex(num, env)
-  if not nextInd then return end   
+  if not nextInd then return end
   env.index = nextInd
   env.read = false
   table.insert(env.queue, nextInd)
-  -- rest  
+  -- rest
   for p, d in string.gmatch(args[2], "([,:])%s*(%-?%d+)") do
     if not (p and d) then break end
     nextInd = wrapIndex(tonumber(d), env)
-    if not nextInd then break end     
+    if not nextInd then break end
     if p == ',' then
       table.insert(env.queue, nextInd)
     else
-      for i = env.queue[#env.queue]+1, nextInd, 1 do 
+      for i = env.queue[#env.queue]+1, nextInd, 1 do
         table.insert(env.queue, i)
       end
-    end       
+    end
   end
   table.remove(env.queue, 1)
 end
@@ -101,7 +101,7 @@ end
 
 local evaluate = {
 
--- current version 
+-- current version
 version = '0.9.38',
 
 -- status

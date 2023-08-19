@@ -104,7 +104,7 @@ g5 = Qb:gates(3):H()
 mat_fn = Mat:eye(8); mat_fn[6][6] = -1
 -- for the Groover diffusion gate (2|0><0| - 1)
 mat_df = -Mat:eye(8); mat_df[1][1] = 1
--- combine 
+-- combine
 oracle_diffuse = Qb:gates(3)
   :fromMatrix(mat_fn)
   :H()
@@ -281,7 +281,7 @@ qubit._measOne = function (Q, pos)
     for j = 0, pos do
       v, rst = math.modf(v * 0.5)  -- TODO use shift
     end
-    if rst > 0.1 then 
+    if rst > 0.1 then
       sum1 = sum1 + Q.vec[k+1][1]
       ones[#ones+1] = true
     else
@@ -477,7 +477,7 @@ qgate.__mul = function (G1, G2)
   end
   if G1.n ~= G2.n then error('Differen size') end
   local res = qgate._new(G1.n)
-  if     not G1.mat then 
+  if     not G1.mat then
     res.mat, res.txt = G2.mat, G2.txt
   elseif not G2.mat then
     res.mat, res.txt = G1.mat, G1.txt

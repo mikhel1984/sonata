@@ -134,7 +134,7 @@ __module__ = "Operations with quaternions."
 
 local quaternion = {
 -- mark
-type = 'quaternion', 
+type = 'quaternion',
 -- simplify
 _simp = numquat
 }
@@ -147,7 +147,7 @@ local function isquaternion(v) return getmetatable(v) == quaternion end
 
 
 local function numOrQuat(w, x, y, z)
-  return Cross.isZero(x) and Cross.isZero(y) and Cross.isZero(z) and w 
+  return Cross.isZero(x) and Cross.isZero(y) and Cross.isZero(z) and w
     or quaternion._new(w, x, y, z)
 end
 
@@ -278,8 +278,8 @@ end
 
 --- Quaternion constructor.
 --  @return New quaternion.
-quaternion._new = function(w, i, j, k) 
-  return setmetatable({_={w,i,j,k}}, quaternion) 
+quaternion._new = function(w, i, j, k)
+  return setmetatable({_={w,i,j,k}}, quaternion)
 end
 
 
@@ -419,7 +419,7 @@ quaternion.matrix = function (Q)
      {q[3],  q[4],  q[1], -q[2]},
      {q[4], -q[3],  q[2],  q[1]}})
 end
-about[quaternion.matrix] = {'Q:matrix() --> M', 
+about[quaternion.matrix] = {'Q:matrix() --> M',
   'Equivalent matrix representation.', help.OTHER}
 
 
@@ -430,7 +430,7 @@ quaternion.normalize = function (Q)
   local q = Q._
   return k > 0 and quaternion._new(q[1]/k, q[2]/k, q[3]/k, q[4]/k) or Q
 end
-about[quaternion.normalize] = {'Q:normalize() --> unit_Q', 
+about[quaternion.normalize] = {'Q:normalize() --> unit_Q',
   'Return unit quaternion.', help.OTHER}
 
 
@@ -449,7 +449,7 @@ quaternion.rotate = function (Q, vec)
   local p2 = Q*p1*quaternion.conj(Q)  -- TODO reuse p1
   return {p2._[2], p2._[3], p2._[4]}
 end
-about[quaternion.rotate] = {'Q:rotate(inVec) --> outVec_t', 
+about[quaternion.rotate] = {'Q:rotate(inVec) --> outVec_t',
   'Apply quaternion to rotate the vector.', ROTATION}
 
 
@@ -474,7 +474,7 @@ quaternion.slerp = function (Q1, Q2, f)
   local sin_th = math.sin(theta)
   return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
 end
-about[quaternion.slerp] = {'Q:slerp(end_Q, rat_f) --> rat_Q', 
+about[quaternion.slerp] = {'Q:slerp(end_Q, rat_f) --> rat_Q',
   'Spherical linear interpolation for part t.', help.OTHER}
 
 
@@ -495,7 +495,7 @@ quaternion.toAA = function (Q)
     return 2*Ver.atan2(v, w), {x/v, y/v, z/v}
   end
 end
-about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t|nil', 
+about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t|nil',
   'Get angle and axis of rotation.', ROTATION}
 
 

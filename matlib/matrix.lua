@@ -784,7 +784,7 @@ matrix.dot = function (V1, V2)
   end
   return s
 end
-about[matrix.dot] = {'V:dot(V2) --> num', 
+about[matrix.dot] = {'V:dot(V2) --> num',
   'Scalar product of two vectors.', VECTOR}
 
 
@@ -1359,7 +1359,7 @@ matrix.vectorize = function (M)
   end
   return matrix._init(#res, 1, res)
 end
-about[matrix.vectorize] = {"M:vectorize() --> V", 
+about[matrix.vectorize] = {"M:vectorize() --> V",
   "Create vector as a stack of columns.", TRANSFORM}
 
 

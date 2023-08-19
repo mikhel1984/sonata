@@ -127,7 +127,7 @@ help.findObject = function (tbl, obj, tGlob)
     elseif mod[obj] then
       -- function description
       local t = mod[obj]
-      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR, 
+      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
         '\n', t[DESCRIPTION]}
     end
   end
@@ -228,7 +228,7 @@ help.readAll = function (fName)
 end
 
 
---- Load localization tables from file, 
+--- Load localization tables from file,
 --  decode if need.
 --  @param fName File path and name.
 --  @return Lua table or nil.

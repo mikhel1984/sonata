@@ -72,7 +72,7 @@ local _call = function (fn, s)
 end
 
 
---	INFO 
+--	INFO
 
 -- description
 local about = {

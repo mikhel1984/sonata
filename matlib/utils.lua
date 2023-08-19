@@ -90,7 +90,7 @@ end
 --  @param vSlave Slave object.
 --  @return Converted slave of nil.
 cross.convert = function (vMaster, vSlave)
-  local mt = getmetatable(vMaster) 
+  local mt = getmetatable(vMaster)
   return mt and mt._convert and mt._convert(vSlave)
 end
 
@@ -117,7 +117,7 @@ end
 --  @param v Some object.
 --  @return true when v == 0
 cross.isZero = function (v)
-  local mt = getmetatable(v) 
+  local mt = getmetatable(v)
   if mt and mt._isZero then
     return mt._isZero(v)
   end

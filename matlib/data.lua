@@ -138,7 +138,7 @@ ans = b[2]                    -->  4
 b2 = 2*b + 4
 ans = b2[1]                   -->  8
 
--- apply function 
+-- apply function
 c = b:map(math.sin)
 ans = c[1]                   --3>  0.909
 

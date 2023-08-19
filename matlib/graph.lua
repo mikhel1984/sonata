@@ -64,7 +64,7 @@ b = a:copy()
 ans = b:isComplete()          -->  false
 
 -- prepare graph
-c = Graph() 
+c = Graph()
 c:addEdges {
   {'a','b'},
   {'a','c'},
@@ -210,7 +210,7 @@ graph.__tostring = function (G)
   if #nd <= 5 then
     return string.format('%s {%s}', nm, table.concat(nd, ','))
   else
-    return string.format('%s {%s -%d- %s}', 
+    return string.format('%s {%s -%d- %s}',
       nm, tostring(nd[1]), #nd-2, tostring(nd[#nd]))
   end
 end
@@ -248,7 +248,7 @@ about[graph.add] = {"G:add(n1, n2=nil, w_d=1)", "Add new node or edge."}
 graph.addEdges = function (G, t)
   for _, v in ipairs(t) do graph.add(G, v[1], v[2], v[3]) end
 end
-about[graph.addEdges] = {"G:addEdges(list_t)", 
+about[graph.addEdges] = {"G:addEdges(list_t)",
   "Import edges and weights from list."}
 
 
@@ -259,7 +259,7 @@ graph.addNodes = function (G, t)
   local g = G._
   for _, v in ipairs(t) do g[v] = g[v] or {} end
 end
-about[graph.addNodes] = {"G:addNodes(list_t)", 
+about[graph.addNodes] = {"G:addNodes(list_t)",
   "Import nodes from list."}
 
 
@@ -354,14 +354,14 @@ about[graph.dir] = {":dir() --> new_G", "Create directed graph.", help.NEW}
 --  @param G Graph object.
 --  @return String with structure.
 graph.dot = function (G)
-  local txt = {G._dir and "digraph {" or "graph {"} 
+  local txt = {G._dir and "digraph {" or "graph {"}
   local line = G._dir and "->" or "--"
   -- edges
   for n1, adj in pairs(G._) do
     local nstr, empty = tostring(n1), true
     for n2, v in pairs(adj) do
       empty = false
-      if v then 
+      if v then
         txt[#txt+1] = string.format("  %s %s %s;", nstr, line, tostring(n2))
       end
     end
@@ -372,7 +372,7 @@ graph.dot = function (G)
   txt[#txt+1] = "}"
   return table.concat(txt, '\n')
 end
-about[graph.dot] = {"G:dot() --> str", 
+about[graph.dot] = {"G:dot() --> str",
   "Return graph structure in dot notation."}
 
 
@@ -512,7 +512,7 @@ about[graph.pathD] = {'G:pathD(startNode, [goalNode]) --> dist_d, path_t|prev_t'
 --  @param n1 Node.
 --  @param n2 Second node.
 graph.remove = function (G, n1, n2)
-  if n2 then 
+  if n2 then
     -- edge
     G._[n1][n2] = nil
     G._[n2][n1] = nil
@@ -533,11 +533,11 @@ about[graph.remove] = {"G:remove(n1, [n2])",
 --  @param name File name.
 graph.toSvg = function (G, name)
   local cmd = string.format('dot -Tsvg -o %s.svg', name)
-  local handle = assert(io.popen(cmd, 'w'), "Can't open dot!") 
+  local handle = assert(io.popen(cmd, 'w'), "Can't open dot!")
   handle:write(graph.dot(G))
   handle:close()
 end
-about[graph.toSvg] = {"G:toSvg(name_s)", 
+about[graph.toSvg] = {"G:toSvg(name_s)",
   "Convert graph to SVG image using Graphviz."}
 
 

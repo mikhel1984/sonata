@@ -630,7 +630,7 @@ about[units.setRule] = {':setRule(name_s, val_U)',
 --  @return text with rules
 units.rules = function (self)
   local t = {}
-  for k, v in pairs(self._rules) do 
+  for k, v in pairs(self._rules) do
     t[#t+1] = string.format('%s\t-> %s', k, tostring(v))
   end
   return table.concat(t, '\n')

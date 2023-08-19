@@ -1,3 +1,11 @@
+======== 0.9.38 =========
+
+Other
+* Update 'print', remove Print
+* Leave only pi constant
+* Choose sequence of notes to execute
+* Update type checking
+
 ======== 0.9.37 =========
 
 Asciiplot

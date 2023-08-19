@@ -1,12 +1,12 @@
 -- Welcome to "Sonata", Lua program for numerical computations!
 -- Here you can find some tips about it.
--- Print 'quit' to exit the program. 
+-- Print 'quit' to exit the program.
 -- Press "Enter" to continue...
 -- PAUSE
 
 --	BASICS
 -- Available functions can be listed using:
-help 'all' 
+help 'all'
 -- PAUSE
 
 -- Information about function can be obtained as
@@ -16,11 +16,11 @@ help(Round)
 -- By the way, this is an interactive mode.
 -- You can enter Lua valid expression after '##'
 -- and see the result. For example, try to get help
--- for any other function. 
+-- for any other function.
 -- PAUSE
 
 -- You can calculate arithmetical expressions
--- and define variables. 
+-- and define variables.
 x = 3
 2*x^2+3*x+5
 -- Last result is stored in the variable
@@ -28,27 +28,27 @@ _ans
 -- PAUSE
 
 -- Multiline expressions should be divided with
--- the backslash. For compatibility with Lua 
+-- the backslash. For compatibility with Lua
 -- it can be placed in the comments.
 1 + 2 + \
 3 + 4
 1 + 2 + --\
 3 + 4
--- PAUSE 
+-- PAUSE
 
 --	MODULES
--- Additional modules can be loaded 
+-- Additional modules can be loaded
 -- with the help of "use" function.
 -- List of modules, aliases and the current status:
 use()
--- PAUSE 
+-- PAUSE
 
--- In order to load module, enter 
+-- In order to load module, enter
 --    use 'name'
 -- Module is available for its alias.
 use 'matrix'
 a = Mat {{1,2},{3,4}}       -- new matrix
--- Fields can be called with dot, 
+-- Fields can be called with dot,
 -- functions with ':'
 a:det()
 Mat:eye(2,2)
@@ -80,13 +80,13 @@ exp(3+_i*4)
 -- PAUSE
 
 -- There are additional commands for
--- intraction, in particular 
+-- intraction, in particular
 -- :ls - show list of parts
 -- :N  - jump to N-th part
 -- Call ':13' to see this message once again.
 -- PAUSE
 
--- Get more information about the available modules 
+-- Get more information about the available modules
 -- with 'modules.note'
 
 -- We wish you pleasant work with the program!

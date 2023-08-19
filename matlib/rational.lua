@@ -63,7 +63,7 @@ ans = b:denom()               -->  1
 print(a)
 
 -- continued fraction to rational
--- 1 + 1/(2+1/(3+1/4)) 
+-- 1 + 1/(2+1/(3+1/4))
 c = Rat:fromCF {[0]=1, 2, 3, 4}
 ans = c                       -->  Rat(43,30)
 
@@ -144,7 +144,7 @@ __module__ = "Computations with rational numbers."
 
 local rational = {
 -- mark
-type = 'rational', 
+type = 'rational',
 -- simplification
 _simp = numrat,
 }
@@ -354,7 +354,7 @@ end
 
 --- Create new object, set metatable.
 --  @param vn Numerator.
---  @param vd Denominator. 
+--  @param vd Denominator.
 --  @return New rational object.
 rational._new = function (vn, vd)
   local g = rational._gcd(vd, vn)     -- inverse order move sign to denominator
@@ -427,14 +427,14 @@ rational.fromCF = function (self, t)
   local check = {}
   for i, v in ipairs(t) do
     if (type(v) == 'number' and Vinteger(v)
-          or type(v) == 'table' and v.__mod) and v > 0 
+          or type(v) == 'table' and v.__mod) and v > 0
     then
       check[i] = v
     else error("Positive integer is expected") end
   end
   local t0 = t[0] or 0
   if (type(t0) == 'number' and Vinteger(t0)
-        or type(t0) == 'table' and t0.__mod) 
+        or type(t0) == 'table' and t0.__mod)
   then
     check[0] = t0
   else error("Integer is expected") end
@@ -478,7 +478,7 @@ rational.toCF = function (R)
   res[#res+1] = math.modf(b)
   return setmetatable(res, _continued)
 end
-about[rational.toCF] = {"R:toCF() --> coeff_t", 
+about[rational.toCF] = {"R:toCF() --> coeff_t",
   "Transform rational number to continued fraction.", help.OTHER}
 
 
@@ -495,7 +495,7 @@ __call = function (self, n, d)
   assert(not Cross.isZero(d), "Wrond denomenator value")
   return rational._new(n, d)
 end})
-about[rational] = {" (num, denom=1) --> new_R", 
+about[rational] = {" (num, denom=1) --> new_R",
   "Create rational number using num (and denom).", help.NEW}
 
 

@@ -4,7 +4,7 @@
 --
 --  Object structure: </br>
 --  <code> {_sign=S, _={v1, ... vn}} </code></br>
---  where <code>S</code> is +1/-1, 
+--  where <code>S</code> is +1/-1,
 --  v1 - vn are digits of the number in reverse order.
 --  For example, number <code>123</code> is represented as
 --  <code>{_sign=1, _={3, 2, 1}}</code> when BASE is 10.
@@ -860,11 +860,11 @@ end
 --  @param B0 Initial multiplier.
 --  @return Pair of multipliers or nil.
 bigint._trivialSearch = function (B, B0)
-  local n = B0 and B0:_copy() or bigint._newTable({2}, 1) 
+  local n = B0 and B0:_copy() or bigint._newTable({2}, 1)
   local sq = bigint._sqrt(B)
   while #sq._ > #n._ or not bigint._gt(n, sq) do
     local v1, v2 = bigint._div(B, n)
-    if bigint._isZero(v2) then 
+    if bigint._isZero(v2) then
       return n, v1
     end
     bigint._incr(n)
@@ -947,7 +947,7 @@ bigint.eq = function (B1, B2)
   end
   return false
 end
-about[bigint.eq] = {"B:eq(x) --> bool", 
+about[bigint.eq] = {"B:eq(x) --> bool",
   "Check equality with the second value.", help.OTHER}
 -- redefine equality
 bigint.__eq = bigint.eq
@@ -999,7 +999,7 @@ bigint.factorize = function (B)
   end
   return res
 end
-about[bigint.factorize] = {"B:factorize() --> primeBs_t", 
+about[bigint.factorize] = {"B:factorize() --> primeBs_t",
   "Find the list of multipliers.", NUMB}
 
 
@@ -1027,7 +1027,7 @@ bigint.gcd = function (B1, B2)
   B1, B2 = bigint._args(B1, B2)
   return bigint._gcd(B1, B2)
 end
-about[bigint.gcd] = {"B:gcd(B2) --> B3", 
+about[bigint.gcd] = {"B:gcd(B2) --> B3",
   "Find the greatest common divisor for two integers.", NUMB}
 
 
@@ -1136,4 +1136,4 @@ bigint.about = about
 return bigint
 
 --=================================
--- TODO check F and ratF for different float() 
+-- TODO check F and ratF for different float()
