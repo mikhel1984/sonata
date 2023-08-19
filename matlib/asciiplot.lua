@@ -132,12 +132,7 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 
 --	LOCAL
 
-
-local function inform(txt)
-  if Sonata then Sonata.say(txt) else print(txt) end
-end
-
-
+local inform = Sonata and Sonata.warning or print
 local mmodf = math.modf
 local MANUAL, CONF = 'manual', 'settings'
 local LOG10 = math.log(10)

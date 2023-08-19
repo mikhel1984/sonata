@@ -85,57 +85,6 @@ __module__ = "Lua based mathematics."
 local main = {}
 
 
---- Print element, use 'scientific' form for float numbers.
---  @param v Value to print.
-main._showElt = function (v)
-  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
-end
-
-
---- Show elements of the table.
---  @param t Table to print.
-main._showTable = function (t)
-  local N, nums, out = 10, {}, {'{ '}
-  -- dialog
-  local function continue(n, res)
-    local txt = tostring(n) .. ' continue? (y/n/) '
-    if Sonata then
-      txt = Sonata.ask(txt, res)
-    else
-      io.write(res, '\n', txt)
-      txt = io.read()
-    end
-    return string.lower(txt) == 'y'
-  end
-  -- list elements
-  for i, v in ipairs(t) do
-    out[#out+1] = main._showElt(v); out[#out+1] = ', '
-    nums[i] = true
-    if i % N == 0 then
-      out[#out+1] = '\n'
-      local data = table.concat(out)
-      out = {'\n'}
-      if not continue(i, data) then break end
-    end
-  end
-  -- hash table elements
-  local count = 0
-  for k, v in pairs(t) do
-    if not nums[k] then
-      out[#out+1] = string.format('\n%s = %s, ', tostring(k), main._showElt(v))
-      count = count + 1
-      if count % N == 0 then
-        local data = table.concat(out)
-        out = {'\n'}
-        if not continue('', data) then break end
-      end
-    end
-  end
-  out[#out+1] = ' }\n'
-  return table.concat(out)
-end
-
-
 -- Commonly used methods
 abs = _call(math.abs, 'abs')
 about[abs] = {"abs(x) --> num", "Absolute value."}
@@ -197,39 +146,6 @@ Map = function (fn, t)
   return nil
 end
 about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table element.', AUX}
-
-
---- Show table content and scientific form of numbers.
---  @param ... List of arguments.
-Print = function (...)
-  local out = {}
-  for i, v in ipairs({...}) do
-    if type(v) == 'table' then
-      local mt = getmetatable(v)
-      if mt and mt.__tostring then
-        -- has representation
-        local tmp = tostring(v)
-        if string.find(tmp, '\n') then
-          out[#out+1] = '\n'
-        end
-        out[#out+1] = tmp
-        out[#out+1] = '\t'
-      else
-        -- require representation
-        out[#out+1] = main._showTable(v)
-      end
-    else
-      -- show value
-      out[#out+1] = main._showElt(v)
-      out[#out+1] = '\t'
-    end
-  end
-  local res = table.concat(out)
-  if Sonata then Sonata.say(res) else print(res) end
-end
-about[Print] = {"Print(...)",
-  "Extenden print function, it shows elements of tables and scientific form of numbers.",
-  AUX}
 
 
 --- Round to some precision.

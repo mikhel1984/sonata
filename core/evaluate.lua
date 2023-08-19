@@ -110,6 +110,7 @@ EV_CMD = 0,   -- continue expected
 EV_ERR = -1,  -- error
 EV_ASK = 2,   -- print question
 EV_WRN = 3,
+EV_INF = 4,
 -- string formats
 FORMAT_V1 = '#v_1',
 FORMAT_V2 = '#v_2',
@@ -198,6 +199,9 @@ local function showAndNext(status, res, env)
   elseif status == evaluate.EV_WRN then
     io.write('Sonata: ', res, '\n')
     env.read, env.info = false, true
+  elseif status == evaluate.EV_INF then
+    io.write(res, '\n')
+    env.read, env.info = false, true
   end
   return evaluate.INV_MAIN
 end
@@ -230,6 +234,65 @@ evaluate._evalBlock = function (co, env)
   else
     env.index = env.index+1
   end
+end
+
+
+--- Redefined print function
+evaluate._newPrint = function (...)
+  local out = {}
+  for i, v in ipairs({...}) do
+    local mt = getmetatable(v)
+    if type(v) == 'table' and not (mt and mt.__tostring) then
+      -- show table
+      out[#out+1] = evaluate._showTable(v)
+    else
+      -- show element
+      local s = tostring(v)
+      out[#out+1] = s
+      out[#out+1] = (string.find(s, '\n.+') ~= false) and '\t' or '\n'
+    end
+  end
+  local res = table.concat(out)
+  coroutine.yield(evaluate.EV_INF, res)
+end
+
+
+--- Show elements of the table.
+--  @param t Table to print.
+evaluate._showTable = function (t)
+  local N, nums, out = 10, {}, {'{ '}
+  -- dialog
+  local function continue(n, res)
+    local txt = tostring(n) .. ' continue? (y/n) '
+    txt = evaluate.ask(txt, res)
+    return string.lower(txt) == 'y'
+  end
+  -- list elements
+  for i, v in ipairs(t) do
+    out[#out+1] = tostring(v); out[#out+1] = ', '
+    nums[i] = true
+    if i % N == 0 then
+      out[#out+1] = '\n'
+      local data = table.concat(out)
+      out = {'\n'}
+      if not continue(i, data) then break end
+    end
+  end
+  -- hash table elements
+  local count = 0
+  for k, v in pairs(t) do
+    if not nums[k] then
+      out[#out+1] = string.format('\n  %s = %s,', tostring(k), tostring(v))
+      count = count + 1
+      if count % N == 0 then
+        local data = table.concat(out)
+        out = {'\n'}
+        if not continue(count, data) then break end
+      end
+    end
+  end
+  out[#out+1] = '}\n'
+  return table.concat(out)
 end
 
 
@@ -288,6 +351,10 @@ evaluate.repl = function (noteList)
   local env = {notes=noteList or {}, index=1,
     read = true, info=false, queue={}, evaluate=evaluate}
   local co = evaluate.evalThread()
+  -- update print
+  if not evaluate._oldPrint then
+    evaluate._oldPrint, print = print, evaluate._newPrint
+  end
   while true do
     local input = ''
     if env.read then
@@ -347,12 +414,12 @@ evaluate.printErr = function (msg)
 end
 
 
---- Send info/warning to user.
+--- Send warning to user.
 --  @param txt Text to print.
-evaluate.say = function (txt)
+evaluate.warning = function (txt)
   if in_coroutine then
     coroutine.yield(evaluate.EV_WRN, txt)
-  else io.write(txt, "\n") end
+  else print(txt) end
 end
 
 
