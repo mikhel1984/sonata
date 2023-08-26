@@ -28,7 +28,7 @@ local cmdInfo = {}
 cmdInfo._print = function (k)
   local info = cmdInfo[k]
   if info then
-    io.write(string.format("%s\t%s\t- %s\n", k, info[2], info[1]))
+    io.write(string.format("%s\t%s\t- %s\n", k, info[2], About:get(info[1])))
   else
     io.write("Unknown key: ", k, "\n")
   end
@@ -59,7 +59,7 @@ commands.help = function (args, env)
     end
   end
 end
-cmdInfo.help = {"Show this help", ""}
+cmdInfo.help = {'cmd_help', ""}
 
 
 -- Save session to log
@@ -82,7 +82,7 @@ commands.log = function (args, env)
     env.evaluate.printErr('Unexpected argument!')
   end
 end
-cmdInfo.log = {"Turn on/off logging", "on/off"}
+cmdInfo.log = {'cmd_log', "on/off"}
 
 
 -- Print list of blocks
@@ -95,11 +95,11 @@ commands.ls = function (args, env)
     io.write(string.format("%d   %s\n", i, s))
   end
 end
-cmdInfo.ls = {"Show list of blocks for execution", "", "Note-files"}
+cmdInfo.ls = {'cmd_ls', "", "Note-files"}
 
 
 -- Go to line
-cmdInfo.N = {"Go to N-th block", ""}
+cmdInfo.N = {'cmd_N', ""}
 
 
 -- Add 'note' file to the list
@@ -114,7 +114,7 @@ commands.o = function (args, env)
     env.evaluate.printErr("Can't open file "..args[2])
   end
 end
-cmdInfo.o = {"Open note-file", "filename", "Note-files"}
+cmdInfo.o = {'cmd_o', "filename", "Note-files"}
 
 
 -- Clear notes
@@ -123,7 +123,7 @@ commands.rm = function (args, env)
   env.queue = {}
   env.index = 1
 end
-cmdInfo.rm = {"Clear list of notes", "", "Note-files"}
+cmdInfo.rm = {'cmd_rm', "", "Note-files"}
 
 
 -- Average time
@@ -140,7 +140,7 @@ commands.time = function (args, env)
     env.evaluate.printErr("Unexpected argument!")
   end
 end
-cmdInfo.time = {"Estimate average time", "func", "Debug"}
+cmdInfo.time = {'cmd_time', "func", "Debug"}
 
 
 -- Trace function
@@ -157,14 +157,14 @@ commands.trace = function (args, env)
     env.evaluate.printErr("Unexpected argument!")
   end
 end
-cmdInfo.trace = {"Profiling for the function", "func", "Debug"}
+cmdInfo.trace = {'cmd_trace', "func", "Debug"}
 
 
 -- Quit the program.
 commands.q = function (args, env)
   env.evaluate.exit()
 end
-cmdInfo.q = {"Quit", ""}
+cmdInfo.q = {'cmd_q', ""}
 
 
 return commands

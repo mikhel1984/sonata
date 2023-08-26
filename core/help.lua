@@ -62,6 +62,16 @@ intro = [[
 ----------------- quit() = exit -----------------
 ]],
 done = 'Done.',
+-- commands
+cmd_help = "Show this help",
+cmd_log = "Turn on/off logging",
+cmd_ls = "Show list of blocks for execution",
+cmd_N = "Go to N-th block",
+cmd_o = "Open note-file",
+cmd_rm = "Clear list of notes",
+cmd_time = "Estimate average time",
+cmd_trace = "Profiling for the function",
+cmd_q = "Quit",
 }
 
 
