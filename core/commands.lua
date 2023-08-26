@@ -59,7 +59,7 @@ commands.help = function (args, env)
     end
   end
 end
-cmdInfo.help = {'cmd_help', ""}
+cmdInfo.help = {'cmd_help', "[cmd]"}
 
 
 -- Save session to log
@@ -117,6 +117,13 @@ end
 cmdInfo.o = {'cmd_o', "filename", "Note-files"}
 
 
+-- Quit the program.
+commands.q = function (args, env)
+  env.evaluate.exit()
+end
+cmdInfo.q = {'cmd_q', ""}
+
+
 -- Clear notes
 commands.rm = function (args, env)
   env.notes = {}
@@ -125,6 +132,15 @@ commands.rm = function (args, env)
 end
 cmdInfo.rm = {'cmd_rm', "", "Note-files"}
 
+
+commands.show = function (args, env)
+  local ind = args[2] and tonumber(args[2]) or env.index
+  if ind < 0 then ind = #env.notes + ind end
+  if 0 < ind and ind <= #env.notes then
+    io.write(env.notes[ind], '\n')
+  end
+end
+cmdInfo.show = {'cmd_show', "[N]", "Note-files"}
 
 -- Average time
 commands.time = function (args, env)
@@ -158,13 +174,6 @@ commands.trace = function (args, env)
   end
 end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
-
-
--- Quit the program.
-commands.q = function (args, env)
-  env.evaluate.exit()
-end
-cmdInfo.q = {'cmd_q', ""}
 
 
 return commands

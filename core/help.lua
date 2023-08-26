@@ -69,9 +69,10 @@ cmd_ls = "Show list of blocks for execution",
 cmd_N = "Go to N-th block",
 cmd_o = "Open note-file",
 cmd_rm = "Clear list of notes",
+cmd_q = "Quit",
+cmd_show = "Print the next of the given note",
 cmd_time = "Estimate average time",
 cmd_trace = "Profiling for the function",
-cmd_q = "Quit",
 }
 
 
