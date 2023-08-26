@@ -197,7 +197,7 @@ local function showAndNext(status, res, env)
     end
     return res[1]
   elseif status == evaluate.EV_WRN then
-    io.write('Sonata: ', res, '\n')
+    io.write(SonataHelp.CHELP, 'Sonata: ', res, '\n')
     env.read, env.info = false, true
   elseif status == evaluate.EV_INF then
     io.write(res, '\n')
@@ -417,6 +417,7 @@ end
 --- Send warning to user.
 --  @param txt Text to print.
 evaluate.warning = function (txt)
+  txt = SonataHelp.CHELP..txt..SonataHelp.CRESET
   if in_coroutine then
     coroutine.yield(evaluate.EV_WRN, txt)
   else print(txt) end
