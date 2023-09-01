@@ -47,6 +47,10 @@ ans = a % b                   -->  0
 
 ans = b ^ 3                   -->  Poly {1,3,3,1}
 
+-- not all powers
+x = Poly:x()
+ans = x^3-2*x+1               --> Poly {1,0,-2,1}
+
 -- integration
 -- free coefficient is 0
 ans = b:int()                 -->  Poly {0.5,1,0}
@@ -327,6 +331,13 @@ end
 polynomial.__pow = function (P, N)
   N = assert(Ver.toInteger(N), "Integer power is expected!")
   if N <= 0 then error("Positive power is expected!") end
+  if #P == 1 and P[1] == 1 and P[0] == 0 then  -- simplified calc
+    local res = {}
+    for i = 0, N-1 do res[i] = 0 end
+    res[N] = 1
+    return polynomial._init(res)
+  end
+  -- general case
   local res, acc = polynomial._init({[0]=1}), polynomial.copy(P)
   while N >= 1 do
     if N % 2 == 1 then res = polynomial.__mul(res, acc) end
@@ -895,6 +906,14 @@ about[polynomial.val] = {"P:val(x) --> y",
   "Get value of polynomial P in point x."}
 -- simplify call
 polynomial.__call = function (p, x) return polynomial.val(p, x) end
+
+
+--- Get object to write polynomial in 'classical' form.
+--  @return Polynomial object.
+polynomial.x = function (self)
+  return polynomial._init({[0]=0, 1})
+end
+about[polynomial.x] = {":x() --> P", "Get object to represent polynomial as a sum of k*x^n"}
 
 
 setmetatable(polynomial, {
