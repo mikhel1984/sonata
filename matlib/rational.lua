@@ -147,6 +147,8 @@ local rational = {
 type = 'rational',
 -- simplification
 _simp = numrat,
+-- print format
+MIXED = false,
 }
 
 
@@ -302,12 +304,17 @@ end
 --  @return String with numerator and denominator.
 rational.__tostring = function (R)
   local r = R._
-  if type(r[1]) == 'number' and type(r[2]) == 'number'
-        and mabs(r[1]) > r[2] then
-    local n = mabs(r[1])       -- numerator
-    local v = math.modf(n / r[2])
-    return string.format(
-      "%s%d %d/%d", r[1] < 0 and '-' or '', v, n % r[2], r[2])
+  if type(r[1]) == 'number' and type(r[2]) == 'number' 
+     and mabs(r[1]) > r[2] 
+  then
+    if rational.MIXED then
+      local n = mabs(r[1])       -- numerator
+      local v = math.modf(n / r[2])
+      return string.format(
+        "%s%d %d/%d", r[1] < 0 and '-' or '', v, n % r[2], r[2])
+    else
+      return string.format("%d/%d", r[1], r[2])
+    end
   else
     return string.format("%s/%s", numStr(r[1]), numStr(r[2]))
   end
@@ -505,4 +512,3 @@ rational.about = about
 return rational
 
 --======================================
--- TODO choose print format

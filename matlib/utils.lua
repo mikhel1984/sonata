@@ -25,6 +25,7 @@ local versions = {
   unpack = unpack or table.unpack
 }
 
+
 -- Check if the number is integer
 versions.isInteger = math.tointeger or function (x)
   if type(x) == 'string' then x = tonumber(x) end
@@ -33,6 +34,7 @@ versions.isInteger = math.tointeger or function (x)
   return p == 0.0 and v >= -1E9 and v <= 1E9
 end
 
+
 -- Check type of the number
 versions.mathType  = math.type or function (x)
   local n = tonumber(x)
@@ -40,6 +42,7 @@ versions.mathType  = math.type or function (x)
   local _, p = mmodf(n)
   return (p == 0.0) and 'integer' or 'float'
 end
+
 
 -- Move elements to new position (and table)
 versions.move = table.move or function (src, sfrom, sto, dfrom, dest)
@@ -55,11 +58,18 @@ versions.move = table.move or function (src, sfrom, sto, dfrom, dest)
   return dest
 end
 
+
 -- Return integer number or nil
 versions.toInteger = math.tointeger or function (x)
   if type(x) == 'string' then x = tonumber(x) end
   local p, q = mmodf(x)
   return (q == 0.0) and p or nil
+end
+
+
+-- Power as function
+versions.pow = math.pow or function (x, y)
+  return x^y
 end
 
 
@@ -365,5 +375,3 @@ return {
 
 --===================================================
 --TODO setup for number of digits
---TODO: fix 'round' for N - 1e-M
---TODO: math.pow for 5.4 and more
