@@ -1408,6 +1408,40 @@ about[matrix.zip] = {':zip(fn, M1, M2,..) --> res_M',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
 
+-- "In the game of life the strong survive..." (Scorpions) ;)
+--  board - matrix with 'ones' as live cells
+matrix.life = function (board)
+  assert(board.type == 'matrix', 'Matrix is expected!')
+  local rows, cols = board:size()
+  local src = board
+  local gen = 0
+  -- make decision about current cell
+  local function islive (r, c)
+    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
+      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
+    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
+  end
+  -- evaluate
+  repeat
+    local new = board:zeros()   -- empty matrix of the same size
+    gen = gen+1
+    -- update
+    for r = 1, rows do
+      for c = 1, cols do
+        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
+        io.write(new[r][c] == 1 and '*' or ' ')
+      end
+      io.write('|\n')
+    end
+    if gen > 1 and new == src then
+      return print('~~ Game Over ~~')
+    end
+    src = new
+    io.write(string.format('#%-3d continue? (y/n) ', gen))
+  until 'n' == io.read()
+end
+
+
 -- constructor call
 setmetatable(matrix, {__call = matrix._new})
 about[matrix] = {" {row1_t, row2_t,..} --> new_M",
