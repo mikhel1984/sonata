@@ -446,7 +446,7 @@ quaternion.rotate = function (Q, vec)
   else
     p1 = quaternion._new(0, vec[1], vec[2], vec[3])
   end
-  local p2 = Q*p1*quaternion.conj(Q)  -- TODO reuse p1
+  local p2 = Q*p1*quaternion.conj(Q)  
   return {p2._[2], p2._[3], p2._[4]}
 end
 about[quaternion.rotate] = {'Q:rotate(inVec) --> outVec_t',

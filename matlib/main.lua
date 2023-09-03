@@ -170,21 +170,6 @@ about[Round] = {
   'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
 
 
---- Show type of the object.
---  @param v Some Lua or Sonata object.
---  @return String with type value.
-Type = function (v)
-  local u = type(v)
-  if u == 'table' then
-    u = v.type or u
-  elseif u == 'number' then
-    u = Ver.mathType(v)
-  end
-  return u
-end
-about[Type] = {'Type(x) --> str', 'Show type of the object.', AUX}
-
-
 -- Sonata specific functions
 if Sonata then  -- SPECIFIC
 
