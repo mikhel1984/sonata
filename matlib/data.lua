@@ -99,11 +99,6 @@ ans = #a                      -->  4
 
 ans = a[1]                    -->  X[3]
 
--- Student cdf and pdf
-ans = D:tcdf(4, 2.5)         --3>  0.9805
-
-ans = D:tpdf(2, 3.3)         --3>  0.0672
-
 -- dsv write
 nm = os.tmpname()
 -- separate elements with ';'
@@ -531,7 +526,7 @@ data.sum = function (self, t)
   return s
 end
 about[data.sum] = {":sum(data_t) --> var",
-  "Get sum of all elements.", help.OTHER}
+  "Get sum of all elements.", STAT}
 
 
 --- Standard deviation and variance.
@@ -600,32 +595,6 @@ data.md = function (self, data_t, names_t, fn)
 end
 about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
-
-
---- Student's cumulative distribution
---  @param d Value.
---  @param N Degree of freedom.
---  @return Cumulative value.
-data.tcdf = function (self, d, N)
-  data.ext_special = data.ext_special or require('matlib.special')
-  local tmp = N/(N+d*d)
-  return 1-0.5*data.ext_special:betainc(tmp, 0.5*N, 0.5)
-end
-about[data.tcdf] = {":tcdf(x_d, deg_N) --> num",
-  "Student's cumulative distribution.", help.OTHER}
-
-
---- Student's density function.
---  @param d Value.
---  @param N Degree of freedom.
---  @return Density value.
-data.tpdf = function (self, d, N)
-  data.ext_special = data.ext_special or require('matlib.special')
-  local tmp = math.sqrt(N)*data.ext_special:beta(0.5, 0.5*N)
-  return (1+d*d/N)^(-0.5*(N+1))/tmp
-end
-about[data.tpdf] = {":tpdf(x_d, deg_N) --> num",
-  "Student's distribution density.", help.OTHER}
 
 
 --- Condition: x == d.
@@ -854,8 +823,17 @@ end
 --  @param k Index.
 --  @param v Value.
 mt_ref.__newindex = function (self, k, v)
-  if Ver.isInteger(k) and self._beg < k and k <= self._end then
-    self._t[self._beg + k] = v
+  if Ver.isInteger(k) and 0 < k and (self._beg + k) <= self._end then
+    k = k + self._beg
+    if getmetatable(v) == mt_ref then
+      -- copy data
+      local i0 = k - 1
+      local n = math.min(#v, self._end - i0)
+      for i = 1, n do self._t[i0 + i] = v[i] end
+    else
+      -- set value
+      self._t[k] = v
+    end
   end
 end
 
@@ -952,7 +930,7 @@ data.T = function (self, src)
   }
   return setmetatable(o, mt_transpose)
 end
-about[data.T] = {":T(src_t) --> TR", "Get reference to 'transposed' table.", REF}
+about[data.T] = {":T(src_t) --> new_T", "Get reference to 'transposed' table.", REF}
 
 
 -- Comment to remove descriptions
