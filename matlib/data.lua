@@ -560,24 +560,23 @@ about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
 --  @param fn Table that generates new column from the given (optional).
 --  @return String with table representation.
 data.md = function (self, data_t, names_t, fn)
-  local acc, line, head, len = {}, {}, {}, {}
+  local acc, line, head = {}, {}, {}
   -- data to stings
   for i, v in ipairs(data_t) do
     local row = {}
     for j, w in ipairs(fn and fn(v) or v) do
-      row[j] = tostring(w)
-      len[j] = math.max(len[j] or 0, #row[j])
+      row[j] = tostring(w)      
     end
     acc[i] = row
   end
   -- names
   if names_t then
     assert(#names_t == #acc[1], "Wrong column number")
-    for j, w in ipairs(names_t) do
-      head[j] = tostring(w)
-      len[j] = math.max(len[j], #head[j])
-    end
+    for j, w in ipairs(names_t) do head[j] = tostring(w) end
+    acc[#acc+1] = head  -- temporary add    
   end
+  local len = Utils.width(acc)
+  if names_t then acc[#acc] = nil end
   -- collect
   for j = 1, #acc[1] do
     local templ = string.format('%%-%ds', len[j])
@@ -873,20 +872,6 @@ end
 --  @return Expected table length.
 mt_transpose.__len = function (self)
   return #self._tbl._src[1]
-end
-
-
---- Transform ref object into pure table.
---  @param self T-ref object.
---  @return Lua table.
-mt_transpose._table = function (self)
-  local res, src = {}, self._tbl._src
-  for i = 1, #src[1] do
-    local row = {}
-    for j = 1, #src do row[j] = src[j][i] end
-    res[i] = row
-  end
-  return res
 end
 
 

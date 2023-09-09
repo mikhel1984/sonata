@@ -249,11 +249,11 @@ end
 
 --- Generate function from string.
 --  @param sExpr Expression for execution.
---  @param iArg Number of arguments.
+--  @param N Number of arguments.
 --  @return Function based on the expression.
-utils.Fn = function (sExpr, iArg)
+utils.Fn = function (sExpr, N)
   local arg = {}
-  for i = 1, iArg do arg[i] = string.format("x%d", i) end
+  for i = 1, N do arg[i] = string.format("x%d", i) end
   local fn = versions.loadStr(
     string.format("return function (%s) return %s end",
       table.concat(arg, ','), sExpr))
@@ -322,6 +322,20 @@ utils.sign = function (d)
   else
     return 1
   end
+end
+
+
+--- Find maximal width for each column.
+--  @param tbl Table with lists of strings.
+--  @return list of width.
+utils.width = function (tbl)
+  local len = {}
+  for _, row in ipairs(tbl) do
+    for j, str in ipairs(row) do
+      len[j] = math.max(len[j] or 0, #str)
+    end
+  end
+  return len
 end
 
 

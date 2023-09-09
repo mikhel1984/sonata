@@ -465,17 +465,26 @@ end
 --- String representation.
 --  @return String.
 matrix.__tostring = function (self)
-  local srow = {}
+  local rows = {}
+  -- to strings
   for r = 1, self._rows do
-    local scol, mr = {}, self[r]
+    local row, src = {}, self[r]
     for c = 1, self._cols do
-      local tmp = mr[c]
-      table.insert(
-        scol, type(tmp) == 'number' and Utils.numstr(tmp) or tostring(tmp))
+      local tmp = src[c]
+      row[c] = (type(tmp) == 'number') and Utils.numstr(tmp) or tostring(tmp)
     end
-    table.insert(srow, table.concat(scol, "  "))
+    rows[r] = row
   end
-  return table.concat(srow, "\n")
+  -- combine
+  if self._rows > 1 and self._cols <= 8 then  -- TODO to parameters 
+    local len = Utils.width(rows)
+    for j = 1, #rows[1] do
+      local templ = string.format('%%%ds', len[j])
+      for i = 1, #rows do rows[i][j] = string.format(templ, rows[i][j]) end
+    end    
+  end
+  for i, row in ipairs(rows) do rows[i] = table.concat(row, "  ") end
+  return table.concat(rows, '\n')
 end
 
 
