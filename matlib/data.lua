@@ -560,7 +560,7 @@ about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
 --  @param fn Table that generates new column from the given (optional).
 --  @return String with table representation.
 data.md = function (self, data_t, names_t, fn)
-  local acc, line, head = {}, {}, {}
+  local acc, line = {}, {}
   -- data to stings
   for i, v in ipairs(data_t) do
     local row = {}
@@ -572,20 +572,18 @@ data.md = function (self, data_t, names_t, fn)
   -- names
   if names_t then
     assert(#names_t == #acc[1], "Wrong column number")
+    local head = {}
     for j, w in ipairs(names_t) do head[j] = tostring(w) end
     acc[#acc+1] = head  -- temporary add    
   end
-  local len = Utils.width(acc)
-  if names_t then acc[#acc] = nil end
-  -- collect
-  for j = 1, #acc[1] do
-    local templ = string.format('%%-%ds', len[j])
-    for i = 1, #acc do acc[i][j] = string.format(templ, acc[i][j]) end
-    line[j] = string.rep('-', len[j])
-    if names_t then head[j] = string.format(templ, head[j]) end
-  end
+  -- save
+  local len = Utils.align(acc)
+  for j = 1, #len do line[j] = string.rep('-', len[j]) end
   local res, templ = {}, '| %s |'
-  if names_t then res[1] = string.format(templ, table.concat(head, ' | ')) end
+  if names_t then 
+    res[1] = string.format(templ, table.concat(acc[#acc], ' | ')) 
+    acc[#acc] = nil
+  end
   res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
   for _, v in ipairs(acc) do
     res[#res+1] = string.format(templ, table.concat(v, ' | '))

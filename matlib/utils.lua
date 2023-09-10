@@ -325,14 +325,21 @@ utils.sign = function (d)
 end
 
 
---- Find maximal width for each column.
+--- Find maximal width for each column, align size.
 --  @param tbl Table with lists of strings.
+--  @param right Alignment to right.
 --  @return list of width.
-utils.width = function (tbl)
+utils.align = function (tbl, right)
+  local base = right and '%%%ds' or '%%-%ds'
   local len = {}
   for _, row in ipairs(tbl) do
-    for j, str in ipairs(row) do
-      len[j] = math.max(len[j] or 0, #str)
+    for j, str in ipairs(row) do len[j] = math.max(len[j] or 0, #str) end
+  end
+  -- align
+  for j, d in ipairs(len) do
+    local templ = string.format(base, d)
+    for _, row in ipairs(tbl) do
+      row[j] = string.format(templ, row[j])
     end
   end
   return len

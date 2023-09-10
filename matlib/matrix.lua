@@ -287,7 +287,11 @@ __module__ = "Matrix operations. The matrices are spares by default."
 
 --	MODULE
 
-local matrix = { type = 'matrix', ismatrix=true }
+local matrix = {
+  type = 'matrix', ismatrix=true,
+  -- parameters
+  ALIGH_WIDTH=8,  -- number of columns to aligh width
+}
 
 
 --- Check object type.
@@ -476,12 +480,8 @@ matrix.__tostring = function (self)
     rows[r] = row
   end
   -- combine
-  if self._rows > 1 and self._cols <= 8 then  -- TODO to parameters 
-    local len = Utils.width(rows)
-    for j = 1, #rows[1] do
-      local templ = string.format('%%%ds', len[j])
-      for i = 1, #rows do rows[i][j] = string.format(templ, rows[i][j]) end
-    end    
+  if self._rows > 1 and self._cols > 1 and self._cols <= matrix.ALIGH_WIDTH then
+    Utils.align(rows, true) 
   end
   for i, row in ipairs(rows) do rows[i] = table.concat(row, "  ") end
   return table.concat(rows, '\n')
