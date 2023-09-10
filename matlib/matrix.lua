@@ -271,6 +271,7 @@ local function addRow(t, i)
   return row
 end
 
+local inform = Sonata and Sonata.warning or print
 
 local TRANSFORM = 'transform'
 local VECTOR = 'vector'
@@ -290,7 +291,8 @@ __module__ = "Matrix operations. The matrices are spares by default."
 local matrix = {
   type = 'matrix', ismatrix=true,
   -- parameters
-  ALIGH_WIDTH=8,  -- number of columns to aligh width
+  ALIGH_WIDTH = 8,  -- number of columns to aligh width
+  CONDITION_NUM = nil,  -- set limit for notification
 }
 
 
@@ -985,6 +987,12 @@ matrix.inv = function (M)
     end
   end
   res._cols = size
+  if matrix.CONDITION_NUM then
+    local cn = matrix.norm(M) * matrix.norm(res)
+    if cn >= matrix.CONDITION_NUM then 
+      inform("Condition number is "..tostring(cn)) 
+    end
+  end
   return res
 end
 about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix.", TRANSFORM}
