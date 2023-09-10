@@ -1,5 +1,10 @@
 ======== 0.9.38 =========
 
+Data
+* Remove some functions
+* Allow copy range in ref
+Matrix
+* Change tostring
 Main
 * Add bind for methods
 * Remove Type, Print
