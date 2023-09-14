@@ -273,6 +273,7 @@ about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
 --  @return Table with the filtered elements.
 data.filter = function (self, t, vCond)
   local res = {}
+  if type(vCond) == 'string' then vCond = Utils.Fn(vCond, 1) end
   if type(vCond) == 'function' then
     -- boolean function
     for i = 1, #t do

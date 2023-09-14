@@ -3,6 +3,7 @@
 Data
 * Remove some functions
 * Allow copy range in ref
+* Use strings in filters
 Matrix
 * Change tostring
 Main
