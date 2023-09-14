@@ -68,7 +68,7 @@ ans = D:geomean(X)           --3>  2.995
 ans = D:harmmean(X,W)        --3>  2.567
 
 -- check if X[i] > 2
-a = D:is(X, D:xGt(2))
+a = D:is(X, "x1 > 2")
 ans = a[1]                    -->  1
 
 -- get elements X[i] > 2
@@ -398,16 +398,17 @@ about[data.histcounts] = {":histcounts(data_t, rng_v=10) --> sum_t, edges_t",
 
 --- Find weights (1/0) based on condition.
 --  @param t Data table.
---  @param fn Condition, boolean function.
+--  @param fn Condition, boolean function or string.
 --  @return Table of 1 and 0.
 data.is = function (self, t, fn)
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 1 or 0
   end
   return res
 end
-about[data.is] = {":is(data_t, cond_fn) --> yesno_t",
+about[data.is] = {":is(data_t, cond) --> yesno_t",
   "Find weights using boolean function.", FILTER}
 
 
@@ -416,6 +417,7 @@ about[data.is] = {":is(data_t, cond_fn) --> yesno_t",
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
 data.isNot = function (self, t, fn)
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 0 or 1
@@ -592,45 +594,6 @@ data.md = function (self, data_t, names_t, fn)
 end
 about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
-
-
---- Condition: x == d.
---  @param d Some value.
---  @return Boolean function.
-data.xEq = function (self, d)
-  return (function (x) return Cross.eq(x, d) end)
-end
-about[data.xEq] = {":xEq(num) --> cond_fn",
-  "Return function for condition x == d.", FILTER}
-
-
---- Condition: x > d
---  @param d Lower limit.
---  @return Boolean function.
-data.xGt = function (self, d)
-  return (function (x) return x > d end)
-end
-about[data.xGt] = {":xGt(num) --> cond_fn", "Return function for condition x > d.", FILTER}
-
-
---- Condition: d1 <= x <= d2.
---  @param d1 Lower limit.
---  @param d2 Upper limit.
---  @return Boolean function.
-data.xIn = function (self, d1, d2)
-  return (function (x) return d1 <= x and x <= d2 end)
-end
-about[data.xIn] = {":xIn(num1, num2) --> cond_fn",
-  "Return function for condition d1 <= x <= d2.", FILTER}
-
-
---- Condition: x < d
---  @param d Upper limit.
---  @return Boolean function.
-data.xLt = function (self, d)
-  return (function (x) return x < d end)
-end
-about[data.xLt] = {":xLt(num) --> cond_fn", "Return function for condition x < d.", FILTER}
 
 
 --- Apply function of n arguments to n lists.
