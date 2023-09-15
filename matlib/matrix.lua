@@ -1011,7 +1011,7 @@ matrix.life = function (board)
   end
   -- evaluate
   repeat
-    local new = board:zeros()   -- empty matrix of the same size
+    local new = matrix:zeros(board)   -- empty matrix of the same size
     gen = gen+1
     -- update
     for r = 1, board._rows do
@@ -1020,11 +1020,20 @@ matrix.life = function (board)
       end
     end
     if gen > 1 and new == src then
-      return print('~~ Game Over ~~')
+      local msg = '~~ No more steps ~~'
+      return Sonata and Sonata.IN_COROUTINE and msg or print(msg)
     end
     src = new
-    io.write(string.format('#%-3d continue? (y/n) ', gen))
-  until 'n' == io.read()
+    local req = string.format('step %d continue? (y/n) ', gen)
+    local resp
+    if Sonata and Sonata.IN_COROUTINE then
+      resp = Sonata.ask(req, new:stars())
+    else
+      print(new:stars())
+      io.write(req)
+      resp = io.read()
+    end
+  until 'n' == resp
 end
 
 

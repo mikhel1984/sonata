@@ -137,7 +137,7 @@ local txtCodes = {
 --  It takes code line and return status and evaluation result.
 local function evalCode()
   local state, cmd, res = evaluate.EV_RES, '', nil
-  local IN_COROUTINE = true  -- set marker
+  evaluate.IN_COROUTINE = true  -- set marker
   while true do
     -- next line of code
     local input = coroutine.yield(state, res)
@@ -240,7 +240,7 @@ end
 --- Redefined print function
 evaluate._newPrint = function (...)
   local out = {}
-  for i, v in ipairs({...}) do
+  for _, v in ipairs({...}) do
     local mt = getmetatable(v)
     if type(v) == 'table' and not (mt and mt.__tostring) then
       -- show table
@@ -418,7 +418,7 @@ end
 --  @param txt Text to print.
 evaluate.warning = function (txt)
   txt = SonataHelp.CHELP..txt..SonataHelp.CRESET
-  if IN_COROUTINE then
+  if evaluate.IN_COROUTINE then
     coroutine.yield(evaluate.EV_WRN, txt)
   else print(txt) end
 end
