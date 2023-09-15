@@ -483,7 +483,7 @@ matrix.__tostring = function (self)
   end
   -- combine
   if self._rows > 1 and self._cols > 1 and self._cols <= matrix.ALIGH_WIDTH then
-    Utils.align(rows, true) 
+    Utils.align(rows, true)
   end
   for i, row in ipairs(rows) do rows[i] = table.concat(row, "  ") end
   return table.concat(rows, '\n')
@@ -989,13 +989,43 @@ matrix.inv = function (M)
   res._cols = size
   if matrix.CONDITION_NUM then
     local cn = matrix.norm(M) * matrix.norm(res)
-    if cn >= matrix.CONDITION_NUM then 
-      inform("Condition number is "..tostring(cn)) 
+    if cn >= matrix.CONDITION_NUM then
+      inform("Condition number is "..tostring(cn))
     end
   end
   return res
 end
 about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix.", TRANSFORM}
+
+
+-- "In the game of life the strong survive..." (Scorpions) ;)
+--  board - matrix with 'ones' as live cells
+matrix.life = function (board)
+  local src = board
+  local gen = 0
+  -- make decision about current cell
+  local function islive (r, c)
+    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
+      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
+    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
+  end
+  -- evaluate
+  repeat
+    local new = board:zeros()   -- empty matrix of the same size
+    gen = gen+1
+    -- update
+    for r = 1, board._rows do
+      for c = 1, board._cols do
+        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
+      end
+    end
+    if gen > 1 and new == src then
+      return print('~~ Game Over ~~')
+    end
+    src = new
+    io.write(string.format('#%-3d continue? (y/n) ', gen))
+  until 'n' == io.read()
+end
 
 
 --- LU transform
@@ -1263,6 +1293,26 @@ about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method."}
 
 
+--- Visualize matrix elements
+--  @param fn Condition function, returns true/false.
+--  @return String with stars when condition is true.
+matrix.stars = function (self, fn)
+  fn = fn or function (x) return x ~= 0 end
+  local acc, row = {}, {}
+  for r = 1, self._rows do
+    local mr = self[r]
+    for c = 1, self._cols do
+      row[c] = fn(mr[c]) and '*' or ' '
+    end
+    row[self._cols+1] = '|'
+    acc[r] = table.concat(row)
+  end
+  return table.concat(acc, '\n')
+end
+about[matrix.stars] = {"M:star(cond_fn) --> str",
+  "Print star when condition for the current elemen is true.", help.OTHER}
+
+
 --- Singular value decomposition for a matrix.
 --  Find U, S, V such that M = U*S*V' and
 --  U, V are orthonormal, S is diagonal matrix.
@@ -1423,40 +1473,6 @@ matrix.zip = function (self, fn, ...)
 end
 about[matrix.zip] = {':zip(fn, M1, M2,..) --> res_M',
   'Apply function to the given matrices element-wise.', TRANSFORM}
-
-
--- "In the game of life the strong survive..." (Scorpions) ;)
---  board - matrix with 'ones' as live cells
-matrix.life = function (board)
-  assert(board.type == 'matrix', 'Matrix is expected!')
-  local rows, cols = board:size()
-  local src = board
-  local gen = 0
-  -- make decision about current cell
-  local function islive (r, c)
-    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
-      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
-    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
-  end
-  -- evaluate
-  repeat
-    local new = board:zeros()   -- empty matrix of the same size
-    gen = gen+1
-    -- update
-    for r = 1, rows do
-      for c = 1, cols do
-        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
-        io.write(new[r][c] == 1 and '*' or ' ')
-      end
-      io.write('|\n')
-    end
-    if gen > 1 and new == src then
-      return print('~~ Game Over ~~')
-    end
-    src = new
-    io.write(string.format('#%-3d continue? (y/n) ', gen))
-  until 'n' == io.read()
-end
 
 
 -- constructor call
