@@ -81,7 +81,7 @@ setmetatable(use,
       for k, _ in  pairs(self) do Sonata.doimport(self, k) end
     elseif type(name) == 'table' then
       -- load group of modules
-      for _, v in ipairs(name) do Sonata.doimport(self, v) end
+      for i, v in ipairs(name) do Sonata.doimport(self, v) end
     else
       -- load module
       Sonata.doimport(self, name)
@@ -99,7 +99,8 @@ help = function(v)
     res = About:makeFull(use)
   else
     res = About:findObject(v, use) or Sonata.info {
-      string.format('<%s>', Type and Type(v) or type(v)), '\n', tostring(v) }
+      string.format('<%s>', getmetatable(v).type or type(v)),
+      '\n', tostring(v) }
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end
