@@ -1,5 +1,5 @@
 --	Brief module overview
-use 'all'
+use '*'
 -- PAUSE
 --	COMPLEX
 -- Operations with complex numbers.

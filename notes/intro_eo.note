@@ -6,7 +6,7 @@
 
 --	BAZAĴOJ
 -- La listo de funkcioj estas akirita per la komando:
-help 'all'
+help '*'
 -- PAUSE
 
 -- Por helpo pri funkcio, enigu ĝian nomon
@@ -66,7 +66,7 @@ use 'Num'
 -- PAUSE
 
 -- Por ŝargi ĉiujn modulojn, voku
-use 'all'
+use '*'
 -- Tajpu 'use()' por kontroli la nunan staton
 
 -- PAUSE

@@ -76,7 +76,7 @@ setmetatable(use,
         end
       end
       return Sonata.inLua and Sonata._toText(lst) or lst
-    elseif name == 'all' then
+    elseif name == '*' then
       -- load all modules
       for k, _ in  pairs(self) do Sonata.doimport(self, k) end
     elseif type(name) == 'table' then
@@ -95,7 +95,7 @@ setmetatable(use,
 help = function(v)
   local res = nil
   v = v or 'main'
-  if v == 'all' then
+  if v == '*' then
     res = About:makeFull(use)
   else
     res = About:findObject(v, use) or Sonata.info {

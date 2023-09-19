@@ -6,7 +6,7 @@
 
 --	BASICS
 -- Available functions can be listed using:
-help 'all'
+help '*'
 -- PAUSE
 
 -- Information about function can be obtained as
@@ -66,7 +66,7 @@ use 'Num'
 -- PAUSE
 
 -- In order to load all modules, enter
-use 'all'
+use '*'
 -- Print 'use()' to check status
 -- PAUSE
 
