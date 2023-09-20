@@ -4,6 +4,7 @@ Data
 * Remove some functions
 * Allow copy range in ref
 * Use strings in filters
+* Add reduce for lists
 Matrix
 * Change tostring
 Main

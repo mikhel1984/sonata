@@ -529,6 +529,7 @@ data.reduce = function (self, fn, t, val)
   if not val then
     val, i0 = t[1], 2
   end
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 2) end
   for i = i0, #t do val = fn(val, t[i]) end
   return val
 end
