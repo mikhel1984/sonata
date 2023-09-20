@@ -316,7 +316,7 @@ data.geomean = function (self, t, tw)
     local st, sw = 0, 0
     for i = 1, #t do
       local w = tw[i] or 1
-      st = st + w*math.log(t[i])
+      st = st + w*math.log(w > 0 and t[i] or 1)
       sw = sw + w
     end
     return math.exp(st / sw)
@@ -338,8 +338,8 @@ data.harmmean = function (self, t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1, #t do
-      local w = tw[i]
-      st = st + w/t[i]
+      local w = tw[i] or 1
+      st = st + w/(w > 0 and t[i] or 1)
       sw = sw + w
     end
     return sw / st
@@ -518,6 +518,22 @@ end
 about[data.moment] = {":moment(order_N, data_t, [weigth_t]) --> num",
   "Central moment of t order N, tw is a list of weights.", STAT}
 
+
+--- Apply reduction rule to the list elements.
+--  @param fn Function of 2 elements.
+--  @param t List.
+--  @param val Initial value (optional).
+--  @return Result of reduction.
+data.reduce = function (self, fn, t, val)
+  local i0 = 1
+  if not val then
+    val, i0 = t[1], 2
+  end
+  for i = i0, #t do val = fn(val, t[i]) end
+  return val
+end
+about[data.reduce] = {":reduce(fn, data_t, [initial]) --> var",
+  "Apply function to its previous result and next element."} 
 
 
 --- Sum of all elements.
