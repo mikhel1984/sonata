@@ -23,15 +23,6 @@ ans = Round(0.9)              -->  1.0
 -- save 2 digits
 ans = Round(math.pi, 2)       -->  3.14
 
--- get type
--- "knows" Sonata objects
-ans = Type(25)                -->  'integer'
-
--- modified print function
-a = {a=1,b=2, 3,4,5}
-Print(a, 0.123)
-
-
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3>  0.909

@@ -150,9 +150,26 @@ Ver = Ver.versions
 
 local STAT = 'statistics'
 local FILES = 'files'
-local FILTER = 'filter'
+local LIST = 'lists'
 local REF = 'reference'
 
+
+--- Make copy of an object or list.
+--  @param v Source object.
+--  @return deep copy.
+local function copy_obj(v)
+  if type(v) == 'table' then
+    if v.copy then 
+      return v:copy()
+    else
+      local lst = {}
+      for i = 1, #v do lst[i] = copy_obj(v[i]) end
+      return lst
+    end
+  else
+    return v
+  end
+end
 
 --	INFO
 
@@ -166,6 +183,16 @@ __module__ = "Data processing and statistics."
 --	MODULE
 
 local data = {}
+
+
+--- Make copy of an object or list.
+--  @param v Source object.
+--  @return deep copy.
+data.copy = function (self, v)
+  return copy_obj(v)
+end
+about[data.copy] = {":copy(t) --> copy_t", 
+  "Make deep copy of the table.", help.OTHER}
 
 
 --- Estimate covariance for two vectors.
@@ -290,7 +317,7 @@ data.filter = function (self, t, vCond)
 end
 about[data.filter] = {":filter(in_t, condition) --> out_t",
   "Get result of the table filtering. Condition is either boolean function or table of weights.",
-  FILTER}
+  LIST}
 
 
 --- Frequency of elements.
@@ -410,7 +437,7 @@ data.is = function (self, t, fn)
   return res
 end
 about[data.is] = {":is(data_t, cond) --> yesno_t",
-  "Find weights using boolean function.", FILTER}
+  "Find weights using boolean function.", LIST}
 
 
 --- Find weights (1/0) based on inverted condition.
@@ -426,7 +453,7 @@ data.isNot = function (self, t, fn)
   return res
 end
 about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
-  "Find inverted weights using boolean function.", FILTER}
+  "Find inverted weights using boolean function.", LIST}
 
 
 --- Maximum value.
@@ -534,7 +561,7 @@ data.reduce = function (self, fn, t, val)
   return val
 end
 about[data.reduce] = {":reduce(fn, data_t, [initial]) --> var",
-  "Apply function to its previous result and next element."} 
+  "Apply function to its previous result and next element.", LIST} 
 
 
 --- Sum of all elements.
@@ -591,9 +618,8 @@ data.md = function (self, data_t, names_t, fn)
   end
   -- names
   if names_t then
-    assert(#names_t == #acc[1], "Wrong column number")
     local head = {}
-    for j, w in ipairs(names_t) do head[j] = tostring(w) end
+    for j = 1, #acc[1] do head[j] = tostring(names_t[j] or '') end
     acc[#acc+1] = head  -- temporary add    
   end
   -- save
@@ -611,7 +637,7 @@ data.md = function (self, data_t, names_t, fn)
   return table.concat(res, '\n')
 end
 about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
-  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
+  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.", help.OTHER}
 
 
 --- Apply function of n arguments to n lists.
@@ -641,7 +667,7 @@ data.zip = function (self, fn, ...)
   return res
 end
 about[data.zip] = {":zip(fn,...) --> tbl",
-  "Sequentially apply function to list of tables.", help.OTHER}
+  "Sequentially apply function to list of tables.", LIST}
 
 
 -- Methametods for the range of numbers.
@@ -766,7 +792,7 @@ data.range = function (self, dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-about[data.range] = {':range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.'}
+about[data.range] = {':range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.', REF}
 
 
 -- Get reference to data range in other table

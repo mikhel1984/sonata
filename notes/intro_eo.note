@@ -73,11 +73,10 @@ use '*'
 
 -- Iuj moduloj ŝanĝas medion kiam ŝarĝitaj.
 -- Ekzemple, la "complex" modulo aldonas
--- kompleksa variablo
-_i
--- kaj ŝanĝas la konduton de kelkaj funkcioj
+-- la konduton de kelkaj funkcioj
 sqrt(-4)
-exp(3+_i*4)
+i = Z:i()
+exp(3+i*4)
 -- PAUSE
 
 -- Estas pliaj komandoj por

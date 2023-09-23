@@ -4,7 +4,7 @@ use '*'
 --	COMPLEX
 -- Operations with complex numbers.
 a = Z(1,2)            -- real and complex components
-b = 3+_i*4             -- use complex unit
+b = 3+Z:i(4)          -- use complex unit
 a / b
 a ^ b                  -- complex power
 sin(b)                 -- modified function behavior

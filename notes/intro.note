@@ -72,11 +72,10 @@ use '*'
 
 -- Some modules modify the program environment.
 -- For example, if the 'complex' is loaded,
--- you can use the complex unit
-_i
--- and some functions can work with it
+-- some functions can work with it
 sqrt(-4)
-exp(3+_i*4)
+i = Z:i()
+exp(3+i*4)
 -- PAUSE
 
 -- There are additional commands for
