@@ -120,7 +120,7 @@ about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
 pi = math.pi
-about[pi] = {"pi", "Number pi.", AUX}
+about[pi] = {"pi --> 3.14", "Number pi.", AUX}
 
 
 --- Wrap function to simplify call if need.
