@@ -47,19 +47,19 @@ Sonata is a Lua based program for mathematical calculations.<br>
 	-e	Evaluate command line expression.<br>
 		e.g. -e "2+2"<br>
 <br>
-	--lang	Generation or updating of the localization file.<br>
-		e.g. --lang eo<br>
 	--test	Run unit tests for a given module. Execute for all modules if no name is specified.<br>
 		e.g. --test array<br>
 	--new	Generating a template for a new module.<br>
 		e.g. --new  matrices  Mat  "Matrix operations."<br>
+	--lang	Generation or updating of the localization file.<br>
+		e.g. --lang eo<br>
 	--doc	Generating a documentation page.<br>
 		e.g. --doc ru<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.37<br>
+<b>VERSION</b>: 0.9.38<br>
 <br>
-<b>MODULES</b>: bigint, graph, gnuplot, rational, data, quaternion, matrix, qubit, numeric, symbolic, complex, geodesy, asciiplot, lens, special, const, units, polynomial, random, main.<br>
+<b>MODULES</b>: bigint, numeric, rational, data, asciiplot, units, graph, const, matrix, complex, lens, symbolic, special, qubit, quaternion, gnuplot, polynomial, main, geodesy, random.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -105,6 +105,10 @@ fig1:setX {range={-3.14, 3.14}}   -- default is {-1, 1}
 fig1:plot(math.sin, 'sin', math.cos, 'cos')
 fig1:title 'Trigonometry'
 print(fig1)
+
+-- make a copy
+fig11 = fig1:copy()
+print(fig11)
 
 -- print data
 x = {1,2,3,4,5}
@@ -345,29 +349,29 @@ ans = a - 0.5                 -->  122.5
 <div><a name="Z"></a>
 <h3># Z (complex) #</h3>
 <p class="descript">Manipulations with complex numbers.</p>
-<p><b>Z (re=0, im=0) --> new_Z</b> - Create new complex number.<br>
-<b>Z:abs() --> float</b> - Return module of complex number.<br>
-<b>Z:acos() --> y_Z</b> - Complex inverse cosine.<br>
-<b>Z:acosh() --> y_Z</b> - Complex inverse hyperbolic cosine.<br>
-<b>Z:arg() --> float</b> - Return argument of complex number.<br>
-<b>Z:asin() --> y_Z</b> - Complex inverse sine.<br>
-<b>Z:asinh() --> y_Z</b> - Complex inverse hyperbolic sine.<br>
-<b>Z:atan() --> y_Z</b> - Complex inverse tangent.<br>
-<b>Z:atanh() --> y_Z</b> - Complex inverse hyperbolic tangent.<br>
-<b>Z:conj() --> conj_Z</b> - Return the complex conjugate. Equal to ~C.<br>
-<b>Z:cos() --> y_Z</b> - Return cosine of a complex number.<br>
-<b>Z:cosh() --> y_Z</b> - Return hyperbolic cosine of a real or complex number.<br>
-<b>Z:exp() --> y_Z</b> - Return exponent in for complex argument.<br>
-<b>Z:i(x=1) --> new_Z</b> - Return x*i.<br>
-<b>Z:im() --> var</b> - Get imaginary part.<br>
-<b>Z:log() --> y_Z</b> - Complex logarithm.<br>
-<b>Z:re() --> var</b> - Get real part.<br>
-<b>Z:round(N=6) --> rounded_Z</b> - Round in-place to specified number of digits.<br>
-<b>Z:sin() --> y_Z</b> - Return sinus of a complex number.<br>
-<b>Z:sinh() --> y_Z</b> - Return hyperbolic sinus of a complex number.<br>
-<b>Z:sqrt() --> y_Z</b> - Return square root. Result can be real of complex.<br>
-<b>Z:tan() --> y_Z</b> - Return tangent of a complex number.<br>
-<b>Z:tanh() --> y_Z</b> - Return hyperbolic tangent of a complex number.<br>
+<p><b>C:abs() --> float</b> - Return module of complex number.<br>
+<b>C:acos() --> y_C</b> - Complex inverse cosine.<br>
+<b>C:acosh() --> y_C</b> - Complex inverse hyperbolic cosine.<br>
+<b>C:arg() --> float</b> - Return argument of complex number.<br>
+<b>C:asin() --> y_C</b> - Complex inverse sine.<br>
+<b>C:asinh() --> y_C</b> - Complex inverse hyperbolic sine.<br>
+<b>C:atan() --> y_C</b> - Complex inverse tangent.<br>
+<b>C:atanh() --> y_C</b> - Complex inverse hyperbolic tangent.<br>
+<b>C:conj() --> conj_C</b> - Return the complex conjugate. Equal to ~C.<br>
+<b>C:cos() --> y_C</b> - Return cosine of a complex number.<br>
+<b>C:cosh() --> y_C</b> - Return hyperbolic cosine of a real or complex number.<br>
+<b>C:exp() --> y_C</b> - Return exponent in for complex argument.<br>
+<b>C:im() --> var</b> - Get imaginary part.<br>
+<b>C:log() --> y_C</b> - Complex logarithm.<br>
+<b>C:re() --> var</b> - Get real part.<br>
+<b>C:round(N=6) --> rounded_C</b> - Round in-place to specified number of digits.<br>
+<b>C:sin() --> y_C</b> - Return sinus of a complex number.<br>
+<b>C:sinh() --> y_C</b> - Return hyperbolic sinus of a complex number.<br>
+<b>C:sqrt() --> y_C</b> - Return square root. Result can be real of complex.<br>
+<b>C:tan() --> y_C</b> - Return tangent of a complex number.<br>
+<b>C:tanh() --> y_C</b> - Return hyperbolic tangent of a complex number.<br>
+<b>Z (re=0, im=0) --> new_C</b> - Create new complex number.<br>
+<b>Z:i(x=1) --> new_C</b> - Return x*i.<br>
 <b>Z:trig(module, angle) --> module*exp(i*angle)</b> - Create complex number using module and angle.<br></p>
 <pre class="example">
 
@@ -392,7 +396,8 @@ ans = Z:i(3) - b              -->  0
 
 ans = a * b                   -->  Z(-6,3)
 
-ans = a / Z:i()               -->  Z(2,-1)
+_i = Z:i()
+ans = a / _i                  -->  Z(2,-1)
 
 -- power can be complex
 c = Z(1,1)^Z(2,-2)
@@ -475,11 +480,8 @@ ans = z:im()                  -->  2
 -- show
 print(a)
 
--- update env on import 
--- add complex unit
-ans = 2*_i                    -->  Z:i(2)
-
--- update some methods 
+-- update env on import
+-- update some methods
 ans = sqrt(-1)                -->  _i
 
 ans = log(-1):im()           --3>  math.pi
@@ -489,26 +491,26 @@ ans = log(-1):im()           --3>  math.pi
 <div><a name="C"></a>
 <h3># C (const) #</h3>
 <p class="descript">Collection of constants.</p>
-<p><b>C.astro.au</b> - Astronomic unit.<br>
-<b>C.astro.ly</b> - One light year.<br>
-<b>C.astro.pc</b> - One parsec.<br>
-<b>C.math.e</b> - Base of the natural logarithm.<br>
-<b>C.math.phi</b> - Golden ratio.<br>
-<b>C.math.pi</b> - Ratio of a circle's circumference to its diameter.<br>
-<b>C.phi.Da</b> - Unified atomic mass unit.<br>
-<b>C.phy.G</b> - Gravitational constant.<br>
-<b>C.phy.NA</b> - Avogadro's number.<br>
-<b>C.phy.R</b> - Universal gas constant.<br>
-<b>C.phy.Rinf</b> - Rydberg constant.<br>
-<b>C.phy.Vm</b> - Volume of one mole of ideal gas.<br>
-<b>C.phy.c</b> - Speed of light.<br>
-<b>C.phy.e</b> - Electron charge.<br>
-<b>C.phy.eps0</b> - Permittivity of free space.<br>
-<b>C.phy.g</b> - Acceleration of free fall.<br>
-<b>C.phy.h</b> - Planck's constant.<br>
-<b>C.phy.k</b> - Boltzmann's constant.<br>
-<b>C.phy.mu0</b> - Permeability of free space.<br>
-<b>C.phy.sigma</b> - Stefan-Boltzmann constant.<br>
+<p><b>C.astro.au --> 1.5E11</b> - Astronomic unit.<br>
+<b>C.astro.ly --> 9.5E15</b> - One light year.<br>
+<b>C.astro.pc --> 3.1E16</b> - One parsec.<br>
+<b>C.math.e --> 2.72</b> - Base of the natural logarithm.<br>
+<b>C.math.phi --> 1.62</b> - Golden ratio.<br>
+<b>C.math.pi --> 3.14</b> - Ratio of a circle's circumference to its diameter.<br>
+<b>C.phi.Da --> 1.7E-27</b> - Unified atomic mass unit.<br>
+<b>C.phy.G --> 6.7E-11</b> - Gravitational constant.<br>
+<b>C.phy.NA --> 6E23</b> - Avogadro's number.<br>
+<b>C.phy.R --> 8.31</b> - Universal gas constant.<br>
+<b>C.phy.Rinf --> 1.1E7</b> - Rydberg constant.<br>
+<b>C.phy.Vm --> 2.2E-2</b> - Volume of one mole of ideal gas.<br>
+<b>C.phy.c --> 3E8</b> - Speed of light.<br>
+<b>C.phy.e --> 1.6E-19</b> - Electron charge.<br>
+<b>C.phy.eps0 --> 8.8E-12</b> - Permittivity of free space.<br>
+<b>C.phy.g --> 9.81</b> - Acceleration of free fall.<br>
+<b>C.phy.h --> 6.6E-34</b> - Planck's constant.<br>
+<b>C.phy.k --> 1.4E-23</b> - Boltzmann's constant.<br>
+<b>C.phy.mu0 --> 1.2E-6</b> - Permeability of free space.<br>
+<b>C.phy.sigma --> 5.6E-8</b> - Stefan-Boltzmann constant.<br>
 <b>C:add(name_s, value, [units_s])</b> - Create new constant.<br>
 <b>C:remove(name_s) --> bool</b> - Delete user-defined constant.<br></p>
 <pre class="example">
@@ -545,7 +547,8 @@ ans = C.myConst               -->  nil
 <h3># D (data) #</h3>
 <p class="descript">Data processing and statistics.</p>
 <p><b>D:Fn(expr_s, arg_N=2) --> fn</b> - Generate function from expression of x1, x2 etc.<br>
-<b>D:T(src_t) --> TR</b> - Get reference to 'transposed' table.<br>
+<b>D:T(src_t) --> new_T</b> - Get reference to 'transposed' table.<br>
+<b>D:copy(t) --> copy_t</b> - Make deep copy of the table.<br>
 <b>D:cov(data_t) --> cov_M</b> - Find covariance matrix for list of vectors.<br>
 <b>D:cov2(xs_t, ys_t) --> float</b> - Find covariance value for two vectors.<br>
 <b>D:csvread(file_s, delim_s=',') --> tbl</b> - Read delimiter separated data as Lua table.<br>
@@ -555,7 +558,7 @@ ans = C.myConst               -->  nil
 <b>D:geomean(data_t, [weigh_t]) --> num</b> - Geometrical mean.<br>
 <b>D:harmmean(data_t, [weigh_t]) --> num</b> - Harmonic mean.<br>
 <b>D:histcounts(data_t, rng_v=10) --> sum_t, edges_t</b> - Calculate amount of bins. Edges can be either number or table.<br>
-<b>D:is(data_t, cond_fn) --> yesno_t</b> - Find weights using boolean function.<br>
+<b>D:is(data_t, cond) --> yesno_t</b> - Find weights using boolean function.<br>
 <b>D:isNot(data_t, cond_fn) --> yesno_t</b> - Find inverted weights using boolean function.<br>
 <b>D:max(data_t) --> var, ind_N</b> - Maximal element and its index.<br>
 <b>D:md(data_t, names_t=nil, row_fn=nil) --> str</b> - Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.<br>
@@ -564,15 +567,10 @@ ans = C.myConst               -->  nil
 <b>D:min(data_t) --> var, ind_N</b> - Minimal element and its index.<br>
 <b>D:moment(order_N, data_t, [weigth_t]) --> num</b> - Central moment of t order N, tw is a list of weights.<br>
 <b>D:range(begin_d, end_d, [step_d]) --> new_R</b> - Generate range object.<br>
+<b>D:reduce(fn, data_t, [initial]) --> var</b> - Apply function to its previous result and next element.<br>
 <b>D:ref(src_t, begin_N=1, end_N=#src_t) --> new_R</b> - Return reference to the range of elements.<br>
 <b>D:std(data_t, [weight_t]) --> dev_f, var_f</b> - Standard deviation and variance. Weights can be used.<br>
 <b>D:sum(data_t) --> var</b> - Get sum of all elements.<br>
-<b>D:tcdf(x_d, deg_N) --> num</b> - Student's cumulative distribution.<br>
-<b>D:tpdf(x_d, deg_N) --> num</b> - Student's distribution density.<br>
-<b>D:xEq(num) --> cond_fn</b> - Return function for condition x == d.<br>
-<b>D:xGt(num) --> cond_fn</b> - Return function for condition x > d.<br>
-<b>D:xIn(num1, num2) --> cond_fn</b> - Return function for condition d1 <= x <= d2.<br>
-<b>D:xLt(num) --> cond_fn</b> - Return function for condition x < d.<br>
 <b>D:zip(fn,...) --> tbl</b> - Sequentially apply function to list of tables.<br></p>
 <pre class="example">
 
@@ -632,7 +630,7 @@ ans = D:geomean(X)           --3>  2.995
 ans = D:harmmean(X,W)        --3>  2.567
 
 -- check if X[i] > 2
-a = D:is(X, D:xGt(2))
+a = D:is(X, "x1 > 2")
 ans = a[1]                    -->  1
 
 -- get elements X[i] > 2
@@ -662,11 +660,6 @@ a = D:ref(X, 3, 6)
 ans = #a                      -->  4
 
 ans = a[1]                    -->  X[3]
-
--- Student cdf and pdf
-ans = D:tcdf(4, 2.5)         --3>  0.9805
-
-ans = D:tpdf(2, 3.3)         --3>  0.0672
 
 -- dsv write
 nm = os.tmpname()
@@ -702,7 +695,7 @@ ans = b[2]                    -->  4
 b2 = 2*b + 4
 ans = b2[1]                   -->  8
 
--- apply function 
+-- apply function
 c = b:map(math.sin)
 ans = c[1]                   --3>  0.909
 
@@ -1010,7 +1003,7 @@ b = a:copy()
 ans = b:isComplete()          -->  false
 
 -- prepare graph
-c = Graph() 
+c = Graph()
 c:addEdges {
   {'a','b'},
   {'a','c'},
@@ -1165,12 +1158,9 @@ ans, _ = lens1:beam(1E-3, 1E3, lambda)  --2>  1.44E-3
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
 <p class="descript">Lua based mathematics.</p>
-<p><b>Map(fn, in_t) --> out_t</b> - Evaluate function for each table element.<br>
-<b>Print(...)</b> - Extenden print function, it shows elements of tables and scientific form of numbers.<br>
+<p><b>Bind(obj, fn_name) --> fn</b> - Wrap function to call it without object.<br>
+<b>Map(fn, in_t) --> out_t</b> - Evaluate function for each table element.<br>
 <b>Round(x_d, N=0) --> num</b> - Round value, define number of decimal digits.<br>
-<b>Type(x) --> str</b> - Show type of the object.<br>
-<b>_e</b> - Euler number.<br>
-<b>_pi</b> - Number pi.<br>
 <b>abs(x) --> num</b> - Absolute value.<br>
 <b>acos(x) --> y</b> - Inverse cosine x.<br>
 <b>acosh(x) --> y</b> - Hyperbolic arc cosine.<br>
@@ -1184,6 +1174,7 @@ ans, _ = lens1:beam(1E-3, 1E3, lambda)  --2>  1.44E-3
 <b>exp(x) --> y</b> - Exponent.<br>
 <b>help(fn='main') --> str</b> - Show information about the function.<br>
 <b>log(x) --> y</b> - Natural logarithm.<br>
+<b>pi --> 3.14</b> - Number pi.<br>
 <b>quit()</b> - Quit the program.<br>
 <b>sin(x) --> y</b> - Sine.<br>
 <b>sinh(x) --> y</b> - Hyperbolic sinus.<br>
@@ -1195,11 +1186,8 @@ ans, _ = lens1:beam(1E-3, 1E3, lambda)  --2>  1.44E-3
 
 require 'matlib.main'
 
--- constants starts from '_'
-ans = _pi                     -->  math.pi
-
 -- standard functions
-ans = exp(0)+sin(_pi/2)+cosh(0)  --1>  3.0
+ans = exp(0)+sin(pi/2)+cosh(0)  --1>  3.0
 
 -- round number
 ans = Round(0.9)              -->  1.0
@@ -1207,21 +1195,12 @@ ans = Round(0.9)              -->  1.0
 -- save 2 digits
 ans = Round(math.pi, 2)       -->  3.14
 
--- get type
--- "knows" Sonata objects
-ans = Type(25)                -->  'integer'
-
--- modified print function
-a = {a=1,b=2, 3,4,5}
-Print(a, 0.123)
-
-
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3>  0.909
 
 -- use Lua functions if need
-ans = math.deg(_pi)          --2>  180.0
+ans = math.deg(pi)           --2>  180.0
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -1255,6 +1234,7 @@ Use M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.<br>
 <b>M:round(N=6)</b> - Round matrix elements in place.<br>
 <b>M:rows() --> N</b> - Get number of rows.<br>
 <b>M:rref() --> upd_M</b> - Perform transformations using Gauss method.<br>
+<b>M:star(cond_fn) --> str</b> - Print star when condition for the current elemen is true.<br>
 <b>M:svd() --> U_M, S_M, V_M</b> - Singular value decomposition, return U, S, V.<br>
 <b>M:table() --> tbl</b> - Convert to simple Lua table.<br>
 <b>M:tr() --> sum</b> - Get trace of the matrix.<br>
@@ -1565,7 +1545,8 @@ ans = y[#y][1]               --2>  2.56
 <b>Poly:lin(xs_t, ys_t, yBefore_d=0, yAfter_d=y0) --> P</b> - Linear data interpolation. Return table with polynomials.<br>
 <b>Poly:ppval(Ps_t, x_d, [index_N]) --> num</b> - Return value of a piecewise polynomial in the point and the polynomial index.<br>
 <b>Poly:spline(xs_t, ys_t) --> Ps_t</b> - Cubic spline data interpolation. Return table with polynomials.<br>
-<b>Poly:taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P</b> - Get Taylor series.<br></p>
+<b>Poly:taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P</b> - Get Taylor series.<br>
+<b>Poly:x() --> P</b> - Get object to represent polynomial as a sum of k*x^n<br></p>
 <pre class="example">
 
 -- use 'polynomial'
@@ -1598,6 +1579,10 @@ ans = a / b                   -->  Poly {1,1,3}
 ans = a % b                   -->  0
 
 ans = b ^ 3                   -->  Poly {1,3,3,1}
+
+-- not all powers
+x = Poly:x()
+ans = x^3-2*x+1               --> Poly {1,0,-2,1}
 
 -- integration
 -- free coefficient is 0
@@ -1890,7 +1875,7 @@ g5 = Qb:gates(3):H()
 mat_fn = Mat:eye(8); mat_fn[6][6] = -1
 -- for the Groover diffusion gate (2|0><0| - 1)
 mat_df = -Mat:eye(8); mat_df[1][1] = 1
--- combine 
+-- combine
 oracle_diffuse = Qb:gates(3)
   :fromMatrix(mat_fn)
   :H()
@@ -2177,7 +2162,7 @@ ans = b:denom()               -->  1
 print(a)
 
 -- continued fraction to rational
--- 1 + 1/(2+1/(3+1/4)) 
+-- 1 + 1/(2+1/(3+1/4))
 c = Rat:fromCF {[0]=1, 2, 3, 4}
 ans = c                       -->  Rat(43,30)
 

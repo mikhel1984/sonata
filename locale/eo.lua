@@ -6,21 +6,21 @@ language = 'Esperanto',
 authors  = [[Stanislav Mikhel]],
 ---------- dialog ----------
 Dialog = {
---["cmd_show"]               = [[Print the next or the given note]],
---["cmd_trace"]              = [[Profiling for the function]],
---["cmd_N"]                  = [[Go to N-th block]],
---["cmd_log"]                = [[Turn on/off logging]],
---["cmd_help"]               = [[Show this help]],
---["cmd_ls"]                 = [[Show list of blocks for execution]],
+["cmd_show"]               = [[Presu la sekvan aŭ la donitan noton]],
+["cmd_trace"]              = [[Profilante la funkcion]],
+["cmd_N"]                  = [[Iru al la noto N]],
+["cmd_log"]                = [[Ŝaltu/malŝaltu logilon]],
+["cmd_help"]               = [[Montru ĉi tiun helpon]],
+["cmd_ls"]                 = [[Montru la liston de notoj]],
 ["intro"]                  = [[-------- help([functio]) = akiri helpon -----------
 ---------- use([modulo]) = piliigi la funcionalidad
 ----------------- quit() = finu -------------------
 ]],
 ["done"]                   = [[Preta.]],
---["cmd_time"]               = [[Estimate average time]],
---["cmd_q"]                  = [[Quit]],
---["cmd_rm"]                 = [[Clear list of notes]],
---["cmd_o"]                  = [[Open note-file]],
+["cmd_time"]               = [[Taksi mezan tempon de ekzekuto]],
+["cmd_q"]                  = [[Eliru la programon]],
+["cmd_rm"]                 = [[Malplenigu la liston de notoj]],
+["cmd_o"]                  = [[Malfermu la noto-dosieron]],
 },
 ---------- asciiplot.lua ----------
 asciiplot = {
@@ -145,8 +145,8 @@ data = {
 [":Fn(expr_s, arg_N=2) --> fn"] = [[Generu funkcion el esprimo de x1, x2 ktp.]],
 [":md(data_t, names_t=nil, row_fn=nil) --> str"] = [[Markdown-simila tabloreprezento. Vicoj povas esti procesitaj per funkcio row_fn(t)-->t.]],
 [":csvread(file_s, delim_s=',') --> tbl"] = [[Legas datumojn disigitaj per delimitilo en la dosiero, revenas Lua tabulon.]],
---[":copy(t) --> copy_t"]    = [[Make deep copy of the table.]],
---[":reduce(fn, data_t, [initial]) --> var"] = [[Apply function to its previous result and next element.]],
+[":copy(t) --> copy_t"]    = [[Faru profundan kopion de la listo.]],
+[":reduce(fn, data_t, [initial]) --> var"] = [[Apliki funkcion al ĝia antaŭa rezulto kaj sekva elemento.]],
 },
 ---------- geodesy.lua ----------
 geodesy = {
@@ -272,7 +272,7 @@ main = {
 ["cosh(x) --> y"]          = [[La hiperbola kosinuso de nombro d.]],
 ["tanh(x) --> y"]          = [[Hiperbola tangento.]],
 ["pi --> 3.14"]            = [[Nombro pi.]],
---["Bind(obj, fn_name) --> fn"] = [[Wrap function to call it without object.]],
+["Bind(obj, fn_name) --> fn"] = [[Envolvi funkcion por nomi ĝin sen objekto.]],
 },
 ---------- matrix.lua ----------
 matrix = {
@@ -317,7 +317,7 @@ Uzi M1 .. M2 por horizontala kunmeto, kaj M1 // M2 por vertikala.]],
 ["M:det() --> num"]        = [[Matrico determinanto.]],
 ["M:rows() --> N"]         = [[Nombro da vicoj.]],
 ["M:rank() --> N"]         = [[Trovi rangon de la matrico.]],
---["M:star(cond_fn) --> str"] = [[Print star when condition for the current elemen is true.]],
+["M:star(cond_fn) --> str"] = [[Vidigu matricon uzante stelojn kiam la kondiĉo estas vera.]],
 },
 ---------- numeric.lua ----------
 numeric = {
@@ -351,7 +351,7 @@ polynomial = {
 ["P:int(x0_d=0) --> int_P"] = [[Trovi la integralo de polinomo, d0 - libera faktoro.]],
 [":ppval(Ps_t, x_d, [index_N]) --> num"] = [[Revenas valoron de peceta polinomo en la punkto, kaj la polinoma indekso.]],
 ["P:str(char_s='x') --> str"] = [[Bele presita por la polinomo.]],
---[":x() --> P"]             = [[Get object to represent polynomial as a sum of k*x^n]],
+[":x() --> P"]             = [[Akiru objekton por reprezenti polinomon en formo de sumo k*x^n.]],
 },
 ---------- quaternion.lua ----------
 quaternion = {
