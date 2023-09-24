@@ -222,8 +222,10 @@ evaluate._evalBlock = function (co, env)
     else
       -- print line and evaluate
       io.write(evaluate.INV_NOTE, line, '\n')
-      local _, status, res = coroutine.resume(co, line)
-      showAndNext(status, res, {})
+      repeat
+        local _, status, res = coroutine.resume(co, line)
+        showAndNext(status, res, {})
+      until status ~= evaluate.EV_INF and status ~= evaluate.EV_WRN
       if status == evaluate.EV_ERR then break end
     end
   end
