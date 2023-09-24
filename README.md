@@ -6,14 +6,14 @@
 
 ## Features
 
-* Pure Lua code
+* Pure Lua code (high portability)
 * Variety of modules
 * Template generation for new modules and localization files
-* Independent mathematical library
+* Standalone mathematical library
 
 ## Getting started
 
-To run the **Sonata**, call
+To run the **Sonata** clone the code and call
 
     lua sonata.lua
 
@@ -39,7 +39,7 @@ Additional components:
 
 ## Dependencies 
 
-**Sonata** works in a standard **Lua 5.x** interpreter, version 5.3+ is preferable. 
+**Sonata** works in **Lua 5.x** interpreter, version 5.3+ is preferable.
 
 Module dependencies:
 * _gnuplot.lua_ requires [gnuplot](http://www.gnuplot.info/) program to be installed

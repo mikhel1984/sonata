@@ -102,7 +102,7 @@ end
 local evaluate = {
 
 -- current version
-version = '0.9.38',
+version = '0.9.39',
 
 -- status
 EV_RES = 1,   -- found result
