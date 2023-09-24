@@ -1,5 +1,5 @@
 ------------ Test cross-module functionality --------------
---[[TEST
+--[[TEST_IT
 
 -- RATIONAL and BIGINT
 -----------------------------
@@ -37,7 +37,7 @@ ans = (a >= b)                   --> false
 -- show
 print(a)
 
--- rat & int 
+-- rat & int
 ans = Rat(1,2) + Int(1)            --> Rat(3,2)
 
 -- int & rat
@@ -61,7 +61,7 @@ ans = a * b                      --> Poly{1,2,1}
 
 ans = a + 1                      --> Rat(Poly{1,4,4},Poly{2,3})
 
-a = Rat(Poly{1,1},Poly{1,2}) 
+a = Rat(Poly{1,1},Poly{1,2})
 ans = a ^ 2                      --> a * a
 
 a = Poly{1,2,3}
@@ -105,14 +105,14 @@ ans = Poly{1,2,3} * Int(2)       --> Poly{Int(2),Int(4),Int(6)}
 ans = Int(1) - Poly{1,0}         --> Poly{-1,1}
 
 
--- POLYNOMIAL and RATIONAL 
+-- POLYNOMIAL and RATIONAL
 -----------------------------
 
 a = Poly{Rat(1,2),Rat(1,3),Rat(1,4)}
-b = Poly{Rat(2,3),Rat(4,5)} 
+b = Poly{Rat(2,3),Rat(4,5)}
 ans = (a ~= nil) and (b ~= nil)  --> true
 
-ans = a(1)                      --> Rat(13,12) 
+ans = a(1)                      --> Rat(13,12)
 
 ans = a + b                     --> Poly{Rat(1,2),Rat(1),Rat(21,20)}
 
@@ -124,7 +124,7 @@ ans = a:der()                   --> Poly{1, Rat(1,3)}
 
 ans = b:int()                   --> Poly{Rat(1,3),Rat(4,5),0}
 
--- show 
+-- show
 print(a:str())
 
 
@@ -162,7 +162,7 @@ print(a)
 -- comp & big
 ans = Comp(1,2) + Int(3)         --> Comp(4,2)
 
--- big & comp 
+-- big & comp
 ans = Int(2) * Comp(1,2)         --> Comp(2,4)
 
 
@@ -185,7 +185,7 @@ ans = Comp.cos(a):im()         --3> -0.343
 
 ans = (a^0.3):re()             --2> 0.91
 
--- show 
+-- show
 print(a)
 
 -- QUATERNION and BIGINT
@@ -215,7 +215,7 @@ ans = d:w()                    --3> 0.768
 
 ans = a ^ 3                     --> Quat{-86,-52,-78,-104}
 
--- show 
+-- show
 print(a)
 
 -- quat & int

@@ -10,7 +10,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'data'
 D = require 'matlib.data'
@@ -68,7 +68,7 @@ ans = D:geomean(X)           --3>  2.995
 ans = D:harmmean(X,W)        --3>  2.567
 
 -- check if X[i] > 2
-a = D:is(X, D:xGt(2))
+a = D:is(X, "x1 > 2")
 ans = a[1]                    -->  1
 
 -- get elements X[i] > 2
@@ -98,11 +98,6 @@ a = D:ref(X, 3, 6)
 ans = #a                      -->  4
 
 ans = a[1]                    -->  X[3]
-
--- Student cdf and pdf
-ans = D:tcdf(4, 2.5)         --3>  0.9805
-
-ans = D:tpdf(2, 3.3)         --3>  0.0672
 
 -- dsv write
 nm = os.tmpname()
@@ -138,7 +133,7 @@ ans = b[2]                    -->  4
 b2 = 2*b + 4
 ans = b2[1]                   -->  8
 
--- apply function 
+-- apply function
 c = b:map(math.sin)
 ans = c[1]                   --3>  0.909
 
@@ -155,9 +150,26 @@ Ver = Ver.versions
 
 local STAT = 'statistics'
 local FILES = 'files'
-local FILTER = 'filter'
+local LIST = 'lists'
 local REF = 'reference'
 
+
+--- Make copy of an object or list.
+--  @param v Source object.
+--  @return deep copy.
+local function copy_obj(v)
+  if type(v) == 'table' then
+    if v.copy then 
+      return v:copy()
+    else
+      local lst = {}
+      for i = 1, #v do lst[i] = copy_obj(v[i]) end
+      return lst
+    end
+  else
+    return v
+  end
+end
 
 --	INFO
 
@@ -171,6 +183,16 @@ __module__ = "Data processing and statistics."
 --	MODULE
 
 local data = {}
+
+
+--- Make copy of an object or list.
+--  @param v Source object.
+--  @return deep copy.
+data.copy = function (self, v)
+  return copy_obj(v)
+end
+about[data.copy] = {":copy(t) --> copy_t", 
+  "Make deep copy of the table.", help.OTHER}
 
 
 --- Estimate covariance for two vectors.
@@ -278,6 +300,7 @@ about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
 --  @return Table with the filtered elements.
 data.filter = function (self, t, vCond)
   local res = {}
+  if type(vCond) == 'string' then vCond = Utils.Fn(vCond, 1) end
   if type(vCond) == 'function' then
     -- boolean function
     for i = 1, #t do
@@ -294,7 +317,7 @@ data.filter = function (self, t, vCond)
 end
 about[data.filter] = {":filter(in_t, condition) --> out_t",
   "Get result of the table filtering. Condition is either boolean function or table of weights.",
-  FILTER}
+  LIST}
 
 
 --- Frequency of elements.
@@ -320,7 +343,7 @@ data.geomean = function (self, t, tw)
     local st, sw = 0, 0
     for i = 1, #t do
       local w = tw[i] or 1
-      st = st + w*math.log(t[i])
+      st = st + w*math.log(w > 0 and t[i] or 1)
       sw = sw + w
     end
     return math.exp(st / sw)
@@ -342,8 +365,8 @@ data.harmmean = function (self, t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1, #t do
-      local w = tw[i]
-      st = st + w/t[i]
+      local w = tw[i] or 1
+      st = st + w/(w > 0 and t[i] or 1)
       sw = sw + w
     end
     return sw / st
@@ -403,17 +426,18 @@ about[data.histcounts] = {":histcounts(data_t, rng_v=10) --> sum_t, edges_t",
 
 --- Find weights (1/0) based on condition.
 --  @param t Data table.
---  @param fn Condition, boolean function.
+--  @param fn Condition, boolean function or string.
 --  @return Table of 1 and 0.
 data.is = function (self, t, fn)
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 1 or 0
   end
   return res
 end
-about[data.is] = {":is(data_t, cond_fn) --> yesno_t",
-  "Find weights using boolean function.", FILTER}
+about[data.is] = {":is(data_t, cond) --> yesno_t",
+  "Find weights using boolean function.", LIST}
 
 
 --- Find weights (1/0) based on inverted condition.
@@ -421,6 +445,7 @@ about[data.is] = {":is(data_t, cond_fn) --> yesno_t",
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
 data.isNot = function (self, t, fn)
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 0 or 1
@@ -428,7 +453,7 @@ data.isNot = function (self, t, fn)
   return res
 end
 about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
-  "Find inverted weights using boolean function.", FILTER}
+  "Find inverted weights using boolean function.", LIST}
 
 
 --- Maximum value.
@@ -521,6 +546,23 @@ about[data.moment] = {":moment(order_N, data_t, [weigth_t]) --> num",
   "Central moment of t order N, tw is a list of weights.", STAT}
 
 
+--- Apply reduction rule to the list elements.
+--  @param fn Function of 2 elements.
+--  @param t List.
+--  @param val Initial value (optional).
+--  @return Result of reduction.
+data.reduce = function (self, fn, t, val)
+  local i0 = 1
+  if not val then
+    val, i0 = t[1], 2
+  end
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 2) end
+  for i = i0, #t do val = fn(val, t[i]) end
+  return val
+end
+about[data.reduce] = {":reduce(fn, data_t, [initial]) --> var",
+  "Apply function to its previous result and next element.", LIST} 
+
 
 --- Sum of all elements.
 --  @param t Table with numbers.
@@ -531,7 +573,7 @@ data.sum = function (self, t)
   return s
 end
 about[data.sum] = {":sum(data_t) --> var",
-  "Get sum of all elements.", help.OTHER}
+  "Get sum of all elements.", STAT}
 
 
 --- Standard deviation and variance.
@@ -565,33 +607,29 @@ about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
 --  @param fn Table that generates new column from the given (optional).
 --  @return String with table representation.
 data.md = function (self, data_t, names_t, fn)
-  local acc, line, head, len = {}, {}, {}, {}
+  local acc, line = {}, {}
   -- data to stings
   for i, v in ipairs(data_t) do
     local row = {}
     for j, w in ipairs(fn and fn(v) or v) do
-      row[j] = tostring(w)
-      len[j] = math.max(len[j] or 0, #row[j])
+      row[j] = tostring(w)      
     end
     acc[i] = row
   end
   -- names
   if names_t then
-    assert(#names_t == #acc[1], "Wrong column number")
-    for j, w in ipairs(names_t) do
-      head[j] = tostring(w)
-      len[j] = math.max(len[j], #head[j])
-    end
+    local head = {}
+    for j = 1, #acc[1] do head[j] = tostring(names_t[j] or '') end
+    acc[#acc+1] = head  -- temporary add    
   end
-  -- collect
-  for j = 1, #acc[1] do
-    local templ = string.format('%%-%ds', len[j])
-    for i = 1, #acc do acc[i][j] = string.format(templ, acc[i][j]) end
-    line[j] = string.rep('-', len[j])
-    if names_t then head[j] = string.format(templ, head[j]) end
-  end
+  -- save
+  local len = Utils.align(acc)
+  for j = 1, #len do line[j] = string.rep('-', len[j]) end
   local res, templ = {}, '| %s |'
-  if names_t then res[1] = string.format(templ, table.concat(head, ' | ')) end
+  if names_t then 
+    res[1] = string.format(templ, table.concat(acc[#acc], ' | ')) 
+    acc[#acc] = nil
+  end
   res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
   for _, v in ipairs(acc) do
     res[#res+1] = string.format(templ, table.concat(v, ' | '))
@@ -599,72 +637,7 @@ data.md = function (self, data_t, names_t, fn)
   return table.concat(res, '\n')
 end
 about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
-  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t."}
-
-
---- Student's cumulative distribution
---  @param d Value.
---  @param N Degree of freedom.
---  @return Cumulative value.
-data.tcdf = function (self, d, N)
-  data.ext_special = data.ext_special or require('matlib.special')
-  local tmp = N/(N+d*d)
-  return 1-0.5*data.ext_special:betainc(tmp, 0.5*N, 0.5)
-end
-about[data.tcdf] = {":tcdf(x_d, deg_N) --> num",
-  "Student's cumulative distribution.", help.OTHER}
-
-
---- Student's density function.
---  @param d Value.
---  @param N Degree of freedom.
---  @return Density value.
-data.tpdf = function (self, d, N)
-  data.ext_special = data.ext_special or require('matlib.special')
-  local tmp = math.sqrt(N)*data.ext_special:beta(0.5, 0.5*N)
-  return (1+d*d/N)^(-0.5*(N+1))/tmp
-end
-about[data.tpdf] = {":tpdf(x_d, deg_N) --> num",
-  "Student's distribution density.", help.OTHER}
-
-
---- Condition: x == d.
---  @param d Some value.
---  @return Boolean function.
-data.xEq = function (self, d)
-  return (function (x) return Cross.eq(x, d) end)
-end
-about[data.xEq] = {":xEq(num) --> cond_fn",
-  "Return function for condition x == d.", FILTER}
-
-
---- Condition: x > d
---  @param d Lower limit.
---  @return Boolean function.
-data.xGt = function (self, d)
-  return (function (x) return x > d end)
-end
-about[data.xGt] = {":xGt(num) --> cond_fn", "Return function for condition x > d.", FILTER}
-
-
---- Condition: d1 <= x <= d2.
---  @param d1 Lower limit.
---  @param d2 Upper limit.
---  @return Boolean function.
-data.xIn = function (self, d1, d2)
-  return (function (x) return d1 <= x and x <= d2 end)
-end
-about[data.xIn] = {":xIn(num1, num2) --> cond_fn",
-  "Return function for condition d1 <= x <= d2.", FILTER}
-
-
---- Condition: x < d
---  @param d Upper limit.
---  @return Boolean function.
-data.xLt = function (self, d)
-  return (function (x) return x < d end)
-end
-about[data.xLt] = {":xLt(num) --> cond_fn", "Return function for condition x < d.", FILTER}
+  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.", help.OTHER}
 
 
 --- Apply function of n arguments to n lists.
@@ -694,7 +667,7 @@ data.zip = function (self, fn, ...)
   return res
 end
 about[data.zip] = {":zip(fn,...) --> tbl",
-  "Sequentially apply function to list of tables.", help.OTHER}
+  "Sequentially apply function to list of tables.", LIST}
 
 
 -- Methametods for the range of numbers.
@@ -819,7 +792,7 @@ data.range = function (self, dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-about[data.range] = {':range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.'}
+about[data.range] = {':range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.', REF}
 
 
 -- Get reference to data range in other table
@@ -854,8 +827,17 @@ end
 --  @param k Index.
 --  @param v Value.
 mt_ref.__newindex = function (self, k, v)
-  if Ver.isInteger(k) and self._beg < k and k <= self._end then
-    self._t[self._beg + k] = v
+  if Ver.isInteger(k) and 0 < k and (self._beg + k) <= self._end then
+    k = k + self._beg
+    if getmetatable(v) == mt_ref then
+      -- copy data
+      local i0 = k - 1
+      local n = math.min(#v, self._end - i0)
+      for i = 1, n do self._t[i0 + i] = v[i] end
+    else
+      -- set value
+      self._t[k] = v
+    end
   end
 end
 
@@ -895,20 +877,6 @@ end
 --  @return Expected table length.
 mt_transpose.__len = function (self)
   return #self._tbl._src[1]
-end
-
-
---- Transform ref object into pure table.
---  @param self T-ref object.
---  @return Lua table.
-mt_transpose._table = function (self)
-  local res, src = {}, self._tbl._src
-  for i = 1, #src[1] do
-    local row = {}
-    for j = 1, #src do row[j] = src[j][i] end
-    res[i] = row
-  end
-  return res
 end
 
 
@@ -952,7 +920,7 @@ data.T = function (self, src)
   }
   return setmetatable(o, mt_transpose)
 end
-about[data.T] = {":T(src_t) --> TR", "Get reference to 'transposed' table.", REF}
+about[data.T] = {":T(src_t) --> new_T", "Get reference to 'transposed' table.", REF}
 
 
 -- Comment to remove descriptions
@@ -961,4 +929,4 @@ data.about = about
 return data
 
 --====================================
---TODO: add tinv
+--TODO: range reverse

@@ -1,12 +1,12 @@
 -- Bonvenon al la programo por matematikaj kalkuloj "Sonata"!
 -- Ĉi tio estas rapida komenca gvidilo.
--- Tajpu 'quit' por eliri. 
+-- Tajpu 'quit' por eliri.
 -- Premu "Enter" por daŭrigi...
 -- PAUSE
 
 --	BAZAĴOJ
 -- La listo de funkcioj estas akirita per la komando:
-help 'all'
+help '*'
 -- PAUSE
 
 -- Por helpo pri funkcio, enigu ĝian nomon
@@ -23,30 +23,27 @@ help(Round)
 -- kaj uzu variablojn.
 x = 3
 2*x^2+3*x+5
--- Konstantoj:
-_pi
-_e
 -- La rezulto de la lasta kalkulo estas konservita en
 _ans
 -- PAUSE
 
 -- Longa esprimo povas esti dividita tra pluraj linioj kun
--- malantaŭa oblikvo. Por kongruo kun Lua vi povas 
+-- malantaŭa oblikvo. Por kongruo kun Lua vi povas
 -- uzi komentojn
 1 + 2 + \
 3 + 4
 1 + 2 + --\
 3 + 4
--- PAUSE 
+-- PAUSE
 
 --	MODULOJ
 -- Pliaj moduloj povas esti ŝarĝitaj per la "use" funkcio.
 -- Jen listo de disponeblaj moduloj kun kaŝnomoj
 -- kaj aktuala stato:
 use()
--- PAUSE 
+-- PAUSE
 
--- La modulo povas esti ŝarĝita per la komando 
+-- La modulo povas esti ŝarĝita per la komando
 --    use 'nomo'
 -- Ĝi tiam fariĝas havebla per kaŝnomo.
 use 'matrix'
@@ -69,18 +66,17 @@ use 'Num'
 -- PAUSE
 
 -- Por ŝargi ĉiujn modulojn, voku
-use 'all'
+use '*'
 -- Tajpu 'use()' por kontroli la nunan staton
 
 -- PAUSE
 
 -- Iuj moduloj ŝanĝas medion kiam ŝarĝitaj.
 -- Ekzemple, la "complex" modulo aldonas
--- kompleksa variablo
-_i
--- kaj ŝanĝas la konduton de kelkaj funkcioj
+-- la konduton de kelkaj funkcioj
 sqrt(-4)
-exp(3+_i*4)
+i = Z:i()
+exp(3+i*4)
 -- PAUSE
 
 -- Estas pliaj komandoj por

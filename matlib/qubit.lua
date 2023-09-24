@@ -9,7 +9,7 @@
 --]]
 
 ---------------- Tests --------------
---[[TEST
+--[[TEST_IT
 
 -- use 'qubit'
 Qb = require 'matlib.qubit'
@@ -104,7 +104,7 @@ g5 = Qb:gates(3):H()
 mat_fn = Mat:eye(8); mat_fn[6][6] = -1
 -- for the Groover diffusion gate (2|0><0| - 1)
 mat_df = -Mat:eye(8); mat_df[1][1] = 1
--- combine 
+-- combine
 oracle_diffuse = Qb:gates(3)
   :fromMatrix(mat_fn)
   :H()
@@ -262,6 +262,12 @@ qubit.__tostring = function (Q)
 end
 
 
+-- Metamethods
+about['_ar'] = {"arithmetic: Q1+Q2, k*Q, G1*G2, G^n, G()", nil, help.META}
+about['_cmp'] = {"comparison: Q1==Q2, Q1~=Q2", nil, help.META}
+about['_obj'] = {"object: Q1..Q2, #Q, #G", nil, help.META}
+
+
 --- Measure on qubit from the system.
 --  Update system state.
 --  @param Q Qubit system.
@@ -275,7 +281,7 @@ qubit._measOne = function (Q, pos)
     for j = 0, pos do
       v, rst = math.modf(v * 0.5)  -- TODO use shift
     end
-    if rst > 0.1 then 
+    if rst > 0.1 then
       sum1 = sum1 + Q.vec[k+1][1]
       ones[#ones+1] = true
     else
@@ -471,7 +477,7 @@ qgate.__mul = function (G1, G2)
   end
   if G1.n ~= G2.n then error('Differen size') end
   local res = qgate._new(G1.n)
-  if     not G1.mat then 
+  if     not G1.mat then
     res.mat, res.txt = G2.mat, G2.txt
   elseif not G2.mat then
     res.mat, res.txt = G1.mat, G1.txt
@@ -841,8 +847,5 @@ qubit.about = about
 return qubit
 
 --======================================
--- https://en.wikipedia.org/wiki/Quantum_logic_gate
 -- TODO vertical concatenation with ..
--- TODO qubit equality
 -- TODO qubit from vector
--- TODO power for gates

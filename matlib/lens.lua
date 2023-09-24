@@ -16,7 +16,7 @@
 
 
 ----------------------- Tests ----------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'lens'
 Lens = require 'matlib.lens'
@@ -130,7 +130,7 @@ __module__ = "Matrix methods in paraxial optics."
 
 local lens = {
 -- mark
-type = 'lens', 
+type = 'lens',
 -- {A, B, C, D}
 key = keys,
 }
@@ -210,7 +210,7 @@ lens._init = function(t) return setmetatable(t, lens) end
 lens.afocal = function (self, dm)
   return lens._init({dm, 0, 0, 1/dm})
 end
-about[lens.afocal] = {":afocal(magn_d) --> L", 
+about[lens.afocal] = {":afocal(magn_d) --> L",
   "Find matrix for the afocal system.", help.NEW}
 
 
@@ -227,7 +227,7 @@ lens.beam = function (L, dW, dR, dLam)
   local _1_q2 = (L[3] + L[4]*_1_q1) / (L[1] + L[2]*_1_q1)
   return math.sqrt(lampi / _1_q2:im()), 1/_1_q2:re()
 end
-about[lens.beam] = {"L:beam(inRad_d, inCurv_d, lambda_d) --> outRad_d, outCurv_d", 
+about[lens.beam] = {"L:beam(inRad_d, inCurv_d, lambda_d) --> outRad_d, outCurv_d",
   "Find output beam radius and curvature.", LASER}
 
 
@@ -246,7 +246,7 @@ about[lens.copy] = {"L:copy() --> cpy_L", "Create a copy of the object."}
 lens.det = function (L)
   return L[1]*L[4] - L[2]*L[3]
 end
-about[lens.det] = {"L:det() --> determinant_d", 
+about[lens.det] = {"L:det() --> determinant_d",
   "Find determinant of the system matrix.", help.OTHER}
 
 
@@ -293,7 +293,7 @@ about[lens.inv] = {"L:inv() --> inv_L", "Get the inverted system matrix.", help.
 lens.isUnit = function (L)
   return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL
 end
-about[lens.isUnit] = {"L:isUnit() --> bool", 
+about[lens.isUnit] = {"L:isUnit() --> bool",
   "Check if the system matrix is unit.", help.OTHER}
 
 

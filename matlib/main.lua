@@ -10,15 +10,12 @@
 
 
 ---------------- Tests ---------------------
---[[TEST
+--[[TEST_IT
 
 require 'matlib.main'
 
--- constants starts from '_'
-ans = _pi                     -->  math.pi
-
 -- standard functions
-ans = exp(0)+sin(_pi/2)+cosh(0)  --1>  3.0
+ans = exp(0)+sin(pi/2)+cosh(0)  --1>  3.0
 
 -- round number
 ans = Round(0.9)              -->  1.0
@@ -26,21 +23,12 @@ ans = Round(0.9)              -->  1.0
 -- save 2 digits
 ans = Round(math.pi, 2)       -->  3.14
 
--- get type
--- "knows" Sonata objects
-ans = Type(25)                -->  'integer'
-
--- modified print function
-a = {a=1,b=2, 3,4,5}
-Print(a, 0.123)
-
-
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3>  0.909
 
 -- use Lua functions if need
-ans = math.deg(_pi)          --2>  180.0
+ans = math.deg(pi)           --2>  180.0
 
 --]]
 
@@ -75,7 +63,7 @@ local _call = function (fn, s)
 end
 
 
---	INFO 
+--	INFO
 
 -- description
 local about = {
@@ -86,57 +74,6 @@ __module__ = "Lua based mathematics."
 --	MODULE
 
 local main = {}
-
-
---- Print element, use 'scientific' form for float numbers.
---  @param v Value to print.
-main._showElt = function (v)
-  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
-end
-
-
---- Show elements of the table.
---  @param t Table to print.
-main._showTable = function (t)
-  local N, nums, out = 10, {}, {'{ '}
-  -- dialog
-  local function continue(n, res)
-    local txt = tostring(n) .. ' continue? (y/n/) '
-    if Sonata then
-      txt = Sonata.ask(txt, res)
-    else
-      io.write(res, '\n', txt)
-      txt = io.read()
-    end
-    return string.lower(txt) == 'y'
-  end
-  -- list elements
-  for i, v in ipairs(t) do
-    out[#out+1] = main._showElt(v); out[#out+1] = ', '
-    nums[i] = true
-    if i % N == 0 then
-      out[#out+1] = '\n'
-      local data = table.concat(out)
-      out = {'\n'}
-      if not continue(i, data) then break end
-    end
-  end
-  -- hash table elements
-  local count = 0
-  for k, v in pairs(t) do
-    if not nums[k] then
-      out[#out+1] = string.format('\n%s = %s, ', tostring(k), main._showElt(v))
-      count = count + 1
-      if count % N == 0 then
-        local data = table.concat(out)
-        out = {'\n'}
-        if not continue('', data) then break end
-      end
-    end
-  end
-  out[#out+1] = ' }\n'
-  return table.concat(out)
-end
 
 
 -- Commonly used methods
@@ -181,10 +118,19 @@ about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", HYP}
 atanh = _call(Calc.atanh, 'atanh')
 about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
-
 -- Constants
-_pi = math.pi;         about[_pi] = {"_pi", "Number pi.", SonataHelp.CONST}
-_e  = 2.718281828459;  about[_e]  = {"_e", "Euler number.", SonataHelp.CONST}
+pi = math.pi
+about[pi] = {"pi --> 3.14", "Number pi.", AUX}
+
+
+--- Wrap function to simplify call if need.
+--  @param obj Sonata object.
+--  @param name Function name.
+--  @return clojure of the method.
+Bind = function (obj, name)
+  return function (...) return obj[name](obj, ...) end
+end
+about[Bind] = {"Bind(obj, fn_name) --> fn", "Wrap function to call it without object.", AUX}
 
 
 --- Generate list of function values.
@@ -203,39 +149,6 @@ end
 about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table element.', AUX}
 
 
---- Show table content and scientific form of numbers.
---  @param ... List of arguments.
-Print = function (...)
-  local out = {}
-  for i, v in ipairs({...}) do
-    if type(v) == 'table' then
-      local mt = getmetatable(v)
-      if mt and mt.__tostring then
-        -- has representation
-        local tmp = tostring(v)
-        if string.find(tmp, '\n') then
-          out[#out+1] = '\n'
-        end
-        out[#out+1] = tmp
-        out[#out+1] = '\t'
-      else
-        -- require representation
-        out[#out+1] = main._showTable(v)
-      end
-    else
-      -- show value
-      out[#out+1] = main._showElt(v)
-      out[#out+1] = '\t'
-    end
-  end
-  local res = table.concat(out)
-  if Sonata then Sonata.say(res) else print(res) end
-end
-about[Print] = {"Print(...)",
-  "Extenden print function, it shows elements of tables and scientific form of numbers.",
-  AUX}
-
-
 --- Round to some precision.
 --  @param f Real number.
 --  @param N Number of decimal digits.
@@ -248,57 +161,7 @@ about[Round] = {
   'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
 
 
---- Show type of the object.
---  @param v Some Lua or Sonata object.
---  @return String with type value.
-Type = function (v)
-  local u = type(v)
-  if u == 'table' then
-    u = v.type or u
-  elseif u == 'number' then
-    u = Ver.mathType(v)
-  end
-  return u
-end
-about[Type] = {'Type(x) --> str', 'Show type of the object.', AUX}
-
-
--- "In the game of life the strong survive..." (Scorpions) ;)
---  board - matrix with 'ones' as live cells
-main.life = function (board)
-  assert(board.type == 'matrix', 'Matrix is expected!')
-  local rows, cols = board:size()
-  local src = board
-  local gen = 0
-  -- make decision about current cell
-  local function islive (r, c)
-    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
-      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
-    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
-  end
-  -- evaluate
-  repeat
-    local new = board:zeros()   -- empty matrix of the same size
-    gen = gen+1
-    -- update
-    for r = 1, rows do
-      for c = 1, cols do
-        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
-        io.write(new[r][c] == 1 and '*' or ' ')
-      end
-      io.write('|\n')
-    end
-    if gen > 1 and new == src then
-      return print('~~ Game Over ~~')
-    end
-    src = new
-    io.write(string.format('#%-3d continue? (y/n) ', gen))
-  until 'n' == io.read()
-end
-
-
 -- Sonata specific functions
-
 if Sonata then  -- SPECIFIC
 
 about[use] = {'use([module_s]) --> str|nil',

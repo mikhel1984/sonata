@@ -62,6 +62,17 @@ intro = [[
 ----------------- quit() = exit -----------------
 ]],
 done = 'Done.',
+-- commands
+cmd_help = "Show this help",
+cmd_log = "Turn on/off logging",
+cmd_ls = "Show list of blocks for execution",
+cmd_N = "Go to N-th block",
+cmd_o = "Open note-file",
+cmd_rm = "Clear list of notes",
+cmd_q = "Quit",
+cmd_show = "Print the next or the given note",
+cmd_time = "Estimate average time",
+cmd_trace = "Profiling for the function",
 }
 
 
@@ -127,7 +138,7 @@ help.findObject = function (tbl, obj, tGlob)
     elseif mod[obj] then
       -- function description
       local t = mod[obj]
-      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR, 
+      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
         '\n', t[DESCRIPTION]}
     end
   end
@@ -228,7 +239,7 @@ help.readAll = function (fName)
 end
 
 
---- Load localization tables from file, 
+--- Load localization tables from file,
 --  decode if need.
 --  @param fName File path and name.
 --  @return Lua table or nil.

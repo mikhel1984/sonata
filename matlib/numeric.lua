@@ -10,7 +10,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'numeric'
 Num = require 'matlib.numeric'
@@ -169,7 +169,7 @@ numeric.lim = function (self, fn, xn, isPositive)
   end
   return prev, false
 end
-about[numeric.lim] = {":lim(fn, xn_d, isPositive) --> y, isFound", 
+about[numeric.lim] = {":lim(fn, xn_d, isPositive) --> y, isFound",
   "Estimate limit of a function."}
 
 

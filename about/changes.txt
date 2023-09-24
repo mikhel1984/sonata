@@ -1,3 +1,22 @@
+======== 0.9.38 =========
+
+Data
+* Remove some functions
+* Allow copy range in ref
+* Use strings in filters
+* Add reduce for lists
+Matrix
+* Change tostring
+Main
+* Add bind for methods
+* Remove Type, Print
+Other
+* Update 'print'
+* Leave only pi constant
+* Choose sequence of notes to execute
+* Update type checking
+* Minor improvements
+
 ======== 0.9.37 =========
 
 Asciiplot

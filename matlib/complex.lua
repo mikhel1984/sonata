@@ -14,7 +14,7 @@
 
 
 ---------------- Tests --------------
---[[TEST
+--[[TEST_IT
 
 -- use 'complex'
 Z = require 'matlib.complex'
@@ -37,7 +37,8 @@ ans = Z:i(3) - b              -->  0
 
 ans = a * b                   -->  Z(-6,3)
 
-ans = a / Z:i()               -->  Z(2,-1)
+_i = Z:i()
+ans = a / _i                  -->  Z(2,-1)
 
 -- power can be complex
 c = Z(1,1)^Z(2,-2)
@@ -120,11 +121,8 @@ ans = z:im()                  -->  2
 -- show
 print(a)
 
--- update env on import 
--- add complex unit
-ans = 2*_i                    -->  Z:i(2)
-
--- update some methods 
+-- update env on import
+-- update some methods
 ans = sqrt(-1)                -->  _i
 
 ans = log(-1):im()           --3>  math.pi
@@ -206,12 +204,13 @@ __module__ = "Manipulations with complex numbers."
 
 local complex = {
 -- mark
-type='complex', 
+type='complex',
 -- for external modules
 iscomplex=true,
 -- simplification
 _simp = numcomp,
 }
+
 
 --- Check object type.
 --  @param c Object.
@@ -344,6 +343,8 @@ end
 --  @return Negative value.
 complex.__unm = function (C) return complex._new(-C._[1], -C._[2]) end
 
+
+-- Metamethods
 about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, help.META}
 about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
@@ -392,10 +393,17 @@ complex._norm = function (C)
 end
 
 
+complex._strip = function (C, tol)
+  C._[1] = Utils.strip(C._[1], tol)
+  C._[2] = Utils.strip(C._[2], tol)
+  return numcomp(C)
+end
+
+
 --- Module of complex number.
 --  @return Module of the number.
 complex.abs = complex._norm
-about[complex.abs] = {"Z:abs() --> float", "Return module of complex number."}
+about[complex.abs] = {"C:abs() --> float", "Return module of complex number."}
 
 
 --- Inverse cosine.
@@ -404,14 +412,14 @@ about[complex.abs] = {"Z:abs() --> float", "Return module of complex number."}
 complex.acos = function (C)
   return -complex._i * complex.log(C + complex.sqrt(C*C-1))
 end
-about[complex.acos] = {"Z:acos() --> y_Z", "Complex inverse cosine.", FUNCTIONS}
+about[complex.acos] = {"C:acos() --> y_C", "Complex inverse cosine.", FUNCTIONS}
 
 
 --- Inverse hyperbolic cosine.
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic cosine.
 complex.acosh = function (C) return complex.log(C + complex.sqrt(C*C-1)) end
-about[complex.acosh] = {"Z:acosh() --> y_Z", 
+about[complex.acosh] = {"C:acosh() --> y_C",
   "Complex inverse hyperbolic cosine.", FUNCTIONS}
 
 
@@ -421,7 +429,7 @@ about[complex.acosh] = {"Z:acosh() --> y_Z",
 complex.arg = function (C)
   return Ver.atan2(Cfloat(C._[2]), Cfloat(C._[1]))
 end
-about[complex.arg] = {"Z:arg() --> float", "Return argument of complex number."}
+about[complex.arg] = {"C:arg() --> float", "Return argument of complex number."}
 
 
 --- Inverse sine.
@@ -430,14 +438,14 @@ about[complex.arg] = {"Z:arg() --> float", "Return argument of complex number."}
 complex.asin = function (C)
   return -complex._i * complex.log(complex._i*C + complex.sqrt(1-C*C))
 end
-about[complex.asin] = {"Z:asin() --> y_Z", "Complex inverse sine.", FUNCTIONS}
+about[complex.asin] = {"C:asin() --> y_C", "Complex inverse sine.", FUNCTIONS}
 
 
 --- Inverse hyperbolic sine.
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic sine.
 complex.asinh = function (C) return complex.log(C + complex.sqrt(C*C+1)) end
-about[complex.asinh] = {"Z:asinh() --> y_Z", 
+about[complex.asinh] = {"C:asinh() --> y_C",
   "Complex inverse hyperbolic sine.", FUNCTIONS}
 
 
@@ -448,7 +456,7 @@ complex.atan = function (C)
   local iC = complex._i * C
   return -0.5 * complex._i * complex.log((1 + iC)/(1 - iC))
 end
-about[complex.atan] = {"Z:atan() --> y_Z", 
+about[complex.atan] = {"C:atan() --> y_C",
   "Complex inverse tangent.", FUNCTIONS}
 
 
@@ -456,7 +464,7 @@ about[complex.atan] = {"Z:atan() --> y_Z",
 --  @param C Complex number.
 --  @return Complex inverse hyperbolic tangent.
 complex.atanh = function (C) return 0.5*complex.log((1 + C)/(1 - C)) end
-about[complex.atanh] = {"Z:atanh() --> y_Z", 
+about[complex.atanh] = {"C:atanh() --> y_C",
   "Complex inverse hyperbolic tangent.", FUNCTIONS}
 
 
@@ -466,7 +474,7 @@ about[complex.atanh] = {"Z:atanh() --> y_Z",
 complex.conj = function (C)
   return complex._new(C._[1], -C._[2])
 end
-about[complex.conj] = {"Z:conj() --> conj_Z", 
+about[complex.conj] = {"C:conj() --> conj_C",
   "Return the complex conjugate. Equal to ~C."}
 complex.__bnot = complex.conj
 
@@ -478,7 +486,7 @@ complex.cos = function (C)
   local c = C._
   return numOrComp(fcos(c[1])*ch(c[2]), -fsin(c[1])*sh(c[2]))
 end
-about[complex.cos] = {"Z:cos() --> y_Z", 
+about[complex.cos] = {"C:cos() --> y_C",
   "Return cosine of a complex number.", FUNCTIONS}
 
 
@@ -486,7 +494,7 @@ about[complex.cos] = {"Z:cos() --> y_Z",
 --  @param C Complex number.
 --  @return Complex hyperbolic cosine.
 complex.cosh = function (C) return 0.5*(complex.exp(C) + complex.exp(-C)) end
-about[complex.cosh] = {"Z:cosh() --> y_Z", 
+about[complex.cosh] = {"C:cosh() --> y_C",
   "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
 
 
@@ -497,26 +505,26 @@ complex.exp = function (C)
   local r = fexp(C._[1])
   return numOrComp(r*fcos(C._[2]), r*fsin(C._[2]))
 end
-about[complex.exp] = {"Z:exp() --> y_Z", 
+about[complex.exp] = {"C:exp() --> y_C",
   "Return exponent in for complex argument.", FUNCTIONS}
 
 
 -- Imaginary unit
 complex.i = function (self, v)
   v = v or 1
-  if not (type(v) == 'number' or type(v) == 'table' and v.float) then 
-    error( "Wrong argument") 
+  if not (type(v) == 'number' or type(v) == 'table' and v.float) then
+    error( "Wrong argument")
   end
   return complex._new(0, v)
 end
-about[complex.i] = {":i(x=1) --> new_Z", "Return x*i.", help.STATIC}
+about[complex.i] = {":i(x=1) --> new_C", "Return x*i.", help.STATIC}
 
 
 --- Get imaginary part.
 --  @param C Complex number.
 --  @return Imaginary part.
 complex.im = function (C) return C._[2] end
-about[complex.im] = {"Z:im() --> var", "Get imaginary part."}
+about[complex.im] = {"C:im() --> var", "Get imaginary part."}
 
 
 --- Natural logarithm
@@ -530,14 +538,14 @@ complex.log = function (C)
     return numOrComp(0.5*math.log(c1*c1 + c2*c2), Ver.atan2(c2, c1))
   end
 end
-about[complex.log] = {"Z:log() --> y_Z", "Complex logarithm.", FUNCTIONS}
+about[complex.log] = {"C:log() --> y_C", "Complex logarithm.", FUNCTIONS}
 
 
 --- Get real part.
 --  @param C Complex number.
 --  @return Real part.
 complex.re = function (C) return C._[1] end
-about[complex.re] = {"Z:re() --> var", "Get real part."}
+about[complex.re] = {"C:re() --> var", "Get real part."}
 
 
 --- Round real and imaginary parts to some number of digits.
@@ -553,7 +561,7 @@ complex.round = function (C, N)
             Cross.norm(b) < tol and 0 or b
   return complex._new(a, b)
 end
-about[complex.round] = {"Z:round(N=6) --> rounded_Z", 
+about[complex.round] = {"C:round(N=6) --> rounded_C",
   "Round in-place to specified number of digits."}
 
 
@@ -564,14 +572,14 @@ complex.sin = function (C)
   local c = C._
   return numOrComp(fsin(c[1])*ch(c[2]), fcos(c[1])*sh(c[2]))
 end
-about[complex.sin] = {"Z:sin() --> y_Z", "Return sinus of a complex number.", FUNCTIONS}
+about[complex.sin] = {"C:sin() --> y_C", "Return sinus of a complex number.", FUNCTIONS}
 
 
 --- Hyperbolic sinus
 --  @param C Complex number.
 --  @return Complex hyperbolic sinus.
 complex.sinh = function (C) return 0.5*(complex.exp(C) - complex.exp(-C)) end
-about[complex.sinh] = {"Z:sinh() --> y_Z", 
+about[complex.sinh] = {"C:sinh() --> y_C",
   "Return hyperbolic sinus of a complex number.", FUNCTIONS}
 
 
@@ -585,7 +593,7 @@ complex.sqrt = function (C)
     return complex.__pow(C, 0.5)
   end
 end
-about[complex.sqrt] = {"Z:sqrt() --> y_Z", 
+about[complex.sqrt] = {"C:sqrt() --> y_C",
   "Return square root. Result can be real of complex.", FUNCTIONS}
 
 
@@ -597,7 +605,7 @@ complex.tan = function (C)
   local den = fcos(2*c[1]) + ch(2*c[2])
   return numOrComp(fsin(2*c[1])/den, sh(2*c[2])/den)
 end
-about[complex.tan] = {"Z:tan() --> y_Z", 
+about[complex.tan] = {"C:tan() --> y_C",
   "Return tangent of a complex number.", FUNCTIONS}
 
 
@@ -605,7 +613,7 @@ about[complex.tan] = {"Z:tan() --> y_Z",
 --  @param C Complex number.
 --  @return Complex hyperbolic tangent.
 complex.tanh = function (C) return complex.sinh(C) / complex.cosh(C) end
-about[complex.tanh] = {"Z:tanh() --> y_Z", 
+about[complex.tanh] = {"C:tanh() --> y_C",
   "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
 
@@ -631,14 +639,11 @@ __call = function (self, re, im)
     "Wrong imaginary part")
   return complex._new(re, im)
 end })
-about[complex] = {" (re=0, im=0) --> new_Z", 
+about[complex] = {" (re=0, im=0) --> new_C",
   "Create new complex number.", help.STATIC}
 
 
 if Sonata then  -- GLOBAL
-
--- complex unit
-_i = complex._i
 
 -- redefine square root
 local _sqrt = sqrt

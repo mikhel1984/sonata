@@ -14,66 +14,62 @@
 local mmodf = math.modf
 
 
---================ New version ================
+--=============== Choose versions =======================
+
 local versions = {
   -- Arctangent with sign
-  atan2     = math.atan,
-  -- Check if the number is integer
-  isInteger = math.tointeger,
+  atan2 = math.atan2 or math.atan,
   -- Execute string code.
-  loadStr   = load,
-  -- Check type of the number.
-  mathType  = math.type,
-  -- Move elements to new position (and table)
-  move      = table.move,
-  -- Return integer number or nil
-  toInteger = math.tointeger,
+  loadStr = loadstring or load,
   -- Extract table values.
-  unpack    = table.unpack,
+  unpack = unpack or table.unpack
 }
 
 
---=============== Previous versions =======================
-if _VERSION < 'Lua 5.3' then
-  -- Arctangent with sign
-  versions.atan2 = math.atan2
-  -- Check if the number is integer
-  versions.isInteger = function (x)
-    if type(x) == 'string' then x = tonumber(x) end
-    if not x then return false end
-    local v, p = mmodf(x)
-    return p == 0.0 and v >= -1E9 and v <= 1E9
-  end
-  -- Execute string code
-  versions.loadStr = loadstring
-  -- Check type of the number
-  versions.mathType = function (x)
-    local n = tonumber(x)
-    if not n then return nil end
-    local _, p = mmodf(n)
-    return (p == 0.0) and 'integer' or 'float'
-  end
-  -- Move elements to new position (and table)
-  versions.move = function (src, sfrom, sto, dfrom, dest)
-    if dest and dest ~= src then
-      for i = sfrom, sto do
-        dest[dfrom] = src[i]
-        dfrom = dfrom + 1
-      end
-    else
-      local temp = versions.move(src, sfrom, sto, sfrom, {})
-      dest = versions.move(temp, sfrom, sto, dfrom, src)
+-- Check if the number is integer
+versions.isInteger = math.tointeger or function (x)
+  if type(x) == 'string' then x = tonumber(x) end
+  if not x then return false end
+  local v, p = mmodf(x)
+  return p == 0.0 and v >= -1E9 and v <= 1E9
+end
+
+
+-- Check type of the number
+versions.mathType  = math.type or function (x)
+  local n = tonumber(x)
+  if not n then return nil end
+  local _, p = mmodf(n)
+  return (p == 0.0) and 'integer' or 'float'
+end
+
+
+-- Move elements to new position (and table)
+versions.move = table.move or function (src, sfrom, sto, dfrom, dest)
+  if dest and dest ~= src then
+    for i = sfrom, sto do
+      dest[dfrom] = src[i]
+      dfrom = dfrom + 1
     end
-    return dest
+  else
+    local temp = versions.move(src, sfrom, sto, sfrom, {})
+    dest = versions.move(temp, sfrom, sto, dfrom, src)
   end
-  -- Return integer number or nil
-  versions.toInteger = function (x)
-    if type(x) == 'string' then x = tonumber(x) end
-    local p, q = mmodf(x)
-    return (q == 0.0) and p or nil
-  end
-  -- Extract table values
-  versions.unpack = unpack
+  return dest
+end
+
+
+-- Return integer number or nil
+versions.toInteger = math.tointeger or function (x)
+  if type(x) == 'string' then x = tonumber(x) end
+  local p, q = mmodf(x)
+  return (q == 0.0) and p or nil
+end
+
+
+-- Power as function
+versions.pow = math.pow or function (x, y)
+  return x^y
 end
 
 
@@ -104,8 +100,8 @@ end
 --  @param vSlave Slave object.
 --  @return Converted slave of nil.
 cross.convert = function (vMaster, vSlave)
-  return type(vMaster) == 'table' and vMaster._convert
-    and vMaster._convert(vSlave)
+  local mt = getmetatable(vMaster)
+  return mt and mt._convert and mt._convert(vSlave)
 end
 
 
@@ -113,7 +109,8 @@ end
 --  @param v Object.
 --  @return Deep copy when possible.
 cross.copy = function (v)
-  return type(v) == 'table' and v.copy and v:copy() or v
+  local mt = getmetatable(v)
+  return mt and mt.copy and mt.copy(v) or v
 end
 
 
@@ -126,8 +123,15 @@ cross.float = function (v)
 end
 
 
+--- Check if the number equal 0.
+--  @param v Some object.
+--  @return true when v == 0
 cross.isZero = function (v)
-  return type(v) == 'table' and v._isZero and v:_isZero() or (v == 0)
+  local mt = getmetatable(v)
+  if mt and mt._isZero then
+    return mt._isZero(v)
+  end
+  return v == 0
 end
 
 
@@ -149,7 +153,20 @@ end
 --  @param v Sonata object.
 --  @return Number or the object itself.
 cross.simp = function (v)
-  return type(v) == 'table' and v._simp and v:_simp() or v
+  local mt = getmetatable(v)
+  return mt and mt._simp and mt._simp(v) or v
+end
+
+
+--- Reduce number of digits
+--  @param v Number object.
+--  @param tol Tolerance (1E-k)
+--  @return Updated object.
+cross.strip = function (v, tol)
+  if type(v) == 'number' then
+    return v - v % tol
+  end
+  return type(v) == 'table' and v._strip and v:_strip(tol) or v
 end
 
 
@@ -232,11 +249,11 @@ end
 
 --- Generate function from string.
 --  @param sExpr Expression for execution.
---  @param iArg Number of arguments.
+--  @param N Number of arguments.
 --  @return Function based on the expression.
-utils.Fn = function (sExpr, iArg)
+utils.Fn = function (sExpr, N)
   local arg = {}
-  for i = 1, iArg do arg[i] = string.format("x%d", i) end
+  for i = 1, N do arg[i] = string.format("x%d", i) end
   local fn = versions.loadStr(
     string.format("return function (%s) return %s end",
       table.concat(arg, ','), sExpr))
@@ -299,11 +316,33 @@ end
 --  @param d Value to check.
 --  @return -1, 0 or 1
 utils.sign = function (d)
-  if type(d) == 'number' or type(d) == 'table' and d.__lt then
+  local tp = type(d)
+  if tp == 'number' or tp == 'table' and d.__lt then
     return (d > 0) and 1 or (d < 0) and -1 or 0
   else
     return 1
   end
+end
+
+
+--- Find maximal width for each column, align size.
+--  @param tbl Table with lists of strings.
+--  @param right Alignment to right.
+--  @return list of width.
+utils.align = function (tbl, right)
+  local base = right and '%%%ds' or '%%-%ds'
+  local len = {}
+  for _, row in ipairs(tbl) do
+    for j, str in ipairs(row) do len[j] = math.max(len[j] or 0, #str) end
+  end
+  -- align
+  for j, d in ipairs(len) do
+    local templ = string.format(base, d)
+    for _, row in ipairs(tbl) do
+      row[j] = string.format(templ, row[j])
+    end
+  end
+  return len
 end
 
 
@@ -357,5 +396,3 @@ return {
 
 --===================================================
 --TODO setup for number of digits
---TODO: fix 'round' for N - 1e-M
---TODO: math.pow for 5.4 and more

@@ -1,11 +1,11 @@
 --	Brief module overview
-use 'all'
+use '*'
 -- PAUSE
 --	COMPLEX
 -- Operations with complex numbers.
 a = Z(1,2)            -- real and complex components
-b = 3+_i*4             -- use complex unit
-a / b                  
+b = 3+Z:i(4)          -- use complex unit
+a / b
 a ^ b                  -- complex power
 sin(b)                 -- modified function behavior
 -- PAUSE
@@ -15,7 +15,7 @@ sin(b)                 -- modified function behavior
 a = Mat({      \
   {1, 2},      \
   {3, 4}})             -- write matrix row by row
-b = Mat {{5,6},{7,8}}  
+b = Mat {{5,6},{7,8}}
 a[2][1]                -- get element (indexation from 1)
 a[2][1] = 5            -- set new value
 a(-1,-1)           -- 'function' call can work with negative indices
@@ -26,7 +26,7 @@ b:inv()                -- inverse matrix
 b:det()                -- determinant
 a .. b                 -- horizontal concatenation
 c = a // b             -- vertical concatenation
-c 
+c
 c:pinv()               -- pseudo-inverse
 -- PAUSE
 
@@ -37,10 +37,10 @@ Num.TOL
 fn = function (x)          \
   return 2*sin(x)+sin(2*x) \
 end -- introduce some function
-Num:newton(fn, _pi/3)  -- find root near the pi/3
-Num:der(fn, _pi/3)     -- estimate derivative in the point
-Num:trapez(fn, 0, _pi/3) -- find integral from 0 to pi/3
--- Solve ODE 
+Num:newton(fn, pi/3)  -- find root near the pi/3
+Num:der(fn, pi/3)     -- estimate derivative in the point
+Num:trapez(fn, 0, pi/3) -- find integral from 0 to pi/3
+-- Solve ODE
 t,yn = Num:ode45(                               \
   function(t,y) return t*y end,  -- y' = f(t,y) \
   {1,3},                         -- t = 1..3    \
@@ -50,15 +50,15 @@ yn                     -- y(3)
 
 --	POLYNOM
 -- Work with polynomials.
-a = Poly {2,3,4,5}     -- sequence of coefficients, from kn to k0 
-b = Poly {1,2} 
+a = Poly {2,3,4,5}     -- sequence of coefficients, from kn to k0
+b = Poly {1,2}
 a(1)                   -- value of the polynomial for x=1
 c = a * b              -- apply arithmetic operations
 c:str('s')             -- 'pretty print' representation
 b:int(3)               -- integrate polynomial, use initial condition
 a:der()                -- differentiation
 t = a:real()           -- find real roots
-t[1] 
+t[1]
 -- PAUSE
 
 --	BIGINT
@@ -68,7 +68,7 @@ b = Int '56789'        -- or from string
 -- Typical operations are available
 a - b
 a * b
-b^50 
+b^50
 _ans:float()           -- decimal representation
 Int(50):F()         -- factorial
 a:base(42)           -- get value in new numerical base
@@ -96,7 +96,7 @@ g:add('d')
 for _,v in ipairs(g:nodes()) do \
   print(v)                      \
 end
--- edges: 
+-- edges:
 for _,v in ipairs(g:edges()) do \
   print(v[1],v[2])              \
 end
@@ -161,7 +161,7 @@ b + 1
 a:inv()
 -- slerp
 a:slerp(b,0.5)      -- use normalization inside
--- PAUSE 
+-- PAUSE
 
 --	ASCIIPLOT
 -- Plot data in Matlab style.

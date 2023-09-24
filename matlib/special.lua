@@ -13,7 +13,7 @@
 
 
 --------------- Tests --------------
---[[TEST
+--[[TEST_IT
 
 -- use 'special'
 Spec = require 'matlib.special'

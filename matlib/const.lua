@@ -9,7 +9,7 @@
 --]]
 
 
---[[TEST
+--[[TEST_IT
 
 -- use 'const'
 C = require 'matlib.const'
@@ -88,7 +88,7 @@ g_u_='m/s^2',      g = 9.80665,             -- 'standard' acceleration of free f
 eps0_u_='F/m',  eps0 = 8.85418781871E-12,   -- permittivity of a vacuum
 sigma_u_='W/(m^2*K^4)', sigma = 5.6704E-8,  -- Stefan-Boltzmann constant
 Rinf_u_='1/m',  Rinf = 10973731.56852773,   -- Rydberg constant
-Da_u_='kg',       Da = 1,660539066605E-27,  -- unified atomic mass unit (Dalton unit)
+Da_u_='kg',       Da = 1.660539066605E-27,  -- unified atomic mass unit (Dalton unit)
 }
 
 
@@ -108,29 +108,29 @@ ext_units = false,
 
 
 -- physics
-about[_phy.G] = {".phy.G", "Gravitational constant.", PHY}
-about[_phy.e] = {".phy.e", "Electron charge.", PHY}
-about[_phy.mu0] = {".phy.mu0", "Permeability of free space.", PHY}
-about[_phy.R] = {".phy.R", "Universal gas constant.", PHY}
-about[_phy.Vm] = {".phy.Vm", "Volume of one mole of ideal gas.", PHY}
-about[_phy.NA] = {".phy.NA", "Avogadro's number.", PHY}
-about[_phy.k] = {".phy.k", "Boltzmann's constant.", PHY}
-about[_phy.h] = {".phy.h", "Planck's constant.", PHY}
-about[_phy.c] = {".phy.c", "Speed of light.", PHY}
-about[_phy.g] = {".phy.g", "Acceleration of free fall.", PHY}
-about[_phy.eps0] = {".phy.eps0", "Permittivity of free space.", PHY}
-about[_phy.sigma] = {".phy.sigma", "Stefan-Boltzmann constant.", PHY}
-about[_phy.Rinf] = {".phy.Rinf", "Rydberg constant.", PHY}
-about[_phy.Da] = {".phi.Da", "Unified atomic mass unit.", PHY}
+about[_phy.G] = {".phy.G --> 6.7E-11", "Gravitational constant.", PHY}
+about[_phy.e] = {".phy.e --> 1.6E-19", "Electron charge.", PHY}
+about[_phy.mu0] = {".phy.mu0 --> 1.2E-6", "Permeability of free space.", PHY}
+about[_phy.R] = {".phy.R --> 8.31", "Universal gas constant.", PHY}
+about[_phy.Vm] = {".phy.Vm --> 2.2E-2", "Volume of one mole of ideal gas.", PHY}
+about[_phy.NA] = {".phy.NA --> 6E23", "Avogadro's number.", PHY}
+about[_phy.k] = {".phy.k --> 1.4E-23", "Boltzmann's constant.", PHY}
+about[_phy.h] = {".phy.h --> 6.6E-34", "Planck's constant.", PHY}
+about[_phy.c] = {".phy.c --> 3E8", "Speed of light.", PHY}
+about[_phy.g] = {".phy.g --> 9.81", "Acceleration of free fall.", PHY}
+about[_phy.eps0] = {".phy.eps0 --> 8.8E-12", "Permittivity of free space.", PHY}
+about[_phy.sigma] = {".phy.sigma --> 5.6E-8", "Stefan-Boltzmann constant.", PHY}
+about[_phy.Rinf] = {".phy.Rinf --> 1.1E7", "Rydberg constant.", PHY}
+about[_phy.Da] = {".phi.Da --> 1.7E-27", "Unified atomic mass unit.", PHY}
 -- astronomy
-about[_astro.pc] = {".astro.pc", "One parsec.", ASTRO}
-about[_astro.ly] = {".astro.ly", "One light year.", ASTRO}
-about[_astro.au] = {".astro.au", "Astronomic unit.", ASTRO}
+about[_astro.pc] = {".astro.pc --> 3.1E16", "One parsec.", ASTRO}
+about[_astro.ly] = {".astro.ly --> 9.5E15", "One light year.", ASTRO}
+about[_astro.au] = {".astro.au --> 1.5E11", "Astronomic unit.", ASTRO}
 -- mathematics
-about[_math.phi] = {".math.phi", "Golden ratio.", MATH}
+about[_math.phi] = {".math.phi --> 1.62", "Golden ratio.", MATH}
 about[_math.pi] = {
-  ".math.pi", "Ratio of a circle's circumference to its diameter.", MATH}
-about[_math.e] = {".math.e", "Base of the natural logarithm.", MATH}
+  ".math.pi --> 3.14", "Ratio of a circle's circumference to its diameter.", MATH}
+about[_math.e] = {".math.e --> 2.72", "Base of the natural logarithm.", MATH}
 
 
 --- Convert to Unit object.

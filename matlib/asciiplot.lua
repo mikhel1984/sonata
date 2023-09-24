@@ -9,7 +9,7 @@
 --]]
 
 
---[[TEST
+--[[TEST_IT
 
 -- use 'asciiplot'
 Ap = require 'matlib.asciiplot'
@@ -27,6 +27,10 @@ fig1:setX {range={-3.14, 3.14}}   -- default is {-1, 1}
 fig1:plot(math.sin, 'sin', math.cos, 'cos')
 fig1:title 'Trigonometry'
 print(fig1)
+
+-- make a copy
+fig11 = fig1:copy()
+print(fig11)
 
 -- print data
 x = {1,2,3,4,5}
@@ -132,15 +136,11 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 
 --	LOCAL
 
-
-local function inform(txt)
-  if Sonata then Sonata.say(txt) else print(txt) end
-end
-
-
+local inform = Sonata and Sonata.warning or print
 local mmodf = math.modf
 local MANUAL, CONF = 'manual', 'settings'
 local LOG10 = math.log(10)
+local vmove = require('matlib/utils').versions.move
 
 --	INFO
 
@@ -1166,13 +1166,7 @@ asciiplot.copy = function (F)
     o._legend[k] = v
   end
   for i = 1, #F._canvas do
-    local row = {}
-    -- TODO use Ver.move
-    local src = F._canvas[i]
-    for j = 1, F._x.size do
-      row[j] = src[j]
-    end
-    o._canvas[i] = row
+    o._canvas[i] = vmove(F._canvas[i], 1, F._x.size, 1, {})
   end
   return setmetatable(o, asciiplot)
 end

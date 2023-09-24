@@ -25,7 +25,7 @@ local PARENTS = {}
 
 local symbolic = {
 -- mark
-type = 'symbolic', 
+type = 'symbolic',
 -- main types
 _parentList = PARENTS,
 -- 'standard' functions
@@ -43,7 +43,7 @@ local COMMON = {
 
     -- Do nothing.
   empty = function (S) end,
-  
+
     --- Check if the value is 1.
   --  @param v Some object.
   --  @return v == 1.
@@ -60,7 +60,7 @@ local COMMON = {
 
   -- Return false always.
   skip = function (S) return false end,
-  
+
 } -- COMMON
 
 
@@ -231,8 +231,8 @@ PARENTS.const = {
   p_simp = COMMON.empty,
   p_eval = function (S) return S end,
   p_diff = function (S1, S2) return symbolic._0 end,
-  p_internal = function (S, n) 
-    return string.format('%s%s', string.rep(' ', n), tostring(S._)) 
+  p_internal = function (S, n)
+    return string.format('%s%s', string.rep(' ', n), tostring(S._))
   end,
 }
 
@@ -380,7 +380,7 @@ end
 
 
 PARENTS.power.p_internal = function (S, n)
-  return string.format('%sPOWER:\n%s\n%s', 
+  return string.format('%sPOWER:\n%s\n%s',
     string.rep(' ', n), S._[1]:p_internal(n+2), S._[2]:p_internal(n+2))
 end
 
@@ -388,14 +388,14 @@ end
 PARENTS.power.p_diff = function (S1, S2)
   local res = nil
   local a, b = S1._[1], S1._[2]
-  local dx = a:p_diff(S2) 
+  local dx = a:p_diff(S2)
   -- da/dx
   if not COMMON.isZero(dx) then
     res = b * a ^ (b - symbolic._1) * dx
   end
   dx = b:p_diff(S2)
   if not COMMON.isZero(dx) then
-    local prod = S1 * symbolic._fnInit.log(a) 
+    local prod = S1 * symbolic._fnInit.log(a)
     res = res and (res + prod) or prod
   end
   return res
@@ -415,11 +415,11 @@ PARENTS.product = {
 
 
 PARENTS.product.p_eq = function (S1, S2)
-  return COMMON.eqPairs(S1, S2) or 
-    #S1._ == 1 and S2._parent == PARENTS.power and 
+  return COMMON.eqPairs(S1, S2) or
+    #S1._ == 1 and S2._parent == PARENTS.power and
     --    S2:p_eq(S1._[1][2] ^ S1._[1][1])
     -- compare power
-    S2._[2]._parent == PARENTS.const and S1._[1][1] == S2._[2]._ and 
+    S2._[2]._parent == PARENTS.const and S1._[1][1] == S2._[2]._ and
     -- compare base
     S1._[1][2]:p_eq(S2._[1])
 end
@@ -504,7 +504,7 @@ end
 
 
 PARENTS.product.p_diff = function (S1, S2)
-  local res = symbolic._0 
+  local res = symbolic._0
   for _, v in ipairs(S1._) do
     local dx = v[2]:p_diff(S2)
     if not COMMON.isZero(dx) then
@@ -543,8 +543,8 @@ PARENTS.sum = {
 
 PARENTS.sum.p_diff = function (S1, S2)
   local res = symbolic:_newExpr(PARENTS.sum, {})
-  for _, v in ipairs(S1._) do 
-    table.insert(res._, {v[1], v[2]:p_diff(S2)}) 
+  for _, v in ipairs(S1._) do
+    table.insert(res._, {v[1], v[2]:p_diff(S2)})
   end
   res:p_simp()
   res:p_signature()
@@ -632,7 +632,7 @@ PARENTS.symbol = {
   p_eq = function (S1, S2) return S1._ == S2._ end,
   p_simp = COMMON.empty,
   p_internal = function (S, n)
-    return string.format('%s%s%s', 
+    return string.format('%s%s%s',
       string.rep(' ', n), S._, symbolic._fnList[S._] and '()' or '')
   end,
 }
@@ -653,12 +653,12 @@ PARENTS.symbol.p_eval = function (S, tEnv)
 end
 
 
-PARENTS.symbol.p_str = function (S, isFull) 
+PARENTS.symbol.p_str = function (S, isFull)
   local nm = S._
   local lst = symbolic._fnList[nm]
   if isFull then
-    return lst and string.format('%s(%s): %s', 
-      nm, table.concat(lst.args or {}, ','), tostring(lst.body or '')) 
+    return lst and string.format('%s(%s): %s',
+      nm, table.concat(lst.args or {}, ','), tostring(lst.body or ''))
   else
     return lst and nm..'()' or nm
   end
@@ -948,7 +948,7 @@ symbolic._fnDiff = {
   cos = {function (x) return -symbolic._fnInit.sin(x) end},
   tan = {
     function (x) return symbolic._1 / symbolic._fnInit.cos(x)^symbolic._2 end},
-  asin = {function (x) 
+  asin = {function (x)
     return symbolic._1 / symbolic._fnInit.sqrt(symbolic._1 - x^symbolic._2) end},
   acos = {function (x)
     return -symbolic._1 / symbolic._fnInit.sqrt(symbolic._1 - x^symbolic._2) end},

@@ -14,7 +14,7 @@
 
 
 --------------- Tests ---------------
---[[TEST
+--[[TEST_IT
 
 -- use 'gnuplot'
 Gp = require 'matlib.gnuplot'

@@ -1,6 +1,6 @@
 --[[		sonata/core/evaluate.lua
 
---- Evaluate user commands.
+--- REPL implementation.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2023.
@@ -11,14 +11,12 @@
 
 --	LOCAL
 
+-- List of commands
+local Cmds = require('core.commands')
 -- String evaluation method
-local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
-local Test = nil
-
+local loadStr = loadstring or load
 -- Highlight "header" in a "note" file
 local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
--- File to save logs
-local LOGNAME = 'log.note'
 
 
 -- Format marker
@@ -33,11 +31,15 @@ local function islist(v)
 end
 
 
---- Print formatted error message.
---  @param msg Message string.
-local function printErr (msg)
-  print(
-    string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET))
+--- Correct note index.
+--  @param n Index value, positive or negative.
+--  @param env Environment table.
+--  @return Corrected index or nil.
+local function wrapIndex (n, env)
+  local lim = #env.notes
+  if n < 0 then n = lim + n + 1 end
+  if n > 0 and n <= lim then return n end
+  return nil
 end
 
 
@@ -47,16 +49,31 @@ end
 local function goTo (args, env)
   local num = tonumber(args[1])
   if not num then
-    printErr("Unknown command "..args[1])
+    env.evaluate.printErr("Unknown command "..args[1])
   end
+  env.index = 1
+  env.queue = {}
+  if #env.notes == 0 then return end
   -- TODO to integer
-  local lim = #env.notes
-  if lim > 0 then
-    env.index = (num < 0) and 1 or (num > lim) and lim or num
-    env.read = false
-  else
-    env.index = 1
+  local nextInd = wrapIndex(num, env)
+  if not nextInd then return end
+  env.index = nextInd
+  env.read = false
+  table.insert(env.queue, nextInd)
+  -- rest
+  for p, d in string.gmatch(args[2], "([,:])%s*(%-?%d+)") do
+    if not (p and d) then break end
+    nextInd = wrapIndex(tonumber(d), env)
+    if not nextInd then break end
+    if p == ',' then
+      table.insert(env.queue, nextInd)
+    else
+      for i = env.queue[#env.queue]+1, nextInd, 1 do
+        table.insert(env.queue, i)
+      end
+    end
   end
+  table.remove(env.queue, 1)
 end
 
 
@@ -83,12 +100,17 @@ end
 --	MODULE
 
 local evaluate = {
+
+-- current version
+version = '0.9.38',
+
 -- status
 EV_RES = 1,   -- found result
 EV_CMD = 0,   -- continue expected
 EV_ERR = -1,  -- error
 EV_ASK = 2,   -- print question
 EV_WRN = 3,
+EV_INF = 4,
 -- string formats
 FORMAT_V1 = '#v_1',
 FORMAT_V2 = '#v_2',
@@ -110,155 +132,12 @@ local txtCodes = {
   [evaluate.FORMAT_CLR] = SonataHelp.CRESET,
 }
 
-
-local cmdInfo = {}
-local commands = {
-
--- Quit the program.
-q = function (args, env)
-  evaluate.exit()
-end,
-
--- Print list of blocks
-ls = function (args, env)
-  for i = 1, #env.notes do
-    local s = ''
-    for line in string.gmatch(env.notes[i], '[^\n\r]+') do
-      if string.find(line, "[^%s]+") then s = line; break end
-    end
-    io.write(string.format("%d   %s\n", i, s))
-  end
-end,
-
--- Add 'note' file to the list
-o = function (args, env)
-  local blk = evaluate._toBlocks(args[2])
-  if blk then
-    for _, v in ipairs(blk) do
-      table.insert(env.notes, v)
-    end
-    io.write("Name: '", args[2], "'\tBlocks: ", #blk, "\n")
-  else
-    printErr("Can't open file "..args[2])
-  end
-end,
-
--- Clear notes
-rm = function (args, env)
-  env.notes = {}
-  env.index = 1
-end,
-
--- Save session to log
-log = function (args, env)
-  if args[2] == 'on' then
-    if not env.log then
-      env.log = io.open(LOGNAME, 'a')
-      if not env.log then printErr("Can't open log file") end
-      local d = os.date('*t')
-      env.log:write(
-        string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
-          d.day, d.month, d.year, d.hour, d.min))
-    end
-  elseif args[2] == 'off' then
-    if env.log then
-      env.log:close()
-      env.log = nil
-    end
-  else
-    printErr('Unexpected argument!')
-  end
-end,
-
--- Trace function
-trace = function (args, env)
-  Test = Test or require('core.test')
-  if args[2] then
-    local fn, err = loadStr('return '..args[2])
-    if fn then
-      print(Test.profile(fn()))
-    else
-      printErr(err)
-    end
-  else
-    printErr("Unexpected argument!")
-  end
-end,
-
--- Average time
-time = function (args, env)
-  Test = Test or require('core.test')
-  if args[2] then
-    local fn, err = loadStr('return '..args[2])
-    if fn then
-      print(string.format('%.4f ms', Test.time(fn())))
-    else
-      printErr(err)
-    end
-  else
-    printErr("Unexpected argument!")
-  end
-end
-
-}  -- commands
-
-
---- Show list of commands
-commands.help = function (args, env)
-  if cmdInfo[args[2]] then
-    cmdInfo._print(args[2])
-  else
-    -- combine
-    local group = {}
-    for k, _ in pairs(commands) do
-      local tp = cmdInfo[k][3]
-      if tp then
-        group[tp] = group[tp] or {}
-        table.insert(group[tp], k)
-      else
-        cmdInfo._print(k)  -- basic command
-      end
-    end
-    -- rest
-    cmdInfo._print('N')
-    for t, lst in pairs(group) do
-      print(string.format("--\t%s", t))
-      for _, v in ipairs(lst) do cmdInfo._print(v) end
-    end
-  end
-end
-
-
--- Command description
-cmdInfo.q = {"Quit", ""}
-cmdInfo.log = {"Turn on/off logging", "on/off"}
-cmdInfo.help = {"Show this help", ""}
-cmdInfo.N = {"Go to N-th block", ""}
-cmdInfo.ls = {"Show list of blocks for execution", "", "Note-files"}
-cmdInfo.o = {"Open note-file", "filename", "Note-files"}
-cmdInfo.rm = {"Clear list of notes", "", "Note-files"}
-cmdInfo.trace = {"Profiling for the function", "func", "Debug"}
-cmdInfo.time = {"Estimate average time", "func", "Debug"}
-
-
---- Show command description.
---  @param k Command name.
-cmdInfo._print = function (k)
-  local info = cmdInfo[k]
-  if info then
-    print(string.format("%s\t%s\t- %s", k, info[2], info[1]))
-  else
-    print("Unknown key: ", k)
-  end
-end
-
-
 --- Evaluate string of Lua code.
 --  The function should work in coroutine.
 --  It takes code line and return status and evaluation result.
 local function evalCode()
   local state, cmd, res = evaluate.EV_RES, '', nil
-  local in_coroutine = true  -- set marker
+  evaluate.IN_COROUTINE = true  -- set marker
   while true do
     -- next line of code
     local input = coroutine.yield(state, res)
@@ -300,7 +179,7 @@ local function showAndNext(status, res, env)
     -- finish evaluation
     if res ~= nil then
       local out = islist(res) and evaluate._toText(res) or res
-      print(out)
+      io.write(tostring(out), "\n")
       if env.log then env.log:write('--[[ ', out, ' ]]\n') end
     end
   elseif status == evaluate.EV_CMD then
@@ -308,17 +187,20 @@ local function showAndNext(status, res, env)
     return evaluate.INV_CONT
   elseif status == evaluate.EV_ERR then
     -- error found
-    printErr(res)
+    evaluate.printErr(res)
     if env.log then env.log:write('--[[ ERROR ]]\n') end
   elseif status == evaluate.EV_ASK then
     -- system question
     if res[2] then
-      print(res[2])
+      io.write(res[2], "\n")
       if env.log then env.log:write('--[[ ', res[2], ' ]]\n') end
     end
     return res[1]
   elseif status == evaluate.EV_WRN then
-    io.write('Sonata: ', res, '\n')
+    io.write(SonataHelp.CHELP, 'Sonata: ', res, '\n')
+    env.read, env.info = false, true
+  elseif status == evaluate.EV_INF then
+    io.write(res, '\n')
     env.read, env.info = false, true
   end
   return evaluate.INV_MAIN
@@ -340,14 +222,79 @@ evaluate._evalBlock = function (co, env)
     else
       -- print line and evaluate
       io.write(evaluate.INV_NOTE, line, '\n')
-      local _, status, res = coroutine.resume(co, line)
-      showAndNext(status, res, {})
+      repeat
+        local _, status, res = coroutine.resume(co, line)
+        showAndNext(status, res, {})
+      until status ~= evaluate.EV_INF and status ~= evaluate.EV_WRN
       if status == evaluate.EV_ERR then break end
     end
   end
   io.write(SonataHelp.CMAIN,
     '\t[ ', env.index, ' / ', #env.notes, ' ]', SonataHelp.CRESET, '\n')
-  env.index = env.index+1
+  if #env.queue > 0 then
+    env.index = table.remove(env.queue, 1)
+  else
+    env.index = env.index+1
+  end
+end
+
+
+--- Redefined print function
+evaluate._newPrint = function (...)
+  local out = {}
+  for _, v in ipairs({...}) do
+    local mt = getmetatable(v)
+    if type(v) == 'table' and not (mt and mt.__tostring) then
+      -- show table
+      out[#out+1] = evaluate._showTable(v)
+    else
+      -- show element
+      local s = tostring(v)
+      out[#out+1] = s
+      out[#out+1] = (string.find(s, '\n.+') ~= false) and '\t' or '\n'
+    end
+  end
+  local res = table.concat(out)
+  coroutine.yield(evaluate.EV_INF, res)
+end
+
+
+--- Show elements of the table.
+--  @param t Table to print.
+evaluate._showTable = function (t)
+  local N, nums, out = 10, {}, {'{ '}
+  -- dialog
+  local function continue(n, res)
+    local txt = tostring(n) .. ' continue? (y/n) '
+    txt = evaluate.ask(txt, res)
+    return string.lower(txt) == 'y'
+  end
+  -- list elements
+  for i, v in ipairs(t) do
+    out[#out+1] = tostring(v); out[#out+1] = ', '
+    nums[i] = true
+    if i % N == 0 then
+      out[#out+1] = '\n'
+      local data = table.concat(out)
+      out = {'\n'}
+      if not continue(i, data) then break end
+    end
+  end
+  -- hash table elements
+  local count = 0
+  for k, v in pairs(t) do
+    if not nums[k] then
+      out[#out+1] = string.format('\n  %s = %s,', tostring(k), tostring(v))
+      count = count + 1
+      if count % N == 0 then
+        local data = table.concat(out)
+        out = {'\n'}
+        if not continue(count, data) then break end
+      end
+    end
+  end
+  out[#out+1] = '}\n'
+  return table.concat(out)
 end
 
 
@@ -401,11 +348,15 @@ end
 
 --- Sonata evaluation loop.
 --  @param noteList Table with text blocks.
-evaluate.cli = function (noteList)
+evaluate.repl = function (noteList)
   local invite = evaluate.INV_MAIN
   local env = {notes=noteList or {}, index=1,
-    read = true, info=false}
+    read = true, info=false, queue={}, evaluate=evaluate}
   local co = evaluate.evalThread()
+  -- update print
+  if not evaluate._oldPrint then
+    evaluate._oldPrint, print = print, evaluate._newPrint
+  end
   while true do
     local input = ''
     if env.read then
@@ -414,7 +365,7 @@ evaluate.cli = function (noteList)
     end
     local cmd = getCmd(input)
     if cmd then
-      local fn = commands[cmd[1]] or goTo
+      local fn = Cmds[cmd[1]] or goTo
       fn(cmd, env)
     elseif #input > 0 or env.info then
       env.read, env.info = true, false
@@ -442,8 +393,8 @@ end
 
 --- Show message and exit the program.
 evaluate.exit = function ()
-  print(SonataHelp.CMAIN..
-    "\n             --======= Bye! =======--\n"..SonataHelp.CRESET)
+  io.write(SonataHelp.CMAIN,
+    "\n             --======= Bye! =======--\n", SonataHelp.CRESET, "\n")
   os.exit()
 end
 
@@ -456,10 +407,20 @@ evaluate.info = function (t)
 end
 
 
---- Send info/warning to user.
+--- Print formatted error message.
+--  @param msg Message string.
+evaluate.printErr = function (msg)
+  io.write(
+    string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET),
+    "\n")
+end
+
+
+--- Send warning to user.
 --  @param txt Text to print.
-evaluate.say = function (txt)
-  if in_coroutine then
+evaluate.warning = function (txt)
+  txt = SonataHelp.CHELP..txt..SonataHelp.CRESET
+  if evaluate.IN_COROUTINE then
     coroutine.yield(evaluate.EV_WRN, txt)
   else print(txt) end
 end

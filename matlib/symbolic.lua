@@ -12,7 +12,7 @@
 --]]
 
 
---[[TEST
+--[[TEST_IT
 
 -- use 'symbolic'
 Sym = require 'matlib.symbolic'
@@ -72,7 +72,7 @@ __module__ = "Symbolic calculations."
 
 
 -- Parser elements
-PARSER = {} 
+PARSER = {}
 
 
 --- Parse coma separated elements.
@@ -83,7 +83,7 @@ PARSER.args = function (lst, n)
   local t = {}
   t[1], n = PARSER.sum(lst, n)
   while lst[n] == ',' do
-    t[#t+1], n = PARSER.sum(lst, n+1) 
+    t[#t+1], n = PARSER.sum(lst, n+1)
   end
   return t, n
 end
@@ -96,7 +96,7 @@ end
 PARSER.sum = function (lst, n)
   local res, n = PARSER.prod(lst, n)
   while true do
-    if lst[n] == '+' then 
+    if lst[n] == '+' then
       local tmp, m = PARSER.prod(lst, n+1)
       res, n = res + tmp, m
     elseif lst[n] == '-' then
@@ -114,8 +114,8 @@ end
 --  @return Table and next index.
 PARSER.prod = function (lst, n)
   local res, n = PARSER.pow(lst, n)
-  while true do 
-    if lst[n] == '*' then 
+  while true do
+    if lst[n] == '*' then
       local tmp, m = PARSER.pow(lst, n+1)
       res, n = res * tmp, m
     elseif lst[n] == '/' then
@@ -218,7 +218,7 @@ symbolic.def = function (self, sName, tArgs, S)
   symbolic._fnList[sName] = { args = t, body = S }
   return symbolic:_newSymbol(sName)
 end
-about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S", 
+about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S",
   "Define symbolical function. S is either symbolic expression or a Lua function."}
 
 
@@ -243,7 +243,7 @@ symbolic.eval = function (S, tEnv)
   res:p_signature()
   return res
 end
-about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num", 
+about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
   "Evaluate symbolic expression with the given environment."}
 
 
@@ -251,10 +251,10 @@ about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
 --  @param sName Function name.
 --  @return Function object or nil.
 symbolic.fn = function (self, sName)
-  return symbolic._fnInit[sName] or 
+  return symbolic._fnInit[sName] or
     symbolic._fnList[sName] and symbolic:_newSymbol(sName) or nil
 end
-about[symbolic.fn] = {":fn(name_s) --> fn_S|nil", 
+about[symbolic.fn] = {":fn(name_s) --> fn_S|nil",
   "Return symbolic function if it is defined."}
 
 

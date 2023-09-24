@@ -16,7 +16,7 @@
 
 
 -------------------- Tests -------------------
---[[TEST
+--[[TEST_IT
 
 -- use 'matrix'
 Mat = require 'matlib.matrix'
@@ -271,6 +271,7 @@ local function addRow(t, i)
   return row
 end
 
+local inform = Sonata and Sonata.warning or print
 
 local TRANSFORM = 'transform'
 local VECTOR = 'vector'
@@ -287,7 +288,12 @@ __module__ = "Matrix operations. The matrices are spares by default."
 
 --	MODULE
 
-local matrix = { type = 'matrix', ismatrix=true }
+local matrix = {
+  type = 'matrix', ismatrix=true,
+  -- parameters
+  ALIGH_WIDTH = 8,  -- number of columns to aligh width
+  CONDITION_NUM = nil,  -- set limit for notification
+}
 
 
 --- Check object type.
@@ -465,17 +471,22 @@ end
 --- String representation.
 --  @return String.
 matrix.__tostring = function (self)
-  local srow = {}
+  local rows = {}
+  -- to strings
   for r = 1, self._rows do
-    local scol, mr = {}, self[r]
+    local row, src = {}, self[r]
     for c = 1, self._cols do
-      local tmp = mr[c]
-      table.insert(
-        scol, type(tmp) == 'number' and Utils.numstr(tmp) or tostring(tmp))
+      local tmp = src[c]
+      row[c] = (type(tmp) == 'number') and Utils.numstr(tmp) or tostring(tmp)
     end
-    table.insert(srow, table.concat(scol, "  "))
+    rows[r] = row
   end
-  return table.concat(srow, "\n")
+  -- combine
+  if self._rows > 1 and self._cols > 1 and self._cols <= matrix.ALIGH_WIDTH then
+    Utils.align(rows, true)
+  end
+  for i, row in ipairs(rows) do rows[i] = table.concat(row, "  ") end
+  return table.concat(rows, '\n')
 end
 
 
@@ -586,6 +597,15 @@ matrix._new = function (self, t)
   return matrix._init(rows, cols, t)
 end
 
+
+matrix._strip = function (M, tol)
+  for r = 1, M._rows do
+    local mr = M[r]
+    for c = 1, M._cols do
+      mr[c] = Utils.strip(mr[c], tol)
+    end
+  end
+end
 
 --- Bidiagonalization.
 --  Find such U, B, V that U*B*V:T() = M and
@@ -775,7 +795,7 @@ matrix.dot = function (V1, V2)
   end
   return s
 end
-about[matrix.dot] = {'V:dot(V2) --> num', 
+about[matrix.dot] = {'V:dot(V2) --> num',
   'Scalar product of two vectors.', VECTOR}
 
 
@@ -967,9 +987,54 @@ matrix.inv = function (M)
     end
   end
   res._cols = size
+  if matrix.CONDITION_NUM then
+    local cn = matrix.norm(M) * matrix.norm(res)
+    if cn >= matrix.CONDITION_NUM then
+      inform("Condition number is "..tostring(cn))
+    end
+  end
   return res
 end
 about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix.", TRANSFORM}
+
+
+-- "In the game of life the strong survive..." (Scorpions) ;)
+--  board - matrix with 'ones' as live cells
+matrix.life = function (board)
+  local src = board
+  local gen = 0
+  -- make decision about current cell
+  local function islive (r, c)
+    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
+      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
+    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
+  end
+  -- evaluate
+  repeat
+    local new = matrix:zeros(board)   -- empty matrix of the same size
+    gen = gen+1
+    -- update
+    for r = 1, board._rows do
+      for c = 1, board._cols do
+        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
+      end
+    end
+    if gen > 1 and new == src then
+      local msg = '~~ No more steps ~~'
+      return Sonata and Sonata.IN_COROUTINE and msg or print(msg)
+    end
+    src = new
+    local req = string.format('step %d continue? (y/n) ', gen)
+    local resp
+    if Sonata and Sonata.IN_COROUTINE then
+      resp = Sonata.ask(req, new:stars())
+    else
+      print(new:stars())
+      io.write(req)
+      resp = io.read()
+    end
+  until 'n' == resp
+end
 
 
 --- LU transform
@@ -1237,6 +1302,26 @@ about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method."}
 
 
+--- Visualize matrix elements
+--  @param fn Condition function, returns true/false.
+--  @return String with stars when condition is true.
+matrix.stars = function (self, fn)
+  fn = fn or function (x) return x ~= 0 end
+  local acc, row = {}, {}
+  for r = 1, self._rows do
+    local mr = self[r]
+    for c = 1, self._cols do
+      row[c] = fn(mr[c]) and '*' or ' '
+    end
+    row[self._cols+1] = '|'
+    acc[r] = table.concat(row)
+  end
+  return table.concat(acc, '\n')
+end
+about[matrix.stars] = {"M:star(cond_fn) --> str",
+  "Print star when condition for the current elemen is true.", help.OTHER}
+
+
 --- Singular value decomposition for a matrix.
 --  Find U, S, V such that M = U*S*V' and
 --  U, V are orthonormal, S is diagonal matrix.
@@ -1350,7 +1435,7 @@ matrix.vectorize = function (M)
   end
   return matrix._init(#res, 1, res)
 end
-about[matrix.vectorize] = {"M:vectorize() --> V", 
+about[matrix.vectorize] = {"M:vectorize() --> V",
   "Create vector as a stack of columns.", TRANSFORM}
 
 

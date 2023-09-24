@@ -18,9 +18,6 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 -- Command evaluation.
 Sonata = require('core.evaluate')
 
--- Current version
-Sonata.version = '0.9.37'
-
 -- Quit the program
 quit = Sonata.exit
 
@@ -79,12 +76,12 @@ setmetatable(use,
         end
       end
       return Sonata.inLua and Sonata._toText(lst) or lst
-    elseif name == 'all' then
+    elseif name == '*' then
       -- load all modules
       for k, _ in  pairs(self) do Sonata.doimport(self, k) end
     elseif type(name) == 'table' then
       -- load group of modules
-      for _, v in ipairs(name) do Sonata.doimport(self, v) end
+      for i, v in ipairs(name) do Sonata.doimport(self, v) end
     else
       -- load module
       Sonata.doimport(self, name)
@@ -98,11 +95,12 @@ setmetatable(use,
 help = function(v)
   local res = nil
   v = v or 'main'
-  if v == 'all' then
+  if v == '*' then
     res = About:makeFull(use)
   else
     res = About:findObject(v, use) or Sonata.info {
-      string.format('<%s>', Type and Type(v) or type(v)), '\n', tostring(v) }
+      string.format('<%s>', getmetatable(v).type or type(v)),
+      '\n', tostring(v) }
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end
@@ -139,7 +137,7 @@ process = function (args)
     local Gen = require('core.generator')
     Gen.lang(args[2], use)
   else
-    print('Current localization file: ', SONATA_LOCALIZATION)
+    io.write('Current localization file:\t', SONATA_LOCALIZATION or 'en', '\n')
   end
 end,
 exit = true},
@@ -171,7 +169,7 @@ exit = true},
 ['-e'] = {
 process = function (args)
   local _, _, ans = coroutine.resume(Sonata.evalThread(), args[2] or '')
-  print(ans)
+  io.write(ans, "\n")
 end,
 exit = true},
 
@@ -185,7 +183,7 @@ process = function (args)
   for i = 1, #args do
     if string.find(args[i], '%.note$') then
       local blk = Sonata._toBlocks(args[i])
-      Sonata.cli(blk)
+      Sonata.repl(blk)
       --Sonata:note(args[i])
     else
       dofile(args[i])
@@ -197,7 +195,7 @@ exit = true},
 
 -- show help
 _args['-h'] = {
-process = function () print(Sonata._arghelp()) end,
+process = function () io.write(Sonata._arghelp(), "\n") end,
 exit = true}
 
 -- string representation of the help info
@@ -242,8 +240,8 @@ if SONATA_LOCALIZATION then
 end
 
 
--- Try to import base functions
-pcall(use, 'main')
+-- Call default module
+use('main')
 
 
 -- Process command line arguments
@@ -261,7 +259,7 @@ io.write(SonataHelp.CMAIN, '\n',
 "   # #      --=====  so/\\/ata  =====--      # #\n",
 "    # #        --==== ", Sonata.version, " ====--        # #\n\n",
 SonataHelp.CHELP)
-print(About:get('intro'), SonataHelp.CRESET)
+io.write(About:get('intro'), SonataHelp.CRESET, "\n")
 
 -- Import default modules
 if SONATA_DEFAULT_MODULES then
@@ -270,9 +268,9 @@ end
 
 -- choose interpreter
 if arg[-1] ~= '-i' then
-  Sonata.cli()
+  Sonata.repl()           -- use Sonata REPL
 else
-  Sonata.inLua = true
+  Sonata.inLua = true    -- use Lua REPL
 end
 
 --===============================================
