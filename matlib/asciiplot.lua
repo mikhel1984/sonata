@@ -83,7 +83,7 @@ fig1:setY {view='mid'}
 fig1:plot(sin, 'sin')
 fig1:title 'First'
 -- second
-fig2:resize(fig1)      -- set equal size
+fig2:scale(fig1)      -- set equal size
 fig2:setX {range={0, 1.57}}
 fig2:plot(cos, 'cos')
 fig2:title 'Second'
@@ -1276,33 +1276,22 @@ end
 about[asciiplot.reset] = {"F:reset()", "Prepare a clear canvas.", MANUAL}
 
 
---- Update size of the canvas.
---  @param F Figure object.
---  @param w Width or source figure.
---  @param h Height.
-asciiplot.resize = function (F, w, h)
-  if isasciiplot(w) then
-    h = w._y.size
-    w = w._x.size
-  end
-  F._x:resize(w)
-  F._y:resize(h)
-end
-about[asciiplot.resize] = {"F:resize(src_F | (width_N, height_N))",
-  "Update size of canvas.", CONF}
-
-
 --- Scale xrange and yrange w.r.t. initial size.
 --  @param F figure object.
---  @param factor Positive value.
+--  @param factor Positive value or another figure object.
 --  @return Updated figure object.
 asciiplot.scale = function (F, factor)
-  assert(factor > 0)
-  F._x:scale(factor)
-  F._y:scale(factor)
+  if isasciiplot(factor) then
+    F._x:resize(factor._x.size)
+    F._y:resize(factor._y.size)
+  else
+    assert(factor > 0)
+    F._x:scale(factor)
+    F._y:scale(factor)
+  end
   return F
 end
-about[asciiplot.scale] = {"F:scale(factor_d, isDefault=false) --> F",
+about[asciiplot.scale] = {"F:scale(factor_d | src_F) --> F",
   "Change figure size w.r.t. initial size.", CONF}
 
 
