@@ -397,7 +397,7 @@ end
 --  @param N Order.
 --  @param x Real number.
 --  @return In(x).
-special.besseli = function (self, N, x)
+special.besseli = function (_, N, x)
   if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessi0(x) end
   if N == 1 then return special._bessi1(x) end
@@ -425,7 +425,7 @@ about[special.besseli] = {":besseli(order_N,x_d) --> num",
 --  @param N Polynomial order.
 --  @param x Real number.
 --  @return Polynomial value
-special.besselj = function (self, N,x)
+special.besselj = function (_, N,x)
   if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessj0(x) end
   if N == 1 then return special._bessj1(x) end
@@ -471,7 +471,7 @@ about[special.besselj] = {":besselj(order_N, x_d) --> num",
 --  @param N Order.
 --  @param x Positive value.
 --  @return Kn(x).
-special.besselk = function (self, N, x)
+special.besselk = function (_, N, x)
   if x <= 0 then error("Positive value is expected!") end
   if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessk0(x) end
@@ -490,7 +490,7 @@ about[special.besselk] = {":besselk(order_N, x_d) --> num",
 --  @param n Polynomial order.
 --  @param x Non-negative real number.
 --  @return Polynomial value
-special.bessely = function (self, n, x)
+special.bessely = function (_, n, x)
   if x <= 0 then error('Positive value is expected!') end
   if not (n >= 0 and Vinteger(n)) then error(ERR_POSINT) end
   if n == 0 then return special._bessy0_(x) end
@@ -511,7 +511,7 @@ about[special.bessely] = {":bessely(order_N, x_d) --> num",
 --  @param z First value.
 --  @param w Second value.
 --  @return B(z,w).
-special.beta = function (self, z, w)
+special.beta = function (_, z, w)
   return math.exp(special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w))
 end
 about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", BETA}
@@ -522,7 +522,7 @@ about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", BETA}
 --  @param a First bound.
 --  @param b Second bound.
 --  @return Value of Ix(a,b).
-special.betainc = function (self, x, a, b)
+special.betainc = function (_, x, a, b)
   if x < 0.0 or x > 1.0 then error("Expected x between 0 and 1!") end
   local bt = nil
   if x == 0 or x == 1 then
@@ -543,7 +543,7 @@ about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
 --  @param z First argument.
 --  @param w Second argument.
 --  @return log(B(x)).
-special.betaln = function (self, z, w)
+special.betaln = function (_, z, w)
   return special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w)
 end
 about[special.betaln] = {":betaln(z_d, w_d) --> num",
@@ -553,7 +553,7 @@ about[special.betaln] = {":betaln(z_d, w_d) --> num",
 --- Dawson integral.
 --  @param x Real number.
 --  @return Integral value.
-special.dawson = function (self, x)
+special.dawson = function (_, x)
   local NMAX, H, A1, A2, A3 = 6, 0.4, 2.0/3.0, 0.4, 2.0/7.0
   if not special._c_dawson then
     -- List of Dawson function coefficients.
@@ -583,14 +583,14 @@ about[special.dawson] = {":dawson(x_d) --> num", "Dawson integral."}
 --- Error function.
 --  @param x Real value.
 --  @return Error value.
-special.erf = function (self, x) return 1-special:erfc(x) end
+special.erf = function (_, x) return 1-special:erfc(x) end
 about[special.erf] = {":erf(x_d) --> num", "Error function."}
 
 
 --- Complementary error function.
 --  @param x Real value.
 --  @return Error value.
-special.erfc = function (self, x)
+special.erfc = function (_, x)
   local z = math.abs(x)
   local t = 1.0/(1+0.5*z)
   local ans = t*math.exp(-z*z - 1.26551223 + t*(1.00002368 + t*(0.37409196
@@ -605,7 +605,7 @@ about[special.erfc] = {":erfc(x_d) --> num", "Complementary error function."}
 --  @param n Power.
 --  @param x Non-negative value.
 --  @return Value of En(x).
-special.expint = function (self, n, x)
+special.expint = function (_, n, x)
   if x == nil then n, x = 1, n end
   if not (n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1))) then
     error(ERR_INVARG)
@@ -650,7 +650,7 @@ about[special.expint] = {":expint(pow_N, x_d) --> num", "Exponential integral En
 --- Gamma function.
 --  @param z Real number.
 --  @return G(z).
-special.gamma = function (self, z)
+special.gamma = function (_, z)
   if z < 0.5 then
     return math.pi / (math.sin(math.pi*z) * special:gamma(1-z))
   else
@@ -667,7 +667,7 @@ about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", GAMMA}
 --- Logarithm of gamma function.
 --  @param z Positive number.
 --  @return log(gamma(z))
-special.gammaln = function (self, z)
+special.gammaln = function (_, z)
   local x, y = z, z
   local tmp = x+5.5
   tmp = tmp-(x+0.5)*math.log(tmp)
@@ -683,7 +683,7 @@ about[special.gammaln] = {":gammaln(x_d) --> num",
 --  @param N Order.
 --  @param x Non-negative value.
 --  @return Value of P(N,x).
-special.gammp = function (self, N, x)
+special.gammp = function (_, N, x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and special._gammaSer(N, x) or 1.0-special._gcf(N, x)
 end
@@ -694,7 +694,7 @@ about[special.gammp] = {":gammp(order_N, x_d) --> num", "Incomplete gamma functi
 --  @param N Order.
 --  @param x Non-negative value.
 --  @return Value of Q(N,x).
-special.gammq = function (self, N, x)
+special.gammq = function (_, N, x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and 1-special._gammaSer(N, x) or special._gcf(N, x)
 end
@@ -706,7 +706,7 @@ about[special.gammq] = {":gammq(order_N, x_d) --> num",
 --  @param n Polynomial order.
 --  @param x Real number.
 --  @return Table with coefficients.
-special.legendre = function (self, n, x)
+special.legendre = function (_, n, x)
   if n < 0 or math.abs(x) > 1 then error(ERR_INVARG) end
   local res = {}
   local plgndr = special._plgndr

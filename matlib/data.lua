@@ -188,7 +188,7 @@ local data = {}
 --- Make copy of an object or list.
 --  @param v Source object.
 --  @return deep copy.
-data.copy = function (self, v)
+data.copy = function (_, v)
   return copy_obj(v)
 end
 about[data.copy] = {":copy(t) --> copy_t", 
@@ -199,7 +199,7 @@ about[data.copy] = {":copy(t) --> copy_t",
 --  @param t1 First data vector.
 --  @param t2 Second data vector.
 --  @return Covariance value.
-data.cov2 = function (self, t1, t2)
+data.cov2 = function (_, t1, t2)
   if #t1 ~= #t2 then error("Different vector size") end
   local m1 = data:mean(t1)
   local m2 = data:mean(t2)
@@ -216,7 +216,7 @@ about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
 --- Estimate covariance matrix.
 --  @param t Table of data vectors.
 --  @return Covariance matrix.
-data.cov = function (self, t)
+data.cov = function (_, t)
   local N = #t
   if N == 0 then error("Expected list of vectors") end
   data.ext_matrix = data.ext_matrix or require('matlib.matrix')
@@ -239,7 +239,7 @@ about[data.cov] = {":cov(data_t) --> cov_M",
 --  @param sFile File name.
 --  @param t Lua table.
 --  @param char Delimiter, default is coma.
-data.csvwrite = function (self, sFile, t, char)
+data.csvwrite = function (_, sFile, t, char)
   local f = assert(io.open(sFile, 'w'))
   char = char or ','
   for _, v in ipairs(t) do
@@ -257,7 +257,7 @@ about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',')",
 --  @param sFile File name.
 --  @param char Delimiter, default is coma.
 --  @return Lua table with data.
-data.csvread = function (self, sFile, char)
+data.csvread = function (_, sFile, char)
   local f = assert(io.open(sFile, 'r'))
   char = char or ','
   local templ = '([^'..char..']+)'
@@ -289,7 +289,7 @@ about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 --  @param sExpr Expression for execution.
 --  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
-data.Fn = function (self, sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
+data.Fn = function (_, sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
 about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
   "Generate function from expression of x1, x2 etc.", help.OTHER}
 
@@ -298,7 +298,7 @@ about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
 --  @param t Table with data.
 --  @param vCond Either boolean function or table of weights.
 --  @return Table with the filtered elements.
-data.filter = function (self, t, vCond)
+data.filter = function (_, t, vCond)
   local res = {}
   if type(vCond) == 'string' then vCond = Utils.Fn(vCond, 1) end
   if type(vCond) == 'function' then
@@ -323,7 +323,7 @@ about[data.filter] = {":filter(in_t, condition) --> out_t",
 --- Frequency of elements.
 --  @param t Table of numbers.
 --  @return Table where keys are elements and values are their frequencies.
-data.freq = function (self, t)
+data.freq = function (_, t)
   local tmp = {}
   for _, v in ipairs(t) do
     tmp[v] = (tmp[v] or 0) + 1
@@ -338,7 +338,7 @@ about[data.freq] = {":freq(data_t) --> tbl",
 --  @param t Table of numbers.
 --  @param tw Table of weights, optional.
 --  @return Geometrical mean.
-data.geomean = function (self, t, tw)
+data.geomean = function (_, t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1, #t do
@@ -361,7 +361,7 @@ about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num",
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
 --  @return Harmonic mean.
-data.harmmean = function (self, t, tw)
+data.harmmean = function (_, t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1, #t do
@@ -384,7 +384,7 @@ about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num",
 --  @param t Data table.
 --  @param rng Number of bins or table with edges.
 --  @return Two tables, with sum and edges.
-data.histcounts = function (self, t, rng)
+data.histcounts = function (_, t, rng)
   rng = rng or 10
   local bins = nil
   -- make copy and sort
@@ -428,7 +428,7 @@ about[data.histcounts] = {":histcounts(data_t, rng_v=10) --> sum_t, edges_t",
 --  @param t Data table.
 --  @param fn Condition, boolean function or string.
 --  @return Table of 1 and 0.
-data.is = function (self, t, fn)
+data.is = function (_, t, fn)
   if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
   local res = {}
   for i = 1, #t do
@@ -444,7 +444,7 @@ about[data.is] = {":is(data_t, cond) --> yesno_t",
 --  @param t Data table.
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
-data.isNot = function (self, t, fn)
+data.isNot = function (_, t, fn)
   if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
   local res = {}
   for i = 1, #t do
@@ -459,7 +459,7 @@ about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
 --- Maximum value.
 --  @param t Table of numbers.
 --  @return Maximum value and its index.
-data.max = function (self, t)
+data.max = function (_, t)
   local m, k = t[1], 1
   for i = 2, #t do
     if t[i] > m then m, k = t[i], i end
@@ -474,7 +474,7 @@ about[data.max] = {":max(data_t) --> var, ind_N",
 --  @param t Table with numbers.
 --  @param tw Table with weight. Can be omitted.
 --  @return Average.
-data.mean = function (self, t, tw)
+data.mean = function (_, t, tw)
   if tw then
     local st, sw = 0, 0
     for i = 1, #t do
@@ -494,7 +494,7 @@ about[data.mean] = {":mean(data_t, [wight_t]) --> num",
 --- Find median.
 --  @param t Table of numbers.
 --  @return Value of median.
-data.median = function (self, t)
+data.median = function (_, t)
   local len = #t
   local y = Ver.move(t, 1, len, 1, {})
   table.sort(y)
@@ -512,7 +512,7 @@ about[data.median] = {":median(data_t) --> num",
 --- Minimum value.
 --  @param t Table of numbers.
 --  @return Minimum value and its index.
-data.min = function (self, t)
+data.min = function (_, t)
   local m, k = t[1], 1
   for i = 2, #t do
     if t[i] < m then m, k = t[i], i end
@@ -528,7 +528,7 @@ about[data.min] = {":min(data_t) --> var, ind_N",
 --  @param t Table of numbers.
 --  @param tw Table of weights. Can be omitted.
 --  @return Central moment value.
-data.moment = function (self, N, t, tw)
+data.moment = function (_, N, t, tw)
   local m, n = 0, 0
   for i = 1, #t do
     local w = tw and tw[i] or 1
@@ -551,7 +551,7 @@ about[data.moment] = {":moment(order_N, data_t, [weigth_t]) --> num",
 --  @param t List.
 --  @param val Initial value (optional).
 --  @return Result of reduction.
-data.reduce = function (self, fn, t, val)
+data.reduce = function (_, fn, t, val)
   local i0 = 1
   if not val then
     val, i0 = t[1], 2
@@ -567,7 +567,7 @@ about[data.reduce] = {":reduce(fn, data_t, [initial]) --> var",
 --- Sum of all elements.
 --  @param t Table with numbers.
 --  @return Sum.
-data.sum = function (self, t)
+data.sum = function (_, t)
   local s = 0
   for i = 1, #t do s = s+t[i] end
   return s
@@ -580,7 +580,7 @@ about[data.sum] = {":sum(data_t) --> var",
 --  @param t Table of numbers.
 --  @param tw Table of weights.
 --  @return Standard deviation, variance.
-data.std = function (self, t, tw)
+data.std = function (_, t, tw)
   local mean = data:mean(t, tw)
   local disp = 0
   if tw then
@@ -606,7 +606,7 @@ about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
 --  @param names_t Table of column names (optional).
 --  @param fn Table that generates new column from the given (optional).
 --  @return String with table representation.
-data.md = function (self, data_t, names_t, fn)
+data.md = function (_, data_t, names_t, fn)
   local acc, line = {}, {}
   -- data to stings
   for i, v in ipairs(data_t) do
@@ -644,7 +644,7 @@ about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
 --  @param fn Function of multiple arguments or string.
 --  @param ... Sequence of lists.
 --  @return List of values fn(...).
-data.zip = function (self, fn, ...)
+data.zip = function (_, fn, ...)
   local ag, res = {...}, {}
   if type(fn) == 'string' then fn = Utils.Fn(fn, #ag) end
   local x, stop = {}, false
@@ -782,7 +782,7 @@ end
 --  @param dEnd End of range.
 --  @param dStep Step value (default is 1).
 --  @return Table with numbers, Range object.
-data.range = function (self, dBegin, dEnd, dStep)
+data.range = function (_, dBegin, dEnd, dStep)
   dStep = dStep or (dEnd > dBegin) and 1 or -1
   local diff = dEnd - dBegin
   assert(diff * dStep > 0, "Wrong range or step")
@@ -847,7 +847,7 @@ end
 --  @param iBeg Index of the first element.
 --  @param iEnd Index of the last element.
 --  @return Reference object.
-data.ref = function (self, t, iBeg, iEnd)
+data.ref = function (_, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
