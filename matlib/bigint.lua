@@ -144,7 +144,7 @@ local Vinteger, Vmove, Cfloat, Cconvert do
   Cconvert = lib.cross.convert
 end
 
-local SEP = '[,`]'
+local SEP = ','
 local NUMB = 'numbers'
 local COMB = 'combinations'
 
@@ -164,15 +164,12 @@ __module__ = "Operations with arbitrary long integers."
 --	MODULE
 
 local mt_digits = {
-
 map = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', [0]='0'},
 mapChar = {},
-
-}  -- mt_digits
-
-
+} 
 -- Fill inverted mapping
 for k, v in pairs(mt_digits.map) do mt_digits.mapChar[v] = k end
+mt_digits.__index = mt_digits
 
 
 --- String representation.
@@ -191,6 +188,32 @@ mt_digits.__tostring = function (t)
   end
   local rst = (t.base == 10) and '' or string.format('_%d', t.base)
   return string.format('%s%s%s', t.sign < 0 and '-' or '', s, rst)
+end
+
+
+--- Improve string view
+--  @param t List of digits.
+--  @param N Number of digits in group.
+--  @param sep Separator, optional.
+--  @return 'Sparse' string representation.
+mt_digits.group = function (t, N, sep)
+  N, sep = N or 3, sep or '`'
+  local n, acc = #t + 1, {}
+  local small = (t.base <= 16)
+  for i = 1, #t do 
+    local ni = n - i
+    acc[#acc+1] = small and mt_digits.map[ t[ni] ] or t[ni]
+    if i < #t then
+      if (ni-1) % N == 0 then
+        acc[#acc+1] = sep 
+      elseif not small then
+        acc[#acc+1] = SEP
+      end
+    end
+  end
+  local rst = (t.base == 10) and '' or string.format('_%d', t.base)
+  return string.format(
+    '%s%s%s', t.sign < 0 and '-' or '', table.concat(acc, ''), rst)
 end
 
 
@@ -701,7 +724,8 @@ bigint._newString = function (s)
   else
     -- sequential digits without separation for small bases
     for dig in string.gmatch(body, '.') do
-      acc[#acc+1] = assert(mt_digits.mapChar[dig])
+      local v = mt_digits.mapChar[dig]
+      if v then acc[#acc+1] = v end
     end
   end
   -- reverse
