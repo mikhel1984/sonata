@@ -127,7 +127,7 @@ end                           -->  456
 print(Int:random(b))
 
 -- greatest common divisor
-ans = a:gcd(b):float()        -->  3
+ans = Int:gcd(a,b,g):float()  -->  3
 
 -- with numbers
 -- result is bigint
@@ -1045,16 +1045,23 @@ about[bigint.float] = {"B:float() --> num",
   "Represent current big integer as number if it possible.", help.OTHER}
 
 
---- Greatest common devision for two (big) numbers.
---  @param B1 First value.
---  @param B2 Second value.
+--- Greatest common devision for several numbers.
+--  @param ... List of numbers.
 --  @return Bigint gcd.
-bigint.gcd = function (B1, B2)
-  B1, B2 = bigint._args(B1, B2)
-  return bigint._gcd(B1, B2)
+bigint.gcd = function (self, ...)
+  local t = {...}
+  if #t == 0 then error('No numbers') end
+  -- compare element-wise
+  local res = isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
+  for i = 2, #t do
+    local ti = t[i]
+    res = bigint._gcd(res, 
+                      isbigint(ti) and ti or bigint._newNumber(ti))
+  end
+  return res
 end
-about[bigint.gcd] = {"B:gcd(B2) --> B3",
-  "Find the greatest common divisor for two integers.", NUMB}
+about[bigint.gcd] = {":gcd(...) --> B",
+  "Find the greatest common divisor for the given integers.", NUMB}
 
 
 -- TODO try https://en.wikipedia.org/wiki/Primality_test
