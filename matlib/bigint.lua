@@ -144,7 +144,7 @@ local Vinteger, Vmove, Cfloat, Cconvert do
   Cconvert = lib.cross.convert
 end
 
-local SEP = ','
+local SEP = '[,`]'
 local NUMB = 'numbers'
 local COMB = 'combinations'
 
@@ -172,7 +172,7 @@ mapChar = {},
 
 
 -- Fill inverted mapping
-for i, v in ipairs(mt_digits.map) do mt_digits.mapChar[v] = i end
+for k, v in pairs(mt_digits.map) do mt_digits.mapChar[v] = k end
 
 
 --- String representation.
@@ -189,7 +189,7 @@ mt_digits.__tostring = function (t)
     for i = 1, #t do acc[i] = t[n-i] end
     s = table.concat(acc, ',')
   end
-  local rst = (t.base == 10) and '' or string.format(':%d', t.base)
+  local rst = (t.base == 10) and '' or string.format('_%d', t.base)
   return string.format('%s%s%s', t.sign < 0 and '-' or '', s, rst)
 end
 
@@ -676,7 +676,7 @@ end
 --  @param s Iput string.
 --  @return new bigint.
 bigint._newString = function (s)
-  local sgn, body, sbase = string.match(s, "^([+-]?)([^:]+):?(%d*)$")
+  local sgn, body, sbase = string.match(s, "^([+-]?)([^_]+)_?(%d*)$")
   -- check base
   local base = 10
   if #sbase == 0 then
