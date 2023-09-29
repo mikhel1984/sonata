@@ -55,14 +55,14 @@ ans = (b%a):float()           -->  87
 
 ans = (a^3):float()           -->  1860867
 
+ans = (a > b)                 -->  false
+
 -- absolute value
 ans = Int('-25'):abs():float()  -->  25
 
 -- factorial
 c = Int(50):F()
 ans = c:float() / 3E64       --1>  1.0
-
-ans = (a > b)                 -->  false
 
 -- ratio of factorials
 ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
@@ -73,6 +73,10 @@ ans = a:eq(123)               -->  true
 -- digits for a different numeric base
 v = g:base(60)
 ans = tostring(v)             -->  '-2,3:60'
+
+-- improve view
+c16 = c:base(16)
+print(c16:group(4))
 
 -- number of digits
 ans = #v                      -->  2
@@ -173,37 +177,35 @@ mt_digits.__index = mt_digits
 
 
 --- String representation.
---  @param t List of digits.
 --  @return string.
-mt_digits.__tostring = function (t)
-  local s, n = nil, #t + 1
-  if t.base <= 16 then
+mt_digits.__tostring = function (self)
+  local s, n = nil, #self + 1
+  if self.base <= 16 then
     local acc = {}
-    for i = 1, #t do acc[i] = mt_digits.map[ t[n-i] ] end
+    for i = 1, #self do acc[i] = mt_digits.map[ self[n-i] ] end
     s = table.concat(acc, '')
   else
     local acc = {}
-    for i = 1, #t do acc[i] = t[n-i] end
+    for i = 1, #self do acc[i] = self[n-i] end
     s = table.concat(acc, ',')
   end
-  local rst = (t.base == 10) and '' or string.format('_%d', t.base)
-  return string.format('%s%s%s', t.sign < 0 and '-' or '', s, rst)
+  local rst = (self.base == 10) and '' or string.format(':%d', self.base)
+  return string.format('%s%s%s', self.sign < 0 and '-' or '', s, rst)
 end
 
 
 --- Improve string view
---  @param t List of digits.
 --  @param N Number of digits in group.
 --  @param sep Separator, optional.
 --  @return 'Sparse' string representation.
-mt_digits.group = function (t, N, sep)
+mt_digits.group = function (self, N, sep)
   N, sep = N or 3, sep or '`'
-  local n, acc = #t + 1, {}
-  local small = (t.base <= 16)
-  for i = 1, #t do 
+  local n, acc = #self + 1, {}
+  local small = (self.base <= 16)
+  for i = 1, #self do 
     local ni = n - i
-    acc[#acc+1] = small and mt_digits.map[ t[ni] ] or t[ni]
-    if i < #t then
+    acc[#acc+1] = small and mt_digits.map[ self[ni] ] or self[ni]
+    if i < #self then
       if (ni-1) % N == 0 then
         acc[#acc+1] = sep 
       elseif not small then
@@ -211,9 +213,9 @@ mt_digits.group = function (t, N, sep)
       end
     end
   end
-  local rst = (t.base == 10) and '' or string.format('_%d', t.base)
+  local rst = (self.base == 10) and '' or string.format('_%d', self.base)
   return string.format(
-    '%s%s%s', t.sign < 0 and '-' or '', table.concat(acc, ''), rst)
+    '%s%s%s', self.sign < 0 and '-' or '', table.concat(acc, ''), rst)
 end
 
 
@@ -699,7 +701,7 @@ end
 --  @param s Iput string.
 --  @return new bigint.
 bigint._newString = function (s)
-  local sgn, body, sbase = string.match(s, "^([+-]?)([^_]+)_?(%d*)$")
+  local sgn, body, sbase = string.match(s, "^([+-]?)([^:]+):?(%d*)$")
   -- check base
   local base = 10
   if #sbase == 0 then
@@ -920,14 +922,14 @@ about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
 --  @param N New base.
 --  @return Table with digits of the found number.
 bigint.base = function (B, N)
-  N = N or BASE
+  N = N or 10
   assert(Vinteger(N) and N > 0, "Wrong base")
   local b = B._
   local res = bigint._rebase(b, BASE, N)
   res.sign = B._sign
   return setmetatable(res, mt_digits)
 end
-about[bigint.base] = {"B:base(N) --> tbl", "Convert number to the new numeric base."}
+about[bigint.base] = {"B:base(N=10) --> tbl", "Convert number to the new numeric base."}
 
 
 --- Find number of combinations.
