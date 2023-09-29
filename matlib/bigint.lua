@@ -129,6 +129,9 @@ print(Int:random(b))
 -- greatest common divisor
 ans = Int:gcd(a,b,g):float()  -->  3
 
+-- least common multiple
+ans = Int:lcm(a,b):float()    --> 18696
+
 -- with numbers
 -- result is bigint
 ans = a + 1.0                 -->  Int(124)
@@ -623,6 +626,15 @@ end
 bigint._isZero = function (B) return #B._ == 1 and B._[1] == 0 end
 
 
+--- Find the least common multiple for two numbers.
+--  @param B1 First bigint value.
+--  @param B2 Second bigint value.
+--  @return least common multiplier.
+bigint._lcm = function (B1, B2)
+  return B1 * (B2 / bigint._gcd(B1, B2))
+end
+
+
 --- Straightforward product algorithm.
 --  @param B1 First bigint multiplier.
 --  @param B2 Second bigint multiplier.
@@ -1065,7 +1077,6 @@ about[bigint.gcd] = {":gcd(...) --> B",
 
 
 -- TODO try https://en.wikipedia.org/wiki/Primality_test
-
 --- Check if the number is prime.
 --  @param B Number.
 --  @param sMethod Trivial search by default. Can be 'Fremat'.
@@ -1081,6 +1092,25 @@ end
 about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
   "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.",
   NUMB}
+
+
+--- Least common multiple.
+--  @param ... List of numbers.
+--  @return Bigint lcm.
+bigint.lcm = function (self, ...)
+  local t = {...}
+  if #t == 0 then error('No numbers') end
+  -- compare element-wise
+  local res = isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
+  for i = 2, #t do
+    local ti = t[i]
+    res = bigint._lcm(res, 
+                      isbigint(ti) and ti or bigint._newNumber(ti))
+  end
+  return res
+end
+about[bigint.lcm] = {":lcm(...) --> B",
+  "Find the least common multiple for the given integers.", NUMB}
 
 
 --- Permutations without repetition.
