@@ -1028,61 +1028,45 @@ about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)", "Plot bar diargram for data."}
 --- Horizontal concatenation of figures.
 --  @param ... List of figure objects.
 --  @return String with figures.
-asciiplot.concat = function (_, ...)
-  -- collect info
-  local ag = {...}
-  local nlegend = 0
-  for i, v in ipairs(ag) do
-    if not isasciiplot(v) then
-      error("Not asciiplot object at "..tostring(i))
-    end
-    if v._y.size ~= ag[1]._y.size then error('Different height') end
-    local n = 0
-    for _ in pairs(v._legend) do n = n + 1 end
-    if n > nlegend then nlegend = n end
+asciiplot.concat = function (_, F1, F2)
+  if not (isasciiplot(F1) and isasciiplot(F2)) then
+    error 'Not asciiplot objects'
   end
-  -- data
+  if F1._y.size ~= F2._y.size then 
+    error 'Different size' 
+  end
   local acc, gap = {}, '   '
-  for _, v in ipairs(ag) do
-    local k, width = 1, v._x.size
-    -- title
-    local row = acc[k] or {}
-    row[#row+1] = asciiplot._format(v._title or '', width, true, true)
-    row[#row+1] = gap
-    acc[k] = row; k = k + 1
-    -- content
-    for j = 1, v._y.size do
-      row = acc[k] or {}
-      row[#row+1] = table.concat(v._canvas[j])
-      row[#row+1] = gap
-      acc[k] = row; k = k + 1
-    end
-    -- legend
-    local n = 0
-    local sym = {}
-    for q, _ in pairs(v._legend) do sym[#sym+1] = q end
-    if #sym > 0 then table.sort(sym) end
-    for _, u in ipairs(sym) do
-      row = acc[k] or {}
-      row[#row+1] = asciiplot._format(
-        string.format('(%s) %s', u, v._legend[u]), width-1+#u, false, true)
-      row[#row+1] = gap
-      acc[k] = row; k = k + 1
-      n = n + 1
-    end
-    -- add empty lines
-    for _ = n+1, nlegend do
-      row = acc[k] or {}
-      row[#row+1] = asciiplot._format('', width, false, true)
-      row[#row+1] = gap
-      acc[k] = row; k = k + 1
-    end
+  local w1, w2 = F1._x.size, F2._x.size
+  -- title
+  acc[1] = string.format('%s%s%s', 
+    asciiplot._format(F1._title or '', w1, true, true), 
+    gap,
+    asciiplot._format(F2._title or '', w2, true, true)) 
+  -- content
+  for j = 1, F1._y.size do
+    acc[#acc+1] = string.format('%s%s%s',
+      table.concat(F1._canvas[j]), gap, table.concat(F2._canvas[j]))
   end
-  -- get strings
-  for i = 1, #acc do acc[i] = table.concat(acc[i]) end
+  -- legend
+  local l1, l2 = {}, {}
+  for k, v in pairs(F1._legend) do 
+    l1[#l1+1] = asciiplot._format(
+      string.format('(%s) %s', k, v), w1-1+#k, false, true)
+  end
+  table.sort(l1)
+  for k, v in pairs(F2._legend) do 
+    l2[#l2+1] = asciiplot._format( 
+      string.format('(%s) %s', k, v), w2-1+#k, false, true)
+  end
+  table.sort(l2)
+  for i = 1, math.max(#l1, #l2) do
+    acc[#acc+1] = string.format('%s%s%s',
+      l1[i] or string.rep(' ', w1), gap, l2[i] or string.rep(' ', w2))
+  end
+  
   return table.concat(acc, '\n')
 end
-about[asciiplot.concat] = {":concat(...) --> str",
+about[asciiplot.concat] = {":concat(F1, F2) --> str",
   "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.",
   help.STATIC}
 
