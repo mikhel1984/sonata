@@ -390,12 +390,9 @@ asciiplot.__tostring = function (self)
   if #self._canvas == 0 then return 'empty figure' end
   local acc = {}
   -- title
-  if self._title then
-    -- to center
-    acc[1] = asciiplot._format(self._title, self._x.size, true, false)
-  end
+  if self._title then acc[1] = self._title end
   -- figure
-  for i = 1, self._y.size do
+  for i = 1, #self._canvas do
     acc[#acc+1] = table.concat(self._canvas[i])
   end
   -- legend
@@ -808,7 +805,7 @@ asciiplot._viewXY = function (self, tX, tY, tZ, tOpt)
   asciiplot._limits(self)
   -- legend
   asciiplot._cntLegend(self, 'Z', lvl)
-  self._title = 'X-Y view'
+  self._title = asciiplot._format('X-Y view', self._x.size, true, false)
   return self
 end
 
@@ -842,7 +839,7 @@ asciiplot._viewXZ = function (self, tX, tY, tZ, tOpt)
   local lvlXZ = {}
   for i = 1, N do lvlXZ[i] = tY[lvl[N-i+1]] end
   asciiplot._cntLegend(self, 'Y', lvlXZ)
-  self._title = 'X-Z view'
+  self._title = asciiplot._format('X-Z view', self._x.size, true, false)
   return self
 end
 
@@ -892,7 +889,8 @@ asciiplot._viewYZ = function (self, tX, tY, tZ, tOpt)
   local lvlZY = {}
   for i = 1, N do lvlZY[i] = tX[lvl[i]] end
   asciiplot._cntLegend(self, 'X', lvlZY)
-  self._title = rotate and 'Z-Y view' or 'Y-Z view'
+  self._title = asciiplot._format(
+    rotate and 'Z-Y view' or 'Y-Z view', self._x.size, true, false)
   return self
 end
 
@@ -1038,10 +1036,7 @@ asciiplot.concat = function (_, F1, F2)
   local acc, gap = {}, '   '
   local w1, w2 = F1._x.size, F2._x.size
   -- title
-  acc[1] = string.format('%s%s%s', 
-    asciiplot._format(F1._title or '', w1, true, true), 
-    gap,
-    asciiplot._format(F2._title or '', w2, true, true)) 
+  acc[1] = string.format('%s%s%s', F1._title, gap, F2._title)
   -- content
   for j = 1, F1._y.size do
     acc[#acc+1] = string.format('%s%s%s',
@@ -1099,7 +1094,11 @@ asciiplot.contour = function (self, fn, tOpt)
   end
   -- specific projection
   local make = assert(asciiplot['_view'..view], "Wrong view")
-  make(self, X, Y, Z, tOpt)
+  local fig = asciiplot.copy(self)
+  make(fig, X, Y, Z, tOpt)
+  self._title = fig._title
+  self._canvas = fig._canvas
+  self._legend = fig._legend
 end
 about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'}) --> nil|str",
   "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output."}
@@ -1277,7 +1276,9 @@ about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix})",
 
 --- Set title.
 --  @param s New title.
-asciiplot.title = function (self, s) self._title = s end
+asciiplot.title = function (self, s) 
+  self._title = asciiplot._format(s, self._x.size, true, false)
+end
 about[asciiplot.title] = {"F:title(str)", "Set new title.", CONF}
 
 
