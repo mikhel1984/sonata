@@ -1077,9 +1077,11 @@ about[asciiplot.concat] = {":concat(F1, F2) --> str",
 --  @return Figure object for single view or string for 'XYZ'.
 asciiplot.contour = function (self, fn, tOpt)
   tOpt = tOpt or {}
-  tOpt.level = tOpt.level or 5    -- TODO limit maximal and minimal values
+  tOpt.level = tOpt.level or 5    
   if tOpt.level > #asciiplot.lvls then
-    error('Max levle is '..tostring(#asciiplot.lvls))
+    error ('Max levle is '..tostring(#asciiplot.lvls))
+  elseif tOpt.level < 1 then
+    error 'Too small levels'
   end
   local view = tOpt.view or 'XY'
   -- calculate
@@ -1093,13 +1095,11 @@ asciiplot.contour = function (self, fn, tOpt)
     local XY = asciiplot._viewXY(asciiplot.copy(self), X, Y, Z, tOpt)
     local XZ = asciiplot._viewXZ(asciiplot.copy(self), X, Y, Z, tOpt)
     local YZ = asciiplot._viewYZ(asciiplot.copy(self), X, Y, Z, tOpt)
-    local txt = {asciiplot.concat(nil, XY, YZ), tostring(XZ)}
-    return table.concat(txt, '\n\n')
+    return string.format('%s\n\n%s', asciiplot.concat(nil, XY, YZ), tostring(XZ))
   end
   -- specific projection
-  if view == 'XY' then asciiplot._viewXY(self, X, Y, Z, tOpt) end
-  if view == 'XZ' then asciiplot._viewXZ(self, X, Y, Z, tOpt) end
-  if view == 'YZ' then asciiplot._viewYZ(self, X, Y, Z, tOpt) end
+  local make = assert(asciiplot['_view'..view], "Wrong view")
+  make(self, X, Y, Z, tOpt)
 end
 about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'}) --> nil|str",
   "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output."}
@@ -1319,7 +1319,7 @@ about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false})",
 
 -- Simplify the constructor call.
 setmetatable(asciiplot, {
-__call = function (self, w, h)
+__call = function (_, w, h)
   -- size
   return asciiplot._new(w or asciiplot.WIDTH, h or asciiplot.HEIGHT)
 end})
