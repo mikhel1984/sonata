@@ -98,7 +98,7 @@ fig3:setY {range={-1,4}, view=false}
 fig3:reset()
 -- set function
 for x = -1.2, 1.2, 0.1 do
-  fig3:addPoint(x, x*x-0.5, Ap.char[1])
+  fig3:addPoint(x, x*x-0.5, Ap.CHAR[1])
 end
 -- set to position
 fig3:addPose(3, 13, '#')   -- characters
@@ -351,7 +351,7 @@ type = 'asciiplot',
 -- const
 WIDTH = 73, HEIGHT = 21,
 -- symbols
-char = {'*', 'o', '#', '+', '~', 'x'},
+CHAR = {'*', 'o', '#', '+', '~', 'x'},
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
 }
@@ -365,7 +365,7 @@ local function isasciiplot(v) return getmetatable(v) == asciiplot end
 
 -- update markers
 if SONATA_USE_COLOR then
-  local char = asciiplot.char
+  local char = asciiplot.CHAR
   for k, v in ipairs(char) do
     char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
   end
@@ -433,7 +433,7 @@ asciiplot._addPolar = function (self, t, tOpt)
   asciiplot._axes(self)
   -- fill
   for j = 1, #tOpt do
-    local xy, c = acc[j], asciiplot.char[j]
+    local xy, c = acc[j], asciiplot.CHAR[j]
     for _, v in ipairs(xy) do
       asciiplot.addPoint(self, v[1], v[2], c)
     end
@@ -451,7 +451,7 @@ end
 asciiplot._addTable = function (self, t, tInd)
   local x = tInd.x 
   for j = 1, #tInd do
-    local c, k = asciiplot.char[j], tInd[j]
+    local c, k = asciiplot.CHAR[j], tInd[j]
     for i = 1, #t do
       local row = t[i]
       asciiplot.addPoint(self, row[x], row[k], c)
@@ -906,7 +906,7 @@ asciiplot.addPoint = function (self, dx, dy, s)
     self._canvas[ny][nx] = s or '*'
   end
 end
-about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s)",
+about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*')",
   "Add point (x,y) using char.", MANUAL}
 
 
@@ -918,10 +918,10 @@ asciiplot.addPose = function (self, ir, ic, s)
   if ir > 0 and ir <= self._y.size and ic > 0 and ic <= self._x.size
             and (#s == 1 or SONATA_USE_COLOR) 
   then
-    self._canvas[ir][ic] = s
+    self._canvas[ir][ic] = s or '*'
   end
 end
-about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s)",
+about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s='*')",
   "Add character to the given position.", MANUAL}
 
 
@@ -1136,7 +1136,7 @@ about[asciiplot.copy] = {"F:copy() --> cpy_F",
 --- Update legend.
 --  @param str_t Table with strings.
 asciiplot.legend = function (self, str_t)
-  for i, c in ipairs(asciiplot.char) do
+  for i, c in ipairs(asciiplot.CHAR) do
     local li = self._legend[c]
     if li then
       self._legend[c] = str_t[i] or li
@@ -1211,7 +1211,7 @@ asciiplot.plot = function (self, ...)
   asciiplot._axes(self)
   -- 'plot'
   for j = 1, #acc do
-    local c = asciiplot.char[j]
+    local c = asciiplot.CHAR[j]
     local r = acc[j]
     asciiplot._addXY(self, r[1], r[2], c)
     self._legend[c] = r[3]
