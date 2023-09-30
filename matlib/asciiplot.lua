@@ -452,11 +452,12 @@ end
 --  @param t Table to print.
 --  @param tInd Allows to choose y columns.
 asciiplot._addTable = function (self, t, tInd)
+  local x = tInd.x 
   for j = 1, #tInd do
     local c, k = asciiplot.char[j], tInd[j]
     for i = 1, #t do
       local row = t[i]
-      asciiplot.addPoint(self, row[1], row[k], c)
+      asciiplot.addPoint(self, row[x], row[k], c)
     end
     self._legend[c] = 'column '..tostring(k)   -- default legend
   end
@@ -552,11 +553,11 @@ end
 --  @param tInd Table of y column indeces.
 --  @return xrange, yrange
 asciiplot._findRange = function (t, tInd)
-  tInd = tInd or {}
   local xmax, ymax, xmin, ymin = -math.huge, -math.huge, math.huge, math.huge
+  local x = tInd.x or 1
   for i = 1, #t do
     local row = t[i]
-    local v = row[1]
+    local v = row[x]
     if v > xmax then xmax = v end
     if v < xmin then xmin = v end
     if #tInd > 0 then
@@ -566,10 +567,12 @@ asciiplot._findRange = function (t, tInd)
         if v < ymin then ymin = v end
       end
     else
-      for j = 2, #row do
-        v = row[j]
-        if v > ymax then ymax = v end
-        if v < ymin then ymin = v end
+      for j = 1, #row do
+        if j ~= x then
+          v = row[j]
+          if v > ymax then ymax = v end
+          if v < ymin then ymin = v end
+        end
       end
     end
   end
@@ -1019,14 +1022,13 @@ asciiplot.bar = function (self, t, iy, ix)
     r = r + 1
   end
 end
-about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)",
-  "Plot bar diargram for data."}
+about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)", "Plot bar diargram for data."}
 
 
 --- Horizontal concatenation of figures.
 --  @param ... List of figure objects.
 --  @return String with figures.
-asciiplot.concat = function (self, ...)
+asciiplot.concat = function (_, ...)
   -- collect info
   local ag = {...}
   local nlegend = 0
@@ -1040,8 +1042,7 @@ asciiplot.concat = function (self, ...)
     if n > nlegend then nlegend = n end
   end
   -- data
-  local acc = {}
-  local gap = '   '
+  local acc, gap = {}, '   '
   for _, v in ipairs(ag) do
     local k, width = 1, v._x.size
     -- title
@@ -1303,9 +1304,12 @@ about[asciiplot.title] = {"F:title(str)", "Set new title.", CONF}
 --  @return The updated figure object.
 asciiplot.tplot = function (self, t, tOpt)
   tOpt = tOpt or {}
+  tOpt.x = tOpt.x or 1  -- choose independent variable
   -- plot all by default
   if #tOpt == 0 then
-    for i = 2, #t[1] do tOpt[#tOpt+1] = i end
+    for i = 1, #t[1] do 
+      if i ~= tOpt.x then tOpt[#tOpt+1] = i end
+    end
   end
   -- check type
   if tOpt.polar then
@@ -1325,7 +1329,7 @@ asciiplot.tplot = function (self, t, tOpt)
   -- limits
   asciiplot._limits(self)
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, cols_N={})",
+about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false})",
   "Plot the table data, choose columns if need."}
 
 
@@ -1343,11 +1347,11 @@ if Sonata then  -- GLOBAL
 
 -- Define simplified function call
 Plot = function (...)
-  local lib = Ap or require('matlib.asciiplot')
-  local f = lib()
+  local ap = Ap or require('matlib.asciiplot')
+  local f = ap()
   f._x:setRange({-5, 5})
   f:plot(...)
-  print(f)
+  return tostring(f)
 end
 about[Plot] = {"Plot(...)",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
