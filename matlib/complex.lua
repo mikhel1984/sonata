@@ -212,12 +212,20 @@ _simp = numcomp,
 }
 
 
+local function compatible(v) 
+  return type(v) == 'number' or getmetatable(v).float 
+end
+
 --- Check object type.
 --  @param c Object.
 --  @return True if the object is a complex number.
 local function iscomplex(v) return getmetatable(v) == complex end
 
 
+--- Check values, make complex if need.
+--  @param a Real part.
+--  @param b Imaginary part.
+--  @return complex or number.
 local function numOrComp(a, b)
   return Cross.isZero(b) and Cross.simp(a) or complex._new(a, b)
 end
@@ -330,18 +338,16 @@ end
 
 
 --- String representation.
---  @param C Complex number.
 --  @return String with complex number elements.
-complex.__tostring = function (C)
-  local a, b = numStr(C._[1]), numStr(C._[2])
+complex.__tostring = function (self)
+  local a, b = numStr(self._[1]), numStr(self._[2])
   return string.format("%s%s%si", a, (b:sub(1, 1) == '-' and '' or '+'), b)
 end
 
 
 --- -C
---  @param C Complex number.
 --  @return Negative value.
-complex.__unm = function (C) return complex._new(-C._[1], -C._[2]) end
+complex.__unm = function (self) return complex._new(-self._[1], -self._[2]) end
 
 
 -- Metamethods
@@ -350,19 +356,16 @@ about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
 --- Convert value into complex number.
+--  Used in Cross.convert.
 --  @param v Source value.
 --  @return Complex number if possible.
-complex._convert = function (v)
-  return (type(v) == 'number' or type(v) == 'table' and v.float)
-         and complex._new(v, 0)
-end
+complex._convert = function (v) return compatible(v) and complex._new(v, 0) end
 
 
 --- Get deep copy of the complex number.
---  @param C Complex number.
 --  @return Equal number.
-complex._copy = function (C)
-  return complex._new(C._[1], C._[2])
+complex._copy = function (self)
+  return complex._new(self._[1], self._[2])
 end
 
 
@@ -379,23 +382,27 @@ end
 complex._i = complex._new(0, 1)
 
 
-complex._isZero = function (C)
-  return complex.isZero(C._[1]) and complex.isZero(C._[2])
+--- Check if the complex number is 0.
+--  @return true when zero.
+complex._isZero = function (self)
+  return complex.isZero(self._[1]) and complex.isZero(self._[2])
 end
 
 
 --- Find object norm.
---  @param C Complex number.
 --  @return Numerical value.
-complex._norm = function (C)
-  local a, b = Cfloat(C._[1]), Cfloat(C._[2])
+complex._norm = function (self)
+  local a, b = Cfloat(self._[1]), Cfloat(self._[2])
   return math.sqrt(a*a + b*b)
 end
 
 
-complex._strip = function (C, tol)
-  C._[1] = Utils.strip(C._[1], tol)
-  C._[2] = Utils.strip(C._[2], tol)
+--- Limit number of digits.
+--  @param tol Desired tolerance.
+--  @return new value.
+complex._strip = function (self, tol)
+  self._[1] = Utils.strip(self._[1], tol)
+  self._[2] = Utils.strip(self._[2], tol)
   return numcomp(C)
 end
 
@@ -407,53 +414,51 @@ about[complex.abs] = {"C:abs() --> float", "Return module of complex number."}
 
 
 --- Inverse cosine.
---  @param C Complex number.
 --  @return Complex inverse cosine.
-complex.acos = function (C)
-  return -complex._i * complex.log(C + complex.sqrt(C*C-1))
+complex.acos = function (self)
+  return -complex._i * complex.log(self + complex.sqrt(self*self-1))
 end
 about[complex.acos] = {"C:acos() --> y_C", "Complex inverse cosine.", FUNCTIONS}
 
 
 --- Inverse hyperbolic cosine.
---  @param C Complex number.
 --  @return Complex inverse hyperbolic cosine.
-complex.acosh = function (C) return complex.log(C + complex.sqrt(C*C-1)) end
+complex.acosh = function (self) 
+  return complex.log(self + complex.sqrt(self*self-1)) 
+end
 about[complex.acosh] = {"C:acosh() --> y_C",
   "Complex inverse hyperbolic cosine.", FUNCTIONS}
 
 
 --- Argument of complex number.
---  @param C Complex number.
 --  @return Argument of the number.
-complex.arg = function (C)
-  return Ver.atan2(Cfloat(C._[2]), Cfloat(C._[1]))
+complex.arg = function (self)
+  return Ver.atan2(Cfloat(self._[2]), Cfloat(self._[1]))
 end
 about[complex.arg] = {"C:arg() --> float", "Return argument of complex number."}
 
 
 --- Inverse sine.
---  @param C Complex number.
 --  @return Complex inverse sine.
-complex.asin = function (C)
-  return -complex._i * complex.log(complex._i*C + complex.sqrt(1-C*C))
+complex.asin = function (self)
+  return -complex._i * complex.log(complex._i*self + complex.sqrt(1-self*self))
 end
 about[complex.asin] = {"C:asin() --> y_C", "Complex inverse sine.", FUNCTIONS}
 
 
 --- Inverse hyperbolic sine.
---  @param C Complex number.
 --  @return Complex inverse hyperbolic sine.
-complex.asinh = function (C) return complex.log(C + complex.sqrt(C*C+1)) end
+complex.asinh = function (self) 
+  return complex.log(self + complex.sqrt(self*self+1)) 
+end
 about[complex.asinh] = {"C:asinh() --> y_C",
   "Complex inverse hyperbolic sine.", FUNCTIONS}
 
 
 --- Inverse tangent.
---  @param C Complex number.
 --  @return Complex inverse tangent.
-complex.atan = function (C)
-  local iC = complex._i * C
+complex.atan = function (self)
+  local iC = complex._i * self
   return -0.5 * complex._i * complex.log((1 + iC)/(1 - iC))
 end
 about[complex.atan] = {"C:atan() --> y_C",
@@ -461,18 +466,16 @@ about[complex.atan] = {"C:atan() --> y_C",
 
 
 --- Inverse hyperbolic tangent.
---  @param C Complex number.
 --  @return Complex inverse hyperbolic tangent.
-complex.atanh = function (C) return 0.5*complex.log((1 + C)/(1 - C)) end
+complex.atanh = function (self) return 0.5*complex.log((1 + self)/(1 - self)) end
 about[complex.atanh] = {"C:atanh() --> y_C",
   "Complex inverse hyperbolic tangent.", FUNCTIONS}
 
 
 --- Conjunction.
---  @param C Complex number.
 --  @return Conjunction to the given number.
-complex.conj = function (C)
-  return complex._new(C._[1], -C._[2])
+complex.conj = function (self)
+  return complex._new(self._[1], -self._[2])
 end
 about[complex.conj] = {"C:conj() --> conj_C",
   "Return the complex conjugate. Equal to ~C."}
@@ -480,10 +483,9 @@ complex.__bnot = complex.conj
 
 
 --- Cosine
---  @param C Complex number.
 --  @return Complex cosine.
-complex.cos = function (C)
-  local c = C._
+complex.cos = function (self)
+  local c = self._
   return numOrComp(fcos(c[1])*ch(c[2]), -fsin(c[1])*sh(c[2]))
 end
 about[complex.cos] = {"C:cos() --> y_C",
@@ -491,50 +493,50 @@ about[complex.cos] = {"C:cos() --> y_C",
 
 
 --- Hyperbolic cosine
---  @param C Complex number.
 --  @return Complex hyperbolic cosine.
-complex.cosh = function (C) return 0.5*(complex.exp(C) + complex.exp(-C)) end
+complex.cosh = function (self) 
+  return 0.5*(complex.exp(self) + complex.exp(-self)) 
+end
 about[complex.cosh] = {"C:cosh() --> y_C",
   "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
 
 
 --- Exponent
---  @param C Complex number.
 --  @return Complex exponent.
-complex.exp = function (C)
-  local r = fexp(C._[1])
-  return numOrComp(r*fcos(C._[2]), r*fsin(C._[2]))
+complex.exp = function (self)
+  local r = fexp(self._[1])
+  return numOrComp(r*fcos(self._[2]), r*fsin(self._[2]))
 end
 about[complex.exp] = {"C:exp() --> y_C",
   "Return exponent in for complex argument.", FUNCTIONS}
 
 
--- Imaginary unit
-complex.i = function (self, v)
-  v = v or 1
-  if not (type(v) == 'number' or type(v) == 'table' and v.float) then
-    error( "Wrong argument")
+--- Imaginary unit maker.
+--  @param v Imaginary part.
+--  @return i*v
+complex.i = function (_, v)
+  if v and not compatible(v) then
+    error "Wrong argument"
   end
-  return complex._new(0, v)
+  return complex._new(0, v or 1)
 end
 about[complex.i] = {":i(x=1) --> new_C", "Return x*i.", help.STATIC}
 
 
 --- Get imaginary part.
---  @param C Complex number.
 --  @return Imaginary part.
-complex.im = function (C) return C._[2] end
+complex.im = function (self) return self._[2] end
 about[complex.im] = {"C:im() --> var", "Get imaginary part."}
 
 
 --- Natural logarithm
---  @param C Real or complex number.
+--  @param v Real or complex value.
 --  @return Real or complex logarithm.
-complex.log = function (C)
-  if type(C) == "number" then
-    return C <= 0 and complex._new(math.log(-C), math.pi) or math.log(C)
+complex.log = function (v)
+  if type(v) == 'number' then
+    return v < 0 and complex._new(math.log(-v), math.pi) or math.log(v)
   else
-    local c1, c2 = Cfloat(C._[1]), Cfloat(C._[2])
+    local c1, c2 = Cfloat(v._[1]), Cfloat(v._[2])
     return numOrComp(0.5*math.log(c1*c1 + c2*c2), Ver.atan2(c2, c1))
   end
 end
@@ -542,19 +544,17 @@ about[complex.log] = {"C:log() --> y_C", "Complex logarithm.", FUNCTIONS}
 
 
 --- Get real part.
---  @param C Complex number.
 --  @return Real part.
-complex.re = function (C) return C._[1] end
+complex.re = function (self) return self._[1] end
 about[complex.re] = {"C:re() --> var", "Get real part."}
 
 
 --- Round real and imaginary parts to some number of digits.
 --  For non-float value round to 0.
---  @param C Complex number.
-complex.round = function (C, N)
+complex.round = function (self, N)
   N = N or 6
   local tol = 10^(-N)
-  local a, b = C._[1], C._[2]
+  local a, b = self._[1], self._[2]
   a = type(a) == 'number' and Utils.round(a, tol) or
             Cross.norm(a) < tol and 0 or a
   b = type(b) == 'number' and Utils.round(b, tol) or
@@ -566,31 +566,31 @@ about[complex.round] = {"C:round(N=6) --> rounded_C",
 
 
 --- Sinus
---  @param C Complex number.
 --  @return Complex sinus.
-complex.sin = function (C)
-  local c = C._
+complex.sin = function (self)
+  local c = self._
   return numOrComp(fsin(c[1])*ch(c[2]), fcos(c[1])*sh(c[2]))
 end
 about[complex.sin] = {"C:sin() --> y_C", "Return sinus of a complex number.", FUNCTIONS}
 
 
 --- Hyperbolic sinus
---  @param C Complex number.
 --  @return Complex hyperbolic sinus.
-complex.sinh = function (C) return 0.5*(complex.exp(C) - complex.exp(-C)) end
+complex.sinh = function (self) 
+  return 0.5*(complex.exp(self) - complex.exp(-self)) 
+end
 about[complex.sinh] = {"C:sinh() --> y_C",
   "Return hyperbolic sinus of a complex number.", FUNCTIONS}
 
 
 --- Square root with possibility of complex result.
---  @param C Real or complex number.
+--  @param v Real or complex number.
 --  @return Real or complex square root.
-complex.sqrt = function (C)
-  if type(C) == "number" then
-    return C < 0 and complex._new(0, math.sqrt(-C)) or math.sqrt(C)
+complex.sqrt = function (v)
+  if type(v) == 'number' then
+    return v < 0 and complex._new(0, math.sqrt(-v)) or math.sqrt(v)
   else
-    return complex.__pow(C, 0.5)
+    return complex.__pow(v, 0.5)
   end
 end
 about[complex.sqrt] = {"C:sqrt() --> y_C",
@@ -598,10 +598,9 @@ about[complex.sqrt] = {"C:sqrt() --> y_C",
 
 
 --- Tangent
---  @param C Complex number.
 --  @return Complex tangent.
-complex.tan = function (C)
-  local c = C._
+complex.tan = function (self)
+  local c = self._
   local den = fcos(2*c[1]) + ch(2*c[2])
   return numOrComp(fsin(2*c[1])/den, sh(2*c[2])/den)
 end
@@ -610,9 +609,8 @@ about[complex.tan] = {"C:tan() --> y_C",
 
 
 --- Hyperbolic tangent
---  @param C Complex number.
 --  @return Complex hyperbolic tangent.
-complex.tanh = function (C) return complex.sinh(C) / complex.cosh(C) end
+complex.tanh = function (self) return complex.sinh(self) / complex.cosh(self) end
 about[complex.tanh] = {"C:tanh() --> y_C",
   "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
@@ -630,20 +628,18 @@ about[complex.trig] = {":trig(module, angle) --> module*exp(i*angle)",
 
 -- simplify constructor call
 setmetatable(complex, {
-__call = function (self, re, im)
+__call = function (_, re, im)
   re = re or 0
   im = im or 0
-  assert(type(re) == 'number' or type(re) == 'table' and re.float,
-    "Wrong real part")
-  assert(type(im) == 'number' or type(im) == 'table' and im.float,
-    "Wrong imaginary part")
+  assert(compatible(re), "Wrong real part")
+  assert(compatible(im), "Wrong imaginary part")
   return complex._new(re, im)
 end })
 about[complex] = {" (re=0, im=0) --> new_C",
   "Create new complex number.", help.STATIC}
 
 
-if Sonata then  -- GLOBAL
+if Sonata then  -- ENV
 
 -- redefine square root
 local _sqrt = sqrt
@@ -657,7 +653,7 @@ log = function (a)
   return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
 end
 
-end   -- GLOBAL
+end   -- ENV
 
 
 -- Comment to remove descriptions
