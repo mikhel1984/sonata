@@ -489,7 +489,7 @@ complex.__bnot = complex.conj
 --  @return Complex cosine.
 complex.cos = function (self)
   local c = self._
-  return numOrComp(fcos(c[1])*ch(c[2]), -fsin(c[1])*sh(c[2]))
+  return complex._new(fcos(c[1])*ch(c[2]), -fsin(c[1])*sh(c[2]))
 end
 about[complex.cos] = {"C:cos() --> y_C",
   "Return cosine of a complex number.", FUNCTIONS}
@@ -508,7 +508,7 @@ about[complex.cosh] = {"C:cosh() --> y_C",
 --  @return Complex exponent.
 complex.exp = function (self)
   local r = fexp(self._[1])
-  return numOrComp(r*fcos(self._[2]), r*fsin(self._[2]))
+  return complex._new(r*fcos(self._[2]), r*fsin(self._[2]))
 end
 about[complex.exp] = {"C:exp() --> y_C",
   "Return exponent in for complex argument.", FUNCTIONS}
@@ -540,7 +540,7 @@ complex.log = function (v)
     return v < 0 and complex._new(math.log(-v), math.pi) or math.log(v)
   else
     local c1, c2 = Cfloat(v._[1]), Cfloat(v._[2])
-    return numOrComp(0.5*math.log(c1*c1 + c2*c2), Ver.atan2(c2, c1))
+    return complex._new(0.5*math.log(c1*c1 + c2*c2), Ver.atan2(c2, c1))
   end
 end
 about[complex.log] = {"C:log() --> y_C", "Complex logarithm.", FUNCTIONS}
@@ -572,7 +572,7 @@ about[complex.round] = {"C:round(N=6) --> rounded_C",
 --  @return Complex sinus.
 complex.sin = function (self)
   local c = self._
-  return numOrComp(fsin(c[1])*ch(c[2]), fcos(c[1])*sh(c[2]))
+  return complex._new(fsin(c[1])*ch(c[2]), fcos(c[1])*sh(c[2]))
 end
 about[complex.sin] = {"C:sin() --> y_C", "Return sinus of a complex number.", FUNCTIONS}
 
@@ -605,7 +605,7 @@ about[complex.sqrt] = {"C:sqrt() --> y_C",
 complex.tan = function (self)
   local c = self._
   local den = fcos(2*c[1]) + ch(2*c[2])
-  return numOrComp(fsin(2*c[1])/den, sh(2*c[2])/den)
+  return complex._new(fsin(2*c[1])/den, sh(2*c[2])/den)
 end
 about[complex.tan] = {"C:tan() --> y_C",
   "Return tangent of a complex number.", FUNCTIONS}
