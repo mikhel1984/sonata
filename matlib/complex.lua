@@ -212,8 +212,11 @@ _simp = numcomp,
 }
 
 
+--- Check if the value can be part of complex number.
+--  @param v Value to check.
+--  @return true of false.
 local function compatible(v) 
-  return type(v) == 'number' or getmetatable(v).float 
+  return type(v) == 'number' or getmetatable(v).float ~= nil
 end
 
 --- Check object type.

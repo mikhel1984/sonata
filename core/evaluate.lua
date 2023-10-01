@@ -88,15 +88,6 @@ local function getCmd (str)
 end
 
 
--- local function balance(s)
---   local t = {}
---   string.gsub(s, '([(){}])', function (x) t[x] = (t[x] or 0) + 1 end)
---   local d1 = (t['('] or 0) - (t[')'] or 0)
---   local d2 = (t['{'] or 0) - (t['}'] or 0)
---   return (d1 < 0 or d2 < 0) and -1 or (d1 > 0 or d2 > 0) and 1 or 0
--- end
-
-
 --	MODULE
 
 local evaluate = {
@@ -136,16 +127,23 @@ local txtCodes = {
 --  The function should work in coroutine.
 --  It takes code line and return status and evaluation result.
 local function evalCode()
-  local state, cmd, res = evaluate.EV_RES, '', nil
+  local state, cmd = evaluate.EV_RES, ''
+  local multiline, res = false, nil
   evaluate.IN_COROUTINE = true  -- set marker
   while true do
     -- next line of code
     local input = coroutine.yield(state, res)
     cmd = (state == evaluate.EV_CMD) and cmd or ''
-    -- check if multiline
-    local partCmd = string.match(input, "(.*)\\%s*$")
-    if partCmd == nil then
-      cmd = cmd..input
+    -- check if multi input
+    local partCmd, amp = string.match(input, "(.*)\\(&?)%s*$")
+    amp = (amp and #amp == 1 or false)
+    if amp then multiline = not multiline end
+    -- exec or wait
+    if multiline or (partCmd and not amp) then
+      cmd = string.format("%s%s\n", cmd, partCmd or input)
+      state, res = evaluate.EV_CMD, nil
+    else
+      cmd = cmd..(partCmd or input)
       -- 'parse'
       local fn, err = loadStr('return '..cmd)  -- either 'return expr'
       if err then
@@ -162,9 +160,6 @@ local function evalCode()
           _ans = ans  -- set global var
         end
       end
-    else
-      cmd = string.format("%s%s\n", cmd, partCmd)
-      state, res = evaluate.EV_CMD, nil
     end
   end
 end
