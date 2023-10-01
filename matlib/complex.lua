@@ -419,7 +419,7 @@ about[complex.abs] = {"C:abs() --> float", "Return module of complex number."}
 --- Inverse cosine.
 --  @return Complex inverse cosine.
 complex.acos = function (self)
-  return -complex._i * complex.log(self + complex.sqrt(self*self-1))
+  return complex._new(0, -1) * complex.log(self + complex.sqrt(self*self-1))
 end
 about[complex.acos] = {"C:acos() --> y_C", "Complex inverse cosine.", FUNCTIONS}
 
@@ -444,7 +444,7 @@ about[complex.arg] = {"C:arg() --> float", "Return argument of complex number."}
 --- Inverse sine.
 --  @return Complex inverse sine.
 complex.asin = function (self)
-  return -complex._i * complex.log(complex._i*self + complex.sqrt(1-self*self))
+  return complex._new(0, -1) * complex.log(complex._i*self + complex.sqrt(1-self*self))
 end
 about[complex.asin] = {"C:asin() --> y_C", "Complex inverse sine.", FUNCTIONS}
 
@@ -462,7 +462,7 @@ about[complex.asinh] = {"C:asinh() --> y_C",
 --  @return Complex inverse tangent.
 complex.atan = function (self)
   local iC = complex._i * self
-  return -0.5 * complex._i * complex.log((1 + iC)/(1 - iC))
+  return complex._new(0, -0.5) * complex.log((1 + iC)/(1 - iC))
 end
 about[complex.atan] = {"C:atan() --> y_C",
   "Complex inverse tangent.", FUNCTIONS}
@@ -632,6 +632,7 @@ about[complex.trig] = {":trig(module, angle) --> module*exp(i*angle)",
 -- simplify constructor call
 setmetatable(complex, {
 __call = function (_, re, im)
+  if iscomplex(re) then return re end
   re = re or 0
   im = im or 0
   assert(compatible(re), "Wrong real part")
