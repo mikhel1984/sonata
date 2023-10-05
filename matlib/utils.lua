@@ -149,25 +149,28 @@ cross.norm = function (v)
 end
 
 
+--- Round float number for required number of digits.
+--  @param v Number for rounding.
+--  @param fTol Required tolerance (1E-k)
+--  @return Rounded value.
+cross.round = function (v, fTol)
+  if type(v) == 'number' then
+    local p, q = mmodf(v / fTol)
+    if     q >  0.5 then p = p + 1
+    elseif q < -0.5 then p = p - 1
+    end
+    return p * fTol
+  end
+  return type(v) == 'table' and v._round and v:_round(fTol) or v
+end
+
+
 --- Apply simplification if possible
 --  @param v Sonata object.
 --  @return Number or the object itself.
 cross.simp = function (v)
   local mt = getmetatable(v)
   return mt and mt._simp and mt._simp(v) or v
-end
-
-
---- Reduce number of digits
---  @param v Number object.
---  @param tol Tolerance (1E-k)
---  @return Updated object.
-cross.strip = function (v, tol)
-  if type(v) == 'number' then
-    local _, q = mmodf(v / tol)
-    return v - q * tol
-  end
-  return type(v) == 'table' and v._strip and v:_strip(tol) or v
 end
 
 
@@ -287,17 +290,6 @@ utils.numstr = function (d)
   return string.format('%.2E', d)
 end
 
-
---- Round float number for required number of digits.
---  @param fArg Number for rounding.
---  @param fTol Required tolerance (1E-k)
-utils.round = function (fArg, fTol)
-  local p, q = mmodf(fArg / fTol)
-  if     q >=  0.5 then  p = p + 1
-  elseif q <= -0.5 then p = p - 1
-  end
-  return p * fTol
-end
 
 
 --- Simple lexer for algebraic expressions.

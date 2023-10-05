@@ -111,9 +111,9 @@ ans = z:acosh():im()         --1>  1.000
 -- atanh
 ans = z:atanh():re()         --3>  0.146
 
--- round in-place
+-- use rounded values
+Z.ROUND = 1E-8
 z = Z(1+1E-3, 2+1e-20)
-z = z:round(5)
 ans = z:re()                 --3>  1.001
 
 ans = z:im()                  -->  2
@@ -204,8 +204,12 @@ _simp = function (C)
   return Czero(C._[2]) and Cross.simp(C._[1]) or C
 end,
 -- strip value, when uncommented
---STRIP = 1E-8,
+--ROUND = 1E-8,
 }
+
+
+about['ROUND'] = {".ROUND", 
+  "Strip numbers to required tolerance when defined.", help.STATIC}
 
 
 --- Check if the value can be part of complex number.
@@ -370,6 +374,10 @@ end
 --  @param vIm Imaginary part, default is 0.
 --  @return Complex number.
 complex._new = function (vRe, vIm)
+  if complex.ROUND then
+    vRe = Cross.round(vRe, complex.ROUND) 
+    vIm = Cross.round(vIm, complex.ROUND)
+  end
   return setmetatable({_={vRe, vIm}}, complex)
 end
 
@@ -398,9 +406,9 @@ end
 --- Limit number of digits.
 --  Cross lib.
 --  @param tol Desired tolerance.
---  @return stripped value.
-complex._strip = function (self, tol)
-  return numOrComp(Cross.strip(self._[1], tol), Cross.strip(self._[2], tol))
+--  @return stripped complex or real number.
+complex._round = function (self, tol)
+  return numOrComp(Cross.round(self._[1], tol), Cross.round(self._[2], tol))
 end
 
 
@@ -544,24 +552,6 @@ about[complex.log] = {"C:log() --> y_C", "Complex logarithm.", FUNCTIONS}
 --  @return Real part.
 complex.re = function (self) return self._[1] end
 about[complex.re] = {"C:re() --> var", "Get real part."}
-
-
---- Round real and imaginary parts to some number of digits.
---  For non-float value round to 0.
---  @param N Number of digits.
---  @return Complex or real number.
-complex.round = function (self, N)
-  N = N or 6
-  local tol = 10^(-N)
-  local a, b = self._[1], self._[2]
-  a = type(a) == 'number' and Utils.round(a, tol) or
-            Cross.norm(a) < tol and 0 or a
-  b = type(b) == 'number' and Utils.round(b, tol) or
-            Cross.norm(b) < tol and 0 or b
-  return complex._new(a, b)
-end
-about[complex.round] = {"C:round(N=6) --> rounded_C",
-  "Round in-place to specified number of digits."}
 
 
 --- Sinus

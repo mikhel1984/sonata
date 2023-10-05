@@ -42,6 +42,7 @@ local AUX = 'auxiliary'
 
 -- compatibility
 local Ver = require("matlib.utils")
+local Cross = Ver.cross
 local Utils = Ver.utils
 local Calc = Ver.calc
 Ver = Ver.versions
@@ -155,7 +156,7 @@ about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table elemen
 --  @return Rounded number.
 Round = function (f, N)
   N = N or 0
-  return Utils.round(f, 10^(-N))
+  return Cross.round(f, 10^(-N))
 end
 about[Round] = {
   'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
