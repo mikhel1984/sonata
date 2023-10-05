@@ -164,7 +164,8 @@ end
 --  @return Updated object.
 cross.strip = function (v, tol)
   if type(v) == 'number' then
-    return v - v % tol
+    local _, q = mmodf(v / tol)
+    return v - q * tol
   end
   return type(v) == 'table' and v._strip and v:_strip(tol) or v
 end

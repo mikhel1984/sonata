@@ -139,18 +139,10 @@ local Cross = Ver.cross
 local Utils = Ver.utils
 Ver = Ver.versions
 
-local Cfloat, Ceq = Cross.float, Cross.eq
+local Cfloat, Czero = Cross.float, Cross.isZero
 
 -- help section
 local FUNCTIONS = 'functions'
-
-
---- Check imaginary part.
---  @param C complex number.
---  @return Simple number if possible.
-local function numcomp(C)
-  return Cross.isZero(C._[2]) and Cross.simp(C._[1]) or C
-end
 
 
 --- Number representation.
@@ -208,7 +200,11 @@ type='complex',
 -- for external modules
 iscomplex=true,
 -- simplification
-_simp = numcomp,
+_simp = function (C)
+  return Czero(C._[2]) and Cross.simp(C._[1]) or C
+end,
+-- strip value, when uncommented
+--STRIP = 1E-8,
 }
 
 
@@ -230,7 +226,7 @@ local function iscomplex(v) return getmetatable(v) == complex end
 --  @param b Imaginary part.
 --  @return complex or number.
 local function numOrComp(a, b)
-  return Cross.isZero(b) and Cross.simp(a) or complex._new(a, b)
+  return Czero(b) and Cross.simp(a) or complex._new(a, b)
 end
 
 
@@ -279,7 +275,7 @@ complex.__eq = function (C1, C2)
     end
   end
   local c1, c2 = C1._, C2._
-  return Ceq(c1[1], c2[1]) and Ceq(c1[2], c2[2])
+  return Cross.eq(c1[1], c2[1]) and Cross.eq(c1[2], c2[2])
 end
 
 
@@ -301,10 +297,7 @@ complex.__mul = function (C1, C2)
 end
 
 
---- Set unknown key. Use proxy to access the element.
---  @param t Table.
---  @param k Key.
---  @param v Value.
+--- Don't set unknown key. 
 complex.__newindex = function () error("Immutable object") end
 
 
@@ -359,7 +352,7 @@ about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
 --- Convert value into complex number.
---  Used in Cross.convert.
+--  Cross lib.
 --  @param v Source value.
 --  @return Complex number if possible.
 complex._convert = function (v) return compatible(v) and complex._new(v, 0) end
@@ -386,13 +379,15 @@ complex._i = complex._new(0, 1)
 
 
 --- Check if the complex number is 0.
+--  Cross lib.
 --  @return true when zero.
 complex._isZero = function (self)
-  return complex.isZero(self._[1]) and complex.isZero(self._[2])
+  return Czero(self._[1]) and Czero(self._[2])
 end
 
 
 --- Find object norm.
+--  Cross lib.
 --  @return Numerical value.
 complex._norm = function (self)
   local a, b = Cfloat(self._[1]), Cfloat(self._[2])
@@ -401,12 +396,11 @@ end
 
 
 --- Limit number of digits.
+--  Cross lib.
 --  @param tol Desired tolerance.
---  @return new value.
+--  @return stripped value.
 complex._strip = function (self, tol)
-  self._[1] = Utils.strip(self._[1], tol)
-  self._[2] = Utils.strip(self._[2], tol)
-  return numcomp(C)
+  return numOrComp(Cross.strip(self._[1], tol), Cross.strip(self._[2], tol))
 end
 
 
@@ -554,6 +548,8 @@ about[complex.re] = {"C:re() --> var", "Get real part."}
 
 --- Round real and imaginary parts to some number of digits.
 --  For non-float value round to 0.
+--  @param N Number of digits.
+--  @return Complex or real number.
 complex.round = function (self, N)
   N = N or 6
   local tol = 10^(-N)
