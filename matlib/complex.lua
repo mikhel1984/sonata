@@ -27,8 +27,8 @@ b = Z(0,3)
 -- imaginary unit
 ans = 3+Z:i(4)                -->  Z(3,4)
 
--- use trigonometrical form
-ans = Z:trig(2,0)             -->  Z(2,0)
+-- use polar form
+ans = 2*Z:cis(1.57):im()     --2>  2.0
 
 -- arithmetic
 ans = a + b                   -->  Z(1,5)
@@ -604,15 +604,14 @@ about[complex.tanh] = {"C:tanh() --> y_C",
   "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
 
---- Create complex number from trigonometric representation.
---  @param vMod Module.
---  @param vArg Argument.
+--- Polar form point position on the unit circle.
+--  @param ang Angle.
 --  @return Complex number.
-complex.trig = function (self, vMod, vArg)
-  return complex._new(vMod*fcos(vArg), vMod*fsin(vArg))
+complex.cis = function (self, ang)
+  return complex._new(fcos(ang), fsin(ang))
 end
-about[complex.trig] = {":trig(module, angle) --> module*exp(i*angle)",
-  "Create complex number using module and angle.", help.STATIC}
+about[complex.cis] = {":cis(angle) --> cos(angle)+i*sin(angle)", 
+  "Make complex number using angle.", help.STATIC}
 
 
 -- simplify constructor call
