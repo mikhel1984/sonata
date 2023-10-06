@@ -334,32 +334,14 @@ transform.householder = function (V, ik)
   return V:eye(r) - u:H() * ( (2 / (u:norm() ^ 2)) * u)
 end
 
-local ref_transpose_t = {}
 
-ref_transpose_t.__index = function (self, k)
-  return self._src[k][self._n]
-end
-
-ref_transpose_t.__newindex = function (self, k, v)
-  self._src[k][self._n] = v
-end
+-- Define reference to (conjugate) transpose matrix
+local ref_transpose = {}
 
 
-local ref_transpose_h = {}
-
-ref_transpose_h.__index = function (self, k)
-  local v = self._src[k][self._n]
-  local mt = getmetatable(v)
-  return mt.conj and mt.conj(v) or v
-end
-
-ref_transpose_h.__newindex = function (self, k, v)
-  self._src[k][self._n] = v
-end
-
-
-local ref_transpose = {type='matrix'}
-
+--- Access to methods or data
+--  @param k Key or column index.
+--  @return Table reference or method.
 ref_transpose.__index = function (self, k)
   if type(k) == 'number' then
     self._tbl._n = k
@@ -369,9 +351,55 @@ ref_transpose.__index = function (self, k)
   end
 end
 
+
+-- Reference to column in transposed matrix.
+local ref_transpose_t = {}
+
+
+--- Get element.
+--  @param k Element index.
+--  @return matrix value.
+ref_transpose_t.__index = function (self, k)
+  return self._src[k][self._n]
+end
+
+
+--- Set element.
+--  @param k Element index.
+--  @param v New value.
+ref_transpose_t.__newindex = function (self, k, v)
+  self._src[k][self._n] = v
+end
+
+
+-- Reference to column in conjutage transposed matrix.
+local ref_transpose_h = {}
+
+
+--- Get element.
+--  @param k Element index.
+--  @return matrix value.
+ref_transpose_h.__index = function (self, k)
+  local v = self._src[k][self._n]
+  return (type(v) == 'table') and v.conj and v:conj() or v
+end
+
+
+--- Set element.
+--  @param k Element index.
+--  @param v New value.
+ref_transpose_h.__newindex = ref_transpose_t.__newindex
+
+
+--- Create (conjugate) transposed matrix.
+--  @param M Source matrix object.
+--  @param hermit Flag shows that the matrix is conjugate.
+--  @return referenced object.
 transform.make_t = function (M, hermit)
   if getmetatable(M) == ref_transpose then
     return M._tbl._src  -- 'transpose' back
+  elseif transform.isref(M) then
+    M = M:copy()  -- avoid reference to reference
   end
   local o = {
     _cols = M._rows,
@@ -382,6 +410,9 @@ transform.make_t = function (M, hermit)
   return setmetatable(o, ref_transpose)
 end
 
+
+--- Initialize methametods for ref objects.
+--  @param t Table with methametods.
 transform.init_ref = function (t)
   -- transpose / hermit
   ref_transpose.__add = t.__add
@@ -398,12 +429,13 @@ transform.init_ref = function (t)
 end
 
 
-transform._mt_transpose = ref_transpose
-
+--- Check if the object is reference.
+--  @return true when matrix is ref.
 transform.isref = function (v)
   local mt = getmetatable(v)
   return mt == ref_transpose
 end
+
 
 return transform
 

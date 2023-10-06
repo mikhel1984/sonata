@@ -927,19 +927,8 @@ about[matrix.round] = {"M:round(N=6)",
 
 --- Conjugate transpose.
 --  @param M Initial matrix.
---  @return Transformed matrix.
-matrix.H = function (M)
-  local res, Mrows = {}, M._rows
-  for c = 1, M._cols do
-    local row = {}
-    for r = 1, Mrows do
-      local v = M[r][c]
-      row[r] = (type(v) == 'table') and v.conj and v:conj() or v
-    end
-    res[c] = row
-  end
-  return matrix._init(#res, Mrows, res)
-end
+--  @return Conjugate transformed matrix object.
+matrix.H = function (M) return tf.make_t(M, true) end
 about[matrix.H] = {"M:H() --> conj_M",
   "Return conjugabe transpose. ", TRANSFORM}
 
@@ -1198,7 +1187,7 @@ matrix.qr = function (M)
     v[1][1] = v11 + s * v:norm()
     local vnorm = v:norm()
     for r = 1, v._rows do v[r][1] = v[r][1] / vnorm end
-    local vt = v:H()
+    local vt = v:H():copy()
     for r = 1, v._rows do v[r][1] = 2 * v[r][1] end
     -- update R
     local vvr = v * (vt * R:range({j, m}, {j, n}))
@@ -1401,17 +1390,8 @@ about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix.", help.OTHER}
 
 --- Transpose matrix.
 --  @param M Initial matrix.
---  @return Transposed matrix.
-matrix.T = function (M)
-  --local res, Mrows = {}, M._rows
-  --for c = 1, M._cols do
-  --  local row = {}
-  --  for r = 1, Mrows do row[r] = M[r][c] end
-  --  res[c] = row
-  --end
-  --return matrix._init(#res, Mrows, res)
-  return tf.make_t(M)
-end
+--  @return Transposed matrix reference.
+matrix.T = function (M) return tf.make_t(M) end
 about[matrix.T] = {"M:T() --> transpose_M",
   "Return matrix transpose.", TRANSFORM}
 
