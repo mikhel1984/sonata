@@ -352,6 +352,11 @@ ref_transpose.__index = function (self, k)
 end
 
 
+ref_transpose.__newindex = function ()
+  error 'Wrong assignment'
+end
+
+
 -- Reference to column in transposed matrix.
 local ref_transpose_t = {}
 
@@ -422,6 +427,8 @@ ref_range.__index = function (self, k)
   end
 end
 
+ref_range.__newindex = ref_transpose.__newindex
+
 ref_range._copy_data = function (self, other)
   assert(self._cols == other._cols and self._rows == other._rows)
   local sr, sc = self._ir, self._tbl._ic
@@ -450,6 +457,22 @@ ref_range_r.__newindex = function (self, k, v)
   end
 end
 
+
+transform.make_range = function (M, ir, ic)
+  if transform.isref(M) then
+    M = M:copy()
+  end
+  local o = {
+    _rows = #ir,
+    _cols = #ic,
+    _ir = ir,
+    _tbl = setmetatable(
+      {_src = M, _ic = ic, _n = {}},
+      ref_range_r)
+  }
+  return setmetatable(o, ref_range)
+end
+
 --- Initialize methametods for ref objects.
 --  @param t Table with methametods.
 transform.init_ref = function (t)
@@ -465,6 +488,18 @@ transform.init_ref = function (t)
   ref_transpose.__call = t.__call
   ref_transpose.__concat = t.__concat
   ref_transpose.__tostring = t.__tostring
+  -- range
+  ref_range.__add = t.__add
+  ref_range.__sub = t.__sub
+  ref_range.__mul = t.__mul
+  ref_range.__div = t.__div
+  ref_range.__unm = t.__unm
+  ref_range.__pow = t.__pow
+  ref_range.__idiv = t.__idiv
+  ref_range.__eq = t.__eq
+  ref_range.__call = t.__call
+  ref_range.__concat = t.__concat
+  ref_range.__tostring = t.__tostring
 end
 
 
@@ -472,7 +507,8 @@ end
 --  @return true when matrix is ref.
 transform.isref = function (v)
   local mt = getmetatable(v)
-  return mt == ref_transpose
+  return mt == ref_transpose or 
+         mt == ref_range
 end
 
 
