@@ -204,12 +204,12 @@ ans = a:tr()                  -->  5
 -- extract first row
 m = a({},1)
 -- vector doesn't need in 2 indices
-ans = m(1,1)                  -->  1
+ans = m(1)                    -->  1
 
 -- extract last column
 -- index can be negative
 m = a(-1,{})
-ans = m(1,2)                  -->  4
+ans = m(2)                    -->  4
 
 -- get rank
 ans = Mat:fill(2,3):rank()    -->  1
@@ -335,7 +335,15 @@ end
 --  @param vC Column number or range (optional).
 --  @return Matrix element or submatrix.
 matrix.__call = function (self, vR, vC)
-  vR, vC = vR or {}, vC or {}
+  if not vC then
+    if self._cols == 1 then 
+      return self[vR][1]
+    elseif self._rows == 1 then
+      return self[1][vR]
+    else
+      error 'Not a vector'
+    end
+  end
   local rows, num = {}, false
   if type(vR) == 'number' then
     rows[1] = toRange(vR, self._rows)
@@ -1324,11 +1332,7 @@ about[matrix.T] = {"M:T() --> transpose_M",
 --  Simplified vector constructor.
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
-matrix.V = function (self, t)
-  local res = {0, 0, 0}       -- prepare some memory
-  for i = 1, #t do res[i] = {t[i]} end
-  return matrix._init(#t, 1, res)
-end
+matrix.V = function (self, t) return tf.make_vec(t) end
 about[matrix.V] = {":V {...} --> new_V",
   "Create vector from list of numbers.", help.NEW}
 

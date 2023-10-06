@@ -505,9 +505,46 @@ transform.make_range = function (M, ir, ic)
 end
 
 
+--- Transform table into column vector.
+local ref_vector = {}
+
+
+--- Access the vector elements.
+--  @param k Index or method.
+--  @return row or result.
+ref_vector.__index = function (self, k)
+  if type(k) == 'number' then
+    self._v[1] = self._tbl[k]
+    return self._v
+  elseif k == 'data' then
+    return self._tbl
+  else
+    return transform._mt_matrix.__index(self, k)
+  end
+end
+
+
+--- Don't modify elements.
+ref_vector.__newindex = ref_transpose.__newindex
+
+
+--- Create column vector reference.
+--  @param t Source table.
+--  @return vector reference.
+transform.make_vec = function (t)
+  local o = {
+    _rows = #t,
+    _cols = 1,
+    _tbl = t,
+    _v = {0},
+  }
+  return setmetatable(o, ref_vector)
+end
+
 --- Initialize methametods for ref objects.
 --  @param t Table with methametods.
 transform.init_ref = function (t)
+  transform._mt_matrix = t
   -- transpose / hermit
   ref_transpose.__add = t.__add
   ref_transpose.__sub = t.__sub
@@ -532,6 +569,18 @@ transform.init_ref = function (t)
   ref_range.__call = t.__call
   ref_range.__concat = t.__concat
   ref_range.__tostring = t.__tostring
+  -- vector
+  ref_vector.__add = t.__add
+  ref_vector.__sub = t.__sub
+  ref_vector.__mul = t.__mul
+  ref_vector.__div = t.__div
+  ref_vector.__unm = t.__unm
+  ref_vector.__pow = t.__pow
+  ref_vector.__idiv = t.__idiv
+  ref_vector.__eq = t.__eq
+  ref_vector.__call = t.__call
+  ref_vector.__concat = t.__concat
+  ref_vector.__tostring = t.__tostring
 end
 
 
@@ -539,11 +588,13 @@ end
 --  @return true when matrix is ref.
 transform.isref = function (v)
   local mt = getmetatable(v)
-  return mt == ref_transpose or 
-         mt == ref_range
+  return mt == ref_transpose 
+      or mt == ref_range 
+      or mt == ref_vector
 end
 
 
 return transform
 
 --===============================
+-- TODO check matrix elements on assignment
