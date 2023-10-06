@@ -411,6 +411,45 @@ transform.make_t = function (M, hermit)
 end
 
 
+local ref_range = {}
+
+ref_range.__index = function (self, k)
+  if type(k) == 'number' then
+    self._tbl._n = self._ir[k] or 0
+    return self._tbl
+  else
+    return self._tbl._src.__index(self, k)
+  end
+end
+
+ref_range._copy_data = function (self, other)
+  assert(self._cols == other._cols and self._rows == other._rows)
+  local sr, sc = self._ir, self._tbl._ic
+  local oir, oc = other._ir, other._tbl._ic
+  local ssrc, osrc = self._tbl._src, other._tbl._src
+  for i = 1, #self._ir do
+    local srow = ssrc[sr[i]]
+    local orow = osrc[oir[i]]
+    for j = 1, #self._tbl._ic do
+      srow[sc[j]] = orow[oc[j]]
+    end
+  end
+end
+
+local ref_range_r = {}
+
+ref_range_r.__index = function (self, k)
+  return self._src[self._n][self._ic[k] or 0]
+end
+
+ref_range_r.__newindex = function (self, k, v) 
+  if getmetatable(v) == ref_range then
+    ref_range._copy_data(self, v)
+  else
+    self._src[self._n][self._ic[k] or 0] = v
+  end
+end
+
 --- Initialize methametods for ref objects.
 --  @param t Table with methametods.
 transform.init_ref = function (t)
