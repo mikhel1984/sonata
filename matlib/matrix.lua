@@ -365,7 +365,7 @@ matrix.__call = function (self, vR, vC)
     local cn = toRange(vC[2] or self._cols, self._cols)
     for c = c1, cn, (vC[3] or 1) do cols[#cols+1] = c end
   end
-  return tf.make_range(self, rows, cols)
+  return tf.makeRange(self, rows, cols)
 end
 
 
@@ -868,7 +868,7 @@ about[matrix.round] = {"M:round(N=6)",
 --- Conjugate transpose.
 --  @param M Initial matrix.
 --  @return Conjugate transformed matrix object.
-matrix.H = function (M) return tf.make_t(M, true) end
+matrix.H = function (M) return tf.makeT(M, true) end
 about[matrix.H] = {"M:H() --> conj_M",
   "Return conjugabe transpose. ", TRANSFORM}
 
@@ -1304,8 +1304,8 @@ about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix.", help.OTHER}
 --- Transpose matrix.
 --  @param M Initial matrix.
 --  @return Transposed matrix reference.
-matrix.T = function (M) return tf.make_t(M) end
-about[matrix.T] = {"M:T() --> transpose_M",
+matrix.T = function (M) return tf.makeT(M) end
+about[matrix.T] = {"M:T() --> transpose_Ref",
   "Return matrix transpose.", TRANSFORM}
 
 
@@ -1313,12 +1313,17 @@ about[matrix.T] = {"M:T() --> transpose_M",
 --  Simplified vector constructor.
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
-matrix.V = function (self, t) return tf.make_vec(t) end
-about[matrix.V] = {":V {...} --> new_V",
+matrix.V = function (self, t) return tf.makeVec(t) end
+about[matrix.V] = {":V {...} --> mat_Ref",
   "Create vector from list of numbers.", help.NEW}
 
 
-matrix.vec = function (self) return tf.make_vec_access(self) end
+--- Get reference to vector.
+--  @return vector object.
+matrix.vec = function (self) return tf.makeVecAccess(self) end
+about[matrix.vec] = {"M:vec() --> vec_Ref",
+  "Create reference to vector data.", VECTOR}
+
 
 --- Stack columns into the single vector.
 --  @param M Source matrix.
@@ -1387,7 +1392,8 @@ about[matrix] = {" {row1_t, row2_t,..} --> new_M",
   "Create matrix from list of strings (tables).", help.NEW}
 
 
-tf.init_ref(matrix)
+-- Config reference objects.
+tf.initRef(matrix)
 
 
 -- Comment to remove descriptions
@@ -1398,7 +1404,6 @@ return matrix
 
 --=========================
 --TODO: check SVD with complex numbers
---TODO: change matrix print
 --TODO: matrix from list and size
 --TODO: Fix eigenvectors for complex eigenvalues.
 --TODO: single Householder algorithm

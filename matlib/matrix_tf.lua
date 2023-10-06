@@ -402,7 +402,7 @@ ref_transpose_h.__newindex = ref_transpose_t.__newindex
 --  @param M Source matrix object.
 --  @param hermit Flag shows that the matrix is conjugate.
 --  @return referenced object.
-transform.make_t = function (M, hermit)
+transform.makeT = function (M, hermit)
   if getmetatable(M) == ref_transpose then
     return M._tbl._src  -- 'transpose' back
   elseif transform.isref(M) then
@@ -442,7 +442,7 @@ end
 --  @param v Matrix to copy.
 ref_range.__newindex = function (self, k, v)
   if k == 'data' then
-    ref_range._copy_data(self, v)
+    ref_range._copyData(self, v)
   else
     error 'Wrong alignment'
   end
@@ -451,7 +451,7 @@ end
 
 --- Copy the given matrix.
 --  @param other Matrix to copy.
-ref_range._copy_data = function (self, other)
+ref_range._copyData = function (self, other)
   if self._cols ~= other._cols or self._rows ~= other._rows then
     error 'Different size'
   end
@@ -489,7 +489,7 @@ end
 --  @param ir List of rows.
 --  @param ic List of columns.
 --  @return reference to the matrix range.
-transform.make_range = function (M, ir, ic)
+transform.makeRange = function (M, ir, ic)
   if transform.isref(M) then
     M = M:copy()
   end
@@ -531,7 +531,7 @@ ref_vector.__newindex = ref_transpose.__newindex
 --- Create column vector reference.
 --  @param t Source table.
 --  @return vector reference.
-transform.make_vec = function (t)
+transform.makeVec = function (t)
   local o = {
     _rows = #t,
     _cols = 1,
@@ -544,7 +544,8 @@ end
 
 --- Simplify access to the vector elements.
 local ref_vec_access = {
-  name = {x=1, y=2, z=3},
+  type = 'vector',
+  _name = {x=1, y=2, z=3},
 }
 
 
@@ -552,7 +553,7 @@ local ref_vec_access = {
 --  @param k Index or field.
 --  @return found element.
 ref_vec_access.__index = function (self, k)
-  local ind = ref_vec_access.name[k] or k
+  local ind = ref_vec_access._name[k] or k
   if type(ind) == 'number' then
     return self._column and self._src[ind][1] or self._src[1][ind]
   elseif k == 'data' then
@@ -576,9 +577,9 @@ end
 --  @param v Value to set.
 ref_vec_access.__newindex = function (self, k, v)
   if k == 'data' then
-    ref_vec_access._copy_data(self, v)
+    ref_vec_access._copyData(self, v)
   else
-    local ind = ref_vec_access.name[k] or k
+    local ind = ref_vec_access._name[k] or k
     if self._column then
       self._src[ind][1] = v
     else 
@@ -590,7 +591,7 @@ end
 
 --- Copy one vector to another.
 --  @param other Second vector object.
-ref_vec_access._copy_data = function (self, other)
+ref_vec_access._copyData = function (self, other)
   if getmetatable(other) ~= ref_vec_access then
     error 'Different types'
   end
@@ -650,7 +651,7 @@ end
 --- Create reference to access vector elements.
 --  @param M Source matrix with single row or column.
 --  @return vector reference object.
-transform.make_vec_access = function (M)
+transform.makeVecAccess = function (M)
   if M._cols ~= 1 and M._rows ~= 1 then
     error 'Not a vector'
   end
@@ -665,7 +666,7 @@ transform.vec_access = ref_vec_access
 
 --- Initialize methametods for ref objects.
 --  @param t Table with methametods.
-transform.init_ref = function (t)
+transform.initRef = function (t)
   transform._mt_matrix = t
   -- transpose / hermit
   ref_transpose.__add = t.__add
