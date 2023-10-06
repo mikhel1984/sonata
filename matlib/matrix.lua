@@ -28,6 +28,7 @@ b = Mat {{5,6},{7,8}}
 ans = a[2][2]                 -->  4
 
 b[1][1] = 5
+
 -- transpose
 c = a:T()
 -- 'smart' getter
@@ -62,7 +63,7 @@ ans = a:det()                 -->  -2
 
 -- inverse matrix
 e = a:inv()
-ans = e(2,1)                  -->  1.5
+ans = e[2][1]                 -->  1.5
 
 -- another call of inversion
 e = a^-1
@@ -124,14 +125,14 @@ g = Mat {
   {4,5,6},
   {7,8,9}
 }
--- same as g:range({2,-1},{2,3})
+-- same as g({2,-1},{2,3})
 ans = g({2,-1},{2,3})         -->  Mat {{5,6},
                                         {8,9}}
 
 -- insert elements
 gg = Mat:eye(3)
-gg:insert({1,2},{1,2}, a)
-ans = gg:range({1,2},{1,2})   -->  a
+gg({1,2},{1,2}).data = a
+ans = gg({1,2},{1,2})   -->  a
 
 -- euclidean norm
 ans = Mat:V({1,2,3}):norm()  --3>  math.sqrt(14)
@@ -203,12 +204,12 @@ ans = a:tr()                  -->  5
 -- extract first row
 m = a({},1)
 -- vector doesn't need in 2 indices
-ans = m(1)                    -->  1
+ans = m(1,1)                  -->  1
 
 -- extract last column
 -- index can be negative
 m = a(-1,{})
-ans = m(2)                    -->  4
+ans = m(1,2)                  -->  4
 
 -- get rank
 ans = Mat:fill(2,3):rank()    -->  1
@@ -334,28 +335,27 @@ end
 --  @param vC Column number or range (optional).
 --  @return Matrix element or submatrix.
 matrix.__call = function (self, vR, vC)
-  if not vC then
-    -- vector call
-    if type(vR) == 'number' then
-      return self._cols == 1 and self[toRange(vR,self._rows)][1]
-        or self[1][toRange(vR,self._cols)]
-    else
-      vC = {1}
-      return self._cols == 1 and matrix.range(self, vR, vC)
-        or matrix.range(self, vC, vR)
-    end
-  end
-  -- matrix call
+  vR, vC = vR or {}, vC or {}
+  local rows, num = {}, false
   if type(vR) == 'number' then
-    if type(vC) == 'number' then
-      vR = toRange(vR, self._rows)
-      vC = toRange(vC, self._cols)
-      return vR and vC and self[vR][vC]
-    else vR = {vR} end
-  else
-    if type(vC) == 'number' then vC = {vC} end
+    rows[1] = toRange(vR, self._rows)
+    num = true
+  else  -- table
+    local r1 = toRange(vR[1] or 1, self._rows)
+    local rn = toRange(vR[2] or self._rows, self._rows)
+    for r = r1, rn, (vR[3] or 1) do rows[#rows+1] = r end
   end
-  return matrix.range(self, vR, vC)
+  local cols = {}
+  if type(vC) == 'number' then
+    cols[1] = toRange(vC, self._cols)
+    -- get element
+    if num then return self[rows[1]][cols[1]] end
+  else  -- table
+    local c1 = toRange(vC[1] or 1, self._cols)
+    local cn = toRange(vC[2] or self._cols, self._cols)
+    for c = c1, cn, (vC[3] or 1) do cols[#cols+1] = c end
+  end
+  return tf.make_range(self, rows, cols)
 end
 
 
@@ -512,55 +512,6 @@ about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, help.META}
 about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
---- Fill second matrix with elements of the first one
---  using index tables.
---  @param from Source matrix.
---  @param tR Table with rows.
---  @param tC Table with columns.
---  @param to Destination matrix.
---  @return Obtained matrix.
-matrix._fromTo = function (from, tR, tC, to)
-  if type(tR) ~= 'table' or type(tC) ~= 'table' then
-    error("Range is a table")
-  end
-  local dst = to or from
-  -- update range
-  if #tR == 1 then
-    local r = toRange(tR[1], dst._rows)
-    tR = {r, r, 1}
-  else
-    tR[1] = toRange(tR[1] or 1, dst._rows)
-    tR[2] = toRange(tR[2] or dst._rows, dst._rows)
-    tR[3] = tR[3] or 1
-    if not (tR[1] and tR[2] and (tR[2]-tR[1])/tR[3] >= 0) then return nil end
-  end
-  if #tC == 1 then
-    local c = toRange(tC[1], dst._cols)
-    tC = {c, c, 1}
-  else
-    tC[1] = toRange(tC[1] or 1, dst._cols)
-    tC[2] = toRange(tC[2] or dst._cols, dst._cols)
-    tC[3] = tC[3] or 1
-    if not (tC[1] and tC[2] and (tC[2]-tC[1])/tC[3] >= 0) then return nil end
-  end
-
-  -- fill matrix
-  to = to or {}
-  local i = 0
-  for r = tR[1], tR[2], tR[3] do
-    i = i+1
-    local resi, mr = to[i] or {}, from[r]
-    local j = 0
-    for c = tC[1], tC[2], tC[3] do
-      j = j+1
-      resi[j] = mr[c]
-    end
-    to[i] = resi
-  end
-  return to
-end
-
-
 --- Initialization of matrix with given size.
 --  @param iR Number of rows.
 --  @param iC Number of columns.
@@ -623,10 +574,10 @@ matrix.bidiag = function (M)
   local w = math.min(m, n)
   for k = 1, w do
     -- set zero to column elements
-    local H1 = tf.householder(B:range({1, m}, {k}), k)
+    local H1 = tf.householder(B({1, m}, {k}), k)
     U, B = U * H1:H(), H1 * B
     if k < (w - 1) then
-      local H2 = tf.householder(B:range({k}, {1, n}):T(), k+1):H()
+      local H2 = tf.householder(B({k}, {1, n}):T(), k+1):H()
       B, V = B * H2, V * H2    -- H2 is transposed!
     end
   end
@@ -732,7 +683,7 @@ about[matrix.copy] = {"M:copy() --> cpy_M",
 --  @return Cross product.
 matrix.cross = function (V1, V2)
   if (V1._rows*V1._cols ~= 3 or V2._rows*V2._cols ~= 3) then
-    error("Vector with 3 elements is expected!")
+    error "Vector with 3 elements is expected!" 
   end
   local x1, y1, z1 = V1(1), V1(2), V1(3)
   local x2, y2, z2 = V2(1), V2(2), V2(3)
@@ -933,18 +884,6 @@ about[matrix.H] = {"M:H() --> conj_M",
   "Return conjugabe transpose. ", TRANSFORM}
 
 
---- Insert values from another matrix.
---  @param M1 Initial matrix, it is modified.
---  @param tR Range of rows.
---  @param tC Range of columns.
---  @param M2 Matrix to insert.
-matrix.insert = function (M1, tR, tC, M2)
-  matrix._fromTo(M2, tR, tC, M1)
-end
-about[matrix.insert] = {"M:insert(rows_t, cols_t, M2)",
-  "Insert second matrix into the given range of indeces."}
-
-
 --- Inverse matrix.
 --  @param M Initial matrix.
 --  @return Result of inversion.
@@ -1128,9 +1067,9 @@ matrix.pinv = function (M)
   local L, r, tmp = matrix:zeros(A._rows, A._cols), 0, nil
   for k = 1, n do
     r = r + 1
-    local B = A:range({k, n}, {k})
+    local B = A({k, n}, {k})
     if r > 1 then
-      tmp = L:range({k, n}, {1, r-1}) * L:range({k}, {1, r-1}):T()
+      tmp = L({k, n}, {1, r-1}) * L({k}, {1, r-1}):T()
       -- product can be scalar
       tmp = ismatrixex(tmp) and tmp or matrix._init(1, 1, {{tmp}})
       B = B - tmp
@@ -1190,13 +1129,13 @@ matrix.qr = function (M)
     local vt = v:H():copy()
     for r = 1, v._rows do v[r][1] = 2 * v[r][1] end
     -- update R
-    local vvr = v * (vt * R:range({j, m}, {j, n}))
+    local vvr = v * (vt * R({j, m}, {j, n}))
     local j1 = j - 1
     for r = j, m do
       for c = j, n do R[r][c] = R[r][c] - vvr[r-j1][c-j1] end
     end
     -- update Q
-    local qvv = (Q:range({1, m}, {j, m}) * v) * vt
+    local qvv = (Q({1, m}, {j, m}) * v) * vt
     for r = 1, m do
       for c = j, m do Q[r][c] = Q[r][c] - qvv[r][c-j1] end
     end
@@ -1209,21 +1148,6 @@ matrix.qr = function (M)
 end
 about[matrix.qr] = {"M:qr() --> Q_M, R_M",
   "QR decomposition of the matrix.", TRANSFORM}
-
-
---- Get sub matrix.
---  In case of sub matrix each index should be a table
---  of 2 or 3 elements: [begin,end[,step]].
---  @param M Source matrix.
---  @param tR Array of rows.
---  @param tC Array of columns.
---  @return Sub array or nil in case of error.
-matrix.range = function (M, tR, tC)
-  local res = matrix._fromTo(M, tR, tC)
-  return matrix._init(#res, #res[1], res)
-end
-about[matrix.range] = {"M:range(rows_t, cols_t) --> range_M",
-  "Get submatrix for the given range of rows and columnts."}
 
 
 --- Matrix rank.

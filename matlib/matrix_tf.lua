@@ -346,6 +346,8 @@ ref_transpose.__index = function (self, k)
   if type(k) == 'number' then
     self._tbl._n = k
     return self._tbl
+  elseif k == 'data' then
+    return self._tbl._src
   else
     return self._tbl._src.__index(self, k)
   end
@@ -422,24 +424,30 @@ ref_range.__index = function (self, k)
   if type(k) == 'number' then
     self._tbl._n = self._ir[k] or 0
     return self._tbl
+  elseif k == 'data' then
+    return self._tbl._src
   else
     return self._tbl._src.__index(self, k)
   end
 end
 
-ref_range.__newindex = ref_transpose.__newindex
+ref_range.__newindex = function (self, k, v)
+  if k == 'data' then
+    ref_range._copy_data(self, v)
+  else
+    error 'Wrong alignment'
+  end
+end
 
 ref_range._copy_data = function (self, other)
-  assert(self._cols == other._cols and self._rows == other._rows)
-  local sr, sc = self._ir, self._tbl._ic
-  local oir, oc = other._ir, other._tbl._ic
-  local ssrc, osrc = self._tbl._src, other._tbl._src
-  for i = 1, #self._ir do
-    local srow = ssrc[sr[i]]
-    local orow = osrc[oir[i]]
-    for j = 1, #self._tbl._ic do
-      srow[sc[j]] = orow[oc[j]]
-    end
+  if self._cols ~= other._cols or self._rows ~= other._rows then
+    error 'Different size'
+  end
+  local r, c = self._ir, self._tbl._ic
+  local src = self._tbl._src
+  for i = 1, self._rows do
+    local row, orow = src[r[i]], other[i]
+    for j = 1, self._cols do row[c[j]] = orow[j] end
   end
 end
 
@@ -450,11 +458,7 @@ ref_range_r.__index = function (self, k)
 end
 
 ref_range_r.__newindex = function (self, k, v) 
-  if getmetatable(v) == ref_range then
-    ref_range._copy_data(self, v)
-  else
-    self._src[self._n][self._ic[k] or 0] = v
-  end
+  self._src[self._n][self._ic[k] or 0] = v
 end
 
 
