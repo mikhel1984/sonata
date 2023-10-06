@@ -1,3 +1,9 @@
+======== 0.9.39 =========
+
+Matrix
+* Use references for transpose, range
+Other
+
 ======== 0.9.38 =========
 
 Data

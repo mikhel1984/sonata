@@ -418,8 +418,13 @@ transform.make_t = function (M, hermit)
 end
 
 
+-- Get range of elements
 local ref_range = {}
 
+
+--- Get row or source data.
+--  @param k Index or method.
+--  @return Table row, data or method.
 ref_range.__index = function (self, k)
   if type(k) == 'number' then
     self._tbl._n = self._ir[k] or 0
@@ -431,6 +436,10 @@ ref_range.__index = function (self, k)
   end
 end
 
+
+--- Copy data.
+--  @param k Field name.
+--  @param v Matrix to copy.
 ref_range.__newindex = function (self, k, v)
   if k == 'data' then
     ref_range._copy_data(self, v)
@@ -439,6 +448,9 @@ ref_range.__newindex = function (self, k, v)
   end
 end
 
+
+--- Copy the given matrix.
+--  @param other Matrix to copy.
 ref_range._copy_data = function (self, other)
   if self._cols ~= other._cols or self._rows ~= other._rows then
     error 'Different size'
@@ -451,17 +463,32 @@ ref_range._copy_data = function (self, other)
   end
 end
 
+
+-- Access to column element.
 local ref_range_r = {}
 
+
+--- Read value.
+--  @param k Index.
+--  @return element in the given position or 0.
 ref_range_r.__index = function (self, k)
   return self._src[self._n][self._ic[k] or 0]
 end
 
+
+--- Set value.
+--  @param k Index.
+--  @param v New value.
 ref_range_r.__newindex = function (self, k, v) 
   self._src[self._n][self._ic[k] or 0] = v
 end
 
 
+--- Crate reference to the matrix range.
+--  @param M Source matrix.
+--  @param ir List of rows.
+--  @param ic List of columns.
+--  @return reference to the matrix range.
 transform.make_range = function (M, ir, ic)
   if transform.isref(M) then
     M = M:copy()
@@ -476,6 +503,7 @@ transform.make_range = function (M, ir, ic)
   }
   return setmetatable(o, ref_range)
 end
+
 
 --- Initialize methametods for ref objects.
 --  @param t Table with methametods.
