@@ -302,14 +302,19 @@ local matrix = {
 local function ismatrix(v) return getmetatable(v) == matrix end
 
 
+local function ismatrixex(v) 
+  return ismatrix(v) or tf.isref(v)
+end
+
+
 --- M1 + M2
 --  @param M1 First matrix or number.
 --  @param M2 Second matrix or number.
 --  @return Sum matrix.
 matrix.__add = function (M1, M2)
-  M1 = ismatrix(M1) and M1 or matrix:fill(
+  M1 = ismatrixex(M1) and M1 or matrix:fill(
     M2._rows, M2._cols, getmetatable(M1) == mt_container and M1[1] or M1)
-  M2 = ismatrix(M2) and M2 or matrix:fill(
+  M2 = ismatrixex(M2) and M2 or matrix:fill(
     M1._rows, M1._cols, getmetatable(M2) == mt_container and M2[1] or M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
@@ -366,7 +371,7 @@ matrix.__concat = function (M1, M2) return matrix.concat(M1, M2, 'h') end
 --  @param M2 Second matrix or number.
 --  @return Matrix of ratio.
 matrix.__div = function (M1, M2)
-  if not ismatrix(M2) then return matrix._kProd(1/M2, M1) end
+  if not ismatrixex(M2) then return matrix._kProd(1/M2, M1) end
   return matrix.__mul(M1, matrix.inv(M2))
 end
 
@@ -376,7 +381,7 @@ end
 --  @param M2 Second matrix.
 --  @return True if all elements are the same.
 matrix.__eq = function (M1, M2)
-  if not (ismatrix(M1) and ismatrix(M2)) then return false end
+  if not (ismatrixex(M1) and ismatrixex(M2)) then return false end
   if M1._rows ~= M2._rows or M1._cols ~= M2._cols then return false end
   for r = 1, M1._rows do
     local ar, br = M1[r], M2[r]
@@ -408,8 +413,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Result of multiplication.
 matrix.__mul = function (M1, M2)
-  if not ismatrix(M1) then return matrix._kProd(M1, M2) end
-  if not ismatrix(M2) then return matrix._kProd(M2, M1) end
+  if not ismatrixex(M1) then return matrix._kProd(M1, M2) end
+  if not ismatrixex(M2) then return matrix._kProd(M2, M1) end
   if (M1._cols ~= M2._rows) then
     error("Impossible to get product: different size!")
   end
@@ -451,9 +456,9 @@ end
 --  @param M2 Second matrix or number.
 --  @return Difference matrix.
 matrix.__sub = function (M1, M2)
-  M1 = ismatrix(M1) and M1 or matrix:fill(
+  M1 = ismatrixex(M1) and M1 or matrix:fill(
     M2._rows, M2._cols, getmetatable(M1) == mt_container and M1[1] or M1)
-  M2 = ismatrix(M2) and M2 or matrix:fill(
+  M2 = ismatrixex(M2) and M2 or matrix:fill(
     M1._rows, M1._cols, getmetatable(M2) == mt_container and M2[1] or M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
@@ -768,7 +773,7 @@ about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
 --- Create matrix with given diagonal elements.
 --  @param v List of elements.
 matrix.D = function (self, v)
-  local vec = ismatrix(v)
+  local vec = ismatrixex(v)
   if vec and (v._rows == 1 or v._cols == 1) or type(v) == 'table' then
     local n = vec and v._rows * v._cols or #v
     local res = matrix._init(n, n, {})
@@ -825,7 +830,7 @@ about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
 --  @param cols Number of columns. Can be omitted in case of square matrix.
 --  @return Diagonal matrix with ones.
 matrix.eye = function (self, iR, iC)
-  if ismatrix(iR) then
+  if ismatrixex(iR) then
     iR, iC = iR._rows, iR._cols
   else
     iC = iC or iR
@@ -1138,7 +1143,7 @@ matrix.pinv = function (M)
     if r > 1 then
       tmp = L:range({k, n}, {1, r-1}) * L:range({k}, {1, r-1}):T()
       -- product can be scalar
-      tmp = ismatrix(tmp) and tmp or matrix._init(1, 1, {{tmp}})
+      tmp = ismatrixex(tmp) and tmp or matrix._init(1, 1, {{tmp}})
       B = B - tmp
     end
     for i = k, n do L[i][r] = B[i-k+1][1] end  -- copy B to L
@@ -1398,13 +1403,14 @@ about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix.", help.OTHER}
 --  @param M Initial matrix.
 --  @return Transposed matrix.
 matrix.T = function (M)
-  local res, Mrows = {}, M._rows
-  for c = 1, M._cols do
-    local row = {}
-    for r = 1, Mrows do row[r] = M[r][c] end
-    res[c] = row
-  end
-  return matrix._init(#res, Mrows, res)
+  --local res, Mrows = {}, M._rows
+  --for c = 1, M._cols do
+  --  local row = {}
+  --  for r = 1, Mrows do row[r] = M[r][c] end
+  --  res[c] = row
+  --end
+  --return matrix._init(#res, Mrows, res)
+  return tf.make_t(M)
 end
 about[matrix.T] = {"M:T() --> transpose_M",
   "Return matrix transpose.", TRANSFORM}
@@ -1444,7 +1450,7 @@ about[matrix.vectorize] = {"M:vectorize() --> V",
 --  @param nC Number of columns. Can be omitted in case of square matrix.
 --  @return Sparse matrix.
 matrix.zeros = function (self, iR, iC)
-  if ismatrix(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
+  if ismatrixex(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
   iC = iC or iR                          -- input is a number
   return matrix._init(iR, iC, {})
 end
@@ -1490,8 +1496,12 @@ about[matrix] = {" {row1_t, row2_t,..} --> new_M",
   "Create matrix from list of strings (tables).", help.NEW}
 
 
+tf.init_ref(matrix)
+
+
 -- Comment to remove descriptions
 matrix.about = about
+
 
 return matrix
 

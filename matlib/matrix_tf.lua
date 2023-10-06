@@ -334,6 +334,76 @@ transform.householder = function (V, ik)
   return V:eye(r) - u:H() * ( (2 / (u:norm() ^ 2)) * u)
 end
 
+local ref_transpose_t = {}
+
+ref_transpose_t.__index = function (self, k)
+  return self._src[k][self._n]
+end
+
+ref_transpose_t.__newindex = function (self, k, v)
+  self._src[k][self._n] = v
+end
+
+
+local ref_transpose_h = {}
+
+ref_transpose_h.__index = function (self, k)
+  local v = self._src[k][self._n]
+  local mt = getmetatable(v)
+  return mt.conj and mt.conj(v) or v
+end
+
+ref_transpose_h.__newindex = function (self, k, v)
+  self._src[k][self._n] = v
+end
+
+
+local ref_transpose = {type='matrix'}
+
+ref_transpose.__index = function (self, k)
+  if type(k) == 'number' then
+    self._tbl._n = k
+    return self._tbl
+  else
+    return self._tbl._src.__index(self, k)
+  end
+end
+
+transform.make_t = function (M, hermit)
+  if getmetatable(M) == ref_transpose then
+    return M._tbl._src  -- 'transpose' back
+  end
+  local o = {
+    _cols = M._rows,
+    _rows = M._cols,
+    _tbl = setmetatable({_src = M, _n = 0}, 
+                        hermit and ref_transpose_h or ref_transpose_t),
+  }
+  return setmetatable(o, ref_transpose)
+end
+
+transform.init_ref = function (t)
+  -- transpose / hermit
+  ref_transpose.__add = t.__add
+  ref_transpose.__sub = t.__sub
+  ref_transpose.__mul = t.__mul
+  ref_transpose.__div = t.__div
+  ref_transpose.__unm = t.__unm
+  ref_transpose.__pow = t.__pow
+  ref_transpose.__idiv = t.__idiv
+  ref_transpose.__eq = t.__eq
+  ref_transpose.__call = t.__call
+  ref_transpose.__concat = t.__concat
+  ref_transpose.__tostring = t.__tostring
+end
+
+
+transform._mt_transpose = ref_transpose
+
+transform.isref = function (v)
+  local mt = getmetatable(v)
+  return mt == ref_transpose
+end
 
 return transform
 
