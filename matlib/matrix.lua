@@ -174,10 +174,12 @@ ans = g:diag()                -->  Mat {{1},{5},{9}}
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
-ans = x1:cross(x2)            -->  Mat {{-3},{6},{-3}}
+-- to vectors
+v1, v2 = x1:vec(), x2:vec()
+ans = v1:cross(v2)  -->  Mat {{-3},{6},{-3}}
 
 -- dot product of 2 vectors
-ans = x1:dot(x2)              -->  32
+ans = v1:dot(v2)              -->  32
 
 -- LU decomposition
 l,u,p = b:lu()
@@ -685,18 +687,8 @@ about[matrix.copy] = {"M:copy() --> cpy_M",
   "Return copy of matrix.", help.OTHER}
 
 
---- V1 x V2
---  @param V1 3-element vector.
---  @param V2 3-element vector.
---  @return Cross product.
-matrix.cross = function (V1, V2)
-  if (V1._rows*V1._cols ~= 3 or V2._rows*V2._cols ~= 3) then
-    error "Vector with 3 elements is expected!" 
-  end
-  local x1, y1, z1 = V1(1), V1(2), V1(3)
-  local x2, y2, z2 = V2(1), V2(2), V2(3)
-  return matrix._init(3, 1, {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
-end
+-- Cross product.
+matrix.cross = tf.vec_access.cross
 about[matrix.cross] = {'V:cross(V2) --> V3',
   'Cross product or two 3-element vectors.', VECTOR}
 
@@ -746,19 +738,8 @@ about[matrix.D] = {':D(list_v) --> M',
   help.NEW}
 
 
---- V1 . V2
---  @param V1 First vector.
---  @param V2 Second vector.
---  @return Scalar product.
-matrix.dot = function (V1, V2)
-  local n = V1._rows*V1._cols
-  if n ~= V2._rows*V2._cols then error("Different vector size") end
-  local s = 0
-  for i = 1, n do
-    s = s + V1(i)*V2(i)
-  end
-  return s
-end
+-- Scalar product.
+matrix.dot = tf.vec_access.dot
 about[matrix.dot] = {'V:dot(V2) --> num',
   'Scalar product of two vectors.', VECTOR}
 
@@ -1328,7 +1309,7 @@ about[matrix.T] = {"M:T() --> transpose_M",
   "Return matrix transpose.", TRANSFORM}
 
 
---- Create vector.
+--- Create column vector.
 --  Simplified vector constructor.
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
@@ -1336,6 +1317,8 @@ matrix.V = function (self, t) return tf.make_vec(t) end
 about[matrix.V] = {":V {...} --> new_V",
   "Create vector from list of numbers.", help.NEW}
 
+
+matrix.vec = function (self) return tf.make_vec_access(self) end
 
 --- Stack columns into the single vector.
 --  @param M Source matrix.

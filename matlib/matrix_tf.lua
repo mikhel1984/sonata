@@ -541,6 +541,128 @@ transform.make_vec = function (t)
   return setmetatable(o, ref_vector)
 end
 
+
+--- Simplify access to the vector elements.
+local ref_vec_access = {
+  name = {x=1, y=2, z=3},
+}
+
+
+--- Get element of method.
+--  @param k Index or field.
+--  @return found element.
+ref_vec_access.__index = function (self, k)
+  local ind = ref_vec_access.name[k] or k
+  if type(ind) == 'number' then
+    return self._column and self._src[ind][1] or self._src[1][ind]
+  elseif k == 'data' then
+    return self._src
+  else
+    return ref_vec_access[k]
+  end
+end
+
+
+--- Vector length.
+--  @return number of elements in the vector.
+ref_vec_access.__len = function (self) 
+  local src = self._src
+  return math.max(src._rows, src._cols) 
+end
+
+
+--- Set new value.
+--  @param k Index.
+--  @param v Value to set.
+ref_vec_access.__newindex = function (self, k, v)
+  if k == 'data' then
+    ref_vec_access._copy_data(self, v)
+  else
+    local ind = ref_vec_access.name[k] or k
+    if self._column then
+      self._src[ind][1] = v
+    else 
+      self._src[1][ind] = v
+    end
+  end
+end
+
+
+--- Copy one vector to another.
+--  @param other Second vector object.
+ref_vec_access._copy_data = function (self, other)
+  if getmetatable(other) ~= ref_vec_access then
+    error 'Different types'
+  end
+  local len = #self
+  if len ~= #other then
+    error 'Different size'
+  end
+  for i = 1, len do self[i] = other[i] end
+end
+
+
+--- Cross product of two vectors.
+--  @param V1 3-element vector.
+--  @param V2 3-element vector.
+--  @return Found vector.
+ref_vec_access.cross = function (V1, V2)
+  if #V1 ~= 3 or #V2 ~= 3 then
+    error 'Vector with 3 elements is expected'
+  end
+  local x1, y1, z1 = V1[1], V1[2], V1[3]
+  local x2, y2, z2 = V2[1], V2[2], V2[3]
+  return transform._mt_matrix._init(3, 1, 
+    {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
+end
+
+
+--- Scalar product of two vectors.
+--  @param V1 First vector.
+--  @param V2 Second vector.
+--  @return dot product.
+ref_vec_access.dot = function (V1, V2)
+  local len = #V1
+  if len ~= #V2 then
+    error 'Different vector length'
+  end
+  local s = 0
+  for i = 1, len do
+    s = s + V1[i] * V2[i]
+  end
+  return s
+end
+
+
+--- Vector norm.
+--  @return value of norm.
+ref_vec_access.norm = function (self)
+  -- TODO other norms
+  local s = 0
+  for i = 1, #self do
+    local v = self[i]
+    s = s + v*v
+  end
+  return math.sqrt(s)
+end
+
+
+--- Create reference to access vector elements.
+--  @param M Source matrix with single row or column.
+--  @return vector reference object.
+transform.make_vec_access = function (M)
+  if M._cols ~= 1 and M._rows ~= 1 then
+    error 'Not a vector'
+  end
+  local o = {
+    _src = M,
+    _column = (M._cols == 1),
+  }
+  return setmetatable(o, ref_vec_access)
+end
+transform.vec_access = ref_vec_access
+
+
 --- Initialize methametods for ref objects.
 --  @param t Table with methametods.
 transform.init_ref = function (t)
