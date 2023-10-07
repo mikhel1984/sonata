@@ -274,6 +274,7 @@ local function addRow(t, i)
   return row
 end
 
+
 local inform = Sonata and Sonata.warning or print
 
 local TRANSFORM = 'transform'
@@ -294,7 +295,7 @@ __module__ = "Matrix operations. The matrices are spares by default."
 local matrix = {
   type = 'matrix', ismatrix=true,
   -- parameters
-  ALIGH_WIDTH = 8,  -- number of columns to aligh width
+  ALIGN_WIDTH = 8,  -- number of columns to aligh width
   CONDITION_NUM = nil,  -- set limit for notification
 }
 
@@ -497,7 +498,7 @@ matrix.__tostring = function (self)
     rows[r] = row
   end
   -- combine
-  if self._rows > 1 and self._cols > 1 and self._cols <= matrix.ALIGH_WIDTH then
+  if self._rows > 1 and self._cols > 1 and self._cols <= matrix.ALIGN_WIDTH then
     Utils.align(rows, true)
   end
   for i, row in ipairs(rows) do rows[i] = table.concat(row, "  ") end
@@ -1313,14 +1314,16 @@ about[matrix.T] = {"M:T() --> transpose_Ref",
 --  Simplified vector constructor.
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
-matrix.V = function (self, t) return tf.makeVec(t) end
+matrix.V = function (self, t)
+  return tf.makeT(matrix._init(1, #t, {t})) 
+end
 about[matrix.V] = {":V {...} --> mat_Ref",
   "Create vector from list of numbers.", help.NEW}
 
 
 --- Get reference to vector.
 --  @return vector object.
-matrix.vec = function (self) return tf.makeVecAccess(self) end
+matrix.vec = function (self) return tf.makeVector(self) end
 about[matrix.vec] = {"M:vec() --> vec_Ref",
   "Create reference to vector data.", VECTOR}
 

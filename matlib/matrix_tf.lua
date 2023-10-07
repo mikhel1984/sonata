@@ -336,7 +336,7 @@ end
 
 
 -- Define reference to (conjugate) transpose matrix
-local ref_transpose = {}
+local ref_transpose = {type='matrix_ref'}
 
 
 --- Access to methods or data
@@ -419,7 +419,7 @@ end
 
 
 -- Get range of elements
-local ref_range = {}
+local ref_range = {type='matrix_ref'}
 
 
 --- Get row or source data.
@@ -505,45 +505,8 @@ transform.makeRange = function (M, ir, ic)
 end
 
 
---- Transform table into column vector.
-local ref_vector = {}
-
-
---- Access the vector elements.
---  @param k Index or method.
---  @return row or result.
-ref_vector.__index = function (self, k)
-  if type(k) == 'number' then
-    self._v[1] = self._tbl[k]
-    return self._v
-  elseif k == 'data' then
-    return self._tbl
-  else
-    return transform._mt_matrix.__index(self, k)
-  end
-end
-
-
---- Don't modify elements.
-ref_vector.__newindex = ref_transpose.__newindex
-
-
---- Create column vector reference.
---  @param t Source table.
---  @return vector reference.
-transform.makeVec = function (t)
-  local o = {
-    _rows = #t,
-    _cols = 1,
-    _tbl = t,
-    _v = {0},
-  }
-  return setmetatable(o, ref_vector)
-end
-
-
 --- Simplify access to the vector elements.
-local ref_vec_access = {
+local ref_vector = {
   type = 'vector',
   _name = {x=1, y=2, z=3},
 }
@@ -552,21 +515,21 @@ local ref_vec_access = {
 --- Get element of method.
 --  @param k Index or field.
 --  @return found element.
-ref_vec_access.__index = function (self, k)
-  local ind = ref_vec_access._name[k] or k
+ref_vector.__index = function (self, k)
+  local ind = ref_vector._name[k] or k
   if type(ind) == 'number' then
     return self._column and self._src[ind][1] or self._src[1][ind]
   elseif k == 'data' then
     return self._src
   else
-    return ref_vec_access[k]
+    return ref_vector[k]
   end
 end
 
 
 --- Vector length.
 --  @return number of elements in the vector.
-ref_vec_access.__len = function (self) 
+ref_vector.__len = function (self) 
   local src = self._src
   return math.max(src._rows, src._cols) 
 end
@@ -575,11 +538,11 @@ end
 --- Set new value.
 --  @param k Index.
 --  @param v Value to set.
-ref_vec_access.__newindex = function (self, k, v)
+ref_vector.__newindex = function (self, k, v)
   if k == 'data' then
-    ref_vec_access._copyData(self, v)
+    ref_vector._copyData(self, v)
   else
-    local ind = ref_vec_access._name[k] or k
+    local ind = ref_vector._name[k] or k
     if self._column then
       self._src[ind][1] = v
     else 
@@ -589,10 +552,17 @@ ref_vec_access.__newindex = function (self, k, v)
 end
 
 
+ref_vector.__tostring = function (self)
+  local res = {}
+  for i = 1, #self do res[i] = tostring(self[i]) end
+  return table.concat(res, '  ')
+end
+
+
 --- Copy one vector to another.
 --  @param other Second vector object.
-ref_vec_access._copyData = function (self, other)
-  if getmetatable(other) ~= ref_vec_access then
+ref_vector._copyData = function (self, other)
+  if getmetatable(other) ~= ref_vector then
     error 'Different types'
   end
   local len = #self
@@ -607,13 +577,13 @@ end
 --  @param V1 3-element vector.
 --  @param V2 3-element vector.
 --  @return Found vector.
-ref_vec_access.cross = function (V1, V2)
+ref_vector.cross = function (V1, V2)
   if #V1 ~= 3 or #V2 ~= 3 then
     error 'Vector with 3 elements is expected'
   end
   local x1, y1, z1 = V1[1], V1[2], V1[3]
   local x2, y2, z2 = V2[1], V2[2], V2[3]
-  return transform._mt_matrix._init(3, 1, 
+  return V1._src._init(3, 1, 
     {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
 end
 
@@ -622,7 +592,7 @@ end
 --  @param V1 First vector.
 --  @param V2 Second vector.
 --  @return dot product.
-ref_vec_access.dot = function (V1, V2)
+ref_vector.dot = function (V1, V2)
   local len = #V1
   if len ~= #V2 then
     error 'Different vector length'
@@ -637,7 +607,7 @@ end
 
 --- Vector norm.
 --  @return value of norm.
-ref_vec_access.norm = function (self)
+ref_vector.norm = function (self)
   -- TODO other norms
   local s = 0
   for i = 1, #self do
@@ -651,7 +621,7 @@ end
 --- Create reference to access vector elements.
 --  @param M Source matrix with single row or column.
 --  @return vector reference object.
-transform.makeVecAccess = function (M)
+transform.makeVector = function (M)
   if M._cols ~= 1 and M._rows ~= 1 then
     error 'Not a vector'
   end
@@ -659,15 +629,14 @@ transform.makeVecAccess = function (M)
     _src = M,
     _column = (M._cols == 1),
   }
-  return setmetatable(o, ref_vec_access)
+  return setmetatable(o, ref_vector)
 end
-transform.vec_access = ref_vec_access
+transform.vec_access = ref_vector
 
 
---- Initialize methametods for ref objects.
+--- Copy methametods for ref objects.
 --  @param t Table with methametods.
 transform.initRef = function (t)
-  transform._mt_matrix = t
   -- transpose / hermit
   ref_transpose.__add = t.__add
   ref_transpose.__sub = t.__sub
@@ -691,19 +660,7 @@ transform.initRef = function (t)
   ref_range.__eq = t.__eq
   ref_range.__call = t.__call
   ref_range.__concat = t.__concat
-  ref_range.__tostring = t.__tostring
-  -- vector
-  ref_vector.__add = t.__add
-  ref_vector.__sub = t.__sub
-  ref_vector.__mul = t.__mul
-  ref_vector.__div = t.__div
-  ref_vector.__unm = t.__unm
-  ref_vector.__pow = t.__pow
-  ref_vector.__idiv = t.__idiv
-  ref_vector.__eq = t.__eq
-  ref_vector.__call = t.__call
-  ref_vector.__concat = t.__concat
-  ref_vector.__tostring = t.__tostring
+  ref_range.__tostring = t.__tostring  
 end
 
 
@@ -712,8 +669,7 @@ end
 transform.isref = function (v)
   local mt = getmetatable(v)
   return mt == ref_transpose 
-      or mt == ref_range 
-      or mt == ref_vector
+      or mt == ref_range      
 end
 
 
