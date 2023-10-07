@@ -405,8 +405,6 @@ ref_transpose_h.__newindex = ref_transpose_t.__newindex
 transform.makeT = function (M, hermit)
   if getmetatable(M) == ref_transpose then
     return M._tbl._src  -- 'transpose' back
-  elseif transform.isref(M) then
-    M = M:copy()  -- avoid reference to reference
   end
   local o = {
     _cols = M._rows,
@@ -490,9 +488,6 @@ end
 --  @param ic List of columns.
 --  @return reference to the matrix range.
 transform.makeRange = function (M, ir, ic)
-  if transform.isref(M) then
-    M = M:copy()
-  end
   local o = {
     _rows = #ir,
     _cols = #ic,
@@ -622,9 +617,6 @@ end
 --  @param M Source matrix with single row or column.
 --  @return vector reference object.
 transform.makeVector = function (M)
-  if M._cols ~= 1 and M._rows ~= 1 then
-    error 'Not a vector'
-  end
   local o = {
     _src = M,
     _column = (M._cols == 1),

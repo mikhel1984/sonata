@@ -302,12 +302,9 @@ local matrix = {
 
 --- Check object type.
 --  @param v Object to check.
---  @return True if the object is 'matrix'.
-local function ismatrix(v) return getmetatable(v) == matrix end
-
-
+--  @return True if the object is 'matrix' or reference.
 local function ismatrixex(v) 
-  return ismatrix(v) or tf.isref(v)
+  return getmetatable(v) == matrix or tf.isref(v)
 end
 
 
@@ -555,8 +552,13 @@ end
 --  @param t Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
 matrix._new = function (self, t)
+  if ismatrixex(t) then
+    return t
+  elseif type(t) == 'number' then
+    return matrix._init(1, 1, {{t}})
+  end
   local cols, rows = 0, #t
-  for i, v in ipairs(t) do
+  for _, v in ipairs(t) do
     if not type(v) == 'table' then error('Row must be a table!') end
     cols = (cols < #v) and #v or cols
     setmetatable(v, mt_access)
@@ -1323,8 +1325,14 @@ about[matrix.V] = {":V {...} --> mat_Ref",
 
 --- Get reference to vector.
 --  @return vector object.
-matrix.vec = function (self) return tf.makeVector(self) end
-about[matrix.vec] = {"M:vec() --> vec_Ref",
+matrix.vec = function (self) 
+  if self._cols ~= 1 and self._rows ~= 1 then
+    inform("Not a vector")
+    return nil
+  end
+  return tf.makeVector(self) 
+end
+about[matrix.vec] = {"M:vec() --> vec_Ref|nil",
   "Create reference to vector data.", VECTOR}
 
 
