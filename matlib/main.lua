@@ -159,7 +159,7 @@ about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table elemen
 --  @return Rounded number.
 Round = function (f, v)
   v = v or 0
-  if Ver.isInteger(v) then
+  if not (0 < v and v < 1) then
     v = 10^(-v)
   end
   return Cross.round(f, v)

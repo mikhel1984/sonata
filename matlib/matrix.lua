@@ -144,8 +144,9 @@ print(h)
 
 -- round elements
 noize = function (v) return v + math.random()*1E-8 end
+Mat.ROUND = 1E-3
 hh = a:map(noize)
-hh:round(3)
+Mat.ROUND = nil
 ans = hh                      -->  a
 
 -- pseudo inverse matrix
@@ -574,6 +575,7 @@ end
 --- Strip matrix components.
 --  @param M Matrix to strip.
 --  @param tol Required tolerance.
+--  @return rounded matrix.
 matrix._round = function (M, tol)
   for i = 1, M._rows do
     local row = rawget(M, i)
@@ -584,6 +586,7 @@ matrix._round = function (M, tol)
       end
     end
   end
+  return M
 end
 
 

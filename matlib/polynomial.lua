@@ -202,7 +202,9 @@ local polynomial = {
 -- marker
 type = 'polynomial',
 -- simplification
-_simp = numpoly
+_simp = numpoly,
+-- parameters
+--ROUND = 1E-12, 
 }
 
 
@@ -417,6 +419,9 @@ end
 --  @param t Table of coefficients, from highest to lowest power.
 --  @return Polynomial object.
 polynomial._init = function (t)
+  if polynomial.ROUND then
+    t = polynomial._round(t, polynomial.ROUND)
+  end
   return setmetatable(t, polynomial)
 end
 
@@ -519,11 +524,17 @@ polynomial._roots3 = function (P)
 end
 
 
-polynomial._strip = function (P, tol)
+--- Strip coefficients of the polynomial.
+--  @param P Polynomial to strip.
+--  @param tol Required tolerance.
+--  @return stripped object.
+polynomial._round = function (P, tol)
   for i = 0, #P do
-    P[i] = Utils.strip(P[i], tol)
+    P[i] = Cross.round(P[i], tol)
   end
+  return P
 end
+
 
 --- Get polynomial from roots.
 --  Arguments are a sequence of roots.
