@@ -142,13 +142,6 @@ rnd = function () return math.random() end
 h = Mat:zeros(2,3):map(rnd)
 print(h)
 
--- round elements
-noize = function (v) return v + math.random()*1E-8 end
-Mat.ROUND = 1E-3
-hh = a:map(noize)
-Mat.ROUND = nil
-ans = hh                      -->  a
-
 -- pseudo inverse matrix
 m = Mat {
   {1,2},
@@ -298,7 +291,7 @@ local matrix = {
   -- parameters
   ALIGN_WIDTH = 8,  -- number of columns to aligh width
   CONDITION_NUM = nil,  -- set limit for notification
-  ROUND = 1E-12,
+  --STRIP = 1E-12,
 }
 
 
@@ -532,8 +525,19 @@ matrix._init = function (iR, iC, t)
     error "Wrong matrix size!" 
   end
   t._cols, t._rows = iC, iR
-  local res = setmetatable(t, matrix)
-  return matrix.ROUND and matrix._round(res, matrix.ROUND) or res
+  -- correct
+  if matrix.STRIP then
+    for i = 1, iR do
+      local row = t[i]
+      if row then
+        for j = 1, iC do
+          local v = row[j]
+          if v and Cnorm(v) < matrix.STRIP then row[j] = 0 end
+        end
+      end
+    end
+  end
+  return setmetatable(t, matrix)
 end
 
 

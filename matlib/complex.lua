@@ -111,13 +111,6 @@ ans = z:acosh():im()         --1>  1.000
 -- atanh
 ans = z:atanh():re()         --3>  0.146
 
--- use rounded values
-Z.ROUND = 1E-8
-z = Z(1+1E-3, 2+1e-20)
-ans = z:re()                 --3>  1.001
-
-ans = z:im()                  -->  2
-
 -- show
 print(a)
 
@@ -204,12 +197,8 @@ _simp = function (C)
   return Czero(C._[2]) and Cross.simp(C._[1]) or C
 end,
 -- strip value, when uncommented
---ROUND = 1E-8,
+--STRIP = 1E-12,
 }
-
-
-about['ROUND'] = {".ROUND", 
-  "Strip numbers to required tolerance when defined.", help.STATIC}
 
 
 --- Check if the value can be part of complex number.
@@ -374,9 +363,9 @@ end
 --  @param vIm Imaginary part, default is 0.
 --  @return Complex number.
 complex._new = function (vRe, vIm)
-  if complex.ROUND then
-    vRe = Cross.round(vRe, complex.ROUND) 
-    vIm = Cross.round(vIm, complex.ROUND)
+  if complex.STRIP then
+    if Cross.norm(vRe) < complex.STRIP then vRe = 0 end
+    if Cross.norm(vIm) < complex.STRIP then vIm = 0 end
   end
   return setmetatable({_={vRe, vIm}}, complex)
 end

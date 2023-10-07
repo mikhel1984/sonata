@@ -204,7 +204,7 @@ type = 'polynomial',
 -- simplification
 _simp = numpoly,
 -- parameters
---ROUND = 1E-12, 
+--STRIP = 1E-12,
 }
 
 
@@ -419,8 +419,10 @@ end
 --  @param t Table of coefficients, from highest to lowest power.
 --  @return Polynomial object.
 polynomial._init = function (t)
-  if polynomial.ROUND then
-    t = polynomial._round(t, polynomial.ROUND)
+  if polynomial.STRIP then
+    for i = 0, #t do
+      if Cross.norm(t[i]) < polynomial.STRIP then t[i] = 0 end
+    end
   end
   return setmetatable(t, polynomial)
 end

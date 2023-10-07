@@ -274,6 +274,7 @@ transform.givensRot = function (d1, d2)
    end
 end
 
+
 --- Remove to small elements in-place.
 --  @param M Source matrix.
 --  @param dTol Threshold value.
