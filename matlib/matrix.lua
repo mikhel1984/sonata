@@ -232,7 +232,7 @@ ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
 
 -- compatibility
 local Ver = require("matlib.utils")
-local Cnorm, Cfloat = Ver.cross.norm, Ver.cross.float
+local Cnorm, Cfloat, Cround = Ver.cross.norm, Ver.cross.float, Ver.cross.round
 local Utils = Ver.utils
 Ver = Ver.versions
 
@@ -297,6 +297,7 @@ local matrix = {
   -- parameters
   ALIGN_WIDTH = 8,  -- number of columns to aligh width
   CONDITION_NUM = nil,  -- set limit for notification
+  ROUND = 1E-12,
 }
 
 
@@ -526,9 +527,12 @@ about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 --  @param t Table for initialization.
 --  @return Matrix object.
 matrix._init = function (iR, iC, t)
-  if iR <= 0 or iC <= 0 then error("Wrong matrix size!") end
+  if iR <= 0 or iC <= 0 then 
+    error "Wrong matrix size!" 
+  end
   t._cols, t._rows = iC, iR
-  return setmetatable(t, matrix)
+  local res = setmetatable(t, matrix)
+  return matrix.ROUND and matrix._round(res, matrix.ROUND) or res
 end
 
 
@@ -567,14 +571,21 @@ matrix._new = function (self, t)
 end
 
 
-matrix._strip = function (M, tol)
-  for r = 1, M._rows do
-    local mr = M[r]
-    for c = 1, M._cols do
-      mr[c] = Utils.strip(mr[c], tol)
+--- Strip matrix components.
+--  @param M Matrix to strip.
+--  @param tol Required tolerance.
+matrix._round = function (M, tol)
+  for i = 1, M._rows do
+    local row = rawget(M, i)
+    if row then
+      for j = 1, M._cols do
+        local v = rawget(row, j)
+	if v then row[j] = Cround(v, tol) end
+      end
     end
   end
 end
+
 
 --- Bidiagonalization.
 --  Find such U, B, V that U*B*V:T() = M and
@@ -841,31 +852,6 @@ matrix.kronSum = function (M1, M2)
   return matrix.kron(M1, matrix:eye(M2)) + matrix.kron(matrix:eye(M1), M2)
 end
 about[matrix.kronSum] = {"M:kronSum(M2) --> M3", "Find Kronecker sum."}
-
-
---- Round matrix elements in place.
---  @param M Matrix object.
---  @param N Number of digits.
-matrix.round = function(M, N)
-  N = N or 6
-  local tol = 10^(-N)
-  for r = 1, M._rows do
-    local mr = M[r]
-    for c = 1, M._cols do
-      local v = mr[c]
-      if type(v) == 'number' then
-        mr[c] = Utils.round(v, tol)
-      elseif v.iscomplex then
-        v = v:round(N)
-        mr[c] = (v:im() == 0) and v:re() or v
-      elseif Cnorm(v) < tol then
-        mr[c] = 0
-      end
-    end
-  end
-end
-about[matrix.round] = {"M:round(N=6)",
-  "Round matrix elements in place.", help.OTHER}
 
 
 --- Conjugate transpose.

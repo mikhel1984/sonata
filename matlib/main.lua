@@ -23,6 +23,9 @@ ans = Round(0.9)              -->  1.0
 -- save 2 digits
 ans = Round(math.pi, 2)       -->  3.14
 
+-- use tolerance
+ans = Round(math.pi, 0.01)    -->  3.14
+
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3>  0.909
@@ -152,25 +155,28 @@ about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table elemen
 
 --- Round to some precision.
 --  @param f Real number.
---  @param N Number of decimal digits.
+--  @param d Number of decimal digits or precision.
 --  @return Rounded number.
-Round = function (f, N)
-  N = N or 0
-  return Cross.round(f, 10^(-N))
+Round = function (f, v)
+  v = v or 0
+  if Ver.isInteger(v) then
+    v = 10^(-v)
+  end
+  return Cross.round(f, v)
 end
-about[Round] = {
-  'Round(x_d, N=0) --> num', 'Round value, define number of decimal digits.', AUX}
+about[Round] = {'Round(v, d=0) --> v', 
+  'Round value, define number of decimal digits or tolerance.', AUX}
 
 
 -- Sonata specific functions
-if Sonata then  -- SPECIFIC
+if Sonata then  --( 
 
 about[use] = {'use([module_s]) --> str|nil',
   "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
 about[help] = {"help(fn='main') --> str", "Show information about the function.", AUX}
 about[quit] = {'quit()', "Quit the program.", AUX}
 
-end  -- SPECIFIC
+end             --) if Sonata
 
 
 -- save link to help info

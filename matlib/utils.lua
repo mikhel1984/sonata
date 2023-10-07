@@ -36,7 +36,7 @@ end
 
 
 -- Check type of the number
-versions.mathType  = math.type or function (x)
+versions.mathType = math.type or function (x)
   local n = tonumber(x)
   if not n then return nil end
   local _, p = mmodf(n)
