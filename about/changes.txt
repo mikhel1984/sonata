@@ -1,7 +1,9 @@
 ======== 0.9.39 =========
 
 Matrix
-* Use references for transpose, range
+* Use references for transpose, range, reshape
+* New type for vectors
+* Remove / operation
 Other
 
 ======== 0.9.38 =========

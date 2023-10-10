@@ -46,10 +46,6 @@ ans = b - a                   -->  Mat {{4,4},{4,4}}
 
 ans = a * b                   -->  Mat {{19,22},{43,50}}
 
-ans = a / b
--- determinant
-ans = ans:det()              --2>  1
-
 -- multiply to scalar
 ans = 2 * a                   -->  Mat {{2,4},{6,8}}
 
@@ -369,16 +365,6 @@ end
 matrix.__concat = function (M1, M2) return matrix.concat(M1, M2, 'h') end
 
 
---- M1 / M2
---  @param M1 First matrix or number.
---  @param M2 Second matrix or number.
---  @return Matrix of ratio.
-matrix.__div = function (M1, M2)
-  if not ismatrixex(M2) then return matrix._kProd(1/M2, M1) end
-  return matrix.__mul(M1, matrix.inv(M2))
-end
-
-
 --- M1 == M2
 --  @param M1 First matrix.
 --  @param M2 Second matrix.
@@ -511,7 +497,7 @@ matrix.__unm = function (self)
 end
 
 
-about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, help.META}
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a^b, -a", nil, help.META}
 about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
@@ -1166,25 +1152,13 @@ about[matrix.rank] = {"M:rank() --> N", "Find rank of the matrix."}
 --  @param iCols New number of columns.
 --  @return Matrix with new size.
 matrix.reshape = function (M, iRows, iCols)
-  iRows = iRows or (M._rows*M._cols)
-  iCols = iCols or 1
-  local res = matrix._init(iRows, iCols, {})
-  local newR, newC = 1, 1   -- temporary indices
-  for r = 1, M._rows do
-    local Mr = M[r]
-    for c = 1, M._cols do
-      res[newR][newC] = Mr[c]
-      newC = newC+1
-      if newC > iCols then
-        newC = 1
-        newR = newR+1
-      end
-    end
-    if newR > iRows then break end
+  if not (iRows and iCols) then
+    iRows = M:rows() * M:cols()
+    iCols = 1
   end
-  return res
+  return tf.makeReshape(M, iRows, iCols)
 end
-about[matrix.reshape] = {"M:reshape(row_N=size, col_N=1) --> upd_M",
+about[matrix.reshape] = {"M:reshape(row_N=size, col_N=1) --> mat_Ref",
   "Get matrix with changed size.", help.OTHER}
 
 
@@ -1333,15 +1307,9 @@ about[matrix.vec] = {"M:vec() --> vec_Ref|nil",
 --  @param M Source matrix.
 --  @return column vector.
 matrix.vectorize = function (M)
-  local res = {}
-  for c = 1, M._cols do
-    for r = 1, M._rows do
-      res[#res+1] = {M[r][c]}  -- TODO save nonzero only?
-    end
-  end
-  return matrix._init(#res, 1, res)
+  return M:T():copy():reshape()
 end
-about[matrix.vectorize] = {"M:vectorize() --> V",
+about[matrix.vectorize] = {"M:vectorize() --> mat_Ref",
   "Create vector as a stack of columns.", TRANSFORM}
 
 

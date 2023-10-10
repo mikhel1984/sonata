@@ -501,6 +501,75 @@ transform.makeRange = function (M, ir, ic)
 end
 
 
+-- Change matrix shape
+local ref_reshape = {type='matrix_ref'}
+
+
+--- Access to the first index.
+--  @param k Index or method name.
+--  @return table or method.
+ref_reshape.__index = function (self, k)
+  local tbl = self._tbl
+  if type(k) == 'number' then
+    tbl._n = self._cols * (k - 1)
+    return tbl
+  elseif k == 'data' then
+    return tbl._src
+  else
+    return tbl._src.__index(self, k)
+  end
+end
+
+
+-- Don't modify object
+ref_reshape.__newindex = ref_transpose.__newindex
+
+
+-- Internal data.
+local ref_reshape_t = {}
+
+
+--- Get matrix value.
+--  @param k Index.
+--  @return element value.
+ref_reshape_t.__index = function (self, k)
+  local n = self._n + k
+  local r = math.modf((n-1) / self._cols)
+  local c = n - r * self._cols
+  return self._src[r+1][c]
+end
+
+
+--- Set matrix value.
+--  @param k Index.
+--  @param v New value.
+ref_reshape_t.__newindex = function (self, k, v)
+  local n = self._n + k
+  local r = math.modf((n-1) / self._cols)
+  local c = n - r * self._cols
+  self._src[r+1][c] = v
+end
+
+
+--- Create matrix with new shape.
+--  @param M Source matrix.
+--  @param rows New number of rows.
+--  @param cols New number of columns.
+--  @return reference to the matrix with new shape.
+transform.makeReshape = function (M, rows, cols)
+  local o = {
+    _cols = cols,
+    _rows = rows,
+    _tbl = setmetatable({
+      _src = M,
+      _n = 0,
+      _cols = M:cols(),
+    }, ref_reshape_t)
+  }
+  return setmetatable(o, ref_reshape)
+end
+
+
 --- Simplify access to the vector elements.
 local ref_vector = {
   type = 'vector',
@@ -654,6 +723,18 @@ transform.initRef = function (t)
   ref_range.__call = t.__call
   ref_range.__concat = t.__concat
   ref_range.__tostring = t.__tostring  
+  -- reshape
+  ref_reshape.__add = t.__add
+  ref_reshape.__sub = t.__sub
+  ref_reshape.__mul = t.__mul
+  ref_reshape.__div = t.__div
+  ref_reshape.__unm = t.__unm
+  ref_reshape.__pow = t.__pow
+  ref_reshape.__idiv = t.__idiv
+  ref_reshape.__eq = t.__eq
+  ref_reshape.__call = t.__call
+  ref_reshape.__concat = t.__concat
+  ref_reshape.__tostring = t.__tostring  
 end
 
 
@@ -663,6 +744,7 @@ transform.isref = function (v)
   local mt = getmetatable(v)
   return mt == ref_transpose 
       or mt == ref_range      
+      or mt == ref_reshape
 end
 
 
