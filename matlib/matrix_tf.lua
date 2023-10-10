@@ -1,6 +1,6 @@
 --[[		sonata/lib/matrix_tf.lua
 
---- Aux matrix transformations.
+--- Aux matrix transformations and references.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
@@ -80,9 +80,7 @@ transform.findEigenvector = function (M, v, eps)
     b = iM * b
     b = b / b:norm()
     local diff = (b - prev):norm()
-    if diff < eps or diff > (2-eps) then
-      break
-    end
+    if diff < eps or diff > (2-eps) then break end
     prev = b
   end
   return b
@@ -280,9 +278,12 @@ end
 --  @param dTol Threshold value.
 transform.clearLess = function (M, dTol)
   for i = 1, M._rows do
-    local mi = M[i]
-    for j = 1, M._cols do
-      if Cnorm(mi[j]) < dTol then mi[j] = 0 end
+    local mi = rawget(M, i)
+    if mi then
+      for j = 1, M._cols do
+        local mij = rawget(mi, j)
+        if mij and Cnorm(mij) < dTol then mi[j] = 0 end
+      end
     end
   end
 end
@@ -344,13 +345,14 @@ local ref_transpose = {type='matrix_ref'}
 --  @param k Key or column index.
 --  @return Table reference or method.
 ref_transpose.__index = function (self, k)
+  local tbl = self._tbl
   if type(k) == 'number' then
-    self._tbl._n = k
-    return self._tbl
+    tbl._n = k
+    return tbl
   elseif k == 'data' then
-    return self._tbl._src
+    return tbl._src
   else
-    return self._tbl._src.__index(self, k)
+    return tbl._src.__index(self, k)
   end
 end
 
@@ -425,13 +427,14 @@ local ref_range = {type='matrix_ref'}
 --  @param k Index or method.
 --  @return Table row, data or method.
 ref_range.__index = function (self, k)
+  local tbl = self._tbl
   if type(k) == 'number' then
-    self._tbl._n = self._ir[k] or 0
-    return self._tbl
+    tbl._n = self._ir[k] or 0
+    return tbl
   elseif k == 'data' then
-    return self._tbl._src
+    return tbl._src
   else
-    return self._tbl._src.__index(self, k)
+    return tbl._src.__index(self, k)
   end
 end
 
@@ -493,9 +496,11 @@ transform.makeRange = function (M, ir, ic)
     _rows = #ir,
     _cols = #ic,
     _ir = ir,
-    _tbl = setmetatable(
-      {_src = M, _ic = ic, _n = {}},
-      ref_range_r)
+    _tbl = setmetatable({
+      _src = M, 
+      _ic = ic, 
+      _n = {}
+    }, ref_range_r)
   }
   return setmetatable(o, ref_range)
 end
@@ -573,7 +578,7 @@ end
 --- Simplify access to the vector elements.
 local ref_vector = {
   type = 'vector',
-  _name = {x=1, y=2, z=3},
+  _ind = {x=1, y=2, z=3},
 }
 
 
@@ -581,7 +586,7 @@ local ref_vector = {
 --  @param k Index or field.
 --  @return found element.
 ref_vector.__index = function (self, k)
-  local ind = ref_vector._name[k] or k
+  local ind = ref_vector._ind[k] or k
   if type(ind) == 'number' then
     return self._column and self._src[ind][1] or self._src[1][ind]
   elseif k == 'data' then
@@ -607,7 +612,7 @@ ref_vector.__newindex = function (self, k, v)
   if k == 'data' then
     ref_vector._copyData(self, v)
   else
-    local ind = ref_vector._name[k] or k
+    local ind = ref_vector._ind[k] or k
     if self._column then
       self._src[ind][1] = v
     else 
@@ -617,6 +622,8 @@ ref_vector.__newindex = function (self, k, v)
 end
 
 
+--- Convert to string.
+--  @return string representation.
 ref_vector.__tostring = function (self)
   local res = {}
   for i = 1, #self do res[i] = tostring(self[i]) end

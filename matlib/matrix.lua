@@ -511,19 +511,8 @@ matrix._init = function (iR, iC, t)
     error "Wrong matrix size!" 
   end
   t._cols, t._rows = iC, iR
-  -- correct
-  if matrix.STRIP then
-    for i = 1, iR do
-      local row = t[i]
-      if row then
-        for j = 1, iC do
-          local v = row[j]
-          if v and Cnorm(v) < matrix.STRIP then row[j] = 0 end
-        end
-      end
-    end
-  end
-  return setmetatable(t, matrix)
+  local res = setmetatable(t, matrix)
+  return matrix.STRIP and tf.clearLess(res, matrix.STRIP) or res
 end
 
 
