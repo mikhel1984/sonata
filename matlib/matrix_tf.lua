@@ -13,6 +13,7 @@
 local Cnorm, Usign do
   local lib = require("matlib.utils")
   Cnorm = lib.cross.norm
+  Czero = lib.cross.isZero
   Usign = lib.utils.sign
 end
 
@@ -97,7 +98,7 @@ transform.firstMinor = function (M)
   else
     local sum, k, M1 = 0, 1, M[1]
     for i = 1, M._cols do
-      if M1[i] ~= 0 then
+      if not Czero(M1[i]) then
         local m = transform.firstMinorSub(M, 1, i)
         sum = sum + (k * M1[i]) * transform.firstMinor(m)
       end
@@ -139,13 +140,13 @@ transform.gaussDown = function (M)
   for k = 1, M._rows do
     -- look for nonzero element
     local i = k+1
-    while M[k][k] == 0 and i <= M._rows do
-      if M[i][k] ~= 0 then M[i], M[k], A = M[k], M[i], -A end
+    while Czero(M[k][k]) and i <= M._rows do
+      if not Czero(M[i][k]) then M[i], M[k], A = M[k], M[i], -A end
       i = i+1
     end
     local coef = M[k][k]
     A = A * coef
-    if coef ~= 0 then
+    if not Czero(coef) then
       -- normalization
       coef = 1/coef
       local mk = M[k]
@@ -154,7 +155,7 @@ transform.gaussDown = function (M)
       for r = (k+1), M._rows do
         local mr = M[r]
         local v = mr[k]
-        if v ~= 0 then
+        if not Czero(v) then
           for c = k, M._cols do mr[c] = mr[c]-v*mk[c] end
         end -- if
       end -- for
@@ -173,7 +174,7 @@ transform.gaussUp = function (M)
     for r = k-1, 1, -1 do
       local mr = M[r]
       local v = mr[k]
-      if v ~= 0 then
+      if not Czero(v) then
         for c = k, M._cols do mr[c] = mr[c]-v*mk[c] end
       end -- if
     end -- for
@@ -236,7 +237,7 @@ transform.luPrepare = function (M)
       vv[rmax] = vv[c]
     end
     index[c] = rmax
-    if ac[c] == 0 then ac[c] = TINY end
+    if Czero(ac[c]) then ac[c] = TINY end
     -- divide by pivot element
     if c ~= a._cols then
       dum = 1.0 / ac[c]

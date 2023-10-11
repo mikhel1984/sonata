@@ -75,9 +75,7 @@ end
 
 --============= Cross-module functionality =========
 
-local cross = {
---NUMBER = 1, TABLE = 2, STRING = 3, OTHER = 4,
-}
+local cross = {}
 
 
 --- Compare equality of two objects.
@@ -291,7 +289,6 @@ utils.numstr = function (d)
 end
 
 
-
 --- Simple lexer for algebraic expressions.
 --  @param s String to parse.
 --  @return List of tokens.
@@ -310,7 +307,7 @@ end
 --  @return -1, 0 or 1
 utils.sign = function (d)
   local tp = type(d)
-  if tp == 'number' or tp == 'table' and d.__lt then
+  if tp == 'number' or (tp == 'table' and d.__lt) then
     return (d > 0) and 1 or (d < 0) and -1 or 0
   else
     return 1

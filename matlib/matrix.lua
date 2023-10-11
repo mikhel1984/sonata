@@ -223,6 +223,7 @@ ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
 -- compatibility
 local Ver = require("matlib.utils")
 local Cnorm, Cfloat, Cround = Ver.cross.norm, Ver.cross.float, Ver.cross.round
+local Czero = Ver.cross.isZero
 local Utils = Ver.utils
 Ver = Ver.versions
 
@@ -294,7 +295,7 @@ local matrix = {
 --- Check object type.
 --  @param v Object to check.
 --  @return True if the object is 'matrix' or reference.
-local function ismatrixex(v) 
+local function ismatrixex(v)
   return getmetatable(v) == matrix or tf.isref(v)
 end
 
@@ -327,7 +328,7 @@ end
 --  @return Matrix element or submatrix.
 matrix.__call = function (self, vR, vC)
   if not vC then
-    if self._cols == 1 then 
+    if self._cols == 1 then
       return self[vR][1]
     elseif self._rows == 1 then
       return self[1][vR]
@@ -507,8 +508,8 @@ about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 --  @param t Table for initialization.
 --  @return Matrix object.
 matrix._init = function (iR, iC, t)
-  if iR <= 0 or iC <= 0 then 
-    error "Wrong matrix size!" 
+  if iR <= 0 or iC <= 0 then
+    error "Wrong matrix size!"
   end
   t._cols, t._rows = iC, iR
   local res = setmetatable(t, matrix)
@@ -685,7 +686,7 @@ about[matrix.copy] = {"M:copy() --> cpy_M",
 
 -- Cross product.
 matrix.cross = tf.vec_access.cross
-about[matrix.cross] = {'V:cross(V2) --> V3',
+about[matrix.cross] = {'V:cross(V2) --> M',
   'Cross product or two 3-element vectors.', VECTOR}
 
 
@@ -854,7 +855,7 @@ matrix.inv = function (M)
   local fn = tf.invList[size]
   if fn then
     local det = tf.detList[size](M)
-    return (det ~= 0) and matrix._kProd(1/det, fn(M))
+    return (not Czero(det)) and matrix._kProd(1/det, fn(M))
                        or matrix:fill(size, size, math.huge)
   end
   -- prepare matrix
@@ -867,7 +868,7 @@ matrix.inv = function (M)
   end
   res._cols = 2*size
   res, det = tf.gaussDown(res)
-  if det == 0 then
+  if Czero(det) then
     return matrix:fill(size, size, math.huge)
   end
   res = tf.gaussUp(res)
@@ -888,7 +889,7 @@ matrix.inv = function (M)
   end
   return res
 end
-about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix.", TRANSFORM}
+about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix."}
 
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
@@ -1058,7 +1059,7 @@ matrix.pinv = function (M)
   return L * K * K * Lt * Mt
 end
 about[matrix.pinv] = {"M:pinv() --> inv_M",
-  "Pseudo inverse matrix calculation.", TRANSFORM}
+  "Pseudo inverse matrix calculation."}
 
 
 --- QR transformation
@@ -1122,7 +1123,7 @@ matrix.rank = function (M)
     -- find nonzero element
     local zeros = true
     for j = i, mat._cols do
-      if mati[j] ~= 0 then
+      if not Czero(mati[j]) then
         zeros = false
         break
       end
@@ -1148,7 +1149,7 @@ matrix.reshape = function (M, iRows, iCols)
   return tf.makeReshape(M, iRows, iCols)
 end
 about[matrix.reshape] = {"M:reshape(row_N=size, col_N=1) --> mat_Ref",
-  "Get matrix with changed size.", help.OTHER}
+  "Get matrix with changed size.", TRANSFORM}
 
 
 --- Get number or rows.
@@ -1165,14 +1166,14 @@ matrix.rref = function (M)
   return tf.gaussUp(tf.gaussDown(M))
 end
 about[matrix.rref] = {"M:rref() --> upd_M",
-  "Perform transformations using Gauss method."}
+  "Perform transformations using Gauss method.", TRANSFORM}
 
 
 --- Visualize matrix elements
 --  @param fn Condition function, returns true/false.
 --  @return String with stars when condition is true.
 matrix.stars = function (self, fn)
-  fn = fn or function (x) return x ~= 0 end
+  fn = fn or function (x) return not Czero(x) end
   local acc, row = {}, {}
   for r = 1, self._rows do
     local mr = self[r]
@@ -1184,7 +1185,7 @@ matrix.stars = function (self, fn)
   end
   return table.concat(acc, '\n')
 end
-about[matrix.stars] = {"M:star(cond_fn) --> str",
+about[matrix.stars] = {"M:stars(cond_fn) --> str",
   "Print star when condition for the current elemen is true.", help.OTHER}
 
 
@@ -1257,7 +1258,7 @@ matrix.tr = function (M)
   for i = 1, math.min(M._rows, M._cols) do sum = sum + M[i][i] end
   return sum
 end
-about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix.", help.OTHER}
+about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix."}
 
 
 --- Transpose matrix.
@@ -1273,7 +1274,7 @@ about[matrix.T] = {"M:T() --> transpose_Ref",
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
 matrix.V = function (self, t)
-  return tf.makeT(matrix._init(1, #t, {t})) 
+  return tf.makeT(matrix._init(1, #t, {t}))
 end
 about[matrix.V] = {":V {...} --> mat_Ref",
   "Create vector from list of numbers.", help.NEW}
@@ -1281,12 +1282,12 @@ about[matrix.V] = {":V {...} --> mat_Ref",
 
 --- Get reference to vector.
 --  @return vector object.
-matrix.vec = function (self) 
+matrix.vec = function (self)
   if self._cols ~= 1 and self._rows ~= 1 then
     inform("Not a vector")
     return nil
   end
-  return tf.makeVector(self) 
+  return tf.makeVector(self)
 end
 about[matrix.vec] = {"M:vec() --> vec_Ref|nil",
   "Create reference to vector data.", VECTOR}
