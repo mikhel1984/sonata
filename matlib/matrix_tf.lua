@@ -707,52 +707,31 @@ transform.vec_access = ref_vector
 --- Copy methametods for ref objects.
 --  @param t Table with methametods.
 transform.initRef = function (t)
-  -- transpose / hermit
-  ref_transpose.__add = t.__add
-  ref_transpose.__sub = t.__sub
-  ref_transpose.__mul = t.__mul
-  ref_transpose.__div = t.__div
-  ref_transpose.__unm = t.__unm
-  ref_transpose.__pow = t.__pow
-  ref_transpose.__idiv = t.__idiv
-  ref_transpose.__eq = t.__eq
-  ref_transpose.__call = t.__call
-  ref_transpose.__concat = t.__concat
-  ref_transpose.__tostring = t.__tostring
-  -- range
-  ref_range.__add = t.__add
-  ref_range.__sub = t.__sub
-  ref_range.__mul = t.__mul
-  ref_range.__div = t.__div
-  ref_range.__unm = t.__unm
-  ref_range.__pow = t.__pow
-  ref_range.__idiv = t.__idiv
-  ref_range.__eq = t.__eq
-  ref_range.__call = t.__call
-  ref_range.__concat = t.__concat
-  ref_range.__tostring = t.__tostring  
-  -- reshape
-  ref_reshape.__add = t.__add
-  ref_reshape.__sub = t.__sub
-  ref_reshape.__mul = t.__mul
-  ref_reshape.__div = t.__div
-  ref_reshape.__unm = t.__unm
-  ref_reshape.__pow = t.__pow
-  ref_reshape.__idiv = t.__idiv
-  ref_reshape.__eq = t.__eq
-  ref_reshape.__call = t.__call
-  ref_reshape.__concat = t.__concat
-  ref_reshape.__tostring = t.__tostring  
+  for _, v in ipairs {
+    '__add', '__sub', '__mul', '__div', '__unm', '__pow',
+    '__idiv', '__eq', '__call', '__concat', '__tostring', 
+  } 
+  do
+    local fn = t[v]
+    ref_transpose[v] = fn
+    ref_range[v] = fn
+    ref_reshape[v] = fn
+  end
 end
+
+
+-- List of reference types
+local refs = {
+  [ref_transpose] = true,
+  [ref_range] = true,
+  [ref_reshape] = true,
+}
 
 
 --- Check if the object is reference.
 --  @return true when matrix is ref.
 transform.isref = function (v)
-  local mt = getmetatable(v)
-  return mt == ref_transpose 
-      or mt == ref_range      
-      or mt == ref_reshape
+  return refs[getmetatable(v)]
 end
 
 
