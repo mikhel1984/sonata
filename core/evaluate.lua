@@ -349,8 +349,8 @@ evaluate.repl = function (noteList)
     read = true, info=false, queue={}, evaluate=evaluate}
   local co = evaluate.evalThread()
   -- update print
-  if not evaluate._oldPrint then
-    evaluate._oldPrint, print = print, evaluate._newPrint
+  if not evaluate.debug then
+    evaluate.debug, print = print, evaluate._newPrint
   end
   while true do
     local input = ''

@@ -576,6 +576,82 @@ transform.makeReshape = function (M, rows, cols)
 end
 
 
+local ref_concat = {type='matrix_ref'}
+
+ref_concat.__index = function (self, k)
+  local tbl = self._tbl
+  if type(k) == 'number' then
+    if tbl._vertical then
+      local n, src = 1, tbl._src
+      while n < #src and k > src[n]._rows do
+        k, n = k - src[n]._rows, n + 1
+      end
+      tbl._mat = src[n] 
+    end
+    tbl._n = k
+    return tbl
+  elseif k == 'data' then
+    return tbl._src
+  else
+    return transform._methods.__index(self, k)
+  end
+end
+
+ref_concat.__newindex = ref_transpose.__newindex
+
+
+local ref_concat_t = {}
+
+ref_concat_t.__index = function (self, k)
+  if not self._vertical then
+    local n, src = 1, self._src
+    while n < #src and k > src[n]._cols do
+      k, n = k - src[n]._cols, n + 1
+    end
+    self._mat = src[n]
+  end
+  return self._mat[self._n][k]
+end
+
+
+ref_concat_t.__newindex = function (self, k, v)
+  if not self._vertical then
+    local n, src = 1, self._src
+    while n < #src and k > src[n]._cols do
+      k, n = k - src[n]._cols, n + 1
+    end
+    self._mat = src[n]
+  end
+  self._mat[self._n][k] = v
+end
+
+
+transform.makeConcat = function (lst, isvertical)
+  local cols, rows = 0, 0
+  for i, m in ipairs(lst) do
+    if isvertical then
+      assert(i == 1 or m._cols == cols)
+      cols = m._cols
+      rows = rows + m._rows
+    else
+      assert(i == 1 or m._rows == rows)
+      rows = m._rows
+      cols = cols + m._cols
+    end
+  end
+  local o = {
+    _cols = cols,
+    _rows = rows,
+    _tbl = setmetatable({
+      _n = 0,
+      _src = lst,
+      _mat = lst[1],
+      _vertical = isvertical,
+    }, ref_concat_t)
+  }
+  return setmetatable(o, ref_concat)
+end
+
 --- Simplify access to the vector elements.
 local ref_vector = {
   type = 'vector',
@@ -716,7 +792,9 @@ transform.initRef = function (t)
     ref_transpose[v] = fn
     ref_range[v] = fn
     ref_reshape[v] = fn
+    ref_concat[v] = fn
   end
+  transform._methods = t
 end
 
 
@@ -725,6 +803,7 @@ local refs = {
   [ref_transpose] = true,
   [ref_range] = true,
   [ref_reshape] = true,
+  [ref_concat] = true,
 }
 
 

@@ -1353,6 +1353,13 @@ setmetatable(matrix, {__call = matrix._new})
 about[matrix] = {" {row1_t, row2_t,..} --> new_M",
   "Create matrix from list of strings (tables).", help.NEW}
 
+matrix.ver = function (self, lst)
+  return tf.makeConcat(lst, true)
+end
+
+matrix.hor = function (self, lst)
+  return tf.makeConcat(lst, false)
+end
 
 -- Config reference objects.
 tf.initRef(matrix)
@@ -1366,6 +1373,5 @@ return matrix
 
 --=========================
 --TODO: check SVD with complex numbers
---TODO: matrix from list and size
 --TODO: Fix eigenvectors for complex eigenvalues.
 --TODO: single Householder algorithm
