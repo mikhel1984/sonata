@@ -89,12 +89,11 @@ ans = Mat:fill(2,3,4)         -->  Mat {{4,4,4},
                                         {4,4,4}}
 
 -- horizontal concatenation
-ans = a .. b                  -->  Mat {{1,2,5,6},
+ans = Mat:hor {a, b}          -->  Mat {{1,2,5,6},
                                         {3,4,7,8}}
 
 -- vertical concatenation
--- (a // b - for short)
-ans = a:concat(b,'v')         -->  Mat {{1,2},{3,4},{5,6},{7,8}}
+ans = Mat:ver {a, b}          -->  Mat {{1,2},{3,4},{5,6},{7,8}}
 
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)       -->  Mat {{1,4},{9,16}}
@@ -109,8 +108,8 @@ aa = Mat:zip(fn, b,b,b)
 ans = aa[1][1]                -->  30
 
 -- use Gauss transform to solve equation
-ans = (a .. Mat:V{5,11}):rref()            -->  Mat {{1,0,1},
-                                                     {0,1,2}}
+ans = (a .. Mat:V{5,11}):copy():rref()  -->  Mat {{1,0,1},
+                                                  {0,1,2}}
 
 -- create vector
 ans = Mat:V {1,2,3}           -->  Mat {{1},{2},{3}}
@@ -359,11 +358,8 @@ matrix.__call = function (self, vR, vC)
 end
 
 
---- Horizontal concatenation
---  @param M1 First matrix.
---  @param M2 Second matrix.
---  @return Concatenated matrix.
-matrix.__concat = function (M1, M2) return matrix.concat(M1, M2, 'h') end
+--- Simplify horizontal concatenation of two matrices.
+matrix.__concat = function (M1, M2) return tf.makeConcat({M1, M2}, false) end
 
 
 --- M1 == M2
@@ -381,13 +377,6 @@ matrix.__eq = function (M1, M2)
   end
   return true
 end
-
-
---- Vertical concatenation.
---  @param M1 First matrix.
---  @param M2 Second matrix.
---  @return Concatenated matrix.
-matrix.__idiv = function (M1, M2) return matrix.concat(M1, M2, 'v') end
 
 
 --- Metametod for access to elements.
@@ -634,40 +623,6 @@ about[matrix.cols] = {"M:cols() --> N",
   "Get number of columns."}
 
 
---- Matrix concatenation.
---  Horizontal concatenation can be performed with
---  <code>..</code>, vertical - <code>//</code>.
---  @param M1 First matrix.
---  @param M2 Second matrix.
---  @param dir Direction of concatenation ('h' for horizontal, 'v' for vertical).
---  @return Concatenated matrix.
-matrix.concat = function (M1, M2, sDir)
-  local res = nil
-  if sDir == 'h' then
-    if (M1._rows ~= M2._rows) then error("Different number of rows") end
-    res = matrix._init(M1._rows, M1._cols+M2._cols, {})
-  elseif sDir == 'v' then
-    if (M1._cols ~= M2._cols) then error("Different number of columns") end
-    res = matrix._init(M1._rows+M2._rows, M1._cols, {})
-  else
-    error("Unexpected type of concatenation")
-  end
-  for r = 1, res._rows do
-    local resr = res[r]
-    for c = 1, res._cols do
-      local src = (r <= M1._rows and c <= M1._cols) and M1 or M2
-      local i = (r <= M1._rows) and r or (r - M1._rows)
-      local j = (c <= M1._cols) and c or (c - M1._cols)
-      resr[c] = src[i][j]
-    end
-  end
-  return res
-end
-about[matrix.concat] = {"M:concat(M2, dir_s) --> comb_M",
-  "Concatenate two matrices, dir='h' - in horizontal direction, dir='v' - in vertical\nUse M1 .. M2 for horizontal concatenation and M1 // M2 for vertical.",
-  TRANSFORM}
-
-
 --- Create copy of matrix.
 --  @param M Source matrix.
 --  @return Deep copy.
@@ -843,6 +798,15 @@ about[matrix.kronSum] = {"M:kronSum(M2) --> M3", "Find Kronecker sum."}
 matrix.H = function (M) return tf.makeT(M, true) end
 about[matrix.H] = {"M:H() --> conj_M",
   "Return conjugabe transpose. ", TRANSFORM}
+
+
+--- Horizonatal concatenation of matrices.
+--  @param lst List of matrices.
+--  @return concatenated matrix object.
+matrix.hor = function (self, lst) return tf.makeConcat(lst, false) end
+about[matrix.hor] = {":hor(mat_t) --> mat_Ref",
+  "Horizontal concatenation for the given list of matrices.", "concat"}
+  
 
 
 --- Inverse matrix.
@@ -1303,6 +1267,14 @@ about[matrix.vectorize] = {"M:vectorize() --> mat_Ref",
   "Create vector as a stack of columns.", TRANSFORM}
 
 
+--- Vertical concatenation of matrices.
+--  @param lst List of matrices.
+--  @return concatenated matrix object.
+matrix.ver = function (self, lst) return tf.makeConcat(lst, true) end
+about[matrix.ver] = {":ver(mat_t} --> mat_Ref", 
+  "Vertical concatenation for the given list of matrices.", "concat"}
+
+
 --- Create matrix of zeros.
 --  @param nR Number of rows.
 --  @param nC Number of columns. Can be omitted in case of square matrix.
@@ -1353,13 +1325,6 @@ setmetatable(matrix, {__call = matrix._new})
 about[matrix] = {" {row1_t, row2_t,..} --> new_M",
   "Create matrix from list of strings (tables).", help.NEW}
 
-matrix.ver = function (self, lst)
-  return tf.makeConcat(lst, true)
-end
-
-matrix.hor = function (self, lst)
-  return tf.makeConcat(lst, false)
-end
 
 -- Config reference objects.
 tf.initRef(matrix)
