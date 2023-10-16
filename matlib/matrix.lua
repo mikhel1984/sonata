@@ -649,7 +649,9 @@ about[matrix.cross] = {'V:cross(V2) --> M',
 --  @param M Initial matrix.
 --  @return Determinant.
 matrix.det = function (M)
-  if (M._rows ~= M._cols) then error("Square matrix is expected!") end
+  if (M._rows ~= M._cols) then
+    error "Square matrix is expected!"
+  end
   local fn = tf.detList[M._rows]
   if fn then return fn(M) end
   -- in other cases
@@ -806,14 +808,16 @@ about[matrix.H] = {"M:H() --> conj_M",
 matrix.hor = function (self, lst) return tf.makeConcat(lst, false) end
 about[matrix.hor] = {":hor(mat_t) --> mat_Ref",
   "Horizontal concatenation for the given list of matrices.", "concat"}
-  
+
 
 
 --- Inverse matrix.
 --  @param M Initial matrix.
 --  @return Result of inversion.
 matrix.inv = function (M)
-  if M._rows ~= M._cols then error("Square matrix is expected!") end
+  if M._rows ~= M._cols then
+    error "Square matrix is expected!"
+  end
   local size = M._cols
   -- check simple cases
   local fn = tf.invList[size]
@@ -1093,9 +1097,9 @@ matrix.rank = function (M)
       end
     end
     if zeros then break end
-    i = i+1
+    i = i + 1
   end
-  return i-1
+  return i - 1
 end
 about[matrix.rank] = {"M:rank() --> N", "Find rank of the matrix."}
 
@@ -1271,7 +1275,7 @@ about[matrix.vectorize] = {"M:vectorize() --> mat_Ref",
 --  @param lst List of matrices.
 --  @return concatenated matrix object.
 matrix.ver = function (self, lst) return tf.makeConcat(lst, true) end
-about[matrix.ver] = {":ver(mat_t} --> mat_Ref", 
+about[matrix.ver] = {":ver(mat_t} --> mat_Ref",
   "Vertical concatenation for the given list of matrices.", "concat"}
 
 

@@ -74,12 +74,12 @@ transform.findEigenvector = function (M, v, eps)
   -- random b
   local b = M._init(M._rows, 1, {})   -- zeros
   for i = 1, M._rows do b[i][1] = math.random() end
-  b = b / b:norm()
+  b = b * (1 / b:norm())
   -- find
   local prev = b
   for i = 1, 10 do
     b = iM * b
-    b = b / b:norm()
+    b = b * (1 / b:norm())
     local diff = (b - prev):norm()
     if diff < eps or diff > (2-eps) then break end
     prev = b
@@ -139,24 +139,26 @@ transform.gaussDown = function (M)
   local A = 1
   for k = 1, M._rows do
     -- look for nonzero element
-    local i = k+1
+    local i = k + 1
     while Czero(M[k][k]) and i <= M._rows do
-      if not Czero(M[i][k]) then M[i], M[k], A = M[k], M[i], -A end
-      i = i+1
+      if not Czero(M[i][k]) then
+        M[i], M[k], A = M[k], M[i], -A
+      end
+      i = i + 1
     end
     local coef = M[k][k]
     A = A * coef
     if not Czero(coef) then
       -- normalization
-      coef = 1/coef
+      coef = 1 / coef
       local mk = M[k]
-      for c = k, M._cols do mk[c] = mk[c]*coef end
+      for c = k, M._cols do mk[c] = mk[c] * coef end
       -- subtraction
-      for r = (k+1), M._rows do
+      for r = (k + 1), M._rows do
         local mr = M[r]
         local v = mr[k]
         if not Czero(v) then
-          for c = k, M._cols do mr[c] = mr[c]-v*mk[c] end
+          for c = k, M._cols do mr[c] = mr[c] - v * mk[c] end
         end -- if
       end -- for
     end -- if
@@ -175,7 +177,7 @@ transform.gaussUp = function (M)
       local mr = M[r]
       local v = mr[k]
       if not Czero(v) then
-        for c = k, M._cols do mr[c] = mr[c]-v*mk[c] end
+        for c = k, M._cols do mr[c] = mr[c] - v * mk[c] end
       end -- if
     end -- for
   end -- for
@@ -413,7 +415,7 @@ transform.makeT = function (M, hermit)
   local o = {
     _cols = M._rows,
     _rows = M._cols,
-    _tbl = setmetatable({_src = M, _n = 0}, 
+    _tbl = setmetatable({_src = M, _n = 0},
                         hermit and ref_transpose_h or ref_transpose_t),
   }
   return setmetatable(o, ref_transpose)
@@ -482,7 +484,7 @@ end
 --- Set value.
 --  @param k Index.
 --  @param v New value.
-ref_range_r.__newindex = function (self, k, v) 
+ref_range_r.__newindex = function (self, k, v)
   self._src[self._n][self._ic[k] or 0] = v
 end
 
@@ -498,8 +500,8 @@ transform.makeRange = function (M, ir, ic)
     _cols = #ic,
     _ir = ir,
     _tbl = setmetatable({
-      _src = M, 
-      _ic = ic, 
+      _src = M,
+      _ic = ic,
       _n = {}
     }, ref_range_r)
   }
@@ -586,7 +588,7 @@ ref_concat.__index = function (self, k)
       while n < #src and k > src[n]._rows do
         k, n = k - src[n]._rows, n + 1
       end
-      tbl._mat = src[n] 
+      tbl._mat = src[n]
     end
     tbl._n = k
     return tbl
@@ -676,9 +678,9 @@ end
 
 --- Vector length.
 --  @return number of elements in the vector.
-ref_vector.__len = function (self) 
+ref_vector.__len = function (self)
   local src = self._src
-  return math.max(src._rows, src._cols) 
+  return math.max(src._rows, src._cols)
 end
 
 
@@ -692,7 +694,7 @@ ref_vector.__newindex = function (self, k, v)
     local ind = ref_vector._ind[k] or k
     if self._column then
       self._src[ind][1] = v
-    else 
+    else
       self._src[1][ind] = v
     end
   end
@@ -732,7 +734,7 @@ ref_vector.cross = function (V1, V2)
   end
   local x1, y1, z1 = V1[1], V1[2], V1[3]
   local x2, y2, z2 = V2[1], V2[2], V2[3]
-  return V1._src._init(3, 1, 
+  return V1._src._init(3, 1,
     {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
 end
 
@@ -785,8 +787,8 @@ transform.vec_access = ref_vector
 transform.initRef = function (t)
   for _, v in ipairs {
     '__add', '__sub', '__mul', '__div', '__unm', '__pow',
-    '__eq', '__call', '__concat', '__tostring', 
-  } 
+    '__eq', '__call', '__concat', '__tostring',
+  }
   do
     local fn = t[v]
     ref_transpose[v] = fn
