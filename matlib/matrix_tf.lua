@@ -360,8 +360,29 @@ ref_transpose.__index = function (self, k)
 end
 
 
-ref_transpose.__newindex = function ()
-  error 'Wrong assignment'
+--- Copy data from one matrix to another.
+--  @param other Source object.
+ref_transpose._copyData = function (self, other)
+  if self._cols ~= other._cols or self._rows ~= other._rows then
+    error 'Different size'
+  end
+  for i = 1, self._rows do
+    for j = 1, self._cols do
+      self[i][j] = other[i][j]
+    end
+  end
+end
+
+
+--- Copy data.
+--  @param k Filed 'data' to do copy.
+--  @param v Other matrix or reference.
+ref_transpose.__newindex = function (self, k, v)
+  if k == 'data' then
+    ref_transpose._copyData(self, v)
+  else
+    error 'Wrong assignment'
+  end
 end
 
 
@@ -443,15 +464,7 @@ end
 
 
 --- Copy data.
---  @param k Field name.
---  @param v Matrix to copy.
-ref_range.__newindex = function (self, k, v)
-  if k == 'data' then
-    ref_range._copyData(self, v)
-  else
-    error 'Wrong alignment'
-  end
-end
+ref_range.__newindex = ref_transpose.__newindex
 
 
 --- Copy the given matrix.
@@ -529,7 +542,7 @@ ref_reshape.__index = function (self, k)
 end
 
 
--- Don't modify object
+-- Copy data.
 ref_reshape.__newindex = ref_transpose.__newindex
 
 
@@ -578,8 +591,13 @@ transform.makeReshape = function (M, rows, cols)
 end
 
 
+-- Concatenate matrices.
 local ref_concat = {type='matrix_ref'}
 
+
+--- Access to the first index.
+--  @param k Index or method name.
+--  @return table or method.
 ref_concat.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
@@ -599,11 +617,18 @@ ref_concat.__index = function (self, k)
   end
 end
 
+
+--- Copy data.
 ref_concat.__newindex = ref_transpose.__newindex
 
 
+-- Internal data.
 local ref_concat_t = {}
 
+
+--- Read element.
+--  @param k Element index.
+--  @return element value.
 ref_concat_t.__index = function (self, k)
   if not self._vertical then
     local n, src = 1, self._src
@@ -616,6 +641,9 @@ ref_concat_t.__index = function (self, k)
 end
 
 
+--- Set element.
+--  @param k Element index.
+--  @param v New value.
 ref_concat_t.__newindex = function (self, k, v)
   if not self._vertical then
     local n, src = 1, self._src
@@ -628,6 +656,10 @@ ref_concat_t.__newindex = function (self, k, v)
 end
 
 
+--- Concatenate matrices into one object.
+--  @param lst List of matrices.
+--  @param isvertical True for vertical concatenation.
+--  @return concatenated matrix reference.
 transform.makeConcat = function (lst, isvertical)
   local cols, rows = 0, 0
   for i, m in ipairs(lst) do
@@ -653,6 +685,7 @@ transform.makeConcat = function (lst, isvertical)
   }
   return setmetatable(o, ref_concat)
 end
+
 
 --- Simplify access to the vector elements.
 local ref_vector = {
@@ -762,10 +795,22 @@ ref_vector.norm = function (self)
   -- TODO other norms
   local s = 0
   for i = 1, #self do
-    local v = self[i]
-    s = s + v*v
+    s = s + Cnorm(self[i])^2
   end
   return math.sqrt(s)
+end
+
+
+--- Normalize in-place.
+ref_vector.normalize = function (self)
+  local s, len = 0, #self
+  for i = 1, len do
+    s = s + Cnorm(self[i])^2
+  end
+  s = math.sqrt(s)
+  for i = 1, len do
+    self[i] = self[i] / s
+  end
 end
 
 
