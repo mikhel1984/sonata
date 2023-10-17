@@ -672,17 +672,24 @@ about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
 
 --- Create matrix with given diagonal elements.
 --  @param v List of elements.
-matrix.D = function (self, v)
+matrix.D = function (_, v, shift)
+  shift = shift or 0
   local vec = ismatrixex(v)
   if vec and (v._rows == 1 or v._cols == 1) or type(v) == 'table' then
     local n = vec and v._rows * v._cols or #v
-    local res = matrix._init(n, n, {})
-    for i = 1, n do res[i][i] = vec and v(i) or v[i] end
+    local res
+    if shift >= 0 then
+      res = matrix._init(n + shift, n + shift, {})
+      for i = 1, n do res[i][i+shift] = vec and v(i) or v[i] end
+    else
+      res = matrix._init(n - shift, n - shift, {})
+      for i = 1, n do res[i-shift][i] = vec and v(i) or v[i] end
+    end
     return res
   end
   return nil
 end
-about[matrix.D] = {':D(list_v) --> M',
+about[matrix.D] = {':D(list_v, shift_N) --> M',
   'Create new matrix with the given diagonal elements.',
   help.NEW}
 
