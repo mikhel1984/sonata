@@ -350,12 +350,12 @@ local ref_transpose = {type='matrix_ref'}
 ref_transpose.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
-    tbl._n = k
+    tbl.n = k
     return tbl
   elseif k == 'data' then
-    return tbl._src
+    return tbl.src
   else
-    return tbl._src.__index(self, k)
+    return tbl.src.__index(self, k)
   end
 end
 
@@ -367,8 +367,9 @@ ref_transpose._copyData = function (self, other)
     error 'Different size'
   end
   for i = 1, self._rows do
+    local dst, src = self[i], other[i]
     for j = 1, self._cols do
-      self[i][j] = other[i][j]
+      dst[j] = src[j]
     end
   end
 end
@@ -394,7 +395,7 @@ local ref_transpose_t = {}
 --  @param k Element index.
 --  @return matrix value.
 ref_transpose_t.__index = function (self, k)
-  return self._src[k][self._n]
+  return self.src[k][self.n]
 end
 
 
@@ -402,7 +403,7 @@ end
 --  @param k Element index.
 --  @param v New value.
 ref_transpose_t.__newindex = function (self, k, v)
-  self._src[k][self._n] = v
+  self.src[k][self.n] = v
 end
 
 
@@ -414,7 +415,7 @@ local ref_transpose_h = {}
 --  @param k Element index.
 --  @return matrix value.
 ref_transpose_h.__index = function (self, k)
-  local v = self._src[k][self._n]
+  local v = self.src[k][self.n]
   return (type(v) == 'table') and v.conj and v:conj() or v
 end
 
@@ -431,12 +432,12 @@ ref_transpose_h.__newindex = ref_transpose_t.__newindex
 --  @return referenced object.
 transform.makeT = function (M, hermit)
   if getmetatable(M) == ref_transpose then
-    return M._tbl._src  -- 'transpose' back
+    return M._tbl.src  -- 'transpose' back
   end
   local o = {
     _cols = M._rows,
     _rows = M._cols,
-    _tbl = setmetatable({_src = M, _n = 0},
+    _tbl = setmetatable({src = M, n = 0},
                         hermit and ref_transpose_h or ref_transpose_t),
   }
   return setmetatable(o, ref_transpose)
@@ -453,12 +454,12 @@ local ref_range = {type='matrix_ref'}
 ref_range.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
-    tbl._n = self._ir[k] or 0
+    tbl.n = self._ir[k] or 0
     return tbl
   elseif k == 'data' then
-    return tbl._src
+    return tbl.src
   else
-    return tbl._src.__index(self, k)
+    return tbl.src.__index(self, k)
   end
 end
 
@@ -474,7 +475,7 @@ ref_range._copyData = function (self, other)
     error 'Different size'
   end
   local r, c = self._ir, self._tbl._ic
-  local src = self._tbl._src
+  local src = self._tbl.src
   for i = 1, self._rows do
     local row, orow = src[r[i]], other[i]
     for j = 1, self._cols do row[c[j]] = orow[j] end
@@ -490,7 +491,7 @@ local ref_range_r = {}
 --  @param k Index.
 --  @return element in the given position or 0.
 ref_range_r.__index = function (self, k)
-  return self._src[self._n][self._ic[k] or 0]
+  return self.src[self.n][self._ic[k] or 0]
 end
 
 
@@ -498,7 +499,7 @@ end
 --  @param k Index.
 --  @param v New value.
 ref_range_r.__newindex = function (self, k, v)
-  self._src[self._n][self._ic[k] or 0] = v
+  self.src[self.n][self._ic[k] or 0] = v
 end
 
 
@@ -513,9 +514,9 @@ transform.makeRange = function (M, ir, ic)
     _cols = #ic,
     _ir = ir,
     _tbl = setmetatable({
-      _src = M,
+      src = M,
       _ic = ic,
-      _n = {}
+      n = {}
     }, ref_range_r)
   }
   return setmetatable(o, ref_range)
@@ -532,12 +533,12 @@ local ref_reshape = {type='matrix_ref'}
 ref_reshape.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
-    tbl._n = self._cols * (k - 1)
+    tbl.n = self._cols * (k - 1)
     return tbl
   elseif k == 'data' then
-    return tbl._src
+    return tbl.src
   else
-    return tbl._src.__index(self, k)
+    return tbl.src.__index(self, k)
   end
 end
 
@@ -554,10 +555,10 @@ local ref_reshape_t = {}
 --  @param k Index.
 --  @return element value.
 ref_reshape_t.__index = function (self, k)
-  local n = self._n + k
-  local r = math.modf((n-1) / self._cols)
-  local c = n - r * self._cols
-  return self._src[r+1][c]
+  local n = self.n + k
+  local r = math.modf((n-1) / self.cols)
+  local c = n - r * self.cols
+  return self.src[r+1][c]
 end
 
 
@@ -565,10 +566,10 @@ end
 --  @param k Index.
 --  @param v New value.
 ref_reshape_t.__newindex = function (self, k, v)
-  local n = self._n + k
-  local r = math.modf((n-1) / self._cols)
-  local c = n - r * self._cols
-  self._src[r+1][c] = v
+  local n = self.n + k
+  local r = math.modf((n-1) / self.cols)
+  local c = n - r * self.cols
+  self.src[r+1][c] = v
 end
 
 
@@ -582,9 +583,9 @@ transform.makeReshape = function (M, rows, cols)
     _cols = cols,
     _rows = rows,
     _tbl = setmetatable({
-      _src = M,
-      _n = 0,
-      _cols = M:cols(),
+      src = M,
+      n = 0,
+      cols = M:cols(),
     }, ref_reshape_t)
   }
   return setmetatable(o, ref_reshape)
@@ -601,17 +602,17 @@ local ref_concat = {type='matrix_ref'}
 ref_concat.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
-    if tbl._vertical then
-      local n, src = 1, tbl._src
+    if tbl.vertical then
+      local n, src = 1, tbl.src
       while n < #src and k > src[n]._rows do
         k, n = k - src[n]._rows, n + 1
       end
-      tbl._mat = src[n]
+      tbl.mat = src[n]
     end
-    tbl._n = k
+    tbl.n = k
     return tbl
   elseif k == 'data' then
-    return tbl._src
+    return tbl.src
   else
     return transform._methods.__index(self, k)
   end
@@ -630,14 +631,14 @@ local ref_concat_t = {}
 --  @param k Element index.
 --  @return element value.
 ref_concat_t.__index = function (self, k)
-  if not self._vertical then
-    local n, src = 1, self._src
+  if not self.vertical then
+    local n, src = 1, self.src
     while n < #src and k > src[n]._cols do
       k, n = k - src[n]._cols, n + 1
     end
-    self._mat = src[n]
+    self.mat = src[n]
   end
-  return self._mat[self._n][k]
+  return self.mat[self.n][k]
 end
 
 
@@ -645,14 +646,14 @@ end
 --  @param k Element index.
 --  @param v New value.
 ref_concat_t.__newindex = function (self, k, v)
-  if not self._vertical then
-    local n, src = 1, self._src
+  if not self.vertical then
+    local n, src = 1, self.src
     while n < #src and k > src[n]._cols do
       k, n = k - src[n]._cols, n + 1
     end
-    self._mat = src[n]
+    self.mat = src[n]
   end
-  self._mat[self._n][k] = v
+  self.mat[self.n][k] = v
 end
 
 
@@ -677,10 +678,10 @@ transform.makeConcat = function (lst, isvertical)
     _cols = cols,
     _rows = rows,
     _tbl = setmetatable({
-      _n = 0,
-      _src = lst,
-      _mat = lst[1],
-      _vertical = isvertical,
+      n = 0,
+      src = lst,
+      mat = lst[1],
+      vertical = isvertical,
     }, ref_concat_t)
   }
   return setmetatable(o, ref_concat)
@@ -833,8 +834,7 @@ transform.initRef = function (t)
   for _, v in ipairs {
     '__add', '__sub', '__mul', '__div', '__unm', '__pow',
     '__eq', '__call', '__concat', '__tostring',
-  }
-  do
+  } do
     local fn = t[v]
     ref_transpose[v] = fn
     ref_range[v] = fn
