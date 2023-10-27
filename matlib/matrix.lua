@@ -980,10 +980,11 @@ matrix.pinv = function (self)
   local m, n, transp = self._rows, self._cols, false
   local Mt, A = self:T(), nil
   if m < n then
-    A, n, transp = matrix.__mul(self, Mt), m, true
+    A, n, transp = self * Mt, m, true
   else
-    A = matrix.__mul(Mt, self)
+    A = Mt * self
   end
+  A = matrix(A)  -- avoid scalar result
   local tol = math.huge
   for i = 1, A._rows do
     local v = Cnorm(A[i][i])
@@ -995,9 +996,7 @@ matrix.pinv = function (self)
     r = r + 1
     local B = A({k, n}, k)
     if r > 1 then
-      tmp = L({k, n}, {1, r-1}) * L(k, {1, r-1}):T()
-      -- product can be scalar
-      tmp = ismatrixex(tmp) and tmp or matrix._init(1, 1, {{tmp}})
+      tmp = matrix(L({k, n}, {1, r-1}) * L(k, {1, r-1}):T())
       B = B - tmp
     end
     for i = k, n do L[i][r] = B[i-k+1][1] end  -- copy B to L
@@ -1017,11 +1016,11 @@ matrix.pinv = function (self)
   end
   L._cols = (r > 0) and r or 1
   local Lt = L:T()
-  local K = matrix.inv(Lt * L)
+  local K = matrix.inv(matrix(Lt * L))
   if transp then
-    return Mt * L * K * K * Lt
+    return (((Mt * L) * K) * K) * Lt
   end
-  return L * K * K * Lt * Mt
+  return L * (K * (K * (Lt * Mt)))
 end
 about[matrix.pinv] = {"M:pinv() --> inv_M",
   "Pseudo inverse matrix calculation."}

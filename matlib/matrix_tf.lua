@@ -43,7 +43,7 @@ end
 -- Inversion for simple cases
 transform.invList = {
 -- 1x1
-function (M) return 1 end,
+function (M) return M._init(1, 1, {{1}}) end,
 -- 2x2
 function (M)
   return M._init(2, 2, {{M[2][2], -M[1][2]}, {-M[2][1], M[1][1]}} )
