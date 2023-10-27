@@ -967,6 +967,11 @@ end
 about[matrix.norm] = {"M:norm() --> num", "Euclidean norm."}
 
 
+matrix.normalize = tf.vec_access.normalize
+about[matrix.normalize] = {"V:normalize()", 
+  "Normalize to unit vector.", VECTOR}
+
+
 --- Quick pseudo inverse matrix.
 --  Based on "Fast computation of Moore-Penrose inverse matrices"
 --  paper by Pierre Courrieu.

@@ -10,11 +10,12 @@
 
 --      LOCAL
 
-local Cnorm, Usign do
+local Cnorm, Usign, Czero, Unumstr do
   local lib = require("matlib.utils")
   Cnorm = lib.cross.norm
   Czero = lib.cross.isZero
   Usign = lib.utils.sign
+  Unumstr = lib.utils.numstr
 end
 
 
@@ -739,7 +740,10 @@ end
 --  @return string representation.
 ref_vector.__tostring = function (self)
   local res = {}
-  for i = 1, #self do res[i] = tostring(self[i]) end
+  for i = 1, #self do 
+    local v = self[i]
+    res[i] = (type(v) == 'number') and Unumstr(v) or tostring(v) 
+  end
   return table.concat(res, '  ')
 end
 
@@ -791,14 +795,25 @@ end
 
 
 --- Vector norm.
+--  @param type_s Type of the norm.
 --  @return value of norm.
-ref_vector.norm = function (self)
-  -- TODO other norms
+ref_vector.norm = function (self, type_s)
+  type_s = type_s or 'l2'
   local s = 0
-  for i = 1, #self do
-    s = s + Cnorm(self[i])^2
+  if type_s == 'l1' then
+    for i = 1, #self do s = s + Cnorm(self[i]) end
+  elseif type_s == 'l2' then
+    for i = 1, #self do 
+      local v = Cnorm(self[i])
+      s = s + v * v
+    end
+    s = math.sqrt(s)
+  elseif type_s == 'linf' then
+    for i = 1, #self do s = math.max(s, Cnorm(self[i])) end
+  else
+    error 'Unknown type'
   end
-  return math.sqrt(s)
+  return s
 end
 
 
