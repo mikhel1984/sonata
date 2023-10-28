@@ -190,6 +190,10 @@ m = Mat {{3,1},{1,3}}
 m = m:chol()
 ans = m[2][2]                --3>  1.633
 
+-- matrix exponential
+m = a:exp()
+ans = m[2][2]                --1> 164.1
+
 -- matrix trace
 ans = a:tr()                  -->  5
 
@@ -685,7 +689,9 @@ about[matrix.dot] = {'V:dot(V2) --> num',
 --- Find eigenvectors and eigenvalues.
 --  @return Matrix with eigenvectors, matrix with eigenvalues in diagonal.
 matrix.eig = function (self)
-  assert(self._rows == self._cols)
+  if self._rows ~= self._cols then
+    error "Square matrix is expected!"
+  end
   matrix.ext_poly = matrix.ext_poly or require("matlib.polynomial")
   local p = matrix.ext_poly:char(self)
   local root = p:roots()
@@ -700,6 +706,26 @@ matrix.eig = function (self)
 end
 about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
   'Find matrices of eigenvectors and eigenvalues.'}
+
+
+--- Find matrix exponential, e^M
+--  @return found matrix.
+matrix.exp = function (self)
+  local U, D = matrix.eig(self)
+  local Ui = matrix.inv(U)
+  for i = 1, D._rows do
+    local v = D[i][i]
+    if type(v) == 'table' then
+      v = v.exp and v:exp() or math.exp(v:float())
+    else
+      v = math.exp(v)
+    end
+    -- U * D
+    for j = 1, D._rows do U[j][i] = U[j][i] * v end
+  end
+  return U * Ui
+end
+about[matrix.exp] = {"M:exp() --> new_M", "Matrix exponential.", TRANSFORM}
 
 
 --- Identity matrix.
@@ -740,45 +766,10 @@ about[matrix.fill] = {":fill(row_N, col_N, val=1) --> M",
   "Create matrix of given numbers (default is 1).", help.NEW}
 
 
---- Kronecker product.
---  @param M Second matrix.
---  @return matrix, obtained with Kronecker product.
-matrix.kron = function (self, M)
-  local res = matrix._init(self._rows*M._rows, self._cols*M._cols, {})
-  for i = 1, self._rows do
-    for j = 1, self._cols do
-      local v = self[i][j]
-      if v ~= 0 then
-        local rr, cc = (i-1)*M._rows, (j-1)*M._cols
-        for p = 1, M._rows do
-          local mp = M[p]
-          local resr = res[rr + p]
-          for q = 1, M._cols do resr[cc + q] = v * mp[q] end
-        end
-      end
-    end
-  end
-  return res
-end
-about[matrix.kron] = {"M:kron(M2) --> M3", "Find Kronecker product."}
-
-
---- Kronecker sum.
---  @param M Second matrix.
---  @return matrix, obtained with Kronecker sum.
-matrix.kronSum = function (self, M)
-  if self._rows ~= self._cols or M._rows ~= M._cols then
-    error('Square matrices expected')
-  end
-  return matrix.kron(self, matrix:eye(M)) + matrix.kron(matrix:eye(M1), M)
-end
-about[matrix.kronSum] = {"M:kronSum(M2) --> M3", "Find Kronecker sum."}
-
-
 --- Conjugate transpose.
 --  @return Conjugate transformed matrix object.
 matrix.H = function (self) return tf.makeT(self, true) end
-about[matrix.H] = {"M:H() --> conj_M",
+about[matrix.H] = {"M:H() --> conj_Ref",
   "Return conjugabe transpose. ", TRANSFORM}
 
 
@@ -837,6 +828,41 @@ matrix.inv = function (self)
   return res
 end
 about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix."}
+
+
+--- Kronecker product.
+--  @param M Second matrix.
+--  @return matrix, obtained with Kronecker product.
+matrix.kron = function (self, M)
+  local res = matrix._init(self._rows*M._rows, self._cols*M._cols, {})
+  for i = 1, self._rows do
+    for j = 1, self._cols do
+      local v = self[i][j]
+      if v ~= 0 then
+        local rr, cc = (i-1)*M._rows, (j-1)*M._cols
+        for p = 1, M._rows do
+          local mp = M[p]
+          local resr = res[rr + p]
+          for q = 1, M._cols do resr[cc + q] = v * mp[q] end
+        end
+      end
+    end
+  end
+  return res
+end
+about[matrix.kron] = {"M:kron(M2) --> M3", "Find Kronecker product."}
+
+
+--- Kronecker sum.
+--  @param M Second matrix.
+--  @return matrix, obtained with Kronecker sum.
+matrix.kronSum = function (self, M)
+  if self._rows ~= self._cols or M._rows ~= M._cols then
+    error('Square matrices expected')
+  end
+  return matrix.kron(self, matrix:eye(M)) + matrix.kron(matrix:eye(M1), M)
+end
+about[matrix.kronSum] = {"M:kronSum(M2) --> M3", "Find Kronecker sum."}
 
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
@@ -1150,15 +1176,14 @@ about[matrix.stars] = {"M:stars(cond_fn) --> str",
 --  @return Matrices U, S, V.
 matrix.svd = function (M)
   local transpose = M._rows < M._cols
-  if transpose then M = M:T() end
+  if transpose then M = M:T():copy() end
   -- main steps
   local U1, B, V1 = tf.bidiag(M)
   local U2, V2 = matrix:eye(U1), matrix:eye(V1)
-  local E, U3, V3 = math.huge, nil, nil
-  while E > 1E-8 do
-    U3, B, V3, E = tf.qrSweep(B)
-    U2, V2 = U2 * U3, V2 * V3
-  end
+  repeat 
+    local U3, B3, V3, E = tf.qrSweep(B)
+    U2, V2, B = U2 * U3, V2 * V3, B3
+  until E <= 1E-8
   U1, V1 = U1 * U2, V1 * V2
   if transpose then
     U1, B, V1 = V1, B:T(), U1

@@ -66,15 +66,16 @@ end
 --  @param M Source matrix.
 --  @return U, B, V
 transform.bidiag = function (M)
-  local m, n, B = m._rows, M._cols, M
+  local m, n, B = M._rows, M._cols, M
   local U, V = M:eye(m), M:eye(n)
   local w = math.min(m, n)
   for k = 1, w do
     -- set zero to column elements
-    local H1 = transform.householder(B({1, m}, k), k)
+    local H1 = transform.householder(B({1, m}, k):copy(), k)
     U, B = U * H1:H(), H1 * B
     if k < (w - 1) then
-      local H2 = transform.householder(B(k, {1, n}):T(), k+1):H()
+      local H2 = transform.householder(
+        B(k, {1, n}):T():copy(), k+1):H()
       B, V = B * H2, V * H2    -- H2 is transposed!
     end
   end
@@ -277,7 +278,7 @@ transform.qrSweep = function (M)
   end
   -- find error (upper diagonal of lenght w-1)
   local e = 0
-  for i = 1, w-1 do e = e + math.abs(B[i][i+1]) end
+  for i = 1, w-1 do e = e + Cnorm(B[i][i+1]) end
   return U, B, V, e
 end
 
@@ -288,13 +289,14 @@ end
 --  @return Householder matrix.
 transform.householder = function (V, ik)
   local r, sum = V._rows, 0
-  local u = V._init(1, r, {})   -- use row vector
+  local u = transform._methods._init(1, r, {})   -- use row vector
   -- fill vector
   for i = ik, r do sum = sum + Cnorm(V[i][1])^2 end
-  u[1][ik] = V[ik][1] + Usign(V[ik][1]) * math.sqrt(sum)
-  for i = ik+1, r do u[1][i] = V[i][1] end
+  local u1 = u[1]
+  u1[ik] = V[ik][1] + Usign(V[ik][1]) * math.sqrt(sum)
+  for i = ik+1, r do u1[i] = V[i][1] end
   -- find matrix
-  return V:eye(r) - u:H() * ( (2 / (u:norm() ^ 2)) * u)
+  return V:eye(r) - u:H() * ( (2 / u:norm()^2) * u)
 end
 
 
