@@ -1053,38 +1053,33 @@ about[matrix.pinv] = {"M:pinv() --> inv_M",
 --  @return Q and R matrices.
 matrix.qr = function (self)
   local m, n = self._rows, self._cols
-  if n > m then error("Wrong matrix size") end
+  if n > m then 
+    error "Wrong matrix size"  
+  end
   local Q = matrix:eye(m)
   local R = matrix.copy(self)
-  local v = matrix._init(m, 1, {})
   for j = 1, math.min(m-1, n) do
     -- housholder transformation
-    -- get vector
-    local k = 1
-    for i = j, m do
-      v[k][1] = R[i][j]
-      k = k + 1
-    end
-    v._rows = k - 1
     -- prepare v and v:T()
-    local v11 = v[1][1]
-    local v11abs = Cnorm(v11)
-    local s = (v11abs > 0) and (v11 / v11abs) or 1
-    v[1][1] = v11 + s * v:norm()
-    local vnorm = v:norm()
-    for r = 1, v._rows do v[r][1] = v[r][1] / vnorm end
+    local v = R({j,m}, j):copy()
+    local v1 = v[1][1]
+    local v1abs = Cnorm(v1)
+    v[1][1] = v1 + v:norm() * (v1abs > 0 and (v1/v1abs) or 1)
+    v:vec():normalize()
     local vt = v:H():copy()
     for r = 1, v._rows do v[r][1] = 2 * v[r][1] end
     -- update R
     local vvr = v * (vt * R({j, m}, {j, n}))
     local j1 = j - 1
     for r = j, m do
-      for c = j, n do R[r][c] = R[r][c] - vvr[r-j1][c-j1] end
+      local Rr, Vj1 = R[r], vvr[r-j1]
+      for c = j, n do Rr[c] = Rr[c] - Vj1[c-j1] end
     end
     -- update Q
     local qvv = (Q({1, m}, {j, m}) * v) * vt
     for r = 1, m do
-      for c = j, m do Q[r][c] = Q[r][c] - qvv[r][c-j1] end
+      local Qr, Qj1 = Q[r], qvv[r]
+      for c = j, m do Qr[c] = Qr[c] - Qj1[c-j1] end
     end
   end
   -- set zeros
