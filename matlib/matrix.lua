@@ -564,58 +564,35 @@ matrix._round = function (self, tol)
 end
 
 
---- Bidiagonalization.
---  Find such U, B, V that U*B*V:T() = M and
---  B is upper bidiagonal, U and V are ortogonal.
---  @return U, B, V
-matrix.bidiag = function (self)
-  local m, n, B = self._rows, self._cols, self
-  local U, V = matrix:eye(m), matrix:eye(n)
-  local w = math.min(m, n)
-  for k = 1, w do
-    -- set zero to column elements
-    local H1 = tf.householder(B({1, m}, k), k)
-    U, B = U * H1:H(), H1 * B
-    if k < (w - 1) then
-      local H2 = tf.householder(B(k, {1, n}):T(), k+1):H()
-      B, V = B * H2, V * H2    -- H2 is transposed!
-    end
-  end
-  return U, B, V
-end
-about[matrix.bidiag] = {"M:bidiag() --> U_M, B_M, V_M",
-  "Bidiagonalization of matrix, return U, B, V.", TRANSFORM}
-
-
 --- Cholesky decomposition.
 --  @param M Positive definite symmetric matrix.
 --  @return Lower part of the decomposition.
 matrix.chol = function (self)
-  if self._rows ~= self._cols then error("Square matrix is expected!") end
-  local a, p = matrix.copy(self), {}
-  -- calculate new values
-  for r = 1, a._rows do
-    local ar = a[r]
-    for c = r, a._cols do
-      local sum = ar[c]
-      for k = r-1, 1, -1 do sum = sum - ar[k]*a[c][k] end
-      if r == c then
-        assert(sum >= 0, 'The matrix is not positive definite!')
-        p[r] = math.sqrt(sum)
+  if self._rows ~= self._cols then 
+    error "Square matrix is expected!" 
+  end
+  local L = matrix:zeros(self._rows, self._cols)
+  for i = 1, self._rows do
+    local Li, Ai = L[i], self[i]
+    for j = 1, i do
+      local sum = 0
+      for k = 1, j-1 do
+        local v = L[j][k]
+        v = (type(v) == 'table' and v.conj) and v:conj() or v
+        sum = sum + v*Li[k]
+      end
+      sum = Ai[j] - sum   -- reuse
+      if j < i then
+        Li[j] = sum / L[j][j]
       else
-        a[c][r] = sum/p[r]
+        if sum < 0 then return nil end  -- not positive definite
+        Li[j] = math.sqrt(sum)
       end
     end
   end
-  -- insert zeros and the main diagonal elements
-  for r = 1, a._rows do
-    local ar = a[r]
-    for c = r+1, a._cols do ar[c] = 0 end
-    ar[r] = p[r]
-  end
-  return a
+  return L
 end
-about[matrix.chol] = {"M:chol() --> lower_M",
+about[matrix.chol] = {"M:chol() --> lower_M|nil",
   "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
 
 
@@ -1175,7 +1152,7 @@ matrix.svd = function (M)
   local transpose = M._rows < M._cols
   if transpose then M = M:T() end
   -- main steps
-  local U1, B, V1 = matrix.bidiag(M)
+  local U1, B, V1 = tf.bidiag(M)
   local U2, V2 = matrix:eye(U1), matrix:eye(V1)
   local E, U3, V3 = math.huge, nil, nil
   while E > 1E-8 do

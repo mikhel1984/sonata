@@ -60,6 +60,28 @@ end
 }
 
 
+--- Bidiagonalization.
+--  Find such U, B, V that U*B*V:T() = M and
+--  B is upper bidiagonal, U and V are ortogonal.
+--  @param M Source matrix.
+--  @return U, B, V
+transform.bidiag = function (M)
+  local m, n, B = m._rows, M._cols, M
+  local U, V = M:eye(m), M:eye(n)
+  local w = math.min(m, n)
+  for k = 1, w do
+    -- set zero to column elements
+    local H1 = transform.householder(B({1, m}, k), k)
+    U, B = U * H1:H(), H1 * B
+    if k < (w - 1) then
+      local H2 = transform.householder(B(k, {1, n}):T(), k+1):H()
+      B, V = B * H2, V * H2    -- H2 is transposed!
+    end
+  end
+  return U, B, V
+end
+
+
 --- Inverse iteration method for eigenvector calculation.
 --  @param M Source matrix.
 --  @param v Eigenvalue estimation.
