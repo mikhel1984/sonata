@@ -29,7 +29,7 @@
 
 --===================  MODULES  =======================
 
--- List of modules in the 'lib' library.
+-- List of modules in the 'matlib' library.
 -- Aliases can be changed.
 use = {
 --  name       alias

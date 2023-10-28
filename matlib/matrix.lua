@@ -109,8 +109,8 @@ aa = Mat:zip(fn, b,b,b)
 ans = aa[1][1]                -->  30
 
 -- use Gauss transform to solve equation
-ans = (a .. Mat:V{5,11}):copy():rref()  -->  Mat {{1,0,1},
-                                                  {0,1,2}}
+ans = (a .. Mat:V{5,11}):rref()  -->  Mat {{1,0,1},
+                                           {0,1,2}}
 
 -- create vector
 ans = Mat:V {1,2,3}           -->  Mat {{1},{2},{3}}
@@ -360,7 +360,12 @@ end
 
 
 --- Simplify horizontal concatenation of two matrices.
-matrix.__concat = function (M1, M2) return tf.makeConcat({M1, M2}, false) end
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @return Concatenated matrix.
+matrix.__concat = function (M1, M2) 
+  return tf.makeConcat({M1, M2}, false):copy() 
+end
 
 
 --- M1 == M2
@@ -899,20 +904,37 @@ end
 --- LU transform
 --  @return L matrix, U matrix, permutations
 matrix.lu = function (self)
-  local a, _, d = tf.luPrepare(self)
-  local p = matrix:eye(self._rows, self._cols)
-  local move = Ver.move
-  while d > 0 do
-    local tmp = p[1]; move(p, 2, p._rows, 1); p[p._rows] = tmp  -- shift
-    d = d-1
+  if self._rows ~= self._cols then 
+    error "Square matrix is expected!"
   end
-  return
-    -- lower
-    matrix.map(a,
-      function (self, r, c) return (r==c) and 1.0 or (r>c and self or 0) end),
-    -- upper
-    matrix.map(a, function (self, r, c) return r <= c and self or 0 end),
-    p  -- permutations
+  -- check square
+  local U, P = self:copy(), matrix:eye(self._rows, self._cols)
+  local L = matrix:eye(self._rows, self._cols)
+  for i = 1, self._rows do
+    -- swap with maximum
+    local k, max = i, Cnorm(U[i][i])
+    for j = i+1, U._rows do
+      local uj = Cnorm(U[j][i])
+      if uj > max then
+        k, max = j, uj
+      end
+    end
+    for j = k-1, i, -1 do
+      U[j], U[j+1] = U[j+1], U[j]
+      P[j], P[j+1] = P[j+1], P[j]
+    end
+    -- fill U, L
+    local Ui = U[i]
+    if not Czero(Ui[i]) then
+      for j = i + 1, U._rows do
+        local Uj = U[j]
+        local t = Uj[i] / Ui[i]
+        L[j][i] = t
+        for c = i, U._cols do Uj[c] = Uj[c] - t * Ui[c] end
+      end
+    end
+  end
+  return L, U, P
 end
 about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
   "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}

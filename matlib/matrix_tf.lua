@@ -186,71 +186,6 @@ transform.gaussUp = function (M)
 end
 
 
---- Prepare LU transformation for other functions.
---  @param M Initial square matrix.
---  @return "Compressed" LU, indexes, number of permutations
-transform.luPrepare = function (M)
-  if M._rows ~= M._cols then error("Square matrix is expected!") end
-  local a = M:copy()
-  local vv = {}
-  -- get scaling information
-  for r = 1, a._rows do
-    local big, abig, v = 0, 0, 0
-    local ar = a[r]
-    for c = 1, a._cols do
-      v = Cnorm(ar[c])
-      if v > abig then
-        big = ar[c]
-        abig = v
-      end
-    end
-    vv[r] = 1.0/big
-  end
-  -- Crout's method
-  local rmax, dum = nil, nil
-  local TINY, d = 1e-20, 0
-  local index = {}
-  for c = 1, a._cols do
-    for r = 1, c-1 do
-      local ar = a[r]
-      local sum = ar[c]
-      for k = 1, r-1 do sum = sum - ar[k]*a[k][c] end
-      ar[c] = sum
-    end
-    local big = 0        -- largest pivot element
-    for r=c, a._rows do
-      local ar = a[r]
-      local sum = ar[c]
-      for k = 1, c-1 do sum = sum - ar[k]*a[k][c] end
-      ar[c] = sum
-      sum = Cnorm(sum)
-      dum = vv[r]*sum
-      if Cnorm(dum) >= Cnorm(big) then big = dum; rmax = r end
-    end
-    local ac = a[c]
-    if c ~= rmax then
-      local armax = a[rmax]
-      -- interchange rows
-      for k = 1, a._rows do
-        dum = armax[k]
-        armax[k] = ac[k]
-        ac[k] = dum
-      end
-      d = d+1
-      vv[rmax] = vv[c]
-    end
-    index[c] = rmax
-    if Czero(ac[c]) then ac[c] = TINY end
-    -- divide by pivot element
-    if c ~= a._cols then
-      dum = 1.0 / ac[c]
-      for r = c+1, a._rows do a[r][c] = dum*a[r][c] end
-    end
-  end
-  return a, index, d
-end
-
-
 --- Given's rotation.
 --  Find such c, s, r that Mat{{c,s},{-s,c}} * Mat:V{d1,d2} = Mat:V{r,0}.
 --  @param d1 First vector element.
@@ -827,6 +762,21 @@ ref_vector.normalize = function (self)
   for i = 1, len do
     self[i] = self[i] / s
   end
+end
+
+
+--- Find skew-symmetric matrix.
+--  @return matrix M^T = -M
+ref_vector.skew = function (self)
+  if #self ~= 3 then
+    error 'Vector with 3 elements is expected'
+  end
+  local x, y, z = self.x, self.y, self.z
+  return transform._methods._init(3, 3, {
+    { 0,-z, y},
+    { z, 0,-x},
+    {-y, x, 0}
+  })
 end
 
 
