@@ -46,7 +46,7 @@ end
 
 -- Move elements to new position (and table)
 versions.move = table.move or function (src, sfrom, sto, dfrom, dest)
-  if dest and dest ~= src then
+  if dest and (dest ~= src or dfrom < sfrom or dfrom > sto) then
     for i = sfrom, sto do
       dest[dfrom] = src[i]
       dfrom = dfrom + 1
