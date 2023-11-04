@@ -127,7 +127,7 @@ ans = p(0.5)                 --2>  -0.512
 --	LOCAL
 
 local Ver = require("matlib.utils")
-local Ustr, Ubin = Ver.utils.numstr, Ver.utils.binsearch
+local Ustr = Ver.utils.numstr
 local Cross = Ver.cross
 Ver = Ver.versions
 
@@ -212,6 +212,40 @@ local mt_ppval = {}
 mt_ppval.__index = mt_ppval
 
 
+--- Copy of the spline.
+--  @return deep copy
+mt_ppval.copy = function (self)
+  local res = {}
+  for i, p in ipairs(self) do res[i] = {p[1], p[2]:copy()} end
+  return setmetatable(res, mt_ppval)
+end
+
+
+--- Find derivatives for all the polynomials.
+--  @return list of derivatives.
+mt_ppval.der = function (self)
+  local res = {}
+  for i, p in ipairs(self) do res[i] = {p[1], polynomial(p[2]:der())} end
+  return setmetatable(res, mt_ppval)
+end
+
+
+--- Find integrals for all the polynomials.
+--  @return list of integrals.
+mt_ppval.int = function (self)
+  local res = {}
+  for i, p in ipairs(self) do
+    local curr = p[2]:int()
+    if i > 1 then
+      local prev = res[i-1][2]
+      curr[0] = prev(p[1]) - curr(p[1])
+    end
+    res[i] = {p[1], curr}
+  end
+  return setmetatable(res, mt_ppval)
+end
+
+
 --- Evaluate value for table of polynomials (piecewise polynomial).
 --  @param d Query point.
 --  @param N Index of polynomial in the table (optional).
@@ -228,7 +262,7 @@ mt_ppval.val = function (self, d, N)
       N = #self
     else
       repeat
-        N = math.ceil((up+low)*0.5)
+        N = math.ceil((up + low)*0.5)
         if d >= self[N][1] then low = N else up = N end
       until up - low <= 1
       N = up
@@ -343,7 +377,7 @@ polynomial.__mul = function (P1, P2)
   for i = 0, #P1 do
     local pi = P1[i]
     for j = 0, #P2 do
-      local k = i+j
+      local k = i + j
       res[k] = (res[k] or 0) + pi*P2[j]
     end
   end
@@ -478,7 +512,7 @@ polynomial._multXv = function (P, v)
   local prev, cur = 0, nil
   for i = 0, #P do
     cur = P[i]
-    P[i] = prev - cur * v
+    P[i] = prev - cur*v
     prev = cur
   end
   P[#P+1] = prev
@@ -520,7 +554,6 @@ polynomial._real = function (self)
   while #pp > 0 do
     local exact = polynomial._exact(pp)
     if exact then
-      --for i = 1, #exact do res[#res+1] = exact[i] end
       Ver.move(exact, 1, #exact, #res+1, res)
       pp = 0
       break
@@ -562,7 +595,7 @@ end
 polynomial._roots2 = function (self)
   local a, b = self[2], self[1]
   local sD = polynomial.ext_complex.sqrt(b*b - 4*a*self[0])
-  local res = {(-b-sD)/(2*a), (-b+sD)/(2*a)}
+  local res = {(-b - sD)/(2*a), (-b + sD)/(2*a)}
   return res
 end
 
@@ -578,19 +611,19 @@ polynomial._roots3 = function (self)
   local res = nil
   if R*R < t then
     -- only real roots
-    t = math.acos(R / math.sqrt(t)) / 3
+    t = math.acos(R / math.sqrt(t))/3
     Q = -2*math.sqrt(Q)   -- reuse
     res = {
-      Q*math.cos(t)-a/3, Q*math.cos(t+2*math.pi/3)-a/3,
-      Q*math.cos(t-2*math.pi/3)-a/3}
+      Q*math.cos(t) - a/3, Q*math.cos(t + 2*math.pi/3) - a/3,
+      Q*math.cos(t - 2*math.pi/3) - a/3}
   else
     -- can have complex roots
     local A = (R > 0 and -1 or 1)
-      * (math.abs(R) + math.sqrt(R*R-t))^(1/3)
+      * (math.abs(R) + math.sqrt(R*R - t))^(1/3)
     local B = (A == 0 and 0 or Q/A)
-    t = polynomial.ext_complex(0, math.sqrt(3)/2 * (A-B))
+    t = polynomial.ext_complex(0, math.sqrt(3)/2*(A - B))
     Q = A + B            -- reuse
-    res = {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
+    res = {Q - a/3, -Q/2 - a/3 + t, -Q/2 - a/3 - t}
   end
   return res
 end
@@ -630,7 +663,7 @@ polynomial.R = function (_, t)
       end
       table.remove(lst, ind)
       res = polynomial.__mul(res,
-        polynomial._init({[0] = re*re + im*im, -2*re, 1}))
+        polynomial._init({[0]= re*re + im*im, -2*re, 1}))
     else
       polynomial._multXv(res, v)
     end
@@ -644,14 +677,14 @@ about[polynomial.R] = {":R(roots_t) --> P",
 --- Find characteristic polinomial for the matrix.
 --  @param M Source matrix.
 --  @return Characteristic polynomial.
-polynomial.cp = function (_, M)
+polynomial.char = function (_, M)
   local m = M:copy()
   for i = 1, m:cols() do
     m[i][i] = polynomial._init({[0]=m[i][i], -1})
   end
   return m:minor(0, 0)
 end
-about[polynomial.cp] = {":cp(M) --> P",
+about[polynomial.char] = {":char(M) --> P",
   "Return characteristic polinomial for the given matrix."}
 
 
@@ -673,7 +706,7 @@ about[polynomial.copy] = {"P:copy() --> cpy_P",
 polynomial.der = function (self)
   local der = {[0]=0}
   for i = 1, #self do
-    der[i-1] = i * self[i]
+    der[i-1] = i*self[i]
   end
   return #der == 0 and Cross.simp(der[0]) or polynomial._init(der)
 end
@@ -699,11 +732,14 @@ polynomial.fit = function (_, tX, tY, N)
   sY[nY+1] = getSum(tY)
   for nX = 2*N, 1, -1 do
     sX[nX] = getSum(acc)
-    if nY > 0 then sY[nY] = getSum(acc, tY); nY = nY-1 end
+    if nY > 0 then 
+      sY[nY] = getSum(acc, tY)
+      nY = nY - 1 
+    end
     if nX > 1 then
       for i = 1, #acc do acc[i] = acc[i]*tX[i] end
-    end -- if
-  end -- for
+    end 
+  end 
   sX[#sX+1] = #tX
   -- prepare matrix, reuse accumulator
   for k = 1, N+1 do
@@ -730,9 +766,9 @@ about[polynomial.fit] = {":fit(xs_t, ys_t, order_N) --> P",
 --  @param x0 Free coefficient.
 --  @return Integral.
 polynomial.int = function (self, d0)
-  local int = {[0] = (d0 or 0)}
+  local int = {[0]= d0 or 0}
   for i = 1, #self+1 do
-    int[i] = self[i-1] / i
+    int[i] = self[i-1]/i
   end
   return polynomial._init(int)
 end
@@ -754,11 +790,11 @@ polynomial.lagrange = function (_, tX, tY)
     for j = 1, #tY do
       if i ~= j then
         polynomial._multXv(p, tX[j])
-        den = den * (v - tX[j])
+        den = den*(v - tX[j])
       end
     end
     -- add
-    v = tY[i] / den
+    v = tY[i]/den
     for j = 0, #p do
       res[j] = (res[j] or 0) + p[j]*v
     end
@@ -772,21 +808,23 @@ about[polynomial.lagrange] = {":lagrange(xs_t, ys_t) --> P",
 --- Linear data interpolation.
 --  @param tX Sequence of independent values.
 --  @param tY Sequence of dependent values.
+--  @param v0 Value before the range.
+--  @param vN Value after the range.
 --  @return Table with polynomials for each interval.
 polynomial.lin = function (_, tX, tY, v0, vN)
   local res = {}
   local xp, yp = tX[1], tY[1]
-  if v0 then res[1] = { xp, polynomial._init({[0] = v0}) } end
+  if v0 then res[1] = { xp, polynomial._init({[0]=v0}) } end
   for i = 2, #tX do
     local xi, yi = tX[i], tY[i]
-    local k = (yi-yp)/(xi-xp)
-    res[#res+1] = { xi, polynomial._init({[0]=yp-k*xp, k}) }
+    local k = (yi - yp)/(xi - xp)
+    res[#res+1] = {xi, polynomial._init({[0]=(yp - k*xp), k})}
     xp, yp = xi, yi
   end
-  if v0 then res[#res+1] = { xp+1, polynomial._init({[0] = vN or v0}) } end
+  if v0 then res[#res+1] = {xp + 1, polynomial._init({[0]= vN or v0}) } end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.lin] = {":lin(xs_t, ys_t, yBefore_d=0, yAfter_d=y0) --> P",
+about[polynomial.lin] = {":lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t",
   "Linear data interpolation. Return table with polynomials.", FIT}
 
 
@@ -802,7 +840,7 @@ polynomial.roots = function (self)
   while ispolynomial(pp) and #pp > 0 do
     local exact = polynomial._exact(pp)
     if exact then
-      Ver.move(exact, 1, #exact, #r+1, res)
+      Ver.move(exact, 1, #exact, #r + 1, res)
       break
     end
     local x = polynomial._nr(pp, Z(math.random(), math.random()), 0.1)
@@ -829,16 +867,16 @@ about[polynomial.roots] = {"P:roots() --> roots_t",
 --  @return Table with polynomials for each interval.
 polynomial.spline = function (_, tX, tY)
   polynomial.ext_matrix = polynomial.ext_matrix or require('matlib.matrix')
-  local mat, N = polynomial.ext_matrix, #tX-1
-  local h, A = {}, mat:zeros(N-1, N+2)
+  local mat, N = polynomial.ext_matrix, #tX - 1
+  local h, A = {}, mat:zeros(N - 1, N + 2)
   -- prepare matrix
-  h[1] = tX[2]-tX[1]
+  h[1] = tX[2] - tX[1]
   for i = 2, N do
     h[i] = tX[i+1] - tX[i]
-    local p = i-1
+    local p = i - 1
     local row, hp, hi = A[p], h[p], h[i]
-    row[p] = hp; row[i] = 2*(hp+hi); row[i+1] = hi
-    row[N+2] = 3*(tY[i+1]-tY[i])/hi - 3*(tY[i]-tY[p])/hp
+    row[p] = hp; row[i] = 2*(hp + hi); row[i+1] = hi
+    row[N+2] = 3*(tY[i+1] - tY[i])/hi - 3*(tY[i] - tY[p])/hp
   end
   -- "remove" penultimate column
   for i = 1, A:rows() do A[i][N+1] = A[i][N+2] end
@@ -858,11 +896,11 @@ polynomial.spline = function (_, tX, tY)
   local res = {}
   for i = 1, N do
     local hi, bi, di, xi = h[i], b[i], tY[i], tX[i]
-    local ai = (b[i+1] - bi) / (3 * hi)
-    local ci = (tY[i+1] - di) / hi - hi * (2*bi + b[i+1]) / 3
+    local ai = (b[i+1] - bi)/(3 * hi)
+    local ci = (tY[i+1] - di)/hi - hi*(2*bi + b[i+1])/3
     res[i] = {tX[i+1], polynomial._init({
-       [0] = ((-ai*xi + bi)*xi - ci)*xi + di,
-       xi*(3*ai*xi - 2*bi) + ci, -3*ai*xi + bi, ai })
+       [0]= ((-ai*xi + bi)*xi - ci)*xi + di,
+       xi*(3*ai*xi - 2*bi) + ci, -3*ai*xi + bi, ai})
     }
   end
   return setmetatable(res, mt_ppval)
@@ -908,9 +946,9 @@ polynomial.taylor = function (_, v, vF, ...)
   for i, x in ipairs({...}) do
     polynomial._multXv(p, v)
     k = k * i
-    local w = x / k
+    local w = x/k
     for j = 0, #p do
-      res[j] = (res[j] or 0) + w * p[j]
+      res[j] = (res[j] or 0) + w*p[j]
     end
   end
   return numpoly(res)
@@ -925,7 +963,7 @@ about[polynomial.taylor] = {":taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P",
 --  @return Value in the given point.
 polynomial.val = function (self, v)
   local res = self[#self]
-  for i = #self-1, 0, -1 do res = res * v + self[i] end
+  for i = #self-1, 0, -1 do res = res*v + self[i] end
   return res
 end
 about[polynomial.val] = {"P:val(x) --> y",
@@ -944,6 +982,11 @@ about[polynomial.x] = {":x() --> P", "Get object to represent polynomial as a su
 
 setmetatable(polynomial, {
 __call = function (_, t)
+  if ispolynomial(t) then
+    return t
+  elseif type(t) == 'number' then
+    return polynomial._init({[0]=t})
+  end
   for _, v in ipairs(t) do
     if not (type(v) == 'number' or
             type(v) == 'table' and v.__add and v.__mul) then
