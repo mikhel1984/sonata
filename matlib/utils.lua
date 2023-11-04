@@ -245,7 +245,7 @@ utils.binsearch = function (t, val, fn)
       return imid, vm
     end
   end
-  return iend, t[iend]
+  return iend, fn(t[iend])
 end
 
 

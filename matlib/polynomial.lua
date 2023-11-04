@@ -109,18 +109,17 @@ ans = p(0.3)                 --2>  math.exp(0.3)
 -- linear interpolation
 -- use constant values out the interval
 p = Poly:lin(X,Y, Y[1], Y[#Y])
-y1, n = Poly:ppval(p, 0.5)
+y1, n = p:val(0.5)
 ans = y1                     --2>  0.621
 
 -- polynomial index
 ans = n                       -->  4
 
 -- simplify call when index is known
-ans = Poly:ppval(p, 0.5, n)  --2>  y1
+ans = p(0.5, n)              --2>  y1
 
 -- cubic spline
 p = Poly:spline(X, Y)
--- can be called without 'ppval'
 ans = p(0.5)                 --2>  -0.512
 
 --]]
@@ -128,7 +127,7 @@ ans = p(0.5)                 --2>  -0.512
 --	LOCAL
 
 local Ver = require("matlib.utils")
-local Unumstr = Ver.utils.numstr
+local Ustr, Ubin = Ver.utils.numstr, Ver.utils.binsearch
 local Cross = Ver.cross
 Ver = Ver.versions
 
@@ -208,8 +207,38 @@ _simp = numpoly,
 local function ispolynomial(v) return getmetatable(v) == polynomial end
 
 
--- Simplify ppval call.
-local mt_ppval = {__call = function (...) return polynomial.ppval(nil, ...) end}
+-- List of polynomials
+local mt_ppval = {}
+mt_ppval.__index = mt_ppval
+
+
+--- Evaluate value for table of polynomials (piecewise polynomial).
+--  @param d Query point.
+--  @param N Index of polynomial in the table (optional).
+--  @return Found value and the polynomial index.
+mt_ppval.val = function (self, d, N)
+  if N then
+    return self[N][2]:val(d), N
+  else
+    -- find index n
+    local up, low = #self-1, 1
+    if d <= self[low][1] then
+      N = 1
+    elseif d > self[up][1] then
+      N = #self
+    else
+      repeat
+        N = math.ceil((up+low)*0.5)
+        if d >= self[N][1] then low = N else up = N end
+      until up - low <= 1
+      N = up
+    end
+    return self[N][2]:val(d), N
+  end
+end
+
+-- Simplify call
+mt_ppval.__call = mt_ppval.val
 
 
 --- P1 + P2
@@ -360,7 +389,7 @@ polynomial.__tostring = function (self)
   local t = {}
   for i = #self, 0, -1 do
     local v = self[i]
-    table.insert(t, type(v) == 'number' and Unumstr(v) or tostring(v))
+    table.insert(t, type(v) == 'number' and Ustr(v) or tostring(v))
   end
   return table.concat(t, ' ')
 end
@@ -761,35 +790,6 @@ about[polynomial.lin] = {":lin(xs_t, ys_t, yBefore_d=0, yAfter_d=y0) --> P",
   "Linear data interpolation. Return table with polynomials.", FIT}
 
 
---- Evaluate value for table of polynomials (piecewise polynomial).
---  @param tP Table of polynomials in form {{x1, p1}, {x2, p2} ...}.
---  @param x Query point.
---  @param n Index of polynomial in the table (optional).
---  @return Found value and the polynomial index.
-polynomial.ppval = function (_, tP, d, N)
-  if N then
-    return tP[N][2](d), N
-  else
-    -- find index n
-    local up, low = #tP-1, 1
-    if d <= tP[low][1] then
-      N = 1
-    elseif d > tP[up][1] then
-      N = #tP
-    else
-      repeat
-        N = math.ceil((up+low)*0.5)
-        if d >= tP[N][1] then low = N else up = N end
-      until up - low <= 1
-      N = up
-    end
-    return tP[N][2](d), N
-  end
-end
-about[polynomial.ppval] = {":ppval(Ps_t, x_d, [index_N]) --> num",
-  "Return value of a piecewise polynomial in the point and the polynomial index.",
-  FIT}
-
 
 --- Find all the polynomial roots.
 --  @return table with roots.
@@ -881,7 +881,7 @@ polynomial.str = function (self, s)
     a, b = self[i], self[i-1]
     if not Cross.isZero(a) then
       if not Cross.eq(a, 1) then 
-        res[#res+1] = (type(a) == 'number' and Unumstr(a) or tostring(a))..'*' 
+        res[#res+1] = (type(a) == 'number' and Ustr(a) or tostring(a))..'*' 
       end
       res[#res+1] = s
       if i > 1 then res[#res+1] = '^'..tostring(i) end
@@ -889,7 +889,7 @@ polynomial.str = function (self, s)
     if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
   end
   if type(b) ~= 'number' or not Cross.isZero(b) then 
-    res[#res+1] = (type(b) == 'number' and Unumstr(b) or tostring(b))
+    res[#res+1] = (type(b) == 'number' and Ustr(b) or tostring(b))
   end
   return table.concat(res)
 end
@@ -963,5 +963,4 @@ return polynomial
 --===========================
 --TODO: other types of splines
 --TODO: other conditions for cubic spline
---TODO: remove Poly:ppval
 --TODO: Newton polynomial
