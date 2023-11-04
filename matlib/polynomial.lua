@@ -74,14 +74,10 @@ ans = (a == c)                -->  true
 -- not equal
 ans = (b == c)                -->  false
 
--- find real roots
-e = a:real()
-ans = e[1]                   --1>  -1.00
-
 -- find all roots
-g = Poly:R{2, 3+4*i, 3-4*i}
+g = Poly:R{1, 2, 3+4*i, 3-4*i}
 e = g:roots()
-ans = e[2]:re()              --1>  3
+ans = e[3]:re()              --1>  3
 
 -- fit curve with polynomial
 -- of order 2
@@ -412,6 +408,20 @@ polynomial._div = function (P1, P2)
 end
 
 
+--- Check if there are exact roots.
+--  @return found roots or nil
+polynomial._exact = function (self)
+  if #self == 1 then
+    return {-self[0] / self[1]}
+  elseif #self == 2 then
+    return polynomial._roots2(self)
+  elseif #self == 3 then
+    return polynomial._roots3(self)
+  end
+  return nil
+end
+
+
 --- Initialize polynomial from table.
 --  @param t Table of coefficients, from highest to lowest power.
 --  @return Polynomial object.
@@ -448,23 +458,60 @@ end
 
 --- Find closest root using Newton-Rapson technique
 --  @param d0 Initial value of the root (optional).
---  @param de Tolerance
---  @return Found value and flag about its correctness.
-polynomial._nr = function (self, d0, de)
+--  @param tol Tolerance
+--  @return found value or nil.
+polynomial._nr = function (self, d0, tol)
   -- prepare variables
   local dp, max = polynomial.der(self), 30
   local val = polynomial.val
   for i = 1, max do
     local der = ispolynomial(dp) and val(dp, d0) or dp
     local dx = val(self, d0) / der
-    if Cross.norm(dx) <= de then
-      return true, d0
+    if Cross.norm(dx) <= tol then
+      return d0
     else
       -- next approximation
       d0 = d0 - dx
     end
   end
-  return false
+  return nil
+end
+
+
+--- Find real or exact roots of the polynomial.
+--  @return Table with real roots.
+polynomial._real = function (self)
+  local pp, res = polynomial.copy(self), {}
+  -- zeros
+  while #pp > 0 and pp[0] == 0 do
+    pp[0] = table.remove(pp, 1)
+    res[#res+1] = 0
+  end
+  -- looking for roots
+  while #pp > 0 do
+    local exact = polynomial._exact(pp)
+    if exact then
+      --for i = 1, #exact do res[#res+1] = exact[i] end
+      Ver.move(exact, 1, #exact, #res+1, res)
+      pp = 0
+      break
+    end
+    -- rough estimate
+    local x = polynomial._nr(pp, math.random(), 0.1)
+    if x then
+      -- correction
+      x = polynomial._nr(self, x, 1E-6)
+      if not x then break end
+      -- save and remove the root
+      res[#res+1] = x
+      -- divide by (1-x)
+      for i = #pp-1, 1, -1 do pp[i] = pp[i] + x*pp[i+1] end
+      pp[0] = table.remove(pp, 1)
+    else 
+      break
+    end
+  end
+  return res, pp
 end
 
 
@@ -487,7 +534,6 @@ polynomial._roots2 = function (self)
   local a, b = self[2], self[1]
   local sD = polynomial.ext_complex.sqrt(b*b - 4*a*self[0])
   local res = {(-b-sD)/(2*a), (-b+sD)/(2*a)}
-  table.sort(res, sortRoots)
   return res
 end
 
@@ -517,7 +563,6 @@ polynomial._roots3 = function (self)
     Q = A + B            -- reuse
     res = {Q-a/3, -Q/2-a/3 + t, -Q/2-a/3 - t}
   end
-  table.sort(res, sortRoots)
   return res
 end
 
@@ -746,72 +791,32 @@ about[polynomial.ppval] = {":ppval(Ps_t, x_d, [index_N]) --> num",
   FIT}
 
 
---- Find real roots of the polynomial.
---  @param P Source polynomial.
---  @return Table with real roots.
-polynomial.real = function (P)
-  local pp, res = polynomial.copy(P), {}
-  -- zeros
-  while #pp > 0 and pp[0] == 0 do
-    pp[0] = table.remove(pp, 1)
-    res[#res+1] = 0
-  end
-  -- if could have roots
-  local p0 = polynomial.copy(pp)
-  while #pp > 0 do
-    -- rough estimate
-    local root, x = polynomial._nr(pp, math.random(), 0.1)
-    if root then
-      -- correction
-      root, x = polynomial._nr(p0, x, 1E-6)
-      if not root then break end
-      -- save and remove the root
-      res[#res+1] = x
-      -- divide by (1-x)
-      for i = #pp-1, 1, -1 do pp[i] = pp[i] + x*pp[i+1] end
-      pp[0] = table.remove(pp, 1)
-    else break
-    end
-  end
-  table.sort(res, function (a, b) return math.abs(a) > math.abs(b) end)
-  return res, pp
-end
-about[polynomial.real] = {"P:real() --> roots_t",
-  "Find real roots of the polynomial.", help.OTHER}
-
-
 --- Find all the polynomial roots.
---  @param P Source polynomial.
---  @return Table with roots.
-polynomial.roots = function (P)
+--  @return table with roots.
+polynomial.roots = function (self)
   polynomial.ext_complex = polynomial.ext_complex or require('matlib.complex')
-  -- exact solution
-  if #P == 1 then
-    return {-P[0] / P[1]}
-  elseif #P == 2 then
-    return polynomial._roots2(P)
-  elseif #P == 3 then
-    return polynomial._roots3(P)
-  end
-  -- approximation
-  local r, pp = polynomial.real(P)
-  if #r == #P then  -- all roots are real
-    return r
-  end
-  -- find complex roots
+  -- exact solution or real roots
+  local res, pp = polynomial._real(self)
+    -- find complex roots
   local Z = polynomial.ext_complex
   while ispolynomial(pp) and #pp > 0 do
-    local root, x = polynomial._nr(pp, Z(math.random(), math.random()), 0.1)
-    if root then
-      _, x = polynomial._nr(P, x, 1E-6)
-      r[#r+1] = x
-      r[#r+1] = x:conj()
-      pp = pp / polynomial:R({x, x:conj()})
-    else break
+    local exact = polynomial._exact(pp)
+    if exact then
+      Ver.move(exact, 1, #exact, #r+1, res)
+      break
+    end
+    local x = polynomial._nr(pp, Z(math.random(), math.random()), 0.1)
+    if x then
+      x = polynomial._nr(self, x, 1E-6)
+      res[#res+1] = x
+      res[#res+1] = x:conj()
+      pp = polynomial._div(pp, polynomial:R({x, x:conj()}))
+    else 
+      break
     end
   end
-  table.sort(r, sortRoots)
-  return r
+  table.sort(res, sortRoots)
+  return res
 end
 about[polynomial.roots] = {"P:roots() --> roots_t",
   "Find all the polynomial roots.", help.OTHER}
@@ -867,14 +872,13 @@ about[polynomial.spline] = {":spline(xs_t, ys_t) --> Ps_t",
 
 
 --- Represent polynomial in "natural" form.
---  @param P Source polynomial.
 --  @param s String variable (default is 'x').
 --  @return String with traditional form of equation.
-polynomial.str = function (P, s)
+polynomial.str = function (self, s)
   s = s or 'x'
   local res, a, b = {}, 0, 0
-  for i = #P, 1, -1 do
-    a, b = P[i], P[i-1]
+  for i = #self, 1, -1 do
+    a, b = self[i], self[i-1]
     if a ~= 0 then
       if a ~= 1 then res[#res+1] = tostring(a)..'*' end
       res[#res+1] = s
@@ -913,12 +917,11 @@ about[polynomial.taylor] = {":taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P",
 
 --- Polynomial value.
 --  Can be called with ().
---  @param P Polynomial.
 --  @param v Variable.
 --  @return Value in the given point.
-polynomial.val = function (P, v)
-  local res = P[#P]
-  for i = #P-1, 0, -1 do res = res * v + P[i] end
+polynomial.val = function (self, v)
+  local res = self[#self]
+  for i = #self-1, 0, -1 do res = res * v + self[i] end
   return res
 end
 about[polynomial.val] = {"P:val(x) --> y",
