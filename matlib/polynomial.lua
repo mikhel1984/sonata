@@ -483,7 +483,7 @@ end
 polynomial._real = function (self)
   local pp, res = polynomial.copy(self), {}
   -- zeros
-  while #pp > 0 and pp[0] == 0 do
+  while #pp > 0 and Cross.isZero(pp[0]) do
     pp[0] = table.remove(pp, 1)
     res[#res+1] = 0
   end
@@ -879,14 +879,18 @@ polynomial.str = function (self, s)
   local res, a, b = {}, 0, 0
   for i = #self, 1, -1 do
     a, b = self[i], self[i-1]
-    if a ~= 0 then
-      if a ~= 1 then res[#res+1] = tostring(a)..'*' end
+    if not Cross.isZero(a) then
+      if not Cross.eq(a, 1) then 
+        res[#res+1] = (type(a) == 'number' and Unumstr(a) or tostring(a))..'*' 
+      end
       res[#res+1] = s
       if i > 1 then res[#res+1] = '^'..tostring(i) end
     end
     if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
   end
-  if type(b) ~= 'number' or b ~= 0 then res[#res+1] = tostring(b) end
+  if type(b) ~= 'number' or not Cross.isZero(b) then 
+    res[#res+1] = (type(b) == 'number' and Unumstr(b) or tostring(b))
+  end
   return table.concat(res)
 end
 about[polynomial.str] = {"P:str(char_s='x') --> str",
