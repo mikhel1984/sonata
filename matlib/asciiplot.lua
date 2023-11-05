@@ -98,7 +98,7 @@ fig3:setY {range={-1,4}, view=false}
 fig3:reset()
 -- set function
 for x = -1.2, 1.2, 0.1 do
-  fig3:addPoint(x, x*x-0.5, Ap.CHAR[1])
+  fig3:addPoint(x, x*x-0.5, '*')
 end
 -- set to position
 fig3:addPose(3, 13, '#')   -- characters
@@ -240,7 +240,8 @@ axis.proj = function (self, d, isX)
   else
     int, frac = mmodf(dx - self.size*(dx - 1))
   end
-  return (frac > 0.5) and (int + 1) or int
+  --return (frac > 0.5) and (int + 1) or int
+  return int, frac
 end
 
 
@@ -351,9 +352,11 @@ type = 'asciiplot',
 -- const
 WIDTH = 73, HEIGHT = 21,
 -- symbols
-CHAR = {'*', 'o', '#', '+', '~', 'x'},
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
+-- idea from 
+-- https://github.com/adam-younes/calculator
+GRADE = {[0]="`", "'", "*", "~", "-", ".", ",", "_"}
 }
 
 
@@ -365,11 +368,7 @@ local function isasciiplot(v) return getmetatable(v) == asciiplot end
 
 -- update markers
 if SONATA_USE_COLOR then
-  local char = asciiplot.CHAR
-  for k, v in ipairs(char) do
-    char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
-  end
-  char = asciiplot.lvls
+  local char = asciiplot.lvls
   for k, v in ipairs(char) do
     char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
   end
@@ -433,11 +432,19 @@ asciiplot._addPolar = function (self, t, tOpt)
   asciiplot._axes(self)
   -- fill
   for j = 1, #tOpt do
-    local xy, c = acc[j], asciiplot.CHAR[j]
+    local xy = acc[j]
     for _, v in ipairs(xy) do
-      asciiplot.addPoint(self, v[1], v[2], c)
+      --asciiplot.addPoint(self, v[1], v[2], c)
+      asciiplot._addGraded(self, v[1], v[2], j)
     end
-    self._legend[c] = 'column '..tostring(tOpt[j])
+    local s = string.char(string.byte('A') - 1 + j)
+    if SONATA_USE_COLOR then
+      s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
+    end
+    for i = #xy, 1, -1 do
+      if asciiplot.addPoint(self, xy[i][1], xy[i][2], s) then break end
+    end
+    self._legend[s] = 'column '..tostring(tOpt[j])
   end
   -- limits
   asciiplot._limits(self)
@@ -451,24 +458,57 @@ end
 asciiplot._addTable = function (self, t, tInd)
   local x = tInd.x 
   for j = 1, #tInd do
-    local c, k = asciiplot.CHAR[j], tInd[j]
+    local k = tInd[j]
     for i = 1, #t do
       local row = t[i]
-      asciiplot.addPoint(self, row[x], row[k], c)
+      asciiplot._addGraded(self, row[x], row[k], j)
     end
-    self._legend[c] = 'column '..tostring(k)   -- default legend
+    local s = string.char(string.byte('A') - 1 + j)
+    if SONATA_USE_COLOR then
+      s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
+    end
+    for i = #t, 1, -1 do
+      local row = t[i]
+      if asciiplot.addPoint(self, row[x], row[k], s) then break end
+    end
+    self._legend[s] = 'column '..tostring(k)   -- default legend
   end
 end
 
 
+asciiplot._addGraded = function (self, x, y, ind)
+  local nx, fx = self._x:proj(x, true)
+  local ny, fy = self._y:proj(y, false)
+  if not (nx and ny) then return end
+  nx = (fx > 0.5) and (nx + 1) or nx
+  fy = fy + 0.5
+  if fy > 1 then
+    fy, ny = fy - 1, ny + 1
+  end
+  local k = math.floor(math.min(fy, 0.99) / 0.125)
+  local s = assert(asciiplot.GRADE[k], 'ind '..tostring(k))
+  if SONATA_USE_COLOR then
+    s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
+  end
+  self._canvas[ny][nx] = s
+end
+
 --- Add group of points.
 --  @param tX List of x coordinates.
 --  @param tY List of y coordinates.
---  @param s Character.
-asciiplot._addXY = function (self, tX, tY, s)
+asciiplot._addXY = function (self, tX, tY, ind)
   for i = 1, #tX do
-    asciiplot.addPoint(self, tX[i], tY[i], s)
+    asciiplot._addGraded(self, tX[i], tY[i], ind)
   end
+  -- legend
+  local s = string.char(string.byte('A') - 1 + ind)
+  if SONATA_USE_COLOR then
+    s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
+  end
+  for i = #tX, 1, -1 do
+    if asciiplot.addPoint(self, tX[i], tY[i], s) then break end
+  end
+  return s
 end
 
 
@@ -899,12 +939,17 @@ end
 --  @param dx Coordinate x.
 --  @param dy Coordinate y.
 --  @param s Character.
+--  @return true when add point
 asciiplot.addPoint = function (self, dx, dy, s)
-  local nx = self._x:proj(dx, true)
-  local ny = self._y:proj(dy, false)
+  local nx, fx = self._x:proj(dx, true)
+  local ny, fy = self._y:proj(dy, false)
   if nx and ny then
+    nx = (fx > 0.5) and (nx + 1) or nx
+    ny = (fy > 0.5) and (ny + 1) or ny
     self._canvas[ny][nx] = s or '*'
+    return true
   end
+  return false
 end
 about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*')",
   "Add point (x,y) using char.", MANUAL}
@@ -1003,9 +1048,11 @@ asciiplot.bar = function (self, t, iy, ix)
     for c = 1, math.min(iL-2, #x) do canvas[c] = string.sub(x, c, c) end
     -- show
     x = t[i][iy]
-    local p = ax:proj(x, true)
+    local p, fp = ax:proj(x, true)
     if not p then
       p = (x < ax.range[1]) and ax.range[1] or ax.range[2]  -- set limit
+    elseif fp > 0.5 then
+      p = p + 1
     end
     if p <= lim then
       for c = p, lim do canvas[iL + c] = ch end
@@ -1136,7 +1183,14 @@ about[asciiplot.copy] = {"F:copy() --> cpy_F",
 --- Update legend.
 --  @param str_t Table with strings.
 asciiplot.legend = function (self, str_t)
-  for i, c in ipairs(asciiplot.CHAR) do
+  local ch = {}
+  for i = 1, #str_t do
+    local s = string.char(string.byte('A') - 1 + i)
+    if SONATA_USE_COLOR then
+      s = string.format('\x1B[3%dm%s\x1B[0m', i, s)
+    end
+  end
+  for i, c in ipairs(ch) do
     local li = self._legend[c]
     if li then
       self._legend[c] = str_t[i] or li
@@ -1211,9 +1265,8 @@ asciiplot.plot = function (self, ...)
   asciiplot._axes(self)
   -- 'plot'
   for j = 1, #acc do
-    local c = asciiplot.CHAR[j]
     local r = acc[j]
-    asciiplot._addXY(self, r[1], r[2], c)
+    local c = asciiplot._addXY(self, r[1], r[2], j)
     self._legend[c] = r[3]
   end
   -- limits
