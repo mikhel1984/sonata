@@ -1039,8 +1039,8 @@ asciiplot.bar = function (self, t, iy, ix)
   -- add values
   asciiplot._clear(self)
   local ch, r = '=', 1
-  local lim = self._yaxis == 'min' and 1 or
-    self._yaxis == 'max' and ax.size or (ax.size + 1)/2
+  local lim = self._xaxis == 'min' and 1 or
+    self._xaxis == 'max' and ax.size or (ax.size + 1)/2
   for i = 1, #t, step do
     local canvas = self._canvas[r]
     -- text
@@ -1189,6 +1189,7 @@ asciiplot.legend = function (self, str_t)
     if SONATA_USE_COLOR then
       s = string.format('\x1B[3%dm%s\x1B[0m', i, s)
     end
+    ch[#ch+1] = s
   end
   for i, c in ipairs(ch) do
     local li = self._legend[c]
