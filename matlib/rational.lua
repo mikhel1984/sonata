@@ -139,6 +139,8 @@ local about = {
 __module__ = "Computations with rational numbers."
 }
 
+local CONTINUATED = 'continuated frac'
+
 
 --	MODULE
 
@@ -193,6 +195,29 @@ rational.__div = function (R1, R2)
   end
   local r1, r2 = R1._, R2._
   return numrat(rational._new(r1[1]*r2[2], r1[2]*r2[1]))
+end
+
+
+--- R1 == R2
+--  @param R1 First number.
+--  @param R2 Second number.
+--  @return True if the numbers are equal.
+rational.__eq = function (R1, R2)
+  if not (isrational(R1) and isrational(R2)) then
+    local p = Cross.convert(R1, R2)
+    if p then 
+      return R1 == p
+    else
+      p = Cross.convert(R2, R1)
+      if p then 
+        return p == R2
+      else
+        return Cross.float(R1) == Cross.float(R2)
+      end
+    end
+  end
+  local r1, r2 = R1._, R2._
+  return Cross.eq(r1[1], r2[1]) and Cross.eq(r1[2], r2[2])
 end
 
 
@@ -384,30 +409,6 @@ rational.denom = function (self) return self._[2] end
 about[rational.denom] = {"R:denom() --> var", "Return the denominator of the rational number."}
 
 
---- R1 == R2
---  @param R1 First number.
---  @param R2 Second number.
---  @return True if the numbers are equal.
-rational.eq = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then
-    local p = Cross.convert(R1, R2)
-    if p then 
-      return R1 == p
-    else
-      p = Cross.convert(R2, R1)
-      if p then 
-        return p == R2
-      else
-        return Cross.float(R1) == Cross.float(R2)
-      end
-    end
-  end
-  local r1, r2 = R1._, R2._
-  return Cross.eq(r1[1], r2[1]) and Cross.eq(r1[2], r2[2])
-end
-about[rational.eq] = {"R:eq(x) --> bool", "Compare two objects.", help.OTHER}
-rational.__eq = rational.eq
-
 
 --- Float point representation.
 --  @return Decimal fraction.
@@ -461,7 +462,7 @@ rational.fromCF = function (_, t)
   return rational._new(rational._cont2rat(check))
 end
 about[rational.fromCF] = {":fromCF(coeff_t) --> R",
-  "Transform continued fraction to rational number.", help.NEW}
+  "Transform continued fraction to rational number.", CONTINUATED}
 
 
 --- The greatest common divisor.
@@ -499,12 +500,15 @@ rational.toCF = function (self)
   return setmetatable(res, mt_continued)
 end
 about[rational.toCF] = {"R:toCF() --> coeff_t",
-  "Transform rational number to continued fraction.", help.OTHER}
+  "Transform rational number to continued fraction.", CONTINUATED}
 
 
 -- call constructor, check arguments
 setmetatable(rational, {
 __call = function (_, n, d)
+  if isrational(n) and not d then 
+    return n
+  end
   d = d or 1
   assert(
     type(n) == 'number' and Vinteger(n) or type(n) == 'table' and n.__mod,
