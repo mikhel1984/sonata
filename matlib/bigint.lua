@@ -67,9 +67,6 @@ ans = c:float() / 3E64       --1>  1.0
 -- ratio of factorials
 ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
 
--- compare with number
-ans = a:eq(123)               -->  true
-
 -- digits for a different numeric base
 v = g:base(60)
 ans = tostring(v)             -->  '-2,3:60'
@@ -156,7 +153,7 @@ local NUMB = 'numbers'
 local COMB = 'combinations'
 
 -- max number for one position
-local BASE = 100000
+local BASE = math.floor(math.sqrt((math.maxinteger or 2^52) / 10))
 
 
 --	INFO
@@ -216,7 +213,7 @@ mt_digits.group = function (self, N, sep)
       end
     end
   end
-  local rst = (self.base == 10) and '' or string.format('_%d', self.base)
+  local rst = (self.base == 10) and '' or string.format(':%d', self.base)
   return string.format(
     '%s%s%s', self.sign < 0 and '-' or '', table.concat(acc, ''), rst)
 end
@@ -430,18 +427,16 @@ end
 
 
 --- - B
---  @param B Bigint object.
 --  @return Opposite value.
-bigint.__unm = function (B) return bigint._newTable(B._, -B._sign) end
+bigint.__unm = function (self) return bigint._newTable(self._, -self._sign) end
 
 
 --- String representation.
---  @param B Bigint object.
 --  @return String object.
-bigint.__tostring = function (B)
-  local t = {B._sign < 0 and '-' or ''}
-  for i = #B._, 1, -1 do
-    t[#t+1] = tonumber(B._[i])
+bigint.__tostring = function (self)
+  local t = {self._sign < 0 and '-' or ''}
+  for i = #self._, 1, -1 do
+    t[#t+1] = tonumber(self._[i])
   end
   return table.concat(t, '')
 end
@@ -472,12 +467,11 @@ end
 
 
 --- Deep copy of the object.
---  @param B Original bigint object.
 --  @return Deep copy.
-bigint._copy = function (B)
-  local c, b = {}, B._
+bigint._copy = function (self)
+  local c, b = {}, self._
   for i = 1, #b do c[i] = b[i] end
-  return bigint._newTable(c, B._sign)
+  return bigint._newTable(c, self._sign)
 end
 
 
@@ -621,9 +615,8 @@ end
 
 
 --- Check for zero value.
---  @param B Bigint number.
 --  @return true when B == 0
-bigint._isZero = function (B) return #B._ == 1 and B._[1] == 0 end
+bigint._isZero = function (self) return #self._ == 1 and self._[1] == 0 end
 
 
 --- Find the least common multiple for two numbers.
@@ -820,13 +813,12 @@ end
 
 
 --- Estimate square root using Babylonian method.
---  @param B Bigint object.
 --  @return Estimation of sqrt(B).
-bigint._sqrt = function (B)
+bigint._sqrt = function (self)
   local ai = bigint._1
   local sum, sub = bigint._sum, bigint._sub
   repeat
-    local aii, _ = bigint._div(B, ai)
+    local aii, _ = bigint._div(self, ai)
     aii._ = bigint._divBase(sum(ai, aii)._, BASE, 2)
     ai, aii = aii, sub(aii, ai)
   until #aii._ == 1 and (aii._[1] <= 1)   -- TODO: check and decrease if need
@@ -917,9 +909,8 @@ bigint._0 = bigint._newTable({0}, 1)
 
 
 --- Absolute value of number.
---  @param B Bigint or integer number.
 --  @return Absolute value.
-bigint.abs = function (B) return bigint._newTable(B._, 1) end
+bigint.abs = function (self) return bigint._newTable(self._, 1) end
 about[bigint.abs] = {"B:abs() --> num", "Return module of arbitrary long number."}
 
 
@@ -930,15 +921,14 @@ about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
 
 
 --- Change current numeric base.
---  @param B Bigint object.
 --  @param N New base.
 --  @return Table with digits of the found number.
-bigint.base = function (B, N)
+bigint.base = function (self, N)
   N = N or 10
   assert(Vinteger(N) and N > 0, "Wrong base")
-  local b = B._
+  local b = self._
   local res = bigint._rebase(b, BASE, N)
-  res.sign = B._sign
+  res.sign = self._sign
   return setmetatable(res, mt_digits)
 end
 about[bigint.base] = {"B:base(N=10) --> tbl", "Convert number to the new numeric base."}
@@ -948,7 +938,7 @@ about[bigint.base] = {"B:base(N=10) --> tbl", "Convert number to the new numeric
 --  @param n Total number of elements.
 --  @param k Group size.
 --  @return Bigint for combination number.
-bigint.C = function (self, n, k)
+bigint.C = function (_, n, k)
   n, k = bigint._args(n, k)
   return bigint:ratF(n, k) / bigint.F(n-k)
 end
@@ -963,7 +953,7 @@ about[bigint.C] = {":C(n, k) --> combinations_B",
 --  @param B1 First bigint object or integer.
 --  @param B2 Second bigint object or integer.
 --  @return True if numbers have the same values and signs.
-bigint.eq = function (B1, B2)
+bigint.__eq = function (B1, B2)
   if not (isbigint(B1) and isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
@@ -985,24 +975,19 @@ bigint.eq = function (B1, B2)
   end
   return false
 end
-about[bigint.eq] = {"B:eq(x) --> bool",
-  "Check equality with the second value.", help.OTHER}
--- redefine equality
-bigint.__eq = bigint.eq
 
 
 --- B!
 --  Use the fact that n*(n-1)*...*2*1 = (n*1)*((n-1)*2)*...
---  @param B Bigint object.
 --  @return Factorial of the number as bigint object.
-bigint.F = function (B)
-  assert(B._sign > 0, "Non-negative value is expected!")
-  local N = B:float()
+bigint.F = function (self)
+  assert(self._sign > 0, "Non-negative value is expected!")
+  local N = self:float()
   if     N <= 1 then return bigint._1
-  elseif N == 2 then return B
+  elseif N == 2 then return self
   end
   local n, m = math.modf((N-2) * 0.5)
-  local S, d, acc = B, B:_copy(), B
+  local S, d, acc = self, self:_copy(), self
   for i = 1, n do
     bigint._decr(d)
     bigint._decr(d)
@@ -1019,11 +1004,10 @@ about[bigint.F] = {"B:F() --> B!",
 
 
 --- Find multipliers for the number.
---  @param B Integer number.
 --  @return List of prime numbers.
-bigint.factorize = function (B)
-  local v, res = B, {}
-  if B._sign < 0 then res[1] = -1 end
+bigint.factorize = function (self)
+  local v, res = self, {}
+  if self._sign < 0 then res[1] = -1 end
   local n, q = nil, nil
   while true do
     n, q = bigint._trivialSearch(v, n)
@@ -1042,16 +1026,15 @@ about[bigint.factorize] = {"B:factorize() --> primeBs_t",
 
 
 --- Float number representation.
---  @param B Bigint object.
 --  @return Integer if possible, otherwise float point number.
-bigint.float = function (B)
-  local b, res = B._, 0
+bigint.float = function (self)
+  local b, res = self._, 0
   if #b > 1 then
     res = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
   else
     res = b[1]
   end
-  return B._sign >= 0 and res or (-res)
+  return self._sign >= 0 and res or (-res)
 end
 about[bigint.float] = {"B:float() --> num",
   "Represent current big integer as number if it possible.", help.OTHER}
@@ -1060,7 +1043,7 @@ about[bigint.float] = {"B:float() --> num",
 --- Greatest common devision for several numbers.
 --  @param ... List of numbers.
 --  @return Bigint gcd.
-bigint.gcd = function (self, ...)
+bigint.gcd = function (_, ...)
   local t = {...}
   if #t == 0 then error('No numbers') end
   -- compare element-wise
@@ -1078,15 +1061,14 @@ about[bigint.gcd] = {":gcd(...) --> B",
 
 -- TODO try https://en.wikipedia.org/wiki/Primality_test
 --- Check if the number is prime.
---  @param B Number.
 --  @param sMethod Trivial search by default. Can be 'Fremat'.
 --  @return true if prime.
-bigint.isPrime = function (B, sMethod)
+bigint.isPrime = function (self, sMethod)
   if sMethod == 'Fermat' then
-    return bigint._primeFermat(B)
+    return bigint._primeFermat(self)
   end
   -- default is a simple search
-  local v1, _ = bigint._trivialSearch(B)
+  local v1, _ = bigint._trivialSearch(self)
   return v1 == nil
 end
 about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
@@ -1097,7 +1079,7 @@ about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
 --- Least common multiple.
 --  @param ... List of numbers.
 --  @return Bigint lcm.
-bigint.lcm = function (self, ...)
+bigint.lcm = function (_, ...)
   local t = {...}
   if #t == 0 then error('No numbers') end
   -- compare element-wise
@@ -1117,7 +1099,7 @@ about[bigint.lcm] = {":lcm(...) --> B",
 --  @param n Number of elements.
 --  @param k Size of group.
 --  @return Number of permutations.
-bigint.P = function (self, n, k)
+bigint.P = function (_, n, k)
   n, k = bigint._args(n, k)
   return bigint:ratF(n, n-k)
 end
@@ -1128,7 +1110,7 @@ about[bigint.P] = {":P(n, k) --> permutaions_B",
 --- Generate random number.
 --  @param B Upper limit.
 --  @return Number from 0 to B.
-bigint.random = function (self, B)
+bigint.random = function (_, B)
   B = isbigint(B) and B or bigint._new(B)
   local set, v = false, 0
   local res = bigint._newTable({0}, B._sign)
@@ -1159,7 +1141,7 @@ about[bigint.random] = {":random(B) --> rand_B",
 --  @param B Numerator.
 --  @param B2 Denominator.
 --  @return Bigint for ration.
-bigint.ratF = function (self, B, B2)
+bigint.ratF = function (_, B, B2)
   assert(B._sign > 0 and B2._sign > 0, "Non-negative expected")
   local N1, N2 = B:float(), B2:float()
   if N1 < N2 then return bigint._0 end
@@ -1186,7 +1168,7 @@ about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
 
 -- simplify constructor call
 setmetatable(bigint, {
-__call = function (self, v)
+__call = function (_, v)
   return bigint._new(v)
 end})
 about[bigint] = {" (var) --> new_B",
