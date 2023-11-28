@@ -291,9 +291,8 @@ bigint.__le = function (B1, B2)
       end
     end
   end
-  return not bigint._gt(B1, B2)
+  return bigint._cmp(B1, B2) < 1
 end
-
 
 --- B1 < B2
 --  @param B1 First bigint or integer.
@@ -312,19 +311,7 @@ bigint.__lt = function (B1, B2)
       end
     end
   end
-  if B1._sign < B2._sign then return true end
-  local b1, b2 = B1._, B2._
-  if #b1 == #b2 then   -- equal length
-    for i = #b1, 1, -1 do
-      if b1[i] ~= b2[i] then
-        return (B1._sign > 0 and b1[i] < b2[i]) or
-               (B1._sign < 0 and b1[i] > b2[i])
-      end
-    end
-    return false
-  else                 -- different length
-    return (B1._sign > 0 and #b1 < #b2) or (B1._sign < 0 and #b1 > #b2)
-  end
+  return bigint._cmp(B1, B2) == -1
 end
 
 
@@ -458,6 +445,36 @@ bigint._args = function (num1, num2)
 end
 
 
+--- Compare 2 bigint numbers.
+--  @param B1 First bigint value.
+--  @param B2 Second bigint value.
+--  @return -1 for less, 0 for equal, +1 for greater
+bigint._cmp = function (B1, B2)
+  -- check signes
+  local sign = B1._sign
+  if sign ~= B2._sign then
+    return sign
+  end
+  -- check size
+  local b1, b2 = B1._, B2._
+  if #b1 < #b2 then
+    return -sign
+  elseif #b1 > #b2 then
+    return sign
+  end
+  -- compare elements
+  for i = #b1, 1, -1 do
+    local d = b1[i] - b2[i]
+    if d > 0 then
+      return sign
+    elseif d < 0 then
+      return -sign
+    end
+  end
+  return 0
+end
+
+
 --- Try to convert object into bigint.
 --  @param v Source objec.
 --  @return Int object.
@@ -517,11 +534,14 @@ bigint._div = function (B1, B2)
   local rem = bigint._newTable({}, 1)
   Vmove(b1, k+1, #b1, 1, rem._)  -- copy last elements
   local v2, den, acc = B2:float(), B2:abs(), {}
+  local var = bigint._newTable({0}, 1)
   for i = k, 1, -1 do
     table.insert(rem._, 1, b1[i])
-    if rem >= den then
+    --if rem >= den then
+    if bigint._cmp(rem, den) > -1 then  -- rem >= den
       local n = math.modf(rem:float() / v2)  -- estimate
-      local tmp = rem - den * bigint._newTable({n}, 1)
+      var._[1] = n
+      local tmp = rem - den * var
       if tmp._sign < 0 then
         n = n - 1
         tmp = tmp + den
@@ -966,14 +986,7 @@ bigint.__eq = function (B1, B2)
       end
     end
   end
-  local b1, b2 = B1._, B2._
-  if #b1 == #b2 and B1._sign == B2._sign then
-    for i = 1, #b1 do
-      if b1[i] ~= b2[i] then return false end
-    end
-    return true
-  end
-  return false
+  return bigint._cmp(B1, B2) == 0
 end
 
 
