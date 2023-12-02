@@ -68,11 +68,11 @@ ans = c:float() / 3E64       --1>  1.0
 ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
 
 -- digits for a different numeric base
-v = g:base(60)
+v = g:digits(60)
 ans = tostring(v)             -->  '-2,3:60'
 
 -- improve view
-c16 = c:base(16)
+c16 = c:digits(16)
 print(c16:group(4))
 
 -- number of digits
@@ -174,6 +174,37 @@ mapChar = {},
 -- Fill inverted mapping
 for k, v in pairs(mt_digits.map) do mt_digits.mapChar[v] = k end
 mt_digits.__index = mt_digits
+
+
+--- B << n
+--  @param N number of positions.
+--  @return left shifted number.
+mt_digits.__shl = function (self, N)
+  assert(Vinteger(N) and N >= 0)
+  local res = {}
+  for i = 1, N do res[i] = 0 end
+  Vmove(self, 1, #self, N+1, res)
+  res.base = self.base
+  res.sign = self.sign
+  return setmetatable(res, mt_digits)
+end
+
+
+--- B >> n
+--  @param N number of positions.
+--  @return right shifted number.
+mt_digits.__shr = function (self, N)
+  assert(Vinteger(N) and N >= 0)
+  local res = {}
+  if N >= #self then
+    res[1] = 0
+  else
+    for i = 1, #self-N do res[i] = self[i+N] end
+  end
+  res.base = self.base
+  res.sign = self.sign
+  return setmetatable(res, mt_digits)
+end
 
 
 --- String representation.
@@ -940,10 +971,10 @@ bigint.sign = function (self) return self._sign end
 about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
 
 
---- Change current numeric base.
+--- Get list of digits for the given base.
 --  @param N New base.
 --  @return Table with digits of the found number.
-bigint.base = function (self, N)
+bigint.digits = function (self, N)
   N = N or 10
   assert(Vinteger(N) and N > 0, "Wrong base")
   local b = self._
@@ -951,7 +982,7 @@ bigint.base = function (self, N)
   res.sign = self._sign
   return setmetatable(res, mt_digits)
 end
-about[bigint.base] = {"B:base(N=10) --> tbl", "Convert number to the new numeric base."}
+about[bigint.digits] = {"B:digits(N=10) --> tbl", "Convert number to the new numeric base."}
 
 
 --- Find number of combinations.
@@ -1182,6 +1213,9 @@ about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
 -- simplify constructor call
 setmetatable(bigint, {
 __call = function (_, v)
+  if isbigint(v) then
+    return v
+  end
   return bigint._new(v)
 end})
 about[bigint] = {" (var) --> new_B",
