@@ -153,7 +153,9 @@ local NUMB = 'numbers'
 local COMB = 'combinations'
 
 -- max number for one position
-local BASE = math.floor(math.sqrt((math.maxinteger or 2^52) / 10))
+--local BASE = math.floor(math.sqrt((math.maxinteger or 2^52) / 10))
+local BASE = 7
+local logBase = math.log(BASE) / math.log(10)
 
 
 --	INFO
@@ -252,6 +254,7 @@ end
 
 -- Main module
 local bigint = { type='bigint' }
+assert(BASE > 2)
 
 
 --- Check object type.
@@ -451,13 +454,7 @@ bigint.__unm = function (self) return bigint._newTable(self._, -self._sign) end
 
 --- String representation.
 --  @return String object.
-bigint.__tostring = function (self)
-  local t = {self._sign < 0 and '-' or ''}
-  for i = #self._, 1, -1 do
-    t[#t+1] = tonumber(self._[i])
-  end
-  return table.concat(t, '')
-end
+bigint.__tostring = function (self) return tostring(self:float()) end
 
 
 about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a",
@@ -870,7 +867,7 @@ bigint._sqrt = function (self)
   local sum, sub = bigint._sum, bigint._sub
   repeat
     local aii, _ = bigint._div(self, ai)
-    aii._ = bigint._divBase(sum(ai, aii)._, BASE, 2)
+    aii._ = bigint._divBase(sum(ai, aii)._, BASE, 2)  -- (ai + aii) / 2
     ai, aii = aii, sub(aii, ai)
   until #aii._ == 1 and (aii._[1] <= 1)   -- TODO: check and decrease if need
   return ai
@@ -882,35 +879,25 @@ end
 --  @param B2 Second bigint object.
 --  @return Difference of the values.
 bigint._sub = function (B1, B2)
-  local r = 1
   local res = bigint._newTable({0}, 1)
-  local b1, b2 = B1._, B2._
-  -- find the biggest number
-  if #b1 < #b2 then
-    r = -1
-  elseif #b1 == #b2 then
-    local i = #b1
-    -- find first difference
-    while i > 0 and b1[i] == b2[i] do i = i - 1 end
-    if i == 0 then return res end
-    if b1[i] < b2[i] then r = -1 end
-  end
-  if r == -1 then
+  local cmp = bigint._cmp(B1, B2)
+  if cmp == 0 then return res end
+  local add, base1 = 1, BASE - 1
+  local b1, b2, rr = B1._, B2._, res._
+  if cmp < 0 then 
     b1, b2 = b2, b1
+    res._sign = -1
   end
-  -- subtraction
-  local rr, sub = res._, 0
-  for i = 1, math.max(#b1, #b2) do
-    local v = b1[i] - (b2[i] or 0) - sub
-    if v < 0 then
-      rr[i], sub = v + BASE, 1
+  for i = 1, #b1 do
+    local v = b1[i] + base1 - (b2[i] or 0) + add
+    if v >= BASE then
+      rr[i], add = v - BASE, 1
     else
-      rr[i], sub = v, 0
+      rr[i], add = v, 0
     end
   end
   -- simplify
   while #rr > 1 and rr[#rr] == 0 do rr[#rr] = nil end
-  res._sign = r
   return res
 end
 
@@ -943,7 +930,7 @@ end
 bigint._trivialSearch = function (B, B0)
   local n = B0 and B0:_copy() or bigint._newTable({2}, 1)
   local sq = bigint._sqrt(B)
-  while #sq._ > #n._ or not bigint._gt(n, sq) do
+  while bigint._cmp(sq, n) > 0 do
     local v1, v2 = bigint._div(B, n)
     if bigint._isZero(v2) then
       return n, v1
@@ -955,8 +942,8 @@ end
 
 
 --- Common return values
-bigint._1 = bigint._newTable({1}, 1)
 bigint._0 = bigint._newTable({0}, 1)
+bigint._1 = bigint._newTable({1}, 1)
 
 
 --- Absolute value of number.
@@ -1063,6 +1050,7 @@ bigint.factorize = function (self)
       v = q
     end
   end
+  print('!!!', #res)
   return res
 end
 about[bigint.factorize] = {"B:factorize() --> primeBs_t",
@@ -1073,10 +1061,10 @@ about[bigint.factorize] = {"B:factorize() --> primeBs_t",
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (self)
   local b, res = self._, 0
-  if #b > 1 then
+  if #b > 1 and #b * logBase > 8 then
     res = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
   else
-    res = b[1]
+    for i = #b, 1, -1 do res = res * BASE + b[i] end
   end
   return self._sign >= 0 and res or (-res)
 end
