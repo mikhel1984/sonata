@@ -304,6 +304,30 @@ bigint.__div = function (B1, B2)
 end
 
 
+--- a == b.
+--  In Lua v == 0 is always false because in the case of number
+--  the program tries to convert everything into number.
+--  For two bigint objects using of <code>==</code> is also possible.
+--  @param B1 First bigint object or integer.
+--  @param B2 Second bigint object or integer.
+--  @return True if numbers have the same values and signs.
+bigint.__eq = function (B1, B2)
+  if not (isbigint(B1) and isbigint(B2)) then
+    local p = Cconvert(B1, B2)
+    if p then
+      return B1 == p
+    else
+      p = Cconvert(B2, B1)
+      if p then return p == B2
+      else
+        return Cfloat(B1) == Cfloat(B2)
+      end
+    end
+  end
+  return bigint._cmp(B1, B2) == 0
+end
+
+
 -- methametods
 bigint.__index = bigint
 
@@ -319,7 +343,8 @@ bigint.__le = function (B1, B2)
       return B1 <= p
     else
       p = Cconvert(B2, B1)
-      if p then return p <= B2
+      if p then 
+        return p <= B2
       else
         return Cfloat(B1) <= Cfloat(B2)
       end
@@ -339,7 +364,8 @@ bigint.__lt = function (B1, B2)
       return B1 < p
     else
       p = Cconvert(B2, B1)
-      if p then return p < B2
+      if p then 
+        return p < B2
       else
         return Cfloat(B1) < Cfloat(B2)
       end
@@ -520,40 +546,15 @@ bigint._copy = function (self)
 end
 
 
---- In-place decrement for number.
---  @param B Number to decrease by 1.
---  @param forced Flag to skip sign check.
-bigint._decr = function (B, forced)
-  local b = B._
-  if not forced and (B._sign < 0 or #b == 1 and b[1] == 0) then
-    B._sign = -1
-    return bigint._incr(B, true)
-  end
-  for i = 1, math.huge do
-    local v = b[i] - 1
-    if v < 0 then
-      v = BASE - 1
-    else
-      b[i] = v
-      break
-    end
-    b[i] = v
-  end
-  if #b > 1 and b[#b] <= 0 then
-    table.remove(b)
-  elseif #b == 1 and b[1] == 0 then
-    B._sign = 1
-  end
-end
-
-
 --- Main algorithm for division.
 --  @param B1 First number representation.
 --  @param B2 Second number representation.
 --  @return The quotient and remainder.
 bigint._div = function (B1, B2)
   local b1, b2 = B1._, B2._
-  if bigint._isZero(B2) then error("Divide by 0!") end
+  if bigint._isZero(B2) then 
+    error "Divide by 0!"
+  end
   local res = bigint._newTable({0}, 1)
   if #b1 < #b2 then  -- too short
     return res, B1
@@ -598,7 +599,7 @@ bigint._divBase = function (t, iOld, iNew)
   local rest, set = 0, false
   for i = #t, 1, -1 do
     rest = rest * iOld + t[i]
-    local n, _ = math.modf(rest / iNew)
+    local n = math.floor(rest / iNew)
     if set or n > 0 then
       t[i] = n
       set = true
@@ -620,44 +621,41 @@ bigint._gcd = function (B1, B2)
 end
 
 
---- Check if the first number is greater then the second
---  @param B1 First number.
---  @param B2 Second number.
---  @return True if B1 > B2.
-bigint._gt = function (B1, B2)
-  if B1._sign > B2._sign then return true end
-  local b1, b2 = B1._, B2._
-  if #b1 == #b2 then
-    for i = #b1, 1, -1 do
-      if b1[i] ~= b2[i] then
-        return (B1._sign > 0 and b1[i] > b2[i]) or
-               (B1._sign < 0 and b1[i] < b2[i])
+--- In-place increment.
+--  @param B Number to change.
+--  @param n Step, not more then the current base.
+bigint._incr = function (B, n)
+  assert(-BASE < n and n < BASE)
+  local b = B._
+  local v = (n < 0 and -n or n)
+  if B._sign * n >= 0 then
+    -- increase
+    for i = 1, #b + 1 do
+      local bi = (b[i] or 0) + v
+      if bi >= BASE then
+        b[i], v = bi - BASE, 1
+      else
+        b[i] = bi
+        break
       end
     end
-    return false
   else
-    return (B1._sign > 0 and #b1 > #b2) or (B1._sign < 0 and #b1 < #b2)
-  end
-end
-
-
---- In-place increment.
---  @param B Number to increase by 1.
---  @param forced Flag to skip sign check.
-bigint._incr = function (B, forced)
-  if not forced and (B._sign < 0) then
-    return bigint._decr(B, true)
-  end
-  local b = B._
-  for i = 1, math.huge do
-    local v = (b[i] or 0) + 1
-    if v == BASE then
-      v = 0
-    else
-      b[i] = v
-      break
+    -- decrease
+    for i = 1, #b do
+      local bi = b[i] - v
+      if bi < 0 then
+        b[i], v = BASE + bi, 1
+      else
+        b[i], v = bi, 0
+        break
+      end
     end
-    b[i] = v
+    if v == 1 then  -- sign is changed
+      b[1] = BASE - b[1]
+      B._sign = (b[1] == 0) and 1 or (-B._sign)
+    elseif #b > 1 and b[#b] == 0 then 
+      b[#b] = nil 
+    end
   end
 end
 
@@ -699,7 +697,7 @@ bigint._mul = function (B1, B2)
   local rest = 0
   for i = 1, #s do
     local si = s[i] + rest
-    rest = math.modf(si / BASE)
+    rest = math.floor(si / BASE)
     s[i] = si - rest * BASE
   end
   if rest > 0 then s[#s+1] = rest end
@@ -820,7 +818,7 @@ bigint._powm = function (B1, B2, B3)
     end
     _, x = div(mul(x, x), B3)
   end
-  _, rest = div(mul(x,y), B3)
+  _, rest = div(mul(x, y), B3)
   return rest
 end
 
@@ -863,13 +861,13 @@ end
 --- Estimate square root using Babylonian method.
 --  @return Estimation of sqrt(B).
 bigint._sqrt = function (self)
-  local ai = bigint._1
+  local ai = (#self._ > 1 or self._[1] > 1) and bigint._2 or bigint._1
   local sum, sub = bigint._sum, bigint._sub
   repeat
     local aii, _ = bigint._div(self, ai)
     aii._ = bigint._divBase(sum(ai, aii)._, BASE, 2)  -- (ai + aii) / 2
     ai, aii = aii, sub(aii, ai)
-  until #aii._ == 1 and (aii._[1] <= 1)   -- TODO: check and decrease if need
+  until #aii._ == 1 and (aii._[1] <= 1)  
   return ai
 end
 
@@ -935,7 +933,7 @@ bigint._trivialSearch = function (B, B0)
     if bigint._isZero(v2) then
       return n, v1
     end
-    bigint._incr(n)
+    bigint._incr(n, 1)
   end
   return nil  -- not found
 end
@@ -944,6 +942,7 @@ end
 --- Common return values
 bigint._0 = bigint._newTable({0}, 1)
 bigint._1 = bigint._newTable({1}, 1)
+bigint._2 = bigint._newTable({2}, 1)
 
 
 --- Absolute value of number.
@@ -984,49 +983,27 @@ about[bigint.C] = {":C(n, k) --> combinations_B",
   "Number of combinations C(n,k).", COMB}
 
 
---- a == b.
---  In Lua v == 0 is always false because in the case of number
---  the program tries to convert everything into number.
---  For two bigint objects using of <code>==</code> is also possible.
---  @param B1 First bigint object or integer.
---  @param B2 Second bigint object or integer.
---  @return True if numbers have the same values and signs.
-bigint.__eq = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
-    local p = Cconvert(B1, B2)
-    if p then
-      return B1 == p
-    else
-      p = Cconvert(B2, B1)
-      if p then return p == B2
-      else
-        return Cfloat(B1) == Cfloat(B2)
-      end
-    end
-  end
-  return bigint._cmp(B1, B2) == 0
-end
-
 
 --- B!
---  Use the fact that n*(n-1)*...*2*1 = (n*1)*((n-1)*2)*...
+--  Use the fact that n*(n-1)*...*2*1 = (n*1) * ((n-1)*2) * ...
 --  @return Factorial of the number as bigint object.
 bigint.F = function (self)
   assert(self._sign > 0, "Non-negative value is expected!")
-  local N = self:float()
-  if     N <= 1 then return bigint._1
-  elseif N == 2 then return self
+  if #self._ == 1 then 
+    if     self._[1] <= 1 then return bigint._1
+    elseif self._[1] == 2 then return self
+    end
   end
-  local n, m = math.modf((N-2) * 0.5)
-  local S, d, acc = self, self:_copy(), self
-  for i = 1, n do
-    bigint._decr(d)
-    bigint._decr(d)
+  local S, acc = self, self
+  local d = self - bigint._2
+  local dd = d._
+  while #dd > 1 or dd[1] > 1 do
     S = bigint._sum(S, d)
     acc = bigint._mul(acc, S)
+    bigint._incr(d, -2)
   end
-  if m > 1E-3 then   -- i.e. m > 0
-    acc = bigint._mul(acc, bigint._newNumber(n + 2))
+  if dd[1] == 1 then
+    acc = bigint._mul(acc, bigint._div(self + bigint._1, bigint._2))
   end
   return acc
 end
@@ -1050,7 +1027,6 @@ bigint.factorize = function (self)
       v = q
     end
   end
-  print('!!!', #res)
   return res
 end
 about[bigint.factorize] = {"B:factorize() --> primeBs_t",
@@ -1184,8 +1160,7 @@ bigint.ratF = function (_, B, B2)
   local S, diff = acc, B - B2
   local n, m = math.modf((N1+N2-2) * 0.5)
   for i = N2+1, n do
-    bigint._decr(diff)
-    bigint._decr(diff)
+    bigint._incr(diff, -2)
     S = bigint._sum(S, diff)
     acc = bigint._mul(acc, S)
   end
