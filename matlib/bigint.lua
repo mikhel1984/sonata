@@ -121,7 +121,7 @@ end                           -->  456
 
 -- pseudo-random number
 -- from 0 to b
-print(Int:random(b))
+print(b:random())
 
 -- greatest common divisor
 ans = Int:gcd(a,b,g):float()  -->  3
@@ -830,8 +830,8 @@ bigint._primeFermat = function (B)
   for i = 1, 5 do
     local a = nil
     repeat
-      a = bigint:random(B)
-    until a:float() >= 2
+      a = bigint.random(B)
+    until #a._ > 1 or a._[1] >= 2
     local v1 = bigint._powm(a, B, B)
     local _, v2 = bigint._div(a, B)
     if v1 ~= v2 then return false end
@@ -1116,21 +1116,19 @@ about[bigint.P] = {":P(n, k) --> permutaions_B",
 
 
 --- Generate random number.
---  @param B Upper limit.
---  @return Number from 0 to B.
-bigint.random = function (_, B)
-  B = isbigint(B) and B or bigint._new(B)
+--  @return Number from 0 to given number.
+bigint.random = function (self)
   local set, v = false, 0
-  local res = bigint._newTable({0}, B._sign)
-  local n = math.random(1, #B._)
-  local b, rr = B._, res._
+  local res = bigint._newTable({0}, self._sign)
+  local b, rr = self._, res._
+  local n = math.random(1, #b)
   local any = (n ~= #b)
   for i = n, 1, -1 do
     -- generate
     if any then
-      v = math.random(1, BASE) - 1
+      v = math.random(0, BASE-1)
     else
-      v = math.random(1, b[i]+1)-1
+      v = math.random(0, b[i])
       any = (v < b[i])
     end
     -- add
@@ -1141,7 +1139,7 @@ bigint.random = function (_, B)
   end
   return res
 end
-about[bigint.random] = {":random(B) --> rand_B",
+about[bigint.random] = {"B:random() --> rand_B",
   "Generate pseudo-random value from 0 to B.", help.STATIC}
 
 
@@ -1151,21 +1149,25 @@ about[bigint.random] = {":random(B) --> rand_B",
 --  @return Bigint for ration.
 bigint.ratF = function (_, B, B2)
   assert(B._sign > 0 and B2._sign > 0, "Non-negative expected")
-  local N1, N2 = B:float(), B2:float()
-  if N1 < N2 then return bigint._0 end
-  if N1 == N2 then return bigint._1 end
-  if N1 == N2 + 1 then return B end
-  local acc = B * (B2 + bigint._1)
-  if N1 == N2+2 then return acc end
-  local S, diff = acc, B - B2
-  local n, m = math.modf((N1+N2-2) * 0.5)
-  for i = N2+1, n do
-    bigint._incr(diff, -2)
-    S = bigint._sum(S, diff)
-    acc = bigint._mul(acc, S)
+  local d = bigint._sub(B, B2)
+  local dd = d._
+  if d._sign < 0 then return bigint._0 end
+  if #dd == 1 then
+    if dd[1] == 0 then return bigint._1 end
+    if dd[1] == 1 then return B end
   end
-  if m > 1E-3 then   -- i.e. m > 0
-    acc = bigint._mul(acc, bigint._newNumber(n+2))
+  local binc = B2 + bigint._1
+  local S = B * binc
+  if dd[1] == 2 then return S end
+  local acc = S
+  bigint._incr(d, -2)
+  while #dd > 1 or dd[1] > 1 do
+    S = bigint._sum(S, d)
+    acc = bigint._mul(acc, S)
+    bigint._incr(d, -2)
+  end
+  if dd[1] == 1 then
+    acc = bigint._mul(acc, bigint._div(B + binc, bigint._2))
   end
   return acc
 end
