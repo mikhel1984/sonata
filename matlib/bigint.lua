@@ -441,7 +441,7 @@ bigint.__pow = function (B1, B2)
   local dig, mul, rest = {}, bigint._mul, nil
   for i = 1, #B2._ do dig[i] = B2._[i] end
   while #dig > 1 or dig[1] > 1 do
-    dig, rest = bigint._divBase(dig, BASE, 2)
+    dig, rest = bigint._divBase(dig, BASE, 2)  -- x/2
     if rest == 1 then
       y = mul(y, x)
     end
@@ -541,7 +541,7 @@ end
 --  @return Deep copy.
 bigint._copy = function (self)
   local c, b = {}, self._
-  for i = 1, #b do c[i] = b[i] end
+  Vmove(b, 1, #b, 1, c)
   return bigint._newTable(c, self._sign)
 end
 
@@ -551,40 +551,10 @@ end
 --  @param B2 Second number representation.
 --  @return The quotient and remainder.
 bigint._div = function (B1, B2)
-  local b1, b2 = B1._, B2._
   if bigint._isZero(B2) then 
     error "Divide by 0!"
   end
-  local res = bigint._newTable({0}, 1)
-  if #b1 < #b2 then  -- too short
-    return res, B1
-  end
-  local k = #b1 - #b2 + 1
-  local rem = bigint._newTable({}, 1)
-  Vmove(b1, k+1, #b1, 1, rem._)  -- copy last elements
-  local v2, den, acc = B2:float(), B2:abs(), {}
-  local var = bigint._newTable({0}, 1)
-  for i = k, 1, -1 do
-    table.insert(rem._, 1, b1[i])
-    --if rem >= den then
-    if bigint._cmp(rem, den) > -1 then  -- rem >= den
-      local n = math.modf(rem:float() / v2)  -- estimate
-      var._[1] = n
-      local tmp = rem - den * var
-      if tmp._sign < 0 then
-        n = n - 1
-        tmp = tmp + den
-      elseif tmp > den then
-        n = n + 1
-        tmp = tmp - den
-      end
-      rem = tmp
-      acc[#acc+1] = n
-    elseif #acc > 0 then
-      acc[#acc+1] = 0
-    end
-  end
-  for i, v in ipairs(acc) do res._[#acc-i+1] = v end
+  local res, rem = bigint._q_r(B1:abs(), B2:abs())
   res._sign = B1._sign*B2._sign
   return res, rem
 end
@@ -702,6 +672,25 @@ bigint._mul = function (B1, B2)
   end
   if rest > 0 then s[#s+1] = rest end
   return sum
+end
+
+
+--- Multiply to small number in-place.
+--  @param t Digits of number.
+--  @param x Multiplier.
+bigint._mulX = function (t, x)
+  assert(x < BASE)
+  local add = 0
+  for i = 1, #t do
+    local v = t[i] * x + add
+    if v >= BASE then
+      v, add = v - BASE, 1
+    else 
+      add = 0
+    end
+    t[i] = v
+  end
+  if add > 0 then t[#t+1] = 1 end
 end
 
 
@@ -837,6 +826,39 @@ bigint._primeFermat = function (B)
     if v1 ~= v2 then return false end
   end
   return true
+end
+
+
+--- Find quotient and reminder for 2 positive numbers.
+--  @param a First integer.
+--  @param b Second integer.
+--  @return quotient and reminder.
+bigint._q_r = function (a, b)
+  local cmp = bigint._cmp
+  local v = cmp(a, b)
+  if v < 0 then
+    return bigint._0, a 
+  elseif v == 0 then
+    return bigint._1, bigint._0
+  end
+  -- find max doubled
+  local c = bigint._copy(b)
+  repeat
+    bigint._mulX(c._, 2)
+  until cmp(a, c) < 0
+  bigint._divBase(c._, BASE, 2)
+  -- find quotient and reminder
+  a = bigint._sub(a, c)
+  local n = bigint._newTable({1}, 1)
+  while cmp(c, b) ~= 0 do
+    bigint._divBase(c._, BASE, 2)
+    bigint._mulX(n._, 2)
+    if cmp(c, a) <= 0 then
+      a = bigint._sub(a, c)
+      bigint._incr(n, 1)
+    end
+  end
+  return n, a
 end
 
 
@@ -1003,7 +1025,9 @@ bigint.F = function (self)
     bigint._incr(d, -2)
   end
   if dd[1] == 1 then
-    acc = bigint._mul(acc, bigint._div(self + bigint._1, bigint._2))
+    S = self + bigint._1
+    bigint._divBase(S._, BASE, 2)
+    acc = bigint._mul(acc, S)
   end
   return acc
 end
@@ -1167,7 +1191,9 @@ bigint.ratF = function (_, B, B2)
     bigint._incr(d, -2)
   end
   if dd[1] == 1 then
-    acc = bigint._mul(acc, bigint._div(B + binc, bigint._2))
+    S = B + binc
+    bigint._divBase(S._, BASE, 2)
+    acc = bigint._mul(acc, S)
   end
   return acc
 end
