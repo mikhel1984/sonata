@@ -318,7 +318,8 @@ bigint.__eq = function (B1, B2)
       return B1 == p
     else
       p = Cconvert(B2, B1)
-      if p then return p == B2
+      if p then 
+        return p == B2
       else
         return Cfloat(B1) == Cfloat(B2)
       end
@@ -439,7 +440,7 @@ bigint.__pow = function (B1, B2)
     return bigint._1
   end
   local dig, mul, rest = {}, bigint._mul, nil
-  for i = 1, #B2._ do dig[i] = B2._[i] end
+  Vmove(B2._, 1, #B2._, 1, dig)
   while #dig > 1 or dig[1] > 1 do
     dig, rest = bigint._divBase(dig, BASE, 2)  -- x/2
     if rest == 1 then
@@ -840,6 +841,10 @@ bigint._q_r = function (a, b)
     return bigint._0, a 
   elseif v == 0 then
     return bigint._1, bigint._0
+  elseif #b._ == 1 then
+    local c = bigint._copy(a)
+    local _, r = bigint._divBase(c._, BASE, b._[1])
+    return c, bigint._newTable({r}, 1)
   end
   -- find max doubled
   local c = bigint._copy(b)
@@ -872,7 +877,7 @@ bigint._rebase = function (t, Nfrom, Nto)
   local res = {base=Nto}
   -- reverse order
   local dig = {}
-  for i, v in ipairs(t) do dig[i] = v end
+  Vmove(t, 1, #t, 1, dig)
   repeat
     dig, res[#res+1] = bigint._divBase(dig, Nfrom, Nto)
   until #dig == 0
@@ -1219,4 +1224,3 @@ bigint.about = about
 return bigint
 
 --=================================
--- TODO check F and ratF for different float()
