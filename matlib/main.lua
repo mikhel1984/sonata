@@ -15,7 +15,7 @@
 require 'matlib.main'
 
 -- standard functions
-ans = exp(0)+sin(pi/2)+cosh(0)  --1>  3.0
+ans = exp(0)+sin(PI/2)+cosh(0)  --1>  3.0
 
 -- round number
 ans = Round(0.9)              -->  1.0
@@ -31,7 +31,7 @@ c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3>  0.909
 
 -- use Lua functions if need
-ans = math.deg(pi)           --2>  180.0
+ans = math.deg(PI)           --2>  180.0
 
 --]]
 
@@ -123,8 +123,8 @@ atanh = _call(Calc.atanh, 'atanh')
 about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
 -- Constants
-pi = math.pi
-about[pi] = {"pi --> 3.14", "Number pi.", AUX}
+PI = math.pi
+about[PI] = {"PI --> 3.14", "Number pi.", AUX}
 
 
 --- Wrap function to simplify call if need.

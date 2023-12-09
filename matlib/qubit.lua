@@ -531,7 +531,7 @@ qgate._X22 = Matrix{{0,1},{1,0}}
 qgate._Y22 = Matrix{{0,Complex:i(-1)}, {Complex:i(1), 0}}
 qgate._Z22 = Matrix{{1, 0}, {0, -1}}
 qgate._S22 = Matrix{{1, 0}, {0, Complex:i(1)}}
-qgate._T22 = Matrix{{1, 0}, {0, Complex:trig(1, math.pi/4)}}
+qgate._T22 = Matrix{{1, 0}, {0, Complex:cis(1, math.pi/4)}}
 qgate._H22 = Matrix{{1,1},{1,-1}}  -- multipy to 1/sqrt(2)
 
 

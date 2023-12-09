@@ -68,7 +68,6 @@ au_u_='m',    au = 149597870700,         -- astronomic unit
 -- math
 local _math = {
              phi = 1.6180339887498948482045868,  -- golden ratio
-              pi = 3.1415926535897932384626434,  -- length to diameter
                e = 2.7182818284590452353602875,  -- base of natural logarithm
 }
 
@@ -128,8 +127,6 @@ about[_astro.ly] = {".astro.ly --> 9.5E15", "One light year.", ASTRO}
 about[_astro.au] = {".astro.au --> 1.5E11", "Astronomic unit.", ASTRO}
 -- mathematics
 about[_math.phi] = {".math.phi --> 1.62", "Golden ratio.", MATH}
-about[_math.pi] = {
-  ".math.pi --> 3.14", "Ratio of a circle's circumference to its diameter.", MATH}
 about[_math.e] = {".math.e --> 2.72", "Base of the natural logarithm.", MATH}
 
 

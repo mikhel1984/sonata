@@ -693,7 +693,7 @@ matrix.eig = function (self)
     error "Square matrix is expected!"
   end
   matrix.ext_poly = matrix.ext_poly or require("matlib.polynomial")
-  local p = matrix.ext_poly:cp(self)
+  local p = matrix.ext_poly:char(self)
   local root = p:roots()
   local P, lam = matrix:zeros(self._rows), matrix:zeros(self._rows)
   for j = 1, #root do

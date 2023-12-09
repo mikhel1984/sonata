@@ -157,7 +157,7 @@ local function evalCode()
         state, res = ok and evaluate.EV_RES or evaluate.EV_ERR, nil
         if ans ~= nil then
           res = islist(ans) and ans or tostring(ans)
-          _ans = ans  -- set global var
+          ANS = ans  -- set global var
         end
       end
     end
