@@ -1066,9 +1066,13 @@ about[bigint.factorize] = {"B:factorize() --> primeBs_t",
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (self)
   local b, res = self._, 0
-  if #b > 1 and #b * logBase > 8 then
-    res = (b[#b]*BASE + b[#b-1]) * BASE^(#b-2)
+  if #b > 2 and #b * logBase > 9 then
+    -- estimate
+    res = ((b[#b]*BASE + b[#b-1])*BASE + b[#b-2]) * BASE^(#b-3)
+    local n = 10^(math.floor(#b*logBase) - 1)
+    res = res - res % n
   else
+    -- exact
     for i = #b, 1, -1 do res = res * BASE + b[i] end
   end
   return self._sign >= 0 and res or (-res)
