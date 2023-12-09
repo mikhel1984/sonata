@@ -481,7 +481,13 @@ bigint.__unm = function (self) return bigint._newTable(self._, -self._sign) end
 
 --- String representation.
 --  @return String object.
-bigint.__tostring = function (self) return tostring(self:float()) end
+bigint.__tostring = function (self) 
+  if (#self._ * logBase) < 9 then
+    return tostring(self:float()) 
+  else
+    return tostring(self:digits(10))
+  end
+end
 
 
 about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a",
