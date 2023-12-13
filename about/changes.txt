@@ -1,9 +1,15 @@
 ======== 0.9.39 =========
 
+Asciiplot
+* Use different characters for smooth line
+Bigint
+* Remove float conversation inside methods
 Matrix
 * Use references for transpose, range, reshape
 * New type for vectors
 * Remove / operation
+Polynomial
+* Update spline methods
 Other
 
 ======== 0.9.38 =========

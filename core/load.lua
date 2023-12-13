@@ -33,7 +33,12 @@ __newindex = function (t, k, v)
   rawset(t, k, v)
 end,
 -- store into the hidden table
-__index = Sonata._modules
+__index = function (t, k)
+  if Sonata.alias[k] then
+    use(k)
+    return Sonata._modules[k]
+  end
+end
 })
 
 
