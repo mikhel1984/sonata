@@ -382,10 +382,11 @@ qubit.meas = function (Q, ind)
       acc[#acc+1] = {sum, i}
     end
   end
-  local _, pair = Ubinsearch(acc, acc[#acc][1]*math.random(),
+  local j = Ubinsearch(acc, acc[#acc][1]*math.random(),
     function (t) return t[1] end)
+  j = acc[j][2]   -- reuse
   for i = 1, Q.vec:rows() do
-    Q.vec[i][1] = (i == pair[2]) and 1 or 0
+    Q.vec[i][1] = (i == j) and 1 or 0
   end
   return Q
 end
