@@ -172,7 +172,7 @@ __module__ = "Operations with arbitrary long integers."
 local mt_digits = {
 map = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', [0]='0'},
 mapChar = {},
-} 
+}
 -- Fill inverted mapping
 for k, v in pairs(mt_digits.map) do mt_digits.mapChar[v] = k end
 mt_digits.__index = mt_digits
@@ -235,12 +235,12 @@ mt_digits.group = function (self, N, sep)
   N, sep = N or 3, sep or '`'
   local n, acc = #self + 1, {}
   local small = (self.base <= 16)
-  for i = 1, #self do 
+  for i = 1, #self do
     local ni = n - i
     acc[#acc+1] = small and mt_digits.map[ self[ni] ] or self[ni]
     if i < #self then
       if (ni-1) % N == 0 then
-        acc[#acc+1] = sep 
+        acc[#acc+1] = sep
       elseif not small then
         acc[#acc+1] = SEP
       end
@@ -318,7 +318,7 @@ bigint.__eq = function (B1, B2)
       return B1 == p
     else
       p = Cconvert(B2, B1)
-      if p then 
+      if p then
         return p == B2
       else
         return Cfloat(B1) == Cfloat(B2)
@@ -344,7 +344,7 @@ bigint.__le = function (B1, B2)
       return B1 <= p
     else
       p = Cconvert(B2, B1)
-      if p then 
+      if p then
         return p <= B2
       else
         return Cfloat(B1) <= Cfloat(B2)
@@ -365,7 +365,7 @@ bigint.__lt = function (B1, B2)
       return B1 < p
     else
       p = Cconvert(B2, B1)
-      if p then 
+      if p then
         return p < B2
       else
         return Cfloat(B1) < Cfloat(B2)
@@ -481,9 +481,9 @@ bigint.__unm = function (self) return bigint._newTable(self._, -self._sign) end
 
 --- String representation.
 --  @return String object.
-bigint.__tostring = function (self) 
+bigint.__tostring = function (self)
   if (#self._ * logBase) < 9 then
-    return tostring(self:float()) 
+    return tostring(self:float())
   else
     return tostring(self:digits(10))
   end
@@ -558,7 +558,7 @@ end
 --  @param B2 Second number representation.
 --  @return The quotient and remainder.
 bigint._div = function (B1, B2)
-  if bigint._isZero(B2) then 
+  if bigint._isZero(B2) then
     error "Divide by 0!"
   end
   local res, rem = bigint._q_r(B1:abs(), B2:abs())
@@ -630,8 +630,8 @@ bigint._incr = function (B, n)
     if v == 1 then  -- sign is changed
       b[1] = BASE - b[1]
       B._sign = (b[1] == 0) and 1 or (-B._sign)
-    elseif #b > 1 and b[#b] == 0 then 
-      b[#b] = nil 
+    elseif #b > 1 and b[#b] == 0 then
+      b[#b] = nil
     end
   end
 end
@@ -692,7 +692,7 @@ bigint._mulX = function (t, x)
     local v = t[i] * x + add
     if v >= BASE then
       v, add = v - BASE, 1
-    else 
+    else
       add = 0
     end
     t[i] = v
@@ -844,7 +844,7 @@ bigint._q_r = function (a, b)
   local cmp = bigint._cmp
   local v = cmp(a, b)
   if v < 0 then
-    return bigint._0, a 
+    return bigint._0, a
   elseif v == 0 then
     return bigint._1, bigint._0
   elseif #b._ == 1 then
@@ -900,7 +900,7 @@ bigint._sqrt = function (self)
     local aii, _ = bigint._div(self, ai)
     aii._ = bigint._divBase(sum(ai, aii)._, BASE, 2)  -- (ai + aii) / 2
     ai, aii = aii, sub(aii, ai)
-  until #aii._ == 1 and (aii._[1] <= 1)  
+  until #aii._ == 1 and (aii._[1] <= 1)
   return ai
 end
 
@@ -915,7 +915,7 @@ bigint._sub = function (B1, B2)
   if cmp == 0 then return res end
   local add, base1 = 1, BASE - 1
   local b1, b2, rr = B1._, B2._, res._
-  if cmp < 0 then 
+  if cmp < 0 then
     b1, b2 = b2, b1
     res._sign = -1
   end
@@ -1022,7 +1022,7 @@ about[bigint.C] = {":C(n, k) --> combinations_B",
 --  @return Factorial of the number as bigint object.
 bigint.F = function (self)
   assert(self._sign > 0, "Non-negative value is expected!")
-  if #self._ == 1 then 
+  if #self._ == 1 then
     if     self._[1] <= 1 then return bigint._1
     elseif self._[1] == 2 then return self
     end
@@ -1097,7 +1097,7 @@ bigint.gcd = function (_, ...)
   local res = isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
   for i = 2, #t do
     local ti = t[i]
-    res = bigint._gcd(res, 
+    res = bigint._gcd(res,
                       isbigint(ti) and ti or bigint._newNumber(ti))
   end
   return res
@@ -1133,7 +1133,7 @@ bigint.lcm = function (_, ...)
   local res = isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
   for i = 2, #t do
     local ti = t[i]
-    res = bigint._lcm(res, 
+    res = bigint._lcm(res,
                       isbigint(ti) and ti or bigint._newNumber(ti))
   end
   return res
@@ -1214,6 +1214,31 @@ bigint.ratF = function (_, B, B2)
 end
 about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
   "Find ratio of factorials num!/denom!.", COMB}
+
+
+--- Find subfactorial of the number.
+--  @return Subfactorial value.
+bigint.subF = function (self)
+  assert(self._sign > 0, "Non-negative expected")
+  local res = bigint._0
+  if #self._ == 1 and self._[1] <= 1 then
+    return res
+  end
+  local c = bigint._newTable({2}, 1)
+  local add = true
+  while bigint._cmp(c, self) <= 0 do
+    if add then
+      res = res + bigint.ratF(nil, self, c)
+    else
+      res = res - bigint.ratF(nil, self, c)
+    end
+    add = not add
+    bigint._incr(c, 1)
+  end
+  return res
+end
+about[bigint.subF] = {"B:subF() --> subfactorial_B",
+  "Find subfactorial of the number.", COMB}
 
 
 -- simplify constructor call
