@@ -67,6 +67,9 @@ ans = c:float() / 3E64       --1>  1.0
 -- ratio of factorials
 ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
 
+-- subfactorial
+ans = Int(4):subF()           --> Int(9)
+
 -- digits for a different numeric base
 v = g:digits(60)
 ans = tostring(v)             -->  '-2,3:60'
@@ -153,9 +156,9 @@ local NUMB = 'numbers'
 local COMB = 'combinations'
 
 -- max number for one position
---local BASE = math.floor(math.sqrt((math.maxinteger or 2^52) / 10))
-local BASE = 7
-local logBase = math.log(BASE) / math.log(10)
+local BASE = math.floor(math.sqrt((math.maxinteger or 2^52) / 10))
+local log10 = math.log(10)
+local logBase = math.log(BASE) / log10
 
 
 --	INFO
@@ -1073,10 +1076,11 @@ about[bigint.factorize] = {"B:factorize() --> primeBs_t",
 bigint.float = function (self)
   local b, res = self._, 0
   if #b > 2 and #b * logBase > 9 then
-    -- estimate
-    res = ((b[#b]*BASE + b[#b-1])*BASE + b[#b-2]) * BASE^(#b-3)
-    local n = 10^(math.floor(#b*logBase) - 1)
-    res = res - res % n
+    local s = math.log(b[#b] + b[#b-1]/BASE) / log10
+    s = s + (#b-1)*logBase
+    res = 10^s
+    -- s = math.floor(s) - 1
+    -- res = res - res % (10 ^ s)
   else
     -- exact
     for i = #b, 1, -1 do res = res * BASE + b[i] end
