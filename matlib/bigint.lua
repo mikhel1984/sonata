@@ -1223,22 +1223,23 @@ about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
 --- Find subfactorial of the number.
 --  @return Subfactorial value.
 bigint.subF = function (self)
-  assert(self._sign > 0, "Non-negative expected")
+  assert(self._sign > 0 and (#self._ > 1 or self._[1] > 0), "Positive expected")
   local res = bigint._0
-  if #self._ == 1 and self._[1] <= 1 then
-    return res
-  end
-  local c = bigint._newTable({2}, 1)
-  local add = true
-  while bigint._cmp(c, self) <= 0 do
+  if #self._ == 1 and self._[1] == 1 then return res end
+  local acc, add = bigint._1, true
+  local d = bigint._copy(self)
+  while true do
     if add then
-      res = res + bigint.ratF(nil, self, c)
+      res = res + acc
     else
-      res = res - bigint.ratF(nil, self, c)
+      res = res - acc
     end
+    if #d._ == 1 and d._[1] == 2 then break end
+    acc = acc * d
     add = not add
-    bigint._incr(c, 1)
+    bigint._incr(d, -1)
   end
+  res._sign = 1
   return res
 end
 about[bigint.subF] = {"B:subF() --> subfactorial_B",
