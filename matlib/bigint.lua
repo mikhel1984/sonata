@@ -1049,6 +1049,24 @@ about[bigint.F] = {"B:F() --> B!",
   "Return factorial of non-negative integer B.", COMB}
 
 
+--- Get n!!
+--  @return double factorial.
+bigint.FF = function (self)
+  -- TODO >= -1
+  assert(self._sign > 0, "Non-negative value is expected!")
+  if #self._ == 1 and self._[1] <= 1 then return bigint._1 end
+  local res = self
+  local d = bigint._sub(self, bigint._2)
+  while #d._ > 1 or d._[1] > 1 do
+    res = bigint._mul(res, d)
+    bigint._incr(d, -2)
+  end
+  return res
+end
+about[bigint.FF] = {"B:FF() --> B!!", 
+  "Find double factorial.", COMB}
+
+
 --- Find multipliers for the number.
 --  @return List of prime numbers.
 bigint.factorize = function (self)
@@ -1220,7 +1238,7 @@ about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
   "Find ratio of factorials num!/denom!.", COMB}
 
 
---- Find subfactorial of the number.
+--- Find !n.
 --  @return Subfactorial value.
 bigint.subF = function (self)
   assert(self._sign > 0 and (#self._ > 1 or self._[1] > 0), "Positive expected")
@@ -1242,7 +1260,7 @@ bigint.subF = function (self)
   res._sign = 1
   return res
 end
-about[bigint.subF] = {"B:subF() --> subfactorial_B",
+about[bigint.subF] = {"B:subF() --> !B", 
   "Find subfactorial of the number.", COMB}
 
 
