@@ -193,8 +193,8 @@ for i, v in ipairs(a) do print(i, v) end
 print(rnd:bytes(8))
 
 -- same seed
-r1 = Rand:new(1)
-r2 = Rand:new(1)
+r1 = Rand:new():seed(1)
+r2 = Rand:new():seed(1)
 ans = (r1() == r2())          -->  true
 
 -- change seed
@@ -280,34 +280,32 @@ random._rand = random._genPM
 
 
 --- Get random integer from range.
---  @param R Random generator.
 --  @param a Lower bound.
 --  @param b Upper bound.
 --  @return Integer value.
-random._randRng = function (R, a, b)
-  local p, q = math.modf((b - a)*R:_rand())
+random._randRng = function (self, a, b)
+  local p, q = math.modf((b - a)*self:_rand())
   return a + (q < 0.5 and p or p + 1)
 end
 
 
 --- Binomial distribution.
---  @param R Random generator.
 --  @param dp Probability (p).
 --  @param N Total number of attempts.
 --  @return Random value.
-random.binomial = function (R, dp, N)
+random.binomial = function (self, dp, N)
   random.ext_special = random.ext_special or require('matlib.special')
   local gln = random.ext_special.gammaln
   local p = (dp < 0.5) and dp or (1 - dp)
   local bnl, am = 0, p*N
   if N < 25 then
     for j = 1, N do
-      if R:_fn() < p then bnl = bnl + 1 end
+      if self:_fn() < p then bnl = bnl + 1 end
     end
   elseif am < 1.0 then
     local g, t, j = math.exp(-am), 1.0, 0
     while j <= N do
-      t = t*R:_fn()
+      t = t*self:_fn()
       if t < g then break end
       j = j + 1
     end
@@ -319,91 +317,86 @@ random.binomial = function (R, dp, N)
     repeat
       local y = 0
       repeat
-        y = math.tan(math.pi*R:_fn())
+        y = math.tan(math.pi*self:_fn())
         em = sq*y + am
       until 0.0 <= em and em < (N + 1)
       em = math.floor(em)
       local t = 1.2*sq*(1 + y*y)*math.exp(
         og - gln(nil, em+1) - gln(nil, N-em+1) + em*plog + (N-em)*pclog)
-    until R:_fn() <= t
+    until self:_fn() <= t
     bnl = em
   end
   return (p ~= dp) and (N - bnl) or bnl
 end
-about[random.binomial] = {":binomial(p_d, N) --> int",
+about[random.binomial] = {"R:binomial(p_d, N) --> int",
   "Binomial distributed random values.", DIST}
 
 
 --- Generate sequence of bytes.
---  @param R Random generator.
 --  @param N Sequence length.
 --  @return String with random bytes.
-random.bytes = function (R, N)
+random.bytes = function (self, N)
   local res = {}
-  for i = 1, N do res[i] = string.char(R:_fnRng(33, 126)) end
+  for i = 1, N do res[i] = string.char(self:_fnRng(33, 126)) end
   return table.concat(res)
 end
-about[random.bytes] = {":bytes(N) --> str", "Get sequence of random bytes."}
+about[random.bytes] = {"R:bytes(N) --> str", "Get sequence of random bytes."}
 
 
 --- Cauchy distribution.
 --  @param dMu Mean value.
 --  @param dSigma Scale.
 --  @return Random number.
-random.cauchy = function (R, dMu, dSigma)
+random.cauchy = function (self, dMu, dSigma)
   dMu, dSigma = dMu or 0.0, dSigma or 1.0
   local u = 0
-  repeat u = R:_fn() until 0 < u and u < 1
+  repeat u = self:_fn() until 0 < u and u < 1
   return math.tan(math.pi*(u-0.5))*dSigma + dMu
 end
-about[random.cauchy] = {":cauchy(mu_d=0, sigma_d=1) --> float",
+about[random.cauchy] = {"R:cauchy(mu_d=0, sigma_d=1) --> float",
   "Cauchy distributed random numbers.", DIST}
 
 
 --- Get random element from the list.
---  @param R Random generator.
 --  @param t Source table.
 --  @return Table element and index.
-random.choice = function (R, t)
-  local i = R:_fnRng(1, #t)
+random.choice = function (self, t)
+  local i = self:_fnRng(1, #t)
   return t[i], i
 end
-about[random.choice] = {":choice(tbl) --> element, index_N",
+about[random.choice] = {"R:choice(tbl) --> element, index_N",
   "Get random table element."}
 
 
 --- Exponential distribution.
---  @param R Random generator.
 --  @param dLam Lambda.
 --  @return random number.
-random.exp = function (R, dLam)
+random.exp = function (self, dLam)
   local s = 0
-  repeat s = R:_fn() until s > 0
+  repeat s = self:_fn() until s > 0
   return -math.log(s) / (dLam or 1.0)
 end
-about[random.exp] = {":exp(lambda_d=1) --> float",
+about[random.exp] = {"R:exp(lambda_d=1) --> float",
   "Exponential distributed random values.", DIST}
 
 
 --- Get random binary value.
---  @param R Random generator.
 --  @param p Probability of 'true'.
 --  @return True of false.
-random.flip = function (R, p) return R:_fn() <= (p or 0.5) end
-about[random.flip] = {":flip(p=0.5) --> bool",
+random.flip = function (self, p) return self:_fn() <= (p or 0.5) end
+about[random.flip] = {"R:flip(p=0.5) --> bool",
   "Uniform distributed binary value."}
 
 
 --- Gamma distribution.
---  @param R Random generator.
 --  @param iAlpha Alpha.
 --  @param iBeta Beta.
 --  @return random number.
-random.gamma = function (R, iAlpha, dBeta)
+random.gamma = function (self, iAlpha, dBeta)
   if iAlpha < 1 then error("Alpha < 1") end
   local x = 1.0
   if iAlpha < 6 then
-    for i = 1, iAlpha do x = x * R:_fn() end
+    for i = 1, iAlpha do x = x * self:_fn() end
     x = -math.log(x)  -- TODO can be 0?
   else
     local y, s= 0, 0
@@ -412,43 +405,41 @@ random.gamma = function (R, iAlpha, dBeta)
       repeat
         local v1, v2 = 0, 0
         repeat
-          v1 = R:_fn()
-          v2 = 2*R:_fn()-1.0
+          v1 = self:_fn()
+          v2 = 2*self:_fn()-1.0
         until v1 > 0 and v1*v1 + v2*v2 <= 1
         y = v2 / v1
         s = math.sqrt(2.0*iAlpha + 1.0)
         x = s*y + iAlpha
       until x > 0
       local e = (1.0 + y*y)*math.exp(iAlpha*math.log(x/iAlpha) - s*y)
-    until R:_fn() < e
+    until self:_fn() < e
   end
   return x / (dBeta or 1)
 end
-about[random.gamma] = {":gamma(alpha_N, beta_d=1) --> float",
+about[random.gamma] = {"R:gamma(alpha_N, beta_d=1) --> float",
   "Gamma distributed random values.", DIST}
 
 
 --- Get random integer.
---  @param R Random generator.
 --  @param N1 Lower bound or total number.
 --  @param N2 Upper bound or nil.
 --  @return Integer value.
-random.int = function (R, N1, N2)
+random.int = function (self, N1, N2)
   N1, N2 = (N2 and N1 or 1), (N2 or N1)
-  return R:_fnRng(N1, N2)
+  return self:_fnRng(N1, N2)
 end
-about[random.int] = {":int([lower_i=1], upper_i) -> int",
+about[random.int] = {"R:int([lower_i=1], upper_i) -> int",
   "Uniform distributed random integer in the given range.", DIST}
 
 
 --- Iterate randomly without repeat.
---  @param R Random generator.
 --  @param t Source table.
 --  @return iterator function over the source table.
-random.ipairs = function (R, t)
+random.ipairs = function (self, t)
   local ind, n = {}, 1
   for i = 1, #t do ind[i] = i end
-  random.shuffle(R, ind)
+  random.shuffle(self, ind)
   -- iterator
   return function ()
     local k = ind[n]
@@ -458,63 +449,60 @@ random.ipairs = function (R, t)
     end
   end
 end
-about[random.ipairs] = {":ipairs(tbl) --> fn",
+about[random.ipairs] = {"R:ipairs(tbl) --> fn",
   "Random iterator over the table elements."}
 
 
 --- Logistic distribution.
---  @param R Random generator.
 --  @param dMu Mean value.
 --  @param dSigma Scale.
-random.logistic = function (R, dMu, dSigma)
+random.logistic = function (self, dMu, dSigma)
   dMu, dSigma = dMu or 0.0, dSigma or 1.0
   local s = 0
-  repeat s = R:_fn() until 0 < s and s < 1
+  repeat s = self:_fn() until 0 < s and s < 1
   return dMu + 0.551328895421792050*dSigma*math.log(s /(1.0 - s))
 end
-about[random.logistic] = {":logistic(mu_d=0, sigma_d=1) --> float",
+about[random.logistic] = {"R:logistic(mu_d=0, sigma_d=1) --> float",
   "Logistic distributed random value.", DIST}
 
 
 --- Constructor example.
---  @param seed Random value.
 --  @return New random generator.
-random.new = function(self, seed)
+random.new = function(_)
   local o = {
     _fn = random._rand,
     _fnRng = random._randRng,
   }
-  random._init(o, seed or 0)
+  random._init(o, 0)
   return setmetatable(o, random)
 end
-about[random.new] = {":new(seed_i=0) --> R",
+about[random.new] = {":new() --> R",
   "Create random generator object.", help.NEW}
 
 
 --- Get Gaussian distribution.
---  @param R Random generator.
 --  @param dMean Mean value.
 --  @dev Deviation.
 --  @return random number.
-random.norm = function (R, dMean, dev)
+random.norm = function (self, dMean, dev)
   dMean, dev = dMean or 0.0, dev or 1.0
   -- use Box-Muller transform
   local u, v, s = 0, 0, 0
   repeat
-    u = 2*R:_fn()-1
-    v = 2*R:_fn()-1
+    u = 2*self:_fn()-1
+    v = 2*self:_fn()-1
     s = u*u + v*v
   until 0 < s and s <= 1
   return dMean + dev * u * math.sqrt(-2*math.log(s)/s)
 end
-about[random.norm] = {":norm(mean_d=0, dev_d=1) --> float",
+about[random.norm] = {"R:norm(mean_d=0, dev_d=1) --> float",
   "Normal distributed random value with the given mean and deviation.", DIST}
 
 
 --- Poisson distribution.
 --  @param dLam Lambda.
 --  @return random number.
-random.poisson = function (R, dLam)
+random.poisson = function (self, dLam)
   random.ext_special = random.ext_special or require('matlib.special')
   local gln = random.ext_special.gammaln
   local em = -1
@@ -522,7 +510,7 @@ random.poisson = function (R, dLam)
     local g = math.exp(-dLam)
     local t = 1.0
     repeat
-      t = t * R:_fn()
+      t = t * self:_fn()
       em = em + 1
     until t <= g
   else
@@ -530,57 +518,55 @@ random.poisson = function (R, dLam)
     local g = dLam*al - gln(nil, dLam+1)
     repeat
       repeat
-        y = math.tan(math.pi * R:_fn())
+        y = math.tan(math.pi * self:_fn())
         em = sq*y + dLam
       until em >= 0
       em = math.floor(em)
       local t = 0.9*(1 + y*y)*math.exp(em*al - gln(nil, em + 1)-g)
-    until R:_fn() <= t
+    until self:_fn() <= t
   end
   return em
 end
-about[random.poisson] = {":poisson(lambda_d) --> int",
+about[random.poisson] = {"R:poisson(lambda_d) --> int",
   "Poisson distributed random values.", DIST}
 
 
 --- Rayleigh distribution.
---  @param R Random generator.
 --  @param dSigma Scale.
 --  @return random number.
-random.rayleigh = function (R, dSigma)
+random.rayleigh = function (self, dSigma)
   local s = 0
-  repeat s = R:_fn() until 0 < s and s < 1
+  repeat s = self:_fn() until 0 < s and s < 1
   return dSigma*math.sqrt(-2*math.log(s))
 end
-about[random.rayleigh] = {":rayleigh(sigma_d) --> float",
+about[random.rayleigh] = {"R:rayleigh(sigma_d) --> float",
   "Rayleigh distributed random values.", DIST}
 
 
 --- Update random generator seed.
---  @param R Random generator.
 --  @param N Seed value.
-random.seed = function (R, N)
+random.seed = function (self, N)
   N = N or os.time()  -- set 'arbitrary' value by default
-  if rawget(R, 'israndom') then
+  if rawget(self, 'israndom') then
     math.randomseed(N)   -- common rand
   else
-    random._init(R, N)   -- custom rand
+    random._init(self, N)   -- custom rand
   end
+  return self
 end
-about[random.seed] = {":seed(N=os.time)", "Set random generator seed."}
+about[random.seed] = {"R:seed(N=os.time) --> R", "Set random generator seed."}
 
 
 --- Change elements order in the table.
---  @param R Random generator.
 --  @param t Table.
-random.shuffle = function (R, t)
+random.shuffle = function (_, t)
   local N = #t
   for i = 1, N do
     local j = math.random(1, N)
     t[i], t[j] = t[j], t[i]
   end
 end
-about[random.shuffle] = {":shuffle(tbl)", "Change order of elements."}
+about[random.shuffle] = {"R:shuffle(tbl)", "Change order of elements."}
 
 
 -- simplify constructor call
