@@ -24,7 +24,7 @@ help(Round)
 x = 3
 2*x^2+3*x+5
 -- La rezulto de la lasta kalkulo estas konservita en
-_ans
+ANS
 -- PAUSE
 
 -- Longa esprimo povas esti dividita tra pluraj linioj kun

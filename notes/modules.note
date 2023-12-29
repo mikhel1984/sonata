@@ -25,7 +25,7 @@ a * b                  -- arithmetic is available
 b:inv()                -- inverse matrix
 b:det()                -- determinant
 a .. b                 -- horizontal concatenation
-c = a // b             -- vertical concatenation
+c = Mat:ver{a,b}       -- vertical concatenation
 c
 c:pinv()               -- pseudo-inverse
 -- PAUSE
@@ -37,9 +37,9 @@ Num.TOL
 fn = function (x)          \
   return 2*sin(x)+sin(2*x) \
 end -- introduce some function
-Num:newton(fn, pi/3)  -- find root near the pi/3
-Num:der(fn, pi/3)     -- estimate derivative in the point
-Num:trapez(fn, 0, pi/3) -- find integral from 0 to pi/3
+Num:newton(fn, PI/3)  -- find root near the pi/3
+Num:der(fn, PI/3)     -- estimate derivative in the point
+Num:trapez(fn, 0, PI/3) -- find integral from 0 to pi/3
 -- Solve ODE
 t,yn = Num:ode45(                               \
   function(t,y) return t*y end,  -- y' = f(t,y) \
@@ -57,7 +57,7 @@ c = a * b              -- apply arithmetic operations
 c:str('s')             -- 'pretty print' representation
 b:int(3)               -- integrate polynomial, use initial condition
 a:der()                -- differentiation
-t = a:real()           -- find real roots
+t = a:roots()          -- find roots
 t[1]
 -- PAUSE
 
@@ -69,9 +69,9 @@ b = Int '56789'        -- or from string
 a - b
 a * b
 b^50
-_ans:float()           -- decimal representation
-Int(50):F()         -- factorial
-a:base(42)           -- get value in new numerical base
+ANS:float()           -- decimal representation
+Int(50):F()           -- factorial
+a:digits(42)          -- get value in new numerical base
 -- PAUSE
 
 --	CONST
