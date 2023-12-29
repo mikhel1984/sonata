@@ -156,8 +156,8 @@ local function evalCode()
         local ok, ans = pcall(fn)
         state, res = ok and evaluate.EV_RES or evaluate.EV_ERR, nil
         if ans ~= nil then
-          res = islist(ans) and ans or tostring(ans)
-          ANS = ans  -- set global var
+          res = islist(ans) and ans or evaluate._extPrint(ans)
+          ANS = ans  -- save result to global var
         end
       end
     end
@@ -234,23 +234,23 @@ evaluate._evalBlock = function (co, env)
 end
 
 
---- Redefined print function
-evaluate._newPrint = function (...)
-  local out = {}
-  for _, v in ipairs({...}) do
-    local mt = getmetatable(v)
-    if type(v) == 'table' and not (mt and mt.__tostring) then
-      -- show table
-      out[#out+1] = evaluate._showTable(v)
-    else
-      -- show element
-      local s = tostring(v)
-      out[#out+1] = s
-      out[#out+1] = (string.find(s, '\n.+') ~= false) and '\t' or '\n'
-    end
+--- Emulate 'print' behavior
+evaluate._simpPrint = function (...)
+  local t = {...}
+  for i, v in ipairs(t) do t[i] = tostring(v) end
+  coroutine.yield(evaluate.EV_INF, table.concat(t, '\t'))
+end
+
+
+--- Extended print function
+--  @return string representation
+evaluate._extPrint = function (v)  
+  local mt = getmetatable(v)
+  if type(v) == 'table' and not (mt and mt.__tostring) then
+    return evaluate._showTable(v)
+  else
+    return tostring(v)    
   end
-  local res = table.concat(out)
-  coroutine.yield(evaluate.EV_INF, res)
 end
 
 
@@ -260,7 +260,7 @@ evaluate._showTable = function (t)
   local N, nums, out = 10, {}, {'{ '}
   -- dialog
   local function continue(n, res)
-    local txt = tostring(n) .. ' continue? (y/n) '
+    local txt = tostring(n) .. ': continue? (y/n) '
     txt = evaluate.ask(txt, res)
     return string.lower(txt) == 'y'
   end
@@ -272,7 +272,9 @@ evaluate._showTable = function (t)
       out[#out+1] = '\n'
       local data = table.concat(out)
       out = {'\n'}
-      if not continue(i, data) then break end
+      if not continue(i, data) then
+        return '\n}'
+      end
     end
   end
   -- hash table elements
@@ -288,7 +290,7 @@ evaluate._showTable = function (t)
       end
     end
   end
-  out[#out+1] = '}\n'
+  out[#out+1] = '}'
   return table.concat(out)
 end
 
@@ -350,7 +352,7 @@ evaluate.repl = function (noteList)
   local co = evaluate.evalThread()
   -- update print
   if not evaluate.debug then
-    evaluate.debug, print = print, evaluate._newPrint
+    evaluate.debug, print = print, evaluate._simpPrint
   end
   while true do
     local input = ''
