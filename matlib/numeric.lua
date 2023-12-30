@@ -36,6 +36,9 @@ ans = b                      --0>  1
 fn = function (x) return math.sin(x) / x end
 ans = Num:lim(fn, 0)         --3>  1.0
 
+-- inf limit
+ans = Num:lim(math.exp, -math.huge)  --3> 0.0
+
 -- numeric integral
 c = Num:trapez(math.sin, 0, math.pi)
 ans = c                      --0>  2
@@ -63,9 +66,9 @@ cond = function (states)
   return states[#states][2] < 0.1
 end
 myfun = function (t,x) return -x end
-y = Num:ode45(myfun, {0,1E2}, 1, {exit=cond})
+y = Num:ode45(myfun, {0, 1E2}, 1, {exit=cond})
 -- time of execution before break
-ans = y[#y][1]               --2>  2.56
+ans = y[#y][1]               --1>  2.3
 
 --]]
 
@@ -77,6 +80,7 @@ local Vunpack, Cnorm do
   Vunpack = lib.versions.unpack
   Cnorm = lib.cross.norm
 end
+local inform = Sonata and Sonata.warning or print
 
 
 -- Runge-Kutta method.
@@ -85,13 +89,13 @@ end
 -- @param y Second variable.
 -- @param h Step.
 -- @return Approximation for y.
-local function rk(fn, dX, dY, dH)
-  local h2 = 0.5*dH
-  local k1 = fn(dX,    dY)
-  local k2 = fn(dX+h2, dY+h2*k1)
-  local k3 = fn(dX+h2, dY+h2*k2)
-  local k4 = fn(dX+dH, dY+dH*k3)
-  return dY + (k1 + 2*(k2 + k3) + k4)*(dH / 6)
+local function rk(fn, x, y, h)
+  local h2 = 0.5*h
+  local k1 = fn(x,    y)
+  local k2 = fn(x+h2, y+h2*k1)
+  local k3 = fn(x+h2, y+h2*k2)
+  local k4 = fn(x+h,  y+h*k3)
+  return y + (k1 + 2*(k2 + k3) + k4)*(h/6)
 end
 
 
@@ -99,7 +103,7 @@ end
 
 -- description
 local about = { __module__ =
-  "Group of functions for numerical calculations. Tolerance for all functions is defined with parameter TOL."
+  "Group of functions for numerical calculations."
 }
 
 
@@ -109,10 +113,9 @@ local numeric = {
 -- current tolerance
 TOL = 1E-3,
 -- max Newton algorithm attempts
-newton_max = 50,
+NEWTON_MAX = 50,
 SMALL = 1E-20,
 }
-about[numeric.TOL] = {".TOL=0.001", "The solution tolerance.", "parameters"}
 
 
 --- Simple derivative.
@@ -121,10 +124,11 @@ about[numeric.TOL] = {".TOL=0.001", "The solution tolerance.", "parameters"}
 --  @return Numerical approximation of the derivative value.
 numeric.der = function (self, fn, d)
   local dx = 2e-2
-  local der, last = (fn(d+dx)-fn(d-dx))/(2*dx), nil
+  local der, last = (fn(d+dx) - fn(d-dx)) / (2*dx), nil
   repeat
+    local d2 = dx
     dx = dx * 0.5
-    der, last = (fn(d+dx)-fn(d-dx))/(2*dx), der
+    der, last = (fn(d+dx) - fn(d-dx)) / d2, der
   until dx < numeric.SMALL or Cnorm(der-last) < numeric.TOL
   return der
 end
@@ -135,6 +139,7 @@ about[numeric.der] = {":der(fn, x_d) --> num",
 --- Estimate lim(fn(x)) for x -> xn.
 --  @param fn Function.
 --  @param xn Value to approach.
+--  @param isPositive Flag for +/-xn.
 --  @return The result and flag of success.
 numeric.lim = function (self, fn, xn, isPositive)
   local prev = nil
@@ -148,18 +153,10 @@ numeric.lim = function (self, fn, xn, isPositive)
       end
       del, prev = del*1E-3, curr
     end
-  elseif xn < math.huge then   -- -inf
-    xn = -1
-    while xn > -math.huge do
-      local curr = fn(xn)
-      if prev and Cnorm(curr - prev) < numeric.TOL then
-        return curr, true
-      end
-      xn, prev = xn * 1E3, curr
-    end
-  else    -- inf
-    xn = 1
-    while xn < math.huge do
+  else 
+    -- +/- inf
+    xn = (xn < math.huge) and -1 or 1
+    while math.abs(xn) < math.huge do
       local curr = fn(xn)
       if prev and Cnorm(curr - prev) < numeric.TOL then
         return curr, true
@@ -173,23 +170,26 @@ about[numeric.lim] = {":lim(fn, xn_d, isPositive) --> y, isFound",
   "Estimate limit of a function."}
 
 
---- Another solution based on Newton's rule.
+--- Solve equation based on Newton's rule.
 --  @param fn Function to analyze.
---  @param d1 Initial value of the root.
---  @return Function root of <code>nil</code>.
+--  @param d1 Initial estimation for the root.
+--  @return root of nil.
 numeric.newton = function (self, fn, d1)
   local h, k, x2 = 0.1, 0, d1
   repeat
     d1 = x2
     local fd1 = fn(d1)
-    x2 = d1 - fd1*h/(fn(d1+h)-fd1)
+    x2 = d1 - fd1*h / (fn(d1+h) - fd1)
     k, h = k+1, h*0.618
-    if k > numeric.newton_max then error("Too many iterations!") end
-  until math.abs(fn(x2)-fd1) < numeric.TOL
+    if k > numeric.NEWTON_MAX then 
+      inform("newton: too many iterations") 
+      break
+    end
+  until Cnorm(fn(x2)-fd1) < numeric.TOL
   return x2
 end
 about[numeric.newton] = {":newton(fn, x0_d) --> num",
-  "Find root of equation using Newton's rule with only one initial condition."}
+  "Find root of equation using Newton's rule."}
 
 
 --- Differential equation solution (Runge-Kutta method).
@@ -202,40 +202,39 @@ numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   local MAX, MIN = 10*numeric.TOL, 0.1*numeric.TOL
   local xn = tDelta[2]
   tParam = tParam or {}
-  local h = tParam.dt or (10*numeric.TOL)
-  local exit = tParam.exit or function (_) return false end
+  local h = tParam.dt or math.min((xn - tDelta[1]), 1.0) / 20
+  local exit = tParam.exit or function () return false end
   -- evaluate
   local res, last = {{tDelta[1], dY0}}, false
-  local upack = Vunpack
   while not exit(res) do
-    local x, y = upack(res[#res])
-    if x >= xn then break
+    local x, y = Vunpack(res[#res])
+    if x >= xn then 
+      break
     elseif x + h > xn then
       h, last = xn-x, true
     end
-    -- correct step
+    -- find next
     if tParam.dt or last then
       res[#res+1] = {x+h, rk(fn, x, y, h)}
     else
       -- step correction
-      local h2 = 0.5*h
-      local y1 =  rk(fn, x, y, h)
-      local y2 =  rk(fn, x+h2, rk(fn, x, y, h2), h2)
+      local h2 = 0.5 * h
+      local y1 = rk(fn, x, y, h)
+      local y2 = rk(fn, x+h2, rk(fn, x, y, h2), h2)
       local dy = Cnorm(y2 - y1)
       if dy > MAX then
         h = h2
-      elseif dy < MIN then
-        h = 2*h
       else
-        -- use y2 because it is should be more precise (?)
+        -- use y2 because it should be more precise (?)
         res[#res+1] = {x+h, y2}
+        if dy < MIN then h = 2*h end
       end
     end
   end
   return res
 end
-about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys_t",
-  "Numerical approximation of the ODE solution.\nFirst parameter is differential equation, second - time interval, third - initial function value. List of parameters is optional and can includes time step or exit condition.\nReturn table of intermediate points in form {t, x(t)}."}
+about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
+  "Numerical approximation of the ODE solution.\nList of parameters is optional and can includes time step and exit condition.\nReturn table of intermediate points in form {t, x(t)}."}
 
 
 --- Find root of equation at the given interval.
@@ -243,16 +242,18 @@ about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=10*TOL,exit=nil}) --> ys
 --  @param a Lower bound.
 --  @param b Upper bound.
 --  @return Function root.
-numeric.solve = function (self, fn, dA, dB)
-  local f0, f1 = fn(dA), fn(dB)
-  if f0*f1 >= 0 then error("Boundary values must have different sign!") end
+numeric.solve = function (self, fn, a, b)
+  local f0, f1 = fn(a), fn(b)
+  if f0*f1 >= 0 then 
+    error "Boundary values must have different sign!"
+  end
   repeat
-    dB = dB - (dB-dA)*f1/(f1-f0)
-    f1 = fn(dB)
+    b = b - (b-a)*f1 / (f1-f0)
+    f1 = fn(b)
   until math.abs(f1) < numeric.TOL
-  return dB
+  return b 
 end
-about[numeric.solve] = {":solve(fn, xLow_d, xUp_d) --> num",
+about[numeric.solve] = {":solve(fn, low_d, up_d) --> num",
   "Find root of equation fn(x)=0 at interval [a,b]."}
 
 
