@@ -31,6 +31,16 @@ local function islist(v)
 end
 
 
+--- Check if the variable is integer.
+--  @param x Object.
+--  @return true if integer.
+local isint = math.tointeger or function (x)
+  if type(x) ~= 'number' then return false end
+  local v, p = math.modf(x)
+  return p == 0.0
+end
+
+
 --- Correct note index.
 --  @param n Index value, positive or negative.
 --  @param env Environment table.
@@ -257,7 +267,7 @@ end
 --- Show elements of the table.
 --  @param t Table to print.
 evaluate._showTable = function (t)
-  local N, nums, out = 10, {}, {'{ '}
+  local N, out = 10, {'{ '}
   -- dialog
   local function continue(n, res)
     local txt = tostring(n) .. ': continue? (y/n) '
@@ -267,7 +277,6 @@ evaluate._showTable = function (t)
   -- list elements
   for i, v in ipairs(t) do
     out[#out+1] = tostring(v); out[#out+1] = ', '
-    nums[i] = true
     if i % N == 0 then
       out[#out+1] = '\n'
       local data = table.concat(out)
@@ -278,9 +287,9 @@ evaluate._showTable = function (t)
     end
   end
   -- hash table elements
-  local count = 0
+  local count, len = 0, #t
   for k, v in pairs(t) do
-    if not nums[k] then
+    if not (isint(k) and 0 < k and k <= len) then
       out[#out+1] = string.format('\n  %s = %s,', tostring(k), tostring(v))
       count = count + 1
       if count % N == 0 then
