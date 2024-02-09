@@ -105,6 +105,9 @@ ans = Int:P(10, 5)            -->  Int(30240)
 -- find combinations
 ans = Int:C(10, 3)            -->  Int(120)
 
+-- with repititions
+ans = Int:C(10, 3, true)      -->  Int(220)
+
 -- check if it prime
 -- iterate though multipliers
 ans = Int(1229):isPrime()     -->  true
@@ -1010,14 +1013,18 @@ about[bigint.digits] = {"B:digits(N=10) --> tbl", "Convert number to the new num
 --- Find number of combinations.
 --  @param n Total number of elements.
 --  @param k Group size.
+--  @param isRepeat Repetition is allowed.
 --  @return Bigint for combination number.
-bigint.C = function (_, n, k)
+bigint.C = function (_, n, k, isRepeat)
   n, k = bigint._args(n, k)
+  if isRepeat then
+    n = n - bigint._1
+    return bigint:ratF(n+k, n) / bigint.F(k)
+  end
   return bigint:ratF(n, k) / bigint.F(n-k)
 end
-about[bigint.C] = {":C(n, k) --> combinations_B",
-  "Number of combinations C(n,k).", COMB}
-
+about[bigint.C] = {":C(n, k, [isRepeat=false]) --> combinations_B",
+  "Number of combinations C(n,k) with or without repetition.", COMB}
 
 
 --- B!
@@ -1119,8 +1126,9 @@ bigint.gcd = function (_, ...)
   local res = isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
   for i = 2, #t do
     local ti = t[i]
-    res = bigint._gcd(res,
-                      isbigint(ti) and ti or bigint._newNumber(ti))
+    res = bigint._gcd(
+      res, 
+      isbigint(ti) and ti or bigint._newNumber(ti))
   end
   return res
 end
@@ -1167,13 +1175,14 @@ about[bigint.lcm] = {":lcm(...) --> B",
 --- Permutations without repetition.
 --  @param n Number of elements.
 --  @param k Size of group.
+--  @param isRepeat Repetition is allowed.
 --  @return Number of permutations.
-bigint.P = function (_, n, k)
+bigint.P = function (_, n, k, isRepeat)
   n, k = bigint._args(n, k)
-  return bigint:ratF(n, n-k)
+  return isRepeat and n^k or bigint:ratF(n, n-k)
 end
-about[bigint.P] = {":P(n, k) --> permutaions_B",
-  "Find permutations without repetition.", COMB}
+about[bigint.P] = {":P(n, k, [isRepeat=false]) --> permutaions_B",
+  "Find permutations with or without repetition.", COMB}
 
 
 --- Generate random number.
