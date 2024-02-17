@@ -83,7 +83,7 @@ end
 local inform = Sonata and Sonata.warning or print
 
 
--- Runge-Kutta method.
+--- Runge-Kutta method.
 -- @param fn Function f(x,y).
 -- @param x First variable.
 -- @param y Second variable.
@@ -96,6 +96,72 @@ local function rk(fn, x, y, h)
   local k3 = fn(x+h2, y+h2*k2)
   local k4 = fn(x+h,  y+h*k3)
   return y + (k1 + 2*(k2 + k3) + k4)*(h/6)
+end
+
+
+--- Trapez method step.
+--  @param fn Function to integrate.
+--  @param a Lower limit.
+--  @param b Upper limit.
+--  @param n Step number.
+--  @param s Previous sum.
+--  @return sum of points.
+local function trapzd (fn, a, b, n, s)
+  if n == 1 then
+    return 0.5*(b - a)*(fn(a) + fn(b))
+  end
+  local tnm = 2^(n-2)
+  local del = (b - a)/tnm
+  local x, sum = a + 0.5*del, 0.0
+  for i = 1, tnm do
+    sum, x = sum + fn(x), x + del
+  end
+  return 0.5*(s + sum*del)
+end
+
+--- Step in extended midpoint rule.
+--  @param fn Function to integrate.
+--  @param a Lower limit.
+--  @param b Upper limit.
+--  @param n Step number.
+--  @param s Previous sum.
+--  @return sum of points.
+local function midpnt (fn, a, b, n, s)
+  if n == 1 then
+    return (b - a)*fn(0.5*(a + b))
+  end
+  local tnm = 3^(n - 2)
+  local del = (b - a)/(3.0 * tnm)
+  local del2 = del + del
+  local x, sum = a + 0.5*del, 0.0
+  for j = 1, tnm do
+    sum, x = sum + fn(x), x + del2
+    sum, x = sum + fn(x), x + del
+  end
+  return s/3.0 + sum*del
+end
+
+
+--- Integration rule, similar to Simplon's.
+--  @param fn Function to integrate.
+--  @param a Lower limit.
+--  @param b Upper limit.
+--  @param eps Accuracy.
+--  @param eval Method to evaluate each step.
+--  @return integra value and flag if it converges.
+local function qsimp (fn, a, b, eps, eval)
+  local s, si = 0, -1e30
+  local ost, st = si, 0
+  local JMAX = 20  -- iteration number
+  for j = 1, JMAX do
+    st = eval(fn, a, b, j, st)
+    s = (4.0*st - ost) / 3.0
+    if j > 3 and math.abs(s-si) < eps then
+      return s, true
+    end
+    si, ost = s, st
+  end
+  return si, false
 end
 
 
@@ -262,32 +328,49 @@ about[numeric.solve] = {":solve(fn, low_d, up_d) --> num",
 --  @param a Lower bound.
 --  @param b Upper bound.
 --  @return Numerical approximation of the integral.
-numeric.trapez = function (self, fn, dA, dB)
-  local N, sum = 10, 0
-  local fab = (fn(dA)+fn(dB)) * 0.5
-  local x, dx, N = dA, (dB-dA)/N, N-1  -- TODO why redefine N?
-  -- initial approximation
-  for i = 1, N do
-    x = x + dx
-    sum = sum + fn(x)
+numeric.int = function (_, fn, a, b)
+  -- check arguments
+  if a > b then
+    return numeric.int(nil, fn, b, a)
+  elseif a == b then
+    return 0, true
   end
-  local I, last = (fab + sum) * dx, 0
-  local Nsum, Nlast = 0, N
-  -- correct
-  repeat
-    last, x, N = I, dA + 0.5*dx, N+Nsum+1
-    Nsum = Nsum + Nlast
-    for i = 1, N do
-      sum = sum + fn(x)
-      x = x + dx
+  -- check inf
+  local afin = -math.huge < a and a < math.huge
+  local bfin = -math.huge < b and b < math.huge
+  if afin and bfin then
+    return qsimp(fn, a, b, numeric.TOL, trapzd)
+  end
+
+  -- infinite limits
+  local fni = function (x) return fn(1/x)/(x*x) end
+  -- -inf
+  if not afin and a < math.huge then
+    if b < 0 then
+      return qsimp(fni, 1/b, 0, numeric.TOL, midpnt)
     end
-    dx, Nlast = dx * 0.5, N
-    I = (fab + sum) * dx
-  until math.abs(I-last) < numeric.TOL
-  return I
+    -- -inf to -1
+    local s1, f1 = qsimp(fni, -1, 0, numeric.TOL, midpnt)
+    if b < math.huge then
+      local s2, f2 = qsimp(fn, -1, b, numeric.TOL, midpnt)
+      return s1 + s2, f1 and f2
+    else
+      local s2, f2 = qsimp(fn, -1, 1, numeric.TOL, trapzd)
+      local s3, f3 = qsimp(fni, 0, 1, numeric.TOL, midpnt)
+      return s1 + s2 + s3, f1 and f2 and f3
+    end
+  end
+  -- +inf
+  if a > 0 then
+    return qsimp(fni, 0, 1/a, numeric.TOL, midpnt)
+  else
+    local s1, f1 = qsimp(fni, 0, 1, numeric.TOL, midpnt)
+    local s2, f2 = qsimp(fn, a, 1, numeric.TOL, midpnt)
+    return s1 + s2, f1 and f2
+  end
 end
-about[numeric.trapez] = {":trapez(fn, x1_d, x2_d) --> num",
-  "Get integral using trapezoidal rule."}
+about[numeric.int] = {":int(fn, x1_d, x2_d) --> num, is_converge",
+  "Get integral of the function. Improper integrals with infinite limits are possible."}
 
 
 -- Comment to remove descriptions
