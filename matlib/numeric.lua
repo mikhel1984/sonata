@@ -40,8 +40,12 @@ ans = Num:lim(fn, 0)         --3>  1.0
 ans = Num:lim(math.exp, -math.huge)  --3> 0.0
 
 -- numeric integral
-c = Num:trapez(math.sin, 0, math.pi)
-ans = c                      --0>  2
+c = Num:int(math.sin, 0, math.pi)
+ans = c                      --2>  2.0
+
+-- infinite limits
+ans = Num:int(function (x) return math.exp(-x*x) end,
+  -math.huge, math.huge)     --2> math.sqrt(math.pi)
 
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
@@ -165,6 +169,12 @@ local function qsimp (fn, a, b, eps, eval)
 end
 
 
+--- Check if the number is limited.
+--  @param x Number to check.
+--  @return true when not infinite.
+local function limited (x) return -math.huge < x and x < math.huge end
+
+
 --	INFO
 
 -- description
@@ -209,7 +219,7 @@ about[numeric.der] = {":der(fn, x_d) --> num",
 --  @return The result and flag of success.
 numeric.lim = function (self, fn, xn, isPositive)
   local prev = nil
-  if -math.huge < xn and xn < math.huge then
+  if limited(xn) then
     -- limited number
     local del = 1
     while del > numeric.SMALL do
@@ -336,10 +346,11 @@ numeric.int = function (_, fn, a, b)
     return 0, true
   end
   -- check inf
-  local afin = -math.huge < a and a < math.huge
-  local bfin = -math.huge < b and b < math.huge
+  local afin, bfin = limited(a), limited(b)
   if afin and bfin then
-    return qsimp(fn, a, b, numeric.TOL, trapzd)
+    return (limited(fn(a)) and limited(fn(b)))
+      and qsimp(fn, a, b, numeric.TOL, trapzd)
+      or  qsimp(fn, a, b, numeric.TOL, midpnt)  -- improper limits
   end
 
   -- infinite limits
@@ -355,7 +366,7 @@ numeric.int = function (_, fn, a, b)
       local s2, f2 = qsimp(fn, -1, b, numeric.TOL, midpnt)
       return s1 + s2, f1 and f2
     else
-      local s2, f2 = qsimp(fn, -1, 1, numeric.TOL, trapzd)
+      local s2, f2 = qsimp(fn, -1, 1, numeric.TOL, midpnt)
       local s3, f3 = qsimp(fni, 0, 1, numeric.TOL, midpnt)
       return s1 + s2 + s3, f1 and f2 and f3
     end

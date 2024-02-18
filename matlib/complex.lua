@@ -410,7 +410,8 @@ about[complex.abs] = {"C:abs() --> float", "Return module of complex number."}
 --- Inverse cosine.
 --  @return Complex inverse cosine.
 complex.acos = function (self)
-  return complex._new(0, -1) * complex.log(self + complex.sqrt(self*self-1))
+  local v = complex._new(0, -1) * complex.log(self + complex.sqrt(self*self-1))
+  return iscomplex(v) and v or complex._new(v, 0)
 end
 about[complex.acos] = {"C:acos() --> y_C", "Complex inverse cosine.", FUNCTIONS}
 
@@ -435,7 +436,9 @@ about[complex.arg] = {"C:arg() --> float", "Return argument of complex number."}
 --- Inverse sine.
 --  @return Complex inverse sine.
 complex.asin = function (self)
-  return complex._new(0, -1) * complex.log(complex._i*self + complex.sqrt(1-self*self))
+  local v = complex._new(0, -1) * complex.log(
+    complex._i*self + complex.sqrt(1-self*self))
+  return iscomplex(v) and v or complex._new(v, 0)
 end
 about[complex.asin] = {"C:asin() --> y_C", "Complex inverse sine.", FUNCTIONS}
 
@@ -453,7 +456,8 @@ about[complex.asinh] = {"C:asinh() --> y_C",
 --  @return Complex inverse tangent.
 complex.atan = function (self)
   local iC = complex._i * self
-  return complex._new(0, -0.5) * complex.log((1 + iC)/(1 - iC))
+  local v = complex._new(0, -0.5) * complex.log((1 + iC)/(1 - iC))
+  return iscomplex(v) and v or complex._new(v, 0)
 end
 about[complex.atan] = {"C:atan() --> y_C",
   "Complex inverse tangent.", FUNCTIONS}
@@ -489,7 +493,8 @@ about[complex.cos] = {"C:cos() --> y_C",
 --- Hyperbolic cosine
 --  @return Complex hyperbolic cosine.
 complex.cosh = function (self) 
-  return 0.5*(complex.exp(self) + complex.exp(-self)) 
+  local v = 0.5*(complex.exp(self) + complex.exp(-self)) 
+  return iscomplex(v) and v or complex._new(v, 0)
 end
 about[complex.cosh] = {"C:cosh() --> y_C",
   "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
@@ -555,7 +560,8 @@ about[complex.sin] = {"C:sin() --> y_C", "Return sinus of a complex number.", FU
 --- Hyperbolic sinus
 --  @return Complex hyperbolic sinus.
 complex.sinh = function (self) 
-  return 0.5*(complex.exp(self) - complex.exp(-self)) 
+  local v = 0.5*(complex.exp(self) - complex.exp(-self)) 
+  return iscomplex(v) and v or complex._new(v, 0)
 end
 about[complex.sinh] = {"C:sinh() --> y_C",
   "Return hyperbolic sinus of a complex number.", FUNCTIONS}
@@ -568,7 +574,13 @@ complex.sqrt = function (v)
   if type(v) == 'number' then
     return v < 0 and complex._new(0, math.sqrt(-v)) or math.sqrt(v)
   else
-    return complex.__pow(v, 0.5)
+    local c = v._
+    local a, b = Cross.norm(c[1]), Cross.norm(c[2])
+    local w = math.sqrt(0.5 * (a + math.sqrt(a*a + b*b)))
+    return  w == 0 and complex._new(0, 0)
+      or c[1] >= 0 and complex._new(w, c[2]/(2*w))
+      or c[2] >= 0 and complex._new(b/(2*w), w)
+                    or complex._new(b/(2*w), -w)
   end
 end
 about[complex.sqrt] = {"C:sqrt() --> y_C",
@@ -588,7 +600,10 @@ about[complex.tan] = {"C:tan() --> y_C",
 
 --- Hyperbolic tangent
 --  @return Complex hyperbolic tangent.
-complex.tanh = function (self) return complex.sinh(self) / complex.cosh(self) end
+complex.tanh = function (self) 
+  local v = complex.sinh(self) / complex.cosh(self) 
+  return iscomplex(v) and v or complex._new(v, 0)
+end
 about[complex.tanh] = {"C:tanh() --> y_C",
   "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
