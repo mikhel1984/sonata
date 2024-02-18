@@ -50,7 +50,7 @@ ans = Num:int(function (x) return math.exp(-x*x) end,
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
-tbl = Num:ode45(function (x,y) return x*y end,
+tbl = Num:ode(function (x,y) return x*y end,
                 {0,3}, 1)
 ans = tbl[#tbl][2]           --2>  90.011
 
@@ -60,7 +60,7 @@ ans = tbl[#tbl][2]           --2>  90.011
 myfun = function (t,x)
   return Mat:V {x(2), 1+2*x(2)-2*x(1)}
 end
-res = Num:ode45(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
+res = Num:ode(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
 xn = res[#res][2]  -- last element
 ans = xn(1)                  --2>   -10.54
 
@@ -70,7 +70,7 @@ cond = function (states)
   return states[#states][2] < 0.1
 end
 myfun = function (t,x) return -x end
-y = Num:ode45(myfun, {0, 1E2}, 1, {exit=cond})
+y = Num:ode(myfun, {0, 1E2}, 1, {exit=cond})
 -- time of execution before break
 ans = y[#y][1]               --1>  2.3
 
@@ -198,7 +198,7 @@ SMALL = 1E-20,
 --  @param fn Function f(x).
 --  @param d Parameter.
 --  @return Numerical approximation of the derivative value.
-numeric.der = function (self, fn, d)
+numeric.der = function (_, fn, d)
   local dx = 2e-2
   local der, last = (fn(d+dx) - fn(d-dx)) / (2*dx), nil
   repeat
@@ -217,7 +217,7 @@ about[numeric.der] = {":der(fn, x_d) --> num",
 --  @param xn Value to approach.
 --  @param isPositive Flag for +/-xn.
 --  @return The result and flag of success.
-numeric.lim = function (self, fn, xn, isPositive)
+numeric.lim = function (_, fn, xn, isPositive)
   local prev = nil
   if limited(xn) then
     -- limited number
@@ -250,7 +250,7 @@ about[numeric.lim] = {":lim(fn, xn_d, isPositive) --> y, isFound",
 --  @param fn Function to analyze.
 --  @param d1 Initial estimation for the root.
 --  @return root of nil.
-numeric.newton = function (self, fn, d1)
+numeric.newton = function (_, fn, d1)
   local h, k, x2 = 0.1, 0, d1
   repeat
     d1 = x2
@@ -274,7 +274,7 @@ about[numeric.newton] = {":newton(fn, x0_d) --> num",
 --  @param y0 Function value at time t0.
 --  @param param Table of additional parameters: dt - time step, exit - exit condition
 --  @return Table of intermediate results.
-numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
+numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local MAX, MIN = 10*numeric.TOL, 0.1*numeric.TOL
   local xn = tDelta[2]
   tParam = tParam or {}
@@ -309,7 +309,7 @@ numeric.ode45 = function (self, fn, tDelta, dY0, tParam)
   end
   return res
 end
-about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
+about[numeric.ode] = {":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
   "Numerical approximation of the ODE solution.\nList of parameters is optional and can includes time step and exit condition.\nReturn table of intermediate points in form {t, x(t)}."}
 
 
@@ -318,7 +318,7 @@ about[numeric.ode45] = {":ode45(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys
 --  @param a Lower bound.
 --  @param b Upper bound.
 --  @return Function root.
-numeric.solve = function (self, fn, a, b)
+numeric.solve = function (_, fn, a, b)
   local f0, f1 = fn(a), fn(b)
   if f0*f1 >= 0 then 
     error "Boundary values must have different sign!"
