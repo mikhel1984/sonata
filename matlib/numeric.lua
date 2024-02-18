@@ -47,7 +47,7 @@ ans = c                      --2>  2.0
 ans = Num:int(
   function (x) return math.exp(-x*x) end, -INF, INF)  --2> math.sqrt(math.pi)
 
--- solve ODE x*y = x'
+-- solve ODE x*y = y'
 -- for x = 0..3, y(0) = 1
 -- return table of solutions and y(3)
 tbl = Num:ode(function (x,y) return x*y end,
@@ -197,6 +197,21 @@ SMALL = 1E-20,
 }
 
 
+--- Replace vector with sequence of elements in ODE solver result.
+--  @param t Table with ODE solution.
+numeric._flat = function (t)
+  for i = 1, #t do
+    local ti = t[i]
+    local v = ti[2]
+    if type(v) == 'table' then
+      -- replace with vector elements
+      v = v:vec()
+      for j = 1, #v do ti[j+1] = v[j] end
+    end
+  end
+end
+
+
 --- Simple derivative.
 --  @param fn Function f(x).
 --  @param d Parameter.
@@ -290,6 +305,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local exit = tParam.exit or function () return false end
   -- evaluate
   local res, last = {{tDelta[1], dY0}}, false
+  res.flat = numeric._flat
   while not exit(res) do
     local x, y = Vunpack(res[#res])
     if x >= xn then 
