@@ -37,15 +37,15 @@ fn = function (x) return math.sin(x) / x end
 ans = Num:lim(fn, 0)         --3>  1.0
 
 -- inf limit
-ans = Num:lim(math.exp, -math.huge)  --3> 0.0
+ans = Num:lim(math.exp, -INF)  --3> 0.0
 
 -- numeric integral
 c = Num:int(math.sin, 0, math.pi)
 ans = c                      --2>  2.0
 
 -- infinite limits
-ans = Num:int(function (x) return math.exp(-x*x) end,
-  -math.huge, math.huge)     --2> math.sqrt(math.pi)
+ans = Num:int(
+  function (x) return math.exp(-x*x) end, -INF, INF)  --2> math.sqrt(math.pi)
 
 -- solve ODE x*y = x'
 -- for x = 0..3, y(0) = 1
@@ -153,19 +153,19 @@ end
 --  @param eps Accuracy.
 --  @param eval Method to evaluate each step.
 --  @return integra value and flag if it converges.
-local function qsimp (fn, a, b, eps, eval)
+local function qsimp (fn, a, b, eps, eval, N)
   local s, si = 0, -1e30
   local ost, st = si, 0
-  local JMAX = 20  -- iteration number
-  for j = 1, JMAX do
+  for j = 1, N do
     st = eval(fn, a, b, j, st)
     s = (4.0*st - ost) / 3.0
     if j > 3 and math.abs(s-si) < eps then
-      return s, true
+      return s
     end
     si, ost = s, st
   end
-  return si, false
+  inform("integral: too many iterations") 
+  return si, true  -- error flag
 end
 
 
@@ -190,6 +190,9 @@ local numeric = {
 TOL = 1E-3,
 -- max Newton algorithm attempts
 NEWTON_MAX = 50,
+-- max integration attempts
+INT_MAX = 20,
+-- 'minima' step
 SMALL = 1E-20,
 }
 
@@ -205,18 +208,22 @@ numeric.der = function (_, fn, d)
     local d2 = dx
     dx = dx * 0.5
     der, last = (fn(d+dx) - fn(d-dx)) / d2, der
-  until dx < numeric.SMALL or Cnorm(der-last) < numeric.TOL
+    if dx < numeric.SMALL then
+      inform("derivative: not found")
+      return der, true
+    end
+  until Cnorm(der-last) < numeric.TOL
   return der
 end
 about[numeric.der] = {":der(fn, x_d) --> num",
-  "Calculate the derivative value for given function."}
+  "Calculate the derivative value for the given function."}
 
 
 --- Estimate lim(fn(x)) for x -> xn.
 --  @param fn Function.
 --  @param xn Value to approach.
 --  @param isPositive Flag for +/-xn.
---  @return The result and flag of success.
+--  @return obtained value.
 numeric.lim = function (_, fn, xn, isPositive)
   local prev = nil
   if limited(xn) then
@@ -225,7 +232,7 @@ numeric.lim = function (_, fn, xn, isPositive)
     while del > numeric.SMALL do
       local curr = isPositive and fn(xn + del) or fn(xn - del)
       if prev and Cnorm(curr - prev) < numeric.TOL then
-        return curr, true
+        return curr
       end
       del, prev = del*1E-3, curr
     end
@@ -235,14 +242,15 @@ numeric.lim = function (_, fn, xn, isPositive)
     while math.abs(xn) < math.huge do
       local curr = fn(xn)
       if prev and Cnorm(curr - prev) < numeric.TOL then
-        return curr, true
+        return curr
       end
       xn, prev = xn * 1E3, curr
     end
   end
-  return prev, false
+  inform('limit: not found')
+  return prev, true  -- error flag
 end
-about[numeric.lim] = {":lim(fn, xn_d, isPositive) --> y, isFound",
+about[numeric.lim] = {":lim(fn, xn_d, isPositive) --> y",
   "Estimate limit of a function."}
 
 
@@ -259,7 +267,7 @@ numeric.newton = function (_, fn, d1)
     k, h = k+1, h*0.618
     if k > numeric.NEWTON_MAX then 
       inform("newton: too many iterations") 
-      break
+      return x2, true  -- error flag
     end
   until Cnorm(fn(x2)-fd1) < numeric.TOL
   return x2
@@ -345,12 +353,13 @@ numeric.int = function (_, fn, a, b)
   elseif a == b then
     return 0, true
   end
+  local N, TOL = numeric.INT_MAX, numeric.TOL
   -- check inf
   local afin, bfin = limited(a), limited(b)
   if afin and bfin then
     return (limited(fn(a)) and limited(fn(b)))
-      and qsimp(fn, a, b, numeric.TOL, trapzd)
-      or  qsimp(fn, a, b, numeric.TOL, midpnt)  -- improper limits
+      and qsimp(fn, a, b, TOL, trapzd, N)
+      or  qsimp(fn, a, b, TOL, midpnt, N)  -- improper limits
   end
 
   -- infinite limits
@@ -358,30 +367,38 @@ numeric.int = function (_, fn, a, b)
   -- -inf
   if not afin and a < math.huge then
     if b < 0 then
-      return qsimp(fni, 1/b, 0, numeric.TOL, midpnt)
+      return qsimp(fni, 1/b, 0, TOL, midpnt, N)
     end
     -- -inf to -1
-    local s1, f1 = qsimp(fni, -1, 0, numeric.TOL, midpnt)
+    local s1, e1 = qsimp(fni, -1, 0, TOL, midpnt, N)
     if b < math.huge then
-      local s2, f2 = qsimp(fn, -1, b, numeric.TOL, midpnt)
-      return s1 + s2, f1 and f2
+      local s2, e2 = qsimp(fn, -1, b, TOL, midpnt, N)
+      return s1 + s2, e1 or e2
     else
-      local s2, f2 = qsimp(fn, -1, 1, numeric.TOL, midpnt)
-      local s3, f3 = qsimp(fni, 0, 1, numeric.TOL, midpnt)
-      return s1 + s2 + s3, f1 and f2 and f3
+      local s2, e2 = qsimp(fn, -1, 1, TOL, midpnt, N)
+      local s3, e2 = qsimp(fni, 0, 1, TOL, midpnt, N)
+      return s1 + s2 + s3, e1 or e2 or e3
     end
   end
   -- +inf
   if a > 0 then
-    return qsimp(fni, 0, 1/a, numeric.TOL, midpnt)
+    return qsimp(fni, 0, 1/a, TOL, midpnt, N)
   else
-    local s1, f1 = qsimp(fni, 0, 1, numeric.TOL, midpnt)
-    local s2, f2 = qsimp(fn, a, 1, numeric.TOL, midpnt)
-    return s1 + s2, f1 and f2
+    local s1, e1 = qsimp(fni, 0, 1, TOL, midpnt, N)
+    local s2, e2 = qsimp(fn, a, 1, TOL, midpnt, N)
+    return s1 + s2, e1 or e2
   end
 end
-about[numeric.int] = {":int(fn, x1_d, x2_d) --> num, is_converge",
+about[numeric.int] = {":int(fn, x1_d, x2_d) --> num",
   "Get integral of the function. Improper integrals with infinite limits are possible."}
+
+
+if Sonata then  -- ENV
+
+-- short alias
+INF = math.huge
+
+end  -- ENV
 
 
 -- Comment to remove descriptions

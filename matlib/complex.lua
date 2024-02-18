@@ -37,8 +37,8 @@ ans = Z:i(3) - b              -->  0
 
 ans = a * b                   -->  Z(-6,3)
 
-_i = Z:i()
-ans = a / _i                  -->  Z(2,-1)
+-- call complex unit I = Z:i()
+ans = a / I                   -->  Z(2,-1)
 
 -- power can be complex
 c = Z(1,1)^Z(2,-2)
@@ -116,7 +116,7 @@ print(a)
 
 -- update env on import
 -- update some methods
-ans = sqrt(-1)                -->  _i
+ans = sqrt(-1)                -->  I 
 
 ans = log(-1):im()           --3>  math.pi
 
@@ -633,6 +633,9 @@ about[complex] = {" (re=0, im=0) --> new_C",
 
 
 if Sonata then  -- ENV
+
+-- complex unit
+I = complex._i
 
 -- redefine square root
 local _sqrt = sqrt
