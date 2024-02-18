@@ -593,10 +593,11 @@ end
 --- Find roots of 2nd order polynomial.
 --  @return Table with roots.
 polynomial._roots2 = function (self)
-  local a, b = self[2], self[1]
-  local sD = polynomial.ext_complex.sqrt(b*b - 4*a*self[0])
-  local res = {(-b - sD)/(2*a), (-b + sD)/(2*a)}
-  return res
+  local a, b, c = self[2], self[1], self[0]
+  local sD = polynomial.ext_complex.sqrt(b*b - 4*a*c)
+  local sgn = b > 0 and 1 or b < 0 and -1 or 0
+  sD = -0.5*(b + sgn*sD)
+  return {sD/a, c/sD}
 end
 
 
