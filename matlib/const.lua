@@ -62,6 +62,7 @@ local _astro = {
 pc_u_='m',    pc = 3.08567758128E16,     -- one parsec
 ly_u_='m',    ly = 9.4607304725808E15,   -- light year
 au_u_='m',    au = 149597870700,         -- astronomic unit
+               k = 0.01720209895,        -- Gaussian gravitational constant
 }
 
 
@@ -69,6 +70,7 @@ au_u_='m',    au = 149597870700,         -- astronomic unit
 local _math = {
              phi = 1.6180339887498948482045868,  -- golden ratio
                e = 2.7182818284590452353602875,  -- base of natural logarithm
+           gamma = 0.5772156649015328606065121,  -- Euler-Mascheroni constant
 }
 
 
@@ -125,9 +127,11 @@ about[_phy.Da] = {".phi.Da --> 1.7E-27", "Unified atomic mass unit.", PHY}
 about[_astro.pc] = {".astro.pc --> 3.1E16", "One parsec.", ASTRO}
 about[_astro.ly] = {".astro.ly --> 9.5E15", "One light year.", ASTRO}
 about[_astro.au] = {".astro.au --> 1.5E11", "Astronomic unit.", ASTRO}
+about[_astro.k] = {".astro.k --> 0.017", "Gaussian gravitational constant.", ASTRO}
 -- mathematics
 about[_math.phi] = {".math.phi --> 1.62", "Golden ratio.", MATH}
 about[_math.e] = {".math.e --> 2.72", "Base of the natural logarithm.", MATH}
+about[_math.gamma] = {".math.gamma --> 0.577", "Euler-Mascheroni constant.", MATH}
 
 
 --- Convert to Unit object.

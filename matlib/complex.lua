@@ -632,24 +632,25 @@ about[complex] = {" (re=0, im=0) --> new_C",
   "Create new complex number.", help.STATIC}
 
 
-if Sonata then  -- ENV
+if Sonata  -- ENV
+then
 
--- complex unit
-I = complex._i
+  -- complex unit
+  I = complex._i
 
--- redefine square root
-local _sqrt = sqrt
-sqrt = function (a)
-  return (iscomplex(a) or type(a) == 'number') and complex.sqrt(a) or _sqrt(a)
+  -- redefine square root
+  local _sqrt = sqrt
+  sqrt = function (a)
+    return (iscomplex(a) or type(a) == 'number') and complex.sqrt(a) or _sqrt(a)
+  end
+
+  -- redefine logarithm
+  local _log = log
+  log = function (a)
+    return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
+  end
+
 end
-
--- redefine logarithm
-local _log = log
-log = function (a)
-  return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
-end
-
-end   -- ENV
 
 
 -- Comment to remove descriptions

@@ -409,12 +409,13 @@ about[numeric.int] = {":int(fn, x1_d, x2_d) --> num",
   "Get integral of the function. Improper integrals with infinite limits are possible."}
 
 
-if Sonata then  -- ENV
+if Sonata  -- ENV
+then
 
--- short alias
-INF = math.huge
+  -- short alias
+  INF = math.huge
 
-end  -- ENV
+end
 
 
 -- Comment to remove descriptions

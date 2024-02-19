@@ -202,7 +202,7 @@ local function showAndNext(status, res, env)
     end
     return res[1]
   elseif status == evaluate.EV_WRN then
-    io.write(SonataHelp.CHELP, 'Warning! ', res, '\n')
+    io.write(SonataHelp.CHELP, 'WARNING ', res, '\n')
     env.read, env.info = false, true
   elseif status == evaluate.EV_INF then
     io.write(res, '\n')
@@ -417,7 +417,7 @@ end
 --  @param msg Message string.
 evaluate.printErr = function (msg)
   io.write(
-    string.format("%sERROR: %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET),
+    string.format("%sERROR %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET),
     "\n")
 end
 

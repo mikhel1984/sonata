@@ -168,15 +168,17 @@ about[Round] = {'Round(v, d=0) --> v',
   'Round value, define number of decimal digits or tolerance.', AUX}
 
 
--- Sonata specific functions
-if Sonata then  --( 
+if Sonata  -- ENV
+then
 
-about[use] = {'use([module_s]) --> str|nil',
-  "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
-about[help] = {"help(fn='main') --> str", "Show information about the function.", AUX}
-about[quit] = {'quit()', "Quit the program.", AUX}
+  -- Sonata specific functions
+  about[use] = {'use([module_s]) --> str|nil',
+    "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
+  about[help] = {"help(fn='main') --> str", 
+    "Show information about the function.", AUX}
+  about[quit] = {'quit()', "Quit the program.", AUX}
 
-end             --) if Sonata
+end
 
 
 -- save link to help info

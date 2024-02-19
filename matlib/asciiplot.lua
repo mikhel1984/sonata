@@ -1301,9 +1301,8 @@ asciiplot.scale = function (self, factor)
     self._x:scale(factor)
     self._y:scale(factor)
   end
-  return self
 end
-about[asciiplot.scale] = {"F:scale(factor_d | src_F) --> F",
+about[asciiplot.scale] = {"F:scale(factor_d | src_F)",
   "Change figure size w.r.t. initial size.", CONF}
 
 
@@ -1385,20 +1384,21 @@ about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", help.STATIC}
 
 
-if Sonata then  -- GLOBAL
+if Sonata  -- ENV
+then
 
--- Define simplified function call
-Plot = function (...)
-  local ap = Ap or require('matlib.asciiplot')
-  local f = ap()
-  f._x:setRange({-5, 5})
-  f:plot(...)
-  return tostring(f)
+  -- Define simplified function call
+  Plot = function (...)
+    local ap = Ap or require('matlib.asciiplot')
+    local f = ap()
+    f._x:setRange({-5, 5})
+    f:plot(...)
+    return tostring(f)
+  end
+  about[Plot] = {"Plot(...)",
+    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
+
 end
-about[Plot] = {"Plot(...)",
-  "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
-
-end  -- GLOBAL
 
 
 -- Comment to remove descriptions
