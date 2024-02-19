@@ -91,7 +91,8 @@ str = Ap:concat(fig1, fig2)   -- similar to fig1..fig2 for 2 objects
 print(str)
 
 -- call 'API' functions
-fig3 = Ap():scale(0.5)
+fig3 = Ap()
+fig3:scale(0.5)
 -- no axes and limits
 fig3:setX {range={-2,2}, view=false}
 fig3:setY {range={-1,4}, view=false}
@@ -561,6 +562,8 @@ asciiplot._clear = function (self)
     end
     self._canvas[i] = row
   end
+  -- remove the rest of rows
+  for i = #self._canvas, self._y.size+1, -1 do self._canvas[i] = nil end
   self._legend = {}
   self._title = nil
 end
