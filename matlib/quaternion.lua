@@ -99,21 +99,6 @@ Ver = Ver.versions
 local ROTATION = 'rotation'
 
 
---- Get float point value if possible.
---  @param v Real value.
---  @return floating point number.
-local function tofloat(v) return type(v) == 'table' and v:float() or v end
-
-
---- Simplify output when possible.
---  @param Q Quaternion object.
---  @return Quaternion or value.
-local function numquat(Q)
-  return Cross.isZero(Q._[2]) and Cross.isZero(Q._[3]) and Cross.isZero(Q._[4])
-    and Cross.simp(Q._[1]) or Q
-end
-
-
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
@@ -137,7 +122,10 @@ local quaternion = {
 -- mark
 type = 'quaternion',
 -- simplify
-_simp = numquat
+_simp = function (Q)
+  return Cross.isZero(Q._[2]) and Cross.isZero(Q._[3]) and Cross.isZero(Q._[4])
+    and Cross.simp(Q._[1]) or Q
+end
 }
 
 
@@ -237,6 +225,7 @@ quaternion.__pow = function (self, d)
     end
     return res
   else
+    local q = quaternion.normalized(self)
     local angle, axis = quaternion.toAA(self)
     if not axis then return 1.0 end  -- no imaginary part
     angle = 0.5 * d * angle   -- new angle
@@ -333,8 +322,8 @@ about[quaternion.conj] = {'Q:conj() --> conj_Q', 'Get conjugation.'}
 --- Find exponential for the quaternion.
 quaternion.exp = function (self)
   local w, x, y, z = Ver.unpack(self._)
-  local v = math.sqrt(x*x + y*y + z*z)
-  w = math.exp(w)  -- reuse
+  local v = math.sqrt(Cross.float(x)^2 + Cross.float(y)^2 + Cross.float(z)^2)
+  w = math.exp(Cross.float(w))  -- reuse
   if v == 0 then return w end
   local svv = math.sin(v) / v * w
   return quaternion._new(math.cos(v)*w, x*svv, y*svv, z*svv)
@@ -422,7 +411,8 @@ about[quaternion.inv] = {'Q:inv() --> inv_Q', 'Find inverted quaternion.'}
 --  @return logarithm value.
 quaternion.log = function (self)
   local w, x, y, z = Ver.unpack(self._)
-  local v = math.sqrt(x*x + y*y + z*z)
+  local v = math.sqrt(Cross.float(x)^2 + Cross.float(y)^2 + Cross.float(z)^2)
+  w = Cross.float(w)
   local n = math.sqrt(w*w + v*v)
   if v == 0 then return math.log(n) end
   local k = math.acos(w / n) / v
