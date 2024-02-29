@@ -133,6 +133,15 @@ end
 cmdInfo.rm = {'cmd_rm', "", "Note-files"}
 
 
+commands.shell = function (args, env)
+  local f = io.popen(args[2])
+  local res = f:read('a')
+  f:close()
+  io.write(res)
+end
+cmdInfo.shell = {"cmd_shell", "cmd"}
+
+
 commands.show = function (args, env)
   local ind = args[2] and tonumber(args[2]) or env.index
   if ind < 0 then ind = #env.notes + ind end

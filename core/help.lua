@@ -73,6 +73,7 @@ cmd_q = "Quit",
 cmd_show = "Print the next or the given note",
 cmd_time = "Estimate average time",
 cmd_trace = "Profiling for the function",
+cmd_shell = "Execute command in shell",
 }
 
 

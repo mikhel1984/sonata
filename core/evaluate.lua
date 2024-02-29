@@ -93,6 +93,8 @@ end
 local function getCmd (str)
   if string.find(str, "^%s*:") then
     return { string.match(str, "(%w+)%s*(.*)") }
+  elseif string.find(str, "^s*!") then
+    return { 'shell', string.match(str, "(%w+.*)") }
   end
   return nil
 end
