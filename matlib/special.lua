@@ -54,10 +54,6 @@ ans = Spec:besseli(2, -3.6)  --3>  4.254
 
 ans = Spec:besselk(5, 5) * 1E2   --3>  3.2706
 
--- Legendre function
-lst = Spec:legendre(3, 0.5)
-ans = lst[1]                 --3>  -0.4375
-
 -- Dawson function
 ans = Spec:dawson(3.3)       --3>  0.1598
 
@@ -365,34 +361,6 @@ special._gcf = function (N, x)
 end
 
 
---- Legendre coefficient.
---  @param n Total order.
---  @param m Current order.
---  @param x Real number.
---  @return Pn_m(x)
-special._plgndr = function (n, m, x)
-  local pmm = 1.0
-  if m > 0 then
-    local somx2 = math.sqrt((1-x)*(1+x))
-    local fact = 1.0
-    for i = 1, m do
-      pmm = pmm*(-fact)*somx2
-      fact = fact+2.0
-    end
-  end
-  if n == m then return pmm
-  else
-    local pmmp1 = x*(2*m+1)*pmm
-    if n ~= m+1 then
-      for ll = m+2, n do
-        pmmp1, pmm = (x*(2*ll-1)*pmmp1-(ll+m-1)*pmm)/(ll-m), pmmp1
-      end
-    end
-    return pmmp1
-  end
-end
-
-
 --- Modified Bessel function In.
 --  @param N Order.
 --  @param x Real number.
@@ -417,7 +385,7 @@ special.besseli = function (_, N, x)
   ans = ans*special._bessi0(x)/bi
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besseli] = {":besseli(order_N,x_d) --> num",
+about[special.besseli] = {":besseli(order_N, x_d) --> num",
   "Modified Bessel function In(x).", BESSEL}
 
 
@@ -432,7 +400,7 @@ special.besselj = function (_, N,x)
   if x == 0 then return 0 end
   local ACC, BIGNO, BIGNI = 40, 1E10, 1E-10
   local ax = math.abs(x)
-  local tox = 2.0/ax
+  local tox = 2.0 / ax
   local bj, bjm, ans = nil, nil, nil
   if ax > N then
     bjm = special._bessj0(ax)
@@ -454,12 +422,12 @@ special.besselj = function (_, N,x)
         ans = ans*BIGNI
         sum = sum*BIGNI
       end
-      if jsum then sum = sum+bj end
+      if jsum then sum = sum + bj end
       jsum = not jsum
       if i == N then ans = bjp end
     end
-    sum = 2.0*sum-bj
-    ans = ans/sum
+    sum = 2.0*sum - bj
+    ans = ans / sum
   end
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
@@ -511,9 +479,7 @@ about[special.bessely] = {":bessely(order_N, x_d) --> num",
 --  @param z First value.
 --  @param w Second value.
 --  @return B(z,w).
-special.beta = function (_, z, w)
-  return math.exp(special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w))
-end
+special.beta = function (_, z, w) return math.exp(special.betaln(_, z, w)) end
 about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", BETA}
 
 
@@ -532,8 +498,8 @@ special.betainc = function (_, x, a, b)
       - special:gammaln(b) + a*math.log(x) + b*math.log(1.0-x))
   end
   return (x < (a+1.0)/(a+b+2.0))
-         and (bt*special._betacf(a, b, x)/a)
-         or (1.0-bt*special._betacf(b, a, 1.0-x)/b)
+     and (bt*special._betacf(a, b, x)/a)
+      or (1.0-bt*special._betacf(b, a, 1.0-x)/b)
 end
 about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
   "Incomplete beta function Ix(a,b).", BETA}
@@ -544,7 +510,7 @@ about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
 --  @param w Second argument.
 --  @return log(B(x)).
 special.betaln = function (_, z, w)
-  return special:gammaln(z)+special:gammaln(w)-special:gammaln(z+w)
+  return special:gammaln(z) + special:gammaln(w) - special:gammaln(z+w)
 end
 about[special.betaln] = {":betaln(z_d, w_d) --> num",
   "Natural logarithm of beta function.", BETA}
@@ -566,7 +532,7 @@ special.dawson = function (_, x)
     return x*(1.0-A1*x2*(1.0-A2*x2*(1.0-A3*x2)))
   else
     local n0 = 2*math.floor(0.5*xx/H+0.5)
-    local xp = xx-n0*H
+    local xp = xx - n0*H
     local e1 = math.exp(2.0*xp*H)
     local e2, d1 = e1*e1, n0+1
     local d2, sum = d1-2.0, 0.0
@@ -583,7 +549,7 @@ about[special.dawson] = {":dawson(x_d) --> num", "Dawson integral."}
 --- Error function.
 --  @param x Real value.
 --  @return Error value.
-special.erf = function (_, x) return 1-special:erfc(x) end
+special.erf = function (_, x) return 1 - special:erfc(x) end
 about[special.erf] = {":erf(x_d) --> num", "Error function."}
 
 
@@ -592,7 +558,7 @@ about[special.erf] = {":erf(x_d) --> num", "Error function."}
 --  @return Error value.
 special.erfc = function (_, x)
   local z = math.abs(x)
-  local t = 1.0/(1+0.5*z)
+  local t = 1.0 / (1+0.5*z)
   local ans = t*math.exp(-z*z - 1.26551223 + t*(1.00002368 + t*(0.37409196
     + t*(0.09678418 + t*(-0.18628806 + t*(0.27886807 + t*(-1.13520398
     + t*(1.48851587 + t*(-0.82215223 + t*0.17087277)))))))))
@@ -616,29 +582,29 @@ special.expint = function (_, n, x)
   local MAXIT, EULER, FPMIN, EPS = 100, 0.5772156649, 1E-30, 1E-7
   if x > 1.0 then
     local b, c = x+n, 1.0/FPMIN
-    local d = 1.0/b
+    local d = 1.0 / b
     local h = d
     for i = 1, MAXIT do
       local a = -i*(nm1+i)
       b = b+2.0
       d, c = 1.0/(a*d+b), b+a/c
-      local del = c*d
-      h = h*del
+      local del = c * d
+      h = h * del
       if math.abs(del-1.0) < EPS then return h*math.exp(-x) end
     end
   else
     local ans = (nm1 ~= 0) and 1.0/nm1 or -math.log(x)-EULER
     local fact, psy, del = 1.0, nil, nil
     for i = 1, MAXIT do
-      fact = fact*(-x/i)
+      fact = fact * (-x/i)
       if i ~= nm1 then
-        del = -fact/(i-nm1)
+        del = -fact / (i-nm1)
       else
         psy = -EULER
         for ii = 1, nm1 do psy = psy+1.0/ii end
-        del = fact*(-math.log(x)+psy)
+        del = fact * (-math.log(x)+psy)
       end
-      ans = ans+del
+      ans = ans + del
       if math.abs(del) < math.abs(ans)*EPS then return ans end
     end -- for i
   end -- if x
@@ -658,7 +624,8 @@ special.gamma = function (_, z)
     local x = 0.99999999999980993
     for i = 1, #k_gamma do x = x + k_gamma[i]/(z+i) end
     local t = z + #k_gamma - 0.5
-    return math.sqrt(2*math.pi)*t^(z+0.5)*math.exp(-t)*x
+    -- sqrt(2*pi) = 2.506...
+    return 2.5066282746310002 * t^(z+0.5) * math.exp(-t) * x
   end
 end
 about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", GAMMA}
@@ -669,11 +636,11 @@ about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", GAMMA}
 --  @return log(gamma(z))
 special.gammaln = function (_, z)
   local x, y = z, z
-  local tmp = x+5.5
-  tmp = tmp-(x+0.5)*math.log(tmp)
+  local tmp = x + 5.5
+  tmp = tmp - (x+0.5)*math.log(tmp)
   local ser = 1.000000000190015
-  for i = 1, #k_gammaln do y=y+1; ser = ser+k_gammaln[i]/y end
-  return -tmp+math.log(2.5066282746310005*ser/x)
+  for i = 1, #k_gammaln do y = y+1; ser = ser+k_gammaln[i]/y end
+  return -tmp + math.log(2.5066282746310005*ser/x)
 end
 about[special.gammaln] = {":gammaln(x_d) --> num",
   "Natural logarithm of gamma function.", GAMMA}
@@ -702,24 +669,10 @@ about[special.gammq] = {":gammq(order_N, x_d) --> num",
   "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
 
 
---- List of Legendre coefficients.
---  @param n Polynomial order.
---  @param x Real number.
---  @return Table with coefficients.
-special.legendre = function (_, n, x)
-  if n < 0 or math.abs(x) > 1 then error(ERR_INVARG) end
-  local res = {}
-  local plgndr = special._plgndr
-  for i = 1, n+1 do res[i] = plgndr(n, i-1, x) end
-  return res
-end
-about[special.legendre] = {":legendre(order_N, x_d) --> coeff_t",
-  "Return list of Legendre polynomial coefficients."}
-
-
 -- Comment to remove descriptions
 special.about = about
 
 return special
 
 --===================================
+-- TODO add other functions
