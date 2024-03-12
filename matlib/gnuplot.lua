@@ -183,15 +183,15 @@ gnuplot.__index = gnuplot
 --- Represent parameters of the graphic.
 --  @param G Gnuplot object.
 --  @return String with object properties.
-gnuplot.__tostring = function (G)
+gnuplot.__tostring = function (self)
   local res = {}
-  for k,v in pairs(G) do
+  for k,v in pairs(self) do
     if type(v) == 'table' then
       local tmp = {}
       for p,q in pairs(v) do
         tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q))
       end
-      v = string.format('{%s}', table.concat(tmp,','))
+      v = string.format('{%s}', table.concat(tmp, ','))
     end
     res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
   end
@@ -203,23 +203,23 @@ end
 --  @param fn Lua function.
 --  @param tBase Range and step.
 --  @return File name.
-gnuplot._fn2file = function (fn,tBase)
+gnuplot._fn2file = function (fn, tBase)
   local name = os.tmpname()
   local xl = tBase.xrange and tBase.xrange[1] or (-10)
   local xr = tBase.xrange and tBase.xrange[2] or 10
   local N = tBase.samples or 100
-  local dx = (xr-xl)/N
+  local dx = (xr-xl) / N
   local f = assert(io.open(name, 'w'), "Can't save to file")
   if tBase.surface then
     local yl = tBase.yrange and tBase.yrange[1] or (-10)
     local yr = tBase.yrange and tBase.yrange[2] or 10
     local dy = (yr-yl)/N
     for x = xl,xr,dx do
-      for y = yl,yr,dy do f:write(x,' ',y,' ',fn(x,y),'\n') end
+      for y = yl, yr, dy do f:write(x, ' ', y, ' ', fn(x,y), '\n') end
     end
   else
-    for x = xl,xr,dx do
-      f:write(x,' ',fn(x),'\n')
+    for x = xl, xr, dx do
+      f:write(x, ' ', fn(x), '\n')
     end
   end
   f:close()
@@ -235,7 +235,7 @@ end
 --  @param t Table with function definition.
 --  @param base Argument range.
 --  @return String representation of the plot command.
-gnuplot._graph = function (t,tBase)
+gnuplot._graph = function (t, tBase)
   -- function/file name
   local fn, str, nm = t[1], '', nil
   if type(fn) == 'table' then
@@ -247,7 +247,7 @@ gnuplot._graph = function (t,tBase)
   end
   -- prepare options
   for _,k in ipairs(gnuplot.foptions) do
-    if t[k] then str = string.format('%s %s %s ', str, prepare(k,t[k])) end
+    if t[k] then str = string.format('%s %s %s ', str, prepare(k, t[k])) end
   end
   return nm, str
 end
@@ -264,13 +264,13 @@ gnuplot._new = function () return setmetatable({}, gnuplot) end
 --  @param t2 Second Lua table (list) or nil.
 --  @param fn Function of two arguments.
 --  @return File name.
-gnuplot._lst2file = function (t1,t2,fn)
+gnuplot._lst2file = function (t1, t2, fn)
   local name = os.tmpname()
   local f = assert(io.open(name, 'w'), "Can't save to file")
   if fn then -- must be function
-    for _,v1 in ipairs(t1) do
-      for _,v2 in ipairs(t2) do
-        f:write(v1,' ',v2,' ',fn(v1,v2),'\n')
+    for _, v1 in ipairs(t1) do
+      for _, v2 in ipairs(t2) do
+        f:write(v1, ' ', v2, ' ', fn(v1,v2), '\n')
       end
     end
   elseif t2 then
@@ -300,7 +300,7 @@ gnuplot._mat2file = function (t)
   local f = assert(io.open(name, 'w'), "Can't save to file")
   for i = 1, t.rows do
     local row = t[i]
-    for j = 1, t.cols do f:write(row[j],' ') end
+    for j = 1, t.cols do f:write(row[j], ' ') end
     f:write('\n')
   end
   f:close()
@@ -319,7 +319,7 @@ gnuplot._tbl2file = function (t)
   local name = os.tmpname()
   local f = assert(io.open(name, 'w'), "Can't save to file")
   for _, row in ipairs(t) do
-    for _, val in ipairs(row) do f:write(val,' ') end
+    for _, val in ipairs(row) do f:write(val, ' ') end
     f:write('\n')
   end
   f:close()
@@ -334,7 +334,7 @@ end
 --- Prepare arguments for table or matrix.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot._vecPrepare = function (v,...)
+gnuplot._vecPrepare = function (v, ...)
   local ag = {...}
   if type(v) == 'table' then
     if #ag == 0 then
@@ -350,21 +350,19 @@ end
 
 
 --- Add new curve to the plot.
---  @param G Gnuplot object.
 --  @param tCurve Table with function/table and parameters.
-gnuplot.add = function (G, tCurve) G[#G+1] = tCurve end
+gnuplot.add = function (self, tCurve) self[#self+1] = tCurve end
 about[gnuplot.add] = {"G:add(curve_v)", "Add new curve to figure."}
 
 
 --- Get copy of graph options.
---  @param G Initial table.
 --  @return Copy of table.
-gnuplot.copy = function (G)
+gnuplot.copy = function (self)
   local cp = gnuplot._new()
-  for k,v in pairs(G) do
+  for k, v in pairs(self) do
     if type(v) == 'table' then
       local tmp = {}
-      for p,q in pairs(v) do tmp[p] = q end
+      for p, q in pairs(v) do tmp[p] = q end
       cp[k] = tmp
     else
       cp[k] = v
@@ -377,7 +375,7 @@ about[gnuplot.copy] = {"G:copy() --> cpy_G", "Get copy of the plot options."}
 
 --- Matlab-like plotting
 --  @param ... Can be "t", "t1,t2", "t1,fn", "t1,t2,name", "t,name" etc.
-gnuplot.plot = function (self,...)
+gnuplot.plot = function (_, ...)
   local ag = {...}
   local cmd = gnuplot._new()
   local i, n = 1, 1
@@ -409,11 +407,11 @@ about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..])",
 
 --- Polar plot.
 --  @param ... List of type x1,y1,nm1 or x1,y1,x2,y2 etc.
-gnuplot.polarplot = function(self,...)
+gnuplot.polarplot = function(_, ...)
   local ag, i, n = {...}, 1, 1
   local cmd = gnuplot._new()
   repeat
-    local name = gnuplot._lst2file(ag[i],ag[i+1])
+    local name = gnuplot._lst2file(ag[i], ag[i+1])
     i = i + 2
     local legend = nil
     if type(ag[i]) == 'string' then
@@ -434,9 +432,8 @@ about[gnuplot.polarplot] = {':polarplot(x1_t, y1_t, [nm_s, x2_t, y2_t,..])',
 
 
 --- Plot graphic.
---  @param G Table with parameters of graphic.
 --  @return Table which can be used for plotting.
-gnuplot.show = function (G)
+gnuplot.show = function (self)
   -- open Gnuplot
   local handle = assert(
     io.popen('gnuplot' .. (gnuplot.testmode and '' or ' -p'), 'w'),
@@ -444,22 +441,22 @@ gnuplot.show = function (G)
   -- save options
   local cmd = {}
   for _,k in ipairs(gnuplot.options) do
-    if G[k] ~= nil then cmd[#cmd+1] = command(k, G[k]) end
+    if self[k] ~= nil then cmd[#cmd+1] = command(k, self[k]) end
   end
-  if G.raw then cmd[#cmd+1] = G.raw end
+  if self.raw then cmd[#cmd+1] = self.raw end
   -- prepare functions
   local fn = {}
-  for i,f in ipairs(G) do
-    fn[i] = string.format("'%s' %s", gnuplot._graph(f,G))
+  for i, f in ipairs(self) do
+    fn[i] = string.format("'%s' %s", gnuplot._graph(f, self))
   end
   -- command
   if #fn > 0 then
-    local cmd_plot = G.surface and 'splot ' or 'plot '
-    cmd[#cmd+1] = cmd_plot .. table.concat(fn,',')
+    local cmd_plot = self.surface and 'splot ' or 'plot '
+    cmd[#cmd+1] = cmd_plot .. table.concat(fn, ',')
   end
   local res = table.concat(cmd, '\n')
   -- send to Gnuplot
-  handle:write(res,'\n')
+  handle:write(res, '\n')
   handle:close()
 end
 about[gnuplot.show] = {"G:show()", "Plot data, represented as Lua table." }
@@ -467,11 +464,11 @@ about[gnuplot.show] = {"G:show()", "Plot data, represented as Lua table." }
 
 --- Surface plot.
 --  @param ... List of type x1,y1,fn1,nm1 or x1,y1,fn1,x2,y2,fn2 etc.
-gnuplot.surfplot = function(self,...)
+gnuplot.surfplot = function(_, ...)
   local ag, i, n = {...}, 1, 1
   local cmd = gnuplot._new()
   repeat
-    local name = gnuplot._lst2file(ag[i],ag[i+1],ag[i+2])
+    local name = gnuplot._lst2file(ag[i], ag[i+1], ag[i+2])
     i = i + 3
     local legend = nil
     if type(ag[i]) == 'string' then
@@ -493,13 +490,13 @@ about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..])',
 --- Plot table of data file.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot.tplot = function (self,v,...)
-  local f, ag = gnuplot._vecPrepare(v,...)
+gnuplot.tplot = function (_, v, ...)
+  local f, ag = gnuplot._vecPrepare(v, ...)
   local cmd = gnuplot._new()
   if #ag > 1 then
     for i = 2,#ag do
-      cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
-        title=string.format("%d:%d",ag[1], ag[i])}
+      cmd[#cmd+1] = {f, using={ag[1], ag[i]}, with='lines',
+        title=string.format("%d:%d", ag[1], ag[i])}
     end
   else
     cmd[#cmd+1] = {f, with='lines', title='1:2'}
@@ -514,13 +511,13 @@ about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..])",
 --- Polar plot table of data file.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot.tpolar = function (self,v,...)
-  local f, ag = gnuplot._vecPrepare(v,...)
+gnuplot.tpolar = function (_, v, ...)
+  local f, ag = gnuplot._vecPrepare(v, ...)
   local cmd = gnuplot._new()
   if #ag > 1 then
     for i = 2,#ag do
-      cmd[#cmd+1] = {f, using={ag[1],ag[i]}, with='lines',
-        title=string.format("%d:%d",ag[1], ag[i])}
+      cmd[#cmd+1] = {f, using={ag[1], ag[i]}, with='lines',
+        title=string.format("%d:%d", ag[1], ag[i])}
     end
   else
     cmd[#cmd+1] = {f, with='lines', title='1:2'}
@@ -536,13 +533,13 @@ about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..])",
 --- Sufrace plot from table of data file.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot.tsurf = function (self,v,...)
-  local f, ag = gnuplot._vecPrepare(v,...)
+gnuplot.tsurf = function (_, v, ...)
+  local f, ag = gnuplot._vecPrepare(v, ...)
   local cmd = gnuplot._new()
   if #ag > 2 then
-    for i = 3,#ag do
-      cmd[#cmd+1] = {f, using={ag[1],ag[2],ag[i]},
-        title=string.format("%d:%d:%d",ag[1],ag[2],ag[i])}
+    for i = 3, #ag do
+      cmd[#cmd+1] = {f, using={ag[1], ag[2], ag[i]},
+        title=string.format("%d:%d:%d", ag[1], ag[2], ag[i])}
     end
   else
     cmd[#cmd+1] = {f, title='1:2:3'}
@@ -555,7 +552,7 @@ about[gnuplot.tsurf] = {":tsurf(var, [x_N, y_N, z1_N, z2_N,..])",
 
 
 -- constructor
-setmetatable(gnuplot, {__call=function (self) return gnuplot._new() end})
+setmetatable(gnuplot, {__call=function (_) return gnuplot._new() end})
 about[gnuplot] = {" () --> new_G", "Prepare Gnuplot object.", help.NEW}
 
 
