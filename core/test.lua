@@ -77,7 +77,7 @@ test._markTest = function (str, res, time)
   if #s > MIN then s = string.sub(s, 1, MIN) end
   local rest = string.rep('.', (FULL-#s))
   return string.format(
-    '%s%s%s | %.3f |', s, rest, (res and 'Succeed' or 'FAILED'), time)
+    '%s%s%s | %.3f |', s, rest, (res and 'Done' or 'FAIL'), time)
 end
 
 

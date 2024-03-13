@@ -7,7 +7,7 @@
 --  Table in represented in form key-power.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2024.
 
 		module 'units'
 --]]
@@ -26,11 +26,10 @@ U:setRule('min', U(60,'s'))
 -- define variable
 a = U(1,'m/s')
 -- convert to km/h, get only value
-ans = a['km/h']              --2>  3.6
+ans = a('km/h')              --2>  3.6
 
--- get numerical value
--- (the save as #a)
-ans = a:value()               -->  1
+-- get numerical value (skip key)
+ans = a()                     -->  1
 
 -- get units
 ans = a:key()                 -->  'm/s'
@@ -62,10 +61,10 @@ U:setRule('snake', U(38, 'parrot'))
 -- define variable
 c = U(2,'snake')
 -- convert
-ans = c['parrot']             -->  76
+ans = c 'parrot'              -->  76
 
 -- convert using prefix
-ans = c['ksnake']            --3>  0.002
+ans = c 'ksnake'             --3>  0.002
 
 -- another definition syntax
 ans = 2 * U('N')              -->  U(2,'N')
@@ -147,6 +146,7 @@ _memKeys = {},
 -- rules for unit conversation
 _rules = {},
 }
+units.__index = units
 
 
 --- Check object type.
@@ -200,12 +200,15 @@ units.__eq = function (U1, U2)
 end
 
 
---- Convert using v['new_units'] notation.
---  @param U Initial unit object.
---  @param s New Units.
---  @return Result of conversation of nil.
-units.__index = function (U, s)
-  return units[s] or (type(s) == 'string' and units.value(units.convert(U, s)))
+--- Get converted value.
+--  @param s Key name.
+--  @return found value.
+units.__call = function (self, s)
+  if s then
+    local v = units.convert(self, s)
+    return v._value
+  end
+  return self._value
 end
 
 
@@ -252,12 +255,11 @@ end
 
 
 --- U ^ d
---  @param U Unit object.
 --  @param d Number.
 --  @return Power.
-units.__pow = function (U, d)
+units.__pow = function (self, d)
   d = assert(Cfloat(d), "Wrong power")
-  local res = isunits(U) and units._deepCopy(U) or units._new(U, '')
+  local res = isunits(self) and units._deepCopy(self) or units._new(self, '')
   res._value = res._value ^ d
   op['^'](res._key, d)
   return res
@@ -278,20 +280,18 @@ end
 
 
 --- Units representation as string.
---  @param U Unit object.
 --  @return Unit value in traditional form.
-units.__tostring = function (U)
+units.__tostring = function (self)
   return string.format('%s %s',
-    type(U._value) == 'number' and Unumstr(U._value) or tostring(U._value),
-    units.key(U))
+    type(self._value) == 'number' and Unumstr(self._value) or tostring(self._value),
+    units.key(self))
 end
 
 
 --- -U
---  @param U Units object.
 --  @return Object with inverted sign.
-units.__unm = function (U)
-  local res = units.copy(U)
+units.__unm = function (self)
+  local res = units.copy(self)
   res._value = -res._value
   return res
 end
@@ -533,33 +533,30 @@ end
 
 
 --- Convert one units to another.
---  @param U Source unit object.
 --  @param s String with new units.
 --  @return Result of conversation of nil.
-units.convert = function (U, s)
+units.convert = function (self, s)
   if not units._memKeys[s] then
     units._memKeys[s] = units._parse(s)
   end
-  return units._convertKey(U, units._memKeys[s])
+  return units._convertKey(self, units._memKeys[s])
 end
 about[units.convert] = {'U:convert(new_s) --> upd_U|nil','Convert one units to another, return new object or nil.', }
 
 
 --- Create copy of the element.
---  @param U Source object.
 --  @return Shalow copy.
-units.copy = function (U)
-  return setmetatable({_value=U._value, _key=U._key}, units)
+units.copy = function (self)
+  return setmetatable({_value=self._value, _key=self._key}, units)
 end
 about[units.copy] = {'U:copy() --> cpy_U', 'Create copy of the element.', help.OTHER}
 
 
 --- Convert table of units into string.
---  @param U Units object.
 --  @return String with units.
-units.key = function (U)
+units.key = function (self)
   local num, denom = {}, {}
-  for k, v in pairs(U._key) do
+  for k, v in pairs(self._key) do
     if v > 0 then
       num[#num+1] = (v ~= 1) and string.format('%s^%s', k, tostring(v)) or k
     else
@@ -638,18 +635,9 @@ end
 about[units.rules] = {":rules() --> str", "Show list of rules."}
 
 
---- Value of the unit object.
---  The same as #U.
---  @param U Unit object.
---  @return Value.
-units.value = function (U) return U._value end
-about[units.value] = {'U:value() --> var', 'Get object value. Same as #U.'}
-units.__len = units.value
-
-
 -- simplify constructor call
 setmetatable(units, {
-__call = function (self, v, s)
+__call = function (_, v, s)
   if s then
     assert(Cfloat(v), "Wrong value type")
   else
