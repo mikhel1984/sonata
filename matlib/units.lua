@@ -21,12 +21,15 @@ U = require 'matlib.units'
 
 -- add some rules
 U.rules['h'] = U(60,'min')
-U.rules['min'] = U(60,'s')
+U.rules['min'] = 60 * U's'
 
 -- define variable
 a = U(1,'m/s')
 -- convert to km/h, get only value
 ans = a('km/h')              --2>  3.6
+
+-- equal syntax
+ans = a 'km/h'               --2>  3.6
 
 -- get numerical value (skip key)
 ans = a()                     -->  1
@@ -55,16 +58,6 @@ ans = b / a                   -->  U(3, '')
 ans = (a < b)                 -->  true
 
 ans = b ^ 3                   -->  U(27, 'm^3/s^3')
-
--- new rule
-U.rules['snake'] = U(38, 'parrot')
--- define variable
-c = U(2,'snake')
--- convert
-ans = c 'parrot'              -->  76
-
--- convert using prefix
-ans = c 'ksnake'             --3>  0.002
 
 -- another definition syntax
 ans = 2 * U('N')              -->  U(2,'N')
