@@ -229,7 +229,7 @@ end
 units.__call = function (self, s)
   if s then
     local v = units.convert(self, s)
-    return v._value
+    return v and v._value or nil
   end
   return self._value
 end
@@ -635,8 +635,16 @@ about[units.prefix] = {
   '.prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 
---- Show list of known rules
---  @return text with rules
+-- Print prefix table
+setmetatable(units.prefix, {
+__tostring = function (t)
+  local s = {}
+  for k, v in pairs(t) do
+    s[#s+1] = string.format('%s = %g', k, v)
+  end
+  return table.concat(s, '\n')
+end})
+
 
 -- simplify constructor call
 setmetatable(units, {
@@ -660,3 +668,4 @@ return units
 
 --==================================================
 --TODO add some predefined rules
+--TODO sort prefix print
