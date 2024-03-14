@@ -20,8 +20,8 @@
 U = require 'matlib.units'
 
 -- add some rules
-U:setRule('h', U(60,'min'))
-U:setRule('min', U(60,'s'))
+U.rules['h'] = U(60,'min')
+U.rules['min'] = U(60,'s')
 
 -- define variable
 a = U(1,'m/s')
@@ -57,7 +57,7 @@ ans = (a < b)                 -->  true
 ans = b ^ 3                   -->  U(27, 'm^3/s^3')
 
 -- new rule
-U:setRule('snake', U(38, 'parrot'))
+U.rules['snake'] = U(38, 'parrot')
 -- define variable
 c = U(2,'snake')
 -- convert
@@ -73,7 +73,7 @@ ans = 2 * U('N')              -->  U(2,'N')
 print(a)
 
 -- list of rules
-print(U:rules())
+print(U.rules)
 --]]
 
 
@@ -138,13 +138,15 @@ __module__ = "Operations and conversations according the units."
 
 --	MODULE
 
+local mt_rules = {}
+
 local units = {
 -- mark
 type = 'units', isunits = true,
 -- save some results
 _memKeys = {},
 -- rules for unit conversation
-_rules = {},
+rules = setmetatable({}, mt_rules),
 }
 units.__index = units
 
@@ -153,6 +155,27 @@ units.__index = units
 --  @param t Object to check.
 --  @return True if the object represents units.
 local function isunits(v) return getmetatable(v) == units end
+
+
+--- Check arguments before assignment.
+mt_rules.__newindex = function (t, k, v)
+  assert(isunits(v), 'Value must be unit object')
+  assert(string.find(k, '[*^/%-+]') == nil, 'Key should not have [*^/]')
+  rawset(t, k, v)
+end
+
+
+--- Show current rules.
+--  @return string with rules.
+mt_rules.__tostring = function (t)
+  local s = {}
+  for k, v in pairs(t) do
+    s[#s+1] = string.format('1 %s\t-> %s', k, tostring(v))
+  end
+  return table.concat(s, '\n')
+end
+about[units.rules] = {
+  '.rules', 'Table of rules for conversation.', help.OTHER}
 
 
 --- U1 + U2
@@ -400,7 +423,7 @@ end
 --  @return Found rule or nil.
 units._expandRules = function (U)
   local v, ku = nil, nil
-  for k1, u1 in pairs(units._rules) do
+  for k1, u1 in pairs(units.rules) do
     -- check
     if U._key[k1] then
       ku, v = k1, U._key[k1]
@@ -612,28 +635,8 @@ about[units.prefix] = {
   '.prefix', 'Table of possible prefixes for units.', help.OTHER}
 
 
---- Add new rule for unit transformation.
---  @param s Unit name.
---  @param U Equal unit object.
-units.setRule = function (self, s, U)
-  assert(isunits(U), 'Units object is expected!')
-  self._rules[s] = U
-end
-about[units.setRule] = {':setRule(name_s, val_U)',
-  'Add new rule for conversation.'}
-
-
 --- Show list of known rules
 --  @return text with rules
-units.rules = function (self)
-  local t = {}
-  for k, v in pairs(self._rules) do
-    t[#t+1] = string.format('%s\t-> %s', k, tostring(v))
-  end
-  return table.concat(t, '\n')
-end
-about[units.rules] = {":rules() --> str", "Show list of rules."}
-
 
 -- simplify constructor call
 setmetatable(units, {
