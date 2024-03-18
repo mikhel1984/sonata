@@ -122,6 +122,17 @@ about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", HYP}
 atanh = _call(Calc.atanh, 'atanh')
 about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
+
+--- Find hypotenuse.
+--  @return square root for the sum of squares.
+hypot = function (...)
+  local s = 0
+  for _, v in ipairs {...} do s = s + v*v end
+  return math.sqrt(s)
+end
+about[hypot] = {"hypot(...)", "Hypotenuse."}
+
+
 -- Constants
 PI = math.pi
 about[PI] = {"PI --> 3.14", "Number pi.", AUX}
