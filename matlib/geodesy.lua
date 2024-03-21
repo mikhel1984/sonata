@@ -142,10 +142,10 @@ ellipsoid.__index = ellipsoid
 --  @param E2 Src ellipsoid object.
 --  @param par Transformation parameters.
 --  @return Function for transformation.
-ellipsoid._bwdBLH = function (E1, E2, tPar)
+ellipsoid._bwdBLH = function (E1, E2, lin)
   local da, df = E1.a - E2.a, E1.f - E2.f
   return function (t)
-    local dB, dL, dH = ellipsoid._molodensky(E2, -tPar[1], -tPar[2], -tPar[3], da, df, t)
+    local dB, dL, dH = ellipsoid._molodensky(E2, -lin[1], -lin[2], -lin[3], da, df, t)
     return {
       B = t.B + dB,
       L = t.L + dL,
@@ -158,14 +158,14 @@ end
 --- Transform coordinates between two Cartesian systems, backward direction.
 --  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
 --  @return Function for coordinate transformation.
-ellipsoid._bwdXYZ = function (tPar)
-  local m = 1 - tPar[7]
-  local wx, wy, wz = tPar[4], tPar[5], tPar[6]
+ellipsoid._bwdXYZ = function (lin, rot, m)
+  m = 1 - m 
+  local wx, wy, wz = rot[1], rot[2], rot[3]
   return function (t)
     return {
-      X = m * ( t.X - wz * t.Y + wy * t.Z) - tPar[1],
-      Y = m * ( wz * t.X + t.Y - wx * t.Z) - tPar[2],
-      Z = m * (-wy * t.X + wx * t.Y + t.Z) - tPar[3]
+      X = m * ( t.X - wz * t.Y + wy * t.Z) - lin[1],
+      Y = m * ( wz * t.X + t.Y - wx * t.Z) - lin[2],
+      Z = m * (-wy * t.X + wx * t.Y + t.Z) - lin[3]
     }
   end
 end
@@ -176,11 +176,11 @@ end
 --  @param E2 Dst ellipsoid object.
 --  @param par Transformation parameters.
 --  @return Function for transformation.
-ellipsoid._fwdBLH = function (E1, E2, tPar)
+ellipsoid._fwdBLH = function (E1, E2, lin)
   local da, df = E2.a - E1.a, E2.f - E1.f
   return function (t)
     local dB, dL, dH = ellipsoid._molodensky(
-      E1, tPar[1], tPar[2], tPar[3], da, df, t)
+      E1, lin[1], lin[2], lin[3], da, df, t)
     return {
       B = t.B + dB,
       L = t.L + dL,
@@ -193,14 +193,14 @@ end
 --- Transform coordinates between two Cartesian systems, forward direction.
 --  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
 --  @return Function for coordinate transformation.
-ellipsoid._fwdXYZ = function (tPar)
-  local m = 1 + tPar[7]
-  local wx, wy, wz = tPar[4], tPar[5], tPar[6]
+ellipsoid._fwdXYZ = function (lin, rot, m)
+  m = 1 + m
+  local wx, wy, wz = rot[1], rot[2], rot[3]
   return function (t)    -- t = {X = x, Y = y, Z = z}
     return {
-      X = m * ( t.X + wz * t.Y - wy * t.Z) + tPar[1],
-      Y = m * (-wz * t.X + t.Y + wx * t.Z) + tPar[2],
-      Z = m * ( wy * t.X - wx * t.Y + t.Z) + tPar[3]
+      X = m * ( t.X + wz * t.Y - wy * t.Z) + lin[1],
+      Y = m * (-wz * t.X + t.Y + wx * t.Z) + lin[2],
+      Z = m * ( wy * t.X - wx * t.Y + t.Z) + lin[3]
     }
   end
 end
@@ -562,15 +562,13 @@ WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563,
   omega = 7.292115E-5,   -- rad/s, rotation rate
   J2 = 1.081874E-3,      -- dynamic form factor
 },
--- russian systems
+-- Russian system
 PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784,
   -- additional parameters
   GMe = 398600.4418E9,  -- m^3/s^2
   omega = 7.292115E-5,  -- rad/s, rotation rate
   J2 = 1082.62575E-6,   -- dynamic form factor
 },
-PZ9002 = ellipsoid:new {a = 6378136, f = 1/298.25784},
-SK42 = ellipsoid:new {a = 6378245, f = 1/298.3},
 
 -- for geohash
 base32 = '0123456789bcdefghjkmnpqrstuvwxyz',
@@ -606,6 +604,13 @@ about[geodesy.deg2dms] = {":deg2dms(deg_d) --> num",
   "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
 
+--- Produce ellipsoid.
+--  @param t Table of parameters {a=, f=}
+geodesy.ellipsoid = function (_, t) return ellipsoid:new(t) end
+about[geodesy.ellipsoid] = {":ellipsoid(param_t) --> E",
+  "Define new ellipsoid parameters."}
+
+
 --- International gravity formula (WGS).
 --  @param B Latitude, deg.
 --  @return Acceleration value.
@@ -616,6 +621,7 @@ geodesy.grav = function (self, dB)
 end
 about[geodesy.grav] = {":grav(latitude_d) --> num",
   "International gravity formula, angle in degrees.", help.OTHER}
+
 
 
 --- Convert hash to corrdinates.
@@ -733,36 +739,21 @@ about[geodesy.solveInv] = {"E:solveInv(blh1_t, blh2_t) --> dist_d, az1_d, az2_d"
   PROB}
 
 
---- Simplify configuration of coordinate transformation between ellipsoids.
---  @param E1 First ellipsoid object.
---  @param E2 Second ellipsoid object.
---  @param par List of parameters {dX, dY, dZ; wx, wy, wz; m}
-local _setTranslation = function (E1, E2, tPar)
+geodesy.setTranslation = function (E1, E2, lin, rot, m)
   -- cartesian
-  E1.xyzInto[E2] = ellipsoid._fwdXYZ(tPar)
-  E2.xyzInto[E1] = ellipsoid._bwdXYZ(tPar)
+  E1.xyzInto[E2] = ellipsoid._fwdXYZ(lin, rot, m)
+  E2.xyzInto[E1] = ellipsoid._bwdXYZ(lin, rot, m)
   -- datum
-  E1.blhInto[E2] = ellipsoid._fwdBLH(E1, E2, tPar)
-  E2.blhInto[E1] = ellipsoid._bwdBLH(E1, E2, tPar)
+  E1.blhInto[E2] = ellipsoid._fwdBLH(E1, E2, lin)
+  E2.blhInto[E1] = ellipsoid._bwdBLH(E1, E2, lin)
 end
+about[geodesy.setTranslation] = {":setTranslation(E1, E2, lin, rot, m)", 
+  "Define transormation rules between ellipsoids.", TRANS}
 
 
 -- PZ90 to WGS84
-_setTranslation(geodesy.PZ90, geodesy.WGS84,
-  {-1.1, -0.3, -0.9; 0, 0, math.rad(-0.2/3600); -0.12E-6})
--- PZ90 and PZ9002
-_setTranslation(geodesy.PZ9002, geodesy.PZ90,
-  {1.07, 0.03, -0.02; 0, 0, math.rad(0.13/3600); 0.22E-6})
--- PZ9002 and WGS84
-_setTranslation(geodesy.PZ9002, geodesy.WGS84,
-  {-0.36, 0.08, 0.18; 0, 0, 0; 0})
--- SK42 and PZ90
-_setTranslation(geodesy.SK42, geodesy.PZ90,
-  {25, -141, -80; 0, math.rad(-0.35/3600), math.rad(-0.66/3600); 0})
--- SK42 and PZ9002
-_setTranslation(geodesy.SK42, geodesy.PZ9002,
-  {23.93, -141.03, -79.98;
-   0, math.rad(-0.35/3600), math.rad(-0.79/3600); -0.22E-6})
+geodesy.setTranslation( geodesy.PZ90, geodesy.WGS84,
+  {-1.1, -0.3, -0.9}, {0, 0, math.rad(-0.2/3600)}, -0.12E-6)
 
 
 geodesy.xyzInto = 'A.xyzInto[B]'
