@@ -112,12 +112,6 @@ end
 local PROB, TRANS, PROJ = "problems", "transform", "projection"
 
 
---- Inverse hyperbolic tangent.
---  @param d Some number.
---  @return Areatangent value.
-local function arth(d) return math.log((1+d)/(1-d)) * 0.5 end
-
-
 --	INFO
 
 local help = SonataHelp or {}
@@ -149,8 +143,7 @@ ellipsoid._bwdBLH = function (E1, E2, lin)
     return {
       B = t.B + dB,
       L = t.L + dL,
-      H = t.H + dH
-    }
+      H = t.H + dH }
   end
 end
 
@@ -165,8 +158,7 @@ ellipsoid._bwdXYZ = function (lin, rot, m)
     return {
       X = m * ( t.X - wz * t.Y + wy * t.Z) - lin[1],
       Y = m * ( wz * t.X + t.Y - wx * t.Z) - lin[2],
-      Z = m * (-wy * t.X + wx * t.Y + t.Z) - lin[3]
-    }
+      Z = m * (-wy * t.X + wx * t.Y + t.Z) - lin[3] }
   end
 end
 
@@ -184,8 +176,7 @@ ellipsoid._fwdBLH = function (E1, E2, lin)
     return {
       B = t.B + dB,
       L = t.L + dL,
-      H = t.H + dH
-    }
+      H = t.H + dH }
   end
 end
 
@@ -200,8 +191,7 @@ ellipsoid._fwdXYZ = function (lin, rot, m)
     return {
       X = m * ( t.X + wz * t.Y - wy * t.Z) + lin[1],
       Y = m * (-wz * t.X + t.Y + wx * t.Z) + lin[2],
-      Z = m * ( wy * t.X - wx * t.Y + t.Z) + lin[3]
-    }
+      Z = m * ( wy * t.X - wx * t.Y + t.Z) + lin[3] }
   end
 end
 
@@ -231,7 +221,7 @@ end
 
 --- Find the meridian radius
 --  @param E Ellipsoid object.
---  @param d
+--  @param d Latitude angle.
 --  @return Radius value.
 ellipsoid._radiusMeridian = function (E, d)
   local s = math.sin(d)
@@ -241,7 +231,7 @@ end
 
 --- Find the vertical radius
 --  @param E Ellipsoid object.
---  @paramd d
+--  @paramd d Latitude angle.
 --  @return Radius value.
 ellipsoid._radiusVertical = function (E, d)
   local s = math.sin(d)
@@ -290,10 +280,9 @@ end
 --- Convert lat/lon to UTM coordinates.
 --  Based on Karney's method and
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
---  @param E Ellipsoid object.
 --  @param t Table with longitude L and lattitude B
 --  @return Table {N=,E=,hs=,zone=} and scale value.
-ellipsoid.ll2utm = function (E, t)
+ellipsoid.ll2utm = function (self, t)
   if not (-80 <= t.B and t.B <= 84) then
     error('Latitude outside UTM limits')
   end
@@ -315,8 +304,8 @@ ellipsoid.ll2utm = function (E, t)
   end
   local lat, lon = math.rad(t.B), math.rad(t.L - l0)
   -- find projection
-  if not E.utmA then E:_setUtmArrays() end
-  local alpha, e = E.utmAlpha, math.sqrt(E.e2)
+  if not self.utmA then self:_setUtmArrays() end
+  local alpha, e = self.utmAlpha, math.sqrt(self.e2)
   local clon = math.cos(lon)
   local tau, slat = math.tan(lat), math.sin(lat)
   local n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
@@ -334,13 +323,13 @@ ellipsoid.ll2utm = function (E, t)
   end
   -- use UTM scale for the central meridian 0.9996
   local pose = {
-    E = E.utmA * eta + 500e3,  -- add false easting
-    N = E.utmA * xi,
+    E = self.utmA * eta + 500e3,  -- add false easting
+    N = self.utmA * xi,
     zone = zone,
     hs = t.B >= 0 and 'N' or 'S',  -- hemisphere
   }
   if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing
-  local scale = E.utmA / E.a * math.sqrt(
+  local scale = self.utmA / self.a * math.sqrt(
     (p1*p1 + q1*q1)*(1-e*e*slat*slat)*(1+tau*tau) / (tau1*tau1 + clon*clon))
   return pose, scale
 end
@@ -363,22 +352,21 @@ end
 --  find the socond point and azimuth if the initial point,
 --  its azimuth and distance are given.
 --  Uses Vincenty's formulae.
---  @param E Ellipsoid object.
 --  @param t1 First point (B,L).
 --  @param dA Azimuth in the first point.
 --  @param dist Distance to the second point.
 --  @return Second point position (B,L) and orientation (deg).
-ellipsoid.solveDir = function (E, t1, dA, dist)
+ellipsoid.solveDir = function (self, t1, dA, dist)
   -- transform arguments
-  local U1 = math.atan((1-E.f)*math.tan(math.rad(t1.B)))
+  local U1 = math.atan((1-self.f)*math.tan(math.rad(t1.B)))
   local sU1, cU1 = math.sin(U1), math.cos(U1)
   local ca1, sa1 = math.cos(math.rad(dA)), math.sin(math.rad(dA))
   -- prepare iterations
   local sig1 = Vatan2(math.tan(U1), ca1) * 2  -- multiplied sigma1
   local alsin = cU1*sa1
   local alcos2 = 1 - alsin*alsin
-  local A, B = ellipsoid._vincentyAB(E.e2, alcos2)
-  A = dist / (E.b * A)  -- reuse
+  local A, B = ellipsoid._vincentyAB(self.e2, alcos2)
+  A = dist / (self.b * A)  -- reuse
   local sig, ssig, csigm = A, 0, 0
   -- iterative part
   repeat
@@ -393,10 +381,10 @@ ellipsoid.solveDir = function (E, t1, dA, dist)
   local csig = math.cos(sig)
   local B2 = Vatan2(
     sU1*csig + cU1*ssig*ca1,
-    (1-E.f)*math.sqrt(1 - alcos2 + (sU1*ssig - cU1*csig*ca1)^2))
-  local C = E.f / 16 * alcos2 * (4 + E.f*(4 - 3*alcos2))
+    (1-self.f)*math.sqrt(1 - alcos2 + (sU1*ssig - cU1*csig*ca1)^2))
+  local C = self.f / 16 * alcos2 * (4 + self.f*(4 - 3*alcos2))
   local L = Vatan2(ssig*sa1, cU1*csig-sU1*ssig*sa1)
-    -(1-C)*E.f*alsin*(sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm))) -- lambda-...
+    -(1-C)*self.f*alsin*(sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm))) -- lambda-...
   local azimuth2 = Vatan2(alsin, -sU1*ssig + cU1*csig*ca1)
   return {B = math.deg(B2), L = t1.L + math.deg(L)}, math.deg(azimuth2)
 end
@@ -405,14 +393,13 @@ end
 --- Solve the inverse geodetic problem:
 --  find distance and azimuths for the two given points.
 --  Uses Vincenty's formulae.
---  @param E Ellipsoid object.
 --  @param t1 First point (B,L).
 --  @param t2 Second point (B,L).
 --  @return distance (m), first and second azimuths (deg)
-ellipsoid.solveInv = function (E, t1, t2)
+ellipsoid.solveInv = function (self, t1, t2)
   -- reduced latitude
-  local U1 = math.atan((1-E.f)*math.tan(math.rad(t1.B)))
-  local U2 = math.atan((1-E.f)*math.tan(math.rad(t2.B)))
+  local U1 = math.atan((1-self.f)*math.tan(math.rad(t1.B)))
+  local U2 = math.atan((1-self.f)*math.tan(math.rad(t2.B)))
   local cU1, cU2 = math.cos(U1), math.cos(U2)
   local sU1, sU2 = math.sin(U1), math.sin(U2)
   -- prepare variables
@@ -426,16 +413,16 @@ ellipsoid.solveInv = function (E, t1, t2)
     local alsin = cU1*cU2*math.sin(lam) / ssig
     alcos2 = 1 - alsin*alsin
     csigm = csig - 2*sU1*sU2 / alcos2
-    local C = E.f / 16 * alcos2 * (4 + E.f*(4 - 3*alcos2))
+    local C = self.f / 16 * alcos2 * (4 + self.f*(4 - 3*alcos2))
     local prev = lam
-    lam = L + (1-C)*E.f*alsin*
+    lam = L + (1-C)*self.f*alsin*
       (sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm)))
   until math.abs(lam - prev) < 1E-12
   -- result
-  local A, B = ellipsoid._vincentyAB(E.e2, alcos2)
+  local A, B = ellipsoid._vincentyAB(self.e2, alcos2)
   local dsig = B*ssig*(csigm + B/4*(csig*(-1 + 2*csigm*csigm)
     -B/6*csigm*(-3 + 4*ssig*ssig)*(-3 + 4*csigm*csigm)))
-  local dist = E.b * A * (sig - dsig)
+  local dist = self.b * A * (sig - dsig)
   local azimuth1 = Vatan2(
     cU2*math.sin(lam), cU1*sU2 - sU1*cU2*math.cos(lam))
   local azimuth2 = Vatan2(
@@ -445,33 +432,32 @@ end
 
 
 --- Transform Cartesian coordinates to Geodetic.
---  @param E Reference ellipsoid object.
 --  @param t Dictionary with coordinates in meters: X, Y, Z.
 --  @return Dictionary with coordinates: B (deg), L (deg), H (m).
-ellipsoid.toBLH = function (E, t)
+ellipsoid.toBLH = function (self, t)
   local X, Y, Z = t.X, t.Y, t.Z
   local D = math.sqrt(X*X + Y*Y)
   local B, L, H = 0, 0, 0 -- result in rad
   if D < 1E-10 then
     B = (Z == 0 and 0 or (Z > 0 and 0.5 or -0.5)) * math.pi
     L = 0
-    H = math.abs(Z) - E.b
+    H = math.abs(Z) - self.b
   else
     -- solve Browning's iterative equation
-    local e22 = E.e2 / (1 - E.e2)
+    local e22 = self.e2 / (1 - self.e2)
     -- initial value for tan(B)
-    local tg = Z / D * (1 + e22 * E.b / math.sqrt(X*X + Y*Y + Z*Z))
+    local tg = Z / D * (1 + e22 * self.b / math.sqrt(X*X + Y*Y + Z*Z))
     for i = 1, 2 do       -- TODO: use tol estimation
-      tg = tg * (1 - E.f)    -- get tan(theta)
+      tg = tg * (1 - self.f)    -- get tan(theta)
       local theta = math.atan(tg)
-      tg = (Z + e22 * E.b * math.sin(theta)^3) /
-        (D - E.e2 * E.a * math.cos(theta)^3)
+      tg = (Z + e22 * self.b * math.sin(theta)^3) /
+        (D - self.e2 * self.a * math.cos(theta)^3)
     end
     B = math.atan(tg)
     L = Vatan2(Y, X)
-    local N = ellipsoid._radiusVertical(E, B)
+    local N = ellipsoid._radiusVertical(self, B)
     if math.abs(tg) > 1 then
-      H = Z / math.sin(B) - (1 - E.e2) * N
+      H = Z / math.sin(B) - (1 - self.e2) * N
     else
       H = D / math.cos(B) - N
     end
@@ -484,33 +470,31 @@ end
 
 
 --- Transform Geodetic coordinats to Cartesian.
---  @param E Reference ellipsoid object.
 --  @param t Dictionary with coordinates: B (deg), L (deg), H (m).
 --  @return Dictionary with coordinates in meters: X, Y, Z.
-ellipsoid.toXYZ = function (E, t)
+ellipsoid.toXYZ = function (self, t)
   -- convert to radians
   local B, L, H = math.rad(t.B), math.rad(t.L), t.H
-  local N = ellipsoid._radiusVertical(E, B)
+  local N = ellipsoid._radiusVertical(self, B)
   local NH = (N + H) * math.cos(B)
   return {
     X = NH * math.cos(L),
     Y = NH * math.sin(L),
-    Z = ((1-E.e2)*N + H) * math.sin(B) }
+    Z = ((1-self.e2)*N + H) * math.sin(B) }
 end
 
 
 --- Convert UTM coordinates to lat/lon.
 --  Based on Karney's method and
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
---  @param E Ellipsoid object.
 --  @param t Table of coordinates {N=,E=,hs=,zone=}.
 --  @return Table with longitude/lattitude and scale value.
-ellipsoid.utm2ll = function (E, t)
+ellipsoid.utm2ll = function (self, t)
   -- substract false easting and northing
   local x, y = t.E - 500e3, t.hs == 'S' and t.N - 10000e3 or t.N
-  if not E.utmA then E:_setUtmArrays() end
-  local beta, e = E.utmBeta, math.sqrt(E.e2)
-  local eta, xi = x / E.utmA, y / E.utmA
+  if not self.utmA then self:_setUtmArrays() end
+  local beta, e = self.utmBeta, math.sqrt(self.e2)
+  local eta, xi = x / self.utmA, y / self.utmA
   local xi1, eta1, p, q = xi, eta, 1, 0
   for j = 1, 6 do
     local sxi, cxi = math.sin(2*j*xi), math.cos(2*j*xi)
@@ -536,7 +520,7 @@ ellipsoid.utm2ll = function (E, t)
   -- convert result
   local lat = math.atan(taui)
   local slat = math.sin(lat)
-  local scale = E.utmA / E.a * math.sqrt(
+  local scale = self.utmA / self.a * math.sqrt(
     (p*p + q*q)*(1-e*e*slat*slat)*(1+taui*taui) *(sheta1*sheta1 + cxi1*cxi1))
   local l0 = (t.zone-1)*6 - 177
   local res = {
@@ -614,7 +598,7 @@ about[geodesy.ellipsoid] = {":ellipsoid(param_t) --> E",
 --- International gravity formula (WGS).
 --  @param B Latitude, deg.
 --  @return Acceleration value.
-geodesy.grav = function (self, dB)
+geodesy.grav = function (_, dB)
   local s = math.sin(math.rad(dB))
   s = s * s  -- get square
   return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
@@ -627,7 +611,7 @@ about[geodesy.grav] = {":grav(latitude_d) --> num",
 --- Convert hash to corrdinates.
 --  @param sHash Geohash string.
 --  @return Central point and range of the zone.
-geodesy.hashDecode = function (self, sHash)
+geodesy.hashDecode = function (_, sHash)
   sHash = string.lower(sHash)
   -- find bounds
   local evenBit = true
@@ -669,7 +653,7 @@ about[geodesy.hashDecode] = {":hashDecode(hash_s) --> coord_t, range_t",
 --  @param t Coordinates (lat, lon).
 --  @param N Number of letters (1-12, optional).
 --  @return String with hash.
-geodesy.hashEncode = function (self, t, N)
+geodesy.hashEncode = function (_, t, N)
   N = N or 6
   local latMin, latMax = -90, 90
   local lonMin, lonMax = -180, 180
@@ -770,7 +754,7 @@ about[geodesy.blhInto] = {"E.blhInto[E2] --> fn",
 --  @param r Cartesian coordinates of the reference point.
 --  @param l Topocentric coordinates of the observed point.
 --  @return Cartesian coordinates of the observed point.
-geodesy.fromENU = function (self, tG, tR, tL)
+geodesy.fromENU = function (_, tG, tR, tL)
   local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
   local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
   return {
@@ -788,7 +772,7 @@ about[geodesy.fromENU] = {":fromENU(blRef_t, xyzRef_t, top_t) --> xyzObs_t",
 --  @param r Cartesian coordinates of the reference point.
 --  @param p Cartesian coordinates of the observed point.
 --  @return Topocentric coordinates of the observed point.
-geodesy.toENU = function (self, tG, tR, tP)
+geodesy.toENU = function (_, tG, tR, tP)
   local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
   local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
   local dx, dy, dz = tP.X-tR.X, tP.Y-tR.Y, tP.Z-tR.Z
@@ -809,5 +793,4 @@ return geodesy
 
 --======================================
 --TODO: check correctness (Molodensky)
---TODO: newEllipsoid to define own ellipsoid object
 --TODO: ellipsoid.__tostring
