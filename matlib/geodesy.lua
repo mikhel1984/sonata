@@ -21,8 +21,8 @@ t0 = {B=rnd()*90, L=rnd()*180, H=rnd()*1000}
 -- latitude, longitude, height
 print(t0.B, t0.L, t0.H)
 
---test in WGS84
-wgs84 = Geo.WGS84
+-- default is WGS84
+wgs84 = Geo()
 -- BLH to XYZ
 t1 = wgs84:toXYZ(t0)
 print(t1.X, t1.Y, t1.Z)
@@ -44,9 +44,23 @@ tc = Geo:toENU(t0, t1, tg)
 tg2 = Geo:fromENU(t0, t1, tc)
 ans = tg2.X                  --3>  tg.X
 
+-- add another ellipsoid
+-- use russian PZ90
+pz90 = Geo { a = 6378136, f = 1/298.25784,
+  -- additional parameters (optional)
+  GMe = 398600.4418E9,  -- m^3/s^2
+  omega = 7.292115E-5,  -- rad/s, rotation rate
+  J2 = 1082.62575E-6,   -- dynamic form factor
+}
+-- define transformation
+pz90:into( wgs84,
+  {-1.1, -0.3, -0.9},          -- linear
+  {0, 0, math.rad(-0.2/3600)}, -- angular
+  -0.12E-6)                    -- scale
 -- transform XYZ from WGS84 to PZ90
-pz90 = Geo.PZ90
--- get function
+print(pz90)  -- show
+
+-- transform
 xyz_wgs84_pz90 = wgs84.xyzInto[pz90]
 t3 = xyz_wgs84_pz90(t1)
 
@@ -129,6 +143,13 @@ local ellipsoid = {}
 
 -- methametods
 ellipsoid.__index = ellipsoid
+
+
+--- Object view.
+--  @return string representation.
+ellipsoid.__tostring = function (self)
+  return string.format("Ellipsoid {a=%d, f=%f}", self.a, self.f)
+end
 
 
 --- Datum transformation from E2 to E1.
@@ -274,6 +295,21 @@ ellipsoid._vincentyAB = function (e2, cosa2)
   local A = 1 + u2*(4096 + u2*(-768 + u2*(320 - 175*u2)))/16384.0
   local B = u2*(256 + u2*(-128 + u2*(74 - 47*u2)))/1024.0
   return A, B
+end
+
+--- Define transformation.
+--  @param E1 First ellipsoid.
+--  @param E2 Second ellipsoid.
+--  @param lin Linear transformation.
+--  @param rot Rotational transformation.
+--  @param m Scaling parameter.
+ellipsoid.into = function (E1, E2, lin, rot, m)
+  -- cartesian
+  E1.xyzInto[E2] = ellipsoid._fwdXYZ(lin, rot, m)
+  E2.xyzInto[E1] = ellipsoid._bwdXYZ(lin, rot, m)
+  -- datum
+  E1.blhInto[E2] = ellipsoid._fwdBLH(E1, E2, lin)
+  E2.blhInto[E1] = ellipsoid._bwdBLH(E1, E2, lin)
 end
 
 
@@ -537,23 +573,6 @@ local geodesy = {
 -- mark
 type = 'geodesy',
 
--- Ellipsoids
-WGS84 = ellipsoid:new {a = 6378137, f = 1/298.257223563,
-  -- additional parameters
-  Me = 5.98E24,          -- kg, mass of earth
-  G  = 6.67E-11,         -- m^3/kg/s^2, gravitational constant
-  GMe = 3.986004418E14,  -- m^3/s^2
-  omega = 7.292115E-5,   -- rad/s, rotation rate
-  J2 = 1.081874E-3,      -- dynamic form factor
-},
--- Russian system
-PZ90 = ellipsoid:new {a = 6378136, f = 1/298.25784,
-  -- additional parameters
-  GMe = 398600.4418E9,  -- m^3/s^2
-  omega = 7.292115E-5,  -- rad/s, rotation rate
-  J2 = 1082.62575E-6,   -- dynamic form factor
-},
-
 -- for geohash
 base32 = '0123456789bcdefghjkmnpqrstuvwxyz',
 }
@@ -586,13 +605,6 @@ geodesy.deg2dms = function (self, d)
 end
 about[geodesy.deg2dms] = {":deg2dms(deg_d) --> num",
   "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
-
-
---- Produce ellipsoid.
---  @param t Table of parameters {a=, f=}
-geodesy.ellipsoid = function (_, t) return ellipsoid:new(t) end
-about[geodesy.ellipsoid] = {":ellipsoid(param_t) --> E",
-  "Define new ellipsoid parameters."}
 
 
 --- International gravity formula (WGS).
@@ -723,21 +735,9 @@ about[geodesy.solveInv] = {"E:solveInv(blh1_t, blh2_t) --> dist_d, az1_d, az2_d"
   PROB}
 
 
-geodesy.setTranslation = function (E1, E2, lin, rot, m)
-  -- cartesian
-  E1.xyzInto[E2] = ellipsoid._fwdXYZ(lin, rot, m)
-  E2.xyzInto[E1] = ellipsoid._bwdXYZ(lin, rot, m)
-  -- datum
-  E1.blhInto[E2] = ellipsoid._fwdBLH(E1, E2, lin)
-  E2.blhInto[E1] = ellipsoid._bwdBLH(E1, E2, lin)
-end
-about[geodesy.setTranslation] = {":setTranslation(E1, E2, lin, rot, m)", 
-  "Define transormation rules between ellipsoids.", TRANS}
-
-
--- PZ90 to WGS84
-geodesy.setTranslation( geodesy.PZ90, geodesy.WGS84,
-  {-1.1, -0.3, -0.9}, {0, 0, math.rad(-0.2/3600)}, -0.12E-6)
+geodesy.into = ellipsoid.into
+about[geodesy.into] = {"E:setTranslation(E2, lin, rot, m)", 
+ "Define transormation rules between ellipsoids.", TRANS}
 
 
 geodesy.xyzInto = 'A.xyzInto[B]'
@@ -784,6 +784,25 @@ geodesy.toENU = function (_, tG, tR, tP)
 end
 about[geodesy.toENU] = {":toENU(blRef_t, xyzRef_t, xyzObs_t) --> top_t",
   "Get topocentric coordinates of a point in reference frame.", TRANS}
+
+
+setmetatable(geodesy, {
+__call = function (_, t)
+  if t then
+    return ellipsoid:new(t)
+  end
+  -- WGS84 by default
+  return ellipsoid:new {a = 6378137, f = 1/298.257223563,
+    -- additional parameters
+    Me = 5.98E24,          -- kg, mass of earth
+    G  = 6.67E-11,         -- m^3/kg/s^2, gravitational constant
+    GMe = 3.986004418E14,  -- m^3/s^2
+    omega = 7.292115E-5,   -- rad/s, rotation rate
+    J2 = 1.081874E-3,      -- dynamic form factor
+  }
+end })
+about[geodesy] = {" ([param_t]) --> E", 
+  "Produce ellipsoid with the given params {a=, f=}.", help.STATIC}
 
 
 -- Comment to remove descriptions
