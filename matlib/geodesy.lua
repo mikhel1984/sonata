@@ -36,14 +36,6 @@ ans = t2.L                   --3>  t0.L
 
 ans = t2.H                   --3>  t0.H
 
--- find topocentric coordinates
-tg = {X=t1.X+10, Y=t1.Y+20, Z=t1.Z+30}
-tc = Geo:toENU(t0, t1, tg)
-
--- back to cartesian
-tg2 = Geo:fromENU(t0, t1, tc)
-ans = tg2.X                  --3>  tg.X
-
 -- add another ellipsoid
 -- use russian PZ90
 pz90 = Geo { a = 6378136, f = 1/298.25784,
@@ -75,13 +67,13 @@ t5 = blh_wgs84_pz90(t0)
 
 -- UTM to lat/lon
 utm = {N=5601281, E=625394, zone=42, hs='N'}
-ll = wgs84:utm2ll(utm)
+ll = wgs84:utm2bl(utm)
 ans = ll.B                   --2>  50.55
 
 ans = ll.L                   --2>  70.77
 
 -- lat/lon to UTM
-utm1 = wgs84:ll2utm(ll)
+utm1 = wgs84:bl2utm(ll)
 ans = utm1.N                 --2>  utm.N
 
 ans = utm1.E                 --2>  utm.E
@@ -318,7 +310,7 @@ end
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
 --  @param t Table with longitude L and lattitude B
 --  @return Table {N=,E=,hs=,zone=} and scale value.
-ellipsoid.ll2utm = function (self, t)
+ellipsoid.bl2utm = function (self, t)
   if not (-80 <= t.B and t.B <= 84) then
     error('Latitude outside UTM limits')
   end
@@ -363,6 +355,7 @@ ellipsoid.ll2utm = function (self, t)
     N = self.utmA * xi,
     zone = zone,
     hs = t.B >= 0 and 'N' or 'S',  -- hemisphere
+    H = t.H or 0,
   }
   if pose.N < 0 then pose.N = pose.N + 10000e3 end  -- add false northing
   local scale = self.utmA / self.a * math.sqrt(
@@ -525,7 +518,7 @@ end
 --  http://www.movable-type.co.uk/scripts/latlong-utm-mgrs.html
 --  @param t Table of coordinates {N=,E=,hs=,zone=}.
 --  @return Table with longitude/lattitude and scale value.
-ellipsoid.utm2ll = function (self, t)
+ellipsoid.utm2bl = function (self, t)
   -- substract false easting and northing
   local x, y = t.E - 500e3, t.hs == 'S' and t.N - 10000e3 or t.N
   if not self.utmA then self:_setUtmArrays() end
@@ -562,7 +555,7 @@ ellipsoid.utm2ll = function (self, t)
   local res = {
     B = math.deg(lat),
     L = math.deg(Vatan2(sheta1, cxi1)) + l0,
-    H = 0
+    H = t.H or 0,
   }
   return res, scale
 end
@@ -713,13 +706,13 @@ about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t",
   "Transform Cartesian coordinates to Geodetic.", TRANS}
 
 
-geodesy.utm2ll = ellipsoid.utm2ll
-about[geodesy.utm2ll] = {"E:utm2ll(utm_t) --> blh_t",
+geodesy.utm2bl = ellipsoid.utm2bl
+about[geodesy.utm2bl] = {"E:utm2bl(utm_t) --> blh_t",
   "Find Geodetic coordinates for the given UTM pose and zone", PROJ}
 
 
-geodesy.ll2utm = ellipsoid.ll2utm
-about[geodesy.ll2utm] = {"E:ll2utm(blh_t) --> utm_t",
+geodesy.bl2utm = ellipsoid.bl2utm
+about[geodesy.bl2utm] = {"E:bl2utm(blh_t) --> utm_t",
   "Find UTM projection for the given coordinates.", PROJ}
 
 
