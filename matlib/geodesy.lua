@@ -657,7 +657,7 @@ geodesy.hashDecode = function (_, sHash)
          {latMax - latMin, lonMax - lonMin}
 end
 about[geodesy.hashDecode] = {":hashDecode(hash_s) --> coord_t, range_t",
-  "Find central point and range of the zone."}
+  "Find central point and range of the zone.", PROJ}
 
 
 --- Geohash from coordinates
@@ -699,7 +699,7 @@ geodesy.hashEncode = function (_, t, N)
   return table.concat(hash)
 end
 about[geodesy.hashEncode] = {":hashEncode(coord_t, letter_N=6) --> hash_s",
-  "Find hash for the given point."}
+  "Find hash for the given point.", PROJ}
 
 
 -- Access to the ellipsoid object methods.
@@ -736,7 +736,7 @@ about[geodesy.solveInv] = {"E:solveInv(blh1_t, blh2_t) --> dist_d, az1_d, az2_d"
 
 
 geodesy.into = ellipsoid.into
-about[geodesy.into] = {"E:setTranslation(E2, lin, rot, m)", 
+about[geodesy.into] = {"E:into(E2, lin, rot, m)", 
  "Define transormation rules between ellipsoids.", TRANS}
 
 
@@ -747,43 +747,6 @@ geodesy.blhInto = 'A.blhInto[B]'
 about[geodesy.blhInto] = {"E.blhInto[E2] --> fn",
   "Get function to transform geodetic coordinates from A to B system using the Molodensky method.",
   TRANS}
-
-
---- Find cartesian coordinates of a point with topocentric coordinates.
---  @param g Geodetic coordinates of the reference point.
---  @param r Cartesian coordinates of the reference point.
---  @param l Topocentric coordinates of the observed point.
---  @return Cartesian coordinates of the observed point.
-geodesy.fromENU = function (_, tG, tR, tL)
-  local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
-  local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
-  return {
-    X = tR.X - sL*tL.X - sB*cL*tL.Y + cB*cL*tL.Z,
-    Y = tR.Y + cL*tL.X - sB*sL*tL.Y + cB*sL*tL.Z,
-    Z = tR.Z + cB*tL.Y + sB*tL.Z
-  }
-end
-about[geodesy.fromENU] = {":fromENU(blRef_t, xyzRef_t, top_t) --> xyzObs_t",
-  "Get cartesian coordinates of a local point in reference frame.", TRANS}
-
-
---- Find topocentric coordinates of a point.
---  @param g Geodetic coordinates of the reference point.
---  @param r Cartesian coordinates of the reference point.
---  @param p Cartesian coordinates of the observed point.
---  @return Topocentric coordinates of the observed point.
-geodesy.toENU = function (_, tG, tR, tP)
-  local sB, cB = math.sin(math.rad(tG.B)), math.cos(math.rad(tG.B))
-  local sL, cL = math.sin(math.rad(tG.L)), math.cos(math.rad(tG.L))
-  local dx, dy, dz = tP.X-tR.X, tP.Y-tR.Y, tP.Z-tR.Z
-  return {
-    X = -sL*dx + cL*dy,
-    Y = -sB*cL*dx - sB*sL*dy + cB*dz,
-    Z = cB*cL*dx + cB*sL*dy + sB*dz
-  }
-end
-about[geodesy.toENU] = {":toENU(blRef_t, xyzRef_t, xyzObs_t) --> top_t",
-  "Get topocentric coordinates of a point in reference frame.", TRANS}
 
 
 setmetatable(geodesy, {
