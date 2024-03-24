@@ -575,28 +575,28 @@ base32 = '0123456789bcdefghjkmnpqrstuvwxyz',
 geodesy.__index = geodesy
 
 
---- Convert degrees to radians.
+--- Convert to degrees.
 --  @param d Degrees.
 --  @param m Minutes (optional).
 --  @param s Seconds (optional).
 --  @return Angle in radians.
-geodesy.dms2rad = function (self, d, m, s)
-  return math.rad(d + (m or 0) / 60 + (s or 0) / 3600)
+geodesy.dms2deg = function (_, d, m, s)
+  return d + (m or 0) / 60 + (s or 0) / 3600
 end
-about[geodesy.dms2rad] = {":dms2rad(deg_d, min_d=0, sec_d=0) --> num",
-  "Convert degrees, minutes and seconds to radians.", help.OTHER}
+about[geodesy.dms2deg] = {":dms2deg(deg_d, min_d=0, sec_d=0) --> deg",
+  "Convert degrees, minutes and seconds to degrees.", help.OTHER}
 
 
 --- Convert degrees to degrees-minutes-seconds.
 --  @param d Angle in degrees.
 --  @return Degrees, minutes, seconds.
-geodesy.deg2dms = function (self, d)
+geodesy.deg2dms = function (_, d)
   local deg = math.floor(d)
   local min = math.floor(60 * (d - deg))
   local sec = 3600 * (d - deg) - 60 * min
   return deg, min, sec
 end
-about[geodesy.deg2dms] = {":deg2dms(deg_d) --> num",
+about[geodesy.deg2dms] = {":deg2dms(deg_d) --> deg, min, sec",
   "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
 
 
@@ -606,9 +606,9 @@ about[geodesy.deg2dms] = {":deg2dms(deg_d) --> num",
 geodesy.grav = function (_, dB)
   local s = math.sin(math.rad(dB))
   s = s * s  -- get square
-  return 9.8703185*(1 + s*(0.00527889 + 0.000023462*s))
+  return 9.780327*(1 + s*(0.0052792 + 0.0000232*s))
 end
-about[geodesy.grav] = {":grav(latitude_d) --> num",
+about[geodesy.grav] = {":grav(latitude_d) --> acceleration",
   "International gravity formula, angle in degrees.", help.OTHER}
 
 
