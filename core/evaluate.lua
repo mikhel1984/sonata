@@ -293,7 +293,8 @@ evaluate._showTable = function (t)
   local count, len = 0, #t
   for k, v in pairs(t) do
     if not (isint(k) and 0 < k and k <= len) then
-      out[#out+1] = string.format('\n  %s = %s,', tostring(k), tostring(v))
+      out[#out+1] = string.format(
+        #out > 1 and '\n  %s = %s,' or '%s = %s,', tostring(k), tostring(v))
       count = count + 1
       if count % N == 0 then
         local data = table.concat(out)
