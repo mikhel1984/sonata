@@ -52,10 +52,10 @@ ans = #ed                     -->  0
 
 -- directed graph
 d = Graph:dir()
-d:add('c', 'p', 2)
+d:add('c', 'p', 5)
 -- and vise versa
 d:add('p', 'c', 3)
-ans = d:edge('c', 'p')        -->  2
+ans = d:edge('c', 'p')        -->  5
 
 -- make copy
 b = a:copy()
@@ -99,7 +99,7 @@ c:add('b','e',0.4)
 c:add('c','f',2)
 
 -- Dijkstra path search
-dist,prev = c:pathD('a')
+dist, prev = c:dijkstra('a')
 ans = dist['g']               -->  1.9
 
 -- show
@@ -151,7 +151,7 @@ local function getPath(tPrev, v)
     v = tPrev[v]
     res[#res+1] = v
   end
-  -- invert
+  -- reverse
   local L = #res
   local n = math.modf(L/2)
   for i = 1, n do
@@ -166,20 +166,21 @@ local Queue = {
   -- create object
   new = function () return {{}, {}} end,
   -- add element
-  push = function (Q, v) table.insert(Q[1], v) end,
+  push = function (self, v) table.insert(self[1], v) end,
   -- check content
-  isEmpty = function (Q) return #Q[2] == 0 and #Q[1] == 0 end
+  isEmpty = function (self) return #self[2] == 0 and #self[1] == 0 end
 }
 
 
 -- remove element
-function Queue.pop(Q)
-  if #Q[2] == 0 then
-    while #Q[1] > 0 do
-      table.insert(Q[2], table.remove(Q[1]))
+function Queue.pop(self)
+  local q1, q2 = self[1], self[2]
+  if #q2 == 0 then
+    while #q1 > 0 do
+      table.insert(q2, table.remove(q1))
     end
   end
-  return table.remove(Q[2])
+  return table.remove(q2)
 end
 
 
@@ -194,7 +195,7 @@ __module__ = "Operations with graphs."
 
 --	MODULE
 
-local graph = { type='graph'  }
+local graph = { type='graph' }
 
 
 -- meta
@@ -202,11 +203,10 @@ graph.__index = graph
 
 
 --- String representation
---  @param G Graph object.
 --  @return String with compressed graph structure.
-graph.__tostring = function (G)
-  local nd = graph.nodes(G)
-  local nm = G._dir and 'Digraph' or 'Graph'
+graph.__tostring = function (self)
+  local nd = graph.nodes(self)
+  local nm = self._dir and 'Digraph' or 'Graph'
   if #nd <= 5 then
     return string.format('%s {%s}', nm, table.concat(nd, ','))
   else
@@ -217,46 +217,44 @@ end
 
 
 --- Prepare empty undirected graph.
+--  @param dir Boolean for directed graph.
 --  @return Undirected graph.
-graph._new = function ()
-  local o = {_={}, _dir=false}
+graph._new = function (dir)
+  local o = {_={}, _dir=dir}
   return setmetatable(o, graph)
 end
 
 
 --- Add node or edge.
---  @param G Graph object.
 --  @param n1 Node.
 --  @param n2 Second node in the edge.
 --  @param w Edge weight.
-graph.add = function (G, n1, n2, w)
-  local g = G._
+graph.add = function (self, n1, n2, w)
+  local g = self._
   g[n1] = g[n1] or {}
   if n2 then
     w = w or 1
     g[n2] = g[n2] or {}
     g[n1][n2] = w
-    g[n2][n1] = G._dir and g[n2][n1] or false
+    g[n2][n1] = self._dir and g[n2][n1] or false
   end
 end
 about[graph.add] = {"G:add(n1, n2=nil, w_d=1)", "Add new node or edge."}
 
 
 --- Import edges from list.
---  @param G Graph object.
 --  @param t List with edges in form {node1, node2, weight}.
-graph.addEdges = function (G, t)
-  for _, v in ipairs(t) do graph.add(G, v[1], v[2], v[3]) end
+graph.addEdges = function (self, t)
+  for _, v in ipairs(t) do graph.add(self, v[1], v[2], v[3]) end
 end
 about[graph.addEdges] = {"G:addEdges(list_t)",
   "Import edges and weights from list."}
 
 
 --- Import nodes from list.
---  @param G Graph object.
 --  @param t List with nodes.
-graph.addNodes = function (G, t)
-  local g = G._
+graph.addNodes = function (self, t)
+  local g = self._
   for _, v in ipairs(t) do g[v] = g[v] or {} end
 end
 about[graph.addNodes] = {"G:addNodes(list_t)",
@@ -264,11 +262,10 @@ about[graph.addNodes] = {"G:addNodes(list_t)",
 
 
 --- Breadth first search.
---  @param G Graph.
 --  @param start Initial node.
 --  @param goal Goal node.
 --  @return Result and found path.
-graph.bfs = function (G, vStart, vGoal)
+graph.bfs = function (self, vStart, vGoal)
   local pred = {[vStart]=vStart}
   -- use queue
   local q = Queue.new()
@@ -281,7 +278,7 @@ graph.bfs = function (G, vStart, vGoal)
       return true, getPath(pred, vGoal)
     end
     -- add successors
-    for v in pairs(G._[node]) do
+    for v in pairs(self._[node]) do
       if not pred[v] then
         Queue.push(q, v)
         pred[v] = node
@@ -295,11 +292,10 @@ about[graph.bfs] = {"G:bfs(startNode, goalNode) --> isFound, path_t",
 
 
 --- Make the graph copy.
---  @param G Graph.
 --  @return Deep copy of the graph.
-graph.copy = function (G)
-  local res = G._dir and graph:dir() or graph._new()
-  for k, v in pairs(G._) do
+graph.copy = function (self)
+  local res = graph._new(self._dir)
+  for k, v in pairs(self._) do
     local tmp = {}
     for n, w in pairs(v) do tmp[n] = w end
     res._[k] = tmp
@@ -310,11 +306,10 @@ about[graph.copy] = {"G:copy() --> cpy_G", "Get copy of the graph."}
 
 
 --- Depth first search.
---  @param G Graph.
 --  @param vStart Initial node.
 --  @param vGoal Goal node.
 --  @return Result and found path.
-graph.dfs = function (G, vStart, vGoal)
+graph.dfs = function (self, vStart, vGoal)
   local pred = {[vStart]=vStart}
   -- use stack
   local stack = {}
@@ -327,7 +322,7 @@ graph.dfs = function (G, vStart, vGoal)
       return true, getPath(pred, vGoal)
     end
     -- add successors
-    for v in pairs(G._[node]) do
+    for v in pairs(self._[node]) do
       if not pred[v] then
         table.insert(stack, v)
         pred[v] = node
@@ -342,22 +337,17 @@ about[graph.dfs] = {"G:dfs(startNote, goalNode) --> isFound, path_t",
 
 --- Prepare empty directed graph.
 --  @return Directed graph.
-graph.dir = function (self)
-  local res = graph._new()
-  res._dir = true
-  return res
-end
+graph.dir = function (self) return graph._new(true) end
 about[graph.dir] = {":dir() --> new_G", "Create directed graph.", help.NEW}
 
 
 --- Show graph structure in dot notation.
---  @param G Graph object.
 --  @return String with structure.
-graph.dot = function (G)
-  local txt = {G._dir and "digraph {" or "graph {"}
-  local line = G._dir and "->" or "--"
+graph.dot = function (self)
+  local txt = {self._dir and "digraph {" or "graph {"}
+  local line = self._dir and "->" or "--"
   -- edges
-  for n1, adj in pairs(G._) do
+  for n1, adj in pairs(self._) do
     local nstr, empty = tostring(n1), true
     for n2, v in pairs(adj) do
       empty = false
@@ -377,23 +367,21 @@ about[graph.dot] = {"G:dot() --> str",
 
 
 --- Get edge weight.
---  @param G Graph object.
 --  @param n1 First node.
 --  @param n2 Second node.
 --  @return Weight or nil.
-graph.edge = function (G, n1, n2)
-  local g = G._
-  return g[n1][n2] or (not G._dir and g[n2][n1]) or nil
+graph.edge = function (self, n1, n2)
+  local g = self._
+  return g[n1][n2] or (not self._dir and g[n2][n1]) or nil
 end
 about[graph.edge] = {"G:edge() --> weight_d|nil", "Get weight of the edge."}
 
 
 --- Get list of edges.
---  @param G Graph object.
 --  @return List of node pairs.
-graph.edges = function (G)
+graph.edges = function (self)
   local res = {}
-  for n, adj in pairs(G._) do
+  for n, adj in pairs(self._) do
     for m, v in pairs(adj) do
       if v then res[#res+1] = {n, m} end
     end
@@ -404,12 +392,11 @@ about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 
 
 --- Check graph completeness.
---  @param G Graph.
 --  @return true if graph is complete.
-graph.isComplete = function (G)
-  if G._dir then return false end
-  local n = tblLen(G._)
-  for _, v in pairs(G._) do
+graph.isComplete = function (self)
+  if self._dir then return false end
+  local n = tblLen(self._)
+  for _, v in pairs(self._) do
     if n ~= tblLen(v) then return false end
   end
   return true
@@ -419,20 +406,16 @@ about[graph.isComplete] = {'G:isComplete() --> bool',
 
 
 --- Check if the graph is directed.
---  @param G Graph object.
 --  @return True if found directed edge.
-graph.isDirected = function (G)
-  return G._dir
-end
+graph.isDirected = function (self) return self._dir end
 about[graph.isDirected] = {'G:isDirected() --> bool',
   'Check if the graph is directed.', help.OTHER}
 
 
 --- Check if graph has negative weights.
---  @param G Graph object.
 --  @return True if found at least one negative edge.
-graph.isNegative = function (G)
-  for _, adj in pairs(G._) do
+graph.isNegative = function (self)
+  for _, adj in pairs(self._) do
     for _, v in pairs(adj) do
       if v and v < 0 then return true end
     end
@@ -444,10 +427,9 @@ about[graph.isNegative] = {'G:isNegative() --> bool',
 
 
 --- Check if the graph has weights different from default value.
---  @param G Graph object.
 --  @return True if found edge not equal to 1.
-graph.isWeighted = function (G)
-  for _, adj in pairs(G._) do
+graph.isWeighted = function (self)
+  for _, adj in pairs(self._) do
     for _, v in pairs(adj) do
       if v and v ~= 1 then return true end
     end
@@ -459,25 +441,23 @@ about[graph.isWeighted] = {'G:isWeighted() --> bool',
 
 
 --- Get graph nodes.
---  @param G Graph.
 --  @return List of nodes.
-graph.nodes = function (G)
+graph.nodes = function (self)
   local res = {}
-  for k in pairs(G._) do res[#res+1] = k end
+  for k in pairs(self._) do res[#res+1] = k end
   return res
 end
 about[graph.nodes] = {"G:nodes() --> node_t", "List of nodes."}
 
 
 --- Shortest path search using Dijkstra algorithm.
---  @param G Graph.
 --  @param start Initial node.
 --  @param goal Goal node.
 --  @return Table of distances and predecessors or path and its length.
-graph.pathD = function(G, vStart, vGoal)
+graph.dijkstra = function(self, vStart, vGoal)
   -- define local set
   local set = {}
-  for k in pairs(G._) do set[k] = math.huge end
+  for k in pairs(self._) do set[k] = math.huge end
   set[vStart] = 0
   -- save results
   local prev, dist = {[vStart]=vStart}, {}
@@ -487,8 +467,8 @@ graph.pathD = function(G, vStart, vGoal)
     if not current then break end
     -- update minimal distance
     dist[current] = val
-    for k, v in pairs(G._[current]) do
-      local alt = val + (v or G._[k][current])
+    for k, v in pairs(self._[current]) do
+      local alt = val + (v or self._[k][current])
       if set[k] and set[k] > alt then
         set[k] = alt
         prev[k] = current
@@ -502,26 +482,26 @@ graph.pathD = function(G, vStart, vGoal)
     return dist, prev
   end
 end
-about[graph.pathD] = {'G:pathD(startNode, [goalNode]) --> dist_d, path_t|prev_t',
+about[graph.dijkstra] = {
+  'G:dijkstra(startNode, [goalNode]) --> dist_d, path_t|prev_t',
   "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.",
   SEARCH}
 
 
 --- Remove node or edge.
---  @param G Graph.
 --  @param n1 Node.
 --  @param n2 Second node.
-graph.remove = function (G, n1, n2)
+graph.remove = function (self, n1, n2)
   if n2 then
     -- edge
-    G._[n1][n2] = nil
-    G._[n2][n1] = nil
+    self._[n1][n2] = nil
+    self._[n2][n1] = nil
   else
     -- node
-    for n3 in pairs(G._[n1]) do
-      G._[n3][n1] = nil
+    for n3 in pairs(self._[n1]) do
+      self._[n3][n1] = nil
     end
-    G._[n1] = nil
+    self._[n1] = nil
   end
 end
 about[graph.remove] = {"G:remove(n1, [n2])",
@@ -529,12 +509,11 @@ about[graph.remove] = {"G:remove(n1, [n2])",
 
 
 --- Save graph as svg image.
---  @param G Graph object.
 --  @param name File name.
-graph.toSvg = function (G, name)
+graph.toSvg = function (self, name)
   local cmd = string.format('dot -Tsvg -o %s.svg', name)
   local handle = assert(io.popen(cmd, 'w'), "Can't open dot!")
-  handle:write(graph.dot(G))
+  handle:write(graph.dot(self))
   handle:close()
 end
 about[graph.toSvg] = {"G:toSvg(name_s)",
@@ -542,15 +521,14 @@ about[graph.toSvg] = {"G:toSvg(name_s)",
 
 
 --- Get number of nodes.
---  @param G Graph object.
 --  @return Number of nodes.
-graph.size = function (G) return tblLen(G._) end
+graph.size = function (self) return tblLen(self._) end
 graph.__len = graph.size
 about[graph.size] = {"G:size() --> nodes_N", "Get node number.", help.OTHER}
 
 
 -- simplify constructor call
-setmetatable(graph, {__call = function (self) return graph._new() end})
+setmetatable(graph, {__call = function (self) return graph._new(false) end})
 about[graph] = {" () --> new_G", "Create undirected graph.", help.NEW}
 
 
@@ -561,4 +539,3 @@ return graph
 
 --=========================================
 --TODO: add heap to Dijkstra's algorithm
---TODO: A* path search
