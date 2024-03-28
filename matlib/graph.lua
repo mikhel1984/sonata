@@ -216,6 +216,29 @@ graph.__tostring = function (self)
 end
 
 
+--- Find graph component.
+--  @param G Source graph.
+--  @parma n0 Initial node.
+--  @return subgraph.
+graph._component = function (G, n0)
+  local res = graph._new(false)
+  local src, dst = G._, res._
+  local stack = {n0}
+  repeat
+    local node = table.remove(stack)
+    if not dst[node] then
+      local t = {}
+      for k, v in pairs(src[node]) do
+        t[k] = v
+        table.insert(stack, k)
+      end
+      dst[node] = t
+    end
+  until #stack == 0
+  return res
+end
+
+
 --- Prepare empty undirected graph.
 --  @param dir Boolean for directed graph.
 --  @return Undirected graph.
@@ -291,6 +314,28 @@ about[graph.bfs] = {"G:bfs(startNode, goalNode) --> isFound, path_t",
   "Breadth first search. Return result and found path.", SEARCH}
 
 
+--- Get list of components.
+--  @return list with subgraphs.
+graph.components = function (self)
+  local res = {}
+  for k in pairs(self._) do
+    local new = true
+    for _, v in ipairs(res) do
+      if v._[k] then 
+        new = false
+        break
+      end
+    end
+    if new then
+      res[#res+1] = graph._component(self, k)
+    end
+  end
+  return res
+end
+about[graph.components] = {"G:components() --> G_t", 
+  "Get list of connected components."}
+
+
 --- Make the graph copy.
 --  @return Deep copy of the graph.
 graph.copy = function (self)
@@ -333,6 +378,44 @@ graph.dfs = function (self, vStart, vGoal)
 end
 about[graph.dfs] = {"G:dfs(startNote, goalNode) --> isFound, path_t",
   "Depth first search. Return result and found path.", SEARCH}
+
+
+--- Shortest path search using Dijkstra algorithm.
+--  @param start Initial node.
+--  @param goal Goal node.
+--  @return Table of distances and predecessors or path and its length.
+graph.dijkstra = function(self, vStart, vGoal)
+  -- define local set
+  local set = {}
+  for k in pairs(self._) do set[k] = math.huge end
+  set[vStart] = 0
+  -- save results
+  local prev, dist = {[vStart]=vStart}, {}
+  -- run
+  while true do
+    local current, val = getMin(set)
+    if not current then break end
+    -- update minimal distance
+    dist[current] = val
+    for k, v in pairs(self._[current]) do
+      local alt = val + (v or self._[k][current])
+      if set[k] and set[k] > alt then
+        set[k] = alt
+        prev[k] = current
+      end
+    end -- for
+  end
+  -- result
+  if vGoal then
+    return dist[vGoal], getPath(prev, vGoal)
+  else
+    return dist, prev
+  end
+end
+about[graph.dijkstra] = {
+  'G:dijkstra(startNode, [goalNode]) --> dist_d, path_t|prev_t',
+  "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.",
+  SEARCH}
 
 
 --- Prepare empty directed graph.
@@ -440,6 +523,13 @@ about[graph.isWeighted] = {'G:isWeighted() --> bool',
   'Check if any edge has weight different from 1.', help.OTHER}
 
 
+--graph.matrix = function (self)
+--  graph.ext_matrix = graph.ext_matrix or require('matlib.matrix')
+--  local mat = graph.ext_matrix
+--  local ns = graph.nodes(self)
+--  local m = mat:zeros(#ns)
+--end
+
 --- Get graph nodes.
 --  @return List of nodes.
 graph.nodes = function (self)
@@ -448,44 +538,6 @@ graph.nodes = function (self)
   return res
 end
 about[graph.nodes] = {"G:nodes() --> node_t", "List of nodes."}
-
-
---- Shortest path search using Dijkstra algorithm.
---  @param start Initial node.
---  @param goal Goal node.
---  @return Table of distances and predecessors or path and its length.
-graph.dijkstra = function(self, vStart, vGoal)
-  -- define local set
-  local set = {}
-  for k in pairs(self._) do set[k] = math.huge end
-  set[vStart] = 0
-  -- save results
-  local prev, dist = {[vStart]=vStart}, {}
-  -- run
-  while true do
-    local current, val = getMin(set)
-    if not current then break end
-    -- update minimal distance
-    dist[current] = val
-    for k, v in pairs(self._[current]) do
-      local alt = val + (v or self._[k][current])
-      if set[k] and set[k] > alt then
-        set[k] = alt
-        prev[k] = current
-      end
-    end -- for
-  end
-  -- result
-  if vGoal then
-    return dist[vGoal], getPath(prev, vGoal)
-  else
-    return dist, prev
-  end
-end
-about[graph.dijkstra] = {
-  'G:dijkstra(startNode, [goalNode]) --> dist_d, path_t|prev_t',
-  "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.",
-  SEARCH}
 
 
 --- Remove node or edge.
