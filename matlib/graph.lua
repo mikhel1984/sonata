@@ -555,6 +555,18 @@ about[graph.isNegative] = {'G:isNegative() --> bool',
   'Check if the graph has negative edges.', PROPERTY}
 
 
+--- Check if the graph is tree.
+--  @return true when tree.
+graph.isTree = function (self)
+  local m = #graph.edges(self)
+  local n = #graph.nodes(self)
+  return n - m == 1 
+    and #graph.components(self) == 1
+end
+about[graph.isTree] = {'G:isTree() --> bool',
+  'Check if the graph is tree.', PROPERTY}
+
+
 --- Check if the graph has weights different from default value.
 --  @return True if found edge not equal to 1.
 graph.isWeighted = function (self)
