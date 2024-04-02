@@ -111,6 +111,7 @@ print(b)
 --	LOCAL
 
 local SEARCH = 'search'
+local PROPERTY = 'property'
 
 
 --- Get key with minimum value, remove it
@@ -455,7 +456,7 @@ about[graph.dot] = {"G:dot() --> str",
 --  @return Weight or nil.
 graph.edge = function (self, n1, n2)
   local g = self._
-  return g[n1][n2] or (not self._dir and g[n2][n1]) or nil
+  return gg[n1][n2] or (not self._dir and g[n2][n1]) or nil
 end
 about[graph.edge] = {"G:edge() --> weight_d|nil", "Get weight of the edge."}
 
@@ -474,6 +475,24 @@ end
 about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 
 
+--- Get adjucent input nodes.
+--  @param node Current node.
+--  @return list of inputs.
+graph.nin = function (self, node)
+  local res, t = {}, self._[node]
+  if self._dir then
+    for k, v in pairs(t) do
+      if not v then res[#res+1] = k end
+    end
+  else
+    for k in pairs(t) do res[#res+1] = k end
+  end
+  return res
+end
+about[graph.nin] = {"G:nin(node) --> nodes_t",
+  "Find adjucent input nodes."}
+
+
 --- Check graph completeness.
 --  @return true if graph is complete.
 graph.isComplete = function (self)
@@ -485,14 +504,41 @@ graph.isComplete = function (self)
   return true
 end
 about[graph.isComplete] = {'G:isComplete() --> bool',
-  'Check completeness of the graph.', help.OTHER}
+  'Check completeness of the graph.', PROPERTY}
 
 
 --- Check if the graph is directed.
 --  @return True if found directed edge.
 graph.isDirected = function (self) return self._dir end
 about[graph.isDirected] = {'G:isDirected() --> bool',
-  'Check if the graph is directed.', help.OTHER}
+  'Check if the graph is directed.', PROPERTY}
+
+
+--- Check if the graph has Euler circle.
+--  @return true when has Euler cirlce.
+graph.isEuler = function (self)
+  -- check degree
+  if self._dir then
+    for _, v in pairs(self._) do
+      local p, q = 0, 0    -- inputs and outputs
+      for _, w in pairs(v) do
+        if w then p = p + 1 else q = q + 1 end
+      end
+      if p ~= q then return false end
+    end
+  else
+    for _, v in pairs(self._) do
+      if tblLen(v) % 2 ~= 0 then return false end
+    end
+  end
+  -- check components
+  local c = graph.components(self)
+  for i = 1, #c do c[i] = graph.size(c[i]) end
+  table.sort(c)
+  return c[#c] > 0 and (#c == 1 or c[#c-1] == 1)
+end
+about[graph.isEuler] = {"G:isEuler() --> bool",
+  "Check if the graph has Euler circle.", PROPERTY}
 
 
 --- Check if graph has negative weights.
@@ -506,7 +552,7 @@ graph.isNegative = function (self)
   return false
 end
 about[graph.isNegative] = {'G:isNegative() --> bool',
-  'Check if the graph has negative edges.', help.OTHER}
+  'Check if the graph has negative edges.', PROPERTY}
 
 
 --- Check if the graph has weights different from default value.
@@ -520,15 +566,28 @@ graph.isWeighted = function (self)
   return false
 end
 about[graph.isWeighted] = {'G:isWeighted() --> bool',
-  'Check if any edge has weight different from 1.', help.OTHER}
+  'Check if any edge has weight different from 1.', PROPERTY}
 
 
---graph.matrix = function (self)
---  graph.ext_matrix = graph.ext_matrix or require('matlib.matrix')
---  local mat = graph.ext_matrix
---  local ns = graph.nodes(self)
---  local m = mat:zeros(#ns)
---end
+--- Get matrix of weights.
+--  @return weight matrix and corresponding node list.
+graph.matrix = function (self)
+  graph.ext_matrix = graph.ext_matrix or require('matlib.matrix')
+  local mat = graph.ext_matrix
+  local ns = graph.nodes(self)
+  local m = mat:zeros(#ns)
+  for i, v in ipairs(ns) do
+    for j = i+1, #ns do
+      local w = ns[j]
+      m[i][j] = graph.edge(self, v, w) or 0
+      m[j][i] = graph.edge(self, w, v) or 0
+    end
+  end
+  return m, ns
+end
+about[graph.matrix] = {"G:matrix() --> weight_M, nodes_t",
+  "Get weights of adjucent edges.", help.OTHER}
+
 
 --- Get graph nodes.
 --  @return List of nodes.
@@ -538,6 +597,24 @@ graph.nodes = function (self)
   return res
 end
 about[graph.nodes] = {"G:nodes() --> node_t", "List of nodes."}
+
+
+--- Get adjucent output nodes.
+--  @param node Current node.
+--  @return list of outputs.
+graph.nout = function (self, node)
+  local res, t = {}, self._[node]
+  if self._dir then
+    for k, v in pairs(t) do
+      if v then res[#res+1] = k end
+    end
+  else
+    for k in pairs(t) do res[#res+1] = k end
+  end
+  return res
+end
+about[graph.nout] = {"G:nout(node) --> nodes_t",
+  "Find adjucent output nodes."}
 
 
 --- Remove node or edge.
