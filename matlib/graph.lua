@@ -112,6 +112,7 @@ print(b)
 
 local SEARCH = 'search'
 local PROPERTY = 'property'
+local EXPORT = 'export'
 
 
 --- Get key with minimum value, remove it
@@ -145,7 +146,7 @@ end
 --  @param tPrev Table where each value is a previous element for the key.
 --  @param v Last node.
 --  @return Table with sequence of nodes.
-local function getPath(tPrev, v)
+local function getPath (tPrev, v)
   local res = {v}
   -- get sequence
   while tPrev[v] ~= v do
@@ -160,6 +161,32 @@ local function getPath(tPrev, v)
   end
   return res
 end
+
+
+--- Make list of names.
+--  @param n Expected node number.
+--  @return list of strings.
+local function makeNodes (n)
+  local res = {}
+  for i = 1, n do res[#res+1] = string.format('n%d', i) end
+  return res
+end
+
+
+-- Show undirected edge
+local mt_edge = {
+__tostring = function (t)
+  return string.format('%s -- %s', tostring(t[1]), tostring(t[2]))
+end
+}
+
+
+-- Show directed edge
+local mt_dir_edge = {
+__tostring = function (t)
+  return string.format('%s -> %s', tostring(t[1]), tostring(t[2]))
+end
+}
 
 
 -- Make queue from two stacks
@@ -337,6 +364,24 @@ about[graph.components] = {"G:components() --> G_t",
   "Get list of connected components."}
 
 
+
+--- Make loop.
+--  @param nodes Node number or list of names.
+--  @return loop.
+graph.C = function (self, nodes)
+  if type(nodes) == 'number' then
+    nodes = makeNodes(nodes)
+  end
+  local g = self._new(false)
+  for i = 2, #nodes do 
+    graph.add(g, nodes[i], nodes[i-1]) 
+  end
+  graph.add(g, nodes[1], nodes[#nodes])
+  return g
+end
+about[graph.C] = {":C(N|names_t) --> G", "Make loop.", help.NEW}
+
+
 --- Make the graph copy.
 --  @return Deep copy of the graph.
 graph.copy = function (self)
@@ -447,7 +492,7 @@ graph.dot = function (self)
   return table.concat(txt, '\n')
 end
 about[graph.dot] = {"G:dot() --> str",
-  "Return graph structure in dot notation."}
+  "Return graph structure in dot notation.", EXPORT}
 
 
 --- Get edge weight.
@@ -467,7 +512,10 @@ graph.edges = function (self)
   local res = {}
   for n, adj in pairs(self._) do
     for m, v in pairs(adj) do
-      if v then res[#res+1] = {n, m} end
+      if v then 
+        local t = setmetatable({n, m}, self._dir and mt_dir_edge or mt_edge)
+        res[#res+1] = t
+      end
     end
   end
   return res
@@ -494,12 +542,12 @@ about[graph.nin] = {"G:nin(node) --> nodes_t",
 
 
 --- Check graph completeness.
---  @return true if graph is complete.
+--  @return true if the graph is complete.
 graph.isComplete = function (self)
   if self._dir then return false end
   local n = tblLen(self._)
-  for _, v in pairs(self._) do
-    if n ~= tblLen(v) then return false end
+  for _, adj in pairs(self._) do
+    if n ~= tblLen(adj) then return false end
   end
   return true
 end
@@ -519,16 +567,16 @@ about[graph.isDirected] = {'G:isDirected() --> bool',
 graph.isEuler = function (self)
   -- check degree
   if self._dir then
-    for _, v in pairs(self._) do
+    for _, adj in pairs(self._) do
       local p, q = 0, 0    -- inputs and outputs
-      for _, w in pairs(v) do
+      for _, w in pairs(adj) do
         if w then p = p + 1 else q = q + 1 end
       end
       if p ~= q then return false end
     end
   else
-    for _, v in pairs(self._) do
-      if tblLen(v) % 2 ~= 0 then return false end
+    for _, adj in pairs(self._) do
+      if tblLen(adj) % 2 ~= 0 then return false end
     end
   end
   -- check components
@@ -539,20 +587,6 @@ graph.isEuler = function (self)
 end
 about[graph.isEuler] = {"G:isEuler() --> bool",
   "Check if the graph has Euler circle.", PROPERTY}
-
-
---- Check if graph has negative weights.
---  @return True if found at least one negative edge.
-graph.isNegative = function (self)
-  for _, adj in pairs(self._) do
-    for _, v in pairs(adj) do
-      if v and v < 0 then return true end
-    end
-  end
-  return false
-end
-about[graph.isNegative] = {'G:isNegative() --> bool',
-  'Check if the graph has negative edges.', PROPERTY}
 
 
 --- Check if the graph is tree.
@@ -579,6 +613,25 @@ graph.isWeighted = function (self)
 end
 about[graph.isWeighted] = {'G:isWeighted() --> bool',
   'Check if any edge has weight different from 1.', PROPERTY}
+
+
+--- Make complete graph.
+--  @param nodes Node number or list of names.
+--  @return complete graph.
+graph.K = function (self, nodes)
+  if type(nodes) == 'number' then
+    nodes = makeNodes(nodes)
+  end
+  local g = self._new(false)
+  for i = 1, #nodes do
+    local ni = nodes[i]
+    for j = i+1, #nodes do
+      graph.add(g, ni, nodes[j])
+    end
+  end
+  return g
+end
+about[graph.K] = {":K(N|names_t) --> G", "Make complete graph.", help.NEW}
 
 
 --- Get matrix of weights.
@@ -629,6 +682,22 @@ about[graph.nout] = {"G:nout(node) --> nodes_t",
   "Find adjucent output nodes."}
 
 
+--- Make chain.
+--  @param nodes Node number or list of names.
+--  @return chain.
+graph.P = function (self, nodes)
+  if type(nodes) == 'number' then
+    nodes = makeNodes(nodes)
+  end
+  local g = self._new(false)
+  for i = 2, #nodes do 
+    graph.add(g, nodes[i], nodes[i-1]) 
+  end
+  return g
+end
+about[graph.P] = {":P(N|names_t) --> G", "Make chain.", help.NEW}
+
+ 
 --- Remove node or edge.
 --  @param n1 Node.
 --  @param n2 Second node.
@@ -658,7 +727,7 @@ graph.toSvg = function (self, name)
   handle:close()
 end
 about[graph.toSvg] = {"G:toSvg(name_s)",
-  "Convert graph to SVG image using Graphviz."}
+  "Convert graph to SVG image using Graphviz.", EXPORT}
 
 
 --- Get number of nodes.
