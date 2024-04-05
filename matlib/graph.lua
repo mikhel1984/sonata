@@ -55,7 +55,7 @@ d = Graph:dir()
 d:add('c', 'p', 5)
 -- and vise versa
 d:add('p', 'c', 3)
-ans = d:edge('c', 'p')        -->  5
+ans = d:edge {'c', 'p'}       -->  5
 
 -- make copy
 b = a:copy()
@@ -496,14 +496,14 @@ about[graph.dot] = {"G:dot() --> str",
 
 
 --- Get edge weight.
---  @param n1 First node.
---  @param n2 Second node.
+--  @param t Pair of nodes.
 --  @return Weight or nil.
-graph.edge = function (self, n1, n2)
+graph.edge = function (self, t)
   local g = self._
+  local n1, n2 = t[1], t[2]
   return gg[n1][n2] or (not self._dir and g[n2][n1]) or nil
 end
-about[graph.edge] = {"G:edge() --> weight_d|nil", "Get weight of the edge."}
+about[graph.edge] = {"G:edge(pair_t) --> weight_d|nil", "Get weight of the edge."}
 
 
 --- Get list of edges.
@@ -644,8 +644,8 @@ graph.matrix = function (self)
   for i, v in ipairs(ns) do
     for j = i+1, #ns do
       local w = ns[j]
-      m[i][j] = graph.edge(self, v, w) or 0
-      m[j][i] = graph.edge(self, w, v) or 0
+      m[i][j] = graph.edge(self, {v, w}) or 0
+      m[j][i] = graph.edge(self, {w, v}) or 0
     end
   end
   return m, ns
