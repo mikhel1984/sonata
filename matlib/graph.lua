@@ -166,9 +166,10 @@ end
 --- Make list of names.
 --  @param n Expected node number.
 --  @return list of strings.
-local function makeNodes (n)
+local function makeNodes (n, s)
+  assert(n > 0, 'Wrong node size')
   local res = {}
-  for i = 1, n do res[#res+1] = string.format('n%d', i) end
+  for i = 1, n do res[#res+1] = string.format('%s%d', s, i) end
   return res
 end
 
@@ -405,6 +406,27 @@ end
 about[graph.components] = {"G:components() --> G_t", 
   "Get list of connected components."}
 
+
+--- Combine several graphs into the single object.
+--  @param gs List of graphs.
+--  @return concatenated graph.
+graph.concat = function (self, gs)
+  local res = graph._new(gs[1]._dir)
+  local dst = res._
+  for i = 1, #gs do
+    local g = gs[i]
+    if g._dir ~= res._dir then error('Different types') end
+    for k, adj in pairs(g._) do
+      local tmp = dst[k] or {}
+      for n, w in pairs(adj) do tmp[n] = w end
+      dst[k] = tmp
+    end
+  end
+  return res
+end
+graph.__concat = function (G1, G2) return graph:concat {G1, G2} end
+about[graph.concat] = {":concat(G_t) --> new_G",
+  "Combine graphs into one object."}
 
 
 --- Make the graph copy.
@@ -681,6 +703,48 @@ end
 about[graph.nout] = {"G:nout(node) --> nodes_t",
   "Find adjucent output nodes."}
 
+
+--- Generate random edges.
+--  @param N Edge number.
+graph.random = function (self, N)
+  -- check / reset 
+  local ns = {}
+  local g = self._
+  for i, v in pairs(g) do
+    if next(v) then g[i] = {} end
+    ns[#ns+1] = i
+  end
+  -- max number of edges
+  local p = #ns
+  p = p*(p-1) / (self._dir and 1 or 2)
+  if N <= 0 or N > p then error('Wrong edge number') end
+  -- fill
+  if N <= p / 2 then
+    -- add 
+    for u = 1, N do
+      local a, b = nil, nil
+      repeat
+        a = ns[math.random(#ns)]
+        b = ns[math.random(#ns)]
+      until g[a][b] == nil
+      graph.add(self, a, b)
+    end
+  else
+    -- make complete, then remove
+    graph._K(self, ns)
+    for u = p-1, N, -1 do
+      local a, b = nil, nil
+      repeat 
+        a = ns[math.random(#ns)]
+        b = ns[math.random(#ns)]
+      until g[a][b] or (not self._dir and g[b][a])
+      graph.remove(self, a, b)
+    end
+  end
+end
+about[graph.random] = {"G:random(edge_N)", 
+  "Fill graph with random edges.", help.OTHER}
+
  
 --- Remove node or edge.
 --  @param n1 Node.
@@ -726,27 +790,29 @@ setmetatable(graph, {
 __call = function (self, t) 
   t = t or {}
   local g = graph._new(t.dir or false)
+  local name = t.name or 'n'
   if t.O then   
     -- only nodes
-    local ns = (type(t.O) == 'number') and makeNodes(t.O) or t.O
+    local ns = (type(t.O) == 'number') and makeNodes(t.O, name) or t.O
     graph.addNodes(g, ns)
   elseif t.K then  
     -- complete
-    local ns = (type(t.K) == 'number') and makeNodes(t.K) or t.K
+    local ns = (type(t.K) == 'number') and makeNodes(t.K, name) or t.K
     return graph._K(g, ns)
   elseif t.C then  
     -- loop
-    local ns = (type(t.C) == 'number') and makeNodes(t.C) or t.C
+    local ns = (type(t.C) == 'number') and makeNodes(t.C, name) or t.C
     return graph._C(g, ns)
   elseif t.P then  
     -- chain
-    local ns = (type(t.P) == 'number') and makeNodes(t.P) or t.P
+    local ns = (type(t.P) == 'number') and makeNodes(t.P, name) or t.P
     return graph._P(g, ns)
   end
   return g
 end})
 about[graph] = {" ([params_t]) --> new_G", 
-  "Create graph. Parameters are {dir=bool, O|K|C|P=number|names}", help.NEW}
+  "Create graph. Parameters are {dir=bool, O|K|C|P=number|names_t, name='n'}.", 
+  help.NEW}
 
 
 -- Comment to remove descriptions
