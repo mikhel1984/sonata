@@ -51,7 +51,7 @@ ed = a:edges()
 ans = #ed                     -->  0
 
 -- directed graph
-d = Graph:dir()
+d = Graph {dir=true}
 d:add('c', 'p', 5)
 -- and vise versa
 d:add('p', 'c', 3)
@@ -94,9 +94,9 @@ ans = found                   -->  true
 
 -- update weight (default is 1)
 -- use 'add' method
-c:add('a','b',0.5)
-c:add('b','e',0.4)
-c:add('c','f',2)
+c:add('a', 'b', 0.5)
+c:add('b', 'e', 0.4)
+c:add('c', 'f', 2)
 
 -- Dijkstra path search
 dist, prev = c:dijkstra('a')
@@ -244,6 +244,19 @@ graph.__tostring = function (self)
 end
 
 
+--- Make loop.
+--  @param g Empty graph.
+--  @param nodes Node number or list of names.
+--  @return loop.
+graph._C = function (g, nodes)
+  for i = 2, #nodes do 
+    graph.add(g, nodes[i], nodes[i-1]) 
+  end
+  graph.add(g, nodes[1], nodes[#nodes])
+  return g
+end
+
+
 --- Find graph component.
 --  @param G Source graph.
 --  @parma n0 Initial node.
@@ -267,12 +280,41 @@ graph._component = function (G, n0)
 end
 
 
+--- Make complete graph.
+--  @param g Empty graph.
+--  @param nodes List of names.
+--  @return complete graph.
+graph._K = function (g, nodes)
+  for i = 1, #nodes do
+    local ni = nodes[i]
+    for j = i+1, #nodes do
+      local nj = nodes[j]
+      graph.add(g, ni, nj)
+      if g._dir then graph.add(g, nj, ni) end
+    end
+  end
+  return g
+end
+
+
 --- Prepare empty undirected graph.
 --  @param dir Boolean for directed graph.
 --  @return Undirected graph.
 graph._new = function (dir)
   local o = {_={}, _dir=dir}
   return setmetatable(o, graph)
+end
+
+
+--- Make chain.
+--  @param g Empty graph.
+--  @param nodes List of names.
+--  @return chain.
+graph._P = function (g, nodes)
+  for i = 2, #nodes do 
+    graph.add(g, nodes[i], nodes[i-1]) 
+  end
+  return g
 end
 
 
@@ -365,23 +407,6 @@ about[graph.components] = {"G:components() --> G_t",
 
 
 
---- Make loop.
---  @param nodes Node number or list of names.
---  @return loop.
-graph.C = function (self, nodes)
-  if type(nodes) == 'number' then
-    nodes = makeNodes(nodes)
-  end
-  local g = self._new(false)
-  for i = 2, #nodes do 
-    graph.add(g, nodes[i], nodes[i-1]) 
-  end
-  graph.add(g, nodes[1], nodes[#nodes])
-  return g
-end
-about[graph.C] = {":C(N|names_t) --> G", "Make loop.", help.NEW}
-
-
 --- Make the graph copy.
 --  @return Deep copy of the graph.
 graph.copy = function (self)
@@ -464,12 +489,6 @@ about[graph.dijkstra] = {
   SEARCH}
 
 
---- Prepare empty directed graph.
---  @return Directed graph.
-graph.dir = function (self) return graph._new(true) end
-about[graph.dir] = {":dir() --> new_G", "Create directed graph.", help.NEW}
-
-
 --- Show graph structure in dot notation.
 --  @return String with structure.
 graph.dot = function (self)
@@ -501,7 +520,7 @@ about[graph.dot] = {"G:dot() --> str",
 graph.edge = function (self, t)
   local g = self._
   local n1, n2 = t[1], t[2]
-  return gg[n1][n2] or (not self._dir and g[n2][n1]) or nil
+  return g[n1][n2] or (not self._dir and g[n2][n1]) or nil
 end
 about[graph.edge] = {"G:edge(pair_t) --> weight_d|nil", "Get weight of the edge."}
 
@@ -615,25 +634,6 @@ about[graph.isWeighted] = {'G:isWeighted() --> bool',
   'Check if any edge has weight different from 1.', PROPERTY}
 
 
---- Make complete graph.
---  @param nodes Node number or list of names.
---  @return complete graph.
-graph.K = function (self, nodes)
-  if type(nodes) == 'number' then
-    nodes = makeNodes(nodes)
-  end
-  local g = self._new(false)
-  for i = 1, #nodes do
-    local ni = nodes[i]
-    for j = i+1, #nodes do
-      graph.add(g, ni, nodes[j])
-    end
-  end
-  return g
-end
-about[graph.K] = {":K(N|names_t) --> G", "Make complete graph.", help.NEW}
-
-
 --- Get matrix of weights.
 --  @return weight matrix and corresponding node list.
 graph.matrix = function (self)
@@ -681,22 +681,6 @@ end
 about[graph.nout] = {"G:nout(node) --> nodes_t",
   "Find adjucent output nodes."}
 
-
---- Make chain.
---  @param nodes Node number or list of names.
---  @return chain.
-graph.P = function (self, nodes)
-  if type(nodes) == 'number' then
-    nodes = makeNodes(nodes)
-  end
-  local g = self._new(false)
-  for i = 2, #nodes do 
-    graph.add(g, nodes[i], nodes[i-1]) 
-  end
-  return g
-end
-about[graph.P] = {":P(N|names_t) --> G", "Make chain.", help.NEW}
-
  
 --- Remove node or edge.
 --  @param n1 Node.
@@ -738,8 +722,31 @@ about[graph.size] = {"G:size() --> nodes_N", "Get node number.", help.OTHER}
 
 
 -- simplify constructor call
-setmetatable(graph, {__call = function (self) return graph._new(false) end})
-about[graph] = {" () --> new_G", "Create undirected graph.", help.NEW}
+setmetatable(graph, {
+__call = function (self, t) 
+  t = t or {}
+  local g = graph._new(t.dir or false)
+  if t.O then   
+    -- only nodes
+    local ns = (type(t.O) == 'number') and makeNodes(t.O) or t.O
+    graph.addNodes(g, ns)
+  elseif t.K then  
+    -- complete
+    local ns = (type(t.K) == 'number') and makeNodes(t.K) or t.K
+    return graph._K(g, ns)
+  elseif t.C then  
+    -- loop
+    local ns = (type(t.C) == 'number') and makeNodes(t.C) or t.C
+    return graph._C(g, ns)
+  elseif t.P then  
+    -- chain
+    local ns = (type(t.P) == 'number') and makeNodes(t.P) or t.P
+    return graph._P(g, ns)
+  end
+  return g
+end})
+about[graph] = {" ([params_t]) --> new_G", 
+  "Create graph. Parameters are {dir=bool, O|K|C|P=number|names}", help.NEW}
 
 
 -- Comment to remove descriptions
