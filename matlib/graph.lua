@@ -227,8 +227,17 @@ __module__ = "Operations with graphs."
 local graph = { type='graph' }
 
 
--- meta
-graph.__index = graph
+--- Methametod to access element.
+--  Looking for node first, then apply method.
+--  @param v Key.
+--  @return true of method.
+graph.__index = function (self, v)
+  if self._[v] then
+    return true
+  else
+    return rawget(graph, v)
+  end
+end
 
 
 --- String representation
@@ -279,7 +288,6 @@ graph._component = function (G, n0)
   until #stack == 0
   return res
 end
-
 
 --- Make complete graph.
 --  @param g Empty graph.
@@ -596,6 +604,18 @@ about[graph.isComplete] = {'G:isComplete() --> bool',
   'Check completeness of the graph.', PROPERTY}
 
 
+--- Check if the graph is connected.
+--  @return true when it has 1 component.
+graph.isConnected = function (self)
+  local n = next(self._)
+  if not n then return false end  -- empty
+  local c = graph._component(self, n)
+  return tblLen(self._) == tblLen(c._)
+end
+about[graph.isConnected] = {"G:isConnected() --> bool",
+  "Check if the graph is connected.", PROPERTY}
+
+
 --- Check if the graph is directed.
 --  @return True if found directed edge.
 graph.isDirected = function (self) return self._dir end
@@ -704,9 +724,9 @@ about[graph.nout] = {"G:nout(node) --> nodes_t",
   "Find adjucent output nodes."}
 
 
---- Generate random edges.
+--- Generate random graph.
 --  @param N Edge number.
-graph.random = function (self, N)
+graph.rand = function (self, N)
   -- check / reset 
   local ns = {}
   local g = self._
@@ -742,7 +762,31 @@ graph.random = function (self, N)
     end
   end
 end
-about[graph.random] = {"G:random(edge_N)", 
+about[graph.rand] = {"G:rand(edge_N)", 
+  "Fill graph with random edges.", help.OTHER}
+
+
+--- Generate random graph.
+--  @param p Edge probability.
+graph.randp = function (self, p)
+  -- check / reset 
+  local ns = {}
+  local g = self._
+  for i, v in pairs(g) do
+    if next(v) then g[i] = {} end
+    ns[#ns+1] = i
+  end
+  -- fill
+  for i = 1, #ns do
+    local a = ns[i]
+    for j = i+1, #ns do
+      local b = ns[j]
+      if math.random() < p then graph.add(self, a, b) end
+      if self._dir and math.random() < p then graph.add(self, b, a) end
+    end
+  end
+end
+about[graph.randp] = {"G:randp(probability_d)",
   "Fill graph with random edges.", help.OTHER}
 
  
