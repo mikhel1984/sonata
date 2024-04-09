@@ -225,19 +225,7 @@ __module__ = "Operations with graphs."
 --	MODULE
 
 local graph = { type='graph' }
-
-
---- Methametod to access element.
---  Looking for node first, then apply method.
---  @param v Key.
---  @return true of method.
-graph.__index = function (self, v)
-  if self._[v] then
-    return true
-  else
-    return rawget(graph, v)
-  end
-end
+graph.__index = graph
 
 
 --- String representation
@@ -572,6 +560,15 @@ end
 about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 
 
+--- Check if the graph has node.
+--  @param n Node name.
+--  @return true when node found
+graph.has = function (self, n)
+  return self._[n] and true or false
+end
+about[graph.has] = {"G:has(node) --> bool", "Check if the graph has the node."}
+
+
 --- Get adjucent input nodes.
 --  @param node Current node.
 --  @return list of inputs.
@@ -579,7 +576,11 @@ graph.nin = function (self, node)
   local res, t = {}, self._[node]
   if self._dir then
     for k, v in pairs(t) do
-      if not v then res[#res+1] = k end
+      if v then
+        if self._[k][node] then res[#res+1] = k end
+      else
+        res[#res+1] = k
+      end
     end
   else
     for k in pairs(t) do res[#res+1] = k end
