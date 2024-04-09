@@ -355,7 +355,7 @@ WIDTH = 73, HEIGHT = 21,
 -- symbols
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
--- idea from 
+-- idea from
 -- https://github.com/adam-younes/calculator
 GRADE = {[0]="`", "'", "*", "~", "-", ".", ",", "_"}
 }
@@ -457,7 +457,7 @@ end
 --  @param t Table to print.
 --  @param tInd Allows to choose y columns.
 asciiplot._addTable = function (self, t, tInd)
-  local x = tInd.x 
+  local x = tInd.x
   for j = 1, #tInd do
     local k = tInd[j]
     for i = 1, #t do
@@ -964,7 +964,7 @@ about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*')",
 --  @param s Character.
 asciiplot.addPose = function (self, ir, ic, s)
   if ir > 0 and ir <= self._y.size and ic > 0 and ic <= self._x.size
-            and (#s == 1 or SONATA_USE_COLOR) 
+            and (#s == 1 or SONATA_USE_COLOR)
   then
     self._canvas[ir][ic] = s or '*'
   end
@@ -1080,8 +1080,8 @@ asciiplot.concat = function (_, F1, F2)
   if not (isasciiplot(F1) and isasciiplot(F2)) then
     error 'Not asciiplot objects'
   end
-  if F1._y.size ~= F2._y.size then 
-    error 'Different size' 
+  if F1._y.size ~= F2._y.size then
+    error 'Different size'
   end
   local acc, gap = {}, '   '
   local w1, w2 = F1._x.size, F2._x.size
@@ -1094,13 +1094,13 @@ asciiplot.concat = function (_, F1, F2)
   end
   -- legend
   local l1, l2 = {}, {}
-  for k, v in pairs(F1._legend) do 
+  for k, v in pairs(F1._legend) do
     l1[#l1+1] = asciiplot._format(
       string.format('(%s) %s', k, v), w1-1+#k, false, true)
   end
   table.sort(l1)
-  for k, v in pairs(F2._legend) do 
-    l2[#l2+1] = asciiplot._format( 
+  for k, v in pairs(F2._legend) do
+    l2[#l2+1] = asciiplot._format(
       string.format('(%s) %s', k, v), w2-1+#k, false, true)
   end
   table.sort(l2)
@@ -1108,7 +1108,7 @@ asciiplot.concat = function (_, F1, F2)
     acc[#acc+1] = string.format('%s%s%s',
       l1[i] or string.rep(' ', w1), gap, l2[i] or string.rep(' ', w2))
   end
-  
+
   return table.concat(acc, '\n')
 end
 about[asciiplot.concat] = {":concat(F1, F2) --> str",
@@ -1122,7 +1122,7 @@ about[asciiplot.concat] = {":concat(F1, F2) --> str",
 --  @return Figure object for single view or string for 'XYZ'.
 asciiplot.contour = function (self, fn, tOpt)
   tOpt = tOpt or {}
-  tOpt.level = tOpt.level or 5    
+  tOpt.level = tOpt.level or 5
   if tOpt.level > #asciiplot.lvls then
     error ('Max levle is '..tostring(#asciiplot.lvls))
   elseif tOpt.level < 1 then
@@ -1332,7 +1332,7 @@ about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix})",
 
 --- Set title.
 --  @param s New title.
-asciiplot.title = function (self, s) 
+asciiplot.title = function (self, s)
   self._title = asciiplot._format(s, self._x.size, true, false)
 end
 about[asciiplot.title] = {"F:title(str)", "Set new title.", CONF}
@@ -1348,7 +1348,7 @@ asciiplot.tplot = function (self, t, tOpt)
   tOpt.x = tOpt.x or 1  -- choose independent variable
   -- plot all by default
   if #tOpt == 0 then
-    for i = 1, #t[1] do 
+    for i = 1, #t[1] do
       if i ~= tOpt.x then tOpt[#tOpt+1] = i end
     end
   end
@@ -1389,7 +1389,7 @@ then
 
   -- Define simplified function call
   Plot = function (...)
-    local ap = Ap or require('matlib.asciiplot')
+    local ap = require('matlib.asciiplot')
     local f = ap()
     f._x:setRange({-5, 5})
     f:plot(...)

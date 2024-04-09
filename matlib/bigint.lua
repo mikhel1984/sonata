@@ -159,7 +159,7 @@ local NUMB = 'numbers'
 local COMB = 'combinations'
 
 -- max number for one position
-local BASE = math.floor(math.sqrt((math.maxinteger or 2^52) / 10))
+local BASE = math.floor(math.sqrt((math.maxinteger or (2^52)) / 10))
 local log10 = math.log(10)
 local logBase = math.log(BASE) / log10
 
@@ -1070,7 +1070,7 @@ bigint.FF = function (self)
   end
   return res
 end
-about[bigint.FF] = {"B:FF() --> B!!", 
+about[bigint.FF] = {"B:FF() --> B!!",
   "Find double factorial.", COMB}
 
 
@@ -1127,7 +1127,7 @@ bigint.gcd = function (_, ...)
   for i = 2, #t do
     local ti = t[i]
     res = bigint._gcd(
-      res, 
+      res,
       isbigint(ti) and ti or bigint._newNumber(ti))
   end
   return res
@@ -1269,7 +1269,7 @@ bigint.subF = function (self)
   res._sign = 1
   return res
 end
-about[bigint.subF] = {"B:subF() --> !B", 
+about[bigint.subF] = {"B:subF() --> !B",
   "Find subfactorial of the number.", COMB}
 
 

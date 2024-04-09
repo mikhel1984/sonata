@@ -164,7 +164,7 @@ local function qsimp (fn, a, b, eps, eval, N)
     end
     si, ost = s, st
   end
-  inform("integral: too many iterations") 
+  inform("integral: too many iterations")
   return si, true  -- error flag
 end
 
@@ -251,7 +251,7 @@ numeric.lim = function (_, fn, xn, isPositive)
       end
       del, prev = del*1E-3, curr
     end
-  else 
+  else
     -- +/- inf
     xn = (xn < math.huge) and -1 or 1
     while math.abs(xn) < math.huge do
@@ -280,8 +280,8 @@ numeric.newton = function (_, fn, d1)
     local fd1 = fn(d1)
     x2 = d1 - fd1*h / (fn(d1+h) - fd1)
     k, h = k+1, h*0.618
-    if k > numeric.NEWTON_MAX then 
-      inform("newton: too many iterations") 
+    if k > numeric.NEWTON_MAX then
+      inform("newton: too many iterations")
       return x2, true  -- error flag
     end
   until Cnorm(fn(x2)-fd1) < numeric.TOL
@@ -302,13 +302,13 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local xn = tDelta[2]
   tParam = tParam or {}
   local h = tParam.dt or math.min((xn - tDelta[1]), 1.0) / 20
-  local exit = tParam.exit or function () return false end
+  local exit = tParam.exit or function (_) return false end
   -- evaluate
   local res, last = {{tDelta[1], dY0}}, false
   res.flat = numeric._flat
   while not exit(res) do
     local x, y = Vunpack(res[#res])
-    if x >= xn then 
+    if x >= xn then
       break
     elseif x + h > xn then
       h, last = xn-x, true
@@ -344,14 +344,14 @@ about[numeric.ode] = {":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
 --  @return Function root.
 numeric.solve = function (_, fn, a, b)
   local f0, f1 = fn(a), fn(b)
-  if f0*f1 >= 0 then 
+  if f0*f1 >= 0 then
     error "Boundary values must have different sign!"
   end
   repeat
     b = b - (b-a)*f1 / (f1-f0)
     f1 = fn(b)
   until math.abs(f1) < numeric.TOL
-  return b 
+  return b
 end
 about[numeric.solve] = {":solve(fn, low_d, up_d) --> num",
   "Find root of equation fn(x)=0 at interval [a,b]."}
@@ -392,7 +392,7 @@ numeric.int = function (_, fn, a, b)
       return s1 + s2, e1 or e2
     else
       local s2, e2 = qsimp(fn, -1, 1, TOL, midpnt, N)
-      local s3, e2 = qsimp(fni, 0, 1, TOL, midpnt, N)
+      local s3, e3 = qsimp(fni, 0, 1, TOL, midpnt, N)
       return s1 + s2 + s3, e1 or e2 or e3
     end
   end

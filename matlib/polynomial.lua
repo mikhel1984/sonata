@@ -542,7 +542,7 @@ end
 
 
 --- Find real or exact roots of the polynomial.
---  @return Table with real roots.
+--  @return Table with real roots and the rest polynomial.
 polynomial._real = function (self)
   local pp, res = polynomial.copy(self), {}
   -- zeros
@@ -555,7 +555,7 @@ polynomial._real = function (self)
     local exact = polynomial._exact(pp)
     if exact then
       Ver.move(exact, 1, #exact, #res+1, res)
-      pp = 0
+      pp = 0  -- rest is zero
       break
     end
     -- rough estimate
@@ -569,7 +569,7 @@ polynomial._real = function (self)
       -- divide by (1-x)
       for i = #pp-1, 1, -1 do pp[i] = pp[i] + x*pp[i+1] end
       pp[0] = table.remove(pp, 1)
-    else 
+    else
       break
     end
   end
@@ -654,7 +654,7 @@ polynomial.R = function (_, t)
       -- looking for pair
       local ind, re, im = nil, v:re(), v:im()
       for i, u in ipairs(lst) do
-        if type(u) == 'table' and u.iscomplex and u:re() == re and u:im() == -im 
+        if type(u) == 'table' and u.iscomplex and u:re() == re and u:im() == -im
         then
           ind = i; break
         end
@@ -733,14 +733,14 @@ polynomial.fit = function (_, tX, tY, N)
   sY[nY+1] = getSum(tY)
   for nX = 2*N, 1, -1 do
     sX[nX] = getSum(acc)
-    if nY > 0 then 
+    if nY > 0 then
       sY[nY] = getSum(acc, tY)
-      nY = nY - 1 
+      nY = nY - 1
     end
     if nX > 1 then
       for i = 1, #acc do acc[i] = acc[i]*tX[i] end
-    end 
-  end 
+    end
+  end
   sX[#sX+1] = #tX
   -- prepare matrix, reuse accumulator
   for k = 1, N+1 do
@@ -841,16 +841,16 @@ polynomial.roots = function (self)
   while ispolynomial(pp) and #pp > 0 do
     local exact = polynomial._exact(pp)
     if exact then
-      Ver.move(exact, 1, #exact, #r + 1, res)
+      Ver.move(exact, 1, #exact, #res + 1, res)
       break
     end
     local x = polynomial._nr(pp, Z(math.random(), math.random()), 0.1)
     if x then
-      x = polynomial._nr(self, x, 1E-6)
+      x = assert(polynomial._nr(self, x, 1E-6))
       res[#res+1] = x
       res[#res+1] = x:conj()
       pp = polynomial._div(pp, polynomial:R({x, x:conj()}))
-    else 
+    else
       break
     end
   end
@@ -919,15 +919,15 @@ polynomial.str = function (self, s)
   for i = #self, 1, -1 do
     a, b = self[i], self[i-1]
     if not Cross.isZero(a) then
-      if not Cross.eq(a, 1) then 
-        res[#res+1] = (type(a) == 'number' and Ustr(a) or tostring(a))..'*' 
+      if not Cross.eq(a, 1) then
+        res[#res+1] = (type(a) == 'number' and Ustr(a) or tostring(a))..'*'
       end
       res[#res+1] = s
       if i > 1 then res[#res+1] = '^'..tostring(i) end
     end
     if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
   end
-  if type(b) ~= 'number' or not Cross.isZero(b) then 
+  if type(b) ~= 'number' or not Cross.isZero(b) then
     res[#res+1] = (type(b) == 'number' and Ustr(b) or tostring(b))
   end
   return table.concat(res)
