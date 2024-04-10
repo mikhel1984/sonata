@@ -228,6 +228,30 @@ local graph = { type='graph' }
 graph.__index = graph
 
 
+--- Check equality of two graphs.
+--  @param G1 First object.
+--  @param G2 Second object.
+--  @return true when the graphs are equal.
+graph.__eq = function (G1, G2)
+  local mt = getmetatable(G1)
+  if mt ~= graph or mt ~= getmetatable(G2) then return false end
+  if G1._dir ~= G2._dir then return false end
+  local g2 = G2._
+  if tblLen(G1._) ~= tblLen(g2) then return false end
+  -- check edges
+  for n1, adj in pairs(G1._) do
+    if not g2[n1] then return false end
+    for n2 in pairs(adj) do 
+      local e = {n1, n2}
+      if graph.edge(G1, e) ~= graph.edge(G2, e) then
+        return false
+      end
+    end
+  end
+  return true
+end
+
+
 --- String representation
 --  @return String with compressed graph structure.
 graph.__tostring = function (self)
@@ -240,6 +264,9 @@ graph.__tostring = function (self)
       nm, tostring(nd[1]), #nd-2, tostring(nd[#nd]))
   end
 end
+
+
+about['_mt'] = {"operations: g1==g2, g1~=g2, g1..g2, #g", nil, help.META}
 
 
 --- Make loop.
@@ -411,7 +438,9 @@ graph.concat = function (self, gs)
   local dst = res._
   for i = 1, #gs do
     local g = gs[i]
-    if g._dir ~= res._dir then error('Different types') end
+    if g._dir ~= res._dir then 
+      error 'Different types'
+    end
     for k, adj in pairs(g._) do
       local tmp = dst[k] or {}
       for n, w in pairs(adj) do tmp[n] = w end
@@ -422,7 +451,7 @@ graph.concat = function (self, gs)
 end
 graph.__concat = function (G1, G2) return graph:concat {G1, G2} end
 about[graph.concat] = {":concat(G_t) --> new_G",
-  "Combine graphs into one object."}
+  "Combine graphs into one object.", help.OTHER}
 
 
 --- Make the graph copy.
@@ -436,7 +465,8 @@ graph.copy = function (self)
   end
   return res
 end
-about[graph.copy] = {"G:copy() --> cpy_G", "Get copy of the graph."}
+about[graph.copy] = {"G:copy() --> cpy_G", 
+  "Get copy of the graph.", help.OTHER}
 
 
 --- Depth first search.
@@ -508,8 +538,9 @@ about[graph.dijkstra] = {
 
 
 --- Show graph structure in dot notation.
+--  @param fname File name (optional).
 --  @return String with structure.
-graph.dot = function (self)
+graph.dot = function (self, fname)
   local txt = {self._dir and "digraph {" or "graph {"}
   local line = self._dir and "->" or "--"
   -- edges
@@ -526,10 +557,18 @@ graph.dot = function (self)
     end
   end
   txt[#txt+1] = "}"
-  return table.concat(txt, '\n')
+  line = table.concat(txt, '\n')  -- reuse
+  if fname then
+    local f = assert(io.open(fname, 'w'))
+    f:write(line)
+    f:close()
+    return 'done'
+  else
+    return line
+  end
 end
-about[graph.dot] = {"G:dot() --> str",
-  "Return graph structure in dot notation.", EXPORT}
+about[graph.dot] = {"G:dot([name_s]) --> str",
+  "Save or return graph structure in dot notation.", EXPORT}
 
 
 --- Get edge weight.
@@ -538,7 +577,7 @@ about[graph.dot] = {"G:dot() --> str",
 graph.edge = function (self, t)
   local g = self._
   local n1, n2 = t[1], t[2]
-  return g[n1][n2] or (not self._dir and g[n2][n1]) or nil
+  return g[n1] and (g[n1][n2] or (not self._dir and g[n2][n1]) or nil)
 end
 about[graph.edge] = {"G:edge(pair_t) --> weight_d|nil", "Get weight of the edge."}
 
@@ -550,7 +589,7 @@ graph.edges = function (self)
   for n, adj in pairs(self._) do
     for m, v in pairs(adj) do
       if v then 
-        local t = setmetatable({n, m}, self._dir and mt_dir_edge or mt_edge)
+        local t = setmetatable({n, m, v}, self._dir and mt_dir_edge or mt_edge)
         res[#res+1] = t
       end
     end
@@ -563,9 +602,7 @@ about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 --- Check if the graph has node.
 --  @param n Node name.
 --  @return true when node found
-graph.has = function (self, n)
-  return self._[n] and true or false
-end
+graph.has = function (self, n) return self._[n] and true or false end
 about[graph.has] = {"G:has(node) --> bool", "Check if the graph has the node."}
 
 
@@ -677,8 +714,8 @@ about[graph.isWeighted] = {'G:isWeighted() --> bool',
   'Check if any edge has weight different from 1.', PROPERTY}
 
 
---- Get matrix of weights.
---  @return weight matrix and corresponding node list.
+--- Get adjacency matrix.
+--  @return adjacency matrix and corresponding node list.
 graph.matrix = function (self)
   graph.ext_matrix = graph.ext_matrix or require('matlib.matrix')
   local mat = graph.ext_matrix
@@ -687,14 +724,14 @@ graph.matrix = function (self)
   for i, v in ipairs(ns) do
     for j = i+1, #ns do
       local w = ns[j]
-      m[i][j] = graph.edge(self, {v, w}) or 0
-      m[j][i] = graph.edge(self, {w, v}) or 0
+      m[i][j] = graph.edge(self, {v, w}) and 1 or 0
+      m[j][i] = graph.edge(self, {w, v}) and 1 or 0
     end
   end
   return m, ns
 end
-about[graph.matrix] = {"G:matrix() --> weight_M, nodes_t",
-  "Get weights of adjucent edges.", help.OTHER}
+about[graph.matrix] = {"G:matrix() --> adjacency_M, nodes_t",
+  "Get adjacency matrix.", help.OTHER}
 
 
 --- Get graph nodes.
@@ -738,7 +775,9 @@ graph.rand = function (self, N)
   -- max number of edges
   local p = #ns
   p = p*(p-1) / (self._dir and 1 or 2)
-  if N <= 0 or N > p then error('Wrong edge number') end
+  if N <= 0 or N > p then 
+    error 'Wrong edge number'
+  end
   -- fill
   if N <= p / 2 then
     -- add 
@@ -770,6 +809,9 @@ about[graph.rand] = {"G:rand(edge_N)",
 --- Generate random graph.
 --  @param p Edge probability.
 graph.randp = function (self, p)
+  if p <= 0 or p > 1 then
+    error "Wrong probability value"
+  end
   -- check / reset 
   local ns = {}
   local g = self._
