@@ -29,13 +29,6 @@ a:addNodes {'a', 'b', 'c', 'd', 'e'}
 nd = a:nodes()
 ans = #nd                     -->  5
 
--- list of edges
-ed = a:edges()
-ans = #ed                     -->  0
-
--- has directed edges
-ans = a:isDirected()          -->  false
-
 -- add node
 a:add('h')
 -- add edge
@@ -44,73 +37,98 @@ a:add('a', 'd')
 -- (same as #a)
 ans = a:size()                -->  6
 
+-- group of edges
+a:addEdges {
+  {'b', 'e'},
+  {'x', 'y'},
+  {'e', 'c', 2},  -- with waigth
+}
 -- remove node
 a:remove('a')
 -- new edge number
 ed = a:edges()
-ans = #ed                     -->  0
+ans = #ed                     -->  3
+
+-- check properties
+ans = a:isWeighted()          --> true
+
+ans = a:isConnected()         --> false
+
+ans = a:isDirected()          --> false
+
+ans = a:isTree()              --> false
+
+-- generate 
+b = Graph {K=5}
+ans = b:isComplete()          --> true
+
+ans = b:isEuler()             --> true
 
 -- directed graph
-d = Graph {dir=true}
-d:add('c', 'p', 5)
--- and vise versa
-d:add('p', 'c', 3)
-ans = d:edge {'c', 'p'}       -->  5
+c = Graph {C=4, dir=true, name='c'}
+ans = c:edge {'c2', 'c1'}     --> 1
+
+-- no edge
+ans = (c:edge {'c1', 'c2'} == nil)  --> true
+
+-- check node
+ans = c:has 'c3'              --> true
+
+-- input nodes
+ans = #c:nin 'c1'             --> 1
+
+-- output nodes
+ans = #c:nout 'c1'            --> 1
+
+-- same in undirected graph
+ans = (#b:nin('n1') == #b:nout('n1'))  --> true
+
+-- list of components
+ans = #a:components()         --> 4
 
 -- make copy
-b = a:copy()
+b1 = b:copy()
+ans = (b == b1)               --> true
 
--- completeness
-ans = b:isComplete()          -->  false
+-- change
+b1:remove('n1', 'n2')
+ans = (b == b1)               --> false
 
--- prepare graph
-c = Graph()
-c:addEdges {
-  {'a','b'},
-  {'a','c'},
-  {'b','d'},
-  {'b','e'},
-  {'c','f'},
-  {'f','g'},
-  {'f','h'},
-  {'e','g'}
-}
--- is it weighted
-ans = c:isWeighted()          -->  false
+-- adjacency matrix
+print(c:matrix())
+
+-- random graph
+d = Graph{O=3, name='a'} .. Graph{O=3, name='b'}
+-- generate edges with probability 0.5
+d:randp(0.5) 
+print(d:edges())
+
+-- set 8 random edges
+d:rand(8)
+ans = #d:edges()              --> 8
 
 -- print in 'dot' notation
-print(c:dot())
+print(d:dot())
 
 -- save svg image
-c:toSvg('test_c')
+d:toSvg('test_d')
 
--- breadth first search
-_,path = c:bfs('e','h')
-ans = path[3]                 -->  'f'
+-- search
+g = Graph {K={1,2,3,4,5,6}}
+ans = #g:search(1, 4, 'bfs')  --> 2
 
--- depth first search
-found,path = c:dfs('d','c')
-ans = found                   -->  true
+ans = (#g:search(1, 4, 'dfs') > 2)  --> true
 
--- update weight (default is 1)
--- use 'add' method
-c:add('a', 'b', 0.5)
-c:add('b', 'e', 0.4)
-c:add('c', 'f', 2)
-
--- Dijkstra path search
-dist, prev = c:dijkstra('a')
-ans = dist['g']               -->  1.9
-
--- show
-print(b)
+-- dijkstra algorithm
+-- update weight 1-4
+g:add(1, 4, 10)
+ans = #g:search(1, 4, 'dijkstra')   --> 3
 
 --]]
 
 
 --	LOCAL
 
-local SEARCH = 'search'
 local PROPERTY = 'property'
 local EXPORT = 'export'
 
@@ -378,36 +396,6 @@ about[graph.addNodes] = {"G:addNodes(list_t)",
   "Import nodes from list."}
 
 
---- Breadth first search.
---  @param start Initial node.
---  @param goal Goal node.
---  @return Result and found path.
-graph.bfs = function (self, vStart, vGoal)
-  local pred = {[vStart]=vStart}
-  -- use queue
-  local q = Queue.new()
-  Queue.push(q, vStart)
-  -- run
-  repeat
-    local node = Queue.pop(q)
-    if node == vGoal then
-      -- found
-      return true, getPath(pred, vGoal)
-    end
-    -- add successors
-    for v in pairs(self._[node]) do
-      if not pred[v] then
-        Queue.push(q, v)
-        pred[v] = node
-      end
-    end
-  until Queue.isEmpty(q)
-  return false
-end
-about[graph.bfs] = {"G:bfs(startNode, goalNode) --> isFound, path_t",
-  "Breadth first search. Return result and found path.", SEARCH}
-
-
 --- Get list of components.
 --  @return list with subgraphs.
 graph.components = function (self)
@@ -427,7 +415,7 @@ graph.components = function (self)
   return res
 end
 about[graph.components] = {"G:components() --> G_t", 
-  "Get list of connected components."}
+  "Get list of connected components.", help.OTHER}
 
 
 --- Combine several graphs into the single object.
@@ -469,72 +457,6 @@ about[graph.copy] = {"G:copy() --> cpy_G",
   "Get copy of the graph.", help.OTHER}
 
 
---- Depth first search.
---  @param vStart Initial node.
---  @param vGoal Goal node.
---  @return Result and found path.
-graph.dfs = function (self, vStart, vGoal)
-  local pred = {[vStart]=vStart}
-  -- use stack
-  local stack = {}
-  table.insert(stack, vStart)
-  -- run
-  repeat
-    local node = table.remove(stack)
-    if node == vGoal then
-      -- found
-      return true, getPath(pred, vGoal)
-    end
-    -- add successors
-    for v in pairs(self._[node]) do
-      if not pred[v] then
-        table.insert(stack, v)
-        pred[v] = node
-      end
-    end
-  until #stack == 0
-  return false
-end
-about[graph.dfs] = {"G:dfs(startNote, goalNode) --> isFound, path_t",
-  "Depth first search. Return result and found path.", SEARCH}
-
-
---- Shortest path search using Dijkstra algorithm.
---  @param start Initial node.
---  @param goal Goal node.
---  @return Table of distances and predecessors or path and its length.
-graph.dijkstra = function(self, vStart, vGoal)
-  -- define local set
-  local set = {}
-  for k in pairs(self._) do set[k] = math.huge end
-  set[vStart] = 0
-  -- save results
-  local prev, dist = {[vStart]=vStart}, {}
-  -- run
-  while true do
-    local current, val = getMin(set)
-    if not current then break end
-    -- update minimal distance
-    dist[current] = val
-    for k, v in pairs(self._[current]) do
-      local alt = val + (v or self._[k][current])
-      if set[k] and set[k] > alt then
-        set[k] = alt
-        prev[k] = current
-      end
-    end -- for
-  end
-  -- result
-  if vGoal then
-    return dist[vGoal], getPath(prev, vGoal)
-  else
-    return dist, prev
-  end
-end
-about[graph.dijkstra] = {
-  'G:dijkstra(startNode, [goalNode]) --> dist_d, path_t|prev_t',
-  "Find shortest path using Dijkstra's algorithm. Return table of distances and predecessors. If goal is defined, return path and its length.",
-  SEARCH}
 
 
 --- Show graph structure in dot notation.
@@ -631,8 +553,7 @@ about[graph.nin] = {"G:nin(node) --> nodes_t",
 --- Check graph completeness.
 --  @return true if the graph is complete.
 graph.isComplete = function (self)
-  if self._dir then return false end
-  local n = tblLen(self._)
+  local n = tblLen(self._) - 1
   for _, adj in pairs(self._) do
     if n ~= tblLen(adj) then return false end
   end
@@ -853,6 +774,13 @@ about[graph.remove] = {"G:remove(n1, [n2])",
   "Remove node or edge from the graph."}
 
 
+--- Get number of nodes.
+--  @return Number of nodes.
+graph.size = function (self) return tblLen(self._) end
+graph.__len = graph.size
+about[graph.size] = {"G:size() --> nodes_N", "Get node number.", help.OTHER}
+
+
 --- Save graph as svg image.
 --  @param name File name.
 graph.toSvg = function (self, name)
@@ -865,12 +793,106 @@ about[graph.toSvg] = {"G:toSvg(name_s)",
   "Convert graph to SVG image using Graphviz.", EXPORT}
 
 
---- Get number of nodes.
---  @return Number of nodes.
-graph.size = function (self) return tblLen(self._) end
-graph.__len = graph.size
-about[graph.size] = {"G:size() --> nodes_N", "Get node number.", help.OTHER}
+local search = {}
 
+--- Breadth first search.
+--  @param G Graph.
+--  @param start Initial node.
+--  @param goal Goal node.
+--  @return table of predecessors.
+search.bfs = function (G, vStart, vGoal)
+  local pred = {[vStart]=vStart}
+  -- use queue
+  local q = Queue.new()
+  Queue.push(q, vStart)
+  -- run
+  repeat
+    local node = Queue.pop(q)
+    -- found ?
+    if node == vGoal then return pred end
+    -- add successors
+    for k, v in pairs(G._[node]) do
+      if not pred[k] and (v or not G._dir) then
+        Queue.push(q, k)
+        pred[k] = node
+      end
+    end
+  until Queue.isEmpty(q)
+  return nil
+end
+
+
+--- Depth first search.
+--  @param G Graph.
+--  @param vStart Initial node.
+--  @param vGoal Goal node.
+--  @return table of predecessors.
+search.dfs = function (G, vStart, vGoal)
+  local pred = {}
+  local stack = {{vStart, vStart}}
+  -- run
+  repeat 
+    -- add successors
+    local curr = table.remove(stack)
+    local node = curr[1]
+    if not pred[node] then
+      pred[node] = curr[2]
+      -- found ?
+      if node == vGoal then return pred end
+      for k, v in pairs(G._[node]) do
+        if not pred[k] and (v or not G._dir) then
+          table.insert(stack, {k, node})
+        end
+      end
+    end
+  until #stack == 0
+  return nil
+end
+
+
+--- Shortest path search using Dijkstra algorithm.
+--  @param G Graph.
+--  @param start Initial node.
+--  @param goal Goal node.
+--  @return table of predecessors.
+search.dijkstra = function(G, vStart, vGoal)
+  local set = {}
+  for k in pairs(G._) do set[k] = math.huge end
+  set[vStart] = 0
+  -- save results
+  local prev, dist = {[vStart]=vStart}, {}
+  -- run
+  while true do
+    local current, val = getMin(set)
+    if not current then break end
+    -- update minimal distance
+    dist[current] = val
+    for k, v in pairs(G._[current]) do
+      if v or not G._dir then
+        local alt = val + (v or G._[k][current])
+        if set[k] and set[k] > alt then
+          set[k] = alt
+          prev[k] = current
+        end
+      end
+    end 
+  end
+  return prev[vGoal] and prev
+end
+
+
+--- Find path between 2 nodes.
+--  @param a First node.
+--  @param b Second node.
+--  @param method String with method name.
+--  @return found path or nil.
+graph.search = function (self, a, b, method)
+  local fn = assert(search[method], 'Method not found')
+  local res = fn(self, a, b)
+  return res and getPath(res, b)
+end
+about[graph.search] = {"G:search(node1, node2, method_s) --> path_t|nil",
+  "Find path between two nodes. Methods are: bfs, dfs, dijkstra.", help.OTHER}
 
 -- simplify constructor call
 setmetatable(graph, {
