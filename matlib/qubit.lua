@@ -235,6 +235,19 @@ qubit.__mul = function (C, Q)
 end
 
 
+--- Q1 - Q2
+--  @param Q1 First state.
+--  @param Q2 Second state.
+--  @return Combined state.
+qubit.__sub = function (Q1, Q2)
+  if not (isqubit(Q1) and isqubit(Q2)) then 
+    error "Unexpected operation" 
+  end
+  assert(Q1._n == Q2._n, ERR_WRONG_SIZE)
+  return qubit._new(Q1._vec - Q2._vec, Q1._n)
+end
+
+
 --- Text representation of qubits.
 --  @return string with description.
 qubit.__tostring = function (self)
@@ -264,7 +277,7 @@ end
 
 
 -- Metamethods
-about['_ar'] = {"arithmetic: Q1+Q2, k*Q, G1*G2, G^n, G()", nil, help.META}
+about['_ar'] = {"arithmetic: Q1+Q2, Q1-Q2, k*Q, G1*G2, G^n, G()", nil, help.META}
 about['_cmp'] = {"comparison: Q1==Q2, Q1~=Q2", nil, help.META}
 about['_obj'] = {"object: Q1..Q2, #Q, #G", nil, help.META}
 
@@ -305,6 +318,18 @@ end
 --  @return new object.
 qubit._new = function (v, n)
   return setmetatable({_vec=v, _n=n}, qubit)
+end
+
+
+--- System in random state.
+--  @param n Number of qubits.
+qubit._rand = function (n)
+  local v = Matrix:zeros(2^n, 1)
+  for i = 1, v:rows() do
+    v[i][1] = Complex(2*math.random()-1, 2*math.random()-1)
+  end
+  v:vec():normalize()
+  return qubit._new(v, n)
 end
 
 
@@ -418,10 +443,14 @@ qubit.__len = qubit.size
 -- constructor call
 setmetatable(qubit, {
 __call = function (self, state)
+  if type(state) == 'number' then
+    assert(Vinteger(state) and state > 0, 'Wrong size')
+    return qubit._rand(state)
+  end
   return qubit._new(qubit._parse(state))
 end
 })
-about[qubit] = {" (t) --> Q", "Create new qubit.", help.NEW}
+about[qubit] = {" (state_s|num) --> Q", "Create new qubit.", help.NEW}
 
 
 --	QGATE
