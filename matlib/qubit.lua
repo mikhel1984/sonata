@@ -41,7 +41,7 @@ b:normalize()
 ans = b:prob '00'            --2>  0.5
 
 -- combine qubits
--- (same as a..b)
+ Q1-Q2,-- (same as a..b)
 c = Qb:combine(a, b)
 print(c)
 
@@ -639,7 +639,7 @@ qgate.CNOT = function (self, slave_i, master_i)
   self._mat = self._mat and (mat * self._mat) or mat
   -- update view
   local txt = self._txt
-  local sym = {[master_i]='o', [slave_i]='X'}
+  local sym = {[master_i]='o', [slave_i]='x'}
   for i = 1, #txt do
     txt[i] = string.format('%s %s', txt[i], sym[i] or '-')
   end
@@ -685,7 +685,7 @@ qgate.fromTable = function (self, t)
   local acc, n = {}, 2^self._n
   local mat = Matrix:zeros(n, n)
   for _, p in ipairs(t) do
-    local _, n1, ind1 = qubit._parse(p[1])
+    local _, n1,  ind1 = qubit._parse(p[1])
     assert(n1 == self._n, ERR_WRONG_SIZE)
     if acc[ind1] then 
       error(string.format('State %s is not unique', p[1])) 
@@ -724,7 +724,7 @@ qgate.H = function (self, ...)
   return self
 end
 qubit.H = qgate.H
-about[qubit.H] = {"G:H([i1,i2,..]) --> upd_G", "Add Hadamard gate.", GATES}
+about[qubit.H] = {"G:H([ind1, ind2, ..]) --> upd_G", "Add Hadamard gate.", GATES}
 
 
 --- Inverse gate system.
@@ -794,32 +794,32 @@ about[qubit.SWAP] = {"G:SWAP(ind1, ind2) --> upd_G", "Add gate to swap 2 qubits.
 -- Add gate S.
 qgate.S = qgate._makeGate(qgate._S22, 'S')
 qubit.S = qgate.S
-about[qubit.S] = {"G:S([ind1,ind2,..]) --> upd_G", "Add S gate.", GATES}
+about[qubit.S] = {"G:S([ind1, ind2,..]) --> upd_G", "Add S gate.", GATES}
 
 
 -- Add gate T.
 qgate.T = qgate._makeGate(qgate._T22, 'T')
 qubit.T = qgate.T
-about[qubit.T] = {"G:T([ind1,ind2,..]) --> upd_G", "Add T gate.", GATES}
+about[qubit.T] = {"G:T([ind1, ind2,..]) --> upd_G", "Add T gate.", GATES}
 
 
 -- Add gate X.
 qgate.X = qgate._makeGate(qgate._X22, 'X')
 qgate.NOT = qgate.X
 qubit.X = qgate.X
-about[qubit.X] = {"G:X([ind1,ind2,..]) --> upd_G", "Add X gate.", GATES}
+about[qubit.X] = {"G:X([ind1, ind2,..]) --> upd_G", "Add X gate.", GATES}
 
 
 -- Add gate Y.
 qgate.Y = qgate._makeGate(qgate._Y22, 'Y')
 qubit.Y = qgate.Y
-about[qubit.Y] = {"G:Y([ind1,ind2,..]) --> upd_G", "Add Y gate.", GATES}
+about[qubit.Y] = {"G:Y([ind1, ind2,..]) --> upd_G", "Add Y gate.", GATES}
 
 
 -- Add gate Z.
 qgate.Z = qgate._makeGate(qgate._Z22, 'Z')
 qubit.Z = qgate.Z
-about[qubit.Z] = {"G:Z([ind1,ind2,..]) --> upd_G", "Add Z gate.", GATES}
+about[qubit.Z] = {"G:Z([ind1, ind2,..]) --> upd_G", "Add Z gate.", GATES}
 
 
 -- Comment to remove descriptions
@@ -830,3 +830,4 @@ return qubit
 --======================================
 -- TODO vertical concatenation with ..
 -- TODO qubit from vector
+-- TODO RX, RY, RZ, P

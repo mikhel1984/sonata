@@ -147,11 +147,14 @@ local function evalCode()
     local input = coroutine.yield(state, res)
     cmd = (state == evaluate.EV_CMD) and cmd or ''
     -- check if multi input
-    local partCmd, amp = string.match(input, "(.*)\\(&?)%s*$")
-    amp = (amp and #amp == 1 or false)
-    if amp then multiline = not multiline end
+    local partCmd, amp = string.match(input, "(.-)(\\*)%s*$")
+    if #amp > 1 then 
+      multiline = true   -- on
+    elseif #input == 0 then
+      multiline = false  -- off
+    end
     -- exec or wait
-    if multiline or (partCmd and not amp) then
+    if multiline or #amp == 1 then
       cmd = string.format("%s%s\n", cmd, partCmd or input)
       state, res = evaluate.EV_CMD, nil
     else
@@ -377,7 +380,7 @@ evaluate.repl = function (noteList)
     if cmd then
       local fn = Cmds[cmd[1]] or goTo
       fn(cmd, env)
-    elseif #input > 0 or env.info then
+    elseif #input > 0 or env.info or invite == evaluate.INV_CONT then
       env.read, env.info = true, false
       if env.log then env.log:write(input, '\n') end
       local _, status, res = coroutine.resume(co, input)
