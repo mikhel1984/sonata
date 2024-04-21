@@ -135,6 +135,7 @@ local txtCodes = {
   [evaluate.FORMAT_CLR] = SonataHelp.CRESET,
 }
 
+
 --- Evaluate string of Lua code.
 --  The function should work in coroutine.
 --  It takes code line and return status and evaluation result.

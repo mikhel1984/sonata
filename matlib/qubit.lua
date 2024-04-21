@@ -40,8 +40,8 @@ b:normalize()
 -- probability of the state |00>
 ans = b:prob '00'            --2>  0.5
 
--- combine qubits
- Q1-Q2,-- (same as a..b)
+-- combine qubits Q1-Q2,
+-- (same as a..b)
 c = Qb:combine(a, b)
 print(c)
 
@@ -194,8 +194,8 @@ local function isqubit(v) return getmetatable(v) == qubit end
 --  @param Q2 Second state.
 --  @return Combined state.
 qubit.__add = function (Q1, Q2)
-  if not (isqubit(Q1) and isqubit(Q2)) then 
-    error "Unexpected operation" 
+  if not (isqubit(Q1) and isqubit(Q2)) then
+    error "Unexpected operation"
   end
   assert(Q1._n == Q2._n, ERR_WRONG_SIZE)
   return qubit._new(Q1._vec + Q2._vec, Q1._n)
@@ -240,8 +240,8 @@ end
 --  @param Q2 Second state.
 --  @return Combined state.
 qubit.__sub = function (Q1, Q2)
-  if not (isqubit(Q1) and isqubit(Q2)) then 
-    error "Unexpected operation" 
+  if not (isqubit(Q1) and isqubit(Q2)) then
+    error "Unexpected operation"
   end
   assert(Q1._n == Q2._n, ERR_WRONG_SIZE)
   return qubit._new(Q1._vec - Q2._vec, Q1._n)
@@ -371,7 +371,8 @@ qubit.combine = function (_, ...)
   end
   return qubit._new(v, n)
 end
-about[qubit.combine] = {":combine([Q1,Q2,..]) --> Q|nil", "Make a system of qubits. Same as Q1..Q2."}
+about[qubit.combine] = {":combine([Q1,Q2,..]) --> Q|nil",
+  "Make a system of qubits. Same as Q1..Q2."}
 
 
 --- Getting copy.
@@ -380,6 +381,23 @@ qubit.copy = function (self)
   return qubit._new(self._vec:copy(), self._n)
 end
 about[qubit.copy] = {"Q:copy() --> cpy_Q", "Create a copy of the object."}
+
+
+--- Initialize qubit system from vector.
+--  @param v Unit vector of length ~ 2^n.
+--  @return qubit object.
+qubit.fromVector = function (self, v)
+  local n, p = math.modf(math.log(v:rows()) / math.log(2))
+  if math.abs(p) > 1E-4 then
+    error 'Wrong vector size'
+  end
+  if math.abs(v:vec():norm() - 1) > 1E-4 then
+    error 'Unit vector expected'
+  end
+  return qubit._new(v, n)
+end
+about[qubit.fromVector] = {":fromVector(V) --> Q",
+  "Initialize qubit state from vector."}
 
 
 --- Get corresponding vector.
@@ -430,7 +448,7 @@ qubit.prob = function (self, state_s)
   end
   return 0
 end
-about[qubit.prob] = {"Q:prob(state_s) --> probatility_d", 
+about[qubit.prob] = {"Q:prob(state_s) --> probatility_d",
   "Get probability for the given state."}
 
 
@@ -462,12 +480,12 @@ qgate.__index = qgate
 --- Initialize gate sequence.
 --  @param n Number of inputs.
 qubit.gates = function (_, n)
-  if n <= 0 or not Vinteger(n) then 
+  if n <= 0 or not Vinteger(n) then
     error 'Wrong input number'
   end
   return qgate._new(n)
 end
-about[qubit.gates] = {":gates(input_n) --> G", 
+about[qubit.gates] = {":gates(input_n) --> G",
   "Initialize gates for the given numer of inputs.", GATES}
 
 
@@ -475,7 +493,7 @@ about[qubit.gates] = {":gates(input_n) --> G",
 --  @param G Gate system.
 --  @parma Q Qubit system.
 qgate.__call = function (G, Q)
-  if G._n ~= Q._n then 
+  if G._n ~= Q._n then
     error 'Different number of qubits'
   end
   return qubit._new(G._mat * Q._vec, Q._n)
@@ -510,10 +528,10 @@ end
 --  @parma n Integer power.
 --  @return n times concatenated gates.
 qgate.__pow = function (self, n)
-  if not Vinteger(n) then 
+  if not Vinteger(n) then
     error 'Integer is expected'
   end
-  if n < -1 then 
+  if n < -1 then
     error "Wrong power"
   end
   if not self._mat and n ~= 0 then return qgate.__pow(self, 0) end
@@ -548,7 +566,7 @@ qgate._X22 = Matrix{{0, 1}, {1, 0}}
 qgate._Y22 = Matrix{{0, Complex:i(-1)}, {Complex:i(1), 0}}
 qgate._Z22 = Matrix{{1, 0}, {0, -1}}
 qgate._S22 = Matrix{{1, 0}, {0, Complex:i(1)}}
-qgate._T22 = Matrix{{1, 0}, {0, Complex:cis(1, math.pi/4)}}
+qgate._T22 = Matrix{{1, 0}, {0, Complex:cis(math.pi/4)}}
 qgate._H22 = Matrix{{1, 1}, {1, -1}}  -- multipy to 1/sqrt(2)
 
 
@@ -646,7 +664,8 @@ qgate.CNOT = function (self, slave_i, master_i)
   return self
 end
 qubit.CNOT = qgate.CNOT
-about[qubit.CNOT] = {"G:CNOT(slave_i, master_i) --> upd_G", "Add CNOT gate.", GATES}
+about[qubit.CNOT] = {"G:CNOT(slave_i, master_i) --> upd_G",
+  "Add CNOT gate.", GATES}
 
 
 --- Transform matrix to gate object.
@@ -667,7 +686,7 @@ qgate.fromMatrix = function (self, m)
   end
   local txt = self._txt
   for i = 1, #txt do
-    txt[i] = string.format('%s U', txt[i])
+    txt[i] = string.format('%s u', txt[i])
   end
   self._mat = self._mat and (m * self._mat) or m
   return self
@@ -687,8 +706,8 @@ qgate.fromTable = function (self, t)
   for _, p in ipairs(t) do
     local _, n1,  ind1 = qubit._parse(p[1])
     assert(n1 == self._n, ERR_WRONG_SIZE)
-    if acc[ind1] then 
-      error(string.format('State %s is not unique', p[1])) 
+    if acc[ind1] then
+      error(string.format('State %s is not unique', p[1]))
     end
     local _, n2, ind2 = qubit._parse(p[2])
     assert(n2 == self._n, ERR_WRONG_SIZE)
@@ -724,7 +743,8 @@ qgate.H = function (self, ...)
   return self
 end
 qubit.H = qgate.H
-about[qubit.H] = {"G:H([ind1, ind2, ..]) --> upd_G", "Add Hadamard gate.", GATES}
+about[qubit.H] = {"G:H([ind1, ind2, ..]) --> upd_G",
+  "Add Hadamard gate.", GATES}
 
 
 --- Inverse gate system.
@@ -739,15 +759,15 @@ qgate.inverse = function (self)
   return res
 end
 qubit.inverse = qgate.inverse
-about[qubit.inverse] = {"G:inverse() --> inv_G", "Get inverted gate sequence", GATES}
+about[qubit.inverse] = {"G:inverse() --> inv_G",
+  "Get inverted gate sequence", GATES}
 
 
 --- Check gate.
---  @param G Gate system.
 --  @return true if the matrix is unitary.
-qgate.isUnitary = function (G)
-  if not G._mat then return false end
-  local U = G._mat * G._mat:H()
+qgate.isUnitary = function (self)
+  if not self._mat then return false end
+  local U = self._mat * self._mat:H()
   for i = 1, U:rows() do U[i][i] = U[i][i] - 1 end
   return U:norm() < 1E-6
 end
@@ -759,7 +779,49 @@ about[qubit.isUnitary] = {"G:isUnitary() --> bool",
 --- Get matrix representation.
 --  @param G Gate system.
 --  @return corresponding matrix.
-qgate.matrix = function (G) return G._mat:copy() end
+qgate.matrix = function (self) return self._mat:copy() end
+
+
+--- Make phase shift.
+--  @param phase Shift value.
+--  @param ... Indexes.
+--  @return updated gate.
+qgate.P = function (self, phase, ...)
+  local m = Matrix {{1, 0}, {0, Complex:cis(phase)}}
+  local fn = qgate._makeGate(m, 'P')
+  return fn(self, ...)
+end
+qubit.P = qgate.P
+about[qubit.P] = {"G:P(phase, [ind1, ind2,..] --> G", 
+  "Add phase shift gate.", GATES}
+
+
+--- Make rotation.
+--  @param axis Axis name (X, Y, Z).
+--  @param angle Angle value.
+--  @param ... Indexes.
+--  @return updated gate.
+qgate.R = function (self, axis, angle, ...)
+  local m = nil
+  angle = 0.5 * angle
+  if axis == 'X' then
+    local c = math.cos(angle)
+    local is = Complex:i(-math.sin(angle))
+    m = Matrix {{c, is}, {is, c}}
+  elseif axis == 'Y' then
+    local c, s = math.cos(angle), math.sin(angle)
+    m = Matrix {{c, -s}, {s, c}}
+  elseif axis == 'Z' then
+    m = Matrix {{Complex:cis(-angle), 0}, {0, Complex:cis(angle)}}
+  else
+    error 'Wrong axis'
+  end
+  local fn = qgate._makeGate(m, 'R')
+  return fn(self, ...)
+end
+qubit.R = qgate.R
+about[qubit.R] = {"G:R(axis_s, angle, [ind1, ind2,..] --> G",
+  "Add rotation for axis 'X', 'Y' or 'Z'.", GATES}
 
 
 --- Get number of inputs/outputs
@@ -788,7 +850,8 @@ qgate.SWAP = function (self, i1, i2)
   return self
 end
 qubit.SWAP = qgate.SWAP
-about[qubit.SWAP] = {"G:SWAP(ind1, ind2) --> upd_G", "Add gate to swap 2 qubits.", GATES}
+about[qubit.SWAP] = {"G:SWAP(ind1, ind2) --> upd_G",
+  "Add gate to swap 2 qubits.", GATES}
 
 
 -- Add gate S.
@@ -829,5 +892,4 @@ return qubit
 
 --======================================
 -- TODO vertical concatenation with ..
--- TODO qubit from vector
 -- TODO RX, RY, RZ, P
