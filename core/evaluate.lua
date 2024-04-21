@@ -377,7 +377,7 @@ evaluate.repl = function (noteList)
       io.write(invite)
       input = io.read()
     end
-    local cmd = getCmd(input)
+    local cmd = (invite ~= evaluate.INV_CONT) and getCmd(input)
     if cmd then
       local fn = Cmds[cmd[1]] or goTo
       fn(cmd, env)
