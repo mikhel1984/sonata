@@ -224,7 +224,7 @@ ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
 
 --	LOCAL
 
--- compatibility
+-- dependencies
 local Ver = require("matlib.utils")
 local Cnorm, Cfloat, Cround = Ver.cross.norm, Ver.cross.float, Ver.cross.round
 local Czero = Ver.cross.isZero
@@ -499,6 +499,12 @@ end
 
 about['_ar'] = {"arithmetic: a+b, a-b, a*b, a^b, -a", nil, help.META}
 about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
+
+
+--- Prepare value of arithmetic operation.
+--  @param v Source value.
+--  @return table with object.
+--matrix._convert = function (v) return setmetatable({v}, mt_container) end
 
 
 --- Initialization of matrix with given size.

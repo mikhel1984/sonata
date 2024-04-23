@@ -822,7 +822,7 @@ transform.vec_access = ref_vector
 transform.initRef = function (t)
   for _, v in ipairs {
     '__add', '__sub', '__mul', '__div', '__unm', '__pow',
-    '__eq', '__call', '__concat', '__tostring',
+    '__eq', '__call', '__concat', '__tostring', 
   } do
     local fn = t[v]
     ref_transpose[v] = fn

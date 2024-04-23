@@ -379,14 +379,17 @@ evaluate.repl = function (noteList)
     end
     local cmd = (invite ~= evaluate.INV_CONT) and getCmd(input)
     if cmd then
+      -- execute command
       local fn = Cmds[cmd[1]] or goTo
       fn(cmd, env)
     elseif #input > 0 or env.info or invite == evaluate.INV_CONT then
+      -- evaluate input
       env.read, env.info = true, false
       if env.log then env.log:write(input, '\n') end
       local _, status, res = coroutine.resume(co, input)
       invite = showAndNext(status, res, env)
     elseif env.index <= #env.notes then
+      -- evaluate notes
       evaluate._evalBlock(co, env)
       env.read = true
     elseif noteList then

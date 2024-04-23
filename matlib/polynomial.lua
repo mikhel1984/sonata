@@ -280,13 +280,12 @@ mt_ppval.__call = mt_ppval.val
 --  @param P2 Second polynomial or number.
 --  @return Sum.
 polynomial.__add = function (P1, P2)
-  if not (ispolynomial(P1) and ispolynomial(P2)) then
-    local p = Cross.convert(P1, P2)
-    if p then
-      return P1 + p
-    else
-      return Cross.convert(P2, P1) + P2
-    end
+  if not ispolynomial(P2) then
+    local v = polynomial._convert(P2)
+    return v and P1 + v or P2.__add(P1, P2)
+  elseif not ispolynomial(P1) then
+    local v = polynomial._convert(P1)
+    return v and v + P2 or error('Not def')
   end
   local t = {}
   -- get sum of equal powers
@@ -302,13 +301,12 @@ end
 --  @param P2 Second polynomial or number.
 --  @param Ratio.
 polynomial.__div = function (P1, P2)
-  if not (ispolynomial(P1) and ispolynomial(P2)) then
-    local p = Cross.convert(P1, P2)
-    if p then
-      return P1 / p
-    else
-      return Cross.convert(P2, P1) / P2
-    end
+  if not ispolynomial(P2) then
+    local v = polynomial._convert(P2)
+    return v and P1 / v or P2.__div(P1, P2)
+  elseif not ispolynomial(P1) then
+    local v = polynomial._convert(P1)
+    return v and v / P2 or error('Not def')
   end
   local res, _ = polynomial._div(P1, P2)
   return res
@@ -346,13 +344,12 @@ polynomial.__index = polynomial
 --  @param P2 Second polynomial or number.
 --  @return Rest.
 polynomial.__mod = function (P1, P2)
-  if not (ispolynomial(P1) and ispolynomial(P2)) then
-    local p = Cross.convert(P1, P2)
-    if p then
-      return P1 % p
-    else
-      return Cross.convert(P2, P1) % P2
-    end
+  if not ispolynomial(P2) then
+    local v = polynomial._convert(P2)
+    return v and P1 % v or P2.__mod(P1, P2)
+  elseif not ispolynomial(P1) then
+    local v = polynomial._convert(P1)
+    return v and v % P2 or error('Not def')
   end
   local _, res = polynomial._div(P1, P2)
   return res
@@ -364,13 +361,12 @@ end
 --  @param P2 Second polynomial or number.
 --  @return Product.
 polynomial.__mul = function (P1, P2)
-  if not (ispolynomial(P1) and ispolynomial(P2)) then
-    local p = Cross.convert(P1, P2)
-    if p then
-      return P1 * p
-    else
-      return Cross.convert(P2, P1) * P2
-    end
+  if not ispolynomial(P2) then
+    local v = polynomial._convert(P2)
+    return v and P1 * v or P2.__mul(P1, P2)
+  elseif not ispolynomial(P1) then
+    local v = polynomial._convert(P1)
+    return v and v * P2 or error('Not def')
   end
   local res = polynomial._init({[0]=0})
   -- get sum of coefficients

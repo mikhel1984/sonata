@@ -147,13 +147,12 @@ end
 --  @param Q2 Second quaternion.
 --  @return Sum object.
 quaternion.__add = function (Q1, Q2)
-  if not (isquaternion(Q1) and isquaternion(Q2)) then
-    local p = Cross.convert(Q1, Q2)
-    if p then
-      return Q1 + p
-    else
-      return Cross.convert(Q2, Q1) + Q2
-    end
+  if not isquaternion(Q2) then
+    local v = quaternion._convert(Q2)
+    return v and Q1 + v or Q2.__add(Q1, Q2)
+  elseif not isquaternion(Q1) then
+    local v = quaternion._convert(Q1)
+    return v and v + Q2 or error('Not def')
   end
   local q1, q2 = Q1._, Q2._
   return numOrQuat(q1[1]+q2[1], q1[2]+q2[2], q1[3]+q2[3], q1[4]+q2[4])
@@ -192,13 +191,12 @@ quaternion.__newindex = function () error("Immutable object") end
 --  @param Q2 Second quaternion.
 --  @return Product.
 quaternion.__mul = function (Q1, Q2)
-  if not (isquaternion(Q1) and isquaternion(Q2)) then
-    local p = Cross.convert(Q1, Q2)
-    if p then
-      return Q1 * p
-    else
-      return Cross.convert(Q2, Q1) * Q2
-    end
+  if not isquaternion(Q2) then
+    local v = quaternion._convert(Q2)
+    return v and Q1 * v or Q2.__mul(Q1, Q2)
+  elseif not isquaternion(Q1) then
+    local v = quaternion._convert(Q1)
+    return v and v * Q2 or error('Not def')
   end
   local q1, q2 = Q1._, Q2._
   return numOrQuat(
@@ -241,13 +239,12 @@ end
 --  @param Q2 Second quaternion.
 --  @return Difference.
 quaternion.__sub = function (Q1, Q2)
-  if not (isquaternion(Q1) and isquaternion(Q2)) then
-    local p = Cross.convert(Q1, Q2)
-    if p then
-      return Q1 - p
-    else
-      return Cross.convert(Q2, Q1) - Q2
-    end
+  if not isquaternion(Q2) then
+    local v = quaternion._convert(Q2)
+    return v and Q1 - v or Q2.__sub(Q1, Q2)
+  elseif not isquaternion(Q1) then
+    local v = quaternion._convert(Q1)
+    return v and v - Q2 or error('Not def')
   end
   local q1, q2 = Q1._, Q2._
   return numOrQuat(q1[1]-q2[1], q1[2]-q2[2], q1[3]-q2[3], q1[4]-q2[4])

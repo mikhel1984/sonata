@@ -228,9 +228,12 @@ end
 --  @param C2 Real or complex number.
 --  @return Sum of numbers.
 complex.__add = function (C1, C2)
-  if not (iscomplex(C1) and iscomplex(C2)) then
-    local p = Cross.convert(C1, C2)
-    return p and (C1 + p) or (Cross.convert(C2, C1) + C2)
+  if not iscomplex(C2) then
+    local v = complex._convert(C2)
+    return v and C1 + v or C2.__add(C1, C2)
+  elseif not iscomplex(C1) then
+    local v = complex._convert(C1)
+    return v and v + C2 or error('Not def')
   end
   local c1, c2 = C1._, C2._
   return numOrComp(c1[1]+c2[1], c1[2]+c2[2])
@@ -242,9 +245,12 @@ end
 --  @param C2 Real or complex number.
 --  @return Ratio of numbers.
 complex.__div = function (C1, C2)
-  if not (iscomplex(C1) and iscomplex(C2)) then
-    local p = Cross.convert(C1, C2)
-    return p and (C1 / p) or (Cross.convert(C2, C1) / C2)
+  if not iscomplex(C2) then
+    local v = complex._convert(C2)
+    return v and C1 / v or C2.__div(C1, C2)
+  elseif not iscomplex(C1) then
+    local v = complex._convert(C1)
+    return v and v / C2 or error('Not def')
   end
   local c11, c12 = Ver.unpack(C1._)
   local c21, c22 = Ver.unpack(C2._)
@@ -281,9 +287,12 @@ complex.__index = complex
 --  @param C2 Real or complex number.
 --  @return Product of numbers.
 complex.__mul = function (C1, C2)
-  if not (iscomplex(C1) and iscomplex(C2)) then
-    local p = Cross.convert(C1, C2)
-    return p and (C1 * p) or (Cross.convert(C2, C1) * C2)
+  if not iscomplex(C2) then
+    local v = complex._convert(C2)
+    return v and C1 * v or C2.__mul(C1, C2)
+  elseif not iscomplex(C1) then
+    local v = complex._convert(C1)
+    return v and v * C2 or error('Not def')
   end
   local c1, c2 = C1._, C2._
   return numOrComp(c1[1]*c2[1] - c1[2]*c2[2], c1[1]*c2[2] + c1[2]*c2[1])
@@ -299,9 +308,12 @@ complex.__newindex = function () error("Immutable object") end
 --  @param C2 Real or complex number.
 --  @return Power.
 complex.__pow = function (C1, C2)
-  if not (iscomplex(C1) and iscomplex(C2)) then
-    local p = Cross.convert(C1, C2)
-    return p and (C1 ^ p) or (Cross.convert(C2, C1) ^ C2)
+  if not iscomplex(C2) then
+    local v = complex._convert(C2)
+    return v and C1 ^ v or C2.__pow(C1, C2)
+  elseif not iscomplex(C1) then
+    local v = complex._convert(C1)
+    return v and v ^ C2 or error('No def')
   end
   local a0, a1 = complex.abs(C1), complex.arg(C1)
   local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
@@ -317,9 +329,12 @@ end
 --  @param C2 Real or complex number.
 --  @return Difference of numbers.
 complex.__sub = function (C1, C2)
-  if not (iscomplex(C1) and iscomplex(C2)) then
-    local p = Cross.convert(C1, C2)
-    return p and (C1 - p) or (Cross.convert(C2, C1) - C2)
+  if not iscomplex(C2) then
+    local v = complex._convert(C2)
+    return v and C1 - v or C2.__sub(C1, C2)
+  elseif not iscomplex(C1) then
+    local v = complex._convert(C1)
+    return v and v - C2 or error('No def')
   end
   local c1, c2 = C1._, C2._
   return numOrComp(c1[1]-c2[1], c1[2]-c2[2])
