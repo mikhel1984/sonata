@@ -267,7 +267,7 @@ qubit.__tostring = function (self)
     end
   end
   -- exact value
-  if #acc == 1 then return string.format('|%s>', acc[1]) end
+  if #acc == 1 and vs[1] == '1' then return string.format('|%s>', acc[1]) end
   -- general
   for i, v in ipairs(vs) do
     acc[i] = string.format('(%s)|%s>', v, acc[i])

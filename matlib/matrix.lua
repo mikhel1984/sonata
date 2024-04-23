@@ -237,9 +237,6 @@ local tf = require("matlib.matrix_tf")
 --- 0 instead nil
 local mt_access = { __index = function () return 0 end }
 
---- Metatable without any operations
-local mt_container = {}
-
 
 --- Simplify object when possible.
 --  @param M Matrix.
@@ -309,12 +306,10 @@ end
 --  @param M2 Second matrix or number.
 --  @return Sum matrix.
 matrix.__add = function (M1, M2)
-  M1 = ismatrixex(M1) and M1 or matrix:fill(
-    M2._rows, M2._cols, getmetatable(M1) == mt_container and M1[1] or M1)
-  M2 = ismatrixex(M2) and M2 or matrix:fill(
-    M1._rows, M1._cols, getmetatable(M2) == mt_container and M2[1] or M2)
+  M1 = ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
+  M2 = ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
-    error("Different matrix size!")
+    error "Different matrix size!"
   end
   local res, Mcols = {}, M1._cols
   for r = 1, M1._rows do
@@ -445,10 +440,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Difference matrix.
 matrix.__sub = function (M1, M2)
-  M1 = ismatrixex(M1) and M1 or matrix:fill(
-    M2._rows, M2._cols, getmetatable(M1) == mt_container and M1[1] or M1)
-  M2 = ismatrixex(M2) and M2 or matrix:fill(
-    M1._rows, M1._cols, getmetatable(M2) == mt_container and M2[1] or M2)
+  M1 = ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
+  M2 = ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
   end
@@ -501,12 +494,6 @@ about['_ar'] = {"arithmetic: a+b, a-b, a*b, a^b, -a", nil, help.META}
 about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 
 
---- Prepare value of arithmetic operation.
---  @param v Source value.
---  @return table with object.
---matrix._convert = function (v) return setmetatable({v}, mt_container) end
-
-
 --- Initialization of matrix with given size.
 --  @param iR Number of rows.
 --  @param iC Number of columns.
@@ -527,7 +514,6 @@ end
 --  @param M Matrix.
 --  @return Result of multiplication.
 matrix._kProd = function (d, M)
-  if getmetatable(d) == mt_container then d = d[1] end
   local res, Mcols = {}, M._cols
   for r = 1, M._rows do
     local rr, mr = {}, M[r]
