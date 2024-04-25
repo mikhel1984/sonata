@@ -362,8 +362,8 @@ end
 --  @param M1 First matrix.
 --  @param M2 Second matrix.
 --  @return Concatenated matrix.
-matrix.__concat = function (M1, M2) 
-  return tf.makeConcat({M1, M2}, false):copy() 
+matrix.__concat = function (M1, M2)
+  return tf.makeConcat({M1, M2}, false):copy()
 end
 
 
@@ -564,8 +564,8 @@ end
 --  @param M Positive definite symmetric matrix.
 --  @return Lower part of the decomposition.
 matrix.chol = function (self)
-  if self._rows ~= self._cols then 
-    error "Square matrix is expected!" 
+  if self._rows ~= self._cols then
+    error "Square matrix is expected!"
   end
   local L = matrix:zeros(self._rows, self._cols)
   for i = 1, self._rows do
@@ -899,7 +899,7 @@ end
 --- LU transform
 --  @return L matrix, U matrix, permutations
 matrix.lu = function (self)
-  if self._rows ~= self._cols then 
+  if self._rows ~= self._cols then
     error "Square matrix is expected!"
   end
   -- check square
@@ -985,7 +985,7 @@ about[matrix.norm] = {"M:norm() --> num", "Euclidean norm."}
 
 
 matrix.normalize = tf.vec_access.normalize
-about[matrix.normalize] = {"V:normalize()", 
+about[matrix.normalize] = {"V:normalize()",
   "Normalize to unit vector.", VECTOR}
 
 
@@ -1048,8 +1048,8 @@ about[matrix.pinv] = {"M:pinv() --> inv_M",
 --  @return Q and R matrices.
 matrix.qr = function (self)
   local m, n = self._rows, self._cols
-  if n > m then 
-    error "Wrong matrix size"  
+  if n > m then
+    error "Wrong matrix size"
   end
   local Q = matrix:eye(m)
   local R = matrix.copy(self)
@@ -1172,7 +1172,7 @@ matrix.svd = function (M)
   -- main steps
   local U1, B, V1 = tf.bidiag(M)
   local U2, V2 = matrix:eye(U1), matrix:eye(V1)
-  repeat 
+  repeat
     local U3, B3, V3, E = tf.qrSweep(B)
     U2, V2, B = U2 * U3, V2 * V3, B3
   until E <= 1E-8

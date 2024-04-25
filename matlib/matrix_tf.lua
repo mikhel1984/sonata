@@ -699,9 +699,9 @@ end
 --  @return string representation.
 ref_vector.__tostring = function (self)
   local res = {}
-  for i = 1, #self do 
+  for i = 1, #self do
     local v = self[i]
-    res[i] = (type(v) == 'number') and Unumstr(v) or tostring(v) 
+    res[i] = (type(v) == 'number') and Unumstr(v) or tostring(v)
   end
   return table.concat(res, '  ')
 end
@@ -762,7 +762,7 @@ ref_vector.norm = function (self, type_s)
   if type_s == 'l1' then
     for i = 1, #self do s = s + Cnorm(self[i]) end
   elseif type_s == 'l2' then
-    for i = 1, #self do 
+    for i = 1, #self do
       local v = Cnorm(self[i])
       s = s + v * v
     end
@@ -822,7 +822,7 @@ transform.vec_access = ref_vector
 transform.initRef = function (t)
   for _, v in ipairs {
     '__add', '__sub', '__mul', '__div', '__unm', '__pow',
-    '__eq', '__call', '__concat', '__tostring', 
+    '__eq', '__call', '__concat', '__tostring',
   } do
     local fn = t[v]
     ref_transpose[v] = fn

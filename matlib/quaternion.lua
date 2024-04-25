@@ -173,7 +173,7 @@ quaternion.__eq = function (Q1, Q2)
     end
   end
   local q1, q2 = Q1._, Q2._
-  return Cross.eq(q1[1], q2[1]) and Cross.eq(q1[2], q2[2]) 
+  return Cross.eq(q1[1], q2[1]) and Cross.eq(q1[2], q2[2])
     and  Cross.eq(q1[3], q2[3]) and Cross.eq(q1[4], q2[4])
 end
 
@@ -440,7 +440,7 @@ quaternion.rotate = function (self, vec)
   else
     p1 = quaternion._new(0, vec[1], vec[2], vec[3])
   end
-  local p2 = self*p1*quaternion.conj(self)  
+  local p2 = self*p1*quaternion.conj(self)
   return {p2._[2], p2._[3], p2._[4]}
 end
 about[quaternion.rotate] = {'Q:rotate(inVec) --> outVec_t',

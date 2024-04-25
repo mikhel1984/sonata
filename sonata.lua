@@ -1,10 +1,10 @@
 #!/usr/local/bin/lua
 
--- Lua based calculator
--- This file is a part of 'sonata.lib' collection, 2017 - 2023.
+-- Lua based mathematical program
+-- This file is a part of 'sonata.matlib' collection, 2017 - 2023.
 
 
---================= CONFIGURATION ====================
+--================  CONFIGURATION  ===================
 
 --	Path ('sonata.lua' location)
 --SONATA_ADD_PATH = 'path/to/dir/'
@@ -38,17 +38,19 @@ use = {
   complex    = "Z",      -- complex numbers
   data       = "D",      -- data processing
   graph      = "Graph",  -- operations with graphs
+  -------------------------
   main       = "Main",   -- common functions
   matrix     = "Mat",    -- matrices and linear algebra
   numeric    = "Num",    -- numeric algorithms
   polynomial = "Poly",   -- operations with polynomials and splines
   random     = "Rand",   -- random number generators
+  -------------------------
   rational   = "Rat",    -- rational numbers and continued fractions
-  symbolic   = "Sym",    -- some symbolic methods
   units      = "U",      -- units conversation
---------------------
   const      = "C",      -- physical and other constants
+  symbolic   = "Sym",    -- some symbolic methods
   geodesy    = "Geo",    -- geodesy transformations
+  -------------------------
   gnuplot    = "Gp",     -- GnuPlot 'binding'
   lens       = "Lens",   -- paraxial optics and laser beams
   quaternion = "Quat",   -- working with quaternions

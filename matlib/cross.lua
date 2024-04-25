@@ -3,11 +3,8 @@
 
 -- RATIONAL and BIGINT
 -----------------------------
-Rat = require 'lib.rational'
-Int = require 'lib.bigint'
-
--- check '%' operation
-ans = Rat.gcd(Int(125), Int(65))  --> Int(5)
+Rat = require 'matlib.rational'
+Int = require 'matlib.bigint'
 
 a = Rat(Int(1), Int(2))
 b = Rat(Int(2))
@@ -46,10 +43,7 @@ ans = Int(1) - Rat(1,2)            --> Rat(1,2)
 
 -- RATIONAL and POLYNOMIAL
 -----------------------------------
-Poly = require 'lib.polynomial'
-
--- check '%' operation
-ans = Rat.gcd(Poly{2,7,6}, Poly{3,10,8})  --> Poly{-0.5,-1}
+Poly = require 'matlib.polynomial'
 
 a = Rat(Poly{1,2,1}, Poly{2,3})
 b = Rat(Poly{2,3})
@@ -93,7 +87,7 @@ ans = b ^ 2                      --> b * b
 
 ans = a:der()                    --> Poly{Int(2),Int(2)}
 
-ans = Poly.build(Int(1),Int(1))  --> Poly{Int(1),Int(-2),Int(1)}
+ans = Poly:R{Int(1),Int(1)}      --> Poly{Int(1),Int(-2),Int(1)}
 
 -- show
 print(a:str())
@@ -130,7 +124,7 @@ print(a:str())
 
 -- COMPLEX and BIGINT
 ------------------------
-Comp = require 'lib.complex'
+Comp = require 'matlib.complex'
 
 a = Comp(Int(1),Int(2))
 b = Comp(0, Int(3))
@@ -146,7 +140,7 @@ ans = a / Comp._i                --> Comp(2, -1)
 
 ans = a:abs()                   --3> 2.236
 
-ans = a:angle()                 --3> 1.107
+ans = a:arg()                   --3> 1.107
 
 ans = a:conj()                   --> Comp(Int(1),Int(-2))
 
@@ -179,7 +173,7 @@ ans = a / Comp._i               --> Comp(Rat(2,3),Rat(-1,2))
 
 ans = b:abs()                   --> 0.5
 
-ans = a:angle()                --3> 0.927
+ans = a:arg()                   --3> 0.927
 
 ans = Comp.cos(a):im()         --3> -0.343
 
@@ -190,15 +184,15 @@ print(a)
 
 -- QUATERNION and BIGINT
 ------------------------
-Quat = require 'lib.quaternion'
+Quat = require 'matlib.quaternion'
 
-a = Quat{Int(1),Int(2),Int(3),Int(4)}
+a = Quat{Int(2),Int(3),Int(4),Int(1)}
 b = Quat{w = Int(3), y = Int(5)}
 ans = (a ~= nil) and (b ~= nil) --> true
 
-ans = a + b                     --> Quat{4,2,8,4}
+ans = a + b                     --> Quat{2,8,4,4}
 
-ans = a * b                     --> Quat{-12,-14,14,22}
+ans = a * b                     --> Quat{-14,14,22,-12}
 
 ans = a + a:conj()              --> Int(2)
 
@@ -207,27 +201,27 @@ ans = a:abs()                  --3> 5.477
 c = a * a:inv()
 ans = c:w()                     --> 1
 
-c = a:normalize()
+c = a:normalized()
 ans = c:abs()                  --3> 1.0
 
 d = c ^ 0.5
 ans = d:w()                    --3> 0.768
 
-ans = a ^ 3                     --> Quat{-86,-52,-78,-104}
+ans = a ^ 3                     --> Quat{-52,-78,-104,-86}
 
 -- show
 print(a)
 
 -- quat & int
-ans = a + Int(1)                --> Quat{2,2,3,4}
+ans = a + Int(1)                --> Quat{2,3,4,2}
 
 -- int & quat
-ans = Int(2) * b                --> Quat{6,0,10,0}
+ans = Int(2) * b                --> Quat{0,10,0,6}
 
 
 -- MATRIX and COMPLEX
 ---------------------
-Mat = require 'lib.matrix'
+Mat = require 'matlib.matrix'
 
 -- prepare
 a = Mat{{1, Comp(2,3)},{Comp(4,5), 6}}
@@ -269,12 +263,8 @@ d2 = d:inv()
 tmp = d * d2
 ans = tmp[1][1]             --3> 1.0
 
--- ratio
-tmp = a / b
-ans = tmp[1][1]:im()        --1> -0.6
-
 -- try to solve equation
-tmp = Mat.rref(a .. Mat.V{4,5})
+tmp = (a .. Mat:V{4,5}):rref()
 ans = tmp[1][2]             --3> 0.0
 
 -- pseudoinverse
@@ -341,12 +331,8 @@ d2 = d:inv()
 tmp = d * d2
 ans = tmp[2][2]             --2> 1.0
 
--- ratio
-tmp = a / b
-ans = tmp[1][1]             --1> 2.0
-
 -- try to solve equation
-tmp = Mat.rref(a .. Mat.V{4,5})
+tmp = (a .. Mat:V{4,5}):rref()
 ans = tmp[1][2]             --3> 0.0
 
 -- pseudoinverse

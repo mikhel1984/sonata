@@ -284,9 +284,9 @@ bigint.__add = function (B1, B2)
     end
   end
   if B1._sign > 0 then
-    return (B2._sign > 0) and bigint._sum(B1, B2) or bigint._sub(B1, B2)
+    return (B2._sign > 0) and bigint._sum(B1, B2) or bigint._sub(B1, B2:abs())
   else
-    return (B2._sign > 0) and bigint._sub(B2, B1) or -bigint._sum(B1, B2)
+    return (B2._sign > 0) and bigint._sub(B2, B1:abs()) or -bigint._sum(B1, B2)
   end
 end
 
@@ -475,7 +475,8 @@ bigint.__sub = function (B1, B2)
   if B1._sign > 0 then
     return (B2._sign > 0) and bigint._sub(B1, B2) or bigint._sum(B1, B2)
   else
-    return (B2._sign > 0) and -bigint._sum(B1, B2) or bigint._sub(B2, B1)
+    return (B2._sign > 0) and -bigint._sum(B1, B2)
+      or bigint._sub(B2:abs(), B1:abs())
   end
 end
 

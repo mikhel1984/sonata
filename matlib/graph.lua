@@ -58,7 +58,7 @@ ans = a:isDirected()          --> false
 
 ans = a:isTree()              --> false
 
--- generate 
+-- generate
 b = Graph {K=5}
 ans = b:isComplete()          --> true
 
@@ -100,7 +100,7 @@ print(c:matrix())
 -- random graph
 d = Graph{O=3, name='a'} .. Graph{O=3, name='b'}
 -- generate edges with probability 0.5
-d:randp(0.5) 
+d:randp(0.5)
 print(d:edges())
 
 -- set 8 random edges
@@ -259,7 +259,7 @@ graph.__eq = function (G1, G2)
   -- check edges
   for n1, adj in pairs(G1._) do
     if not g2[n1] then return false end
-    for n2 in pairs(adj) do 
+    for n2 in pairs(adj) do
       local e = {n1, n2}
       if graph.edge(G1, e) ~= graph.edge(G2, e) then
         return false
@@ -292,8 +292,8 @@ about['_mt'] = {"operations: g1==g2, g1~=g2, g1..g2, #g", nil, help.META}
 --  @param nodes Node number or list of names.
 --  @return loop.
 graph._C = function (g, nodes)
-  for i = 2, #nodes do 
-    graph.add(g, nodes[i], nodes[i-1]) 
+  for i = 2, #nodes do
+    graph.add(g, nodes[i], nodes[i-1])
   end
   graph.add(g, nodes[1], nodes[#nodes])
   return g
@@ -353,8 +353,8 @@ end
 --  @param nodes List of names.
 --  @return chain.
 graph._P = function (g, nodes)
-  for i = 2, #nodes do 
-    graph.add(g, nodes[i], nodes[i-1]) 
+  for i = 2, #nodes do
+    graph.add(g, nodes[i], nodes[i-1])
   end
   return g
 end
@@ -403,7 +403,7 @@ graph.components = function (self)
   for k in pairs(self._) do
     local new = true
     for _, v in ipairs(res) do
-      if v._[k] then 
+      if v._[k] then
         new = false
         break
       end
@@ -414,7 +414,7 @@ graph.components = function (self)
   end
   return res
 end
-about[graph.components] = {"G:components() --> G_t", 
+about[graph.components] = {"G:components() --> G_t",
   "Get list of connected components.", help.OTHER}
 
 
@@ -426,7 +426,7 @@ graph.concat = function (self, gs)
   local dst = res._
   for i = 1, #gs do
     local g = gs[i]
-    if g._dir ~= res._dir then 
+    if g._dir ~= res._dir then
       error 'Different types'
     end
     for k, adj in pairs(g._) do
@@ -453,7 +453,7 @@ graph.copy = function (self)
   end
   return res
 end
-about[graph.copy] = {"G:copy() --> cpy_G", 
+about[graph.copy] = {"G:copy() --> cpy_G",
   "Get copy of the graph.", help.OTHER}
 
 
@@ -510,7 +510,7 @@ graph.edges = function (self)
   local res = {}
   for n, adj in pairs(self._) do
     for m, v in pairs(adj) do
-      if v then 
+      if v then
         local t = setmetatable({n, m, v}, self._dir and mt_dir_edge or mt_edge)
         res[#res+1] = t
       end
@@ -614,7 +614,7 @@ about[graph.isEuler] = {"G:isEuler() --> bool",
 graph.isTree = function (self)
   local m = #graph.edges(self)
   local n = #graph.nodes(self)
-  return n - m == 1 
+  return n - m == 1
     and #graph.components(self) == 1
 end
 about[graph.isTree] = {'G:isTree() --> bool',
@@ -686,7 +686,7 @@ about[graph.nout] = {"G:nout(node) --> nodes_t",
 --- Generate random graph.
 --  @param N Edge number.
 graph.rand = function (self, N)
-  -- check / reset 
+  -- check / reset
   local ns = {}
   local g = self._
   for i, v in pairs(g) do
@@ -696,12 +696,12 @@ graph.rand = function (self, N)
   -- max number of edges
   local p = #ns
   p = p*(p-1) / (self._dir and 1 or 2)
-  if N <= 0 or N > p then 
+  if N <= 0 or N > p then
     error 'Wrong edge number'
   end
   -- fill
   if N <= p / 2 then
-    -- add 
+    -- add
     for u = 1, N do
       local a, b = nil, nil
       repeat
@@ -715,7 +715,7 @@ graph.rand = function (self, N)
     graph._K(self, ns)
     for u = p-1, N, -1 do
       local a, b = nil, nil
-      repeat 
+      repeat
         a = ns[math.random(#ns)]
         b = ns[math.random(#ns)]
       until g[a][b] or (not self._dir and g[b][a])
@@ -723,7 +723,7 @@ graph.rand = function (self, N)
     end
   end
 end
-about[graph.rand] = {"G:rand(edge_N)", 
+about[graph.rand] = {"G:rand(edge_N)",
   "Fill graph with random edges.", help.OTHER}
 
 
@@ -733,7 +733,7 @@ graph.randp = function (self, p)
   if p <= 0 or p > 1 then
     error "Wrong probability value"
   end
-  -- check / reset 
+  -- check / reset
   local ns = {}
   local g = self._
   for i, v in pairs(g) do
@@ -753,7 +753,7 @@ end
 about[graph.randp] = {"G:randp(probability_d)",
   "Fill graph with random edges.", help.OTHER}
 
- 
+
 --- Remove node or edge.
 --  @param n1 Node.
 --  @param n2 Second node.
@@ -831,7 +831,7 @@ search.dfs = function (G, vStart, vGoal)
   local pred = {}
   local stack = {{vStart, vStart}}
   -- run
-  repeat 
+  repeat
     -- add successors
     local curr = table.remove(stack)
     local node = curr[1]
@@ -875,7 +875,7 @@ search.dijkstra = function(G, vStart, vGoal)
           prev[k] = current
         end
       end
-    end 
+    end
   end
   return prev[vGoal] and prev
 end
@@ -896,31 +896,31 @@ about[graph.search] = {"G:search(node1, node2, method_s) --> path_t|nil",
 
 -- simplify constructor call
 setmetatable(graph, {
-__call = function (self, t) 
+__call = function (self, t)
   t = t or {}
   local g = graph._new(t.dir or false)
   local name = t.name or 'n'
-  if t.O then   
+  if t.O then
     -- only nodes
     local ns = (type(t.O) == 'number') and makeNodes(t.O, name) or t.O
     graph.addNodes(g, ns)
-  elseif t.K then  
+  elseif t.K then
     -- complete
     local ns = (type(t.K) == 'number') and makeNodes(t.K, name) or t.K
     return graph._K(g, ns)
-  elseif t.C then  
+  elseif t.C then
     -- loop
     local ns = (type(t.C) == 'number') and makeNodes(t.C, name) or t.C
     return graph._C(g, ns)
-  elseif t.P then  
+  elseif t.P then
     -- chain
     local ns = (type(t.P) == 'number') and makeNodes(t.P, name) or t.P
     return graph._P(g, ns)
   end
   return g
 end})
-about[graph] = {" ([params_t]) --> new_G", 
-  "Create graph. Parameters are {dir=bool, O|K|C|P=number|names_t, name='n'}.", 
+about[graph] = {" ([params_t]) --> new_G",
+  "Create graph. Parameters are {dir=bool, O|K|C|P=number|names_t, name='n'}.",
   help.NEW}
 
 

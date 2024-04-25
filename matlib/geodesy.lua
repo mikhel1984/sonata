@@ -165,7 +165,7 @@ end
 --  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
 --  @return Function for coordinate transformation.
 ellipsoid._bwdXYZ = function (lin, rot, m)
-  m = 1 - m 
+  m = 1 - m
   local wx, wy, wz = rot[1], rot[2], rot[3]
   return function (t)
     return {
@@ -729,7 +729,7 @@ about[geodesy.solveInv] = {"E:solveInv(blh1_t, blh2_t) --> dist_d, az1_d, az2_d"
 
 
 geodesy.into = ellipsoid.into
-about[geodesy.into] = {"E:into(E2, lin, rot, m)", 
+about[geodesy.into] = {"E:into(E2, lin, rot, m)",
  "Define transormation rules between ellipsoids.", TRANS}
 
 
@@ -757,7 +757,7 @@ __call = function (_, t)
     J2 = 1.081874E-3,      -- dynamic form factor
   }
 end })
-about[geodesy] = {" ([param_t]) --> E", 
+about[geodesy] = {" ([param_t]) --> E",
   "Produce ellipsoid with the given params {a=, f=}.", help.STATIC}
 
 

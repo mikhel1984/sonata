@@ -792,7 +792,7 @@ qgate.P = function (self, phase, ...)
   return fn(self, ...)
 end
 qubit.P = qgate.P
-about[qubit.P] = {"G:P(phase, [ind1, ind2,..] --> G", 
+about[qubit.P] = {"G:P(phase, [ind1, ind2,..] --> G",
   "Add phase shift gate.", GATES}
 
 

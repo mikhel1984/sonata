@@ -116,7 +116,7 @@ print(a)
 
 -- update env on import
 -- update some methods
-ans = sqrt(-1)                -->  I 
+ans = sqrt(-1)                -->  I
 
 ans = log(-1):im()           --3>  math.pi
 
@@ -204,7 +204,7 @@ end,
 --- Check if the value can be part of complex number.
 --  @param v Value to check.
 --  @return true of false.
-local function compatible(v) 
+local function compatible(v)
   return type(v) == 'number' or getmetatable(v).float ~= nil
 end
 
@@ -299,7 +299,7 @@ complex.__mul = function (C1, C2)
 end
 
 
---- Don't set unknown key. 
+--- Don't set unknown key.
 complex.__newindex = function () error("Immutable object") end
 
 
@@ -433,8 +433,8 @@ about[complex.acos] = {"C:acos() --> y_C", "Complex inverse cosine.", FUNCTIONS}
 
 --- Inverse hyperbolic cosine.
 --  @return Complex inverse hyperbolic cosine.
-complex.acosh = function (self) 
-  return complex.log(self + complex.sqrt(self*self-1)) 
+complex.acosh = function (self)
+  return complex.log(self + complex.sqrt(self*self-1))
 end
 about[complex.acosh] = {"C:acosh() --> y_C",
   "Complex inverse hyperbolic cosine.", FUNCTIONS}
@@ -460,8 +460,8 @@ about[complex.asin] = {"C:asin() --> y_C", "Complex inverse sine.", FUNCTIONS}
 
 --- Inverse hyperbolic sine.
 --  @return Complex inverse hyperbolic sine.
-complex.asinh = function (self) 
-  return complex.log(self + complex.sqrt(self*self+1)) 
+complex.asinh = function (self)
+  return complex.log(self + complex.sqrt(self*self+1))
 end
 about[complex.asinh] = {"C:asinh() --> y_C",
   "Complex inverse hyperbolic sine.", FUNCTIONS}
@@ -507,8 +507,8 @@ about[complex.cos] = {"C:cos() --> y_C",
 
 --- Hyperbolic cosine
 --  @return Complex hyperbolic cosine.
-complex.cosh = function (self) 
-  local v = 0.5*(complex.exp(self) + complex.exp(-self)) 
+complex.cosh = function (self)
+  local v = 0.5*(complex.exp(self) + complex.exp(-self))
   return iscomplex(v) and v or complex._new(v, 0)
 end
 about[complex.cosh] = {"C:cosh() --> y_C",
@@ -574,8 +574,8 @@ about[complex.sin] = {"C:sin() --> y_C", "Return sinus of a complex number.", FU
 
 --- Hyperbolic sinus
 --  @return Complex hyperbolic sinus.
-complex.sinh = function (self) 
-  local v = 0.5*(complex.exp(self) - complex.exp(-self)) 
+complex.sinh = function (self)
+  local v = 0.5*(complex.exp(self) - complex.exp(-self))
   return iscomplex(v) and v or complex._new(v, 0)
 end
 about[complex.sinh] = {"C:sinh() --> y_C",
@@ -615,8 +615,8 @@ about[complex.tan] = {"C:tan() --> y_C",
 
 --- Hyperbolic tangent
 --  @return Complex hyperbolic tangent.
-complex.tanh = function (self) 
-  local v = complex.sinh(self) / complex.cosh(self) 
+complex.tanh = function (self)
+  local v = complex.sinh(self) / complex.cosh(self)
   return iscomplex(v) and v or complex._new(v, 0)
 end
 about[complex.tanh] = {"C:tanh() --> y_C",
@@ -629,7 +629,7 @@ about[complex.tanh] = {"C:tanh() --> y_C",
 complex.cis = function (self, ang)
   return complex._new(fcos(ang), fsin(ang))
 end
-about[complex.cis] = {":cis(angle) --> cos(angle)+i*sin(angle)", 
+about[complex.cis] = {":cis(angle) --> cos(angle)+i*sin(angle)",
   "Make complex number using angle.", help.STATIC}
 
 

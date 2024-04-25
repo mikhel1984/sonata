@@ -186,7 +186,7 @@ end
 rational.__div = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
-    if p then 
+    if p then
       return R1 / p
     else
       p = Cross.convert(R2, R1)
@@ -205,11 +205,11 @@ end
 rational.__eq = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
-    if p then 
+    if p then
       return R1 == p
     else
       p = Cross.convert(R2, R1)
-      if p then 
+      if p then
         return p == R2
       else
         return Cross.float(R1) == Cross.float(R2)
@@ -232,11 +232,11 @@ rational.__index = rational
 rational.__le = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
-    if p then 
+    if p then
       return R1 <= p
     else
       p = Cross.convert(R2, R1)
-      if p then 
+      if p then
         return p <= R2
       else
         return Cross.float(R1) <= Cross.float(R2)
@@ -255,11 +255,11 @@ end
 rational.__lt = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
-    if p then 
+    if p then
       return R1 < p
     else
       p = Cross.convert(R2, R1)
-      if p then 
+      if p then
         return p < R2
       else
         return Cross.float(R1) < Cross.float(R2)
@@ -278,7 +278,7 @@ end
 rational.__mul = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
-    if p then 
+    if p then
       return R1 * p
     else
       p = Cross.convert(R2, R1)
@@ -323,7 +323,7 @@ end
 rational.__sub = function (R1, R2)
   if not (isrational(R1) and isrational(R2)) then
     local p = Cross.convert(R1, R2)
-    if p then 
+    if p then
       return R1 - p
     else
       p = Cross.convert(R2, R1)
@@ -339,8 +339,8 @@ end
 --  @return String with numerator and denominator.
 rational.__tostring = function (self)
   local r = self._
-  if type(r[1]) == 'number' and type(r[2]) == 'number' 
-     and mabs(r[1]) > r[2] 
+  if type(r[1]) == 'number' and type(r[2]) == 'number'
+     and mabs(r[1]) > r[2]
   then
     if rational.MIXED then
       local n = mabs(r[1])       -- numerator
@@ -447,7 +447,7 @@ rational.fromCF = function (_, t)
       or type(v) == 'table' and v.__mod) and v > 0
     then
       check[i] = v
-    else 
+    else
       error "Positive integer is expected"
     end
   end
@@ -456,7 +456,7 @@ rational.fromCF = function (_, t)
     or type(t0) == 'table' and t0.__mod)
   then
     check[0] = t0
-  else 
+  else
     error "Integer is expected"
   end
   return rational._new(rational._cont2rat(check))
@@ -484,7 +484,7 @@ about[rational.num] = {"R:num() --> var", "Return the numerator of rational numb
 --  @return Table of coefficients t such that R = t[0] + 1/(t[1]+1/(t[2]+1/...
 rational.toCF = function (self)
   local a, b = self._[1], self._[2]
-  if a < 0 then 
+  if a < 0 then
     error "Positive is expected"
   end
   local numbers = (type(a) == 'number' and type(b) == 'number')
@@ -506,7 +506,7 @@ about[rational.toCF] = {"R:toCF() --> coeff_t",
 -- call constructor, check arguments
 setmetatable(rational, {
 __call = function (_, n, d)
-  if isrational(n) and not d then 
+  if isrational(n) and not d then
     return n
   end
   d = d or 1

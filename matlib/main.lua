@@ -175,7 +175,7 @@ Round = function (f, v)
   end
   return Cross.round(f, v)
 end
-about[Round] = {'Round(v, d=0) --> v', 
+about[Round] = {'Round(v, d=0) --> v',
   'Round value, define number of decimal digits or tolerance.', AUX}
 
 
@@ -185,7 +185,7 @@ then
   -- Sonata specific functions
   about[use] = {'use([module_s]) --> str|nil',
     "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
-  about[help] = {"help(fn='main') --> str", 
+  about[help] = {"help(fn='main') --> str",
     "Show information about the function.", AUX}
   about[quit] = {'quit()', "Quit the program.", AUX}
 

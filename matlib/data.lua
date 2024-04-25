@@ -159,7 +159,7 @@ local REF = 'reference'
 --  @return deep copy.
 local function copy_obj(v)
   if type(v) == 'table' then
-    if v.copy then 
+    if v.copy then
       return v:copy()
     else
       local lst = {}
@@ -191,7 +191,7 @@ local data = {}
 data.copy = function (_, v)
   return copy_obj(v)
 end
-about[data.copy] = {":copy(t) --> copy_t", 
+about[data.copy] = {":copy(t) --> copy_t",
   "Make deep copy of the table.", help.OTHER}
 
 
@@ -561,7 +561,7 @@ data.reduce = function (_, fn, t, val)
   return val
 end
 about[data.reduce] = {":reduce(fn, data_t, [initial]) --> var",
-  "Apply function to its previous result and next element.", LIST} 
+  "Apply function to its previous result and next element.", LIST}
 
 
 --- Sum of all elements.
@@ -612,7 +612,7 @@ data.md = function (_, data_t, names_t, fn)
   for i, v in ipairs(data_t) do
     local row = {}
     for j, w in ipairs(fn and fn(v) or v) do
-      row[j] = tostring(w)      
+      row[j] = tostring(w)
     end
     acc[i] = row
   end
@@ -620,14 +620,14 @@ data.md = function (_, data_t, names_t, fn)
   if names_t then
     local head = {}
     for j = 1, #acc[1] do head[j] = tostring(names_t[j] or '') end
-    acc[#acc+1] = head  -- temporary add    
+    acc[#acc+1] = head  -- temporary add
   end
   -- save
   local len = Utils.align(acc)
   for j = 1, #len do line[j] = string.rep('-', len[j]) end
   local res, templ = {}, '| %s |'
-  if names_t then 
-    res[1] = string.format(templ, table.concat(acc[#acc], ' | ')) 
+  if names_t then
+    res[1] = string.format(templ, table.concat(acc[#acc], ' | '))
     acc[#acc] = nil
   end
   res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
