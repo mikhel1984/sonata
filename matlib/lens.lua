@@ -28,10 +28,24 @@ require 'matlib.complex'  -- for beam transformation
 n1 = 1      -- air
 n2 = 1.56   -- glass
 -- radius 200 mm, thickness 5 mm
-lens1 = Lens:R(200,n1,n2)
+lens1 = Lens:R(n1,200,n2)
         :T(5,n2)
-        :R(-200,n2,n1)
+        :R(n2,-200,n1)
 ans = lens1:isUnit()          -->  true
+
+-- in the chain definition
+-- 'n' can be taken from a previous element
+lens11 = Lens:R(n1,200,n2)
+         :T(5)
+         :R(-200, n1)
+ans = (lens1 == lens11)       -->  true
+
+-- if n==1 then it can be skipped
+lens12 = Lens:R(200,n2)  -- skip first n
+         :T(5)
+         :R(-200)  -- first n from previous, skip last n
+ans = (lens1 == lens12)       -->  true
+
 
 -- get matrix element
 ans = lens1.D                --2>  1
@@ -215,7 +229,10 @@ about['_op'] = {"operations: L1 == L2, L1 .. L2", nil, help.META }
 --- Object constructor.
 --  @param t ABCD table.
 --  @return 'Lens' object.
-lens._init = function(t) return setmetatable(t, lens) end
+lens._init = function(t) 
+  t._nprev = t._nprev or nil
+  return setmetatable(t, lens) 
+end
 
 
 --- Make component for afocal system.
@@ -252,7 +269,7 @@ about[lens.beam] = {"L:beam(inRad_d, inCurv_d, lambda_d) --> outRad_d, outCurv_d
 --- Make a copy.
 --  @return Copy of the object.
 lens.copy = function (self)
-  return lens._init({self[1], self[2], self[3], self[4]})
+  return lens._init({self[1], self[2], self[3], self[4], _nprev=self._nprev})
 end
 about[lens.copy] = {"L:copy() --> cpy_L", "Create a copy of the object."}
 
@@ -312,32 +329,42 @@ about[lens.isUnit] = {"L:isUnit() --> bool",
 --  @param dn Refractive index.
 --  @return Reflection matrix.
 lens.mirror = function (self, dr, dn)
-  local L = { 1, 0, 2*dn/dr, 1 }
+  dn = dn or self._nprev or 1
+  local L = {1, 0, 2*dn/dr, 1, _nprev=dn}
   if self[4] then  -- update and return
     self[1], self[2], self[3], self[4] = prod(L, self)
+    self._nprev = dn
     return self
   end
   return lens._init(L)
 end
-about[lens.mirror] = {":mirror(rad_d, n_d) --> L",
+about[lens.mirror] = {":mirror(rad_d, n_d=1) --> L",
   "Find reflection matrix for the given radius and refractive index.",
   help.NEW}
 
 
 --- Make component for refraction.
---  @param dr Radius of a surface.
---  @param dn1 Initial refractive index.
---  @param dn2 Final refractive index.
+--  @param nin Initial refractive index.
+--  @param r Radius of a surface.
+--  @param nout Final refractive index.
 --  @return Refraction matrix.
-lens.R = function (self, dr, dn1, dn2)
-  local L = { 1,  0, -(dn2-dn1)/dr, 1 }
+lens.R = function (self, nin, rad, nout)
+  if not nout then
+    if not rad then
+      nin, rad, nout = self._nprev, nin, 1
+    else
+      nin, rad, nout = self._nprev or 1, nin, rad
+    end
+  end
+  local L = {1,  0, -(nout-nin)/rad, 1, _nprev=nout}
   if self[4] then  -- update and return
     self[1], self[2], self[3], self[4] = prod(L, self)
+    self._nprev = nout
     return self
   end
   return lens._init(L)
 end
-about[lens.R] = {":R(rad_d, n1_d, n2_d) --> L",
+about[lens.R] = {":R(nin_d, rad_d, nout_d) --> L",
   "Find refraction matrix for the given radius of surface and input and output refractive indeces.",
   help.NEW}
 
@@ -379,10 +406,11 @@ about[lens.thin] = {":thin(focalDist_d) --> L",
 --  @param dn Refractive index.
 --  @return Translational matrix.
 lens.T = function (self, dt, dn)
-  dn = dn or 1
-  local L = {1, dt/dn, 0, 1}
+  dn = dn or self._nprev or 1
+  local L = {1, dt/dn, 0, 1, _nprev=dn}
   if self[4] then  -- update and return
     self[1], self[2], self[3], self[4] = prod(L, self)
+    self._nprev = dn
     return self
   end
   return lens._init(L)
