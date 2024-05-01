@@ -84,16 +84,13 @@ ans = y2                     --2>  -24.83
 sys2 = sys1:inv()  -- transpose
 ans, _ = sys2(y2, V2)        --3>  y1
 
--- system matrix determinant
-ans = lens1:det()            --3>  1
-
 -- create thin lens
 lens2 = Lens:thin(f)
 _, V3 = lens1(y1,V1)
 _, ans = lens2(y1,V1)        --2>  V3
 
 -- flat mirror
-lens3 = Lens:mirror(math.huge, n1)
+lens3 = Lens:M(math.huge, n1)
 _, ans = lens3(y1,V1)        --2>  V1
 
 -- afocal system
@@ -130,6 +127,7 @@ local keys = {A=1, B=2, C=3, D=4}
 -- tolerance of comparison
 local TOL = 1E-8
 local LASER = 'laser'
+local ANALYZE = 'analyze'
 
 
 --	INFO
@@ -271,14 +269,8 @@ about[lens.beam] = {"L:beam(inRad_d, inCurv_d, lambda_d) --> outRad_d, outCurv_d
 lens.copy = function (self)
   return lens._init({self[1], self[2], self[3], self[4], _nprev=self._nprev})
 end
-about[lens.copy] = {"L:copy() --> cpy_L", "Create a copy of the object."}
-
-
---- Find the matrix determinant.
---  @return Determinant value.
-lens.det = function (self) return self[1]*self[4] - self[2]*self[3] end
-about[lens.det] = {"L:det() --> determinant_d",
-  "Find determinant of the system matrix.", help.OTHER}
+about[lens.copy] = {"L:copy() --> cpy_L", 
+  "Create a copy of the object.", help.OTHER}
 
 
 --- Find Gaussian beam characterictics.
@@ -321,14 +313,14 @@ lens.isUnit = function (self)
   return math.abs(self[1]*self[4]-self[2]*self[3]-1) < TOL
 end
 about[lens.isUnit] = {"L:isUnit() --> bool",
-  "Check if the system matrix is unit.", help.OTHER}
+  "Check if the system matrix is unit.", ANALYZE}
 
 
 --- Make component for a curved mirror.
 --  @param dr Radius of a mirror surface.
 --  @param dn Refractive index.
 --  @return Reflection matrix.
-lens.mirror = function (self, dr, dn)
+lens.M = function (self, dr, dn)
   dn = dn or self._nprev or 1
   local L = {1, 0, 2*dn/dr, 1, _nprev=dn}
   if self[4] then  -- update and return
@@ -338,9 +330,18 @@ lens.mirror = function (self, dr, dn)
   end
   return lens._init(L)
 end
-about[lens.mirror] = {":mirror(rad_d, n_d=1) --> L",
+about[lens.M] = {":M(rad_d, n_d=1) --> L",
   "Find reflection matrix for the given radius and refractive index.",
   help.NEW}
+
+
+--- Get elements as matrix.
+--  @return 2x2 matrix.
+lens.matrix = function (self)
+  lens.ext_matrix = lens.ext_matrix or require('matlib.matrix')
+  return lens.ext_matrix({{self[1], self[2]}, {self[3], self[4]}})
+end
+about[lens.matrix] = {"L:matrix() --> M", "Get elements as matrix.", help.OTHER}
 
 
 --- Make component for refraction.
@@ -383,7 +384,8 @@ lens.solve = function (_, fn, ind, d0)
   return lens.ext_numeric:newton(eqn, d0)
 end
 about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
-  "Find condition when component with the given index is equal to 0, use initial assumption."}
+  "Find condition when component with the given index is equal to 0, use initial assumption.",
+  ANALYZE}
 
 
 --- Make component for a thin lens.
@@ -430,7 +432,8 @@ lens.transform = function (self, dy, dV)
   return (self[1]*dy + self[2]*dV), (self[3]*dy + self[4]*dV)
 end
 about[lens.transform] = {"L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d",
-  "Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to call L(dy,dV)."}
+  "Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to call L(dy,dV).",
+  help.OTHER}
 -- Simplified call of transformation.
 lens.__call = lens.transform
 
@@ -479,7 +482,7 @@ lens.cardinal = function (self, dn1, dn2)
 end
 about[lens.cardinal] = {"L:cardinal(nLft_d=1, nRht_d=1) --> points_t",
   "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.",
-  help.OTHER}
+  ANALYZE}
 
 
 -- Create arbitrary object
