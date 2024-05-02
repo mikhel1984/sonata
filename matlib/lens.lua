@@ -31,7 +31,7 @@ n2 = 1.56   -- glass
 lens1 = Lens:R(n1,200,n2)
         :T(5,n2)
         :R(n2,-200,n1)
-ans = lens1:isUnit()          -->  true
+ans = lens1:matrix():det()   --2>  1.0
 
 -- in the chain definition
 -- 'n' can be taken from a previous element
@@ -65,7 +65,7 @@ fn = function (d2)
   return Lens:T(d1)..lens1..Lens:T(d2)
 end
 -- solve for B = 0, initial guess dist = 100
-d2 = Lens:solve(fn, Lens.key.B, 100)
+d2 = Lens:solve(fn, 'B', 100)
 ans = d2                     --2>   623.21
 
 -- check solution
@@ -165,6 +165,10 @@ local function prod (L1, L2)
 end
 
 
+--- Check matrix module
+--  @return true if unit matrix
+local function isunit (L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
+
 
 --- Concatenate components along the ray trace.
 --  Equal to matrix product in the opposite order.
@@ -175,7 +179,7 @@ lens.__concat = function (L1, L2)
   if not (islens(L1) and islens(L2)) then
     error 'Not a Lens object'
   end
-  if not (lens.isUnit(L1) and lens.isUnit(L2)) then
+  if not (isunit(L1) and isunit(L2)) then
     error "Wrong system matrices"
   end
   return lens._init({prod(L2, L1)})
@@ -301,19 +305,12 @@ about[lens.gaussSize] = {":gaussSize(waist_d, lambda_d, dist_d) --> rad_d, curv_
 --- Inverse the component matrix.
 --  @return Inverted matrix.
 lens.inv = function (self)
-  -- assume the unit matrix
+  if not isunit(self) then
+    error 'Not a unit matrix'
+  end
   return lens._init({self[4], -self[2], -self[3], self[1]})
 end
 about[lens.inv] = {"L:inv() --> inv_L", "Get the inverted system matrix.", help.OTHER}
-
-
---- Check matrix type.
---  @return True if the matrix is unit.
-lens.isUnit = function (self)
-  return math.abs(self[1]*self[4]-self[2]*self[3]-1) < TOL
-end
-about[lens.isUnit] = {"L:isUnit() --> bool",
-  "Check if the system matrix is unit.", ANALYZE}
 
 
 --- Make component for a curved mirror.
