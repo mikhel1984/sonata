@@ -46,7 +46,6 @@ lens12 = Lens:R(200,n2)  -- skip first n
          :R(-200)  -- first n from previous, skip last n
 ans = (lens1 == lens12)       -->  true
 
-
 -- get matrix element
 ans = lens1.D                --2>  1
 
@@ -107,14 +106,19 @@ ans = lens1:copy()            -->  lens1
 
 -- gaussian beam parameters
 lambda = 1024   -- nm, YAG-Nd laser
-lambda = lambda * 1E-9  -- meters
-ans, _ = Lens:gaussParam(1E-3, lambda) --2>  3.26E-4
+lambda = lambda * 1E-6  -- mm
+ans, _ = Lens:gParam(1, lambda) --2>  3.26E-4
 
 -- laser beam radius
-ans, _ = Lens:gaussSize(1E-3, lambda, 100) --2>  0.033
+_, ans = Lens:gSize(1, lambda, 1E5) --2>  32.61
 
 -- laser beam transformation
-ans, _ = lens1:beam(1E-3, 1E3, lambda)  --2>  1.44E-3
+_, ans = lens1:beam(1E6, 1, lambda)  --2>  0.991
+
+-- laser cavity
+air_rod = Lens: T(50) : T(30, 1.56)
+cavity = Lens:M(-300) .. air_rod .. Lens:M(-300) .. air_rod:inv()
+ans, _ = cavity:emit(lambda)         --2> -90
 
 --]]
 
@@ -231,7 +235,7 @@ about['_op'] = {"operations: L1 == L2, L1 .. L2", nil, help.META }
 --- Object constructor.
 --  @param t ABCD table.
 --  @return 'Lens' object.
-lens._init = function(t) 
+lens._init = function (t) 
   t._nprev = t._nprev or nil
   return setmetatable(t, lens) 
 end
@@ -253,19 +257,19 @@ about[lens.afocal] = {":afocal(magn_d) --> L",
 
 
 --- Find Gaussian beam parameters after transformation.
---  @param dW Input beam radius, m.
---  @param dR Input beam curvature, m.
---  @param dLam Wavelength, m.
+--  @param dR Input beam curvature.
+--  @param dW Input beam spot radius.
+--  @param dLam Wavelength.
 --  @return Output beam radius and curvature.
-lens.beam = function (self, dW, dR, dLam)
+lens.beam = function (self, dR, dW, dLam)
   lens.ext_complex = lens.ext_complex or require("matlib.complex")
   local lampi = dLam / math.pi
   local _1_q1 = lens.ext_complex(1/dR, lampi / (dW * dW))
   local _1_q2 = (self[3] + self[4]*_1_q1) / (self[1] + self[2]*_1_q1)
-  return math.sqrt(lampi / _1_q2:im()), 1/_1_q2:re()
+  return 1/_1_q2:re(), math.sqrt(lampi / _1_q2:im())
 end
-about[lens.beam] = {"L:beam(inRad_d, inCurv_d, lambda_d) --> outRad_d, outCurv_d",
-  "Find output beam radius and curvature.", LASER}
+about[lens.beam] = {"L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize_d",
+  "Find output beam curvature and spot radius.", LASER}
 
 
 --- Make a copy.
@@ -277,15 +281,32 @@ about[lens.copy] = {"L:copy() --> cpy_L",
   "Create a copy of the object.", help.OTHER}
 
 
+--- Find output beam of a laser cavity.
+--  @param lam Waveleight, m.
+--  @return beam curvature and spot radius (for stable resonator).
+lens.emit = function (self, lam)
+  local tr = (self[1] + self[4]) * 0.5
+  if math.abs(tr) <= 1 then
+    local s = math.sqrt(1 - tr*tr)
+    return 2*self[2]/(self[4]-self[1]), math.sqrt(lam*self[2]/(math.pi*s))
+  else
+    local sh = math.sqrt(tr*tr - 1) * (tr > 1 and 1 or -1)
+    return (self[1] - self[4] + 2*sh)/(2*self[3])
+  end
+end
+about[lens.emit] = {"L:emit(lambda_d) --> outCurv_d, outSize_d|nil",
+  "Find laser cavity output beam curvature and radius (for stable case).", LASER}
+
+
 --- Find Gaussian beam characterictics.
 --  @param dW0 Beam waist, m.
 --  @param dLam Waveleight, m.
 --  @return Divergence angle and Raileigh range.
-lens.gaussParam = function (_, dW0, dLam)
+lens.gParam = function (_, dW0, dLam)
   local t = math.pi * dW0 / dLam
   return 1/t, t * dW0
 end
-about[lens.gaussParam] = {":gaussParam(waist_d, lambda_d) --> div_d, range_d",
+about[lens.gParam] = {":gParam(waist_d, lambda_d) --> div_d, range_d",
   "Find divergence angle and Raileigh range for a Gaussian beam.", LASER}
 
 
@@ -293,12 +314,12 @@ about[lens.gaussParam] = {":gaussParam(waist_d, lambda_d) --> div_d, range_d",
 --  @param dW0 Beam waist, m.
 --  @param dLam Waveleight, m.
 --  @param dist Distance, m.
---  @return Beam radius and curvature in pose dist.
-lens.gaussSize = function (_, dW0, dLam, dist)
+--  @return curvature and beam radius in the pose dist.
+lens.gSize = function (_, dW0, dLam, dist)
   local t = (math.pi * dW0 * dW0 / dLam / dist) ^ 2
-  return dW0 * math.sqrt(1 + 1/t), dist * (1 + t)
+  return dist*(1 + t),  dW0 * math.sqrt(1 + 1/t)
 end
-about[lens.gaussSize] = {":gaussSize(waist_d, lambda_d, dist_d) --> rad_d, curv_d",
+about[lens.gSize] = {":gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d",
   "Find Gaussian beam radius and curvature at some distance.", LASER}
 
 
@@ -497,3 +518,4 @@ lens.about = about
 return lens
 
 --======================================
+-- TODO check emit method
