@@ -288,14 +288,16 @@ lens.emit = function (self, lam)
   local tr = (self[1] + self[4]) * 0.5
   if math.abs(tr) <= 1 then
     local s = math.sqrt(1 - tr*tr)
-    return 2*self[2]/(self[4]-self[1]), math.sqrt(lam*self[2]/(math.pi*s))
+    return 2*self[2]/(self[4]-self[1]), math.sqrt(lam*self[2]/(math.pi*s)),
+      math.sqrt(-lam*s/math.pi/self[3]), (self[1]-self[4])/2/self[3]
   else
     local sh = math.sqrt(tr*tr - 1) * (tr > 1 and 1 or -1)
     return (self[1] - self[4] + 2*sh)/(2*self[3])
   end
 end
-about[lens.emit] = {"L:emit(lambda_d) --> outCurv_d, outSize_d|nil",
-  "Find laser cavity output beam curvature and radius (for stable case).", LASER}
+about[lens.emit] = {
+  "L:emit(lambda_d) --> outCurv_d, outSize_d|nil, waist_d|nil, shift_d|nil ",
+  "Find laser cavity output beam curvature. In the case of stable cavity also returns size radius, waist radius and its shift from the plane.", LASER}
 
 
 --- Find Gaussian beam characterictics.
