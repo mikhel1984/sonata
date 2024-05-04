@@ -7,7 +7,7 @@
 --  where each element <i>pk</i> corresponds to coefficient of <i>x^k</i>.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'polynomial'
 --]]
@@ -718,10 +718,14 @@ about[polynomial.der] = {"P:der() --> der_P",
 --  @return Polynomial object.
 polynomial.fit = function (_, tX, tY, N)
   if not (N > 0 and Ver.mathType(N) == 'integer') then
-    error('Wrong order!')
+    error 'Wrong order!'
   end
-  if #tX ~= #tY then error('Wrong data size!') end
-  if #tX <= N then error('Too few points!') end
+  if #tX ~= #tY then
+    error 'Wrong data size!'
+  end
+  if #tX <= N then
+    error 'Too few points!'
+  end
   -- find sums
   local acc = Ver.move(tX, 1, #tX, 1, {})     -- accumulate powers
   local sX, sY = {}, {}              -- accumulate sums
@@ -770,7 +774,7 @@ polynomial.int = function (self, d0)
   return polynomial._init(int)
 end
 about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
-  "Calculate integral, d0 - free coefficient."}
+  "Calculate integral, define free coefficient if need."}
 
 
 --- Find interpolation polinomial in the Lagrange form.
@@ -778,7 +782,9 @@ about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
 --  @param Y Set of variables.
 --  @return Interpolation polynomial.
 polynomial.lagrange = function (_, tX, tY)
-  if #tX ~= #tY then error('Wrong data size!') end
+  if #tX ~= #tY then
+    error 'Wrong data size!'
+  end
   local res = polynomial._init({[0]=0})
   for i = 1, #tX do
     -- find basis polynomial
@@ -821,9 +827,9 @@ polynomial.lin = function (_, tX, tY, v0, vN)
   if v0 then res[#res+1] = {xp + 1, polynomial._init({[0]= vN or v0}) } end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.lin] = {":lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t",
+about[polynomial.lin] = {
+  ":lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t",
   "Linear data interpolation. Return table with polynomials.", FIT}
-
 
 
 --- Find all the polynomial roots.
@@ -964,7 +970,7 @@ polynomial.val = function (self, v)
   return res
 end
 about[polynomial.val] = {"P:val(x) --> y",
-  "Get value of polynomial P in point x."}
+  "Get value of polynomial P in point x. Equat to P(x)."}
 -- simplify call
 polynomial.__call = function (p, x) return polynomial.val(p, x) end
 
@@ -974,7 +980,8 @@ polynomial.__call = function (p, x) return polynomial.val(p, x) end
 polynomial.x = function (_)
   return polynomial._init({[0]=0, 1})
 end
-about[polynomial.x] = {":x() --> P", "Get object to represent polynomial as a sum of k*x^n"}
+about[polynomial.x] = {":x() --> P",
+  "Get object to define polynomial as a sum of k*x^n"}
 
 
 setmetatable(polynomial, {

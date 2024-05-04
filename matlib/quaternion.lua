@@ -7,7 +7,7 @@
 --  where <i>w</i> is a real part, <i>i, j, k</i> are imaginary elements.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'quaternion'
 --]]
@@ -343,7 +343,8 @@ quaternion.fromAA = function (_, dAng, vAxe)
   if d > 0 then d = math.sin(dAng*0.5) / d end
   return quaternion._new(math.cos(dAng*0.5), x*d, y*d, z*d)
 end
-about[quaternion.fromAA] = {':fromAA(angle_d, axis_d) --> Q','Create quaternion using angle and axis.', ROTATION}
+about[quaternion.fromAA] = {':fromAA(angle_d, axis_t|V) --> Q',
+  'Create quaternion using angle and axis.', ROTATION}
 
 
 --- Get quaternion from rotation matrix.
@@ -370,7 +371,8 @@ quaternion.fromRot = function (_, M)
       (M[2][1]-M[1][2])/S, (M[1][3]+M[3][1])/S, (M[2][3]+M[3][2])/S, 0.25*S)
   end
 end
-about[quaternion.fromRot] = {':fromRot(M) --> Q', 'Convert rotation matrix to quaternion.', ROTATION}
+about[quaternion.fromRot] = {':fromRot(M) --> Q',
+  'Convert rotation matrix to quaternion.', ROTATION}
 
 
 --- Obtain quaternion from the Euler angles.
@@ -391,7 +393,8 @@ quaternion.fromRPY = function (_, roll, pitch, yaw)
     cr * sp * cy + sr * cp * sy,
     cr * cp * sy - sr * sp * cy)
 end
-about[quaternion.fromRPY] = {":fromRPY(roll_d, pitch_d, yaw_d) --> Q", "Convert Euler angles to quaternion.", ROTATION}
+about[quaternion.fromRPY] = {":fromRPY(roll_d, pitch_d, yaw_d) --> Q",
+  "Convert Euler angles to quaternion.", ROTATION}
 
 
 --- Get inversion.
@@ -443,7 +446,7 @@ quaternion.rotate = function (self, vec)
   local p2 = self*p1*quaternion.conj(self)
   return {p2._[2], p2._[3], p2._[4]}
 end
-about[quaternion.rotate] = {'Q:rotate(inVec) --> outVec_t',
+about[quaternion.rotate] = {'Q:rotate(in_t|V) --> out_t',
   'Apply quaternion to rotate the vector.', ROTATION}
 
 
@@ -469,14 +472,14 @@ quaternion.slerp = function (Q1, Q2, f)
   return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
 end
 about[quaternion.slerp] = {'Q:slerp(end_Q, rat_f) --> rat_Q',
-  'Spherical linear interpolation for part t.', help.OTHER}
+  'Spherical linear interpolation for the given ratio.', help.OTHER}
 
 
 --- Get angle and axis of the quaternion.
 --  @return Angle and table with unit vector of direction.
 quaternion.toAA = function (self)
   if math.abs(quaternion._norm2(self)-1) > 1E-4 then
-    error("Unit quaternion is required!")
+    error "Unit quaternion is required!"
   end
   local w, x, y, z = Ver.unpack(self._)
   -- get sin
@@ -496,7 +499,7 @@ about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t|nil',
 quaternion.toRot = function (self)
   quaternion.ext_matrix = quaternion.ext_matrix or require('matlib.matrix')
   if math.abs(quaternion._norm2(self)-1) > 1E-4 then
-    error("Unit quaternion is required!")
+    error "Unit quaternion is required!"
   end
   local w, x, y, z = Ver.unpack(self._)
   return quaternion.ext_matrix {
@@ -504,7 +507,8 @@ quaternion.toRot = function (self)
     {2*(x*y+z*w), 1-2*(x*x+z*z), 2*(y*z-x*w)},
     {2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)}}
 end
-about[quaternion.toRot] = {'Q:toRot() --> M', 'Get equal rotation matrix.', ROTATION}
+about[quaternion.toRot] = {'Q:toRot() --> M',
+  'Get equal rotation matrix.', ROTATION}
 
 
 --- Get Euler angles.
@@ -519,7 +523,8 @@ quaternion.toRPY = function (self)
   local yaw   = Ver.atan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
   return roll, pitch, yaw
 end
-about[quaternion.toRPY] = {"Q:toRPY() --> roll_d, pitch_d, yaw_d", "Get Euler angles.", ROTATION}
+about[quaternion.toRPY] = {"Q:toRPY() --> roll_d, pitch_d, yaw_d",
+  "Get Euler angles.", ROTATION}
 
 
 --- Get w component.
@@ -566,7 +571,8 @@ setmetatable(quaternion,
   return quaternion._new(w, x, y, z)
 end
 })
-about[quaternion] = {" {x, y, z, w} --> new_Q", "Create new quaternion.", help.NEW}
+about[quaternion] = {" {x, y, z, w} --> new_Q",
+  "Create new quaternion.", help.NEW}
 
 
 -- Comment to remove descriptions
@@ -575,4 +581,3 @@ quaternion.about = about
 return quaternion
 
 --======================================
---TODO add math functions

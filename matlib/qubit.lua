@@ -3,7 +3,7 @@
 --- Quantum computing simulation.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'qubit'
 --]]
@@ -371,8 +371,8 @@ qubit.combine = function (_, ...)
   end
   return qubit._new(v, n)
 end
-about[qubit.combine] = {":combine([Q1,Q2,..]) --> Q|nil",
-  "Make a system of qubits. Same as Q1..Q2."}
+about[qubit.combine] = {":combine([Q1, Q2, ...]) --> Q|nil",
+  "Make a system of qubits. Same as Q1..Q2 for two components."}
 
 
 --- Getting copy.
@@ -427,7 +427,7 @@ qubit.meas = function (self, ind)
   end
   return self
 end
-about[qubit.meas] = {"Q:meas([index]) --> Q", "Qubit state measurement."}
+about[qubit.meas] = {"Q:meas(index=nil) --> Q", "Qubit state measurement."}
 
 
 --- Normalize coefficients to unit vector.
@@ -692,7 +692,7 @@ qgate.fromMatrix = function (self, m)
   return self
 end
 qubit.fromMatrix = qgate.fromMatrix
-about[qubit.fromMatrix] = {"G:fromMatrix(mat) --> upd_G",
+about[qubit.fromMatrix] = {"G:fromMatrix(M) --> upd_G",
   "Make gate from matrix.", GATES}
 
 
@@ -743,7 +743,7 @@ qgate.H = function (self, ...)
   return self
 end
 qubit.H = qgate.H
-about[qubit.H] = {"G:H([ind1, ind2, ..]) --> upd_G",
+about[qubit.H] = {"G:H([ind1, ind2 ...]) --> upd_G",
   "Add Hadamard gate.", GATES}
 
 
@@ -792,7 +792,7 @@ qgate.P = function (self, phase, ...)
   return fn(self, ...)
 end
 qubit.P = qgate.P
-about[qubit.P] = {"G:P(phase, [ind1, ind2,..] --> G",
+about[qubit.P] = {"G:P(phase, [ind1, ind2 ...] --> G",
   "Add phase shift gate.", GATES}
 
 
@@ -820,7 +820,7 @@ qgate.R = function (self, axis, angle, ...)
   return fn(self, ...)
 end
 qubit.R = qgate.R
-about[qubit.R] = {"G:R(axis_s, angle, [ind1, ind2,..] --> G",
+about[qubit.R] = {"G:R(axis_s, angle, [ind1, ind2 ...] --> G",
   "Add rotation for axis 'X', 'Y' or 'Z'.", GATES}
 
 
@@ -857,32 +857,32 @@ about[qubit.SWAP] = {"G:SWAP(ind1, ind2) --> upd_G",
 -- Add gate S.
 qgate.S = qgate._makeGate(qgate._S22, 'S')
 qubit.S = qgate.S
-about[qubit.S] = {"G:S([ind1, ind2,..]) --> upd_G", "Add S gate.", GATES}
+about[qubit.S] = {"G:S([ind1, ind2 ...]) --> upd_G", "Add S gate.", GATES}
 
 
 -- Add gate T.
 qgate.T = qgate._makeGate(qgate._T22, 'T')
 qubit.T = qgate.T
-about[qubit.T] = {"G:T([ind1, ind2,..]) --> upd_G", "Add T gate.", GATES}
+about[qubit.T] = {"G:T([ind1, ind2 ...]) --> upd_G", "Add T gate.", GATES}
 
 
 -- Add gate X.
 qgate.X = qgate._makeGate(qgate._X22, 'X')
 qgate.NOT = qgate.X
 qubit.X = qgate.X
-about[qubit.X] = {"G:X([ind1, ind2,..]) --> upd_G", "Add X gate.", GATES}
+about[qubit.X] = {"G:X([ind1, ind2 ...]) --> upd_G", "Add X gate.", GATES}
 
 
 -- Add gate Y.
 qgate.Y = qgate._makeGate(qgate._Y22, 'Y')
 qubit.Y = qgate.Y
-about[qubit.Y] = {"G:Y([ind1, ind2,..]) --> upd_G", "Add Y gate.", GATES}
+about[qubit.Y] = {"G:Y([ind1, ind2 ...]) --> upd_G", "Add Y gate.", GATES}
 
 
 -- Add gate Z.
 qgate.Z = qgate._makeGate(qgate._Z22, 'Z')
 qubit.Z = qgate.Z
-about[qubit.Z] = {"G:Z([ind1, ind2,..]) --> upd_G", "Add Z gate.", GATES}
+about[qubit.Z] = {"G:Z([ind1, ind2 ...]) --> upd_G", "Add Z gate.", GATES}
 
 
 -- Comment to remove descriptions
@@ -892,4 +892,3 @@ return qubit
 
 --======================================
 -- TODO vertical concatenation with ..
--- TODO RX, RY, RZ, P

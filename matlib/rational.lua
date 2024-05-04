@@ -7,7 +7,7 @@
 --  where both numbers are integers.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'rational'
 --]]
@@ -406,7 +406,8 @@ end
 --- Get denominator.
 --  @return Denominator.
 rational.denom = function (self) return self._[2] end
-about[rational.denom] = {"R:denom() --> var", "Return the denominator of the rational number."}
+about[rational.denom] = {"R:denom() --> var",
+  "Return the denominator of the rational number."}
 
 
 
@@ -416,7 +417,8 @@ rational.float = function (self)
   local r = self._
   return (r[1] < 0 and -1 or 1) * (Cross.norm(r[1]) / Cross.norm(r[2]))
 end
-about[rational.float] = {"R:float() --> num", "Return rational number as decimal."}
+about[rational.float] = {"R:float() --> num",
+  "Return rational number as decimal."}
 
 
 --- Get rational number approximation.
@@ -477,7 +479,8 @@ end
 --- Get numerator.
 --  @return Numerator.
 rational.num = function (self) return self._[1] end
-about[rational.num] = {"R:num() --> var", "Return the numerator of rational number."}
+about[rational.num] = {"R:num() --> var",
+  "Return the numerator of rational number."}
 
 
 --- Find continued fraction coefficients.

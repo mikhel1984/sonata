@@ -9,7 +9,7 @@
 --  "Introduction to matrix methods in optics" by A.Gerrard, J.M.Burch.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'lens'
 --]]
@@ -229,15 +229,15 @@ lens.__tostring = function (self)
 end
 
 
-about['_op'] = {"operations: L1 == L2, L1 .. L2", nil, help.META }
+about['_op'] = {"operations: L1==L2, L1..L2", nil, help.META }
 
 
 --- Object constructor.
 --  @param t ABCD table.
 --  @return 'Lens' object.
-lens._init = function (t) 
+lens._init = function (t)
   t._nprev = t._nprev or nil
-  return setmetatable(t, lens) 
+  return setmetatable(t, lens)
 end
 
 
@@ -277,7 +277,7 @@ about[lens.beam] = {"L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize
 lens.copy = function (self)
   return lens._init({self[1], self[2], self[3], self[4], _nprev=self._nprev})
 end
-about[lens.copy] = {"L:copy() --> cpy_L", 
+about[lens.copy] = {"L:copy() --> cpy_L",
   "Create a copy of the object.", help.OTHER}
 
 
@@ -297,7 +297,8 @@ lens.emit = function (self, lam)
 end
 about[lens.emit] = {
   "L:emit(lambda_d) --> outCurv_d, outSize_d|nil, waist_d|nil, shift_d|nil ",
-  "Find laser cavity output beam curvature. In the case of stable cavity also returns size radius, waist radius and its shift from the plane.", LASER}
+  "Find laser cavity output beam curvature. In the case of stable cavity also returns size radius, waist radius and its shift from the plane.",
+  LASER}
 
 
 --- Find Gaussian beam characterictics.
@@ -333,7 +334,8 @@ lens.inv = function (self)
   end
   return lens._init({self[4], -self[2], -self[3], self[1]})
 end
-about[lens.inv] = {"L:inv() --> inv_L", "Get the inverted system matrix.", help.OTHER}
+about[lens.inv] = {"L:inv() --> inv_L",
+  "Get the inverted system matrix.", help.OTHER}
 
 
 --- Make component for a curved mirror.
@@ -419,7 +421,7 @@ lens.thin = function (self, df)
   end
   return lens._init(L)
 end
-about[lens.thin] = {":thin(focalDist_d) --> L",
+about[lens.thin] = {":thin(focal_d) --> L",
   "Find the thin lens system matrix for the given focal distance.", help.NEW}
 
 
@@ -452,7 +454,7 @@ lens.transform = function (self, dy, dV)
   return (self[1]*dy + self[2]*dV), (self[3]*dy + self[4]*dV)
 end
 about[lens.transform] = {"L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d",
-  "Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to call L(dy,dV).",
+  "Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to L(dy,dV).",
   help.OTHER}
 -- Simplified call of transformation.
 lens.__call = lens.transform
@@ -511,7 +513,8 @@ __call = function (_, A, B, C, D)
   assert(A and B and C and D)
   return lens._init({A, B, C, D})
 end})
-about[lens] = {" (A_d, B_d, C_d, D_d) --> new_L", "Make new lens component.", help.NEW}
+about[lens] = {" (A_d, B_d, C_d, D_d) --> new_L",
+  "Make new lens component.", help.NEW}
 
 
 -- Comment to remove descriptions

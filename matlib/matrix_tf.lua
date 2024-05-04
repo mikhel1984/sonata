@@ -3,7 +3,7 @@
 --- Aux matrix transformations and references.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'matrix_tf'
 --]]
@@ -845,9 +845,7 @@ local refs = {
 
 --- Check if the object is reference.
 --  @return true when matrix is ref.
-transform.isref = function (v)
-  return refs[getmetatable(v)]
-end
+transform.isref = function (v) return refs[getmetatable(v)] end
 
 
 return transform

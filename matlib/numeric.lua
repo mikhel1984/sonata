@@ -3,7 +3,7 @@
 --- Numerical solutions for some mathematical problems.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'numeric'
 --]]
@@ -265,7 +265,7 @@ numeric.lim = function (_, fn, xn, isPositive)
   inform('limit: not found')
   return prev, true  -- error flag
 end
-about[numeric.lim] = {":lim(fn, xn_d, isPositive) --> y",
+about[numeric.lim] = {":lim(fn, xn_d, isPositive=false) --> y",
   "Estimate limit of a function."}
 
 
@@ -334,7 +334,9 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   return res
 end
 about[numeric.ode] = {":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
-  "Numerical approximation of the ODE solution.\nList of parameters is optional and can includes time step and exit condition.\nReturn table of intermediate points in form {t, x(t)}."}
+[[Numerical approximation of the ODE solution.
+List of parameters is optional and can includes time step and exit condition.
+Return table of intermediate points in form {t, x(t)}.]]}
 
 
 --- Find root of equation at the given interval.
@@ -354,7 +356,7 @@ numeric.solve = function (_, fn, a, b)
   return b
 end
 about[numeric.solve] = {":solve(fn, low_d, up_d) --> num",
-  "Find root of equation fn(x)=0 at interval [a,b]."}
+  "Find root of equation fn(x)=0 on interval [a,b]."}
 
 
 --- Integration using trapeze method.
@@ -409,13 +411,13 @@ about[numeric.int] = {":int(fn, x1_d, x2_d) --> num",
   "Get integral of the function. Improper integrals with infinite limits are possible."}
 
 
-if Sonata  -- ENV
-then
+if Sonata
+then  --=====================
 
   -- short alias
   INF = math.huge
 
-end
+end   --=====================
 
 
 -- Comment to remove descriptions

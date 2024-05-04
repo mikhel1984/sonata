@@ -3,7 +3,7 @@
 --- Use pseudography for data visualization.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'asciiplot'
 --]]
@@ -983,7 +983,7 @@ asciiplot.addString = function (self, ir, ic, s)
   end
 end
 about[asciiplot.addString] = {"F:addString(row_N, col_N, str)",
-  "Set string from the given position.", MANUAL}
+  "Add string to the given position.", MANUAL}
 
 
 --- Get information about axes.
@@ -1008,7 +1008,7 @@ asciiplot.axes = function (self)
   return res
 end
 about[asciiplot.axes] = {"F:axes() --> tbl",
-  "Get {size, log, range, view, fix} for each axis.", help.OTHER}
+  "Get {'size','log','range','view','fix'} for each axis.", help.OTHER}
 
 
 --- Plot bar graph.
@@ -1070,11 +1070,13 @@ asciiplot.bar = function (self, t, iy, ix)
     r = r + 1
   end
 end
-about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)", "Plot bar diargram for data."}
+about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)",
+  "Plot bar diargram for the given data."}
 
 
---- Horizontal concatenation of figures.
---  @param ... List of figure objects.
+--- Horizontal concatenation of 2 figures.
+--  @param F1 First figure.
+--  @param F2 Second figure.
 --  @return String with figures.
 asciiplot.concat = function (_, F1, F2)
   if not (isasciiplot(F1) and isasciiplot(F2)) then
@@ -1112,7 +1114,7 @@ asciiplot.concat = function (_, F1, F2)
   return table.concat(acc, '\n')
 end
 about[asciiplot.concat] = {":concat(F1, F2) --> str",
-  "Horizontal concatenation of figures with the same height. For two object operator '..' can be used.",
+  "Horizontal concatenation of figures with the same height. Equal to F1..F2.",
   help.STATIC}
 
 
@@ -1286,7 +1288,7 @@ asciiplot.reset = function (self)
   asciiplot._axes(self)
   asciiplot._limits(self)
 end
-about[asciiplot.reset] = {"F:reset()", "Prepare a clear canvas.", MANUAL}
+about[asciiplot.reset] = {"F:reset()", "Prepare a clean canvas.", MANUAL}
 
 
 --- Scale xrange and yrange w.r.t. initial size.
@@ -1309,24 +1311,24 @@ about[asciiplot.scale] = {"F:scale(factor_d | src_F)",
 --- X axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setX = function (self, t) asciiplot._setAxis(self, t, '_x') end
-about[asciiplot.setX] = {"F:setX(par_t={range,view,log,fix})",
-  "X axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), ragne fix (true/false).",
+about[asciiplot.setX] = {"F:setX(par_t)",
+  "X axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
   CONF}
 
 
 --- Y axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setY = function (self, t) asciiplot._setAxis(self, t, '_y') end
-about[asciiplot.setY] = {"F:setY(par_t={range,view,log,fix})",
-  "Y axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
+about[asciiplot.setY] = {"F:setY(par_t)",
+  "Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
   CONF}
 
 
 --- Z axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setZ = function (self, t) asciiplot._setAxis(self, t, '_z') end
-about[asciiplot.setZ] = {"F:setZ(par_t={range,view,log,fix})",
-  "Z axis configuration, set range ({a,b}), view ('min'/'mid'/'max'/false), logarithm (true/false), range fix (true/false).",
+about[asciiplot.setZ] = {"F:setZ(par_t)",
+  "Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
   CONF}
 
 
@@ -1384,8 +1386,8 @@ about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", help.STATIC}
 
 
-if Sonata  -- ENV
-then
+if Sonata
+then  --=====================
 
   -- Define simplified function call
   Plot = function (...)
@@ -1398,7 +1400,7 @@ then
   about[Plot] = {"Plot(...)",
     "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
 
-end
+end   --=====================
 
 
 -- Comment to remove descriptions

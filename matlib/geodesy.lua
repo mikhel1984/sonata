@@ -3,7 +3,7 @@
 --- Coordinate transformations and other geodetic tasks.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'geodesy'
 --]]
@@ -708,7 +708,7 @@ about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t",
 
 geodesy.utm2bl = ellipsoid.utm2bl
 about[geodesy.utm2bl] = {"E:utm2bl(utm_t) --> blh_t",
-  "Find Geodetic coordinates for the given UTM pose and zone", PROJ}
+  "Find Geodetic coordinates for the given UTM pose and zone.", PROJ}
 
 
 geodesy.bl2utm = ellipsoid.bl2utm
@@ -757,8 +757,8 @@ __call = function (_, t)
     J2 = 1.081874E-3,      -- dynamic form factor
   }
 end })
-about[geodesy] = {" ([param_t]) --> E",
-  "Produce ellipsoid with the given params {a=, f=}.", help.STATIC}
+about[geodesy] = {" (param_t=nil) --> E",
+  "Produce ellipsoid with the given params {'a', 'f'}.", help.STATIC}
 
 
 -- Comment to remove descriptions
@@ -768,4 +768,3 @@ return geodesy
 
 --======================================
 --TODO: check correctness (Molodensky)
---TODO: ellipsoid.__tostring

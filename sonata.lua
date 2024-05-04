@@ -1,7 +1,7 @@
 #!/usr/local/bin/lua
 
 -- Lua based mathematical program
--- This file is a part of 'sonata.matlib' collection, 2017 - 2023.
+-- This file is a part of 'sonata.matlib' collection, 2017 - 2024.
 
 
 --================  CONFIGURATION  ===================

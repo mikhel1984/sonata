@@ -6,7 +6,7 @@
 --  by W.H.Press, S.A.Teukolsky, W.T.Vetterling and B.P.Flannery
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'special'
 --]]
@@ -393,7 +393,7 @@ about[special.besseli] = {":besseli(order_N, x_d) --> num",
 --  @param N Polynomial order.
 --  @param x Real number.
 --  @return Polynomial value
-special.besselj = function (_, N,x)
+special.besselj = function (_, N, x)
   if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
   if N == 0 then return special._bessj0(x) end
   if N == 1 then return special._bessj1(x) end
@@ -610,7 +610,8 @@ special.expint = function (_, n, x)
   end -- if x
   error('Evaluation is failed!')
 end
-about[special.expint] = {":expint(pow_N, x_d) --> num", "Exponential integral En(x)."}
+about[special.expint] = {":expint(pow_N, x_d) --> num",
+  "Exponential integral En(x)."}
 
 
 --- Gamma function.
@@ -639,7 +640,10 @@ special.gammaln = function (_, z)
   local tmp = x + 5.5
   tmp = tmp - (x+0.5)*math.log(tmp)
   local ser = 1.000000000190015
-  for i = 1, #k_gammaln do y = y+1; ser = ser+k_gammaln[i]/y end
+  for i = 1, #k_gammaln do
+    y = y +1
+    ser = ser + k_gammaln[i]/y
+  end
   return -tmp + math.log(2.5066282746310005*ser/x)
 end
 about[special.gammaln] = {":gammaln(x_d) --> num",
@@ -654,7 +658,8 @@ special.gammp = function (_, N, x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and special._gammaSer(N, x) or 1.0-special._gcf(N, x)
 end
-about[special.gammp] = {":gammp(order_N, x_d) --> num", "Incomplete gamma function P(N,x).", GAMMA}
+about[special.gammp] = {":gammp(order_N, x_d) --> num",
+  "Incomplete gamma function P(N,x).", GAMMA}
 
 
 --- Incomplete gamma function Q(N,x).

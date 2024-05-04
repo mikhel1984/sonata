@@ -7,7 +7,7 @@
 --  i.e. complex number is a table which consists of two elements.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'complex'
 --]]
@@ -569,7 +569,8 @@ complex.sin = function (self)
   local c = self._
   return complex._new(fsin(c[1])*ch(c[2]), fcos(c[1])*sh(c[2]))
 end
-about[complex.sin] = {"C:sin() --> y_C", "Return sinus of a complex number.", FUNCTIONS}
+about[complex.sin] = {"C:sin() --> y_C",
+  "Return sinus of a complex number.", FUNCTIONS}
 
 
 --- Hyperbolic sinus
@@ -629,8 +630,8 @@ about[complex.tanh] = {"C:tanh() --> y_C",
 complex.cis = function (self, ang)
   return complex._new(fcos(ang), fsin(ang))
 end
-about[complex.cis] = {":cis(angle) --> cos(angle)+i*sin(angle)",
-  "Make complex number using angle.", help.STATIC}
+about[complex.cis] = {":cis(phy) --> cos(phy)+i*sin(phy)",
+  "Make complex number exp(i*phy).", help.STATIC}
 
 
 -- simplify constructor call
@@ -647,8 +648,8 @@ about[complex] = {" (re=0, im=0) --> new_C",
   "Create new complex number.", help.STATIC}
 
 
-if Sonata  -- ENV
-then
+if Sonata
+then  --=====================
 
   -- complex unit
   I = complex._i
@@ -665,7 +666,7 @@ then
     return (iscomplex(a) or type(a) == 'number') and complex.log(a) or _log(a)
   end
 
-end
+end   --=====================
 
 
 -- Comment to remove descriptions

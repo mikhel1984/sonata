@@ -3,7 +3,7 @@
 --- Random number generators.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'random'
 --]]
@@ -393,7 +393,9 @@ about[random.flip] = {"R:flip(p=0.5) --> bool",
 --  @param iBeta Beta.
 --  @return random number.
 random.gamma = function (self, iAlpha, dBeta)
-  if iAlpha < 1 then error("Alpha < 1") end
+  if iAlpha < 1 then
+    error "Alpha < 1"
+  end
   local x = 1.0
   if iAlpha < 6 then
     for i = 1, iAlpha do x = x * self:_fn() end
@@ -429,7 +431,7 @@ random.int = function (self, N1, N2)
   N1, N2 = (N2 and N1 or 1), (N2 or N1)
   return self:_fnRng(N1, N2)
 end
-about[random.int] = {"R:int([lower_i=1], upper_i) -> int",
+about[random.int] = {"R:int(lower_i=1, upper_i) -> int",
   "Uniform distributed random integer in the given range.", DIST}
 
 
@@ -449,7 +451,7 @@ random.ipairs = function (self, t)
     end
   end
 end
-about[random.ipairs] = {"R:ipairs(tbl) --> fn",
+about[random.ipairs] = {"R:ipairs(tbl) --> iterator_fn",
   "Random iterator over the table elements."}
 
 
@@ -566,7 +568,7 @@ random.shuffle = function (_, t)
     t[i], t[j] = t[j], t[i]
   end
 end
-about[random.shuffle] = {"R:shuffle(tbl)", "Change order of elements."}
+about[random.shuffle] = {"R:shuffle(tbl)", "Change order of elements in place."}
 
 
 -- simplify constructor call

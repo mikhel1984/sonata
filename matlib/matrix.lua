@@ -9,7 +9,7 @@
 --  operation X[i][j] will return 0.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'matrix'
 --]]
@@ -595,8 +595,7 @@ about[matrix.chol] = {"M:chol() --> lower_M|nil",
 --- Get number of columns.
 --  @return Number of columns.
 matrix.cols = function (self) return self._cols end
-about[matrix.cols] = {"M:cols() --> N",
-  "Get number of columns."}
+about[matrix.cols] = {"M:cols() --> N", "Get number of columns."}
 
 
 --- Create copy of matrix.
@@ -667,9 +666,8 @@ matrix.D = function (_, v, shift)
   end
   return nil
 end
-about[matrix.D] = {':D(list_v, shift_N) --> M',
-  'Create new matrix with the given diagonal elements.',
-  help.NEW}
+about[matrix.D] = {':D(list_v, shift_N=0) --> M',
+  'Create new matrix with the given diagonal elements.', help.NEW}
 
 
 -- Scalar product.
@@ -773,7 +771,6 @@ about[matrix.hor] = {":hor(mat_t) --> mat_Ref",
   "Horizontal concatenation for the given list of matrices.", "concat"}
 
 
-
 --- Inverse matrix.
 --  @return Result of inversion.
 matrix.inv = function (self)
@@ -842,7 +839,7 @@ matrix.kron = function (self, M)
   end
   return res
 end
-about[matrix.kron] = {"M:kron(M2) --> M3", "Find Kronecker product."}
+about[matrix.kron] = {"M:kron(M2) --> M⊗M2", "Find Kronecker product."}
 
 
 --- Kronecker sum.
@@ -854,12 +851,12 @@ matrix.kronSum = function (self, M)
   end
   return matrix.kron(self, matrix:eye(M)) + matrix.kron(matrix:eye(M1), M)
 end
-about[matrix.kronSum] = {"M:kronSum(M2) --> M3", "Find Kronecker sum."}
+about[matrix.kronSum] = {"M:kronSum(M2) --> M⊕M2", "Find Kronecker sum."}
 
 
 -- "In the game of life the strong survive..." (Scorpions) ;)
 --  board - matrix with 'ones' as live cells
-matrix.life = function (board)
+matrix.LIFE = function (board)
   local src = board
   local gen = 0
   -- make decision about current cell
@@ -932,7 +929,7 @@ matrix.lu = function (self)
   return L, U, P
 end
 about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
-  "LU decomposition for the matrix. Return L,U and P matrices.", TRANSFORM}
+  "LU decomposition for the matrix. Return L, U and P matrices.", TRANSFORM}
 
 
 --- Apply function to each element.
@@ -948,7 +945,7 @@ matrix.map = function (self, fn)
   return matrix._init(#res, Mcols, res)
 end
 about[matrix.map] = {"M:map(fn) --> found_M",
-  "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x,row,col).",
+  "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x, row, col).",
   TRANSFORM}
 
 
@@ -1122,8 +1119,8 @@ matrix.reshape = function (self, iRows, iCols)
   end
   return tf.makeReshape(self, iRows, iCols)
 end
-about[matrix.reshape] = {"M:reshape(row_N=size, col_N=1) --> mat_Ref",
-  "Get matrix with changed size.", TRANSFORM}
+about[matrix.reshape] = {"M:reshape(row_N=(rows*cols), col_N=1) --> mat_Ref",
+  "Matrix with rearranged elements.", TRANSFORM}
 
 
 --- Get number or rows.
@@ -1134,9 +1131,7 @@ about[matrix.rows] = {"M:rows() --> N", "Get number of rows."}
 
 --- Solve system of equations using Gauss method.
 --  @return Transformed matrix.
-matrix.rref = function (self)
-  return tf.gaussUp(tf.gaussDown(self))
-end
+matrix.rref = function (self) return tf.gaussUp(tf.gaussDown(self)) end
 about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method.", TRANSFORM}
 
@@ -1267,7 +1262,7 @@ about[matrix.vec] = {"M:vec() --> vec_Ref|nil",
 matrix.vectorize = function (M)
   return M:T():copy():reshape()
 end
-about[matrix.vectorize] = {"M:vectorize() --> mat_Ref",
+about[matrix.vectorize] = {"M:vectorize() --> V",
   "Create vector as a stack of columns.", TRANSFORM}
 
 
@@ -1320,13 +1315,13 @@ matrix.zip = function (_, fn, ...)
   end
   return matrix._init(rows, cols, res)
 end
-about[matrix.zip] = {':zip(fn, M1, M2,..) --> res_M',
+about[matrix.zip] = {':zip(fn, ...) --> res_M',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
 
 -- constructor call
 setmetatable(matrix, {__call = matrix._new})
-about[matrix] = {" {row1_t, row2_t,..} --> new_M",
+about[matrix] = {" {row1_t, ...} --> new_M",
   "Create matrix from list of strings (tables).", help.NEW}
 
 

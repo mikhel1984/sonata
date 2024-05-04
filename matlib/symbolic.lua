@@ -6,7 +6,7 @@
 --  <code> {_=components, _parent=parent, _sign=signature} </code><br>
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'symbolic'
 --]]
@@ -230,7 +230,8 @@ symbolic.diff = function (S1, S2)
   if S1:_isfn() then error('Undefined arguments') end
   return S1:p_diff(S2)
 end
-about[symbolic.diff] = {"S:diff(var_S) --> derivative_S", "Find symbolic derivative."}
+about[symbolic.diff] = {"S:diff(var_S) --> derivative_S",
+  "Find symbolic derivative."}
 
 
 --- Find value for the given substitutions.
@@ -264,14 +265,16 @@ about[symbolic.fn] = {":fn(name_s) --> fn_S|nil",
 symbolic.introspect = function (S)
   return S:p_internal(0)
 end
-about[symbolic.introspect] = {"S:introspect() --> str", "Show the internal structure."}
+about[symbolic.introspect] = {"S:introspect() --> str",
+  "Show the internal structure."}
 
 
 --- Check if the symbol is function.
 --  @param S Symbolic variable.
 --  @return true when it is function.
 symbolic.isFn = function (S) return S:_isfn() end
-about[symbolic.isFn] = {'S:isFn() --> bool', 'Return true if the symbol is function.'}
+about[symbolic.isFn] = {'S:isFn() --> bool',
+  'Return true if the symbol is function.'}
 
 
 --- Get name of variable.
@@ -294,7 +297,8 @@ symbolic.parse = function(self, str)
   end
   return table.unpack(res)
 end
-about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..", "Get simbolic expression from string."}
+about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..",
+  "Get simbolic expression from string."}
 
 
 --- Get value of constant.
@@ -316,7 +320,8 @@ __call = function (self, v)
   end
   error("Wrong argument "..tostring(v))
 end})
-about[symbolic] = {" (num|str) --> new_S", "Create new symbolic variable.", help.NEW}
+about[symbolic] = {" (num|str) --> new_S",
+  "Create new symbolic variable.", help.NEW}
 
 
 -- Comment to remove descriptions

@@ -3,7 +3,7 @@
 --- Collection of constants.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'const'
 --]]
@@ -101,10 +101,10 @@ the_answer_to_the_ultimate_question_of_life_the_universe_and_everything = 42,
 
 -- Interface
 local const = {
-phy = {},
-astro = {},
-math = {},
-ext_units = false,
+  phy = {},
+  astro = {},
+  math = {},
+  ext_units = false,
 }
 
 
@@ -158,7 +158,7 @@ const.add = function (self, sName, val, sUnit)
   _user[sName] = val
   _user[sName..'_u_'] = sUnit
 end
-about[const.add] = {':add(name_s, value, [units_s])', 'Create new constant.'}
+about[const.add] = {':add(name_s, value, units_s=nil)', 'Create new constant.'}
 
 
 --- Remove existing constant.

@@ -10,7 +10,7 @@
 --  <code>{_sign=1, _={3, 2, 1}}</code> when BASE is 10.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'bigint'
 --]]
@@ -988,13 +988,14 @@ bigint._2 = bigint._newTable({2}, 1)
 --- Absolute value of number.
 --  @return Absolute value.
 bigint.abs = function (self) return bigint._newTable(self._, 1) end
-about[bigint.abs] = {"B:abs() --> num", "Return module of arbitrary long number."}
+about[bigint.abs] = {"B:abs() --> abs_B",
+  "Return module of arbitrary long number."}
 
 
 --- Get sign of the number.
---  @return sign in form -1/0/+1.
+--  @return sign in form -1/+1.
 bigint.sign = function (self) return self._sign end
-about[bigint.sign] = {"B:sign() --> int", "Return +1/0/-1."}
+about[bigint.sign] = {"B:sign() --> int", "Return +1/-1."}
 
 
 --- Get list of digits for the given base.
@@ -1008,7 +1009,8 @@ bigint.digits = function (self, N)
   res.sign = self._sign
   return setmetatable(res, mt_digits)
 end
-about[bigint.digits] = {"B:digits(N=10) --> tbl", "Convert number to the new numeric base."}
+about[bigint.digits] = {"B:digits(N=10) --> tbl",
+  "Get digits the new numeric base."}
 
 
 --- Find number of combinations.
@@ -1024,7 +1026,7 @@ bigint.C = function (_, n, k, isRepeat)
   end
   return bigint:ratF(n, k) / bigint.F(n-k)
 end
-about[bigint.C] = {":C(n, k, [isRepeat=false]) --> combinations_B",
+about[bigint.C] = {":C(n, k, isRepeat=false) --> combinations_B",
   "Number of combinations C(n,k) with or without repetition.", COMB}
 
 
@@ -1071,8 +1073,7 @@ bigint.FF = function (self)
   end
   return res
 end
-about[bigint.FF] = {"B:FF() --> B!!",
-  "Find double factorial.", COMB}
+about[bigint.FF] = {"B:FF() --> B!!", "Find double factorial.", COMB}
 
 
 --- Find multipliers for the number.
@@ -1093,8 +1094,8 @@ bigint.factorize = function (self)
   end
   return res
 end
-about[bigint.factorize] = {"B:factorize() --> primeBs_t",
-  "Find the list of multipliers.", NUMB}
+about[bigint.factorize] = {"B:factorize() --> prime_t",
+  "Find prive multipliers.", NUMB}
 
 
 --- Float number representation.
@@ -1105,8 +1106,6 @@ bigint.float = function (self)
     local s = math.log(b[#b] + b[#b-1]/BASE) / log10
     s = s + (#b-1)*logBase
     res = 10^s
-    -- s = math.floor(s) - 1
-    -- res = res - res % (10 ^ s)
   else
     -- exact
     for i = #b, 1, -1 do res = res * BASE + b[i] end
@@ -1149,7 +1148,7 @@ bigint.isPrime = function (self, sMethod)
   local v1, _ = bigint._trivialSearch(self)
   return v1 == nil
 end
-about[bigint.isPrime] = {"B:isPrime([method_s]) --> bool",
+about[bigint.isPrime] = {"B:isPrime(method_s=nil) --> bool",
   "Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.",
   NUMB}
 
@@ -1182,7 +1181,7 @@ bigint.P = function (_, n, k, isRepeat)
   n, k = bigint._args(n, k)
   return isRepeat and n^k or bigint:ratF(n, n-k)
 end
-about[bigint.P] = {":P(n, k, [isRepeat=false]) --> permutaions_B",
+about[bigint.P] = {":P(n, k, isRepeat=false) --> permutaions_B",
   "Find permutations with or without repetition.", COMB}
 
 
@@ -1245,7 +1244,7 @@ bigint.ratF = function (_, B, B2)
   return acc
 end
 about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
-  "Find ratio of factorials num!/denom!.", COMB}
+  "Find ratio of factorials.", COMB}
 
 
 --- Find !n.
@@ -1282,7 +1281,7 @@ __call = function (_, v)
   end
   return bigint._new(v)
 end})
-about[bigint] = {" (var) --> new_B",
+about[bigint] = {" (num|str|tbl) --> new_B",
   "Create number from integer, string or table.", help.STATIC}
 
 

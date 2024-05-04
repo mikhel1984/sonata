@@ -167,8 +167,7 @@ mt_rules.__tostring = function (t)
   end
   return table.concat(s, '\n')
 end
-about[units.rules] = {
-  '.rules', 'Table of rules for conversation.', help.OTHER}
+about[units.rules] = {'.rules', 'Table of rules for conversation.', help.OTHER}
 
 
 --- U1 + U2
@@ -557,7 +556,8 @@ units.convert = function (self, s)
   end
   return units._convertKey(self, units._memKeys[s])
 end
-about[units.convert] = {'U:convert(new_s) --> upd_U|nil','Convert one units to another, return new object or nil.', }
+about[units.convert] = {'U:convert(new_s) --> upd_U|nil',
+  'Convert one units to another, return new object or nil.'}
 
 
 --- Create copy of the element.
@@ -565,7 +565,8 @@ about[units.convert] = {'U:convert(new_s) --> upd_U|nil','Convert one units to a
 units.copy = function (self)
   return setmetatable({_value=self._value, _key=self._key}, units)
 end
-about[units.copy] = {'U:copy() --> cpy_U', 'Create copy of the element.', help.OTHER}
+about[units.copy] = {'U:copy() --> cpy_U',
+  'Create copy of the element.', help.OTHER}
 
 
 --- Convert table of units into string.
@@ -624,8 +625,8 @@ units.prefix = {
   Z = 1e+21,  -- zetta
   Y = 1e+24,  -- yotta
 }
-about[units.prefix] = {
-  '.prefix', 'Table of possible prefixes for units.', help.OTHER}
+about[units.prefix] = {'.prefix',
+  'Table of possible prefixes for units.', help.OTHER}
 
 
 -- Print prefix table

@@ -3,7 +3,7 @@
 --- Default functions and objects.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'main'
 --]]
@@ -82,7 +82,7 @@ local main = {}
 
 -- Commonly used methods
 abs = _call(math.abs, 'abs')
-about[abs] = {"abs(x) --> num", "Absolute value."}
+about[abs] = {"abs(x) --> y", "Absolute value."}
 exp = _call(math.exp, 'exp')
 about[exp] = {"exp(x) --> y", "Exponent."}
 log = _call(math.log, 'log')
@@ -104,7 +104,8 @@ about[acos] = {"acos(x) --> y", "Inverse cosine x.", TRIG}
 atan = _call(math.atan, 'atan')
 about[atan] = {"atan(x) --> y", "Inverse tangent x.", TRIG}
 atan2 = Ver.atan2
-about[atan2] = {"atan2(y_d, x_d) --> num", "Inverse tangent of dy/dx, use signs.", TRIG}
+about[atan2] = {"atan2(y_d, x_d) --> num",
+  "Inverse tangent of y/x, use signs.", TRIG}
 
 -- Hyperbolic
 cosh = _call(Calc.cosh, 'cosh')
@@ -143,9 +144,12 @@ about[PI] = {"PI --> 3.14", "Number pi.", AUX}
 --  @param name Function name.
 --  @return clojure of the method.
 Bind = function (obj, name)
-  return function (...) return obj[name](obj, ...) end
+  return function (...)
+           return obj[name](obj, ...)
+         end
 end
-about[Bind] = {"Bind(obj, fn_name) --> fn", "Wrap function to call it without object.", AUX}
+about[Bind] = {"Bind(obj, fn_name) --> fn",
+  "Wrap function to call it without object.", AUX}
 
 
 --- Generate list of function values.
@@ -161,7 +165,8 @@ Map = function (fn, t)
   end
   return nil
 end
-about[Map] = {'Map(fn, in_t) --> out_t','Evaluate function for each table element.', AUX}
+about[Map] = {'Map(fn, in_t) --> out_t',
+  'Evaluate function for each table element.', AUX}
 
 
 --- Round to some precision.
@@ -175,21 +180,23 @@ Round = function (f, v)
   end
   return Cross.round(f, v)
 end
-about[Round] = {'Round(v, d=0) --> v',
+about[Round] = {'Round(v, decimal_N=0) --> round_v',
   'Round value, define number of decimal digits or tolerance.', AUX}
 
 
-if Sonata  -- ENV
-then
+if Sonata
+then  --=====================
 
   -- Sonata specific functions
   about[use] = {'use([module_s]) --> str|nil',
     "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
+
   about[help] = {"help(fn='main') --> str",
     "Show information about the function.", AUX}
+
   about[quit] = {'quit()', "Quit the program.", AUX}
 
-end
+end   --=====================
 
 
 -- save link to help info

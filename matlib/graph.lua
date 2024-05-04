@@ -10,7 +10,7 @@
 --  "false" is used to mark paired of absent edges.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'graph'
 --]]
@@ -484,12 +484,12 @@ graph.dot = function (self, fname)
     local f = assert(io.open(fname, 'w'))
     f:write(line)
     f:close()
-    return 'done'
+    return 'Done'
   else
     return line
   end
 end
-about[graph.dot] = {"G:dot([name_s]) --> str",
+about[graph.dot] = {"G:dot(fname_s=nil) --> str",
   "Save or return graph structure in dot notation.", EXPORT}
 
 
@@ -652,7 +652,7 @@ graph.matrix = function (self)
   return m, ns
 end
 about[graph.matrix] = {"G:matrix() --> adjacency_M, nodes_t",
-  "Get adjacency matrix.", help.OTHER}
+  "Get adjacency matrix and node list.", help.OTHER}
 
 
 --- Get graph nodes.
@@ -770,7 +770,7 @@ graph.remove = function (self, n1, n2)
     self._[n1] = nil
   end
 end
-about[graph.remove] = {"G:remove(n1, [n2])",
+about[graph.remove] = {"G:remove(n1, n2=nil)",
   "Remove node or edge from the graph."}
 
 
@@ -778,7 +778,8 @@ about[graph.remove] = {"G:remove(n1, [n2])",
 --  @return Number of nodes.
 graph.size = function (self) return tblLen(self._) end
 graph.__len = graph.size
-about[graph.size] = {"G:size() --> nodes_N", "Get node number.", help.OTHER}
+about[graph.size] = {"G:size() --> nodes_N",
+  "Get node number. Equal to #G.", help.OTHER}
 
 
 --- Save graph as svg image.
@@ -894,6 +895,7 @@ end
 about[graph.search] = {"G:search(node1, node2, method_s) --> path_t|nil",
   "Find path between two nodes. Methods are: bfs, dfs, dijkstra.", help.OTHER}
 
+
 -- simplify constructor call
 setmetatable(graph, {
 __call = function (self, t)
@@ -919,7 +921,7 @@ __call = function (self, t)
   end
   return g
 end})
-about[graph] = {" ([params_t]) --> new_G",
+about[graph] = {" (params_t={}) --> new_G",
   "Create graph. Parameters are {dir=bool, O|K|C|P=number|names_t, name='n'}.",
   help.NEW}
 

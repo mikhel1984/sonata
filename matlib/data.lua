@@ -3,7 +3,7 @@
 --- Data processing and statistics.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
 	module 'data'
 --]]
@@ -28,10 +28,7 @@ w[5] = 2; w[6] = 2
 ans = D:mean(X)              --3>  3.375
 
 -- standard deviation
-ans, tmp = D:std(X,W)        --3>  1.495
-
--- variance
-ans = tmp                    --3>  2.234
+ans = D:std(X,W)             --3>  1.495
 
 -- covariance for two vectors
 Y = {0,2,1,3,7,5,8,4}
@@ -200,7 +197,9 @@ about[data.copy] = {":copy(t) --> copy_t",
 --  @param t2 Second data vector.
 --  @return Covariance value.
 data.cov2 = function (_, t1, t2)
-  if #t1 ~= #t2 then error("Different vector size") end
+  if #t1 ~= #t2 then
+    error "Different vector size"
+  end
   local m1 = data:mean(t1)
   local m2 = data:mean(t2)
   local s = 0
@@ -218,7 +217,9 @@ about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
 --  @return Covariance matrix.
 data.cov = function (_, t)
   local N = #t
-  if N == 0 then error("Expected list of vectors") end
+  if N == 0 then
+    error "Expected list of vectors"
+  end
   data.ext_matrix = data.ext_matrix or require('matlib.matrix')
   local m = data.ext_matrix:zeros(N, N)
   for i = 1, N do
@@ -247,9 +248,8 @@ data.csvwrite = function (_, sFile, t, char)
     f:write(v, '\n')
   end
   f:close()
-  io.write('Done\n')
 end
-about[data.csvwrite] = {":csvwrite(file_s, data_t, char=',')",
+about[data.csvwrite] = {":csvwrite(file_s, data_t, delim_s=',')",
   "Save Lua table as delimiter separated data into file.", FILES}
 
 
@@ -315,8 +315,8 @@ data.filter = function (_, t, vCond)
   end
   return res
 end
-about[data.filter] = {":filter(in_t, condition) --> out_t",
-  "Get result of the table filtering. Condition is either boolean function or table of weights.",
+about[data.filter] = {":filter(in_t, fn|str|tbl) --> out_t",
+  "Get result of the table filtering. Condition is boolean function, string or table of weights.",
   LIST}
 
 
@@ -353,7 +353,7 @@ data.geomean = function (_, t, tw)
     return p^(1/#t)
   end
 end
-about[data.geomean] = {":geomean(data_t, [weigh_t]) --> num",
+about[data.geomean] = {":geomean(data_t, weigh_t=nil) --> num",
   "Geometrical mean.", STAT}
 
 
@@ -376,7 +376,7 @@ data.harmmean = function (_, t, tw)
     return #t / h
   end
 end
-about[data.harmmean] = {":harmmean(data_t, [weigh_t]) --> num",
+about[data.harmmean] = {":harmmean(data_t, weigh_t=nil) --> num",
   "Harmonic mean.", STAT}
 
 
@@ -399,11 +399,11 @@ data.histcounts = function (_, t, rng)
   elseif type(rng) == 'table' then
     bins = rng
   else
-    error("Expected number or table")
+    error "Expected number or table"
   end
   -- check order
   for i = 2, #bins do
-    if bins[i] <= bins[i-1] then error("Wrong order") end
+    if bins[i] <= bins[i-1] then error ("Wrong order") end
   end
   -- fill result
   local res = {}
@@ -436,8 +436,8 @@ data.is = function (_, t, fn)
   end
   return res
 end
-about[data.is] = {":is(data_t, cond) --> yesno_t",
-  "Find weights using boolean function.", LIST}
+about[data.is] = {":is(data_t, fn|str) --> weigh_t",
+  "Find weights using condition (boolean function or string).", LIST}
 
 
 --- Find weights (1/0) based on inverted condition.
@@ -452,8 +452,8 @@ data.isNot = function (_, t, fn)
   end
   return res
 end
-about[data.isNot] = {":isNot(data_t, cond_fn) --> yesno_t",
-  "Find inverted weights using boolean function.", LIST}
+about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
+  "Find inverted weights using condition (boolean function or string).", LIST}
 
 
 --- Maximum value.
@@ -487,7 +487,7 @@ data.mean = function (_, t, tw)
     return data:sum(t) / #t
   end
 end
-about[data.mean] = {":mean(data_t, [wight_t]) --> num",
+about[data.mean] = {":mean(data_t, wight_t=nil) --> num",
   "Calculate average value. Weights can be used.", STAT}
 
 
@@ -542,8 +542,8 @@ data.moment = function (_, N, t, tw)
   end
   return mu / n
 end
-about[data.moment] = {":moment(order_N, data_t, [weigth_t]) --> num",
-  "Central moment of t order N, tw is a list of weights.", STAT}
+about[data.moment] = {":moment(order_N, data_t, weigth_t=nil) --> num",
+  "Central moment of order N, weights can be defined.", STAT}
 
 
 --- Apply reduction rule to the list elements.
@@ -560,7 +560,7 @@ data.reduce = function (_, fn, t, val)
   for i = i0, #t do val = fn(val, t[i]) end
   return val
 end
-about[data.reduce] = {":reduce(fn, data_t, [initial]) --> var",
+about[data.reduce] = {":reduce(fn|str, data_t, initial=nil) --> var",
   "Apply function to its previous result and next element.", LIST}
 
 
@@ -595,10 +595,10 @@ data.std = function (_, t, tw)
     for i = 1, #t do disp = disp + (t[i]-mean)^2 end
     disp = disp / #t
   end
-  return math.sqrt(disp), disp
+  return math.sqrt(disp)
 end
-about[data.std] = {":std(data_t, [weight_t]) --> dev_f, var_f",
-  "Standard deviation and variance. Weights can be used.", STAT}
+about[data.std] = {":std(data_t, weight_t=nil) --> num",
+  "Standard deviation. Weights can be used.", STAT}
 
 
 --- Show data in Markdown-like table form.
@@ -637,7 +637,8 @@ data.md = function (_, data_t, names_t, fn)
   return table.concat(res, '\n')
 end
 about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
-  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.", help.OTHER}
+  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.",
+  help.OTHER}
 
 
 --- Apply function of n arguments to n lists.
@@ -666,7 +667,7 @@ data.zip = function (_, fn, ...)
   end
   return res
 end
-about[data.zip] = {":zip(fn,...) --> tbl",
+about[data.zip] = {":zip(fn|str, ...) --> tbl",
   "Sequentially apply function to list of tables.", LIST}
 
 
@@ -736,9 +737,7 @@ end
 --- Get number of elements.
 --  @param self Range object.
 --  @return Element number.
-mt_range.__len = function (self)
-  return self._N
-end
+mt_range.__len = function (self) return self._N end
 
 
 --- Get i-th element.
@@ -780,7 +779,7 @@ end
 --- Generate sequence of values.
 --  @param dBegin Beginning of range.
 --  @param dEnd End of range.
---  @param dStep Step value (default is 1).
+--  @param dStep Step value (default is 1 or -1).
 --  @return Table with numbers, Range object.
 data.range = function (_, dBegin, dEnd, dStep)
   dStep = dStep or (dEnd > dBegin) and 1 or -1
@@ -792,7 +791,8 @@ data.range = function (_, dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-about[data.range] = {':range(begin_d, end_d, [step_d]) --> new_R', 'Generate range object.', REF}
+about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
+  'Generate range object.', REF}
 
 
 -- Get reference to data range in other table
@@ -802,9 +802,7 @@ local mt_ref = { type = 'ref' }
 --- Number of elements in range.
 --  @param self Ref object.
 --  @return Length of the reference table.
-mt_ref.__len = function (self)
-  return self._end - self._beg
-end
+mt_ref.__len = function (self) return self._end - self._beg end
 
 
 --- Get i-th element.
@@ -875,9 +873,7 @@ end
 --- Get table 'length'.
 --  @param self T-ref object.
 --  @return Expected table length.
-mt_transpose.__len = function (self)
-  return #self._tbl._src[1]
-end
+mt_transpose.__len = function (self) return #self._tbl._src[1] end
 
 
 -- Metatable for internal table.
@@ -920,7 +916,8 @@ data.T = function (self, src)
   }
   return setmetatable(o, mt_transpose)
 end
-about[data.T] = {":T(src_t) --> new_T", "Get reference to 'transposed' table.", REF}
+about[data.T] = {":T(src_t) --> new_T",
+  "Get reference to 'transposed' table.", REF}
 
 
 -- Comment to remove descriptions

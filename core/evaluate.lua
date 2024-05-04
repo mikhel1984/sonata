@@ -3,7 +3,7 @@
 --- REPL implementation.
 --
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2023.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2024.
 
 	module 'evaluate'
 --]]
@@ -149,7 +149,7 @@ local function evalCode()
     cmd = (state == evaluate.EV_CMD) and cmd or ''
     -- check if multi input
     local partCmd, amp = string.match(input, "(.-)(\\*)%s*$")
-    if #amp > 1 then 
+    if #amp > 1 then
       multiline = true   -- on
     elseif #input == 0 then
       multiline = false  -- off
@@ -261,12 +261,12 @@ end
 
 --- Extended print function
 --  @return string representation
-evaluate._extPrint = function (v)  
+evaluate._extPrint = function (v)
   local mt = getmetatable(v)
   if type(v) == 'table' and not (mt and mt.__tostring) then
     return evaluate._showTable(v)
   else
-    return tostring(v)    
+    return tostring(v)
   end
 end
 
