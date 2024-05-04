@@ -116,9 +116,9 @@ _, ans = Lens:gSize(1, lambda, 1E5) --2>  32.61
 _, ans = lens1:beam(1E6, 1, lambda)  --2>  0.991
 
 -- laser cavity
-air_rod = Lens: T(50) : T(30, 1.56)
-cavity = Lens:M(-300) .. air_rod .. Lens:M(-300) .. air_rod:inv()
-ans, _ = cavity:emit(lambda)         --2> -90
+air_rod = Lens: T(250) : T(30, 1.56)
+cavity = Lens:M(-300) .. air_rod .. Lens:M(-300) .. air_rod
+ans, _ = cavity:emit(lambda)         --1> 300.0
 
 --]]
 
@@ -518,4 +518,3 @@ lens.about = about
 return lens
 
 --======================================
--- TODO check emit method
