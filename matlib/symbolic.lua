@@ -53,7 +53,7 @@ local Ulex do
   Ulex = lib.utils.lex
 end
 
-local symbolic = require('matlib.symbase')
+local symbolic = require('matlib.symbolic_tf')
 
 
 --- Check object type.
@@ -72,7 +72,7 @@ __module__ = "Symbolic calculations."
 
 
 -- Parser elements
-PARSER = {}
+local PARSER = {}
 
 
 --- Parse coma separated elements.
@@ -199,7 +199,7 @@ end
 --  @param tArgs List of arguments (symbolic objects).
 --  @param S Function body, symbolical expression or Lua function.
 --  @return Function object.
-symbolic.def = function (self, sName, tArgs, S)
+symbolic.def = function (_, sName, tArgs, S)
   assert(type(sName) == 'string' and issymbolic(S), "Wrong arguments")
   local t = {}
   for i, v in ipairs(tArgs) do
@@ -207,12 +207,12 @@ symbolic.def = function (self, sName, tArgs, S)
       if v._parent == symbolic._parentList.symbol then
         t[i] = v._
       else
-        error("Wrong arguments")
+        error "Wrong arguments"
       end
     elseif type(v) == 'string' then
       t[i] = v
     else
-      error("Wrong arguments")
+      error "Wrong arguments"
     end
   end
   symbolic._fnList[sName] = { args = t, body = S }
@@ -223,23 +223,21 @@ about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S",
 
 
 --- Find derivative dS1/dS2.
---  @param S1 Symbolic expression or function.
 --  @param S2 Variable.
 --  @return Derivative.
-symbolic.diff = function (S1, S2)
-  if S1:_isfn() then error('Undefined arguments') end
-  return S1:p_diff(S2)
+symbolic.diff = function (self, S2)
+  if self:_isfn() then error('Undefined arguments') end
+  return self:p_diff(S2)
 end
 about[symbolic.diff] = {"S:diff(var_S) --> derivative_S",
   "Find symbolic derivative."}
 
 
 --- Find value for the given substitutions.
---  @param S Symbolic object.
 --  @param tEnv Table of substitutions (key - value).
 --  @return New object.
-symbolic.eval = function (S, tEnv)
-  local res = S:p_eval(tEnv or {})
+symbolic.eval = function (self, tEnv)
+  local res = self:p_eval(tEnv or {})
   res:p_simp(true)
   res:p_signature()
   return res
@@ -251,7 +249,7 @@ about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
 --- Find function using its name.
 --  @param sName Function name.
 --  @return Function object or nil.
-symbolic.fn = function (self, sName)
+symbolic.fn = function (_, sName)
   return symbolic._fnInit[sName] or
     symbolic._fnList[sName] and symbolic:_newSymbol(sName) or nil
 end
@@ -260,35 +258,30 @@ about[symbolic.fn] = {":fn(name_s) --> fn_S|nil",
 
 
 --- Show internal structure of expression.
---  @param S Symbolic expression.
 --  @return String with structure.
-symbolic.introspect = function (S)
-  return S:p_internal(0)
-end
+symbolic.introspect = function (self) return self:p_internal(0) end
 about[symbolic.introspect] = {"S:introspect() --> str",
   "Show the internal structure."}
 
 
 --- Check if the symbol is function.
---  @param S Symbolic variable.
 --  @return true when it is function.
-symbolic.isFn = function (S) return S:_isfn() end
+symbolic.isFn = function (self) return self:_isfn() end
 about[symbolic.isFn] = {'S:isFn() --> bool',
   'Return true if the symbol is function.'}
 
 
 --- Get name of variable.
---  @param S Symbolic object.
 --  @return Variable name.
-symbolic.name = function (S)
-  return S._parent == symbolic._parentList.symbol and S._ or nil
+symbolic.name = function (self)
+  return self._parent == symbolic._parentList.symbol and self._ or nil
 end
 
 
 --- Get symbolic expression from string.
 --  @param str Expression string.
 --  @return One or several symbolic elements.
-symbolic.parse = function(self, str)
+symbolic.parse = function(_, str)
   local tokens = Ulex(str)
   assert(#tokens > 0)
   local res = PARSER.args(tokens, 1)
@@ -302,19 +295,17 @@ about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..",
 
 
 --- Get value of constant.
---  @param S Symbolic object.
 --  @return Constant value.
-symbolic.value = function (S)
-  return S._parent == symbolic._parentList.const and S._ or nil
+symbolic.value = function (self)
+  return self._parent == symbolic._parentList.const and self._ or nil
 end
 
 
 -- simplify constructor call
 setmetatable(symbolic, {
-__call = function (self, v)
+__call = function (_, v)
   if type(v) == 'string' then
-    return symbolic:_newSymbol(
-      assert(v:match('^[_%a]+[_%w]*$'), 'Wrong name'))
+    return symbolic:_newSymbol(assert(v:match('^[_%a]+[_%w]*$'), 'Wrong name'))
   elseif type(v) == 'number' or type(v) == 'table' and v.__mul then   -- TODO other methods?
     return symbolic:_newConst(v)
   end

@@ -11,6 +11,12 @@
 
 --	LOCAL
 
+local Upack do
+  local lib = require('matlib.utils')
+  Upack = lib.versions.unpack
+end
+
+
 --- Condition for element sorting.
 --  @param S1 Symbolic object.
 --  @param S2 Symbolic object.
@@ -41,22 +47,18 @@ local function issym(v) return getmetatable(v) == symbolic end
 -- Combine 'common' methods
 local COMMON = {
 
-    -- Do nothing.
+  -- Do nothing.
   empty = function (S) end,
 
-    --- Check if the value is 1.
+  --- Check if the value is 1.
   --  @param v Some object.
   --  @return v == 1.
-  isOne = function (v)
-    return issym(v) and v._ == 1 or v == 1
-  end,
+  isOne = function (v) return issym(v) and v._ == 1 or v == 1 end,
 
   --- Check if the value is 0.
   --  @param v Some object.
   --  @return v == 0
-  isZero = function (v)
-    return issym(v) and v._ == 0 or v == 0
-  end,
+  isZero = function (v) return issym(v) and v._ == 0 or v == 0 end,
 
   -- Return false always.
   skip = function (S) return false end,
@@ -65,12 +67,12 @@ local COMMON = {
 
 
 --- Copy content of the simbolic object.
---  @param S Destination object.
---  @param S0 Source object.
-COMMON.copy = function (S, S0)
-  S._parent = S0._parent
-  S._ = S0._
-  S._sign = S0.p_isatom and S0._sign or nil
+--  @param dst Destination object.
+--  @param src Source object.
+COMMON.copy = function (dst, src)
+  dst._parent = src._parent
+  dst._ = src._
+  dst._sign = src.p_isatom and src._sign or nil
 end
 
 
@@ -257,11 +259,13 @@ PARENTS.funcValue.p_diff = function (S1, S2)
   for i = 2, #S1._ do args[#args+1] = S1._[i] end
   local diffs = S1._[1]:p_diff(S2)
   if diffs then
-    -- found predefined derivatives
-    if #args ~= #diffs then error('Wrong arguments number') end
+    -- has predefined derivatives
+    if #args ~= #diffs then 
+      error 'Wrong arguments number'
+    end
     for i, fn in ipairs(diffs) do
       local dx = args[i]:p_diff(S2)
-      if not COMMON.isZero(dx) then res = res + fn(table.unpack(args)) * dx end
+      if not COMMON.isZero(dx) then res = res + fn(Upack(args)) * dx end
     end
   else
     -- derivative not defined
@@ -292,13 +296,17 @@ PARENTS.funcValue.p_eval = function (S, tEnv)
   local body = symbolic._fnList[S._[1]._].body
   if #val + 1 == #t and body then
     -- evaluate
-    return symbolic:_newConst( body(table.unpack(val)) )
+    return symbolic:_newConst( body(Upack(val)) )
   else
     return symbolic:_newExpr(S._parent, t)
   end
 end
 
 
+--- Function internal struct.
+--  @param S Symbolic object.
+--  @param n Shift.
+--  @return string representation.
 PARENTS.funcValue.p_internal = function (S, n)
   local t = {string.format('%sCALL', string.rep(' ', n))}
   for _, v in ipairs(S._) do
@@ -308,6 +316,9 @@ PARENTS.funcValue.p_internal = function (S, n)
 end
 
 
+--- Text form.
+--  @param S Symbolic object.
+--  @return string.
 PARENTS.funcValue.p_str = function (S)
   local t = {}
   for i = 2, #S._ do t[#t+1] = S._[i]:p_str() end
@@ -379,12 +390,20 @@ PARENTS.power.p_str = function (S)
 end
 
 
+--- Power internal struct.
+--  @param S Symbolic object.
+--  @param n Shift.
+--  @return string representation.
 PARENTS.power.p_internal = function (S, n)
   return string.format('%sPOWER:\n%s\n%s',
     string.rep(' ', n), S._[1]:p_internal(n+2), S._[2]:p_internal(n+2))
 end
 
 
+--- Power derivative.
+--  @param S1 First object.
+--  @param S2 Second object.
+--  @return derivative object.
 PARENTS.power.p_diff = function (S1, S2)
   local res = nil
   local a, b = S1._[1], S1._[2]
@@ -532,7 +551,8 @@ end
 -- ============ SUM ============
 
 PARENTS.sum = {
-  -- S._ = {{k1, S1}, {k2, S2}, ...}
+  -- S._ = {{k1, S1}, {k2, S2}, ...} 
+  -- i.e. k1*S1 + k2*S2 + ...
   p_char = '+',
   p_isatom = false,
   p_signature = COMMON.signaturePairs,
