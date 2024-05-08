@@ -81,7 +81,7 @@ end
 --  @param S2 Second symbolic object.
 --  @return true when objects are equal.
 COMMON.eq = function (S1, S2)
-  if not (S1._sign == S2._sign and #S1._ == #S2._) then
+  if S1._sign ~= S2._sign or S1._parent ~= S2._parent or #S1._ ~= #S2._ then
     return false
   end
   for i = 1, #S1._ do
@@ -99,7 +99,7 @@ end
 --  @param S2 Second symbolic object.
 --  @return true when objects are equal.
 COMMON.eqPairs = function (S1, S2)
-  if not (S1._sign == S2._sign and #S1._ == #S2._) then
+  if S1._sign ~= S2._sign or S1._parent ~= S2._parent or #S1._ ~= #S2._ then
     return false
   end
   for i = 1, #S1._ do
@@ -147,9 +147,9 @@ COMMON.signature = function (S)
     found = S._[i]:p_signature() or found
   end
   if S._sign and not found then return false end
-  local t = {}
-  for i = 1, #S._ do t[i] = S._[i]._sign end
-  S._sign = string.format('(%s:%s)', S.p_char, table.concat(t, ';'))
+  local sum = S.p_id
+  for i = 1, #S._ do sum = (sum*8 + S._[i]._sign) % 1000000 end
+  S._sign = sum
   return true
 end
 
@@ -165,9 +165,9 @@ COMMON.signaturePairs = function (S)
   end
   if S._sign and not found then return false end
   table.sort(S._, compList)
-  local t = {}
-  for i = 1, #S._ do t[i] = S._[i][2]._sign end
-  S._sign = string.format('(%s:%s)', S.p_char, table.concat(t, ';'))
+  local sum = S.p_id
+  for i = 1, #S._ do sum = (sum*8 + S._[i][2]._sign) % 1000000 end
+  S._sign = sum
   return true
 end
 
@@ -225,7 +225,7 @@ end
 
 PARENTS.const = {
   -- S._ = value
-  p_char = '',
+  p_id = 1,
   p_isatom = true,
   p_signature = COMMON.skip,
   p_eq = function (S1, S2) return S1._ == S2._ end,
@@ -243,7 +243,7 @@ PARENTS.const = {
 
 PARENTS.funcValue = {
   -- S._ = {fn, arg1, arg2, ...}
-  p_char = 'FN',
+  p_id = 2,
   p_isatom = false,
   p_signature = COMMON.signature,
   p_eq = COMMON.eq,
@@ -330,7 +330,7 @@ end
 
 PARENTS.power = {
   -- S._ = {base, power}
-  p_char = '^',
+  p_id = 3,
   p_isatom = false,
   p_signature = COMMON.signature,
   p_eq = COMMON.eq,
@@ -425,7 +425,7 @@ end
 
 PARENTS.product = {
   -- S._ = {{pow1, S1}, {pow2, S2}, ...}
-  p_char = '*',
+  p_id = 4,
   p_isatom = false,
   p_signature = COMMON.signaturePairs,
   --p_eq = COMMON.eqPairs,
@@ -553,7 +553,7 @@ end
 PARENTS.sum = {
   -- S._ = {{k1, S1}, {k2, S2}, ...} 
   -- i.e. k1*S1 + k2*S2 + ...
-  p_char = '+',
+  p_id = 5,
   p_isatom = false,
   p_signature = COMMON.signaturePairs,
   p_eq = COMMON.eqPairs,
@@ -646,7 +646,7 @@ end
 
 PARENTS.symbol = {
   -- S._ = name
-  p_char = 'S',
+  p_id = 6,
   p_isatom = true,
   p_signature = COMMON.skip,
   p_eq = function (S1, S2) return S1._ == S2._ end,
@@ -678,7 +678,7 @@ PARENTS.symbol.p_str = function (S, isFull)
   local lst = symbolic._fnList[nm]
   if isFull then
     return lst and string.format('%s(%s): %s',
-      nm, table.concat(lst.args or {}, ','), tostring(lst.body or ''))
+      nm, table.concat(lst.args or {}, ','), tostring(lst.body or '')) or nm
   else
     return lst and nm..'()' or nm
   end
@@ -891,7 +891,7 @@ end
 symbolic._newConst = function (self, v)
   local o = {
     _parent = PARENTS.const,
-    _sign = '.',
+    _sign = 1,
     _ = v,
   }
   return setmetatable(o, self)
@@ -917,9 +917,11 @@ end
 --  @param sName Variable name.
 --  @return Symbolic object.
 symbolic._newSymbol = function (self, sName)
+  local sum = 0
+  for i = 1, #sName do sum = (sum*8 + string.byte(sName, i, i)) % 100000 end
   local o = {
     _parent = PARENTS.symbol,
-    _sign = sName,
+    _sign = sum,
     _ = sName,
   }
   return setmetatable(o, self)

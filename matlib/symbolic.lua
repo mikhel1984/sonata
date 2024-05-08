@@ -148,34 +148,32 @@ end
 PARSER.prim = function (lst, n)
   local v = lst[n]
   if type(v) == 'number' then
-    return symbolic:_newConst(v), n+1
+    return symbolic:_newConst(v), n + 1
   elseif v == '(' then
-    local res, n = PARSER.sum(lst, n+1)
-    if lst[n] ~= ')' then error("expected ')'") end
-    return res, n+1
+    local res, n = PARSER.sum(lst, n + 1)
+    if lst[n] ~= ')' then error ("expected ')'") end
+    return res, n + 1
   elseif v == '-' then
-    local res, n = PARSER.prod(lst, n+1)
+    local res, n = PARSER.prod(lst, n + 1)
     return -res, n
   elseif string.find(v, '^[%a_]') ~= nil then
     if lst[n+1] == '(' then
       local t = nil
       if lst[n+2] == ')' then
-        t, n = {}, n+2
+        t, n = {}, n + 2
       else
-        t, n = PARSER.args(lst, n+2)
+        t, n = PARSER.args(lst, n + 2)
       end
-      if lst[n] ~= ')' then error("expected ')'") end
+      if lst[n] ~= ')' then error ("expected ')'") end
       -- add function
-      if not symbolic._fnList[v] then
-        symbolic._fnList[v] = {}
-      end
+      if not symbolic._fnList[v] then symbolic._fnList[v] = {} end
       table.insert(t, 1, symbolic:_newSymbol(v))
-      return symbolic:_newExpr(symbolic._parentList.funcValue, t), n+1
+      return symbolic:_newExpr(symbolic._parentList.funcValue, t), n + 1
     else
-      return symbolic:_newSymbol(v), n+1
+      return symbolic:_newSymbol(v), n + 1
     end
   else
-    error("unexpected symbol "..v)
+    error ("unexpected symbol "..v)
   end
   return nil, n
 end
@@ -261,7 +259,7 @@ about[symbolic.fn] = {":fn(name_s) --> fn_S|nil",
 --  @return String with structure.
 symbolic.introspect = function (self) return self:p_internal(0) end
 about[symbolic.introspect] = {"S:introspect() --> str",
-  "Show the internal structure."}
+  "Show internal structure."}
 
 
 --- Check if the symbol is function.
@@ -305,11 +303,12 @@ end
 setmetatable(symbolic, {
 __call = function (_, v)
   if type(v) == 'string' then
-    return symbolic:_newSymbol(assert(v:match('^[_%a]+[_%w]*$'), 'Wrong name'))
+    local s = assert(v:match('^[_%a]+[_%w]*$'), 'Wrong name')
+    return symbolic:_newSymbol(s)
   elseif type(v) == 'number' or type(v) == 'table' and v.__mul then   -- TODO other methods?
     return symbolic:_newConst(v)
   end
-  error("Wrong argument "..tostring(v))
+  error ("Wrong argument "..tostring(v))
 end})
 about[symbolic] = {" (num|str) --> new_S",
   "Create new symbolic variable.", help.NEW}
