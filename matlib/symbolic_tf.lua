@@ -34,7 +34,6 @@ local symbolic = {
 type = 'symbolic',
 -- main types
 _parentList = PARENTS,
--- 'standard' functions
 }
 
 
@@ -172,14 +171,35 @@ COMMON.signaturePairs = function (S)
 end
 
 
+--- Try to combine (simplify) to pairs {k, S}
+--  @param a First pair.
+--  @param b Second pair.
+--  @param tParent Parent reference.
+COMMON.simpPairElements = function (a, b, tParent)
+  local a2, b2 = a[2], b[2]
+  if a2._parent == PARENTS.const and a2._parent == b2._parent then
+    -- c1*c2 + c3*c4  or  c1^c2 * c3^c4
+    if tParent == PARENTS.product then
+      a[2] = symbolic:_newConst(a[1]*a2._ + b[1]*b2._)
+    else  -- PARENTS.power
+      a[2] = symbolic:_newConst(a2._^a[1] * b2._^b[1])
+    end
+    a[1], b[1] = 1, 0
+  elseif b2:p_eq(a2) then
+    -- c1*v + c2*v  or v^c1 * v^c3
+    a[1], b[1] = a[1] + b[1], 0
+  end
+end
+
+
 --- Simplify list of pairs (in place).
 --  @param S Symbolic object.
 --  @param tParent Parent reference.
 COMMON.simpPair = function (S, tParent)
   -- be sure that signature is found
   S:p_signature()
-  -- get coefficients
-  for i, v in ipairs(S._) do
+  -- update coefficients
+  for _, v in ipairs(S._) do
     if v[2]._parent == tParent then
       local k = v[2]:p_getConst()
       if k ~= 1 then
@@ -191,22 +211,10 @@ COMMON.simpPair = function (S, tParent)
   -- combine elements
   for i, si in ipairs(S._) do
     if si[1] ~= 0 then
-      local iconst = (si[2]._parent == PARENTS.const)
       for j = i+1, #S._ do
         local sj = S._[j]
         if sj[1] ~= 0 then
-          if iconst and sj[2]._parent == PARENTS.const then
-            -- combine constants
-            if tParent == PARENTS.product then
-              si[2] = symbolic:_newConst(si[1] * si[2]._ + sj[1] * sj[2]._)
-            else  -- PARENTS.power
-              si[2] = symbolic:_newConst(si[2]._ ^ si[1] * sj[2]._ ^ sj[1])
-            end
-            si[1], sj[1] = 1, 0
-          elseif si[2]:p_eq(sj[2]) then
-            -- combine expressions
-            si[1], sj[1] = si[1] + sj[1], 0
-          end
+          COMMON.simpPairElements(si, sj, tParent)
         end
       end
     end
@@ -366,8 +374,8 @@ PARENTS.power.p_simp = function (S, bFull)
     COMMON.copy(S, symbolic._1)
   elseif COMMON.isOne(S._[1]) or COMMON.isZero(S._[1]) then  -- 1^v or 0^v
     COMMON.copy(S, S._[1])
-  elseif S._[1]._parent == S._[2]._parent and
-         S._[1]._parent == PARENTS.const then
+  elseif S._[1]._parent == S._[2]._parent and S._[1]._parent == PARENTS.const 
+  then
     COMMON.copy(S, symbolic:_newConst(S._[1]._ ^ S._[2]._))
   end
 end
@@ -702,7 +710,7 @@ symbolic.__add = function (S1, S2)
   local res = symbolic:_newExpr(PARENTS.sum, {})
   -- S1
   if S1._parent == PARENTS.sum then
-    for i, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {1, S1})
   end
@@ -748,6 +756,12 @@ end
 symbolic.__div = function (S1, S2)
   S1, S2 = symbolic._toSym(S1, S2)
   local res = symbolic:_newExpr(PARENTS.product, {})
+  -- check a^x / a^y
+  if S1._parent == PARENTS.power and S2._parent == PARENTS.power 
+     and S1._[1] == S2._[1] 
+  then
+     return symbolic.__pow(S1._[1], S1._[2] - S2._[2])
+  end
   -- S1
   if S1._parent == PARENTS.product then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
@@ -779,9 +793,7 @@ end
 --  @param t Source object.
 --  @param k Required key.
 --  @return Found method or nil.
-symbolic.__index = function (t, k)
-  return symbolic[k] or t._parent[k]
-end
+symbolic.__index = function (t, k) return symbolic[k] or t._parent[k] end
 
 
 --- S1 * S2
@@ -791,8 +803,10 @@ end
 symbolic.__mul = function (S1, S2)
   S1, S2 = symbolic._toSym(S1, S2)
   local res = symbolic:_newExpr(PARENTS.product, {})
-  if S1._parent == PARENTS.power and S2._parent == PARENTS.power and
-     S1._[1] == S2._[1] then
+  -- check a^x * a^y
+  if S1._parent == PARENTS.power and S2._parent == PARENTS.power 
+     and S1._[1] == S2._[1] 
+  then
      return symbolic.__pow(S1._[1], S1._[2] + S2._[2])
   end
   -- S1
@@ -821,6 +835,7 @@ symbolic.__pow = function (S1, S2)
   S1, S2 = symbolic._toSym(S1, S2)
   local res = symbolic:_newExpr(PARENTS.power)
   if S1._parent == PARENTS.power then
+    -- (a^x)^y
     res._ = {S1._[1], S1._[2] * S2}
     res._[2]:p_simp()
   else
