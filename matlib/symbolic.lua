@@ -257,9 +257,8 @@ about[symbolic.fn] = {":fn(name_s) --> fn_S|nil",
 
 --- Show internal structure of expression.
 --  @return String with structure.
-symbolic.introspect = function (self) return self:p_internal(0) end
-about[symbolic.introspect] = {"S:introspect() --> str",
-  "Show internal structure."}
+symbolic.struct = function (self) return self:p_internal(0) end
+about[symbolic.struct] = {"S:struct() --> str", "Show internal structure."}
 
 
 --- Check if the symbol is function.

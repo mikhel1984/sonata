@@ -11,9 +11,10 @@
 
 --	LOCAL
 
-local Upack do
+local Upack, Isint do
   local lib = require('matlib.utils')
   Upack = lib.versions.unpack
+  Isint = lib.versions.isInteger
 end
 
 
@@ -509,7 +510,7 @@ PARENTS.product.p_str = function (S)
   local num, denom = {}, {}
   for _, v in ipairs(S._) do
     local v1, v2 = v[1], v[2]:p_str()
-    if #S._ > 1 and COMMON.closed[v[2]._parent] then
+    if (#S._ > 1 or v1 ~= 1) and COMMON.closed[v[2]._parent] then
       v2 = string.format('(%s)', v2)
     end
     if v1 > 0 then
@@ -998,6 +999,53 @@ symbolic._fnDiff = {
 --  @return True if it is found in function list.
 symbolic._isfn = function (S)
   return S._parent == PARENTS.symbol and symbolic._fnList[S._]
+end
+
+
+symbolic.expand = function (S)
+  local acc, rest = {}, {}
+  -- collect elements
+  if S._parent == PARENTS.product then
+    for _, v in ipairs(S._) do
+      local v1, v2 = v[1], v[2]
+      if v2._parent == PARENTS.sum and v1 > 0 and Isint(v1) then
+        for i = 1, v1 do acc[#acc+1] = v2 end
+      else
+        rest[#rest+1] = v
+      end
+    end
+  elseif S._parent == PARENTS.power then
+    if S._[1]._parent == PARENTS.sum and S._[2]._parent == PARENTS.const then
+      local v1, v2 = S._[2]._, S._[1]
+      for i = 1, v1 do acc[#acc+1] = v2 end
+    end
+  end
+  -- not found
+  if #acc == 0 then return S end
+  -- main terms
+  local res = nil
+  for _, v in ipairs(acc) do
+    if res then
+      local s = {}
+      for _, x in ipairs(res) do
+        for _, y in ipairs(v._) do
+          table.insert(s, {x[1]*y[1], x[2]*y[2]})
+        end
+      end
+      res = s
+    else
+      res = v._
+    end
+  end
+  -- multiplier
+  if #rest > 0 then
+    local k = symbolic:_newExpr(PARENTS.product, rest)
+    for _, x in ipairs(res) do x[2] = x[2]*k end
+  end
+  res = symbolic:_newExpr(PARENTS.sum, res)
+  res:p_simp()
+  res:p_signature()
+  return res
 end
 
 
