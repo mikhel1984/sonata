@@ -21,7 +21,7 @@ end
 --  @param S1 Symbolic object.
 --  @param S2 Symbolic object.
 --  @return true when S1 < S2.
-local compList = function (S1, S2) return S1[2]._sign < S2[2]._sign end
+local compList = function (S1, S2) return S1[1]._sign < S2[1]._sign end
 
 
 --- Find factorial.
@@ -113,7 +113,7 @@ COMMON.eqPairs = function (S1, S2)
   end
   for i = 1, #S1._ do
     local si1, si2 = S1._[i], S2._[i]
-    if not (si1[1] == si2[1] and si1[2]:p_eq(si2[2])) then
+    if not (si1[2] == si2[2] and si1[1]:p_eq(si2[1])) then
       return false
     end
   end
@@ -141,7 +141,7 @@ end
 COMMON.evalPairs = function (S, tEnv)
   local res = symbolic:_newExpr(S._parent, {})
   for i, v in ipairs(S._) do
-    res._[i] = {v[1], v[2]:p_eval(tEnv)}
+    res._[i] = {v[1]:p_eval(tEnv), v[2]}
   end
   return res
 end
@@ -170,12 +170,12 @@ COMMON.signaturePairs = function (S)
   -- check elements
   local found = false
   for i = 1, #S._ do
-    found = S._[i][2]:p_signature() or found
+    found = S._[i][1]:p_signature() or found
   end
   if S._sign and not found then return false end
   table.sort(S._, compList)
   local sum = S.p_id
-  for i = 1, #S._ do sum = (sum*8 + S._[i][2]._sign) % 1000000 end
+  for i = 1, #S._ do sum = (sum*8 + S._[i][1]._sign) % 1000000 end
   S._sign = sum
   return true
 end
@@ -186,18 +186,18 @@ end
 --  @param b Second pair.
 --  @param tParent Parent reference.
 COMMON.simpPairElements = function (a, b, tParent)
-  local a2, b2 = a[2], b[2]
-  if a2._parent == PARENTS.const and a2._parent == b2._parent then
+  local a1, b1 = a[1], b[1]
+  if a1._parent == PARENTS.const and a1._parent == b1._parent then
     -- c1*c2 + c3*c4  or  c1^c2 * c3^c4
     if tParent == PARENTS.product then
-      a[2] = symbolic:_newConst(a[1]*a2._ + b[1]*b2._)
+      a[1] = symbolic:_newConst(a1._*a[2] + b1._*b[2])
     else  -- PARENTS.power
-      a[2] = symbolic:_newConst(a2._^a[1] * b2._^b[1])
+      a[1] = symbolic:_newConst(a1._^a[2] * b1._^b[2])
     end
-    a[1], b[1] = 1, 0
-  elseif b2:p_eq(a2) then
+    a[2], b[2] = 1, 0
+  elseif b1:p_eq(a1) then
     -- c1*v + c2*v  or v^c1 * v^c3
-    a[1], b[1] = a[1] + b[1], 0
+    a[2], b[2] = a[2] + b[2], 0
   end
 end
 
@@ -210,20 +210,20 @@ COMMON.simpPair = function (S, tParent)
   S:p_signature()
   -- update coefficients
   for _, v in ipairs(S._) do
-    if v[2]._parent == tParent then
-      local k = v[2]:p_getConst()
+    if v[1]._parent == tParent then
+      local k = v[1]:p_getConst()
       if k ~= 1 then
-        v[1] = v[1] * k
-        v[2]:p_signature()
+        v[2] = v[2] * k
+        v[1]:p_signature()
       end
     end
   end
   -- combine elements
   for i, si in ipairs(S._) do
-    if si[1] ~= 0 then
+    if si[2] ~= 0 then
       for j = i+1, #S._ do
         local sj = S._[j]
-        if sj[1] ~= 0 then
+        if sj[2] ~= 0 then
           COMMON.simpPairElements(si, sj, tParent)
         end
       end
@@ -231,7 +231,7 @@ COMMON.simpPair = function (S, tParent)
   end
   -- remove zeros
   for i = #S._, 1, -1 do
-    if S._[i][1] == 0 then
+    if S._[i][2] == 0 then
       table.remove(S._, i)
       S._sign = nil
     end
@@ -442,7 +442,7 @@ end
 -- ============ PRODUCT ============
 
 PARENTS.product = {
-  -- S._ = {{pow1, S1}, {pow2, S2}, ...}
+  -- S._ = {{S1, pow1}, {S2, pow2}, ...}
   p_id = 4,
   p_isatom = false,
   p_signature = COMMON.signaturePairs,
@@ -452,13 +452,12 @@ PARENTS.product = {
 
 
 PARENTS.product.p_eq = function (S1, S2)
-  return COMMON.eqPairs(S1, S2) or
-    #S1._ == 1 and S2._parent == PARENTS.power and
-    --    S2:p_eq(S1._[1][2] ^ S1._[1][1])
+  return COMMON.eqPairs(S1, S2) 
+    or #S1._ == 1 and S2._parent == PARENTS.power 
     -- compare power
-    S2._[2]._parent == PARENTS.const and S1._[1][1] == S2._[2]._ and
+    and S2._[2]._parent == PARENTS.const and S1._[1][2] == S2._[2]._ 
     -- compare base
-    S1._[1][2]:p_eq(S2._[1])
+    and S1._[1][1]:p_eq(S2._[1])
 end
 
 
@@ -467,10 +466,10 @@ end
 --  @return Constant value.
 PARENTS.product.p_getConst = function (S)
   local v = S._[1]
-  if v[2]._parent == PARENTS.const then
-    v = v[1] * v[2]._  -- coefficient * const
-    if #S._ == 2 and COMMON.isOne(S._[2][1]) then    -- val^1
-      COMMON.copy(S, S._[2][2])
+  if v[1]._parent == PARENTS.const then
+    v = v[1]._ * v[2]  -- coefficient * const
+    if #S._ == 2 and COMMON.isOne(S._[2][2]) then    -- val^1
+      COMMON.copy(S, S._[2][1])
     else
       table.remove(S._, 1)
       S._sign = nil
@@ -487,7 +486,7 @@ end
 PARENTS.product.p_simp = function (S, bFull)
   if bFull then
     COMMON.simpPair(S, PARENTS.power)  -- check for similar terms
-    for _, v in ipairs(S._) do v[2]:p_simp(bFull) end
+    for _, v in ipairs(S._) do v[1]:p_simp(bFull) end
   end
   COMMON.simpPair(S, PARENTS.power)
   -- empty list
@@ -498,16 +497,16 @@ PARENTS.product.p_simp = function (S, bFull)
     table.sort(S._, compList)
   end
   -- check constant
-  if COMMON.isZero(S._[1][2]) then
+  if COMMON.isZero(S._[1][1]) then
     COMMON.copy(S, symbolic._0)
     return
-  elseif #S._ > 1 and COMMON.isOne(S._[1][2]) then
+  elseif #S._ > 1 and COMMON.isOne(S._[1][1]) then
     table.remove(S._, 1)
     S._sign = nil
   end
   -- change type
-  if #S._ == 1 and S._[1][1] == 1 then
-    COMMON.copy(S, S._[1][2])
+  if #S._ == 1 and S._[1][2] == 1 then
+    COMMON.copy(S, S._[1][1])
   end
 end
 
@@ -518,16 +517,16 @@ end
 PARENTS.product.p_str = function (S)
   local num, denom = {}, {}
   for _, v in ipairs(S._) do
-    local v1, v2 = v[1], v[2]:p_str()
-    if (#S._ > 1 or v1 ~= 1) and COMMON.closed[v[2]._parent] then
-      v2 = string.format('(%s)', v2)
+    local k, x = v[2], v[1]:p_str()
+    if (#S._ > 1 or k ~= 1) and COMMON.closed[v[1]._parent] then
+      x = string.format('(%s)', x)
     end
-    if v1 > 0 then
+    if k > 0 then
       num[#num+1] =
-        (v1 == 1) and v2 or string.format('%s^%s', v2, tostring(v1))
+        (k == 1) and x or string.format('%s^%s', x, tostring(k))
     else  -- v[1] < 0
       denom[#denom+1] =
-        (v1 == -1) and v2 or string.format('%s^%s', v2, tostring(-v1))
+        (k == -1) and x or string.format('%s^%s', x, tostring(-k))
     end
   end
   if #denom == 0 then
@@ -543,12 +542,12 @@ end
 PARENTS.product.p_diff = function (S1, S2)
   local res = symbolic._0
   for _, v in ipairs(S1._) do
-    local dx = v[2]:p_diff(S2)
+    local dx = v[1]:p_diff(S2)
     if not COMMON.isZero(dx) then
-      local k = v[1]
-      v[1] = k - 1  -- reduce power
+      local k = v[2]
+      v[2] = k - 1  -- reduce power
       res = res + (k * dx) * S1  -- TODO k * dx directly into table
-      v[1] = k      -- set back
+      v[2] = k      -- set back
     end
   end
   return res
@@ -559,8 +558,8 @@ PARENTS.product.p_internal = function (S, n)
   local t = {string.format('%sPROD:', string.rep(' ', n))}
   local offset = string.rep(' ', n+2)
   for _, v in ipairs(S._) do
-    t[#t+1] = v[2]:p_internal(n+2)
-    t[#t+1] = string.format('%s[^ %s]', offset, tostring(v[1]))
+    t[#t+1] = v[1]:p_internal(n+2)
+    t[#t+1] = string.format('%s[^ %s]', offset, tostring(v[2]))
   end
   return table.concat(t, '\n')
 end
@@ -569,7 +568,7 @@ end
 -- ============ SUM ============
 
 PARENTS.sum = {
-  -- S._ = {{k1, S1}, {k2, S2}, ...} 
+  -- S._ = {{S1, k1}, {S2, k2}, ...} 
   -- i.e. k1*S1 + k2*S2 + ...
   p_id = 5,
   p_isatom = false,
@@ -582,7 +581,7 @@ PARENTS.sum = {
 PARENTS.sum.p_diff = function (S1, S2)
   local res = symbolic:_newExpr(PARENTS.sum, {})
   for _, v in ipairs(S1._) do
-    table.insert(res._, {v[1], v[2]:p_diff(S2)})
+    table.insert(res._, {v[1]:p_diff(S2), v[2]})
   end
   res:p_simp()
   res:p_signature()
@@ -594,8 +593,8 @@ PARENTS.sum.p_internal = function (S, n)
   local t = {string.format('%sSUM:', string.rep(' ', n))}
   local offset = string.rep(' ', n+2)
   for _, v in ipairs(S._) do
-    t[#t+1] = string.format('%s[%s *]', offset, tostring(v[1]))
-    t[#t+1] = v[2]:p_internal(n+2)
+    t[#t+1] = v[1]:p_internal(n+2)
+    t[#t+1] = string.format('%s[* %s]', offset, tostring(v[2]))
   end
   return table.concat(t, '\n')
 end
@@ -607,7 +606,7 @@ end
 PARENTS.sum.p_simp = function (S, bFull)
   if bFull then
     COMMON.simpPair(S, PARENTS.product)  -- check for similar terms
-    for _, v in ipairs(S._) do v[2]:p_simp(bFull) end
+    for _, v in ipairs(S._) do v[1]:p_simp(bFull) end
   end
   -- update structure
   COMMON.simpPair(S, PARENTS.product)
@@ -619,7 +618,7 @@ PARENTS.sum.p_simp = function (S, bFull)
   -- sort and remove zero constant
   if #S._ > 1 then
     table.sort(S._, compList)
-    if COMMON.isZero(S._[1][2]) then
+    if COMMON.isZero(S._[1][1]) then
       table.remove(S._, 1)
       S._sign = nil
     end
@@ -627,10 +626,10 @@ PARENTS.sum.p_simp = function (S, bFull)
   -- change type
   if #S._ == 1 then
     local v = S._[1]
-    if v[1] ~= 1 then
-      COMMON.copy(S, symbolic:_newConst(v[1]) * v[2])
+    if v[2] ~= 1 then
+      COMMON.copy(S, symbolic:_newConst(v[2]) * v[1])
     else
-      COMMON.copy(S, v[2])
+      COMMON.copy(S, v[1])
     end
   end
 end
@@ -642,13 +641,13 @@ end
 PARENTS.sum.p_str = function (S)
   local plus, minus = {}, {}
   for _, v in ipairs(S._) do
-    local v1, v2 = v[1], v[2]:p_str()
-    if v1 > 0 then
+    local k, x = v[2], v[1]:p_str()
+    if k > 0 then
       plus[#plus+1] =
-        (v1 == 1) and v2 or string.format('%s*%s', tostring(v1), v2)
+        (k == 1) and x or string.format('%s*%s', tostring(k), x)
     else
       minus[#minus+1] =
-        (v1 == -1) and v2 or string.format('%s*%s', tostring(-v1), v2)
+        (k == -1) and x or string.format('%s*%s', tostring(-k), x)
     end
   end
   if #minus == 0 then
@@ -733,14 +732,14 @@ symbolic._binomial = function (lst, n)
       for i = 1, #lst do
         local pi = pos[i]
         if pi > 0 then
-          terms[#terms+1] = {pi, lst[i][2]}
+          terms[#terms+1] = {lst[i][1], pi}
           p = p / fl(pi)
-          q = q * lst[i][1]^pi
+          q = q * lst[i][2]^pi
         end
       end
       sum, tmp = math.modf(p*q)   -- reuse
       if tmp ~= 0 then sum = p*q end
-      res[#res+1] = {sum, symbolic:_newExpr(PARENTS.product, terms)}
+      res[#res+1] = {symbolic:_newExpr(PARENTS.product, terms), sum}
     end
     s = s + 1
   until pos[#pos] == n
@@ -799,13 +798,13 @@ end
 symbolic._ratGet = function (S, k)
   if S._parent == PARENTS.power and S._[2]._parent == PARENTS.const then
     -- transform
-    S = symbolic:_newExpr(PARENTS.product, {{S._[2]._, S._[1]}})
+    S = symbolic:_newExpr(PARENTS.product, {{S._[1], S._[2]._}})
   end
   if S._parent ~= PARENTS.product then return k > 0 and S or symbolic._1 end
   local acc = {}
   for _, v in ipairs(S._) do
-    local t = v[1] * k
-    if t > 0 then acc[#acc+1] = {t, v[2]} end
+    local t = v[2] * k
+    if t > 0 then acc[#acc+1] = {v[1], t} end
   end
   return #acc > 0 and symbolic:_newExpr(PARENTS.product, acc) or symbolic._1
 end

@@ -195,13 +195,13 @@ symbolic.__add = function (S1, S2)
   if S1._parent == PARENTS.sum then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {1, S1})
+    table.insert(res._, {S1, 1})
   end
   -- S2
   if S2._parent == PARENTS.sum then
     for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {1, S2})
+    table.insert(res._, {S2, 1})
   end
   res:p_simp()
   res:p_signature()
@@ -249,13 +249,13 @@ symbolic.__div = function (S1, S2)
   if S1._parent == PARENTS.product then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {1, S1})
+    table.insert(res._, {S1, 1})
   end
   -- S2
   if S2._parent == PARENTS.product then
     for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
   else
-    table.insert(res._, {-1, S2})
+    table.insert(res._, {S2, -1})
   end
   res:p_simp()
   res:p_signature()
@@ -296,13 +296,13 @@ symbolic.__mul = function (S1, S2)
   if S1._parent == PARENTS.product then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {1, S1})
+    table.insert(res._, {S1, 1})
   end
   -- S2
   if S2._parent == PARENTS.product then
     for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {1, S2})
+    table.insert(res._, {S2, 1})
   end
   res:p_simp()
   res:p_signature()
@@ -341,13 +341,13 @@ symbolic.__sub = function (S1, S2)
   if S1._parent == PARENTS.sum then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {1, S1})
+    table.insert(res._, {S1, 1})
   end
   -- S2
   if S2._parent == PARENTS.sum then
     for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
   else
-    table.insert(res._, {-1, S2})
+    table.insert(res._, {S2, -1})
   end
   res:p_simp()
   res:p_signature()
@@ -370,7 +370,7 @@ symbolic.__unm = function (S)
   local res = nil
   if S._parent == PARENTS.sum then
     res = symbolic:_newExpr(PARENTS.sum, {})
-    for i, v in ipairs(S._) do res._[i] = {-v[1], v[2]} end
+    for i, v in ipairs(S._) do res._[i] = {v[1], -v[2]} end
   else
     res = symbolic._m1 * S
   end
@@ -380,8 +380,6 @@ symbolic.__unm = function (S)
   res:p_signature()
   return res
 end
-
-
 
 
 --- Convert arguments to symbolic if need.
@@ -454,9 +452,9 @@ symbolic.expand = function (self)
   -- collect elements
   if self._parent == PARENTS.product then
     for _, v in ipairs(self._) do
-      local v1, v2 = v[1], v[2]
-      if v2._parent == PARENTS.sum and v1 > 0 and Isint(v1) then
-        acc[#acc+1] = symbolic._binomial(v2._, v1)
+      local k, x = v[2], v[1]
+      if x._parent == PARENTS.sum and k > 0 and Isint(k) then
+        acc[#acc+1] = symbolic._binomial(x._, k)
       else
         rest[#rest+1] = v
       end
@@ -484,7 +482,7 @@ symbolic.expand = function (self)
   -- multiplier
   if #rest > 0 then
     local k = symbolic:_newExpr(PARENTS.product, rest)
-    for _, x in ipairs(res) do x[2] = x[2]*k end
+    for _, x in ipairs(res) do x[1] = x[1]*k end
   end
   res = symbolic:_newExpr(PARENTS.sum, res)
   res:p_simp()
