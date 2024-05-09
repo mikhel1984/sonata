@@ -11,10 +11,9 @@
 
 --	LOCAL
 
-local Upack, Isint do
+local Upack do
   local lib = require('matlib.utils')
   Upack = lib.versions.unpack
-  Isint = lib.versions.isInteger
 end
 
 
@@ -23,6 +22,16 @@ end
 --  @param S2 Symbolic object.
 --  @return true when S1 < S2.
 local compList = function (S1, S2) return S1[2]._sign < S2[2]._sign end
+
+
+--- Find factorial.
+--  @param n Positive integer.
+--  @return n!
+local function fl (n)
+  local res = 1
+  for i = 2, n do res = res * i end
+  return res
+end
 
 
 --	MODULE
@@ -700,6 +709,43 @@ COMMON.closed = {
 [PARENTS.product] = true,
 -- [PARENTS.power] = true,
 }
+
+
+--- Expand (a+b+c+..)^n
+--  @param lst List of pairs {coef, obj}.
+--  @param n Integer power.
+--  @return sum of terms.
+symbolic._binomial = function (lst, n)
+  if n == 1 then return symbolic:_newExpr(PARENTS.sum, lst) end
+  local nfl, m = fl(n), n + 1
+  local res, pos, s = {}, {}, n
+  repeat
+    -- find group
+    local tmp, sum = s, 0
+    for i = 1, #lst do
+      local v = math.modf(tmp / m)
+      pos[i] = tmp - v*m
+      tmp, sum = v, sum + pos[i]
+    end
+    -- add product
+    if sum == n then
+      local terms, p, q = {}, nfl, 1
+      for i = 1, #lst do
+        local pi = pos[i]
+        if pi > 0 then
+          terms[#terms+1] = {pi, lst[i][2]}
+          p = p / fl(pi)
+          q = q * lst[i][1]^pi
+        end
+      end
+      sum, tmp = math.modf(p*q)   -- reuse
+      if tmp ~= 0 then sum = p*q end
+      res[#res+1] = {sum, symbolic:_newExpr(PARENTS.product, terms)}
+    end
+    s = s + 1
+  until pos[#pos] == n
+  return symbolic:_newExpr(PARENTS.sum, res)
+end
 
 
 --- Create constant object.

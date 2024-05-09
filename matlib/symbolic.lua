@@ -48,9 +48,10 @@ ans = foo(Sym(2), Sym(3))     -->  Sym(8)
 
 --	LOCAL
 
-local Ulex do
+local Ulex, Isint do
   local lib = require('matlib.utils')
   Ulex = lib.utils.lex
+  Isint = lib.versions.isInteger
 end
 
 local symbolic = require('matlib.symbolic_tf')
@@ -446,35 +447,34 @@ about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
   "Evaluate symbolic expression with the given environment."}
 
 
-symbolic.expand = function (S)
+--- Expand product of polynomials.
+--  @return expanded expression or the same.
+symbolic.expand = function (self)
   local acc, rest = {}, {}
   -- collect elements
-  if S._parent == PARENTS.product then
-    for _, v in ipairs(S._) do
+  if self._parent == PARENTS.product then
+    for _, v in ipairs(self._) do
       local v1, v2 = v[1], v[2]
       if v2._parent == PARENTS.sum and v1 > 0 and Isint(v1) then
-        for i = 1, v1 do acc[#acc+1] = v2 end
+        acc[#acc+1] = symbolic._binomial(v2._, v1)
       else
         rest[#rest+1] = v
       end
     end
-  elseif S._parent == PARENTS.power then
-    if S._[1]._parent == PARENTS.sum and S._[2]._parent == PARENTS.const then
-      local v1, v2 = S._[2]._, S._[1]
-      for i = 1, v1 do acc[#acc+1] = v2 end
+  elseif self._parent == PARENTS.power then
+    if self._[1]._parent == PARENTS.sum and self._[2]._parent == PARENTS.const then
+      acc[1] = symbolic._binomial(self._[1]._, self._[2]._)
     end
   end
   -- not found
-  if #acc == 0 then return S end
+  if #acc == 0 then return self end
   -- main terms
   local res = nil
   for _, v in ipairs(acc) do
     if res then
       local s = {}
       for _, x in ipairs(res) do
-        for _, y in ipairs(v._) do
-          table.insert(s, {x[1]*y[1], x[2]*y[2]})
-        end
+        for _, y in ipairs(v._) do s[#s+1] = {x[1]*y[1], x[2]*y[2]} end
       end
       res = s
     else
@@ -491,6 +491,8 @@ symbolic.expand = function (S)
   res:p_signature()
   return res
 end
+about[symbolic.expand] = {"S:expand() --> expanded_S",
+  "Expand product of polynomials when possible."}
 
 
 --- Find function using its name.
