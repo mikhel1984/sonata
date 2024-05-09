@@ -792,6 +792,25 @@ symbolic._newSymbol = function (self, sName)
 end
 
 
+--- Collect terms of numerator or denomenator.
+--  @param S Symbolic object.
+--  @param k Flag, +1 or -1.
+--  @return found terms or 1.
+symbolic._ratGet = function (S, k)
+  if S._parent == PARENTS.power and S._[2]._parent == PARENTS.const then
+    -- transform
+    S = symbolic:_newExpr(PARENTS.product, {{S._[2]._, S._[1]}})
+  end
+  if S._parent ~= PARENTS.product then return k > 0 and S or symbolic._1 end
+  local acc = {}
+  for _, v in ipairs(S._) do
+    local t = v[1] * k
+    if t > 0 then acc[#acc+1] = {t, v[2]} end
+  end
+  return #acc > 0 and symbolic:_newExpr(PARENTS.product, acc) or symbolic._1
+end
+
+
 -- Often used constants
 symbolic._m1 = symbolic:_newConst(-1)
 symbolic._0 = symbolic:_newConst(0)

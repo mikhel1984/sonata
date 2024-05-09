@@ -542,6 +542,20 @@ about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..",
   "Get simbolic expression from string."}
 
 
+--- Get numerator.
+--  @return numerator of the ratio.
+symbolic.ratNum = function (self) return symbolic._ratGet(self, 1) end
+about[symbolic.ratNum] = {"S:ratNum() --> numerator_S", 
+  "Get numerator of the expression."}
+
+
+--- Get denominator.
+--  @return denomenator or the ratio.
+symbolic.ratDenom = function (self) return symbolic._ratGet(self, -1) end
+about[symbolic.ratDenom] = {"S:ratDenom() --> denominator_S",
+  "Get denominator of the expression."}
+
+
 --- Get value of constant.
 --  @return Constant value.
 symbolic.value = function (self)
