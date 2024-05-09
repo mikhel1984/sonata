@@ -155,10 +155,11 @@ end
 COMMON.rawgetPair = function (S, n, m, ...)
   if n == nil then return S end
   if n <= #S._ then
+    -- whole line
     if m == nil then
-      -- current line
       return symbolic:_newExpr(S._parent, {S._[n]})
     end
+    -- choose from pair
     if m == 1 then
       return S._[n][1]:p_rawget(...)
     elseif m == 2 then
@@ -166,6 +167,34 @@ COMMON.rawgetPair = function (S, n, m, ...)
     end
   end
   return nil 
+end
+
+
+COMMON.rawsetPair = function (S, v, n, m, q, ...)
+  if n and n <= #S._ then
+    if m == nil or (q == nil and m == 1 and v._parent == S._parent) then
+      -- insert here
+      if v._parent == S._parent then
+        table.remove(S._, n)
+        for _, ln in ipairs(v._) do table.insert(S._, ln) end
+      else
+        table.insert(S._, {v, 1})
+      end
+    elseif m == 1 then
+      -- update symbolic part
+      if q == nil then
+        S._[n][1] = v
+      else
+        return S._[n][1]:p_rawset(v, q, ...)
+      end
+    elseif m == 2 and v._parent == PARENTS.const then
+      S._[n][2] = v._
+    else
+      return false
+    end
+    S._sign = nil
+  end
+  return false
 end
 
 
@@ -277,6 +306,7 @@ PARENTS.const = {
     return string.format('%s%s', string.rep(' ', n), tostring(S._))
   end,
   p_rawget = COMMON.rawget,
+  p_rawset = COMMON.skip,
 }
 
 
@@ -298,6 +328,20 @@ PARENTS.funcValue.p_rawget = function (S, n, ...)
   if n == nil then return S end
   if n <= #S._ then return S._[n]:p_rawget(...) end
   return nil
+end
+
+
+PARENTS.funcValue.p_rawset = function (S, v, n, m, ...)
+  if n and n <= #S._ and n > 1 then
+    if m == nil then
+      S._[n] = v
+      S._sign = nil
+      return true
+    else
+      return S._[n]:p_rawset(v, m, ...)
+    end
+  end
+  return false
 end
 
 
@@ -390,6 +434,20 @@ PARENTS.power.p_rawget = function (S, n, ...)
   if n == nil then return S end
   if n <= 2 then return S._[n]:p_rawget(...) end
   return nil
+end
+
+
+PARENTS.power.p_rawset = function (S, v, n, m, ...)
+  if n and n <= 2 then
+    if m == nil then
+      S._[n] = v
+      S._sign = nil
+      return true
+    else
+      S._[n]:p_rawset(v, m, ...)
+    end
+  end
+  return false
 end
 
 
@@ -486,6 +544,7 @@ PARENTS.product = {
   --p_eq = COMMON.eqPairs,
   p_eval = COMMON.evalPairs,
   p_rawget = COMMON.rawgetPair,
+  p_rawset = COMMON.rawsetPair,
 }
 
 
@@ -614,6 +673,7 @@ PARENTS.sum = {
   p_eq = COMMON.eqPairs,
   p_eval = COMMON.evalPairs,
   p_rawget = COMMON.rawgetPair,
+  p_rawset = COMMON.rawsetPair,
 }
 
 
@@ -712,6 +772,7 @@ PARENTS.symbol = {
       string.rep(' ', n), S._, symbolic._fnList[S._] and '()' or '')
   end,
   p_rawget = COMMON.rawget,
+  p_rawset = COMMON.skip,
 }
 
 
