@@ -54,6 +54,7 @@ local Ulex do
 end
 
 local symbolic = require('matlib.symbolic_tf')
+local PARENTS = symbolic._parentList
 
 
 --- Check object type.
@@ -168,7 +169,7 @@ PARSER.prim = function (lst, n)
       -- add function
       if not symbolic._fnList[v] then symbolic._fnList[v] = {} end
       table.insert(t, 1, symbolic:_newSymbol(v))
-      return symbolic:_newExpr(symbolic._parentList.funcValue, t), n + 1
+      return symbolic:_newExpr(PARENTS.funcValue, t), n + 1
     else
       return symbolic:_newSymbol(v), n + 1
     end
@@ -180,6 +181,207 @@ end
 
 
 --	MODULE
+
+
+--- S1 + S2
+--  @param S1 Symbolic object or number.
+--  @param S2 Symbolic object or number.
+--  @return Sum object.
+symbolic.__add = function (S1, S2)
+  S1, S2 = symbolic._toSym(S1, S2)
+  local res = symbolic:_newExpr(PARENTS.sum, {})
+  -- S1
+  if S1._parent == PARENTS.sum then
+    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+  else
+    table.insert(res._, {1, S1})
+  end
+  -- S2
+  if S2._parent == PARENTS.sum then
+    for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
+  else
+    table.insert(res._, {1, S2})
+  end
+  res:p_simp()
+  res:p_signature()
+  return res
+end
+
+
+--- Call symbolic function.
+--  @param S Symbolic object.
+--  @param ... List of arguments.
+--  @return Function value (symbolic object).
+symbolic.__call = function (S, ...)
+  if S:_isfn() then
+    local t = {...}
+    local fn = symbolic._fnList[S._]
+    if #t ~= #fn.args then
+      error(string.format("Expected %d arguments for %s", #fn.args, S._))
+    end
+    if type(fn.body) == 'function' or fn.body == nil then
+      table.insert(t, 1, S)
+      return symbolic:_newExpr(PARENTS.funcValue, t)
+    elseif issymbolic(fn.body) then
+      local env = {}
+      for i, k in ipairs(fn.args) do env[k] = t[i] end
+      return symbolic.eval(fn.body, env)
+    end
+  end
+end
+
+
+--- S1 / S2
+--  @param S1 Symbolic object or number.
+--  @param S2 Symbolic object or number.
+--  @return Ratio object.
+symbolic.__div = function (S1, S2)
+  S1, S2 = symbolic._toSym(S1, S2)
+  local res = symbolic:_newExpr(PARENTS.product, {})
+  -- check a^x / a^y
+  if S1._parent == PARENTS.power and S2._parent == PARENTS.power 
+     and S1._[1] == S2._[1] 
+  then
+     return symbolic.__pow(S1._[1], S1._[2] - S2._[2])
+  end
+  -- S1
+  if S1._parent == PARENTS.product then
+    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+  else
+    table.insert(res._, {1, S1})
+  end
+  -- S2
+  if S2._parent == PARENTS.product then
+    for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
+  else
+    table.insert(res._, {-1, S2})
+  end
+  res:p_simp()
+  res:p_signature()
+  return res
+end
+
+
+--- S1 == S2
+--  @param S1 Symbolic object or number.
+--  @param S2 Symbolic object or number.
+--  @return true when objects are equal.
+symbolic.__eq = function (S1, S2)
+  return issymbolic(S1) and issymbolic(S2) and S1:p_eq(S2)
+end
+
+
+--- Multiple 'inheritance'.
+--  @param t Source object.
+--  @param k Required key.
+--  @return Found method or nil.
+symbolic.__index = function (t, k) return symbolic[k] or t._parent[k] end
+
+
+--- S1 * S2
+--  @param S1 Symbolic object or number.
+--  @param S2 Symbolic object or number.
+--  @return Product object.
+symbolic.__mul = function (S1, S2)
+  S1, S2 = symbolic._toSym(S1, S2)
+  local res = symbolic:_newExpr(PARENTS.product, {})
+  -- check a^x * a^y
+  if S1._parent == PARENTS.power and S2._parent == PARENTS.power 
+     and S1._[1] == S2._[1] 
+  then
+     return symbolic.__pow(S1._[1], S1._[2] + S2._[2])
+  end
+  -- S1
+  if S1._parent == PARENTS.product then
+    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+  else
+    table.insert(res._, {1, S1})
+  end
+  -- S2
+  if S2._parent == PARENTS.product then
+    for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
+  else
+    table.insert(res._, {1, S2})
+  end
+  res:p_simp()
+  res:p_signature()
+  return res
+end
+
+
+--- S1 ^ S2
+--  @param S1 Symbolic object or number.
+--  @param S2 Symbolic object or number.
+--  @return Power object.
+symbolic.__pow = function (S1, S2)
+  S1, S2 = symbolic._toSym(S1, S2)
+  local res = symbolic:_newExpr(PARENTS.power)
+  if S1._parent == PARENTS.power then
+    -- (a^x)^y
+    res._ = {S1._[1], S1._[2] * S2}
+    res._[2]:p_simp()
+  else
+    res._ = {S1, S2}
+  end
+  res:p_simp()
+  res:p_signature()
+  return res
+end
+
+
+--- S1 - S2
+--  @param S1 Symbolic object or number.
+--  @param S2 Symbolic object or number.
+--  @return Difference object.
+symbolic.__sub = function (S1, S2)
+  S1, S2 = symbolic._toSym(S1, S2)
+  local res = symbolic:_newExpr(PARENTS.sum, {})
+  -- S1
+  if S1._parent == PARENTS.sum then
+    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+  else
+    table.insert(res._, {1, S1})
+  end
+  -- S2
+  if S2._parent == PARENTS.sum then
+    for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
+  else
+    table.insert(res._, {-1, S2})
+  end
+  res:p_simp()
+  res:p_signature()
+  return res
+end
+
+
+--- String representation.
+--  @param S Symbolic object.
+--  @return String.
+symbolic.__tostring = function (S)
+  return S._parent.p_str(S, true)  -- true for full version of fn
+end
+
+
+--- -S
+--  @param S Symbolic object.
+--  @return Negative value.
+symbolic.__unm = function (S)
+  local res = nil
+  if S._parent == PARENTS.sum then
+    res = symbolic:_newExpr(PARENTS.sum, {})
+    for i, v in ipairs(S._) do res._[i] = {-v[1], v[2]} end
+  else
+    res = symbolic._m1 * S
+  end
+  if S._parent == PARENTS.product then
+    res:p_simp()
+  end
+  res:p_signature()
+  return res
+end
+
+
+
 
 --- Convert arguments to symbolic if need.
 --  @param v2 First value.
@@ -202,7 +404,7 @@ symbolic.def = function (_, sName, tArgs, S)
   local t = {}
   for i, v in ipairs(tArgs) do
     if issymbolic(v) then
-      if v._parent == symbolic._parentList.symbol then
+      if v._parent == PARENTS.symbol then
         t[i] = v._
       else
         error "Wrong arguments"
@@ -244,6 +446,53 @@ about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
   "Evaluate symbolic expression with the given environment."}
 
 
+symbolic.expand = function (S)
+  local acc, rest = {}, {}
+  -- collect elements
+  if S._parent == PARENTS.product then
+    for _, v in ipairs(S._) do
+      local v1, v2 = v[1], v[2]
+      if v2._parent == PARENTS.sum and v1 > 0 and Isint(v1) then
+        for i = 1, v1 do acc[#acc+1] = v2 end
+      else
+        rest[#rest+1] = v
+      end
+    end
+  elseif S._parent == PARENTS.power then
+    if S._[1]._parent == PARENTS.sum and S._[2]._parent == PARENTS.const then
+      local v1, v2 = S._[2]._, S._[1]
+      for i = 1, v1 do acc[#acc+1] = v2 end
+    end
+  end
+  -- not found
+  if #acc == 0 then return S end
+  -- main terms
+  local res = nil
+  for _, v in ipairs(acc) do
+    if res then
+      local s = {}
+      for _, x in ipairs(res) do
+        for _, y in ipairs(v._) do
+          table.insert(s, {x[1]*y[1], x[2]*y[2]})
+        end
+      end
+      res = s
+    else
+      res = v._
+    end
+  end
+  -- multiplier
+  if #rest > 0 then
+    local k = symbolic:_newExpr(PARENTS.product, rest)
+    for _, x in ipairs(res) do x[2] = x[2]*k end
+  end
+  res = symbolic:_newExpr(PARENTS.sum, res)
+  res:p_simp()
+  res:p_signature()
+  return res
+end
+
+
 --- Find function using its name.
 --  @param sName Function name.
 --  @return Function object or nil.
@@ -271,7 +520,7 @@ about[symbolic.isFn] = {'S:isFn() --> bool',
 --- Get name of variable.
 --  @return Variable name.
 symbolic.name = function (self)
-  return self._parent == symbolic._parentList.symbol and self._ or nil
+  return self._parent == PARENTS.symbol and self._ or nil
 end
 
 
@@ -294,7 +543,7 @@ about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..",
 --- Get value of constant.
 --  @return Constant value.
 symbolic.value = function (self)
-  return self._parent == symbolic._parentList.const and self._ or nil
+  return self._parent == PARENTS.const and self._ or nil
 end
 
 
