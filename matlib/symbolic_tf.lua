@@ -147,6 +147,28 @@ COMMON.evalPairs = function (S, tEnv)
 end
 
 
+COMMON.rawget = function (S, n, ...)
+  return (n == nil) and S or nil
+end
+
+
+COMMON.rawgetPair = function (S, n, m, ...)
+  if n == nil then return S end
+  if n <= #S._ then
+    if m == nil then
+      -- current line
+      return symbolic:_newExpr(S._parent, {S._[n]})
+    end
+    if m == 1 then
+      return S._[n][1]:p_rawget(...)
+    elseif m == 2 then
+      return symbolic:_newConst(S._[n][2]):p_rawget(...)
+    end
+  end
+  return nil 
+end
+
+
 --- Find signature of an object based on list.
 --  @param S Symbolic object.
 --  @return true when update signature.
@@ -254,6 +276,7 @@ PARENTS.const = {
   p_internal = function (S, n)
     return string.format('%s%s', string.rep(' ', n), tostring(S._))
   end,
+  p_rawget = COMMON.rawget,
 }
 
 
@@ -269,6 +292,13 @@ PARENTS.funcValue = {
     for _, v in ipairs(S._) do v:p_simp(bFull) end
   end,
 }
+
+
+PARENTS.funcValue.p_rawget = function (S, n, ...)
+  if n == nil then return S end
+  if n <= #S._ then return S._[n]:p_rawget(...) end
+  return nil
+end
 
 
 PARENTS.funcValue.p_diff = function (S1, S2)
@@ -354,6 +384,13 @@ PARENTS.power = {
   p_eq = COMMON.eq,
   p_eval = COMMON.eval,
 }
+
+
+PARENTS.power.p_rawget = function (S, n, ...)
+  if n == nil then return S end
+  if n <= 2 then return S._[n]:p_rawget(...) end
+  return nil
+end
 
 
 --- Split power to numeric and symbolic parts.
@@ -448,6 +485,7 @@ PARENTS.product = {
   p_signature = COMMON.signaturePairs,
   --p_eq = COMMON.eqPairs,
   p_eval = COMMON.evalPairs,
+  p_rawget = COMMON.rawgetPair,
 }
 
 
@@ -575,6 +613,7 @@ PARENTS.sum = {
   p_signature = COMMON.signaturePairs,
   p_eq = COMMON.eqPairs,
   p_eval = COMMON.evalPairs,
+  p_rawget = COMMON.rawgetPair,
 }
 
 
@@ -672,6 +711,7 @@ PARENTS.symbol = {
     return string.format('%s%s%s',
       string.rep(' ', n), S._, symbolic._fnList[S._] and '()' or '')
   end,
+  p_rawget = COMMON.rawget,
 }
 
 
