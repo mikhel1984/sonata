@@ -22,14 +22,14 @@ Quat = require 'matlib.quaternion'
 require 'matlib.matrix'
 
 -- quaternion
--- set {x,y,z,w}
-a = Quat {2,3,4,1}
+-- set {w,x,y,z}
+a = Quat {1,2,3,4}
 -- part of elements
 b = Quat {w=3, x=4}
-ans = b                       -->  Quat{4,0,0, w=3}
+ans = b                       -->  Quat{3, 4, 0, 0}
 
 -- conjugation
-ans = a:conj()                -->  Quat{-2,-3,-4, w=1}
+ans = a:conj()                -->  Quat{1, -2,-3,-4}
 
 -- real when imaginary are zeros
 ans = a + a:conj()            -->  2
@@ -42,11 +42,11 @@ c = a*a:inv()
 ans = c:w()                  --1>  1.000
 
 -- arithmetic
-ans = a+b                     -->  Quat{6,3,4, w=4}
+ans = a+b                     -->  Quat{4, 6,3,4}
 
-ans = a*b                     -->  Quat{10,25, w=-5}
+ans = a*b                     -->  Quat{-5, 10,25,}
 
-ans = 3*b                     -->  Quat{12, w=9}
+ans = 3*b                     -->  Quat{9, 12}
 
 -- power
 ans = b^3                     -->  b * b * b
@@ -561,10 +561,10 @@ setmetatable(quaternion,
 {__call = function (_, v)
   if isquaternion(v) then return v end
   assert(type(v) == 'table', "Table is expected")
-  local x = v[1] or v.x or 0
-  local y = v[2] or v.y or 0
-  local z = v[3] or v.z or 0
-  local w = v[4] or v.w or 0
+  local w = v[1] or v.w or 0
+  local x = v[2] or v.x or 0
+  local y = v[3] or v.y or 0
+  local z = v[4] or v.z or 0  
   assert(type(w) == 'number' or type(w) == 'table' and w.float, "Wrong part w")
   assert(type(x) == 'number' or type(x) == 'table' and x.float, "Wrong part x")
   assert(type(y) == 'number' or type(y) == 'table' and y.float, "Wrong part y")

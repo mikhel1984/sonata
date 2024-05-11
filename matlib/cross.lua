@@ -186,13 +186,13 @@ print(a)
 ------------------------
 Quat = require 'matlib.quaternion'
 
-a = Quat{Int(2),Int(3),Int(4),Int(1)}
+a = Quat{Int(1),Int(2),Int(3),Int(4)}
 b = Quat{w = Int(3), y = Int(5)}
 ans = (a ~= nil) and (b ~= nil) --> true
 
-ans = a + b                     --> Quat{2,8,4,4}
+ans = a + b                     --> Quat{4,2,8,4}
 
-ans = a * b                     --> Quat{-14,14,22,-12}
+ans = a * b                     --> Quat{-12,-14,14,22}
 
 ans = a + a:conj()              --> Int(2)
 
@@ -207,16 +207,16 @@ ans = c:abs()                  --3> 1.0
 d = c ^ 0.5
 ans = d:w()                    --3> 0.768
 
-ans = a ^ 3                     --> Quat{-52,-78,-104,-86}
+ans = a ^ 3                     --> Quat{-86,-52,-78,-104,}
 
 -- show
 print(a)
 
 -- quat & int
-ans = a + Int(1)                --> Quat{2,3,4,2}
+ans = a + Int(1)                --> Quat{2, 2,3,4}
 
 -- int & quat
-ans = Int(2) * b                --> Quat{0,10,0,6}
+ans = Int(2) * b                --> Quat{6,0,10,0}
 
 
 -- MATRIX and COMPLEX
