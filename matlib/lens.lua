@@ -455,7 +455,7 @@ lens.transform = function (self, dy, dV)
   return (self[1]*dy + self[2]*dV), (self[3]*dy + self[4]*dV)
 end
 about[lens.transform] = {"L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d",
-  "Find the output ray position 'dy' and optical angle 'dV' (= v*n). Equal to L(dy,dV).",
+  "Find the output ray position 'y' and optical angle 'V' (= v*n). Equal to L(y,V).",
   help.OTHER}
 -- Simplified call of transformation.
 lens.__call = lens.transform

@@ -166,8 +166,8 @@ Bind = function (obj, ...)
   end
   return Ver.unpack(res)
 end
-about[Bind] = {"Bind(obj, fn_name) --> fn",
-  "Wrap function to call it without object.", AUX}
+about[Bind] = {"Bind(obj, nm1, [nm2, ...]) --> fn",
+  "Wrap functions to call them without object.", AUX}
 
 
 --- Generate list of function values.

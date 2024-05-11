@@ -279,7 +279,7 @@ local VECTOR = 'vector'
 local help = SonataHelp or {}
 -- description
 local about = {
-__module__ = "Matrix operations. The matrices are spares by default."
+__module__ = "Matrix operations. The matrices are spares by default. Indexation from 1."
 }
 
 

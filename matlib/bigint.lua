@@ -1011,7 +1011,7 @@ bigint.digits = function (self, N)
   return setmetatable(res, mt_digits)
 end
 about[bigint.digits] = {"B:digits(N=10) --> tbl",
-  "Get digits the new numeric base."}
+  "Get digits in the new numeric base."}
 
 
 --- Find number of combinations.
