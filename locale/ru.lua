@@ -64,7 +64,7 @@ bigint = {
 [":lcm(...) --> B"]        = [[Наименьшее общее кратное.]],
 ["B:digits(N=10) --> tbl"] = [[Возвращает цифры числа для заданной системы счисления.]],
 [":P(n, k, isRepeat=false) --> permutaions_B"] = [[Возвращает число перестановок без повторов.]],
---[" (num|str|tbl) --> new_B"] = [[Create number from integer, string or table.]],
+[" (num|str|tbl) --> new_B"] = [[Создаёт большое целое число на основе числа, строки или таблицы.]],
 },
 ---------- complex.lua ----------
 complex = {
@@ -117,8 +117,8 @@ const = {
 [".phy.mu0 --> 1.2E-6"]    = [[Магнитная постоянная.]],
 [".phy.R --> 8.31"]        = [[Универсальная газовая постоянная.]],
 [".phy.eps0 --> 8.8E-12"]  = [[Электрическая постоянная.]],
---[".math.gamma --> 0.577"]  = [[Euler-Mascheroni constant.]],
---[".astro.k --> 0.017"]     = [[Gaussian gravitational constant.]],
+[".math.gamma --> 0.577"]  = [[Постоянная Эйлера-Маскерони.]],
+[".astro.k --> 0.017"]     = [[Гравитационная постоянная Гаусса.]],
 },
 ---------- data.lua ----------
 data = {
@@ -163,11 +163,11 @@ geodesy = {
 ["E:toXYZ(blh_t) --> xyz_t"] = [[Преобразует геодезические координаты в геоцентрические.]],
 ["E:solveDir(blh_t, az1_d, dist_d) --> blh_t, az2_d"] = [[Решение прямой задачи геодезии, поиск положения и азимута второй точки при заданных начальной точке, направлении и расстоянии.]],
 [":hashDecode(hash_s) --> coord_t, range_t"] = [[Определения положения зоны по геохэшу.]],
---[" (param_t=nil) --> E"]   = [[Produce ellipsoid with the given params {'a', 'f'}.]],
---[":dms2deg(deg_d, min_d=0, sec_d=0) --> deg"] = [[Convert degrees, minutes and seconds to degrees.]],
---["E:into(E2, lin, rot, m)"] = [[Define transormation rules between ellipsoids.]],
---["E:utm2bl(utm_t) --> blh_t"] = [[Find Geodetic coordinates for the given UTM pose and zone.]],
---["E:bl2utm(blh_t) --> utm_t"] = [[Find UTM projection for the given coordinates.]],
+[" (param_t=nil) --> E"]   = [[Новый эллипсоид с заданными параметрами {'a', 'f'}.]],
+[":dms2deg(deg_d, min_d=0, sec_d=0) --> deg"] = [[Преобразует градусы, минуты, секунды в десятичные градусы.]],
+["E:into(E2, lin, rot, m)"] = [[Задать правила преобразования эллипсоидов.]],
+["E:utm2bl(utm_t) --> blh_t"] = [[Найти геодезические координаты для заданной UTM позиции и зоны.]],
+["E:bl2utm(blh_t) --> utm_t"] = [[Найти UTM проекцию для заданных координат.]],
 },
 ---------- gnuplot.lua ----------
 gnuplot = {
@@ -221,19 +221,19 @@ graph = {
 ["G:copy() --> cpy_G"]     = [[Создаёт копию графа.]],
 ["G:edges() --> edges_t"]  = [[Возвращает список рёбер.]],
 ["G:add(n1, n2=nil, w_d=1)"] = [[Добавляет узел (одиночное имя) или ребро.]],
---["G:components() --> G_t"] = [[Get list of connected components.]],
---["G:rand(edge_N)"]         = [[Fill graph with random edges.]],
---[":concat(G_t) --> new_G"] = [[Combine graphs into one object.]],
---["G:isConnected() --> bool"] = [[Check if the graph is connected.]],
---["G:isTree() --> bool"]    = [[Check if the graph is tree.]],
---["G:randp(probability_d)"] = [[Fill graph with random edges.]],
---[" (params_t={}) --> new_G"] = [[Create graph. Parameters are {dir=bool, O|K|C|P=number|names_t, name='n'}.]],
---["G:search(node1, node2, method_s) --> path_t|nil"] = [[Find path between two nodes. Methods are: bfs, dfs, dijkstra.]],
---["G:nout(node) --> nodes_t"] = [[Find adjucent output nodes.]],
---["G:matrix() --> adjacency_M, nodes_t"] = [[Get adjacency matrix and node list.]],
---["G:has(node) --> bool"]   = [[Check if the graph has the node.]],
---["G:isEuler() --> bool"]   = [[Check if the graph has Euler circle.]],
---["G:nin(node) --> nodes_t"] = [[Find adjucent input nodes.]],
+["G:components() --> G_t"] = [[Список компонентов графа.]],
+["G:rand(edge_N)"]         = [[Заполнить граф случайными ребрами.]],
+[":concat(G_t) --> new_G"] = [[Объединить несколько графов в один объект.]],
+["G:isConnected() --> bool"] = [[True если граф связанный.]],
+["G:isTree() --> bool"]    = [[True если это дерево.]],
+["G:randp(probability_d)"] = [[Заполнить рёбрами с заданной вероятностью.]],
+[" (params_t={}) --> new_G"] = [[Создать граф, используюя параметры {dir=флаг, O|K|C|P=число|names_t, name='n'}.]],
+["G:search(node1, node2, method_s) --> path_t|nil"] = [[Поиск пути между двумя узлами. Методы: bfs, dfs, dijkstra.]],
+["G:nout(node) --> nodes_t"] = [[Список узлов на выходе.]],
+["G:matrix() --> adjacency_M, nodes_t"] = [[Матрица сопряжения и список узлов.]],
+["G:has(node) --> bool"]   = [[Проверка принадлежности узла графу.]],
+["G:isEuler() --> bool"]   = [[True если содержит цикл Эйлера.]],
+["G:nin(node) --> nodes_t"] = [[Список узлов на входе.]],
 },
 ---------- lens.lua ----------
 lens = {
@@ -247,13 +247,14 @@ lens = {
 ["L:copy() --> cpy_L"]     = [[Возвращает копию объекта.]],
 ["L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d"] = [[Определяет положение луча 'y' и оптический угол 'V' (= v*n) на выходе оптической системы. Эквивалентно вызову L(y,V).]],
 [":afocal(magn_d) --> L"]  = [[Возвращает матрицу для афокальной системы.]],
---[":R(nin_d, rad_d, nout_d) --> L"] = [[Find refraction matrix for the given radius of surface and input and output refractive indeces.]],
---[":T(dist_d, n_d=1) --> L"] = [[Find translation matrix for the given distance and refractive index.]],
---[":M(rad_d, n_d=1) --> L"] = [[Find reflection matrix for the given radius and refractive index.]],
---[":gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d"] = [[Find Gaussian beam radius and curvature at some distance.]],
---["L:matrix() --> M"]       = [[Get elements as matrix.]],
---["L:emit(lambda_d) --> outCurv_d, outSize_d|nil, waist_d|nil, shift_d|nil "] = [[Find laser cavity output beam curvature. In the case of stable cavity also returns size radius, waist radius and its shift from the plane.]],
---[":gParam(waist_d, lambda_d) --> div_d, range_d"] = [[Find divergence angle and Raileigh range for a Gaussian beam.]],
+[":R(nin_d, rad_d, nout_d) --> L"] = [[Матрица преломления с учётом радиуса кривизны и показателей преломления на входе и выходе.]],
+[":T(dist_d, n_d=1) --> L"] = [[Матрица перемещения для заданного расстояния и показателя преломления.]],
+[":M(rad_d, n_d=1) --> L"] = [[Матрица для отражающей поверхности заданного радиуса с учётом показателя преломления среды.]],
+[":gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d"] = [[Размер пучка и радиус кривизны на расстоянии от перетяжки.]],
+["L:matrix() --> M"]       = [[Матрица оптической системы.]],
+["L:emit(lambda_d) --> outCurv_d, outSize_d|nil, waist_d|nil, shift_d|nil "] = [[Поиск радиуса кривизны фронта на выходе резонатора. 
+Для устойчивого резонатора также возвращает радиус пучка на выходе, а также размер и положение перетяжки.]],
+[":gParam(waist_d, lambda_d) --> div_d, range_d"] = [[Возвращает угол расходимости и размер ближней зоны гауссова луча.]],
 },
 ---------- main.lua ----------
 main = {
@@ -282,7 +283,7 @@ main = {
 ["acos(x) --> y"]          = [[Арккосинус x.]],
 ["acosh(x) --> y"]         = [[Гиперболический арккосинус.]],
 ["cos(x) --> y"]           = [[Косинус x.]],
---["hypot(...)"]             = [[Hypotenuse.]],
+["hypot(...)"]             = [[Гипотенуза.]],
 },
 ---------- matrix.lua ----------
 matrix = {
@@ -326,7 +327,7 @@ matrix = {
 ["M:kronSum(M2) --> M⊕M2"] = [[Сумма Кронеккера.]],
 ["M:norm() --> num"]       = [[Евклидова норма.]],
 ["M:rows() --> N"]         = [[Число строк.]],
---[" {row1_t, ...} --> new_M"] = [[Create matrix from list of strings (tables).]],
+[" {row1_t, ...} --> new_M"] = [[Строит матрицу из списка строк.]],
 },
 ---------- numeric.lua ----------
 numeric = {
@@ -335,10 +336,10 @@ numeric = {
 [":newton(fn, x0_d) --> num"] = [[Поиск корня методом Ньютона в окрестностях заданной точки.]],
 [":der(fn, x_d) --> num"]  = [[Оценка производной функции в точке.]],
 [":solve(fn, low_d, up_d) --> num"] = [[Поиск корня уравнения fn(x)=0 на интервале [a,b].]],
---[":int(fn, x1_d, x2_d) --> num"] = [[Get integral of the function. Improper integrals with infinite limits are possible.]],
---[=[[":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t"] = [[Numerical approximation of the ODE solution.
-List of parameters is optional and can includes time step and exit condition.
-Return table of intermediate points in form {t, x(t)}.]],]=]
+[":int(fn, x1_d, x2_d) --> num"] = [[Определённый интеграл. Допустимы бесконечные пределы.]],
+[":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t"] = [[Численное решение ОДУ.
+Списко параметров опциональный, может включать шаг по времени и условие завершения.
+Возвращает список найденных точек в форме {t, x(t)}.]],
 },
 ---------- polynomial.lua ----------
 polynomial = {
@@ -377,10 +378,10 @@ quaternion = {
 ["Q:y() --> var"]          = [[Компонента y.]],
 ["Q:slerp(end_Q, rat_f) --> rat_Q"] = [[Сферическая линейная интерполяция двух кватернионов.]],
 ["Q:toAA() --> angle_d, axis_t|nil"] = [[Возвращает угол поворота и ось вращения.]],
---[" {x, y, z, w} --> new_Q"] = [[Create new quaternion.]],
---["Q:exp() --> exp_Q"]      = [[Quaternion exponential.]],
---["Q:normalized() --> unit_Q"] = [[Return unit quaternion.]],
---["Q:log() --> log_Q"]      = [[Quaternion logarithm.]],
+[" {x, y, z, w} --> new_Q"] = [[Новый кватернион, w - действительная часть, остальные мнимые.]],
+["Q:exp() --> exp_Q"]      = [[Экспонента кватерниона.]],
+["Q:normalized() --> unit_Q"] = [[Возвращает единичный кватернион.]],
+["Q:log() --> log_Q"]      = [[Логарифм кватерниона.]],
 },
 ---------- qubit.lua ----------
 qubit = {
@@ -405,9 +406,9 @@ qubit = {
 ["G:inverse() --> inv_G"]  = [[Возвращает обратное преобразование.]],
 ["Q:normalize()"]          = [[Нормализовать коэффициенты.]],
 [":combine([Q1, Q2, ...]) --> Q|nil"] = [[Объединить кубиты в систему. Эквивалентно Q1..Q2.]],
---[" (state_s|num) --> Q"]   = [[Create new qubit.]],
---[":fromVector(V) --> Q"]   = [[Initialize qubit state from vector.]],
---["G:R(axis_s, angle, [ind1, ind2 ...] --> G"] = [[Add rotation for axis 'X', 'Y' or 'Z'.]],
+[" (state_s|num) --> Q"]   = [[Создать систему кубитов.]],
+[":fromVector(V) --> Q"]   = [[Создать систему на основе вектора состояний.]],
+["G:R(axis_s, angle, [ind1, ind2 ...] --> G"] = [[Гейт вращения для оси 'X', 'Y' или 'Z'.]],
 },
 ---------- random.lua ----------
 random = {
@@ -483,6 +484,6 @@ units = {
 ["U:key() --> str"]        = [[Возвращает единицы измерения.]],
 ["U:copy() --> cpy_U"]     = [[Создание копии объекта.]],
 ["U:convert(new_s) --> upd_U|nil"] = [[Преобразование единиц измерения, возвращает новый объект или nil.]],
---[".rules"]                 = [[Table of rules for conversation.]],
+[".rules"]                 = [[Таблица с правилами преобразования.]],
 },
 }
