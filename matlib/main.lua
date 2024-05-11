@@ -141,12 +141,21 @@ about[PI] = {"PI --> 3.14", "Number pi.", AUX}
 
 --- Wrap function to simplify call if need.
 --  @param obj Sonata object.
---  @param name Function name.
---  @return clojure of the method.
-Bind = function (obj, name)
-  return function (...)
-           return obj[name](obj, ...)
-         end
+--  @param ... Function names.
+--  @return clojure of the methods.
+Bind = function (obj, ...)
+  -- import if need
+  if type(obj) == 'string' then obj = use(obj) end
+  -- bind
+  local res = {}
+  for i, nm in ipairs({...}) do
+    local f = obj[nm]
+    if type(f) ~= 'function' then
+      error('Wrong function '..tostring(nm))
+    end
+    res[i] = function (...) return f(obj, ...) end
+  end
+  return Ver.unpack(res)
 end
 about[Bind] = {"Bind(obj, fn_name) --> fn",
   "Wrap function to call it without object.", AUX}
