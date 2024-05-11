@@ -9,6 +9,7 @@
 --  i.e. each node has links to adjucent nodes.
 --  "false" is used to mark paired of absent edges.
 --
+--  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 

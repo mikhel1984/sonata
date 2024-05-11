@@ -6,6 +6,7 @@
 --  <code>{w, i, j, k} </code></br>
 --  where <i>w</i> is a real part, <i>i, j, k</i> are imaginary elements.
 --
+--  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 

@@ -8,6 +8,7 @@
 --  Internal elements can be empty tables, but anyway
 --  operation X[i][j] will return 0.
 --
+--  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 

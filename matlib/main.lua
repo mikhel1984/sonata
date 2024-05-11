@@ -2,6 +2,7 @@
 
 --- Default functions and objects.
 --
+--  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
@@ -13,9 +14,13 @@
 --[[TEST_IT
 
 require 'matlib.main'
+-- for bind example
+D = require('matlib.data')
 
 -- standard functions
 ans = exp(0)+sin(PI/2)+cosh(0)  --1>  3.0
+
+ans = hypot(3, 4)            --2>  5.0
 
 -- round number
 ans = Round(0.9)              -->  1.0
@@ -29,6 +34,10 @@ ans = Round(math.pi, 0.01)    -->  3.14
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3>  0.909
+
+-- bind functions
+min, sum = Bind(D, 'min', 'sum')
+ans = min{1, 2, 3} + sum{1,2,3}  -->  7
 
 -- use Lua functions if need
 ans = math.deg(PI)           --2>  180.0

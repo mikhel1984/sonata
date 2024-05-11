@@ -2,6 +2,7 @@
 
 -- Lua based mathematical program
 -- This file is a part of 'sonata.matlib' collection, 2017 - 2024.
+-- The software is provided 'as is', without warranty of any kind, express or implied.
 
 
 --================  CONFIGURATION  ===================

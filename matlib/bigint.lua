@@ -9,6 +9,7 @@
 --  For example, number <code>123</code> is represented as
 --  <code>{_sign=1, _={3, 2, 1}}</code> when BASE is 10.
 --
+--  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
 
