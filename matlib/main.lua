@@ -153,8 +153,6 @@ about[PI] = {"PI --> 3.14", "Number pi.", AUX}
 --  @param ... Function names.
 --  @return clojure of the methods.
 Bind = function (obj, ...)
-  -- import if need
-  if type(obj) == 'string' then obj = use(obj) end
   -- bind
   local res = {}
   for i, nm in ipairs({...}) do

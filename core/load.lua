@@ -58,7 +58,6 @@ Sonata.doimport = function (tbl, name)
     -- add description
     if lib.about then About:add(lib.about, name, var) end
   end
-  return Sonata._modules[var]
 end
 
 
@@ -91,7 +90,7 @@ setmetatable(use,
       for i, v in ipairs(name) do Sonata.doimport(self, v) end
     else
       -- load module
-      return Sonata.doimport(self, name)
+      Sonata.doimport(self, name)
     end
   end,
 })
