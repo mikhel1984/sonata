@@ -122,6 +122,7 @@ __module__ = "Operations with quaternions."
 local quaternion = {
 -- mark
 type = 'quaternion',
+isquaternion = true,
 -- simplify
 _simp = function (Q)
   return Cross.isZero(Q._[2]) and Cross.isZero(Q._[3]) and Cross.isZero(Q._[4])

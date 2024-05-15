@@ -190,9 +190,9 @@ __module__ = "Manipulations with complex numbers."
 
 local complex = {
 -- mark
-type='complex',
+type = 'complex',
 -- for external modules
-iscomplex=true,
+iscomplex = true,
 -- simplification
 _simp = function (C)
   return Czero(C._[2]) and Cross.simp(C._[1]) or C

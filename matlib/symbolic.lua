@@ -65,6 +65,12 @@ local PARENTS = symbolic._parentList
 local function issymbolic(v) return getmetatable(v) == symbolic end
 
 
+local function compatible (v)
+  return type(v) == 'number' 
+      or type(v) == 'table' and (v.float or v.iscomplex or v.isquaternion)
+end
+
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -383,6 +389,11 @@ symbolic.__unm = function (S)
 end
 
 
+symbolic._convert = function (v) 
+  return compatible(v) and symbolic:_newConst(v) 
+end
+
+
 --- Convert arguments to symbolic if need.
 --  @param v2 First value.
 --  @param v2 Second value.
@@ -568,7 +579,8 @@ __call = function (_, v)
   if type(v) == 'string' then
     local s = assert(v:match('^[_%a]+[_%w]*$'), 'Wrong name')
     return symbolic:_newSymbol(s)
-  elseif type(v) == 'number' or type(v) == 'table' and v.__mul then   -- TODO other methods?
+  elseif type(v) == 'number' or type(v) == 'table' and v.__mul and v.__add
+  then
     return symbolic:_newConst(v)
   end
   error ("Wrong argument "..tostring(v))

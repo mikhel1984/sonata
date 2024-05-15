@@ -260,7 +260,9 @@ end
 
 
 -- Main module
-local bigint = { type='bigint' }
+local bigint = { 
+type = 'bigint', 
+}
 assert(BASE > 2)
 
 
