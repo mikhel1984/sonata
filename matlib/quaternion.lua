@@ -534,6 +534,8 @@ about[quaternion.toRPY] = {"Q:toRPY() --> roll_d, pitch_d, yaw_d",
 --  @return w element.
 quaternion.w = function (Q) return Q._[1] end
 about[quaternion.w] = {"Q:w() --> var", "Get w component.", help.OTHER}
+-- marker of a complex number
+quaternion.re = quaternion.w
 
 
 --- Get x component.

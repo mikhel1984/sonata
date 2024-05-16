@@ -66,8 +66,7 @@ local function issymbolic(v) return getmetatable(v) == symbolic end
 
 
 local function compatible (v)
-  return type(v) == 'number' 
-      or type(v) == 'table' and (v.float or v.iscomplex or v.isquaternion)
+  return type(v) == 'number' or type(v) == 'table' and (v.float or v.re)
 end
 
 

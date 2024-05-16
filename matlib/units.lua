@@ -36,7 +36,7 @@ ans = a 'km/h'               --2>  3.6
 ans = a()                     -->  1
 
 -- get units
-ans = a:key()                 -->  'm/s'
+ans = a:u()                   -->  'm/s'
 
 -- make copy
 cp = a:copy()
@@ -300,7 +300,7 @@ end
 units.__tostring = function (self)
   return string.format('%s %s',
     type(self._value) == 'number' and Unumstr(self._value) or tostring(self._value),
-    units.key(self))
+    units.u(self))
 end
 
 
@@ -572,7 +572,7 @@ about[units.copy] = {'U:copy() --> cpy_U',
 
 --- Convert table of units into string.
 --  @return String with units.
-units.key = function (self)
+units.u = function (self)
   local num, denom = {}, {}
   for k, v in pairs(self._key) do
     if v > 0 then
@@ -599,7 +599,7 @@ units.key = function (self)
   end
   return num .. denom
 end
-about[units.key] = {'U:key() --> str', 'Get units.'}
+about[units.u] = {'U:u() --> str', 'Get units.'}
 
 
 -- prefix list
