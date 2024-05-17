@@ -267,10 +267,6 @@ io.write(SonataHelp.CMAIN, '\n',
 SonataHelp.CHELP)
 io.write(About:get('intro'), SonataHelp.CRESET, "\n")
 
--- Import default modules
-if SONATA_DEFAULT_MODULES then
-  use(SONATA_DEFAULT_MODULES)
-end
 
 -- choose interpreter
 if arg[-1] ~= '-i' then

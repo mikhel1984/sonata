@@ -61,6 +61,7 @@ local function goTo (args, env)
   local num = tonumber(args[1])
   if not num then
     env.evaluate.printErr("Unknown command "..args[1])
+    return nil
   end
   env.index = 1
   env.queue = {}

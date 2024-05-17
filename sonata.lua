@@ -13,13 +13,10 @@
 --	Text coloring
 --SONATA_USE_COLOR = true
 
---	Load after start
---SONATA_DEFAULT_MODULES = {'matrix','asciiplot'}
-
 --	Unicode symbols for function plot
 --SONATA_ASCIIPLOT_UNICODE = true
 
---      Reserve aliases (keywords)
+--  Reserve aliases (keywords)
 --SONATA_PROTECT_ALIAS = true
 
 --	Uncomment to set the localization file
