@@ -421,7 +421,7 @@ data.histcounts = function (_, t, rng)
   end
   return res, bins
 end
-about[data.histcounts] = {":histcounts(data_t, rng_v=10) --> sum_t, edges_t",
+about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", STAT}
 
 
@@ -561,7 +561,7 @@ data.reduce = function (_, fn, t, val)
   for i = i0, #t do val = fn(val, t[i]) end
   return val
 end
-about[data.reduce] = {":reduce(fn|str, data_t, initial=nil) --> var",
+about[data.reduce] = {":reduce(fn|str, data_t, initial=datadata_t[1]_t[1]) --> var",
   "Apply function to its previous result and next element.", LIST}
 
 

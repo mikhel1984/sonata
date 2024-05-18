@@ -267,7 +267,9 @@ end
 axis.setRange = function (self, t)
   local a, b = t[1], t[2]
   -- check limits
-  if a == b then error('Wrong range') end
+  if a == b then 
+    error 'Wrong range'
+  end
   if a > b then
     a, b = b, a
   end
@@ -1411,3 +1413,5 @@ return asciiplot
 
 --======================================
 -- FIX contour concatenation when use color
+-- TODO remove legend when flag false
+-- TODO correct range in polar plot

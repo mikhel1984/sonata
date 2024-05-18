@@ -531,12 +531,14 @@ end
 matrix._new = function (self, t)
   if ismatrixex(t) then
     return t
-  elseif type(t) == 'number' then
+  elseif type(t) == 'number' or type(t) == 'table' and t.__mul then
     return matrix._init(1, 1, {{t}})
   end
   local cols, rows = 0, #t
   for _, v in ipairs(t) do
-    if not type(v) == 'table' then error('Row must be a table!') end
+    if not type(v) == 'table' then 
+      error 'Row must be table!'
+    end
     cols = (cols < #v) and #v or cols
     setmetatable(v, mt_access)
   end

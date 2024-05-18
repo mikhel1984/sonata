@@ -88,6 +88,9 @@ end
 local inform = Sonata and Sonata.warning or print
 
 
+local ODE = 'ode'
+
+
 --- Runge-Kutta method.
 -- @param fn Function f(x,y).
 -- @param x First variable.
@@ -198,21 +201,6 @@ SMALL = 1E-20,
 }
 
 
---- Replace vector with sequence of elements in ODE solver result.
---  @param t Table with ODE solution.
-numeric._flat = function (t)
-  for i = 1, #t do
-    local ti = t[i]
-    local v = ti[2]
-    if type(v) == 'table' then
-      -- replace with vector elements
-      v = v:vec()
-      for j = 1, #v do ti[j+1] = v[j] end
-    end
-  end
-end
-
-
 --- Simple derivative.
 --  @param fn Function f(x).
 --  @param d Parameter.
@@ -233,6 +221,23 @@ numeric.der = function (_, fn, d)
 end
 about[numeric.der] = {":der(fn, x_d) --> num",
   "Calculate the derivative value for the given function."}
+
+
+--- Replace vector with sequence of elements in ODE solver result.
+--  @param t Table with ODE solution.
+numeric.flat = function (t)
+  for i = 1, #t do
+    local ti = t[i]
+    local v = ti[2]
+    if type(v) == 'table' then
+      -- replace with vector elements
+      v = v:vec()
+      for j = 1, #v do ti[j+1] = v[j] end
+    end
+  end
+end
+about[numeric.flat] = {"ys:flat() --> ys",
+  "Transform vector to list for each rov in ODE output.", ODE}
 
 
 --- Estimate lim(fn(x)) for x -> xn.
@@ -306,7 +311,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local exit = tParam.exit or function (_) return false end
   -- evaluate
   local res, last = {{tDelta[1], dY0}}, false
-  res.flat = numeric._flat
+  res.flat = numeric.flat
   while not exit(res) do
     local x, y = Vunpack(res[#res])
     if x >= xn then
@@ -337,7 +342,7 @@ end
 about[numeric.ode] = {":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
 [[Numerical approximation of the ODE solution.
 List of parameters is optional and can includes time step and exit condition.
-Return table of intermediate points in form {t, x(t)}.]]}
+Return table of intermediate points in form {t, x(t)}.]], ODE}
 
 
 --- Find root of equation at the given interval.

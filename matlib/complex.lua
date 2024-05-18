@@ -29,7 +29,7 @@ b = Z(0,3)
 ans = 3+Z:i(4)                -->  Z(3,4)
 
 -- use polar form
-ans = 2*Z:cis(1.57):im()     --2>  2.0
+ans = 2*Z:E(1.57):im()     --2>  2.0
 
 -- arithmetic
 ans = a + b                   -->  Z(1,5)
@@ -628,10 +628,10 @@ about[complex.tanh] = {"C:tanh() --> y_C",
 --- Polar form point position on the unit circle.
 --  @param ang Angle.
 --  @return Complex number.
-complex.cis = function (self, ang)
+complex.E = function (self, ang)
   return complex._new(fcos(ang), fsin(ang))
 end
-about[complex.cis] = {":cis(phy) --> cos(phy)+i*sin(phy)",
+about[complex.E] = {":E(phy) --> cos(phy)+i*sin(phy)",
   "Make complex number exp(i*phy).", help.STATIC}
 
 

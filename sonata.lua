@@ -8,7 +8,7 @@
 --================  CONFIGURATION  ===================
 
 --	Path ('sonata.lua' location)
---SONATA_ADD_PATH = 'path/to/dir/'
+--SONATA_ADD_PATH = 'path/to/sonata/'
 
 --	Text coloring
 --SONATA_USE_COLOR = true

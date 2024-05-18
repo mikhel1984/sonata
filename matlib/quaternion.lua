@@ -315,7 +315,8 @@ quaternion.conj = function (self)
   local q = self._
   return quaternion._new(q[1], -q[2], -q[3], -q[4])
 end
-about[quaternion.conj] = {'Q:conj() --> conj_Q', 'Get conjugation.'}
+about[quaternion.conj] = {'Q:conj() --> conj_Q', 'Get conjugation. Equal to ~Q.'}
+quaternion.__bnot = quaternion.conj
 
 
 --- Find exponential for the quaternion.

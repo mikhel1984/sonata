@@ -567,7 +567,7 @@ qgate._X22 = Matrix{{0, 1}, {1, 0}}
 qgate._Y22 = Matrix{{0, Complex:i(-1)}, {Complex:i(1), 0}}
 qgate._Z22 = Matrix{{1, 0}, {0, -1}}
 qgate._S22 = Matrix{{1, 0}, {0, Complex:i(1)}}
-qgate._T22 = Matrix{{1, 0}, {0, Complex:cis(math.pi/4)}}
+qgate._T22 = Matrix{{1, 0}, {0, Complex:E(math.pi/4)}}
 qgate._H22 = Matrix{{1, 1}, {1, -1}}  -- multipy to 1/sqrt(2)
 
 
@@ -788,7 +788,7 @@ qgate.matrix = function (self) return self._mat:copy() end
 --  @param ... Indexes.
 --  @return updated gate.
 qgate.P = function (self, phase, ...)
-  local m = Matrix {{1, 0}, {0, Complex:cis(phase)}}
+  local m = Matrix {{1, 0}, {0, Complex:E(phase)}}
   local fn = qgate._makeGate(m, 'P')
   return fn(self, ...)
 end
@@ -813,7 +813,7 @@ qgate.R = function (self, axis, angle, ...)
     local c, s = math.cos(angle), math.sin(angle)
     m = Matrix {{c, -s}, {s, c}}
   elseif axis == 'Z' then
-    m = Matrix {{Complex:cis(-angle), 0}, {0, Complex:cis(angle)}}
+    m = Matrix {{Complex:E(-angle), 0}, {0, Complex:E(angle)}}
   else
     error 'Wrong axis'
   end
