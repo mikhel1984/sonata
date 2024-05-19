@@ -167,7 +167,7 @@ description = 'Generating a template for a new module.',
 example = '--new  matrices  Mat  "Matrix operations."',
 process = function (args)
   local Gen = require('core.generator')
-  Gen.module(args[2], args[3], args[4])
+  Gen.module(args[2], args[3] or args[2], args[4] or args[2])
 end,
 exit = true},
 

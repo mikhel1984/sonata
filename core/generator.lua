@@ -257,8 +257,8 @@ end
 --  @param alias Module short name.
 --  @param description Short module description.
 generator.module = function (mName, alias, description)
-  if not (mName and alias) then
-    return io.write('Expected: --new "name" "Alias" ["description"]\n')
+  if not mName then
+    return io.write('Expected: --new "name" ["Alias"] ["description"]\n')
   end
   local fName = sformat('%s%s%s.lua', LIB, Help.SEP, mName)
   -- check existence
@@ -268,7 +268,6 @@ generator.module = function (mName, alias, description)
     return io.write('File ', fName, ' is already exists!\n')
   end
   -- write new file
-  description = description or "The module of your dream!"
   local txt =
 [=[--[[		sonata/WORD1
 
@@ -315,7 +314,7 @@ __module__ = "WORD5"
 
 local WORD2 = {
 -- mark
-type = 'WORD2', isWORD2 = true,
+type = 'WORD2',
 }
 -- methametods
 WORD2.__index = WORD2
