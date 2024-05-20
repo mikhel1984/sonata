@@ -195,7 +195,13 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Sum object.
 symbolic.__add = function (S1, S2)
-  S1, S2 = symbolic._toSym(S1, S2)
+  if not issymbolic(S2) then
+    local v = symbolic._convert(S2)
+    return v and S1 + v or S2.__add(S1, S2)
+  elseif not issymbolic(S1) then
+    local v = symbolic._convert(S1)
+    return v and v + S2 or error('Not def')
+  end
   local res = symbolic:_newExpr(PARENTS.sum, {})
   -- S1
   if S1._parent == PARENTS.sum then
@@ -243,7 +249,13 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Ratio object.
 symbolic.__div = function (S1, S2)
-  S1, S2 = symbolic._toSym(S1, S2)
+  if not issymbolic(S2) then
+    local v = symbolic._convert(S2)
+    return v and S1 / v or S2.__div(S1, S2)
+  elseif not issymbolic(S1) then
+    local v = symbolic._convert(S1)
+    return v and v / S2 or error('Not def')
+  end
   local res = symbolic:_newExpr(PARENTS.product, {})
   -- check a^x / a^y
   if S1._parent == PARENTS.power and S2._parent == PARENTS.power 
@@ -290,7 +302,13 @@ symbolic.__index = function (t, k) return symbolic[k] or t._parent[k] end
 --  @param S2 Symbolic object or number.
 --  @return Product object.
 symbolic.__mul = function (S1, S2)
-  S1, S2 = symbolic._toSym(S1, S2)
+  if not issymbolic(S2) then
+    local v = symbolic._convert(S2)
+    return v and S1 * v or S2.__mul(S1, S2)
+  elseif not issymbolic(S1) then
+    local v = symbolic._convert(S1)
+    return v and v * S2 or error('Not def')
+  end
   local res = symbolic:_newExpr(PARENTS.product, {})
   -- check a^x * a^y
   if S1._parent == PARENTS.power and S2._parent == PARENTS.power 
@@ -321,7 +339,13 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Power object.
 symbolic.__pow = function (S1, S2)
-  S1, S2 = symbolic._toSym(S1, S2)
+  if not issymbolic(S2) then
+    local v = symbolic._convert(S2)
+    return v and S1 ^ v or S2.__pow(S1, S2)
+  elseif not issymbolic(S1) then
+    local v = symbolic._convert(S1)
+    return v and v ^ S2 or error('Not def')
+  end
   local res = symbolic:_newExpr(PARENTS.power)
   if S1._parent == PARENTS.power then
     -- (a^x)^y
@@ -341,7 +365,13 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Difference object.
 symbolic.__sub = function (S1, S2)
-  S1, S2 = symbolic._toSym(S1, S2)
+  if not issymbolic(S2) then
+    local v = symbolic._convert(S2)
+    return v and S1 - v or S2.__sub(S1, S2)
+  elseif not issymbolic(S1) then
+    local v = symbolic._convert(S1)
+    return v and v - S2 or error('Not def')
+  end
   local res = symbolic:_newExpr(PARENTS.sum, {})
   -- S1
   if S1._parent == PARENTS.sum then
@@ -390,17 +420,6 @@ end
 
 symbolic._convert = function (v) 
   return compatible(v) and symbolic:_newConst(v) 
-end
-
-
---- Convert arguments to symbolic if need.
---  @param v2 First value.
---  @param v2 Second value.
---  @return Symbolic objects.
-symbolic._toSym = function (v1, v2)
-  v1 = issymbolic(v1) and v1 or symbolic:_newConst(v1)
-  v2 = issymbolic(v2) and v2 or symbolic:_newConst(v2)
-  return v1, v2
 end
 
 
