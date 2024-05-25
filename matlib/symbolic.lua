@@ -33,7 +33,6 @@ ans = x^y * x^(2*y)           -->  x^(3*y)
 
 -- evaluate
 S = (x+y)*(x-y)
-print(S)
 ans = S:eval{x=2, y=1}        -->  Sym(3)
 
 -- define function
@@ -41,8 +40,26 @@ foo = Sym:def('foo', {x, y}, x^y)
 ans = foo(y, x)               -->  y^x
 
 -- numeric value
-ans = foo(Sym(2), Sym(3))     -->  Sym(8)
+ans = foo(Sym(2), Sym(3)):val()  -->  8
 
+-- get by name
+ssin = Sym.fn.sin
+ans = ssin:isFn()             --> true
+
+-- expand
+ans = S:expand()              -->  x*x-y*y
+
+-- derivative
+ans = (x^3-ssin(2*x)):diff(x)       -->  3.0*x*x-2*Sym.fn.cos(2*x)
+
+-- parts
+S1 = (x-y)/(x+y)
+ans = S1:ratNum()                -->  x-y
+
+ans = S1:ratDenom()              --> x+y
+
+-- internal structure
+print(S1:struct())
 
 --]]
 
@@ -57,6 +74,8 @@ end
 
 local symbolic = require('matlib.symbolic_tf')
 local PARENTS = symbolic._parentList
+
+local STRUCT, TRANSFORM = 'structure', 'transformation'
 
 
 --- Check object type.
@@ -418,6 +437,14 @@ symbolic.__unm = function (S)
 end
 
 
+-- Metamethods
+about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, help.META}
+about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
+
+
+--- Transform value to symbolic object.
+--  @param v Source object.
+--  @return symbolic variable or nil
 symbolic._convert = function (v) 
   return compatible(v) and symbolic:_newConst(v) 
 end
@@ -448,18 +475,22 @@ symbolic.def = function (_, sName, tArgs, S)
   return symbolic:_newSymbol(sName)
 end
 about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S",
-  "Define symbolical function. S is either symbolic expression or a Lua function."}
+  "Define symbolical function. S is either symbolic expression or a Lua function.",
+  help.NEW}
 
 
 --- Find derivative dS1/dS2.
 --  @param S2 Variable.
 --  @return Derivative.
 symbolic.diff = function (self, S2)
-  if self:_isfn() then error('Undefined arguments') end
+  if self:_isfn() then 
+    error 'Undefined arguments'
+  end
+  if type(S2) == 'string' then S2 = symbolic:_newSymbol(S2) end
   return self:p_diff(S2)
 end
 about[symbolic.diff] = {"S:diff(var_S) --> derivative_S",
-  "Find symbolic derivative."}
+  "Find symbolic derivative.", TRANSFORM}
 
 
 --- Find value for the given substitutions.
@@ -472,7 +503,7 @@ symbolic.eval = function (self, tEnv)
   return res
 end
 about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
-  "Evaluate symbolic expression with the given environment."}
+  "Evaluate symbolic expression with the given environment.", TRANSFORM}
 
 
 --- Expand product of polynomials.
@@ -520,38 +551,30 @@ symbolic.expand = function (self)
   return res
 end
 about[symbolic.expand] = {"S:expand() --> expanded_S",
-  "Expand product of polynomials when possible."}
+  "Expand product of polynomials when possible.", TRANSFORM}
 
 
---- Find function using its name.
---  @param sName Function name.
---  @return Function object or nil.
-symbolic.fn = function (_, sName)
-  return symbolic._fnInit[sName] or
-    symbolic._fnList[sName] and symbolic:_newSymbol(sName) or nil
+--- Get function
+symbolic.fn = setmetatable({}, {
+__index = function (_, name)
+  return symbolic._fnInit[name] 
+    or symbolic._fnList[name] and symbolic:_newSymbol(name) or nil
 end
-about[symbolic.fn] = {":fn(name_s) --> fn_S|nil",
-  "Return symbolic function if it is defined."}
+})
 
 
 --- Show internal structure of expression.
 --  @return String with structure.
 symbolic.struct = function (self) return self:p_internal(0) end
-about[symbolic.struct] = {"S:struct() --> str", "Show internal structure."}
+about[symbolic.struct] = {"S:struct() --> str", 
+  "Show internal structure.", STRUCT}
 
 
 --- Check if the symbol is function.
 --  @return true when it is function.
-symbolic.isFn = function (self) return self:_isfn() end
+symbolic.isFn = function (self) return self:_isfn() ~= nil end
 about[symbolic.isFn] = {'S:isFn() --> bool',
-  'Return true if the symbol is function.'}
-
-
---- Get name of variable.
---  @return Variable name.
-symbolic.name = function (self)
-  return self._parent == PARENTS.symbol and self._ or nil
-end
+  'Return true if the symbol is function.', help.OTHER}
 
 
 --- Get symbolic expression from string.
@@ -567,28 +590,29 @@ symbolic.parse = function(_, str)
   return table.unpack(res)
 end
 about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..",
-  "Get simbolic expression from string."}
+  "Get simbolic expression from string.", help.NEW}
 
 
 --- Get numerator.
 --  @return numerator of the ratio.
 symbolic.ratNum = function (self) return symbolic._ratGet(self, 1) end
 about[symbolic.ratNum] = {"S:ratNum() --> numerator_S", 
-  "Get numerator of the expression."}
+  "Get numerator of the expression.", STRUCT}
 
 
 --- Get denominator.
 --  @return denomenator or the ratio.
 symbolic.ratDenom = function (self) return symbolic._ratGet(self, -1) end
 about[symbolic.ratDenom] = {"S:ratDenom() --> denominator_S",
-  "Get denominator of the expression."}
+  "Get denominator of the expression.", STRUCT}
 
 
 --- Get value of constant.
 --  @return Constant value.
-symbolic.value = function (self)
+symbolic.val = function (self)
   return self._parent == PARENTS.const and self._ or nil
 end
+about[symbolic.val] = {"S:val() --> num", "Get constant value.", help.OTHER}
 
 
 -- simplify constructor call
@@ -613,4 +637,4 @@ symbolic.about = about
 return symbolic
 
 --=============================================================
---TODO 'eval' for expression substitution
+--TODO rawget, rawset

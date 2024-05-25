@@ -908,6 +908,7 @@ symbolic._ratGet = function (S, k)
     local t = v[2] * k
     if t > 0 then acc[#acc+1] = {v[1], t} end
   end
+  if #acc == 1 and acc[1][2] == 1 then return acc[1][1] end
   return #acc > 0 and symbolic:_newExpr(PARENTS.product, acc) or symbolic._1
 end
 
