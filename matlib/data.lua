@@ -22,9 +22,9 @@ require 'matlib.matrix'
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
 -- weight
-w = {1,1,0}
+W = {1,1,0}
 -- enought to define w[i] ~= 1
-w[5] = 2; w[6] = 2
+W[5] = 2; W[6] = 2
 -- average
 ans = D:mean(X)              --3>  3.375
 

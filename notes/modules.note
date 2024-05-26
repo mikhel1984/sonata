@@ -39,13 +39,13 @@ fn = function (x)          \
 end -- introduce some function
 Num:newton(fn, PI/3)  -- find root near the pi/3
 Num:der(fn, PI/3)     -- estimate derivative in the point
-Num:trapez(fn, 0, PI/3) -- find integral from 0 to pi/3
+Num:int(fn, 0, PI/3)  -- find integral from 0 to pi/3
 -- Solve ODE
-t,yn = Num:ode45(                               \
+xy = Num:ode(                                   \
   function(t,y) return t*y end,  -- y' = f(t,y) \
   {1,3},                         -- t = 1..3    \
   1)                             -- y(1) = 1
-yn                     -- y(3)
+xy[#xy][2]                       -- y(3)
 -- PAUSE
 
 --	POLYNOM
@@ -106,7 +106,7 @@ g:edge('a','b')
 g:add ('b','e', 2)
 g:add ('f')
 -- find path
-found, path = g:bfs('a','c')
+path = g:search('a','c', 'bfs')
 for _, v in ipairs(path) do  \
   print(v)                   \
 end
@@ -138,12 +138,12 @@ Spec:besselj(2, 0.5)
 --	UNITS
 -- Conversation between measurement units.
 -- Define rules
-U:setRule('h', U(60, 'min'))       -- 1 h = 60 min
-U:setRule('min', U(60, 'sec'))     -- 1 min = 60 sec
+U.rules['h'] = U(60, 'min')       -- 1 h = 60 min
+U.rules['min'] = U(60, 'sec')     -- 1 min = 60 sec
 -- new variable
-v = U(2, 'm/sec')
+v = 2 * U'm/sec'
 -- convert to 'km/h'
-v['km/h']
+v 'km/h'
 -- arithmetic is possible
 t = U(10,'sec')
 s = v * t
@@ -173,3 +173,67 @@ fig
 -- second argument can be function
 fig:plot(a, b, 'sin', math.cos, 'cos')
 fig
+-- PAUSE
+
+--	DATA
+-- Data processing and statistics.
+X = {3,2,5,6,3,4,3,1}
+w = {1,1,0}
+-- analyze
+D:std(X, w)
+D:filter(X, "x1 % 2 == 0")
+-- print
+t = {{1,2,3},{4,5,6}}
+D:md(t, {'a', 'b', 'c'})
+-- PAUSE
+
+--	GEODESY
+-- Coordinate transformations and other tasks.
+wgs = Geo()
+ll = {B=45, L=60, H=1000}
+wgs:bl2utm(ll)
+Geo:hashEncode(ll, 7)
+-- PAUSE
+
+--	LENS
+-- Matrix methods in optics.
+-- simple lens
+lens = Lens: R(1, 200, 1.56) : T(5) : R(-200, 1)
+lens:cardinal()
+-- laser cavity
+air_rod = Lens: T(250) : T(20, 1.56)
+mirror = Lens:M(-300)
+cavity = mirror .. air_rod .. mirror .. air_rod
+print(cavity:emit(1.064e-6))  -- curvature, beam, wrist, location
+-- PAUSE
+
+--	QUBIT
+-- Emulate quantum computation.
+-- make gates
+g = Qb:gates(2):H():X(0):Y(1):Z()
+g
+-- apply transformation to quantum system
+a = 0.1*Qb'|00>' + 0.3*Qb'|01>' + 0.5*Qb'|11>'
+a:normalize()
+b = g(a)
+b
+b:prob '10'
+b:meas()
+-- PAUSE
+
+--	RANDOM
+-- Random distrubutions.
+rnd = Rand:new()  -- custom generator
+rnd:norm(1, 0.5)
+rnd:exp(0.6)
+rnd:rayleigh(0.4)
+-- PAUSE
+
+--	SYMBOLIC
+-- Elements of computer algebra.
+x, a = Sym('x'), Sym(2)
+p, q = Sym:parse('x-y, x+y')
+p:eval {x=2, y=1}
+p + q
+(a*p*q*x):expand()
+(x^3-a*x+x^2):diff(x)
