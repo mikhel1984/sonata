@@ -125,7 +125,7 @@ generator.doc = function (locName, tModules)
   end
 
   res[#res+1] =
-    '<div><p align="center"><i>2017-2023, Stanislav Mikhel</i></p></div>'
+    '<div><p align="center"><i>2017-2024, Stanislav Mikhel</i></p></div>'
   res[#res+1] = '</body></html>'
 
   -- save
