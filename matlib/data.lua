@@ -29,7 +29,7 @@ W[5] = 2; W[6] = 2
 ans = D:mean(X)              --3>  3.375
 
 -- standard deviation
-ans = D:std(X,W)             --3>  1.495
+ans = D:std(X,W)             --3>  1.314
 
 -- covariance for two vectors
 Y = {0,2,1,3,7,5,8,4}
@@ -63,7 +63,7 @@ ans = D:min(X)                -->  1
 ans = D:geomean(X)           --3>  2.995
 
 -- harmonic mean
-ans = D:harmmean(X,W)        --3>  2.567
+ans = D:harmmean(X,W)        --3>  2.571
 
 -- check if X[i] > 2
 a = D:is(X, "x1 > 2")

@@ -22,10 +22,10 @@ ans = C.phy.e * 1E19         --3>  1.602
 
 -- convert to Unit object (add _U)
 e = C.phy.e_U
-ans = e:key()                 -->  C.phy.e_u_
+ans = e:u()                   -->  C.phy.e_u_
 
 -- change units
-ans = e['nC']                --3>  C.phy.e * 1E9
+ans = e 'nC'                 --3>  C.phy.e * 1E9
 
 -- create "immutable" value
 C:add('myConst', 10)
