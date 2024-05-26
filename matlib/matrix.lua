@@ -536,7 +536,7 @@ matrix._new = function (self, t)
   end
   local cols, rows = 0, #t
   for _, v in ipairs(t) do
-    if not type(v) == 'table' then 
+    if type(v) ~= 'table' then
       error 'Row must be table!'
     end
     cols = (cols < #v) and #v or cols
@@ -852,7 +852,7 @@ matrix.kronSum = function (self, M)
   if self._rows ~= self._cols or M._rows ~= M._cols then
     error('Square matrices expected')
   end
-  return matrix.kron(self, matrix:eye(M)) + matrix.kron(matrix:eye(M1), M)
+  return matrix.kron(self, matrix:eye(M)) + matrix.kron(matrix:eye(self), M)
 end
 about[matrix.kronSum] = {"M:kronSum(M2) --> M⊕M2", "Find Kronecker sum."}
 
@@ -1024,7 +1024,7 @@ matrix.pinv = function (self)
       L[k][r] = tmp
       for i = k+1, n do L[i][r] = L[i][r]/tmp end
     elseif not iscomplex and tmp > tol then
-      tmp = math.sqrt(Cfloat(tmp))
+      tmp = math.sqrt(assert(Cfloat(tmp)))
       L[k][r] = tmp
       for i = k+1, n do L[i][r] = L[i][r]/tmp end
     else

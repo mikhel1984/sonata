@@ -357,7 +357,10 @@ calc.sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
 --- Hyperbolic tangent.
 --  @param x Float number.
 --  @return Hyperbolic tangent value.
-calc.tanh = function (x) t = math.exp(2*x); return (t-1)/(t+1) end
+calc.tanh = function (x)
+  local t = math.exp(2*x)
+  return (t-1)/(t+1)
+end
 
 
 --- Inverse hyperbolic sine.

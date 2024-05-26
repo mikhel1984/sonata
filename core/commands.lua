@@ -135,7 +135,7 @@ cmdInfo.rm = {'cmd_rm', "", "Note-files"}
 
 
 commands.shell = function (args, env)
-  local f = io.popen(args[2])
+  local f = assert(io.popen(args[2]))
   local res = f:read('a')
   f:close()
   io.write(res)

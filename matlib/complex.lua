@@ -150,7 +150,7 @@ end
 --- Find exponential with type conversation.
 --  @param v Value.
 --  @return exp(float(v))
-local function fexp(v) return math.exp(Cfloat(v)) end
+local function fexp(v) return math.exp(assert(Cfloat(v))) end
 
 
 --- Hyperbolic cosine.
@@ -168,13 +168,13 @@ local function sh (v) return 0.5*(fexp(v)-fexp(-v)) end
 --- Find sinus with type conversation.
 --  @param v Real value.
 --  @return sin(float(v))
-local function fsin(v) return math.sin(Cfloat(v)) end
+local function fsin(v) return math.sin(assert(Cfloat(v))) end
 
 
 --- Find cosine with type conversation.
 --  @param v Real value.
 --  @return cos(float(v))
-local function fcos(v) return math.cos(Cfloat(v)) end
+local function fcos(v) return math.cos(assert(Cfloat(v))) end
 
 
 --	INFO
@@ -444,7 +444,7 @@ about[complex.acosh] = {"C:acosh() --> y_C",
 --- Argument of complex number.
 --  @return Argument of the number.
 complex.arg = function (self)
-  return Ver.atan2(Cfloat(self._[2]), Cfloat(self._[1]))
+  return Ver.atan2(assert(Cfloat(self._[2])), assert(Cfloat(self._[1])))
 end
 about[complex.arg] = {"C:arg() --> float", "Return argument of complex number."}
 
@@ -551,7 +551,7 @@ complex.log = function (v)
   if type(v) == 'number' then
     return v < 0 and complex._new(math.log(-v), math.pi) or math.log(v)
   else
-    local c1, c2 = Cfloat(v._[1]), Cfloat(v._[2])
+    local c1, c2 = assert(Cfloat(v._[1])), assert(Cfloat(v._[2]))
     return complex._new(0.5*math.log(c1*c1 + c2*c2), Ver.atan2(c2, c1))
   end
 end

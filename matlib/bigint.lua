@@ -260,8 +260,8 @@ end
 
 
 -- Main module
-local bigint = { 
-type = 'bigint', 
+local bigint = {
+type = 'bigint',
 }
 assert(BASE > 2)
 
@@ -1090,7 +1090,7 @@ bigint.factorize = function (self)
     if n == nil then
       res[#res+1] = v
       break
-    else
+    else  -- n, q ~= nil
       res[#res+1] = n
       v = q
     end

@@ -323,7 +323,7 @@ quaternion.__bnot = quaternion.conj
 quaternion.exp = function (self)
   local w, x, y, z = Ver.unpack(self._)
   local v = math.sqrt(Cross.float(x)^2 + Cross.float(y)^2 + Cross.float(z)^2)
-  w = math.exp(Cross.float(w))  -- reuse
+  w = math.exp(assert(Cross.float(w)))  -- reuse
   if v == 0 then return w end
   local svv = math.sin(v) / v * w
   return quaternion._new(math.cos(v)*w, x*svv, y*svv, z*svv)
@@ -568,7 +568,7 @@ setmetatable(quaternion,
   local w = v[1] or v.w or 0
   local x = v[2] or v.x or 0
   local y = v[3] or v.y or 0
-  local z = v[4] or v.z or 0  
+  local z = v[4] or v.z or 0
   assert(type(w) == 'number' or type(w) == 'table' and w.float, "Wrong part w")
   assert(type(x) == 'number' or type(x) == 'table' and x.float, "Wrong part x")
   assert(type(y) == 'number' or type(y) == 'table' and y.float, "Wrong part y")

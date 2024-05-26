@@ -240,7 +240,6 @@ evaluate._evalBlock = function (co, env)
         local _, status, res = coroutine.resume(co, line)
         showAndNext(status, res, {})
       until status ~= evaluate.EV_INF and status ~= evaluate.EV_WRN
-      if status == evaluate.EV_ERR then break end
     end
   end
   io.write(SonataHelp.CMAIN,

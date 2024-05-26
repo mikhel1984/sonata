@@ -201,7 +201,7 @@ about[Round] = {'Round(v, decimal_N=0) --> round_v',
 
 
 if Sonata
-then  --=====================
+then  --~~~~~~~~~~~~~~~~~~~~~~
 
   -- Sonata specific functions
   about[use] = {'use([module_s]) --> str|nil',
@@ -212,7 +212,7 @@ then  --=====================
 
   about[quit] = {'quit()', "Quit the program.", AUX}
 
-end   --=====================
+end   --~~~~~~~~~~~~~~~~~~~~~~
 
 
 -- save link to help info
