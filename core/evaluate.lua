@@ -107,7 +107,7 @@ end
 local evaluate = {
 
 -- current version
-version = '0.9.40',
+version = '0.9.41',
 
 -- status
 EV_RES = 1,   -- found result
@@ -144,6 +144,8 @@ local txtCodes = {
 local function evalCode()
   local state, cmd = evaluate.EV_RES, ''
   local multiline, res = false, nil
+  local _ENV = setmetatable({}, {__index=_G})
+  if _VERSION == 'Lua 5.1' then setfenv(1, _ENV) end  
   evaluate.IN_COROUTINE = true  -- set marker
   while true do
     -- next line of code
