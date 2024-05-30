@@ -165,9 +165,9 @@ local function evalCode()
     else
       cmd = cmd..(partCmd or input)
       -- 'parse'
-      local fn, err = loadStr('return '..cmd)  -- either 'return expr'
+      local fn, err = loadStr('return '..cmd, nil, 't', _ENV)  -- either 'return expr'
       if err then
-        fn, err = loadStr(cmd)                 -- or 'expr'
+        fn, err = loadStr(cmd, nil, 't', _ENV)                 -- or 'expr'
       end
       -- get result
       if err then
