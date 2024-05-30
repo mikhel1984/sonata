@@ -204,16 +204,16 @@ SMALL = 1E-20,
 -- check limits
 if 1E300 < math.huge then
   -- 64 bits
-  numeric.EPS = 1E-308
-  numeric.FMAX = 1E308
+  numeric.EPS = 2^(-52)
+  numeric.FMAX = 2^1023
 elseif 1E60 < math.huge then
   -- 32 bits
-  numeric.EPS = 1E-308
-  numeric.FMAX = 1E308
+  numeric.EPS = 2^(-23)
+  numeric.FMAX = 2^127
 else
   -- 16 bits
-  numeric.EPS = 1E-308
-  numeric.FMAX = 1E308
+  numeric.EPS = 2^(-10)
+  numeric.FMAX = 2^15
 end
 
 

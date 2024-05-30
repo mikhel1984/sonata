@@ -307,14 +307,6 @@ axis.setRange = function (self, t)
 end
 
 
---- Compare range to the initial, set the largest values.
---  @param t Pair {minlim, maxlim}.
-axis.setMaxRange = function (self, t)
-  axis.setRange(
-    self, {math.min(self._init[1], t[1]), math.max(self._init[2], t[2])})
-end
-
-
 --- Apply logarithmic scale for the axis.
 --  @param isLog Flag to set scale type.
 axis.setLog = function (self, isLog)
@@ -425,11 +417,16 @@ asciiplot._addPolar = function (self, t, tOpt)
   end
   -- update range
   if not self._yfix then
+    local rxx, ryy = {}, {}
     for j = 1, #tOpt do
       local rx, ry = asciiplot._findRange(acc[j], {})
-      self._x:setMaxRange(rx)
-      self._y:setMaxRange(ry)
+      rxx[1] = math.min(rxx[1] or rx[1], rx[1])
+      rxx[2] = math.max(rxx[2] or rx[2], rx[2])
+      ryy[1] = math.min(ryy[1] or ry[1], ry[1])
+      ryy[2] = math.max(ryy[2] or ry[2], ry[2])
     end
+    self._x:setRange(rxx)
+    self._y:setRange(ryy)
   end
   -- prepare
   asciiplot._clear(self)
