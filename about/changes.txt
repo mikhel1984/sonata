@@ -1,3 +1,11 @@
+======== 0.9.41 =========
+
+======== 0.9.40 =========
+
+Other
+* Update interfeaces in most of modules
+* Bug fixes and other improvements
+
 ======== 0.9.39 =========
 
 Asciiplot
@@ -11,6 +19,7 @@ Matrix
 Polynomial
 * Update spline methods
 Other
+* Import modules without 'use'
 
 ======== 0.9.38 =========
 

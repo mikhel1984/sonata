@@ -116,7 +116,6 @@ extremum._minGolden = function (fun, a, b, c)
     x2, x1 = b, b - gc*(b-a)
   end
   local f1, f2 = fun(x1), fun(x2)
-  local i = 1
   while math.abs(x3-x0) > TOL do
     if f2 < f1 then
       x0, x1, x2 = x1, x2, gr*x2 + gc*x3

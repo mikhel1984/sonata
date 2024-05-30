@@ -201,6 +201,22 @@ SMALL = 1E-20,
 }
 
 
+-- check limits
+if 1E300 < math.huge then
+  -- 64 bits
+  numeric.EPS = 1E-308
+  numeric.FMAX = 1E308
+elseif 1E60 < math.huge then
+  -- 32 bits
+  numeric.EPS = 1E-308
+  numeric.FMAX = 1E308
+else
+  -- 16 bits
+  numeric.EPS = 1E-308
+  numeric.FMAX = 1E308
+end
+
+
 --- Simple derivative.
 --  @param fn Function f(x).
 --  @param d Parameter.

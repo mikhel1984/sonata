@@ -471,6 +471,46 @@ about[data.max] = {":max(data_t) --> var, ind_N",
   "Maximal element and its index.", STAT}
 
 
+--- Show data in Markdown-like table form.
+--  @param data_t Table of form {row1, row2, etc.}.
+--  @param names_t Table of column names (optional).
+--  @param fn Table that generates new column from the given (optional).
+--  @return String with table representation.
+data.md = function (_, data_t, names_t, fn)
+  local acc, line = {}, {}
+  -- data to stings
+  for i, v in ipairs(data_t) do
+    local row = {}
+    for j, w in ipairs(fn and fn(v) or v) do
+      row[j] = tostring(w)
+    end
+    acc[i] = row
+  end
+  -- names
+  if names_t then
+    local head = {}
+    for j = 1, #acc[1] do head[j] = tostring(names_t[j] or '') end
+    acc[#acc+1] = head  -- temporary add
+  end
+  -- save
+  local len = Utils.align(acc)
+  for j = 1, #len do line[j] = string.rep('-', len[j]) end
+  local res, templ = {}, '| %s |'
+  if names_t then
+    res[1] = string.format(templ, table.concat(acc[#acc], ' | '))
+    acc[#acc] = nil
+  end
+  res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
+  for _, v in ipairs(acc) do
+    res[#res+1] = string.format(templ, table.concat(v, ' | '))
+  end
+  return table.concat(res, '\n')
+end
+about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
+  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.",
+  help.OTHER}
+
+
 --- Average value.
 --  @param t Table with numbers.
 --  @param tw Table with weight. Can be omitted.
@@ -602,46 +642,6 @@ about[data.std] = {":std(data_t, weight_t=nil) --> num",
   "Standard deviation. Weights can be used.", STAT}
 
 
---- Show data in Markdown-like table form.
---  @param data_t Table of form {row1, row2, etc.}.
---  @param names_t Table of column names (optional).
---  @param fn Table that generates new column from the given (optional).
---  @return String with table representation.
-data.md = function (_, data_t, names_t, fn)
-  local acc, line = {}, {}
-  -- data to stings
-  for i, v in ipairs(data_t) do
-    local row = {}
-    for j, w in ipairs(fn and fn(v) or v) do
-      row[j] = tostring(w)
-    end
-    acc[i] = row
-  end
-  -- names
-  if names_t then
-    local head = {}
-    for j = 1, #acc[1] do head[j] = tostring(names_t[j] or '') end
-    acc[#acc+1] = head  -- temporary add
-  end
-  -- save
-  local len = Utils.align(acc)
-  for j = 1, #len do line[j] = string.rep('-', len[j]) end
-  local res, templ = {}, '| %s |'
-  if names_t then
-    res[1] = string.format(templ, table.concat(acc[#acc], ' | '))
-    acc[#acc] = nil
-  end
-  res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
-  for _, v in ipairs(acc) do
-    res[#res+1] = string.format(templ, table.concat(v, ' | '))
-  end
-  return table.concat(res, '\n')
-end
-about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
-  "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.",
-  help.OTHER}
-
-
 --- Apply function of n arguments to n lists.
 --  @param fn Function of multiple arguments or string.
 --  @param ... Sequence of lists.
@@ -764,6 +764,13 @@ end
 mt_range.__newindex = function (self, k, v) end
 
 
+--- Make reversed range object.
+--  @return new object.
+mt_range.reverse = function (self)
+  return mt_range._init(self._end, self._beg, -self._step, self._N, self._fn)
+end
+
+
 --- Apply function to range of numbers.
 --  @param fn Function f(x).
 --  @return modified range of numbers.
@@ -866,8 +873,10 @@ local mt_transpose = {type = 'transpose'}
 --  @param k Table index.
 --  @return Empty table with mt_transpose_k metatable.
 mt_transpose.__index = function (self, k)
-  self._tbl._n = k
-  return self._tbl
+  if Ver.isInteger(k) and 0 < k and k <= #self._tbl._src[1] then
+    self._tbl._n = k
+    return self._tbl
+  end
 end
 
 
@@ -927,4 +936,3 @@ data.about = about
 return data
 
 --====================================
---TODO: range reverse
