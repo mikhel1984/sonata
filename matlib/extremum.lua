@@ -132,11 +132,150 @@ extremum._minGolden = function (fun, a, b, c)
   end
 end
 
+extremum._minBrent = function (fun, a, b, c)
+  local imax, small, e, d = 100, 1E-30, 0, 0
+  local gc = 2-GOLD
+  a, c = math.min(a, c), math.max(a, c)
+  local x, w, v = b, b, b
+  local fx = fun(x)
+  local fv, fw = fx, fx
+  for i = 1, imax do
+    local xm = 0.5*(a+c)
+    local tol1 = TOL*math.abs(x) + small
+    local tol2 = 2*tol1
+    if math.abs(x-xm) <= (tol2-0.5*(c-a)) then
+      return x, fx
+    end
+    -- parabolic fit
+    local upd = false
+    if math.abs(e) > tol1 then
+      local r = (x-w)*(fx-fv)
+      local q = (x-v)*(fx-fw)
+      local p = (x-v)*q - (x-w)*r
+      q = 2*(q-r)
+      if q > 0 then p = -p end
+      q = math.abs(q)
+      local etemp = e
+      e = d
+      if math.abs(p) >= math.abs(0.5*q*etemp) or p <= q*(a-x) or p >= q*(c-x) then
+        upd = true
+      else
+        d = p / q
+        u = x + d
+        if (u-a < tol2) or (c-u < tol2) then
+          d = (xm >= x) and tol1 or (-tol1)
+        end
+      end
+    else
+      upd = true
+    end
+    if upd then
+      e = (x >= xm) and (a-x) or (c-x)
+      d = gc*e
+    end
+    local u = (math.abs(d) >= tol1) and (x+d) or (x + (d >= 0 and tol1 or -tol1))
+    local fu = fun(u)
+    if fu <= fx then
+      if u >= x then a = x else c = x end
+      v, w, x = w, x, u
+      fv, fw, fx = fw, fx, fu
+    else
+      if u < x then a = u else c = u end
+      if fu <= fw or w == x then
+        v, w = w, u
+        fv, fw = fw, fu
+      elseif fu < fv or v == x or v == w then
+        v, fv = u, fu
+      end
+    end
+  end
+  error('Too many iterations')  --TODO warning
+end
+
+
+
+extremum._minBrentD = function (fun, dfun, a, b, c)
+  local imax, small, e, d = 100, 1E-30, 0, 0
+  a, c = math.min(a, c), math.max(a, c)
+  local x, w, v = b, b, b
+  local fx = fun(x)
+  local fv, fw = fx, fx
+  local dx = dfun(x)
+  local dv, dw = dx, dx
+  for i = 1, imax do
+    local xm = 0.5*(a+c)
+    local tol1 = TOL*math.abs(x) + small
+    local tol2 = 2*tol1
+    if math.abs(x-xm) <= (tol2-0.5*(c-a)) then
+      return x, fx
+    end
+    -- parabolic fit
+    local upd = false
+    if math.abs(e) > tol1 then
+      local d1 = 2*(c-a)
+      local d2 = d1
+      if dw ~= dx then d1 = (w-x)*dx/(dx-dw) end
+      if dv ~= dx then d2 = (v-x)*dx/(dx-dv) end
+      local u1, u2 = x + d1, x + d2
+      local ok1 = (a-u1)*(u1-c) > 0 and dx*d1 <= 0
+      local ok2 = (a-u2)*(u2-c) > 0 and dx*d2 <= 0
+      local olde = e
+      e = d
+      if ok1 or ok2 then
+        if ok1 and ok2 then
+          d = (math.abs(d1) < math.abs(d2)) and d1 or d2
+        else
+          d = ok1 and d1 or d2
+        end
+        if math.abs(d) <= math.abs(0.5*olde) then
+          local u = x + d
+          if (u-a < tol2) or (c-u < tol2) then
+            d = (xm >= x) and tol1 or (-tol1)
+          end
+        else upd = true end
+      else upd = true end
+    else upd = true end
+    if upd then
+      e = dx >= 0 and (a-x) or (c-x)
+      d = 0.5*e
+    end
+    local u, fu = nil, nil
+    if math.abs(d) >= tol1 then
+      u = x + d
+      fu = fun(u)
+    else
+      u = x + (d >= 0 and tol1 or -tol1)
+      fu = fun(u)
+      if fu > fx then
+        return x, fx
+      end
+    end
+    local du = dfun(u)
+    if fu <= fx then
+      if u >= x then a = x else c = x end
+      v, fv, dv = w, fw, dw
+      w, fw, dw = x, fx, dx
+      x, fx, dx = u, fu, du
+    else
+      if u < x then a = u else c = u end
+      if fu <= fw or w == x then
+        v, fv, dv = w, fw, dw
+        w, fw, dw = u, fu, du
+      elseif fu < fv or v == x or v == w then
+        v, fv, dv = u, fu, du
+      end
+    end
+  end
+  error('Too many iterations')  --TODO warning
+end
+
 -- Comment to remove descriptions
 extremum.about = about
 
 --return extremum
-local x, y = -2, 1
 local fun = function (x) return x*x end
-print(extremum._minGolden(fun, -2, -1, 3))
+local dfun = function (x) return 2*x end
+print(extremum._minBrentD(fun, dfun, -4, -1, 3))
+--print(extremum._minBrent(fun, -4, -1, 3))
+--print(extremum._minGolden(fun, -4, -1, 3))
 
