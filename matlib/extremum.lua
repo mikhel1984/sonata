@@ -282,8 +282,8 @@ end
 
 extremum._simplex = function (pp, fun)
   extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
-  local nmax, small = 200, 1E-10
   local mat = extremum.ext_matrix
+  local nmax, small = 200, 1E-10
   local y, pmin = {}, {}
   for i = 1, pp:cols() do y[i] = fun(pp({}, i)) end
   local psum = extremum._simplexPsum(pp)
@@ -359,6 +359,60 @@ extremum._simplexExtra = function (p, y, psum, ihi, fac, fun)
   end
   return ytry
 end
+
+
+extremum._linmin = function (p, xi, fun)
+  local ff = function (x) return fun(p + x*xi) end 
+  local a, b, c = extremum._bracket(ff, 0.0, 1.0)
+  local xm, fm = extremum._minBrent(ff, a, b, c)
+  return ff(xm), fm
+end
+
+
+extremum._minPowel = function (fun, pp)
+  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
+  local mat = extremum.ext_matrix
+  local ximat = mat:eye(pp:rows())
+  local imax, small, n = 200, 1E-25, pp:rows()
+  local p, pt = pp, pp
+  local fret = fun(p)
+  for iter = 1, math.huge do
+    local ibig, del = 1, 0.0
+    local fp, fptt = fret, nil
+    -- find the biggest decrease
+    for i = 0, n do
+      fptt = fret
+      p, fret = extremum._linmin(p, ximat({}, i), fun)
+      if fptt - fret > del then
+        del, ibig = fptt - fret, i
+      end
+    end
+    if 2*(fp-fret) <= TOL*(mabs(fp) + mabs(fret) + small) then
+      return p, fret
+    end
+    if iter >= imax then error("Too much iterations") end
+    -- extrapolated point
+    local xi = p - pt
+    pt = p
+    fptt = fun(2*p - pt)
+    if fptt < fp then
+      local t = 2*(fp-2*fret+fptt)*(fp-fret-del)^2 - del*(fp-fptt)^2
+      if t < 0 then
+        p, fret = extremum._linmin(p, xi, fun)
+        for j = 1, n do
+          local xmatj = ximat[j]
+          xmatj[ibig] = xmatj[n]
+          xmatj[n] = xi[j][1]
+        end
+      end
+    end
+
+
+  end
+  
+end
+
+
 
 -- Comment to remove descriptions
 extremum.about = about
