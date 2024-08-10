@@ -59,7 +59,7 @@ help.__index = help
 help.english = {
 intro = [[
 ------- help([function]) = get help -------------
----------- use([module]) = expand functionality -
+---------- use([module]) = load module ----------
 ----------------- quit() = exit -----------------
 ]],
 done = 'Done.',

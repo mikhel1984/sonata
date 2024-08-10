@@ -411,12 +411,8 @@ evaluate.evalThread = function ()
 end
 
 
---- Show message and exit the program.
-evaluate.exit = function ()
-  io.write(SonataHelp.CMAIN,
-    "\n             --======= Bye! =======--\n", SonataHelp.CRESET, "\n")
-  os.exit()
-end
+--- Exit the program.
+evaluate.exit = function () os.exit() end
 
 
 --- Mark information about formatting.
