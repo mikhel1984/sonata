@@ -754,6 +754,28 @@ ref_vector.dot = function (V1, V2)
 end
 
 
+--- Outer product of two vectors.
+--  @param V1 First vector.
+--  @param V2 Second vector.
+--  @return outer product.
+ref_vector.outer = function (V1, V2)
+  local len = #V1
+  if len ~= #V2 then
+    error 'Different vector length'
+  end
+  local m = {}
+  for i = 1, len do m[i] = {} end
+  for i = 1, len do
+    local vi, mi = V1[i], m[i]
+    for j = i, len do
+      mi[j] = vi * V2[j]
+      m[j][i] = mi[j]
+    end
+  end
+  return V1._src._init(len, len, m)
+end
+
+
 --- Vector norm.
 --  @param type_s Type of the norm.
 --  @return value of norm.

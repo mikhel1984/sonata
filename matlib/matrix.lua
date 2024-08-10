@@ -172,6 +172,10 @@ ans = v1:cross(v2)  -->  Mat {{-3},{6},{-3}}
 -- dot product of 2 vectors
 ans = v1:dot(v2)              -->  32
 
+-- outer product
+vout = v1:outer(v2)
+ans = vout[1][3]              -->  6
+
 -- LU decomposition
 l,u,p = b:lu()
 ans = l[2][1]                --3>  0.714
@@ -987,6 +991,12 @@ about[matrix.norm] = {"M:norm() --> num", "Euclidean norm."}
 matrix.normalize = tf.vec_access.normalize
 about[matrix.normalize] = {"V:normalize()",
   "Normalize to unit vector.", VECTOR}
+
+
+-- Outer product.
+matrix.outer = tf.vec_access.outer
+about[matrix.outer] = {'V:outer(V2) --> M', 
+  'Outer product or two vectors.', VECTOR}
 
 
 --- Quick pseudo inverse matrix.
