@@ -276,6 +276,22 @@ random._genPMInit = function (t, seed)
 end
 
 
+--- Recursive making of random array.
+--  @param n Current size.
+--  @param ... Rest of dimensions.
+--  @return table with random tables or scalar value.
+random._arrayRest = function (self, n, ...)
+  if n then
+    if n <= 0 then error('expected positive size') end
+    local res = {}
+    for i = 1, n do res[i] = random._arrayRest(self, ...) end
+    return res
+  else
+    return self:_fn()
+  end
+end
+
+
 random._init = random._genPMInit
 random._rand = random._genPM
 
@@ -288,6 +304,16 @@ random._randRng = function (self, a, b)
   local p, q = math.modf((b - a)*self:_rand())
   return a + (q < 0.5 and p or p + 1)
 end
+
+
+--- Get array of random numbers [0;1) with given size.
+--  @param ... sequence of dimensions.
+--  @return multidimentional random array.
+random.array = function (self, ...)
+  return random._arrayRest(self, ...)
+end
+about[random.array] = {"R:array(n1,[n2,..]) --> tbl", 
+  "Get multidimentional random array."}
 
 
 --- Binomial distribution.
