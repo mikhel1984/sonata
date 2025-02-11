@@ -4,7 +4,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2024.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2025.
 
 	module 'load'
 ]]
@@ -15,6 +15,8 @@ SonataHelp = require("core.help")
 About = SonataHelp.init()
 -- Text colors
 SonataHelp.useColors(SONATA_USE_COLOR)
+-- Input function
+local reader = nil
 
 -- Command evaluation.
 Sonata = require('core.evaluate')
@@ -171,6 +173,19 @@ process = function (args)
 end,
 exit = true},
 
+-- define method for input (and output)
+['--io'] = {
+description = "Method for interaction (readline).",
+example = '--io readline',
+process = function (args)
+  if args[2] == 'readline' then
+    reader = require("core.io_readline").reader
+  else
+    print("Unknown option:", args[2])
+  end
+end,
+exit = (arg[2] ~= "readline")},
+
 -- command line evaluation
 ['-e'] = {
 process = function (args)
@@ -270,10 +285,9 @@ io.write(About:get('intro'), SonataHelp.CRESET, "\n")
 
 -- choose interpreter
 if arg[-1] ~= '-i' then
-  Sonata.repl()           -- use Sonata REPL
+  Sonata.repl(nil, reader)  -- use Sonata REPL
 else
-  Sonata.inLua = true    -- use Lua REPL
+  Sonata.inLua = true       -- use Lua REPL
 end
 
 --===============================================
---note: all methods in _args require exit after execution...

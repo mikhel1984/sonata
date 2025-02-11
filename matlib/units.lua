@@ -8,7 +8,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2024.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2025.
 
 		module 'units'
 --]]

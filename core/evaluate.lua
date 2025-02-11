@@ -4,7 +4,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2024.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2025.
 
 	module 'evaluate'
 --]]
@@ -53,6 +53,14 @@ local function wrapIndex (n, env)
   return nil
 end
 
+
+--- Print invite message and read user input.
+--  @param str Invite string.
+--  @return user input.
+local function readLine (str)
+  io.write(str)
+  return io.read()
+end
 
 --- Set position for the next block in 'note' file.
 --  @param args List of arguments.
@@ -145,7 +153,7 @@ local function evalCode()
   local state, cmd = evaluate.EV_RES, ''
   local multiline, res = false, nil
   local _ENV = setmetatable({}, {__index=_G})
-  if _VERSION == 'Lua 5.1' then setfenv(1, _ENV) end  
+  if _VERSION == 'Lua 5.1' then setfenv(1, _ENV) end
   evaluate.IN_COROUTINE = true  -- set marker
   while true do
     -- next line of code
@@ -365,7 +373,8 @@ end
 
 --- Sonata evaluation loop.
 --  @param noteList Table with text blocks.
-evaluate.repl = function (noteList)
+evaluate.repl = function (noteList, reader)
+  reader = reader or readLine
   local invite = evaluate.INV_MAIN
   local env = {notes=noteList or {}, index=1,
     read = true, info=false, queue={}, evaluate=evaluate}
@@ -375,11 +384,7 @@ evaluate.repl = function (noteList)
     evaluate.oO, print = print, evaluate._simpPrint
   end
   while true do
-    local input = ''
-    if env.read then
-      io.write(invite)
-      input = io.read()
-    end
+    local input = env.read and reader(invite) or ''
     local cmd = (invite ~= evaluate.INV_CONT) and getCmd(input)
     if cmd then
       -- execute command

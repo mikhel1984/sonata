@@ -10,7 +10,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2024.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
 
 	module 'matrix'
 --]]
@@ -995,7 +995,7 @@ about[matrix.normalize] = {"V:normalize()",
 
 -- Outer product.
 matrix.outer = tf.vec_access.outer
-about[matrix.outer] = {'V:outer(V2) --> M', 
+about[matrix.outer] = {'V:outer(V2) --> M',
   'Outer product or two vectors.', VECTOR}
 
 
