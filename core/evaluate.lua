@@ -24,7 +24,6 @@ local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
 local mt_sonatainfo = {}
 
 
-
 --- Check if the variable is integer.
 --  @param x Object.
 --  @return true if integer.
@@ -54,6 +53,7 @@ local function readLine (str)
   io.write(str)
   return io.read()
 end
+
 
 --- Set position for the next block in 'note' file.
 --  @param args List of arguments.
@@ -138,13 +138,13 @@ local txtCodes = {
   [evaluate.FORMAT_CLR] = SonataHelp.CRESET,
 }
 
+
 --- Check if the table is mt_sonatainfo list.
 --  @param v Object.
 --  @return true if mt_sonatainfo list is found.
 evaluate.islist = function (v)
   return type(v) == 'table' and getmetatable(v) == mt_sonatainfo
 end
-
 
 
 --- Evaluate string of Lua code.
@@ -155,6 +155,7 @@ local function evalCode()
   local multiline, res = false, nil
   local _ENV = setmetatable({}, {__index=_G})
   if _VERSION == 'Lua 5.1' then setfenv(1, _ENV) end
+  evaluate.set_local_env(_ENV)  -- for 'readline' completion
   evaluate.IN_COROUTINE = true  -- set marker
   while true do
     -- next line of code
@@ -264,6 +265,7 @@ evaluate._evalBlock = function (co, env)
     env.index = env.index+1
   end
 end
+
 
 
 --- Emulate 'print' behavior
@@ -439,6 +441,10 @@ evaluate.printErr = function (msg)
     string.format("%sERROR %s%s", SonataHelp.CERROR, msg, SonataHelp.CRESET),
     "\n")
 end
+
+
+--- Set environment table reference.
+evaluate.set_local_env = function () end
 
 
 --- Send warning to user.

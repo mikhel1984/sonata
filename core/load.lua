@@ -179,7 +179,9 @@ description = "Method for interaction (readline, tcp).",
 example = '--io readline',
 process = function (args)
   if args[2] == 'readline' then
-    reader = require("core.io_readline").reader
+    local readline = require("core.io_readline")
+    reader = readline.reader
+    Sonata.set_local_env = readline.set_local_env
   elseif args[2] == 'tcp' then
     local server = require("core.io_socket")
     local port = assert(tonumber(args[3]), 'Expected: --io tcp port')
