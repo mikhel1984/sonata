@@ -175,11 +175,16 @@ exit = true},
 
 -- define method for input (and output)
 ['--io'] = {
-description = "Method for interaction (readline).",
+description = "Method for interaction (readline, tcp).",
 example = '--io readline',
 process = function (args)
   if args[2] == 'readline' then
     reader = require("core.io_readline").reader
+  elseif args[2] == 'tcp' then
+    local server = require("core.io_socket")
+    local port = assert(tonumber(args[3]), 'Expected: --io tcp port')
+    server:new('*', port)
+    server:repl()
   else
     print("Unknown option:", args[2])
   end

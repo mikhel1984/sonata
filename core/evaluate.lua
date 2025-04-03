@@ -24,13 +24,6 @@ local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
 local mt_sonatainfo = {}
 
 
---- Check if the table is mt_sonatainfo list.
---  @param v Object.
---  @return true if mt_sonatainfo list is found.
-local function islist(v)
-  return type(v) == 'table' and getmetatable(v) == mt_sonatainfo
-end
-
 
 --- Check if the variable is integer.
 --  @param x Object.
@@ -145,6 +138,14 @@ local txtCodes = {
   [evaluate.FORMAT_CLR] = SonataHelp.CRESET,
 }
 
+--- Check if the table is mt_sonatainfo list.
+--  @param v Object.
+--  @return true if mt_sonatainfo list is found.
+evaluate.islist = function (v)
+  return type(v) == 'table' and getmetatable(v) == mt_sonatainfo
+end
+
+
 
 --- Evaluate string of Lua code.
 --  The function should work in coroutine.
@@ -184,7 +185,7 @@ local function evalCode()
         local ok, ans = pcall(fn)
         state, res = ok and evaluate.EV_RES or evaluate.EV_ERR, nil
         if ans ~= nil then
-          res = islist(ans) and ans or evaluate._extPrint(ans)
+          res = evaluate.islist(ans) and ans or evaluate._extPrint(ans)
           -- save result to global var
           if ok then ANS = ans end
         end
@@ -202,7 +203,7 @@ local function showAndNext(status, res, env)
   if status == evaluate.EV_RES then
     -- finish evaluation
     if res ~= nil then
-      local out = islist(res) and evaluate._toText(res) or res
+      local out = evaluate.islist(res) and evaluate._toText(res) or res
       io.write(tostring(out), "\n")
       if env.log then env.log:write('--[[ ', out, ' ]]\n') end
     end
@@ -221,9 +222,11 @@ local function showAndNext(status, res, env)
     end
     return res[1]
   elseif status == evaluate.EV_WRN then
+    -- interpreter warning
     io.write(SonataHelp.CHELP, 'WARNING ', res, '\n')
     env.read, env.info = false, true
   elseif status == evaluate.EV_INF then
+    -- print text
     io.write(res, '\n')
     env.read, env.info = false, true
   end
