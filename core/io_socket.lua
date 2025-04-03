@@ -48,8 +48,10 @@ local function sendAndNext(status, res, env)
     return res[1]
   elseif status == ev.EV_WRN then
     env.cli:send('WARNING ' .. res .. '\n')
+    env.read = false
   elseif status == ev.EV_INF then
-    enf.cli:send(res)
+    env.cli:send(res .. '\n')
+    env.read = false
   end
   return ev.INV_MAIN
 end
@@ -92,6 +94,7 @@ tcp_server.repl = function (self)
         cli = cli,
         invite = ev.INV_MAIN,
         co = ev.evalThread(),
+        read = true,
       }
       clients[#clients+1] = group
       cli:send(group.invite)
@@ -100,15 +103,23 @@ tcp_server.repl = function (self)
     local closed = {}
     for i = 1, #clients do
       local group = clients[i]
-      local cmd, err = group.cli:receive()
+      local cmd, err = nil, nil
+      if group.read then
+        cmd, err = group.cli:receive()
+      else
+        cmd = ''
+      end
       if err and err ~= 'timeout' then
         io.write(err, '\n')
         closed[#closed+1] = i
       elseif cmd then
         if cmd ~= ':q' then
+          group.read = true
           local _, status, res = coroutine.resume(group.co, cmd)
           group.invite = sendAndNext(status, res, group)
-          group.cli:send(group.invite)
+          if group.read then
+            group.cli:send(group.invite)
+          end
         else
           group.cli:send('close connection')
           closed[#closed+1] = i
@@ -118,8 +129,7 @@ tcp_server.repl = function (self)
     -- remove
     for i = 1, #closed do
       local group = table.remove(clients, closed[i])
-      local addr, port = group.cli:getsockname()
-      io.write('close client ', addr, ' ', port, '\n')
+      io.write('close client from ', group.cli:getsockname(), '\n')
       group.cli:close()
     end
   end
