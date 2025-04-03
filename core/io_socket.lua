@@ -1,16 +1,36 @@
+--[[    sonata/core/io_socket.lua
+
+--- Run Sonata as a TCP server.
+--
+--  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2025.
+
+	module 'io_socket'
+--]]
 
 local socket = require("socket")
 local ev = require("core.evaluate")
 
-local tcp_server = {}
 
-function quit () end
+--- Redefine command to protect server.
+function quit () 
+  return 'Enter :q to quit'
+end
 
+
+--- Command for remote stop of the server.
 function _stopServer ()
   io.write('Get request to stop server')
   os.exit()
 end
 
+
+--- Send response and get the next invite string.
+--  @param status Status of evaluation.
+--  @param res Result of evaluation.
+--  @param env List of client links.
+--  @return Invite string.
 local function sendAndNext(status, res, env)
   if status == ev.EV_RES then
     if res ~= nil then
@@ -34,6 +54,14 @@ local function sendAndNext(status, res, env)
   return ev.INV_MAIN
 end
 
+
+-- TCP server object
+local tcp_server = {}
+
+
+--- Make new server.
+--  @param host Host address.
+--  @param port Port number.
 tcp_server.new = function (self, host, port)
   local tcp = assert(socket.tcp())
   assert(tcp:bind(host, port))
@@ -43,20 +71,23 @@ tcp_server.new = function (self, host, port)
   tcp:settimeout(0.05)  -- seconds, accept timeout
 end
 
+
+--- Server evaluation loop.
 tcp_server.repl = function (self)
   local clients, tcp = {}, self.tcp
+  -- update print function
   if not ev.oO then
     ev.oO, print = print, ev._simpPrint
   end
-  
+  -- main loop 
   while true do
     -- check new clients
     local cli, err = tcp:accept()
     if err and err ~= 'timeout' then
-      ev.oO(err)
+      io.write(err, '\n')
     elseif cli then
       -- save
-      cli:settimeout(0.2)  -- seconds
+      cli:settimeout(0.05)  -- seconds
       local group = {
         cli = cli,
         invite = ev.INV_MAIN,
@@ -71,8 +102,7 @@ tcp_server.repl = function (self)
       local group = clients[i]
       local cmd, err = group.cli:receive()
       if err and err ~= 'timeout' then
-        ev.oO(err)
-        group.cli:close()
+        io.write(err, '\n')
         closed[#closed+1] = i
       elseif cmd then
         if cmd ~= ':q' then
@@ -81,17 +111,21 @@ tcp_server.repl = function (self)
           group.cli:send(group.invite)
         else
           group.cli:send('close connection')
-          group.cli:close()
           closed[#closed+1] = i
         end
       end
     end
     -- remove
     for i = 1, #closed do
-      ev.oO('close', closed[i])
-      table.remove(clients, closed[i])
+      local group = table.remove(clients, closed[i])
+      local addr, port = group.cli:getsockname()
+      io.write('close client ', addr, ' ', port, '\n')
+      group.cli:close()
     end
   end
 end
 
+
 return tcp_server
+
+--=================================

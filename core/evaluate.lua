@@ -198,6 +198,7 @@ end
 --- Show result and choose the next invite string.
 --  @param status Status of evaluation.
 --  @param res Result of evaluation.
+--  @param env List of environment parameters.
 --  @return Invite string.
 local function showAndNext(status, res, env)
   if status == evaluate.EV_RES then

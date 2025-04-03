@@ -7,7 +7,7 @@
 --  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2025.
 
 	module 'io_readline'
-]]
+--]]
 
 -- Get external library
 local rl = require('readline')
