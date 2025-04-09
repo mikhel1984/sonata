@@ -135,7 +135,6 @@ end
 
 extremum._minBrent = function (fun, a, b, c)
   local imax, small, e, d = 100, 1E-30, 0, 0
-  local gc = 2-GOLD
   a, c = mmin(a, c), mmax(a, c)
   local x, w, v = b, b, b
   local fx = fun(x)
@@ -156,12 +155,10 @@ extremum._minBrent = function (fun, a, b, c)
       q = 2*(q-r)
       if q > 0 then p = -p end
       q = mabs(q)
-      local etemp = e
-      e = d
-      if mabs(p) >= mabs(0.5*q*etemp) or p <= q*(a-x) or p >= q*(c-x) then
+      if mabs(p) >= mabs(0.5*q*e) or p <= q*(a-x) or p >= q*(c-x) then
         upd = true
       else
-        d = p / q
+        e, d = d, p/q
         u = x + d
         if (u-a < tol2) or (c-u < tol2) then
           d = (xm >= x) and tol1 or (-tol1)
@@ -172,7 +169,7 @@ extremum._minBrent = function (fun, a, b, c)
     end
     if upd then
       e = (x >= xm) and (a-x) or (c-x)
-      d = gc*e
+      d = (2-GOLD)*e
     end
     local u = (mabs(d) >= tol1) and (x+d) or (x + (d >= 0 and tol1 or -tol1))
     local fu = fun(u)
@@ -191,6 +188,7 @@ extremum._minBrent = function (fun, a, b, c)
     end
   end
   error('Too many iterations')  --TODO warning
+  return x, fx
 end
 
 
@@ -211,31 +209,32 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
       return x, fx
     end
     -- parabolic fit
-    local upd = false
+    local upd = true
     if mabs(e) > tol1 then
       local d1 = 2*(c-a)
       local d2 = d1
       if dw ~= dx then d1 = (w-x)*dx/(dx-dw) end
       if dv ~= dx then d2 = (v-x)*dx/(dx-dv) end
-      local u1, u2 = x + d1, x + d2
-      local ok1 = (a-u1)*(u1-c) > 0 and dx*d1 <= 0
-      local ok2 = (a-u2)*(u2-c) > 0 and dx*d2 <= 0
-      local olde = e
-      e = d
+      b = x + d1  -- reuse
+      local ok1 = (a-b)*(b-c) > 0 and dx*d1 <= 0
+      b = x + d2
+      local ok2 = (a-b)*(b-c) > 0 and dx*d2 <= 0
+      b, e = e, d
       if ok1 or ok2 then
         if ok1 and ok2 then
           d = (mabs(d1) < mabs(d2)) and d1 or d2
         else
           d = ok1 and d1 or d2
         end
-        if mabs(d) <= mabs(0.5*olde) then
-          local u = x + d
-          if (u-a < tol2) or (c-u < tol2) then
+        if mabs(d) <= mabs(0.5*b) then
+          b = x + d
+          if (b-a < tol2) or (c-b < tol2) then
             d = (xm >= x) and tol1 or (-tol1)
           end
-        else upd = true end
-      else upd = true end
-    else upd = true end
+          upd = false
+        end
+      end
+    end
     if upd then
       e = dx >= 0 and (a-x) or (c-x)
       d = 0.5*e
@@ -268,6 +267,7 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
     end
   end
   error('Too many iterations')  --TODO warning
+  return x, fx
 end
 
 extremum._simplexPsum = function (pp)
@@ -418,16 +418,16 @@ end
 extremum.about = about
 
 --return extremum
---local fun = function (x) return x*x end
---local dfun = function (x) return 2*x end
---print(extremum._minBrentD(fun, dfun, -4, -1, 3))
---print(extremum._minBrent(fun, -4, -1, 3))
+local fun = function (x) return x*x end
+local dfun = function (x) return 2*x end
+print(extremum._minBrentD(fun, dfun, -10, -9, 10))
+--print(extremum._minBrent(fun, -20, 19, 20))
 --print(extremum._minGolden(fun, -4, -1, 3))
 
-local foo = function (y) return (y[1][1]-1)^2 + (y[2][1]-2)^2 end
-local Mat = require 'matlib.matrix'
-
-pts = Mat{{3,1},{1,-1},{-1,-2}}:T()
-x, fx = extremum._simplex(pts, foo)
-print(x)
-print(fx)
+--local foo = function (y) return (y[1][1]-1)^2 + (y[2][1]-2)^2 end
+--local Mat = require 'matlib.matrix'
+--
+--pts = Mat{{3,1},{1,-1},{-1,-2}}:T()
+--x, fx = extremum._simplex(pts, foo)
+--print(x)
+--print(fx)
