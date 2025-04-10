@@ -270,77 +270,74 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
   return x, fx
 end
 
-extremum._simplexPsum = function (pp)
-  local psum = {}
+extremum._simplexPsum = function (pp, psum)
   for i = 1, pp:rows() do
     local s, pi = 0, pp[i]
     for j = 1, pp:cols() do s = s + pi[j] end
     psum[i] = s
   end
-  return psum
 end
 
 extremum._simplex = function (pp, fun)
   extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
   local mat = extremum.ext_matrix
-  local nmax, small = 200, 1E-10
-  local y, pmin = {}, {}
+  local nmax, small = 500, 1E-10
+  local y, psum = {}, {}
   for i = 1, pp:cols() do y[i] = fun(pp({}, i)) end
-  local psum = extremum._simplexPsum(pp)
+  extremum._simplexPsum(pp, psum)
   local p = pp:copy()
-  local nfunc = 0  -- TODO for loop ?
-  while true do
+  for _ = 1, nmax do
     -- find highest, next highest and lowest
-    local ilo = 1
-    local ihi, inhi = 1, 2
+    local ilo, ihi, inhi = 1, 1, 2
     if y[1] > y[2] then 
       ihi, inhi = 2, 1
     end
-    for i = 1, pp:cols() do
-      if y[i] <= y[ilo] then ilo = i end
-      if y[i] > y[ihi] then
+    for i = 1, #y do
+      local yi = y[i]
+      if yi <= y[ilo] then ilo = i end
+      if yi > y[ihi] then
         inhi, ihi = ihi, i
-      elseif y[i] > y[inhi] and i ~= ihi then
+      elseif i ~= ihi and yi > y[inhi] then
         inhi = i
       end
     end
     local rtol = 2*mabs(y[ihi]-y[ilo])/(mabs(y[ihi]) + mabs(y[ilo]) + small)
     if rtol < TOL then
-      -- put the best point into first element
+      -- put the best point into the first element
       y[1], y[ilo] = y[ilo], y[1]
       for i = 1, pp:rows() do
         local pi = p[i]
         pi[1], pi[ilo] = pi[ilo], pi[1]
-        pmin[i] = pi[1]
       end
-      return mat:V(pmin), y[1]
+      return p({}, 1), y[1]
     end
-    if nfunc >= nmax then error('Too mutch iterations') end
     -- new iteration
     local ytry = extremum._simplexExtra(p, y, psum, ihi, -1.0, fun)
     if ytry <= y[ilo] then
       -- try additional extrapolation
-      ytry = extremum._simplexExtra(p, y, psum, ihi, 2.0, fun)
+      extremum._simplexExtra(p, y, psum, ihi, 2.0, fun)
     elseif ytry >= y[inhi] then
       -- one dimentional construction
       local ysave = y[ihi]
       ytry = extremum._simplexExtra(p, y, psum, ihi, 0.5, fun)
       if ytry >= ysave then
+        -- contract around the lowest point
         for i = 1, p:cols() do
           if i ~= ilo then
-            local pj = p[j]
-            psum[j] = 0.5*(pj[i] + pj[ilo])
-            pj[i] = psum[j]
+            for j = 1, p:rows() do
+              local pj = p[j]
+              psum[j] = 0.5*(pj[i] + pj[ilo])
+              pj[i] = psum[j]
+            end
+            y[i] = fun(mat:V(psum))
           end
-          y[i] = fun(mat:V(psum))
         end
-        psum = extremum._simplexPsum(p)
+        extremum._simplexPsum(p, psum)
       end
-    else
-      nfunc = nfunc - 1
     end
-    nfunc = nfunc + 1
   end
+  error('Too mutch iterations')
+  return p({}, 1), y[1]
 end
 
 extremum._simplexExtra = function (p, y, psum, ihi, fac, fun)
@@ -348,8 +345,10 @@ extremum._simplexExtra = function (p, y, psum, ihi, fac, fun)
   local fac1 = (1.0-fac)/ndim
   local fac2 = fac1 - fac
   local ptry = {}
-  for j = 1, ndim do ptry[j] = psum[j]*fac1 - p[j][ihi]*fac2 end
-  local ytry = fun(p:V(ptry))  -- use matrix as reference to method V
+  for j = 1, ndim do 
+    ptry[j] = psum[j]*fac1 - p[j][ihi]*fac2 
+  end
+  local ytry = fun(extremum.ext_matrix:V(ptry)) 
   if ytry < y[ihi] then
     y[ihi] = ytry
     for j = 1, ndim do
@@ -418,16 +417,16 @@ end
 extremum.about = about
 
 --return extremum
-local fun = function (x) return x*x end
-local dfun = function (x) return 2*x end
-print(extremum._minBrentD(fun, dfun, -10, -9, 10))
+--local fun = function (x) return x*x end
+--local dfun = function (x) return 2*x end
+--print(extremum._minBrentD(fun, dfun, -10, -9, 10))
 --print(extremum._minBrent(fun, -20, 19, 20))
 --print(extremum._minGolden(fun, -4, -1, 3))
 
---local foo = function (y) return (y[1][1]-1)^2 + (y[2][1]-2)^2 end
---local Mat = require 'matlib.matrix'
+local foo = function (y) return (y[1][1]-1)^2 + (y[2][1]-2)^2 end
+local Mat = require 'matlib.matrix'
 --
---pts = Mat{{3,1},{1,-1},{-1,-2}}:T()
---x, fx = extremum._simplex(pts, foo)
---print(x)
---print(fx)
+pts = Mat{{5,3},{7,-9},{-7,-4}}:T()
+x, fx = extremum._simplex(pts, foo)
+print(x)
+print(fx)
