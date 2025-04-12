@@ -364,51 +364,49 @@ extremum._linmin = function (p, xi, fun)
   local ff = function (x) return fun(p + x*xi) end 
   local a, b, c = extremum._bracket(ff, 0.0, 1.0)
   local xm, fm = extremum._minBrent(ff, a, b, c)
-  return ff(xm), fm
+  xi = xm * xi
+  return p + xi, xi, fm
 end
 
 
-extremum._minPowel = function (fun, pp)
+extremum._minPowel = function (fun, p)
   extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
   local mat = extremum.ext_matrix
-  local ximat = mat:eye(pp:rows())
-  local imax, small, n = 200, 1E-25, pp:rows()
-  local p, pt = pp, pp
+  local imax, small, n = 200, 1E-25, p:rows()
+  local ximat = mat:eye(n)
   local fret = fun(p)
-  for iter = 1, math.huge do
+  for iter = 1, imax do
     local ibig, del = 1, 0.0
-    local fp, fptt = fret, nil
+    local pt, fp = p, fret
     -- find the biggest decrease
-    for i = 0, n do
-      fptt = fret
-      p, fret = extremum._linmin(p, ximat({}, i), fun)
-      if fptt - fret > del then
-        del, ibig = fptt - fret, i
+    for i = 1, n do
+      local fprev = fret
+      p, _, fret = extremum._linmin(p, ximat({}, i), fun)
+      fprev = fprev - fret  -- reuse
+      if fprev > del then
+        del, ibig = fprev, i
       end
     end
-    if 2*(fp-fret) <= TOL*(mabs(fp) + mabs(fret) + small) then
+    if 2*mabs(fp-fret) <= TOL*(mabs(fp) + mabs(fret) + small) then
       return p, fret
     end
-    if iter >= imax then error("Too much iterations") end
     -- extrapolated point
-    local xi = p - pt
-    pt = p
-    fptt = fun(2*p - pt)
+    local grad = p - pt
+    local fptt = fun(p + grad)
     if fptt < fp then
       local t = 2*(fp-2*fret+fptt)*(fp-fret-del)^2 - del*(fp-fptt)^2
       if t < 0 then
-        p, fret = extremum._linmin(p, xi, fun)
+        p, grad, fret = extremum._linmin(p, grad, fun)
         for j = 1, n do
           local xmatj = ximat[j]
           xmatj[ibig] = xmatj[n]
-          xmatj[n] = xi[j][1]
+          xmatj[n] = grad[j][1]
         end
       end
     end
-
-
   end
-  
+  error("Too much iterations")
+  return p, fret
 end
 
 
@@ -423,10 +421,16 @@ extremum.about = about
 --print(extremum._minBrent(fun, -20, 19, 20))
 --print(extremum._minGolden(fun, -4, -1, 3))
 
-local foo = function (y) return (y[1][1]-1)^2 + (y[2][1]-2)^2 end
+local foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
 local Mat = require 'matlib.matrix'
---
-pts = Mat{{5,3},{7,-9},{-7,-4}}:T()
-x, fx = extremum._simplex(pts, foo)
+
+--pts = Mat{{5,3},{7,-9},{-7,-4}}:T()
+--x, fx = extremum._simplex(pts, foo)
+--print(x)
+--print(fx)
+
+p0 = Mat:V{5, 4}
+x, fx = extremum._minPowel(foo, p0)
 print(x)
 print(fx)
+
