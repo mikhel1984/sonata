@@ -368,6 +368,15 @@ extremum._linmin = function (p, xi, fun)
   return p + xi, xi, fm
 end
 
+extremum._linmind = function (p, xi, fun, dfun)
+  local ff = function (x) return fun(p + x*xi) end
+  local df = function (x) return dfun(p + x*xi):T() * xi end
+  local a, b, c = extremum._bracket(ff, 0.0, 1.0)
+  local xm, fm = extremum._minBrentD(ff, df, a, b, c)
+  xi = xm * xi
+  return p + xi, xi, fm
+end
+
 
 extremum._minPowel = function (fun, p)
   extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
@@ -409,6 +418,36 @@ extremum._minPowel = function (fun, p)
   return p, fret
 end
 
+extremum._minGrad = function (fun, dfun, p)
+  local imax, small, n = 200, 1E-20, p:rows()
+  local fret, xi = fun(p), dfun(p)
+  local g = -xi
+  local h = g
+  for i = 1, imax do
+    local fp = fret
+    --p, xi, fret = extremum._linmin(p, xi, fun)
+    p, xi, fret = extremum._linmind(p, xi, fun, dfun)
+    if 2*mabs(fp - fret) <= TOL*(mabs(fret) + mabs(fp) + small) then
+      return p, fret
+    end
+    xi = dfun(p)
+    local gg, dgg = 0.0, 0.0
+    for j = 1, n do
+      local gj, xj = g[j][1], xi[j][1]
+      gg = gg + gj*gj
+      dgg = dgg + xj*xj + (xj+gj)*xj
+    end
+    if gg == 0.0 then
+      return p, fret
+    end
+    local gam = dgg / gg
+    h, g = gam*h - xi, -xi
+    xi = h
+  end
+  error("Too much iterations")
+  return p, fret
+end
+
 
 
 -- Comment to remove descriptions
@@ -421,8 +460,9 @@ extremum.about = about
 --print(extremum._minBrent(fun, -20, 19, 20))
 --print(extremum._minGolden(fun, -4, -1, 3))
 
-local foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
 local Mat = require 'matlib.matrix'
+local foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
+local dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
 
 --pts = Mat{{5,3},{7,-9},{-7,-4}}:T()
 --x, fx = extremum._simplex(pts, foo)
@@ -430,7 +470,9 @@ local Mat = require 'matlib.matrix'
 --print(fx)
 
 p0 = Mat:V{5, 4}
-x, fx = extremum._minPowel(foo, p0)
+x, fx = extremum._minGrad(foo, dfoo, p0)
+--x, fx = extremum._minPowel(foo, p0)
+
 print(x)
 print(fx)
 
