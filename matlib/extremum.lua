@@ -448,6 +448,181 @@ extremum._minGrad = function (fun, dfun, p)
   return p, fret
 end
 
+extremum._simp1 = function (a, mm, ll, nll, iabs)
+  local bmax, kp = 0.0, 0
+  if nll > 0 then
+    local am1 = a[mm+1]
+    kp = ll[1]
+    bmax = am1[kp+1]
+    for k = 2, nll do
+      local lk = ll[k]
+      local test = iabs 
+        and (mabs(am1[lk+1]) - mabs(bmax))
+         or (am1[lk+1] - bmax)
+      if test > 0 then
+        bmax, kp = am1[lk+1], lk
+      end
+    end
+  end
+  return bmax, kp
+end
+
+extremum._simp2 = function (a, kp)
+  local eps = 1E-6
+  local m, n = a:rows()-2, a:cols()-1
+  local ip, ii = 0, -1
+  for i = 1, m do
+    if a[i+1][kp+1] < -eps then
+      ii = i
+      break
+    end
+  end
+  if ii < 0 then
+    return ip
+  end
+  local q1 = -a[ii+1][1] / a[ii+1][kp+1]
+  ip = ii
+  for i = ip+1, m do
+    local ai1 = a[i+1]
+    if ai1[kp+1] < -eps then
+      local q = -ai1[1]/ai1[kp+1]
+      if q < q1 then
+        ip, q1 = i, q
+      elseif q == q1 then
+        local qp, q0 = nil, nil
+        for k = 1, n do
+          qp = -a[ip+1][k+1]/a[ip+1][kp+1]
+          q0 = -ai1[k+1]/ai1[kp+1]
+          if q0 ~= qp then break end
+        end
+        if q0 < qp then
+          ip = i
+        end
+      end
+    end
+  end
+  return ip
+end
+
+extremum._simp3 = function (a, i1, k1, ip, kp)
+  local piv = 1.0 / a[ip+1][kp+1]
+  for ii = 1, i1+1 do
+    local ai = a[ii]
+    if ii-1 ~= ip then
+      ai[kp+1] = ai[kp+1] * piv
+      local ap1 = a[ip+1]
+      for kk = 1, k1+1 do
+        if kk-1 ~= kp then
+          ai[kk] = ai[kk] - ap1[kk]*ai[kp+1]
+        end
+      end
+      for kk = 1, k1+1 do
+        if kk-1 ~= kp then 
+          ap1[kk] = ap1[kk] * (-piv)
+        end
+      end
+      ap1[kp+1] = piv
+    end
+  end
+end
+
+extremum._simpx = function (a, m1, m2, m3)
+  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
+  a = a:copy()  -- work with copy
+  local mat = extremum.ext_matrix
+  local eps = 1E-6
+  local m, n = a:rows()-2, a:cols()-1
+  assert(m == m1+m2+m3, "Bad input constraint counts")
+  local izrov, iposv = {}, {}
+  local l1, l3 = {}, {}
+  local ip, kp = nil, nil
+  for k = 1, n do
+    l1[k] = k; izrov[k] = k
+  end
+  l1[n+1] = 0.0
+  -- make all variables right-handed
+  for i = 1, m do
+    if a[i+1][1] < 0 then error("Bad input") end
+    iposv[i] = n+i; l3[i] = 0.0
+  end
+  if m2 + m3 > 0 then
+    for i = 1, m2 do l3[i] = 1 end
+    for k = 1, n+1 do
+      -- compute aux objective function
+      local q1 = 0.0
+      for i = m1, m do q1 = q1 + a[i+1][k] end
+      a[i+2][k] = -q1
+    end
+    for _ = 1, 1E4 do
+      -- find max coefficient
+      local bmax, kp = extremum._simp1(a, m+1, l1, nl1, 0)
+      if bmax <= eps and a[m+2][1] < -eps then
+        -- no feasible solution
+        return nil 
+      elseif bmax <= eps and a[m+2][1] <= eps then
+        -- aux function is zero, feasible vector
+        local skip = false
+        for iip = m1+m2+1, m do
+          if iposv[iip] == (iip + n) then
+            bmax, kp = extremum._simp1(a, iip, l1, nl1, 1)
+            if bmax > eps then
+              skip = true
+              break
+            end
+          end
+        end
+        if not skip then
+          for i = m1+1, m1+m2 do
+            if l3[i-m1] == 1 then
+              local ai1 = a[i+1]
+              for k = 1, n+1 do ai1[k] = -ai1[k] end
+            end
+          end
+          break
+        end
+      else
+        -- locate pivot element
+        ip = extremum._simp2(a, kp)
+        if ip == 0 then
+          return nil
+        end
+      end
+      extremum._simp3(a, m+1, n, ip, kp)
+      -- exchange left and right variable
+      if iposv[ip] >= (n+m1+m2+1) then
+        for k = 1, nl1 do
+          if l1[k] == kp then break end
+        end
+        nl1 = nl1 - 1
+        for is = k, nl1 do l1[is] = l1[is+1] end
+      else
+        local kh = iposv[ip]-m1-n
+        if kh >= 1 and l3[kh] > 0 then
+          l2[kh] = 0
+          a[m+2][kp+1] = a[m+2][kp+1] + 1
+          for i = 1, m+2 do
+            a[i][kp+1] = -a[i][kp+1]
+          end
+        end
+      end
+      izrov[kp], iposv[ip] = iposv[ip], izrov[kp]
+    end
+  end
+
+  for _ = 1, 1E6 do
+    local bmax, kp = extremum._simp1(a, 0, l1, nl1, 0)
+    if bmax <= eps then
+      return a, izrov, iposv, true
+    end
+    ip = extremum._simp2(a, kp)
+    if ip == 0 then
+      return a, izrov, iposv, false
+    end
+    extremum._simp3(a, m, n, ip, kp)
+    izrov[kp], iposv[ip] = iposv[ip], izrov[kp]
+  end
+end
+
 
 
 -- Comment to remove descriptions
