@@ -36,6 +36,25 @@ cmdInfo._print = function (k)
 end
 
 
+--- Clear global variables in environment
+commands.clear = function (args, env)
+  local vs = {}
+  for s in string.gmatch(args[2], "[^, ]") do vs[#vs+1] = s end
+  -- prepare
+  local input = ""
+  if vs[1] == '*' then
+    input = 'for k in pairs(_ENV) do _ENV[k] = nil end'
+  else
+    for i, v in ipairs(vs) do vs[i] = string.format('_ENV["%s"] = nil', v) end
+    input = table.concat(vs, '; ')
+  end
+  -- execute
+  coroutine.resume(env.co, input)
+end
+cmdInfo.clear = {'cmd_clear', "*|v1,v2.."}
+
+
+
 --- Show list of commands
 commands.help = function (args, env)
   if cmdInfo[args[2]] then

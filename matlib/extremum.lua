@@ -527,23 +527,21 @@ extremum._simp3 = function (a, i1, k1, ip, kp)
 end
 
 extremum._simpx = function (a, m1, m2, m3)
-  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
   a = a:copy()  -- work with copy
-  local mat = extremum.ext_matrix
   local eps = 1E-6
   local m, n = a:rows()-2, a:cols()-1
   assert(m == m1+m2+m3, "Bad input constraint counts")
   local izrov, iposv = {}, {}
   local l1, l3 = {}, {}
-  local ip, kp = nil, nil
+  local ip, kp, bmax = nil, nil, nil
   for k = 1, n do
     l1[k] = k; izrov[k] = k
   end
-  l1[n+1] = 0.0
+  l1[n+1] = 0
   -- make all variables right-handed
   for i = 1, m do
     if a[i+1][1] < 0 then error("Bad input") end
-    iposv[i] = n+i; l3[i] = 0.0
+    iposv[i] = n+i; l3[i] = 0
   end
   if m2 + m3 > 0 then
     for i = 1, m2 do l3[i] = 1 end
@@ -551,11 +549,11 @@ extremum._simpx = function (a, m1, m2, m3)
       -- compute aux objective function
       local q1 = 0.0
       for i = m1, m do q1 = q1 + a[i+1][k] end
-      a[i+2][k] = -q1
+      a[m+2][k] = -q1
     end
     for _ = 1, 1E4 do
       -- find max coefficient
-      local bmax, kp = extremum._simp1(a, m+1, l1, nl1, 0)
+      bmax, kp = extremum._simp1(a, m+1, l1, nl1, 0)
       if bmax <= eps and a[m+2][1] < -eps then
         -- no feasible solution
         return nil 
@@ -598,7 +596,7 @@ extremum._simpx = function (a, m1, m2, m3)
       else
         local kh = iposv[ip]-m1-n
         if kh >= 1 and l3[kh] > 0 then
-          l2[kh] = 0
+          l3[kh] = 0
           a[m+2][kp+1] = a[m+2][kp+1] + 1
           for i = 1, m+2 do
             a[i][kp+1] = -a[i][kp+1]

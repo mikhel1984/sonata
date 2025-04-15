@@ -382,9 +382,9 @@ end
 evaluate.repl = function (noteList, reader)
   reader = reader or readLine
   local invite = evaluate.INV_MAIN
-  local env = {notes=noteList or {}, index=1,
-    read = true, info=false, queue={}, evaluate=evaluate}
   local co = evaluate.evalThread()
+  local env = {notes=noteList or {}, index=1,
+    read = true, info=false, queue={}, evaluate=evaluate, co=co}
   -- update print
   if not evaluate.oO then
     evaluate.oO, print = print, evaluate._simpPrint
