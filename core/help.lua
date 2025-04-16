@@ -64,6 +64,7 @@ intro = [[
 ]],
 done = 'Done.',
 -- commands
+cmd_clear = "Clear global variables",
 cmd_help = "Show this help",
 cmd_log = "Turn on/off logging",
 cmd_ls = "Show list of blocks for execution",
@@ -74,6 +75,7 @@ cmd_q = "Quit",
 cmd_show = "Print the next or the given note",
 cmd_time = "Estimate average time",
 cmd_trace = "Profiling for the function",
+cmd_set = "Set short alias for module method",
 cmd_shell = "Execute command in shell",
 }
 

@@ -18,6 +18,18 @@ local loadStr = loadstring or load
 local LOGNAME = 'log.note'
 
 
+--- Get instruction how to set global variable.
+--  @param m Module name.
+--  @param k Key name.
+--  @param n Global variable name.
+--  @return string for evaluation.
+local function set_template (m, k, n)
+  return string.format(
+    "%s = (type(%s.%s) == 'function') and function(...) return %s.%s(%s, ...) end or %s.%s",
+     n,          m, k,                                         m, k, m,              m,  k)
+end
+
+
 --	MODULE
 
 local commands = {}
@@ -37,9 +49,11 @@ end
 
 
 --- Clear global variables in environment
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.clear = function (args, env)
   local vs = {}
-  for s in string.gmatch(args[2], "[^, ]") do vs[#vs+1] = s end
+  for s in string.gmatch(args[2], "[^, ]+") do vs[#vs+1] = s end
   -- prepare
   local input = ""
   if vs[1] == '*' then
@@ -54,8 +68,40 @@ end
 cmdInfo.clear = {'cmd_clear', "*|v1,v2.."}
 
 
+--- Set short alias for module methods.
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
+commands.set = function (args, env)
+  local grp = {}
+  if #args < 2 then return end
+  for s in string.gmatch(args[2], "[^,]+") do
+    local g = {}
+    for token in string.gmatch(s, "[^ ]+") do g[#g+1] = token end
+    grp[#grp+1] = g
+  end
+  local tbl = table.remove(grp[1], 1)
+  local cs = {}
+  for i, v in ipairs(grp) do
+    if not (#v == 1 or #v == 3 and v[2] == 'as') then
+      env.evaluate.printErr('Wrong format!')
+      return
+    end
+    local nm = v[3] or v[1]
+    if string.find(nm, '.', 1, true) then
+      env.evaluate.printErr('Wrong format!')
+      return
+    end
+    grp[i] = set_template(tbl, v[1], nm)
+  end
+  local input = table.concat(grp, '; ')
+  coroutine.resume(env.co, input)
+end
+cmdInfo.set = {'cmd_set', "Module f1 [as v1], f2"}
+
 
 --- Show list of commands
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.help = function (args, env)
   if cmdInfo[args[2]] then
     cmdInfo._print(args[2])
@@ -83,6 +129,8 @@ cmdInfo.help = {'cmd_help', "[cmd]"}
 
 
 -- Save session to log
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.log = function (args, env)
   if args[2] == 'on' then
     if not env.log then
@@ -106,6 +154,8 @@ cmdInfo.log = {'cmd_log', "on/off"}
 
 
 -- Print list of blocks
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.ls = function (args, env)
   for i = 1, #env.notes do
     local s = ''
@@ -119,10 +169,12 @@ cmdInfo.ls = {'cmd_ls', "", "Note-files"}
 
 
 -- Go to line
-cmdInfo.N = {'cmd_N', ""}
+cmdInfo.N = {'cmd_N', "", "Note-files"}
 
 
 -- Add 'note' file to the list
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.o = function (args, env)
   local blk = env.evaluate._toBlocks(args[2])
   if blk then
@@ -138,6 +190,8 @@ cmdInfo.o = {'cmd_o', "filename", "Note-files"}
 
 
 -- Quit the program.
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.q = function (args, env)
   env.evaluate.exit()
 end
@@ -145,12 +199,15 @@ cmdInfo.q = {'cmd_q', ""}
 
 
 -- Clear notes
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.rm = function (args, env)
   env.notes = {}
   env.queue = {}
   env.index = 1
 end
 cmdInfo.rm = {'cmd_rm', "", "Note-files"}
+
 
 
 commands.shell = function (args, env)
@@ -162,6 +219,9 @@ end
 cmdInfo.shell = {"cmd_shell", "cmd"}
 
 
+--- Show the given notes.
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.show = function (args, env)
   local ind = args[2] and tonumber(args[2]) or env.index
   if ind < 0 then ind = #env.notes + ind end
@@ -171,7 +231,10 @@ commands.show = function (args, env)
 end
 cmdInfo.show = {'cmd_show', "[N]", "Note-files"}
 
--- Average time
+
+--- Average time
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.time = function (args, env)
   Test = Test or require('core.test')
   if args[2] then
@@ -188,7 +251,9 @@ end
 cmdInfo.time = {'cmd_time', "func", "Debug"}
 
 
--- Trace function
+--- Trace function
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.trace = function (args, env)
   Test = Test or require('core.test')
   if args[2] then
