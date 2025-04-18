@@ -77,6 +77,7 @@ cmd_time = "Estimate average time",
 cmd_trace = "Profiling for the function",
 cmd_set = "Set short alias for module method",
 cmd_shell = "Execute command in shell",
+cmd_w = "Write output to 'pipe'",
 }
 
 

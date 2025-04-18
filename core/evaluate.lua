@@ -267,6 +267,13 @@ evaluate._evalBlock = function (co, env)
 end
 
 
+evaluate._pipeFile = function ()
+  local tmp = os.tmpname()
+  local n = string.find(string.reverse(tmp), '[/\\]')
+  local prefix = n and string.sub(tmp, 1, #tmp-n+1) or ''
+  return prefix .. 'sonata-pipe'
+end
+
 
 --- Emulate 'print' behavior
 evaluate._simpPrint = function (...)

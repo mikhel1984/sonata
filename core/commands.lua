@@ -68,37 +68,6 @@ end
 cmdInfo.clear = {'cmd_clear', "*|v1,v2.."}
 
 
---- Set short alias for module methods.
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.set = function (args, env)
-  local grp = {}
-  if #args < 2 then return end
-  for s in string.gmatch(args[2], "[^,]+") do
-    local g = {}
-    for token in string.gmatch(s, "[^ ]+") do g[#g+1] = token end
-    grp[#grp+1] = g
-  end
-  local tbl = table.remove(grp[1], 1)
-  local cs = {}
-  for i, v in ipairs(grp) do
-    if not (#v == 1 or #v == 3 and v[2] == 'as') then
-      env.evaluate.printErr('Wrong format!')
-      return
-    end
-    local nm = v[3] or v[1]
-    if string.find(nm, '.', 1, true) then
-      env.evaluate.printErr('Wrong format!')
-      return
-    end
-    grp[i] = set_template(tbl, v[1], nm)
-  end
-  local input = table.concat(grp, '; ')
-  coroutine.resume(env.co, input)
-end
-cmdInfo.set = {'cmd_set', "Module f1 [as v1], f2"}
-
-
 --- Show list of commands
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
@@ -209,7 +178,38 @@ end
 cmdInfo.rm = {'cmd_rm', "", "Note-files"}
 
 
+--- Set short alias for module methods.
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
+commands.set = function (args, env)
+  local grp = {}
+  if #args < 2 then return end
+  for s in string.gmatch(args[2], "[^,]+") do
+    local g = {}
+    for token in string.gmatch(s, "[^ ]+") do g[#g+1] = token end
+    grp[#grp+1] = g
+  end
+  local tbl = table.remove(grp[1], 1)
+  local cs = {}
+  for i, v in ipairs(grp) do
+    if not (#v == 1 or #v == 3 and v[2] == 'as') then
+      env.evaluate.printErr('Wrong format!')
+      return
+    end
+    local nm = v[3] or v[1]
+    if string.find(nm, '.', 1, true) then
+      env.evaluate.printErr('Wrong format!')
+      return
+    end
+    grp[i] = set_template(tbl, v[1], nm)
+  end
+  local input = table.concat(grp, '; ')
+  coroutine.resume(env.co, input)
+end
+cmdInfo.set = {'cmd_set', "Module f1 [as v1], f2"}
 
+
+-- TODO remove?
 commands.shell = function (args, env)
   local f = assert(io.popen(args[2]))
   local res = f:read('a')
@@ -268,6 +268,24 @@ commands.trace = function (args, env)
   end
 end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
+
+
+commands.w = function (args, env)
+  -- prepare file
+  if not env.pipe then
+    local fname = env.evaluate._pipeFile()
+    env.pipe = io.open(fname, 'a+')
+  end
+  -- exec and write
+  local _, status, res = coroutine.resume(env.co, args[2] or '')
+  if status ~= env.evaluate.EV_ERR then
+    env.pipe:write(res, '\n\n')
+    env.pipe:flush()
+  else
+    env.evaluate.printErr(res)
+  end
+end
+cmdInfo.w = {"cmd_w", "expr"}
 
 
 return commands

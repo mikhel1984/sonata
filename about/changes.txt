@@ -1,5 +1,11 @@
 ======== 0.9.41 =========
 
+Other
+* Local environment
+* Integrate readline (io mode)
+* Integrate tcp server (io mode)
+* Commands for environment cleaning and binding
+
 ======== 0.9.40 =========
 
 Other
