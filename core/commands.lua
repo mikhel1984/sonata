@@ -278,11 +278,13 @@ commands.w = function (args, env)
   end
   -- exec and write
   local _, status, res = coroutine.resume(env.co, args[2] or '')
-  if status ~= env.evaluate.EV_ERR then
+  if type(res) ~= 'string' then
+    env.evaluate.printErr('Expected string or number, got ' .. type(res))
+  elseif status == env.evaluate.EV_ERR then
+    env.evaluate.printErr(res)
+  else
     env.pipe:write(res, '\n\n')
     env.pipe:flush()
-  else
-    env.evaluate.printErr(res)
   end
 end
 cmdInfo.w = {"cmd_w", "expr"}
