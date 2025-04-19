@@ -470,14 +470,13 @@ end
 extremum._simp2 = function (a, kp)
   local eps = 1E-6
   local m, n = a:rows()-2, a:cols()-1
-  local ip, ii = 0, -1
-  for i = 1, m do
-    if a[i+1][kp+1] < -eps then
-      ii = i
-      break
-    end
+  local ip, ii = 0, 1
+  -- check possible pivots
+  while ii <= m do
+    if a[ii+1][kp+1] < -eps then break end
+    ii = ii + 1
   end
-  if ii < 0 then
+  if ii > m then
     return ip
   end
   local q1 = -a[ii+1][1] / a[ii+1][kp+1]
@@ -505,26 +504,30 @@ extremum._simp2 = function (a, kp)
 end
 
 extremum._simp3 = function (a, i1, k1, ip, kp)
-  local piv = 1.0 / a[ip+1][kp+1]
+  local ap1 = a[ip+1]
+  local piv = 1.0 / ap1[kp+1]
   for ii = 1, i1+1 do
     local ai = a[ii]
     if ii-1 ~= ip then
       ai[kp+1] = ai[kp+1] * piv
-      local ap1 = a[ip+1]
       for kk = 1, k1+1 do
         if kk-1 ~= kp then
           ai[kk] = ai[kk] - ap1[kk]*ai[kp+1]
         end
       end
-      for kk = 1, k1+1 do
-        if kk-1 ~= kp then 
-          ap1[kk] = ap1[kk] * (-piv)
-        end
-      end
-      ap1[kp+1] = piv
     end
   end
+  for kk = 1, k1+1 do
+    if kk-1 ~= kp then 
+      ap1[kk] = ap1[kk] * (-piv)
+    end
+  end
+  ap1[kp+1] = piv
 end
+
+-- m1: A1*x <= b1
+-- m2: A2*x >= b2 >= 0
+-- m3: A3*x == b3
 
 extremum._simpx = function (a, m1, m2, m3)
   a = a:copy()  -- work with copy
@@ -532,7 +535,7 @@ extremum._simpx = function (a, m1, m2, m3)
   local m, n = a:rows()-2, a:cols()-1
   assert(m == m1+m2+m3, "Bad input constraint counts")
   local izrov, iposv = {}, {}
-  local l1, l3 = {}, {}
+  local l1, l3, nl1 = {}, {}, n
   local ip, kp, bmax = nil, nil, nil
   for k = 1, n do
     l1[k] = k; izrov[k] = k
@@ -548,21 +551,23 @@ extremum._simpx = function (a, m1, m2, m3)
     for k = 1, n+1 do
       -- compute aux objective function
       local q1 = 0.0
-      for i = m1, m do q1 = q1 + a[i+1][k] end
+      for i = 1, m do q1 = q1 + a[i+1][k] end
       a[m+2][k] = -q1
     end
     for _ = 1, 1E4 do
       -- find max coefficient
-      bmax, kp = extremum._simp1(a, m+1, l1, nl1, 0)
+      bmax, kp = extremum._simp1(a, m+1, l1, nl1, false)
+      print(bmax, kp)
       if bmax <= eps and a[m+2][1] < -eps then
         -- no feasible solution
+        print('aaa')
         return nil 
       elseif bmax <= eps and a[m+2][1] <= eps then
         -- aux function is zero, feasible vector
         local skip = false
         for iip = m1+m2+1, m do
           if iposv[iip] == (iip + n) then
-            bmax, kp = extremum._simp1(a, iip, l1, nl1, 1)
+            bmax, kp = extremum._simp1(a, iip, l1, nl1, true)
             if bmax > eps then
               skip = true
               break
@@ -576,20 +581,26 @@ extremum._simpx = function (a, m1, m2, m3)
               for k = 1, n+1 do ai1[k] = -ai1[k] end
             end
           end
+          print "bbb"
           break
         end
       else
         -- locate pivot element
+        print(a)
         ip = extremum._simp2(a, kp)
+        print(ip)
         if ip == 0 then
+          print "ccc"
           return nil
         end
       end
       extremum._simp3(a, m+1, n, ip, kp)
       -- exchange left and right variable
       if iposv[ip] >= (n+m1+m2+1) then
-        for k = 1, nl1 do
+        local k = 1
+        while k <= nl1 do
           if l1[k] == kp then break end
+          k = k + 1
         end
         nl1 = nl1 - 1
         for is = k, nl1 do l1[is] = l1[is+1] end
@@ -608,7 +619,7 @@ extremum._simpx = function (a, m1, m2, m3)
   end
 
   for _ = 1, 1E6 do
-    local bmax, kp = extremum._simp1(a, 0, l1, nl1, 0)
+    local bmax, kp = extremum._simp1(a, 0, l1, nl1, false)
     if bmax <= eps then
       return a, izrov, iposv, true
     end
@@ -634,18 +645,33 @@ extremum.about = about
 --print(extremum._minGolden(fun, -4, -1, 3))
 
 local Mat = require 'matlib.matrix'
-local foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
-local dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
+--local foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
+--local dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
 
 --pts = Mat{{5,3},{7,-9},{-7,-4}}:T()
 --x, fx = extremum._simplex(pts, foo)
 --print(x)
 --print(fx)
 
-p0 = Mat:V{5, 4}
-x, fx = extremum._minGrad(foo, dfoo, p0)
+--p0 = Mat:V{5, 4}
+--x, fx = extremum._minGrad(foo, dfoo, p0)
 --x, fx = extremum._minPowel(foo, p0)
 
-print(x)
-print(fx)
+--print(x)
+--print(fx)
+
+a = Mat{
+  {0, 1, 1, 3, -0.5},
+  {740, -1, 0, -2, 0},
+  {0, 0, -2, 0, 7},
+  {0.5, 0, -1, 1, -2},
+  {9, -1, -1, -1, -1},
+  {0, 0, 0, 0, 0},
+}
+
+v1, v2, v3, v4 = extremum._simpx(a, 2, 1, 1)
+print(v1)
+print(v2)
+print(v3)
+print(v4)
 
