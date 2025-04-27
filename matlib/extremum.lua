@@ -448,51 +448,46 @@ extremum._minGrad = function (fun, dfun, p)
   return p, fret
 end
 
-extremum._simpx = function (c, param)
-  local Au, bu = param.Au, param.bu
-  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
-  local mat = extremum.ext_matrix
-  local n = Au:rows()  -- todo check value
-  local H = mat:ver {
-    mat:hor {mat:eye(1, 1), -c, mat:zeros(1, 1 + n)},
-    mat:hor {mat:zeros(bu), Au, mat:eye(n, n), bu},
-  }:copy()
+extremum._simpxEliminate = function (H,  ids)
   local hm = H:cols()
-  local ids = {}
-  for i = 1, n do ids[i] = i + c:cols() end
-  while true do
+  local basis = {}
+  for _ = 1, hm do
     -- get pivot column
+    print(H)
     local col = 0
-    for i = 2, hm-1 do
+    for i = 1, hm-1 do
       if H[1][i] > 0 then
         col = i
         break
       end
     end
+    print('col', col)
     -- apply pivot
     if col > 0 then
       -- find row
       local jmin, vmin = 0, math.huge
       for j = 2, H:rows() do
         local vc, vm = H[j][col], H[j][hm]
-        if vc ~= 0 and math.abs(vm/vc) < vmin then
+        if not basis[j] and vc ~= 0 and math.abs(vm/vc) < vmin then
           jmin, vmin = j, math.abs(vm/vc)
         end
       end
       if jmin == 0 then  break end  -- no solution ?
+      basis[jmin] = true
+      print('row', jmin, vmin)
 
-      ids[jmin-1] = col - 1
+      ids[jmin-1] = col 
 
       local Hj = H[jmin]
       vmin = Hj[col]  -- reuse
-      for k = 2, hm do
+      for k = 1, hm do
         Hj[k] = Hj[k] / vmin
       end
       for i = 1, H:rows() do
         if i ~= jmin then
           local Hi = H[i]
           local t = Hi[col]
-          for k = 2, hm do
+          for k = 1, hm do
             Hi[k] = Hi[k] - Hj[k]*t
           end
         end
@@ -501,6 +496,93 @@ extremum._simpx = function (c, param)
       break
     end
   end
+  return H, ids
+end
+
+extremum._simpx = function (c, param)
+  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
+  local mat = extremum.ext_matrix
+  local nu, ne, nl = 0, 0, 0
+  local Au, bu = param.Au, param.bu
+  local Ae, be = param.Ae, param.be
+  local Al, bl = param.Al, param.bl
+  local As, inter, bs = nil, nil, nil
+
+
+  if Au then
+    nu = Au:rows()
+    As, bs, inter = Au, bu, mat:eye(nu)
+  end
+
+  if Al then
+    nl = Al:rows()
+    if As then
+      As, bs = mat:ver {As, Al}, mat:ver {bs, bl}
+      local r, c = inter:rows(), inter:cols()
+      inter = mat:ver {
+        mat:hor {inter, mat:zeros(r, 2*nl)},
+        mat:hor {mat:zeros(nl, c), -mat:eye(nl), mat:eye(nl)}
+      }
+    else
+      As, bs = Al, bl
+      inter = (-mat:eye(nl)) .. mat:eye(nl)
+    end
+  end
+
+  if Ae then
+    ne = Ae:rows()
+    if As then
+      As, bs = mat:ver {As, Ae}, mat:ver {bs, be}
+      local r, c = inter:rows(), inter:cols()
+      inter = mat:ver {
+        mat:hor {inter, mat:zeros(r, ne)},
+        mat:hor {mat:zeros(ne, c), mat:eye(ne)}
+      }
+    else
+      As, bs, inter = Ae, be, mat:eye(ne)
+    end
+  end
+
+
+  local H, ids = nil, {}
+  for i = 1, nu+ne+nl do ids[i] = i + C:cols() end
+
+  if ne + nl > 0 then
+    -- prepare first row
+    local asum, bsum = {}, 0
+    for i = 1, As:cols() do
+      local s = 0
+      for j = nu+1, As:rows() do s = s + As[j][i] end
+      asum[i] = s
+    end
+    for j = nu+1, bs:rows() do bsum = bsum + bs[j][1] end
+    -- phase 1 matrix
+    H = mat:ver {
+      mat:hor {mat{asum}, mat:zeros(1, inter:cols()), mat(bsum)},
+      mat:hor {As, inter, bs},
+    }:copy()
+
+    H, ids = extremum._simpxEliminate(H, ids)
+    -- TODO check H(1, -1) is 0
+    -- update table
+    local hm, last = H:cols(), H:cols()-nu-nl
+    for i = 1, H:rows() do H[i][last] = H[i][hm] end
+    H._cols = last
+    for i = 1, H:cols() do
+      H[1][i] = (i <= C:cols()) and -C[1][i] or 0
+    end
+  elseif nu > 0 then
+    H = mat:ver {
+      mat:hor {-C, mat:zeros(1, inter:cols()+1)},
+      mat:hor {As, inter, bs}
+    }:copy() 
+  end
+  print('-----')
+
+  if H then
+    H, ids = extremum._simpxEliminate(H, ids)
+  end
+
   print(H)
   for i = 1, #ids do print(ids[i]) end
 end
@@ -536,10 +618,14 @@ local dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
 --Au = Mat{{1, 0}, {0, 2}, {3, 2}}
 --bu = Mat:V {4, 12, 18}
 
-C = Mat{{-2, -3, -4}}
-Au = Mat{{3, 2, 1}, {2, 5, 3}}
-bu = Mat:V{10, 15}
+--C = Mat{{-2, -3, -4}}
+--Au = Mat{{3, 2, 1}, {2, 5, 3}}
+--bu = Mat:V{10, 15}
 
+C = Mat{{-0.4, -0.5}}
+Au = Mat{{0.3, 0.1}}; bu = Mat(2.7) 
+Ae = Mat{{0.5, 0.5}}; be = Mat(6)
+Al = Mat{{0.6, 0.4}}; bl = Mat(6)
 
-extremum._simpx(C, {Au=Au, bu=bu})
+extremum._simpx(C, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
 
