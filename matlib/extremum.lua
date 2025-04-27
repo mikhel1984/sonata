@@ -587,7 +587,6 @@ extremum._simpx = function (c, param)
   for i = 1, #ids do print(ids[i]) end
 end
 
-
 -- Comment to remove descriptions
 extremum.about = about
 
@@ -599,8 +598,8 @@ extremum.about = about
 --print(extremum._minGolden(fun, -4, -1, 3))
 
 local Mat = require 'matlib.matrix'
-local foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
-local dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
+--local foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
+--local dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
 
 --pts = Mat{{5,3},{7,-9},{-7,-4}}:T()
 --x, fx = extremum._simplex(pts, foo)
