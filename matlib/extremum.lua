@@ -449,11 +449,9 @@ extremum._minGrad = function (fun, dfun, p)
 end
 
 extremum._simpxEliminate = function (H,  ids)
-  local hm = H:cols()
-  local basis = {}
+  local hm, basis = H:cols(), {}
   for _ = 1, hm do
     -- get pivot column
-    print(H)
     local col = 0
     for i = 1, hm-1 do
       if H[1][i] > 0 then
@@ -461,7 +459,6 @@ extremum._simpxEliminate = function (H,  ids)
         break
       end
     end
-    print('col', col)
     -- apply pivot
     if col > 0 then
       -- find row
@@ -473,9 +470,8 @@ extremum._simpxEliminate = function (H,  ids)
         end
       end
       if jmin == 0 then  break end  -- no solution ?
-      basis[jmin] = true
-      print('row', jmin, vmin)
 
+      basis[jmin] = true
       ids[jmin-1] = col 
 
       local Hj = H[jmin]
@@ -502,50 +498,46 @@ end
 extremum._simpx = function (c, param)
   extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
   local mat = extremum.ext_matrix
-  local nu, ne, nl = 0, 0, 0
-  local Au, bu = param.Au, param.bu
-  local Ae, be = param.Ae, param.be
-  local Al, bl = param.Al, param.bl
+  local nu, ne, nl, nx = 0, 0, 0, c:cols()
   local As, inter, bs = nil, nil, nil
 
-
-  if Au then
-    nu = Au:rows()
-    As, bs, inter = Au, bu, mat:eye(nu)
+  if param.Au then
+    nu = param.Au:rows()
+    As, bs, inter = param.Au, param.bu, mat:eye(nu)
   end
 
-  if Al then
-    nl = Al:rows()
+  if param.Al then
+    nl = param.Al:rows()
+    local eye = mat:eye(nl)
     if As then
-      As, bs = mat:ver {As, Al}, mat:ver {bs, bl}
+      As, bs = mat:ver {As, param.Al}, mat:ver {bs, param.bl}
       local r, c = inter:rows(), inter:cols()
       inter = mat:ver {
         mat:hor {inter, mat:zeros(r, 2*nl)},
-        mat:hor {mat:zeros(nl, c), -mat:eye(nl), mat:eye(nl)}
+        mat:hor {mat:zeros(nl, c), -eye, eye}
       }
     else
-      As, bs = Al, bl
-      inter = (-mat:eye(nl)) .. mat:eye(nl)
+      As, bs = param.Al, param.bl
+      inter = (-eye) .. eye
     end
   end
 
-  if Ae then
-    ne = Ae:rows()
+  if param.Ae then
+    ne = param.Ae:rows()
     if As then
-      As, bs = mat:ver {As, Ae}, mat:ver {bs, be}
+      As, bs = mat:ver {As, param.Ae}, mat:ver {bs, param.be}
       local r, c = inter:rows(), inter:cols()
       inter = mat:ver {
         mat:hor {inter, mat:zeros(r, ne)},
         mat:hor {mat:zeros(ne, c), mat:eye(ne)}
       }
     else
-      As, bs, inter = Ae, be, mat:eye(ne)
+      As, bs, inter = param.Ae, param.be, mat:eye(ne)
     end
   end
 
-
   local H, ids = nil, {}
-  for i = 1, nu+ne+nl do ids[i] = i + C:cols() end
+  for i = 1, nu+ne+nl do ids[i] = i + nx end
 
   if ne + nl > 0 then
     -- prepare first row
@@ -565,22 +557,30 @@ extremum._simpx = function (c, param)
     H, ids = extremum._simpxEliminate(H, ids)
     -- TODO check H(1, -1) is 0
     -- update table
-    local hm, last = H:cols(), H:cols()-nu-nl
+    local hm, last = H:cols(), H:cols()-ne-nl
     for i = 1, H:rows() do H[i][last] = H[i][hm] end
-    H._cols = last
+    H._cols = last    -- update size
     for i = 1, H:cols() do
-      H[1][i] = (i <= C:cols()) and -C[1][i] or 0
+      H[1][i] = (i <= nx) and -c[1][i] or 0
     end
   elseif nu > 0 then
     H = mat:ver {
-      mat:hor {-C, mat:zeros(1, inter:cols()+1)},
+      mat:hor {-c, mat:zeros(1, inter:cols()+1)},
       mat:hor {As, inter, bs}
     }:copy() 
   end
-  print('-----')
 
   if H then
     H, ids = extremum._simpxEliminate(H, ids)
+    local hm = H:cols()
+    local res = mat:zeros(nx, 1)
+    for _, v in ipairs(ids) do
+      if v <= nx then res[v][1] = H[v+1][hm] end
+    end
+    --return res, H[1][hm]
+    local fx = H[1][hm]
+    print(res)
+    print(fx)
   end
 
   print(H)
@@ -622,10 +622,10 @@ local dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
 --Au = Mat{{3, 2, 1}, {2, 5, 3}}
 --bu = Mat:V{10, 15}
 
-C = Mat{{-0.4, -0.5}}
+Cc = Mat{{-0.4, -0.5}}
 Au = Mat{{0.3, 0.1}}; bu = Mat(2.7) 
 Ae = Mat{{0.5, 0.5}}; be = Mat(6)
 Al = Mat{{0.6, 0.4}}; bl = Mat(6)
 
-extremum._simpx(C, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
+extremum._simpx(Cc, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
 
