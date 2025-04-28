@@ -180,6 +180,7 @@ local mt_digits = {
 map = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', [0]='0'},
 mapChar = {},
 }
+
 -- Fill inverted mapping
 for k, v in pairs(mt_digits.map) do mt_digits.mapChar[v] = k end
 mt_digits.__index = mt_digits

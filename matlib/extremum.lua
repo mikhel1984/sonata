@@ -1,6 +1,6 @@
 --[[		sonata/matlib/extremum.lua
 
---- Finding extremum point.
+--- Finding extremum point for the given funciton.
 --
 --  </br></br><b>Authors</b>: Your Name
 
@@ -32,12 +32,13 @@ local mabs, mmax, mmin = math.abs, math.max, math.min
 local GOLD = 1.6180339
 local TOL = 1E-4
 
+
 --	INFO
 
-local help = SonataHelp or {}  -- optional
+local help = SonataHelp or {} 
 -- description
 local about = {
-__module__ = "Finding extremum point"
+__module__ = "Finding extremum point."
 }
 
 
@@ -59,8 +60,8 @@ local function isextremum(v) return getmetatable(v) == extremum end
 
 --- Search in downhill direction to find bracket a minimum of a function.
 --  @param fun Function to minimize.
---  @param a Initial left point.
---  @param b Initial right point.
+--  @param a Initial low bound.
+--  @param b Initial high bound.
 --  @return tuple of points (a, b, c, fa, fb, fc), such that fb <= fa, fc
 extremum._bracket = function (fun, a, b)
   local tiny, limit = 1E-20, 100
@@ -108,6 +109,12 @@ extremum._bracket = function (fun, a, b)
 end
 
 
+--- Find minimum using golden section method.
+--  @param fun Source function.
+--  @param a Small bound.
+--  @param b Intermediate point.
+--  @param c High bound.
+--  @return point where function is minimal and its value.
 extremum._minGolden = function (fun, a, b, c)
   local gr, gc = GOLD-1, 2-GOLD
   local x0, x1, x2, x3 = a, nil, nil, c
@@ -133,6 +140,13 @@ extremum._minGolden = function (fun, a, b, c)
   end
 end
 
+
+--- Find minimum using Brent method.
+--  @param fun Source function.
+--  @param a Small bound.
+--  @param b Intermediate point.
+--  @param c High bound.
+--  @return point where function is minimal and its value.
 extremum._minBrent = function (fun, a, b, c)
   local imax, small, e, d = 100, 1E-30, 0, 0
   a, c = mmin(a, c), mmax(a, c)
@@ -192,7 +206,13 @@ extremum._minBrent = function (fun, a, b, c)
 end
 
 
-
+--- Find minimum using Brent method and a function derivative.
+--  @param fun Source function.
+--  @param dfun Derivative of the function.
+--  @param a Small bound.
+--  @param b Intermediate point.
+--  @param c High bound.
+--  @return point where function is minimal and its value.
 extremum._minBrentD = function (fun, dfun, a, b, c)
   local imax, small, e, d = 100, 1E-30, 0, 0
   a, c = mmin(a, c), mmax(a, c)
@@ -270,6 +290,24 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
   return x, fx
 end
 
+extremum.minimum1D = function (fun, a, b, param)
+  param = param or {}
+  local c = param.c or (a + b)*0.5
+  if param.method == 'Brent' then
+    if param.dfun then
+      return extremum._minBrentD(fun, param.dfun, a, b, c)
+    else
+      return extremum._minBrent(fun, a, b, c)
+    end
+  else
+    return extremum._minGolden(fun, a, b, c)
+  end
+end
+
+
+--- Find sum of elements for the simplex method.
+--  @param pp Matrix with points.
+--  @param psum Table to store the result.
 extremum._simplexPsum = function (pp, psum)
   for i = 1, pp:rows() do
     local s, pi = 0, pp[i]
@@ -278,7 +316,12 @@ extremum._simplexPsum = function (pp, psum)
   end
 end
 
-extremum._simplex = function (pp, fun)
+
+--- Multidimentional minimum search with simplex method.
+--  @param fun Funciton for minimization.
+--  @param pp List of bound points as a matrix.
+--  @return point where function is minimal and its value.
+extremum._simplex = function (fun, pp)
   extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
   local mat = extremum.ext_matrix
   local nmax, small = 500, 1E-10
@@ -448,7 +491,20 @@ extremum._minGrad = function (fun, dfun, p)
   return p, fret
 end
 
-extremum._simpxEliminate = function (H,  ids)
+extremum.minimum = function (fun, p, param)
+  param = param or {}
+  if param.method == 'Powel' then
+    if param.dfun then
+      return extremum._minGrad(fun, param.dfun, p)
+    else
+      return extremum._minPowel(fun, p)
+    end
+  else
+    return extremum._simplex(fun, param.p)
+  end
+end
+
+extremum._lpSimpxEliminate = function (H,  ids)
   local hm = H:cols()
   for s = 1, hm do
     -- get pivot column
@@ -491,7 +547,7 @@ extremum._simpxEliminate = function (H,  ids)
   return H, ids
 end
 
-extremum._simpx = function (c, param)
+extremum._lpSimplex = function (c, param)
   extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
   local mat = extremum.ext_matrix
   local nu, ne, nl, nx = 0, 0, 0, c:cols()
@@ -550,7 +606,7 @@ extremum._simpx = function (c, param)
       mat:hor {As, inter, bs},
     }:copy()
 
-    H, ids = extremum._simpxEliminate(H, ids)
+    H, ids = extremum._lpSimpxEliminate(H, ids)
     -- TODO check H(1, -1) is 0
     -- update table
     local hm, last = H:cols(), H:cols()-ne-nl
@@ -567,7 +623,7 @@ extremum._simpx = function (c, param)
   end
 
   if H then
-    H, ids = extremum._simpxEliminate(H, ids)
+    H, ids = extremum._lpSimpxEliminate(H, ids)
     local hm = H:cols()
     local res = mat:zeros(nx, 1)
     for i, v in ipairs(ids) do
@@ -576,6 +632,10 @@ extremum._simpx = function (c, param)
     return res, H[1][hm]
   end
 end
+
+
+extremum.linprog = function (c, param) return extremum._lpSimplex(c, param) end
+
 
 -- Comment to remove descriptions
 extremum.about = about
@@ -616,7 +676,7 @@ Ae = Mat{{3, 2, 1}, {2, 5, 3}}; be = Mat:V{10, 15}
 --Ae = Mat{{0.5, 0.5}}; be = Mat(6)
 --Al = Mat{{0.6, 0.4}}; bl = Mat(6)
 
-x, fx = extremum._simpx(Cc, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
+x, fx = extremum._lpSimplex(Cc, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
 print(x)
 print('f(x)', fx)
 
