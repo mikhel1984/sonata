@@ -449,11 +449,11 @@ extremum._minGrad = function (fun, dfun, p)
 end
 
 extremum._simpxEliminate = function (H,  ids)
-  local hm, basis = H:cols(), {}
-  for _ = 1, hm do
+  local hm = H:cols()
+  for s = 1, hm do
     -- get pivot column
     local col = 0
-    for i = 1, hm-1 do
+    for i = s, hm-1 do
       if H[1][i] > 0 then
         col = i
         break
@@ -465,27 +465,23 @@ extremum._simpxEliminate = function (H,  ids)
       local jmin, vmin = 0, math.huge
       for j = 2, H:rows() do
         local vc, vm = H[j][col], H[j][hm]
-        if not basis[j] and vc ~= 0 and math.abs(vm/vc) < vmin then
-          jmin, vmin = j, math.abs(vm/vc)
+        if vc > 0 and vm/vc < vmin then
+          jmin, vmin = j, vm/vc
         end
       end
       if jmin == 0 then  break end  -- no solution ?
 
-      basis[jmin] = true
       ids[jmin-1] = col 
-
       local Hj = H[jmin]
       vmin = Hj[col]  -- reuse
-      for k = 1, hm do
-        Hj[k] = Hj[k] / vmin
-      end
-      for i = 1, H:rows() do
-        if i ~= jmin then
-          local Hi = H[i]
+      -- normalize line
+      for k = 1, hm do Hj[k] = Hj[k] / vmin end
+      -- extract
+      for j = 1, H:rows() do
+        if j ~= jmin then
+          local Hi = H[j]
           local t = Hi[col]
-          for k = 1, hm do
-            Hi[k] = Hi[k] - Hj[k]*t
-          end
+          for k = 1, hm do Hi[k] = Hi[k] - Hj[k]*t end
         end
       end
     else
@@ -499,11 +495,11 @@ extremum._simpx = function (c, param)
   extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
   local mat = extremum.ext_matrix
   local nu, ne, nl, nx = 0, 0, 0, c:cols()
-  local As, inter, bs = nil, nil, nil
+  local As, bs, inter = param.Au, param.bu, nil
 
-  if param.Au then
-    nu = param.Au:rows()
-    As, bs, inter = param.Au, param.bu, mat:eye(nu)
+  if As then
+    nu = As:rows()
+    inter = mat:eye(nu)
   end
 
   if param.Al then
@@ -513,12 +509,12 @@ extremum._simpx = function (c, param)
       As, bs = mat:ver {As, param.Al}, mat:ver {bs, param.bl}
       local r, c = inter:rows(), inter:cols()
       inter = mat:ver {
-        mat:hor {inter, mat:zeros(r, 2*nl)},
+        mat:hor {inter, mat:zeros(r, nl+nl)},
         mat:hor {mat:zeros(nl, c), -eye, eye}
       }
     else
       As, bs = param.Al, param.bl
-      inter = (-eye) .. eye
+      inter = mat:hor {-eye, eye}
     end
   end
 
@@ -574,17 +570,11 @@ extremum._simpx = function (c, param)
     H, ids = extremum._simpxEliminate(H, ids)
     local hm = H:cols()
     local res = mat:zeros(nx, 1)
-    for _, v in ipairs(ids) do
-      if v <= nx then res[v][1] = H[v+1][hm] end
+    for i, v in ipairs(ids) do
+      if v <= nx then res[v][1] = H[i+1][hm] end
     end
-    --return res, H[1][hm]
-    local fx = H[1][hm]
-    print(res)
-    print(fx)
+    return res, H[1][hm]
   end
-
-  print(H)
-  for i = 1, #ids do print(ids[i]) end
 end
 
 -- Comment to remove descriptions
@@ -613,18 +603,20 @@ local Mat = require 'matlib.matrix'
 --print(x)
 --print(fx)
 
---C = Mat{{-3, -5}}
+--Cc = Mat{{-3, -5}}
 --Au = Mat{{1, 0}, {0, 2}, {3, 2}}
 --bu = Mat:V {4, 12, 18}
 
---C = Mat{{-2, -3, -4}}
---Au = Mat{{3, 2, 1}, {2, 5, 3}}
---bu = Mat:V{10, 15}
+Cc = Mat{{-2, -3, -4}}
+--Au = Mat{{3, 2, 1}, {2, 5, 3}}; bu = Mat:V{10, 15}
+Ae = Mat{{3, 2, 1}, {2, 5, 3}}; be = Mat:V{10, 15}
 
-Cc = Mat{{-0.4, -0.5}}
-Au = Mat{{0.3, 0.1}}; bu = Mat(2.7) 
-Ae = Mat{{0.5, 0.5}}; be = Mat(6)
-Al = Mat{{0.6, 0.4}}; bl = Mat(6)
+--Cc = Mat{{-0.4, -0.5}}
+--Au = Mat{{0.3, 0.1}}; bu = Mat(2.7) 
+--Ae = Mat{{0.5, 0.5}}; be = Mat(6)
+--Al = Mat{{0.6, 0.4}}; bl = Mat(6)
 
-extremum._simpx(Cc, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
+x, fx = extremum._simpx(Cc, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
+print(x)
+print('f(x)', fx)
 
