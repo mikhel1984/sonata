@@ -1,27 +1,111 @@
 --[[		sonata/matlib/extremum.lua
 
---- Finding extremum point for the given funciton.
+--- Extremum search and optimization methods.
 --
---  </br></br><b>Authors</b>: Your Name
+--  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
+--  </br></br><b>Authors</b>: Stanislav Mikhel
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
 
 	module 'extremum'
 --]]
 
--- Define here your tests, save results to 'ans',
--- use --> for the strict equality
--- and --n> for the n-digit precision in the case of floating numbers.
+
+---------------- Tests -----------------
 --[[TEST_IT
 
 -- use 'extremum'
 Ex = require 'matlib.extremum'
+-- use matrices for multidimentional optimization
+Mat = require 'matlib.matrix'
 
--- example
-a = Ex()
--- check equality
-ans = a.type                  -->  'extremum'
+-- 1D minimum point, golden section
+fun = function (x) return x*x end
+xm, fm = Ex:minimum1D(fun, -10, 5)
+ans = xm                     --2> 0.0
 
--- check relative equality ( ~10^(-2) )
-ans = math.pi                --2> 355/113
+ans = fm                     --2> 0.0
+
+-- 1D Brent method, with initial point
+xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', b=-5})
+ans = xm                     --2> 0.0
+
+-- 1D Brent method, use derivative
+df = function (x) return 2*x end
+xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', dfun=df})
+ans = xm                     --2> 0.0
+
+-- Find maximum
+xm, fm = Ex:maximum1D(math.cos, -1, 1, {b=0.5})
+ans = fm                     --2> 1.0
+
+-- multidimentional, Powel method
+foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
+p0 = Mat:V {5, 4}
+xm, fm = Ex:minimum(foo, p0)
+ans = xm(1)                  --2> 1.0
+
+ans = fm                     --2> 0.0
+
+-- multidimentional, with derivative
+dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
+xm, fm = Ex:minimum(foo, p0, {dfun=dfoo})
+ans = xm(2)                  --2> 2.0
+
+-- multidimentional, simplex
+-- expected column-vectors
+pp = Mat{{5,3},{7,-9},{-7,-4}}:T()
+xm, fm = Ex:minimum(foo, pp, {method='simplex'})
+ans = fm                     --2> 0.0
+
+-- multidimentional, maximum
+foo = function (x) return 3 - x:norm() end
+xm, fm = Ex:maximum(foo, Mat:V{-3, 4})
+ans = fm                     --3> 3.0
+
+-- linear programming, simplex method
+-- minimize C*x when Au*x <= bu
+C = Mat{{-3, -5}}
+A = Mat{{1, 0}, {0, 2}, {3, 2}}; b = Mat:V {4, 12, 18}
+xm, fm = Ex:linprog(C, {Au=A, bu=b})
+ans = fm                     --2> -36.0
+
+-- LP, additional constraints
+-- C*x -> min, Au*x <= bu, Ae*x == be, Al*x >= bl
+C = Mat{{-0.4, -0.5}}
+Au = Mat{{0.3, 0.1}}; bu = Mat(2.7)
+Ae = Mat{{0.5, 0.5}}; be = Mat(6)
+Al = Mat{{0.6, 0.4}}; bl = Mat(6)
+xm, fm = Ex:linprog(C, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
+ans = fm                     --2> -5.4
+
+-- simulated annealing
+-- solve the problem of 8 chess queens
+pos = {1, 2, 3, 4, 5, 6, 7, 8}  -- initial positions
+-- update method, replace 2 arbitrary elements
+tweak = function (x)
+  local y, m, n = {}, nil, nil
+  for i = 1, #x do y[i] = x[i] end  -- return copy
+  repeat
+    m, n = math.random(#y), math.random(#y)
+  until m ~= n
+  y[m], y[n] = y[n], y[m]
+  return y
+end
+-- state energy, number of collisions
+energy = function (x)
+  local s = 0
+  for i = 1, #x-1 do
+    for j = i+1, #x do
+      -- check the same diagonal
+      if math.abs(j-i) == math.abs(x[j]-x[i]) then s = s + 1 end
+    end
+  end
+  return s
+end
+-- find solution
+xm, fm = Ex:annealing(energy, tweak, pos, 20, 0.95, 2)
+print(table.concat(xm, ' '))
+ans = fm                     --> 0
 
 --]]
 
@@ -32,30 +116,23 @@ local mabs, mmax, mmin = math.abs, math.max, math.min
 local GOLD = 1.6180339
 local TOL = 1E-4
 
+local inform = Sonata and Sonata.warning or print
+
 
 --	INFO
 
-local help = SonataHelp or {} 
+local help = SonataHelp or {}
 -- description
 local about = {
-__module__ = "Finding extremum point."
+__module__ = "Extremum search and optimization methods."
 }
 
 
 --	MODULE
 
-local extremum = {
--- mark
-type = 'extremum',
-}
+local extremum = {}
 -- methametods
 extremum.__index = extremum
-
-
---- Check object type.
---  @param v Object.
---  @return True if the object is extremum.
-local function isextremum(v) return getmetatable(v) == extremum end
 
 
 --- Search in downhill direction to find bracket a minimum of a function.
@@ -109,41 +186,179 @@ extremum._bracket = function (fun, a, b)
 end
 
 
---- Find minimum using golden section method.
+--- Moves along the fiven direction to find minimum value.
+--  @param p Initial point.
+--  @param xi Multidimentional direction.
 --  @param fun Source function.
---  @param a Small bound.
---  @param b Intermediate point.
---  @param c High bound.
---  @return point where function is minimal and its value.
-extremum._minGolden = function (fun, a, b, c)
-  local gr, gc = GOLD-1, 2-GOLD
-  local x0, x1, x2, x3 = a, nil, nil, c
-  if mabs(c-b) > mabs(b-a) then
-    x1, x2 = b, b + gc*(c-b)
-  else
-    x2, x1 = b, b - gc*(b-a)
-  end
-  local f1, f2 = fun(x1), fun(x2)
-  while mabs(x3-x0) > TOL do
-    if f2 < f1 then
-      x0, x1, x2 = x1, x2, gr*x2 + gc*x3
-      f1, f2 = f2, fun(x2)
+--  @return found point, deflection and function value.
+extremum._linmin = function (p, xi, fun)
+  local ff = function (x) return fun(p + x*xi) end
+  local a, b, c = extremum._bracket(ff, 0.0, 1.0)
+  local xm, fm = extremum._minBrent(ff, a, b, c)
+  xi = xm * xi
+  return p + xi, xi, fm
+end
+
+
+--- Moves along the fiven direction to find minimum value.
+--  Use gradient function.
+--  @param p Initial point.
+--  @param xi Multidimentional direction.
+--  @param fun Source function.
+--  @param dfun Gradient function.
+--  @return found point, deflection and function value.
+extremum._linmind = function (p, xi, fun, dfun)
+  local ff = function (x) return fun(p + x*xi) end
+  local df = function (x) return dfun(p + x*xi):T() * xi end
+  local a, b, c = extremum._bracket(ff, 0.0, 1.0)
+  local xm, fm = extremum._minBrentD(ff, df, a, b, c)
+  xi = xm * xi
+  return p + xi, xi, fm
+end
+
+
+--- Find and apply pivot operation.
+--  @param H Matrix for optimization.
+--  @param ids List of variable indices.
+--  @return updated matrix and list of indices.
+extremum._lpSimpxEliminate = function (H,  ids)
+  local hm = H:cols()
+  for s = 1, hm do
+    -- get pivot column
+    local col = 0
+    for i = s, hm-1 do
+      if H[1][i] > 0 then
+        col = i
+        break
+      end
+    end
+    -- apply pivot
+    if col > 0 then
+      -- find row
+      local jmin, vmin = 0, math.huge
+      for j = 2, H:rows() do
+        local vc, vm = H[j][col], H[j][hm]
+        if vc > 0 and vm/vc < vmin then
+          jmin, vmin = j, vm/vc
+        end
+      end
+      if jmin == 0 then  break end  -- no solution ?
+
+      ids[jmin-1] = col
+      local Hj = H[jmin]
+      vmin = Hj[col]  -- reuse
+      -- normalize line
+      for k = 1, hm do Hj[k] = Hj[k] / vmin end
+      -- extract
+      for j = 1, H:rows() do
+        if j ~= jmin then
+          local Hi = H[j]
+          local t = Hi[col]
+          for k = 1, hm do Hi[k] = Hi[k] - Hj[k]*t end
+        end
+      end
     else
-      x3, x2, x1 = x2, x1, gr*x1 + gc*x0
-      f2, f1 = f1, fun(x1)
+      break
     end
   end
-  if f1 < f2 then
-    return x1, f1
-  else
-    return x2, f2
+  return H, ids
+end
+
+
+--- Solve LP problem using simplex method.
+--  @param c Row-vector of coefficients for equation c*x -> min.
+--  @param param Optimization parameters (matrices Au*x <= bu, Ae*x == be, Al*x >= bl).
+--  @return minimum point and function value.
+extremum._lpSimplex = function (c, param)
+  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
+  local mat = extremum.ext_matrix
+  local nu, ne, nl, nx = 0, 0, 0, c:cols()
+  local As, bs, inter = param.Au, param.bu, nil
+
+  if As then
+    nu = As:rows()
+    inter = mat:eye(nu)
+  end
+
+  if param.Al then
+    nl = param.Al:rows()
+    local eye = mat:eye(nl)
+    if As then
+      As, bs = mat:ver {As, param.Al}, mat:ver {bs, param.bl}
+      local r, c = inter:rows(), inter:cols()
+      inter = mat:ver {
+        mat:hor {inter, mat:zeros(r, nl+nl)},
+        mat:hor {mat:zeros(nl, c), -eye, eye}
+      }
+    else
+      As, bs = param.Al, param.bl
+      inter = mat:hor {-eye, eye}
+    end
+  end
+
+  if param.Ae then
+    ne = param.Ae:rows()
+    if As then
+      As, bs = mat:ver {As, param.Ae}, mat:ver {bs, param.be}
+      local r, c = inter:rows(), inter:cols()
+      inter = mat:ver {
+        mat:hor {inter, mat:zeros(r, ne)},
+        mat:hor {mat:zeros(ne, c), mat:eye(ne)}
+      }
+    else
+      As, bs, inter = param.Ae, param.be, mat:eye(ne)
+    end
+  end
+
+  local H, ids = nil, {}
+  for i = 1, nu+ne+nl do ids[i] = i + nx end
+
+  if ne + nl > 0 then
+    -- prepare first row
+    local asum, bsum = {}, 0
+    for i = 1, As:cols() do
+      local s = 0
+      for j = nu+1, As:rows() do s = s + As[j][i] end
+      asum[i] = s
+    end
+    for j = nu+1, bs:rows() do bsum = bsum + bs[j][1] end
+    -- phase 1 matrix
+    H = mat:ver {
+      mat:hor {mat{asum}, mat:zeros(1, inter:cols()), mat(bsum)},
+      mat:hor {As, inter, bs},
+    }:copy()
+
+    H, ids = extremum._lpSimpxEliminate(H, ids)
+    -- TODO check H(1, -1) is 0
+    -- update table
+    local hm, last = H:cols(), H:cols()-ne-nl
+    for i = 1, H:rows() do H[i][last] = H[i][hm] end
+    H._cols = last    -- update size
+    for i = 1, H:cols() do
+      H[1][i] = (i <= nx) and -c[1][i] or 0
+    end
+  elseif nu > 0 then
+    H = mat:ver {
+      mat:hor {-c, mat:zeros(1, inter:cols()+1)},
+      mat:hor {As, inter, bs}
+    }:copy()
+  end
+
+  if H then
+    H, ids = extremum._lpSimpxEliminate(H, ids)
+    local hm = H:cols()
+    local res = mat:zeros(nx, 1)
+    for i, v in ipairs(ids) do
+      if v <= nx then res[v][1] = H[i+1][hm] end
+    end
+    return res, H[1][hm]
   end
 end
 
 
 --- Find minimum using Brent method.
 --  @param fun Source function.
---  @param a Small bound.
+--  @param a Low bound.
 --  @param b Intermediate point.
 --  @param c High bound.
 --  @return point where function is minimal and its value.
@@ -201,7 +416,7 @@ extremum._minBrent = function (fun, a, b, c)
       end
     end
   end
-  error('Too many iterations')  --TODO warning
+  inform('Too many iterations')
   return x, fx
 end
 
@@ -209,7 +424,7 @@ end
 --- Find minimum using Brent method and a function derivative.
 --  @param fun Source function.
 --  @param dfun Derivative of the function.
---  @param a Small bound.
+--  @param a Low bound.
 --  @param b Intermediate point.
 --  @param c High bound.
 --  @return point where function is minimal and its value.
@@ -286,22 +501,150 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
       end
     end
   end
-  error('Too many iterations')  --TODO warning
+  inform('Too many iterations')
   return x, fx
 end
 
-extremum.minimum1D = function (fun, a, b, param)
-  param = param or {}
-  local c = param.c or (a + b)*0.5
-  if param.method == 'Brent' then
-    if param.dfun then
-      return extremum._minBrentD(fun, param.dfun, a, b, c)
-    else
-      return extremum._minBrent(fun, a, b, c)
-    end
+
+--- Find minimum using golden section method.
+--  @param fun Source function.
+--  @param a Low bound.
+--  @param b Intermediate point.
+--  @param c High bound.
+--  @return point where function is minimal and its value.
+extremum._minGolden = function (fun, a, b, c)
+  local gr, gc = GOLD-1, 2-GOLD
+  local x0, x1, x2, x3 = a, nil, nil, c
+  if mabs(c-b) > mabs(b-a) then
+    x1, x2 = b, b + gc*(c-b)
   else
-    return extremum._minGolden(fun, a, b, c)
+    x2, x1 = b, b - gc*(b-a)
   end
+  local f1, f2 = fun(x1), fun(x2)
+  while mabs(x3-x0) > TOL do
+    if f2 < f1 then
+      x0, x1, x2 = x1, x2, gr*x2 + gc*x3
+      f1, f2 = f2, fun(x2)
+    else
+      x3, x2, x1 = x2, x1, gr*x1 + gc*x0
+      f2, f1 = f1, fun(x1)
+    end
+  end
+  if f1 < f2 then
+    return x1, f1
+  else
+    return x2, f2
+  end
+end
+
+
+--- Multidimentional minimum search using Powel method
+--  and gradient function.
+--  @param fun Source function.
+--  @param dfun Gradient function.
+--  @param p Initial point.
+--  @return minimum point and function value.
+extremum._minGrad = function (fun, dfun, p)
+  local imax, small, n = 200, 1E-20, p:rows()
+  local fret, xi = fun(p), dfun(p)
+  local g = -xi
+  local h = g
+  for i = 1, imax do
+    local fp = fret
+    --p, xi, fret = extremum._linmin(p, xi, fun)
+    p, xi, fret = extremum._linmind(p, xi, fun, dfun)
+    if 2*mabs(fp - fret) <= TOL*(mabs(fret) + mabs(fp) + small) then
+      return p, fret
+    end
+    xi = dfun(p)
+    local gg, dgg = 0.0, 0.0
+    for j = 1, n do
+      local gj, xj = g[j][1], xi[j][1]
+      gg = gg + gj*gj
+      dgg = dgg + xj*xj + (xj+gj)*xj
+    end
+    if gg == 0.0 then
+      return p, fret
+    end
+    local gam = dgg / gg
+    h, g = gam*h - xi, -xi
+    xi = h
+  end
+  error("Too much iterations")
+  return p, fret
+end
+
+
+--- Multidimentional minimum search using Powel method.
+--  @param fun Source function.
+--  @param p Initial point.
+--  @return minimum point and function value.
+extremum._minPowel = function (fun, p)
+  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
+  local mat = extremum.ext_matrix
+  local imax, small, n = 200, 1E-25, p:rows()
+  local ximat = mat:eye(n)
+  local fret = fun(p)
+  for iter = 1, imax do
+    local ibig, del = 1, 0.0
+    local pt, fp = p, fret
+    -- find the biggest decrease
+    for i = 1, n do
+      local fprev = fret
+      p, _, fret = extremum._linmin(p, ximat({}, i), fun)
+      fprev = fprev - fret  -- reuse
+      if fprev > del then
+        del, ibig = fprev, i
+      end
+    end
+    if 2*mabs(fp-fret) <= TOL*(mabs(fp) + mabs(fret) + small) then
+      return p, fret
+    end
+    -- extrapolated point
+    local grad = p - pt
+    local fptt = fun(p + grad)
+    if fptt < fp then
+      local t = 2*(fp-2*fret+fptt)*(fp-fret-del)^2 - del*(fp-fptt)^2
+      if t < 0 then
+        p, grad, fret = extremum._linmin(p, grad, fun)
+        for j = 1, n do
+          local xmatj = ximat[j]
+          xmatj[ibig] = xmatj[n]
+          xmatj[n] = grad[j][1]
+        end
+      end
+    end
+  end
+  inform("Too much iterations")
+  return p, fret
+end
+
+
+--- Extrapolates by factor through the face of the simplex.
+--  Replace the high point it the new is better.
+--  @param p List of bound points as a matrix.
+--  @param y List of funciton values.
+--  @param psum List of vector sums.
+--  @param fac Factor value.
+--  @param fun Source function.
+--  @return the found extremum.
+extremum._simplexExtra = function (p, y, psum, ihi, fac, fun)
+  local ndim = p:rows()
+  local fac1 = (1.0-fac)/ndim
+  local fac2 = fac1 - fac
+  local ptry = {}
+  for j = 1, ndim do
+    ptry[j] = psum[j]*fac1 - p[j][ihi]*fac2
+  end
+  local ytry = fun(extremum.ext_matrix:V(ptry))
+  if ytry < y[ihi] then
+    y[ihi] = ytry
+    for j = 1, ndim do
+      psum[j] = psum[j] + ptry[j] - p[j][ihi]
+      p[j][ihi] = ptry[j]
+    end
+  end
+  return ytry
 end
 
 
@@ -332,7 +675,7 @@ extremum._simplex = function (fun, pp)
   for _ = 1, nmax do
     -- find highest, next highest and lowest
     local ilo, ihi, inhi = 1, 1, 2
-    if y[1] > y[2] then 
+    if y[1] > y[2] then
       ihi, inhi = 2, 1
     end
     for i = 1, #y do
@@ -379,304 +722,142 @@ extremum._simplex = function (fun, pp)
       end
     end
   end
-  error('Too mutch iterations')
+  inform('Too mutch iterations')
   return p({}, 1), y[1]
 end
 
-extremum._simplexExtra = function (p, y, psum, ihi, fac, fun)
-  local ndim = p:rows()
-  local fac1 = (1.0-fac)/ndim
-  local fac2 = fac1 - fac
-  local ptry = {}
-  for j = 1, ndim do 
-    ptry[j] = psum[j]*fac1 - p[j][ihi]*fac2 
-  end
-  local ytry = fun(extremum.ext_matrix:V(ptry)) 
-  if ytry < y[ihi] then
-    y[ihi] = ytry
-    for j = 1, ndim do
-      psum[j] = psum[j] + ptry[j] - p[j][ihi]
-      p[j][ihi] = ptry[j]
-    end
-  end
-  return ytry
-end
 
-
-extremum._linmin = function (p, xi, fun)
-  local ff = function (x) return fun(p + x*xi) end 
-  local a, b, c = extremum._bracket(ff, 0.0, 1.0)
-  local xm, fm = extremum._minBrent(ff, a, b, c)
-  xi = xm * xi
-  return p + xi, xi, fm
-end
-
-extremum._linmind = function (p, xi, fun, dfun)
-  local ff = function (x) return fun(p + x*xi) end
-  local df = function (x) return dfun(p + x*xi):T() * xi end
-  local a, b, c = extremum._bracket(ff, 0.0, 1.0)
-  local xm, fm = extremum._minBrentD(ff, df, a, b, c)
-  xi = xm * xi
-  return p + xi, xi, fm
-end
-
-
-extremum._minPowel = function (fun, p)
-  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
-  local mat = extremum.ext_matrix
-  local imax, small, n = 200, 1E-25, p:rows()
-  local ximat = mat:eye(n)
-  local fret = fun(p)
-  for iter = 1, imax do
-    local ibig, del = 1, 0.0
-    local pt, fp = p, fret
-    -- find the biggest decrease
-    for i = 1, n do
-      local fprev = fret
-      p, _, fret = extremum._linmin(p, ximat({}, i), fun)
-      fprev = fprev - fret  -- reuse
-      if fprev > del then
-        del, ibig = fprev, i
-      end
-    end
-    if 2*mabs(fp-fret) <= TOL*(mabs(fp) + mabs(fret) + small) then
-      return p, fret
-    end
-    -- extrapolated point
-    local grad = p - pt
-    local fptt = fun(p + grad)
-    if fptt < fp then
-      local t = 2*(fp-2*fret+fptt)*(fp-fret-del)^2 - del*(fp-fptt)^2
-      if t < 0 then
-        p, grad, fret = extremum._linmin(p, grad, fun)
-        for j = 1, n do
-          local xmatj = ximat[j]
-          xmatj[ibig] = xmatj[n]
-          xmatj[n] = grad[j][1]
+--- Simulated annealing optimization method.
+--  @param energy Function that calculates energy.
+--  @param update Function that updates vector.
+--  @param x Initial value.
+--  @param temp (=nil) Initial temperature.
+--  @param alpha (=0.9) Temperature update coefficient.
+--  @param nmax (=1) Number of iteration for each temperature.
+--  @return found solution and its energy.
+extremum.annealing = function (_, energy, update, x, temp, alpha, nmax)
+  local e0, curr = energy(x), x
+  temp = temp or math.max(e0, 1.0)
+  alpha = alpha or 0.9
+  nmax = nmax or 1
+  repeat
+    for i = 1, nmax do
+      local new = update(curr)
+      local ei = energy(new)
+      if ei <= e0 then
+        e0, curr = ei, new
+      else
+        local v = math.exp((e0-ei)/temp)
+        if math.random() < v then
+          e0, curr = ei, new
         end
       end
+      if e0 == 0 then break end
     end
-  end
-  error("Too much iterations")
-  return p, fret
+    temp = temp * alpha
+  until temp <= TOL or e0 == 0
+  return curr, e0
 end
+about[extremum.annealing] = {
+  ":annealing(energy_fn, update_fn, x_M, temp_d=enerty0, alpha_d=0.9, nmax_N=1) -> x_M, energy_d",
+  "Simulated annealing method."}
 
-extremum._minGrad = function (fun, dfun, p)
-  local imax, small, n = 200, 1E-20, p:rows()
-  local fret, xi = fun(p), dfun(p)
-  local g = -xi
-  local h = g
-  for i = 1, imax do
-    local fp = fret
-    --p, xi, fret = extremum._linmin(p, xi, fun)
-    p, xi, fret = extremum._linmind(p, xi, fun, dfun)
-    if 2*mabs(fp - fret) <= TOL*(mabs(fret) + mabs(fp) + small) then
-      return p, fret
-    end
-    xi = dfun(p)
-    local gg, dgg = 0.0, 0.0
-    for j = 1, n do
-      local gj, xj = g[j][1], xi[j][1]
-      gg = gg + gj*gj
-      dgg = dgg + xj*xj + (xj+gj)*xj
-    end
-    if gg == 0.0 then
-      return p, fret
-    end
-    local gam = dgg / gg
-    h, g = gam*h - xi, -xi
-    xi = h
-  end
-  error("Too much iterations")
-  return p, fret
+
+--- Find maximum of a function with scalar argument.
+--  Set param.method=Brent to use Brent algorithm, param.b - initial point,
+--  param.dfun - function derivative (for Brent). Default method is golden section.
+--  @param fun Source function.
+--  @param a Low bound.
+--  @param c Hight bound.
+--  @param param Table with additional parameters {mehtod=nil, b=nil, dfun=nil}.
+--  @return maximum point and function value.
+extremum.maximum1D = function (_, fun, a, c, param)
+  local xm, fm = extremum.minimum1D (_, function (x) return -fun(x) end, a, c, param)
+  return xm, -fm
 end
+about[extremum.maximum1D] = {
+  ":maximum1D(fn, a_d, c_d, param={method='golden',b=millde,dfun=nil}) -> x_d, min_d",
+  "Find maximum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method)."}
 
-extremum.minimum = function (fun, p, param)
+
+--- Multidimentional maximum search.
+--  param.method: 'Powel' or 'simplex', param.dfun - gradient function.
+--  @param fun Source function.
+--  @param p Initial point for 'Powel', matrix with points for 'simplex'.
+--  @param param Table with additional parameters {method=nil, dfun=nil}.
+--  @return maximum point and function value.
+extremum.maximum = function (_, fun, p, param)
+  local xm, fm = extremum.minimum (_, function (x) return -fun(x) end, p, param)
+  return xm, -fm
+end
+about[extremum.maximum] = {
+  ":maximum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d",
+  "Find maximum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach."}
+
+
+--- Find minimum of a function with scalar argument.
+--  Set param.method=Brent to use Brent algorithm, param.b - initial point,
+--  param.dfun - function derivative (for Brent). Default method is golden section.
+--  @param fun Source function.
+--  @param a Low bound.
+--  @param c Hight bound.
+--  @param param Table with additional parameters {mehtod=nil, b=nil, dfun=nil}.
+--  @return minimum point and function value.
+extremum.minimum1D = function (_, fun, a, c, param)
   param = param or {}
-  if param.method == 'Powel' then
+  local b = param.b or (a + c)*0.5
+  if param.method == 'Brent' then
+    if param.dfun then
+      return extremum._minBrentD(fun, param.dfun, a, b, c)
+    else
+      return extremum._minBrent(fun, a, b, c)
+    end
+  else
+    return extremum._minGolden(fun, a, b, c)
+  end
+end
+about[extremum.minimum1D] = {
+  ":minimum1D(fn, a_d, c_d, param={method='golden',b=middle,dfun=nil}) -> x_d, min_d",
+  "Find minimum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method)."}
+
+
+--- Multidimentional minimum search.
+--  param.method: 'Powel' or 'simplex', param.dfun - gradient function.
+--  @param fun Source function.
+--  @param p Initial point for 'Powel', matrix with points for 'simplex'.
+--  @param param Table with additional parameters {method=nil, dfun=nil}.
+--  @return minimum point and function value.
+extremum.minimum = function (_, fun, p, param)
+  param = param or {}
+  if not param.method or param.method == 'Powel' then
     if param.dfun then
       return extremum._minGrad(fun, param.dfun, p)
     else
       return extremum._minPowel(fun, p)
     end
-  else
-    return extremum._simplex(fun, param.p)
+  elseif param.method == 'simplex' then
+    return extremum._simplex(fun, p)
   end
 end
-
-extremum._lpSimpxEliminate = function (H,  ids)
-  local hm = H:cols()
-  for s = 1, hm do
-    -- get pivot column
-    local col = 0
-    for i = s, hm-1 do
-      if H[1][i] > 0 then
-        col = i
-        break
-      end
-    end
-    -- apply pivot
-    if col > 0 then
-      -- find row
-      local jmin, vmin = 0, math.huge
-      for j = 2, H:rows() do
-        local vc, vm = H[j][col], H[j][hm]
-        if vc > 0 and vm/vc < vmin then
-          jmin, vmin = j, vm/vc
-        end
-      end
-      if jmin == 0 then  break end  -- no solution ?
-
-      ids[jmin-1] = col 
-      local Hj = H[jmin]
-      vmin = Hj[col]  -- reuse
-      -- normalize line
-      for k = 1, hm do Hj[k] = Hj[k] / vmin end
-      -- extract
-      for j = 1, H:rows() do
-        if j ~= jmin then
-          local Hi = H[j]
-          local t = Hi[col]
-          for k = 1, hm do Hi[k] = Hi[k] - Hj[k]*t end
-        end
-      end
-    else
-      break
-    end
-  end
-  return H, ids
-end
-
-extremum._lpSimplex = function (c, param)
-  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
-  local mat = extremum.ext_matrix
-  local nu, ne, nl, nx = 0, 0, 0, c:cols()
-  local As, bs, inter = param.Au, param.bu, nil
-
-  if As then
-    nu = As:rows()
-    inter = mat:eye(nu)
-  end
-
-  if param.Al then
-    nl = param.Al:rows()
-    local eye = mat:eye(nl)
-    if As then
-      As, bs = mat:ver {As, param.Al}, mat:ver {bs, param.bl}
-      local r, c = inter:rows(), inter:cols()
-      inter = mat:ver {
-        mat:hor {inter, mat:zeros(r, nl+nl)},
-        mat:hor {mat:zeros(nl, c), -eye, eye}
-      }
-    else
-      As, bs = param.Al, param.bl
-      inter = mat:hor {-eye, eye}
-    end
-  end
-
-  if param.Ae then
-    ne = param.Ae:rows()
-    if As then
-      As, bs = mat:ver {As, param.Ae}, mat:ver {bs, param.be}
-      local r, c = inter:rows(), inter:cols()
-      inter = mat:ver {
-        mat:hor {inter, mat:zeros(r, ne)},
-        mat:hor {mat:zeros(ne, c), mat:eye(ne)}
-      }
-    else
-      As, bs, inter = param.Ae, param.be, mat:eye(ne)
-    end
-  end
-
-  local H, ids = nil, {}
-  for i = 1, nu+ne+nl do ids[i] = i + nx end
-
-  if ne + nl > 0 then
-    -- prepare first row
-    local asum, bsum = {}, 0
-    for i = 1, As:cols() do
-      local s = 0
-      for j = nu+1, As:rows() do s = s + As[j][i] end
-      asum[i] = s
-    end
-    for j = nu+1, bs:rows() do bsum = bsum + bs[j][1] end
-    -- phase 1 matrix
-    H = mat:ver {
-      mat:hor {mat{asum}, mat:zeros(1, inter:cols()), mat(bsum)},
-      mat:hor {As, inter, bs},
-    }:copy()
-
-    H, ids = extremum._lpSimpxEliminate(H, ids)
-    -- TODO check H(1, -1) is 0
-    -- update table
-    local hm, last = H:cols(), H:cols()-ne-nl
-    for i = 1, H:rows() do H[i][last] = H[i][hm] end
-    H._cols = last    -- update size
-    for i = 1, H:cols() do
-      H[1][i] = (i <= nx) and -c[1][i] or 0
-    end
-  elseif nu > 0 then
-    H = mat:ver {
-      mat:hor {-c, mat:zeros(1, inter:cols()+1)},
-      mat:hor {As, inter, bs}
-    }:copy() 
-  end
-
-  if H then
-    H, ids = extremum._lpSimpxEliminate(H, ids)
-    local hm = H:cols()
-    local res = mat:zeros(nx, 1)
-    for i, v in ipairs(ids) do
-      if v <= nx then res[v][1] = H[i+1][hm] end
-    end
-    return res, H[1][hm]
-  end
-end
+about[extremum.minimum] = {
+  ":minimum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d",
+  "Find minimum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach."}
 
 
-extremum.linprog = function (c, param) return extremum._lpSimplex(c, param) end
+--- Solve LP problem c*x -> min.
+--  Use simplex method.
+--  @param c Row-vector of coefficients.
+--  @param param List of parameters (matrices Au*x <= bu, Ae*x == be, Al*x >= bl).
+--  @return minimum point and function value.
+extremum.linprog = function (_, c, param) return extremum._lpSimplex(c, param) end
+about[extremum.linprog] = {
+  ":linprog(c_M, param={Au=nil,bu=nil,Ae=nil,be=nil,Al=nil,bl=nil}) -> x_M, min_d",
+  "Solve LP problem c*x -> min with Au*x <= bu, Ae*x == be, Al*x >= bl."}
 
 
 -- Comment to remove descriptions
 extremum.about = about
 
---return extremum
---local fun = function (x) return x*x end
---local dfun = function (x) return 2*x end
---print(extremum._minBrentD(fun, dfun, -10, -9, 10))
---print(extremum._minBrent(fun, -20, 19, 20))
---print(extremum._minGolden(fun, -4, -1, 3))
+return extremum
 
-local Mat = require 'matlib.matrix'
---local foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
---local dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
-
---pts = Mat{{5,3},{7,-9},{-7,-4}}:T()
---x, fx = extremum._simplex(pts, foo)
---print(x)
---print(fx)
-
---p0 = Mat:V{5, 4}
---x, fx = extremum._minGrad(foo, dfoo, p0)
---x, fx = extremum._minPowel(foo, p0)
-
---print(x)
---print(fx)
-
---Cc = Mat{{-3, -5}}
---Au = Mat{{1, 0}, {0, 2}, {3, 2}}
---bu = Mat:V {4, 12, 18}
-
-Cc = Mat{{-2, -3, -4}}
---Au = Mat{{3, 2, 1}, {2, 5, 3}}; bu = Mat:V{10, 15}
-Ae = Mat{{3, 2, 1}, {2, 5, 3}}; be = Mat:V{10, 15}
-
---Cc = Mat{{-0.4, -0.5}}
---Au = Mat{{0.3, 0.1}}; bu = Mat(2.7) 
---Ae = Mat{{0.5, 0.5}}; be = Mat(6)
---Al = Mat{{0.6, 0.4}}; bl = Mat(6)
-
-x, fx = extremum._lpSimplex(Cc, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
-print(x)
-print('f(x)', fx)
-
+--===============================

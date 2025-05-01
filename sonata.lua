@@ -54,6 +54,8 @@ use = {
   quaternion = "Quat",   -- working with quaternions
   qubit      = "Qb",     -- emulate quantum computations
   special    = "Spec",   -- list of 'special' functions
+  -------------------------
+  extremum   = "Ex",     -- extremums and optimization
 }
 
 

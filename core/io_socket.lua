@@ -97,6 +97,7 @@ tcp_server.repl = function (self)
         read = true,
       }
       clients[#clients+1] = group
+      -- cli:send(About:get('intro'))
       cli:send(group.invite)
     end
     -- process requests
