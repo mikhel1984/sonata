@@ -187,7 +187,7 @@ process = function (args)
     local port = assert(tonumber(args[3]), 'Expected: --io tcp port')
     server:new('*', port)
     server:repl()
-  elseif args[2] == 'pipe' then
+  elseif args[2] == 'w' then
     -- expected Unix
     local fname = Sonata._pipeFile()
     os.execute('> ' .. fname)  -- clear/create file
@@ -287,11 +287,7 @@ end
 
 
 -- Run!!!
-
-io.write(SonataHelp.CMAIN, '\n',
-"   # #      --=====  so/\\/ata  =====--      # #\n",
-"    # #        --==== ", Sonata.version, " ====--        # #\n\n",
-SonataHelp.CHELP)
+io.write(SonataHelp.CMAIN, '\n', Sonata.TITLE, '\n', SonataHelp.CHELP)
 io.write(About:get('intro'), SonataHelp.CRESET, "\n")
 
 

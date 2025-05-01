@@ -130,6 +130,11 @@ alias = {},
 _modules = {},
 }
 
+evaluate.TITLE = string.format(
+[[   # #      --=====  so/\/ata  =====--      # #
+    # #        --==== %s ====--        # #
+]], evaluate.version)
+
 
 -- Format to representation mapping
 local txtCodes = {
