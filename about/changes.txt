@@ -1,9 +1,11 @@
 ======== 0.9.41 =========
 
 Other
+* New module 'extremum'
 * Local environment
 * Integrate readline (io mode)
 * Integrate tcp server (io mode)
+* Send output to other terminal (io mode)
 * Commands for environment cleaning and binding
 
 ======== 0.9.40 =========

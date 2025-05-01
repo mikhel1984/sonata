@@ -18,6 +18,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Z">complex</a></li>
 <li><a href="#C">const</a></li>
 <li><a href="#D">data</a></li>
+<li><a href="#Ex">extremum</a></li>
 <li><a href="#Geo">geodesy</a></li>
 <li><a href="#Gp">gnuplot</a></li>
 <li><a href="#Graph">graph</a></li>
@@ -47,19 +48,21 @@ Sonata is a Lua based program for mathematical calculations.<br>
 	-e	Evaluate command line expression.<br>
 		e.g. -e "2+2"<br>
 <br>
+	--lang	Generation or updating of the localization file.<br>
+		e.g. --lang eo<br>
 	--doc	Generating a documentation page.<br>
 		e.g. --doc ru<br>
 	--test	Run unit tests for a given module. Execute for all modules if no name is specified.<br>
 		e.g. --test array<br>
 	--new	Generating a template for a new module.<br>
 		e.g. --new  matrices  Mat  "Matrix operations."<br>
-	--lang	Generation or updating of the localization file.<br>
-		e.g. --lang eo<br>
+	--io	Method for interaction (readline, tcp).<br>
+		e.g. --io readline<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.40<br>
+<b>VERSION</b>: 0.9.41<br>
 <br>
-<b>MODULES</b>: bigint, matrix, qubit, main, symbolic, geodesy, complex, rational, polynomial, const, special, random, gnuplot, data, numeric, lens, quaternion, units, graph, asciiplot.<br>
+<b>MODULES</b>: polynomial, random, matrix, bigint, geodesy, numeric, quaternion, data, graph, symbolic, asciiplot, rational, extremum, gnuplot, qubit, lens, units, special, const, complex, main.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -703,6 +706,113 @@ ans = c[1]                   --3>  0.909
 
 --</pre>
 <a href="#Top">Top</a></div>
+<div><a name="Ex"></a>
+<h3># Ex (extremum) #</h3>
+<p class="descript">Extremum search and optimization methods.</p>
+<p><b>Ex:annealing(energy_fn, update_fn, x_M, temp_d=enerty0, alpha_d=0.9, nmax_N=1) -> x_M, energy_d</b> - Simulated annealing method.<br>
+<b>Ex:linprog(c_M, param={Au=nil,bu=nil,Ae=nil,be=nil,Al=nil,bl=nil}) -> x_M, min_d</b> - Solve LP problem c*x -> min with Au*x <= bu, Ae*x == be, Al*x >= bl.<br>
+<b>Ex:maximum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d</b> - Find maximum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach.<br>
+<b>Ex:maximum1D(fn, a_d, c_d, param={method='golden',b=millde,dfun=nil}) -> x_d, min_d</b> - Find maximum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method).<br>
+<b>Ex:minimum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d</b> - Find minimum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach.<br>
+<b>Ex:minimum1D(fn, a_d, c_d, param={method='golden',b=middle,dfun=nil}) -> x_d, min_d</b> - Find minimum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method).<br></p>
+<pre class="example">
+
+-- use 'extremum'
+Ex = require 'matlib.extremum'
+-- use matrices for multidimentional optimization
+Mat = require 'matlib.matrix'
+
+-- 1D minimum point, golden section
+fun = function (x) return x*x end
+xm, fm = Ex:minimum1D(fun, -10, 5)
+ans = xm                     --2> 0.0
+
+ans = fm                     --2> 0.0
+
+-- 1D Brent method, with initial point
+xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', b=-5})
+ans = xm                     --2> 0.0
+
+-- 1D Brent method, use derivative
+df = function (x) return 2*x end
+xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', dfun=df})
+ans = xm                     --2> 0.0
+
+-- Find maximum
+xm, fm = Ex:maximum1D(math.cos, -1, 1, {b=0.5})
+ans = fm                     --2> 1.0
+
+-- multidimentional, Powel method
+foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
+p0 = Mat:V {5, 4}
+xm, fm = Ex:minimum(foo, p0)
+ans = xm(1)                  --2> 1.0
+
+ans = fm                     --2> 0.0
+
+-- multidimentional, with derivative
+dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
+xm, fm = Ex:minimum(foo, p0, {dfun=dfoo})
+ans = xm(2)                  --2> 2.0
+
+-- multidimentional, simplex
+-- expected column-vectors
+pp = Mat{{5,3},{7,-9},{-7,-4}}:T()
+xm, fm = Ex:minimum(foo, pp, {method='simplex'})
+ans = fm                     --2> 0.0
+
+-- multidimentional, maximum
+foo = function (x) return 3 - x:norm() end
+xm, fm = Ex:maximum(foo, Mat:V{-3, 4})
+ans = fm                     --3> 3.0
+
+-- linear programming, simplex method
+-- minimize C*x when Au*x <= bu
+C = Mat{{-3, -5}}
+A = Mat{{1, 0}, {0, 2}, {3, 2}}; b = Mat:V {4, 12, 18}
+xm, fm = Ex:linprog(C, {Au=A, bu=b})
+ans = fm                     --2> -36.0
+
+-- LP, additional constraints
+-- C*x -> min, Au*x <= bu, Ae*x == be, Al*x >= bl
+C = Mat{{-0.4, -0.5}}
+Au = Mat{{0.3, 0.1}}; bu = Mat(2.7)
+Ae = Mat{{0.5, 0.5}}; be = Mat(6)
+Al = Mat{{0.6, 0.4}}; bl = Mat(6)
+xm, fm = Ex:linprog(C, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
+ans = fm                     --2> -5.4
+
+-- simulated annealing
+-- solve the problem of 8 chess queens
+pos = {1, 2, 3, 4, 5, 6, 7, 8}  -- initial positions
+-- update method, replace 2 arbitrary elements
+tweak = function (x)
+  local y, m, n = {}, nil, nil
+  for i = 1, #x do y[i] = x[i] end  -- return copy
+  repeat
+    m, n = math.random(#y), math.random(#y)
+  until m ~= n
+  y[m], y[n] = y[n], y[m]
+  return y
+end
+-- state energy, number of collisions
+energy = function (x)
+  local s = 0
+  for i = 1, #x-1 do
+    for j = i+1, #x do
+      -- check the same diagonal
+      if math.abs(j-i) == math.abs(x[j]-x[i]) then s = s + 1 end
+    end
+  end
+  return s
+end
+-- find solution
+xm, fm = Ex:annealing(energy, tweak, pos, 20, 0.95, 2)
+print(table.concat(xm, ' '))
+ans = fm                     --> 0
+
+--</pre>
+<a href="#Top">Top</a></div>
 <div><a name="Geo"></a>
 <h3># Geo (geodesy) #</h3>
 <p class="descript">Coordinate transformations and other geodetic tasks.</p>
@@ -1308,7 +1418,8 @@ ans = math.deg(PI)           --2>  180.0
 <b>Mat:zip(fn, ...) --> res_M</b> - Apply function to the given matrices element-wise.<br>
 <b>V:cross(V2) --> M</b> - Cross product or two 3-element vectors.<br>
 <b>V:dot(V2) --> num</b> - Scalar product of two vectors.<br>
-<b>V:normalize()</b> - Normalize to unit vector.<br></p>
+<b>V:normalize()</b> - Normalize to unit vector.<br>
+<b>V:outer(V2) --> M</b> - Outer product or two vectors.<br></p>
 <pre class="example">
 
 -- use 'matrix'
@@ -1463,6 +1574,10 @@ ans = v1:cross(v2)  -->  Mat {{-3},{6},{-3}}
 
 -- dot product of 2 vectors
 ans = v1:dot(v2)              -->  32
+
+-- outer product
+vout = v1:outer(v2)
+ans = vout[1][3]              -->  6
 
 -- LU decomposition
 l,u,p = b:lu()
@@ -1953,7 +2068,8 @@ ans = g5(Qb'000'):meas()      --> Qb'101'
 <div><a name="Rand"></a>
 <h3># Rand (random) #</h3>
 <p class="descript">Random number generators.</p>
-<p><b>R:binomial(p_d, N) --> int</b> - Binomial distributed random values.<br>
+<p><b>R:array(n1,[n2,..]) --> tbl</b> - Get multidimentional random array.<br>
+<b>R:binomial(p_d, N) --> int</b> - Binomial distributed random values.<br>
 <b>R:bytes(N) --> str</b> - Get sequence of random bytes.<br>
 <b>R:cauchy(mu_d=0, sigma_d=1) --> float</b> - Cauchy distributed random numbers.<br>
 <b>R:choice(tbl) --> element, index_N</b> - Get random table element.<br>
