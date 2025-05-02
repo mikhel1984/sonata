@@ -273,6 +273,250 @@ assert(BASE > 2)
 local function isbigint(v) return getmetatable(v) == bigint end
 
 
+--- Correct function arguments if need.
+--  @param num1 First number representation.
+--  @param num2 Second number representation (optional).
+--  @return Bigint objects with the same numeric bases.
+local _args = function (num1, num2)
+  num1 = isbigint(num1) and num1 or bigint._newNumber(num1)
+  num2 = isbigint(num2) and num2 or bigint._newNumber(num2)
+  return num1, num2
+end
+
+
+--- Divide elements in the list ot given number, find reminder.
+--  @param t List of numbers.
+--  @param iOld Initial bases.
+--  @param iNew New bases.
+--  @return Quotient and reminder.
+local _divBase = function (t, iOld, iNew)
+  local rest, set = 0, false
+  for i = #t, 1, -1 do
+    rest = rest * iOld + t[i]
+    local n = math.floor(rest / iNew)
+    if set or n > 0 then
+      t[i] = n
+      set = true
+    else
+      t[i] = nil
+    end
+    rest = rest - iNew * n
+  end
+  return t, rest
+end
+
+
+--- In-place increment.
+--  @param B Number to change.
+--  @param n Step, not more then the current base.
+local _incr = function (B, n)
+  assert(-BASE < n and n < BASE)
+  local b = B._
+  local v = (n < 0 and -n or n)
+  if B._sign * n >= 0 then
+    -- increase
+    for i = 1, #b + 1 do
+      local bi = (b[i] or 0) + v
+      if bi >= BASE then
+        b[i], v = bi - BASE, 1
+      else
+        b[i] = bi
+        break
+      end
+    end
+  else
+    -- decrease
+    for i = 1, #b do
+      local bi = b[i] - v
+      if bi < 0 then
+        b[i], v = BASE + bi, 1
+      else
+        b[i], v = bi, 0
+        break
+      end
+    end
+    if v == 1 then  -- sign is changed
+      b[1] = BASE - b[1]
+      B._sign = (b[1] == 0) and 1 or (-B._sign)
+    elseif #b > 1 and b[#b] == 0 then
+      b[#b] = nil
+    end
+  end
+end
+
+
+--- Multiply to small number in-place.
+--  @param t Digits of number.
+--  @param x Multiplier.
+local _mulX = function (t, x)
+  assert(x < BASE)
+  local add = 0
+  for i = 1, #t do
+    local v = t[i] * x + add
+    if v >= BASE then
+      v, add = v - BASE, 1
+    else
+      add = 0
+    end
+    t[i] = v
+  end
+  if add > 0 then t[#t+1] = 1 end
+end
+
+
+--- Get subtraction for two positive bigint numbers.
+--  @param B1 First bigint object.
+--  @param B2 Second bigint object.
+--  @return Difference of the values.
+local _sub = function (B1, B2)
+  local res = bigint._newTable({0}, 1)
+  local cmp = bigint._cmp(B1, B2)
+  if cmp == 0 then return res end
+  local add, base1 = 1, BASE - 1
+  local b1, b2, rr = B1._, B2._, res._
+  if cmp < 0 then
+    b1, b2 = b2, b1
+    res._sign = -1
+  end
+  for i = 1, #b1 do
+    local v = b1[i] + base1 - (b2[i] or 0) + add
+    if v >= BASE then
+      rr[i], add = v - BASE, 1
+    else
+      rr[i], add = v, 0
+    end
+  end
+  -- simplify
+  while #rr > 1 and rr[#rr] == 0 do rr[#rr] = nil end
+  return res
+end
+
+
+
+--- Find quotient and reminder for 2 positive numbers.
+--  @param a First integer.
+--  @param b Second integer.
+--  @return quotient and reminder.
+local _q_r = function (a, b)
+  local cmp = bigint._cmp
+  local v = cmp(a, b)
+  if v < 0 then
+    return bigint._0, a
+  elseif v == 0 then
+    return bigint._1, bigint._0
+  elseif #b._ == 1 then
+    local c = bigint._copy(a)
+    local _, r = _divBase(c._, BASE, b._[1])
+    return c, bigint._newTable({r}, 1)
+  end
+  -- find max doubled
+  local c = bigint._copy(b)
+  repeat
+    _mulX(c._, 2)
+  until cmp(a, c) < 0
+  _divBase(c._, BASE, 2)
+  -- find quotient and reminder
+  a = _sub(a, c)
+  local n = bigint._newTable({1}, 1)
+  while cmp(c, b) ~= 0 do
+    _divBase(c._, BASE, 2)
+    _mulX(n._, 2)
+    if cmp(c, a) <= 0 then
+      a = _sub(a, c)
+      _incr(n, 1)
+    end
+  end
+  return n, a
+end
+
+
+--- Straightforward product algorithm.
+--  @param B1 First bigint multiplier.
+--  @param B2 Second bigint multiplier.
+--  @return Product without sign.
+local _mul = function (B1, B2)
+  local sum = bigint._newTable({0}, 1)
+  local b1, b2, s = B1._, B2._, sum._
+  -- get products
+  for i = 0, #b1-1 do
+    local v = b1[i+1]
+    if v > 0 then
+      for j = 1, #b2 do
+        local pos = i + j
+        s[pos] = (s[pos] or 0) + v * b2[j]
+      end
+    else
+      s[i+1] = s[i+1] or 0
+    end
+  end
+  -- rearrange
+  local rest = 0
+  for i = 1, #s do
+    local si = s[i] + rest
+    rest = math.floor(si / BASE)
+    s[i] = si - rest * BASE
+  end
+  if rest > 0 then s[#s+1] = rest end
+  return sum
+end
+
+
+--- Check if it prime using the Fermat theorem.
+--  @param B Number.
+--  @return true if prime.
+local _primeFermat = function (B)
+  for i = 1, 5 do
+    local a = nil
+    repeat
+      a = bigint.random(B)
+    until #a._ > 1 or a._[1] >= 2
+    local v1 = bigint._powm(a, B, B)
+    local _, v2 = bigint._div(a, B)
+    if v1 ~= v2 then return false end
+  end
+  return true
+end
+
+
+--- Change numeric base.
+--  @param t Table with digits.
+--  @param Nfrom Source base.
+--  @param Nto Destination base.
+--  @return result of conversation.
+local _rebase = function (t, Nfrom, Nto)
+  if Nfrom == Nto then return t end
+  local res = {base=Nto}
+  -- reverse order
+  local dig = {}
+  Vmove(t, 1, #t, 1, dig)
+  repeat
+    dig, res[#res+1] = _divBase(dig, Nfrom, Nto)
+  until #dig == 0
+  return res
+end
+
+
+--- Get sum of the two positive big numbers.
+--  @param B1 First bigint object.
+--  @param B2 Second bigint object.
+--  @return Sum of the values.
+local _sum = function (B1, B2)
+  local add = 0
+  local res = bigint._newTable({0}, 1)
+  local b1, b2, rr = B1._, B2._, res._
+  for i = 1, math.max(#b1, #b2) do
+    local v = (b1[i] or 0) + (b2[i] or 0) + add
+    if v >= BASE then
+      rr[i], add = v - BASE, 1
+    else
+      rr[i], add = v, 0
+    end
+  end
+  if add == 1 then rr[#rr+1] = 1 end
+  return res
+end
+
+
 --- B1 + B2
 --  @param B1 First bigint or integer.
 --  @param B2 Second bigint or integer.
@@ -288,9 +532,9 @@ bigint.__add = function (B1, B2)
     end
   end
   if B1._sign > 0 then
-    return (B2._sign > 0) and bigint._sum(B1, B2) or bigint._sub(B1, B2:abs())
+    return (B2._sign > 0) and _sum(B1, B2) or _sub(B1, B2:abs())
   else
-    return (B2._sign > 0) and bigint._sub(B2, B1:abs()) or -bigint._sum(B1, B2)
+    return (B2._sign > 0) and _sub(B2, B1:abs()) or -_sum(B1, B2)
   end
 end
 
@@ -419,7 +663,7 @@ bigint.__mul = function (B1, B2)
       return p and (p * B2) or (Cfloat(B1) * Cfloat(B2))
     end
   end
-  local res = bigint._mul(B1, B2)
+  local res = _mul(B1, B2)
   res._sign = B1._sign * B2._sign
   return res
 end
@@ -449,16 +693,16 @@ bigint.__pow = function (B1, B2)
     assert(not bigint._isZero(B1), "Error: 0^0!")
     return bigint._1
   end
-  local dig, mul, rest = {}, bigint._mul, nil
+  local dig, rest = {}, nil
   Vmove(B2._, 1, #B2._, 1, dig)
   while #dig > 1 or dig[1] > 1 do
-    dig, rest = bigint._divBase(dig, BASE, 2)  -- x/2
+    dig, rest = _divBase(dig, BASE, 2)  -- x/2
     if rest == 1 then
-      y = mul(y, x)
+      y = _mul(y, x)
     end
-    x = mul(x, x)
+    x = _mul(x, x)
   end
-  return mul(x, y)
+  return _mul(x, y)
 end
 
 
@@ -477,10 +721,10 @@ bigint.__sub = function (B1, B2)
     end
   end
   if B1._sign > 0 then
-    return (B2._sign > 0) and bigint._sub(B1, B2) or bigint._sum(B1, B2)
+    return (B2._sign > 0) and _sub(B1, B2) or _sum(B1, B2)
   else
-    return (B2._sign > 0) and -bigint._sum(B1, B2)
-      or bigint._sub(B2:abs(), B1:abs())
+    return (B2._sign > 0) and -_sum(B1, B2)
+      or _sub(B2:abs(), B1:abs())
   end
 end
 
@@ -504,17 +748,6 @@ end
 about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a",
   nil, help.META}
 about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
-
-
---- Correct function arguments if need.
---  @param num1 First number representation.
---  @param num2 Second number representation (optional).
---  @return Bigint objects with the same numeric bases.
-bigint._args = function (num1, num2)
-  num1 = isbigint(num1) and num1 or bigint._newNumber(num1)
-  num2 = isbigint(num2) and num2 or bigint._newNumber(num2)
-  return num1, num2
-end
 
 
 --- Compare 2 bigint numbers.
@@ -572,31 +805,9 @@ bigint._div = function (B1, B2)
   if bigint._isZero(B2) then
     error "Divide by 0!"
   end
-  local res, rem = bigint._q_r(B1:abs(), B2:abs())
+  local res, rem = _q_r(B1:abs(), B2:abs())
   res._sign = B1._sign*B2._sign
   return res, rem
-end
-
-
---- Divide elements in the list ot given number, find reminder.
---  @param t List of numbers.
---  @param iOld Initial bases.
---  @param iNew New bases.
---  @return Quotient and reminder.
-bigint._divBase = function (t, iOld, iNew)
-  local rest, set = 0, false
-  for i = #t, 1, -1 do
-    rest = rest * iOld + t[i]
-    local n = math.floor(rest / iNew)
-    if set or n > 0 then
-      t[i] = n
-      set = true
-    else
-      t[i] = nil
-    end
-    rest = rest - iNew * n
-  end
-  return t, rest
 end
 
 
@@ -606,45 +817,6 @@ end
 --  @return Bigint gcd.
 bigint._gcd = function (B1, B2)
   return bigint._isZero(B1) and B2 or bigint._gcd(B2 % B1, B1)
-end
-
-
---- In-place increment.
---  @param B Number to change.
---  @param n Step, not more then the current base.
-bigint._incr = function (B, n)
-  assert(-BASE < n and n < BASE)
-  local b = B._
-  local v = (n < 0 and -n or n)
-  if B._sign * n >= 0 then
-    -- increase
-    for i = 1, #b + 1 do
-      local bi = (b[i] or 0) + v
-      if bi >= BASE then
-        b[i], v = bi - BASE, 1
-      else
-        b[i] = bi
-        break
-      end
-    end
-  else
-    -- decrease
-    for i = 1, #b do
-      local bi = b[i] - v
-      if bi < 0 then
-        b[i], v = BASE + bi, 1
-      else
-        b[i], v = bi, 0
-        break
-      end
-    end
-    if v == 1 then  -- sign is changed
-      b[1] = BASE - b[1]
-      B._sign = (b[1] == 0) and 1 or (-B._sign)
-    elseif #b > 1 and b[#b] == 0 then
-      b[#b] = nil
-    end
-  end
 end
 
 
@@ -659,56 +831,6 @@ bigint._isZero = function (self) return #self._ == 1 and self._[1] == 0 end
 --  @return least common multiplier.
 bigint._lcm = function (B1, B2)
   return B1 * (B2 / bigint._gcd(B1, B2))
-end
-
-
---- Straightforward product algorithm.
---  @param B1 First bigint multiplier.
---  @param B2 Second bigint multiplier.
---  @return Product without sign.
-bigint._mul = function (B1, B2)
-  local sum = bigint._newTable({0}, 1)
-  local b1, b2, s = B1._, B2._, sum._
-  -- get products
-  for i = 0, #b1-1 do
-    local v = b1[i+1]
-    if v > 0 then
-      for j = 1, #b2 do
-        local pos = i + j
-        s[pos] = (s[pos] or 0) + v * b2[j]
-      end
-    else
-      s[i+1] = s[i+1] or 0
-    end
-  end
-  -- rearrange
-  local rest = 0
-  for i = 1, #s do
-    local si = s[i] + rest
-    rest = math.floor(si / BASE)
-    s[i] = si - rest * BASE
-  end
-  if rest > 0 then s[#s+1] = rest end
-  return sum
-end
-
-
---- Multiply to small number in-place.
---  @param t Digits of number.
---  @param x Multiplier.
-bigint._mulX = function (t, x)
-  assert(x < BASE)
-  local add = 0
-  for i = 1, #t do
-    local v = t[i] * x + add
-    if v >= BASE then
-      v, add = v - BASE, 1
-    else
-      add = 0
-    end
-    t[i] = v
-  end
-  if add > 0 then t[#t+1] = 1 end
 end
 
 
@@ -727,8 +849,7 @@ bigint._new = function (num)
       if v < 0 or v >= base then error("Wrong digit at "..tostring(i)) end
       acc[i] = v
     end
-    return bigint._newTable(
-      bigint._rebase(acc, base, BASE), num.sign)
+    return bigint._newTable(_rebase(acc, base, BASE), num.sign)
   elseif type(num) == 'string' then
     return bigint._newString(num)
   elseif type(num) == 'number' and Vinteger(num) then
@@ -793,7 +914,7 @@ bigint._newString = function (s)
     local j = #acc+1-i
     acc[i], acc[j] = acc[j], acc[i]
   end
-  return bigint._newTable(bigint._rebase(acc, base, BASE), sgn == '-' and -1 or 1)
+  return bigint._newTable(_rebase(acc, base, BASE), sgn == '-' and -1 or 1)
 end
 
 
@@ -816,89 +937,17 @@ bigint._powm = function (B1, B2, B3)
   _, B1 = div(B1, B3)
   if bigint._isZero(B1) then return bigint._0 end
   local y, x = bigint._1, B1
-  local dig, mul, rest = bigint._copy(B2), bigint._mul, nil
+  local dig, rest = bigint._copy(B2), nil
   local d = dig._
   while #d > 1 or d[1] > 1 do
-    d, rest = bigint._divBase(d, BASE, 2)
+    d, rest = _divBase(d, BASE, 2)
     if rest == 1 then
-      _, y = div(mul(y, x), B3)
+      _, y = div(_mul(y, x), B3)
     end
-    _, x = div(mul(x, x), B3)
+    _, x = div(_mul(x, x), B3)
   end
-  _, rest = div(mul(x, y), B3)
+  _, rest = div(_mul(x, y), B3)
   return rest
-end
-
-
---- Check if it prime using the Fermat theorem.
---  @param B Number.
---  @return true if prime.
-bigint._primeFermat = function (B)
-  for i = 1, 5 do
-    local a = nil
-    repeat
-      a = bigint.random(B)
-    until #a._ > 1 or a._[1] >= 2
-    local v1 = bigint._powm(a, B, B)
-    local _, v2 = bigint._div(a, B)
-    if v1 ~= v2 then return false end
-  end
-  return true
-end
-
-
---- Find quotient and reminder for 2 positive numbers.
---  @param a First integer.
---  @param b Second integer.
---  @return quotient and reminder.
-bigint._q_r = function (a, b)
-  local cmp = bigint._cmp
-  local v = cmp(a, b)
-  if v < 0 then
-    return bigint._0, a
-  elseif v == 0 then
-    return bigint._1, bigint._0
-  elseif #b._ == 1 then
-    local c = bigint._copy(a)
-    local _, r = bigint._divBase(c._, BASE, b._[1])
-    return c, bigint._newTable({r}, 1)
-  end
-  -- find max doubled
-  local c = bigint._copy(b)
-  repeat
-    bigint._mulX(c._, 2)
-  until cmp(a, c) < 0
-  bigint._divBase(c._, BASE, 2)
-  -- find quotient and reminder
-  a = bigint._sub(a, c)
-  local n = bigint._newTable({1}, 1)
-  while cmp(c, b) ~= 0 do
-    bigint._divBase(c._, BASE, 2)
-    bigint._mulX(n._, 2)
-    if cmp(c, a) <= 0 then
-      a = bigint._sub(a, c)
-      bigint._incr(n, 1)
-    end
-  end
-  return n, a
-end
-
-
---- Change numeric base.
---  @param t Table with digits.
---  @param Nfrom Source base.
---  @param Nto Destination base.
---  @return result of conversation.
-bigint._rebase = function (t, Nfrom, Nto)
-  if Nfrom == Nto then return t end
-  local res = {base=Nto}
-  -- reverse order
-  local dig = {}
-  Vmove(t, 1, #t, 1, dig)
-  repeat
-    dig, res[#res+1] = bigint._divBase(dig, Nfrom, Nto)
-  until #dig == 0
-  return res
 end
 
 
@@ -906,62 +955,13 @@ end
 --  @return Estimation of sqrt(B).
 bigint._sqrt = function (self)
   local ai = (#self._ > 1 or self._[1] > 1) and bigint._2 or bigint._1
-  local sum, sub = bigint._sum, bigint._sub
+  local div = bigint._div
   repeat
-    local aii, _ = bigint._div(self, ai)
-    aii._ = bigint._divBase(sum(ai, aii)._, BASE, 2)  -- (ai + aii) / 2
-    ai, aii = aii, sub(aii, ai)
+    local aii, _ = div(self, ai)
+    aii._ = _divBase(_sum(ai, aii)._, BASE, 2)  -- (ai + aii) / 2
+    ai, aii = aii, _sub(aii, ai)
   until #aii._ == 1 and (aii._[1] <= 1)
   return ai
-end
-
-
---- Get subtraction for two positive bigint numbers.
---  @param B1 First bigint object.
---  @param B2 Second bigint object.
---  @return Difference of the values.
-bigint._sub = function (B1, B2)
-  local res = bigint._newTable({0}, 1)
-  local cmp = bigint._cmp(B1, B2)
-  if cmp == 0 then return res end
-  local add, base1 = 1, BASE - 1
-  local b1, b2, rr = B1._, B2._, res._
-  if cmp < 0 then
-    b1, b2 = b2, b1
-    res._sign = -1
-  end
-  for i = 1, #b1 do
-    local v = b1[i] + base1 - (b2[i] or 0) + add
-    if v >= BASE then
-      rr[i], add = v - BASE, 1
-    else
-      rr[i], add = v, 0
-    end
-  end
-  -- simplify
-  while #rr > 1 and rr[#rr] == 0 do rr[#rr] = nil end
-  return res
-end
-
-
---- Get sum of the two positive big numbers.
---  @param B1 First bigint object.
---  @param B2 Second bigint object.
---  @return Sum of the values.
-bigint._sum = function (B1, B2)
-  local add = 0
-  local res = bigint._newTable({0}, 1)
-  local b1, b2, rr = B1._, B2._, res._
-  for i = 1, math.max(#b1, #b2) do
-    local v = (b1[i] or 0) + (b2[i] or 0) + add
-    if v >= BASE then
-      rr[i], add = v - BASE, 1
-    else
-      rr[i], add = v, 0
-    end
-  end
-  if add == 1 then rr[#rr+1] = 1 end
-  return res
 end
 
 
@@ -971,13 +971,13 @@ end
 --  @return Pair of multipliers or nil.
 bigint._trivialSearch = function (B, B0)
   local n = B0 and B0:_copy() or bigint._newTable({2}, 1)
-  local sq = bigint._sqrt(B)
+  local sq, div = bigint._sqrt(B), bigint._div
   while bigint._cmp(sq, n) > 0 do
-    local v1, v2 = bigint._div(B, n)
+    local v1, v2 = div(B, n)
     if bigint._isZero(v2) then
       return n, v1
     end
-    bigint._incr(n, 1)
+    _incr(n, 1)
   end
   return nil  -- not found
 end
@@ -1009,7 +1009,7 @@ bigint.digits = function (self, N)
   N = N or 10
   assert(Vinteger(N) and N > 0, "Wrong base")
   local b = self._
-  local res = bigint._rebase(b, BASE, N)
+  local res = _rebase(b, BASE, N)
   res.sign = self._sign
   return setmetatable(res, mt_digits)
 end
@@ -1023,7 +1023,7 @@ about[bigint.digits] = {"B:digits(N=10) --> tbl",
 --  @param isRepeat Repetition is allowed.
 --  @return Bigint for combination number.
 bigint.C = function (_, n, k, isRepeat)
-  n, k = bigint._args(n, k)
+  n, k = _args(n, k)
   if isRepeat then
     n = n - bigint._1
     return bigint:ratF(n+k, n) / bigint.F(k)
@@ -1048,14 +1048,14 @@ bigint.F = function (self)
   local d = self - bigint._2
   local dd = d._
   while #dd > 1 or dd[1] > 1 do
-    S = bigint._sum(S, d)
-    acc = bigint._mul(acc, S)
-    bigint._incr(d, -2)
+    S = _sum(S, d)
+    acc = _mul(acc, S)
+    _incr(d, -2)
   end
   if dd[1] == 1 then
     S = self + bigint._1
-    bigint._divBase(S._, BASE, 2)
-    acc = bigint._mul(acc, S)
+    _divBase(S._, BASE, 2)
+    acc = _mul(acc, S)
   end
   return acc
 end
@@ -1070,10 +1070,10 @@ bigint.FF = function (self)
   assert(self._sign > 0, "Non-negative value is expected!")
   if #self._ == 1 and self._[1] <= 1 then return bigint._1 end
   local res = self
-  local d = bigint._sub(self, bigint._2)
+  local d = _sub(self, bigint._2)
   while #d._ > 1 or d._[1] > 1 do
-    res = bigint._mul(res, d)
-    bigint._incr(d, -2)
+    res = _mul(res, d)
+    _incr(d, -2)
   end
   return res
 end
@@ -1146,7 +1146,7 @@ about[bigint.gcd] = {":gcd(...) --> B",
 --  @return true if prime.
 bigint.isPrime = function (self, sMethod)
   if sMethod == 'Fermat' then
-    return bigint._primeFermat(self)
+    return _primeFermat(self)
   end
   -- default is a simple search
   local v1, _ = bigint._trivialSearch(self)
@@ -1182,7 +1182,7 @@ about[bigint.lcm] = {":lcm(...) --> B",
 --  @param isRepeat Repetition is allowed.
 --  @return Number of permutations.
 bigint.P = function (_, n, k, isRepeat)
-  n, k = bigint._args(n, k)
+  n, k = _args(n, k)
   return isRepeat and n^k or bigint:ratF(n, n-k)
 end
 about[bigint.P] = {":P(n, k, isRepeat=false) --> permutaions_B",
@@ -1223,7 +1223,7 @@ about[bigint.random] = {"B:random() --> rand_B",
 --  @return Bigint for ration.
 bigint.ratF = function (_, B, B2)
   assert(B._sign > 0 and B2._sign > 0, "Non-negative expected")
-  local d = bigint._sub(B, B2)
+  local d = _sub(B, B2)
   local dd = d._
   if d._sign < 0 then return bigint._0 end
   if #dd == 1 then
@@ -1234,16 +1234,16 @@ bigint.ratF = function (_, B, B2)
   local S = B * binc
   if dd[1] == 2 then return S end
   local acc = S
-  bigint._incr(d, -2)
+  _incr(d, -2)
   while #dd > 1 or dd[1] > 1 do
-    S = bigint._sum(S, d)
-    acc = bigint._mul(acc, S)
-    bigint._incr(d, -2)
+    S = _sum(S, d)
+    acc = _mul(acc, S)
+    _incr(d, -2)
   end
   if dd[1] == 1 then
     S = B + binc
-    bigint._divBase(S._, BASE, 2)
-    acc = bigint._mul(acc, S)
+    _divBase(S._, BASE, 2)
+    acc = _mul(acc, S)
   end
   return acc
 end
@@ -1268,7 +1268,7 @@ bigint.subF = function (self)
     if #d._ == 1 and d._[1] == 2 then break end
     acc = acc * d
     add = not add
-    bigint._incr(d, -1)
+    _incr(d, -1)
   end
   res._sign = 1
   return res
