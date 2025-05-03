@@ -137,7 +137,7 @@ local EXPORT = 'export'
 --- Get key with minimum value, remove it
 --  @param t Table of pairs {node, weight}.
 --  @return Node and correspondent weight.
-local function getMin(t)
+local function _getMin(t)
   local minval, key = math.huge, nil
   -- find new minimal value
   for k, v in pairs(t) do
@@ -154,7 +154,7 @@ end
 --- Count elements in table.
 --  @param t Table to check.
 --  @return Total number of the elements.
-local function tblLen (t)
+local function _tblLen (t)
   local n = 0
   for _ in pairs(t) do n = n+1 end
   return n
@@ -165,7 +165,7 @@ end
 --  @param tPrev Table where each value is a previous element for the key.
 --  @param v Last node.
 --  @return Table with sequence of nodes.
-local function getPath (tPrev, v)
+local function _getPath (tPrev, v)
   local res = {v}
   -- get sequence
   while tPrev[v] ~= v do
@@ -185,7 +185,7 @@ end
 --- Make list of names.
 --  @param n Expected node number.
 --  @return list of strings.
-local function makeNodes (n, s)
+local function _makeNodes (n, s)
   assert(n > 0, 'Wrong node size')
   local res = {}
   for i = 1, n do res[#res+1] = string.format('%s%d', s, i) end
@@ -221,7 +221,7 @@ local Queue = {
 
 
 -- remove element
-function Queue.pop(self)
+Queue.pop = function (self)
   local q1, q2 = self[1], self[2]
   if #q2 == 0 then
     while #q1 > 0 do
@@ -244,6 +244,32 @@ __module__ = "Operations with graphs."
 --	MODULE
 
 local graph = { type='graph' }
+
+
+--- Find graph component.
+--  @param G Source graph.
+--  @parma n0 Initial node.
+--  @return subgraph.
+local function _component (G, n0)
+  local res = graph._new(false)
+  local src, dst = G._, res._
+  local stack = {n0}
+  repeat
+    local node = table.remove(stack)
+    if not dst[node] then
+      local t = {}
+      for k, v in pairs(src[node]) do
+        t[k] = v
+        table.insert(stack, k)
+      end
+      dst[node] = t
+    end
+  until #stack == 0
+  return res
+end
+
+
+-- Metamethods
 graph.__index = graph
 
 
@@ -256,7 +282,7 @@ graph.__eq = function (G1, G2)
   if mt ~= graph or mt ~= getmetatable(G2) then return false end
   if G1._dir ~= G2._dir then return false end
   local g2 = G2._
-  if tblLen(G1._) ~= tblLen(g2) then return false end
+  if _tblLen(G1._) ~= _tblLen(g2) then return false end
   -- check edges
   for n1, adj in pairs(G1._) do
     if not g2[n1] then return false end
@@ -300,28 +326,6 @@ graph._C = function (g, nodes)
   return g
 end
 
-
---- Find graph component.
---  @param G Source graph.
---  @parma n0 Initial node.
---  @return subgraph.
-graph._component = function (G, n0)
-  local res = graph._new(false)
-  local src, dst = G._, res._
-  local stack = {n0}
-  repeat
-    local node = table.remove(stack)
-    if not dst[node] then
-      local t = {}
-      for k, v in pairs(src[node]) do
-        t[k] = v
-        table.insert(stack, k)
-      end
-      dst[node] = t
-    end
-  until #stack == 0
-  return res
-end
 
 --- Make complete graph.
 --  @param g Empty graph.
@@ -410,7 +414,7 @@ graph.components = function (self)
       end
     end
     if new then
-      res[#res+1] = graph._component(self, k)
+      res[#res+1] = _component(self, k)
     end
   end
   return res
@@ -554,9 +558,9 @@ about[graph.nin] = {"G:nin(node) --> nodes_t",
 --- Check graph completeness.
 --  @return true if the graph is complete.
 graph.isComplete = function (self)
-  local n = tblLen(self._) - 1
+  local n = _tblLen(self._) - 1
   for _, adj in pairs(self._) do
-    if n ~= tblLen(adj) then return false end
+    if n ~= _tblLen(adj) then return false end
   end
   return true
 end
@@ -569,8 +573,8 @@ about[graph.isComplete] = {'G:isComplete() --> bool',
 graph.isConnected = function (self)
   local n = next(self._)
   if not n then return false end  -- empty
-  local c = graph._component(self, n)
-  return tblLen(self._) == tblLen(c._)
+  local c = _component(self, n)
+  return _tblLen(self._) == _tblLen(c._)
 end
 about[graph.isConnected] = {"G:isConnected() --> bool",
   "Check if the graph is connected.", PROPERTY}
@@ -597,7 +601,7 @@ graph.isEuler = function (self)
     end
   else
     for _, adj in pairs(self._) do
-      if tblLen(adj) % 2 ~= 0 then return false end
+      if _tblLen(adj) % 2 ~= 0 then return false end
     end
   end
   -- check components
@@ -777,7 +781,7 @@ about[graph.remove] = {"G:remove(n1, n2=nil)",
 
 --- Get number of nodes.
 --  @return Number of nodes.
-graph.size = function (self) return tblLen(self._) end
+graph.size = function (self) return _tblLen(self._) end
 graph.__len = graph.size
 about[graph.size] = {"G:size() --> nodes_N",
   "Get node number. Equal to #G.", help.OTHER}
@@ -865,7 +869,7 @@ search.dijkstra = function(G, vStart, vGoal)
   local prev, dist = {[vStart]=vStart}, {}
   -- run
   while true do
-    local current, val = getMin(set)
+    local current, val = _getMin(set)
     if not current then break end
     -- update minimal distance
     dist[current] = val
@@ -891,7 +895,7 @@ end
 graph.search = function (self, a, b, method)
   local fn = assert(search[method], 'Method not found')
   local res = fn(self, a, b)
-  return res and getPath(res, b)
+  return res and _getPath(res, b)
 end
 about[graph.search] = {"G:search(node1, node2, method_s) --> path_t|nil",
   "Find path between two nodes. Methods are: bfs, dfs, dijkstra.", help.OTHER}
@@ -905,19 +909,19 @@ __call = function (self, t)
   local name = t.name or 'n'
   if t.O then
     -- only nodes
-    local ns = (type(t.O) == 'number') and makeNodes(t.O, name) or t.O
+    local ns = (type(t.O) == 'number') and _makeNodes(t.O, name) or t.O
     graph.addNodes(g, ns)
   elseif t.K then
     -- complete
-    local ns = (type(t.K) == 'number') and makeNodes(t.K, name) or t.K
+    local ns = (type(t.K) == 'number') and _makeNodes(t.K, name) or t.K
     return graph._K(g, ns)
   elseif t.C then
     -- loop
-    local ns = (type(t.C) == 'number') and makeNodes(t.C, name) or t.C
+    local ns = (type(t.C) == 'number') and _makeNodes(t.C, name) or t.C
     return graph._C(g, ns)
   elseif t.P then
     -- chain
-    local ns = (type(t.P) == 'number') and makeNodes(t.P, name) or t.P
+    local ns = (type(t.P) == 'number') and _makeNodes(t.P, name) or t.P
     return graph._P(g, ns)
   end
   return g

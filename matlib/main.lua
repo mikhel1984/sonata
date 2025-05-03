@@ -64,7 +64,7 @@ Ver = Ver.versions
 --  @param fn Function.
 --  @param s Function name.
 --  @return Function equal to fn(x).
-local _call = function (fn, s)
+local function _call (fn, s)
   return function (v)
     if type(v) == 'table' then
       local method = v[s]
@@ -164,9 +164,7 @@ Bind = function (obj, ...)
   end
   return Ver.unpack(res)
 end
-about[Bind] = {"Bind(obj, nm1, [nm2, ...]) --> fn",
-  "Wrap functions to call them without object.", AUX}
-
+--TODO remove Bind, use 'set' instead
 
 --- Generate list of function values.
 --  @param fn Function to apply.

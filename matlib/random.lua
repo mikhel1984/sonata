@@ -202,6 +202,12 @@ ans = (r1() == r2())          -->  true
 r2:seed(2)
 ans = (r1() ~= r2())          -->  true
 
+-- fill array 2x2x3
+arr = Rand:array(2, 2, 3)
+ans = #arr[1][1]              --> 3
+
+ans = arr[2][1][2] <= 1.0     --> true
+
 --]]
 
 
@@ -232,12 +238,20 @@ _fnRng = function (self, a, b) return math.random(a, b) end,
 }
 
 
--- make object callable
-random.__call = function (R) return R:_fn() end
-
-
--- methametods
-random.__index = random
+--- Recursive making of random array.
+--  @param n Current size.
+--  @param ... Rest of dimensions.
+--  @return table with random tables or scalar value.
+local function _arrayRest (self, n, ...)
+  if n then
+    if n <= 0 then error('expected positive size') end
+    local res = {}
+    for i = 1, n do res[i] = _arrayRest(self, ...) end
+    return res
+  else
+    return self:_fn()
+  end
+end
 
 
 --- Generate random from 0 to 1. Use generator of Park and Miller with
@@ -245,7 +259,7 @@ random.__index = random
 --  @param t Random object.
 --  @param rmax Maximal value less or equal to 1.0.
 --  @return random number.
-random._genPM = function (t, rmax)
+local function _genPM (t, rmax)
   rmax = rmax or 0.9999998
   local state = t._state
   local k = math.floor(state / 127773)
@@ -262,7 +276,7 @@ end
 --- Initialize Park-Miller generator.
 --  @param t Generator object.
 --  @param seed Integer value.
-random._genPMInit = function (t, seed)
+local function _genPMInit (t, seed)
   if seed < 1 then seed = 1 end
   local iv = {}
   for j = -4, 32 do
@@ -276,41 +290,35 @@ random._genPMInit = function (t, seed)
 end
 
 
---- Recursive making of random array.
---  @param n Current size.
---  @param ... Rest of dimensions.
---  @return table with random tables or scalar value.
-random._arrayRest = function (self, n, ...)
-  if n then
-    if n <= 0 then error('expected positive size') end
-    local res = {}
-    for i = 1, n do res[i] = random._arrayRest(self, ...) end
-    return res
-  else
-    return self:_fn()
-  end
-end
-
-
-random._init = random._genPMInit
-random._rand = random._genPM
-
-
 --- Get random integer from range.
+--  @param R Random generator.
 --  @param a Lower bound.
 --  @param b Upper bound.
 --  @return Integer value.
-random._randRng = function (self, a, b)
-  local p, q = math.modf((b - a)*self:_rand())
+local function _randRng (R, a, b)
+  local p, q = math.modf((b - a)*R:_rand())
   return a + (q < 0.5 and p or p + 1)
 end
+
+
+-- make object callable
+random.__call = function (R) return R:_fn() end
+
+
+-- methametods
+random.__index = random
+
+
+-- set generator
+random._init = _genPMInit
+random._rand = _genPM
 
 
 --- Get array of random numbers [0;1) with given size.
 --  @param ... sequence of dimensions.
 --  @return multidimentional random array.
 random.array = function (self, ...)
-  return random._arrayRest(self, ...)
+  return _arrayRest(self, ...)
 end
 about[random.array] = {"R:array(n1,[n2,..]) --> tbl", 
   "Get multidimentional random array."}
@@ -500,7 +508,7 @@ about[random.logistic] = {"R:logistic(mu_d=0, sigma_d=1) --> float",
 random.new = function(_)
   local o = {
     _fn = random._rand,
-    _fnRng = random._randRng,
+    _fnRng = _randRng,
   }
   random._init(o, 0)
   return setmetatable(o, random)

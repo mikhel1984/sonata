@@ -270,16 +270,16 @@ assert(BASE > 2)
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is a big integer.
-local function isbigint(v) return getmetatable(v) == bigint end
+local function _isbigint(v) return getmetatable(v) == bigint end
 
 
 --- Correct function arguments if need.
 --  @param num1 First number representation.
 --  @param num2 Second number representation (optional).
 --  @return Bigint objects with the same numeric bases.
-local _args = function (num1, num2)
-  num1 = isbigint(num1) and num1 or bigint._newNumber(num1)
-  num2 = isbigint(num2) and num2 or bigint._newNumber(num2)
+local function _args (num1, num2)
+  num1 = _isbigint(num1) and num1 or bigint._newNumber(num1)
+  num2 = _isbigint(num2) and num2 or bigint._newNumber(num2)
   return num1, num2
 end
 
@@ -289,7 +289,7 @@ end
 --  @param iOld Initial bases.
 --  @param iNew New bases.
 --  @return Quotient and reminder.
-local _divBase = function (t, iOld, iNew)
+local function _divBase (t, iOld, iNew)
   local rest, set = 0, false
   for i = #t, 1, -1 do
     rest = rest * iOld + t[i]
@@ -309,7 +309,7 @@ end
 --- In-place increment.
 --  @param B Number to change.
 --  @param n Step, not more then the current base.
-local _incr = function (B, n)
+local function _incr (B, n)
   assert(-BASE < n and n < BASE)
   local b = B._
   local v = (n < 0 and -n or n)
@@ -348,7 +348,7 @@ end
 --- Multiply to small number in-place.
 --  @param t Digits of number.
 --  @param x Multiplier.
-local _mulX = function (t, x)
+local function _mulX (t, x)
   assert(x < BASE)
   local add = 0
   for i = 1, #t do
@@ -368,7 +368,7 @@ end
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
 --  @return Difference of the values.
-local _sub = function (B1, B2)
+local function _sub (B1, B2)
   local res = bigint._newTable({0}, 1)
   local cmp = bigint._cmp(B1, B2)
   if cmp == 0 then return res end
@@ -397,7 +397,7 @@ end
 --  @param a First integer.
 --  @param b Second integer.
 --  @return quotient and reminder.
-local _q_r = function (a, b)
+local function _q_r (a, b)
   local cmp = bigint._cmp
   local v = cmp(a, b)
   if v < 0 then
@@ -434,7 +434,7 @@ end
 --  @param B1 First bigint multiplier.
 --  @param B2 Second bigint multiplier.
 --  @return Product without sign.
-local _mul = function (B1, B2)
+local function _mul (B1, B2)
   local sum = bigint._newTable({0}, 1)
   local b1, b2, s = B1._, B2._, sum._
   -- get products
@@ -464,7 +464,7 @@ end
 --- Check if it prime using the Fermat theorem.
 --  @param B Number.
 --  @return true if prime.
-local _primeFermat = function (B)
+local function _primeFermat (B)
   for i = 1, 5 do
     local a = nil
     repeat
@@ -483,7 +483,7 @@ end
 --  @param Nfrom Source base.
 --  @param Nto Destination base.
 --  @return result of conversation.
-local _rebase = function (t, Nfrom, Nto)
+local function _rebase (t, Nfrom, Nto)
   if Nfrom == Nto then return t end
   local res = {base=Nto}
   -- reverse order
@@ -500,7 +500,7 @@ end
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
 --  @return Sum of the values.
-local _sum = function (B1, B2)
+local function _sum (B1, B2)
   local add = 0
   local res = bigint._newTable({0}, 1)
   local b1, b2, rr = B1._, B2._, res._
@@ -522,7 +522,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Sum object.
 bigint.__add = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 + p
@@ -544,7 +544,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Ratio object.
 bigint.__div = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 / p
@@ -566,7 +566,7 @@ end
 --  @param B2 Second bigint object or integer.
 --  @return True if numbers have the same values and signs.
 bigint.__eq = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 == p
@@ -592,7 +592,7 @@ bigint.__index = bigint
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less or equal to the second.
 bigint.__le = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 <= p
@@ -613,7 +613,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return True if the first value is less then the second one.
 bigint.__lt = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 < p
@@ -635,7 +635,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Remainder object.
 bigint.__mod = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 % p
@@ -654,7 +654,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Product object.
 bigint.__mul = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 * p
@@ -678,7 +678,7 @@ bigint.__newindex = function () error("Immutable object") end
 --  @param B2 Second bigint or integer.
 --  @return Power of the number.
 bigint.__pow = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 ^ p
@@ -711,7 +711,7 @@ end
 --  @param B2 Second bigint or integer.
 --  @return Difference object.
 bigint.__sub = function (B1, B2)
-  if not (isbigint(B1) and isbigint(B2)) then
+  if not (_isbigint(B1) and _isbigint(B2)) then
     local p = Cconvert(B1, B2)
     if p then
       return B1 - p
@@ -1127,12 +1127,12 @@ bigint.gcd = function (_, ...)
   local t = {...}
   if #t == 0 then error('No numbers') end
   -- compare element-wise
-  local res = isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
+  local res = _isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
   for i = 2, #t do
     local ti = t[i]
     res = bigint._gcd(
       res,
-      isbigint(ti) and ti or bigint._newNumber(ti))
+      _isbigint(ti) and ti or bigint._newNumber(ti))
   end
   return res
 end
@@ -1164,11 +1164,11 @@ bigint.lcm = function (_, ...)
   local t = {...}
   if #t == 0 then error('No numbers') end
   -- compare element-wise
-  local res = isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
+  local res = _isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
   for i = 2, #t do
     local ti = t[i]
     res = bigint._lcm(res,
-                      isbigint(ti) and ti or bigint._newNumber(ti))
+                      _isbigint(ti) and ti or bigint._newNumber(ti))
   end
   return res
 end
@@ -1280,7 +1280,7 @@ about[bigint.subF] = {"B:subF() --> !B",
 -- simplify constructor call
 setmetatable(bigint, {
 __call = function (_, v)
-  if isbigint(v) then
+  if _isbigint(v) then
     return v
   end
   return bigint._new(v)

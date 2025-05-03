@@ -97,17 +97,17 @@ local mabs = math.abs
 --- Check if the element is huge
 --  @param v Variable.
 --  @return true for big input.
-local function isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
+local function _isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 
 
 --- Simplify rational when possible.
 --  @param R Rational number.
 --  @return same object or some number
-local function numrat(R)
+local function _numrat(R)
   local a, b = R._[1], R._[2]
   return Cross.eq(b, 1) and Cross.simp(a)               -- x / 1
     -- float num or denom
-    or (isbig(a) or isbig(b)) and (a / b)
+    or (_isbig(a) or _isbig(b)) and (a / b)
     or R
 end
 
@@ -115,7 +115,7 @@ end
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
-local function numStr(v)
+local function _numStr(v)
   return type(v) == 'number' and Unumstr(v) or tostring(v)
 end
 
@@ -149,7 +149,7 @@ local rational = {
 -- mark
 type = 'rational',
 -- simplification
-_simp = numrat,
+_simp = _numrat,
 -- print format
 MIXED = false,
 }
@@ -158,7 +158,20 @@ MIXED = false,
 --- Check object type.
 --  @param v Test object.
 --  @return True for rational number.
-local function isrational(v) return getmetatable(v) == rational end
+local function _isrational(v) return getmetatable(v) == rational end
+
+
+--- Find rational number for the given continued fraction.
+--  @param t Continued fraction coefficients.
+--  @return Numerator and denomenator.
+local function _cont2rat (t)
+  local a, b = 0, 1
+  for i = #t, 1, -1 do
+    b, a = t[i] * b + a, b
+  end
+  return t[0] * b + a, b
+end
+
 
 
 --- R1 + R2
@@ -166,7 +179,7 @@ local function isrational(v) return getmetatable(v) == rational end
 --  @param R2 Second rational or integer number.
 --  @return Sum.
 rational.__add = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then
+  if not (_isrational(R1) and _isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then
       return R1 + p
@@ -176,7 +189,7 @@ rational.__add = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return numrat(rational._new(r1[1]*r2[2]+r1[2]*r2[1], r1[2]*r2[2]))
+  return _numrat(rational._new(r1[1]*r2[2]+r1[2]*r2[1], r1[2]*r2[2]))
 end
 
 
@@ -185,7 +198,7 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Ratio.
 rational.__div = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then
+  if not (_isrational(R1) and _isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then
       return R1 / p
@@ -195,7 +208,7 @@ rational.__div = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return numrat(rational._new(r1[1]*r2[2], r1[2]*r2[1]))
+  return _numrat(rational._new(r1[1]*r2[2], r1[2]*r2[1]))
 end
 
 
@@ -204,7 +217,7 @@ end
 --  @param R2 Second number.
 --  @return True if the numbers are equal.
 rational.__eq = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then
+  if not (_isrational(R1) and _isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then
       return R1 == p
@@ -231,7 +244,7 @@ rational.__index = rational
 --  @param R2 Second number.
 --  @return True in the first value is less or equal then the second one.
 rational.__le = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then
+  if not (_isrational(R1) and _isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then
       return R1 <= p
@@ -254,7 +267,7 @@ end
 --  @param R2 Second number.
 --  @return True if the first number is less.
 rational.__lt = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then
+  if not (_isrational(R1) and _isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then
       return R1 < p
@@ -277,7 +290,7 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Product.
 rational.__mul = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then
+  if not (_isrational(R1) and _isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then
       return R1 * p
@@ -287,7 +300,7 @@ rational.__mul = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return numrat(rational._new(r1[1]*r2[1], r1[2]*r2[2]))
+  return _numrat(rational._new(r1[1]*r2[1], r1[2]*r2[2]))
 end
 
 
@@ -309,9 +322,9 @@ rational.__pow = function (R1, R2)
     end
     local r1 = R1._
     if R2 >= 0 then
-      return numrat(rational._new(r1[1]^R2, r1[2]^R2))
+      return _numrat(rational._new(r1[1]^R2, r1[2]^R2))
     else
-      return numrat(rational._new(r1[2]^R2, r1[1]^R2))
+      return _numrat(rational._new(r1[2]^R2, r1[1]^R2))
     end
   end
 end
@@ -322,7 +335,7 @@ end
 --  @param R2 Second rational or integer number.
 --  @return Difference.
 rational.__sub = function (R1, R2)
-  if not (isrational(R1) and isrational(R2)) then
+  if not (_isrational(R1) and _isrational(R2)) then
     local p = Cross.convert(R1, R2)
     if p then
       return R1 - p
@@ -332,7 +345,7 @@ rational.__sub = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return numrat(rational._new(r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[2]))
+  return _numrat(rational._new(r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[2]))
 end
 
 
@@ -352,7 +365,7 @@ rational.__tostring = function (self)
       return string.format("%d/%d", r[1], r[2])
     end
   else
-    return string.format("%s/%s", numStr(r[1]), numStr(r[2]))
+    return string.format("%s/%s", _numStr(r[1]), _numStr(r[2]))
   end
 end
 
@@ -374,17 +387,6 @@ rational._convert = function (v)
          and rational._new(v, 1)
 end
 
-
---- Find rational number for the given continued fraction.
---  @param t Continued fraction coefficients.
---  @return Numerator and denomenator.
-rational._cont2rat = function (t)
-  local a, b = 0, 1
-  for i = #t, 1, -1 do
-    b, a = t[i] * b + a, b
-  end
-  return t[0] * b + a, b
-end
 
 
 --- Check if the number is 0.
@@ -432,7 +434,7 @@ rational.from = function (_, f, fErr)
   local a, b = acc[0], 1
   while c > 0 and math.abs(a/b - f0) > fErr do
     acc[#acc+1], c = math.modf(1/c)
-    a, b = rational._cont2rat(acc)
+    a, b = _cont2rat(acc)
   end
   return rational._new(f >= 0 and a or -a, b)
 end
@@ -462,7 +464,7 @@ rational.fromCF = function (_, t)
   else
     error "Integer is expected"
   end
-  return rational._new(rational._cont2rat(check))
+  return rational._new(_cont2rat(check))
 end
 about[rational.fromCF] = {":fromCF(coeff_t) --> R",
   "Transform continued fraction to rational number.", CONTINUATED}
@@ -510,7 +512,7 @@ about[rational.toCF] = {"R:toCF() --> coeff_t",
 -- call constructor, check arguments
 setmetatable(rational, {
 __call = function (_, n, d)
-  if isrational(n) and not d then
+  if _isrational(n) and not d then
     return n
   end
   d = d or 1

@@ -53,7 +53,7 @@ local PHY, ASTRO, MATH = "physics", "astronomy", "math"
 
 
 --- Call error when user try to modify constant value
-local function modifyError () error('Constants are immutable!') end
+local function _modifyError () error('Constants are immutable!') end
 
 
 --	MODULE
@@ -109,6 +109,20 @@ local const = {
 }
 
 
+--- Convert to Unit object.
+--  @param t Table with the constant.
+--  @param sKey The constant name.
+--  @return Unit object or nil.
+local function _unit_ (t, sKey)
+  if type(sKey) == 'string' and string.find(sKey, '_U$') then
+    const.ext_units = const.ext_units or require('matlib.units')
+    local name = string.sub(sKey, 1, -3)
+    local val = t[name]
+    return val and const.ext_units(val, t[name..'_u_'] or '') or nil
+  end
+end
+
+
 -- physics
 about[_phy.G] = {".phy.G --> 6.7E-11", "Gravitational constant.", PHY}
 about[_phy.e] = {".phy.e --> 1.6E-19", "Electron charge.", PHY}
@@ -134,19 +148,6 @@ about[_math.phi] = {".math.phi --> 1.62", "Golden ratio.", MATH}
 about[_math.e] = {".math.e --> 2.72", "Base of the natural logarithm.", MATH}
 about[_math.gamma] = {".math.gamma --> 0.577", "Euler-Mascheroni constant.", MATH}
 
-
---- Convert to Unit object.
---  @param t Table with the constant.
---  @param sKey The constant name.
---  @return Unit object or nil.
-const._unit_ = function (t, sKey)
-  if type(sKey) == 'string' and string.find(sKey, '_U$') then
-    const.ext_units = const.ext_units or require('matlib.units')
-    local name = string.sub(sKey, 1, -3)
-    local val = t[name]
-    return val and const.ext_units(val, t[name..'_u_'] or '') or nil
-  end
-end
 
 
 --- Make value "constant".
@@ -180,14 +181,14 @@ const.about = about
 
 
 -- Make objects "immutable"
-setmetatable(const,       {__newindex=modifyError,
-  __index = function (t, k) return _user[k] or const._unit_(_user, k) end})
-setmetatable(const.phy,   {__newindex=modifyError,
-  __index = function (t, k) return _phy[k]  or const._unit_(_phy, k) end})
-setmetatable(const.astro, {__newindex=modifyError,
-  __index = function (t, k) return _astro[k] or const._unit_(_astro, k) end})
-setmetatable(const.math,  {__newindex=modifyError,
-  __index = function (t, k) return _math[k] or const._unit_(_math, k) end})
+setmetatable(const,       {__newindex=_modifyError,
+  __index = function (t, k) return _user[k] or _unit_(_user, k) end})
+setmetatable(const.phy,   {__newindex=_modifyError,
+  __index = function (t, k) return _phy[k]  or _unit_(_phy, k) end})
+setmetatable(const.astro, {__newindex=_modifyError,
+  __index = function (t, k) return _astro[k] or _unit_(_astro, k) end})
+setmetatable(const.math,  {__newindex=_modifyError,
+  __index = function (t, k) return _math[k] or _unit_(_math, k) end})
 
 
 return const

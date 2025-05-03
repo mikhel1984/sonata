@@ -246,7 +246,7 @@ local mt_access = { __index = function () return 0 end }
 --- Simplify object when possible.
 --  @param M Matrix.
 --  @return Number in the case of single element.
-local function nummat(M)
+local function _nummat(M)
   return M._rows == 1 and M._cols == 1 and M[1][1] or M
 end
 
@@ -255,7 +255,7 @@ end
 --  @param i Positive or negative index value.
 --  @param iRange Available range of indexes.
 --  @return Corrected index or nil.
-local function toRange(i, iRange)
+local function _toRange(i, iRange)
   if i < 0 then i = i + iRange + 1 end
   return i > 0 and i <= iRange and i or nil
 end
@@ -265,7 +265,7 @@ end
 --  @param t Table (matrix).
 --  @param i Index.
 --  @return Matrix row.
-local function addRow(t, i)
+local function _addRow(t, i)
   local row = setmetatable({}, mt_access)
   t[i] = row
   return row
@@ -301,8 +301,23 @@ local matrix = {
 --- Check object type.
 --  @param v Object to check.
 --  @return True if the object is 'matrix' or reference.
-local function ismatrixex(v)
+local function _ismatrixex(v)
   return getmetatable(v) == matrix or tf.isref(v)
+end
+
+
+--- Set product of element to coefficient.
+--  @param d Coefficient.
+--  @param M Matrix.
+--  @return Result of multiplication.
+local function _kProd (d, M)
+  local res, Mcols = {}, M._cols
+  for r = 1, M._rows do
+    local rr, mr = {}, M[r]
+    for c = 1, Mcols do rr[c] = d*mr[c] end
+    res[r] = rr
+  end
+  return matrix._init(#res, Mcols, res)
 end
 
 
@@ -311,8 +326,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Sum matrix.
 matrix.__add = function (M1, M2)
-  M1 = ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
-  M2 = ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
+  M1 = _ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
+  M2 = _ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error "Different matrix size!"
   end
@@ -342,21 +357,21 @@ matrix.__call = function (self, vR, vC)
   end
   local rows, num = {}, false
   if type(vR) == 'number' then
-    rows[1] = toRange(vR, self._rows)
+    rows[1] = _toRange(vR, self._rows)
     num = true
   else  -- table
-    local r1 = toRange(vR[1] or 1, self._rows)
-    local rn = toRange(vR[2] or self._rows, self._rows)
+    local r1 = _toRange(vR[1] or 1, self._rows)
+    local rn = _toRange(vR[2] or self._rows, self._rows)
     for r = r1, rn, (vR[3] or 1) do rows[#rows+1] = r end
   end
   local cols = {}
   if type(vC) == 'number' then
-    cols[1] = toRange(vC, self._cols)
+    cols[1] = _toRange(vC, self._cols)
     -- get element
     if num then return self[rows[1]][cols[1]] end
   else  -- table
-    local c1 = toRange(vC[1] or 1, self._cols)
-    local cn = toRange(vC[2] or self._cols, self._cols)
+    local c1 = _toRange(vC[1] or 1, self._cols)
+    local cn = _toRange(vC[2] or self._cols, self._cols)
     for c = c1, cn, (vC[3] or 1) do cols[#cols+1] = c end
   end
   return tf.makeRange(self, rows, cols)
@@ -377,7 +392,7 @@ end
 --  @param M2 Second matrix.
 --  @return True if all elements are the same.
 matrix.__eq = function (M1, M2)
-  if not (ismatrixex(M1) and ismatrixex(M2)) then return false end
+  if not (_ismatrixex(M1) and _ismatrixex(M2)) then return false end
   if M1._rows ~= M2._rows or M1._cols ~= M2._cols then return false end
   for r = 1, M1._rows do
     local ar, br = M1[r], M2[r]
@@ -393,7 +408,7 @@ end
 --  @param v Key.
 --  @return New matrix row or desired method.
 matrix.__index = function (self, v)
-  return matrix[v] or (type(v)=='number' and addRow(self, v))
+  return matrix[v] or (type(v)=='number' and _addRow(self, v))
 end
 
 
@@ -402,8 +417,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Result of multiplication.
 matrix.__mul = function (M1, M2)
-  if not ismatrixex(M1) then return matrix._kProd(M1, M2) end
-  if not ismatrixex(M2) then return matrix._kProd(M2, M1) end
+  if not _ismatrixex(M1) then return _kProd(M1, M2) end
+  if not _ismatrixex(M2) then return _kProd(M2, M1) end
   if (M1._cols ~= M2._rows) then
     error("Impossible to get product: different size!")
   end
@@ -418,7 +433,7 @@ matrix.__mul = function (M1, M2)
     end
     res[r] = rr
   end
-  return nummat(matrix._init(#res, resCols, res))
+  return _nummat(matrix._init(#res, resCols, res))
 end
 
 
@@ -445,8 +460,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Difference matrix.
 matrix.__sub = function (M1, M2)
-  M1 = ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
-  M2 = ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
+  M1 = _ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
+  M2 = _ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
   end
@@ -514,26 +529,11 @@ matrix._init = function (iR, iC, t)
 end
 
 
---- Set product of element to coefficient.
---  @param d Coefficient.
---  @param M Matrix.
---  @return Result of multiplication.
-matrix._kProd = function (d, M)
-  local res, Mcols = {}, M._cols
-  for r = 1, M._rows do
-    local rr, mr = {}, M[r]
-    for c = 1, Mcols do rr[c] = d*mr[c] end
-    res[r] = rr
-  end
-  return matrix._init(#res, Mcols, res)
-end
-
-
 --- Create new matrix from list of tables.
 --  @param t Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
 matrix._new = function (self, t)
-  if ismatrixex(t) then
+  if _ismatrixex(t) then
     return t
   elseif type(t) == 'number' or type(t) == 'table' and t.__mul then
     return matrix._init(1, 1, {{t}})
@@ -658,7 +658,7 @@ about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
 --  @param v List of elements.
 matrix.D = function (_, v, shift)
   shift = shift or 0
-  local vec = ismatrixex(v)
+  local vec = _ismatrixex(v)
   if vec and (v._rows == 1 or v._cols == 1) or type(v) == 'table' then
     local n = vec and v._rows * v._cols or #v
     local res
@@ -730,7 +730,7 @@ about[matrix.exp] = {"M:exp() --> new_M", "Matrix exponential.", TRANSFORM}
 --  @param cols Number of columns. Can be omitted in case of square matrix.
 --  @return Diagonal matrix with ones.
 matrix.eye = function (_, iR, iC)
-  if ismatrixex(iR) then
+  if _ismatrixex(iR) then
     iR, iC = iR._rows, iR._cols
   else
     iC = iC or iR
@@ -789,7 +789,7 @@ matrix.inv = function (self)
   local fn = tf.invList[size]
   if fn then
     local det = tf.detList[size](self)
-    return (not Czero(det)) and matrix._kProd(1/det, fn(self))
+    return (not Czero(det)) and _kProd(1/det, fn(self))
                        or matrix:fill(size, size, math.huge)
   end
   -- prepare matrix
@@ -1292,7 +1292,7 @@ about[matrix.ver] = {":ver(mat_t} --> mat_Ref",
 --  @param nC Number of columns. Can be omitted in case of square matrix.
 --  @return Sparse matrix.
 matrix.zeros = function (_, iR, iC)
-  if ismatrixex(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
+  if _ismatrixex(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
   iC = iC or iR                          -- input is a number
   return matrix._init(iR, iC, {})
 end

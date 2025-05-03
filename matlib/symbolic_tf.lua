@@ -22,13 +22,13 @@ end
 --  @param S1 Symbolic object.
 --  @param S2 Symbolic object.
 --  @return true when S1 < S2.
-local compList = function (S1, S2) return S1[1]._sign < S2[1]._sign end
+local function _compList (S1, S2) return S1[1]._sign < S2[1]._sign end
 
 
 --- Find factorial.
 --  @param n Positive integer.
 --  @return n!
-local function fl (n)
+local function _fl (n)
   local res = 1
   for i = 2, n do res = res * i end
   return res
@@ -51,7 +51,7 @@ _parentList = PARENTS,
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is symbolic.
-local function issym(v) return getmetatable(v) == symbolic end
+local function _issym(v) return getmetatable(v) == symbolic end
 
 
 -- Combine 'common' methods
@@ -63,12 +63,12 @@ local COMMON = {
   --- Check if the value is 1.
   --  @param v Some object.
   --  @return v == 1.
-  isOne = function (v) return issym(v) and v._ == 1 or v == 1 end,
+  isOne = function (v) return _issym(v) and v._ == 1 or v == 1 end,
 
   --- Check if the value is 0.
   --  @param v Some object.
   --  @return v == 0
-  isZero = function (v) return issym(v) and v._ == 0 or v == 0 end,
+  isZero = function (v) return _issym(v) and v._ == 0 or v == 0 end,
 
   -- Return false always.
   skip = function (S) return false end,
@@ -225,7 +225,7 @@ COMMON.signaturePairs = function (S)
     found = S._[i][1]:p_signature() or found
   end
   if S._sign and not found then return false end
-  table.sort(S._, compList)
+  table.sort(S._, _compList)
   local sum = S.p_id
   for i = 1, #S._ do sum = (sum*8 + S._[i][1]._sign) % 1000000 end
   S._sign = sum
@@ -592,7 +592,7 @@ PARENTS.product.p_simp = function (S, bFull)
     COMMON.copy(S, symbolic._1)
     return
   elseif #S._ > 1 then
-    table.sort(S._, compList)
+    table.sort(S._, _compList)
   end
   -- check constant
   if COMMON.isZero(S._[1][1]) then
@@ -717,7 +717,7 @@ PARENTS.sum.p_simp = function (S, bFull)
   end
   -- sort and remove zero constant
   if #S._ > 1 then
-    table.sort(S._, compList)
+    table.sort(S._, _compList)
     if COMMON.isZero(S._[1][1]) then
       table.remove(S._, 1)
       S._sign = nil
@@ -788,7 +788,7 @@ end
 
 PARENTS.symbol.p_eval = function (S, tEnv)
   local v = tEnv[S._]
-  return v and (issym(v) and v or symbolic:_newConst(v)) or S
+  return v and (_issym(v) and v or symbolic:_newConst(v)) or S
 end
 
 
@@ -818,7 +818,7 @@ COMMON.closed = {
 --  @return sum of terms.
 symbolic._binomial = function (lst, n)
   if n == 1 then return symbolic:_newExpr(PARENTS.sum, lst) end
-  local nfl, m = fl(n), n + 1
+  local nfl, m = _fl(n), n + 1
   local res, pos, s = {}, {}, n
   repeat
     -- find group
@@ -835,7 +835,7 @@ symbolic._binomial = function (lst, n)
         local pi = pos[i]
         if pi > 0 then
           terms[#terms+1] = {lst[i][1], pi}
-          p = p / fl(pi)
+          p = p / _fl(pi)
           q = q * lst[i][2]^pi
         end
       end

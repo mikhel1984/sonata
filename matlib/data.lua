@@ -155,13 +155,13 @@ local REF = 'reference'
 --- Make copy of an object or list.
 --  @param v Source object.
 --  @return deep copy.
-local function copy_obj(v)
+local function _copy_obj(v)
   if type(v) == 'table' then
     if v.copy then
       return v:copy()
     else
       local lst = {}
-      for i = 1, #v do lst[i] = copy_obj(v[i]) end
+      for i = 1, #v do lst[i] = _copy_obj(v[i]) end
       return lst
     end
   else
@@ -187,7 +187,7 @@ local data = {}
 --  @param v Source object.
 --  @return deep copy.
 data.copy = function (_, v)
-  return copy_obj(v)
+  return _copy_obj(v)
 end
 about[data.copy] = {":copy(t) --> copy_t",
   "Make deep copy of the table.", help.OTHER}

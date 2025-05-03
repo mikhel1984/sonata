@@ -134,23 +134,12 @@ __module__ = "Coordinate transformations and other geodetic tasks."
 local ellipsoid = {}
 
 
--- methametods
-ellipsoid.__index = ellipsoid
-
-
---- Object view.
---  @return string representation.
-ellipsoid.__tostring = function (self)
-  return string.format("Ellipsoid {a=%d, f=%f}", self.a, self.f)
-end
-
-
 --- Datum transformation from E2 to E1.
 --  @param E1 Dst ellipsoid object.
 --  @param E2 Src ellipsoid object.
 --  @param par Transformation parameters.
 --  @return Function for transformation.
-ellipsoid._bwdBLH = function (E1, E2, lin)
+local function _bwdBLH (E1, E2, lin)
   local da, df = E1.a - E2.a, E1.f - E2.f
   return function (t)
     local dB, dL, dH = ellipsoid._molodensky(E2, -lin[1], -lin[2], -lin[3], da, df, t)
@@ -165,7 +154,7 @@ end
 --- Transform coordinates between two Cartesian systems, backward direction.
 --  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
 --  @return Function for coordinate transformation.
-ellipsoid._bwdXYZ = function (lin, rot, m)
+local function _bwdXYZ (lin, rot, m)
   m = 1 - m
   local wx, wy, wz = rot[1], rot[2], rot[3]
   return function (t)
@@ -182,7 +171,7 @@ end
 --  @param E2 Dst ellipsoid object.
 --  @param par Transformation parameters.
 --  @return Function for transformation.
-ellipsoid._fwdBLH = function (E1, E2, lin)
+local function _fwdBLH (E1, E2, lin)
   local da, df = E2.a - E1.a, E2.f - E1.f
   return function (t)
     local dB, dL, dH = ellipsoid._molodensky(
@@ -198,7 +187,7 @@ end
 --- Transform coordinates between two Cartesian systems, forward direction.
 --  @param par List of translations, rotations and scale {dX, dY, dZ; wx, wy, wz; m}.
 --  @return Function for coordinate transformation.
-ellipsoid._fwdXYZ = function (lin, rot, m)
+local function _fwdXYZ (lin, rot, m)
   m = 1 + m
   local wx, wy, wz = rot[1], rot[2], rot[3]
   return function (t)    -- t = {X = x, Y = y, Z = z}
@@ -207,6 +196,49 @@ ellipsoid._fwdXYZ = function (lin, rot, m)
       Y = m * (-wz * t.X + t.Y + wx * t.Z) + lin[2],
       Z = m * ( wy * t.X - wx * t.Y + t.Z) + lin[3] }
   end
+end
+
+
+--- Find the meridian radius
+--  @param E Ellipsoid object.
+--  @param d Latitude angle.
+--  @return Radius value.
+local function _radiusMeridian (E, d)
+  local s = math.sin(d)
+  return E.a * (1 - E.e2) / (1 - E.e2*s*s)^1.5
+end
+
+
+--- Find the vertical radius
+--  @param E Ellipsoid object.
+--  @paramd d Latitude angle.
+--  @return Radius value.
+local function _radiusVertical (E, d)
+  local s = math.sin(d)
+  return E.a / math.sqrt(1 - E.e2*s*s)
+end
+
+
+--- Find coefficients.
+--  @param e2 Square excentrisitet.
+--  @param cosa2 Square cosine of the angle.
+--  @return A and B values.
+local function _vincentyAB (e2, cosa2)
+  local u2 = e2 * cosa2
+  local A = 1 + u2*(4096 + u2*(-768 + u2*(320 - 175*u2)))/16384.0
+  local B = u2*(256 + u2*(-128 + u2*(74 - 47*u2)))/1024.0
+  return A, B
+end
+
+
+-- methametods
+ellipsoid.__index = ellipsoid
+
+
+--- Object view.
+--  @return string representation.
+ellipsoid.__tostring = function (self)
+  return string.format("Ellipsoid {a=%d, f=%f}", self.a, self.f)
 end
 
 
@@ -224,7 +256,7 @@ ellipsoid._molodensky = function (E, dx, dy, dz, da, df, t)
   local sB, cB = math.sin(B), math.cos(B)
   local sL, cL = math.sin(L), math.cos(L)
   local f1 = 1 - E.f
-  local M, N = ellipsoid._radiusMeridian(E, B), ellipsoid._radiusVertical(E, B)
+  local M, N = _radiusMeridian(E, B), _radiusVertical(E, B)
   local dB = (-dx*sB*cL - dy*sB*sL + dz*cB + N*E.e2*sB*cB*da/E.a
                + sB*cB*(M/f1 + N*f1)*df) / (M + t.H)
   local dL = (-dx*sL + dy*cL) / ((N + t.H)*cB)
@@ -232,25 +264,6 @@ ellipsoid._molodensky = function (E, dx, dy, dz, da, df, t)
   return math.deg(dB), math.deg(dL), dH
 end
 
-
---- Find the meridian radius
---  @param E Ellipsoid object.
---  @param d Latitude angle.
---  @return Radius value.
-ellipsoid._radiusMeridian = function (E, d)
-  local s = math.sin(d)
-  return E.a * (1 - E.e2) / (1 - E.e2*s*s)^1.5
-end
-
-
---- Find the vertical radius
---  @param E Ellipsoid object.
---  @paramd d Latitude angle.
---  @return Radius value.
-ellipsoid._radiusVertical = function (E, d)
-  local s = math.sin(d)
-  return E.a / math.sqrt(1 - E.e2*s*s)
-end
 
 
 --- Prepare coefficients for UTM transformations.
@@ -279,17 +292,6 @@ ellipsoid._setUtmArrays = function (E)
 end
 
 
---- Find coefficients.
---  @param e2 Square excentrisitet.
---  @param cosa2 Square cosine of the angle.
---  @return A and B values.
-ellipsoid._vincentyAB = function (e2, cosa2)
-  local u2 = e2 * cosa2
-  local A = 1 + u2*(4096 + u2*(-768 + u2*(320 - 175*u2)))/16384.0
-  local B = u2*(256 + u2*(-128 + u2*(74 - 47*u2)))/1024.0
-  return A, B
-end
-
 --- Define transformation.
 --  @param E1 First ellipsoid.
 --  @param E2 Second ellipsoid.
@@ -298,11 +300,11 @@ end
 --  @param m Scaling parameter.
 ellipsoid.into = function (E1, E2, lin, rot, m)
   -- cartesian
-  E1.xyzInto[E2] = ellipsoid._fwdXYZ(lin, rot, m)
-  E2.xyzInto[E1] = ellipsoid._bwdXYZ(lin, rot, m)
+  E1.xyzInto[E2] = _fwdXYZ(lin, rot, m)
+  E2.xyzInto[E1] = _bwdXYZ(lin, rot, m)
   -- datum
-  E1.blhInto[E2] = ellipsoid._fwdBLH(E1, E2, lin)
-  E2.blhInto[E1] = ellipsoid._bwdBLH(E1, E2, lin)
+  E1.blhInto[E2] = _fwdBLH(E1, E2, lin)
+  E2.blhInto[E1] = _bwdBLH(E1, E2, lin)
 end
 
 
@@ -395,7 +397,7 @@ ellipsoid.solveDir = function (self, t1, dA, dist)
   local sig1 = Vatan2(math.tan(U1), ca1) * 2  -- multiplied sigma1
   local alsin = cU1*sa1
   local alcos2 = 1 - alsin*alsin
-  local A, B = ellipsoid._vincentyAB(self.e2, alcos2)
+  local A, B = _vincentyAB(self.e2, alcos2)
   A = dist / (self.b * A)  -- reuse
   local sig, ssig, csigm = A, 0, 0
   -- iterative part
@@ -449,7 +451,7 @@ ellipsoid.solveInv = function (self, t1, t2)
       (sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm)))
   until math.abs(lam - prev) < 1E-12
   -- result
-  local A, B = ellipsoid._vincentyAB(self.e2, alcos2)
+  local A, B = _vincentyAB(self.e2, alcos2)
   local dsig = B*ssig*(csigm + B/4*(csig*(-1 + 2*csigm*csigm)
     -B/6*csigm*(-3 + 4*ssig*ssig)*(-3 + 4*csigm*csigm)))
   local dist = self.b * A * (sig - dsig)
@@ -485,7 +487,7 @@ ellipsoid.toBLH = function (self, t)
     end
     B = math.atan(tg)
     L = Vatan2(Y, X)
-    local N = ellipsoid._radiusVertical(self, B)
+    local N = _radiusVertical(self, B)
     if math.abs(tg) > 1 then
       H = Z / math.sin(B) - (1 - self.e2) * N
     else
@@ -505,7 +507,7 @@ end
 ellipsoid.toXYZ = function (self, t)
   -- convert to radians
   local B, L, H = math.rad(t.B), math.rad(t.L), t.H
-  local N = ellipsoid._radiusVertical(self, B)
+  local N = _radiusVertical(self, B)
   local NH = (N + H) * math.cos(B)
   return {
     X = NH * math.cos(L),

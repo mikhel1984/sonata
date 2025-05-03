@@ -103,7 +103,7 @@ local ROTATION = 'rotation'
 --- Number representation.
 --  @param v Value.
 --  @return String representation.
-local function numStr(v)
+local function _numStr(v)
   return type(v) == 'number' and Unumstr(v) or tostring(v)
 end
 
@@ -134,11 +134,11 @@ end
 --- Check object type.
 --  @param t Object.
 --  @return True if the object is quaternion.
-local function isquaternion(v) return getmetatable(v) == quaternion end
+local function _isquaternion(v) return getmetatable(v) == quaternion end
 
 
 --- Make quaternion or return number.
-local function numOrQuat(w, x, y, z)
+local function _numOrQuat(w, x, y, z)
   return Cross.isZero(x) and Cross.isZero(y) and Cross.isZero(z) and w
     or quaternion._new(w, x, y, z)
 end
@@ -149,15 +149,15 @@ end
 --  @param Q2 Second quaternion.
 --  @return Sum object.
 quaternion.__add = function (Q1, Q2)
-  if not isquaternion(Q2) then
+  if not _isquaternion(Q2) then
     local v = quaternion._convert(Q2)
     return v and Q1 + v or Q2.__add(Q1, Q2)
-  elseif not isquaternion(Q1) then
+  elseif not _isquaternion(Q1) then
     local v = quaternion._convert(Q1)
     return v and v + Q2 or error('Not def')
   end
   local q1, q2 = Q1._, Q2._
-  return numOrQuat(q1[1]+q2[1], q1[2]+q2[2], q1[3]+q2[3], q1[4]+q2[4])
+  return _numOrQuat(q1[1]+q2[1], q1[2]+q2[2], q1[3]+q2[3], q1[4]+q2[4])
 end
 
 
@@ -166,7 +166,7 @@ end
 --  @param Q2 Second quaternion.
 --  @return True if the quaternions are equal.
 quaternion.__eq = function (Q1, Q2)
-  if not (isquaternion(Q1) and isquaternion(Q2)) then
+  if not (_isquaternion(Q1) and _isquaternion(Q2)) then
     local p = Cross.convert(Q1, Q2)
     if p then
       return Q1 == p
@@ -193,15 +193,15 @@ quaternion.__newindex = function () error("Immutable object") end
 --  @param Q2 Second quaternion.
 --  @return Product.
 quaternion.__mul = function (Q1, Q2)
-  if not isquaternion(Q2) then
+  if not _isquaternion(Q2) then
     local v = quaternion._convert(Q2)
     return v and Q1 * v or Q2.__mul(Q1, Q2)
-  elseif not isquaternion(Q1) then
+  elseif not _isquaternion(Q1) then
     local v = quaternion._convert(Q1)
     return v and v * Q2 or error('Not def')
   end
   local q1, q2 = Q1._, Q2._
-  return numOrQuat(
+  return _numOrQuat(
     q1[1]*q2[1] - q1[2]*q2[2] - q1[3]*q2[3] - q1[4]*q2[4],
     q1[1]*q2[2] + q1[2]*q2[1] + q1[3]*q2[4] - q1[4]*q2[3],
     q1[1]*q2[3] - q1[2]*q2[4] + q1[3]*q2[1] + q1[4]*q2[2],
@@ -230,7 +230,7 @@ quaternion.__pow = function (self, d)
     if not axis then return 1.0 end  -- no imaginary part
     angle = 0.5 * d * angle   -- new angle
     local sa = math.sin(angle)
-    return numOrQuat (
+    return _numOrQuat (
       math.cos(angle), sa*axis[1], sa*axis[2], sa*axis[3])
   end
 end
@@ -241,23 +241,23 @@ end
 --  @param Q2 Second quaternion.
 --  @return Difference.
 quaternion.__sub = function (Q1, Q2)
-  if not isquaternion(Q2) then
+  if not _isquaternion(Q2) then
     local v = quaternion._convert(Q2)
     return v and Q1 - v or Q2.__sub(Q1, Q2)
-  elseif not isquaternion(Q1) then
+  elseif not _isquaternion(Q1) then
     local v = quaternion._convert(Q1)
     return v and v - Q2 or error('Not def')
   end
   local q1, q2 = Q1._, Q2._
-  return numOrQuat(q1[1]-q2[1], q1[2]-q2[2], q1[3]-q2[3], q1[4]-q2[4])
+  return _numOrQuat(q1[1]-q2[1], q1[2]-q2[2], q1[3]-q2[3], q1[4]-q2[4])
 end
 
 
 --- String representation of the object.
 --  @return String with quaternion elements.
 quaternion.__tostring = function (self)
-  local x, y, z = numStr(self._[2]), numStr(self._[3]), numStr(self._[4])
-  return string.format("%s%s%si%s%sj%s%sk", numStr(self._[1]),
+  local x, y, z = _numStr(self._[2]), _numStr(self._[3]), _numStr(self._[4])
+  return string.format("%s%s%si%s%sj%s%sk", _numStr(self._[1]),
     x:sub(1, 1) == '-' and '' or '+', x,
     y:sub(1, 1) == '-' and '' or '+', y,
     z:sub(1, 1) == '-' and '' or '+', z)
@@ -563,7 +563,7 @@ about[quaternion.z] = {"Q:z() --> var", "Get z component.", help.OTHER}
 -- simplify constructor call
 setmetatable(quaternion,
 {__call = function (_, v)
-  if isquaternion(v) then return v end
+  if _isquaternion(v) then return v end
   assert(type(v) == 'table', "Table is expected")
   local w = v[1] or v.w or 0
   local x = v[2] or v.x or 0

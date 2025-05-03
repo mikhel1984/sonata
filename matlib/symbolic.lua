@@ -81,10 +81,10 @@ local STRUCT, TRANSFORM = 'structure', 'transformation'
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is symbolic.
-local function issymbolic(v) return getmetatable(v) == symbolic end
+local function _issymbolic(v) return getmetatable(v) == symbolic end
 
 
-local function compatible (v)
+local function _compatible (v)
   return type(v) == 'number' or type(v) == 'table' and (v.float or v.re)
 end
 
@@ -214,10 +214,10 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Sum object.
 symbolic.__add = function (S1, S2)
-  if not issymbolic(S2) then
+  if not _issymbolic(S2) then
     local v = symbolic._convert(S2)
     return v and S1 + v or S2.__add(S1, S2)
-  elseif not issymbolic(S1) then
+  elseif not _issymbolic(S1) then
     local v = symbolic._convert(S1)
     return v and v + S2 or error('Not def')
   end
@@ -254,7 +254,7 @@ symbolic.__call = function (S, ...)
     if type(fn.body) == 'function' or fn.body == nil then
       table.insert(t, 1, S)
       return symbolic:_newExpr(PARENTS.funcValue, t)
-    elseif issymbolic(fn.body) then
+    elseif _issymbolic(fn.body) then
       local env = {}
       for i, k in ipairs(fn.args) do env[k] = t[i] end
       return symbolic.eval(fn.body, env)
@@ -268,10 +268,10 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Ratio object.
 symbolic.__div = function (S1, S2)
-  if not issymbolic(S2) then
+  if not _issymbolic(S2) then
     local v = symbolic._convert(S2)
     return v and S1 / v or S2.__div(S1, S2)
-  elseif not issymbolic(S1) then
+  elseif not _issymbolic(S1) then
     local v = symbolic._convert(S1)
     return v and v / S2 or error('Not def')
   end
@@ -305,7 +305,7 @@ end
 --  @param S2 Symbolic object or number.
 --  @return true when objects are equal.
 symbolic.__eq = function (S1, S2)
-  return issymbolic(S1) and issymbolic(S2) and S1:p_eq(S2)
+  return _issymbolic(S1) and _issymbolic(S2) and S1:p_eq(S2)
 end
 
 
@@ -321,10 +321,10 @@ symbolic.__index = function (t, k) return symbolic[k] or t._parent[k] end
 --  @param S2 Symbolic object or number.
 --  @return Product object.
 symbolic.__mul = function (S1, S2)
-  if not issymbolic(S2) then
+  if not _issymbolic(S2) then
     local v = symbolic._convert(S2)
     return v and S1 * v or S2.__mul(S1, S2)
-  elseif not issymbolic(S1) then
+  elseif not _issymbolic(S1) then
     local v = symbolic._convert(S1)
     return v and v * S2 or error('Not def')
   end
@@ -358,10 +358,10 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Power object.
 symbolic.__pow = function (S1, S2)
-  if not issymbolic(S2) then
+  if not _issymbolic(S2) then
     local v = symbolic._convert(S2)
     return v and S1 ^ v or S2.__pow(S1, S2)
-  elseif not issymbolic(S1) then
+  elseif not _issymbolic(S1) then
     local v = symbolic._convert(S1)
     return v and v ^ S2 or error('Not def')
   end
@@ -384,10 +384,10 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Difference object.
 symbolic.__sub = function (S1, S2)
-  if not issymbolic(S2) then
+  if not _issymbolic(S2) then
     local v = symbolic._convert(S2)
     return v and S1 - v or S2.__sub(S1, S2)
-  elseif not issymbolic(S1) then
+  elseif not _issymbolic(S1) then
     local v = symbolic._convert(S1)
     return v and v - S2 or error('Not def')
   end
@@ -446,7 +446,7 @@ about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
 --  @param v Source object.
 --  @return symbolic variable or nil
 symbolic._convert = function (v) 
-  return compatible(v) and symbolic:_newConst(v) 
+  return _compatible(v) and symbolic:_newConst(v) 
 end
 
 
@@ -456,10 +456,10 @@ end
 --  @param S Function body, symbolical expression or Lua function.
 --  @return Function object.
 symbolic.def = function (_, sName, tArgs, S)
-  assert(type(sName) == 'string' and issymbolic(S), "Wrong arguments")
+  assert(type(sName) == 'string' and _issymbolic(S), "Wrong arguments")
   local t = {}
   for i, v in ipairs(tArgs) do
-    if issymbolic(v) then
+    if _issymbolic(v) then
       if v._parent == PARENTS.symbol then
         t[i] = v._
       else
@@ -584,7 +584,7 @@ symbolic.parse = function(_, str)
   local tokens = Ulex(str)
   assert(#tokens > 0)
   local res = PARSER.args(tokens, 1)
-  if issymbolic(res) then
+  if _issymbolic(res) then
     return res
   end
   return table.unpack(res)

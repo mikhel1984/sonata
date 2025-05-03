@@ -163,7 +163,7 @@ axis.__index = axis
 --- Create new axis.
 --  @param N Required width.
 --  @return axis object.
-local _axis_new = function (N)
+local function _axis_new (N)
   if N < 9 then
     inform('Set minimal axis size:'..tostring(N))
     N = 9
@@ -356,12 +356,6 @@ GRADE = {[0]="`", "'", "*", "~", "-", ".", ",", "_"}
 }
 
 
---- Check object type.
---  @param v Object.
---  @return True if the object is asciiplot.
-local function isasciiplot(v) return getmetatable(v) == asciiplot end
-
-
 -- update markers
 if SONATA_USE_COLOR then
   local char = asciiplot.lvls
@@ -371,34 +365,10 @@ if SONATA_USE_COLOR then
 end
 
 
--- Simplify call for two objects.
-asciiplot.__concat = function (F1, F2) return asciiplot.concat(nil, F1, F2) end
-
-
--- methametods
-asciiplot.__index = asciiplot
-
-
---- String representation of the object.
---  @return String.
-asciiplot.__tostring = function (self)
-  if #self._canvas == 0 then return 'empty figure' end
-  local acc = {}
-  -- title
-  if self._title then acc[1] = self._title end
-  -- figure
-  for i = 1, #self._canvas do
-    acc[#acc+1] = table.concat(self._canvas[i])
-  end
-  -- legend
-  local sym = {}
-  for k, _ in pairs(self._legend) do sym[#sym+1] = k end
-  if #sym > 0 then table.sort(sym) end
-  for _, k in ipairs(sym) do
-    acc[#acc+1] = string.format("(%s) %s", k, self._legend[k])
-  end
-  return table.concat(acc, '\n')
-end
+--- Check object type.
+--  @param v Object.
+--  @return True if the object is asciiplot.
+local function _isasciiplot(v) return getmetatable(v) == asciiplot end
 
 
 --- Add symbol based on its height.
@@ -406,7 +376,7 @@ end
 --  @param x Coordinate x.
 --  @param y Coordinate y.
 --  @param ind Color index.
-local _addGraded = function (fig, x, y, ind)
+local function _addGraded (fig, x, y, ind)
   local nx, fx = fig._x:proj(x, true)
   local ny, fy = fig._y:proj(y, false)
   if not (nx and ny) then return end
@@ -428,7 +398,7 @@ end
 --  @param t Table {{x1,y11,y12...}, {x2,y21,y22..}, ...}
 --  @param tInd Table of y column indeces.
 --  @return xrange, yrange
-local _findRange = function (t, tInd)
+local function _findRange (t, tInd)
   local xmax, ymax, xmin, ymin = -math.huge, -math.huge, math.huge, math.huge
   local x = tInd.x or 1
   for i = 1, #t do
@@ -460,7 +430,7 @@ end
 --  @param fig asciiplot object.
 --  @param t Data table.
 --  @param tOpt List of column numbers.
-local _addPolar = function (fig, t, tOpt)
+local function _addPolar (fig, t, tOpt)
   local acc = {}
   -- transform data
   for i, row in ipairs(t) do
@@ -513,7 +483,7 @@ end
 --  @param fig asciiplot object.
 --  @param t Table to print.
 --  @param tInd Allows to choose y columns.
-local _addTable = function (fig, t, tInd)
+local function _addTable (fig, t, tInd)
   local x = tInd.x
   for j = 1, #tInd do
     local k = tInd[j]
@@ -538,7 +508,7 @@ end
 --  @param fig asciiplot object.
 --  @param tX List of x coordinates.
 --  @param tY List of y coordinates.
-local _addXY = function (fig, tX, tY, ind)
+local function _addXY (fig, tX, tY, ind)
   for i = 1, #tX do
     _addGraded(fig, tX[i], tY[i], ind)
   end
@@ -558,7 +528,7 @@ end
 --  @param fig asciiplot object.
 --  @param s Axis name.
 --  @param lvl List of levels.
-local _cntLegend = function (fig, s, lvl)
+local function _cntLegend (fig, s, lvl)
   local j, line = 1, {}
   for i = 1, #lvl do
     -- group levels
@@ -577,7 +547,7 @@ end
 --- Get bounds of the vector.
 --  @param t Table (vector).
 --  @return Minimal and maximal values.
-local _findVectorRange = function (t)
+local function _findVectorRange (t)
   local vmin, vmax = math.huge, -math.huge
   for i = 1, #t do
     local v = t[i]
@@ -592,7 +562,7 @@ end
 --  @param fig asciiplot object.
 --  @param fn Function f(x).
 --  @return Lists of coordinates X and Y.
-local _fn2XY = function (fig, fn)
+local function _fn2XY (fig, fn)
   local X, Y = {}, {}
   for i, x in fig._x:values(true) do
     X[i] = x
@@ -606,7 +576,7 @@ end
 --  @param fig asciiplot object.
 --  @param fn Function f(x,y).
 --  @return Vectors X, Y, 'matrix' Z, range of heights.
-local _fn2Z = function (fig, fn)
+local function _fn2Z (fig, fn)
   local X, Y, Z = {}, {}, {}
   for i, x in fig._x:values(true) do X[i] = x end
   local zmin, zmax = math.huge, -math.huge
@@ -630,7 +600,7 @@ end
 --  @param N Required length.
 --  @param bCentr Flag to put to central position.
 --  @param bCut   Flag to cut a long string.
-local _format = function (s, N, bCentr, bCut)
+local function _format (s, N, bCentr, bCut)
   local res = s
   if #s < N then
     local n = N - #s
@@ -653,7 +623,7 @@ end
 --  @param fig asciiplot object.
 --  @param t Table with parameters {range, log, view, fix, size}.
 --  @param pref Prefix string.
-local _setAxis = function (fig, t, pref)
+local function _setAxis (fig, t, pref)
   -- range
   if t.range then fig[pref]:setRange(t.range) end
   -- logarithmic scale
@@ -674,7 +644,7 @@ end
 --  @param bScale Flag to use bounds in calculation.
 --  @param bInt Flag for a number rounding.
 --  @return List of levels and step value.
-local _surfRange = function (v1, vn, N, bScale, bInt)
+local function _surfRange (v1, vn, N, bScale, bInt)
   local res, nn, h = {}, N, 0
   if bScale then
     nn = N - 1
@@ -692,6 +662,36 @@ local _surfRange = function (v1, vn, N, bScale, bInt)
     end
   end
   return res, h
+end
+
+
+-- Simplify call for two objects.
+asciiplot.__concat = function (F1, F2) return asciiplot.concat(nil, F1, F2) end
+
+
+-- methametods
+asciiplot.__index = asciiplot
+
+
+--- String representation of the object.
+--  @return String.
+asciiplot.__tostring = function (self)
+  if #self._canvas == 0 then return 'empty figure' end
+  local acc = {}
+  -- title
+  if self._title then acc[1] = self._title end
+  -- figure
+  for i = 1, #self._canvas do
+    acc[#acc+1] = table.concat(self._canvas[i])
+  end
+  -- legend
+  local sym = {}
+  for k, _ in pairs(self._legend) do sym[#sym+1] = k end
+  if #sym > 0 then table.sort(sym) end
+  for _, k in ipairs(sym) do
+    acc[#acc+1] = string.format("(%s) %s", k, self._legend[k])
+  end
+  return table.concat(acc, '\n')
 end
 
 
@@ -1092,7 +1092,7 @@ about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)",
 --  @param F2 Second figure.
 --  @return String with figures.
 asciiplot.concat = function (_, F1, F2)
-  if not (isasciiplot(F1) and isasciiplot(F2)) then
+  if not (_isasciiplot(F1) and _isasciiplot(F2)) then
     error 'Not asciiplot objects'
   end
   if F1._y.size ~= F2._y.size then
@@ -1308,7 +1308,7 @@ about[asciiplot.reset] = {"F:reset()", "Prepare a clean canvas.", MANUAL}
 --  @param factor Positive value or another figure object.
 --  @return Updated figure object.
 asciiplot.scale = function (self, factor)
-  if isasciiplot(factor) then
+  if _isasciiplot(factor) then
     self._x:resize(factor._x.size)
     self._y:resize(factor._y.size)
   else

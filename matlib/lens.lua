@@ -157,14 +157,14 @@ key = keys,
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is 'lens'.
-local function islens(v) return getmetatable(v) == lens end
+local function _islens(v) return getmetatable(v) == lens end
 
 
 --- Matrix product.
 --  @param L1 First matrix.
 --  @param L2 Second matrix.
 --  @return A, B, C, D
-local function prod (L1, L2)
+local function _prod (L1, L2)
   return L1[1]*L2[1]+L1[2]*L2[3], L1[1]*L2[2]+L1[2]*L2[4],
          L1[3]*L2[1]+L1[4]*L2[3], L1[3]*L2[2]+L1[4]*L2[4]
 end
@@ -172,7 +172,7 @@ end
 
 --- Check matrix module
 --  @return true if unit matrix
-local function isunit (L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
+local function _isunit (L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
 
 
 --- Concatenate components along the ray trace.
@@ -181,13 +181,13 @@ local function isunit (L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
 --  @param L2 Second object.
 --  @return Concatenated object.
 lens.__concat = function (L1, L2)
-  if not (islens(L1) and islens(L2)) then
+  if not (_islens(L1) and _islens(L2)) then
     error 'Not a Lens object'
   end
-  if not (isunit(L1) and isunit(L2)) then
+  if not (_isunit(L1) and _isunit(L2)) then
     error "Wrong system matrices"
   end
-  return lens._init({prod(L2, L1)})
+  return lens._init({_prod(L2, L1)})
 end
 
 
@@ -196,7 +196,7 @@ end
 --  @param L2 Second object.
 --  @return True if the objects are equal.
 lens.__eq = function (L1, L2)
-  if not (islens(L1) and islens(L2)) then
+  if not (_islens(L1) and _islens(L2)) then
     error 'Not a Lens object'
   end
   return math.abs(L1[1]-L2[1]) < TOL and math.abs(L1[2]-L2[2]) < TOL
@@ -248,7 +248,7 @@ end
 lens.afocal = function (self, dm)
   local L = {dm, 0, 0, 1/dm}
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     return self
   end
   return lens._init(L)
@@ -330,7 +330,7 @@ about[lens.gSize] = {":gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d",
 --- Inverse the component matrix.
 --  @return Inverted matrix.
 lens.inv = function (self)
-  if not isunit(self) then
+  if not _isunit(self) then
     error 'Not a unit matrix'
   end
   return lens._init({self[4], -self[2], -self[3], self[1]})
@@ -347,7 +347,7 @@ lens.M = function (self, dr, dn)
   dn = dn or self._nprev or 1
   local L = {1, 0, 2*dn/dr, 1, _nprev=dn}
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     self._nprev = dn
     return self
   end
@@ -382,7 +382,7 @@ lens.R = function (self, nin, rad, nout)
   end
   local L = {1,  0, -(nout-nin)/rad, 1, _nprev=nout}
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     self._nprev = nout
     return self
   end
@@ -417,7 +417,7 @@ about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
 lens.thin = function (self, df)
   local L = { 1, 0, -1/df, 1 }
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     return self
   end
   return lens._init(L)
@@ -434,7 +434,7 @@ lens.T = function (self, dt, dn)
   dn = dn or self._nprev or 1
   local L = {1, dt/dn, 0, 1, _nprev=dn}
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     self._nprev = dn
     return self
   end

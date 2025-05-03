@@ -97,7 +97,7 @@ local ODE = 'ode'
 -- @param y Second variable.
 -- @param h Step.
 -- @return Approximation for y.
-local function rk(fn, x, y, h)
+local function _rk(fn, x, y, h)
   local h2 = 0.5*h
   local k1 = fn(x,    y)
   local k2 = fn(x+h2, y+h2*k1)
@@ -114,7 +114,7 @@ end
 --  @param n Step number.
 --  @param s Previous sum.
 --  @return sum of points.
-local function trapzd (fn, a, b, n, s)
+local function _trapzd (fn, a, b, n, s)
   if n == 1 then
     return 0.5*(b - a)*(fn(a) + fn(b))
   end
@@ -134,7 +134,7 @@ end
 --  @param n Step number.
 --  @param s Previous sum.
 --  @return sum of points.
-local function midpnt (fn, a, b, n, s)
+local function _midpnt (fn, a, b, n, s)
   if n == 1 then
     return (b - a)*fn(0.5*(a + b))
   end
@@ -157,7 +157,7 @@ end
 --  @param eps Accuracy.
 --  @param eval Method to evaluate each step.
 --  @return integra value and flag if it converges.
-local function qsimp (fn, a, b, eps, eval, N)
+local function _qsimp (fn, a, b, eps, eval, N)
   local s, si = 0, -1e30
   local ost, st = si, 0
   for j = 1, N do
@@ -176,7 +176,7 @@ end
 --- Check if the number is limited.
 --  @param x Number to check.
 --  @return true when not infinite.
-local function limited (x) return -math.huge < x and x < math.huge end
+local function _limited (x) return -math.huge < x and x < math.huge end
 
 
 --	INFO
@@ -263,7 +263,7 @@ about[numeric.flat] = {"ys:flat() --> ys",
 --  @return obtained value.
 numeric.lim = function (_, fn, xn, isPositive)
   local prev = nil
-  if limited(xn) then
+  if _limited(xn) then
     -- limited number
     local del = 1
     while del > numeric.SMALL do
@@ -337,12 +337,12 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
     end
     -- find next
     if tParam.dt or last then
-      res[#res+1] = {x+h, rk(fn, x, y, h)}
+      res[#res+1] = {x+h, _rk(fn, x, y, h)}
     else
       -- step correction
       local h2 = 0.5 * h
-      local y1 = rk(fn, x, y, h)
-      local y2 = rk(fn, x+h2, rk(fn, x, y, h2), h2)
+      local y1 = _rk(fn, x, y, h)
+      local y2 = _rk(fn, x+h2, _rk(fn, x, y, h2), h2)
       local dy = Cnorm(y2 - y1)
       if dy > MAX then
         h = h2
@@ -395,11 +395,11 @@ numeric.int = function (_, fn, a, b)
   end
   local N, TOL = numeric.INT_MAX, numeric.TOL
   -- check inf
-  local afin, bfin = limited(a), limited(b)
+  local afin, bfin = _limited(a), _limited(b)
   if afin and bfin then
-    return (limited(fn(a)) and limited(fn(b)))
-      and qsimp(fn, a, b, TOL, trapzd, N)
-      or  qsimp(fn, a, b, TOL, midpnt, N)  -- improper limits
+    return (_limited(fn(a)) and _limited(fn(b)))
+      and _qsimp(fn, a, b, TOL, _trapzd, N)
+      or  _qsimp(fn, a, b, TOL, _midpnt, N)  -- improper limits
   end
 
   -- infinite limits
@@ -407,25 +407,25 @@ numeric.int = function (_, fn, a, b)
   -- -inf
   if not afin and a < math.huge then
     if b < 0 then
-      return qsimp(fni, 1/b, 0, TOL, midpnt, N)
+      return _qsimp(fni, 1/b, 0, TOL, _midpnt, N)
     end
     -- -inf to -1
-    local s1, e1 = qsimp(fni, -1, 0, TOL, midpnt, N)
+    local s1, e1 = _qsimp(fni, -1, 0, TOL, _midpnt, N)
     if b < math.huge then
-      local s2, e2 = qsimp(fn, -1, b, TOL, midpnt, N)
+      local s2, e2 = _qsimp(fn, -1, b, TOL, _midpnt, N)
       return s1 + s2, e1 or e2
     else
-      local s2, e2 = qsimp(fn, -1, 1, TOL, midpnt, N)
-      local s3, e3 = qsimp(fni, 0, 1, TOL, midpnt, N)
+      local s2, e2 = _qsimp(fn, -1, 1, TOL, _midpnt, N)
+      local s3, e3 = _qsimp(fni, 0, 1, TOL, _midpnt, N)
       return s1 + s2 + s3, e1 or e2 or e3
     end
   end
   -- +inf
   if a > 0 then
-    return qsimp(fni, 0, 1/a, TOL, midpnt, N)
+    return _qsimp(fni, 0, 1/a, TOL, _midpnt, N)
   else
-    local s1, e1 = qsimp(fni, 0, 1, TOL, midpnt, N)
-    local s2, e2 = qsimp(fn, a, 1, TOL, midpnt, N)
+    local s1, e1 = _qsimp(fni, 0, 1, TOL, _midpnt, N)
+    local s2, e2 = _qsimp(fn, a, 1, TOL, _midpnt, N)
     return s1 + s2, e1 or e2
   end
 end
