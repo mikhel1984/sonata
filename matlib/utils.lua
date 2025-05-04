@@ -75,6 +75,8 @@ end
 
 
 --============= Cross-module functionality =========
+-- Cross methods:
+-- _convert, _isZero, _norm, _round, _simp, copy, float
 
 local cross = {}
 
@@ -196,7 +198,7 @@ local utils = {
 --- Transform sequence of strings to number.
 --  @param t Table with strings.
 --  @return Table with numbers when possible.
-utils._toNumbers = function (t)
+local function _toNumbers (t)
   local res, num = {}, {}
   local s = NUM_DOT
   for _, v in ipairs(t) do
@@ -299,7 +301,7 @@ utils.lex = function (s)
     if #x > 0 then res[#res+1] = x end
     if #y > 0 then res[#res+1] = y end
   end
-  return utils._toNumbers(res)
+  return _toNumbers(res)
 end
 
 
@@ -340,25 +342,25 @@ end
 --============== Calc ================
 
 local calc = {}
-
+local mexp, msqrt, mlog = math.exp, math.sqrt, math.log
 
 --- Hyperbolic cosine.
 --  @param x Float number.
 --  @return Hyperbolic cosine value.
-calc.cosh = function (x) return 0.5*(math.exp(x)+math.exp(-x)) end
+calc.cosh = function (x) return 0.5*(mexp(x) + mexp(-x)) end
 
 
 --- Hyperbolic sine.
 --  @param x Float number.
 --  @return Hyperbolic sine value.
-calc.sinh = function (x) return 0.5*(math.exp(x)-math.exp(-x)) end
+calc.sinh = function (x) return 0.5*(mexp(x) - mexp(-x)) end
 
 
 --- Hyperbolic tangent.
 --  @param x Float number.
 --  @return Hyperbolic tangent value.
 calc.tanh = function (x)
-  local t = math.exp(2*x)
+  local t = mexp(2*x)
   return (t-1)/(t+1)
 end
 
@@ -366,19 +368,19 @@ end
 --- Inverse hyperbolic sine.
 --  @param x Float number.
 --  @return Inverse hyperbolic sine value.
-calc.asinh = function (x) return math.log(x+math.sqrt(x*x+1)) end
+calc.asinh = function (x) return mlog(x + msqrt(x*x+1)) end
 
 
 --- Inverse hyperbolic cosine.
 --  @param x Float number.
 --  @return Inverse hyperbolic cosine value.
-calc.acosh = function (x) return math.log(x+math.sqrt(x*x-1)) end
+calc.acosh = function (x) return mlog(x + msqrt(x*x-1)) end
 
 
 --- Inverse hyperbolic tangent.
 --  @param x Float number.
 --  @return Inverse hyperbolic tangent value.
-calc.atanh = function (x) return 0.5*math.log((1+x)/(1-x)) end
+calc.atanh = function (x) return 0.5*mlog((1 + x)/(1 - x)) end
 
 
 return {
