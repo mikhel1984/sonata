@@ -186,9 +186,7 @@ local data = {}
 --- Make copy of an object or list.
 --  @param v Source object.
 --  @return deep copy.
-data.copy = function (_, v)
-  return _copy_obj(v)
-end
+data.copy = function (_, v) return _copy_obj(v) end
 about[data.copy] = {":copy(t) --> copy_t",
   "Make deep copy of the table.", help.OTHER}
 

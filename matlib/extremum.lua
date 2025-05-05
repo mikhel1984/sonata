@@ -107,6 +107,17 @@ xm, fm = Ex:annealing(energy, tweak, pos, 20, 0.95, 2)
 print(table.concat(xm, ' '))
 ans = fm                     --> 0
 
+-- nonlinear data fit
+-- prepare data
+xs, ys = {}, {}
+foo = function (x, t) return t.A*math.sin(t.B*x) + t.C end
+t0 = {A=2, B=0.5, C=-1}
+for i = 1, 40 do xs[i] = i*0.1; ys[i] = foo(xs[i], t0) end
+-- initial estimation
+tinit = {A=3, B=2, C=-2}
+tm, fm = Ex:fit(foo, tinit, xs, ys)
+ans = tm.A                   --2> t0.A
+
 --]]
 
 
@@ -654,6 +665,7 @@ extremum._minPowel = function (fun, p)
       end
     end
   end
+  -- ignore when defined manually
   inform("Too much iterations")
   return p, fret
 end
@@ -759,8 +771,46 @@ extremum.annealing = function (_, energy, update, x, temp, alpha, nmax)
   return curr, e0
 end
 about[extremum.annealing] = {
-  ":annealing(energy_fn, update_fn, x_M, temp_d=enerty0, alpha_d=0.9, nmax_N=1) -> x_M, energy_d",
+  ":annealing(energy_fn, update_fn, x_M, temp_d=energy0, alpha_d=0.9, nmax_N=1) -> x_M, energy_d",
   "Simulated annealing method."}
+
+
+--- Nonlinear data approximation.
+--  @param fn Function with nonlinear model fn(x, t) -> y.
+--  @param t0 Initial estimation of parameters.
+--  @param xs List of x values.
+--  @param ys List of y values.
+--  @return table with parameters and sum of squares
+extremum.fit = function (_, fn, t0, xs, ys)
+  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
+  local keys, v0 = {}, {}
+  for k, w in pairs(t0) do
+    keys[#keys+1] = k
+    v0[#v0+1] = w
+  end
+  -- make function for optimization
+  local t = {}
+  local test = function (vec)
+    for i = 1, #keys do t[keys[i]] = vec[i][1] end
+    local s = 0.0
+    for i = 1, #xs do 
+      local dy = ys[i] - fn(xs[i], t)
+      s = s + dy*dy 
+    end
+    return s
+  end
+  -- find minimum
+  v0 = extremum.ext_matrix:V(v0)  -- reuse
+  local vm, fmin = extremum._minPowel(test, v0)
+  -- to table
+  local tm = {}
+  for i, k in ipairs(keys) do tm[k] = vm[i][1] end
+  return tm, fmin
+end
+about[extremum.fit] = {
+  ":fit(model_fn, param_t, xs_t, ys_t) --> minParam_t, sqSum_d",
+  "Fit data with nonlinear model y = fn(x,t), where t is a parameter dictionary."}
+
 
 
 --- Find maximum of a function with scalar argument.
@@ -861,3 +911,5 @@ extremum.about = about
 return extremum
 
 --===============================
+-- TODO improve fit accuracy
+-- TODO hide warnings in fit
