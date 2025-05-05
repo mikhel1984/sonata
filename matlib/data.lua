@@ -135,6 +135,11 @@ ans = b2[1]                   -->  8
 c = b:map(math.sin)
 ans = c[1]                   --3>  0.909
 
+-- reverse elements
+q = {1, 2, 3, 4, 5}
+D:reverse(q)
+ans = q[1]                   --> 5
+
 --]]
 
 
@@ -601,6 +606,18 @@ data.reduce = function (_, fn, t, val)
 end
 about[data.reduce] = {":reduce(fn|str, data_t, initial=datadata_t[1]_t[1]) --> var",
   "Apply function to its previous result and next element.", LIST}
+
+
+--- Reverse list in place.
+--  @param t List of elements.
+data.reverse = function (_, t)
+  local n, m = math.floor(#t / 2), #t+1
+  for i = 1, n do
+    t[i], t[m-i] = t[m-i], t[i]
+  end
+end
+about[data.reverse] = {":reverse(data_t)", 
+  "Reverse table elements in place.", help.OTHER}
 
 
 --- Sum of all elements.
