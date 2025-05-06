@@ -119,8 +119,10 @@ local _args = {
 
 -- run tests
 ['--test'] = {
-description = 'Run unit tests for a given module. Execute for all modules if no name is specified.',
-example = '--test array',
+description = 'Run unit tests.',
+example = {
+  'e.g. --test          # all tests', 
+  '     --test array    # tests for the given module'},
 process = function (args)
   local Test = require('core.test')
   SONATA_PROTECT_ALIAS = false
@@ -139,7 +141,9 @@ exit = true},
 -- localization file
 ['--lang'] = {
 description = 'Generation or updating of the localization file.',
-example = '--lang eo',
+example = {
+  'e.g. --lang          # show current language', 
+  '     --lang eo       # file for Esperanto localization'},
 process = function (args)
   if args[2] then
     local Gen = require('core.generator')
@@ -153,7 +157,9 @@ exit = true},
 -- generate 'help.html'
 ['--doc'] = {
 description = 'Generating a documentation page.',
-example = '--doc ru',
+example = {
+  'e.g. --doc           # original documentation', 
+  '     --doc ru        # translated documentation'},
 process = function (args)
   local Gen = require('core.generator')
   if args[2] then
@@ -166,7 +172,7 @@ exit = true},
 -- new module
 ['--new'] = {
 description = 'Generating a template for a new module.',
-example = '--new  matrices  Mat  "Matrix operations."',
+example = {'e.g. --new  matrices  Mat  "Matrix operations."'},
 process = function (args)
   local Gen = require('core.generator')
   Gen.module(args[2], args[3] or args[2], args[4] or args[2])
@@ -175,8 +181,11 @@ exit = true},
 
 -- define method for input (and output)
 ['--io'] = {
-description = "Method for interaction (readline, tcp).",
-example = '--io readline',
+description = "Method for interaction.",
+example = {
+  'e.g. --io readline   # keep command history', 
+  '     --io tcp 23456  # server mode', 
+  '     --io w          # output window mode'},
 process = function (args)
   if args[2] == 'readline' then
     local readline = require("core.io_readline")
@@ -234,7 +243,7 @@ exit = true}
 -- string representation of the help info
 Sonata._arghelp = function ()
   local txt = {
-    "\nSonata is a Lua based program for mathematical calculations.",
+    "\nSonata is a Lua program for mathematical calculations.",
     "",
     "USAGE:",
     "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
@@ -249,11 +258,15 @@ Sonata._arghelp = function ()
   for k, v in pairs(_args) do
     if v.description then
       txt[#txt+1] = string.format('\t%s\t%s', k, v.description)
-      if v.example then
-        txt[#txt+1] = string.format('\t\te.g. %s', v.example)
+      for i = 1, #v.example do
+        txt[#txt+1] = string.format('\t\t%s', v.example[i])
       end
+      --if v.example then
+      --  txt[#txt+1] = string.format('\t\te.g. %s', v.example)
+      --end
     end
   end
+  txt[#txt+1] = ""
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
   txt[#txt+1] = "\nVERSION: "..Sonata.version
   txt[#txt+1] = ""
