@@ -162,10 +162,12 @@ example = {
   '     --doc ru        # translated documentation'},
 process = function (args)
   local Gen = require('core.generator')
-  if args[2] then
-    SONATA_LOCALIZATION = args[2]..'.lng'
+  if args[2] == 'md' then
+    Gen.md(use)
+  else
+    if args[2] then SONATA_LOCALIZATION = args[2]..'.lng' end
+    Gen.doc(SONATA_LOCALIZATION, use)
   end
-  Gen.doc(SONATA_LOCALIZATION, use)
 end,
 exit = true},
 
