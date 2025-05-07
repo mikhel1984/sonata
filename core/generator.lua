@@ -135,6 +135,9 @@ generator.doc = function (locName, tModules)
   io.write("File 'help.html' is saved!\n")
 end
 
+
+--- Generate markdown file with documentation.
+--  @param tModule Table with description for all modules.
 generator.md = function (tModule)
   local res = {
     "# Sonata Lua Calculus",
@@ -145,7 +148,7 @@ generator.md = function (tModule)
   for k, v in pairs(tModule) do sortedModules[#sortedModules+1] = {k, v} end
   table.sort(sortedModules, function (a, b) return a[1] < b[1] end)
   -- modules
-  local sym = {["<b>"]="**", ["</b>"]="**", ["<br>"]="\n"}
+  local sym = {["<b>"]="**", ["</b>"]="**", ["<br>"]=""}
   for _, val in ipairs(sortedModules) do
     local k, v = val[1], val[2]
     res[#res+1] = sformat('## %s (%s)', v, k)
@@ -153,6 +156,7 @@ generator.md = function (tModule)
     res[#res+1] = description
     res[#res+1] = ""
     res[#res+1] = sgsub(functions, "(<.->)", sym) 
+    res[#res+1] = ""
   end
 
   local f = assert(io.open('help.md', 'w'), "Can't save help file")
