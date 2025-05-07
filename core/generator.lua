@@ -148,7 +148,7 @@ generator.md = function (tModule)
   for k, v in pairs(tModule) do sortedModules[#sortedModules+1] = {k, v} end
   table.sort(sortedModules, function (a, b) return a[1] < b[1] end)
   -- modules
-  local sym = {["<b>"]="**", ["</b>"]="**", ["<br>"]=""}
+  local sym = {["<b>"]="**", ["</b>"]="**", ["<br>"]="\n"}
   for _, val in ipairs(sortedModules) do
     local k, v = val[1], val[2]
     res[#res+1] = sformat('## %s (%s)', v, k)
