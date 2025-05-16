@@ -945,9 +945,102 @@ about[data.T] = {":T(src_t) --> new_T",
   "Get reference to 'transposed' table.", REF}
 
 
+local mt_accum = {
+  __index = function (t, k)
+    table.insert(t._nm, k)
+    local n = #t._nm
+    rawset(t, k, n)
+    return n
+  end
+}
+
+
+local function list_pack (src, acc)
+  local t = {string.pack('B', acc['#'])}
+  for _, v in ipairs(src) do
+    if type(v) == 'table' then
+      t[#t+1] = v._pack and v:_pack(acc) or list_pack(v, acc)
+    elseif type(v) == 'number' then
+      t[#t+1] = Ver.isInteger(v) and string.pack('Bi', acc['&i'], v) 
+                                  or string.pack('Bd', acc['&f'], v)
+    else
+      error "Wrong type for pack"
+    end
+  end
+  t[#t+1] = '\0'
+  return table.concat(t)
+end
+
+local function list_unpack (src, pos, acc)
+  local t, n = {}, nil
+  while string.sub(src, pos, pos) ~= '\0' do
+    n, pos = string.unpack('B', src, pos)
+    local key = acc[n]
+    if key == '&i' then
+      t[#t+1], pos = string.unpack('i', src, pos)
+    elseif key == '&f' then
+      t[#t+1], pos = string.unpack('d', src, pos)
+    elseif key == '#' then
+      t[#t+1], pos = list_unpack(src, pos, acc)
+    else
+      -- Sonata object
+      if type(key) == 'string' then
+        acc[n] = require('matlib.'..key)
+      end
+      t[#t+1] = acc[n]._unpack(src, pos, acc)
+    end
+  end
+  return t, pos+1
+end
+
+
+data.pack = function (self, v)
+  -- TODO set program version
+  local t = {'/\\/', string.pack('I2', 100), '\0',}
+  local acc, bin = setmetatable({_nm={}}, mt_accum), nil
+  if type(v) == 'table' then
+    bin = v._pack and v:_pack(acc) or list_pack(v, acc)
+  else
+    error "No rules to pack it"
+  end
+  -- make 'vocabulary'
+  for _, nm in ipairs(acc._nm) do
+    t[#t+1] = string.pack('B', #nm)
+    t[#t+1] = nm
+  end
+  t[#t+1] = '\0'  -- end marker
+  t[#t+1] = bin
+  -- TODO add check sum
+  return table.concat(t)
+end
+
+data.unpack = function (self, v)
+  if string.sub(v, 1, 3) ~= '/\\/' then
+    error 'Unknown data type'
+  end
+  local ver, pos = string.unpack('I2', v, 4)
+  pos = pos + 1  -- skip zero
+  -- restore vocabulary
+  local types, n = {}, 0
+  while string.sub(v, pos, pos) ~= '\0' do
+    n, pos = string.unpack('B', v, pos)
+    types[#types+1] = string.sub(v, pos, pos+n-1)
+    pos = pos + n
+  end
+  pos = pos + 1
+  if types[1] == '#' then
+    return list_unpack(v, pos+1, types)
+  else
+    types[1] = require('matlib.'..types[1])
+    return types[1]._unpack(v, pos+1, types)
+  end
+end
+
+
 -- Comment to remove descriptions
 data.about = about
 
 return data
 
 --====================================
+

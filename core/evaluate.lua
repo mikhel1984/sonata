@@ -108,7 +108,7 @@ end
 local evaluate = {
 
 -- current version
-version = '0.9.42',
+version = '1.00',
 
 -- status
 EV_RES = 1,   -- found result
@@ -132,7 +132,7 @@ _modules = {},
 
 evaluate.TITLE = string.format(
 [[   # #      --=====  so/\/ata  =====--      # #
-    # #        --==== %s ====--        # #
+    # #         --==== %s ====--        # #
 ]], evaluate.version)
 
 
