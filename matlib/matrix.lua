@@ -1336,17 +1336,7 @@ matrix._pack = function (self, acc)
   local spack = string.pack
   local t = {spack('B', acc['matrix']), spack('I2', rs), spack('I2', cs)}
   for r = 1, rs do
-    local row = self[r]
-    for c = 1, cs do
-      local x = row[c]
-      if type(x) == 'number' then
-        t[#t+1] = Utils.pack_num(x, acc)
-      elseif type(x) == 'table' and x._pack then
-        t[#t+1] = x:_pack(acc)
-      else
-        error "Unable to pack"
-      end
-    end
+    t[#t+1] = Utils.pack_seq(self[r], 1, cs, acc)
   end
   return table.concat(t)
 end
@@ -1357,22 +1347,7 @@ matrix._unpack = function (src, pos, acc, ver)
   rs, pos = sunpack('I2', src, pos)
   cs, pos = sunpack('I2', src, pos)
   for r = 1, rs do
-    local row, n = {}, nil
-    for c = 1, cs do
-      n, pos = sunpack('B', src, pos)
-      local key = acc[n]
-      if type(key) == "string" then
-        if string.byte(key, 1) == 0x26 then  -- &
-          row[c], pos = unpack_num(src, pos, key, ver)
-        else
-          acc[n] = require('matlib.'..key)
-          row[c], pos = acc[n]._unpack(src, pos, acc, ver)
-        end
-      else
-        row[c], pos = key._unpack(src, pos, acc, ver)
-      end
-    end
-    t[r] = row
+    t[r], pos = Utils.unpack_seq(cs, src, pos, acc, ver)
   end
   return matrix._init(rs, cs, t), pos
 end

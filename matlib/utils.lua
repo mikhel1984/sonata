@@ -368,6 +368,40 @@ utils.unpack_num = function (s, pos, key, ver)
   return string.unpack(string.sub(key, 2), s, pos)
 end
 
+utils.pack_seq = function (src, i0, ii, acc)
+  local t, pack_num = {}, utils.pack_num
+  for i = i0, ii do
+    local x = src[i]
+    if type(x) == 'number' then
+      t[#t+1] = pack_num(x, acc)
+    elseif type(x) == 'table' and x._pack then
+      t[#t+1] = x:_pack(acc)
+    else
+      error "Unable to pack"
+    end
+  end
+  return table.concat(t)
+end
+
+utils.unpack_seq = function (len, s, pos, acc, ver)
+  local t, n, unpack_num = {}, nil, utils.unpack_num
+  for i = 1, len do
+    n, pos = string.unpack('B', s, pos)
+    local key = acc[n]
+    if type(key) == "string" then
+      if string.byte(key, 1) == 0x26 then  -- &
+        t[i], pos = unpack_num(s, pos, key, ver)
+      else
+        acc[n] = require('matlib.'..key)
+        t[i], pos = acc[n]._unpack(s, pos, acc, ver)
+      end
+    else
+      t[i], pos = key._unpack(s, pos, acc, ver)
+    end
+  end
+  return t, pos
+end
+
 --============== Calc ================
 
 local calc = {}

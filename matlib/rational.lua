@@ -85,11 +85,11 @@ ans = a + 0.5                 -->  1
 
 --	LOCAL
 
-local Vinteger, Unumstr, Cross do
+local Vinteger, Cross, Utils do
   local lib = require("matlib.utils")
   Vinteger = lib.versions.isInteger
-  Unumstr = lib.utils.numstr
   Cross = lib.cross
+  Utils = lib.utils
 end
 local mabs = math.abs
 
@@ -116,7 +116,7 @@ end
 --  @param v Value.
 --  @return String representation.
 local function _numStr(v)
-  return type(v) == 'number' and Unumstr(v) or tostring(v)
+  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
 end
 
 
@@ -508,6 +508,15 @@ end
 about[rational.toCF] = {"R:toCF() --> coeff_t",
   "Transform rational number to continued fraction.", CONTINUATED}
 
+rational._pack = function (self, acc)
+  local t = {string.pack('B', acc['rational']), Utils.pack_seq(self._, 1, 2, acc)}
+  return table.concat(t)
+end
+
+rational._unpack = function (src, pos, acc, ver)
+  local t, p = Utils.unpack_seq(2, src, pos, acc, ver)
+  return rational._new(t[1], t[2]), p
+end
 
 -- call constructor, check arguments
 setmetatable(rational, {

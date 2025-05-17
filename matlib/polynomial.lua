@@ -990,36 +990,15 @@ polynomial._pack = function (self, acc)
   local spack = string.pack
   local n = #self
   local t = {spack('B', acc['polynomial']), spack('I2', n)}
-  for i = 0, n do
-    local x = self[i]
-    if type(x) == 'number' then
-      t[#t+1] = Utils.pack_num(x, acc)
-    elseif type(x) == 'table' and x._pack then
-      t[#t+1] = x:_pack(acc)
-    else
-      error "Unable to pack"
-    end
-  end
+  t[#t+1] = Utils.pack_seq(self, 0, n, acc)
   return table.concat(t)
 end
 
 polynomial._unpack = function (src, pos, acc, ver)
-  local t, ord, n = {}, nil, nil
+  local t, ord = {}, nil
   ord, pos = string.unpack('I2', src, pos)
-  for i = 0, ord do
-    n, pos = string.unpack('B', src, pos)
-    local key = acc[n]
-    if type(key) == "string" then
-      if string.byte(key, 1) == 0x26 then  -- &
-        t[i], pos = Utils.unpack_num(src, pos, key, ver)
-      else
-        acc[n] = require('matlib.'..key)
-        t[i], pos = acc[n]._unpack(src, pos, acc, ver)
-      end
-    else
-      t[i], pos = key._unpack(src, pos, acc, ver)
-    end
-  end
+  t, pos = Utils.unpack_seq(ord+1, src, pos, acc, ver)
+  t = table.move(t, 1, #t, 0, {})
   return polynomial._init(t), pos
 end
 
