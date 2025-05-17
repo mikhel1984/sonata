@@ -961,33 +961,31 @@ local function list_pack (src, acc)
     if type(v) == 'table' then
       t[#t+1] = v._pack and v:_pack(acc) or list_pack(v, acc)
     elseif type(v) == 'number' then
-      t[#t+1] = Ver.isInteger(v) and string.pack('Bi', acc['&i'], v) 
-                                  or string.pack('Bd', acc['&f'], v)
+      t[#t+1] = Utils.pack_num(v, acc)
     else
-      error "Wrong type for pack"
+      error "Unable to pack"
     end
   end
   t[#t+1] = '\0'
   return table.concat(t)
 end
 
-local function list_unpack (src, pos, acc)
+local function list_unpack (src, pos, acc, ver)
   local t, n = {}, nil
   while string.sub(src, pos, pos) ~= '\0' do
     n, pos = string.unpack('B', src, pos)
     local key = acc[n]
-    if key == '&i' then
-      t[#t+1], pos = string.unpack('i', src, pos)
-    elseif key == '&f' then
-      t[#t+1], pos = string.unpack('d', src, pos)
-    elseif key == '#' then
-      t[#t+1], pos = list_unpack(src, pos, acc)
-    else
-      -- Sonata object
-      if type(key) == 'string' then
+    if type(key) == "string" then
+      if key == '#' then
+        t[#t+1], pos = list_unpack(src, pos, acc, ver)
+      elseif string.sub(key, 1, 1) == '&' then
+        t[#t+1], pos = Utils.unpack_num(src, pos, key, ver)
+      else   -- Sonata object
         acc[n] = require('matlib.'..key)
+        t[#t+1] = acc[n]._unpack(src, pos, acc, ver)
       end
-      t[#t+1] = acc[n]._unpack(src, pos, acc)
+    else  -- library table
+      t[#t+1] = acc[n]._unpack(src, pos, acc, ver)
     end
   end
   return t, pos+1
@@ -1015,7 +1013,7 @@ data.pack = function (self, v)
 end
 
 data.unpack = function (self, v)
-  if string.sub(v, 1, 3) ~= '/\\/' then
+  if type(v) ~= 'string' or string.sub(v, 1, 3) ~= '/\\/' then
     error 'Unknown data type'
   end
   local ver, pos = string.unpack('I2', v, 4)
@@ -1029,10 +1027,10 @@ data.unpack = function (self, v)
   end
   pos = pos + 1
   if types[1] == '#' then
-    return list_unpack(v, pos+1, types)
+    return list_unpack(v, pos+1, types, ver)
   else
     types[1] = require('matlib.'..types[1])
-    return types[1]._unpack(v, pos+1, types)
+    return types[1]._unpack(v, pos+1, types, ver)
   end
 end
 

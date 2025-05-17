@@ -635,6 +635,40 @@ about[complex.E] = {":E(phy) --> cos(phy)+i*sin(phy)",
   "Make complex number exp(i*phy).", help.STATIC}
 
 
+complex._pack = function (self, acc)
+  local t = {string.pack('B', acc['complex']), 0, 0}
+  for i = 1, 2 do
+    local x = self._[i]
+    if type(x) == 'number' then
+      t[i+1] = Utils.pack_num(x, acc)
+    elseif type(x) == 'table' and x._pack then
+      t[i+1] = x:_pack(acc)
+    else
+      error "Unable to pack"
+    end
+  end
+  return table.concat(t)
+end
+
+complex._unpack = function (src, pos, acc, ver)
+  local t, n = {0, 0}, nil
+  for i = 1, 2 do
+    n, pos = string.unpack('B', src, pos)
+    local key = acc[n]
+    if type(key) == "string" then
+      if string.sub(key, 1, 1) == '&' then
+        t[i], pos = Utils.unpack_num(src, pos, key, ver)
+      else
+        acc[n] = require('matlib.'..key)
+        t[i], pos = acc[n]._unpack(src, pos, acc, ver)
+      end
+    else
+      t[i], pos = acc[n]._unpack(src, pos, acc, ver)
+    end
+  end
+  return complex._new(t[1], t[2]), pos
+end
+
 -- simplify constructor call
 setmetatable(complex, {
 __call = function (_, re, im)

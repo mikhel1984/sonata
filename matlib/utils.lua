@@ -338,6 +338,35 @@ utils.align = function (tbl, right)
   return len
 end
 
+utils.pack_num = function (x, acc)
+  local v, p = mmodf(math.abs(x))
+  if p == 0.0 then
+    -- integer
+    if v < 128 then
+      return string.pack('Bb', acc['&b'], x)
+    elseif v < 32768 then
+      return string.pack('Bi2', acc['&i2'], x)
+    elseif v < 2.1E9 then
+      return string.pack('Bi4', acc['&i4'], x)
+    elseif v < 9.2E18 then
+      return string.pack('Bi8', acc['&i8'], x)
+    else
+      return string.pack('Bd', acc['&d'], x)
+    end
+  else
+    -- float
+    if v > 3.4E38 or p < -3.4E38 then
+      return string.pack('Bd', acc['&d'], x)
+    else
+      return string.pack('Bf', acc['&f'], x)
+    end
+  end
+end
+
+utils.unpack_num = function (s, pos, key, ver)
+  -- remove & to get template
+  return string.unpack(string.sub(key, 2), s, pos)
+end
 
 --============== Calc ================
 
