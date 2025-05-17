@@ -972,23 +972,23 @@ end
 
 local function list_unpack (src, pos, acc, ver)
   local t, n = {}, nil
-  while string.sub(src, pos, pos) ~= '\0' do
+  while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
     local key = acc[n]
     if type(key) == "string" then
       if key == '#' then
         t[#t+1], pos = list_unpack(src, pos, acc, ver)
-      elseif string.sub(key, 1, 1) == '&' then
+      elseif string.byte(key, 1) == 0x26 then  -- &
         t[#t+1], pos = Utils.unpack_num(src, pos, key, ver)
       else   -- Sonata object
         acc[n] = require('matlib.'..key)
-        t[#t+1] = acc[n]._unpack(src, pos, acc, ver)
+        t[#t+1], pos = acc[n]._unpack(src, pos, acc, ver)
       end
     else  -- library table
-      t[#t+1] = acc[n]._unpack(src, pos, acc, ver)
+      t[#t+1], pos = key._unpack(src, pos, acc, ver)
     end
   end
-  return t, pos+1
+  return t, pos+1  -- skip last \0
 end
 
 
@@ -1020,7 +1020,7 @@ data.unpack = function (self, v)
   pos = pos + 1  -- skip zero
   -- restore vocabulary
   local types, n = {}, 0
-  while string.sub(v, pos, pos) ~= '\0' do
+  while string.byte(v, pos) ~= 0 do
     n, pos = string.unpack('B', v, pos)
     types[#types+1] = string.sub(v, pos, pos+n-1)
     pos = pos + n

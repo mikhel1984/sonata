@@ -656,14 +656,14 @@ complex._unpack = function (src, pos, acc, ver)
     n, pos = string.unpack('B', src, pos)
     local key = acc[n]
     if type(key) == "string" then
-      if string.sub(key, 1, 1) == '&' then
+      if string.byte(key, 1) == 0x26 then  -- &
         t[i], pos = Utils.unpack_num(src, pos, key, ver)
       else
         acc[n] = require('matlib.'..key)
         t[i], pos = acc[n]._unpack(src, pos, acc, ver)
       end
     else
-      t[i], pos = acc[n]._unpack(src, pos, acc, ver)
+      t[i], pos = key._unpack(src, pos, acc, ver)
     end
   end
   return complex._new(t[1], t[2]), pos

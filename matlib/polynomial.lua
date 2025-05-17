@@ -128,7 +128,7 @@ ans = p(0.5)                 --2>  -0.512
 --	LOCAL
 
 local Ver = require("matlib.utils")
-local Ustr = Ver.utils.numstr
+local Utils = Ver.utils
 local Cross = Ver.cross
 Ver = Ver.versions
 
@@ -523,7 +523,7 @@ polynomial.__tostring = function (self)
   local t = {}
   for i = #self, 0, -1 do
     local v = self[i]
-    table.insert(t, type(v) == 'number' and Ustr(v) or tostring(v))
+    table.insert(t, type(v) == 'number' and Utils.numstr(v) or tostring(v))
   end
   return table.concat(t, ' ')
 end
@@ -924,7 +924,7 @@ polynomial.str = function (self, s)
     a, b = self[i], self[i-1]
     if not Cross.isZero(a) then
       if not Cross.eq(a, 1) then
-        res[#res+1] = (type(a) == 'number' and Ustr(a) or tostring(a))..'*'
+        res[#res+1] = (type(a) == 'number' and Utils.numstr(a) or tostring(a))..'*'
       end
       res[#res+1] = s
       if i > 1 then res[#res+1] = '^'..tostring(i) end
@@ -932,7 +932,7 @@ polynomial.str = function (self, s)
     if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
   end
   if type(b) ~= 'number' or not Cross.isZero(b) then
-    res[#res+1] = (type(b) == 'number' and Ustr(b) or tostring(b))
+    res[#res+1] = (type(b) == 'number' and Utils.numstr(b) or tostring(b))
   end
   return table.concat(res)
 end
@@ -985,6 +985,43 @@ end
 about[polynomial.x] = {":x() --> P",
   "Get object to define polynomial as a sum of k*x^n"}
 
+
+polynomial._pack = function (self, acc)
+  local spack = string.pack
+  local n = #self
+  local t = {spack('B', acc['polynomial']), spack('I2', n)}
+  for i = 0, n do
+    local x = self[i]
+    if type(x) == 'number' then
+      t[#t+1] = Utils.pack_num(x, acc)
+    elseif type(x) == 'table' and x._pack then
+      t[#t+1] = x:_pack(acc)
+    else
+      error "Unable to pack"
+    end
+  end
+  return table.concat(t)
+end
+
+polynomial._unpack = function (src, pos, acc, ver)
+  local t, ord, n = {}, nil, nil
+  ord, pos = string.unpack('I2', src, pos)
+  for i = 0, ord do
+    n, pos = string.unpack('B', src, pos)
+    local key = acc[n]
+    if type(key) == "string" then
+      if string.byte(key, 1) == 0x26 then  -- &
+        t[i], pos = Utils.unpack_num(src, pos, key, ver)
+      else
+        acc[n] = require('matlib.'..key)
+        t[i], pos = acc[n]._unpack(src, pos, acc, ver)
+      end
+    else
+      t[i], pos = key._unpack(src, pos, acc, ver)
+    end
+  end
+  return polynomial._init(t), pos
+end
 
 setmetatable(polynomial, {
 __call = function (_, t)
