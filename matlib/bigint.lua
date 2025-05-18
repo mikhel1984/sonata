@@ -1280,10 +1280,8 @@ about[bigint.subF] = {"B:subF() --> !B",
 
 bigint._pack = function (self, acc)
   local n = #self._
-  local t = {string.pack('B', acc["bigint"]), 
-    Utils.pack_num(BASE, acc),
-    string.pack('b', self._sign), 
-    string.pack('I2', n),
+  local t = {string.pack('B', acc["bigint"]), Utils.pack_num(BASE, acc),
+    string.pack('b', self._sign), string.pack('I2', n),
     Utils.pack_seq(self._, 1, n, acc)}
   return table.concat(t)
 end

@@ -94,6 +94,7 @@ print(d)
 local Ver = require("matlib.utils")
 local Unumstr = Ver.utils.numstr
 local Cross = Ver.cross
+local Utils = Ver.utils
 Ver = Ver.versions
 
 -- categories
@@ -559,6 +560,16 @@ about[quaternion.y] = {"Q:y() --> var", "Get y component.", help.OTHER}
 quaternion.z = function (Q) return Q._[4] end
 about[quaternion.z] = {"Q:z() --> var", "Get z component.", help.OTHER}
 
+
+quaternion._pack = function (self, acc)
+  local t = {string.pack('B', acc['quaternion']), Utils.pack_seq(self._, 1, 4, acc)}
+  return table.concat(t)
+end
+
+quaternion._unpack = function (src, pos, acc, ver)
+  local t, p = Utils.unpack_seq(4, src, pos, acc, ver)
+  return quaternion._new(t[1], t[2], t[3], t[4]), p
+end
 
 -- simplify constructor call
 setmetatable(quaternion,
