@@ -147,8 +147,9 @@ ans = a - 0.5                 -->  122.5
 
 --	LOCAL
 
-local Vinteger, Vmove, Cfloat, Cconvert do
+local Vinteger, Vmove, Cfloat, Cconvert, Utils do
   local lib = require("matlib.utils")
+  Utils = lib.utils
   Vinteger = lib.versions.isInteger
   Vmove = lib.versions.move
   Cfloat = lib.cross.float
@@ -1276,6 +1277,27 @@ end
 about[bigint.subF] = {"B:subF() --> !B",
   "Find subfactorial of the number.", COMB}
 
+
+bigint._pack = function (self, acc)
+  local n = #self._
+  local t = {string.pack('B', acc["bigint"]), 
+    Utils.pack_num(BASE, acc),
+    string.pack('b', self._sign), 
+    string.pack('I2', n),
+    Utils.pack_seq(self._, 1, n, acc)}
+  return table.concat(t)
+end
+
+bigint._unpack = function (src, pos, acc, ver)
+  local n, base, sign, t = nil, nil, nil, nil
+  n, pos = string.unpack('B', src, pos)
+  base, pos = Utils.unpack_num(src, pos, acc[n], ver)
+  sign, pos = string.unpack('b', src, pos)
+  n, pos = string.unpack('I2', src, pos)
+  t, pos = Utils.unpack_seq(n, src, pos, acc, ver)
+  if base ~= BASE then t = _rebase(t, base, BASE) end
+  return bigint._newTable(t, sign), pos
+end
 
 -- simplify constructor call
 setmetatable(bigint, {
