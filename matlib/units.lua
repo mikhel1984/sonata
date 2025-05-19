@@ -4,7 +4,7 @@
 --
 --  Object structure:  </br>
 --  <code>{_value=number, _key=table_of_units}</code></br>
---  Table in represented in form key-power.
+--  Table is represented in form key-power.
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
@@ -73,12 +73,11 @@ print(U.rules)
 
 --	LOCAL
 
-local Cfloat, Cnorm, Ulex, Unumstr do
+local Cfloat, Cnorm, Utils do
   local lib = require('matlib.utils')
   Cfloat = lib.cross.float
   Cnorm = lib.cross.norm
-  Ulex = lib.utils.lex
-  Unumstr = lib.utils.numstr
+  Utils = lib.utils
 end
 
 
@@ -354,7 +353,7 @@ end
 --  @return Unit value in traditional form.
 units.__tostring = function (self)
   return string.format('%s %s',
-    type(self._value) == 'number' and Unumstr(self._value) or tostring(self._value),
+    type(self._value) == 'number' and Utils.numstr(self._value) or tostring(self._value),
     units.u(self))
 end
 
@@ -540,7 +539,7 @@ end
 --  @return Reduced list of units.
 units._parse = function (str)
   if #str == 0 then return {} end
-  local tokens = Ulex(str)
+  local tokens = Utils.lex(str)
   if #tokens == 0 then error("Wrong format") end
   local res, m = units._getTerm(tokens, 1)
   if m-1 ~= #tokens then error("Wrong format") end
@@ -629,6 +628,50 @@ units.prefix = {
 about[units.prefix] = {'.prefix',
   'Table of possible prefixes for units.', help.OTHER}
 
+
+units._pack = function (self, acc)
+  local t = {string.pack('B', acc['units'])}
+  if type(self._value) == 'number' then
+    t[#t+1] = Utils.pack_num(self._value, acc)
+  elseif type(self._value) == 'table' and self._value._pack then 
+    t[#t+1] = self._value:pack(acc)
+  else
+    error "Unable to pack"
+  end
+  for k, v in pairs(self._key) do
+    local n = #k
+    t[#t+1] = string.pack('B', n)
+    t[#t+1] = k
+    t[#t+1] = Utils.pack_num(v, acc)
+  end
+  t[#t+1] = '\0'
+  return table.concat(t)
+end
+
+units._unpack = function (src, pos, acc, ver)
+  local val, n, t = nil, nil, {}
+  n, pos = string.unpack('B', src, pos)
+  local key = acc[n]
+  if type(key) == 'string' then
+    if string.byte(key, 1) == 0x26 then
+      val, pos = Utils.unpack_num(src, pos, key, ver)
+    else
+      acc[n] = require("matlib."..key)
+      val, pos = acc[n]._unpack(src, pos, acc, ver)
+    end
+  else
+    val, pos = key._unpack(src, pos, acc, ver)
+  end
+  while string.byte(src, pos) ~= 0 do
+    n, pos = string.unpack('B', src, pos)
+    local nm = string.sub(src, pos, pos+n-1)
+    pos = pos + n
+    n, pos = string.unpack('B', src, pos)
+    n, pos = Utils.unpack_num(src, pos, acc[n], ver)
+    t[nm] = n
+  end
+  return setmetatable({_value=val, _key=t}, units), pos+1
+end
 
 -- Print prefix table
 setmetatable(units.prefix, {
