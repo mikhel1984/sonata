@@ -872,6 +872,9 @@ data.ref = function (_, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
+  if getmetatable(t) == mt_ref then
+    return setmetatable({_beg=t._beg+iBeg-1, _end=t._beg+iEnd, _t=t._t}, mt_ref)
+  end
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, mt_ref)
 end
 about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
@@ -1041,4 +1044,4 @@ data.about = about
 return data
 
 --====================================
-
+--TODO simplify sequence of transformations
