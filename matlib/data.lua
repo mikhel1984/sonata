@@ -51,7 +51,7 @@ tmp = D:freq(X)
 ans = tmp[3]                  -->  3
 
 -- central moment
-ans = D:moment(2,X)          --3>  2.234
+ans = D:moment(X,2)          --3>  2.234
 
 -- summ of elements
 ans = D:sum(X)                -->  27
@@ -101,7 +101,7 @@ ans = a[1]                    -->  X[3]
 nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-D:csvwrite(nm, t, ';')
+D:csvwrite(t, nm, ';')
 
 -- dsv read
 -- with separator ';'
@@ -174,6 +174,17 @@ local function _copy_obj(v)
   end
 end
 
+local function _wrap_call (f)
+  return function (self, ...) return f(nil, self._t, ...) end
+end
+
+local function _wrap_list (f)
+  return function (self, ...)
+    self._t = f(nil, self._t, ...)
+    return self
+  end
+end
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -187,14 +198,26 @@ __module__ = "Data processing and statistics."
 
 local data = {}
 
+local mt_list = {
+  type="list"
+}
+
+mt_list.__index = function (t, k) return mt_list[k] or t._t[k] end
+
+mt_list.__newindex = function (t, k, v) t._t[k] = v end
+
+mt_list.__len = function (t) return #t._t end
+
+mt_list.__tostring = function (t) return 'list' end
+
 
 --- Make copy of an object or list.
 --  @param v Source object.
 --  @return deep copy.
 data.copy = function (_, v) return _copy_obj(v) end
+mt_list.copy = _wrap_list(data.copy)
 about[data.copy] = {":copy(t) --> copy_t",
   "Make deep copy of the table.", help.OTHER}
-
 
 --- Estimate covariance for two vectors.
 --  @param t1 First data vector.
@@ -212,6 +235,7 @@ data.cov2 = function (_, t1, t2)
   end
   return s / #t1
 end
+mt_list.cov2 = _wrap_call(data.cov2)
 about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
   "Find covariance value for two vectors.", STAT}
 
@@ -236,15 +260,16 @@ data.cov = function (_, t)
   end
   return m
 end
+mt_list.cov = _wrap_call(data.cov)
 about[data.cov] = {":cov(data_t) --> cov_M",
   "Find covariance matrix for list of vectors.", STAT}
 
 
 --- Save Lua table in file, use given delimiter.
---  @param sFile File name.
 --  @param t Lua table.
+--  @param sFile File name.
 --  @param char Delimiter, default is coma.
-data.csvwrite = function (_, sFile, t, char)
+data.csvwrite = function (_, t, sFile, char)
   local f = assert(io.open(sFile, 'w'))
   char = char or ','
   for _, v in ipairs(t) do
@@ -253,7 +278,8 @@ data.csvwrite = function (_, sFile, t, char)
   end
   f:close()
 end
-about[data.csvwrite] = {":csvwrite(file_s, data_t, delim_s=',')",
+mt_list.csvwrite = _wrap_call(data.csvwrite)
+about[data.csvwrite] = {":csvwrite(data_t, file_s, delim_s=',')",
   "Save Lua table as delimiter separated data into file.", FILES}
 
 
@@ -319,6 +345,7 @@ data.filter = function (_, t, vCond)
   end
   return res
 end
+mt_list.filter = _wrap_list(data.filter)
 about[data.filter] = {":filter(in_t, fn|str|tbl) --> out_t",
   "Get result of the table filtering. Condition is boolean function, string or table of weights.",
   LIST}
@@ -334,6 +361,7 @@ data.freq = function (_, t)
   end
   return tmp
 end
+mt_list.freq = _wrap_list(data.freq)
 about[data.freq] = {":freq(data_t) --> tbl",
   "Return table with frequencies of elements.", STAT}
 
@@ -357,6 +385,7 @@ data.geomean = function (_, t, tw)
     return p^(1/#t)
   end
 end
+mt_list.geomean = _wrap_call(data.geomean)
 about[data.geomean] = {":geomean(data_t, weigh_t=nil) --> num",
   "Geometrical mean.", STAT}
 
@@ -380,6 +409,7 @@ data.harmmean = function (_, t, tw)
     return #t / h
   end
 end
+mt_list.harmmean = _wrap_call(harmmean)
 about[data.harmmean] = {":harmmean(data_t, weigh_t=nil) --> num",
   "Harmonic mean.", STAT}
 
@@ -426,7 +456,7 @@ data.histcounts = function (_, t, rng)
 end
 about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", STAT}
-
+-- TODO add to mt_list
 
 --- Find weights (1/0) based on condition.
 --  @param t Data table.
@@ -440,6 +470,7 @@ data.is = function (_, t, fn)
   end
   return res
 end
+mt_list.is = _wrap_list(data.is)
 about[data.is] = {":is(data_t, fn|str) --> weigh_t",
   "Find weights using condition (boolean function or string).", LIST}
 
@@ -456,6 +487,7 @@ data.isNot = function (_, t, fn)
   end
   return res
 end
+mt_list.isNot = _wrap_list(data.isNot)
 about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
   "Find inverted weights using condition (boolean function or string).", LIST}
 
@@ -470,6 +502,7 @@ data.max = function (_, t)
   end
   return m, k
 end
+mt_list.max = _wrap_call(data.max)
 about[data.max] = {":max(data_t) --> var, ind_N",
   "Maximal element and its index.", STAT}
 
@@ -509,6 +542,7 @@ data.md = function (_, data_t, names_t, fn)
   end
   return table.concat(res, '\n')
 end
+mt_list.md = _wrap_call(data.md)
 about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.",
   help.OTHER}
@@ -531,6 +565,7 @@ data.mean = function (_, t, tw)
     return data:sum(t) / #t
   end
 end
+mt_list.mean = _wrap_call(data.mean)
 about[data.mean] = {":mean(data_t, wight_t=nil) --> num",
   "Calculate average value. Weights can be used.", STAT}
 
@@ -549,6 +584,7 @@ data.median = function (_, t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
+mt_list.median = _wrap_call(data.median)
 about[data.median] = {":median(data_t) --> num",
   "Median of the list.", STAT}
 
@@ -563,16 +599,17 @@ data.min = function (_, t)
   end
   return m, k
 end
+mt_list.min = _wrap_call(data.min)
 about[data.min] = {":min(data_t) --> var, ind_N",
   "Minimal element and its index.", STAT}
 
 
 --- Central moment.
---  @param N Order of the moment.
 --  @param t Table of numbers.
+--  @param N Order of the moment.
 --  @param tw Table of weights. Can be omitted.
 --  @return Central moment value.
-data.moment = function (_, N, t, tw)
+data.moment = function (_, t, N, tw)
   local m, n = 0, 0
   for i = 1, #t do
     local w = tw and tw[i] or 1
@@ -586,16 +623,17 @@ data.moment = function (_, N, t, tw)
   end
   return mu / n
 end
-about[data.moment] = {":moment(order_N, data_t, weigth_t=nil) --> num",
+mt_list.moment = _wrap_call(data.moment)
+about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
   "Central moment of order N, weights can be defined.", STAT}
 
 
 --- Apply reduction rule to the list elements.
---  @param fn Function of 2 elements.
 --  @param t List.
+--  @param fn Function of 2 elements.
 --  @param val Initial value (optional).
 --  @return Result of reduction.
-data.reduce = function (_, fn, t, val)
+data.reduce = function (_, t, fn, val)
   local i0 = 1
   if not val then
     val, i0 = t[1], 2
@@ -604,7 +642,8 @@ data.reduce = function (_, fn, t, val)
   for i = i0, #t do val = fn(val, t[i]) end
   return val
 end
-about[data.reduce] = {":reduce(fn|str, data_t, initial=datadata_t[1]_t[1]) --> var",
+mt_list.reduce = _wrap_list(data.reduce)
+about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var",
   "Apply function to its previous result and next element.", LIST}
 
 
@@ -616,6 +655,7 @@ data.reverse = function (_, t)
     t[i], t[m-i] = t[m-i], t[i]
   end
 end
+mt_list.reverse = function (self) data.reverse(nil, self._t); return self end
 about[data.reverse] = {":reverse(data_t)", 
   "Reverse table elements in place.", help.OTHER}
 
@@ -628,6 +668,7 @@ data.sum = function (_, t)
   for i = 1, #t do s = s+t[i] end
   return s
 end
+mt_list.sum = _wrap_call(data.sum)
 about[data.sum] = {":sum(data_t) --> var",
   "Get sum of all elements.", STAT}
 
@@ -653,6 +694,7 @@ data.std = function (_, t, tw)
   end
   return math.sqrt(disp)
 end
+mt_list.std = _wrap_call(data.std)
 about[data.std] = {":std(data_t, weight_t=nil) --> num",
   "Standard deviation. Weights can be used.", STAT}
 
@@ -1036,6 +1078,11 @@ data.unpack = function (self, v)
     return types[1]._unpack(v, pos+1, types, ver)
   end
 end
+
+setmetatable(data, {
+__call = function (self, t)
+  return setmetatable({_t=t}, mt_list)
+end })
 
 
 -- Comment to remove descriptions
