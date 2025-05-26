@@ -185,6 +185,43 @@ local function _wrap_list (f)
   end
 end
 
+local function list_pack (src, acc)
+  local t = {string.pack('B', acc['#'])}
+  for _, v in ipairs(src) do
+    if type(v) == 'table' then
+      t[#t+1] = v._pack and v:_pack(acc) or list_pack(v, acc)
+    elseif type(v) == 'number' then
+      t[#t+1] = Utils.pack_num(v, acc)
+    else
+      error "Unable to pack"
+    end
+  end
+  t[#t+1] = '\0'
+  return table.concat(t)
+end
+
+local function list_unpack (src, pos, acc, ver)
+  local t, n = {}, nil
+  while string.byte(src, pos) ~= 0 do
+    n, pos = string.unpack('B', src, pos)
+    local key = acc[n]
+    if type(key) == "string" then
+      if key == '#' then
+        t[#t+1], pos = list_unpack(src, pos, acc, ver)
+      elseif string.byte(key, 1) == 0x26 then  -- &
+        t[#t+1], pos = Utils.unpack_num(src, pos, key, ver)
+      else   -- Sonata object
+        acc[n] = require('matlib.'..key)
+        t[#t+1], pos = acc[n]._unpack(src, pos, acc, ver)
+      end
+    else  -- library table
+      t[#t+1], pos = key._unpack(src, pos, acc, ver)
+    end
+  end
+  return t, pos+1  -- skip last \0
+end
+
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -198,17 +235,21 @@ __module__ = "Data processing and statistics."
 
 local data = {}
 
+
 local mt_list = {
-  type="list"
+  type="list",
+  -- methods
+  __newindex = function (t, k, v) t._t[k] = v end,
+  __len = function (t) return #t._t end,
+  __tostring = function (t) return string.format("<list %s>", tostring(t._t)) end,
 }
 
-mt_list.__index = function (t, k) return mt_list[k] or t._t[k] end
-
-mt_list.__newindex = function (t, k, v) t._t[k] = v end
-
-mt_list.__len = function (t) return #t._t end
-
-mt_list.__tostring = function (t) return 'list' end
+mt_list.__index = function (t, k)
+  if k == 'data' then
+    return t._t
+  end
+  return mt_list[k] or t._t[k]
+end
 
 
 --- Make copy of an object or list.
@@ -649,15 +690,20 @@ about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var
 
 --- Reverse list in place.
 --  @param t List of elements.
-data.reverse = function (_, t)
+--  @param inPlace Apply in place.
+--  @return Updated list.
+data.reverse = function (_, t, inPlace)
+  local dst = in_place and t or {}
   local n, m = math.floor(#t / 2), #t+1
   for i = 1, n do
-    t[i], t[m-i] = t[m-i], t[i]
+    dst[i], dst[m-i] = t[m-i], t[i]
   end
+  return dst
 end
-mt_list.reverse = function (self) data.reverse(nil, self._t); return self end
-about[data.reverse] = {":reverse(data_t)", 
-  "Reverse table elements in place.", help.OTHER}
+--mt_list.reverse = function (self) data.reverse(nil, self._t); return self end
+mt_list.reverse = _wrap_list(data.reverse)
+about[data.reverse] = {":reverse(data_t, [inPlace=false]) --> t",
+  "Reverse table elements.", help.OTHER}
 
 
 --- Sum of all elements.
@@ -861,13 +907,12 @@ about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
 
 
 -- Get reference to data range in other table
-local mt_ref = { type = 'ref' }
-
-
---- Number of elements in range.
---  @param self Ref object.
---  @return Length of the reference table.
-mt_ref.__len = function (self) return self._end - self._beg end
+local mt_ref = {
+  type = 'ref' ,
+  -- methods
+  __len = function (t) return t._end - t._beg end,
+  __tostring = function (t) return string.format("<ref %s>", tostring(t._t)) end,
+}
 
 
 --- Get i-th element.
@@ -925,7 +970,12 @@ about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
 
 -- Get reference to 'transposed' data
 -- i.e. t[i][j] returns t[j][i]
-local mt_transpose = {type = 'transpose'}
+local mt_transpose = {
+  type = 'transpose',
+  -- methods
+  __len = function (t) return #t._tbl._src[1] end,
+  __tostring = function (t) return string.format("<transpose %s>", tostring(t._tbl._src)) end,
+}
 
 
 --- Get access to k-th element.
@@ -938,12 +988,6 @@ mt_transpose.__index = function (self, k)
     return self._tbl
   end
 end
-
-
---- Get table 'length'.
---  @param self T-ref object.
---  @return Expected table length.
-mt_transpose.__len = function (self) return #self._tbl._src[1] end
 
 
 -- Metatable for internal table.
@@ -1000,43 +1044,6 @@ local mt_accum = {
 }
 
 
-local function list_pack (src, acc)
-  local t = {string.pack('B', acc['#'])}
-  for _, v in ipairs(src) do
-    if type(v) == 'table' then
-      t[#t+1] = v._pack and v:_pack(acc) or list_pack(v, acc)
-    elseif type(v) == 'number' then
-      t[#t+1] = Utils.pack_num(v, acc)
-    else
-      error "Unable to pack"
-    end
-  end
-  t[#t+1] = '\0'
-  return table.concat(t)
-end
-
-local function list_unpack (src, pos, acc, ver)
-  local t, n = {}, nil
-  while string.byte(src, pos) ~= 0 do
-    n, pos = string.unpack('B', src, pos)
-    local key = acc[n]
-    if type(key) == "string" then
-      if key == '#' then
-        t[#t+1], pos = list_unpack(src, pos, acc, ver)
-      elseif string.byte(key, 1) == 0x26 then  -- &
-        t[#t+1], pos = Utils.unpack_num(src, pos, key, ver)
-      else   -- Sonata object
-        acc[n] = require('matlib.'..key)
-        t[#t+1], pos = acc[n]._unpack(src, pos, acc, ver)
-      end
-    else  -- library table
-      t[#t+1], pos = key._unpack(src, pos, acc, ver)
-    end
-  end
-  return t, pos+1  -- skip last \0
-end
-
-
 data.pack = function (self, v)
   -- TODO set program version
   local t = {'/\\/', string.pack('I2', 100), '\0',}
@@ -1091,4 +1098,4 @@ data.about = about
 return data
 
 --====================================
---TODO simplify sequence of transformations
+-- TODO add sort
