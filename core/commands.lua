@@ -270,6 +270,9 @@ end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
 
 
+--- Set output to other window (temporary file).
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.w = function (args, env)
   -- prepare file
   if not env.pipe then

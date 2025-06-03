@@ -64,4 +64,4 @@ use = {
 if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
-require('core.load')
+require 'core.load'

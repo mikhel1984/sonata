@@ -191,7 +191,7 @@ example = {
 process = function (args)
   if args[2] == 'readline' then
     local readline = require("core.io_readline")
-    reader = readline.reader
+    reader = readline.reader  -- set implementation
     Sonata.set_local_env = readline.set_local_env
   elseif args[2] == 'tcp' then
     local server = require("core.io_socket")
@@ -212,14 +212,13 @@ exit = (arg[2] ~= "readline")},
 -- command line evaluation
 ['-e'] = {
 process = function (args)
-  local _, _, ans = coroutine.resume(Sonata.evalThread(), args[2] or '')
-  io.write(ans, "\n")
+  local _, _, ans = coroutine.resume(Sonata.evalThread(), args[2] or io.read())
+  io.write(ans or "", "\n")
 end,
 exit = true},
 
 -- process files
 ['default'] = {
---description = 'Evaluate file(s).',
 process = function (args)
   if SONATA_LOCALIZATION then
     About:localization(SONATA_LOCALIZATION)
@@ -228,7 +227,6 @@ process = function (args)
     if string.find(args[i], '%.note$') then
       local blk = Sonata._toBlocks(args[i])
       Sonata.repl(blk)
-      --Sonata:note(args[i])
     else
       dofile(args[i])
     end
@@ -263,9 +261,6 @@ Sonata._arghelp = function ()
       for i = 1, #v.example do
         txt[#txt+1] = string.format('\t\t%s', v.example[i])
       end
-      --if v.example then
-      --  txt[#txt+1] = string.format('\t\te.g. %s', v.example)
-      --end
     end
   end
   txt[#txt+1] = ""

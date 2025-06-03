@@ -131,7 +131,7 @@ _modules = {},
 }
 
 evaluate.TITLE = string.format(
-[[   # #      --=====  so/\/ata  =====--      # #
+[[   # #      --=====  so/\/ata  =====--     # #
     # #         --==== %s ====--        # #
 ]], evaluate.version)
 
