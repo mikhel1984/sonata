@@ -15,14 +15,20 @@ SonataHelp = require("core.help")
 About = SonataHelp.init()
 -- Text colors
 SonataHelp.useColors(SONATA_USE_COLOR)
--- Input function
-local reader = nil
-
 -- Command evaluation.
 Sonata = require('core.evaluate')
-
 -- Quit the program
 quit = Sonata.exit
+
+
+--- Print invite message and read user input.
+--  @param str Invite string.
+--  @return user input.
+local function _reader (str)
+  io.write(str)
+  return io.read()
+end
+
 
 -- Get list of aliases
 for k, v in pairs(use) do Sonata.alias[v] = k end
@@ -46,7 +52,7 @@ end
 
 
 -- Import actions
-Sonata.doimport = function (tbl, name)
+local function _doimport (tbl, name)
   local var = tbl[name]
   if not var then
     -- try alias
@@ -86,13 +92,13 @@ setmetatable(use,
       return Sonata.inLua and Sonata._toText(lst) or lst
     elseif name == '*' then
       -- load all modules
-      for k, _ in  pairs(self) do Sonata.doimport(self, k) end
+      for k, _ in  pairs(self) do _doimport(self, k) end
     elseif type(name) == 'table' then
       -- load group of modules
-      for i, v in ipairs(name) do Sonata.doimport(self, v) end
+      for i, v in ipairs(name) do _doimport(self, v) end
     else
       -- load module
-      Sonata.doimport(self, name)
+      _doimport(self, name)
     end
   end,
 })
@@ -111,6 +117,16 @@ help = function(v)
       '\n', tostring(v) }
   end
   return Sonata.inLua and Sonata._toText(res) or res
+end
+
+
+-- "Quick" evaluation or a user input
+if arg[1] == '-e' then
+  Sonata.inLua = true
+  use('main')
+  local ans = Sonata.evalLine(arg[2] or io.read())
+  if ans then io.write(ans, "\n") end
+  os.exit()
 end
 
 
@@ -191,7 +207,7 @@ example = {
 process = function (args)
   if args[2] == 'readline' then
     local readline = require("core.io_readline")
-    reader = readline.reader  -- set implementation
+    _reader = readline.reader  -- set implementation
     Sonata.set_local_env = readline.set_local_env
   elseif args[2] == 'tcp' then
     local server = require("core.io_socket")
@@ -209,13 +225,7 @@ process = function (args)
 end,
 exit = (arg[2] ~= "readline")},
 
--- command line evaluation
-['-e'] = {
-process = function (args)
-  local _, _, ans = coroutine.resume(Sonata.evalThread(), args[2] or io.read())
-  io.write(ans or "", "\n")
-end,
-exit = true},
+-- ['-e'] defined outside
 
 -- process files
 ['default'] = {
@@ -225,7 +235,7 @@ process = function (args)
   end
   for i = 1, #args do
     if string.find(args[i], '%.note$') then
-      local blk = Sonata._toBlocks(args[i])
+      local blk = Sonata.toBlocks(args[i])
       Sonata.repl(blk)
     else
       dofile(args[i])
@@ -242,18 +252,18 @@ exit = true}
 
 -- string representation of the help info
 Sonata._arghelp = function ()
+  local blank = ""
   local txt = {
     "\nSonata is a Lua program for mathematical calculations.",
-    "",
+    blank,
     "USAGE:",
     "\tlua [-i] sonata.lua [flag] [arg1 arg2 ...]",
     "(option '-i' can be used for working in native Lua interpreter)",
-    "",
+    blank,
     "FLAGS:",
     "\t-h\tGet this help message.",
     "\t-e\tEvaluate command line expression.",
     '\t\te.g. -e "2+2"',
-    "",
   }
   for k, v in pairs(_args) do
     if v.description then
@@ -263,10 +273,9 @@ Sonata._arghelp = function ()
       end
     end
   end
-  txt[#txt+1] = ""
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
   txt[#txt+1] = "\nVERSION: "..Sonata.version
-  txt[#txt+1] = ""
+  txt[#txt+1] = blank
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end
   txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules, ', '))
@@ -303,7 +312,7 @@ io.write(About:get('intro'), SonataHelp.CRESET, "\n")
 
 -- choose interpreter
 if arg[-1] ~= '-i' then
-  Sonata.repl(nil, reader)  -- use Sonata REPL
+  Sonata.repl(nil, _reader)  -- use Sonata REPL
 else
   Sonata.inLua = true       -- use Lua REPL
 end

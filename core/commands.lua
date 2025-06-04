@@ -145,7 +145,7 @@ cmdInfo.N = {'cmd_N', "", "Note-files"}
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
 commands.o = function (args, env)
-  local blk = env.evaluate._toBlocks(args[2])
+  local blk = env.evaluate.toBlocks(args[2])
   if blk then
     for _, v in ipairs(blk) do
       table.insert(env.notes, v)
