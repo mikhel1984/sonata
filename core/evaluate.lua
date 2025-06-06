@@ -52,7 +52,7 @@ end
 local function _goTo (args, env)
   local num = tonumber(args[1])
   if not num then
-    env.evaluate.printErr("Unknown command "..args[1])
+    env.evaluate.printErr("Unknown command "..(args[1] or ""))
     return nil
   end
   env.index = 1

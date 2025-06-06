@@ -140,6 +140,10 @@ q = {1, 2, 3, 4, 5}
 D:reverse(q)
 ans = q[1]                   --> 5
 
+-- sort
+D:sort(q, "x1 < x2")
+ans = q[1]                   --> 1
+
 --]]
 
 
@@ -174,10 +178,18 @@ local function _copy_obj(v)
   end
 end
 
+
+--- Make function that returns result of source method call.
+--  @param f Source method.
+--  @return function call result.
 local function _wrap_call (f)
   return function (self, ...) return f(nil, self._t, ...) end
 end
 
+
+--- Make function that calls source method and saves result.
+--  @param f Source method.
+--  @return list wrapper.
 local function _wrap_list (f)
   return function (self, ...)
     self._t = f(nil, self._t, ...)
@@ -185,11 +197,16 @@ local function _wrap_list (f)
   end
 end
 
-local function list_pack (src, acc)
+
+--- Convert list to binary string.
+--  @param src Source table.
+--  @param acc Data type accumulator.
+--  @return binary string.
+local function _list_pack (src, acc)
   local t = {string.pack('B', acc['#'])}
   for _, v in ipairs(src) do
     if type(v) == 'table' then
-      t[#t+1] = v._pack and v:_pack(acc) or list_pack(v, acc)
+      t[#t+1] = v._pack and v:_pack(acc) or _list_pack(v, acc)
     elseif type(v) == 'number' then
       t[#t+1] = Utils.pack_num(v, acc)
     else
@@ -200,14 +217,21 @@ local function list_pack (src, acc)
   return table.concat(t)
 end
 
-local function list_unpack (src, pos, acc, ver)
+
+--- Convert binary string to list.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Data type accumulator.
+--  @param ver Version of the pack algorithm.
+--  @return obtained object and the next position.
+local function _list_unpack (src, pos, acc, ver)
   local t, n = {}, nil
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
     local key = acc[n]
     if type(key) == "string" then
       if key == '#' then
-        t[#t+1], pos = list_unpack(src, pos, acc, ver)
+        t[#t+1], pos = _list_unpack(src, pos, acc, ver)
       elseif string.byte(key, 1) == 0x26 then  -- &
         t[#t+1], pos = Utils.unpack_num(src, pos, key, ver)
       else   -- Sonata object
@@ -236,19 +260,52 @@ __module__ = "Data processing and statistics."
 local data = {}
 
 
+-- List wrapper.
 local mt_list = {
   type="list",
   -- methods
-  __newindex = function (t, k, v) t._t[k] = v end,
-  __len = function (t) return #t._t end,
-  __tostring = function (t) return string.format("<list %s>", tostring(t._t)) end,
+  __newindex = function (self, k, v) self._t[k] = v end,
+  __len = function (self) return #self._t end,
+  __tostring = function (self)
+    return string.format("<list %s>", tostring(self._t))
+  end,
 }
 
-mt_list.__index = function (t, k)
-  if k == 'data' then
-    return t._t
+
+--- Access to the wrapped list.
+--  @param k Index name.
+--  @return data value.
+mt_list.__index = function (self, k)
+  if k == 'data' then return self._t end
+  return mt_list[k] or self._t[k]
+end
+
+
+--- Make range of data.
+--  @param k0 Start index.
+--  @param kn Stop index.
+--  @param step (=1) Step value (optional).
+--  @return Object with the given data range.
+mt_list.__call = function (self, k0, kn, step)
+  step = step or 1
+  if k0 < 0 then k0 = #self._t + 1 + k0 end
+  if kn < 0 then kn = #self._t + 1 + kn end
+  assert(step > 0 and kn > k0 or step < 0 and kn < k0, "wrong range")
+  local t = {}
+  for i = k0, kn, step do
+    t[#t+1] = self._t[i]
   end
-  return mt_list[k] or t._t[k]
+  self._t = t
+  return self
+end
+
+
+--- Make copy of a list wrapper.
+--  @return copy object.
+mt_list.copy = function (self)
+  local t = {}
+  for i = 1, #self._t do t[i] = self._t[i] end
+  return setmetatable({_t=t}, mt_list)
 end
 
 
@@ -256,9 +313,9 @@ end
 --  @param v Source object.
 --  @return deep copy.
 data.copy = function (_, v) return _copy_obj(v) end
-mt_list.copy = _wrap_list(data.copy)
 about[data.copy] = {":copy(t) --> copy_t",
   "Make deep copy of the table.", help.OTHER}
+
 
 --- Estimate covariance for two vectors.
 --  @param t1 First data vector.
@@ -407,6 +464,31 @@ about[data.freq] = {":freq(data_t) --> tbl",
   "Return table with frequencies of elements.", STAT}
 
 
+--- Apply given function to elements of the list when condition is true.
+--  @param t Table of numbers.
+--  @param fn Transformation function or string.
+--  @param cond Condition function f(i,v) or string.
+--  @return obtained list.
+data.gen = function (_, t, fn, cond)
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
+  -- condition function f(index, value)
+  if cond and type(cond) == 'string' then cond = Utils.Fn(cond, 2) end
+  local q = {}
+  if cond then
+    for i, v in ipairs(t) do
+      if cond(i, v) then q[#q+1] = fn(v) end
+    end
+  else
+    for i, v in ipairs(t) do q[i] = fn(v) end
+  end
+  return q
+end
+mt_list.gen = _wrap_list(data.gen)
+about[data.gen] = {":gen(t, fn|str, [cond_fn|cond_str=nil]) --> t",
+  "Make new list using given transformation. Optional condition function of the form f(index,value).",
+  LIST}
+
+
 --- Geometrical mean.
 --  @param t Table of numbers.
 --  @param tw Table of weights, optional.
@@ -495,9 +577,10 @@ data.histcounts = function (_, t, rng)
   end
   return res, bins
 end
+mt_list.histcounts = _wrap_call(data.histcounts)
 about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", STAT}
--- TODO add to mt_list
+
 
 --- Find weights (1/0) based on condition.
 --  @param t Data table.
@@ -690,20 +773,28 @@ about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var
 
 --- Reverse list in place.
 --  @param t List of elements.
---  @param inPlace Apply in place.
---  @return Updated list.
-data.reverse = function (_, t, inPlace)
-  local dst = in_place and t or {}
+data.reverse = function (_, t)
   local n, m = math.floor(#t / 2), #t+1
   for i = 1, n do
-    dst[i], dst[m-i] = t[m-i], t[i]
+    t[i], t[m-i] = t[m-i], t[i]
   end
   return dst
 end
---mt_list.reverse = function (self) data.reverse(nil, self._t); return self end
-mt_list.reverse = _wrap_list(data.reverse)
-about[data.reverse] = {":reverse(data_t, [inPlace=false]) --> t",
+mt_list.reverse = function (self) data.reverse(nil, self._t); return self end
+about[data.reverse] = {":reverse(data_t)",
   "Reverse table elements.", help.OTHER}
+
+
+--- Sort elements in place.
+--  @param t List of elements.
+--  @param fn Comparison function or string.
+data.sort = function (_, t, fn)
+  if type(fn) == "string" then fn = Utils.Fn(fn, 2) end
+  table.sort(t, fn)
+end
+mt_list.sort = function (self, fn) data.sort(nil, self._t, fn); return self end
+about[data.sort] = {":sort(data_t, fn|str)",
+  "Sort elements of the list", help.OTHER}
 
 
 --- Sum of all elements.
@@ -773,6 +864,13 @@ data.zip = function (_, fn, ...)
 end
 about[data.zip] = {":zip(fn|str, ...) --> tbl",
   "Sequentially apply function to list of tables.", LIST}
+
+
+-- Constructor for the list wrapper.
+setmetatable(data, {
+__call = function (self, t)
+  return setmetatable({_t=t}, mt_list)
+end })
 
 
 -- Methametods for the range of numbers.
@@ -1034,7 +1132,9 @@ about[data.T] = {":T(src_t) --> new_T",
   "Get reference to 'transposed' table.", REF}
 
 
+-- Collect data types for packing.
 local mt_accum = {
+  -- Save new element and return its index.
   __index = function (t, k)
     table.insert(t._nm, k)
     local n = #t._nm
@@ -1044,12 +1144,15 @@ local mt_accum = {
 }
 
 
+--- Convert object to binary string.
+--  @param v Source object.
+--  @return string representation.
 data.pack = function (self, v)
   -- TODO set program version
   local t = {'/\\/', string.pack('I2', 100), '\0',}
   local acc, bin = setmetatable({_nm={}}, mt_accum), nil
   if type(v) == 'table' then
-    bin = v._pack and v:_pack(acc) or list_pack(v, acc)
+    bin = v._pack and v:_pack(acc) or _list_pack(v, acc)
   else
     error "No rules to pack it"
   end
@@ -1063,7 +1166,13 @@ data.pack = function (self, v)
   -- TODO add check sum
   return table.concat(t)
 end
+about[data.pack] = {":pack(obj) --> bin_s",
+  "Pack object to binary string.", help.OTHER}
 
+
+--- Convert binary string to Sonata object.
+--  @param v Source string.
+--  @return object.
 data.unpack = function (self, v)
   if type(v) ~= 'string' or string.sub(v, 1, 3) ~= '/\\/' then
     error 'Unknown data type'
@@ -1078,18 +1187,15 @@ data.unpack = function (self, v)
     pos = pos + n
   end
   pos = pos + 1
-  if types[1] == '#' then
-    return list_unpack(v, pos+1, types, ver)
+  if types[1] == '#' then  -- lua table
+    return _list_unpack(v, pos+1, types, ver)
   else
     types[1] = require('matlib.'..types[1])
     return types[1]._unpack(v, pos+1, types, ver)
   end
 end
-
-setmetatable(data, {
-__call = function (self, t)
-  return setmetatable({_t=t}, mt_list)
-end })
+about[data.unpack] = {":unpack(bin_s) --> obj",
+  "Unpack object from binary string.", help.OTHER}
 
 
 -- Comment to remove descriptions
