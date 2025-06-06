@@ -156,7 +156,7 @@ Ver = Ver.versions
 
 
 local STAT = 'statistics'
-local FILES = 'files'
+local FILES = 'in/out'
 local LIST = 'lists'
 local REF = 'reference'
 
@@ -307,6 +307,29 @@ mt_list.copy = function (self)
   for i = 1, #self._t do t[i] = self._t[i] end
   return setmetatable({_t=t}, mt_list)
 end
+
+
+--- Estimate correlation for two lists.
+--  @param t1 First data list.
+--  @param t2 Second data list.
+--  @return correlation value.
+data.corr = function(_, t1, t2)
+  if #t1 ~= #t2 then
+    error "Different vector size"
+  end
+  local m1 = data:mean(t1)
+  local m2 = data:mean(t2)
+  local s12, s11, s22 = 0, 0, 0
+  for i = 1, #t1 do
+    local d1, d2 = t1[i]-m1, t2[i]-m2
+    s12 = s12 + d1*d2
+    s11 = s11 + d1*d1
+    s22 = s22 + d2*d2
+  end
+  return s12 / math.sqrt(s11*s22)
+end
+about[data.corr] = {":corr(xs_t, ys_t) --> float",
+  "Find correlation for two vectors.", STAT}
 
 
 --- Make copy of an object or list.
@@ -467,7 +490,7 @@ about[data.freq] = {":freq(data_t) --> tbl",
 --- Apply given function to elements of the list when condition is true.
 --  @param t Table of numbers.
 --  @param fn Transformation function or string.
---  @param cond Condition function f(i,v) or string.
+--  @param cond Condition function f(v,i) or string.
 --  @return obtained list.
 data.gen = function (_, t, fn, cond)
   if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
@@ -476,7 +499,7 @@ data.gen = function (_, t, fn, cond)
   local q = {}
   if cond then
     for i, v in ipairs(t) do
-      if cond(i, v) then q[#q+1] = fn(v) end
+      if cond(v, i) then q[#q+1] = fn(v) end
     end
   else
     for i, v in ipairs(t) do q[i] = fn(v) end
@@ -484,8 +507,8 @@ data.gen = function (_, t, fn, cond)
   return q
 end
 mt_list.gen = _wrap_list(data.gen)
-about[data.gen] = {":gen(t, fn|str, [cond_fn|cond_str=nil]) --> t",
-  "Make new list using given transformation. Optional condition function of the form f(index,value).",
+about[data.gen] = {":gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t",
+  "Make new list using given transformation. Optional condition function of the form f(value,index).",
   LIST}
 
 
@@ -782,7 +805,7 @@ data.reverse = function (_, t)
 end
 mt_list.reverse = function (self) data.reverse(nil, self._t); return self end
 about[data.reverse] = {":reverse(data_t)",
-  "Reverse table elements.", help.OTHER}
+  "Reverse table elements.", LIST}
 
 
 --- Sort elements in place.
@@ -794,7 +817,7 @@ data.sort = function (_, t, fn)
 end
 mt_list.sort = function (self, fn) data.sort(nil, self._t, fn); return self end
 about[data.sort] = {":sort(data_t, fn|str)",
-  "Sort elements of the list", help.OTHER}
+  "Sort elements of the list", LIST}
 
 
 --- Sum of all elements.
@@ -871,6 +894,8 @@ setmetatable(data, {
 __call = function (self, t)
   return setmetatable({_t=t}, mt_list)
 end })
+about[data] = {" (data_t) --> new_L",
+  "Create list wrapper.", REF}
 
 
 -- Methametods for the range of numbers.
@@ -1062,7 +1087,7 @@ data.ref = function (_, t, iBeg, iEnd)
   end
   return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, mt_ref)
 end
-about[data.ref] = {':ref(src_t, begin_N=1, end_N=#src_t) --> new_R',
+about[data.ref] = {':ref(data_t, begin_N=1, end_N=#src_t) --> new_R',
   'Return reference to the range of elements.', REF}
 
 
@@ -1128,7 +1153,7 @@ data.T = function (self, src)
   }
   return setmetatable(o, mt_transpose)
 end
-about[data.T] = {":T(src_t) --> new_T",
+about[data.T] = {":T(data_t) --> new_T",
   "Get reference to 'transposed' table.", REF}
 
 
@@ -1167,7 +1192,7 @@ data.pack = function (self, v)
   return table.concat(t)
 end
 about[data.pack] = {":pack(obj) --> bin_s",
-  "Pack object to binary string.", help.OTHER}
+  "Pack object to binary string.", FILES}
 
 
 --- Convert binary string to Sonata object.
@@ -1195,7 +1220,7 @@ data.unpack = function (self, v)
   end
 end
 about[data.unpack] = {":unpack(bin_s) --> obj",
-  "Unpack object from binary string.", help.OTHER}
+  "Unpack object from binary string.", FILES}
 
 
 -- Comment to remove descriptions
