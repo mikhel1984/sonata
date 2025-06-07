@@ -108,10 +108,6 @@ D:csvwrite(t, nm, ';')
 tt = D:csvread(nm, ';')
 ans = tt[2][2]                -->  t[2][2]
 
--- reference to 'transposed' table
-b = D:T(t)
-ans = b[3][2]                 -->  t[2][3]
-
 -- Markdown-like print for a table
 print(D:md(t))
 
@@ -175,25 +171,6 @@ local function _copy_obj(v)
     end
   else
     return v
-  end
-end
-
-
---- Make function that returns result of source method call.
---  @param f Source method.
---  @return function call result.
-local function _wrap_call (f)
-  return function (self, ...) return f(nil, self._t, ...) end
-end
-
-
---- Make function that calls source method and saves result.
---  @param f Source method.
---  @return list wrapper.
-local function _wrap_list (f)
-  return function (self, ...)
-    self._t = f(nil, self._t, ...)
-    return self
   end
 end
 
@@ -264,20 +241,38 @@ local data = {}
 local mt_list = {
   type="list",
   -- methods
-  __newindex = function (self, k, v) self._t[k] = v end,
-  __len = function (self) return #self._t end,
+  __newindex = function (self, k, v) self._tbl[k] = v end,
+  __len = function (self) return #self._tbl end,
   __tostring = function (self)
-    return string.format("<list %s>", tostring(self._t))
+    return string.format("<list %s>", tostring(self._tbl))
   end,
 }
+
+
+--- Make function that returns result of source method call.
+--  @param f Source method.
+--  @return function call result.
+local function _wrap_call (f)
+  return function (self, ...) return f(nil, self, ...) end
+end
+
+
+--- Make function that calls source method and saves result.
+--  @param f Source method.
+--  @return list wrapper.
+local function _wrap_list (f)
+  return function (self, ...)
+    return setmetatable({_tbl=f(nil, self, ...)}, mt_list)
+  end
+end
 
 
 --- Access to the wrapped list.
 --  @param k Index name.
 --  @return data value.
 mt_list.__index = function (self, k)
-  if k == 'data' then return self._t end
-  return mt_list[k] or self._t[k]
+  if k == 'data' then return self._tbl end
+  return mt_list[k] or self._tbl[k]
 end
 
 
@@ -288,14 +283,14 @@ end
 --  @return Object with the given data range.
 mt_list.__call = function (self, k0, kn, step)
   step = step or 1
-  if k0 < 0 then k0 = #self._t + 1 + k0 end
-  if kn < 0 then kn = #self._t + 1 + kn end
+  if k0 < 0 then k0 = #self._tbl + 1 + k0 end
+  if kn < 0 then kn = #self._tbl + 1 + kn end
   assert(step > 0 and kn > k0 or step < 0 and kn < k0, "wrong range")
   local t = {}
   for i = k0, kn, step do
-    t[#t+1] = self._t[i]
+    t[#t+1] = self._tbl[i]
   end
-  self._t = t
+  self._tbl = t
   return self
 end
 
@@ -304,8 +299,8 @@ end
 --  @return copy object.
 mt_list.copy = function (self)
   local t = {}
-  for i = 1, #self._t do t[i] = self._t[i] end
-  return setmetatable({_t=t}, mt_list)
+  for i = 1, #self._tbl do t[i] = self._tbl[i] end
+  return setmetatable({_tbl=t}, mt_list)
 end
 
 
@@ -482,7 +477,7 @@ data.freq = function (_, t)
   end
   return tmp
 end
-mt_list.freq = _wrap_list(data.freq)
+mt_list.freq = _wrap_call(data.freq)
 about[data.freq] = {":freq(data_t) --> tbl",
   "Return table with frequencies of elements.", STAT}
 
@@ -789,7 +784,7 @@ data.reduce = function (_, t, fn, val)
   for i = i0, #t do val = fn(val, t[i]) end
   return val
 end
-mt_list.reduce = _wrap_list(data.reduce)
+mt_list.reduce = _wrap_call(data.reduce)
 about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var",
   "Apply function to its previous result and next element.", LIST}
 
@@ -803,7 +798,7 @@ data.reverse = function (_, t)
   end
   return dst
 end
-mt_list.reverse = function (self) data.reverse(nil, self._t); return self end
+mt_list.reverse = function (self) data.reverse(nil, self._tbl); return self end
 about[data.reverse] = {":reverse(data_t)",
   "Reverse table elements.", LIST}
 
@@ -815,7 +810,7 @@ data.sort = function (_, t, fn)
   if type(fn) == "string" then fn = Utils.Fn(fn, 2) end
   table.sort(t, fn)
 end
-mt_list.sort = function (self, fn) data.sort(nil, self._t, fn); return self end
+mt_list.sort = function (self, fn) data.sort(nil, self._tbl, fn); return self end
 about[data.sort] = {":sort(data_t, fn|str)",
   "Sort elements of the list", LIST}
 
@@ -892,7 +887,7 @@ about[data.zip] = {":zip(fn|str, ...) --> tbl",
 -- Constructor for the list wrapper.
 setmetatable(data, {
 __call = function (self, t)
-  return setmetatable({_t=t}, mt_list)
+  return setmetatable({_tbl=t}, mt_list)
 end })
 about[data] = {" (data_t) --> new_L",
   "Create list wrapper.", REF}
@@ -1034,7 +1029,7 @@ local mt_ref = {
   type = 'ref' ,
   -- methods
   __len = function (t) return t._end - t._beg end,
-  __tostring = function (t) return string.format("<ref %s>", tostring(t._t)) end,
+  __tostring = function (t) return string.format("<ref %s>", tostring(t._tbl)) end,
 }
 
 
@@ -1046,7 +1041,7 @@ mt_ref.__index = function (self, i)
   if Ver.isInteger(i) then
     local n = i + self._beg
     if self._beg < n and n <= self._end then
-      return self._t[n]
+      return self._tbl[n]
     end
   end
   return mt_ref[i]
@@ -1064,10 +1059,10 @@ mt_ref.__newindex = function (self, k, v)
       -- copy data
       local i0 = k - 1
       local n = math.min(#v, self._end - i0)
-      for i = 1, n do self._t[i0 + i] = v[i] end
+      for i = 1, n do self._tbl[i0 + i] = v[i] end
     else
       -- set value
-      self._t[k] = v
+      self._tbl[k] = v
     end
   end
 end
@@ -1083,78 +1078,113 @@ data.ref = function (_, t, iBeg, iEnd)
   iEnd = iEnd or #t
   assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
   if getmetatable(t) == mt_ref then
-    return setmetatable({_beg=t._beg+iBeg-1, _end=t._beg+iEnd, _t=t._t}, mt_ref)
+    return setmetatable({_beg=t._beg+iBeg-1, _end=t._beg+iEnd, _tbl=t._tbl}, mt_ref)
   end
-  return setmetatable({_beg=iBeg-1, _end=iEnd, _t=t}, mt_ref)
+  return setmetatable({_beg=iBeg-1, _end=iEnd, _tbl=t}, mt_ref)
 end
 about[data.ref] = {':ref(data_t, begin_N=1, end_N=#src_t) --> new_R',
   'Return reference to the range of elements.', REF}
 
 
--- Get reference to 'transposed' data
--- i.e. t[i][j] returns t[j][i]
-local mt_transpose = {
-  type = 'transpose',
+-- Column reference
+local mt_col = {
+  type='column',
   -- methods
-  __len = function (t) return #t._tbl._src[1] end,
-  __tostring = function (t) return string.format("<transpose %s>", tostring(t._tbl._src)) end,
+  __len = function (self) return #self._tbl end,
+  __tostring = function (self)
+    return string.format("<column %d %s>", self._n, tostring(self._tbl))
+  end
 }
 
 
---- Get access to k-th element.
---  @param self T-ref object.
---  @param k Table index.
---  @return Empty table with mt_transpose_k metatable.
-mt_transpose.__index = function (self, k)
-  if Ver.isInteger(k) and 0 < k and k <= #self._tbl._src[1] then
-    self._tbl._n = k
-    return self._tbl
+--- Get column element.
+--  @param k Key.
+--  @return found value.
+mt_col.__index = function (self, k) 
+  local tmp = mt_list[k]
+  if tmp then  -- for sequential transformations
+    return tmp
+  end
+  local row = self._tbl[k]
+  return row and row[self._n]
+end
+
+
+--- Set element or group of elements.
+--  @param k Key, 'data' for group set.
+--  @param v Value, scalar or list.
+mt_col.__newindex = function (self, k, v)
+  if k == 'data' then
+    if type(v) ~= 'table' or #v ~= #self._tbl then
+      error "unable to set elements"
+    end
+    local t, n = self._tbl, self._n
+    for i = 1, #t do t[i][n] = v[i] end
+  else
+    local row = self._tbl[k]
+    if row then row[self._n] = v end
   end
 end
 
 
--- Metatable for internal table.
-local mt_transpose_k = {}
-
-
---- Get table element.
---  @param self Internal T-ref object.
---  @param k Element index.
-mt_transpose_k.__index = function (self, k)
-  local v = self._src[k]
-  return v and v[self._n] or nil
+--- Make column reference.
+--  @param t Source table.
+--  @param n Column number.
+--  @return column reference.
+data.col = function (_, t, n)
+  assert(Ver.isInteger(n) and t[1][n], "Out of range")
+  return setmetatable({_tbl=t, _n=n}, mt_col)
 end
+about[data.col] = {":col(src_t, col_N) --> ref_Col",
+  "Make column reference.", REF}
 
 
---- Set table element.
---  @param self Internal T-ref object.
---  @param k Element index.
---  @param v New value.
-mt_transpose_k.__newindex = function (self, k, v)
-  self._src[k][self._n] = v
-end
-
-
---- Get length of 'internal' table.
---  @param self Internal T-ref object.
---  @return Table length.
-mt_transpose_k.__len = function (self) return #self._src end
-
-
---- Get reference to 'transposed' table.
---  @param src Source table.
---  @return Reference object.
-data.T = function (self, src)
-  if #src == 0 or type(src[1]) ~= 'table' then
-    return src  -- don't need in reference
+-- Row reference
+local mt_row = {
+  type='row',
+  -- methods
+  __len = function (self) return #self._row end,
+  __tostring = function (self)
+    return string.format("row %d %s", self._n, tostring(self._tbl))
   end
-  local o = {
-    _tbl = setmetatable({_src = src, _n = 0}, mt_transpose_k),
-  }
-  return setmetatable(o, mt_transpose)
+}
+
+
+--- Get row element.
+--  @param k Key.
+--  @return found value.
+mt_row.__index = function (self, k)
+  return mt_list[k] or self._row[k]
 end
-about[data.T] = {":T(data_t) --> new_T",
-  "Get reference to 'transposed' table.", REF}
+
+
+--- Set element or group of elements.
+--  @param k Key, 'data' for group set.
+--  @param v Value, scalar or list.
+mt_row.__newindex = function (self, k, v)
+  if k == 'data' then
+    if type(v) ~= 'table' or #v ~= #self._row then
+      error "unable to set elements"
+    end
+    local t = self._row
+    for i = 1, #t do t[i] = v[i] end
+  else
+    if self._row[k] then self._row[k] = v end
+  end
+end
+
+
+--- Make row reference.
+--  @param t Source table.
+--  @param n Column number.
+--  @return column reference.
+data.row = function (_, t, n)
+  local row = t[n]
+  assert(Ver.isInteger(n) and row, "Out of range")
+  return setmetatable({_tbl=t, _row=row, _n=n}, mt_row)
+end
+about[data.row] = {":row(src_t, row_N) --> ref_Row",
+  "Make row reference.", REF}
 
 
 -- Collect data types for packing.
@@ -1229,4 +1259,3 @@ data.about = about
 return data
 
 --====================================
--- TODO add sort
