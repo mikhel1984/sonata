@@ -40,6 +40,9 @@ ans = a                      --3>  -0.65625
 tmp = D:cov({X,Y})
 ans = tmp[1][2]              --3>  a
 
+-- correlation
+ans = D:corr(X, Y)           --2> -0.166
+
 -- maximum element and index
 _,ans = D:max(X)              -->  4
 
@@ -78,10 +81,24 @@ fn = function (x) return x > 2 end
 tmp = D:filter(X, fn)
 ans = tmp[1]                  -->  X[1]
 
+-- reverse elements
+q = {1, 2, 3, 4, 5}
+D:reverse(q)
+ans = q[1]                   --> 5
+
+-- sort
+D:sort(q, "x1 < x2")
+ans = q[1]                   --> 1
+
 -- generate new list
 -- use 'lazy' function definition
 tmp = D:zip("{x1-x2, x1+x2}", X, Y)
 ans = tmp[1][2]               -->  X[1]+Y[1]
+
+-- generator with condition
+-- squares or even elements
+tmp = D:gen(X, "x1^2", "x2 % 2 == 0")
+ans = tmp[2]                  --> X[4]*X[4]
 
 -- find histogram
 a,b = D:histcounts(X, 3)
@@ -96,6 +113,10 @@ a = D:ref(X, 3, 6)
 ans = #a                      -->  4
 
 ans = a[1]                    -->  X[3]
+
+-- sequential processing
+a = D(X)
+ans = a:filter("x1 > 3"):sum()  --> 15
 
 -- dsv write
 nm = os.tmpname()
@@ -130,15 +151,6 @@ ans = b2[1]                   -->  8
 -- apply function
 c = b:map(math.sin)
 ans = c[1]                   --3>  0.909
-
--- reverse elements
-q = {1, 2, 3, 4, 5}
-D:reverse(q)
-ans = q[1]                   --> 5
-
--- sort
-D:sort(q, "x1 < x2")
-ans = q[1]                   --> 1
 
 --]]
 
