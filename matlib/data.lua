@@ -32,8 +32,9 @@ ans = D:mean(X)              --3>  3.375
 ans = D:std(X,W)             --3>  1.314
 
 -- covariance matrix
+Y = {0,2,1,3,7,5,8,4}
 tmp = D:cov({X,Y})
-ans = tmp[1][2]              --3>  a
+ans = tmp[1][2]              --2>  -0.656
 
 -- correlation
 ans = D:corr(X, Y)           --2> -0.166
@@ -283,25 +284,6 @@ end
 mt_list.__index = function (self, k)
   if k == 'data' then return self._tbl end
   return mt_list[k] or self._tbl[k]
-end
-
-
---- Make range of data.
---  @param k0 Start index.
---  @param kn Stop index.
---  @param step (=1) Step value (optional).
---  @return Object with the given data range.
-mt_list.__call = function (self, k0, kn, step)
-  step = step or 1
-  if k0 < 0 then k0 = #self._tbl + 1 + k0 end
-  if kn < 0 then kn = #self._tbl + 1 + kn end
-  assert(step > 0 and kn > k0 or step < 0 and kn < k0, "wrong range")
-  local t = {}
-  for i = k0, kn, step do
-    t[#t+1] = self._tbl[i]
-  end
-  self._tbl = t
-  return self
 end
 
 
@@ -1069,7 +1051,7 @@ mt_ref.__index = function (self, i)
       return self._tbl[n]
     end
   end
-  return mt_ref[i]
+  return mt_ref[i] or mt_list[i]
 end
 
 
@@ -1123,7 +1105,7 @@ local mt_col = {
 --  @param k Key.
 --  @return found value.
 mt_col.__index = function (self, k) 
-  local tmp = mt_list[k]
+  local tmp = mt_col[k] or mt_list[k]
   if tmp then  -- for sequential transformations
     return tmp
   end
@@ -1172,7 +1154,7 @@ local mt_row = {
 --  @param k Key.
 --  @return found value.
 mt_row.__index = function (self, k)
-  return mt_list[k] or self._row[k]
+  return mt_row[k] or mt_list[k] or self._row[k]
 end
 
 
