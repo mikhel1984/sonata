@@ -272,7 +272,7 @@ Sonata._arghelp = function ()
     end
   end
   txt[#txt+1] = "\t No flag  - Evaluate file(s)."
-  txt[#txt+1] = "\nVERSION: "..Sonata.version
+  txt[#txt+1] = string.format("\nVERSION: %d.%02d", Sonata.MAJOR_V, Sonata.MINOR_V)
   txt[#txt+1] = blank
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end

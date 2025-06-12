@@ -99,7 +99,8 @@ end
 local evaluate = {
 
 -- current version
-version = '1.00',
+MAJOR_V = 1,
+MINOR_V = 0,
 
 -- status
 EV_RES = 1,   -- found result
@@ -123,8 +124,8 @@ _modules = {},
 
 evaluate.TITLE = string.format(
 [[   # #      --=====  so/\/ata  =====--     # #
-    # #         --==== %s ====--        # #
-]], evaluate.version)
+    # #         --==== %d.%02d ====--        # #
+]], evaluate.MAJOR_V, evaluate.MINOR_V)
 
 
 -- Format to representation mapping

@@ -128,6 +128,14 @@ D:csvwrite(t, nm, ';')
 tt = D:csvread(nm, ';')
 ans = tt[2][2]                -->  t[2][2]
 
+-- pack
+bin = D:pack(t)
+ans = #bin                    --> 30
+
+-- unpack
+t2 = D:unpack(bin)
+ans = t2[1][2]                --> t[1][2]
+
 -- Markdown-like print for a table
 print(D:md(t))
 
@@ -1202,10 +1210,10 @@ local mt_accum = {
 
 --- Convert object to binary string.
 --  @param v Source object.
---  @return string representation.
+--  @return binary string representation.
 data.pack = function (self, v)
-  -- TODO set program version
-  local t = {'/\\/', string.pack('I2', 100), '\0',}
+  local ver = Sonata and (100*Sonata.MAJOR_V + Sonata.MINOR_V) or 100
+  local t = {'/\\/', string.pack('I2', ver), '\0',}
   local acc, bin = setmetatable({_nm={}}, mt_accum), nil
   if type(v) == 'table' then
     bin = v._pack and v:_pack(acc) or _list_pack(v, acc)
