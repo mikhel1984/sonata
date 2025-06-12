@@ -99,6 +99,10 @@ ans = tmp[1][2]               -->  X[1]+Y[1]
 tmp = D:gen(X, "x1^2", "x2 % 2 == 0")
 ans = tmp[2]                  --> X[4]*X[4]
 
+-- make array 2x3
+zs = D:zeros(2, 3)
+ans = #zs[2]                  --> 3
+
 -- find histogram
 a,b = D:histcounts(X, 3)
 ans = b[1]                    -->  2.25
@@ -175,6 +179,17 @@ local FILES = 'in/out'
 local LIST = 'lists'
 local REF = 'reference'
 local AUX = 'auxiliary'
+
+
+--- Add string bytes.
+--  @param s Source string.
+--  @param n (=nil) Last character position.
+--  @return byte sum % 8.
+local function _byteSum (s, n)
+  local v = 0
+  for i = 1, (n or #s) do v = v + string.byte(s, i, i) end
+  return v % 8
+end
 
 
 --- Make copy of an object or list.
@@ -1251,7 +1266,10 @@ data.pack = function (self, v)
   end
   t[#t+1] = '\0'  -- end marker
   t[#t+1] = bin
-  -- TODO add check sum
+  -- check sum
+  local sum = 0
+  for i = 1, #t do sum = sum + _byteSum(t[i]) end
+  t[#t+1] = string.pack('B', sum % 8)
   return table.concat(t)
 end
 about[data.pack] = {":pack(obj) --> bin_s",
@@ -1264,6 +1282,9 @@ about[data.pack] = {":pack(obj) --> bin_s",
 data.unpack = function (self, v)
   if type(v) ~= 'string' or string.sub(v, 1, 3) ~= '/\\/' then
     error 'Unknown data type'
+  end
+  if _byteSum(v, #v-1) ~= string.byte(v, #v) then
+    error 'Wrong check sum'
   end
   local ver, pos = string.unpack('I2', v, 4)
   pos = pos + 1  -- skip zero
