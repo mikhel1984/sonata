@@ -112,9 +112,7 @@ help = function(v)
   if v == '*' then
     res = About:makeFull(use)
   else
-    res = About:findObject(v, use) or Sonata.info {
-      string.format('<%s>', getmetatable(v) and getmetatable(v).type or type(v)),
-      '\n', tostring(v) }
+    res = About:findObject(v, use) or Sonata.info(About:objectInfo(v))
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end

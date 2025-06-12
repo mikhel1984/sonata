@@ -28,6 +28,13 @@ about[function] =
 -- internal parameters
 local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
 
+-- metamethods signes
+local meta_op = {
+  __add="+", __sub="-", __mul="*", __div="/", __pow="^", __mod="%", __unm="-obj", 
+  __idiv="//", __band="&", __bor="|", __bnot="~", __shl="<<", __shr=">>", 
+  __concat="..", __len="#", __eq="==", __lt="<", __le="<=", __call="obj()"
+}
+
 
 --	MODULE
 
@@ -226,6 +233,35 @@ help.makeModule = function (t, nm)
     res[#res+1] = '\n'
   end
   return res
+end
+
+
+--- Collect information about object.
+--  @param var Some object.
+--  @return table with descriptions.
+help.objectInfo = function (_, var)
+  local mt = getmetatable(var)
+  local t = {
+    string.format('<%s>', mt and mt.type or type(var)), 
+    '\n', tostring(var)}
+  if mt then
+    local acc = {}
+    for k, v in pairs(mt) do
+      if type(k) == 'string' and type(v) == 'function' then
+        if string.sub(k, 1, 1) == '_' then
+          if meta_op[k] then acc[#acc+1] = meta_op[k] end
+        else
+          acc[#acc+1] = k
+        end
+      end
+    end
+    if #acc > 0 then
+      table.sort(acc, function (a, b) return #a < #b end)
+      t[#t+1] = '\n'
+      t[#t+1] = 'Methods: ' .. table.concat(acc, ', ')
+    end
+  end
+  return t
 end
 
 

@@ -166,6 +166,7 @@ local STAT = 'statistics'
 local FILES = 'in/out'
 local LIST = 'lists'
 local REF = 'reference'
+local AUX = 'auxiliary'
 
 
 --- Make copy of an object or list.
@@ -311,8 +312,8 @@ data.cov2 = data._cov2  -- DEPRECATED
 --  @param val Value to search.
 --  @param fn (=nil) Function to extract data.
 --  @return index and value.
-data.binsearch = function (_, t, val, fn) 
-  local i, u = Utils.binsearch(t, val, fn) 
+data.binsearch = function (_, t, val, fn)
+  local i, u = Utils.binsearch(t, val, fn)
   if u == val then
     return i, u  -- only when found
   end
@@ -444,7 +445,7 @@ about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 --  @return Function based on the expression.
 data.Fn = function (_, sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
 about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
-  "Generate function from expression of x1, x2 etc.", help.OTHER}
+  "Generate function from expression of x1, x2 etc.", AUX}
 
 
 --- Find elements using condition.
@@ -901,18 +902,12 @@ about[data] = {" (data_t) --> new_L",
 
 
 -- Methametods for the range of numbers.
-local mt_range = { type = 'range' }
-
-
---- Initialize range object.
---  @param dBeg First value.
---  @param dEnd Last value.
---  @param dStep Step value.
---  @param iN Number of elements.
---  @return Range object.
-mt_range._init = function (dBeg, dEnd, dStep, iN, fn)
-  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN, _fn=fn}, mt_range)
-end
+local mt_range = { 
+  type = 'range',
+  -- methods 
+  __len = function (self) return self._N end,
+  __newindex = function (self, k, v) end,  -- can't modify
+}
 
 
 --- Add number (shift range).
@@ -963,12 +958,6 @@ mt_range.__tostring = function (self)
 end
 
 
---- Get number of elements.
---  @param self Range object.
---  @return Element number.
-mt_range.__len = function (self) return self._N end
-
-
 --- Get i-th element.
 --  @param self Range object.
 --  @param i Element index.
@@ -988,8 +977,19 @@ mt_range.__index = function (self, i)
 end
 
 
--- Don't set new elements
-mt_range.__newindex = function (self, k, v) end
+-- Range methods
+about["_rng"] = {"range: -R, R+x, R-x, k*R, R|fn", nil, AUX}
+
+
+--- Initialize range object.
+--  @param dBeg First value.
+--  @param dEnd Last value.
+--  @param dStep Step value.
+--  @param iN Number of elements.
+--  @return Range object.
+mt_range._init = function (dBeg, dEnd, dStep, iN, fn)
+  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN, _fn=fn}, mt_range)
+end
 
 
 --- Make reversed range object.
@@ -1010,6 +1010,7 @@ mt_range.map = function (self, fn)
     return mt_range._init(self._beg, self._end, self._step, self._N, fn)
   end
 end
+mt_range.__bor = mt_range.map  -- allow  rng | fn1 | fn2
 
 
 --- Generate sequence of values.
@@ -1028,7 +1029,7 @@ data.range = function (_, dBegin, dEnd, dStep)
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
 about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
-  'Generate range object.', REF}
+  'Generate range object.', AUX}
 
 
 -- Get reference to data range in other table
@@ -1104,7 +1105,7 @@ local mt_col = {
 --- Get column element.
 --  @param k Key.
 --  @return found value.
-mt_col.__index = function (self, k) 
+mt_col.__index = function (self, k)
   local tmp = mt_col[k] or mt_list[k]
   if tmp then  -- for sequential transformations
     return tmp
