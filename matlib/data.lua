@@ -31,11 +31,6 @@ ans = D:mean(X)              --3>  3.375
 -- standard deviation
 ans = D:std(X,W)             --3>  1.314
 
--- covariance for two vectors
-Y = {0,2,1,3,7,5,8,4}
-a = D:cov2(X,Y)
-ans = a                      --3>  -0.65625
-
 -- covariance matrix
 tmp = D:cov({X,Y})
 ans = tmp[1][2]              --3>  a
@@ -89,6 +84,9 @@ ans = q[1]                   --> 5
 -- sort
 D:sort(q, "x1 < x2")
 ans = q[1]                   --> 1
+
+-- binary search
+ans, _ = D:binsearch(q, 2)   --> 2
 
 -- generate new list
 -- use 'lazy' function definition
@@ -307,6 +305,41 @@ mt_list.__call = function (self, k0, kn, step)
 end
 
 
+--- Estimate covariance for two vectors.
+--  @param t1 First data vector.
+--  @param t2 Second data vector.
+--  @return Covariance value.
+data._cov2 = function (_, t1, t2)
+  if #t1 ~= #t2 then
+    error "Different vector size"
+  end
+  local m1 = data:mean(t1)
+  local m2 = data:mean(t2)
+  local s = 0
+  for i = 1, #t1 do
+    s = s + (t1[i] - m1)*(t2[i] - m2)
+  end
+  return s / #t1
+end
+data.cov2 = data._cov2  -- DEPRECATED
+
+
+--- Binary search in sorted list.
+--  @param t Sorted list of elements.
+--  @param val Value to search.
+--  @param fn (=nil) Function to extract data.
+--  @return index and value.
+data.binsearch = function (_, t, val, fn) 
+  local i, u = Utils.binsearch(t, val, fn) 
+  if u == val then
+    return i, u  -- only when found
+  end
+end
+mt_list.binsearch = _wrap_call(data.binsearch)
+about[data.binsearch] = {":binsearch(sorted_t, value, [extract_fn]) --> index_i, value",
+  "Find position of element in sorted list using binary search.", LIST}
+
+
 --- Make copy of a list wrapper.
 --  @return copy object.
 mt_list.copy = function (self)
@@ -347,26 +380,6 @@ about[data.copy] = {":copy(t) --> copy_t",
   "Make deep copy of the table.", help.OTHER}
 
 
---- Estimate covariance for two vectors.
---  @param t1 First data vector.
---  @param t2 Second data vector.
---  @return Covariance value.
-data.cov2 = function (_, t1, t2)
-  if #t1 ~= #t2 then
-    error "Different vector size"
-  end
-  local m1 = data:mean(t1)
-  local m2 = data:mean(t2)
-  local s = 0
-  for i = 1, #t1 do
-    s = s + (t1[i] - m1)*(t2[i] - m2)
-  end
-  return s / #t1
-end
-mt_list.cov2 = _wrap_call(data.cov2)
-about[data.cov2] = {":cov2(xs_t, ys_t) --> float",
-  "Find covariance value for two vectors.", STAT}
-
 
 --- Estimate covariance matrix.
 --  @param t Table of data vectors.
@@ -380,9 +393,9 @@ data.cov = function (_, t)
   local m = data.ext_matrix:zeros(N, N)
   for i = 1, N do
     local ti = t[i]
-    m[i][i] = data:cov2(ti, ti)
+    m[i][i] = data:_cov2(ti, ti)
     for j = i+1, N do
-      m[i][j] = data:cov2(ti, t[j])
+      m[i][j] = data:_cov2(ti, t[j])
       m[j][i] = m[i][j]
     end
   end
