@@ -142,7 +142,11 @@ local inform = Sonata and Sonata.warning or print
 local mmodf = math.modf
 local MANUAL, CONF = 'manual', 'settings'
 local LOG10 = math.log(10)
-local vmove = require('matlib/utils').versions.move
+local Utils = require("matlib/utils")
+local vmove = Utils.versions.move
+local czero = Utils.cross.isZero
+Utils = Utils.utils
+
 
 --	INFO
 
@@ -1343,6 +1347,26 @@ asciiplot.setZ = function (self, t) _setAxis(self, t, '_z') end
 about[asciiplot.setZ] = {"F:setZ(par_t)",
   "Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
   CONF}
+
+
+--- Visualize matrix elements
+--  @param fn Condition function, returns true/false.
+--  @return String with stars when condition is true.
+asciiplot.stars = function (_, M, fn)
+  fn = fn or function (x) return not czero(x) end
+  local acc, row, ncol = {}, {}, M:cols()
+  for r = 1, M:rows() do
+    local mr = M[r]
+    for c = 1, ncol do
+      row[c] = fn(mr[c]) and '*' or ' '
+    end
+    row[ncol+1] = '|'
+    acc[r] = table.concat(row)
+  end
+  return table.concat(acc, '\n')
+end
+about[asciiplot.stars] = {":stars(M, cond_fn) --> str",
+  "Print matrix, use star when condition for the current elemen is true.", help.OTHER}
 
 
 --- Set title.

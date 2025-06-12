@@ -861,45 +861,6 @@ end
 about[matrix.kronSum] = {"M:kronSum(M2) --> M⊕M2", "Find Kronecker sum."}
 
 
--- "In the game of life the strong survive..." (Scorpions) ;)
---  board - matrix with 'ones' as live cells
-matrix.LIFE = function (board)
-  local src = board
-  local gen = 0
-  -- make decision about current cell
-  local function islive (r, c)
-    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
-      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
-    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
-  end
-  -- evaluate
-  repeat
-    local new = matrix:zeros(board)   -- empty matrix of the same size
-    gen = gen+1
-    -- update
-    for r = 1, board._rows do
-      for c = 1, board._cols do
-        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
-      end
-    end
-    if gen > 1 and new == src then
-      local msg = '~~ No more steps ~~'
-      return Sonata and Sonata.IN_COROUTINE and msg or print(msg)
-    end
-    src = new
-    local req = string.format('step %d continue? (y/n) ', gen)
-    local resp
-    if Sonata and Sonata.IN_COROUTINE then
-      resp = Sonata.ask(req, new:stars())
-    else
-      print(new:stars())
-      io.write(req)
-      resp = io.read()
-    end
-  until 'n' == resp
-end
-
-
 --- LU transform
 --  @return L matrix, U matrix, permutations
 matrix.lu = function (self)
@@ -1147,26 +1108,6 @@ about[matrix.rows] = {"M:rows() --> N", "Get number of rows."}
 matrix.rref = function (self) return tf.gaussUp(tf.gaussDown(self)) end
 about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method.", TRANSFORM}
-
-
---- Visualize matrix elements
---  @param fn Condition function, returns true/false.
---  @return String with stars when condition is true.
-matrix.stars = function (self, fn)
-  fn = fn or function (x) return not Czero(x) end
-  local acc, row = {}, {}
-  for r = 1, self._rows do
-    local mr = self[r]
-    for c = 1, self._cols do
-      row[c] = fn(mr[c]) and '*' or ' '
-    end
-    row[self._cols+1] = '|'
-    acc[r] = table.concat(row)
-  end
-  return table.concat(acc, '\n')
-end
-about[matrix.stars] = {"M:stars(cond_fn) --> str",
-  "Print star when condition for the current elemen is true.", help.OTHER}
 
 
 --- Singular value decomposition for a matrix.
