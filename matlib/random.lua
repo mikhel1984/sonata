@@ -248,9 +248,8 @@ local function _arrayRest (self, n, ...)
     local res = {}
     for i = 1, n do res[i] = _arrayRest(self, ...) end
     return res
-  else
-    return self:_fn()
   end
+  return self:_fn()
 end
 
 
@@ -320,7 +319,7 @@ random._rand = _genPM
 random.array = function (self, ...)
   return _arrayRest(self, ...)
 end
-about[random.array] = {"R:array(n1,[n2,..]) --> tbl", 
+about[random.array] = {"R:array(n1, [n2,..]) --> tbl", 
   "Get multidimentional random array."}
 
 

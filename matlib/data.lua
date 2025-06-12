@@ -180,13 +180,13 @@ local AUX = 'auxiliary'
 --- Make copy of an object or list.
 --  @param v Source object.
 --  @return deep copy.
-local function _copy_obj(v)
+local function _copyObj(v)
   if type(v) == 'table' then
     if v.copy then
       return v:copy()
     else
       local lst = {}
-      for i = 1, #v do lst[i] = _copy_obj(v[i]) end
+      for i = 1, #v do lst[i] = _copyObj(v[i]) end
       return lst
     end
   else
@@ -195,15 +195,31 @@ local function _copy_obj(v)
 end
 
 
+--- Recursive making or array with given value.
+--  @param val Value to set.
+--  @param n Current dimentions.
+--  @param ... Rest of dimentions.
+--  @return table or value.
+local function _fillRest (val, n, ...)
+  if n then
+    if n <= 0 then error('expected positive size') end
+    local res = {}
+    for i = 1, n do res[i] = _fillRest(val, ...) end
+    return res
+  end
+  return val
+end
+
+
 --- Convert list to binary string.
 --  @param src Source table.
 --  @param acc Data type accumulator.
 --  @return binary string.
-local function _list_pack (src, acc)
+local function _listPack (src, acc)
   local t = {string.pack('B', acc['#'])}
   for _, v in ipairs(src) do
     if type(v) == 'table' then
-      t[#t+1] = v._pack and v:_pack(acc) or _list_pack(v, acc)
+      t[#t+1] = v._pack and v:_pack(acc) or _listPack(v, acc)
     elseif type(v) == 'number' then
       t[#t+1] = Utils.pack_num(v, acc)
     else
@@ -221,14 +237,14 @@ end
 --  @param acc Data type accumulator.
 --  @param ver Version of the pack algorithm.
 --  @return obtained object and the next position.
-local function _list_unpack (src, pos, acc, ver)
+local function _listUnpack (src, pos, acc, ver)
   local t, n = {}, nil
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
     local key = acc[n]
     if type(key) == "string" then
       if key == '#' then
-        t[#t+1], pos = _list_unpack(src, pos, acc, ver)
+        t[#t+1], pos = _listUnpack(src, pos, acc, ver)
       elseif string.byte(key, 1) == 0x26 then  -- &
         t[#t+1], pos = Utils.unpack_num(src, pos, key, ver)
       else   -- Sonata object
@@ -272,7 +288,7 @@ local mt_list = {
 --- Make function that returns result of source method call.
 --  @param f Source method.
 --  @return function call result.
-local function _wrap_call (f)
+local function _wrapCall (f)
   return function (self, ...) return f(nil, self, ...) end
 end
 
@@ -280,7 +296,7 @@ end
 --- Make function that calls source method and saves result.
 --  @param f Source method.
 --  @return list wrapper.
-local function _wrap_list (f)
+local function _wrapList (f)
   return function (self, ...)
     return setmetatable({_tbl=f(nil, self, ...)}, mt_list)
   end
@@ -326,7 +342,7 @@ data.binsearch = function (_, t, val, fn)
     return i, u  -- only when found
   end
 end
-mt_list.binsearch = _wrap_call(data.binsearch)
+mt_list.binsearch = _wrapCall(data.binsearch)
 about[data.binsearch] = {":binsearch(sorted_t, value, [extract_fn]) --> index_i, value",
   "Find position of element in sorted list using binary search.", LIST}
 
@@ -366,7 +382,7 @@ about[data.corr] = {":corr(xs_t, ys_t) --> float",
 --- Make copy of an object or list.
 --  @param v Source object.
 --  @return deep copy.
-data.copy = function (_, v) return _copy_obj(v) end
+data.copy = function (_, v) return _copyObj(v) end
 about[data.copy] = {":copy(t) --> copy_t",
   "Make deep copy of the table.", help.OTHER}
 
@@ -392,7 +408,7 @@ data.cov = function (_, t)
   end
   return m
 end
-mt_list.cov = _wrap_call(data.cov)
+mt_list.cov = _wrapCall(data.cov)
 about[data.cov] = {":cov(data_t) --> cov_M",
   "Find covariance matrix for list of vectors.", STAT}
 
@@ -410,7 +426,7 @@ data.csvwrite = function (_, t, sFile, char)
   end
   f:close()
 end
-mt_list.csvwrite = _wrap_call(data.csvwrite)
+mt_list.csvwrite = _wrapCall(data.csvwrite)
 about[data.csvwrite] = {":csvwrite(data_t, file_s, delim_s=',')",
   "Save Lua table as delimiter separated data into file.", FILES}
 
@@ -477,7 +493,7 @@ data.filter = function (_, t, vCond)
   end
   return res
 end
-mt_list.filter = _wrap_list(data.filter)
+mt_list.filter = _wrapList(data.filter)
 about[data.filter] = {":filter(in_t, fn|str|tbl) --> out_t",
   "Get result of the table filtering. Condition is boolean function, string or table of weights.",
   LIST}
@@ -493,7 +509,7 @@ data.freq = function (_, t)
   end
   return tmp
 end
-mt_list.freq = _wrap_call(data.freq)
+mt_list.freq = _wrapCall(data.freq)
 about[data.freq] = {":freq(data_t) --> tbl",
   "Return table with frequencies of elements.", STAT}
 
@@ -517,7 +533,7 @@ data.gen = function (_, t, fn, cond)
   end
   return q
 end
-mt_list.gen = _wrap_list(data.gen)
+mt_list.gen = _wrapList(data.gen)
 about[data.gen] = {":gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t",
   "Make new list using given transformation. Optional condition function of the form f(value,index).",
   LIST}
@@ -542,7 +558,7 @@ data.geomean = function (_, t, tw)
     return p^(1/#t)
   end
 end
-mt_list.geomean = _wrap_call(data.geomean)
+mt_list.geomean = _wrapCall(data.geomean)
 about[data.geomean] = {":geomean(data_t, weigh_t=nil) --> num",
   "Geometrical mean.", STAT}
 
@@ -566,7 +582,7 @@ data.harmmean = function (_, t, tw)
     return #t / h
   end
 end
-mt_list.harmmean = _wrap_call(harmmean)
+mt_list.harmmean = _wrapCall(harmmean)
 about[data.harmmean] = {":harmmean(data_t, weigh_t=nil) --> num",
   "Harmonic mean.", STAT}
 
@@ -611,7 +627,7 @@ data.histcounts = function (_, t, rng)
   end
   return res, bins
 end
-mt_list.histcounts = _wrap_call(data.histcounts)
+mt_list.histcounts = _wrapCall(data.histcounts)
 about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", STAT}
 
@@ -628,7 +644,7 @@ data.is = function (_, t, fn)
   end
   return res
 end
-mt_list.is = _wrap_list(data.is)
+mt_list.is = _wrapList(data.is)
 about[data.is] = {":is(data_t, fn|str) --> weigh_t",
   "Find weights using condition (boolean function or string).", LIST}
 
@@ -645,7 +661,7 @@ data.isNot = function (_, t, fn)
   end
   return res
 end
-mt_list.isNot = _wrap_list(data.isNot)
+mt_list.isNot = _wrapList(data.isNot)
 about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
   "Find inverted weights using condition (boolean function or string).", LIST}
 
@@ -660,7 +676,7 @@ data.max = function (_, t)
   end
   return m, k
 end
-mt_list.max = _wrap_call(data.max)
+mt_list.max = _wrapCall(data.max)
 about[data.max] = {":max(data_t) --> var, ind_N",
   "Maximal element and its index.", STAT}
 
@@ -700,7 +716,7 @@ data.md = function (_, data_t, names_t, fn)
   end
   return table.concat(res, '\n')
 end
-mt_list.md = _wrap_call(data.md)
+mt_list.md = _wrapCall(data.md)
 about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.",
   help.OTHER}
@@ -723,7 +739,7 @@ data.mean = function (_, t, tw)
     return data:sum(t) / #t
   end
 end
-mt_list.mean = _wrap_call(data.mean)
+mt_list.mean = _wrapCall(data.mean)
 about[data.mean] = {":mean(data_t, wight_t=nil) --> num",
   "Calculate average value. Weights can be used.", STAT}
 
@@ -742,7 +758,7 @@ data.median = function (_, t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
-mt_list.median = _wrap_call(data.median)
+mt_list.median = _wrapCall(data.median)
 about[data.median] = {":median(data_t) --> num",
   "Median of the list.", STAT}
 
@@ -757,7 +773,7 @@ data.min = function (_, t)
   end
   return m, k
 end
-mt_list.min = _wrap_call(data.min)
+mt_list.min = _wrapCall(data.min)
 about[data.min] = {":min(data_t) --> var, ind_N",
   "Minimal element and its index.", STAT}
 
@@ -781,7 +797,7 @@ data.moment = function (_, t, N, tw)
   end
   return mu / n
 end
-mt_list.moment = _wrap_call(data.moment)
+mt_list.moment = _wrapCall(data.moment)
 about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
   "Central moment of order N, weights can be defined.", STAT}
 
@@ -800,7 +816,7 @@ data.reduce = function (_, t, fn, val)
   for i = i0, #t do val = fn(val, t[i]) end
   return val
 end
-mt_list.reduce = _wrap_call(data.reduce)
+mt_list.reduce = _wrapCall(data.reduce)
 about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var",
   "Apply function to its previous result and next element.", LIST}
 
@@ -839,7 +855,7 @@ data.sum = function (_, t)
   for i = 1, #t do s = s+t[i] end
   return s
 end
-mt_list.sum = _wrap_call(data.sum)
+mt_list.sum = _wrapCall(data.sum)
 about[data.sum] = {":sum(data_t) --> var",
   "Get sum of all elements.", STAT}
 
@@ -865,9 +881,17 @@ data.std = function (_, t, tw)
   end
   return math.sqrt(disp)
 end
-mt_list.std = _wrap_call(data.std)
+mt_list.std = _wrapCall(data.std)
 about[data.std] = {":std(data_t, weight_t=nil) --> num",
   "Standard deviation. Weights can be used.", STAT}
+
+
+--- Make table of given size filled with zeros.
+--  @param ... Size list.
+--  @return table with zeros.
+data.zeros = function (_, ...) return _fillRest(0, ...) end
+about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl", 
+  "Make table with zeros.", help.OTHER}
 
 
 --- Apply function of n arguments to n lists.
@@ -1216,7 +1240,7 @@ data.pack = function (self, v)
   local t = {'/\\/', string.pack('I2', ver), '\0',}
   local acc, bin = setmetatable({_nm={}}, mt_accum), nil
   if type(v) == 'table' then
-    bin = v._pack and v:_pack(acc) or _list_pack(v, acc)
+    bin = v._pack and v:_pack(acc) or _listPack(v, acc)
   else
     error "No rules to pack it"
   end
@@ -1252,7 +1276,7 @@ data.unpack = function (self, v)
   end
   pos = pos + 1
   if types[1] == '#' then  -- lua table
-    return _list_unpack(v, pos+1, types, ver)
+    return _listUnpack(v, pos+1, types, ver)
   else
     types[1] = require('matlib.'..types[1])
     return types[1]._unpack(v, pos+1, types, ver)
