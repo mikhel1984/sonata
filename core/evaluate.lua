@@ -122,11 +122,6 @@ alias = {},
 _modules = {},
 }
 
-evaluate.TITLE = string.format(
-[[   # #      --=====  so/\/ata  =====--     # #
-    # #         --==== %d.%02d ====--        # #
-]], evaluate.MAJOR_V, evaluate.MINOR_V)
-
 
 -- Format to representation mapping
 local txtCodes = {
@@ -417,8 +412,14 @@ evaluate.evalThread = function ()
 end
 
 
---- Exit the program.
-evaluate.exit = function () os.exit() end
+--- Make title string.
+--  @return title string.
+evaluate.getTitle = function ()
+  return string.format(
+[[   # #      --=====  so/\/ata  =====--     # #
+    # #         --==== %d.%02d ====--        # #
+]], evaluate.MAJOR_V, evaluate.MINOR_V)
+end
 
 
 --- Mark information about formatting.

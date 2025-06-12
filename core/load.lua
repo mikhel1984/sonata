@@ -18,7 +18,7 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 -- Command evaluation.
 Sonata = require('core.evaluate')
 -- Quit the program
-quit = Sonata.exit
+quit = os.exit
 
 
 --- Print invite message and read user input.
@@ -304,7 +304,7 @@ end
 
 
 -- Run!!!
-io.write(SonataHelp.CMAIN, '\n', Sonata.TITLE, '\n', SonataHelp.CHELP)
+io.write(SonataHelp.CMAIN, '\n', Sonata.getTitle(), '\n', SonataHelp.CHELP)
 io.write(About:get('intro'), SonataHelp.CRESET, "\n")
 
 
