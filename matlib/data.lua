@@ -1103,9 +1103,6 @@ local mt_col = {
   type='column',
   -- methods
   __len = function (self) return #self._tbl end,
-  __tostring = function (self)
-    return string.format("<column %d %s>", self._n, tostring(self._tbl))
-  end
 }
 
 
@@ -1120,7 +1117,6 @@ mt_col.__index = function (self, k)
   local row = self._tbl[k]
   return row and row[self._n]
 end
-
 
 --- Set element or group of elements.
 --  @param k Key, 'data' for group set.
@@ -1156,9 +1152,6 @@ local mt_row = {
   type='row',
   -- methods
   __len = function (self) return #self._row end,
-  __tostring = function (self)
-    return string.format("row %d %s", self._n, tostring(self._tbl))
-  end
 }
 
 
