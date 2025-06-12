@@ -478,15 +478,6 @@ about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
   "Read delimiter separated data as Lua table.", FILES}
 
 
---- Generate function from string.
---  @param sExpr Expression for execution.
---  @param iArg Number of arguments (optional).
---  @return Function based on the expression.
-data.Fn = function (_, sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
-about[data.Fn] = {":Fn(expr_s, arg_N=2) --> fn",
-  "Generate function from expression of x1, x2 etc.", AUX}
-
-
 --- Find elements using condition.
 --  @param t Table with data.
 --  @param vCond Either boolean function or table of weights.

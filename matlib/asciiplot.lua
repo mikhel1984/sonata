@@ -1423,23 +1423,6 @@ about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", help.STATIC}
 
 
-if Sonata
-then  --=====================
-
-  -- Define simplified function call
-  Plot = function (...)
-    local ap = require('matlib.asciiplot')
-    local f = ap()
-    f._x:setRange({-5, 5})
-    f:plot(...)
-    return tostring(f)
-  end
-  about[Plot] = {"Plot(...)",
-    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
-
-end   --=====================
-
-
 -- Comment to remove descriptions
 asciiplot.about = about
 

@@ -164,7 +164,18 @@ Bind = function (obj, ...)
   end
   return Ver.unpack(res)
 end
---TODO remove Bind, use 'set' instead
+-- DEPRECATED
+-- use 'set' instead
+
+
+--- Generate function from string.
+--  @param sExpr Expression for execution.
+--  @param iArg Number of arguments (optional).
+--  @return Function based on the expression.
+Fn = function (sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
+about[Fn] = {"Fn(expr_s, arg_N=2) --> fn",
+  "Generate function from expression of x1, x2 etc.", AUX}
+
 
 --- Generate list of function values.
 --  @param fn Function to apply.
@@ -181,6 +192,20 @@ Map = function (fn, t)
 end
 about[Map] = {'Map(fn, in_t) --> out_t',
   'Evaluate function for each table element.', AUX}
+
+
+--- Use 'asciiplot' for simplified print.
+--  @param ... Objects to plot.
+--  @return figure as text.
+Plot = function (...)
+  main._ap = main._ap or require('matlib.asciiplot')
+  local f = main._ap()
+  f._x:setRange({-5, 5})
+  f:plot(...)
+  return tostring(f)
+end
+about[Plot] = {"Plot(...) --> str",
+    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", AUX}
 
 
 --- Round to some precision.
