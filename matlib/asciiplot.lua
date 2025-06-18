@@ -116,11 +116,11 @@ fig4:contour(function (x,y) return x*x - y*y end)
 print(fig4)
 
 -- bar diagram
-data = {}
+tx, ty = {}, {}
 k = 2*3.14/20
-for i = 1, 20 do data[#data+1] = {k*i, math.sin(k*i)} end
+for i = 1, 20 do tx[i]=k*i; ty[i]=math.sin(k*i) end
 fig5 = Ap()
-fig5:bar(data)
+fig5:bar(tx, ty)
 print(fig5)
 
 -- use log scale
@@ -1029,11 +1029,16 @@ about[asciiplot.axes] = {"F:axes() --> tbl",
 
 
 --- Plot bar graph.
---  @param t Data table {{x1,y1},{x2,y2}...}.
---  @param iy Index of y column (optional).
---  @param ix Index of x column (optional).
-asciiplot.bar = function (self, t, iy, ix)
-  ix, iy = ix or 1, iy or 2
+--  @param tx X list (optional).
+--  @param ty Y list.
+asciiplot.bar = function (self, tx, ty)
+  -- check arguments
+  if not ty then
+    ty = {}
+    for i = 1, #tx do ty[i] = i end
+    tx, ty = ty, tx
+  end
+  if #tx ~= #ty then error("Different list size") end
   -- size
   local iL = mmodf(self._x.size * 0.2)
   if iL % 2 == 1 then iL = iL - 1 end
@@ -1043,8 +1048,8 @@ asciiplot.bar = function (self, t, iy, ix)
   -- find limits
   if not self._xfix then
     local min, max = math.huge, -math.huge
-    for i = 1, #t do
-      local v = t[i][iy]
+    for i = 1, #ty do
+      local v = ty[i]
       if v > max then max = v end
       if v < min then min = v end
     end
@@ -1052,8 +1057,8 @@ asciiplot.bar = function (self, t, iy, ix)
   end
   -- data step
   local step = 1
-  if #t > self._y.size then
-    local int, frac = mmodf(#t / self._y.size)
+  if #ty > self._y.size then
+    local int, frac = mmodf(#ty / self._y.size)
     step = (frac > 0) and (int+1) or int
   end
   -- add values
@@ -1061,13 +1066,13 @@ asciiplot.bar = function (self, t, iy, ix)
   local ch, r = '=', 1
   local lim = self._xaxis == 'min' and 1 or
     self._xaxis == 'max' and ax.size or (ax.size + 1)/2
-  for i = 1, #t, step do
+  for i = 1, #ty, step do
     local canvas = self._canvas[r]
     -- text
-    local x = tostring(t[i][ix])
+    local x = tostring(tx[i])
     for c = 1, math.min(iL-2, #x) do canvas[c] = string.sub(x, c, c) end
     -- show
-    x = t[i][iy]
+    x = ty[i]
     local p, fp = ax:proj(x, true)
     if not p then
       p = (x < ax.range[1]) and ax.range[1] or ax.range[2]  -- set limit
@@ -1087,7 +1092,7 @@ asciiplot.bar = function (self, t, iy, ix)
     r = r + 1
   end
 end
-about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)",
+about[asciiplot.bar] = {"F:bar([tx,] ty)",
   "Plot bar diargram for the given data."}
 
 
@@ -1431,5 +1436,4 @@ return asciiplot
 --======================================
 -- FIX contour concatenation when use color
 -- TODO remove legend when flag false
--- TODO correct range in polar plot
 -- TODO replace contour with cross-section
