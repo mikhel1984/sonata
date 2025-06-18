@@ -1142,8 +1142,8 @@ about[asciiplot.concat] = {":concat(F1, F2) --> str",
 
 --- Plot function of two arguments using contours.
 --  @param fn Function f(x,y).
---  @param tOpt Table of options: level - number of lines, view - projection ('XY', 'XZ', 'YZ', 'concat' for its combination).
---  @return Figure object for single view or string for 'XYZ'.
+--  @param tOpt Table of options: level - number of lines, view - projection ('XY', 'XZ', 'YZ').
+--  @return Figure object.
 asciiplot.contour = function (self, fn, tOpt)
   tOpt = tOpt or {}
   tOpt.level = tOpt.level or 5
@@ -1160,22 +1160,16 @@ asciiplot.contour = function (self, fn, tOpt)
   end
   local X, Y, Z, zrng = _fn2Z(self, fn)
   if not self._zfix then self._z:setRange(zrng) end
-  if view == 'concat' then
-    local XY = asciiplot._viewXY(asciiplot.copy(self), X, Y, Z, tOpt)
-    local XZ = asciiplot._viewXZ(asciiplot.copy(self), X, Y, Z, tOpt)
-    local YZ = asciiplot._viewYZ(asciiplot.copy(self), X, Y, Z, tOpt)
-    return string.format('%s\n\n%s', asciiplot.concat(nil, XY, YZ), tostring(XZ))
-  end
   -- specific projection
-  local make = assert(asciiplot['_view'..view], "Wrong view")
+  local make = assert(asciiplot['_view'..view], "Wrong view "..view)
   local fig = asciiplot.copy(self)
   make(fig, X, Y, Z, tOpt)
   self._title = fig._title
   self._canvas = fig._canvas
   self._legend = fig._legend
 end
-about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'}) --> nil|str",
-  "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output."}
+about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'})",
+  "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ."}
 
 
 --- Make a copy.
