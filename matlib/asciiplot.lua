@@ -689,11 +689,13 @@ asciiplot.__tostring = function (self)
     acc[#acc+1] = table.concat(self._canvas[i])
   end
   -- legend
-  local sym = {}
-  for k, _ in pairs(self._legend) do sym[#sym+1] = k end
-  if #sym > 0 then table.sort(sym) end
-  for _, k in ipairs(sym) do
-    acc[#acc+1] = string.format("(%s) %s", k, self._legend[k])
+  if not self._legend._hide then
+    local sym = {}
+    for k, _ in pairs(self._legend) do sym[#sym+1] = k end
+    if #sym > 0 then table.sort(sym) end
+    for _, k in ipairs(sym) do
+      acc[#acc+1] = string.format("(%s) %s", k, self._legend[k])
+    end
   end
   return table.concat(acc, '\n')
 end
@@ -1204,6 +1206,12 @@ about[asciiplot.copy] = {"F:copy() --> cpy_F",
 --- Update legend.
 --  @param str_t Table with strings.
 asciiplot.legend = function (self, str_t)
+  if str_t == 'off' then
+    self._legend._hide = true
+    return
+  elseif str_t == 'on' then
+    self._legend._hide = nil
+  end
   local ch = {}
   for i = 1, #str_t do
     local s = string.char(string.byte('A') - 1 + i)
@@ -1219,7 +1227,8 @@ asciiplot.legend = function (self, str_t)
     else break end
   end
 end
-about[asciiplot.legend] = {"F:legend(str_t)", "Update legend.", CONF}
+about[asciiplot.legend] = {"F:legend(str_t|flag_s)", 
+  "Update legend. Use off/on to hide or show the legend.", CONF}
 
 
 --- Generalized plot funciton.

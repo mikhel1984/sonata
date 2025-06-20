@@ -177,7 +177,7 @@ local function _evalCode()
       else
         local ok, ans = pcall(fn)
         state, res = ok and evaluate.EV_RES or evaluate.EV_ERR, nil
-        if ans ~= nil and not string.find(cmd, ';.-$') then
+        if ans ~= nil and not string.find(cmd, ';%s-$') then
           res = evaluate.islist(ans) and ans or evaluate._extPrint(ans)
           -- save result to global var
           if ok then ANS = ans end
