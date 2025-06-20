@@ -1430,4 +1430,4 @@ return asciiplot
 --======================================
 -- FIX contour concatenation when use color
 -- TODO remove legend when flag false
--- TODO replace contour with cross-section
+-- TODO allow contour level definitions
