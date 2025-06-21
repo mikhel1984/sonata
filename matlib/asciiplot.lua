@@ -462,11 +462,17 @@ local function _addPolar (fig, t, tOpt)
   asciiplot._clear(fig)
   asciiplot._axes(fig)
   -- fill
+  local sym = tOpt.sym
+  if sym and #sym == 0 then sym = nil end
   for j = 1, #tOpt do
+    local c = sym and (j <= #sym and string.sub(sym, j, j) or string.sub(sym, -1, -1))
     local xy = acc[j]
     for _, v in ipairs(xy) do
-      --asciiplot.addPoint(self, v[1], v[2], c)
-      _addGraded(fig, v[1], v[2], j)
+      if c then
+        asciiplot.addPoint(fig, v[1], v[2], c)
+      else
+        _addGraded(fig, v[1], v[2], j)
+      end
     end
     local s = string.char(string.byte('A') - 1 + j)
     if SONATA_USE_COLOR then
@@ -488,12 +494,18 @@ end
 --  @param t Table to print.
 --  @param tInd Allows to choose y columns.
 local function _addTable (fig, t, tInd)
-  local x = tInd.x
+  local x, sym = tInd.x, tInd.sym
+  if sym and #sym == 0 then sym = nil end
   for j = 1, #tInd do
+    local c = sym and (j <= #sym and string.sub(sym, j, j) or string.sub(sym, -1, -1))
     local k = tInd[j]
     for i = 1, #t do
       local row = t[i]
-      _addGraded(fig, row[x], row[k], j)
+      if c then
+        asciiplot.addPoint(fig, row[x], row[k], c)
+      else
+        _addGraded(fig, row[x], row[k], j)
+      end
     end
     local s = string.char(string.byte('A') - 1 + j)
     if SONATA_USE_COLOR then
@@ -1417,7 +1429,7 @@ asciiplot.tplot = function (self, t, tOpt)
   -- limits
   asciiplot._limits(self)
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false})",
+about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})",
   "Plot the table data, choose columns if need."}
 
 
