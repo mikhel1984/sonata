@@ -240,7 +240,10 @@ Ver = Ver.versions
 local tf = require("matlib.matrix_tf")
 
 --- 0 instead nil
-local mt_access = { __index = function () return 0 end }
+local mt_access = { 
+  __index = function () return 0 end,
+  __len = function () return end,
+}
 
 
 --- Simplify object when possible.
@@ -295,6 +298,8 @@ local matrix = {
   ALIGN_WIDTH = 8,  -- number of columns to aligh width
   CONDITION_NUM = nil,  -- set limit for notification
   --STRIP = 1E-12,
+
+  __len = mt_access.__len,
 }
 
 
