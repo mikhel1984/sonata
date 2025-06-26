@@ -274,6 +274,47 @@ local function _listUnpack (src, pos, acc, ver)
 end
 
 
+--- Merge sort algorithm.
+--  @param up Source list.
+--  @param down Buffer.
+--  @param left Start index.
+--  @param right End index.
+--  @param fn Comparison method.
+--  @return Sorted list.
+local function _mergeSort(up, down, left, right, fn)
+  if left == right then
+    down[left] = up[left]
+    return down
+  end
+  local middle = left + math.floor(0.5*(right - left))
+  -- divide
+  local lbuf = _mergeSort(up, down, left, middle, fn)
+  local rbuf = _mergeSort(up, down, middle+1, right, fn)
+  local target = (lbuf == up) and down or up
+  local lcur, rcur = left, middle+1
+  -- merge
+  for i = left, right do
+    local lv, rv = lbuf[lcur], rbuf[rcur]
+    if lcur <= middle and rcur <= right then
+      if fn(lv, rv) then
+        target[i] = lv
+        lcur = lcur + 1
+      else
+        target[i] = rv
+        rcur = rcur + 1
+      end
+    elseif lcur <= middle then
+      target[i] = lv
+      lcur = lcur + 1
+    else
+      target[i] = rv
+      rcur = rcur + 1
+    end
+  end
+  return target
+end
+
+
 --	INFO
 
 local help = SonataHelp or {}
@@ -846,7 +887,7 @@ about[data.reverse] = {":reverse(data_t)",
 --  @param fn Comparison function or string.
 data.sort = function (_, t, fn)
   if type(fn) == "string" then fn = Utils.Fn(fn, 2) end
-  table.sort(t, fn)
+  return _mergeSort(t, {}, 1, #t, fn)
 end
 mt_list.sort = function (self, fn) data.sort(nil, self._tbl, fn); return self end
 about[data.sort] = {":sort(data_t, fn|str)",
@@ -1114,6 +1155,13 @@ mt_ref.__newindex = function (self, k, v)
 end
 
 
+--- Get reference range.
+--  @return Beginning and the end of data range.
+mt_ref.range = function (self)
+  return self._beg+1, self._end
+end
+
+
 --- Create reference to other table.
 --  @param t Source table.
 --  @param iBeg Index of the first element.
@@ -1304,3 +1352,4 @@ data.about = about
 return data
 
 --====================================
+-- TODO iterated merge sort
