@@ -100,8 +100,8 @@ ans = Mat:ver {a, b}          -->  Mat {{1,2},{3,4},{5,6},{7,8}}
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)       -->  Mat {{1,4},{9,16}}
 
--- apply function which depends on index too
-ans = a:map(function (x,r,c) return x-r-c end) -->  Mat {{-1,-1},{-0,-0}}
+-- apply function as string
+ans = a:map "x1^2"            -->  Mat {{1,4},{9,16}}
 
 -- apply function to matrices
 -- element-wise
@@ -240,7 +240,7 @@ Ver = Ver.versions
 local tf = require("matlib.matrix_tf")
 
 --- 0 instead nil
-local mt_access = { 
+local mt_access = {
   __index = function () return 0 end,
   __len = function () return end,
 }
@@ -909,16 +909,17 @@ about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
 --  @param fn Desired function.
 --  @return Matrix where each element is obtained based on desired function.
 matrix.map = function (self, fn)
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
   local res, Mcols = {}, self._cols
   for r = 1, self._rows do
     local rr, mr = {}, self[r]
-    for c = 1, Mcols do rr[c] = fn(mr[c], r, c) end
+    for c = 1, Mcols do rr[c] = fn(mr[c]) end
     res[r] = rr
   end
   return matrix._init(#res, Mcols, res)
 end
-about[matrix.map] = {"M:map(fn) --> found_M",
-  "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x, row, col).",
+about[matrix.map] = {"M:map(fn|str) --> found_M",
+  "Apply the given function to all elements, return new matrix.",
   TRANSFORM}
 
 
@@ -1115,6 +1116,11 @@ about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method.", TRANSFORM}
 
 
+matrix.skew = tf.vec_access.skew
+about[matrix.skew] = {"V:skew() --> M",
+  "Make skew-symmetric matrix from the vector.", VECTOR}
+
+
 --- Singular value decomposition for a matrix.
 --  Find U, S, V such that M = U*S*V' and
 --  U, V are orthonormal, S is diagonal matrix.
@@ -1253,6 +1259,7 @@ about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
 matrix.zip = function (_, fn, ...)
   local arg = {...}
   local rows, cols = arg[1]._rows, arg[1]._cols
+  if type(fn) == 'string' then fn = Utils.Fn(fn, #arg) end
   -- check size
   for i = 2, #arg do
     if arg[i]._rows ~= rows or arg[i]._cols ~= cols then
@@ -1274,7 +1281,7 @@ matrix.zip = function (_, fn, ...)
   end
   return matrix._init(rows, cols, res)
 end
-about[matrix.zip] = {':zip(fn, ...) --> res_M',
+about[matrix.zip] = {':zip(fn|str, ...) --> res_M',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
 matrix._pack = function (self, acc)
