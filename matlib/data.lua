@@ -1126,7 +1126,7 @@ local mt_ref = {
 --  @return Table value.
 mt_ref.__index = function (self, i)
   if Ver.isInteger(i) then
-    local n = i + self._beg
+    local n = (i >= 0) and (i + self._beg) or (i + 1 + self._end)
     if self._beg < n and n <= self._end then
       return self._tbl[n]
     end
@@ -1160,6 +1160,22 @@ end
 mt_ref.range = function (self)
   return self._beg+1, self._end
 end
+
+
+--- Change bounds or the reference.
+--  @param a Left shift.
+--  @param b Right shift.
+--  @return New ref object.
+mt_ref.shift = function (self, a, b)
+  b = b or a
+  return setmetatable({
+    _beg=math.max(math.min(self._beg+a, #self._tbl-1), 0),
+    _end=math.max(math.min(self._end+b, #self._tbl), 1),
+    _tbl=self._tbl
+  }, mt_ref)
+end
+mt_ref.__shl = function (ref, n) return mt_ref.shift(ref, -n, -n) end
+mt_ref.__shr = function (ref, n) return mt_ref.shift(ref, n, n) end
 
 
 --- Create reference to other table.
