@@ -199,15 +199,10 @@ exit = true},
 ['--io'] = {
 description = "Method for interaction.",
 example = {
-  'e.g. --io readline   # keep command history', 
-  '     --io tcp 23456  # server mode', 
+  'e.g. --io tcp 23456  # server mode', 
   '     --io w          # output window mode'},
 process = function (args)
-  if args[2] == 'readline' then
-    local readline = require("core.io_readline")
-    _reader = readline.reader  -- set implementation
-    Sonata.set_local_env = readline.set_local_env
-  elseif args[2] == 'tcp' then
+  if args[2] == 'tcp' then
     local server = require("core.io_socket")
     local port = assert(tonumber(args[3]), 'Expected: --io tcp port')
     server:new('*', port)
@@ -221,7 +216,7 @@ process = function (args)
     print("Unknown option:", args[2])
   end
 end,
-exit = (arg[2] ~= "readline")},
+exit = true},
 
 -- ['-e'] defined outside
 
@@ -300,6 +295,14 @@ if #arg > 0 then
   if not command then command = _args['default'] end
   command.process(arg)
   if command.exit then os.exit() end
+end
+
+
+-- Use input history
+if SONATA_READLINE then
+  local readline = require("core.io_readline")
+  _reader = readline.reader  -- set implementation
+  Sonata.set_local_env = readline.set_local_env
 end
 
 

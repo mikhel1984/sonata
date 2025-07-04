@@ -13,6 +13,9 @@
 --	Text coloring
 --SONATA_USE_COLOR = true
 
+--  History and autocomplete (linux)
+--SONATA_READLINE = true
+
 --	Unicode symbols for function plot
 --SONATA_ASCIIPLOT_UNICODE = true
 
