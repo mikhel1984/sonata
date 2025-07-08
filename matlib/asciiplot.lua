@@ -57,7 +57,7 @@ for x = 0, 3, 0.1 do
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
 fig2:setX {view='min'}  -- down
-fig2:tplot(tbl)
+fig2:tplot(tbl, {sym='*+'})
 print(fig2)
 
 -- plot only y2, don't rescale
