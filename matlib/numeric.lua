@@ -168,7 +168,7 @@ local function _qsimp (fn, a, b, eps, eval, N)
     end
     si, ost = s, st
   end
-  inform("integral: too many iterations")
+  inform("too many iterations")
   return si, true  -- error flag
 end
 
@@ -229,7 +229,7 @@ numeric.der = function (_, fn, d)
     dx = dx * 0.5
     der, last = (fn(d+dx) - fn(d-dx)) / d2, der
     if dx < numeric.SMALL then
-      inform("derivative: not found")
+      inform("derivative not found")
       return der, true
     end
   until Cnorm(der-last) < numeric.TOL
@@ -242,17 +242,22 @@ about[numeric.der] = {":der(fn, x_d) --> num",
 --- Replace vector with sequence of elements in ODE solver result.
 --  @param t Table with ODE solution.
 numeric.flat = function (t)
+  local dst = {}
   for i = 1, #t do
     local ti = t[i]
-    local v = ti[2]
+    local row, v = {ti[1]}, ti[2]
     if type(v) == 'table' then
       -- replace with vector elements
       v = v:vec()
-      for j = 1, #v do ti[j+1] = v[j] end
+      for j = 1, #v do row[j+1] = v[j] end
+    else
+      row[2] = v
     end
+    dst[i] = row
   end
+  return dst
 end
-about[numeric.flat] = {"ys:flat() --> ys",
+about[numeric.flat] = {"ys:flat() --> ys_t",
   "Transform vector to list for each rov in ODE output.", ODE}
 
 
@@ -284,7 +289,7 @@ numeric.lim = function (_, fn, xn, isPositive)
       xn, prev = xn * 1E3, curr
     end
   end
-  inform('limit: not found')
+  inform('limit not found')
   return prev, true  -- error flag
 end
 about[numeric.lim] = {":lim(fn, xn_d, isPositive=false) --> y",
@@ -303,7 +308,7 @@ numeric.newton = function (_, fn, d1)
     x2 = d1 - fd1*h / (fn(d1+h) - fd1)
     k, h = k+1, h*0.618
     if k > numeric.NEWTON_MAX then
-      inform("newton: too many iterations")
+      inform("too many iterations")
       return x2, true  -- error flag
     end
   until Cnorm(fn(x2)-fd1) < numeric.TOL
