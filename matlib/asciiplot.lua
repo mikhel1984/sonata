@@ -969,6 +969,31 @@ asciiplot._viewYZ = function (self, tX, tY, tZ, tOpt)
 end
 
 
+--- Plot line from one point to another.
+--  @param x1 First point x coordinate.
+--  @param y1 First point y coordinate.
+--  @param x2 Second point x coordinate.
+--  @param y2 Second point y coordinate.
+--  @param s Character.
+asciiplot.addLine = function (self, x1, y1, x2, y2, s)
+  local dx, dy = x2-x1, y2-y1
+  if math.abs(dx) >= math.abs(dy) then
+    -- along x axis
+    if dx == 0 then return end
+    local step = (self._x.diff / self._x.size) * (dx >= 0 and 1 or -1)
+    local k = dy/dx
+    for x = x1, x2, step do self:addPoint(x, y1 + k*(x-x1), s) end    
+  else
+    -- along y axis
+    local step = (self._y.diff / self._y.size) * (dy >= 0 and 1 or -1)
+    local k = dx/dy
+    for y = y1, y2, step do self:addPoint(x1 + k*(y-y1), y, s) end
+  end  
+end
+about[asciiplot.addLine] = {"F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')",
+  "Add line from (x1,y1) to (x2,y2).", MANUAL}
+
+
 --- Scale and add a point to the figure.
 --  @param dx Coordinate x.
 --  @param dy Coordinate y.
