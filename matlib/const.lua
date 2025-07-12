@@ -160,7 +160,7 @@ const.add = function (self, sName, val, sUnit)
   _user[sName] = val
   _user[sName..'_u_'] = sUnit
 end
-about[const.add] = {':add(name_s, value, units_s=nil)', 'Create new constant.'}
+about[const.add] = {':add(name_s, value, units_s=nil)', 'Temporary define constant.'}
 
 
 --- Remove existing constant.
