@@ -26,7 +26,7 @@ about[function] =
 --	LOCAL
 
 -- internal parameters
-local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
+local TITLE, DESCRIPTION, CATEGORY, EXTEND, TEST = 1, 2, 3, 4, 5
 
 -- metamethods signes
 local meta_op = {
@@ -150,8 +150,24 @@ help.findObject = function (tbl, obj, tGlob)
     elseif mod[obj] then
       -- function description
       local t = mod[obj]
-      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
+      local res = {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
         '\n', t[DESCRIPTION]}
+      -- extract examples from unit tests
+      help.ext_test = help.ext_test or require('core.test')
+      if not t[TEST] then
+        local fname = string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), nm)
+        local text = assert(help.readAll(fname), "Unable to load '"..fname.."'")
+        t[TEST] = help.ext_test.getCode(text)
+      end
+      local examples = help.ext_test.examples(t[TEST], t[EXTEND])
+      if #examples > 0 then
+        res[#res+1] = '\n\n  Examples\n'
+        for _, v in ipairs(examples) do
+          res[#res+1] = '\n'
+          res[#res+1] = v
+        end
+      end
+      return Sonata.info (res)
     end
   end
   return nil

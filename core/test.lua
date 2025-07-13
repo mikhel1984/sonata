@@ -40,13 +40,22 @@
 local DELIM = '\r?\n[%s%c]*\n'
 local LOG_NAME = 'test.log'
 local CODE_TEMPLATE = '%-%-%[(=*)%[TEST_IT(.-)%]%1%]'
-local TEST_TEMPLATE = '(.*)%-%-(%d?)>(.*)'
+local TEST_TEMPLATE = '(.*)%-%-%.?(%d?)>(.*)'
 local TOL = {['0']=1, ['1']=1E+1, ['2']=1E+2, ['3']=1E+3, ['4']=1E+4,
   ['5']=1E+5, ['6']=1E+6, ['7']=1E+7, ['8']=1E+8, ['9']=1E+9}
 
 local loadStr = (_VERSION < 'Lua 5.3') and loadstring or load
 
-local help = require('core.help')
+
+--- Load text from file.
+--  @param fname File name.
+--  @return String.
+local function readFile (fname)
+  local f = assert(io.open(fname, 'r'))
+  local str = f:read('*a')
+  f:close()
+  return str
+end
 
 
 --	MODULE
@@ -55,15 +64,6 @@ local test = {
 -- test results
 results = {},
 }
-
-
---- Extract test code from file.
---  @param str File text.
---  @return Strings with unit tests.
-test._getCode = function (str)
-  local _, q = string.match(str, CODE_TEMPLATE)
-  return q
-end
 
 
 --- Prepare test code preview.
@@ -90,16 +90,43 @@ test._print = function (str)
 end
 
 
+--- Extract examples for the given function.
+--  @param text Text with unit tests.
+--  @param fnstr String with function signature.
+--  @return List with unit tests where function is called.
+test.examples = function (text, fnstr) 
+  local res = {}
+  local template = string.match(fnstr, '(:%w+)') 
+  if not template then return res end
+  template = template .. '[ (]'
+  for block in test.split(text, DELIM) do
+    if string.find(block, template) then
+      res[#res+1] = block
+    end
+  end
+  return res
+end
+
+
+--- Extract test code from file.
+--  @param str File text.
+--  @return Strings with unit tests.
+test.getCode = function (str)
+  local _, q = string.match(str, CODE_TEMPLATE)
+  return q
+end
+
+
 --- Execute tests listed in module.
 --  @param fname Lua file name.
 test.module = function (fname)
   -- read file
-  local text = assert(help.readAll(fname), "Can't open file '"..fname.."'")
+  local text = readFile(fname)
   test.log = test.log or io.open(LOG_NAME, 'w')
   -- write head
   test._print('\n\tModule: ' .. fname)
   -- get test
-  text = test._getCode(text)
+  text = test.getCode(text)
   if not text or #text == 0 then return end  -- no tests
   local succeed, failed = 0, 0
   local fulltime = 0
@@ -176,6 +203,7 @@ test.split = function (str, delim)
     return res
   end
 end
+
 
 
 --- Combine all results.
