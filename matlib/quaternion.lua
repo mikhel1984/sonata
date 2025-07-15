@@ -35,11 +35,11 @@ ans = a:conj()                -->  Quat{1, -2,-3,-4}
 ans = a + a:conj()            -->  2
 
 -- norm
-ans = b:abs()                --1>  5.000
+ans = b:abs()               --.1>  5.000
 
 -- inversion
 c = a*a:inv()
-ans = c:w()                  --1>  1.000
+ans = c:w()                 --.1>  1.000
 
 -- arithmetic
 ans = a+b                     -->  Quat{4, 6,3,4}
@@ -53,35 +53,35 @@ ans = b^3                     -->  b * b * b
 
 -- unit quaternion
 a = a:normalized()
-ans = a:abs()                --1>  1.000
+ans = a:abs()               --.1>  1.000
 
 -- unit power
 aa = a^1.5
-ans = aa:x()                 --3>  0.324
+ans = aa:x()                --.3>  0.324
 
-ans = aa:y()                 --3>  0.486
+ans = aa:y()                --.3>  0.486
 
-ans = aa:z()                 --3>  0.648
+ans = aa:z()                --.3>  0.648
 
 -- rotation matrix
 m = a:toRot()
 d = Quat:fromRot(m)
-ans = (d-a):abs()            --1>  0.000
+ans = (d-a):abs()           --.1>  0.000
 
 -- use angle
 -- and axis
 ang = 0.5
 axis = {1,1,1}
 f = Quat:fromAA(ang,axis)
-ans,_ = f:toAA()             --3>  ang
+ans,_ = f:toAA()            --.3>  ang
 
 -- rotate vector
 p = a:rotate({1,0,0})
-ans = p[1]                   --3>  -0.667
+ans = p[1]                  --.3>  -0.667
 
 -- spherical interpolation
-d = a:slerp(b,0.5)
-ans = d:w()                  --3>  0.467
+d = Quat:slerp(a, b, 0.5)
+ans = d:w()                 --.3>  0.467
 
 -- show
 print(d)
@@ -221,7 +221,7 @@ quaternion.__pow = function (self, d)
     local res, acc = quaternion._new(1, 0, 0, 0), self
     while d > 0 do
       if d % 2 == 1 then res = quaternion.__mul(res, acc) end
-      d = math.modf(d * 0.5)
+      d = math.floor(d * 0.5)
       if d > 0 then acc = quaternion.__mul(acc, acc) end
     end
     return res
@@ -459,7 +459,7 @@ about[quaternion.rotate] = {'Q:rotate(in_t|V) --> out_t',
 --  @param Q2 End quaternion.
 --  @param f Part from 0 to 1.
 --  @return Intermediate quaternion.
-quaternion.slerp = function (Q1, Q2, f)
+quaternion.slerp = function (_, Q1, Q2, f)
   -- assume quaternions are not unit
   local qa = quaternion.normalized(Q1)
   local qb = quaternion.normalized(Q2)
@@ -475,7 +475,7 @@ quaternion.slerp = function (Q1, Q2, f)
   local sin_th = math.sin(theta)
   return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
 end
-about[quaternion.slerp] = {'Q:slerp(end_Q, rat_f) --> rat_Q',
+about[quaternion.slerp] = {':slerp(beg_Q, end_Q, rat_f) --> rat_Q',
   'Spherical linear interpolation for the given ratio.', help.OTHER}
 
 
