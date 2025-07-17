@@ -162,8 +162,7 @@ local COMB = 'combinations'
 
 -- max number for one position
 local BASE = math.floor(math.sqrt((math.maxinteger or (2^52)) / 10))
-local log10 = math.log(10)
-local logBase = math.log(BASE) / log10
+local logBase = math.log(BASE, 10)
 
 
 --	INFO
@@ -1108,7 +1107,7 @@ about[bigint.factorize] = {"B:factorize() --> prime_t",
 bigint.float = function (self)
   local b, res = self._, 0
   if #b > 2 and #b * logBase > 9 then
-    local s = math.log(b[#b] + b[#b-1]/BASE) / log10
+    local s = math.log(b[#b] + b[#b-1]/BASE, 10)
     s = s + (#b-1)*logBase
     res = 10^s
   else

@@ -141,7 +141,6 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 local inform = Sonata and Sonata.warning or print
 local mmodf = math.modf
 local MANUAL, CONF = 'manual', 'settings'
-local LOG10 = math.log(10)
 local Utils = require("matlib/utils")
 local vmove = Utils.versions.move
 local czero = Utils.cross.isZero
@@ -237,7 +236,7 @@ end
 --  @param isX Flag of direct projection.
 --  @return Position (index) or nil if out of range.
 axis.proj = function (self, d, isX)
-  d = self.log and math.log(d)/LOG10 or d
+  d = self.log and math.log(d, 10) or d
   if d < self.range[1] or d > self.range[2] then return nil end
   local dx = (d - self.range[1]) / self.diff
   local int, frac = nil, nil
@@ -281,15 +280,15 @@ axis.setRange = function (self, t)
     -- lorarithm mode
     if b <= 0 then b = 1 end
     if a <= 0 then a = b / 10 end
-    local p1 = math.log(a) / LOG10
+    local p1 = math.log(a, 10)
     p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
-    local p2 = math.log(b) / LOG10
+    local p2 = math.log(b, 10)
     p2 = (p2 > 0) and math.ceil(p2) or math.floor(p2)
     self.range[1], self.range[2] = p1, p2
   else
     -- normal mode
     self.range[1], self.range[2] = a, b
-    local n = math.log(b - a) / LOG10
+    local n = math.log(b - a, 10)
     n = (n >= 0) and math.floor(n) or math.ceil(n)
     local tol = 10^(n-1)
     local v, rest = mmodf(a / tol)
