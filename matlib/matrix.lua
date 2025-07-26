@@ -628,7 +628,7 @@ about[matrix.copy] = {"M:copy() --> cpy_M",
 -- Cross product.
 matrix.cross = tf.vec_access.cross
 about[matrix.cross] = {'V:cross(V2) --> M',
-  'Cross product or two 3-element vectors.', VECTOR}
+  'Cross product of two 3-element vectors.', VECTOR}
 
 
 --- Find determinant.
@@ -1118,7 +1118,7 @@ about[matrix.rref] = {"M:rref() --> upd_M",
 
 matrix.skew = tf.vec_access.skew
 about[matrix.skew] = {"V:skew() --> M",
-  "Make skew-symmetric matrix from the vector.", VECTOR}
+  "Make skew-symmetric matrix from the 3-element vector.", VECTOR}
 
 
 --- Singular value decomposition for a matrix.

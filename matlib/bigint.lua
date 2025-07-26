@@ -1099,7 +1099,7 @@ bigint.factorize = function (self)
   return res
 end
 about[bigint.factorize] = {"B:factorize() --> prime_t",
-  "Find prive multipliers.", NUMB}
+  "Find prime multipliers.", NUMB}
 
 
 --- Float number representation.
