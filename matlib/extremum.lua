@@ -103,7 +103,13 @@ energy = function (x)
   return s
 end
 -- find solution
-xm, fm = Ex:annealing(energy, tweak, pos, 20, 0.95, 2)
+xm, fm = Ex:annealing {
+  energy=energy,
+  update=tweak, 
+  init=pos, 
+  T=20, 
+  alpha=0.95, 
+  loop=2 }
 print(table.concat(xm, ' '))
 ans = fm                     --> 0
 
@@ -740,18 +746,15 @@ end
 
 
 --- Simulated annealing optimization method.
---  @param energy Function that calculates energy.
---  @param update Function that updates vector.
---  @param x Initial value.
---  @param temp (=nil) Initial temperature.
---  @param alpha (=0.9) Temperature update coefficient.
---  @param nmax (=1) Number of iteration for each temperature.
+--  @param task Talbe with elements: energy, update, init, T, alpha, loop.
 --  @return found solution and its energy.
-extremum.annealing = function (_, energy, update, x, temp, alpha, nmax)
-  local e0, curr = energy(x), x
-  temp = temp or math.max(e0, 1.0)
-  alpha = alpha or 0.9
-  nmax = nmax or 1
+extremum.annealing = function (_, task)
+  local energy, update = task.energy, task.update
+  local curr = task.init  -- start point
+  local e0 = energy(curr) -- initial energy
+  local temp = task.T or math.max(e0, 1.0)  -- initial annealing temperature
+  local alpha = task.alpha or 0.9  -- temperature update coefficient
+  local nmax = task.loop or 1      -- number of attempts with one temperature
   repeat
     for i = 1, nmax do
       local new = update(curr)
@@ -771,7 +774,7 @@ extremum.annealing = function (_, energy, update, x, temp, alpha, nmax)
   return curr, e0
 end
 about[extremum.annealing] = {
-  ":annealing(energy_fn, update_fn, x_M, temp_d=energy0, alpha_d=0.9, nmax_N=1) -> x_M, energy_d",
+  ":annealing(task={energy=fn,update=fn,init=x0,T=energy(x0),alpha=0.9,loop=1}) -> x_M, energy_d",
   "Simulated annealing method."}
 
 
