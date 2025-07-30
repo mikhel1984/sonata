@@ -65,7 +65,7 @@ ans = D:geomean(X)           --3>  2.995
 ans = D:harmmean(X,W)        --3>  2.571
 
 -- check if X[i] > 2
-a = D:is(X, "x1 > 2")
+a = D:is(X, "x > 2")
 ans = a[1]                    -->  1
 
 -- get elements X[i] > 2
@@ -83,7 +83,7 @@ D:reverse(q)
 ans = q[1]                   --> 5
 
 -- sort
-D:sort(q, "x1 < x2")
+D:sort(q, "x,y -> x < y")
 ans = q[1]                   --> 1
 
 -- binary search
@@ -91,12 +91,12 @@ ans, _ = D:binsearch(q, 2)   --> 2
 
 -- generate new list
 -- use 'lazy' function definition
-tmp = D:zip("{x1-x2, x1+x2}", X, Y)
+tmp = D:zip("x1,x2 -> {x1-x2, x1+x2}", X, Y)
 ans = tmp[1][2]               -->  X[1]+Y[1]
 
 -- generator with condition
 -- squares or even elements
-tmp = D:gen(X, "x1^2", "x2 % 2 == 0")
+tmp = D:gen(X, "x^2", "x, y -> y % 2 == 0")
 ans = tmp[2]                  --> X[4]*X[4]
 
 -- make array 2x3
@@ -119,7 +119,7 @@ ans = a[1]                    -->  X[3]
 
 -- sequential processing
 a = D(X)
-ans = a:filter("x1 > 3"):sum()  --> 15
+ans = a:filter("x > 3"):sum()  --> 15
 
 -- dsv write
 nm = os.tmpname()
@@ -134,7 +134,7 @@ ans = tt[2][2]                -->  t[2][2]
 
 -- pack
 bin = D:pack(t)
-ans = #bin                    --> 30
+ans = #bin                    --> 31
 
 -- unpack
 t2 = D:unpack(bin)

@@ -170,11 +170,10 @@ end
 
 --- Generate function from string.
 --  @param sExpr Expression for execution.
---  @param iArg Number of arguments (optional).
 --  @return Function based on the expression.
-Fn = function (sExpr, iArg) return Utils.Fn(sExpr, iArg or 2) end
-about[Fn] = {"Fn(expr_s, arg_N=2) --> fn",
-  "Generate function from expression of x1, x2 etc.", AUX}
+Fn = Utils.Fn
+about[Fn] = {"Fn(expr_s) --> fn",
+  "Generate function from expression 'args -> value'", AUX}
 
 
 --- Generate list of function values.

@@ -254,14 +254,14 @@ end
 
 --- Generate function from string.
 --  @param sExpr Expression for execution.
---  @param N Number of arguments.
 --  @return Function based on the expression.
-utils.Fn = function (sExpr, N)
-  local arg = {}
-  for i = 1, N do arg[i] = string.format("x%d", i) end
+utils.Fn = function (sExpr)
+  local a, b = string.match(sExpr, "(.*)->(.+)")
+  if not a then 
+    a, b = 'x', sExpr
+  end
   local fn = versions.loadStr(
-    string.format("return function (%s) return %s end",
-      table.concat(arg, ','), sExpr))
+    string.format("return function (%s) return %s end", a, b))
   return fn and fn()
 end
 

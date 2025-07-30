@@ -101,7 +101,7 @@ ans = Mat:ver {a, b}          -->  Mat {{1,2},{3,4},{5,6},{7,8}}
 ans = a:map(function (x) return x^2 end)       -->  Mat {{1,4},{9,16}}
 
 -- apply function as string
-ans = a:map "x1^2"            -->  Mat {{1,4},{9,16}}
+ans = a:map "x^2"            -->  Mat {{1,4},{9,16}}
 
 -- apply function to matrices
 -- element-wise
