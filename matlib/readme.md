@@ -5,28 +5,15 @@ They can be used either in the **Sonata** program or independently.
 
 ## Available modules 
 
-### array (Arr)
-
-Manipulations with arrays of arbitrary elements.
-
-```lua
--- create new array with specific size
-a = Arr {2,2,4}
-a:set({1,2,1}, 10)  -- set element, index in curly brackets
-a:get{1,2,1}        -- get element
--- new array from the given
-b = a:map(funciton (x) return x and 1 or 0 end) 
-```
-
 ### asciiplot (Ap)
 
 Visualize data with pseudographic.
 
 ```lua
 fig = Ap()    -- create figure
-fig:setX {range={-3.14, 3.14}               -- axis configuration
+fig:setX {range={-3.14, 3.14}}              -- axis configuration
 fig:plot(math.sin, 'sin', math.cos, 'cos')  -- add data
-fig:title('Trigonometry')                   -- set title
+fig:title 'Trigonometry'                    -- set title
 print(fig)    -- get as string
 ```
 
@@ -36,9 +23,10 @@ Operations with arbitrary long integers.
 
 ```lua
 -- create from string (for example)
-a = Int("12345678987654321")
-b = a * Int{4,5,6}  -- table can be used
-c = b:rebase(20)    -- get representation with base = 20
+a = Int("12345678987654321") 
+b = a * Int(456)    -- from number
+c = b:factorize()   -- list of multipliers
+d = b:digits(20)    -- list of digits for base 20
 ```
 
 ### complex (Z)
@@ -58,8 +46,9 @@ Collection of scientific constants.
 ```lua
 C.phy.e             -- electron charge
 C.phy.e_u           -- charge units
-C.add("foo",-1/12)  -- add own value, call with _C.foo
+C:add("foo", -1/12)  -- add own value, call with C.foo
 ```
+
 ### data (D)
 
 Data processing and statistics.
@@ -67,8 +56,9 @@ Data processing and statistics.
 ```lua
 X = {1, 2, 3, 4, 5, 6}  -- data
 a = D:moment(X, 2)     -- central moment
-b = D:filter(X, D:xGt(3))  -- get X[i] > 2
+b = D:filter(X, "x > 2")  -- get X[i] > 2
 ```
+
 ### geodesy (Geo)
 
 Coordinate transformations and other geodetic tasks.
@@ -108,7 +98,7 @@ Matrix methods in paraxial optics.
 
 ```lua
 -- define system structure
-sys = Lens:ref(200,1,1.56)..Lens:trans(5,1.56)..Lens:ref(-200,1.56)
+sys = Lens:R(200,1,1.56)..Lens:T(5)..Lens:R(-200,1.56)
 y, V = sys(5, 0.1)    -- ray transformation
 pts = sys:cardinal()  -- find cardinal points
 ```
@@ -129,7 +119,7 @@ Functions for numerical calculations.
 
 ```lua
 a = Num:solve(math.sin, 3, 4) -- find root in range
-b = Num:trapez(math.sin, 0, 1) -- numerical integration
+b = Num:int(math.sin, 0, 1) -- numerical integration
 -- solve ode x' = x*y for x = {0,3} and y(0) = 1
 tbl, yn = Num:ode45(function (x,y) return x*y end, {0,3}, 1)
 ```
@@ -198,8 +188,29 @@ c = a + b              -- some calculations
 Units conversation.
 
 ```lua
-Unit:setRule('h', Unit(60,'min'))  -- first rule
-Unit:setRule('min', Unit(60,'s'))  -- second rule
-a = Unit(1, 'm/s')   -- set variable
-b = a['km/h']        -- get value in km/h
+Unit.rules['h'] = Unit(60,'min')  -- first rule
+Unit.rules['min'] = Unit(60,'s')  -- second rule
+a = 1 * Unit 'm/s'   -- set variable
+b = a('km/h')        -- get value in km/h
+```
+
+### extremum (Ex)
+
+Optimization problems.
+
+```lua
+-- scalar argument
+a = Ex:minimum1D(function (x) return x*x end, -1, 1)
+-- vector argument
+b = Ex:maximum(function (y) return -y(1)^2-y(2)^2 end, Mat:V{2, 3})
+```
+
+### qubit (Qb)
+
+Emulate quantum computations.
+
+```lua
+a = Qb'00' + Qb'11'   -- define state
+b = Qb:gates(2):H()   -- defien system
+c = b(a)              -- apply transforms
 ```
