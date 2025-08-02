@@ -35,9 +35,10 @@ ans = Round(math.pi, 0.01)    -->  3.14
 c = Map(sin, {2,4,6,8,10})
 ans = c[1]                   --3>  0.909
 
--- bind functions
-min, sum = Bind(D, 'min', 'sum')
-ans = min{1, 2, 3} + sum{1,2,3}  -->  7
+-- simplified asciiplot call
+-- use table to change range
+xrng, yrng = {-3, 3}, {-1, 1}
+Plot(math.cos, 'cos', xrng, yrng, 'range correct')
 
 -- use Lua functions if need
 ans = math.deg(PI)           --2>  180.0

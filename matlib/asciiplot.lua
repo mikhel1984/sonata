@@ -40,6 +40,8 @@ fig1:plot(x,y)
 print(fig1)
 
 -- combine different sources
+x = {1,2,3,4,5}
+y = {1,3,5,7,9}
 fig1:setY {view='min'}  -- left axis
 fig1:plot(x,'single',x,y,'pair',math.log,'function')
 print(fig1)
@@ -106,6 +108,7 @@ end
 fig3:addPose(3, 13, '#')   -- characters
 fig3:addPose(3, 24, '#')
 fig3:addString(2,3,'Hi!')  -- text
+fig3:addLine(0, 1, 0, 1.5, '|')
 print(fig3)
 
 -- print surface contours
@@ -128,11 +131,13 @@ fig6 = Ap()
 fig6:setX {range={-10, 10}}
 fig6:setY {log=true}
 fig6:plot(math.exp)
+fig6:legend 'off'
 print(fig6)
 
--- simplified call, use range -1...1
--- change it via table if need
-Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
+-- show matrix structure
+Mat = require 'matlib.matrix'
+s = Ap:stars(Mat:eye(4))
+print(s)
 
 --]]
 
@@ -1245,9 +1250,9 @@ asciiplot.legend = function (self, str_t)
   if str_t == 'off' then
     self._legend._hide = true
     return
-  elseif str_t == 'on' then
-    self._legend._hide = nil
   end
+  self._legend._hide = nil
+  if str_t == 'on' then return end
   local ch = {}
   for i = 1, #str_t do
     local s = string.char(string.byte('A') - 1 + i)
@@ -1474,5 +1479,4 @@ return asciiplot
 
 --======================================
 -- FIX contour concatenation when use color
--- TODO remove legend when flag false
 -- TODO allow contour level definitions
