@@ -85,7 +85,12 @@ ans = #c:nout 'c1'            --> 1
 ans = (#b:nin('n1') == #b:nout('n1'))  --> true
 
 -- list of components
-ans = #a:components()         --> 4
+cps = a:components()
+ans = #cps                    --> 4
+
+-- concatenate graphs
+aa = Graph:concat(cps)
+ans = #aa                     --> #a
 
 -- make copy
 b1 = b:copy()
@@ -460,8 +465,6 @@ graph.copy = function (self)
 end
 about[graph.copy] = {"G:copy() --> cpy_G",
   "Get copy of the graph.", help.OTHER}
-
-
 
 
 --- Show graph structure in dot notation.

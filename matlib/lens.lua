@@ -32,7 +32,7 @@ n2 = 1.56   -- glass
 lens1 = Lens:R(n1,200,n2)
         :T(5,n2)
         :R(n2,-200,n1)
-ans = lens1:matrix():det()   --2>  1.0
+ans = lens1:matrix():det()  --.2>  1.0
 
 -- in the chain definition
 -- 'n' can be taken from a previous element
@@ -48,11 +48,11 @@ lens12 = Lens:R(200,n2)  -- skip first n
 ans = (lens1 == lens12)       -->  true
 
 -- get matrix element
-ans = lens1.D                --2>  1
+ans = lens1.D               --.2>  1
 
 -- find cardinal points
 pts = lens1:cardinal()
-ans = pts.F1                 --2>  -177.76
+ans = pts.F1                --.2>  -177.76
 
 -- print points
 print(pts)
@@ -66,37 +66,37 @@ fn = function (d2)
 end
 -- solve for B = 0, initial guess dist = 100
 d2 = Lens:solve(fn, 'B', 100)
-ans = d2                     --2>   623.21
+ans = d2                    --.2>   623.21
 
 -- check solution
 -- assume the lens it thin
 f = -pts.F1
-ans = 1/d1 + 1/d2            --2>  1/f
+ans = 1/d1 + 1/d2           --.2>  1/f
 
 -- ray transformation
 y1 = 10          -- mm, height
 V1 = n1 * 0.05   -- optical angle
 sys1 = fn(d2)
 y2, V2 = sys1(y1,V1)
-ans = y2                     --2>  -24.83
+ans = y2                    --.2>  -24.83
 
 -- from image to object
 sys2 = sys1:inv()  -- transpose
-ans, _ = sys2(y2, V2)        --3>  y1
+ans, _ = sys2(y2, V2)       --.3>  y1
 
 -- create thin lens
 lens2 = Lens:thin(f)
 _, V3 = lens1(y1,V1)
-_, ans = lens2(y1,V1)        --2>  V3
+_, ans = lens2(y1,V1)       --.2>  V3
 
 -- flat mirror
 lens3 = Lens:M(math.huge, n1)
-_, ans = lens3(y1,V1)        --2>  V1
+_, ans = lens3(y1,V1)       --.2>  V1
 
 -- afocal system
 m = 10
 lens4 = Lens:afocal(m)
-ans, _ = lens4(y1,V1)        --2>  m*y1
+ans, _ = lens4(y1,V1)       --.2>  m*y1
 
 -- arbitrary system matrix (ABCD)
 lens5 = Lens(1, 0, -0.5, 1)
@@ -108,18 +108,18 @@ ans = lens1:copy()            -->  lens1
 -- gaussian beam parameters
 lambda = 1024   -- nm, YAG-Nd laser
 lambda = lambda * 1E-6  -- mm
-ans, _ = Lens:gParam(1, lambda) --2>  3.26E-4
+ans, _ = Lens:gParam(1, lambda) --.2>  3.26E-4
 
 -- laser beam radius
-_, ans = Lens:gSize(1, lambda, 1E5) --2>  32.61
+_, ans = Lens:gSize(1, lambda, 1E5) --.2>  32.61
 
 -- laser beam transformation
-_, ans = lens1:beam(1E6, 1, lambda)  --2>  0.991
+_, ans = lens1:beam(1E6, 1, lambda)  --.2>  0.991
 
 -- laser cavity
 air_rod = Lens: T(250) : T(30, 1.56)
 cavity = Lens:M(-300) .. air_rod .. Lens:M(-300) .. air_rod
-ans, _ = cavity:emit(lambda)         --1> 300.0
+ans, _ = cavity:emit(lambda)         --.1> 300.0
 
 --]]
 

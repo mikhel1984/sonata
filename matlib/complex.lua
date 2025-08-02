@@ -19,6 +19,8 @@
 
 -- use 'complex'
 Z = require 'matlib.complex'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- real and imaginary pars
 a = Z(1,2)
@@ -29,7 +31,7 @@ b = Z(0,3)
 ans = 3+Z:i(4)                -->  Z(3,4)
 
 -- use polar form
-ans = 2*Z:E(1.57):im()     --2>  2.0
+ans = 2*Z:E(1.57):im()      --.2>  2.0
 
 -- arithmetic
 ans = a + b                   -->  Z(1,5)
@@ -39,16 +41,15 @@ ans = Z:i(3) - b              -->  0
 ans = a * b                   -->  Z(-6,3)
 
 -- call complex unit I = Z:i()
-ans = a / I                   -->  Z(2,-1)
+ans = Z(1,2) / I              -->  Z(2,-1)
 
 -- power can be complex
 c = Z(1,1)^Z(2,-2)
-
 -- real part
-ans = c:re()                 --3>  6.147
+ans = c:re()                --.3>  6.147
 
 -- imaginary part
-ans = c:im()                 --1>  7.4
+ans = c:im()                --.1>  7.4
 
 -- comparison
 ans = (a == b)                -->  false
@@ -56,10 +57,10 @@ ans = (a == b)                -->  false
 ans = (a ~= b)                -->  true
 
 -- absolute value
-ans = a:abs()                --3>  2.236
+ans = a:abs()               --.3>  2.236
 
 -- argument (angle, rad)
-ans = a:arg()                --3>  1.107
+ans = a:arg()               --.3>  1.107
 
 -- conjugated number
 ans = a:conj()                -->  Z(1,-2)
@@ -67,59 +68,68 @@ ans = a:conj()                -->  Z(1,-2)
 -- some functions after import
 -- become default, such as
 d = Z(-2):sqrt()
-ans = d:im()                 --3>  1.414
+ans = d:im()                --.3>  1.414
 
 -- exp
-ans = d:exp():re()           --3>  0.156
+ans = d:exp():re()          --.3>  0.156
 
 -- log
-ans = d:log():re()           --3>  0.3465
+ans = d:log():re()          --.3>  0.3465
 
 -- sin
-ans = d:sin():im()           --3>  1.935
+ans = d:sin():im()          --.3>  1.935
 
 -- cos
-ans = d:cos():re()           --3>  2.178
+ans = d:cos():re()          --.3>  2.178
 
 -- tan
-ans = d:tan():re()           --1>  0
+ans = d:tan():re()          --.1>  0
 
 -- sinh
-ans = d:sinh():re()          --1>  0
+ans = d:sinh():re()         --.1>  0
 
 -- cosh
-ans = d:cosh():re()          --3>  0.156
+ans = d:cosh():re()         --.3>  0.156
 
 -- tanh
-ans = d:tanh():im()          --3>  6.334
+ans = d:tanh():im()         --.3>  6.334
 
 -- asin
 z = Z(2,3)
-ans = z:asin():im()          --3>  1.983
+ans = z:asin():im()         --.3>  1.983
 
 -- acos
-ans = z:acos():re()          --2>  1.000
+ans = z:acos():re()         --.2>  1.000
 
 -- atan
-ans = z:atan():im()          --3>  0.229
+ans = z:atan():im()         --.3>  0.229
 
 -- asinh
-ans = z:asinh():re()         --3>  1.968
+ans = z:asinh():re()        --.3>  1.968
 
 -- acosh
-ans = z:acosh():im()         --1>  1.000
+ans = z:acosh():im()        --.1>  1.000
 
 -- atanh
-ans = z:atanh():re()         --3>  0.146
+ans = z:atanh():re()        --.3>  0.146
 
 -- show
 print(a)
 
 -- update env on import
--- update some methods
+-- new sqrt
 ans = sqrt(-1)                -->  I
 
-ans = log(-1):im()           --3>  math.pi
+-- new log
+ans = log(-1):im()          --.3>  math.pi
+
+-- object pack
+a = Z(-2, 3)
+t = D:pack(a)
+ans = type(t)                 -->  'string'
+
+-- unpack
+ans = D:unpack(t)             -->  a
 
 --]]
 
@@ -408,12 +418,33 @@ complex._norm = function (self)
 end
 
 
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+complex._pack = function (self, acc)
+  local t = {string.pack('B', acc['complex']), Utils.pack_seq(self._, 1, 2, acc)}
+  return table.concat(t)
+end
+
+
 --- Limit number of digits.
 --  Cross lib.
 --  @param tol Desired tolerance.
 --  @return stripped complex or real number.
 complex._round = function (self, tol)
   return _numOrComp(Cross.round(self._[1], tol), Cross.round(self._[2], tol))
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Complex object.
+complex._unpack = function (src, pos, acc, ver)
+  local t, p = Utils.unpack_seq(2, src, pos, acc, ver)
+  return complex._new(t[1], t[2]), p
 end
 
 
@@ -514,6 +545,16 @@ complex.cosh = function (self)
 end
 about[complex.cosh] = {"C:cosh() --> y_C",
   "Return hyperbolic cosine of a real or complex number.", FUNCTIONS}
+
+
+--- Polar form point position on the unit circle.
+--  @param ang Angle.
+--  @return Complex number.
+complex.E = function (self, ang)
+  return complex._new(_fcos(ang), _fsin(ang))
+end
+about[complex.E] = {":E(phy) --> cos(phy)+i*sin(phy)",
+  "Make complex number exp(i*phy).", help.STATIC}
 
 
 --- Exponent
@@ -625,25 +666,6 @@ about[complex.tanh] = {"C:tanh() --> y_C",
   "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
 
---- Polar form point position on the unit circle.
---  @param ang Angle.
---  @return Complex number.
-complex.E = function (self, ang)
-  return complex._new(_fcos(ang), _fsin(ang))
-end
-about[complex.E] = {":E(phy) --> cos(phy)+i*sin(phy)",
-  "Make complex number exp(i*phy).", help.STATIC}
-
-
-complex._pack = function (self, acc)
-  local t = {string.pack('B', acc['complex']), Utils.pack_seq(self._, 1, 2, acc)}
-  return table.concat(t)
-end
-
-complex._unpack = function (src, pos, acc, ver)
-  local t, p = Utils.unpack_seq(2, src, pos, acc, ver)
-  return complex._new(t[1], t[2]), p
-end
 
 -- simplify constructor call
 setmetatable(complex, {

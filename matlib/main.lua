@@ -21,7 +21,7 @@ D = require('matlib.data')
 ans = exp(0)+sin(PI/2)+cosh(0)  --.1>  3.0
 
 -- hypotenuse
-ans = hypot(3, 4)            --.2>  5.0
+ans = hypot(3, 4)           --.2>  5.0
 
 -- lazy function definition
 -- equal to function (x, y) return x^2 - y^3 end
@@ -39,7 +39,7 @@ ans = Round(math.pi, 0.01)    -->  3.14
 
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
-ans = c[1]                   --.3>  0.909
+ans = c[1]                  --.3>  0.909
 
 -- simplified asciiplot call
 -- use table to change range
@@ -48,7 +48,7 @@ s = Plot(math.cos, 'cos', xrng, yrng, 'range correct')
 print(s)
 
 -- use Lua functions if need
-ans = math.deg(PI)           --.2>  180.0
+ans = math.deg(PI)          --.2>  180.0
 
 --]]
 

@@ -21,6 +21,10 @@
 
 -- use 'matrix'
 Mat = require 'matlib.matrix'
+-- complex numbers
+Z = require 'matlib.complex'
+-- pack/unpack
+D = require 'matlib.data'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}
@@ -132,7 +136,7 @@ gg({1,2},{1,2}).data = a
 ans = gg({1,2},{1,2})   -->  a
 
 -- euclidean norm
-ans = Mat:V({1,2,3}):norm()  --3>  math.sqrt(14)
+ans = Mat:V({1,2,3}):norm()  --.3>  math.sqrt(14)
 
 -- random matrix
 rnd = function () return math.random() end
@@ -146,7 +150,7 @@ m = Mat {
   {5,6}
 }
 n = m:pinv()
-ans = n(2,2)                 --3>  0.333
+ans = n(2,2)                --.3>  0.333
 
 -- copy as Lua table
 -- (without methametods)
@@ -162,6 +166,7 @@ ans = Mat:D({1,2,3})          -->  Mat {{1,0,0},
 -- get diagonal
 ans = g:diag()                -->  Mat {{1},{5},{9}}
 
+
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
@@ -176,28 +181,45 @@ ans = v1:dot(v2)              -->  32
 vout = v1:outer(v2)
 ans = vout[1][3]              -->  6
 
+-- skew symmetric matrix
+m = v1:skew()
+ans = m + m:T()               -->  Mat:zeros(3)
+
+-- normalize vector
+v1:normalize()
+ans = v1:norm()              --.3>  1.0
+
+-- minor
+ans = vout:minor(1, 1)       -->  36
+
 -- LU decomposition
 l,u,p = b:lu()
-ans = l[2][1]                --3>  0.714
+ans = l[2][1]               --.3>  0.714
 
 -- QR decomposition
 q,r = m:qr()
-ans = (q*r)[2][2]            --3>  m[2][2]
+ans = (q*r)[2][2]           --.3>  m[2][2]
 
-ans = q:det()                --3>  1.0
+ans = q:det()               --.3>  1.0
 
 -- SVD decomposition
 u,s,v = m:svd()
-ans = (u*s*v:T())[1][1]      --3>  m[1][1]
+ans = (u*s*v:T())[1][1]     --.3>  m[1][1]
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
-ans = m[2][2]                --3>  1.633
+ans = m[2][2]               --.3>  1.633
+
+-- eigen vectors and values
+evec, eval = a:eig()
+v1 = evec({}, 1)
+p1 = a*v1
+ans = p1(1)                --.3>  eval[1][1]*v1(1)
 
 -- matrix exponential
 m = a:exp()
-ans = m[2][2]                --1> 164.1
+ans = m[2][2]               --.1>  164.1
 
 -- matrix trace
 ans = a:tr()                  -->  5
@@ -223,6 +245,32 @@ tmp = Mat{
 }
 ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
                                         {4,5,6}}
+
+-- conjugate transpose
+m = Mat {{Z(1,2), Z(3,4)}, {0, 0}}
+h = m:H()
+ans = h[2][1]                 -->  Z(3,-4)
+
+-- Kronecker product
+m = a:kron(a)
+ans = m[4][3]                 -->  a[2][2]*a[2][1]
+
+-- Kronecker sum
+m = a:kronSum(a)
+ans = m[1][1]                 -->  2
+
+-- column wise vector
+v = a:vectorize()
+ans = v:rows()                -->  a:cols()*a:rows()
+
+-- pack
+m = Mat{{1, 0.1}, {-0.2, 2}}
+t = D:pack(m)
+ans = type(t)                 -->  "string"
+
+-- unpack
+v = D:unpack(t)
+ans = v[1][2]               --.3>  m[1][2]
 
 --]]
 
@@ -553,6 +601,39 @@ matrix._new = function (self, t)
   end
   return matrix._init(rows, cols, t)
 end
+
+
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+matrix._pack = function (self, acc)
+  local rs, cs = self:rows(), self:cols()
+  local spack = string.pack
+  local t = {spack('B', acc['matrix']), spack('I2', rs), spack('I2', cs)}
+  for r = 1, rs do
+    t[#t+1] = Utils.pack_seq(self[r], 1, cs, acc)
+  end
+  return table.concat(t)
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Matrix object.
+matrix._unpack = function (src, pos, acc, ver)
+  local rs, cs, t = 0, 0, {}
+  local unpack_num, sunpack = Utils.unpack_num, string.unpack
+  rs, pos = sunpack('I2', src, pos)
+  cs, pos = sunpack('I2', src, pos)
+  for r = 1, rs do
+    t[r], pos = Utils.unpack_seq(cs, src, pos, acc, ver)
+  end
+  return matrix._init(rs, cs, t), pos
+end
+
 
 
 --- Strip matrix components.
@@ -1284,26 +1365,6 @@ end
 about[matrix.zip] = {':zip(fn|str, ...) --> res_M',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
-matrix._pack = function (self, acc)
-  local rs, cs = self:rows(), self:cols()
-  local spack = string.pack
-  local t = {spack('B', acc['matrix']), spack('I2', rs), spack('I2', cs)}
-  for r = 1, rs do
-    t[#t+1] = Utils.pack_seq(self[r], 1, cs, acc)
-  end
-  return table.concat(t)
-end
-
-matrix._unpack = function (src, pos, acc, ver)
-  local rs, cs, t = 0, 0, {}
-  local unpack_num, sunpack = Utils.unpack_num, string.unpack
-  rs, pos = sunpack('I2', src, pos)
-  cs, pos = sunpack('I2', src, pos)
-  for r = 1, rs do
-    t[r], pos = Utils.unpack_seq(cs, src, pos, acc, ver)
-  end
-  return matrix._init(rs, cs, t), pos
-end
 
 -- constructor call
 setmetatable(matrix, {__call = matrix._new})

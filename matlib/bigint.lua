@@ -21,6 +21,8 @@
 --[[TEST_IT
 -- use 'bigint'
 Int = require 'matlib.bigint'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- from integer
 a = Int(123)
@@ -43,7 +45,7 @@ ans = g:sign()                -->  -1
 -- check equality
 ans = (a == -g)               -->  true
 
--- arithmetical operations
+-- arithmetic operations
 ans = (a+b):float()           -->  579
 
 ans = (a-b):float()           -->  -333
@@ -63,7 +65,7 @@ ans = Int('-25'):abs():float()  -->  25
 
 -- factorial
 c = Int(50):F()
-ans = c:float() / 3E64       --1>  1.0
+ans = c:float() / 3E64      --.1>  1.0
 
 -- ratio of factorials
 ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
@@ -71,7 +73,11 @@ ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
 -- subfactorial
 ans = Int(4):subF()           --> Int(9)
 
+-- double factorial
+ans = Int(5):FF()             --> Int(15)
+
 -- digits for a different numeric base
+g = Int(-123)
 v = g:digits(60)
 ans = tostring(v)             -->  '-2,3:60'
 
@@ -86,10 +92,7 @@ ans = #v                      -->  2
 ans = v[2]                    -->  2
 
 -- base and sign
-ans = v.base == 60 and v.sign == -1  -->  true
-
--- print digits
-print(v)
+ans = (v.base == 60 and v.sign == -1)  -->  true
 
 -- back to bigint
 ans = Int(v)                  -->  g
@@ -117,18 +120,18 @@ ans = Int(1229):isPrime()     -->  true
 ans = Int(1229):isPrime('Fermat') -->  true
 
 -- factorize
-t = b:factorize()
+t = Int(456):factorize()
 ans = #t                      -->  5
 
 -- check factorization
 ans = 1
-for i = 1,#t do
-  ans = ans * (t[i]:float())
+for i = 1, #t do
+  ans = ans * t[i]:float()
 end                           -->  456
 
 -- pseudo-random number
 -- from 0 to b
-print(b:random())
+print(Int(42):random())
 
 -- greatest common divisor
 ans = Int:gcd(a,b,g):float()  -->  3
@@ -138,10 +141,18 @@ ans = Int:lcm(a,b):float()    --> 18696
 
 -- with numbers
 -- result is bigint
-ans = a + 1.0                 -->  Int(124)
+ans = a + 1                   -->  Int(124)
 
 -- result is float
 ans = a - 0.5                 -->  122.5
+
+-- object pack
+a = Int(1234)
+t = D:pack(a)
+ans = type(t)                 --> 'string'
+
+-- unpack
+ans = D:unpack(t)             --> a
 
 --]]
 
@@ -951,6 +962,18 @@ bigint._powm = function (B1, B2, B3)
 end
 
 
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+bigint._pack = function (self, acc)
+  local n = #self._
+  local t = {string.pack('B', acc["bigint"]), Utils.pack_num(BASE, acc),
+    string.pack('b', self._sign), string.pack('I2', n),
+    Utils.pack_seq(self._, 1, n, acc)}
+  return table.concat(t)
+end
+
+
 --- Estimate square root using Babylonian method.
 --  @return Estimation of sqrt(B).
 bigint._sqrt = function (self)
@@ -983,6 +1006,24 @@ bigint._trivialSearch = function (B, B0)
 end
 
 
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Bigint object.
+bigint._unpack = function (src, pos, acc, ver)
+  local n, base, sign, t = nil, nil, nil, nil
+  n, pos = string.unpack('B', src, pos)
+  base, pos = Utils.unpack_num(src, pos, acc[n], ver)
+  sign, pos = string.unpack('b', src, pos)
+  n, pos = string.unpack('I2', src, pos)
+  t, pos = Utils.unpack_seq(n, src, pos, acc, ver)
+  if base ~= BASE then t = _rebase(t, base, BASE) end
+  return bigint._newTable(t, sign), pos
+end
+
+
 --- Common return values
 bigint._0 = bigint._newTable({0}, 1)
 bigint._1 = bigint._newTable({1}, 1)
@@ -994,12 +1035,6 @@ bigint._2 = bigint._newTable({2}, 1)
 bigint.abs = function (self) return bigint._newTable(self._, 1) end
 about[bigint.abs] = {"B:abs() --> abs_B",
   "Return module of arbitrary long number."}
-
-
---- Get sign of the number.
---  @return sign in form -1/+1.
-bigint.sign = function (self) return self._sign end
-about[bigint.sign] = {"B:sign() --> int", "Return +1/-1."}
 
 
 --- Get list of digits for the given base.
@@ -1251,6 +1286,12 @@ about[bigint.ratF] = {":ratF(num_B, denom_B) --> num!/denom!",
   "Find ratio of factorials.", COMB}
 
 
+--- Get sign of the number.
+--  @return sign in form -1/+1.
+bigint.sign = function (self) return self._sign end
+about[bigint.sign] = {"B:sign() --> int", "Return +1/-1."}
+
+
 --- Find !n.
 --  @return Subfactorial value.
 bigint.subF = function (self)
@@ -1276,25 +1317,6 @@ end
 about[bigint.subF] = {"B:subF() --> !B",
   "Find subfactorial of the number.", COMB}
 
-
-bigint._pack = function (self, acc)
-  local n = #self._
-  local t = {string.pack('B', acc["bigint"]), Utils.pack_num(BASE, acc),
-    string.pack('b', self._sign), string.pack('I2', n),
-    Utils.pack_seq(self._, 1, n, acc)}
-  return table.concat(t)
-end
-
-bigint._unpack = function (src, pos, acc, ver)
-  local n, base, sign, t = nil, nil, nil, nil
-  n, pos = string.unpack('B', src, pos)
-  base, pos = Utils.unpack_num(src, pos, acc[n], ver)
-  sign, pos = string.unpack('b', src, pos)
-  n, pos = string.unpack('I2', src, pos)
-  t, pos = Utils.unpack_seq(n, src, pos, acc, ver)
-  if base ~= BASE then t = _rebase(t, base, BASE) end
-  return bigint._newTable(t, sign), pos
-end
 
 -- simplify constructor call
 setmetatable(bigint, {

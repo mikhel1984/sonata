@@ -31,11 +31,11 @@ print(t1.X, t1.Y, t1.Z)
 -- XYZ to BHL
 t2 = wgs84:toBLH(t1)
 print(t2.B, t2.L, t2.H)
-ans = t2.B                   --3>  t0.B
+ans = t2.B                  --.3>  t0.B
 
-ans = t2.L                   --3>  t0.L
+ans = t2.L                  --.3>  t0.L
 
-ans = t2.H                   --3>  t0.H
+ans = t2.H                  --.3>  t0.H
 
 -- add another ellipsoid
 -- use russian PZ90
@@ -60,7 +60,7 @@ t3 = xyz_wgs84_pz90(t1)
 -- backward transformation
 xyz_pz90_wgs84 = pz90.xyzInto[wgs84]
 t4 = xyz_pz90_wgs84(t3)
-ans = t4.X                   --2>  t1.X
+ans = t4.X                  --.2>  t1.X
 
 -- datum transformation
 blh_wgs84_pz90 = wgs84.blhInto[pz90]
@@ -69,15 +69,15 @@ t5 = blh_wgs84_pz90(t0)
 -- UTM to lat/lon
 utm = {N=5601281, E=625394, zone=42, hs='N'}
 ll = wgs84:utm2bl(utm)
-ans = ll.B                   --2>  50.55
+ans = ll.B                  --.2>  50.55
 
-ans = ll.L                   --2>  70.77
+ans = ll.L                  --.2>  70.77
 
 -- lat/lon to UTM
 utm1 = wgs84:bl2utm(ll)
-ans = utm1.N                 --2>  utm.N
+ans = utm1.N                --.2>  utm.N
 
-ans = utm1.E                 --2>  utm.E
+ans = utm1.E                --.2>  utm.E
 
 ans = utm1.zone               -->  utm.zone
 
@@ -89,12 +89,12 @@ ans = (s >= 0)                -->  true
 
 -- direct problem
 p3, a3 = wgs84:solveDir(p1,a1,s)
-ans = a3                     --2>  a2
+ans = a3                    --.2>  a2
 
-ans = p3.B                   --2>  p2.B
+ans = p3.B                  --.2>  p2.B
 
 -- equator acceleration
-ans = Geo:grav(0)            --1>  9.78
+ans = Geo:grav(0)           --.1>  9.78
 
 -- find geohash
 h = Geo:hashEncode(p1, 7)
@@ -102,7 +102,7 @@ print(h)
 
 -- position from geohash
 p4, _ = Geo:hashDecode(h)
-ans = p4.B                   --2>  p1.B
+ans = p4.B                  --.2>  p1.B
 
 --]]
 

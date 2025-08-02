@@ -26,18 +26,18 @@ W = {1,1,0}
 -- enought to define w[i] ~= 1
 W[5] = 2; W[6] = 2
 -- average
-ans = D:mean(X)              --3>  3.375
+ans = D:mean(X)             --.3>  3.375
 
 -- standard deviation
-ans = D:std(X,W)             --3>  1.314
+ans = D:std(X,W)            --.3>  1.314
 
 -- covariance matrix
 Y = {0,2,1,3,7,5,8,4}
 tmp = D:cov({X,Y})
-ans = tmp[1][2]              --2>  -0.656
+ans = tmp[1][2]             --.2>  -0.656
 
 -- correlation
-ans = D:corr(X, Y)           --2> -0.166
+ans = D:corr(X, Y)          --.2> -0.166
 
 -- maximum element and index
 _,ans = D:max(X)              -->  4
@@ -50,7 +50,7 @@ tmp = D:freq(X)
 ans = tmp[3]                  -->  3
 
 -- central moment
-ans = D:moment(X,2)          --3>  2.234
+ans = D:moment(X,2)         --.3>  2.234
 
 -- summ of elements
 ans = D:sum(X)                -->  27
@@ -59,10 +59,10 @@ ans = D:sum(X)                -->  27
 ans = D:min(X)                -->  1
 
 -- geometrical mean
-ans = D:geomean(X)           --3>  2.995
+ans = D:geomean(X)          --.3>  2.995
 
 -- harmonic mean
-ans = D:harmmean(X,W)        --3>  2.571
+ans = D:harmmean(X,W)       --.3>  2.571
 
 -- check if X[i] > 2
 a = D:is(X, "x > 2")
@@ -82,7 +82,7 @@ q = {1, 2, 3, 4, 5}
 D:reverse(q)
 ans = q[1]                   --> 5
 
--- sort
+-- merge sort
 D:sort(q, "x,y -> x < y")
 ans = q[1]                   --> 1
 
@@ -96,12 +96,19 @@ ans = tmp[1][2]               -->  X[1]+Y[1]
 
 -- generator with condition
 -- squares or even elements
-tmp = D:gen(X, "x^2", "x, y -> y % 2 == 0")
+tmp = D:gen(X,
+  "x^2",                 -- rule
+  "x, y -> y % 2 == 0")  -- condition
 ans = tmp[2]                  --> X[4]*X[4]
+
+-- sum of squares
+ans = D:reduce(q, "acc,x -> acc+x^2", 0)  --> 55
 
 -- make array 2x3
 zs = D:zeros(2, 3)
 ans = #zs[2]                  --> 3
+
+ans = zs[1][1]                --> 0
 
 -- find histogram
 a,b = D:histcounts(X, 3)
@@ -117,6 +124,12 @@ ans = #a                      -->  4
 
 ans = a[1]                    -->  X[3]
 
+-- shift reference range
+-- can be called with << and >>
+a1 = a:shift(-1)
+-- show new borders
+print(a:range())
+
 -- sequential processing
 a = D(X)
 ans = a:filter("x > 3"):sum()  --> 15
@@ -131,6 +144,14 @@ D:csvwrite(t, nm, ';')
 -- with separator ';'
 tt = D:csvread(nm, ';')
 ans = tt[2][2]                -->  t[2][2]
+
+-- get column
+vc = D:col(t, 2)
+ans = vc[2]                   --> t[2][2]
+
+-- get row
+vr = D:row(t, 1)
+ans = vr[3]                   --> t[1][3]
 
 -- pack
 bin = D:pack(t)
@@ -151,8 +172,12 @@ c = D:md(t, {'sq', 'avg'}, fn)
 print(c)
 
 -- even numbers
-b = D:range(2,10,2)
+b = D:range(2, 10, 2)
 ans = b[2]                    -->  4
+
+-- reverse range
+b1 = b:reverse()
+ans = b1[1]                   --> 10
 
 -- linear transformations
 -- with range Range objects
@@ -161,7 +186,7 @@ ans = b2[1]                   -->  8
 
 -- apply function
 c = b:map(math.sin)
-ans = c[1]                   --3>  0.909
+ans = c[1]                  --.3>  0.909
 
 --]]
 
@@ -852,15 +877,12 @@ about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
 --- Apply reduction rule to the list elements.
 --  @param t List.
 --  @param fn Function of 2 elements.
---  @param val Initial value (optional).
+--  @param val (=0) Initial value.
 --  @return Result of reduction.
 data.reduce = function (_, t, fn, val)
-  local i0 = 1
-  if not val then
-    val, i0 = t[1], 2
-  end
+  val = val or 0
   if type(fn) == 'string' then fn = Utils.Fn(fn, 2) end
-  for i = i0, #t do val = fn(val, t[i]) end
+  for i = 1, #t do val = fn(val, t[i]) end
   return val
 end
 mt_list.reduce = _wrapCall(data.reduce)
@@ -937,7 +959,7 @@ about[data.std] = {":std(data_t, weight_t=nil) --> num",
 --  @param ... Size list.
 --  @return table with zeros.
 data.zeros = function (_, ...) return _fillRest(0, ...) end
-about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl", 
+about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl",
   "Make table with zeros.", help.OTHER}
 
 
@@ -981,9 +1003,9 @@ about[data] = {" (data_t) --> new_L",
 
 
 -- Methametods for the range of numbers.
-local mt_range = { 
+local mt_range = {
   type = 'range',
-  -- methods 
+  -- methods
   __len = function (self) return self._N end,
   __newindex = function (self, k, v) end,  -- can't modify
 }

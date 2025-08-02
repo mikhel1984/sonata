@@ -21,53 +21,53 @@ Mat = require 'matlib.matrix'
 -- 1D minimum point, golden section
 fun = function (x) return x*x end
 xm, fm = Ex:minimum1D(fun, -10, 5)
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- 1D Brent method, with initial point
 xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', b=-5})
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
 -- 1D Brent method, use derivative
 df = function (x) return 2*x end
 xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', dfun=df})
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
 -- Find maximum
 xm, fm = Ex:maximum1D(math.cos, -1, 1, {b=0.5})
-ans = fm                     --2> 1.0
+ans = fm                    --.2> 1.0
 
 -- multidimentional, Powel method
 foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
 p0 = Mat:V {5, 4}
 xm, fm = Ex:minimum(foo, p0)
-ans = xm(1)                  --2> 1.0
+ans = xm(1)                 --.2> 1.0
 
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- multidimentional, with derivative
 dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
 xm, fm = Ex:minimum(foo, p0, {dfun=dfoo})
-ans = xm(2)                  --2> 2.0
+ans = xm(2)                 --.2> 2.0
 
 -- multidimentional, simplex
 -- expected column-vectors
 pp = Mat{{5,3},{7,-9},{-7,-4}}:T()
 xm, fm = Ex:minimum(foo, pp, {method='simplex'})
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- multidimentional, maximum
 foo = function (x) return 3 - x:norm() end
 xm, fm = Ex:maximum(foo, Mat:V{-3, 4})
-ans = fm                     --3> 3.0
+ans = fm                    --.3> 3.0
 
 -- linear programming, simplex method
 -- minimize C*x when Au*x <= bu
 C = Mat{{-3, -5}}
 A = Mat{{1, 0}, {0, 2}, {3, 2}}; b = Mat:V {4, 12, 18}
 xm, fm = Ex:linprog(C, {Au=A, bu=b})
-ans = fm                     --2> -36.0
+ans = fm                    --.2> -36.0
 
 -- LP, additional constraints
 -- C*x -> min, Au*x <= bu, Ae*x == be, Al*x >= bl
@@ -76,7 +76,7 @@ Au = Mat{{0.3, 0.1}}; bu = Mat(2.7)
 Ae = Mat{{0.5, 0.5}}; be = Mat(6)
 Al = Mat{{0.6, 0.4}}; bl = Mat(6)
 xm, fm = Ex:linprog(C, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
-ans = fm                     --2> -5.4
+ans = fm                    --.2> -5.4
 
 -- simulated annealing
 -- solve the problem of 8 chess queens
@@ -105,11 +105,12 @@ end
 -- find solution
 xm, fm = Ex:annealing {
   energy=energy,
-  update=tweak, 
-  init=pos, 
-  T=20, 
-  alpha=0.95, 
-  loop=2 }
+  update=tweak,
+  init=pos,
+  T=20,
+  alpha=0.95,
+  loop=2
+}
 print(table.concat(xm, ' '))
 ans = fm                     --> 0
 
@@ -122,7 +123,7 @@ for i = 1, 40 do xs[i] = i*0.1; ys[i] = foo(xs[i], t0) end
 -- initial estimation
 tinit = {A=3, B=2, C=-2}
 tm, fm = Ex:fit(foo, tinit, xs, ys)
-ans = tm.A                   --2> t0.A
+ans = tm.A                  --.2> t0.A
 
 --]]
 
@@ -796,9 +797,9 @@ extremum.fit = function (_, fn, t0, xs, ys)
   local test = function (vec)
     for i = 1, #keys do t[keys[i]] = vec[i][1] end
     local s = 0.0
-    for i = 1, #xs do 
+    for i = 1, #xs do
       local dy = ys[i] - fn(xs[i], t)
-      s = s + dy*dy 
+      s = s + dy*dy
     end
     return s
   end
