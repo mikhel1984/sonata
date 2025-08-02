@@ -18,9 +18,15 @@ require 'matlib.main'
 D = require('matlib.data')
 
 -- standard functions
-ans = exp(0)+sin(PI/2)+cosh(0)  --1>  3.0
+ans = exp(0)+sin(PI/2)+cosh(0)  --.1>  3.0
 
-ans = hypot(3, 4)            --2>  5.0
+-- hypotenuse
+ans = hypot(3, 4)            --.2>  5.0
+
+-- lazy function definition
+-- equal to function (x, y) return x^2 - y^3 end
+f = Fn "x, y -> x^2 - y^2"
+ans = f(2, 3)                 --> -5.0
 
 -- round number
 ans = Round(0.9)              -->  1.0
@@ -33,15 +39,16 @@ ans = Round(math.pi, 0.01)    -->  3.14
 
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
-ans = c[1]                   --3>  0.909
+ans = c[1]                   --.3>  0.909
 
 -- simplified asciiplot call
 -- use table to change range
 xrng, yrng = {-3, 3}, {-1, 1}
-Plot(math.cos, 'cos', xrng, yrng, 'range correct')
+s = Plot(math.cos, 'cos', xrng, yrng, 'range correct')
+print(s)
 
 -- use Lua functions if need
-ans = math.deg(PI)           --2>  180.0
+ans = math.deg(PI)           --.2>  180.0
 
 --]]
 
@@ -169,8 +176,9 @@ end
 -- use 'set' instead
 
 
---- Generate function from string.
---  @param sExpr Expression for execution.
+--- Generate function from string in form 'args -> expression'.
+--  For single argument named 'x' only 'expression' can be defined.
+--  @param sExpr Definition in form 'args -> expr'.
 --  @return Function based on the expression.
 Fn = Utils.Fn
 about[Fn] = {"Fn(expr_s) --> fn",
@@ -182,6 +190,9 @@ about[Fn] = {"Fn(expr_s) --> fn",
 --  @param t Table with arguments.
 --  @return Table with result of evaluation.
 Map = function (fn, t)
+  if type(fn) == 'string' then
+    fn = Utils.Fn(fn)
+  end
   if type(t) == 'table' then
     if t.map then return t:map(fn) end
     local res = {}
