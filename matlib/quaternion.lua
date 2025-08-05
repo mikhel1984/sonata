@@ -20,6 +20,8 @@
 Quat = require 'matlib.quaternion'
 -- external dependencies, can be loaded implicitly
 require 'matlib.matrix'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- quaternion
 -- set {w,x,y,z}
@@ -75,6 +77,12 @@ axis = {1,1,1}
 f = Quat:fromAA(ang,axis)
 ans,_ = f:toAA()            --.3>  ang
 
+-- RPY
+roll = 0.1
+qq = Quat:fromRPY(roll, 0.2, 0.3)
+r, p, y = qq:toRPY()
+ans = r                     --.1>  roll
+
 -- rotate vector
 p = a:rotate({1,0,0})
 ans = p[1]                  --.3>  -0.667
@@ -85,6 +93,22 @@ ans = d:w()                 --.3>  0.467
 
 -- show
 print(d)
+
+-- exp
+q = a:exp()
+ans = q:x()                 --.3>  0.371
+
+-- log
+r = q:log()
+ans = r:w()                 --.3>  a:w()
+
+-- pack
+t = D:pack(a)
+ans = type(t)                 -->  'string'
+
+-- unpack
+aa = D:unpack(t)
+ans = aa:w()                --.3>  a:w()
 
 --]]
 
@@ -301,6 +325,28 @@ quaternion._norm2 = function (Q)
   return Cross.float(q[1])^2 + Cross.float(q[2])^2 + Cross.float(q[3])^2
     + Cross.float(q[4])^2
 end
+
+
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+quaternion._pack = function (self, acc)
+  local t = {string.pack('B', acc['quaternion']), Utils.pack_seq(self._, 1, 4, acc)}
+  return table.concat(t)
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Complex object.
+quaternion._unpack = function (src, pos, acc, ver)
+  local t, p = Utils.unpack_seq(4, src, pos, acc, ver)
+  return quaternion._new(t[1], t[2], t[3], t[4]), p
+end
+
 
 
 --- Norm of the quaternion.
@@ -560,16 +606,6 @@ about[quaternion.y] = {"Q:y() --> var", "Get y component.", help.OTHER}
 quaternion.z = function (Q) return Q._[4] end
 about[quaternion.z] = {"Q:z() --> var", "Get z component.", help.OTHER}
 
-
-quaternion._pack = function (self, acc)
-  local t = {string.pack('B', acc['quaternion']), Utils.pack_seq(self._, 1, 4, acc)}
-  return table.concat(t)
-end
-
-quaternion._unpack = function (src, pos, acc, ver)
-  local t, p = Utils.unpack_seq(4, src, pos, acc, ver)
-  return quaternion._new(t[1], t[2], t[3], t[4]), p
-end
 
 -- simplify constructor call
 setmetatable(quaternion,

@@ -24,22 +24,27 @@ ans = #a                      -->  1
 
 -- qubit as vector
 av = a:matrix()
-ans = av(1)                  --2>  0.2
+ans = av(1)                 --.2>  0.2
+
+-- make from vector
+av:vec():normalize()
+aa = Qb:fromVector(av)
+ans = aa:prob '0'           --.2>  0.04
 
 -- norm
-ans = a * a                  --2>  1.0
+ans = a * a                 --.2>  1.0
 
 -- projection to |+>
 k = 1 / math.sqrt(2)
 plus = k*Qb'|0>' + k*Qb'|1>'
-ans = plus * a               --2>  (0.2+0.98)*k
+ans = plus * a              --.2>  (0.2+0.98)*k
 
 -- system of qubits
 -- allow to skip |>
 b = Qb'00' + Qb'11'
 b:normalize()
 -- probability of the state |00>
-ans = b:prob '00'            --2>  0.5
+ans = b:prob '00'           --.2>  0.5
 
 -- combine qubits Q1-Q2,
 -- (same as a..b)
@@ -49,6 +54,7 @@ print(c)
 -- do 'measurement' of all states
 -- result is calculated using probabilities
 print(c:meas())
+
 
 -- define Hadamard gate for 2 qubits
 g1 = Qb:gates(2):H()
@@ -62,12 +68,12 @@ ans = g1:isUnitary()          -->  true
 
 -- as matrix
 g1m = g1:matrix()
-ans = g1m[1][1]              --2>  0.5
+ans = g1m[1][1]             --.2>  0.5
 
 -- apply to qubits
 d = g1(Qb'|00>')
 -- check projection
-ans = (plus..plus) * d       --2>  1.0
+ans = (plus..plus) * d      --.2>  1.0
 
 -- add X to 0-th, Y to 1-st and Z to both
 -- indexation from zero
@@ -82,7 +88,7 @@ print(g2)
 -- inverse system
 g3 = g2:inverse()
 mm = g2:matrix() * g3:matrix()
-ans = mm[4][4]               --2>  1.0
+ans = mm[4][4]              --.2>  1.0
 
 -- Deutsch-Jozsa algorithm
 -- check for function f(x) = x, 1 is expected as output
@@ -357,7 +363,6 @@ qubit._rand = function (n)
 end
 
 
-
 --- Combine qubits into the system.
 --  @param ... Sequence of subsystems.
 --  @return combined state.
@@ -389,7 +394,7 @@ about[qubit.copy] = {"Q:copy() --> cpy_Q", "Create a copy of the object."}
 --  @param v Unit vector of length ~ 2^n.
 --  @return qubit object.
 qubit.fromVector = function (self, v)
-  local n, p = math.modf(math.log(v:rows()) / math.log(2))
+  local n, p = math.modf(math.log(v:rows(), 2))
   if math.abs(p) > 1E-4 then
     error 'Wrong vector size'
   end
