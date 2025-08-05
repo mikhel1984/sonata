@@ -20,8 +20,11 @@
 -- use 'polynomial'
 Poly = require 'matlib.polynomial'
 -- external dependencies, can be loaded implicitly
-require 'matlib.matrix'         -- in Poly.fit
 Comp = require 'matlib.complex' -- for complex roots
+-- make matrix
+Mat = require 'matlib.matrix'   
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- coefficients in ascendant order
 a = Poly {1,2,4,3}
@@ -78,14 +81,14 @@ ans = (b == c)                -->  false
 -- find all roots
 g = Poly:R{1, 2, 3+4*i, 3-4*i}
 e = g:roots()
-ans = e[3]:re()              --1>  3
+ans = e[3]:re()             --.1>  3
 
 -- fit curve with polynomial
 -- of order 2
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly:fit(A,B,2)
-ans = p(10)                  --0>  227.0
+ans = p(10)                 --.0>  227.0
 
 -- simple print
 print(a)
@@ -100,28 +103,42 @@ ans = d:str('s')              -->  '2*s^2-2*s+1'
 X = {-1.5, -0.75, 0, 0.75, 1.5}
 Y = {-14.101,-0.931596,0,0.931596,14.101}
 p = Poly:lagrange(X,Y)
-ans = p[3]                   --3>  4.83485
+ans = p[3]                  --.3>  4.83485
 
 -- Taylor series
 -- for exp(x) near 0
 p = Poly:taylor(0, 1, 1, 1, 1)
-ans = p(0.3)                 --2>  math.exp(0.3)
+ans = p(0.3)                --.2>  math.exp(0.3)
 
 -- linear interpolation
 -- use constant values out the interval
 p = Poly:lin(X,Y, Y[1], Y[#Y])
 y1, n = p:val(0.5)
-ans = y1                     --2>  0.621
+ans = y1                    --.2>  0.621
 
 -- polynomial index
 ans = n                       -->  4
 
 -- simplify call when index is known
-ans = p(0.5, n)              --2>  y1
+ans = p(0.5, n)             --.2>  y1
 
 -- cubic spline
 p = Poly:spline(X, Y)
-ans = p(0.5)                 --2>  -0.512
+ans = p(0.5)                --.2>  -0.512
+
+-- characteristic polynomial
+m = Mat {{1,2}, {3,4}}
+p = Poly:char(m)
+ans = #p                     -->  2
+
+ans = p[0]                 --.3>  m:det()
+
+-- object pack
+t = D:pack(p)
+ans = type(t)                -->  'string'
+
+-- unpack
+ans = D:unpack(t)            -->  p
 
 --]]
 
@@ -592,6 +609,18 @@ polynomial._isZero = function (self)
 end
 
 
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+polynomial._pack = function (self, acc)
+  local spack = string.pack
+  local n = #self
+  local t = {spack('B', acc['polynomial']), spack('I2', n)}
+  t[#t+1] = Utils.pack_seq(self, 0, n, acc)
+  return table.concat(t)
+end
+
+
 --- Find real or exact roots of the polynomial.
 --  @return Table with real roots and the rest polynomial.
 polynomial._real = function (self)
@@ -636,6 +665,21 @@ polynomial._round = function (self, tol)
     self[i] = Cross.round(self[i], tol)
   end
   return self
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Polynomial object.
+polynomial._unpack = function (src, pos, acc, ver)
+  local t, ord = {}, nil
+  ord, pos = string.unpack('I2', src, pos)
+  t, pos = Utils.unpack_seq(ord+1, src, pos, acc, ver)
+  t = table.move(t, 1, #t, 0, {})
+  return polynomial._init(t), pos
 end
 
 
@@ -985,22 +1029,6 @@ end
 about[polynomial.x] = {":x() --> P",
   "Get object to define polynomial as a sum of k*x^n"}
 
-
-polynomial._pack = function (self, acc)
-  local spack = string.pack
-  local n = #self
-  local t = {spack('B', acc['polynomial']), spack('I2', n)}
-  t[#t+1] = Utils.pack_seq(self, 0, n, acc)
-  return table.concat(t)
-end
-
-polynomial._unpack = function (src, pos, acc, ver)
-  local t, ord = {}, nil
-  ord, pos = string.unpack('I2', src, pos)
-  t, pos = Utils.unpack_seq(ord+1, src, pos, acc, ver)
-  t = table.move(t, 1, #t, 0, {})
-  return polynomial._init(t), pos
-end
 
 setmetatable(polynomial, {
 __call = function (_, t)

@@ -17,32 +17,34 @@
 Num = require 'matlib.numeric'
 -- use matrices for high order equations
 Mat = require 'matlib.matrix'
+-- show
+Ap = require 'matlib.asciiplot'
 
 -- define tolerance
 Num.TOL = 1e-4
 -- solve 'sin(x) = 0' for x in (pi/2...3*pi/2)
 a = Num:solve(math.sin, math.pi*0.5, math.pi*1.5)
-ans = a                      --3>  math.pi
+ans = a                     --.3>  math.pi
 
 -- Newton method
 -- only one initial value
 d = Num:newton(math.sin, math.pi*0.7)
-ans = d                      --3>  math.pi
+ans = d                     --.3>  math.pi
 
 -- numeric derivative
 b = Num:der(math.sin, 0)
-ans = b                      --0>  1
+ans = b                     --.0>  1
 
 -- numeric limit
 fn = function (x) return math.sin(x) / x end
-ans = Num:lim(fn, 0)         --3>  1.0
+ans = Num:lim(fn, 0)        --.3>  1.0
 
 -- inf limit
-ans = Num:lim(math.exp, -INF)  --3> 0.0
+ans = Num:lim(math.exp, -INF)  --.3> 0.0
 
 -- numeric integral
 c = Num:int(math.sin, 0, math.pi)
-ans = c                      --2>  2.0
+ans = c                     --.2>  2.0
 
 -- infinite limits
 ans = Num:int(
@@ -53,17 +55,22 @@ ans = Num:int(
 -- return table of solutions and y(3)
 tbl = Num:ode(function (x,y) return x*y end,
                 {0,3}, 1)
-ans = tbl[#tbl][2]           --2>  90.011
+ans = tbl[#tbl][2]          --.2>  90.011
 
 -- y''-2*y'+2*y = 1
--- represent as: x1 = y, x2 = y'
--- so: x1' = x2, x2' = 1+2*x2-2*x1
+-- if   x1 = y, x2 = y'
+-- then x1' = x2, x2' = 1+2*x2-2*x1
 myfun = function (t,x)
   return Mat:V {x(2), 1+2*x(2)-2*x(1)}
 end
-res = Num:ode(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
+res = Num:ode(myfun, {0,2}, Mat:V{3,2}, {dt=0.1})
 xn = res[#res][2]  -- last element
-ans = xn(1)                  --2>   -10.54
+ans = xn(1)                 --.2>   -10.54
+
+-- view
+fig = Ap()
+fig:tplot(res:flat())
+print(fig)
 
 -- define exit condition
 cond = function (states)
@@ -73,7 +80,7 @@ end
 myfun = function (t,x) return -x end
 y = Num:ode(myfun, {0, 1E2}, 1, {exit=cond})
 -- time of execution before break
-ans = y[#y][1]               --1>  2.3
+ans = y[#y][1]              --.1>  2.3
 
 --]]
 
@@ -88,8 +95,28 @@ end
 local inform = Sonata and Sonata.warning or print
 
 
-local ODE = 'ode'
+local mt_ode_solution = {
 
+--- Replace vector with sequence of elements in ODE solver result.
+--  @param t Table with ODE solution.
+flat = function (t)
+  local dst = {}
+  for i = 1, #t do
+    local ti = t[i]
+    local row, v = {ti[1]}, ti[2]
+    if type(v) == 'table' then
+      -- replace with vector elements
+      v = v:vec()
+      for j = 1, #v do row[j+1] = v[j] end
+    else
+      row[2] = v
+    end
+    dst[i] = row
+  end
+  return dst
+end
+}
+mt_ode_solution.__index = mt_ode_solution
 
 --- Runge-Kutta method.
 -- @param fn Function f(x,y).
@@ -239,27 +266,6 @@ about[numeric.der] = {":der(fn, x_d) --> num",
   "Calculate the derivative value for the given function."}
 
 
---- Replace vector with sequence of elements in ODE solver result.
---  @param t Table with ODE solution.
-numeric.flat = function (t)
-  local dst = {}
-  for i = 1, #t do
-    local ti = t[i]
-    local row, v = {ti[1]}, ti[2]
-    if type(v) == 'table' then
-      -- replace with vector elements
-      v = v:vec()
-      for j = 1, #v do row[j+1] = v[j] end
-    else
-      row[2] = v
-    end
-    dst[i] = row
-  end
-  return dst
-end
-about[numeric.flat] = {"ys:flat() --> ys_t",
-  "Transform vector to list for each rov in ODE output.", ODE}
-
 
 --- Estimate lim(fn(x)) for x -> xn.
 --  @param fn Function.
@@ -331,8 +337,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local h = tParam.dt or math.min((xn - tDelta[1]), 1.0) / 20
   local exit = tParam.exit or function (_) return false end
   -- evaluate
-  local res, last = {{tDelta[1], dY0}}, false
-  res.flat = numeric.flat
+  local res, last = setmetatable({{tDelta[1], dY0}}, mt_ode_solution), false
   while not exit(res) do
     local x, y = Vunpack(res[#res])
     if x >= xn then
@@ -363,10 +368,11 @@ end
 about[numeric.ode] = {":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
 [[Numerical approximation of the ODE solution.
 List of parameters is optional and can includes time step and exit condition.
-Return table of intermediate points in form {t, x(t)}.]], ODE}
+Return table of intermediate points in form {t, x(t)}.]]}
 
 
 --- Find root of equation at the given interval.
+--  Secant method.
 --  @param fn Function to analyze.
 --  @param a Lower bound.
 --  @param b Upper bound.
