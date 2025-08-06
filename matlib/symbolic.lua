@@ -22,6 +22,12 @@ Sym = require 'matlib.symbolic'
 x, y = Sym('x'), Sym('y')
 ans = (x == y)                -->  false
 
+-- parse string
+e1, e2 = Sym:parse('x+y, x*y')
+ans = e1                      --> x+y
+
+ans = e2                      --> y*x
+
 -- sum
 ans = x + 2*y - x + y         -->  3*y
 

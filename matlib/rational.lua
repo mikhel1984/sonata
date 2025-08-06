@@ -19,6 +19,8 @@
 
 -- use 'rational'
 Rat = require 'matlib.rational'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -80,6 +82,14 @@ ans = a + 1                   -->  Rat(3,2)
 
 -- result is float
 ans = a + 0.5                 -->  1
+
+-- object pack
+z = Rat(3, 4)
+t = D:pack(z)
+ans = type(t)                 -->  'string'
+
+-- unpack
+ans = D:unpack(t)             -->  z
 
 --]]
 
@@ -388,7 +398,6 @@ rational._convert = function (v)
 end
 
 
-
 --- Check if the number is 0.
 --  @return true for zero.
 rational._isZero = function (self)
@@ -403,6 +412,27 @@ end
 rational._new = function (vn, vd)
   local g = rational._gcd(vd, vn)     -- inverse order move sign to denominator
   return setmetatable({_ = {vn/g, vd/g}}, rational)
+end
+
+
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+rational._pack = function (self, acc)
+  local t = {string.pack('B', acc['rational']), Utils.pack_seq(self._, 1, 2, acc)}
+  return table.concat(t)
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Rational object.
+rational._unpack = function (src, pos, acc, ver)
+  local t, p = Utils.unpack_seq(2, src, pos, acc, ver)
+  return rational._new(t[1], t[2]), p
 end
 
 
@@ -508,15 +538,6 @@ end
 about[rational.toCF] = {"R:toCF() --> coeff_t",
   "Transform rational number to continued fraction.", CONTINUATED}
 
-rational._pack = function (self, acc)
-  local t = {string.pack('B', acc['rational']), Utils.pack_seq(self._, 1, 2, acc)}
-  return table.concat(t)
-end
-
-rational._unpack = function (src, pos, acc, ver)
-  local t, p = Utils.unpack_seq(2, src, pos, acc, ver)
-  return rational._new(t[1], t[2]), p
-end
 
 -- call constructor, check arguments
 setmetatable(rational, {

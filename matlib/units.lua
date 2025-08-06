@@ -19,6 +19,8 @@
 
 -- use 'units'
 U = require 'matlib.units'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- add some rules
 U.rules['h'] = U(60,'min')
@@ -68,6 +70,14 @@ print(a)
 
 -- list of rules
 print(U.rules)
+
+-- object pack
+t = D:pack(a)
+ans = type(t)                 -->  'string'
+
+-- unpack
+ans = D:unpack(t)             -->  a
+
 --]]
 
 
@@ -547,6 +557,61 @@ units._parse = function (str)
 end
 
 
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+units._pack = function (self, acc)
+  local t = {string.pack('B', acc['units'])}
+  if type(self._value) == 'number' then
+    t[#t+1] = Utils.pack_num(self._value, acc)
+  elseif type(self._value) == 'table' and self._value._pack then 
+    t[#t+1] = self._value:pack(acc)
+  else
+    error "Unable to pack"
+  end
+  for k, v in pairs(self._key) do
+    local n = #k
+    t[#t+1] = string.pack('B', n)
+    t[#t+1] = k
+    t[#t+1] = Utils.pack_num(v, acc)
+  end
+  t[#t+1] = '\0'
+  return table.concat(t)
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Units object.
+units._unpack = function (src, pos, acc, ver)
+  local val, n, t = nil, nil, {}
+  n, pos = string.unpack('B', src, pos)
+  local key = acc[n]
+  if type(key) == 'string' then
+    if string.byte(key, 1) == 0x26 then
+      val, pos = Utils.unpack_num(src, pos, key, ver)
+    else
+      acc[n] = require("matlib."..key)
+      val, pos = acc[n]._unpack(src, pos, acc, ver)
+    end
+  else
+    val, pos = key._unpack(src, pos, acc, ver)
+  end
+  while string.byte(src, pos) ~= 0 do
+    n, pos = string.unpack('B', src, pos)
+    local nm = string.sub(src, pos, pos+n-1)
+    pos = pos + n
+    n, pos = string.unpack('B', src, pos)
+    n, pos = Utils.unpack_num(src, pos, acc[n], ver)
+    t[nm] = n
+  end
+  return setmetatable({_value=val, _key=t}, units), pos+1
+end
+
+
 --- Convert one units to another.
 --  @param s String with new units.
 --  @return Result of conversation of nil.
@@ -628,50 +693,6 @@ units.prefix = {
 about[units.prefix] = {'.prefix',
   'Table of possible prefixes for units.', help.OTHER}
 
-
-units._pack = function (self, acc)
-  local t = {string.pack('B', acc['units'])}
-  if type(self._value) == 'number' then
-    t[#t+1] = Utils.pack_num(self._value, acc)
-  elseif type(self._value) == 'table' and self._value._pack then 
-    t[#t+1] = self._value:pack(acc)
-  else
-    error "Unable to pack"
-  end
-  for k, v in pairs(self._key) do
-    local n = #k
-    t[#t+1] = string.pack('B', n)
-    t[#t+1] = k
-    t[#t+1] = Utils.pack_num(v, acc)
-  end
-  t[#t+1] = '\0'
-  return table.concat(t)
-end
-
-units._unpack = function (src, pos, acc, ver)
-  local val, n, t = nil, nil, {}
-  n, pos = string.unpack('B', src, pos)
-  local key = acc[n]
-  if type(key) == 'string' then
-    if string.byte(key, 1) == 0x26 then
-      val, pos = Utils.unpack_num(src, pos, key, ver)
-    else
-      acc[n] = require("matlib."..key)
-      val, pos = acc[n]._unpack(src, pos, acc, ver)
-    end
-  else
-    val, pos = key._unpack(src, pos, acc, ver)
-  end
-  while string.byte(src, pos) ~= 0 do
-    n, pos = string.unpack('B', src, pos)
-    local nm = string.sub(src, pos, pos+n-1)
-    pos = pos + n
-    n, pos = string.unpack('B', src, pos)
-    n, pos = Utils.unpack_num(src, pos, acc[n], ver)
-    t[nm] = n
-  end
-  return setmetatable({_value=val, _key=t}, units), pos+1
-end
 
 -- Print prefix table
 setmetatable(units.prefix, {
