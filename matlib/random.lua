@@ -36,7 +36,8 @@ ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
 table.remove(ts)  -- ignore right values
 fig = Ap()
-fig:setY {view='mid'}; fig:setX {range={0, 0.5}, fix=true}
+fig:setX {view='min', range={0, 0.2}, fix=true}
+fig:setY {size=#ts}
 --v = _D:T()  -- get list of pairs
 fig:bar(te, ts)
 print(fig)
