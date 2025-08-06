@@ -161,11 +161,9 @@ help.findObject = function (tbl, obj, tGlob)
       end
       local examples = help.ext_test.examples(t[TEST], t[EXTEND])
       if #examples > 0 then
-        res[#res+1] = '\n\n  Examples\n'
-        for _, v in ipairs(examples) do
-          res[#res+1] = '\n'
-          res[#res+1] = v
-        end
+        res[#res+1] = '\n\n  Example\n'
+        -- add one example
+        res[#res+1] = examples[1]
       end
       return Sonata.info (res)
     end

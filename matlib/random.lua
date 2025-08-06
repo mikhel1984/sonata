@@ -34,10 +34,11 @@ end
 -- visualize
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
+table.remove(ts)  -- ignore right values
 fig = Ap()
-fig:setY {view='min'}; fig:setX {range={0, 0.5}, fix=true}
-v = _D:T({te, ts})  -- get list of pairs
-fig:bar(v)
+fig:setY {view='mid'}; fig:setX {range={0, 0.5}, fix=true}
+--v = _D:T()  -- get list of pairs
+fig:bar(te, ts)
 print(fig)
 
 -- custom generator (0 to 1)
@@ -49,8 +50,8 @@ end
 -- visualize renerated data
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
-v = _D:T({te, ts})   -- list of pairs
-fig:bar(v)
+table.remove(ts)  -- ignore right values
+fig:bar(te, ts)
 print(fig)
 
 -- normal distribution
@@ -214,8 +215,9 @@ ans = arr[2][1][2] <= 1.0     --> true
 --	LOCAL
 
 -- categories
-DIST = 'distribution'
+local DIST = 'distribution'
 
+local mexp, mlog, msqrt, mrandom = math.exp, math.log, math.sqrt, math.random
 
 --	INFO
 
@@ -232,9 +234,9 @@ local random = {
 -- mark
 type = 'random', israndom = true,
 -- from 0 to 1
-_fn = function (self) return math.random() end,
+_fn = function (self) return mrandom() end,
 -- from a to b
-_fnRng = function (self, a, b) return math.random(a, b) end,
+_fnRng = function (self, a, b) return mrandom(a, b) end,
 }
 
 
@@ -337,7 +339,7 @@ random.binomial = function (self, dp, N)
       if self:_fn() < p then bnl = bnl + 1 end
     end
   elseif am < 1.0 then
-    local g, t, j = math.exp(-am), 1.0, 0
+    local g, t, j = mexp(-am), 1.0, 0
     while j <= N do
       t = t*self:_fn()
       if t < g then break end
@@ -346,8 +348,8 @@ random.binomial = function (self, dp, N)
     bnl = (j <= N) and j or N
   else
     local pc, og = 1 - p, gln(nil, N + 1)
-    local sq, em = math.sqrt(2*am*pc), 0
-    local plog, pclog = math.log(p), math.log(1 - p)
+    local sq, em = msqrt(2*am*pc), 0
+    local plog, pclog = mlog(p), mlog(1 - p)
     repeat
       local y = 0
       repeat
@@ -355,7 +357,7 @@ random.binomial = function (self, dp, N)
         em = sq*y + am
       until 0.0 <= em and em < (N + 1)
       em = math.floor(em)
-      local t = 1.2*sq*(1 + y*y)*math.exp(
+      local t = 1.2*sq*(1 + y*y)*mexp(
         og - gln(nil, em+1) - gln(nil, N-em+1) + em*plog + (N-em)*pclog)
     until self:_fn() <= t
     bnl = em
@@ -408,7 +410,7 @@ about[random.choice] = {"R:choice(tbl) --> element, index_N",
 random.exp = function (self, dLam)
   local s = 0
   repeat s = self:_fn() until s > 0
-  return -math.log(s) / (dLam or 1.0)
+  return -mlog(s) / (dLam or 1.0)
 end
 about[random.exp] = {"R:exp(lambda_d=1) --> float",
   "Exponential distributed random values.", DIST}
@@ -433,7 +435,7 @@ random.gamma = function (self, iAlpha, dBeta)
   local x = 1.0
   if iAlpha < 6 then
     for i = 1, iAlpha do x = x * self:_fn() end
-    x = -math.log(x)  -- TODO can be 0?
+    x = -mlog(x)  -- TODO can be 0?
   else
     local y, s= 0, 0
     iAlpha = iAlpha - 1  -- reuse
@@ -445,10 +447,10 @@ random.gamma = function (self, iAlpha, dBeta)
           v2 = 2*self:_fn()-1.0
         until v1 > 0 and v1*v1 + v2*v2 <= 1
         y = v2 / v1
-        s = math.sqrt(2.0*iAlpha + 1.0)
+        s = msqrt(2.0*iAlpha + 1.0)
         x = s*y + iAlpha
       until x > 0
-      local e = (1.0 + y*y)*math.exp(iAlpha*math.log(x/iAlpha) - s*y)
+      local e = (1.0 + y*y)*mexp(iAlpha*mlog(x/iAlpha) - s*y)
     until self:_fn() < e
   end
   return x / (dBeta or 1)
@@ -496,7 +498,7 @@ random.logistic = function (self, dMu, dSigma)
   dMu, dSigma = dMu or 0.0, dSigma or 1.0
   local s = 0
   repeat s = self:_fn() until 0 < s and s < 1
-  return dMu + 0.551328895421792050*dSigma*math.log(s /(1.0 - s))
+  return dMu + 0.551328895421792050*dSigma*mlog(s /(1.0 - s))
 end
 about[random.logistic] = {"R:logistic(mu_d=0, sigma_d=1) --> float",
   "Logistic distributed random value.", DIST}
@@ -529,7 +531,7 @@ random.norm = function (self, dMean, dev)
     v = 2*self:_fn()-1
     s = u*u + v*v
   until 0 < s and s <= 1
-  return dMean + dev * u * math.sqrt(-2*math.log(s)/s)
+  return dMean + dev * u * msqrt(-2*mlog(s)/s)
 end
 about[random.norm] = {"R:norm(mean_d=0, dev_d=1) --> float",
   "Normal distributed random value with the given mean and deviation.", DIST}
@@ -543,14 +545,14 @@ random.poisson = function (self, dLam)
   local gln = random.ext_special.gammaln
   local em = -1
   if dLam < 12 then
-    local g = math.exp(-dLam)
+    local g = mexp(-dLam)
     local t = 1.0
     repeat
       t = t * self:_fn()
       em = em + 1
     until t <= g
   else
-    local sq, al, y = math.sqrt(2*dLam), math.log(dLam), 0
+    local sq, al, y = msqrt(2*dLam), mlog(dLam), 0
     local g = dLam*al - gln(nil, dLam+1)
     repeat
       repeat
@@ -558,7 +560,7 @@ random.poisson = function (self, dLam)
         em = sq*y + dLam
       until em >= 0
       em = math.floor(em)
-      local t = 0.9*(1 + y*y)*math.exp(em*al - gln(nil, em + 1)-g)
+      local t = 0.9*(1 + y*y)*mexp(em*al - gln(nil, em + 1)-g)
     until self:_fn() <= t
   end
   return em
@@ -573,7 +575,7 @@ about[random.poisson] = {"R:poisson(lambda_d) --> int",
 random.rayleigh = function (self, dSigma)
   local s = 0
   repeat s = self:_fn() until 0 < s and s < 1
-  return dSigma*math.sqrt(-2*math.log(s))
+  return dSigma*msqrt(-2*mlog(s))
 end
 about[random.rayleigh] = {"R:rayleigh(sigma_d) --> float",
   "Rayleigh distributed random values.", DIST}
@@ -598,7 +600,7 @@ about[random.seed] = {"R:seed(N=os.time) --> R", "Set random generator seed."}
 random.shuffle = function (_, t)
   local N = #t
   for i = 1, N do
-    local j = math.random(1, N)
+    local j = mrandom(1, N)
     t[i], t[j] = t[j], t[i]
   end
 end
