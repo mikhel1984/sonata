@@ -363,10 +363,6 @@ utils.pack_num = function (x, acc)
   end
 end
 
-utils.unpack_num = function (s, pos, key, ver)
-  -- remove & to get template
-  return string.unpack(string.sub(key, 2), s, pos)
-end
 
 utils.pack_seq = function (src, i0, ii, acc)
   local t, pack_num = {}, utils.pack_num
@@ -381,6 +377,27 @@ utils.pack_seq = function (src, i0, ii, acc)
     end
   end
   return table.concat(t)
+end
+
+utils.pack_str = function (s, acc)
+  local n = #s
+  if n < 256 then
+    return string.pack('BB', acc['"B'], n) .. s
+  elseif n < 65536 then
+    return string.pack('BI2', acc['"I2'], n) .. s
+  elseif n < 16777216 then
+    return string.pack('BI3', acc['"I3'], n) .. s
+  elseif n < 4294967296 then
+    return string.pack('BI4', acc['"I4'], n) .. s
+  else
+    error("Too big string, max is 4294967296")
+  end
+end
+
+
+utils.unpack_num = function (s, pos, key, ver)
+  -- remove & to get template
+  return string.unpack(string.sub(key, 2), s, pos)
 end
 
 utils.unpack_seq = function (len, s, pos, acc, ver)
@@ -400,6 +417,11 @@ utils.unpack_seq = function (len, s, pos, acc, ver)
     end
   end
   return t, pos
+end
+
+utils.unpack_str = function (s, pos, key, ver)
+  local n, pos = string.unpack(string.sub(key, 2), s, pos)
+  return string.sub(s, pos, pos+n-1), pos+n
 end
 
 --============== Calc ================
