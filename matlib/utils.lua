@@ -338,6 +338,11 @@ utils.align = function (tbl, right)
   return len
 end
 
+
+--- Define number size and convert it to binary string.
+--  @param x Value to pack.
+--  @param acc Accumulator table.
+--  @return binary string.
 utils.pack_num = function (x, acc)
   local v, p = mmodf(math.abs(x))
   if p == 0.0 then
@@ -364,6 +369,12 @@ utils.pack_num = function (x, acc)
 end
 
 
+--- Pack sequence of numbers or objects.
+--  @param src List of numbers/objects.
+--  @param i0 Start index.
+--  @param ii End index.
+--  @param acc Accumulator table.
+--  @return binary string.
 utils.pack_seq = function (src, i0, ii, acc)
   local t, pack_num = {}, utils.pack_num
   for i = i0, ii do
@@ -379,6 +390,11 @@ utils.pack_seq = function (src, i0, ii, acc)
   return table.concat(t)
 end
 
+
+--- Check size and pack string.
+--  @param s Source string.
+--  @param acc Accumulator table.
+--  @return binary string.
 utils.pack_str = function (s, acc)
   local n = #s
   if n < 256 then
@@ -390,16 +406,29 @@ utils.pack_str = function (s, acc)
   elseif n < 4294967296 then
     return string.pack('BI4', acc['"I4'], n) .. s
   else
-    error("Too big string, max is 4294967296")
+    error "Too big string, max is 4294967296"
   end
 end
 
 
+--- Get number from binary string.
+--  @param s Source string.
+--  @param pos Start position.
+--  @param key Number tag.
+--  @param ver Pack version algorithm.
+--  @return number and next position.
 utils.unpack_num = function (s, pos, key, ver)
   -- remove & to get template
   return string.unpack(string.sub(key, 2), s, pos)
 end
 
+
+--- Get sequence of numbers/objects from binary string.
+--  @param s Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack version algorithm.
+--  @return table with resutl, next position.
 utils.unpack_seq = function (len, s, pos, acc, ver)
   local t, n, unpack_num = {}, nil, utils.unpack_num
   for i = 1, len do
@@ -419,10 +448,18 @@ utils.unpack_seq = function (len, s, pos, acc, ver)
   return t, pos
 end
 
+
+--- Get unpacked string.
+--  @param s Source string.
+--  @param pos Start position.
+--  @param key Number tag.
+--  @param ver Pack version algorithm.
+--  @return string and next position.
 utils.unpack_str = function (s, pos, key, ver)
   local n, pos = string.unpack(string.sub(key, 2), s, pos)
   return string.sub(s, pos, pos+n-1), pos+n
 end
+
 
 --============== Calc ================
 

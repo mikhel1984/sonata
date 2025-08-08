@@ -562,17 +562,17 @@ end
 --  @return String with object representation.
 units._pack = function (self, acc)
   local t = {string.pack('B', acc['units'])}
+  -- value
   if type(self._value) == 'number' then
     t[#t+1] = Utils.pack_num(self._value, acc)
-  elseif type(self._value) == 'table' and self._value._pack then 
-    t[#t+1] = self._value:pack(acc)
+  elseif type(self._value) == 'table' and self._value._pack then
+    t[#t+1] = self._value:_pack(acc)
   else
     error "Unable to pack"
   end
+  -- units
   for k, v in pairs(self._key) do
-    local n = #k
-    t[#t+1] = string.pack('B', n)
-    t[#t+1] = k
+    t[#t+1] = Utils.pack_str(k, acc)
     t[#t+1] = Utils.pack_num(v, acc)
   end
   t[#t+1] = '\0'
@@ -587,7 +587,7 @@ end
 --  @param ver Pack algorithm version.
 --  @return Units object.
 units._unpack = function (src, pos, acc, ver)
-  local val, n, t = nil, nil, {}
+  local val, n, t, nm = nil, nil, {}, nil
   n, pos = string.unpack('B', src, pos)
   local key = acc[n]
   if type(key) == 'string' then
@@ -602,8 +602,7 @@ units._unpack = function (src, pos, acc, ver)
   end
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
-    local nm = string.sub(src, pos, pos+n-1)
-    pos = pos + n
+    nm, pos = Utils.unpack_str(src, pos, acc[n], ver)
     n, pos = string.unpack('B', src, pos)
     n, pos = Utils.unpack_num(src, pos, acc[n], ver)
     t[nm] = n

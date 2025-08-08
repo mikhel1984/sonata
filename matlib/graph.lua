@@ -22,6 +22,8 @@
 
 -- use 'graph'
 Graph = require 'matlib.graph'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- build undirected graph
 a = Graph()
@@ -130,10 +132,22 @@ ans = (#g:search(1, 4, 'dfs') > 2)  --> true
 g:add(1, 4, 10)
 ans = #g:search(1, 4, 'dijkstra')   --> 3
 
+-- data pack
+t = D:pack(b)
+ans = type(t)                 -->  'string'
+
+-- data unpack
+ans = D:unpack(t)             --> b
+
 --]]
 
 
 --	LOCAL
+
+local Utils do
+  local lib = require('matlib.utils')
+  Utils = lib.utils
+end
 
 local PROPERTY = 'property'
 local EXPORT = 'export'
@@ -367,6 +381,71 @@ graph._P = function (g, nodes)
     graph.add(g, nodes[i], nodes[i-1])
   end
   return g
+end
+
+
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+graph._pack = function (self, acc)
+  local t = {string.pack('B', acc['graph'])}
+  local ns, p = {}, 1
+  t[#t+1] = string.pack('B', self._dir and 1 or 0)
+  -- nodes
+  for k in pairs(self._) do
+    local s = tostring(k)
+    t[#t+1] = Utils.pack_str(s, acc)
+    ns[s], p = p, p+1
+  end
+  t[#t+1] = '\0'
+  -- edges
+  for k, v in pairs(self._) do
+    local s = tostring(k)
+    t[#t+1] = Utils.pack_num(ns[s], acc)
+    for q, w in pairs(v) do
+      if w then   -- TODO simplify for directed graph
+        local u = ns[tostring(q)]
+        t[#t+1] = Utils.pack_num(u, acc)
+        t[#t+1] = Utils.pack_num(w, acc)
+      end
+    end
+    t[#t+1] = '\0'
+  end
+  return table.concat(t)
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Graph object.
+graph._unpack = function (src, pos, acc, ver)
+  local ns, n, dir = {}, nil, nil
+  dir, pos = string.unpack('B', src, pos)
+  -- get nodes
+  while string.byte(src, pos) ~= 0 do
+    n, pos = string.unpack('B', src, pos)
+    ns[#ns+1], pos = Utils.unpack_str(src, pos, acc[n], ver)
+  end
+  pos = pos + 1
+  local gr, i, j, w = graph._new(dir == 1), nil, nil, nil
+  -- get edges
+  for i = 1, #ns do
+    n, pos = string.unpack('B', src, pos)
+    i, pos = Utils.unpack_num(src, pos, acc[n], ver)
+    if string.byte(src, pos) == 0 then graph.add(gr, ns[i]) end
+    while string.byte(src, pos) ~= 0 do
+      n, pos = string.unpack('B', src, pos)
+      j, pos = Utils.unpack_num(src, pos, acc[n], ver)
+      n, pos = string.unpack('B', src, pos)
+      w, pos = Utils.unpack_num(src, pos, acc[n], ver)
+      graph.add(gr, ns[i], ns[j], w)
+    end
+    pos = pos + 1
+  end
+  return gr, pos
 end
 
 
