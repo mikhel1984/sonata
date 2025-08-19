@@ -141,6 +141,36 @@ atanh = _call(Calc.atanh, 'atanh')
 about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
 
+--- Check equality.
+--  @param x First number or object.
+--  @param y Second number or object.
+--  @return true when objects are equal.
+eq = function (x, y)
+  if type(x) == 'table' and x.__eq then
+    return x:__eq(y)
+  elseif type(y) == 'table' and y.__eq then
+    return y:__eq(x)
+  end
+  return x == y
+end
+about[eq] = {"eq(x, y) --> bool", "Check equality of two objects."}
+
+
+--- Convert object to float number if possible.
+--  @param x Number or object.
+--  @return float point number.
+float = function (x)
+  if type(x) == 'number' then
+    return x
+  elseif type(x) == 'table' then
+    return x:float()
+  else
+    return tonumber(x)
+  end
+end
+about[float] = {"float(obj) --> x", "Convert object to float point number."}
+
+
 --- Find hypotenuse.
 --  @return square root for the sum of squares.
 hypot = function (...)
@@ -149,6 +179,13 @@ hypot = function (...)
   return math.sqrt(s)
 end
 about[hypot] = {"hypot(...)", "Hypotenuse."}
+
+
+--- Convert object to integer number if possible.
+--  @param x Number or object.
+--  @return integer number.
+int = function (x) return math.floor(float(x)) end
+about[int] = {"int(obj) --> x", "Convert object to integer number."}
 
 
 -- Constants

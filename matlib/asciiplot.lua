@@ -273,7 +273,7 @@ end
 --- Update axis range.
 --  @param t New range {min, max}.
 axis.setRange = function (self, t)
-  local a, b = t[1], t[2]
+  local a, b = t[1], t[#t]
   -- check limits
   if a == b then
     error 'Wrong range'
