@@ -22,8 +22,8 @@ Sym = require 'matlib.symbolic'
 x, y = Sym('x'), Sym('y')
 ans = (x == y)                -->  false
 
--- parse string
-e1, e2 = Sym:parse('x+y, x*y')
+-- parse expressions
+e1, e2 = Sym('x+y, x*y')
 ans = e1                      --> x+y
 
 ans = e2                      --> y*x
@@ -586,7 +586,7 @@ about[symbolic.isFn] = {'S:isFn() --> bool',
 --- Get symbolic expression from string.
 --  @param str Expression string.
 --  @return One or several symbolic elements.
-symbolic.parse = function(_, str)
+symbolic._parse = function(str)
   local tokens = Ulex(str)
   assert(#tokens > 0)
   local res = PARSER.args(tokens, 1)
@@ -595,8 +595,8 @@ symbolic.parse = function(_, str)
   end
   return table.unpack(res)
 end
-about[symbolic.parse] = {":parse(expr_s) --> S1, S2, ..",
-  "Get simbolic expression from string.", help.NEW}
+-- Deprecated
+symbolic.parse = function (_, str) return symbolic._parse(str) end
 
 
 --- Get numerator.
@@ -625,8 +625,7 @@ about[symbolic.val] = {"S:val() --> num", "Get constant value.", help.OTHER}
 setmetatable(symbolic, {
 __call = function (_, v)
   if type(v) == 'string' then
-    local s = assert(v:match('^[_%a]+[_%w]*$'), 'Wrong name')
-    return symbolic:_newSymbol(s)
+    return symbolic._parse(v)
   elseif type(v) == 'number' or type(v) == 'table' and v.__mul and v.__add
   then
     return symbolic:_newConst(v)
