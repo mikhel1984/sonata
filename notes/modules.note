@@ -1,9 +1,14 @@
---	Brief module overview
-use '*'
+--	MAIN
+hypot(3, 4)
+f = Fn "x,y -> x^2 + y^2"
+f(3, 4)
+Round(PI, 2)
+int(PI)
+Map(sin, {0, PI/4, PI/2})
 -- PAUSE
 --	COMPLEX
 -- Operations with complex numbers.
-a = Z(1,2)            -- real and complex components
+a = Z(1, 2)           -- real and complex components
 b = 3+Z:i(4)          -- use complex unit
 a / b
 a ^ b                  -- complex power
@@ -15,17 +20,17 @@ sin(b)                 -- modified function behavior
 a = Mat({      \
   {1, 2},      \
   {3, 4}})             -- write matrix row by row
-b = Mat {{5,6},{7,8}}
+b = Mat {{5,6}, {7,8}}
 a[2][1]                -- get element (indexation from 1)
 a[2][1] = 5            -- set new value
 a(-1,-1)           -- 'function' call can work with negative indices
-a(1,{1,2})         -- and return submatrix
+a(1, {1,2})        -- and return submatrix
 a * b                  -- arithmetic is available
 0.5 * a                -- combination with numbers
 b:inv()                -- inverse matrix
 b:det()                -- determinant
 a .. b                 -- horizontal concatenation
-c = Mat:ver{a,b}       -- vertical concatenation
+c = Mat:ver{a, b}      -- vertical concatenation
 c
 c:pinv()               -- pseudo-inverse
 -- PAUSE
@@ -80,7 +85,7 @@ C.phy.G                  -- gravitational constant
 C.phy.G_u                -- units of measurement are available with postfix '_u'
 -- It is possible to define own constant.
 -- It can't be modified.
-C:add('foo',42)
+C:add('foo', 42)
 C.foo
 -- ...and remove it
 C:remove('foo')
@@ -101,9 +106,9 @@ for _,v in ipairs(g:edges()) do \
   print(v[1],v[2])              \
 end
 -- default weight is 1
-g:edge('a','b')
+g:edge('a', 'b')
 -- you can add weighted edges
-g:add ('b','e', 2)
+g:add ('b', 'e', 2)
 g:add ('f')
 -- find path
 path = g:search('a','c', 'bfs')
@@ -115,21 +120,22 @@ end
 
 --	RATIONAL
 -- Rational numbers.
-a = Rat(1,2)
-b = Rat(1,3)
+a = Rat(1, 2)
+b = Rat(1, 3)
 -- arithmetics
 a + b
 a * b
 a / b
 -- float point representation
 a:float()
+float(a)
 a:num()        -- numerator
 a:denom()      -- denominator
 -- PAUSE
 
 --	SPECIAL
 -- Some special functions.
-Spec:beta(1,3)
+Spec:beta(1, 3)
 Spec:erf(2)
 Spec:gamma(2.2)
 Spec:besselj(2, 0.5)
@@ -141,26 +147,26 @@ Spec:besselj(2, 0.5)
 U.rules['h'] = U(60, 'min')       -- 1 h = 60 min
 U.rules['min'] = U(60, 'sec')     -- 1 min = 60 sec
 -- new variable
-v = 2 * U'm/sec'
+v = 2 * U 'm/sec'
 -- convert to 'km/h'
 v 'km/h'
 -- arithmetic is possible
-t = U(10,'sec')
+t = U(10, 'sec')
 s = v * t
 s
 -- PAUSE
 
 --	QUATERNION
 -- Quaternions and rotation.
-a = Quat{1,2,3,4}        -- {w,x,y,z}
-b = Quat{w=3,x=4}        -- y=0 and z=0
+a = Quat{1, 2, 3, 4}     -- {w,x,y,z}
+b = Quat{w=3, x=4}       -- y=0 and z=0
 -- arithmetics
 a + b
 a * b
 b + 1
 a:inv()
 -- slerp
-a:slerp(b,0.5)      -- use normalization inside
+Quat:slerp(a, b, 0.5)    -- use normalization inside
 -- PAUSE
 
 --	ASCIIPLOT
@@ -181,9 +187,9 @@ X = {3,2,5,6,3,4,3,1}
 w = {1,1,0}
 -- analyze
 D:std(X, w)
-D:filter(X, "x1 % 2 == 0")
+D:filter(X, "x % 2 == 0")
 -- print
-t = {{1,2,3},{4,5,6}}
+t = {{1,2,3}, {4,5,6}}
 D:md(t, {'a', 'b', 'c'})
 -- PAUSE
 
@@ -232,8 +238,20 @@ rnd:rayleigh(0.4)
 --	SYMBOLIC
 -- Elements of computer algebra.
 x, a = Sym('x'), Sym(2)
-p, q = Sym:parse('x-y, x+y')
+p, q = Sym('x-y, x+y')
 p:eval {x=2, y=1}
 p + q
 (a*p*q*x):expand()
 (x^3-a*x+x^2):diff(x)
+-- PAUSE
+
+--  EXTREMUM
+-- Optimization problems.
+fun = function (x) return x*x end
+xm, fm = Ex:minimum1D(fun, -10, 5)
+print(xm, fm)
+-- multidimentional
+foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
+p0 = Mat:V {5, 4}
+xm, fm = Ex:minimum(foo, p0)
+xm

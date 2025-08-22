@@ -229,7 +229,7 @@ process = function (args)
   for i = 1, #args do
     if string.find(args[i], '%.note$') then
       local blk = Sonata.toBlocks(args[i])
-      Sonata.repl(blk)
+      Sonata.repl(blk, _reader)
     else
       dofile(args[i])
     end

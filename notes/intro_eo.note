@@ -43,10 +43,7 @@ ANS
 use()
 -- PAUSE
 
--- La modulo povas esti ŝarĝita per la komando
---    use 'nomo'
--- Ĝi tiam fariĝas havebla per kaŝnomo.
-use 'matrix'
+-- La modulo povas esti ŝarĝita per la kaŝnomo.
 a = Mat {{1,2},{3,4}}       -- nova matrico
 -- Parametroj povas esti nomitaj per punkto
 -- funkcioj por ':'
@@ -59,10 +56,6 @@ help 'matrix'   -- aŭ help 'Mat'
 -- Pluraj moduloj povas esti ŝarĝitaj samtempe per la komando
 --    use {'nomo1','nomo2'}
 use {'complex', 'asciiplot'}
--- PAUSE
-
--- Vi ankaŭ povas uzi kaŝnomon por ŝargi
-use 'Num'
 -- PAUSE
 
 -- Por ŝargi ĉiujn modulojn, voku
