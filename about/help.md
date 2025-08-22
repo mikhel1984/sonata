@@ -7,6 +7,10 @@ Use pseudography for data visualization.
 
 **Ap:concat(F1, F2) --> str** - Horizontal concatenation of figures with the same height. Equal to F1..F2.
 
+**Ap:stars(M, cond_fn) --> str** - Print matrix, use star when condition for the current elemen is true.
+
+**F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')** - Add line from (x1,y1) to (x2,y2).
+
 **F:addPoint(x_d, y_d, char_s='*')** - Add point (x,y) using char.
 
 **F:addPose(row_N, col_N, char_s='*')** - Add character to the given position.
@@ -15,13 +19,13 @@ Use pseudography for data visualization.
 
 **F:axes() --> tbl** - Get {'size','log','range','view','fix'} for each axis.
 
-**F:bar(t, y_N=2, x_N=1)** - Plot bar diargram for the given data.
+**F:bar([tx,] ty)** - Plot bar diargram for the given data.
 
-**F:contour(fn, {level=5, view='XY'}) --> nil|str** - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output.
+**F:contour(fn, {level=5, view='XY'})** - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ.
 
 **F:copy() --> cpy_F** - Create a copy of the object.
 
-**F:legend(str_t)** - Update legend.
+**F:legend(str_t|flag_s)** - Update legend. Use off/on to hide or show the legend.
 
 **F:plot(...)** - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.
 
@@ -37,9 +41,7 @@ Use pseudography for data visualization.
 
 **F:title(str)** - Set new title.
 
-**F:tplot(data_t, cols_t={x=1, polar=false})** - Plot the table data, choose columns if need.
-
-**Plot(...)** - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.
+**F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})** - Plot the table data, choose columns if need.
 
 
 ## Int (bigint)
@@ -53,7 +55,7 @@ Operations with arbitrary long integers.
 
 **B:digits(N=10) --> tbl** - Get digits in the new numeric base.
 
-**B:factorize() --> prime_t** - Find prive multipliers.
+**B:factorize() --> prime_t** - Find prime multipliers.
 
 **B:float() --> num** - Represent current big integer as number if it possible.
 
@@ -173,7 +175,7 @@ Collection of constants.
 
 **C.phy.sigma --> 5.6E-8** - Stefan-Boltzmann constant.
 
-**C:add(name_s, value, units_s=nil)** - Create new constant.
+**C:add(name_s, value, units_s=nil)** - Temporary define constant.
 
 **C:remove(name_s) --> bool** - Delete user-defined constant.
 
@@ -181,23 +183,27 @@ Collection of constants.
 ## D (data)
 Data processing and statistics.
 
-**D:Fn(expr_s, arg_N=2) --> fn** - Generate function from expression of x1, x2 etc.
+**D (data_t) --> new_L** - Create list wrapper.
 
-**D:T(src_t) --> new_T** - Get reference to 'transposed' table.
+**D:binsearch(sorted_t, value, [extract_fn]) --> index_i, value** - Find position of element in sorted list using binary search.
+
+**D:col(src_t, col_N) --> ref_Col** - Make column reference.
 
 **D:copy(t) --> copy_t** - Make deep copy of the table.
 
-**D:cov(data_t) --> cov_M** - Find covariance matrix for list of vectors.
+**D:corr(xs_t, ys_t) --> float** - Find correlation for two vectors.
 
-**D:cov2(xs_t, ys_t) --> float** - Find covariance value for two vectors.
+**D:cov(data_t) --> cov_M** - Find covariance matrix for list of vectors.
 
 **D:csvread(file_s, delim_s=',') --> tbl** - Read delimiter separated data as Lua table.
 
-**D:csvwrite(file_s, data_t, delim_s=',')** - Save Lua table as delimiter separated data into file.
+**D:csvwrite(data_t, file_s, delim_s=',')** - Save Lua table as delimiter separated data into file.
 
 **D:filter(in_t, fn|str|tbl) --> out_t** - Get result of the table filtering. Condition is boolean function, string or table of weights.
 
 **D:freq(data_t) --> tbl** - Return table with frequencies of elements.
+
+**D:gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t** - Make new list using given transformation. Optional condition function of the form f(value,index).
 
 **D:geomean(data_t, weigh_t=nil) --> num** - Geometrical mean.
 
@@ -219,19 +225,29 @@ Data processing and statistics.
 
 **D:min(data_t) --> var, ind_N** - Minimal element and its index.
 
-**D:moment(order_N, data_t, weigth_t=nil) --> num** - Central moment of order N, weights can be defined.
+**D:moment(data_t, order_N, weigth_t=nil) --> num** - Central moment of order N, weights can be defined.
+
+**D:pack(obj) --> bin_s** - Pack object to binary string.
 
 **D:range(begin_d, end_d, step_d=±1) --> new_R** - Generate range object.
 
-**D:reduce(fn|str, data_t, initial=datadata_t[1]_t[1]) --> var** - Apply function to its previous result and next element.
+**D:reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var** - Apply function to its previous result and next element.
 
-**D:ref(src_t, begin_N=1, end_N=#src_t) --> new_R** - Return reference to the range of elements.
+**D:ref(data_t, begin_N=1, end_N=#src_t) --> new_R** - Return reference to the range of elements.
 
-**D:reverse(data_t)** - Reverse table elements in place.
+**D:reverse(data_t)** - Reverse table elements.
+
+**D:row(src_t, row_N) --> ref_Row** - Make row reference.
+
+**D:sort(data_t, fn|str)** - Sort elements of the list
 
 **D:std(data_t, weight_t=nil) --> num** - Standard deviation. Weights can be used.
 
 **D:sum(data_t) --> var** - Get sum of all elements.
+
+**D:unpack(bin_s) --> obj** - Unpack object from binary string.
+
+**D:zeros(n1, [n2,..]) --> tbl** - Make table with zeros.
 
 **D:zip(fn|str, ...) --> tbl** - Sequentially apply function to list of tables.
 
@@ -239,7 +255,7 @@ Data processing and statistics.
 ## Ex (extremum)
 Extremum search and optimization methods.
 
-**Ex:annealing(energy_fn, update_fn, x_M, temp_d=energy0, alpha_d=0.9, nmax_N=1) -> x_M, energy_d** - Simulated annealing method.
+**Ex:annealing(task={energy=fn,update=fn,init=x0,T=energy(x0),alpha=0.9,loop=1}) -> x_M, energy_d** - Simulated annealing method.
 
 **Ex:fit(model_fn, param_t, xs_t, ys_t) --> minParam_t, sqSum_d** - Fit data with nonlinear model y = fn(x,t), where t is a parameter dictionary.
 
@@ -451,9 +467,13 @@ Matrix methods in paraxial optics.
 ## Main (main)
 Lua based mathematics.
 
+**Fn(expr_s) --> fn** - Generate function from expression 'args -> value'
+
 **Map(fn, in_t) --> out_t** - Evaluate function for each table element.
 
 **PI --> 3.14** - Number pi.
+
+**Plot(...) --> str** - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.
 
 **Round(v, decimal_N=0) --> round_v** - Round value, define number of decimal digits or tolerance.
 
@@ -477,11 +497,17 @@ Lua based mathematics.
 
 **cosh(x) --> y** - Hyperbolic cosine.
 
+**eq(x, y) --> bool** - Check equality of two objects.
+
 **exp(x) --> y** - Exponent.
+
+**float(obj) --> x** - Convert object to float point number.
 
 **help(fn='main') --> str** - Show information about the function.
 
 **hypot(...)** - Hypotenuse.
+
+**int(obj) --> x** - Convert object to integer number.
 
 **log(x) --> y** - Natural logarithm.
 
@@ -529,7 +555,7 @@ Matrix operations. The matrices are spares by default. Indexation from 1.
 
 **M:lu() --> L_M, U_M, perm_M** - LU decomposition for the matrix. Return L, U and P matrices.
 
-**M:map(fn) --> found_M** - Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x, row, col).
+**M:map(fn|str) --> found_M** - Apply the given function to all elements, return new matrix.
 
 **M:minor(row_N, col_N) --> minor_M** - Find minor for the matrix element.
 
@@ -546,8 +572,6 @@ Matrix operations. The matrices are spares by default. Indexation from 1.
 **M:rows() --> N** - Get number of rows.
 
 **M:rref() --> upd_M** - Perform transformations using Gauss method.
-
-**M:stars(cond_fn) --> str** - Print star when condition for the current elemen is true.
 
 **M:svd() --> U_M, S_M, V_M** - Singular value decomposition, return U, S, V.
 
@@ -575,15 +599,17 @@ Matrix operations. The matrices are spares by default. Indexation from 1.
 
 **Mat:zeros(row_N, col_N=row_N) --> M** - Create matrix of zeros.
 
-**Mat:zip(fn, ...) --> res_M** - Apply function to the given matrices element-wise.
+**Mat:zip(fn|str, ...) --> res_M** - Apply function to the given matrices element-wise.
 
-**V:cross(V2) --> M** - Cross product or two 3-element vectors.
+**V:cross(V2) --> M** - Cross product of two 3-element vectors.
 
 **V:dot(V2) --> num** - Scalar product of two vectors.
 
 **V:normalize()** - Normalize to unit vector.
 
 **V:outer(V2) --> M** - Outer product or two vectors.
+
+**V:skew() --> M** - Make skew-symmetric matrix from the 3-element vector.
 
 
 ## Num (numeric)
@@ -604,8 +630,6 @@ List of parameters is optional and can includes time step and exit condition.
 Return table of intermediate points in form {t, x(t)}.
 
 **Num:solve(fn, low_d, up_d) --> num** - Find root of equation fn(x)=0 on interval [a,b].
-
-**ys:flat() --> ys** - Transform vector to list for each rov in ODE output.
 
 
 ## Poly (polynomial)
@@ -659,8 +683,6 @@ Operations with quaternions.
 
 **Q:rotate(in_t|V) --> out_t** - Apply quaternion to rotate the vector.
 
-**Q:slerp(end_Q, rat_f) --> rat_Q** - Spherical linear interpolation for the given ratio.
-
 **Q:toAA() --> angle_d, axis_t|nil** - Get angle and axis of rotation.
 
 **Q:toRPY() --> roll_d, pitch_d, yaw_d** - Get Euler angles.
@@ -682,6 +704,8 @@ Operations with quaternions.
 **Quat:fromRPY(roll_d, pitch_d, yaw_d) --> Q** - Convert Euler angles to quaternion.
 
 **Quat:fromRot(M) --> Q** - Convert rotation matrix to quaternion.
+
+**Quat:slerp(beg_Q, end_Q, rat_f) --> rat_Q** - Spherical linear interpolation for the given ratio.
 
 
 ## Qb (qubit)
@@ -737,7 +761,7 @@ Quantum computing simulation
 ## Rand (random)
 Random number generators.
 
-**R:array(n1,[n2,..]) --> tbl** - Get multidimentional random array.
+**R:array(n1, [n2,..]) --> tbl** - Get multidimentional random array.
 
 **R:binomial(p_d, N) --> int** - Binomial distributed random values.
 
@@ -848,8 +872,6 @@ Symbolic calculations.
 **Sym (num|str) --> new_S** - Create new symbolic variable.
 
 **Sym:def(name_s, args_t, expr_S) --> fn_S** - Define symbolical function. S is either symbolic expression or a Lua function.
-
-**Sym:parse(expr_s) --> S1, S2, ..** - Get simbolic expression from string.
 
 
 ## U (units)

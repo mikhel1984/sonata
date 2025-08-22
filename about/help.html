@@ -37,7 +37,7 @@ DIV {margin-left: 10px;}
 </ul></div>
 <div><h3># About #</h3>
 <p><br>
-Sonata is a Lua based program for mathematical calculations.<br>
+Sonata is a Lua program for mathematical calculations.<br>
 <br>
 <b>USAGE</b>:<br>
 	lua [-i] sonata.lua [flag] [arg1 arg2 ...]<br>
@@ -47,22 +47,25 @@ Sonata is a Lua based program for mathematical calculations.<br>
 	-h	Get this help message.<br>
 	-e	Evaluate command line expression.<br>
 		e.g. -e "2+2"<br>
-<br>
 	--lang	Generation or updating of the localization file.<br>
-		e.g. --lang eo<br>
+		e.g. --lang          # show current language<br>
+		     --lang eo       # file for Esperanto localization<br>
+	--test	Run unit tests.<br>
+		e.g. --test          # all tests<br>
+		     --test array    # tests for the given module<br>
 	--doc	Generating a documentation page.<br>
-		e.g. --doc ru<br>
-	--test	Run unit tests for a given module. Execute for all modules if no name is specified.<br>
-		e.g. --test array<br>
+		e.g. --doc           # original documentation<br>
+		     --doc ru        # translated documentation<br>
+	--io	Method for interaction.<br>
+		e.g. --io tcp 23456  # server mode<br>
+		     --io w          # output window mode<br>
 	--new	Generating a template for a new module.<br>
 		e.g. --new  matrices  Mat  "Matrix operations."<br>
-	--io	Method for interaction (readline, tcp).<br>
-		e.g. --io readline<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 0.9.41<br>
+<b>VERSION</b>: 1.00<br>
 <br>
-<b>MODULES</b>: polynomial, random, matrix, bigint, geodesy, numeric, quaternion, data, graph, symbolic, asciiplot, rational, extremum, gnuplot, qubit, lens, units, special, const, complex, main.<br>
+<b>MODULES</b>: random, quaternion, geodesy, lens, main, rational, asciiplot, special, numeric, gnuplot, symbolic, data, const, units, polynomial, bigint, extremum, graph, matrix, qubit, complex.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -72,14 +75,16 @@ Sonata is a Lua based program for mathematical calculations.<br>
 <p class="descript">Use pseudography for data visualization.</p>
 <p><b>Ap (width_N=73, height_N=21) --> new_F</b> - Create new asciiplot.<br>
 <b>Ap:concat(F1, F2) --> str</b> - Horizontal concatenation of figures with the same height. Equal to F1..F2.<br>
+<b>Ap:stars(M, cond_fn) --> str</b> - Print matrix, use star when condition for the current elemen is true.<br>
+<b>F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')</b> - Add line from (x1,y1) to (x2,y2).<br>
 <b>F:addPoint(x_d, y_d, char_s='*')</b> - Add point (x,y) using char.<br>
 <b>F:addPose(row_N, col_N, char_s='*')</b> - Add character to the given position.<br>
 <b>F:addString(row_N, col_N, str)</b> - Add string to the given position.<br>
 <b>F:axes() --> tbl</b> - Get {'size','log','range','view','fix'} for each axis.<br>
-<b>F:bar(t, y_N=2, x_N=1)</b> - Plot bar diargram for the given data.<br>
-<b>F:contour(fn, {level=5, view='XY'}) --> nil|str</b> - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output.<br>
+<b>F:bar([tx,] ty)</b> - Plot bar diargram for the given data.<br>
+<b>F:contour(fn, {level=5, view='XY'})</b> - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ.<br>
 <b>F:copy() --> cpy_F</b> - Create a copy of the object.<br>
-<b>F:legend(str_t)</b> - Update legend.<br>
+<b>F:legend(str_t|flag_s)</b> - Update legend. Use off/on to hide or show the legend.<br>
 <b>F:plot(...)</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br>
 <b>F:reset()</b> - Prepare a clean canvas.<br>
 <b>F:scale(factor_d | src_F)</b> - Change figure size w.r.t. initial size.<br>
@@ -87,8 +92,7 @@ Sonata is a Lua based program for mathematical calculations.<br>
 <b>F:setY(par_t)</b> - Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.<br>
 <b>F:setZ(par_t)</b> - Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.<br>
 <b>F:title(str)</b> - Set new title.<br>
-<b>F:tplot(data_t, cols_t={x=1, polar=false})</b> - Plot the table data, choose columns if need.<br>
-<b>Plot(...)</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br></p>
+<b>F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})</b> - Plot the table data, choose columns if need.<br></p>
 <pre class="example">
 
 -- use 'asciiplot'
@@ -119,6 +123,8 @@ fig1:plot(x,y)
 print(fig1)
 
 -- combine different sources
+x = {1,2,3,4,5}
+y = {1,3,5,7,9}
 fig1:setY {view='min'}  -- left axis
 fig1:plot(x,'single',x,y,'pair',math.log,'function')
 print(fig1)
@@ -136,7 +142,7 @@ for x = 0, 3, 0.1 do
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
 fig2:setX {view='min'}  -- down
-fig2:tplot(tbl)
+fig2:tplot(tbl, {sym='*+'})
 print(fig2)
 
 -- plot only y2, don't rescale
@@ -185,6 +191,7 @@ end
 fig3:addPose(3, 13, '#')   -- characters
 fig3:addPose(3, 24, '#')
 fig3:addString(2,3,'Hi!')  -- text
+fig3:addLine(0, 1, 0, 1.5, '|')
 print(fig3)
 
 -- print surface contours
@@ -195,11 +202,11 @@ fig4:contour(function (x,y) return x*x - y*y end)
 print(fig4)
 
 -- bar diagram
-data = {}
+tx, ty = {}, {}
 k = 2*3.14/20
-for i = 1, 20 do data[#data+1] = {k*i, math.sin(k*i)} end
+for i = 1, 20 do tx[i]=k*i; ty[i]=math.sin(k*i) end
 fig5 = Ap()
-fig5:bar(data)
+fig5:bar(tx, ty)
 print(fig5)
 
 -- use log scale
@@ -207,11 +214,13 @@ fig6 = Ap()
 fig6:setX {range={-10, 10}}
 fig6:setY {log=true}
 fig6:plot(math.exp)
+fig6:legend 'off'
 print(fig6)
 
--- simplified call, use range -1...1
--- change it via table if need
-Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
+-- show matrix structure
+Mat = require 'matlib.matrix'
+s = Ap:stars(Mat:eye(4))
+print(s)
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -222,7 +231,7 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 <b>B:FF() --> B!!</b> - Find double factorial.<br>
 <b>B:abs() --> abs_B</b> - Return module of arbitrary long number.<br>
 <b>B:digits(N=10) --> tbl</b> - Get digits in the new numeric base.<br>
-<b>B:factorize() --> prime_t</b> - Find prive multipliers.<br>
+<b>B:factorize() --> prime_t</b> - Find prime multipliers.<br>
 <b>B:float() --> num</b> - Represent current big integer as number if it possible.<br>
 <b>B:isPrime(method_s=nil) --> bool</b> - Check if the number is prime. Set 'Fermat' method to use the small Fermat theorem.<br>
 <b>B:random() --> rand_B</b> - Generate pseudo-random value from 0 to B.<br>
@@ -237,6 +246,8 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 <pre class="example">
 -- use 'bigint'
 Int = require 'matlib.bigint'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- from integer
 a = Int(123)
@@ -259,7 +270,7 @@ ans = g:sign()                -->  -1
 -- check equality
 ans = (a == -g)               -->  true
 
--- arithmetical operations
+-- arithmetic operations
 ans = (a+b):float()           -->  579
 
 ans = (a-b):float()           -->  -333
@@ -279,7 +290,7 @@ ans = Int('-25'):abs():float()  -->  25
 
 -- factorial
 c = Int(50):F()
-ans = c:float() / 3E64       --1>  1.0
+ans = c:float() / 3E64      --.1>  1.0
 
 -- ratio of factorials
 ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
@@ -287,7 +298,11 @@ ans = Int:ratF(Int(50), Int(49))  -->  Int(50)
 -- subfactorial
 ans = Int(4):subF()           --> Int(9)
 
+-- double factorial
+ans = Int(5):FF()             --> Int(15)
+
 -- digits for a different numeric base
+g = Int(-123)
 v = g:digits(60)
 ans = tostring(v)             -->  '-2,3:60'
 
@@ -302,10 +317,7 @@ ans = #v                      -->  2
 ans = v[2]                    -->  2
 
 -- base and sign
-ans = v.base == 60 and v.sign == -1  -->  true
-
--- print digits
-print(v)
+ans = (v.base == 60 and v.sign == -1)  -->  true
 
 -- back to bigint
 ans = Int(v)                  -->  g
@@ -333,18 +345,18 @@ ans = Int(1229):isPrime()     -->  true
 ans = Int(1229):isPrime('Fermat') -->  true
 
 -- factorize
-t = b:factorize()
+t = Int(456):factorize()
 ans = #t                      -->  5
 
 -- check factorization
 ans = 1
-for i = 1,#t do
-  ans = ans * (t[i]:float())
+for i = 1, #t do
+  ans = ans * t[i]:float()
 end                           -->  456
 
 -- pseudo-random number
 -- from 0 to b
-print(b:random())
+print(Int(42):random())
 
 -- greatest common divisor
 ans = Int:gcd(a,b,g):float()  -->  3
@@ -354,10 +366,18 @@ ans = Int:lcm(a,b):float()    --> 18696
 
 -- with numbers
 -- result is bigint
-ans = a + 1.0                 -->  Int(124)
+ans = a + 1                   -->  Int(124)
 
 -- result is float
 ans = a - 0.5                 -->  122.5
+
+-- object pack
+a = Int(1234)
+t = D:pack(a)
+ans = type(t)                 --> 'string'
+
+-- unpack
+ans = D:unpack(t)             --> a
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -391,6 +411,8 @@ ans = a - 0.5                 -->  122.5
 
 -- use 'complex'
 Z = require 'matlib.complex'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- real and imaginary pars
 a = Z(1,2)
@@ -401,7 +423,7 @@ b = Z(0,3)
 ans = 3+Z:i(4)                -->  Z(3,4)
 
 -- use polar form
-ans = 2*Z:E(1.57):im()     --2>  2.0
+ans = 2*Z:E(1.57):im()      --.2>  2.0
 
 -- arithmetic
 ans = a + b                   -->  Z(1,5)
@@ -411,16 +433,15 @@ ans = Z:i(3) - b              -->  0
 ans = a * b                   -->  Z(-6,3)
 
 -- call complex unit I = Z:i()
-ans = a / I                   -->  Z(2,-1)
+ans = Z(1,2) / I              -->  Z(2,-1)
 
 -- power can be complex
 c = Z(1,1)^Z(2,-2)
-
 -- real part
-ans = c:re()                 --3>  6.147
+ans = c:re()                --.3>  6.147
 
 -- imaginary part
-ans = c:im()                 --1>  7.4
+ans = c:im()                --.1>  7.4
 
 -- comparison
 ans = (a == b)                -->  false
@@ -428,10 +449,10 @@ ans = (a == b)                -->  false
 ans = (a ~= b)                -->  true
 
 -- absolute value
-ans = a:abs()                --3>  2.236
+ans = a:abs()               --.3>  2.236
 
 -- argument (angle, rad)
-ans = a:arg()                --3>  1.107
+ans = a:arg()               --.3>  1.107
 
 -- conjugated number
 ans = a:conj()                -->  Z(1,-2)
@@ -439,59 +460,68 @@ ans = a:conj()                -->  Z(1,-2)
 -- some functions after import
 -- become default, such as
 d = Z(-2):sqrt()
-ans = d:im()                 --3>  1.414
+ans = d:im()                --.3>  1.414
 
 -- exp
-ans = d:exp():re()           --3>  0.156
+ans = d:exp():re()          --.3>  0.156
 
 -- log
-ans = d:log():re()           --3>  0.3465
+ans = d:log():re()          --.3>  0.3465
 
 -- sin
-ans = d:sin():im()           --3>  1.935
+ans = d:sin():im()          --.3>  1.935
 
 -- cos
-ans = d:cos():re()           --3>  2.178
+ans = d:cos():re()          --.3>  2.178
 
 -- tan
-ans = d:tan():re()           --1>  0
+ans = d:tan():re()          --.1>  0
 
 -- sinh
-ans = d:sinh():re()          --1>  0
+ans = d:sinh():re()         --.1>  0
 
 -- cosh
-ans = d:cosh():re()          --3>  0.156
+ans = d:cosh():re()         --.3>  0.156
 
 -- tanh
-ans = d:tanh():im()          --3>  6.334
+ans = d:tanh():im()         --.3>  6.334
 
 -- asin
 z = Z(2,3)
-ans = z:asin():im()          --3>  1.983
+ans = z:asin():im()         --.3>  1.983
 
 -- acos
-ans = z:acos():re()          --2>  1.000
+ans = z:acos():re()         --.2>  1.000
 
 -- atan
-ans = z:atan():im()          --3>  0.229
+ans = z:atan():im()         --.3>  0.229
 
 -- asinh
-ans = z:asinh():re()         --3>  1.968
+ans = z:asinh():re()        --.3>  1.968
 
 -- acosh
-ans = z:acosh():im()         --1>  1.000
+ans = z:acosh():im()        --.1>  1.000
 
 -- atanh
-ans = z:atanh():re()         --3>  0.146
+ans = z:atanh():re()        --.3>  0.146
 
 -- show
 print(a)
 
 -- update env on import
--- update some methods
+-- new sqrt
 ans = sqrt(-1)                -->  I
 
-ans = log(-1):im()           --3>  math.pi
+-- new log
+ans = log(-1):im()          --.3>  math.pi
+
+-- object pack
+a = Z(-2, 3)
+t = D:pack(a)
+ans = type(t)                 -->  'string'
+
+-- unpack
+ans = D:unpack(t)             -->  a
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -519,7 +549,7 @@ ans = log(-1):im()           --3>  math.pi
 <b>C.phy.k --> 1.4E-23</b> - Boltzmann's constant.<br>
 <b>C.phy.mu0 --> 1.2E-6</b> - Permeability of free space.<br>
 <b>C.phy.sigma --> 5.6E-8</b> - Stefan-Boltzmann constant.<br>
-<b>C:add(name_s, value, units_s=nil)</b> - Create new constant.<br>
+<b>C:add(name_s, value, units_s=nil)</b> - Temporary define constant.<br>
 <b>C:remove(name_s) --> bool</b> - Delete user-defined constant.<br></p>
 <pre class="example">
 
@@ -529,14 +559,14 @@ C = require 'matlib.const'
 require 'matlib.units'  -- convert into Unit object
 
 -- charge of electron
-ans = C.phy.e * 1E19         --3>  1.602
+ans = C.phy.e * 1E19        --.3>  1.602
 
 -- convert to Unit object (add _U)
 e = C.phy.e_U
 ans = e:u()                   -->  C.phy.e_u_
 
 -- change units
-ans = e 'nC'                 --3>  C.phy.e * 1E9
+ans = e 'nC'                --.3>  C.phy.e * 1E9
 
 -- create "immutable" value
 C:add('myConst', 10)
@@ -554,15 +584,17 @@ ans = C.myConst               -->  nil
 <div><a name="D"></a>
 <h3># D (data) #</h3>
 <p class="descript">Data processing and statistics.</p>
-<p><b>D:Fn(expr_s, arg_N=2) --> fn</b> - Generate function from expression of x1, x2 etc.<br>
-<b>D:T(src_t) --> new_T</b> - Get reference to 'transposed' table.<br>
+<p><b>D (data_t) --> new_L</b> - Create list wrapper.<br>
+<b>D:binsearch(sorted_t, value, [extract_fn]) --> index_i, value</b> - Find position of element in sorted list using binary search.<br>
+<b>D:col(src_t, col_N) --> ref_Col</b> - Make column reference.<br>
 <b>D:copy(t) --> copy_t</b> - Make deep copy of the table.<br>
+<b>D:corr(xs_t, ys_t) --> float</b> - Find correlation for two vectors.<br>
 <b>D:cov(data_t) --> cov_M</b> - Find covariance matrix for list of vectors.<br>
-<b>D:cov2(xs_t, ys_t) --> float</b> - Find covariance value for two vectors.<br>
 <b>D:csvread(file_s, delim_s=',') --> tbl</b> - Read delimiter separated data as Lua table.<br>
-<b>D:csvwrite(file_s, data_t, delim_s=',')</b> - Save Lua table as delimiter separated data into file.<br>
+<b>D:csvwrite(data_t, file_s, delim_s=',')</b> - Save Lua table as delimiter separated data into file.<br>
 <b>D:filter(in_t, fn|str|tbl) --> out_t</b> - Get result of the table filtering. Condition is boolean function, string or table of weights.<br>
 <b>D:freq(data_t) --> tbl</b> - Return table with frequencies of elements.<br>
+<b>D:gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t</b> - Make new list using given transformation. Optional condition function of the form f(value,index).<br>
 <b>D:geomean(data_t, weigh_t=nil) --> num</b> - Geometrical mean.<br>
 <b>D:harmmean(data_t, weigh_t=nil) --> num</b> - Harmonic mean.<br>
 <b>D:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t</b> - Calculate amount of bins. Edges can be either number or table.<br>
@@ -573,12 +605,18 @@ ans = C.myConst               -->  nil
 <b>D:mean(data_t, wight_t=nil) --> num</b> - Calculate average value. Weights can be used.<br>
 <b>D:median(data_t) --> num</b> - Median of the list.<br>
 <b>D:min(data_t) --> var, ind_N</b> - Minimal element and its index.<br>
-<b>D:moment(order_N, data_t, weigth_t=nil) --> num</b> - Central moment of order N, weights can be defined.<br>
+<b>D:moment(data_t, order_N, weigth_t=nil) --> num</b> - Central moment of order N, weights can be defined.<br>
+<b>D:pack(obj) --> bin_s</b> - Pack object to binary string.<br>
 <b>D:range(begin_d, end_d, step_d=±1) --> new_R</b> - Generate range object.<br>
-<b>D:reduce(fn|str, data_t, initial=datadata_t[1]_t[1]) --> var</b> - Apply function to its previous result and next element.<br>
-<b>D:ref(src_t, begin_N=1, end_N=#src_t) --> new_R</b> - Return reference to the range of elements.<br>
+<b>D:reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var</b> - Apply function to its previous result and next element.<br>
+<b>D:ref(data_t, begin_N=1, end_N=#src_t) --> new_R</b> - Return reference to the range of elements.<br>
+<b>D:reverse(data_t)</b> - Reverse table elements.<br>
+<b>D:row(src_t, row_N) --> ref_Row</b> - Make row reference.<br>
+<b>D:sort(data_t, fn|str)</b> - Sort elements of the list<br>
 <b>D:std(data_t, weight_t=nil) --> num</b> - Standard deviation. Weights can be used.<br>
 <b>D:sum(data_t) --> var</b> - Get sum of all elements.<br>
+<b>D:unpack(bin_s) --> obj</b> - Unpack object from binary string.<br>
+<b>D:zeros(n1, [n2,..]) --> tbl</b> - Make table with zeros.<br>
 <b>D:zip(fn|str, ...) --> tbl</b> - Sequentially apply function to list of tables.<br></p>
 <pre class="example">
 
@@ -595,19 +633,18 @@ W = {1,1,0}
 -- enought to define w[i] ~= 1
 W[5] = 2; W[6] = 2
 -- average
-ans = D:mean(X)              --3>  3.375
+ans = D:mean(X)             --.3>  3.375
 
 -- standard deviation
-ans = D:std(X,W)             --3>  1.314
-
--- covariance for two vectors
-Y = {0,2,1,3,7,5,8,4}
-a = D:cov2(X,Y)
-ans = a                      --3>  -0.65625
+ans = D:std(X,W)            --.3>  1.314
 
 -- covariance matrix
+Y = {0,2,1,3,7,5,8,4}
 tmp = D:cov({X,Y})
-ans = tmp[1][2]              --3>  a
+ans = tmp[1][2]             --.2>  -0.656
+
+-- correlation
+ans = D:corr(X, Y)          --.2> -0.166
 
 -- maximum element and index
 _,ans = D:max(X)              -->  4
@@ -620,7 +657,7 @@ tmp = D:freq(X)
 ans = tmp[3]                  -->  3
 
 -- central moment
-ans = D:moment(2,X)          --3>  2.234
+ans = D:moment(X,2)         --.3>  2.234
 
 -- summ of elements
 ans = D:sum(X)                -->  27
@@ -629,13 +666,13 @@ ans = D:sum(X)                -->  27
 ans = D:min(X)                -->  1
 
 -- geometrical mean
-ans = D:geomean(X)           --3>  2.995
+ans = D:geomean(X)          --.3>  2.995
 
 -- harmonic mean
-ans = D:harmmean(X,W)        --3>  2.571
+ans = D:harmmean(X,W)       --.3>  2.571
 
 -- check if X[i] > 2
-a = D:is(X, "x1 > 2")
+a = D:is(X, "x > 2")
 ans = a[1]                    -->  1
 
 -- get elements X[i] > 2
@@ -647,10 +684,38 @@ fn = function (x) return x > 2 end
 tmp = D:filter(X, fn)
 ans = tmp[1]                  -->  X[1]
 
+-- reverse elements
+q = {1, 2, 3, 4, 5}
+D:reverse(q)
+ans = q[1]                   --> 5
+
+-- merge sort
+D:sort(q, "x,y -> x < y")
+ans = q[1]                   --> 1
+
+-- binary search
+ans, _ = D:binsearch(q, 2)   --> 2
+
 -- generate new list
 -- use 'lazy' function definition
-tmp = D:zip("{x1-x2, x1+x2}", X, Y)
+tmp = D:zip("x1,x2 -> {x1-x2, x1+x2}", X, Y)
 ans = tmp[1][2]               -->  X[1]+Y[1]
+
+-- generator with condition
+-- squares or even elements
+tmp = D:gen(X,
+  "x^2",                 -- rule
+  "x, y -> y % 2 == 0")  -- condition
+ans = tmp[2]                  --> X[4]*X[4]
+
+-- sum of squares
+ans = D:reduce(q, "acc,x -> acc+x^2", 0)  --> 55
+
+-- make array 2x3
+zs = D:zeros(2, 3)
+ans = #zs[2]                  --> 3
+
+ans = zs[1][1]                --> 0
 
 -- find histogram
 a,b = D:histcounts(X, 3)
@@ -666,20 +731,42 @@ ans = #a                      -->  4
 
 ans = a[1]                    -->  X[3]
 
+-- shift reference range
+-- can be called with << and >>
+a1 = a:shift(-1)
+-- show new borders
+print(a:range())
+
+-- sequential processing
+a = D(X)
+ans = a:filter("x > 3"):sum()  --> 15
+
 -- dsv write
 nm = os.tmpname()
 -- separate elements with ';'
 t = {{1,2,3},{4,5,6}}
-D:csvwrite(nm, t, ';')
+D:csvwrite(t, nm, ';')
 
 -- dsv read
 -- with separator ';'
 tt = D:csvread(nm, ';')
 ans = tt[2][2]                -->  t[2][2]
 
--- reference to 'transposed' table
-b = D:T(t)
-ans = b[3][2]                 -->  t[2][3]
+-- get column
+vc = D:col(t, 2)
+ans = vc[2]                   --> t[2][2]
+
+-- get row
+vr = D:row(t, 1)
+ans = vr[3]                   --> t[1][3]
+
+-- pack
+bin = D:pack(t)
+ans = #bin                    --> 31
+
+-- unpack
+t2 = D:unpack(bin)
+ans = t2[1][2]                --> t[1][2]
 
 -- Markdown-like print for a table
 print(D:md(t))
@@ -692,8 +779,12 @@ c = D:md(t, {'sq', 'avg'}, fn)
 print(c)
 
 -- even numbers
-b = D:range(2,10,2)
+b = D:range(2, 10, 2)
 ans = b[2]                    -->  4
+
+-- reverse range
+b1 = b:reverse()
+ans = b1[1]                   --> 10
 
 -- linear transformations
 -- with range Range objects
@@ -702,14 +793,15 @@ ans = b2[1]                   -->  8
 
 -- apply function
 c = b:map(math.sin)
-ans = c[1]                   --3>  0.909
+ans = c[1]                  --.3>  0.909
 
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Ex"></a>
 <h3># Ex (extremum) #</h3>
 <p class="descript">Extremum search and optimization methods.</p>
-<p><b>Ex:annealing(energy_fn, update_fn, x_M, temp_d=enerty0, alpha_d=0.9, nmax_N=1) -> x_M, energy_d</b> - Simulated annealing method.<br>
+<p><b>Ex:annealing(task={energy=fn,update=fn,init=x0,T=energy(x0),alpha=0.9,loop=1}) -> x_M, energy_d</b> - Simulated annealing method.<br>
+<b>Ex:fit(model_fn, param_t, xs_t, ys_t) --> minParam_t, sqSum_d</b> - Fit data with nonlinear model y = fn(x,t), where t is a parameter dictionary.<br>
 <b>Ex:linprog(c_M, param={Au=nil,bu=nil,Ae=nil,be=nil,Al=nil,bl=nil}) -> x_M, min_d</b> - Solve LP problem c*x -> min with Au*x <= bu, Ae*x == be, Al*x >= bl.<br>
 <b>Ex:maximum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d</b> - Find maximum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach.<br>
 <b>Ex:maximum1D(fn, a_d, c_d, param={method='golden',b=millde,dfun=nil}) -> x_d, min_d</b> - Find maximum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method).<br>
@@ -725,53 +817,53 @@ Mat = require 'matlib.matrix'
 -- 1D minimum point, golden section
 fun = function (x) return x*x end
 xm, fm = Ex:minimum1D(fun, -10, 5)
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- 1D Brent method, with initial point
 xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', b=-5})
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
 -- 1D Brent method, use derivative
 df = function (x) return 2*x end
 xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', dfun=df})
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
 -- Find maximum
 xm, fm = Ex:maximum1D(math.cos, -1, 1, {b=0.5})
-ans = fm                     --2> 1.0
+ans = fm                    --.2> 1.0
 
 -- multidimentional, Powel method
 foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
 p0 = Mat:V {5, 4}
 xm, fm = Ex:minimum(foo, p0)
-ans = xm(1)                  --2> 1.0
+ans = xm(1)                 --.2> 1.0
 
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- multidimentional, with derivative
 dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
 xm, fm = Ex:minimum(foo, p0, {dfun=dfoo})
-ans = xm(2)                  --2> 2.0
+ans = xm(2)                 --.2> 2.0
 
 -- multidimentional, simplex
 -- expected column-vectors
 pp = Mat{{5,3},{7,-9},{-7,-4}}:T()
 xm, fm = Ex:minimum(foo, pp, {method='simplex'})
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- multidimentional, maximum
 foo = function (x) return 3 - x:norm() end
 xm, fm = Ex:maximum(foo, Mat:V{-3, 4})
-ans = fm                     --3> 3.0
+ans = fm                    --.3> 3.0
 
 -- linear programming, simplex method
 -- minimize C*x when Au*x <= bu
 C = Mat{{-3, -5}}
 A = Mat{{1, 0}, {0, 2}, {3, 2}}; b = Mat:V {4, 12, 18}
 xm, fm = Ex:linprog(C, {Au=A, bu=b})
-ans = fm                     --2> -36.0
+ans = fm                    --.2> -36.0
 
 -- LP, additional constraints
 -- C*x -> min, Au*x <= bu, Ae*x == be, Al*x >= bl
@@ -780,7 +872,7 @@ Au = Mat{{0.3, 0.1}}; bu = Mat(2.7)
 Ae = Mat{{0.5, 0.5}}; be = Mat(6)
 Al = Mat{{0.6, 0.4}}; bl = Mat(6)
 xm, fm = Ex:linprog(C, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
-ans = fm                     --2> -5.4
+ans = fm                    --.2> -5.4
 
 -- simulated annealing
 -- solve the problem of 8 chess queens
@@ -807,9 +899,27 @@ energy = function (x)
   return s
 end
 -- find solution
-xm, fm = Ex:annealing(energy, tweak, pos, 20, 0.95, 2)
+xm, fm = Ex:annealing {
+  energy=energy,
+  update=tweak,
+  init=pos,
+  T=20,
+  alpha=0.95,
+  loop=2
+}
 print(table.concat(xm, ' '))
 ans = fm                     --> 0
+
+-- nonlinear data fit
+-- prepare data
+xs, ys = {}, {}
+foo = function (x, t) return t.A*math.sin(t.B*x) + t.C end
+t0 = {A=2, B=0.5, C=-1}
+for i = 1, 40 do xs[i] = i*0.1; ys[i] = foo(xs[i], t0) end
+-- initial estimation
+tinit = {A=3, B=2, C=-2}
+tm, fm = Ex:fit(foo, tinit, xs, ys)
+ans = tm.A                  --.2> t0.A
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -852,11 +962,11 @@ print(t1.X, t1.Y, t1.Z)
 -- XYZ to BHL
 t2 = wgs84:toBLH(t1)
 print(t2.B, t2.L, t2.H)
-ans = t2.B                   --3>  t0.B
+ans = t2.B                  --.3>  t0.B
 
-ans = t2.L                   --3>  t0.L
+ans = t2.L                  --.3>  t0.L
 
-ans = t2.H                   --3>  t0.H
+ans = t2.H                  --.3>  t0.H
 
 -- add another ellipsoid
 -- use russian PZ90
@@ -881,7 +991,7 @@ t3 = xyz_wgs84_pz90(t1)
 -- backward transformation
 xyz_pz90_wgs84 = pz90.xyzInto[wgs84]
 t4 = xyz_pz90_wgs84(t3)
-ans = t4.X                   --2>  t1.X
+ans = t4.X                  --.2>  t1.X
 
 -- datum transformation
 blh_wgs84_pz90 = wgs84.blhInto[pz90]
@@ -890,15 +1000,15 @@ t5 = blh_wgs84_pz90(t0)
 -- UTM to lat/lon
 utm = {N=5601281, E=625394, zone=42, hs='N'}
 ll = wgs84:utm2bl(utm)
-ans = ll.B                   --2>  50.55
+ans = ll.B                  --.2>  50.55
 
-ans = ll.L                   --2>  70.77
+ans = ll.L                  --.2>  70.77
 
 -- lat/lon to UTM
 utm1 = wgs84:bl2utm(ll)
-ans = utm1.N                 --2>  utm.N
+ans = utm1.N                --.2>  utm.N
 
-ans = utm1.E                 --2>  utm.E
+ans = utm1.E                --.2>  utm.E
 
 ans = utm1.zone               -->  utm.zone
 
@@ -910,12 +1020,12 @@ ans = (s >= 0)                -->  true
 
 -- direct problem
 p3, a3 = wgs84:solveDir(p1,a1,s)
-ans = a3                     --2>  a2
+ans = a3                    --.2>  a2
 
-ans = p3.B                   --2>  p2.B
+ans = p3.B                  --.2>  p2.B
 
 -- equator acceleration
-ans = Geo:grav(0)            --1>  9.78
+ans = Geo:grav(0)           --.1>  9.78
 
 -- find geohash
 h = Geo:hashEncode(p1, 7)
@@ -923,7 +1033,7 @@ print(h)
 
 -- position from geohash
 p4, _ = Geo:hashDecode(h)
-ans = p4.B                   --2>  p1.B
+ans = p4.B                  --.2>  p1.B
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -1085,6 +1195,8 @@ f:show()
 
 -- use 'graph'
 Graph = require 'matlib.graph'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- build undirected graph
 a = Graph()
@@ -1148,7 +1260,12 @@ ans = #c:nout 'c1'            --> 1
 ans = (#b:nin('n1') == #b:nout('n1'))  --> true
 
 -- list of components
-ans = #a:components()         --> 4
+cps = a:components()
+ans = #cps                    --> 4
+
+-- concatenate graphs
+aa = Graph:concat(cps)
+ans = #aa                     --> #a
 
 -- make copy
 b1 = b:copy()
@@ -1188,6 +1305,13 @@ ans = (#g:search(1, 4, 'dfs') > 2)  --> true
 g:add(1, 4, 10)
 ans = #g:search(1, 4, 'dijkstra')   --> 3
 
+-- data pack
+t = D:pack(b)
+ans = type(t)                 -->  'string'
+
+-- data unpack
+ans = D:unpack(t)             --> b
+
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Lens"></a>
@@ -1224,7 +1348,7 @@ n2 = 1.56   -- glass
 lens1 = Lens:R(n1,200,n2)
         :T(5,n2)
         :R(n2,-200,n1)
-ans = lens1:matrix():det()   --2>  1.0
+ans = lens1:matrix():det()  --.2>  1.0
 
 -- in the chain definition
 -- 'n' can be taken from a previous element
@@ -1240,11 +1364,11 @@ lens12 = Lens:R(200,n2)  -- skip first n
 ans = (lens1 == lens12)       -->  true
 
 -- get matrix element
-ans = lens1.D                --2>  1
+ans = lens1.D               --.2>  1
 
 -- find cardinal points
 pts = lens1:cardinal()
-ans = pts.F1                 --2>  -177.76
+ans = pts.F1                --.2>  -177.76
 
 -- print points
 print(pts)
@@ -1258,37 +1382,37 @@ fn = function (d2)
 end
 -- solve for B = 0, initial guess dist = 100
 d2 = Lens:solve(fn, 'B', 100)
-ans = d2                     --2>   623.21
+ans = d2                    --.2>   623.21
 
 -- check solution
 -- assume the lens it thin
 f = -pts.F1
-ans = 1/d1 + 1/d2            --2>  1/f
+ans = 1/d1 + 1/d2           --.2>  1/f
 
 -- ray transformation
 y1 = 10          -- mm, height
 V1 = n1 * 0.05   -- optical angle
 sys1 = fn(d2)
 y2, V2 = sys1(y1,V1)
-ans = y2                     --2>  -24.83
+ans = y2                    --.2>  -24.83
 
 -- from image to object
 sys2 = sys1:inv()  -- transpose
-ans, _ = sys2(y2, V2)        --3>  y1
+ans, _ = sys2(y2, V2)       --.3>  y1
 
 -- create thin lens
 lens2 = Lens:thin(f)
 _, V3 = lens1(y1,V1)
-_, ans = lens2(y1,V1)        --2>  V3
+_, ans = lens2(y1,V1)       --.2>  V3
 
 -- flat mirror
 lens3 = Lens:M(math.huge, n1)
-_, ans = lens3(y1,V1)        --2>  V1
+_, ans = lens3(y1,V1)       --.2>  V1
 
 -- afocal system
 m = 10
 lens4 = Lens:afocal(m)
-ans, _ = lens4(y1,V1)        --2>  m*y1
+ans, _ = lens4(y1,V1)       --.2>  m*y1
 
 -- arbitrary system matrix (ABCD)
 lens5 = Lens(1, 0, -0.5, 1)
@@ -1300,27 +1424,28 @@ ans = lens1:copy()            -->  lens1
 -- gaussian beam parameters
 lambda = 1024   -- nm, YAG-Nd laser
 lambda = lambda * 1E-6  -- mm
-ans, _ = Lens:gParam(1, lambda) --2>  3.26E-4
+ans, _ = Lens:gParam(1, lambda) --.2>  3.26E-4
 
 -- laser beam radius
-_, ans = Lens:gSize(1, lambda, 1E5) --2>  32.61
+_, ans = Lens:gSize(1, lambda, 1E5) --.2>  32.61
 
 -- laser beam transformation
-_, ans = lens1:beam(1E6, 1, lambda)  --2>  0.991
+_, ans = lens1:beam(1E6, 1, lambda)  --.2>  0.991
 
 -- laser cavity
 air_rod = Lens: T(250) : T(30, 1.56)
 cavity = Lens:M(-300) .. air_rod .. Lens:M(-300) .. air_rod
-ans, _ = cavity:emit(lambda)         --1> 300.0
+ans, _ = cavity:emit(lambda)         --.1> 300.0
 
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
 <p class="descript">Lua based mathematics.</p>
-<p><b>Bind(obj, nm1, [nm2, ...]) --> fn</b> - Wrap functions to call them without object.<br>
+<p><b>Fn(expr_s) --> fn</b> - Generate function from expression 'args -> value'<br>
 <b>Map(fn, in_t) --> out_t</b> - Evaluate function for each table element.<br>
 <b>PI --> 3.14</b> - Number pi.<br>
+<b>Plot(...) --> str</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br>
 <b>Round(v, decimal_N=0) --> round_v</b> - Round value, define number of decimal digits or tolerance.<br>
 <b>abs(x) --> y</b> - Absolute value.<br>
 <b>acos(x) --> y</b> - Inverse cosine x.<br>
@@ -1332,9 +1457,12 @@ ans, _ = cavity:emit(lambda)         --1> 300.0
 <b>atanh(x) --> y</b> - Hyperbolic inverse tangent.<br>
 <b>cos(x) --> y</b> - Cosine.<br>
 <b>cosh(x) --> y</b> - Hyperbolic cosine.<br>
+<b>eq(x, y) --> bool</b> - Check equality of two objects.<br>
 <b>exp(x) --> y</b> - Exponent.<br>
+<b>float(obj) --> x</b> - Convert object to float point number.<br>
 <b>help(fn='main') --> str</b> - Show information about the function.<br>
 <b>hypot(...)</b> - Hypotenuse.<br>
+<b>int(obj) --> x</b> - Convert object to integer number.<br>
 <b>log(x) --> y</b> - Natural logarithm.<br>
 <b>quit()</b> - Quit the program.<br>
 <b>sin(x) --> y</b> - Sine.<br>
@@ -1350,9 +1478,15 @@ require 'matlib.main'
 D = require('matlib.data')
 
 -- standard functions
-ans = exp(0)+sin(PI/2)+cosh(0)  --1>  3.0
+ans = exp(0)+sin(PI/2)+cosh(0)  --.1>  3.0
 
-ans = hypot(3, 4)            --2>  5.0
+-- hypotenuse
+ans = hypot(3, 4)           --.2>  5.0
+
+-- lazy function definition
+-- equal to function (x, y) return x^2 - y^3 end
+f = Fn "x, y -> x^2 - y^2"
+ans = f(2, 3)                 --> -5.0
 
 -- round number
 ans = Round(0.9)              -->  1.0
@@ -1365,14 +1499,16 @@ ans = Round(math.pi, 0.01)    -->  3.14
 
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
-ans = c[1]                   --3>  0.909
+ans = c[1]                  --.3>  0.909
 
--- bind functions
-min, sum = Bind(D, 'min', 'sum')
-ans = min{1, 2, 3} + sum{1,2,3}  -->  7
+-- simplified asciiplot call
+-- use table to change range
+xrng, yrng = {-3, 3}, {-1, 1}
+s = Plot(math.cos, 'cos', xrng, yrng, 'range correct')
+print(s)
 
 -- use Lua functions if need
-ans = math.deg(PI)           --2>  180.0
+ans = math.deg(PI)          --.2>  180.0
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -1392,7 +1528,7 @@ ans = math.deg(PI)           --2>  180.0
 <b>M:kron(M2) --> M⊗M2</b> - Find Kronecker product.<br>
 <b>M:kronSum(M2) --> M⊕M2</b> - Find Kronecker sum.<br>
 <b>M:lu() --> L_M, U_M, perm_M</b> - LU decomposition for the matrix. Return L, U and P matrices.<br>
-<b>M:map(fn) --> found_M</b> - Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x, row, col).<br>
+<b>M:map(fn|str) --> found_M</b> - Apply the given function to all elements, return new matrix.<br>
 <b>M:minor(row_N, col_N) --> minor_M</b> - Find minor for the matrix element.<br>
 <b>M:norm() --> num</b> - Euclidean norm.<br>
 <b>M:pinv() --> inv_M</b> - Pseudo inverse matrix calculation.<br>
@@ -1401,7 +1537,6 @@ ans = math.deg(PI)           --2>  180.0
 <b>M:reshape(row_N=(rows*cols), col_N=1) --> mat_Ref</b> - Matrix with rearranged elements.<br>
 <b>M:rows() --> N</b> - Get number of rows.<br>
 <b>M:rref() --> upd_M</b> - Perform transformations using Gauss method.<br>
-<b>M:stars(cond_fn) --> str</b> - Print star when condition for the current elemen is true.<br>
 <b>M:svd() --> U_M, S_M, V_M</b> - Singular value decomposition, return U, S, V.<br>
 <b>M:table() --> tbl</b> - Convert to simple Lua table.<br>
 <b>M:tr() --> sum</b> - Get trace of the matrix.<br>
@@ -1415,15 +1550,20 @@ ans = math.deg(PI)           --2>  180.0
 <b>Mat:hor(mat_t) --> mat_Ref</b> - Horizontal concatenation for the given list of matrices.<br>
 <b>Mat:ver(mat_t} --> mat_Ref</b> - Vertical concatenation for the given list of matrices.<br>
 <b>Mat:zeros(row_N, col_N=row_N) --> M</b> - Create matrix of zeros.<br>
-<b>Mat:zip(fn, ...) --> res_M</b> - Apply function to the given matrices element-wise.<br>
-<b>V:cross(V2) --> M</b> - Cross product or two 3-element vectors.<br>
+<b>Mat:zip(fn|str, ...) --> res_M</b> - Apply function to the given matrices element-wise.<br>
+<b>V:cross(V2) --> M</b> - Cross product of two 3-element vectors.<br>
 <b>V:dot(V2) --> num</b> - Scalar product of two vectors.<br>
 <b>V:normalize()</b> - Normalize to unit vector.<br>
-<b>V:outer(V2) --> M</b> - Outer product or two vectors.<br></p>
+<b>V:outer(V2) --> M</b> - Outer product or two vectors.<br>
+<b>V:skew() --> M</b> - Make skew-symmetric matrix from the 3-element vector.<br></p>
 <pre class="example">
 
 -- use 'matrix'
 Mat = require 'matlib.matrix'
+-- complex numbers
+Z = require 'matlib.complex'
+-- pack/unpack
+D = require 'matlib.data'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}
@@ -1503,8 +1643,8 @@ ans = Mat:ver {a, b}          -->  Mat {{1,2},{3,4},{5,6},{7,8}}
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)       -->  Mat {{1,4},{9,16}}
 
--- apply function which depends on index too
-ans = a:map(function (x,r,c) return x-r-c end) -->  Mat {{-1,-1},{-0,-0}}
+-- apply function as string
+ans = a:map "x^2"            -->  Mat {{1,4},{9,16}}
 
 -- apply function to matrices
 -- element-wise
@@ -1535,7 +1675,7 @@ gg({1,2},{1,2}).data = a
 ans = gg({1,2},{1,2})   -->  a
 
 -- euclidean norm
-ans = Mat:V({1,2,3}):norm()  --3>  math.sqrt(14)
+ans = Mat:V({1,2,3}):norm()  --.3>  math.sqrt(14)
 
 -- random matrix
 rnd = function () return math.random() end
@@ -1549,7 +1689,7 @@ m = Mat {
   {5,6}
 }
 n = m:pinv()
-ans = n(2,2)                 --3>  0.333
+ans = n(2,2)                --.3>  0.333
 
 -- copy as Lua table
 -- (without methametods)
@@ -1565,6 +1705,7 @@ ans = Mat:D({1,2,3})          -->  Mat {{1,0,0},
 -- get diagonal
 ans = g:diag()                -->  Mat {{1},{5},{9}}
 
+
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
@@ -1579,28 +1720,45 @@ ans = v1:dot(v2)              -->  32
 vout = v1:outer(v2)
 ans = vout[1][3]              -->  6
 
+-- skew symmetric matrix
+m = v1:skew()
+ans = m + m:T()               -->  Mat:zeros(3)
+
+-- normalize vector
+v1:normalize()
+ans = v1:norm()              --.3>  1.0
+
+-- minor
+ans = vout:minor(1, 1)       -->  36
+
 -- LU decomposition
 l,u,p = b:lu()
-ans = l[2][1]                --3>  0.714
+ans = l[2][1]               --.3>  0.714
 
 -- QR decomposition
 q,r = m:qr()
-ans = (q*r)[2][2]            --3>  m[2][2]
+ans = (q*r)[2][2]           --.3>  m[2][2]
 
-ans = q:det()                --3>  1.0
+ans = q:det()               --.3>  1.0
 
 -- SVD decomposition
 u,s,v = m:svd()
-ans = (u*s*v:T())[1][1]      --3>  m[1][1]
+ans = (u*s*v:T())[1][1]     --.3>  m[1][1]
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
-ans = m[2][2]                --3>  1.633
+ans = m[2][2]               --.3>  1.633
+
+-- eigen vectors and values
+evec, eval = a:eig()
+v1 = evec({}, 1)
+p1 = a*v1
+ans = p1(1)                --.3>  eval[1][1]*v1(1)
 
 -- matrix exponential
 m = a:exp()
-ans = m[2][2]                --1> 164.1
+ans = m[2][2]               --.1>  164.1
 
 -- matrix trace
 ans = a:tr()                  -->  5
@@ -1627,6 +1785,32 @@ tmp = Mat{
 ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
                                         {4,5,6}}
 
+-- conjugate transpose
+m = Mat {{Z(1,2), Z(3,4)}, {0, 0}}
+h = m:H()
+ans = h[2][1]                 -->  Z(3,-4)
+
+-- Kronecker product
+m = a:kron(a)
+ans = m[4][3]                 -->  a[2][2]*a[2][1]
+
+-- Kronecker sum
+m = a:kronSum(a)
+ans = m[1][1]                 -->  2
+
+-- column wise vector
+v = a:vectorize()
+ans = v:rows()                -->  a:cols()*a:rows()
+
+-- pack
+m = Mat{{1, 0.1}, {-0.2, 2}}
+t = D:pack(m)
+ans = type(t)                 -->  "string"
+
+-- unpack
+v = D:unpack(t)
+ans = v[1][2]               --.3>  m[1][2]
+
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Num"></a>
@@ -1639,40 +1823,41 @@ ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
 <b>Num:ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t</b> - Numerical approximation of the ODE solution.<br>
 List of parameters is optional and can includes time step and exit condition.<br>
 Return table of intermediate points in form {t, x(t)}.<br>
-<b>Num:solve(fn, low_d, up_d) --> num</b> - Find root of equation fn(x)=0 on interval [a,b].<br>
-<b>ys:flat() --> ys</b> - Transform vector to list for each rov in ODE output.<br></p>
+<b>Num:solve(fn, low_d, up_d) --> num</b> - Find root of equation fn(x)=0 on interval [a,b].<br></p>
 <pre class="example">
 
 -- use 'numeric'
 Num = require 'matlib.numeric'
 -- use matrices for high order equations
 Mat = require 'matlib.matrix'
+-- show
+Ap = require 'matlib.asciiplot'
 
 -- define tolerance
 Num.TOL = 1e-4
 -- solve 'sin(x) = 0' for x in (pi/2...3*pi/2)
 a = Num:solve(math.sin, math.pi*0.5, math.pi*1.5)
-ans = a                      --3>  math.pi
+ans = a                     --.3>  math.pi
 
 -- Newton method
 -- only one initial value
 d = Num:newton(math.sin, math.pi*0.7)
-ans = d                      --3>  math.pi
+ans = d                     --.3>  math.pi
 
 -- numeric derivative
 b = Num:der(math.sin, 0)
-ans = b                      --0>  1
+ans = b                     --.0>  1
 
 -- numeric limit
 fn = function (x) return math.sin(x) / x end
-ans = Num:lim(fn, 0)         --3>  1.0
+ans = Num:lim(fn, 0)        --.3>  1.0
 
 -- inf limit
-ans = Num:lim(math.exp, -INF)  --3> 0.0
+ans = Num:lim(math.exp, -INF)  --.3> 0.0
 
 -- numeric integral
 c = Num:int(math.sin, 0, math.pi)
-ans = c                      --2>  2.0
+ans = c                     --.2>  2.0
 
 -- infinite limits
 ans = Num:int(
@@ -1683,17 +1868,22 @@ ans = Num:int(
 -- return table of solutions and y(3)
 tbl = Num:ode(function (x,y) return x*y end,
                 {0,3}, 1)
-ans = tbl[#tbl][2]           --2>  90.011
+ans = tbl[#tbl][2]          --.2>  90.011
 
 -- y''-2*y'+2*y = 1
--- represent as: x1 = y, x2 = y'
--- so: x1' = x2, x2' = 1+2*x2-2*x1
+-- if   x1 = y, x2 = y'
+-- then x1' = x2, x2' = 1+2*x2-2*x1
 myfun = function (t,x)
   return Mat:V {x(2), 1+2*x(2)-2*x(1)}
 end
-res = Num:ode(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
+res = Num:ode(myfun, {0,2}, Mat:V{3,2}, {dt=0.1})
 xn = res[#res][2]  -- last element
-ans = xn(1)                  --2>   -10.54
+ans = xn(1)                 --.2>   -10.54
+
+-- view
+fig = Ap()
+fig:tplot(res:flat())
+print(fig)
 
 -- define exit condition
 cond = function (states)
@@ -1703,7 +1893,7 @@ end
 myfun = function (t,x) return -x end
 y = Num:ode(myfun, {0, 1E2}, 1, {exit=cond})
 -- time of execution before break
-ans = y[#y][1]               --1>  2.3
+ans = y[#y][1]              --.1>  2.3
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -1730,8 +1920,11 @@ ans = y[#y][1]               --1>  2.3
 -- use 'polynomial'
 Poly = require 'matlib.polynomial'
 -- external dependencies, can be loaded implicitly
-require 'matlib.matrix'         -- in Poly.fit
 Comp = require 'matlib.complex' -- for complex roots
+-- make matrix
+Mat = require 'matlib.matrix'   
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- coefficients in ascendant order
 a = Poly {1,2,4,3}
@@ -1788,14 +1981,14 @@ ans = (b == c)                -->  false
 -- find all roots
 g = Poly:R{1, 2, 3+4*i, 3-4*i}
 e = g:roots()
-ans = e[3]:re()              --1>  3
+ans = e[3]:re()             --.1>  3
 
 -- fit curve with polynomial
 -- of order 2
 A={0,1,2,3}
 B={-3,2,11,24}
 p = Poly:fit(A,B,2)
-ans = p(10)                  --0>  227.0
+ans = p(10)                 --.0>  227.0
 
 -- simple print
 print(a)
@@ -1810,28 +2003,42 @@ ans = d:str('s')              -->  '2*s^2-2*s+1'
 X = {-1.5, -0.75, 0, 0.75, 1.5}
 Y = {-14.101,-0.931596,0,0.931596,14.101}
 p = Poly:lagrange(X,Y)
-ans = p[3]                   --3>  4.83485
+ans = p[3]                  --.3>  4.83485
 
 -- Taylor series
 -- for exp(x) near 0
 p = Poly:taylor(0, 1, 1, 1, 1)
-ans = p(0.3)                 --2>  math.exp(0.3)
+ans = p(0.3)                --.2>  math.exp(0.3)
 
 -- linear interpolation
 -- use constant values out the interval
 p = Poly:lin(X,Y, Y[1], Y[#Y])
 y1, n = p:val(0.5)
-ans = y1                     --2>  0.621
+ans = y1                    --.2>  0.621
 
 -- polynomial index
 ans = n                       -->  4
 
 -- simplify call when index is known
-ans = p(0.5, n)              --2>  y1
+ans = p(0.5, n)             --.2>  y1
 
 -- cubic spline
 p = Poly:spline(X, Y)
-ans = p(0.5)                 --2>  -0.512
+ans = p(0.5)                --.2>  -0.512
+
+-- characteristic polynomial
+m = Mat {{1,2}, {3,4}}
+p = Poly:char(m)
+ans = #p                     -->  2
+
+ans = p[0]                 --.3>  m:det()
+
+-- object pack
+t = D:pack(p)
+ans = type(t)                -->  'string'
+
+-- unpack
+ans = D:unpack(t)            -->  p
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -1845,7 +2052,6 @@ ans = p(0.5)                 --2>  -0.512
 <b>Q:log() --> log_Q</b> - Quaternion logarithm.<br>
 <b>Q:normalized() --> unit_Q</b> - Return unit quaternion.<br>
 <b>Q:rotate(in_t|V) --> out_t</b> - Apply quaternion to rotate the vector.<br>
-<b>Q:slerp(end_Q, rat_f) --> rat_Q</b> - Spherical linear interpolation for the given ratio.<br>
 <b>Q:toAA() --> angle_d, axis_t|nil</b> - Get angle and axis of rotation.<br>
 <b>Q:toRPY() --> roll_d, pitch_d, yaw_d</b> - Get Euler angles.<br>
 <b>Q:toRot() --> M</b> - Get equal rotation matrix.<br>
@@ -1856,13 +2062,16 @@ ans = p(0.5)                 --2>  -0.512
 <b>Quat {x, y, z, w} --> new_Q</b> - Create new quaternion.<br>
 <b>Quat:fromAA(angle_d, axis_t|V) --> Q</b> - Create quaternion using angle and axis.<br>
 <b>Quat:fromRPY(roll_d, pitch_d, yaw_d) --> Q</b> - Convert Euler angles to quaternion.<br>
-<b>Quat:fromRot(M) --> Q</b> - Convert rotation matrix to quaternion.<br></p>
+<b>Quat:fromRot(M) --> Q</b> - Convert rotation matrix to quaternion.<br>
+<b>Quat:slerp(beg_Q, end_Q, rat_f) --> rat_Q</b> - Spherical linear interpolation for the given ratio.<br></p>
 <pre class="example">
 
 -- use 'quaternion'
 Quat = require 'matlib.quaternion'
 -- external dependencies, can be loaded implicitly
 require 'matlib.matrix'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- quaternion
 -- set {w,x,y,z}
@@ -1878,11 +2087,11 @@ ans = a:conj()                -->  Quat{1, -2,-3,-4}
 ans = a + a:conj()            -->  2
 
 -- norm
-ans = b:abs()                --1>  5.000
+ans = b:abs()               --.1>  5.000
 
 -- inversion
 c = a*a:inv()
-ans = c:w()                  --1>  1.000
+ans = c:w()                 --.1>  1.000
 
 -- arithmetic
 ans = a+b                     -->  Quat{4, 6,3,4}
@@ -1896,38 +2105,60 @@ ans = b^3                     -->  b * b * b
 
 -- unit quaternion
 a = a:normalized()
-ans = a:abs()                --1>  1.000
+ans = a:abs()               --.1>  1.000
 
 -- unit power
 aa = a^1.5
-ans = aa:x()                 --3>  0.324
+ans = aa:x()                --.3>  0.324
 
-ans = aa:y()                 --3>  0.486
+ans = aa:y()                --.3>  0.486
 
-ans = aa:z()                 --3>  0.648
+ans = aa:z()                --.3>  0.648
 
 -- rotation matrix
 m = a:toRot()
 d = Quat:fromRot(m)
-ans = (d-a):abs()            --1>  0.000
+ans = (d-a):abs()           --.1>  0.000
 
 -- use angle
 -- and axis
 ang = 0.5
 axis = {1,1,1}
 f = Quat:fromAA(ang,axis)
-ans,_ = f:toAA()             --3>  ang
+ans,_ = f:toAA()            --.3>  ang
+
+-- RPY
+roll = 0.1
+qq = Quat:fromRPY(roll, 0.2, 0.3)
+r, p, y = qq:toRPY()
+ans = r                     --.1>  roll
 
 -- rotate vector
 p = a:rotate({1,0,0})
-ans = p[1]                   --3>  -0.667
+ans = p[1]                  --.3>  -0.667
 
 -- spherical interpolation
-d = a:slerp(b,0.5)
-ans = d:w()                  --3>  0.467
+d = Quat:slerp(a, b, 0.5)
+ans = d:w()                 --.3>  0.467
 
 -- show
 print(d)
+
+-- exp
+q = a:exp()
+ans = q:x()                 --.3>  0.371
+
+-- log
+r = q:log()
+ans = r:w()                 --.3>  a:w()
+
+-- pack
+t = D:pack(a)
+ans = type(t)                 -->  'string'
+
+-- unpack
+aa = D:unpack(t)
+ans = aa:w()                --.3>  a:w()
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -1971,22 +2202,27 @@ ans = #a                      -->  1
 
 -- qubit as vector
 av = a:matrix()
-ans = av(1)                  --2>  0.2
+ans = av(1)                 --.2>  0.2
+
+-- make from vector
+av:vec():normalize()
+aa = Qb:fromVector(av)
+ans = aa:prob '0'           --.2>  0.04
 
 -- norm
-ans = a * a                  --2>  1.0
+ans = a * a                 --.2>  1.0
 
 -- projection to |+>
 k = 1 / math.sqrt(2)
 plus = k*Qb'|0>' + k*Qb'|1>'
-ans = plus * a               --2>  (0.2+0.98)*k
+ans = plus * a              --.2>  (0.2+0.98)*k
 
 -- system of qubits
 -- allow to skip |>
 b = Qb'00' + Qb'11'
 b:normalize()
 -- probability of the state |00>
-ans = b:prob '00'            --2>  0.5
+ans = b:prob '00'           --.2>  0.5
 
 -- combine qubits Q1-Q2,
 -- (same as a..b)
@@ -1996,6 +2232,7 @@ print(c)
 -- do 'measurement' of all states
 -- result is calculated using probabilities
 print(c:meas())
+
 
 -- define Hadamard gate for 2 qubits
 g1 = Qb:gates(2):H()
@@ -2009,12 +2246,12 @@ ans = g1:isUnitary()          -->  true
 
 -- as matrix
 g1m = g1:matrix()
-ans = g1m[1][1]              --2>  0.5
+ans = g1m[1][1]             --.2>  0.5
 
 -- apply to qubits
 d = g1(Qb'|00>')
 -- check projection
-ans = (plus..plus) * d       --2>  1.0
+ans = (plus..plus) * d      --.2>  1.0
 
 -- add X to 0-th, Y to 1-st and Z to both
 -- indexation from zero
@@ -2029,7 +2266,7 @@ print(g2)
 -- inverse system
 g3 = g2:inverse()
 mm = g2:matrix() * g3:matrix()
-ans = mm[4][4]               --2>  1.0
+ans = mm[4][4]              --.2>  1.0
 
 -- Deutsch-Jozsa algorithm
 -- check for function f(x) = x, 1 is expected as output
@@ -2068,7 +2305,7 @@ ans = g5(Qb'000'):meas()      --> Qb'101'
 <div><a name="Rand"></a>
 <h3># Rand (random) #</h3>
 <p class="descript">Random number generators.</p>
-<p><b>R:array(n1,[n2,..]) --> tbl</b> - Get multidimentional random array.<br>
+<p><b>R:array(n1, [n2,..]) --> tbl</b> - Get multidimentional random array.<br>
 <b>R:binomial(p_d, N) --> int</b> - Binomial distributed random values.<br>
 <b>R:bytes(N) --> str</b> - Get sequence of random bytes.<br>
 <b>R:cauchy(mu_d=0, sigma_d=1) --> float</b> - Cauchy distributed random numbers.<br>
@@ -2110,10 +2347,12 @@ end
 -- visualize
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
+table.remove(ts)  -- ignore right values
 fig = Ap()
-fig:setY {view='min'}; fig:setX {range={0, 0.5}, fix=true}
-v = _D:T({te, ts})  -- get list of pairs
-fig:bar(v)
+fig:setX {view='min', range={0, 0.2}, fix=true}
+fig:setY {size=#ts}
+--v = _D:T()  -- get list of pairs
+fig:bar(te, ts)
 print(fig)
 
 -- custom generator (0 to 1)
@@ -2125,8 +2364,8 @@ end
 -- visualize renerated data
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
-v = _D:T({te, ts})   -- list of pairs
-fig:bar(v)
+table.remove(ts)  -- ignore right values
+fig:bar(te, ts)
 print(fig)
 
 -- normal distribution
@@ -2278,6 +2517,12 @@ ans = (r1() == r2())          -->  true
 r2:seed(2)
 ans = (r1() ~= r2())          -->  true
 
+-- fill array 2x2x3
+arr = Rand:array(2, 2, 3)
+ans = #arr[1][1]              --> 3
+
+ans = arr[2][1][2] <= 1.0     --> true
+
 --</pre>
 <a href="#Top">Top</a></div>
 <div><a name="Rat"></a>
@@ -2294,6 +2539,8 @@ ans = (r1() ~= r2())          -->  true
 
 -- use 'rational'
 Rat = require 'matlib.rational'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- numerator, denominator
 a = Rat(1,2)
@@ -2355,6 +2602,14 @@ ans = a + 1                   -->  Rat(3,2)
 
 -- result is float
 ans = a + 0.5                 -->  1
+
+-- object pack
+z = Rat(3, 4)
+t = D:pack(z)
+ans = type(t)                 -->  'string'
+
+-- unpack
+ans = D:unpack(t)             -->  z
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -2434,8 +2689,7 @@ ans = Spec:dawson(3.3)       --3>  0.1598
 <b>S:struct() --> str</b> - Show internal structure.<br>
 <b>S:val() --> num</b> - Get constant value.<br>
 <b>Sym (num|str) --> new_S</b> - Create new symbolic variable.<br>
-<b>Sym:def(name_s, args_t, expr_S) --> fn_S</b> - Define symbolical function. S is either symbolic expression or a Lua function.<br>
-<b>Sym:parse(expr_s) --> S1, S2, ..</b> - Get simbolic expression from string.<br></p>
+<b>Sym:def(name_s, args_t, expr_S) --> fn_S</b> - Define symbolical function. S is either symbolic expression or a Lua function.<br></p>
 <pre class="example">
 
 -- use 'symbolic'
@@ -2444,6 +2698,12 @@ Sym = require 'matlib.symbolic'
 -- create variables
 x, y = Sym('x'), Sym('y')
 ans = (x == y)                -->  false
+
+-- parse expressions
+e1, e2 = Sym('x+y, x*y')
+ans = e1                      --> x+y
+
+ans = e2                      --> y*x
 
 -- sum
 ans = x + 2*y - x + y         -->  3*y
@@ -2499,6 +2759,8 @@ print(S1:struct())
 
 -- use 'units'
 U = require 'matlib.units'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- add some rules
 U.rules['h'] = U(60,'min')
@@ -2548,6 +2810,14 @@ print(a)
 
 -- list of rules
 print(U.rules)
+
+-- object pack
+t = D:pack(a)
+ans = type(t)                 -->  'string'
+
+-- unpack
+ans = D:unpack(t)             -->  a
+
 --</pre>
 <a href="#Top">Top</a></div>
 <div><p align="center"><i>2017-2024, Stanislav Mikhel</i></p></div>

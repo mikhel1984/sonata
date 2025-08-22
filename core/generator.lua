@@ -120,7 +120,7 @@ generator.doc = function (locName, tModules)
     res[#res+1] = sformat('<p class="descript">%s</p>', description)
     res[#res+1] = sformat('<p>%s</p>', functions)
     local fstr = Help.readAll(sformat('%s%s%s.lua', LIB, Help.SEP, k))
-    res[#res+1] = docExample(Test._getCode(fstr))
+    res[#res+1] = docExample(Test.getCode(fstr))
     res[#res+1] = '<a href="#Top">Top</a></div>'
   end
 
