@@ -24,22 +24,27 @@ ans = #a                      -->  1
 
 -- qubit as vector
 av = a:matrix()
-ans = av(1)                  --2>  0.2
+ans = av(1)                 --.2>  0.2
+
+-- make from vector
+av:vec():normalize()
+aa = Qb:fromVector(av)
+ans = aa:prob '0'           --.2>  0.04
 
 -- norm
-ans = a * a                  --2>  1.0
+ans = a * a                 --.2>  1.0
 
 -- projection to |+>
 k = 1 / math.sqrt(2)
 plus = k*Qb'|0>' + k*Qb'|1>'
-ans = plus * a               --2>  (0.2+0.98)*k
+ans = plus * a              --.2>  (0.2+0.98)*k
 
 -- system of qubits
 -- allow to skip |>
 b = Qb'00' + Qb'11'
 b:normalize()
 -- probability of the state |00>
-ans = b:prob '00'            --2>  0.5
+ans = b:prob '00'           --.2>  0.5
 
 -- combine qubits Q1-Q2,
 -- (same as a..b)
@@ -49,6 +54,7 @@ print(c)
 -- do 'measurement' of all states
 -- result is calculated using probabilities
 print(c:meas())
+
 
 -- define Hadamard gate for 2 qubits
 g1 = Qb:gates(2):H()
@@ -62,12 +68,12 @@ ans = g1:isUnitary()          -->  true
 
 -- as matrix
 g1m = g1:matrix()
-ans = g1m[1][1]              --2>  0.5
+ans = g1m[1][1]             --.2>  0.5
 
 -- apply to qubits
 d = g1(Qb'|00>')
 -- check projection
-ans = (plus..plus) * d       --2>  1.0
+ans = (plus..plus) * d      --.2>  1.0
 
 -- add X to 0-th, Y to 1-st and Z to both
 -- indexation from zero
@@ -82,7 +88,7 @@ print(g2)
 -- inverse system
 g3 = g2:inverse()
 mm = g2:matrix() * g3:matrix()
-ans = mm[4][4]               --2>  1.0
+ans = mm[4][4]              --.2>  1.0
 
 -- Deutsch-Jozsa algorithm
 -- check for function f(x) = x, 1 is expected as output
@@ -144,7 +150,7 @@ local ERR_NOT_A_GATE = 'Not a gate object'
 --  @param bits List of booleans.
 --  @param slave Index to change.
 --  @parma master Index to check.
-local function ruleCnot (bits, slave, master)
+local function _ruleCnot (bits, slave, master)
   if bits[master] then
     bits[slave] = not bits[slave]
   end
@@ -155,7 +161,7 @@ end
 --  @param bits List of booleans.
 --  @param i1 Index of the first element.
 --  @param i2 Index of the second element.
-local function ruleSwap (bits, i1, i2)
+local function _ruleSwap (bits, i1, i2)
   bits[i1], bits[i2] = bits[i2], bits[i1]
 end
 
@@ -163,7 +169,7 @@ end
 --- Find square value.
 --  @param v Real or complex number.
 --  @return v^2
-local function square (v)
+local function _square (v)
   return (getmetatable(v) == Complex) and (v:re()^2 + v:im()^2) or (v*v)
 end
 
@@ -187,7 +193,59 @@ qubit.__index = qubit
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is qubit.
-local function isqubit(v) return getmetatable(v) == qubit end
+local function _isqubit(v) return getmetatable(v) == qubit end
+
+
+--- Measure on qubit from the system.
+--  Update system state.
+--  @param pos Qubit index.
+--  @return Qubit state.
+local function _measOne (self, pos)
+  local sum0, sum1 = 0, 0
+  local ones = {}
+  for k = 0, self._vec:rows()-1 do
+    local v, rst = k, 0
+    for j = 0, pos do
+      v, rst = math.modf(v * 0.5)  -- TODO use shift
+    end
+    if rst > 0.1 then
+      sum1 = sum1 + self._vec[k+1][1]
+      ones[#ones+1] = true
+    else
+      sum0 = sum0 + self._vec[k+1][1]
+      ones[#ones+1] = false
+    end
+  end
+  local isOne = (math.random()*(sum0+sum1) > sum0)
+  for i, v in ipairs(ones) do
+    if v ~= isOne then self._vec[i][1] = 0 end
+  end
+  qubit.normalize(self)
+  return qubit._new(isOne and Matrix:V{0, 1} or Matrix:V{1, 0}, 1)
+end
+
+
+--- Get state from the string representation.
+--  @param state String of the form '|xxx>'.
+--  @return vector, size, index of 1
+local function _parse (state)
+  local s = string.match(state, '^|(.+)>$')
+  s = string.reverse(s or state)
+  local n, sum = 0, 1
+  for w in string.gmatch(s, ".") do
+    if w == '1' then
+      sum = sum + 2^n
+    elseif w == '0' then
+      -- skip
+    else
+      error 'Expected 0 or 1'
+    end
+    n = n + 1
+  end
+  local res = Matrix:zeros(2^n, 1)
+  res[sum][1] = 1
+  return res, n, sum
+end
 
 
 --- Q1 + Q2
@@ -195,7 +253,7 @@ local function isqubit(v) return getmetatable(v) == qubit end
 --  @param Q2 Second state.
 --  @return Combined state.
 qubit.__add = function (Q1, Q2)
-  if not (isqubit(Q1) and isqubit(Q2)) then
+  if not (_isqubit(Q1) and _isqubit(Q2)) then
     error "Unexpected operation"
   end
   assert(Q1._n == Q2._n, ERR_WRONG_SIZE)
@@ -224,8 +282,8 @@ end
 --  @param Q State.
 --  @return Scaled state.
 qubit.__mul = function (C, Q)
-  if isqubit(C) then
-    if isqubit(Q) then
+  if _isqubit(C) then
+    if _isqubit(Q) then
       assert(C._n == Q._n, ERR_WRONG_SIZE)
       return C._vec:H() * Q._vec
     else
@@ -241,7 +299,7 @@ end
 --  @param Q2 Second state.
 --  @return Combined state.
 qubit.__sub = function (Q1, Q2)
-  if not (isqubit(Q1) and isqubit(Q2)) then
+  if not (_isqubit(Q1) and _isqubit(Q2)) then
     error "Unexpected operation"
   end
   assert(Q1._n == Q2._n, ERR_WRONG_SIZE)
@@ -283,35 +341,6 @@ about['_cmp'] = {"comparison: Q1==Q2, Q1~=Q2", nil, help.META}
 about['_obj'] = {"object: Q1..Q2, #Q, #G", nil, help.META}
 
 
---- Measure on qubit from the system.
---  Update system state.
---  @param pos Qubit index.
---  @return Qubit state.
-qubit._measOne = function (self, pos)
-  local sum0, sum1 = 0, 0
-  local ones = {}
-  for k = 0, self._vec:rows()-1 do
-    local v, rst = k, 0
-    for j = 0, pos do
-      v, rst = math.modf(v * 0.5)  -- TODO use shift
-    end
-    if rst > 0.1 then
-      sum1 = sum1 + self._vec[k+1][1]
-      ones[#ones+1] = true
-    else
-      sum0 = sum0 + self._vec[k+1][1]
-      ones[#ones+1] = false
-    end
-  end
-  local isOne = (math.random()*(sum0+sum1) > sum0)
-  for i, v in ipairs(ones) do
-    if v ~= isOne then self._vec[i][1] = 0 end
-  end
-  qubit.normalize(self)
-  return qubit._new(isOne and Matrix:V{0, 1} or Matrix:V{1, 0}, 1)
-end
-
-
 --- Initialize new qubit system.
 --  @param v State vector.
 --  @param tp Type of basis.
@@ -331,29 +360,6 @@ qubit._rand = function (n)
   end
   v:vec():normalize()
   return qubit._new(v, n)
-end
-
-
---- Get state from the string representation.
---  @param state String of the form '|xxx>'.
---  @return vector, size, index of 1
-qubit._parse = function (state)
-  local s = string.match(state, '^|(.+)>$')
-  s = string.reverse(s or state)
-  local n, sum = 0, 1
-  for w in string.gmatch(s, ".") do
-    if w == '1' then
-      sum = sum + 2^n
-    elseif w == '0' then
-      -- skip
-    else
-      error 'Expected 0 or 1'
-    end
-    n = n + 1
-  end
-  local res = Matrix:zeros(2^n, 1)
-  res[sum][1] = 1
-  return res, n, sum
 end
 
 
@@ -388,7 +394,7 @@ about[qubit.copy] = {"Q:copy() --> cpy_Q", "Create a copy of the object."}
 --  @param v Unit vector of length ~ 2^n.
 --  @return qubit object.
 qubit.fromVector = function (self, v)
-  local n, p = math.modf(math.log(v:rows()) / math.log(2))
+  local n, p = math.modf(math.log(v:rows(), 2))
   if math.abs(p) > 1E-4 then
     error 'Wrong vector size'
   end
@@ -411,12 +417,12 @@ about[qubit.matrix] = {"Q:matrix() --> M", "Get matrix representation."}
 --  @param ind Qubit to measure.
 --  @return found state.
 qubit.meas = function (self, ind)
-  if ind then return qubit._measOne(self, ind) end
+  if ind then return _measOne(self, ind) end
   local acc = {}
   for i = 1, self._vec:rows() do
     local v = self._vec[i][1]
     if not Czero(v) then
-      local sum = (#acc > 0 and acc[#acc][1] or 0) + square(v)
+      local sum = (#acc > 0 and acc[#acc][1] or 0) + _square(v)
       acc[#acc+1] = {sum, i}
     end
   end
@@ -440,11 +446,11 @@ about[qubit.normalize] = {"Q:normalize()", "Make norm equal to 1."}
 --  @param state_s - String with the state description.
 --  @return Probability.
 qubit.prob = function (self, state_s)
-  local v, n = qubit._parse(state_s)
+  local v, n = _parse(state_s)
   assert(n == self._n, ERR_WRONG_SIZE)
   for i = 1, v:rows() do
     if v[i][1] > 0.9 then  -- equal to 1
-      return square(self._vec[i][1])
+      return _square(self._vec[i][1])
     end
   end
   return 0
@@ -466,7 +472,7 @@ __call = function (self, state)
     assert(Vinteger(state) and state > 0, 'Wrong size')
     return qubit._rand(state)
   end
-  return qubit._new(qubit._parse(state))
+  return qubit._new(_parse(state))
 end
 })
 about[qubit] = {" (state_s|num) --> Q", "Create new qubit.", help.NEW}
@@ -654,7 +660,7 @@ end
 qgate.CNOT = function (self, slave_i, master_i)
   assert(getmetatable(self) == qgate, ERR_NOT_A_GATE)
   slave_i, master_i = slave_i + 1, master_i + 1
-  local mat = self:_matrixFor(ruleCnot, slave_i, master_i)
+  local mat = self:_matrixFor(_ruleCnot, slave_i, master_i)
   self._mat = self._mat and (mat * self._mat) or mat
   -- update view
   local txt = self._txt
@@ -705,12 +711,12 @@ qgate.fromTable = function (self, t)
   local acc, n = {}, 2^self._n
   local mat = Matrix:zeros(n, n)
   for _, p in ipairs(t) do
-    local _, n1,  ind1 = qubit._parse(p[1])
+    local _, n1,  ind1 = _parse(p[1])
     assert(n1 == self._n, ERR_WRONG_SIZE)
     if acc[ind1] then
       error(string.format('State %s is not unique', p[1]))
     end
-    local _, n2, ind2 = qubit._parse(p[2])
+    local _, n2, ind2 = _parse(p[2])
     assert(n2 == self._n, ERR_WRONG_SIZE)
     mat[ind2][ind1] = 1
     acc[ind1] = true
@@ -838,7 +844,7 @@ qgate.__len = qgate.size
 qgate.SWAP = function (self, i1, i2)
   assert(getmetatable(self) == qgate, ERR_NOT_A_GATE)
   i1, i2 = i1 + 1, i2 + 1
-  local mat = self:_matrixFor(ruleSwap, i1, i2)
+  local mat = self:_matrixFor(_ruleSwap, i1, i2)
   self._mat = self._mat and (mat * self._mat) or mat
   if i1 > i2 then
     i1, i2 = i2, i1

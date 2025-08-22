@@ -13,6 +13,9 @@
 --	Text coloring
 --SONATA_USE_COLOR = true
 
+--  History and autocomplete (linux)
+--SONATA_READLINE = true
+
 --	Unicode symbols for function plot
 --SONATA_ASCIIPLOT_UNICODE = true
 
@@ -64,4 +67,4 @@ use = {
 if SONATA_ADD_PATH then
   package.path = string.format("%s;%s?.lua", package.path, SONATA_ADD_PATH)
 end
-require('core.load')
+require 'core.load'

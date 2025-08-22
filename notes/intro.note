@@ -43,10 +43,7 @@ ANS
 use()
 -- PAUSE
 
--- In order to load module, enter
---    use 'name'
--- Module is available for its alias.
-use 'matrix'
+-- In order to load module, call its alias.
 a = Mat {{1,2},{3,4}}       -- new matrix
 -- Fields can be called with dot,
 -- functions with ':'
@@ -59,10 +56,6 @@ help 'matrix'   -- or help 'Mat'
 -- Several modules could be loaded as
 --    use {'name1','name2'}
 use {'complex', 'asciiplot'}
--- PAUSE
-
--- It is possible to use alias instead of the module name
-use 'Num'
 -- PAUSE
 
 -- In order to load all modules, enter

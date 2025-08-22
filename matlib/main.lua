@@ -18,9 +18,15 @@ require 'matlib.main'
 D = require('matlib.data')
 
 -- standard functions
-ans = exp(0)+sin(PI/2)+cosh(0)  --1>  3.0
+ans = exp(0)+sin(PI/2)+cosh(0)  --.1>  3.0
 
-ans = hypot(3, 4)            --2>  5.0
+-- hypotenuse
+ans = hypot(3, 4)           --.2>  5.0
+
+-- lazy function definition
+-- equal to function (x, y) return x^2 - y^3 end
+f = Fn "x, y -> x^2 - y^2"
+ans = f(2, 3)                 --> -5.0
 
 -- round number
 ans = Round(0.9)              -->  1.0
@@ -33,14 +39,16 @@ ans = Round(math.pi, 0.01)    -->  3.14
 
 -- calculate function values
 c = Map(sin, {2,4,6,8,10})
-ans = c[1]                   --3>  0.909
+ans = c[1]                  --.3>  0.909
 
--- bind functions
-min, sum = Bind(D, 'min', 'sum')
-ans = min{1, 2, 3} + sum{1,2,3}  -->  7
+-- simplified asciiplot call
+-- use table to change range
+xrng, yrng = {-3, 3}, {-1, 1}
+s = Plot(math.cos, 'cos', xrng, yrng, 'range correct')
+print(s)
 
 -- use Lua functions if need
-ans = math.deg(PI)           --2>  180.0
+ans = math.deg(PI)          --.2>  180.0
 
 --]]
 
@@ -64,7 +72,7 @@ Ver = Ver.versions
 --  @param fn Function.
 --  @param s Function name.
 --  @return Function equal to fn(x).
-local _call = function (fn, s)
+local function _call (fn, s)
   return function (v)
     if type(v) == 'table' then
       local method = v[s]
@@ -133,6 +141,36 @@ atanh = _call(Calc.atanh, 'atanh')
 about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
 
 
+--- Check equality.
+--  @param x First number or object.
+--  @param y Second number or object.
+--  @return true when objects are equal.
+eq = function (x, y)
+  if type(x) == 'table' and x.__eq then
+    return x:__eq(y)
+  elseif type(y) == 'table' and y.__eq then
+    return y:__eq(x)
+  end
+  return x == y
+end
+about[eq] = {"eq(x, y) --> bool", "Check equality of two objects."}
+
+
+--- Convert object to float number if possible.
+--  @param x Number or object.
+--  @return float point number.
+float = function (x)
+  if type(x) == 'number' then
+    return x
+  elseif type(x) == 'table' then
+    return x:float()
+  else
+    return tonumber(x)
+  end
+end
+about[float] = {"float(obj) --> x", "Convert object to float point number."}
+
+
 --- Find hypotenuse.
 --  @return square root for the sum of squares.
 hypot = function (...)
@@ -141,6 +179,13 @@ hypot = function (...)
   return math.sqrt(s)
 end
 about[hypot] = {"hypot(...)", "Hypotenuse."}
+
+
+--- Convert object to integer number if possible.
+--  @param x Number or object.
+--  @return integer number.
+int = function (x) return math.floor(float(x)) end
+about[int] = {"int(obj) --> x", "Convert object to integer number."}
 
 
 -- Constants
@@ -164,8 +209,17 @@ Bind = function (obj, ...)
   end
   return Ver.unpack(res)
 end
-about[Bind] = {"Bind(obj, nm1, [nm2, ...]) --> fn",
-  "Wrap functions to call them without object.", AUX}
+-- DEPRECATED
+-- use 'set' instead
+
+
+--- Generate function from string in form 'args -> expression'.
+--  For single argument named 'x' only 'expression' can be defined.
+--  @param sExpr Definition in form 'args -> expr'.
+--  @return Function based on the expression.
+Fn = Utils.Fn
+about[Fn] = {"Fn(expr_s) --> fn",
+  "Generate function from expression 'args -> value'", AUX}
 
 
 --- Generate list of function values.
@@ -173,6 +227,9 @@ about[Bind] = {"Bind(obj, nm1, [nm2, ...]) --> fn",
 --  @param t Table with arguments.
 --  @return Table with result of evaluation.
 Map = function (fn, t)
+  if type(fn) == 'string' then
+    fn = Utils.Fn(fn)
+  end
   if type(t) == 'table' then
     if t.map then return t:map(fn) end
     local res = {}
@@ -183,6 +240,20 @@ Map = function (fn, t)
 end
 about[Map] = {'Map(fn, in_t) --> out_t',
   'Evaluate function for each table element.', AUX}
+
+
+--- Use 'asciiplot' for simplified print.
+--  @param ... Objects to plot.
+--  @return figure as text.
+Plot = function (...)
+  main._ap = main._ap or require('matlib.asciiplot')
+  local f = main._ap()
+  f._x:setRange({-5, 5})
+  f:plot(...)
+  return tostring(f)
+end
+about[Plot] = {"Plot(...) --> str",
+    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", AUX}
 
 
 --- Round to some precision.

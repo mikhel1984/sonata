@@ -32,7 +32,7 @@ n2 = 1.56   -- glass
 lens1 = Lens:R(n1,200,n2)
         :T(5,n2)
         :R(n2,-200,n1)
-ans = lens1:matrix():det()   --2>  1.0
+ans = lens1:matrix():det()  --.2>  1.0
 
 -- in the chain definition
 -- 'n' can be taken from a previous element
@@ -48,11 +48,11 @@ lens12 = Lens:R(200,n2)  -- skip first n
 ans = (lens1 == lens12)       -->  true
 
 -- get matrix element
-ans = lens1.D                --2>  1
+ans = lens1.D               --.2>  1
 
 -- find cardinal points
 pts = lens1:cardinal()
-ans = pts.F1                 --2>  -177.76
+ans = pts.F1                --.2>  -177.76
 
 -- print points
 print(pts)
@@ -66,37 +66,37 @@ fn = function (d2)
 end
 -- solve for B = 0, initial guess dist = 100
 d2 = Lens:solve(fn, 'B', 100)
-ans = d2                     --2>   623.21
+ans = d2                    --.2>   623.21
 
 -- check solution
 -- assume the lens it thin
 f = -pts.F1
-ans = 1/d1 + 1/d2            --2>  1/f
+ans = 1/d1 + 1/d2           --.2>  1/f
 
 -- ray transformation
 y1 = 10          -- mm, height
 V1 = n1 * 0.05   -- optical angle
 sys1 = fn(d2)
 y2, V2 = sys1(y1,V1)
-ans = y2                     --2>  -24.83
+ans = y2                    --.2>  -24.83
 
 -- from image to object
 sys2 = sys1:inv()  -- transpose
-ans, _ = sys2(y2, V2)        --3>  y1
+ans, _ = sys2(y2, V2)       --.3>  y1
 
 -- create thin lens
 lens2 = Lens:thin(f)
 _, V3 = lens1(y1,V1)
-_, ans = lens2(y1,V1)        --2>  V3
+_, ans = lens2(y1,V1)       --.2>  V3
 
 -- flat mirror
 lens3 = Lens:M(math.huge, n1)
-_, ans = lens3(y1,V1)        --2>  V1
+_, ans = lens3(y1,V1)       --.2>  V1
 
 -- afocal system
 m = 10
 lens4 = Lens:afocal(m)
-ans, _ = lens4(y1,V1)        --2>  m*y1
+ans, _ = lens4(y1,V1)       --.2>  m*y1
 
 -- arbitrary system matrix (ABCD)
 lens5 = Lens(1, 0, -0.5, 1)
@@ -108,18 +108,18 @@ ans = lens1:copy()            -->  lens1
 -- gaussian beam parameters
 lambda = 1024   -- nm, YAG-Nd laser
 lambda = lambda * 1E-6  -- mm
-ans, _ = Lens:gParam(1, lambda) --2>  3.26E-4
+ans, _ = Lens:gParam(1, lambda) --.2>  3.26E-4
 
 -- laser beam radius
-_, ans = Lens:gSize(1, lambda, 1E5) --2>  32.61
+_, ans = Lens:gSize(1, lambda, 1E5) --.2>  32.61
 
 -- laser beam transformation
-_, ans = lens1:beam(1E6, 1, lambda)  --2>  0.991
+_, ans = lens1:beam(1E6, 1, lambda)  --.2>  0.991
 
 -- laser cavity
 air_rod = Lens: T(250) : T(30, 1.56)
 cavity = Lens:M(-300) .. air_rod .. Lens:M(-300) .. air_rod
-ans, _ = cavity:emit(lambda)         --1> 300.0
+ans, _ = cavity:emit(lambda)         --.1> 300.0
 
 --]]
 
@@ -157,14 +157,14 @@ key = keys,
 --- Check object type.
 --  @param v Object.
 --  @return True if the object is 'lens'.
-local function islens(v) return getmetatable(v) == lens end
+local function _islens(v) return getmetatable(v) == lens end
 
 
 --- Matrix product.
 --  @param L1 First matrix.
 --  @param L2 Second matrix.
 --  @return A, B, C, D
-local function prod (L1, L2)
+local function _prod (L1, L2)
   return L1[1]*L2[1]+L1[2]*L2[3], L1[1]*L2[2]+L1[2]*L2[4],
          L1[3]*L2[1]+L1[4]*L2[3], L1[3]*L2[2]+L1[4]*L2[4]
 end
@@ -172,7 +172,7 @@ end
 
 --- Check matrix module
 --  @return true if unit matrix
-local function isunit (L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
+local function _isunit (L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
 
 
 --- Concatenate components along the ray trace.
@@ -181,13 +181,13 @@ local function isunit (L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
 --  @param L2 Second object.
 --  @return Concatenated object.
 lens.__concat = function (L1, L2)
-  if not (islens(L1) and islens(L2)) then
+  if not (_islens(L1) and _islens(L2)) then
     error 'Not a Lens object'
   end
-  if not (isunit(L1) and isunit(L2)) then
+  if not (_isunit(L1) and _isunit(L2)) then
     error "Wrong system matrices"
   end
-  return lens._init({prod(L2, L1)})
+  return lens._init({_prod(L2, L1)})
 end
 
 
@@ -196,7 +196,7 @@ end
 --  @param L2 Second object.
 --  @return True if the objects are equal.
 lens.__eq = function (L1, L2)
-  if not (islens(L1) and islens(L2)) then
+  if not (_islens(L1) and _islens(L2)) then
     error 'Not a Lens object'
   end
   return math.abs(L1[1]-L2[1]) < TOL and math.abs(L1[2]-L2[2]) < TOL
@@ -248,7 +248,7 @@ end
 lens.afocal = function (self, dm)
   local L = {dm, 0, 0, 1/dm}
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     return self
   end
   return lens._init(L)
@@ -330,7 +330,7 @@ about[lens.gSize] = {":gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d",
 --- Inverse the component matrix.
 --  @return Inverted matrix.
 lens.inv = function (self)
-  if not isunit(self) then
+  if not _isunit(self) then
     error 'Not a unit matrix'
   end
   return lens._init({self[4], -self[2], -self[3], self[1]})
@@ -347,7 +347,7 @@ lens.M = function (self, dr, dn)
   dn = dn or self._nprev or 1
   local L = {1, 0, 2*dn/dr, 1, _nprev=dn}
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     self._nprev = dn
     return self
   end
@@ -382,7 +382,7 @@ lens.R = function (self, nin, rad, nout)
   end
   local L = {1,  0, -(nout-nin)/rad, 1, _nprev=nout}
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     self._nprev = nout
     return self
   end
@@ -417,7 +417,7 @@ about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
 lens.thin = function (self, df)
   local L = { 1, 0, -1/df, 1 }
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     return self
   end
   return lens._init(L)
@@ -434,7 +434,7 @@ lens.T = function (self, dt, dn)
   dn = dn or self._nprev or 1
   local L = {1, dt/dn, 0, 1, _nprev=dn}
   if self[4] then  -- update and return
-    self[1], self[2], self[3], self[4] = prod(L, self)
+    self[1], self[2], self[3], self[4] = _prod(L, self)
     self._nprev = dn
     return self
   end

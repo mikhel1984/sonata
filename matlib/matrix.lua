@@ -21,6 +21,10 @@
 
 -- use 'matrix'
 Mat = require 'matlib.matrix'
+-- complex numbers
+Z = require 'matlib.complex'
+-- pack/unpack
+D = require 'matlib.data'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}
@@ -100,8 +104,8 @@ ans = Mat:ver {a, b}          -->  Mat {{1,2},{3,4},{5,6},{7,8}}
 -- apply function of 1 argument
 ans = a:map(function (x) return x^2 end)       -->  Mat {{1,4},{9,16}}
 
--- apply function which depends on index too
-ans = a:map(function (x,r,c) return x-r-c end) -->  Mat {{-1,-1},{-0,-0}}
+-- apply function as string
+ans = a:map "x^2"            -->  Mat {{1,4},{9,16}}
 
 -- apply function to matrices
 -- element-wise
@@ -132,7 +136,7 @@ gg({1,2},{1,2}).data = a
 ans = gg({1,2},{1,2})   -->  a
 
 -- euclidean norm
-ans = Mat:V({1,2,3}):norm()  --3>  math.sqrt(14)
+ans = Mat:V({1,2,3}):norm()  --.3>  math.sqrt(14)
 
 -- random matrix
 rnd = function () return math.random() end
@@ -146,7 +150,7 @@ m = Mat {
   {5,6}
 }
 n = m:pinv()
-ans = n(2,2)                 --3>  0.333
+ans = n(2,2)                --.3>  0.333
 
 -- copy as Lua table
 -- (without methametods)
@@ -162,6 +166,7 @@ ans = Mat:D({1,2,3})          -->  Mat {{1,0,0},
 -- get diagonal
 ans = g:diag()                -->  Mat {{1},{5},{9}}
 
+
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
@@ -176,28 +181,45 @@ ans = v1:dot(v2)              -->  32
 vout = v1:outer(v2)
 ans = vout[1][3]              -->  6
 
+-- skew symmetric matrix
+m = v1:skew()
+ans = m + m:T()               -->  Mat:zeros(3)
+
+-- normalize vector
+v1:normalize()
+ans = v1:norm()              --.3>  1.0
+
+-- minor
+ans = vout:minor(1, 1)       -->  36
+
 -- LU decomposition
 l,u,p = b:lu()
-ans = l[2][1]                --3>  0.714
+ans = l[2][1]               --.3>  0.714
 
 -- QR decomposition
 q,r = m:qr()
-ans = (q*r)[2][2]            --3>  m[2][2]
+ans = (q*r)[2][2]           --.3>  m[2][2]
 
-ans = q:det()                --3>  1.0
+ans = q:det()               --.3>  1.0
 
 -- SVD decomposition
 u,s,v = m:svd()
-ans = (u*s*v:T())[1][1]      --3>  m[1][1]
+ans = (u*s*v:T())[1][1]     --.3>  m[1][1]
 
 -- Cholesky decomposition
 m = Mat {{3,1},{1,3}}
 m = m:chol()
-ans = m[2][2]                --3>  1.633
+ans = m[2][2]               --.3>  1.633
+
+-- eigen vectors and values
+evec, eval = a:eig()
+v1 = evec({}, 1)
+p1 = a*v1
+ans = p1(1)                --.3>  eval[1][1]*v1(1)
 
 -- matrix exponential
 m = a:exp()
-ans = m[2][2]                --1> 164.1
+ans = m[2][2]               --.1>  164.1
 
 -- matrix trace
 ans = a:tr()                  -->  5
@@ -224,6 +246,32 @@ tmp = Mat{
 ans = tmp:reshape(2,3)        -->  Mat {{1,2,3},
                                         {4,5,6}}
 
+-- conjugate transpose
+m = Mat {{Z(1,2), Z(3,4)}, {0, 0}}
+h = m:H()
+ans = h[2][1]                 -->  Z(3,-4)
+
+-- Kronecker product
+m = a:kron(a)
+ans = m[4][3]                 -->  a[2][2]*a[2][1]
+
+-- Kronecker sum
+m = a:kronSum(a)
+ans = m[1][1]                 -->  2
+
+-- column wise vector
+v = a:vectorize()
+ans = v:rows()                -->  a:cols()*a:rows()
+
+-- pack
+m = Mat{{1, 0.1}, {-0.2, 2}}
+t = D:pack(m)
+ans = type(t)                 -->  "string"
+
+-- unpack
+v = D:unpack(t)
+ans = v[1][2]               --.3>  m[1][2]
+
 --]]
 
 
@@ -240,13 +288,16 @@ Ver = Ver.versions
 local tf = require("matlib.matrix_tf")
 
 --- 0 instead nil
-local mt_access = { __index = function () return 0 end }
+local mt_access = {
+  __index = function () return 0 end,
+  __len = function () return end,
+}
 
 
 --- Simplify object when possible.
 --  @param M Matrix.
 --  @return Number in the case of single element.
-local function nummat(M)
+local function _nummat(M)
   return M._rows == 1 and M._cols == 1 and M[1][1] or M
 end
 
@@ -255,7 +306,7 @@ end
 --  @param i Positive or negative index value.
 --  @param iRange Available range of indexes.
 --  @return Corrected index or nil.
-local function toRange(i, iRange)
+local function _toRange(i, iRange)
   if i < 0 then i = i + iRange + 1 end
   return i > 0 and i <= iRange and i or nil
 end
@@ -265,7 +316,7 @@ end
 --  @param t Table (matrix).
 --  @param i Index.
 --  @return Matrix row.
-local function addRow(t, i)
+local function _addRow(t, i)
   local row = setmetatable({}, mt_access)
   t[i] = row
   return row
@@ -295,14 +346,31 @@ local matrix = {
   ALIGN_WIDTH = 8,  -- number of columns to aligh width
   CONDITION_NUM = nil,  -- set limit for notification
   --STRIP = 1E-12,
+
+  __len = mt_access.__len,
 }
 
 
 --- Check object type.
 --  @param v Object to check.
 --  @return True if the object is 'matrix' or reference.
-local function ismatrixex(v)
+local function _ismatrixex(v)
   return getmetatable(v) == matrix or tf.isref(v)
+end
+
+
+--- Set product of element to coefficient.
+--  @param d Coefficient.
+--  @param M Matrix.
+--  @return Result of multiplication.
+local function _kProd (d, M)
+  local res, Mcols = {}, M._cols
+  for r = 1, M._rows do
+    local rr, mr = {}, M[r]
+    for c = 1, Mcols do rr[c] = d*mr[c] end
+    res[r] = rr
+  end
+  return matrix._init(#res, Mcols, res)
 end
 
 
@@ -311,8 +379,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Sum matrix.
 matrix.__add = function (M1, M2)
-  M1 = ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
-  M2 = ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
+  M1 = _ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
+  M2 = _ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error "Different matrix size!"
   end
@@ -342,21 +410,21 @@ matrix.__call = function (self, vR, vC)
   end
   local rows, num = {}, false
   if type(vR) == 'number' then
-    rows[1] = toRange(vR, self._rows)
+    rows[1] = _toRange(vR, self._rows)
     num = true
   else  -- table
-    local r1 = toRange(vR[1] or 1, self._rows)
-    local rn = toRange(vR[2] or self._rows, self._rows)
+    local r1 = _toRange(vR[1] or 1, self._rows)
+    local rn = _toRange(vR[2] or self._rows, self._rows)
     for r = r1, rn, (vR[3] or 1) do rows[#rows+1] = r end
   end
   local cols = {}
   if type(vC) == 'number' then
-    cols[1] = toRange(vC, self._cols)
+    cols[1] = _toRange(vC, self._cols)
     -- get element
     if num then return self[rows[1]][cols[1]] end
   else  -- table
-    local c1 = toRange(vC[1] or 1, self._cols)
-    local cn = toRange(vC[2] or self._cols, self._cols)
+    local c1 = _toRange(vC[1] or 1, self._cols)
+    local cn = _toRange(vC[2] or self._cols, self._cols)
     for c = c1, cn, (vC[3] or 1) do cols[#cols+1] = c end
   end
   return tf.makeRange(self, rows, cols)
@@ -377,7 +445,7 @@ end
 --  @param M2 Second matrix.
 --  @return True if all elements are the same.
 matrix.__eq = function (M1, M2)
-  if not (ismatrixex(M1) and ismatrixex(M2)) then return false end
+  if not (_ismatrixex(M1) and _ismatrixex(M2)) then return false end
   if M1._rows ~= M2._rows or M1._cols ~= M2._cols then return false end
   for r = 1, M1._rows do
     local ar, br = M1[r], M2[r]
@@ -393,7 +461,7 @@ end
 --  @param v Key.
 --  @return New matrix row or desired method.
 matrix.__index = function (self, v)
-  return matrix[v] or (type(v)=='number' and addRow(self, v))
+  return matrix[v] or (type(v)=='number' and _addRow(self, v))
 end
 
 
@@ -402,8 +470,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Result of multiplication.
 matrix.__mul = function (M1, M2)
-  if not ismatrixex(M1) then return matrix._kProd(M1, M2) end
-  if not ismatrixex(M2) then return matrix._kProd(M2, M1) end
+  if not _ismatrixex(M1) then return _kProd(M1, M2) end
+  if not _ismatrixex(M2) then return _kProd(M2, M1) end
   if (M1._cols ~= M2._rows) then
     error("Impossible to get product: different size!")
   end
@@ -418,7 +486,7 @@ matrix.__mul = function (M1, M2)
     end
     res[r] = rr
   end
-  return nummat(matrix._init(#res, resCols, res))
+  return _nummat(matrix._init(#res, resCols, res))
 end
 
 
@@ -445,8 +513,8 @@ end
 --  @param M2 Second matrix or number.
 --  @return Difference matrix.
 matrix.__sub = function (M1, M2)
-  M1 = ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
-  M2 = ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
+  M1 = _ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
+  M2 = _ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
     error("Different matrix size!")
   end
@@ -514,26 +582,11 @@ matrix._init = function (iR, iC, t)
 end
 
 
---- Set product of element to coefficient.
---  @param d Coefficient.
---  @param M Matrix.
---  @return Result of multiplication.
-matrix._kProd = function (d, M)
-  local res, Mcols = {}, M._cols
-  for r = 1, M._rows do
-    local rr, mr = {}, M[r]
-    for c = 1, Mcols do rr[c] = d*mr[c] end
-    res[r] = rr
-  end
-  return matrix._init(#res, Mcols, res)
-end
-
-
 --- Create new matrix from list of tables.
 --  @param t Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
 matrix._new = function (self, t)
-  if ismatrixex(t) then
+  if _ismatrixex(t) then
     return t
   elseif type(t) == 'number' or type(t) == 'table' and t.__mul then
     return matrix._init(1, 1, {{t}})
@@ -548,6 +601,39 @@ matrix._new = function (self, t)
   end
   return matrix._init(rows, cols, t)
 end
+
+
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+matrix._pack = function (self, acc)
+  local rs, cs = self:rows(), self:cols()
+  local spack = string.pack
+  local t = {spack('B', acc['matrix']), spack('I2', rs), spack('I2', cs)}
+  for r = 1, rs do
+    t[#t+1] = Utils.pack_seq(self[r], 1, cs, acc)
+  end
+  return table.concat(t)
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Matrix object.
+matrix._unpack = function (src, pos, acc, ver)
+  local rs, cs, t = 0, 0, {}
+  local unpack_num, sunpack = Utils.unpack_num, string.unpack
+  rs, pos = sunpack('I2', src, pos)
+  cs, pos = sunpack('I2', src, pos)
+  for r = 1, rs do
+    t[r], pos = Utils.unpack_seq(cs, src, pos, acc, ver)
+  end
+  return matrix._init(rs, cs, t), pos
+end
+
 
 
 --- Strip matrix components.
@@ -623,7 +709,7 @@ about[matrix.copy] = {"M:copy() --> cpy_M",
 -- Cross product.
 matrix.cross = tf.vec_access.cross
 about[matrix.cross] = {'V:cross(V2) --> M',
-  'Cross product or two 3-element vectors.', VECTOR}
+  'Cross product of two 3-element vectors.', VECTOR}
 
 
 --- Find determinant.
@@ -658,7 +744,7 @@ about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
 --  @param v List of elements.
 matrix.D = function (_, v, shift)
   shift = shift or 0
-  local vec = ismatrixex(v)
+  local vec = _ismatrixex(v)
   if vec and (v._rows == 1 or v._cols == 1) or type(v) == 'table' then
     local n = vec and v._rows * v._cols or #v
     local res
@@ -730,7 +816,7 @@ about[matrix.exp] = {"M:exp() --> new_M", "Matrix exponential.", TRANSFORM}
 --  @param cols Number of columns. Can be omitted in case of square matrix.
 --  @return Diagonal matrix with ones.
 matrix.eye = function (_, iR, iC)
-  if ismatrixex(iR) then
+  if _ismatrixex(iR) then
     iR, iC = iR._rows, iR._cols
   else
     iC = iC or iR
@@ -789,7 +875,7 @@ matrix.inv = function (self)
   local fn = tf.invList[size]
   if fn then
     local det = tf.detList[size](self)
-    return (not Czero(det)) and matrix._kProd(1/det, fn(self))
+    return (not Czero(det)) and _kProd(1/det, fn(self))
                        or matrix:fill(size, size, math.huge)
   end
   -- prepare matrix
@@ -861,45 +947,6 @@ end
 about[matrix.kronSum] = {"M:kronSum(M2) --> M⊕M2", "Find Kronecker sum."}
 
 
--- "In the game of life the strong survive..." (Scorpions) ;)
---  board - matrix with 'ones' as live cells
-matrix.LIFE = function (board)
-  local src = board
-  local gen = 0
-  -- make decision about current cell
-  local function islive (r, c)
-    local n = src[r-1][c-1] + src[r][c-1] + src[r+1][c-1] + src[r-1][c]
-      + src[r+1][c] + src[r-1][c+1] + src[r][c+1] + src[r+1][c+1]
-    return (n==3 or n==2 and src[r][c]==1) and 1 or 0
-  end
-  -- evaluate
-  repeat
-    local new = matrix:zeros(board)   -- empty matrix of the same size
-    gen = gen+1
-    -- update
-    for r = 1, board._rows do
-      for c = 1, board._cols do
-        new[r][c] = gen > 1 and islive(r, c) or src[r][c] ~= 0 and 1 or 0
-      end
-    end
-    if gen > 1 and new == src then
-      local msg = '~~ No more steps ~~'
-      return Sonata and Sonata.IN_COROUTINE and msg or print(msg)
-    end
-    src = new
-    local req = string.format('step %d continue? (y/n) ', gen)
-    local resp
-    if Sonata and Sonata.IN_COROUTINE then
-      resp = Sonata.ask(req, new:stars())
-    else
-      print(new:stars())
-      io.write(req)
-      resp = io.read()
-    end
-  until 'n' == resp
-end
-
-
 --- LU transform
 --  @return L matrix, U matrix, permutations
 matrix.lu = function (self)
@@ -943,16 +990,17 @@ about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
 --  @param fn Desired function.
 --  @return Matrix where each element is obtained based on desired function.
 matrix.map = function (self, fn)
+  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
   local res, Mcols = {}, self._cols
   for r = 1, self._rows do
     local rr, mr = {}, self[r]
-    for c = 1, Mcols do rr[c] = fn(mr[c], r, c) end
+    for c = 1, Mcols do rr[c] = fn(mr[c]) end
     res[r] = rr
   end
   return matrix._init(#res, Mcols, res)
 end
-about[matrix.map] = {"M:map(fn) --> found_M",
-  "Apply the given function to all elements, return new matrix. Function can be in form f(x) or f(x, row, col).",
+about[matrix.map] = {"M:map(fn|str) --> found_M",
+  "Apply the given function to all elements, return new matrix.",
   TRANSFORM}
 
 
@@ -1149,24 +1197,9 @@ about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method.", TRANSFORM}
 
 
---- Visualize matrix elements
---  @param fn Condition function, returns true/false.
---  @return String with stars when condition is true.
-matrix.stars = function (self, fn)
-  fn = fn or function (x) return not Czero(x) end
-  local acc, row = {}, {}
-  for r = 1, self._rows do
-    local mr = self[r]
-    for c = 1, self._cols do
-      row[c] = fn(mr[c]) and '*' or ' '
-    end
-    row[self._cols+1] = '|'
-    acc[r] = table.concat(row)
-  end
-  return table.concat(acc, '\n')
-end
-about[matrix.stars] = {"M:stars(cond_fn) --> str",
-  "Print star when condition for the current elemen is true.", help.OTHER}
+matrix.skew = tf.vec_access.skew
+about[matrix.skew] = {"V:skew() --> M",
+  "Make skew-symmetric matrix from the 3-element vector.", VECTOR}
 
 
 --- Singular value decomposition for a matrix.
@@ -1292,7 +1325,7 @@ about[matrix.ver] = {":ver(mat_t} --> mat_Ref",
 --  @param nC Number of columns. Can be omitted in case of square matrix.
 --  @return Sparse matrix.
 matrix.zeros = function (_, iR, iC)
-  if ismatrixex(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
+  if _ismatrixex(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
   iC = iC or iR                          -- input is a number
   return matrix._init(iR, iC, {})
 end
@@ -1307,6 +1340,7 @@ about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
 matrix.zip = function (_, fn, ...)
   local arg = {...}
   local rows, cols = arg[1]._rows, arg[1]._cols
+  if type(fn) == 'string' then fn = Utils.Fn(fn, #arg) end
   -- check size
   for i = 2, #arg do
     if arg[i]._rows ~= rows or arg[i]._cols ~= cols then
@@ -1328,7 +1362,7 @@ matrix.zip = function (_, fn, ...)
   end
   return matrix._init(rows, cols, res)
 end
-about[matrix.zip] = {':zip(fn, ...) --> res_M',
+about[matrix.zip] = {':zip(fn|str, ...) --> res_M',
   'Apply function to the given matrices element-wise.', TRANSFORM}
 
 

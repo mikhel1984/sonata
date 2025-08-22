@@ -14,7 +14,7 @@ local ev = require("core.evaluate")
 
 
 --- Redefine command to protect server.
-function quit () 
+function quit ()
   return 'Enter :q to quit'
 end
 
@@ -81,7 +81,7 @@ tcp_server.repl = function (self)
   if not ev.oO then
     ev.oO, print = print, ev._simpPrint
   end
-  -- main loop 
+  -- main loop
   while true do
     -- check new clients
     local cli, err = tcp:accept()
@@ -97,7 +97,7 @@ tcp_server.repl = function (self)
         read = true,
       }
       clients[#clients+1] = group
-      cli:send(Sonata.TITLE)
+      cli:send(Sonata.getTitle())
       -- cli:send(About:get('intro'))
       cli:send("\n" .. group.invite)
     end

@@ -116,11 +116,11 @@ generator.doc = function (locName, tModules)
     local k, v = val[1], val[2]
     res[#res+1] = sformat('<div><a name="%s"></a>', v)
     res[#res+1] = sformat('<h3># %s (%s) #</h3>', v, k)
-    functions, description = docLines(k, v, lng)
+    local functions, description = docLines(k, v, lng)
     res[#res+1] = sformat('<p class="descript">%s</p>', description)
     res[#res+1] = sformat('<p>%s</p>', functions)
-    fstr = Help.readAll(sformat('%s%s%s.lua', LIB, Help.SEP, k))
-    res[#res+1] = docExample(Test._getCode(fstr))
+    local fstr = Help.readAll(sformat('%s%s%s.lua', LIB, Help.SEP, k))
+    res[#res+1] = docExample(Test.getCode(fstr))
     res[#res+1] = '<a href="#Top">Top</a></div>'
   end
 
@@ -135,6 +135,35 @@ generator.doc = function (locName, tModules)
   io.write("File 'help.html' is saved!\n")
 end
 
+
+--- Generate markdown file with documentation.
+--  @param tModule Table with description for all modules.
+generator.md = function (tModule)
+  local res = {
+    "# Sonata Lua Calculus",
+    "",
+  }
+  -- prepare module list
+  local sortedModules = {}
+  for k, v in pairs(tModule) do sortedModules[#sortedModules+1] = {k, v} end
+  table.sort(sortedModules, function (a, b) return a[1] < b[1] end)
+  -- modules
+  local sym = {["<b>"]="**", ["</b>"]="**", ["<br>"]="\n"}
+  for _, val in ipairs(sortedModules) do
+    local k, v = val[1], val[2]
+    res[#res+1] = sformat('## %s (%s)', v, k)
+    local functions, description = docLines(k, v, {})
+    res[#res+1] = description
+    res[#res+1] = ""
+    res[#res+1] = sgsub(functions, "(<.->)", sym)
+    res[#res+1] = ""
+  end
+
+  local f = assert(io.open('help.md', 'w'), "Can't save help file")
+  f:write(tconcat(res, '\n'))
+  f:close()
+  io.write("File 'help.md' is saved!\n")
+end
 
 --================== Localization template =================
 

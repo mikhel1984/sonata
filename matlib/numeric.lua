@@ -17,32 +17,34 @@
 Num = require 'matlib.numeric'
 -- use matrices for high order equations
 Mat = require 'matlib.matrix'
+-- show
+Ap = require 'matlib.asciiplot'
 
 -- define tolerance
 Num.TOL = 1e-4
 -- solve 'sin(x) = 0' for x in (pi/2...3*pi/2)
 a = Num:solve(math.sin, math.pi*0.5, math.pi*1.5)
-ans = a                      --3>  math.pi
+ans = a                     --.3>  math.pi
 
 -- Newton method
 -- only one initial value
 d = Num:newton(math.sin, math.pi*0.7)
-ans = d                      --3>  math.pi
+ans = d                     --.3>  math.pi
 
 -- numeric derivative
 b = Num:der(math.sin, 0)
-ans = b                      --0>  1
+ans = b                     --.0>  1
 
 -- numeric limit
 fn = function (x) return math.sin(x) / x end
-ans = Num:lim(fn, 0)         --3>  1.0
+ans = Num:lim(fn, 0)        --.3>  1.0
 
 -- inf limit
-ans = Num:lim(math.exp, -INF)  --3> 0.0
+ans = Num:lim(math.exp, -INF)  --.3> 0.0
 
 -- numeric integral
 c = Num:int(math.sin, 0, math.pi)
-ans = c                      --2>  2.0
+ans = c                     --.2>  2.0
 
 -- infinite limits
 ans = Num:int(
@@ -53,17 +55,22 @@ ans = Num:int(
 -- return table of solutions and y(3)
 tbl = Num:ode(function (x,y) return x*y end,
                 {0,3}, 1)
-ans = tbl[#tbl][2]           --2>  90.011
+ans = tbl[#tbl][2]          --.2>  90.011
 
 -- y''-2*y'+2*y = 1
--- represent as: x1 = y, x2 = y'
--- so: x1' = x2, x2' = 1+2*x2-2*x1
+-- if   x1 = y, x2 = y'
+-- then x1' = x2, x2' = 1+2*x2-2*x1
 myfun = function (t,x)
   return Mat:V {x(2), 1+2*x(2)-2*x(1)}
 end
-res = Num:ode(myfun, {0,2}, Mat:V{3,2}, {dt=0.2})
+res = Num:ode(myfun, {0,2}, Mat:V{3,2}, {dt=0.1})
 xn = res[#res][2]  -- last element
-ans = xn(1)                  --2>   -10.54
+ans = xn(1)                 --.2>   -10.54
+
+-- view
+fig = Ap()
+fig:tplot(res:flat())
+print(fig)
 
 -- define exit condition
 cond = function (states)
@@ -73,7 +80,7 @@ end
 myfun = function (t,x) return -x end
 y = Num:ode(myfun, {0, 1E2}, 1, {exit=cond})
 -- time of execution before break
-ans = y[#y][1]               --1>  2.3
+ans = y[#y][1]              --.1>  2.3
 
 --]]
 
@@ -88,8 +95,28 @@ end
 local inform = Sonata and Sonata.warning or print
 
 
-local ODE = 'ode'
+local mt_ode_solution = {
 
+--- Replace vector with sequence of elements in ODE solver result.
+--  @param t Table with ODE solution.
+flat = function (t)
+  local dst = {}
+  for i = 1, #t do
+    local ti = t[i]
+    local row, v = {ti[1]}, ti[2]
+    if type(v) == 'table' then
+      -- replace with vector elements
+      v = v:vec()
+      for j = 1, #v do row[j+1] = v[j] end
+    else
+      row[2] = v
+    end
+    dst[i] = row
+  end
+  return dst
+end
+}
+mt_ode_solution.__index = mt_ode_solution
 
 --- Runge-Kutta method.
 -- @param fn Function f(x,y).
@@ -97,7 +124,7 @@ local ODE = 'ode'
 -- @param y Second variable.
 -- @param h Step.
 -- @return Approximation for y.
-local function rk(fn, x, y, h)
+local function _rk(fn, x, y, h)
   local h2 = 0.5*h
   local k1 = fn(x,    y)
   local k2 = fn(x+h2, y+h2*k1)
@@ -114,7 +141,7 @@ end
 --  @param n Step number.
 --  @param s Previous sum.
 --  @return sum of points.
-local function trapzd (fn, a, b, n, s)
+local function _trapzd (fn, a, b, n, s)
   if n == 1 then
     return 0.5*(b - a)*(fn(a) + fn(b))
   end
@@ -134,7 +161,7 @@ end
 --  @param n Step number.
 --  @param s Previous sum.
 --  @return sum of points.
-local function midpnt (fn, a, b, n, s)
+local function _midpnt (fn, a, b, n, s)
   if n == 1 then
     return (b - a)*fn(0.5*(a + b))
   end
@@ -157,7 +184,7 @@ end
 --  @param eps Accuracy.
 --  @param eval Method to evaluate each step.
 --  @return integra value and flag if it converges.
-local function qsimp (fn, a, b, eps, eval, N)
+local function _qsimp (fn, a, b, eps, eval, N)
   local s, si = 0, -1e30
   local ost, st = si, 0
   for j = 1, N do
@@ -168,7 +195,7 @@ local function qsimp (fn, a, b, eps, eval, N)
     end
     si, ost = s, st
   end
-  inform("integral: too many iterations")
+  inform("too many iterations")
   return si, true  -- error flag
 end
 
@@ -176,7 +203,7 @@ end
 --- Check if the number is limited.
 --  @param x Number to check.
 --  @return true when not infinite.
-local function limited (x) return -math.huge < x and x < math.huge end
+local function _limited (x) return -math.huge < x and x < math.huge end
 
 
 --	INFO
@@ -229,7 +256,7 @@ numeric.der = function (_, fn, d)
     dx = dx * 0.5
     der, last = (fn(d+dx) - fn(d-dx)) / d2, der
     if dx < numeric.SMALL then
-      inform("derivative: not found")
+      inform("derivative not found")
       return der, true
     end
   until Cnorm(der-last) < numeric.TOL
@@ -239,22 +266,6 @@ about[numeric.der] = {":der(fn, x_d) --> num",
   "Calculate the derivative value for the given function."}
 
 
---- Replace vector with sequence of elements in ODE solver result.
---  @param t Table with ODE solution.
-numeric.flat = function (t)
-  for i = 1, #t do
-    local ti = t[i]
-    local v = ti[2]
-    if type(v) == 'table' then
-      -- replace with vector elements
-      v = v:vec()
-      for j = 1, #v do ti[j+1] = v[j] end
-    end
-  end
-end
-about[numeric.flat] = {"ys:flat() --> ys",
-  "Transform vector to list for each rov in ODE output.", ODE}
-
 
 --- Estimate lim(fn(x)) for x -> xn.
 --  @param fn Function.
@@ -263,7 +274,7 @@ about[numeric.flat] = {"ys:flat() --> ys",
 --  @return obtained value.
 numeric.lim = function (_, fn, xn, isPositive)
   local prev = nil
-  if limited(xn) then
+  if _limited(xn) then
     -- limited number
     local del = 1
     while del > numeric.SMALL do
@@ -284,7 +295,7 @@ numeric.lim = function (_, fn, xn, isPositive)
       xn, prev = xn * 1E3, curr
     end
   end
-  inform('limit: not found')
+  inform('limit not found')
   return prev, true  -- error flag
 end
 about[numeric.lim] = {":lim(fn, xn_d, isPositive=false) --> y",
@@ -303,7 +314,7 @@ numeric.newton = function (_, fn, d1)
     x2 = d1 - fd1*h / (fn(d1+h) - fd1)
     k, h = k+1, h*0.618
     if k > numeric.NEWTON_MAX then
-      inform("newton: too many iterations")
+      inform("too many iterations")
       return x2, true  -- error flag
     end
   until Cnorm(fn(x2)-fd1) < numeric.TOL
@@ -326,8 +337,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local h = tParam.dt or math.min((xn - tDelta[1]), 1.0) / 20
   local exit = tParam.exit or function (_) return false end
   -- evaluate
-  local res, last = {{tDelta[1], dY0}}, false
-  res.flat = numeric.flat
+  local res, last = setmetatable({{tDelta[1], dY0}}, mt_ode_solution), false
   while not exit(res) do
     local x, y = Vunpack(res[#res])
     if x >= xn then
@@ -337,12 +347,12 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
     end
     -- find next
     if tParam.dt or last then
-      res[#res+1] = {x+h, rk(fn, x, y, h)}
+      res[#res+1] = {x+h, _rk(fn, x, y, h)}
     else
       -- step correction
       local h2 = 0.5 * h
-      local y1 = rk(fn, x, y, h)
-      local y2 = rk(fn, x+h2, rk(fn, x, y, h2), h2)
+      local y1 = _rk(fn, x, y, h)
+      local y2 = _rk(fn, x+h2, _rk(fn, x, y, h2), h2)
       local dy = Cnorm(y2 - y1)
       if dy > MAX then
         h = h2
@@ -358,10 +368,11 @@ end
 about[numeric.ode] = {":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
 [[Numerical approximation of the ODE solution.
 List of parameters is optional and can includes time step and exit condition.
-Return table of intermediate points in form {t, x(t)}.]], ODE}
+Return table of intermediate points in form {t, x(t)}.]]}
 
 
 --- Find root of equation at the given interval.
+--  Secant method.
 --  @param fn Function to analyze.
 --  @param a Lower bound.
 --  @param b Upper bound.
@@ -395,11 +406,11 @@ numeric.int = function (_, fn, a, b)
   end
   local N, TOL = numeric.INT_MAX, numeric.TOL
   -- check inf
-  local afin, bfin = limited(a), limited(b)
+  local afin, bfin = _limited(a), _limited(b)
   if afin and bfin then
-    return (limited(fn(a)) and limited(fn(b)))
-      and qsimp(fn, a, b, TOL, trapzd, N)
-      or  qsimp(fn, a, b, TOL, midpnt, N)  -- improper limits
+    return (_limited(fn(a)) and _limited(fn(b)))
+      and _qsimp(fn, a, b, TOL, _trapzd, N)
+      or  _qsimp(fn, a, b, TOL, _midpnt, N)  -- improper limits
   end
 
   -- infinite limits
@@ -407,25 +418,25 @@ numeric.int = function (_, fn, a, b)
   -- -inf
   if not afin and a < math.huge then
     if b < 0 then
-      return qsimp(fni, 1/b, 0, TOL, midpnt, N)
+      return _qsimp(fni, 1/b, 0, TOL, _midpnt, N)
     end
     -- -inf to -1
-    local s1, e1 = qsimp(fni, -1, 0, TOL, midpnt, N)
+    local s1, e1 = _qsimp(fni, -1, 0, TOL, _midpnt, N)
     if b < math.huge then
-      local s2, e2 = qsimp(fn, -1, b, TOL, midpnt, N)
+      local s2, e2 = _qsimp(fn, -1, b, TOL, _midpnt, N)
       return s1 + s2, e1 or e2
     else
-      local s2, e2 = qsimp(fn, -1, 1, TOL, midpnt, N)
-      local s3, e3 = qsimp(fni, 0, 1, TOL, midpnt, N)
+      local s2, e2 = _qsimp(fn, -1, 1, TOL, _midpnt, N)
+      local s3, e3 = _qsimp(fni, 0, 1, TOL, _midpnt, N)
       return s1 + s2 + s3, e1 or e2 or e3
     end
   end
   -- +inf
   if a > 0 then
-    return qsimp(fni, 0, 1/a, TOL, midpnt, N)
+    return _qsimp(fni, 0, 1/a, TOL, _midpnt, N)
   else
-    local s1, e1 = qsimp(fni, 0, 1, TOL, midpnt, N)
-    local s2, e2 = qsimp(fn, a, 1, TOL, midpnt, N)
+    local s1, e1 = _qsimp(fni, 0, 1, TOL, _midpnt, N)
+    local s2, e2 = _qsimp(fn, a, 1, TOL, _midpnt, N)
     return s1 + s2, e1 or e2
   end
 end

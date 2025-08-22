@@ -4,7 +4,7 @@
 --
 --  Object structure:  </br>
 --  <code>{_value=number, _key=table_of_units}</code></br>
---  Table in represented in form key-power.
+--  Table is represented in form key-power.
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
@@ -19,6 +19,8 @@
 
 -- use 'units'
 U = require 'matlib.units'
+-- for pack/unpack
+D = require 'matlib.data'
 
 -- add some rules
 U.rules['h'] = U(60,'min')
@@ -68,17 +70,24 @@ print(a)
 
 -- list of rules
 print(U.rules)
+
+-- object pack
+t = D:pack(a)
+ans = type(t)                 -->  'string'
+
+-- unpack
+ans = D:unpack(t)             -->  a
+
 --]]
 
 
 --	LOCAL
 
-local Cfloat, Cnorm, Ulex, Unumstr do
+local Cfloat, Cnorm, Utils do
   local lib = require('matlib.utils')
   Cfloat = lib.cross.float
   Cnorm = lib.cross.norm
-  Ulex = lib.utils.lex
-  Unumstr = lib.utils.numstr
+  Utils = lib.utils
 end
 
 
@@ -87,7 +96,7 @@ end
 --  @param t1 First key-value table.
 --  @param t2 Second key-value table.
 --  @param pos True when positive.
-local function eliminate(t1, t2, pos)
+local function _eliminate(t1, t2, pos)
   for k, v in pairs(t2) do
     if t1[k] then
       local vv = pos and (t1[k] + v) or (t1[k] - v)
@@ -116,7 +125,7 @@ local op = {
 --  @param d1 First unit object.
 --  @param d2 Second unit object.
 --  @return True if the objects are equal.
-local function equal(d1, d2)
+local function _equal(d1, d2)
   return math.abs(d1-d2) <= 1e-3*math.abs(d1)
 end
 
@@ -148,12 +157,67 @@ units.__index = units
 --- Check object type.
 --  @param t Object to check.
 --  @return True if the object represents units.
-local function isunits(v) return getmetatable(v) == units end
+local function _isunits(v) return getmetatable(v) == units end
+
+
+--- Prepare arguments.
+--  @param a First unit object or number.
+--  @param b Second unit object or number.
+--  @return Arguments as units.
+local function _args (a, b)
+  a = _isunits(a) and a or units._new(a, '')
+  b = _isunits(b) and b or units._new(b, '')
+  return a, b
+end
+
+
+--- Get common part and difference between 2 strings.
+--  @param str1 First string.
+--  @param str2 Second string.
+--  @return First prefix, second prefix, common part.
+local function _diff (s1, s2)
+  local n1, n2 = #s1, #s2
+  local ssub, sbyte = string.sub, string.byte
+  while n1 > 0 and n2 > 0 and sbyte(s1, n1) == sbyte(s2, n2) do
+    n1, n2 = n1 - 1, n2 - 1
+  end
+  return ssub(s1, 1, n1), ssub(s2, 1, n2), ssub(s1, n1+1)
+end
+
+
+--- Expand prefixes in both objects in-place.
+--  @param U1 First unit value.
+--  @param U2 Second unit object.
+local function _expand (U1, U2)
+  local q1, q2, com1, com2 = {}, {}, {}, {}
+  -- initialize q2
+  for k, v in pairs(U2._key) do q2[k] = v end
+  -- find common
+  for k1, v1 in pairs(U1._key) do
+    local found = false
+    for k2, v2 in pairs(q2) do
+      local l, r, base = _diff(k1, k2)
+      -- apply changes
+      if #base > 0 and units.prefix[l] and units.prefix[r] then
+        U1._value = U1._value * (units.prefix[l] ^ v1)
+        U2._value = U2._value * (units.prefix[r] ^ v2)
+        com1[base], com2[base] = v1, v2
+        found, q2[k2] = true, nil
+        break
+      end
+    end
+    if not found then q1[k1] = v1 end
+  end
+  -- add common elements
+  for k, v in pairs(com1) do q1[k] = v end
+  for k, v in pairs(com2) do q2[k] = v end
+  U1._key, U2._key = q1, q2
+end
 
 
 --- Check arguments before assignment.
 mt_rules.__newindex = function (t, k, v)
-  assert(isunits(v), 'Value must be unit object')
+  assert(_isunits(v), 'Value must be unit object')
   assert(string.find(k, '[*^/%-+]') == nil, 'Key should not have [*^/]')
   rawset(t, k, v)
 end
@@ -176,7 +240,7 @@ about[units.rules] = {'.rules', 'Table of rules for conversation.', help.OTHER}
 --  @param U2 Second unit object.
 --  @return Sum of unit objects.
 units.__add = function (U1, U2)
-  U1, U2 = units._args(U1, U2)
+  U1, U2 = _args(U1, U2)
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   local res = units.copy(U1)
   res._value = res._value + tmp._value
@@ -189,13 +253,13 @@ end
 --  @param U2 Second unit object.
 --  @return Ratio of unit objects.
 units.__div = function (U1, U2)
-  U1, U2 = units._args(U1, U2)
+  U1, U2 = _args(U1, U2)
   U1, U2 = units._deepCopy(U1), units._deepCopy(U2)
-  eliminate(U1._key, U2._key, false)
+  _eliminate(U1._key, U2._key, false)
   -- not empty
   if next(U2._key) then
-    units._expand(U1, U2)
-    eliminate(U1._key, U2._key, false)
+    _expand(U1, U2)
+    _eliminate(U1._key, U2._key, false)
   end
   -- add
   for k, v in pairs(U2._key) do U1._key[k] = -v end
@@ -209,10 +273,10 @@ end
 --  @param U2 Second unit object.
 --  @return True if the objects are equal.
 units.__eq = function (U1, U2)
-  if not (isunits(U1) and isunits(U2)) then return false end
+  if not (_isunits(U1) and _isunits(U2)) then return false end
   local tmp = units._convertKey(U2, U1._key)
   if tmp == nil then return false end
-  return equal(U1._value, tmp._value)
+  return _equal(U1._value, tmp._value)
 end
 
 
@@ -233,7 +297,7 @@ end
 --  @param U2 Second unit object.
 --  @return Result of comparison.
 units.__le = function (U1, U2)
-  assert(isunits(U1) and isunits(U2), 'Not compatible!')
+  assert(_isunits(U1) and _isunits(U2), 'Not compatible!')
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   return U1._value <= tmp._value
 end
@@ -244,7 +308,7 @@ end
 --  @param U2 Second unit object.
 --  @return Result of comparison.
 units.__lt = function (U1, U2)
-  assert(isunits(U1) and isunits(U2), 'Not compatible!')
+  assert(_isunits(U1) and _isunits(U2), 'Not compatible!')
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   return U1._value < tmp._value
 end
@@ -255,13 +319,13 @@ end
 --  @param U2 Second unit object.
 --  @return Product of unit objects.
 units.__mul = function (U1, U2)
-  U1, U2 = units._args(U1, U2)
+  U1, U2 = _args(U1, U2)
   U1, U2 = units._deepCopy(U1), units._deepCopy(U2)
-  eliminate(U1._key, U2._key, true)
+  _eliminate(U1._key, U2._key, true)
   -- not empty
   if next(U2._key) then
-    units._expand(U1, U2)
-    eliminate(U1._key, U2._key, true)
+    _expand(U1, U2)
+    _eliminate(U1._key, U2._key, true)
   end
   -- add
   for k, v in pairs(U2._key) do U1._key[k] = v end
@@ -275,7 +339,7 @@ end
 --  @return Power.
 units.__pow = function (self, d)
   d = assert(Cfloat(d), "Wrong power")
-  local res = isunits(self) and units._deepCopy(self) or units._new(self, '')
+  local res = _isunits(self) and units._deepCopy(self) or units._new(self, '')
   res._value = res._value ^ d
   op['^'](res._key, d)
   return res
@@ -287,7 +351,7 @@ end
 --  @param U2 Second unit object.
 --  @return Subtraction of objects with the same units.
 units.__sub = function (U1, U2)
-  U1, U2 = units._args(U1, U2)
+  U1, U2 = _args(U1, U2)
   local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
   local res = units.copy(U1)
   res._value = res._value - tmp._value
@@ -299,7 +363,7 @@ end
 --  @return Unit value in traditional form.
 units.__tostring = function (self)
   return string.format('%s %s',
-    type(self._value) == 'number' and Unumstr(self._value) or tostring(self._value),
+    type(self._value) == 'number' and Utils.numstr(self._value) or tostring(self._value),
     units.u(self))
 end
 
@@ -315,17 +379,6 @@ end
 
 about['_ar'] = {'arithmetic: a+b, a-b, a*b, a/b, a^N', nil, help.META}
 about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', nil, help.META}
-
-
---- Prepare arguments.
---  @param a First unit object or number.
---  @param b Second unit object or number.
---  @return Arguments as units.
-units._args = function (a, b)
-  a = isunits(a) and a or units._new(a, '')
-  b = isunits(b) and b or units._new(b, '')
-  return a, b
-end
 
 
 --- Convert object to another units.
@@ -366,50 +419,6 @@ units._deepCopy = function (U)
 end
 
 
---- Get common part and difference between 2 strings.
---  @param str1 First string.
---  @param str2 Second string.
---  @return First prefix, second prefix, common part.
-units._diff = function (s1, s2)
-  local n1, n2 = #s1, #s2
-  local ssub, sbyte = string.sub, string.byte
-  while n1 > 0 and n2 > 0 and sbyte(s1, n1) == sbyte(s2, n2) do
-    n1, n2 = n1 - 1, n2 - 1
-  end
-  return ssub(s1, 1, n1), ssub(s2, 1, n2), ssub(s1, n1+1)
-end
-
-
---- Expand prefixes in both objects in-place.
---  @param U1 First unit value.
---  @param U2 Second unit object.
-units._expand = function (U1, U2)
-  local q1, q2, com1, com2 = {}, {}, {}, {}
-  -- initialize q2
-  for k, v in pairs(U2._key) do q2[k] = v end
-  -- find common
-  for k1, v1 in pairs(U1._key) do
-    local found = false
-    for k2, v2 in pairs(q2) do
-      local l, r, base = units._diff(k1, k2)
-      -- apply changes
-      if #base > 0 and units.prefix[l] and units.prefix[r] then
-        U1._value = U1._value * (units.prefix[l] ^ v1)
-        U2._value = U2._value * (units.prefix[r] ^ v2)
-        com1[base], com2[base] = v1, v2
-        found, q2[k2] = true, nil
-        break
-      end
-    end
-    if not found then q1[k1] = v1 end
-  end
-  -- add common elements
-  for k, v in pairs(com1) do q1[k] = v end
-  for k, v in pairs(com2) do q2[k] = v end
-  U1._key, U2._key = q1, q2
-end
-
-
 --- Apply rule. When found exclude it from
 --  the unit table.
 --  @param U Unit object.
@@ -422,7 +431,7 @@ units._expandRules = function (U)
       ku, v = k1, U._key[k1]
     else
       for k2, v2 in pairs(U._key) do
-        local l, r, base = units._diff(k1, k2)
+        local l, r, base = _diff(k1, k2)
         if #base > 0 and l == '' and units.prefix[r] then
           ku, v = k2, v2
           break
@@ -540,11 +549,65 @@ end
 --  @return Reduced list of units.
 units._parse = function (str)
   if #str == 0 then return {} end
-  local tokens = Ulex(str)
+  local tokens = Utils.lex(str)
   if #tokens == 0 then error("Wrong format") end
   local res, m = units._getTerm(tokens, 1)
   if m-1 ~= #tokens then error("Wrong format") end
   return res
+end
+
+
+--- Dump to binary string.
+--  @param acc Accumulator table.
+--  @return String with object representation.
+units._pack = function (self, acc)
+  local t = {string.pack('B', acc['units'])}
+  -- value
+  if type(self._value) == 'number' then
+    t[#t+1] = Utils.pack_num(self._value, acc)
+  elseif type(self._value) == 'table' and self._value._pack then
+    t[#t+1] = self._value:_pack(acc)
+  else
+    error "Unable to pack"
+  end
+  -- units
+  for k, v in pairs(self._key) do
+    t[#t+1] = Utils.pack_str(k, acc)
+    t[#t+1] = Utils.pack_num(v, acc)
+  end
+  t[#t+1] = '\0'
+  return table.concat(t)
+end
+
+
+--- Undump from binary string.
+--  @param src Source string.
+--  @param pos Start position.
+--  @param acc Accumulator table.
+--  @param ver Pack algorithm version.
+--  @return Units object.
+units._unpack = function (src, pos, acc, ver)
+  local val, n, t, nm = nil, nil, {}, nil
+  n, pos = string.unpack('B', src, pos)
+  local key = acc[n]
+  if type(key) == 'string' then
+    if string.byte(key, 1) == 0x26 then
+      val, pos = Utils.unpack_num(src, pos, key, ver)
+    else
+      acc[n] = require("matlib."..key)
+      val, pos = acc[n]._unpack(src, pos, acc, ver)
+    end
+  else
+    val, pos = key._unpack(src, pos, acc, ver)
+  end
+  while string.byte(src, pos) ~= 0 do
+    n, pos = string.unpack('B', src, pos)
+    nm, pos = Utils.unpack_str(src, pos, acc[n], ver)
+    n, pos = string.unpack('B', src, pos)
+    n, pos = Utils.unpack_num(src, pos, acc[n], ver)
+    t[nm] = n
+  end
+  return setmetatable({_value=val, _key=t}, units), pos+1
 end
 
 

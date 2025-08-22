@@ -9,7 +9,7 @@
 * Pure Lua code (high portability)
 * Variety of modules
 * Template generation for new modules and localization files
-* Standalone mathematical library
+* Standalone mathematical [library](./about/help.md)
 
 ## Getting started
 

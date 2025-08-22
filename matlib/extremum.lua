@@ -21,53 +21,53 @@ Mat = require 'matlib.matrix'
 -- 1D minimum point, golden section
 fun = function (x) return x*x end
 xm, fm = Ex:minimum1D(fun, -10, 5)
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- 1D Brent method, with initial point
 xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', b=-5})
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
 -- 1D Brent method, use derivative
 df = function (x) return 2*x end
 xm, fm = Ex:minimum1D(fun, -10, 5, {method='Brent', dfun=df})
-ans = xm                     --2> 0.0
+ans = xm                    --.2> 0.0
 
 -- Find maximum
 xm, fm = Ex:maximum1D(math.cos, -1, 1, {b=0.5})
-ans = fm                     --2> 1.0
+ans = fm                    --.2> 1.0
 
 -- multidimentional, Powel method
 foo = function (y) return (y[1][1]-1)^4 + (y[2][1]-2)^4 end
 p0 = Mat:V {5, 4}
 xm, fm = Ex:minimum(foo, p0)
-ans = xm(1)                  --2> 1.0
+ans = xm(1)                 --.2> 1.0
 
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- multidimentional, with derivative
 dfoo = function (y) return Mat:V{4*(y[1][1]-1)^3, 4*(y[2][1]-2)^3} end
 xm, fm = Ex:minimum(foo, p0, {dfun=dfoo})
-ans = xm(2)                  --2> 2.0
+ans = xm(2)                 --.2> 2.0
 
 -- multidimentional, simplex
 -- expected column-vectors
 pp = Mat{{5,3},{7,-9},{-7,-4}}:T()
 xm, fm = Ex:minimum(foo, pp, {method='simplex'})
-ans = fm                     --2> 0.0
+ans = fm                    --.2> 0.0
 
 -- multidimentional, maximum
 foo = function (x) return 3 - x:norm() end
 xm, fm = Ex:maximum(foo, Mat:V{-3, 4})
-ans = fm                     --3> 3.0
+ans = fm                    --.3> 3.0
 
 -- linear programming, simplex method
 -- minimize C*x when Au*x <= bu
 C = Mat{{-3, -5}}
 A = Mat{{1, 0}, {0, 2}, {3, 2}}; b = Mat:V {4, 12, 18}
 xm, fm = Ex:linprog(C, {Au=A, bu=b})
-ans = fm                     --2> -36.0
+ans = fm                    --.2> -36.0
 
 -- LP, additional constraints
 -- C*x -> min, Au*x <= bu, Ae*x == be, Al*x >= bl
@@ -76,7 +76,7 @@ Au = Mat{{0.3, 0.1}}; bu = Mat(2.7)
 Ae = Mat{{0.5, 0.5}}; be = Mat(6)
 Al = Mat{{0.6, 0.4}}; bl = Mat(6)
 xm, fm = Ex:linprog(C, {Au=Au, bu=bu, Ae=Ae, be=be, Al=Al, bl=bl})
-ans = fm                     --2> -5.4
+ans = fm                    --.2> -5.4
 
 -- simulated annealing
 -- solve the problem of 8 chess queens
@@ -103,9 +103,27 @@ energy = function (x)
   return s
 end
 -- find solution
-xm, fm = Ex:annealing(energy, tweak, pos, 20, 0.95, 2)
+xm, fm = Ex:annealing {
+  energy=energy,
+  update=tweak,
+  init=pos,
+  T=20,
+  alpha=0.95,
+  loop=2
+}
 print(table.concat(xm, ' '))
 ans = fm                     --> 0
+
+-- nonlinear data fit
+-- prepare data
+xs, ys = {}, {}
+foo = function (x, t) return t.A*math.sin(t.B*x) + t.C end
+t0 = {A=2, B=0.5, C=-1}
+for i = 1, 40 do xs[i] = i*0.1; ys[i] = foo(xs[i], t0) end
+-- initial estimation
+tinit = {A=3, B=2, C=-2}
+tm, fm = Ex:fit(foo, tinit, xs, ys)
+ans = tm.A                  --.2> t0.A
 
 --]]
 
@@ -140,7 +158,7 @@ extremum.__index = extremum
 --  @param a Initial low bound.
 --  @param b Initial high bound.
 --  @return tuple of points (a, b, c, fa, fb, fc), such that fb <= fa, fc
-extremum._bracket = function (fun, a, b)
+local function _bracket (fun, a, b)
   local tiny, limit = 1E-20, 100
   local fa, fb = fun(a), fun(b)
   if fb > fa then
@@ -191,9 +209,9 @@ end
 --  @param xi Multidimentional direction.
 --  @param fun Source function.
 --  @return found point, deflection and function value.
-extremum._linmin = function (p, xi, fun)
+local function _linmin (p, xi, fun)
   local ff = function (x) return fun(p + x*xi) end
-  local a, b, c = extremum._bracket(ff, 0.0, 1.0)
+  local a, b, c = _bracket(ff, 0.0, 1.0)
   local xm, fm = extremum._minBrent(ff, a, b, c)
   xi = xm * xi
   return p + xi, xi, fm
@@ -207,10 +225,10 @@ end
 --  @param fun Source function.
 --  @param dfun Gradient function.
 --  @return found point, deflection and function value.
-extremum._linmind = function (p, xi, fun, dfun)
+local function _linmind (p, xi, fun, dfun)
   local ff = function (x) return fun(p + x*xi) end
   local df = function (x) return dfun(p + x*xi):T() * xi end
-  local a, b, c = extremum._bracket(ff, 0.0, 1.0)
+  local a, b, c = _bracket(ff, 0.0, 1.0)
   local xm, fm = extremum._minBrentD(ff, df, a, b, c)
   xi = xm * xi
   return p + xi, xi, fm
@@ -221,7 +239,7 @@ end
 --  @param H Matrix for optimization.
 --  @param ids List of variable indices.
 --  @return updated matrix and list of indices.
-extremum._lpSimpxEliminate = function (H,  ids)
+local function _lpSimpxEliminate (H,  ids)
   local hm = H:cols()
   for s = 1, hm do
     -- get pivot column
@@ -262,6 +280,46 @@ extremum._lpSimpxEliminate = function (H,  ids)
     end
   end
   return H, ids
+end
+
+
+--- Extrapolates by factor through the face of the simplex.
+--  Replace the high point it the new is better.
+--  @param p List of bound points as a matrix.
+--  @param y List of funciton values.
+--  @param psum List of vector sums.
+--  @param fac Factor value.
+--  @param fun Source function.
+--  @return the found extremum.
+local function _simplexExtra (p, y, psum, ihi, fac, fun)
+  local ndim = p:rows()
+  local fac1 = (1.0-fac)/ndim
+  local fac2 = fac1 - fac
+  local ptry = {}
+  for j = 1, ndim do
+    ptry[j] = psum[j]*fac1 - p[j][ihi]*fac2
+  end
+  local ytry = fun(extremum.ext_matrix:V(ptry))
+  if ytry < y[ihi] then
+    y[ihi] = ytry
+    for j = 1, ndim do
+      psum[j] = psum[j] + ptry[j] - p[j][ihi]
+      p[j][ihi] = ptry[j]
+    end
+  end
+  return ytry
+end
+
+
+--- Find sum of elements for the simplex method.
+--  @param pp Matrix with points.
+--  @param psum Table to store the result.
+local function _simplexPsum (pp, psum)
+  for i = 1, pp:rows() do
+    local s, pi = 0, pp[i]
+    for j = 1, pp:cols() do s = s + pi[j] end
+    psum[i] = s
+  end
 end
 
 
@@ -328,7 +386,7 @@ extremum._lpSimplex = function (c, param)
       mat:hor {As, inter, bs},
     }:copy()
 
-    H, ids = extremum._lpSimpxEliminate(H, ids)
+    H, ids = _lpSimpxEliminate(H, ids)
     -- TODO check H(1, -1) is 0
     -- update table
     local hm, last = H:cols(), H:cols()-ne-nl
@@ -345,7 +403,7 @@ extremum._lpSimplex = function (c, param)
   end
 
   if H then
-    H, ids = extremum._lpSimpxEliminate(H, ids)
+    H, ids = _lpSimpxEliminate(H, ids)
     local hm = H:cols()
     local res = mat:zeros(nx, 1)
     for i, v in ipairs(ids) do
@@ -551,8 +609,7 @@ extremum._minGrad = function (fun, dfun, p)
   local h = g
   for i = 1, imax do
     local fp = fret
-    --p, xi, fret = extremum._linmin(p, xi, fun)
-    p, xi, fret = extremum._linmind(p, xi, fun, dfun)
+    p, xi, fret = _linmind(p, xi, fun, dfun)
     if 2*mabs(fp - fret) <= TOL*(mabs(fret) + mabs(fp) + small) then
       return p, fret
     end
@@ -591,7 +648,7 @@ extremum._minPowel = function (fun, p)
     -- find the biggest decrease
     for i = 1, n do
       local fprev = fret
-      p, _, fret = extremum._linmin(p, ximat({}, i), fun)
+      p, _, fret = _linmin(p, ximat({}, i), fun)
       fprev = fprev - fret  -- reuse
       if fprev > del then
         del, ibig = fprev, i
@@ -606,7 +663,7 @@ extremum._minPowel = function (fun, p)
     if fptt < fp then
       local t = 2*(fp-2*fret+fptt)*(fp-fret-del)^2 - del*(fp-fptt)^2
       if t < 0 then
-        p, grad, fret = extremum._linmin(p, grad, fun)
+        p, grad, fret = _linmin(p, grad, fun)
         for j = 1, n do
           local xmatj = ximat[j]
           xmatj[ibig] = xmatj[n]
@@ -615,49 +672,11 @@ extremum._minPowel = function (fun, p)
       end
     end
   end
+  -- ignore when defined manually
   inform("Too much iterations")
   return p, fret
 end
 
-
---- Extrapolates by factor through the face of the simplex.
---  Replace the high point it the new is better.
---  @param p List of bound points as a matrix.
---  @param y List of funciton values.
---  @param psum List of vector sums.
---  @param fac Factor value.
---  @param fun Source function.
---  @return the found extremum.
-extremum._simplexExtra = function (p, y, psum, ihi, fac, fun)
-  local ndim = p:rows()
-  local fac1 = (1.0-fac)/ndim
-  local fac2 = fac1 - fac
-  local ptry = {}
-  for j = 1, ndim do
-    ptry[j] = psum[j]*fac1 - p[j][ihi]*fac2
-  end
-  local ytry = fun(extremum.ext_matrix:V(ptry))
-  if ytry < y[ihi] then
-    y[ihi] = ytry
-    for j = 1, ndim do
-      psum[j] = psum[j] + ptry[j] - p[j][ihi]
-      p[j][ihi] = ptry[j]
-    end
-  end
-  return ytry
-end
-
-
---- Find sum of elements for the simplex method.
---  @param pp Matrix with points.
---  @param psum Table to store the result.
-extremum._simplexPsum = function (pp, psum)
-  for i = 1, pp:rows() do
-    local s, pi = 0, pp[i]
-    for j = 1, pp:cols() do s = s + pi[j] end
-    psum[i] = s
-  end
-end
 
 
 --- Multidimentional minimum search with simplex method.
@@ -670,7 +689,7 @@ extremum._simplex = function (fun, pp)
   local nmax, small = 500, 1E-10
   local y, psum = {}, {}
   for i = 1, pp:cols() do y[i] = fun(pp({}, i)) end
-  extremum._simplexPsum(pp, psum)
+  _simplexPsum(pp, psum)
   local p = pp:copy()
   for _ = 1, nmax do
     -- find highest, next highest and lowest
@@ -698,14 +717,14 @@ extremum._simplex = function (fun, pp)
       return p({}, 1), y[1]
     end
     -- new iteration
-    local ytry = extremum._simplexExtra(p, y, psum, ihi, -1.0, fun)
+    local ytry = _simplexExtra(p, y, psum, ihi, -1.0, fun)
     if ytry <= y[ilo] then
       -- try additional extrapolation
-      extremum._simplexExtra(p, y, psum, ihi, 2.0, fun)
+      _simplexExtra(p, y, psum, ihi, 2.0, fun)
     elseif ytry >= y[inhi] then
       -- one dimentional construction
       local ysave = y[ihi]
-      ytry = extremum._simplexExtra(p, y, psum, ihi, 0.5, fun)
+      ytry = _simplexExtra(p, y, psum, ihi, 0.5, fun)
       if ytry >= ysave then
         -- contract around the lowest point
         for i = 1, p:cols() do
@@ -718,7 +737,7 @@ extremum._simplex = function (fun, pp)
             y[i] = fun(mat:V(psum))
           end
         end
-        extremum._simplexPsum(p, psum)
+        _simplexPsum(p, psum)
       end
     end
   end
@@ -728,18 +747,15 @@ end
 
 
 --- Simulated annealing optimization method.
---  @param energy Function that calculates energy.
---  @param update Function that updates vector.
---  @param x Initial value.
---  @param temp (=nil) Initial temperature.
---  @param alpha (=0.9) Temperature update coefficient.
---  @param nmax (=1) Number of iteration for each temperature.
+--  @param task Talbe with elements: energy, update, init, T, alpha, loop.
 --  @return found solution and its energy.
-extremum.annealing = function (_, energy, update, x, temp, alpha, nmax)
-  local e0, curr = energy(x), x
-  temp = temp or math.max(e0, 1.0)
-  alpha = alpha or 0.9
-  nmax = nmax or 1
+extremum.annealing = function (_, task)
+  local energy, update = task.energy, task.update
+  local curr = task.init  -- start point
+  local e0 = energy(curr) -- initial energy
+  local temp = task.T or math.max(e0, 1.0)  -- initial annealing temperature
+  local alpha = task.alpha or 0.9  -- temperature update coefficient
+  local nmax = task.loop or 1      -- number of attempts with one temperature
   repeat
     for i = 1, nmax do
       local new = update(curr)
@@ -759,8 +775,46 @@ extremum.annealing = function (_, energy, update, x, temp, alpha, nmax)
   return curr, e0
 end
 about[extremum.annealing] = {
-  ":annealing(energy_fn, update_fn, x_M, temp_d=enerty0, alpha_d=0.9, nmax_N=1) -> x_M, energy_d",
+  ":annealing(task={energy=fn,update=fn,init=x0,T=energy(x0),alpha=0.9,loop=1}) -> x_M, energy_d",
   "Simulated annealing method."}
+
+
+--- Nonlinear data approximation.
+--  @param fn Function with nonlinear model fn(x, t) -> y.
+--  @param t0 Initial estimation of parameters.
+--  @param xs List of x values.
+--  @param ys List of y values.
+--  @return table with parameters and sum of squares
+extremum.fit = function (_, fn, t0, xs, ys)
+  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
+  local keys, v0 = {}, {}
+  for k, w in pairs(t0) do
+    keys[#keys+1] = k
+    v0[#v0+1] = w
+  end
+  -- make function for optimization
+  local t = {}
+  local test = function (vec)
+    for i = 1, #keys do t[keys[i]] = vec[i][1] end
+    local s = 0.0
+    for i = 1, #xs do
+      local dy = ys[i] - fn(xs[i], t)
+      s = s + dy*dy
+    end
+    return s
+  end
+  -- find minimum
+  v0 = extremum.ext_matrix:V(v0)  -- reuse
+  local vm, fmin = extremum._minPowel(test, v0)
+  -- to table
+  local tm = {}
+  for i, k in ipairs(keys) do tm[k] = vm[i][1] end
+  return tm, fmin
+end
+about[extremum.fit] = {
+  ":fit(model_fn, param_t, xs_t, ys_t) --> minParam_t, sqSum_d",
+  "Fit data with nonlinear model y = fn(x,t), where t is a parameter dictionary."}
+
 
 
 --- Find maximum of a function with scalar argument.
@@ -861,3 +915,5 @@ extremum.about = about
 return extremum
 
 --===============================
+-- TODO improve fit accuracy
+-- TODO hide warnings in fit

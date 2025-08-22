@@ -40,6 +40,8 @@ fig1:plot(x,y)
 print(fig1)
 
 -- combine different sources
+x = {1,2,3,4,5}
+y = {1,3,5,7,9}
 fig1:setY {view='min'}  -- left axis
 fig1:plot(x,'single',x,y,'pair',math.log,'function')
 print(fig1)
@@ -57,7 +59,7 @@ for x = 0, 3, 0.1 do
   tbl[#tbl+1] = {x, math.sin(x), math.cos(x)}
 end
 fig2:setX {view='min'}  -- down
-fig2:tplot(tbl)
+fig2:tplot(tbl, {sym='*+'})
 print(fig2)
 
 -- plot only y2, don't rescale
@@ -106,6 +108,7 @@ end
 fig3:addPose(3, 13, '#')   -- characters
 fig3:addPose(3, 24, '#')
 fig3:addString(2,3,'Hi!')  -- text
+fig3:addLine(0, 1, 0, 1.5, '|')
 print(fig3)
 
 -- print surface contours
@@ -116,11 +119,11 @@ fig4:contour(function (x,y) return x*x - y*y end)
 print(fig4)
 
 -- bar diagram
-data = {}
+tx, ty = {}, {}
 k = 2*3.14/20
-for i = 1, 20 do data[#data+1] = {k*i, math.sin(k*i)} end
+for i = 1, 20 do tx[i]=k*i; ty[i]=math.sin(k*i) end
 fig5 = Ap()
-fig5:bar(data)
+fig5:bar(tx, ty)
 print(fig5)
 
 -- use log scale
@@ -128,11 +131,13 @@ fig6 = Ap()
 fig6:setX {range={-10, 10}}
 fig6:setY {log=true}
 fig6:plot(math.exp)
+fig6:legend 'off'
 print(fig6)
 
--- simplified call, use range -1...1
--- change it via table if need
-Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
+-- show matrix structure
+Mat = require 'matlib.matrix'
+s = Ap:stars(Mat:eye(4))
+print(s)
 
 --]]
 
@@ -141,8 +146,11 @@ Plot(math.cos, 'cos', {-3,3}, {-1,1}, 'range correct')
 local inform = Sonata and Sonata.warning or print
 local mmodf = math.modf
 local MANUAL, CONF = 'manual', 'settings'
-local LOG10 = math.log(10)
-local vmove = require('matlib/utils').versions.move
+local Utils = require("matlib/utils")
+local vmove = Utils.versions.move
+local czero = Utils.cross.isZero
+Utils = Utils.utils
+
 
 --	INFO
 
@@ -158,6 +166,29 @@ __module__ = "Use pseudography for data visualization."
 -- Axis object
 local axis = {}
 axis.__index = axis
+
+
+--- Create new axis.
+--  @param N Required width.
+--  @return axis object.
+local function _axis_new (N)
+  if N < 9 then
+    inform('Set minimal axis size:'..tostring(N))
+    N = 9
+  elseif N % 2 == 0 then
+    inform('Change to odd size')
+    return _axis_new(N+1)
+  end
+  local x1, x2 = -1, 1
+  local a = {
+    size = N,          -- current width
+    range = {x1, x2},  -- current range
+    diff = x2-x1,      -- range amplitude
+    _init = {x1, x2},  -- initial range
+    _size = N,         -- initial width
+  }
+  return setmetatable(a, axis)
+end
 
 
 --- Make a copy.
@@ -205,35 +236,12 @@ axis.markerInterval = function (self)
 end
 
 
---- Create new axis.
---  @param N Required width.
---  @return axis object.
-axis.new = function (N)
-  if N < 9 then
-    inform('Set minimal axis size:'..tostring(N))
-    N = 9
-  elseif N % 2 == 0 then
-    inform('Change to odd size')
-    return axis.new(N+1)
-  end
-  local x1, x2 = -1, 1
-  local a = {
-    size = N,          -- current width
-    range = {x1, x2},  -- current range
-    diff = x2-x1,      -- range amplitude
-    _init = {x1, x2},  -- initial range
-    _size = N,         -- initial width
-  }
-  return setmetatable(a, axis)
-end
-
-
 --- Find number position maping on the axis.
 --  @param d Number for projection.
 --  @param isX Flag of direct projection.
 --  @return Position (index) or nil if out of range.
 axis.proj = function (self, d, isX)
-  d = self.log and math.log(d)/LOG10 or d
+  d = self.log and math.log(d, 10) or d
   if d < self.range[1] or d > self.range[2] then return nil end
   local dx = (d - self.range[1]) / self.diff
   local int, frac = nil, nil
@@ -265,7 +273,7 @@ end
 --- Update axis range.
 --  @param t New range {min, max}.
 axis.setRange = function (self, t)
-  local a, b = t[1], t[2]
+  local a, b = t[1], t[#t]
   -- check limits
   if a == b then
     error 'Wrong range'
@@ -277,15 +285,15 @@ axis.setRange = function (self, t)
     -- lorarithm mode
     if b <= 0 then b = 1 end
     if a <= 0 then a = b / 10 end
-    local p1 = math.log(a) / LOG10
+    local p1 = math.log(a, 10)
     p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
-    local p2 = math.log(b) / LOG10
+    local p2 = math.log(b, 10)
     p2 = (p2 > 0) and math.ceil(p2) or math.floor(p2)
     self.range[1], self.range[2] = p1, p2
   else
     -- normal mode
     self.range[1], self.range[2] = a, b
-    local n = math.log(b - a) / LOG10
+    local n = math.log(b - a, 10)
     n = (n >= 0) and math.floor(n) or math.ceil(n)
     local tol = 10^(n-1)
     local v, rest = mmodf(a / tol)
@@ -356,18 +364,324 @@ GRADE = {[0]="`", "'", "*", "~", "-", ".", ",", "_"}
 }
 
 
---- Check object type.
---  @param v Object.
---  @return True if the object is asciiplot.
-local function isasciiplot(v) return getmetatable(v) == asciiplot end
-
-
 -- update markers
 if SONATA_USE_COLOR then
   local char = asciiplot.lvls
   for k, v in ipairs(char) do
     char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
   end
+end
+
+
+--- Check object type.
+--  @param v Object.
+--  @return True if the object is asciiplot.
+local function _isasciiplot(v) return getmetatable(v) == asciiplot end
+
+
+--- Add symbol based on its height.
+--  @param fig asciiplot object.
+--  @param x Coordinate x.
+--  @param y Coordinate y.
+--  @param ind Color index.
+local function _addGraded (fig, x, y, ind)
+  local nx, fx = fig._x:proj(x, true)
+  local ny, fy = fig._y:proj(y, false)
+  if not (nx and ny) then return end
+  nx = (fx > 0.5) and (nx + 1) or nx
+  fy = fy + 0.5
+  if fy > 1 then
+    fy, ny = fy - 1, ny + 1
+  end
+  local k = math.floor(math.min(fy, 0.99) / 0.125)
+  local s = assert(asciiplot.GRADE[k], 'ind '..tostring(k))
+  if SONATA_USE_COLOR then
+    s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
+  end
+  fig._canvas[ny][nx] = s
+end
+
+
+--- Get bounds of the table values.
+--  @param t Table {{x1,y11,y12...}, {x2,y21,y22..}, ...}
+--  @param tInd Table of y column indeces.
+--  @return xrange, yrange
+local function _findRange (t, tInd)
+  local xmax, ymax, xmin, ymin = -math.huge, -math.huge, math.huge, math.huge
+  local x = tInd.x or 1
+  for i = 1, #t do
+    local row = t[i]
+    local v = row[x]
+    if v > xmax then xmax = v end
+    if v < xmin then xmin = v end
+    if #tInd > 0 then
+      for j = 1, #tInd do
+        v = row[tInd[j]]
+        if v > ymax then ymax = v end
+        if v < ymin then ymin = v end
+      end
+    else
+      for j = 1, #row do
+        if j ~= x then
+          v = row[j]
+          if v > ymax then ymax = v end
+          if v < ymin then ymin = v end
+        end
+      end
+    end
+  end
+  return {xmin, xmax}, {ymin, ymax}
+end
+
+
+--- Transform points to polar system, add to figure.
+--  @param fig asciiplot object.
+--  @param t Data table.
+--  @param tOpt List of column numbers.
+local function _addPolar (fig, t, tOpt)
+  local acc = {}
+  -- transform data
+  for i, row in ipairs(t) do
+    local s, c = math.sin(row[1]), math.cos(row[1])
+    for j, ind in ipairs(tOpt) do
+      local curr = acc[j] or {}
+      curr[i] = {row[ind]*c, row[ind]*s}
+      acc[j] = curr
+    end
+  end
+  -- update range
+  if not fig._yfix then
+    local rxx, ryy = {}, {}
+    for j = 1, #tOpt do
+      local rx, ry = _findRange(acc[j], {})
+      rxx[1] = math.min(rxx[1] or rx[1], rx[1])
+      rxx[2] = math.max(rxx[2] or rx[2], rx[2])
+      ryy[1] = math.min(ryy[1] or ry[1], ry[1])
+      ryy[2] = math.max(ryy[2] or ry[2], ry[2])
+    end
+    fig._x:setRange(rxx)
+    fig._y:setRange(ryy)
+  end
+  -- prepare
+  asciiplot._clear(fig)
+  asciiplot._axes(fig)
+  -- fill
+  local sym = tOpt.sym
+  if sym and #sym == 0 then sym = nil end
+  for j = 1, #tOpt do
+    local c = sym and (j <= #sym and string.sub(sym, j, j) or string.sub(sym, -1, -1))
+    local xy = acc[j]
+    for _, v in ipairs(xy) do
+      if c then
+        asciiplot.addPoint(fig, v[1], v[2], c)
+      else
+        _addGraded(fig, v[1], v[2], j)
+      end
+    end
+    local s = string.char(string.byte('A') - 1 + j)
+    if SONATA_USE_COLOR then
+      s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
+    end
+    for i = #xy, 1, -1 do
+      if asciiplot.addPoint(fig, xy[i][1], xy[i][2], s) then break end
+    end
+    fig._legend[s] = 'column '..tostring(tOpt[j])
+  end
+  -- limits
+  asciiplot._limits(fig)
+end
+
+
+--- Add points from a table.
+--  First element of each row is x, the rest are yi.
+--  @param fig asciiplot object.
+--  @param t Table to print.
+--  @param tInd Allows to choose y columns.
+local function _addTable (fig, t, tInd)
+  local x, sym = tInd.x, tInd.sym
+  if sym and #sym == 0 then sym = nil end
+  for j = 1, #tInd do
+    local c = sym and (j <= #sym and string.sub(sym, j, j) or string.sub(sym, -1, -1))
+    local k = tInd[j]
+    for i = 1, #t do
+      local row = t[i]
+      if c then
+        asciiplot.addPoint(fig, row[x], row[k], c)
+      else
+        _addGraded(fig, row[x], row[k], j)
+      end
+    end
+    local s = string.char(string.byte('A') - 1 + j)
+    if SONATA_USE_COLOR then
+      s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
+    end
+    for i = #t, 1, -1 do
+      local row = t[i]
+      if asciiplot.addPoint(fig, row[x], row[k], s) then break end
+    end
+    fig._legend[s] = 'column '..tostring(k)   -- default legend
+  end
+end
+
+
+--- Add group of points.
+--  @param fig asciiplot object.
+--  @param tX List of x coordinates.
+--  @param tY List of y coordinates.
+local function _addXY (fig, tX, tY, ind)
+  for i = 1, #tX do
+    _addGraded(fig, tX[i], tY[i], ind)
+  end
+  -- legend
+  local s = string.char(string.byte('A') - 1 + ind)
+  if SONATA_USE_COLOR then
+    s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
+  end
+  for i = #tX, 1, -1 do
+    if asciiplot.addPoint(fig, tX[i], tY[i], s) then break end
+  end
+  return s
+end
+
+
+--- Fill legend for contour object.
+--  @param fig asciiplot object.
+--  @param s Axis name.
+--  @param lvl List of levels.
+local function _cntLegend (fig, s, lvl)
+  local j, line = 1, {}
+  for i = 1, #lvl do
+    -- group levels
+    line[#line+1] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i])
+    if i % 3 == 0 then
+      fig._legend[s..tostring(j)] = table.concat(line, '  ')
+      j, line = j + 1, {}
+    end
+  end
+  if #line > 0 then
+    fig._legend[s..tostring(j)] = table.concat(line, '  ')
+  end
+end
+
+
+--- Get bounds of the vector.
+--  @param t Table (vector).
+--  @return Minimal and maximal values.
+local function _findVectorRange (t)
+  local vmin, vmax = math.huge, -math.huge
+  for i = 1, #t do
+    local v = t[i]
+    if v > vmax then vmax = v end
+    if v < vmin then vmin = v end
+  end
+  return vmin, vmax
+end
+
+
+--- Find vectors X and Y for the given function.
+--  @param fig asciiplot object.
+--  @param fn Function f(x).
+--  @return Lists of coordinates X and Y.
+local function _fn2XY (fig, fn)
+  local X, Y = {}, {}
+  for i, x in fig._x:values(true) do
+    X[i] = x
+    Y[i] = fn(x)
+  end
+  return X, Y
+end
+
+
+--- Find height for each pair (x, y).
+--  @param fig asciiplot object.
+--  @param fn Function f(x,y).
+--  @return Vectors X, Y, 'matrix' Z, range of heights.
+local function _fn2Z (fig, fn)
+  local X, Y, Z = {}, {}, {}
+  for i, x in fig._x:values(true) do X[i] = x end
+  local zmin, zmax = math.huge, -math.huge
+  for ny, y in fig._y:values(false) do
+    local row = {}
+    for nx = 1, #X do
+      local z = fn(X[nx], y)
+      if z > zmax then zmax = z end
+      if z < zmin then zmin = z end
+      row[nx] = z
+    end
+    Y[ny] = y
+    Z[ny] = row
+  end
+  return X, Y, Z, {zmin, zmax}
+end
+
+
+--- Prepare string of the given length.
+--  @param s Source string.
+--  @param N Required length.
+--  @param bCentr Flag to put to central position.
+--  @param bCut   Flag to cut a long string.
+local function _format (s, N, bCentr, bCut)
+  local res = s
+  if #s < N then
+    local n = N - #s
+    if bCentr then
+      local n1 = mmodf(n / 2)
+      local n2 = n - n1
+      res = string.rep(' ', n1) .. s .. string.rep(' ', n2)
+    else
+      res = s .. string.rep(' ', n)
+    end
+  end
+  if #res > N and bCut then
+    res = string.sub(res, 1, N)
+  end
+  return res
+end
+
+
+--- Set axis settings.
+--  @param fig asciiplot object.
+--  @param t Table with parameters {range, log, view, fix, size}.
+--  @param pref Prefix string.
+local function _setAxis (fig, t, pref)
+  -- range
+  if t.range then fig[pref]:setRange(t.range) end
+  -- logarithmic scale
+  if t.log ~= nil then fig[pref]:setLog(t.log) end
+  -- visualize
+  if t.view ~= nil then fig[pref..'axis'] = t.view end
+  -- fix scale
+  if t.fix ~= nil then fig[pref..'fix'] = t.fix end
+  -- length
+  if t.size ~= nil then fig[pref]:resize(t.size) end
+end
+
+
+--- Find range of levels for surface plot.
+--  @param v1 Begin of range.
+--  @param vn End of range.
+--  @param N Number of lines.
+--  @param bScale Flag to use bounds in calculation.
+--  @param bInt Flag for a number rounding.
+--  @return List of levels and step value.
+local function _surfRange (v1, vn, N, bScale, bInt)
+  local res, nn, h = {}, N, 0
+  if bScale then
+    nn = N - 1
+    h = (vn - v1) / nn
+    res[1] = v1
+  else
+    h = (vn - v1) / (N + 1)
+  end
+  for i = 1, nn do
+    if bInt then
+      local ind, rst = mmodf(1 + h * i)
+      res[#res+1] = (rst > 0.5) and ind+1 or ind
+    else
+      res[#res+1] = v1 + h * i
+    end
+  end
+  return res, h
 end
 
 
@@ -391,125 +705,15 @@ asciiplot.__tostring = function (self)
     acc[#acc+1] = table.concat(self._canvas[i])
   end
   -- legend
-  local sym = {}
-  for k, _ in pairs(self._legend) do sym[#sym+1] = k end
-  if #sym > 0 then table.sort(sym) end
-  for _, k in ipairs(sym) do
-    acc[#acc+1] = string.format("(%s) %s", k, self._legend[k])
+  if not self._legend._hide then
+    local sym = {}
+    for k, _ in pairs(self._legend) do sym[#sym+1] = k end
+    if #sym > 0 then table.sort(sym) end
+    for _, k in ipairs(sym) do
+      acc[#acc+1] = string.format("(%s) %s", k, self._legend[k])
+    end
   end
   return table.concat(acc, '\n')
-end
-
-
---- Transform points to polar system, add to figure.
---  @param t Data table.
---  @param tOpt List of column numbers.
-asciiplot._addPolar = function (self, t, tOpt)
-  local acc = {}
-  -- transform data
-  for i, row in ipairs(t) do
-    local s, c = math.sin(row[1]), math.cos(row[1])
-    for j, ind in ipairs(tOpt) do
-      local curr = acc[j] or {}
-      curr[i] = {row[ind]*c, row[ind]*s}
-      acc[j] = curr
-    end
-  end
-  -- update range
-  if not self._yfix then
-    local rxx, ryy = {}, {}
-    for j = 1, #tOpt do
-      local rx, ry = asciiplot._findRange(acc[j], {})
-      rxx[1] = math.min(rxx[1] or rx[1], rx[1])
-      rxx[2] = math.max(rxx[2] or rx[2], rx[2])
-      ryy[1] = math.min(ryy[1] or ry[1], ry[1])
-      ryy[2] = math.max(ryy[2] or ry[2], ry[2])
-    end
-    self._x:setRange(rxx)
-    self._y:setRange(ryy)
-  end
-  -- prepare
-  asciiplot._clear(self)
-  asciiplot._axes(self)
-  -- fill
-  for j = 1, #tOpt do
-    local xy = acc[j]
-    for _, v in ipairs(xy) do
-      --asciiplot.addPoint(self, v[1], v[2], c)
-      asciiplot._addGraded(self, v[1], v[2], j)
-    end
-    local s = string.char(string.byte('A') - 1 + j)
-    if SONATA_USE_COLOR then
-      s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
-    end
-    for i = #xy, 1, -1 do
-      if asciiplot.addPoint(self, xy[i][1], xy[i][2], s) then break end
-    end
-    self._legend[s] = 'column '..tostring(tOpt[j])
-  end
-  -- limits
-  asciiplot._limits(self)
-end
-
-
---- Add points from a table.
---  First element of each row is x, the rest are yi.
---  @param t Table to print.
---  @param tInd Allows to choose y columns.
-asciiplot._addTable = function (self, t, tInd)
-  local x = tInd.x
-  for j = 1, #tInd do
-    local k = tInd[j]
-    for i = 1, #t do
-      local row = t[i]
-      asciiplot._addGraded(self, row[x], row[k], j)
-    end
-    local s = string.char(string.byte('A') - 1 + j)
-    if SONATA_USE_COLOR then
-      s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
-    end
-    for i = #t, 1, -1 do
-      local row = t[i]
-      if asciiplot.addPoint(self, row[x], row[k], s) then break end
-    end
-    self._legend[s] = 'column '..tostring(k)   -- default legend
-  end
-end
-
-
-asciiplot._addGraded = function (self, x, y, ind)
-  local nx, fx = self._x:proj(x, true)
-  local ny, fy = self._y:proj(y, false)
-  if not (nx and ny) then return end
-  nx = (fx > 0.5) and (nx + 1) or nx
-  fy = fy + 0.5
-  if fy > 1 then
-    fy, ny = fy - 1, ny + 1
-  end
-  local k = math.floor(math.min(fy, 0.99) / 0.125)
-  local s = assert(asciiplot.GRADE[k], 'ind '..tostring(k))
-  if SONATA_USE_COLOR then
-    s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
-  end
-  self._canvas[ny][nx] = s
-end
-
---- Add group of points.
---  @param tX List of x coordinates.
---  @param tY List of y coordinates.
-asciiplot._addXY = function (self, tX, tY, ind)
-  for i = 1, #tX do
-    asciiplot._addGraded(self, tX[i], tY[i], ind)
-  end
-  -- legend
-  local s = string.char(string.byte('A') - 1 + ind)
-  if SONATA_USE_COLOR then
-    s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
-  end
-  for i = #tX, 1, -1 do
-    if asciiplot.addPoint(self, tX[i], tY[i], s) then break end
-  end
-  return s
 end
 
 
@@ -569,130 +773,6 @@ asciiplot._clear = function (self)
 end
 
 
---- Fill legend for contour object.
---  @param s Axis name.
---  @param lvl List of levels.
-asciiplot._cntLegend = function (self, s, lvl)
-  local j, line = 1, {}
-  for i = 1, #lvl do
-    -- group levels
-    line[#line+1] = string.format('%s(%.2f)', asciiplot.lvls[i], lvl[i])
-    if i % 3 == 0 then
-      self._legend[s..tostring(j)] = table.concat(line, '  ')
-      j, line = j + 1, {}
-    end
-  end
-  if #line > 0 then
-    self._legend[s..tostring(j)] = table.concat(line, '  ')
-  end
-end
-
-
---- Get bounds of the table values.
---  @param t Table {{x1,y11,y12...}, {x2,y21,y22..}, ...}
---  @param tInd Table of y column indeces.
---  @return xrange, yrange
-asciiplot._findRange = function (t, tInd)
-  local xmax, ymax, xmin, ymin = -math.huge, -math.huge, math.huge, math.huge
-  local x = tInd.x or 1
-  for i = 1, #t do
-    local row = t[i]
-    local v = row[x]
-    if v > xmax then xmax = v end
-    if v < xmin then xmin = v end
-    if #tInd > 0 then
-      for j = 1, #tInd do
-        v = row[tInd[j]]
-        if v > ymax then ymax = v end
-        if v < ymin then ymin = v end
-      end
-    else
-      for j = 1, #row do
-        if j ~= x then
-          v = row[j]
-          if v > ymax then ymax = v end
-          if v < ymin then ymin = v end
-        end
-      end
-    end
-  end
-  return {xmin, xmax}, {ymin, ymax}
-end
-
-
---- Get bounds of the vector.
---  @param t Table (vector).
---  @return Minimal and maximal values.
-asciiplot._findVectorRange = function (t)
-  local vmin, vmax = math.huge, -math.huge
-  for i = 1, #t do
-    local v = t[i]
-    if v > vmax then vmax = v end
-    if v < vmin then vmin = v end
-  end
-  return vmin, vmax
-end
-
-
---- Find vectors X and Y for the given function.
---  @param fn Function f(x).
---  @return Lists of coordinates X and Y.
-asciiplot._fn2XY = function (self, fn)
-  local X, Y = {}, {}
-  for i, x in self._x:values(true) do
-    X[i] = x
-    Y[i] = fn(x)
-  end
-  return X, Y
-end
-
-
---- Find height for each pair (x, y).
---  @param fn Function f(x,y).
---  @return Vectors X, Y, 'matrix' Z, range of heights.
-asciiplot._fn2Z = function (self, fn)
-  local X, Y, Z = {}, {}, {}
-  for i, x in self._x:values(true) do X[i] = x end
-  local zmin, zmax = math.huge, -math.huge
-  for ny, y in self._y:values(false) do
-    local row = {}
-    for nx = 1, #X do
-      local z = fn(X[nx], y)
-      if z > zmax then zmax = z end
-      if z < zmin then zmin = z end
-      row[nx] = z
-    end
-    Y[ny] = y
-    Z[ny] = row
-  end
-  return X, Y, Z, {zmin, zmax}
-end
-
-
---- Prepare string of the given length.
---  @param s Source string.
---  @param N Required length.
---  @param bCentr Flag to put to central position.
---  @param bLim   Flag to cut a long string.
-asciiplot._format = function (s, N, bCentr, bCut)
-  local res = s
-  if #s < N then
-    local n = N - #s
-    if bCentr then
-      local n1 = mmodf(n / 2)
-      local n2 = n - n1
-      res = string.rep(' ', n1) .. s .. string.rep(' ', n2)
-    else
-      res = s .. string.rep(' ', n)
-    end
-  end
-  if #res > N and bCut then
-    res = string.sub(res, 1, N)
-  end
-  return res
-end
-
-
 --- Add xrange and yrange.
 asciiplot._limits = function (self)
   -- horizontal
@@ -742,16 +822,16 @@ asciiplot._limits = function (self)
 end
 
 
---- Constructor example.
+--- Object constructor.
 --  @param dwidth Figure width.
 --  @param dheight Figure height.
 --  @return New object of asciiplot.
 asciiplot._new = function(dwidth, dheight)
   local pos = 'mid'
   local o = {
-    _x = axis.new(dwidth),
-    _y = axis.new(dheight),
-    _z = axis.new(dwidth),
+    _x = _axis_new(dwidth),
+    _y = _axis_new(dheight),
+    _z = _axis_new(dwidth),
     -- axes location
     _xaxis = pos,
     _yaxis = pos,
@@ -771,51 +851,6 @@ asciiplot._new = function(dwidth, dheight)
 end
 
 
---- Set axis settings.
---  @param t Table with parameters {range, log, view, fix, size}.
---  @param pref Prefix string.
-asciiplot._setAxis = function (self, t, pref)
-  -- range
-  if t.range then self[pref]:setRange(t.range) end
-  -- logarithmic scale
-  if t.log ~= nil then self[pref]:setLog(t.log) end
-  -- visualize
-  if t.view ~= nil then self[pref..'axis'] = t.view end
-  -- fix scale
-  if t.fix ~= nil then self[pref..'fix'] = t.fix end
-  -- length
-  if t.size ~= nil then self[pref]:resize(t.size) end
-end
-
-
---- Find range of levels for surface plot.
---  @param v1 Begin of range.
---  @param vn End of range.
---  @param N Number of lines.
---  @param bScale Flag to use bounds in calculation.
---  @param bInt Flag for a number rounding.
---  @return List of levels and step value.
-asciiplot._surfRange = function (v1, vn, N, bScale, bInt)
-  local res, nn, h = {}, N, 0
-  if bScale then
-    nn = N - 1
-    h = (vn - v1) / nn
-    res[1] = v1
-  else
-    h = (vn - v1) / (N + 1)
-  end
-  for i = 1, nn do
-    if bInt then
-      local ind, rst = mmodf(1 + h * i)
-      res[#res+1] = (rst > 0.5) and ind+1 or ind
-    else
-      res[#res+1] = v1 + h * i
-    end
-  end
-  return res, h
-end
-
-
 --- Find XY projection of a contour.
 --  @param tX X range table.
 --  @param tY Y range table.
@@ -825,7 +860,7 @@ end
 asciiplot._viewXY = function (self, tX, tY, tZ, tOpt)
   local ZERR = 0.05  -- deflection from expected level value
   local N = tOpt.level
-  local lvl, h = asciiplot._surfRange(
+  local lvl, h = _surfRange(
     self._z.range[1], self._z.range[2], N, tOpt.minmax, false)
   h = h * ZERR
     -- prepare
@@ -847,8 +882,8 @@ asciiplot._viewXY = function (self, tX, tY, tZ, tOpt)
   end
   asciiplot._limits(self)
   -- legend
-  asciiplot._cntLegend(self, 'Z', lvl)
-  self._title = asciiplot._format('X-Y view', self._x.size, true, false)
+  _cntLegend(self, 'Z', lvl)
+  self._title = _format('X-Y view', self._x.size, true, false)
   return self
 end
 
@@ -861,7 +896,7 @@ end
 --  @return Figure object.
 asciiplot._viewXZ = function (self, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, _ = asciiplot._surfRange(1, self._y.size, N, tOpt.minmax, true)
+  local lvl, _ = _surfRange(1, self._y.size, N, tOpt.minmax, true)
   -- copy settings
   self._y:setRange(self._z._init)
   self._y:setLog(self._z.log)
@@ -881,8 +916,8 @@ asciiplot._viewXZ = function (self, tX, tY, tZ, tOpt)
   -- legend
   local lvlXZ = {}
   for i = 1, N do lvlXZ[i] = tY[lvl[N-i+1]] end
-  asciiplot._cntLegend(self, 'Y', lvlXZ)
-  self._title = asciiplot._format('X-Z view', self._x.size, true, false)
+  _cntLegend(self, 'Y', lvlXZ)
+  self._title = _format('X-Z view', self._x.size, true, false)
   return self
 end
 
@@ -895,7 +930,7 @@ end
 --  @return Figure object.
 asciiplot._viewYZ = function (self, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, _ = asciiplot._surfRange(1, self._x.size, N, tOpt.minmax, true)
+  local lvl, _ = _surfRange(1, self._x.size, N, tOpt.minmax, true)
   local rotate = (tOpt.view == 'concat')
   -- update ranges
   if rotate then
@@ -931,11 +966,36 @@ asciiplot._viewYZ = function (self, tX, tY, tZ, tOpt)
   -- legend
   local lvlZY = {}
   for i = 1, N do lvlZY[i] = tX[lvl[i]] end
-  asciiplot._cntLegend(self, 'X', lvlZY)
-  self._title = asciiplot._format(
+  _cntLegend(self, 'X', lvlZY)
+  self._title = _format(
     rotate and 'Z-Y view' or 'Y-Z view', self._x.size, true, false)
   return self
 end
+
+
+--- Plot line from one point to another.
+--  @param x1 First point x coordinate.
+--  @param y1 First point y coordinate.
+--  @param x2 Second point x coordinate.
+--  @param y2 Second point y coordinate.
+--  @param s Character.
+asciiplot.addLine = function (self, x1, y1, x2, y2, s)
+  local dx, dy = x2-x1, y2-y1
+  if math.abs(dx) >= math.abs(dy) then
+    -- along x axis
+    if dx == 0 then return end
+    local step = (self._x.diff / self._x.size) * (dx >= 0 and 1 or -1)
+    local k = dy/dx
+    for x = x1, x2, step do self:addPoint(x, y1 + k*(x-x1), s) end
+  else
+    -- along y axis
+    local step = (self._y.diff / self._y.size) * (dy >= 0 and 1 or -1)
+    local k = dx/dy
+    for y = y1, y2, step do self:addPoint(x1 + k*(y-y1), y, s) end
+  end
+end
+about[asciiplot.addLine] = {"F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')",
+  "Add line from (x1,y1) to (x2,y2).", MANUAL}
 
 
 --- Scale and add a point to the figure.
@@ -1012,11 +1072,16 @@ about[asciiplot.axes] = {"F:axes() --> tbl",
 
 
 --- Plot bar graph.
---  @param t Data table {{x1,y1},{x2,y2}...}.
---  @param iy Index of y column (optional).
---  @param ix Index of x column (optional).
-asciiplot.bar = function (self, t, iy, ix)
-  ix, iy = ix or 1, iy or 2
+--  @param tx X list (optional).
+--  @param ty Y list.
+asciiplot.bar = function (self, tx, ty)
+  -- check arguments
+  if not ty then
+    ty = {}
+    for i = 1, #tx do ty[i] = i end
+    tx, ty = ty, tx
+  end
+  if #tx ~= #ty then error("Different list size") end
   -- size
   local iL = mmodf(self._x.size * 0.2)
   if iL % 2 == 1 then iL = iL - 1 end
@@ -1026,8 +1091,8 @@ asciiplot.bar = function (self, t, iy, ix)
   -- find limits
   if not self._xfix then
     local min, max = math.huge, -math.huge
-    for i = 1, #t do
-      local v = t[i][iy]
+    for i = 1, #ty do
+      local v = ty[i]
       if v > max then max = v end
       if v < min then min = v end
     end
@@ -1035,8 +1100,8 @@ asciiplot.bar = function (self, t, iy, ix)
   end
   -- data step
   local step = 1
-  if #t > self._y.size then
-    local int, frac = mmodf(#t / self._y.size)
+  if #ty > self._y.size then
+    local int, frac = mmodf(#ty / self._y.size)
     step = (frac > 0) and (int+1) or int
   end
   -- add values
@@ -1044,13 +1109,13 @@ asciiplot.bar = function (self, t, iy, ix)
   local ch, r = '=', 1
   local lim = self._xaxis == 'min' and 1 or
     self._xaxis == 'max' and ax.size or (ax.size + 1)/2
-  for i = 1, #t, step do
+  for i = 1, #ty, step do
     local canvas = self._canvas[r]
     -- text
-    local x = tostring(t[i][ix])
+    local x = tostring(tx[i])
     for c = 1, math.min(iL-2, #x) do canvas[c] = string.sub(x, c, c) end
     -- show
-    x = t[i][iy]
+    x = ty[i]
     local p, fp = ax:proj(x, true)
     if not p then
       p = (x < ax.range[1]) and ax.range[1] or ax.range[2]  -- set limit
@@ -1070,7 +1135,7 @@ asciiplot.bar = function (self, t, iy, ix)
     r = r + 1
   end
 end
-about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)",
+about[asciiplot.bar] = {"F:bar([tx,] ty)",
   "Plot bar diargram for the given data."}
 
 
@@ -1079,7 +1144,7 @@ about[asciiplot.bar] = {"F:bar(t, y_N=2, x_N=1)",
 --  @param F2 Second figure.
 --  @return String with figures.
 asciiplot.concat = function (_, F1, F2)
-  if not (isasciiplot(F1) and isasciiplot(F2)) then
+  if not (_isasciiplot(F1) and _isasciiplot(F2)) then
     error 'Not asciiplot objects'
   end
   if F1._y.size ~= F2._y.size then
@@ -1097,12 +1162,12 @@ asciiplot.concat = function (_, F1, F2)
   -- legend
   local l1, l2 = {}, {}
   for k, v in pairs(F1._legend) do
-    l1[#l1+1] = asciiplot._format(
+    l1[#l1+1] = _format(
       string.format('(%s) %s', k, v), w1-1+#k, false, true)
   end
   table.sort(l1)
   for k, v in pairs(F2._legend) do
-    l2[#l2+1] = asciiplot._format(
+    l2[#l2+1] = _format(
       string.format('(%s) %s', k, v), w2-1+#k, false, true)
   end
   table.sort(l2)
@@ -1120,8 +1185,8 @@ about[asciiplot.concat] = {":concat(F1, F2) --> str",
 
 --- Plot function of two arguments using contours.
 --  @param fn Function f(x,y).
---  @param tOpt Table of options: level - number of lines, view - projection ('XY', 'XZ', 'YZ', 'concat' for its combination).
---  @return Figure object for single view or string for 'XYZ'.
+--  @param tOpt Table of options: level - number of lines, view - projection ('XY', 'XZ', 'YZ').
+--  @return Figure object.
 asciiplot.contour = function (self, fn, tOpt)
   tOpt = tOpt or {}
   tOpt.level = tOpt.level or 5
@@ -1136,24 +1201,18 @@ asciiplot.contour = function (self, fn, tOpt)
     -- increase resolution for default size
     self._x.size, self._y.size = self._y.size, self._x.size
   end
-  local X, Y, Z, zrng = asciiplot._fn2Z(self, fn)
+  local X, Y, Z, zrng = _fn2Z(self, fn)
   if not self._zfix then self._z:setRange(zrng) end
-  if view == 'concat' then
-    local XY = asciiplot._viewXY(asciiplot.copy(self), X, Y, Z, tOpt)
-    local XZ = asciiplot._viewXZ(asciiplot.copy(self), X, Y, Z, tOpt)
-    local YZ = asciiplot._viewYZ(asciiplot.copy(self), X, Y, Z, tOpt)
-    return string.format('%s\n\n%s', asciiplot.concat(nil, XY, YZ), tostring(XZ))
-  end
   -- specific projection
-  local make = assert(asciiplot['_view'..view], "Wrong view")
+  local make = assert(asciiplot['_view'..view], "Wrong view "..view)
   local fig = asciiplot.copy(self)
   make(fig, X, Y, Z, tOpt)
   self._title = fig._title
   self._canvas = fig._canvas
   self._legend = fig._legend
 end
-about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'}) --> nil|str",
-  "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ. Use 'view=concat' for concatenated string output."}
+about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'})",
+  "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ."}
 
 
 --- Make a copy.
@@ -1188,6 +1247,12 @@ about[asciiplot.copy] = {"F:copy() --> cpy_F",
 --- Update legend.
 --  @param str_t Table with strings.
 asciiplot.legend = function (self, str_t)
+  if str_t == 'off' then
+    self._legend._hide = true
+    return
+  end
+  self._legend._hide = nil
+  if str_t == 'on' then return end
   local ch = {}
   for i = 1, #str_t do
     local s = string.char(string.byte('A') - 1 + i)
@@ -1203,7 +1268,8 @@ asciiplot.legend = function (self, str_t)
     else break end
   end
 end
-about[asciiplot.legend] = {"F:legend(str_t)", "Update legend.", CONF}
+about[asciiplot.legend] = {"F:legend(str_t|flag_s)",
+  "Update legend. Use off/on to hide or show the legend.", CONF}
 
 
 --- Generalized plot funciton.
@@ -1228,7 +1294,7 @@ asciiplot.plot = function (self, ...)
         ty, tx = tx, {}
         for j = 1, #ty do tx[j] = j end
       end
-      local a, b = asciiplot._findVectorRange(tx)
+      local a, b = _findVectorRange(tx)
       if a < vmin then vmin = a end
       if b > vmax then vmax = b end
     else
@@ -1256,9 +1322,9 @@ asciiplot.plot = function (self, ...)
   for j = 1, #acc do
     local r = acc[j]
     if type(r[1]) == 'function' then
-      r[1], r[2] = asciiplot._fn2XY(self, r[1])
+      r[1], r[2] = _fn2XY(self, r[1])
     end
-    local a, b = asciiplot._findVectorRange(r[2])
+    local a, b = _findVectorRange(r[2])
     if a < vmin then vmin = a end
     if b > vmax then vmax = b end
   end
@@ -1272,7 +1338,7 @@ asciiplot.plot = function (self, ...)
   -- 'plot'
   for j = 1, #acc do
     local r = acc[j]
-    local c = asciiplot._addXY(self, r[1], r[2], j)
+    local c = _addXY(self, r[1], r[2], j)
     self._legend[c] = r[3]
   end
   -- limits
@@ -1295,7 +1361,7 @@ about[asciiplot.reset] = {"F:reset()", "Prepare a clean canvas.", MANUAL}
 --  @param factor Positive value or another figure object.
 --  @return Updated figure object.
 asciiplot.scale = function (self, factor)
-  if isasciiplot(factor) then
+  if _isasciiplot(factor) then
     self._x:resize(factor._x.size)
     self._y:resize(factor._y.size)
   else
@@ -1310,7 +1376,7 @@ about[asciiplot.scale] = {"F:scale(factor_d | src_F)",
 
 --- X axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
-asciiplot.setX = function (self, t) asciiplot._setAxis(self, t, '_x') end
+asciiplot.setX = function (self, t) _setAxis(self, t, '_x') end
 about[asciiplot.setX] = {"F:setX(par_t)",
   "X axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
   CONF}
@@ -1318,7 +1384,7 @@ about[asciiplot.setX] = {"F:setX(par_t)",
 
 --- Y axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
-asciiplot.setY = function (self, t) asciiplot._setAxis(self, t, '_y') end
+asciiplot.setY = function (self, t) _setAxis(self, t, '_y') end
 about[asciiplot.setY] = {"F:setY(par_t)",
   "Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
   CONF}
@@ -1326,16 +1392,36 @@ about[asciiplot.setY] = {"F:setY(par_t)",
 
 --- Z axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
-asciiplot.setZ = function (self, t) asciiplot._setAxis(self, t, '_z') end
+asciiplot.setZ = function (self, t) _setAxis(self, t, '_z') end
 about[asciiplot.setZ] = {"F:setZ(par_t)",
   "Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
   CONF}
 
 
+--- Visualize matrix elements
+--  @param fn Condition function, returns true/false.
+--  @return String with stars when condition is true.
+asciiplot.stars = function (_, M, fn)
+  fn = fn or function (x) return not czero(x) end
+  local acc, row, ncol = {}, {}, M:cols()
+  for r = 1, M:rows() do
+    local mr = M[r]
+    for c = 1, ncol do
+      row[c] = fn(mr[c]) and '*' or ' '
+    end
+    row[ncol+1] = '|'
+    acc[r] = table.concat(row)
+  end
+  return table.concat(acc, '\n')
+end
+about[asciiplot.stars] = {":stars(M, cond_fn) --> str",
+  "Print matrix, use star when condition for the current elemen is true.", help.OTHER}
+
+
 --- Set title.
 --  @param s New title.
 asciiplot.title = function (self, s)
-  self._title = asciiplot._format(s, self._x.size, true, false)
+  self._title = _format(s, self._x.size, true, false)
 end
 about[asciiplot.title] = {"F:title(str)", "Set new title.", CONF}
 
@@ -1356,11 +1442,11 @@ asciiplot.tplot = function (self, t, tOpt)
   end
   -- check type
   if tOpt.polar then
-    return asciiplot._addPolar(self, t, tOpt)
+    return _addPolar(self, t, tOpt)
   end
   -- update range
   if not self._yfix then
-    local rx, ry = asciiplot._findRange(t, tOpt)
+    local rx, ry = _findRange(t, tOpt)
     self._x:setRange(rx)
     self._y:setRange(ry)
   end
@@ -1368,11 +1454,11 @@ asciiplot.tplot = function (self, t, tOpt)
   asciiplot._clear(self)
   asciiplot._axes(self)
   -- fill
-  asciiplot._addTable(self, t, tOpt)
+  _addTable(self, t, tOpt)
   -- limits
   asciiplot._limits(self)
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false})",
+about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})",
   "Plot the table data, choose columns if need."}
 
 
@@ -1386,23 +1472,6 @@ about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", help.STATIC}
 
 
-if Sonata
-then  --=====================
-
-  -- Define simplified function call
-  Plot = function (...)
-    local ap = require('matlib.asciiplot')
-    local f = ap()
-    f._x:setRange({-5, 5})
-    f:plot(...)
-    return tostring(f)
-  end
-  about[Plot] = {"Plot(...)",
-    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", help.OTHER}
-
-end   --=====================
-
-
 -- Comment to remove descriptions
 asciiplot.about = about
 
@@ -1410,5 +1479,4 @@ return asciiplot
 
 --======================================
 -- FIX contour concatenation when use color
--- TODO remove legend when flag false
--- TODO correct range in polar plot
+-- TODO allow contour level definitions

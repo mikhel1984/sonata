@@ -34,9 +34,9 @@ function (M) return M[1][1]*M[2][2] - M[2][1]*M[1][2] end,
 -- 3x3
 function (M)
   local m1, m2, m3 = M[1], M[2], M[3]
-  return m1[1]*(m2[2]*m3[3]-m2[3]*m3[2]) -
-         m1[2]*(m2[1]*m3[3]-m2[3]*m3[1]) +
-         m1[3]*(m2[1]*m3[2]-m2[2]*m3[1])
+  return m1[1]*(m2[2]*m3[3]-m2[3]*m3[2]) 
+       - m1[2]*(m2[1]*m3[3]-m2[3]*m3[1]) 
+       + m1[3]*(m2[1]*m3[2]-m2[2]*m3[1])
 end
 }
 
@@ -845,7 +845,7 @@ transform.vec_access = ref_vector
 transform.initRef = function (t)
   for _, v in ipairs {
     '__add', '__sub', '__mul', '__div', '__unm', '__pow',
-    '__eq', '__call', '__concat', '__tostring',
+    '__eq', '__call', '__concat', '__tostring', '__len',
   } do
     local fn = t[v]
     ref_transpose[v] = fn

@@ -145,7 +145,7 @@ cmdInfo.N = {'cmd_N', "", "Note-files"}
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
 commands.o = function (args, env)
-  local blk = env.evaluate._toBlocks(args[2])
+  local blk = env.evaluate.toBlocks(args[2])
   if blk then
     for _, v in ipairs(blk) do
       table.insert(env.notes, v)
@@ -161,9 +161,7 @@ cmdInfo.o = {'cmd_o', "filename", "Note-files"}
 -- Quit the program.
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
-commands.q = function (args, env)
-  env.evaluate.exit()
-end
+commands.q = function (args, env) os.exit() end
 cmdInfo.q = {'cmd_q', ""}
 
 
@@ -270,6 +268,9 @@ end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
 
 
+--- Set output to other window (temporary file).
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
 commands.w = function (args, env)
   -- prepare file
   if not env.pipe then

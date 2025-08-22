@@ -138,7 +138,7 @@ local main = {
 --  @param k Key.
 --  @param v Value.
 --  @return String with command.
-local function command (k,v)
+local function _command (k,v)
   local spc = special[k]
   return spc and spc(v) or main[type(v)](k,v)
 end
@@ -148,7 +148,7 @@ end
 --  @param s Key.
 --  @param v Value.
 --  @return String, prepared for usage in function.
-local function prepare(s,v)
+local function _prepare(s,v)
   if s == 'title' then v = string.format("'%s'", v) end
   if s == 'using' then v = table.concat(v,':') end
   return s,v
@@ -177,34 +177,11 @@ foptions = {'using','title','with','linetype','linestyle','linewidth','ls',
 }
 
 
--- metha
-gnuplot.__index = gnuplot
-
-
---- Represent parameters of the graphic.
---  @param G Gnuplot object.
---  @return String with object properties.
-gnuplot.__tostring = function (self)
-  local res = {}
-  for k,v in pairs(self) do
-    if type(v) == 'table' then
-      local tmp = {}
-      for p,q in pairs(v) do
-        tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q))
-      end
-      v = string.format('{%s}', table.concat(tmp, ','))
-    end
-    res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
-  end
-  return string.format('{\n%s\n}', table.concat(res, ',\n'))
-end
-
-
 --- Save function result to tmp file.
 --  @param fn Lua function.
 --  @param tBase Range and step.
 --  @return File name.
-gnuplot._fn2file = function (fn, tBase)
+local function _fn2file (fn, tBase)
   local name = os.tmpname()
   local xl = tBase.xrange and tBase.xrange[1] or (-10)
   local xr = tBase.xrange and tBase.xrange[2] or 10
@@ -232,40 +209,12 @@ gnuplot._fn2file = function (fn, tBase)
 end
 
 
---- Add function parameters
---  @param t Table with function definition.
---  @param base Argument range.
---  @return String representation of the plot command.
-gnuplot._graph = function (t, tBase)
-  -- function/file name
-  local fn, str, nm = t[1], '', nil
-  if type(fn) == 'table' then
-    nm = fn.ismatrix and gnuplot._mat2file(fn) or gnuplot._tbl2file(fn)
-  elseif type(fn) == 'function' then
-    nm = gnuplot._fn2file(fn,tBase)
-  else  -- type(fn) == 'string' !!
-    nm = fn
-  end
-  -- prepare options
-  for _,k in ipairs(gnuplot.foptions) do
-    if t[k] then str = string.format('%s %s %s ', str, prepare(k, t[k])) end
-  end
-  return nm, str
-end
-
-
---- Create new object, set metatable.
---  @param o Table with parameters or nil.
---  @return New 'gnuplot' object.
-gnuplot._new = function () return setmetatable({}, gnuplot) end
-
-
 --- Save one or two lists into tmp file
 --  @param t1 First Lua table (list).
 --  @param t2 Second Lua table (list) or nil.
 --  @param fn Function of two arguments.
 --  @return File name.
-gnuplot._lst2file = function (t1, t2, fn)
+local function _lst2file (t1, t2, fn)
   local name = os.tmpname()
   local f = assert(io.open(name, 'w'), "Can't save to file")
   if fn then -- must be function
@@ -296,7 +245,7 @@ end
 --- Save matrix to tmp file.
 --  @param t Sonata matrix.
 --  @return File name.
-gnuplot._mat2file = function (t)
+local function _mat2file (t)
   local name = os.tmpname()
   local f = assert(io.open(name, 'w'), "Can't save to file")
   for i = 1, t.rows do
@@ -316,7 +265,7 @@ end
 --- Save table to tmp file.
 --  @param t Lua table with numbers.
 --  @return File name.
-gnuplot._tbl2file = function (t)
+local function _tbl2file (t)
   local name = os.tmpname()
   local f = assert(io.open(name, 'w'), "Can't save to file")
   for _, row in ipairs(t) do
@@ -335,7 +284,7 @@ end
 --- Prepare arguments for table or matrix.
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
-gnuplot._vecPrepare = function (v, ...)
+local function _vecPrepare (v, ...)
   local ag = {...}
   if type(v) == 'table' then
     if #ag == 0 then
@@ -344,10 +293,61 @@ gnuplot._vecPrepare = function (v, ...)
       ag = {}
       for i = 1,n do ag[#ag+1] = i end
     end
-    v = v.ismatrix and gnuplot._mat2file(v) or gnuplot._tbl2file(v)
+    v = v.ismatrix and _mat2file(v) or _tbl2file(v)
   end
   return v, ag
 end
+
+
+--- Add function parameters
+--  @param t Table with function definition.
+--  @param base Argument range.
+--  @return String representation of the plot command.
+local function _graph (t, tBase)
+  -- function/file name
+  local fn, str, nm = t[1], '', nil
+  if type(fn) == 'table' then
+    nm = fn.ismatrix and _mat2file(fn) or _tbl2file(fn)
+  elseif type(fn) == 'function' then
+    nm = _fn2file(fn,tBase)
+  else  -- type(fn) == 'string' !!
+    nm = fn
+  end
+  -- prepare options
+  for _,k in ipairs(gnuplot.foptions) do
+    if t[k] then str = string.format('%s %s %s ', str, _prepare(k, t[k])) end
+  end
+  return nm, str
+end
+
+
+-- metha
+gnuplot.__index = gnuplot
+
+
+--- Represent parameters of the graphic.
+--  @param G Gnuplot object.
+--  @return String with object properties.
+gnuplot.__tostring = function (self)
+  local res = {}
+  for k,v in pairs(self) do
+    if type(v) == 'table' then
+      local tmp = {}
+      for p,q in pairs(v) do
+        tmp[#tmp+1] = string.format('%s=%s', tostring(p), tostring(q))
+      end
+      v = string.format('{%s}', table.concat(tmp, ','))
+    end
+    res[#res+1] = string.format('%s=%s', tostring(k), tostring(v))
+  end
+  return string.format('{\n%s\n}', table.concat(res, ',\n'))
+end
+
+
+--- Create new object, set metatable.
+--  @param o Table with parameters or nil.
+--  @return New 'gnuplot' object.
+gnuplot._new = function () return setmetatable({}, gnuplot) end
 
 
 --- Add new curve to the plot.
@@ -384,10 +384,10 @@ gnuplot.plot = function (_, ...)
     -- ag[i] have to be table
     local var, name, legend = ag[i+1], nil, nil
     if type(var) == 'table' or type(var) == 'function' then
-      name = gnuplot._lst2file(ag[i], var)
+      name = _lst2file(ag[i], var)
       i = i+2
     else
-      name = gnuplot._lst2file(ag[i])
+      name = _lst2file(ag[i])
       i = i+1
     end
     if type(ag[i]) == 'string' then
@@ -412,7 +412,7 @@ gnuplot.polarplot = function(_, ...)
   local ag, i, n = {...}, 1, 1
   local cmd = gnuplot._new()
   repeat
-    local name = gnuplot._lst2file(ag[i], ag[i+1])
+    local name = _lst2file(ag[i], ag[i+1])
     i = i + 2
     local legend = nil
     if type(ag[i]) == 'string' then
@@ -442,13 +442,13 @@ gnuplot.show = function (self)
   -- save options
   local cmd = {}
   for _,k in ipairs(gnuplot.options) do
-    if self[k] ~= nil then cmd[#cmd+1] = command(k, self[k]) end
+    if self[k] ~= nil then cmd[#cmd+1] = _command(k, self[k]) end
   end
   if self.raw then cmd[#cmd+1] = self.raw end
   -- prepare functions
   local fn = {}
   for i, f in ipairs(self) do
-    fn[i] = string.format("'%s' %s", gnuplot._graph(f, self))
+    fn[i] = string.format("'%s' %s", _graph(f, self))
   end
   -- command
   if #fn > 0 then
@@ -469,7 +469,7 @@ gnuplot.surfplot = function(_, ...)
   local ag, i, n = {...}, 1, 1
   local cmd = gnuplot._new()
   repeat
-    local name = gnuplot._lst2file(ag[i], ag[i+1], ag[i+2])
+    local name = _lst2file(ag[i], ag[i+1], ag[i+2])
     i = i + 3
     local legend = nil
     if type(ag[i]) == 'string' then
@@ -492,7 +492,7 @@ about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..])',
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tplot = function (_, v, ...)
-  local f, ag = gnuplot._vecPrepare(v, ...)
+  local f, ag = _vecPrepare(v, ...)
   local cmd = gnuplot._new()
   if #ag > 1 then
     for i = 2,#ag do
@@ -513,7 +513,7 @@ about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..])",
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tpolar = function (_, v, ...)
-  local f, ag = gnuplot._vecPrepare(v, ...)
+  local f, ag = _vecPrepare(v, ...)
   local cmd = gnuplot._new()
   if #ag > 1 then
     for i = 2,#ag do
@@ -535,7 +535,7 @@ about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..])",
 --  @param v Table, matrix or dat-file.
 --  @param ... Column indexes for plotting (e.g. 1,4,9), all by default
 gnuplot.tsurf = function (_, v, ...)
-  local f, ag = gnuplot._vecPrepare(v, ...)
+  local f, ag = _vecPrepare(v, ...)
   local cmd = gnuplot._new()
   if #ag > 2 then
     for i = 3, #ag do

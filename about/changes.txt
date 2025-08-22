@@ -1,3 +1,18 @@
+========= 1.00 ==========
+
+Asciiplot
+* Update tplot, bar
+* Plot line
+Data
+* Pack and unpack methods
+* Allow sequential data transformations
+* Access to table rows and cols
+Other
+* In help add methods for objects and examples for functions
+* Simplify programm call with -e option
+* No return value when ends with ;
+* Bug fixes and other improvements
+
 ======== 0.9.41 =========
 
 Other

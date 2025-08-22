@@ -23,7 +23,7 @@ local local_env = {}
 --- Check if the name is module name.
 --  @param s Module name or alias.
 --  @return true when argument is a name.
-local function is_module (s)  
+local function is_module (s)
   for k, v in pairs(use) do
     if k == s or v == s then
       return true
@@ -44,7 +44,7 @@ local function complete (text, from, to)
   local p, q = string.find(phrase, '[.:]')
   if p then
     -- var.method
-    local w1 = string.sub(phrase, 1, p-1) 
+    local w1 = string.sub(phrase, 1, p-1)
     local ns = _ENV[w1]
     if ns then
       local w2 = string.sub(phrase, q+1, #phrase)

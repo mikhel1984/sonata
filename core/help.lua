@@ -26,7 +26,14 @@ about[function] =
 --	LOCAL
 
 -- internal parameters
-local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
+local TITLE, DESCRIPTION, CATEGORY, EXTEND, TEST = 1, 2, 3, 4, 5
+
+-- metamethods signes
+local meta_op = {
+  __add="+", __sub="-", __mul="*", __div="/", __pow="^", __mod="%", __unm="-obj",
+  __idiv="//", __band="&", __bor="|", __bnot="~", __shl="<<", __shr=">>",
+  __concat="..", __len="#", __eq="==", __lt="<", __le="<=", __call="obj()"
+}
 
 
 --	MODULE
@@ -143,8 +150,22 @@ help.findObject = function (tbl, obj, tGlob)
     elseif mod[obj] then
       -- function description
       local t = mod[obj]
-      return Sonata.info {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
+      local res = {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
         '\n', t[DESCRIPTION]}
+      -- extract examples from unit tests
+      help.ext_test = help.ext_test or require('core.test')
+      if not t[TEST] then
+        local fname = string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), nm)
+        local text = assert(help.readAll(fname), "Unable to load '"..fname.."'")
+        t[TEST] = help.ext_test.getCode(text)
+      end
+      local examples = help.ext_test.examples(t[TEST], t[EXTEND])
+      if #examples > 0 then
+        res[#res+1] = '\n\n  Example\n'
+        -- add one example
+        res[#res+1] = examples[1]
+      end
+      return Sonata.info (res)
     end
   end
   return nil
@@ -218,14 +239,43 @@ help.makeModule = function (t, nm)
   local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm, Sonata.FORMAT_CLR,
     '\n', txt, '\n'}
   for cat, n in pairs(acc) do          -- for each category
-    res[#res+1] = '\t'
+    res[#res+1] = '\t::'
     res[#res+1] = Sonata.FORMAT_V1; res[#res+1] = cat
-    res[#res+1] = Sonata.FORMAT_CLR; res[#res+1] = '\n'
+    res[#res+1] = Sonata.FORMAT_CLR; res[#res+1] = '::\n'
     table.sort(n)
     res[#res+1] = table.concat(n, '\n')
     res[#res+1] = '\n'
   end
   return res
+end
+
+
+--- Collect information about object.
+--  @param var Some object.
+--  @return table with descriptions.
+help.objectInfo = function (_, var)
+  local mt = getmetatable(var)
+  local t = {
+    string.format('<%s>', mt and mt.type or type(var)),
+    '\n', tostring(var)}
+  if mt then
+    local acc = {}
+    for k, v in pairs(mt) do
+      if type(k) == 'string' and type(v) == 'function' then
+        if string.sub(k, 1, 1) == '_' then
+          if meta_op[k] then acc[#acc+1] = meta_op[k] end
+        else
+          acc[#acc+1] = k
+        end
+      end
+    end
+    if #acc > 0 then
+      table.sort(acc, function (a, b) return #a < #b end)
+      t[#t+1] = '\n'
+      t[#t+1] = 'Methods: ' .. table.concat(acc, ', ')
+    end
+  end
+  return t
 end
 
 

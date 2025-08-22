@@ -34,10 +34,12 @@ end
 -- visualize
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
+table.remove(ts)  -- ignore right values
 fig = Ap()
-fig:setY {view='min'}; fig:setX {range={0, 0.5}, fix=true}
-v = _D:T({te, ts})  -- get list of pairs
-fig:bar(v)
+fig:setX {view='min', range={0, 0.2}, fix=true}
+fig:setY {size=#ts}
+--v = _D:T()  -- get list of pairs
+fig:bar(te, ts)
 print(fig)
 
 -- custom generator (0 to 1)
@@ -49,8 +51,8 @@ end
 -- visualize renerated data
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
-v = _D:T({te, ts})   -- list of pairs
-fig:bar(v)
+table.remove(ts)  -- ignore right values
+fig:bar(te, ts)
 print(fig)
 
 -- normal distribution
@@ -202,14 +204,21 @@ ans = (r1() == r2())          -->  true
 r2:seed(2)
 ans = (r1() ~= r2())          -->  true
 
+-- fill array 2x2x3
+arr = Rand:array(2, 2, 3)
+ans = #arr[1][1]              --> 3
+
+ans = arr[2][1][2] <= 1.0     --> true
+
 --]]
 
 
 --	LOCAL
 
 -- categories
-DIST = 'distribution'
+local DIST = 'distribution'
 
+local mexp, mlog, msqrt, mrandom = math.exp, math.log, math.sqrt, math.random
 
 --	INFO
 
@@ -226,18 +235,25 @@ local random = {
 -- mark
 type = 'random', israndom = true,
 -- from 0 to 1
-_fn = function (self) return math.random() end,
+_fn = function (self) return mrandom() end,
 -- from a to b
-_fnRng = function (self, a, b) return math.random(a, b) end,
+_fnRng = function (self, a, b) return mrandom(a, b) end,
 }
 
 
--- make object callable
-random.__call = function (R) return R:_fn() end
-
-
--- methametods
-random.__index = random
+--- Recursive making of random array.
+--  @param n Current size.
+--  @param ... Rest of dimensions.
+--  @return table with random tables or scalar value.
+local function _arrayRest (self, n, ...)
+  if n then
+    if n <= 0 then error('expected positive size') end
+    local res = {}
+    for i = 1, n do res[i] = _arrayRest(self, ...) end
+    return res
+  end
+  return self:_fn()
+end
 
 
 --- Generate random from 0 to 1. Use generator of Park and Miller with
@@ -245,7 +261,7 @@ random.__index = random
 --  @param t Random object.
 --  @param rmax Maximal value less or equal to 1.0.
 --  @return random number.
-random._genPM = function (t, rmax)
+local function _genPM (t, rmax)
   rmax = rmax or 0.9999998
   local state = t._state
   local k = math.floor(state / 127773)
@@ -262,7 +278,7 @@ end
 --- Initialize Park-Miller generator.
 --  @param t Generator object.
 --  @param seed Integer value.
-random._genPMInit = function (t, seed)
+local function _genPMInit (t, seed)
   if seed < 1 then seed = 1 end
   local iv = {}
   for j = -4, 32 do
@@ -276,43 +292,37 @@ random._genPMInit = function (t, seed)
 end
 
 
---- Recursive making of random array.
---  @param n Current size.
---  @param ... Rest of dimensions.
---  @return table with random tables or scalar value.
-random._arrayRest = function (self, n, ...)
-  if n then
-    if n <= 0 then error('expected positive size') end
-    local res = {}
-    for i = 1, n do res[i] = random._arrayRest(self, ...) end
-    return res
-  else
-    return self:_fn()
-  end
-end
-
-
-random._init = random._genPMInit
-random._rand = random._genPM
-
-
 --- Get random integer from range.
+--  @param R Random generator.
 --  @param a Lower bound.
 --  @param b Upper bound.
 --  @return Integer value.
-random._randRng = function (self, a, b)
-  local p, q = math.modf((b - a)*self:_rand())
+local function _randRng (R, a, b)
+  local p, q = math.modf((b - a)*R:_rand())
   return a + (q < 0.5 and p or p + 1)
 end
+
+
+-- make object callable
+random.__call = function (R) return R:_fn() end
+
+
+-- methametods
+random.__index = random
+
+
+-- set generator
+random._init = _genPMInit
+random._rand = _genPM
 
 
 --- Get array of random numbers [0;1) with given size.
 --  @param ... sequence of dimensions.
 --  @return multidimentional random array.
 random.array = function (self, ...)
-  return random._arrayRest(self, ...)
+  return _arrayRest(self, ...)
 end
-about[random.array] = {"R:array(n1,[n2,..]) --> tbl", 
+about[random.array] = {"R:array(n1, [n2,..]) --> tbl", 
   "Get multidimentional random array."}
 
 
@@ -330,7 +340,7 @@ random.binomial = function (self, dp, N)
       if self:_fn() < p then bnl = bnl + 1 end
     end
   elseif am < 1.0 then
-    local g, t, j = math.exp(-am), 1.0, 0
+    local g, t, j = mexp(-am), 1.0, 0
     while j <= N do
       t = t*self:_fn()
       if t < g then break end
@@ -339,8 +349,8 @@ random.binomial = function (self, dp, N)
     bnl = (j <= N) and j or N
   else
     local pc, og = 1 - p, gln(nil, N + 1)
-    local sq, em = math.sqrt(2*am*pc), 0
-    local plog, pclog = math.log(p), math.log(1 - p)
+    local sq, em = msqrt(2*am*pc), 0
+    local plog, pclog = mlog(p), mlog(1 - p)
     repeat
       local y = 0
       repeat
@@ -348,7 +358,7 @@ random.binomial = function (self, dp, N)
         em = sq*y + am
       until 0.0 <= em and em < (N + 1)
       em = math.floor(em)
-      local t = 1.2*sq*(1 + y*y)*math.exp(
+      local t = 1.2*sq*(1 + y*y)*mexp(
         og - gln(nil, em+1) - gln(nil, N-em+1) + em*plog + (N-em)*pclog)
     until self:_fn() <= t
     bnl = em
@@ -401,7 +411,7 @@ about[random.choice] = {"R:choice(tbl) --> element, index_N",
 random.exp = function (self, dLam)
   local s = 0
   repeat s = self:_fn() until s > 0
-  return -math.log(s) / (dLam or 1.0)
+  return -mlog(s) / (dLam or 1.0)
 end
 about[random.exp] = {"R:exp(lambda_d=1) --> float",
   "Exponential distributed random values.", DIST}
@@ -426,7 +436,7 @@ random.gamma = function (self, iAlpha, dBeta)
   local x = 1.0
   if iAlpha < 6 then
     for i = 1, iAlpha do x = x * self:_fn() end
-    x = -math.log(x)  -- TODO can be 0?
+    x = -mlog(x)  -- TODO can be 0?
   else
     local y, s= 0, 0
     iAlpha = iAlpha - 1  -- reuse
@@ -438,10 +448,10 @@ random.gamma = function (self, iAlpha, dBeta)
           v2 = 2*self:_fn()-1.0
         until v1 > 0 and v1*v1 + v2*v2 <= 1
         y = v2 / v1
-        s = math.sqrt(2.0*iAlpha + 1.0)
+        s = msqrt(2.0*iAlpha + 1.0)
         x = s*y + iAlpha
       until x > 0
-      local e = (1.0 + y*y)*math.exp(iAlpha*math.log(x/iAlpha) - s*y)
+      local e = (1.0 + y*y)*mexp(iAlpha*mlog(x/iAlpha) - s*y)
     until self:_fn() < e
   end
   return x / (dBeta or 1)
@@ -489,7 +499,7 @@ random.logistic = function (self, dMu, dSigma)
   dMu, dSigma = dMu or 0.0, dSigma or 1.0
   local s = 0
   repeat s = self:_fn() until 0 < s and s < 1
-  return dMu + 0.551328895421792050*dSigma*math.log(s /(1.0 - s))
+  return dMu + 0.551328895421792050*dSigma*mlog(s /(1.0 - s))
 end
 about[random.logistic] = {"R:logistic(mu_d=0, sigma_d=1) --> float",
   "Logistic distributed random value.", DIST}
@@ -500,7 +510,7 @@ about[random.logistic] = {"R:logistic(mu_d=0, sigma_d=1) --> float",
 random.new = function(_)
   local o = {
     _fn = random._rand,
-    _fnRng = random._randRng,
+    _fnRng = _randRng,
   }
   random._init(o, 0)
   return setmetatable(o, random)
@@ -522,7 +532,7 @@ random.norm = function (self, dMean, dev)
     v = 2*self:_fn()-1
     s = u*u + v*v
   until 0 < s and s <= 1
-  return dMean + dev * u * math.sqrt(-2*math.log(s)/s)
+  return dMean + dev * u * msqrt(-2*mlog(s)/s)
 end
 about[random.norm] = {"R:norm(mean_d=0, dev_d=1) --> float",
   "Normal distributed random value with the given mean and deviation.", DIST}
@@ -536,14 +546,14 @@ random.poisson = function (self, dLam)
   local gln = random.ext_special.gammaln
   local em = -1
   if dLam < 12 then
-    local g = math.exp(-dLam)
+    local g = mexp(-dLam)
     local t = 1.0
     repeat
       t = t * self:_fn()
       em = em + 1
     until t <= g
   else
-    local sq, al, y = math.sqrt(2*dLam), math.log(dLam), 0
+    local sq, al, y = msqrt(2*dLam), mlog(dLam), 0
     local g = dLam*al - gln(nil, dLam+1)
     repeat
       repeat
@@ -551,7 +561,7 @@ random.poisson = function (self, dLam)
         em = sq*y + dLam
       until em >= 0
       em = math.floor(em)
-      local t = 0.9*(1 + y*y)*math.exp(em*al - gln(nil, em + 1)-g)
+      local t = 0.9*(1 + y*y)*mexp(em*al - gln(nil, em + 1)-g)
     until self:_fn() <= t
   end
   return em
@@ -566,7 +576,7 @@ about[random.poisson] = {"R:poisson(lambda_d) --> int",
 random.rayleigh = function (self, dSigma)
   local s = 0
   repeat s = self:_fn() until 0 < s and s < 1
-  return dSigma*math.sqrt(-2*math.log(s))
+  return dSigma*msqrt(-2*mlog(s))
 end
 about[random.rayleigh] = {"R:rayleigh(sigma_d) --> float",
   "Rayleigh distributed random values.", DIST}
@@ -591,7 +601,7 @@ about[random.seed] = {"R:seed(N=os.time) --> R", "Set random generator seed."}
 random.shuffle = function (_, t)
   local N = #t
   for i = 1, N do
-    local j = math.random(1, N)
+    local j = mrandom(1, N)
     t[i], t[j] = t[j], t[i]
   end
 end
