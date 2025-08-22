@@ -161,7 +161,7 @@ cmdInfo.o = {'cmd_o', "filename", "Note-files"}
 -- Quit the program.
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
-commands.q = function (args, env) os.exit() end 
+commands.q = function (args, env) os.exit() end
 cmdInfo.q = {'cmd_q', ""}
 
 

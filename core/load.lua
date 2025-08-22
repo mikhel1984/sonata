@@ -135,7 +135,7 @@ local _args = {
 ['--test'] = {
 description = 'Run unit tests.',
 example = {
-  'e.g. --test          # all tests', 
+  'e.g. --test          # all tests',
   '     --test array    # tests for the given module'},
 process = function (args)
   local Test = require('core.test')
@@ -156,7 +156,7 @@ exit = true},
 ['--lang'] = {
 description = 'Generation or updating of the localization file.',
 example = {
-  'e.g. --lang          # show current language', 
+  'e.g. --lang          # show current language',
   '     --lang eo       # file for Esperanto localization'},
 process = function (args)
   if args[2] then
@@ -172,7 +172,7 @@ exit = true},
 ['--doc'] = {
 description = 'Generating a documentation page.',
 example = {
-  'e.g. --doc           # original documentation', 
+  'e.g. --doc           # original documentation',
   '     --doc ru        # translated documentation'},
 process = function (args)
   local Gen = require('core.generator')
@@ -199,7 +199,7 @@ exit = true},
 ['--io'] = {
 description = "Method for interaction.",
 example = {
-  'e.g. --io tcp 23456  # server mode', 
+  'e.g. --io tcp 23456  # server mode',
   '     --io w          # output window mode'},
 process = function (args)
   if args[2] == 'tcp' then

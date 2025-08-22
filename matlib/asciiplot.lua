@@ -986,13 +986,13 @@ asciiplot.addLine = function (self, x1, y1, x2, y2, s)
     if dx == 0 then return end
     local step = (self._x.diff / self._x.size) * (dx >= 0 and 1 or -1)
     local k = dy/dx
-    for x = x1, x2, step do self:addPoint(x, y1 + k*(x-x1), s) end    
+    for x = x1, x2, step do self:addPoint(x, y1 + k*(x-x1), s) end
   else
     -- along y axis
     local step = (self._y.diff / self._y.size) * (dy >= 0 and 1 or -1)
     local k = dx/dy
     for y = y1, y2, step do self:addPoint(x1 + k*(y-y1), y, s) end
-  end  
+  end
 end
 about[asciiplot.addLine] = {"F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')",
   "Add line from (x1,y1) to (x2,y2).", MANUAL}
@@ -1268,7 +1268,7 @@ asciiplot.legend = function (self, str_t)
     else break end
   end
 end
-about[asciiplot.legend] = {"F:legend(str_t|flag_s)", 
+about[asciiplot.legend] = {"F:legend(str_t|flag_s)",
   "Update legend. Use off/on to hide or show the legend.", CONF}
 
 

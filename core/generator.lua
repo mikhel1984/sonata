@@ -155,7 +155,7 @@ generator.md = function (tModule)
     local functions, description = docLines(k, v, {})
     res[#res+1] = description
     res[#res+1] = ""
-    res[#res+1] = sgsub(functions, "(<.->)", sym) 
+    res[#res+1] = sgsub(functions, "(<.->)", sym)
     res[#res+1] = ""
   end
 

@@ -30,8 +30,8 @@ local TITLE, DESCRIPTION, CATEGORY, EXTEND, TEST = 1, 2, 3, 4, 5
 
 -- metamethods signes
 local meta_op = {
-  __add="+", __sub="-", __mul="*", __div="/", __pow="^", __mod="%", __unm="-obj", 
-  __idiv="//", __band="&", __bor="|", __bnot="~", __shl="<<", __shr=">>", 
+  __add="+", __sub="-", __mul="*", __div="/", __pow="^", __mod="%", __unm="-obj",
+  __idiv="//", __band="&", __bor="|", __bnot="~", __shl="<<", __shr=">>",
   __concat="..", __len="#", __eq="==", __lt="<", __le="<=", __call="obj()"
 }
 
@@ -256,7 +256,7 @@ end
 help.objectInfo = function (_, var)
   local mt = getmetatable(var)
   local t = {
-    string.format('<%s>', mt and mt.type or type(var)), 
+    string.format('<%s>', mt and mt.type or type(var)),
     '\n', tostring(var)}
   if mt then
     local acc = {}

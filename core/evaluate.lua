@@ -356,12 +356,12 @@ end
 --  @return result of execution or nil.
 evaluate.evalLine = function (cmd)
   local fn, err = loadStr('return '..cmd)
-  if err then 
+  if err then
     fn, err = loadStr(cmd)
   end
   if not err then
     local ok, ans = pcall(fn)
-    if ok and ans then 
+    if ok and ans then
       return evaluate.islist(ans) and ans or evaluate._extPrint(ans)
     end
   end
