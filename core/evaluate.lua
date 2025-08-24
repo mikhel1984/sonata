@@ -100,7 +100,7 @@ local evaluate = {
 
 -- current version
 MAJOR_V = 1,
-MINOR_V = 0,
+MINOR_V = 1,
 
 -- status
 EV_RES = 1,   -- found result

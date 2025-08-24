@@ -143,20 +143,20 @@ print(s)
 
 --	LOCAL
 
-local inform = Sonata and Sonata.warning or print
-local mmodf = math.modf
-local MANUAL, CONF = 'manual', 'settings'
-local Utils = require("matlib/utils")
-local vmove = Utils.versions.move
-local czero = Utils.cross.isZero
-Utils = Utils.utils
+local _utils = require("matlib/utils")
+local _vmove = _utils.versions.move
+local _czero = _utils.cross.isZero
+_utils = _utils.utils
 
+local _inform = Sonata and Sonata.warning or print
+local _modf = math.modf
+local _tag = { MANUAL='manual', CONF='settings' }
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Use pseudography for data visualization."
 }
 
@@ -173,10 +173,10 @@ axis.__index = axis
 --  @return axis object.
 local function _axis_new (N)
   if N < 9 then
-    inform('Set minimal axis size:'..tostring(N))
+    _inform('Set minimal axis size:'..tostring(N))
     N = 9
   elseif N % 2 == 0 then
-    inform('Change to odd size')
+    _inform('Change to odd size')
     return _axis_new(N+1)
   end
   local x1, x2 = -1, 1
@@ -246,9 +246,9 @@ axis.proj = function (self, d, isX)
   local dx = (d - self.range[1]) / self.diff
   local int, frac = nil, nil
   if isX then
-    int, frac = mmodf((self.size - 1)*dx + 1)
+    int, frac = _modf((self.size - 1)*dx + 1)
   else
-    int, frac = mmodf(dx - self.size*(dx - 1))
+    int, frac = _modf(dx - self.size*(dx - 1))
   end
   --return (frac > 0.5) and (int + 1) or int
   return int, frac
@@ -259,10 +259,10 @@ end
 --  @param N New size.
 axis.resize = function (self, N)
   if N < 9 then
-    inform('Set minimal axis size:'..tostring(N))
+    _inform('Set minimal axis size:'..tostring(N))
     N = 9
   elseif N % 2 == 0 then
-    inform('Change to odd size')
+    _inform('Change to odd size')
     return axis.resize(self, N+1)
   end
   self.size = N
@@ -296,19 +296,19 @@ axis.setRange = function (self, t)
     local n = math.log(b - a, 10)
     n = (n >= 0) and math.floor(n) or math.ceil(n)
     local tol = 10^(n-1)
-    local v, rest = mmodf(a / tol)
+    local v, rest = _modf(a / tol)
     if rest ~= 0 then
       rest = (rest > 0) and 0 or 1
       self.range[1] = (v - rest) * tol
     end
-    v, rest = mmodf(b / tol)
+    v, rest = _modf(b / tol)
     if rest ~= 0 then
       rest = (rest < 0) and 0 or 1
       self.range[2] = (v + rest) * tol
     end
   end
   if a ~= t[1] or b ~= t[2] then
-    inform(string.format('Change limits to %f %f', a, b))
+    _inform(string.format('Change limits to %f %f', a, b))
   end
   self._init[1], self._init[2] = a, b  -- exact limits
   self.diff = self.range[2] - self.range[1]
@@ -328,7 +328,7 @@ end
 --- Change size w.r.t initial value.
 --  @param factor Positive multiplier.
 axis.scale = function (self, factor)
-  local int, frac = mmodf(self._size * factor)
+  local int, frac = _modf(self._size * factor)
   axis.resize(self, (int % 2 == 1) and int or (int + 1))
 end
 
@@ -625,7 +625,7 @@ local function _format (s, N, bCentr, bCut)
   if #s < N then
     local n = N - #s
     if bCentr then
-      local n1 = mmodf(n / 2)
+      local n1 = _modf(n / 2)
       local n2 = n - n1
       res = string.rep(' ', n1) .. s .. string.rep(' ', n2)
     else
@@ -675,7 +675,7 @@ local function _surfRange (v1, vn, N, bScale, bInt)
   end
   for i = 1, nn do
     if bInt then
-      local ind, rst = mmodf(1 + h * i)
+      local ind, rst = _modf(1 + h * i)
       res[#res+1] = (rst > 0.5) and ind+1 or ind
     else
       res[#res+1] = v1 + h * i
@@ -994,8 +994,8 @@ asciiplot.addLine = function (self, x1, y1, x2, y2, s)
     for y = y1, y2, step do self:addPoint(x1 + k*(y-y1), y, s) end
   end
 end
-about[asciiplot.addLine] = {"F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')",
-  "Add line from (x1,y1) to (x2,y2).", MANUAL}
+_about[asciiplot.addLine] = {"F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')",
+  "Add line from (x1,y1) to (x2,y2).", _tag.MANUAL}
 
 
 --- Scale and add a point to the figure.
@@ -1014,8 +1014,8 @@ asciiplot.addPoint = function (self, dx, dy, s)
   end
   return false
 end
-about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*')",
-  "Add point (x,y) using char.", MANUAL}
+_about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*')",
+  "Add point (x,y) using char.", _tag.MANUAL}
 
 
 --- Set character to direct position.
@@ -1029,8 +1029,8 @@ asciiplot.addPose = function (self, ir, ic, s)
     self._canvas[ir][ic] = s or '*'
   end
 end
-about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s='*')",
-  "Add character to the given position.", MANUAL}
+_about[asciiplot.addPose] = {"F:addPose(row_N, col_N, char_s='*')",
+  "Add character to the given position.", _tag.MANUAL}
 
 
 --- Set string to the given position.
@@ -1042,11 +1042,11 @@ asciiplot.addString = function (self, ir, ic, s)
     asciiplot.addPose(self, ir, ic+i-1, string.sub(s, i, i))
   end
 end
-about[asciiplot.addString] = {"F:addString(row_N, col_N, str)",
-  "Add string to the given position.", MANUAL}
+_about[asciiplot.addString] = {"F:addString(row_N, col_N, str)",
+  "Add string to the given position.", _tag.MANUAL}
 
 
---- Get information about axes.
+--- Get information _about axes.
 --  @return Table with parameters.
 asciiplot.axes = function (self)
   local res = {}
@@ -1067,8 +1067,8 @@ asciiplot.axes = function (self)
   end
   return res
 end
-about[asciiplot.axes] = {"F:axes() --> tbl",
-  "Get {'size','log','range','view','fix'} for each axis.", help.OTHER}
+_about[asciiplot.axes] = {"F:axes() --> tbl",
+  "Get {'size','log','range','view','fix'} for each axis.", _help.OTHER}
 
 
 --- Plot bar graph.
@@ -1083,7 +1083,7 @@ asciiplot.bar = function (self, tx, ty)
   end
   if #tx ~= #ty then error("Different list size") end
   -- size
-  local iL = mmodf(self._x.size * 0.2)
+  local iL = _modf(self._x.size * 0.2)
   if iL % 2 == 1 then iL = iL - 1 end
   local iR = self._x.size - iL
   local ax = self._x:copy()  -- temporary axis object
@@ -1101,7 +1101,7 @@ asciiplot.bar = function (self, tx, ty)
   -- data step
   local step = 1
   if #ty > self._y.size then
-    local int, frac = mmodf(#ty / self._y.size)
+    local int, frac = _modf(#ty / self._y.size)
     step = (frac > 0) and (int+1) or int
   end
   -- add values
@@ -1135,7 +1135,7 @@ asciiplot.bar = function (self, tx, ty)
     r = r + 1
   end
 end
-about[asciiplot.bar] = {"F:bar([tx,] ty)",
+_about[asciiplot.bar] = {"F:bar([tx,] ty)",
   "Plot bar diargram for the given data."}
 
 
@@ -1178,9 +1178,9 @@ asciiplot.concat = function (_, F1, F2)
 
   return table.concat(acc, '\n')
 end
-about[asciiplot.concat] = {":concat(F1, F2) --> str",
+_about[asciiplot.concat] = {":concat(F1, F2) --> str",
   "Horizontal concatenation of figures with the same height. Equal to F1..F2.",
-  help.STATIC}
+  _help.STATIC}
 
 
 --- Plot function of two arguments using contours.
@@ -1211,7 +1211,7 @@ asciiplot.contour = function (self, fn, tOpt)
   self._canvas = fig._canvas
   self._legend = fig._legend
 end
-about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'})",
+_about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'})",
   "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ."}
 
 
@@ -1236,12 +1236,12 @@ asciiplot.copy = function (self)
     o._legend[k] = v
   end
   for i = 1, #self._canvas do
-    o._canvas[i] = vmove(self._canvas[i], 1, self._x.size, 1, {})
+    o._canvas[i] = _vmove(self._canvas[i], 1, self._x.size, 1, {})
   end
   return setmetatable(o, asciiplot)
 end
-about[asciiplot.copy] = {"F:copy() --> cpy_F",
-  "Create a copy of the object.", help.OTHER}
+_about[asciiplot.copy] = {"F:copy() --> cpy_F",
+  "Create a copy of the object.", _help.OTHER}
 
 
 --- Update legend.
@@ -1268,8 +1268,8 @@ asciiplot.legend = function (self, str_t)
     else break end
   end
 end
-about[asciiplot.legend] = {"F:legend(str_t|flag_s)",
-  "Update legend. Use off/on to hide or show the legend.", CONF}
+_about[asciiplot.legend] = {"F:legend(str_t|flag_s)",
+  "Update legend. Use off/on to hide or show the legend.", _tag.CONF}
 
 
 --- Generalized plot funciton.
@@ -1344,7 +1344,7 @@ asciiplot.plot = function (self, ...)
   -- limits
   asciiplot._limits(self)
 end
-about[asciiplot.plot] = {"F:plot(...)",
+_about[asciiplot.plot] = {"F:plot(...)",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
 
 
@@ -1354,7 +1354,7 @@ asciiplot.reset = function (self)
   asciiplot._axes(self)
   asciiplot._limits(self)
 end
-about[asciiplot.reset] = {"F:reset()", "Prepare a clean canvas.", MANUAL}
+_about[asciiplot.reset] = {"F:reset()", "Prepare a clean canvas.", _tag.MANUAL}
 
 
 --- Scale xrange and yrange w.r.t. initial size.
@@ -1370,39 +1370,39 @@ asciiplot.scale = function (self, factor)
     self._y:scale(factor)
   end
 end
-about[asciiplot.scale] = {"F:scale(factor_d | src_F)",
-  "Change figure size w.r.t. initial size.", CONF}
+_about[asciiplot.scale] = {"F:scale(factor_d | src_F)",
+  "Change figure size w.r.t. initial size.", _tag.CONF}
 
 
 --- X axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setX = function (self, t) _setAxis(self, t, '_x') end
-about[asciiplot.setX] = {"F:setX(par_t)",
+_about[asciiplot.setX] = {"F:setX(par_t)",
   "X axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  CONF}
+  _tag.CONF}
 
 
 --- Y axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setY = function (self, t) _setAxis(self, t, '_y') end
-about[asciiplot.setY] = {"F:setY(par_t)",
+_about[asciiplot.setY] = {"F:setY(par_t)",
   "Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  CONF}
+  _tag.CONF}
 
 
 --- Z axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setZ = function (self, t) _setAxis(self, t, '_z') end
-about[asciiplot.setZ] = {"F:setZ(par_t)",
+_about[asciiplot.setZ] = {"F:setZ(par_t)",
   "Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  CONF}
+  _tag.CONF}
 
 
 --- Visualize matrix elements
 --  @param fn Condition function, returns true/false.
 --  @return String with stars when condition is true.
 asciiplot.stars = function (_, M, fn)
-  fn = fn or function (x) return not czero(x) end
+  fn = fn or function (x) return not _czero(x) end
   local acc, row, ncol = {}, {}, M:cols()
   for r = 1, M:rows() do
     local mr = M[r]
@@ -1414,8 +1414,8 @@ asciiplot.stars = function (_, M, fn)
   end
   return table.concat(acc, '\n')
 end
-about[asciiplot.stars] = {":stars(M, cond_fn) --> str",
-  "Print matrix, use star when condition for the current elemen is true.", help.OTHER}
+_about[asciiplot.stars] = {":stars(M, cond_fn) --> str",
+  "Print matrix, use star when condition for the current elemen is true.", _help.OTHER}
 
 
 --- Set title.
@@ -1423,7 +1423,7 @@ about[asciiplot.stars] = {":stars(M, cond_fn) --> str",
 asciiplot.title = function (self, s)
   self._title = _format(s, self._x.size, true, false)
 end
-about[asciiplot.title] = {"F:title(str)", "Set new title.", CONF}
+_about[asciiplot.title] = {"F:title(str)", "Set new title.", _tag.CONF}
 
 
 --- Plot data represented in form of table
@@ -1458,7 +1458,7 @@ asciiplot.tplot = function (self, t, tOpt)
   -- limits
   asciiplot._limits(self)
 end
-about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})",
+_about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})",
   "Plot the table data, choose columns if need."}
 
 
@@ -1468,12 +1468,14 @@ __call = function (_, w, h)
   -- size
   return asciiplot._new(w or asciiplot.WIDTH, h or asciiplot.HEIGHT)
 end})
-about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
-  "Create new asciiplot.", help.STATIC}
+_about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
+  "Create new asciiplot.", _help.STATIC}
 
 
 -- Comment to remove descriptions
-asciiplot.about = about
+asciiplot.about = _about
+-- clear load data
+_tag = nil
 
 return asciiplot
 

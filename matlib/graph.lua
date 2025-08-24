@@ -144,13 +144,9 @@ ans = D:unpack(t)             --> b
 
 --	LOCAL
 
-local Utils do
-  local lib = require('matlib.utils')
-  Utils = lib.utils
-end
+local _utils = require("matlib.utils").utils
 
-local PROPERTY = 'property'
-local EXPORT = 'export'
+local _tag = { PROPERTY='property', EXPORT='export' }
 
 
 --- Get key with minimum value, remove it
@@ -253,9 +249,9 @@ end
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Operations with graphs."
 }
 
@@ -330,7 +326,7 @@ graph.__tostring = function (self)
 end
 
 
-about['_mt'] = {"operations: g1==g2, g1~=g2, g1..g2, #g", nil, help.META}
+_about['_mt'] = {"operations: g1==g2, g1~=g2, g1..g2, #g", nil, _help.META}
 
 
 --- Make loop.
@@ -394,19 +390,19 @@ graph._pack = function (self, acc)
   -- nodes
   for k in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = Utils.pack_str(s, acc)
+    t[#t+1] = _utils.pack_str(s, acc)
     ns[s], p = p, p+1
   end
   t[#t+1] = '\0'
   -- edges
   for k, v in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = Utils.pack_num(ns[s], acc)
+    t[#t+1] = _utils.pack_num(ns[s], acc)
     for q, w in pairs(v) do
       if w then   -- TODO simplify for directed graph
         local u = ns[tostring(q)]
-        t[#t+1] = Utils.pack_num(u, acc)
-        t[#t+1] = Utils.pack_num(w, acc)
+        t[#t+1] = _utils.pack_num(u, acc)
+        t[#t+1] = _utils.pack_num(w, acc)
       end
     end
     t[#t+1] = '\0'
@@ -427,20 +423,20 @@ graph._unpack = function (src, pos, acc, ver)
   -- get nodes
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
-    ns[#ns+1], pos = Utils.unpack_str(src, pos, acc[n], ver)
+    ns[#ns+1], pos = _utils.unpack_str(src, pos, acc[n], ver)
   end
   pos = pos + 1
   local gr, i, j, w = graph._new(dir == 1), nil, nil, nil
   -- get edges
   for i = 1, #ns do
     n, pos = string.unpack('B', src, pos)
-    i, pos = Utils.unpack_num(src, pos, acc[n], ver)
+    i, pos = _utils.unpack_num(src, pos, acc[n], ver)
     if string.byte(src, pos) == 0 then graph.add(gr, ns[i]) end
     while string.byte(src, pos) ~= 0 do
       n, pos = string.unpack('B', src, pos)
-      j, pos = Utils.unpack_num(src, pos, acc[n], ver)
+      j, pos = _utils.unpack_num(src, pos, acc[n], ver)
       n, pos = string.unpack('B', src, pos)
-      w, pos = Utils.unpack_num(src, pos, acc[n], ver)
+      w, pos = _utils.unpack_num(src, pos, acc[n], ver)
       graph.add(gr, ns[i], ns[j], w)
     end
     pos = pos + 1
@@ -463,7 +459,7 @@ graph.add = function (self, n1, n2, w)
     g[n2][n1] = self._dir and g[n2][n1] or false
   end
 end
-about[graph.add] = {"G:add(n1, n2=nil, w_d=1)", "Add new node or edge."}
+_about[graph.add] = {"G:add(n1, n2=nil, w_d=1)", "Add new node or edge."}
 
 
 --- Import edges from list.
@@ -471,7 +467,7 @@ about[graph.add] = {"G:add(n1, n2=nil, w_d=1)", "Add new node or edge."}
 graph.addEdges = function (self, t)
   for _, v in ipairs(t) do graph.add(self, v[1], v[2], v[3]) end
 end
-about[graph.addEdges] = {"G:addEdges(list_t)",
+_about[graph.addEdges] = {"G:addEdges(list_t)",
   "Import edges and weights from list."}
 
 
@@ -481,7 +477,7 @@ graph.addNodes = function (self, t)
   local g = self._
   for _, v in ipairs(t) do g[v] = g[v] or {} end
 end
-about[graph.addNodes] = {"G:addNodes(list_t)",
+_about[graph.addNodes] = {"G:addNodes(list_t)",
   "Import nodes from list."}
 
 
@@ -503,8 +499,8 @@ graph.components = function (self)
   end
   return res
 end
-about[graph.components] = {"G:components() --> G_t",
-  "Get list of connected components.", help.OTHER}
+_about[graph.components] = {"G:components() --> G_t",
+  "Get list of connected components.", _help.OTHER}
 
 
 --- Combine several graphs into the single object.
@@ -527,8 +523,8 @@ graph.concat = function (self, gs)
   return res
 end
 graph.__concat = function (G1, G2) return graph:concat {G1, G2} end
-about[graph.concat] = {":concat(G_t) --> new_G",
-  "Combine graphs into one object.", help.OTHER}
+_about[graph.concat] = {":concat(G_t) --> new_G",
+  "Combine graphs into one object.", _help.OTHER}
 
 
 --- Make the graph copy.
@@ -542,8 +538,8 @@ graph.copy = function (self)
   end
   return res
 end
-about[graph.copy] = {"G:copy() --> cpy_G",
-  "Get copy of the graph.", help.OTHER}
+_about[graph.copy] = {"G:copy() --> cpy_G",
+  "Get copy of the graph.", _help.OTHER}
 
 
 --- Show graph structure in dot notation.
@@ -576,8 +572,8 @@ graph.dot = function (self, fname)
     return line
   end
 end
-about[graph.dot] = {"G:dot(fname_s=nil) --> str",
-  "Save or return graph structure in dot notation.", EXPORT}
+_about[graph.dot] = {"G:dot(fname_s=nil) --> str",
+  "Save or return graph structure in dot notation.", _tag.EXPORT}
 
 
 --- Get edge weight.
@@ -588,7 +584,7 @@ graph.edge = function (self, t)
   local n1, n2 = t[1], t[2]
   return g[n1] and (g[n1][n2] or (not self._dir and g[n2][n1]) or nil)
 end
-about[graph.edge] = {"G:edge(pair_t) --> weight_d|nil", "Get weight of the edge."}
+_about[graph.edge] = {"G:edge(pair_t) --> weight_d|nil", "Get weight of the edge."}
 
 
 --- Get list of edges.
@@ -605,14 +601,14 @@ graph.edges = function (self)
   end
   return res
 end
-about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
+_about[graph.edges] = {"G:edges() --> edges_t", "Get list of edges."}
 
 
 --- Check if the graph has node.
 --  @param n Node name.
 --  @return true when node found
 graph.has = function (self, n) return self._[n] and true or false end
-about[graph.has] = {"G:has(node) --> bool", "Check if the graph has the node."}
+_about[graph.has] = {"G:has(node) --> bool", "Check if the graph has the node."}
 
 
 --- Get adjucent input nodes.
@@ -633,7 +629,7 @@ graph.nin = function (self, node)
   end
   return res
 end
-about[graph.nin] = {"G:nin(node) --> nodes_t",
+_about[graph.nin] = {"G:nin(node) --> nodes_t",
   "Find adjucent input nodes."}
 
 
@@ -646,8 +642,8 @@ graph.isComplete = function (self)
   end
   return true
 end
-about[graph.isComplete] = {'G:isComplete() --> bool',
-  'Check completeness of the graph.', PROPERTY}
+_about[graph.isComplete] = {'G:isComplete() --> bool',
+  'Check completeness of the graph.', _tag.PROPERTY}
 
 
 --- Check if the graph is connected.
@@ -658,15 +654,15 @@ graph.isConnected = function (self)
   local c = _component(self, n)
   return _tblLen(self._) == _tblLen(c._)
 end
-about[graph.isConnected] = {"G:isConnected() --> bool",
-  "Check if the graph is connected.", PROPERTY}
+_about[graph.isConnected] = {"G:isConnected() --> bool",
+  "Check if the graph is connected.", _tag.PROPERTY}
 
 
 --- Check if the graph is directed.
 --  @return True if found directed edge.
 graph.isDirected = function (self) return self._dir end
-about[graph.isDirected] = {'G:isDirected() --> bool',
-  'Check if the graph is directed.', PROPERTY}
+_about[graph.isDirected] = {'G:isDirected() --> bool',
+  'Check if the graph is directed.', _tag.PROPERTY}
 
 
 --- Check if the graph has Euler circle.
@@ -692,8 +688,8 @@ graph.isEuler = function (self)
   table.sort(c)
   return c[#c] > 0 and (#c == 1 or c[#c-1] == 1)
 end
-about[graph.isEuler] = {"G:isEuler() --> bool",
-  "Check if the graph has Euler circle.", PROPERTY}
+_about[graph.isEuler] = {"G:isEuler() --> bool",
+  "Check if the graph has Euler circle.", _tag.PROPERTY}
 
 
 --- Check if the graph is tree.
@@ -704,8 +700,8 @@ graph.isTree = function (self)
   return n - m == 1
     and #graph.components(self) == 1
 end
-about[graph.isTree] = {'G:isTree() --> bool',
-  'Check if the graph is tree.', PROPERTY}
+_about[graph.isTree] = {'G:isTree() --> bool',
+  'Check if the graph is tree.', _tag.PROPERTY}
 
 
 --- Check if the graph has weights different from default value.
@@ -718,8 +714,8 @@ graph.isWeighted = function (self)
   end
   return false
 end
-about[graph.isWeighted] = {'G:isWeighted() --> bool',
-  'Check if any edge has weight different from 1.', PROPERTY}
+_about[graph.isWeighted] = {'G:isWeighted() --> bool',
+  'Check if any edge has weight different from 1.', _tag.PROPERTY}
 
 
 --- Get adjacency matrix.
@@ -738,8 +734,8 @@ graph.matrix = function (self)
   end
   return m, ns
 end
-about[graph.matrix] = {"G:matrix() --> adjacency_M, nodes_t",
-  "Get adjacency matrix and node list.", help.OTHER}
+_about[graph.matrix] = {"G:matrix() --> adjacency_M, nodes_t",
+  "Get adjacency matrix and node list.", _help.OTHER}
 
 
 --- Get graph nodes.
@@ -749,7 +745,7 @@ graph.nodes = function (self)
   for k in pairs(self._) do res[#res+1] = k end
   return res
 end
-about[graph.nodes] = {"G:nodes() --> node_t", "List of nodes."}
+_about[graph.nodes] = {"G:nodes() --> node_t", "List of nodes."}
 
 
 --- Get adjucent output nodes.
@@ -766,7 +762,7 @@ graph.nout = function (self, node)
   end
   return res
 end
-about[graph.nout] = {"G:nout(node) --> nodes_t",
+_about[graph.nout] = {"G:nout(node) --> nodes_t",
   "Find adjucent output nodes."}
 
 
@@ -810,8 +806,8 @@ graph.rand = function (self, N)
     end
   end
 end
-about[graph.rand] = {"G:rand(edge_N)",
-  "Fill graph with random edges.", help.OTHER}
+_about[graph.rand] = {"G:rand(edge_N)",
+  "Fill graph with random edges.", _help.OTHER}
 
 
 --- Generate random graph.
@@ -837,8 +833,8 @@ graph.randp = function (self, p)
     end
   end
 end
-about[graph.randp] = {"G:randp(probability_d)",
-  "Fill graph with random edges.", help.OTHER}
+_about[graph.randp] = {"G:randp(probability_d)",
+  "Fill graph with random edges.", _help.OTHER}
 
 
 --- Remove node or edge.
@@ -857,7 +853,7 @@ graph.remove = function (self, n1, n2)
     self._[n1] = nil
   end
 end
-about[graph.remove] = {"G:remove(n1, n2=nil)",
+_about[graph.remove] = {"G:remove(n1, n2=nil)",
   "Remove node or edge from the graph."}
 
 
@@ -865,8 +861,8 @@ about[graph.remove] = {"G:remove(n1, n2=nil)",
 --  @return Number of nodes.
 graph.size = function (self) return _tblLen(self._) end
 graph.__len = graph.size
-about[graph.size] = {"G:size() --> nodes_N",
-  "Get node number. Equal to #G.", help.OTHER}
+_about[graph.size] = {"G:size() --> nodes_N",
+  "Get node number. Equal to #G.", _help.OTHER}
 
 
 --- Save graph as svg image.
@@ -877,8 +873,8 @@ graph.toSvg = function (self, name)
   handle:write(graph.dot(self))
   handle:close()
 end
-about[graph.toSvg] = {"G:toSvg(name_s)",
-  "Convert graph to SVG image using Graphviz.", EXPORT}
+_about[graph.toSvg] = {"G:toSvg(name_s)",
+  "Convert graph to SVG image using Graphviz.", _tag.EXPORT}
 
 
 local search = {}
@@ -979,8 +975,8 @@ graph.search = function (self, a, b, method)
   local res = fn(self, a, b)
   return res and _getPath(res, b)
 end
-about[graph.search] = {"G:search(node1, node2, method_s) --> path_t|nil",
-  "Find path between two nodes. Methods are: bfs, dfs, dijkstra.", help.OTHER}
+_about[graph.search] = {"G:search(node1, node2, method_s) --> path_t|nil",
+  "Find path between two nodes. Methods are: bfs, dfs, dijkstra.", _help.OTHER}
 
 
 -- simplify constructor call
@@ -1008,13 +1004,15 @@ __call = function (self, t)
   end
   return g
 end})
-about[graph] = {" (params_t={}) --> new_G",
+_about[graph] = {" (params_t={}) --> new_G",
   "Create graph. Parameters are {dir=bool, O|K|C|P=number|names_t, name='n'}.",
-  help.NEW}
+  _help.NEW}
 
 
 -- Comment to remove descriptions
-graph.about = about
+graph.about = _about
+-- clear load data
+_tag = nil
 
 return graph
 

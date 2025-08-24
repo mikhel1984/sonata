@@ -44,12 +44,11 @@ ans = C.myConst               -->  nil
 --	LOCAL
 
 -- description
-local about = {
+local _about = {
 __module__ = "Collection of constants."
 }
 
-
-local PHY, ASTRO, MATH = "physics", "astronomy", "math"
+local _tag = { PHY="physics", ASTRO="astronomy", MATH="math" }
 
 
 --- Call error when user try to modify constant value
@@ -124,30 +123,29 @@ end
 
 
 -- physics
-about[_phy.G] = {".phy.G --> 6.7E-11", "Gravitational constant.", PHY}
-about[_phy.e] = {".phy.e --> 1.6E-19", "Electron charge.", PHY}
-about[_phy.mu0] = {".phy.mu0 --> 1.2E-6", "Permeability of free space.", PHY}
-about[_phy.R] = {".phy.R --> 8.31", "Universal gas constant.", PHY}
-about[_phy.Vm] = {".phy.Vm --> 2.2E-2", "Volume of one mole of ideal gas.", PHY}
-about[_phy.NA] = {".phy.NA --> 6E23", "Avogadro's number.", PHY}
-about[_phy.k] = {".phy.k --> 1.4E-23", "Boltzmann's constant.", PHY}
-about[_phy.h] = {".phy.h --> 6.6E-34", "Planck's constant.", PHY}
-about[_phy.c] = {".phy.c --> 3E8", "Speed of light.", PHY}
-about[_phy.g] = {".phy.g --> 9.81", "Acceleration of free fall.", PHY}
-about[_phy.eps0] = {".phy.eps0 --> 8.8E-12", "Permittivity of free space.", PHY}
-about[_phy.sigma] = {".phy.sigma --> 5.6E-8", "Stefan-Boltzmann constant.", PHY}
-about[_phy.Rinf] = {".phy.Rinf --> 1.1E7", "Rydberg constant.", PHY}
-about[_phy.Da] = {".phi.Da --> 1.7E-27", "Unified atomic mass unit.", PHY}
+_about[_phy.G] = {".phy.G --> 6.7E-11", "Gravitational constant.", _tag.PHY}
+_about[_phy.e] = {".phy.e --> 1.6E-19", "Electron charge.", _tag.PHY}
+_about[_phy.mu0] = {".phy.mu0 --> 1.2E-6", "Permeability of free space.", _tag.PHY}
+_about[_phy.R] = {".phy.R --> 8.31", "Universal gas constant.", _tag.PHY}
+_about[_phy.Vm] = {".phy.Vm --> 2.2E-2", "Volume of one mole of ideal gas.", _tag.PHY}
+_about[_phy.NA] = {".phy.NA --> 6E23", "Avogadro's number.", _tag.PHY}
+_about[_phy.k] = {".phy.k --> 1.4E-23", "Boltzmann's constant.", _tag.PHY}
+_about[_phy.h] = {".phy.h --> 6.6E-34", "Planck's constant.", _tag.PHY}
+_about[_phy.c] = {".phy.c --> 3E8", "Speed of light.", _tag.PHY}
+_about[_phy.g] = {".phy.g --> 9.81", "Acceleration of free fall.", _tag.PHY}
+_about[_phy.eps0] = {".phy.eps0 --> 8.8E-12", "Permittivity of free space.", _tag.PHY}
+_about[_phy.sigma] = {".phy.sigma --> 5.6E-8", "Stefan-Boltzmann constant.", _tag.PHY}
+_about[_phy.Rinf] = {".phy.Rinf --> 1.1E7", "Rydberg constant.", _tag.PHY}
+_about[_phy.Da] = {".phi.Da --> 1.7E-27", "Unified atomic mass unit.", _tag.PHY}
 -- astronomy
-about[_astro.pc] = {".astro.pc --> 3.1E16", "One parsec.", ASTRO}
-about[_astro.ly] = {".astro.ly --> 9.5E15", "One light year.", ASTRO}
-about[_astro.au] = {".astro.au --> 1.5E11", "Astronomic unit.", ASTRO}
-about[_astro.k] = {".astro.k --> 0.017", "Gaussian gravitational constant.", ASTRO}
+_about[_astro.pc] = {".astro.pc --> 3.1E16", "One parsec.", _tag.ASTRO}
+_about[_astro.ly] = {".astro.ly --> 9.5E15", "One light year.", _tag.ASTRO}
+_about[_astro.au] = {".astro.au --> 1.5E11", "Astronomic unit.", _tag.ASTRO}
+_about[_astro.k] = {".astro.k --> 0.017", "Gaussian gravitational constant.", _tag.ASTRO}
 -- mathematics
-about[_math.phi] = {".math.phi --> 1.62", "Golden ratio.", MATH}
-about[_math.e] = {".math.e --> 2.72", "Base of the natural logarithm.", MATH}
-about[_math.gamma] = {".math.gamma --> 0.577", "Euler-Mascheroni constant.", MATH}
-
+_about[_math.phi] = {".math.phi --> 1.62", "Golden ratio.", _tag.MATH}
+_about[_math.e] = {".math.e --> 2.72", "Base of the natural logarithm.", _tag.MATH}
+_about[_math.gamma] = {".math.gamma --> 0.577", "Euler-Mascheroni constant.", _tag.MATH}
 
 
 --- Make value "constant".
@@ -160,7 +158,7 @@ const.add = function (self, sName, val, sUnit)
   _user[sName] = val
   _user[sName..'_u_'] = sUnit
 end
-about[const.add] = {':add(name_s, value, units_s=nil)', 'Temporary define constant.'}
+_about[const.add] = {':add(name_s, value, units_s=nil)', 'Temporary define constant.'}
 
 
 --- Remove existing constant.
@@ -173,11 +171,11 @@ const.remove = function (self, sName)
   end
   return false
 end
-about[const.remove] = {':remove(name_s) --> bool', 'Delete user-defined constant.'}
+_about[const.remove] = {':remove(name_s) --> bool', 'Delete user-defined constant.'}
 
 
 -- Comment to remove descriptions
-const.about = about
+const.about = _about
 
 
 -- Make objects "immutable"
@@ -190,6 +188,9 @@ setmetatable(const.astro, {__newindex=_modifyError,
 setmetatable(const.math,  {__newindex=_modifyError,
   __index = function (t, k) return _math[k] or _unit_(_math, k) end})
 
+
+-- clear load data
+_tag = nil
 
 return const
 

@@ -130,18 +130,21 @@ ans = tm.A                  --.2> t0.A
 
 --	LOCAL
 
-local mabs, mmax, mmin = math.abs, math.max, math.min
 local GOLD = 1.6180339
 local TOL = 1E-4
 
-local inform = Sonata and Sonata.warning or print
+local _ext = {
+  -- matrix = require("matlib.matrix"),
+}
+
+local _abs, _max, _min = math.abs, math.max, math.min
+local _inform = Sonata and Sonata.warning or print
 
 
 --	INFO
 
-local help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Extremum search and optimization methods."
 }
 
@@ -170,7 +173,7 @@ local function _bracket (fun, a, b)
   while fb > fc do
     local r = (b-a)*(fb-fc)
     local q = (b-c)*(fb-fa)
-    local denom = 2*mmax(mabs(q-r), tiny)
+    local denom = 2*_max(_abs(q-r), tiny)
     local u = b - ((b-c)*q - (b-a)*r)/((q >= r) and denom or -denom)
     local ulim = b + limit*(c-b)
     if (b-u)*(u-c) > 0 then   -- parabolic u between b and c
@@ -299,7 +302,7 @@ local function _simplexExtra (p, y, psum, ihi, fac, fun)
   for j = 1, ndim do
     ptry[j] = psum[j]*fac1 - p[j][ihi]*fac2
   end
-  local ytry = fun(extremum.ext_matrix:V(ptry))
+  local ytry = fun(_ext.matrix:V(ptry))
   if ytry < y[ihi] then
     y[ihi] = ytry
     for j = 1, ndim do
@@ -328,8 +331,8 @@ end
 --  @param param Optimization parameters (matrices Au*x <= bu, Ae*x == be, Al*x >= bl).
 --  @return minimum point and function value.
 extremum._lpSimplex = function (c, param)
-  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
-  local mat = extremum.ext_matrix
+  _ext.matrix = _ext.matrix or require("matlib.matrix")
+  local mat = _ext.matrix
   local nu, ne, nl, nx = 0, 0, 0, c:cols()
   local As, bs, inter = param.Au, param.bu, nil
 
@@ -422,27 +425,27 @@ end
 --  @return point where function is minimal and its value.
 extremum._minBrent = function (fun, a, b, c)
   local imax, small, e, d = 100, 1E-30, 0, 0
-  a, c = mmin(a, c), mmax(a, c)
+  a, c = _min(a, c), _max(a, c)
   local x, w, v = b, b, b
   local fx = fun(x)
   local fv, fw = fx, fx
   for i = 1, imax do
     local xm = 0.5*(a+c)
-    local tol1 = TOL*mabs(x) + small
+    local tol1 = TOL*_abs(x) + small
     local tol2 = 2*tol1
-    if mabs(x-xm) <= (tol2-0.5*(c-a)) then
+    if _abs(x-xm) <= (tol2-0.5*(c-a)) then
       return x, fx
     end
     -- parabolic fit
     local upd = false
-    if mabs(e) > tol1 then
+    if _abs(e) > tol1 then
       local r = (x-w)*(fx-fv)
       local q = (x-v)*(fx-fw)
       local p = (x-v)*q - (x-w)*r
       q = 2*(q-r)
       if q > 0 then p = -p end
-      q = mabs(q)
-      if mabs(p) >= mabs(0.5*q*e) or p <= q*(a-x) or p >= q*(c-x) then
+      q = _abs(q)
+      if _abs(p) >= _abs(0.5*q*e) or p <= q*(a-x) or p >= q*(c-x) then
         upd = true
       else
         e, d = d, p/q
@@ -458,7 +461,7 @@ extremum._minBrent = function (fun, a, b, c)
       e = (x >= xm) and (a-x) or (c-x)
       d = (2-GOLD)*e
     end
-    local u = (mabs(d) >= tol1) and (x+d) or (x + (d >= 0 and tol1 or -tol1))
+    local u = (_abs(d) >= tol1) and (x+d) or (x + (d >= 0 and tol1 or -tol1))
     local fu = fun(u)
     if fu <= fx then
       if u >= x then a = x else c = x end
@@ -474,7 +477,7 @@ extremum._minBrent = function (fun, a, b, c)
       end
     end
   end
-  inform('Too many iterations')
+  _inform('Too many iterations')
   return x, fx
 end
 
@@ -488,7 +491,7 @@ end
 --  @return point where function is minimal and its value.
 extremum._minBrentD = function (fun, dfun, a, b, c)
   local imax, small, e, d = 100, 1E-30, 0, 0
-  a, c = mmin(a, c), mmax(a, c)
+  a, c = _min(a, c), _max(a, c)
   local x, w, v = b, b, b
   local fx = fun(x)
   local fv, fw = fx, fx
@@ -496,14 +499,14 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
   local dv, dw = dx, dx
   for i = 1, imax do
     local xm = 0.5*(a+c)
-    local tol1 = TOL*mabs(x) + small
+    local tol1 = TOL*_abs(x) + small
     local tol2 = 2*tol1
-    if mabs(x-xm) <= (tol2-0.5*(c-a)) then
+    if _abs(x-xm) <= (tol2-0.5*(c-a)) then
       return x, fx
     end
     -- parabolic fit
     local upd = true
-    if mabs(e) > tol1 then
+    if _abs(e) > tol1 then
       local d1 = 2*(c-a)
       local d2 = d1
       if dw ~= dx then d1 = (w-x)*dx/(dx-dw) end
@@ -515,11 +518,11 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
       b, e = e, d
       if ok1 or ok2 then
         if ok1 and ok2 then
-          d = (mabs(d1) < mabs(d2)) and d1 or d2
+          d = (_abs(d1) < _abs(d2)) and d1 or d2
         else
           d = ok1 and d1 or d2
         end
-        if mabs(d) <= mabs(0.5*b) then
+        if _abs(d) <= _abs(0.5*b) then
           b = x + d
           if (b-a < tol2) or (c-b < tol2) then
             d = (xm >= x) and tol1 or (-tol1)
@@ -533,7 +536,7 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
       d = 0.5*e
     end
     local u, fu = nil, nil
-    if mabs(d) >= tol1 then
+    if _abs(d) >= tol1 then
       u = x + d
       fu = fun(u)
     else
@@ -559,7 +562,7 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
       end
     end
   end
-  inform('Too many iterations')
+  _inform('Too many iterations')
   return x, fx
 end
 
@@ -573,13 +576,13 @@ end
 extremum._minGolden = function (fun, a, b, c)
   local gr, gc = GOLD-1, 2-GOLD
   local x0, x1, x2, x3 = a, nil, nil, c
-  if mabs(c-b) > mabs(b-a) then
+  if _abs(c-b) > _abs(b-a) then
     x1, x2 = b, b + gc*(c-b)
   else
     x2, x1 = b, b - gc*(b-a)
   end
   local f1, f2 = fun(x1), fun(x2)
-  while mabs(x3-x0) > TOL do
+  while _abs(x3-x0) > TOL do
     if f2 < f1 then
       x0, x1, x2 = x1, x2, gr*x2 + gc*x3
       f1, f2 = f2, fun(x2)
@@ -610,7 +613,7 @@ extremum._minGrad = function (fun, dfun, p)
   for i = 1, imax do
     local fp = fret
     p, xi, fret = _linmind(p, xi, fun, dfun)
-    if 2*mabs(fp - fret) <= TOL*(mabs(fret) + mabs(fp) + small) then
+    if 2*_abs(fp - fret) <= TOL*(_abs(fret) + _abs(fp) + small) then
       return p, fret
     end
     xi = dfun(p)
@@ -637,8 +640,8 @@ end
 --  @param p Initial point.
 --  @return minimum point and function value.
 extremum._minPowel = function (fun, p)
-  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
-  local mat = extremum.ext_matrix
+  _ext.matrix = _ext.matrix or require("matlib.matrix")
+  local mat = _ext.matrix
   local imax, small, n = 200, 1E-25, p:rows()
   local ximat = mat:eye(n)
   local fret = fun(p)
@@ -654,7 +657,7 @@ extremum._minPowel = function (fun, p)
         del, ibig = fprev, i
       end
     end
-    if 2*mabs(fp-fret) <= TOL*(mabs(fp) + mabs(fret) + small) then
+    if 2*_abs(fp-fret) <= TOL*(_abs(fp) + _abs(fret) + small) then
       return p, fret
     end
     -- extrapolated point
@@ -673,7 +676,7 @@ extremum._minPowel = function (fun, p)
     end
   end
   -- ignore when defined manually
-  inform("Too much iterations")
+  _inform("Too much iterations")
   return p, fret
 end
 
@@ -684,8 +687,8 @@ end
 --  @param pp List of bound points as a matrix.
 --  @return point where function is minimal and its value.
 extremum._simplex = function (fun, pp)
-  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
-  local mat = extremum.ext_matrix
+  _ext.matrix = _ext.matrix or require("matlib.matrix")
+  local mat = _ext.matrix
   local nmax, small = 500, 1E-10
   local y, psum = {}, {}
   for i = 1, pp:cols() do y[i] = fun(pp({}, i)) end
@@ -706,7 +709,7 @@ extremum._simplex = function (fun, pp)
         inhi = i
       end
     end
-    local rtol = 2*mabs(y[ihi]-y[ilo])/(mabs(y[ihi]) + mabs(y[ilo]) + small)
+    local rtol = 2*_abs(y[ihi]-y[ilo])/(_abs(y[ihi]) + _abs(y[ilo]) + small)
     if rtol < TOL then
       -- put the best point into the first element
       y[1], y[ilo] = y[ilo], y[1]
@@ -741,7 +744,7 @@ extremum._simplex = function (fun, pp)
       end
     end
   end
-  inform('Too mutch iterations')
+  _inform('Too mutch iterations')
   return p({}, 1), y[1]
 end
 
@@ -774,7 +777,7 @@ extremum.annealing = function (_, task)
   until temp <= TOL or e0 == 0
   return curr, e0
 end
-about[extremum.annealing] = {
+_about[extremum.annealing] = {
   ":annealing(task={energy=fn,update=fn,init=x0,T=energy(x0),alpha=0.9,loop=1}) -> x_M, energy_d",
   "Simulated annealing method."}
 
@@ -786,7 +789,8 @@ about[extremum.annealing] = {
 --  @param ys List of y values.
 --  @return table with parameters and sum of squares
 extremum.fit = function (_, fn, t0, xs, ys)
-  extremum.ext_matrix = extremum.ext_matrix or require("matlib.matrix")
+  _ext.matrix = _ext.matrix or require("matlib.matrix")
+  local mat = _ext.matrix
   local keys, v0 = {}, {}
   for k, w in pairs(t0) do
     keys[#keys+1] = k
@@ -804,14 +808,14 @@ extremum.fit = function (_, fn, t0, xs, ys)
     return s
   end
   -- find minimum
-  v0 = extremum.ext_matrix:V(v0)  -- reuse
+  v0 = _ext.matrix:V(v0)  -- reuse
   local vm, fmin = extremum._minPowel(test, v0)
   -- to table
   local tm = {}
   for i, k in ipairs(keys) do tm[k] = vm[i][1] end
   return tm, fmin
 end
-about[extremum.fit] = {
+_about[extremum.fit] = {
   ":fit(model_fn, param_t, xs_t, ys_t) --> minParam_t, sqSum_d",
   "Fit data with nonlinear model y = fn(x,t), where t is a parameter dictionary."}
 
@@ -829,7 +833,7 @@ extremum.maximum1D = function (_, fun, a, c, param)
   local xm, fm = extremum.minimum1D (_, function (x) return -fun(x) end, a, c, param)
   return xm, -fm
 end
-about[extremum.maximum1D] = {
+_about[extremum.maximum1D] = {
   ":maximum1D(fn, a_d, c_d, param={method='golden',b=millde,dfun=nil}) -> x_d, min_d",
   "Find maximum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method)."}
 
@@ -844,7 +848,7 @@ extremum.maximum = function (_, fun, p, param)
   local xm, fm = extremum.minimum (_, function (x) return -fun(x) end, p, param)
   return xm, -fm
 end
-about[extremum.maximum] = {
+_about[extremum.maximum] = {
   ":maximum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d",
   "Find maximum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach."}
 
@@ -870,7 +874,7 @@ extremum.minimum1D = function (_, fun, a, c, param)
     return extremum._minGolden(fun, a, b, c)
   end
 end
-about[extremum.minimum1D] = {
+_about[extremum.minimum1D] = {
   ":minimum1D(fn, a_d, c_d, param={method='golden',b=middle,dfun=nil}) -> x_d, min_d",
   "Find minimum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method)."}
 
@@ -893,7 +897,7 @@ extremum.minimum = function (_, fun, p, param)
     return extremum._simplex(fun, p)
   end
 end
-about[extremum.minimum] = {
+_about[extremum.minimum] = {
   ":minimum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d",
   "Find minimum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach."}
 
@@ -904,13 +908,13 @@ about[extremum.minimum] = {
 --  @param param List of parameters (matrices Au*x <= bu, Ae*x == be, Al*x >= bl).
 --  @return minimum point and function value.
 extremum.linprog = function (_, c, param) return extremum._lpSimplex(c, param) end
-about[extremum.linprog] = {
+_about[extremum.linprog] = {
   ":linprog(c_M, param={Au=nil,bu=nil,Ae=nil,be=nil,Al=nil,bl=nil}) -> x_M, min_d",
   "Solve LP problem c*x -> min with Au*x <= bu, Ae*x == be, Al*x >= bl."}
 
 
 -- Comment to remove descriptions
-extremum.about = about
+extremum.about = _about
 
 return extremum
 

@@ -193,17 +193,18 @@ ans = c[1]                  --.3>  0.909
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Cross = Ver.cross
-local Utils = Ver.utils
-Ver = Ver.versions
+local _ext = {
+  utils = require("matlib.utils"),
+  -- matrix = require("matlib.matrix"),  -- covariance
+}
 
+local _utils = _ext.utils.utils
+local _ver = _ext.utils.versions
 
-local STAT = 'statistics'
-local FILES = 'in/out'
-local LIST = 'lists'
-local REF = 'reference'
-local AUX = 'auxiliary'
+local _tag = { 
+  STAT='statistics', FILES='in/out', LIST='lists', 
+  REF='reference', AUX='auxiliary',
+}
 
 
 --- Add string bytes.
@@ -261,9 +262,9 @@ local function _listPack (src, acc)
     if type(v) == 'table' then
       t[#t+1] = v._pack and v:_pack(acc) or _listPack(v, acc)
     elseif type(v) == 'number' then
-      t[#t+1] = Utils.pack_num(v, acc)
+      t[#t+1] = _utils.pack_num(v, acc)
     elseif type(v) == 'string' then
-      t[#t+1] = Utils.pack_str(v, acc)
+      t[#t+1] = _utils.pack_str(v, acc)
     else
       error "Unable to pack"
     end
@@ -288,9 +289,9 @@ local function _listUnpack (src, pos, acc, ver)
       if key == '#' then
         t[#t+1], pos = _listUnpack(src, pos, acc, ver)
       elseif string.byte(key, 1) == 0x26 then  -- &
-        t[#t+1], pos = Utils.unpack_num(src, pos, key, ver)
+        t[#t+1], pos = _utils.unpack_num(src, pos, key, ver)
       elseif string.byte(key, 1) == 0x22 then  -- "
-        t[#t+1], pos = Utils.unpack_str(src, pos, key, ver)
+        t[#t+1], pos = _utils.unpack_str(src, pos, key, ver)
       else   -- Sonata object
         acc[n] = require('matlib.'..key)
         t[#t+1], pos = acc[n]._unpack(src, pos, acc, ver)
@@ -346,9 +347,9 @@ end
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Data processing and statistics."
 }
 
@@ -422,14 +423,14 @@ data.cov2 = data._cov2  -- DEPRECATED
 --  @param fn (=nil) Function to extract data.
 --  @return index and value.
 data.binsearch = function (_, t, val, fn)
-  local i, u = Utils.binsearch(t, val, fn)
+  local i, u = _utils.binsearch(t, val, fn)
   if u == val then
     return i, u  -- only when found
   end
 end
 mt_list.binsearch = _wrapCall(data.binsearch)
-about[data.binsearch] = {":binsearch(sorted_t, value, [extract_fn]) --> index_i, value",
-  "Find position of element in sorted list using binary search.", LIST}
+_about[data.binsearch] = {":binsearch(sorted_t, value, [extract_fn]) --> index_i, value",
+  "Find position of element in sorted list using binary search.", _tag.LIST}
 
 
 --- Make copy of a list wrapper.
@@ -460,16 +461,16 @@ data.corr = function(_, t1, t2)
   end
   return s12 / math.sqrt(s11*s22)
 end
-about[data.corr] = {":corr(xs_t, ys_t) --> float",
-  "Find correlation for two vectors.", STAT}
+_about[data.corr] = {":corr(xs_t, ys_t) --> float",
+  "Find correlation for two vectors.", _tag.STAT}
 
 
 --- Make copy of an object or list.
 --  @param v Source object.
 --  @return deep copy.
 data.copy = function (_, v) return _copyObj(v) end
-about[data.copy] = {":copy(t) --> copy_t",
-  "Make deep copy of the table.", help.OTHER}
+_about[data.copy] = {":copy(t) --> copy_t",
+  "Make deep copy of the table.", _help.OTHER}
 
 
 
@@ -481,8 +482,8 @@ data.cov = function (_, t)
   if N == 0 then
     error "Expected list of vectors"
   end
-  data.ext_matrix = data.ext_matrix or require('matlib.matrix')
-  local m = data.ext_matrix:zeros(N, N)
+  _ext.matrix = _ext.matrix or require('matlib.matrix')
+  local m = _ext.matrix:zeros(N, N)
   for i = 1, N do
     local ti = t[i]
     m[i][i] = data:_cov2(ti, ti)
@@ -494,8 +495,8 @@ data.cov = function (_, t)
   return m
 end
 mt_list.cov = _wrapCall(data.cov)
-about[data.cov] = {":cov(data_t) --> cov_M",
-  "Find covariance matrix for list of vectors.", STAT}
+_about[data.cov] = {":cov(data_t) --> cov_M",
+  "Find covariance matrix for list of vectors.", _tag.STAT}
 
 
 --- Save Lua table in file, use given delimiter.
@@ -512,8 +513,8 @@ data.csvwrite = function (_, t, sFile, char)
   f:close()
 end
 mt_list.csvwrite = _wrapCall(data.csvwrite)
-about[data.csvwrite] = {":csvwrite(data_t, file_s, delim_s=',')",
-  "Save Lua table as delimiter separated data into file.", FILES}
+_about[data.csvwrite] = {":csvwrite(data_t, file_s, delim_s=',')",
+  "Save Lua table as delimiter separated data into file.", _tag.FILES}
 
 
 --- Import data from text file, use given delimiter.
@@ -544,8 +545,8 @@ data.csvread = function (_, sFile, char)
   f:close()
   return res
 end
-about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
-  "Read delimiter separated data as Lua table.", FILES}
+_about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
+  "Read delimiter separated data as Lua table.", _tag.FILES}
 
 
 --- Find elements using condition.
@@ -554,7 +555,7 @@ about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 --  @return Table with the filtered elements.
 data.filter = function (_, t, vCond)
   local res = {}
-  if type(vCond) == 'string' then vCond = Utils.Fn(vCond, 1) end
+  if type(vCond) == 'string' then vCond = _utils.Fn(vCond, 1) end
   if type(vCond) == 'function' then
     -- boolean function
     for i = 1, #t do
@@ -570,9 +571,9 @@ data.filter = function (_, t, vCond)
   return res
 end
 mt_list.filter = _wrapList(data.filter)
-about[data.filter] = {":filter(in_t, fn|str|tbl) --> out_t",
+_about[data.filter] = {":filter(in_t, fn|str|tbl) --> out_t",
   "Get result of the table filtering. Condition is boolean function, string or table of weights.",
-  LIST}
+  _tag.LIST}
 
 
 --- Frequency of elements.
@@ -586,8 +587,8 @@ data.freq = function (_, t)
   return tmp
 end
 mt_list.freq = _wrapCall(data.freq)
-about[data.freq] = {":freq(data_t) --> tbl",
-  "Return table with frequencies of elements.", STAT}
+_about[data.freq] = {":freq(data_t) --> tbl",
+  "Return table with frequencies of elements.", _tag.STAT}
 
 
 --- Apply given function to elements of the list when condition is true.
@@ -596,9 +597,9 @@ about[data.freq] = {":freq(data_t) --> tbl",
 --  @param cond Condition function f(v,i) or string.
 --  @return obtained list.
 data.gen = function (_, t, fn, cond)
-  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
   -- condition function f(index, value)
-  if cond and type(cond) == 'string' then cond = Utils.Fn(cond, 2) end
+  if cond and type(cond) == 'string' then cond = _utils.Fn(cond, 2) end
   local q = {}
   if cond then
     for i, v in ipairs(t) do
@@ -610,9 +611,9 @@ data.gen = function (_, t, fn, cond)
   return q
 end
 mt_list.gen = _wrapList(data.gen)
-about[data.gen] = {":gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t",
+_about[data.gen] = {":gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t",
   "Make new list using given transformation. Optional condition function of the form f(value,index).",
-  LIST}
+  _tag.LIST}
 
 
 --- Geometrical mean.
@@ -635,8 +636,8 @@ data.geomean = function (_, t, tw)
   end
 end
 mt_list.geomean = _wrapCall(data.geomean)
-about[data.geomean] = {":geomean(data_t, weigh_t=nil) --> num",
-  "Geometrical mean.", STAT}
+_about[data.geomean] = {":geomean(data_t, weigh_t=nil) --> num",
+  "Geometrical mean.", _tag.STAT}
 
 
 --- Harmonic mean.
@@ -659,8 +660,8 @@ data.harmmean = function (_, t, tw)
   end
 end
 mt_list.harmmean = _wrapCall(harmmean)
-about[data.harmmean] = {":harmmean(data_t, weigh_t=nil) --> num",
-  "Harmonic mean.", STAT}
+_about[data.harmmean] = {":harmmean(data_t, weigh_t=nil) --> num",
+  "Harmonic mean.", _tag.STAT}
 
 
 --- Number of elements in each bin.
@@ -671,7 +672,7 @@ data.histcounts = function (_, t, rng)
   rng = rng or 10
   local bins = nil
   -- make copy and sort
-  local y = Ver.move(t, 1, #t, 1, {})
+  local y = _ver.move(t, 1, #t, 1, {})
   table.sort(y)
   -- prepare edges
   if type(rng) == 'number' then
@@ -704,8 +705,8 @@ data.histcounts = function (_, t, rng)
   return res, bins
 end
 mt_list.histcounts = _wrapCall(data.histcounts)
-about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
-  "Calculate amount of bins. Edges can be either number or table.", STAT}
+_about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
+  "Calculate amount of bins. Edges can be either number or table.", _tag.STAT}
 
 
 --- Find weights (1/0) based on condition.
@@ -713,7 +714,7 @@ about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t"
 --  @param fn Condition, boolean function or string.
 --  @return Table of 1 and 0.
 data.is = function (_, t, fn)
-  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 1 or 0
@@ -721,8 +722,8 @@ data.is = function (_, t, fn)
   return res
 end
 mt_list.is = _wrapList(data.is)
-about[data.is] = {":is(data_t, fn|str) --> weigh_t",
-  "Find weights using condition (boolean function or string).", LIST}
+_about[data.is] = {":is(data_t, fn|str) --> weigh_t",
+  "Find weights using condition (boolean function or string).", _tag.LIST}
 
 
 --- Find weights (1/0) based on inverted condition.
@@ -730,7 +731,7 @@ about[data.is] = {":is(data_t, fn|str) --> weigh_t",
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
 data.isNot = function (_, t, fn)
-  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 0 or 1
@@ -738,8 +739,8 @@ data.isNot = function (_, t, fn)
   return res
 end
 mt_list.isNot = _wrapList(data.isNot)
-about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
-  "Find inverted weights using condition (boolean function or string).", LIST}
+_about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
+  "Find inverted weights using condition (boolean function or string).", _tag.LIST}
 
 
 --- Maximum value.
@@ -753,8 +754,8 @@ data.max = function (_, t)
   return m, k
 end
 mt_list.max = _wrapCall(data.max)
-about[data.max] = {":max(data_t) --> var, ind_N",
-  "Maximal element and its index.", STAT}
+_about[data.max] = {":max(data_t) --> var, ind_N",
+  "Maximal element and its index.", _tag.STAT}
 
 
 --- Show data in Markdown-like table form.
@@ -779,7 +780,7 @@ data.md = function (_, data_t, names_t, fn)
     acc[#acc+1] = head  -- temporary add
   end
   -- save
-  local len = Utils.align(acc)
+  local len = _utils.align(acc)
   for j = 1, #len do line[j] = string.rep('-', len[j]) end
   local res, templ = {}, '| %s |'
   if names_t then
@@ -793,9 +794,9 @@ data.md = function (_, data_t, names_t, fn)
   return table.concat(res, '\n')
 end
 mt_list.md = _wrapCall(data.md)
-about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
+_about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.",
-  help.OTHER}
+  _help.OTHER}
 
 
 --- Average value.
@@ -816,8 +817,8 @@ data.mean = function (_, t, tw)
   end
 end
 mt_list.mean = _wrapCall(data.mean)
-about[data.mean] = {":mean(data_t, wight_t=nil) --> num",
-  "Calculate average value. Weights can be used.", STAT}
+_about[data.mean] = {":mean(data_t, wight_t=nil) --> num",
+  "Calculate average value. Weights can be used.", _tag.STAT}
 
 
 --- Find median.
@@ -825,7 +826,7 @@ about[data.mean] = {":mean(data_t, wight_t=nil) --> num",
 --  @return Value of median.
 data.median = function (_, t)
   local len = #t
-  local y = Ver.move(t, 1, len, 1, {})
+  local y = _ver.move(t, 1, len, 1, {})
   table.sort(y)
   if len % 2 == 1 then
     return y[(len+1)/2]
@@ -835,8 +836,8 @@ data.median = function (_, t)
   end
 end
 mt_list.median = _wrapCall(data.median)
-about[data.median] = {":median(data_t) --> num",
-  "Median of the list.", STAT}
+_about[data.median] = {":median(data_t) --> num",
+  "Median of the list.", _tag.STAT}
 
 
 --- Minimum value.
@@ -850,8 +851,8 @@ data.min = function (_, t)
   return m, k
 end
 mt_list.min = _wrapCall(data.min)
-about[data.min] = {":min(data_t) --> var, ind_N",
-  "Minimal element and its index.", STAT}
+_about[data.min] = {":min(data_t) --> var, ind_N",
+  "Minimal element and its index.", _tag.STAT}
 
 
 --- Central moment.
@@ -874,8 +875,8 @@ data.moment = function (_, t, N, tw)
   return mu / n
 end
 mt_list.moment = _wrapCall(data.moment)
-about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
-  "Central moment of order N, weights can be defined.", STAT}
+_about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
+  "Central moment of order N, weights can be defined.", _tag.STAT}
 
 
 --- Apply reduction rule to the list elements.
@@ -885,13 +886,13 @@ about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
 --  @return Result of reduction.
 data.reduce = function (_, t, fn, val)
   val = val or 0
-  if type(fn) == 'string' then fn = Utils.Fn(fn, 2) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn, 2) end
   for i = 1, #t do val = fn(val, t[i]) end
   return val
 end
 mt_list.reduce = _wrapCall(data.reduce)
-about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var",
-  "Apply function to its previous result and next element.", LIST}
+_about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var",
+  "Apply function to its previous result and next element.", _tag.LIST}
 
 
 --- Reverse list in place.
@@ -904,20 +905,20 @@ data.reverse = function (_, t)
   return dst
 end
 mt_list.reverse = function (self) data.reverse(nil, self._tbl); return self end
-about[data.reverse] = {":reverse(data_t)",
-  "Reverse table elements.", LIST}
+_about[data.reverse] = {":reverse(data_t)",
+  "Reverse table elements.", _tag.LIST}
 
 
 --- Sort elements in place.
 --  @param t List of elements.
 --  @param fn Comparison function or string.
 data.sort = function (_, t, fn)
-  if type(fn) == "string" then fn = Utils.Fn(fn, 2) end
+  if type(fn) == "string" then fn = _utils.Fn(fn, 2) end
   return _mergeSort(t, {}, 1, #t, fn)
 end
 mt_list.sort = function (self, fn) data.sort(nil, self._tbl, fn); return self end
-about[data.sort] = {":sort(data_t, fn|str)",
-  "Sort elements of the list", LIST}
+_about[data.sort] = {":sort(data_t, fn|str)",
+  "Sort elements of the list", _tag.LIST}
 
 
 --- Sum of all elements.
@@ -929,8 +930,8 @@ data.sum = function (_, t)
   return s
 end
 mt_list.sum = _wrapCall(data.sum)
-about[data.sum] = {":sum(data_t) --> var",
-  "Get sum of all elements.", STAT}
+_about[data.sum] = {":sum(data_t) --> var",
+  "Get sum of all elements.", _tag.STAT}
 
 
 --- Standard deviation and variance.
@@ -955,16 +956,16 @@ data.std = function (_, t, tw)
   return math.sqrt(disp)
 end
 mt_list.std = _wrapCall(data.std)
-about[data.std] = {":std(data_t, weight_t=nil) --> num",
-  "Standard deviation. Weights can be used.", STAT}
+_about[data.std] = {":std(data_t, weight_t=nil) --> num",
+  "Standard deviation. Weights can be used.", _tag.STAT}
 
 
 --- Make table of given size filled with zeros.
 --  @param ... Size list.
 --  @return table with zeros.
 data.zeros = function (_, ...) return _fillRest(0, ...) end
-about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl",
-  "Make table with zeros.", help.OTHER}
+_about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl",
+  "Make table with zeros.", _help.OTHER}
 
 
 --- Apply function of n arguments to n lists.
@@ -973,7 +974,7 @@ about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl",
 --  @return List of values fn(...).
 data.zip = function (_, fn, ...)
   local ag, res = {...}, {}
-  if type(fn) == 'string' then fn = Utils.Fn(fn, #ag) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn, #ag) end
   local x, stop = {}, false
   for i = 1, math.huge do
     for j = 1, #ag do
@@ -986,15 +987,15 @@ data.zip = function (_, fn, ...)
       end
     end
     if not stop then
-      res[i] = fn(Ver.unpack(x))
+      res[i] = fn(_ver.unpack(x))
     else
       break
     end
   end
   return res
 end
-about[data.zip] = {":zip(fn|str, ...) --> tbl",
-  "Sequentially apply function to list of tables.", LIST}
+_about[data.zip] = {":zip(fn|str, ...) --> tbl",
+  "Sequentially apply function to list of tables.", _tag.LIST}
 
 
 -- Constructor for the list wrapper.
@@ -1002,8 +1003,8 @@ setmetatable(data, {
 __call = function (self, t)
   return setmetatable({_tbl=t}, mt_list)
 end })
-about[data] = {" (data_t) --> new_L",
-  "Create list wrapper.", REF}
+_about[data] = {" (data_t) --> new_L",
+  "Create list wrapper.", _tag.REF}
 
 
 -- Methametods for the range of numbers.
@@ -1068,7 +1069,7 @@ end
 --  @param i Element index.
 --  @return Number.
 mt_range.__index = function (self, i)
-  if Ver.isInteger(i) and i > 0 and i <= self._N then
+  if _ver.isInteger(i) and i > 0 and i <= self._N then
     local v = 0
     if i < self._N then
       v = self._beg + (i-1)*self._step
@@ -1083,7 +1084,7 @@ end
 
 
 -- Range methods
-about["_rng"] = {"range: -R, R+x, R-x, k*R, R|fn", nil, AUX}
+_about["_rng"] = {"range: -R, R+x, R-x, k*R, R|fn", nil, _tag.AUX}
 
 
 --- Initialize range object.
@@ -1133,8 +1134,8 @@ data.range = function (_, dBegin, dEnd, dStep)
   -- result
   return mt_range._init(dBegin, dEnd, dStep, n)
 end
-about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
-  'Generate range object.', AUX}
+_about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
+  'Generate range object.', _tag.AUX}
 
 
 -- Get reference to data range in other table
@@ -1151,7 +1152,7 @@ local mt_ref = {
 --  @param i Element index.
 --  @return Table value.
 mt_ref.__index = function (self, i)
-  if Ver.isInteger(i) then
+  if _ver.isInteger(i) then
     local n = (i >= 0) and (i + self._beg) or (i + 1 + self._end)
     if self._beg < n and n <= self._end then
       return self._tbl[n]
@@ -1166,7 +1167,7 @@ end
 --  @param k Index.
 --  @param v Value.
 mt_ref.__newindex = function (self, k, v)
-  if Ver.isInteger(k) and 0 < k and (self._beg + k) <= self._end then
+  if _ver.isInteger(k) and 0 < k and (self._beg + k) <= self._end then
     k = k + self._beg
     if getmetatable(v) == mt_ref then
       -- copy data
@@ -1212,14 +1213,14 @@ mt_ref.__shr = function (ref, n) return mt_ref.shift(ref, n, n) end
 data.ref = function (_, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
-  assert(Ver.isInteger(iBeg) and Ver.isInteger(iEnd), "Wrong index type")
+  assert(_ver.isInteger(iBeg) and _ver.isInteger(iEnd), "Wrong index type")
   if getmetatable(t) == mt_ref then
     return setmetatable({_beg=t._beg+iBeg-1, _end=t._beg+iEnd, _tbl=t._tbl}, mt_ref)
   end
   return setmetatable({_beg=iBeg-1, _end=iEnd, _tbl=t}, mt_ref)
 end
-about[data.ref] = {':ref(data_t, begin_N=1, end_N=#src_t) --> new_R',
-  'Return reference to the range of elements.', REF}
+_about[data.ref] = {':ref(data_t, begin_N=1, end_N=#src_t) --> new_R',
+  'Return reference to the range of elements.', _tag.REF}
 
 
 -- Column reference
@@ -1264,11 +1265,11 @@ end
 --  @param n Column number.
 --  @return column reference.
 data.col = function (_, t, n)
-  assert(Ver.isInteger(n) and t[1][n], "Out of range")
+  assert(_ver.isInteger(n) and t[1][n], "Out of range")
   return setmetatable({_tbl=t, _n=n}, mt_col)
 end
-about[data.col] = {":col(src_t, col_N) --> ref_Col",
-  "Make column reference.", REF}
+_about[data.col] = {":col(src_t, col_N) --> ref_Col",
+  "Make column reference.", _tag.REF}
 
 
 -- Row reference
@@ -1309,11 +1310,11 @@ end
 --  @return column reference.
 data.row = function (_, t, n)
   local row = t[n]
-  assert(Ver.isInteger(n) and row, "Out of range")
+  assert(_ver.isInteger(n) and row, "Out of range")
   return setmetatable({_tbl=t, _row=row, _n=n}, mt_row)
 end
-about[data.row] = {":row(src_t, row_N) --> ref_Row",
-  "Make row reference.", REF}
+_about[data.row] = {":row(src_t, row_N) --> ref_Row",
+  "Make row reference.", _tag.REF}
 
 
 -- Collect data types for packing.
@@ -1353,8 +1354,8 @@ data.pack = function (self, v)
   t[#t+1] = string.pack('B', sum % 8)
   return table.concat(t)
 end
-about[data.pack] = {":pack(obj) --> bin_s",
-  "Pack object to binary string.", FILES}
+_about[data.pack] = {":pack(obj) --> bin_s",
+  "Pack object to binary string.", _tag.FILES}
 
 
 --- Convert binary string to Sonata object.
@@ -1384,12 +1385,14 @@ data.unpack = function (self, v)
     return types[1]._unpack(v, pos+1, types, ver)
   end
 end
-about[data.unpack] = {":unpack(bin_s) --> obj",
-  "Unpack object from binary string.", FILES}
+_about[data.unpack] = {":unpack(bin_s) --> obj",
+  "Unpack object from binary string.", _tag.FILES}
 
 
 -- Comment to remove descriptions
-data.about = about
+data.about = _about
+-- clear load data
+_tag = nil
 
 return data
 

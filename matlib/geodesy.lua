@@ -109,21 +109,19 @@ ans = p4.B                  --.2>  p1.B
 
 --	LOCAL
 
-local Vatan2, Calc do
-  local lib = require("matlib.utils")
-  Vatan2 = lib.versions.atan2
-  Calc = lib.calc
-end
+local _calc = require("matlib.utils")
+local _atan2 = _calc.versions.atan2
+_calc = _calc.calc
 
 -- categories
-local PROB, TRANS, PROJ = "problems", "transform", "projection"
+local _tag = { PROB="problems", TRANS="transform", PROJ="projection" }
 
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Coordinate transformations and other geodetic tasks."
 }
 
@@ -265,7 +263,6 @@ ellipsoid._molodensky = function (E, dx, dy, dz, da, df, t)
 end
 
 
-
 --- Prepare coefficients for UTM transformations.
 --  @param E Ellipsoid object.
 ellipsoid._setUtmArrays = function (E)
@@ -339,14 +336,14 @@ ellipsoid.bl2utm = function (self, t)
   local alpha, e = self.utmAlpha, math.sqrt(self.e2)
   local clon = math.cos(lon)
   local tau, slat = math.tan(lat), math.sin(lat)
-  local n1 = Calc.sinh( e*Calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
+  local n1 = _calc.sinh( e*_calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
   local tau1 = tau*math.sqrt(1+n1*n1) - n1*math.sqrt(1+tau*tau)
-  local xi1 = Vatan2(tau1, clon)
-  local eta1 = Calc.asinh(math.sin(lon) / math.sqrt(tau1*tau1 + clon*clon))
+  local xi1 = _atan2(tau1, clon)
+  local eta1 = _calc.asinh(math.sin(lon) / math.sqrt(tau1*tau1 + clon*clon))
   local xi, eta, p1, q1 = xi1, eta1, 1, 0
   for i = 1, 6 do
     local sxi, cxi = math.sin(2*i*xi1), math.cos(2*i*xi1)
-    local seta, ceta = Calc.sinh(2*i*eta1), Calc.cosh(2*i*eta1)
+    local seta, ceta = _calc.sinh(2*i*eta1), _calc.cosh(2*i*eta1)
     xi  =  xi + alpha[i] * sxi * ceta
     eta = eta + alpha[i] * cxi * seta
     p1  =  p1 + 2*i*alpha[i] * cxi * ceta
@@ -394,7 +391,7 @@ ellipsoid.solveDir = function (self, t1, dA, dist)
   local sU1, cU1 = math.sin(U1), math.cos(U1)
   local ca1, sa1 = math.cos(math.rad(dA)), math.sin(math.rad(dA))
   -- prepare iterations
-  local sig1 = Vatan2(math.tan(U1), ca1) * 2  -- multiplied sigma1
+  local sig1 = _atan2(math.tan(U1), ca1) * 2  -- multiplied sigma1
   local alsin = cU1*sa1
   local alcos2 = 1 - alsin*alsin
   local A, B = _vincentyAB(self.e2, alcos2)
@@ -411,13 +408,13 @@ ellipsoid.solveDir = function (self, t1, dA, dist)
   until math.abs(prev - sig) < 1E-9
   -- result
   local csig = math.cos(sig)
-  local B2 = Vatan2(
+  local B2 = _atan2(
     sU1*csig + cU1*ssig*ca1,
     (1-self.f)*math.sqrt(1 - alcos2 + (sU1*ssig - cU1*csig*ca1)^2))
   local C = self.f / 16 * alcos2 * (4 + self.f*(4 - 3*alcos2))
-  local L = Vatan2(ssig*sa1, cU1*csig-sU1*ssig*sa1)
+  local L = _atan2(ssig*sa1, cU1*csig-sU1*ssig*sa1)
     -(1-C)*self.f*alsin*(sig + C*ssig*(csigm + C*csig*(-1 + 2*csigm*csigm))) -- lambda-...
-  local azimuth2 = Vatan2(alsin, -sU1*ssig + cU1*csig*ca1)
+  local azimuth2 = _atan2(alsin, -sU1*ssig + cU1*csig*ca1)
   return {B = math.deg(B2), L = t1.L + math.deg(L)}, math.deg(azimuth2)
 end
 
@@ -441,7 +438,7 @@ ellipsoid.solveInv = function (self, t1, t2)
   repeat
     ssig = math.sqrt((cU2*math.sin(lam))^2 + (cU1*sU2-sU1*cU2*math.cos(lam))^2)
     csig = sU1*sU2 + cU1*cU2*math.cos(lam)
-    sig = Vatan2(ssig, csig)
+    sig = _atan2(ssig, csig)
     local alsin = cU1*cU2*math.sin(lam) / ssig
     alcos2 = 1 - alsin*alsin
     csigm = csig - 2*sU1*sU2 / alcos2
@@ -455,9 +452,9 @@ ellipsoid.solveInv = function (self, t1, t2)
   local dsig = B*ssig*(csigm + B/4*(csig*(-1 + 2*csigm*csigm)
     -B/6*csigm*(-3 + 4*ssig*ssig)*(-3 + 4*csigm*csigm)))
   local dist = self.b * A * (sig - dsig)
-  local azimuth1 = Vatan2(
+  local azimuth1 = _atan2(
     cU2*math.sin(lam), cU1*sU2 - sU1*cU2*math.cos(lam))
-  local azimuth2 = Vatan2(
+  local azimuth2 = _atan2(
     cU1*math.sin(lam), -sU1*cU2 + cU1*sU2*math.cos(lam))
   return dist, math.deg(azimuth1), math.deg(azimuth2)
 end
@@ -486,7 +483,7 @@ ellipsoid.toBLH = function (self, t)
         (D - self.e2 * self.a * math.cos(theta)^3)
     end
     B = math.atan(tg)
-    L = Vatan2(Y, X)
+    L = _atan2(Y, X)
     local N = _radiusVertical(self, B)
     if math.abs(tg) > 1 then
       H = Z / math.sin(B) - (1 - self.e2) * N
@@ -530,20 +527,20 @@ ellipsoid.utm2bl = function (self, t)
   local xi1, eta1, p, q = xi, eta, 1, 0
   for j = 1, 6 do
     local sxi, cxi = math.sin(2*j*xi), math.cos(2*j*xi)
-    local seta, ceta = Calc.sinh(2*j*eta), Calc.cosh(2*j*eta)
+    local seta, ceta = _calc.sinh(2*j*eta), _calc.cosh(2*j*eta)
     xi1  = xi1 - beta[j] * sxi * ceta
     eta1 = eta1 - beta[j] * cxi * seta
     p    = p - 2*j*beta[j] * cxi * ceta
     q    = q - 2*j*beta[j] * sxi * seta
   end
-  local sheta1 = Calc.sinh(eta1)
+  local sheta1 = _calc.sinh(eta1)
   local cxi1 =  math.cos(xi1)
   local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
   local taui = tau1
   -- find latitude
   repeat
     local sqrti = math.sqrt(1 + taui*taui)
-    local si = Calc.sinh( e*Calc.atanh(e*taui/sqrti) )
+    local si = _calc.sinh( e*_calc.atanh(e*taui/sqrti) )
     local taui1 = taui*math.sqrt(1+si*si) - si*sqrti
     local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) *
       (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)
@@ -557,7 +554,7 @@ ellipsoid.utm2bl = function (self, t)
   local l0 = (t.zone-1)*6 - 177
   local res = {
     B = math.deg(lat),
-    L = math.deg(Vatan2(sheta1, cxi1)) + l0,
+    L = math.deg(_atan2(sheta1, cxi1)) + l0,
     H = t.H or 0,
   }
   return res, scale
@@ -586,8 +583,8 @@ geodesy.__index = geodesy
 geodesy.dms2deg = function (_, d, m, s)
   return d + (m or 0) / 60 + (s or 0) / 3600
 end
-about[geodesy.dms2deg] = {":dms2deg(deg_d, min_d=0, sec_d=0) --> deg",
-  "Convert degrees, minutes and seconds to degrees.", help.OTHER}
+_about[geodesy.dms2deg] = {":dms2deg(deg_d, min_d=0, sec_d=0) --> deg",
+  "Convert degrees, minutes and seconds to degrees.", _help.OTHER}
 
 
 --- Convert degrees to degrees-minutes-seconds.
@@ -599,8 +596,8 @@ geodesy.deg2dms = function (_, d)
   local sec = 3600 * (d - deg) - 60 * min
   return deg, min, sec
 end
-about[geodesy.deg2dms] = {":deg2dms(deg_d) --> deg, min, sec",
-  "Return degrees, minutes and seconds for the given angle value.", help.OTHER}
+_about[geodesy.deg2dms] = {":deg2dms(deg_d) --> deg, min, sec",
+  "Return degrees, minutes and seconds for the given angle value.", _help.OTHER}
 
 
 --- International gravity formula (WGS).
@@ -611,8 +608,8 @@ geodesy.grav = function (_, dB)
   s = s * s  -- get square
   return 9.780327*(1 + s*(0.0052792 + 0.0000232*s))
 end
-about[geodesy.grav] = {":grav(latitude_d) --> acceleration",
-  "International gravity formula, angle in degrees.", help.OTHER}
+_about[geodesy.grav] = {":grav(latitude_d) --> acceleration",
+  "International gravity formula, angle in degrees.", _help.OTHER}
 
 
 
@@ -652,8 +649,8 @@ geodesy.hashDecode = function (_, sHash)
   return {B = (latMin+latMax)*0.5, L = (lonMin+lonMax)*0.5},
          {latMax - latMin, lonMax - lonMin}
 end
-about[geodesy.hashDecode] = {":hashDecode(hash_s) --> coord_t, range_t",
-  "Find central point and range of the zone.", PROJ}
+_about[geodesy.hashDecode] = {":hashDecode(hash_s) --> coord_t, range_t",
+  "Find central point and range of the zone.", _tag.PROJ}
 
 
 --- Geohash from coordinates
@@ -694,55 +691,55 @@ geodesy.hashEncode = function (_, t, N)
   end
   return table.concat(hash)
 end
-about[geodesy.hashEncode] = {":hashEncode(coord_t, letter_N=6) --> hash_s",
-  "Find hash for the given point.", PROJ}
+_about[geodesy.hashEncode] = {":hashEncode(coord_t, letter_N=6) --> hash_s",
+  "Find hash for the given point.", _tag.PROJ}
 
 
 -- Access to the ellipsoid object methods.
 geodesy.toXYZ = ellipsoid.toXYZ
-about[geodesy.toXYZ] = {"E:toXYZ(blh_t) --> xyz_t",
-  "Transform Geodetic coordinates to Cartesian.", TRANS}
+_about[geodesy.toXYZ] = {"E:toXYZ(blh_t) --> xyz_t",
+  "Transform Geodetic coordinates to Cartesian.", _tag.TRANS}
 
 
 geodesy.toBLH = ellipsoid.toBLH
-about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t",
-  "Transform Cartesian coordinates to Geodetic.", TRANS}
+_about[geodesy.toBLH] = {"E:toBLH(xyz_t) --> blh_t",
+  "Transform Cartesian coordinates to Geodetic.", _tag.TRANS}
 
 
 geodesy.utm2bl = ellipsoid.utm2bl
-about[geodesy.utm2bl] = {"E:utm2bl(utm_t) --> blh_t",
-  "Find Geodetic coordinates for the given UTM pose and zone.", PROJ}
+_about[geodesy.utm2bl] = {"E:utm2bl(utm_t) --> blh_t",
+  "Find Geodetic coordinates for the given UTM pose and zone.", _tag.PROJ}
 
 
 geodesy.bl2utm = ellipsoid.bl2utm
-about[geodesy.bl2utm] = {"E:bl2utm(blh_t) --> utm_t",
-  "Find UTM projection for the given coordinates.", PROJ}
+_about[geodesy.bl2utm] = {"E:bl2utm(blh_t) --> utm_t",
+  "Find UTM projection for the given coordinates.", _tag.PROJ}
 
 
 geodesy.solveDir = ellipsoid.solveDir
-about[geodesy.solveDir] = {"E:solveDir(blh_t, az1_d, dist_d) --> blh_t, az2_d",
+_about[geodesy.solveDir] = {"E:solveDir(blh_t, az1_d, dist_d) --> blh_t, az2_d",
   "Solve direct geodetic problem, find second point position and its orientation if the first point, azimuth and distance are given.",
-  PROB}
+  _tag.PROB}
 
 
 geodesy.solveInv = ellipsoid.solveInv
-about[geodesy.solveInv] = {"E:solveInv(blh1_t, blh2_t) --> dist_d, az1_d, az2_d",
+_about[geodesy.solveInv] = {"E:solveInv(blh1_t, blh2_t) --> dist_d, az1_d, az2_d",
   "Solve inverse geodetic problem, find distance and azimuths for two points.",
-  PROB}
+  _tag.PROB}
 
 
 geodesy.into = ellipsoid.into
-about[geodesy.into] = {"E:into(E2, lin, rot, m)",
- "Define transormation rules between ellipsoids.", TRANS}
+_about[geodesy.into] = {"E:into(E2, lin, rot, m)",
+ "Define transormation rules between ellipsoids.", _tag.TRANS}
 
 
 geodesy.xyzInto = 'A.xyzInto[B]'
-about[geodesy.xyzInto] = {"E.xyzInto[E2] --> fn",
-  "Get function to transform coordinates from E to E2 system.", TRANS}
+_about[geodesy.xyzInto] = {"E.xyzInto[E2] --> fn",
+  "Get function to transform coordinates from E to E2 system.", _tag.TRANS}
 geodesy.blhInto = 'A.blhInto[B]'
-about[geodesy.blhInto] = {"E.blhInto[E2] --> fn",
+_about[geodesy.blhInto] = {"E.blhInto[E2] --> fn",
   "Get function to transform geodetic coordinates from E to E2 system using the Molodensky method.",
-  TRANS}
+  _tag.TRANS}
 
 
 setmetatable(geodesy, {
@@ -760,12 +757,14 @@ __call = function (_, t)
     J2 = 1.081874E-3,      -- dynamic form factor
   }
 end })
-about[geodesy] = {" (param_t=nil) --> E",
-  "Produce ellipsoid with the given params {'a', 'f'}.", help.STATIC}
+_about[geodesy] = {" (param_t=nil) --> E",
+  "Produce ellipsoid with the given params {'a', 'f'}.", _help.STATIC}
 
 
 -- Comment to remove descriptions
-geodesy.about = about
+geodesy.about = _about
+-- clear load data
+_tag = nil
 
 return geodesy
 

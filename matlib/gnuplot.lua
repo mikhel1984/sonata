@@ -108,12 +108,12 @@ f:show()
 
 --	LOCAL
 
-local isWindows = package.config:sub(1,1) == '\\'
 local TEMP = '\\AppData\\Local\\VirtualStore'
+local _iswindows = package.config:sub(1,1) == '\\'
 
 
 -- special commands
-local special = {
+local _special = {
   output = function (s) return string.format("set output '%s'", s) end,
   xlabel = function (s) return string.format("set xlabel '%s'", s) end,
   ylabel = function (s) return string.format("set ylabel '%s'", s) end,
@@ -122,7 +122,7 @@ local special = {
 
 
 -- main commands
-local main = {
+local _main = {
   string  = function (x,y) return string.format('set %s %s', x, y) end,
   number  = function (x,y) return string.format('set %s %d', x, y) end,
   table   = function (x,y)
@@ -139,8 +139,8 @@ local main = {
 --  @param v Value.
 --  @return String with command.
 local function _command (k,v)
-  local spc = special[k]
-  return spc and spc(v) or main[type(v)](k,v)
+  local spc = _special[k]
+  return spc and spc(v) or _main[type(v)](k,v)
 end
 
 
@@ -157,9 +157,9 @@ end
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Interface for calling Gnuplot from Sonata."
 }
 
@@ -201,7 +201,7 @@ local function _fn2file (fn, tBase)
     end
   end
   f:close()
-  if isWindows then
+  if _iswindows then
     name = string.format(
       '%s%s%s', os.getenv('userprofile'), TEMP, name)
   end
@@ -234,7 +234,7 @@ local function _lst2file (t1, t2, fn)
     for i, v1 in ipairs(t1) do f:write(i, ' ', v1, '\n') end
   end
   f:close()
-  if isWindows then
+  if _iswindows then
     name = string.format(
       '%s%s%s', os.getenv('userprofile'), TEMP, name)
   end
@@ -254,7 +254,7 @@ local function _mat2file (t)
     f:write('\n')
   end
   f:close()
-  if isWindows then
+  if _iswindows then
     name = string.format(
       '%s%s%s', os.getenv('userprofile'), TEMP, name)
   end
@@ -273,7 +273,7 @@ local function _tbl2file (t)
     f:write('\n')
   end
   f:close()
-  if isWindows then
+  if _iswindows then
     name = string.format(
       '%s%s%s', os.getenv('userprofile'), TEMP, name)
   end
@@ -353,7 +353,7 @@ gnuplot._new = function () return setmetatable({}, gnuplot) end
 --- Add new curve to the plot.
 --  @param tCurve Table with function/table and parameters.
 gnuplot.add = function (self, tCurve) self[#self+1] = tCurve end
-about[gnuplot.add] = {"G:add(curve_v)", "Add new curve to figure."}
+_about[gnuplot.add] = {"G:add(curve_v)", "Add new curve to figure."}
 
 
 --- Get copy of graph options.
@@ -371,7 +371,7 @@ gnuplot.copy = function (self)
   end
   return cp
 end
-about[gnuplot.copy] = {"G:copy() --> cpy_G", "Get copy of the plot options."}
+_about[gnuplot.copy] = {"G:copy() --> cpy_G", "Get copy of the plot options."}
 
 
 --- Matlab-like plotting
@@ -402,7 +402,7 @@ gnuplot.plot = function (_, ...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..])",
+_about[gnuplot.plot] = {":plot(x1_t, [y1_t, nm_s, x2_t,..])",
   "'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 
@@ -428,7 +428,7 @@ gnuplot.polarplot = function(_, ...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.polarplot] = {':polarplot(x1_t, y1_t, [nm_s, x2_t, y2_t,..])',
+_about[gnuplot.polarplot] = {':polarplot(x1_t, y1_t, [nm_s, x2_t, y2_t,..])',
   "Make polar plot. 'x' is list of numbers, 'y' is either list or functin, 'nm' - curve name."}
 
 
@@ -460,7 +460,7 @@ gnuplot.show = function (self)
   handle:write(res, '\n')
   handle:close()
 end
-about[gnuplot.show] = {"G:show()", "Plot data, represented as Lua table." }
+_about[gnuplot.show] = {"G:show()", "Plot data, represented as Lua table." }
 
 
 --- Surface plot.
@@ -484,7 +484,7 @@ gnuplot.surfplot = function(_, ...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..])',
+_about[gnuplot.surfplot] = {':surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..])',
   "Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name."}
 
 
@@ -505,7 +505,7 @@ gnuplot.tplot = function (_, v, ...)
   cmd.grid = true
   cmd:show()
 end
-about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..])",
+_about[gnuplot.tplot] = {":tplot(var, [x_N, y1_N, y2_N,..])",
   "Plot table, matrix or data file. Optional elements define columns."}
 
 
@@ -527,7 +527,7 @@ gnuplot.tpolar = function (_, v, ...)
   cmd.grid = 'polar'
   cmd:show()
 end
-about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..])",
+_about[gnuplot.tpolar] = {":tpolar(var, [x_N, y1_N, y2_N,..])",
   "Polar plot for table, matrix or data file. Optional elements define columns."}
 
 
@@ -548,17 +548,17 @@ gnuplot.tsurf = function (_, v, ...)
   cmd.surface = true
   cmd:show()
 end
-about[gnuplot.tsurf] = {":tsurf(var, [x_N, y_N, z1_N, z2_N,..])",
+_about[gnuplot.tsurf] = {":tsurf(var, [x_N, y_N, z1_N, z2_N,..])",
   "Surface plot for table, matrix or data file. Optional elements define columns."}
 
 
 -- constructor
 setmetatable(gnuplot, {__call=function (_) return gnuplot._new() end})
-about[gnuplot] = {" () --> new_G", "Prepare Gnuplot object.", help.NEW}
+_about[gnuplot] = {" () --> new_G", "Prepare Gnuplot object.", _help.NEW}
 
 
 gnuplot.keys = 'keys'
-about[gnuplot.keys] = {'.keys',
+_about[gnuplot.keys] = {'.keys',
 [[  Options / examples:
 {math.sin, title='sin'}       -- plot using function, define in Lua; add legend
 {'sin.dat', ln=1, lw=2}       -- plot data from file, use given color and width
@@ -584,7 +584,7 @@ raw='set pm3d'                -- set Gnuplot options manually
 
 
 -- Comment to remove descriptions
-gnuplot.about = about
+gnuplot.about = _about
 
 return gnuplot
 
