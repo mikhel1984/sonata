@@ -55,17 +55,18 @@ ans = math.deg(PI)          --.2>  180.0
 
 --	LOCAL
 
-local TRIG = 'trigonometry'
-local HYP = 'hyperbolic'
-local AUX = 'auxiliary'
+local _tag = { TRIG='trigonometry', HYP='hyperbolic', AUX='auxiliary' }
 
 
 -- compatibility
-local Ver = require("matlib.utils")
-local Cross = Ver.cross
-local Utils = Ver.utils
-local Calc = Ver.calc
-Ver = Ver.versions
+local _ext = {
+  utils = require("matlib.utils"),
+  -- ap = require("matlib.asciiplot"),
+}
+
+local _calc = _ext.utils.calc
+local _round = _ext.utils.cross.round
+local _fn = _ext.utils.utils.Fn
 
 
 --- Call default or module-specific function.
@@ -87,7 +88,7 @@ end
 --	INFO
 
 -- description
-local about = {
+local _about = {
 __module__ = "Lua based mathematics."
 }
 
@@ -99,46 +100,46 @@ local main = {}
 
 -- Commonly used methods
 abs = _call(math.abs, 'abs')
-about[abs] = {"abs(x) --> y", "Absolute value."}
+_about[abs] = {"abs(x) --> y", "Absolute value."}
 exp = _call(math.exp, 'exp')
-about[exp] = {"exp(x) --> y", "Exponent."}
+_about[exp] = {"exp(x) --> y", "Exponent."}
 log = _call(math.log, 'log')
-about[log] = {"log(x) --> y", "Natural logarithm."}
+_about[log] = {"log(x) --> y", "Natural logarithm."}
 sqrt = _call(math.sqrt, 'sqrt')
-about[sqrt] = {"sqrt(x) --> y", "Square root."}
+_about[sqrt] = {"sqrt(x) --> y", "Square root."}
 
 -- Trigonometrical
 sin = _call(math.sin, 'sin')
-about[sin] = {"sin(x) --> y", "Sine.", TRIG}
+_about[sin] = {"sin(x) --> y", "Sine.", _tag.TRIG}
 cos = _call(math.cos, 'cos')
-about[cos] = {"cos(x) --> y", "Cosine.", TRIG}
+_about[cos] = {"cos(x) --> y", "Cosine.", _tag.TRIG}
 tan = _call(math.tan, 'tan')
-about[tan] = {"tan(x) --> y", "Tangent.", TRIG}
+_about[tan] = {"tan(x) --> y", "Tangent.", _tag.TRIG}
 asin = _call(math.asin, 'asin')
-about[asin] = {"asin(x) --> y", "Inverse sine.", TRIG}
+_about[asin] = {"asin(x) --> y", "Inverse sine.", _tag.TRIG}
 acos = _call(math.acos, 'acos')
-about[acos] = {"acos(x) --> y", "Inverse cosine x.", TRIG}
+_about[acos] = {"acos(x) --> y", "Inverse cosine x.", _tag.TRIG}
 atan = _call(math.atan, 'atan')
-about[atan] = {"atan(x) --> y", "Inverse tangent x.", TRIG}
-atan2 = Ver.atan2
-about[atan2] = {"atan2(y_d, x_d) --> num",
-  "Inverse tangent of y/x, use signs.", TRIG}
+_about[atan] = {"atan(x) --> y", "Inverse tangent x.", _tag.TRIG}
+atan2 = _ext.utils.versions.atan2
+_about[atan2] = {"atan2(y_d, x_d) --> num",
+  "Inverse tangent of y/x, use signs.", _tag.TRIG}
 
 -- Hyperbolic
-cosh = _call(Calc.cosh, 'cosh')
-about[cosh] = {"cosh(x) --> y", "Hyperbolic cosine.", HYP}
-sinh = _call(Calc.sinh, 'sinh')
-about[sinh] = {"sinh(x) --> y", "Hyperbolic sinus.", HYP}
-tanh = _call(Calc.tanh, 'tanh')
-about[tanh] = {"tanh(x) --> y", "Hyperbolic tangent.", HYP}
+cosh = _call(_calc.cosh, 'cosh')
+_about[cosh] = {"cosh(x) --> y", "Hyperbolic cosine.", _tag.HYP}
+sinh = _call(_calc.sinh, 'sinh')
+_about[sinh] = {"sinh(x) --> y", "Hyperbolic sinus.", _tag.HYP}
+tanh = _call(_calc.tanh, 'tanh')
+_about[tanh] = {"tanh(x) --> y", "Hyperbolic tangent.", _tag.HYP}
 
 -- Hyperbolic inverse
-asinh = _call(Calc.asinh, 'asinh')
-about[asinh] = {"asinh(x) --> y", "Hyperbolic inverse sine.", HYP}
-acosh = _call(Calc.acosh, 'acosh')
-about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", HYP}
-atanh = _call(Calc.atanh, 'atanh')
-about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", HYP}
+asinh = _call(_calc.asinh, 'asinh')
+_about[asinh] = {"asinh(x) --> y", "Hyperbolic inverse sine.", _tag.HYP}
+acosh = _call(_calc.acosh, 'acosh')
+_about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", _tag.HYP}
+atanh = _call(_calc.atanh, 'atanh')
+_about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", _tag.HYP}
 
 
 --- Check equality.
@@ -153,7 +154,7 @@ eq = function (x, y)
   end
   return x == y
 end
-about[eq] = {"eq(x, y) --> bool", "Check equality of two objects."}
+_about[eq] = {"eq(x, y) --> bool", "Check equality of two objects."}
 
 
 --- Convert object to float number if possible.
@@ -168,7 +169,7 @@ float = function (x)
     return tonumber(x)
   end
 end
-about[float] = {"float(obj) --> x", "Convert object to float point number."}
+_about[float] = {"float(obj) --> x", "Convert object to float point number."}
 
 
 --- Find hypotenuse.
@@ -178,48 +179,28 @@ hypot = function (...)
   for _, v in ipairs {...} do s = s + v*v end
   return math.sqrt(s)
 end
-about[hypot] = {"hypot(...)", "Hypotenuse."}
+_about[hypot] = {"hypot(...)", "Hypotenuse."}
 
 
 --- Convert object to integer number if possible.
 --  @param x Number or object.
 --  @return integer number.
 int = function (x) return math.floor(float(x)) end
-about[int] = {"int(obj) --> x", "Convert object to integer number."}
+_about[int] = {"int(obj) --> x", "Convert object to integer number."}
 
 
 -- Constants
 PI = math.pi
-about[PI] = {"PI --> 3.14", "Number pi.", AUX}
-
-
---- Wrap function to simplify call if need.
---  @param obj Sonata object.
---  @param ... Function names.
---  @return clojure of the methods.
-Bind = function (obj, ...)
-  -- bind
-  local res = {}
-  for i, nm in ipairs({...}) do
-    local f = obj[nm]
-    if type(f) ~= 'function' then
-      error('Wrong function '..tostring(nm))
-    end
-    res[i] = function (...) return f(obj, ...) end
-  end
-  return Ver.unpack(res)
-end
--- DEPRECATED
--- use 'set' instead
+_about[PI] = {"PI --> 3.14", "Number pi.", _tag.AUX}
 
 
 --- Generate function from string in form 'args -> expression'.
 --  For single argument named 'x' only 'expression' can be defined.
 --  @param sExpr Definition in form 'args -> expr'.
 --  @return Function based on the expression.
-Fn = Utils.Fn
-about[Fn] = {"Fn(expr_s) --> fn",
-  "Generate function from expression 'args -> value'", AUX}
+Fn = _fn
+_about[Fn] = {"Fn(expr_s) --> fn",
+  "Generate function from expression 'args -> value'", _tag.AUX}
 
 
 --- Generate list of function values.
@@ -228,7 +209,7 @@ about[Fn] = {"Fn(expr_s) --> fn",
 --  @return Table with result of evaluation.
 Map = function (fn, t)
   if type(fn) == 'string' then
-    fn = Utils.Fn(fn)
+    fn = _fn(fn)
   end
   if type(t) == 'table' then
     if t.map then return t:map(fn) end
@@ -238,22 +219,22 @@ Map = function (fn, t)
   end
   return nil
 end
-about[Map] = {'Map(fn, in_t) --> out_t',
-  'Evaluate function for each table element.', AUX}
+_about[Map] = {'Map(fn, in_t) --> out_t',
+  'Evaluate function for each table element.', _tag.AUX}
 
 
 --- Use 'asciiplot' for simplified print.
 --  @param ... Objects to plot.
 --  @return figure as text.
 Plot = function (...)
-  main._ap = main._ap or require('matlib.asciiplot')
-  local f = main._ap()
+  _ext.ap = _ext.ap or require('matlib.asciiplot')
+  local f = _ext.ap()
   f._x:setRange({-5, 5})
   f:plot(...)
   return tostring(f)
 end
-about[Plot] = {"Plot(...) --> str",
-    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", AUX}
+_about[Plot] = {"Plot(...) --> str",
+    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", _tag.AUX}
 
 
 --- Round to some precision.
@@ -265,29 +246,31 @@ Round = function (f, v)
   if not (0 < v and v < 1) then
     v = 10^(-v)
   end
-  return Cross.round(f, v)
+  return _round(f, v)
 end
-about[Round] = {'Round(v, decimal_N=0) --> round_v',
-  'Round value, define number of decimal digits or tolerance.', AUX}
+_about[Round] = {'Round(v, decimal_N=0) --> round_v',
+  'Round value, define number of decimal digits or tolerance.', _tag.AUX}
 
 
 if Sonata
 then  --~~~~~~~~~~~~~~~~~~~~~~
 
   -- Sonata specific functions
-  about[use] = {'use([module_s]) --> str|nil',
-    "Call use('module') or use{'module1','module2'} to load new functions.", AUX}
+  _about[use] = {'use([module_s]) --> str|nil',
+    "Call use('module') or use{'module1','module2'} to load new functions.", _tag.AUX}
 
-  about[help] = {"help(fn='main') --> str",
-    "Show information about the function.", AUX}
+  _about[help] = {"help(fn='main') --> str",
+    "Show information about the function.", _tag.AUX}
 
-  about[quit] = {'quit()', "Quit the program.", AUX}
+  _about[quit] = {'quit()', "Quit the program.", _tag.AUX}
 
 end   --~~~~~~~~~~~~~~~~~~~~~~
 
 
 -- save link to help info
-main.about = about
+main.about = _about
+-- clear load data
+_tag = nil
 
 return main
 
