@@ -11,13 +11,11 @@
 
 --      LOCAL
 
-local Cnorm, Usign, Czero, Unumstr do
-  local lib = require("matlib.utils")
-  Cnorm = lib.cross.norm
-  Czero = lib.cross.isZero
-  Usign = lib.utils.sign
-  Unumstr = lib.utils.numstr
-end
+local _utils = require("matlib.utils")
+local _norm = _utils.cross.norm
+local _zero = _utils.cross.isZero
+local _sign = _utils.utils.sign
+local _numstr = _utils.utils.numstr
 
 
 --      MODULE
@@ -93,7 +91,7 @@ transform.findEigenvector = function (M, v, eps)
   -- (M - v * I)^-1
   local iM = M:copy()
   -- add 'noize'
-  v = (Cnorm(v) > 0) and 1.01 * v or 1E-4
+  v = (_norm(v) > 0) and 1.01 * v or 1E-4
   for i = 1, M._rows do iM[i][i] = M[i][i] - v end
   iM = iM:inv()
   -- random b
@@ -123,7 +121,7 @@ transform.firstMinor = function (M)
   else
     local sum, k, M1 = 0, 1, M[1]
     for i = 1, M._cols do
-      if not Czero(M1[i]) then
+      if not _zero(M1[i]) then
         local m = transform.firstMinorSub(M, 1, i)
         sum = sum + (k * M1[i]) * transform.firstMinor(m)
       end
@@ -165,15 +163,15 @@ transform.gaussDown = function (M)
   for k = 1, M._rows do
     -- look for nonzero element
     local i = k + 1
-    while Czero(M[k][k]) and i <= M._rows do
-      if not Czero(M[i][k]) then
+    while _zero(M[k][k]) and i <= M._rows do
+      if not _zero(M[i][k]) then
         M[i], M[k], A = M[k], M[i], -A
       end
       i = i + 1
     end
     local coef = M[k][k]
     A = A * coef
-    if not Czero(coef) then
+    if not _zero(coef) then
       -- normalization
       coef = 1 / coef
       local mk = M[k]
@@ -182,7 +180,7 @@ transform.gaussDown = function (M)
       for r = (k + 1), M._rows do
         local mr = M[r]
         local v = mr[k]
-        if not Czero(v) then
+        if not _zero(v) then
           for c = k, M._cols do mr[c] = mr[c] - v * mk[c] end
         end -- if
       end -- for
@@ -201,7 +199,7 @@ transform.gaussUp = function (M)
     for r = k-1, 1, -1 do
       local mr = M[r]
       local v = mr[k]
-      if not Czero(v) then
+      if not _zero(v) then
         for c = k, M._cols do mr[c] = mr[c] - v * mk[c] end
       end -- if
     end -- for
@@ -218,18 +216,18 @@ end
 transform.givensRot = function (d1, d2)
    -- return cos, sin; r is omitted
    if d2 == 0 then
-     local c = Usign(d1)
-     return (c == 0) and 1 or c, 0, Cnorm(d1)
+     local c = _sign(d1)
+     return (c == 0) and 1 or c, 0, _norm(d1)
    elseif d1 == 0 then
-     return 0, Usign(d2), Cnorm(d2)
-   elseif Cnorm(d1) > Cnorm(d2) then
+     return 0, _sign(d2), _norm(d2)
+   elseif _norm(d1) > _norm(d2) then
      local t = d2 / d1
-     local u = Usign(d1) * math.sqrt(1 + t*t)
+     local u = _sign(d1) * math.sqrt(1 + t*t)
      local c = 1 / u
      return c, t * c, d1 * u
    else
      local t = d1 / d2
-     local u = Usign(d2) * math.sqrt(1 + t*t)
+     local u = _sign(d2) * math.sqrt(1 + t*t)
      local s = 1 / u
      return t * s, s, d2 * u
    end
@@ -245,7 +243,7 @@ transform.clearLess = function (M, dTol)
     if mi then
       for j = 1, M._cols do
         local mij = rawget(mi, j)
-        if mij and Cnorm(mij) < dTol then mi[j] = 0 end
+        if mij and _norm(mij) < dTol then mi[j] = 0 end
       end
     end
   end
@@ -279,7 +277,7 @@ transform.qrSweep = function (M)
   end
   -- find error (upper diagonal of lenght w-1)
   local e = 0
-  for i = 1, w-1 do e = e + Cnorm(B[i][i+1]) end
+  for i = 1, w-1 do e = e + _norm(B[i][i+1]) end
   return U, B, V, e
 end
 
@@ -292,9 +290,9 @@ transform.householder = function (V, ik)
   local r, sum = V._rows, 0
   local u = transform._methods._init(1, r, {})   -- use row vector
   -- fill vector
-  for i = ik, r do sum = sum + Cnorm(V[i][1])^2 end
+  for i = ik, r do sum = sum + _norm(V[i][1])^2 end
   local u1 = u[1]
-  u1[ik] = V[ik][1] + Usign(V[ik][1]) * math.sqrt(sum)
+  u1[ik] = V[ik][1] + _sign(V[ik][1]) * math.sqrt(sum)
   for i = ik+1, r do u1[i] = V[i][1] end
   -- find matrix
   return V:eye(r) - u:H() * ( (2 / u:norm()^2) * u)
@@ -702,7 +700,7 @@ ref_vector.__tostring = function (self)
   local res = {}
   for i = 1, #self do
     local v = self[i]
-    res[i] = (type(v) == 'number') and Unumstr(v) or tostring(v)
+    res[i] = (type(v) == 'number') and _numstr(v) or tostring(v)
   end
   return table.concat(res, '  ')
 end
@@ -783,15 +781,15 @@ ref_vector.norm = function (self, type_s)
   type_s = type_s or 'l2'
   local s = 0
   if type_s == 'l1' then
-    for i = 1, #self do s = s + Cnorm(self[i]) end
+    for i = 1, #self do s = s + _norm(self[i]) end
   elseif type_s == 'l2' then
     for i = 1, #self do
-      local v = Cnorm(self[i])
+      local v = _norm(self[i])
       s = s + v * v
     end
     s = math.sqrt(s)
   elseif type_s == 'linf' then
-    for i = 1, #self do s = math.max(s, Cnorm(self[i])) end
+    for i = 1, #self do s = math.max(s, _norm(self[i])) end
   else
     error 'Unknown type'
   end
@@ -803,7 +801,7 @@ end
 ref_vector.normalize = function (self)
   local s, len = 0, #self
   for i = 1, len do
-    s = s + Cnorm(self[i])^2
+    s = s + _norm(self[i])^2
   end
   s = math.sqrt(s)
   for i = 1, len do
