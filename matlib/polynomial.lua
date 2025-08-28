@@ -144,21 +144,26 @@ ans = D:unpack(t)            -->  p
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Utils = Ver.utils
-local Cross = Ver.cross
-Ver = Ver.versions
+local _ext = {
+  utils = require("matlib.utils"),
+  -- matrix = require("matlib.matrix"),
+  -- complex = require("matlib.complex"),
+}
+
+local _utils = _ext.utils.utils
+local _ver = _ext.utils.versions
+local _cross = _ext.utils.cross
 
 
 -- Return number in trivial case.
-local function _numpoly(P) return #P == 0 and Cross.simp(P[0]) or P end
+local function _numpoly(P) return #P == 0 and _cross.simp(P[0]) or P end
 
 
 --- Simplify polynomial, remove zeros from the begin.
 --  @param t Table of coefficients.
 --  @return Simplified polynomial.
 local function _reduce (t)
-  while #t > 0 and Cross.isZero(t[#t]) do table.remove(t) end
+  while #t > 0 and _cross.isZero(t[#t]) do table.remove(t) end
   return t
 end
 
@@ -192,16 +197,16 @@ local function _sortRoots (v1, v2)
   elseif is2 and v2.iscomplex and not (is1 and v1.iscomplex) then
     return true
   else
-    return Cross.norm(v1) > Cross.norm(v2)
+    return _cross.norm(v1) > _cross.norm(v2)
   end
 end
 
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Operations with polynomials."
 }
 
@@ -297,7 +302,7 @@ mt_ppval.__call = mt_ppval.val
 --  @return Table with roots.
 local function _roots2 (self)
   local a, b, c = self[2], self[1], self[0]
-  local sD = polynomial.ext_complex.sqrt(b*b - 4*a*c)
+  local sD = _ext.complex.sqrt(b*b - 4*a*c)
   local sgn = b > 0 and 1 or b < 0 and -1 or 0
   sD = -0.5*(b + sgn*sD)
   return {sD/a, c/sD}
@@ -325,7 +330,7 @@ local function _roots3 (self)
     local A = (R > 0 and -1 or 1)
       * (math.abs(R) + math.sqrt(R*R - t))^(1/3)
     local B = (A == 0 and 0 or Q/A)
-    t = polynomial.ext_complex(0, math.sqrt(3)/2*(A - B))
+    t = _ext.complex(0, math.sqrt(3)/2*(A - B))
     Q = A + B            -- reuse
     res = {Q - a/3, -Q/2 - a/3 + t, -Q/2 - a/3 - t}
   end
@@ -372,7 +377,7 @@ local function _nr (self, d0, tol)
   for i = 1, max do
     local der = _ispolynomial(dp) and val(dp, d0) or dp
     local dx = val(self, d0) / der
-    if Cross.norm(dx) <= tol then
+    if _cross.norm(dx) <= tol then
       return d0
     else
       -- next approximation
@@ -443,7 +448,7 @@ polynomial.__eq = function (P1, P2)
     if _ispolynomial(P2) then
       if #P1 ~= #P2 then return false end
       for i = 0, #P1 do
-        if not Cross.eq(P1[i], P2[i]) then return false end
+        if not _cross.eq(P1[i], P2[i]) then return false end
       end
       return true
     else
@@ -506,7 +511,7 @@ end
 --  @param N Positive integer power.
 --  @return Polynomial in given power.
 polynomial.__pow = function (self, N)
-  N = assert(Ver.toInteger(N), "Integer power is expected!")
+  N = assert(_ver.toInteger(N), "Integer power is expected!")
   if N <= 0 then error("Positive power is expected!") end
   if #self == 1 and self[1] == 1 and self[0] == 0 then  -- simplified calc
     local res = {}
@@ -540,7 +545,7 @@ polynomial.__tostring = function (self)
   local t = {}
   for i = #self, 0, -1 do
     local v = self[i]
-    table.insert(t, type(v) == 'number' and Utils.numstr(v) or tostring(v))
+    table.insert(t, type(v) == 'number' and _utils.numstr(v) or tostring(v))
   end
   return table.concat(t, ' ')
 end
@@ -555,8 +560,8 @@ polynomial.__unm = function (self)
 end
 
 
-about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^n, -a", nil, help.META}
-about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
+_about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^n, -a", nil, _help.META}
+_about['_cmp'] = {"comparison: a==b, a~=b", nil, _help.META}
 
 
 polynomial._convert = function (v)
@@ -595,7 +600,7 @@ end
 polynomial._init = function (t)
   if polynomial.STRIP then
     for i = 0, #t do
-      if Cross.norm(t[i]) < polynomial.STRIP then t[i] = 0 end
+      if _cross.norm(t[i]) < polynomial.STRIP then t[i] = 0 end
     end
   end
   return setmetatable(t, polynomial)
@@ -605,7 +610,7 @@ end
 --- Check if the polynomial is zero constant
 --  @return true when P==0
 polynomial._isZero = function (self)
-  return #self == 0 and Cross.isZero(self[0])
+  return #self == 0 and _cross.isZero(self[0])
 end
 
 
@@ -616,7 +621,7 @@ polynomial._pack = function (self, acc)
   local spack = string.pack
   local n = #self
   local t = {spack('B', acc['polynomial']), spack('I2', n)}
-  t[#t+1] = Utils.pack_seq(self, 0, n, acc)
+  t[#t+1] = _utils.pack_seq(self, 0, n, acc)
   return table.concat(t)
 end
 
@@ -626,7 +631,7 @@ end
 polynomial._real = function (self)
   local pp, res = polynomial.copy(self), {}
   -- zeros
-  while #pp > 0 and Cross.isZero(pp[0]) do
+  while #pp > 0 and _cross.isZero(pp[0]) do
     pp[0] = table.remove(pp, 1)
     res[#res+1] = 0
   end
@@ -634,7 +639,7 @@ polynomial._real = function (self)
   while #pp > 0 do
     local exact = _exact(pp)
     if exact then
-      Ver.move(exact, 1, #exact, #res+1, res)
+      _ver.move(exact, 1, #exact, #res+1, res)
       pp = 0  -- rest is zero
       break
     end
@@ -662,7 +667,7 @@ end
 --  @return stripped object.
 polynomial._round = function (self, tol)
   for i = 0, #self do
-    self[i] = Cross.round(self[i], tol)
+    self[i] = _cross.round(self[i], tol)
   end
   return self
 end
@@ -677,7 +682,7 @@ end
 polynomial._unpack = function (src, pos, acc, ver)
   local t, ord = {}, nil
   ord, pos = string.unpack('I2', src, pos)
-  t, pos = Utils.unpack_seq(ord+1, src, pos, acc, ver)
+  t, pos = _utils.unpack_seq(ord+1, src, pos, acc, ver)
   t = table.move(t, 1, #t, 0, {})
   return polynomial._init(t), pos
 end
@@ -688,7 +693,7 @@ end
 --  @param t List of roots.
 --  @return Polynomial object.
 polynomial.R = function (_, t)
-  local lst = Ver.move(t, 1, #t, 1, {})
+  local lst = _ver.move(t, 1, #t, 1, {})
   local res = polynomial._init({[0]=1})
   while #lst > 0 do
     local v = table.remove(lst, 1)
@@ -713,8 +718,8 @@ polynomial.R = function (_, t)
   end
   return res
 end
-about[polynomial.R] = {":R(roots_t) --> P",
-  "Return polynomial with given roots.", help.OTHER}
+_about[polynomial.R] = {":R(roots_t) --> P",
+  "Return polynomial with given roots.", _help.OTHER}
 
 
 --- Find characteristic polinomial for the matrix.
@@ -727,7 +732,7 @@ polynomial.char = function (_, M)
   end
   return m:minor(0, 0)
 end
-about[polynomial.char] = {":char(M) --> P",
+_about[polynomial.char] = {":char(M) --> P",
   "Return characteristic polinomial for the given matrix."}
 
 
@@ -736,12 +741,12 @@ about[polynomial.char] = {":char(M) --> P",
 polynomial.copy = function (self)
   local res = {}
   for i = 0, #self do
-    res[i] = Cross.copy(self[i])
+    res[i] = _cross.copy(self[i])
   end
   return polynomial._init(res)
 end
-about[polynomial.copy] = {"P:copy() --> cpy_P",
-  "Get copy of the polynomial.", help.OTHER}
+_about[polynomial.copy] = {"P:copy() --> cpy_P",
+  "Get copy of the polynomial.", _help.OTHER}
 
 
 --- Get derivative.
@@ -751,9 +756,9 @@ polynomial.der = function (self)
   for i = 1, #self do
     der[i-1] = i*self[i]
   end
-  return #der == 0 and Cross.simp(der[0]) or polynomial._init(der)
+  return #der == 0 and _cross.simp(der[0]) or polynomial._init(der)
 end
-about[polynomial.der] = {"P:der() --> der_P",
+_about[polynomial.der] = {"P:der() --> der_P",
   "Calculate derivative of polynomial."}
 
 
@@ -763,7 +768,7 @@ about[polynomial.der] = {"P:der() --> der_P",
 --  @param ord Polynomial order.
 --  @return Polynomial object.
 polynomial.fit = function (_, tX, tY, N)
-  if not (N > 0 and Ver.mathType(N) == 'integer') then
+  if not (N > 0 and _ver.mathType(N) == 'integer') then
     error 'Wrong order!'
   end
   if #tX ~= #tY then
@@ -773,7 +778,7 @@ polynomial.fit = function (_, tX, tY, N)
     error 'Too few points!'
   end
   -- find sums
-  local acc = Ver.move(tX, 1, #tX, 1, {})     -- accumulate powers
+  local acc = _ver.move(tX, 1, #tX, 1, {})     -- accumulate powers
   local sX, sY = {}, {}              -- accumulate sums
   local nY = N
   sY[nY+1] = _getSum(tY)
@@ -798,14 +803,14 @@ polynomial.fit = function (_, tX, tY, N)
   -- add sums to the last "column"
   for i = 1, #acc do table.insert(acc[i], sY[i]) end
   -- solve
-  polynomial.ext_matrix = polynomial.ext_matrix or require('matlib.matrix')
-  local mat = polynomial.ext_matrix
+  _ext.matrix = _ext.matrix or require('matlib.matrix')
+  local mat = _ext.matrix
   local gaus = mat(acc):rref()
   local res = {}
   for i = 1, N+1 do res[i] = gaus(i, -1) end
   return _reorder(res)
 end
-about[polynomial.fit] = {":fit(xs_t, ys_t, order_N) --> P",
+_about[polynomial.fit] = {":fit(xs_t, ys_t, order_N) --> P",
   "Find polynomial approximation for the line.", FIT}
 
 
@@ -819,7 +824,7 @@ polynomial.int = function (self, d0)
   end
   return polynomial._init(int)
 end
-about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
+_about[polynomial.int] = {"P:int(x0_d=0) --> int_P",
   "Calculate integral, define free coefficient if need."}
 
 
@@ -850,7 +855,7 @@ polynomial.lagrange = function (_, tX, tY)
   end
   return _numpoly(_reduce(res))
 end
-about[polynomial.lagrange] = {":lagrange(xs_t, ys_t) --> P",
+_about[polynomial.lagrange] = {":lagrange(xs_t, ys_t) --> P",
   "Find interpolation polynomial in the Lagrange form.", FIT}
 
 
@@ -873,7 +878,7 @@ polynomial.lin = function (_, tX, tY, v0, vN)
   if v0 then res[#res+1] = {xp + 1, polynomial._init({[0]= vN or v0}) } end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.lin] = {
+_about[polynomial.lin] = {
   ":lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t",
   "Linear data interpolation. Return table with polynomials.", FIT}
 
@@ -881,15 +886,15 @@ about[polynomial.lin] = {
 --- Find all the polynomial roots.
 --  @return table with roots.
 polynomial.roots = function (self)
-  polynomial.ext_complex = polynomial.ext_complex or require('matlib.complex')
+  _ext.complex = _ext.complex or require('matlib.complex')
   -- exact solution or real roots
   local res, pp = polynomial._real(self)
     -- find complex roots
-  local Z = polynomial.ext_complex
+  local Z = _ext.complex
   while _ispolynomial(pp) and #pp > 0 do
     local exact = _exact(pp)
     if exact then
-      Ver.move(exact, 1, #exact, #res + 1, res)
+      _ver.move(exact, 1, #exact, #res + 1, res)
       break
     end
     local x = _nr(pp, Z(math.random(), math.random()), 0.1)
@@ -905,8 +910,8 @@ polynomial.roots = function (self)
   table.sort(res, _sortRoots)
   return res
 end
-about[polynomial.roots] = {"P:roots() --> roots_t",
-  "Find all the polynomial roots.", help.OTHER}
+_about[polynomial.roots] = {"P:roots() --> roots_t",
+  "Find all the polynomial roots.", _help.OTHER}
 
 
 --- Cubic spline data interpolation.
@@ -915,8 +920,8 @@ about[polynomial.roots] = {"P:roots() --> roots_t",
 --  @param tY Sequence of dependent values.
 --  @return Table with polynomials for each interval.
 polynomial.spline = function (_, tX, tY)
-  polynomial.ext_matrix = polynomial.ext_matrix or require('matlib.matrix')
-  local mat, N = polynomial.ext_matrix, #tX - 1
+  _ext.matrix = _ext.matrix or require('matlib.matrix')
+  local mat, N = _ext.matrix, #tX - 1
   local h, A = {}, mat:zeros(N - 1, N + 2)
   -- prepare matrix
   h[1] = tX[2] - tX[1]
@@ -954,7 +959,7 @@ polynomial.spline = function (_, tX, tY)
   end
   return setmetatable(res, mt_ppval)
 end
-about[polynomial.spline] = {":spline(xs_t, ys_t) --> Ps_t",
+_about[polynomial.spline] = {":spline(xs_t, ys_t) --> Ps_t",
   "Cubic spline data interpolation. Return table with polynomials.", FIT}
 
 
@@ -966,22 +971,22 @@ polynomial.str = function (self, s)
   local res, a, b = {}, 0, 0
   for i = #self, 1, -1 do
     a, b = self[i], self[i-1]
-    if not Cross.isZero(a) then
-      if not Cross.eq(a, 1) then
-        res[#res+1] = (type(a) == 'number' and Utils.numstr(a) or tostring(a))..'*'
+    if not _cross.isZero(a) then
+      if not _cross.eq(a, 1) then
+        res[#res+1] = (type(a) == 'number' and _utils.numstr(a) or tostring(a))..'*'
       end
       res[#res+1] = s
       if i > 1 then res[#res+1] = '^'..tostring(i) end
     end
     if type(b) ~= 'number' or b > 0 then res[#res+1] = '+' end
   end
-  if type(b) ~= 'number' or not Cross.isZero(b) then
-    res[#res+1] = (type(b) == 'number' and Utils.numstr(b) or tostring(b))
+  if type(b) ~= 'number' or not _cross.isZero(b) then
+    res[#res+1] = (type(b) == 'number' and _utils.numstr(b) or tostring(b))
   end
   return table.concat(res)
 end
-about[polynomial.str] = {"P:str(char_s='x') --> str",
-  "Pretty print for polynomial.", help.OTHER}
+_about[polynomial.str] = {"P:str(char_s='x') --> str",
+  "Pretty print for polynomial.", _help.OTHER}
 
 
 --- Find Taylor series.
@@ -1002,7 +1007,7 @@ polynomial.taylor = function (_, v, vF, ...)
   end
   return _numpoly(res)
 end
-about[polynomial.taylor] = {":taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P",
+_about[polynomial.taylor] = {":taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P",
   "Get Taylor series.", FIT}
 
 
@@ -1015,7 +1020,7 @@ polynomial.val = function (self, v)
   for i = #self-1, 0, -1 do res = res*v + self[i] end
   return res
 end
-about[polynomial.val] = {"P:val(x) --> y",
+_about[polynomial.val] = {"P:val(x) --> y",
   "Get value of polynomial P in point x. Equat to P(x)."}
 -- simplify call
 polynomial.__call = function (p, x) return polynomial.val(p, x) end
@@ -1026,7 +1031,7 @@ polynomial.__call = function (p, x) return polynomial.val(p, x) end
 polynomial.x = function (_)
   return polynomial._init({[0]=0, 1})
 end
-about[polynomial.x] = {":x() --> P",
+_about[polynomial.x] = {":x() --> P",
   "Get object to define polynomial as a sum of k*x^n"}
 
 
@@ -1045,11 +1050,11 @@ __call = function (_, t)
   end
   return _reorder(t)
 end})
-about[polynomial] = {" {.., v1, v0} --> new_P", "Create a polynomial.", help.NEW}
+_about[polynomial] = {" {.., v1, v0} --> new_P", "Create a polynomial.", _help.NEW}
 
 
 -- Comment to remove descriptions
-polynomial.about = about
+polynomial.about = _about
 
 return polynomial
 
