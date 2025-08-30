@@ -245,7 +245,7 @@ end
 quaternion.__pow = function (self, d)
   if d == -1 then
     return quaternion.inv(self)
-  elseif d >= 0 and _ver.isInteger(d) then
+  elseif d >= 0 and _ver.toInteger(d) ~= nil then
     -- positive integer use for all quaternions
     local res, acc = quaternion._new(1, 0, 0, 0), self
     while d > 0 do

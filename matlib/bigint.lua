@@ -159,7 +159,7 @@ ans = D:unpack(t)             --> a
 --	LOCAL
 
 local _utils = require("matlib.utils")
-local _isinteger = _utils.versions.isInteger
+local _tointeger = _utils.versions.toInteger
 local _move = _utils.versions.move
 local _float = _utils.cross.float
 local _convert = _utils.cross.convert
@@ -198,7 +198,7 @@ mt_digits.__index = mt_digits
 --  @param N number of positions.
 --  @return left shifted number.
 mt_digits.__shl = function (self, N)
-  assert(_isinteger(N) and N >= 0)
+  assert(_tointeger(N) and N >= 0)
   local res = {}
   for i = 1, N do res[i] = 0 end
   _move(self, 1, #self, N+1, res)
@@ -212,7 +212,7 @@ end
 --  @param N number of positions.
 --  @return right shifted number.
 mt_digits.__shr = function (self, N)
-  assert(_isinteger(N) and N >= 0)
+  assert(_tointeger(N) and N >= 0)
   local res = {}
   if N >= #self then
     res[1] = 0
@@ -792,7 +792,7 @@ end
 --  @param v Source objec.
 --  @return Int object.
 bigint._convert = function (v)
-  return _isinteger(v) and bigint._newNumber(v) or nil
+  return _tointeger(v) ~= nil and bigint._newNumber(v) or nil
 end
 
 
@@ -850,7 +850,7 @@ bigint._new = function (num)
   if type(num) == 'table' then
     assert(#num > 0, "Wrong input")
     local base = num.base
-    assert(base and base > 0 and _isinteger(base), "Wrong base")
+    assert(base and base > 0 and _tointeger(base), "Wrong base")
     assert(num.sign, "Wrong sign")
     local acc = {}
     for i, v in ipairs(num) do
@@ -860,7 +860,7 @@ bigint._new = function (num)
     return bigint._newTable(_rebase(acc, base, BASE), num.sign)
   elseif type(num) == 'string' then
     return bigint._newString(num)
-  elseif type(num) == 'number' and _isinteger(num) then
+  elseif type(num) == 'number' and _tointeger(num) ~= nil then
     return bigint._newNumber(num)
   end
   error("Wrong number: "..tostring(num))
@@ -1039,7 +1039,7 @@ _about[bigint.abs] = {"B:abs() --> abs_B",
 --  @return Table with digits of the found number.
 bigint.digits = function (self, N)
   N = N or 10
-  assert(_isinteger(N) and N > 0, "Wrong base")
+  assert(_tointeger(N) and N > 0, "Wrong base")
   local b = self._
   local res = _rebase(b, BASE, N)
   res.sign = self._sign

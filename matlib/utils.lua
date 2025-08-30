@@ -12,7 +12,7 @@
 
 --	MODULE
 
-local mmodf = math.modf
+local _modf = math.modf
 
 
 --=============== Choose versions =======================
@@ -27,20 +27,11 @@ local versions = {
 }
 
 
--- Check if the number is integer
-versions.isInteger = math.tointeger or function (x)
-  if type(x) == 'string' then x = tonumber(x) end
-  if not x then return false end
-  local v, p = mmodf(x)
-  return p == 0.0 and v >= -1E9 and v <= 1E9
-end
-
-
 -- Check type of the number
 versions.mathType = math.type or function (x)
   local n = tonumber(x)
   if not n then return nil end
-  local _, p = mmodf(n)
+  local _, p = _modf(n)
   return (p == 0.0) and 'integer' or 'float'
 end
 
@@ -63,7 +54,7 @@ end
 -- Return integer number or nil
 versions.toInteger = math.tointeger or function (x)
   if type(x) == 'string' then x = tonumber(x) end
-  local p, q = mmodf(x)
+  local p, q = _modf(x)
   return (q == 0.0) and p or nil
 end
 
@@ -156,7 +147,7 @@ end
 --  @return Rounded value.
 cross.round = function (v, fTol)
   if type(v) == 'number' then
-    local p, q = mmodf(v / fTol)
+    local p, q = _modf(v / fTol)
     if     q >  0.5 then p = p + 1
     elseif q < -0.5 then p = p - 1
     end
@@ -270,7 +261,7 @@ end
 --  @param d Number.
 --  @return String representation.
 utils.numstr = function (d)
-  local int, frac = mmodf(d)
+  local int, frac = _modf(d)
   local a = math.abs(int)
   -- short integer
   if frac == 0 then
@@ -344,7 +335,7 @@ end
 --  @param acc Accumulator table.
 --  @return binary string.
 utils.pack_num = function (x, acc)
-  local v, p = mmodf(math.abs(x))
+  local v, p = _modf(math.abs(x))
   if p == 0.0 then
     -- integer
     if v < 128 then

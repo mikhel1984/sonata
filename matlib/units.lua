@@ -83,12 +83,10 @@ ans = D:unpack(t)             -->  a
 
 --	LOCAL
 
-local Cfloat, Cnorm, Utils do
-  local lib = require('matlib.utils')
-  Cfloat = lib.cross.float
-  Cnorm = lib.cross.norm
-  Utils = lib.utils
-end
+local _utils = require("matlib.utils")
+local _float = _utils.cross.float
+local _norm = _utils.cross.norm
+_utils = _utils.utils
 
 
 --- Combine common elements in tables, add power to the
@@ -108,7 +106,7 @@ end
 
 
 -- Operations with tables of units.
-local op = {
+local _op = {
 ['*'] = function(u1, u2)
           for k, v in pairs(u2) do u1[k] = (u1[k] or 0) + v end
         end,
@@ -132,9 +130,9 @@ end
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Operations and conversations according the units."
 }
 
@@ -232,7 +230,7 @@ mt_rules.__tostring = function (t)
   end
   return table.concat(s, '\n')
 end
-about[units.rules] = {'.rules', 'Table of rules for conversation.', help.OTHER}
+_about[units.rules] = {'.rules', 'Table of rules for conversation.', _help.OTHER}
 
 
 --- U1 + U2
@@ -338,10 +336,10 @@ end
 --  @param d Number.
 --  @return Power.
 units.__pow = function (self, d)
-  d = assert(Cfloat(d), "Wrong power")
+  d = assert(_float(d), "Wrong power")
   local res = _isunits(self) and units._deepCopy(self) or units._new(self, '')
   res._value = res._value ^ d
-  op['^'](res._key, d)
+  _op['^'](res._key, d)
   return res
 end
 
@@ -363,7 +361,7 @@ end
 --  @return Unit value in traditional form.
 units.__tostring = function (self)
   return string.format('%s %s',
-    type(self._value) == 'number' and Utils.numstr(self._value) or tostring(self._value),
+    type(self._value) == 'number' and _utils.numstr(self._value) or tostring(self._value),
     units.u(self))
 end
 
@@ -377,8 +375,8 @@ units.__unm = function (self)
 end
 
 
-about['_ar'] = {'arithmetic: a+b, a-b, a*b, a/b, a^N', nil, help.META}
-about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', nil, help.META}
+_about['_ar'] = {'arithmetic: a+b, a-b, a*b, a/b, a^N', nil, _help.META}
+_about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', nil, _help.META}
 
 
 --- Convert object to another units.
@@ -502,7 +500,7 @@ units._getPow = function (lst, n)
   if lst[m] == '^' then
     local num = nil
     num, m = units._getNum(lst, m+1)
-    op['^'](res, num)
+    _op['^'](res, num)
   end
   return res, m
 end
@@ -518,7 +516,7 @@ units._getTerm = function (lst, n)
     -- while get * or / get terms and evaluate
     local sign, tmp = lst[m], nil
     tmp, m = units._getPow(lst, m+1)
-    op[sign](res, tmp)
+    _op[sign](res, tmp)
   end
   return res, m
 end
@@ -540,7 +538,7 @@ end
 --  @param U Unit object.
 --  @return Absolute value.
 units._norm = function (U)
-  return Cnorm(U._value)
+  return _norm(U._value)
 end
 
 
@@ -549,7 +547,7 @@ end
 --  @return Reduced list of units.
 units._parse = function (str)
   if #str == 0 then return {} end
-  local tokens = Utils.lex(str)
+  local tokens = _utils.lex(str)
   if #tokens == 0 then error("Wrong format") end
   local res, m = units._getTerm(tokens, 1)
   if m-1 ~= #tokens then error("Wrong format") end
@@ -564,7 +562,7 @@ units._pack = function (self, acc)
   local t = {string.pack('B', acc['units'])}
   -- value
   if type(self._value) == 'number' then
-    t[#t+1] = Utils.pack_num(self._value, acc)
+    t[#t+1] = _utils.pack_num(self._value, acc)
   elseif type(self._value) == 'table' and self._value._pack then
     t[#t+1] = self._value:_pack(acc)
   else
@@ -572,8 +570,8 @@ units._pack = function (self, acc)
   end
   -- units
   for k, v in pairs(self._key) do
-    t[#t+1] = Utils.pack_str(k, acc)
-    t[#t+1] = Utils.pack_num(v, acc)
+    t[#t+1] = _utils.pack_str(k, acc)
+    t[#t+1] = _utils.pack_num(v, acc)
   end
   t[#t+1] = '\0'
   return table.concat(t)
@@ -592,7 +590,7 @@ units._unpack = function (src, pos, acc, ver)
   local key = acc[n]
   if type(key) == 'string' then
     if string.byte(key, 1) == 0x26 then
-      val, pos = Utils.unpack_num(src, pos, key, ver)
+      val, pos = _utils.unpack_num(src, pos, key, ver)
     else
       acc[n] = require("matlib."..key)
       val, pos = acc[n]._unpack(src, pos, acc, ver)
@@ -602,9 +600,9 @@ units._unpack = function (src, pos, acc, ver)
   end
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
-    nm, pos = Utils.unpack_str(src, pos, acc[n], ver)
+    nm, pos = _utils.unpack_str(src, pos, acc[n], ver)
     n, pos = string.unpack('B', src, pos)
-    n, pos = Utils.unpack_num(src, pos, acc[n], ver)
+    n, pos = _utils.unpack_num(src, pos, acc[n], ver)
     t[nm] = n
   end
   return setmetatable({_value=val, _key=t}, units), pos+1
@@ -620,7 +618,7 @@ units.convert = function (self, s)
   end
   return units._convertKey(self, units._memKeys[s])
 end
-about[units.convert] = {'U:convert(new_s) --> upd_U|nil',
+_about[units.convert] = {'U:convert(new_s) --> upd_U|nil',
   'Convert one units to another, return new object or nil.'}
 
 
@@ -629,8 +627,8 @@ about[units.convert] = {'U:convert(new_s) --> upd_U|nil',
 units.copy = function (self)
   return setmetatable({_value=self._value, _key=self._key}, units)
 end
-about[units.copy] = {'U:copy() --> cpy_U',
-  'Create copy of the element.', help.OTHER}
+_about[units.copy] = {'U:copy() --> cpy_U',
+  'Create copy of the element.', _help.OTHER}
 
 
 --- Convert table of units into string.
@@ -662,7 +660,7 @@ units.u = function (self)
   end
   return num .. denom
 end
-about[units.u] = {'U:u() --> str', 'Get units.'}
+_about[units.u] = {'U:u() --> str', 'Get units.'}
 
 
 -- prefix list
@@ -689,8 +687,8 @@ units.prefix = {
   Z = 1e+21,  -- zetta
   Y = 1e+24,  -- yotta
 }
-about[units.prefix] = {'.prefix',
-  'Table of possible prefixes for units.', help.OTHER}
+_about[units.prefix] = {'.prefix',
+  'Table of possible prefixes for units.', _help.OTHER}
 
 
 -- Print prefix table
@@ -708,19 +706,19 @@ end})
 setmetatable(units, {
 __call = function (_, v, s)
   if s then
-    assert(Cfloat(v), "Wrong value type")
+    assert(_float(v), "Wrong value type")
   else
     v, s = 1, v
   end
   assert(type(s) == 'string', 'Wrong unit type')
   return units._new(v, s)
 end})
-about[units] = {' (val=1, name_s) --> new_U',
-  'Create new elements with units.', help.NEW}
+_about[units] = {' (val=1, name_s) --> new_U',
+  'Create new elements with units.', _help.NEW}
 
 
 -- Comment to remove descriptions
-units.about = about
+units.about = _about
 
 return units
 

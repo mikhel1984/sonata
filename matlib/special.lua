@@ -63,21 +63,26 @@ ans = Spec:dawson(3.3)       --3>  0.1598
 
 --	LOCAL
 
-local Vinteger do
-  local lib = require("matlib.utils")
-  Vinteger = lib.versions.isInteger
-end
-
+local _utils = require("matlib.utils")
+local _tointeger = _utils.versions.toInteger
 
 -- constants for gamma approximation
-local k_gamma = {676.5203681218851, -1259.1392167224028, 771.32342877765313,
+local _k_gamma = {676.5203681218851, -1259.1392167224028, 771.32342877765313,
   -176.61502916214059, 12.507343278686905, -0.13857109526572012,
   9.9843695780195716E-6, 1.5056327351493116E-7}
 
 
 -- constants for ln(gamma) approximation
-local k_gammaln = {76.18009172947146, -86.50532032941677, 24.01409824083091,
+local _k_gammaln = {76.18009172947146, -86.50532032941677, 24.01409824083091,
   -1.231739572450155, 0.1208650973866179E-2, -0.5395239384953E-5}
+
+-- doc categories
+local _tag = { GAMMA="gamma", BETA="beta", BESSEL="bessel" }
+
+
+-- error
+local ERR_POSINT = "Non-negative integer order is expected!"
+local ERR_INVARG = "Invalid arguments!"
 
 
 --- Fixed lower bound based on absolute value.
@@ -87,19 +92,10 @@ local k_gammaln = {76.18009172947146, -86.50532032941677, 24.01409824083091,
 local function _lowBound(a, b) return math.abs(a) > b and a or b end
 
 
--- doc categories
-local GAMMA, BETA, BESSEL = 'gamma', 'beta', 'bessel'
-
-
--- error
-local ERR_POSINT = "Non-negative integer order is expected!"
-local ERR_INVARG = "Invalid arguments!"
-
-
 --	INFO
 
 -- description
-local about = {
+local _about = {
 __module__ = "Special mathematical functions."
 }
 
@@ -367,7 +363,7 @@ end
 --  @param x Real number.
 --  @return In(x).
 special.besseli = function (_, N, x)
-  if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
+  if N < 0 or _tointeger(N) == nil then error(ERR_POSINT) end
   if N == 0 then return _bessi0(x) end
   if N == 1 then return _bessi1(x) end
   if x == 0 then return 0.0 end
@@ -386,8 +382,8 @@ special.besseli = function (_, N, x)
   ans = ans*_bessi0(x)/bi
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besseli] = {":besseli(order_N, x_d) --> num",
-  "Modified Bessel function In(x).", BESSEL}
+_about[special.besseli] = {":besseli(order_N, x_d) --> num",
+  "Modified Bessel function In(x).", _tag.BESSEL}
 
 
 --- Bessel function of the first kind
@@ -395,7 +391,7 @@ about[special.besseli] = {":besseli(order_N, x_d) --> num",
 --  @param x Real number.
 --  @return Polynomial value
 special.besselj = function (_, N, x)
-  if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
+  if N < 0 or _tointeger(N) == nil then error(ERR_POSINT) end
   if N == 0 then return _bessj0(x) end
   if N == 1 then return _bessj1(x) end
   if x == 0 then return 0 end
@@ -432,8 +428,8 @@ special.besselj = function (_, N, x)
   end
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
-about[special.besselj] = {":besselj(order_N, x_d) --> num",
-  "Bessel function of the first kind.", BESSEL}
+_about[special.besselj] = {":besselj(order_N, x_d) --> num",
+  "Bessel function of the first kind.", _tag.BESSEL}
 
 
 --- Modified Bessel function Kn.
@@ -442,7 +438,7 @@ about[special.besselj] = {":besselj(order_N, x_d) --> num",
 --  @return Kn(x).
 special.besselk = function (_, N, x)
   if x <= 0 then error("Positive value is expected!") end
-  if not (N >= 0 and Vinteger(N)) then error(ERR_POSINT) end
+  if N < 0 or _tointeger(N) == nil then error(ERR_POSINT) end
   if N == 0 then return _bessk0(x) end
   if N == 1 then return _bessk1(x) end
   local tox, bkm, bk = 2.0/x, _bessk0(x), _bessk1(x)
@@ -451,8 +447,8 @@ special.besselk = function (_, N, x)
   end
   return bk
 end
-about[special.besselk] = {":besselk(order_N, x_d) --> num",
-  "Modified Bessel function Kn(x).", BESSEL}
+_about[special.besselk] = {":besselk(order_N, x_d) --> num",
+  "Modified Bessel function Kn(x).", _tag.BESSEL}
 
 
 --- Bessel function of the second kind
@@ -461,7 +457,7 @@ about[special.besselk] = {":besselk(order_N, x_d) --> num",
 --  @return Polynomial value
 special.bessely = function (_, n, x)
   if x <= 0 then error('Positive value is expected!') end
-  if not (n >= 0 and Vinteger(n)) then error(ERR_POSINT) end
+  if n < 0 or _tointeger(n) == nil then error(ERR_POSINT) end
   if n == 0 then return _bessy0(x) end
   if n == 1 then return _bessy1(x) end
   local tox = 2.0/x
@@ -472,8 +468,8 @@ special.bessely = function (_, n, x)
   end
   return by
 end
-about[special.bessely] = {":bessely(order_N, x_d) --> num",
-  "Bessel function of the second kind.", BESSEL}
+_about[special.bessely] = {":bessely(order_N, x_d) --> num",
+  "Bessel function of the second kind.", _tag.BESSEL}
 
 
 --- Beta function.
@@ -481,7 +477,7 @@ about[special.bessely] = {":bessely(order_N, x_d) --> num",
 --  @param w Second value.
 --  @return B(z,w).
 special.beta = function (_, z, w) return math.exp(special.betaln(_, z, w)) end
-about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", BETA}
+_about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", _tag.BETA}
 
 
 --- Incomplete beta function
@@ -502,8 +498,8 @@ special.betainc = function (_, x, a, b)
      and (bt*_betacf(a, b, x)/a)
       or (1.0-bt*_betacf(b, a, 1.0-x)/b)
 end
-about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
-  "Incomplete beta function Ix(a,b).", BETA}
+_about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
+  "Incomplete beta function Ix(a,b).", _tag.BETA}
 
 
 --- Logarithm of beta function.
@@ -513,8 +509,8 @@ about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
 special.betaln = function (_, z, w)
   return special:gammaln(z) + special:gammaln(w) - special:gammaln(z+w)
 end
-about[special.betaln] = {":betaln(z_d, w_d) --> num",
-  "Natural logarithm of beta function.", BETA}
+_about[special.betaln] = {":betaln(z_d, w_d) --> num",
+  "Natural logarithm of beta function.", _tag.BETA}
 
 
 --- Dawson integral.
@@ -544,14 +540,14 @@ special.dawson = function (_, x)
     return 0.5641895835*sum*(x>=0 and math.exp(-xp*xp) or -math.exp(-xp*xp))
   end
 end
-about[special.dawson] = {":dawson(x_d) --> num", "Dawson integral."}
+_about[special.dawson] = {":dawson(x_d) --> num", "Dawson integral."}
 
 
 --- Error function.
 --  @param x Real value.
 --  @return Error value.
 special.erf = function (_, x) return 1 - special:erfc(x) end
-about[special.erf] = {":erf(x_d) --> num", "Error function."}
+_about[special.erf] = {":erf(x_d) --> num", "Error function."}
 
 
 --- Complementary error function.
@@ -565,7 +561,7 @@ special.erfc = function (_, x)
     + t*(1.48851587 + t*(-0.82215223 + t*0.17087277)))))))))
   return (x >= 0.0) and ans or (2.0 - ans)
 end
-about[special.erfc] = {":erfc(x_d) --> num", "Complementary error function."}
+_about[special.erfc] = {":erfc(x_d) --> num", "Complementary error function."}
 
 
 --- Exponential integral.
@@ -611,7 +607,7 @@ special.expint = function (_, n, x)
   end -- if x
   error('Evaluation is failed!')
 end
-about[special.expint] = {":expint(pow_N, x_d) --> num",
+_about[special.expint] = {":expint(pow_N, x_d) --> num",
   "Exponential integral En(x)."}
 
 
@@ -624,13 +620,13 @@ special.gamma = function (_, z)
   else
     z = z-1
     local x = 0.99999999999980993
-    for i = 1, #k_gamma do x = x + k_gamma[i]/(z+i) end
-    local t = z + #k_gamma - 0.5
+    for i = 1, #_k_gamma do x = x + _k_gamma[i]/(z+i) end
+    local t = z + #_k_gamma - 0.5
     -- sqrt(2*pi) = 2.506...
     return 2.5066282746310002 * t^(z+0.5) * math.exp(-t) * x
   end
 end
-about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", GAMMA}
+_about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", _tag.GAMMA}
 
 
 --- Logarithm of gamma function.
@@ -641,14 +637,14 @@ special.gammaln = function (_, z)
   local tmp = x + 5.5
   tmp = tmp - (x+0.5)*math.log(tmp)
   local ser = 1.000000000190015
-  for i = 1, #k_gammaln do
+  for i = 1, #_k_gammaln do
     y = y +1
-    ser = ser + k_gammaln[i]/y
+    ser = ser + _k_gammaln[i]/y
   end
   return -tmp + math.log(2.5066282746310005*ser/x)
 end
-about[special.gammaln] = {":gammaln(x_d) --> num",
-  "Natural logarithm of gamma function.", GAMMA}
+_about[special.gammaln] = {":gammaln(x_d) --> num",
+  "Natural logarithm of gamma function.", _tag.GAMMA}
 
 
 --- Incomplete gamma function P(N,x).
@@ -659,8 +655,8 @@ special.gammp = function (_, N, x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and _gammaSer(N, x) or 1.0-_gcf(N, x)
 end
-about[special.gammp] = {":gammp(order_N, x_d) --> num",
-  "Incomplete gamma function P(N,x).", GAMMA}
+_about[special.gammp] = {":gammp(order_N, x_d) --> num",
+  "Incomplete gamma function P(N,x).", _tag.GAMMA}
 
 
 --- Incomplete gamma function Q(N,x).
@@ -671,12 +667,14 @@ special.gammq = function (_, N, x)
   if x < 0.0 or N <= 0 then error(ERR_INVARG) end
   return (x < N+1.0) and 1-_gammaSer(N, x) or _gcf(N, x)
 end
-about[special.gammq] = {":gammq(order_N, x_d) --> num",
-  "Incomplete gamma function Q(N,x) = 1-P(N,x).", GAMMA}
+_about[special.gammq] = {":gammq(order_N, x_d) --> num",
+  "Incomplete gamma function Q(N,x) = 1-P(N,x).", _tag.GAMMA}
 
 
 -- Comment to remove descriptions
-special.about = about
+special.about = _about
+-- clear load data
+_tag = nil
 
 return special
 

@@ -95,19 +95,18 @@ ans = D:unpack(t)             -->  z
 
 --	LOCAL
 
-local Vinteger, Cross, Utils do
-  local lib = require("matlib.utils")
-  Vinteger = lib.versions.isInteger
-  Cross = lib.cross
-  Utils = lib.utils
-end
-local mabs = math.abs
+local _utils = require("matlib.utils")
+local _cross = _utils.cross
+local _tointeger = _utils.versions.toInteger
+_utils = _utils.utils
+
+local _abs = math.abs
 
 
 --- Check if the element is huge
 --  @param v Variable.
 --  @return true for big input.
-local function _isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
+local function _isbig(v) return type(v) == 'number' and _abs(v) > 1E10 end
 
 
 --- Simplify rational when possible.
@@ -115,7 +114,7 @@ local function _isbig(v) return type(v) == 'number' and mabs(v) > 1E10 end
 --  @return same object or some number
 local function _numrat(R)
   local a, b = R._[1], R._[2]
-  return Cross.eq(b, 1) and Cross.simp(a)               -- x / 1
+  return _cross.eq(b, 1) and _cross.simp(a)               -- x / 1
     -- float num or denom
     or (_isbig(a) or _isbig(b)) and (a / b)
     or R
@@ -126,7 +125,7 @@ end
 --  @param v Value.
 --  @return String representation.
 local function _numStr(v)
-  return type(v) == 'number' and Utils.numstr(v) or tostring(v)
+  return type(v) == 'number' and _utils.numstr(v) or tostring(v)
 end
 
 
@@ -144,9 +143,9 @@ end
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Computations with rational numbers."
 }
 
@@ -190,12 +189,12 @@ end
 --  @return Sum.
 rational.__add = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
-    local p = Cross.convert(R1, R2)
+    local p = _cross.convert(R1, R2)
     if p then
       return R1 + p
     else
-      p = Cross.convert(R2, R1)
-      return p and (p + R2) or (Cross.float(R1) + Cross.float(R2))
+      p = _cross.convert(R2, R1)
+      return p and (p + R2) or (_cross.float(R1) + _cross.float(R2))
     end
   end
   local r1, r2 = R1._, R2._
@@ -209,12 +208,12 @@ end
 --  @return Ratio.
 rational.__div = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
-    local p = Cross.convert(R1, R2)
+    local p = _cross.convert(R1, R2)
     if p then
       return R1 / p
     else
-      p = Cross.convert(R2, R1)
-      return p and (p / R2) or (Cross.float(R1) / Cross.float(R2))
+      p = _cross.convert(R2, R1)
+      return p and (p / R2) or (_cross.float(R1) / _cross.float(R2))
     end
   end
   local r1, r2 = R1._, R2._
@@ -228,20 +227,20 @@ end
 --  @return True if the numbers are equal.
 rational.__eq = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
-    local p = Cross.convert(R1, R2)
+    local p = _cross.convert(R1, R2)
     if p then
       return R1 == p
     else
-      p = Cross.convert(R2, R1)
+      p = _cross.convert(R2, R1)
       if p then
         return p == R2
       else
-        return Cross.float(R1) == Cross.float(R2)
+        return _cross.float(R1) == _cross.float(R2)
       end
     end
   end
   local r1, r2 = R1._, R2._
-  return Cross.eq(r1[1], r2[1]) and Cross.eq(r1[2], r2[2])
+  return _cross.eq(r1[1], r2[1]) and _cross.eq(r1[2], r2[2])
 end
 
 
@@ -255,15 +254,15 @@ rational.__index = rational
 --  @return True in the first value is less or equal then the second one.
 rational.__le = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
-    local p = Cross.convert(R1, R2)
+    local p = _cross.convert(R1, R2)
     if p then
       return R1 <= p
     else
-      p = Cross.convert(R2, R1)
+      p = _cross.convert(R2, R1)
       if p then
         return p <= R2
       else
-        return Cross.float(R1) <= Cross.float(R2)
+        return _cross.float(R1) <= _cross.float(R2)
       end
     end
   end
@@ -278,15 +277,15 @@ end
 --  @return True if the first number is less.
 rational.__lt = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
-    local p = Cross.convert(R1, R2)
+    local p = _cross.convert(R1, R2)
     if p then
       return R1 < p
     else
-      p = Cross.convert(R2, R1)
+      p = _cross.convert(R2, R1)
       if p then
         return p < R2
       else
-        return Cross.float(R1) < Cross.float(R2)
+        return _cross.float(R1) < _cross.float(R2)
       end
     end
   end
@@ -301,12 +300,12 @@ end
 --  @return Product.
 rational.__mul = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
-    local p = Cross.convert(R1, R2)
+    local p = _cross.convert(R1, R2)
     if p then
       return R1 * p
     else
-      p = Cross.convert(R2, R1)
-      return p and (p * R2) or (Cross.float(R1) * Cross.float(R2))
+      p = _cross.convert(R2, R1)
+      return p and (p * R2) or (_cross.float(R1) * _cross.float(R2))
     end
   end
   local r1, r2 = R1._, R2._
@@ -323,11 +322,11 @@ rational.__newindex = function () error("Immutable object") end
 --  @param R2 Rational or real number.
 --  @return Power value.
 rational.__pow = function (R1, R2)
-  R2 = Cross.float(R2)
+  R2 = _cross.float(R2)
   if type(R1) == "number" then
     return R1^R2
   else
-    if not Vinteger(R2) then
+    if _tointeger(R2) == nil then
       error "Power must be integer"
     end
     local r1 = R1._
@@ -346,12 +345,12 @@ end
 --  @return Difference.
 rational.__sub = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
-    local p = Cross.convert(R1, R2)
+    local p = _cross.convert(R1, R2)
     if p then
       return R1 - p
     else
-      p = Cross.convert(R2, R1)
-      return p and (p - R2) or (Cross.float(R1) - Cross.float(R2))
+      p = _cross.convert(R2, R1)
+      return p and (p - R2) or (_cross.float(R1) - _cross.float(R2))
     end
   end
   local r1, r2 = R1._, R2._
@@ -364,10 +363,10 @@ end
 rational.__tostring = function (self)
   local r = self._
   if type(r[1]) == 'number' and type(r[2]) == 'number'
-     and mabs(r[1]) > r[2]
+     and _abs(r[1]) > r[2]
   then
     if rational.MIXED then
-      local n = mabs(r[1])       -- numerator
+      local n = _abs(r[1])       -- numerator
       local v = math.modf(n / r[2])
       return string.format(
         "%s%d %d/%d", r[1] < 0 and '-' or '', v, n % r[2], r[2])
@@ -385,15 +384,15 @@ end
 rational.__unm = function (self) return rational._new(-self._[1], self._[2]) end
 
 
-about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, -a, a^b", nil, help.META}
-about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, help.META}
+_about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, -a, a^b", nil, _help.META}
+_about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, _help.META}
 
 
 --- Convert value to rational number.
 --  @param v Source value.
 --  @return Rational number of false.
 rational._convert = function (v)
-  return (type(v) == 'number' and Vinteger(v) or type(v) == 'table' and v.__mod)
+  return (type(v) == 'number' and _tointeger(v) ~= nil or type(v) == 'table' and v.__mod)
          and rational._new(v, 1)
 end
 
@@ -401,7 +400,7 @@ end
 --- Check if the number is 0.
 --  @return true for zero.
 rational._isZero = function (self)
-  return Cross.isZero(self._[1])
+  return _cross.isZero(self._[1])
 end
 
 
@@ -419,7 +418,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 rational._pack = function (self, acc)
-  local t = {string.pack('B', acc['rational']), Utils.pack_seq(self._, 1, 2, acc)}
+  local t = {string.pack('B', acc['rational']), _utils.pack_seq(self._, 1, 2, acc)}
   return table.concat(t)
 end
 
@@ -431,7 +430,7 @@ end
 --  @param ver Pack algorithm version.
 --  @return Rational object.
 rational._unpack = function (src, pos, acc, ver)
-  local t, p = Utils.unpack_seq(2, src, pos, acc, ver)
+  local t, p = _utils.unpack_seq(2, src, pos, acc, ver)
   return rational._new(t[1], t[2]), p
 end
 
@@ -439,7 +438,7 @@ end
 --- Get denominator.
 --  @return Denominator.
 rational.denom = function (self) return self._[2] end
-about[rational.denom] = {"R:denom() --> var",
+_about[rational.denom] = {"R:denom() --> var",
   "Return the denominator of the rational number."}
 
 
@@ -448,9 +447,9 @@ about[rational.denom] = {"R:denom() --> var",
 --  @return Decimal fraction.
 rational.float = function (self)
   local r = self._
-  return (r[1] < 0 and -1 or 1) * (Cross.norm(r[1]) / Cross.norm(r[2]))
+  return (r[1] < 0 and -1 or 1) * (_cross.norm(r[1]) / _cross.norm(r[2]))
 end
-about[rational.float] = {"R:float() --> num",
+_about[rational.float] = {"R:float() --> num",
   "Return rational number as decimal."}
 
 
@@ -468,8 +467,8 @@ rational.from = function (_, f, fErr)
   end
   return rational._new(f >= 0 and a or -a, b)
 end
-about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
-  "Estimate ratio from floating point value.", help.NEW}
+_about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
+  "Estimate ratio from floating point value.", _help.NEW}
 
 
 --- Get rational number from continued fraction coefficients.
@@ -478,7 +477,7 @@ about[rational.from] = {":from(src_f, err_f=1E-3) --> R",
 rational.fromCF = function (_, t)
   local check = {}
   for i, v in ipairs(t) do
-    if (type(v) == 'number' and Vinteger(v)
+    if (type(v) == 'number' and _tointeger(v) ~= nil
       or type(v) == 'table' and v.__mod) and v > 0
     then
       check[i] = v
@@ -487,7 +486,7 @@ rational.fromCF = function (_, t)
     end
   end
   local t0 = t[0] or 0
-  if (type(t0) == 'number' and Vinteger(t0)
+  if (type(t0) == 'number' and _tointeger(t0) ~= nil
     or type(t0) == 'table' and t0.__mod)
   then
     check[0] = t0
@@ -496,7 +495,7 @@ rational.fromCF = function (_, t)
   end
   return rational._new(_cont2rat(check))
 end
-about[rational.fromCF] = {":fromCF(coeff_t) --> R",
+_about[rational.fromCF] = {":fromCF(coeff_t) --> R",
   "Transform continued fraction to rational number.", CONTINUATED}
 
 
@@ -505,14 +504,14 @@ about[rational.fromCF] = {":fromCF(coeff_t) --> R",
 --  @param vb Second integer.
 --  @return Greatest common divisor.
 rational._gcd = function (va, vb)
-  return Cross.isZero(va) and vb or rational._gcd(vb % va, va)
+  return _cross.isZero(va) and vb or rational._gcd(vb % va, va)
 end
 
 
 --- Get numerator.
 --  @return Numerator.
 rational.num = function (self) return self._[1] end
-about[rational.num] = {"R:num() --> var",
+_about[rational.num] = {"R:num() --> var",
   "Return the numerator of rational number."}
 
 
@@ -535,7 +534,7 @@ rational.toCF = function (self)
   res[#res+1] = math.modf(b)
   return setmetatable(res, mt_continued)
 end
-about[rational.toCF] = {"R:toCF() --> coeff_t",
+_about[rational.toCF] = {"R:toCF() --> coeff_t",
   "Transform rational number to continued fraction.", CONTINUATED}
 
 
@@ -547,20 +546,20 @@ __call = function (_, n, d)
   end
   d = d or 1
   assert(
-    type(n) == 'number' and Vinteger(n) or type(n) == 'table' and n.__mod,
+    type(n) == 'number' and _tointeger(n) ~= nil or type(n) == 'table' and n.__mod,
     "Wrong numerator type")
   assert(
-    type(d) == 'number' and Vinteger(d) or type(d) == 'table' and d.__mod,
+    type(d) == 'number' and _tointeger(d) ~= nil or type(d) == 'table' and d.__mod,
     "Wrong denomenator type")
-  assert(not Cross.isZero(d), "Wrond denomenator value")
+  assert(not _cross.isZero(d), "Wrond denomenator value")
   return rational._new(n, d)
 end})
-about[rational] = {" (num, denom=1) --> new_R",
-  "Create rational number using num (and denom).", help.NEW}
+_about[rational] = {" (num, denom=1) --> new_R",
+  "Create rational number using num (and denom).", _help.NEW}
 
 
 -- Comment to remove descriptions
-rational.about = about
+rational.about = _about
 
 return rational
 

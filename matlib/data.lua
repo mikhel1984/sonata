@@ -1069,7 +1069,7 @@ end
 --  @param i Element index.
 --  @return Number.
 mt_range.__index = function (self, i)
-  if _ver.isInteger(i) and i > 0 and i <= self._N then
+  if _ver.toInteger(i) ~= nil and i > 0 and i <= self._N then
     local v = 0
     if i < self._N then
       v = self._beg + (i-1)*self._step
@@ -1152,7 +1152,7 @@ local mt_ref = {
 --  @param i Element index.
 --  @return Table value.
 mt_ref.__index = function (self, i)
-  if _ver.isInteger(i) then
+  if _ver.toInteger(i) ~= nil then
     local n = (i >= 0) and (i + self._beg) or (i + 1 + self._end)
     if self._beg < n and n <= self._end then
       return self._tbl[n]
@@ -1167,7 +1167,7 @@ end
 --  @param k Index.
 --  @param v Value.
 mt_ref.__newindex = function (self, k, v)
-  if _ver.isInteger(k) and 0 < k and (self._beg + k) <= self._end then
+  if _ver.toInteger(k) ~= nil and 0 < k and (self._beg + k) <= self._end then
     k = k + self._beg
     if getmetatable(v) == mt_ref then
       -- copy data
@@ -1213,7 +1213,7 @@ mt_ref.__shr = function (ref, n) return mt_ref.shift(ref, n, n) end
 data.ref = function (_, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
-  assert(_ver.isInteger(iBeg) and _ver.isInteger(iEnd), "Wrong index type")
+  assert(_ver.toInteger(iBeg) and _ver.toInteger(iEnd), "Wrong index type")
   if getmetatable(t) == mt_ref then
     return setmetatable({_beg=t._beg+iBeg-1, _end=t._beg+iEnd, _tbl=t._tbl}, mt_ref)
   end
@@ -1265,7 +1265,7 @@ end
 --  @param n Column number.
 --  @return column reference.
 data.col = function (_, t, n)
-  assert(_ver.isInteger(n) and t[1][n], "Out of range")
+  assert(_ver.toInteger(n) and t[1][n], "Out of range")
   return setmetatable({_tbl=t, _n=n}, mt_col)
 end
 _about[data.col] = {":col(src_t, col_N) --> ref_Col",
@@ -1310,7 +1310,7 @@ end
 --  @return column reference.
 data.row = function (_, t, n)
   local row = t[n]
-  assert(_ver.isInteger(n) and row, "Out of range")
+  assert(_ver.toInteger(n) and row, "Out of range")
   return setmetatable({_tbl=t, _row=row, _n=n}, mt_row)
 end
 _about[data.row] = {":row(src_t, row_N) --> ref_Row",

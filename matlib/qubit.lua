@@ -132,7 +132,7 @@ local _ext = {
   complex = require("matlib.complex"),
 }
 
-local _isinteger = _ext.utils.versions.isInteger
+local _tointeger = _ext.utils.versions.toInteger
 local _iszero = _ext.utils.cross.isZero
 local _num2str = _ext.utils.utils.numstr
 local _binsearch = _ext.utils.utils.binsearch
@@ -468,7 +468,7 @@ qubit.__len = qubit.size
 setmetatable(qubit, {
 __call = function (self, state)
   if type(state) == 'number' then
-    assert(_isinteger(state) and state > 0, 'Wrong size')
+    assert(_tointeger(state) and state > 0, 'Wrong size')
     return qubit._rand(state)
   end
   return qubit._new(_parse(state))
@@ -486,7 +486,7 @@ qgate.__index = qgate
 --- Initialize gate sequence.
 --  @param n Number of inputs.
 qubit.gates = function (_, n)
-  if n <= 0 or not _isinteger(n) then
+  if n <= 0 or _tointeger(n) == nil then
     error 'Wrong input number'
   end
   return qgate._new(n)
@@ -534,7 +534,7 @@ end
 --  @parma n Integer power.
 --  @return n times concatenated gates.
 qgate.__pow = function (self, n)
-  if not _isinteger(n) then
+  if _tointeger(n) == nil then
     error 'Integer is expected'
   end
   if n < -1 then
