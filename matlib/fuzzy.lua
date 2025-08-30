@@ -29,6 +29,7 @@ ans = math.pi               --.2> 355/113
 --	LOCAL
 
 local ERR_ORDER = "Wrong order"
+local ERR_OPERATION = "Unexpected operation"
 
 --	INFO
 
@@ -53,6 +54,7 @@ local mt_set = {
 }
 mt_set.__index = mt_set
 
+
 local function _newSet (s, op, nm)
   local o = {
     set=s,
@@ -62,9 +64,10 @@ local function _newSet (s, op, nm)
   return setmetatable(o, mt_set)
 end
 
+
 local function _setArgs (S1, S2)
-  if getmetatable(S1) ~= mt_set then S1 = _newSet(S1, nil, mt_set._default) end
-  if getmetatable(S2) ~= mt_set then S2 = _newSet(S2, nil, mt_set._default) end
+  if getmetatable(S1) ~= mt_set then S1 = _newSet(S1) end
+  if getmetatable(S2) ~= mt_set then S2 = _newSet(S2) end
   return S1, S2
 end
 
@@ -79,31 +82,51 @@ mt_set._eval = function (S, x, env)
   elseif S.op == _op.NOT then
     return env.NOT(S.set:_eval(x, env))
   end
-  error "Unexpected operation"
+  error(ERR_OPERATION)
 end
 
-mt_set.eval = function (S, x, env)
+
+mt_set.__call = function (S, x, env)
   env = env or { AND=math.min, OR=math.max, NOT=_op.fnNot, }
   return mt_set._eval(S, x, env)
 end
 
 
-mt_set.sand = function (S1, S2)
+mt_set._str = function (S)
+  if not S.op then
+    return S.name or mt_set._default
+  elseif S.op == _op.AND then
+    return string.format("(%s & %s)", S.set[1]:_str(), S.set[2]:_str())
+  elseif S.op == _op.OR then
+    return string.format("(%s | %s)", S.set[1]:_str(), S.set[2]:_str())
+  elseif S.op == _op.NOT then
+    return string.format("~" .. S.set:_str())
+  end
+  error(ERR_OPERATION)
+end
+
+
+mt_set.__tostring = function (S)
+  return string.format("fuzzy %s",  mt_set._str(S))
+end
+
+
+mt_set.andf = function (S1, S2)
   return _newSet({_setArgs(S1, S2)}, _op.AND)
 end
-mt_set.__band = mt_set.sand
+mt_set.__band = mt_set.andf
 
 
-mt_set.sor = function (S1, S2)
+mt_set.orf = function (S1, S2)
   return _newSet({_setArgs(S1, S2)}, _op.OR)
 end
-mt_set.__bor = mt_set.sor
+mt_set.__bor = mt_set.orf
 
 
-mt_set.snot = function (S)
+mt_set.notf = function (S)
   return _newSet(S, _op.NOT)
 end
-mt_set.__bnot = mt_set.snot
+mt_set.__bnot = mt_set.notf
 
 
 
@@ -150,7 +173,7 @@ fuzzy.trapmf = function (_, a, b, c, d)
 end
 
 fuzzy.newmf = function (_, fn, name)
-  return _newSet(fn, nil, name or mt_set._default)
+  return _newSet(fn, nil, name)
 end
 
 
@@ -201,4 +224,4 @@ fuzzy.about = _about
 a = fuzzy:trapmf(0, 1, 2, 3)
 b = fuzzy:trimf(-1, 0, 1)
 local c = a & b | (~a) & b
-print(c:eval(0.1))
+print(c)
