@@ -28,7 +28,7 @@ ans = math.pi               --.2> 355/113
 
 --	LOCAL
 
-local _foo = 42
+local ERR_ORDER = "Wrong order"
 
 --	INFO
 
@@ -41,12 +41,117 @@ __module__ = "Fuzzy logic."
 
 --	MODULE
 
+local _op = { 
+  AND='conjunction', OR='disjunction', NOT='complement', 
+  fnNot = function (x) return 1 - x end,
+}
+
+
+local mt_set = { 
+  type = 'fuzzy_set', 
+  _default = 'user_mf',
+}
+mt_set.__index = mt_set
+
+local function _newSet (s, op, nm)
+  local o = {
+    set=s,
+    op=op,
+    name=nm
+  }
+  return setmetatable(o, mt_set)
+end
+
+local function _setArgs (S1, S2)
+  if getmetatable(S1) ~= mt_set then S1 = _newSet(S1, nil, mt_set._default) end
+  if getmetatable(S2) ~= mt_set then S2 = _newSet(S2, nil, mt_set._default) end
+  return S1, S2
+end
+
+
+mt_set._eval = function (S, x, env)
+  if not S.op then
+    return S.set(x)
+  elseif S.op == _op.AND then
+    return env.AND(S.set[1]:_eval(x, env), S.set[2]:_eval(x, env))
+  elseif S.op == _op.OR then
+    return env.OR(S.set[1]:_eval(x, env), S.set[2]:_eval(x, env))
+  elseif S.op == _op.NOT then
+    return env.NOT(S.set:_eval(x, env))
+  end
+  error "Unexpected operation"
+end
+
+mt_set.eval = function (S, x, env)
+  env = env or { AND=math.min, OR=math.max, NOT=_op.fnNot, }
+  return mt_set._eval(S, x, env)
+end
+
+
+mt_set.sand = function (S1, S2)
+  return _newSet({_setArgs(S1, S2)}, _op.AND)
+end
+mt_set.__band = mt_set.sand
+
+
+mt_set.sor = function (S1, S2)
+  return _newSet({_setArgs(S1, S2)}, _op.OR)
+end
+mt_set.__bor = mt_set.sor
+
+
+mt_set.snot = function (S)
+  return _newSet(S, _op.NOT)
+end
+mt_set.__bnot = mt_set.snot
+
+
+
+
+
+
 local fuzzy = {
 -- mark
 type = 'fuzzy',
 }
 -- methametods
 fuzzy.__index = fuzzy
+
+fuzzy.trimf = function (_, a, b, c)
+  assert(a <= b and b <= c, ERR_ORDER)
+  local k1 = (b > a) and (1/(b-a)) or 0
+  local k2 = (c > b) and (-1/(c-b)) or 0
+  local fn = function (x)
+    if x < a or x > c then
+      return 0
+    elseif x < b then
+      return k1*(x-a)
+    end
+    return 1 + k2*(x-b)
+  end
+  return _newSet(fn, nil, 'trimf')
+end
+
+fuzzy.trapmf = function (_, a, b, c, d)
+  assert(a <= b and b <= c and c <= d, ERR_ORDER)
+  local k1 = (b > a) and (1/(b-a)) or 0
+  local k2 = (d > c) and (-1/(d-c)) or 0
+  local fn = function (x)
+    if x < a or x > d then
+      return 0
+    elseif x < b then
+      return k1*(x-a)
+    elseif x < c then
+      return 1
+    end
+    return 1 + k2*(x-c)
+  end
+  return _newSet(fn, nil, 'trapmf')
+end
+
+fuzzy.newmf = function (_, fn, name)
+  return _newSet(fn, nil, name or mt_set._default)
+end
 
 
 --- Check object type.
@@ -88,7 +193,12 @@ _about[fuzzy.copy] = {"F:copy() --> cpy_F",
 -- Comment to remove descriptions
 fuzzy.about = _about
 
-return fuzzy
+--return fuzzy
 
 --======================================
 --TODO: write new functions
+
+a = fuzzy:trapmf(0, 1, 2, 3)
+b = fuzzy:trimf(-1, 0, 1)
+local c = a & b | (~a) & b
+print(c:eval(0.1))
