@@ -57,6 +57,8 @@ local mt_set = {
     OR = math.max,
     NOT = function (x) return 1 - x end,
     DEFUZ = 'centroid',
+    IMPL = math.min,
+    AGG = math.max,
   }
 }
 mt_set.__index = mt_set
@@ -96,6 +98,28 @@ end
 mt_set.__call = function (S, x, env)
   env = env or mt_set._default_env
   return mt_set._eval(S, x, env)
+end
+
+
+mt_set._evalDomains = function (S, p, env)
+  local d = S.domain
+  if d then
+    local v = p[d] 
+    if not v then 
+      error "No value for domain " .. d
+    end
+    return mt_set._eval(S, v, env)
+  end
+  if not S.op then
+    error "Unable to evaluate"
+  elseif S.op == _op.AND then
+    return env.AND(S.set[1]:_evalDomains(p, env), S.set[2]:_evalDomains(p, env))
+  elseif S.op == _op.OR then
+    return env.OR(S.set[1]:_evalDomains(p, env), S.set[2]:_evalDomains(p, env))
+  elseif S.op == _op.NOT then
+    return env.NOT(S.set:_evalDomains(p, env))
+  end
+  error(ERR_OPERATION)
 end
 
 
@@ -211,12 +235,130 @@ local mt_domain = {
 }
 
 
+mt_domain.__index = function (self, k)
+  return self._set[k] or mt_domain[k]
+end
+
+
+mt_domain.__newindex = function (self, k, v)
+  if not (v == nil or getmetatable(v) == mt_set) then
+    error "Fuzzy set is expected"
+  end
+  if type(k) ~= "string" then
+    error "Name must be string"
+  end
+  self._set[k] = v
+  v.domain = self._name
+end
+
+
+mt_domain.range = function (self)
+  return {self._range[1], self._range[2]}
+end
+
+
+mt_domain.sets = function (self)
+  local t = {}
+  for k in ipairs(self._set) do t[#t+1] = k end
+  return t
+end
+
+
+local function _newDomain (rng, nm)
+  local o = {
+    _range = rng,
+    _name = nm,
+    _set = {}
+  }
+  return setmetatable(o, mt_domain)
+end
+
+
+
+
 local fuzzy = {
 -- mark
 type = 'fuzzy',
 }
+
+
 -- methametods
-fuzzy.__index = fuzzy
+fuzzy.__index = function (self, k)
+  return self._domain[k] or fuzzy[k]
+end
+
+
+
+fuzzy._new = function (env)
+  env = env or {}
+  local acc = {}
+  for k, v in ipairs(mt_set._default_env) do
+    acc[k] = env[k] or v
+  end
+  local o = {
+    _env = acc,
+    _domain = {},
+    _rules = {},
+  }
+  return setmetatable(o, fuzzy)
+end
+
+
+fuzzy.addDomain = function (self, range, name)
+  assert(type(range) == 'table' and range[1] < range[2], "Wrong range")
+  assert(type(name) == "string", "Name must be string")
+  self._domain[name] = _newDomain(range, name)
+  return self._domain[name]
+end
+
+
+fuzzy.addRule = function (self, iset, oset, w)
+  w = w or 1
+  if getmetatable(iset) ~= mt_set or getmetatable(oset) ~= mt_set then
+    error "Expected fuzzy set on input and output"
+  end
+  if w < 0 or w > 1 then
+    error "Incorrect weight"
+  end
+  table.insert(self._rules, {iset, oset, w, 0})
+end
+
+
+fuzzy.setEnv = function (self, env)
+  for k, v in ipairs(env) do
+    self._env[k] = v
+  end
+end
+
+fuzzy._aggregate = function (self, x)
+  local env = self._env
+  local implicate, aggregate = env.IMPL, env.AGG
+  local res = 0
+  for _, r in ipairs(self._rules) do
+    local v = r[2]:_eval(x, env)
+    v = implicate(v, r[4])
+    res = aggregate(res, v)
+  end
+  return res
+end
+
+fuzzy.eval = function (self, p)
+  if #self._rules == 0 then return 0 end
+  for _, r in ipairs(self._rules) do
+    r[4] = r[3] * r[1]:_evalDomains(p, self._env)
+  end
+  local fset = _newSet(
+    function (x) return self:_aggregate(x) end,
+    nil,
+    "output")
+  
+  local nm = self._rules[1][2].domain
+  fset.domain = nm
+  local rng = self._domain[nm]._range
+  local d = fset:defuzzify(rng, self._env)
+  return d, fset
+end
+
 
 fuzzy.trimf = function (_, a, b, c)
   assert(a <= b and b <= c, ERR_ORDER)
