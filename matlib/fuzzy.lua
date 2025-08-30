@@ -28,6 +28,8 @@ ans = math.pi               --.2> 355/113
 
 --	LOCAL
 
+local _utils = require("matlib.utils")
+
 local ERR_ORDER = "Wrong order"
 local ERR_OPERATION = "Unexpected operation"
 
@@ -43,14 +45,19 @@ __module__ = "Fuzzy logic."
 --	MODULE
 
 local _op = { 
-  AND='conjunction', OR='disjunction', NOT='complement', 
-  fnNot = function (x) return 1 - x end,
+  AND=1, OR=2, NOT=3, 
 }
 
 
 local mt_set = { 
   type = 'fuzzy_set', 
-  _default = 'user_mf',
+  _default_name = 'user_mf',
+  _default_env = {
+    AND = math.min, 
+    OR = math.max,
+    NOT = function (x) return 1 - x end,
+    DEFUZ = 'centroid',
+  }
 }
 mt_set.__index = mt_set
 
@@ -87,20 +94,20 @@ end
 
 
 mt_set.__call = function (S, x, env)
-  env = env or { AND=math.min, OR=math.max, NOT=_op.fnNot, }
+  env = env or mt_set._default_env
   return mt_set._eval(S, x, env)
 end
 
 
 mt_set._str = function (S)
   if not S.op then
-    return S.name or mt_set._default
+    return S.name or mt_set._default_name
   elseif S.op == _op.AND then
     return string.format("(%s & %s)", S.set[1]:_str(), S.set[2]:_str())
   elseif S.op == _op.OR then
     return string.format("(%s | %s)", S.set[1]:_str(), S.set[2]:_str())
   elseif S.op == _op.NOT then
-    return string.format("~" .. S.set:_str())
+    return "~" .. S.set:_str()
   end
   error(ERR_OPERATION)
 end
@@ -129,6 +136,68 @@ end
 mt_set.__bnot = mt_set.notf
 
 
+mt_set.defuzzify = function (S, rng, env)
+  env = env or mt_set._default_env
+  local res, a, b = 0, rng[1], rng[2]
+  local n = 100
+  local dx = (b - a)/n
+  if env.DEFUZ == 'centroid' then
+    local num, denom = 0, 0
+    for x = a, b, dx do
+      local v = S(x)
+      num = num + x*v
+      denom = denom + v
+    end
+    res = (denom > 0) and (num/denom) or 0
+  elseif env.DEFUZ == 'bisector' then
+    local v = {[0]=0}
+    for x = a, b, dx do
+      v[#v+1] = v[#v] + dx*S(x)
+    end
+    local i = _utils.utils.binsearch(v, v[#v]*0.5)
+    res = a + (i-1)*dx
+  else
+    -- list of maximum
+    local v = {}
+    local i, pp, p = 0, 0, 0
+    for x = a, b, dx do
+      local vi = S(x)
+      if pp <= p and p > vi then
+        v[#v+1] = {i-1, p}
+      end
+      pp, p = p, vi
+      i = i + 1
+    end
+    if #v == 0 then
+      res = a
+    elseif env.DEFUZ == 'lom' then
+      local vmax = v[1]
+      for i = 2, #v do
+        if v[i][2] > vmax[2] then
+          vmax = v[i]
+        end
+      end
+      res = a + vmax[1]*dx
+    elseif env.DEFUZ == 'som' then
+      local vmin = v[1]
+      for i = 2, #v do
+        if v[i][2] < vmin[2] then
+          vmin = v[i]
+        end
+      end
+      res = a + vmin[1]*dx
+    elseif env.DEFUZ == 'mom' then
+      local sum = 0
+      for _, vi in ipairs(v) do
+        sum = sum + vi[1] 
+      end
+      res = a + dx*(sum/#v)
+    else
+      error "Unknown method"
+    end
+  end
+  return res
+end
 
 
 
@@ -222,6 +291,8 @@ fuzzy.about = _about
 --TODO: write new functions
 
 a = fuzzy:trapmf(0, 1, 2, 3)
-b = fuzzy:trimf(-1, 0, 1)
+b = fuzzy:trimf(-2, 0, 1)
 local c = a & b | (~a) & b
-print(c)
+local env = mt_set._default_env
+--env.DEFUZ = 'bisector'
+print(b:defuzzify({-2, 1}, env))

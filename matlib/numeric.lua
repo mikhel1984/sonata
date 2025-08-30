@@ -390,7 +390,7 @@ _about[numeric.solve] = {":solve(fn, low_d, up_d) --> num",
   "Find root of equation fn(x)=0 on interval [a,b]."}
 
 
---- Integration using trapeze method.
+--- Integration using Simpson method.
 --  @param fn Function f(x).
 --  @param a Lower bound.
 --  @param b Upper bound.
