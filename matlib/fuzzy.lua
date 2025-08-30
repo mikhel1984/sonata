@@ -139,9 +139,10 @@ mt_set.__bnot = mt_set.notf
 mt_set.defuzzify = function (S, rng, env)
   env = env or mt_set._default_env
   local res, a, b = 0, rng[1], rng[2]
-  local n = 100
+  local n = 100  -- TODO adaptive search
   local dx = (b - a)/n
   if env.DEFUZ == 'centroid' then
+    -- center of gravity
     local num, denom = 0, 0
     for x = a, b, dx do
       local v = S(x)
@@ -150,14 +151,15 @@ mt_set.defuzzify = function (S, rng, env)
     end
     res = (denom > 0) and (num/denom) or 0
   elseif env.DEFUZ == 'bisector' then
+    -- divide into equal area
     local v = {[0]=0}
     for x = a, b, dx do
       v[#v+1] = v[#v] + dx*S(x)
     end
-    local i = _utils.utils.binsearch(v, v[#v]*0.5)
+    local i = _utils.utils.binsearch(v, v[#v]*0.5)  -- TODO improve accuracy
     res = a + (i-1)*dx
   else
-    -- list of maximum
+    -- find maximum points
     local v = {}
     local i, pp, p = 0, 0, 0
     for x = a, b, dx do
@@ -168,9 +170,11 @@ mt_set.defuzzify = function (S, rng, env)
       pp, p = p, vi
       i = i + 1
     end
+    -- evaluate
     if #v == 0 then
       res = a
     elseif env.DEFUZ == 'lom' then
+      -- largest of maximum
       local vmax = v[1]
       for i = 2, #v do
         if v[i][2] > vmax[2] then
@@ -179,6 +183,7 @@ mt_set.defuzzify = function (S, rng, env)
       end
       res = a + vmax[1]*dx
     elseif env.DEFUZ == 'som' then
+      -- smallest of maximum
       local vmin = v[1]
       for i = 2, #v do
         if v[i][2] < vmin[2] then
@@ -187,6 +192,7 @@ mt_set.defuzzify = function (S, rng, env)
       end
       res = a + vmin[1]*dx
     elseif env.DEFUZ == 'mom' then
+      -- middle of maximum (average of points)
       local sum = 0
       for _, vi in ipairs(v) do
         sum = sum + vi[1] 
@@ -200,6 +206,9 @@ mt_set.defuzzify = function (S, rng, env)
 end
 
 
+local mt_domain = {
+  type="fuzzy_domain",
+}
 
 
 local fuzzy = {
@@ -239,6 +248,158 @@ fuzzy.trapmf = function (_, a, b, c, d)
     return 1 + k2*(x-c)
   end
   return _newSet(fn, nil, 'trapmf')
+end
+
+fuzzy.linzmf = function (_, a, b)
+  assert(a <= b, ERR_ORDER)
+  local k = (b > a) and (-1/(b-a)) or 0
+  local fn = function (x)
+    if x < a then
+      return 1
+    elseif x > b then
+      return 0
+    end
+    return 1 + k*(x-a)
+  end
+  return _newSet(fn, nil, 'linzmf')
+end
+
+fuzzy.linsmf = function (_, a, b)
+  assert(a <= b, ERR_ORDER)
+  local k = (b > a) and (1/(b-a)) or 0
+  local fn = function (x)
+    if x < a then 
+      return 0
+    elseif x > b then
+      return 1
+    end
+    return 1 + k*(x-a)
+  end
+  return _newSet(fn, nil, 'linsmf')
+end
+
+fuzzy.gaussmf = function (_, sig, mu)
+  local fn = function (x)
+    local v = (x-mu)/sig
+    return math.exp(-v*v*0.5)
+  end
+  return _newSet(fn, nil, 'gaussmf')
+end
+
+fuzzy.gauss2mf = function (_, s1, m1, s2, m2)
+  assert(m1 <= m2, ERR_ORDER)
+  local fn = function (x)
+    if x < m1 then
+      local v = (x-m1)/s1
+      return math.exp(-v*v*0.5)
+    elseif x > m2 then
+      local v = (x-m2)/s2
+      return math.exp(-v*v*0.5)
+    end
+    return 1
+  end
+  return _newSet(fn, nil, 'gauss2mf')
+end
+
+fuzzy.gbellmf = function (_, w, p, m)
+  assert(w ~= 0, "Wrong width")
+  local p = 2*p
+  local fn = function (x)
+    local v = math.abs((x-m)/w)
+    return 1/(1 + v^p)
+  end
+  return _newSet(fn, nil, 'gbellmf')
+end
+
+fuzzy.sigmf = function (_, k, m)
+  local fn = function (x)
+    local v = k*(x-m)
+    return 1/(1 + math.exp(-v))
+  end
+  return _newSet(fn, nil, 'sigmf')
+end
+
+fuzzy.dsigmf = function (_, k1, m1, k2, m2)
+  assert(m1 <= m2, ERR_ORDER)
+  local fn = function (x)
+    local v1 = k1*(x-m1)
+    local v2 = k2*(x-m2)
+    return 1/(1 + math.exp(-v1)) - 1/(1 + math.exp(-v2))
+  end
+  return _newSet(fn, nil, 'dsigmf')
+end
+
+fuzzy.psigmf = function (_, k1, m1, k2, m2)
+  assert(m1 <= m2, ERR_ORDER)
+  local fn = function (x)
+    local v1 = k1*(x-m1)
+    local v2 = k2*(x-m2)
+    return 1/(1 + math.exp(-v1))/(1 + math.exp(-v2))
+  end
+  return _newSet(fn, nil, 'psigmf')
+end
+
+fuzzy.zmf = function (_, a, b)
+  assert(a < b, ERR_ORDER)
+  local m, d = (a+b)*0.5, b-a
+  local fn = function (x)
+    if x < a then 
+      return 1
+    elseif x < m then
+      local v = (x-a)/d
+      return 1 - 2*v*v
+    elseif x < b then
+      local v = (x-b)/d
+      return 2*v*v
+    end
+    return 0
+  end
+  return _newSet(fn, nil, 'zmf')
+end
+
+fuzzy.smf = function (_, a, b)
+  assert(a < b, ERR_ORDER)
+  local m, d = (a+b)*0.5, b-a
+  local fn = function (x)
+    if x < a then
+      return 0
+    elseif x < m then
+      local v = (x-a)/d
+      return 2*v*v
+    elseif x < b then
+      local v = (x-b)/d
+      return 1 - 2*v*v
+    end
+    return 1
+  end
+  return _newSet(fn, nil, 'smf')
+end
+
+fuzzy.pimf = function (_, a, b, c, d)
+  assert(a < b and b <= c and c < d, ERR_ORDER)
+  local m1, m2 = (a+b)*0.5, (c+d)*0.5
+  local q1, q2 = (b-a), (d-c)
+  local fn = function (x)
+    if x < a then 
+      return 0
+    elseif x < m1 then
+      local v = (x-a)/q1
+      return 2*v*v
+    elseif x < b then
+      local v = (x-b)/q1
+      return 1 - 2*v*v
+    elseif x < c then
+      return 1
+    elseif x < m2 then
+      local v = (x-c)/q2
+      return 1 - 2*v*v
+    elseif x < d then
+      local v = (x-d)/q2
+      return 2*v*v
+    end
+    return 0
+  end
+  return _newSet(fn, nil, 'pimf')
 end
 
 fuzzy.newmf = function (_, fn, name)
