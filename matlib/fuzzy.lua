@@ -28,6 +28,11 @@ ans = math.pi               --.2> 355/113
 
 --	LOCAL
 
+local _ext = {
+  utils = require("matlib.utils"),
+  -- ap = require("matlib.asciiplot"),
+}
+
 local _utils = require("matlib.utils")
 
 local ERR_ORDER = "Wrong order"
@@ -78,6 +83,11 @@ local function _setArgs (S1, S2)
   if getmetatable(S1) ~= mt_set then S1 = _newSet(S1) end
   if getmetatable(S2) ~= mt_set then S2 = _newSet(S2) end
   return S1, S2
+end
+
+
+mt_set.copy = function (S)
+  return _newSet(S.set, S.op, S.name)
 end
 
 
@@ -180,7 +190,7 @@ mt_set.defuzzify = function (S, rng, env)
     for x = a, b, dx do
       v[#v+1] = v[#v] + dx*S(x)
     end
-    local i = _utils.utils.binsearch(v, v[#v]*0.5)  -- TODO improve accuracy
+    local i = _ext.utils.utils.binsearch(v, v[#v]*0.5)  -- TODO improve accuracy
     res = a + (i-1)*dx
   else
     -- find maximum points
@@ -346,9 +356,6 @@ fuzzy.eval = function (self, p)
   if #self._rules == 0 then return 0 end
   for _, r in ipairs(self._rules) do
     r[4] = r[3] * r[1]:_evalDomains(p, self._env)
-    print(r[1])
-    print(r[2])
-    print(r[4])
   end
   local fset = _newSet(
     function (x) return self:_aggregate(x) end,
@@ -357,9 +364,29 @@ fuzzy.eval = function (self, p)
   
   local nm = self._rules[1][2].domain
   fset.domain = nm
+  self[nm]["ANS"] = fset
   local rng = self._domain[nm]._range
   local d = fset:defuzzify(rng, self._env)
   return d, fset
+end
+
+fuzzy.plot = function (self, domain, set)
+  local dom = assert(self[domain], "Domain not found")
+  _ext.ap = _ext.ap or require("matlib.asciiplot")
+  local fig = _ext.ap()
+  fig:setX {range = dom._range}
+  if set then
+    local s = assert(dom[set], "Set not found")
+    fig:plot(s, set)
+  else
+    local t = {}
+    for name, s in pairs(dom._set) do
+      t[#t+1] = s
+      t[#t+1] = name
+    end
+    fig:plot(table.unpack(t))
+  end
+  return fig
 end
 
 
@@ -418,7 +445,7 @@ fuzzy.linsmf = function (_, a, b)
     elseif x > b then
       return 1
     end
-    return 1 + k*(x-a)
+    return k*(x-a)
   end
   return _newSet(fn, nil, 'linsmf')
 end
@@ -594,7 +621,7 @@ fuzzy.about = _about
 --return fuzzy
 
 --======================================
---TODO: write new functions
+--TODO: print rules
 
 --a = fuzzy:trapmf(0, 1, 2, 3)
 --b = fuzzy:trimf(-2, 0, 1)
@@ -623,9 +650,11 @@ fz:addRule(fz.service.good, fz.tip.average)
 fz:addRule(fz.service.excellent | fz.food.delicious, fz.tip.generous)
 
 d, out = fz:eval {service = 2, food=5}
-print(d)
-Ap = require("matlib.asciiplot")
-fig = Ap()
-fig:setX {range=fz.tip:range()}
-fig:plot(out)
-print(fig)
+print(fz:plot("tip"))
+--print(d)
+-- Ap = require("matlib.asciiplot")
+-- fig = Ap()
+-- fig:setX {range={-5,5}}
+-- fig:setX {range=fz.tip:range()}
+-- fig:plot(out)
+-- print(fig)
