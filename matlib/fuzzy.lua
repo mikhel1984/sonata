@@ -106,7 +106,7 @@ mt_set._evalDomains = function (S, p, env)
   if d then
     local v = p[d] 
     if not v then 
-      error "No value for domain " .. d
+      error("No value for domain " .. d)
     end
     return mt_set._eval(S, v, env)
   end
@@ -259,7 +259,7 @@ end
 
 mt_domain.sets = function (self)
   local t = {}
-  for k in ipairs(self._set) do t[#t+1] = k end
+  for k in pairs(self._set) do t[#t+1] = k end
   return t
 end
 
@@ -292,7 +292,7 @@ end
 fuzzy._new = function (env)
   env = env or {}
   local acc = {}
-  for k, v in ipairs(mt_set._default_env) do
+  for k, v in pairs(mt_set._default_env) do
     acc[k] = env[k] or v
   end
   local o = {
@@ -346,6 +346,9 @@ fuzzy.eval = function (self, p)
   if #self._rules == 0 then return 0 end
   for _, r in ipairs(self._rules) do
     r[4] = r[3] * r[1]:_evalDomains(p, self._env)
+    print(r[1])
+    print(r[2])
+    print(r[4])
   end
   local fset = _newSet(
     function (x) return self:_aggregate(x) end,
@@ -593,9 +596,36 @@ fuzzy.about = _about
 --======================================
 --TODO: write new functions
 
-a = fuzzy:trapmf(0, 1, 2, 3)
-b = fuzzy:trimf(-2, 0, 1)
-local c = a & b | (~a) & b
-local env = mt_set._default_env
---env.DEFUZ = 'bisector'
-print(b:defuzzify({-2, 1}, env))
+--a = fuzzy:trapmf(0, 1, 2, 3)
+--b = fuzzy:trimf(-2, 0, 1)
+--local c = a & b | (~a) & b
+--local env = mt_set._default_env
+----env.DEFUZ = 'bisector'
+--print(b:defuzzify({-2, 1}, env))
+
+fz = fuzzy:_new()
+s1 = fz:addDomain({0, 10}, "service")
+s1.poor = fuzzy:gaussmf(1.5, 0)
+s1.good = fuzzy:gaussmf(1.5, 5)
+s1.excellent = fuzzy:gaussmf(1.5, 10)
+
+s2 = fz:addDomain({0, 10}, "food")
+s2.rancid = fuzzy:trapmf(-2, 0, 1, 3)
+s2.delicious = fuzzy:trapmf(7, 9, 10, 12)
+
+s3 = fz:addDomain({0, 30}, "tip")
+fz.tip.cheap = fuzzy:trimf(0, 5, 10)
+fz.tip.average = fuzzy:trimf(10, 15, 20)
+s3.generous = fuzzy:trimf(20, 25, 30)
+
+fz:addRule(fz.service.poor | fz.food.rancid, fz.tip.cheap)
+fz:addRule(fz.service.good, fz.tip.average)
+fz:addRule(fz.service.excellent | fz.food.delicious, fz.tip.generous)
+
+d, out = fz:eval {service = 2, food=5}
+print(d)
+Ap = require("matlib.asciiplot")
+fig = Ap()
+fig:setX {range=fz.tip:range()}
+fig:plot(out)
+print(fig)

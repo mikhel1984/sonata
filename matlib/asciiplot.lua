@@ -191,6 +191,11 @@ local function _axis_new (N)
 end
 
 
+local function _callable (f)
+  return type(f) == 'function' or (type(f) == 'table' and f.__call)
+end
+
+
 --- Make a copy.
 --  @param A Source axis object.
 --  @return Axis copy.
@@ -1283,7 +1288,7 @@ asciiplot.plot = function (self, ...)
   repeat
     local tx, ty = ag[i], ag[i+1]
     -- data
-    if type(tx) == 'function' then
+    if _callable(tx) then
       -- save funciton, check region later
       ty = nil
     elseif type(tx) == 'table' then
@@ -1321,7 +1326,7 @@ asciiplot.plot = function (self, ...)
   vmin, vmax = math.huge, -math.huge
   for j = 1, #acc do
     local r = acc[j]
-    if type(r[1]) == 'function' then
+    if _callable(r[1]) then
       r[1], r[2] = _fn2XY(self, r[1])
     end
     local a, b = _findVectorRange(r[2])
