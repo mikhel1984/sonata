@@ -316,6 +316,19 @@ mt_domain.__newindex = function (self, k, v)
 end
 
 
+--- Get domain object copy.
+--  @return New domain object.
+mt_domain._copy = function (self)
+  local o = {
+    _name = self._name,
+    _range = {self._range[1], self._range[2]},
+    _set = {}
+  }
+  for k, v in pairs(self._set) do o._set[k] = v end
+  return setmetatable(o, mt_domain)
+end
+
+
 --- Make new domain object.
 --  @param rng Rangle table.
 --  @param nm Domain name.
@@ -330,20 +343,21 @@ mt_domain._new  = function (rng, nm)
 end
 
 
---- Get domain range.
---  @return range table.
-mt_domain.range = function (self)
-  return {self._range[1], self._range[2]}
-end
-
-
 --- Get list of sets inside the domain.
 --  @return list of names.
-mt_domain.sets = function (self)
+mt_domain.getNames = function (self)
   local t = {}
   for k in pairs(self._set) do t[#t+1] = k end
   return t
 end
+
+
+--- Get domain range.
+--  @return range table.
+mt_domain.getRange = function (self)
+  return {self._range[1], self._range[2]}
+end
+
 
 
 -- Fuzzy infirence system.
@@ -446,6 +460,12 @@ fuzzy.apPlot = function (self, domain, set)
 end
 
 
+--- Fuzzy set with difference of two sigmoidal membership funcitons.
+--  @param k1 Tile coefficient of the first function.
+--  @param m1 First inflection point.
+--  @param k2 Tilt coefficient of the second function.
+--  @param m2 Second inflection point.
+--  @return set object.
 fuzzy.dsigmf = function (_, k1, m1, k2, m2)
   assert(m1 <= m2, ERR_ORDER)
   local fn = function (x)
@@ -455,7 +475,6 @@ fuzzy.dsigmf = function (_, k1, m1, k2, m2)
   end
   return _newSet(fn, nil, 'dsigmf')
 end
-
 
 
 --- Find oubput set and value for the given domain parameters.
@@ -478,6 +497,10 @@ fuzzy.evalFor = function (self, p)
 end
 
 
+--- Fuzzy set with Gaussian membership function.
+--  @param sig Standard deviation.
+--  @param mu Mean value.
+--  @return set object.
 fuzzy.gaussmf = function (_, sig, mu)
   local fn = function (x)
     local v = (x-mu)/sig
@@ -486,6 +509,14 @@ fuzzy.gaussmf = function (_, sig, mu)
   return _newSet(fn, nil, 'gaussmf')
 end
 
+
+--- Fuzzy set with 2 Gaussian membership functions.
+--  Function value in between the functions equal 1.
+--  @param s1 First standard deviation.
+--  @param m1 First mean.
+--  @param s2 Second standard deviation.
+--  @param m2 Second mean.
+--  @return set object.
 fuzzy.gauss2mf = function (_, s1, m1, s2, m2)
   assert(m1 <= m2, ERR_ORDER)
   local fn = function (x)
@@ -501,8 +532,14 @@ fuzzy.gauss2mf = function (_, s1, m1, s2, m2)
   return _newSet(fn, nil, 'gauss2mf')
 end
 
+
+--- Fuzzy set with generalized bell-shaped membership function.
+--  @param w Width.
+--  @param p Power.
+--  @param m Peak position.
+--  @return set object.
 fuzzy.gbellmf = function (_, w, p, m)
-  assert(w ~= 0, "Wrong width")
+  assert(w > 0, "Wrong width")
   local p = 2*p
   local fn = function (x)
     local v = math.abs((x-m)/w)
@@ -512,7 +549,10 @@ fuzzy.gbellmf = function (_, w, p, m)
 end
 
 
-
+--- Fuzzy set with linear s-shaped saturation membership function. 
+--  @param a Last 0 point.
+--  @param b First 1 point.
+--  @return set object.
 fuzzy.linsmf = function (_, a, b)
   assert(a <= b, ERR_ORDER)
   local k = (b > a) and (1/(b-a)) or 0
@@ -528,7 +568,10 @@ fuzzy.linsmf = function (_, a, b)
 end
 
 
-
+--- Fuzzy set with linear z-shaped saturation member function.
+--  @param a Last 1 point.
+--  @param b First 0 point.
+--  @return set object.
 fuzzy.linzmf = function (_, a, b)
   assert(a <= b, ERR_ORDER)
   local k = (b > a) and (-1/(b-a)) or 0
@@ -543,11 +586,20 @@ fuzzy.linzmf = function (_, a, b)
   return _newSet(fn, nil, 'linzmf')
 end
 
+
+--- Make fuzzy set with own member function
+--  f(x) -> [0, 1] for all real x.
+--  @param fn Member function.
+--  @param name Function name (optional).
+--  @return set object.
 fuzzy.newmf = function (_, fn, name)
   return _newSet(fn, nil, name)
 end
 
 
+--- Fuzzy set with pi-shaped member function.
+--  @param a,b,c,d Trapeze bounds.
+--  @return set object.
 fuzzy.pimf = function (_, a, b, c, d)
   assert(a < b and b <= c and c < d, ERR_ORDER)
   local m1, m2 = (a+b)*0.5, (c+d)*0.5
@@ -576,6 +628,12 @@ fuzzy.pimf = function (_, a, b, c, d)
 end
 
 
+--- Fuzzy set with product of two sigmoidal membership funcitons.
+--  @param k1 Tilt coefficient of the first function.
+--  @param m1 First inflection point.
+--  @param k2 Tile coefficient of the second function.
+--  @param m2 Second inflection point.
+--  @return set object.
 fuzzy.psigmf = function (_, k1, m1, k2, m2)
   assert(m1 <= m2, ERR_ORDER)
   local fn = function (x)
@@ -587,7 +645,6 @@ fuzzy.psigmf = function (_, k1, m1, k2, m2)
 end
 
 
-
 --- Update environment settings.
 --  @param env New environment settings.
 fuzzy.setEnv = function (self, env)
@@ -596,6 +653,11 @@ fuzzy.setEnv = function (self, env)
   end
 end
 
+
+--- Fuzzy set with sigmoidal member function.
+--  @param k Tilt coefficient.
+--  @param m Inflection point.
+--  @return set object.
 fuzzy.sigmf = function (_, k, m)
   local fn = function (x)
     local v = k*(x-m)
@@ -605,6 +667,10 @@ fuzzy.sigmf = function (_, k, m)
 end
 
 
+--- Fuzzy set with s-shaped saturation membership function. 
+--  @param a Last 0 point.
+--  @param b First 1 point.
+--  @return set object.
 fuzzy.smf = function (_, a, b)
   assert(a < b, ERR_ORDER)
   local m, d = (a+b)*0.5, b-a
@@ -624,6 +690,12 @@ fuzzy.smf = function (_, a, b)
 end
 
 
+--- Fuzzy set with trapeze member function.
+--  @param a Left bottom point.
+--  @param b Left top point.
+--  @param c Right top point.
+--  @param d Right bottom point.
+--  @return set object.
 fuzzy.trapmf = function (_, a, b, c, d)
   assert(a <= b and b <= c and c <= d, ERR_ORDER)
   local k1 = (b > a) and (1/(b-a)) or 0
@@ -642,6 +714,11 @@ fuzzy.trapmf = function (_, a, b, c, d)
 end
 
 
+--- Fuzzy set with triangle member function.
+--  @param a Left bottom point.
+--  @param b Top point.
+--  @param c Right bottom point.
+--  @return set object.
 fuzzy.trimf = function (_, a, b, c)
   assert(a <= b and b <= c, ERR_ORDER)
   local k1 = (b > a) and (1/(b-a)) or 0
@@ -658,6 +735,10 @@ fuzzy.trimf = function (_, a, b, c)
 end
 
 
+--- Fuzzy set with z-shaped saturation membership function. 
+--  @param a Last 1 point.
+--  @param b First 0 point.
+--  @return set object.
 fuzzy.zmf = function (_, a, b)
   assert(a < b, ERR_ORDER)
   local m, d = (a+b)*0.5, b-a
