@@ -42,6 +42,11 @@ local _op = {
   AND=1, OR=2, NOT=3,
 }
 
+-- tags
+local _tag = {
+  MF="fuzzy_set", FIS="inference_system",
+}
+
 
 --	INFO
 
@@ -391,6 +396,27 @@ fuzzy._aggregate = function (self, x)
 end
 
 
+--- Find oubput set and value for the given domain parameters.
+--  @param p Domain values.
+--  @return output value and fuzzy set.
+fuzzy._evalFor = function (self, p)
+  if #self._rules == 0 then return 0 end
+  for _, r in ipairs(self._rules) do
+    r[4] = r[3] * r[1]:_evalDomains(p, self._env)
+  end
+  local fset = _newSet(
+    function (x) return self:_aggregate(x) end,
+    nil, "aggregated")
+  local nm = self._rules[1][2].domain
+  fset.domain = nm
+  self[nm]["ANS"] = fset
+  local rng = self._domain[nm]._range
+  local d = fset:defuzzify(rng, self._env)
+  return d, fset
+end
+fuzzy.__call = fuzzy._evalFor
+
+
 --- Make new fuzzy infirence system.
 --  @param env Environment settings.
 fuzzy._new = function (env)
@@ -418,6 +444,8 @@ fuzzy.addDomain = function (self, range, name)
   self._domain[name] = mt_domain._new(range, name)
   return self._domain[name]
 end
+_about[fuzzy.addDomain] = {"S:addDomain(range_t, name_s)",
+  "Add new domain to system.", _tag.FIS}
 
 
 --- Add new rule for mappint from input to output.
@@ -434,12 +462,14 @@ fuzzy.addRule = function (self, iset, oset, w)
   end
   table.insert(self._rules, {iset, oset, w, 0})
 end
+_about[fuzzy.addRule] = {"S:addRule(in_S, out_S, weight_d=1)",
+  "Add new rule to system.", _tag.FIS}
 
 
 --- Plot fuzzy set from the given domain.
 --  @param domain Domain name.
 --  @param set Set name (optional).
---  @return string with plots.
+--  @return asciiplot object.
 fuzzy.apPlot = function (self, domain, set)
   local dom = assert(self[domain], "Domain not found")
   _ext.ap = _ext.ap or require("matlib.asciiplot")
@@ -458,6 +488,9 @@ fuzzy.apPlot = function (self, domain, set)
   end
   return fig
 end
+_about[fuzzy.apPlot] = {"S:apPlot(domain_s, set_s=nil) --> fig",
+  "Visualize fuzzy set with asciiplot. Plot all the sets when name not defined.",
+  _tag.FIS}
 
 
 --- Fuzzy set with difference of two sigmoidal membership funcitons.
@@ -475,26 +508,9 @@ fuzzy.dsigmf = function (_, k1, m1, k2, m2)
   end
   return _newSet(fn, nil, 'dsigmf')
 end
-
-
---- Find oubput set and value for the given domain parameters.
---  @param p Domain values.
---  @return output value and fuzzy set.
-fuzzy.evalFor = function (self, p)
-  if #self._rules == 0 then return 0 end
-  for _, r in ipairs(self._rules) do
-    r[4] = r[3] * r[1]:_evalDomains(p, self._env)
-  end
-  local fset = _newSet(
-    function (x) return self:_aggregate(x) end,
-    nil, "aggregated")
-  local nm = self._rules[1][2].domain
-  fset.domain = nm
-  self[nm]["ANS"] = fset
-  local rng = self._domain[nm]._range
-  local d = fset:defuzzify(rng, self._env)
-  return d, fset
-end
+_about[fuzzy.dsigmf] = {":dsigmf(k1_d, m1_d, k2_d, m2_d) --> S",
+  "Make new fuzzy set, member function is difference of two sigmoidal functions.",
+   _tag.MF}
 
 
 --- Fuzzy set with Gaussian membership function.
@@ -508,6 +524,8 @@ fuzzy.gaussmf = function (_, sig, mu)
   end
   return _newSet(fn, nil, 'gaussmf')
 end
+_about[fuzzy.gaussmf] = {":gaussmf(sigma_d, mu_d) --> S",
+  "Make new fuzzy set with Gaussian member function.", _tag.MF}
 
 
 --- Fuzzy set with 2 Gaussian membership functions.
@@ -531,6 +549,8 @@ fuzzy.gauss2mf = function (_, s1, m1, s2, m2)
   end
   return _newSet(fn, nil, 'gauss2mf')
 end
+_about[fuzzy.gauss2mf] = {":gauss2mf(sigma1_d, mu1_d, sigma2_d, mu2_d) --> S",
+  "Make new fuzzy set, member function combines two Gaussians.", _tag.MF}
 
 
 --- Fuzzy set with generalized bell-shaped membership function.
@@ -547,6 +567,8 @@ fuzzy.gbellmf = function (_, w, p, m)
   end
   return _newSet(fn, nil, 'gbellmf')
 end
+_about[fuzzy.gbellmf] = {":gbellmf(width_d, power_d, mean_d) --> S",
+  "Make new fuzzy set with generalized bell-shaped member function.", _tag.MF}
 
 
 --- Fuzzy set with linear s-shaped saturation membership function. 
@@ -566,6 +588,9 @@ fuzzy.linsmf = function (_, a, b)
   end
   return _newSet(fn, nil, 'linsmf')
 end
+_about[fuzzy.linsmf] = {":linsmf(left_d, right_d) --> S",
+  "Make new fuzzy set with linear s-shaped saturation member function.", 
+  _tag.MF}
 
 
 --- Fuzzy set with linear z-shaped saturation member function.
@@ -585,6 +610,9 @@ fuzzy.linzmf = function (_, a, b)
   end
   return _newSet(fn, nil, 'linzmf')
 end
+_about[fuzzy.linzmf] = {":linzmf(left_d, right_d) --> S",
+  "Make new fuzzy set with linear z-shaped saturated member function.",
+  _tag.MF}
 
 
 --- Make fuzzy set with own member function
@@ -595,6 +623,8 @@ end
 fuzzy.newmf = function (_, fn, name)
   return _newSet(fn, nil, name)
 end
+_about[fuzzy.newmf] = {":newmf(member_fn, name_s=nil) --> S",
+  "Make new fuzzy set with user defined member function.", _tag.MF}
 
 
 --- Fuzzy set with pi-shaped member function.
@@ -626,6 +656,8 @@ fuzzy.pimf = function (_, a, b, c, d)
   end
   return _newSet(fn, nil, 'pimf')
 end
+_about[fuzzy.pimf] = {":pimf(lowLeft_d, upLeft_d, upRight_d, lowRight_d) --> S",
+  "Make new fuzzy set with pi-shaped member function.", _tag.MF}
 
 
 --- Fuzzy set with product of two sigmoidal membership funcitons.
@@ -800,7 +832,7 @@ fz:addRule(fz.service.poor | fz.food.rancid, fz.tip.cheap)
 fz:addRule(fz.service.good, fz.tip.average)
 fz:addRule(fz.service.excellent | fz.food.delicious, fz.tip.generous)
 
-d, out = fz:evalFor {service = 2, food=5}
+d, out = fz {service = 2, food=5}
 print(fz:apPlot("tip", "ANS"))
 --print(d)
 -- Ap = require("matlib.asciiplot")
