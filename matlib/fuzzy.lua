@@ -105,7 +105,7 @@ __module__ = "Fuzzy logic elements."
 local mt_set = {
   type = 'fuzzy_set',
   -- function default name
-  _default_name = 'user_mf',
+  _defaultName = 'user_mf',
   -- environment settings
   _default_env = {
     AND = math.min,
@@ -126,11 +126,14 @@ mt_set.__index = mt_set
 --  @param s Function or other set.
 --  @param op Operation to apply (optional).
 --  @param nm Set name (optional).
-local function _newSet (s, op, nm)
+--  @param params List of parameters (optional).
+--  @return new fuzzy set.
+local function _newSet (s, op, nm, params)
   local o = {
     set=s,
     op=op,
-    name=nm
+    name=nm,
+    param = params
   }
   return setmetatable(o, mt_set)
 end
@@ -212,7 +215,9 @@ end
 --  @return string.
 mt_set._str = function (self)
   if not self.op then
-    return self.name or mt_set._default_name
+    return string.format("%s(%s)",
+      self.name or mt_set._defaultName,
+      self.param and table.concat(self.param, ',') or "")
   elseif self.op == _op.AND then
     return string.format("(%s & %s)", self.set[1]:_str(), self.set[2]:_str())
   elseif self.op == _op.OR then
@@ -551,7 +556,7 @@ fuzzy.dsigmf = function (_, k1, m1, k2, m2)
     local v2 = k2*(x-m2)
     return 1/(1 + math.exp(-v1)) - 1/(1 + math.exp(-v2))
   end
-  return _newSet(fn, nil, 'dsigmf')
+  return _newSet(fn, nil, 'dsigmf', {k1, m1, k2, m2})
 end
 _about[fuzzy.dsigmf] = {":dsigmf(tilt1_d, inflect1_d, tilt2_d, inflect2_d) --> F",
   "Make new fuzzy set, member function is difference of two sigmoidal functions.",
@@ -567,7 +572,7 @@ fuzzy.gaussmf = function (_, sig, mu)
     local v = (x-mu)/sig
     return math.exp(-v*v*0.5)
   end
-  return _newSet(fn, nil, 'gaussmf')
+  return _newSet(fn, nil, 'gaussmf', {sig, mu})
 end
 _about[fuzzy.gaussmf] = {":gaussmf(sigma_d, mu_d) --> F",
   "Make new fuzzy set with Gaussian member function.", _tag.MF}
@@ -592,7 +597,7 @@ fuzzy.gauss2mf = function (_, s1, m1, s2, m2)
     end
     return 1
   end
-  return _newSet(fn, nil, 'gauss2mf')
+  return _newSet(fn, nil, 'gauss2mf', {s1, m1, s2, m2})
 end
 _about[fuzzy.gauss2mf] = {":gauss2mf(sigma1_d, mu1_d, sigma2_d, mu2_d) --> F",
   "Make new fuzzy set, member function combines two Gaussians.", _tag.MF}
@@ -610,7 +615,7 @@ fuzzy.gbellmf = function (_, w, p, m)
     local v = math.abs((x-m)/w)
     return 1/(1 + v^p)
   end
-  return _newSet(fn, nil, 'gbellmf')
+  return _newSet(fn, nil, 'gbellmf', {w, p, m})
 end
 _about[fuzzy.gbellmf] = {":gbellmf(width_d, power_d, mean_d) --> F",
   "Make new fuzzy set with generalized bell-shaped member function.", _tag.MF}
@@ -631,7 +636,7 @@ fuzzy.linsmf = function (_, a, b)
     end
     return k*(x-a)
   end
-  return _newSet(fn, nil, 'linsmf')
+  return _newSet(fn, nil, 'linsmf', {a, b})
 end
 _about[fuzzy.linsmf] = {":linsmf(left_d, right_d) --> F",
   "Make new fuzzy set with linear s-shaped saturation member function.", 
@@ -653,7 +658,7 @@ fuzzy.linzmf = function (_, a, b)
     end
     return 1 + k*(x-a)
   end
-  return _newSet(fn, nil, 'linzmf')
+  return _newSet(fn, nil, 'linzmf', {a, b})
 end
 _about[fuzzy.linzmf] = {":linzmf(left_d, right_d) --> F",
   "Make new fuzzy set with linear z-shaped saturated member function.",
@@ -699,7 +704,7 @@ fuzzy.pimf = function (_, a, b, c, d)
     end
     return 0
   end
-  return _newSet(fn, nil, 'pimf')
+  return _newSet(fn, nil, 'pimf', {a, b, c, d})
 end
 _about[fuzzy.pimf] = {":pimf(lowLeft_d, upLeft_d, upRight_d, lowRight_d) --> F",
   "Make new fuzzy set with pi-shaped member function.", _tag.MF}
@@ -718,7 +723,7 @@ fuzzy.psigmf = function (_, k1, m1, k2, m2)
     local v2 = k2*(x-m2)
     return 1/(1 + math.exp(-v1))/(1 + math.exp(-v2))
   end
-  return _newSet(fn, nil, 'psigmf')
+  return _newSet(fn, nil, 'psigmf', {k1, m1, k2, m2})
 end
 _about[fuzzy.psigmf] = {":psigmf(tilt1_d, inflect1_d, tilt2_d, inflect2_d) --> F",
   "Make new fuzzy set with product of two sigmoidal member functions.",
@@ -745,7 +750,7 @@ fuzzy.sigmf = function (_, k, m)
     local v = k*(x-m)
     return 1/(1 + math.exp(-v))
   end
-  return _newSet(fn, nil, 'sigmf')
+  return _newSet(fn, nil, 'sigmf', {k, m})
 end
 _about[fuzzy.sigmf] = {":sigmf(tilt_d, inflection_d) --> F",
   "Make new fuzzy set with sigmoidal member function.", _tag.MF}
@@ -770,7 +775,7 @@ fuzzy.smf = function (_, a, b)
     end
     return 1
   end
-  return _newSet(fn, nil, 'smf')
+  return _newSet(fn, nil, 'smf', {a, b})
 end
 _about[fuzzy.smf] = {":smf(left_d, right_d) --> F",
   "Make new fuzzy set with s-shaped saturation member function.", _tag.MF}
@@ -796,7 +801,7 @@ fuzzy.trapmf = function (_, a, b, c, d)
     end
     return 1 + k2*(x-c)
   end
-  return _newSet(fn, nil, 'trapmf')
+  return _newSet(fn, nil, 'trapmf', {a, b, c, d})
 end
 _about[fuzzy.trapmf] = {":trapmf(lowLeft_d, upLeft_d, upRight_d, lowRight_d) --> F",
   "Make new fuzzy set with trapeze member function.", _tag.MF}
@@ -819,7 +824,7 @@ fuzzy.trimf = function (_, a, b, c)
     end
     return 1 + k2*(x-b)
   end
-  return _newSet(fn, nil, 'trimf')
+  return _newSet(fn, nil, 'trimf', {a, b, c})
 end
 _about[fuzzy.trimf] = {":trimf(left_d, up_d, right_d) --> F",
   "Make new fuzzy set with triangle member function.", _tag.MF}
@@ -844,7 +849,7 @@ fuzzy.zmf = function (_, a, b)
     end
     return 0
   end
-  return _newSet(fn, nil, 'zmf')
+  return _newSet(fn, nil, 'zmf', {a, b})
 end
 _about[fuzzy.zmf] = {":zmf(left_d, right_d) --> F",
   "Make new fuzzy set with z-shaped saturation member function.", _tag.MF}
