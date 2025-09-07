@@ -29,6 +29,9 @@ ans = a(2.5)                  -->  1
 b = a:andf( Fz:linzmf(3, 4) )
 ans = b(5)                    -->  0
 
+-- defuzzification
+ans = b:defuzzify({0, 5}, 'bisector')  --.1>  2.5
+
 -- show structure
 print(b)
 
@@ -45,6 +48,14 @@ fs.temperature.hot = Fz:smf(26, 32)
 fan.slow = Fz:linzmf(20, 40)
 fan.moderate = Fz:trimf(35, 50, 80)
 fan.high = Fz:linsmf(70, 90)
+
+-- get components
+lst = fs.temperature:getNames()
+ans = #lst                    -->  3
+
+-- get range
+lst = fan:getRange()
+ans = lst[1]                  -->  0
 
 -- draw all sets
 print(fs:apPlot('temperature'))
@@ -86,7 +97,7 @@ local _op = {
 
 -- tags
 local _tag = {
-  MF="fuzzy_set", FIS="inference_system",
+  MF="fuzzy_set", FIS="inference_system", DOM="domain"
 }
 
 
@@ -107,7 +118,7 @@ local mt_set = {
   -- function default name
   _defaultName = 'user_mf',
   -- environment settings
-  _default_env = {
+  _defaultEnv = {
     AND = math.min,
     OR = math.max,
     NOT = function (x) return 1 - x end,
@@ -155,7 +166,7 @@ end
 --  @param env Environment settings.
 --  @return membership.
 mt_set.__call = function (self, x, env)
-  env = env or mt_set._default_env
+  env = env or mt_set._defaultEnv
   return mt_set._eval(self, x, env)
 end
 
@@ -249,14 +260,14 @@ end
 --- Apply defuzzification.
 --  Available methods are: centroid, bisector, lom, som, mom.
 --  @param rng Range table {begin, end}.
---  @param env Environment settings.
+--  @param method(='centroid') Defuzzification method.
 --  @return value from the input set.
-mt_set.defuzzify = function (self, rng, env)
-  env = env or mt_set._default_env
+mt_set.defuzzify = function (self, rng, method)
+  method = method or 'centroid'
   local res, a, b = 0, rng[1], rng[2]
   local n = 100  -- TODO adaptive search
   local dx = (b - a)/n
-  if env.DEFUZ == 'centroid' then
+  if method == 'centroid' then
     -- center of gravity
     local num, denom = 0, 0
     for x = a, b, dx do
@@ -265,7 +276,7 @@ mt_set.defuzzify = function (self, rng, env)
       denom = denom + v
     end
     res = (denom > 0) and (num/denom) or 0
-  elseif env.DEFUZ == 'bisector' then
+  elseif method == 'bisector' then
     -- divide into equal area
     local v = {[0]=0}
     for x = a, b, dx do
@@ -288,7 +299,7 @@ mt_set.defuzzify = function (self, rng, env)
     -- evaluate
     if #v == 0 then
       res = a
-    elseif env.DEFUZ == 'lom' then
+    elseif method == 'lom' then
       -- largest of maximum
       local vmax = v[1]
       for i = 2, #v do
@@ -297,7 +308,7 @@ mt_set.defuzzify = function (self, rng, env)
         end
       end
       res = a + vmax[1]*dx
-    elseif env.DEFUZ == 'som' then
+    elseif method == 'som' then
       -- smallest of maximum
       local vmin = v[1]
       for i = 2, #v do
@@ -306,7 +317,7 @@ mt_set.defuzzify = function (self, rng, env)
         end
       end
       res = a + vmin[1]*dx
-    elseif env.DEFUZ == 'mom' then
+    elseif method == 'mom' then
       -- middle of maximum (average of points)
       local sum = 0
       for _, vi in ipairs(v) do
@@ -411,7 +422,6 @@ mt_domain.getRange = function (self)
 end
 
 
-
 -- Fuzzy infirence system.
 local fuzzy = {
 -- mark
@@ -461,7 +471,7 @@ fuzzy._evalFor = function (self, p)
   fset.domain = nm
   self[nm]["ANS"] = fset
   local rng = self._domain[nm]._range
-  local d = fset:defuzzify(rng, self._env)
+  local d = fset:defuzzify(rng, self._env.DEFUZ)
   return d, fset
 end
 fuzzy.__call = fuzzy._evalFor
@@ -472,7 +482,7 @@ fuzzy.__call = fuzzy._evalFor
 fuzzy._new = function (env)
   env = env or {}
   local acc = {}
-  for k, v in pairs(mt_set._default_env) do
+  for k, v in pairs(mt_set._defaultEnv) do
     acc[k] = env[k] or v
   end
   local o = {
@@ -494,8 +504,8 @@ fuzzy.addDomain = function (self, range, name)
   self._domain[name] = mt_domain._new(range, name)
   return self._domain[name]
 end
-_about[fuzzy.addDomain] = {"S:addDomain(range_t, name_s)",
-  "Add new domain to system.", _tag.FIS}
+_about[fuzzy.addDomain] = {"S:addDomain(range_t, name_s) --> D",
+  "Add new domain to system, return reference.", _tag.FIS}
 
 
 --- Add new rule for mappint from input to output.
@@ -512,8 +522,14 @@ fuzzy.addRule = function (self, iset, oset, w)
   end
   table.insert(self._rules, {iset, oset, w, 0})
 end
-_about[fuzzy.addRule] = {"S:addRule(in_S, out_S, weight_d=1)",
+_about[fuzzy.addRule] = {"S:addRule(in_F, out_F, weight_d=1)",
   "Add new rule to system.", _tag.FIS}
+
+
+-- Intersection.
+fuzzy.andf = mt_set.andf
+_about[fuzzy.andf] = {"F:andf(F2) --> new_F",
+  "Fuzzy set intersection. Equal to F & F2.", _tag.MF}
 
 
 --- Plot fuzzy set from the given domain.
@@ -542,6 +558,11 @@ _about[fuzzy.apPlot] = {"S:apPlot(domain_s, set_s=nil) --> fig",
   "Visualize fuzzy set with asciiplot. Plot all the sets when name not defined.",
   _tag.FIS}
 
+
+fuzzy.defuzzify = mt_set.defuzzify
+_about[fuzzy.defuzzify] = {"F:defuzzify(range_t, method_s=centroid) --> value_d",
+  "Defuzzification. Available methods are: centroid, bisector, lom, som, mom.",
+  _tag.MF}
 
 --- Fuzzy set with difference of two sigmoidal membership funcitons.
 --  @param k1 Tile coefficient of the first function.
@@ -621,7 +642,17 @@ _about[fuzzy.gbellmf] = {":gbellmf(width_d, power_d, mean_d) --> F",
   "Make new fuzzy set with generalized bell-shaped member function.", _tag.MF}
 
 
---- Fuzzy set with linear s-shaped saturation membership function. 
+fuzzy.getNames = mt_domain.getNames
+_about[fuzzy.getNames] = {"D:getNames() --> sets_t",
+  "Get list of set names in domain.", _tag.DOM}
+
+
+fuzzy.getRange = mt_domain.getRange
+_about[fuzzy.getRange] = {"D:getRange() --> range_t",
+  "Get domain range.", _tag.DOM}
+
+
+--- Fuzzy set with linear s-shaped saturation membership function.
 --  @param a Last 0 point.
 --  @param b First 1 point.
 --  @return set object.
@@ -639,7 +670,7 @@ fuzzy.linsmf = function (_, a, b)
   return _newSet(fn, nil, 'linsmf', {a, b})
 end
 _about[fuzzy.linsmf] = {":linsmf(left_d, right_d) --> F",
-  "Make new fuzzy set with linear s-shaped saturation member function.", 
+  "Make new fuzzy set with linear s-shaped saturation member function.",
   _tag.MF}
 
 
@@ -675,6 +706,18 @@ fuzzy.newmf = function (_, fn, name)
 end
 _about[fuzzy.newmf] = {":newmf(member_fn, name_s=nil) --> F",
   "Make new fuzzy set with user defined member function.", _tag.MF}
+
+
+-- Complement.
+fuzzy.notf = mt_set.notf
+_about[fuzzy.notf] = {"F:notf() --> new_F",
+  "Fuzzy set complement. Equal to ~F.", _tag.MF}
+
+
+-- Union.
+fuzzy.orf = mt_set.orf
+_about[fuzzy.orf] = {"F:orf(F2) --> new_F",
+  "Fuzzy set union. Equal to F | F2.", _tag.MF}
 
 
 --- Fuzzy set with pi-shaped member function.
@@ -737,7 +780,7 @@ fuzzy.setEnv = function (self, env)
     self._env[k] = v
   end
 end
-_about[fuzzy.setEnv] = {"S:setEnv(params_t)", 
+_about[fuzzy.setEnv] = {"S:setEnv(params_t)",
   "Update system environment.", _tag.FIS}
 
 
@@ -756,7 +799,7 @@ _about[fuzzy.sigmf] = {":sigmf(tilt_d, inflection_d) --> F",
   "Make new fuzzy set with sigmoidal member function.", _tag.MF}
 
 
---- Fuzzy set with s-shaped saturation membership function. 
+--- Fuzzy set with s-shaped saturation membership function.
 --  @param a Last 0 point.
 --  @param b First 1 point.
 --  @return set object.
@@ -830,7 +873,7 @@ _about[fuzzy.trimf] = {":trimf(left_d, up_d, right_d) --> F",
   "Make new fuzzy set with triangle member function.", _tag.MF}
 
 
---- Fuzzy set with z-shaped saturation membership function. 
+--- Fuzzy set with z-shaped saturation membership function.
 --  @param a Last 1 point.
 --  @param b First 0 point.
 --  @return set object.
