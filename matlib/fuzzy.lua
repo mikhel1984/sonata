@@ -39,7 +39,7 @@ fs:addDomain({0, 40}, 'temperature')   -- input
 fan = fs:addDomain({0, 100}, 'fan_speed')  -- output
 -- add fuzzy setts
 fs.temperature.cold = Fz:zmf(10, 16)
-fs.temperature.warm = Fz:trapmf(12, 18, 26, 34)
+fs.temperature.warm = Fz:trapmf(12, 19, 26, 34)
 fs.temperature.hot = Fz:smf(26, 32)
 -- equaly, add to domain variable
 fan.slow = Fz:linzmf(20, 40)
@@ -57,8 +57,8 @@ fs:addRule(fs.temperature.warm, fs.fan_speed.moderate)
 fs:addRule(fs.temperature.hot, fs.fan_speed.high, 0.8)
 
 -- evaluate and defuzzify
-val, out_set = fs {temperature = 18}
-ans = val                  --.1>  55.0
+val, out_set = fs {temperature = 28}
+ans = val                  --.1>  60.7
 
 -- result in the field ANS
 fig = fs:apPlot('fan_speed', 'ANS')
