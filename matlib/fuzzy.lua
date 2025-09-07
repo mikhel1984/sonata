@@ -14,14 +14,56 @@
 
 -- use 'fuzzy'
 Fz = require 'matlib.fuzzy'
+-- show sets
+Ap = require 'matlib.asciiplot'
 
--- example
-a = Fz()
--- check equality
-ans = a.type                  -->  'fuzzy'
+-- make fuzzy set
+a = Fz:linsmf(1, 2)
+-- get values
+ans = a(-1)                   -->  0
 
--- check relative equality ( ~10^(-2) )
-ans = math.pi               --.2> 355/113
+ans = a(2.5)                  -->  1
+
+-- apply intersection, equal to
+--  a | Fz:linzmf(3, 4)
+b = a:andf( Fz:linzmf(3, 4) )
+ans = b(5)                    -->  0
+
+-- show structure
+print(b)
+
+-- infirence system with default settings
+fs = Fz()
+-- add domains
+fs:addDomain({0, 40}, 'temperature')   -- input
+fan = fs:addDomain({0, 100}, 'fan_speed')  -- output
+-- add fuzzy setts
+fs.temperature.cold = Fz:zmf(10, 16)
+fs.temperature.warm = Fz:trapmf(12, 18, 26, 34)
+fs.temperature.hot = Fz:smf(26, 32)
+-- equaly, add to domain variable
+fan.slow = Fz:linzmf(20, 40)
+fan.moderate = Fz:trimf(35, 50, 80)
+fan.high = Fz:linsmf(70, 90)
+
+-- draw all sets
+print(fs:apPlot('temperature'))
+-- draw specific set
+print(fs:apPlot('temperature', 'cold'))
+
+-- define rules (if .., then .., weight)
+fs:addRule(fs.temperature.cold, fs.fan_speed.slow)
+fs:addRule(fs.temperature.warm, fs.fan_speed.moderate)
+fs:addRule(fs.temperature.hot, fs.fan_speed.high, 0.8)
+
+-- evaluate and defuzzify
+val, out_set = fs {temperature = 18}
+ans = val                  --.1>  55.0
+
+-- result in the field ANS
+fig = fs:apPlot('fan_speed', 'ANS')
+fig:addLine(val, 0, val, out_set(val), ':')
+print(fig)
 
 --]]
 
@@ -53,7 +95,7 @@ local _tag = {
 local _help = SonataHelp or {}  -- optional
 -- description
 local _about = {
-__module__ = "Fuzzy logic."
+__module__ = "Fuzzy logic elements."
 }
 
 
@@ -819,43 +861,8 @@ _about[fuzzy] = {" (env_t=nil) --> F", "Create new fuzzy inference system.", _he
 -- Comment to remove descriptions
 fuzzy.about = _about
 
---return fuzzy
+return fuzzy
 
 --======================================
 --TODO: print rules
 
---a = fuzzy:trapmf(0, 1, 2, 3)
---b = fuzzy:trimf(-2, 0, 1)
---local c = a & b | (~a) & b
---local env = mt_set._default_env
-----env.DEFUZ = 'bisector'
---print(b:defuzzify({-2, 1}, env))
-
-fz = fuzzy()
-s1 = fz:addDomain({0, 10}, "service")
-s1.poor = fuzzy:gaussmf(1.5, 0)
-s1.good = fuzzy:gaussmf(1.5, 5)
-s1.excellent = fuzzy:gaussmf(1.5, 10)
-
-s2 = fz:addDomain({0, 10}, "food")
-s2.rancid = fuzzy:trapmf(-2, 0, 1, 3)
-s2.delicious = fuzzy:trapmf(7, 9, 10, 12)
-
-s3 = fz:addDomain({0, 30}, "tip")
-fz.tip.cheap = fuzzy:trimf(0, 5, 10)
-fz.tip.average = fuzzy:trimf(10, 15, 20)
-s3.generous = fuzzy:trimf(20, 25, 30)
-
-fz:addRule(fz.service.poor | fz.food.rancid, fz.tip.cheap)
-fz:addRule(fz.service.good, fz.tip.average)
-fz:addRule(fz.service.excellent | fz.food.delicious, fz.tip.generous)
-
-d, out = fz {service = 2, food=5}
-print(fz:apPlot("tip", "ANS"))
---print(d)
--- Ap = require("matlib.asciiplot")
--- fig = Ap()
--- fig:setX {range={-5,5}}
--- fig:setX {range=fz.tip:range()}
--- fig:plot(out)
--- print(fig)
