@@ -34,11 +34,10 @@ end
 -- visualize
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
-table.remove(ts)  -- ignore right values
+table.insert(te, 'rest')
 fig = Ap()
 fig:setX {view='min', range={0, 0.2}, fix=true}
 fig:setY {size=#ts}
---v = _D:T()  -- get list of pairs
 fig:bar(te, ts)
 print(fig)
 
@@ -51,7 +50,7 @@ end
 -- visualize renerated data
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
-table.remove(ts)  -- ignore right values
+table.insert(te, 'rest') 
 fig:bar(te, ts)
 print(fig)
 

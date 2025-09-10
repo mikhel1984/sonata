@@ -134,11 +134,6 @@ fig6:plot(math.exp)
 fig6:legend 'off'
 print(fig6)
 
--- show matrix structure
-Mat = require 'matlib.matrix'
-s = Ap:stars(Mat:eye(4))
-print(s)
-
 --]]
 
 --	LOCAL
@@ -1419,8 +1414,7 @@ asciiplot.stars = function (_, M, fn)
   end
   return table.concat(acc, '\n')
 end
-_about[asciiplot.stars] = {":stars(M, cond_fn) --> str",
-  "Print matrix, use star when condition for the current elemen is true.", _help.OTHER}
+-- Deprecated
 
 
 --- Set title.

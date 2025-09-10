@@ -18,6 +18,7 @@ D = require 'matlib.data'
 -- external dependencies, can be loaded implicitly
 require 'matlib.special'
 require 'matlib.matrix'
+require 'matlib.asciiplot'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -118,6 +119,9 @@ ans = b[1]                    -->  2.25
 a,b = D:histcounts(X,{2,4,7})
 ans = a[1]                    -->  1
 
+-- show histogram
+print(D:histPlot(X, {2, 4, 7}))
+
 -- table range reference
 a = D:ref(X, 3, 6)
 ans = #a                      -->  4
@@ -196,6 +200,7 @@ ans = c[1]                  --.3>  0.909
 local _ext = {
   utils = require("matlib.utils"),
   -- matrix = require("matlib.matrix"),  -- covariance
+  -- ap = require("matlib.asciiplot"),  -- histPlot
 }
 
 local _utils = _ext.utils.utils
@@ -707,6 +712,25 @@ end
 mt_list.histcounts = _wrapCall(data.histcounts)
 _about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", _tag.STAT}
+
+
+--- Show histogram with asciiplot.
+--  @param t Data table.
+--  @param rng Number of bins or table with edges.
+--  @return asciiplot object.
+data.histPlot = function (_, t, rng)
+  _ext.ap = _ext.ap or require("matlib.asciiplot")
+  local res, bins = data.histcounts(_, t, rng)
+  bins[#bins+1] = 'rest'
+  local m = data.max(_, res)
+  local fig = _ext.ap()
+  fig:setX {view='min', range={0, m}, fix=true}
+  fig:setY {size=#res}
+  fig:bar(bins, res)
+  return fig
+end
+_about[data.histPlot] = {":histPlot(data_t, edges_t|N=10) --> fig",
+  "Find and show histogram.", _tag.STAT}
 
 
 --- Find weights (1/0) based on condition.
