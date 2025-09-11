@@ -87,8 +87,6 @@ end
 local function _getCmd (str)
   if string.find(str, "^%s*:") then
     return { string.match(str, "(%w+)%s*(.*)") }
-  elseif string.find(str, "^s*!") then
-    return { 'shell', string.match(str, "(%w+.*)") }
   end
   return nil
 end
@@ -147,6 +145,7 @@ local function _evalCode()
   local multiline, res = false, nil
   local _ENV = setmetatable({}, {__index=_G})
   if _VERSION == 'Lua 5.1' then setfenv(1, _ENV) end
+  local compile = function (s) return loadStr(s, nil, 't', _ENV) end
   evaluate.set_local_env(_ENV)  -- for 'readline' completion
   evaluate.IN_COROUTINE = true  -- set marker
   while true do
@@ -166,10 +165,10 @@ local function _evalCode()
       state, res = evaluate.EV_CMD, nil
     else
       cmd = cmd..(partCmd or input)
-      -- 'parse'
-      local fn, err = loadStr('return '..cmd, nil, 't', _ENV)  -- either 'return expr'
+      -- make executable
+      local fn, err = compile('return '..cmd)  -- either 'return expr'
       if err then
-        fn, err = loadStr(cmd, nil, 't', _ENV)                 -- or 'expr'
+        fn, err = compile(cmd)                 -- or 'expr'
       end
       -- get result
       if err then
