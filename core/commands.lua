@@ -235,18 +235,14 @@ cmdInfo.show = {'cmd_show', "[N]", "Note-files"}
 --- Average time
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
-commands.time = function (args, env)
+commands.time = function (str, env)
   Test = Test or require('core.test')
-  if args[2] then
-    local fn, err = loadStr('return '..args[2])
-    if fn then
-      io.write(string.format('%.4f ms\n', Test.time(fn())))
-    else
-      env.evaluate.printErr(err)
-    end
-  else
-    env.evaluate.printErr("Unexpected argument!")
+  local fn, err = loadStr("return "..str, nil, 't', env) 
+  if err then
+    return nil, err
   end
+  local out = string.format('%.4f ms', Test.time(fn))
+  return function () return out end
 end
 cmdInfo.time = {'cmd_time', "func", "Debug"}
 internal.time = true
@@ -255,18 +251,14 @@ internal.time = true
 --- Trace function
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
-commands.trace = function (args, env)
+commands.trace = function (str, env)
   Test = Test or require('core.test')
-  if args[2] then
-    local fn, err = loadStr('return '..args[2])
-    if fn then
-      io.write(tostring(Test.profile(fn())), "\n")
-    else
-      env.evaluate.printErr(err)
-    end
-  else
-    env.evaluate.printErr("Unexpected argument!")
+  local fn, err = loadStr('return '..str, nil, 't', env)
+  if err then
+    return nil, err
   end
+  local out = tostring(Test.profile(fn))
+  return function () return out end
 end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
 internal.trace = true
