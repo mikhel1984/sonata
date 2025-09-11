@@ -241,7 +241,11 @@ commands.time = function (str, env)
   if err then
     return nil, err
   end
-  local out = string.format('%.4f ms', Test.time(fn))
+  local ok, val = pcall(Test.time, fn)
+  if not ok then
+    return nil, val
+  end
+  local out = string.format('%.4f ms', val)
   return function () return out end
 end
 cmdInfo.time = {'cmd_time', "func", "Debug"}
@@ -257,7 +261,11 @@ commands.trace = function (str, env)
   if err then
     return nil, err
   end
-  local out = tostring(Test.profile(fn))
+  local ok, val = pcall(Test.profile, fn)
+  if not ok then
+    return nil, val
+  end
+  local out = tostring(val)
   return function () return out end
 end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
