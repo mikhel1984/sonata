@@ -146,6 +146,7 @@ _utils = _utils.utils
 local _inform = Sonata and Sonata.warning or print
 local _modf = math.modf
 local _tag = { MANUAL='manual', CONF='settings' }
+local _sonata_use_color = SONATA_USE_COLOR
 
 --	INFO
 
@@ -186,6 +187,9 @@ local function _axis_new (N)
 end
 
 
+--- Check if the object can be called.
+--  @param f Object to check.
+--  @return true when function or has method __call.
 local function _callable (f)
   return type(f) == 'function' or (type(f) == 'table' and f.__call)
 end
@@ -242,16 +246,11 @@ end
 --  @return Position (index) or nil if out of range.
 axis.proj = function (self, d, isX)
   d = self.log and math.log(d, 10) or d
-  if d < self.range[1] or d > self.range[2] then return nil end
-  local dx = (d - self.range[1]) / self.diff
-  local int, frac = nil, nil
-  if isX then
-    int, frac = _modf((self.size - 1)*dx + 1)
-  else
-    int, frac = _modf(dx - self.size*(dx - 1))
-  end
-  --return (frac > 0.5) and (int + 1) or int
-  return int, frac
+  local d0 = self.range[1]
+  if d < d0 or d > self.range[2] then return nil end
+  local dx = (d - d0) / self.diff
+  return _modf(
+    isX and ((self.size - 1)*dx + 1) or (dx - self.size*(dx - 1)))
 end
 
 
@@ -335,7 +334,7 @@ end
 
 --- Move over the axis elements.
 --  @param isX Flag of direct iteration.
---  @return Iterator, it gives index and value.
+--  @return Iterator, it returns index and value.
 axis.values = function (self, isX)
   local x0 = isX and self.range[1] or self.range[2]
   local k  = isX and self.diff / (self.size - 1) or -self.diff / (self.size - 1)
@@ -393,9 +392,10 @@ local function _addGraded (fig, x, y, ind)
   if fy > 1 then
     fy, ny = fy - 1, ny + 1
   end
-  local k = math.floor(math.min(fy, 0.99) / 0.125)
-  local s = assert(asciiplot.GRADE[k], 'ind '..tostring(k))
-  if SONATA_USE_COLOR then
+  -- fy in (0, 1), multiply to (#GRADE - small_value)
+  local k = math.floor(fy*7.99)
+  local s = asciiplot.GRADE[k]
+  if _sonata_use_color then
     s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
   end
   fig._canvas[ny][nx] = s
@@ -479,7 +479,7 @@ local function _addPolar (fig, t, tOpt)
       end
     end
     local s = string.char(string.byte('A') - 1 + j)
-    if SONATA_USE_COLOR then
+    if _sonata_use_color then
       s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
     end
     for i = #xy, 1, -1 do
@@ -512,7 +512,7 @@ local function _addTable (fig, t, tInd)
       end
     end
     local s = string.char(string.byte('A') - 1 + j)
-    if SONATA_USE_COLOR then
+    if _sonata_use_color then
       s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
     end
     for i = #t, 1, -1 do
@@ -534,7 +534,7 @@ local function _addXY (fig, tX, tY, ind)
   end
   -- legend
   local s = string.char(string.byte('A') - 1 + ind)
-  if SONATA_USE_COLOR then
+  if _sonata_use_color then
     s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
   end
   for i = #tX, 1, -1 do
@@ -729,9 +729,7 @@ asciiplot._axes = function (self)
   elseif self._yaxis == 'min' then n = 1
   elseif self._yaxis == 'max' then n = self._x.size end
   if n then
-    for i = 1, self._y.size do
-      self._canvas[i][n] = vertical
-    end
+    for i = 1, self._y.size do self._canvas[i][n] = vertical end
     self._canvas[1][n] = up
     -- markers
     local d = self._y:markerInterval()
@@ -744,9 +742,7 @@ asciiplot._axes = function (self)
   elseif self._xaxis == 'min' then n = self._y.size end
   if n then
     local row = self._canvas[n]
-    for i = 1, self._x.size do
-      row[i] = horizontal
-    end
+    for i = 1, self._x.size do row[i] = horizontal end
     row[self._x.size] = right
     -- markers
     local d = self._x:markerInterval()
@@ -761,9 +757,8 @@ asciiplot._clear = function (self)
   for i = 1, self._y.size do
     local row = self._canvas[i] or {}
     for j = 1, width do row[j] = white end
-    if #row > width then
-      for j = #row, width+1, -1 do row[j] = nil end
-    end
+    -- clear the rest
+    for j = #row, width+1, -1 do row[j] = nil end
     self._canvas[i] = row
   end
   -- remove the rest of rows
@@ -778,45 +773,57 @@ asciiplot._limits = function (self)
   -- horizontal
   local width, height = self._x.size, self._y.size
   local n = nil
-  if self._xaxis == 'mid' then n = (height + 3) / 2
+  if     self._xaxis == 'mid' then n = (height + 3) / 2
   elseif self._xaxis == 'max' then n = 1
   elseif self._xaxis == 'min' then n = height end
   if n then
     -- min
     local row, beg = self._canvas[n], 0
-    local s = self._x:limit('min')
-    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    local s, i = self._x:limit('min'), 1
+    for c in string.gmatch(s, '.') do 
+      row[beg+i], i = c, i+1
+    end
     -- max
     s = self._x:limit('max')
-    beg = width - #s - 1
-    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    beg, i = width - #s - 1, 1
+    for c in string.gmatch(s, '.') do
+      row[beg+i], i = c, i+1
+    end
     -- mid
     if width > 21 then  -- 'visual' parameter
       s = self._x:limit('mid')
-      beg = (width + 1) / 2
-      for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+      beg, i = (width + 1)/2, 1
+      for c in string.gmatch(s, '.') do
+        row[beg+i], i = c, i+1
+      end
     end
     n = nil
   end
   -- vertical
-  if self._yaxis == 'mid' then n = (width + 1) / 2
+  if     self._yaxis == 'mid' then n = (width + 1) / 2
   elseif self._yaxis == 'min' then n = 1
   elseif self._yaxis == 'max' then n = width end
   if n then
     -- min
     local s = self._y:limit('min')
     local beg = (n == width) and (width - #s - 1) or n
-    local row = self._canvas[height-1]
-    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    local row, i = self._canvas[height-1], 1
+    for c in string.gmatch(s, '.') do
+      row[beg+i], i = c, i+1
+    end
     -- max
     s = self._y:limit('max')
-    row = self._canvas[2]
-    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+    row, i = self._canvas[2], 1
+    for c in string.gmatch(s, '.') do
+      row[beg+i], i = c, i+1
+    end
     -- mid
     if height > 11 then  -- 'visual' parameter
       s = self._y:limit('mid')
-      row = self._canvas[(height + 1) / 2]
-      for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
+      row, i = self._canvas[(height + 1)/2], 1
+      for c in string.gmatch(s, '.') do
+        row[beg+i], i = c, i+1
+      end
     end
   end
 end
@@ -1024,7 +1031,7 @@ _about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*')",
 --  @param s Character.
 asciiplot.addPose = function (self, ir, ic, s)
   if ir > 0 and ir <= self._y.size and ic > 0 and ic <= self._x.size
-            and (#s == 1 or SONATA_USE_COLOR)
+            and (#s == 1 or _sonata_use_color)
   then
     self._canvas[ir][ic] = s or '*'
   end
@@ -1256,7 +1263,7 @@ asciiplot.legend = function (self, str_t)
   local ch = {}
   for i = 1, #str_t do
     local s = string.char(string.byte('A') - 1 + i)
-    if SONATA_USE_COLOR then
+    if _sonata_use_color then
       s = string.format('\x1B[3%dm%s\x1B[0m', i, s)
     end
     ch[#ch+1] = s
@@ -1317,18 +1324,20 @@ asciiplot.plot = function (self, ...)
     self._x:setRange({vmin, vmax})
   end
 
-  -- update y range
-  vmin, vmax = math.huge, -math.huge
+  -- update y range  
   for j = 1, #acc do
     local r = acc[j]
     if _callable(r[1]) then
       r[1], r[2] = _fn2XY(self, r[1])
-    end
-    local a, b = _findVectorRange(r[2])
-    if a < vmin then vmin = a end
-    if b > vmax then vmax = b end
+    end    
   end
   if not self._yfix then
+    vmin, vmax = math.huge, -math.huge
+    for j = 1, #acc do
+      local a, b = _findVectorRange(acc[j][2])
+      if a < vmin then vmin = a end
+      if b > vmax then vmax = b end      
+    end
     self._y:setRange({vmin, vmax})
   end
 
