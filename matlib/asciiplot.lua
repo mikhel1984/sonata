@@ -144,7 +144,7 @@ local _czero = _utils.cross.isZero
 _utils = _utils.utils
 
 local _inform = Sonata and Sonata.warning or print
-local _modf = math.modf
+local _modf, _log, _floor = math.modf, math.log, math.floor
 local _tag = { MANUAL='manual', CONF='settings' }
 local _sonata_use_color = SONATA_USE_COLOR
 
@@ -245,7 +245,7 @@ end
 --  @param isX Flag of direct projection.
 --  @return Position (index) or nil if out of range.
 axis.proj = function (self, d, isX)
-  d = self.log and math.log(d, 10) or d
+  d = self.log and _log(d, 10) or d
   local d0 = self.range[1]
   if d < d0 or d > self.range[2] then return nil end
   local dx = (d - d0) / self.diff
@@ -284,16 +284,16 @@ axis.setRange = function (self, t)
     -- lorarithm mode
     if b <= 0 then b = 1 end
     if a <= 0 then a = b / 10 end
-    local p1 = math.log(a, 10)
-    p1 = (p1 > 0) and math.ceil(p1) or math.floor(p1)
-    local p2 = math.log(b, 10)
-    p2 = (p2 > 0) and math.ceil(p2) or math.floor(p2)
+    local p1 = _log(a, 10)
+    p1 = (p1 > 0) and math.ceil(p1) or _floor(p1)
+    local p2 = _log(b, 10)
+    p2 = (p2 > 0) and math.ceil(p2) or _floor(p2)
     self.range[1], self.range[2] = p1, p2
   else
     -- normal mode
     self.range[1], self.range[2] = a, b
-    local n = math.log(b - a, 10)
-    n = (n >= 0) and math.floor(n) or math.ceil(n)
+    local n = _log(b - a, 10)
+    n = (n >= 0) and _floor(n) or math.ceil(n)
     local tol = 10^(n-1)
     local v, rest = _modf(a / tol)
     if rest ~= 0 then
@@ -393,7 +393,7 @@ local function _addGraded (fig, x, y, ind)
     fy, ny = fy - 1, ny + 1
   end
   -- fy in (0, 1), multiply to (#GRADE - small_value)
-  local k = math.floor(fy*7.99)
+  local k = _floor(fy*7.99)
   local s = asciiplot.GRADE[k]
   if _sonata_use_color then
     s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
@@ -779,23 +779,17 @@ asciiplot._limits = function (self)
   if n then
     -- min
     local row, beg = self._canvas[n], 0
-    local s, i = self._x:limit('min'), 1
-    for c in string.gmatch(s, '.') do 
-      row[beg+i], i = c, i+1
-    end
+    local s = self._x:limit('min')
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
     s = self._x:limit('max')
-    beg, i = width - #s - 1, 1
-    for c in string.gmatch(s, '.') do
-      row[beg+i], i = c, i+1
-    end
+    beg = width - #s - 1
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
     if width > 21 then  -- 'visual' parameter
       s = self._x:limit('mid')
-      beg, i = (width + 1)/2, 1
-      for c in string.gmatch(s, '.') do
-        row[beg+i], i = c, i+1
-      end
+      beg = (width + 1)/2
+      for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     end
     n = nil
   end
@@ -807,23 +801,17 @@ asciiplot._limits = function (self)
     -- min
     local s = self._y:limit('min')
     local beg = (n == width) and (width - #s - 1) or n
-    local row, i = self._canvas[height-1], 1
-    for c in string.gmatch(s, '.') do
-      row[beg+i], i = c, i+1
-    end
+    local row = self._canvas[height-1]
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- max
     s = self._y:limit('max')
-    row, i = self._canvas[2], 1
-    for c in string.gmatch(s, '.') do
-      row[beg+i], i = c, i+1
-    end
+    row = self._canvas[2]
+    for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     -- mid
     if height > 11 then  -- 'visual' parameter
       s = self._y:limit('mid')
-      row, i = self._canvas[(height + 1)/2], 1
-      for c in string.gmatch(s, '.') do
-        row[beg+i], i = c, i+1
-      end
+      row = self._canvas[(height + 1)/2]
+      for i = 1, #s do row[beg+i] = string.sub(s, i, i) end
     end
   end
 end
@@ -1116,11 +1104,12 @@ asciiplot.bar = function (self, tx, ty)
   local ch, r = '=', 1
   local lim = self._xaxis == 'min' and 1 or
     self._xaxis == 'max' and ax.size or (ax.size + 1)/2
+  local mmin, ssub = math.min, string.sub
   for i = 1, #ty, step do
     local canvas = self._canvas[r]
     -- text
     local x = tostring(tx[i])
-    for c = 1, math.min(iL-2, #x) do canvas[c] = string.sub(x, c, c) end
+    for c = 1, mmin(iL-2, #x) do canvas[c] = ssub(x, c, c) end
     -- show
     x = ty[i]
     local p, fp = ax:proj(x, true)
@@ -1136,9 +1125,7 @@ asciiplot.bar = function (self, tx, ty)
     end
     -- value
     x = tostring(x)
-    for c = 1, math.min(iL-2, #x) do
-      canvas[iR+2+c] = string.sub(x, c, c)
-    end
+    for c = 1, mmin(iL-2, #x) do canvas[iR+2+c] = ssub(x, c, c) end
     r = r + 1
   end
 end
@@ -1324,19 +1311,19 @@ asciiplot.plot = function (self, ...)
     self._x:setRange({vmin, vmax})
   end
 
-  -- update y range  
+  -- update y range
   for j = 1, #acc do
     local r = acc[j]
     if _callable(r[1]) then
       r[1], r[2] = _fn2XY(self, r[1])
-    end    
+    end
   end
   if not self._yfix then
     vmin, vmax = math.huge, -math.huge
     for j = 1, #acc do
       local a, b = _findVectorRange(acc[j][2])
       if a < vmin then vmin = a end
-      if b > vmax then vmax = b end      
+      if b > vmax then vmax = b end
     end
     self._y:setRange({vmin, vmax})
   end
