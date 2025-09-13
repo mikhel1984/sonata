@@ -53,7 +53,10 @@ fan.high = Fz:linsmf(70, 90)
 lst = fs.temperature:setList()
 ans = #lst                    -->  3
 
--- get range
+-- get domain name
+ans = fan:getName()           -->  "fan_speed"
+
+-- get domin range
 lst = fan:getRange()
 ans = lst[1]                  -->  0
 
@@ -65,16 +68,33 @@ print(fs:apPlot('temperature', 'cold'))
 -- define rules (if .., then .., weight)
 fs:addRule(fs.temperature.cold, fs.fan_speed.slow)
 fs:addRule(fs.temperature.warm, fs.fan_speed.moderate)
-fs:addRule(fs.temperature.hot, fs.fan_speed.high, 0.8)
+fs:addRule(fs.temperature.hot, fs.fan_speed.high, 0.7)
+
+-- number of rules
+ans = #fs                     -->  3
+
+-- show rule and its elements
+print(fs[2])
+print(fs[2].input:asRule(), fs[2].output:asRule(), fs[2].weight)
+
+-- update rule
+fs[3].weight = 0.8
+ans = fs[3].weight          --.1>  0.8
 
 -- evaluate and defuzzify
 val, out_set = fs {temperature = 28}
-ans = val                  --.1>  60.7
+ans = val                   --.1>  60.7
 
 -- result in the field ANS
 fig = fs:apPlot('fan_speed', 'ANS')
 fig:addLine(val, 0, val, out_set(val), ':')
 print(fig)
+
+-- remove elements
+fs.temperature.cold = nil  -- remove fuzzy set
+fs.temperature = nil       -- remove domain
+fs[1] = nil                -- remove rule
+ans = #fs                     -->  2
 
 --]]
 
@@ -242,11 +262,10 @@ mt_set._str = function (self)
 end
 
 
+--- Make string representation in rule form.
+--  @return string.
 mt_set.asRule = function (self)
-  if not self.op then
-    if not (self.domain and self.domSet) then 
-      return tostring(self) 
-    end
+  if self.domain and self.domSet then
     return string.format("%s is %s", self.domain, self.domSet)
   elseif self.op == _op.AND then
     return string.format("(%s and %s)", self.set[1]:asRule(), self.set[2]:asRule())
@@ -254,6 +273,8 @@ mt_set.asRule = function (self)
     return string.format("(%s or %s)", self.set[1]:asRule(), self.set[2]:asRule())
   elseif self.op == _op.NOT then
     return string.format("not (%s)", self.set:asRule())
+  elseif self.op then
+    return tostring(self)
   end
   error(ERR_OPERATION)
 end
@@ -309,9 +330,7 @@ mt_set.defuzzify = function (self, rng, method)
     local i, pp, p = 0, 0, 0
     for x = a, b, dx do
       local vi = self(x)
-      if pp <= p and p > vi then
-        v[#v+1] = {i-1, p}
-      end
+      if pp <= p and p > vi then v[#v+1] = {i-1, p} end
       pp, p = p, vi
       i = i + 1
     end
@@ -322,26 +341,20 @@ mt_set.defuzzify = function (self, rng, method)
       -- largest of maximum
       local vmax = v[1]
       for i = 2, #v do
-        if v[i][2] > vmax[2] then
-          vmax = v[i]
-        end
+        if v[i][2] > vmax[2] then vmax = v[i] end
       end
       res = a + vmax[1]*dx
     elseif method == 'som' then
       -- smallest of maximum
       local vmin = v[1]
       for i = 2, #v do
-        if v[i][2] < vmin[2] then
-          vmin = v[i]
-        end
+        if v[i][2] < vmin[2] then vmin = v[i] end
       end
       res = a + vmin[1]*dx
     elseif method == 'mom' then
       -- middle of maximum (average of points)
       local sum = 0
-      for _, vi in ipairs(v) do
-        sum = sum + vi[1]
-      end
+      for _, vi in ipairs(v) do sum = sum + vi[1] end
       res = a + dx*(sum/#v)
     else
       error "Unknown method"
@@ -394,8 +407,10 @@ mt_domain.__newindex = function (self, k, v)
     error "Name must be string"
   end
   self._set[k] = v
-  v.domain = self._name
-  v.domSet = k
+  if v then
+    v.domain = self._name
+    v.domSet = k
+  end
 end
 
 
@@ -426,6 +441,8 @@ mt_domain._new  = function (rng, nm)
 end
 
 
+--- Get name of the domain.
+--  @return name string.
 mt_domain.getName = function (self) return self._name end
 
 
@@ -445,16 +462,24 @@ mt_domain.getRange = function (self)
 end
 
 
+-- Rule object.
 local mt_rule = {
   type = "fuzzy_rule"
 }
 
+
+--- Get rule method, restrict access.
+--  @param k Field name.
+--  @return Field value.
 mt_rule.__index = function (self, k)
   local tmp = '_'..k
   return self[tmp] or mt_rule[k]
 end
 
 
+--- Update field, restrict access and check type.
+--  @param k Field name.
+--  @param v New field value.
 mt_rule.__newindex = function (self, k, v)
   if getmetatable(v) == mt_set then
     if k == "input" then
@@ -472,12 +497,19 @@ mt_rule.__newindex = function (self, k, v)
 end
 
 
+--- Rule to string.
+--  @return string representation.
 mt_rule.__tostring = function (self)
   return string.format("IF %s THEN %s W %.2f",
     self._input:asRule(), self._output:asRule(), self._weight)
 end
 
 
+--- Make new rule object.
+--  @param fin Input fuzzy set.
+--  @param fout Output fuzzy set.
+--  @param weight (=1) Rule weight.
+--  @return new rule object.
 mt_rule._new = function (fin, fout, weight)
   local o = {
     _input = fin,
@@ -496,7 +528,9 @@ type = 'fuzzy',
 }
 
 
+-- metamethods
 _about["_bin"] = {"sets: a | b, a & b, ~a", nil, _help.META}
+_about["_fis"] = {"fis: #a, a()", nil, _help.META}
 
 
 --- Get domain or fuzzy object method.
@@ -507,9 +541,14 @@ fuzzy.__index = function (self, k)
 end
 
 
+--- Get number of rules.
+--  @return rule size.
 fuzzy.__len = function (self) return #self._rules end
 
 
+--- Remove domains or rules.
+--  @param k Name or index.
+--  @param v Value, expected nil.
 fuzzy.__newindex = function (self, k, v)
   if v == nil then
     if self._domain[k] then
@@ -640,10 +679,16 @@ _about[fuzzy.apPlot] = {"S:apPlot(domain_s, set_s=nil) --> fig",
   _tag.FIS}
 
 
+fuzzy.asRule = mt_set.asRule
+_about[fuzzy.asRule] = {"F:asRule() --> str",
+  "Return set description as a part of rule.", _tag.MF}
+
+
 fuzzy.defuzzify = mt_set.defuzzify
 _about[fuzzy.defuzzify] = {"F:defuzzify(range_t, method_s=centroid) --> value_d",
   "Defuzzification. Available methods are: centroid, bisector, lom, som, mom.",
   _tag.MF}
+
 
 --- Fuzzy set with difference of two sigmoidal membership funcitons.
 --  @param k1 Tile coefficient of the first function.
@@ -733,6 +778,11 @@ end
 fuzzy.setList = mt_domain.setList
 _about[fuzzy.setList] = {"D:setList() --> sets_t",
   "Get list of set names in domain.", _tag.DOM}
+
+
+fuzzy.getName = mt_domain.getName
+_about[fuzzy.getName] = {"D:getName() --> str",
+  "Get domain name.", _tag.DOM}
 
 
 fuzzy.getRange = mt_domain.getRange
