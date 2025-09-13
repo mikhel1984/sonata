@@ -367,7 +367,7 @@ local asciiplot = {
 type = 'asciiplot',
 -- const
 WIDTH = 73, HEIGHT = 21,
-OUTLIERS = false,  -- skip outliers
+OUTLIERS = 2,  -- skip outliers over 2*std, ignore when non-positive
 -- symbols
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
@@ -851,6 +851,9 @@ asciiplot._new = function(dwidth, dheight)
     _zfix = false,
     -- image
     _canvas = {},
+    -- last call
+    _lastFn = nil,
+    _lastArgs = nil,
     -- comments
     _legend = {},
     -- title can be added
@@ -1083,6 +1086,7 @@ _about[asciiplot.axes] = {"F:axes() --> tbl",
 --- Plot bar graph.
 --  @param tx X list (optional).
 --  @param ty Y list.
+--  @return updated figure object.
 asciiplot.bar = function (self, tx, ty)
   -- check arguments
   if not ty then
@@ -1142,8 +1146,12 @@ asciiplot.bar = function (self, tx, ty)
     for c = 1, mmin(iL-2, #x) do canvas[iR+2+c] = ssub(x, c, c) end
     r = r + 1
   end
+  -- save and return
+  self._lastFn = 'bar'
+  self._lastArgs = {tx, ty}
+  return self
 end
-_about[asciiplot.bar] = {"F:bar([tx,] ty)",
+_about[asciiplot.bar] = {"F:bar([tx,] ty) --> F",
   "Plot bar diargram for the given data."}
 
 
@@ -1194,7 +1202,7 @@ _about[asciiplot.concat] = {":concat(F1, F2) --> str",
 --- Plot function of two arguments using contours.
 --  @param fn Function f(x,y).
 --  @param tOpt Table of options: level - number of lines, view - projection ('XY', 'XZ', 'YZ').
---  @return Figure object.
+--  @return updated figure object.
 asciiplot.contour = function (self, fn, tOpt)
   tOpt = tOpt or {}
   tOpt.level = tOpt.level or 5
@@ -1218,8 +1226,12 @@ asciiplot.contour = function (self, fn, tOpt)
   self._title = fig._title
   self._canvas = fig._canvas
   self._legend = fig._legend
+  -- save and return
+  self._lastFn = 'contour'
+  self._lastArgs = {fn, tOpt}
+  return self
 end
-_about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'})",
+_about[asciiplot.contour] = {"F:contour(fn, {level=5, view='XY'}) --> F",
   "Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ."}
 
 
@@ -1282,7 +1294,7 @@ _about[asciiplot.legend] = {"F:legend(str_t|flag_s)",
 
 --- Generalized plot funciton.
 --  @param ... is "t1", "t1,t2", "fn", "t1,name", "t1,t2,name" etc.
---  @return The updated figure object.
+--  @return updated figure object.
 asciiplot.plot = function (self, ...)
   local ag, acc = {...}, {}
   local vmin, vmax = math.huge, -math.huge
@@ -1339,10 +1351,11 @@ asciiplot.plot = function (self, ...)
     for j = 1, #acc do
       local r = acc[j]
       local a, b = _findVectorRange(r[2])
-      if not self.OUTLIERS and isfun[j] then
+      if isfun[j] and self.OUTLIERS > 0 then
         -- skip outliers
         local mean, std = _statistics(r[2])
-        a, b = math.max(a, mean-2*std), math.min(b, mean+2*std)
+        a = math.max(a, mean - self.OUTLIERS*std)
+        b = math.min(b, mean + self.OUTLIERS*std)
       end
       if a < vmin then vmin = a end
       if b > vmax then vmax = b end
@@ -1361,9 +1374,25 @@ asciiplot.plot = function (self, ...)
   end
   -- limits
   asciiplot._limits(self)
+  -- save and return
+  self._lastFn = 'plot'
+  self._lastArgs = ag
+  return self
 end
-_about[asciiplot.plot] = {"F:plot(...)",
+_about[asciiplot.plot] = {"F:plot(...) --> F",
   "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc." }
+
+
+--- Repeat last draw command.
+--  @return updated figure object or nil.
+asciiplot.redraw = function (self)
+  if self._lastFn then
+    return asciiplot[self._lastFn](self, table.unpack(self._lastArgs))
+  end
+end
+asciiplot.__bnot = asciiplot.redraw
+_about[asciiplot.plot] = {"F:redraw() --> F|nil",
+  "Apply the last draw command. Equal to ~F.", _help.OTHER}
 
 
 --- Prepare a clear canvas.
@@ -1447,7 +1476,7 @@ _about[asciiplot.title] = {"F:title(str)", "Set new title.", _tag.CONF}
 --  {{x1,y11,y12,...}, {x2,y21,y22,...}, ...}
 --  @param t Data table.
 --  @param tOpt (Optional) Table of column indices.
---  @return The updated figure object.
+--  @return updated figure object.
 asciiplot.tplot = function (self, t, tOpt)
   tOpt = tOpt or {}
   tOpt.x = tOpt.x or 1  -- choose independent variable
@@ -1474,8 +1503,12 @@ asciiplot.tplot = function (self, t, tOpt)
   _addTable(self, t, tOpt)
   -- limits
   asciiplot._limits(self)
+  -- save and return
+  self._lastFn = 'tplot'
+  self._lastArgs = {t, tOpt}
+  return self
 end
-_about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})",
+_about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil}) --> F",
   "Plot the table data, choose columns if need."}
 
 
