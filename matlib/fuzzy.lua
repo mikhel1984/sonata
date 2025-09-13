@@ -49,7 +49,11 @@ fan.slow = Fz:linzmf(20, 40)
 fan.moderate = Fz:trimf(35, 50, 80)
 fan.high = Fz:linsmf(70, 90)
 
--- get components
+-- get domain list
+lst = fs:getDomains()
+ans = #lst                    -->  2
+
+-- get set list
 lst = fs.temperature:setList()
 ans = #lst                    -->  3
 
@@ -117,7 +121,8 @@ local _op = {
 
 -- tags
 local _tag = {
-  MF="fuzzy_set", FIS="inference_system", DOM="domain"
+  MF="fuzzy set", FIS="inference system", DOM="domain",
+  OP="fuzzy set operations",
 }
 
 
@@ -649,7 +654,7 @@ _about[fuzzy.addRule] = {"S:addRule(in_F, out_F, weight_d=1)",
 -- Intersection.
 fuzzy.andf = mt_set.andf
 _about[fuzzy.andf] = {"F:andf(F2) --> new_F",
-  "Fuzzy set intersection. Equal to F & F2.", _tag.MF}
+  "Fuzzy set intersection. Equal to F & F2.", _tag.OP}
 
 
 --- Plot fuzzy set from the given domain.
@@ -681,13 +686,13 @@ _about[fuzzy.apPlot] = {"S:apPlot(domain_s, set_s=nil) --> fig",
 
 fuzzy.asRule = mt_set.asRule
 _about[fuzzy.asRule] = {"F:asRule() --> str",
-  "Return set description as a part of rule.", _tag.MF}
+  "Return set description as a part of rule.", _tag.OP}
 
 
 fuzzy.defuzzify = mt_set.defuzzify
 _about[fuzzy.defuzzify] = {"F:defuzzify(range_t, method_s=centroid) --> value_d",
   "Defuzzification. Available methods are: centroid, bisector, lom, som, mom.",
-  _tag.MF}
+  _tag.OP}
 
 
 --- Fuzzy set with difference of two sigmoidal membership funcitons.
@@ -768,6 +773,8 @@ _about[fuzzy.gbellmf] = {":gbellmf(width_d, power_d, mean_d) --> F",
   "Make new fuzzy set with generalized bell-shaped member function.", _tag.MF}
 
 
+--- Get domain names.
+--  @return list of names.
 fuzzy.getDomains = function (self)
   local t = {}
   for _, v in pairs(self._domain) do t[#t+1] = v._name end
@@ -849,13 +856,13 @@ _about[fuzzy.newmf] = {":newmf(member_fn, name_s=nil) --> F",
 -- Complement.
 fuzzy.notf = mt_set.notf
 _about[fuzzy.notf] = {"F:notf() --> new_F",
-  "Fuzzy set complement. Equal to ~F.", _tag.MF}
+  "Fuzzy set complement. Equal to ~F.", _tag.OP}
 
 
 -- Union.
 fuzzy.orf = mt_set.orf
 _about[fuzzy.orf] = {"F:orf(F2) --> new_F",
-  "Fuzzy set union. Equal to F | F2.", _tag.MF}
+  "Fuzzy set union. Equal to F | F2.", _tag.OP}
 
 
 --- Fuzzy set with pi-shaped member function.
