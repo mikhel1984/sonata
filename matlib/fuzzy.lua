@@ -400,7 +400,7 @@ mt_domain._new  = function (rng, nm)
   local o = {
     _range = rng,
     _name = nm,
-    _set = {}
+    _set = {},
   }
   return setmetatable(o, mt_domain)
 end
@@ -422,6 +422,21 @@ mt_domain.getRange = function (self)
 end
 
 
+local mt_rule = {
+  type = "fuzzy_rule"
+}
+
+mt_rule._new = function (fin, fout, weight)
+  local o = {
+    input = fin,
+    output = fout,
+    weight = weight,
+    _res = 0,
+  }
+  return setmetatable(o, mt_rule)
+end
+
+
 -- Fuzzy infirence system.
 local fuzzy = {
 -- mark
@@ -440,6 +455,17 @@ fuzzy.__index = function (self, k)
 end
 
 
+fuzzy.__newindex = function (self, k, v)
+  if v == nil then
+    if self._domain[k] then
+      self._domain[k] = v
+    elseif self._rules[k] then
+      self._rules[k] = v
+    end
+  end
+end
+
+
 --- Evaluate membership value for current system state.
 --  @param x Input value.
 --  @return membership.
@@ -448,8 +474,8 @@ fuzzy._aggregate = function (self, x)
   local implicate, aggregate = env.IMPL, env.AGG
   local res = 0
   for _, r in ipairs(self._rules) do
-    local v = r[2]:_eval(x, env)
-    v = implicate(v, r[4])
+    local v = r.output:_eval(x, env)
+    v = implicate(v, r._res)
     res = aggregate(res, v)
   end
   return res
@@ -462,12 +488,12 @@ end
 fuzzy._evalFor = function (self, p)
   if #self._rules == 0 then return 0 end
   for _, r in ipairs(self._rules) do
-    r[4] = r[3] * r[1]:_evalDomains(p, self._env)
+    r._res = r.weight * r.input:_evalDomains(p, self._env)
   end
   local fset = _newSet(
     function (x) return self:_aggregate(x) end,
     nil, "aggregated")
-  local nm = self._rules[1][2].domain
+  local nm = self._rules[1].output.domain
   fset.domain = nm
   self[nm]["ANS"] = fset
   local rng = self._domain[nm]._range
@@ -520,7 +546,7 @@ fuzzy.addRule = function (self, iset, oset, w)
   if w < 0 or w > 1 then
     error "Incorrect weight"
   end
-  table.insert(self._rules, {iset, oset, w, 0})
+  table.insert(self._rules, mt_rule._new(iset, oset, w))
 end
 _about[fuzzy.addRule] = {"S:addRule(in_F, out_F, weight_d=1)",
   "Add new rule to system.", _tag.FIS}
