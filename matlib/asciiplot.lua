@@ -167,13 +167,13 @@ axis.__index = axis
 --- Create new axis.
 --  @param N Required width.
 --  @return axis object.
-local function _axis_new (N)
+local function _axisNew (N)
   if N < 9 then
     _inform('Set minimal axis size:'..tostring(N))
     N = 9
   elseif N % 2 == 0 then
     _inform('Change to odd size')
-    return _axis_new(N+1)
+    return _axisNew(N+1)
   end
   local x1, x2 = -1, 1
   local a = {
@@ -192,6 +192,19 @@ end
 --  @return true when function or has method __call.
 local function _callable (f)
   return type(f) == 'function' or (type(f) == 'table' and f.__call)
+end
+
+
+local function _statistics (t)
+  if #t == 0 then return 0, 0 end
+  local sum, sq = 0, 0
+  for i = 1, #t do
+    local v = t[i]
+    sum = sum + v
+    sq = sq + v*v
+  end
+  local mean = sum / #t
+  return mean, math.sqrt(sq/#t - mean*mean)
 end
 
 
@@ -354,6 +367,7 @@ local asciiplot = {
 type = 'asciiplot',
 -- const
 WIDTH = 73, HEIGHT = 21,
+OUTLIERS = false,  -- skip outliers
 -- symbols
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
@@ -824,9 +838,9 @@ end
 asciiplot._new = function(dwidth, dheight)
   local pos = 'mid'
   local o = {
-    _x = _axis_new(dwidth),
-    _y = _axis_new(dheight),
-    _z = _axis_new(dwidth),
+    _x = _axisNew(dwidth),
+    _y = _axisNew(dheight),
+    _z = _axisNew(dwidth),
     -- axes location
     _xaxis = pos,
     _yaxis = pos,
@@ -1312,16 +1326,24 @@ asciiplot.plot = function (self, ...)
   end
 
   -- update y range
+  local isfun = {}
   for j = 1, #acc do
     local r = acc[j]
     if _callable(r[1]) then
+      isfun[j] = true
       r[1], r[2] = _fn2XY(self, r[1])
     end
   end
   if not self._yfix then
     vmin, vmax = math.huge, -math.huge
     for j = 1, #acc do
-      local a, b = _findVectorRange(acc[j][2])
+      local r = acc[j]
+      local a, b = _findVectorRange(r[2])
+      if not self.OUTLIERS and isfun[j] then
+        -- skip outliers
+        local mean, std = _statistics(r[2])
+        a, b = math.max(a, mean-2*std), math.min(b, mean+2*std)
+      end
       if a < vmin then vmin = a end
       if b > vmax then vmax = b end
     end
