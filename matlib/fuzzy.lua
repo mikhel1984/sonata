@@ -50,7 +50,7 @@ fan.moderate = Fz:trimf(35, 50, 80)
 fan.high = Fz:linsmf(70, 90)
 
 -- get components
-lst = fs.temperature:getNames()
+lst = fs.temperature:setList()
 ans = #lst                    -->  3
 
 -- get range
@@ -144,7 +144,9 @@ local function _newSet (s, op, nm, params)
     set=s,
     op=op,
     name=nm,
-    param = params
+    param = params,
+    domain = nil,
+    domSet = nil,
   }
   return setmetatable(o, mt_set)
 end
@@ -235,6 +237,23 @@ mt_set._str = function (self)
     return string.format("(%s | %s)", self.set[1]:_str(), self.set[2]:_str())
   elseif self.op == _op.NOT then
     return "~" .. self.set:_str()
+  end
+  error(ERR_OPERATION)
+end
+
+
+mt_set.asRule = function (self)
+  if not self.op then
+    if not (self.domain and self.domSet) then 
+      return tostring(self) 
+    end
+    return string.format("%s is %s", self.domain, self.domSet)
+  elseif self.op == _op.AND then
+    return string.format("(%s and %s)", self.set[1]:asRule(), self.set[2]:asRule())
+  elseif self.op == _op.OR then
+    return string.format("(%s or %s)", self.set[1]:asRule(), self.set[2]:asRule())
+  elseif self.op == _op.NOT then
+    return string.format("not (%s)", self.set:asRule())
   end
   error(ERR_OPERATION)
 end
@@ -376,6 +395,7 @@ mt_domain.__newindex = function (self, k, v)
   end
   self._set[k] = v
   v.domain = self._name
+  v.domSet = k
 end
 
 
@@ -406,9 +426,12 @@ mt_domain._new  = function (rng, nm)
 end
 
 
+mt_domain.getName = function (self) return self._name end
+
+
 --- Get list of sets inside the domain.
 --  @return list of names.
-mt_domain.getNames = function (self)
+mt_domain.setList = function (self)
   local t = {}
   for k in pairs(self._set) do t[#t+1] = k end
   return t
@@ -426,11 +449,40 @@ local mt_rule = {
   type = "fuzzy_rule"
 }
 
+mt_rule.__index = function (self, k)
+  local tmp = '_'..k
+  return self[tmp] or mt_rule[k]
+end
+
+
+mt_rule.__newindex = function (self, k, v)
+  if getmetatable(v) == mt_set then
+    if k == "input" then
+      self._input = v
+    elseif k == "output" then
+      self._output = v
+    else
+      error "unknown key"
+    end
+  elseif k == "weight" and 0 <= v and v <= 1 then
+    self._weight = v
+  else
+    error "Unable to execute"
+  end
+end
+
+
+mt_rule.__tostring = function (self)
+  return string.format("IF %s THEN %s W %.2f",
+    self._input:asRule(), self._output:asRule(), self._weight)
+end
+
+
 mt_rule._new = function (fin, fout, weight)
   local o = {
-    input = fin,
-    output = fout,
-    weight = weight,
+    _input = fin,
+    _output = fout,
+    _weight = weight,
     _res = 0,
   }
   return setmetatable(o, mt_rule)
@@ -451,8 +503,11 @@ _about["_bin"] = {"sets: a | b, a & b, ~a", nil, _help.META}
 --  @param k Parameter name.
 --  @return parameter value.
 fuzzy.__index = function (self, k)
-  return self._domain[k] or fuzzy[k]
+  return self._rules[k] or self._domain[k] or fuzzy[k]
 end
+
+
+fuzzy.__len = function (self) return #self._rules end
 
 
 fuzzy.__newindex = function (self, k, v)
@@ -460,7 +515,7 @@ fuzzy.__newindex = function (self, k, v)
     if self._domain[k] then
       self._domain[k] = v
     elseif self._rules[k] then
-      self._rules[k] = v
+      table.remove(self._rules, k)
     end
   end
 end
@@ -474,7 +529,7 @@ fuzzy._aggregate = function (self, x)
   local implicate, aggregate = env.IMPL, env.AGG
   local res = 0
   for _, r in ipairs(self._rules) do
-    local v = r.output:_eval(x, env)
+    local v = r._output:_eval(x, env)
     v = implicate(v, r._res)
     res = aggregate(res, v)
   end
@@ -488,12 +543,12 @@ end
 fuzzy._evalFor = function (self, p)
   if #self._rules == 0 then return 0 end
   for _, r in ipairs(self._rules) do
-    r._res = r.weight * r.input:_evalDomains(p, self._env)
+    r._res = r._weight * r._input:_evalDomains(p, self._env)
   end
   local fset = _newSet(
     function (x) return self:_aggregate(x) end,
     nil, "aggregated")
-  local nm = self._rules[1].output.domain
+  local nm = self._rules[1]._output.domain
   fset.domain = nm
   self[nm]["ANS"] = fset
   local rng = self._domain[nm]._range
@@ -668,8 +723,15 @@ _about[fuzzy.gbellmf] = {":gbellmf(width_d, power_d, mean_d) --> F",
   "Make new fuzzy set with generalized bell-shaped member function.", _tag.MF}
 
 
-fuzzy.getNames = mt_domain.getNames
-_about[fuzzy.getNames] = {"D:getNames() --> sets_t",
+fuzzy.getDomains = function (self)
+  local t = {}
+  for _, v in pairs(self._domain) do t[#t+1] = v._name end
+  return t
+end
+
+
+fuzzy.setList = mt_domain.setList
+_about[fuzzy.setList] = {"D:setList() --> sets_t",
   "Get list of set names in domain.", _tag.DOM}
 
 
