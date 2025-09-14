@@ -505,19 +505,54 @@ end
 
 local tree = {
   -- create object
-  new = function (l, r, v) return {left=l, right=r, val=(v or 0), node=true} end,
+  new = function (l, r, v, tp) 
+    return {left=l, right=r, val=v, type=tp} 
+  end,
   -- check node
-  isNode = function (t) return type(t) == 'table' and t.node end,
+  isNode = function (t) return t.type == 'node' end,
+  -- check leaf
+  isLeaf = function (t) return t.type == 'leaf' end,
+  LEAF = 'leaf', NODE = 'node',
 }
 
 
-tree.rotR = function (node)
-  return tree.new(node.left.left, tree.new(node.left.right, node.right))
+--tree.rotR = function (node)
+--  return tree.new(node.left.left, tree.new(node.left.right, node.right))
+--end
+--
+--
+--tree.rotL = function (node)
+--  return tree.new(tree.new(node.left, node.right.left), node.right.right)
+--end
+
+
+tree.init = function (l, r, v)
+  if l==nil and r==nil or l~=nil and r~=nil then
+    tree.new(l, r, v or 0, tree.NODE)
+  else
+    tree.new(l or r, nil, v or 0, tree.LEAF)
+  end
 end
 
-
-tree.rotL = function (node)
-  return tree.new(tree.new(node.left, node.right.left), node.right.right)
+tree.addWeighted = function (node, obj, w)
+  if node.type == tree.LEAF then
+    node.left = tree.init(node.left, nil, node.val)
+    node.right = tree.init(obj, nil, w)
+    node.type = tree.NODE  -- change type
+  else
+    local vl, vr = node.left.val, node.right.val
+    if wl+wr <= w then
+      node.left = tree.init(node.left, node.right, wl+wr)
+      node.right = tree.init(obj, nil, w)
+    else
+      if wl < wr then
+        tree.addWeighted(node.left, obj, w)
+      else
+        tree.addWeighted(node.right, obj, w)
+      end
+    end
+  end
+  node.val = node.left.val + node.right.val
 end
 
 
