@@ -454,53 +454,80 @@ end
 
 --============== Calc ================
 
-local calc = {}
 local mexp, msqrt, mlog = math.exp, math.sqrt, math.log
 
---- Hyperbolic cosine.
---  @param x Float number.
---  @return Hyperbolic cosine value.
-calc.cosh = function (x) return 0.5*(mexp(x) + mexp(-x)) end
+-- Additional functions.
+local calc = {
+  -- hyperbolic cosine
+  cosh = function (x) return 0.5*(mexp(x) + mexp(-x)) end,
+  -- hyperbolic sine
+  sinh = function (x) return 0.5*(mexp(x) - mexp(-x)) end,
+  -- inverse hyperbolic sine
+  asinh = function (x) return mlog(x + msqrt(x*x+1)) end,
+  -- inverse hyperbolic cosine
+  acosh = function (x) return mlog(x + msqrt(x*x-1)) end,
+  -- inverse hyperbolic tangent
+  atanh = function (x) return 0.5*mlog((1 + x)/(1 - x)) end,
+  -- hyperbolic tangent
+  tanh = function (x)
+    local t = mexp(2*x)
+    return (t-1)/(t+1)
+  end,
+}
 
 
---- Hyperbolic sine.
---  @param x Float number.
---  @return Hyperbolic sine value.
-calc.sinh = function (x) return 0.5*(mexp(x) - mexp(-x)) end
+--============== Queue ================
+
+--- Queue data structure
+local queue = {
+  -- create object
+  new = function () return {{}, {}} end,
+  -- add element
+  push = function (self, v) table.insert(self[1], v) end,
+  -- check content
+  isEmpty = function (self) return #self[2] == 0 and #self[1] == 0 end
+}
 
 
---- Hyperbolic tangent.
---  @param x Float number.
---  @return Hyperbolic tangent value.
-calc.tanh = function (x)
-  local t = mexp(2*x)
-  return (t-1)/(t+1)
+-- Remove element.
+queue.pop = function (self)
+  local q1, q2 = self[1], self[2]
+  if #q2 == 0 then
+    while #q1 > 0 do
+      table.insert(q2, table.remove(q1))
+    end
+  end
+  return table.remove(q2)
 end
 
 
---- Inverse hyperbolic sine.
---  @param x Float number.
---  @return Inverse hyperbolic sine value.
-calc.asinh = function (x) return mlog(x + msqrt(x*x+1)) end
+--============== Bin Tree ================
+
+local tree = {
+  -- create object
+  new = function (l, r, v) return {left=l, right=r, val=(v or 0), node=true} end,
+  -- check node
+  isNode = function (t) return type(t) == 'table' and t.node end,
+}
 
 
---- Inverse hyperbolic cosine.
---  @param x Float number.
---  @return Inverse hyperbolic cosine value.
-calc.acosh = function (x) return mlog(x + msqrt(x*x-1)) end
+tree.rotR = function (node)
+  return tree.new(node.left.left, tree.new(node.left.right, node.right))
+end
 
 
---- Inverse hyperbolic tangent.
---  @param x Float number.
---  @return Inverse hyperbolic tangent value.
-calc.atanh = function (x) return 0.5*mlog((1 + x)/(1 - x)) end
+tree.rotL = function (node)
+  return tree.new(tree.new(node.left, node.right.left), node.right.right)
+end
 
 
+-- export
 return {
   versions = versions,
   cross = cross,
   utils = utils,
   calc = calc,
+  queue = queue,
 }
 
 --===================================================

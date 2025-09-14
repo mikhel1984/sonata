@@ -144,7 +144,9 @@ ans = D:unpack(t)             --> b
 
 --	LOCAL
 
-local _utils = require("matlib.utils").utils
+local _utils = require("matlib.utils")
+local _queue = _utils.queue
+_utils = _utils.utils
 
 local _tag = { PROPERTY='property', EXPORT='export' }
 
@@ -222,29 +224,6 @@ __tostring = function (t)
   return string.format('%s -> %s', tostring(t[1]), tostring(t[2]))
 end
 }
-
-
--- Make queue from two stacks
-local Queue = {
-  -- create object
-  new = function () return {{}, {}} end,
-  -- add element
-  push = function (self, v) table.insert(self[1], v) end,
-  -- check content
-  isEmpty = function (self) return #self[2] == 0 and #self[1] == 0 end
-}
-
-
--- remove element
-Queue.pop = function (self)
-  local q1, q2 = self[1], self[2]
-  if #q2 == 0 then
-    while #q1 > 0 do
-      table.insert(q2, table.remove(q1))
-    end
-  end
-  return table.remove(q2)
-end
 
 
 --	INFO
@@ -887,21 +866,21 @@ local search = {}
 search.bfs = function (G, vStart, vGoal)
   local pred = {[vStart]=vStart}
   -- use queue
-  local q = Queue.new()
-  Queue.push(q, vStart)
+  local q = _queue.new()
+  _queue.push(q, vStart)
   -- run
   repeat
-    local node = Queue.pop(q)
+    local node = _queue.pop(q)
     -- found ?
     if node == vGoal then return pred end
     -- add successors
     for k, v in pairs(G._[node]) do
       if not pred[k] and (v or not G._dir) then
-        Queue.push(q, k)
+        _queue.push(q, k)
         pred[k] = node
       end
     end
-  until Queue.isEmpty(q)
+  until _queue.isEmpty(q)
   return nil
 end
 
