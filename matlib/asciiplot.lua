@@ -139,6 +139,7 @@ print(fig6)
 --	LOCAL
 
 local _utils = require("matlib/utils")
+local _tree = _utils.tree
 local _vmove = _utils.versions.move
 local _czero = _utils.cross.isZero
 _utils = _utils.utils
@@ -1522,6 +1523,69 @@ _about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", _help.STATIC}
 
 
+local _wtree = {}
+
+_wtree.init = function (l, r, v)
+  if l == nil and r == nil or l ~= nil and r ~= nil then
+    return _tree.new(l, r, v or 0, false)
+  else
+    return _tree.new(l or r, nil, v or 0, true)
+  end
+end
+
+_wtree.add = function (node, obj, w)
+  if node.isleaf then
+    node.left = _wtree.init(node.left, nil, node.val)
+    node.right = _wtree.init(obj, nil, w)
+    node.isleaf = false
+  else
+    local vl, vr = node.left.val, node.right.val
+    if vl+vr <= w then
+      node.left = _wtree.init(node.left, node.right, vl+vr)
+      node.right = _wtree.init(obj, nil, w)
+    else
+      if vl < vr then
+        _wtree.add(node.left, obj, w)
+      else
+        _wtree.add(node.right, obj, w)
+      end
+    end
+  end
+  node.val = node.left.val + node.right.val
+end
+
+_wtree.fill = function (node, w1, w2, h1, h2, wsplit, acc)
+  if node.isleaf then
+    local n = string.char(string.byte('a') + #n)
+    -- fill range
+    acc[#acc+1] = node.left
+  else
+    local kl = node.left.val / node.val
+    if wsplit then
+      local wi = kl*(w2 - w1)
+      _wtree.fill(node.left, w1, wi, h1, h2, false, acc)
+      _wtree.fill(node.right, wi, w2, h1, h2, false, acc)
+    else
+      local hi = kl*(h2 - h1)
+      _wtree.fill(node.left, w1, w2, h1, hi, true, acc)
+      _wtree.fill(node.right, w1, w2, hi, h2, true, acc)
+    end
+  end
+end
+
+_printTree = function (node, lvl, side)
+  if not node.isleaf then
+    _printTree(node.left, lvl+1, 'L')
+    print(string.format('%s%s %s', string.rep(' ', lvl), side, tostring(node.val)))
+    _printTree(node.right, lvl+1, 'R')
+  else
+    print(string.format("%s=%s %s", string.rep(' ', lvl), tostring(node.left), tostring(node.val) ))
+  end
+end
+
+
+
+
 -- Comment to remove descriptions
 asciiplot.about = _about
 -- clear load data
@@ -1532,3 +1596,5 @@ return asciiplot
 --======================================
 -- FIX contour concatenation when use color
 -- TODO allow contour level definitions
+
+
