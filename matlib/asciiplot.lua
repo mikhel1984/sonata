@@ -160,6 +160,38 @@ __module__ = "Use pseudography for data visualization."
 
 --	MODULE
 
+local _wtree = {}
+
+_wtree.init = function (l, r, v)
+  if l == nil and r == nil or l ~= nil and r ~= nil then
+    return _tree.new(l, r, v or 0, false)
+  else
+    return _tree.new(l or r, nil, v or 0, true)
+  end
+end
+
+_wtree.add = function (node, obj, w)
+  if node.isleaf then
+    node.left = _wtree.init(node.left, nil, node.val)
+    node.right = _wtree.init(obj, nil, w)
+    node.isleaf = false
+  else
+    local vl, vr = node.left.val, node.right.val
+    if vl+vr <= w then
+      node.left = _wtree.init(node.left, node.right, vl+vr)
+      node.right = _wtree.init(obj, nil, w)
+    else
+      if vl < vr then
+        _wtree.add(node.left, obj, w)
+      else
+        _wtree.add(node.right, obj, w)
+      end
+    end
+  end
+  node.val = node.left.val + node.right.val
+end
+
+
 -- Axis object
 local axis = {}
 axis.__index = axis
@@ -654,6 +686,39 @@ local function _format (s, N, bCentr, bCut)
 end
 
 
+local function _fillBlock (fig, node, w1, w2, h1, h2, wdiv, acc)
+  if node.isleaf then
+    -- draw
+    local ch = string.char(string.byte('A') + #acc)
+    acc[#acc+1] = ch
+    local nw1, fw1 = fig._x:proj(w1, true)
+    nw1 = (fw1 > 0.5) and (nw1 + 1) or nw1
+    local nw2, fw2 = fig._x:proj(w2, true)
+    nw2 = (fw2 > 0.5) and (nw2 + 1) or nw2
+    local nh1, fh1 = fig._y:proj(h1, false)
+    nh1 = (fh1 > 0.5) and (nh1 + 1) or nh1
+    local nh2, fh2 = fig._y:proj(h2, false)
+    nh2 = (fh2 > 0.5) and (nh2 + 1) or nh2
+    for ny = nh2, nh1 do
+      local row = fig._canvas[ny]
+      for nx = nw1, nw2 do row[nx] = ch end
+    end
+  else
+    -- visit branches
+    local kl = node.left.val / node.val
+    if wdiv then
+      local m = w1 + kl*(w2 - w1)
+      _fillBlock(fig, node.left, w1, m, h1, h2, false, acc)
+      _fillBlock(fig, node.right, m, w2, h1, h2, false, acc)
+    else
+      local m = h1 + kl*(h2 - h1)
+      _fillBlock(fig, node.left, w1, w2, h1, m, true, acc)
+      _fillBlock(fig, node.right, w1, w2, m, h2, true, acc)
+    end
+  end
+end
+
+
 --- Set axis settings.
 --  @param fig asciiplot object.
 --  @param t Table with parameters {range, log, view, fix, size}.
@@ -862,6 +927,7 @@ asciiplot._new = function(dwidth, dheight)
   -- return object
   return setmetatable(o, asciiplot)
 end
+
 
 
 --- Find XY projection of a contour.
@@ -1154,6 +1220,32 @@ asciiplot.bar = function (self, tx, ty)
 end
 _about[asciiplot.bar] = {"F:bar([tx,] ty) --> F",
   "Plot bar diargram for the given data."}
+
+
+asciiplot.blocks = function (self, tx, ty)
+  -- check arguments
+  if #tx == 0 then return self end
+  if not ty then
+    ty = {}
+    for i = 1, #tx do ty[i] = i end
+    tx, ty = ty, tx
+  end
+  if #tx ~= #ty then error("Different list size") end
+  -- make weighted tree
+  local tree = _wtree.init(tx[1], nil, ty[1])
+  for i = 2, #tx do
+    _wtree.add(tree, tx[i], ty[i])
+  end
+  -- draw
+  local acc = {}
+  asciiplot._clear(self)
+  _fillBlock(self, tree,
+    self._x.range[1], self._x.range[2],
+    self._y.range[1], self._y.range[2],
+    true, acc)
+  -- TODO legend
+  return self
+end
 
 
 --- Horizontal concatenation of 2 figures.
@@ -1523,69 +1615,6 @@ _about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
   "Create new asciiplot.", _help.STATIC}
 
 
-local _wtree = {}
-
-_wtree.init = function (l, r, v)
-  if l == nil and r == nil or l ~= nil and r ~= nil then
-    return _tree.new(l, r, v or 0, false)
-  else
-    return _tree.new(l or r, nil, v or 0, true)
-  end
-end
-
-_wtree.add = function (node, obj, w)
-  if node.isleaf then
-    node.left = _wtree.init(node.left, nil, node.val)
-    node.right = _wtree.init(obj, nil, w)
-    node.isleaf = false
-  else
-    local vl, vr = node.left.val, node.right.val
-    if vl+vr <= w then
-      node.left = _wtree.init(node.left, node.right, vl+vr)
-      node.right = _wtree.init(obj, nil, w)
-    else
-      if vl < vr then
-        _wtree.add(node.left, obj, w)
-      else
-        _wtree.add(node.right, obj, w)
-      end
-    end
-  end
-  node.val = node.left.val + node.right.val
-end
-
-_wtree.fill = function (node, w1, w2, h1, h2, wsplit, acc)
-  if node.isleaf then
-    local n = string.char(string.byte('a') + #n)
-    -- fill range
-    acc[#acc+1] = node.left
-  else
-    local kl = node.left.val / node.val
-    if wsplit then
-      local wi = kl*(w2 - w1)
-      _wtree.fill(node.left, w1, wi, h1, h2, false, acc)
-      _wtree.fill(node.right, wi, w2, h1, h2, false, acc)
-    else
-      local hi = kl*(h2 - h1)
-      _wtree.fill(node.left, w1, w2, h1, hi, true, acc)
-      _wtree.fill(node.right, w1, w2, hi, h2, true, acc)
-    end
-  end
-end
-
-_printTree = function (node, lvl, side)
-  if not node.isleaf then
-    _printTree(node.left, lvl+1, 'L')
-    print(string.format('%s%s %s', string.rep(' ', lvl), side, tostring(node.val)))
-    _printTree(node.right, lvl+1, 'R')
-  else
-    print(string.format("%s=%s %s", string.rep(' ', lvl), tostring(node.left), tostring(node.val) ))
-  end
-end
-
-
-
-
 -- Comment to remove descriptions
 asciiplot.about = _about
 -- clear load data
@@ -1596,5 +1625,4 @@ return asciiplot
 --======================================
 -- FIX contour concatenation when use color
 -- TODO allow contour level definitions
-
 
