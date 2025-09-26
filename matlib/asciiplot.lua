@@ -126,6 +126,13 @@ fig5 = Ap()
 fig5:bar(tx, ty)
 print(fig5)
 
+-- blocks
+fig7 = Ap()
+tx = {'v1', 'v2', 'v3', 'v4'}
+ty = {10, 5, 2, 3}
+fig7:blocks(tx, ty)
+print(fig7)
+
 -- use log scale
 fig6 = Ap()
 fig6:setX {range={-10, 10}}
@@ -160,8 +167,15 @@ __module__ = "Use pseudography for data visualization."
 
 --	MODULE
 
+-- weighted tree
 local _wtree = {}
 
+
+--- New weighted tree.
+--  @param l Left element.
+--  @param r Right element.
+--  @param v Weight.
+--  @return new node or leaf.
 _wtree.init = function (l, r, v)
   if l == nil and r == nil or l ~= nil and r ~= nil then
     return _tree.new(l, r, v or 0, false)
@@ -170,6 +184,11 @@ _wtree.init = function (l, r, v)
   end
 end
 
+
+--- Add element to the tree.
+--  @param node Node to add new object.
+--  @param obj New object.
+--  @param w Weight of the object.
 _wtree.add = function (node, obj, w)
   if node.isleaf then
     node.left = _wtree.init(node.left, nil, node.val)
@@ -411,7 +430,7 @@ GRADE = {[0]="`", "'", "*", "~", "-", ".", ",", "_"}
 
 
 -- update markers
-if SONATA_USE_COLOR then
+if _sonata_use_color then
   local char = asciiplot.lvls
   for k, v in ipairs(char) do
     char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
@@ -690,7 +709,10 @@ local function _fillBlock (fig, node, w1, w2, h1, h2, wdiv, acc)
   if node.isleaf then
     -- draw
     local ch = string.char(string.byte('A') + #acc)
-    acc[#acc+1] = ch
+    if _sonata_use_color then
+      ch = string.format('\x1B[3%dm%s\x1B[0m', (#acc+1) % 9, ch)
+    end
+    acc[#acc+1] = {ch, node.left}
     local nw1, fw1 = fig._x:proj(w1, true)
     nw1 = (fw1 > 0.5) and (nw1 + 1) or nw1
     local nw2, fw2 = fig._x:proj(w2, true)
@@ -1222,6 +1244,10 @@ _about[asciiplot.bar] = {"F:bar([tx,] ty) --> F",
   "Plot bar diargram for the given data."}
 
 
+--- Show relation with blocks.
+--  @param tx X list (optional).
+--  @param ty Y list.
+--  @return updated figure object.
 asciiplot.blocks = function (self, tx, ty)
   -- check arguments
   if #tx == 0 then return self end
@@ -1243,9 +1269,19 @@ asciiplot.blocks = function (self, tx, ty)
     self._x.range[1], self._x.range[2],
     self._y.range[1], self._y.range[2],
     true, acc)
-  -- TODO legend
+  -- legend
+  local i, s = 1, {}
+  for n, p in ipairs(acc) do
+    s[#s+1] = string.format('%s:%s', p[1], tostring(p[2]))
+    if n % 4 == 0 then
+      self._legend['L'..tostring(i)] = table.concat(s, ' ')
+      i, s = i+1, {}
+    end
+  end
   return self
 end
+_about[asciiplot.blocks] = {"F:blocks([tx,] ty) --> F",
+  "Plot data relations with blocks."}
 
 
 --- Horizontal concatenation of 2 figures.
