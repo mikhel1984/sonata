@@ -381,9 +381,7 @@ mt_set.__bor = mt_set.orf
 
 --- Apply set complement (NOT, ~).
 --  @retrun complemented set.
-mt_set.notf = function (self)
-  return _newSet(self, _op.NOT)
-end
+mt_set.notf = function (self) return _newSet(self, _op.NOT) end
 mt_set.__bnot = mt_set.notf
 
 
@@ -468,9 +466,7 @@ end
 
 
 -- Rule object.
-local mt_rule = {
-  type = "fuzzy_rule"
-}
+local mt_rule = { type = "fuzzy_rule" }
 
 
 --- Get rule method, restrict access.
@@ -527,10 +523,7 @@ end
 
 
 -- Fuzzy infirence system.
-local fuzzy = {
--- mark
-type = 'fuzzy',
-}
+local fuzzy = { type = 'fuzzy' }
 
 
 -- metamethods
@@ -846,9 +839,7 @@ _about[fuzzy.linzmf] = {":linzmf(left_d, right_d) --> F",
 --  @param fn Member function.
 --  @param name Function name (optional).
 --  @return set object.
-fuzzy.newmf = function (_, fn, name)
-  return _newSet(fn, nil, name)
-end
+fuzzy.newmf = function (_, fn, name) return _newSet(fn, nil, name) end
 _about[fuzzy.newmf] = {":newmf(member_fn, name_s=nil) --> F",
   "Make new fuzzy set with user defined member function.", _tag.MF}
 
@@ -921,9 +912,7 @@ _about[fuzzy.psigmf] = {":psigmf(tilt1_d, inflect1_d, tilt2_d, inflect2_d) --> F
 --- Update environment settings.
 --  @param env New environment settings.
 fuzzy.setEnv = function (self, env)
-  for k, v in ipairs(env) do
-    self._env[k] = v
-  end
+  for k, v in ipairs(env) do self._env[k] = v end
 end
 _about[fuzzy.setEnv] = {"S:setEnv(params_t)",
   "Update system environment.", _tag.FIS}
@@ -1053,9 +1042,10 @@ _about[fuzzy] = {" (env_t=nil) --> F", "Create new fuzzy inference system.", _he
 
 -- Comment to remove descriptions
 fuzzy.about = _about
+-- clear load data
+_tag = nil
 
 return fuzzy
 
 --======================================
---TODO: print rules
 

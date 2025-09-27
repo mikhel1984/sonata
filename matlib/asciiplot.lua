@@ -579,6 +579,13 @@ local function _fn2Z (fig, fn)
 end
 
 
+--- Fill block or sub-blocks.
+--  @param fig asciiplot object.
+--  @param node Tree node.
+--  @param w1, w2 Start and end of width.
+--  @param h1, h2 Start and end of height.
+--  @param wdiv Flag to divide width.
+--  @param acc Accumulator table.
 local function _fillBlock (fig, node, w1, w2, h1, h2, wdiv, acc)
   if node.isleaf then
     -- draw

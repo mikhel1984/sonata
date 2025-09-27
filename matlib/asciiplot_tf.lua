@@ -15,6 +15,11 @@ local _tree = _utils.tree
 local _modf = math.modf
 
 
+--- New weighted tree.
+--  @param l Left element.
+--  @param r Right element.
+--  @param v Weight.
+--  @return new node or leaf.
 local function _treeInit (l, r, v)
   if l == nil and r == nil or l ~= nil and r ~= nil then
     return _tree.new(l, r, v or 0, false)
@@ -24,6 +29,7 @@ local function _treeInit (l, r, v)
 end
 
 
+-- Auxiliary asciiplot functions.
 local transform = {}
 
 
@@ -97,6 +103,9 @@ transform.format = function (s, N, bCentr, bCut)
 end
 
 
+--- Estimate parameters to find outliers.
+--  @param t Data list.
+--  @return mean value and standard deviation.
 transform.statistics = function (t)
   if #t == 0 then return 0, 0 end
   local sum, sq = 0, 0
@@ -138,11 +147,7 @@ transform.surfRange = function (v1, vn, N, bScale, bInt)
 end
 
 
---- New weighted tree.
---  @param l Left element.
---  @param r Right element.
---  @param v Weight.
---  @return new node or leaf.
+-- Make weighted tree.
 transform.treeInit = _treeInit
 
 

@@ -1,3 +1,17 @@
+========= 1.01 ==========
+
+Asciiplot
+* Plot callable objects
+* Code optimization
+* Redraw figure with new parameters
+* Option to skip outliers
+* Block diagram
+Data
+* Histogram plot
+Other
+* New module 'fuzzy'
+* Fix call for 'time' and 'trace'
+
 ========= 1.00 ==========
 
 Asciiplot
