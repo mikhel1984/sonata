@@ -146,10 +146,11 @@ print(fig6)
 --	LOCAL
 
 local _utils = require("matlib/utils")
-local _tree = _utils.tree
+
 local _vmove = _utils.versions.move
 local _czero = _utils.cross.isZero
 _utils = _utils.utils
+local _tf = require("matlib.asciiplot_tf")
 
 local _inform = Sonata and Sonata.warning or print
 local _modf, _log, _floor = math.modf, math.log, math.floor
@@ -166,50 +167,6 @@ __module__ = "Use pseudography for data visualization."
 
 
 --	MODULE
-
--- weighted tree
-local _wtree = {}
-
-
---- New weighted tree.
---  @param l Left element.
---  @param r Right element.
---  @param v Weight.
---  @return new node or leaf.
-_wtree.init = function (l, r, v)
-  if l == nil and r == nil or l ~= nil and r ~= nil then
-    return _tree.new(l, r, v or 0, false)
-  else
-    return _tree.new(l or r, nil, v or 0, true)
-  end
-end
-
-
---- Add element to the tree.
---  @param node Node to add new object.
---  @param obj New object.
---  @param w Weight of the object.
-_wtree.add = function (node, obj, w)
-  if node.isleaf then
-    node.left = _wtree.init(node.left, nil, node.val)
-    node.right = _wtree.init(obj, nil, w)
-    node.isleaf = false
-  else
-    local vl, vr = node.left.val, node.right.val
-    if vl+vr <= w then
-      node.left = _wtree.init(node.left, node.right, vl+vr)
-      node.right = _wtree.init(obj, nil, w)
-    else
-      if vl < vr then
-        _wtree.add(node.left, obj, w)
-      else
-        _wtree.add(node.right, obj, w)
-      end
-    end
-  end
-  node.val = node.left.val + node.right.val
-end
-
 
 -- Axis object
 local axis = {}
@@ -236,27 +193,6 @@ local function _axisNew (N)
     _size = N,         -- initial width
   }
   return setmetatable(a, axis)
-end
-
-
---- Check if the object can be called.
---  @param f Object to check.
---  @return true when function or has method __call.
-local function _callable (f)
-  return type(f) == 'function' or (type(f) == 'table' and f.__call)
-end
-
-
-local function _statistics (t)
-  if #t == 0 then return 0, 0 end
-  local sum, sq = 0, 0
-  for i = 1, #t do
-    local v = t[i]
-    sum = sum + v
-    sq = sq + v*v
-  end
-  local mean = sum / #t
-  return mean, math.sqrt(sq/#t - mean*mean)
 end
 
 
@@ -444,6 +380,14 @@ end
 local function _isasciiplot(v) return getmetatable(v) == asciiplot end
 
 
+--- Check if the object can be called.
+--  @param f Object to check.
+--  @return true when function or has method __call.
+local function _callable (f)
+  return type(f) == 'function' or (type(f) == 'table' and f.__call)
+end
+
+
 --- Add symbol based on its height.
 --  @param fig asciiplot object.
 --  @param x Coordinate x.
@@ -468,38 +412,6 @@ local function _addGraded (fig, x, y, ind)
 end
 
 
---- Get bounds of the table values.
---  @param t Table {{x1,y11,y12...}, {x2,y21,y22..}, ...}
---  @param tInd Table of y column indeces.
---  @return xrange, yrange
-local function _findRange (t, tInd)
-  local xmax, ymax, xmin, ymin = -math.huge, -math.huge, math.huge, math.huge
-  local x = tInd.x or 1
-  for i = 1, #t do
-    local row = t[i]
-    local v = row[x]
-    if v > xmax then xmax = v end
-    if v < xmin then xmin = v end
-    if #tInd > 0 then
-      for j = 1, #tInd do
-        v = row[tInd[j]]
-        if v > ymax then ymax = v end
-        if v < ymin then ymin = v end
-      end
-    else
-      for j = 1, #row do
-        if j ~= x then
-          v = row[j]
-          if v > ymax then ymax = v end
-          if v < ymin then ymin = v end
-        end
-      end
-    end
-  end
-  return {xmin, xmax}, {ymin, ymax}
-end
-
-
 --- Transform points to polar system, add to figure.
 --  @param fig asciiplot object.
 --  @param t Data table.
@@ -519,7 +431,7 @@ local function _addPolar (fig, t, tOpt)
   if not fig._yfix then
     local rxx, ryy = {}, {}
     for j = 1, #tOpt do
-      local rx, ry = _findRange(acc[j], {})
+      local rx, ry = _tf.findRange(acc[j], {})
       rxx[1] = math.min(rxx[1] or rx[1], rx[1])
       rxx[2] = math.max(rxx[2] or rx[2], rx[2])
       ryy[1] = math.min(ryy[1] or ry[1], ry[1])
@@ -630,20 +542,6 @@ local function _cntLegend (fig, s, lvl)
 end
 
 
---- Get bounds of the vector.
---  @param t Table (vector).
---  @return Minimal and maximal values.
-local function _findVectorRange (t)
-  local vmin, vmax = math.huge, -math.huge
-  for i = 1, #t do
-    local v = t[i]
-    if v > vmax then vmax = v end
-    if v < vmin then vmin = v end
-  end
-  return vmin, vmax
-end
-
-
 --- Find vectors X and Y for the given function.
 --  @param fig asciiplot object.
 --  @param fn Function f(x).
@@ -678,30 +576,6 @@ local function _fn2Z (fig, fn)
     Z[ny] = row
   end
   return X, Y, Z, {zmin, zmax}
-end
-
-
---- Prepare string of the given length.
---  @param s Source string.
---  @param N Required length.
---  @param bCentr Flag to put to central position.
---  @param bCut   Flag to cut a long string.
-local function _format (s, N, bCentr, bCut)
-  local res = s
-  if #s < N then
-    local n = N - #s
-    if bCentr then
-      local n1 = _modf(n / 2)
-      local n2 = n - n1
-      res = string.rep(' ', n1) .. s .. string.rep(' ', n2)
-    else
-      res = s .. string.rep(' ', n)
-    end
-  end
-  if #res > N and bCut then
-    res = string.sub(res, 1, N)
-  end
-  return res
 end
 
 
@@ -756,34 +630,6 @@ local function _setAxis (fig, t, pref)
   if t.fix ~= nil then fig[pref..'fix'] = t.fix end
   -- length
   if t.size ~= nil then fig[pref]:resize(t.size) end
-end
-
-
---- Find range of levels for surface plot.
---  @param v1 Begin of range.
---  @param vn End of range.
---  @param N Number of lines.
---  @param bScale Flag to use bounds in calculation.
---  @param bInt Flag for a number rounding.
---  @return List of levels and step value.
-local function _surfRange (v1, vn, N, bScale, bInt)
-  local res, nn, h = {}, N, 0
-  if bScale then
-    nn = N - 1
-    h = (vn - v1) / nn
-    res[1] = v1
-  else
-    h = (vn - v1) / (N + 1)
-  end
-  for i = 1, nn do
-    if bInt then
-      local ind, rst = _modf(1 + h * i)
-      res[#res+1] = (rst > 0.5) and ind+1 or ind
-    else
-      res[#res+1] = v1 + h * i
-    end
-  end
-  return res, h
 end
 
 
@@ -961,7 +807,7 @@ end
 asciiplot._viewXY = function (self, tX, tY, tZ, tOpt)
   local ZERR = 0.05  -- deflection from expected level value
   local N = tOpt.level
-  local lvl, h = _surfRange(
+  local lvl, h = _tf.surfRange(
     self._z.range[1], self._z.range[2], N, tOpt.minmax, false)
   h = h * ZERR
     -- prepare
@@ -984,7 +830,7 @@ asciiplot._viewXY = function (self, tX, tY, tZ, tOpt)
   asciiplot._limits(self)
   -- legend
   _cntLegend(self, 'Z', lvl)
-  self._title = _format('X-Y view', self._x.size, true, false)
+  self._title = _tf.format('X-Y view', self._x.size, true, false)
   return self
 end
 
@@ -997,7 +843,7 @@ end
 --  @return Figure object.
 asciiplot._viewXZ = function (self, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, _ = _surfRange(1, self._y.size, N, tOpt.minmax, true)
+  local lvl, _ = _tf.surfRange(1, self._y.size, N, tOpt.minmax, true)
   -- copy settings
   self._y:setRange(self._z._init)
   self._y:setLog(self._z.log)
@@ -1018,7 +864,7 @@ asciiplot._viewXZ = function (self, tX, tY, tZ, tOpt)
   local lvlXZ = {}
   for i = 1, N do lvlXZ[i] = tY[lvl[N-i+1]] end
   _cntLegend(self, 'Y', lvlXZ)
-  self._title = _format('X-Z view', self._x.size, true, false)
+  self._title = _tf.format('X-Z view', self._x.size, true, false)
   return self
 end
 
@@ -1031,7 +877,7 @@ end
 --  @return Figure object.
 asciiplot._viewYZ = function (self, tX, tY, tZ, tOpt)
   local N = tOpt.level
-  local lvl, _ = _surfRange(1, self._x.size, N, tOpt.minmax, true)
+  local lvl, _ = _tf.surfRange(1, self._x.size, N, tOpt.minmax, true)
   local rotate = (tOpt.view == 'concat')
   -- update ranges
   if rotate then
@@ -1068,7 +914,7 @@ asciiplot._viewYZ = function (self, tX, tY, tZ, tOpt)
   local lvlZY = {}
   for i = 1, N do lvlZY[i] = tX[lvl[i]] end
   _cntLegend(self, 'X', lvlZY)
-  self._title = _format(
+  self._title = _tf.format(
     rotate and 'Z-Y view' or 'Y-Z view', self._x.size, true, false)
   return self
 end
@@ -1258,9 +1104,9 @@ asciiplot.blocks = function (self, tx, ty)
   end
   if #tx ~= #ty then error("Different list size") end
   -- make weighted tree
-  local tree = _wtree.init(tx[1], nil, ty[1])
+  local tree = _tf.treeInit(tx[1], nil, ty[1])
   for i = 2, #tx do
-    _wtree.add(tree, tx[i], ty[i])
+    _tf.treeAdd(tree, tx[i], ty[i])
   end
   -- draw
   local acc = {}
@@ -1307,12 +1153,12 @@ asciiplot.concat = function (_, F1, F2)
   -- legend
   local l1, l2 = {}, {}
   for k, v in pairs(F1._legend) do
-    l1[#l1+1] = _format(
+    l1[#l1+1] = _tf.format(
       string.format('(%s) %s', k, v), w1-1+#k, false, true)
   end
   table.sort(l1)
   for k, v in pairs(F2._legend) do
-    l2[#l2+1] = _format(
+    l2[#l2+1] = _tf.format(
       string.format('(%s) %s', k, v), w2-1+#k, false, true)
   end
   table.sort(l2)
@@ -1421,7 +1267,7 @@ _about[asciiplot.legend] = {"F:legend(str_t|flag_s)",
   "Update legend. Use off/on to hide or show the legend.", _tag.CONF}
 
 
---- Generalized plot funciton.
+--- Generalized plot function.
 --  @param ... is "t1", "t1,t2", "fn", "t1,name", "t1,t2,name" etc.
 --  @return updated figure object.
 asciiplot.plot = function (self, ...)
@@ -1433,7 +1279,7 @@ asciiplot.plot = function (self, ...)
     local tx, ty = ag[i], ag[i+1]
     -- data
     if _callable(tx) then
-      -- save funciton, check region later
+      -- save function, check region later
       ty = nil
     elseif type(tx) == 'table' then
       if type(ty) == 'table' then
@@ -1443,7 +1289,7 @@ asciiplot.plot = function (self, ...)
         ty, tx = tx, {}
         for j = 1, #ty do tx[j] = j end
       end
-      local a, b = _findVectorRange(tx)
+      local a, b = _tf.findVectorRange(tx)
       if a < vmin then vmin = a end
       if b > vmax then vmax = b end
     else
@@ -1479,10 +1325,10 @@ asciiplot.plot = function (self, ...)
     vmin, vmax = math.huge, -math.huge
     for j = 1, #acc do
       local r = acc[j]
-      local a, b = _findVectorRange(r[2])
+      local a, b = _tf.findVectorRange(r[2])
       if isfun[j] and self.OUTLIERS > 0 then
         -- skip outliers
-        local mean, std = _statistics(r[2])
+        local mean, std = _tf.statistics(r[2])
         a = math.max(a, mean - self.OUTLIERS*std)
         b = math.min(b, mean + self.OUTLIERS*std)
       end
@@ -1596,7 +1442,7 @@ end
 --- Set title.
 --  @param s New title.
 asciiplot.title = function (self, s)
-  self._title = _format(s, self._x.size, true, false)
+  self._title = _tf.format(s, self._x.size, true, false)
 end
 _about[asciiplot.title] = {"F:title(str)", "Set new title.", _tag.CONF}
 
@@ -1621,7 +1467,7 @@ asciiplot.tplot = function (self, t, tOpt)
   end
   -- update range
   if not self._yfix then
-    local rx, ry = _findRange(t, tOpt)
+    local rx, ry = _tf.findRange(t, tOpt)
     self._x:setRange(rx)
     self._y:setRange(ry)
   end
