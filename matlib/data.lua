@@ -99,7 +99,7 @@ ans = tmp[1][2]               -->  X[1]+Y[1]
 -- squares or even elements
 tmp = D:gen(X,
   "x^2",                 -- rule
-  "x, y -> y % 2 == 0")  -- condition
+  "x, n -> n % 2 == 0")  -- condition
 ans = tmp[2]                  --> X[4]*X[4]
 
 -- sum of squares
@@ -404,22 +404,25 @@ end
 
 
 --- Estimate covariance for two vectors.
---  @param t1 First data vector.
---  @param t2 Second data vector.
+--  @param ii First list index.
+--  @param jj Second list index.
+--  @param ts List of lists.
+--  @param ms List of means.
 --  @return Covariance value.
-data._cov2 = function (_, t1, t2)
+data._cov2 = function (_, ii, jj, ts, ms)
+  local t1, t2 = ts[ii], ts[jj]
   if #t1 ~= #t2 then
     error "Different vector size"
   end
-  local m1 = data:mean(t1)
-  local m2 = data:mean(t2)
-  local s = 0
+  if #t1 == 0 then
+    error "Empty vector"
+  end
+  local m1, m2, s = ms[ii], ms[jj], 0
   for i = 1, #t1 do
     s = s + (t1[i] - m1)*(t2[i] - m2)
   end
   return s / #t1
 end
-data.cov2 = data._cov2  -- DEPRECATED
 
 
 --- Binary search in sorted list.
@@ -489,11 +492,12 @@ data.cov = function (_, t)
   end
   _ext.matrix = _ext.matrix or require('matlib.matrix')
   local m = _ext.matrix:zeros(N, N)
+  local avg = {}
+  for i = 1, N do avg[i] = data:mean(t[i]) end
   for i = 1, N do
-    local ti = t[i]
-    m[i][i] = data:_cov2(ti, ti)
+    m[i][i] = data:_cov2(i, i, t, avg)
     for j = i+1, N do
-      m[i][j] = data:_cov2(ti, t[j])
+      m[i][j] = data:_cov2(i, j, t, avg)
       m[j][i] = m[i][j]
     end
   end
