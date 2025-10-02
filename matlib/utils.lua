@@ -12,7 +12,7 @@
 
 --	MODULE
 
-local mmodf = math.modf
+local _modf = math.modf
 
 
 --=============== Choose versions =======================
@@ -27,20 +27,11 @@ local versions = {
 }
 
 
--- Check if the number is integer
-versions.isInteger = math.tointeger or function (x)
-  if type(x) == 'string' then x = tonumber(x) end
-  if not x then return false end
-  local v, p = mmodf(x)
-  return p == 0.0 and v >= -1E9 and v <= 1E9
-end
-
-
 -- Check type of the number
 versions.mathType = math.type or function (x)
   local n = tonumber(x)
   if not n then return nil end
-  local _, p = mmodf(n)
+  local _, p = _modf(n)
   return (p == 0.0) and 'integer' or 'float'
 end
 
@@ -63,7 +54,7 @@ end
 -- Return integer number or nil
 versions.toInteger = math.tointeger or function (x)
   if type(x) == 'string' then x = tonumber(x) end
-  local p, q = mmodf(x)
+  local p, q = _modf(x)
   return (q == 0.0) and p or nil
 end
 
@@ -156,7 +147,7 @@ end
 --  @return Rounded value.
 cross.round = function (v, fTol)
   if type(v) == 'number' then
-    local p, q = mmodf(v / fTol)
+    local p, q = _modf(v / fTol)
     if     q >  0.5 then p = p + 1
     elseif q < -0.5 then p = p - 1
     end
@@ -270,7 +261,7 @@ end
 --  @param d Number.
 --  @return String representation.
 utils.numstr = function (d)
-  local int, frac = mmodf(d)
+  local int, frac = _modf(d)
   local a = math.abs(int)
   -- short integer
   if frac == 0 then
@@ -344,7 +335,7 @@ end
 --  @param acc Accumulator table.
 --  @return binary string.
 utils.pack_num = function (x, acc)
-  local v, p = mmodf(math.abs(x))
+  local v, p = _modf(math.abs(x))
   if p == 0.0 then
     -- integer
     if v < 128 then
@@ -463,53 +454,82 @@ end
 
 --============== Calc ================
 
-local calc = {}
 local mexp, msqrt, mlog = math.exp, math.sqrt, math.log
 
---- Hyperbolic cosine.
---  @param x Float number.
---  @return Hyperbolic cosine value.
-calc.cosh = function (x) return 0.5*(mexp(x) + mexp(-x)) end
+-- Additional functions.
+local calc = {
+  -- hyperbolic cosine
+  cosh = function (x) return 0.5*(mexp(x) + mexp(-x)) end,
+  -- hyperbolic sine
+  sinh = function (x) return 0.5*(mexp(x) - mexp(-x)) end,
+  -- inverse hyperbolic sine
+  asinh = function (x) return mlog(x + msqrt(x*x+1)) end,
+  -- inverse hyperbolic cosine
+  acosh = function (x) return mlog(x + msqrt(x*x-1)) end,
+  -- inverse hyperbolic tangent
+  atanh = function (x) return 0.5*mlog((1 + x)/(1 - x)) end,
+  -- hyperbolic tangent
+  tanh = function (x)
+    local t = mexp(2*x)
+    return (t-1)/(t+1)
+  end,
+}
 
 
---- Hyperbolic sine.
---  @param x Float number.
---  @return Hyperbolic sine value.
-calc.sinh = function (x) return 0.5*(mexp(x) - mexp(-x)) end
+--============== Queue ================
+
+--- Queue data structure
+local queue = {
+  -- create object
+  new = function () return {{}, {}} end,
+  -- add element
+  push = function (self, v) table.insert(self[1], v) end,
+  -- check content
+  isEmpty = function (self) return #self[2] == 0 and #self[1] == 0 end
+}
 
 
---- Hyperbolic tangent.
---  @param x Float number.
---  @return Hyperbolic tangent value.
-calc.tanh = function (x)
-  local t = mexp(2*x)
-  return (t-1)/(t+1)
+-- Remove element.
+queue.pop = function (self)
+  local q1, q2 = self[1], self[2]
+  if #q2 == 0 then
+    while #q1 > 0 do
+      table.insert(q2, table.remove(q1))
+    end
+  end
+  return table.remove(q2)
 end
 
 
---- Inverse hyperbolic sine.
---  @param x Float number.
---  @return Inverse hyperbolic sine value.
-calc.asinh = function (x) return mlog(x + msqrt(x*x+1)) end
+--============== Bin Tree ================
+
+local mt_tree = {}
+
+local tree = {
+  -- create object
+  new = function (l, r, v, isleaf) 
+    return setmetatable({left=l, right=r, val=v, isleaf=isleaf}, mt_tree)
+  end,
+  -- check node
+  isNode = function (t) return t.isleaf ~= true end,
+  -- check leaf
+  isLeaf = function (t) return t.isleaf == true end,
+  -- check tree
+  isTree = function (t) return getmetatable(t) == mt_tree end,
+  -- flags
+  LEAF = true, NODE = false,
+}
 
 
---- Inverse hyperbolic cosine.
---  @param x Float number.
---  @return Inverse hyperbolic cosine value.
-calc.acosh = function (x) return mlog(x + msqrt(x*x-1)) end
 
-
---- Inverse hyperbolic tangent.
---  @param x Float number.
---  @return Inverse hyperbolic tangent value.
-calc.atanh = function (x) return 0.5*mlog((1 + x)/(1 - x)) end
-
-
+-- export
 return {
   versions = versions,
   cross = cross,
   utils = utils,
   calc = calc,
+  queue = queue,
+  tree = tree,
 }
 
 --===================================================

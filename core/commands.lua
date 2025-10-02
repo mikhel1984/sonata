@@ -17,6 +17,8 @@ local loadStr = loadstring or load
 -- File to save logs
 local LOGNAME = 'log.note'
 
+local function _empty () end
+
 
 --- Get instruction how to set global variable.
 --  @param m Module name.
@@ -34,6 +36,7 @@ end
 
 local commands = {}
 local cmdInfo = {}
+local internal = {}
 
 
 --- Show command description.
@@ -51,21 +54,20 @@ end
 --- Clear global variables in environment
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
-commands.clear = function (args, env)
+commands.clear = function (str, env)
+  -- parse
   local vs = {}
-  for s in string.gmatch(args[2], "[^, ]+") do vs[#vs+1] = s end
-  -- prepare
-  local input = ""
+  for s in string.gmatch(str, "[^, ]+") do vs[#vs+1] = s end
+  -- apply
   if vs[1] == '*' then
-    input = 'for k in pairs(_ENV) do _ENV[k] = nil end'
+    for k in pairs(env) do env[k] = nil end
   else
-    for i, v in ipairs(vs) do vs[i] = string.format('_ENV["%s"] = nil', v) end
-    input = table.concat(vs, '; ')
+    for i, v in ipairs(vs) do env[v] = nil end
   end
-  -- execute
-  coroutine.resume(env.co, input)
+  return _empty
 end
 cmdInfo.clear = {'cmd_clear', "*|v1,v2.."}
+internal.clear = true
 
 
 --- Show list of commands
@@ -179,10 +181,10 @@ cmdInfo.rm = {'cmd_rm', "", "Note-files"}
 --- Set short alias for module methods.
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
-commands.set = function (args, env)
+commands.set = function (str, env)
+  -- parse
   local grp = {}
-  if #args < 2 then return end
-  for s in string.gmatch(args[2], "[^,]+") do
+  for s in string.gmatch(str, "[^,]+") do
     local g = {}
     for token in string.gmatch(s, "[^ ]+") do g[#g+1] = token end
     grp[#grp+1] = g
@@ -191,20 +193,20 @@ commands.set = function (args, env)
   local cs = {}
   for i, v in ipairs(grp) do
     if not (#v == 1 or #v == 3 and v[2] == 'as') then
-      env.evaluate.printErr('Wrong format!')
-      return
+      return nil, "Wrong format!"
     end
     local nm = v[3] or v[1]
     if string.find(nm, '.', 1, true) then
-      env.evaluate.printErr('Wrong format!')
-      return
+      return nil, "Wrong format"
     end
     grp[i] = set_template(tbl, v[1], nm)
   end
   local input = table.concat(grp, '; ')
-  coroutine.resume(env.co, input)
+  -- compile code
+  return loadStr(input, nil, 't', env) 
 end
 cmdInfo.set = {'cmd_set', "Module f1 [as v1], f2"}
+internal.set = true
 
 
 -- TODO remove?
@@ -233,39 +235,41 @@ cmdInfo.show = {'cmd_show', "[N]", "Note-files"}
 --- Average time
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
-commands.time = function (args, env)
+commands.time = function (str, env)
   Test = Test or require('core.test')
-  if args[2] then
-    local fn, err = loadStr('return '..args[2])
-    if fn then
-      io.write(string.format('%.4f ms\n', Test.time(fn())))
-    else
-      env.evaluate.printErr(err)
-    end
-  else
-    env.evaluate.printErr("Unexpected argument!")
+  local fn, err = loadStr("return "..str, nil, 't', env) 
+  if err then
+    return nil, err
   end
+  local ok, val = pcall(Test.time, fn)
+  if not ok then
+    return nil, val
+  end
+  local out = string.format('%.4f ms', val)
+  return function () return out end
 end
 cmdInfo.time = {'cmd_time', "func", "Debug"}
+internal.time = true
 
 
 --- Trace function
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
-commands.trace = function (args, env)
+commands.trace = function (str, env)
   Test = Test or require('core.test')
-  if args[2] then
-    local fn, err = loadStr('return '..args[2])
-    if fn then
-      io.write(tostring(Test.profile(fn())), "\n")
-    else
-      env.evaluate.printErr(err)
-    end
-  else
-    env.evaluate.printErr("Unexpected argument!")
+  local fn, err = loadStr('return '..str, nil, 't', env)
+  if err then
+    return nil, err
   end
+  local ok, val = pcall(Test.profile, fn)
+  if not ok then
+    return nil, val
+  end
+  local out = tostring(val)
+  return function () return out end
 end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
+internal.trace = true
 
 
 --- Set output to other window (temporary file).
@@ -291,5 +295,8 @@ end
 cmdInfo.w = {"cmd_w", "expr"}
 
 
-return commands
+return {
+  commands=commands,
+  internal=internal,
+}
 

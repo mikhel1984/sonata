@@ -87,8 +87,6 @@ end
 local function _getCmd (str)
   if string.find(str, "^%s*:") then
     return { string.match(str, "(%w+)%s*(.*)") }
-  elseif string.find(str, "^s*!") then
-    return { 'shell', string.match(str, "(%w+.*)") }
   end
   return nil
 end
@@ -100,7 +98,7 @@ local evaluate = {
 
 -- current version
 MAJOR_V = 1,
-MINOR_V = 0,
+MINOR_V = 1,
 
 -- status
 EV_RES = 1,   -- found result
@@ -166,10 +164,17 @@ local function _evalCode()
       state, res = evaluate.EV_CMD, nil
     else
       cmd = cmd..(partCmd or input)
-      -- 'parse'
-      local fn, err = loadStr('return '..cmd, nil, 't', _ENV)  -- either 'return expr'
-      if err then
-        fn, err = loadStr(cmd, nil, 't', _ENV)                 -- or 'expr'
+      local fn, err = nil, nil
+      local usercmd = _getCmd(cmd)
+      if usercmd then
+        local call = Cmds.commands[usercmd[1]]
+        fn, err = call(usercmd[2], _ENV)
+      else
+        -- make executable
+        fn, err = loadStr('return '..cmd, nil, 't', _ENV)  -- either 'return expr'
+        if err then
+          fn, err = loadStr(cmd, nil, 't', _ENV)           -- or 'expr'
+        end
       end
       -- get result
       if err then
@@ -382,9 +387,9 @@ evaluate.repl = function (noteList, reader)
   while true do
     local input = env.read and reader(invite) or ''
     local cmd = (invite ~= evaluate.INV_CONT) and _getCmd(input)
-    if cmd then
+    if cmd and not Cmds.internal[cmd[1]] then
       -- execute command
-      local fn = Cmds[cmd[1]] or _goTo
+      local fn = Cmds.commands[cmd[1]] or _goTo
       fn(cmd, env)
     elseif #input > 0 or env.info or invite == evaluate.INV_CONT then
       -- evaluate input

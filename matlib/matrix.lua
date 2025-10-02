@@ -278,14 +278,14 @@ ans = v[1][2]               --.3>  m[1][2]
 --	LOCAL
 
 -- dependencies
-local Ver = require("matlib.utils")
-local Cnorm, Cfloat, Cround = Ver.cross.norm, Ver.cross.float, Ver.cross.round
-local Czero = Ver.cross.isZero
-local Utils = Ver.utils
-Ver = Ver.versions
+local _utils = require("matlib.utils")
+local _ver = _utils.versions
+local _norm, _float, _round = _utils.cross.norm, _utils.cross.float, _utils.cross.round
+local _zero = _utils.cross.isZero
+_utils = _utils.utils
 
 -- Matrix transformations
-local tf = require("matlib.matrix_tf")
+local _tf = require("matlib.matrix_tf")
 
 --- 0 instead nil
 local mt_access = {
@@ -323,17 +323,16 @@ local function _addRow(t, i)
 end
 
 
-local inform = Sonata and Sonata.warning or print
+local _inform = Sonata and Sonata.warning or print
 
-local TRANSFORM = 'transform'
-local VECTOR = 'vector'
+local _tag = { TRANSFORM='transform', VECTOR='vector', }
 
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Matrix operations. The matrices are spares by default. Indexation from 1."
 }
 
@@ -355,7 +354,7 @@ local matrix = {
 --  @param v Object to check.
 --  @return True if the object is 'matrix' or reference.
 local function _ismatrixex(v)
-  return getmetatable(v) == matrix or tf.isref(v)
+  return getmetatable(v) == matrix or _tf.isref(v)
 end
 
 
@@ -427,7 +426,7 @@ matrix.__call = function (self, vR, vC)
     local cn = _toRange(vC[2] or self._cols, self._cols)
     for c = c1, cn, (vC[3] or 1) do cols[#cols+1] = c end
   end
-  return tf.makeRange(self, rows, cols)
+  return _tf.makeRange(self, rows, cols)
 end
 
 
@@ -436,7 +435,7 @@ end
 --  @param M2 Second matrix.
 --  @return Concatenated matrix.
 matrix.__concat = function (M1, M2)
-  return tf.makeConcat({M1, M2}, false):copy()
+  return _tf.makeConcat({M1, M2}, false):copy()
 end
 
 
@@ -494,7 +493,7 @@ end
 --  @param n Natural power or -1.
 --  @return Power of the matrix.
 matrix.__pow = function (self, N)
-  N = assert(Ver.toInteger(N), "Integer is expected!")
+  N = assert(_ver.toInteger(N), "Integer is expected!")
   if (self._rows ~= self._cols) then error("Square matrix is expected!") end
   if N == -1 then return matrix.inv(self) end
   local res, acc = matrix:eye(self._rows), matrix.copy(self)
@@ -537,13 +536,13 @@ matrix.__tostring = function (self)
     local row, src = {}, self[r]
     for c = 1, self._cols do
       local tmp = src[c]
-      row[c] = (type(tmp) == 'number') and Utils.numstr(tmp) or tostring(tmp)
+      row[c] = (type(tmp) == 'number') and _utils.numstr(tmp) or tostring(tmp)
     end
     rows[r] = row
   end
   -- combine
   if self._rows > 1 and self._cols > 1 and self._cols <= matrix.ALIGN_WIDTH then
-    Utils.align(rows, true)
+    _utils.align(rows, true)
   end
   for i, row in ipairs(rows) do rows[i] = table.concat(row, "  ") end
   return table.concat(rows, '\n')
@@ -563,8 +562,8 @@ matrix.__unm = function (self)
 end
 
 
-about['_ar'] = {"arithmetic: a+b, a-b, a*b, a^b, -a", nil, help.META}
-about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
+_about['_ar'] = {"arithmetic: a+b, a-b, a*b, a^b, -a", nil, _help.META}
+_about['_cmp'] = {"comparison: a==b, a~=b", nil, _help.META}
 
 
 --- Initialization of matrix with given size.
@@ -578,7 +577,7 @@ matrix._init = function (iR, iC, t)
   end
   t._cols, t._rows = iC, iR
   local res = setmetatable(t, matrix)
-  return matrix.STRIP and tf.clearLess(res, matrix.STRIP) or res
+  return matrix.STRIP and _tf.clearLess(res, matrix.STRIP) or res
 end
 
 
@@ -611,7 +610,7 @@ matrix._pack = function (self, acc)
   local spack = string.pack
   local t = {spack('B', acc['matrix']), spack('I2', rs), spack('I2', cs)}
   for r = 1, rs do
-    t[#t+1] = Utils.pack_seq(self[r], 1, cs, acc)
+    t[#t+1] = _utils.pack_seq(self[r], 1, cs, acc)
   end
   return table.concat(t)
 end
@@ -625,11 +624,11 @@ end
 --  @return Matrix object.
 matrix._unpack = function (src, pos, acc, ver)
   local rs, cs, t = 0, 0, {}
-  local unpack_num, sunpack = Utils.unpack_num, string.unpack
+  local unpack_num, sunpack = _utils.unpack_num, string.unpack
   rs, pos = sunpack('I2', src, pos)
   cs, pos = sunpack('I2', src, pos)
   for r = 1, rs do
-    t[r], pos = Utils.unpack_seq(cs, src, pos, acc, ver)
+    t[r], pos = _utils.unpack_seq(cs, src, pos, acc, ver)
   end
   return matrix._init(rs, cs, t), pos
 end
@@ -645,7 +644,7 @@ matrix._round = function (self, tol)
     if row then
       for j = 1, self._cols do
         local v = rawget(row, j)
-	if v then row[j] = Cround(v, tol) end
+	      if v then row[j] = _round(v, tol) end
       end
     end
   end
@@ -681,14 +680,14 @@ matrix.chol = function (self)
   end
   return L
 end
-about[matrix.chol] = {"M:chol() --> lower_M|nil",
-  "Cholesky decomposition of positive definite symmetric matrix.", TRANSFORM}
+_about[matrix.chol] = {"M:chol() --> lower_M|nil",
+  "Cholesky decomposition of positive definite symmetric matrix.", _tag.TRANSFORM}
 
 
 --- Get number of columns.
 --  @return Number of columns.
 matrix.cols = function (self) return self._cols end
-about[matrix.cols] = {"M:cols() --> N", "Get number of columns."}
+_about[matrix.cols] = {"M:cols() --> N", "Get number of columns."}
 
 
 --- Create copy of matrix.
@@ -702,14 +701,14 @@ matrix.copy = function (self)
   end
   return matrix._init(#res, Mcols, res)
 end
-about[matrix.copy] = {"M:copy() --> cpy_M",
-  "Return copy of matrix.", help.OTHER}
+_about[matrix.copy] = {"M:copy() --> cpy_M",
+  "Return copy of matrix.", _help.OTHER}
 
 
 -- Cross product.
-matrix.cross = tf.vec_access.cross
-about[matrix.cross] = {'V:cross(V2) --> M',
-  'Cross product of two 3-element vectors.', VECTOR}
+matrix.cross = _tf.vec_access.cross
+_about[matrix.cross] = {'V:cross(V2) --> M',
+  'Cross product of two 3-element vectors.', _tag.VECTOR}
 
 
 --- Find determinant.
@@ -718,13 +717,13 @@ matrix.det = function (self)
   if (self._rows ~= self._cols) then
     error "Square matrix is expected!"
   end
-  local fn = tf.detList[self._rows]
+  local fn = _tf.detList[self._rows]
   if fn then return fn(self) end
   -- in other cases
-  local _, K = tf.gaussDown(matrix.copy(self))
+  local _, K = _tf.gaussDown(matrix.copy(self))
   return K
 end
-about[matrix.det] = {"M:det() --> num", "Calculate determinant."}
+_about[matrix.det] = {"M:det() --> num", "Calculate determinant."}
 
 
 --- Get diagonal vector.
@@ -737,7 +736,7 @@ matrix.diag = function (self)
   end
   return matrix._init(#res, 1, res)
 end
-about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
+_about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
 
 
 --- Create matrix with given diagonal elements.
@@ -759,14 +758,14 @@ matrix.D = function (_, v, shift)
   end
   return nil
 end
-about[matrix.D] = {':D(list_v, shift_N=0) --> M',
-  'Create new matrix with the given diagonal elements.', help.NEW}
+_about[matrix.D] = {':D(list_v, shift_N=0) --> M',
+  'Create new matrix with the given diagonal elements.', _help.NEW}
 
 
 -- Scalar product.
-matrix.dot = tf.vec_access.dot
-about[matrix.dot] = {'V:dot(V2) --> num',
-  'Scalar product of two vectors.', VECTOR}
+matrix.dot = _tf.vec_access.dot
+_about[matrix.dot] = {'V:dot(V2) --> num',
+  'Scalar product of two vectors.', _tag.VECTOR}
 
 
 --- Find eigenvectors and eigenvalues.
@@ -780,14 +779,14 @@ matrix.eig = function (self)
   local root = p:roots()
   local P, lam = matrix:zeros(self._rows), matrix:zeros(self._rows)
   for j = 1, #root do
-    local v = tf.findEigenvector(self, root[j], 1E-4)
+    local v = _tf.findEigenvector(self, root[j], 1E-4)
     -- save
     for i = 1, self._rows do P[i][j] = v[i][1] end
     lam[j][j] = root[j]
   end
   return P, lam
 end
-about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
+_about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
   'Find matrices of eigenvectors and eigenvalues.'}
 
 
@@ -808,7 +807,7 @@ matrix.exp = function (self)
   end
   return U * Ui
 end
-about[matrix.exp] = {"M:exp() --> new_M", "Matrix exponential.", TRANSFORM}
+_about[matrix.exp] = {"M:exp() --> new_M", "Matrix exponential.", _tag.TRANSFORM}
 
 
 --- Identity matrix.
@@ -825,8 +824,8 @@ matrix.eye = function (_, iR, iC)
   for i = 1, math.min(iR, iC) do m[i][i] = 1 end
   return m
 end
-about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
-  "Create identity matrix.", help.NEW}
+_about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
+  "Create identity matrix.", _help.NEW}
 
 
 --- Fill matrix with some value.
@@ -845,22 +844,22 @@ matrix.fill = function (_, iR, iC, val)
   end
   return matrix._init(iR, iC, res)
 end
-about[matrix.fill] = {":fill(row_N, col_N, val=1) --> M",
-  "Create matrix of given numbers (default is 1).", help.NEW}
+_about[matrix.fill] = {":fill(row_N, col_N, val=1) --> M",
+  "Create matrix of given numbers (default is 1).", _help.NEW}
 
 
 --- Conjugate transpose.
 --  @return Conjugate transformed matrix object.
-matrix.H = function (self) return tf.makeT(self, true) end
-about[matrix.H] = {"M:H() --> conj_Ref",
-  "Return conjugabe transpose. ", TRANSFORM}
+matrix.H = function (self) return _tf.makeT(self, true) end
+_about[matrix.H] = {"M:H() --> conj_Ref",
+  "Return conjugabe transpose. ", _tag.TRANSFORM}
 
 
 --- Horizonatal concatenation of matrices.
 --  @param lst List of matrices.
 --  @return concatenated matrix object.
-matrix.hor = function (self, lst) return tf.makeConcat(lst, false) end
-about[matrix.hor] = {":hor(mat_t) --> mat_Ref",
+matrix.hor = function (self, lst) return _tf.makeConcat(lst, false) end
+_about[matrix.hor] = {":hor(mat_t) --> mat_Ref",
   "Horizontal concatenation for the given list of matrices.", "concat"}
 
 
@@ -872,10 +871,10 @@ matrix.inv = function (self)
   end
   local size = self._cols
   -- check simple cases
-  local fn = tf.invList[size]
+  local fn = _tf.invList[size]
   if fn then
-    local det = tf.detList[size](self)
-    return (not Czero(det)) and _kProd(1/det, fn(self))
+    local det = _tf.detList[size](self)
+    return (not _zero(det)) and _kProd(1/det, fn(self))
                        or matrix:fill(size, size, math.huge)
   end
   -- prepare matrix
@@ -887,11 +886,11 @@ matrix.inv = function (self)
     resi[i+size] = 1
   end
   res._cols = 2*size
-  res, det = tf.gaussDown(res)
-  if Czero(det) then
+  res, det = _tf.gaussDown(res)
+  if _zero(det) then
     return matrix:fill(size, size, math.huge)
   end
-  res = tf.gaussUp(res)
+  res = _tf.gaussUp(res)
   -- move result
   for r = 1, size do
     local resr = res[r]
@@ -904,12 +903,12 @@ matrix.inv = function (self)
   if matrix.CONDITION_NUM then
     local cn = matrix.norm(self) * matrix.norm(res)
     if cn >= matrix.CONDITION_NUM then
-      inform("Condition number is "..tostring(cn))
+      _inform("Condition number is "..tostring(cn))
     end
   end
   return res
 end
-about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix."}
+_about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix."}
 
 
 --- Kronecker product.
@@ -932,7 +931,7 @@ matrix.kron = function (self, M)
   end
   return res
 end
-about[matrix.kron] = {"M:kron(M2) --> M⊗M2", "Find Kronecker product."}
+_about[matrix.kron] = {"M:kron(M2) --> M⊗M2", "Find Kronecker product."}
 
 
 --- Kronecker sum.
@@ -944,7 +943,7 @@ matrix.kronSum = function (self, M)
   end
   return matrix.kron(self, matrix:eye(M)) + matrix.kron(matrix:eye(self), M)
 end
-about[matrix.kronSum] = {"M:kronSum(M2) --> M⊕M2", "Find Kronecker sum."}
+_about[matrix.kronSum] = {"M:kronSum(M2) --> M⊕M2", "Find Kronecker sum."}
 
 
 --- LU transform
@@ -958,9 +957,9 @@ matrix.lu = function (self)
   local L = matrix:eye(self._rows, self._cols)
   for i = 1, self._rows do
     -- swap with maximum
-    local k, max = i, Cnorm(U[i][i])
+    local k, max = i, _norm(U[i][i])
     for j = i+1, U._rows do
-      local uj = Cnorm(U[j][i])
+      local uj = _norm(U[j][i])
       if uj > max then
         k, max = j, uj
       end
@@ -971,7 +970,7 @@ matrix.lu = function (self)
     end
     -- fill U, L
     local Ui = U[i]
-    if not Czero(Ui[i]) then
+    if not _zero(Ui[i]) then
       for j = i + 1, U._rows do
         local Uj = U[j]
         local t = Uj[i] / Ui[i]
@@ -982,15 +981,15 @@ matrix.lu = function (self)
   end
   return L, U, P
 end
-about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
-  "LU decomposition for the matrix. Return L, U and P matrices.", TRANSFORM}
+_about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
+  "LU decomposition for the matrix. Return L, U and P matrices.", _tag.TRANSFORM}
 
 
 --- Apply function to each element.
 --  @param fn Desired function.
 --  @return Matrix where each element is obtained based on desired function.
 matrix.map = function (self, fn)
-  if type(fn) == 'string' then fn = Utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
   local res, Mcols = {}, self._cols
   for r = 1, self._rows do
     local rr, mr = {}, self[r]
@@ -999,9 +998,9 @@ matrix.map = function (self, fn)
   end
   return matrix._init(#res, Mcols, res)
 end
-about[matrix.map] = {"M:map(fn|str) --> found_M",
+_about[matrix.map] = {"M:map(fn|str) --> found_M",
   "Apply the given function to all elements, return new matrix.",
-  TRANSFORM}
+  _tag.TRANSFORM}
 
 
 --- Find minor for the matrix element.
@@ -1011,13 +1010,13 @@ about[matrix.map] = {"M:map(fn|str) --> found_M",
 matrix.minor = function (self, ir, ic)
   assert(self._rows == self._cols)
   if ir > 0 and ic > 0 and ir <= self._rows and ic <= self._cols then
-    return tf.firstMinor(tf.firstMinorSub(self, ir, ic))
+    return _tf.firstMinor(_tf.firstMinorSub(self, ir, ic))
   else
     -- determinant via minors
-    return tf.firstMinor(self)
+    return _tf.firstMinor(self)
   end
 end
-about[matrix.minor] = {"M:minor(row_N, col_N) --> minor_M",
+_about[matrix.minor] = {"M:minor(row_N, col_N) --> minor_M",
   "Find minor for the matrix element."}
 
 
@@ -1028,23 +1027,23 @@ matrix.norm = function (self)
   for r = 1, self._rows do
     local mr = self[r]
     for c = 1, self._cols do
-      sum = sum + Cnorm(mr[c])^2
+      sum = sum + _norm(mr[c])^2
     end
   end
   return math.sqrt(sum)
 end
-about[matrix.norm] = {"M:norm() --> num", "Euclidean norm."}
+_about[matrix.norm] = {"M:norm() --> num", "Euclidean norm."}
 
 
-matrix.normalize = tf.vec_access.normalize
-about[matrix.normalize] = {"V:normalize()",
-  "Normalize to unit vector.", VECTOR}
+matrix.normalize = _tf.vec_access.normalize
+_about[matrix.normalize] = {"V:normalize()",
+  "Normalize to unit vector.", _tag.VECTOR}
 
 
 -- Outer product.
-matrix.outer = tf.vec_access.outer
-about[matrix.outer] = {'V:outer(V2) --> M',
-  'Outer product or two vectors.', VECTOR}
+matrix.outer = _tf.vec_access.outer
+_about[matrix.outer] = {'V:outer(V2) --> M',
+  'Outer product or two vectors.', _tag.VECTOR}
 
 
 --- Quick pseudo inverse matrix.
@@ -1062,7 +1061,7 @@ matrix.pinv = function (self)
   A = matrix(A)  -- avoid scalar result
   local tol = math.huge
   for i = 1, A._rows do
-    local v = Cnorm(A[i][i])
+    local v = _norm(A[i][i])
     tol = math.min(tol, (v > 0 and v or math.huge))
   end
   tol = tol * 1e-9
@@ -1082,7 +1081,7 @@ matrix.pinv = function (self)
       L[k][r] = tmp
       for i = k+1, n do L[i][r] = L[i][r]/tmp end
     elseif not iscomplex and tmp > tol then
-      tmp = math.sqrt(assert(Cfloat(tmp)))
+      tmp = math.sqrt(assert(_float(tmp)))
       L[k][r] = tmp
       for i = k+1, n do L[i][r] = L[i][r]/tmp end
     else
@@ -1097,7 +1096,7 @@ matrix.pinv = function (self)
   end
   return L * (K * (K * (Lt * Mt)))
 end
-about[matrix.pinv] = {"M:pinv() --> inv_M",
+_about[matrix.pinv] = {"M:pinv() --> inv_M",
   "Pseudo inverse matrix calculation."}
 
 
@@ -1116,7 +1115,7 @@ matrix.qr = function (self)
     -- prepare v and v:T()
     local v = R({j,m}, j):copy()
     local v1 = v[1][1]
-    local v1abs = Cnorm(v1)
+    local v1abs = _norm(v1)
     v[1][1] = v1 + v:norm() * (v1abs > 0 and (v1/v1abs) or 1)
     v:vec():normalize()
     local vt = v:H():copy()
@@ -1141,14 +1140,14 @@ matrix.qr = function (self)
   end
   return Q, R
 end
-about[matrix.qr] = {"M:qr() --> Q_M, R_M",
-  "QR decomposition of the matrix.", TRANSFORM}
+_about[matrix.qr] = {"M:qr() --> Q_M, R_M",
+  "QR decomposition of the matrix.", _tag.TRANSFORM}
 
 
 --- Matrix rank.
 --  @return Value of rank.
 matrix.rank = function (self)
-  local mat = tf.gaussDown(matrix.copy(self))
+  local mat = _tf.gaussDown(matrix.copy(self))
   local i = 1
   while i <= mat._rows do
     local mati = mat[i]
@@ -1156,7 +1155,7 @@ matrix.rank = function (self)
     -- find nonzero element
     local zeros = true
     for j = i, mat._cols do
-      if not Czero(mati[j]) then
+      if not _zero(mati[j]) then
         zeros = false
         break
       end
@@ -1166,7 +1165,7 @@ matrix.rank = function (self)
   end
   return i - 1
 end
-about[matrix.rank] = {"M:rank() --> N", "Find rank of the matrix."}
+_about[matrix.rank] = {"M:rank() --> N", "Find rank of the matrix."}
 
 
 --- Change matrix size.
@@ -1178,28 +1177,28 @@ matrix.reshape = function (self, iRows, iCols)
     iRows = self:rows() * self:cols()
     iCols = 1
   end
-  return tf.makeReshape(self, iRows, iCols)
+  return _tf.makeReshape(self, iRows, iCols)
 end
-about[matrix.reshape] = {"M:reshape(row_N=(rows*cols), col_N=1) --> mat_Ref",
-  "Matrix with rearranged elements.", TRANSFORM}
+_about[matrix.reshape] = {"M:reshape(row_N=(rows*cols), col_N=1) --> mat_Ref",
+  "Matrix with rearranged elements.", _tag.TRANSFORM}
 
 
 --- Get number or rows.
 --  @return Number of rows.
 matrix.rows = function (self) return self._rows end
-about[matrix.rows] = {"M:rows() --> N", "Get number of rows."}
+_about[matrix.rows] = {"M:rows() --> N", "Get number of rows."}
 
 
 --- Solve system of equations using Gauss method.
 --  @return Transformed matrix.
-matrix.rref = function (self) return tf.gaussUp(tf.gaussDown(self)) end
-about[matrix.rref] = {"M:rref() --> upd_M",
-  "Perform transformations using Gauss method.", TRANSFORM}
+matrix.rref = function (self) return _tf.gaussUp(_tf.gaussDown(self)) end
+_about[matrix.rref] = {"M:rref() --> upd_M",
+  "Perform transformations using Gauss method.", _tag.TRANSFORM}
 
 
-matrix.skew = tf.vec_access.skew
-about[matrix.skew] = {"V:skew() --> M",
-  "Make skew-symmetric matrix from the 3-element vector.", VECTOR}
+matrix.skew = _tf.vec_access.skew
+_about[matrix.skew] = {"V:skew() --> M",
+  "Make skew-symmetric matrix from the 3-element vector.", _tag.VECTOR}
 
 
 --- Singular value decomposition for a matrix.
@@ -1211,10 +1210,10 @@ matrix.svd = function (M)
   local transpose = M._rows < M._cols
   if transpose then M = M:T():copy() end
   -- main steps
-  local U1, B, V1 = tf.bidiag(M)
+  local U1, B, V1 = _tf.bidiag(M)
   local U2, V2 = matrix:eye(U1), matrix:eye(V1)
   repeat
-    local U3, B3, V3, E = tf.qrSweep(B)
+    local U3, B3, V3, E = _tf.qrSweep(B)
     U2, V2, B = U2 * U3, V2 * V3, B3
   until E <= 1E-8
   U1, V1 = U1 * U2, V1 * V2
@@ -1234,8 +1233,8 @@ matrix.svd = function (M)
   end
   return U1, B1, V1
 end
-about[matrix.svd] = {"M:svd() --> U_M, S_M, V_M",
-  "Singular value decomposition, return U, S, V.", TRANSFORM}
+_about[matrix.svd] = {"M:svd() --> U_M, S_M, V_M",
+  "Singular value decomposition, return U, S, V.", _tag.TRANSFORM}
 
 
 --- Matrix to table.
@@ -1257,8 +1256,8 @@ matrix.table = function (self)
   end
   return res
 end
-about[matrix.table] = {"M:table() --> tbl",
-  "Convert to simple Lua table.", help.OTHER}
+_about[matrix.table] = {"M:table() --> tbl",
+  "Convert to simple Lua table.", _help.OTHER}
 
 
 --- Get trace of the matrix.
@@ -1268,14 +1267,14 @@ matrix.tr = function (self)
   for i = 1, math.min(self._rows, self._cols) do sum = sum + self[i][i] end
   return sum
 end
-about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix."}
+_about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix."}
 
 
 --- Transpose matrix.
 --  @return Transposed matrix reference.
-matrix.T = function (self) return tf.makeT(self) end
-about[matrix.T] = {"M:T() --> transpose_Ref",
-  "Return matrix transpose.", TRANSFORM}
+matrix.T = function (self) return _tf.makeT(self) end
+_about[matrix.T] = {"M:T() --> transpose_Ref",
+  "Return matrix transpose.", _tag.TRANSFORM}
 
 
 --- Create column vector.
@@ -1283,23 +1282,23 @@ about[matrix.T] = {"M:T() --> transpose_Ref",
 --  @param t Table with vector elements.
 --  @return Vector form of matrix.
 matrix.V = function (_, t)
-  return tf.makeT(matrix._init(1, #t, {t}))
+  return _tf.makeT(matrix._init(1, #t, {t}))
 end
-about[matrix.V] = {":V {...} --> mat_Ref",
-  "Create vector from list of numbers.", help.NEW}
+_about[matrix.V] = {":V {...} --> mat_Ref",
+  "Create vector from list of numbers.", _help.NEW}
 
 
 --- Get reference to vector.
 --  @return vector object.
 matrix.vec = function (self)
   if self._cols ~= 1 and self._rows ~= 1 then
-    inform("Not a vector")
+    _inform("Not a vector")
     return nil
   end
-  return tf.makeVector(self)
+  return _tf.makeVector(self)
 end
-about[matrix.vec] = {"M:vec() --> vec_Ref|nil",
-  "Create reference to vector data.", VECTOR}
+_about[matrix.vec] = {"M:vec() --> vec_Ref|nil",
+  "Create reference to vector data.", _tag.VECTOR}
 
 
 --- Stack columns into the single vector.
@@ -1308,15 +1307,15 @@ about[matrix.vec] = {"M:vec() --> vec_Ref|nil",
 matrix.vectorize = function (M)
   return M:T():copy():reshape()
 end
-about[matrix.vectorize] = {"M:vectorize() --> V",
-  "Create vector as a stack of columns.", TRANSFORM}
+_about[matrix.vectorize] = {"M:vectorize() --> V",
+  "Create vector as a stack of columns.", _tag.TRANSFORM}
 
 
 --- Vertical concatenation of matrices.
 --  @param lst List of matrices.
 --  @return concatenated matrix object.
-matrix.ver = function (self, lst) return tf.makeConcat(lst, true) end
-about[matrix.ver] = {":ver(mat_t} --> mat_Ref",
+matrix.ver = function (self, lst) return _tf.makeConcat(lst, true) end
+_about[matrix.ver] = {":ver(mat_t} --> mat_Ref",
   "Vertical concatenation for the given list of matrices.", "concat"}
 
 
@@ -1329,8 +1328,8 @@ matrix.zeros = function (_, iR, iC)
   iC = iC or iR                          -- input is a number
   return matrix._init(iR, iC, {})
 end
-about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
-  "Create matrix of zeros.", help.NEW}
+_about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
+  "Create matrix of zeros.", _help.NEW}
 
 
 --- Apply function element-wise to matrices.
@@ -1340,7 +1339,7 @@ about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
 matrix.zip = function (_, fn, ...)
   local arg = {...}
   local rows, cols = arg[1]._rows, arg[1]._cols
-  if type(fn) == 'string' then fn = Utils.Fn(fn, #arg) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn, #arg) end
   -- check size
   for i = 2, #arg do
     if arg[i]._rows ~= rows or arg[i]._cols ~= cols then
@@ -1349,7 +1348,7 @@ matrix.zip = function (_, fn, ...)
   end
   local res, v = {}, {}
   -- evaluate
-  local upack = Ver.unpack
+  local upack = _ver.unpack
   for r = 1, rows do
     local rr = {}
     for c = 1, cols do
@@ -1362,23 +1361,24 @@ matrix.zip = function (_, fn, ...)
   end
   return matrix._init(rows, cols, res)
 end
-about[matrix.zip] = {':zip(fn|str, ...) --> res_M',
-  'Apply function to the given matrices element-wise.', TRANSFORM}
+_about[matrix.zip] = {':zip(fn|str, ...) --> res_M',
+  'Apply function to the given matrices element-wise.', _tag.TRANSFORM}
 
 
 -- constructor call
 setmetatable(matrix, {__call = matrix._new})
-about[matrix] = {" {row1_t, ...} --> new_M",
-  "Create matrix from list of strings (tables).", help.NEW}
+_about[matrix] = {" {row1_t, ...} --> new_M",
+  "Create matrix from list of strings (tables).", _help.NEW}
 
 
 -- Config reference objects.
-tf.initRef(matrix)
+_tf.initRef(matrix)
 
 
 -- Comment to remove descriptions
-matrix.about = about
-
+matrix.about = _about
+-- clear load data
+_tag = nil
 
 return matrix
 

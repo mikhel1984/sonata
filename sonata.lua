@@ -59,6 +59,7 @@ use = {
   special    = "Spec",   -- list of 'special' functions
   -------------------------
   extremum   = "Ex",     -- extremums and optimization
+  fuzzy      = "Fz",     -- fuzzy logic elements
 }
 
 

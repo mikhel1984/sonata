@@ -72,16 +72,16 @@ print(S1:struct())
 
 --	LOCAL
 
-local Ulex, Isint do
-  local lib = require('matlib.utils')
-  Ulex = lib.utils.lex
-  Isint = lib.versions.isInteger
-end
+local _ext = {
+  utils = require("matlib.utils"),
+  tf = require("matlib.symbolic_tf"),
+}
 
-local symbolic = require('matlib.symbolic_tf')
+local _lex = _ext.utils.utils.lex
+local _tag = { STRUCT="structure", TRANSFORM="transformation" }
+
+local symbolic = _ext.tf
 local PARENTS = symbolic._parentList
-
-local STRUCT, TRANSFORM = 'structure', 'transformation'
 
 
 --- Check object type.
@@ -97,9 +97,9 @@ end
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Symbolic calculations."
 }
 
@@ -444,8 +444,8 @@ end
 
 
 -- Metamethods
-about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, help.META}
-about['_cmp'] = {"comparison: a==b, a~=b", nil, help.META}
+_about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, _help.META}
+_about['_cmp'] = {"comparison: a==b, a~=b", nil, _help.META}
 
 
 --- Transform value to symbolic object.
@@ -480,9 +480,9 @@ symbolic.def = function (_, sName, tArgs, S)
   symbolic._fnList[sName] = { args = t, body = S }
   return symbolic:_newSymbol(sName)
 end
-about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S",
+_about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S",
   "Define symbolical function. S is either symbolic expression or a Lua function.",
-  help.NEW}
+  _help.NEW}
 
 
 --- Find derivative dS1/dS2.
@@ -495,8 +495,8 @@ symbolic.diff = function (self, S2)
   if type(S2) == 'string' then S2 = symbolic:_newSymbol(S2) end
   return self:p_diff(S2)
 end
-about[symbolic.diff] = {"S:diff(var_S) --> derivative_S",
-  "Find symbolic derivative.", TRANSFORM}
+_about[symbolic.diff] = {"S:diff(var_S) --> derivative_S",
+  "Find symbolic derivative.", _tag.TRANSFORM}
 
 
 --- Find value for the given substitutions.
@@ -508,8 +508,8 @@ symbolic.eval = function (self, tEnv)
   res:p_signature()
   return res
 end
-about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
-  "Evaluate symbolic expression with the given environment.", TRANSFORM}
+_about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
+  "Evaluate symbolic expression with the given environment.", _tag.TRANSFORM}
 
 
 --- Expand product of polynomials.
@@ -518,9 +518,10 @@ symbolic.expand = function (self)
   local acc, rest = {}, {}
   -- collect elements
   if self._parent == PARENTS.product then
+    local toint = _ext.utils.versions.toInteger
     for _, v in ipairs(self._) do
       local k, x = v[2], v[1]
-      if x._parent == PARENTS.sum and k > 0 and Isint(k) then
+      if x._parent == PARENTS.sum and k > 0 and toint(k) ~= nil then
         acc[#acc+1] = symbolic._binomial(x._, k)
       else
         rest[#rest+1] = v
@@ -556,8 +557,8 @@ symbolic.expand = function (self)
   res:p_signature()
   return res
 end
-about[symbolic.expand] = {"S:expand() --> expanded_S",
-  "Expand product of polynomials when possible.", TRANSFORM}
+_about[symbolic.expand] = {"S:expand() --> expanded_S",
+  "Expand product of polynomials when possible.", _tag.TRANSFORM}
 
 
 --- Get function
@@ -572,22 +573,22 @@ end
 --- Show internal structure of expression.
 --  @return String with structure.
 symbolic.struct = function (self) return self:p_internal(0) end
-about[symbolic.struct] = {"S:struct() --> str", 
-  "Show internal structure.", STRUCT}
+_about[symbolic.struct] = {"S:struct() --> str", 
+  "Show internal structure.", _tag.STRUCT}
 
 
 --- Check if the symbol is function.
 --  @return true when it is function.
 symbolic.isFn = function (self) return self:_isfn() ~= nil end
-about[symbolic.isFn] = {'S:isFn() --> bool',
-  'Return true if the symbol is function.', help.OTHER}
+_about[symbolic.isFn] = {'S:isFn() --> bool',
+  'Return true if the symbol is function.', _help.OTHER}
 
 
 --- Get symbolic expression from string.
 --  @param str Expression string.
 --  @return One or several symbolic elements.
 symbolic._parse = function(str)
-  local tokens = Ulex(str)
+  local tokens = _lex(str)
   assert(#tokens > 0)
   local res = PARSER.args(tokens, 1)
   if _issymbolic(res) then
@@ -602,15 +603,15 @@ symbolic.parse = function (_, str) return symbolic._parse(str) end
 --- Get numerator.
 --  @return numerator of the ratio.
 symbolic.ratNum = function (self) return symbolic._ratGet(self, 1) end
-about[symbolic.ratNum] = {"S:ratNum() --> numerator_S", 
-  "Get numerator of the expression.", STRUCT}
+_about[symbolic.ratNum] = {"S:ratNum() --> numerator_S", 
+  "Get numerator of the expression.", _tag.STRUCT}
 
 
 --- Get denominator.
 --  @return denomenator or the ratio.
 symbolic.ratDenom = function (self) return symbolic._ratGet(self, -1) end
-about[symbolic.ratDenom] = {"S:ratDenom() --> denominator_S",
-  "Get denominator of the expression.", STRUCT}
+_about[symbolic.ratDenom] = {"S:ratDenom() --> denominator_S",
+  "Get denominator of the expression.", _tag.STRUCT}
 
 
 --- Get value of constant.
@@ -618,7 +619,7 @@ about[symbolic.ratDenom] = {"S:ratDenom() --> denominator_S",
 symbolic.val = function (self)
   return self._parent == PARENTS.const and self._ or nil
 end
-about[symbolic.val] = {"S:val() --> num", "Get constant value.", help.OTHER}
+_about[symbolic.val] = {"S:val() --> num", "Get constant value.", _help.OTHER}
 
 
 -- simplify constructor call
@@ -632,12 +633,14 @@ __call = function (_, v)
   end
   error ("Wrong argument "..tostring(v))
 end})
-about[symbolic] = {" (num|str) --> new_S",
-  "Create new symbolic variable.", help.NEW}
+_about[symbolic] = {" (num|str) --> new_S",
+  "Create new symbolic variable.", _help.NEW}
 
 
 -- Comment to remove descriptions
-symbolic.about = about
+symbolic.about = _about
+-- clear load data
+_tag = nil
 
 return symbolic
 

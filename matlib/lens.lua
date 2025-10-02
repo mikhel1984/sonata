@@ -127,19 +127,18 @@ ans, _ = cavity:emit(lambda)         --.1> 300.0
 --	LOCAL
 
 -- use letters for convenience
-local keys = {A=1, B=2, C=3, D=4}
+local _keys = {A=1, B=2, C=3, D=4}
+local _tag = { LASER='laser', ANALYZE='analyze' }
 
 -- tolerance of comparison
 local TOL = 1E-8
-local LASER = 'laser'
-local ANALYZE = 'analyze'
 
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Matrix methods in paraxial optics."
 }
 
@@ -150,7 +149,7 @@ local lens = {
 -- mark
 type = 'lens',
 -- {A, B, C, D}
-key = keys,
+key = _keys,
 }
 
 
@@ -209,7 +208,7 @@ end
 --  @param k Key.
 --  @return Value or method.
 lens.__index = function (t, k)
-  return lens[k] or rawget(t, keys[k] or '')
+  return lens[k] or rawget(t, _keys[k] or '')
 end
 
 
@@ -218,7 +217,7 @@ end
 --  @param k Key.
 --  @param v Value.
 lens.__newindex = function (t, k, v)
-  if keys[k] then t[keys[k]] = v end
+  if _keys[k] then t[_keys[k]] = v end
 end
 
 
@@ -230,7 +229,7 @@ lens.__tostring = function (self)
 end
 
 
-about['_op'] = {"operations: L1==L2, L1..L2", nil, help.META }
+_about['_op'] = {"operations: L1==L2, L1..L2", nil, _help.META }
 
 
 --- Object constructor.
@@ -253,8 +252,8 @@ lens.afocal = function (self, dm)
   end
   return lens._init(L)
 end
-about[lens.afocal] = {":afocal(magn_d) --> L",
-  "Find matrix for the afocal system.", help.NEW}
+_about[lens.afocal] = {":afocal(magn_d) --> L",
+  "Find matrix for the afocal system.", _help.NEW}
 
 
 --- Find Gaussian beam parameters after transformation.
@@ -269,8 +268,8 @@ lens.beam = function (self, dR, dW, dLam)
   local _1_q2 = (self[3] + self[4]*_1_q1) / (self[1] + self[2]*_1_q1)
   return 1/_1_q2:re(), math.sqrt(lampi / _1_q2:im())
 end
-about[lens.beam] = {"L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize_d",
-  "Find output beam curvature and spot radius.", LASER}
+_about[lens.beam] = {"L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize_d",
+  "Find output beam curvature and spot radius.", _tag.LASER}
 
 
 --- Make a copy.
@@ -278,8 +277,8 @@ about[lens.beam] = {"L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize
 lens.copy = function (self)
   return lens._init({self[1], self[2], self[3], self[4], _nprev=self._nprev})
 end
-about[lens.copy] = {"L:copy() --> cpy_L",
-  "Create a copy of the object.", help.OTHER}
+_about[lens.copy] = {"L:copy() --> cpy_L",
+  "Create a copy of the object.", _help.OTHER}
 
 
 --- Find output beam of a laser cavity.
@@ -296,10 +295,10 @@ lens.emit = function (self, lam)
     return (self[1] - self[4] + 2*sh)/(2*self[3])
   end
 end
-about[lens.emit] = {
+_about[lens.emit] = {
   "L:emit(lambda_d) --> outCurv_d, outSize_d|nil, waist_d|nil, shift_d|nil ",
   "Find laser cavity output beam curvature. In the case of stable cavity also returns size radius, waist radius and its shift from the plane.",
-  LASER}
+  _tag.LASER}
 
 
 --- Find Gaussian beam characterictics.
@@ -310,8 +309,8 @@ lens.gParam = function (_, dW0, dLam)
   local t = math.pi * dW0 / dLam
   return 1/t, t * dW0
 end
-about[lens.gParam] = {":gParam(waist_d, lambda_d) --> div_d, range_d",
-  "Find divergence angle and Raileigh range for a Gaussian beam.", LASER}
+_about[lens.gParam] = {":gParam(waist_d, lambda_d) --> div_d, range_d",
+  "Find divergence angle and Raileigh range for a Gaussian beam.", _tag.LASER}
 
 
 --- Find Gaussian beam propagation.
@@ -323,8 +322,8 @@ lens.gSize = function (_, dW0, dLam, dist)
   local t = (math.pi * dW0 * dW0 / dLam / dist) ^ 2
   return dist*(1 + t),  dW0 * math.sqrt(1 + 1/t)
 end
-about[lens.gSize] = {":gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d",
-  "Find Gaussian beam radius and curvature at some distance.", LASER}
+_about[lens.gSize] = {":gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d",
+  "Find Gaussian beam radius and curvature at some distance.", _tag.LASER}
 
 
 --- Inverse the component matrix.
@@ -335,8 +334,8 @@ lens.inv = function (self)
   end
   return lens._init({self[4], -self[2], -self[3], self[1]})
 end
-about[lens.inv] = {"L:inv() --> inv_L",
-  "Get the inverted system matrix.", help.OTHER}
+_about[lens.inv] = {"L:inv() --> inv_L",
+  "Get the inverted system matrix.", _help.OTHER}
 
 
 --- Make component for a curved mirror.
@@ -353,9 +352,9 @@ lens.M = function (self, dr, dn)
   end
   return lens._init(L)
 end
-about[lens.M] = {":M(rad_d, n_d=1) --> L",
+_about[lens.M] = {":M(rad_d, n_d=1) --> L",
   "Find reflection matrix for the given radius and refractive index.",
-  help.NEW}
+  _help.NEW}
 
 
 --- Get elements as matrix.
@@ -364,7 +363,7 @@ lens.matrix = function (self)
   lens.ext_matrix = lens.ext_matrix or require('matlib.matrix')
   return lens.ext_matrix({{self[1], self[2]}, {self[3], self[4]}})
 end
-about[lens.matrix] = {"L:matrix() --> M", "Get elements as matrix.", help.OTHER}
+_about[lens.matrix] = {"L:matrix() --> M", "Get elements as matrix.", _help.OTHER}
 
 
 --- Make component for refraction.
@@ -388,9 +387,9 @@ lens.R = function (self, nin, rad, nout)
   end
   return lens._init(L)
 end
-about[lens.R] = {":R(nin_d, rad_d, nout_d) --> L",
+_about[lens.R] = {":R(nin_d, rad_d, nout_d) --> L",
   "Find refraction matrix for the given radius of surface and input and output refractive indeces.",
-  help.NEW}
+  _help.NEW}
 
 
 --- Find condition when fn(d).X == 0
@@ -406,9 +405,9 @@ lens.solve = function (_, fn, ind, d0)
   -- try to solve
   return lens.ext_numeric:newton(eqn, d0)
 end
-about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
+_about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
   "Find condition when component with the given index is equal to 0, use initial assumption.",
-  ANALYZE}
+  _tag.ANALYZE}
 
 
 --- Make component for a thin lens.
@@ -422,8 +421,8 @@ lens.thin = function (self, df)
   end
   return lens._init(L)
 end
-about[lens.thin] = {":thin(focal_d) --> L",
-  "Find the thin lens system matrix for the given focal distance.", help.NEW}
+_about[lens.thin] = {":thin(focal_d) --> L",
+  "Find the thin lens system matrix for the given focal distance.", _help.NEW}
 
 
 --- Make component for translation.
@@ -440,9 +439,9 @@ lens.T = function (self, dt, dn)
   end
   return lens._init(L)
 end
-about[lens.T] = {":T(dist_d, n_d=1) --> L",
+_about[lens.T] = {":T(dist_d, n_d=1) --> L",
   "Find translation matrix for the given distance and refractive index.",
-  help.NEW}
+  _help.NEW}
 
 
 --- Find ray parameters after transformation.
@@ -454,9 +453,9 @@ about[lens.T] = {":T(dist_d, n_d=1) --> L",
 lens.transform = function (self, dy, dV)
   return (self[1]*dy + self[2]*dV), (self[3]*dy + self[4]*dV)
 end
-about[lens.transform] = {"L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d",
+_about[lens.transform] = {"L:transform(yIn_d, VIn_d) --> yOut_d, VOut_d",
   "Find the output ray position 'y' and optical angle 'V' (= v*n). Equal to L(y,V).",
-  help.OTHER}
+  _help.OTHER}
 -- Simplified call of transformation.
 lens.__call = lens.transform
 
@@ -503,9 +502,9 @@ lens.cardinal = function (self, dn1, dn2)
 
   return setmetatable(res, mt_cardinal)
 end
-about[lens.cardinal] = {"L:cardinal(nLft_d=1, nRht_d=1) --> points_t",
+_about[lens.cardinal] = {"L:cardinal(nLft_d=1, nRht_d=1) --> points_t",
   "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.",
-  ANALYZE}
+  _tag.ANALYZE}
 
 
 -- Create arbitrary object
@@ -514,12 +513,14 @@ __call = function (_, A, B, C, D)
   assert(A and B and C and D)
   return lens._init({A, B, C, D})
 end})
-about[lens] = {" (A_d, B_d, C_d, D_d) --> new_L",
-  "Make new lens component.", help.NEW}
+_about[lens] = {" (A_d, B_d, C_d, D_d) --> new_L",
+  "Make new lens component.", _help.NEW}
 
 
 -- Comment to remove descriptions
-lens.about = about
+lens.about = _about
+-- clear load data
+_tag = nil
 
 return lens
 

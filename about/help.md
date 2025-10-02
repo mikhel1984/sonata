@@ -7,8 +7,6 @@ Use pseudography for data visualization.
 
 **Ap:concat(F1, F2) --> str** - Horizontal concatenation of figures with the same height. Equal to F1..F2.
 
-**Ap:stars(M, cond_fn) --> str** - Print matrix, use star when condition for the current elemen is true.
-
 **F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')** - Add line from (x1,y1) to (x2,y2).
 
 **F:addPoint(x_d, y_d, char_s='*')** - Add point (x,y) using char.
@@ -19,15 +17,17 @@ Use pseudography for data visualization.
 
 **F:axes() --> tbl** - Get {'size','log','range','view','fix'} for each axis.
 
-**F:bar([tx,] ty)** - Plot bar diargram for the given data.
+**F:bar([tx,] ty) --> F** - Plot bar diargram for the given data.
 
-**F:contour(fn, {level=5, view='XY'})** - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ.
+**F:blocks([tx,] ty) --> F** - Plot data relations with blocks.
+
+**F:contour(fn, {level=5, view='XY'}) --> F** - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ.
 
 **F:copy() --> cpy_F** - Create a copy of the object.
 
 **F:legend(str_t|flag_s)** - Update legend. Use off/on to hide or show the legend.
 
-**F:plot(...)** - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.
+**F:redraw() --> F|nil** - Apply the last draw command. Equal to ~F.
 
 **F:reset()** - Prepare a clean canvas.
 
@@ -41,7 +41,7 @@ Use pseudography for data visualization.
 
 **F:title(str)** - Set new title.
 
-**F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})** - Plot the table data, choose columns if need.
+**F:tplot(data_t, cols_t={x=1, polar=false, sym=nil}) --> F** - Plot the table data, choose columns if need.
 
 
 ## Int (bigint)
@@ -209,6 +209,8 @@ Data processing and statistics.
 
 **D:harmmean(data_t, weigh_t=nil) --> num** - Harmonic mean.
 
+**D:histPlot(data_t, edges_t|N=10) --> fig** - Find and show histogram.
+
 **D:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t** - Calculate amount of bins. Edges can be either number or table.
 
 **D:is(data_t, fn|str) --> weigh_t** - Find weights using condition (boolean function or string).
@@ -268,6 +270,64 @@ Extremum search and optimization methods.
 **Ex:minimum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d** - Find minimum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach.
 
 **Ex:minimum1D(fn, a_d, c_d, param={method='golden',b=middle,dfun=nil}) -> x_d, min_d** - Find minimum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method).
+
+
+## Fz (fuzzy)
+Fuzzy logic elements.
+
+**D:getName() --> str** - Get domain name.
+
+**D:getRange() --> range_t** - Get domain range.
+
+**D:setList() --> sets_t** - Get list of set names in domain.
+
+**F:andf(F2) --> new_F** - Fuzzy set intersection. Equal to F & F2.
+
+**F:asRule() --> str** - Return set description as a part of rule.
+
+**F:defuzzify(range_t, method_s=centroid) --> value_d** - Defuzzification. Available methods are: centroid, bisector, lom, som, mom.
+
+**F:notf() --> new_F** - Fuzzy set complement. Equal to ~F.
+
+**F:orf(F2) --> new_F** - Fuzzy set union. Equal to F | F2.
+
+**Fz (env_t=nil) --> F** - Create new fuzzy inference system.
+
+**Fz:dsigmf(tilt1_d, inflect1_d, tilt2_d, inflect2_d) --> F** - Make new fuzzy set, member function is difference of two sigmoidal functions.
+
+**Fz:gauss2mf(sigma1_d, mu1_d, sigma2_d, mu2_d) --> F** - Make new fuzzy set, member function combines two Gaussians.
+
+**Fz:gaussmf(sigma_d, mu_d) --> F** - Make new fuzzy set with Gaussian member function.
+
+**Fz:gbellmf(width_d, power_d, mean_d) --> F** - Make new fuzzy set with generalized bell-shaped member function.
+
+**Fz:linsmf(left_d, right_d) --> F** - Make new fuzzy set with linear s-shaped saturation member function.
+
+**Fz:linzmf(left_d, right_d) --> F** - Make new fuzzy set with linear z-shaped saturated member function.
+
+**Fz:newmf(member_fn, name_s=nil) --> F** - Make new fuzzy set with user defined member function.
+
+**Fz:pimf(lowLeft_d, upLeft_d, upRight_d, lowRight_d) --> F** - Make new fuzzy set with pi-shaped member function.
+
+**Fz:psigmf(tilt1_d, inflect1_d, tilt2_d, inflect2_d) --> F** - Make new fuzzy set with product of two sigmoidal member functions.
+
+**Fz:sigmf(tilt_d, inflection_d) --> F** - Make new fuzzy set with sigmoidal member function.
+
+**Fz:smf(left_d, right_d) --> F** - Make new fuzzy set with s-shaped saturation member function.
+
+**Fz:trapmf(lowLeft_d, upLeft_d, upRight_d, lowRight_d) --> F** - Make new fuzzy set with trapeze member function.
+
+**Fz:trimf(left_d, up_d, right_d) --> F** - Make new fuzzy set with triangle member function.
+
+**Fz:zmf(left_d, right_d) --> F** - Make new fuzzy set with z-shaped saturation member function.
+
+**S:addDomain(range_t, name_s) --> D** - Add new domain to system, return reference.
+
+**S:addRule(in_F, out_F, weight_d=1)** - Add new rule to system.
+
+**S:apPlot(domain_s, set_s=nil) --> fig** - Visualize fuzzy set with asciiplot. Plot all the sets when name not defined.
+
+**S:setEnv(params_t)** - Update system environment.
 
 
 ## Geo (geodesy)

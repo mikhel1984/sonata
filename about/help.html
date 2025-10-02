@@ -19,6 +19,7 @@ DIV {margin-left: 10px;}
 <li><a href="#C">const</a></li>
 <li><a href="#D">data</a></li>
 <li><a href="#Ex">extremum</a></li>
+<li><a href="#Fz">fuzzy</a></li>
 <li><a href="#Geo">geodesy</a></li>
 <li><a href="#Gp">gnuplot</a></li>
 <li><a href="#Graph">graph</a></li>
@@ -50,6 +51,8 @@ Sonata is a Lua program for mathematical calculations.<br>
 	--lang	Generation or updating of the localization file.<br>
 		e.g. --lang          # show current language<br>
 		     --lang eo       # file for Esperanto localization<br>
+	--new	Generating a template for a new module.<br>
+		e.g. --new  matrices  Mat  "Matrix operations."<br>
 	--test	Run unit tests.<br>
 		e.g. --test          # all tests<br>
 		     --test array    # tests for the given module<br>
@@ -59,13 +62,11 @@ Sonata is a Lua program for mathematical calculations.<br>
 	--io	Method for interaction.<br>
 		e.g. --io tcp 23456  # server mode<br>
 		     --io w          # output window mode<br>
-	--new	Generating a template for a new module.<br>
-		e.g. --new  matrices  Mat  "Matrix operations."<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 1.00<br>
+<b>VERSION</b>: 1.01<br>
 <br>
-<b>MODULES</b>: random, quaternion, geodesy, lens, main, rational, asciiplot, special, numeric, gnuplot, symbolic, data, const, units, polynomial, bigint, extremum, graph, matrix, qubit, complex.<br>
+<b>MODULES</b>: bigint, data, matrix, extremum, polynomial, rational, fuzzy, random, graph, const, units, qubit, geodesy, asciiplot, quaternion, main, lens, symbolic, numeric, gnuplot, special, complex.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -75,24 +76,24 @@ Sonata is a Lua program for mathematical calculations.<br>
 <p class="descript">Use pseudography for data visualization.</p>
 <p><b>Ap (width_N=73, height_N=21) --> new_F</b> - Create new asciiplot.<br>
 <b>Ap:concat(F1, F2) --> str</b> - Horizontal concatenation of figures with the same height. Equal to F1..F2.<br>
-<b>Ap:stars(M, cond_fn) --> str</b> - Print matrix, use star when condition for the current elemen is true.<br>
 <b>F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')</b> - Add line from (x1,y1) to (x2,y2).<br>
 <b>F:addPoint(x_d, y_d, char_s='*')</b> - Add point (x,y) using char.<br>
 <b>F:addPose(row_N, col_N, char_s='*')</b> - Add character to the given position.<br>
 <b>F:addString(row_N, col_N, str)</b> - Add string to the given position.<br>
 <b>F:axes() --> tbl</b> - Get {'size','log','range','view','fix'} for each axis.<br>
-<b>F:bar([tx,] ty)</b> - Plot bar diargram for the given data.<br>
-<b>F:contour(fn, {level=5, view='XY'})</b> - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ.<br>
+<b>F:bar([tx,] ty) --> F</b> - Plot bar diargram for the given data.<br>
+<b>F:blocks([tx,] ty) --> F</b> - Plot data relations with blocks.<br>
+<b>F:contour(fn, {level=5, view='XY'}) --> F</b> - Find contours of projection for a function fn(x,y). Views: XY, XZ, YZ.<br>
 <b>F:copy() --> cpy_F</b> - Create a copy of the object.<br>
 <b>F:legend(str_t|flag_s)</b> - Update legend. Use off/on to hide or show the legend.<br>
-<b>F:plot(...)</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br>
+<b>F:redraw() --> F|nil</b> - Apply the last draw command. Equal to ~F.<br>
 <b>F:reset()</b> - Prepare a clean canvas.<br>
 <b>F:scale(factor_d | src_F)</b> - Change figure size w.r.t. initial size.<br>
 <b>F:setX(par_t)</b> - X axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.<br>
 <b>F:setY(par_t)</b> - Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.<br>
 <b>F:setZ(par_t)</b> - Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.<br>
 <b>F:title(str)</b> - Set new title.<br>
-<b>F:tplot(data_t, cols_t={x=1, polar=false, sym=nil})</b> - Plot the table data, choose columns if need.<br></p>
+<b>F:tplot(data_t, cols_t={x=1, polar=false, sym=nil}) --> F</b> - Plot the table data, choose columns if need.<br></p>
 <pre class="example">
 
 -- use 'asciiplot'
@@ -209,6 +210,13 @@ fig5 = Ap()
 fig5:bar(tx, ty)
 print(fig5)
 
+-- blocks
+fig7 = Ap()
+tx = {'v1', 'v2', 'v3', 'v4'}
+ty = {10, 5, 2, 3}
+fig7:blocks(tx, ty)
+print(fig7)
+
 -- use log scale
 fig6 = Ap()
 fig6:setX {range={-10, 10}}
@@ -216,11 +224,6 @@ fig6:setY {log=true}
 fig6:plot(math.exp)
 fig6:legend 'off'
 print(fig6)
-
--- show matrix structure
-Mat = require 'matlib.matrix'
-s = Ap:stars(Mat:eye(4))
-print(s)
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -597,6 +600,7 @@ ans = C.myConst               -->  nil
 <b>D:gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t</b> - Make new list using given transformation. Optional condition function of the form f(value,index).<br>
 <b>D:geomean(data_t, weigh_t=nil) --> num</b> - Geometrical mean.<br>
 <b>D:harmmean(data_t, weigh_t=nil) --> num</b> - Harmonic mean.<br>
+<b>D:histPlot(data_t, edges_t|N=10) --> fig</b> - Find and show histogram.<br>
 <b>D:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t</b> - Calculate amount of bins. Edges can be either number or table.<br>
 <b>D:is(data_t, fn|str) --> weigh_t</b> - Find weights using condition (boolean function or string).<br>
 <b>D:isNot(data_t, fn|str) --> weigh_t</b> - Find inverted weights using condition (boolean function or string).<br>
@@ -625,6 +629,7 @@ D = require 'matlib.data'
 -- external dependencies, can be loaded implicitly
 require 'matlib.special'
 require 'matlib.matrix'
+require 'matlib.asciiplot'
 
 -- initial data (tables)
 X = {3,2,5,6,3,4,3,1}
@@ -705,7 +710,7 @@ ans = tmp[1][2]               -->  X[1]+Y[1]
 -- squares or even elements
 tmp = D:gen(X,
   "x^2",                 -- rule
-  "x, y -> y % 2 == 0")  -- condition
+  "x, n -> n % 2 == 0")  -- condition
 ans = tmp[2]                  --> X[4]*X[4]
 
 -- sum of squares
@@ -724,6 +729,9 @@ ans = b[1]                    -->  2.25
 -- define edges
 a,b = D:histcounts(X,{2,4,7})
 ans = a[1]                    -->  1
+
+-- show histogram
+print(D:histPlot(X, {2, 4, 7}))
 
 -- table range reference
 a = D:ref(X, 3, 6)
@@ -920,6 +928,128 @@ for i = 1, 40 do xs[i] = i*0.1; ys[i] = foo(xs[i], t0) end
 tinit = {A=3, B=2, C=-2}
 tm, fm = Ex:fit(foo, tinit, xs, ys)
 ans = tm.A                  --.2> t0.A
+
+--</pre>
+<a href="#Top">Top</a></div>
+<div><a name="Fz"></a>
+<h3># Fz (fuzzy) #</h3>
+<p class="descript">Fuzzy logic elements.</p>
+<p><b>D:getName() --> str</b> - Get domain name.<br>
+<b>D:getRange() --> range_t</b> - Get domain range.<br>
+<b>D:setList() --> sets_t</b> - Get list of set names in domain.<br>
+<b>F:andf(F2) --> new_F</b> - Fuzzy set intersection. Equal to F & F2.<br>
+<b>F:asRule() --> str</b> - Return set description as a part of rule.<br>
+<b>F:defuzzify(range_t, method_s=centroid) --> value_d</b> - Defuzzification. Available methods are: centroid, bisector, lom, som, mom.<br>
+<b>F:notf() --> new_F</b> - Fuzzy set complement. Equal to ~F.<br>
+<b>F:orf(F2) --> new_F</b> - Fuzzy set union. Equal to F | F2.<br>
+<b>Fz (env_t=nil) --> F</b> - Create new fuzzy inference system.<br>
+<b>Fz:dsigmf(tilt1_d, inflect1_d, tilt2_d, inflect2_d) --> F</b> - Make new fuzzy set, member function is difference of two sigmoidal functions.<br>
+<b>Fz:gauss2mf(sigma1_d, mu1_d, sigma2_d, mu2_d) --> F</b> - Make new fuzzy set, member function combines two Gaussians.<br>
+<b>Fz:gaussmf(sigma_d, mu_d) --> F</b> - Make new fuzzy set with Gaussian member function.<br>
+<b>Fz:gbellmf(width_d, power_d, mean_d) --> F</b> - Make new fuzzy set with generalized bell-shaped member function.<br>
+<b>Fz:linsmf(left_d, right_d) --> F</b> - Make new fuzzy set with linear s-shaped saturation member function.<br>
+<b>Fz:linzmf(left_d, right_d) --> F</b> - Make new fuzzy set with linear z-shaped saturated member function.<br>
+<b>Fz:newmf(member_fn, name_s=nil) --> F</b> - Make new fuzzy set with user defined member function.<br>
+<b>Fz:pimf(lowLeft_d, upLeft_d, upRight_d, lowRight_d) --> F</b> - Make new fuzzy set with pi-shaped member function.<br>
+<b>Fz:psigmf(tilt1_d, inflect1_d, tilt2_d, inflect2_d) --> F</b> - Make new fuzzy set with product of two sigmoidal member functions.<br>
+<b>Fz:sigmf(tilt_d, inflection_d) --> F</b> - Make new fuzzy set with sigmoidal member function.<br>
+<b>Fz:smf(left_d, right_d) --> F</b> - Make new fuzzy set with s-shaped saturation member function.<br>
+<b>Fz:trapmf(lowLeft_d, upLeft_d, upRight_d, lowRight_d) --> F</b> - Make new fuzzy set with trapeze member function.<br>
+<b>Fz:trimf(left_d, up_d, right_d) --> F</b> - Make new fuzzy set with triangle member function.<br>
+<b>Fz:zmf(left_d, right_d) --> F</b> - Make new fuzzy set with z-shaped saturation member function.<br>
+<b>S:addDomain(range_t, name_s) --> D</b> - Add new domain to system, return reference.<br>
+<b>S:addRule(in_F, out_F, weight_d=1)</b> - Add new rule to system.<br>
+<b>S:apPlot(domain_s, set_s=nil) --> fig</b> - Visualize fuzzy set with asciiplot. Plot all the sets when name not defined.<br>
+<b>S:setEnv(params_t)</b> - Update system environment.<br></p>
+<pre class="example">
+
+-- use 'fuzzy'
+Fz = require 'matlib.fuzzy'
+-- show sets
+Ap = require 'matlib.asciiplot'
+
+-- make fuzzy set
+a = Fz:linsmf(1, 2)
+-- get values
+ans = a(-1)                   -->  0
+
+ans = a(2.5)                  -->  1
+
+-- apply intersection, equal to
+--  a | Fz:linzmf(3, 4)
+b = a:andf( Fz:linzmf(3, 4) )
+ans = b(5)                    -->  0
+
+-- defuzzification
+ans = b:defuzzify({0, 5}, 'bisector')  --.1>  2.5
+
+-- show structure
+print(b)
+
+-- infirence system with default settings
+fs = Fz()
+-- add domains
+fs:addDomain({0, 40}, 'temperature')   -- input
+fan = fs:addDomain({0, 100}, 'fan_speed')  -- output
+-- add fuzzy setts
+fs.temperature.cold = Fz:zmf(10, 16)
+fs.temperature.warm = Fz:trapmf(12, 19, 26, 34)
+fs.temperature.hot = Fz:smf(26, 32)
+-- equaly, add to domain variable
+fan.slow = Fz:linzmf(20, 40)
+fan.moderate = Fz:trimf(35, 50, 80)
+fan.high = Fz:linsmf(70, 90)
+
+-- get domain list
+lst = fs:getDomains()
+ans = #lst                    -->  2
+
+-- get set list
+lst = fs.temperature:setList()
+ans = #lst                    -->  3
+
+-- get domain name
+ans = fan:getName()           -->  "fan_speed"
+
+-- get domin range
+lst = fan:getRange()
+ans = lst[1]                  -->  0
+
+-- draw all sets
+print(fs:apPlot('temperature'))
+-- draw specific set
+print(fs:apPlot('temperature', 'cold'))
+
+-- define rules (if .., then .., weight)
+fs:addRule(fs.temperature.cold, fs.fan_speed.slow)
+fs:addRule(fs.temperature.warm, fs.fan_speed.moderate)
+fs:addRule(fs.temperature.hot, fs.fan_speed.high, 0.7)
+
+-- number of rules
+ans = #fs                     -->  3
+
+-- show rule and its elements
+print(fs[2])
+print(fs[2].input:asRule(), fs[2].output:asRule(), fs[2].weight)
+
+-- update rule
+fs[3].weight = 0.8
+ans = fs[3].weight          --.1>  0.8
+
+-- evaluate and defuzzify
+val, out_set = fs {temperature = 28}
+ans = val                   --.1>  60.7
+
+-- result in the field ANS
+fig = fs:apPlot('fan_speed', 'ANS')
+fig:addLine(val, 0, val, out_set(val), ':')
+print(fig)
+
+-- remove elements
+fs.temperature.cold = nil  -- remove fuzzy set
+fs.temperature = nil       -- remove domain
+fs[1] = nil                -- remove rule
+ans = #fs                     -->  2
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -2347,11 +2477,10 @@ end
 -- visualize
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
-table.remove(ts)  -- ignore right values
+table.insert(te, 'rest')
 fig = Ap()
 fig:setX {view='min', range={0, 0.2}, fix=true}
 fig:setY {size=#ts}
---v = _D:T()  -- get list of pairs
 fig:bar(te, ts)
 print(fig)
 
@@ -2364,7 +2493,7 @@ end
 -- visualize renerated data
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
-table.remove(ts)  -- ignore right values
+table.insert(te, 'rest') 
 fig:bar(te, ts)
 print(fig)
 

@@ -300,7 +300,7 @@ generator.module = function (mName, alias, description)
   local txt =
 [=[--[[		sonata/WORD1
 
-3L WORD5.
+3L WORD5
 --
 --  </br></br><b>Authors</b>: Your Name
 
@@ -309,7 +309,7 @@ generator.module = function (mName, alias, description)
 
 -- Define here your tests, save results to 'ans',
 -- use --> for the strict equality
--- and --n> for the n-digit precision in the case of floating numbers.
+-- and --.n> for the n-digit precision in the case of floating numbers.
 --[[TEST_IT
 
 -- use 'WORD2'
@@ -321,20 +321,20 @@ a = WORD3()
 ans = a.type                  -->  'WORD2'
 
 -- check relative equality ( ~10^(-2) )
-ans = math.pi                --2> 355/113
+ans = math.pi               --.2> 355/113
 
 --]]
 
 
 --	LOCAL
 
-local FOO = 42
+local _foo = 42
 
 --	INFO
 
-local help = SonataHelp or {}  -- optional
+local _help = SonataHelp or {}  -- optional
 -- description
-local about = {
+local _about = {
 __module__ = "WORD5"
 }
 
@@ -352,7 +352,7 @@ WORD2.__index = WORD2
 3L Check object type.
 --  @param v Object.
 --  @return True if the object is WORD2.
-local function isWORD2(v) return getmetatable(v) == WORD2 end
+local function _isWORD2(v) return getmetatable(v) == WORD2 end
 
 
 3L Constructor example.
@@ -364,13 +364,13 @@ WORD2.new = function(self, t)
   -- return object
   return setmetatable(o, self)
 end
-about[WORD2.new] = {":new(t) --> WORD6", "Explicit constructor.", help.NEW}
+_about[WORD2.new] = {":new(t) --> WORD6", "Explicit constructor.", _help.NEW}
 -- begin from ':' to get 'WORD3:new(t)'
 
 
 -- simplify constructor call
 setmetatable(WORD2, {__call = function (self, v) return WORD2:new(v) end})
-about[WORD2] = {" (t) --> WORD6", "Create new WORD2.", help.NEW}
+_about[WORD2] = {" (t) --> WORD6", "Create new WORD2.", _help.NEW}
 -- begin from ' ' to get 'WORD3 ()'
 
 
@@ -381,13 +381,12 @@ WORD2.copy = function (self)
   -- some logic
   return WORD2:new(argument)
 end
-about[WORD2.copy] = {"WORD6:copy() --> cpy_WORD6",
+_about[WORD2.copy] = {"WORD6:copy() --> cpy_WORD6",
   "Create a copy of the object."} -- third element is optional, default is 'base'
--- don't modify since start from letter
-
+-- begin from WORD6 implicitly
 
 -- Comment to remove descriptions
-WORD2.about = about
+WORD2.about = _about
 
 return WORD2
 
@@ -412,4 +411,3 @@ end
 return generator
 
 --=======================================
---FIX: lost white space in 'use_import' on file update

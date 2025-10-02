@@ -12,10 +12,8 @@
 
 --	LOCAL
 
-local Upack do
-  local lib = require('matlib.utils')
-  Upack = lib.versions.unpack
-end
+local _utils = require("matlib.utils")
+local _unpack = _utils.versions.unpack
 
 
 --- Condition for element sorting.
@@ -358,7 +356,7 @@ PARENTS.funcValue.p_diff = function (S1, S2)
     end
     for i, fn in ipairs(diffs) do
       local dx = args[i]:p_diff(S2)
-      if not COMMON.isZero(dx) then res = res + fn(Upack(args)) * dx end
+      if not COMMON.isZero(dx) then res = res + fn(_unpack(args)) * dx end
     end
   else
     -- derivative not defined
@@ -389,7 +387,7 @@ PARENTS.funcValue.p_eval = function (S, tEnv)
   local body = symbolic._fnList[S._[1]._].body
   if #val + 1 == #t and body then
     -- evaluate
-    return symbolic:_newConst( body(Upack(val)) )
+    return symbolic:_newConst( body(_unpack(val)) )
   else
     return symbolic:_newExpr(S._parent, t)
   end

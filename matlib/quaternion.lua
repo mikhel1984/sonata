@@ -115,11 +115,16 @@ ans = aa:w()                --.3>  a:w()
 
 --	LOCAL
 
-local Ver = require("matlib.utils")
-local Unumstr = Ver.utils.numstr
-local Cross = Ver.cross
-local Utils = Ver.utils
-Ver = Ver.versions
+local _ext = {
+  utils = require("matlib.utils"),
+  -- matrix = require("matlib.matrix"),
+}
+
+
+local _ver = _ext.utils.versions
+local _cross = _ext.utils.cross
+local _utils = _ext.utils.utils
+local _num2str = _utils.numstr
 
 -- categories
 local ROTATION = 'rotation'
@@ -129,15 +134,15 @@ local ROTATION = 'rotation'
 --  @param v Value.
 --  @return String representation.
 local function _numStr(v)
-  return type(v) == 'number' and Unumstr(v) or tostring(v)
+  return type(v) == 'number' and _num2str(v) or tostring(v)
 end
 
 
 --	INFO
 
-local help = SonataHelp or {}
+local _help = SonataHelp or {}
 -- description
-local about = {
+local _about = {
 __module__ = "Operations with quaternions."
 }
 
@@ -150,8 +155,8 @@ type = 'quaternion',
 isquaternion = true,
 -- simplify
 _simp = function (Q)
-  return Cross.isZero(Q._[2]) and Cross.isZero(Q._[3]) and Cross.isZero(Q._[4])
-    and Cross.simp(Q._[1]) or Q
+  return _cross.isZero(Q._[2]) and _cross.isZero(Q._[3]) and _cross.isZero(Q._[4])
+    and _cross.simp(Q._[1]) or Q
 end
 }
 
@@ -164,7 +169,7 @@ local function _isquaternion(v) return getmetatable(v) == quaternion end
 
 --- Make quaternion or return number.
 local function _numOrQuat(w, x, y, z)
-  return Cross.isZero(x) and Cross.isZero(y) and Cross.isZero(z) and w
+  return _cross.isZero(x) and _cross.isZero(y) and _cross.isZero(z) and w
     or quaternion._new(w, x, y, z)
 end
 
@@ -192,16 +197,16 @@ end
 --  @return True if the quaternions are equal.
 quaternion.__eq = function (Q1, Q2)
   if not (_isquaternion(Q1) and _isquaternion(Q2)) then
-    local p = Cross.convert(Q1, Q2)
+    local p = _cross.convert(Q1, Q2)
     if p then
       return Q1 == p
     else
-      return Cross.convert(Q2, Q1) == Q2
+      return _cross.convert(Q2, Q1) == Q2
     end
   end
   local q1, q2 = Q1._, Q2._
-  return Cross.eq(q1[1], q2[1]) and Cross.eq(q1[2], q2[2])
-    and  Cross.eq(q1[3], q2[3]) and Cross.eq(q1[4], q2[4])
+  return _cross.eq(q1[1], q2[1]) and _cross.eq(q1[2], q2[2])
+    and  _cross.eq(q1[3], q2[3]) and _cross.eq(q1[4], q2[4])
 end
 
 
@@ -240,7 +245,7 @@ end
 quaternion.__pow = function (self, d)
   if d == -1 then
     return quaternion.inv(self)
-  elseif d >= 0 and Ver.isInteger(d) then
+  elseif d >= 0 and _ver.toInteger(d) ~= nil then
     -- positive integer use for all quaternions
     local res, acc = quaternion._new(1, 0, 0, 0), self
     while d > 0 do
@@ -297,8 +302,8 @@ quaternion.__unm = function (self)
 end
 
 
-about['_ar'] = {'arithmetic: a+b, a-b, a*b, a^k, -a', nil, help.META}
-about['_cmp'] = {'comparison: a==b, a~=b', nil, help.META}
+_about['_ar'] = {'arithmetic: a+b, a-b, a*b, a^k, -a', nil, _help.META}
+_about['_cmp'] = {'comparison: a==b, a~=b', nil, _help.META}
 
 
 --- Transform number to quaternion.
@@ -322,8 +327,8 @@ end
 --  @return Value of norm.
 quaternion._norm2 = function (Q)
   local q = Q._
-  return Cross.float(q[1])^2 + Cross.float(q[2])^2 + Cross.float(q[3])^2
-    + Cross.float(q[4])^2
+  return _cross.float(q[1])^2 + _cross.float(q[2])^2 + _cross.float(q[3])^2
+    + _cross.float(q[4])^2
 end
 
 
@@ -331,7 +336,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 quaternion._pack = function (self, acc)
-  local t = {string.pack('B', acc['quaternion']), Utils.pack_seq(self._, 1, 4, acc)}
+  local t = {string.pack('B', acc['quaternion']), _utils.pack_seq(self._, 1, 4, acc)}
   return table.concat(t)
 end
 
@@ -343,7 +348,7 @@ end
 --  @param ver Pack algorithm version.
 --  @return Complex object.
 quaternion._unpack = function (src, pos, acc, ver)
-  local t, p = Utils.unpack_seq(4, src, pos, acc, ver)
+  local t, p = _utils.unpack_seq(4, src, pos, acc, ver)
   return quaternion._new(t[1], t[2], t[3], t[4]), p
 end
 
@@ -352,7 +357,7 @@ end
 --- Norm of the quaternion.
 --  @return Value of norm.
 quaternion.abs = function (self) return math.sqrt(quaternion._norm2(self)) end
-about[quaternion.abs] = {'Q:abs() --> num', 'Value of the norm.'}
+_about[quaternion.abs] = {'Q:abs() --> num', 'Value of the norm.'}
 quaternion._norm = quaternion.abs
 
 
@@ -362,20 +367,20 @@ quaternion.conj = function (self)
   local q = self._
   return quaternion._new(q[1], -q[2], -q[3], -q[4])
 end
-about[quaternion.conj] = {'Q:conj() --> conj_Q', 'Get conjugation. Equal to ~Q.'}
+_about[quaternion.conj] = {'Q:conj() --> conj_Q', 'Get conjugation. Equal to ~Q.'}
 quaternion.__bnot = quaternion.conj
 
 
 --- Find exponential for the quaternion.
 quaternion.exp = function (self)
-  local w, x, y, z = Ver.unpack(self._)
-  local v = math.sqrt(Cross.float(x)^2 + Cross.float(y)^2 + Cross.float(z)^2)
-  w = math.exp(assert(Cross.float(w)))  -- reuse
+  local w, x, y, z = _ver.unpack(self._)
+  local v = math.sqrt(_cross.float(x)^2 + _cross.float(y)^2 + _cross.float(z)^2)
+  w = math.exp(assert(_cross.float(w)))  -- reuse
   if v == 0 then return w end
   local svv = math.sin(v) / v * w
   return quaternion._new(math.cos(v)*w, x*svv, y*svv, z*svv)
 end
-about[quaternion.exp] = {'Q:exp() --> exp_Q', 'Quaternion exponential.'}
+_about[quaternion.exp] = {'Q:exp() --> exp_Q', 'Quaternion exponential.'}
 
 
 --- Build quaternion from angle-axis representation.
@@ -393,7 +398,7 @@ quaternion.fromAA = function (_, dAng, vAxe)
   if d > 0 then d = math.sin(dAng*0.5) / d end
   return quaternion._new(math.cos(dAng*0.5), x*d, y*d, z*d)
 end
-about[quaternion.fromAA] = {':fromAA(angle_d, axis_t|V) --> Q',
+_about[quaternion.fromAA] = {':fromAA(angle_d, axis_t|V) --> Q',
   'Create quaternion using angle and axis.', ROTATION}
 
 
@@ -421,7 +426,7 @@ quaternion.fromRot = function (_, M)
       (M[2][1]-M[1][2])/S, (M[1][3]+M[3][1])/S, (M[2][3]+M[3][2])/S, 0.25*S)
   end
 end
-about[quaternion.fromRot] = {':fromRot(M) --> Q',
+_about[quaternion.fromRot] = {':fromRot(M) --> Q',
   'Convert rotation matrix to quaternion.', ROTATION}
 
 
@@ -443,7 +448,7 @@ quaternion.fromRPY = function (_, roll, pitch, yaw)
     cr * sp * cy + sr * cp * sy,
     cr * cp * sy - sr * sp * cy)
 end
-about[quaternion.fromRPY] = {":fromRPY(roll_d, pitch_d, yaw_d) --> Q",
+_about[quaternion.fromRPY] = {":fromRPY(roll_d, pitch_d, yaw_d) --> Q",
   "Convert Euler angles to quaternion.", ROTATION}
 
 
@@ -454,21 +459,21 @@ quaternion.inv = function (self)
   local q = self._
   return quaternion._new(q[1]*k, -q[2]*k, -q[3]*k, -q[4]*k)
 end
-about[quaternion.inv] = {'Q:inv() --> inv_Q', 'Find inverted quaternion.'}
+_about[quaternion.inv] = {'Q:inv() --> inv_Q', 'Find inverted quaternion.'}
 
 
 --- Logarithm of the quaternion.
 --  @return logarithm value.
 quaternion.log = function (self)
-  local w, x, y, z = Ver.unpack(self._)
-  local v = math.sqrt(Cross.float(x)^2 + Cross.float(y)^2 + Cross.float(z)^2)
-  w = Cross.float(w)
+  local w, x, y, z = _ver.unpack(self._)
+  local v = math.sqrt(_cross.float(x)^2 + _cross.float(y)^2 + _cross.float(z)^2)
+  w = _cross.float(w)
   local n = math.sqrt(w*w + v*v)
   if v == 0 then return math.log(n) end
   local k = math.acos(w / n) / v
   return quaternion._new(math.log(n), x*k, y*k, z*k)
 end
-about[quaternion.log] = {'Q:log() --> log_Q', 'Quaternion logarithm.'}
+_about[quaternion.log] = {'Q:log() --> log_Q', 'Quaternion logarithm.'}
 
 
 --- Transform quaternion into unit 'vector' in-place.
@@ -478,8 +483,8 @@ quaternion.normalized = function (self)
   local q = self._
   return k > 0 and quaternion._new(q[1]/k, q[2]/k, q[3]/k, q[4]/k) or self
 end
-about[quaternion.normalized] = {'Q:normalized() --> unit_Q',
-  'Return unit quaternion.', help.OTHER}
+_about[quaternion.normalized] = {'Q:normalized() --> unit_Q',
+  'Return unit quaternion.', _help.OTHER}
 
 
 --- Apply quaternion to rotate the vector.
@@ -496,7 +501,7 @@ quaternion.rotate = function (self, vec)
   local p2 = self*p1*quaternion.conj(self)
   return {p2._[2], p2._[3], p2._[4]}
 end
-about[quaternion.rotate] = {'Q:rotate(in_t|V) --> out_t',
+_about[quaternion.rotate] = {'Q:rotate(in_t|V) --> out_t',
   'Apply quaternion to rotate the vector.', ROTATION}
 
 
@@ -521,8 +526,8 @@ quaternion.slerp = function (_, Q1, Q2, f)
   local sin_th = math.sin(theta)
   return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
 end
-about[quaternion.slerp] = {':slerp(beg_Q, end_Q, rat_f) --> rat_Q',
-  'Spherical linear interpolation for the given ratio.', help.OTHER}
+_about[quaternion.slerp] = {':slerp(beg_Q, end_Q, rat_f) --> rat_Q',
+  'Spherical linear interpolation for the given ratio.', _help.OTHER}
 
 
 --- Get angle and axis of the quaternion.
@@ -531,33 +536,33 @@ quaternion.toAA = function (self)
   if math.abs(quaternion._norm2(self)-1) > 1E-4 then
     error "Unit quaternion is required!"
   end
-  local w, x, y, z = Ver.unpack(self._)
+  local w, x, y, z = _ver.unpack(self._)
   -- get sin
   local v = math.sqrt(x*x + y*y + z*z)
   if math.abs(v) < 1E-16 then
     return 1.0, nil
   else
-    return 2*Ver.atan2(v, w), {x/v, y/v, z/v}
+    return 2*_ver.atan2(v, w), {x/v, y/v, z/v}
   end
 end
-about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t|nil',
+_about[quaternion.toAA] = {'Q:toAA() --> angle_d, axis_t|nil',
   'Get angle and axis of rotation.', ROTATION}
 
 
 --- Get rotation matrix.
 --  @return Rotation matrix 3x3.
 quaternion.toRot = function (self)
-  quaternion.ext_matrix = quaternion.ext_matrix or require('matlib.matrix')
+  _ext.matrix = _ext.matrix or require('matlib.matrix')
   if math.abs(quaternion._norm2(self)-1) > 1E-4 then
     error "Unit quaternion is required!"
   end
-  local w, x, y, z = Ver.unpack(self._)
-  return quaternion.ext_matrix {
+  local w, x, y, z = _ver.unpack(self._)
+  return _ext.matrix {
     {1-2*(y*y+z*z), 2*(x*y-z*w), 2*(x*z+y*w)},
     {2*(x*y+z*w), 1-2*(x*x+z*z), 2*(y*z-x*w)},
     {2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)}}
 end
-about[quaternion.toRot] = {'Q:toRot() --> M',
+_about[quaternion.toRot] = {'Q:toRot() --> M',
   'Get equal rotation matrix.', ROTATION}
 
 
@@ -567,13 +572,13 @@ quaternion.toRPY = function (self)
   if math.abs(quaternion._norm2(self)-1) > 1E-4 then
     error("Unit quaternion is required!")
   end
-  local w, x, y, z = Ver.unpack(self._)
-  local roll  = Ver.atan2(2*(w*x + y*z), 1 - 2*(x*x + y*y))
+  local w, x, y, z = _ver.unpack(self._)
+  local roll  = _ver.atan2(2*(w*x + y*z), 1 - 2*(x*x + y*y))
   local pitch = math.asin(2*(w*y - z*x))
-  local yaw   = Ver.atan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
+  local yaw   = _ver.atan2(2*(w*z + x*y), 1 - 2*(y*y + z*z))
   return roll, pitch, yaw
 end
-about[quaternion.toRPY] = {"Q:toRPY() --> roll_d, pitch_d, yaw_d",
+_about[quaternion.toRPY] = {"Q:toRPY() --> roll_d, pitch_d, yaw_d",
   "Get Euler angles.", ROTATION}
 
 
@@ -581,7 +586,7 @@ about[quaternion.toRPY] = {"Q:toRPY() --> roll_d, pitch_d, yaw_d",
 --  @param Q Quaternion.
 --  @return w element.
 quaternion.w = function (Q) return Q._[1] end
-about[quaternion.w] = {"Q:w() --> var", "Get w component.", help.OTHER}
+_about[quaternion.w] = {"Q:w() --> var", "Get w component.", _help.OTHER}
 -- marker of a complex number
 quaternion.re = quaternion.w
 
@@ -590,21 +595,21 @@ quaternion.re = quaternion.w
 --  @param Q Quaternion.
 --  @return x element.
 quaternion.x = function (Q) return Q._[2] end
-about[quaternion.x] = {"Q:x() --> var", "Get x component.", help.OTHER}
+_about[quaternion.x] = {"Q:x() --> var", "Get x component.", _help.OTHER}
 
 
 --- Get y component.
 --  @param Q Quaternion.
 --  @return y element.
 quaternion.y = function (Q) return Q._[3] end
-about[quaternion.y] = {"Q:y() --> var", "Get y component.", help.OTHER}
+_about[quaternion.y] = {"Q:y() --> var", "Get y component.", _help.OTHER}
 
 
 --- Get z component.
 --  @param Q Quaternion.
 --  @return z element.
 quaternion.z = function (Q) return Q._[4] end
-about[quaternion.z] = {"Q:z() --> var", "Get z component.", help.OTHER}
+_about[quaternion.z] = {"Q:z() --> var", "Get z component.", _help.OTHER}
 
 
 -- simplify constructor call
@@ -623,12 +628,12 @@ setmetatable(quaternion,
   return quaternion._new(w, x, y, z)
 end
 })
-about[quaternion] = {" {x, y, z, w} --> new_Q",
-  "Create new quaternion.", help.NEW}
+_about[quaternion] = {" {x, y, z, w} --> new_Q",
+  "Create new quaternion.", _help.NEW}
 
 
 -- Comment to remove descriptions
-quaternion.about = about
+quaternion.about = _about
 
 return quaternion
 

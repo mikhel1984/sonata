@@ -87,12 +87,10 @@ ans = y[#y][1]              --.1>  2.3
 
 --	LOCAL
 
-local Vunpack, Cnorm do
-  local lib = require("matlib.utils")
-  Vunpack = lib.versions.unpack
-  Cnorm = lib.cross.norm
-end
-local inform = Sonata and Sonata.warning or print
+local _utils = require("matlib.utils")
+local _norm = _utils.cross.norm
+
+local _inform = Sonata and Sonata.warning or print
 
 
 local mt_ode_solution = {
@@ -195,7 +193,7 @@ local function _qsimp (fn, a, b, eps, eval, N)
     end
     si, ost = s, st
   end
-  inform("too many iterations")
+  _inform("too many iterations")
   return si, true  -- error flag
 end
 
@@ -209,7 +207,7 @@ local function _limited (x) return -math.huge < x and x < math.huge end
 --	INFO
 
 -- description
-local about = { __module__ =
+local _about = { __module__ =
   "Group of functions for numerical calculations."
 }
 
@@ -256,13 +254,13 @@ numeric.der = function (_, fn, d)
     dx = dx * 0.5
     der, last = (fn(d+dx) - fn(d-dx)) / d2, der
     if dx < numeric.SMALL then
-      inform("derivative not found")
+      _inform("derivative not found")
       return der, true
     end
-  until Cnorm(der-last) < numeric.TOL
+  until _norm(der-last) < numeric.TOL
   return der
 end
-about[numeric.der] = {":der(fn, x_d) --> num",
+_about[numeric.der] = {":der(fn, x_d) --> num",
   "Calculate the derivative value for the given function."}
 
 
@@ -279,7 +277,7 @@ numeric.lim = function (_, fn, xn, isPositive)
     local del = 1
     while del > numeric.SMALL do
       local curr = isPositive and fn(xn + del) or fn(xn - del)
-      if prev and Cnorm(curr - prev) < numeric.TOL then
+      if prev and _norm(curr - prev) < numeric.TOL then
         return curr
       end
       del, prev = del*1E-3, curr
@@ -289,16 +287,16 @@ numeric.lim = function (_, fn, xn, isPositive)
     xn = (xn < math.huge) and -1 or 1
     while math.abs(xn) < math.huge do
       local curr = fn(xn)
-      if prev and Cnorm(curr - prev) < numeric.TOL then
+      if prev and _norm(curr - prev) < numeric.TOL then
         return curr
       end
       xn, prev = xn * 1E3, curr
     end
   end
-  inform('limit not found')
+  _inform('limit not found')
   return prev, true  -- error flag
 end
-about[numeric.lim] = {":lim(fn, xn_d, isPositive=false) --> y",
+_about[numeric.lim] = {":lim(fn, xn_d, isPositive=false) --> y",
   "Estimate limit of a function."}
 
 
@@ -314,13 +312,13 @@ numeric.newton = function (_, fn, d1)
     x2 = d1 - fd1*h / (fn(d1+h) - fd1)
     k, h = k+1, h*0.618
     if k > numeric.NEWTON_MAX then
-      inform("too many iterations")
+      _inform("too many iterations")
       return x2, true  -- error flag
     end
-  until Cnorm(fn(x2)-fd1) < numeric.TOL
+  until _norm(fn(x2)-fd1) < numeric.TOL
   return x2
 end
-about[numeric.newton] = {":newton(fn, x0_d) --> num",
+_about[numeric.newton] = {":newton(fn, x0_d) --> num",
   "Find root of equation using Newton's rule."}
 
 
@@ -339,7 +337,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   -- evaluate
   local res, last = setmetatable({{tDelta[1], dY0}}, mt_ode_solution), false
   while not exit(res) do
-    local x, y = Vunpack(res[#res])
+    local x, y = _utils.versions.unpack(res[#res])
     if x >= xn then
       break
     elseif x + h > xn then
@@ -353,7 +351,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
       local h2 = 0.5 * h
       local y1 = _rk(fn, x, y, h)
       local y2 = _rk(fn, x+h2, _rk(fn, x, y, h2), h2)
-      local dy = Cnorm(y2 - y1)
+      local dy = _norm(y2 - y1)
       if dy > MAX then
         h = h2
       else
@@ -365,7 +363,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   end
   return res
 end
-about[numeric.ode] = {":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
+_about[numeric.ode] = {":ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t",
 [[Numerical approximation of the ODE solution.
 List of parameters is optional and can includes time step and exit condition.
 Return table of intermediate points in form {t, x(t)}.]]}
@@ -388,11 +386,11 @@ numeric.solve = function (_, fn, a, b)
   until math.abs(f1) < numeric.TOL
   return b
 end
-about[numeric.solve] = {":solve(fn, low_d, up_d) --> num",
+_about[numeric.solve] = {":solve(fn, low_d, up_d) --> num",
   "Find root of equation fn(x)=0 on interval [a,b]."}
 
 
---- Integration using trapeze method.
+--- Integration using Simpson method.
 --  @param fn Function f(x).
 --  @param a Lower bound.
 --  @param b Upper bound.
@@ -440,7 +438,7 @@ numeric.int = function (_, fn, a, b)
     return s1 + s2, e1 or e2
   end
 end
-about[numeric.int] = {":int(fn, x1_d, x2_d) --> num",
+_about[numeric.int] = {":int(fn, x1_d, x2_d) --> num",
   "Get integral of the function. Improper integrals with infinite limits are possible."}
 
 
@@ -454,7 +452,7 @@ end   --=====================
 
 
 -- Comment to remove descriptions
-numeric.about = about
+numeric.about = _about
 
 return numeric
 
