@@ -419,8 +419,9 @@ end
 local function _addPolar (fig, t, tOpt)
   local acc = {}
   -- transform data
+  local ii = tOpt.x
   for i, row in ipairs(t) do
-    local s, c = math.sin(row[1]), math.cos(row[1])
+    local s, c = math.sin(row[ii]), math.cos(row[ii])
     for j, ind in ipairs(tOpt) do
       local curr = acc[j] or {}
       curr[i] = {row[ind]*c, row[ind]*s}
@@ -467,6 +468,7 @@ local function _addPolar (fig, t, tOpt)
   end
   -- limits
   asciiplot._limits(fig)
+  return fig
 end
 
 
