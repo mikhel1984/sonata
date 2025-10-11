@@ -1408,25 +1408,20 @@ _about[asciiplot.scale] = {"F:scale(factor_d | src_F)",
 --- X axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setX = function (self, t) _setAxis(self, t, '_x') end
-_about[asciiplot.setX] = {"F:setX(par_t)",
-  "X axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  _tag.CONF}
+local _axisStr = "Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells)."
+_about[asciiplot.setX] = {"F:setX(par_t)", _axisStr, _tag.CONF}
 
 
 --- Y axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setY = function (self, t) _setAxis(self, t, '_y') end
-_about[asciiplot.setY] = {"F:setY(par_t)",
-  "Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  _tag.CONF}
+_about[asciiplot.setY] = {"F:setY(par_t)", _axisStr, _tag.CONF}
 
 
 --- Z axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setZ = function (self, t) _setAxis(self, t, '_z') end
-_about[asciiplot.setZ] = {"F:setZ(par_t)",
-  "Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  _tag.CONF}
+_about[asciiplot.setZ] = {"F:setZ(par_t)", _axisStr, _tag.CONF}
 
 
 --- Visualize matrix elements

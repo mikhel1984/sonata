@@ -164,12 +164,13 @@ local _move = _utils.versions.move
 local _float = _utils.cross.float
 local _convert = _utils.cross.convert
 _utils = _utils.utils
+local _floor = math.floor
 
 local SEP = ','
 local _tag = { NUMB='numbers', COMB='combinations' }
 
 -- max number for one position
-local BASE = math.floor(math.sqrt((math.maxinteger or (2^52)) / 10))
+local BASE = _floor(math.sqrt((math.maxinteger or (2^52)) / 10))
 local _logbase = math.log(BASE, 10)
 
 
@@ -298,17 +299,15 @@ end
 --  @param iNew New bases.
 --  @return Quotient and reminder.
 local function _divBase (t, iOld, iNew)
-  local rest, set = 0, false
+  local rest = 0
   for i = #t, 1, -1 do
-    rest = rest * iOld + t[i]
-    local n = math.floor(rest / iNew)
-    if set or n > 0 then
-      t[i] = n
-      set = true
-    else
-      t[i] = nil
+    rest = rest*iOld + t[i]
+    local n = nil
+    if rest >= iNew or t[i+1] then
+      n = _floor(rest / iNew)
+      rest = rest - iNew*n
     end
-    rest = rest - iNew * n
+    t[i] = n
   end
   return t, rest
 end
@@ -318,7 +317,6 @@ end
 --  @param B Number to change.
 --  @param n Step, not more then the current base.
 local function _incr (B, n)
-  assert(-BASE < n and n < BASE)
   local b = B._
   local v = (n < 0 and -n or n)
   if B._sign * n >= 0 then
@@ -357,7 +355,6 @@ end
 --  @param t Digits of number.
 --  @param x Multiplier.
 local function _mulX (t, x)
-  assert(x < BASE)
   local add = 0
   for i = 1, #t do
     local v = t[i] * x + add
@@ -372,20 +369,30 @@ local function _mulX (t, x)
 end
 
 
+--- Make bigint from table.
+--  @param t Digits in reverse order.
+--  @param sn Sign (+1/-1).
+--  @return new bigint.
+local function _newTable (t, sn)
+  return setmetatable({_=t, _sign=sn}, bigint)
+end
+
+
+
 --- Get subtraction for two positive bigint numbers.
 --  @param B1 First bigint object.
 --  @param B2 Second bigint object.
 --  @return Difference of the values.
 local function _sub (B1, B2)
-  local res = bigint._newTable({0}, 1)
+  local res = _newTable({0}, 1)
   local cmp = bigint._cmp(B1, B2)
   if cmp == 0 then return res end
-  local add, base1 = 1, BASE - 1
   local b1, b2, rr = B1._, B2._, res._
   if cmp < 0 then
     b1, b2 = b2, b1
     res._sign = -1
   end
+  local add, base1 = 1, BASE - 1
   for i = 1, #b1 do
     local v = b1[i] + base1 - (b2[i] or 0) + add
     if v >= BASE then
@@ -407,15 +414,16 @@ end
 --  @return quotient and reminder.
 local function _q_r (a, b)
   local cmp = bigint._cmp
+  -- special cases
   local v = cmp(a, b)
   if v < 0 then
     return bigint._0, a
   elseif v == 0 then
     return bigint._1, bigint._0
-  elseif #b._ == 1 then
+  elseif #b._ == 1 then  -- simple number
     local c = bigint._copy(a)
     local _, r = _divBase(c._, BASE, b._[1])
-    return c, bigint._newTable({r}, 1)
+    return c, _newTable({r}, 1)
   end
   -- find max doubled
   local c = bigint._copy(b)
@@ -425,7 +433,7 @@ local function _q_r (a, b)
   _divBase(c._, BASE, 2)
   -- find quotient and reminder
   a = _sub(a, c)
-  local n = bigint._newTable({1}, 1)
+  local n = _newTable({1}, 1)
   while cmp(c, b) ~= 0 do
     _divBase(c._, BASE, 2)
     _mulX(n._, 2)
@@ -443,7 +451,7 @@ end
 --  @param B2 Second bigint multiplier.
 --  @return Product without sign.
 local function _mul (B1, B2)
-  local sum = bigint._newTable({0}, 1)
+  local sum = _newTable({0}, 1)
   local b1, b2, s = B1._, B2._, sum._
   -- get products
   for i = 0, #b1-1 do
@@ -461,7 +469,7 @@ local function _mul (B1, B2)
   local rest = 0
   for i = 1, #s do
     local si = s[i] + rest
-    rest = math.floor(si / BASE)
+    rest = _floor(si / BASE)
     s[i] = si - rest * BASE
   end
   if rest > 0 then s[#s+1] = rest end
@@ -510,7 +518,7 @@ end
 --  @return Sum of the values.
 local function _sum (B1, B2)
   local add = 0
-  local res = bigint._newTable({0}, 1)
+  local res = _newTable({0}, 1)
   local b1, b2, rr = B1._, B2._, res._
   for i = 1, math.max(#b1, #b2) do
     local v = (b1[i] or 0) + (b2[i] or 0) + add
@@ -739,7 +747,7 @@ end
 
 --- - B
 --  @return Opposite value.
-bigint.__unm = function (self) return bigint._newTable(self._, -self._sign) end
+bigint.__unm = function (self) return _newTable(self._, -self._sign) end
 
 
 --- String representation.
@@ -801,7 +809,7 @@ end
 bigint._copy = function (self)
   local c, b = {}, self._
   _move(b, 1, #b, 1, c)
-  return bigint._newTable(c, self._sign)
+  return _newTable(c, self._sign)
 end
 
 
@@ -857,7 +865,7 @@ bigint._new = function (num)
       if v < 0 or v >= base then error("Wrong digit at "..tostring(i)) end
       acc[i] = v
     end
-    return bigint._newTable(_rebase(acc, base, BASE), num.sign)
+    return _newTable(_rebase(acc, base, BASE), num.sign)
   elseif type(num) == 'string' then
     return bigint._newString(num)
   elseif type(num) == 'number' and _tointeger(num) ~= nil then
@@ -878,9 +886,9 @@ bigint._newNumber = function (num)
    local ibase = 1.0 / BASE
    repeat
      acc[#acc+1] = num % BASE
-     num = math.floor(num * ibase)
+     num = _floor(num * ibase)
    until num == 0
-   return bigint._newTable(acc, sign)
+   return _newTable(acc, sign)
 end
 
 
@@ -918,21 +926,13 @@ bigint._newString = function (s)
     end
   end
   -- reverse
-  for i = 1, math.floor(#acc / 2) do
+  for i = 1, _floor(#acc / 2) do
     local j = #acc+1-i
     acc[i], acc[j] = acc[j], acc[i]
   end
-  return bigint._newTable(_rebase(acc, base, BASE), sgn == '-' and -1 or 1)
+  return _newTable(_rebase(acc, base, BASE), sgn == '-' and -1 or 1)
 end
 
-
---- Make bigint from table.
---  @param t Digits in reverse order.
---  @param sn Sign (+1/-1).
---  @return new bigint.
-bigint._newTable = function (t, sn)
-  return setmetatable({_=t, _sign=sn}, bigint)
-end
 
 
 --- Find (B1 ^ B2) % B3
@@ -990,7 +990,7 @@ end
 --  @param B0 Initial multiplier.
 --  @return Pair of multipliers or nil.
 bigint._trivialSearch = function (B, B0)
-  local n = B0 and B0:_copy() or bigint._newTable({2}, 1)
+  local n = B0 and B0:_copy() or _newTable({2}, 1)
   local sq, div = bigint._sqrt(B), bigint._div
   while bigint._cmp(sq, n) > 0 do
     local v1, v2 = div(B, n)
@@ -1017,19 +1017,20 @@ bigint._unpack = function (src, pos, acc, ver)
   n, pos = string.unpack('I2', src, pos)
   t, pos = _utils.unpack_seq(n, src, pos, acc, ver)
   if base ~= BASE then t = _rebase(t, base, BASE) end
-  return bigint._newTable(t, sign), pos
+  return _newTable(t, sign), pos
 end
 
 
 --- Common return values
-bigint._0 = bigint._newTable({0}, 1)
-bigint._1 = bigint._newTable({1}, 1)
-bigint._2 = bigint._newTable({2}, 1)
+bigint._0 = _newTable({0}, 1)
+bigint._1 = _newTable({1}, 1)
+bigint._2 = _newTable({2}, 1)
+bigint._1n = _newTable({1}, -1)
 
 
 --- Absolute value of number.
 --  @return Absolute value.
-bigint.abs = function (self) return bigint._newTable(self._, 1) end
+bigint.abs = function (self) return _newTable(self._, 1) end
 _about[bigint.abs] = {"B:abs() --> abs_B",
   "Return module of arbitrary long number."}
 
@@ -1116,7 +1117,10 @@ _about[bigint.FF] = {"B:FF() --> B!!", "Find double factorial.", _tag.COMB}
 --  @return List of prime numbers.
 bigint.factorize = function (self)
   local v, res = self, {}
-  if self._sign < 0 then res[1] = -1 end
+  if self._sign < 0 then 
+    res[1] = bigint._1n 
+    v = v:abs()
+  end
   local n, q = nil, nil
   while true do
     n, q = bigint._trivialSearch(v, n)
@@ -1225,7 +1229,7 @@ _about[bigint.P] = {":P(n, k, isRepeat=false) --> permutaions_B",
 --  @return Number from 0 to given number.
 bigint.random = function (self)
   local set, v = false, 0
-  local res = bigint._newTable({0}, self._sign)
+  local res = _newTable({0}, self._sign)
   local b, rr = self._, res._
   local n = math.random(1, #b)
   local any = (n ~= #b)
