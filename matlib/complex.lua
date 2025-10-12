@@ -326,12 +326,13 @@ complex.__pow = function (C1, C2)
     local v = complex._convert(C1)
     return v and v ^ C2 or error('No def')
   end
-  local a0, a1 = complex.abs(C1), complex.arg(C1)
-  local k = (a0 >= 0) and  math.log(a0) or -math.log(-a0)
-  local c1, c2 = C1._, C2._
-  local abs = a0^(_float(c2[1]))*math.exp(-a1*c2[2])
-  local arg = k*c2[2]+c2[1]*a1
-  return _numOrComp(abs*_fcos(arg), abs*_fsin(arg))
+  local re1, im1 = _float(C1._[1]), _float(C1._[2])
+  local re2, im2 = _float(C2._[1]), _float(C2._[2])
+  local a0 = math.sqrt(re1*re1 + im1*im1)
+  local a1 = _ver.atan2(im1, re1)
+  local abs = a0^(re2)*math.exp(-a1*im2)
+  local arg = math.log(a0)*im2 + re2*a1
+  return _numOrComp(abs*math.cos(arg), abs*math.sin(arg))
 end
 
 
@@ -475,7 +476,7 @@ _about[complex.acosh] = {"C:acosh() --> y_C",
 --- Argument of complex number.
 --  @return Argument of the number.
 complex.arg = function (self)
-  return _ver.atan2(assert(_float(self._[2])), assert(_float(self._[1])))
+  return _ver.atan2(_float(self._[2]), _float(self._[1]))
 end
 _about[complex.arg] = {"C:arg() --> float", "Return argument of complex number."}
 
@@ -551,7 +552,8 @@ _about[complex.cosh] = {"C:cosh() --> y_C",
 --  @param ang Angle.
 --  @return Complex number.
 complex.E = function (self, ang)
-  return complex._new(_fcos(ang), _fsin(ang))
+  local v = _float(ang)
+  return complex._new(math.cos(v), math.sin(v))
 end
 _about[complex.E] = {":E(phy) --> cos(phy)+i*sin(phy)",
   "Make complex number exp(i*phy).", _help.STATIC}
