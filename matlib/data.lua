@@ -564,7 +564,7 @@ _about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 --  @return Table with the filtered elements.
 data.filter = function (_, t, vCond)
   local res = {}
-  if type(vCond) == 'string' then vCond = _utils.Fn(vCond, 1) end
+  if type(vCond) == 'string' then vCond = _utils.Fn(vCond) end
   if type(vCond) == 'function' then
     -- boolean function
     for i = 1, #t do
@@ -606,9 +606,9 @@ _about[data.freq] = {":freq(data_t) --> tbl",
 --  @param cond Condition function f(v,i) or string.
 --  @return obtained list.
 data.gen = function (_, t, fn, cond)
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
-  -- condition function f(index, value)
-  if cond and type(cond) == 'string' then cond = _utils.Fn(cond, 2) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  -- condition function f(value, index)
+  if type(cond) == 'string' then cond = _utils.Fn(cond) end
   local q = {}
   if cond then
     for i, v in ipairs(t) do
@@ -742,7 +742,7 @@ _about[data.histPlot] = {":histPlot(data_t, edges_t|N=10) --> fig",
 --  @param fn Condition, boolean function or string.
 --  @return Table of 1 and 0.
 data.is = function (_, t, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 1 or 0
@@ -759,7 +759,7 @@ _about[data.is] = {":is(data_t, fn|str) --> weigh_t",
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
 data.isNot = function (_, t, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 0 or 1
@@ -914,7 +914,7 @@ _about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
 --  @return Result of reduction.
 data.reduce = function (_, t, fn, val)
   val = val or 0
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 2) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   for i = 1, #t do val = fn(val, t[i]) end
   return val
 end
@@ -941,7 +941,7 @@ _about[data.reverse] = {":reverse(data_t)",
 --  @param t List of elements.
 --  @param fn Comparison function or string.
 data.sort = function (_, t, fn)
-  if type(fn) == "string" then fn = _utils.Fn(fn, 2) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   return _mergeSort(t, {}, 1, #t, fn)
 end
 mt_list.sort = function (self, fn) data.sort(nil, self._tbl, fn); return self end
@@ -1002,7 +1002,7 @@ _about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl",
 --  @return List of values fn(...).
 data.zip = function (_, fn, ...)
   local ag, res = {...}, {}
-  if type(fn) == 'string' then fn = _utils.Fn(fn, #ag) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   local x, stop = {}, false
   for i = 1, math.huge do
     for j = 1, #ag do
