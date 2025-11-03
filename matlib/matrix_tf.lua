@@ -328,9 +328,8 @@ ref_transpose.__index = function (self, k)
     return tbl
   elseif k == 'data' then
     return tbl.src
-  else
-    return tbl.src.__index(self, k)
   end
+  return tbl.src.__index(self, k)
 end
 
 
@@ -579,7 +578,7 @@ ref_concat.__index = function (self, k)
     if tbl.vertical then
       local n, src = 1, tbl.src
       while n < #src and k > src[n]._rows do
-        k, n = k - src[n]._rows, n + 1
+        k, n = k - src[n]._rows, n+1
       end
       tbl.mat = src[n]
     end
@@ -587,9 +586,8 @@ ref_concat.__index = function (self, k)
     return tbl
   elseif k == 'data' then
     return tbl.src
-  else
-    return transform._methods.__index(self, k)
   end
+  return transform._methods.__index(self, k)
 end
 
 

@@ -435,11 +435,11 @@ end
 --  @param c High bound.
 --  @return point where function is minimal and its value.
 extremum._minBrent = function (fun, a, b, c)
-  local imax, e, d = 100, 0, 0
   a, c = _min(a, c), _max(a, c)
   local x, w, v = b, b, b
   local fx = fun(x)
   local fv, fw = fx, fx
+  local imax, e, d = 100, 0, 0
   for i = 1, imax do
     local xm = 0.5*(a+c)
     local tol1 = TOL*_abs(x) + SMALL
@@ -448,25 +448,23 @@ extremum._minBrent = function (fun, a, b, c)
       return x, fx
     end
     -- parabolic fit
-    local upd = false
+    local upd = true
     if _abs(e) > tol1 then
       local r = (x-w)*(fx-fv)
       local q = (x-v)*(fx-fw)
       local p = (x-v)*q - (x-w)*r
       q = 2*(q-r)
-      if q > 0 then p = -p end
-      q = _abs(q)
+      if q > 0 then p = -p else q = -q end
       if _abs(p) >= _abs(0.5*q*e) or p <= q*(a-x) or p >= q*(c-x) then
-        upd = true
+        -- ignore
       else
         e, d = d, p/q
         u = x + d
         if (u-a < tol2) or (c-u < tol2) then
           d = (xm >= x) and tol1 or (-tol1)
         end
+        upd = false
       end
-    else
-      upd = true
     end
     if upd then
       e = (x >= xm) and (a-x) or (c-x)
@@ -653,7 +651,12 @@ extremum._minPowel = function (fun, p)
   _ext.matrix = _ext.matrix or require("matlib.matrix")
   local mat = _ext.matrix
   local imax, n = 200, p:rows()
-  local ximat = mat:eye(n)
+  local xdir = {}
+  for i = 1, n do
+    local t = {}
+    for j = 1, n do t[j] = (j == i) and 1 or 0 end
+    xdir[i] = t
+  end
   local fret = fun(p)
   for iter = 1, imax do
     local ibig, del = 1, 0.0
@@ -661,7 +664,7 @@ extremum._minPowel = function (fun, p)
     -- find the biggest decrease
     for i = 1, n do
       local fprev = fret
-      p, _, fret = _linmin(p, ximat({}, i), fun)
+      p, _, fret = _linmin(p, mat:V(xdir[i]), fun)
       fprev = fprev - fret  -- reuse
       if fprev > del then
         del, ibig = fprev, i
@@ -677,10 +680,9 @@ extremum._minPowel = function (fun, p)
       local t = 2*(fp-2*fret+fptt)*(fp-fret-del)^2 - del*(fp-fptt)^2
       if t < 0 then
         p, grad, fret = _linmin(p, grad, fun)
+        local xmat = xdir[ibig]
         for j = 1, n do
-          local xmatj = ximat[j]
-          xmatj[ibig] = xmatj[n]
-          xmatj[n] = grad[j][1]
+          xmat[j] = grad[j][1]
         end
       end
     end
