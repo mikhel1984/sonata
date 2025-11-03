@@ -354,7 +354,8 @@ local matrix = {
 --  @param v Object to check.
 --  @return True if the object is 'matrix' or reference.
 local function _ismatrixex(v)
-  return getmetatable(v) == matrix or _tf.isref(v)
+  local mt = getmetatable(v)
+  return mt == matrix or _tf.refs[mt]
 end
 
 
@@ -472,7 +473,7 @@ matrix.__mul = function (M1, M2)
   if not _ismatrixex(M1) then return _kProd(M1, M2) end
   if not _ismatrixex(M2) then return _kProd(M2, M1) end
   if (M1._cols ~= M2._rows) then
-    error("Impossible to get product: different size!")
+    error "Impossible to get product: different size!"
   end
   local res = {}
   local resCols, m1Cols = M2._cols, M1._cols
@@ -572,12 +573,22 @@ _about['_cmp'] = {"comparison: a==b, a~=b", nil, _help.META}
 --  @param t Table for initialization.
 --  @return Matrix object.
 matrix._init = function (iR, iC, t)
-  if iR <= 0 or iC <= 0 then
-    error "Wrong matrix size!"
-  end
   t._cols, t._rows = iC, iR
   local res = setmetatable(t, matrix)
   return matrix.STRIP and _tf.clearLess(res, matrix.STRIP) or res
+end
+
+
+--- Initialization of matrix with size check.
+--  @param iR Number of rows.
+--  @param iC Number of columns.
+--  @param t Table for initialization.
+--  @return Matrix object.
+matrix._initCheck = function (iR, iC, t)
+  if iR <= 0 or iC <= 0 then
+    error "Wrong matrix size!"
+  end
+  return matrix._init(iR, iC, t)
 end
 
 
@@ -598,7 +609,7 @@ matrix._new = function (self, t)
     cols = (cols < #v) and #v or cols
     setmetatable(v, mt_access)
   end
-  return matrix._init(rows, cols, t)
+  return matrix._initCheck(rows, cols, t)
 end
 
 
@@ -630,7 +641,7 @@ matrix._unpack = function (src, pos, acc, ver)
   for r = 1, rs do
     t[r], pos = _utils.unpack_seq(cs, src, pos, acc, ver)
   end
-  return matrix._init(rs, cs, t), pos
+  return matrix._initCheck(rs, cs, t), pos
 end
 
 
@@ -649,6 +660,18 @@ matrix._round = function (self, tol)
     end
   end
   return self
+end
+
+
+--- Add scaled matrix to the given one.
+--  i.e.  self += k*M
+--  @param k Scalar coefficient.
+--  @param M Other matrix.
+matrix.add = function (self, k, M)
+  if self._rows ~= M._rows or self._cols ~= M._cols then
+    error "Different size"
+  end
+  _tf.addScale(self, k, M)
 end
 
 
@@ -748,10 +771,10 @@ matrix.D = function (_, v, shift)
     local n = vec and v._rows * v._cols or #v
     local res
     if shift >= 0 then
-      res = matrix._init(n + shift, n + shift, {})
+      res = matrix._initCheck(n + shift, n + shift, {})
       for i = 1, n do res[i][i+shift] = vec and v(i) or v[i] end
     else
-      res = matrix._init(n - shift, n - shift, {})
+      res = matrix._initCheck(n - shift, n - shift, {})
       for i = 1, n do res[i-shift][i] = vec and v(i) or v[i] end
     end
     return res
@@ -820,7 +843,7 @@ matrix.eye = function (_, iR, iC)
   else
     iC = iC or iR
   end
-  local m = matrix._init(iR, iC, {})
+  local m = matrix._initCheck(iR, iC, {})
   for i = 1, math.min(iR, iC) do m[i][i] = 1 end
   return m
 end
@@ -842,7 +865,7 @@ matrix.fill = function (_, iR, iC, val)
     for c = 1, iC do mr[c] = val end
     res[r] = mr
   end
-  return matrix._init(iR, iC, res)
+  return matrix._initCheck(iR, iC, res)
 end
 _about[matrix.fill] = {":fill(row_N, col_N, val=1) --> M",
   "Create matrix of given numbers (default is 1).", _help.NEW}
@@ -1326,7 +1349,7 @@ _about[matrix.ver] = {":ver(mat_t} --> mat_Ref",
 matrix.zeros = function (_, iR, iC)
   if _ismatrixex(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
   iC = iC or iR                          -- input is a number
-  return matrix._init(iR, iC, {})
+  return matrix._initCheck(iR, iC, {})
 end
 _about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
   "Create matrix of zeros.", _help.NEW}
