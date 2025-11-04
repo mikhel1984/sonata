@@ -254,7 +254,7 @@ end
 --  @param ids List of variable indices.
 --  @return updated matrix and list of indices.
 local function _lpSimpxEliminate (H,  ids)
-  local hm = H:cols()
+  local hm, hr = H:cols(), H:rows()
   for s = 1, hm do
     -- get pivot column
     local col = 0
@@ -268,13 +268,13 @@ local function _lpSimpxEliminate (H,  ids)
     if col > 0 then
       -- find row
       local jmin, vmin = 0, math.huge
-      for j = 2, H:rows() do
+      for j = 2, hr do
         local vc, vm = H[j][col], H[j][hm]
         if vc > 0 and vm/vc < vmin then
           jmin, vmin = j, vm/vc
         end
       end
-      if jmin == 0 then  break end  -- no solution ?
+      if jmin == 0 then break end  -- no solution ?
 
       ids[jmin-1] = col
       local Hj = H[jmin]
@@ -282,7 +282,7 @@ local function _lpSimpxEliminate (H,  ids)
       -- normalize line
       for k = 1, hm do Hj[k] = Hj[k] / vmin end
       -- extract
-      for j = 1, H:rows() do
+      for j = 1, hr do
         if j ~= jmin then
           local Hi = H[j]
           local t = Hi[col]
@@ -298,13 +298,13 @@ end
 
 
 --- Extrapolates by factor through the face of the simplex.
---  Replace the high point it the new is better.
+--  Replace the high point if the new one is better.
 --  @param p List of bound points as a matrix.
 --  @param y List of funciton values.
 --  @param psum List of vector sums.
 --  @param fac Factor value.
 --  @param fun Source function.
---  @return the found extremum.
+--  @return found extremum.
 local function _simplexExtra (p, y, psum, ihi, fac, fun)
   local ndim = p:rows()
   local fac1 = (1.0-fac)/ndim
@@ -329,9 +329,10 @@ end
 --  @param pp Matrix with points.
 --  @param psum Table to store the result.
 local function _simplexPsum (pp, psum)
+  local cs = pp:cols()
   for i = 1, pp:rows() do
     local s, pi = 0, pp[i]
-    for j = 1, pp:cols() do s = s + pi[j] end
+    for j = 1, cs do s = s + pi[j] end
     psum[i] = s
   end
 end
@@ -701,11 +702,11 @@ end
 extremum._simplex = function (fun, pp)
   _ext.matrix = _ext.matrix or require("matlib.matrix")
   local mat = _ext.matrix
-  local nmax = 500
   local y, psum = {}, {}
-  for i = 1, pp:cols() do y[i] = fun(pp({}, i)) end
-  _simplexPsum(pp, psum)
   local p = pp:copy()
+  for i = 1, p:cols() do y[i] = fun(p({}, i)) end
+  _simplexPsum(p, psum)
+  local nmax, pr, pc = 500, p:rows(), p:cols()
   for _ = 1, nmax do
     -- find highest, next highest and lowest
     local ilo, ihi, inhi = 1, 1, 2
@@ -725,7 +726,7 @@ extremum._simplex = function (fun, pp)
     if rtol < TOL then
       -- put the best point into the first element
       y[1], y[ilo] = y[ilo], y[1]
-      for i = 1, pp:rows() do
+      for i = 1, pr do
         local pi = p[i]
         pi[1], pi[ilo] = pi[ilo], pi[1]
       end
@@ -742,9 +743,9 @@ extremum._simplex = function (fun, pp)
       ytry = _simplexExtra(p, y, psum, ihi, 0.5, fun)
       if ytry >= ysave then
         -- contract around the lowest point
-        for i = 1, p:cols() do
+        for i = 1, pc do
           if i ~= ilo then
-            for j = 1, p:rows() do
+            for j = 1, pr do
               local pj = p[j]
               psum[j] = 0.5*(pj[i] + pj[ilo])
               pj[i] = psum[j]
