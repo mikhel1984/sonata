@@ -809,10 +809,21 @@ extremum.fit = function (_, fn, t0, xs, ys)
     keys[#keys+1] = k
     v0[#v0+1] = w
   end
+  -- resample
+  local k = 6
+  local step = math.floor(#xs / (#keys*k))
+  if step > 1 then
+    local tx, ty = {}, {}
+    for i = 1, #xs, step do
+      tx[#tx+1] = xs[i]
+      ty[#ty+1] = ys[i]
+    end
+    xs, ys = tx, ty
+  end
   -- make function for optimization
   local t = {}
   local test = function (vec)
-    for i = 1, #keys do t[keys[i]] = vec[i][1] end
+    for i, key in ipairs(keys) do t[key] = vec[i][1] end
     local s = 0.0
     for i = 1, #xs do
       local dy = ys[i] - fn(xs[i], t)
