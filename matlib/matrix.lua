@@ -686,13 +686,12 @@ matrix.chol = function (self)
   for i = 1, self._rows do
     local Li, Ai = L[i], self[i]
     for j = 1, i do
-      local sum = 0
+      local sum = Ai[j]
       for k = 1, j-1 do
         local v = L[j][k]
         v = (type(v) == 'table' and v.conj) and v:conj() or v
-        sum = sum + v*Li[k]
+        sum = sum - v*Li[k]
       end
-      sum = Ai[j] - sum   -- reuse
       if j < i then
         Li[j] = sum / L[j][j]
       else
@@ -978,30 +977,54 @@ matrix.lu = function (self)
   -- check square
   local U, P = self:copy(), matrix:eye(self._rows, self._cols)
   local L = matrix:eye(self._rows, self._cols)
-  for i = 1, self._rows do
-    -- swap with maximum
-    local k, max = i, _norm(U[i][i])
-    for j = i+1, U._rows do
-      local uj = _norm(U[j][i])
-      if uj > max then
-        k, max = j, uj
+  for i = 1, U._rows do
+    -- find pivot
+    local k, max = i, 0.0
+    for r = i, U._rows do
+      local Ur = U[r]
+      local s = Ur[i]
+      for q = 1, i-1 do
+        s = s - Ur[q]*U[q][r]
+      end
+      s = _norm(s)
+      if s > max then
+        max, k = s, r
       end
     end
-    for j = k-1, i, -1 do
-      U[j], U[j+1] = U[j+1], U[j]
-      P[j], P[j+1] = P[j+1], P[j]
+    -- swap
+    if i ~= k then
+      U[i], U[k] = U[k], U[i]
+      P[i], P[k] = P[k], P[i]
     end
-    -- fill U, L
+    -- fill U part
     local Ui = U[i]
-    if not _zero(Ui[i]) then
-      for j = i + 1, U._rows do
+    for j = i, U._rows do
+      local s = Ui[j]
+      for q = 1, i-1 do
+        s = s - Ui[q]*U[q][j]
+      end   
+      Ui[j] = s 
+    end
+    -- fill L part
+    local Uii = Ui[i]
+    if not _zero(Uii) then
+      for j = i+1, L._rows do
         local Uj = U[j]
-        local t = Uj[i] / Ui[i]
-        L[j][i] = t
-        for c = i, U._cols do Uj[c] = Uj[c] - t * Ui[c] end
+        local s = Uj[i]
+        for q = 1, i-1 do
+          s = s - Uj[q]*U[q][i]
+        end
+        Uj[i] = s / Uii
       end
     end
   end
+  -- divide
+  for i = 2, self._rows do
+    local Li, Ui = L[i], U[i]
+    for j = 1, i-1 do
+      Li[j], Ui[j] = Ui[j], 0
+    end
+  end    
   return L, U, P
 end
 _about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
