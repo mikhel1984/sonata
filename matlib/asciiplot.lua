@@ -146,8 +146,8 @@ print(fig6)
 --	LOCAL
 
 local _utils = require("matlib/utils")
+local _ver = _utils.versions
 
-local _vmove = _utils.versions.move
 local _czero = _utils.cross.isZero
 _utils = _utils.utils
 local _tf = require("matlib.asciiplot_tf")
@@ -1240,7 +1240,7 @@ asciiplot.copy = function (self)
     o._legend[k] = v
   end
   for i = 1, #self._canvas do
-    o._canvas[i] = _vmove(self._canvas[i], 1, self._x.size, 1, {})
+    o._canvas[i] = _ver.move(self._canvas[i], 1, self._x.size, 1, {})
   end
   return setmetatable(o, asciiplot)
 end
@@ -1371,7 +1371,7 @@ _about[asciiplot.plot] = {"F:plot(...) --> F",
 --  @return updated figure object or nil.
 asciiplot.redraw = function (self)
   if self._lastFn then
-    return asciiplot[self._lastFn](self, table.unpack(self._lastArgs))
+    return asciiplot[self._lastFn](self, _ver.unpack(self._lastArgs))
   end
 end
 asciiplot.__bnot = asciiplot.redraw

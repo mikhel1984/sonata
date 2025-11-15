@@ -159,6 +159,7 @@ ans = D:unpack(t)             --> a
 --	LOCAL
 
 local _utils = require("matlib.utils")
+local _logN = _utils.versions.log
 local _tointeger = _utils.versions.toInteger
 local _move = _utils.versions.move
 local _float = _utils.cross.float
@@ -171,7 +172,7 @@ local _tag = { NUMB='numbers', COMB='combinations' }
 
 -- max number for one position
 local BASE = _floor(math.sqrt((math.maxinteger or (2^52)) / 10))
-local _logbase = math.log(BASE, 10)
+local _logbase = _logN(BASE, 10)
 
 
 --	INFO
@@ -1142,8 +1143,9 @@ _about[bigint.factorize] = {"B:factorize() --> prime_t",
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (self)
   local b, res = self._, 0
+  print(#b)
   if #b > 2 and #b * _logbase > 9 then
-    local s = math.log(b[#b] + b[#b-1]/BASE, 10)
+    local s = _logN(b[#b] + b[#b-1]/BASE, 10)
     s = s + (#b-1)*_logbase
     res = 10^s
   else

@@ -668,7 +668,7 @@ fuzzy.apPlot = function (self, domain, set)
       t[#t+1] = s
       t[#t+1] = name
     end
-    fig:plot(table.unpack(t))
+    fig:plot(_ext.utils.versions.unpack(t))
   end
   return fig
 end

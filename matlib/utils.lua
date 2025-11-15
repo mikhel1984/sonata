@@ -54,7 +54,7 @@ end
 -- Return integer number or nil
 versions.toInteger = math.tointeger or function (x)
   if type(x) == 'string' then x = tonumber(x) end
-  local p, q = _modf(x)
+  local p, q = _modf(x or 0.5)  -- send float value when x == nil
   return (q == 0.0) and p or nil
 end
 
@@ -63,6 +63,12 @@ end
 versions.pow = math.pow or function (x, y)
   return x^y
 end
+
+
+-- Logarithm with specific base
+versions.log = math.log10 and function (x, n)
+  return math.log(x) / math.log(n)
+end or math.log
 
 
 --============= Cross-module functionality =========

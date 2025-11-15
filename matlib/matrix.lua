@@ -166,7 +166,6 @@ ans = Mat:D({1,2,3})          -->  Mat {{1,0,0},
 -- get diagonal
 ans = g:diag()                -->  Mat {{1},{5},{9}}
 
-
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
@@ -983,9 +982,7 @@ matrix.lu = function (self)
     for r = i, U._rows do
       local Ur = U[r]
       local s = Ur[i]
-      for q = 1, i-1 do
-        s = s - Ur[q]*U[q][r]
-      end
+      for q = 1, i-1 do s = s - Ur[q]*U[q][r] end
       s = _norm(s)
       if s > max then
         max, k = s, r
@@ -1000,9 +997,7 @@ matrix.lu = function (self)
     local Ui = U[i]
     for j = i, U._rows do
       local s = Ui[j]
-      for q = 1, i-1 do
-        s = s - Ui[q]*U[q][j]
-      end   
+      for q = 1, i-1 do s = s - Ui[q]*U[q][j] end   
       Ui[j] = s 
     end
     -- fill L part
@@ -1011,9 +1006,7 @@ matrix.lu = function (self)
       for j = i+1, L._rows do
         local Uj = U[j]
         local s = Uj[i]
-        for q = 1, i-1 do
-          s = s - Uj[q]*U[q][i]
-        end
+        for q = 1, i-1 do s = s - Uj[q]*U[q][i] end
         Uj[i] = s / Uii
       end
     end
