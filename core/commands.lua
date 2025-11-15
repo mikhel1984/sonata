@@ -288,7 +288,8 @@ commands.w = function (args, env)
   elseif status == env.evaluate.EV_ERR then
     env.evaluate.printErr(res)
   else
-    env.pipe:write(res, '\n\n')
+    env.pipe:write('>> ', args[2], '\n')
+    env.pipe:write(res, '\n')
     env.pipe:flush()
   end
 end
