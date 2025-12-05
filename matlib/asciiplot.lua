@@ -690,7 +690,7 @@ asciiplot._axes = function (self)
     self._canvas[1][n] = up
     -- markers
     local d = self._y:markerInterval()
-    for i = d+1, self._y.size-1, d do self._canvas[i][n] = mark end
+    for i = 1+d, self._y.size, d do self._canvas[i][n] = mark end
     n = nil
   end
   -- horizontal line
@@ -703,7 +703,7 @@ asciiplot._axes = function (self)
     row[self._x.size] = right
     -- markers
     local d = self._x:markerInterval()
-    for i = d+1, self._x.size-1, d do row[i] = mark end
+    for i = 1, self._x.size-1, d do row[i] = mark end
   end
 end
 
