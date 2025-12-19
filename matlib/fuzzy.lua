@@ -87,7 +87,7 @@ ans = fs[3].weight          --.1>  0.8
 
 -- evaluate and defuzzify
 val, out_set = fs {temperature = 28}
-ans = val                   --.1>  58.2
+ans = val                   --.1>  62.0
 
 -- result in the field ANS
 fig = fs:apPlot('fan_speed', 'ANS')
@@ -158,20 +158,32 @@ local mt_set = {
 mt_set.__index = mt_set
 
 
-local function _adaptivePts (S, a, b, pa, pb, tol, htol, acc) 
+--- Approximate shape of a set.
+--  @param S Set object.
+--  @param a Begin of a range.
+--  @param b End of a range.
+--  @param pa Set value in point a.
+--  @param pb Set value in point b.
+--  @param tol Shape approximation tolerance.
+--  @param htol Horizontal search tolerance for 0 value.
+--  @param acc Table to store the results.
+local function _adaptivePts (S, a, b, pa, pb, tol, htol, acc)
   local x, tx = (a+b)*0.5, (pa+pb)*0.5
   local fx = S(x)
   acc[#acc+1] = {x, fx}
-  local split = math.abs(fx-tx) > tol or fx == 0.0 and (b-a) > (2*htol)
+  local split = math.abs(fx-tx) > tol or fx < 1E-16 and (b-a) > (2*htol)
   if split then
     _adaptivePts(S, a, x, pa, fx, tol, htol, acc)
     -- tail recursion
     return _adaptivePts(S, x, b, fx, pb, tol, htol, acc)
   end
-  return acc
 end
 
 
+--- Comparison function.
+--  @param a First pair {pose, value}.
+--  @param b Second pair {pose, value}.
+--  @return true when a is smaller then b.
 local function _fstArg (a, b) return a[1] < b[1] end
 
 
@@ -305,17 +317,13 @@ end
 --  @param S1 First set or function.
 --  @param S2 Second set or function.
 --  @return intersection of two sets.
-mt_set.andf = function (S1, S2)
-  return _newSet({_setArgs(S1, S2)}, _op.AND)
-end
+mt_set.andf = function (S1, S2) return _newSet({_setArgs(S1, S2)}, _op.AND) end
 mt_set.__band = mt_set.andf
 
 
 --- Make set copy.
 --  @return new set with the same function and name.
-mt_set.copy = function (self)
-  return _newSet(self.set, self.op, self.name)
-end
+mt_set.copy = function (self) return _newSet(self.set, self.op, self.name) end
 
 
 --- Apply defuzzification.
@@ -328,8 +336,9 @@ mt_set.defuzzify = function (self, rng, method)
   local res, a, b = 0, rng[1], rng[2]
   -- get shape
   local tol = 0.03
-  local ps = _adaptivePts(
-    self, a, b, self(a), self(b), tol, tol*(b-a), {})
+  local ps = {{a, self(a)}, {b, self(b)}}
+  _adaptivePts(
+    self, a, b, ps[1][2], ps[2][2], tol, tol*(b-a), ps)
   table.sort(ps, _fstArg)
   -- calculate
   if method == 'centroid' then
@@ -394,9 +403,7 @@ end
 --  @param S1 First set or function.
 --  @param S2 Second set or function.
 --  @return union of two sets.
-mt_set.orf = function (S1, S2)
-  return _newSet({_setArgs(S1, S2)}, _op.OR)
-end
+mt_set.orf = function (S1, S2) return _newSet({_setArgs(S1, S2)}, _op.OR) end
 mt_set.__bor = mt_set.orf
 
 
@@ -407,9 +414,7 @@ mt_set.__bnot = mt_set.notf
 
 
 --- Domain object.
-local mt_domain = {
-  type="fuzzy_domain",
-}
+local mt_domain = { type="fuzzy_domain", }
 
 
 --- Get fuzzy set or object method.
@@ -481,9 +486,7 @@ end
 
 --- Get domain range.
 --  @return range table.
-mt_domain.getRange = function (self)
-  return {self._range[1], self._range[2]}
-end
+mt_domain.getRange = function (self) return {self._range[1], self._range[2]} end
 
 
 -- Rule object.
