@@ -87,7 +87,7 @@ ans = fs[3].weight          --.1>  0.8
 
 -- evaluate and defuzzify
 val, out_set = fs {temperature = 28}
-ans = val                   --.1>  60.7
+ans = val                   --.1>  62.0
 
 -- result in the field ANS
 fig = fs:apPlot('fan_speed', 'ANS')
@@ -158,6 +158,35 @@ local mt_set = {
 mt_set.__index = mt_set
 
 
+--- Approximate shape of a set.
+--  @param S Set object.
+--  @param a Begin of a range.
+--  @param b End of a range.
+--  @param pa Set value in point a.
+--  @param pb Set value in point b.
+--  @param tol Shape approximation tolerance.
+--  @param htol Horizontal search tolerance for 0 value.
+--  @param acc Table to store the results.
+local function _adaptivePts (S, a, b, pa, pb, tol, htol, acc)
+  local x, tx = (a+b)*0.5, (pa+pb)*0.5
+  local fx = S(x)
+  acc[#acc+1] = {x, fx}
+  local split = math.abs(fx-tx) > tol or fx < 1E-16 and (b-a) > (2*htol)
+  if split then
+    _adaptivePts(S, a, x, pa, fx, tol, htol, acc)
+    -- tail recursion
+    return _adaptivePts(S, x, b, fx, pb, tol, htol, acc)
+  end
+end
+
+
+--- Comparison function.
+--  @param a First pair {pose, value}.
+--  @param b Second pair {pose, value}.
+--  @return true when a is smaller then b.
+local function _fstArg (a, b) return a[1] < b[1] end
+
+
 --- Make fuzzy set object.
 --  @param s Function or other set.
 --  @param op Operation to apply (optional).
@@ -181,7 +210,7 @@ end
 --  @param S1 First set or function.
 --  @param S2 Second set or function.
 --  @return Same arguments or new fuzzy sets.
-function _setArgs (S1, S2)
+local function _setArgs (S1, S2)
   if getmetatable(S1) ~= mt_set then S1 = _newSet(S1) end
   if getmetatable(S2) ~= mt_set then S2 = _newSet(S2) end
   return S1, S2
@@ -193,8 +222,7 @@ end
 --  @param env Environment settings.
 --  @return membership.
 mt_set.__call = function (self, x, env)
-  env = env or mt_set._defaultEnv
-  return mt_set._eval(self, x, env)
+  return mt_set._eval(self, x, env or mt_set._defaultEnv)
 end
 
 
@@ -289,17 +317,13 @@ end
 --  @param S1 First set or function.
 --  @param S2 Second set or function.
 --  @return intersection of two sets.
-mt_set.andf = function (S1, S2)
-  return _newSet({_setArgs(S1, S2)}, _op.AND)
-end
+mt_set.andf = function (S1, S2) return _newSet({_setArgs(S1, S2)}, _op.AND) end
 mt_set.__band = mt_set.andf
 
 
 --- Make set copy.
 --  @return new set with the same function and name.
-mt_set.copy = function (self)
-  return _newSet(self.set, self.op, self.name)
-end
+mt_set.copy = function (self) return _newSet(self.set, self.op, self.name) end
 
 
 --- Apply defuzzification.
@@ -310,34 +334,40 @@ end
 mt_set.defuzzify = function (self, rng, method)
   method = method or 'centroid'
   local res, a, b = 0, rng[1], rng[2]
-  local n = 100  -- TODO adaptive search
-  local dx = (b - a)/n
+  -- get shape
+  local tol = 0.03
+  local ps = {{a, self(a)}, {b, self(b)}}
+  _adaptivePts(
+    self, a, b, ps[1][2], ps[2][2], tol, tol*(b-a), ps)
+  table.sort(ps, _fstArg)
+  -- calculate
   if method == 'centroid' then
     -- center of gravity
-    local num, denom = 0, 0
-    for x = a, b, dx do
-      local v = self(x)
-      num = num + x*v
-      denom = denom + v
+    local num, denom, prev = 0, 0, ps[1]
+    for _, p in ipairs(ps) do
+      local vdx = p[2]*(p[1] - prev[1])  -- val*dx
+      num = num + p[1]*vdx
+      denom = denom + vdx
+      prev = p
     end
     res = (denom > 0) and (num/denom) or 0
   elseif method == 'bisector' then
-    -- divide into equal area
-    local v = {[0]=0}
-    for x = a, b, dx do
-      v[#v+1] = v[#v] + dx*self(x)
+    -- find area
+    local v, prev = {[0]=0}, ps[1]
+    for _, p in ipairs(ps) do
+      v[#v+1] = v[#v] + p[2]*(p[1]-prev[1])
+      prev = p
     end
-    local i = _ext.utils.utils.binsearch(v, v[#v]*0.5)  -- TODO improve accuracy
-    res = a + (i-1)*dx
+    local i = _ext.utils.utils.binsearch(v, v[#v]*0.5)
+    res = ps[i][1]
   else
     -- find maximum points
     local v = {}
-    local i, pp, p = 0, 0, 0
-    for x = a, b, dx do
-      local vi = self(x)
-      if pp <= p and p > vi then v[#v+1] = {i-1, p} end
+    local pp, p = 0, 0, 0
+    for i, pi in ipairs(ps) do
+      local vi = pi[2]
+      if pp <= p and p > vi then v[#v+1] = ps[i-1] end
       pp, p = p, vi
-      i = i + 1
     end
     -- evaluate
     if #v == 0 then
@@ -348,19 +378,19 @@ mt_set.defuzzify = function (self, rng, method)
       for i = 2, #v do
         if v[i][2] > vmax[2] then vmax = v[i] end
       end
-      res = a + vmax[1]*dx
+      res = vmax[1]
     elseif method == 'som' then
       -- smallest of maximum
       local vmin = v[1]
       for i = 2, #v do
         if v[i][2] < vmin[2] then vmin = v[i] end
       end
-      res = a + vmin[1]*dx
+      res = vmin[1]
     elseif method == 'mom' then
       -- middle of maximum (average of points)
       local sum = 0
       for _, vi in ipairs(v) do sum = sum + vi[1] end
-      res = a + dx*(sum/#v)
+      res = sum / #v
     else
       error "Unknown method"
     end
@@ -373,9 +403,7 @@ end
 --  @param S1 First set or function.
 --  @param S2 Second set or function.
 --  @return union of two sets.
-mt_set.orf = function (S1, S2)
-  return _newSet({_setArgs(S1, S2)}, _op.OR)
-end
+mt_set.orf = function (S1, S2) return _newSet({_setArgs(S1, S2)}, _op.OR) end
 mt_set.__bor = mt_set.orf
 
 
@@ -386,9 +414,7 @@ mt_set.__bnot = mt_set.notf
 
 
 --- Domain object.
-local mt_domain = {
-  type="fuzzy_domain",
-}
+local mt_domain = { type="fuzzy_domain", }
 
 
 --- Get fuzzy set or object method.
@@ -460,9 +486,7 @@ end
 
 --- Get domain range.
 --  @return range table.
-mt_domain.getRange = function (self)
-  return {self._range[1], self._range[2]}
-end
+mt_domain.getRange = function (self) return {self._range[1], self._range[2]} end
 
 
 -- Rule object.
