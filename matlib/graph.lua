@@ -67,6 +67,9 @@ ans = b:isComplete()          --> true
 
 ans = b:isEuler()             --> true
 
+-- show
+print(b:apPlot())
+
 -- directed graph
 c = Graph {C=4, dir=true, name='c'}
 ans = c:edge {'c2', 'c1'}     --> 1
@@ -144,10 +147,12 @@ ans = D:unpack(t)             --> b
 
 --	LOCAL
 
-local _utils = require("matlib.utils")
-local _queue = _utils.queue
-_utils = _utils.utils
+local _ext = {
+  utils = require("matlib.utils"),
+  -- ap = require("matlib.asciiplot"),
+}
 
+local _queue = _ext.utils.queue
 local _tag = { PROPERTY='property', EXPORT='export' }
 
 
@@ -363,25 +368,26 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 graph._pack = function (self, acc)
+  local utils = _ext.utils.utils
   local t = {string.pack('B', acc['graph'])}
   local ns, p = {}, 1
   t[#t+1] = string.pack('B', self._dir and 1 or 0)
   -- nodes
   for k in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = _utils.pack_str(s, acc)
+    t[#t+1] = utils.pack_str(s, acc)
     ns[s], p = p, p+1
   end
   t[#t+1] = '\0'
   -- edges
   for k, v in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = _utils.pack_num(ns[s], acc)
+    t[#t+1] = utils.pack_num(ns[s], acc)
     for q, w in pairs(v) do
       if w then   -- TODO simplify for directed graph
         local u = ns[tostring(q)]
-        t[#t+1] = _utils.pack_num(u, acc)
-        t[#t+1] = _utils.pack_num(w, acc)
+        t[#t+1] = utils.pack_num(u, acc)
+        t[#t+1] = utils.pack_num(w, acc)
       end
     end
     t[#t+1] = '\0'
@@ -397,25 +403,26 @@ end
 --  @param ver Pack algorithm version.
 --  @return Graph object.
 graph._unpack = function (src, pos, acc, ver)
+  local utils = _ext.utils.utils
   local ns, n, dir = {}, nil, nil
   dir, pos = string.unpack('B', src, pos)
   -- get nodes
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
-    ns[#ns+1], pos = _utils.unpack_str(src, pos, acc[n], ver)
+    ns[#ns+1], pos = utils.unpack_str(src, pos, acc[n], ver)
   end
   pos = pos + 1
   local gr, i, j, w = graph._new(dir == 1), nil, nil, nil
   -- get edges
   for i = 1, #ns do
     n, pos = string.unpack('B', src, pos)
-    i, pos = _utils.unpack_num(src, pos, acc[n], ver)
+    i, pos = utils.unpack_num(src, pos, acc[n], ver)
     if string.byte(src, pos) == 0 then graph.add(gr, ns[i]) end
     while string.byte(src, pos) ~= 0 do
       n, pos = string.unpack('B', src, pos)
-      j, pos = _utils.unpack_num(src, pos, acc[n], ver)
+      j, pos = utils.unpack_num(src, pos, acc[n], ver)
       n, pos = string.unpack('B', src, pos)
-      w, pos = _utils.unpack_num(src, pos, acc[n], ver)
+      w, pos = utils.unpack_num(src, pos, acc[n], ver)
       graph.add(gr, ns[i], ns[j], w)
     end
     pos = pos + 1
@@ -458,6 +465,59 @@ graph.addNodes = function (self, t)
 end
 _about[graph.addNodes] = {"G:addNodes(list_t)",
   "Import nodes from list."}
+
+
+--- Visualize graph with asciiplot.
+--  @param width (=nil) Image widht.
+--  @param height (=nil) Image height.
+--  @return figure object.
+graph.apPlot = function (self, width, height)
+  local nd = graph.nodes(self)
+  _ext.ap = _ext.ap or require("matlib.asciiplot")
+  local fig = _ext.ap(width, height)
+  if #nd == 0 then return fig end
+  fig:_clear()
+  fig:setX {range={-1.5, 1.5}}  -- make 'ellipsoid'
+  fig:setY {range={-1, 1}}
+  if #nd == 1 then
+    local r, c = fig:addPoint(0, 0, '@')
+    fig:addString(r, c+2, tostring(nd[1]))
+    return fig
+  end
+  -- circle of radius 1
+  local step = math.pi * 2 / #nd
+  local pos = {}
+  for i = 1, #nd do
+    local a = step*(i-1) + math.pi/2
+    pos[nd[i]] = {math.cos(a), math.sin(a)}
+  end
+  -- draw edges
+  local edges = self:edges()
+  for _, edge in ipairs(edges) do
+    local a, b = edge[1], edge[2]
+    local pa, pb = pos[a], pos[b]
+    local pts = fig:_drawLine(pa[1], pa[2], pb[1], pb[2])
+    if self._dir and #pts > 2 then
+      pa = pts[#pts-1]
+      fig:addPose(pa[1], pa[2], 'A')  -- "arrow"
+    end
+  end
+  -- draw nodes
+  for i = 1, #nd do
+    local p = pos[nd[i]]
+    local r, c = fig:addPoint(p[1], p[2], '@')
+    local name = tostring(nd[i])
+    if p[1] >= 0 then
+      fig:addString(r, c+2, name)
+    else
+      fig:addString(r, c-2-#name, name)
+    end
+  end
+  return fig
+end
+_about[graph.apPlot] = {"G:apPlot([width_N, height_N]) --> fig",
+  "Show graph structure with asciiplot. Arrows are marked with 'A'.", 
+  _help.OTHER}
 
 
 --- Get list of components.

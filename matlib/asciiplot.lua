@@ -409,6 +409,7 @@ local function _addGraded (fig, x, y, ind)
     s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
   end
   fig._canvas[ny][nx] = s
+  return ny, nx
 end
 
 
@@ -725,6 +726,37 @@ asciiplot._clear = function (self)
 end
 
 
+--- Draw line between two points.
+--  @param x1 First point x coordinate.
+--  @param y1 First point y coordinate.
+--  @param x2 Second point x coordinate.
+--  @param y2 Second point y coordinate.
+--  @param ind Color index.
+--  @return table of point positions.
+asciiplot._drawLine = function (self, x1, y1, x2, y2, ind)
+  local dx, dy, acc = x2-x1, y2-y1, {}
+  if math.abs(dx) >= math.abs(dy) then
+    -- along x axis
+    if dx == 0 then return end
+    local step = (self._x.diff / (self._x.size-1)) * (dx >= 0 and 1 or -1)
+    local k = dy/dx
+    for x = x1, x2, step do 
+      local pr, pc = _addGraded(self, x, y1+k*(x-x1), ind)
+      if pr then acc[#acc+1] = {pr, pc} end
+    end
+  else
+    -- along y axis
+    local step = (self._y.diff / (self._y.size-1)) * (dy >= 0 and 1 or -1)
+    local k = dx/dy
+    for y = y1, y2, step do 
+      local pr, pc = _addGraded(self, x1 + k*(y-y1), y, ind) 
+      if pr then acc[#acc+1] = {pr, pc} end
+    end
+  end
+  return acc
+end
+
+
 --- Add xrange and yrange.
 asciiplot._limits = function (self)
   -- horizontal
@@ -804,7 +836,6 @@ asciiplot._new = function(dwidth, dheight)
   -- return object
   return setmetatable(o, asciiplot)
 end
-
 
 
 --- Find XY projection of a contour.
@@ -966,11 +997,10 @@ asciiplot.addPoint = function (self, dx, dy, s)
     nx = (fx > 0.5) and (nx + 1) or nx
     ny = (fy > 0.5) and (ny + 1) or ny
     self._canvas[ny][nx] = s or '*'
-    return true
+    return ny, nx
   end
-  return false
 end
-_about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*')",
+_about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*') --> row_N, col_N|nil",
   "Add point (x,y) using char.", _tag.MANUAL}
 
 
