@@ -87,7 +87,7 @@ ans = fs[3].weight          --.1>  0.8
 
 -- evaluate and defuzzify
 val, out_set = fs {temperature = 28}
-ans = val                   --.1>  62.0
+ans = val                   --.1>  61.1
 
 -- result in the field ANS
 fig = fs:apPlot('fan_speed', 'ANS')
@@ -160,31 +160,26 @@ mt_set.__index = mt_set
 
 --- Approximate shape of a set.
 --  @param S Set object.
---  @param a Begin of a range.
---  @param b End of a range.
---  @param pa Set value in point a.
---  @param pb Set value in point b.
+--  @param pa Pair {pose, value} for the lower bound.
+--  @param pb Pair {pose, value} for the upper bound.
 --  @param tol Shape approximation tolerance.
---  @param htol Horizontal search tolerance for 0 value.
---  @param acc Table to store the results.
-local function _adaptivePts (S, a, b, pa, pb, tol, htol, acc)
-  local x, tx = (a+b)*0.5, (pa+pb)*0.5
-  local fx = S(x)
-  acc[#acc+1] = {x, fx}
-  local split = math.abs(fx-tx) > tol or fx < 1E-16 and (b-a) > (2*htol)
-  if split then
-    _adaptivePts(S, a, x, pa, fx, tol, htol, acc)
-    -- tail recursion
-    return _adaptivePts(S, x, b, fx, pb, tol, htol, acc)
+--  @param htol Horizontal search resolution.
+local function _adaptivePts (S, pa, pb, tol, htol)
+  local res, stack = {pa}, {pb}
+  while #stack > 0 do
+    local last, top = res[#res], stack[#stack]
+    local x, y = last[1], top[1]
+    local z, tz = (x+y)*0.5, (last[2]+top[2])*0.5
+    local fz = S(z)
+    if math.abs(fz-tz) > tol or (y-x) > htol then
+      stack[#stack+1] = {z, fz}
+    else
+      res[#res+1] = {z, fz}
+      res[#res+1] = table.remove(stack)
+    end
   end
+  return res
 end
-
-
---- Comparison function.
---  @param a First pair {pose, value}.
---  @param b Second pair {pose, value}.
---  @return true when a is smaller then b.
-local function _fstArg (a, b) return a[1] < b[1] end
 
 
 --- Make fuzzy set object.
@@ -335,11 +330,8 @@ mt_set.defuzzify = function (self, rng, method)
   method = method or 'centroid'
   local res, a, b = 0, rng[1], rng[2]
   -- get shape
-  local tol = 0.03
-  local ps = {{a, self(a)}, {b, self(b)}}
-  _adaptivePts(
-    self, a, b, ps[1][2], ps[2][2], tol, tol*(b-a), ps)
-  table.sort(ps, _fstArg)
+  local tol, htol = 0.03, (b-a)*0.1
+  local ps = _adaptivePts(self, {a, self(a)}, {b, self(b)}, tol, htol)
   -- calculate
   if method == 'centroid' then
     -- center of gravity
