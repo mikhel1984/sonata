@@ -496,7 +496,7 @@ graph.apPlot = function (self, width, height)
   for _, edge in ipairs(edges) do
     local a, b = edge[1], edge[2]
     local pa, pb = pos[a], pos[b]
-    local pts = fig:_drawLine(pa[1], pa[2], pb[1], pb[2])
+    local pts = fig:_drawLine(pa[1], pa[2], pb[1], pb[2], 1)
     if self._dir and #pts > 2 then
       pa = pts[#pts-1]
       fig:addPose(pa[1], pa[2], 'A')  -- "arrow"
