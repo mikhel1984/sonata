@@ -24,6 +24,9 @@
 Graph = require 'matlib.graph'
 -- for pack/unpack
 D = require 'matlib.data'
+-- additional
+require 'matlib.matrix'
+require 'matlib.asciiplot'
 
 -- build undirected graph
 a = Graph()
@@ -44,7 +47,7 @@ ans = a:size()                -->  6
 a:addEdges {
   {'b', 'e'},
   {'x', 'y'},
-  {'e', 'c', 2},  -- with waigth
+  {'e', 'c', 2},  -- with weigth
 }
 -- remove node
 a:remove('a')
@@ -112,7 +115,7 @@ print(c:matrix())
 d = Graph{O=3, name='a'} .. Graph{O=3, name='b'}
 -- generate edges with probability 0.5
 d:randp(0.5)
-print(d:edges())
+print(#d:edges())
 
 -- set 8 random edges
 d:rand(8)
@@ -153,6 +156,7 @@ local _ext = {
 }
 
 local _queue = _ext.utils.queue
+local _format = string.format
 local _tag = { PROPERTY='property', EXPORT='export' }
 
 
@@ -208,9 +212,11 @@ end
 --  @param n Expected node number.
 --  @return list of strings.
 local function _makeNodes (n, s)
-  assert(n > 0, 'Wrong node size')
+  if n <= 0 then
+    error 'Wrong node size'
+  end
   local res = {}
-  for i = 1, n do res[#res+1] = string.format('%s%d', s, i) end
+  for i = 1, n do res[#res+1] = _format('%s%d', s, i) end
   return res
 end
 
@@ -218,7 +224,7 @@ end
 -- Show undirected edge
 local mt_edge = {
 __tostring = function (t)
-  return string.format('%s -- %s', tostring(t[1]), tostring(t[2]))
+  return _format('%s -- %s', tostring(t[1]), tostring(t[2]))
 end
 }
 
@@ -226,7 +232,7 @@ end
 -- Show directed edge
 local mt_dir_edge = {
 __tostring = function (t)
-  return string.format('%s -> %s', tostring(t[1]), tostring(t[2]))
+  return _format('%s -> %s', tostring(t[1]), tostring(t[2]))
 end
 }
 
@@ -302,9 +308,9 @@ graph.__tostring = function (self)
   local nd = graph.nodes(self)
   local nm = self._dir and 'Digraph' or 'Graph'
   if #nd <= 5 then
-    return string.format('%s {%s}', nm, table.concat(nd, ','))
+    return _format('%s {%s}', nm, table.concat(nd, ','))
   else
-    return string.format('%s {%s -%d- %s}',
+    return _format('%s {%s -%d- %s}',
       nm, tostring(nd[1]), #nd-2, tostring(nd[#nd]))
   end
 end
@@ -336,7 +342,6 @@ graph._K = function (g, nodes)
     for j = i+1, #nodes do
       local nj = nodes[j]
       graph.add(g, ni, nj)
-      if g._dir then graph.add(g, nj, ni) end
     end
   end
   return g
@@ -593,11 +598,11 @@ graph.dot = function (self, fname)
     for n2, v in pairs(adj) do
       empty = false
       if v then
-        txt[#txt+1] = string.format("  %s %s %s;", nstr, line, tostring(n2))
+        txt[#txt+1] = _format("  %s %s %s;", nstr, line, tostring(n2))
       end
     end
     if empty then
-      txt[#txt+1] = string.format("  %s;", nstr)
+      txt[#txt+1] = _format("  %s;", nstr)
     end
   end
   txt[#txt+1] = "}"
@@ -907,7 +912,7 @@ _about[graph.size] = {"G:size() --> nodes_N",
 --- Save graph as svg image.
 --  @param name File name.
 graph.toSvg = function (self, name)
-  local cmd = string.format('dot -Tsvg -o %s.svg', name)
+  local cmd = _format('dot -Tsvg -o %s.svg', name)
   local handle = assert(io.popen(cmd, 'w'), "Can't open dot!")
   handle:write(graph.dot(self))
   handle:close()

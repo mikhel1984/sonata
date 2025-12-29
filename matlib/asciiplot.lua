@@ -735,10 +735,12 @@ end
 --  @return table of point positions.
 asciiplot._drawLine = function (self, x1, y1, x2, y2, ind)
   local dx, dy, acc = x2-x1, y2-y1, {}
-  if math.abs(dx) >= math.abs(dy) then
+  local w1 = self._x.size/self._x.diff*math.abs(dx)
+  local w2 = self._y.size/self._y.diff*math.abs(dy)
+  if w1 >= w2 then
     -- along x axis
-    if dx == 0 then return end
-    local step = (self._x.diff / (self._x.size-1)) * (dx >= 0 and 1 or -1)
+    if dx == 0 then return acc end
+    local step = (self._x.diff / self._x.size) * (dx >= 0 and 1 or -1)
     local k = dy/dx
     for x = x1, x2, step do 
       local pr, pc = _addGraded(self, x, y1+k*(x-x1), ind)
@@ -746,7 +748,7 @@ asciiplot._drawLine = function (self, x1, y1, x2, y2, ind)
     end
   else
     -- along y axis
-    local step = (self._y.diff / (self._y.size-1)) * (dy >= 0 and 1 or -1)
+    local step = (self._y.diff / self._y.size) * (dy >= 0 and 1 or -1)
     local k = dx/dy
     for y = y1, y2, step do 
       local pr, pc = _addGraded(self, x1 + k*(y-y1), y, ind) 
@@ -968,7 +970,9 @@ end
 --  @param s Character.
 asciiplot.addLine = function (self, x1, y1, x2, y2, s)
   local dx, dy = x2-x1, y2-y1
-  if math.abs(dx) >= math.abs(dy) then
+  local w1 = self._x.size/self._x.diff*math.abs(dx)
+  local w2 = self._y.size/self._y.diff*math.abs(dy)
+  if w1 >= w2 then
     -- along x axis
     if dx == 0 then return end
     local step = (self._x.diff / self._x.size) * (dx >= 0 and 1 or -1)
