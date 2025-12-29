@@ -160,6 +160,30 @@ local _format = string.format
 local _tag = { PROPERTY='property', EXPORT='export' }
 
 
+--- Get sequence of nodes in depth-first order.
+--  @param G Source graph.
+--  @param vStart Initial node.
+--  @return table with nodes.
+local function _dfsSeq (G, vStart)
+  local pred, res = {}, {}
+  local stack = {{vStart, vStart}}
+  repeat
+    local curr = table.remove(stack)
+    local node = curr[1]
+    if not pred[node] then
+      pred[node] = curr[2]
+      res[#res+1] = node
+      for k, v in pairs(G._[node]) do
+        if v and not pred[k] then
+          table.insert(stack, {k, node})
+        end
+      end
+    end
+  until #stack == 0
+  return res
+end
+
+
 --- Get key with minimum value, remove it
 --  @param t Table of pairs {node, weight}.
 --  @return Node and correspondent weight.
@@ -342,6 +366,7 @@ graph._K = function (g, nodes)
     for j = i+1, #nodes do
       local nj = nodes[j]
       graph.add(g, ni, nj)
+      if g._dir then graph.add(g, nj, ni) end
     end
   end
   return g
@@ -444,10 +469,10 @@ graph.add = function (self, n1, n2, w)
   local g = self._
   g[n1] = g[n1] or {}
   if n2 then
-    w = w or 1
-    g[n2] = g[n2] or {}
-    g[n1][n2] = w
-    g[n2][n1] = self._dir and g[n2][n1] or false
+    g[n1][n2] = w or 1
+    local gn2 = g[n2] or {}
+    g[n2] = gn2
+    gn2[n1] = self._dir and gn2[n1] or false
   end
 end
 _about[graph.add] = {"G:add(n1, n2=nil, w_d=1)", "Add new node or edge."}
@@ -477,17 +502,32 @@ _about[graph.addNodes] = {"G:addNodes(list_t)",
 --  @param height (=nil) Image height.
 --  @return figure object.
 graph.apPlot = function (self, width, height)
-  local nd = graph.nodes(self)
+  local acc, len = {}, 0
+  for k in pairs(self._) do
+    acc[k], len = true, len+1
+  end
   _ext.ap = _ext.ap or require("matlib.asciiplot")
   local fig = _ext.ap(width, height)
-  if #nd == 0 then return fig end
+  if len == 0 then return fig end
   fig:_clear()
   fig:setX {range={-1.5, 1.5}}  -- make 'ellipsoid'
   fig:setY {range={-1, 1}}
-  if #nd == 1 then
+  if len == 1 then
     local r, c = fig:addPoint(0, 0, '@')
     fig:addString(r, c+2, tostring(nd[1]))
     return fig
+  end
+  -- sorted nodes
+  local nd = {}
+  for node in pairs(self._) do
+    if acc[node] then
+      nd[#nd+1], acc[node] = node, nil
+      for _, v in ipairs(_dfsSeq(self, node)) do
+        if acc[v] then
+          nd[#nd+1], acc[v] = v, nil
+        end
+      end
+    end
   end
   -- circle of radius 1
   local step = math.pi * 2 / #nd
@@ -497,23 +537,24 @@ graph.apPlot = function (self, width, height)
     pos[nd[i]] = {math.cos(a), math.sin(a)}
   end
   -- draw edges
+  local arrows = {}
   local edges = self:edges()
   for _, edge in ipairs(edges) do
     local a, b = edge[1], edge[2]
     local pa, pb = pos[a], pos[b]
     local pts = fig:_drawLine(pa[1], pa[2], pb[1], pb[2], 1)
     if self._dir and #pts > 2 then
-      pa = pts[#pts-1]
-      fig:addPose(pa[1], pa[2], 'A')  -- "arrow"
+      arrows[#arrows+1] = pts[#pts-1]  -- save position
     end
   end
+  for _, p in ipairs(arrows) do fig:addPose(p[1], p[2], 'A') end
   -- draw nodes
   for i = 1, #nd do
     local p = pos[nd[i]]
     local r, c = fig:addPoint(p[1], p[2], '@')
     local name = tostring(nd[i])
     if p[1] >= 0 then
-      fig:addString(r, c+2, name)
+      fig:addString(r, c+3, name)
     else
       fig:addString(r, c-2-#name, name)
     end
@@ -521,7 +562,7 @@ graph.apPlot = function (self, width, height)
   return fig
 end
 _about[graph.apPlot] = {"G:apPlot([width_N, height_N]) --> fig",
-  "Show graph structure with asciiplot. Arrows are marked with 'A'.", 
+  "Show graph structure with asciiplot. Arrows are marked with 'A'.",
   _help.OTHER}
 
 
@@ -834,7 +875,7 @@ graph.rand = function (self, N)
       repeat
         a = ns[math.random(#ns)]
         b = ns[math.random(#ns)]
-      until g[a][b] == nil
+      until a ~= b and g[a][b] == nil
       graph.add(self, a, b)
     end
   else
@@ -845,7 +886,7 @@ graph.rand = function (self, N)
       repeat
         a = ns[math.random(#ns)]
         b = ns[math.random(#ns)]
-      until g[a][b] or (not self._dir and g[b][a])
+      until a ~= b and (g[a][b] or (not self._dir and g[b][a]))
       graph.remove(self, a, b)
     end
   end
