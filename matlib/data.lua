@@ -175,6 +175,42 @@ end
 c = D:md(t, {'sq', 'avg'}, fn)
 print(c)
 
+-- iterate over combinations
+q = {1,2,3}
+n = 0
+for _ in D:icomb(q, 2) do n = n+1 end 
+ans = n                       -->  3
+
+-- iterate over permutations
+n = 0
+for _ in D:iperm(q) do n = n+1 end
+ans = n                       -->  6
+
+-- nested iterators
+-- get all permutations of N elements
+seq = {
+  -- wrap to remove 'self' from arguments
+  function (...) return D:icomb(...) end,
+  function (...) return D:iperm(...) end,
+}
+n = 0
+for _ in D:inest(seq, q, 2) do n = n+1 end
+ans = n                       -->  6
+
+-- iterate over all combination length
+inum = function (A)
+  local i = -1
+  return function ()
+    i = i+1  -- from 0 to #A
+    if i > #A then return end
+    return A, i
+  end  
+end
+seq = {inum, function (...) return D:icomb(...) end}
+for v in D:inest(seq, q) do
+  print('{'..table.concat(v, ', ')..'}')
+end
+
 -- even numbers
 b = D:range(2, 10, 2)
 ans = b[2]                    -->  4
@@ -239,6 +275,7 @@ local function _copyObj(v)
     return v
   end
 end
+
 
 
 --- Recursive making or array with given value.
@@ -735,6 +772,94 @@ data.histPlot = function (_, t, rng)
 end
 _about[data.histPlot] = {":histPlot(data_t, edges_t|N=10) --> fig",
   "Find and show histogram.", _tag.STAT}
+  
+
+--- Iterate over all n-length combinations for elements from the list t.
+--  @param t Source list.
+--  @param n Length of combination.
+--  @return iterator over combinations.
+data.icomb = function (_, t, n)
+  local ind, w = {0}, #t-n
+  -- iterator
+  return function ()
+    -- check index
+    while #ind > 0 and ind[#ind] - #ind >= w do
+      table.remove(ind)
+    end
+    if #ind == 0 then return end
+    -- next index
+    local p = table.remove(ind)
+    while #ind < n do
+      p = p+1
+      table.insert(ind, p)
+    end
+    -- make result
+    local res = {}
+    for i = 1, n do res[i] = t[ ind[i] ] end  
+    return res
+  end 
+end
+mt_list.icomb = _wrapCall(data.icomb)
+_about[data.icomb] = {":icomb(list_t, N) --> fn()->t",
+  "Iterate over all n-length combinations of elements from the source list."}
+
+
+--- Make iterator as a sequence of nested iterators.
+--  Each next iterator takes argument from the previous one.
+--  @param t Sequence of iterators.
+--  @param ... Arguments of the first iterator.
+--  @return complex iterator.
+data.inest = function (_, t, ...)
+  local stack = {t[1](...)}  -- init first
+  -- iterator
+  return function ()
+    local p = table.pack( stack[#stack]() )
+    -- remove completed
+    while #p == 0 and #stack > 1 do
+      table.remove(stack)
+      p = table.pack( stack[#stack]() )  -- new element for iteration
+    end
+    -- update iterators
+    while #p > 0 and #stack < #t do
+      stack[#stack+1] = t[#stack+1]( table.unpack(p) )
+      p = table.pack( stack[#stack]() )  -- iterate
+    end
+    return table.unpack(p)
+  end
+end
+_about[data.inest] = {":inest(iterators_t, ...) --> fn()->t",
+  "Combine sequence of nested iterators, each previous iterator generates agrument for the next one."}
+
+
+--- Iterate over all permutations for the given list elements.
+--  @param t Source list.
+--  @return iterator over permutations.
+data.iperm = function (_, t)
+  local ind, n = {}, #t
+  -- init
+  local p, loop = n, n
+  for i = 1, n do ind[i] = i end
+  -- iterator
+  return function ()
+    if loop > 1 or p > 1 then  -- ignore last permutation
+      local res = {}
+      for i = 1, n do res[i] = t[ ind[i] ] end
+      -- next index
+      if p == 1 then
+        loop = loop-1
+        p = n
+      end
+      -- swap
+      local q = p-1
+      ind[p], ind[q] = ind[q], ind[p]
+      p = q
+      return res
+    end
+  end
+end
+mt_list.iperm = _wrapCall(data.iperm)
+_about[data.iperm] = {":iperm(list_t) --> fn()->t",
+  "Iterate over all permutations of the source list."}
 
 
 --- Find weights (1/0) based on condition.
