@@ -22,7 +22,7 @@ local versions = {
   atan2 = math.atan2 or math.atan,
   -- Execute string code.
   loadStr = loadstring or load,
-  -- Extract table values.
+  -- Extract values from table.
   unpack = unpack or table.unpack
 }
 
@@ -69,6 +69,12 @@ end
 versions.log = math.log10 and function (x, n)
   return math.log(x) / math.log(n)
 end or math.log
+
+
+-- Pack into table
+versions.pack = table.pack or function (...)
+  return {...}
+end
 
 
 --============= Cross-module functionality =========

@@ -813,18 +813,18 @@ data.inest = function (_, t, ...)
   local stack = {t[1](...)}  -- init first
   -- iterator
   return function ()
-    local p = table.pack( stack[#stack]() )
+    local p = _ver.pack( stack[#stack]() )
     -- remove completed
     while #p == 0 and #stack > 1 do
       table.remove(stack)
-      p = table.pack( stack[#stack]() )  -- new element for iteration
+      p = _ver.pack( stack[#stack]() )  -- new element for iteration
     end
     -- update iterators
     while #p > 0 and #stack < #t do
-      stack[#stack+1] = t[#stack+1]( table.unpack(p) )
-      p = table.pack( stack[#stack]() )  -- iterate
+      stack[#stack+1] = t[#stack+1]( _ver.unpack(p) )
+      p = _ver.pack( stack[#stack]() )  -- iterate
     end
-    return table.unpack(p)
+    return _ver.unpack(p)
   end
 end
 _about[data.inest] = {":inest(iterators_t, ...) --> fn()->t",
