@@ -929,7 +929,9 @@ graph.remove = function (self, n1, n2)
   if n2 then
     -- edge
     self._[n1][n2] = nil
-    self._[n2][n1] = nil
+    if not self._dir then
+      self._[n2][n1] = nil
+    end    
   else
     -- node
     for n3 in pairs(self._[n1]) do
