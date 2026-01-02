@@ -45,7 +45,7 @@ local function complete (text, from, to)
   if p then
     -- var.method
     local w1 = string.sub(phrase, 1, p-1)
-    local ns = _ENV[w1]
+    local ns = local_env[w1]
     if ns then
       local w2 = string.sub(phrase, q+1, #phrase)
       -- check methods
