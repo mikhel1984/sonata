@@ -119,19 +119,20 @@ end
 --  @param nm Name of the module.
 help.add = function (dst, tbl, nm, alias)
   dst._modules[nm] = tbl
+  dst._als[nm] = alias
   -- update
-  local lng = dst._locale[nm] or {}
-  for k, v in pairs(tbl) do
-    if k == '__module__' then
-      tbl[k] = lng.__module__ or v              -- translate module description
-    else
-      local title = v[TITLE]
-      v[DESCRIPTION] = lng[title] or v[DESCRIPTION] -- translate description
-      v[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
-      v[EXTEND] = help._toExtend(title, alias)
-    end
-  end
-  if lng then dst._locale[nm] = nil end  -- free memory
+--  local lng = dst._locale[nm] or {}
+--  for k, v in pairs(tbl) do
+--    if k == '__module__' then
+--      tbl[k] = lng.__module__ or v              -- translate module description
+--    else
+--      local title = v[TITLE]
+--      v[DESCRIPTION] = lng[title] or v[DESCRIPTION] -- translate description
+--      v[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
+--      v[EXTEND] = help._toExtend(title, alias)
+--    end
+--  end
+--  if lng then dst._locale[nm] = nil end  -- free memory
 end
 
 
@@ -146,10 +147,15 @@ help.findObject = function (tbl, obj, tGlob)
   for nm, mod in pairs(tbl._modules) do
     if str and (nm == obj or tGlob[nm] == obj) then
       -- module description
-      return help.makeModule(mod, tGlob[nm])
+      return help.makeModule(tbl, nm)
     elseif mod[obj] then
+      if not tbl._info[tbl._lang][nm] then
+        local lang = tbl._locales[tbl._lang]
+        local alias = tbl._als[nm]
+        tbl._info[tbl._lang][nm] = help.prepareModule(mod, lang, alias)
+      end
       -- function description
-      local t = mod[obj]
+      local t = tbl._info[tbl._lang][nm][obj]
       local res = {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
         '\n', t[DESCRIPTION]}
       -- extract examples from unit tests
@@ -173,11 +179,12 @@ end
 
 
 --- Get translated string if possible.
---  @param self Parent object.
+--  @param tbl Parent object.
 --  @param txt Text to seek.
 --  @return Translated or initial text.
 help.get = function (tbl, txt)
-  local lng = tbl._locale.Dialog and tbl._locale.Dialog[txt]
+  local src = tbl._locales[tbl._lang]
+  local lng = src.Dialog and src.Dialog[txt]
   return lng or help.english[txt] or txt
 end
 
@@ -185,7 +192,14 @@ end
 --- Prepare main table for help info.
 --  @return New table.
 help.init = function ()
-  return setmetatable({_locale={}, _modules={}}, help)
+  local o = {_locales={default={}}, _modules={}, _als={}}
+  o.__index = o
+  return setmetatable(o, help)
+end
+
+
+help.newStore = function (self)
+  return setmetatable({_info={default={}}, _lang='default'}, self)  
 end
 
 
@@ -196,7 +210,7 @@ help.localization = function (dst, fName)
   fName = help.LOCALE..help.SEP..fName
   local lng = help.lngImport(fName)
   if lng then
-    dst._locale = lng
+    dst._locales[fName] = lng
   else
     io.write("File ", fName, " not found.\n")
   end
@@ -210,7 +224,7 @@ end
 help.makeFull = function (t, tGlob)
   local res = Sonata.info {}
   for nm, mod in pairs(t._modules) do
-    local acc = help.makeModule(mod, tGlob[nm])
+    local acc = help.makeModule(t, nm)
     for _, v in ipairs(acc) do
       res[#res+1] = v
     end
@@ -219,11 +233,39 @@ help.makeFull = function (t, tGlob)
 end
 
 
+help.prepareModule = function (mod, lang, alias)
+  local acc = {}
+  for k, v in pairs(mod) do
+    local t = nil
+    if k == '__module__' then
+      t = lang.__module__ or v              -- translate module description
+    else
+      local title = v[TITLE]
+      t = {}
+      t[TITLE] = title 
+      t[DESCRIPTION] = lang[title] or v[DESCRIPTION] -- translate description
+      t[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
+      t[EXTEND] = help._toExtend(title, alias)
+    end
+    acc[k] = t
+  end
+  return acc
+end
+
+
 --- Prepare description for module.
 --  @param t Table with functions.
 --  @param nm Module name.
 --  @return List of strings.
-help.makeModule = function (t, nm)
+help.makeModule = function (store, nm)
+  local t = store._info[store._lang][nm]
+  if not t then
+    local mod = store._modules[nm]
+    local lang = store._locales[store._lang]
+    local alias = store._als[nm]
+    store._info[store._lang][nm] = help.prepareModule(mod, lang, alias)
+    t = store._info[store._lang][nm]
+  end
   -- sort by categories
   local acc, txt = {}, ''
   for k, v in pairs(t) do
@@ -236,7 +278,7 @@ help.makeModule = function (t, nm)
     end
   end
   -- output
-  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, nm, Sonata.FORMAT_CLR,
+  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, store._als[nm], Sonata.FORMAT_CLR,
     '\n', txt, '\n'}
   for cat, n in pairs(acc) do          -- for each category
     res[#res+1] = '\t::'

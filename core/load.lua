@@ -13,6 +13,7 @@
 SonataHelp = require("core.help")
 -- Collect all descriptions
 About = SonataHelp.init()
+AboutStore = About:newStore()
 -- Text colors
 SonataHelp.useColors(SONATA_USE_COLOR)
 -- Command evaluation.
@@ -110,9 +111,9 @@ help = function(v)
   local res = nil
   v = v or 'main'
   if v == '*' then
-    res = About:makeFull(use)
+    res = AboutStore:makeFull(use)
   else
-    res = About:findObject(v, use) or Sonata.info(About:objectInfo(v))
+    res = AboutStore:findObject(v, use) or Sonata.info(About:objectInfo(v))
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end
@@ -308,7 +309,7 @@ end
 
 -- Run!!!
 io.write(SonataHelp.CMAIN, '\n', Sonata.getTitle(), '\n', SonataHelp.CHELP)
-io.write(About:get('intro'), SonataHelp.CRESET, "\n")
+io.write(AboutStore:get('intro'), SonataHelp.CRESET, "\n")
 
 
 -- choose interpreter
