@@ -113,7 +113,7 @@ help = function(v)
   if v == '*' then
     res = AboutStore:makeFull(use)
   else
-    res = AboutStore:findObject(v, use) or Sonata.info(About:objectInfo(v))
+    res = AboutStore:findObject(v, use) or Sonata.info(SonataHelp.objectInfo(v))
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end
@@ -280,7 +280,7 @@ end
 
 --================== EXECUTION =================
 
--- Read localization file and update descriptions
+-- Set default language
 if SONATA_LOCALIZATION then
   About:localization(SONATA_LOCALIZATION)
 end

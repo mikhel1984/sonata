@@ -120,19 +120,6 @@ end
 help.add = function (dst, tbl, nm, alias)
   dst._modules[nm] = tbl
   dst._als[nm] = alias
-  -- update
---  local lng = dst._locale[nm] or {}
---  for k, v in pairs(tbl) do
---    if k == '__module__' then
---      tbl[k] = lng.__module__ or v              -- translate module description
---    else
---      local title = v[TITLE]
---      v[DESCRIPTION] = lng[title] or v[DESCRIPTION] -- translate description
---      v[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
---      v[EXTEND] = help._toExtend(title, alias)
---    end
---  end
---  if lng then dst._locale[nm] = nil end  -- free memory
 end
 
 
@@ -149,10 +136,10 @@ help.findObject = function (tbl, obj, tGlob)
       -- module description
       return help.makeModule(tbl, nm)
     elseif mod[obj] then
+      -- init description
       if not tbl._info[tbl._lang][nm] then
         local lang = tbl._locales[tbl._lang]
-        local alias = tbl._als[nm]
-        tbl._info[tbl._lang][nm] = help.prepareModule(mod, lang, alias)
+        tbl._info[tbl._lang][nm] = help.prepareModule(mod, lang, tbl._als[nm])
       end
       -- function description
       local t = tbl._info[tbl._lang][nm][obj]
@@ -198,6 +185,8 @@ help.init = function ()
 end
 
 
+--- Prepare function info storage.
+--  @return New storage object.
 help.newStore = function (self)
   return setmetatable({_info={default={}}, _lang='default'}, self)  
 end
@@ -218,7 +207,7 @@ end
 
 
 --- Collect information for all modules.
---  @param t Table with all modules.
+--  @param t Module info storage.
 --  @param tGlob Table with aliases.
 --  @return List of strings.
 help.makeFull = function (t, tGlob)
@@ -233,6 +222,11 @@ help.makeFull = function (t, tGlob)
 end
 
 
+--- Generate module description for the given language.
+--  @param mod Source module description.
+--  @param lang Table with translations.
+--  @param alias Module alias name.
+--  @return table with function info.
 help.prepareModule = function (mod, lang, alias)
   local acc = {}
   for k, v in pairs(mod) do
@@ -254,7 +248,7 @@ end
 
 
 --- Prepare description for module.
---  @param t Table with functions.
+--  @param store Function info storage.
 --  @param nm Module name.
 --  @return List of strings.
 help.makeModule = function (store, nm)
@@ -262,8 +256,7 @@ help.makeModule = function (store, nm)
   if not t then
     local mod = store._modules[nm]
     local lang = store._locales[store._lang]
-    local alias = store._als[nm]
-    store._info[store._lang][nm] = help.prepareModule(mod, lang, alias)
+    store._info[store._lang][nm] = help.prepareModule(mod, lang, store._als[nm])
     t = store._info[store._lang][nm]
   end
   -- sort by categories
@@ -295,7 +288,7 @@ end
 --- Collect information about object.
 --  @param var Some object.
 --  @return table with descriptions.
-help.objectInfo = function (_, var)
+help.objectInfo = function (var)
   local mt = getmetatable(var)
   local t = {
     string.format('<%s>', mt and mt.type or type(var)),
