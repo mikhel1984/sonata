@@ -451,10 +451,17 @@ local function _addPolar (fig, t, tOpt)
   for j = 1, #tOpt do
     local c = sym and (j <= #sym and string.sub(sym, j, j) or string.sub(sym, -1, -1))
     local xy = acc[j]
+    if tOpt.line then
+      local prev = nil
+      for _, v in ipairs(xy) do
+        if prev then fig:_drawLine(prev[1], prev[2], v[1], v[2], j) end
+        prev = v
+      end
+    end
     for _, v in ipairs(xy) do
       if c then
         asciiplot.addPoint(fig, v[1], v[2], c)
-      else
+      elseif not tOpt.line then
         _addGraded(fig, v[1], v[2], j)
       end
     end
@@ -484,6 +491,13 @@ local function _addTable (fig, t, tInd)
   for j = 1, #tInd do
     local c = sym and (j <= #sym and string.sub(sym, j, j) or string.sub(sym, -1, -1))
     local k = tInd[j]
+    if tInd.line then
+      local prev = nil
+      for _, v in ipairs(t) do
+        if prev then fig:_drawLine(prev[1], prev[2], v[1], v[2], j) end 
+        prev = v
+      end
+    end
     for i = 1, #t do
       local row = t[i]
       if c then
@@ -1521,7 +1535,7 @@ asciiplot.tplot = function (self, t, tOpt)
   self._lastArgs = {t, tOpt}
   return self
 end
-_about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil}) --> F",
+_about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil, line=false}) --> F",
   "Plot the table data, choose columns if need."}
 
 

@@ -1291,6 +1291,19 @@ _about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
   'Generate range object.', _tag.AUX}
 
 
+--- Generate powers or 10.
+--  @param dBegin Beginning of range.
+--  @param dEnd End of range.
+--  @param dStep Step value (default is 1 or -1).
+--  @return table of 10^x, Range object.
+data.logrange = function (_, dBeg, dEnd, dStep)
+  local range = data.range(_, dBeg, dEnd, dStep)
+  return range:map(function (x) return 10^x end)
+end
+_about[data.logrange] = {':logrange(begin_d, end_d, step_d=±1) --> new_R)',
+  "Generate logarithmic range.", _tag.AUX}
+
+
 -- Get reference to data range in other table
 local mt_ref = {
   type = 'ref' ,
