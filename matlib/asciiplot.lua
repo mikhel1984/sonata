@@ -356,6 +356,7 @@ type = 'asciiplot',
 -- const
 WIDTH = 73, HEIGHT = 21,
 OUTLIERS = 2,  -- skip outliers over 2*std, ignore when non-positive
+PLOT_LINE = true,  -- draw lines between points
 -- symbols
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
@@ -454,7 +455,7 @@ local function _addPolar (fig, t, tOpt)
     if tOpt.line then
       local prev = nil
       for _, v in ipairs(xy) do
-        if prev then fig:_drawLine(prev[1], prev[2], v[1], v[2], j) end
+        if prev then asciiplot._drawLine(fig, prev[1], prev[2], v[1], v[2], j) end
         prev = v
       end
     end
@@ -494,7 +495,7 @@ local function _addTable (fig, t, tInd)
     if tInd.line then
       local prev = nil
       for _, v in ipairs(t) do
-        if prev then fig:_drawLine(prev[1], prev[2], v[1], v[2], j) end 
+        if prev then asciiplot._drawLine(fig, prev[1], prev[2], v[1], v[2], j) end 
         prev = v
       end
     end
@@ -523,9 +524,20 @@ end
 --  @param fig asciiplot object.
 --  @param tX List of x coordinates.
 --  @param tY List of y coordinates.
-local function _addXY (fig, tX, tY, ind)
+local function _addXY (fig, tX, tY, ind, line)
+  local o = nil
+  if line then
+    for i = 2, #tX do
+      asciiplot._drawLine(fig, tX[i-1], tY[i-1], tX[i], tY[i], ind)
+    end
+    o = _sonata_use_color and string.format('\x1B[3%dmo\x1B[0m', ind) or 'o'
+  end
   for i = 1, #tX do
-    _addGraded(fig, tX[i], tY[i], ind)
+    if line then
+      asciiplot.addPoint(fig, tX[i], tY[i], o)
+    else
+      _addGraded(fig, tX[i], tY[i], ind)
+    end
   end
   -- legend
   local s = string.char(string.byte('A') - 1 + ind)
@@ -1333,7 +1345,7 @@ asciiplot.plot = function (self, ...)
   -- collect data
   local i = 1
   repeat
-    local tx, ty = ag[i], ag[i+1]
+    local tx, ty, lines = ag[i], ag[i+1], nil
     -- data
     if _callable(tx) then
       -- save function, check region later
@@ -1349,6 +1361,7 @@ asciiplot.plot = function (self, ...)
       local a, b = _tf.findVectorRange(tx)
       if a < vmin then vmin = a end
       if b > vmax then vmax = b end
+      lines = asciiplot.PLOT_LINE
     else
       error('Unexpected argument in position '..tostring(i))
     end
@@ -1361,7 +1374,7 @@ asciiplot.plot = function (self, ...)
       i = i + 1
     end
     -- save
-    acc[#acc+1] = {tx, ty, legend}
+    acc[#acc+1] = {tx, ty, legend, lines}
   until i > #ag
   if not self._xfix then
     if vmin == math.huge then vmin = self._x._init[1] end
@@ -1401,7 +1414,7 @@ asciiplot.plot = function (self, ...)
   -- 'plot'
   for j = 1, #acc do
     local r = acc[j]
-    local c = _addXY(self, r[1], r[2], j)
+    local c = _addXY(self, r[1], r[2], j, r[3])
     self._legend[c] = r[3]
   end
   -- limits
