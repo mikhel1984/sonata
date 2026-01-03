@@ -108,8 +108,8 @@ setmetatable(use,
 --- Print SonataHelp information.
 --  @param v Function, module or nil.
 help = function(v)
-  local res = nil
   v = v or 'main'
+  local res = nil
   if v == '*' then
     res = About:makeFull(use, SONATA_LOCALIZATION)
   else

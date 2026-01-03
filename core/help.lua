@@ -141,7 +141,7 @@ help.findObject = function (tbl, obj, tGlob, lang)
     elseif mod[obj] then
       -- init description
       if not tbl._info[lang][nm] then
-        local tlang = tbl._locales[lang][nm]
+        local tlang = tbl._locales[lang][nm] or {}
         tbl._info[lang][nm] = help.prepareModule(mod, tlang, tbl._als[nm])
       end
       -- function description
@@ -183,13 +183,13 @@ end
 --- Prepare main table for help info.
 --  @return New table.
 help.init = function ()
-  local o = {
-    _locales={}, _modules={}, _als={}, _info = {}
-  }
+  local o = {_locales={}, _modules={}, _als={}, _info = {}}
   return setmetatable(o, help)
 end
 
 
+--- Prepare tables to keep descriptions.
+--  @param lang Language name (file).
 help.prepareLang = function (self, lang)
   lang = lang or help.DEFAULT
   self._locales[lang] = self._locales[lang] or {}
@@ -209,6 +209,7 @@ help.localization = function (dst, fName)
   else
     io.write("File ", fName, " not found.\n")
   end
+  return dst._locales[fName]
 end
 
 
@@ -262,7 +263,7 @@ help.makeModule = function (store, nm, lang)
   local t = store._info[lang][nm]
   if not t then
     local mod = store._modules[nm]
-    local tlang = store._locales[lang][nm]
+    local tlang = store._locales[lang][nm] or {}
     store._info[lang][nm] = help.prepareModule(mod, tlang, store._als[nm])
     t = store._info[lang][nm]
   end
