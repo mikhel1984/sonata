@@ -141,7 +141,7 @@ help.findObject = function (tbl, obj, tGlob, lang)
     elseif mod[obj] then
       -- init description
       if not tbl._info[lang][nm] then
-        local tlang = tbl._locales[lang]
+        local tlang = tbl._locales[lang][nm]
         tbl._info[lang][nm] = help.prepareModule(mod, tlang, tbl._als[nm])
       end
       -- function description
@@ -262,7 +262,7 @@ help.makeModule = function (store, nm, lang)
   local t = store._info[lang][nm]
   if not t then
     local mod = store._modules[nm]
-    local tlang = store._locales[lang]
+    local tlang = store._locales[lang][nm]
     store._info[lang][nm] = help.prepareModule(mod, tlang, store._als[nm])
     t = store._info[lang][nm]
   end
