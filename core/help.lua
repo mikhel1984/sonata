@@ -46,6 +46,8 @@ OTHER = 'other',
 NEW = 'constructor',
 META = 'methods',
 STATIC = 'common',
+-- default language
+DEFAULT = 'default',
 -- file name separator
 SEP = string.sub(package.config, 1, 1),
 -- colors
@@ -128,21 +130,22 @@ end
 --  @param obj Something that we would like to find.
 --  @param tGlob Table with aliases.
 --  @return Description or nil.
-help.findObject = function (tbl, obj, tGlob)
+help.findObject = function (tbl, obj, tGlob, lang)
+  lang = lang or help.DEFAULT
   -- check module
   local str = type(obj) == 'string'
   for nm, mod in pairs(tbl._modules) do
     if str and (nm == obj or tGlob[nm] == obj) then
       -- module description
-      return help.makeModule(tbl, nm)
+      return help.makeModule(tbl, nm, lang)
     elseif mod[obj] then
       -- init description
-      if not tbl._info[tbl._lang][nm] then
-        local lang = tbl._locales[tbl._lang]
-        tbl._info[tbl._lang][nm] = help.prepareModule(mod, lang, tbl._als[nm])
+      if not tbl._info[lang][nm] then
+        local tlang = tbl._locales[lang]
+        tbl._info[lang][nm] = help.prepareModule(mod, tlang, tbl._als[nm])
       end
       -- function description
-      local t = tbl._info[tbl._lang][nm][obj]
+      local t = tbl._info[lang][nm][obj]
       local res = {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
         '\n', t[DESCRIPTION]}
       -- extract examples from unit tests
@@ -169,8 +172,9 @@ end
 --  @param tbl Parent object.
 --  @param txt Text to seek.
 --  @return Translated or initial text.
-help.get = function (tbl, txt)
-  local src = tbl._locales[tbl._lang]
+help.get = function (tbl, txt, lang)
+  lang = lang or help.DEFAULT
+  local src = tbl._locales[lang]
   local lng = src.Dialog and src.Dialog[txt]
   return lng or help.english[txt] or txt
 end
@@ -179,16 +183,17 @@ end
 --- Prepare main table for help info.
 --  @return New table.
 help.init = function ()
-  local o = {_locales={default={}}, _modules={}, _als={}}
-  o.__index = o
+  local o = {
+    _locales={}, _modules={}, _als={}, _info = {}
+  }
   return setmetatable(o, help)
 end
 
 
---- Prepare function info storage.
---  @return New storage object.
-help.newStore = function (self)
-  return setmetatable({_info={default={}}, _lang='default'}, self)  
+help.prepareLang = function (self, lang)
+  lang = lang or help.DEFAULT
+  self._locales[lang] = self._locales[lang] or {}
+  self._info[lang] = self._info[lang] or {}
 end
 
 
@@ -196,10 +201,11 @@ end
 --  @param self Parent object.
 --  @param fName Name of the file with translated text.
 help.localization = function (dst, fName)
-  fName = help.LOCALE..help.SEP..fName
-  local lng = help.lngImport(fName)
+  local path = help.LOCALE..help.SEP..fName
+  local lng = help.lngImport(path)
   if lng then
     dst._locales[fName] = lng
+    help.prepareLang(dst, fName)
   else
     io.write("File ", fName, " not found.\n")
   end
@@ -210,10 +216,11 @@ end
 --  @param t Module info storage.
 --  @param tGlob Table with aliases.
 --  @return List of strings.
-help.makeFull = function (t, tGlob)
+help.makeFull = function (t, tGlob, lang)
+  lang = lang or help.DEFAULT
   local res = Sonata.info {}
   for nm, mod in pairs(t._modules) do
-    local acc = help.makeModule(t, nm)
+    local acc = help.makeModule(t, nm, lang)
     for _, v in ipairs(acc) do
       res[#res+1] = v
     end
@@ -227,17 +234,17 @@ end
 --  @param lang Table with translations.
 --  @param alias Module alias name.
 --  @return table with function info.
-help.prepareModule = function (mod, lang, alias)
+help.prepareModule = function (mod, tlang, alias)
   local acc = {}
   for k, v in pairs(mod) do
     local t = nil
     if k == '__module__' then
-      t = lang.__module__ or v              -- translate module description
+      t = tlang.__module__ or v              -- translate module description
     else
       local title = v[TITLE]
       t = {}
       t[TITLE] = title 
-      t[DESCRIPTION] = lang[title] or v[DESCRIPTION] -- translate description
+      t[DESCRIPTION] = tlang[title] or v[DESCRIPTION] -- translate description
       t[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
       t[EXTEND] = help._toExtend(title, alias)
     end
@@ -251,13 +258,13 @@ end
 --  @param store Function info storage.
 --  @param nm Module name.
 --  @return List of strings.
-help.makeModule = function (store, nm)
-  local t = store._info[store._lang][nm]
+help.makeModule = function (store, nm, lang)
+  local t = store._info[lang][nm]
   if not t then
     local mod = store._modules[nm]
-    local lang = store._locales[store._lang]
-    store._info[store._lang][nm] = help.prepareModule(mod, lang, store._als[nm])
-    t = store._info[store._lang][nm]
+    local tlang = store._locales[lang]
+    store._info[lang][nm] = help.prepareModule(mod, tlang, store._als[nm])
+    t = store._info[lang][nm]
   end
   -- sort by categories
   local acc, txt = {}, ''
