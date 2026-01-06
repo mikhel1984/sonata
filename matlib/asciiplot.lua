@@ -1414,7 +1414,7 @@ asciiplot.plot = function (self, ...)
   -- 'plot'
   for j = 1, #acc do
     local r = acc[j]
-    local c = _addXY(self, r[1], r[2], j, r[3])
+    local c = _addXY(self, r[1], r[2], j, r[4])
     self._legend[c] = r[3]
   end
   -- limits
