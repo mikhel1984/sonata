@@ -87,7 +87,7 @@ generator.doc = function (locName, tModules)
     '.DESCRIPT {text-align:center; font-style:italic; }',
     '</style>',
     '<a name="Top"></a>',
-    '<div><h1 align="center">Sonata Lua Calculus</h1>',
+    sformat('<div><h1 align="center">Sonata v.%d.%02d</h1>', Sonata.MAJOR_V, Sonata.MINOR_V),
   }
   -- prepare module list
   local sortedModules = {}
@@ -105,7 +105,7 @@ generator.doc = function (locName, tModules)
   base = sgsub(base, '(%u%u%u+)', '<b>%1</b>')
   res[#res+1] = sformat('<p>%s</p>', base)
   res[#res+1] =
-    '<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>'
+    '<p><a href="https://github.com/mikhel1984/sonata">Project repository</a></p></div>'
 
   local fName = sformat('%s%s%s', Help.LOCALE, Help.SEP, locName)
   -- prepare new file
@@ -125,7 +125,7 @@ generator.doc = function (locName, tModules)
   end
 
   res[#res+1] =
-    '<div><p align="center"><i>2017-2024, Stanislav Mikhel</i></p></div>'
+    '<div><p align="center"><i>2017-2026, Stanislav Mikhel</i></p></div>'
   res[#res+1] = '</body></html>'
 
   -- save
