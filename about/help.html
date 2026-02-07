@@ -11,7 +11,7 @@ DIV {margin-left: 10px;}
 .DESCRIPT {text-align:center; font-style:italic; }
 </style>
 <a name="Top"></a>
-<div><h1 align="center">Sonata Lua Calculus</h1>
+<div><h1 align="center">Sonata v.1.02</h1>
 <ul>
 <li><a href="#Ap">asciiplot</a></li>
 <li><a href="#Int">bigint</a></li>
@@ -51,33 +51,33 @@ Sonata is a Lua program for mathematical calculations.<br>
 	--lang	Generation or updating of the localization file.<br>
 		e.g. --lang          # show current language<br>
 		     --lang eo       # file for Esperanto localization<br>
+	--io	Method for interaction.<br>
+		e.g. --io tcp 23456  # server mode<br>
+		     --io w          # output window mode<br>
+	--doc	Generating a documentation page.<br>
+		e.g. --doc           # original documentation<br>
+		     --doc ru        # translated documentation<br>
 	--new	Generating a template for a new module.<br>
 		e.g. --new  matrices  Mat  "Matrix operations."<br>
 	--test	Run unit tests.<br>
 		e.g. --test          # all tests<br>
 		     --test array    # tests for the given module<br>
-	--doc	Generating a documentation page.<br>
-		e.g. --doc           # original documentation<br>
-		     --doc ru        # translated documentation<br>
-	--io	Method for interaction.<br>
-		e.g. --io tcp 23456  # server mode<br>
-		     --io w          # output window mode<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 1.01<br>
+<b>VERSION</b>: 1.02<br>
 <br>
-<b>MODULES</b>: bigint, data, matrix, extremum, polynomial, rational, fuzzy, random, graph, const, units, qubit, geodesy, asciiplot, quaternion, main, lens, symbolic, numeric, gnuplot, special, complex.<br>
+<b>MODULES</b>: special, qubit, graph, matrix, quaternion, main, data, const, units, fuzzy, lens, extremum, gnuplot, rational, complex, symbolic, asciiplot, geodesy, random, bigint, polynomial, numeric.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
-<p><a href="https://github.com/mikhel1984/sonata/wiki">Project Wiki</a></p></div>
+<p><a href="https://github.com/mikhel1984/sonata">Project repository</a></p></div>
 <div><a name="Ap"></a>
 <h3># Ap (asciiplot) #</h3>
 <p class="descript">Use pseudography for data visualization.</p>
 <p><b>Ap (width_N=73, height_N=21) --> new_F</b> - Create new asciiplot.<br>
 <b>Ap:concat(F1, F2) --> str</b> - Horizontal concatenation of figures with the same height. Equal to F1..F2.<br>
 <b>F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')</b> - Add line from (x1,y1) to (x2,y2).<br>
-<b>F:addPoint(x_d, y_d, char_s='*')</b> - Add point (x,y) using char.<br>
+<b>F:addPoint(x_d, y_d, char_s='*') --> row_N, col_N|nil</b> - Add point (x,y) using char.<br>
 <b>F:addPose(row_N, col_N, char_s='*')</b> - Add character to the given position.<br>
 <b>F:addString(row_N, col_N, str)</b> - Add string to the given position.<br>
 <b>F:axes() --> tbl</b> - Get {'size','log','range','view','fix'} for each axis.<br>
@@ -89,11 +89,11 @@ Sonata is a Lua program for mathematical calculations.<br>
 <b>F:redraw() --> F|nil</b> - Apply the last draw command. Equal to ~F.<br>
 <b>F:reset()</b> - Prepare a clean canvas.<br>
 <b>F:scale(factor_d | src_F)</b> - Change figure size w.r.t. initial size.<br>
-<b>F:setX(par_t)</b> - X axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.<br>
-<b>F:setY(par_t)</b> - Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.<br>
-<b>F:setZ(par_t)</b> - Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.<br>
+<b>F:setX(par_t)</b> - Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells).<br>
+<b>F:setY(par_t)</b> - Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells).<br>
+<b>F:setZ(par_t)</b> - Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells).<br>
 <b>F:title(str)</b> - Set new title.<br>
-<b>F:tplot(data_t, cols_t={x=1, polar=false, sym=nil}) --> F</b> - Plot the table data, choose columns if need.<br></p>
+<b>F:tplot(data_t, cols_t={x=1, polar=false, sym=nil, line=false}) --> F</b> - Plot the table data, choose columns if need.<br></p>
 <pre class="example">
 
 -- use 'asciiplot'
@@ -602,8 +602,12 @@ ans = C.myConst               -->  nil
 <b>D:harmmean(data_t, weigh_t=nil) --> num</b> - Harmonic mean.<br>
 <b>D:histPlot(data_t, edges_t|N=10) --> fig</b> - Find and show histogram.<br>
 <b>D:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t</b> - Calculate amount of bins. Edges can be either number or table.<br>
+<b>D:icomb(list_t, N) --> fn()->t</b> - Iterate over all n-length combinations of elements from the source list.<br>
+<b>D:inest(iterators_t, ...) --> fn()->t</b> - Combine sequence of nested iterators, each previous iterator generates agrument for the next one.<br>
+<b>D:iperm(list_t) --> fn()->t</b> - Iterate over all permutations of the source list.<br>
 <b>D:is(data_t, fn|str) --> weigh_t</b> - Find weights using condition (boolean function or string).<br>
 <b>D:isNot(data_t, fn|str) --> weigh_t</b> - Find inverted weights using condition (boolean function or string).<br>
+<b>D:logrange(begin_d, end_d, step_d=±1) --> new_R)</b> - Generate logarithmic range.<br>
 <b>D:max(data_t) --> var, ind_N</b> - Maximal element and its index.<br>
 <b>D:md(data_t, names_t=nil, row_fn=nil) --> str</b> - Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.<br>
 <b>D:mean(data_t, wight_t=nil) --> num</b> - Calculate average value. Weights can be used.<br>
@@ -785,6 +789,42 @@ fn = function (v)
 end
 c = D:md(t, {'sq', 'avg'}, fn)
 print(c)
+
+-- iterate over combinations
+q = {1,2,3}
+n = 0
+for _ in D:icomb(q, 2) do n = n+1 end 
+ans = n                       -->  3
+
+-- iterate over permutations
+n = 0
+for _ in D:iperm(q) do n = n+1 end
+ans = n                       -->  6
+
+-- nested iterators
+-- get all permutations of N elements
+seq = {
+  -- wrap to remove 'self' from arguments
+  function (...) return D:icomb(...) end,
+  function (...) return D:iperm(...) end,
+}
+n = 0
+for _ in D:inest(seq, q, 2) do n = n+1 end
+ans = n                       -->  6
+
+-- iterate over all combination length
+inum = function (A)
+  local i = -1
+  return function ()
+    i = i+1  -- from 0 to #A
+    if i > #A then return end
+    return A, i
+  end  
+end
+seq = {inum, function (...) return D:icomb(...) end}
+for v in D:inest(seq, q) do
+  print('{'..table.concat(v, ', ')..'}')
+end
 
 -- even numbers
 b = D:range(2, 10, 2)
@@ -1038,7 +1078,7 @@ ans = fs[3].weight          --.1>  0.8
 
 -- evaluate and defuzzify
 val, out_set = fs {temperature = 28}
-ans = val                   --.1>  60.7
+ans = val                   --.1>  61.1
 
 -- result in the field ANS
 fig = fs:apPlot('fan_speed', 'ANS')
@@ -1297,6 +1337,7 @@ f:show()
 <p><b>G:add(n1, n2=nil, w_d=1)</b> - Add new node or edge.<br>
 <b>G:addEdges(list_t)</b> - Import edges and weights from list.<br>
 <b>G:addNodes(list_t)</b> - Import nodes from list.<br>
+<b>G:apPlot([width_N, height_N]) --> fig</b> - Show graph structure with asciiplot. Arrows are marked with 'A'.<br>
 <b>G:components() --> G_t</b> - Get list of connected components.<br>
 <b>G:copy() --> cpy_G</b> - Get copy of the graph.<br>
 <b>G:dot(fname_s=nil) --> str</b> - Save or return graph structure in dot notation.<br>
@@ -1327,6 +1368,9 @@ f:show()
 Graph = require 'matlib.graph'
 -- for pack/unpack
 D = require 'matlib.data'
+-- additional
+require 'matlib.matrix'
+require 'matlib.asciiplot'
 
 -- build undirected graph
 a = Graph()
@@ -1347,7 +1391,7 @@ ans = a:size()                -->  6
 a:addEdges {
   {'b', 'e'},
   {'x', 'y'},
-  {'e', 'c', 2},  -- with waigth
+  {'e', 'c', 2},  -- with weigth
 }
 -- remove node
 a:remove('a')
@@ -1369,6 +1413,9 @@ b = Graph {K=5}
 ans = b:isComplete()          --> true
 
 ans = b:isEuler()             --> true
+
+-- show
+print(b:apPlot())
 
 -- directed graph
 c = Graph {C=4, dir=true, name='c'}
@@ -1412,7 +1459,7 @@ print(c:matrix())
 d = Graph{O=3, name='a'} .. Graph{O=3, name='b'}
 -- generate edges with probability 0.5
 d:randp(0.5)
-print(d:edges())
+print(#d:edges())
 
 -- set 8 random edges
 d:rand(8)
@@ -1470,6 +1517,7 @@ Lens = require 'matlib.lens'
 -- external dependencies, can be loaded implicitly
 require 'matlib.numeric'  -- for root searching
 require 'matlib.complex'  -- for beam transformation
+require 'matlib.matrix'   -- calc determinant
 
 -- define a simple lense
 n1 = 1      -- air
@@ -1573,9 +1621,9 @@ ans, _ = cavity:emit(lambda)         --.1> 300.0
 <h3># Main (main) #</h3>
 <p class="descript">Lua based mathematics.</p>
 <p><b>Fn(expr_s) --> fn</b> - Generate function from expression 'args -> value'<br>
-<b>Map(fn, in_t) --> out_t</b> - Evaluate function for each table element.<br>
+<b>Map(fn, in_t) --> out_t|nil</b> - Evaluate function for each table element.<br>
 <b>PI --> 3.14</b> - Number pi.<br>
-<b>Plot(...) --> str</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.<br>
+<b>Plot(args_t) --> fig</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc. Parameters could be added with axis prefix like xrange, ylog etc.<br>
 <b>Round(v, decimal_N=0) --> round_v</b> - Round value, define number of decimal digits or tolerance.<br>
 <b>abs(x) --> y</b> - Absolute value.<br>
 <b>acos(x) --> y</b> - Inverse cosine x.<br>
@@ -1633,8 +1681,8 @@ ans = c[1]                  --.3>  0.909
 
 -- simplified asciiplot call
 -- use table to change range
-xrng, yrng = {-3, 3}, {-1, 1}
-s = Plot(math.cos, 'cos', xrng, yrng, 'range correct')
+--xrng, yrng = {-3, 3}, {-1, 1}
+s = Plot {math.cos, 'cos', xrange={-3,3}, yrange={-1,1}}
 print(s)
 
 -- use Lua functions if need
@@ -1834,7 +1882,6 @@ ans = Mat:D({1,2,3})          -->  Mat {{1,0,0},
 
 -- get diagonal
 ans = g:diag()                -->  Mat {{1},{5},{9}}
-
 
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
@@ -2949,5 +2996,5 @@ ans = D:unpack(t)             -->  a
 
 --</pre>
 <a href="#Top">Top</a></div>
-<div><p align="center"><i>2017-2024, Stanislav Mikhel</i></p></div>
+<div><p align="center"><i>2017-2026, Stanislav Mikhel</i></p></div>
 </body></html>

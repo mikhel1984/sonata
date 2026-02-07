@@ -140,7 +140,7 @@ end
 --  @param tModule Table with description for all modules.
 generator.md = function (tModule)
   local res = {
-    "# Sonata Lua Calculus",
+    sformat("# Sonata v.%d.%02d", Sonata.MAJOR_V, Sonata.MINOR_V),
     "",
   }
   -- prepare module list

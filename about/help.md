@@ -1,4 +1,4 @@
-# Sonata Lua Calculus
+# Sonata v.1.02
 
 ## Ap (asciiplot)
 Use pseudography for data visualization.
@@ -9,7 +9,7 @@ Use pseudography for data visualization.
 
 **F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')** - Add line from (x1,y1) to (x2,y2).
 
-**F:addPoint(x_d, y_d, char_s='*')** - Add point (x,y) using char.
+**F:addPoint(x_d, y_d, char_s='*') --> row_N, col_N|nil** - Add point (x,y) using char.
 
 **F:addPose(row_N, col_N, char_s='*')** - Add character to the given position.
 
@@ -33,15 +33,15 @@ Use pseudography for data visualization.
 
 **F:scale(factor_d | src_F)** - Change figure size w.r.t. initial size.
 
-**F:setX(par_t)** - X axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.
+**F:setX(par_t)** - Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells).
 
-**F:setY(par_t)** - Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.
+**F:setY(par_t)** - Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells).
 
-**F:setZ(par_t)** - Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.
+**F:setZ(par_t)** - Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells).
 
 **F:title(str)** - Set new title.
 
-**F:tplot(data_t, cols_t={x=1, polar=false, sym=nil}) --> F** - Plot the table data, choose columns if need.
+**F:tplot(data_t, cols_t={x=1, polar=false, sym=nil, line=false}) --> F** - Plot the table data, choose columns if need.
 
 
 ## Int (bigint)
@@ -213,9 +213,17 @@ Data processing and statistics.
 
 **D:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t** - Calculate amount of bins. Edges can be either number or table.
 
+**D:icomb(list_t, N) --> fn()->t** - Iterate over all n-length combinations of elements from the source list.
+
+**D:inest(iterators_t, ...) --> fn()->t** - Combine sequence of nested iterators, each previous iterator generates agrument for the next one.
+
+**D:iperm(list_t) --> fn()->t** - Iterate over all permutations of the source list.
+
 **D:is(data_t, fn|str) --> weigh_t** - Find weights using condition (boolean function or string).
 
 **D:isNot(data_t, fn|str) --> weigh_t** - Find inverted weights using condition (boolean function or string).
+
+**D:logrange(begin_d, end_d, step_d=±1) --> new_R)** - Generate logarithmic range.
 
 **D:max(data_t) --> var, ind_N** - Maximal element and its index.
 
@@ -439,6 +447,8 @@ Operations with graphs.
 
 **G:addNodes(list_t)** - Import nodes from list.
 
+**G:apPlot([width_N, height_N]) --> fig** - Show graph structure with asciiplot. Arrows are marked with 'A'.
+
 **G:components() --> G_t** - Get list of connected components.
 
 **G:copy() --> cpy_G** - Get copy of the graph.
@@ -529,11 +539,11 @@ Lua based mathematics.
 
 **Fn(expr_s) --> fn** - Generate function from expression 'args -> value'
 
-**Map(fn, in_t) --> out_t** - Evaluate function for each table element.
+**Map(fn, in_t) --> out_t|nil** - Evaluate function for each table element.
 
 **PI --> 3.14** - Number pi.
 
-**Plot(...) --> str** - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.
+**Plot(args_t) --> fig** - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc. Parameters could be added with axis prefix like xrange, ylog etc.
 
 **Round(v, decimal_N=0) --> round_v** - Round value, define number of decimal digits or tolerance.
 
