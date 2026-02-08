@@ -175,6 +175,42 @@ end
 c = D:md(t, {'sq', 'avg'}, fn)
 print(c)
 
+-- iterate over combinations
+q = {1,2,3}
+n = 0
+for _ in D:icomb(q, 2) do n = n+1 end 
+ans = n                       -->  3
+
+-- iterate over permutations
+n = 0
+for _ in D:iperm(q) do n = n+1 end
+ans = n                       -->  6
+
+-- nested iterators
+-- get all permutations of N elements
+seq = {
+  -- wrap to remove 'self' from arguments
+  function (...) return D:icomb(...) end,
+  function (...) return D:iperm(...) end,
+}
+n = 0
+for _ in D:inest(seq, q, 2) do n = n+1 end
+ans = n                       -->  6
+
+-- iterate over all combination length
+inum = function (A)
+  local i = -1
+  return function ()
+    i = i+1  -- from 0 to #A
+    if i > #A then return end
+    return A, i
+  end  
+end
+seq = {inum, function (...) return D:icomb(...) end}
+for v in D:inest(seq, q) do
+  print('{'..table.concat(v, ', ')..'}')
+end
+
 -- even numbers
 b = D:range(2, 10, 2)
 ans = b[2]                    -->  4
@@ -239,6 +275,7 @@ local function _copyObj(v)
     return v
   end
 end
+
 
 
 --- Recursive making or array with given value.
@@ -564,7 +601,7 @@ _about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 --  @return Table with the filtered elements.
 data.filter = function (_, t, vCond)
   local res = {}
-  if type(vCond) == 'string' then vCond = _utils.Fn(vCond, 1) end
+  if type(vCond) == 'string' then vCond = _utils.Fn(vCond) end
   if type(vCond) == 'function' then
     -- boolean function
     for i = 1, #t do
@@ -606,9 +643,9 @@ _about[data.freq] = {":freq(data_t) --> tbl",
 --  @param cond Condition function f(v,i) or string.
 --  @return obtained list.
 data.gen = function (_, t, fn, cond)
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
-  -- condition function f(index, value)
-  if cond and type(cond) == 'string' then cond = _utils.Fn(cond, 2) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  -- condition function f(value, index)
+  if type(cond) == 'string' then cond = _utils.Fn(cond) end
   local q = {}
   if cond then
     for i, v in ipairs(t) do
@@ -735,6 +772,94 @@ data.histPlot = function (_, t, rng)
 end
 _about[data.histPlot] = {":histPlot(data_t, edges_t|N=10) --> fig",
   "Find and show histogram.", _tag.STAT}
+  
+
+--- Iterate over all n-length combinations for elements from the list t.
+--  @param t Source list.
+--  @param n Length of combination.
+--  @return iterator over combinations.
+data.icomb = function (_, t, n)
+  local ind, w = {0}, #t-n
+  -- iterator
+  return function ()
+    -- check index
+    while #ind > 0 and ind[#ind] - #ind >= w do
+      table.remove(ind)
+    end
+    if #ind == 0 then return end
+    -- next index
+    local p = table.remove(ind)
+    while #ind < n do
+      p = p+1
+      table.insert(ind, p)
+    end
+    -- make result
+    local res = {}
+    for i = 1, n do res[i] = t[ ind[i] ] end  
+    return res
+  end 
+end
+mt_list.icomb = _wrapCall(data.icomb)
+_about[data.icomb] = {":icomb(list_t, N) --> fn()->t",
+  "Iterate over all n-length combinations of elements from the source list."}
+
+
+--- Make iterator as a sequence of nested iterators.
+--  Each next iterator takes argument from the previous one.
+--  @param t Sequence of iterators.
+--  @param ... Arguments of the first iterator.
+--  @return complex iterator.
+data.inest = function (_, t, ...)
+  local stack = {t[1](...)}  -- init first
+  -- iterator
+  return function ()
+    local p = _ver.pack( stack[#stack]() )
+    -- remove completed
+    while #p == 0 and #stack > 1 do
+      table.remove(stack)
+      p = _ver.pack( stack[#stack]() )  -- new element for iteration
+    end
+    -- update iterators
+    while #p > 0 and #stack < #t do
+      stack[#stack+1] = t[#stack+1]( _ver.unpack(p) )
+      p = _ver.pack( stack[#stack]() )  -- iterate
+    end
+    return _ver.unpack(p)
+  end
+end
+_about[data.inest] = {":inest(iterators_t, ...) --> fn()->t",
+  "Combine sequence of nested iterators, each previous iterator generates agrument for the next one."}
+
+
+--- Iterate over all permutations for the given list elements.
+--  @param t Source list.
+--  @return iterator over permutations.
+data.iperm = function (_, t)
+  local ind, n = {}, #t
+  -- init
+  local p, loop = n, n
+  for i = 1, n do ind[i] = i end
+  -- iterator
+  return function ()
+    if loop > 1 or p > 1 then  -- ignore last permutation
+      local res = {}
+      for i = 1, n do res[i] = t[ ind[i] ] end
+      -- next index
+      if p == 1 then
+        loop = loop-1
+        p = n
+      end
+      -- swap
+      local q = p-1
+      ind[p], ind[q] = ind[q], ind[p]
+      p = q
+      return res
+    end
+  end
+end
+mt_list.iperm = _wrapCall(data.iperm)
+_about[data.iperm] = {":iperm(list_t) --> fn()->t",
+  "Iterate over all permutations of the source list."}
 
 
 --- Find weights (1/0) based on condition.
@@ -742,7 +867,7 @@ _about[data.histPlot] = {":histPlot(data_t, edges_t|N=10) --> fig",
 --  @param fn Condition, boolean function or string.
 --  @return Table of 1 and 0.
 data.is = function (_, t, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 1 or 0
@@ -759,7 +884,7 @@ _about[data.is] = {":is(data_t, fn|str) --> weigh_t",
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
 data.isNot = function (_, t, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 0 or 1
@@ -914,7 +1039,7 @@ _about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
 --  @return Result of reduction.
 data.reduce = function (_, t, fn, val)
   val = val or 0
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 2) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   for i = 1, #t do val = fn(val, t[i]) end
   return val
 end
@@ -941,7 +1066,7 @@ _about[data.reverse] = {":reverse(data_t)",
 --  @param t List of elements.
 --  @param fn Comparison function or string.
 data.sort = function (_, t, fn)
-  if type(fn) == "string" then fn = _utils.Fn(fn, 2) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   return _mergeSort(t, {}, 1, #t, fn)
 end
 mt_list.sort = function (self, fn) data.sort(nil, self._tbl, fn); return self end
@@ -1002,7 +1127,7 @@ _about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl",
 --  @return List of values fn(...).
 data.zip = function (_, fn, ...)
   local ag, res = {...}, {}
-  if type(fn) == 'string' then fn = _utils.Fn(fn, #ag) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   local x, stop = {}, false
   for i = 1, math.huge do
     for j = 1, #ag do
@@ -1164,6 +1289,19 @@ data.range = function (_, dBegin, dEnd, dStep)
 end
 _about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
   'Generate range object.', _tag.AUX}
+
+
+--- Generate powers or 10.
+--  @param dBegin Beginning of range.
+--  @param dEnd End of range.
+--  @param dStep Step value (default is 1 or -1).
+--  @return table of 10^x, Range object.
+data.logrange = function (_, dBeg, dEnd, dStep)
+  local range = data.range(_, dBeg, dEnd, dStep)
+  return range:map(function (x) return 10^x end)
+end
+_about[data.logrange] = {':logrange(begin_d, end_d, step_d=±1) --> new_R)',
+  "Generate logarithmic range.", _tag.AUX}
 
 
 -- Get reference to data range in other table

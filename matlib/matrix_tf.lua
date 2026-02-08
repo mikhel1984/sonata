@@ -59,6 +59,21 @@ end
 }
 
 
+--- Do dst += k*M
+--  @param dst Destination matrix.
+--  @param k Scalar coefficient.
+--  @param M Other matrix.
+transform.addScale = function (dst, k, M)
+  local cols = dst._cols
+  for r = 1, dst._rows do
+    local dr, mr = dst[r], M[r]
+    for c = 1, cols do
+      dr[c] = dr[c] + k*mr[c]
+    end
+  end
+end
+
+
 --- Bidiagonalization.
 --  Find such U, B, V that U*B*V:T() = M and
 --  B is upper bidiagonal, U and V are ortogonal.
@@ -151,7 +166,7 @@ transform.firstMinorSub = function (M, ir, ic)
     for c = ic+1, M._cols do rr[c-1] = mr[c] end
     res[r-1] = rr
   end
-  return M._init(M._rows-1, M._cols-1, res)
+  return M._initCheck(M._rows-1, M._cols-1, res)
 end
 
 
@@ -313,9 +328,8 @@ ref_transpose.__index = function (self, k)
     return tbl
   elseif k == 'data' then
     return tbl.src
-  else
-    return tbl.src.__index(self, k)
   end
+  return tbl.src.__index(self, k)
 end
 
 
@@ -564,7 +578,7 @@ ref_concat.__index = function (self, k)
     if tbl.vertical then
       local n, src = 1, tbl.src
       while n < #src and k > src[n]._rows do
-        k, n = k - src[n]._rows, n + 1
+        k, n = k - src[n]._rows, n+1
       end
       tbl.mat = src[n]
     end
@@ -572,9 +586,8 @@ ref_concat.__index = function (self, k)
     return tbl
   elseif k == 'data' then
     return tbl.src
-  else
-    return transform._methods.__index(self, k)
   end
+  return transform._methods.__index(self, k)
 end
 
 
@@ -856,17 +869,12 @@ end
 
 
 -- List of reference types
-local refs = {
+transform.refs = {
   [ref_transpose] = true,
   [ref_range] = true,
   [ref_reshape] = true,
   [ref_concat] = true,
 }
-
-
---- Check if the object is reference.
---  @return true when matrix is ref.
-transform.isref = function (v) return refs[getmetatable(v)] end
 
 
 return transform

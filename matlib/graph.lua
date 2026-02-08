@@ -24,6 +24,9 @@
 Graph = require 'matlib.graph'
 -- for pack/unpack
 D = require 'matlib.data'
+-- additional
+require 'matlib.matrix'
+require 'matlib.asciiplot'
 
 -- build undirected graph
 a = Graph()
@@ -44,7 +47,7 @@ ans = a:size()                -->  6
 a:addEdges {
   {'b', 'e'},
   {'x', 'y'},
-  {'e', 'c', 2},  -- with waigth
+  {'e', 'c', 2},  -- with weigth
 }
 -- remove node
 a:remove('a')
@@ -66,6 +69,9 @@ b = Graph {K=5}
 ans = b:isComplete()          --> true
 
 ans = b:isEuler()             --> true
+
+-- show
+print(b:apPlot())
 
 -- directed graph
 c = Graph {C=4, dir=true, name='c'}
@@ -109,7 +115,7 @@ print(c:matrix())
 d = Graph{O=3, name='a'} .. Graph{O=3, name='b'}
 -- generate edges with probability 0.5
 d:randp(0.5)
-print(d:edges())
+print(#d:edges())
 
 -- set 8 random edges
 d:rand(8)
@@ -144,11 +150,38 @@ ans = D:unpack(t)             --> b
 
 --	LOCAL
 
-local _utils = require("matlib.utils")
-local _queue = _utils.queue
-_utils = _utils.utils
+local _ext = {
+  utils = require("matlib.utils"),
+  -- ap = require("matlib.asciiplot"),
+}
 
+local _queue = _ext.utils.queue
+local _format = string.format
 local _tag = { PROPERTY='property', EXPORT='export' }
+
+
+--- Get sequence of nodes in depth-first order.
+--  @param G Source graph.
+--  @param vStart Initial node.
+--  @return table with nodes.
+local function _dfsSeq (G, vStart)
+  local pred, res = {}, {}
+  local stack = {{vStart, vStart}}
+  repeat
+    local curr = table.remove(stack)
+    local node = curr[1]
+    if not pred[node] then
+      pred[node] = curr[2]
+      res[#res+1] = node
+      for k, v in pairs(G._[node]) do
+        if v and not pred[k] then
+          table.insert(stack, {k, node})
+        end
+      end
+    end
+  until #stack == 0
+  return res
+end
 
 
 --- Get key with minimum value, remove it
@@ -203,9 +236,11 @@ end
 --  @param n Expected node number.
 --  @return list of strings.
 local function _makeNodes (n, s)
-  assert(n > 0, 'Wrong node size')
+  if n <= 0 then
+    error 'Wrong node size'
+  end
   local res = {}
-  for i = 1, n do res[#res+1] = string.format('%s%d', s, i) end
+  for i = 1, n do res[#res+1] = _format('%s%d', s, i) end
   return res
 end
 
@@ -213,7 +248,7 @@ end
 -- Show undirected edge
 local mt_edge = {
 __tostring = function (t)
-  return string.format('%s -- %s', tostring(t[1]), tostring(t[2]))
+  return _format('%s -- %s', tostring(t[1]), tostring(t[2]))
 end
 }
 
@@ -221,7 +256,7 @@ end
 -- Show directed edge
 local mt_dir_edge = {
 __tostring = function (t)
-  return string.format('%s -> %s', tostring(t[1]), tostring(t[2]))
+  return _format('%s -> %s', tostring(t[1]), tostring(t[2]))
 end
 }
 
@@ -297,9 +332,9 @@ graph.__tostring = function (self)
   local nd = graph.nodes(self)
   local nm = self._dir and 'Digraph' or 'Graph'
   if #nd <= 5 then
-    return string.format('%s {%s}', nm, table.concat(nd, ','))
+    return _format('%s {%s}', nm, table.concat(nd, ','))
   else
-    return string.format('%s {%s -%d- %s}',
+    return _format('%s {%s -%d- %s}',
       nm, tostring(nd[1]), #nd-2, tostring(nd[#nd]))
   end
 end
@@ -363,25 +398,26 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 graph._pack = function (self, acc)
+  local utils = _ext.utils.utils
   local t = {string.pack('B', acc['graph'])}
   local ns, p = {}, 1
   t[#t+1] = string.pack('B', self._dir and 1 or 0)
   -- nodes
   for k in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = _utils.pack_str(s, acc)
+    t[#t+1] = utils.pack_str(s, acc)
     ns[s], p = p, p+1
   end
   t[#t+1] = '\0'
   -- edges
   for k, v in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = _utils.pack_num(ns[s], acc)
+    t[#t+1] = utils.pack_num(ns[s], acc)
     for q, w in pairs(v) do
       if w then   -- TODO simplify for directed graph
         local u = ns[tostring(q)]
-        t[#t+1] = _utils.pack_num(u, acc)
-        t[#t+1] = _utils.pack_num(w, acc)
+        t[#t+1] = utils.pack_num(u, acc)
+        t[#t+1] = utils.pack_num(w, acc)
       end
     end
     t[#t+1] = '\0'
@@ -397,25 +433,26 @@ end
 --  @param ver Pack algorithm version.
 --  @return Graph object.
 graph._unpack = function (src, pos, acc, ver)
+  local utils = _ext.utils.utils
   local ns, n, dir = {}, nil, nil
   dir, pos = string.unpack('B', src, pos)
   -- get nodes
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
-    ns[#ns+1], pos = _utils.unpack_str(src, pos, acc[n], ver)
+    ns[#ns+1], pos = utils.unpack_str(src, pos, acc[n], ver)
   end
   pos = pos + 1
   local gr, i, j, w = graph._new(dir == 1), nil, nil, nil
   -- get edges
   for i = 1, #ns do
     n, pos = string.unpack('B', src, pos)
-    i, pos = _utils.unpack_num(src, pos, acc[n], ver)
+    i, pos = utils.unpack_num(src, pos, acc[n], ver)
     if string.byte(src, pos) == 0 then graph.add(gr, ns[i]) end
     while string.byte(src, pos) ~= 0 do
       n, pos = string.unpack('B', src, pos)
-      j, pos = _utils.unpack_num(src, pos, acc[n], ver)
+      j, pos = utils.unpack_num(src, pos, acc[n], ver)
       n, pos = string.unpack('B', src, pos)
-      w, pos = _utils.unpack_num(src, pos, acc[n], ver)
+      w, pos = utils.unpack_num(src, pos, acc[n], ver)
       graph.add(gr, ns[i], ns[j], w)
     end
     pos = pos + 1
@@ -432,10 +469,10 @@ graph.add = function (self, n1, n2, w)
   local g = self._
   g[n1] = g[n1] or {}
   if n2 then
-    w = w or 1
-    g[n2] = g[n2] or {}
-    g[n1][n2] = w
-    g[n2][n1] = self._dir and g[n2][n1] or false
+    g[n1][n2] = w or 1
+    local gn2 = g[n2] or {}
+    g[n2] = gn2
+    gn2[n1] = self._dir and gn2[n1] or false
   end
 end
 _about[graph.add] = {"G:add(n1, n2=nil, w_d=1)", "Add new node or edge."}
@@ -458,6 +495,75 @@ graph.addNodes = function (self, t)
 end
 _about[graph.addNodes] = {"G:addNodes(list_t)",
   "Import nodes from list."}
+
+
+--- Visualize graph with asciiplot.
+--  @param width (=nil) Image widht.
+--  @param height (=nil) Image height.
+--  @return figure object.
+graph.apPlot = function (self, width, height)
+  local acc, len = {}, 0
+  for k in pairs(self._) do
+    acc[k], len = true, len+1
+  end
+  _ext.ap = _ext.ap or require("matlib.asciiplot")
+  local fig = _ext.ap(width, height)
+  if len == 0 then return fig end
+  fig:_clear()
+  fig:setX {range={-1.5, 1.5}}  -- make 'ellipsoid'
+  fig:setY {range={-1, 1}}
+  if len == 1 then
+    local r, c = fig:addPoint(0, 0, '@')
+    fig:addString(r, c+2, tostring(nd[1]))
+    return fig
+  end
+  -- sorted nodes
+  local nd = {}
+  for node in pairs(self._) do
+    if acc[node] then
+      nd[#nd+1], acc[node] = node, nil
+      for _, v in ipairs(_dfsSeq(self, node)) do
+        if acc[v] then
+          nd[#nd+1], acc[v] = v, nil
+        end
+      end
+    end
+  end
+  -- circle of radius 1
+  local step = math.pi * 2 / #nd
+  local pos = {}
+  for i = 1, #nd do
+    local a = step*(i-1) + math.pi/2
+    pos[nd[i]] = {math.cos(a), math.sin(a)}
+  end
+  -- draw edges
+  local arrows = {}
+  local edges = self:edges()
+  for _, edge in ipairs(edges) do
+    local a, b = edge[1], edge[2]
+    local pa, pb = pos[a], pos[b]
+    local pts = fig:_drawLine(pa[1], pa[2], pb[1], pb[2], 1)
+    if self._dir and #pts > 2 then
+      arrows[#arrows+1] = pts[#pts-1]  -- save position
+    end
+  end
+  for _, p in ipairs(arrows) do fig:addPose(p[1], p[2], 'A') end
+  -- draw nodes
+  for i = 1, #nd do
+    local p = pos[nd[i]]
+    local r, c = fig:addPoint(p[1], p[2], '@')
+    local name = tostring(nd[i])
+    if p[1] >= 0 then
+      fig:addString(r, c+3, name)
+    else
+      fig:addString(r, c-2-#name, name)
+    end
+  end
+  return fig
+end
+_about[graph.apPlot] = {"G:apPlot([width_N, height_N]) --> fig",
+  "Show graph structure with asciiplot. Arrows are marked with 'A'.",
+  _help.OTHER}
 
 
 --- Get list of components.
@@ -533,11 +639,11 @@ graph.dot = function (self, fname)
     for n2, v in pairs(adj) do
       empty = false
       if v then
-        txt[#txt+1] = string.format("  %s %s %s;", nstr, line, tostring(n2))
+        txt[#txt+1] = _format("  %s %s %s;", nstr, line, tostring(n2))
       end
     end
     if empty then
-      txt[#txt+1] = string.format("  %s;", nstr)
+      txt[#txt+1] = _format("  %s;", nstr)
     end
   end
   txt[#txt+1] = "}"
@@ -769,7 +875,7 @@ graph.rand = function (self, N)
       repeat
         a = ns[math.random(#ns)]
         b = ns[math.random(#ns)]
-      until g[a][b] == nil
+      until a ~= b and g[a][b] == nil
       graph.add(self, a, b)
     end
   else
@@ -780,7 +886,7 @@ graph.rand = function (self, N)
       repeat
         a = ns[math.random(#ns)]
         b = ns[math.random(#ns)]
-      until g[a][b] or (not self._dir and g[b][a])
+      until a ~= b and (g[a][b] or (not self._dir and g[b][a]))
       graph.remove(self, a, b)
     end
   end
@@ -823,7 +929,9 @@ graph.remove = function (self, n1, n2)
   if n2 then
     -- edge
     self._[n1][n2] = nil
-    self._[n2][n1] = nil
+    if not self._dir then
+      self._[n2][n1] = nil
+    end    
   else
     -- node
     for n3 in pairs(self._[n1]) do
@@ -847,7 +955,7 @@ _about[graph.size] = {"G:size() --> nodes_N",
 --- Save graph as svg image.
 --  @param name File name.
 graph.toSvg = function (self, name)
-  local cmd = string.format('dot -Tsvg -o %s.svg', name)
+  local cmd = _format('dot -Tsvg -o %s.svg', name)
   local handle = assert(io.popen(cmd, 'w'), "Can't open dot!")
   handle:write(graph.dot(self))
   handle:close()

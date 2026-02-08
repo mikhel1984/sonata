@@ -22,7 +22,7 @@ local versions = {
   atan2 = math.atan2 or math.atan,
   -- Execute string code.
   loadStr = loadstring or load,
-  -- Extract table values.
+  -- Extract values from table.
   unpack = unpack or table.unpack
 }
 
@@ -54,7 +54,7 @@ end
 -- Return integer number or nil
 versions.toInteger = math.tointeger or function (x)
   if type(x) == 'string' then x = tonumber(x) end
-  local p, q = _modf(x)
+  local p, q = _modf(x or 0.5)  -- send float value when x == nil
   return (q == 0.0) and p or nil
 end
 
@@ -62,6 +62,18 @@ end
 -- Power as function
 versions.pow = math.pow or function (x, y)
   return x^y
+end
+
+
+-- Logarithm with specific base
+versions.log = math.log10 and function (x, n)
+  return math.log(x) / math.log(n)
+end or math.log
+
+
+-- Pack into table
+versions.pack = table.pack or function (...)
+  return {...}
 end
 
 

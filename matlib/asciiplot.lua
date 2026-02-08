@@ -146,8 +146,8 @@ print(fig6)
 --	LOCAL
 
 local _utils = require("matlib/utils")
+local _ver = _utils.versions
 
-local _vmove = _utils.versions.move
 local _czero = _utils.cross.isZero
 _utils = _utils.utils
 local _tf = require("matlib.asciiplot_tf")
@@ -356,6 +356,7 @@ type = 'asciiplot',
 -- const
 WIDTH = 73, HEIGHT = 21,
 OUTLIERS = 2,  -- skip outliers over 2*std, ignore when non-positive
+PLOT_LINE = true,  -- draw lines between points
 -- symbols
 lvls = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'},
 keys = {'_x','_y','_z','x','y','z'},
@@ -409,6 +410,7 @@ local function _addGraded (fig, x, y, ind)
     s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
   end
   fig._canvas[ny][nx] = s
+  return ny, nx
 end
 
 
@@ -419,8 +421,9 @@ end
 local function _addPolar (fig, t, tOpt)
   local acc = {}
   -- transform data
+  local ii = tOpt.x
   for i, row in ipairs(t) do
-    local s, c = math.sin(row[1]), math.cos(row[1])
+    local s, c = math.sin(row[ii]), math.cos(row[ii])
     for j, ind in ipairs(tOpt) do
       local curr = acc[j] or {}
       curr[i] = {row[ind]*c, row[ind]*s}
@@ -449,10 +452,17 @@ local function _addPolar (fig, t, tOpt)
   for j = 1, #tOpt do
     local c = sym and (j <= #sym and string.sub(sym, j, j) or string.sub(sym, -1, -1))
     local xy = acc[j]
+    if tOpt.line then
+      local prev = nil
+      for _, v in ipairs(xy) do
+        if prev then asciiplot._drawLine(fig, prev[1], prev[2], v[1], v[2], j) end
+        prev = v
+      end
+    end
     for _, v in ipairs(xy) do
       if c then
         asciiplot.addPoint(fig, v[1], v[2], c)
-      else
+      elseif not tOpt.line then
         _addGraded(fig, v[1], v[2], j)
       end
     end
@@ -467,6 +477,7 @@ local function _addPolar (fig, t, tOpt)
   end
   -- limits
   asciiplot._limits(fig)
+  return fig
 end
 
 
@@ -481,6 +492,13 @@ local function _addTable (fig, t, tInd)
   for j = 1, #tInd do
     local c = sym and (j <= #sym and string.sub(sym, j, j) or string.sub(sym, -1, -1))
     local k = tInd[j]
+    if tInd.line then
+      local prev = nil
+      for _, v in ipairs(t) do
+        if prev then asciiplot._drawLine(fig, prev[1], prev[2], v[1], v[2], j) end 
+        prev = v
+      end
+    end
     for i = 1, #t do
       local row = t[i]
       if c then
@@ -506,9 +524,20 @@ end
 --  @param fig asciiplot object.
 --  @param tX List of x coordinates.
 --  @param tY List of y coordinates.
-local function _addXY (fig, tX, tY, ind)
+local function _addXY (fig, tX, tY, ind, line)
+  local o = nil
+  if line then
+    for i = 2, #tX do
+      asciiplot._drawLine(fig, tX[i-1], tY[i-1], tX[i], tY[i], ind)
+    end
+    o = _sonata_use_color and string.format('\x1B[3%dmo\x1B[0m', ind) or 'o'
+  end
   for i = 1, #tX do
-    _addGraded(fig, tX[i], tY[i], ind)
+    if line then
+      asciiplot.addPoint(fig, tX[i], tY[i], o)
+    else
+      _addGraded(fig, tX[i], tY[i], ind)
+    end
   end
   -- legend
   local s = string.char(string.byte('A') - 1 + ind)
@@ -688,7 +717,7 @@ asciiplot._axes = function (self)
     self._canvas[1][n] = up
     -- markers
     local d = self._y:markerInterval()
-    for i = d+1, self._y.size-1, d do self._canvas[i][n] = mark end
+    for i = 1+d, self._y.size, d do self._canvas[i][n] = mark end
     n = nil
   end
   -- horizontal line
@@ -701,7 +730,7 @@ asciiplot._axes = function (self)
     row[self._x.size] = right
     -- markers
     local d = self._x:markerInterval()
-    for i = d+1, self._x.size-1, d do row[i] = mark end
+    for i = 1, self._x.size-1, d do row[i] = mark end
   end
 end
 
@@ -720,6 +749,39 @@ asciiplot._clear = function (self)
   for i = #self._canvas, self._y.size+1, -1 do self._canvas[i] = nil end
   self._legend = {}
   self._title = nil
+end
+
+
+--- Draw line between two points.
+--  @param x1 First point x coordinate.
+--  @param y1 First point y coordinate.
+--  @param x2 Second point x coordinate.
+--  @param y2 Second point y coordinate.
+--  @param ind Color index.
+--  @return table of point positions.
+asciiplot._drawLine = function (self, x1, y1, x2, y2, ind)
+  local dx, dy, acc = x2-x1, y2-y1, {}
+  local w1 = self._x.size/self._x.diff*math.abs(dx)
+  local w2 = self._y.size/self._y.diff*math.abs(dy)
+  if w1 >= w2 then
+    -- along x axis
+    if dx == 0 then return acc end
+    local step = (self._x.diff / self._x.size) * (dx >= 0 and 1 or -1)
+    local k = dy/dx
+    for x = x1, x2, step do 
+      local pr, pc = _addGraded(self, x, y1+k*(x-x1), ind)
+      if pr then acc[#acc+1] = {pr, pc} end
+    end
+  else
+    -- along y axis
+    local step = (self._y.diff / self._y.size) * (dy >= 0 and 1 or -1)
+    local k = dx/dy
+    for y = y1, y2, step do 
+      local pr, pc = _addGraded(self, x1 + k*(y-y1), y, ind) 
+      if pr then acc[#acc+1] = {pr, pc} end
+    end
+  end
+  return acc
 end
 
 
@@ -802,7 +864,6 @@ asciiplot._new = function(dwidth, dheight)
   -- return object
   return setmetatable(o, asciiplot)
 end
-
 
 
 --- Find XY projection of a contour.
@@ -935,7 +996,9 @@ end
 --  @param s Character.
 asciiplot.addLine = function (self, x1, y1, x2, y2, s)
   local dx, dy = x2-x1, y2-y1
-  if math.abs(dx) >= math.abs(dy) then
+  local w1 = self._x.size/self._x.diff*math.abs(dx)
+  local w2 = self._y.size/self._y.diff*math.abs(dy)
+  if w1 >= w2 then
     -- along x axis
     if dx == 0 then return end
     local step = (self._x.diff / self._x.size) * (dx >= 0 and 1 or -1)
@@ -964,11 +1027,10 @@ asciiplot.addPoint = function (self, dx, dy, s)
     nx = (fx > 0.5) and (nx + 1) or nx
     ny = (fy > 0.5) and (ny + 1) or ny
     self._canvas[ny][nx] = s or '*'
-    return true
+    return ny, nx
   end
-  return false
 end
-_about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*')",
+_about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*') --> row_N, col_N|nil",
   "Add point (x,y) using char.", _tag.MANUAL}
 
 
@@ -1238,7 +1300,7 @@ asciiplot.copy = function (self)
     o._legend[k] = v
   end
   for i = 1, #self._canvas do
-    o._canvas[i] = _vmove(self._canvas[i], 1, self._x.size, 1, {})
+    o._canvas[i] = _ver.move(self._canvas[i], 1, self._x.size, 1, {})
   end
   return setmetatable(o, asciiplot)
 end
@@ -1283,7 +1345,7 @@ asciiplot.plot = function (self, ...)
   -- collect data
   local i = 1
   repeat
-    local tx, ty = ag[i], ag[i+1]
+    local tx, ty, lines = ag[i], ag[i+1], nil
     -- data
     if _callable(tx) then
       -- save function, check region later
@@ -1299,6 +1361,7 @@ asciiplot.plot = function (self, ...)
       local a, b = _tf.findVectorRange(tx)
       if a < vmin then vmin = a end
       if b > vmax then vmax = b end
+      lines = asciiplot.PLOT_LINE
     else
       error('Unexpected argument in position '..tostring(i))
     end
@@ -1311,7 +1374,7 @@ asciiplot.plot = function (self, ...)
       i = i + 1
     end
     -- save
-    acc[#acc+1] = {tx, ty, legend}
+    acc[#acc+1] = {tx, ty, legend, lines}
   until i > #ag
   if not self._xfix then
     if vmin == math.huge then vmin = self._x._init[1] end
@@ -1351,7 +1414,7 @@ asciiplot.plot = function (self, ...)
   -- 'plot'
   for j = 1, #acc do
     local r = acc[j]
-    local c = _addXY(self, r[1], r[2], j)
+    local c = _addXY(self, r[1], r[2], j, r[4])
     self._legend[c] = r[3]
   end
   -- limits
@@ -1369,7 +1432,7 @@ _about[asciiplot.plot] = {"F:plot(...) --> F",
 --  @return updated figure object or nil.
 asciiplot.redraw = function (self)
   if self._lastFn then
-    return asciiplot[self._lastFn](self, table.unpack(self._lastArgs))
+    return asciiplot[self._lastFn](self, _ver.unpack(self._lastArgs))
   end
 end
 asciiplot.__bnot = asciiplot.redraw
@@ -1406,25 +1469,20 @@ _about[asciiplot.scale] = {"F:scale(factor_d | src_F)",
 --- X axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setX = function (self, t) _setAxis(self, t, '_x') end
-_about[asciiplot.setX] = {"F:setX(par_t)",
-  "X axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  _tag.CONF}
+local _axisStr = "Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells)."
+_about[asciiplot.setX] = {"F:setX(par_t)", _axisStr, _tag.CONF}
 
 
 --- Y axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setY = function (self, t) _setAxis(self, t, '_y') end
-_about[asciiplot.setY] = {"F:setY(par_t)",
-  "Y axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  _tag.CONF}
+_about[asciiplot.setY] = {"F:setY(par_t)", _axisStr, _tag.CONF}
 
 
 --- Z axis settings.
 --  @param t Table with parameters {range, log, view, fix}.
 asciiplot.setZ = function (self, t) _setAxis(self, t, '_z') end
-_about[asciiplot.setZ] = {"F:setZ(par_t)",
-  "Z axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size'.",
-  _tag.CONF}
+_about[asciiplot.setZ] = {"F:setZ(par_t)", _axisStr, _tag.CONF}
 
 
 --- Visualize matrix elements
@@ -1490,7 +1548,7 @@ asciiplot.tplot = function (self, t, tOpt)
   self._lastArgs = {t, tOpt}
   return self
 end
-_about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil}) --> F",
+_about[asciiplot.tplot] = {"F:tplot(data_t, cols_t={x=1, polar=false, sym=nil, line=false}) --> F",
   "Plot the table data, choose columns if need."}
 
 

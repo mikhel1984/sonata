@@ -594,7 +594,7 @@ symbolic._parse = function(str)
   if _issymbolic(res) then
     return res
   end
-  return table.unpack(res)
+  return _ext.utils.versions.unpack(res)
 end
 -- Deprecated
 symbolic.parse = function (_, str) return symbolic._parse(str) end

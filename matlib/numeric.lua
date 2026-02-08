@@ -442,6 +442,60 @@ _about[numeric.int] = {":int(fn, x1_d, x2_d) --> num",
   "Get integral of the function. Improper integrals with infinite limits are possible."}
 
 
+numeric.fit = function (_, fn, t0, xs, ys, param)
+  local mat = require("matlib.matrix")
+  param = param or {}
+  -- save keys, prepare vector
+  local keys, tt = {}, {}
+  for k, w in pairs(t0) do
+    keys[#keys+1] = k
+    tt[k] = w  -- make copy
+  end
+  keys = param.keys or keys
+  -- gradient
+  local grad = param.grad or function (x, t)
+    local dx = mat:zeros(1, #keys)
+    local v0 = fn(x, t)
+    for i, key in ipairs(keys) do
+      local prev = t[key]
+      local diff = math.max(math.abs(prev*1E-3), 1E-8)
+      t[key] = prev + diff
+      dx[1][i] = (fn(x, t) - v0) / diff
+      t[key] = prev  -- restore
+    end
+    return dx
+  end
+  -- search
+  local imax = 100
+  local w = param.w or {}
+  local tprev = nil
+  for _ = 1, imax do
+    -- collect values
+    local AA, At = mat:zeros(#keys, #keys), mat:zeros(#keys, 1)
+    for i = 1, #xs do
+      local J = grad(xs[i], tt)
+      local dy = ys[i] - fn(xs[i], tt)
+      local wi = w[i] or 1
+      AA:add(wi, J:T()*J)
+      At:add(dy*wi, J:T())
+    end
+    local dt = AA:inv() * At
+    -- update parameters
+    local finish = (tprev ~= nil)
+    for i, key in ipairs(keys) do
+      tt[key] = tt[key] + dt[i][1]
+      finish = finish and math.abs(dt[i][1]-tprev[i][1]) <= numeric.TOL
+    end
+    if finish then
+      return tt, true
+    end
+    tprev = dt
+  end
+  _inform("too many iterations")
+  return tt, false
+end
+
+
 if Sonata
 then  --=====================
 

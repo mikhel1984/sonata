@@ -1,3 +1,17 @@
+========= 1.02 ==========
+
+Asciiplot
+* draw graphs
+* draw tables with lines
+Data
+* iterators for combinations and permutations
+Extremum
+* shape based calculation of defuzzify function
+Other
+* Refactoring and bugfix in modules A-L
+* lang command to change translation
+* improve w, tcp and readline modes
+
 ========= 1.01 ==========
 
 Asciiplot

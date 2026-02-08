@@ -132,6 +132,7 @@ ans = tm.A                  --.2> t0.A
 
 local GOLD = 1.6180339
 local TOL = 1E-4
+local SMALL = 1E-20
 
 local _ext = {
   -- matrix = require("matlib.matrix"),
@@ -162,20 +163,21 @@ extremum.__index = extremum
 --  @param b Initial high bound.
 --  @return tuple of points (a, b, c, fa, fb, fc), such that fb <= fa, fc
 local function _bracket (fun, a, b)
-  local tiny, limit = 1E-20, 100
+  local limit = 100
   local fa, fb = fun(a), fun(b)
   if fb > fa then
     a, b = b, a
     fa, fb = fb, fa
   end
   local c = b + GOLD*(b-a)
-  local fc, fu = fun(c), nil
+  local fc = fun(c)
   while fb > fc do
     local r = (b-a)*(fb-fc)
     local q = (b-c)*(fb-fa)
-    local denom = 2*_max(_abs(q-r), tiny)
-    local u = b - ((b-c)*q - (b-a)*r)/((q >= r) and denom or -denom)
+    local denom = (q ~= r) and (2*(q-r)) or SMALL
+    local u = b - ((b-c)*q - (b-a)*r)/denom
     local ulim = b + limit*(c-b)
+    local fu = nil
     if (b-u)*(u-c) > 0 then   -- parabolic u between b and c
       fu = fun(u)
       if fu < fc then
@@ -213,7 +215,10 @@ end
 --  @param fun Source function.
 --  @return found point, deflection and function value.
 local function _linmin (p, xi, fun)
-  local ff = function (x) return fun(p + x*xi) end
+  local ff = function (x) 
+    local m = p:copy(); m:add(x, xi)  -- p + x*xi
+    return fun(m)
+  end
   local a, b, c = _bracket(ff, 0.0, 1.0)
   local xm, fm = extremum._minBrent(ff, a, b, c)
   xi = xm * xi
@@ -227,14 +232,20 @@ end
 --  @param xi Multidimentional direction.
 --  @param fun Source function.
 --  @param dfun Gradient function.
---  @return found point, deflection and function value.
+--  @return found point, function value.
 local function _linmind (p, xi, fun, dfun)
-  local ff = function (x) return fun(p + x*xi) end
-  local df = function (x) return dfun(p + x*xi):T() * xi end
+  local ff = function (x) 
+    local m = p:copy(); m:add(x, xi)  -- p + x*xi
+    return fun(m)
+  end
+  local df = function (x)
+    local m = p:copy(); m:add(x, xi)  -- p + x*xi
+    return dfun(m):T() * xi
+  end
   local a, b, c = _bracket(ff, 0.0, 1.0)
   local xm, fm = extremum._minBrentD(ff, df, a, b, c)
-  xi = xm * xi
-  return p + xi, xi, fm
+  p = p:copy(); p:add(xm, xi)  -- p + xm*xi
+  return p, fm
 end
 
 
@@ -243,7 +254,7 @@ end
 --  @param ids List of variable indices.
 --  @return updated matrix and list of indices.
 local function _lpSimpxEliminate (H,  ids)
-  local hm = H:cols()
+  local hm, hr = H:cols(), H:rows()
   for s = 1, hm do
     -- get pivot column
     local col = 0
@@ -257,13 +268,13 @@ local function _lpSimpxEliminate (H,  ids)
     if col > 0 then
       -- find row
       local jmin, vmin = 0, math.huge
-      for j = 2, H:rows() do
+      for j = 2, hr do
         local vc, vm = H[j][col], H[j][hm]
         if vc > 0 and vm/vc < vmin then
           jmin, vmin = j, vm/vc
         end
       end
-      if jmin == 0 then  break end  -- no solution ?
+      if jmin == 0 then break end  -- no solution ?
 
       ids[jmin-1] = col
       local Hj = H[jmin]
@@ -271,7 +282,7 @@ local function _lpSimpxEliminate (H,  ids)
       -- normalize line
       for k = 1, hm do Hj[k] = Hj[k] / vmin end
       -- extract
-      for j = 1, H:rows() do
+      for j = 1, hr do
         if j ~= jmin then
           local Hi = H[j]
           local t = Hi[col]
@@ -287,13 +298,13 @@ end
 
 
 --- Extrapolates by factor through the face of the simplex.
---  Replace the high point it the new is better.
+--  Replace the high point if the new one is better.
 --  @param p List of bound points as a matrix.
 --  @param y List of funciton values.
 --  @param psum List of vector sums.
 --  @param fac Factor value.
 --  @param fun Source function.
---  @return the found extremum.
+--  @return found extremum.
 local function _simplexExtra (p, y, psum, ihi, fac, fun)
   local ndim = p:rows()
   local fac1 = (1.0-fac)/ndim
@@ -318,9 +329,10 @@ end
 --  @param pp Matrix with points.
 --  @param psum Table to store the result.
 local function _simplexPsum (pp, psum)
+  local cs = pp:cols()
   for i = 1, pp:rows() do
     local s, pi = 0, pp[i]
-    for j = 1, pp:cols() do s = s + pi[j] end
+    for j = 1, cs do s = s + pi[j] end
     psum[i] = s
   end
 end
@@ -424,38 +436,36 @@ end
 --  @param c High bound.
 --  @return point where function is minimal and its value.
 extremum._minBrent = function (fun, a, b, c)
-  local imax, small, e, d = 100, 1E-30, 0, 0
   a, c = _min(a, c), _max(a, c)
   local x, w, v = b, b, b
   local fx = fun(x)
   local fv, fw = fx, fx
+  local imax, e, d = 100, 0, 0
   for i = 1, imax do
     local xm = 0.5*(a+c)
-    local tol1 = TOL*_abs(x) + small
+    local tol1 = TOL*_abs(x) + SMALL
     local tol2 = 2*tol1
     if _abs(x-xm) <= (tol2-0.5*(c-a)) then
       return x, fx
     end
     -- parabolic fit
-    local upd = false
+    local upd = true
     if _abs(e) > tol1 then
       local r = (x-w)*(fx-fv)
       local q = (x-v)*(fx-fw)
       local p = (x-v)*q - (x-w)*r
       q = 2*(q-r)
-      if q > 0 then p = -p end
-      q = _abs(q)
+      if q > 0 then p = -p else q = -q end
       if _abs(p) >= _abs(0.5*q*e) or p <= q*(a-x) or p >= q*(c-x) then
-        upd = true
+        -- ignore
       else
         e, d = d, p/q
         u = x + d
         if (u-a < tol2) or (c-u < tol2) then
           d = (xm >= x) and tol1 or (-tol1)
         end
+        upd = false
       end
-    else
-      upd = true
     end
     if upd then
       e = (x >= xm) and (a-x) or (c-x)
@@ -490,16 +500,16 @@ end
 --  @param c High bound.
 --  @return point where function is minimal and its value.
 extremum._minBrentD = function (fun, dfun, a, b, c)
-  local imax, small, e, d = 100, 1E-30, 0, 0
   a, c = _min(a, c), _max(a, c)
   local x, w, v = b, b, b
   local fx = fun(x)
   local fv, fw = fx, fx
   local dx = dfun(x)
   local dv, dw = dx, dx
+  local imax, e, d = 100, 0, 0
   for i = 1, imax do
     local xm = 0.5*(a+c)
-    local tol1 = TOL*_abs(x) + small
+    local tol1 = TOL*_abs(x) + SMALL
     local tol2 = 2*tol1
     if _abs(x-xm) <= (tol2-0.5*(c-a)) then
       return x, fx
@@ -606,14 +616,14 @@ end
 --  @param p Initial point.
 --  @return minimum point and function value.
 extremum._minGrad = function (fun, dfun, p)
-  local imax, small, n = 200, 1E-20, p:rows()
+  local imax, n = 200, p:rows()
   local fret, xi = fun(p), dfun(p)
   local g = -xi
   local h = g
   for i = 1, imax do
     local fp = fret
-    p, xi, fret = _linmind(p, xi, fun, dfun)
-    if 2*_abs(fp - fret) <= TOL*(_abs(fret) + _abs(fp) + small) then
+    p, fret = _linmind(p, xi, fun, dfun)
+    if 2*_abs(fp - fret) <= TOL*(_abs(fret) + _abs(fp) + SMALL) then
       return p, fret
     end
     xi = dfun(p)
@@ -621,13 +631,12 @@ extremum._minGrad = function (fun, dfun, p)
     for j = 1, n do
       local gj, xj = g[j][1], xi[j][1]
       gg = gg + gj*gj
-      dgg = dgg + xj*xj + (xj+gj)*xj
+      dgg = dgg + (xj+gj)*xj
     end
     if gg == 0.0 then
       return p, fret
     end
-    local gam = dgg / gg
-    h, g = gam*h - xi, -xi
+    h, g = (dgg/gg)*h - xi, -xi
     xi = h
   end
   error("Too much iterations")
@@ -642,8 +651,13 @@ end
 extremum._minPowel = function (fun, p)
   _ext.matrix = _ext.matrix or require("matlib.matrix")
   local mat = _ext.matrix
-  local imax, small, n = 200, 1E-25, p:rows()
-  local ximat = mat:eye(n)
+  local imax, n = 200, p:rows()
+  local xdir = {}
+  for i = 1, n do
+    local t = {}
+    for j = 1, n do t[j] = (j == i) and 1 or 0 end
+    xdir[i] = t
+  end
   local fret = fun(p)
   for iter = 1, imax do
     local ibig, del = 1, 0.0
@@ -651,13 +665,13 @@ extremum._minPowel = function (fun, p)
     -- find the biggest decrease
     for i = 1, n do
       local fprev = fret
-      p, _, fret = _linmin(p, ximat({}, i), fun)
+      p, _, fret = _linmin(p, mat:V(xdir[i]), fun)
       fprev = fprev - fret  -- reuse
       if fprev > del then
         del, ibig = fprev, i
       end
     end
-    if 2*_abs(fp-fret) <= TOL*(_abs(fp) + _abs(fret) + small) then
+    if 2*_abs(fp-fret) <= TOL*(_abs(fp) + _abs(fret) + SMALL) then
       return p, fret
     end
     -- extrapolated point
@@ -667,10 +681,9 @@ extremum._minPowel = function (fun, p)
       local t = 2*(fp-2*fret+fptt)*(fp-fret-del)^2 - del*(fp-fptt)^2
       if t < 0 then
         p, grad, fret = _linmin(p, grad, fun)
+        local xmat = xdir[ibig]
         for j = 1, n do
-          local xmatj = ximat[j]
-          xmatj[ibig] = xmatj[n]
-          xmatj[n] = grad[j][1]
+          xmat[j] = grad[j][1]
         end
       end
     end
@@ -689,11 +702,11 @@ end
 extremum._simplex = function (fun, pp)
   _ext.matrix = _ext.matrix or require("matlib.matrix")
   local mat = _ext.matrix
-  local nmax, small = 500, 1E-10
   local y, psum = {}, {}
-  for i = 1, pp:cols() do y[i] = fun(pp({}, i)) end
-  _simplexPsum(pp, psum)
   local p = pp:copy()
+  for i = 1, p:cols() do y[i] = fun(p({}, i)) end
+  _simplexPsum(p, psum)
+  local nmax, pr, pc = 500, p:rows(), p:cols()
   for _ = 1, nmax do
     -- find highest, next highest and lowest
     local ilo, ihi, inhi = 1, 1, 2
@@ -709,11 +722,11 @@ extremum._simplex = function (fun, pp)
         inhi = i
       end
     end
-    local rtol = 2*_abs(y[ihi]-y[ilo])/(_abs(y[ihi]) + _abs(y[ilo]) + small)
+    local rtol = 2*_abs(y[ihi]-y[ilo])/(_abs(y[ihi]) + _abs(y[ilo]) + SMALL)
     if rtol < TOL then
       -- put the best point into the first element
       y[1], y[ilo] = y[ilo], y[1]
-      for i = 1, pp:rows() do
+      for i = 1, pr do
         local pi = p[i]
         pi[1], pi[ilo] = pi[ilo], pi[1]
       end
@@ -730,9 +743,9 @@ extremum._simplex = function (fun, pp)
       ytry = _simplexExtra(p, y, psum, ihi, 0.5, fun)
       if ytry >= ysave then
         -- contract around the lowest point
-        for i = 1, p:cols() do
+        for i = 1, pc do
           if i ~= ilo then
-            for j = 1, p:rows() do
+            for j = 1, pr do
               local pj = p[j]
               psum[j] = 0.5*(pj[i] + pj[ilo])
               pj[i] = psum[j]
@@ -796,10 +809,21 @@ extremum.fit = function (_, fn, t0, xs, ys)
     keys[#keys+1] = k
     v0[#v0+1] = w
   end
+  -- resample
+  local k = 6
+  local step = math.floor(#xs / (#keys*k))
+  if step > 1 then
+    local tx, ty = {}, {}
+    for i = 1, #xs, step do
+      tx[#tx+1] = xs[i]
+      ty[#ty+1] = ys[i]
+    end
+    xs, ys = tx, ty
+  end
   -- make function for optimization
   local t = {}
   local test = function (vec)
-    for i = 1, #keys do t[keys[i]] = vec[i][1] end
+    for i, key in ipairs(keys) do t[key] = vec[i][1] end
     local s = 0.0
     for i = 1, #xs do
       local dy = ys[i] - fn(xs[i], t)

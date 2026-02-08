@@ -13,6 +13,7 @@
 SonataHelp = require("core.help")
 -- Collect all descriptions
 About = SonataHelp.init()
+About:prepareLang()
 -- Text colors
 SonataHelp.useColors(SONATA_USE_COLOR)
 -- Command evaluation.
@@ -107,12 +108,13 @@ setmetatable(use,
 --- Print SonataHelp information.
 --  @param v Function, module or nil.
 help = function(v)
-  local res = nil
   v = v or 'main'
+  local res = nil
   if v == '*' then
-    res = About:makeFull(use)
+    res = About:makeFull(use, SONATA_LOCALIZATION)
   else
-    res = About:findObject(v, use) or Sonata.info(About:objectInfo(v))
+    res = About:findObject(v, use, SONATA_LOCALIZATION) or 
+          Sonata.info(SonataHelp.objectInfo(v))
   end
   return Sonata.inLua and Sonata._toText(res) or res
 end
@@ -279,7 +281,7 @@ end
 
 --================== EXECUTION =================
 
--- Read localization file and update descriptions
+-- Set default language
 if SONATA_LOCALIZATION then
   About:localization(SONATA_LOCALIZATION)
 end
@@ -308,7 +310,7 @@ end
 
 -- Run!!!
 io.write(SonataHelp.CMAIN, '\n', Sonata.getTitle(), '\n', SonataHelp.CHELP)
-io.write(About:get('intro'), SonataHelp.CRESET, "\n")
+io.write(About:get('intro', SONATA_LOCALIZATION), SonataHelp.CRESET, "\n")
 
 
 -- choose interpreter

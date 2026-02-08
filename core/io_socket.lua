@@ -81,6 +81,7 @@ tcp_server.repl = function (self)
   if not ev.oO then
     ev.oO, print = print, ev._simpPrint
   end
+  local closed = {}
   -- main loop
   while true do
     -- check new clients
@@ -98,16 +99,14 @@ tcp_server.repl = function (self)
       }
       clients[#clients+1] = group
       cli:send(Sonata.getTitle())
-      -- cli:send(About:get('intro'))
       cli:send("\n" .. group.invite)
     end
-    -- process requests
-    local closed = {}
+    -- process requests    
     for i = 1, #clients do
       local group = clients[i]
       local cmd, err = nil, nil
       if group.read then
-        cmd, err = group.cli:receive()
+        cmd, err = group.cli:receive('*l')
       else
         cmd = ''
       end
@@ -129,8 +128,9 @@ tcp_server.repl = function (self)
       end
     end
     -- remove
-    for i = 1, #closed do
-      local group = table.remove(clients, closed[i])
+    while #closed > 0 do
+      local ids = table.remove(closed)
+      local group = table.remove(clients, ids)
       io.write('close client from ', group.cli:getsockname(), '\n')
       group.cli:close()
     end

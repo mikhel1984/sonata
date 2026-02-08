@@ -24,6 +24,7 @@ Lens = require 'matlib.lens'
 -- external dependencies, can be loaded implicitly
 require 'matlib.numeric'  -- for root searching
 require 'matlib.complex'  -- for beam transformation
+require 'matlib.matrix'   -- calc determinant
 
 -- define a simple lense
 n1 = 1      -- air
@@ -132,6 +133,7 @@ local _tag = { LASER='laser', ANALYZE='analyze' }
 
 -- tolerance of comparison
 local TOL = 1E-8
+local mabs, msqrt = math.abs, math.sqrt
 
 
 --	INFO
@@ -171,7 +173,7 @@ end
 
 --- Check matrix module
 --  @return true if unit matrix
-local function _isunit (L) return math.abs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
+local function _isunit (L) return mabs(L[1]*L[4]-L[2]*L[3]-1) < TOL end
 
 
 --- Concatenate components along the ray trace.
@@ -198,8 +200,8 @@ lens.__eq = function (L1, L2)
   if not (_islens(L1) and _islens(L2)) then
     error 'Not a Lens object'
   end
-  return math.abs(L1[1]-L2[1]) < TOL and math.abs(L1[2]-L2[2]) < TOL
-     and math.abs(L1[3]-L2[3]) < TOL and math.abs(L1[4]-L2[4]) < TOL
+  return mabs(L1[1]-L2[1]) < TOL and mabs(L1[2]-L2[2]) < TOL
+     and mabs(L1[3]-L2[3]) < TOL and mabs(L1[4]-L2[4]) < TOL
 end
 
 
@@ -266,7 +268,7 @@ lens.beam = function (self, dR, dW, dLam)
   local lampi = dLam / math.pi
   local _1_q1 = lens.ext_complex(1/dR, lampi / (dW * dW))
   local _1_q2 = (self[3] + self[4]*_1_q1) / (self[1] + self[2]*_1_q1)
-  return 1/_1_q2:re(), math.sqrt(lampi / _1_q2:im())
+  return 1/_1_q2:re(), msqrt(lampi / _1_q2:im())
 end
 _about[lens.beam] = {"L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize_d",
   "Find output beam curvature and spot radius.", _tag.LASER}
@@ -286,12 +288,12 @@ _about[lens.copy] = {"L:copy() --> cpy_L",
 --  @return beam curvature and spot radius (for stable resonator).
 lens.emit = function (self, lam)
   local tr = (self[1] + self[4]) * 0.5
-  if math.abs(tr) <= 1 then
-    local s = math.sqrt(1 - tr*tr)
-    return 2*self[2]/(self[4]-self[1]), math.sqrt(lam*self[2]/(math.pi*s)),
-      math.sqrt(-lam*s/math.pi/self[3]), (self[1]-self[4])/2/self[3]
+  if mabs(tr) <= 1 then
+    local s = msqrt(1 - tr*tr)
+    return 2*self[2]/(self[4]-self[1]), msqrt(lam*self[2]/(math.pi*s)),
+      msqrt(-lam*s/math.pi/self[3]), (self[1]-self[4])/2/self[3]
   else
-    local sh = math.sqrt(tr*tr - 1) * (tr > 1 and 1 or -1)
+    local sh = msqrt(tr*tr - 1) * (tr > 1 and 1 or -1)
     return (self[1] - self[4] + 2*sh)/(2*self[3])
   end
 end
@@ -320,7 +322,7 @@ _about[lens.gParam] = {":gParam(waist_d, lambda_d) --> div_d, range_d",
 --  @return curvature and beam radius in the pose dist.
 lens.gSize = function (_, dW0, dLam, dist)
   local t = (math.pi * dW0 * dW0 / dLam / dist) ^ 2
-  return dist*(1 + t),  dW0 * math.sqrt(1 + 1/t)
+  return dist*(1 + t),  dW0 * msqrt(1 + 1/t)
 end
 _about[lens.gSize] = {":gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d",
   "Find Gaussian beam radius and curvature at some distance.", _tag.LASER}
@@ -466,15 +468,15 @@ local mt_cardinal = {
   type = 'cardinal_points',
   -- pretty pring
   __tostring = function (self)
-    local txt = {}
-    txt[1] = 'From the input plane'
-    txt[2] = 'F1 at '..tostring(self.F1)
-    txt[3] = 'H1 at '..tostring(self.H1)
-    txt[4] = 'N1 at '..tostring(self.N1)
-    txt[5] = 'From the output plane'
-    txt[6] = 'F2 at '..tostring(self.F2)
-    txt[7] = 'H2 at '..tostring(self.H2)
-    txt[8] = 'N2 at '..tostring(self.N2)
+    local txt = {
+      'From the input plane',
+      'F1 at '..tostring(self.F1),
+      'H1 at '..tostring(self.H1),
+      'N1 at '..tostring(self.N1),
+      'From the output plane',
+      'F2 at '..tostring(self.F2),
+      'H2 at '..tostring(self.H2),
+      'N2 at '..tostring(self.N2)}
     return table.concat(txt, '\n')
   end
 }

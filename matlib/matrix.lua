@@ -166,7 +166,6 @@ ans = Mat:D({1,2,3})          -->  Mat {{1,0,0},
 -- get diagonal
 ans = g:diag()                -->  Mat {{1},{5},{9}}
 
-
 -- cross-product of 2 vectors
 x1 = Mat {{1,2,3}}
 x2 = Mat {{4,5,6}}
@@ -354,7 +353,8 @@ local matrix = {
 --  @param v Object to check.
 --  @return True if the object is 'matrix' or reference.
 local function _ismatrixex(v)
-  return getmetatable(v) == matrix or _tf.isref(v)
+  local mt = getmetatable(v)
+  return mt == matrix or _tf.refs[mt]
 end
 
 
@@ -472,7 +472,7 @@ matrix.__mul = function (M1, M2)
   if not _ismatrixex(M1) then return _kProd(M1, M2) end
   if not _ismatrixex(M2) then return _kProd(M2, M1) end
   if (M1._cols ~= M2._rows) then
-    error("Impossible to get product: different size!")
+    error "Impossible to get product: different size!"
   end
   local res = {}
   local resCols, m1Cols = M2._cols, M1._cols
@@ -572,12 +572,22 @@ _about['_cmp'] = {"comparison: a==b, a~=b", nil, _help.META}
 --  @param t Table for initialization.
 --  @return Matrix object.
 matrix._init = function (iR, iC, t)
-  if iR <= 0 or iC <= 0 then
-    error "Wrong matrix size!"
-  end
   t._cols, t._rows = iC, iR
   local res = setmetatable(t, matrix)
   return matrix.STRIP and _tf.clearLess(res, matrix.STRIP) or res
+end
+
+
+--- Initialization of matrix with size check.
+--  @param iR Number of rows.
+--  @param iC Number of columns.
+--  @param t Table for initialization.
+--  @return Matrix object.
+matrix._initCheck = function (iR, iC, t)
+  if iR <= 0 or iC <= 0 then
+    error "Wrong matrix size!"
+  end
+  return matrix._init(iR, iC, t)
 end
 
 
@@ -598,7 +608,7 @@ matrix._new = function (self, t)
     cols = (cols < #v) and #v or cols
     setmetatable(v, mt_access)
   end
-  return matrix._init(rows, cols, t)
+  return matrix._initCheck(rows, cols, t)
 end
 
 
@@ -630,7 +640,7 @@ matrix._unpack = function (src, pos, acc, ver)
   for r = 1, rs do
     t[r], pos = _utils.unpack_seq(cs, src, pos, acc, ver)
   end
-  return matrix._init(rs, cs, t), pos
+  return matrix._initCheck(rs, cs, t), pos
 end
 
 
@@ -652,6 +662,18 @@ matrix._round = function (self, tol)
 end
 
 
+--- Add scaled matrix to the given one.
+--  i.e.  self += k*M
+--  @param k Scalar coefficient.
+--  @param M Other matrix.
+matrix.add = function (self, k, M)
+  if self._rows ~= M._rows or self._cols ~= M._cols then
+    error "Different size"
+  end
+  _tf.addScale(self, k, M)
+end
+
+
 --- Cholesky decomposition.
 --  @param M Positive definite symmetric matrix.
 --  @return Lower part of the decomposition.
@@ -663,13 +685,12 @@ matrix.chol = function (self)
   for i = 1, self._rows do
     local Li, Ai = L[i], self[i]
     for j = 1, i do
-      local sum = 0
+      local sum = Ai[j]
       for k = 1, j-1 do
         local v = L[j][k]
         v = (type(v) == 'table' and v.conj) and v:conj() or v
-        sum = sum + v*Li[k]
+        sum = sum - v*Li[k]
       end
-      sum = Ai[j] - sum   -- reuse
       if j < i then
         Li[j] = sum / L[j][j]
       else
@@ -748,10 +769,10 @@ matrix.D = function (_, v, shift)
     local n = vec and v._rows * v._cols or #v
     local res
     if shift >= 0 then
-      res = matrix._init(n + shift, n + shift, {})
+      res = matrix._initCheck(n + shift, n + shift, {})
       for i = 1, n do res[i][i+shift] = vec and v(i) or v[i] end
     else
-      res = matrix._init(n - shift, n - shift, {})
+      res = matrix._initCheck(n - shift, n - shift, {})
       for i = 1, n do res[i-shift][i] = vec and v(i) or v[i] end
     end
     return res
@@ -820,7 +841,7 @@ matrix.eye = function (_, iR, iC)
   else
     iC = iC or iR
   end
-  local m = matrix._init(iR, iC, {})
+  local m = matrix._initCheck(iR, iC, {})
   for i = 1, math.min(iR, iC) do m[i][i] = 1 end
   return m
 end
@@ -842,7 +863,7 @@ matrix.fill = function (_, iR, iC, val)
     for c = 1, iC do mr[c] = val end
     res[r] = mr
   end
-  return matrix._init(iR, iC, res)
+  return matrix._initCheck(iR, iC, res)
 end
 _about[matrix.fill] = {":fill(row_N, col_N, val=1) --> M",
   "Create matrix of given numbers (default is 1).", _help.NEW}
@@ -955,30 +976,48 @@ matrix.lu = function (self)
   -- check square
   local U, P = self:copy(), matrix:eye(self._rows, self._cols)
   local L = matrix:eye(self._rows, self._cols)
-  for i = 1, self._rows do
-    -- swap with maximum
-    local k, max = i, _norm(U[i][i])
-    for j = i+1, U._rows do
-      local uj = _norm(U[j][i])
-      if uj > max then
-        k, max = j, uj
+  for i = 1, U._rows do
+    -- find pivot
+    local k, max = i, 0.0
+    for r = i, U._rows do
+      local Ur = U[r]
+      local s = Ur[i]
+      for q = 1, i-1 do s = s - Ur[q]*U[q][r] end
+      s = _norm(s)
+      if s > max then
+        max, k = s, r
       end
     end
-    for j = k-1, i, -1 do
-      U[j], U[j+1] = U[j+1], U[j]
-      P[j], P[j+1] = P[j+1], P[j]
+    -- swap
+    if i ~= k then
+      U[i], U[k] = U[k], U[i]
+      P[i], P[k] = P[k], P[i]
     end
-    -- fill U, L
+    -- fill U part
     local Ui = U[i]
-    if not _zero(Ui[i]) then
-      for j = i + 1, U._rows do
+    for j = i, U._rows do
+      local s = Ui[j]
+      for q = 1, i-1 do s = s - Ui[q]*U[q][j] end   
+      Ui[j] = s 
+    end
+    -- fill L part
+    local Uii = Ui[i]
+    if not _zero(Uii) then
+      for j = i+1, L._rows do
         local Uj = U[j]
-        local t = Uj[i] / Ui[i]
-        L[j][i] = t
-        for c = i, U._cols do Uj[c] = Uj[c] - t * Ui[c] end
+        local s = Uj[i]
+        for q = 1, i-1 do s = s - Uj[q]*U[q][i] end
+        Uj[i] = s / Uii
       end
     end
   end
+  -- divide
+  for i = 2, self._rows do
+    local Li, Ui = L[i], U[i]
+    for j = 1, i-1 do
+      Li[j], Ui[j] = Ui[j], 0
+    end
+  end    
   return L, U, P
 end
 _about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
@@ -1326,7 +1365,7 @@ _about[matrix.ver] = {":ver(mat_t} --> mat_Ref",
 matrix.zeros = function (_, iR, iC)
   if _ismatrixex(iR) then iR, iC = iR._rows, iR._cols end  -- input is a matrix
   iC = iC or iR                          -- input is a number
-  return matrix._init(iR, iC, {})
+  return matrix._initCheck(iR, iC, {})
 end
 _about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
   "Create matrix of zeros.", _help.NEW}

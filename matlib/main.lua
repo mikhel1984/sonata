@@ -43,8 +43,8 @@ ans = c[1]                  --.3>  0.909
 
 -- simplified asciiplot call
 -- use table to change range
-xrng, yrng = {-3, 3}, {-1, 1}
-s = Plot(math.cos, 'cos', xrng, yrng, 'range correct')
+--xrng, yrng = {-3, 3}, {-1, 1}
+s = Plot {math.cos, 'cos', xrange={-3,3}, yrange={-1,1}}
 print(s)
 
 -- use Lua functions if need
@@ -67,6 +67,7 @@ local _ext = {
 local _calc = _ext.utils.calc
 local _round = _ext.utils.cross.round
 local _fn = _ext.utils.utils.Fn
+local _unpack = _ext.utils.versions.unpack
 
 
 --- Call default or module-specific function.
@@ -78,9 +79,8 @@ local function _call (fn, s)
     if type(v) == 'table' then
       local method = v[s]
       return method and method(v) or fn(v:float())
-    else
-      return fn(v)
     end
+    return fn(v)
   end
 end
 
@@ -217,24 +217,33 @@ Map = function (fn, t)
     for i, v in ipairs(t) do res[i] = fn(v) end
     return res
   end
-  return nil
 end
-_about[Map] = {'Map(fn, in_t) --> out_t',
+_about[Map] = {'Map(fn, in_t) --> out_t|nil',
   'Evaluate function for each table element.', _tag.AUX}
 
 
 --- Use 'asciiplot' for simplified print.
 --  @param ... Objects to plot.
 --  @return figure as text.
-Plot = function (...)
+Plot = function (t)
   _ext.ap = _ext.ap or require('matlib.asciiplot')
   local f = _ext.ap()
-  f._x:setRange({-5, 5})
-  f:plot(...)
-  return tostring(f)
+  -- params
+  for k, v in pairs(t) do
+    if type(k) == 'string' then
+      local axis, param = string.match(k, '(.)(.+)')
+      if axis == 'x' then 
+        f:setX {[param]=v}
+      elseif axis == 'y' then 
+        f:setY {[param]=v}
+      end
+    end
+  end
+  -- args
+  return f:plot(_unpack(t))
 end
-_about[Plot] = {"Plot(...) --> str",
-    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc.", _tag.AUX}
+_about[Plot] = {"Plot(args_t) --> fig",
+    "Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc. Parameters could be added with axis prefix like xrange, ylog etc.", _tag.AUX}
 
 
 --- Round to some precision.
