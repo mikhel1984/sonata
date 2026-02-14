@@ -405,19 +405,19 @@ graph._pack = function (self, acc)
   -- nodes
   for k in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = utils.pack_str(s, acc)
+    t[#t+1] = utils.packStr(s, acc)
     ns[s], p = p, p+1
   end
   t[#t+1] = '\0'
   -- edges
   for k, v in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = utils.pack_num(ns[s], acc)
+    t[#t+1] = utils.packNum(ns[s], acc)
     for q, w in pairs(v) do
       if w then   -- TODO simplify for directed graph
         local u = ns[tostring(q)]
-        t[#t+1] = utils.pack_num(u, acc)
-        t[#t+1] = utils.pack_num(w, acc)
+        t[#t+1] = utils.packNum(u, acc)
+        t[#t+1] = utils.packNum(w, acc)
       end
     end
     t[#t+1] = '\0'
@@ -439,20 +439,20 @@ graph._unpack = function (src, pos, acc, ver)
   -- get nodes
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
-    ns[#ns+1], pos = utils.unpack_str(src, pos, acc[n], ver)
+    ns[#ns+1], pos = utils.unpackStr(src, pos, acc[n], ver)
   end
   pos = pos + 1
   local gr, i, j, w = graph._new(dir == 1), nil, nil, nil
   -- get edges
   for i = 1, #ns do
     n, pos = string.unpack('B', src, pos)
-    i, pos = utils.unpack_num(src, pos, acc[n], ver)
+    i, pos = utils.unpackNum(src, pos, acc[n], ver)
     if string.byte(src, pos) == 0 then graph.add(gr, ns[i]) end
     while string.byte(src, pos) ~= 0 do
       n, pos = string.unpack('B', src, pos)
-      j, pos = utils.unpack_num(src, pos, acc[n], ver)
+      j, pos = utils.unpackNum(src, pos, acc[n], ver)
       n, pos = string.unpack('B', src, pos)
-      w, pos = utils.unpack_num(src, pos, acc[n], ver)
+      w, pos = utils.unpackNum(src, pos, acc[n], ver)
       graph.add(gr, ns[i], ns[j], w)
     end
     pos = pos + 1

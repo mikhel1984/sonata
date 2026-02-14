@@ -620,7 +620,7 @@ matrix._pack = function (self, acc)
   local spack = string.pack
   local t = {spack('B', acc['matrix']), spack('I2', rs), spack('I2', cs)}
   for r = 1, rs do
-    t[#t+1] = _utils.pack_seq(self[r], 1, cs, acc)
+    t[#t+1] = _utils.packSeq(self[r], 1, cs, acc)
   end
   return table.concat(t)
 end
@@ -634,11 +634,11 @@ end
 --  @return Matrix object.
 matrix._unpack = function (src, pos, acc, ver)
   local rs, cs, t = 0, 0, {}
-  local unpack_num, sunpack = _utils.unpack_num, string.unpack
+  local sunpack = string.unpack
   rs, pos = sunpack('I2', src, pos)
   cs, pos = sunpack('I2', src, pos)
   for r = 1, rs do
-    t[r], pos = _utils.unpack_seq(cs, src, pos, acc, ver)
+    t[r], pos = _utils.unpackSeq(cs, src, pos, acc, ver)
   end
   return matrix._initCheck(rs, cs, t), pos
 end

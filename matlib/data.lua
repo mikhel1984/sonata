@@ -304,9 +304,9 @@ local function _listPack (src, acc)
     if type(v) == 'table' then
       t[#t+1] = v._pack and v:_pack(acc) or _listPack(v, acc)
     elseif type(v) == 'number' then
-      t[#t+1] = _utils.pack_num(v, acc)
+      t[#t+1] = _utils.packNum(v, acc)
     elseif type(v) == 'string' then
-      t[#t+1] = _utils.pack_str(v, acc)
+      t[#t+1] = _utils.packStr(v, acc)
     else
       error "Unable to pack"
     end
@@ -331,9 +331,9 @@ local function _listUnpack (src, pos, acc, ver)
       if key == '#' then
         t[#t+1], pos = _listUnpack(src, pos, acc, ver)
       elseif string.byte(key, 1) == 0x26 then  -- &
-        t[#t+1], pos = _utils.unpack_num(src, pos, key, ver)
+        t[#t+1], pos = _utils.unpackNum(src, pos, key, ver)
       elseif string.byte(key, 1) == 0x22 then  -- "
-        t[#t+1], pos = _utils.unpack_str(src, pos, key, ver)
+        t[#t+1], pos = _utils.unpackStr(src, pos, key, ver)
       else   -- Sonata object
         acc[n] = require('matlib.'..key)
         t[#t+1], pos = acc[n]._unpack(src, pos, acc, ver)

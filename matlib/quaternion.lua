@@ -336,7 +336,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 quaternion._pack = function (self, acc)
-  local t = {string.pack('B', acc['quaternion']), _utils.pack_seq(self._, 1, 4, acc)}
+  local t = {string.pack('B', acc['quaternion']), _utils.packSeq(self._, 1, 4, acc)}
   return table.concat(t)
 end
 
@@ -348,10 +348,9 @@ end
 --  @param ver Pack algorithm version.
 --  @return Complex object.
 quaternion._unpack = function (src, pos, acc, ver)
-  local t, p = _utils.unpack_seq(4, src, pos, acc, ver)
+  local t, p = _utils.unpackSeq(4, src, pos, acc, ver)
   return quaternion._new(t[1], t[2], t[3], t[4]), p
 end
-
 
 
 --- Norm of the quaternion.
