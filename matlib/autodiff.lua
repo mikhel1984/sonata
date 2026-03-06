@@ -203,6 +203,19 @@ autodiff.__sub = function (v1, v2)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
 
+autodiff.__unm = function (v)
+  local x = v._[1]
+  local vars = _get_vars(v._der[1])
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {v},
+    vars,
+    {-1},
+    {0},
+    0)
+
+  return autodiff._init(-x, lin_vars, quad_vars, cross_vars)
+end
+
 
 
 autodiff.__mul = function (v1, v2)
@@ -219,6 +232,25 @@ autodiff.__mul = function (v1, v2)
     {y, x},
     {0, 0},
     1)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.__div = function (v1, v2)
+  local x, y = v1._[1], v2._[1]
+  local vars = _get_vars(v1._der[1], v2._der[1])
+
+  local f = x/y
+  local yy = 1.0/(y*y)
+
+  if #vars == 0 then return f end
+
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {v1, v2},
+    vars,
+    {1/y, -f/y},
+    {0, 2*f*yy},
+    -yy)
 
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
@@ -267,5 +299,5 @@ local v1 = autodiff._var(3, "x")
 local v2 = autodiff._var(2, "y")
 
 
-local s = v1 - v2*v2
-print(s:d2(v2))
+local s = v1 / v2
+print(s:d(v2))
