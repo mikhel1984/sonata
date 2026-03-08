@@ -305,13 +305,17 @@ _about[autodiff] = {" (t) --> A", "Create new autodiff.", _help.NEW}
 --- Method example.
 --  It is good idea to define method for the copy creation.
 --  @return Copy of the object.
-autodiff.copy = function (self)
-  -- some logic
-  return autodiff:new(argument)
+autodiff._copy = function (self)
+  local d1, d2, d3 = {}, {}, {}
+  for k, v in pairs(self._der[1]) do d1[k] = v end
+  for k, v in pairs(self._der[2]) do d2[k] = v end
+  for k, v in pairs(self._der[3]) do
+    local t = {}
+    for kk, vv in pairs(v) do t[kk] = vv end
+    d3[k] = t
+  end
+  return autodiff._init(self._[1], d1, d2, d3, self._[2])
 end
-_about[autodiff.copy] = {"A:copy() --> cpy_A",
-  "Create a copy of the object."} -- third element is optional, default is 'base'
--- begin from A implicitly
 
 -- Comment to remove descriptions
 autodiff.about = _about
@@ -326,5 +330,5 @@ local v1 = autodiff(3, "x")
 local v2 = autodiff(2, "y")
 
 
-local s = v1 / v2
-print(s:d(v2))
+local s = v1 * 2
+print(s:d(v1))
