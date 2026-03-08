@@ -28,15 +28,14 @@ ans = math.pi               --.2> 355/113
 
 --	LOCAL
 
-local _foo = 42
-
---	INFO
-
-local _help = SonataHelp or {}  -- optional
--- description
-local _about = {
-__module__ = "Automatic differentiation."
+local _ext = {
+  utils = require("matlib.utils"),
+  -- matrix = require("matlib.matrix"),
 }
+
+local _cross = _ext.utils.cross
+
+local _empty, _zeros = {}, {0, 0}
 
 
 local function _chain_rule (fns, vars, lins, quads, cross)
@@ -91,6 +90,19 @@ local function _chain_rule (fns, vars, lins, quads, cross)
   return lin_vars, quad_vars, cross_vars
 end
 
+--	INFO
+
+local _help = SonataHelp or {}  -- optional
+-- description
+local _about = {
+__module__ = "Automatic differentiation."
+}
+
+
+local function _compatible (v)
+  return type(v) == "number" or type(v) == "table"
+    and (v.float or v._norm)
+end
 
 --	MODULE
 
@@ -116,6 +128,10 @@ autodiff._init = function (v, dv, ddv, cross, name)
   return setmetatable(o, autodiff)
 end
 
+autodiff._convert = function (v)
+  return _compatible(v) and autodiff._init(v, _empty, _empty, _empty)
+end
+
 autodiff._var = function (v, name)
   local t = autodiff._init(v, {}, {}, {}, name)
   local key = t._
@@ -125,6 +141,22 @@ autodiff._var = function (v, name)
 end
 
 autodiff.v = function (self) return self._[1] end
+
+autodiff.float = function (self)
+  local v = self._[1]
+  return type(v) == "number" and v or
+    v.float and v:float() or nil
+end
+
+autodiff._norm = function (self)
+  v = self._[1]
+  return type(v) == "number" and math.abs(v) or
+    v._norm and v:_norm() or nil
+end
+
+autodiff._isZero = function (self)
+  return _cross.isZero(self._[1])
+end
 
 autodiff.d = function (self, var)
   if var then
@@ -168,37 +200,39 @@ local function _get_vars (a, b)
 end
 
 autodiff.__add = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 + w or v2.__add(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w + v2 or error("Not def")
+  end
+  -- 
   local x, y = v1._[1], v2._[1]
   local vars = _get_vars(v1._der[1], v2._der[1])
-
   local f = x+y
-
   if #vars == 0 then return f end
-
   local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v1, v2},
-    vars,
-    {1, 1},
-    {0, 0},
-    0)
+    {v1, v2}, vars, {1, 1}, _zeros, 0)
 
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
 
 autodiff.__sub = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 - w or v2.__sub(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w - v2 or error("Not def")
+  end
+  --
   local x, y = v1._[1], v2._[1]
   local vars = _get_vars(v1._der[1], v2._der[1])
-
   local f = x-y
-
   if #vars == 0 then return f end
-
   local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v1, v2},
-    vars,
-    {1, -1},
-    {0, 0},
-    0)
+    {v1, v2}, vars, {1, -1}, _zeros, 0)
 
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
@@ -207,11 +241,7 @@ autodiff.__unm = function (v)
   local x = v._[1]
   local vars = _get_vars(v._der[1])
   local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v},
-    vars,
-    {-1},
-    {0},
-    0)
+    {v}, vars, {-1}, _zeros, 0)
 
   return autodiff._init(-x, lin_vars, quad_vars, cross_vars)
 end
@@ -219,58 +249,55 @@ end
 
 
 autodiff.__mul = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 * w or v2.__mul(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w * v2 or error("Not def")
+  end
+  --
   local x, y = v1._[1], v2._[1]
   local vars = _get_vars(v1._der[1], v2._der[1])
-
   local f = x*y
-
   if #vars == 0 then return f end
-
   local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v1, v2},
-    vars,
-    {y, x},
-    {0, 0},
-    1)
+    {v1, v2}, vars, {y, x}, _zeros, 1)
 
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
 
 autodiff.__div = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 / w or v2.__div(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w / v2 or error("Not def")
+  end
+  --
   local x, y = v1._[1], v2._[1]
   local vars = _get_vars(v1._der[1], v2._der[1])
-
-  local f = x/y
-  local yy = 1.0/(y*y)
-
+  local f, yy = x/y, 1.0/(y*y)
   if #vars == 0 then return f end
-
   local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v1, v2},
-    vars,
-    {1/y, -f/y},
-    {0, 2*f*yy},
-    -yy)
+    {v1, v2}, vars, {1/y, -f/y}, {0, 2*f*yy}, -yy)
 
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
 
 
---- Constructor example.
---  @param t Some value.
---  @return New object of autodiff.
-autodiff.new = function(self, t)
-  local o = {}
-  -- your logic
-  -- return object
-  return setmetatable(o, self)
-end
-_about[autodiff.new] = {":new(t) --> A", "Explicit constructor.", _help.NEW}
--- begin from ':' to get 'Ad:new(t)'
-
 
 -- simplify constructor call
-setmetatable(autodiff, {__call = function (self, v) return autodiff:new(v) end})
+setmetatable(autodiff, {
+__call = function (_, v, name) 
+  assert(_compatible(v), "Wrong data type")
+  local t = autodiff._init(v, {}, {}, {}, name)
+  local key = t._
+  t._der[1][key] = 1.0
+  t._der[2][key] = 0.0
+  return t
+end })
 _about[autodiff] = {" (t) --> A", "Create new autodiff.", _help.NEW}
 -- begin from ' ' to get 'Ad ()'
 
@@ -295,8 +322,8 @@ autodiff.about = _about
 --======================================
 --TODO: write new functions
 
-local v1 = autodiff._var(3, "x")
-local v2 = autodiff._var(2, "y")
+local v1 = autodiff(3, "x")
+local v2 = autodiff(2, "y")
 
 
 local s = v1 / v2
