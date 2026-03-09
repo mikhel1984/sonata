@@ -15,13 +15,51 @@
 -- use 'autodiff'
 Ad = require 'matlib.autodiff'
 
--- example
-a = Ad()
--- check equality
-ans = a.type                  -->  'autodiff'
+-- init
+x = Ad(3, "x")
+y = Ad(4)  -- name is optional
+-- get value
+ans = x()                     -->  3
 
--- check relative equality ( ~10^(-2) )
-ans = math.pi               --.2> 355/113
+-- arithmetic operation
+s = x + y
+-- first derivative
+ans = s:d(x)                --.2>  1
+
+-- second derivative
+ans = s:d2(y)               --.2>  0
+
+s = x * y
+-- val() could be skipped
+ans = s:d(x)                --.2>  y()
+
+-- ds^2/dxdy
+ans = s:d2(x, y)            --.2>  1.0
+
+ans = (y - x):d(x)          --.2>  -1.0
+
+s = x / y
+ans = s:d(y)                --.2>  -x()/y()^2
+
+ans = s:d2(y, x)            --.2>  -1/y()^2
+
+s = x^y
+-- equal to s:d2(x)
+ans = s:d2(x, x)            --.2>  y()*(y()-1)*x()^(y()-2)
+
+ans = s:d(y)                --.2>  x()^y()*math.log(x())
+
+ans = x:sin():d(x)          --.2>  math.cos(x())
+
+ans = x:cos():d2(x)         --.2>  -math.cos(x())
+
+ans = (x*y):tan():d(x)      --.2>  y()/math.cos(x()*y())^2
+
+ans = y:sqrt():d(y)         --.2>  1/(2*math.sqrt(y()))
+
+ans = x:exp():d2(x)         --.2>  math.exp(x())
+
+ans = x:log():d(x)          --.2>  1/x()
 
 --]]
 
@@ -153,6 +191,10 @@ autodiff.__add = function (v1, v2)
     {v1, v2}, vars, {1, 1}, _zeros, 0)
 
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.__call = function (self)
+  return self._[1]
 end
 
 autodiff.__div = function (v1, v2)
@@ -529,23 +571,14 @@ __call = function (_, v, name)
   t._der[2][key] = 0.0
   return t
 end })
-_about[autodiff] = {" (t) --> A", "Create new autodiff.", _help.NEW}
+_about[autodiff] = {" (t) --> A", "Create new autodiff object.", _help.NEW}
 -- begin from ' ' to get 'Ad ()'
 
 
 -- Comment to remove descriptions
 autodiff.about = _about
 
---return autodiff
+return autodiff
 
--- TODO const tables to local variables
 --======================================
---TODO: write new functions
 
-local v1 = autodiff(3, "x")
-local v2 = autodiff(2, "y")
-
-print(v2)
-
-local s = v1 ^ v2
-print(s:d2(v2, v1))
