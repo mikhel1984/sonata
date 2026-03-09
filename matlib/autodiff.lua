@@ -50,7 +50,7 @@ local function _chain_rule (fns, vars, lins, quads, cross)
     end
     cross_vars[v] = t
   end
-  
+
   -- chain rule
   for i = 1, #vars do
     local v1 = vars[i]
@@ -59,7 +59,7 @@ local function _chain_rule (fns, vars, lins, quads, cross)
       for k = 1, #lins do
         local der, dh, d2h = fns[k]._der, lins[k], quads[k]
         local fv1 = der[1][v1] or 0  -- 1sd derivative
-        if i == j then 
+        if i == j then
           -- first order terms
           lin_vars[v1] = lin_vars[v1] + dh*fv1
           -- pure second order terms
@@ -76,11 +76,11 @@ local function _chain_rule (fns, vars, lins, quads, cross)
       -- update quadratic and cross product terms
       if #fns > 1 then
         local d1, d2 = fns[1]._der[1], fns[2]._der[1]
-        local tmp = (d1[v2] or 0) * (d2[v1] or 0) 
+        local tmp = (d1[v2] or 0) * (d2[v1] or 0)
         if i == j then
           quad_vars[v1] = quad_vars[v1] + 2*cross*tmp
-        else 
-          tmp = tmp + (d1[v1] or 0) * (d2[v2] or 0) 
+        else
+          tmp = tmp + (d1[v1] or 0) * (d2[v2] or 0)
           local t = cross_vars[v1]
           t[v2] = t[v2] + cross*tmp
         end
@@ -90,8 +90,20 @@ local function _chain_rule (fns, vars, lins, quads, cross)
   return lin_vars, quad_vars, cross_vars
 end
 
+local function _get_vars (a, b)
+  local res = {}
+  for k in pairs(a) do res[#res+1] = k end
+  if b then
+    for k in pairs(b) do
+      if not a[k] then res[#res+1] = k end
+    end
+  end
+  return res
+end
+
+
 local function _value (v)
-  return type(v) == "number" and v 
+  return type(v) == "number" and v
     or type(v) == "table" and
       (v.float and v:float() or v._norm and v)
     or nil   -- either number or complex/quaternion
@@ -131,7 +143,7 @@ autodiff.__add = function (v1, v2)
     local w = autodiff._convert(v1)
     return w and w + v2 or error("Not def")
   end
-  -- 
+  --
   local x, y = v1._[1], v2._[1]
   local vars = _get_vars(v1._der[1], v2._der[1])
   local f = x+y
@@ -180,6 +192,39 @@ autodiff.__mul = function (v1, v2)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
 
+autodiff.__pow = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 ^ w or v2.__pow(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w ^ v2 or error("Not def")
+  end
+  --
+  local x, y = v1._[1], v2._[1]
+  local vars = _get_vars(v1._der[1], v2._der[1])
+  local f = x^y
+  if #vars == 0 then return f end
+  local lins = {y*x^(y-1), 0}
+  local quads = {y*(y-1)*x^(y-2), 0}
+  local cross = 0
+  local istblx = type(x) == "table"
+  local norm = istblx and _cross.norm(x)
+           or (x > 0) and x
+           or 0
+  if norm > 0 and (not istblx and type(y) ~= "table" or v2._der[1][v2._] ~= 0)
+  then
+    local lx = istblx and x:log() or math.log(x)
+    lins[2] = x^y * lx
+    quads[2] = x^y * lx*lx
+    cross = x^y * (y*lx + 1)/x
+  end
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {v1, v2}, vars, lins, quads, cross)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
 
 autodiff.__sub = function (v1, v2)
   if not _isautodiff(v2) then
@@ -214,7 +259,7 @@ end
 
 autodiff.__tostring = function (self)
   local v, n = self._[1], self._[2]
-  return string.format("Ad(%s%s%s)", 
+  return string.format("Ad(%s%s%s)",
     n or "",
     n and "=" or "",
     type(v) == "number" and _ext.utils.utils.numstr(v) or tostring(v))
@@ -272,50 +317,36 @@ autodiff.float = function (self)
 end
 
 autodiff.d = function (self, var)
-  if var then
-    return _isautodiff(var) and self._der[1][var._] or 0
+  if not var then
+    error "Variable expected"
   end
-  return self._der[1]
+  return _isautodiff(var) and self._der[1][var._] or 0
 end
 
-autodiff.d2 = function (self, var)
-  if var then
-    return _isautodiff(var) and self._der[2][var._] or 0
+autodiff.d2 = function (self, x, y)
+  if not x then
+    error "Variable expected"
   end
-  return self._der[2]
-end
-
-autodiff.d2c = function (self, x, y)
+  y = y or x
+  -- second derivative
+  if x == y then
+    return _isautodiff(x) and self._der[2][x._] or 0
+  end
+  -- cross derivative
   local dc = self._der[3]
-  if x and y then
-    if x == y then return self:d2(x) end
-    if _isautodiff(x) and _isautodiff(y) then
-      local kx, ky = x._, y._
-      return dc[kx] and dc[kx][ky] 
-          or dc[ky] and dc[ky][kx]
-          or 0.0
-    end
-  elseif not x and not y then
-    return dc
+  if _isautodiff(x) and _isautodiff(y) then
+    local kx, ky = x._, y._
+    return dc[kx] and dc[kx][ky]
+        or dc[ky] and dc[ky][kx]
+        or 0.0
   end
   return 0.0
-end
-
-local function _get_vars (a, b)
-  local res = {}
-  for k in pairs(a) do res[#res+1] = k end
-  if b then 
-    for k in pairs(b) do
-      if not a[k] then res[#res+1] = k end
-    end
-  end
-  return res
 end
 
 
 -- simplify constructor call
 setmetatable(autodiff, {
-__call = function (_, v, name) 
+__call = function (_, v, name)
   if _isautodiff(v) then
     if name then v._[2] = name end
     return v
@@ -345,6 +376,5 @@ local v2 = autodiff(2, "y")
 
 print(v2)
 
-local s = v1 * 2
-print(s)
-print(s:d(v1))
+local s = v1 ^ v2
+print(s:d2(v2, v1))
