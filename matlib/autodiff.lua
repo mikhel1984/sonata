@@ -34,6 +34,7 @@ local _ext = {
 }
 
 local _cross = _ext.utils.cross
+local _calc = _ext.utils.calc
 
 local _empty, _zeros = {}, {0, 0}
 
@@ -305,16 +306,183 @@ autodiff._norm = function (self)
     v._norm and v:_norm() or nil
 end
 
-
-
-autodiff.v = function (self) return self._[1] end
-
-
-autodiff.float = function (self)
-  local v = self._[1]
-  return type(v) == "number" and v or
-    v.float and v:float() or nil
+local function _fun (x, nm, f)
+  return type(x) == "number" and f(x)
+      or x[nm] and x[nm](x)
+      or f(x:float())
 end
+
+autodiff.acos = function (self)
+  local x = self._[1]
+  local f = _fun(x, "acos", math.acos)
+  local vars = _get_vars(self._der[1])
+  local sq = _fun(1-x*x, "sqrt", math.sqrt)
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {-1/sq}, {x/(sq*(x*x-1))}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.acosh = function (self)
+  local x = self._[1]
+  local f = _fun(x, "acosh", _calc.acosh)
+  local vars = _get_vars(self._der[1])
+  local sq = _fun(x*x-1, "sqrt", math.sqrt)
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {1/sq}, {-x/(sq*(x*x-1))}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.asin = function (self)
+  local x = self._[1]
+  local f = _fun(x, "asin", math.asin)
+  local vars = _get_vars(self._der[1])
+  local sq = _fun(1-x*x, "sqrt", math.sqrt)
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {1/sq}, {-x/(sq*(x*x-1))}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.asinh = function (self)
+  local x = self._[1]
+  local f = _fun(x, "asinh", _calc.asinh)
+  local vars = _get_vars(self._der[1])
+  local sq = _fun(x*x+1, "sqrt", math.sqrt)
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {1/sq}, {-x/(sq*(x*x+1))}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.atan = function (self)
+  local x = self._[1]
+  local f = _fun(x, "atan", math.atan)
+  local vars = _get_vars(self._der[1])
+  local xx = x*x + 1
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {1/xx}, {-2*x/(xx*xx)}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.atanh = function (self)
+  local x = self._[1]
+  local f = _fun(x, "atanh", _calc.atanh)
+  local vars = _get_vars(self._der[1])
+  local xx = x*x - 1
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {-1/xx}, {2*x/(xx*xx)}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.cos = function (self)
+  local x = self._[1]
+  local f = _fun(x, "cos", math.cos)
+  local vars = _get_vars(self._der[1])
+  local s = _fun(x, "sin", math.sin)
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {-s}, {-f}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.cosh = function (self)
+  local x = self._[1]
+  local f = _fun(x, "cosh", _calc.cosh)
+  local vars = _get_vars(self._der[1])
+  local s = _fun(x, "sinh", _calc.sinh)
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {s}, {f}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.exp = function (self)
+  local x = self._[1]
+  local f = _fun(x, "exp", math.exp)
+  local vars = _get_vars(self._der[1])
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {f}, {f}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.log = function (self, base)
+  local x = self._[1]
+  local f = _fun(x, "log", math.log)
+  local vars = _get_vars(self._der[1])
+  local lbase = base and math.log(base) or 1
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {1/(x*lbase)}, {-1/(x*x*lbase)}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.sin = function (self)
+  local x = self._[1]
+  local f = _fun(x, "sin", math.sin)
+  local vars = _get_vars(self._der[1])
+  local c = _fun(x, "cos", math.cos)
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {c}, {-f}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.sinh = function (self)
+  local x = self._[1]
+  local f = _fun(x, "sinh", _calc.sinh)
+  local vars = _get_vars(self._der[1])
+  local c = _fun(x, "cosh", _calc.cosh)
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {c}, {f}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.sqrt = function (self)
+  local x = self._[1]
+  local f = _fun(x, "sqrt", math.sqrt)
+  local vars = _get_vars(self._der[1])
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {1/(2*f)}, {-1/(4*x*f)}, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.tan = function (self)
+  local x = self._[1]
+  local s = _fun(x, "sin", math.sin)
+  local c = _fun(x, "cos", math.cos)
+  local vars = _get_vars(self._der[1])
+  local cc = c*c
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {1/(cc)}, {2*s/(cc*c)}, 0)
+
+  return autodiff._init(s/c, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.tanh = function (self)
+  local x = self._[1]
+  local s = _fun(x, "sinh", _calc.sinh)
+  local c = _fun(x, "cosh", _calc.cosh)
+  local vars = _get_vars(self._der[1])
+  local cc = c*c
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {self}, vars, {1/(cc)}, {-2*s/(cc*c)}, 0)
+
+  return autodiff._init(s/c, lin_vars, quad_vars, cross_vars)
+end
+
+
+--autodiff.float = function (self)
+--  local v = self._[1]
+--  return type(v) == "number" and v or
+--    v.float and v:float() or nil
+--end
 
 autodiff.d = function (self, var)
   if not var then
@@ -344,6 +512,9 @@ autodiff.d2 = function (self, x, y)
 end
 
 
+autodiff.val = function (self) return self._[1] end
+
+
 -- simplify constructor call
 setmetatable(autodiff, {
 __call = function (_, v, name)
@@ -352,7 +523,7 @@ __call = function (_, v, name)
     return v
   end
   local w = assert(_value(v), "Wrong data type")
-  local t = autodiff._init(w, {}, {}, {}, name)
+  local t = autodiff._init(w, {}, {}, _empty, name)
   local key = t._
   t._der[1][key] = 1.0
   t._der[2][key] = 0.0
