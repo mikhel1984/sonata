@@ -90,6 +90,14 @@ local function _chain_rule (fns, vars, lins, quads, cross)
   return lin_vars, quad_vars, cross_vars
 end
 
+local function _value (v)
+  return type(v) == "number" and v 
+    or type(v) == "table" and
+      (v.float and v:float() or v._norm and v)
+    or nil   -- either number or complex/quaternion
+end
+
+
 --	INFO
 
 local _help = SonataHelp or {}  -- optional
@@ -99,10 +107,6 @@ __module__ = "Automatic differentiation."
 }
 
 
-local function _compatible (v)
-  return type(v) == "number" or type(v) == "table"
-    and (v.float or v._norm)
-end
 
 --	MODULE
 
@@ -119,6 +123,123 @@ autodiff.__index = autodiff
 --  @return True if the object is autodiff.
 local function _isautodiff(v) return getmetatable(v) == autodiff end
 
+autodiff.__add = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 + w or v2.__add(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w + v2 or error("Not def")
+  end
+  -- 
+  local x, y = v1._[1], v2._[1]
+  local vars = _get_vars(v1._der[1], v2._der[1])
+  local f = x+y
+  if #vars == 0 then return f end
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {v1, v2}, vars, {1, 1}, _zeros, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.__div = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 / w or v2.__div(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w / v2 or error("Not def")
+  end
+  --
+  local x, y = v1._[1], v2._[1]
+  local vars = _get_vars(v1._der[1], v2._der[1])
+  local f, yy = x/y, 1.0/(y*y)
+  if #vars == 0 then return f end
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {v1, v2}, vars, {1/y, -f/y}, {0, 2*f*yy}, -yy)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+autodiff.__mul = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 * w or v2.__mul(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w * v2 or error("Not def")
+  end
+  --
+  local x, y = v1._[1], v2._[1]
+  local vars = _get_vars(v1._der[1], v2._der[1])
+  local f = x*y
+  if #vars == 0 then return f end
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {v1, v2}, vars, {y, x}, _zeros, 1)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+
+autodiff.__sub = function (v1, v2)
+  if not _isautodiff(v2) then
+    local w = autodiff._convert(v2)
+    return w and v1 - w or v2.__sub(v1, v2)
+  elseif not _isautodiff(v1) then
+    local w = autodiff._convert(v1)
+    return w and w - v2 or error("Not def")
+  end
+  --
+  local x, y = v1._[1], v2._[1]
+  local vars = _get_vars(v1._der[1], v2._der[1])
+  local f = x-y
+  if #vars == 0 then return f end
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {v1, v2}, vars, {1, -1}, _zeros, 0)
+
+  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+
+
+autodiff.__unm = function (v)
+  local x = v._[1]
+  local vars = _get_vars(v._der[1])
+  local lin_vars, quad_vars, cross_vars = _chain_rule(
+    {v}, vars, {-1}, _zeros, 0)
+
+  return autodiff._init(-x, lin_vars, quad_vars, cross_vars)
+end
+
+
+
+autodiff.__tostring = function (self)
+  local v, n = self._[1], self._[2]
+  return string.format("Ad(%s%s%s)", 
+    n or "",
+    n and "=" or "",
+    type(v) == "number" and _ext.utils.utils.numstr(v) or tostring(v))
+end
+
+autodiff._convert = function (v)
+  local w = _value(v)
+  return w and autodiff._init(w, _empty, _empty, _empty)
+end
+
+--- Method example.
+--  It is good idea to define method for the copy creation.
+--  @return Copy of the object.
+autodiff._copy = function (self)
+  local d1, d2, d3 = {}, {}, {}
+  for k, v in pairs(self._der[1]) do d1[k] = v end
+  for k, v in pairs(self._der[2]) do d2[k] = v end
+  for k, v in pairs(self._der[3]) do
+    local t = {}
+    for kk, vv in pairs(v) do t[kk] = vv end
+    d3[k] = t
+  end
+  return autodiff._init(self._[1], d1, d2, d3, self._[2])
+end
+
 
 autodiff._init = function (v, dv, ddv, cross, name)
   local o = {
@@ -128,24 +249,9 @@ autodiff._init = function (v, dv, ddv, cross, name)
   return setmetatable(o, autodiff)
 end
 
-autodiff._convert = function (v)
-  return _compatible(v) and autodiff._init(v, _empty, _empty, _empty)
-end
 
-autodiff._var = function (v, name)
-  local t = autodiff._init(v, {}, {}, {}, name)
-  local key = t._
-  t._der[1][key] = 1.0
-  t._der[2][key] = 0.0
-  return t
-end
-
-autodiff.v = function (self) return self._[1] end
-
-autodiff.float = function (self)
-  local v = self._[1]
-  return type(v) == "number" and v or
-    v.float and v:float() or nil
+autodiff._isZero = function (self)
+  return _cross.isZero(self._[1])
 end
 
 autodiff._norm = function (self)
@@ -154,8 +260,15 @@ autodiff._norm = function (self)
     v._norm and v:_norm() or nil
 end
 
-autodiff._isZero = function (self)
-  return _cross.isZero(self._[1])
+
+
+autodiff.v = function (self) return self._[1] end
+
+
+autodiff.float = function (self)
+  local v = self._[1]
+  return type(v) == "number" and v or
+    v.float and v:float() or nil
 end
 
 autodiff.d = function (self, var)
@@ -199,100 +312,16 @@ local function _get_vars (a, b)
   return res
 end
 
-autodiff.__add = function (v1, v2)
-  if not _isautodiff(v2) then
-    local w = autodiff._convert(v2)
-    return w and v1 + w or v2.__add(v1, v2)
-  elseif not _isautodiff(v1) then
-    local w = autodiff._convert(v1)
-    return w and w + v2 or error("Not def")
-  end
-  -- 
-  local x, y = v1._[1], v2._[1]
-  local vars = _get_vars(v1._der[1], v2._der[1])
-  local f = x+y
-  if #vars == 0 then return f end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v1, v2}, vars, {1, 1}, _zeros, 0)
-
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
-end
-
-autodiff.__sub = function (v1, v2)
-  if not _isautodiff(v2) then
-    local w = autodiff._convert(v2)
-    return w and v1 - w or v2.__sub(v1, v2)
-  elseif not _isautodiff(v1) then
-    local w = autodiff._convert(v1)
-    return w and w - v2 or error("Not def")
-  end
-  --
-  local x, y = v1._[1], v2._[1]
-  local vars = _get_vars(v1._der[1], v2._der[1])
-  local f = x-y
-  if #vars == 0 then return f end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v1, v2}, vars, {1, -1}, _zeros, 0)
-
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
-end
-
-autodiff.__unm = function (v)
-  local x = v._[1]
-  local vars = _get_vars(v._der[1])
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v}, vars, {-1}, _zeros, 0)
-
-  return autodiff._init(-x, lin_vars, quad_vars, cross_vars)
-end
-
-
-
-autodiff.__mul = function (v1, v2)
-  if not _isautodiff(v2) then
-    local w = autodiff._convert(v2)
-    return w and v1 * w or v2.__mul(v1, v2)
-  elseif not _isautodiff(v1) then
-    local w = autodiff._convert(v1)
-    return w and w * v2 or error("Not def")
-  end
-  --
-  local x, y = v1._[1], v2._[1]
-  local vars = _get_vars(v1._der[1], v2._der[1])
-  local f = x*y
-  if #vars == 0 then return f end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v1, v2}, vars, {y, x}, _zeros, 1)
-
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
-end
-
-autodiff.__div = function (v1, v2)
-  if not _isautodiff(v2) then
-    local w = autodiff._convert(v2)
-    return w and v1 / w or v2.__div(v1, v2)
-  elseif not _isautodiff(v1) then
-    local w = autodiff._convert(v1)
-    return w and w / v2 or error("Not def")
-  end
-  --
-  local x, y = v1._[1], v2._[1]
-  local vars = _get_vars(v1._der[1], v2._der[1])
-  local f, yy = x/y, 1.0/(y*y)
-  if #vars == 0 then return f end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
-    {v1, v2}, vars, {1/y, -f/y}, {0, 2*f*yy}, -yy)
-
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
-end
-
-
 
 -- simplify constructor call
 setmetatable(autodiff, {
 __call = function (_, v, name) 
-  assert(_compatible(v), "Wrong data type")
-  local t = autodiff._init(v, {}, {}, {}, name)
+  if _isautodiff(v) then
+    if name then v._[2] = name end
+    return v
+  end
+  local w = assert(_value(v), "Wrong data type")
+  local t = autodiff._init(w, {}, {}, {}, name)
   local key = t._
   t._der[1][key] = 1.0
   t._der[2][key] = 0.0
@@ -301,21 +330,6 @@ end })
 _about[autodiff] = {" (t) --> A", "Create new autodiff.", _help.NEW}
 -- begin from ' ' to get 'Ad ()'
 
-
---- Method example.
---  It is good idea to define method for the copy creation.
---  @return Copy of the object.
-autodiff._copy = function (self)
-  local d1, d2, d3 = {}, {}, {}
-  for k, v in pairs(self._der[1]) do d1[k] = v end
-  for k, v in pairs(self._der[2]) do d2[k] = v end
-  for k, v in pairs(self._der[3]) do
-    local t = {}
-    for kk, vv in pairs(v) do t[kk] = vv end
-    d3[k] = t
-  end
-  return autodiff._init(self._[1], d1, d2, d3, self._[2])
-end
 
 -- Comment to remove descriptions
 autodiff.about = _about
@@ -329,6 +343,8 @@ autodiff.about = _about
 local v1 = autodiff(3, "x")
 local v2 = autodiff(2, "y")
 
+print(v2)
 
 local s = v1 * 2
+print(s)
 print(s:d(v1))
