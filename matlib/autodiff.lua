@@ -14,6 +14,8 @@
 
 -- use 'autodiff'
 Ad = require 'matlib.autodiff'
+-- for jacobian/hessian
+require 'matlib.matrix'
 
 -- init
 x = Ad(3, "x")
@@ -26,12 +28,22 @@ s = x + y
 -- first derivative
 ans = s:d(x)                --.2>  1
 
+-- name can be used
+ans = s:d "x"               --.2>  1
+
 -- second derivative
 ans = s:d2(y)               --.2>  0
 
 s = x * y
--- val() could be skipped
 ans = s:d(x)                --.2>  y()
+
+-- jacobian (gradient)
+v = s:grad {x, y}  -- get vector
+ans = v(1)                  --.2> y()
+
+-- hessian
+v = s:hess {x, y}
+ans = v(1,2)                --.2> 1
 
 -- ds^2/dxdy
 ans = s:d2(x, y)            --.2>  1.0
@@ -75,6 +87,13 @@ local _cross = _ext.utils.cross
 local _calc = _ext.utils.calc
 
 local _empty, _zeros = {}, {0, 0}
+
+
+local function _by_name (var, nm)
+  for k in pairs(var._der[1]) do
+    if k[2] == nm then return k end
+  end
+end
 
 
 local function _chain_rule (fns, vars, lins, quads, cross)
@@ -530,7 +549,9 @@ autodiff.d = function (self, var)
   if not var then
     error "Variable expected"
   end
-  return _isautodiff(var) and self._der[1][var._] or 0
+  return _isautodiff(var) and self._der[1][var._] 
+      or type(var) == "string" and self._der[1][_by_name(self, var)]
+      or 0
 end
 
 autodiff.d2 = function (self, x, y)
@@ -539,18 +560,36 @@ autodiff.d2 = function (self, x, y)
   end
   y = y or x
   -- second derivative
+  local kx = _isautodiff(x) and x._ or type(x) == "string" and _by_name(self, x)
   if x == y then
-    return _isautodiff(x) and self._der[2][x._] or 0
+    return self._der[2][kx] or 0
   end
   -- cross derivative
+  local ky = _isautodiff(y) and y._ or type(y) == "string" and _by_name(self, y)
   local dc = self._der[3]
-  if _isautodiff(x) and _isautodiff(y) then
-    local kx, ky = x._, y._
-    return dc[kx] and dc[kx][ky]
-        or dc[ky] and dc[ky][kx]
-        or 0.0
+  return dc[kx] and dc[kx][ky]
+      or dc[ky] and dc[ky][kx]
+      or 0.0
+end
+
+autodiff.grad = function (self, vars)
+  _ext.matrix = _ext.matrix or require("matlib.matrix")
+  local t = {}
+  for i, v in ipairs(vars) do t[i] = autodiff.d(self, v) end
+  return _ext.matrix:V(t)
+end
+
+autodiff.hess = function (self, vars)
+  _ext.matrix = _ext.matrix or require("matlib.matrix")
+  local m = _ext.matrix:zeros(#vars)
+  for i = 1, #vars do
+    local vi, t = vars[i], m[i]
+    for j = 1, i-1 do t[j] = m[j][i] end
+    for j = i, #vars do
+      t[j] = autodiff.d2(self, vi, vars[j])
+    end
   end
-  return 0.0
+  return m
 end
 
 
