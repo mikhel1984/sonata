@@ -668,7 +668,6 @@ _about[complex.tanh] = {"C:tanh() --> y_C",
   "Return hyperbolic tangent of a complex number.", FUNCTIONS}
 
 
-
 -- simplify constructor call
 setmetatable(complex, {
 __call = function (_, re, im)

@@ -364,7 +364,7 @@ WORD2.new = function(self, t)
   -- return object
   return setmetatable(o, self)
 end
-_about[WORD2.new] = {":new(t) --> WORD6", "Explicit constructor.", _help.NEW}
+_about[WORD2.new] = {":new(t) --> WORD6", "Explicit constructor.", _help.STATIC}
 -- begin from ':' to get 'WORD3:new(t)'
 
 
