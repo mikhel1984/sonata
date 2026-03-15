@@ -86,6 +86,7 @@ ans = x:log():d(x)          --.2>  1/x()
 -- Sonata dependencies
 local _ext = {
   utils = require("matlib.utils"),
+  complex = require("matlib.complex"),
   -- matrix = require("matlib.matrix"),
 }
 
@@ -93,6 +94,8 @@ local _ext = {
 local _cross = _ext.utils.cross
 -- Additional math functions
 local _calc = _ext.utils.calc
+-- complex square root
+local _sqrt = _ext.complex.sqrt
 
 -- Constants
 local _EMPTY, _ZEROS = {}, {0, 0}
@@ -456,9 +459,9 @@ end
 --  @return inverse cosine.
 autodiff.acos = function (self)
   local x = self._[1]
-  local f = _fun(x, "acos", math.acos)
   local vars = _get_vars(self._der[1])
-  local sq = _fun(1-x*x, "sqrt", math.sqrt)
+  local f = _ext.complex(x):acos():_simp()
+  local sq = _sqrt(1 - x*x)
   local lin_vars, quad_vars, cross_vars = _chain_rule(
     {self}, vars, {-1/sq}, {x/(sq*(x*x-1))}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
@@ -469,9 +472,9 @@ end
 --  @return hyperbolic inverse cosine.
 autodiff.acosh = function (self)
   local x = self._[1]
-  local f = _fun(x, "acosh", _calc.acosh)
   local vars = _get_vars(self._der[1])
-  local sq = _fun(x*x-1, "sqrt", math.sqrt)
+  local f = _ext.complex(x):acosh():_simp()
+  local sq = _sqrt(x*x - 1)
   local lin_vars, quad_vars, cross_vars = _chain_rule(
     {self}, vars, {1/sq}, {-x/(sq*(x*x-1))}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
@@ -482,9 +485,9 @@ end
 --  @return inverse sine.
 autodiff.asin = function (self)
   local x = self._[1]
-  local f = _fun(x, "asin", math.asin)
   local vars = _get_vars(self._der[1])
-  local sq = _fun(1-x*x, "sqrt", math.sqrt)
+  local f = _ext.complex(x):asin():_simp()
+  local sq = _sqrt(1 - x*x)
   local lin_vars, quad_vars, cross_vars = _chain_rule(
     {self}, vars, {1/sq}, {-x/(sq*(x*x-1))}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
@@ -497,7 +500,7 @@ autodiff.asinh = function (self)
   local x = self._[1]
   local f = _fun(x, "asinh", _calc.asinh)
   local vars = _get_vars(self._der[1])
-  local sq = _fun(x*x+1, "sqrt", math.sqrt)
+  local sq = _fun(x*x + 1, "sqrt", math.sqrt)
   local lin_vars, quad_vars, cross_vars = _chain_rule(
     {self}, vars, {1/sq}, {-x/(sq*(x*x+1))}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
@@ -676,7 +679,7 @@ end
 --  @return square root value.
 autodiff.sqrt = function (self)
   local x = self._[1]
-  local f = _fun(x, "sqrt", math.sqrt)
+  local f = _sqrt(x)
   local vars = _get_vars(self._der[1])
   local lin_vars, quad_vars, cross_vars = _chain_rule(
     {self}, vars, {1/(2*f)}, {-1/(4*x*f)}, 0)
