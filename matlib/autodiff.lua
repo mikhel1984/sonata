@@ -100,6 +100,9 @@ local _sqrt = _ext.complex.sqrt
 -- Constants
 local _EMPTY, _ZEROS = {}, {0, 0}
 
+-- Function info
+local FUNCTIONS = 'functions'
+
 
 --- Find reference by name.
 --  @param var Variable.
@@ -285,6 +288,57 @@ autodiff.__div = function (A1, A2)
 end
 
 
+--- A1 == A2
+--  @param A1 autodiff object or number.
+--  @param A2 autodiff object or number.
+--  @return equality of numbers.
+autodiff.__eq = function (A1, A2)
+  if not (_isautodiff(A1) and _isautodiff(A2)) then
+    local a = _cross.convert(A1, A2)
+    if a then
+      return A1 == a
+    else
+      return _cross.convert(A2, A1) == A2
+    end
+  end
+  return _cross.eq(A1._[1], A2._[1])
+end
+
+
+--- A1 < A2
+--  @param A1 autodiff object or number.
+--  @param A2 autodiff object or number.
+--  @return true when first argument is less then the second one.
+autodiff.__lt = function (A1, A2)
+  if not (_isautodiff(A1) and _isautodiff(A2)) then
+    local a = _cross.convert(A1, A2)
+    if a then
+      return A1 < a
+    else
+      return _cross.convert(A2, A1) < A2
+    end
+  end
+  return A1._[1] < A2._[1]
+end
+
+
+--- A1 <= A2
+--  @param A1 autodiff object or number.
+--  @param A2 autodiff object or number.
+--  @return true when first argument is less then the second one.
+autodiff.__le = function (A1, A2)
+  if not (_isautodiff(A1) and _isautodiff(A2)) then
+    local a = _cross.convert(A1, A2)
+    if a then
+      return A1 <= a
+    else
+      return _cross.convert(A2, A1) <= A2
+    end
+  end
+  return A1._[1] <= A2._[1]
+end
+
+
 --- A1 * A2
 --  @param A1 autodiff object or number.
 --  @param A2 autodiff object or number.
@@ -390,6 +444,11 @@ autodiff.__unm = function (self)
 end
 
 
+-- Metamethods
+_about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, _help.META}
+_about['_cmp'] = {"comparison: a==b, a~=b, a < b, a <= b", nil, _help.META}
+
+
 --- Transform constant value to autodiff object.
 --  @param v Number to transform.
 --  @return autodiff object.
@@ -397,28 +456,6 @@ autodiff._convert = function (v)
   local w = _value(v)
   return w and autodiff._init(w, _EMPTY, _EMPTY, _EMPTY)
 end
-
-
---- Deep copy of an autodiff object.
---  @return copy of the object.
-autodiff._copy = function (self)
-  local d1, d2, d3 = {}, {}, {}
-  for k, v in pairs(self._der[1]) do d1[k] = v end
-  for k, v in pairs(self._der[2]) do d2[k] = v end
-  for k, v in pairs(self._der[3]) do
-    local t = {}
-    for kk, vv in pairs(v) do t[kk] = vv end
-    d3[k] = t
-  end
-  return autodiff._init(self._[1], d1, d2, d3, self._[2])
-end
-
-
---autodiff.float = function (self)
---  local v = self._[1]
---  return type(v) == "number" and v or
---    v.float and v:float() or nil
---end
 
 
 --- Make autodiff object.
@@ -440,19 +477,24 @@ end
 --- Check if the object value is zero.
 --  For compatibility with other modules.
 --  @return true when equal to zero.
-autodiff._isZero = function (self)
-  return _cross.isZero(self._[1])
-end
+autodiff._isZero = function (self) return _cross.isZero(self._[1]) end
 
 
 --- Find absolute value of an object.
 --  For compatibility with other modules.
 --  @return absolute value.
-autodiff._norm = function (self)
-  v = self._[1]
-  return type(v) == "number" and math.abs(v) or
-    v._norm and v:_norm() or nil
-end
+autodiff._norm = function (self) return _cross.norm(self._[1]) end
+
+
+--- Round value to specific tolerance.
+--  @param tol Tolerance value.
+--  @return rounded number.
+autodiff._round = function (self, tol) return _cross.round(self._[1], tol) end
+
+
+--- Try to get numeric value.
+--  @return float value or nil.
+autodiff._simp = function (self) return _cross.simp(self._[1]) end
 
 
 --- acos(x)
@@ -466,6 +508,7 @@ autodiff.acos = function (self)
     {self}, vars, {-1/sq}, {x/(sq*(x*x-1))}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.acos] = {"A:acos() --> y_A", "Inverse cosine.", FUNCTIONS}
 
 
 --- acosh(x)
@@ -479,6 +522,8 @@ autodiff.acosh = function (self)
     {self}, vars, {1/sq}, {-x/(sq*(x*x-1))}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.acosh] = {"A:acosh() --> y_A",
+  "Inverse hyperbolic cosine.", FUNCTIONS}
 
 
 --- asin(x)
@@ -492,6 +537,7 @@ autodiff.asin = function (self)
     {self}, vars, {1/sq}, {-x/(sq*(x*x-1))}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.asin] = {"A:asin() --> y_A", "Inverse sine.", FUNCTIONS}
 
 
 --- asinh(x)
@@ -505,6 +551,8 @@ autodiff.asinh = function (self)
     {self}, vars, {1/sq}, {-x/(sq*(x*x+1))}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.asinh] = {"A:asinh() --> y_A",
+  "Inverse hyperbolic sine.", FUNCTIONS}
 
 
 --- atan(x)
@@ -518,6 +566,7 @@ autodiff.atan = function (self)
     {self}, vars, {1/xx}, {-2*x/(xx*xx)}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.atan] = {"A:atan() --> y_A", "Inverse tangent.", FUNCTIONS}
 
 
 --- atanh(x)
@@ -530,6 +579,23 @@ autodiff.atanh = function (self)
   local lin_vars, quad_vars, cross_vars = _chain_rule(
     {self}, vars, {-1/xx}, {2*x/(xx*xx)}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+end
+_about[autodiff.atanh] = {"A:atanh() --> y_A",
+  "Inverse hyperbolic tangent.", FUNCTIONS}
+
+
+--- Deep copy of an autodiff object.
+--  @return copy of the object.
+autodiff.copy = function (self)
+  local d1, d2, d3 = {}, {}, {}
+  for k, v in pairs(self._der[1]) do d1[k] = v end
+  for k, v in pairs(self._der[2]) do d2[k] = v end
+  for k, v in pairs(self._der[3]) do
+    local t = {}
+    for kk, vv in pairs(v) do t[kk] = vv end
+    d3[k] = t
+  end
+  return autodiff._init(self._[1], d1, d2, d3, self._[2])
 end
 
 
@@ -544,6 +610,7 @@ autodiff.cos = function (self)
     {self}, vars, {-s}, {-f}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.cos] = {"A:cos() --> y_A", "Cosine value.", FUNCTIONS}
 
 
 --- cosh(x)
@@ -557,6 +624,8 @@ autodiff.cosh = function (self)
     {self}, vars, {s}, {f}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.acosh] = {"A:cosh() --> y_A",
+  "Hypebolic cosine value.", FUNCTIONS}
 
 
 --- Get 1st derivative.
@@ -570,6 +639,8 @@ autodiff.d = function (self, x)
       or type(x) == "string" and self._der[1][_by_name(self, x)]
       or 0
 end
+_about[autodiff.d] = {"A:d(var) --> df/dx_A",
+  "First derivative wrt the given variable (object or name)."}
 
 
 --- Get 2nd derivative.
@@ -593,6 +664,8 @@ autodiff.d2 = function (self, x, y)
       or dc[ky] and dc[ky][kx]
       or 0.0
 end
+_about[autodiff.d2] = {"A:d2(var, [var2=var]) --> d2f/dxdy_A",
+  "Second derivative wrt the given variables (object or name)."}
 
 
 --- exp(x)
@@ -605,6 +678,11 @@ autodiff.exp = function (self)
     {self}, vars, {f}, {f}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.exp] = {"A:exp() --> y_A", "Exponent value.", FUNCTIONS}
+
+
+--- Get variable as float value when possible.
+autodiff.float = function (self) return _cross.float(self._[1]) end
 
 
 --- Find gradient vector.
@@ -616,6 +694,8 @@ autodiff.grad = function (self, vars)
   for i, v in ipairs(vars) do t[i] = autodiff.d(self, v) end
   return _ext.matrix:V(t)
 end
+_about[autodiff.grad] = {"A:grad(vars_t) --> grad_V",
+  "Find Jacobian vector of expression wrt to the given list of variables."}
 
 
 --- Find hessian matrix.
@@ -633,6 +713,8 @@ autodiff.hess = function (self, vars)
   end
   return m
 end
+_about[autodiff.hess] = {"A:hess(vars_t) --> hess_M",
+  "Find Hessian matrix of expression wrt to the given list of variables."}
 
 
 --- log(x)
@@ -647,6 +729,7 @@ autodiff.log = function (self, base)
     {self}, vars, {1/(x*lbase)}, {-1/(x*x*lbase)}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.log] = {"A:log([base=e]) --> y_A", "Logarithm value.", FUNCTIONS}
 
 
 --- sin(x)
@@ -660,6 +743,7 @@ autodiff.sin = function (self)
     {self}, vars, {c}, {-f}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.sin] = {"A:sin() --> y_A", "Sine value.", FUNCTIONS}
 
 
 --- sinh(x)
@@ -673,6 +757,8 @@ autodiff.sinh = function (self)
     {self}, vars, {c}, {f}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.sinh] = {"A:sinh() --> y_A",
+  "Hyperbolic sine value.", FUNCTIONS}
 
 
 --- sqrt(x)
@@ -685,6 +771,7 @@ autodiff.sqrt = function (self)
     {self}, vars, {1/(2*f)}, {-1/(4*x*f)}, 0)
   return autodiff._init(f, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.sqrt] = {"A:sqrt() --> y_A", "Square root value.", FUNCTIONS}
 
 
 --- tan(x)
@@ -699,6 +786,7 @@ autodiff.tan = function (self)
     {self}, vars, {1/(cc)}, {2*s/(cc*c)}, 0)
   return autodiff._init(s/c, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.tan] = {"A:tan() --> y_A", "Tangent value.", FUNCTIONS}
 
 
 --- tanh(x)
@@ -713,6 +801,8 @@ autodiff.tanh = function (self)
     {self}, vars, {1/(cc)}, {-2*s/(cc*c)}, 0)
   return autodiff._init(s/c, lin_vars, quad_vars, cross_vars)
 end
+_about[autodiff.tanh] = {"A:tanh() --> y_A",
+  "Hyperbolic tangent value.", FUNCTIONS}
 
 
 -- simplify constructor call
@@ -729,8 +819,8 @@ __call = function (_, v, name)
   t._der[2][key] = 0.0
   return t
 end })
-_about[autodiff] = {" (t) --> new_A",
-  "Create new autodiff object.", _help.STATIC}
+_about[autodiff] = {" (value, [name]) --> new_A",
+  "Create a new autodiff object.", _help.STATIC}
 
 
 -- Comment to remove descriptions
