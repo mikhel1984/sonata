@@ -357,5 +357,69 @@ ans = b:tr()                 --> Rat(9,2)
 -- rank
 ans = a:rank()               --> 2
 
+-- AUTODIFF and RATIONAL
+-----------------------
+a = Ad(Rat(1,3))
+ans = (a ~= nil)             -->  true
 
---]]
+-- to Ad object
+b = Rat(2,3)
+ab = b + a
+ans = ab()                 --.2>  1
+
+ans = ab:d(a)              --.2>  1
+
+ans = a == b                 -->  false
+
+ans = a < b                  -->  true
+
+ans = a()                  --.3>  0.333
+
+-- AUTODIFF and COMPLEX
+----------------------------
+c = Comp(1, 2)
+ac = a + c
+ans = ac():re()            --.2>  1.333
+
+ans = Ad(c) == c             -->  true
+
+ans = (a*c):d(a)             -->  c
+
+-- AUTODIFF and MATRIX
+-------------------------------
+a = Mat{{Ad(1, "x"), 2}, {3, Ad(4, "y")}}
+ans = a[1][1]()              -->  1
+
+b = a*a
+ans = b[1][1]:d('x')         -->  2
+
+ans = b[1][2]:d('y')         -->  2
+
+-- determinant
+ans = a:det()()            --.2>  -2
+
+-- inverse
+bi = b:inv()
+ans = bi[1][1]()           --.2>  5.5
+
+-- pseudoinverse
+c = Mat{{1, 2, Ad(3)}, {8, Ad(5), 9}}
+cc = c:pinv()
+tmp = c*cc
+ans = tmp[1][1]()          --.2>  1
+
+-- AUTODIFF and POLYNOMIAL
+----------------------------
+a = Poly {Ad(1), 2}
+ans = a ~= nil               -->  true
+
+b = a * a
+ans = b[1]                   --> Ad(4)
+
+-- check derivative
+c = Ad(3)
+f1 = c^2 + 2*c + 4
+f2 = Poly{1, 2, 4}
+ans = f1:d(c)              --.2> f2:der()(3)
+
+]]

@@ -1143,7 +1143,6 @@ _about[bigint.factorize] = {"B:factorize() --> prime_t",
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (self)
   local b, res = self._, 0
-  print(#b)
   if #b > 2 and #b * _logbase > 9 then
     local s = _logN(b[#b] + b[#b-1]/BASE, 10)
     s = s + (#b-1)*_logbase
