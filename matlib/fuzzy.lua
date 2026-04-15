@@ -355,7 +355,7 @@ mt_set.defuzzify = function (self, rng, method)
   else
     -- find maximum points
     local v = {}
-    local pp, p = 0, 0, 0
+    local pp, p = 0, 0
     for i, pi in ipairs(ps) do
       local vi = pi[2]
       if pp <= p and p > vi then v[#v+1] = ps[i-1] end
@@ -1051,7 +1051,7 @@ _about[fuzzy.zmf] = {":zmf(left_d, right_d) --> F",
 -- simplify constructor call
 setmetatable(fuzzy, {
 __call = function (self, v)
-  return fuzzy:_new(v)
+  return fuzzy._new(v)
 end})
 _about[fuzzy] = {" (env_t=nil) --> F", "Create new fuzzy inference system.", _help.NEW}
 

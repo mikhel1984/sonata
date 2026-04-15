@@ -997,8 +997,8 @@ matrix.lu = function (self)
     local Ui = U[i]
     for j = i, U._rows do
       local s = Ui[j]
-      for q = 1, i-1 do s = s - Ui[q]*U[q][j] end   
-      Ui[j] = s 
+      for q = 1, i-1 do s = s - Ui[q]*U[q][j] end
+      Ui[j] = s
     end
     -- fill L part
     local Uii = Ui[i]
@@ -1017,7 +1017,7 @@ matrix.lu = function (self)
     for j = 1, i-1 do
       Li[j], Ui[j] = Ui[j], 0
     end
-  end    
+  end
   return L, U, P
 end
 _about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
@@ -1028,7 +1028,7 @@ _about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
 --  @param fn Desired function.
 --  @return Matrix where each element is obtained based on desired function.
 matrix.map = function (self, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   local res, Mcols = {}, self._cols
   for r = 1, self._rows do
     local rr, mr = {}, self[r]
@@ -1378,7 +1378,7 @@ _about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
 matrix.zip = function (_, fn, ...)
   local arg = {...}
   local rows, cols = arg[1]._rows, arg[1]._cols
-  if type(fn) == 'string' then fn = _utils.Fn(fn, #arg) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   -- check size
   for i = 2, #arg do
     if arg[i]._rows ~= rows or arg[i]._cols ~= cols then

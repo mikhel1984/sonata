@@ -512,11 +512,6 @@ graph.apPlot = function (self, width, height)
   fig:_clear()
   fig:setX {range={-1.5, 1.5}}  -- make 'ellipsoid'
   fig:setY {range={-1, 1}}
-  if len == 1 then
-    local r, c = fig:addPoint(0, 0, '@')
-    fig:addString(r, c+2, tostring(nd[1]))
-    return fig
-  end
   -- sorted nodes
   local nd = {}
   for node in pairs(self._) do
@@ -528,6 +523,11 @@ graph.apPlot = function (self, width, height)
         end
       end
     end
+  end
+  if len == 1 then
+    local r, c = fig:addPoint(0, 0, '@')
+    fig:addString(r, c+2, tostring(nd[1]))
+    return fig
   end
   -- circle of radius 1
   local step = math.pi * 2 / #nd
@@ -931,7 +931,7 @@ graph.remove = function (self, n1, n2)
     self._[n1][n2] = nil
     if not self._dir then
       self._[n2][n1] = nil
-    end    
+    end
   else
     -- node
     for n3 in pairs(self._[n1]) do

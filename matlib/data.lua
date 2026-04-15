@@ -178,7 +178,7 @@ print(c)
 -- iterate over combinations
 q = {1,2,3}
 n = 0
-for _ in D:icomb(q, 2) do n = n+1 end 
+for _ in D:icomb(q, 2) do n = n+1 end
 ans = n                       -->  3
 
 -- iterate over permutations
@@ -204,7 +204,7 @@ inum = function (A)
     i = i+1  -- from 0 to #A
     if i > #A then return end
     return A, i
-  end  
+  end
 end
 seq = {inum, function (...) return D:icomb(...) end}
 for v in D:inest(seq, q) do
@@ -242,8 +242,8 @@ local _ext = {
 local _utils = _ext.utils.utils
 local _ver = _ext.utils.versions
 
-local _tag = { 
-  STAT='statistics', FILES='in/out', LIST='lists', 
+local _tag = {
+  STAT='statistics', FILES='in/out', LIST='lists',
   REF='reference', AUX='auxiliary',
 }
 
@@ -705,7 +705,7 @@ data.harmmean = function (_, t, tw)
     return #t / h
   end
 end
-mt_list.harmmean = _wrapCall(harmmean)
+mt_list.harmmean = _wrapCall(data.harmmean)
 _about[data.harmmean] = {":harmmean(data_t, weigh_t=nil) --> num",
   "Harmonic mean.", _tag.STAT}
 
@@ -772,7 +772,7 @@ data.histPlot = function (_, t, rng)
 end
 _about[data.histPlot] = {":histPlot(data_t, edges_t|N=10) --> fig",
   "Find and show histogram.", _tag.STAT}
-  
+
 
 --- Iterate over all n-length combinations for elements from the list t.
 --  @param t Source list.
@@ -795,9 +795,9 @@ data.icomb = function (_, t, n)
     end
     -- make result
     local res = {}
-    for i = 1, n do res[i] = t[ ind[i] ] end  
+    for i = 1, n do res[i] = t[ ind[i] ] end
     return res
-  end 
+  end
 end
 mt_list.icomb = _wrapCall(data.icomb)
 _about[data.icomb] = {":icomb(list_t, N) --> fn()->t",
@@ -1055,7 +1055,6 @@ data.reverse = function (_, t)
   for i = 1, n do
     t[i], t[m-i] = t[m-i], t[i]
   end
-  return dst
 end
 mt_list.reverse = function (self) data.reverse(nil, self._tbl); return self end
 _about[data.reverse] = {":reverse(data_t)",

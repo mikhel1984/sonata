@@ -94,9 +94,9 @@ end
 --  @param text Text with unit tests.
 --  @param fnstr String with function signature.
 --  @return List with unit tests where function is called.
-test.examples = function (text, fnstr) 
+test.examples = function (text, fnstr)
   local res = {}
-  local template = string.match(fnstr, '(:%w+)') 
+  local template = string.match(fnstr, '(:%w+)')
   if not template then return res end
   template = template .. '[ (]'
   for block in test.split(text, DELIM) do
@@ -136,7 +136,7 @@ test.module = function (fname)
       local q, e, a = string.match(block, TEST_TEMPLATE)
       q = q or block   -- question
       a = a or ''      -- answer
-      local arrow, time = 0, 0
+      local arrow, time = nil, 0
       -- evaluate
       local status, err = pcall(function ()
         local fq = loadStr(q)
@@ -203,7 +203,6 @@ test.split = function (str, delim)
     return res
   end
 end
-
 
 
 --- Combine all results.

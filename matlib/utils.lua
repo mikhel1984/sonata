@@ -66,6 +66,7 @@ end
 
 
 -- Logarithm with specific base
+-- use log10 as a marker for version 5.1
 versions.log = math.log10 and function (x, n)
   return math.log(x) / math.log(n)
 end or math.log
@@ -260,7 +261,7 @@ end
 --  @return Function based on the expression.
 utils.Fn = function (sExpr)
   local a, b = string.match(sExpr, "(.*)->(.+)")
-  if not a then 
+  if not a then
     a, b = 'x', sExpr
   end
   local fn = versions.loadStr(
@@ -519,7 +520,7 @@ local mt_tree = {}
 
 local tree = {
   -- create object
-  new = function (l, r, v, isleaf) 
+  new = function (l, r, v, isleaf)
     return setmetatable({left=l, right=r, val=v, isleaf=isleaf}, mt_tree)
   end,
   -- check node

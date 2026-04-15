@@ -101,10 +101,10 @@ tcp_server.repl = function (self)
       cli:send(Sonata.getTitle())
       cli:send("\n" .. group.invite)
     end
-    -- process requests    
+    -- process requests
     for i = 1, #clients do
       local group = clients[i]
-      local cmd, err = nil, nil
+      local cmd = nil
       if group.read then
         cmd, err = group.cli:receive('*l')
       else

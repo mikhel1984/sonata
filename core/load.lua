@@ -113,7 +113,7 @@ help = function(v)
   if v == '*' then
     res = About:makeFull(use, SONATA_LOCALIZATION)
   else
-    res = About:findObject(v, use, SONATA_LOCALIZATION) or 
+    res = About:findObject(v, use, SONATA_LOCALIZATION) or
           Sonata.info(SonataHelp.objectInfo(v))
   end
   return Sonata.inLua and Sonata._toText(res) or res

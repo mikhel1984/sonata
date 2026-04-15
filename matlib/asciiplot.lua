@@ -145,7 +145,7 @@ print(fig6)
 
 --	LOCAL
 
-local _utils = require("matlib/utils")
+local _utils = require("matlib.utils")
 local _ver = _utils.versions
 
 local _czero = _utils.cross.isZero
@@ -495,7 +495,7 @@ local function _addTable (fig, t, tInd)
     if tInd.line then
       local prev = nil
       for _, v in ipairs(t) do
-        if prev then asciiplot._drawLine(fig, prev[1], prev[2], v[1], v[2], j) end 
+        if prev then asciiplot._drawLine(fig, prev[1], prev[2], v[1], v[2], j) end
         prev = v
       end
     end
@@ -768,7 +768,7 @@ asciiplot._drawLine = function (self, x1, y1, x2, y2, ind)
     if dx == 0 then return acc end
     local step = (self._x.diff / self._x.size) * (dx >= 0 and 1 or -1)
     local k = dy/dx
-    for x = x1, x2, step do 
+    for x = x1, x2, step do
       local pr, pc = _addGraded(self, x, y1+k*(x-x1), ind)
       if pr then acc[#acc+1] = {pr, pc} end
     end
@@ -776,8 +776,8 @@ asciiplot._drawLine = function (self, x1, y1, x2, y2, ind)
     -- along y axis
     local step = (self._y.diff / self._y.size) * (dy >= 0 and 1 or -1)
     local k = dx/dy
-    for y = y1, y2, step do 
-      local pr, pc = _addGraded(self, x1 + k*(y-y1), y, ind) 
+    for y = y1, y2, step do
+      local pr, pc = _addGraded(self, x1 + k*(y-y1), y, ind)
       if pr then acc[#acc+1] = {pr, pc} end
     end
   end

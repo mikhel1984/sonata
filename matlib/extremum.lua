@@ -215,7 +215,7 @@ end
 --  @param fun Source function.
 --  @return found point, deflection and function value.
 local function _linmin (p, xi, fun)
-  local ff = function (x) 
+  local ff = function (x)
     local m = p:copy(); m:add(x, xi)  -- p + x*xi
     return fun(m)
   end
@@ -234,7 +234,7 @@ end
 --  @param dfun Gradient function.
 --  @return found point, function value.
 local function _linmind (p, xi, fun, dfun)
-  local ff = function (x) 
+  local ff = function (x)
     local m = p:copy(); m:add(x, xi)  -- p + x*xi
     return fun(m)
   end
@@ -358,10 +358,9 @@ extremum._lpSimplex = function (c, param)
     local eye = mat:eye(nl)
     if As then
       As, bs = mat:ver {As, param.Al}, mat:ver {bs, param.bl}
-      local r, c = inter:rows(), inter:cols()
       inter = mat:ver {
-        mat:hor {inter, mat:zeros(r, nl+nl)},
-        mat:hor {mat:zeros(nl, c), -eye, eye}
+        mat:hor {inter, mat:zeros(inter:rows(), nl+nl)},
+        mat:hor {mat:zeros(nl, inter:cols()), -eye, eye}
       }
     else
       As, bs = param.Al, param.bl
@@ -373,10 +372,9 @@ extremum._lpSimplex = function (c, param)
     ne = param.Ae:rows()
     if As then
       As, bs = mat:ver {As, param.Ae}, mat:ver {bs, param.be}
-      local r, c = inter:rows(), inter:cols()
       inter = mat:ver {
-        mat:hor {inter, mat:zeros(r, ne)},
-        mat:hor {mat:zeros(ne, c), mat:eye(ne)}
+        mat:hor {inter, mat:zeros(inter:rows(), ne)},
+        mat:hor {mat:zeros(ne, inter:cols()), mat:eye(ne)}
       }
     else
       As, bs, inter = param.Ae, param.be, mat:eye(ne)
@@ -460,7 +458,7 @@ extremum._minBrent = function (fun, a, b, c)
         -- ignore
       else
         e, d = d, p/q
-        u = x + d
+        local u = x + d
         if (u-a < tol2) or (c-u < tol2) then
           d = (xm >= x) and tol1 or (-tol1)
         end
