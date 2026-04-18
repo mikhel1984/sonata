@@ -220,6 +220,17 @@ process = function (args)
 end,
 exit = true},
 
+['--make'] = {
+description = "Wrap code into Lua.",
+example = {
+  'e.g. --make mylib.h mylib.c'},
+process = function (args)
+  local gen = require("maker.cgen")
+  local aa = {}; for i = 2, #args do aa[#aa+1] = args[i] end
+  gen.makeBin(aa)
+end,
+exit = true},
+
 -- ['-e'] defined outside
 
 -- process files
