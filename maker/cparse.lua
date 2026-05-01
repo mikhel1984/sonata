@@ -331,7 +331,6 @@ parser.getFunctions = function (s)
       end
       t.out = t.out and _listToMap(_split(t.out, SPACE)) or {}
       t.inout = t.inout and _listToMap(_split(t.inout, SPACE)) or {}
-      t.ptr = t.ptr and _listToMap(_split(t.ptr), SPACE) or {}
       lst[#lst+1] = {name, args, t}
     end
   end

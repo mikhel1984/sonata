@@ -61,7 +61,9 @@ local function _cAuxName (info, dir)
   local args = {"lua_State* L"}
   local aname = {"L"}
   local tp, size = info.C, ""
-  if string.find(tp, "struct") and #info.arr_size == 0 then tp = tp.."*" end
+  if string.find(tp, "struct") and #info.arr_size == 0 and info.ptr_count == 0 then
+    tp = tp.."*" 
+  end
   if info.ptr_count > 0 then 
     tp = tp.._rep("*", info.ptr_count + (dir == "to" and 1 or 0)) 
   end
@@ -318,6 +320,8 @@ local function _auxLtoDynArr (sh, ids, lvl, var, nm, env)
   end
   acc[#acc+1] = shift2.."lua_pop(L, 1);"
   acc[#acc+1] = shift1.."}"
+  acc[#acc+1] = shift.."} else {"
+  acc[#acc+1] = shift1..'luaL_error(L, "Empty array");'
   acc[#acc+1] = shift.."}"
   acc[#acc+1] = shift.._format("%s = %s;", nm, data)
   return _concat(acc, "\n")
