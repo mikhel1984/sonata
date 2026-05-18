@@ -110,6 +110,9 @@ ans = p[3]                  --.3>  4.83485
 p = Poly:taylor(0, 1, 1, 1, 1)
 ans = p(0.3)                --.2>  math.exp(0.3)
 
+-- Chebyshev polynomial
+ans = Poly:chebyshev(3)       -->  Poly {4, 0, -3, 0}
+
 -- linear interpolation
 -- use constant values out the interval
 p = Poly:lin(X,Y, Y[1], Y[#Y])
@@ -688,40 +691,6 @@ polynomial._unpack = function (src, pos, acc, ver)
 end
 
 
---- Get polynomial from roots.
---  Arguments are a sequence of roots.
---  @param t List of roots.
---  @return Polynomial object.
-polynomial.R = function (_, t)
-  local lst = _ver.move(t, 1, #t, 1, {})
-  local res = polynomial._init({[0]=1})
-  while #lst > 0 do
-    local v = table.remove(lst, 1)
-    if type(v) == 'table' and v.iscomplex then
-      -- looking for pair
-      local ind, re, im = nil, v:re(), v:im()
-      for i, u in ipairs(lst) do
-        if type(u) == 'table' and u.iscomplex and u:re() == re and u:im() == -im
-        then
-          ind = i; break
-        end
-      end
-      if not ind then
-        error ('No pair for '..tostring(v))
-      end
-      table.remove(lst, ind)
-      res = polynomial.__mul(res,
-        polynomial._init({[0]= re*re + im*im, -2*re, 1}))
-    else
-      _multXv(res, v)
-    end
-  end
-  return res
-end
-_about[polynomial.R] = {":R(roots_t) --> P",
-  "Return polynomial with given roots.", _help.OTHER}
-
-
 --- Find characteristic polinomial for the matrix.
 --  @param M Source matrix.
 --  @return Characteristic polynomial.
@@ -734,6 +703,31 @@ polynomial.char = function (_, M)
 end
 _about[polynomial.char] = {":char(M) --> P",
   "Return characteristic polinomial for the given matrix."}
+
+
+--- Find Chebyshev polynomial.
+--  @param order Polynomial order.
+--  @param tp Type ('T' or 'U').
+--  @return Chebyshev polynomial.
+polynomial.chebyshev = function (_, order, tp)
+  if order < 0 or _ver.toInteger(order) == nil then
+    error "Expected non-negative order"
+  end
+  local prev = {[0]=1}  -- T0/U0
+  if order == 0 then 
+    return polynomial._init(prev) 
+  end
+  local curr = {[0]=0, (tp == 'U') and 2.0 or 1.0}  -- T1/U1
+  for i = 2, order do
+    curr, prev = prev, curr
+    for j = #prev+1, 0, -1 do
+      curr[j] = 2*(prev[j-1] or 0) - (curr[j] or 0)
+    end
+  end
+  return polynomial._init(curr)
+end
+_about[polynomial.chebyshev] = {":chebyshev(order_N, type='T') -> P",
+  "Return Chebyshev polynomial or the first or second kind."}
 
 
 --- Create copy of object.
@@ -881,6 +875,40 @@ end
 _about[polynomial.lin] = {
   ":lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t",
   "Linear data interpolation. Return table with polynomials.", FIT}
+
+
+--- Get polynomial from roots.
+--  Arguments are a sequence of roots.
+--  @param t List of roots.
+--  @return Polynomial object.
+polynomial.R = function (_, t)
+  local lst = _ver.move(t, 1, #t, 1, {})
+  local res = polynomial._init({[0]=1})
+  while #lst > 0 do
+    local v = table.remove(lst, 1)
+    if type(v) == 'table' and v.iscomplex then
+      -- looking for pair
+      local ind, re, im = nil, v:re(), v:im()
+      for i, u in ipairs(lst) do
+        if type(u) == 'table' and u.iscomplex and u:re() == re and u:im() == -im
+        then
+          ind = i; break
+        end
+      end
+      if not ind then
+        error ('No pair for '..tostring(v))
+      end
+      table.remove(lst, ind)
+      res = polynomial.__mul(res,
+        polynomial._init({[0]= re*re + im*im, -2*re, 1}))
+    else
+      _multXv(res, v)
+    end
+  end
+  return res
+end
+_about[polynomial.R] = {":R(roots_t) --> P",
+  "Return polynomial with given roots.", _help.OTHER}
 
 
 --- Find all the polynomial roots.
