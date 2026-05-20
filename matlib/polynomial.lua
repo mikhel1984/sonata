@@ -303,8 +303,8 @@ mt_ppval.__call = mt_ppval.val
 
 --- Find roots of 2nd order polynomial.
 --  @return Table with roots.
-local function _roots2 (self)
-  local a, b, c = self[2], self[1], self[0]
+local function _roots2 (P)
+  local a, b, c = P[2], P[1], P[0]
   local sD = _ext.complex.sqrt(b*b - 4*a*c)
   local sgn = b > 0 and 1 or b < 0 and -1 or 0
   sD = -0.5*(b + sgn*sD)
@@ -315,9 +315,9 @@ end
 --- Find roots of 3rd order polynomial.
 --  Use Cardano's formula.
 --  @return Table with roots.
-local function _roots3 (self)
-  local t = self[3]
-  local a, b, c = self[2]/t, self[1]/t, self[0]/t
+local function _roots3 (P)
+  local t = P[3]
+  local a, b, c = P[2]/t, P[1]/t, P[0]/t
   local Q, R = (a*a - 3*b)/9, (2*a^3 - 9*a*b + 27*c)/54
   t = Q^3
   local res = nil
@@ -343,13 +343,13 @@ end
 
 --- Check if there are exact roots.
 --  @return found roots or nil
-local function _exact (self)
-  if #self == 1 then
-    return {-self[0] / self[1]}
-  elseif #self == 2 then
-    return _roots2(self)
-  elseif #self == 3 then
-    return _roots3(self)
+local function _exact (P)
+  if #P == 1 then
+    return {-P[0] / P[1]}
+  elseif #P == 2 then
+    return _roots2(P)
+  elseif #P == 3 then
+    return _roots3(P)
   end
   return nil
 end
@@ -373,13 +373,13 @@ end
 --  @param d0 Initial value of the root (optional).
 --  @param tol Tolerance
 --  @return found value or nil.
-local function _nr (self, d0, tol)
+local function _nr (P, d0, tol)
   -- prepare variables
-  local dp, max = polynomial.der(self), 30
+  local dp, max = polynomial.der(P), 30
   local val = polynomial.val
   for i = 1, max do
     local der = _ispolynomial(dp) and val(dp, d0) or dp
-    local dx = val(self, d0) / der
+    local dx = val(P, d0) / der
     if _cross.norm(dx) <= tol then
       return d0
     else

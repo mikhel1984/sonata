@@ -182,7 +182,6 @@ local function _cont2rat (t)
 end
 
 
-
 --- R1 + R2
 --  @param R1 First rational or integer number.
 --  @param R2 Second rational or integer number.
