@@ -67,13 +67,13 @@ local _utils = require("matlib.utils")
 local _tointeger = _utils.versions.toInteger
 
 -- constants for gamma approximation
-local _k_gamma = {676.5203681218851, -1259.1392167224028, 771.32342877765313,
+local _kGamma = {676.5203681218851, -1259.1392167224028, 771.32342877765313,
   -176.61502916214059, 12.507343278686905, -0.13857109526572012,
   9.9843695780195716E-6, 1.5056327351493116E-7}
 
 
 -- constants for ln(gamma) approximation
-local _k_gammaln = {76.18009172947146, -86.50532032941677, 24.01409824083091,
+local _kGammaln = {76.18009172947146, -86.50532032941677, 24.01409824083091,
   -1.231739572450155, 0.1208650973866179E-2, -0.5395239384953E-5}
 
 -- doc categories
@@ -620,8 +620,8 @@ special.gamma = function (_, z)
   else
     z = z-1
     local x = 0.99999999999980993
-    for i = 1, #_k_gamma do x = x + _k_gamma[i]/(z+i) end
-    local t = z + #_k_gamma - 0.5
+    for i = 1, #_kGamma do x = x + _kGamma[i]/(z+i) end
+    local t = z + #_kGamma - 0.5
     -- sqrt(2*pi) = 2.506...
     return 2.5066282746310002 * t^(z+0.5) * math.exp(-t) * x
   end
@@ -637,9 +637,9 @@ special.gammaln = function (_, z)
   local tmp = x + 5.5
   tmp = tmp - (x+0.5)*math.log(tmp)
   local ser = 1.000000000190015
-  for i = 1, #_k_gammaln do
+  for i = 1, #_kGammaln do
     y = y +1
-    ser = ser + _k_gammaln[i]/y
+    ser = ser + _kGammaln[i]/y
   end
   return -tmp + math.log(2.5066282746310005*ser/x)
 end

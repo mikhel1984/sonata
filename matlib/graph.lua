@@ -153,6 +153,7 @@ ans = D:unpack(t)             --> b
 local _ext = {
   utils = require("matlib.utils"),
   -- ap = require("matlib.asciiplot"),
+  -- mat = require("matlib.matrix"),
 }
 
 local _queue = _ext.utils.queue
@@ -246,7 +247,7 @@ end
 
 
 -- Show undirected edge
-local mt_edge = {
+local mtEdge = {
 __tostring = function (t)
   return _format('%s -- %s', tostring(t[1]), tostring(t[2]))
 end
@@ -254,7 +255,7 @@ end
 
 
 -- Show directed edge
-local mt_dir_edge = {
+local mtDirEdge = {
 __tostring = function (t)
   return _format('%s -> %s', tostring(t[1]), tostring(t[2]))
 end
@@ -679,7 +680,7 @@ graph.edges = function (self)
   for n, adj in pairs(self._) do
     for m, v in pairs(adj) do
       if v then
-        local t = setmetatable({n, m, v}, self._dir and mt_dir_edge or mt_edge)
+        local t = setmetatable({n, m, v}, self._dir and mtDirEdge or mtEdge)
         res[#res+1] = t
       end
     end
@@ -806,8 +807,8 @@ _about[graph.isWeighted] = {'G:isWeighted() --> bool',
 --- Get adjacency matrix.
 --  @return adjacency matrix and corresponding node list.
 graph.matrix = function (self)
-  graph.ext_matrix = graph.ext_matrix or require('matlib.matrix')
-  local mat = graph.ext_matrix
+  _ext.matrix = _ext.matrix or require('matlib.matrix')
+  local mat = _ext.matrix
   local ns = graph.nodes(self)
   local m = mat:zeros(#ns)
   for i, v in ipairs(ns) do

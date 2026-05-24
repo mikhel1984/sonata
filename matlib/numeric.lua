@@ -93,7 +93,7 @@ local _norm = _utils.cross.norm
 local _inform = Sonata and Sonata.warning or print
 
 
-local mt_ode_solution = {
+local mtOdeSolution = {
 
 --- Replace vector with sequence of elements in ODE solver result.
 --  @param t Table with ODE solution.
@@ -114,7 +114,7 @@ flat = function (t)
   return dst
 end
 }
-mt_ode_solution.__index = mt_ode_solution
+mtOdeSolution.__index = mtOdeSolution
 
 --- Runge-Kutta method.
 -- @param fn Function f(x,y).
@@ -335,7 +335,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local h = tParam.dt or math.min((xn - tDelta[1]), 1.0) / 20
   local exit = tParam.exit or function (_) return false end
   -- evaluate
-  local res, last = setmetatable({{tDelta[1], dY0}}, mt_ode_solution), false
+  local res, last = setmetatable({{tDelta[1], dY0}}, mtOdeSolution), false
   while not exit(res) do
     local x, y = _utils.versions.unpack(res[#res])
     if x >= xn then

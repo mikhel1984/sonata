@@ -139,7 +139,7 @@ __module__ = "Operations and conversations according the units."
 
 --	MODULE
 
-local mt_rules = {}
+local mtRules = {}
 
 local units = {
 -- mark
@@ -147,7 +147,7 @@ type = 'units', isunits = true,
 -- save some results
 _memKeys = {},
 -- rules for unit conversation
-rules = setmetatable({}, mt_rules),
+rules = setmetatable({}, mtRules),
 }
 units.__index = units
 
@@ -214,7 +214,7 @@ end
 
 
 --- Check arguments before assignment.
-mt_rules.__newindex = function (t, k, v)
+mtRules.__newindex = function (t, k, v)
   assert(_isunits(v), 'Value must be unit object')
   assert(string.find(k, '[*^/%-+]') == nil, 'Key should not have [*^/]')
   rawset(t, k, v)
@@ -223,7 +223,7 @@ end
 
 --- Show current rules.
 --  @return string with rules.
-mt_rules.__tostring = function (t)
+mtRules.__tostring = function (t)
   local s = {}
   for k, v in pairs(t) do
     s[#s+1] = string.format('1 %s\t-> %s', k, tostring(v))

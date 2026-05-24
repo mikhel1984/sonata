@@ -522,8 +522,8 @@ quaternion.slerp = function (_, Q1, Q2, f)
   end
   -- calculate
   local theta = math.acos(dot)
-  local sin_th = math.sin(theta)
-  return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
+  local sinTh = math.sin(theta)
+  return (math.sin((1-f)*theta)/sinTh) * qa + (math.sin(f*theta)/sinTh) * qb
 end
 _about[quaternion.slerp] = {':slerp(beg_Q, end_Q, rat_f) --> rat_Q',
   'Spherical linear interpolation for the given ratio.', _help.OTHER}

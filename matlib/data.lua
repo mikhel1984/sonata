@@ -402,7 +402,7 @@ local data = {}
 
 
 -- List wrapper.
-local mt_list = {
+local mtList = {
   type="list",
   -- methods
   __newindex = function (self, k, v) self._tbl[k] = v end,
@@ -426,7 +426,7 @@ end
 --  @return list wrapper.
 local function _wrapList (f)
   return function (self, ...)
-    return setmetatable({_tbl=f(nil, self, ...)}, mt_list)
+    return setmetatable({_tbl=f(nil, self, ...)}, mtList)
   end
 end
 
@@ -434,9 +434,9 @@ end
 --- Access to the wrapped list.
 --  @param k Index name.
 --  @return data value.
-mt_list.__index = function (self, k)
+mtList.__index = function (self, k)
   if k == 'data' then return self._tbl end
-  return mt_list[k] or self._tbl[k]
+  return mtList[k] or self._tbl[k]
 end
 
 
@@ -473,17 +473,17 @@ data.binsearch = function (_, t, val, fn)
     return i, u  -- only when found
   end
 end
-mt_list.binsearch = _wrapCall(data.binsearch)
+mtList.binsearch = _wrapCall(data.binsearch)
 _about[data.binsearch] = {":binsearch(sorted_t, value, [extract_fn]) --> index_i, value",
   "Find position of element in sorted list using binary search.", _tag.LIST}
 
 
 --- Make copy of a list wrapper.
 --  @return copy object.
-mt_list.copy = function (self)
+mtList.copy = function (self)
   local t = {}
   for i = 1, #self._tbl do t[i] = self._tbl[i] end
-  return setmetatable({_tbl=t}, mt_list)
+  return setmetatable({_tbl=t}, mtList)
 end
 
 
@@ -540,7 +540,7 @@ data.cov = function (_, t)
   end
   return m
 end
-mt_list.cov = _wrapCall(data.cov)
+mtList.cov = _wrapCall(data.cov)
 _about[data.cov] = {":cov(data_t) --> cov_M",
   "Find covariance matrix for list of vectors.", _tag.STAT}
 
@@ -558,7 +558,7 @@ data.csvwrite = function (_, t, sFile, char)
   end
   f:close()
 end
-mt_list.csvwrite = _wrapCall(data.csvwrite)
+mtList.csvwrite = _wrapCall(data.csvwrite)
 _about[data.csvwrite] = {":csvwrite(data_t, file_s, delim_s=',')",
   "Save Lua table as delimiter separated data into file.", _tag.FILES}
 
@@ -616,7 +616,7 @@ data.filter = function (_, t, vCond)
   end
   return res
 end
-mt_list.filter = _wrapList(data.filter)
+mtList.filter = _wrapList(data.filter)
 _about[data.filter] = {":filter(in_t, fn|str|tbl) --> out_t",
   "Get result of the table filtering. Condition is boolean function, string or table of weights.",
   _tag.LIST}
@@ -632,7 +632,7 @@ data.freq = function (_, t)
   end
   return tmp
 end
-mt_list.freq = _wrapCall(data.freq)
+mtList.freq = _wrapCall(data.freq)
 _about[data.freq] = {":freq(data_t) --> tbl",
   "Return table with frequencies of elements.", _tag.STAT}
 
@@ -656,7 +656,7 @@ data.gen = function (_, t, fn, cond)
   end
   return q
 end
-mt_list.gen = _wrapList(data.gen)
+mtList.gen = _wrapList(data.gen)
 _about[data.gen] = {":gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t",
   "Make new list using given transformation. Optional condition function of the form f(value,index).",
   _tag.LIST}
@@ -681,7 +681,7 @@ data.geomean = function (_, t, tw)
     return p^(1/#t)
   end
 end
-mt_list.geomean = _wrapCall(data.geomean)
+mtList.geomean = _wrapCall(data.geomean)
 _about[data.geomean] = {":geomean(data_t, weigh_t=nil) --> num",
   "Geometrical mean.", _tag.STAT}
 
@@ -705,7 +705,7 @@ data.harmmean = function (_, t, tw)
     return #t / h
   end
 end
-mt_list.harmmean = _wrapCall(data.harmmean)
+mtList.harmmean = _wrapCall(data.harmmean)
 _about[data.harmmean] = {":harmmean(data_t, weigh_t=nil) --> num",
   "Harmonic mean.", _tag.STAT}
 
@@ -750,7 +750,7 @@ data.histcounts = function (_, t, rng)
   end
   return res, bins
 end
-mt_list.histcounts = _wrapCall(data.histcounts)
+mtList.histcounts = _wrapCall(data.histcounts)
 _about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
   "Calculate amount of bins. Edges can be either number or table.", _tag.STAT}
 
@@ -799,7 +799,7 @@ data.icomb = function (_, t, n)
     return res
   end
 end
-mt_list.icomb = _wrapCall(data.icomb)
+mtList.icomb = _wrapCall(data.icomb)
 _about[data.icomb] = {":icomb(list_t, N) --> fn()->t",
   "Iterate over all n-length combinations of elements from the source list."}
 
@@ -857,7 +857,7 @@ data.iperm = function (_, t)
     end
   end
 end
-mt_list.iperm = _wrapCall(data.iperm)
+mtList.iperm = _wrapCall(data.iperm)
 _about[data.iperm] = {":iperm(list_t) --> fn()->t",
   "Iterate over all permutations of the source list."}
 
@@ -874,7 +874,7 @@ data.is = function (_, t, fn)
   end
   return res
 end
-mt_list.is = _wrapList(data.is)
+mtList.is = _wrapList(data.is)
 _about[data.is] = {":is(data_t, fn|str) --> weigh_t",
   "Find weights using condition (boolean function or string).", _tag.LIST}
 
@@ -891,7 +891,7 @@ data.isNot = function (_, t, fn)
   end
   return res
 end
-mt_list.isNot = _wrapList(data.isNot)
+mtList.isNot = _wrapList(data.isNot)
 _about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
   "Find inverted weights using condition (boolean function or string).", _tag.LIST}
 
@@ -906,7 +906,7 @@ data.max = function (_, t)
   end
   return m, k
 end
-mt_list.max = _wrapCall(data.max)
+mtList.max = _wrapCall(data.max)
 _about[data.max] = {":max(data_t) --> var, ind_N",
   "Maximal element and its index.", _tag.STAT}
 
@@ -946,7 +946,7 @@ data.md = function (_, data_t, names_t, fn)
   end
   return table.concat(res, '\n')
 end
-mt_list.md = _wrapCall(data.md)
+mtList.md = _wrapCall(data.md)
 _about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.",
   _help.OTHER}
@@ -969,7 +969,7 @@ data.mean = function (_, t, tw)
     return data:sum(t) / #t
   end
 end
-mt_list.mean = _wrapCall(data.mean)
+mtList.mean = _wrapCall(data.mean)
 _about[data.mean] = {":mean(data_t, wight_t=nil) --> num",
   "Calculate average value. Weights can be used.", _tag.STAT}
 
@@ -988,7 +988,7 @@ data.median = function (_, t)
     return (y[len] + y[len+1]) * 0.5
   end
 end
-mt_list.median = _wrapCall(data.median)
+mtList.median = _wrapCall(data.median)
 _about[data.median] = {":median(data_t) --> num",
   "Median of the list.", _tag.STAT}
 
@@ -1003,7 +1003,7 @@ data.min = function (_, t)
   end
   return m, k
 end
-mt_list.min = _wrapCall(data.min)
+mtList.min = _wrapCall(data.min)
 _about[data.min] = {":min(data_t) --> var, ind_N",
   "Minimal element and its index.", _tag.STAT}
 
@@ -1027,7 +1027,7 @@ data.moment = function (_, t, N, tw)
   end
   return mu / n
 end
-mt_list.moment = _wrapCall(data.moment)
+mtList.moment = _wrapCall(data.moment)
 _about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
   "Central moment of order N, weights can be defined.", _tag.STAT}
 
@@ -1043,7 +1043,7 @@ data.reduce = function (_, t, fn, val)
   for i = 1, #t do val = fn(val, t[i]) end
   return val
 end
-mt_list.reduce = _wrapCall(data.reduce)
+mtList.reduce = _wrapCall(data.reduce)
 _about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var",
   "Apply function to its previous result and next element.", _tag.LIST}
 
@@ -1056,7 +1056,7 @@ data.reverse = function (_, t)
     t[i], t[m-i] = t[m-i], t[i]
   end
 end
-mt_list.reverse = function (self) data.reverse(nil, self._tbl); return self end
+mtList.reverse = function (self) data.reverse(nil, self._tbl); return self end
 _about[data.reverse] = {":reverse(data_t)",
   "Reverse table elements.", _tag.LIST}
 
@@ -1068,7 +1068,7 @@ data.sort = function (_, t, fn)
   if type(fn) == "string" then fn = _utils.Fn(fn) end
   return _mergeSort(t, {}, 1, #t, fn)
 end
-mt_list.sort = function (self, fn) data.sort(nil, self._tbl, fn); return self end
+mtList.sort = function (self, fn) data.sort(nil, self._tbl, fn); return self end
 _about[data.sort] = {":sort(data_t, fn|str)",
   "Sort elements of the list", _tag.LIST}
 
@@ -1081,7 +1081,7 @@ data.sum = function (_, t)
   for i = 1, #t do s = s+t[i] end
   return s
 end
-mt_list.sum = _wrapCall(data.sum)
+mtList.sum = _wrapCall(data.sum)
 _about[data.sum] = {":sum(data_t) --> var",
   "Get sum of all elements.", _tag.STAT}
 
@@ -1107,7 +1107,7 @@ data.std = function (_, t, tw)
   end
   return math.sqrt(disp)
 end
-mt_list.std = _wrapCall(data.std)
+mtList.std = _wrapCall(data.std)
 _about[data.std] = {":std(data_t, weight_t=nil) --> num",
   "Standard deviation. Weights can be used.", _tag.STAT}
 
@@ -1153,14 +1153,14 @@ _about[data.zip] = {":zip(fn|str, ...) --> tbl",
 -- Constructor for the list wrapper.
 setmetatable(data, {
 __call = function (self, t)
-  return setmetatable({_tbl=t}, mt_list)
+  return setmetatable({_tbl=t}, mtList)
 end })
 _about[data] = {" (data_t) --> new_L",
   "Create list wrapper.", _tag.REF}
 
 
 -- Methametods for the range of numbers.
-local mt_range = {
+local mtRange = {
   type = 'range',
   -- methods
   __len = function (self) return self._N end,
@@ -1172,11 +1172,11 @@ local mt_range = {
 --  @param d Any number.
 --  @param R Range object.
 --  @return Shifted range table.
-mt_range.__add = function (d, R)
+mtRange.__add = function (d, R)
   if type(R) == 'number' then
-    return mt_range.__add(R, d)
+    return mtRange.__add(R, d)
   else
-    return mt_range._init(d+R._beg, d+R._end, R._step, R._N)
+    return mtRange._init(d+R._beg, d+R._end, R._step, R._N)
   end
 end
 
@@ -1185,11 +1185,11 @@ end
 --  @param R Range object.
 --  @param d Any number.
 --  @return Shifted range table.
-mt_range.__sub = function (R, d)
+mtRange.__sub = function (R, d)
   if type(R) == 'number' then   -- d is range
     return R + (-1)*d
   else
-    return mt_range._init(R._beg-d, R._end-d, R._step, R._N)
+    return mtRange._init(R._beg-d, R._end-d, R._step, R._N)
   end
 end
 
@@ -1198,11 +1198,11 @@ end
 --  @param d Any number.
 --  @param R Range object.
 --  @return Expanded range table.
-mt_range.__mul = function (d, R)
+mtRange.__mul = function (d, R)
   if type(R) == 'number' then
-    return mt_range.__mul(R, d)
+    return mtRange.__mul(R, d)
   else
-    return mt_range._init(d*R._beg, d*R._end, d*R._step, R._N)
+    return mtRange._init(d*R._beg, d*R._end, d*R._step, R._N)
   end
 end
 
@@ -1210,7 +1210,7 @@ end
 --- Pretty print.
 --  @param R Range object.
 --  @return String with the table representation.
-mt_range.__tostring = function (self)
+mtRange.__tostring = function (self)
   return string.format("%s{%g, %g .. %g}", self._fn and "fn" or "",
     self._beg, self._beg+self._step, self._end)
 end
@@ -1220,7 +1220,7 @@ end
 --  @param self Range object.
 --  @param i Element index.
 --  @return Number.
-mt_range.__index = function (self, i)
+mtRange.__index = function (self, i)
   if _ver.toInteger(i) ~= nil and i > 0 and i <= self._N then
     local v = 0
     if i < self._N then
@@ -1230,7 +1230,7 @@ mt_range.__index = function (self, i)
     end
     return v and self._fn and self._fn(v) or v
   else
-    return mt_range[i]
+    return mtRange[i]
   end
 end
 
@@ -1245,30 +1245,30 @@ _about["_rng"] = {"range: -R, R+x, R-x, k*R, R|fn", nil, _tag.AUX}
 --  @param dStep Step value.
 --  @param iN Number of elements.
 --  @return Range object.
-mt_range._init = function (dBeg, dEnd, dStep, iN, fn)
-  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN, _fn=fn}, mt_range)
+mtRange._init = function (dBeg, dEnd, dStep, iN, fn)
+  return setmetatable({_beg=dBeg, _end=dEnd, _step=dStep, _N=iN, _fn=fn}, mtRange)
 end
 
 
 --- Make reversed range object.
 --  @return new object.
-mt_range.reverse = function (self)
-  return mt_range._init(self._end, self._beg, -self._step, self._N, self._fn)
+mtRange.reverse = function (self)
+  return mtRange._init(self._end, self._beg, -self._step, self._N, self._fn)
 end
 
 
 --- Apply function to range of numbers.
 --  @param fn Function f(x).
 --  @return modified range of numbers.
-mt_range.map = function (self, fn)
+mtRange.map = function (self, fn)
   if self._fn then
     local fn1 = function (x) return fn(self._fn(x)) end  -- combine functions
-    return mt_range._init(self._beg, self._end, self._step, self._N, fn1)
+    return mtRange._init(self._beg, self._end, self._step, self._N, fn1)
   else
-    return mt_range._init(self._beg, self._end, self._step, self._N, fn)
+    return mtRange._init(self._beg, self._end, self._step, self._N, fn)
   end
 end
-mt_range.__bor = mt_range.map  -- allow  rng | fn1 | fn2
+mtRange.__bor = mtRange.map  -- allow  rng | fn1 | fn2
 
 
 --- Generate sequence of values.
@@ -1284,7 +1284,7 @@ data.range = function (_, dBegin, dEnd, dStep)
   local n, _ = math.modf(diff / dStep)
   if math.abs(n*dStep - dEnd) >= math.abs(dStep * 0.1) then n = n + 1 end
   -- result
-  return mt_range._init(dBegin, dEnd, dStep, n)
+  return mtRange._init(dBegin, dEnd, dStep, n)
 end
 _about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
   'Generate range object.', _tag.AUX}
@@ -1304,7 +1304,7 @@ _about[data.logrange] = {':logrange(begin_d, end_d, step_d=±1) --> new_R)',
 
 
 -- Get reference to data range in other table
-local mt_ref = {
+local mtRef = {
   type = 'ref' ,
   -- methods
   __len = function (t) return t._end - t._beg end,
@@ -1316,14 +1316,14 @@ local mt_ref = {
 --  @param self Ref object.
 --  @param i Element index.
 --  @return Table value.
-mt_ref.__index = function (self, i)
+mtRef.__index = function (self, i)
   if _ver.toInteger(i) ~= nil then
     local n = (i >= 0) and (i + self._beg) or (i + 1 + self._end)
     if self._beg < n and n <= self._end then
       return self._tbl[n]
     end
   end
-  return mt_ref[i] or mt_list[i]
+  return mtRef[i] or mtList[i]
 end
 
 
@@ -1331,10 +1331,10 @@ end
 --  @param self Ref object.
 --  @param k Index.
 --  @param v Value.
-mt_ref.__newindex = function (self, k, v)
+mtRef.__newindex = function (self, k, v)
   if _ver.toInteger(k) ~= nil and 0 < k and (self._beg + k) <= self._end then
     k = k + self._beg
-    if getmetatable(v) == mt_ref then
+    if getmetatable(v) == mtRef then
       -- copy data
       local i0 = k - 1
       local n = math.min(#v, self._end - i0)
@@ -1349,7 +1349,7 @@ end
 
 --- Get reference range.
 --  @return Beginning and the end of data range.
-mt_ref.range = function (self)
+mtRef.range = function (self)
   return self._beg+1, self._end
 end
 
@@ -1358,16 +1358,16 @@ end
 --  @param a Left shift.
 --  @param b Right shift.
 --  @return New ref object.
-mt_ref.shift = function (self, a, b)
+mtRef.shift = function (self, a, b)
   b = b or a
   return setmetatable({
     _beg=math.max(math.min(self._beg+a, #self._tbl-1), 0),
     _end=math.max(math.min(self._end+b, #self._tbl), 1),
     _tbl=self._tbl
-  }, mt_ref)
+  }, mtRef)
 end
-mt_ref.__shl = function (ref, n) return mt_ref.shift(ref, -n, -n) end
-mt_ref.__shr = function (ref, n) return mt_ref.shift(ref, n, n) end
+mtRef.__shl = function (ref, n) return mtRef.shift(ref, -n, -n) end
+mtRef.__shr = function (ref, n) return mtRef.shift(ref, n, n) end
 
 
 --- Create reference to other table.
@@ -1379,17 +1379,17 @@ data.ref = function (_, t, iBeg, iEnd)
   iBeg = iBeg or 1
   iEnd = iEnd or #t
   assert(_ver.toInteger(iBeg) and _ver.toInteger(iEnd), "Wrong index type")
-  if getmetatable(t) == mt_ref then
-    return setmetatable({_beg=t._beg+iBeg-1, _end=t._beg+iEnd, _tbl=t._tbl}, mt_ref)
+  if getmetatable(t) == mtRef then
+    return setmetatable({_beg=t._beg+iBeg-1, _end=t._beg+iEnd, _tbl=t._tbl}, mtRef)
   end
-  return setmetatable({_beg=iBeg-1, _end=iEnd, _tbl=t}, mt_ref)
+  return setmetatable({_beg=iBeg-1, _end=iEnd, _tbl=t}, mtRef)
 end
 _about[data.ref] = {':ref(data_t, begin_N=1, end_N=#src_t) --> new_R',
   'Return reference to the range of elements.', _tag.REF}
 
 
 -- Column reference
-local mt_col = {
+local mtCol = {
   type='column',
   -- methods
   __len = function (self) return #self._tbl end,
@@ -1399,8 +1399,8 @@ local mt_col = {
 --- Get column element.
 --  @param k Key.
 --  @return found value.
-mt_col.__index = function (self, k)
-  local tmp = mt_col[k] or mt_list[k]
+mtCol.__index = function (self, k)
+  local tmp = mtCol[k] or mtList[k]
   if tmp then  -- for sequential transformations
     return tmp
   end
@@ -1411,7 +1411,7 @@ end
 --- Set element or group of elements.
 --  @param k Key, 'data' for group set.
 --  @param v Value, scalar or list.
-mt_col.__newindex = function (self, k, v)
+mtCol.__newindex = function (self, k, v)
   if k == 'data' then
     if type(v) ~= 'table' or #v ~= #self._tbl then
       error "unable to set elements"
@@ -1431,14 +1431,14 @@ end
 --  @return column reference.
 data.col = function (_, t, n)
   assert(_ver.toInteger(n) and t[1][n], "Out of range")
-  return setmetatable({_tbl=t, _n=n}, mt_col)
+  return setmetatable({_tbl=t, _n=n}, mtCol)
 end
 _about[data.col] = {":col(src_t, col_N) --> ref_Col",
   "Make column reference.", _tag.REF}
 
 
 -- Row reference
-local mt_row = {
+local mtRow = {
   type='row',
   -- methods
   __len = function (self) return #self._row end,
@@ -1448,15 +1448,15 @@ local mt_row = {
 --- Get row element.
 --  @param k Key.
 --  @return found value.
-mt_row.__index = function (self, k)
-  return mt_row[k] or mt_list[k] or self._row[k]
+mtRow.__index = function (self, k)
+  return mtRow[k] or mtList[k] or self._row[k]
 end
 
 
 --- Set element or group of elements.
 --  @param k Key, 'data' for group set.
 --  @param v Value, scalar or list.
-mt_row.__newindex = function (self, k, v)
+mtRow.__newindex = function (self, k, v)
   if k == 'data' then
     if type(v) ~= 'table' or #v ~= #self._row then
       error "unable to set elements"
@@ -1476,14 +1476,14 @@ end
 data.row = function (_, t, n)
   local row = t[n]
   assert(_ver.toInteger(n) and row, "Out of range")
-  return setmetatable({_tbl=t, _row=row, _n=n}, mt_row)
+  return setmetatable({_tbl=t, _row=row, _n=n}, mtRow)
 end
 _about[data.row] = {":row(src_t, row_N) --> ref_Row",
   "Make row reference.", _tag.REF}
 
 
 -- Collect data types for packing.
-local mt_accum = {
+local mtAccum = {
   -- Save new element and return its index.
   __index = function (t, k)
     table.insert(t._nm, k)
@@ -1500,7 +1500,7 @@ local mt_accum = {
 data.pack = function (self, v)
   local ver = Sonata and (100*Sonata.MAJOR_V + Sonata.MINOR_V) or 100
   local t = {'/\\/', string.pack('I2', ver), '\0',}
-  local acc, bin = setmetatable({_nm={}}, mt_accum), nil
+  local acc, bin = setmetatable({_nm={}}, mtAccum), nil
   if type(v) == 'table' then
     bin = v._pack and v:_pack(acc) or _listPack(v, acc)
   else

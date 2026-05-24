@@ -516,19 +516,19 @@ end
 
 --============== Bin Tree ================
 
-local mt_tree = {}
+local mtTree = {}
 
 local tree = {
   -- create object
   new = function (l, r, v, isleaf)
-    return setmetatable({left=l, right=r, val=v, isleaf=isleaf}, mt_tree)
+    return setmetatable({left=l, right=r, val=v, isleaf=isleaf}, mtTree)
   end,
   -- check node
   isNode = function (t) return t.isleaf ~= true end,
   -- check leaf
   isLeaf = function (t) return t.isleaf == true end,
   -- check tree
-  isTree = function (t) return getmetatable(t) == mt_tree end,
+  isTree = function (t) return getmetatable(t) == mtTree end,
   -- flags
   LEAF = true, NODE = false,
 }

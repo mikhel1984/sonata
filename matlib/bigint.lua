@@ -186,34 +186,34 @@ __module__ = "Operations with arbitrary long integers."
 
 --	MODULE
 
-local mt_digits = {
+local mtDigits = {
 map = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', [0]='0'},
 mapChar = {},
 }
 
 -- Fill inverted mapping
-for k, v in pairs(mt_digits.map) do mt_digits.mapChar[v] = k end
-mt_digits.__index = mt_digits
+for k, v in pairs(mtDigits.map) do mtDigits.mapChar[v] = k end
+mtDigits.__index = mtDigits
 
 
 --- B << n
 --  @param N number of positions.
 --  @return left shifted number.
-mt_digits.__shl = function (self, N)
+mtDigits.__shl = function (self, N)
   assert(_tointeger(N) and N >= 0)
   local res = {}
   for i = 1, N do res[i] = 0 end
   _move(self, 1, #self, N+1, res)
   res.base = self.base
   res.sign = self.sign
-  return setmetatable(res, mt_digits)
+  return setmetatable(res, mtDigits)
 end
 
 
 --- B >> n
 --  @param N number of positions.
 --  @return right shifted number.
-mt_digits.__shr = function (self, N)
+mtDigits.__shr = function (self, N)
   assert(_tointeger(N) and N >= 0)
   local res = {}
   if N >= #self then
@@ -223,17 +223,17 @@ mt_digits.__shr = function (self, N)
   end
   res.base = self.base
   res.sign = self.sign
-  return setmetatable(res, mt_digits)
+  return setmetatable(res, mtDigits)
 end
 
 
 --- String representation.
 --  @return string.
-mt_digits.__tostring = function (self)
+mtDigits.__tostring = function (self)
   local s, n = nil, #self + 1
   if self.base <= 16 then
     local acc = {}
-    for i = 1, #self do acc[i] = mt_digits.map[ self[n-i] ] end
+    for i = 1, #self do acc[i] = mtDigits.map[ self[n-i] ] end
     s = table.concat(acc, '')
   else
     local acc = {}
@@ -249,13 +249,13 @@ end
 --  @param N Number of digits in group.
 --  @param sep Separator, optional.
 --  @return 'Sparse' string representation.
-mt_digits.group = function (self, N, sep)
+mtDigits.group = function (self, N, sep)
   N, sep = N or 3, sep or '`'
   local n, acc = #self + 1, {}
   local small = (self.base <= 16)
   for i = 1, #self do
     local ni = n - i
-    acc[#acc+1] = small and mt_digits.map[ self[ni] ] or self[ni]
+    acc[#acc+1] = small and mtDigits.map[ self[ni] ] or self[ni]
     if i < #self then
       if (ni-1) % N == 0 then
         acc[#acc+1] = sep
@@ -922,7 +922,7 @@ bigint._newString = function (s)
   else
     -- sequential digits without separation for small bases
     for dig in string.gmatch(body, '.') do
-      local v = mt_digits.mapChar[dig]
+      local v = mtDigits.mapChar[dig]
       if v then acc[#acc+1] = v end
     end
   end
@@ -1045,7 +1045,7 @@ bigint.digits = function (self, N)
   local b = self._
   local res = _rebase(b, BASE, N)
   res.sign = self._sign
-  return setmetatable(res, mt_digits)
+  return setmetatable(res, mtDigits)
 end
 _about[bigint.digits] = {"B:digits(N=10) --> tbl",
   "Get digits in the new numeric base."}

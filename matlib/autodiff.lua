@@ -108,7 +108,7 @@ local FUNCTIONS = 'functions'
 --  @param var Variable.
 --  @param nm Name string.
 --  @return variable or nil.
-local function _by_name (var, nm)
+local function _byName (var, nm)
   for k in pairs(var._der[1]) do
     if k[2] == nm then return k end
   end
@@ -122,15 +122,15 @@ end
 --  @param quads List of coefficients for the 2nd derivative.
 --  @param cross List of coefficients for cross derivatives.
 --  @return tables with values for 1st, 2nd and cross derivatives.
-local function _chain_rule (ads, vars, lins, quads, cross)
+local function _chainRule (ads, vars, lins, quads, cross)
   -- initialization
-  local lin_vars, quad_vars, cross_vars = {}, {}, {}
+  local linVars, quadVars, crossVars = {}, {}, {}
   for i, v in ipairs(vars) do
-    lin_vars[v] = 0
-    quad_vars[v] = 0
+    linVars[v] = 0
+    quadVars[v] = 0
     local t = {}
     for j = i+1, #vars do t[ vars[j] ] = 0 end
-    cross_vars[v] = t
+    crossVars[v] = t
   end
 
   -- chain rule
@@ -143,15 +143,15 @@ local function _chain_rule (ads, vars, lins, quads, cross)
         local fv1 = der[1][v1] or 0  -- 1sd derivative
         if i == j then
           -- first order terms
-          lin_vars[v1] = lin_vars[v1] + dh*fv1
+          linVars[v1] = linVars[v1] + dh*fv1
           -- pure second order terms
-          quad_vars[v1] = quad_vars[v1] + dh*(der[2][v1] or 0) + d2h*fv1*fv1
+          quadVars[v1] = quadVars[v1] + dh*(der[2][v1] or 0) + d2h*fv1*fv1
         else
           local d3 = der[3]
           local fdc = d3[v1] and d3[v1][v2] or d3[v2] and d3[v2][v1] or 0
           -- cross product of second order terms
           local tmp = dh*fdc + d2h*fv1*(der[1][v2] or 0)
-          local t = cross_vars[v1]
+          local t = crossVars[v1]
           t[v2] = t[v2] + tmp
         end
       end
@@ -160,16 +160,16 @@ local function _chain_rule (ads, vars, lins, quads, cross)
         local d1, d2 = ads[1]._der[1], ads[2]._der[1]
         local tmp = (d1[v2] or 0) * (d2[v1] or 0)
         if i == j then
-          quad_vars[v1] = quad_vars[v1] + 2*cross*tmp
+          quadVars[v1] = quadVars[v1] + 2*cross*tmp
         else
           tmp = tmp + (d1[v1] or 0) * (d2[v2] or 0)
-          local t = cross_vars[v1]
+          local t = crossVars[v1]
           t[v2] = t[v2] + cross*tmp
         end
       end
     end
   end
-  return lin_vars, quad_vars, cross_vars
+  return linVars, quadVars, crossVars
 end
 
 
@@ -189,7 +189,7 @@ end
 --  @param a First autodiff object.
 --  @param b Second autodiff object (or nil).
 --  @return list of variables.
-local function _get_vars (a, b)
+local function _getVars (a, b)
   local res = {}
   for k in pairs(a) do res[#res+1] = k end
   if b then
@@ -251,12 +251,12 @@ autodiff.__add = function (A1, A2)
   end
   -- process
   local x, y = A1._[1], A2._[1]
-  local vars = _get_vars(A1._der[1], A2._der[1])
+  local vars = _getVars(A1._der[1], A2._der[1])
   local f = x + y
   if #vars == 0 then return f end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {A1, A2}, vars, {1, 1}, _ZEROS, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 
 
@@ -279,12 +279,12 @@ autodiff.__div = function (A1, A2)
   end
   -- process
   local x, y = A1._[1], A2._[1]
-  local vars = _get_vars(A1._der[1], A2._der[1])
+  local vars = _getVars(A1._der[1], A2._der[1])
   local f, yy = x/y, 1.0/(y*y)
   if #vars == 0 then return f end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {A1, A2}, vars, {1/y, -f/y}, {0, 2*f*yy}, -yy)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 
 
@@ -353,12 +353,12 @@ autodiff.__mul = function (A1, A2)
   end
   -- process
   local x, y = A1._[1], A2._[1]
-  local vars = _get_vars(A1._der[1], A2._der[1])
+  local vars = _getVars(A1._der[1], A2._der[1])
   local f = x * y
   if #vars == 0 then return f end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {A1, A2}, vars, {y, x}, _ZEROS, 1)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 
 
@@ -376,7 +376,7 @@ autodiff.__pow = function (A1, A2)
   end
   -- process
   local x, y = A1._[1], A2._[1]
-  local vars = _get_vars(A1._der[1], A2._der[1])
+  local vars = _getVars(A1._der[1], A2._der[1])
   local f = x ^ y
   if #vars == 0 then return f end
   local lins = {y*x^(y-1), 0}
@@ -393,9 +393,9 @@ autodiff.__pow = function (A1, A2)
     quads[2] = x^y * lx*lx
     cross = x^y * (y*lx + 1)/x
   end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {A1, A2}, vars, lins, quads, cross)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 
 
@@ -413,12 +413,12 @@ autodiff.__sub = function (A1, A2)
   end
   -- process
   local x, y = A1._[1], A2._[1]
-  local vars = _get_vars(A1._der[1], A2._der[1])
+  local vars = _getVars(A1._der[1], A2._der[1])
   local f = x - y
   if #vars == 0 then return f end
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {A1, A2}, vars, {1, -1}, _ZEROS, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 
 
@@ -437,10 +437,10 @@ end
 --  @return negation of number.
 autodiff.__unm = function (self)
   local x = self._[1]
-  local vars = _get_vars(self._der[1])
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local vars = _getVars(self._der[1])
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {-1}, _ZEROS, 0)
-  return autodiff._init(-x, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(-x, linVars, quadVars, crossVars)
 end
 
 
@@ -501,12 +501,12 @@ autodiff._simp = function (self) return _cross.simp(self._[1]) end
 --  @return inverse cosine.
 autodiff.acos = function (self)
   local x = self._[1]
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local f = _ext.complex(x):acos():_simp()
   local sq = _sqrt(1 - x*x)
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {-1/sq}, {x/(sq*(x*x-1))}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.acos] = {"A:acos() --> y_A", "Inverse cosine.", FUNCTIONS}
 
@@ -515,12 +515,12 @@ _about[autodiff.acos] = {"A:acos() --> y_A", "Inverse cosine.", FUNCTIONS}
 --  @return hyperbolic inverse cosine.
 autodiff.acosh = function (self)
   local x = self._[1]
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local f = _ext.complex(x):acosh():_simp()
   local sq = _sqrt(x*x - 1)
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {1/sq}, {-x/(sq*(x*x-1))}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.acosh] = {"A:acosh() --> y_A",
   "Inverse hyperbolic cosine.", FUNCTIONS}
@@ -530,12 +530,12 @@ _about[autodiff.acosh] = {"A:acosh() --> y_A",
 --  @return inverse sine.
 autodiff.asin = function (self)
   local x = self._[1]
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local f = _ext.complex(x):asin():_simp()
   local sq = _sqrt(1 - x*x)
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {1/sq}, {-x/(sq*(x*x-1))}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.asin] = {"A:asin() --> y_A", "Inverse sine.", FUNCTIONS}
 
@@ -545,11 +545,11 @@ _about[autodiff.asin] = {"A:asin() --> y_A", "Inverse sine.", FUNCTIONS}
 autodiff.asinh = function (self)
   local x = self._[1]
   local f = _fun(x, "asinh", _calc.asinh)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local sq = _fun(x*x + 1, "sqrt", math.sqrt)
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {1/sq}, {-x/(sq*(x*x+1))}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.asinh] = {"A:asinh() --> y_A",
   "Inverse hyperbolic sine.", FUNCTIONS}
@@ -560,11 +560,11 @@ _about[autodiff.asinh] = {"A:asinh() --> y_A",
 autodiff.atan = function (self)
   local x = self._[1]
   local f = _fun(x, "atan", math.atan)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local xx = x*x + 1
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {1/xx}, {-2*x/(xx*xx)}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.atan] = {"A:atan() --> y_A", "Inverse tangent.", FUNCTIONS}
 
@@ -574,11 +574,11 @@ _about[autodiff.atan] = {"A:atan() --> y_A", "Inverse tangent.", FUNCTIONS}
 autodiff.atanh = function (self)
   local x = self._[1]
   local f = _fun(x, "atanh", _calc.atanh)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local xx = x*x - 1
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {-1/xx}, {2*x/(xx*xx)}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.atanh] = {"A:atanh() --> y_A",
   "Inverse hyperbolic tangent.", FUNCTIONS}
@@ -604,11 +604,11 @@ end
 autodiff.cos = function (self)
   local x = self._[1]
   local f = _fun(x, "cos", math.cos)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local s = _fun(x, "sin", math.sin)
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {-s}, {-f}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.cos] = {"A:cos() --> y_A", "Cosine value.", FUNCTIONS}
 
@@ -618,11 +618,11 @@ _about[autodiff.cos] = {"A:cos() --> y_A", "Cosine value.", FUNCTIONS}
 autodiff.cosh = function (self)
   local x = self._[1]
   local f = _fun(x, "cosh", _calc.cosh)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local s = _fun(x, "sinh", _calc.sinh)
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {s}, {f}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.acosh] = {"A:cosh() --> y_A",
   "Hypebolic cosine value.", FUNCTIONS}
@@ -636,7 +636,7 @@ autodiff.d = function (self, x)
     error "Variable expected"
   end
   return _isautodiff(x) and self._der[1][x._]
-      or type(x) == "string" and self._der[1][_by_name(self, x)]
+      or type(x) == "string" and self._der[1][_byName(self, x)]
       or 0
 end
 _about[autodiff.d] = {"A:d(var) --> df/dx_A",
@@ -653,12 +653,12 @@ autodiff.d2 = function (self, x, y)
   end
   y = y or x
   -- second derivative
-  local kx = _isautodiff(x) and x._ or type(x) == "string" and _by_name(self, x)
+  local kx = _isautodiff(x) and x._ or type(x) == "string" and _byName(self, x)
   if x == y then
     return self._der[2][kx] or 0
   end
   -- cross derivative
-  local ky = _isautodiff(y) and y._ or type(y) == "string" and _by_name(self, y)
+  local ky = _isautodiff(y) and y._ or type(y) == "string" and _byName(self, y)
   local dc = self._der[3]
   return dc[kx] and dc[kx][ky]
       or dc[ky] and dc[ky][kx]
@@ -673,10 +673,10 @@ _about[autodiff.d2] = {"A:d2(var, [var2=var]) --> d2f/dxdy_A",
 autodiff.exp = function (self)
   local x = self._[1]
   local f = _fun(x, "exp", math.exp)
-  local vars = _get_vars(self._der[1])
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local vars = _getVars(self._der[1])
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {f}, {f}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.exp] = {"A:exp() --> y_A", "Exponent value.", FUNCTIONS}
 
@@ -723,11 +723,11 @@ _about[autodiff.hess] = {"A:hess(vars_t) --> hess_M",
 autodiff.log = function (self, base)
   local x = self._[1]
   local f = _fun(x, "log", math.log)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local lbase = base and math.log(base) or 1
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {1/(x*lbase)}, {-1/(x*x*lbase)}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.log] = {"A:log([base=e]) --> y_A", "Logarithm value.", FUNCTIONS}
 
@@ -737,11 +737,11 @@ _about[autodiff.log] = {"A:log([base=e]) --> y_A", "Logarithm value.", FUNCTIONS
 autodiff.sin = function (self)
   local x = self._[1]
   local f = _fun(x, "sin", math.sin)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local c = _fun(x, "cos", math.cos)
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {c}, {-f}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.sin] = {"A:sin() --> y_A", "Sine value.", FUNCTIONS}
 
@@ -751,11 +751,11 @@ _about[autodiff.sin] = {"A:sin() --> y_A", "Sine value.", FUNCTIONS}
 autodiff.sinh = function (self)
   local x = self._[1]
   local f = _fun(x, "sinh", _calc.sinh)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local c = _fun(x, "cosh", _calc.cosh)
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {c}, {f}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.sinh] = {"A:sinh() --> y_A",
   "Hyperbolic sine value.", FUNCTIONS}
@@ -766,10 +766,10 @@ _about[autodiff.sinh] = {"A:sinh() --> y_A",
 autodiff.sqrt = function (self)
   local x = self._[1]
   local f = _sqrt(x)
-  local vars = _get_vars(self._der[1])
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local vars = _getVars(self._der[1])
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {1/(2*f)}, {-1/(4*x*f)}, 0)
-  return autodiff._init(f, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(f, linVars, quadVars, crossVars)
 end
 _about[autodiff.sqrt] = {"A:sqrt() --> y_A", "Square root value.", FUNCTIONS}
 
@@ -780,11 +780,11 @@ autodiff.tan = function (self)
   local x = self._[1]
   local s = _fun(x, "sin", math.sin)
   local c = _fun(x, "cos", math.cos)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local cc = c*c
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {1/(cc)}, {2*s/(cc*c)}, 0)
-  return autodiff._init(s/c, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(s/c, linVars, quadVars, crossVars)
 end
 _about[autodiff.tan] = {"A:tan() --> y_A", "Tangent value.", FUNCTIONS}
 
@@ -795,11 +795,11 @@ autodiff.tanh = function (self)
   local x = self._[1]
   local s = _fun(x, "sinh", _calc.sinh)
   local c = _fun(x, "cosh", _calc.cosh)
-  local vars = _get_vars(self._der[1])
+  local vars = _getVars(self._der[1])
   local cc = c*c
-  local lin_vars, quad_vars, cross_vars = _chain_rule(
+  local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {1/(cc)}, {-2*s/(cc*c)}, 0)
-  return autodiff._init(s/c, lin_vars, quad_vars, cross_vars)
+  return autodiff._init(s/c, linVars, quadVars, crossVars)
 end
 _about[autodiff.tanh] = {"A:tanh() --> y_A",
   "Hyperbolic tangent value.", FUNCTIONS}

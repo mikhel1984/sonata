@@ -130,7 +130,7 @@ end
 
 
 -- Continued fraction printing
-local mt_continued = {
+local mtContinued = {
 __tostring = function (t)
   local res = {tostring(t[0])}
   for i = 1, #t do
@@ -531,7 +531,7 @@ rational.toCF = function (self)
     a, b = b, a
   end
   res[#res+1] = math.modf(b)
-  return setmetatable(res, mt_continued)
+  return setmetatable(res, mtContinued)
 end
 _about[rational.toCF] = {"R:toCF() --> coeff_t",
   "Transform rational number to continued fraction.", CONTINUATED}

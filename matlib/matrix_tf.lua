@@ -315,13 +315,13 @@ end
 
 
 -- Define reference to (conjugate) transpose matrix
-local ref_transpose = {type='matrix_ref'}
+local refTranspose = {type='matrix_ref'}
 
 
 --- Access to methods or data
 --  @param k Key or column index.
 --  @return Table reference or method.
-ref_transpose.__index = function (self, k)
+refTranspose.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
     tbl.n = k
@@ -335,7 +335,7 @@ end
 
 --- Copy data from one matrix to another.
 --  @param other Source object.
-ref_transpose._copyData = function (self, other)
+refTranspose._copyData = function (self, other)
   if self._cols ~= other._cols or self._rows ~= other._rows then
     error 'Different size'
   end
@@ -351,9 +351,9 @@ end
 --- Copy data.
 --  @param k Filed 'data' to do copy.
 --  @param v Other matrix or reference.
-ref_transpose.__newindex = function (self, k, v)
+refTranspose.__newindex = function (self, k, v)
   if k == 'data' then
-    ref_transpose._copyData(self, v)
+    refTranspose._copyData(self, v)
   else
     error 'Wrong assignment'
   end
@@ -361,13 +361,13 @@ end
 
 
 -- Reference to column in transposed matrix.
-local ref_transpose_t = {}
+local refTranspose_t = {}
 
 
 --- Get element.
 --  @param k Element index.
 --  @return matrix value.
-ref_transpose_t.__index = function (self, k)
+refTranspose_t.__index = function (self, k)
   return self.src[k][self.n]
 end
 
@@ -375,19 +375,19 @@ end
 --- Set element.
 --  @param k Element index.
 --  @param v New value.
-ref_transpose_t.__newindex = function (self, k, v)
+refTranspose_t.__newindex = function (self, k, v)
   self.src[k][self.n] = v
 end
 
 
 -- Reference to column in conjutage transposed matrix.
-local ref_transpose_h = {}
+local refTranspose_h = {}
 
 
 --- Get element.
 --  @param k Element index.
 --  @return matrix value.
-ref_transpose_h.__index = function (self, k)
+refTranspose_h.__index = function (self, k)
   local v = self.src[k][self.n]
   return (type(v) == 'table') and v.conj and v:conj() or v
 end
@@ -396,7 +396,7 @@ end
 --- Set element.
 --  @param k Element index.
 --  @param v New value.
-ref_transpose_h.__newindex = ref_transpose_t.__newindex
+refTranspose_h.__newindex = refTranspose_t.__newindex
 
 
 --- Create (conjugate) transposed matrix.
@@ -404,27 +404,27 @@ ref_transpose_h.__newindex = ref_transpose_t.__newindex
 --  @param hermit Flag shows that the matrix is conjugate.
 --  @return referenced object.
 transform.makeT = function (M, hermit)
-  if getmetatable(M) == ref_transpose then
+  if getmetatable(M) == refTranspose then
     return M._tbl.src  -- 'transpose' back
   end
   local o = {
     _cols = M._rows,
     _rows = M._cols,
     _tbl = setmetatable({src = M, n = 0},
-                        hermit and ref_transpose_h or ref_transpose_t),
+                        hermit and refTranspose_h or refTranspose_t),
   }
-  return setmetatable(o, ref_transpose)
+  return setmetatable(o, refTranspose)
 end
 
 
 -- Get range of elements
-local ref_range = {type='matrix_ref'}
+local refRange = {type='matrix_ref'}
 
 
 --- Get row or source data.
 --  @param k Index or method.
 --  @return Table row, data or method.
-ref_range.__index = function (self, k)
+refRange.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
     tbl.n = self._ir[k] or 0
@@ -438,12 +438,12 @@ end
 
 
 --- Copy data.
-ref_range.__newindex = ref_transpose.__newindex
+refRange.__newindex = refTranspose.__newindex
 
 
 --- Copy the given matrix.
 --  @param other Matrix to copy.
-ref_range._copyData = function (self, other)
+refRange._copyData = function (self, other)
   if self._cols ~= other._cols or self._rows ~= other._rows then
     error 'Different size'
   end
@@ -457,13 +457,13 @@ end
 
 
 -- Access to column element.
-local ref_range_r = {}
+local refRange_r = {}
 
 
 --- Read value.
 --  @param k Index.
 --  @return element in the given position or 0.
-ref_range_r.__index = function (self, k)
+refRange_r.__index = function (self, k)
   return self.src[self.n][self._ic[k] or 0]
 end
 
@@ -471,7 +471,7 @@ end
 --- Set value.
 --  @param k Index.
 --  @param v New value.
-ref_range_r.__newindex = function (self, k, v)
+refRange_r.__newindex = function (self, k, v)
   self.src[self.n][self._ic[k] or 0] = v
 end
 
@@ -490,20 +490,20 @@ transform.makeRange = function (M, ir, ic)
       src = M,
       _ic = ic,
       n = {}
-    }, ref_range_r)
+    }, refRange_r)
   }
-  return setmetatable(o, ref_range)
+  return setmetatable(o, refRange)
 end
 
 
 -- Change matrix shape
-local ref_reshape = {type='matrix_ref'}
+local refReshape = {type='matrix_ref'}
 
 
 --- Access to the first index.
 --  @param k Index or method name.
 --  @return table or method.
-ref_reshape.__index = function (self, k)
+refReshape.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
     tbl.n = self._cols * (k - 1)
@@ -517,17 +517,17 @@ end
 
 
 -- Copy data.
-ref_reshape.__newindex = ref_transpose.__newindex
+refReshape.__newindex = refTranspose.__newindex
 
 
 -- Internal data.
-local ref_reshape_t = {}
+local refReshape_t = {}
 
 
 --- Get matrix value.
 --  @param k Index.
 --  @return element value.
-ref_reshape_t.__index = function (self, k)
+refReshape_t.__index = function (self, k)
   local n = self.n + k
   local r = math.modf((n-1) / self.cols)
   local c = n - r * self.cols
@@ -538,7 +538,7 @@ end
 --- Set matrix value.
 --  @param k Index.
 --  @param v New value.
-ref_reshape_t.__newindex = function (self, k, v)
+refReshape_t.__newindex = function (self, k, v)
   local n = self.n + k
   local r = math.modf((n-1) / self.cols)
   local c = n - r * self.cols
@@ -559,20 +559,20 @@ transform.makeReshape = function (M, rows, cols)
       src = M,
       n = 0,
       cols = M:cols(),
-    }, ref_reshape_t)
+    }, refReshape_t)
   }
-  return setmetatable(o, ref_reshape)
+  return setmetatable(o, refReshape)
 end
 
 
 -- Concatenate matrices.
-local ref_concat = {type='matrix_ref'}
+local refConcat = {type='matrix_ref'}
 
 
 --- Access to the first index.
 --  @param k Index or method name.
 --  @return table or method.
-ref_concat.__index = function (self, k)
+refConcat.__index = function (self, k)
   local tbl = self._tbl
   if type(k) == 'number' then
     if tbl.vertical then
@@ -592,17 +592,17 @@ end
 
 
 --- Copy data.
-ref_concat.__newindex = ref_transpose.__newindex
+refConcat.__newindex = refTranspose.__newindex
 
 
 -- Internal data.
-local ref_concat_t = {}
+local refConcat_t = {}
 
 
 --- Read element.
 --  @param k Element index.
 --  @return element value.
-ref_concat_t.__index = function (self, k)
+refConcat_t.__index = function (self, k)
   if not self.vertical then
     local n, src = 1, self.src
     while n < #src and k > src[n]._cols do
@@ -617,7 +617,7 @@ end
 --- Set element.
 --  @param k Element index.
 --  @param v New value.
-ref_concat_t.__newindex = function (self, k, v)
+refConcat_t.__newindex = function (self, k, v)
   if not self.vertical then
     local n, src = 1, self.src
     while n < #src and k > src[n]._cols do
@@ -654,14 +654,14 @@ transform.makeConcat = function (lst, isvertical)
       src = lst,
       mat = lst[1],
       vertical = isvertical,
-    }, ref_concat_t)
+    }, refConcat_t)
   }
-  return setmetatable(o, ref_concat)
+  return setmetatable(o, refConcat)
 end
 
 
 --- Simplify access to the vector elements.
-local ref_vector = {
+local refVector = {
   type = 'vector',
   _ind = {x=1, y=2, z=3},
 }
@@ -670,21 +670,21 @@ local ref_vector = {
 --- Get element of method.
 --  @param k Index or field.
 --  @return found element.
-ref_vector.__index = function (self, k)
-  local ind = ref_vector._ind[k] or k
+refVector.__index = function (self, k)
+  local ind = refVector._ind[k] or k
   if type(ind) == 'number' then
     return self._column and self._src[ind][1] or self._src[1][ind]
   elseif k == 'data' then
     return self._src
   else
-    return ref_vector[k]
+    return refVector[k]
   end
 end
 
 
 --- Vector length.
 --  @return number of elements in the vector.
-ref_vector.__len = function (self)
+refVector.__len = function (self)
   local src = self._src
   return math.max(src._rows, src._cols)
 end
@@ -693,11 +693,11 @@ end
 --- Set new value.
 --  @param k Index.
 --  @param v Value to set.
-ref_vector.__newindex = function (self, k, v)
+refVector.__newindex = function (self, k, v)
   if k == 'data' then
-    ref_vector._copyData(self, v)
+    refVector._copyData(self, v)
   else
-    local ind = ref_vector._ind[k] or k
+    local ind = refVector._ind[k] or k
     if self._column then
       self._src[ind][1] = v
     else
@@ -709,7 +709,7 @@ end
 
 --- Convert to string.
 --  @return string representation.
-ref_vector.__tostring = function (self)
+refVector.__tostring = function (self)
   local res = {}
   for i = 1, #self do
     local v = self[i]
@@ -721,8 +721,8 @@ end
 
 --- Copy one vector to another.
 --  @param other Second vector object.
-ref_vector._copyData = function (self, other)
-  if getmetatable(other) ~= ref_vector then
+refVector._copyData = function (self, other)
+  if getmetatable(other) ~= refVector then
     error 'Different types'
   end
   local len = #self
@@ -737,7 +737,7 @@ end
 --  @param V1 3-element vector.
 --  @param V2 3-element vector.
 --  @return Found vector.
-ref_vector.cross = function (V1, V2)
+refVector.cross = function (V1, V2)
   if #V1 ~= 3 or #V2 ~= 3 then
     error 'Vector with 3 elements is expected'
   end
@@ -752,7 +752,7 @@ end
 --  @param V1 First vector.
 --  @param V2 Second vector.
 --  @return dot product.
-ref_vector.dot = function (V1, V2)
+refVector.dot = function (V1, V2)
   local len = #V1
   if len ~= #V2 then
     error 'Different vector length'
@@ -769,7 +769,7 @@ end
 --  @param V1 First vector.
 --  @param V2 Second vector.
 --  @return outer product.
-ref_vector.outer = function (V1, V2)
+refVector.outer = function (V1, V2)
   local len = #V1
   if len ~= #V2 then
     error 'Different vector length'
@@ -790,7 +790,7 @@ end
 --- Vector norm.
 --  @param type_s Type of the norm.
 --  @return value of norm.
-ref_vector.norm = function (self, type_s)
+refVector.norm = function (self, type_s)
   type_s = type_s or 'l2'
   local s = 0
   if type_s == 'l1' then
@@ -811,7 +811,7 @@ end
 
 
 --- Normalize in-place.
-ref_vector.normalize = function (self)
+refVector.normalize = function (self)
   local s, len = 0, #self
   for i = 1, len do
     s = s + _norm(self[i])^2
@@ -825,7 +825,7 @@ end
 
 --- Find skew-symmetric matrix.
 --  @return matrix M^T = -M
-ref_vector.skew = function (self)
+refVector.skew = function (self)
   if #self ~= 3 then
     error 'Vector with 3 elements is expected'
   end
@@ -846,9 +846,9 @@ transform.makeVector = function (M)
     _src = M,
     _column = (M._cols == 1),
   }
-  return setmetatable(o, ref_vector)
+  return setmetatable(o, refVector)
 end
-transform.vec_access = ref_vector
+transform.vecAccess = refVector
 
 
 --- Copy methametods for ref objects.
@@ -859,10 +859,10 @@ transform.initRef = function (t)
     '__eq', '__call', '__concat', '__tostring', '__len',
   } do
     local fn = t[v]
-    ref_transpose[v] = fn
-    ref_range[v] = fn
-    ref_reshape[v] = fn
-    ref_concat[v] = fn
+    refTranspose[v] = fn
+    refRange[v] = fn
+    refReshape[v] = fn
+    refConcat[v] = fn
   end
   transform._methods = t
 end
@@ -870,10 +870,10 @@ end
 
 -- List of reference types
 transform.refs = {
-  [ref_transpose] = true,
-  [ref_range] = true,
-  [ref_reshape] = true,
-  [ref_concat] = true,
+  [refTranspose] = true,
+  [refRange] = true,
+  [refReshape] = true,
+  [refConcat] = true,
 }
 
 

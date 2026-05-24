@@ -234,31 +234,31 @@ local function _ispolynomial(v) return getmetatable(v) == polynomial end
 
 
 -- List of polynomials
-local mt_ppval = {}
-mt_ppval.__index = mt_ppval
+local mtPpval = {}
+mtPpval.__index = mtPpval
 
 
 --- Copy of the spline.
 --  @return deep copy
-mt_ppval.copy = function (self)
+mtPpval.copy = function (self)
   local res = {}
   for i, p in ipairs(self) do res[i] = {p[1], p[2]:copy()} end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 
 
 --- Find derivatives for all the polynomials.
 --  @return list of derivatives.
-mt_ppval.der = function (self)
+mtPpval.der = function (self)
   local res = {}
   for i, p in ipairs(self) do res[i] = {p[1], polynomial(p[2]:der())} end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 
 
 --- Find integrals for all the polynomials.
 --  @return list of integrals.
-mt_ppval.int = function (self)
+mtPpval.int = function (self)
   local res = {}
   for i, p in ipairs(self) do
     local curr = p[2]:int()
@@ -268,7 +268,7 @@ mt_ppval.int = function (self)
     end
     res[i] = {p[1], curr}
   end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 
 
@@ -276,7 +276,7 @@ end
 --  @param d Query point.
 --  @param N Index of polynomial in the table (optional).
 --  @return Found value and the polynomial index.
-mt_ppval.val = function (self, d, N)
+mtPpval.val = function (self, d, N)
   if N then
     return self[N][2]:val(d), N
   else
@@ -298,7 +298,7 @@ mt_ppval.val = function (self, d, N)
 end
 
 -- Simplify call
-mt_ppval.__call = mt_ppval.val
+mtPpval.__call = mtPpval.val
 
 
 --- Find roots of 2nd order polynomial.
@@ -870,7 +870,7 @@ polynomial.lin = function (_, tX, tY, v0, vN)
     xp, yp = xi, yi
   end
   if v0 then res[#res+1] = {xp + 1, polynomial._init({[0]= vN or v0}) } end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 _about[polynomial.lin] = {
   ":lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t",
@@ -985,7 +985,7 @@ polynomial.spline = function (_, tX, tY)
        xi*(3*ai*xi - 2*bi) + ci, -3*ai*xi + bi, ai})
     }
   end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 _about[polynomial.spline] = {":spline(xs_t, ys_t) --> Ps_t",
   "Cubic spline data interpolation. Return table with polynomials.", FIT}

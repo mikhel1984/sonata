@@ -155,7 +155,7 @@ local _tf = require("matlib.asciiplot_tf")
 local _inform = Sonata and Sonata.warning or print
 local _modf, _log, _floor = math.modf, math.log, math.floor
 local _tag = { MANUAL='manual', CONF='settings' }
-local _sonata_use_color = SONATA_USE_COLOR
+local _sonataUseColor = SONATA_USE_COLOR
 
 --	INFO
 
@@ -367,7 +367,7 @@ GRADE = {[0]="`", "'", "*", "~", "-", ".", ",", "_"}
 
 
 -- update markers
-if _sonata_use_color then
+if _sonataUseColor then
   local char = asciiplot.lvls
   for k, v in ipairs(char) do
     char[k] = string.format('\x1B[3%dm%s\x1B[0m', k, v)
@@ -406,7 +406,7 @@ local function _addGraded (fig, x, y, ind)
   -- fy in (0, 1), multiply to (#GRADE - small_value)
   local k = _floor(fy*7.99)
   local s = asciiplot.GRADE[k]
-  if _sonata_use_color then
+  if _sonataUseColor then
     s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
   end
   fig._canvas[ny][nx] = s
@@ -467,7 +467,7 @@ local function _addPolar (fig, t, tOpt)
       end
     end
     local s = string.char(string.byte('A') - 1 + j)
-    if _sonata_use_color then
+    if _sonataUseColor then
       s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
     end
     for i = #xy, 1, -1 do
@@ -508,7 +508,7 @@ local function _addTable (fig, t, tInd)
       end
     end
     local s = string.char(string.byte('A') - 1 + j)
-    if _sonata_use_color then
+    if _sonataUseColor then
       s = string.format('\x1B[3%dm%s\x1B[0m', j, s)
     end
     for i = #t, 1, -1 do
@@ -530,7 +530,7 @@ local function _addXY (fig, tX, tY, ind, line)
     for i = 2, #tX do
       asciiplot._drawLine(fig, tX[i-1], tY[i-1], tX[i], tY[i], ind)
     end
-    o = _sonata_use_color and string.format('\x1B[3%dmo\x1B[0m', ind) or 'o'
+    o = _sonataUseColor and string.format('\x1B[3%dmo\x1B[0m', ind) or 'o'
   end
   for i = 1, #tX do
     if line then
@@ -541,7 +541,7 @@ local function _addXY (fig, tX, tY, ind, line)
   end
   -- legend
   local s = string.char(string.byte('A') - 1 + ind)
-  if _sonata_use_color then
+  if _sonataUseColor then
     s = string.format('\x1B[3%dm%s\x1B[0m', ind, s)
   end
   for i = #tX, 1, -1 do
@@ -619,7 +619,7 @@ local function _fillBlock (fig, node, w1, w2, h1, h2, wdiv, acc)
   if node.isleaf then
     -- draw
     local ch = string.char(string.byte('A') + #acc)
-    if _sonata_use_color then
+    if _sonataUseColor then
       ch = string.format('\x1B[3%dm%s\x1B[0m', (#acc+1) % 9, ch)
     end
     acc[#acc+1] = {ch, node.left}
@@ -1040,7 +1040,7 @@ _about[asciiplot.addPoint] = {"F:addPoint(x_d, y_d, char_s='*') --> row_N, col_N
 --  @param s Character.
 asciiplot.addPose = function (self, ir, ic, s)
   if ir > 0 and ir <= self._y.size and ic > 0 and ic <= self._x.size
-            and (#s == 1 or _sonata_use_color)
+            and (#s == 1 or _sonataUseColor)
   then
     self._canvas[ir][ic] = s or '*'
   end
@@ -1320,7 +1320,7 @@ asciiplot.legend = function (self, str_t)
   local ch = {}
   for i = 1, #str_t do
     local s = string.char(string.byte('A') - 1 + i)
-    if _sonata_use_color then
+    if _sonataUseColor then
       s = string.format('\x1B[3%dm%s\x1B[0m', i, s)
     end
     ch[#ch+1] = s

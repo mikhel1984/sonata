@@ -138,7 +138,7 @@ __module__ = "Fuzzy logic elements."
 --	MODULE
 
 -- Fuzzy set object.
-local mt_set = {
+local mtSet = {
   type = 'fuzzy_set',
   -- function default name
   _defaultName = 'user_mf',
@@ -155,7 +155,7 @@ local mt_set = {
     AGG = math.max,
   }
 }
-mt_set.__index = mt_set
+mtSet.__index = mtSet
 
 
 --- Approximate shape of a set.
@@ -197,7 +197,7 @@ local function _newSet (s, op, nm, params)
     domain = nil,
     domSet = nil,
   }
-  return setmetatable(o, mt_set)
+  return setmetatable(o, mtSet)
 end
 
 
@@ -206,8 +206,8 @@ end
 --  @param S2 Second set or function.
 --  @return Same arguments or new fuzzy sets.
 local function _setArgs (S1, S2)
-  if getmetatable(S1) ~= mt_set then S1 = _newSet(S1) end
-  if getmetatable(S2) ~= mt_set then S2 = _newSet(S2) end
+  if getmetatable(S1) ~= mtSet then S1 = _newSet(S1) end
+  if getmetatable(S2) ~= mtSet then S2 = _newSet(S2) end
   return S1, S2
 end
 
@@ -216,15 +216,15 @@ end
 --  @param x Input value.
 --  @param env Environment settings.
 --  @return membership.
-mt_set.__call = function (self, x, env)
-  return mt_set._eval(self, x, env or mt_set._defaultEnv)
+mtSet.__call = function (self, x, env)
+  return mtSet._eval(self, x, env or mtSet._defaultEnv)
 end
 
 
 --- Make string representation.
 --  @return string.
-mt_set.__tostring = function (self)
-  return string.format("fuzzy %s",  mt_set._str(self))
+mtSet.__tostring = function (self)
+  return string.format("fuzzy %s",  mtSet._str(self))
 end
 
 
@@ -232,7 +232,7 @@ end
 --  @param x Input value.
 --  @param env Environment settings.
 --  @return membership.
-mt_set._eval = function (self, x, env)
+mtSet._eval = function (self, x, env)
   if not self.op then
     return self.set(x)
   elseif self.op == _op.AND then
@@ -250,14 +250,14 @@ end
 --  @param p Table with domain values.
 --  @param env Environment settings.
 --  @return combined membership value.
-mt_set._evalDomains = function (self, p, env)
+mtSet._evalDomains = function (self, p, env)
   local d = self.domain
   if d then
     local v = p[d]
     if not v then
       error("No value for domain " .. d)
     end
-    return mt_set._eval(self, v, env)
+    return mtSet._eval(self, v, env)
   end
   if not self.op then
     error "Unable to evaluate"
@@ -274,10 +274,10 @@ end
 
 --- Make string representation for set or operation.
 --  @return string.
-mt_set._str = function (self)
+mtSet._str = function (self)
   if not self.op then
     return string.format("%s(%s)",
-      self.name or mt_set._defaultName,
+      self.name or mtSet._defaultName,
       self.param and table.concat(self.param, ',') or "")
   elseif self.op == _op.AND then
     return string.format("(%s & %s)", self.set[1]:_str(), self.set[2]:_str())
@@ -292,7 +292,7 @@ end
 
 --- Make string representation in rule form.
 --  @return string.
-mt_set.asRule = function (self)
+mtSet.asRule = function (self)
   if self.domain and self.domSet then
     return string.format("%s is %s", self.domain, self.domSet)
   elseif self.op == _op.AND then
@@ -312,13 +312,13 @@ end
 --  @param S1 First set or function.
 --  @param S2 Second set or function.
 --  @return intersection of two sets.
-mt_set.andf = function (S1, S2) return _newSet({_setArgs(S1, S2)}, _op.AND) end
-mt_set.__band = mt_set.andf
+mtSet.andf = function (S1, S2) return _newSet({_setArgs(S1, S2)}, _op.AND) end
+mtSet.__band = mtSet.andf
 
 
 --- Make set copy.
 --  @return new set with the same function and name.
-mt_set.copy = function (self) return _newSet(self.set, self.op, self.name) end
+mtSet.copy = function (self) return _newSet(self.set, self.op, self.name) end
 
 
 --- Apply defuzzification.
@@ -326,7 +326,7 @@ mt_set.copy = function (self) return _newSet(self.set, self.op, self.name) end
 --  @param rng Range table {begin, end}.
 --  @param method(='centroid') Defuzzification method.
 --  @return value from the input set.
-mt_set.defuzzify = function (self, rng, method)
+mtSet.defuzzify = function (self, rng, method)
   method = method or 'centroid'
   local res, a, b = 0, rng[1], rng[2]
   -- get shape
@@ -395,33 +395,33 @@ end
 --  @param S1 First set or function.
 --  @param S2 Second set or function.
 --  @return union of two sets.
-mt_set.orf = function (S1, S2) return _newSet({_setArgs(S1, S2)}, _op.OR) end
-mt_set.__bor = mt_set.orf
+mtSet.orf = function (S1, S2) return _newSet({_setArgs(S1, S2)}, _op.OR) end
+mtSet.__bor = mtSet.orf
 
 
 --- Apply set complement (NOT, ~).
 --  @retrun complemented set.
-mt_set.notf = function (self) return _newSet(self, _op.NOT) end
-mt_set.__bnot = mt_set.notf
+mtSet.notf = function (self) return _newSet(self, _op.NOT) end
+mtSet.__bnot = mtSet.notf
 
 
 --- Domain object.
-local mt_domain = { type="fuzzy_domain", }
+local mtDomain = { type="fuzzy_domain", }
 
 
 --- Get fuzzy set or object method.
 --  @param k Element name.
 --  @return found element.
-mt_domain.__index = function (self, k)
-  return self._set[k] or mt_domain[k]
+mtDomain.__index = function (self, k)
+  return self._set[k] or mtDomain[k]
 end
 
 
 --- Add new fuzzy set.
 --  @param k Fuzzy set name.
 --  @param v Fuzzy set object.
-mt_domain.__newindex = function (self, k, v)
-  if not (v == nil or getmetatable(v) == mt_set) then
+mtDomain.__newindex = function (self, k, v)
+  if not (v == nil or getmetatable(v) == mtSet) then
     error "Fuzzy set is expected"
   end
   if type(k) ~= "string" then
@@ -437,14 +437,14 @@ end
 
 --- Get domain object copy.
 --  @return New domain object.
-mt_domain._copy = function (self)
+mtDomain._copy = function (self)
   local o = {
     _name = self._name,
     _range = {self._range[1], self._range[2]},
     _set = {}
   }
   for k, v in pairs(self._set) do o._set[k] = v end
-  return setmetatable(o, mt_domain)
+  return setmetatable(o, mtDomain)
 end
 
 
@@ -452,24 +452,24 @@ end
 --  @param rng Rangle table.
 --  @param nm Domain name.
 --  @return new domain.
-mt_domain._new  = function (rng, nm)
+mtDomain._new  = function (rng, nm)
   local o = {
     _range = rng,
     _name = nm,
     _set = {},
   }
-  return setmetatable(o, mt_domain)
+  return setmetatable(o, mtDomain)
 end
 
 
 --- Get name of the domain.
 --  @return name string.
-mt_domain.getName = function (self) return self._name end
+mtDomain.getName = function (self) return self._name end
 
 
 --- Get list of sets inside the domain.
 --  @return list of names.
-mt_domain.setList = function (self)
+mtDomain.setList = function (self)
   local t = {}
   for k in pairs(self._set) do t[#t+1] = k end
   return t
@@ -478,27 +478,27 @@ end
 
 --- Get domain range.
 --  @return range table.
-mt_domain.getRange = function (self) return {self._range[1], self._range[2]} end
+mtDomain.getRange = function (self) return {self._range[1], self._range[2]} end
 
 
 -- Rule object.
-local mt_rule = { type = "fuzzy_rule" }
+local mtRule = { type = "fuzzy_rule" }
 
 
 --- Get rule method, restrict access.
 --  @param k Field name.
 --  @return Field value.
-mt_rule.__index = function (self, k)
+mtRule.__index = function (self, k)
   local tmp = '_'..k
-  return self[tmp] or mt_rule[k]
+  return self[tmp] or mtRule[k]
 end
 
 
 --- Update field, restrict access and check type.
 --  @param k Field name.
 --  @param v New field value.
-mt_rule.__newindex = function (self, k, v)
-  if getmetatable(v) == mt_set then
+mtRule.__newindex = function (self, k, v)
+  if getmetatable(v) == mtSet then
     if k == "input" then
       self._input = v
     elseif k == "output" then
@@ -516,7 +516,7 @@ end
 
 --- Rule to string.
 --  @return string representation.
-mt_rule.__tostring = function (self)
+mtRule.__tostring = function (self)
   return string.format("IF %s THEN %s W %.2f",
     self._input:asRule(), self._output:asRule(), self._weight)
 end
@@ -527,14 +527,14 @@ end
 --  @param fout Output fuzzy set.
 --  @param weight (=1) Rule weight.
 --  @return new rule object.
-mt_rule._new = function (fin, fout, weight)
+mtRule._new = function (fin, fout, weight)
   local o = {
     _input = fin,
     _output = fout,
     _weight = weight,
     _res = 0,
   }
-  return setmetatable(o, mt_rule)
+  return setmetatable(o, mtRule)
 end
 
 
@@ -616,7 +616,7 @@ fuzzy.__call = fuzzy._evalFor
 fuzzy._new = function (env)
   env = env or {}
   local acc = {}
-  for k, v in pairs(mt_set._defaultEnv) do
+  for k, v in pairs(mtSet._defaultEnv) do
     acc[k] = env[k] or v
   end
   local o = {
@@ -635,7 +635,7 @@ end
 fuzzy.addDomain = function (self, range, name)
   assert(type(range) == 'table' and range[1] < range[2], "Wrong range")
   assert(type(name) == "string", "Name must be string")
-  self._domain[name] = mt_domain._new(range, name)
+  self._domain[name] = mtDomain._new(range, name)
   return self._domain[name]
 end
 _about[fuzzy.addDomain] = {"S:addDomain(range_t, name_s) --> D",
@@ -648,20 +648,20 @@ _about[fuzzy.addDomain] = {"S:addDomain(range_t, name_s) --> D",
 --  @param w Rule weight.
 fuzzy.addRule = function (self, iset, oset, w)
   w = w or 1
-  if getmetatable(iset) ~= mt_set or getmetatable(oset) ~= mt_set then
+  if getmetatable(iset) ~= mtSet or getmetatable(oset) ~= mtSet then
     error "Expected fuzzy set on input and output"
   end
   if w < 0 or w > 1 then
     error "Incorrect weight"
   end
-  table.insert(self._rules, mt_rule._new(iset, oset, w))
+  table.insert(self._rules, mtRule._new(iset, oset, w))
 end
 _about[fuzzy.addRule] = {"S:addRule(in_F, out_F, weight_d=1)",
   "Add new rule to system.", _tag.FIS}
 
 
 -- Intersection.
-fuzzy.andf = mt_set.andf
+fuzzy.andf = mtSet.andf
 _about[fuzzy.andf] = {"F:andf(F2) --> new_F",
   "Fuzzy set intersection. Equal to F & F2.", _tag.OP}
 
@@ -693,12 +693,12 @@ _about[fuzzy.apPlot] = {"S:apPlot(domain_s, set_s=nil) --> fig",
   _tag.FIS}
 
 
-fuzzy.asRule = mt_set.asRule
+fuzzy.asRule = mtSet.asRule
 _about[fuzzy.asRule] = {"F:asRule() --> str",
   "Return set description as a part of rule.", _tag.OP}
 
 
-fuzzy.defuzzify = mt_set.defuzzify
+fuzzy.defuzzify = mtSet.defuzzify
 _about[fuzzy.defuzzify] = {"F:defuzzify(range_t, method_s=centroid) --> value_d",
   "Defuzzification. Available methods are: centroid, bisector, lom, som, mom.",
   _tag.OP}
@@ -791,17 +791,17 @@ fuzzy.getDomains = function (self)
 end
 
 
-fuzzy.setList = mt_domain.setList
+fuzzy.setList = mtDomain.setList
 _about[fuzzy.setList] = {"D:setList() --> sets_t",
   "Get list of set names in domain.", _tag.DOM}
 
 
-fuzzy.getName = mt_domain.getName
+fuzzy.getName = mtDomain.getName
 _about[fuzzy.getName] = {"D:getName() --> str",
   "Get domain name.", _tag.DOM}
 
 
-fuzzy.getRange = mt_domain.getRange
+fuzzy.getRange = mtDomain.getRange
 _about[fuzzy.getRange] = {"D:getRange() --> range_t",
   "Get domain range.", _tag.DOM}
 
@@ -861,13 +861,13 @@ _about[fuzzy.newmf] = {":newmf(member_fn, name_s=nil) --> F",
 
 
 -- Complement.
-fuzzy.notf = mt_set.notf
+fuzzy.notf = mtSet.notf
 _about[fuzzy.notf] = {"F:notf() --> new_F",
   "Fuzzy set complement. Equal to ~F.", _tag.OP}
 
 
 -- Union.
-fuzzy.orf = mt_set.orf
+fuzzy.orf = mtSet.orf
 _about[fuzzy.orf] = {"F:orf(F2) --> new_F",
   "Fuzzy set union. Equal to F | F2.", _tag.OP}
 

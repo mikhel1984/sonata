@@ -452,8 +452,8 @@ gnuplot.show = function (self)
   end
   -- command
   if #fn > 0 then
-    local cmd_plot = self.surface and 'splot ' or 'plot '
-    cmd[#cmd+1] = cmd_plot .. table.concat(fn, ',')
+    local cmdPlot = self.surface and 'splot ' or 'plot '
+    cmd[#cmd+1] = cmdPlot .. table.concat(fn, ',')
   end
   local res = table.concat(cmd, '\n')
   -- send to Gnuplot

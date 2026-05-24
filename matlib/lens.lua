@@ -264,11 +264,11 @@ _about[lens.afocal] = {":afocal(magn_d) --> L",
 --  @param dLam Wavelength.
 --  @return Output beam radius and curvature.
 lens.beam = function (self, dR, dW, dLam)
-  lens.ext_complex = lens.ext_complex or require("matlib.complex")
+  lens.extComplex = lens.extComplex or require("matlib.complex")
   local lampi = dLam / math.pi
-  local _1_q1 = lens.ext_complex(1/dR, lampi / (dW * dW))
-  local _1_q2 = (self[3] + self[4]*_1_q1) / (self[1] + self[2]*_1_q1)
-  return 1/_1_q2:re(), msqrt(lampi / _1_q2:im())
+  local q1inv = lens.extComplex(1/dR, lampi / (dW * dW))
+  local q2inv = (self[3] + self[4]*q1inv) / (self[1] + self[2]*q1inv)
+  return 1/q2inv:re(), msqrt(lampi / q2inv:im())
 end
 _about[lens.beam] = {"L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize_d",
   "Find output beam curvature and spot radius.", _tag.LASER}
@@ -362,8 +362,8 @@ _about[lens.M] = {":M(rad_d, n_d=1) --> L",
 --- Get elements as matrix.
 --  @return 2x2 matrix.
 lens.matrix = function (self)
-  lens.ext_matrix = lens.ext_matrix or require('matlib.matrix')
-  return lens.ext_matrix({{self[1], self[2]}, {self[3], self[4]}})
+  lens.extMatrix = lens.extMatrix or require('matlib.matrix')
+  return lens.extMatrix({{self[1], self[2]}, {self[3], self[4]}})
 end
 _about[lens.matrix] = {"L:matrix() --> M", "Get elements as matrix.", _help.OTHER}
 
@@ -401,11 +401,11 @@ _about[lens.R] = {":R(nin_d, rad_d, nout_d) --> L",
 --  @param d0 Initial estimation of the variable.
 --  @return The found parameter value.
 lens.solve = function (_, fn, ind, d0)
-  lens.ext_numeric = lens.ext_numeric or require('matlib.numeric')
+  lens.extNumeric = lens.extNumeric or require('matlib.numeric')
   -- prepare 'equation'
   local eqn = function (d) return fn(d)[ind] end
   -- try to solve
-  return lens.ext_numeric:newton(eqn, d0)
+  return lens.extNumeric:newton(eqn, d0)
 end
 _about[lens.solve] = {":solve(fn, index_N, initial_d) --> found_d",
   "Find condition when component with the given index is equal to 0, use initial assumption.",
@@ -463,7 +463,7 @@ lens.__call = lens.transform
 
 
 -- explain the vector of cardinal points
-local mt_cardinal = {
+local mtCardinal = {
   -- mark
   type = 'cardinal_points',
   -- pretty pring
@@ -502,7 +502,7 @@ lens.cardinal = function (self, dn1, dn2)
   res.H2 = v + dn2 / C             -- second principal point
   res.N2 = (dn1 - self[1]*dn2) / C -- second nodal point
 
-  return setmetatable(res, mt_cardinal)
+  return setmetatable(res, mtCardinal)
 end
 _about[lens.cardinal] = {"L:cardinal(nLft_d=1, nRht_d=1) --> points_t",
   "Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.",
