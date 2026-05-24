@@ -208,7 +208,7 @@ process = function (args)
     local server = require("core.io_socket")
     local port = assert(tonumber(args[3]), 'Expected: --io tcp port')
     server:new('*', port)
-    server:repl()
+    pcall(server.repl, server)
   elseif args[2] == 'w' then
     -- expected Unix
     local fname = Sonata._pipeFile()

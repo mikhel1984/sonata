@@ -70,7 +70,7 @@ tcp_server.new = function (self, host, port)
   self.tcp = tcp
   io.write('Run tcp server on port ', tostring(port), '\n')
   assert(tcp:listen())
-  tcp:settimeout(0.05)  -- seconds, accept timeout
+  tcp:settimeout(0.01)  -- seconds, accept timeout
 end
 
 
@@ -90,7 +90,7 @@ tcp_server.repl = function (self)
       io.write(err, '\n')
     elseif cli then
       -- save
-      cli:settimeout(0.05)  -- seconds
+      cli:settimeout(0.0)  -- non-blocking
       local group = {
         cli = cli,
         invite = ev.INV_MAIN,
