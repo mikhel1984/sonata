@@ -11,9 +11,10 @@ DIV {margin-left: 10px;}
 .DESCRIPT {text-align:center; font-style:italic; }
 </style>
 <a name="Top"></a>
-<div><h1 align="center">Sonata v.1.02</h1>
+<div><h1 align="center">Sonata v.1.03</h1>
 <ul>
 <li><a href="#Ap">asciiplot</a></li>
+<li><a href="#Ad">autodiff</a></li>
 <li><a href="#Int">bigint</a></li>
 <li><a href="#Z">complex</a></li>
 <li><a href="#C">const</a></li>
@@ -51,6 +52,8 @@ Sonata is a Lua program for mathematical calculations.<br>
 	--lang	Generation or updating of the localization file.<br>
 		e.g. --lang          # show current language<br>
 		     --lang eo       # file for Esperanto localization<br>
+	--make	Wrap code into Lua.<br>
+		e.g. --make mylib.h mylib.c<br>
 	--io	Method for interaction.<br>
 		e.g. --io tcp 23456  # server mode<br>
 		     --io w          # output window mode<br>
@@ -64,9 +67,9 @@ Sonata is a Lua program for mathematical calculations.<br>
 		     --test array    # tests for the given module<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 1.02<br>
+<b>VERSION</b>: 1.03<br>
 <br>
-<b>MODULES</b>: special, qubit, graph, matrix, quaternion, main, data, const, units, fuzzy, lens, extremum, gnuplot, rational, complex, symbolic, asciiplot, geodesy, random, bigint, polynomial, numeric.<br>
+<b>MODULES</b>: random, bigint, polynomial, graph, const, complex, numeric, asciiplot, matrix, autodiff, extremum, main, units, qubit, special, fuzzy, symbolic, quaternion, data, geodesy, lens, gnuplot, rational.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -224,6 +227,93 @@ fig6:setY {log=true}
 fig6:plot(math.exp)
 fig6:legend 'off'
 print(fig6)
+
+--</pre>
+<a href="#Top">Top</a></div>
+<div><a name="Ad"></a>
+<h3># Ad (autodiff) #</h3>
+<p class="descript">Automatic differentiation.</p>
+<p><b>A:acos() --> y_A</b> - Inverse cosine.<br>
+<b>A:asin() --> y_A</b> - Inverse sine.<br>
+<b>A:asinh() --> y_A</b> - Inverse hyperbolic sine.<br>
+<b>A:atan() --> y_A</b> - Inverse tangent.<br>
+<b>A:atanh() --> y_A</b> - Inverse hyperbolic tangent.<br>
+<b>A:cos() --> y_A</b> - Cosine value.<br>
+<b>A:cosh() --> y_A</b> - Hypebolic cosine value.<br>
+<b>A:d(var) --> df/dx_A</b> - First derivative wrt the given variable (object or name).<br>
+<b>A:d2(var, [var2=var]) --> d2f/dxdy_A</b> - Second derivative wrt the given variables (object or name).<br>
+<b>A:exp() --> y_A</b> - Exponent value.<br>
+<b>A:grad(vars_t) --> grad_V</b> - Find Jacobian vector of expression wrt to the given list of variables.<br>
+<b>A:hess(vars_t) --> hess_M</b> - Find Hessian matrix of expression wrt to the given list of variables.<br>
+<b>A:log([base=e]) --> y_A</b> - Logarithm value.<br>
+<b>A:sin() --> y_A</b> - Sine value.<br>
+<b>A:sinh() --> y_A</b> - Hyperbolic sine value.<br>
+<b>A:sqrt() --> y_A</b> - Square root value.<br>
+<b>A:tan() --> y_A</b> - Tangent value.<br>
+<b>A:tanh() --> y_A</b> - Hyperbolic tangent value.<br>
+<b>Ad (value, [name]) --> new_A</b> - Create a new autodiff object.<br></p>
+<pre class="example">
+
+-- use 'autodiff'
+Ad = require 'matlib.autodiff'
+-- for jacobian/hessian
+require 'matlib.matrix'
+
+-- init
+x = Ad(3, "x")
+y = Ad(4)  -- name is optional
+-- get value
+ans = x()                     -->  3
+
+-- arithmetic operation
+s = x + y
+-- first derivative
+ans = s:d(x)                --.2>  1
+
+-- name can be used
+ans = s:d "x"               --.2>  1
+
+-- second derivative
+ans = s:d2(y)               --.2>  0
+
+s = x * y
+ans = s:d(x)                --.2>  y()
+
+-- jacobian (gradient)
+v = s:grad {x, y}  -- get vector
+ans = v(1)                  --.2>  y()
+
+-- hessian
+v = s:hess {x, y}
+ans = v(1,2)                --.2>  1
+
+-- ds^2/dxdy
+ans = s:d2(x, y)            --.2>  1.0
+
+ans = (y - x):d(x)          --.2>  -1.0
+
+s = x / y
+ans = s:d(y)                --.2>  -x()/y()^2
+
+ans = s:d2(y, x)            --.2>  -1/y()^2
+
+s = x^y
+-- equal to s:d2(x)
+ans = s:d2(x, x)            --.2>  y()*(y()-1)*x()^(y()-2)
+
+ans = s:d(y)                --.2>  x()^y()*math.log(x())
+
+ans = x:sin():d(x)          --.2>  math.cos(x())
+
+ans = x:cos():d2(x)         --.2>  -math.cos(x())
+
+ans = (x*y):tan():d(x)      --.2>  y()/math.cos(x()*y())^2
+
+ans = y:sqrt():d(y)         --.2>  1/(2*math.sqrt(y()))
+
+ans = x:exp():d2(x)         --.2>  math.exp(x())
+
+ans = x:log():d(x)          --.2>  1/x()
 
 --</pre>
 <a href="#Top">Top</a></div>
@@ -793,7 +883,7 @@ print(c)
 -- iterate over combinations
 q = {1,2,3}
 n = 0
-for _ in D:icomb(q, 2) do n = n+1 end 
+for _ in D:icomb(q, 2) do n = n+1 end
 ans = n                       -->  3
 
 -- iterate over permutations
@@ -819,7 +909,7 @@ inum = function (A)
     i = i+1  -- from 0 to #A
     if i > #A then return end
     return A, i
-  end  
+  end
 end
 seq = {inum, function (...) return D:icomb(...) end}
 for v in D:inest(seq, q) do
@@ -2086,6 +2176,7 @@ ans = y[#y][1]              --.1>  2.3
 <b>Poly {.., v1, v0} --> new_P</b> - Create a polynomial.<br>
 <b>Poly:R(roots_t) --> P</b> - Return polynomial with given roots.<br>
 <b>Poly:char(M) --> P</b> - Return characteristic polinomial for the given matrix.<br>
+<b>Poly:chebyshev(order_N, type='T') -> P</b> - Return Chebyshev polynomial or the first or second kind.<br>
 <b>Poly:fit(xs_t, ys_t, order_N) --> P</b> - Find polynomial approximation for the line.<br>
 <b>Poly:lagrange(xs_t, ys_t) --> P</b> - Find interpolation polynomial in the Lagrange form.<br>
 <b>Poly:lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t</b> - Linear data interpolation. Return table with polynomials.<br>
@@ -2186,6 +2277,9 @@ ans = p[3]                  --.3>  4.83485
 -- for exp(x) near 0
 p = Poly:taylor(0, 1, 1, 1, 1)
 ans = p(0.3)                --.2>  math.exp(0.3)
+
+-- Chebyshev polynomial
+ans = Poly:chebyshev(3)       -->  Poly {4, 0, -3, 0}
 
 -- linear interpolation
 -- use constant values out the interval
