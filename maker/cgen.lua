@@ -546,5 +546,10 @@ generator.makeBin = function (src)
   generator.compile(attr, files)
 end
 
-return generator
+
+if string.find(arg[0], "cgen") then
+  generator.makeBin(arg)
+else
+  return generator
+end
 
