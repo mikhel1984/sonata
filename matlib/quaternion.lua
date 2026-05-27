@@ -8,7 +8,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2026.
 
 	module 'quaternion'
 --]]
@@ -336,7 +336,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 quaternion._pack = function (self, acc)
-  local t = {string.pack('B', acc['quaternion']), _utils.pack_seq(self._, 1, 4, acc)}
+  local t = {string.pack('B', acc['quaternion']), _utils.packSeq(self._, 1, 4, acc)}
   return table.concat(t)
 end
 
@@ -348,10 +348,9 @@ end
 --  @param ver Pack algorithm version.
 --  @return Complex object.
 quaternion._unpack = function (src, pos, acc, ver)
-  local t, p = _utils.unpack_seq(4, src, pos, acc, ver)
+  local t, p = _utils.unpackSeq(4, src, pos, acc, ver)
   return quaternion._new(t[1], t[2], t[3], t[4]), p
 end
-
 
 
 --- Norm of the quaternion.
@@ -523,8 +522,8 @@ quaternion.slerp = function (_, Q1, Q2, f)
   end
   -- calculate
   local theta = math.acos(dot)
-  local sin_th = math.sin(theta)
-  return (math.sin((1-f)*theta)/sin_th) * qa + (math.sin(f*theta)/sin_th) * qb
+  local sinTh = math.sin(theta)
+  return (math.sin((1-f)*theta)/sinTh) * qa + (math.sin(f*theta)/sinTh) * qb
 end
 _about[quaternion.slerp] = {':slerp(beg_Q, end_Q, rat_f) --> rat_Q',
   'Spherical linear interpolation for the given ratio.', _help.OTHER}

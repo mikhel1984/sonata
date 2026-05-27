@@ -10,7 +10,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2026.
 
 	module 'matrix'
 --]]
@@ -287,7 +287,7 @@ _utils = _utils.utils
 local _tf = require("matlib.matrix_tf")
 
 --- 0 instead nil
-local mt_access = {
+local mtAccess = {
   __index = function () return 0 end,
   __len = function () return end,
 }
@@ -316,7 +316,7 @@ end
 --  @param i Index.
 --  @return Matrix row.
 local function _addRow(t, i)
-  local row = setmetatable({}, mt_access)
+  local row = setmetatable({}, mtAccess)
   t[i] = row
   return row
 end
@@ -345,7 +345,7 @@ local matrix = {
   CONDITION_NUM = nil,  -- set limit for notification
   --STRIP = 1E-12,
 
-  __len = mt_access.__len,
+  __len = mtAccess.__len,
 }
 
 
@@ -606,7 +606,7 @@ matrix._new = function (self, t)
       error 'Row must be table!'
     end
     cols = (cols < #v) and #v or cols
-    setmetatable(v, mt_access)
+    setmetatable(v, mtAccess)
   end
   return matrix._initCheck(rows, cols, t)
 end
@@ -620,7 +620,7 @@ matrix._pack = function (self, acc)
   local spack = string.pack
   local t = {spack('B', acc['matrix']), spack('I2', rs), spack('I2', cs)}
   for r = 1, rs do
-    t[#t+1] = _utils.pack_seq(self[r], 1, cs, acc)
+    t[#t+1] = _utils.packSeq(self[r], 1, cs, acc)
   end
   return table.concat(t)
 end
@@ -634,11 +634,11 @@ end
 --  @return Matrix object.
 matrix._unpack = function (src, pos, acc, ver)
   local rs, cs, t = 0, 0, {}
-  local unpack_num, sunpack = _utils.unpack_num, string.unpack
+  local sunpack = string.unpack
   rs, pos = sunpack('I2', src, pos)
   cs, pos = sunpack('I2', src, pos)
   for r = 1, rs do
-    t[r], pos = _utils.unpack_seq(cs, src, pos, acc, ver)
+    t[r], pos = _utils.unpackSeq(cs, src, pos, acc, ver)
   end
   return matrix._initCheck(rs, cs, t), pos
 end
@@ -727,7 +727,7 @@ _about[matrix.copy] = {"M:copy() --> cpy_M",
 
 
 -- Cross product.
-matrix.cross = _tf.vec_access.cross
+matrix.cross = _tf.vecAccess.cross
 _about[matrix.cross] = {'V:cross(V2) --> M',
   'Cross product of two 3-element vectors.', _tag.VECTOR}
 
@@ -784,7 +784,7 @@ _about[matrix.D] = {':D(list_v, shift_N=0) --> M',
 
 
 -- Scalar product.
-matrix.dot = _tf.vec_access.dot
+matrix.dot = _tf.vecAccess.dot
 _about[matrix.dot] = {'V:dot(V2) --> num',
   'Scalar product of two vectors.', _tag.VECTOR}
 
@@ -795,8 +795,8 @@ matrix.eig = function (self)
   if self._rows ~= self._cols then
     error "Square matrix is expected!"
   end
-  matrix.ext_poly = matrix.ext_poly or require("matlib.polynomial")
-  local p = matrix.ext_poly:char(self)
+  matrix.extPoly = matrix.extPoly or require("matlib.polynomial")
+  local p = matrix.extPoly:char(self)
   local root = p:roots()
   local P, lam = matrix:zeros(self._rows), matrix:zeros(self._rows)
   for j = 1, #root do
@@ -903,7 +903,7 @@ matrix.inv = function (self)
   -- add "tail"
   for i = 1, size do
     local resi = res[i]
-    setmetatable(resi, mt_access)
+    setmetatable(resi, mtAccess)
     resi[i+size] = 1
   end
   res._cols = 2*size
@@ -997,8 +997,8 @@ matrix.lu = function (self)
     local Ui = U[i]
     for j = i, U._rows do
       local s = Ui[j]
-      for q = 1, i-1 do s = s - Ui[q]*U[q][j] end   
-      Ui[j] = s 
+      for q = 1, i-1 do s = s - Ui[q]*U[q][j] end
+      Ui[j] = s
     end
     -- fill L part
     local Uii = Ui[i]
@@ -1017,7 +1017,7 @@ matrix.lu = function (self)
     for j = 1, i-1 do
       Li[j], Ui[j] = Ui[j], 0
     end
-  end    
+  end
   return L, U, P
 end
 _about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
@@ -1028,7 +1028,7 @@ _about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
 --  @param fn Desired function.
 --  @return Matrix where each element is obtained based on desired function.
 matrix.map = function (self, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn, 1) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   local res, Mcols = {}, self._cols
   for r = 1, self._rows do
     local rr, mr = {}, self[r]
@@ -1074,13 +1074,13 @@ end
 _about[matrix.norm] = {"M:norm() --> num", "Euclidean norm."}
 
 
-matrix.normalize = _tf.vec_access.normalize
+matrix.normalize = _tf.vecAccess.normalize
 _about[matrix.normalize] = {"V:normalize()",
   "Normalize to unit vector.", _tag.VECTOR}
 
 
 -- Outer product.
-matrix.outer = _tf.vec_access.outer
+matrix.outer = _tf.vecAccess.outer
 _about[matrix.outer] = {'V:outer(V2) --> M',
   'Outer product or two vectors.', _tag.VECTOR}
 
@@ -1235,7 +1235,7 @@ _about[matrix.rref] = {"M:rref() --> upd_M",
   "Perform transformations using Gauss method.", _tag.TRANSFORM}
 
 
-matrix.skew = _tf.vec_access.skew
+matrix.skew = _tf.vecAccess.skew
 _about[matrix.skew] = {"V:skew() --> M",
   "Make skew-symmetric matrix from the 3-element vector.", _tag.VECTOR}
 
@@ -1378,7 +1378,7 @@ _about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
 matrix.zip = function (_, fn, ...)
   local arg = {...}
   local rows, cols = arg[1]._rows, arg[1]._cols
-  if type(fn) == 'string' then fn = _utils.Fn(fn, #arg) end
+  if type(fn) == 'string' then fn = _utils.Fn(fn) end
   -- check size
   for i = 2, #arg do
     if arg[i]._rows ~= rows or arg[i]._cols ~= cols then

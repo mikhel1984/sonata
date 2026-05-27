@@ -4,7 +4,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2026.
 
 	module 'utils'
 --]]
@@ -66,6 +66,7 @@ end
 
 
 -- Logarithm with specific base
+-- use log10 as a marker for version 5.1
 versions.log = math.log10 and function (x, n)
   return math.log(x) / math.log(n)
 end or math.log
@@ -260,7 +261,7 @@ end
 --  @return Function based on the expression.
 utils.Fn = function (sExpr)
   local a, b = string.match(sExpr, "(.*)->(.+)")
-  if not a then 
+  if not a then
     a, b = 'x', sExpr
   end
   local fn = versions.loadStr(
@@ -346,7 +347,7 @@ end
 --  @param x Value to pack.
 --  @param acc Accumulator table.
 --  @return binary string.
-utils.pack_num = function (x, acc)
+utils.packNum = function (x, acc)
   local v, p = _modf(math.abs(x))
   if p == 0.0 then
     -- integer
@@ -378,12 +379,12 @@ end
 --  @param ii End index.
 --  @param acc Accumulator table.
 --  @return binary string.
-utils.pack_seq = function (src, i0, ii, acc)
-  local t, pack_num = {}, utils.pack_num
+utils.packSeq = function (src, i0, ii, acc)
+  local t, packNum = {}, utils.packNum
   for i = i0, ii do
     local x = src[i]
     if type(x) == 'number' then
-      t[#t+1] = pack_num(x, acc)
+      t[#t+1] = packNum(x, acc)
     elseif type(x) == 'table' and x._pack then
       t[#t+1] = x:_pack(acc)
     else
@@ -398,7 +399,7 @@ end
 --  @param s Source string.
 --  @param acc Accumulator table.
 --  @return binary string.
-utils.pack_str = function (s, acc)
+utils.packStr = function (s, acc)
   local n = #s
   if n < 256 then
     return string.pack('BB', acc['"B'], n) .. s
@@ -420,7 +421,7 @@ end
 --  @param key Number tag.
 --  @param ver Pack version algorithm.
 --  @return number and next position.
-utils.unpack_num = function (s, pos, key, ver)
+utils.unpackNum = function (s, pos, key, ver)
   -- remove & to get template
   return string.unpack(string.sub(key, 2), s, pos)
 end
@@ -432,14 +433,14 @@ end
 --  @param acc Accumulator table.
 --  @param ver Pack version algorithm.
 --  @return table with resutl, next position.
-utils.unpack_seq = function (len, s, pos, acc, ver)
-  local t, n, unpack_num = {}, nil, utils.unpack_num
+utils.unpackSeq = function (len, s, pos, acc, ver)
+  local t, n, unpackNum = {}, nil, utils.unpackNum
   for i = 1, len do
     n, pos = string.unpack('B', s, pos)
     local key = acc[n]
     if type(key) == "string" then
       if string.byte(key, 1) == 0x26 then  -- &
-        t[i], pos = unpack_num(s, pos, key, ver)
+        t[i], pos = unpackNum(s, pos, key, ver)
       else
         acc[n] = require('matlib.'..key)
         t[i], pos = acc[n]._unpack(s, pos, acc, ver)
@@ -458,7 +459,7 @@ end
 --  @param key Number tag.
 --  @param ver Pack version algorithm.
 --  @return string and next position.
-utils.unpack_str = function (s, pos, key, ver)
+utils.unpackStr = function (s, pos, key, ver)
   local n, pos = string.unpack(string.sub(key, 2), s, pos)
   return string.sub(s, pos, pos+n-1), pos+n
 end
@@ -515,19 +516,19 @@ end
 
 --============== Bin Tree ================
 
-local mt_tree = {}
+local mtTree = {}
 
 local tree = {
   -- create object
-  new = function (l, r, v, isleaf) 
-    return setmetatable({left=l, right=r, val=v, isleaf=isleaf}, mt_tree)
+  new = function (l, r, v, isleaf)
+    return setmetatable({left=l, right=r, val=v, isleaf=isleaf}, mtTree)
   end,
   -- check node
   isNode = function (t) return t.isleaf ~= true end,
   -- check leaf
   isLeaf = function (t) return t.isleaf == true end,
   -- check tree
-  isTree = function (t) return getmetatable(t) == mt_tree end,
+  isTree = function (t) return getmetatable(t) == mtTree end,
   -- flags
   LEAF = true, NODE = false,
 }

@@ -8,7 +8,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2026.
 
 	module 'rational'
 --]]
@@ -130,7 +130,7 @@ end
 
 
 -- Continued fraction printing
-local mt_continued = {
+local mtContinued = {
 __tostring = function (t)
   local res = {tostring(t[0])}
   for i = 1, #t do
@@ -180,7 +180,6 @@ local function _cont2rat (t)
   end
   return t[0] * b + a, b
 end
-
 
 
 --- R1 + R2
@@ -418,7 +417,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 rational._pack = function (self, acc)
-  local t = {string.pack('B', acc['rational']), _utils.pack_seq(self._, 1, 2, acc)}
+  local t = {string.pack('B', acc['rational']), _utils.packSeq(self._, 1, 2, acc)}
   return table.concat(t)
 end
 
@@ -430,7 +429,7 @@ end
 --  @param ver Pack algorithm version.
 --  @return Rational object.
 rational._unpack = function (src, pos, acc, ver)
-  local t, p = _utils.unpack_seq(2, src, pos, acc, ver)
+  local t, p = _utils.unpackSeq(2, src, pos, acc, ver)
   return rational._new(t[1], t[2]), p
 end
 
@@ -532,7 +531,7 @@ rational.toCF = function (self)
     a, b = b, a
   end
   res[#res+1] = math.modf(b)
-  return setmetatable(res, mt_continued)
+  return setmetatable(res, mtContinued)
 end
 _about[rational.toCF] = {"R:toCF() --> coeff_t",
   "Transform rational number to continued fraction.", CONTINUATED}

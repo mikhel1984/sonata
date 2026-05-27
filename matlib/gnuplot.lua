@@ -8,7 +8,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2026.
 
 	module 'gnuplot'
 --]]
@@ -452,8 +452,8 @@ gnuplot.show = function (self)
   end
   -- command
   if #fn > 0 then
-    local cmd_plot = self.surface and 'splot ' or 'plot '
-    cmd[#cmd+1] = cmd_plot .. table.concat(fn, ',')
+    local cmdPlot = self.surface and 'splot ' or 'plot '
+    cmd[#cmd+1] = cmdPlot .. table.concat(fn, ',')
   end
   local res = table.concat(cmd, '\n')
   -- send to Gnuplot

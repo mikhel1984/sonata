@@ -11,7 +11,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2026.
 
 	module 'bigint'
 --]]
@@ -186,34 +186,34 @@ __module__ = "Operations with arbitrary long integers."
 
 --	MODULE
 
-local mt_digits = {
+local mtDigits = {
 map = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', [0]='0'},
 mapChar = {},
 }
 
 -- Fill inverted mapping
-for k, v in pairs(mt_digits.map) do mt_digits.mapChar[v] = k end
-mt_digits.__index = mt_digits
+for k, v in pairs(mtDigits.map) do mtDigits.mapChar[v] = k end
+mtDigits.__index = mtDigits
 
 
 --- B << n
 --  @param N number of positions.
 --  @return left shifted number.
-mt_digits.__shl = function (self, N)
+mtDigits.__shl = function (self, N)
   assert(_tointeger(N) and N >= 0)
   local res = {}
   for i = 1, N do res[i] = 0 end
   _move(self, 1, #self, N+1, res)
   res.base = self.base
   res.sign = self.sign
-  return setmetatable(res, mt_digits)
+  return setmetatable(res, mtDigits)
 end
 
 
 --- B >> n
 --  @param N number of positions.
 --  @return right shifted number.
-mt_digits.__shr = function (self, N)
+mtDigits.__shr = function (self, N)
   assert(_tointeger(N) and N >= 0)
   local res = {}
   if N >= #self then
@@ -223,17 +223,17 @@ mt_digits.__shr = function (self, N)
   end
   res.base = self.base
   res.sign = self.sign
-  return setmetatable(res, mt_digits)
+  return setmetatable(res, mtDigits)
 end
 
 
 --- String representation.
 --  @return string.
-mt_digits.__tostring = function (self)
+mtDigits.__tostring = function (self)
   local s, n = nil, #self + 1
   if self.base <= 16 then
     local acc = {}
-    for i = 1, #self do acc[i] = mt_digits.map[ self[n-i] ] end
+    for i = 1, #self do acc[i] = mtDigits.map[ self[n-i] ] end
     s = table.concat(acc, '')
   else
     local acc = {}
@@ -249,13 +249,13 @@ end
 --  @param N Number of digits in group.
 --  @param sep Separator, optional.
 --  @return 'Sparse' string representation.
-mt_digits.group = function (self, N, sep)
+mtDigits.group = function (self, N, sep)
   N, sep = N or 3, sep or '`'
   local n, acc = #self + 1, {}
   local small = (self.base <= 16)
   for i = 1, #self do
     local ni = n - i
-    acc[#acc+1] = small and mt_digits.map[ self[ni] ] or self[ni]
+    acc[#acc+1] = small and mtDigits.map[ self[ni] ] or self[ni]
     if i < #self then
       if (ni-1) % N == 0 then
         acc[#acc+1] = sep
@@ -922,7 +922,7 @@ bigint._newString = function (s)
   else
     -- sequential digits without separation for small bases
     for dig in string.gmatch(body, '.') do
-      local v = mt_digits.mapChar[dig]
+      local v = mtDigits.mapChar[dig]
       if v then acc[#acc+1] = v end
     end
   end
@@ -965,9 +965,9 @@ end
 --  @return String with object representation.
 bigint._pack = function (self, acc)
   local n = #self._
-  local t = {string.pack('B', acc["bigint"]), _utils.pack_num(BASE, acc),
+  local t = {string.pack('B', acc["bigint"]), _utils.packNum(BASE, acc),
     string.pack('b', self._sign), string.pack('I2', n),
-    _utils.pack_seq(self._, 1, n, acc)}
+    _utils.packSeq(self._, 1, n, acc)}
   return table.concat(t)
 end
 
@@ -1013,10 +1013,10 @@ end
 bigint._unpack = function (src, pos, acc, ver)
   local n, base, sign, t = nil, nil, nil, nil
   n, pos = string.unpack('B', src, pos)
-  base, pos = _utils.unpack_num(src, pos, acc[n], ver)
+  base, pos = _utils.unpackNum(src, pos, acc[n], ver)
   sign, pos = string.unpack('b', src, pos)
   n, pos = string.unpack('I2', src, pos)
-  t, pos = _utils.unpack_seq(n, src, pos, acc, ver)
+  t, pos = _utils.unpackSeq(n, src, pos, acc, ver)
   if base ~= BASE then t = _rebase(t, base, BASE) end
   return _newTable(t, sign), pos
 end
@@ -1045,7 +1045,7 @@ bigint.digits = function (self, N)
   local b = self._
   local res = _rebase(b, BASE, N)
   res.sign = self._sign
-  return setmetatable(res, mt_digits)
+  return setmetatable(res, mtDigits)
 end
 _about[bigint.digits] = {"B:digits(N=10) --> tbl",
   "Get digits in the new numeric base."}
@@ -1143,7 +1143,6 @@ _about[bigint.factorize] = {"B:factorize() --> prime_t",
 --  @return Integer if possible, otherwise float point number.
 bigint.float = function (self)
   local b, res = self._, 0
-  print(#b)
   if #b > 2 and #b * _logbase > 9 then
     local s = _logN(b[#b] + b[#b-1]/BASE, 10)
     s = s + (#b-1)*_logbase

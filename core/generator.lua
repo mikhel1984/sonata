@@ -4,7 +4,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2026.
 
 	module 'generator'
 --]]
@@ -364,7 +364,7 @@ WORD2.new = function(self, t)
   -- return object
   return setmetatable(o, self)
 end
-_about[WORD2.new] = {":new(t) --> WORD6", "Explicit constructor.", _help.NEW}
+_about[WORD2.new] = {":new(t) --> WORD6", "Explicit constructor.", _help.STATIC}
 -- begin from ':' to get 'WORD3:new(t)'
 
 

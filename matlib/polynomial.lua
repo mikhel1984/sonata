@@ -8,7 +8,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2026.
 
 	module 'polynomial'
 --]]
@@ -109,6 +109,9 @@ ans = p[3]                  --.3>  4.83485
 -- for exp(x) near 0
 p = Poly:taylor(0, 1, 1, 1, 1)
 ans = p(0.3)                --.2>  math.exp(0.3)
+
+-- Chebyshev polynomial
+ans = Poly:chebyshev(3)       -->  Poly {4, 0, -3, 0}
 
 -- linear interpolation
 -- use constant values out the interval
@@ -231,31 +234,31 @@ local function _ispolynomial(v) return getmetatable(v) == polynomial end
 
 
 -- List of polynomials
-local mt_ppval = {}
-mt_ppval.__index = mt_ppval
+local mtPpval = {}
+mtPpval.__index = mtPpval
 
 
 --- Copy of the spline.
 --  @return deep copy
-mt_ppval.copy = function (self)
+mtPpval.copy = function (self)
   local res = {}
   for i, p in ipairs(self) do res[i] = {p[1], p[2]:copy()} end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 
 
 --- Find derivatives for all the polynomials.
 --  @return list of derivatives.
-mt_ppval.der = function (self)
+mtPpval.der = function (self)
   local res = {}
   for i, p in ipairs(self) do res[i] = {p[1], polynomial(p[2]:der())} end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 
 
 --- Find integrals for all the polynomials.
 --  @return list of integrals.
-mt_ppval.int = function (self)
+mtPpval.int = function (self)
   local res = {}
   for i, p in ipairs(self) do
     local curr = p[2]:int()
@@ -265,7 +268,7 @@ mt_ppval.int = function (self)
     end
     res[i] = {p[1], curr}
   end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 
 
@@ -273,7 +276,7 @@ end
 --  @param d Query point.
 --  @param N Index of polynomial in the table (optional).
 --  @return Found value and the polynomial index.
-mt_ppval.val = function (self, d, N)
+mtPpval.val = function (self, d, N)
   if N then
     return self[N][2]:val(d), N
   else
@@ -295,13 +298,13 @@ mt_ppval.val = function (self, d, N)
 end
 
 -- Simplify call
-mt_ppval.__call = mt_ppval.val
+mtPpval.__call = mtPpval.val
 
 
 --- Find roots of 2nd order polynomial.
 --  @return Table with roots.
-local function _roots2 (self)
-  local a, b, c = self[2], self[1], self[0]
+local function _roots2 (P)
+  local a, b, c = P[2], P[1], P[0]
   local sD = _ext.complex.sqrt(b*b - 4*a*c)
   local sgn = b > 0 and 1 or b < 0 and -1 or 0
   sD = -0.5*(b + sgn*sD)
@@ -312,9 +315,9 @@ end
 --- Find roots of 3rd order polynomial.
 --  Use Cardano's formula.
 --  @return Table with roots.
-local function _roots3 (self)
-  local t = self[3]
-  local a, b, c = self[2]/t, self[1]/t, self[0]/t
+local function _roots3 (P)
+  local t = P[3]
+  local a, b, c = P[2]/t, P[1]/t, P[0]/t
   local Q, R = (a*a - 3*b)/9, (2*a^3 - 9*a*b + 27*c)/54
   t = Q^3
   local res = nil
@@ -340,13 +343,13 @@ end
 
 --- Check if there are exact roots.
 --  @return found roots or nil
-local function _exact (self)
-  if #self == 1 then
-    return {-self[0] / self[1]}
-  elseif #self == 2 then
-    return _roots2(self)
-  elseif #self == 3 then
-    return _roots3(self)
+local function _exact (P)
+  if #P == 1 then
+    return {-P[0] / P[1]}
+  elseif #P == 2 then
+    return _roots2(P)
+  elseif #P == 3 then
+    return _roots3(P)
   end
   return nil
 end
@@ -370,13 +373,13 @@ end
 --  @param d0 Initial value of the root (optional).
 --  @param tol Tolerance
 --  @return found value or nil.
-local function _nr (self, d0, tol)
+local function _nr (P, d0, tol)
   -- prepare variables
-  local dp, max = polynomial.der(self), 30
+  local dp, max = polynomial.der(P), 30
   local val = polynomial.val
   for i = 1, max do
     local der = _ispolynomial(dp) and val(dp, d0) or dp
-    local dx = val(self, d0) / der
+    local dx = val(P, d0) / der
     if _cross.norm(dx) <= tol then
       return d0
     else
@@ -621,7 +624,7 @@ polynomial._pack = function (self, acc)
   local spack = string.pack
   local n = #self
   local t = {spack('B', acc['polynomial']), spack('I2', n)}
-  t[#t+1] = _utils.pack_seq(self, 0, n, acc)
+  t[#t+1] = _utils.packSeq(self, 0, n, acc)
   return table.concat(t)
 end
 
@@ -682,44 +685,10 @@ end
 polynomial._unpack = function (src, pos, acc, ver)
   local t, ord = {}, nil
   ord, pos = string.unpack('I2', src, pos)
-  t, pos = _utils.unpack_seq(ord+1, src, pos, acc, ver)
+  t, pos = _utils.unpackSeq(ord+1, src, pos, acc, ver)
   t = table.move(t, 1, #t, 0, {})
   return polynomial._init(t), pos
 end
-
-
---- Get polynomial from roots.
---  Arguments are a sequence of roots.
---  @param t List of roots.
---  @return Polynomial object.
-polynomial.R = function (_, t)
-  local lst = _ver.move(t, 1, #t, 1, {})
-  local res = polynomial._init({[0]=1})
-  while #lst > 0 do
-    local v = table.remove(lst, 1)
-    if type(v) == 'table' and v.iscomplex then
-      -- looking for pair
-      local ind, re, im = nil, v:re(), v:im()
-      for i, u in ipairs(lst) do
-        if type(u) == 'table' and u.iscomplex and u:re() == re and u:im() == -im
-        then
-          ind = i; break
-        end
-      end
-      if not ind then
-        error ('No pair for '..tostring(v))
-      end
-      table.remove(lst, ind)
-      res = polynomial.__mul(res,
-        polynomial._init({[0]= re*re + im*im, -2*re, 1}))
-    else
-      _multXv(res, v)
-    end
-  end
-  return res
-end
-_about[polynomial.R] = {":R(roots_t) --> P",
-  "Return polynomial with given roots.", _help.OTHER}
 
 
 --- Find characteristic polinomial for the matrix.
@@ -734,6 +703,31 @@ polynomial.char = function (_, M)
 end
 _about[polynomial.char] = {":char(M) --> P",
   "Return characteristic polinomial for the given matrix."}
+
+
+--- Find Chebyshev polynomial.
+--  @param order Polynomial order.
+--  @param tp Type ('T' or 'U').
+--  @return Chebyshev polynomial.
+polynomial.chebyshev = function (_, order, tp)
+  if order < 0 or _ver.toInteger(order) == nil then
+    error "Expected non-negative order"
+  end
+  local prev = {[0]=1}  -- T0/U0
+  if order == 0 then 
+    return polynomial._init(prev) 
+  end
+  local curr = {[0]=0, (tp == 'U') and 2.0 or 1.0}  -- T1/U1
+  for i = 2, order do
+    curr, prev = prev, curr
+    for j = #prev+1, 0, -1 do
+      curr[j] = 2*(prev[j-1] or 0) - (curr[j] or 0)
+    end
+  end
+  return polynomial._init(curr)
+end
+_about[polynomial.chebyshev] = {":chebyshev(order_N, type='T') -> P",
+  "Return Chebyshev polynomial or the first or second kind."}
 
 
 --- Create copy of object.
@@ -876,11 +870,45 @@ polynomial.lin = function (_, tX, tY, v0, vN)
     xp, yp = xi, yi
   end
   if v0 then res[#res+1] = {xp + 1, polynomial._init({[0]= vN or v0}) } end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 _about[polynomial.lin] = {
   ":lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t",
   "Linear data interpolation. Return table with polynomials.", FIT}
+
+
+--- Get polynomial from roots.
+--  Arguments are a sequence of roots.
+--  @param t List of roots.
+--  @return Polynomial object.
+polynomial.R = function (_, t)
+  local lst = _ver.move(t, 1, #t, 1, {})
+  local res = polynomial._init({[0]=1})
+  while #lst > 0 do
+    local v = table.remove(lst, 1)
+    if type(v) == 'table' and v.iscomplex then
+      -- looking for pair
+      local ind, re, im = nil, v:re(), v:im()
+      for i, u in ipairs(lst) do
+        if type(u) == 'table' and u.iscomplex and u:re() == re and u:im() == -im
+        then
+          ind = i; break
+        end
+      end
+      if not ind then
+        error ('No pair for '..tostring(v))
+      end
+      table.remove(lst, ind)
+      res = polynomial.__mul(res,
+        polynomial._init({[0]= re*re + im*im, -2*re, 1}))
+    else
+      _multXv(res, v)
+    end
+  end
+  return res
+end
+_about[polynomial.R] = {":R(roots_t) --> P",
+  "Return polynomial with given roots.", _help.OTHER}
 
 
 --- Find all the polynomial roots.
@@ -957,7 +985,7 @@ polynomial.spline = function (_, tX, tY)
        xi*(3*ai*xi - 2*bi) + ci, -3*ai*xi + bi, ai})
     }
   end
-  return setmetatable(res, mt_ppval)
+  return setmetatable(res, mtPpval)
 end
 _about[polynomial.spline] = {":spline(xs_t, ys_t) --> Ps_t",
   "Cubic spline data interpolation. Return table with polynomials.", FIT}

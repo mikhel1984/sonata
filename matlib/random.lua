@@ -4,7 +4,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2023-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2023-2026.
 
 	module 'random'
 --]]
@@ -238,9 +238,9 @@ local random = {
 -- mark
 type = 'random', israndom = true,
 -- from 0 to 1
-_fn = function (self) return _random() end,
+_fn = function () return _random() end,
 -- from a to b
-_fnRng = function (self, a, b) return _random(a, b) end,
+_fnRng = function (_, a, b) return _random(a, b) end,
 }
 
 
@@ -248,14 +248,14 @@ _fnRng = function (self, a, b) return _random(a, b) end,
 --  @param n Current size.
 --  @param ... Rest of dimensions.
 --  @return table with random tables or scalar value.
-local function _arrayRest (self, n, ...)
+local function _arrayRest (R, n, ...)
   if n then
     if n <= 0 then error('expected positive size') end
     local res = {}
-    for i = 1, n do res[i] = _arrayRest(self, ...) end
+    for i = 1, n do res[i] = _arrayRest(R, ...) end
     return res
   end
-  return self:_fn()
+  return R:_fn()
 end
 
 

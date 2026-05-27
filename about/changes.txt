@@ -1,3 +1,10 @@
+========= 1.03 ==========
+
+Other
+* New module 'autodiff'
+* C library wrapper
+* Minor improvements
+
 ========= 1.02 ==========
 
 Asciiplot

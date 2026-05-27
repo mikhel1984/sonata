@@ -8,7 +8,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2026.
 
 	module 'complex'
 --]]
@@ -423,7 +423,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 complex._pack = function (self, acc)
-  local t = {string.pack('B', acc['complex']), _utils.pack_seq(self._, 1, 2, acc)}
+  local t = {string.pack('B', acc['complex']), _utils.packSeq(self._, 1, 2, acc)}
   return table.concat(t)
 end
 
@@ -444,7 +444,7 @@ end
 --  @param ver Pack algorithm version.
 --  @return Complex object.
 complex._unpack = function (src, pos, acc, ver)
-  local t, p = _utils.unpack_seq(2, src, pos, acc, ver)
+  local t, p = _utils.unpackSeq(2, src, pos, acc, ver)
   return complex._new(t[1], t[2]), p
 end
 
@@ -666,7 +666,6 @@ complex.tanh = function (self)
 end
 _about[complex.tanh] = {"C:tanh() --> y_C",
   "Return hyperbolic tangent of a complex number.", FUNCTIONS}
-
 
 
 -- simplify constructor call

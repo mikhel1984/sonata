@@ -4,7 +4,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2026.
 
 	module 'commands'
 --]]
@@ -203,7 +203,7 @@ commands.set = function (str, env)
   end
   local input = table.concat(grp, '; ')
   -- compile code
-  return loadStr(input, nil, 't', env) 
+  return loadStr(input, nil, 't', env)
 end
 cmdInfo.set = {'cmd_set', "Module f1 [as v1], f2"}
 internal.set = true
@@ -237,7 +237,7 @@ cmdInfo.show = {'cmd_show', "[N]", "Note-files"}
 --  @param env Table with environment references.
 commands.time = function (str, env)
   Test = Test or require('core.test')
-  local fn, err = loadStr("return "..str, nil, 't', env) 
+  local fn, err = loadStr("return "..str, nil, 't', env)
   if err then
     return nil, err
   end
@@ -292,7 +292,7 @@ commands.lang = function (str, env)
       else
         return About:findObject(v, use, %s) or Sonata.info(SonataHelp.objectInfo(v))
       end
-    end]], 
+    end]],
     str, str)
   local fn, err = loadStr(cmd, nil, 't', env)
   if err then

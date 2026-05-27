@@ -1,4 +1,4 @@
-# Sonata v.1.02
+# Sonata v.1.03
 
 ## Ap (asciiplot)
 Use pseudography for data visualization.
@@ -42,6 +42,48 @@ Use pseudography for data visualization.
 **F:title(str)** - Set new title.
 
 **F:tplot(data_t, cols_t={x=1, polar=false, sym=nil, line=false}) --> F** - Plot the table data, choose columns if need.
+
+
+## Ad (autodiff)
+Automatic differentiation.
+
+**A:acos() --> y_A** - Inverse cosine.
+
+**A:asin() --> y_A** - Inverse sine.
+
+**A:asinh() --> y_A** - Inverse hyperbolic sine.
+
+**A:atan() --> y_A** - Inverse tangent.
+
+**A:atanh() --> y_A** - Inverse hyperbolic tangent.
+
+**A:cos() --> y_A** - Cosine value.
+
+**A:cosh() --> y_A** - Hypebolic cosine value.
+
+**A:d(var) --> df/dx_A** - First derivative wrt the given variable (object or name).
+
+**A:d2(var, [var2=var]) --> d2f/dxdy_A** - Second derivative wrt the given variables (object or name).
+
+**A:exp() --> y_A** - Exponent value.
+
+**A:grad(vars_t) --> grad_V** - Find Jacobian vector of expression wrt to the given list of variables.
+
+**A:hess(vars_t) --> hess_M** - Find Hessian matrix of expression wrt to the given list of variables.
+
+**A:log([base=e]) --> y_A** - Logarithm value.
+
+**A:sin() --> y_A** - Sine value.
+
+**A:sinh() --> y_A** - Hyperbolic sine value.
+
+**A:sqrt() --> y_A** - Square root value.
+
+**A:tan() --> y_A** - Tangent value.
+
+**A:tanh() --> y_A** - Hyperbolic tangent value.
+
+**Ad (value, [name]) --> new_A** - Create a new autodiff object.
 
 
 ## Int (bigint)
@@ -722,6 +764,8 @@ Operations with polynomials.
 **Poly:R(roots_t) --> P** - Return polynomial with given roots.
 
 **Poly:char(M) --> P** - Return characteristic polinomial for the given matrix.
+
+**Poly:chebyshev(order_N, type='T') -> P** - Return Chebyshev polynomial or the first or second kind.
 
 **Poly:fit(xs_t, ys_t, order_N) --> P** - Find polynomial approximation for the line.
 

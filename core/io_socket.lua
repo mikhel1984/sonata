@@ -4,7 +4,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2026.
 
 	module 'io_socket'
 --]]
@@ -70,7 +70,7 @@ tcp_server.new = function (self, host, port)
   self.tcp = tcp
   io.write('Run tcp server on port ', tostring(port), '\n')
   assert(tcp:listen())
-  tcp:settimeout(0.05)  -- seconds, accept timeout
+  tcp:settimeout(0.01)  -- seconds, accept timeout
 end
 
 
@@ -90,7 +90,7 @@ tcp_server.repl = function (self)
       io.write(err, '\n')
     elseif cli then
       -- save
-      cli:settimeout(0.05)  -- seconds
+      cli:settimeout(0.0)  -- non-blocking
       local group = {
         cli = cli,
         invite = ev.INV_MAIN,
@@ -101,10 +101,10 @@ tcp_server.repl = function (self)
       cli:send(Sonata.getTitle())
       cli:send("\n" .. group.invite)
     end
-    -- process requests    
+    -- process requests
     for i = 1, #clients do
       local group = clients[i]
-      local cmd, err = nil, nil
+      local cmd = nil
       if group.read then
         cmd, err = group.cli:receive('*l')
       else

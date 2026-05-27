@@ -11,7 +11,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.matlib</a> collection, 2017-2026.
 
 	module 'graph'
 --]]
@@ -153,6 +153,7 @@ ans = D:unpack(t)             --> b
 local _ext = {
   utils = require("matlib.utils"),
   -- ap = require("matlib.asciiplot"),
+  -- mat = require("matlib.matrix"),
 }
 
 local _queue = _ext.utils.queue
@@ -246,7 +247,7 @@ end
 
 
 -- Show undirected edge
-local mt_edge = {
+local mtEdge = {
 __tostring = function (t)
   return _format('%s -- %s', tostring(t[1]), tostring(t[2]))
 end
@@ -254,7 +255,7 @@ end
 
 
 -- Show directed edge
-local mt_dir_edge = {
+local mtDirEdge = {
 __tostring = function (t)
   return _format('%s -> %s', tostring(t[1]), tostring(t[2]))
 end
@@ -405,19 +406,19 @@ graph._pack = function (self, acc)
   -- nodes
   for k in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = utils.pack_str(s, acc)
+    t[#t+1] = utils.packStr(s, acc)
     ns[s], p = p, p+1
   end
   t[#t+1] = '\0'
   -- edges
   for k, v in pairs(self._) do
     local s = tostring(k)
-    t[#t+1] = utils.pack_num(ns[s], acc)
+    t[#t+1] = utils.packNum(ns[s], acc)
     for q, w in pairs(v) do
       if w then   -- TODO simplify for directed graph
         local u = ns[tostring(q)]
-        t[#t+1] = utils.pack_num(u, acc)
-        t[#t+1] = utils.pack_num(w, acc)
+        t[#t+1] = utils.packNum(u, acc)
+        t[#t+1] = utils.packNum(w, acc)
       end
     end
     t[#t+1] = '\0'
@@ -439,20 +440,20 @@ graph._unpack = function (src, pos, acc, ver)
   -- get nodes
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
-    ns[#ns+1], pos = utils.unpack_str(src, pos, acc[n], ver)
+    ns[#ns+1], pos = utils.unpackStr(src, pos, acc[n], ver)
   end
   pos = pos + 1
   local gr, i, j, w = graph._new(dir == 1), nil, nil, nil
   -- get edges
   for i = 1, #ns do
     n, pos = string.unpack('B', src, pos)
-    i, pos = utils.unpack_num(src, pos, acc[n], ver)
+    i, pos = utils.unpackNum(src, pos, acc[n], ver)
     if string.byte(src, pos) == 0 then graph.add(gr, ns[i]) end
     while string.byte(src, pos) ~= 0 do
       n, pos = string.unpack('B', src, pos)
-      j, pos = utils.unpack_num(src, pos, acc[n], ver)
+      j, pos = utils.unpackNum(src, pos, acc[n], ver)
       n, pos = string.unpack('B', src, pos)
-      w, pos = utils.unpack_num(src, pos, acc[n], ver)
+      w, pos = utils.unpackNum(src, pos, acc[n], ver)
       graph.add(gr, ns[i], ns[j], w)
     end
     pos = pos + 1
@@ -512,11 +513,6 @@ graph.apPlot = function (self, width, height)
   fig:_clear()
   fig:setX {range={-1.5, 1.5}}  -- make 'ellipsoid'
   fig:setY {range={-1, 1}}
-  if len == 1 then
-    local r, c = fig:addPoint(0, 0, '@')
-    fig:addString(r, c+2, tostring(nd[1]))
-    return fig
-  end
   -- sorted nodes
   local nd = {}
   for node in pairs(self._) do
@@ -528,6 +524,11 @@ graph.apPlot = function (self, width, height)
         end
       end
     end
+  end
+  if len == 1 then
+    local r, c = fig:addPoint(0, 0, '@')
+    fig:addString(r, c+2, tostring(nd[1]))
+    return fig
   end
   -- circle of radius 1
   local step = math.pi * 2 / #nd
@@ -679,7 +680,7 @@ graph.edges = function (self)
   for n, adj in pairs(self._) do
     for m, v in pairs(adj) do
       if v then
-        local t = setmetatable({n, m, v}, self._dir and mt_dir_edge or mt_edge)
+        local t = setmetatable({n, m, v}, self._dir and mtDirEdge or mtEdge)
         res[#res+1] = t
       end
     end
@@ -806,8 +807,8 @@ _about[graph.isWeighted] = {'G:isWeighted() --> bool',
 --- Get adjacency matrix.
 --  @return adjacency matrix and corresponding node list.
 graph.matrix = function (self)
-  graph.ext_matrix = graph.ext_matrix or require('matlib.matrix')
-  local mat = graph.ext_matrix
+  _ext.matrix = _ext.matrix or require('matlib.matrix')
+  local mat = _ext.matrix
   local ns = graph.nodes(self)
   local m = mat:zeros(#ns)
   for i, v in ipairs(ns) do
@@ -931,7 +932,7 @@ graph.remove = function (self, n1, n2)
     self._[n1][n2] = nil
     if not self._dir then
       self._[n2][n1] = nil
-    end    
+    end
   else
     -- node
     for n3 in pairs(self._[n1]) do

@@ -8,7 +8,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.lib</a> collection, 2017-2026.
 
 		module 'units'
 --]]
@@ -139,7 +139,7 @@ __module__ = "Operations and conversations according the units."
 
 --	MODULE
 
-local mt_rules = {}
+local mtRules = {}
 
 local units = {
 -- mark
@@ -147,7 +147,7 @@ type = 'units', isunits = true,
 -- save some results
 _memKeys = {},
 -- rules for unit conversation
-rules = setmetatable({}, mt_rules),
+rules = setmetatable({}, mtRules),
 }
 units.__index = units
 
@@ -214,7 +214,7 @@ end
 
 
 --- Check arguments before assignment.
-mt_rules.__newindex = function (t, k, v)
+mtRules.__newindex = function (t, k, v)
   assert(_isunits(v), 'Value must be unit object')
   assert(string.find(k, '[*^/%-+]') == nil, 'Key should not have [*^/]')
   rawset(t, k, v)
@@ -223,7 +223,7 @@ end
 
 --- Show current rules.
 --  @return string with rules.
-mt_rules.__tostring = function (t)
+mtRules.__tostring = function (t)
   local s = {}
   for k, v in pairs(t) do
     s[#s+1] = string.format('1 %s\t-> %s', k, tostring(v))
@@ -562,7 +562,7 @@ units._pack = function (self, acc)
   local t = {string.pack('B', acc['units'])}
   -- value
   if type(self._value) == 'number' then
-    t[#t+1] = _utils.pack_num(self._value, acc)
+    t[#t+1] = _utils.packNum(self._value, acc)
   elseif type(self._value) == 'table' and self._value._pack then
     t[#t+1] = self._value:_pack(acc)
   else
@@ -570,8 +570,8 @@ units._pack = function (self, acc)
   end
   -- units
   for k, v in pairs(self._key) do
-    t[#t+1] = _utils.pack_str(k, acc)
-    t[#t+1] = _utils.pack_num(v, acc)
+    t[#t+1] = _utils.packStr(k, acc)
+    t[#t+1] = _utils.packNum(v, acc)
   end
   t[#t+1] = '\0'
   return table.concat(t)
@@ -590,7 +590,7 @@ units._unpack = function (src, pos, acc, ver)
   local key = acc[n]
   if type(key) == 'string' then
     if string.byte(key, 1) == 0x26 then
-      val, pos = _utils.unpack_num(src, pos, key, ver)
+      val, pos = _utils.unpackNum(src, pos, key, ver)
     else
       acc[n] = require("matlib."..key)
       val, pos = acc[n]._unpack(src, pos, acc, ver)
@@ -600,9 +600,9 @@ units._unpack = function (src, pos, acc, ver)
   end
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack('B', src, pos)
-    nm, pos = _utils.unpack_str(src, pos, acc[n], ver)
+    nm, pos = _utils.unpackStr(src, pos, acc[n], ver)
     n, pos = string.unpack('B', src, pos)
-    n, pos = _utils.unpack_num(src, pos, acc[n], ver)
+    n, pos = _utils.unpackNum(src, pos, acc[n], ver)
     t[nm] = n
   end
   return setmetatable({_value=val, _key=t}, units), pos+1

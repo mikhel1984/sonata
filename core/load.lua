@@ -4,7 +4,7 @@
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
---  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2025.
+--  @release This file is a part of <a href="https://github.com/mikhel1984/sonata">sonata.core</a> collection, 2017-2026.
 
 	module 'load'
 ]]
@@ -113,7 +113,7 @@ help = function(v)
   if v == '*' then
     res = About:makeFull(use, SONATA_LOCALIZATION)
   else
-    res = About:findObject(v, use, SONATA_LOCALIZATION) or 
+    res = About:findObject(v, use, SONATA_LOCALIZATION) or
           Sonata.info(SonataHelp.objectInfo(v))
   end
   return Sonata.inLua and Sonata._toText(res) or res
@@ -208,7 +208,7 @@ process = function (args)
     local server = require("core.io_socket")
     local port = assert(tonumber(args[3]), 'Expected: --io tcp port')
     server:new('*', port)
-    server:repl()
+    pcall(server.repl, server)
   elseif args[2] == 'w' then
     -- expected Unix
     local fname = Sonata._pipeFile()
@@ -217,6 +217,17 @@ process = function (args)
   else
     print("Unknown option:", args[2])
   end
+end,
+exit = true},
+
+['--make'] = {
+description = "Wrap code into Lua.",
+example = {
+  'e.g. --make mylib.h mylib.c'},
+process = function (args)
+  local gen = require("maker.cgen")
+  local aa = {}; for i = 2, #args do aa[#aa+1] = args[i] end
+  gen.makeBin(aa)
 end,
 exit = true},
 
