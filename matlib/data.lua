@@ -1152,7 +1152,7 @@ _about[data.zip] = {":zip(fn|str, ...) --> tbl",
 
 -- Constructor for the list wrapper.
 setmetatable(data, {
-__call = function (self, t)
+__call = function (_, t)
   return setmetatable({_tbl=t}, mtList)
 end })
 _about[data] = {" (data_t) --> new_L",
@@ -1526,7 +1526,7 @@ _about[data.pack] = {":pack(obj) --> bin_s",
 --- Convert binary string to Sonata object.
 --  @param v Source string.
 --  @return object.
-data.unpack = function (self, v)
+data.unpack = function (_, v)
   if type(v) ~= 'string' or string.sub(v, 1, 3) ~= '/\\/' then
     error 'Unknown data type'
   end
@@ -1556,8 +1556,6 @@ _about[data.unpack] = {":unpack(bin_s) --> obj",
 
 -- Comment to remove descriptions
 data.about = _about
--- clear load data
-_tag = nil
 
 return data
 

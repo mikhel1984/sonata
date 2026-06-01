@@ -50,7 +50,7 @@ end
 -- visualize renerated data
 ts, te = _D:histcounts(lst, 10)
 normalize(ts, 1)
-table.insert(te, 'rest') 
+table.insert(te, 'rest')
 fig:bar(te, ts)
 print(fig)
 
@@ -325,7 +325,7 @@ random._rand = _genPM
 random.array = function (self, ...)
   return _arrayRest(self, ...)
 end
-_about[random.array] = {"R:array(n1, [n2,..]) --> tbl", 
+_about[random.array] = {"R:array(n1, [n2,..]) --> tbl",
   "Get multidimentional random array."}
 
 
@@ -339,7 +339,7 @@ random.binomial = function (self, dp, N)
   local p = (dp < 0.5) and dp or (1 - dp)
   local bnl, am = 0, p*N
   if N < 25 then
-    for j = 1, N do
+    for _ = 1, N do
       if self:_fn() < p then bnl = bnl + 1 end
     end
   elseif am < 1.0 then
@@ -438,7 +438,7 @@ random.gamma = function (self, iAlpha, dBeta)
   end
   local x = 1.0
   if iAlpha < 6 then
-    for i = 1, iAlpha do x = x * self:_fn() end
+    for _ = 1, iAlpha do x = x * self:_fn() end
     x = -_log(x)  -- TODO can be 0?
   else
     local y, s= 0, 0

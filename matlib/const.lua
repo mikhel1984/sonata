@@ -152,7 +152,7 @@ _about[_math.gamma] = {".math.gamma --> 0.577", "Euler-Mascheroni constant.", _t
 --  @param sName Name of constant.
 --  @param val  Value of constant.
 --  @param sUunit String with units.
-const.add = function (self, sName, val, sUnit)
+const.add = function (_, sName, val, sUnit)
   -- add only new constants
   if _user[sName] then error('Cannot modify '..tostring(sName)) end
   _user[sName] = val
@@ -163,7 +163,7 @@ _about[const.add] = {':add(name_s, value, units_s=nil)', 'Temporary define const
 
 --- Remove existing constant.
 --  @param sName Name of constant.
-const.remove = function (self, sName)
+const.remove = function (_, sName)
   if _user[sName] then
     _user[sName] = nil
     _user[sName..'_u_'] = nil
@@ -188,9 +188,6 @@ setmetatable(const.astro, {__newindex=_modifyError,
 setmetatable(const.math,  {__newindex=_modifyError,
   __index = function (t, k) return _math[k] or _unit_(_math, k) end})
 
-
--- clear load data
-_tag = nil
 
 return const
 

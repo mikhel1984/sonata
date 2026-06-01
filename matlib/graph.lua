@@ -445,7 +445,7 @@ graph._unpack = function (src, pos, acc, ver)
   pos = pos + 1
   local gr, i, j, w = graph._new(dir == 1), nil, nil, nil
   -- get edges
-  for i = 1, #ns do
+  for _ = 1, #ns do
     n, pos = string.unpack('B', src, pos)
     i, pos = utils.unpackNum(src, pos, acc[n], ver)
     if string.byte(src, pos) == 0 then graph.add(gr, ns[i]) end
@@ -592,7 +592,7 @@ _about[graph.components] = {"G:components() --> G_t",
 --- Combine several graphs into the single object.
 --  @param gs List of graphs.
 --  @return concatenated graph.
-graph.concat = function (self, gs)
+graph.concat = function (_, gs)
   local res = graph._new(gs[1]._dir)
   local dst = res._
   for i = 1, #gs do
@@ -871,7 +871,7 @@ graph.rand = function (self, N)
   -- fill
   if N <= p / 2 then
     -- add
-    for u = 1, N do
+    for _ = 1, N do
       local a, b = nil, nil
       repeat
         a = ns[math.random(#ns)]
@@ -1032,13 +1032,12 @@ search.dijkstra = function(G, vStart, vGoal)
   for k in pairs(G._) do set[k] = math.huge end
   set[vStart] = 0
   -- save results
-  local prev, dist = {[vStart]=vStart}, {}
+  local prev = {[vStart]=vStart}
   -- run
   while true do
     local current, val = _getMin(set)
     if not current then break end
     -- update minimal distance
-    dist[current] = val
     for k, v in pairs(G._[current]) do
       if v or not G._dir then
         local alt = val + (v or G._[k][current])
@@ -1069,7 +1068,7 @@ _about[graph.search] = {"G:search(node1, node2, method_s) --> path_t|nil",
 
 -- simplify constructor call
 setmetatable(graph, {
-__call = function (self, t)
+__call = function (_, t)
   t = t or {}
   local g = graph._new(t.dir or false)
   local name = t.name or 'n'
@@ -1099,8 +1098,6 @@ _about[graph] = {" (params_t={}) --> new_G",
 
 -- Comment to remove descriptions
 graph.about = _about
--- clear load data
-_tag = nil
 
 return graph
 

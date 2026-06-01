@@ -460,7 +460,8 @@ end
 --  @param ver Pack version algorithm.
 --  @return string and next position.
 utils.unpackStr = function (s, pos, key, ver)
-  local n, pos = string.unpack(string.sub(key, 2), s, pos)
+  local n = nil
+  n, pos = string.unpack(string.sub(key, 2), s, pos)
   return string.sub(s, pos, pos+n-1), pos+n
 end
 

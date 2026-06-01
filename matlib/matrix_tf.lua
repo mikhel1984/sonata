@@ -32,8 +32,8 @@ function (M) return M[1][1]*M[2][2] - M[2][1]*M[1][2] end,
 -- 3x3
 function (M)
   local m1, m2, m3 = M[1], M[2], M[3]
-  return m1[1]*(m2[2]*m3[3]-m2[3]*m3[2]) 
-       - m1[2]*(m2[1]*m3[3]-m2[3]*m3[1]) 
+  return m1[1]*(m2[2]*m3[3]-m2[3]*m3[2])
+       - m1[2]*(m2[1]*m3[3]-m2[3]*m3[1])
        + m1[3]*(m2[1]*m3[2]-m2[2]*m3[1])
 end
 }
@@ -115,7 +115,7 @@ transform.findEigenvector = function (M, v, eps)
   b = b * (1 / b:norm())
   -- find
   local prev = b
-  for i = 1, 10 do
+  for _ = 1, 10 do
     b = iM * b
     b = b * (1 / b:norm())
     local diff = (b - prev):norm()

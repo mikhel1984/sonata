@@ -278,8 +278,6 @@ end   --~~~~~~~~~~~~~~~~~~~~~~
 
 -- save link to help info
 main.about = _about
--- clear load data
-_tag = nil
 
 return main
 

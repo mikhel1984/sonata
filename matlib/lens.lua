@@ -489,7 +489,7 @@ local mtCardinal = {
 lens.cardinal = function (self, dn1, dn2)
   dn1 = dn1 or 1
   dn2 = dn2 or 1
-  local txt, res = {}, {}
+  local res = {}
   local C = self[3]
 
   local v = dn1 * self[4] / C      -- first focus point
@@ -521,8 +521,6 @@ _about[lens] = {" (A_d, B_d, C_d, D_d) --> new_L",
 
 -- Comment to remove descriptions
 lens.about = _about
--- clear load data
-_tag = nil
 
 return lens
 

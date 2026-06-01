@@ -56,7 +56,7 @@ local function _issym(v) return getmetatable(v) == symbolic end
 local COMMON = {
 
   -- Do nothing.
-  empty = function (S) end,
+  empty = function () end,
 
   --- Check if the value is 1.
   --  @param v Some object.
@@ -69,7 +69,7 @@ local COMMON = {
   isZero = function (v) return _issym(v) and v._ == 0 or v == 0 end,
 
   -- Return false always.
-  skip = function (S) return false end,
+  skip = function () return false end,
 
 } -- COMMON
 
@@ -146,7 +146,7 @@ COMMON.evalPairs = function (S, tEnv)
 end
 
 
-COMMON.rawget = function (S, n, ...)
+COMMON.rawget = function (S, n)
   return (n == nil) and S or nil
 end
 
@@ -165,7 +165,7 @@ COMMON.rawgetPair = function (S, n, m, ...)
       return symbolic:_newConst(S._[n][2]):p_rawget(...)
     end
   end
-  return nil 
+  return nil
 end
 
 
@@ -300,7 +300,7 @@ PARENTS.const = {
   p_str = function (S) return tostring(S._) end,
   p_simp = COMMON.empty,
   p_eval = function (S) return S end,
-  p_diff = function (S1, S2) return symbolic._0 end,
+  p_diff = function () return symbolic._0 end,
   p_internal = function (S, n)
     return string.format('%s%s', string.rep(' ', n), tostring(S._))
   end,
@@ -351,7 +351,7 @@ PARENTS.funcValue.p_diff = function (S1, S2)
   local diffs = S1._[1]:p_diff(S2)
   if diffs then
     -- has predefined derivatives
-    if #args ~= #diffs then 
+    if #args ~= #diffs then
       error 'Wrong arguments number'
     end
     for i, fn in ipairs(diffs) do
@@ -478,7 +478,7 @@ PARENTS.power.p_simp = function (S, bFull)
     COMMON.copy(S, symbolic._1)
   elseif COMMON.isOne(S._[1]) or COMMON.isZero(S._[1]) then  -- 1^v or 0^v
     COMMON.copy(S, S._[1])
-  elseif S._[1]._parent == S._[2]._parent and S._[1]._parent == PARENTS.const 
+  elseif S._[1]._parent == S._[2]._parent and S._[1]._parent == PARENTS.const
   then
     COMMON.copy(S, symbolic:_newConst(S._[1]._ ^ S._[2]._))
   end
@@ -548,10 +548,10 @@ PARENTS.product = {
 
 
 PARENTS.product.p_eq = function (S1, S2)
-  return COMMON.eqPairs(S1, S2) 
-    or #S1._ == 1 and S2._parent == PARENTS.power 
+  return COMMON.eqPairs(S1, S2)
+    or #S1._ == 1 and S2._parent == PARENTS.power
     -- compare power
-    and S2._[2]._parent == PARENTS.const and S1._[1][2] == S2._[2]._ 
+    and S2._[2]._parent == PARENTS.const and S1._[1][2] == S2._[2]._
     -- compare base
     and S1._[1][1]:p_eq(S2._[1])
 end
@@ -664,7 +664,7 @@ end
 -- ============ SUM ============
 
 PARENTS.sum = {
-  -- S._ = {{S1, k1}, {S2, k2}, ...} 
+  -- S._ = {{S1, k1}, {S2, k2}, ...}
   -- i.e. k1*S1 + k2*S2 + ...
   p_id = 5,
   p_isatom = false,

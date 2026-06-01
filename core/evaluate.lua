@@ -98,7 +98,7 @@ local evaluate = {
 
 -- current version
 MAJOR_V = 1,
-MINOR_V = 3,
+MINOR_V = 4,
 
 -- status
 EV_RES = 1,   -- found result

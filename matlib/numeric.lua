@@ -146,7 +146,7 @@ local function _trapzd (fn, a, b, n, s)
   local tnm = 2^(n-2)
   local del = (b - a)/tnm
   local x, sum = a + 0.5*del, 0.0
-  for i = 1, tnm do
+  for _ = 1, tnm do
     sum, x = sum + fn(x), x + del
   end
   return 0.5*(s + sum*del)
@@ -167,7 +167,7 @@ local function _midpnt (fn, a, b, n, s)
   local del = (b - a)/(3.0 * tnm)
   local del2 = del + del
   local x, sum = a + 0.5*del, 0.0
-  for j = 1, tnm do
+  for _ = 1, tnm do
     sum, x = sum + fn(x), x + del2
     sum, x = sum + fn(x), x + del
   end
@@ -496,6 +496,7 @@ numeric.fit = function (_, fn, t0, xs, ys, param)
 end
 
 
+-- set globals
 if Sonata
 then  --=====================
 

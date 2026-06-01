@@ -594,7 +594,7 @@ end
 --- Create new matrix from list of tables.
 --  @param t Table, where each sub table is a raw of matrix.
 --  @return Matrix object.
-matrix._new = function (self, t)
+matrix._new = function (_, t)
   if _ismatrixex(t) then
     return t
   elseif type(t) == 'number' or type(t) == 'table' and t.__mul then
@@ -879,7 +879,7 @@ _about[matrix.H] = {"M:H() --> conj_Ref",
 --- Horizonatal concatenation of matrices.
 --  @param lst List of matrices.
 --  @return concatenated matrix object.
-matrix.hor = function (self, lst) return _tf.makeConcat(lst, false) end
+matrix.hor = function (_, lst) return _tf.makeConcat(lst, false) end
 _about[matrix.hor] = {":hor(mat_t) --> mat_Ref",
   "Horizontal concatenation for the given list of matrices.", "concat"}
 
@@ -1353,7 +1353,7 @@ _about[matrix.vectorize] = {"M:vectorize() --> V",
 --- Vertical concatenation of matrices.
 --  @param lst List of matrices.
 --  @return concatenated matrix object.
-matrix.ver = function (self, lst) return _tf.makeConcat(lst, true) end
+matrix.ver = function (_, lst) return _tf.makeConcat(lst, true) end
 _about[matrix.ver] = {":ver(mat_t} --> mat_Ref",
   "Vertical concatenation for the given list of matrices.", "concat"}
 
@@ -1416,8 +1416,6 @@ _tf.initRef(matrix)
 
 -- Comment to remove descriptions
 matrix.about = _about
--- clear load data
-_tag = nil
 
 return matrix
 

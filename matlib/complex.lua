@@ -551,7 +551,7 @@ _about[complex.cosh] = {"C:cosh() --> y_C",
 --- Polar form point position on the unit circle.
 --  @param ang Angle.
 --  @return Complex number.
-complex.E = function (self, ang)
+complex.E = function (_, ang)
   local v = _float(ang)
   return complex._new(math.cos(v), math.sin(v))
 end

@@ -149,7 +149,6 @@ local _utils = require("matlib.utils")
 local _ver = _utils.versions
 
 local _czero = _utils.cross.isZero
-_utils = _utils.utils
 local _tf = require("matlib.asciiplot_tf")
 
 local _inform = Sonata and Sonata.warning or print
@@ -328,7 +327,7 @@ end
 --- Change size w.r.t initial value.
 --  @param factor Positive multiplier.
 axis.scale = function (self, factor)
-  local int, frac = _modf(self._size * factor)
+  local int = _modf(self._size * factor)
   axis.resize(self, (int % 2 == 1) and int or (int + 1))
 end
 
@@ -1564,8 +1563,6 @@ _about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
 
 -- Comment to remove descriptions
 asciiplot.about = _about
--- clear load data
-_tag = nil
 
 return asciiplot
 

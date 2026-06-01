@@ -22,7 +22,7 @@ Poly = require 'matlib.polynomial'
 -- external dependencies, can be loaded implicitly
 Comp = require 'matlib.complex' -- for complex roots
 -- make matrix
-Mat = require 'matlib.matrix'   
+Mat = require 'matlib.matrix'
 -- for pack/unpack
 D = require 'matlib.data'
 
@@ -377,7 +377,7 @@ local function _nr (P, d0, tol)
   -- prepare variables
   local dp, max = polynomial.der(P), 30
   local val = polynomial.val
-  for i = 1, max do
+  for _ = 1, max do
     local der = _ispolynomial(dp) and val(dp, d0) or dp
     local dx = val(P, d0) / der
     if _cross.norm(dx) <= tol then
@@ -714,11 +714,11 @@ polynomial.chebyshev = function (_, order, tp)
     error "Expected non-negative order"
   end
   local prev = {[0]=1}  -- T0/U0
-  if order == 0 then 
-    return polynomial._init(prev) 
+  if order == 0 then
+    return polynomial._init(prev)
   end
   local curr = {[0]=0, (tp == 'U') and 2.0 or 1.0}  -- T1/U1
-  for i = 2, order do
+  for _ = 2, order do
     curr, prev = prev, curr
     for j = #prev+1, 0, -1 do
       curr[j] = 2*(prev[j-1] or 0) - (curr[j] or 0)

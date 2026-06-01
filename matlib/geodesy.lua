@@ -763,8 +763,6 @@ _about[geodesy] = {" (param_t=nil) --> E",
 
 -- Comment to remove descriptions
 geodesy.about = _about
--- clear load data
-_tag = nil
 
 return geodesy
 

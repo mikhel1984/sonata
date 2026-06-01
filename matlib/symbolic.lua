@@ -124,10 +124,10 @@ end
 
 --- Parse sum or difference.
 --  @param lst List with tokens.
---  @param n Element index.
+--  @param ind Element index.
 --  @return Table and next index.
-PARSER.sum = function (lst, n)
-  local res, n = PARSER.prod(lst, n)
+PARSER.sum = function (lst, ind)
+  local res, n = PARSER.prod(lst, ind)
   while true do
     if lst[n] == '+' then
       local tmp, m = PARSER.prod(lst, n+1)
@@ -143,10 +143,10 @@ end
 
 --- Parse product or ratio.
 --  @param lst List with tokens.
---  @param n Element index.
+--  @param ind Element index.
 --  @return Table and next index.
-PARSER.prod = function (lst, n)
-  local res, n = PARSER.pow(lst, n)
+PARSER.prod = function (lst, ind)
+  local res, n = PARSER.pow(lst, ind)
   while true do
     if lst[n] == '*' then
       local tmp, m = PARSER.pow(lst, n+1)
@@ -162,10 +162,10 @@ end
 
 --- Parse power.
 --  @param lst List with tokens.
---  @param n Element index.
+--  @param ind Element index.
 --  @return Table and next index.
-PARSER.pow = function (lst, n)
-  local res, n = PARSER.prim(lst, n)
+PARSER.pow = function (lst, ind)
+  local res, n = PARSER.prim(lst, ind)
   if lst[n] == '^' then  -- TODO add **
     local tmp, m = PARSER.prim(lst, n+1)
     res, n = res ^ tmp, m
@@ -179,15 +179,15 @@ end
 --  @param n Element index.
 --  @return Table and next index.
 PARSER.prim = function (lst, n)
-  local v = lst[n]
+  local v, res = lst[n], nil
   if type(v) == 'number' then
     return symbolic:_newConst(v), n + 1
   elseif v == '(' then
-    local res, n = PARSER.sum(lst, n + 1)
+    res, n = PARSER.sum(lst, n + 1)
     if lst[n] ~= ')' then error ("expected ')'") end
     return res, n + 1
   elseif v == '-' then
-    local res, n = PARSER.prod(lst, n + 1)
+    res, n = PARSER.prod(lst, n + 1)
     return -res, n
   elseif string.find(v, '^[%a_]') ~= nil then
     if lst[n+1] == '(' then
@@ -283,8 +283,8 @@ symbolic.__div = function (S1, S2)
   end
   local res = symbolic:_newExpr(PARENTS.product, {})
   -- check a^x / a^y
-  if S1._parent == PARENTS.power and S2._parent == PARENTS.power 
-     and S1._[1] == S2._[1] 
+  if S1._parent == PARENTS.power and S2._parent == PARENTS.power
+     and S1._[1] == S2._[1]
   then
      return symbolic.__pow(S1._[1], S1._[2] - S2._[2])
   end
@@ -336,8 +336,8 @@ symbolic.__mul = function (S1, S2)
   end
   local res = symbolic:_newExpr(PARENTS.product, {})
   -- check a^x * a^y
-  if S1._parent == PARENTS.power and S2._parent == PARENTS.power 
-     and S1._[1] == S2._[1] 
+  if S1._parent == PARENTS.power and S2._parent == PARENTS.power
+     and S1._[1] == S2._[1]
   then
      return symbolic.__pow(S1._[1], S1._[2] + S2._[2])
   end
@@ -451,8 +451,8 @@ _about['_cmp'] = {"comparison: a==b, a~=b", nil, _help.META}
 --- Transform value to symbolic object.
 --  @param v Source object.
 --  @return symbolic variable or nil
-symbolic._convert = function (v) 
-  return _compatible(v) and symbolic:_newConst(v) 
+symbolic._convert = function (v)
+  return _compatible(v) and symbolic:_newConst(v)
 end
 
 
@@ -489,7 +489,7 @@ _about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S",
 --  @param S2 Variable.
 --  @return Derivative.
 symbolic.diff = function (self, S2)
-  if self:_isfn() then 
+  if self:_isfn() then
     error 'Undefined arguments'
   end
   if type(S2) == 'string' then S2 = symbolic:_newSymbol(S2) end
@@ -564,7 +564,7 @@ _about[symbolic.expand] = {"S:expand() --> expanded_S",
 --- Get function
 symbolic.fn = setmetatable({}, {
 __index = function (_, name)
-  return symbolic._fnInit[name] 
+  return symbolic._fnInit[name]
     or symbolic._fnList[name] and symbolic:_newSymbol(name) or nil
 end
 })
@@ -573,7 +573,7 @@ end
 --- Show internal structure of expression.
 --  @return String with structure.
 symbolic.struct = function (self) return self:p_internal(0) end
-_about[symbolic.struct] = {"S:struct() --> str", 
+_about[symbolic.struct] = {"S:struct() --> str",
   "Show internal structure.", _tag.STRUCT}
 
 
@@ -603,7 +603,7 @@ symbolic.parse = function (_, str) return symbolic._parse(str) end
 --- Get numerator.
 --  @return numerator of the ratio.
 symbolic.ratNum = function (self) return symbolic._ratGet(self, 1) end
-_about[symbolic.ratNum] = {"S:ratNum() --> numerator_S", 
+_about[symbolic.ratNum] = {"S:ratNum() --> numerator_S",
   "Get numerator of the expression.", _tag.STRUCT}
 
 
@@ -639,8 +639,6 @@ _about[symbolic] = {" (num|str) --> new_S",
 
 -- Comment to remove descriptions
 symbolic.about = _about
--- clear load data
-_tag = nil
 
 return symbolic
 

@@ -482,7 +482,7 @@ end
 --  @param B Number.
 --  @return true if prime.
 local function _primeFermat (B)
-  for i = 1, 5 do
+  for _ = 1, 5 do
     local a = nil
     repeat
       a = bigint.random(B)
@@ -942,7 +942,7 @@ end
 --  @param B3 Third bigint object.
 --  @return Modular power.
 bigint._powm = function (B1, B2, B3)
-  local div = bigint._div
+  local div, _ = bigint._div, nil
   _, B1 = div(B1, B3)
   if bigint._isZero(B1) then return bigint._0 end
   local y, x = bigint._1, B1
@@ -1118,8 +1118,8 @@ _about[bigint.FF] = {"B:FF() --> B!!", "Find double factorial.", _tag.COMB}
 --  @return List of prime numbers.
 bigint.factorize = function (self)
   local v, res = self, {}
-  if self._sign < 0 then 
-    res[1] = bigint._1n 
+  if self._sign < 0 then
+    res[1] = bigint._1n
     v = v:abs()
   end
   local n, q = nil, nil
@@ -1334,8 +1334,6 @@ _about[bigint] = {" (num|str|tbl) --> new_B",
 
 -- Comment to remove descriptions
 bigint.about = _about
--- clear load data
-_tag = nil
 
 return bigint
 

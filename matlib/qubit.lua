@@ -204,7 +204,7 @@ local function _measOne (self, pos)
   local ones = {}
   for k = 0, self._vec:rows()-1 do
     local v, rst = k, 0
-    for j = 0, pos do
+    for _ = 0, pos do
       v, rst = math.modf(v * 0.5)  -- TODO use shift
     end
     if rst > 0.1 then
@@ -235,7 +235,7 @@ local function _parse (state)
     if w == '1' then
       sum = sum + 2^n
     elseif w == '0' then
-      -- skip
+      -- pass
     else
       error 'Expected 0 or 1'
     end
@@ -392,7 +392,7 @@ _about[qubit.copy] = {"Q:copy() --> cpy_Q", "Create a copy of the object."}
 --- Initialize qubit system from vector.
 --  @param v Unit vector of length ~ 2^n.
 --  @return qubit object.
-qubit.fromVector = function (self, v)
+qubit.fromVector = function (_, v)
   local n, p = math.modf(math.log(v:rows(), 2))
   if math.abs(p) > 1E-4 then
     error 'Wrong vector size'
@@ -466,7 +466,7 @@ qubit.__len = qubit.size
 
 -- constructor call
 setmetatable(qubit, {
-__call = function (self, state)
+__call = function (_, state)
   if type(state) == 'number' then
     assert(_tointeger(state) and state > 0, 'Wrong size')
     return qubit._rand(state)

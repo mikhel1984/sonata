@@ -771,7 +771,7 @@ _about[fuzzy.gauss2mf] = {":gauss2mf(sigma1_d, mu1_d, sigma2_d, mu2_d) --> F",
 --  @return set object.
 fuzzy.gbellmf = function (_, w, p, m)
   assert(w > 0, "Wrong width")
-  local p = 2*p
+  p = 2*p
   local fn = function (x)
     local v = math.abs((x-m)/w)
     return 1/(1 + v^p)
@@ -1050,7 +1050,7 @@ _about[fuzzy.zmf] = {":zmf(left_d, right_d) --> F",
 
 -- simplify constructor call
 setmetatable(fuzzy, {
-__call = function (self, v)
+__call = function (_, v)
   return fuzzy._new(v)
 end})
 _about[fuzzy] = {" (env_t=nil) --> F", "Create new fuzzy inference system.", _help.NEW}
@@ -1058,8 +1058,6 @@ _about[fuzzy] = {" (env_t=nil) --> F", "Create new fuzzy inference system.", _he
 
 -- Comment to remove descriptions
 fuzzy.about = _about
--- clear load data
-_tag = nil
 
 return fuzzy
 

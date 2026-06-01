@@ -439,7 +439,7 @@ extremum._minBrent = function (fun, a, b, c)
   local fx = fun(x)
   local fv, fw = fx, fx
   local imax, e, d = 100, 0, 0
-  for i = 1, imax do
+  for _ = 1, imax do
     local xm = 0.5*(a+c)
     local tol1 = TOL*_abs(x) + SMALL
     local tol2 = 2*tol1
@@ -505,7 +505,7 @@ extremum._minBrentD = function (fun, dfun, a, b, c)
   local dx = dfun(x)
   local dv, dw = dx, dx
   local imax, e, d = 100, 0, 0
-  for i = 1, imax do
+  for _ = 1, imax do
     local xm = 0.5*(a+c)
     local tol1 = TOL*_abs(x) + SMALL
     local tol2 = 2*tol1
@@ -618,7 +618,7 @@ extremum._minGrad = function (fun, dfun, p)
   local fret, xi = fun(p), dfun(p)
   local g = -xi
   local h = g
-  for i = 1, imax do
+  for _ = 1, imax do
     local fp = fret
     p, fret = _linmind(p, xi, fun, dfun)
     if 2*_abs(fp - fret) <= TOL*(_abs(fret) + _abs(fp) + SMALL) then
@@ -662,7 +662,7 @@ extremum._minPowel = function (fun, p)
     local pt, fp = p, fret
     -- find the biggest decrease
     for i = 1, n do
-      local fprev = fret
+      local fprev, _ = fret, nil
       p, _, fret = _linmin(p, mat:V(xdir[i]), fun)
       fprev = fprev - fret  -- reuse
       if fprev > del then
@@ -771,7 +771,7 @@ extremum.annealing = function (_, task)
   local alpha = task.alpha or 0.9  -- temperature update coefficient
   local nmax = task.loop or 1      -- number of attempts with one temperature
   repeat
-    for i = 1, nmax do
+    for ii = 1, nmax do
       local new = update(curr)
       local ei = energy(new)
       if ei <= e0 then
@@ -801,15 +801,14 @@ _about[extremum.annealing] = {
 --  @return table with parameters and sum of squares
 extremum.fit = function (_, fn, t0, xs, ys)
   _ext.matrix = _ext.matrix or require("matlib.matrix")
-  local mat = _ext.matrix
   local keys, v0 = {}, {}
   for k, w in pairs(t0) do
     keys[#keys+1] = k
     v0[#v0+1] = w
   end
   -- resample
-  local k = 6
-  local step = math.floor(#xs / (#keys*k))
+  local kn = 6
+  local step = math.floor(#xs / (#keys*kn))
   if step > 1 then
     local tx, ty = {}, {}
     for i = 1, #xs, step do

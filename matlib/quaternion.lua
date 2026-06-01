@@ -256,7 +256,7 @@ quaternion.__pow = function (self, d)
     return res
   else
     local q = quaternion.normalized(self)
-    local angle, axis = quaternion.toAA(self)
+    local angle, axis = quaternion.toAA(q)
     if not axis then return 1.0 end  -- no imaginary part
     angle = 0.5 * d * angle   -- new angle
     local sa = math.sin(angle)

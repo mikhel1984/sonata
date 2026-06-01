@@ -344,7 +344,7 @@ local function _gammaSer (N, x)
     local ap, del = N, 1.0/N
     local sum = del
     local gammaln = special.gammaln
-    for i = 1, ITMAX do
+    for _ = 1, ITMAX do
       ap = ap+1
       del = del*x/ap
       sum = sum+del
@@ -673,8 +673,6 @@ _about[special.gammq] = {":gammq(order_N, x_d) --> num",
 
 -- Comment to remove descriptions
 special.about = _about
--- clear load data
-_tag = nil
 
 return special
 
