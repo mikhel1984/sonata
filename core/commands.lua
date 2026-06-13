@@ -99,7 +99,46 @@ end
 cmdInfo.help = {'cmd_help', "[cmd]"}
 
 
--- Save session to log
+--- Change current language.
+--  @param args List {command, arg_string}
+--  @param env Table with environment references.
+commands.lang = function (str, env)
+  -- get file
+  if str == "en" then
+    str = 'nil'
+  else
+    str = string.match(str, "(%S*)")..".lua"
+    if not About:localization(str) then
+      return nil, "File not found"
+    end
+    str = string.format('"%s"', str)
+  end
+  -- update 'help' function
+  local cmd = string.format([[
+    help = function(v)
+      v = v or 'main'
+      if v == '*' then
+        return About:makeFull(use, %s)
+      else
+        return About:findObject(v, use, %s) or Sonata.info(SonataHelp.objectInfo(v))
+      end
+    end]],
+    str, str)
+  local fn, err = loadStr(cmd, nil, 't', env)
+  if err then
+    return nil, err
+  end
+  local ok, val = pcall(fn)
+  if not ok then
+    return nil, val
+  end
+  return function () return "Load "..(str == 'nil' and 'en' or str) end
+end
+cmdInfo.lang = {"cmd_lang", "name"}
+internal.lang = true
+
+
+--- Save session to log
 --  @param args List {command, arg_string}
 --  @param env Table with environment references.
 commands.log = function (args, env)
@@ -270,42 +309,6 @@ commands.trace = function (str, env)
 end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
 internal.trace = true
-
-
-commands.lang = function (str, env)
-  -- get file
-  if str == "en" then
-    str = 'nil'
-  else
-    str = string.match(str, "(%S*)")..".lua"
-    if not About:localization(str) then
-      return nil, "File not found"
-    end
-    str = string.format('"%s"', str)
-  end
-  -- update 'help' function
-  local cmd = string.format([[
-    help = function(v)
-      v = v or 'main'
-      if v == '*' then
-        return About:makeFull(use, %s)
-      else
-        return About:findObject(v, use, %s) or Sonata.info(SonataHelp.objectInfo(v))
-      end
-    end]],
-    str, str)
-  local fn, err = loadStr(cmd, nil, 't', env)
-  if err then
-    return nil, err
-  end
-  local ok, val = pcall(fn)
-  if not ok then
-    return nil, val
-  end
-  return function () return "Load "..(str == 'nil' and 'en' or str) end
-end
-cmdInfo.lang = {"cmd_lang", "name"}
-internal.lang = true
 
 
 --- Set output to other window (temporary file).

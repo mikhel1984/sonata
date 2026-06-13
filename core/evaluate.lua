@@ -147,6 +147,16 @@ local function _evalCode()
   if _VERSION == 'Lua 5.1' then setfenv(1, _ENV) end
   evaluate.set_local_env(_ENV)  -- for 'readline' completion
   evaluate.IN_COROUTINE = true  -- set marker
+
+  _ENV.Fstr = function (txt)
+    local res = string.gsub(
+      txt, "%b{}",
+      function (x)
+        return tostring(loadStr("return "..string.sub(x, 2, -2), nil, "t", _ENV)())
+      end)
+    return res  -- skip second return value
+  end
+
   while true do
     -- next line of code
     local input = coroutine.yield(state, res)

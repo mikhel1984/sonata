@@ -203,6 +203,23 @@ _about[Fn] = {"Fn(expr_s) --> fn",
   "Generate function from expression 'args -> value'", _tag.AUX}
 
 
+--- Format string in place, Python-like.
+--  @param txt String with expressions in curly brackets.
+--  @return Formatted string.
+Fstr = function (txt)
+  local res = string.gsub(
+    txt, "%b{}",
+    function (x)
+      return tostring(
+        _ext.utils.versions.loadStr("return "..string.sub(x, 2, -2))())
+    end)
+  return res  -- skip second return value
+end
+_about[Fstr] = {"Fstr(txt) --> txt",
+  "Replace expressions in curly brackets to their values in place.", _tag.AUX}
+-- FIXME inviseable in local environment
+
+
 --- Generate list of function values.
 --  @param fn Function to apply.
 --  @param t Table with arguments.
