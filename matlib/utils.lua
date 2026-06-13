@@ -12,7 +12,8 @@
 
 --	MODULE
 
-local _modf = math.modf
+local _modf, _mabs = math.modf, math.abs
+local _mexp, _msqrt, _mlog = math.exp, math.sqrt, math.log
 
 
 --=============== Choose versions =======================
@@ -68,8 +69,8 @@ end
 -- Logarithm with specific base
 -- use log10 as a marker for version 5.1
 versions.log = math.log10 and function (x, n)
-  return math.log(x) / math.log(n)
-end or math.log
+  return _mlog(x) / _mlog(n)
+end or _mlog
 
 
 -- Pack into table
@@ -146,9 +147,9 @@ end
 cross.norm = function (v)
   local tp = type(v)
   if tp == 'number' then
-    return math.abs(v)
+    return _mabs(v)
   elseif tp == 'table' then
-    return v.float and math.abs(v:float()) or v._norm and v:_norm() or nil
+    return v.float and _mabs(v:float()) or v._norm and v:_norm() or nil
   end
   return nil
 end
@@ -277,14 +278,14 @@ end
 --  @return String representation.
 utils.numstr = function (d)
   local int, frac = _modf(d)
-  local a = math.abs(int)
+  local a = _mabs(int)
   -- short integer
   if frac == 0 then
     if a < 1E5 then
       return string.format('%d', int)
     end
   elseif int == 0 then
-    if math.abs(frac) >= 0.01 then
+    if _mabs(frac) >= 0.01 then
       return string.format("%.3f", d)
     end
   elseif a < 10 then
@@ -318,9 +319,8 @@ utils.sign = function (d)
   local tp = type(d)
   if tp == 'number' or (tp == 'table' and d.__lt) then
     return (d > 0) and 1 or (d < 0) and -1 or 0
-  else
-    return 1
   end
+  return 0
 end
 
 
@@ -350,7 +350,7 @@ end
 --  @param acc Accumulator table.
 --  @return binary string.
 utils.packNum = function (x, acc)
-  local v, p = _modf(math.abs(x))
+  local v, p = _modf(_mabs(x))
   if p == 0.0 then
     -- integer
     if v < 128 then
@@ -470,23 +470,22 @@ end
 
 --============== Calc ================
 
-local mexp, msqrt, mlog = math.exp, math.sqrt, math.log
 
 -- Additional functions.
 local calc = {
   -- hyperbolic cosine
-  cosh = function (x) return 0.5*(mexp(x) + mexp(-x)) end,
+  cosh = function (x) return 0.5*(_mexp(x) + _mexp(-x)) end,
   -- hyperbolic sine
-  sinh = function (x) return 0.5*(mexp(x) - mexp(-x)) end,
+  sinh = function (x) return 0.5*(_mexp(x) - _mexp(-x)) end,
   -- inverse hyperbolic sine
-  asinh = function (x) return mlog(x + msqrt(x*x+1)) end,
+  asinh = function (x) return _mlog(x + _msqrt(x*x+1)) end,
   -- inverse hyperbolic cosine
-  acosh = function (x) return mlog(x + msqrt(x*x-1)) end,
+  acosh = function (x) return _mlog(x + _msqrt(x*x-1)) end,
   -- inverse hyperbolic tangent
-  atanh = function (x) return 0.5*mlog((1 + x)/(1 - x)) end,
+  atanh = function (x) return 0.5*_mlog((1 + x)/(1 - x)) end,
   -- hyperbolic tangent
   tanh = function (x)
-    local t = mexp(2*x)
+    local t = _mexp(2*x)
     return (t-1)/(t+1)
   end,
 }

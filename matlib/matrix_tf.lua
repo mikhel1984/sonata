@@ -17,6 +17,8 @@ local _zero = _utils.cross.isZero
 local _sign = _utils.utils.sign
 local _numstr = _utils.utils.numstr
 
+local _msqrt = math.sqrt
+
 
 --      MODULE
 
@@ -81,15 +83,20 @@ end
 --  @return U, B, V
 transform.bidiag = function (M)
   local m, n, B = M._rows, M._cols, M
-  local U, V = M:eye(m), M:eye(n)
+  local U, V = M:eye(m, m), M:eye(n, n)
   local w = math.min(m, n)
+  local irows, icols = {}, {}
+  for i = 1, m do irows[i] = i end
+  for i = 1, n do icols[i] = i end
   for k = 1, w do
     -- set zero to column elements
-    local H1 = transform.householder(B({1, m}, k):copy(), k)
+    local tk = {k}
+    local vec = transform.makeRange(B, irows, tk)
+    local H1 = transform.householder(vec, k)
     U, B = U * H1:H(), H1 * B
     if k < (w - 1) then
-      local H2 = transform.householder(
-        B(k, {1, n}):T():copy(), k + 1):H()
+      vec = transform.makeRange(B, tk, icols):T()
+      local H2 = transform.householder(vec, k + 1):H()
       B, V = B * H2, V * H2    -- H2 is transposed!
     end
   end
@@ -112,12 +119,12 @@ transform.findEigenvector = function (M, v, eps)
   -- random b
   local b = M._init(M._rows, 1, {})   -- zeros
   for i = 1, M._rows do b[i][1] = math.random() end
-  b = b * (1 / b:norm())
+  b = (1 / b:norm()) * b
   -- find
   local prev = b
   for _ = 1, 10 do
     b = iM * b
-    b = b * (1 / b:norm())
+    b = (1 / b:norm()) * b
     local diff = (b - prev):norm()
     if diff < eps or diff > (2 - eps) then break end
     prev = b
@@ -237,12 +244,12 @@ transform.givensRot = function (d1, d2)
      return 0, _sign(d2), _norm(d2)
    elseif _norm(d1) > _norm(d2) then
      local t = d2 / d1
-     local u = _sign(d1) * math.sqrt(1 + t*t)
+     local u = _sign(d1) * _msqrt(1 + t*t)
      local c = 1 / u
      return c, t * c, d1 * u
    else
      local t = d1 / d2
-     local u = _sign(d2) * math.sqrt(1 + t*t)
+     local u = _sign(d2) * _msqrt(1 + t*t)
      local s = 1 / u
      return t * s, s, d2 * u
    end
@@ -253,10 +260,11 @@ end
 --  @param M Source matrix.
 --  @param dTol Threshold value.
 transform.clearLess = function (M, dTol)
+  local cols = M._cols
   for i = 1, M._rows do
     local mi = rawget(M, i)
     if mi then
-      for j = 1, M._cols do
+      for j = 1, cols do
         local mij = rawget(mi, j)
         if mij and _norm(mij) < dTol then mi[j] = 0 end
       end
@@ -272,19 +280,19 @@ end
 --  @return Matrices U, B, V, value E
 transform.qrSweep = function (M)
   local m, n, B = M._rows, M._cols, M
-  local U, V = M:eye(m), M:eye(n)
+  local U, V = M:eye(m, m), M:eye(n, n)
   local w, TOL = math.min(m, n), 1E-13
   for k = 1, w - 1 do
     -- V
     local c, s = transform.givensRot(B[k][k], B[k][k+1])
-    local Q = M:eye(n)
+    local Q = M:eye(n, n)
     Q[k  ][k] = c; Q[k  ][k+1] = -s
     Q[k+1][k] = s; Q[k+1][k+1] =  c
     B, V = B * Q, V * Q       -- Q is transposed!
     transform.clearLess(B, TOL)
     -- U
     c, s = transform.givensRot(B[k][k], B[k+1][k])
-    Q = M:eye(m)
+    Q = M:eye(m, m)
     Q[k  ][k] =  c; Q[k  ][k+1] = s
     Q[k+1][k] = -s; Q[k+1][k+1] = c
     U, B = U * Q:T(), Q * B
@@ -305,12 +313,15 @@ transform.householder = function (V, ik)
   local r, sum = V._rows, 0
   local u = transform._methods._init(1, r, {})   -- use row vector
   -- fill vector
-  for i = ik, r do sum = sum + _norm(V[i][1])^2 end
+  for i = ik, r do 
+    local vi = _norm(V[i][1])
+    sum = sum + vi*vi
+  end
   local u1 = u[1]
-  u1[ik] = V[ik][1] + _sign(V[ik][1]) * math.sqrt(sum)
-  for i = ik+1, r do u1[i] = V[i][1] end
+  u1[ik] = V[ik][1] + _sign(V[ik][1]) * _msqrt(sum)
+  for i = ik + 1, r do u1[i] = V[i][1] end
   -- find matrix
-  return V:eye(r) - u:H() * ((2 / u:norm()^2) * u)
+  return V:eye(r, r) - u:H() * ((2 / u:norm()^2) * u)
 end
 
 
@@ -465,7 +476,7 @@ local refRange_r = {}
 --  @param k Index.
 --  @return element in the given position or 0.
 refRange_r.__index = function (self, k)
-  return self.src[self.n][self._ic[k] or 0]
+  return self.src[self.n][self._ic[k]] or 0
 end
 
 
@@ -490,7 +501,7 @@ transform.makeRange = function (M, ir, ic)
     _tbl = setmetatable({
       src = M,
       _ic = ic,
-      n = {}
+      n = 0,
     }, refRange_r)
   }
   return setmetatable(o, refRange)
@@ -803,7 +814,7 @@ refVector.norm = function (self, type_s)
       local v = _norm(self[i])
       s = s + v * v
     end
-    s = math.sqrt(s)
+    s = _msqrt(s)
   elseif type_s == "linf" then
     for i = 1, #self do s = math.max(s, _norm(self[i])) end
   else
@@ -819,7 +830,7 @@ refVector.normalize = function (self)
   for i = 1, len do
     s = s + _norm(self[i])^2
   end
-  s = math.sqrt(s)
+  s = _msqrt(s)
   for i = 1, len do
     self[i] = self[i] / s
   end

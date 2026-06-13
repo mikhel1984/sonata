@@ -25,6 +25,9 @@ Mat = require 'matlib.matrix'
 Z = require 'matlib.complex'
 -- pack/unpack
 D = require 'matlib.data'
+-- eigenvalues
+require 'matlib.polynomial'
+require 'matlib.complex'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}
@@ -404,32 +407,32 @@ end
 --  @param vC Column number or range (optional).
 --  @return Matrix element or submatrix.
 matrix.__call = function (self, vR, vC)
+  local nr, nc = self._rows, self._cols
   if not vC then
-    if self._cols == 1 then
+    if nc == 1 then
       return self[vR][1]
-    elseif self._rows == 1 then
+    elseif nr == 1 then
       return self[1][vR]
-    else
-      error "Not a vector"
     end
+    error "Not a vector"
   end
   local rows, num = {}, false
   if type(vR) == "number" then
-    rows[1] = _toRange(vR, self._rows)
+    rows[1] = _toRange(vR, nr)
     num = true
   else  -- table
-    local r1 = _toRange(vR[1] or 1, self._rows)
-    local rn = _toRange(vR[2] or self._rows, self._rows)
+    local r1 = _toRange(vR[1] or 1, nr)
+    local rn = _toRange(vR[2] or nr, nr)
     for r = r1, rn, (vR[3] or 1) do rows[#rows+1] = r end
   end
   local cols = {}
   if type(vC) == "number" then
-    cols[1] = _toRange(vC, self._cols)
+    cols[1] = _toRange(vC, nc)
     -- get element
     if num then return self[rows[1]][cols[1]] end
   else  -- table
-    local c1 = _toRange(vC[1] or 1, self._cols)
-    local cn = _toRange(vC[2] or self._cols, self._cols)
+    local c1 = _toRange(vC[1] or 1, nc)
+    local cn = _toRange(vC[2] or nc, nc)
     for c = c1, cn, (vC[3] or 1) do cols[#cols+1] = c end
   end
   return _tf.makeRange(self, rows, cols)
@@ -904,8 +907,9 @@ matrix.inv = function (self)
   local fn = _tf.invList[size]
   if fn then
     local det = _tf.detList[size](self)
-    return (not _zero(det)) and _kProd(1/det, fn(self))
-                       or matrix:fill(size, size, math.huge)
+    return (not _zero(det))
+      and _kProd(1/det, fn(self))
+      or  matrix:fill(size, size, math.huge)
   end
   -- prepare matrix
   local res, det = matrix.copy(self), nil
@@ -924,10 +928,7 @@ matrix.inv = function (self)
   -- move result
   for r = 1, size do
     local resr = res[r]
-    for c = 1, size do
-      local p = size + c
-      resr[c], resr[p] = resr[p], nil
-    end
+    for c = 1, size do resr[c] = resr[size+c] end
   end
   res._cols = size
   if matrix.CONDITION_NUM then
@@ -1071,11 +1072,13 @@ _about[matrix.minor] = {"M:minor(row_N, col_N) --> minor_M",
 --- Euclidean norm of the matrix at whole.
 --  @return Norm value.
 matrix.norm = function (self)
-  local sum = 0
+  local sum, cols = 0, self._cols
   for r = 1, self._rows do
     local mr = self[r]
-    for c = 1, self._cols do
-      sum = sum + _norm(mr[c])^2
+    for c = 1, cols do
+      -- use norm to avoid additional computations for complex objects
+      local v = _norm(mr[c])
+      sum = sum + v*v
     end
   end
   return math.sqrt(sum)
@@ -1114,7 +1117,7 @@ matrix.pinv = function (self)
     tol = math.min(tol, (v > 0 and v or math.huge))
   end
   tol = tol * 1e-9
-  local L, r, tmp = matrix:zeros(A._rows, A._cols), 0, nil
+  local L, r, tmp = matrix:zeros(A), 0, nil
   for k = 1, n do
     r = r + 1
     local B = A({k, n}, k)
@@ -1267,16 +1270,21 @@ matrix.svd = function (M)
   until E <= 1E-8
   U1, V1 = U1 * U2, V1 * V2
   if transpose then
-    U1, B, V1 = V1, B:T(), U1
+    U1, V1 = V1, U1
+    B._rows, B._cols = B._cols, B._rows  -- diagonal matrix
   end
   -- remove zeros
-  local B1 = matrix:zeros(B._rows, B._cols)
-  for i = 1, V1._rows do
+  local B1 = matrix:zeros(B)
+  local nr = V1._rows
+  for i = 1, nr do
     local s = B[i][i]
     if s < 0 then
       s = -s  -- correct sign (TODO try to avoid it)
       --  and column elements
-      for j = 1, V1._rows do V1[j][i] = -V1[j][i] end
+      for j = 1, nr do
+        local v1j = V1[j]
+        v1j[i] = -v1j[i]
+      end
     end
     B1[i][i] = s
   end
@@ -1321,7 +1329,7 @@ _about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix."}
 
 --- Transpose matrix.
 --  @return Transposed matrix reference.
-matrix.T = function (self) return _tf.makeT(self) end
+matrix.T = _tf.makeT
 _about[matrix.T] = {"M:T() --> transpose_Ref",
   "Return matrix transpose.", _tag.TRANSFORM}
 
