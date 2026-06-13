@@ -167,8 +167,8 @@ local _convert = _utils.cross.convert
 _utils = _utils.utils
 local _floor = math.floor
 
-local SEP = ','
-local _tag = { NUMB='numbers', COMB='combinations' }
+local SEP = ","
+local _tag = { NUMB="numbers", COMB="combinations" }
 
 -- max number for one position
 local BASE = _floor(math.sqrt((math.maxinteger or (2^52)) / 10))
@@ -187,7 +187,7 @@ __module__ = "Operations with arbitrary long integers."
 --	MODULE
 
 local mtDigits = {
-map = {'1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', [0]='0'},
+map = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", [0]="0"},
 mapChar = {},
 }
 
@@ -234,14 +234,14 @@ mtDigits.__tostring = function (self)
   if self.base <= 16 then
     local acc = {}
     for i = 1, #self do acc[i] = mtDigits.map[ self[n-i] ] end
-    s = table.concat(acc, '')
+    s = table.concat(acc, "")
   else
     local acc = {}
     for i = 1, #self do acc[i] = self[n-i] end
-    s = table.concat(acc, ',')
+    s = table.concat(acc, ",")
   end
-  local rst = (self.base == 10) and '' or string.format(':%d', self.base)
-  return string.format('%s%s%s', self.sign < 0 and '-' or '', s, rst)
+  local rst = (self.base == 10) and "" or string.format(":%d", self.base)
+  return string.format("%s%s%s", self.sign < 0 and "-" or "", s, rst)
 end
 
 
@@ -250,7 +250,7 @@ end
 --  @param sep Separator, optional.
 --  @return 'Sparse' string representation.
 mtDigits.group = function (self, N, sep)
-  N, sep = N or 3, sep or '`'
+  N, sep = N or 3, sep or "`"
   local n, acc = #self + 1, {}
   local small = (self.base <= 16)
   for i = 1, #self do
@@ -264,15 +264,15 @@ mtDigits.group = function (self, N, sep)
       end
     end
   end
-  local rst = (self.base == 10) and '' or string.format(':%d', self.base)
+  local rst = (self.base == 10) and "" or string.format(":%d", self.base)
   return string.format(
-    '%s%s%s', self.sign < 0 and '-' or '', table.concat(acc, ''), rst)
+    "%s%s%s", self.sign < 0 and "-" or "", table.concat(acc, ""), rst)
 end
 
 
 -- Main module
 local bigint = {
-type = 'bigint',
+type = "bigint",
 }
 assert(BASE > 2)
 
@@ -687,7 +687,9 @@ end
 
 
 --- Don't allow B[x] = y
-bigint.__newindex = function () error("Immutable object") end
+bigint.__newindex = function ()
+  error "Immutable object"
+end
 
 
 --- B1 ^ B2
@@ -704,7 +706,9 @@ bigint.__pow = function (B1, B2)
       return p and (p ^ B2) or (_float(B1) ^ _float(B2))
     end
   end
-  if B2._sign < 0 then error('Negative power!') end
+  if B2._sign < 0 then
+    error "Negative power!"
+  end
   local y, x = bigint._1, B1
   if bigint._isZero(B2) then
     assert(not bigint._isZero(B1), "Error: 0^0!")
@@ -762,9 +766,9 @@ bigint.__tostring = function (self)
 end
 
 
-_about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a",
+_about["_ar"] = {"arithmetic: a+b, a-b, a*b, a/b, a%b, a^b, -a, #a",
   nil, _help.META}
-_about['_cmp'] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, _help.META}
+_about["_cmp"] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, _help.META}
 
 
 --- Compare 2 bigint numbers.
@@ -856,20 +860,22 @@ end
 --  @return Bigint object.
 bigint._new = function (num)
   -- prepare
-  if type(num) == 'table' then
+  if type(num) == "table" then
     assert(#num > 0, "Wrong input")
     local base = num.base
     assert(base and base > 0 and _tointeger(base), "Wrong base")
     assert(num.sign, "Wrong sign")
     local acc = {}
     for i, v in ipairs(num) do
-      if v < 0 or v >= base then error("Wrong digit at "..tostring(i)) end
+      if v < 0 or v >= base then
+        error("Wrong digit at "..tostring(i))
+      end
       acc[i] = v
     end
     return _newTable(_rebase(acc, base, BASE), num.sign)
-  elseif type(num) == 'string' then
+  elseif type(num) == "string" then
     return bigint._newString(num)
-  elseif type(num) == 'number' and _tointeger(num) ~= nil then
+  elseif type(num) == "number" and _tointeger(num) ~= nil then
     return bigint._newNumber(num)
   end
   error("Wrong number: "..tostring(num))
@@ -901,9 +907,9 @@ bigint._newString = function (s)
   -- check base
   local base = 10
   if #sbase == 0 then
-    if     string.find(body, '^0x') then
+    if     string.find(body, "^0x") then
       base, body = 16, string.sub(body, 3, -1)
-    elseif string.find(body, '^0b') then
+    elseif string.find(body, "^0b") then
       base, body = 2, string.sub(body, 3, -1)
     end
   else
@@ -914,14 +920,14 @@ bigint._newString = function (s)
   local acc = {}
   if string.find(body, SEP) or base > 16 then
     -- all digits in decimal form
-    for dig in string.gmatch(body, '%d+') do
+    for dig in string.gmatch(body, "%d+") do
       local v = tonumber(dig)
       assert(v and v < base)
       acc[#acc+1] = v
     end
   else
     -- sequential digits without separation for small bases
-    for dig in string.gmatch(body, '.') do
+    for dig in string.gmatch(body, ".") do
       local v = mtDigits.mapChar[dig]
       if v then acc[#acc+1] = v end
     end
@@ -931,7 +937,7 @@ bigint._newString = function (s)
     local j = #acc+1-i
     acc[i], acc[j] = acc[j], acc[i]
   end
-  return _newTable(_rebase(acc, base, BASE), sgn == '-' and -1 or 1)
+  return _newTable(_rebase(acc, base, BASE), sgn == "-" and -1 or 1)
 end
 
 
@@ -965,8 +971,8 @@ end
 --  @return String with object representation.
 bigint._pack = function (self, acc)
   local n = #self._
-  local t = {string.pack('B', acc["bigint"]), _utils.packNum(BASE, acc),
-    string.pack('b', self._sign), string.pack('I2', n),
+  local t = {string.pack("B", acc["bigint"]), _utils.packNum(BASE, acc),
+    string.pack("b", self._sign), string.pack("I2", n),
     _utils.packSeq(self._, 1, n, acc)}
   return table.concat(t)
 end
@@ -1012,10 +1018,10 @@ end
 --  @return Bigint object.
 bigint._unpack = function (src, pos, acc, ver)
   local n, base, sign, t = nil, nil, nil, nil
-  n, pos = string.unpack('B', src, pos)
+  n, pos = string.unpack("B", src, pos)
   base, pos = _utils.unpackNum(src, pos, acc[n], ver)
-  sign, pos = string.unpack('b', src, pos)
-  n, pos = string.unpack('I2', src, pos)
+  sign, pos = string.unpack("b", src, pos)
+  n, pos = string.unpack("I2", src, pos)
   t, pos = _utils.unpackSeq(n, src, pos, acc, ver)
   if base ~= BASE then t = _rebase(t, base, BASE) end
   return _newTable(t, sign), pos
@@ -1162,7 +1168,9 @@ _about[bigint.float] = {"B:float() --> num",
 --  @return Bigint gcd.
 bigint.gcd = function (_, ...)
   local t = {...}
-  if #t == 0 then error('No numbers') end
+  if #t == 0 then
+    error "No numbers"
+  end
   -- compare element-wise
   local res = _isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
   for i = 2, #t do
@@ -1182,7 +1190,7 @@ _about[bigint.gcd] = {":gcd(...) --> B",
 --  @param sMethod Trivial search by default. Can be 'Fremat'.
 --  @return true if prime.
 bigint.isPrime = function (self, sMethod)
-  if sMethod == 'Fermat' then
+  if sMethod == "Fermat" then
     return _primeFermat(self)
   end
   -- default is a simple search
@@ -1199,7 +1207,9 @@ _about[bigint.isPrime] = {"B:isPrime(method_s=nil) --> bool",
 --  @return Bigint lcm.
 bigint.lcm = function (_, ...)
   local t = {...}
-  if #t == 0 then error('No numbers') end
+  if #t == 0 then
+    error "No numbers"
+  end
   -- compare element-wise
   local res = _isbigint(t[1]) and t[1] or bigint._newNumber(t[1])
   for i = 2, #t do

@@ -276,15 +276,21 @@ ans = v[1][2]               --.3>  m[1][2]
 
 --	LOCAL
 
--- dependencies
-local _utils = require("matlib.utils")
-local _ver = _utils.versions
-local _norm, _float, _round = _utils.cross.norm, _utils.cross.float, _utils.cross.round
-local _zero = _utils.cross.isZero
-_utils = _utils.utils
+local _ext = {
+  utils = require("matlib.utils"),
+  tf = require("matlib.matrix_tf"),
+  -- poly = require("matlib.polynomial"),
+}
 
--- Matrix transformations
-local _tf = require("matlib.matrix_tf")
+local _ver = _ext.utils.versions
+local _norm = _ext.utils.cross.norm
+local _zero = _ext.utils.cross.isZero
+local _utils = _ext.utils.utils
+local _tf = _ext.tf
+
+
+local _tag = { TRANSFORM="transform", VECTOR="vector", }
+
 
 --- 0 instead nil
 local mtAccess = {
@@ -324,7 +330,6 @@ end
 
 local _inform = Sonata and Sonata.warning or print
 
-local _tag = { TRANSFORM='transform', VECTOR='vector', }
 
 
 --	INFO
@@ -339,7 +344,8 @@ __module__ = "Matrix operations. The matrices are spares by default. Indexation 
 --	MODULE
 
 local matrix = {
-  type = 'matrix', ismatrix=true,
+  type = "matrix",
+  ismatrix=true,
   -- parameters
   ALIGN_WIDTH = 8,  -- number of columns to aligh width
   CONDITION_NUM = nil,  -- set limit for notification
@@ -404,11 +410,11 @@ matrix.__call = function (self, vR, vC)
     elseif self._rows == 1 then
       return self[1][vR]
     else
-      error 'Not a vector'
+      error "Not a vector"
     end
   end
   local rows, num = {}, false
-  if type(vR) == 'number' then
+  if type(vR) == "number" then
     rows[1] = _toRange(vR, self._rows)
     num = true
   else  -- table
@@ -417,7 +423,7 @@ matrix.__call = function (self, vR, vC)
     for r = r1, rn, (vR[3] or 1) do rows[#rows+1] = r end
   end
   local cols = {}
-  if type(vC) == 'number' then
+  if type(vC) == "number" then
     cols[1] = _toRange(vC, self._cols)
     -- get element
     if num then return self[rows[1]][cols[1]] end
@@ -460,7 +466,7 @@ end
 --  @param v Key.
 --  @return New matrix row or desired method.
 matrix.__index = function (self, v)
-  return matrix[v] or (type(v)=='number' and _addRow(self, v))
+  return matrix[v] or (type(v) == "number" and _addRow(self, v))
 end
 
 
@@ -494,12 +500,14 @@ end
 --  @return Power of the matrix.
 matrix.__pow = function (self, N)
   N = assert(_ver.toInteger(N), "Integer is expected!")
-  if (self._rows ~= self._cols) then error("Square matrix is expected!") end
+  if self._rows ~= self._cols then
+    error "Square matrix is expected!"
+  end
   if N == -1 then return matrix.inv(self) end
   local res, acc = matrix:eye(self._rows), matrix.copy(self)
   local mul = matrix.__mul
   while N > 0 do
-    if N%2 == 1 then res = mul(res, acc) end
+    if N % 2 ~= 0 then res = mul(res, acc) end
     N = math.modf(N*0.5)
     if N > 0 then acc = mul(acc, acc) end
   end
@@ -515,7 +523,7 @@ matrix.__sub = function (M1, M2)
   M1 = _ismatrixex(M1) and M1 or matrix:fill(M2._rows, M2._cols, M1)
   M2 = _ismatrixex(M2) and M2 or matrix:fill(M1._rows, M1._cols, M2)
   if (M1._rows~=M2._rows or M1._cols~=M2._cols) then
-    error("Different matrix size!")
+    error "Different matrix size!"
   end
   local res, Mcols = {}, M1._cols
   for r = 1, M1._rows do
@@ -536,7 +544,7 @@ matrix.__tostring = function (self)
     local row, src = {}, self[r]
     for c = 1, self._cols do
       local tmp = src[c]
-      row[c] = (type(tmp) == 'number') and _utils.numstr(tmp) or tostring(tmp)
+      row[c] = (type(tmp) == "number") and _utils.numstr(tmp) or tostring(tmp)
     end
     rows[r] = row
   end
@@ -545,7 +553,7 @@ matrix.__tostring = function (self)
     _utils.align(rows, true)
   end
   for i, row in ipairs(rows) do rows[i] = table.concat(row, "  ") end
-  return table.concat(rows, '\n')
+  return table.concat(rows, "\n")
 end
 
 
@@ -562,8 +570,8 @@ matrix.__unm = function (self)
 end
 
 
-_about['_ar'] = {"arithmetic: a+b, a-b, a*b, a^b, -a", nil, _help.META}
-_about['_cmp'] = {"comparison: a==b, a~=b", nil, _help.META}
+_about["_ar"] = {"arithmetic: a+b, a-b, a*b, a^b, -a", nil, _help.META}
+_about["_cmp"] = {"comparison: a==b, a~=b", nil, _help.META}
 
 
 --- Initialization of matrix with given size.
@@ -597,13 +605,13 @@ end
 matrix._new = function (_, t)
   if _ismatrixex(t) then
     return t
-  elseif type(t) == 'number' or type(t) == 'table' and t.__mul then
+  elseif type(t) == "number" or type(t) == "table" and t.__mul then
     return matrix._init(1, 1, {{t}})
   end
   local cols, rows = 0, #t
   for _, v in ipairs(t) do
-    if type(v) ~= 'table' then
-      error 'Row must be table!'
+    if type(v) ~= "table" then
+      error "Row must be table!"
     end
     cols = (cols < #v) and #v or cols
     setmetatable(v, mtAccess)
@@ -618,7 +626,7 @@ end
 matrix._pack = function (self, acc)
   local rs, cs = self:rows(), self:cols()
   local spack = string.pack
-  local t = {spack('B', acc['matrix']), spack('I2', rs), spack('I2', cs)}
+  local t = {spack("B", acc["matrix"]), spack("I2", rs), spack("I2", cs)}
   for r = 1, rs do
     t[#t+1] = _utils.packSeq(self[r], 1, cs, acc)
   end
@@ -635,8 +643,8 @@ end
 matrix._unpack = function (src, pos, acc, ver)
   local rs, cs, t = 0, 0, {}
   local sunpack = string.unpack
-  rs, pos = sunpack('I2', src, pos)
-  cs, pos = sunpack('I2', src, pos)
+  rs, pos = sunpack("I2", src, pos)
+  cs, pos = sunpack("I2", src, pos)
   for r = 1, rs do
     t[r], pos = _utils.unpackSeq(cs, src, pos, acc, ver)
   end
@@ -649,12 +657,13 @@ end
 --  @param tol Required tolerance.
 --  @return rounded matrix.
 matrix._round = function (self, tol)
+  local round = _ext.utils.cross.round
   for i = 1, self._rows do
     local row = rawget(self, i)
     if row then
       for j = 1, self._cols do
         local v = rawget(row, j)
-	      if v then row[j] = _round(v, tol) end
+	      if v then row[j] = round(v, tol) end
       end
     end
   end
@@ -688,7 +697,7 @@ matrix.chol = function (self)
       local sum = Ai[j]
       for k = 1, j-1 do
         local v = L[j][k]
-        v = (type(v) == 'table' and v.conj) and v:conj() or v
+        v = (type(v) == "table" and v.conj) and v:conj() or v
         sum = sum - v*Li[k]
       end
       if j < i then
@@ -728,8 +737,8 @@ _about[matrix.copy] = {"M:copy() --> cpy_M",
 
 -- Cross product.
 matrix.cross = _tf.vecAccess.cross
-_about[matrix.cross] = {'V:cross(V2) --> M',
-  'Cross product of two 3-element vectors.', _tag.VECTOR}
+_about[matrix.cross] = {"V:cross(V2) --> M",
+  "Cross product of two 3-element vectors.", _tag.VECTOR}
 
 
 --- Find determinant.
@@ -757,7 +766,7 @@ matrix.diag = function (self)
   end
   return matrix._init(#res, 1, res)
 end
-_about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
+_about[matrix.diag] = {"M:diag() --> V", "Get diagonal of the matrix."}
 
 
 --- Create matrix with given diagonal elements.
@@ -765,7 +774,7 @@ _about[matrix.diag] = {'M:diag() --> V', 'Get diagonal of the matrix.'}
 matrix.D = function (_, v, shift)
   shift = shift or 0
   local vec = _ismatrixex(v)
-  if vec and (v._rows == 1 or v._cols == 1) or type(v) == 'table' then
+  if vec and (v._rows == 1 or v._cols == 1) or type(v) == "table" then
     local n = vec and v._rows * v._cols or #v
     local res
     if shift >= 0 then
@@ -779,14 +788,14 @@ matrix.D = function (_, v, shift)
   end
   return nil
 end
-_about[matrix.D] = {':D(list_v, shift_N=0) --> M',
-  'Create new matrix with the given diagonal elements.', _help.NEW}
+_about[matrix.D] = {":D(list_v, shift_N=0) --> M",
+  "Create new matrix with the given diagonal elements.", _help.NEW}
 
 
 -- Scalar product.
 matrix.dot = _tf.vecAccess.dot
-_about[matrix.dot] = {'V:dot(V2) --> num',
-  'Scalar product of two vectors.', _tag.VECTOR}
+_about[matrix.dot] = {"V:dot(V2) --> num",
+  "Scalar product of two vectors.", _tag.VECTOR}
 
 
 --- Find eigenvectors and eigenvalues.
@@ -795,8 +804,8 @@ matrix.eig = function (self)
   if self._rows ~= self._cols then
     error "Square matrix is expected!"
   end
-  matrix.extPoly = matrix.extPoly or require("matlib.polynomial")
-  local p = matrix.extPoly:char(self)
+  _ext.poly = _ext.poly or require("matlib.polynomial")
+  local p = _ext.poly:char(self)
   local root = p:roots()
   local P, lam = matrix:zeros(self._rows), matrix:zeros(self._rows)
   for j = 1, #root do
@@ -807,8 +816,8 @@ matrix.eig = function (self)
   end
   return P, lam
 end
-_about[matrix.eig] = {'M:eig() --> vectors_M, values_M',
-  'Find matrices of eigenvectors and eigenvalues.'}
+_about[matrix.eig] = {"M:eig() --> vectors_M, values_M",
+  "Find matrices of eigenvectors and eigenvalues."}
 
 
 --- Find matrix exponential, e^M
@@ -818,7 +827,7 @@ matrix.exp = function (self)
   local Ui = matrix.inv(U)
   for i = 1, D._rows do
     local v = D[i][i]
-    if type(v) == 'table' then
+    if type(v) == "table" then
       v = v.exp and v:exp() or math.exp(v:float())
     else
       v = math.exp(v)
@@ -916,7 +925,7 @@ matrix.inv = function (self)
   for r = 1, size do
     local resr = res[r]
     for c = 1, size do
-      local p = size+c
+      local p = size + c
       resr[c], resr[p] = resr[p], nil
     end
   end
@@ -944,8 +953,8 @@ matrix.kron = function (self, M)
         local rr, cc = (i-1)*M._rows, (j-1)*M._cols
         for p = 1, M._rows do
           local mp = M[p]
-          local resr = res[rr + p]
-          for q = 1, M._cols do resr[cc + q] = v * mp[q] end
+          local resr = res[rr+p]
+          for q = 1, M._cols do resr[cc+q] = v * mp[q] end
         end
       end
     end
@@ -960,7 +969,7 @@ _about[matrix.kron] = {"M:kron(M2) --> M⊗M2", "Find Kronecker product."}
 --  @return matrix, obtained with Kronecker sum.
 matrix.kronSum = function (self, M)
   if self._rows ~= self._cols or M._rows ~= M._cols then
-    error('Square matrices expected')
+    error "Square matrices expected"
   end
   return matrix.kron(self, matrix:eye(M)) + matrix.kron(matrix:eye(self), M)
 end
@@ -1003,7 +1012,7 @@ matrix.lu = function (self)
     -- fill L part
     local Uii = Ui[i]
     if not _zero(Uii) then
-      for j = i+1, L._rows do
+      for j = i + 1, L._rows do
         local Uj = U[j]
         local s = Uj[i]
         for q = 1, i-1 do s = s - Uj[q]*U[q][i] end
@@ -1028,7 +1037,7 @@ _about[matrix.lu] = {"M:lu() --> L_M, U_M, perm_M",
 --  @param fn Desired function.
 --  @return Matrix where each element is obtained based on desired function.
 matrix.map = function (self, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   local res, Mcols = {}, self._cols
   for r = 1, self._rows do
     local rr, mr = {}, self[r]
@@ -1081,8 +1090,8 @@ _about[matrix.normalize] = {"V:normalize()",
 
 -- Outer product.
 matrix.outer = _tf.vecAccess.outer
-_about[matrix.outer] = {'V:outer(V2) --> M',
-  'Outer product or two vectors.', _tag.VECTOR}
+_about[matrix.outer] = {"V:outer(V2) --> M",
+  "Outer product or two vectors.", _tag.VECTOR}
 
 
 --- Quick pseudo inverse matrix.
@@ -1090,6 +1099,7 @@ _about[matrix.outer] = {'V:outer(V2) --> M',
 --  paper by Pierre Courrieu.
 --  @return Pseudo inverse matrix.
 matrix.pinv = function (self)
+  local float = _ext.utils.cross.float
   local m, n, transp = self._rows, self._cols, false
   local Mt, A = self:T(), nil
   if m < n then
@@ -1114,15 +1124,15 @@ matrix.pinv = function (self)
     end
     for i = k, n do L[i][r] = B[i-k+1][1] end  -- copy B to L
     tmp = L[k][r]
-    local iscomplex = (type(tmp)=='table') and tmp.iscomplex
+    local iscomplex = (type(tmp) == "table") and tmp.iscomplex
     if iscomplex and tmp:abs() > tol then
       tmp = tmp:sqrt()
       L[k][r] = tmp
-      for i = k+1, n do L[i][r] = L[i][r]/tmp end
+      for i = k + 1, n do L[i][r] = L[i][r]/tmp end
     elseif not iscomplex and tmp > tol then
-      tmp = math.sqrt(assert(_float(tmp)))
+      tmp = math.sqrt(assert(float(tmp)))
       L[k][r] = tmp
-      for i = k+1, n do L[i][r] = L[i][r]/tmp end
+      for i = k + 1, n do L[i][r] = L[i][r]/tmp end
     else
       r = r - 1
     end
@@ -1175,7 +1185,7 @@ matrix.qr = function (self)
   end
   -- set zeros
   for c = 1, n do
-    for r = c+1, m do R[r][c] = 0 end
+    for r = c + 1, m do R[r][c] = 0 end
   end
   return Q, R
 end
@@ -1378,11 +1388,11 @@ _about[matrix.zeros] = {":zeros(row_N, col_N=row_N) --> M",
 matrix.zip = function (_, fn, ...)
   local arg = {...}
   local rows, cols = arg[1]._rows, arg[1]._cols
-  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   -- check size
   for i = 2, #arg do
     if arg[i]._rows ~= rows or arg[i]._cols ~= cols then
-      error("Different size!")
+      error "Different size!"
     end
   end
   local res, v = {}, {}
@@ -1400,8 +1410,8 @@ matrix.zip = function (_, fn, ...)
   end
   return matrix._init(rows, cols, res)
 end
-_about[matrix.zip] = {':zip(fn|str, ...) --> res_M',
-  'Apply function to the given matrices element-wise.', _tag.TRANSFORM}
+_about[matrix.zip] = {":zip(fn|str, ...) --> res_M",
+  "Apply function to the given matrices element-wise.", _tag.TRANSFORM}
 
 
 -- constructor call

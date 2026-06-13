@@ -32,9 +32,9 @@ function (M) return M[1][1]*M[2][2] - M[2][1]*M[1][2] end,
 -- 3x3
 function (M)
   local m1, m2, m3 = M[1], M[2], M[3]
-  return m1[1]*(m2[2]*m3[3]-m2[3]*m3[2])
-       - m1[2]*(m2[1]*m3[3]-m2[3]*m3[1])
-       + m1[3]*(m2[1]*m3[2]-m2[2]*m3[1])
+  return m1[1]*(m2[2]*m3[3] - m2[3]*m3[2])
+       - m1[2]*(m2[1]*m3[3] - m2[3]*m3[1])
+       + m1[3]*(m2[1]*m3[2] - m2[2]*m3[1])
 end
 }
 
@@ -51,9 +51,9 @@ end,
 function (M)
   local m1, m2, m3 = M[1], M[2], M[3]
   return M._init(3, 3, {
-    {m2[2]*m3[3]-m2[3]*m3[2], -(m1[2]*m3[3]-m1[3]*m3[2]), m1[2]*m2[3]-m1[3]*m2[2]},
-    {-(m2[1]*m3[3]-m2[3]*m3[1]), m1[1]*m3[3]-m1[3]*m3[1], -(m1[1]*m2[3]-m1[3]*m2[1])},
-    {m2[1]*m3[2]-m2[2]*m3[1], -(m1[1]*m3[2]-m1[2]*m3[1]), m1[1]*m2[2]-m1[2]*m2[1]}
+    {  m2[2]*m3[3] - m2[3]*m3[2], -(m1[2]*m3[3] - m1[3]*m3[2]),  m1[2]*m2[3] - m1[3]*m2[2]},
+    {-(m2[1]*m3[3] - m2[3]*m3[1]),  m1[1]*m3[3] - m1[3]*m3[1], -(m1[1]*m2[3] - m1[3]*m2[1])},
+    {  m2[1]*m3[2] - m2[2]*m3[1], -(m1[1]*m3[2] - m1[2]*m3[1]),  m1[1]*m2[2] - m1[2]*m2[1]}
   })
 end
 }
@@ -89,7 +89,7 @@ transform.bidiag = function (M)
     U, B = U * H1:H(), H1 * B
     if k < (w - 1) then
       local H2 = transform.householder(
-        B(k, {1, n}):T():copy(), k+1):H()
+        B(k, {1, n}):T():copy(), k + 1):H()
       B, V = B * H2, V * H2    -- H2 is transposed!
     end
   end
@@ -119,7 +119,7 @@ transform.findEigenvector = function (M, v, eps)
     b = iM * b
     b = b * (1 / b:norm())
     local diff = (b - prev):norm()
-    if diff < eps or diff > (2-eps) then break end
+    if diff < eps or diff > (2 - eps) then break end
     prev = b
   end
   return b
@@ -138,7 +138,7 @@ transform.firstMinor = function (M)
     for i = 1, M._cols do
       if not _zero(M1[i]) then
         local m = transform.firstMinorSub(M, 1, i)
-        sum = sum + (k * M1[i]) * transform.firstMinor(m)
+        sum = sum + (k*M1[i]) * transform.firstMinor(m)
       end
       k = -k
     end
@@ -154,19 +154,19 @@ end
 --  @return Submatrix.
 transform.firstMinorSub = function (M, ir, ic)
   local res = {}
-  for r = 1, ir-1 do
+  for r = 1, ir - 1 do
     local rr, mr = {}, M[r]
-    for c = 1, ic-1 do rr[c] = mr[c] end
-    for c = ic+1, M._cols do rr[c-1] = mr[c] end
+    for c = 1, ic - 1 do rr[c] = mr[c] end
+    for c = ic + 1, M._cols do rr[c-1] = mr[c] end
     res[r] = rr
   end
-  for r = ir+1, M._rows do
+  for r = ir + 1, M._rows do
     local rr, mr = {}, M[r]
-    for c = 1, ic-1 do rr[c] = mr[c] end
-    for c = ic+1, M._cols do rr[c-1] = mr[c] end
+    for c = 1, ic - 1 do rr[c] = mr[c] end
+    for c = ic + 1, M._cols do rr[c-1] = mr[c] end
     res[r-1] = rr
   end
-  return M._initCheck(M._rows-1, M._cols-1, res)
+  return M._initCheck(M._rows - 1, M._cols - 1, res)
 end
 
 
@@ -211,7 +211,7 @@ end
 transform.gaussUp = function (M)
   for k = M._rows, 1, -1 do
     local mk = M[k]
-    for r = k-1, 1, -1 do
+    for r = k - 1, 1, -1 do
       local mr = M[r]
       local v = mr[k]
       if not _zero(v) then
@@ -274,7 +274,7 @@ transform.qrSweep = function (M)
   local m, n, B = M._rows, M._cols, M
   local U, V = M:eye(m), M:eye(n)
   local w, TOL = math.min(m, n), 1E-13
-  for k = 1, w-1 do
+  for k = 1, w - 1 do
     -- V
     local c, s = transform.givensRot(B[k][k], B[k][k+1])
     local Q = M:eye(n)
@@ -292,7 +292,7 @@ transform.qrSweep = function (M)
   end
   -- find error (upper diagonal of lenght w-1)
   local e = 0
-  for i = 1, w-1 do e = e + _norm(B[i][i+1]) end
+  for i = 1, w - 1 do e = e + _norm(B[i][i+1]) end
   return U, B, V, e
 end
 
@@ -310,12 +310,12 @@ transform.householder = function (V, ik)
   u1[ik] = V[ik][1] + _sign(V[ik][1]) * math.sqrt(sum)
   for i = ik+1, r do u1[i] = V[i][1] end
   -- find matrix
-  return V:eye(r) - u:H() * ( (2 / u:norm()^2) * u)
+  return V:eye(r) - u:H() * ((2 / u:norm()^2) * u)
 end
 
 
 -- Define reference to (conjugate) transpose matrix
-local refTranspose = {type='matrix_ref'}
+local refTranspose = {type="matrix_ref"}
 
 
 --- Access to methods or data
@@ -323,10 +323,10 @@ local refTranspose = {type='matrix_ref'}
 --  @return Table reference or method.
 refTranspose.__index = function (self, k)
   local tbl = self._tbl
-  if type(k) == 'number' then
+  if type(k) == "number" then
     tbl.n = k
     return tbl
-  elseif k == 'data' then
+  elseif k == "data" then
     return tbl.src
   end
   return tbl.src.__index(self, k)
@@ -337,7 +337,7 @@ end
 --  @param other Source object.
 refTranspose._copyData = function (self, other)
   if self._cols ~= other._cols or self._rows ~= other._rows then
-    error 'Different size'
+    error "Different size"
   end
   for i = 1, self._rows do
     local dst, src = self[i], other[i]
@@ -352,10 +352,10 @@ end
 --  @param k Filed 'data' to do copy.
 --  @param v Other matrix or reference.
 refTranspose.__newindex = function (self, k, v)
-  if k == 'data' then
+  if k == "data" then
     refTranspose._copyData(self, v)
   else
-    error 'Wrong assignment'
+    error "Wrong assignment"
   end
 end
 
@@ -389,7 +389,7 @@ local refTranspose_h = {}
 --  @return matrix value.
 refTranspose_h.__index = function (self, k)
   local v = self.src[k][self.n]
-  return (type(v) == 'table') and v.conj and v:conj() or v
+  return (type(v) == "table") and v.conj and v:conj() or v
 end
 
 
@@ -410,15 +410,16 @@ transform.makeT = function (M, hermit)
   local o = {
     _cols = M._rows,
     _rows = M._cols,
-    _tbl = setmetatable({src = M, n = 0},
-                        hermit and refTranspose_h or refTranspose_t),
+    _tbl = setmetatable(
+      {src = M, n = 0},
+      hermit and refTranspose_h or refTranspose_t),
   }
   return setmetatable(o, refTranspose)
 end
 
 
 -- Get range of elements
-local refRange = {type='matrix_ref'}
+local refRange = {type="matrix_ref"}
 
 
 --- Get row or source data.
@@ -426,10 +427,10 @@ local refRange = {type='matrix_ref'}
 --  @return Table row, data or method.
 refRange.__index = function (self, k)
   local tbl = self._tbl
-  if type(k) == 'number' then
+  if type(k) == "number" then
     tbl.n = self._ir[k] or 0
     return tbl
-  elseif k == 'data' then
+  elseif k == "data" then
     return tbl.src
   else
     return tbl.src.__index(self, k)
@@ -445,7 +446,7 @@ refRange.__newindex = refTranspose.__newindex
 --  @param other Matrix to copy.
 refRange._copyData = function (self, other)
   if self._cols ~= other._cols or self._rows ~= other._rows then
-    error 'Different size'
+    error "Different size"
   end
   local r, c = self._ir, self._tbl._ic
   local src = self._tbl.src
@@ -497,7 +498,7 @@ end
 
 
 -- Change matrix shape
-local refReshape = {type='matrix_ref'}
+local refReshape = {type="matrix_ref"}
 
 
 --- Access to the first index.
@@ -505,10 +506,10 @@ local refReshape = {type='matrix_ref'}
 --  @return table or method.
 refReshape.__index = function (self, k)
   local tbl = self._tbl
-  if type(k) == 'number' then
+  if type(k) == "number" then
     tbl.n = self._cols * (k - 1)
     return tbl
-  elseif k == 'data' then
+  elseif k == "data" then
     return tbl.src
   else
     return tbl.src.__index(self, k)
@@ -566,7 +567,7 @@ end
 
 
 -- Concatenate matrices.
-local refConcat = {type='matrix_ref'}
+local refConcat = {type="matrix_ref"}
 
 
 --- Access to the first index.
@@ -574,17 +575,17 @@ local refConcat = {type='matrix_ref'}
 --  @return table or method.
 refConcat.__index = function (self, k)
   local tbl = self._tbl
-  if type(k) == 'number' then
+  if type(k) == "number" then
     if tbl.vertical then
       local n, src = 1, tbl.src
       while n < #src and k > src[n]._rows do
-        k, n = k - src[n]._rows, n+1
+        k, n = k - src[n]._rows, n + 1
       end
       tbl.mat = src[n]
     end
     tbl.n = k
     return tbl
-  elseif k == 'data' then
+  elseif k == "data" then
     return tbl.src
   end
   return transform._methods.__index(self, k)
@@ -662,7 +663,7 @@ end
 
 --- Simplify access to the vector elements.
 local refVector = {
-  type = 'vector',
+  type = "vector",
   _ind = {x=1, y=2, z=3},
 }
 
@@ -672,9 +673,9 @@ local refVector = {
 --  @return found element.
 refVector.__index = function (self, k)
   local ind = refVector._ind[k] or k
-  if type(ind) == 'number' then
+  if type(ind) == "number" then
     return self._column and self._src[ind][1] or self._src[1][ind]
-  elseif k == 'data' then
+  elseif k == "data" then
     return self._src
   else
     return refVector[k]
@@ -694,7 +695,7 @@ end
 --  @param k Index.
 --  @param v Value to set.
 refVector.__newindex = function (self, k, v)
-  if k == 'data' then
+  if k == "data" then
     refVector._copyData(self, v)
   else
     local ind = refVector._ind[k] or k
@@ -713,9 +714,9 @@ refVector.__tostring = function (self)
   local res = {}
   for i = 1, #self do
     local v = self[i]
-    res[i] = (type(v) == 'number') and _numstr(v) or tostring(v)
+    res[i] = (type(v) == "number") and _numstr(v) or tostring(v)
   end
-  return table.concat(res, '  ')
+  return table.concat(res, "  ")
 end
 
 
@@ -723,11 +724,11 @@ end
 --  @param other Second vector object.
 refVector._copyData = function (self, other)
   if getmetatable(other) ~= refVector then
-    error 'Different types'
+    error "Different types"
   end
   local len = #self
   if len ~= #other then
-    error 'Different size'
+    error "Different size"
   end
   for i = 1, len do self[i] = other[i] end
 end
@@ -739,12 +740,14 @@ end
 --  @return Found vector.
 refVector.cross = function (V1, V2)
   if #V1 ~= 3 or #V2 ~= 3 then
-    error 'Vector with 3 elements is expected'
+    error "Vector with 3 elements is expected"
   end
   local x1, y1, z1 = V1[1], V1[2], V1[3]
   local x2, y2, z2 = V2[1], V2[2], V2[3]
-  return V1._src._init(3, 1,
-    {{y1*z2-z1*y2}, {z1*x2-x1*z2}, {x1*y2-y1*x2}})
+  return V1._src._init(3, 1, {
+    {y1*z2 - z1*y2},
+    {z1*x2 - x1*z2},
+    {x1*y2 - y1*x2}})
 end
 
 
@@ -755,7 +758,7 @@ end
 refVector.dot = function (V1, V2)
   local len = #V1
   if len ~= #V2 then
-    error 'Different vector length'
+    error "Different vector length"
   end
   local s = 0
   for i = 1, len do
@@ -772,7 +775,7 @@ end
 refVector.outer = function (V1, V2)
   local len = #V1
   if len ~= #V2 then
-    error 'Different vector length'
+    error "Different vector length"
   end
   local m = {}
   for i = 1, len do m[i] = {} end
@@ -791,20 +794,20 @@ end
 --  @param type_s Type of the norm.
 --  @return value of norm.
 refVector.norm = function (self, type_s)
-  type_s = type_s or 'l2'
+  type_s = type_s or "l2"
   local s = 0
-  if type_s == 'l1' then
+  if type_s == "l1" then
     for i = 1, #self do s = s + _norm(self[i]) end
-  elseif type_s == 'l2' then
+  elseif type_s == "l2" then
     for i = 1, #self do
       local v = _norm(self[i])
       s = s + v * v
     end
     s = math.sqrt(s)
-  elseif type_s == 'linf' then
+  elseif type_s == "linf" then
     for i = 1, #self do s = math.max(s, _norm(self[i])) end
   else
-    error 'Unknown type'
+    error "Unknown type"
   end
   return s
 end
@@ -827,7 +830,7 @@ end
 --  @return matrix M^T = -M
 refVector.skew = function (self)
   if #self ~= 3 then
-    error 'Vector with 3 elements is expected'
+    error "Vector with 3 elements is expected"
   end
   local x, y, z = self.x, self.y, self.z
   return transform._methods._init(3, 3, {
@@ -855,8 +858,8 @@ transform.vecAccess = refVector
 --  @param t Table with methametods.
 transform.initRef = function (t)
   for _, v in ipairs {
-    '__add', '__sub', '__mul', '__div', '__unm', '__pow',
-    '__eq', '__call', '__concat', '__tostring', '__len',
+    "__add", "__sub", "__mul", "__div", "__unm", "__pow",
+    "__eq", "__call", "__concat", "__tostring", "__len",
   } do
     local fn = t[v]
     refTranspose[v] = fn
