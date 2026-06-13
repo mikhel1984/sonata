@@ -163,6 +163,8 @@ cross.round = function (v, fTol)
     local p, q = _modf(v / fTol)
     if     q >  0.5 then p = p + 1
     elseif q < -0.5 then p = p - 1
+    -- round half to even
+    elseif q == 0.5 and p % 2 ~= 0 then p = p + 1
     end
     return p * fTol
   end
