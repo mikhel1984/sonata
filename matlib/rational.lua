@@ -417,8 +417,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 rational._pack = function (self, acc)
-  local t = {string.pack('B', acc['rational']), _utils.packSeq(self._, 1, 2, acc)}
-  return table.concat(t)
+  return string.pack('B', acc['rational']).._utils.packSeq(self._, 1, 2, acc)
 end
 
 

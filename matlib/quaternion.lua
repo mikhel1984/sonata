@@ -336,8 +336,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 quaternion._pack = function (self, acc)
-  local t = {string.pack('B', acc['quaternion']), _utils.packSeq(self._, 1, 4, acc)}
-  return table.concat(t)
+  return string.pack('B', acc['quaternion']).._utils.packSeq(self._, 1, 4, acc)
 end
 
 

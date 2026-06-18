@@ -621,11 +621,8 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 polynomial._pack = function (self, acc)
-  local spack = string.pack
   local n = #self
-  local t = {spack('B', acc['polynomial']), spack('I2', n)}
-  t[#t+1] = _utils.packSeq(self, 0, n, acc)
-  return table.concat(t)
+  return string.pack('BI2', acc['polynomial'], n).._utils.packSeq(self, 0, n, acc)
 end
 
 
@@ -686,7 +683,7 @@ polynomial._unpack = function (src, pos, acc, ver)
   local t, ord = {}, nil
   ord, pos = string.unpack('I2', src, pos)
   t, pos = _utils.unpackSeq(ord+1, src, pos, acc, ver)
-  t = table.move(t, 1, #t, 0, {})
+  t = _ver.move(t, 1, #t, 0, {})
   return polynomial._init(t), pos
 end
 

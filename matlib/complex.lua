@@ -423,8 +423,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 complex._pack = function (self, acc)
-  local t = {string.pack('B', acc['complex']), _utils.packSeq(self._, 1, 2, acc)}
-  return table.concat(t)
+  return string.pack('B', acc['complex']).._utils.packSeq(self._, 1, 2, acc)
 end
 
 

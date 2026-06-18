@@ -971,10 +971,9 @@ end
 --  @return String with object representation.
 bigint._pack = function (self, acc)
   local n = #self._
-  local t = {string.pack("B", acc["bigint"]), _utils.packNum(BASE, acc),
-    string.pack("b", self._sign), string.pack("I2", n),
-    _utils.packSeq(self._, 1, n, acc)}
-  return table.concat(t)
+  return table.concat {
+    string.pack("B", acc["bigint"]), _utils.packNum(BASE, acc),
+    string.pack("bI2", self._sign, n), _utils.packSeq(self._, 1, n, acc)}
 end
 
 
@@ -1020,8 +1019,7 @@ bigint._unpack = function (src, pos, acc, ver)
   local n, base, sign, t = nil, nil, nil, nil
   n, pos = string.unpack("B", src, pos)
   base, pos = _utils.unpackNum(src, pos, acc[n], ver)
-  sign, pos = string.unpack("b", src, pos)
-  n, pos = string.unpack("I2", src, pos)
+  sign, n, pos = string.unpack("bI2", src, pos)
   t, pos = _utils.unpackSeq(n, src, pos, acc, ver)
   if base ~= BASE then t = _rebase(t, base, BASE) end
   return _newTable(t, sign), pos

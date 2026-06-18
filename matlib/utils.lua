@@ -366,7 +366,7 @@ utils.packNum = function (x, acc)
     end
   else
     -- float
-    if v > 3.4E38 or p < -3.4E38 then
+    if v > 3.4E38 or p < 3.4E-38 then
       return string.pack('Bd', acc['&d'], x)
     else
       return string.pack('Bf', acc['&f'], x)

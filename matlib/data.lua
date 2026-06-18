@@ -255,7 +255,7 @@ local _tag = {
 local function _byteSum (s, n)
   local v = 0
   for i = 1, (n or #s) do v = v + string.byte(s, i, i) end
-  return v % 8
+  return v % 256
 end
 
 
@@ -1516,7 +1516,7 @@ data.pack = function (self, v)
   -- check sum
   local sum = 0
   for i = 1, #t do sum = sum + _byteSum(t[i]) end
-  t[#t+1] = string.pack('B', sum % 8)
+  t[#t+1] = string.pack('B', sum % 256)
   return table.concat(t)
 end
 _about[data.pack] = {":pack(obj) --> bin_s",

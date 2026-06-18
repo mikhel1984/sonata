@@ -400,9 +400,8 @@ end
 --  @return String with object representation.
 graph._pack = function (self, acc)
   local utils = _ext.utils.utils
-  local t = {string.pack('B', acc['graph'])}
+  local t = {string.pack('BB', acc['graph'], self._dir and 1 or 0)}
   local ns, p = {}, 1
-  t[#t+1] = string.pack('B', self._dir and 1 or 0)
   -- nodes
   for k in pairs(self._) do
     local s = tostring(k)
