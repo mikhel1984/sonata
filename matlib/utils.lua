@@ -474,9 +474,9 @@ end
 -- Additional functions.
 local calc = {
   -- hyperbolic cosine
-  cosh = function (x) return 0.5*(_mexp(x) + _mexp(-x)) end,
+  -- cosh = function (x) return 0.5*(_mexp(x) + _mexp(-x)) end,
   -- hyperbolic sine
-  sinh = function (x) return 0.5*(_mexp(x) - _mexp(-x)) end,
+  -- sinh = function (x) return 0.5*(_mexp(x) - _mexp(-x)) end,
   -- inverse hyperbolic sine
   asinh = function (x) return _mlog(x + _msqrt(x*x+1)) end,
   -- inverse hyperbolic cosine
@@ -484,10 +484,10 @@ local calc = {
   -- inverse hyperbolic tangent
   atanh = function (x) return 0.5*_mlog((1 + x)/(1 - x)) end,
   -- hyperbolic tangent
-  tanh = function (x)
-    local t = _mexp(2*x)
-    return (t-1)/(t+1)
-  end,
+  -- tanh = function (x)
+  --   local t = _mexp(2*x)
+  --   return (t-1)/(t+1)
+  -- end,
 }
 
 

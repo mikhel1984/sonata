@@ -336,14 +336,14 @@ ellipsoid.bl2utm = function (self, t)
   local alpha, e = self.utmAlpha, math.sqrt(self.e2)
   local clon = math.cos(lon)
   local tau, slat = math.tan(lat), math.sin(lat)
-  local n1 = _calc.sinh( e*_calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
+  local n1 = math.sinh( e*_calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
   local tau1 = tau*math.sqrt(1+n1*n1) - n1*math.sqrt(1+tau*tau)
   local xi1 = _atan2(tau1, clon)
   local eta1 = _calc.asinh(math.sin(lon) / math.sqrt(tau1*tau1 + clon*clon))
   local xi, eta, p1, q1 = xi1, eta1, 1, 0
   for i = 1, 6 do
     local sxi, cxi = math.sin(2*i*xi1), math.cos(2*i*xi1)
-    local seta, ceta = _calc.sinh(2*i*eta1), _calc.cosh(2*i*eta1)
+    local seta, ceta = math.sinh(2*i*eta1), math.cosh(2*i*eta1)
     xi  =  xi + alpha[i] * sxi * ceta
     eta = eta + alpha[i] * cxi * seta
     p1  =  p1 + 2*i*alpha[i] * cxi * ceta
@@ -527,20 +527,20 @@ ellipsoid.utm2bl = function (self, t)
   local xi1, eta1, p, q = xi, eta, 1, 0
   for j = 1, 6 do
     local sxi, cxi = math.sin(2*j*xi), math.cos(2*j*xi)
-    local seta, ceta = _calc.sinh(2*j*eta), _calc.cosh(2*j*eta)
+    local seta, ceta = math.sinh(2*j*eta), math.cosh(2*j*eta)
     xi1  = xi1 - beta[j] * sxi * ceta
     eta1 = eta1 - beta[j] * cxi * seta
     p    = p - 2*j*beta[j] * cxi * ceta
     q    = q - 2*j*beta[j] * sxi * seta
   end
-  local sheta1 = _calc.sinh(eta1)
+  local sheta1 = math.sinh(eta1)
   local cxi1 =  math.cos(xi1)
   local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
   local taui = tau1
   -- find latitude
   repeat
     local sqrti = math.sqrt(1 + taui*taui)
-    local si = _calc.sinh( e*_calc.atanh(e*taui/sqrti) )
+    local si = math.sinh( e*_calc.atanh(e*taui/sqrti) )
     local taui1 = taui*math.sqrt(1+si*si) - si*sqrti
     local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) *
       (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)

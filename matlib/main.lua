@@ -126,11 +126,11 @@ _about[atan2] = {"atan2(y_d, x_d) --> num",
   "Inverse tangent of y/x, use signs.", _tag.TRIG}
 
 -- Hyperbolic
-cosh = _call(_calc.cosh, 'cosh')
+cosh = _call(math.cosh, 'cosh')
 _about[cosh] = {"cosh(x) --> y", "Hyperbolic cosine.", _tag.HYP}
-sinh = _call(_calc.sinh, 'sinh')
+sinh = _call(math.sinh, 'sinh')
 _about[sinh] = {"sinh(x) --> y", "Hyperbolic sinus.", _tag.HYP}
-tanh = _call(_calc.tanh, 'tanh')
+tanh = _call(math.tanh, 'tanh')
 _about[tanh] = {"tanh(x) --> y", "Hyperbolic tangent.", _tag.HYP}
 
 -- Hyperbolic inverse
