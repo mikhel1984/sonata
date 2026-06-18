@@ -290,7 +290,7 @@ local _norm = _ext.utils.cross.norm
 local _zero = _ext.utils.cross.isZero
 local _utils = _ext.utils.utils
 local _tf = _ext.tf
-
+local _mmin = math.min
 
 local _tag = { TRANSFORM="transform", VECTOR="vector", }
 
@@ -331,8 +331,8 @@ local function _addRow(t, i)
 end
 
 
+-- User notification
 local _inform = Sonata and Sonata.warning or print
-
 
 
 --	INFO
@@ -455,9 +455,10 @@ end
 matrix.__eq = function (M1, M2)
   if not (_ismatrixex(M1) and _ismatrixex(M2)) then return false end
   if M1._rows ~= M2._rows or M1._cols ~= M2._cols then return false end
+  local Mcols = M1._cols
   for r = 1, M1._rows do
     local ar, br = M1[r], M2[r]
-    for c = 1, M1._cols do
+    for c = 1, Mcols do
       if ar[c] ~= br[c] then return false end
     end
   end
@@ -652,16 +653,15 @@ matrix._unpack = function (src, pos, acc, ver)
 end
 
 
-
 --- Strip matrix components.
 --  @param tol Required tolerance.
 --  @return rounded matrix.
 matrix._round = function (self, tol)
-  local round = _ext.utils.cross.round
+  local round, cols = _ext.utils.cross.round, self._cols
   for i = 1, self._rows do
     local row = rawget(self, i)
     if row then
-      for j = 1, self._cols do
+      for j = 1, cols do
         local v = rawget(row, j)
 	      if v then row[j] = round(v, tol) end
       end
@@ -761,7 +761,7 @@ _about[matrix.det] = {"M:det() --> num", "Calculate determinant."}
 --  @return Vector of matrix.
 matrix.diag = function (self)
   local res = {}
-  for i = 1, math.min(self._rows, self._cols) do
+  for i = 1, _mmin(self._rows, self._cols) do
     res[i] = {self[i][i]}
   end
   return matrix._init(#res, 1, res)
@@ -851,7 +851,7 @@ matrix.eye = function (_, iR, iC)
     iC = iC or iR
   end
   local m = matrix._initCheck(iR, iC, {})
-  for i = 1, math.min(iR, iC) do m[i][i] = 1 end
+  for i = 1, _mmin(iR, iC) do m[i][i] = 1 end
   return m
 end
 _about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
@@ -864,7 +864,6 @@ _about[matrix.eye] = {":eye(row_N, col_N=row_N) --> M",
 --  @param val Value to set. Default is 1.
 --  @return New matrix.
 matrix.fill = function (_, iR, iC, val)
-  assert(iR > 0 and iC > 0)
   val = val or 1
   local res = {}
   for r = 1, iR do
@@ -944,15 +943,16 @@ _about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix."}
 --  @return matrix, obtained with Kronecker product.
 matrix.kron = function (self, M)
   local res = matrix._init(self._rows*M._rows, self._cols*M._cols, {})
+  local scols, mrows, mcols = self._cols, M._rows, M._cols
   for i = 1, self._rows do
-    for j = 1, self._cols do
+    for j = 1, scols do
       local v = self[i][j]
       if v ~= 0 then
-        local rr, cc = (i-1)*M._rows, (j-1)*M._cols
-        for p = 1, M._rows do
+        local rr, cc = (i-1)*mrows, (j-1)*mcols
+        for p = 1, mrows do
           local mp = M[p]
           local resr = res[rr+p]
-          for q = 1, M._cols do resr[cc+q] = v * mp[q] end
+          for q = 1, mcols do resr[cc+q] = v * mp[q] end
         end
       end
     end
@@ -983,10 +983,11 @@ matrix.lu = function (self)
   -- check square
   local U, P = self:copy(), matrix:eye(self._rows, self._cols)
   local L = matrix:eye(self._rows, self._cols)
-  for i = 1, U._rows do
+  local Urows, Lrows = U._rows, L._rows
+  for i = 1, Urows do
     -- find pivot
     local k, max = i, 0.0
-    for r = i, U._rows do
+    for r = i, Urows do
       local Ur = U[r]
       local s = Ur[i]
       for q = 1, i-1 do s = s - Ur[q]*U[q][r] end
@@ -1002,7 +1003,7 @@ matrix.lu = function (self)
     end
     -- fill U part
     local Ui = U[i]
-    for j = i, U._rows do
+    for j = i, Urows do
       local s = Ui[j]
       for q = 1, i-1 do s = s - Ui[q]*U[q][j] end
       Ui[j] = s
@@ -1010,7 +1011,7 @@ matrix.lu = function (self)
     -- fill L part
     local Uii = Ui[i]
     if not _zero(Uii) then
-      for j = i + 1, L._rows do
+      for j = i + 1, Lrows do
         local Uj = U[j]
         local s = Uj[i]
         for q = 1, i-1 do s = s - Uj[q]*U[q][i] end
@@ -1103,15 +1104,14 @@ matrix.pinv = function (self)
   local m, n, transp = self._rows, self._cols, false
   local Mt, A = self:T(), nil
   if m < n then
-    A, n, transp = self * Mt, m, true
+    A, n, transp = matrix(self * Mt), m, true
   else
-    A = Mt * self
+    A = matrix(Mt * self)
   end
-  A = matrix(A)  -- avoid scalar result
   local tol = math.huge
   for i = 1, A._rows do
     local v = _norm(A[i][i])
-    tol = math.min(tol, (v > 0 and v or math.huge))
+    tol = _mmin(tol, v > 0 and v or math.huge)
   end
   tol = tol * 1e-9
   local L, r, tmp = matrix:zeros(A), 0, nil
@@ -1124,13 +1124,9 @@ matrix.pinv = function (self)
     end
     for i = k, n do L[i][r] = B[i-k+1][1] end  -- copy B to L
     tmp = L[k][r]
-    local iscomplex = (type(tmp) == "table") and tmp.iscomplex
-    if iscomplex and tmp:abs() > tol then
-      tmp = tmp:sqrt()
-      L[k][r] = tmp
-      for i = k + 1, n do L[i][r] = L[i][r]/tmp end
-    elseif not iscomplex and tmp > tol then
-      tmp = math.sqrt(assert(float(tmp)))
+    if _norm(tmp) > tol then
+      tmp = (type(tmp) == "table") and tmp.sqrt and tmp:sqrt()
+        or math.sqrt(float(tmp))
       L[k][r] = tmp
       for i = k + 1, n do L[i][r] = L[i][r]/tmp end
     else
@@ -1138,12 +1134,11 @@ matrix.pinv = function (self)
     end
   end
   L._cols = (r > 0) and r or 1
-  local Lt = L:T()
+  local Lt = L:T():copy()
   local K = matrix.inv(matrix(Lt * L))
-  if transp then
-    return (((Mt * L) * K) * K) * Lt
-  end
-  return L * (K * (K * (Lt * Mt)))
+  return transp
+    and (((Mt * L) * K) * K) * Lt
+    or  L * (K * (K * (Lt * Mt)))
 end
 _about[matrix.pinv] = {"M:pinv() --> inv_M",
   "Pseudo inverse matrix calculation."}
@@ -1159,10 +1154,10 @@ matrix.qr = function (self)
   end
   local Q = matrix:eye(m)
   local R = matrix.copy(self)
-  for j = 1, math.min(m-1, n) do
+  for j = 1, _mmin(m-1, n) do
     -- housholder transformation
     -- prepare v and v:T()
-    local v = R({j,m}, j):copy()
+    local v = R({j, m}, j):copy()
     local v1 = v[1][1]
     local v1abs = _norm(v1)
     v[1][1] = v1 + v:norm() * (v1abs > 0 and (v1/v1abs) or 1)
@@ -1223,7 +1218,7 @@ _about[matrix.rank] = {"M:rank() --> N", "Find rank of the matrix."}
 --  @return Matrix with new size.
 matrix.reshape = function (self, iRows, iCols)
   if not (iRows and iCols) then
-    iRows = self:rows() * self:cols()
+    iRows = self._rows * self._cols
     iCols = 1
   end
   return _tf.makeReshape(self, iRows, iCols)
@@ -1318,7 +1313,7 @@ _about[matrix.table] = {"M:table() --> tbl",
 --  @return Sum of elements of the main diagonal.
 matrix.tr = function (self)
   local sum = 0
-  for i = 1, math.min(self._rows, self._cols) do sum = sum + self[i][i] end
+  for i = 1, _mmin(self._rows, self._cols) do sum = sum + self[i][i] end
   return sum
 end
 _about[matrix.tr] = {"M:tr() --> sum", "Get trace of the matrix."}

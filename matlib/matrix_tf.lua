@@ -19,6 +19,8 @@ local _numstr = _utils.utils.numstr
 
 local _msqrt = math.sqrt
 
+-- most often used matrix size
+local _ids = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 --      MODULE
 
@@ -285,17 +287,25 @@ transform.qrSweep = function (M)
   for k = 1, w - 1 do
     -- V
     local c, s = transform.givensRot(B[k][k], B[k][k+1])
-    local Q = M:eye(n, n)
-    Q[k  ][k] = c; Q[k  ][k+1] = -s
-    Q[k+1][k] = s; Q[k+1][k+1] =  c
-    B, V = B * Q, V * Q       -- Q is transposed!
+    --B, V = B * Q, V * Q       -- Q is transposed!
+    for i = 1, n do
+      local Bi = B[i]
+      Bi[k], Bi[k+1] = c*Bi[k] + s*Bi[k+1], -s*Bi[k] + c*Bi[k+1]
+      local Vi = V[i]
+      Vi[k], Vi[k+1] = c*Vi[k] + s*Vi[k+1], -s*Vi[k] + c*Vi[k+1]
+    end
     transform.clearLess(B, TOL)
     -- U
     c, s = transform.givensRot(B[k][k], B[k+1][k])
-    Q = M:eye(m, m)
-    Q[k  ][k] =  c; Q[k  ][k+1] = s
-    Q[k+1][k] = -s; Q[k+1][k+1] = c
-    U, B = U * Q:T(), Q * B
+    --U, B = U * Q:T(), Q * B
+    for i = 1, m do
+      local Ui = U[i]
+      Ui[k], Ui[k+1] = c*Ui[k] + s*Ui[k+1], -s*Ui[k] + c*Ui[k+1]
+    end
+    local Bk, Bk1 = B[k], B[k+1]
+    for i = 1, n do
+      Bk[i], Bk1[i] = c*Bk[i] + s*Bk1[i], -s*Bk[i] + c*Bk1[i]
+    end
     transform.clearLess(B, TOL)
   end
   -- find error (upper diagonal of lenght w-1)
@@ -313,7 +323,7 @@ transform.householder = function (V, ik)
   local r, sum = V._rows, 0
   local u = transform._methods._init(1, r, {})   -- use row vector
   -- fill vector
-  for i = ik, r do 
+  for i = ik, r do
     local vi = _norm(V[i][1])
     sum = sum + vi*vi
   end
@@ -334,7 +344,7 @@ local refTranspose = {type="matrix_ref"}
 --  @return Table reference or method.
 refTranspose.__index = function (self, k)
   local tbl = self._tbl
-  if type(k) == "number" then
+  if _ids[k] or type(k) == "number" then
     tbl.n = k
     return tbl
   elseif k == "data" then
@@ -438,7 +448,7 @@ local refRange = {type="matrix_ref"}
 --  @return Table row, data or method.
 refRange.__index = function (self, k)
   local tbl = self._tbl
-  if type(k) == "number" then
+  if _ids[k] or type(k) == "number" then
     tbl.n = self._ir[k] or 0
     return tbl
   elseif k == "data" then
@@ -517,7 +527,7 @@ local refReshape = {type="matrix_ref"}
 --  @return table or method.
 refReshape.__index = function (self, k)
   local tbl = self._tbl
-  if type(k) == "number" then
+  if _ids[k] or type(k) == "number" then
     tbl.n = self._cols * (k - 1)
     return tbl
   elseif k == "data" then
@@ -586,7 +596,7 @@ local refConcat = {type="matrix_ref"}
 --  @return table or method.
 refConcat.__index = function (self, k)
   local tbl = self._tbl
-  if type(k) == "number" then
+  if _ids[k] or type(k) == "number" then
     if tbl.vertical then
       local n, src = 1, tbl.src
       while n < #src and k > src[n]._rows do
@@ -684,7 +694,7 @@ local refVector = {
 --  @return found element.
 refVector.__index = function (self, k)
   local ind = refVector._ind[k] or k
-  if type(ind) == "number" then
+  if _ids[ind] or type(ind) == "number" then
     return self._column and self._src[ind][1] or self._src[1][ind]
   elseif k == "data" then
     return self._src

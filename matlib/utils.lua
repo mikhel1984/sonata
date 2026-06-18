@@ -145,13 +145,13 @@ end
 --  @param v Some object.
 --  @return Norm or nil.
 cross.norm = function (v)
-  local tp = type(v)
-  if tp == 'number' then
-    return _mabs(v)
-  elseif tp == 'table' then
-    return v.float and _mabs(v:float()) or v._norm and v:_norm() or nil
+  local mt = getmetatable(v)
+  if mt then
+    -- table
+    return mt.float and _mabs(v:float()) or mt._norm and v:_norm() or nil
   end
-  return nil
+  -- number
+  return _mabs(v)
 end
 
 
