@@ -89,10 +89,11 @@ ans = y[#y][1]              --.1>  2.3
 
 local _utils = require("matlib.utils")
 local _norm = _utils.cross.norm
+local _unpack = _utils.versions.unpack
+local _mabs, _mhuge = math.abs, math.huge
 
-local _inform = Sonata and Sonata.warning or print
 
-
+-- List of vectors to table.
 local mtOdeSolution = {
 
 --- Replace vector with sequence of elements in ODE solver result.
@@ -102,7 +103,7 @@ flat = function (t)
   for i = 1, #t do
     local ti = t[i]
     local row, v = {ti[1]}, ti[2]
-    if type(v) == 'table' then
+    if getmetatable(v) then
       -- replace with vector elements
       v = v:vec()
       for j = 1, #v do row[j+1] = v[j] end
@@ -116,6 +117,7 @@ end
 }
 mtOdeSolution.__index = mtOdeSolution
 
+
 --- Runge-Kutta method.
 -- @param fn Function f(x,y).
 -- @param x First variable.
@@ -128,7 +130,7 @@ local function _rk(fn, x, y, h)
   local k2 = fn(x+h2, y+h2*k1)
   local k3 = fn(x+h2, y+h2*k2)
   local k4 = fn(x+h,  y+h*k3)
-  return y + (k1 + 2*(k2 + k3) + k4)*(h/6)
+  return y + (k1 + 2*(k2 + k3) + k4)*(h/6.0)
 end
 
 
@@ -152,6 +154,7 @@ local function _trapzd (fn, a, b, n, s)
   return 0.5*(s + sum*del)
 end
 
+
 --- Step in extended midpoint rule.
 --  @param fn Function to integrate.
 --  @param a Lower limit.
@@ -165,10 +168,9 @@ local function _midpnt (fn, a, b, n, s)
   end
   local tnm = 3^(n - 2)
   local del = (b - a)/(3.0 * tnm)
-  local del2 = del + del
   local x, sum = a + 0.5*del, 0.0
   for _ = 1, tnm do
-    sum, x = sum + fn(x), x + del2
+    sum, x = sum + fn(x), x + 2*del
     sum, x = sum + fn(x), x + del
   end
   return s/3.0 + sum*del
@@ -188,20 +190,19 @@ local function _qsimp (fn, a, b, eps, eval, N)
   for j = 1, N do
     st = eval(fn, a, b, j, st)
     s = (4.0*st - ost) / 3.0
-    if j > 3 and math.abs(s-si) < eps then
+    if j > 3 and _mabs(s - si) < eps then
       return s
     end
     si, ost = s, st
   end
-  _inform("too many iterations")
-  return si, true  -- error flag
+  return si, "too many iterations"
 end
 
 
 --- Check if the number is limited.
 --  @param x Number to check.
 --  @return true when not infinite.
-local function _limited (x) return -math.huge < x and x < math.huge end
+local function _limited (x) return -_mhuge < x and x < _mhuge end
 
 
 --	INFO
@@ -221,17 +222,17 @@ TOL = 1E-3,
 NEWTON_MAX = 50,
 -- max integration attempts
 INT_MAX = 20,
--- 'minima' step
+-- 'minimal' step
 SMALL = 1E-20,
 }
 
 
 -- check limits
-if 1E300 < math.huge then
+if 1E300 < _mhuge then
   -- 64 bits
   numeric.EPS = 2^(-52)
   numeric.FMAX = 2^1023
-elseif 1E60 < math.huge then
+elseif 1E60 < _mhuge then
   -- 32 bits
   numeric.EPS = 2^(-23)
   numeric.FMAX = 2^127
@@ -240,12 +241,14 @@ else
   numeric.EPS = 2^(-10)
   numeric.FMAX = 2^15
 end
+_about[numeric.EPS] = {"EPS", "Minimal float point number."}
+_about[numeric.FMAX] = {"FMAX", "Maximal float point number."}
 
 
 --- Simple derivative.
 --  @param fn Function f(x).
 --  @param d Parameter.
---  @return Numerical approximation of the derivative value.
+--  @return Numerical approximation of the derivative value and optional error message.
 numeric.der = function (_, fn, d)
   local dx = 2e-2
   local der, last = (fn(d+dx) - fn(d-dx)) / (2*dx), nil
@@ -254,22 +257,72 @@ numeric.der = function (_, fn, d)
     dx = dx * 0.5
     der, last = (fn(d+dx) - fn(d-dx)) / d2, der
     if dx < numeric.SMALL then
-      _inform("derivative not found")
-      return der, true
+      return der, "derivative not found"
     end
   until _norm(der-last) < numeric.TOL
   return der
 end
-_about[numeric.der] = {":der(fn, x_d) --> num",
+_about[numeric.der] = {":der(fn, x_d) --> num, [err]",
   "Calculate the derivative value for the given function."}
 
+
+--- Integration using Simpson method.
+--  @param fn Function f(x).
+--  @param a Lower bound.
+--  @param b Upper bound.
+--  @return Numerical approximation of the integral and optional error message.
+numeric.int = function (_, fn, a, b)
+  -- check arguments
+  if a > b then
+    return numeric.int(_, fn, b, a)
+  elseif a == b then
+    return 0
+  end
+  local N, TOL = numeric.INT_MAX, numeric.TOL
+  -- check inf
+  local afin, bfin = _limited(a), _limited(b)
+  if afin and bfin then
+    return (_limited(fn(a)) and _limited(fn(b)))
+      and _qsimp(fn, a, b, TOL, _trapzd, N)
+      or  _qsimp(fn, a, b, TOL, _midpnt, N)  -- improper limits
+  end
+
+  -- infinite limits
+  local fni = function (x) return fn(1/x)/(x*x) end
+  -- -inf
+  if not afin and a < _mhuge then
+    if b < 0 then
+      return _qsimp(fni, 1/b, 0, TOL, _midpnt, N)
+    end
+    -- -inf to -1
+    local s1, e1 = _qsimp(fni, -1, 0, TOL, _midpnt, N)
+    if b < _mhuge then
+      local s2, e2 = _qsimp(fn, -1, b, TOL, _midpnt, N)
+      return s1 + s2, e1 or e2
+    else
+      local s2, e2 = _qsimp(fn, -1, 1, TOL, _midpnt, N)
+      local s3, e3 = _qsimp(fni, 0, 1, TOL, _midpnt, N)
+      return s1 + s2 + s3, e1 or e2 or e3
+    end
+  end
+  -- +inf
+  if a > 0 then
+    return _qsimp(fni, 0, 1/a, TOL, _midpnt, N)
+  else
+    local s1, e1 = _qsimp(fni, 0, 1, TOL, _midpnt, N)
+    local s2, e2 = _qsimp(fn, a, 1, TOL, _midpnt, N)
+    return s1 + s2, e1 or e2
+  end
+end
+_about[numeric.int] = {":int(fn, x1_d, x2_d) --> num, [err]",
+  "Get integral of the function. Improper integrals with infinite limits are possible."}
 
 
 --- Estimate lim(fn(x)) for x -> xn.
 --  @param fn Function.
 --  @param xn Value to approach.
 --  @param isPositive Flag for +/-xn.
---  @return obtained value.
+--  @return obtained value and optional error message.
 numeric.lim = function (_, fn, xn, isPositive)
   local prev = nil
   if _limited(xn) then
@@ -284,8 +337,8 @@ numeric.lim = function (_, fn, xn, isPositive)
     end
   else
     -- +/- inf
-    xn = (xn < math.huge) and -1 or 1
-    while math.abs(xn) < math.huge do
+    xn = (xn < _mhuge) and -1 or 1
+    while _mabs(xn) < _mhuge do
       local curr = fn(xn)
       if prev and _norm(curr - prev) < numeric.TOL then
         return curr
@@ -293,17 +346,16 @@ numeric.lim = function (_, fn, xn, isPositive)
       xn, prev = xn * 1E3, curr
     end
   end
-  _inform('limit not found')
-  return prev, true  -- error flag
+  return prev, "limit not found"
 end
-_about[numeric.lim] = {":lim(fn, xn_d, isPositive=false) --> y",
+_about[numeric.lim] = {":lim(fn, xn_d, isPositive=false) --> y, [err]",
   "Estimate limit of a function."}
 
 
 --- Solve equation based on Newton's rule.
 --  @param fn Function to analyze.
 --  @param d1 Initial estimation for the root.
---  @return root of nil.
+--  @return root and optional error message.
 numeric.newton = function (_, fn, d1)
   local h, k, x2 = 0.1, 0, d1
   repeat
@@ -312,13 +364,12 @@ numeric.newton = function (_, fn, d1)
     x2 = d1 - fd1*h / (fn(d1+h) - fd1)
     k, h = k+1, h*0.618
     if k > numeric.NEWTON_MAX then
-      _inform("too many iterations")
-      return x2, true  -- error flag
+      return x2, "too many iterations"
     end
   until _norm(fn(x2)-fd1) < numeric.TOL
   return x2
 end
-_about[numeric.newton] = {":newton(fn, x0_d) --> num",
+_about[numeric.newton] = {":newton(fn, x0_d) --> num, [err]",
   "Find root of equation using Newton's rule."}
 
 
@@ -333,24 +384,24 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local xn = tDelta[2]
   tParam = tParam or {}
   local h = tParam.dt or math.min((xn - tDelta[1]), 1.0) / 20
-  local exit = tParam.exit or function (_) return false end
+  local exit = tParam.exit or function () return false end
   -- evaluate
   local res, last = setmetatable({{tDelta[1], dY0}}, mtOdeSolution), false
   while not exit(res) do
-    local x, y = _utils.versions.unpack(res[#res])
+    local x, y = _unpack(res[#res])
     if x >= xn then
       break
     elseif x + h > xn then
       h, last = xn-x, true
     end
     -- find next
+    local y1 = _rk(fn, x, y, h)
     if tParam.dt or last then
-      res[#res+1] = {x+h, _rk(fn, x, y, h)}
+      res[#res+1] = {x+h, y1}
     else
       -- step correction
       local h2 = 0.5 * h
-      local y1 = _rk(fn, x, y, h)
-      local y2 = _rk(fn, x+h2, _rk(fn, x, y, h2), h2)
+      local y2 = _rk(fn, x+h2, _rk(fn, x, y, h2), h2)  -- TODO check correctness
       local dy = _norm(y2 - y1)
       if dy > MAX then
         h = h2
@@ -383,65 +434,14 @@ numeric.solve = function (_, fn, a, b)
   repeat
     b = b - (b-a)*f1 / (f1-f0)
     f1 = fn(b)
-  until math.abs(f1) < numeric.TOL
+  until _mabs(f1) < numeric.TOL
   return b
 end
 _about[numeric.solve] = {":solve(fn, low_d, up_d) --> num",
   "Find root of equation fn(x)=0 on interval [a,b]."}
 
 
---- Integration using Simpson method.
---  @param fn Function f(x).
---  @param a Lower bound.
---  @param b Upper bound.
---  @return Numerical approximation of the integral.
-numeric.int = function (_, fn, a, b)
-  -- check arguments
-  if a > b then
-    return numeric.int(nil, fn, b, a)
-  elseif a == b then
-    return 0, true
-  end
-  local N, TOL = numeric.INT_MAX, numeric.TOL
-  -- check inf
-  local afin, bfin = _limited(a), _limited(b)
-  if afin and bfin then
-    return (_limited(fn(a)) and _limited(fn(b)))
-      and _qsimp(fn, a, b, TOL, _trapzd, N)
-      or  _qsimp(fn, a, b, TOL, _midpnt, N)  -- improper limits
-  end
-
-  -- infinite limits
-  local fni = function (x) return fn(1/x)/(x*x) end
-  -- -inf
-  if not afin and a < math.huge then
-    if b < 0 then
-      return _qsimp(fni, 1/b, 0, TOL, _midpnt, N)
-    end
-    -- -inf to -1
-    local s1, e1 = _qsimp(fni, -1, 0, TOL, _midpnt, N)
-    if b < math.huge then
-      local s2, e2 = _qsimp(fn, -1, b, TOL, _midpnt, N)
-      return s1 + s2, e1 or e2
-    else
-      local s2, e2 = _qsimp(fn, -1, 1, TOL, _midpnt, N)
-      local s3, e3 = _qsimp(fni, 0, 1, TOL, _midpnt, N)
-      return s1 + s2 + s3, e1 or e2 or e3
-    end
-  end
-  -- +inf
-  if a > 0 then
-    return _qsimp(fni, 0, 1/a, TOL, _midpnt, N)
-  else
-    local s1, e1 = _qsimp(fni, 0, 1, TOL, _midpnt, N)
-    local s2, e2 = _qsimp(fn, a, 1, TOL, _midpnt, N)
-    return s1 + s2, e1 or e2
-  end
-end
-_about[numeric.int] = {":int(fn, x1_d, x2_d) --> num",
-  "Get integral of the function. Improper integrals with infinite limits are possible."}
-
-
+-- TODO remove?
 numeric.fit = function (_, fn, t0, xs, ys, param)
   local mat = require("matlib.matrix")
   param = param or {}
@@ -458,7 +458,7 @@ numeric.fit = function (_, fn, t0, xs, ys, param)
     local v0 = fn(x, t)
     for i, key in ipairs(keys) do
       local prev = t[key]
-      local diff = math.max(math.abs(prev*1E-3), 1E-8)
+      local diff = math.max(_mabs(prev*1E-3), 1E-8)
       t[key] = prev + diff
       dx[1][i] = (fn(x, t) - v0) / diff
       t[key] = prev  -- restore
@@ -484,15 +484,14 @@ numeric.fit = function (_, fn, t0, xs, ys, param)
     local finish = (tprev ~= nil)
     for i, key in ipairs(keys) do
       tt[key] = tt[key] + dt[i][1]
-      finish = finish and math.abs(dt[i][1]-tprev[i][1]) <= numeric.TOL
+      finish = finish and _mabs(dt[i][1]-tprev[i][1]) <= numeric.TOL
     end
     if finish then
       return tt, true
     end
     tprev = dt
   end
-  _inform("too many iterations")
-  return tt, false
+  return tt, "too many iterations"
 end
 
 
@@ -501,7 +500,7 @@ if Sonata
 then  --=====================
 
   -- short alias
-  INF = math.huge
+  INF = _mhuge
 
 end   --=====================
 
