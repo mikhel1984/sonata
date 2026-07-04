@@ -473,22 +473,35 @@ end
 
 -- Additional functions.
 local calc = {
-  -- hyperbolic cosine
-  -- cosh = function (x) return 0.5*(_mexp(x) + _mexp(-x)) end,
-  -- hyperbolic sine
-  -- sinh = function (x) return 0.5*(_mexp(x) - _mexp(-x)) end,
   -- inverse hyperbolic sine
   asinh = function (x) return _mlog(x + _msqrt(x*x+1)) end,
   -- inverse hyperbolic cosine
   acosh = function (x) return _mlog(x + _msqrt(x*x-1)) end,
   -- inverse hyperbolic tangent
   atanh = function (x) return 0.5*_mlog((1 + x)/(1 - x)) end,
-  -- hyperbolic tangent
-  -- tanh = function (x)
-  --   local t = _mexp(2*x)
-  --   return (t-1)/(t+1)
-  -- end,
 }
+
+
+--- Factorial.
+--  @param n Integer value.
+--  @return factorial value.
+calc.fac = function (n)
+  local prod = 1
+  for i = 2, n do prod = prod * i end
+  return prod
+end
+
+
+--- Combinations.
+--  @param n Total number of elements.
+--  @param k Number of elements in combination.
+--  @return number of combinations.
+calc.comb = function (n, k)
+  local num, denom = 1, 1
+  for i = n, n-k+1, -1 do num = num * i end
+  for i = 2, k do denom = denom * i end
+  return num / denom
+end
 
 
 --============== Queue ================
