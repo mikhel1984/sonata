@@ -227,6 +227,9 @@ type = "polynomial",
 _simp = _numpoly,
 -- parameters
 --STRIP = 1E-12,
+superscript = {
+  "\u{00B9}", "\u{00B2}", "\u{00B3}", "\u{2074}", "\u{2075}",
+  "\u{2076}", "\u{2077}", "\u{2078}", "\u{2079}"},
 }
 
 
@@ -996,6 +999,7 @@ _about[polynomial.spline] = {":spline(xs_t, ys_t) --> Ps_t",
 --  @return String with traditional form of equation.
 polynomial.str = function (self, s)
   s = s or "x"
+  local unicode = SONATA_UNICODE_SYMBOLS and #self <= 9
   local res, a, b = {}, 0, 0
   for i = #self, 1, -1 do
     a, b = self[i], self[i-1]
@@ -1004,7 +1008,9 @@ polynomial.str = function (self, s)
         res[#res+1] = (type(a) == "number" and _utils.numstr(a) or tostring(a)).."*"
       end
       res[#res+1] = s
-      if i > 1 then res[#res+1] = "^"..tostring(i) end
+      if i > 1 then
+        res[#res+1] = unicode and polynomial.superscript[i] or "^"..tostring(i)
+      end
     end
     if type(b) ~= "number" or b > 0 then res[#res+1] = "+" end
   end

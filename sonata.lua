@@ -16,8 +16,8 @@
 --  History and autocomplete (linux)
 --SONATA_READLINE = true
 
---	Unicode symbols for function plot
---SONATA_ASCIIPLOT_UNICODE = true
+--	Unicode symbols for pretty print
+--SONATA_UNICODE_SYMBOLS = true
 
 --  Reserve aliases (keywords)
 --SONATA_PROTECT_ALIAS = true

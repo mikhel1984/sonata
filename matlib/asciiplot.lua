@@ -703,7 +703,7 @@ end
 --- Add coordinate axes.
 asciiplot._axes = function (self)
   local vertical, horizontal, mark, up, right = '|', '-', '+', 'A', '>'
-  if SONATA_ASCIIPLOT_UNICODE then
+  if SONATA_UNICODE_SYMBOLS then
     vertical, horizontal, mark, up, right = '│', '─', '┼', '▲', '▶'
   end
   -- vertical line
