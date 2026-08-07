@@ -219,9 +219,10 @@ local _ext = {
 }
 
 -- categories
-local DIST = 'distribution'
+local DIST = "distribution"
 
-local _exp, _log, _sqrt, _random = math.exp, math.log, math.sqrt, math.random
+local _exp, _log, _sqrt = math.exp, math.log, math.sqrt
+local _floor, _random = math.floor, math.random
 
 --	INFO
 
@@ -236,7 +237,7 @@ __module__ = "Random number generators."
 
 local random = {
 -- mark
-type = 'random', israndom = true,
+type = "random", israndom = true,
 -- from 0 to 1
 _fn = function () return _random() end,
 -- from a to b
@@ -250,7 +251,9 @@ _fnRng = function (_, a, b) return _random(a, b) end,
 --  @return table with random tables or scalar value.
 local function _arrayRest (R, n, ...)
   if n then
-    if n <= 0 then error('expected positive size') end
+    if n <= 0 then
+      error "Expected positive size"
+    end
     local res = {}
     for i = 1, n do res[i] = _arrayRest(R, ...) end
     return res
@@ -267,10 +270,10 @@ end
 local function _genPM (t, rmax)
   rmax = rmax or 0.9999998
   local state = t._state
-  local k = math.floor(state / 127773)
+  local k = _floor(state / 127773)
   state = 16807*(state - k*127773) - 2836*k   -- (16807*state + 2836) % 127773
   state = (state < 0) and (state + 2147483647) or state
-  local j = math.floor(t._iy / 69273666) + 1  -- 1 to 32
+  local j = _floor(t._iy / 69273666) + 1  -- 1 to 32
   t._iy, t._iv[j] = t._iv[j], state
   t._state = state
   local tmp = 4.65661287E-10 * t._iy   -- y / 2147483647
@@ -285,7 +288,7 @@ local function _genPMInit (t, seed)
   if seed < 1 then seed = 1 end
   local iv = {}
   for j = -4, 32 do
-    local k = math.floor(seed / 127773)
+    local k = _floor(seed / 127773)
     seed = 16807*(seed - k*127773) - 2836*k
     if seed < 0 then seed = seed + 2147483647 end
     if j > 0 then iv[j] = seed end
@@ -334,7 +337,7 @@ _about[random.array] = {"R:array(n1, [n2,..]) --> tbl",
 --  @param N Total number of attempts.
 --  @return Random value.
 random.binomial = function (self, dp, N)
-  _ext.special = _ext.special or require('matlib.special')
+  _ext.special = _ext.special or require("matlib.special")
   local gln = _ext.special.gammaln
   local p = (dp < 0.5) and dp or (1 - dp)
   local bnl, am = 0, p*N
@@ -360,7 +363,7 @@ random.binomial = function (self, dp, N)
         y = math.tan(math.pi*self:_fn())
         em = sq*y + am
       until 0.0 <= em and em < (N + 1)
-      em = math.floor(em)
+      em = _floor(em)
       local t = 1.2*sq*(1 + y*y)*_exp(
         og - gln(nil, em+1) - gln(nil, N-em+1) + em*plog + (N-em)*pclog)
     until self:_fn() <= t
@@ -391,7 +394,7 @@ random.cauchy = function (self, dMu, dSigma)
   dMu, dSigma = dMu or 0.0, dSigma or 1.0
   local u = 0
   repeat u = self:_fn() until 0 < u and u < 1
-  return math.tan(math.pi*(u-0.5))*dSigma + dMu
+  return math.tan(math.pi*(u - 0.5))*dSigma + dMu
 end
 _about[random.cauchy] = {"R:cauchy(mu_d=0, sigma_d=1) --> float",
   "Cauchy distributed random numbers.", DIST}
@@ -441,17 +444,17 @@ random.gamma = function (self, iAlpha, dBeta)
     for _ = 1, iAlpha do x = x * self:_fn() end
     x = -_log(x)  -- TODO can be 0?
   else
-    local y, s= 0, 0
     iAlpha = iAlpha - 1  -- reuse
+    local s = _sqrt(2.0*iAlpha + 1.0)
     repeat
+      local y = 0
       repeat
         local v1, v2 = 0, 0
         repeat
           v1 = self:_fn()
-          v2 = 2*self:_fn()-1.0
+          v2 = 2*self:_fn() - 1.0
         until v1 > 0 and v1*v1 + v2*v2 <= 1
         y = v2 / v1
-        s = _sqrt(2.0*iAlpha + 1.0)
         x = s*y + iAlpha
       until x > 0
       local e = (1.0 + y*y)*_exp(iAlpha*_log(x/iAlpha) - s*y)
@@ -502,7 +505,7 @@ random.logistic = function (self, dMu, dSigma)
   dMu, dSigma = dMu or 0.0, dSigma or 1.0
   local s = 0
   repeat s = self:_fn() until 0 < s and s < 1
-  return dMu + 0.551328895421792050*dSigma*_log(s /(1.0 - s))
+  return dMu + 0.551328895421792050*dSigma*_log(s/(1.0 - s))
 end
 _about[random.logistic] = {"R:logistic(mu_d=0, sigma_d=1) --> float",
   "Logistic distributed random value.", DIST}
@@ -527,15 +530,14 @@ _about[random.new] = {":new() --> R",
 --  @dev Deviation.
 --  @return random number.
 random.norm = function (self, dMean, dev)
-  dMean, dev = dMean or 0.0, dev or 1.0
   -- use Box-Muller transform
   local u, v, s = 0, 0, 0
   repeat
-    u = 2*self:_fn()-1
-    v = 2*self:_fn()-1
+    u = 2*self:_fn() - 1
+    v = 2*self:_fn() - 1
     s = u*u + v*v
   until 0 < s and s <= 1
-  return dMean + dev * u * _sqrt(-2*_log(s)/s)
+  return (dMean or 0) + (dev or 0.5) * u * _sqrt(-2*_log(s)/s)
 end
 _about[random.norm] = {"R:norm(mean_d=0, dev_d=1) --> float",
   "Normal distributed random value with the given mean and deviation.", DIST}
@@ -545,7 +547,7 @@ _about[random.norm] = {"R:norm(mean_d=0, dev_d=1) --> float",
 --  @param dLam Lambda.
 --  @return random number.
 random.poisson = function (self, dLam)
-  _ext.special = _ext.special or require('matlib.special')
+  _ext.special = _ext.special or require("matlib.special")
   local gln = _ext.special.gammaln
   local em = -1
   if dLam < 12 then
@@ -563,8 +565,8 @@ random.poisson = function (self, dLam)
         y = math.tan(math.pi * self:_fn())
         em = sq*y + dLam
       until em >= 0
-      em = math.floor(em)
-      local t = 0.9*(1 + y*y)*_exp(em*al - gln(nil, em + 1)-g)
+      em = _floor(em)
+      local t = 0.9*(1 + y*y)*_exp(em*al - gln(nil, em + 1) - g)
     until self:_fn() <= t
   end
   return em
@@ -587,9 +589,10 @@ _about[random.rayleigh] = {"R:rayleigh(sigma_d) --> float",
 
 --- Update random generator seed.
 --  @param N Seed value.
+--  @return random object.
 random.seed = function (self, N)
   N = N or os.time()  -- set 'arbitrary' value by default
-  if rawget(self, 'israndom') then
+  if rawget(self, "israndom") then
     math.randomseed(N)   -- common rand
   else
     random._init(self, N)   -- custom rand

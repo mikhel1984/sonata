@@ -138,11 +138,11 @@ local _num2str = _ext.utils.utils.numstr
 local _binsearch = _ext.utils.utils.binsearch
 
 -- categories
-local GATES = 'gates'
+local GATES = "gates"
 
 -- errors
-local ERR_WRONG_SIZE = 'Different size'
-local ERR_NOT_A_GATE = 'Not a gate object'
+local ERR_WRONG_SIZE = "Different size"
+local ERR_NOT_A_GATE = "Not a gate object"
 
 
 --- Rule for CNOT operation.
@@ -184,7 +184,7 @@ __module__ = "Quantum computing simulation"
 
 --	QUBIT
 
-local qubit = { type = 'qubit' }
+local qubit = { type = "qubit" }
 -- methametods
 qubit.__index = qubit
 
@@ -228,16 +228,16 @@ end
 --  @param state String of the form '|xxx>'.
 --  @return vector, size, index of 1
 local function _parse (state)
-  local s = string.match(state, '^|(.+)>$')
+  local s = string.match(state, "^|(.+)>$")
   s = string.reverse(s or state)
   local n, sum = 0, 1
   for w in string.gmatch(s, ".") do
-    if w == '1' then
+    if w == "1" then
       sum = sum + 2^n
-    elseif w == '0' then
+    elseif w == "0" then
       -- pass
     else
-      error 'Expected 0 or 1'
+      error "Expected 0 or 1"
     end
     n = n + 1
   end
@@ -318,26 +318,26 @@ qubit.__tostring = function (self)
       local v, rst = k, 0
       for i = n, 1, -1 do
         v, rst = math.modf(v * 0.5)
-        bits[i] = (rst > 0.1) and '1' or '0'
+        bits[i] = (rst > 0.1) and "1" or "0"
       end
-      vs[#vs+1] = (type(vk) == 'number') and _num2str(vk) or tostring(vk)
+      vs[#vs+1] = (type(vk) == "number") and _num2str(vk) or tostring(vk)
       acc[#acc+1] = table.concat(bits)
     end
   end
   -- exact value
-  if #acc == 1 and vs[1] == '1' then return string.format('|%s>', acc[1]) end
+  if #acc == 1 and vs[1] == "1" then return string.format("|%s>", acc[1]) end
   -- general
   for i, v in ipairs(vs) do
-    acc[i] = string.format('(%s)|%s>', v, acc[i])
+    acc[i] = string.format("(%s)|%s>", v, acc[i])
   end
-  return table.concat(acc, ' + ')
+  return table.concat(acc, " + ")
 end
 
 
 -- Metamethods
-_about['_ar'] = {"arithmetic: Q1+Q2, Q1-Q2, k*Q, G1*G2, G^n, G()", nil, _help.META}
-_about['_cmp'] = {"comparison: Q1==Q2, Q1~=Q2", nil, _help.META}
-_about['_obj'] = {"object: Q1..Q2, #Q, #G", nil, _help.META}
+_about["_ar"] = {"arithmetic: Q1+Q2, Q1-Q2, k*Q, G1*G2, G^n, G()", nil, _help.META}
+_about["_cmp"] = {"comparison: Q1==Q2, Q1~=Q2", nil, _help.META}
+_about["_obj"] = {"object: Q1..Q2, #Q, #G", nil, _help.META}
 
 
 --- Initialize new qubit system.
@@ -395,10 +395,10 @@ _about[qubit.copy] = {"Q:copy() --> cpy_Q", "Create a copy of the object."}
 qubit.fromVector = function (_, v)
   local n, p = math.modf(math.log(v:rows(), 2))
   if math.abs(p) > 1E-4 then
-    error 'Wrong vector size'
+    error "Wrong vector size"
   end
   if math.abs(v:vec():norm() - 1) > 1E-4 then
-    error 'Unit vector expected'
+    error "Unit vector expected"
   end
   return qubit._new(v, n)
 end
@@ -467,8 +467,8 @@ qubit.__len = qubit.size
 -- constructor call
 setmetatable(qubit, {
 __call = function (_, state)
-  if type(state) == 'number' then
-    assert(_tointeger(state) and state > 0, 'Wrong size')
+  if type(state) == "number" then
+    assert(_tointeger(state) and state > 0, "Wrong size")
     return qubit._rand(state)
   end
   return qubit._new(_parse(state))
@@ -479,7 +479,7 @@ _about[qubit] = {" (state_s|num) --> Q", "Create new qubit.", _help.NEW}
 
 --	QGATE
 
-local qgate = { type = 'qgate' }
+local qgate = { type = "qgate" }
 qgate.__index = qgate
 
 
@@ -487,7 +487,7 @@ qgate.__index = qgate
 --  @param n Number of inputs.
 qubit.gates = function (_, n)
   if n <= 0 or _tointeger(n) == nil then
-    error 'Wrong input number'
+    error "Wrong input number"
   end
   return qgate._new(n)
 end
@@ -500,7 +500,7 @@ _about[qubit.gates] = {":gates(input_n) --> G",
 --  @parma Q Qubit system.
 qgate.__call = function (G, Q)
   if G._n ~= Q._n then
-    error 'Different number of qubits'
+    error "Different number of qubits"
   end
   return qubit._new(G._mat * Q._vec, Q._n)
 end
@@ -512,7 +512,7 @@ end
 --  @return concatenated gates.
 qgate.__mul = function (G1, G2)
   if getmetatable(G1) ~= qgate or getmetatable(G2) ~= qgate then
-    error 'Undefined'
+    error "Undefined"
   end
   assert(G1._n == G2._n, ERR_WRONG_SIZE)
   local res = qgate._new(G1._n)
@@ -535,7 +535,7 @@ end
 --  @return n times concatenated gates.
 qgate.__pow = function (self, n)
   if _tointeger(n) == nil then
-    error 'Integer is expected'
+    error "Integer is expected"
   end
   if n < -1 then
     error "Wrong power"
@@ -549,7 +549,7 @@ qgate.__pow = function (self, n)
     for i = 1, #txt do txt[i] = string.rep(self._txt[i], n) end
   else
     res._mat = _ext.matrix:eye(2^self._n)
-    for i = 1, #txt do txt[i] = ' -' end
+    for i = 1, #txt do txt[i] = " -" end
   end
   return res
 end
@@ -560,9 +560,9 @@ end
 qgate.__tostring = function (self)
   local acc = {}
   for i = self._n, 1, -1 do
-    acc[#acc+1] = string.format('|x%d> %s', i-1, self._txt[i])
+    acc[#acc+1] = string.format("|x%d> %s", i-1, self._txt[i])
   end
-  return table.concat(acc, '\n')
+  return table.concat(acc, "\n")
 end
 
 
@@ -584,9 +584,9 @@ qgate._fill = function (self, lst, s)
   for i = self._n, 1, -1 do
     local gi = lst[i]
     if gi then
-      txt[i] = string.format('%s %s', txt[i], s)
+      txt[i] = string.format("%s %s", txt[i], s)
     else
-      txt[i] = string.format('%s -', txt[i])
+      txt[i] = string.format("%s -", txt[i])
       gi = qgate._I22
     end
     res = res and res:kron(gi) or gi
@@ -663,9 +663,9 @@ qgate.CNOT = function (self, slave_i, master_i)
   self._mat = self._mat and (mat * self._mat) or mat
   -- update view
   local txt = self._txt
-  local sym = {[master_i]='o', [slave_i]='x'}
+  local sym = {[master_i]="o", [slave_i]="x"}
   for i = 1, #txt do
-    txt[i] = string.format('%s %s', txt[i], sym[i] or '-')
+    txt[i] = string.format("%s %s", txt[i], sym[i] or "-")
   end
   return self
 end
@@ -682,7 +682,7 @@ qgate.fromMatrix = function (self, m)
   m = (getmetatable(m) == _ext.matrix) and m or _ext.matrix(m)
   local n = 2^self._n
   if m:rows() ~= m:cols() or m:rows() ~= n then
-    error(string.format('Expected %dx%d matrix', n, n))
+    error(string.format("Expected %dx%d matrix", n, n))
   end
   local tmp = qgate._new(self._n)
   tmp._mat = m
@@ -692,7 +692,7 @@ qgate.fromMatrix = function (self, m)
   end
   local txt = self._txt
   for i = 1, #txt do
-    txt[i] = string.format('%s u', txt[i])
+    txt[i] = string.format("%s u", txt[i])
   end
   self._mat = self._mat and (m * self._mat) or m
   return self
@@ -713,7 +713,7 @@ qgate.fromTable = function (self, t)
     local _, n1,  ind1 = _parse(p[1])
     assert(n1 == self._n, ERR_WRONG_SIZE)
     if acc[ind1] then
-      error(string.format('State %s is not unique', p[1]))
+      error(string.format("State %s is not unique", p[1]))
     end
     local _, n2, ind2 = _parse(p[2])
     assert(n2 == self._n, ERR_WRONG_SIZE)
@@ -722,7 +722,7 @@ qgate.fromTable = function (self, t)
   end
   for i = 1, n do
     if not acc[i] then
-      error('Unknown column '..tostring(i))
+      error("Unknown column "..tostring(i))
     end
   end
   return qgate.fromMatrix(self, mat)
@@ -744,7 +744,7 @@ qgate.H = function (self, ...)
     for i = 1, self._n do g[i] = qgate._H22 end
     p = self._n
   end
-  qgate._fill(self, g, 'H')
+  qgate._fill(self, g, "H")
   self._mat = self._mat * 2^(-0.5*p)
   return self
 end
@@ -794,7 +794,7 @@ qgate.matrix = function (self) return self._mat:copy() end
 --  @return updated gate.
 qgate.P = function (self, phase, ...)
   local m = _ext.matrix {{1, 0}, {0, _ext.complex:E(phase)}}
-  local fn = qgate._makeGate(m, 'P')
+  local fn = qgate._makeGate(m, "P")
   return fn(self, ...)
 end
 qubit.P = qgate.P
@@ -810,19 +810,19 @@ _about[qubit.P] = {"G:P(phase, [ind1, ind2 ...] --> G",
 qgate.R = function (self, axis, angle, ...)
   local m = nil
   angle = 0.5 * angle
-  if axis == 'X' then
+  if axis == "X" then
     local c = math.cos(angle)
     local is = _ext.complex:i(-math.sin(angle))
     m = _ext.matrix {{c, is}, {is, c}}
-  elseif axis == 'Y' then
+  elseif axis == "Y" then
     local c, s = math.cos(angle), math.sin(angle)
     m = _ext.matrix {{c, -s}, {s, c}}
-  elseif axis == 'Z' then
+  elseif axis == "Z" then
     m = _ext.matrix {{_ext.complex:E(-angle), 0}, {0, _ext.complex:E(angle)}}
   else
-    error 'Wrong axis'
+    error "Wrong axis"
   end
-  local fn = qgate._makeGate(m, 'R')
+  local fn = qgate._makeGate(m, "R")
   return fn(self, ...)
 end
 qubit.R = qgate.R
@@ -849,9 +849,9 @@ qgate.SWAP = function (self, i1, i2)
     i1, i2 = i2, i1
   end
   local txt = self._txt
-  local sym = {[i1]='/', [i2]='\\'}
+  local sym = {[i1]="/", [i2]="\\"}
   for i = 1, #txt do
-    txt[i] = string.format('%s %s', txt[i], sym[i] or '-')
+    txt[i] = string.format("%s %s", txt[i], sym[i] or "-")
   end
   return self
 end
@@ -861,32 +861,32 @@ _about[qubit.SWAP] = {"G:SWAP(ind1, ind2) --> upd_G",
 
 
 -- Add gate S.
-qgate.S = qgate._makeGate(qgate._S22, 'S')
+qgate.S = qgate._makeGate(qgate._S22, "S")
 qubit.S = qgate.S
 _about[qubit.S] = {"G:S([ind1, ind2 ...]) --> upd_G", "Add S gate.", GATES}
 
 
 -- Add gate T.
-qgate.T = qgate._makeGate(qgate._T22, 'T')
+qgate.T = qgate._makeGate(qgate._T22, "T")
 qubit.T = qgate.T
 _about[qubit.T] = {"G:T([ind1, ind2 ...]) --> upd_G", "Add T gate.", GATES}
 
 
 -- Add gate X.
-qgate.X = qgate._makeGate(qgate._X22, 'X')
+qgate.X = qgate._makeGate(qgate._X22, "X")
 qgate.NOT = qgate.X
 qubit.X = qgate.X
 _about[qubit.X] = {"G:X([ind1, ind2 ...]) --> upd_G", "Add X gate.", GATES}
 
 
 -- Add gate Y.
-qgate.Y = qgate._makeGate(qgate._Y22, 'Y')
+qgate.Y = qgate._makeGate(qgate._Y22, "Y")
 qubit.Y = qgate.Y
 _about[qubit.Y] = {"G:Y([ind1, ind2 ...]) --> upd_G", "Add Y gate.", GATES}
 
 
 -- Add gate Z.
-qgate.Z = qgate._makeGate(qgate._Z22, 'Z')
+qgate.Z = qgate._makeGate(qgate._Z22, "Z")
 qubit.Z = qgate.Z
 _about[qubit.Z] = {"G:Z([ind1, ind2 ...]) --> upd_G", "Add Z gate.", GATES}
 
