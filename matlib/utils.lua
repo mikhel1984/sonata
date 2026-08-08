@@ -202,6 +202,94 @@ local utils = {
 }
 
 
+-- Hash estimation.
+-- Represent hash as a sequence of integer number from 0 to 93.
+-- The result is mapped to 'visible' ASCII range 33 - 126.
+-- Goal: equal hash for tables with equal elements.
+-- Different hashes between sessions when table has functions or metatables.
+local hash = {
+  -- metamethods
+  mm = {
+    __add = true, __sub = true, __mul = true, __div = true, __mod = true,
+    __pow = true, __unm = true, __idiv = true, __band = true, __bor = true,
+    __bxor = true, __bnot = true, __shl = true, __shr = true, __concat = true,
+    __len = true, __eq = true, __lt = true, __le = true,
+    __index = true, __newindex = true, __call = true,
+  },
+  DEPTH = 10,
+  -- function parameters
+  LEN = 94, PRIME1 = 89, PRIME2 = 83, START = 33,
+}
+
+
+--- Combine hash sequences, save result to first table.
+--  @param h1 First hash sequence.
+--  @param h2 Second hash sequence.
+--  @param shift Positive shift value.
+--  @return updated first table.
+hash.add = function (h1, h2, shift)
+  local p, z = hash.PRIME2, hash.LEN
+  for i = 1, #h1 do
+    local j = (i - 1 + shift) % #h2 + 1
+    -- 83 is other prime less then 94
+    h1[i] = (h1[i]*p + h2[j]) % z
+  end
+  return h1
+end
+
+
+--- Convert object to string, find its hash sequence.
+--  @param s Source object.
+--  @return hash code sequence.
+hash.fromStr = function (s)
+  s = tostring(s)
+  local h = hash.init()
+  local p, z = hash.PRIME1, hash.LEN
+  for i = 1, #s do
+    local j = (i - 1) % #h + 1
+    h[j] = (h[j]*p + string.byte(s, i)) % z
+  end
+  return h
+end
+
+
+--- Prepare table for hash elements.
+--  @return table with zeros.
+hash.init = function () return {0, 0, 0, 0, 0, 0} end
+
+
+--- Find hash sequence for the given object.
+--  @param v Source object.
+--  @param cnt Table depth counter.
+--  @return hash code sequence.
+hash.main = function (v, cnt)
+  return (type(v) == "table" and cnt < hash.DEPTH)
+     and hash.tbl(v, cnt+1)
+      or hash.fromStr(v)
+end
+
+
+--- Find hash sequence for table.
+--  @param v Source object.
+--  @param cnt Table depth counter.
+--  @return hash code sequence.
+hash.tbl = function (v, cnt)
+  local h = hash.init()
+  h[#h] = 1  -- make difference with empty string
+  local shift, mm = 1, hash.mm
+  for k, w in pairs(v) do
+    local h1 = (k == v) and hash.fromStr(k) or hash.main(k, cnt)
+    local h2 = (w == v or mm[k]) and hash.fromStr(w) or hash.main(w, cnt)
+    -- combine
+    hash.add(h, hash.add(h1, h2, shift), 0)
+    shift = shift + 1
+  end
+  local mt = getmetatable(v)
+  if mt then hash.add(h, hash.fromStr(mt), shift) end
+  return h
+end
+
+
 --- Transform sequence of strings to number.
 --  @param t Table with strings.
 --  @return Table with numbers when possible.
@@ -234,6 +322,41 @@ local function _toNumbers (t)
 end
 
 
+--- Generate function from string.
+--  @param sExpr Expression for execution.
+--  @return Function based on the expression.
+utils.Fn = function (sExpr)
+  local a, b = string.match(sExpr, "(.*)->(.+)")
+  if not a then
+    a, b = 'x', sExpr
+  end
+  local fn = versions.loadStr(
+    string.format("return function (%s) return %s end", a, b))
+  return fn and fn()
+end
+
+
+--- Find maximal width for each column, align size.
+--  @param tbl Table with lists of strings.
+--  @param right Alignment to right.
+--  @return list of width.
+utils.align = function (tbl, right)
+  local base = right and '%%%ds' or '%%-%ds'
+  local len = {}
+  for _, row in ipairs(tbl) do
+    for j, str in ipairs(row) do len[j] = math.max(len[j] or 0, #str) end
+  end
+  -- align
+  for j, d in ipairs(len) do
+    local templ = string.format(base, d)
+    for _, row in ipairs(tbl) do
+      row[j] = string.format(templ, row[j])
+    end
+  end
+  return len
+end
+
+
 --- Find element that equal or bigger then the given one.
 --  @param t Table with sorted data.
 --  @param val Value for search.
@@ -259,43 +382,14 @@ utils.binsearch = function (t, val, fn)
 end
 
 
---- Generate function from string.
---  @param sExpr Expression for execution.
---  @return Function based on the expression.
-utils.Fn = function (sExpr)
-  local a, b = string.match(sExpr, "(.*)->(.+)")
-  if not a then
-    a, b = 'x', sExpr
-  end
-  local fn = versions.loadStr(
-    string.format("return function (%s) return %s end", a, b))
-  return fn and fn()
-end
-
-
---- 'Smart' number to string conversation.
---  @param d Number.
---  @return String representation.
-utils.numstr = function (d)
-  local int, frac = _modf(d)
-  local a = _mabs(int)
-  -- short integer
-  if frac == 0 then
-    if a < 1E5 then
-      return string.format('%d', int)
-    end
-  elseif int == 0 then
-    if _mabs(frac) >= 0.01 then
-      return string.format("%.3f", d)
-    end
-  elseif a < 10 then
-    return string.format('%.3f', d)
-  elseif a < 100 then
-    return string.format('%.2f', d)
-  elseif a < 1000 then
-    return string.format('%.1f', d)
-  end
-  return string.format('%.2E', d)
+--- Find hash of the object as a string.
+--  It is designed only to compare different objects in the same session.
+--  @param v Source object.
+--  @return ASCII hash string.
+utils.hash = function (v)
+  local h = hash.main(v, 0)
+  for i = 1, #h do h[i] = h[i] + hash.START end
+  return string.char(versions.unpack(h))
 end
 
 
@@ -309,39 +403,6 @@ utils.lex = function (s)
     if #y > 0 then res[#res+1] = y end
   end
   return _toNumbers(res)
-end
-
-
---- Check sign if possible.
---  @param d Value to check.
---  @return -1, 0 or 1
-utils.sign = function (d)
-  local tp = type(d)
-  if tp == 'number' or (tp == 'table' and d.__lt) then
-    return (d > 0) and 1 or (d < 0) and -1 or 0
-  end
-  return 0
-end
-
-
---- Find maximal width for each column, align size.
---  @param tbl Table with lists of strings.
---  @param right Alignment to right.
---  @return list of width.
-utils.align = function (tbl, right)
-  local base = right and '%%%ds' or '%%-%ds'
-  local len = {}
-  for _, row in ipairs(tbl) do
-    for j, str in ipairs(row) do len[j] = math.max(len[j] or 0, #str) end
-  end
-  -- align
-  for j, d in ipairs(len) do
-    local templ = string.format(base, d)
-    for _, row in ipairs(tbl) do
-      row[j] = string.format(templ, row[j])
-    end
-  end
-  return len
 end
 
 
@@ -397,6 +458,32 @@ utils.packSeq = function (src, i0, ii, acc)
 end
 
 
+--- 'Smart' number to string conversation.
+--  @param d Number.
+--  @return String representation.
+utils.numstr = function (d)
+  local int, frac = _modf(d)
+  local a = _mabs(int)
+  -- short integer
+  if frac == 0 then
+    if a < 1E5 then
+      return string.format('%d', int)
+    end
+  elseif int == 0 then
+    if _mabs(frac) >= 0.01 then
+      return string.format("%.3f", d)
+    end
+  elseif a < 10 then
+    return string.format('%.3f', d)
+  elseif a < 100 then
+    return string.format('%.2f', d)
+  elseif a < 1000 then
+    return string.format('%.1f', d)
+  end
+  return string.format('%.2E', d)
+end
+
+
 --- Check size and pack string.
 --  @param s Source string.
 --  @param acc Accumulator table.
@@ -414,6 +501,18 @@ utils.packStr = function (s, acc)
   else
     error "Too big string, max is 4294967296"
   end
+end
+
+
+--- Check sign if possible.
+--  @param d Value to check.
+--  @return -1, 0 or 1
+utils.sign = function (d)
+  local tp = type(d)
+  if tp == 'number' or (tp == 'table' and d.__lt) then
+    return (d > 0) and 1 or (d < 0) and -1 or 0
+  end
+  return 0
 end
 
 
