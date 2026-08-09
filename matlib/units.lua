@@ -97,7 +97,7 @@ _utils = _utils.utils
 local function _eliminate(t1, t2, pos)
   for k, v in pairs(t2) do
     if t1[k] then
-      local vv = pos and (t1[k] + v) or (t1[k] - v)
+      local vv = t1[k] + (pos and v or -v)
       t1[k] = (vv ~= 0) and vv or nil
       t2[k] = nil
     end
@@ -179,7 +179,7 @@ local function _diff (s1, s2)
   while n1 > 0 and n2 > 0 and sbyte(s1, n1) == sbyte(s2, n2) do
     n1, n2 = n1 - 1, n2 - 1
   end
-  return ssub(s1, 1, n1), ssub(s2, 1, n2), ssub(s1, n1+1)
+  return ssub(s1, 1, n1), ssub(s2, 1, n2), ssub(s1, n1 + 1)
 end
 
 
@@ -207,8 +207,9 @@ local function _expand (U1, U2)
     if not found then q1[k1] = v1 end
   end
   -- add common elements
-  for k, v in pairs(com1) do q1[k] = v end
-  for k, v in pairs(com2) do q2[k] = v end
+  for k, v in pairs(com1) do 
+    q1[k], q2[k] = v, com2[k]
+  end
   U1._key, U2._key = q1, q2
 end
 
@@ -380,13 +381,12 @@ _about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', nil, _help.MET
 
 
 --- Convert object to another units.
---  @param U Unit object.
 --  @param t Table with desired units.
 --  @return New object or nil.
-units._convertKey = function (U, t)
+units._convertKey = function (self, t)
   local dst = units._new(1, '')
   dst._key = t
-  local src = units._deepCopy(U)
+  local src = units._deepCopy(self)
   src._value = 1
   local rat = units.__div(src, dst)
   -- require to check rules
@@ -401,49 +401,45 @@ units._convertKey = function (U, t)
     -- can not find transformation
     dst = nil
   else
-    dst._value = U._value * rat._value
+    dst._value = self._value * rat._value
   end
   return dst
 end
 
 
 --- Copy all keys from the object.
---  @param U Source object.
 --  @return Deep copy.
-units._deepCopy = function (U)
+units._deepCopy = function (self)
   local keys = {}
-  for k, v in pairs(U._key) do keys[k] = v end
-  return setmetatable({_value=U._value, _key=keys}, units)
+  for k, v in pairs(self._key) do keys[k] = v end
+  return setmetatable({_value=self._value, _key=keys}, units)
 end
 
 
 --- Apply rule. When found exclude it from
 --  the unit table.
---  @param U Unit object.
 --  @return Found rule or nil.
-units._expandRules = function (U)
-  local v, ku = nil, nil
+units._expandRules = function (self)
   for k1, u1 in pairs(units.rules) do
+    local v, ku = nil, nil
     -- check
-    if U._key[k1] then
-      ku, v = k1, U._key[k1]
+    if self._key[k1] then
+      ku, v = k1, self._key[k1]
     else
-      for k2, v2 in pairs(U._key) do
+      for k2, v2 in pairs(self._key) do
         local l, r, base = _diff(k1, k2)
-        if #base > 0 and l == '' and units.prefix[r] then
+        if #base > 0 and #l == 0 and units.prefix[r] then
           ku, v = k2, v2
           break
         end
       end
     end
-    -- get if it is found
+    -- apply found units
     if ku then
-      U._key[ku] = nil
+      self._key[ku] = nil
       local res = units._deepCopy(u1)
       res._value = res._value ^ v
-      for a, b in pairs(res._key) do
-        res._key[a] = b * v
-      end
+      for a, b in pairs(res._key) do res._key[a] = b * v end
       return res
     end
   end
@@ -535,11 +531,8 @@ end
 
 
 --- Get absolute value.
---  @param U Unit object.
 --  @return Absolute value.
-units._norm = function (U)
-  return _norm(U._value)
-end
+units._norm = function (self) return _norm(self._value) end
 
 
 --- Parse units expression.
