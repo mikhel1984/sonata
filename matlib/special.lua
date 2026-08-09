@@ -66,6 +66,9 @@ ans = Spec:dawson(3.3)       --3>  0.1598
 local _utils = require("matlib.utils")
 local _tointeger = _utils.versions.toInteger
 
+local _abs, _exp, _log, _sqrt = math.abs, math.exp, math.log, math.sqrt
+local _cos, _sin, _floor = math.cos, math.sin, math.floor
+
 -- constants for gamma approximation
 local _kGamma = {676.5203681218851, -1259.1392167224028, 771.32342877765313,
   -176.61502916214059, 12.507343278686905, -0.13857109526572012,
@@ -79,7 +82,6 @@ local _kGammaln = {76.18009172947146, -86.50532032941677, 24.01409824083091,
 -- doc categories
 local _tag = { GAMMA="gamma", BETA="beta", BESSEL="bessel" }
 
-
 -- error
 local ERR_POSINT = "Non-negative integer order is expected!"
 local ERR_INVARG = "Invalid arguments!"
@@ -89,7 +91,7 @@ local ERR_INVARG = "Invalid arguments!"
 --  @param a Value to return.
 --  @param b Lower bound.
 --  @return Second argument if first is too small.
-local function _lowBound(a, b) return math.abs(a) > b and a or b end
+local function _lowBound(a, b) return _abs(a) > b and a or b end
 
 
 --	INFO
@@ -112,17 +114,17 @@ special.__index = special
 --  @return Representation of Q.
 local function _gcf (N, x)
   local ITMAX, EPS, FPMIN = 100, 3E-7, 1E-30
-  local b, c = x+1.0-N, 1.0/FPMIN
+  local b, c = x + 1.0 - N, 1.0/FPMIN
   local d = 1.0/b
-  local h, an, del = d, nil, nil
+  local h, an = d, nil
   for i = 1, ITMAX do
-    an, b = -i*(i-N), b+2.0
-    d, c = 1.0/_lowBound(an*d+b, FPMIN), _lowBound(b+an/c, FPMIN)
-    del = d*c
+    an, b = -i*(i - N), b + 2.0
+    d, c = 1.0/_lowBound(an*d + b, FPMIN), _lowBound(b + an/c, FPMIN)
+    local del = d*c
     h = h*del
-    if math.abs(del-1.0) < EPS then break end
+    if _abs(del - 1.0) < EPS then break end
   end
-  return math.exp(-x+N*math.log(x)-special:gammaln(N))*h
+  return _exp(-x + N*_log(x) - special:gammaln(N))*h
 end
 
 
@@ -130,7 +132,7 @@ end
 --  @param x Real number.
 --  @return I0(x).
 local function _bessi0 (x)
-  local ax = math.abs(x)
+  local ax = _abs(x)
   if ax < 3.75 then
     local y = x/3.75
     y = y*y
@@ -138,7 +140,7 @@ local function _bessi0 (x)
       + y*(0.360768E-1 + y*0.45813E-2)))))
   else
     local y = 3.75/ax
-    return (math.exp(ax)/math.sqrt(ax))*(0.39894228 + y*(0.1328592E-1
+    return (_exp(ax)/_sqrt(ax))*(0.39894228 + y*(0.1328592E-1
       + y*(0.225319E-2 + y*(-0.157565E-2 + y*(0.916281e-2
       + y*(-0.2057706E-1 + y*(0.2635537E-1 + y*(-0.1647633E-1
       + y*0.392377E-2))))))))
@@ -150,7 +152,7 @@ end
 --  @param x Real number.
 --  @return I1(x).
 local function _bessi1 (x)
-  local ax, ans = math.abs(x), 0
+  local ax, ans = _abs(x), 0
   if ax < 3.75 then
     local y = x/3.75
     y = y*y
@@ -161,7 +163,7 @@ local function _bessi1 (x)
     ans = 0.2282967E-1 + y*(-0.2895312E-1 + y*(0.1787654E-1 - y*0.420059E-2))
     ans = 0.39894228 + y*(-0.3988024E-1 + y*(-0.362018E-2 + y*(0.163801E-2
       + y*(-0.1031555E-1 + y*ans))))
-    ans = ans*(math.exp(ax)/math.sqrt(ax))
+    ans = ans*(_exp(ax)/_sqrt(ax))
   end
   return (x < 0) and -ans or ans
 end
@@ -171,24 +173,23 @@ end
 --  @param x Real number.
 --  @return J0(x).
 local function _bessj0 (x)
-  local ax  = math.abs(x)
-  local ans1, ans2, y = 0, 0, 0
+  local ax  = _abs(x)
   if ax < 8.0 then
-    y = x*x
-    ans1 = 57568490574.0 + y*(-13362590354.0 + y*(651619640.7
+    local y = x*x
+    local ans1 = 57568490574.0 + y*(-13362590354.0 + y*(651619640.7
       + y*(-11214424.18 + y*(77392.33017 - y*184.9052456))))
-    ans2 = 57568490411.0 + y*(1029532985.0 + y*(9494680.718 + y*(59272.64853
+    local ans2 = 57568490411.0 + y*(1029532985.0 + y*(9494680.718 + y*(59272.64853
       + y*(267.8532712 + y))))
     return ans1/ans2
   else
     local z = 8.0/ax
-    y = z*z
-    ans1 = 1.0 + y*(-0.1098628627E-2 + y*(0.2734510407E-4
+    local y = z*z
+    local ans1 = 1.0 + y*(-0.1098628627E-2 + y*(0.2734510407E-4
       + y*(-0.2073370639E-5 + y*0.2093887211E-6)))
-    ans2 = -0.1562499995E-1 + y*(0.1430488765E-3 + y*(-0.6911147651E-5
+    local ans2 = -0.1562499995E-1 + y*(0.1430488765E-3 + y*(-0.6911147651E-5
       + y*(0.7621095161E-6 - y*0.934935152E-7)))
-    local xx = ax-0.785398164
-    return math.sqrt(0.636619772/ax)*(math.cos(xx)*ans1 - z*math.sin(xx)*ans2)
+    y = ax - 0.785398164  -- reuse
+    return _sqrt(0.636619772/ax) * (_cos(y)*ans1 - z*_sin(y)*ans2)
   end
 end
 
@@ -197,24 +198,24 @@ end
 --  @param x Real number.
 --  @return J1(x).
 local function _bessj1 (x)
-  local ax = math.abs(x)
-  local ans1, ans2, y = 0, 0, 0
+  local ax = _abs(x)
   if ax < 8.0 then
-    y = x*x
-    ans1 = x*(72362614232.0 + y*(-7895059235.0 + y*(242396853.1 +
+    local y = x*x
+    local ans1 = x*(72362614232.0 + y*(-7895059235.0 + y*(242396853.1 +
       y*(-2972611.439 + y*(15704.4826 - y*30.16036606)))))
-    ans2 = 144725228442.0 + y*(2300535178.0 + y*(18583304.74
+    local ans2 = 144725228442.0 + y*(2300535178.0 + y*(18583304.74
       + y*(99447.43394 + y*(376.9991397 + y))))
     return ans1/ans2
   else
     local z = 8.0/ax
-    y = z*z
-    ans1 = 1.0 + y*(0.183105E-2 + y*(-0.3516396496E-4 + y*(0.2457520174E-5
+    local y = z*z
+    local ans1 = 1.0 + y*(0.183105E-2 + y*(-0.3516396496E-4 + y*(0.2457520174E-5
       - y*0.240337019E-6)))
-    ans2 = 0.04687499995 + y*(-0.2002690873E-3 + y*(0.8449199096E-5
+    local ans2 = 0.04687499995 + y*(-0.2002690873E-3 + y*(0.8449199096E-5
       + y*(-0.88228987E-6 + y*0.105787412E-6)))
-    local xx = ax-2.356194491
-    ans1 = math.sqrt(0.636619772/ax)*(math.cos(xx)*ans1 - z*math.sin(xx)*ans2)
+    -- reuse
+    y = ax - 2.356194491
+    ans1 = _sqrt(0.636619772/ax) * (_cos(y)*ans1 - z*_sin(y)*ans2)
     return (x >= 0) and ans1 or -ans1
   end
 end
@@ -226,12 +227,12 @@ end
 local function _bessk0 (x)
   if x <= 2.0 then
     local y = x*x/4.0
-    return (-math.log(x/2.0)*_bessi0(x)) + (-0.57721566
+    return -_log(x/2.0)*_bessi0(x) + (-0.57721566
       + y*(0.42278420 + y*(0.23069756 + y*(0.3488590E-1 + y*(0.262698E-2
       + y*(0.10750E-3 + y*0.74E-5))))))
   else
     local y = 2.0/x
-    return (math.exp(-x)/math.sqrt(x))*(1.25331414 + y*(-0.7832358E-1
+    return (_exp(-x)/_sqrt(x))*(1.25331414 + y*(-0.7832358E-1
       + y*(0.2189568E-1 + y*(-0.1062446E-1 + y*(0.587872E-2
       + y*(-0.251540E-2 + y*0.53208E-3))))))
   end
@@ -244,12 +245,12 @@ end
 local function _bessk1 (x)
   if x <= 2.0 then
     local y = x*x/4.0
-    return (math.log(x/2.0)*_bessi1(x)) + (1.0/x)*(1.0
+    return _log(x/2.0)*_bessi1(x) + (1.0/x)*(1.0
       + y*(0.15443144 + y*(-0.67278579 + y*(-0.18156897 + y*(-0.1919402E-1
       + y*(-0.110404E-2 - y*0.4686E-4))))))
   else
     local y = 2.0/x
-    return (math.exp(-x)/math.sqrt(x))*(1.25331414 + y*(0.23498619
+    return (_exp(-x)/_sqrt(x))*(1.25331414 + y*(0.23498619
       + y*(-0.3655620E-1 + y*(0.1504268E-1 + y*(-0.780353E-2 + y*(0.325614E-2
       - y*0.68245E-3))))))
   end
@@ -260,23 +261,22 @@ end
 --  @param x Non-negative number.
 --  @return Y0(x).
 local function _bessy0 (x)
-  local ans1, ans2, y = 0, 0, 0
   if x < 8.0 then
-    y = x*x
-    ans1 = -2957821389.0 + y*(7062834065.0 + y*(-512359803.6 + y*(10879881.29
+    local y = x*x
+    local ans1 = -2957821389.0 + y*(7062834065.0 + y*(-512359803.6 + y*(10879881.29
       + y*(-86327.92757 + y*228.4622733))))
-    ans2 = 40076544269.0 + y*(745249964.8 + y*(7189466.438 + y*(47447.26470
+    local ans2 = 40076544269.0 + y*(745249964.8 + y*(7189466.438 + y*(47447.26470
       + y*(226.1030244 + y))))
-    return ans1/ans2 + 0.636619772*_bessj0(x)*math.log(x)
+    return ans1/ans2 + 0.636619772*_bessj0(x)*_log(x)
   else
     local z = 8.0/x
-    y = z*z
-    ans1 = 1.0 + y*(-0.1098628627E-2 + y*(0.2734510407E-4
+    local y = z*z
+    local ans1 = 1.0 + y*(-0.1098628627E-2 + y*(0.2734510407E-4
       + y*(-0.2073370639E-5 + y*0.2093887211E-6)))
-    ans2 = -0.1562499995E-1 + y*(0.1430488765E-3 + y*(-0.6911147651E-5
+    local ans2 = -0.1562499995E-1 + y*(0.1430488765E-3 + y*(-0.6911147651E-5
       + y*(0.7621095161E-6 - y*0.934945152E-7)))
-    local xx = x - 0.785398164
-    return math.sqrt(0.636619772/x)*(math.sin(xx)*ans1 + z*math.cos(xx)*ans2)
+    y = x - 0.785398164  -- reuse
+    return _sqrt(0.636619772/x)*(_sin(y)*ans1 + z*_cos(y)*ans2)
   end
 end
 
@@ -285,23 +285,22 @@ end
 --  @param x Non-negative number.
 --  @return Y1(x).
 local function _bessy1 (x)
-  local ans1, ans2, y = 0, 0, 0
   if x < 8.0 then
-    y = x*x
-    ans1 = x*(-0.4900604943E13 + y*(0.1275274390E13 + y*(-0.5153438139E11
+    local y = x*x
+    local ans1 = x*(-0.4900604943E13 + y*(0.1275274390E13 + y*(-0.5153438139E11
       + y*(0.7349264551E9 + y*(-0.4237922726E7 + y*0.8511937935E4)))))
-    ans2 = 0.2499580570E14 + y*(0.4244419664E12 + y*(0.3733650367E10
+    local ans2 = 0.2499580570E14 + y*(0.4244419664E12 + y*(0.3733650367E10
       + y*(0.2245904002E8 + y*(0.1020426050E6 + y*(0.3549632885E3 + y)))))
-    return ans1/ans2 + 0.636619772*(_bessj1(x)*math.log(x) - 1.0/x)
+    return ans1/ans2 + 0.636619772*(_bessj1(x)*_log(x) - 1.0/x)
   else
     local z = 8.0/x
-    y = z*z
-    ans1 = 1.0 + y*(0.183105E-2 + y*(-0.3516396496E-4 + y*(0.2457520174E-5
+    local y = z*z
+    local ans1 = 1.0 + y*(0.183105E-2 + y*(-0.3516396496E-4 + y*(0.2457520174E-5
       - y*0.240337019E-6)))
-    ans2 = 0.04687499995 + y*(-0.2002690873E-3 + y*(0.8449199096E-5
+    local ans2 = 0.04687499995 + y*(-0.2002690873E-3 + y*(0.8449199096E-5
       + y*(-0.88228987E-6 + y*0.105787412E-6)))
-    local xx = x - 2.356194491
-    return math.sqrt(0.636619772/x)*(math.sin(xx)*ans1 + z*math.cos(xx)*ans2)
+    y = x - 2.356194491
+    return _sqrt(0.636619772/x)*(_sin(y)*ans1 + z*_cos(y)*ans2)
   end
 end
 
@@ -314,19 +313,19 @@ end
 --  @return Fraction value.
 local function _betacf (a, b, x)
   local MAXIT, EPS, FPMIN = 100, 3E-7, 1E-30
-  local qab, qap, qam = a+b, a+1.0, a-1.0
-  local c, d = 1.0, 1.0/_lowBound(1.0-qab*x/qap, FPMIN)
-  local h, m2, aa, del = d, nil, nil, nil
+  local qab, qap, qam = a + b, a + 1.0, a - 1.0
+  local c, d = 1.0, 1.0/_lowBound(1.0 - qab*x/qap, FPMIN)
+  local h = d
   for m = 1, MAXIT do
-    m2 = 2*m
-    aa = m*(b-m)*x/((qam+m2)*(a+m2))
-    d, c = 1.0/_lowBound(1.0+aa*d, FPMIN), _lowBound(1.0+aa/c, FPMIN)
+    local m2 = 2*m
+    local aa = m*(b - m)*x / ((qam + m2)*(a + m2))
+    d, c = 1.0/_lowBound(1.0 + aa*d, FPMIN), _lowBound(1.0 + aa/c, FPMIN)
     h = h*d*c
-    aa = -(a+m)*(qab+m)*x/((a+m2)*(qap+m2))
-    d, c = 1.0/_lowBound(1.0+aa*d, FPMIN), _lowBound(1.0+aa/c, FPMIN)
-    del = d*c
+    aa = -(a + m)*(qab + m)*x / ((a + m2)*(qap + m2))
+    d, c = 1.0/_lowBound(1.0 + aa*d, FPMIN), _lowBound(1.0 + aa/c, FPMIN)
+    local del = d*c
     h = h*del
-    if math.abs(del-1.0) < EPS then break end
+    if _abs(del - 1.0) < EPS then break end
   end
   return h
 end
@@ -339,17 +338,18 @@ end
 local function _gammaSer (N, x)
   local ITMAX, EPS = 100, 3E-7
   local gamser = 0.0
-  if x <= 0 then assert(x == 0)
+  if x <= 0 then 
+    assert(x == 0)
   else
     local ap, del = N, 1.0/N
     local sum = del
     local gammaln = special.gammaln
     for _ = 1, ITMAX do
-      ap = ap+1
+      ap = ap + 1
       del = del*x/ap
-      sum = sum+del
-      if math.abs(del) < math.abs(sum)*EPS then
-        gamser = sum*math.exp(-x+N*math.log(x)-gammaln(nil, N))
+      sum = sum + del
+      if _abs(del) < _abs(sum)*EPS then
+        gamser = sum*_exp(-x + N*_log(x) - gammaln(nil, N))
         break
       end
     end
@@ -363,16 +363,18 @@ end
 --  @param x Real number.
 --  @return In(x).
 special.besseli = function (_, N, x)
-  if N < 0 or _tointeger(N) == nil then error(ERR_POSINT) end
+  if N < 0 or _tointeger(N) == nil then
+    error(ERR_POSINT)
+  end
   if N == 0 then return _bessi0(x) end
   if N == 1 then return _bessi1(x) end
   if x == 0 then return 0.0 end
   local ACC, BIGNO, BIGNI = 40.0, 1E10, 1E-10
-  local tox = 2.0/math.abs(x)
+  local tox = 2.0/_abs(x)
   local bip, ans, bi = 0.0, 0.0, 1.0
-  for j = 2*(N+math.floor(math.sqrt(ACC*N))), 1, -1 do
-    bi, bip = bip+j*tox*bi, bi
-    if math.abs(bi) > BIGNO then
+  for j = 2*(N + _floor(_sqrt(ACC*N))), 1, -1 do
+    bi, bip = bip + j*tox*bi, bi
+    if _abs(bi) > BIGNO then
       ans = ans*BIGNI
       bi = bi*BIGNI
       bip = bip*BIGNI
@@ -391,29 +393,30 @@ _about[special.besseli] = {":besseli(order_N, x_d) --> num",
 --  @param x Real number.
 --  @return Polynomial value
 special.besselj = function (_, N, x)
-  if N < 0 or _tointeger(N) == nil then error(ERR_POSINT) end
+  if N < 0 or _tointeger(N) == nil then
+    error(ERR_POSINT)
+  end
   if N == 0 then return _bessj0(x) end
   if N == 1 then return _bessj1(x) end
   if x == 0 then return 0 end
   local ACC, BIGNO, BIGNI = 40, 1E10, 1E-10
-  local ax = math.abs(x)
-  local tox = 2.0 / ax
-  local bj, bjm, ans = nil, nil, nil
+  local ax = _abs(x)
+  local tox, ans = 2.0 / ax, 0
   if ax > N then
-    bjm = _bessj0(ax)
-    bj = _bessj1(ax)
-    for i = 1, (N-1) do
-      bj, bjm = i*tox*bj-bjm, bj
+    local bjm = _bessj0(ax)
+    local bj = _bessj1(ax)
+    for i = 1, (N - 1) do
+      bj, bjm = i*tox*bj - bjm, bj
     end
     ans = bj
   else
-    local m = math.floor((N+math.floor(math.sqrt(ACC*N)))/2)*2
+    local m = _floor((N + _floor(_sqrt(ACC*N)))/2)*2
     local jsum, sum = false, 0
     local bjp = 0
-    bj, ans = 1, 0
+    local bj = 1
     for i = m, 1, -1 do
-      bj, bjp = i*tox*bj-bjp, bj
-      if math.abs(bj) > BIGNO then
+      bj, bjp = i*tox*bj - bjp, bj
+      if _abs(bj) > BIGNO then
         bj = bj*BIGNI
         bjp = bjp*BIGNI
         ans = ans*BIGNI
@@ -423,8 +426,7 @@ special.besselj = function (_, N, x)
       jsum = not jsum
       if i == N then ans = bjp end
     end
-    sum = 2.0*sum - bj
-    ans = ans / sum
+    ans = ans/(2*sum - bj)
   end
   return (x < 0.0 and (N % 2)==1) and -ans or ans
 end
@@ -437,13 +439,17 @@ _about[special.besselj] = {":besselj(order_N, x_d) --> num",
 --  @param x Positive value.
 --  @return Kn(x).
 special.besselk = function (_, N, x)
-  if x <= 0 then error("Positive value is expected!") end
-  if N < 0 or _tointeger(N) == nil then error(ERR_POSINT) end
+  if x <= 0 then
+    error "Positive value is expected!"
+  end
+  if N < 0 or _tointeger(N) == nil then
+    error(ERR_POSINT)
+  end
   if N == 0 then return _bessk0(x) end
   if N == 1 then return _bessk1(x) end
   local tox, bkm, bk = 2.0/x, _bessk0(x), _bessk1(x)
-  for j = 1, N-1 do
-    bk, bkm = bkm+j*tox*bk, bk
+  for j = 1, N - 1 do
+    bk, bkm = bkm + j*tox*bk, bk
   end
   return bk
 end
@@ -456,15 +462,19 @@ _about[special.besselk] = {":besselk(order_N, x_d) --> num",
 --  @param x Non-negative real number.
 --  @return Polynomial value
 special.bessely = function (_, n, x)
-  if x <= 0 then error('Positive value is expected!') end
-  if n < 0 or _tointeger(n) == nil then error(ERR_POSINT) end
+  if x <= 0 then
+    error "Positive value is expected!"
+  end
+  if n < 0 or _tointeger(n) == nil then
+    error(ERR_POSINT)
+  end
   if n == 0 then return _bessy0(x) end
   if n == 1 then return _bessy1(x) end
   local tox = 2.0/x
   local by = _bessy1(x)
   local bym = _bessy0(x)
-  for i = 1, (n-1) do
-    by, bym = i*tox*by-bym, by
+  for i = 1, n - 1 do
+    by, bym = i*tox*by - bym, by
   end
   return by
 end
@@ -476,7 +486,7 @@ _about[special.bessely] = {":bessely(order_N, x_d) --> num",
 --  @param z First value.
 --  @param w Second value.
 --  @return B(z,w).
-special.beta = function (_, z, w) return math.exp(special.betaln(_, z, w)) end
+special.beta = function (_, z, w) return _exp(special.betaln(_, z, w)) end
 _about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", _tag.BETA}
 
 
@@ -486,17 +496,17 @@ _about[special.beta] = {":beta(z_d, w_d) --> num", "Beta function.", _tag.BETA}
 --  @param b Second bound.
 --  @return Value of Ix(a,b).
 special.betainc = function (_, x, a, b)
-  if x < 0.0 or x > 1.0 then error("Expected x between 0 and 1!") end
-  local bt = nil
-  if x == 0 or x == 1 then
-    bt = 0.0
-  else
-    bt = math.exp(special:gammaln(a+b) - special:gammaln(a)
-      - special:gammaln(b) + a*math.log(x) + b*math.log(1.0-x))
+  if x < 0.0 or x > 1.0 then
+    error "Expected x between 0 and 1!"
   end
-  return (x < (a+1.0)/(a+b+2.0))
+  local bt = 0.0
+  if not (x == 0 or x == 1) then
+    bt = _exp(special:gammaln(a + b) - special:gammaln(a)
+      - special:gammaln(b) + a*_log(x) + b*_log(1.0 - x))
+  end
+  return (x < (a + 1.0)/(a + b + 2.0))
      and (bt*_betacf(a, b, x)/a)
-      or (1.0-bt*_betacf(b, a, 1.0-x)/b)
+      or (1.0 - bt*_betacf(b, a, 1.0 - x)/b)
 end
 _about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
   "Incomplete beta function Ix(a,b).", _tag.BETA}
@@ -507,7 +517,7 @@ _about[special.betainc] = {":betainc(x_d, a_d, b_d) --> num",
 --  @param w Second argument.
 --  @return log(B(x)).
 special.betaln = function (_, z, w)
-  return special:gammaln(z) + special:gammaln(w) - special:gammaln(z+w)
+  return special:gammaln(z) + special:gammaln(w) - special:gammaln(z + w)
 end
 _about[special.betaln] = {":betaln(z_d, w_d) --> num",
   "Natural logarithm of beta function.", _tag.BETA}
@@ -521,23 +531,23 @@ special.dawson = function (_, x)
   if not special._c_dawson then
     -- List of Dawson function coefficients.
     special._c_dawson = {0, 0, 0, 0, 0, 0}
-    for i = 1, NMAX do special._c_dawson[i] = math.exp(-((2.0*i-1.0)*H)^2) end
+    for i = 1, NMAX do special._c_dawson[i] = _exp(-((2*i - 1)*H)^2) end
   end
-  local xx = math.abs(x)
+  local xx = _abs(x)
   if xx < 0.2 then
     local x2 = x*x
-    return x*(1.0-A1*x2*(1.0-A2*x2*(1.0-A3*x2)))
+    return x*(1.0 - A1*x2*(1.0 - A2*x2*(1.0 - A3*x2)))
   else
-    local n0 = 2*math.floor(0.5*xx/H+0.5)
+    local n0 = 2*_floor(0.5*xx/H + 0.5)
     local xp = xx - n0*H
-    local e1 = math.exp(2.0*xp*H)
-    local e2, d1 = e1*e1, n0+1
-    local d2, sum = d1-2.0, 0.0
+    local e1 = _exp(2*xp*H)
+    local e2, d1 = e1*e1, n0 + 1
+    local d2, sum = d1 - 2.0, 0.0
     for i = 1, NMAX do
-      sum = sum + special._c_dawson[i]*(e1/d1+1.0/(d2*e1))
-      d1, d2, e1 = d1+2.0, d2-2.0, e1*e2
+      sum = sum + special._c_dawson[i]*(e1/d1 + 1.0/(d2*e1))
+      d1, d2, e1 = d1 + 2.0, d2 - 2.0, e1*e2
     end
-    return 0.5641895835*sum*(x>=0 and math.exp(-xp*xp) or -math.exp(-xp*xp))
+    return 0.5641895835*sum*(x >= 0 and _exp(-xp*xp) or -_exp(-xp*xp))
   end
 end
 _about[special.dawson] = {":dawson(x_d) --> num", "Dawson integral."}
@@ -554,9 +564,9 @@ _about[special.erf] = {":erf(x_d) --> num", "Error function."}
 --  @param x Real value.
 --  @return Error value.
 special.erfc = function (_, x)
-  local z = math.abs(x)
-  local t = 1.0 / (1+0.5*z)
-  local ans = t*math.exp(-z*z - 1.26551223 + t*(1.00002368 + t*(0.37409196
+  local z = _abs(x)
+  local t = 1.0 / (1 + 0.5*z)
+  local ans = t*_exp(-z*z - 1.26551223 + t*(1.00002368 + t*(0.37409196
     + t*(0.09678418 + t*(-0.18628806 + t*(0.27886807 + t*(-1.13520398
     + t*(1.48851587 + t*(-0.82215223 + t*0.17087277)))))))))
   return (x >= 0.0) and ans or (2.0 - ans)
@@ -573,39 +583,43 @@ special.expint = function (_, n, x)
   if not (n >= 0 and x >= 0 and not (x == 0 and (n == 0 or n == 1))) then
     error(ERR_INVARG)
   end
-  if n == 0 then return math.exp(-x)/x end
-  local nm1 = n-1
+  if n == 0 then return _exp(-x)/x end
+  local nm1 = n - 1
   if x == 0.0 then return 1.0/nm1 end
   local MAXIT, EULER, FPMIN, EPS = 100, 0.5772156649, 1E-30, 1E-7
   if x > 1.0 then
-    local b, c = x+n, 1.0/FPMIN
+    local b, c = x + n, 1.0/FPMIN
     local d = 1.0 / b
     local h = d
     for i = 1, MAXIT do
-      local a = -i*(nm1+i)
-      b = b+2.0
-      d, c = 1.0/(a*d+b), b+a/c
-      local del = c * d
-      h = h * del
-      if math.abs(del-1.0) < EPS then return h*math.exp(-x) end
+      local a = -i*(nm1 + i)
+      b = b + 2.0
+      d, c = 1.0/(a*d + b), b + a/c
+      local del = c*d
+      h = h*del
+      if _abs(del - 1.0) < EPS then 
+        return h*_exp(-x) 
+      end
     end
   else
-    local ans = (nm1 ~= 0) and 1.0/nm1 or -math.log(x)-EULER
-    local fact, psy, del = 1.0, nil, nil
+    local ans = (nm1 ~= 0) and 1.0/nm1 or (-_log(x) - EULER)
+    local fact, del = 1.0, nil
     for i = 1, MAXIT do
       fact = fact * (-x/i)
       if i ~= nm1 then
-        del = -fact / (i-nm1)
+        del = -fact / (i - nm1)
       else
-        psy = -EULER
-        for ii = 1, nm1 do psy = psy+1.0/ii end
-        del = fact * (-math.log(x)+psy)
+        local psy = -EULER
+        for ii = 1, nm1 do psy = psy + 1.0/ii end
+        del = fact * (-_log(x) + psy)
       end
       ans = ans + del
-      if math.abs(del) < math.abs(ans)*EPS then return ans end
-    end -- for i
-  end -- if x
-  error('Evaluation is failed!')
+      if _abs(del) < _abs(ans)*EPS then 
+        return ans 
+      end
+    end
+  end
+  error "Evaluation is failed!"
 end
 _about[special.expint] = {":expint(pow_N, x_d) --> num",
   "Exponential integral En(x)."}
@@ -616,14 +630,14 @@ _about[special.expint] = {":expint(pow_N, x_d) --> num",
 --  @return G(z).
 special.gamma = function (_, z)
   if z < 0.5 then
-    return math.pi / (math.sin(math.pi*z) * special:gamma(1-z))
+    return math.pi / (_sin(math.pi*z) * special:gamma(1 - z))
   else
-    z = z-1
+    z = z - 1
     local x = 0.99999999999980993
-    for i = 1, #_kGamma do x = x + _kGamma[i]/(z+i) end
+    for i = 1, #_kGamma do x = x + _kGamma[i]/(z + i) end
     local t = z + #_kGamma - 0.5
     -- sqrt(2*pi) = 2.506...
-    return 2.5066282746310002 * t^(z+0.5) * math.exp(-t) * x
+    return 2.5066282746310002 * t^(z + 0.5) * _exp(-t) * x
   end
 end
 _about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", _tag.GAMMA}
@@ -633,15 +647,14 @@ _about[special.gamma] = {":gamma(x_d) --> num", "Gamma function.", _tag.GAMMA}
 --  @param z Positive number.
 --  @return log(gamma(z))
 special.gammaln = function (_, z)
-  local x, y = z, z
-  local tmp = x + 5.5
-  tmp = tmp - (x+0.5)*math.log(tmp)
-  local ser = 1.000000000190015
+  local tmp = z + 5.5
+  tmp = tmp - (z + 0.5)*_log(tmp)
+  local ser, y = 1.000000000190015, z
   for i = 1, #_kGammaln do
-    y = y +1
+    y = y + 1
     ser = ser + _kGammaln[i]/y
   end
-  return -tmp + math.log(2.5066282746310005*ser/x)
+  return -tmp + _log(2.5066282746310005*ser/z)
 end
 _about[special.gammaln] = {":gammaln(x_d) --> num",
   "Natural logarithm of gamma function.", _tag.GAMMA}
@@ -652,8 +665,10 @@ _about[special.gammaln] = {":gammaln(x_d) --> num",
 --  @param x Non-negative value.
 --  @return Value of P(N,x).
 special.gammp = function (_, N, x)
-  if x < 0.0 or N <= 0 then error(ERR_INVARG) end
-  return (x < N+1.0) and _gammaSer(N, x) or 1.0-_gcf(N, x)
+  if x < 0.0 or N <= 0 then
+    error(ERR_INVARG)
+  end
+  return (x < N + 1.0) and _gammaSer(N, x) or (1.0 - _gcf(N, x))
 end
 _about[special.gammp] = {":gammp(order_N, x_d) --> num",
   "Incomplete gamma function P(N,x).", _tag.GAMMA}
@@ -664,8 +679,10 @@ _about[special.gammp] = {":gammp(order_N, x_d) --> num",
 --  @param x Non-negative value.
 --  @return Value of Q(N,x).
 special.gammq = function (_, N, x)
-  if x < 0.0 or N <= 0 then error(ERR_INVARG) end
-  return (x < N+1.0) and 1-_gammaSer(N, x) or _gcf(N, x)
+  if x < 0.0 or N <= 0 then
+    error(ERR_INVARG)
+  end
+  return (x < N + 1.0) and (1 - _gammaSer(N, x)) or _gcf(N, x)
 end
 _about[special.gammq] = {":gammq(order_N, x_d) --> num",
   "Incomplete gamma function Q(N,x) = 1-P(N,x).", _tag.GAMMA}
