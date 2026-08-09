@@ -88,6 +88,10 @@ local _float = _utils.cross.float
 local _norm = _utils.cross.norm
 _utils = _utils.utils
 
+local _format = string.format
+
+local ERR_DIFF_UNITS = "Different units!"
+
 
 --- Combine common elements in tables, add power to the
 --  first table, remove from the second one.
@@ -107,13 +111,13 @@ end
 
 -- Operations with tables of units.
 local _op = {
-['*'] = function(u1, u2)
+["*"] = function(u1, u2)
           for k, v in pairs(u2) do u1[k] = (u1[k] or 0) + v end
         end,
-['/'] = function(u1, u2)
+["/"] = function(u1, u2)
           for k, v in pairs(u2) do u1[k] = (u1[k] or 0) - v end
         end,
-['^'] = function(u, n)
+["^"] = function(u, n)
           for k, v in pairs(u) do u[k] = v*n end
         end
 }
@@ -143,7 +147,7 @@ local mtRules = {}
 
 local units = {
 -- mark
-type = 'units', isunits = true,
+type = "units", isunits = true,
 -- save some results
 _memKeys = {},
 -- rules for unit conversation
@@ -163,8 +167,8 @@ local function _isunits(v) return getmetatable(v) == units end
 --  @param b Second unit object or number.
 --  @return Arguments as units.
 local function _args (a, b)
-  a = _isunits(a) and a or units._new(a, '')
-  b = _isunits(b) and b or units._new(b, '')
+  a = _isunits(a) and a or units._new(a, "")
+  b = _isunits(b) and b or units._new(b, "")
   return a, b
 end
 
@@ -207,7 +211,7 @@ local function _expand (U1, U2)
     if not found then q1[k1] = v1 end
   end
   -- add common elements
-  for k, v in pairs(com1) do 
+  for k, v in pairs(com1) do
     q1[k], q2[k] = v, com2[k]
   end
   U1._key, U2._key = q1, q2
@@ -216,8 +220,8 @@ end
 
 --- Check arguments before assignment.
 mtRules.__newindex = function (t, k, v)
-  assert(_isunits(v), 'Value must be unit object')
-  assert(string.find(k, '[*^/%-+]') == nil, 'Key should not have [*^/]')
+  assert(_isunits(v), "Value must be unit object")
+  assert(string.find(k, "[*^/%-+]") == nil, "Key should not have [*^/]")
   rawset(t, k, v)
 end
 
@@ -227,11 +231,11 @@ end
 mtRules.__tostring = function (t)
   local s = {}
   for k, v in pairs(t) do
-    s[#s+1] = string.format('1 %s\t-> %s', k, tostring(v))
+    s[#s+1] = _format("1 %s\t-> %s", k, tostring(v))
   end
-  return table.concat(s, '\n')
+  return table.concat(s, "\n")
 end
-_about[units.rules] = {'.rules', 'Table of rules for conversation.', _help.OTHER}
+_about[units.rules] = {".rules", "Table of rules for conversation.", _help.OTHER}
 
 
 --- U1 + U2
@@ -240,7 +244,7 @@ _about[units.rules] = {'.rules', 'Table of rules for conversation.', _help.OTHER
 --  @return Sum of unit objects.
 units.__add = function (U1, U2)
   U1, U2 = _args(U1, U2)
-  local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
+  local tmp = assert(units._convertKey(U2, U1._key), ERR_DIFF_UNITS)
   local res = units.copy(U1)
   res._value = res._value + tmp._value
   return res
@@ -296,8 +300,8 @@ end
 --  @param U2 Second unit object.
 --  @return Result of comparison.
 units.__le = function (U1, U2)
-  assert(_isunits(U1) and _isunits(U2), 'Not compatible!')
-  local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
+  assert(_isunits(U1) and _isunits(U2), "Not compatible!")
+  local tmp = assert(units._convertKey(U2, U1._key), ERR_DIFF_UNITS)
   return U1._value <= tmp._value
 end
 
@@ -307,8 +311,8 @@ end
 --  @param U2 Second unit object.
 --  @return Result of comparison.
 units.__lt = function (U1, U2)
-  assert(_isunits(U1) and _isunits(U2), 'Not compatible!')
-  local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
+  assert(_isunits(U1) and _isunits(U2), "Not compatible!")
+  local tmp = assert(units._convertKey(U2, U1._key), ERR_DIFF_UNITS)
   return U1._value < tmp._value
 end
 
@@ -338,9 +342,9 @@ end
 --  @return Power.
 units.__pow = function (self, d)
   d = assert(_float(d), "Wrong power")
-  local res = _isunits(self) and units._deepCopy(self) or units._new(self, '')
+  local res = _isunits(self) and units._deepCopy(self) or units._new(self, "")
   res._value = res._value ^ d
-  _op['^'](res._key, d)
+  _op["^"](res._key, d)
   return res
 end
 
@@ -351,7 +355,7 @@ end
 --  @return Subtraction of objects with the same units.
 units.__sub = function (U1, U2)
   U1, U2 = _args(U1, U2)
-  local tmp = assert(units._convertKey(U2, U1._key), "Different units!")
+  local tmp = assert(units._convertKey(U2, U1._key), ERR_DIFF_UNITS)
   local res = units.copy(U1)
   res._value = res._value - tmp._value
   return res
@@ -361,8 +365,8 @@ end
 --- Units representation as string.
 --  @return Unit value in traditional form.
 units.__tostring = function (self)
-  return string.format('%s %s',
-    type(self._value) == 'number' and _utils.numstr(self._value) or tostring(self._value),
+  return _format("%s %s",
+    type(self._value) == "number" and _utils.numstr(self._value) or tostring(self._value),
     units.u(self))
 end
 
@@ -376,15 +380,15 @@ units.__unm = function (self)
 end
 
 
-_about['_ar'] = {'arithmetic: a+b, a-b, a*b, a/b, a^N', nil, _help.META}
-_about['_cmp'] = {'comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b', nil, _help.META}
+_about["_ar"] = {"arithmetic: a+b, a-b, a*b, a/b, a^N", nil, _help.META}
+_about["_cmp"] = {"comparison: a==b, a~=b, a<b, a<=b, a>b, a>=b", nil, _help.META}
 
 
 --- Convert object to another units.
 --  @param t Table with desired units.
 --  @return New object or nil.
 units._convertKey = function (self, t)
-  local dst = units._new(1, '')
+  local dst = units._new(1, "")
   dst._key = t
   local src = units._deepCopy(self)
   src._value = 1
@@ -453,15 +457,17 @@ end
 --  @return Table of units and next position.
 units._getExpr = function (lst, n)
   local v = lst[n]
-  if v == '(' then
+  if v == "(" then
     -- parse sub-expression
-    local res, m = units._getTerm(lst, n+1)
-    if lst[m] ~= ')' then error('Expected )') end
-    return res, m+1
+    local res, m = units._getTerm(lst, n + 1)
+    if lst[m] ~= ")" then
+      error "Expected )"
+    end
+    return res, m + 1
   elseif v == 1 then
-    return {}, n+1
-  elseif string.find(v, '^%a+$') then
-    return {[v] = 1}, n+1
+    return {}, n + 1
+  elseif string.find(v, "^%a+$") then
+    return {[v] = 1}, n + 1
   end
   error("Wrong unit "..v)
 end
@@ -473,17 +479,17 @@ end
 --  @return Number and the next position.
 units._getNum = function (lst, n)
   local v = lst[n]
-  if v == '(' then
-    local res, m = units._getNum(lst, n+1)
-    assert(lst[m] == ')')
-    return res, m+1
-  elseif v == '-' then
-    local res, m = units._getNum(lst, n+1)
+  if v == "(" then
+    local res, m = units._getNum(lst, n + 1)
+    assert(lst[m] == ")")
+    return res, m + 1
+  elseif v == "-" then
+    local res, m = units._getNum(lst, n + 1)
     return -res, m
-  elseif type(v) ~= 'number' then
-    error("Expected number for power")
+  elseif type(v) ~= "number" then
+    error "Expected number for power"
   end
-  return v, n+1
+  return v, n + 1
 end
 
 
@@ -493,10 +499,10 @@ end
 --  @return Table of units and next position.
 units._getPow = function (lst, n)
   local res, m  = units._getExpr(lst, n)
-  if lst[m] == '^' then
+  if lst[m] == "^" then
     local num = nil
-    num, m = units._getNum(lst, m+1)
-    _op['^'](res, num)
+    num, m = units._getNum(lst, m + 1)
+    _op["^"](res, num)
   end
   return res, m
 end
@@ -508,10 +514,10 @@ end
 --  @return Table of units and next position.
 units._getTerm = function (lst, n)
   local res, m = units._getPow(lst, n)
-  while lst[m] == '*' or lst[m] == '/' do
+  while lst[m] == "*" or lst[m] == "/" do
     -- while get * or / get terms and evaluate
     local sign, tmp = lst[m], nil
-    tmp, m = units._getPow(lst, m+1)
+    tmp, m = units._getPow(lst, m + 1)
     _op[sign](res, tmp)
   end
   return res, m
@@ -541,9 +547,13 @@ units._norm = function (self) return _norm(self._value) end
 units._parse = function (str)
   if #str == 0 then return {} end
   local tokens = _utils.lex(str)
-  if #tokens == 0 then error("Wrong format") end
+  if #tokens == 0 then
+    error "Wrong format"
+  end
   local res, m = units._getTerm(tokens, 1)
-  if m-1 ~= #tokens then error("Wrong format") end
+  if m - 1 ~= #tokens then
+    error "Wrong format"
+  end
   return res
 end
 
@@ -552,11 +562,11 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 units._pack = function (self, acc)
-  local t = {string.pack('B', acc['units'])}
+  local t = {string.pack("B", acc["units"])}
   -- value
-  if type(self._value) == 'number' then
+  if type(self._value) == "number" then
     t[#t+1] = _utils.packNum(self._value, acc)
-  elseif type(self._value) == 'table' and self._value._pack then
+  elseif type(self._value) == "table" and self._value._pack then
     t[#t+1] = self._value:_pack(acc)
   else
     error "Unable to pack"
@@ -566,7 +576,7 @@ units._pack = function (self, acc)
     t[#t+1] = _utils.packStr(k, acc)
     t[#t+1] = _utils.packNum(v, acc)
   end
-  t[#t+1] = '\0'
+  t[#t+1] = "\0"
   return table.concat(t)
 end
 
@@ -579,10 +589,11 @@ end
 --  @return Units object.
 units._unpack = function (src, pos, acc, ver)
   local val, n, t, nm = nil, nil, {}, nil
-  n, pos = string.unpack('B', src, pos)
+  local sbyte, sunpack = string.byte, string.unpack
+  n, pos = sunpack("B", src, pos)
   local key = acc[n]
-  if type(key) == 'string' then
-    if string.byte(key, 1) == 0x26 then
+  if type(key) == "string" then
+    if sbyte(key, 1) == 0x26 then
       val, pos = _utils.unpackNum(src, pos, key, ver)
     else
       acc[n] = require("matlib."..key)
@@ -591,14 +602,14 @@ units._unpack = function (src, pos, acc, ver)
   else
     val, pos = key._unpack(src, pos, acc, ver)
   end
-  while string.byte(src, pos) ~= 0 do
-    n, pos = string.unpack('B', src, pos)
+  while sbyte(src, pos) ~= 0 do
+    n, pos = sunpack("B", src, pos)
     nm, pos = _utils.unpackStr(src, pos, acc[n], ver)
-    n, pos = string.unpack('B', src, pos)
+    n, pos = sunpack("B", src, pos)
     n, pos = _utils.unpackNum(src, pos, acc[n], ver)
     t[nm] = n
   end
-  return setmetatable({_value=val, _key=t}, units), pos+1
+  return setmetatable({_value=val, _key=t}, units), pos + 1
 end
 
 
@@ -611,8 +622,8 @@ units.convert = function (self, s)
   end
   return units._convertKey(self, units._memKeys[s])
 end
-_about[units.convert] = {'U:convert(new_s) --> upd_U|nil',
-  'Convert one units to another, return new object or nil.'}
+_about[units.convert] = {"U:convert(new_s) --> upd_U|nil",
+  "Convert one units to another, return new object or nil."}
 
 
 --- Create copy of the element.
@@ -620,8 +631,8 @@ _about[units.convert] = {'U:convert(new_s) --> upd_U|nil',
 units.copy = function (self)
   return setmetatable({_value=self._value, _key=self._key}, units)
 end
-_about[units.copy] = {'U:copy() --> cpy_U',
-  'Create copy of the element.', _help.OTHER}
+_about[units.copy] = {"U:copy() --> cpy_U",
+  "Create copy of the element.", _help.OTHER}
 
 
 --- Convert table of units into string.
@@ -630,30 +641,30 @@ units.u = function (self)
   local num, denom = {}, {}
   for k, v in pairs(self._key) do
     if v > 0 then
-      num[#num+1] = (v ~= 1) and string.format('%s^%s', k, tostring(v)) or k
+      num[#num+1] = (v ~= 1) and _format("%s^%s", k, tostring(v)) or k
     else
       denom[#denom+1] =
-        (v ~= -1) and string.format('%s^%s', k, tostring(-v)) or k
+        (v ~= -1) and _format("%s^%s", k, tostring(-v)) or k
     end
   end
   -- reuse num, denom
   if #num > 0 then
     num = (#num > 1)
-      and string.format(#denom > 0 and '(%s)' or '%s', table.concat(num, '*'))
+      and _format(#denom > 0 and "(%s)" or "%s", table.concat(num, "*"))
       or num[1]
   else
-    num = ''
+    num = ""
   end
   if #denom > 0 then
-    denom = (#denom > 1) and string.format('(%s)', table.concat(denom, '*'))
+    denom = (#denom > 1) and _format("(%s)", table.concat(denom, "*"))
           or denom[1]
-    num = (#num > 0) and num..'/' or '1/'
+    num = (#num > 0) and num.."/" or "1/"
   else
-    denom = ''
+    denom = ""
   end
-  return num .. denom
+  return num..denom
 end
-_about[units.u] = {'U:u() --> str', 'Get units.'}
+_about[units.u] = {"U:u() --> str", "Get units."}
 
 
 -- prefix list
@@ -680,18 +691,18 @@ units.prefix = {
   Z = 1e+21,  -- zetta
   Y = 1e+24,  -- yotta
 }
-_about[units.prefix] = {'.prefix',
-  'Table of possible prefixes for units.', _help.OTHER}
+_about[units.prefix] = {".prefix",
+  "Table of possible prefixes for units.", _help.OTHER}
 
 
 -- Print prefix table
 setmetatable(units.prefix, {
 __tostring = function (t)
   local s = {}
-  for k, v in pairs(t) do
-    s[#s+1] = string.format('%s = %g', k, v)
-  end
-  return table.concat(s, '\n')
+  for k, v in pairs(t) do s[#s+1] = {k, v} end
+  table.sort(s, function (x, y) return x[2] < y[2] end)
+  for i, v in ipairs(s) do s[i] = _format("%s = %g", v[1], v[2]) end
+  return table.concat(s, "\n")
 end})
 
 
@@ -703,11 +714,11 @@ __call = function (_, v, s)
   else
     v, s = 1, v
   end
-  assert(type(s) == 'string', 'Wrong unit type')
+  assert(type(s) == "string", "Wrong unit type")
   return units._new(v, s)
 end})
-_about[units] = {' (val=1, name_s) --> new_U',
-  'Create new elements with units.', _help.NEW}
+_about[units] = {" (val=1, name_s) --> new_U",
+  "Create new elements with units.", _help.NEW}
 
 
 -- Comment to remove descriptions
@@ -717,4 +728,3 @@ return units
 
 --==================================================
 --TODO add some predefined rules
---TODO sort prefix print
