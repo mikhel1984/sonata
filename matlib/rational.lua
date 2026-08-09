@@ -102,6 +102,8 @@ _utils = _utils.utils
 
 local _abs, _modf = math.abs, math.modf
 
+local CONTINUATED = "continuated frac"
+
 
 --- Check if the element is huge
 --  @param v Variable.
@@ -114,9 +116,9 @@ local function _isbig(v) return type(v) == "number" and _abs(v) > 1E10 end
 --  @return same object or some number
 local function _numrat(R)
   local a, b = R._[1], R._[2]
-  return _cross.eq(b, 1) and _cross.simp(a)               -- x / 1
+  return _cross.eq(b, 1) and _cross.simp(a)       -- x / 1
     -- float num or denom
-    or (_isbig(a) or _isbig(b)) and (a / b)
+    or (_isbig(a) or _isbig(b)) and (a/b)
     or R
 end
 
@@ -136,9 +138,7 @@ __tostring = function (t)
   for i = 1, #t do
     res[#res+1] = "+1/("..tostring(t[i])
   end
-  return string.format("%s%s", 
-    table.concat(res),
-    #t > 0 and "..)" or "")
+  return table.concat(res)..(#t > 0 and " ..)" or "")
 end
 }
 
@@ -150,8 +150,6 @@ local _help = SonataHelp or {}
 local _about = {
 __module__ = "Computations with rational numbers."
 }
-
-local CONTINUATED = "continuated frac"
 
 
 --	MODULE
@@ -178,9 +176,9 @@ local function _isrational(v) return getmetatable(v) == rational end
 local function _cont2rat (t)
   local a, b = 0, 1
   for i = #t, 1, -1 do
-    b, a = t[i] * b + a, b
+    b, a = t[i]*b + a, b
   end
-  return t[0] * b + a, b
+  return t[0]*b + a, b
 end
 
 
@@ -199,7 +197,7 @@ rational.__add = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return _numrat(rational._new(r1[1]*r2[2]+r1[2]*r2[1], r1[2]*r2[2]))
+  return _numrat(rational._new(r1[1]*r2[2] + r1[2]*r2[1], r1[2]*r2[2]))
 end
 
 
@@ -211,10 +209,10 @@ rational.__div = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
     local p = _cross.convert(R1, R2)
     if p then
-      return R1 / p
+      return R1/p
     else
       p = _cross.convert(R2, R1)
-      return p and (p / R2) or (_cross.float(R1) / _cross.float(R2))
+      return p and (p/R2) or (_cross.float(R1)/_cross.float(R2))
     end
   end
   local r1, r2 = R1._, R2._
@@ -268,7 +266,7 @@ rational.__le = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return (r1[1]*r2[2]) <= (r2[1]*r1[2])
+  return r1[1]*r2[2] <= r2[1]*r1[2]
 end
 
 
@@ -291,7 +289,7 @@ rational.__lt = function (R1, R2)
     end
   end
   local r1, r2 = R1._, R2._
-  return (r1[1]*r2[2]) < (r2[1]*r1[2])
+  return r1[1]*r2[2] < r2[1]*r1[2]
 end
 
 
@@ -303,10 +301,10 @@ rational.__mul = function (R1, R2)
   if not (_isrational(R1) and _isrational(R2)) then
     local p = _cross.convert(R1, R2)
     if p then
-      return R1 * p
+      return R1*p
     else
       p = _cross.convert(R2, R1)
-      return p and (p * R2) or (_cross.float(R1) * _cross.float(R2))
+      return p and (p*R2) or (_cross.float(R1)*_cross.float(R2))
     end
   end
   local r1, r2 = R1._, R2._
@@ -332,9 +330,9 @@ rational.__pow = function (R1, R2)
     end
     local r1 = R1._
     if R2 >= 0 then
-      return _numrat(rational._new(r1[1]^R2, r1[2]^R2))
+      return _numrat(rational._newSimp(r1[1]^R2, r1[2]^R2))
     else
-      return _numrat(rational._new(r1[2]^R2, r1[1]^R2))
+      return _numrat(rational._newSimp(r1[2]^R2, r1[1]^R2))
     end
   end
 end
@@ -382,7 +380,7 @@ end
 
 --- -R
 --  @preturn Opposite rational number.
-rational.__unm = function (self) return rational._new(-self._[1], self._[2]) end
+rational.__unm = function (self) return rational._newSimp(-self._[1], self._[2]) end
 
 
 _about["_ar"] = {"arithmetic: a+b, a-b, a*b, a/b, -a, a^b", nil, _help.META}
@@ -394,7 +392,16 @@ _about["_cmp"] = {"comparison: a<b, a<=b, a>b, a>=b, a==b, a~=b", nil, _help.MET
 --  @return Rational number of false.
 rational._convert = function (v)
   return (type(v) == "number" and _tointeger(v) ~= nil or type(v) == "table" and v.__mod)
-         and rational._new(v, 1)
+         and rational._newSimp(v, 1)
+end
+
+
+--- The greatest common divisor.
+--  @param va First integer.
+--  @param vb Second integer.
+--  @return Greatest common divisor.
+rational._gcd = function (va, vb)
+  return _cross.isZero(va) and vb or rational._gcd(vb % va, va)
 end
 
 
@@ -410,6 +417,15 @@ rational._isZero = function (self) return _cross.isZero(self._[1]) end
 rational._new = function (vn, vd)
   local g = rational._gcd(vd, vn)     -- inverse order move sign to denominator
   return setmetatable({_ = {vn/g, vd/g}}, rational)
+end
+
+
+--- Create new object without GCD call.
+--  @param vn Numerator.
+--  @param vd Denominator.
+--  @return New rational object.
+rational._newSimp = function (vn, vd)
+  return setmetatable({_ = {vn, vd}}, rational)
 end
 
 
@@ -429,7 +445,7 @@ end
 --  @return Rational object.
 rational._unpack = function (src, pos, acc, ver)
   local t, p = _utils.unpackSeq(2, src, pos, acc, ver)
-  return rational._new(t[1], t[2]), p
+  return rational._newSimp(t[1], t[2]), p
 end
 
 
@@ -444,7 +460,7 @@ _about[rational.denom] = {"R:denom() --> var",
 --  @return Decimal fraction.
 rational.float = function (self)
   local r = self._
-  return (r[1] < 0 and -1 or 1) * (_cross.norm(r[1]) / _cross.norm(r[2]))
+  return (r[1] < 0 and -1 or 1) * (_cross.norm(r[1])/_cross.norm(r[2]))
 end
 _about[rational.float] = {"R:float() --> num",
   "Return rational number as decimal."}
@@ -494,15 +510,6 @@ rational.fromCF = function (_, t)
 end
 _about[rational.fromCF] = {":fromCF(coeff_t) --> R",
   "Transform continued fraction to rational number.", CONTINUATED}
-
-
---- The greatest common divisor.
---  @param va First integer.
---  @param vb Second integer.
---  @return Greatest common divisor.
-rational._gcd = function (va, vb)
-  return _cross.isZero(va) and vb or rational._gcd(vb % va, va)
-end
 
 
 --- Get numerator.
