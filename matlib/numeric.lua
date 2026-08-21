@@ -35,6 +35,10 @@ ans = d                     --.3>  math.pi
 b = Num:der(math.sin, 0)
 ans = b                     --.0>  1
 
+-- derivative with Riders' method
+b = Num:derRidders(math.cos, 0)
+ans = b                     --.2>  0
+
 -- numeric limit
 fn = function (x) return math.sin(x) / x end
 ans = Num:lim(fn, 0)        --.3>  1.0
@@ -245,25 +249,54 @@ _about[numeric.EPS] = {"EPS", "Minimal float point number."}
 _about[numeric.FMAX] = {"FMAX", "Maximal float point number."}
 
 
---- Simple derivative.
+--- Simple derivative using central difference.
 --  @param fn Function f(x).
---  @param d Parameter.
+--  @param x Variable.
 --  @return Numerical approximation of the derivative value and optional error message.
-numeric.der = function (_, fn, d)
+numeric.der = function (_, fn, x)
   local dx = 2e-2
-  local der, last = (fn(d+dx) - fn(d-dx)) / (2*dx), nil
+  local der, last = (fn(x+dx) - fn(x-dx)) / (2*dx), nil
   repeat
     local d2 = dx
     dx = dx * 0.5
-    der, last = (fn(d+dx) - fn(d-dx)) / d2, der
+    der, last = (fn(x+dx) - fn(x-dx)) / d2, der
     if dx < numeric.SMALL then
-      return der, "derivative not found"
+      return der, "step limit over"
     end
   until _norm(der-last) < numeric.TOL
   return der
 end
 _about[numeric.der] = {":der(fn, x_d) --> num, [err]",
   "Calculate the derivative value for the given function."}
+
+
+--- Find derivative use Ridders' method.
+--  It is more precise and robust, but less quick.
+--  @param fn Function f(x).
+--  @param x Variable.
+--  @return Numerical approximation of the derivative value and optional error message.
+numeric.derRidders = function (_, fn, x)
+  local h = 1E-2
+  local acc, prev = { (fn(x + h) - fn(x - h))/(2*h) }, {}
+  repeat
+    prev, acc = acc, prev
+    h = h*0.5
+    if h < numeric.SMALL then
+      return acc[#acc], "step limit over"
+    end
+    -- A(1, n)
+    acc[1] = (fn(x + h) - fn(x - h))/(2*h)
+    -- A(i, n-i+1)
+    local k = 1.0
+    for i = 2, #prev+1 do
+      k = k*4.0
+      acc[i] = (k*acc[i-1] - prev[i-1])/(k - 1)
+    end
+  until _norm(acc[#acc] - acc[#acc-1]) < numeric.TOL
+  return acc[#acc]
+end
+_about[numeric.derRidders] = {":derRidders(fn, x_d) --> num, [err]",
+  "Calculate derivative of the function using Ridders' method."}
 
 
 --- Integration using Simpson method.
