@@ -82,9 +82,13 @@ generator.doc = function (locName, tModules)
     'H3 {text-align:center;}',
     'P {line-height:1.3;}',
     'UL {column-count: 4; border: 2px solid blue; border-radius: 5px; padding: 5px 5px 5px 30px;}',
-    'DIV {margin-left: 10px;}',
-    '.EXAMPLE {border: 2px solid blue; border-radius: 5px; background: lightgrey; padding: 15px; margin: 10px 0px; color:navy; }',
-    '.DESCRIPT {text-align:center; font-style:italic; }',
+    'body > DIV {margin-left: 10px;}',
+    '.DESCRIPT, .descript {text-align:center; font-style:italic; }',
+    '.mod-body {display: flex; gap: 16px; align-items: flex-start;}',
+    '.mod-fns, .mod-ex {flex: 1 1 0; min-width: 0;}',
+    '.mod-fns {max-height: calc(100vh - 8em); overflow: auto;}',
+    '.mod-fns P {margin: 0;}',
+    'pre.example, .EXAMPLE {border: 2px solid blue; border-radius: 5px; background: lightgrey; padding: 15px; margin: 0; color:navy; max-height: calc(100vh - 8em); overflow: auto;}',
     '</style>',
     '<a name="Top"></a>',
     sformat('<div><h1 align="center">Sonata v.%d.%02d</h1>', Sonata.MAJOR_V, Sonata.MINOR_V),
@@ -118,9 +122,11 @@ generator.doc = function (locName, tModules)
     res[#res+1] = sformat('<h3># %s (%s) #</h3>', v, k)
     local functions, description = docLines(k, v, lng)
     res[#res+1] = sformat('<p class="descript">%s</p>', description)
-    res[#res+1] = sformat('<p>%s</p>', functions)
+    res[#res+1] = '<div class="mod-body">'
+    res[#res+1] = sformat('<div class="mod-fns"><p>%s</p></div>', functions)
     local fstr = Help.readAll(sformat('%s%s%s.lua', LIB, Help.SEP, k))
-    res[#res+1] = docExample(Test.getCode(fstr))
+    res[#res+1] = sformat('<div class="mod-ex">%s</div>', docExample(Test.getCode(fstr)) or '')
+    res[#res+1] = '</div>'
     res[#res+1] = '<a href="#Top">Top</a></div>'
   end
 
