@@ -24,9 +24,9 @@ ans = (x == y)                -->  false
 
 -- parse expressions
 e1, e2 = Sym('x+y, x*y')
-ans = e1                      --> y+x
+ans = e1                      -->  y+x
 
-ans = e2                      --> y*x
+ans = e2                      -->  y*x
 
 -- sum
 ans = x + 2*y - x + y         -->  3*y
@@ -45,20 +45,20 @@ ans = S:eval{x=2, y=1}        -->  3
 foo = function (x, y) return x^y end
 ans = foo(y, x)               -->  y^x
 
--- numeric value
-ans = foo(2, 3)  -->  8
-
 -- expand
 ans = S:expand()              -->  x*x-y*y
 
 -- derivative
-ans = (x^3-Sym:sin(2*x)):diff(x)       -->  3.0*x*x-2*Sym:cos(2*x)
+ans = (x^3-Sym:sin(2*x)):diff(x)     -->  3.0*x*x-2*Sym:cos(2*x)
+
+-- partial derivative
+ans = foo(x, y):diff(y, 2)    -->  x^y*Sym:log(x)^2
 
 -- parts
 S1 = (x-y)/(x+y)
-ans = S1:ratNum()                -->  x-y
+ans = S1:ratNum()             -->  x-y
 
-ans = S1:ratDenom()              --> x+y
+ans = S1:ratDenom()           -->  x+y
 
 -- internal structure
 print(S1:struct())
@@ -78,6 +78,7 @@ local _tag = { STRUCT="structure", TRANSFORM="transformation" }
 
 local symbolic = _ext.tf
 local _parents = symbolic._parentList
+local _tinsert = table.insert
 
 
 --- Check object type.
@@ -86,11 +87,9 @@ local _parents = symbolic._parentList
 local function _issymbolic(v) return getmetatable(v) == symbolic end
 
 
-local function _compatible (v)
-  return type(v) == "number" or type(v) == "table" and (v.float or v.re)
-end
-
-
+--- Check function argument. 
+--  Raise error when incompatible.
+--  @param v Value to check.
 local function _checkarg(v)
   if not (_issymbolic(v) 
     or type(v) == "number" 
@@ -101,6 +100,11 @@ local function _checkarg(v)
 end
 
 
+--- Declare rules for specific function.
+--  @param name Function name.
+--  @param fn Numeric Lua function.
+--  @param deriv List of partial derivatives for each function argument.
+--  @return Function that generates symbolic expression.
 local function _wrapFn (name, fn, deriv)
   -- register
   symbolic._fnList[name] = fn
@@ -247,7 +251,7 @@ PARSER.prim = function (lst, n)
       if lst[n] ~= ")" then error ("expected ')'") end
       -- add function
       if not symbolic._fnList[v] then symbolic._fnList[v] = {} end
-      table.insert(t, 1, v)
+      _tinsert(t, 1, v)
       return symbolic:_newExpr(_parents.funcValue, t), n + 1
     else
       return symbolic:_newSymbol(v), n + 1
@@ -271,15 +275,15 @@ symbolic.__add = function (S1, S2)
   local res = symbolic:_newExpr(_parents.sum, {})
   -- S1
   if _issymbolic(S1) and S1._parent == _parents.sum then
-    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+    for _, v in ipairs(S1._) do _tinsert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {S1, 1})
+    _tinsert(res._, {S1, 1})
   end
   -- S2
   if _issymbolic(S2) and S2._parent == _parents.sum then
-    for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
+    for _, v in ipairs(S2._) do _tinsert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {S2, 1})
+    _tinsert(res._, {S2, 1})
   end
   res = res:pSimp()
   if _issymbolic(res) then
@@ -298,15 +302,15 @@ symbolic.__div = function (S1, S2)
   local res = symbolic:_newExpr(_parents.product, {})
   -- S1
   if _issymbolic(S1) and S1._parent == _parents.product then
-    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+    for _, v in ipairs(S1._) do _tinsert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {S1, 1})
+    _tinsert(res._, {S1, 1})
   end
   -- S2
   if _issymbolic(S2) and S2._parent == _parents.product then
-    for _, v in ipairs(S2._) do table.insert(res._, {v[1], -v[2]}) end
+    for _, v in ipairs(S2._) do _tinsert(res._, {v[1], -v[2]}) end
   else
-    table.insert(res._, {S2, -1})
+    _tinsert(res._, {S2, -1})
   end
   res = res:pSimp()
   if _issymbolic(res) then
@@ -341,15 +345,15 @@ symbolic.__mul = function (S1, S2)
   local res = symbolic:_newExpr(_parents.product, {})
   -- S1
   if _issymbolic(S1) and S1._parent == _parents.product then
-    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+    for _, v in ipairs(S1._) do _tinsert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {S1, 1})
+    _tinsert(res._, {S1, 1})
   end
   -- S2
   if _issymbolic(S2) and S2._parent == _parents.product then
-    for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
+    for _, v in ipairs(S2._) do _tinsert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {S2, 1})
+    _tinsert(res._, {S2, 1})
   end
   res = res:pSimp()
   if _issymbolic(res) then
@@ -391,15 +395,15 @@ symbolic.__sub = function (S1, S2)
   local res = symbolic:_newExpr(_parents.sum, {})
   -- S1
   if _issymbolic(S1) and S1._parent == _parents.sum then
-    for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
+    for _, v in ipairs(S1._) do _tinsert(res._, {v[1], v[2]}) end
   else
-    table.insert(res._, {S1, 1})
+    _tinsert(res._, {S1, 1})
   end
   -- S2
   if _issymbolic(S2) and S2._parent == _parents.sum then
-    for _, v in ipairs(S2._) do table.insert(res._, {v[1], -v[2]}) end
+    for _, v in ipairs(S2._) do _tinsert(res._, {v[1], -v[2]}) end
   else
-    table.insert(res._, {S2, -1})
+    _tinsert(res._, {S2, -1})
   end
   res = res:pSimp()
   if _issymbolic(res) then
@@ -412,9 +416,7 @@ end
 --- String representation.
 --  @param S Symbolic object.
 --  @return String.
-symbolic.__tostring = function (S)
-  return S._parent.pStr(S, true)  -- true for full version of fn
-end
+symbolic.__tostring = function (S) return S._parent.pStr(S) end
 
 
 --- -S
@@ -440,6 +442,7 @@ _about["_cmp"] = {"comparison: a==b, a~=b", nil, _help.META}
 
 --- Find derivative dS1/dS2.
 --  @param S2 Variable.
+--  @param n (=1) Order.
 --  @return Derivative.
 symbolic.diff = function (self, S2, n)
   n = n or 1

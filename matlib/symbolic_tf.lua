@@ -87,10 +87,8 @@ end
 
 -- Combine 'common' methods
 local common = {
-
   -- Return false always.
   skip = function () return false end,
-
 } -- common
 
 
@@ -178,7 +176,6 @@ common.rawsetPair = function (S, v, n, m, q, ...)
 end
 
 
-
 --- Find signature of an object based on list of pairs.
 --  @param S Symbolic object.
 --  @return true when update signature.
@@ -203,7 +200,6 @@ common.signaturePairs = function (S)
   S._sign = sum
   return true
 end
-
 
 
 --- Simplify list of pairs (in place).
@@ -311,7 +307,6 @@ parents.funcValue.pEq = function (S1, S2)
 end
 
 
-
 parents.funcValue.pRawGet = function (S, n, ...)
   if n == nil then return S end
   if n <= #S._ then return S._[n]:pRawGet(...) end
@@ -333,6 +328,10 @@ parents.funcValue.pRawSet = function (S, v, n, m, ...)
 end
 
 
+--- Differentiate function.
+--  @param S1 Symbol list for function call.
+--  @param S2 Variable.
+--  @return Derivative.
 parents.funcValue.pDiff = function (S1, S2)
   local res = 0
   local args = _move(S1._, 2, #S1._, 1, {})
@@ -390,7 +389,7 @@ parents.funcValue.pInternal = function (S, n)
   local t = {string.format("%sCALL %s", string.rep(" ", n), S._[1])}
   for i = 2, #S._ do
     local v = S._[i]
-    t[#t+1] = _issym(v) and v:pInternal(n + 2) 
+    t[#t+1] = _issym(v) and v:pInternal(n + 2)
       or string.rep(" ", n + 2)..tostring(v)
   end
   return _tconcat(t, "\n")
@@ -402,7 +401,7 @@ end
 --  @return string.
 parents.funcValue.pStr = function (S)
   local t = {}
-  for i = 2, #S._ do 
+  for i = 2, #S._ do
     t[#t+1] = _issym(S._[i]) and S._[i]:pStr() or tostring(S._[i])
   end
   return string.format("%s(%s)", S._[1], _tconcat(t, ","))
@@ -519,6 +518,10 @@ parents.product.pStr = function (S)
 end
 
 
+--- Derivative of a product of symbols.
+--  @param S1 Expression with products.
+--  @param S2 Variable.
+--  @return derivative.
 parents.product.pDiff = function (S1, S2)
   local res = 0
   for i, v in ipairs(S1._) do
@@ -529,7 +532,7 @@ parents.product.pDiff = function (S1, S2)
     end
     dx = _issym(b) and b:pDiff(S2) or 0
     if dx ~= 0 then
-      local prod = S1 * symbolic._fnInit.log(a)
+      local prod = a^b * symbolic:log(a)*dx
       sum = sum and (sum + prod) or prod
     end
     if sum and sum ~= 0 then
@@ -541,11 +544,14 @@ parents.product.pDiff = function (S1, S2)
       res = res + tmp * sum
     end
   end
-
   return res
 end
 
 
+--- Internal structure of a product object.
+--  @param S Symbolic object.
+--  @param n Shift size.
+--  @return string representation.
 parents.product.pInternal = function (S, n)
   local t = {string.format("%sPROD:", string.rep(" ", n))}
   local offset = string.rep(" ", n+2)
@@ -577,6 +583,10 @@ parents.sum = {
 }
 
 
+--- Derivative of a sum of symbols.
+--  @param S1 Expression with sums.
+--  @param S2 Variable.
+--  @return derivative.
 parents.sum.pDiff = function (S1, S2)
   local res = symbolic:_newExpr(parents.sum, {})
   for _, v in ipairs(S1._) do
@@ -595,6 +605,10 @@ parents.sum.pDiff = function (S1, S2)
 end
 
 
+--- Internal structure of a product object.
+--  @param S Symbolic object.
+--  @param n Shift size.
+--  @return string representation.
 parents.sum.pInternal = function (S, n)
   local t = {string.format("%sSUM:", string.rep(" ", n))}
   local offset = string.rep(" ", n + 2)
@@ -674,23 +688,12 @@ parents.symbol = {
   pEq = function (S1, S2) return _issym(S1) and _issym(S2) and S1._ == S2._ end,
   pSimp = function (S) return S end,
   pInternal = function (S, n) return string.rep(" ", n) .. S._ end,
+  pDiff = function (S1, S2) return S1._ == S2._ and 1 or 0 end,
+  pEval = function (S, tEnv) return tEnv[S._] or S end,
+  pStr = function (S) return S._ end,
   pRawGet = common.rawget,
   pRawSet = common.skip,
 }
-
-
-parents.symbol.pDiff = function (S1, S2)
-  return S1._ == S2._ and 1 or 0
-end
-
-
-parents.symbol.pEval = function (S, tEnv)
-  local v = tEnv[S._]
-  return v or S
-end
-
-
-parents.symbol.pStr = function (S, isFull) return S._ end
 
 
 --- List of elements for printing in brackets.
