@@ -14,35 +14,21 @@
 
 local _utils = require("matlib.utils")
 local _unpack = _utils.versions.unpack
-
-
---- Condition for element sorting.
---  @param S1 Symbolic object.
---  @param S2 Symbolic object.
---  @return true when S1 < S2.
-local function _compList (S1, S2) return S1[1]._sign < S2[1]._sign end
-
-
---- Find factorial.
---  @param n Positive integer.
---  @return n!
-local function _fl (n)
-  local res = 1
-  for i = 2, n do res = res * i end
-  return res
-end
+local _move = _utils.versions.move
+local _tsort, _tremove, _tconcat = table.sort, table.remove, table.concat
+local _tinsert = table.insert
 
 
 --	MODULE
 
-local PARENTS = {}
+local parents = {}
 
 
 local symbolic = {
 -- mark
-type = 'symbolic',
+type = "symbolic",
 -- main types
-_parentList = PARENTS,
+_parentList = parents,
 }
 
 
@@ -52,84 +38,77 @@ _parentList = PARENTS,
 local function _issym(v) return getmetatable(v) == symbolic end
 
 
+--- Condition for element sorting.
+--  @param S1 Symbolic object.
+--  @param S2 Symbolic object.
+--  @return true when S1 < S2.
+local function _compList (S1, S2)
+  local v1 = _issym(S1[1]) and S1[1]._sign or 0
+  local k1 = _issym(S1[2]) and S1[2]._sign or 0
+  local v2 = _issym(S2[1]) and S2[1]._sign or 0
+  local k2 = _issym(S2[2]) and S2[2]._sign or 0
+  return v1 < v2 or (v1 == v2 and k1 < k2)
+end
+
+
+--- Check equality of 2 values.
+--  @param a First symbolic or numeric value.
+--  @param b Second symbolic or numeric value.
+--  @return true when objects are equal.
+local function _eql (a, b)
+  if _issym(a) then
+    return _issym(b) and a:pEq(b)
+  else
+    return not _issym(b) and a == b
+  end
+end
+
+
+--- Try to combine (simplify) to pairs {k, S}
+--  @param a First pair.
+--  @param b Second pair.
+--  @param tParent Parent reference.
+local function _simpPairElements (a, b, tParent)
+  local a1, b1 = a[1], b[1]
+  if not (_issym(a1) or _issym(b1)) then
+    -- c1*c2 + c3*c4  or  c1^c2 * c3^c4
+    if tParent == parents.product then
+      a[1] = a1*a[2] + b1*b[2]
+    else  -- power
+      a[1] = a1^a[2] * b1^b[2]
+    end
+    a[2], b[2] = 1, 0
+  elseif _issym(a1) and _issym(b1) and b1:pEq(a1) then
+    -- add coefficients
+    a[2], b[2] = a[2] + b[2], 0
+  end
+end
+
+
 -- Combine 'common' methods
-local COMMON = {
-
-  -- Do nothing.
-  empty = function () end,
-
-  --- Check if the value is 1.
-  --  @param v Some object.
-  --  @return v == 1.
-  isOne = function (v) return _issym(v) and v._ == 1 or v == 1 end,
-
-  --- Check if the value is 0.
-  --  @param v Some object.
-  --  @return v == 0
-  isZero = function (v) return _issym(v) and v._ == 0 or v == 0 end,
+local common = {
 
   -- Return false always.
   skip = function () return false end,
 
-} -- COMMON
-
-
---- Copy content of the simbolic object.
---  @param dst Destination object.
---  @param src Source object.
-COMMON.copy = function (dst, src)
-  dst._parent = src._parent
-  dst._ = src._
-  dst._sign = src.p_isatom and src._sign or nil
-end
-
-
---- Check equality for objects based on lists.
---  @param S1 First symbolic object.
---  @param S2 Second symbolic object.
---  @return true when objects are equal.
-COMMON.eq = function (S1, S2)
-  if S1._sign ~= S2._sign or S1._parent ~= S2._parent or #S1._ ~= #S2._ then
-    return false
-  end
-  for i = 1, #S1._ do
-    local si1, si2 = S1._[i], S2._[i]
-    if not si1:p_eq(si2) then
-      return false
-    end
-  end
-  return true
-end
+} -- common
 
 
 --- Check equality for objects based on lists of pairs.
 --  @param S1 First symbolic object.
 --  @param S2 Second symbolic object.
 --  @return true when objects are equal.
-COMMON.eqPairs = function (S1, S2)
+common.eqPairs = function (S1, S2)
   if S1._sign ~= S2._sign or S1._parent ~= S2._parent or #S1._ ~= #S2._ then
     return false
   end
   for i = 1, #S1._ do
     local si1, si2 = S1._[i], S2._[i]
-    if not (si1[2] == si2[2] and si1[1]:p_eq(si2[1])) then
+    if not (_eql(si1[1], si2[1]) and _eql(si1[2], si2[2])) then
       return false
     end
   end
   return true
-end
-
-
---- Evaluate expression for list.
---  @param S Symbolic object.
---  @param tEnv Table with elements for substitution.
---  @return New object.
-COMMON.eval = function (S, tEnv)
-  local res = symbolic:_newExpr(S._parent, {})
-  for i, v in ipairs(S._) do
-    res._[i] = v:p_eval(tEnv)
-  end
-  return res
 end
 
 
@@ -137,21 +116,23 @@ end
 --  @param S Symbolic object.
 --  @param tEnv Table with elements for substitution.
 --  @return New object.
-COMMON.evalPairs = function (S, tEnv)
+common.evalPairs = function (S, tEnv)
   local res = symbolic:_newExpr(S._parent, {})
   for i, v in ipairs(S._) do
-    res._[i] = {v[1]:p_eval(tEnv), v[2]}
+    res._[i] = {
+      _issym(v[1]) and v[1]:pEval(tEnv) or v[1],
+      _issym(v[2]) and v[2]:pEval(tEnv) or v[2]}
   end
   return res
 end
 
 
-COMMON.rawget = function (S, n)
+common.rawget = function (S, n)
   return (n == nil) and S or nil
 end
 
 
-COMMON.rawgetPair = function (S, n, m, ...)
+common.rawgetPair = function (S, n, m, ...)
   if n == nil then return S end
   if n <= #S._ then
     -- whole line
@@ -160,34 +141,34 @@ COMMON.rawgetPair = function (S, n, m, ...)
     end
     -- choose from pair
     if m == 1 then
-      return S._[n][1]:p_rawget(...)
+      return S._[n][1]:pRawGet(...)
     elseif m == 2 then
-      return symbolic:_newConst(S._[n][2]):p_rawget(...)
+      return symbolic:_newConst(S._[n][2]):pRawGet(...)
     end
   end
   return nil
 end
 
 
-COMMON.rawsetPair = function (S, v, n, m, q, ...)
+common.rawsetPair = function (S, v, n, m, q, ...)
   if n and n <= #S._ then
     if m == nil or (q == nil and m == 1 and v._parent == S._parent) then
       -- insert here
       if v._parent == S._parent then
-        table.remove(S._, n)
-        for _, ln in ipairs(v._) do table.insert(S._, ln) end
+        _tremove(S._, n)
+        for _, ln in ipairs(v._) do _tinsert(S._, ln) end
       else
-        table.insert(S._, {v, 1})
+        _tinsert(S._, {v, 1})
       end
     elseif m == 1 then
       -- update symbolic part
       if q == nil then
         S._[n][1] = v
       else
-        return S._[n][1]:p_rawset(v, q, ...)
+        return S._[n][1]:pRawSet(v, q, ...)
       end
-    elseif m == 2 and v._parent == PARENTS.const then
-      S._[n][2] = v._
+    -- elseif m == 2 and v._parent == parents.const then
+    --   S._[n][2] = v._
     else
       return false
     end
@@ -197,75 +178,61 @@ COMMON.rawsetPair = function (S, v, n, m, q, ...)
 end
 
 
---- Find signature of an object based on list.
---  @param S Symbolic object.
---  @return true when update signature.
-COMMON.signature = function (S)
-  local found = false
-  for i = 1, #S._ do
-    found = S._[i]:p_signature() or found
-  end
-  if S._sign and not found then return false end
-  local sum = S.p_id
-  for i = 1, #S._ do sum = (sum*8 + S._[i]._sign) % 1000000 end
-  S._sign = sum
-  return true
-end
-
 
 --- Find signature of an object based on list of pairs.
 --  @param S Symbolic object.
 --  @return true when update signature.
-COMMON.signaturePairs = function (S)
+common.signaturePairs = function (S)
   -- check elements
   local found = false
-  for i = 1, #S._ do
-    found = S._[i][1]:p_signature() or found
+  for _, v in ipairs(S._) do
+    found = _issym(v[1]) and v[1]:pSignature() or found
+    found = _issym(v[2]) and v[2]:pSignature() or found
   end
   if S._sign and not found then return false end
-  table.sort(S._, _compList)
-  local sum = S.p_id
-  for i = 1, #S._ do sum = (sum*8 + S._[i][1]._sign) % 1000000 end
+  _tsort(S._, _compList)
+  local sum = S.pId
+  for _, v in ipairs(S._) do
+    if _issym(v[1]) then
+      sum = (sum*8 + v[1]._sign) % 1000000
+    end
+    if _issym(v[2]) then
+      sum = (sum*8 + v[2]._sign) % 1000000
+    end
+  end
   S._sign = sum
   return true
 end
 
-
---- Try to combine (simplify) to pairs {k, S}
---  @param a First pair.
---  @param b Second pair.
---  @param tParent Parent reference.
-COMMON.simpPairElements = function (a, b, tParent)
-  local a1, b1 = a[1], b[1]
-  if a1._parent == PARENTS.const and a1._parent == b1._parent then
-    -- c1*c2 + c3*c4  or  c1^c2 * c3^c4
-    if tParent == PARENTS.product then
-      a[1] = symbolic:_newConst(a1._*a[2] + b1._*b[2])
-    else  -- PARENTS.power
-      a[1] = symbolic:_newConst(a1._^a[2] * b1._^b[2])
-    end
-    a[2], b[2] = 1, 0
-  elseif b1:p_eq(a1) then
-    -- c1*v + c2*v  or v^c1 * v^c3
-    a[2], b[2] = a[2] + b[2], 0
-  end
-end
 
 
 --- Simplify list of pairs (in place).
 --  @param S Symbolic object.
 --  @param tParent Parent reference.
-COMMON.simpPair = function (S, tParent)
+common.simpPair = function (S, tParent)
   -- be sure that signature is found
-  S:p_signature()
+  S:pSignature()
   -- update coefficients
-  for _, v in ipairs(S._) do
-    if v[1]._parent == tParent then
-      local k = v[1]:p_getConst()
-      if k ~= 1 then
-        v[2] = v[2] * k
-        v[1]:p_signature()
+  if tParent == parents.product then
+    for _, v in ipairs(S._) do
+      if _issym(v[1]) and v[1]._parent == tParent then
+        local k = v[1]:pGetConst()
+        if k ~= 1 then
+          v[2] = v[2] * k
+          v[1]:pSignature()
+        end
       end
+    end
+  end
+  -- align levels
+  for i = #S._, 1, -1 do
+    local si = S._[i]
+    if _issym(si[1]) and si[1]._parent == S._parent then
+      for _, v in ipairs(si[1]._) do
+        _tinsert(S._, {v[1], v[2]*si[2]})
+      end
+      _tremove(S._, i)
+      S._sign = nil
     end
   end
   -- combine elements
@@ -274,97 +241,118 @@ COMMON.simpPair = function (S, tParent)
       for j = i+1, #S._ do
         local sj = S._[j]
         if sj[2] ~= 0 then
-          COMMON.simpPairElements(si, sj, tParent)
+          _simpPairElements(si, sj, tParent)
         end
       end
     end
   end
   -- remove zeros
   for i = #S._, 1, -1 do
-    if S._[i][2] == 0 then
-      table.remove(S._, i)
+    local si = S._[i]
+    if not _issym(si[2]) and si[2] == 0 then
+      _tremove(S._, i)
       S._sign = nil
     end
   end
 end
 
 
--- ============ CONSTANT ============
-
-PARENTS.const = {
-  -- S._ = value
-  p_id = 1,
-  p_isatom = true,
-  p_signature = COMMON.skip,
-  p_eq = function (S1, S2) return S1._ == S2._ end,
-  p_str = function (S) return tostring(S._) end,
-  p_simp = COMMON.empty,
-  p_eval = function (S) return S end,
-  p_diff = function () return symbolic._0 end,
-  p_internal = function (S, n)
-    return string.format('%s%s', string.rep(' ', n), tostring(S._))
-  end,
-  p_rawget = COMMON.rawget,
-  p_rawset = COMMON.skip,
-}
-
-
 -- ============ FUNCTION CALL ============
 
-PARENTS.funcValue = {
+parents.funcValue = {
   -- S._ = {fn, arg1, arg2, ...}
-  p_id = 2,
-  p_isatom = false,
-  p_signature = COMMON.signature,
-  p_eq = COMMON.eq,
-  p_simp = function (S, bFull)
-    for _, v in ipairs(S._) do v:p_simp(bFull) end
+  pId = 2,
+  pIsAtom = false,
+  pSimp = function (S, bFull)
+    for i, v in ipairs(S._) do
+      S._[i] = _issym(v) and v:pSimp(bFull) or v
+    end
+    return S
   end,
 }
 
 
-PARENTS.funcValue.p_rawget = function (S, n, ...)
+--- Find signature of a list.
+--  @param S Symbolic object.
+--  @return true when update signature.
+parents.funcValue.pSignature = function (S)
+  local found = false
+  for _, v in ipairs(S._) do
+    if _issym(v) then
+      found = v:pSignature() or found
+    end
+  end
+  if S._sign and not found then return false end
+  local sum = S.pId
+  for _, v in ipairs(S._) do
+    if _issym(v) then
+      sum = (sum*8 + v._sign) % 1000000
+    end
+  end
+  S._sign = sum
+  return true
+end
+
+
+--- Check equality for objects in lists.
+--  @param S1 First symbolic object.
+--  @param S2 Second symbolic object.
+--  @return true when objects are equal.
+parents.funcValue.pEq = function (S1, S2)
+  if S1._sign ~= S2._sign or S1._parent ~= S2._parent or #S1._ ~= #S2._ then
+    return false
+  end
+  for i = 1, #S1._ do
+    if not _eql(S1._[i], S2._[i]) then
+      return false
+    end
+  end
+  return true
+end
+
+
+
+parents.funcValue.pRawGet = function (S, n, ...)
   if n == nil then return S end
-  if n <= #S._ then return S._[n]:p_rawget(...) end
+  if n <= #S._ then return S._[n]:pRawGet(...) end
   return nil
 end
 
 
-PARENTS.funcValue.p_rawset = function (S, v, n, m, ...)
+parents.funcValue.pRawSet = function (S, v, n, m, ...)
   if n and n <= #S._ and n > 1 then
     if m == nil then
       S._[n] = v
       S._sign = nil
       return true
     else
-      return S._[n]:p_rawset(v, m, ...)
+      return S._[n]:pRawSet(v, m, ...)
     end
   end
   return false
 end
 
 
-PARENTS.funcValue.p_diff = function (S1, S2)
-  local res = symbolic._0
-  local args = {}
-  for i = 2, #S1._ do args[#args+1] = S1._[i] end
-  local diffs = S1._[1]:p_diff(S2)
+parents.funcValue.pDiff = function (S1, S2)
+  local res = 0
+  local args = _move(S1._, 2, #S1._, 1, {})
+  local diffs = symbolic._fnDiff[S1._[1]]
   if diffs then
     -- has predefined derivatives
     if #args ~= #diffs then
-      error 'Wrong arguments number'
+      error "Wrong arguments number"
     end
     for i, fn in ipairs(diffs) do
-      local dx = args[i]:p_diff(S2)
-      if not COMMON.isZero(dx) then res = res + fn(_unpack(args)) * dx end
+      local dx = args[i]:pDiff(S2)
+      if dx ~= 0 then res = res + fn(_unpack(args)) * dx end
     end
   else
     -- derivative not defined
     local df = symbolic:_newExpr(
-      PARENTS.funcValue, {symbolic._fnInit.diff, S1._[1], S2})
-    for _, v in ipairs(args) do
-      local dx = v:p_diff(S2)
-      if not COMMON.isZero(dx) then res = res + df * dx end
+      parents.funcValue, {'diff', symbolic:_newSymbol(S1._[1]), S2})
+    for i = 1, #args do
+      local dx = args[i]:pDiff(S2)
+      if dx ~= 0 then res = res + df * dx end
     end
   end
   return res
@@ -375,19 +363,19 @@ end
 --  @param S Symbolic object.
 --  @param tEnv Elements for substitution.
 --  @return New object.
-PARENTS.funcValue.p_eval = function (S, tEnv)
+parents.funcValue.pEval = function (S, tEnv)
   local t, val = {S._[1]}, {}
   for i = 2, #S._ do
-    local v = S._[i]:p_eval(tEnv)
+    local v = S._[i]:pEval(tEnv)
     t[i] = v
-    if v._parent == PARENTS.const then
-      val[#val+1] = v._
+    if not _issym(v) then
+      val[#val+1] = v
     end
   end
-  local body = symbolic._fnList[S._[1]._].body
+  local body = symbolic._fnList[S._[1]]
   if #val + 1 == #t and body then
     -- evaluate
-    return symbolic:_newConst( body(_unpack(val)) )
+    return body(_unpack(val))
   else
     return symbolic:_newExpr(S._parent, t)
   end
@@ -398,415 +386,317 @@ end
 --  @param S Symbolic object.
 --  @param n Shift.
 --  @return string representation.
-PARENTS.funcValue.p_internal = function (S, n)
-  local t = {string.format('%sCALL', string.rep(' ', n))}
-  for _, v in ipairs(S._) do
-    t[#t+1] = v:p_internal(n+2)
+parents.funcValue.pInternal = function (S, n)
+  local t = {string.format("%sCALL %s", string.rep(" ", n), S._[1])}
+  for i = 2, #S._ do
+    local v = S._[i]
+    t[#t+1] = _issym(v) and v:pInternal(n + 2) 
+      or string.rep(" ", n + 2)..tostring(v)
   end
-  return table.concat(t, '\n')
+  return _tconcat(t, "\n")
 end
 
 
 --- Text form.
 --  @param S Symbolic object.
 --  @return string.
-PARENTS.funcValue.p_str = function (S)
+parents.funcValue.pStr = function (S)
   local t = {}
-  for i = 2, #S._ do t[#t+1] = S._[i]:p_str() end
-  return string.format('%s(%s)', S._[1]._, table.concat(t, ','))
-end
-
-
--- ============ POWER ============
-
-PARENTS.power = {
-  -- S._ = {base, power}
-  p_id = 3,
-  p_isatom = false,
-  p_signature = COMMON.signature,
-  p_eq = COMMON.eq,
-  p_eval = COMMON.eval,
-}
-
-
-PARENTS.power.p_rawget = function (S, n, ...)
-  if n == nil then return S end
-  if n <= 2 then return S._[n]:p_rawget(...) end
-  return nil
-end
-
-
-PARENTS.power.p_rawset = function (S, v, n, m, ...)
-  if n and n <= 2 then
-    if m == nil then
-      S._[n] = v
-      S._sign = nil
-      return true
-    else
-      S._[n]:p_rawset(v, m, ...)
-    end
+  for i = 2, #S._ do 
+    t[#t+1] = _issym(S._[i]) and S._[i]:pStr() or tostring(S._[i])
   end
-  return false
-end
-
-
---- Split power to numeric and symbolic parts.
---  @param S Symbolic object.
---  @return Constant value.
-PARENTS.power.p_getConst = function (S)
-  local v = S._[2]
-  if v._parent == PARENTS.const then
-    v = v._
-    COMMON.copy(S, S._[1])
-    return v
-  end
-  return 1
-end
-
-
---- Simplify power (in place).
---  @param S Symbolic object.
---  @param bFull Flag for recursive simplification.
-PARENTS.power.p_simp = function (S, bFull)
-  if bFull then
-    S._[1]:p_simp(bFull)
-    S._[2]:p_simp(bFull)
-  end
-  if COMMON.isOne(S._[2]) then       -- v^1
-    COMMON.copy(S, S._[1])
-  elseif COMMON.isZero(S._[2]) then  -- v^0
-    COMMON.copy(S, symbolic._1)
-  elseif COMMON.isOne(S._[1]) or COMMON.isZero(S._[1]) then  -- 1^v or 0^v
-    COMMON.copy(S, S._[1])
-  elseif S._[1]._parent == S._[2]._parent and S._[1]._parent == PARENTS.const
-  then
-    COMMON.copy(S, symbolic:_newConst(S._[1]._ ^ S._[2]._))
-  end
-end
-
-
---- Power object to string translation.
---  @param S Symbolic object.
---  @return String representation.
-PARENTS.power.p_str = function (S)
-  local base = S._[1]:p_str()
-  if COMMON.closed[S._[1]._parent] then
-    base = string.format('(%s)', base)
-  end
-  --if COMMON.isOne(S._[2]) then return base end
-  local pow = S._[2]:p_str()
-  if COMMON.closed[S._[2]._parent] then
-    pow = string.format('(%s)', pow)
-  end
-  return string.format('%s^%s', base, pow)
-end
-
-
---- Power internal struct.
---  @param S Symbolic object.
---  @param n Shift.
---  @return string representation.
-PARENTS.power.p_internal = function (S, n)
-  return string.format('%sPOWER:\n%s\n%s',
-    string.rep(' ', n), S._[1]:p_internal(n+2), S._[2]:p_internal(n+2))
-end
-
-
---- Power derivative.
---  @param S1 First object.
---  @param S2 Second object.
---  @return derivative object.
-PARENTS.power.p_diff = function (S1, S2)
-  local res = nil
-  local a, b = S1._[1], S1._[2]
-  local dx = a:p_diff(S2)
-  -- da/dx
-  if not COMMON.isZero(dx) then
-    res = b * a ^ (b - symbolic._1) * dx
-  end
-  dx = b:p_diff(S2)
-  if not COMMON.isZero(dx) then
-    local prod = S1 * symbolic._fnInit.log(a)
-    res = res and (res + prod) or prod
-  end
-  return res
+  return string.format("%s(%s)", S._[1], _tconcat(t, ","))
 end
 
 
 -- ============ PRODUCT ============
 
-PARENTS.product = {
+parents.product = {
   -- S._ = {{S1, pow1}, {S2, pow2}, ...}
-  p_id = 4,
-  p_isatom = false,
-  p_signature = COMMON.signaturePairs,
-  --p_eq = COMMON.eqPairs,
-  p_eval = COMMON.evalPairs,
-  p_rawget = COMMON.rawgetPair,
-  p_rawset = COMMON.rawsetPair,
+  pId = 4,
+  pIsAtom = false,
+  pSignature = common.signaturePairs,
+  pEq = common.eqPairs,
+  pEval = common.evalPairs,
+  pRawGet = common.rawgetPair,
+  pRawSet = common.rawsetPair,
 }
-
-
-PARENTS.product.p_eq = function (S1, S2)
-  return COMMON.eqPairs(S1, S2)
-    or #S1._ == 1 and S2._parent == PARENTS.power
-    -- compare power
-    and S2._[2]._parent == PARENTS.const and S1._[1][2] == S2._[2]._
-    -- compare base
-    and S1._[1][1]:p_eq(S2._[1])
-end
 
 
 --- Split product to numeric and symbolic parts.
 --  @param S Symbolic object.
 --  @return Constant value.
-PARENTS.product.p_getConst = function (S)
-  local v = S._[1]
-  if v[1]._parent == PARENTS.const then
-    v = v[1]._ * v[2]  -- coefficient * const
-    if #S._ == 2 and COMMON.isOne(S._[2][2]) then    -- val^1
-      COMMON.copy(S, S._[2][1])
-    else
-      table.remove(S._, 1)
-      S._sign = nil
+parents.product.pGetConst = function (S)
+  local k, v = 1, S._[1]
+  if not _issym(v[1]) and not _issym(v[2]) then
+    k = v[1] ^ v[2]
+    -- update the rest of object
+    _tremove(S._, 1)
+    S._sign = nil
+    if #S._ == 1 and S._[1][2] == 1 then  -- val^1
+      -- simplify
+      local g = S._[1][1]
+      S._parent = g._parent
+      S._sign = g.pIsAtom and g._sign or nil
+      S._ = g._
     end
-    return v
   end
-  return 1
+  return k
 end
 
 
 --- Simplify product (in place).
 --  @param S Symbolic object.
 --  @param bFull Flag for recursive simplification.
-PARENTS.product.p_simp = function (S, bFull)
+parents.product.pSimp = function (S, bFull)
   if bFull then
-    COMMON.simpPair(S, PARENTS.power)  -- check for similar terms
-    for _, v in ipairs(S._) do v[1]:p_simp(bFull) end
+    common.simpPair(S)  -- check for similar terms
+    for _, v in ipairs(S._) do
+      v[1] = _issym(v[1]) and v[1]:pSimp(bFull) or v[1]
+      v[2] = _issym(v[2]) and v[2]:pSimp(bFull) or v[2]
+    end
   end
-  COMMON.simpPair(S, PARENTS.power)
+  common.simpPair(S)
   -- empty list
   if #S._ == 0 then
-    COMMON.copy(S, symbolic._1)
-    return
+    return 1
   elseif #S._ > 1 then
-    table.sort(S._, _compList)
+    _tsort(S._, _compList)
   end
   -- check constant
-  if COMMON.isZero(S._[1][1]) then
-    COMMON.copy(S, symbolic._0)
-    return
-  elseif #S._ > 1 and COMMON.isOne(S._[1][1]) then
-    table.remove(S._, 1)
+  if S._[1][1] == 0 then
+    return 0
+  elseif #S._ > 1 and (S._[1][1] == 1 or S._[1][2] == 0) then
+    _tremove(S._, 1)
     S._sign = nil
   end
   -- change type
-  if #S._ == 1 and S._[1][2] == 1 then
-    COMMON.copy(S, S._[1][1])
+  if #S._ == 1 then
+    local v = S._[1]
+    if v[2] == 1 then   -- x^1
+      return v[1]  -- extract expression
+    elseif v[2] == 0 then  -- x^0
+      return 1
+    elseif v[1] == 1 or v[1] == 0 then  -- 1^x or 0^x
+      return v[1]
+    elseif not (_issym(v[2]) or _issym(v[1])) then
+      return v[1]^v[2]  -- number
+    end
   end
+  return S
 end
 
 
 --- Sum object to string translation.
 --  @param S Symbolic object.
 --  @return String representation.
-PARENTS.product.p_str = function (S)
+parents.product.pStr = function (S)
   local num, denom = {}, {}
   for _, v in ipairs(S._) do
-    local k, x = v[2], v[1]:p_str()
-    if (#S._ > 1 or k ~= 1) and COMMON.closed[v[1]._parent] then
-      x = string.format('(%s)', x)
+    local k, x = v[2], _issym(v[1]) and v[1]:pStr() or tostring(v[1])
+    if (#S._ > 1 or k ~= 1) and _issym(v[1]) and common.closed[v[1]._parent] then
+      x = string.format("(%s)", x)
     end
-    if k > 0 then
+    if _issym(k) then
+      local w = k:pStr()
+      if not k.pIsAtom then w = string.format("(%s)", w) end
+      num[#num + 1] = string.format("%s^%s", x, w)
+    elseif k > 0 then
       num[#num+1] =
-        (k == 1) and x or string.format('%s^%s', x, tostring(k))
+        (k == 1) and x or string.format("%s^%s", x, tostring(k))
     else  -- v[1] < 0
       denom[#denom+1] =
-        (k == -1) and x or string.format('%s^%s', x, tostring(-k))
+        (k == -1) and x or string.format("%s^%s", x, tostring(-k))
     end
   end
   if #denom == 0 then
-    return table.concat(num, '*')
+    return _tconcat(num, "*")
   else
-    num = #num > 0 and table.concat(num, '*') or '1'  -- reuse
+    num = #num > 0 and _tconcat(num, "*") or "1"  -- reuse
     return string.format(
-      #denom > 1 and "%s/(%s)" or "%s/%s", num, table.concat(denom, '*'))
+      #denom > 1 and "%s/(%s)" or "%s/%s", num, _tconcat(denom, "*"))
   end
 end
 
 
-PARENTS.product.p_diff = function (S1, S2)
-  local res = symbolic._0
-  for _, v in ipairs(S1._) do
-    local dx = v[1]:p_diff(S2)
-    if not COMMON.isZero(dx) then
-      local k = v[2]
-      v[2] = k - 1  -- reduce power
-      res = res + (k * dx) * S1  -- TODO k * dx directly into table
-      v[2] = k      -- set back
+parents.product.pDiff = function (S1, S2)
+  local res = 0
+  for i, v in ipairs(S1._) do
+    local a, b, sum = v[1], v[2]
+    local dx = _issym(a) and a:pDiff(S2) or 0
+    if dx ~= 0 then
+      sum = b * a^(b - 1) * dx
+    end
+    dx = _issym(b) and b:pDiff(S2) or 0
+    if dx ~= 0 then
+      local prod = S1 * symbolic._fnInit.log(a)
+      sum = sum and (sum + prod) or prod
+    end
+    if sum and sum ~= 0 then
+      local tmp = symbolic:_newExpr(parents.product, {})
+      for j, w in ipairs(S1._) do
+        if j ~= i then _tinsert(tmp._, w) end
+      end
+      tmp:pSignature()
+      res = res + tmp * sum
     end
   end
+
   return res
 end
 
 
-PARENTS.product.p_internal = function (S, n)
-  local t = {string.format('%sPROD:', string.rep(' ', n))}
-  local offset = string.rep(' ', n+2)
+parents.product.pInternal = function (S, n)
+  local t = {string.format("%sPROD:", string.rep(" ", n))}
+  local offset = string.rep(" ", n+2)
   for _, v in ipairs(S._) do
-    t[#t+1] = v[1]:p_internal(n+2)
-    t[#t+1] = string.format('%s[^ %s]', offset, tostring(v[2]))
+    t[#t+1] = _issym(v[1]) and v[1]:pInternal(n+2) or offset..tostring(v[1])
+    if _issym(v[2]) then
+      t[#t+1] = offset.."[^]"
+      t[#t+1] = v[2]:pInternal(n+4)
+    else
+      t[#t+1] = string.format("%s[^ %s]", offset, tostring(v[2]))
+    end
   end
-  return table.concat(t, '\n')
+  return _tconcat(t, "\n")
 end
 
 
 -- ============ SUM ============
 
-PARENTS.sum = {
+parents.sum = {
   -- S._ = {{S1, k1}, {S2, k2}, ...}
   -- i.e. k1*S1 + k2*S2 + ...
-  p_id = 5,
-  p_isatom = false,
-  p_signature = COMMON.signaturePairs,
-  p_eq = COMMON.eqPairs,
-  p_eval = COMMON.evalPairs,
-  p_rawget = COMMON.rawgetPair,
-  p_rawset = COMMON.rawsetPair,
+  pId = 5,
+  pIsAtom = false,
+  pSignature = common.signaturePairs,
+  pEq = common.eqPairs,
+  pEval = common.evalPairs,
+  pRawGet = common.rawgetPair,
+  pRawSet = common.rawsetPair,
 }
 
 
-PARENTS.sum.p_diff = function (S1, S2)
-  local res = symbolic:_newExpr(PARENTS.sum, {})
+parents.sum.pDiff = function (S1, S2)
+  local res = symbolic:_newExpr(parents.sum, {})
   for _, v in ipairs(S1._) do
-    table.insert(res._, {v[1]:p_diff(S2), v[2]})
+    if _issym(v[1]) then
+      _tinsert(res._, {v[1]:pDiff(S2), v[2]})
+    end
   end
-  res:p_simp()
-  res:p_signature()
+  local tmp = res:pSimp()
+  if _issym(tmp) then
+    res = tmp
+  else
+    return tmp
+  end
+  res:pSignature()
   return res
 end
 
 
-PARENTS.sum.p_internal = function (S, n)
-  local t = {string.format('%sSUM:', string.rep(' ', n))}
-  local offset = string.rep(' ', n+2)
+parents.sum.pInternal = function (S, n)
+  local t = {string.format("%sSUM:", string.rep(" ", n))}
+  local offset = string.rep(" ", n + 2)
   for _, v in ipairs(S._) do
-    t[#t+1] = v[1]:p_internal(n+2)
-    t[#t+1] = string.format('%s[* %s]', offset, tostring(v[2]))
+    t[#t+1] = _issym(v[1]) and v[1]:pInternal(n + 2) or offset..tostring(v[1])
+    t[#t+1] = string.format("%s[* %s]", offset, tostring(v[2]))
   end
-  return table.concat(t, '\n')
+  return _tconcat(t, "\n")
 end
 
 
 --- Simplify sum (in place).
 --  @param S Symbolic object.
 --  @param bFull Flag for recursive simplification.
-PARENTS.sum.p_simp = function (S, bFull)
+parents.sum.pSimp = function (S, bFull)
   if bFull then
-    COMMON.simpPair(S, PARENTS.product)  -- check for similar terms
-    for _, v in ipairs(S._) do v[1]:p_simp(bFull) end
+    common.simpPair(S, parents.product)  -- check for similar terms
+    for _, v in ipairs(S._) do
+      v[1] = _issym(v[1]) and v[1]:pSimp(bFull) or v[1]
+    end
   end
   -- update structure
-  COMMON.simpPair(S, PARENTS.product)
+  common.simpPair(S, parents.product)
   -- empty list
   if #S._ == 0 then
-    COMMON.copy(S, symbolic._0)
-    return
+    return 0
   end
   -- sort and remove zero constant
   if #S._ > 1 then
-    table.sort(S._, _compList)
-    if COMMON.isZero(S._[1][1]) then
-      table.remove(S._, 1)
+    _tsort(S._, _compList)
+    if S._[1][1] == 0 or S._[1][2] == 0 then
+      _tremove(S._, 1)
       S._sign = nil
     end
   end
   -- change type
   if #S._ == 1 then
     local v = S._[1]
-    if v[2] ~= 1 then
-      COMMON.copy(S, symbolic:_newConst(v[2]) * v[1])
-    else
-      COMMON.copy(S, v[1])
-    end
+    -- extract expression or make product
+    return (v[2] == 1) and v[1] or (v[2]*v[1])
   end
+  return S
 end
 
 
 --- Product object to string translation.
 --  @param S Symbolic object.
 --  @return String representation.
-PARENTS.sum.p_str = function (S)
+parents.sum.pStr = function (S)
   local plus, minus = {}, {}
   for _, v in ipairs(S._) do
-    local k, x = v[2], v[1]:p_str()
+    local k, x = v[2], _issym(v[1]) and v[1]:pStr() or tostring(v[1])
     if k > 0 then
       plus[#plus+1] =
-        (k == 1) and x or string.format('%s*%s', tostring(k), x)
+        (k == 1) and x or string.format("%s*%s", tostring(k), x)
     else
       minus[#minus+1] =
-        (k == -1) and x or string.format('%s*%s', tostring(-k), x)
+        (k == -1) and x or string.format("%s*%s", tostring(-k), x)
     end
   end
   if #minus == 0 then
-    return table.concat(plus, '+')
+    return _tconcat(plus, "+")
   else
     return string.format(
-      '%s-%s', table.concat(plus, '+'), table.concat(minus, '-'))
+      "%s-%s", _tconcat(plus, "+"), _tconcat(minus, "-"))
   end
 end
 
 
 -- ============ SYMBOL ============
 
-PARENTS.symbol = {
+parents.symbol = {
   -- S._ = name
-  p_id = 6,
-  p_isatom = true,
-  p_signature = COMMON.skip,
-  p_eq = function (S1, S2) return S1._ == S2._ end,
-  p_simp = COMMON.empty,
-  p_internal = function (S, n)
-    return string.format('%s%s%s',
-      string.rep(' ', n), S._, symbolic._fnList[S._] and '()' or '')
-  end,
-  p_rawget = COMMON.rawget,
-  p_rawset = COMMON.skip,
+  pId = 6,
+  pIsAtom = true,
+  pSignature = common.skip,
+  pEq = function (S1, S2) return _issym(S1) and _issym(S2) and S1._ == S2._ end,
+  pSimp = function (S) return S end,
+  pInternal = function (S, n) return string.rep(" ", n) .. S._ end,
+  pRawGet = common.rawget,
+  pRawSet = common.skip,
 }
 
 
-PARENTS.symbol.p_diff = function (S1, S2)
-  if symbolic._fnList[S1._] then
-    return symbolic._fnDiff[S1._] or nil
-  else
-    return S1._ == S2._ and symbolic._1 or symbolic._0
-  end
+parents.symbol.pDiff = function (S1, S2)
+  return S1._ == S2._ and 1 or 0
 end
 
 
-PARENTS.symbol.p_eval = function (S, tEnv)
+parents.symbol.pEval = function (S, tEnv)
   local v = tEnv[S._]
-  return v and (_issym(v) and v or symbolic:_newConst(v)) or S
+  return v or S
 end
 
 
-PARENTS.symbol.p_str = function (S, isFull)
-  local nm = S._
-  local lst = symbolic._fnList[nm]
-  if isFull then
-    return lst and string.format('%s(%s): %s',
-      nm, table.concat(lst.args or {}, ','), tostring(lst.body or '')) or nm
-  else
-    return lst and nm..'()' or nm
-  end
-end
+parents.symbol.pStr = function (S, isFull) return S._ end
 
 
 --- List of elements for printing in brackets.
-COMMON.closed = {
-[PARENTS.sum] = true,
-[PARENTS.product] = true,
--- [PARENTS.power] = true,
+common.closed = {
+[parents.sum] = true,
+[parents.product] = true,
 }
 
 
@@ -815,8 +705,9 @@ COMMON.closed = {
 --  @param n Integer power.
 --  @return sum of terms.
 symbolic._binomial = function (lst, n)
-  if n == 1 then return symbolic:_newExpr(PARENTS.sum, lst) end
-  local nfl, m = _fl(n), n + 1
+  if n == 1 then return symbolic:_newExpr(parents.sum, lst) end
+  local fl = _utils.calc.fl
+  local nfl, m = fl(n), n + 1
   local res, pos, s = {}, {}, n
   repeat
     -- find group
@@ -833,31 +724,17 @@ symbolic._binomial = function (lst, n)
         local pi = pos[i]
         if pi > 0 then
           terms[#terms+1] = {lst[i][1], pi}
-          p = p / _fl(pi)
+          p = p / fl(pi)
           q = q * lst[i][2]^pi
         end
       end
       sum, tmp = math.modf(p*q)   -- reuse
       if tmp ~= 0 then sum = p*q end
-      res[#res+1] = {symbolic:_newExpr(PARENTS.product, terms), sum}
+      res[#res+1] = {symbolic:_newExpr(parents.product, terms), sum}
     end
     s = s + 1
   until pos[#pos] == n
-  return symbolic:_newExpr(PARENTS.sum, res)
-end
-
-
---- Create constant object.
---  @param self Symbolic table.
---  @param v Constant value.
---  @return Symbolic object.
-symbolic._newConst = function (self, v)
-  local o = {
-    _parent = PARENTS.const,
-    _sign = 1,
-    _ = v,
-  }
-  return setmetatable(o, self)
+  return symbolic:_newExpr(parents.sum, res)
 end
 
 
@@ -883,7 +760,7 @@ symbolic._newSymbol = function (self, sName)
   local sum = 0
   for i = 1, #sName do sum = (sum*8 + string.byte(sName, i, i)) % 100000 end
   local o = {
-    _parent = PARENTS.symbol,
+    _parent = parents.symbol,
     _sign = sum,
     _ = sName,
   }
@@ -896,77 +773,21 @@ end
 --  @param k Flag, +1 or -1.
 --  @return found terms or 1.
 symbolic._ratGet = function (S, k)
-  if S._parent == PARENTS.power and S._[2]._parent == PARENTS.const then
-    -- transform
-    S = symbolic:_newExpr(PARENTS.product, {{S._[1], S._[2]._}})
-  end
-  if S._parent ~= PARENTS.product then return k > 0 and S or symbolic._1 end
+  if S._parent ~= parents.product then return k > 0 and S or 1 end
   local acc = {}
   for _, v in ipairs(S._) do
     local t = v[2] * k
     if t > 0 then acc[#acc+1] = {v[1], t} end
   end
   if #acc == 1 and acc[1][2] == 1 then return acc[1][1] end
-  return #acc > 0 and symbolic:_newExpr(PARENTS.product, acc) or symbolic._1
+  return #acc > 0 and symbolic:_newExpr(parents.product, acc) or 1
 end
 
-
--- Often used constants
-symbolic._m1 = symbolic:_newConst(-1)
-symbolic._0 = symbolic:_newConst(0)
-symbolic._1 = symbolic:_newConst(1)
-symbolic._2 = symbolic:_newConst(2)
-
-
--- predefine some functions
-local singleArg = {'x'}
-symbolic._fnList = {
-  sqrt = {args = singleArg, body = math.sqrt},
-  log = {args = singleArg, body = math.sin},
-  exp = {args = singleArg, body = math.exp},
-  sin = {args = singleArg, body = math.sin},
-  cos = {args = singleArg, body = math.cos},
-  tan = {args = singleArg, body = math.tan},
-  asin = {args = singleArg, body = math.asin},
-  acos = {args = singleArg, body = math.acos},
-  atan = {args = singleArg, body = math.atan},
-  --
-  diff = {args = {'y','x'}},
-}
-
-
--- add objects for main functions
-symbolic._fnInit = {}
-for k, _ in pairs(symbolic._fnList) do
-  symbolic._fnInit[k] = symbolic:_newSymbol(k)
-end
-
+-- list of predefined functions
+symbolic._fnList = {}
 
 -- list of derivatives
 -- i-th position of a table corresponds to df/dxi
-symbolic._fnDiff = {
-  sqrt = {
-    function (x) return symbolic._1 / symbolic._fnInit.sqrt(x) / symbolic._2 end},
-  log = {function (x) return symbolic._1 / x end},
-  exp = {function (x) return symbolic._fnInit.exp(x) end},
-  sin = {function (x) return symbolic._fnInit.cos(x) end},
-  cos = {function (x) return -symbolic._fnInit.sin(x) end},
-  tan = {
-    function (x) return symbolic._1 / symbolic._fnInit.cos(x)^symbolic._2 end},
-  asin = {function (x)
-    return symbolic._1 / symbolic._fnInit.sqrt(symbolic._1 - x^symbolic._2) end},
-  acos = {function (x)
-    return -symbolic._1 / symbolic._fnInit.sqrt(symbolic._1 - x^symbolic._2) end},
-  atan = {function (x) return symbolic._1 / (symbolic._1 + x^symbolic._2) end},
-}
-
-
---- Check if the object is function.
---  @param S Symbolic object.
---  @return True if it is found in function list.
-symbolic._isfn = function (S)
-  return S._parent == PARENTS.symbol and symbolic._fnList[S._]
-end
-
+symbolic._fnDiff = {}
 
 return symbolic

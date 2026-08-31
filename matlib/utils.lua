@@ -584,7 +584,7 @@ local calc = {
 --- Factorial.
 --  @param n Integer value.
 --  @return factorial value.
-calc.fac = function (n)
+calc.fl = function (n)
   local prod = 1
   for i = 2, n do prod = prod * i end
   return prod

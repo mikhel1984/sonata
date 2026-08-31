@@ -24,7 +24,7 @@ ans = (x == y)                -->  false
 
 -- parse expressions
 e1, e2 = Sym('x+y, x*y')
-ans = e1                      --> x+y
+ans = e1                      --> y+x
 
 ans = e2                      --> y*x
 
@@ -39,24 +39,20 @@ ans = x^y * x^(2*y)           -->  x^(3*y)
 
 -- evaluate
 S = (x+y)*(x-y)
-ans = S:eval{x=2, y=1}        -->  Sym(3)
+ans = S:eval{x=2, y=1}        -->  3
 
 -- define function
-foo = Sym:def('foo', {x, y}, x^y)
+foo = function (x, y) return x^y end
 ans = foo(y, x)               -->  y^x
 
 -- numeric value
-ans = foo(Sym(2), Sym(3)):val()  -->  8
-
--- get by name
-ssin = Sym.fn.sin
-ans = ssin:isFn()             --> true
+ans = foo(2, 3)  -->  8
 
 -- expand
 ans = S:expand()              -->  x*x-y*y
 
 -- derivative
-ans = (x^3-ssin(2*x)):diff(x)       -->  3.0*x*x-2*Sym.fn.cos(2*x)
+ans = (x^3-Sym:sin(2*x)):diff(x)       -->  3.0*x*x-2*Sym:cos(2*x)
 
 -- parts
 S1 = (x-y)/(x+y)
@@ -81,7 +77,7 @@ local _lex = _ext.utils.utils.lex
 local _tag = { STRUCT="structure", TRANSFORM="transformation" }
 
 local symbolic = _ext.tf
-local PARENTS = symbolic._parentList
+local _parents = symbolic._parentList
 
 
 --- Check object type.
@@ -91,8 +87,59 @@ local function _issymbolic(v) return getmetatable(v) == symbolic end
 
 
 local function _compatible (v)
-  return type(v) == 'number' or type(v) == 'table' and (v.float or v.re)
+  return type(v) == "number" or type(v) == "table" and (v.float or v.re)
 end
+
+
+local function _checkarg(v)
+  if not (_issymbolic(v) 
+    or type(v) == "number" 
+    or type(v) == "table" and v.__add and v.__mul) 
+  then
+    error("Unexpected argument "..tostring(v))
+  end
+end
+
+
+local function _wrapFn (name, fn, deriv)
+  -- register
+  symbolic._fnList[name] = fn
+  symbolic._fnDiff[name] = deriv
+  -- ignore first arg, evaluate the rest
+  return function (_, ...)
+    local t = {name, ...}
+    for i = 2, #t do _checkarg(t[i]) end
+    return symbolic:_newExpr(_parents.funcValue, t)
+  end
+end
+
+symbolic.sin = _wrapFn("sin", math.sin,
+  {function (x) return symbolic:cos(x) end})
+
+
+symbolic.cos = _wrapFn("cos", math.cos,
+  {function (x) return -symbolic:sin(x) end})
+
+symbolic.tan = _wrapFn("tan", math.tan,
+  {function (x) return 1 / symbolic:cos(x)^2 end})
+
+symbolic.asin = _wrapFn("asin", math.asin,
+  {function (x) return 1 / symbolic:sqrt(1 - x*x) end})
+
+symbolic.acos = _wrapFn("acos", math.acos,
+  {function (x) return -1 / symbolic:sqrt(1 - x*x) end})
+
+symbolic.atan = _wrapFn("atan", math.atan,
+  {function (x) return 1 / (1 + x*x) end})
+
+symbolic.sqrt = _wrapFn("sqrt", math.sqrt, 
+{function (x) return 1 / (symbolic:sqrt(x) * 2) end})
+
+symbolic.log = _wrapFn("log", math.log,
+  {function (x) return 1 / x end})
+
+symbolic.exp = _wrapFn("exp", math.exp,
+  {function (x) return symbolic:exp(x) end})
 
 
 --	INFO
@@ -115,7 +162,7 @@ local PARSER = {}
 PARSER.args = function (lst, n)
   local t = {}
   t[1], n = PARSER.sum(lst, n)
-  while lst[n] == ',' do
+  while lst[n] == "," do
     t[#t+1], n = PARSER.sum(lst, n+1)
   end
   return t, n
@@ -129,10 +176,10 @@ end
 PARSER.sum = function (lst, ind)
   local res, n = PARSER.prod(lst, ind)
   while true do
-    if lst[n] == '+' then
+    if lst[n] == "+" then
       local tmp, m = PARSER.prod(lst, n+1)
       res, n = res + tmp, m
-    elseif lst[n] == '-' then
+    elseif lst[n] == "-" then
       local tmp, m = PARSER.prod(lst, n+1)
       res, n = res - tmp, m
     else break end
@@ -148,10 +195,10 @@ end
 PARSER.prod = function (lst, ind)
   local res, n = PARSER.pow(lst, ind)
   while true do
-    if lst[n] == '*' then
+    if lst[n] == "*" then
       local tmp, m = PARSER.pow(lst, n+1)
       res, n = res * tmp, m
-    elseif lst[n] == '/' then
+    elseif lst[n] == "/" then
       local tmp, m = PARSER.pow(lst, n+1)
       res, n = res / tmp, m
     else break end
@@ -166,7 +213,7 @@ end
 --  @return Table and next index.
 PARSER.pow = function (lst, ind)
   local res, n = PARSER.prim(lst, ind)
-  if lst[n] == '^' then  -- TODO add **
+  if lst[n] == "^" then  -- TODO add **
     local tmp, m = PARSER.prim(lst, n+1)
     res, n = res ^ tmp, m
   end
@@ -180,28 +227,28 @@ end
 --  @return Table and next index.
 PARSER.prim = function (lst, n)
   local v, res = lst[n], nil
-  if type(v) == 'number' then
-    return symbolic:_newConst(v), n + 1
-  elseif v == '(' then
+  if type(v) == "number" then
+    return v, n + 1
+  elseif v == "(" then
     res, n = PARSER.sum(lst, n + 1)
-    if lst[n] ~= ')' then error ("expected ')'") end
+    if lst[n] ~= ")" then error ("expected ')'") end
     return res, n + 1
-  elseif v == '-' then
+  elseif v == "-" then
     res, n = PARSER.prod(lst, n + 1)
     return -res, n
-  elseif string.find(v, '^[%a_]') ~= nil then
-    if lst[n+1] == '(' then
+  elseif string.find(v, "^[%a_]") ~= nil then
+    if lst[n+1] == "(" then
       local t = nil
-      if lst[n+2] == ')' then
+      if lst[n+2] == ")" then
         t, n = {}, n + 2
       else
         t, n = PARSER.args(lst, n + 2)
       end
-      if lst[n] ~= ')' then error ("expected ')'") end
+      if lst[n] ~= ")" then error ("expected ')'") end
       -- add function
       if not symbolic._fnList[v] then symbolic._fnList[v] = {} end
-      table.insert(t, 1, symbolic:_newSymbol(v))
-      return symbolic:_newExpr(PARENTS.funcValue, t), n + 1
+      table.insert(t, 1, v)
+      return symbolic:_newExpr(_parents.funcValue, t), n + 1
     else
       return symbolic:_newSymbol(v), n + 1
     end
@@ -220,52 +267,25 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Sum object.
 symbolic.__add = function (S1, S2)
-  if not _issymbolic(S2) then
-    local v = symbolic._convert(S2)
-    return v and S1 + v or S2.__add(S1, S2)
-  elseif not _issymbolic(S1) then
-    local v = symbolic._convert(S1)
-    return v and v + S2 or error('Not def')
-  end
-  local res = symbolic:_newExpr(PARENTS.sum, {})
+  _checkarg(S1); _checkarg(S2)
+  local res = symbolic:_newExpr(_parents.sum, {})
   -- S1
-  if S1._parent == PARENTS.sum then
+  if _issymbolic(S1) and S1._parent == _parents.sum then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {S1, 1})
   end
   -- S2
-  if S2._parent == PARENTS.sum then
+  if _issymbolic(S2) and S2._parent == _parents.sum then
     for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {S2, 1})
   end
-  res:p_simp()
-  res:p_signature()
-  return res
-end
-
-
---- Call symbolic function.
---  @param S Symbolic object.
---  @param ... List of arguments.
---  @return Function value (symbolic object).
-symbolic.__call = function (S, ...)
-  if S:_isfn() then
-    local t = {...}
-    local fn = symbolic._fnList[S._]
-    if #t ~= #fn.args then
-      error(string.format("Expected %d arguments for %s", #fn.args, S._))
-    end
-    if type(fn.body) == 'function' or fn.body == nil then
-      table.insert(t, 1, S)
-      return symbolic:_newExpr(PARENTS.funcValue, t)
-    elseif _issymbolic(fn.body) then
-      local env = {}
-      for i, k in ipairs(fn.args) do env[k] = t[i] end
-      return symbolic.eval(fn.body, env)
-    end
+  res = res:pSimp()
+  if _issymbolic(res) then
+    res:pSignature()
   end
+  return res
 end
 
 
@@ -274,34 +294,24 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Ratio object.
 symbolic.__div = function (S1, S2)
-  if not _issymbolic(S2) then
-    local v = symbolic._convert(S2)
-    return v and S1 / v or S2.__div(S1, S2)
-  elseif not _issymbolic(S1) then
-    local v = symbolic._convert(S1)
-    return v and v / S2 or error('Not def')
-  end
-  local res = symbolic:_newExpr(PARENTS.product, {})
-  -- check a^x / a^y
-  if S1._parent == PARENTS.power and S2._parent == PARENTS.power
-     and S1._[1] == S2._[1]
-  then
-     return symbolic.__pow(S1._[1], S1._[2] - S2._[2])
-  end
+  _checkarg(S1); _checkarg(S2)
+  local res = symbolic:_newExpr(_parents.product, {})
   -- S1
-  if S1._parent == PARENTS.product then
+  if _issymbolic(S1) and S1._parent == _parents.product then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {S1, 1})
   end
   -- S2
-  if S2._parent == PARENTS.product then
-    for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
+  if _issymbolic(S2) and S2._parent == _parents.product then
+    for _, v in ipairs(S2._) do table.insert(res._, {v[1], -v[2]}) end
   else
     table.insert(res._, {S2, -1})
   end
-  res:p_simp()
-  res:p_signature()
+  res = res:pSimp()
+  if _issymbolic(res) then
+    res:pSignature()
+  end
   return res
 end
 
@@ -311,7 +321,7 @@ end
 --  @param S2 Symbolic object or number.
 --  @return true when objects are equal.
 symbolic.__eq = function (S1, S2)
-  return _issymbolic(S1) and _issymbolic(S2) and S1:p_eq(S2)
+  return _issymbolic(S1) and _issymbolic(S2) and S1:pEq(S2)
 end
 
 
@@ -327,34 +337,24 @@ symbolic.__index = function (t, k) return symbolic[k] or t._parent[k] end
 --  @param S2 Symbolic object or number.
 --  @return Product object.
 symbolic.__mul = function (S1, S2)
-  if not _issymbolic(S2) then
-    local v = symbolic._convert(S2)
-    return v and S1 * v or S2.__mul(S1, S2)
-  elseif not _issymbolic(S1) then
-    local v = symbolic._convert(S1)
-    return v and v * S2 or error('Not def')
-  end
-  local res = symbolic:_newExpr(PARENTS.product, {})
-  -- check a^x * a^y
-  if S1._parent == PARENTS.power and S2._parent == PARENTS.power
-     and S1._[1] == S2._[1]
-  then
-     return symbolic.__pow(S1._[1], S1._[2] + S2._[2])
-  end
+  _checkarg(S1); _checkarg(S2)
+  local res = symbolic:_newExpr(_parents.product, {})
   -- S1
-  if S1._parent == PARENTS.product then
+  if _issymbolic(S1) and S1._parent == _parents.product then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {S1, 1})
   end
   -- S2
-  if S2._parent == PARENTS.product then
+  if _issymbolic(S2) and S2._parent == _parents.product then
     for _, v in ipairs(S2._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {S2, 1})
   end
-  res:p_simp()
-  res:p_signature()
+  res = res:pSimp()
+  if _issymbolic(res) then
+    res:pSignature()
+  end
   return res
 end
 
@@ -364,23 +364,20 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Power object.
 symbolic.__pow = function (S1, S2)
-  if not _issymbolic(S2) then
-    local v = symbolic._convert(S2)
-    return v and S1 ^ v or S2.__pow(S1, S2)
-  elseif not _issymbolic(S1) then
-    local v = symbolic._convert(S1)
-    return v and v ^ S2 or error('Not def')
-  end
-  local res = symbolic:_newExpr(PARENTS.power)
-  if S1._parent == PARENTS.power then
+  _checkarg(S1); _checkarg(S2)
+  local res = symbolic:_newExpr(_parents.product)
+  if _issymbolic(S1) and S1._parent == _parents.product then
     -- (a^x)^y
-    res._ = {S1._[1], S1._[2] * S2}
-    res._[2]:p_simp()
+    local t = {}
+    for i, v in ipairs(S1._) do t[i] = {v[1], v[2]*S2} end
+    res._ = t
   else
-    res._ = {S1, S2}
+    res._ = {{S1, S2}}
   end
-  res:p_simp()
-  res:p_signature()
+  res = res:pSimp()
+  if _issymbolic(res) then
+    res:pSignature()
+  end
   return res
 end
 
@@ -390,28 +387,24 @@ end
 --  @param S2 Symbolic object or number.
 --  @return Difference object.
 symbolic.__sub = function (S1, S2)
-  if not _issymbolic(S2) then
-    local v = symbolic._convert(S2)
-    return v and S1 - v or S2.__sub(S1, S2)
-  elseif not _issymbolic(S1) then
-    local v = symbolic._convert(S1)
-    return v and v - S2 or error('Not def')
-  end
-  local res = symbolic:_newExpr(PARENTS.sum, {})
+  _checkarg(S1); _checkarg(S2)
+  local res = symbolic:_newExpr(_parents.sum, {})
   -- S1
-  if S1._parent == PARENTS.sum then
+  if _issymbolic(S1) and S1._parent == _parents.sum then
     for _, v in ipairs(S1._) do table.insert(res._, {v[1], v[2]}) end
   else
     table.insert(res._, {S1, 1})
   end
   -- S2
-  if S2._parent == PARENTS.sum then
-    for _, v in ipairs(S2._) do table.insert(res._, {-v[1], v[2]}) end
+  if _issymbolic(S2) and S2._parent == _parents.sum then
+    for _, v in ipairs(S2._) do table.insert(res._, {v[1], -v[2]}) end
   else
     table.insert(res._, {S2, -1})
   end
-  res:p_simp()
-  res:p_signature()
+  res = res:pSimp()
+  if _issymbolic(res) then
+    res:pSignature()
+  end
   return res
 end
 
@@ -420,7 +413,7 @@ end
 --  @param S Symbolic object.
 --  @return String.
 symbolic.__tostring = function (S)
-  return S._parent.p_str(S, true)  -- true for full version of fn
+  return S._parent.pStr(S, true)  -- true for full version of fn
 end
 
 
@@ -429,71 +422,33 @@ end
 --  @return Negative value.
 symbolic.__unm = function (S)
   local res = nil
-  if S._parent == PARENTS.sum then
-    res = symbolic:_newExpr(PARENTS.sum, {})
+  if S._parent == _parents.sum then
+    res = symbolic:_newExpr(_parents.sum, {})
     for i, v in ipairs(S._) do res._[i] = {v[1], -v[2]} end
   else
-    res = symbolic._m1 * S
+    res = (-1) * S
   end
-  if S._parent == PARENTS.product then
-    res:p_simp()
-  end
-  res:p_signature()
+  res:pSignature()
   return res
 end
 
 
 -- Metamethods
-_about['_ar'] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, _help.META}
-_about['_cmp'] = {"comparison: a==b, a~=b", nil, _help.META}
-
-
---- Transform value to symbolic object.
---  @param v Source object.
---  @return symbolic variable or nil
-symbolic._convert = function (v)
-  return _compatible(v) and symbolic:_newConst(v)
-end
-
-
---- Define (redefine) function.
---  @param sName Function name.
---  @param tArgs List of arguments (symbolic objects).
---  @param S Function body, symbolical expression or Lua function.
---  @return Function object.
-symbolic.def = function (_, sName, tArgs, S)
-  assert(type(sName) == 'string' and _issymbolic(S), "Wrong arguments")
-  local t = {}
-  for i, v in ipairs(tArgs) do
-    if _issymbolic(v) then
-      if v._parent == PARENTS.symbol then
-        t[i] = v._
-      else
-        error "Wrong arguments"
-      end
-    elseif type(v) == 'string' then
-      t[i] = v
-    else
-      error "Wrong arguments"
-    end
-  end
-  symbolic._fnList[sName] = { args = t, body = S }
-  return symbolic:_newSymbol(sName)
-end
-_about[symbolic.def] = {":def(name_s, args_t, expr_S) --> fn_S",
-  "Define symbolical function. S is either symbolic expression or a Lua function.",
-  _help.NEW}
+_about["_ar"] = {"arithmetic: a+b, a-b, a*b, a/b, a^b, -a", nil, _help.META}
+_about["_cmp"] = {"comparison: a==b, a~=b", nil, _help.META}
 
 
 --- Find derivative dS1/dS2.
 --  @param S2 Variable.
 --  @return Derivative.
-symbolic.diff = function (self, S2)
-  if self:_isfn() then
-    error 'Undefined arguments'
+symbolic.diff = function (self, S2, n)
+  n = n or 1
+  if type(S2) == "string" then S2 = symbolic:_newSymbol(S2) end
+  local res = self
+  for i = n, 1, -1 do
+    res = res:pDiff(S2)
   end
-  if type(S2) == 'string' then S2 = symbolic:_newSymbol(S2) end
-  return self:p_diff(S2)
+  return res
 end
 _about[symbolic.diff] = {"S:diff(var_S) --> derivative_S",
   "Find symbolic derivative.", _tag.TRANSFORM}
@@ -503,9 +458,11 @@ _about[symbolic.diff] = {"S:diff(var_S) --> derivative_S",
 --  @param tEnv Table of substitutions (key - value).
 --  @return New object.
 symbolic.eval = function (self, tEnv)
-  local res = self:p_eval(tEnv or {})
-  res:p_simp(true)
-  res:p_signature()
+  local res = self:pEval(tEnv or {})
+  res = res:pSimp(true)
+  if _issymbolic(res) then
+    res:pSignature()
+  end
   return res
 end
 _about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
@@ -517,19 +474,15 @@ _about[symbolic.eval] = {"S:eval(env_t={}) --> upd_S|num",
 symbolic.expand = function (self)
   local acc, rest = {}, {}
   -- collect elements
-  if self._parent == PARENTS.product then
+  if self._parent == _parents.product then
     local toint = _ext.utils.versions.toInteger
     for _, v in ipairs(self._) do
       local k, x = v[2], v[1]
-      if x._parent == PARENTS.sum and k > 0 and toint(k) ~= nil then
+      if x._parent == _parents.sum and k > 0 and toint(k) ~= nil then
         acc[#acc+1] = symbolic._binomial(x._, k)
       else
         rest[#rest+1] = v
       end
-    end
-  elseif self._parent == PARENTS.power then
-    if self._[1]._parent == PARENTS.sum and self._[2]._parent == PARENTS.const then
-      acc[1] = symbolic._binomial(self._[1]._, self._[2]._)
     end
   end
   -- not found
@@ -549,39 +502,25 @@ symbolic.expand = function (self)
   end
   -- multiplier
   if #rest > 0 then
-    local k = symbolic:_newExpr(PARENTS.product, rest)
+    local k = symbolic:_newExpr(_parents.product, rest)
     for _, x in ipairs(res) do x[1] = x[1]*k end
   end
-  res = symbolic:_newExpr(PARENTS.sum, res)
-  res:p_simp()
-  res:p_signature()
+  res = symbolic:_newExpr(_parents.sum, res)
+  res = res:pSimp()
+  if _issymbolic(res) then
+    res:pSignature()
+  end
   return res
 end
 _about[symbolic.expand] = {"S:expand() --> expanded_S",
   "Expand product of polynomials when possible.", _tag.TRANSFORM}
 
 
---- Get function
-symbolic.fn = setmetatable({}, {
-__index = function (_, name)
-  return symbolic._fnInit[name]
-    or symbolic._fnList[name] and symbolic:_newSymbol(name) or nil
-end
-})
-
-
 --- Show internal structure of expression.
 --  @return String with structure.
-symbolic.struct = function (self) return self:p_internal(0) end
+symbolic.struct = function (self) return self:pInternal(0) end
 _about[symbolic.struct] = {"S:struct() --> str",
   "Show internal structure.", _tag.STRUCT}
-
-
---- Check if the symbol is function.
---  @return true when it is function.
-symbolic.isFn = function (self) return self:_isfn() ~= nil end
-_about[symbolic.isFn] = {'S:isFn() --> bool',
-  'Return true if the symbol is function.', _help.OTHER}
 
 
 --- Get symbolic expression from string.
@@ -614,22 +553,14 @@ _about[symbolic.ratDenom] = {"S:ratDenom() --> denominator_S",
   "Get denominator of the expression.", _tag.STRUCT}
 
 
---- Get value of constant.
---  @return Constant value.
-symbolic.val = function (self)
-  return self._parent == PARENTS.const and self._ or nil
-end
-_about[symbolic.val] = {"S:val() --> num", "Get constant value.", _help.OTHER}
-
-
 -- simplify constructor call
 setmetatable(symbolic, {
 __call = function (_, v)
-  if type(v) == 'string' then
+  if type(v) == "string" then
     return symbolic._parse(v)
-  elseif type(v) == 'number' or type(v) == 'table' and v.__mul and v.__add
+  elseif type(v) == "number" or type(v) == "table" and v.__mul and v.__add
   then
-    return symbolic:_newConst(v)
+    return v  -- do nothing
   end
   error ("Wrong argument "..tostring(v))
 end})
