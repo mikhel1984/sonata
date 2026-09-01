@@ -28,13 +28,14 @@ Use flag _-h_ to see additional options:
 ## Structure 
 
 Main components:
-* _core_ - interpreter, help and test systems, other program specific elements
 * _matlib_ - collection of mathematical modules 
+* _core_ - interpreter, help and test systems, other program specific elements
 * _sonata.lua_ - program configuration and loading
 
 Additional components:
 * _about_ - system info
 * _locale_ - localization files
+* _maker_ - Lua wrapper for C functions
 * _notes_ - predefined interactive files
 
 ## Dependencies 

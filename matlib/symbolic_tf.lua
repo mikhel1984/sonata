@@ -212,10 +212,11 @@ common.simpPair = function (S, tParent)
   if tParent == parents.product then
     for _, v in ipairs(S._) do
       if _issym(v[1]) and v[1]._parent == tParent then
-        local k = v[1]:pGetConst()
+        local k, rest = v[1]:pSplitConst()
         if k ~= 1 then
           v[2] = v[2] * k
-          v[1]:pSignature()
+          rest:pSignature()
+          v[1] = rest
         end
       end
     end
@@ -258,7 +259,6 @@ end
 parents.funcValue = {
   -- S._ = {fn, arg1, arg2, ...}
   pId = 2,
-  pIsAtom = false,
   pSimp = function (S, bFull)
     for i, v in ipairs(S._) do
       S._[i] = _issym(v) and v:pSimp(bFull) or v
@@ -401,9 +401,7 @@ end
 --  @return string.
 parents.funcValue.pStr = function (S)
   local t = {}
-  for i = 2, #S._ do
-    t[#t+1] = _issym(S._[i]) and S._[i]:pStr() or tostring(S._[i])
-  end
+  for i = 2, #S._ do t[#t+1] = tostring(S._[i]) end
   return string.format("%s(%s)", S._[1], _tconcat(t, ","))
 end
 
@@ -413,7 +411,6 @@ end
 parents.product = {
   -- S._ = {{S1, pow1}, {S2, pow2}, ...}
   pId = 4,
-  pIsAtom = false,
   pSignature = common.signaturePairs,
   pEq = common.eqPairs,
   pEval = common.evalPairs,
@@ -424,23 +421,24 @@ parents.product = {
 
 --- Split product to numeric and symbolic parts.
 --  @param S Symbolic object.
---  @return Constant value.
-parents.product.pGetConst = function (S)
+--  @return Constant value and the rest of the object.
+parents.product.pSplitConst = function (S)
   local k, v = 1, S._[1]
+  local obj = S
   if not _issym(v[1]) and not _issym(v[2]) then
     k = v[1] ^ v[2]
+    obj = symbolic:_newExpr(parents.product,
+      _move(S._, 2, #S._, 1, {}))
     -- update the rest of object
-    _tremove(S._, 1)
-    S._sign = nil
-    if #S._ == 1 and S._[1][2] == 1 then  -- val^1
+    if #obj._ == 1 and obj._[1][2] == 1 then  -- val^1
       -- simplify
-      local g = S._[1][1]
-      S._parent = g._parent
-      S._sign = g.pIsAtom and g._sign or nil
-      S._ = g._
+      local g = obj._[1][1]
+      obj._parent = g._parent
+      obj._sign = g._sign
+      obj._ = g._
     end
   end
-  return k
+  return k, obj
 end
 
 
@@ -492,13 +490,13 @@ end
 parents.product.pStr = function (S)
   local num, denom = {}, {}
   for _, v in ipairs(S._) do
-    local k, x = v[2], _issym(v[1]) and v[1]:pStr() or tostring(v[1])
+    local k, x = v[2], tostring(v[1])
     if (#S._ > 1 or k ~= 1) and _issym(v[1]) and common.closed[v[1]._parent] then
       x = string.format("(%s)", x)
     end
     if _issym(k) then
       local w = k:pStr()
-      if not k.pIsAtom then w = string.format("(%s)", w) end
+      if k._parent ~= parents.symbol then w = string.format("(%s)", w) end
       num[#num + 1] = string.format("%s^%s", x, w)
     elseif k > 0 then
       num[#num+1] =
@@ -574,7 +572,6 @@ parents.sum = {
   -- S._ = {{S1, k1}, {S2, k2}, ...}
   -- i.e. k1*S1 + k2*S2 + ...
   pId = 5,
-  pIsAtom = false,
   pSignature = common.signaturePairs,
   pEq = common.eqPairs,
   pEval = common.evalPairs,
@@ -660,7 +657,7 @@ end
 parents.sum.pStr = function (S)
   local plus, minus = {}, {}
   for _, v in ipairs(S._) do
-    local k, x = v[2], _issym(v[1]) and v[1]:pStr() or tostring(v[1])
+    local k, x = v[2], tostring(v[1])
     if k > 0 then
       plus[#plus+1] =
         (k == 1) and x or string.format("%s*%s", tostring(k), x)
@@ -683,9 +680,8 @@ end
 parents.symbol = {
   -- S._ = name
   pId = 6,
-  pIsAtom = true,
   pSignature = common.skip,
-  pEq = function (S1, S2) return _issym(S1) and _issym(S2) and S1._ == S2._ end,
+  pEq = function (S1, S2) return _issym(S2) and S1._ == S2._ end,
   pSimp = function (S) return S end,
   pInternal = function (S, n) return string.rep(" ", n) .. S._ end,
   pDiff = function (S1, S2) return S1._ == S2._ and 1 or 0 end,
