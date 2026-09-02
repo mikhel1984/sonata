@@ -18,6 +18,8 @@ local _move = _utils.versions.move
 local _tsort, _tremove, _tconcat = table.sort, table.remove, table.concat
 local _tinsert = table.insert
 
+local K1, K2 = 8, 100000
+
 
 --	MODULE
 
@@ -44,10 +46,13 @@ local function _issym(v) return getmetatable(v) == symbolic end
 --  @return true when S1 < S2.
 local function _compList (S1, S2)
   local v1 = _issym(S1[1]) and S1[1]._sign or 0
-  local k1 = _issym(S1[2]) and S1[2]._sign or 0
   local v2 = _issym(S2[1]) and S2[1]._sign or 0
-  local k2 = _issym(S2[2]) and S2[2]._sign or 0
-  return v1 < v2 or (v1 == v2 and k1 < k2)
+  if v1 == v2 then
+    local k1 = _issym(S1[2]) and S1[2]._sign or 0
+    local k2 = _issym(S2[2]) and S2[2]._sign or 0
+    return k1 < k2
+  end
+  return v1 < v2
 end
 
 
@@ -57,7 +62,7 @@ end
 --  @return true when objects are equal.
 local function _eql (a, b)
   if _issym(a) then
-    return _issym(b) and a:pEq(b)
+    return _issym(b) and a._parent.pEq(a, b)
   else
     return not _issym(b) and a == b
   end
@@ -70,7 +75,8 @@ end
 --  @param tParent Parent reference.
 local function _simpPairElements (a, b, tParent)
   local a1, b1 = a[1], b[1]
-  if not (_issym(a1) or _issym(b1)) then
+  local syma, symb = _issym(a1), _issym(b1)
+  if not (syma or symb) then
     -- c1*c2 + c3*c4  or  c1^c2 * c3^c4
     if tParent == parents.product then
       a[1] = a1*a[2] + b1*b[2]
@@ -78,10 +84,35 @@ local function _simpPairElements (a, b, tParent)
       a[1] = a1^a[2] * b1^b[2]
     end
     a[2], b[2] = 1, 0
-  elseif _issym(a1) and _issym(b1) and b1:pEq(a1) then
+  elseif syma and symb and b1._parent.pEq(b1, a1) then
     -- add coefficients
     a[2], b[2] = a[2] + b[2], 0
   end
+end
+
+
+--- Split product to numeric and symbolic parts.
+--  @param S Symbolic object.
+--  @return Constant value and the rest of the object.
+local function _prodSplitConst (S)
+  local k, v = 1, S._[1]
+  local obj = S
+  if not _issym(v[1]) and not _issym(v[2]) then
+    k = v[1] ^ v[2]
+    obj = symbolic:_newExpr(parents.product,
+      _move(S._, 2, #S._, 1, {}))
+    -- update the rest of object
+    if #obj._ == 1 and obj._[1][2] == 1 then  -- val^1
+      -- simplify
+      local g = obj._[1][1]
+      obj._parent = g._parent
+      obj._sign = g._sign
+      obj._ = g._
+    else
+      obj._parent.pSignature(obj)
+    end
+  end
+  return k, obj
 end
 
 
@@ -117,9 +148,10 @@ end
 common.evalPairs = function (S, tEnv)
   local res = symbolic:_newExpr(S._parent, {})
   for i, v in ipairs(S._) do
+    local v1, v2 = v[1], v[2]
     res._[i] = {
-      _issym(v[1]) and v[1]:pEval(tEnv) or v[1],
-      _issym(v[2]) and v[2]:pEval(tEnv) or v[2]}
+      _issym(v1) and v1._parent.pEval(v1, tEnv) or v1,
+      _issym(v2) and v2._parent.pEval(v2, tEnv) or v2}
   end
   return res
 end
@@ -181,20 +213,21 @@ end
 --  @return true when update signature.
 common.signaturePairs = function (S)
   -- check elements
-  local found = false
+  local update = false
   for _, v in ipairs(S._) do
-    found = _issym(v[1]) and v[1]:pSignature() or found
-    found = _issym(v[2]) and v[2]:pSignature() or found
+    local v1, v2 = v[1], v[2]
+    update = _issym(v1) and v1._parent.pSignature(v1) or update
+    update = _issym(v2) and v2._parent.pSignature(v2) or update
   end
-  if S._sign and not found then return false end
+  if S._sign and not update then return false end
   _tsort(S._, _compList)
-  local sum = S.pId
+  local sum = S._parent.pId
   for _, v in ipairs(S._) do
     if _issym(v[1]) then
-      sum = (sum*8 + v[1]._sign) % 1000000
+      sum = (sum*K1 + v[1]._sign) % K2
     end
     if _issym(v[2]) then
-      sum = (sum*8 + v[2]._sign) % 1000000
+      sum = (sum*K1 + v[2]._sign) % K2
     end
   end
   S._sign = sum
@@ -207,15 +240,14 @@ end
 --  @param tParent Parent reference.
 common.simpPair = function (S, tParent)
   -- be sure that signature is found
-  S:pSignature()
+  -- S:pSignature()
   -- update coefficients
   if tParent == parents.product then
     for _, v in ipairs(S._) do
       if _issym(v[1]) and v[1]._parent == tParent then
-        local k, rest = v[1]:pSplitConst()
+        local k, rest = _prodSplitConst(v[1])
         if k ~= 1 then
           v[2] = v[2] * k
-          rest:pSignature()
           v[1] = rest
         end
       end
@@ -246,7 +278,7 @@ common.simpPair = function (S, tParent)
   -- remove zeros
   for i = #S._, 1, -1 do
     local si = S._[i]
-    if not _issym(si[2]) and si[2] == 0 then
+    if si[2] == 0 then
       _tremove(S._, i)
       S._sign = nil
     end
@@ -261,7 +293,7 @@ parents.funcValue = {
   pId = 2,
   pSimp = function (S, bFull)
     for i, v in ipairs(S._) do
-      S._[i] = _issym(v) and v:pSimp(bFull) or v
+      S._[i] = _issym(v) and v._parent.pSimp(v, bFull) or v
     end
     return S
   end,
@@ -272,17 +304,17 @@ parents.funcValue = {
 --  @param S Symbolic object.
 --  @return true when update signature.
 parents.funcValue.pSignature = function (S)
-  local found = false
+  local update = false
   for _, v in ipairs(S._) do
     if _issym(v) then
-      found = v:pSignature() or found
+      update = v._parent.pSignature(v) or update
     end
   end
-  if S._sign and not found then return false end
-  local sum = S.pId
+  if S._sign and not update then return false end
+  local sum = S._parent.pId
   for _, v in ipairs(S._) do
     if _issym(v) then
-      sum = (sum*8 + v._sign) % 1000000
+      sum = (sum*K1 + v._sign) % K2
     end
   end
   S._sign = sum
@@ -342,7 +374,8 @@ parents.funcValue.pDiff = function (S1, S2)
       error "Wrong arguments number"
     end
     for i, fn in ipairs(diffs) do
-      local dx = args[i]:pDiff(S2)
+      local dx = args[i]
+      dx = dx._parent.pDiff(dx, S2)
       if dx ~= 0 then res = res + fn(_unpack(args)) * dx end
     end
   else
@@ -350,7 +383,8 @@ parents.funcValue.pDiff = function (S1, S2)
     local df = symbolic:_newExpr(
       parents.funcValue, {'diff', symbolic:_newSymbol(S1._[1]), S2})
     for i = 1, #args do
-      local dx = args[i]:pDiff(S2)
+      local dx = args[i]
+      dx = dx._parent.pDiff(dx, S2)
       if dx ~= 0 then res = res + df * dx end
     end
   end
@@ -365,7 +399,8 @@ end
 parents.funcValue.pEval = function (S, tEnv)
   local t, val = {S._[1]}, {}
   for i = 2, #S._ do
-    local v = S._[i]:pEval(tEnv)
+    local V = S._[i]
+    v = v._parent.pEval(v, tEnv)
     t[i] = v
     if not _issym(v) then
       val[#val+1] = v
@@ -419,38 +454,17 @@ parents.product = {
 }
 
 
---- Split product to numeric and symbolic parts.
---  @param S Symbolic object.
---  @return Constant value and the rest of the object.
-parents.product.pSplitConst = function (S)
-  local k, v = 1, S._[1]
-  local obj = S
-  if not _issym(v[1]) and not _issym(v[2]) then
-    k = v[1] ^ v[2]
-    obj = symbolic:_newExpr(parents.product,
-      _move(S._, 2, #S._, 1, {}))
-    -- update the rest of object
-    if #obj._ == 1 and obj._[1][2] == 1 then  -- val^1
-      -- simplify
-      local g = obj._[1][1]
-      obj._parent = g._parent
-      obj._sign = g._sign
-      obj._ = g._
-    end
-  end
-  return k, obj
-end
-
 
 --- Simplify product (in place).
 --  @param S Symbolic object.
 --  @param bFull Flag for recursive simplification.
 parents.product.pSimp = function (S, bFull)
   if bFull then
-    common.simpPair(S)  -- check for similar terms
+    -- common.simpPair(S)  -- check for similar terms
     for _, v in ipairs(S._) do
-      v[1] = _issym(v[1]) and v[1]:pSimp(bFull) or v[1]
-      v[2] = _issym(v[2]) and v[2]:pSimp(bFull) or v[2]
+      local v1, v2 = v[1], v[2]
+      v[1] = _issym(v1) and v1._parent.pSimp(v1, bFull) or v1
+      v[2] = _issym(v2) and v2._parent.pSimp(v2, bFull) or v2
     end
   end
   common.simpPair(S)
@@ -524,11 +538,11 @@ parents.product.pDiff = function (S1, S2)
   local res = 0
   for i, v in ipairs(S1._) do
     local a, b, sum = v[1], v[2]
-    local dx = _issym(a) and a:pDiff(S2) or 0
+    local dx = _issym(a) and a._parent.pDiff(a, S2) or 0
     if dx ~= 0 then
       sum = b * a^(b - 1) * dx
     end
-    dx = _issym(b) and b:pDiff(S2) or 0
+    dx = _issym(b) and b._parent.pDiff(b, S2) or 0
     if dx ~= 0 then
       local prod = a^b * symbolic:log(a)*dx
       sum = sum and (sum + prod) or prod
@@ -538,7 +552,7 @@ parents.product.pDiff = function (S1, S2)
       for j, w in ipairs(S1._) do
         if j ~= i then _tinsert(tmp._, w) end
       end
-      tmp:pSignature()
+      tmp._parent.pSignature(tmp)
       res = res + tmp * sum
     end
   end
@@ -587,17 +601,15 @@ parents.sum = {
 parents.sum.pDiff = function (S1, S2)
   local res = symbolic:_newExpr(parents.sum, {})
   for _, v in ipairs(S1._) do
-    if _issym(v[1]) then
-      _tinsert(res._, {v[1]:pDiff(S2), v[2]})
+    local v1 = v[1]
+    if _issym(v1) then
+      _tinsert(res._, {v1._parent.pDiff(v1, S2), v[2]})
     end
   end
-  local tmp = res:pSimp()
-  if _issym(tmp) then
-    res = tmp
-  else
-    return tmp
+  res = res._parent.pSimp(res)
+  if _issym(res) then
+    res._parent.pSignature(res)
   end
-  res:pSignature()
   return res
 end
 
@@ -622,9 +634,10 @@ end
 --  @param bFull Flag for recursive simplification.
 parents.sum.pSimp = function (S, bFull)
   if bFull then
-    common.simpPair(S, parents.product)  -- check for similar terms
+    -- common.simpPair(S, parents.product)  -- check for similar terms
     for _, v in ipairs(S._) do
-      v[1] = _issym(v[1]) and v[1]:pSimp(bFull) or v[1]
+      local v1 = v[1]
+      v[1] = _issym(v1) and v1._parent.pSimp(v1, bFull) or v1
     end
   end
   -- update structure
@@ -746,6 +759,7 @@ symbolic._newExpr = function (self, parent, v)
   local o = {
     _parent = parent,
     _ = v,
+    _sign = nil,
   }
   return setmetatable(o, self)
 end
@@ -757,7 +771,7 @@ end
 --  @return Symbolic object.
 symbolic._newSymbol = function (self, sName)
   local sum = 0
-  for i = 1, #sName do sum = (sum*8 + string.byte(sName, i, i)) % 100000 end
+  for i = 1, #sName do sum = (sum*K1 + string.byte(sName, i, i)) % K2 end
   local o = {
     _parent = parents.symbol,
     _sign = sum,
