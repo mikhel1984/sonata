@@ -61,6 +61,7 @@ use = {
   extremum   = "Ex",     -- extremums and optimization
   fuzzy      = "Fz",     -- fuzzy logic elements
   autodiff   = "Ad",     -- automatic 1st and 2nd derivatives
+  statistics = "Stat",   -- elements or statistics
 }
 
 

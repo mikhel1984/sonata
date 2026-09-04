@@ -1,6 +1,6 @@
 --[[		sonata/lib/data.lua
 
---- Data processing and statistics.
+--- Data rading and processing.
 --
 --  <br>The software is provided 'as is', without warranty of any kind, express or implied.</br>
 --  </br></br><b>Authors</b>: Stanislav Mikhel
@@ -15,56 +15,9 @@
 
 -- use 'data'
 D = require 'matlib.data'
--- external dependencies, can be loaded implicitly
-require 'matlib.special'
-require 'matlib.matrix'
-require 'matlib.asciiplot'
 
--- initial data (tables)
+-- initial data
 X = {3,2,5,6,3,4,3,1}
--- weight
-W = {1,1,0}
--- enought to define w[i] ~= 1
-W[5] = 2; W[6] = 2
--- average
-ans = D:mean(X)             --.3>  3.375
-
--- standard deviation
-ans = D:std(X,W)            --.3>  1.314
-
--- covariance matrix
-Y = {0,2,1,3,7,5,8,4}
-tmp = D:cov({X,Y})
-ans = tmp[1][2]             --.2>  -0.656
-
--- correlation
-ans = D:corr(X, Y)          --.2> -0.166
-
--- maximum element and index
-_,ans = D:max(X)              -->  4
-
--- median
-ans = D:median(X)             -->  3
-
--- table of frequencies
-tmp = D:freq(X)
-ans = tmp[3]                  -->  3
-
--- central moment
-ans = D:moment(X,2)         --.3>  2.234
-
--- summ of elements
-ans = D:sum(X)                -->  27
-
--- minimum value
-ans = D:min(X)                -->  1
-
--- geometrical mean
-ans = D:geomean(X)          --.3>  2.995
-
--- harmonic mean
-ans = D:harmmean(X,W)       --.3>  2.571
-
 -- check if X[i] > 2
 a = D:is(X, "x > 2")
 ans = a[1]                    -->  1
@@ -81,16 +34,17 @@ ans = tmp[1]                  -->  X[1]
 -- reverse elements
 q = {1, 2, 3, 4, 5}
 D:reverse(q)
-ans = q[1]                   --> 5
+ans = q[1]                    -->  5
 
 -- merge sort
 D:sort(q, "x,y -> x < y")
-ans = q[1]                   --> 1
+ans = q[1]                    -->  1
 
 -- binary search
-ans, _ = D:binsearch(q, 2)   --> 2
+ans, _ = D:binsearch(q, 2)    -->  2
 
 -- generate new list
+Y = {0,2,1,3,7,5,8,4}
 -- use 'lazy' function definition
 tmp = D:zip("x1,x2 -> {x1-x2, x1+x2}", X, Y)
 ans = tmp[1][2]               -->  X[1]+Y[1]
@@ -100,27 +54,16 @@ ans = tmp[1][2]               -->  X[1]+Y[1]
 tmp = D:gen(X,
   "x^2",                 -- rule
   "x, n -> n % 2 == 0")  -- condition
-ans = tmp[2]                  --> X[4]*X[4]
+ans = tmp[2]                  -->  X[4]*X[4]
 
 -- sum of squares
 ans = D:reduce(q, "acc,x -> acc+x^2", 0)  --> 55
 
 -- make array 2x3
 zs = D:zeros(2, 3)
-ans = #zs[2]                  --> 3
+ans = #zs[2]                  -->  3
 
-ans = zs[1][1]                --> 0
-
--- find histogram
-a,b = D:histcounts(X, 3)
-ans = b[1]                    -->  2.25
-
--- define edges
-a,b = D:histcounts(X,{2,4,7})
-ans = a[1]                    -->  1
-
--- show histogram
-print(D:histPlot(X, {2, 4, 7}))
+ans = zs[1][1]                -->  0
 
 -- table range reference
 a = D:ref(X, 3, 6)
@@ -136,7 +79,7 @@ print(a:range())
 
 -- sequential processing
 a = D(X)
-ans = a:filter("x > 3"):sum()  --> 15
+ans = a:filter("x > 3"):reduce("x,y -> x+y")  -->  15
 
 -- dsv write
 nm = os.tmpname()
@@ -151,19 +94,19 @@ ans = tt[2][2]                -->  t[2][2]
 
 -- get column
 vc = D:col(t, 2)
-ans = vc[2]                   --> t[2][2]
+ans = vc[2]                   -->  t[2][2]
 
 -- get row
 vr = D:row(t, 1)
-ans = vr[3]                   --> t[1][3]
+ans = vr[3]                   -->  t[1][3]
 
 -- pack
 bin = D:pack(t)
-ans = #bin                    --> 31
+ans = #bin                    -->  31
 
 -- unpack
 t2 = D:unpack(bin)
-ans = t2[1][2]                --> t[1][2]
+ans = t2[1][2]                -->  t[1][2]
 
 -- Markdown-like print for a table
 print(D:md(t))
@@ -217,7 +160,7 @@ ans = b[2]                    -->  4
 
 -- reverse range
 b1 = b:reverse()
-ans = b1[1]                   --> 10
+ans = b1[1]                   -->  10
 
 -- linear transformations
 -- with range Range objects
@@ -235,16 +178,14 @@ ans = c[1]                  --.3>  0.909
 
 local _ext = {
   utils = require("matlib.utils"),
-  -- matrix = require("matlib.matrix"),  -- covariance
-  -- ap = require("matlib.asciiplot"),  -- histPlot
 }
 
 local _utils = _ext.utils.utils
 local _ver = _ext.utils.versions
 
 local _tag = {
-  STAT='statistics', FILES='in/out', LIST='lists',
-  REF='reference', AUX='auxiliary',
+  FILES="in/out", LIST="lists",
+  REF="reference", AUX="auxiliary",
 }
 
 
@@ -263,7 +204,7 @@ end
 --  @param v Source object.
 --  @return deep copy.
 local function _copyObj(v)
-  if type(v) == 'table' then
+  if type(v) == "table" then
     if v.copy then
       return v:copy()
     else
@@ -277,7 +218,6 @@ local function _copyObj(v)
 end
 
 
-
 --- Recursive making or array with given value.
 --  @param val Value to set.
 --  @param n Current dimentions.
@@ -285,7 +225,9 @@ end
 --  @return table or value.
 local function _fillRest (val, n, ...)
   if n then
-    if n <= 0 then error('expected positive size') end
+    if n <= 0 then
+      error "expected positive size"
+    end
     local res = {}
     for i = 1, n do res[i] = _fillRest(val, ...) end
     return res
@@ -299,19 +241,19 @@ end
 --  @param acc Data type accumulator.
 --  @return binary string.
 local function _listPack (src, acc)
-  local t = {string.pack('B', acc['#'])}
+  local t = {string.pack("B", acc["#"])}
   for _, v in ipairs(src) do
-    if type(v) == 'table' then
+    if type(v) == "table" then
       t[#t+1] = v._pack and v:_pack(acc) or _listPack(v, acc)
-    elseif type(v) == 'number' then
+    elseif type(v) == "number" then
       t[#t+1] = _utils.packNum(v, acc)
-    elseif type(v) == 'string' then
+    elseif type(v) == "string" then
       t[#t+1] = _utils.packStr(v, acc)
     else
       error "Unable to pack"
     end
   end
-  t[#t+1] = '\0'
+  t[#t+1] = "\0"
   return table.concat(t)
 end
 
@@ -325,17 +267,17 @@ end
 local function _listUnpack (src, pos, acc, ver)
   local t, n = {}, nil
   while string.byte(src, pos) ~= 0 do
-    n, pos = string.unpack('B', src, pos)
+    n, pos = string.unpack("B", src, pos)
     local key = acc[n]
     if type(key) == "string" then
-      if key == '#' then
+      if key == "#" then
         t[#t+1], pos = _listUnpack(src, pos, acc, ver)
       elseif string.byte(key, 1) == 0x26 then  -- &
         t[#t+1], pos = _utils.unpackNum(src, pos, key, ver)
       elseif string.byte(key, 1) == 0x22 then  -- "
         t[#t+1], pos = _utils.unpackStr(src, pos, key, ver)
       else   -- Sonata object
-        acc[n] = require('matlib.'..key)
+        acc[n] = require("matlib."..key)
         t[#t+1], pos = acc[n]._unpack(src, pos, acc, ver)
       end
     else  -- library table
@@ -392,7 +334,7 @@ end
 local _help = SonataHelp or {}
 -- description
 local _about = {
-__module__ = "Data processing and statistics."
+__module__ = "Data rading and processing."
 }
 
 
@@ -435,31 +377,10 @@ end
 --  @param k Index name.
 --  @return data value.
 mtList.__index = function (self, k)
-  if k == 'data' then return self._tbl end
+  if k == "data" then return self._tbl end
   return mtList[k] or self._tbl[k]
 end
 
-
---- Estimate covariance for two vectors.
---  @param ii First list index.
---  @param jj Second list index.
---  @param ts List of lists.
---  @param ms List of means.
---  @return Covariance value.
-data._cov2 = function (_, ii, jj, ts, ms)
-  local t1, t2 = ts[ii], ts[jj]
-  if #t1 ~= #t2 then
-    error "Different vector size"
-  end
-  if #t1 == 0 then
-    error "Empty vector"
-  end
-  local m1, m2, s = ms[ii], ms[jj], 0
-  for i = 1, #t1 do
-    s = s + (t1[i] - m1)*(t2[i] - m2)
-  end
-  return s / #t1
-end
 
 
 --- Binary search in sorted list.
@@ -487,29 +408,6 @@ mtList.copy = function (self)
 end
 
 
---- Estimate correlation for two lists.
---  @param t1 First data list.
---  @param t2 Second data list.
---  @return correlation value.
-data.corr = function(_, t1, t2)
-  if #t1 ~= #t2 then
-    error "Different vector size"
-  end
-  local m1 = data:mean(t1)
-  local m2 = data:mean(t2)
-  local s12, s11, s22 = 0, 0, 0
-  for i = 1, #t1 do
-    local d1, d2 = t1[i]-m1, t2[i]-m2
-    s12 = s12 + d1*d2
-    s11 = s11 + d1*d1
-    s22 = s22 + d2*d2
-  end
-  return s12 / math.sqrt(s11*s22)
-end
-_about[data.corr] = {":corr(xs_t, ys_t) --> float",
-  "Find correlation for two vectors.", _tag.STAT}
-
-
 --- Make copy of an object or list.
 --  @param v Source object.
 --  @return deep copy.
@@ -518,43 +416,16 @@ _about[data.copy] = {":copy(t) --> copy_t",
   "Make deep copy of the table.", _help.OTHER}
 
 
-
---- Estimate covariance matrix.
---  @param t Table of data vectors.
---  @return Covariance matrix.
-data.cov = function (_, t)
-  local N = #t
-  if N == 0 then
-    error "Expected list of vectors"
-  end
-  _ext.matrix = _ext.matrix or require('matlib.matrix')
-  local m = _ext.matrix:zeros(N, N)
-  local avg = {}
-  for i = 1, N do avg[i] = data:mean(t[i]) end
-  for i = 1, N do
-    m[i][i] = data:_cov2(i, i, t, avg)
-    for j = i+1, N do
-      m[i][j] = data:_cov2(i, j, t, avg)
-      m[j][i] = m[i][j]
-    end
-  end
-  return m
-end
-mtList.cov = _wrapCall(data.cov)
-_about[data.cov] = {":cov(data_t) --> cov_M",
-  "Find covariance matrix for list of vectors.", _tag.STAT}
-
-
 --- Save Lua table in file, use given delimiter.
 --  @param t Lua table.
 --  @param sFile File name.
 --  @param char Delimiter, default is coma.
 data.csvwrite = function (_, t, sFile, char)
-  local f = assert(io.open(sFile, 'w'))
-  char = char or ','
+  local f = assert(io.open(sFile, "w"))
+  char = char or ","
   for _, v in ipairs(t) do
-    if type(v) == 'table' then v = table.concat(v, char) end
-    f:write(v, '\n')
+    if type(v) == "table" then v = table.concat(v, char) end
+    f:write(v, "\n")
   end
   f:close()
 end
@@ -568,16 +439,16 @@ _about[data.csvwrite] = {":csvwrite(data_t, file_s, delim_s=',')",
 --  @param char Delimiter, default is coma.
 --  @return Lua table with data.
 data.csvread = function (_, sFile, char)
-  local f = assert(io.open(sFile, 'r'))
-  char = char or ','
-  local templ = '([^'..char..']+)'
+  local f = assert(io.open(sFile, "r"))
+  char = char or ","
+  local templ = "([^"..char.."]+)"
   local res = {}
-  for s in f:lines('l') do
+  for s in f:lines("l") do
     -- read data
-    if char ~= '#' then
-      s = string.match(s, '([^#]+)')    -- skip comments
+    if char ~= "#" then
+      s = string.match(s, "([^#]+)")    -- skip comments
     end
-    s = string.match(s, '^%s*(.*)%s*$')  -- strip line
+    s = string.match(s, "^%s*(.*)%s*$")  -- strip line
     if #s > 0 then
       local tmp = {}
       -- parse string
@@ -601,14 +472,14 @@ _about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
 --  @return Table with the filtered elements.
 data.filter = function (_, t, vCond)
   local res = {}
-  if type(vCond) == 'string' then vCond = _utils.Fn(vCond) end
-  if type(vCond) == 'function' then
+  if type(vCond) == "string" then vCond = _utils.Fn(vCond) end
+  if type(vCond) == "function" then
     -- boolean function
     for i = 1, #t do
       local v = t[i]
       if vCond(v) then res[#res+1] = v end
     end
-  elseif type(vCond) == 'table' then
+  elseif type(vCond) == "table" then
     -- weights
     for i = 1, #t do
       if vCond[i] ~= 0 then res[#res+1] = t[i] end
@@ -622,20 +493,6 @@ _about[data.filter] = {":filter(in_t, fn|str|tbl) --> out_t",
   _tag.LIST}
 
 
---- Frequency of elements.
---  @param t Table of numbers.
---  @return Table where keys are elements and values are their frequencies.
-data.freq = function (_, t)
-  local tmp = {}
-  for _, v in ipairs(t) do
-    tmp[v] = (tmp[v] or 0) + 1
-  end
-  return tmp
-end
-mtList.freq = _wrapCall(data.freq)
-_about[data.freq] = {":freq(data_t) --> tbl",
-  "Return table with frequencies of elements.", _tag.STAT}
-
 
 --- Apply given function to elements of the list when condition is true.
 --  @param t Table of numbers.
@@ -643,9 +500,9 @@ _about[data.freq] = {":freq(data_t) --> tbl",
 --  @param cond Condition function f(v,i) or string.
 --  @return obtained list.
 data.gen = function (_, t, fn, cond)
-  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   -- condition function f(value, index)
-  if type(cond) == 'string' then cond = _utils.Fn(cond) end
+  if type(cond) == "string" then cond = _utils.Fn(cond) end
   local q = {}
   if cond then
     for i, v in ipairs(t) do
@@ -662,124 +519,12 @@ _about[data.gen] = {":gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t",
   _tag.LIST}
 
 
---- Geometrical mean.
---  @param t Table of numbers.
---  @param tw Table of weights, optional.
---  @return Geometrical mean.
-data.geomean = function (_, t, tw)
-  if tw then
-    local st, sw = 0, 0
-    for i = 1, #t do
-      local w = tw[i] or 1
-      st = st + w*math.log(w > 0 and t[i] or 1)
-      sw = sw + w
-    end
-    return math.exp(st / sw)
-  else
-    local p = 1
-    for i = 1, #t do p = p * t[i] end
-    return p^(1/#t)
-  end
-end
-mtList.geomean = _wrapCall(data.geomean)
-_about[data.geomean] = {":geomean(data_t, weigh_t=nil) --> num",
-  "Geometrical mean.", _tag.STAT}
-
-
---- Harmonic mean.
---  @param t Table of numbers.
---  @param tw Table of weights. Can be omitted.
---  @return Harmonic mean.
-data.harmmean = function (_, t, tw)
-  if tw then
-    local st, sw = 0, 0
-    for i = 1, #t do
-      local w = tw[i] or 1
-      st = st + w/(w > 0 and t[i] or 1)
-      sw = sw + w
-    end
-    return sw / st
-  else
-    local h = 0
-    for i = 1, #t do h = h + 1/t[i] end
-    return #t / h
-  end
-end
-mtList.harmmean = _wrapCall(data.harmmean)
-_about[data.harmmean] = {":harmmean(data_t, weigh_t=nil) --> num",
-  "Harmonic mean.", _tag.STAT}
-
-
---- Number of elements in each bin.
---  @param t Data table.
---  @param rng Number of bins or table with edges.
---  @return Two tables, with sum and edges.
-data.histcounts = function (_, t, rng)
-  rng = rng or 10
-  local bins = nil
-  -- make copy and sort
-  local y = _ver.move(t, 1, #t, 1, {})
-  table.sort(y)
-  -- prepare edges
-  if type(rng) == 'number' then
-    local vMin, vMax = y[1], y[#y]
-    local wid = (vMax - vMin) / (rng - 1)
-    bins = {}
-    for v = vMin + 0.5*wid, vMax, wid do bins[#bins+1] = v end
-  elseif type(rng) == 'table' then
-    bins = rng
-  else
-    error "Expected number or table"
-  end
-  -- check order
-  for i = 2, #bins do
-    if bins[i] <= bins[i-1] then error ("Wrong order") end
-  end
-  -- fill result
-  local res = {}
-  for i = 1, #bins+1 do res[i] = 0 end
-  local p, i = 1, 1
-  while i <= #y do
-    local v = y[i]
-    if p > #bins or v < bins[p] then
-        res[p] = res[p] + 1
-        i = i + 1
-    else
-      p = p + 1
-    end
-  end
-  return res, bins
-end
-mtList.histcounts = _wrapCall(data.histcounts)
-_about[data.histcounts] = {":histcounts(data_t, edges_t|N=10) --> sum_t, edges_t",
-  "Calculate amount of bins. Edges can be either number or table.", _tag.STAT}
-
-
---- Show histogram with asciiplot.
---  @param t Data table.
---  @param rng Number of bins or table with edges.
---  @return asciiplot object.
-data.histPlot = function (_, t, rng)
-  _ext.ap = _ext.ap or require("matlib.asciiplot")
-  local res, bins = data.histcounts(_, t, rng)
-  bins[#bins+1] = 'rest'
-  local m = data.max(_, res)
-  local fig = _ext.ap()
-  fig:setX {view='min', range={0, m}, fix=true}
-  fig:setY {size=#res}
-  fig:bar(bins, res)
-  return fig
-end
-_about[data.histPlot] = {":histPlot(data_t, edges_t|N=10) --> fig",
-  "Find and show histogram.", _tag.STAT}
-
-
 --- Iterate over all n-length combinations for elements from the list t.
 --  @param t Source list.
 --  @param n Length of combination.
 --  @return iterator over combinations.
 data.icomb = function (_, t, n)
-  local ind, w = {0}, #t-n
+  local ind, w = {0}, #t - n
   -- iterator
   return function ()
     -- check index
@@ -846,11 +591,11 @@ data.iperm = function (_, t)
       for i = 1, n do res[i] = t[ ind[i] ] end
       -- next index
       if p == 1 then
-        loop = loop-1
+        loop = loop - 1
         p = n
       end
       -- swap
-      local q = p-1
+      local q = p - 1
       ind[p], ind[q] = ind[q], ind[p]
       p = q
       return res
@@ -867,7 +612,7 @@ _about[data.iperm] = {":iperm(list_t) --> fn()->t",
 --  @param fn Condition, boolean function or string.
 --  @return Table of 1 and 0.
 data.is = function (_, t, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 1 or 0
@@ -884,7 +629,7 @@ _about[data.is] = {":is(data_t, fn|str) --> weigh_t",
 --  @param fn Condition, boolean function.
 --  @return Table of 1 and 0.
 data.isNot = function (_, t, fn)
-  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   local res = {}
   for i = 1, #t do
     res[i] = fn(t[i]) and 0 or 1
@@ -895,20 +640,6 @@ mtList.isNot = _wrapList(data.isNot)
 _about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
   "Find inverted weights using condition (boolean function or string).", _tag.LIST}
 
-
---- Maximum value.
---  @param t Table of numbers.
---  @return Maximum value and its index.
-data.max = function (_, t)
-  local m, k = t[1], 1
-  for i = 2, #t do
-    if t[i] > m then m, k = t[i], i end
-  end
-  return m, k
-end
-mtList.max = _wrapCall(data.max)
-_about[data.max] = {":max(data_t) --> var, ind_N",
-  "Maximal element and its index.", _tag.STAT}
 
 
 --- Show data in Markdown-like table form.
@@ -929,22 +660,22 @@ data.md = function (_, data_t, names_t, fn)
   -- names
   if names_t then
     local head = {}
-    for j = 1, #acc[1] do head[j] = tostring(names_t[j] or '') end
+    for j = 1, #acc[1] do head[j] = tostring(names_t[j] or "") end
     acc[#acc+1] = head  -- temporary add
   end
   -- save
   local len = _utils.align(acc)
-  for j = 1, #len do line[j] = string.rep('-', len[j]) end
-  local res, templ = {}, '| %s |'
+  for j = 1, #len do line[j] = string.rep("-", len[j]) end
+  local res, templ = {}, "| %s |"
   if names_t then
-    res[1] = string.format(templ, table.concat(acc[#acc], ' | '))
+    res[1] = string.format(templ, table.concat(acc[#acc], " | "))
     acc[#acc] = nil
   end
-  res[#res+1] = string.format('|-%s-|', table.concat(line, '-|-'))
+  res[#res+1] = string.format("|-%s-|", table.concat(line, "-|-"))
   for _, v in ipairs(acc) do
-    res[#res+1] = string.format(templ, table.concat(v, ' | '))
+    res[#res+1] = string.format(templ, table.concat(v, " | "))
   end
-  return table.concat(res, '\n')
+  return table.concat(res, "\n")
 end
 mtList.md = _wrapCall(data.md)
 _about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
@@ -952,84 +683,6 @@ _about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   _help.OTHER}
 
 
---- Average value.
---  @param t Table with numbers.
---  @param tw Table with weight. Can be omitted.
---  @return Average.
-data.mean = function (_, t, tw)
-  if tw then
-    local st, sw = 0, 0
-    for i = 1, #t do
-      local w = tw[i] or 1
-      st = st + t[i]*w
-      sw = sw + w
-    end
-    return st / sw
-  else
-    return data:sum(t) / #t
-  end
-end
-mtList.mean = _wrapCall(data.mean)
-_about[data.mean] = {":mean(data_t, wight_t=nil) --> num",
-  "Calculate average value. Weights can be used.", _tag.STAT}
-
-
---- Find median.
---  @param t Table of numbers.
---  @return Value of median.
-data.median = function (_, t)
-  local len = #t
-  local y = _ver.move(t, 1, len, 1, {})
-  table.sort(y)
-  if len % 2 == 1 then
-    return y[(len+1)/2]
-  else
-    len = len / 2
-    return (y[len] + y[len+1]) * 0.5
-  end
-end
-mtList.median = _wrapCall(data.median)
-_about[data.median] = {":median(data_t) --> num",
-  "Median of the list.", _tag.STAT}
-
-
---- Minimum value.
---  @param t Table of numbers.
---  @return Minimum value and its index.
-data.min = function (_, t)
-  local m, k = t[1], 1
-  for i = 2, #t do
-    if t[i] < m then m, k = t[i], i end
-  end
-  return m, k
-end
-mtList.min = _wrapCall(data.min)
-_about[data.min] = {":min(data_t) --> var, ind_N",
-  "Minimal element and its index.", _tag.STAT}
-
-
---- Central moment.
---  @param t Table of numbers.
---  @param N Order of the moment.
---  @param tw Table of weights. Can be omitted.
---  @return Central moment value.
-data.moment = function (_, t, N, tw)
-  local m, n = 0, 0
-  for i = 1, #t do
-    local w = tw and tw[i] or 1
-    m = m + w * t[i]
-    n = n + w
-  end
-  m = m / n
-  local mu = 0
-  for i = 1, #t do
-    mu = mu + (tw and tw[i] or 1) * (t[i]-m)^N
-  end
-  return mu / n
-end
-mtList.moment = _wrapCall(data.moment)
-_about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
-  "Central moment of order N, weights can be defined.", _tag.STAT}
 
 
 --- Apply reduction rule to the list elements.
@@ -1039,7 +692,7 @@ _about[data.moment] = {":moment(data_t, order_N, weigth_t=nil) --> num",
 --  @return Result of reduction.
 data.reduce = function (_, t, fn, val)
   val = val or 0
-  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   for i = 1, #t do val = fn(val, t[i]) end
   return val
 end
@@ -1051,7 +704,7 @@ _about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> va
 --- Reverse list in place.
 --  @param t List of elements.
 data.reverse = function (_, t)
-  local n, m = math.floor(#t / 2), #t+1
+  local n, m = math.floor(#t / 2), #t + 1
   for i = 1, n do
     t[i], t[m-i] = t[m-i], t[i]
   end
@@ -1073,44 +726,6 @@ _about[data.sort] = {":sort(data_t, fn|str)",
   "Sort elements of the list", _tag.LIST}
 
 
---- Sum of all elements.
---  @param t Table with numbers.
---  @return Sum.
-data.sum = function (_, t)
-  local s = 0
-  for i = 1, #t do s = s+t[i] end
-  return s
-end
-mtList.sum = _wrapCall(data.sum)
-_about[data.sum] = {":sum(data_t) --> var",
-  "Get sum of all elements.", _tag.STAT}
-
-
---- Standard deviation and variance.
---  @param t Table of numbers.
---  @param tw Table of weights.
---  @return Standard deviation, variance.
-data.std = function (_, t, tw)
-  local mean = data:mean(t, tw)
-  local disp = 0
-  if tw then
-    local sw = 0
-    for i = 1, #t do
-      local w = tw[i] or 1
-      disp = disp + w*(t[i]-mean)^2
-      sw = sw + w
-    end
-    disp = disp / sw
-  else
-    for i = 1, #t do disp = disp + (t[i]-mean)^2 end
-    disp = disp / #t
-  end
-  return math.sqrt(disp)
-end
-mtList.std = _wrapCall(data.std)
-_about[data.std] = {":std(data_t, weight_t=nil) --> num",
-  "Standard deviation. Weights can be used.", _tag.STAT}
-
 
 --- Make table of given size filled with zeros.
 --  @param ... Size list.
@@ -1126,7 +741,7 @@ _about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl",
 --  @return List of values fn(...).
 data.zip = function (_, fn, ...)
   local ag, res = {...}, {}
-  if type(fn) == 'string' then fn = _utils.Fn(fn) end
+  if type(fn) == "string" then fn = _utils.Fn(fn) end
   local x, stop = {}, false
   for i = 1, math.huge do
     for j = 1, #ag do
@@ -1161,7 +776,7 @@ _about[data] = {" (data_t) --> new_L",
 
 -- Methametods for the range of numbers.
 local mtRange = {
-  type = 'range',
+  type = "range",
   -- methods
   __len = function (self) return self._N end,
   __newindex = function (self, k, v) end,  -- can't modify
@@ -1173,10 +788,10 @@ local mtRange = {
 --  @param R Range object.
 --  @return Shifted range table.
 mtRange.__add = function (d, R)
-  if type(R) == 'number' then
+  if type(R) == "number" then
     return mtRange.__add(R, d)
   else
-    return mtRange._init(d+R._beg, d+R._end, R._step, R._N)
+    return mtRange._init(d + R._beg, d + R._end, R._step, R._N)
   end
 end
 
@@ -1186,10 +801,10 @@ end
 --  @param d Any number.
 --  @return Shifted range table.
 mtRange.__sub = function (R, d)
-  if type(R) == 'number' then   -- d is range
+  if type(R) == "number" then   -- d is range
     return R + (-1)*d
   else
-    return mtRange._init(R._beg-d, R._end-d, R._step, R._N)
+    return mtRange._init(R._beg - d, R._end - d, R._step, R._N)
   end
 end
 
@@ -1199,7 +814,7 @@ end
 --  @param R Range object.
 --  @return Expanded range table.
 mtRange.__mul = function (d, R)
-  if type(R) == 'number' then
+  if type(R) == "number" then
     return mtRange.__mul(R, d)
   else
     return mtRange._init(d*R._beg, d*R._end, d*R._step, R._N)
@@ -1224,7 +839,7 @@ mtRange.__index = function (self, i)
   if _ver.toInteger(i) ~= nil and i > 0 and i <= self._N then
     local v = 0
     if i < self._N then
-      v = self._beg + (i-1)*self._step
+      v = self._beg + (i - 1)*self._step
     else
       v = self._end
     end
@@ -1286,8 +901,8 @@ data.range = function (_, dBegin, dEnd, dStep)
   -- result
   return mtRange._init(dBegin, dEnd, dStep, n)
 end
-_about[data.range] = {':range(begin_d, end_d, step_d=±1) --> new_R',
-  'Generate range object.', _tag.AUX}
+_about[data.range] = {":range(begin_d, end_d, step_d=±1) --> new_R",
+  "Generate range object.", _tag.AUX}
 
 
 --- Generate powers or 10.
@@ -1299,13 +914,13 @@ data.logrange = function (_, dBeg, dEnd, dStep)
   local range = data.range(_, dBeg, dEnd, dStep)
   return range:map(function (x) return 10^x end)
 end
-_about[data.logrange] = {':logrange(begin_d, end_d, step_d=±1) --> new_R)',
+_about[data.logrange] = {":logrange(begin_d, end_d, step_d=±1) --> new_R)",
   "Generate logarithmic range.", _tag.AUX}
 
 
 -- Get reference to data range in other table
 local mtRef = {
-  type = 'ref' ,
+  type = "ref" ,
   -- methods
   __len = function (t) return t._end - t._beg end,
   __tostring = function (t) return string.format("<ref %s>", tostring(t._tbl)) end,
@@ -1338,7 +953,7 @@ mtRef.__newindex = function (self, k, v)
       -- copy data
       local i0 = k - 1
       local n = math.min(#v, self._end - i0)
-      for i = 1, n do self._tbl[i0 + i] = v[i] end
+      for i = 1, n do self._tbl[i0+i] = v[i] end
     else
       -- set value
       self._tbl[k] = v
@@ -1350,7 +965,7 @@ end
 --- Get reference range.
 --  @return Beginning and the end of data range.
 mtRef.range = function (self)
-  return self._beg+1, self._end
+  return self._beg + 1, self._end
 end
 
 
@@ -1361,8 +976,8 @@ end
 mtRef.shift = function (self, a, b)
   b = b or a
   return setmetatable({
-    _beg=math.max(math.min(self._beg+a, #self._tbl-1), 0),
-    _end=math.max(math.min(self._end+b, #self._tbl), 1),
+    _beg=math.max(math.min(self._beg + a, #self._tbl - 1), 0),
+    _end=math.max(math.min(self._end + b, #self._tbl), 1),
     _tbl=self._tbl
   }, mtRef)
 end
@@ -1380,17 +995,17 @@ data.ref = function (_, t, iBeg, iEnd)
   iEnd = iEnd or #t
   assert(_ver.toInteger(iBeg) and _ver.toInteger(iEnd), "Wrong index type")
   if getmetatable(t) == mtRef then
-    return setmetatable({_beg=t._beg+iBeg-1, _end=t._beg+iEnd, _tbl=t._tbl}, mtRef)
+    return setmetatable({_beg=t._beg + iBeg - 1, _end=t._beg + iEnd, _tbl=t._tbl}, mtRef)
   end
-  return setmetatable({_beg=iBeg-1, _end=iEnd, _tbl=t}, mtRef)
+  return setmetatable({_beg=iBeg - 1, _end=iEnd, _tbl=t}, mtRef)
 end
-_about[data.ref] = {':ref(data_t, begin_N=1, end_N=#src_t) --> new_R',
-  'Return reference to the range of elements.', _tag.REF}
+_about[data.ref] = {":ref(data_t, begin_N=1, end_N=#src_t) --> new_R",
+  "Return reference to the range of elements.", _tag.REF}
 
 
 -- Column reference
 local mtCol = {
-  type='column',
+  type="column",
   -- methods
   __len = function (self) return #self._tbl end,
 }
@@ -1412,8 +1027,8 @@ end
 --  @param k Key, 'data' for group set.
 --  @param v Value, scalar or list.
 mtCol.__newindex = function (self, k, v)
-  if k == 'data' then
-    if type(v) ~= 'table' or #v ~= #self._tbl then
+  if k == "data" then
+    if type(v) ~= "table" or #v ~= #self._tbl then
       error "unable to set elements"
     end
     local t, n = self._tbl, self._n
@@ -1439,7 +1054,7 @@ _about[data.col] = {":col(src_t, col_N) --> ref_Col",
 
 -- Row reference
 local mtRow = {
-  type='row',
+  type="row",
   -- methods
   __len = function (self) return #self._row end,
 }
@@ -1457,8 +1072,8 @@ end
 --  @param k Key, 'data' for group set.
 --  @param v Value, scalar or list.
 mtRow.__newindex = function (self, k, v)
-  if k == 'data' then
-    if type(v) ~= 'table' or #v ~= #self._row then
+  if k == "data" then
+    if type(v) ~= "table" or #v ~= #self._row then
       error "unable to set elements"
     end
     local t = self._row
@@ -1499,24 +1114,24 @@ local mtAccum = {
 --  @return binary string representation.
 data.pack = function (self, v)
   local ver = Sonata and (100*Sonata.MAJOR_V + Sonata.MINOR_V) or 100
-  local t = {'/\\/', string.pack('I2', ver), '\0',}
+  local t = {"/\\/", string.pack("I2", ver), "\0",}
   local acc, bin = setmetatable({_nm={}}, mtAccum), nil
-  if type(v) == 'table' then
+  if type(v) == "table" then
     bin = v._pack and v:_pack(acc) or _listPack(v, acc)
   else
     error "No rules to pack it"
   end
-  -- make 'vocabulary'
+  -- make "vocabulary"
   for _, nm in ipairs(acc._nm) do
-    t[#t+1] = string.pack('B', #nm)
+    t[#t+1] = string.pack("B", #nm)
     t[#t+1] = nm
   end
-  t[#t+1] = '\0'  -- end marker
+  t[#t+1] = "\0"  -- end marker
   t[#t+1] = bin
   -- check sum
   local sum = 0
   for i = 1, #t do sum = sum + _byteSum(t[i]) end
-  t[#t+1] = string.pack('B', sum % 256)
+  t[#t+1] = string.pack("B", sum % 256)
   return table.concat(t)
 end
 _about[data.pack] = {":pack(obj) --> bin_s",
@@ -1527,26 +1142,26 @@ _about[data.pack] = {":pack(obj) --> bin_s",
 --  @param v Source string.
 --  @return object.
 data.unpack = function (_, v)
-  if type(v) ~= 'string' or string.sub(v, 1, 3) ~= '/\\/' then
-    error 'Unknown data type'
+  if type(v) ~= "string" or string.sub(v, 1, 3) ~= "/\\/" then
+    error "Unknown data type"
   end
   if _byteSum(v, #v-1) ~= string.byte(v, #v) then
-    error 'Wrong check sum'
+    error "Wrong check sum"
   end
-  local ver, pos = string.unpack('I2', v, 4)
+  local ver, pos = string.unpack("I2", v, 4)
   pos = pos + 1  -- skip zero
   -- restore vocabulary
   local types, n = {}, 0
   while string.byte(v, pos) ~= 0 do
-    n, pos = string.unpack('B', v, pos)
+    n, pos = string.unpack("B", v, pos)
     types[#types+1] = string.sub(v, pos, pos+n-1)
     pos = pos + n
   end
   pos = pos + 1
-  if types[1] == '#' then  -- lua table
+  if types[1] == "#" then  -- lua table
     return _listUnpack(v, pos+1, types, ver)
   else
-    types[1] = require('matlib.'..types[1])
+    types[1] = require("matlib."..types[1])
     return types[1]._unpack(v, pos+1, types, ver)
   end
 end
