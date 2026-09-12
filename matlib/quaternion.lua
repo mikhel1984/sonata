@@ -188,7 +188,8 @@ quaternion.__add = function (Q1, Q2)
     return v and v + Q2 or error("Not def")
   end
   local q1, q2 = Q1._, Q2._
-  return _numOrQuat(q1[1]+q2[1], q1[2]+q2[2], q1[3]+q2[3], q1[4]+q2[4])
+  return _numOrQuat(
+    q1[1] + q2[1], q1[2] + q2[2], q1[3] + q2[3], q1[4] + q2[4])
 end
 
 
@@ -279,7 +280,8 @@ quaternion.__sub = function (Q1, Q2)
     return v and v - Q2 or error("Not def")
   end
   local q1, q2 = Q1._, Q2._
-  return _numOrQuat(q1[1]-q2[1], q1[2]-q2[2], q1[3]-q2[3], q1[4]-q2[4])
+  return _numOrQuat(
+    q1[1] - q2[1], q1[2] - q2[2], q1[3] - q2[3], q1[4] - q2[4])
 end
 
 
@@ -287,10 +289,11 @@ end
 --  @return String with quaternion elements.
 quaternion.__tostring = function (self)
   local x, y, z = _numStr(self._[2]), _numStr(self._[3]), _numStr(self._[4])
+  local minus = string.byte("-", 1)
   return string.format("%s%s%si%s%sj%s%sk", _numStr(self._[1]),
-    x:sub(1, 1) == "-" and "" or "+", x,
-    y:sub(1, 1) == "-" and "" or "+", y,
-    z:sub(1, 1) == "-" and "" or "+", z)
+    x:byte(1) == minus and "" or "+", x,
+    y:byte(1) == minus and "" or "+", y,
+    z:byte(1) == minus and "" or "+", z)
 end
 
 
@@ -318,7 +321,7 @@ end
 --- Quaternion constructor.
 --  @return New quaternion.
 quaternion._new = function(w, i, j, k)
-  return setmetatable({_={w,i,j,k}}, quaternion)
+  return setmetatable({_={w, i, j, k}}, quaternion)
 end
 
 
@@ -407,21 +410,21 @@ quaternion.fromRot = function (_, M)
   assert(M.ismatrix)
   local tr = M[1][1] + M[2][2] + M[3][3]
   if tr > 0 then
-    local S = 2*_msqrt(1+tr)
+    local S = 2*_msqrt(1 + tr)
     return quaternion._new(
-      0.25*S, (M[3][2]-M[2][3])/S, (M[1][3]-M[3][1])/S, (M[2][1]-M[1][2])/S)
+      0.25*S, (M[3][2] - M[2][3])/S, (M[1][3] - M[3][1])/S, (M[2][1] - M[1][2])/S)
   elseif M[1][1] > M[2][2] and M[1][1] > M[3][3] then
-    local S = 2*_msqrt(1+M[1][1]-M[2][2]-M[3][3])
+    local S = 2*_msqrt(1 + M[1][1] - M[2][2] - M[3][3])
     return quaternion._new(
-      (M[3][2]-M[2][3])/S, 0.25*S, (M[1][2]+M[2][1])/S, (M[1][3]+M[3][1])/S)
+      (M[3][2] - M[2][3])/S, 0.25*S, (M[1][2] + M[2][1])/S, (M[1][3] + M[3][1])/S)
   elseif M[2][2] > M[3][3] then
-    local S = 2*_msqrt(1+M[2][2]-M[1][1]-M[3][3])
+    local S = 2*_msqrt(1 + M[2][2] - M[1][1] - M[3][3])
     return quaternion._new(
-      (M[1][3]-M[3][1])/S, (M[1][2]+M[2][1])/S, 0.25*S, (M[2][3]+M[3][2])/S)
+      (M[1][3] - M[3][1])/S, (M[1][2] + M[2][1])/S, 0.25*S, (M[2][3] + M[3][2])/S)
   else
-    local S = 2*_msqrt(1+M[3][3]-M[1][1]-M[2][2])
+    local S = 2*_msqrt(1 + M[3][3] - M[1][1] - M[2][2])
     return quaternion._new(
-      (M[2][1]-M[1][2])/S, (M[1][3]+M[3][1])/S, (M[2][3]+M[3][2])/S, 0.25*S)
+      (M[2][1] - M[1][2])/S, (M[1][3] + M[3][1])/S, (M[2][3] + M[3][2])/S, 0.25*S)
   end
 end
 _about[quaternion.fromRot] = {":fromRot(M) --> Q",
@@ -441,10 +444,10 @@ quaternion.fromRPY = function (_, roll, pitch, yaw)
   local cy = _mcos(yaw * 0.5)
   local sy = _msin(yaw * 0.5)
   return quaternion._new(
-    cr * cp * cy + sr * sp * sy,
-    sr * cp * cy - cr * sp * sy,
-    cr * sp * cy + sr * cp * sy,
-    cr * cp * sy - sr * sp * cy)
+    cr*cp*cy + sr*sp*sy,
+    sr*cp*cy - cr*sp*sy,
+    cr*sp*cy + sr*cp*sy,
+    cr*cp*sy - sr*sp*cy)
 end
 _about[quaternion.fromRPY] = {":fromRPY(roll_d, pitch_d, yaw_d) --> Q",
   "Convert Euler angles to quaternion.", ROTATION}
@@ -467,7 +470,9 @@ quaternion.log = function (self)
   local v = _msqrt(_cross.float(x)^2 + _cross.float(y)^2 + _cross.float(z)^2)
   w = _cross.float(w)
   local n = _msqrt(w*w + v*v)
-  if v == 0 then return math.log(n) end
+  if v == 0 then 
+    return math.log(n) 
+  end
   local k = math.acos(w / n) / v
   return quaternion._new(math.log(n), x*k, y*k, z*k)
 end
@@ -489,7 +494,7 @@ _about[quaternion.normalized] = {"Q:normalized() --> unit_Q",
 --  @param vec Vector in form of matrix object or the table with 3 elements.
 --  @return Table with new orientation.
 quaternion.rotate = function (self, vec)
-  assert(_mabs(quaternion.abs(self)-1.0) < 1E-3)
+  assert(_mabs(quaternion.abs(self) - 1.0) < 1E-3)
   local p1 = nil
   if vec.ismatrix then
     p1 = quaternion._new(0, vec(1), vec(2), vec(3))
@@ -522,7 +527,7 @@ quaternion.slerp = function (_, Q1, Q2, f)
   -- calculate
   local theta = math.acos(dot)
   local sinTh = _msin(theta)
-  return (_msin((1-f)*theta)/sinTh) * qa + (_msin(f*theta)/sinTh) * qb
+  return (_msin((1 - f)*theta)/sinTh)*qa + (_msin(f*theta)/sinTh)*qb
 end
 _about[quaternion.slerp] = {":slerp(beg_Q, end_Q, rat_f) --> rat_Q",
   "Spherical linear interpolation for the given ratio.", _help.OTHER}
@@ -531,7 +536,7 @@ _about[quaternion.slerp] = {":slerp(beg_Q, end_Q, rat_f) --> rat_Q",
 --- Get angle and axis of the quaternion.
 --  @return Angle and table with unit vector of direction.
 quaternion.toAA = function (self)
-  if _mabs(quaternion._norm2(self)-1) > 1E-4 then
+  if _mabs(quaternion._norm2(self) - 1) > 1E-4 then
     error "Unit quaternion is required!"
   end
   local w, x, y, z = _ver.unpack(self._)
@@ -540,7 +545,7 @@ quaternion.toAA = function (self)
   if _mabs(v) < 1E-20 then
     return 1.0, nil
   end
-  v = _msqrt(x*x + y*y + z*z)
+  v = _msqrt(v)
   return 2*_ver.atan2(v, w), {x/v, y/v, z/v}
 end
 _about[quaternion.toAA] = {"Q:toAA() --> angle_d, axis_t|nil",
@@ -551,14 +556,14 @@ _about[quaternion.toAA] = {"Q:toAA() --> angle_d, axis_t|nil",
 --  @return Rotation matrix 3x3.
 quaternion.toRot = function (self)
   _ext.matrix = _ext.matrix or require("matlib.matrix")
-  if _mabs(quaternion._norm2(self)-1) > 1E-4 then
+  if _mabs(quaternion._norm2(self) - 1) > 1E-4 then
     error "Unit quaternion is required!"
   end
   local w, x, y, z = _ver.unpack(self._)
   return _ext.matrix {
-    {1-2*(y*y+z*z), 2*(x*y-z*w), 2*(x*z+y*w)},
-    {2*(x*y+z*w), 1-2*(x*x+z*z), 2*(y*z-x*w)},
-    {2*(x*z-y*w), 2*(y*z+x*w), 1-2*(x*x+y*y)}}
+    {1 - 2*(y*y + z*z), 2*(x*y - z*w), 2*(x*z + y*w)},
+    {2*(x*y + z*w), 1 - 2*(x*x + z*z), 2*(y*z - x*w)},
+    {2*(x*z - y*w), 2*(y*z + x*w), 1 - 2*(x*x + y*y)}}
 end
 _about[quaternion.toRot] = {"Q:toRot() --> M",
   "Get equal rotation matrix.", ROTATION}
@@ -626,7 +631,7 @@ setmetatable(quaternion,
   return quaternion._new(w, x, y, z)
 end
 })
-_about[quaternion] = {" {x, y, z, w} --> new_Q",
+_about[quaternion] = {" {w, x, y, z} --> new_Q",
   "Create new quaternion.", _help.NEW}
 
 
