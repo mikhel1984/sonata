@@ -16,18 +16,31 @@ About = SonataHelp.init()
 About:prepareLang()
 -- Text colors
 SonataHelp.useColors(SONATA_USE_COLOR)
+
+
 -- Command evaluation.
-Sonata = require('core.evaluate')
--- Quit the program
+Sonata = {
+  MAJOR_V = 1, MINOR_V = 4,
+  alias = {},
+  _modules = {},
+}
+
+
+-- Main definitions.
+local _base = require("core.io_base")
+-- Show table if need.
+printTbl = _base.doShowTable
+-- Quit the program.
 quit = os.exit
 
 
---- Print invite message and read user input.
---  @param str Invite string.
---  @return user input.
-local function _reader (str)
-  io.write(str)
-  return io.read()
+--- Make title string.
+--  @return title string.
+Sonata.getTitle = function ()
+  return string.format(
+[[   # #      --=====  so/\/ata  =====--     # #
+    # #         --==== %d.%02d ====--        # #
+]], Sonata.MAJOR_V, Sonata.MINOR_V)
 end
 
 
@@ -75,22 +88,22 @@ setmetatable(use,
 { -- load modules
   __call = function (self, name)
     if not name then
-      local lst = Sonata.info {
-        Sonata.FORMAT_V1,
+      local lst = _base.formatted {
+        _base.FORMAT_V1,
         string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"),
-        Sonata.FORMAT_CLR}
+        _base.FORMAT_CLR}
       -- show loaded modules
       for k, v in pairs(use) do
         lst[#lst+1] = string.format("%-12s%-10s", k, v)
         if Sonata._modules[v] then
-          lst[#lst+1] = Sonata.FORMAT_V1
+          lst[#lst+1] = _base.FORMAT_V1
           lst[#lst+1] = '++\n'
-          lst[#lst+1] = Sonata.FORMAT_CLR
+          lst[#lst+1] = _base.FORMAT_CLR
         else
           lst[#lst+1] = '\n'
         end
       end
-      return Sonata.inLua and Sonata._toText(lst) or lst
+      return Sonata.inLua and _base.simpleString(lst) or lst
     elseif name == '*' then
       -- load all modules
       for k, _ in  pairs(self) do _doimport(self, k) end
@@ -114,9 +127,9 @@ help = function(v)
     res = About:makeFull(use, SONATA_LOCALIZATION)
   else
     res = About:findObject(v, use, SONATA_LOCALIZATION) or
-          Sonata.info(SonataHelp.objectInfo(v))
+          _base.formatted(SonataHelp.objectInfo(v))
   end
-  return Sonata.inLua and Sonata._toText(res) or res
+  return Sonata.inLua and _base.simpleString(res) or res
 end
 
 
@@ -124,16 +137,16 @@ end
 if arg[1] == '-e' then
   Sonata.inLua = true
   use('main')
-  local ans = Sonata.evalLine(arg[2] or io.read())
-  if ans then io.write(ans, "\n") end
+  local ok, ans = _base.doEval(arg[2] or io.read())
+  if ok then io.write(ans, "\n") end
   os.exit()
 end
 
 
--- command line arguments of Sonata and their processing
+-- Command line arguments of Sonata and their processing
 local _args = {
 
--- run tests
+-- Run tests
 ['--test'] = {
 description = 'Run unit tests.',
 example = {
@@ -154,7 +167,7 @@ process = function (args)
 end,
 exit = true},
 
--- localization file
+-- Localization file
 ['--lang'] = {
 description = 'Generation or updating of the localization file.',
 example = {
@@ -170,7 +183,7 @@ process = function (args)
 end,
 exit = true},
 
--- generate 'help.html'
+-- Generate 'help.html'
 ['--doc'] = {
 description = 'Generating a documentation page.',
 example = {
@@ -187,7 +200,7 @@ process = function (args)
 end,
 exit = true},
 
--- new module
+-- New module
 ['--new'] = {
 description = 'Generating a template for a new module.',
 example = {'e.g. --new  matrices  Mat  "Matrix operations."'},
@@ -197,7 +210,7 @@ process = function (args)
 end,
 exit = true},
 
--- define method for input (and output)
+-- Define method for input (and output)
 ['--io'] = {
 description = "Method for interaction.",
 example = {
@@ -205,13 +218,13 @@ example = {
   '     --io w          # output window mode'},
 process = function (args)
   if args[2] == 'tcp' then
-    local server = require("core.io_socket")
+    local server = require("core.io_tcp")
     local port = assert(tonumber(args[3]), 'Expected: --io tcp port')
     server:new('*', port)
     pcall(server.repl, server)
   elseif args[2] == 'w' then
     -- expected Unix
-    local fname = Sonata._pipeFile()
+    local fname = _base.pipeFile()
     os.execute('> ' .. fname)  -- clear/create file
     os.execute('tail -F ' .. fname)
   else
@@ -220,7 +233,8 @@ process = function (args)
 end,
 exit = true},
 
-['--make'] = {
+-- Generate Lua binding
+['--Make'] = {
 description = "Wrap code into Lua.",
 example = {
   'e.g. --make mylib.h mylib.c'},
@@ -239,14 +253,8 @@ process = function (args)
   if SONATA_LOCALIZATION then
     About:localization(SONATA_LOCALIZATION)
   end
-  for i = 1, #args do
-    if string.find(args[i], '%.note$') then
-      local blk = Sonata.toBlocks(args[i])
-      Sonata.repl(blk, _reader)
-    else
-      dofile(args[i])
-    end
-  end
+  local loop = require("core.io_terminal")
+  loop.replFiles(args)
 end,
 exit = true},
 }
@@ -270,6 +278,8 @@ Sonata._arghelp = function ()
     "\t-h\tGet this help message.",
     "\t-e\tEvaluate command line expression.",
     '\t\te.g. -e "2+2"',
+    "\t-i\tContinue interaction after file evaluation.",
+    "\t\te.g. -i file1.note file2.note",
   }
   for k, v in pairs(_args) do
     if v.description then
@@ -311,14 +321,6 @@ if #arg > 0 then
 end
 
 
--- Use input history
-if SONATA_READLINE then
-  local readline = require("core.io_readline")
-  _reader = readline.reader  -- set implementation
-  Sonata.set_local_env = readline.set_local_env
-end
-
-
 -- Run!!!
 io.write(SonataHelp.CMAIN, '\n', Sonata.getTitle(), '\n', SonataHelp.CHELP)
 io.write(About:get('intro', SONATA_LOCALIZATION), SonataHelp.CRESET, "\n")
@@ -326,9 +328,11 @@ io.write(About:get('intro', SONATA_LOCALIZATION), SonataHelp.CRESET, "\n")
 
 -- choose interpreter
 if arg[-1] ~= '-i' then
-  Sonata.repl(nil, _reader)  -- use Sonata REPL
+  local loop = require("core.io_terminal")
+  loop.repl() -- use Sonata REPL
 else
   Sonata.inLua = true       -- use Lua REPL
 end
 
 --===============================================
+

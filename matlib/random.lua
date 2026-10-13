@@ -15,7 +15,7 @@
 -- use 'random'
 Rand = require 'matlib.random'
 Ap = require 'matlib.asciiplot'     -- for visualization
-_D = require 'matlib.data'          -- hystogram
+Stat = require 'matlib.statistics'  -- hystogram
 Spec = require 'matlib.special'     -- gamma function
 -- prepare for data generation
 N = 100  -- number of points
@@ -32,7 +32,7 @@ for i = 1, N do
 end
 
 -- visualize
-ts, te = _D:histcounts(lst, 10)
+ts, te = Stat:histcounts(lst, 10)
 normalize(ts, 1)
 table.insert(te, 'rest')
 fig = Ap()
@@ -48,7 +48,7 @@ for i = 1, N do
 end
 
 -- visualize renerated data
-ts, te = _D:histcounts(lst, 10)
+ts, te = Stat:histcounts(lst, 10)
 normalize(ts, 1)
 table.insert(te, 'rest')
 fig:bar(te, ts)
@@ -67,7 +67,7 @@ fig:setX {view='min'}
 function visualize (data, a, b, step, fn)
   local lim = {}
   for x = a, b, step do lim[#lim+1] = x end
-  local ts, te = _D:histcounts(data, lim)
+  local ts, te = Stat:histcounts(data, lim)
   normalize(ts, step)
   fig:plot(te, ts, 'random', fn, 'pdf')
   print(fig)

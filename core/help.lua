@@ -35,6 +35,11 @@ local meta_op = {
   __concat="..", __len="#", __eq="==", __lt="<", __le="<=", __call="obj()"
 }
 
+local _ext = {
+  base = require("core.io_base"),
+  -- test = require("core.test"),
+}
+
 
 --	MODULE
 
@@ -147,22 +152,22 @@ help.findObject = function (tbl, obj, tGlob, lang)
       end
       -- function description
       local t = tbl._info[lang][nm][obj]
-      local res = {'  ', Sonata.FORMAT_V1, t[EXTEND], Sonata.FORMAT_CLR,
+      local res = {'  ', _ext.base.FORMAT_V1, t[EXTEND], _ext.base.FORMAT_CLR,
         '\n', t[DESCRIPTION]}
       -- extract examples from unit tests
-      help.ext_test = help.ext_test or require('core.test')
+      _ext.test = _ext.test or require('core.test')
       if not t[TEST] then
         local fname = string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), nm)
         local text = assert(help.readAll(fname), "Unable to load '"..fname.."'")
-        t[TEST] = help.ext_test.getCode(text)
+        t[TEST] = _ext.test.getCode(text)
       end
-      local examples = help.ext_test.examples(t[TEST], t[EXTEND])
+      local examples = _ext.test.examples(t[TEST], t[EXTEND])
       if #examples > 0 then
         res[#res+1] = '\n\n  Example\n'
         -- add one example
         res[#res+1] = examples[1]
       end
-      return Sonata.info (res)
+      return _ext.base.formatted(res)
     end
   end
   return nil
@@ -220,7 +225,7 @@ end
 --  @return List of strings.
 help.makeFull = function (t, tGlob, lang)
   lang = lang or help.DEFAULT
-  local res = Sonata.info {}
+  local res = _ext.base.formatted {}
   for nm, mod in pairs(t._modules) do
     local acc = help.makeModule(t, nm, lang)
     for _, v in ipairs(acc) do
@@ -280,12 +285,12 @@ help.makeModule = function (store, nm, lang)
     end
   end
   -- output
-  local res = Sonata.info {'\n\t', Sonata.FORMAT_V2, store._als[nm], Sonata.FORMAT_CLR,
+  local res = _ext.base.formatted {'\n\t', _ext.base.FORMAT_V2, store._als[nm], _ext.base.FORMAT_CLR,
     '\n', txt, '\n'}
   for cat, n in pairs(acc) do          -- for each category
     res[#res+1] = '\t::'
-    res[#res+1] = Sonata.FORMAT_V1; res[#res+1] = cat
-    res[#res+1] = Sonata.FORMAT_CLR; res[#res+1] = '::\n'
+    res[#res+1] = _ext.base.FORMAT_V1; res[#res+1] = cat
+    res[#res+1] = _ext.base.FORMAT_CLR; res[#res+1] = '::\n'
     table.sort(n)
     res[#res+1] = table.concat(n, '\n')
     res[#res+1] = '\n'
@@ -315,7 +320,7 @@ help.objectInfo = function (var)
     end
     if #acc > 0 then
       table.sort(acc, function (a, b) return #a < #b end)
-      t[#t+1] = '\n'
+      t[#t+1] = '\n\n'
       t[#t+1] = 'Methods: ' .. table.concat(acc, ', ')
     end
   end

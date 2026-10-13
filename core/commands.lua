@@ -12,106 +12,151 @@
 
 --	LOCAL
 
-local Test = nil
-local loadStr = loadstring or load
--- File to save logs
-local LOGNAME = 'log.note'
+local _ext = {
+  base = require("core.io_base"),
+  -- notes = require("core.io_notes"),
+  -- test = require("core.test"),
+}
 
-local function _empty () end
+-- aliases
+local _loadStr = loadstring or load
+local _extBase = _ext.base
 
 
---- Get instruction how to set global variable.
---  @param m Module name.
---  @param k Key name.
---  @param n Global variable name.
---  @return string for evaluation.
-local function set_template (m, k, n)
-  return string.format(
-    "%s = (type(%s.%s) == 'function') and function(...) return %s.%s(%s, ...) end or %s.%s",
-     n,          m, k,                                         m, k, m,              m,  k)
+--- Call note fragment evaluation.
+--  Post processing method.
+--  @param state Executor state.
+--  @param env Thread environment.
+local function _evalNotes (state, env)
+  if state.input == "" and state.notes:ready() then
+    local block, index = state.notes:getNext()
+    local res = state.notes:evalBlock(block, state, env)
+    res[#res+1] = string.format("\t[ %d / %d ]", index, state.notes:size())
+    coroutine.yield(_extBase.EV_INFO, table.concat(res, "\n"))
+  end
 end
 
 
---	MODULE
-
-local commands = {}
-local cmdInfo = {}
-local internal = {}
-
-
---- Show command description.
---  @param k Command name.
-cmdInfo._print = function (k)
-  local info = cmdInfo[k]
-  if info then
-    io.write(string.format("%s\t%s\t- %s\n", k, info[2], About:get(info[1])))
-  else
-    io.write("Unknown key: ", k, "\n")
+--- Save text for log file.
+--  Post processing method.
+--  @param state Executor state.
+--  @param env Thread environment.
+local function _writeLog (state, env)
+  -- input
+  state.log:write(state.input, "\n")
+  -- result
+  if state.status == _extBase.EV_ERR then
+    state.log:write("--[[ ERROR ]]\n")
+  elseif state.output then
+    local txt = _extBase.simpleString(state.output)
+    state.log:write("--[[ ", txt, " ]]\n")
   end
+end
+
+
+--  MODULE
+
+-- File to save logs
+local LOGNAME = 'log.note'
+-- commands
+local commands = {}
+-- Tags
+local cmdInfo = {}
+
+
+--- Make copy of available commands, exclude names from the argument list.
+--  @param ... Commands to hide.
+--  @return list of commands.
+local function _init (...)
+  local res = {}
+  -- copy initial function list
+  for k, v in pairs(commands) do res[k] = v end
+  -- remove the given elements
+  for _, k in ipairs {...} do res[k] = nil end
+  return res
+end
+
+
+--- Prepare command description.
+--  @param k Command name.
+--  @return description line.
+local function _line (k)
+  local info, txt = cmdInfo[k], nil
+  if info then
+    return string.format("%s\t%s\t- %s", k, info[2], About:get(info[1]))
+  end
+  return "Unknown key: "..k
 end
 
 
 --- Clear global variables in environment
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.clear = function (str, env)
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.clear = function (expr, state, env)
   -- parse
   local vs = {}
-  for s in string.gmatch(str, "[^, ]+") do vs[#vs+1] = s end
+  for s in string.gmatch(expr, "[^, ]+") do vs[#vs+1] = s end
   -- apply
   if vs[1] == '*' then
     for k in pairs(env) do env[k] = nil end
   else
-    for i, v in ipairs(vs) do env[v] = nil end
+    for _, v in ipairs(vs) do env[v] = nil end
   end
-  return _empty
+  return _extBase.EV_RES, "Done"
 end
 cmdInfo.clear = {'cmd_clear', "*|v1,v2.."}
-internal.clear = true
 
 
---- Show list of commands
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.help = function (args, env)
-  if cmdInfo[args[2]] then
-    cmdInfo._print(args[2])
+--- Get information about functions.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.help = function (expr, state, env)
+  local acc = {}
+  if cmdInfo[expr] then
+    acc[1] = _line(expr)
   else
     -- combine
     local group = {}
-    for k, _ in pairs(commands) do
+    for k, _ in pairs(state.commands) do
       local tp = cmdInfo[k][3]
       if tp then
         group[tp] = group[tp] or {}
         table.insert(group[tp], k)
       else
-        cmdInfo._print(k)  -- basic command
+        acc[#acc+1] = _line(k)  -- basic command
       end
     end
     -- rest
-    cmdInfo._print('N')
+    acc[#acc+1] = _line("N")
     for t, lst in pairs(group) do
-      io.write(string.format("--\t%s\n", t))
-      for _, v in ipairs(lst) do cmdInfo._print(v) end
+      acc[#acc+1] = "--\t"..t
+      for _, v in ipairs(lst) do acc[#acc+1] = _line(v) end
     end
   end
+  return _extBase.EV_RES, table.concat(acc, "\n")
 end
 cmdInfo.help = {'cmd_help', "[cmd]"}
 
 
 --- Change current language.
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.lang = function (str, env)
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.lang = function (expr, state, env)
   -- get file
-  if str == "en" then
-    str = 'nil'
+  if expr == "en" then
+    expr = 'nil'
   else
-    str = string.match(str, "(%S*)")..".lua"
-    if not About:localization(str) then
-      return nil, "File not found"
+    expr = string.match(expr, "(%S*)")..".lua"
+    if not About:localization(expr) then
+      return _extBase.EV_ERR, "File not found"
     end
-    str = string.format('"%s"', str)
+    expr = string.format('"%s"', expr)
   end
   -- update 'help' function
   local cmd = string.format([[
@@ -120,223 +165,253 @@ commands.lang = function (str, env)
       if v == '*' then
         return About:makeFull(use, %s)
       else
-        return About:findObject(v, use, %s) or Sonata.info(SonataHelp.objectInfo(v))
+        return About:findObject(v, use, %s) or Sonata.formatted(SonataHelp.objectInfo(v))
       end
     end]],
-    str, str)
-  local fn, err = loadStr(cmd, nil, 't', env)
+    expr, expr)
+  local fn, err = _loadStr(cmd, nil, 't', env)
   if err then
-    return nil, err
+    return _extBase.EV_ERR, err
   end
   local ok, val = pcall(fn)
   if not ok then
-    return nil, val
+    return _extBase.EV_ERR, val
   end
-  return function () return "Load "..(str == 'nil' and 'en' or str) end
+  return _extBase.EV_RES,  "Load "..(expr == 'nil' and 'en' or expr)
 end
 cmdInfo.lang = {"cmd_lang", "name"}
-internal.lang = true
 
 
---- Save session to log
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.log = function (args, env)
-  if args[2] == 'on' then
-    if not env.log then
-      env.log = io.open(LOGNAME, 'a')
-      if not env.log then env.evaluate.printErr("Can't open log file") end
+--- Save session to log.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.log = function (expr, state, env)
+  local txt = nil
+  -- start
+  if expr == 'on' then
+    if not state.log then
+      state.log = io.open(LOGNAME, 'a')
+      if not state.log then
+        return _extBase.EV_ERR, "Can't open log file"
+      end
       local d = os.date('*t')
-      env.log:write(
+      state.log:write(
         string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
           d.day, d.month, d.year, d.hour, d.min))
+      txt = "Open "..LOGNAME
+      state.postProc.log = _writeLog
     end
-  elseif args[2] == 'off' then
-    if env.log then
-      env.log:close()
-      env.log = nil
+  -- stop
+  elseif expr == 'off' then
+    if state.log then
+      state.log:close()
+      state.log = nil
+      state.postProc.log = nil
+      txt = "Close "..LOGNAME
     end
   else
-    env.evaluate.printErr('Unexpected argument!')
+    return _extBase.EV_ERR, "Expected 'on'/'off', found "..expr
   end
+  return _extBase.EV_RES, txt
 end
 cmdInfo.log = {'cmd_log', "on/off"}
-
-
--- Print list of blocks
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.ls = function (args, env)
-  for i = 1, #env.notes do
-    local s = ''
-    for line in string.gmatch(env.notes[i], '[^\n\r]+') do
-      if string.find(line, "[^%s]+") then s = line; break end
-    end
-    io.write(string.format("%d   %s\n", i, s))
-  end
-end
-cmdInfo.ls = {'cmd_ls', "", "Note-files"}
 
 
 -- Go to line
 cmdInfo.N = {'cmd_N', "", "Note-files"}
 
 
--- Add 'note' file to the list
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.o = function (args, env)
-  local blk = env.evaluate.toBlocks(args[2])
-  if blk then
-    for _, v in ipairs(blk) do
-      table.insert(env.notes, v)
-    end
-    io.write("Name: '", args[2], "'\tBlocks: ", #blk, "\n")
-  else
-    env.evaluate.printErr("Can't open file "..args[2])
+--- Add 'note' file to the list.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.o = function (expr, state, env)
+  -- load library
+  if not state.notes then
+    _ext.notes = _ext.notes or require("core.io_notes")
+    local cmds = _init("log", "rm")
+    state.notes = _ext.notes.init(cmds)
   end
+  -- load file
+  local res, n0 = nil, state.notes:size()
+  if state.notes:readFile(expr) then
+    state.postProc.notes = _evalNotes
+    res = string.format("Name: %s\tBlocks %d", expr, state.notes:size() - n0)
+  else
+    res = "Unable to open file "..expr
+  end
+  return _extBase.EV_RES, res
 end
 cmdInfo.o = {'cmd_o', "filename", "Note-files"}
 
 
--- Quit the program.
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.q = function (args, env) os.exit() end
+--- Quit the program.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.q = function (expr, state, env)
+  state.run = false
+  return _extBase.EV_RES, nil
+end
 cmdInfo.q = {'cmd_q', ""}
 
 
--- Clear notes
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.rm = function (args, env)
-  env.notes = {}
-  env.queue = {}
-  env.index = 1
+--- Clear notes.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.rm = function (expr, state, env)
+  if state.notes then
+    state.notes:clear()
+  end
+  return _extBase.EV_RES, nil
 end
 cmdInfo.rm = {'cmd_rm', "", "Note-files"}
 
 
---- Set short alias for module methods.
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.set = function (str, env)
-  -- parse
-  local grp = {}
-  for s in string.gmatch(str, "[^,]+") do
-    local g = {}
-    for token in string.gmatch(s, "[^ ]+") do g[#g+1] = token end
-    grp[#grp+1] = g
+--- Print list of blocks.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.ls = function (expr, state, env)
+  local res
+  if not state.notes or state.notes:size() == 0 then
+    res = "No notes"
+  else
+    res = table.concat(state.notes:heads(), "\n")
   end
-  local tbl = table.remove(grp[1], 1)
-  local cs = {}
-  for i, v in ipairs(grp) do
-    if not (#v == 1 or #v == 3 and v[2] == 'as') then
-      return nil, "Wrong format!"
-    end
-    local nm = v[3] or v[1]
-    if string.find(nm, '.', 1, true) then
-      return nil, "Wrong format"
-    end
-    grp[i] = set_template(tbl, v[1], nm)
-  end
-  local input = table.concat(grp, '; ')
-  -- compile code
-  return loadStr(input, nil, 't', env)
+  return _extBase.EV_RES, res
 end
-cmdInfo.set = {'cmd_set', "Module f1 [as v1], f2"}
-internal.set = true
-
-
--- TODO remove?
-commands.shell = function (args, env)
-  local f = assert(io.popen(args[2]))
-  local res = f:read('a')
-  f:close()
-  io.write(res)
-end
-cmdInfo.shell = {"cmd_shell", "cmd"}
+cmdInfo.ls = {'cmd_ls', "", "Note-files"}
 
 
 --- Show the given notes.
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.show = function (args, env)
-  local ind = args[2] and tonumber(args[2]) or env.index
-  if ind < 0 then ind = #env.notes + ind end
-  if 0 < ind and ind <= #env.notes then
-    io.write(env.notes[ind], '\n')
-  end
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.show = function (expr, state, env)
+  return _extBase.EV_RES,
+    state.notes and state.notes:text(expr and tonumber(expr))
 end
 cmdInfo.show = {'cmd_show', "[N]", "Note-files"}
 
 
---- Average time
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.time = function (str, env)
-  Test = Test or require('core.test')
-  local fn, err = loadStr("return "..str, nil, 't', env)
+--- Average time of execution.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.time = function (expr, state, env)
+  _ext.test = _ext.test or require("core.test")
+  -- make function
+  local fn, err = _loadStr("return "..expr, nil, 't', env)
   if err then
-    return nil, err
+    return _extBase.EV_ERR, err
   end
-  local ok, val = pcall(Test.time, fn)
+  -- eval
+  local ok, val = pcall(_ext.test.time, fn)
   if not ok then
-    return nil, val
+    return _extBase.EV_ERR, val
   end
-  local out = string.format('%.4f ms', val)
-  return function () return out end
+  return _extBase.EV_RES, string.format('%.4f ms', val)
 end
 cmdInfo.time = {'cmd_time', "func", "Debug"}
-internal.time = true
 
 
---- Trace function
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.trace = function (str, env)
-  Test = Test or require('core.test')
-  local fn, err = loadStr('return '..str, nil, 't', env)
+--- Trace function call.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.trace = function (expr, state, env)
+  _ext.test = _ext.test or require("core.test")
+  -- make function
+  local fn, err = _loadStr('return '..expr, nil, 't', env)
   if err then
-    return nil, err
+    return _extBase.EV_ERR, err
   end
-  local ok, val = pcall(Test.profile, fn)
+  -- eval
+  local ok, val = pcall(_ext.test.profile, fn)
   if not ok then
-    return nil, val
+    return _extBase.EV_ERR, val
   end
-  local out = tostring(val)
-  return function () return out end
+  return _extBase.EV_RES, tostring(val)
 end
 cmdInfo.trace = {'cmd_trace', "func", "Debug"}
-internal.trace = true
+
+
+--- Show list of variables.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.var = function (expr, state, env)
+  local acc = {}
+  for k, v in pairs(env) do
+    -- make text
+    local tp = type(v)
+    if tp == "table" then tp = v.type or tp end
+    local val = string.match(tostring(v), "^([^\r\n]*)")
+    if #val > 30 then  -- strip
+      val = string.sub(val, 1, 30).."..."
+    end
+    -- show
+    acc[#acc+1] = string.format("%s\t<%s>\t%s", tostring(k), tp, val)
+  end
+  return _extBase.EV_RES, table.concat(acc, "\n")
+end
+cmdInfo.var = {"cmd_var", ""}
 
 
 --- Set output to other window (temporary file).
---  @param args List {command, arg_string}
---  @param env Table with environment references.
-commands.w = function (args, env)
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.w = function (expr, state, env)
   -- prepare file
-  if not env.pipe then
-    local fname = env.evaluate._pipeFile()
-    env.pipe = io.open(fname, 'a+')
+  if not state.pipe then
+    local fname = _extBase.pipeFile()
+    state.pipe = io.open(fname, 'a+')
   end
-  -- exec and write
-  local _, status, res = coroutine.resume(env.co, args[2] or '')
-  if type(res) ~= 'string' then
-    env.evaluate.printErr('Expected string or number, got ' .. type(res))
-  elseif status == env.evaluate.EV_ERR then
-    env.evaluate.printErr(res)
+  -- evaluate input
+  state.pipe:write(">> ", expr, "\n")
+  local co = coroutine.create(_extBase.doEval)
+  local ok, status, res = coroutine.resume(co, expr, env)
+  -- process answers of a user
+  while coroutine.status(co) ~= "dead" do
+    if status == _extBase.EV_ASK and res[2] then
+      state.pipe:write(_extBase.simpleString(res[2]), "\n")
+      state.pipe:flush()
+      table.remove(res)
+    end
+    local answer = coroutine.yield(status, res)
+    ok, status, res = coroutine.resume(co, answer)
+  end
+  -- result
+  if status then
+    state.pipe:write(_extBase.simpleString(res), "\n")
+    status, res = _extBase.EV_RES, nil
   else
-    env.pipe:write('>> ', args[2], '\n')
-    env.pipe:write(res, '\n')
-    env.pipe:flush()
+    state.pipe:write("<< ERROR\n")
+    status = _extBase.EV_ERR
   end
+  state.pipe:flush()
+  return status, res
 end
 cmdInfo.w = {"cmd_w", "expr"}
 
 
 return {
-  commands=commands,
-  internal=internal,
+  init = _init,
 }
+
+--=========================================
 
