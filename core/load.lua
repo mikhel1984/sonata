@@ -20,16 +20,15 @@ SonataHelp.useColors(SONATA_USE_COLOR)
 
 -- Command evaluation.
 Sonata = {
+  -- version
   MAJOR_V = 1, MINOR_V = 4,
-  alias = {},
-  _modules = {},
 }
 
 
 -- Main definitions.
 local _base = require("core.io_base")
 -- Show table if need.
-printTbl = _base.doShowTable
+tprint = _base.doShowTable
 -- Quit the program.
 quit = os.exit
 
@@ -45,23 +44,26 @@ end
 
 
 -- Get list of aliases
+Sonata.alias = {}
+Sonata._modules = {}
 for k, v in pairs(use) do Sonata.alias[v] = k end
+
 -- protect names
 setmetatable(_G, {
--- protect aliases
-__newindex = function (t, k, v)
-  if SONATA_PROTECT_ALIAS and Sonata.alias[k] then
-    error(string.format('%s is reserved for %s module', k, Sonata.alias[k]))
-  end
-  rawset(t, k, v)
-end,
 -- store into the hidden table
 __index = function (t, k)
   if Sonata.alias[k] then
     use(k)
     return Sonata._modules[k]
   end
-end
+end,
+-- protect aliases
+__newindex = function (t, k, v)
+  if SONATA_PROTECT_ALIAS and Sonata.alias[k] then
+    error(string.format("%s is reserved for %s module", k, Sonata.alias[k]))
+  end
+  rawset(t, k, v)
+end,
 })
 
 
@@ -74,7 +76,7 @@ local function _doimport (tbl, name)
     name = assert(Sonata.alias[name], "Wrong module name: "..name.."!")
   end
   if not Sonata._modules[var] then
-    local lib = require('matlib.'..name)
+    local lib = require("matlib."..name)
     Sonata._modules[var] = lib
     if not SONATA_PROTECT_ALIAS then _G[var] = lib end
     -- add description
@@ -84,46 +86,46 @@ end
 
 
 -- Add modules
-setmetatable(use,
-{ -- load modules
-  __call = function (self, name)
-    if not name then
-      local lst = _base.formatted {
-        _base.FORMAT_V1,
-        string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"),
-        _base.FORMAT_CLR}
-      -- show loaded modules
-      for k, v in pairs(use) do
-        lst[#lst+1] = string.format("%-12s%-10s", k, v)
-        if Sonata._modules[v] then
-          lst[#lst+1] = _base.FORMAT_V1
-          lst[#lst+1] = '++\n'
-          lst[#lst+1] = _base.FORMAT_CLR
-        else
-          lst[#lst+1] = '\n'
-        end
+setmetatable(use, { 
+-- load modules
+__call = function (self, name)
+  if not name then
+    local lst = _base.formatted {
+      _base.FORMAT_V1,
+      string.format("\n%-12s%-9s%s\n\n", "MODULE", "ALIAS", "USED"),
+      _base.FORMAT_CLR}
+    -- show loaded modules
+    for k, v in pairs(use) do
+      lst[#lst+1] = string.format("%-12s%-10s", k, v)
+      if Sonata._modules[v] then
+        lst[#lst+1] = _base.FORMAT_V1
+        lst[#lst+1] = "++\n"
+        lst[#lst+1] = _base.FORMAT_CLR
+      else
+        lst[#lst+1] = "\n"
       end
-      return Sonata.inLua and _base.simpleString(lst) or lst
-    elseif name == '*' then
-      -- load all modules
-      for k, _ in  pairs(self) do _doimport(self, k) end
-    elseif type(name) == 'table' then
-      -- load group of modules
-      for i, v in ipairs(name) do _doimport(self, v) end
-    else
-      -- load module
-      _doimport(self, name)
     end
-  end,
+    return Sonata.inLua and _base.simpleString(lst) or lst
+  elseif name == "*" then
+    -- load all modules
+    for k, _ in  pairs(self) do _doimport(self, k) end
+  elseif type(name) == "table" then
+    -- load group of modules
+    for i, v in ipairs(name) do _doimport(self, v) end
+  else
+    -- load module
+    _doimport(self, name)
+  end
+end
 })
 
 
 --- Print SonataHelp information.
 --  @param v Function, module or nil.
 help = function(v)
-  v = v or 'main'
+  v = v or "main"
   local res = nil
-  if v == '*' then
+  if v == "*" then
     res = About:makeFull(use, SONATA_LOCALIZATION)
   else
     res = About:findObject(v, use, SONATA_LOCALIZATION) or
@@ -134,11 +136,11 @@ end
 
 
 -- "Quick" evaluation or a user input
-if arg[1] == '-e' then
+if arg[1] == "-e" then
   Sonata.inLua = true
-  use('main')
+  use("main")
   local ok, ans = _base.doEval(arg[2] or io.read())
-  if ok then io.write(ans, "\n") end
+  if ok then print(_base.simpleString(ans)) end
   os.exit()
 end
 
@@ -147,20 +149,20 @@ end
 local _args = {
 
 -- Run tests
-['--test'] = {
-description = 'Run unit tests.',
+["--test"] = {
+description = "Run unit tests.",
 example = {
-  'e.g. --test          # all tests',
-  '     --test array    # tests for the given module'},
+  "e.g. --test          # all tests",
+  "     --test array    # tests for the given module"},
 process = function (args)
-  local Test = require('core.test')
+  local Test = require("core.test")
   SONATA_PROTECT_ALIAS = false
   if args[2] then
     Test.module(
-      string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), args[2]))
+      string.format("%smatlib/%s.lua", (SONATA_ADD_PATH or ""), args[2]))
   else
     for m in pairs(use) do
-      Test.module(string.format('%smatlib/%s.lua', (SONATA_ADD_PATH or ''), m))
+      Test.module(string.format("%smatlib/%s.lua", (SONATA_ADD_PATH or ""), m))
     end
   end
   Test.summary()
@@ -168,65 +170,65 @@ end,
 exit = true},
 
 -- Localization file
-['--lang'] = {
-description = 'Generation or updating of the localization file.',
+["--lang"] = {
+description = "Generation or updating of the localization file.",
 example = {
-  'e.g. --lang          # show current language',
-  '     --lang eo       # file for Esperanto localization'},
+  "e.g. --lang          # show current language",
+  "     --lang eo       # file for Esperanto localization"},
 process = function (args)
   if args[2] then
-    local Gen = require('core.generator')
+    local Gen = require("core.generator")
     Gen.lang(args[2], use)
   else
-    io.write('Current localization file:\t', SONATA_LOCALIZATION or 'en', '\n')
+    io.write("Current localization file:\t", SONATA_LOCALIZATION or "en", "\n")
   end
 end,
 exit = true},
 
 -- Generate 'help.html'
-['--doc'] = {
-description = 'Generating a documentation page.',
+["--doc"] = {
+description = "Generating a documentation page.",
 example = {
-  'e.g. --doc           # original documentation',
-  '     --doc ru        # translated documentation'},
+  "e.g. --doc           # original documentation",
+  "     --doc ru        # translated documentation"},
 process = function (args)
-  local Gen = require('core.generator')
-  if args[2] == 'md' then
+  local Gen = require("core.generator")
+  if args[2] == "md" then
     Gen.md(use)
   else
-    if args[2] then SONATA_LOCALIZATION = args[2]..'.lng' end
+    if args[2] then SONATA_LOCALIZATION = args[2]..".lng" end
     Gen.doc(SONATA_LOCALIZATION, use)
   end
 end,
 exit = true},
 
 -- New module
-['--new'] = {
-description = 'Generating a template for a new module.',
+["--new"] = {
+description = "Generating a template for a new module.",
 example = {'e.g. --new  matrices  Mat  "Matrix operations."'},
 process = function (args)
-  local Gen = require('core.generator')
+  local Gen = require("core.generator")
   Gen.module(args[2], args[3] or args[2], args[4] or args[2])
 end,
 exit = true},
 
 -- Define method for input (and output)
-['--io'] = {
+["--io"] = {
 description = "Method for interaction.",
 example = {
-  'e.g. --io tcp 23456  # server mode',
-  '     --io w          # output window mode'},
+  "e.g. --io tcp 23456  # server mode",
+  "     --io w          # output window mode"},
 process = function (args)
-  if args[2] == 'tcp' then
+  if args[2] == "tcp" then
     local server = require("core.io_tcp")
-    local port = assert(tonumber(args[3]), 'Expected: --io tcp port')
-    server:new('*', port)
+    local port = assert(tonumber(args[3]), "Expected: --io tcp port")
+    server:new("*", port)
     pcall(server.repl, server)
-  elseif args[2] == 'w' then
+  elseif args[2] == "w" then
     -- expected Unix
     local fname = _base.pipeFile()
-    os.execute('> ' .. fname)  -- clear/create file
-    os.execute('tail -F ' .. fname)
+    os.execute("> " .. fname)  -- clear/create file
+    os.execute("tail -F " .. fname)
   else
     print("Unknown option:", args[2])
   end
@@ -234,10 +236,10 @@ end,
 exit = true},
 
 -- Generate Lua binding
-['--Make'] = {
+["--make"] = {
 description = "Wrap code into Lua.",
 example = {
-  'e.g. --make mylib.h mylib.c'},
+  "e.g. --make mylib.h mylib.c"},
 process = function (args)
   local gen = require("maker.cgen")
   local aa = {}; for i = 2, #args do aa[#aa+1] = args[i] end
@@ -248,7 +250,7 @@ exit = true},
 -- ['-e'] defined outside
 
 -- process files
-['default'] = {
+["default"] = {
 process = function (args)
   if SONATA_LOCALIZATION then
     About:localization(SONATA_LOCALIZATION)
@@ -260,7 +262,7 @@ exit = true},
 }
 
 -- show help
-_args['-h'] = {
+_args["-h"] = {
 process = function () io.write(Sonata._arghelp(), "\n") end,
 exit = true}
 
@@ -283,9 +285,9 @@ Sonata._arghelp = function ()
   }
   for k, v in pairs(_args) do
     if v.description then
-      txt[#txt+1] = string.format('\t%s\t%s', k, v.description)
+      txt[#txt+1] = string.format("\t%s\t%s", k, v.description)
       for i = 1, #v.example do
-        txt[#txt+1] = string.format('\t\t%s', v.example[i])
+        txt[#txt+1] = string.format("\t\t%s", v.example[i])
       end
     end
   end
@@ -294,9 +296,9 @@ Sonata._arghelp = function ()
   txt[#txt+1] = blank
   local modules = {}
   for k in pairs(use) do modules[#modules+1] = k end
-  txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules, ', '))
+  txt[#txt+1] = string.format("MODULES: %s.\n", table.concat(modules, ", "))
   txt[#txt+1] = "BUGS: mail to 'mikhel.sk@gmail.com'\n"
-  return table.concat(txt, '\n')
+  return table.concat(txt, "\n")
 end
 
 
@@ -309,25 +311,25 @@ end
 
 
 -- Call default module
-use('main')
+use("main")
 
 
 -- Process command line arguments
 if #arg > 0 then
   local command = _args[arg[1]]
-  if not command then command = _args['default'] end
+  if not command then command = _args["default"] end
   command.process(arg)
   if command.exit then os.exit() end
 end
 
 
 -- Run!!!
-io.write(SonataHelp.CMAIN, '\n', Sonata.getTitle(), '\n', SonataHelp.CHELP)
-io.write(About:get('intro', SONATA_LOCALIZATION), SonataHelp.CRESET, "\n")
+io.write(SonataHelp.CMAIN, "\n", Sonata.getTitle(), "\n", SonataHelp.CHELP)
+io.write(About:get("intro", SONATA_LOCALIZATION), SonataHelp.CRESET, "\n")
 
 
 -- choose interpreter
-if arg[-1] ~= '-i' then
+if arg[-1] ~= "-i" then
   local loop = require("core.io_terminal")
   loop.repl() -- use Sonata REPL
 else

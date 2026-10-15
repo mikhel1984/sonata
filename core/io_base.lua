@@ -20,7 +20,7 @@ local _loadStr = loadstring or load
 --  @param x Number to check.
 --  @return true in case of integer.
 local _isint = math.tointeger or function (x)
-  if type(x) ~= 'number' then return false end
+  if type(x) ~= "number" then return false end
   local v, p = math.modf(x)
   return p == 0.0
 end
@@ -42,9 +42,9 @@ EV_WARN = 4,  -- show warning
 EV_INFO = 5,  -- show notification
 EV_ERR = 6,   -- error
 -- string formats
-FORMAT_V1 = '#v_1',
-FORMAT_V2 = '#v_2',
-FORMAT_CLR = '#v_clr',
+FORMAT_V1 = "#v_1",
+FORMAT_V2 = "#v_2",
+FORMAT_CLR = "#v_clr",
 }
 
 
@@ -75,22 +75,22 @@ end
 --  @param t Table to show.
 --  @return table elements.
 io_base.doShowTable = function (t)
-  local N, out = 10, {'{ '}
+  local N, out = 10, {"{ "}
   -- dialog
   local function continue(n, res)
-    local txt = tostring(n) .. ': continue? (y/n) '
+    local txt = tostring(n) .. ": continue? (y/n) "
     txt = io_base.ask(txt, res)
-    return string.lower(txt) == 'y'
+    return string.lower(txt) == "y"
   end
   -- list elements
   for i, v in ipairs(t) do
-    out[#out+1] = tostring(v); out[#out+1] = ', '
+    out[#out+1] = tostring(v); out[#out+1] = ", "
     if i % N == 0 then
-      out[#out+1] = '\n'
+      out[#out+1] = "\n"
       local data = table.concat(out)
-      out = {'\n'}
+      out = {"\n"}
       if not continue(i, data) then
-        return '\n}'
+        return "\n}"
       end
     end
   end
@@ -99,19 +99,19 @@ io_base.doShowTable = function (t)
   for k, v in pairs(t) do
     if not (_isint(k) and 0 < k and k <= len) then
       local sk = tostring(k)
-      if string.sub(sk, 1, 1) ~= '_' then
+      if string.sub(sk, 1, 1) ~= "_" then
         out[#out+1] = string.format(
-          #out > 1 and '\n  %s = %s,' or '%s = %s,', sk, tostring(v))
+          #out > 1 and "\n  %s = %s," or "%s = %s,", sk, tostring(v))
         count = count + 1
         if count % N == 0 then
           local data = table.concat(out)
-          out = {'\n'}
+          out = {"\n"}
           if not continue(count, data) then break end
         end
       end
     end
   end
-  out[#out+1] = '}'
+  out[#out+1] = "}"
   return table.concat(out)
 end
 
@@ -249,15 +249,13 @@ io_base.doThread = function (commands, state, env)
   local status, res = io_base.EV_RES, nil
   while true do
     -- pre processing
-    for _, fn in pairs(state.preProc) do
-      fn(state, env)
-    end
+    for _, fn in pairs(state.preProc) do fn(state, env) end
     -- main logic
     local input = coroutine.yield(status, res)
     local cmd = io_base.doRead(input, env)
     status, res = io_base.doCommand(cmd, commands, state, env)
     -- hide output in the case of ";"
-    if res ~= nil and status == io_base.EV_RES and string.find(cmd, ';%s-$') then
+    if res ~= nil and status == io_base.EV_RES and string.find(cmd, ";%s-$") then
       res = nil
     end
     -- save for processing
@@ -270,9 +268,7 @@ io_base.doThread = function (commands, state, env)
       res = _doShowResult(res)
     end
     -- post processing
-    for _, fn in pairs(state.postProc) do
-      fn(state, env)
-    end
+    for _, fn in pairs(state.postProc) do fn(state, env) end
   end
 end
 
@@ -291,7 +287,7 @@ io_base.mainLoop = function (reader, writer, commands, invite, preproc, postproc
     commands=commands, preProc={main=preproc}, postProc={main=postproc}}
   -- environment
   local _ENV = setmetatable({}, {__index=_G})
-  if _VERSION == 'Lua 5.1' then setfenv(1, _ENV) end
+  if _VERSION == "Lua 5.1" then setfenv(1, _ENV) end
   -- thread
   local co = coroutine.create(io_base.doThread)
   coroutine.resume(co, commands, state, _ENV)
@@ -341,9 +337,9 @@ end
 --  @return name string.
 io_base.pipeFile = function ()
   local tmp = os.tmpname()
-  local n = string.find(string.reverse(tmp), '[/\\]')
-  local prefix = n and string.sub(tmp, 1, #tmp-n+1) or ''
-  return prefix .. 'sonata-pipe'
+  local n = string.find(string.reverse(tmp), "[/\\]")
+  local prefix = n and string.sub(tmp, 1, #tmp-n+1) or ""
+  return prefix .. "sonata-pipe"
 end
 
 

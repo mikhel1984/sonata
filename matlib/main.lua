@@ -55,7 +55,7 @@ ans = math.deg(PI)          --.2>  180.0
 
 --	LOCAL
 
-local _tag = { TRIG='trigonometry', HYP='hyperbolic', AUX='auxiliary' }
+local _tag = { TRIG="trigonometry", HYP="hyperbolic", AUX="auxiliary" }
 
 
 -- compatibility
@@ -76,7 +76,7 @@ local _unpack = _ext.utils.versions.unpack
 --  @return Function equal to fn(x).
 local function _call (fn, s)
   return function (v)
-    if type(v) == 'table' then
+    if type(v) == "table" then
       local method = v[s]
       return method and method(v) or fn(v:float())
     end
@@ -99,46 +99,46 @@ local main = {}
 
 
 -- Commonly used methods
-abs = _call(math.abs, 'abs')
+abs = _call(math.abs, "abs")
 _about[abs] = {"abs(x) --> y", "Absolute value."}
-exp = _call(math.exp, 'exp')
+exp = _call(math.exp, "exp")
 _about[exp] = {"exp(x) --> y", "Exponent."}
-log = _call(math.log, 'log')
+log = _call(math.log, "log")
 _about[log] = {"log(x) --> y", "Natural logarithm."}
-sqrt = _call(math.sqrt, 'sqrt')
+sqrt = _call(math.sqrt, "sqrt")
 _about[sqrt] = {"sqrt(x) --> y", "Square root."}
 
 -- Trigonometrical
-sin = _call(math.sin, 'sin')
+sin = _call(math.sin, "sin")
 _about[sin] = {"sin(x) --> y", "Sine.", _tag.TRIG}
-cos = _call(math.cos, 'cos')
+cos = _call(math.cos, "cos")
 _about[cos] = {"cos(x) --> y", "Cosine.", _tag.TRIG}
-tan = _call(math.tan, 'tan')
+tan = _call(math.tan, "tan")
 _about[tan] = {"tan(x) --> y", "Tangent.", _tag.TRIG}
-asin = _call(math.asin, 'asin')
+asin = _call(math.asin, "asin")
 _about[asin] = {"asin(x) --> y", "Inverse sine.", _tag.TRIG}
-acos = _call(math.acos, 'acos')
+acos = _call(math.acos, "acos")
 _about[acos] = {"acos(x) --> y", "Inverse cosine x.", _tag.TRIG}
-atan = _call(math.atan, 'atan')
+atan = _call(math.atan, "atan")
 _about[atan] = {"atan(x) --> y", "Inverse tangent x.", _tag.TRIG}
 atan2 = _ext.utils.versions.atan2
 _about[atan2] = {"atan2(y_d, x_d) --> num",
   "Inverse tangent of y/x, use signs.", _tag.TRIG}
 
 -- Hyperbolic
-cosh = _call(math.cosh, 'cosh')
+cosh = _call(math.cosh, "cosh")
 _about[cosh] = {"cosh(x) --> y", "Hyperbolic cosine.", _tag.HYP}
-sinh = _call(math.sinh, 'sinh')
+sinh = _call(math.sinh, "sinh")
 _about[sinh] = {"sinh(x) --> y", "Hyperbolic sinus.", _tag.HYP}
-tanh = _call(math.tanh, 'tanh')
+tanh = _call(math.tanh, "tanh")
 _about[tanh] = {"tanh(x) --> y", "Hyperbolic tangent.", _tag.HYP}
 
 -- Hyperbolic inverse
-asinh = _call(_calc.asinh, 'asinh')
+asinh = _call(_calc.asinh, "asinh")
 _about[asinh] = {"asinh(x) --> y", "Hyperbolic inverse sine.", _tag.HYP}
-acosh = _call(_calc.acosh, 'acosh')
+acosh = _call(_calc.acosh, "acosh")
 _about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", _tag.HYP}
-atanh = _call(_calc.atanh, 'atanh')
+atanh = _call(_calc.atanh, "atanh")
 _about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", _tag.HYP}
 
 
@@ -147,9 +147,9 @@ _about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", _tag.HYP}
 --  @param y Second number or object.
 --  @return true when objects are equal.
 eq = function (x, y)
-  if type(x) == 'table' and x.__eq then
+  if type(x) == "table" and x.__eq then
     return x:__eq(y)
-  elseif type(y) == 'table' and y.__eq then
+  elseif type(y) == "table" and y.__eq then
     return y:__eq(x)
   end
   return x == y
@@ -161,9 +161,9 @@ _about[eq] = {"eq(x, y) --> bool", "Check equality of two objects."}
 --  @param x Number or object.
 --  @return float point number.
 float = function (x)
-  if type(x) == 'number' then
+  if type(x) == "number" then
     return x
-  elseif type(x) == 'table' then
+  elseif type(x) == "table" then
     return x:float()
   else
     return tonumber(x)
@@ -225,33 +225,33 @@ _about[Fstr] = {"Fstr(txt) --> txt",
 --  @param t Table with arguments.
 --  @return Table with result of evaluation.
 Map = function (fn, t)
-  if type(fn) == 'string' then
+  if type(fn) == "string" then
     fn = _fn(fn)
   end
-  if type(t) == 'table' then
+  if type(t) == "table" then
     if t.map then return t:map(fn) end
     local res = {}
     for i, v in ipairs(t) do res[i] = fn(v) end
     return res
   end
 end
-_about[Map] = {'Map(fn, in_t) --> out_t|nil',
-  'Evaluate function for each table element.', _tag.AUX}
+_about[Map] = {"Map(fn, in_t) --> out_t|nil",
+  "Evaluate function for each table element.", _tag.AUX}
 
 
 --- Use 'asciiplot' for simplified print.
 --  @param ... Objects to plot.
 --  @return figure as text.
 Plot = function (t)
-  _ext.ap = _ext.ap or require('matlib.asciiplot')
+  _ext.ap = _ext.ap or require("matlib.asciiplot")
   local f = _ext.ap()
   -- params
   for k, v in pairs(t) do
-    if type(k) == 'string' then
-      local axis, param = string.match(k, '(.)(.+)')
-      if axis == 'x' then 
+    if type(k) == "string" then
+      local axis, param = string.match(k, "(.)(.+)")
+      if axis == "x" then 
         f:setX {[param]=v}
-      elseif axis == 'y' then 
+      elseif axis == "y" then 
         f:setY {[param]=v}
       end
     end
@@ -274,21 +274,23 @@ Round = function (f, v)
   end
   return _round(f, v)
 end
-_about[Round] = {'Round(v, decimal_N=0) --> round_v',
-  'Round value, define number of decimal digits or tolerance.', _tag.AUX}
+_about[Round] = {"Round(v, decimal_N=0) --> round_v",
+  "Round value, define number of decimal digits or tolerance.", _tag.AUX}
 
 
 if Sonata
 then  --~~~~~~~~~~~~~~~~~~~~~~
 
   -- Sonata specific functions
-  _about[use] = {'use([module_s]) --> str|nil',
+  _about[use] = {"use([module_s]) --> str|nil",
     "Call use('module') or use{'module1','module2'} to load new functions.", _tag.AUX}
 
   _about[help] = {"help(fn='main') --> str",
     "Show information about the function.", _tag.AUX}
 
-  _about[quit] = {'quit()', "Quit the program.", _tag.AUX}
+  _about[quit] = {"quit()", "Quit the program.", _tag.AUX}
+
+  _about[tprint] = {"tprint(tbl)", "Print table.", _tag.AUX}
 
 end   --~~~~~~~~~~~~~~~~~~~~~~
 

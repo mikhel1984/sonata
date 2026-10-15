@@ -54,10 +54,20 @@ local function _writeLog (state, env)
 end
 
 
+--- Initialize log writing.
+--  Post processing method.
+--  @param state Executor state.
+--  @param env Thread environment.
+local function _initLog (state, env)
+  state.postProc.log = _writeLog
+  state.preProc.log = nil
+end
+
+
 --  MODULE
 
 -- File to save logs
-local LOGNAME = 'log.note'
+local LOGNAME = "log.note"
 -- commands
 local commands = {}
 -- Tags
@@ -99,14 +109,14 @@ commands.clear = function (expr, state, env)
   local vs = {}
   for s in string.gmatch(expr, "[^, ]+") do vs[#vs+1] = s end
   -- apply
-  if vs[1] == '*' then
+  if vs[1] == "*" then
     for k in pairs(env) do env[k] = nil end
   else
     for _, v in ipairs(vs) do env[v] = nil end
   end
   return _extBase.EV_RES, "Done"
 end
-cmdInfo.clear = {'cmd_clear', "*|v1,v2.."}
+cmdInfo.clear = {"cmd_clear", "*|v1,v2.."}
 
 
 --- Get information about functions.
@@ -139,7 +149,7 @@ commands.help = function (expr, state, env)
   end
   return _extBase.EV_RES, table.concat(acc, "\n")
 end
-cmdInfo.help = {'cmd_help', "[cmd]"}
+cmdInfo.help = {"cmd_help", "[cmd]"}
 
 
 --- Change current language.
@@ -150,7 +160,7 @@ cmdInfo.help = {'cmd_help', "[cmd]"}
 commands.lang = function (expr, state, env)
   -- get file
   if expr == "en" then
-    expr = 'nil'
+    expr = "nil"
   else
     expr = string.match(expr, "(%S*)")..".lua"
     if not About:localization(expr) then
@@ -169,7 +179,7 @@ commands.lang = function (expr, state, env)
       end
     end]],
     expr, expr)
-  local fn, err = _loadStr(cmd, nil, 't', env)
+  local fn, err = _loadStr(cmd, nil, "t", env)
   if err then
     return _extBase.EV_ERR, err
   end
@@ -177,7 +187,7 @@ commands.lang = function (expr, state, env)
   if not ok then
     return _extBase.EV_ERR, val
   end
-  return _extBase.EV_RES,  "Load "..(expr == 'nil' and 'en' or expr)
+  return _extBase.EV_RES,  "Load "..(expr == "nil" and "en" or expr)
 end
 cmdInfo.lang = {"cmd_lang", "name"}
 
@@ -190,21 +200,21 @@ cmdInfo.lang = {"cmd_lang", "name"}
 commands.log = function (expr, state, env)
   local txt = nil
   -- start
-  if expr == 'on' then
+  if expr == "on" then
     if not state.log then
-      state.log = io.open(LOGNAME, 'a')
+      state.log = io.open(LOGNAME, "a")
       if not state.log then
         return _extBase.EV_ERR, "Can't open log file"
       end
-      local d = os.date('*t')
+      local d = os.date("*t")
       state.log:write(
-        string.format('\n--\tSession\n-- %d-%d-%d %d:%d\n\n',
+        string.format("\n--\tSession\n-- %d-%d-%d %d:%d\n\n",
           d.day, d.month, d.year, d.hour, d.min))
       txt = "Open "..LOGNAME
-      state.postProc.log = _writeLog
+      state.preProc.log = _initLog
     end
   -- stop
-  elseif expr == 'off' then
+  elseif expr == "off" then
     if state.log then
       state.log:close()
       state.log = nil
@@ -216,11 +226,11 @@ commands.log = function (expr, state, env)
   end
   return _extBase.EV_RES, txt
 end
-cmdInfo.log = {'cmd_log', "on/off"}
+cmdInfo.log = {"cmd_log", "on/off"}
 
 
 -- Go to line
-cmdInfo.N = {'cmd_N', "", "Note-files"}
+cmdInfo.N = {"cmd_N", "", "Note-files"}
 
 
 --- Add 'note' file to the list.
@@ -245,7 +255,7 @@ commands.o = function (expr, state, env)
   end
   return _extBase.EV_RES, res
 end
-cmdInfo.o = {'cmd_o', "filename", "Note-files"}
+cmdInfo.o = {"cmd_o", "filename", "Note-files"}
 
 
 --- Quit the program.
@@ -257,7 +267,7 @@ commands.q = function (expr, state, env)
   state.run = false
   return _extBase.EV_RES, nil
 end
-cmdInfo.q = {'cmd_q', ""}
+cmdInfo.q = {"cmd_q", ""}
 
 
 --- Clear notes.
@@ -271,7 +281,7 @@ commands.rm = function (expr, state, env)
   end
   return _extBase.EV_RES, nil
 end
-cmdInfo.rm = {'cmd_rm', "", "Note-files"}
+cmdInfo.rm = {"cmd_rm", "", "Note-files"}
 
 
 --- Print list of blocks.
@@ -288,7 +298,7 @@ commands.ls = function (expr, state, env)
   end
   return _extBase.EV_RES, res
 end
-cmdInfo.ls = {'cmd_ls', "", "Note-files"}
+cmdInfo.ls = {"cmd_ls", "", "Note-files"}
 
 
 --- Show the given notes.
@@ -300,7 +310,7 @@ commands.show = function (expr, state, env)
   return _extBase.EV_RES,
     state.notes and state.notes:text(expr and tonumber(expr))
 end
-cmdInfo.show = {'cmd_show', "[N]", "Note-files"}
+cmdInfo.show = {"cmd_show", "[N]", "Note-files"}
 
 
 --- Average time of execution.
@@ -311,7 +321,7 @@ cmdInfo.show = {'cmd_show', "[N]", "Note-files"}
 commands.time = function (expr, state, env)
   _ext.test = _ext.test or require("core.test")
   -- make function
-  local fn, err = _loadStr("return "..expr, nil, 't', env)
+  local fn, err = _loadStr("return "..expr, nil, "t", env)
   if err then
     return _extBase.EV_ERR, err
   end
@@ -320,9 +330,9 @@ commands.time = function (expr, state, env)
   if not ok then
     return _extBase.EV_ERR, val
   end
-  return _extBase.EV_RES, string.format('%.4f ms', val)
+  return _extBase.EV_RES, string.format("%.4f ms", val)
 end
-cmdInfo.time = {'cmd_time', "func", "Debug"}
+cmdInfo.time = {"cmd_time", "func", "Debug"}
 
 
 --- Trace function call.
@@ -333,7 +343,7 @@ cmdInfo.time = {'cmd_time', "func", "Debug"}
 commands.trace = function (expr, state, env)
   _ext.test = _ext.test or require("core.test")
   -- make function
-  local fn, err = _loadStr('return '..expr, nil, 't', env)
+  local fn, err = _loadStr("return "..expr, nil, "t", env)
   if err then
     return _extBase.EV_ERR, err
   end
@@ -344,7 +354,7 @@ commands.trace = function (expr, state, env)
   end
   return _extBase.EV_RES, tostring(val)
 end
-cmdInfo.trace = {'cmd_trace', "func", "Debug"}
+cmdInfo.trace = {"cmd_trace", "func", "Debug"}
 
 
 --- Show list of variables.
@@ -379,7 +389,7 @@ commands.w = function (expr, state, env)
   -- prepare file
   if not state.pipe then
     local fname = _extBase.pipeFile()
-    state.pipe = io.open(fname, 'a+')
+    state.pipe = io.open(fname, "a+")
   end
   -- evaluate input
   state.pipe:write(">> ", expr, "\n")
