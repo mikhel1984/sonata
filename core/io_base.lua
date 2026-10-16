@@ -172,18 +172,7 @@ io_base.doCommand = function (input, commands, state, env)
   local fn = commands[name]
   local ok, res = false, nil
   if name and not fn then
-    -- check block index
-    local n = tonumber(name)
-    if n then
-      if state.notes then
-        n = state.notes:goTo(n)
-        ok, res = true, "Start from "..tostring(n)
-      else
-        ok, res = true, "No notes"
-      end
-    else
-      ok, res = false, "Unknown command: "..name
-    end
+    ok, res = false, "Unknown command: "..name
   elseif fn then
     ok, res = fn(expr, state, env)
   else
@@ -250,15 +239,14 @@ io_base.doThread = function (commands, state, env)
     -- main logic
     local input = coroutine.yield(status, res)
     local cmd = io_base.doRead(input, env)
+    state.input = cmd
     status, res = io_base.doCommand(cmd, commands, state, env)
+    state.status = status
     -- hide output in the case of ";"
     if res ~= nil and status == io_base.EV_RES and string.find(cmd, ";%s-$") then
       res = nil
     end
-    -- save for processing
-    state.input = cmd
     state.output = res
-    state.status = status
     -- print table
     if res ~= nil and status == io_base.EV_RES then
       env.ANS = res  -- set "global" variable

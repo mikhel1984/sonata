@@ -66,6 +66,29 @@ io_notes.clear = function (self)
 end
 
 
+--- Wrap index for the given block size.
+--  Index could be negative out of the block list size.
+io_notes.clip = function (self, ind)
+  if ind < 0 then ind = #self.blocks + ind + 1 end
+  if ind < 1 then
+    return 1
+  elseif ind > #self.blocks then
+    return #self.blocks
+  end
+  return ind
+end
+
+
+--- Add sequence to queue.
+--  @param new Flag to prepare new queue.
+--  @param a Start index.
+--  @param b End index.
+io_notes.enqueue = function (self, new, a, b)
+  if new then self.queue = {} end
+  for i = a, b do table.insert(self.queue, i) end
+end
+
+
 --- Evaluate the given block of notes.
 --  @param block Text block.
 --  @param state Executor state.
@@ -187,19 +210,6 @@ io_notes.text = function (self, ind)
     end
   end
 end
-
-
---- Start sequence of execution from the given index.
---  Index could be negative out of the block list size.
-io_notes.goTo = function (self, ind)
-  if ind < 0 then ind = #self.blocks + ind + 1 end
-  if ind < 1 then ind = 1
-  elseif ind > #self.blocks then ind = #self.blocks end
-  self.queue = {}
-  for i = ind, #self.blocks do table.insert(self.queue, i) end
-  return ind
-end
-
 
 return io_notes
 

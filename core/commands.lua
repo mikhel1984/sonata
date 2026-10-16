@@ -229,8 +229,37 @@ end
 cmdInfo.log = {"cmd_log", "on/off"}
 
 
--- Go to line
-cmdInfo.N = {"cmd_N", "", "Note-files"}
+--- Update sequence of notes to eval.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.n = function (expr, state, env)
+  if not state.notes or state.notes:size() == 0 then
+    return _extBase.EV_RES, "Notes not found"
+  end
+  if not string.find(expr, "%d+") then
+    state.notes:enqueue(true, 1, 0)  -- set empty queue
+    return _extBase.EV_RES, "Clear queue"
+  end
+  local prev, isnew = nil, true
+  for d, p in string.gmatch(expr, "(%-?%d+)%s*([,:]?)") do
+    if not d then break end
+    d = state.notes:clip(tonumber(d))
+    if not d then break end
+    if p == "," then
+      state.notes:enqueue(isnew, prev or d, d)
+      prev, isnew = nil, false
+    elseif p == ":" then
+      prev = d
+    else
+      state.notes:enqueue(isnew, prev or d, d)
+    end
+  end
+  state.input = ""  -- reset to start evaluation immediately
+  return _extBase.EV_RES, nil
+end
+cmdInfo.n = {"cmd_n", "n[:m,p]", "Note-files"}
 
 
 --- Add 'note' file to the list.
