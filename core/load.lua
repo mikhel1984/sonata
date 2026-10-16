@@ -9,20 +9,21 @@
 	module 'load'
 ]]
 
+
+-- Global state.
+Sonata = {
+  -- version
+  MAJOR_V = 1, MINOR_V = 4,
+  -- keep modules
+  alias = {}, _modules = {},
+}
+
+
 -- Prepare help module.
 SonataHelp = require("core.help")
 -- Collect all descriptions
 About = SonataHelp.init()
 About:prepareLang()
--- Text colors
-SonataHelp.useColors(SONATA_USE_COLOR)
-
-
--- Command evaluation.
-Sonata = {
-  -- version
-  MAJOR_V = 1, MINOR_V = 4,
-}
 
 
 -- Main definitions.
@@ -31,6 +32,10 @@ local _base = require("core.io_base")
 tprint = _base.doShowTable
 -- Quit the program.
 quit = os.exit
+-- Show warning
+Sonata.warning = _base.warning
+-- Ask question
+Sonata.ask = _base.ask
 
 
 --- Make title string.
@@ -44,8 +49,6 @@ end
 
 
 -- Get list of aliases
-Sonata.alias = {}
-Sonata._modules = {}
 for k, v in pairs(use) do Sonata.alias[v] = k end
 
 -- protect names

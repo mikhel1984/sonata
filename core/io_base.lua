@@ -140,6 +140,7 @@ io_base.isformatted = function (v) return getmetatable(v) == mt_sonatainfo end
 --- Allow functions to ask question.
 --  @param question Question to user, print as invite string.
 --  @param res Current result if any.
+--  @return user response.
 io_base.ask = function (question, res)
   return coroutine.yield(io_base.EV_ASK, {question, res})
 end
@@ -147,16 +148,12 @@ end
 
 --- Show warning notification.
 --  @param txt Warning message.
-io_base.warning = function (txt)
-  return coroutine.yield(io_base.EV_WARN, txt)
-end
+io_base.warning = function (txt) coroutine.yield(io_base.EV_WARN, txt) end
 
 
 --- Show any information.
 --  @param txt Text to show.
-io_base.info = function (txt)
-  return coroutine.yield(io_base.EV_INFO, txt)
-end
+io_base.info = function (txt) coroutine.yield(io_base.EV_INFO, txt) end
 
 
 --- Check command input, evaluate expression.

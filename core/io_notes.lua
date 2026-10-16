@@ -72,32 +72,35 @@ end
 --  @param env Thread environment.
 --  @return table with inputs and outputs.
 io_notes.evalBlock = function (self, block, state, env)
-  local read, ok, status, res, input
+  local read, ok, status, res
   local acc = {}
 
   for line in string.gmatch(block, "([^\n]+)\r?\n?") do
     -- read
+    local input = nil
     if string.find(line, '^%s*%-%-') then
       -- highlight line comments
       line = string.gsub(line, '\t(.+)', NOTE_TEMPL)
       acc[#acc+1] = SonataHelp.CHELP..line..SonataHelp.CRESET
     elseif not read or coroutine.status(read) == "dead" then
       -- finish current input
-      input = line
       acc[#acc+1] = _invite[1]..line
       read = coroutine.create(_extBase.doRead)
       ok, status, res = coroutine.resume(read, line, env)
+      input = line
     else
       -- continue input
-      input = input.."\n"..line
       acc[#acc+1] = _invite[2]..line
       ok, status, res = coroutine.resume(read, line)
+      input = status
     end
     -- evaluate
     if status ~= _extBase.EV_CMD and input then
       ok, res = _extBase.doCommand(input, self.commands, state, env)
       if ok then
+        if string.find(input, ";%s-$") then res = nil end
         if res ~= nil then
+          env.ANS = res
           acc[#acc+1] = _extBase.simpleString(res)
         end
       else

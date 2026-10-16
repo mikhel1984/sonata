@@ -249,7 +249,7 @@ commands.o = function (expr, state, env)
   local res, n0 = nil, state.notes:size()
   if state.notes:readFile(expr) then
     state.postProc.notes = _evalNotes
-    res = string.format("Name: %s\tBlocks %d", expr, state.notes:size() - n0)
+    res = string.format("Name: %s\tBlocks: %d", expr, state.notes:size() - n0)
   else
     res = "Unable to open file "..expr
   end
