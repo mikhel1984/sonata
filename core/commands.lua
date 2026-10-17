@@ -125,7 +125,7 @@ cmdInfo.clear = {"cmd_clear", "*|v1,v2.."}
 --  @param env Thread environment.
 --  @return status and result.
 commands.help = function (expr, state, env)
-  local acc = {}
+  local acc = {"--\tGeneral"}
   if cmdInfo[expr] then
     acc[1] = _line(expr)
   else
@@ -141,9 +141,8 @@ commands.help = function (expr, state, env)
       end
     end
     -- rest
-    acc[#acc+1] = _line("N")
     for t, lst in pairs(group) do
-      acc[#acc+1] = "--\t"..t
+      acc[#acc+1] = "\n--\t"..t
       for _, v in ipairs(lst) do acc[#acc+1] = _line(v) end
     end
   end
@@ -328,6 +327,49 @@ commands.ls = function (expr, state, env)
   return _extBase.EV_RES, res
 end
 cmdInfo.ls = {"cmd_ls", "", "Note-files"}
+
+
+--- Set short alias for module methods.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.set = function (expr, state, env)
+  -- parse
+  local grp = {}
+  for s in string.gmatch(expr, "[^,]+") do
+    local g = {}
+    for token in string.gmatch(s, "%S+") do g[#g+1] = token end
+    grp[#grp+1] = g
+  end
+  -- main library/object
+  local tbl = table.remove(grp[1], 1)
+  tbl = env[tbl]
+  if not tbl then
+    return _extBase.EV_ERR, tbl.."not found"
+  end
+  -- variables
+  for _, g in ipairs(grp) do
+    if not (#g == 1 or #g == 3 and g[2] == "as") then
+      return _extBase.EV_ERR, "Wrong format"
+    end
+    -- find last name and object
+    local obj, nm = tbl, ""
+    for s in string.gmatch(g[1], "[^.]+") do
+      obj, nm = obj[s], s
+    end
+    if type(obj) == "function" then
+      -- wrap function call
+      local fn = obj
+      obj = function (...) return fn(tbl, ...) end
+    end
+    -- set alias
+    if #g == 3 then nm = g[3] end
+    env[nm] = obj
+  end
+  return _extBase.EV_RES, nil
+end
+cmdInfo.set = {'cmd_set', "lib f1 [as v1], f2"}
 
 
 --- Show the given notes.

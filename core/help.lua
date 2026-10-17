@@ -80,9 +80,10 @@ done = 'Done.',
 -- commands
 cmd_clear = "Clear global variables",
 cmd_help = "Show this help",
+cmd_lang = "Change language.",
 cmd_log = "Turn on/off logging",
 cmd_ls = "Show list of blocks for execution",
-cmd_N = "Go to N-th block",
+cmd_n = "Go to N-th block",
 cmd_o = "Open note-file",
 cmd_rm = "Clear list of notes",
 cmd_q = "Quit",
@@ -91,8 +92,8 @@ cmd_time = "Estimate average time",
 cmd_trace = "Profiling for the function",
 cmd_set = "Set short alias for module method",
 cmd_shell = "Execute command in shell",
+cmd_var = "Show list of variables",
 cmd_w = "Write output to 'pipe'",
-cmd_lang = "Change language."
 }
 
 
