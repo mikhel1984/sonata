@@ -14,6 +14,18 @@
 -- Core logic.
 local _extBase = require("core.io_base")
 
+local _loadStr = loadstring or load
+
+
+local mt_block = {}
+mt_block.__index = mt_block
+
+
+local function _toBlock (txt, src, filetype)
+  local o = {text=txt, src=src, filetype=filetype}
+  return setmetatable(o, mt_block)
+end
+
 
 --- Read file, split into text blocks.
 --  Separator is the "pause" word.
@@ -26,10 +38,16 @@ local function _blocks (fname)
   -- remove long comments
   txt = string.gsub(txt, '%-%-%[(=*)%[.-%]%1%]', '')
   local init, res = 1, {}
+  -- lua file
+  if not string.find(fname, "%.note$") then
+    res[1] = _toBlock(txt, fname, "lua")
+    return res
+  end
+  -- note file
   while true do
     local i1, i2 = string.find(txt, '%-%-%s-[Pp][Aa][Uu][Ss][Ee].-\n?', init)
     if i1 then
-      res[#res+1] = string.sub(txt, init, i1 - 1)
+      res[#res+1] = _toBlock(string.sub(txt, init, i1 - 1), fname, "note")
       init = i2 + 1
     else
       break
@@ -37,7 +55,7 @@ local function _blocks (fname)
   end
   local last = string.sub(txt, init, #txt)
   if string.find(last, "%w?") then
-    res[#res+1] = last
+    res[#res+1] = _toBlock(last, fname, "note")
   end
   return res
 end
@@ -51,6 +69,15 @@ local _invite = {
 
 -- Highlight template.
 local NOTE_TEMPL = SonataHelp.CBOLD..'\t%1'..SonataHelp.CNBOLD
+
+
+mt_block.head = function (self)
+  local s = ""
+  for line in string.gmatch(self.text, '[^\n\r]+') do
+    if string.find(line, "[^%s]+") then s = line; break end
+  end
+  return string.format("%s [%s]", s, self.filetype)
+end
 
 
 --  MODULE
@@ -97,8 +124,20 @@ end
 io_notes.evalBlock = function (self, block, state, env)
   local read, ok, status, res
   local acc = {}
-
-  for line in string.gmatch(block, "([^\n]+)\r?\n?") do
+  -- lua file
+  if block.filetype == "lua" then
+    local fn, err = _loadStr(block.text, nil, "t", env)
+    if err then 
+      acc[#acc+1] = SonataHelp.CERROR..err..SonataHelp.CRESET
+    else
+      ok, res = pcall(fn)
+      acc[#acc+1] = ok and string.format('"%s" done', block.src) or
+        (SonataHelp.CERROR..res..SonataHelp.CRESET)
+    end
+    return acc
+  end
+  -- note file
+  for line in string.gmatch(block.text, "([^\n]+)\r?\n?") do
     -- read
     local input = nil
     if string.find(line, '^%s*%-%-') then
@@ -148,11 +187,7 @@ end
 io_notes.heads = function (self)
   local acc = {}
   for i = 1, #self.blocks do
-    local s = ''
-    for line in string.gmatch(self.blocks[i], '[^\n\r]+') do
-      if string.find(line, "[^%s]+") then s = line; break end
-    end
-    acc[#acc+1] = string.format("%d)   %s", i, s)
+    acc[#acc+1] = string.format("%d)\t%s", i, self.blocks[i]:head())
   end
   return acc
 end
@@ -204,9 +239,9 @@ end
 io_notes.text = function (self, ind)
   ind = ind or self.queue[1]
   if ind then
-    local t = self.blocks[ind]
-    if t then
-      return string.format("\t[ %d / %d ]\n%s", ind, #self.blocks, t)
+    local b = self.blocks[ind]
+    if b then
+      return string.format("\t[%d/%d; %s]\n%s", ind, #self.blocks, b.src, b.text)
     end
   end
 end
@@ -214,4 +249,4 @@ end
 return io_notes
 
 --=========================================================
--- TODO read lua files
+
