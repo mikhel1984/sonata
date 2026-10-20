@@ -382,7 +382,6 @@ mtList.__index = function (self, k)
 end
 
 
-
 --- Binary search in sorted list.
 --  @param t Sorted list of elements.
 --  @param val Value to search.
@@ -397,6 +396,24 @@ end
 mtList.binsearch = _wrapCall(data.binsearch)
 _about[data.binsearch] = {":binsearch(sorted_t, value, [extract_fn]) --> index_i, value",
   "Find position of element in sorted list using binary search.", _tag.LIST}
+
+
+--- Limit elements with the given range.
+--  @param t Table with numbers.
+--  @param a Lower limit.
+--  @param b Upper limit.
+data.clip = function (_, t, a, b)
+  for i = 1, #t do
+    if t[i] < a then
+      t[i] = a
+    elseif t[i] > b then
+      t[i] = b
+    end
+  end
+end
+mtList.clip = function (self, a, b) data.clip(nil, self._tbl, a, b); return self end
+_about[data.clip] = {":clip(data_t, min_f, max_f)",
+  "Move each element into range (min, max).", _tag.LIST}
 
 
 --- Make copy of a list wrapper.
@@ -464,6 +481,35 @@ data.csvread = function (_, sFile, char)
 end
 _about[data.csvread] = {":csvread(file_s, delim_s=',') --> tbl",
   "Read delimiter separated data as Lua table.", _tag.FILES}
+
+
+--- Find cumulative sum for each position.
+--  @param t Table with data.
+--  @return table with cumulative sums.
+data.cumsum = function (_, t)
+  local res, sum = {}, 0.0
+  for i = 1, #t do
+    sum = sum + t[i]
+    res[i] = sum
+  end
+  return res
+end
+mtList.cumsum = _wrapList(data.cumsum)
+_about[data.cumsum] = {":cumsum(in_t) --> out_t",
+  "Find cumulative sum for each position.", _tag.LIST}
+
+
+--- Find difference of elements.
+--  @param t Table with numbers.
+--  @return table of differences.
+data.diff = function (_, t)
+  local res = {}
+  for i = 2, #t do res[#res+1] = t[i] - t[i-1] end
+  return res
+end
+mtList.diff = _wrapList(data.diff)
+_about[data.diff] = {":diff(in_t) --> out_t",
+  "Find differences of sequential elements.", _tag.LIST}
 
 
 --- Find elements using condition.
@@ -641,7 +687,6 @@ _about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
   "Find inverted weights using condition (boolean function or string).", _tag.LIST}
 
 
-
 --- Show data in Markdown-like table form.
 --  @param data_t Table of form {row1, row2, etc.}.
 --  @param names_t Table of column names (optional).
@@ -681,8 +726,6 @@ mtList.md = _wrapCall(data.md)
 _about[data.md] = {":md(data_t, names_t=nil, row_fn=nil) --> str",
   "Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.",
   _help.OTHER}
-
-
 
 
 --- Apply reduction rule to the list elements.
