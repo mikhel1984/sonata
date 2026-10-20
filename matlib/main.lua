@@ -75,12 +75,12 @@ local _unpack = _ext.utils.versions.unpack
 --  @param s Function name.
 --  @return Function equal to fn(x).
 local function _call (fn, s)
-  return function (v)
+  return function (v, w)
     if type(v) == "table" then
       local method = v[s]
-      return method and method(v) or fn(v:float())
+      return method and method(v, w) or fn(v:float(), w)
     end
-    return fn(v)
+    return fn(v, w)
   end
 end
 
@@ -104,7 +104,7 @@ _about[abs] = {"abs(x) --> y", "Absolute value."}
 exp = _call(math.exp, "exp")
 _about[exp] = {"exp(x) --> y", "Exponent."}
 log = _call(math.log, "log")
-_about[log] = {"log(x) --> y", "Natural logarithm."}
+_about[log] = {"log(x, [base=e]) --> y", "Natural logarithm."}
 sqrt = _call(math.sqrt, "sqrt")
 _about[sqrt] = {"sqrt(x) --> y", "Square root."}
 

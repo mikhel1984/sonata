@@ -588,16 +588,18 @@ _about[complex.im] = {"C:im() --> var", "Get imaginary part."}
 
 --- Natural logarithm
 --  @param v Real or complex value.
+--  @param b (=e) Logarithm base.
 --  @return Real or complex logarithm.
-complex.log = function (v)
+complex.log = function (v, b)
+  local b = b and math.log(b) or 1.0
   if type(v) == 'number' then
-    return v < 0 and complex._new(math.log(-v), math.pi) or math.log(v)
+    return v < 0 and complex._new(math.log(-v)/b, math.pi/b) or math.log(v)/b
   else
     local c1, c2 = assert(_float(v._[1])), assert(_float(v._[2]))
-    return complex._new(0.5*math.log(c1*c1 + c2*c2), _ver.atan2(c2, c1))
+    return complex._new(0.5*math.log(c1*c1 + c2*c2)/b, _ver.atan2(c2, c1)/b)
   end
 end
-_about[complex.log] = {"C:log() --> y_C", "Complex logarithm.", FUNCTIONS}
+_about[complex.log] = {"C:log([base=e]) --> y_C", "Complex logarithm.", FUNCTIONS}
 
 
 --- Get real part.

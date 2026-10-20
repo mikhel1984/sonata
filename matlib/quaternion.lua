@@ -464,19 +464,21 @@ _about[quaternion.inv] = {"Q:inv() --> inv_Q", "Find inverted quaternion."}
 
 
 --- Logarithm of the quaternion.
+--  @param b (=e) Logarithm base.
 --  @return logarithm value.
-quaternion.log = function (self)
+quaternion.log = function (self, b)
+  b = b and math.log(b) or 1.0
   local w, x, y, z = _ver.unpack(self._)
   local v = _msqrt(_cross.float(x)^2 + _cross.float(y)^2 + _cross.float(z)^2)
   w = _cross.float(w)
   local n = _msqrt(w*w + v*v)
   if v == 0 then 
-    return math.log(n) 
+    return math.log(n)/b 
   end
-  local k = math.acos(w / n) / v
-  return quaternion._new(math.log(n), x*k, y*k, z*k)
+  local k = math.acos(w / n) / v / b
+  return quaternion._new(math.log(n)/b, x*k, y*k, z*k)
 end
-_about[quaternion.log] = {"Q:log() --> log_Q", "Quaternion logarithm."}
+_about[quaternion.log] = {"Q:log([base=e]) --> log_Q", "Quaternion logarithm."}
 
 
 --- Transform quaternion into unit 'vector'.

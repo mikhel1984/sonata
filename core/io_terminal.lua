@@ -93,11 +93,12 @@ end
 local function _makePostprocFiles (t)
   if t[1] ~= "-i" then
     -- postprocessor function
+    local exit = false
     return function (state, env)
-      if state.run then
-        state.run = not (
-          state.input == "" and
-          not state.notes:ready())
+      if exit then
+        state.run = false
+      elseif state.run then
+        exit = state.input == "" and not state.notes:ready()
       end
     end
   end

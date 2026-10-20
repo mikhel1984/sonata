@@ -718,7 +718,7 @@ _about[autodiff.hess] = {"A:hess(vars_t) --> hess_M",
 
 
 --- log(x)
---  @param base (=e) logarithm base.
+--  @param base (=e) Logarithm base.
 --  @return logarithm value.
 autodiff.log = function (self, base)
   local x = self._[1]
