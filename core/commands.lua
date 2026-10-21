@@ -270,7 +270,7 @@ commands.o = function (expr, state, env)
   -- load library
   if not state.notes then
     _ext.notes = _ext.notes or require("core.io_notes")
-    local cmds = _init("log", "rm")
+    local cmds = _init("log", "sh", "rm")
     state.notes = _ext.notes.init(cmds)
   end
   -- load file
@@ -370,6 +370,20 @@ commands.set = function (expr, state, env)
   return _extBase.EV_RES, nil
 end
 cmdInfo.set = {'cmd_set', "lib f1 [as v1], f2"}
+
+
+--- Evaluate command in shell.
+--  @param expr Command agrument.
+--  @param state Executor state.
+--  @param env Thread environment.
+--  @return status and result.
+commands.sh = function (expr, state, env)
+  local f = assert(io.popen(expr))
+  local res = f:read("a")
+  f:close()
+  return _extBase.EV_RES, res
+end
+cmdInfo.sh = {"cmd_sh", "cmd"}
 
 
 --- Show the given notes.

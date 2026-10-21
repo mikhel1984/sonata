@@ -51,7 +51,7 @@ local commands = _ext.cmds.init(
   -- note files
   "o", "rm", "ls",
   -- others
-  "log", "w")
+  "log", "w", "sh")
 
 
 --  MODULE

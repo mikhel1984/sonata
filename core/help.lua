@@ -91,7 +91,7 @@ cmd_show = "Print the next or the given note",
 cmd_time = "Estimate average time",
 cmd_trace = "Profiling for the function",
 cmd_set = "Set short alias for module method",
-cmd_shell = "Execute command in shell",
+cmd_sh = "Execute command in shell",
 cmd_var = "Show list of variables",
 cmd_w = "Write output to 'pipe'",
 }

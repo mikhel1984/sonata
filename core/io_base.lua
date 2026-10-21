@@ -71,6 +71,46 @@ local function _doShowResult (res)
 end
 
 
+--- Process expressions "{}" in string.
+--  @param s Source string.
+--  @return equivalent "string.format" expression.
+local function _stringFormatF (s)
+  local acc = {}
+  s = string.sub(s, 2)  -- remove "f"
+  s = string.gsub(s, "%b{}", 
+    function (x) 
+      local format, arg
+      local a, b = string.match(x, "(.-):(%.%d+f)")
+      if a then
+        format, arg = "%"..b, string.sub(a, 2)
+      else
+        format, arg = "%s", string.format("tostring(%s)", string.sub(x, 2, -2))
+      end
+      acc[#acc+1] = arg 
+      return format
+    end)
+  return string.format("string.format(%s, %s)", s, table.concat(acc, ", "))
+end
+
+
+--- Evaluate substitutions in string.
+--  @param s Source string.
+--  @param env Environment table.
+--  @return updated string.
+local function _stringFormat (s, env)
+  -- ${...}
+  s = string.gsub(s, "$%b{}", 
+    function (x)
+      x = '$"'..string.sub(x, 2)..'"'  -- to form $"{...}"
+      return tostring(
+        _loadStr("return ".._stringFormatF(x), nil, "t", env)())
+    end)
+  -- f"..."
+  s = string.gsub(s, 'f%b""', _stringFormatF)
+  return s
+end
+
+
 --- Print table, ask about continuation if need.
 --  @param t Table to show.
 --  @return table elements.
@@ -221,7 +261,8 @@ io_base.doRead = function (input, env)
     end
     cmd[#cmd+1] = partCmd or input
   end
-  return table.concat(cmd, "\n")
+  local s = table.concat(cmd, "\n")
+  return _stringFormat(s, env)
 end
 
 
