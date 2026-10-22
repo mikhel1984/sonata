@@ -151,7 +151,7 @@ local _ver = _utils.versions
 local _czero = _utils.cross.isZero
 local _tf = require("matlib.asciiplot_tf")
 
-local _inform = Sonata and Sonata.warning or print
+local _inform = Sonata and not Sonata.inLua and Sonata.warning or print
 local _modf, _log, _floor = math.modf, math.log, math.floor
 local _tag = { MANUAL='manual', CONF='settings' }
 local _sonataUseColor = SONATA_USE_COLOR

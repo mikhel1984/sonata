@@ -30,6 +30,7 @@ lst = {}
 for i = 1, N do
   lst[i] = Rand()
 end
+print("mu", (0+1)/2, "var", (1-0)^2/12)
 
 -- visualize
 ts, te = Stat:histcounts(lst, 10)
@@ -59,6 +60,7 @@ mu, sig = 1, 0.5
 for i = 1, N do
   lst[i] = rnd:norm(mu, sig)
 end
+print("mu", mu, "var", sig*sig)
 
 -- show normal distribution
 fig = Ap(53, 19)
@@ -83,6 +85,7 @@ lam = 0.5
 for i = 1, N do
   lst[i] = Rand:exp(lam)
 end
+print("mu", 1/lam, "var", 1/lam^2)
 
 -- show exponential distribution
 pdf = function (x) return  lam*math.exp(-lam*x) end
@@ -94,6 +97,7 @@ mu = 2; sig = 2
 for i = 1, N do
   lst[i] = Rand:logistic(mu, sig)
 end
+print("mu", mu, "var", (sig*math.pi)^2/3)
 
 -- show logistic distribution
 pdf = function (x)
@@ -107,6 +111,7 @@ sig = 0.5
 for i = 1, N do
   lst[i] = rnd:rayleigh(sig)
 end
+print("mu", sig*math.sqrt(math.pi/2), "var", (4-math.pi)/2*sig^2)
 
 -- show Raileigh distribution
 pdf = function (x)
@@ -131,6 +136,7 @@ alpha = 7; beta = 1
 for i = 1, N do
   lst[i] = rnd:gamma(alpha, beta)
 end
+print("mu", alpha/beta, "var", alpha/beta^2)
 
 -- show gamma distribution
 gamma = Spec:gamma(alpha)
@@ -144,6 +150,7 @@ lambda = 4
 for i = 1, N do
   lst[i] = Rand:poisson(lambda)
 end
+print("mu", lambda, "var", lambda)
 
 -- show Poisson distribution
 -- find factorial
@@ -163,6 +170,7 @@ n = 20; p = 0.4
 for i = 1, N do
   lst[i] = Rand:binomial(p, n)
 end
+print("mu", n*p, "var", n*p*(1-p))
 
 -- show binomial distribution
 pmf = function (x)
@@ -527,7 +535,7 @@ _about[random.new] = {":new() --> R",
 
 --- Get Gaussian distribution.
 --  @param dMean Mean value.
---  @dev Deviation.
+--  @param dev Deviation.
 --  @return random number.
 random.norm = function (self, dMean, dev)
   -- use Box-Muller transform

@@ -332,7 +332,7 @@ end
 
 
 -- User notification
-local _inform = Sonata and Sonata.warning or print
+local _inform = Sonata and not Sonata.inLua and Sonata.warning or print
 
 
 --	INFO

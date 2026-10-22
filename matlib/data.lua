@@ -740,7 +740,7 @@ data.reduce = function (_, t, fn, val)
   return val
 end
 mtList.reduce = _wrapCall(data.reduce)
-_about[data.reduce] = {":reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var",
+_about[data.reduce] = {":reduce(data, fn|str, initial=data[1]) --> var",
   "Apply function to its previous result and next element.", _tag.LIST}
 
 

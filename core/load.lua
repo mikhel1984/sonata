@@ -160,6 +160,7 @@ example = {
 process = function (args)
   local Test = require("core.test")
   SONATA_PROTECT_ALIAS = false
+  Sonata.inLua = true
   if args[2] then
     Test.module(
       string.format("%smatlib/%s.lua", (SONATA_ADD_PATH or ""), args[2]))

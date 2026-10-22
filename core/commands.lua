@@ -378,6 +378,14 @@ cmdInfo.set = {'cmd_set', "lib f1 [as v1], f2"}
 --  @param env Thread environment.
 --  @return status and result.
 commands.sh = function (expr, state, env)
+  -- substitutions
+  expr = string.gsub(expr, "$%b{}",
+    function (x)
+      x = 'f"'..string.sub(x, 2)..'"'  -- make f"{...}"
+      return tostring(
+        _loadStr("return ".._extBase.stringFormat(x), nil, "t", env)())
+    end)
+  -- shell request
   local f = assert(io.popen(expr))
   local res = f:read("a")
   f:close()
