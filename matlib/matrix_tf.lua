@@ -275,6 +275,36 @@ transform.clearLess = function (M, dTol)
 end
 
 
+transform.ismatrix = function (v)
+  local mt = getmetatable(v)
+  return mt == transform._methods or transform.refs[mt]
+end
+
+
+--- Find Kronecker product.
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @return matrix product.
+transform.kronProd = function (M1, M2)
+  local res = transform._methods._init(M1._rows*M2._rows, M1._cols*M2._cols, {})
+  local scols, mrows, mcols = M1._cols, M2._rows, M2._cols
+  for i = 1, M1._rows do
+    for j = 1, scols do
+      local v = M1[i][j]
+      if v ~= 0 then
+        local rr, cc = (i-1)*mrows, (j-1)*mcols
+        for p = 1, mrows do
+          local mp = M2[p]
+          local resr = res[rr+p]
+          for q = 1, mcols do resr[cc+q] = v * mp[q] end
+        end
+      end
+    end
+  end
+  return res
+end
+
+
 --- QR-type sweeps for SVD.
 --  Find such U, B, V that B = U*M*V:T() and
 --  U, V are orthonormal, B is bidiagonal rectangular. Estimate error E.
@@ -333,6 +363,43 @@ transform.householder = function (V, ik)
   -- find matrix
   return V:eye(r, r) - u:H() * ((2 / u:norm()^2) * u)
 end
+
+
+-- Define object for Kronecker product and addition.
+local refKron = {type="operation_ref"}
+refKron.__index = refKron
+
+
+--- M1 `Kronecker +` M2
+--  @param M1 First matrix or ref object.
+--  @param M2 Second matrix of ref object.
+--  @return Kronecker sum.
+refKron.__add = function (M1, M2)
+  local m1 = getmetatable(M1) == refKron and M1.data or M1
+  local m2 = getmetatable(M2) == refKron and M2.data or M2
+  if m1._rows ~= m1._cols or m2._rows ~= m2._cols then
+    error "Square matrices expected"
+  end
+  return (transform.kronProd(m1, transform._methods:eye(m2))
+    + transform.kronProd(transform._methods:eye(m1), m2))
+end
+
+
+--- M1 `Kronecker *` M2
+--  @param M1 First matrix or ref object.
+--  @param M2 Second matrix of ref object.
+--  @return Kronecker product.
+refKron.__mul = function (M1, M2)
+  local m1 = getmetatable(M1) == refKron and M1.data or M1
+  local m2 = getmetatable(M2) == refKron and M2.data or M2
+  return transform.kronProd(m1, m2)
+end
+
+
+--- Define reference object for Kronecker operations.
+--  @param M Source matrix.
+--  @return reference object.
+transform.makeKroneker = function (M) return setmetatable({data=M}, refKron) end
 
 
 -- Define reference to (conjugate) transpose matrix
@@ -789,27 +856,6 @@ refVector.dot = function (V1, V2)
 end
 
 
---- Outer product of two vectors.
---  @param V1 First vector.
---  @param V2 Second vector.
---  @return outer product.
-refVector.outer = function (V1, V2)
-  local len = #V1
-  if len ~= #V2 then
-    error "Different vector length"
-  end
-  local m = {}
-  for i = 1, len do m[i] = {} end
-  for i = 1, len do
-    local vi, mi = V1[i], m[i]
-    for j = i, len do
-      mi[j] = vi * V2[j]
-      m[j][i] = mi[j]
-    end
-  end
-  return V1._src._init(len, len, m)
-end
-
 
 --- Vector norm.
 --  @param type_s Type of the norm.
@@ -847,6 +893,28 @@ refVector.normalize = function (self)
 end
 
 
+--- Outer product of two vectors.
+--  @param V1 First vector.
+--  @param V2 Second vector.
+--  @return outer product.
+refVector.outer = function (V1, V2)
+  local len = #V1
+  if len ~= #V2 then
+    error "Different vector length"
+  end
+  local m = {}
+  for i = 1, len do m[i] = {} end
+  for i = 1, len do
+    local vi, mi = V1[i], m[i]
+    for j = i, len do
+      mi[j] = vi * V2[j]
+      m[j][i] = mi[j]
+    end
+  end
+  return V1._src._init(len, len, m)
+end
+
+
 --- Find skew-symmetric matrix.
 --  @return matrix M^T = -M
 refVector.skew = function (self)
@@ -862,6 +930,15 @@ refVector.skew = function (self)
 end
 
 
+--- Find sum of vector elements.
+--  @return sum value.
+refVector.sum = function (self)
+  local v = 0
+  for i = 1, #self do v = v + self[i] end
+  return v
+end
+
+
 --- Create reference to access vector elements.
 --  @param M Source matrix with single row or column.
 --  @return vector reference object.
@@ -873,6 +950,95 @@ transform.makeVector = function (M)
   return setmetatable(o, refVector)
 end
 transform.vecAccess = refVector
+
+
+-- Do element wise operations.
+local refElements = {type="operation_ref"}
+
+
+--- Make new matrix using the given operation.
+--  @param M1 First matrix.
+--  @param M2 Second matrix.
+--  @param fn Function to apply.
+--  @return the obtained matrix.
+refElements._apply = function (M1, M2, fn)
+  -- prepare elements
+  local m1 = getmetatable(M1) == refElements and M1.data or M1
+  local m2 = getmetatable(M2) == refElements and M2.data or M2
+  m1 = transform.ismatrix(m1) and m1
+    or transform._methods:fill(m2._rows, m2._cols, m1)
+  m2 = transform.ismatrix(m2) and m2
+    or transform._methods:fill(m1._rows, m1._cols, m2)
+  local rs, cs = m1._rows, m1._cols
+  if rs ~= m2._rows or cs ~= m2._cols then
+    error "Different matrix size"
+  end
+  -- calculate
+  local acc = {}
+  for i = 1, rs do
+    local t, m1i, m2i = {}, m1[i], m2[i]
+    for j = 1, cs do t[j] = fn(m1i[j], m2i[j]) end
+    acc[i] = t
+  end
+  return transform._methods._init(rs, cs, acc)
+end
+
+
+--- M1 + M2
+--  @param M1 First reference or matrix.
+--  @param M2 Second reference or matrix.
+--  @return element wise sum.
+refElements.__add = function (M1, M2)
+  local m1 = getmetatable(M1) == refElements and M1.data or M1
+  local m2 = getmetatable(M2) == refElements and M2.data or M2
+  return m1 + m2
+end
+
+
+--- M1 / M2
+--  @param M1 First reference or matrix.
+--  @param M2 Second reference or matrix.
+--  @return elements wise ratio.
+refElements.__div = function (M1, M2)
+  return refElements._apply(M1, M2, function (a, b) return a/b end)
+end
+
+
+--- M1 * M2
+--  @param M1 First reference or matrix.
+--  @param M2 Second reference or matrix.
+--  @return elements wise product.
+refElements.__mul = function (M1, M2)
+  return refElements._apply(M1, M2, function (a, b) return a*b end)
+end
+
+
+--- M1 ^ M2
+--  @param M1 First reference or matrix.
+--  @param M2 Second reference or matrix.
+--  @return elements wise power.
+refElements.__pow = function (M1, M2)
+  return refElements._apply(M1, M2, function (a, b) return a^b end)
+end
+
+
+--- M1 - M2
+--  @param M1 First reference or matrix.
+--  @param M2 Second reference or matrix.
+--  @return elements wise difference.
+refElements.__sub = function (M1, M2)
+  local m1 = getmetatable(M1) == refElements and M1.data or M1
+  local m2 = getmetatable(M2) == refElements and M2.data or M2
+  return m1 - m2
+end
+
+
+--- Make reference object for element wise operations.
+--  @param M source matrix.
+--  @return wrapped matrix.
+transform.makeElementWise = function (M)
+  return setmetatable({data=M}, refElements)
+end
 
 
 --- Copy methametods for ref objects.

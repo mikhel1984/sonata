@@ -254,11 +254,11 @@ h = m:H()
 ans = h[2][1]                 -->  Z(3,-4)
 
 -- Kronecker product
-m = a:kron(a)
+m = a:kron() * a
 ans = m[4][3]                 -->  a[2][2]*a[2][1]
 
 -- Kronecker sum
-m = a:kronSum(a)
+m = a:kron() + a
 ans = m[1][1]                 -->  2
 
 -- column wise vector
@@ -892,6 +892,13 @@ _about[matrix.hor] = {":hor(mat_t) --> mat_Ref",
   "Horizontal concatenation for the given list of matrices.", "concat"}
 
 
+--- Make matrix for element wise operations.
+--  @return wrapper for matrix.
+matrix.ij = function (self) return _tf.makeElementWise(self) end
+_about[matrix.ij] = {"M:ij() --> op_Ref",
+  "Make matrix for element wise operations.", _tag.TRANSFORM}
+
+
 --- Inverse matrix.
 --  @return Result of inversion.
 matrix.inv = function (self)
@@ -938,40 +945,11 @@ end
 _about[matrix.inv] = {"M:inv() --> inv_M", "Return inverse matrix."}
 
 
---- Kronecker product.
---  @param M Second matrix.
---  @return matrix, obtained with Kronecker product.
-matrix.kron = function (self, M)
-  local res = matrix._init(self._rows*M._rows, self._cols*M._cols, {})
-  local scols, mrows, mcols = self._cols, M._rows, M._cols
-  for i = 1, self._rows do
-    for j = 1, scols do
-      local v = self[i][j]
-      if v ~= 0 then
-        local rr, cc = (i-1)*mrows, (j-1)*mcols
-        for p = 1, mrows do
-          local mp = M[p]
-          local resr = res[rr+p]
-          for q = 1, mcols do resr[cc+q] = v * mp[q] end
-        end
-      end
-    end
-  end
-  return res
-end
-_about[matrix.kron] = {"M:kron(M2) --> M⊗M2", "Find Kronecker product."}
-
-
---- Kronecker sum.
---  @param M Second matrix.
---  @return matrix, obtained with Kronecker sum.
-matrix.kronSum = function (self, M)
-  if self._rows ~= self._cols or M._rows ~= M._cols then
-    error "Square matrices expected"
-  end
-  return matrix.kron(self, matrix:eye(M)) + matrix.kron(matrix:eye(self), M)
-end
-_about[matrix.kronSum] = {"M:kronSum(M2) --> M⊕M2", "Find Kronecker sum."}
+--- Make object for Kronecker product and sum.
+--  @return object with special methods for addition and multiplication.
+matrix.kron = function (self) return _tf.makeKroneker(self) end
+_about[matrix.kron] = {"M:kron() --> op_Ref",
+  "Make object for Kronecker product and sum.", _tag.TRANSFORM}
 
 
 --- LU transform
@@ -1243,6 +1221,11 @@ _about[matrix.rref] = {"M:rref() --> upd_M",
 matrix.skew = _tf.vecAccess.skew
 _about[matrix.skew] = {"V:skew() --> M",
   "Make skew-symmetric matrix from the 3-element vector.", _tag.VECTOR}
+
+
+matrix.sum = _tf.vecAccess.sum
+_about[matrix.sum] = {"V:sum() --> d",
+  "Find sum of the vector elements.", _tag.VECTOR}
 
 
 --- Singular value decomposition for a matrix.

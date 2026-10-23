@@ -382,6 +382,16 @@ mtList.__index = function (self, k)
 end
 
 
+--- Apply function to all elements of a list.
+--  @param fn Function to apply.
+--  @return new list object.
+mtList.map = function (self, fn)
+  local t = {}
+  for i = 1, #self._tbl do t[i] = fn(self._tbl[i]) end
+  return setmetatable({_tbl=t}, mtList)
+end
+
+
 --- Binary search in sorted list.
 --  @param t Sorted list of elements.
 --  @param val Value to search.

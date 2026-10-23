@@ -78,7 +78,9 @@ local function _call (fn, s)
   return function (v, w)
     if type(v) == "table" then
       local method = v[s]
-      return method and method(v, w) or fn(v:float(), w)
+      return method and method(v, w) 
+        or v.map and v:map(fn)  -- ignore second arg
+        or fn(v:float(), w)
     end
     return fn(v, w)
   end
