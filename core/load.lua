@@ -89,7 +89,7 @@ end
 
 
 -- Add modules
-setmetatable(use, { 
+setmetatable(use, {
 -- load modules
 __call = function (self, name)
   if not name then
@@ -248,6 +248,27 @@ process = function (args)
   local gen = require("maker.cgen")
   local aa = {}; for i = 2, #args do aa[#aa+1] = args[i] end
   gen.makeBin(aa)
+end,
+exit = true},
+
+-- Upgrade Sonata version
+["--version"] = {
+description = "Get or upgrade version.",
+example = {
+  "e.g. --version       # show version",
+  "     --version upgrade  # pull the latest code"},
+process = function (args)
+  local cmd = {}
+  if SONATA_ADD_PATH then cmd[1] = "cd "..SONATA_ADD_PATH end
+  if args[2] == "upgrade" then
+    cmd[#cmd+1] = "git checkout develop"
+    cmd[#cmd+1] = "git pull origin develop"
+  else
+    return print(string.format("%d.%02d", Sonata.MAJOR_V, Sonata.MINOR_V))
+  end
+  local f = assert(io.popen(table.concat(cmd, " && ")))
+  f:read("a")  -- wait for process complete
+  f:close()
 end,
 exit = true},
 
