@@ -258,13 +258,19 @@ example = {
   "e.g. --version       # show version",
   "     --version upgrade  # pull the latest code"},
 process = function (args)
+  local v = string.format("%d.%02d", Sonata.MAJOR_V, Sonata.MINOR_V)
+  if not args[2] then
+    return print(v)
+  end
   local cmd = {}
   if SONATA_ADD_PATH then cmd[1] = "cd "..SONATA_ADD_PATH end
   if args[2] == "upgrade" then
     cmd[#cmd+1] = "git checkout develop"
     cmd[#cmd+1] = "git pull origin develop"
+  elseif args[2] == v then
+    cmd[#cmd+1] = "git checkout develop"
   else
-    return print(string.format("%d.%02d", Sonata.MAJOR_V, Sonata.MINOR_V))
+    cmd[#cmd+1] = "git checkout "..args[2]
   end
   local f = assert(io.popen(table.concat(cmd, " && ")))
   f:read("a")  -- wait for process complete

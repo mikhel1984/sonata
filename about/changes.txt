@@ -1,3 +1,14 @@
+========= 1.04 ==========
+
+Matrix
+* Add objects for Kronecker and element wise operations
+Symbolic
+* Update internal structure
+Other
+* Refactoring the rest of modules
+* Divide "data" into "data" and "statistics"
+* Update architecture of a core modules
+
 ========= 1.03 ==========
 
 Other
@@ -8,16 +19,16 @@ Other
 ========= 1.02 ==========
 
 Asciiplot
-* draw graphs
-* draw tables with lines
+* Draw graphs
+* Draw tables with lines
 Data
-* iterators for combinations and permutations
+* Iterators for combinations and permutations
 Extremum
-* shape based calculation of defuzzify function
+* Shape based calculation of defuzzify function
 Other
 * Refactoring and bugfix in modules A-L
-* lang command to change translation
-* improve w, tcp and readline modes
+* Lang command to change translation
+* Improve w, tcp and readline modes
 
 ========= 1.01 ==========
 
