@@ -399,7 +399,7 @@ end
 parents.funcValue.pEval = function (S, tEnv)
   local t, val = {S._[1]}, {}
   for i = 2, #S._ do
-    local V = S._[i]
+    local v = S._[i]
     v = v._parent.pEval(v, tEnv)
     t[i] = v
     if not _issym(v) then
@@ -537,7 +537,7 @@ end
 parents.product.pDiff = function (S1, S2)
   local res = 0
   for i, v in ipairs(S1._) do
-    local a, b, sum = v[1], v[2]
+    local a, b, sum = v[1], v[2], nil
     local dx = _issym(a) and a._parent.pDiff(a, S2) or 0
     if dx ~= 0 then
       sum = b * a^(b - 1) * dx

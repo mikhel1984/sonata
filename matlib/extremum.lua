@@ -346,7 +346,7 @@ extremum._lpSimplex = function (c, param)
   _ext.matrix = _ext.matrix or require("matlib.matrix")
   local mat = _ext.matrix
   local nu, ne, nl, nx = 0, 0, 0, c:cols()
-  local As, bs, inter = param.Au, param.bu, nil
+  local As, bs, inter = param.Au, param.bu, mat:zeros(1)
 
   if As then
     nu = As:rows()
@@ -657,7 +657,7 @@ extremum._minPowel = function (fun, p)
     xdir[i] = t
   end
   local fret = fun(p)
-  for iter = 1, imax do
+  for _ = 1, imax do
     local ibig, del = 1, 0.0
     local pt, fp = p, fret
     -- find the biggest decrease
@@ -771,7 +771,7 @@ extremum.annealing = function (_, task)
   local alpha = task.alpha or 0.9  -- temperature update coefficient
   local nmax = task.loop or 1      -- number of attempts with one temperature
   repeat
-    for ii = 1, nmax do
+    for _ = 1, nmax do
       local new = update(curr)
       local ei = energy(new)
       if ei <= e0 then

@@ -91,7 +91,6 @@ local _ver = _ext.utils.versions
 
 --	INFO
 
-local _help = SonataHelp or {}  -- optional
 -- description
 local _about = {
 __module__ = "Elements of statistics."

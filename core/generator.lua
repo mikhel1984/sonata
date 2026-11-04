@@ -14,7 +14,7 @@
 
 local Help = require('core.help')
 
-local TITLE, DESCRIPTION, CATEGORY, EXTEND = 1, 2, 3, 4
+local TITLE, DESCRIPTION = 1, 2
 local S10 = string.rep('-', 10)
 
 local LIB = (SONATA_ADD_PATH or '')..'matlib'

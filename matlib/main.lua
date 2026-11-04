@@ -64,7 +64,6 @@ local _ext = {
   -- ap = require("matlib.asciiplot"),
 }
 
-local _calc = _ext.utils.calc
 local _round = _ext.utils.cross.round
 local _fn = _ext.utils.utils.Fn
 local _unpack = _ext.utils.versions.unpack
@@ -128,19 +127,19 @@ _about[atan2] = {"atan2(y_d, x_d) --> num",
   "Inverse tangent of y/x, use signs.", _tag.TRIG}
 
 -- Hyperbolic
-cosh = _call(math.cosh, "cosh")
+cosh = _call(_ext.utils.versions.cosh, "cosh")
 _about[cosh] = {"cosh(x) --> y", "Hyperbolic cosine.", _tag.HYP}
-sinh = _call(math.sinh, "sinh")
+sinh = _call(_ext.utils.versions.sinh, "sinh")
 _about[sinh] = {"sinh(x) --> y", "Hyperbolic sinus.", _tag.HYP}
-tanh = _call(math.tanh, "tanh")
+tanh = _call(_ext.utils.versions.tanh, "tanh")
 _about[tanh] = {"tanh(x) --> y", "Hyperbolic tangent.", _tag.HYP}
 
 -- Hyperbolic inverse
-asinh = _call(_calc.asinh, "asinh")
+asinh = _call(_ext.utils.calc.asinh, "asinh")
 _about[asinh] = {"asinh(x) --> y", "Hyperbolic inverse sine.", _tag.HYP}
-acosh = _call(_calc.acosh, "acosh")
+acosh = _call(_ext.utils.calc.acosh, "acosh")
 _about[acosh] = {"acosh(x) --> y", "Hyperbolic arc cosine.", _tag.HYP}
-atanh = _call(_calc.atanh, "atanh")
+atanh = _call(_ext.utils.calc.atanh, "atanh")
 _about[atanh] = {"atanh(x) --> y", "Hyperbolic inverse tangent.", _tag.HYP}
 
 
@@ -234,9 +233,9 @@ Plot = function (t)
   for k, v in pairs(t) do
     if type(k) == "string" then
       local axis, param = string.match(k, "(.)(.+)")
-      if axis == "x" then 
+      if axis == "x" then
         f:setX {[param]=v}
-      elseif axis == "y" then 
+      elseif axis == "y" then
         f:setY {[param]=v}
       end
     end

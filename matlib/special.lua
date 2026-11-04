@@ -338,7 +338,7 @@ end
 local function _gammaSer (N, x)
   local ITMAX, EPS = 100, 3E-7
   local gamser = 0.0
-  if x <= 0 then 
+  if x <= 0 then
     assert(x == 0)
   else
     local ap, del = N, 1.0/N
@@ -597,8 +597,8 @@ special.expint = function (_, n, x)
       d, c = 1.0/(a*d + b), b + a/c
       local del = c*d
       h = h*del
-      if _abs(del - 1.0) < EPS then 
-        return h*_exp(-x) 
+      if _abs(del - 1.0) < EPS then
+        return h*_exp(-x)
       end
     end
   else
@@ -614,8 +614,8 @@ special.expint = function (_, n, x)
         del = fact * (-_log(x) + psy)
       end
       ans = ans + del
-      if _abs(del) < _abs(ans)*EPS then 
-        return ans 
+      if _abs(del) < _abs(ans)*EPS then
+        return ans
       end
     end
   end

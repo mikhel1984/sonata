@@ -79,6 +79,25 @@ versions.pack = table.pack or function (...)
 end
 
 
+-- Hyperbolic sin.
+versions.sinh = math.sinh or function (x)
+  return (_mexp(x) - _mexp(-x))*0.5
+end
+
+
+-- Hyperbolic cos.
+versions.cosh = math.cosh or function (x)
+  return (_mexp(x) + _mexp(-x))*0.5
+end
+
+
+-- Hyperbolic tan.
+versions.tanh = math.tanh or function (x)
+  local v = _mexp(2*x)
+  return (v - 1) / (v + 1)
+end
+
+
 --============= Cross-module functionality =========
 -- Cross methods:
 -- _convert, _isZero, _norm, _round, _simp, copy, float

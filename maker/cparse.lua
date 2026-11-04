@@ -15,8 +15,8 @@ star_name.__index = star_name
 -- Transition graph and properties.
 -- Defines available continuations.
 local _lex = {
-  [START] = {int=true, unsigned=true, long=true, short=true, float=true, 
-             void=true, [TYPE]=true, char=true, signed=true, double=true, 
+  [START] = {int=true, unsigned=true, long=true, short=true, float=true,
+             void=true, [TYPE]=true, char=true, signed=true, double=true,
              struct=true, const=true},
   int = setmetatable({_int=true}, star_name),
   char = setmetatable({_char=true}, star_name),
@@ -57,7 +57,7 @@ local function _split (str, delim)
       res = _sub(str, i)
       i = #str+1
     end
-    if j ~= 1 then  -- skip first empty string 
+    if j ~= 1 then  -- skip first empty string
       acc[#acc+1] = res
     end
   end
@@ -77,7 +77,7 @@ end
 -- Keep text in {}, past text from [[]].
 local function _removeMultiline (s)
   local has_compiler = false
-  local res = _gsub(s, '(/%*.-%*/)', function (m) 
+  local res = _gsub(s, '(/%*.-%*/)', function (m)
     if _find(m, '/%*{.-}%*/') then   -- attributes
       if _find(m, 'compiler') then has_compiler = true end
       return m
@@ -99,11 +99,11 @@ local function _parseFunction (s, pos)
   -- find and process function name
   local name = _sub(s, pos, a-1)
   name = _gsub(name, TYPE_SYMBOLS, _addSpace)
-  name = _split(name, SPACE)
+  name = _split(name, SPACE)  -- reuse
   -- find and process function arguments
   local args = _sub(s, a+1, b-1)
   args = _gsub(args, TYPE_SYMBOLS, _addSpace)
-  args = _split(args, ',')
+  args = _split(args, ',')  -- reuse
   for i = 1, #args do
     args[i] = _split(args[i], SPACE)
   end
@@ -147,14 +147,14 @@ parser.var = function (var, tplua, tpc, nptr, arr, qual)
     C = tpc,
     Lua = tplua,
     ptr_count = nptr or 0,
-    arr_size = arr or {}, 
+    arr_size = arr or {},
     cnst = qual, }
 end
 
 -- Analyze sequence of tokens, get table of parameters.
 local function _resolveLine (ln, types)
   local i, name_pos, num_ptr = 1, #ln, 0
-  local char, int, float, void, cnst
+  local char, int, float, cnst
   local var_name, arr_size, struct_name = '', {}, nil
   -- analyze tokens
   local expect = _lex[START]
@@ -202,7 +202,6 @@ local function _resolveLine (ln, types)
     if expect._int   then int = true end
     if expect._float then float = true end
     if expect._arr   then arr_size[#arr_size+1] = 0 end
-    if expect._void  then void = true end  -- ?
     if expect._ptr   then num_ptr = num_ptr + 1 end
     i = i + 1
   end
@@ -210,19 +209,19 @@ local function _resolveLine (ln, types)
   local t = parser.var(var_name, nil, nil, num_ptr, arr_size, cnst)
   -- make C type
   local ctype = {}
-  for i = 1, name_pos-1 do 
-    if ln[i] == '*' then break end
-    ctype[i] = ln[i]
+  for j = 1, name_pos-1 do
+    if ln[j] == '*' then break end
+    ctype[j] = ln[j]
   end
   t.C = table.concat(ctype, ' ')
   -- make Lua type
-  if int then 
+  if int then
     t.Lua = 'int'
-  elseif float then 
+  elseif float then
     t.Lua = 'float'
-  elseif struct_name then 
+  elseif struct_name then
     t.Lua = 'table'
-  elseif char then 
+  elseif char then
     t.Lua = cnst and num_ptr == 1 and 'string' or 'int'
   end
   -- print "----"
@@ -265,9 +264,7 @@ parser.getTypes = function (s)
   local a, b = 1, 0
   -- structure definition
   while true do
-    a, b = _find(s,
-      'struct[%w%s_]+%b{}[%w%s_]*;', 
-      b+1)
+    a, b = _find(s, 'struct[%w%s_]+%b{}[%w%s_]*;', b + 1)
     if not a then break end
     local full, short, body = _parseStruct(_sub(s, a, b))
     setmetatable(body, mt_struct)  -- set marker
@@ -299,7 +296,7 @@ end
 
 -- Find properties for all the functions.
 parser.resolveFunctions = function (lst, types)
-  for i, grp in ipairs(lst) do
+  for _, grp in ipairs(lst) do
     -- name
     grp[1] = _resolveLine(grp[1], types)
     -- args
@@ -320,7 +317,7 @@ parser.getFunctions = function (s)
     -- read table
     local txt = assert(_match(s, '({.-})', a))
     local t = assert(load('return '..txt), "Wrong syntax")()
-    if t.compiler then 
+    if t.compiler then
       lib_attr = t
     else
       local name, args
@@ -350,49 +347,49 @@ parser.parse = function (fname)
 end
 
 -- Parser introspection.
-parser.view = function (fname)
-  local attr, fn_list, structs = parser.parse(fname)
+parser.view = function (fileName)
+  local attr, fn_list, structs = parser.parse(fileName)
   print "== Library attributes =="
   for k, v in pairs(attr) do print(k, "=", v) end
-  
+
   print ""
   print "== Structures =="
   for k, v in pairs(structs) do
     print(k)
     for _, f in ipairs(v) do
       print(string.format(
-        "-%s\tC='%s%s' Lua='%s' %s", 
-        f.var_name, f.C, 
-        f.ptr_count > 0 and string.rep("*", f.ptr_count) or "", 
-        f.Lua, 
+        "-%s\tC='%s%s' Lua='%s' %s",
+        f.var_name, f.C,
+        f.ptr_count > 0 and string.rep("*", f.ptr_count) or "",
+        f.Lua,
         #f.arr_size > 0 and "["..table.concat(f.arr_size, ":").."]" or ""))
     end
   end
-  
+
   print ""
   print "== Functions =="
-  for _, fn in ipairs(fn_list) do 
+  for _, fn in ipairs(fn_list) do
     local fname, fargs, fattr = fn[1], fn[2], fn[3]
     print(fname.var_name)
-    for _, v in ipairs(fargs) do 
+    for _, v in ipairs(fargs) do
       local t = {'in'}
       if fattr.out[v.var_name] then t[1] = 'out' elseif fattr.inout[v.var_name] then t[1] = 'inout' end
       print(string.format(
-        "- %s\t[%s] C='%s%s' Lua='%s' %s", 
-        v.var_name, 
+        "- %s\t[%s] C='%s%s' Lua='%s' %s",
+        v.var_name,
         table.concat(t, ','),
-        v.C, 
-        v.ptr_count > 0 and string.rep("*", v.ptr_count) or "", 
-        v.Lua, 
+        v.C,
+        v.ptr_count > 0 and string.rep("*", v.ptr_count) or "",
+        v.Lua,
         #v.arr_size > 0 and "["..table.concat(v.arr_size, ":").."]" or ""))
     end
     if fname.C ~= "void" or fname.ptr_count > 0 then
       print "\treturn"
       print(string.format(
-        "- \t[out] C='%s%s' Lua='%s' %s", 
-        fname.C, 
-        fname.ptr_count > 0 and string.rep("*", fname.ptr_count) or "", 
-        fname.Lua, 
+        "- \t[out] C='%s%s' Lua='%s' %s",
+        fname.C,
+        fname.ptr_count > 0 and string.rep("*", fname.ptr_count) or "",
+        fname.Lua,
         #fname.arr_size > 0 and "["..table.concat(fname.arr_size, ":").."]" or ""))
     end
   end

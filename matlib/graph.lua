@@ -881,7 +881,7 @@ graph.rand = function (self, N)
   else
     -- make complete, then remove
     graph._K(self, ns)
-    for u = p-1, N, -1 do
+    for _ = p-1, N, -1 do
       local a, b = nil, nil
       repeat
         a = ns[math.random(#ns)]

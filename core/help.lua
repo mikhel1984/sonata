@@ -219,12 +219,11 @@ end
 
 --- Collect information for all modules.
 --  @param t Module info storage.
---  @param tGlob Table with aliases.
 --  @return List of strings.
-help.makeFull = function (t, tGlob, lang)
+help.makeFull = function (t, lang)
   lang = lang or help.DEFAULT
   local res = _ext.base.formatted {}
-  for nm, mod in pairs(t._modules) do
+  for nm in pairs(t._modules) do
     local acc = help.makeModule(t, nm, lang)
     for _, v in ipairs(acc) do
       res[#res+1] = v
@@ -248,7 +247,7 @@ help.prepareModule = function (mod, tlang, alias)
     else
       local title = v[TITLE]
       t = {}
-      t[TITLE] = title 
+      t[TITLE] = title
       t[DESCRIPTION] = tlang[title] or v[DESCRIPTION] -- translate description
       t[CATEGORY] = v[CATEGORY] or help.BASE      -- update category
       t[EXTEND] = help._toExtend(title, alias)

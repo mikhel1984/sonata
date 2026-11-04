@@ -21,7 +21,7 @@ local _loadStr = loadstring or load
 --  @return true in case of integer.
 local _isint = math.tointeger or function (x)
   if type(x) ~= "number" then return false end
-  local v, p = math.modf(x)
+  local _, p = math.modf(x)
   return p == 0.0
 end
 
@@ -207,6 +207,7 @@ end
 --  @param input Initial input string.
 --  @param env Thread environment.
 io_base.doRead = function (input, env)
+  -- TODO remove env?
   local partCmd, amp = string.match(input, "(.-)(\\*)%s*$")
   local cmd = {partCmd or input}
   local multiline = #amp > 1

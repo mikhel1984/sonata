@@ -54,7 +54,7 @@ for k, v in pairs(use) do Sonata.alias[v] = k end
 -- protect names
 setmetatable(_G, {
 -- store into the hidden table
-__index = function (t, k)
+__index = function (_, k)
   if Sonata.alias[k] then
     use(k)
     return Sonata._modules[k]
@@ -114,7 +114,7 @@ __call = function (self, name)
     for k, _ in  pairs(self) do _doimport(self, k) end
   elseif type(name) == "table" then
     -- load group of modules
-    for i, v in ipairs(name) do _doimport(self, v) end
+    for _, v in ipairs(name) do _doimport(self, v) end
   else
     -- load module
     _doimport(self, name)
@@ -129,7 +129,7 @@ help = function(v)
   v = v or "main"
   local res = nil
   if v == "*" then
-    res = About:makeFull(use, SONATA_LOCALIZATION)
+    res = About:makeFull(SONATA_LOCALIZATION)
   else
     res = About:findObject(v, use, SONATA_LOCALIZATION) or
           _base.formatted(SonataHelp.objectInfo(v))
@@ -273,7 +273,7 @@ process = function (args)
     cmd[#cmd+1] = "git checkout "..args[2]
   end
   local f = assert(io.popen(table.concat(cmd, " && ")))
-  f:read("a")  -- wait for process complete
+  local _ = f:read("a")  -- wait for process complete
   f:close()
 end,
 exit = true},

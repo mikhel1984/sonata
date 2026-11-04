@@ -94,6 +94,7 @@ local _ext = {
 local _cross = _ext.utils.cross
 -- Additional math functions
 local _calc = _ext.utils.calc
+local _ver = _ext.utils.versions
 -- complex square root
 local _sqrt = _ext.complex.sqrt
 
@@ -617,9 +618,9 @@ _about[autodiff.cos] = {"A:cos() --> y_A", "Cosine value.", FUNCTIONS}
 --  @return hyperbolic cosine.
 autodiff.cosh = function (self)
   local x = self._[1]
-  local f = _fun(x, "cosh", math.cosh)
+  local f = _fun(x, "cosh", _ver.cosh)
   local vars = _getVars(self._der[1])
-  local s = _fun(x, "sinh", math.sinh)
+  local s = _fun(x, "sinh", _ver.sinh)
   local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {s}, {f}, 0)
   return autodiff._init(f, linVars, quadVars, crossVars)
@@ -750,9 +751,9 @@ _about[autodiff.sin] = {"A:sin() --> y_A", "Sine value.", FUNCTIONS}
 --  @return hyperbolic sine value.
 autodiff.sinh = function (self)
   local x = self._[1]
-  local f = _fun(x, "sinh", math.sinh)
+  local f = _fun(x, "sinh", _ver.sinh)
   local vars = _getVars(self._der[1])
-  local c = _fun(x, "cosh", math.cosh)
+  local c = _fun(x, "cosh", _ver.cosh)
   local linVars, quadVars, crossVars = _chainRule(
     {self}, vars, {c}, {f}, 0)
   return autodiff._init(f, linVars, quadVars, crossVars)
@@ -793,8 +794,8 @@ _about[autodiff.tan] = {"A:tan() --> y_A", "Tangent value.", FUNCTIONS}
 --  @return hyperbolic tangent.
 autodiff.tanh = function (self)
   local x = self._[1]
-  local s = _fun(x, "sinh", math.sinh)
-  local c = _fun(x, "cosh", math.cosh)
+  local s = _fun(x, "sinh", _ver.sinh)
+  local c = _fun(x, "cosh", _ver.cosh)
   local vars = _getVars(self._der[1])
   local cc = c*c
   local linVars, quadVars, crossVars = _chainRule(

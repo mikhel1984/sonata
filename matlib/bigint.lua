@@ -913,7 +913,7 @@ bigint._newString = function (s)
       base, body = 2, string.sub(body, 3, -1)
     end
   else
-    base = tonumber(sbase)
+    base = tonumber(sbase)  -- reuse
     assert(base and base > 1, "Wrong base")
   end
   -- get digits

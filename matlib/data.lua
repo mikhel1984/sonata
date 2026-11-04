@@ -832,7 +832,7 @@ local mtRange = {
   type = "range",
   -- methods
   __len = function (self) return self._N end,
-  __newindex = function (self, k, v) end,  -- can't modify
+  __newindex = function () end,  -- can't modify
 }
 
 
@@ -1165,7 +1165,7 @@ local mtAccum = {
 --- Convert object to binary string.
 --  @param v Source object.
 --  @return binary string representation.
-data.pack = function (self, v)
+data.pack = function (_, v)
   local ver = Sonata and (100*Sonata.MAJOR_V + Sonata.MINOR_V) or 100
   local t = {"/\\/", string.pack("I2", ver), "\0",}
   local acc, bin = setmetatable({_nm={}}, mtAccum), nil

@@ -87,13 +87,13 @@ local _tinsert = table.insert
 local function _issymbolic(v) return getmetatable(v) == symbolic end
 
 
---- Check function argument. 
+--- Check function argument.
 --  Raise error when incompatible.
 --  @param v Value to check.
 local function _checkarg(v)
-  if not (_issymbolic(v) 
-    or type(v) == "number" 
-    or type(v) == "table" and v.__add and v.__mul) 
+  if not (_issymbolic(v)
+    or type(v) == "number"
+    or type(v) == "table" and v.__add and v.__mul)
   then
     error("Unexpected argument "..tostring(v))
   end
@@ -136,7 +136,7 @@ symbolic.acos = _wrapFn("acos", math.acos,
 symbolic.atan = _wrapFn("atan", math.atan,
   {function (x) return 1 / (1 + x*x) end})
 
-symbolic.sqrt = _wrapFn("sqrt", math.sqrt, 
+symbolic.sqrt = _wrapFn("sqrt", math.sqrt,
 {function (x) return 1 / (symbolic:sqrt(x) * 2) end})
 
 symbolic.log = _wrapFn("log", math.log,
@@ -448,7 +448,7 @@ symbolic.diff = function (self, S2, n)
   n = n or 1
   if type(S2) == "string" then S2 = symbolic:_newSymbol(S2) end
   local res = self
-  for i = n, 1, -1 do
+  for _ = 1, n do
     res = res:pDiff(S2)
   end
   return res

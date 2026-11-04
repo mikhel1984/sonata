@@ -417,7 +417,7 @@ numeric.ode = function (_, fn, tDelta, dY0, tParam)
   local xn = tDelta[2]
   tParam = tParam or {}
   local h = tParam.dt or math.min((xn - tDelta[1]), 1.0) / 20
-  local exit = tParam.exit or function () return false end
+  local exit = tParam.exit or function (_) return false end
   -- evaluate
   local res, last = setmetatable({{tDelta[1], dY0}}, mtOdeSolution), false
   while not exit(res) do

@@ -180,13 +180,13 @@ const.about = _about
 
 -- Make objects "immutable"
 setmetatable(const,       {__newindex=_modifyError,
-  __index = function (t, k) return _user[k] or _unit_(_user, k) end})
+  __index = function (_, k) return _user[k] or _unit_(_user, k) end})
 setmetatable(const.phy,   {__newindex=_modifyError,
-  __index = function (t, k) return _phy[k]  or _unit_(_phy, k) end})
+  __index = function (_, k) return _phy[k]  or _unit_(_phy, k) end})
 setmetatable(const.astro, {__newindex=_modifyError,
-  __index = function (t, k) return _astro[k] or _unit_(_astro, k) end})
+  __index = function (_, k) return _astro[k] or _unit_(_astro, k) end})
 setmetatable(const.math,  {__newindex=_modifyError,
-  __index = function (t, k) return _math[k] or _unit_(_math, k) end})
+  __index = function (_, k) return _math[k] or _unit_(_math, k) end})
 
 
 return const

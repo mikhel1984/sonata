@@ -91,7 +91,7 @@ end
 --  @param k Command name.
 --  @return description line.
 local function _line (k)
-  local info, txt = cmdInfo[k], nil
+  local info = cmdInfo[k]
   if info then
     return string.format("%s\t%s\t- %s", k, info[2], About:get(info[1]))
   end
@@ -172,7 +172,7 @@ commands.lang = function (expr, state, env)
     help = function(v)
       v = v or 'main'
       if v == '*' then
-        return About:makeFull(use, %s)
+        return About:makeFull(%s)
       else
         return About:findObject(v, use, %s) or Sonata.formatted(SonataHelp.objectInfo(v))
       end
@@ -487,7 +487,7 @@ commands.w = function (expr, state, env)
   -- evaluate input
   state.pipe:write(">> ", expr, "\n")
   local co = coroutine.create(_extBase.doEval)
-  local ok, status, res = coroutine.resume(co, expr, env)
+  local _, status, res = coroutine.resume(co, expr, env)
   -- process answers of a user
   while coroutine.status(co) ~= "dead" do
     if status == _extBase.EV_ASK and res[2] then
@@ -496,7 +496,7 @@ commands.w = function (expr, state, env)
       table.remove(res)
     end
     local answer = coroutine.yield(status, res)
-    ok, status, res = coroutine.resume(co, answer)
+    _, status, res = coroutine.resume(co, answer)
   end
   -- result
   if status then

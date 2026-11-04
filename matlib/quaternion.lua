@@ -472,8 +472,8 @@ quaternion.log = function (self, b)
   local v = _msqrt(_cross.float(x)^2 + _cross.float(y)^2 + _cross.float(z)^2)
   w = _cross.float(w)
   local n = _msqrt(w*w + v*v)
-  if v == 0 then 
-    return math.log(n)/b 
+  if v == 0 then
+    return math.log(n)/b
   end
   local k = math.acos(w / n) / v / b
   return quaternion._new(math.log(n)/b, x*k, y*k, z*k)

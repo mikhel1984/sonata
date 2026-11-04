@@ -127,7 +127,7 @@ io_notes.evalBlock = function (self, block, state, env)
   -- lua file
   if block.filetype == "lua" then
     local fn, err = _loadStr(block.text, nil, "t", env)
-    if err then 
+    if err then
       acc[#acc+1] = SonataHelp.CERROR..err..SonataHelp.CRESET
     else
       ok, res = pcall(fn)
@@ -148,12 +148,12 @@ io_notes.evalBlock = function (self, block, state, env)
       -- finish current input
       acc[#acc+1] = _invite[1]..line
       read = coroutine.create(_extBase.doRead)
-      ok, status, res = coroutine.resume(read, line, env)
+      _, status = coroutine.resume(read, line, env)
       input = line
     else
       -- continue input
       acc[#acc+1] = _invite[2]..line
-      ok, status, res = coroutine.resume(read, line)
+      _, status = coroutine.resume(read, line)
       input = status
     end
     -- evaluate

@@ -65,7 +65,7 @@ local io_tcp = {}
 --  @return reader function.
 local function makeReader (client)
   -- Send string and wait for user input.
-  return function (str, env)
+  return function (str, _)
     client:send(str.." ")
     return coroutine.yield()
   end

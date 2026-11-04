@@ -94,7 +94,7 @@ local function _makePostprocFiles (t)
   if t[1] ~= "-i" then
     -- postprocessor function
     local exit = false
-    return function (state, env)
+    return function (state, _)
       if exit then
         state.run = false
       elseif state.run then
