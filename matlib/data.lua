@@ -75,7 +75,7 @@ ans = a[1]                    -->  X[3]
 -- can be called with << and >>
 a1 = a:shift(-1)
 -- show new borders
-print(a:range())
+print(a:scope())
 
 -- sequential processing
 a = D(X)
@@ -225,8 +225,10 @@ end
 --  @return table or value.
 local function _fillRest (val, n, ...)
   if n then
-    if n <= 0 then
+    if n < 0 then
       error "expected positive size"
+    elseif n == 0 then
+      return {}
     end
     local res = {}
     for i = 1, n do res[i] = _fillRest(val, ...) end
@@ -269,7 +271,9 @@ local function _listUnpack (src, pos, acc, ver)
   while string.byte(src, pos) ~= 0 do
     n, pos = string.unpack("B", src, pos)
     local key = acc[n]
-    if type(key) == "string" then
+    if not key then
+      error "Key not found"
+    elseif type(key) == "string" then
       if key == "#" then
         t[#t+1], pos = _listUnpack(src, pos, acc, ver)
       elseif string.byte(key, 1) == 0x26 then  -- &
@@ -398,10 +402,7 @@ end
 --  @param fn (=nil) Function to extract data.
 --  @return index and value.
 data.binsearch = function (_, t, val, fn)
-  local i, u = _utils.binsearch(t, val, fn)
-  if u == val then
-    return i, u  -- only when found
-  end
+  return _utils.binsearch(t, val, fn)
 end
 mtList.binsearch = _wrapCall(data.binsearch)
 _about[data.binsearch] = {":binsearch(sorted_t, value, [extract_fn]) --> index_i, value",
@@ -429,9 +430,7 @@ _about[data.clip] = {":clip(data_t, min_f, max_f)",
 --- Make copy of a list wrapper.
 --  @return copy object.
 mtList.copy = function (self)
-  local t = {}
-  for i = 1, #self._tbl do t[i] = self._tbl[i] end
-  return setmetatable({_tbl=t}, mtList)
+  return setmetatable({_tbl=_copyObj(self._tbl)}, mtList)
 end
 
 
@@ -468,7 +467,7 @@ _about[data.csvwrite] = {":csvwrite(data_t, file_s, delim_s=',')",
 data.csvread = function (_, sFile, char)
   local f = assert(io.open(sFile, "r"))
   char = char or ","
-  local templ = "([^"..char.."]+)"
+  local templ = "([^"..char.."]+)"   -- TODO consider special symbols in Lua
   local res = {}
   for s in f:lines("l") do
     -- read data
@@ -538,6 +537,7 @@ data.filter = function (_, t, vCond)
   elseif type(vCond) == "table" then
     -- weights
     for i = 1, #t do
+      -- skip only for zeros, other numbers and nil are "true"
       if vCond[i] ~= 0 then res[#res+1] = t[i] end
     end
   end
@@ -552,8 +552,8 @@ _about[data.filter] = {":filter(in_t, fn|str|tbl) --> out_t",
 
 --- Apply given function to elements of the list when condition is true.
 --  @param t Table of numbers.
---  @param fn Transformation function or string.
---  @param cond Condition function f(v,i) or string.
+--  @param fn Transformation function or string f(x).
+--  @param cond Condition function or string f(x, i) -> boolean.
 --  @return obtained list.
 data.gen = function (_, t, fn, cond)
   if type(fn) == "string" then fn = _utils.Fn(fn) end
@@ -571,7 +571,7 @@ data.gen = function (_, t, fn, cond)
 end
 mtList.gen = _wrapList(data.gen)
 _about[data.gen] = {":gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t",
-  "Make new list using given transformation. Optional condition function of the form f(value,index).",
+  "Make new list using given transformation f(value). Optional condition function of the form f(value,index).",
   _tag.LIST}
 
 
@@ -614,6 +614,7 @@ data.inest = function (_, t, ...)
   local stack = {t[1](...)}  -- init first
   -- iterator
   return function ()
+    if #stack == 0 then return nil end
     local p = _ver.pack( stack[#stack]() )
     -- remove completed
     while #p == 0 and #stack > 1 do
@@ -640,9 +641,11 @@ data.iperm = function (_, t)
   -- init
   local p, loop = n, n
   for i = 1, n do ind[i] = i end
+  -- add single permutation for one element
+  if n == 1 then loop = 2 end
   -- iterator
   return function ()
-    if loop > 1 or p > 1 then  -- ignore last permutation
+    if loop > 1 or p > 1 then  -- ignore first permutation
       local res = {}
       for i = 1, n do res[i] = t[ ind[i] ] end
       -- next index
@@ -680,29 +683,13 @@ _about[data.is] = {":is(data_t, fn|str) --> weigh_t",
   "Find weights using condition (boolean function or string).", _tag.LIST}
 
 
---- Find weights (1/0) based on inverted condition.
---  @param t Data table.
---  @param fn Condition, boolean function.
---  @return Table of 1 and 0.
-data.isNot = function (_, t, fn)
-  if type(fn) == "string" then fn = _utils.Fn(fn) end
-  local res = {}
-  for i = 1, #t do
-    res[i] = fn(t[i]) and 0 or 1
-  end
-  return res
-end
-mtList.isNot = _wrapList(data.isNot)
-_about[data.isNot] = {":isNot(data_t, fn|str) --> weigh_t",
-  "Find inverted weights using condition (boolean function or string).", _tag.LIST}
-
-
 --- Show data in Markdown-like table form.
 --  @param data_t Table of form {row1, row2, etc.}.
 --  @param names_t Table of column names (optional).
 --  @param fn Table that generates new column from the given (optional).
 --  @return String with table representation.
 data.md = function (_, data_t, names_t, fn)
+  if #data_t == 0 then return "" end
   local acc, line = {}, {}
   -- data to stings
   for i, v in ipairs(data_t) do
@@ -750,7 +737,7 @@ data.reduce = function (_, t, fn, val)
   return val
 end
 mtList.reduce = _wrapCall(data.reduce)
-_about[data.reduce] = {":reduce(data, fn|str, initial=data[1]) --> var",
+_about[data.reduce] = {":reduce(data, fn|str, initial=0) --> var",
   "Apply function to its previous result and next element.", _tag.LIST}
 
 
@@ -771,13 +758,16 @@ _about[data.reverse] = {":reverse(data_t)",
 --  @param t List of elements.
 --  @param fn Comparison function or string.
 data.sort = function (_, t, fn)
-  if type(fn) == "string" then fn = _utils.Fn(fn) end
-  return _mergeSort(t, {}, 1, #t, fn)
+  if type(fn) == "string" then
+    fn = _utils.Fn(fn)
+  elseif fn == nil then
+    fn = function (x, y) return x < y end
+  end
+  _mergeSort(t, {}, 1, #t, fn)  -- TODO always modify in place ?
 end
 mtList.sort = function (self, fn) data.sort(nil, self._tbl, fn); return self end
 _about[data.sort] = {":sort(data_t, fn|str)",
-  "Sort elements of the list", _tag.LIST}
-
+  "Sort elements of the list.", _tag.LIST}
 
 
 --- Make table of given size filled with zeros.
@@ -795,8 +785,9 @@ _about[data.zeros] = {":zeros(n1, [n2,..]) --> tbl",
 data.zip = function (_, fn, ...)
   local ag, res = {...}, {}
   if type(fn) == "string" then fn = _utils.Fn(fn) end
-  local x, stop = {}, false
+  local stop = false
   for i = 1, math.huge do
+    local x = {}
     for j = 1, #ag do
       local v = ag[j][i]
       if v ~= nil then
@@ -806,7 +797,7 @@ data.zip = function (_, fn, ...)
         break
       end
     end
-    if not stop then
+    if not stop and #x == #ag then
       res[i] = fn(_ver.unpack(x))
     else
       break
@@ -844,7 +835,7 @@ mtRange.__add = function (d, R)
   if type(R) == "number" then
     return mtRange.__add(R, d)
   else
-    return mtRange._init(d + R._beg, d + R._end, R._step, R._N)
+    return mtRange._init(d + R._beg, d + R._end, R._step, R._N, R._fn)
   end
 end
 
@@ -857,7 +848,7 @@ mtRange.__sub = function (R, d)
   if type(R) == "number" then   -- d is range
     return R + (-1)*d
   else
-    return mtRange._init(R._beg - d, R._end - d, R._step, R._N)
+    return mtRange._init(R._beg - d, R._end - d, R._step, R._N, R._fn)
   end
 end
 
@@ -870,7 +861,7 @@ mtRange.__mul = function (d, R)
   if type(R) == "number" then
     return mtRange.__mul(R, d)
   else
-    return mtRange._init(d*R._beg, d*R._end, d*R._step, R._N)
+    return mtRange._init(d*R._beg, d*R._end, d*R._step, R._N, R._fn)
   end
 end
 
@@ -896,7 +887,11 @@ mtRange.__index = function (self, i)
     else
       v = self._end
     end
-    return v and self._fn and self._fn(v) or v
+    if v and self._fn then
+      return self._fn(v)
+    else
+      return v
+    end
   else
     return mtRange[i]
   end
@@ -948,11 +943,8 @@ data.range = function (_, dBegin, dEnd, dStep)
   dStep = dStep or (dEnd > dBegin) and 1 or -1
   local diff = dEnd - dBegin
   assert(diff * dStep > 0, "Wrong range or step")
-  -- check size
-  local n, _ = math.modf(diff / dStep)
-  if math.abs(n*dStep - dEnd) >= math.abs(dStep * 0.1) then n = n + 1 end
-  -- result
-  return mtRange._init(dBegin, dEnd, dStep, n)
+  local n = math.floor(diff / dStep)
+  return mtRange._init(dBegin, dBegin + n*dStep, dStep, n + 1)
 end
 _about[data.range] = {":range(begin_d, end_d, step_d=±1) --> new_R",
   "Generate range object.", _tag.AUX}
@@ -965,10 +957,22 @@ _about[data.range] = {":range(begin_d, end_d, step_d=±1) --> new_R",
 --  @return table of 10^x, Range object.
 data.logrange = function (_, dBeg, dEnd, dStep)
   local range = data.range(_, dBeg, dEnd, dStep)
-  return range:map(function (x) return 10^x end)
+  return range:map(function (x) return 10^x end)  -- TODO protect from inf
 end
 _about[data.logrange] = {":logrange(begin_d, end_d, step_d=±1) --> new_R)",
   "Generate logarithmic range.", _tag.AUX}
+
+
+--- Generate sequence of numbers of a given size.
+--  @param dBegin Beginning of range.
+--  @param dEnd End of range.
+--  @param N Number of segments.
+--  @return Table with numbers, Range object.
+data.linspace = function (_, dBeg, dEnd, N)
+  return data.range(_, dBeg, dEnd, (dEnd - dBeg)/(N + 1))
+end
+_about[data.linspace] = {":linspace(begin_d, end_d, points_N) --> new_R",
+  "Generate range object with number of segments.", _tag.AUX}
 
 
 -- Get reference to data range in other table
@@ -986,7 +990,7 @@ local mtRef = {
 --  @return Table value.
 mtRef.__index = function (self, i)
   if _ver.toInteger(i) ~= nil then
-    local n = (i >= 0) and (i + self._beg) or (i + 1 + self._end)
+    local n = (i > 0) and (i + self._beg) or (i + 1 + self._end)
     if self._beg < n and n <= self._end then
       return self._tbl[n]
     end
@@ -1017,22 +1021,22 @@ end
 
 --- Get reference range.
 --  @return Beginning and the end of data range.
-mtRef.range = function (self)
+mtRef.scope = function (self)
   return self._beg + 1, self._end
 end
 
 
---- Change bounds or the reference.
+--- Change bounds of the reference.
 --  @param a Left shift.
 --  @param b Right shift.
 --  @return New ref object.
 mtRef.shift = function (self, a, b)
   b = b or a
-  return setmetatable({
-    _beg=math.max(math.min(self._beg + a, #self._tbl - 1), 0),
-    _end=math.max(math.min(self._end + b, #self._tbl), 1),
-    _tbl=self._tbl
-  }, mtRef)
+  local ibeg = math.max(math.min(self._beg + a, #self._tbl - 1), 0)
+  local iend = math.max(math.min(self._end + b, #self._tbl), 1)
+  return setmetatable(
+    {_beg=ibeg, _end=math.max(ibeg, iend), _tbl=self._tbl},
+    mtRef)
 end
 mtRef.__shl = function (ref, n) return mtRef.shift(ref, -n, -n) end
 mtRef.__shr = function (ref, n) return mtRef.shift(ref, n, n) end
@@ -1156,6 +1160,9 @@ local mtAccum = {
   __index = function (t, k)
     table.insert(t._nm, k)
     local n = #t._nm
+    if n > 255 then
+      error "Too mutch data types"
+    end
     rawset(t, k, n)
     return n
   end
@@ -1214,7 +1221,7 @@ data.unpack = function (_, v)
   if types[1] == "#" then  -- lua table
     return _listUnpack(v, pos+1, types, ver)
   else
-    types[1] = require("matlib."..types[1])
+    types[1] = require("matlib."..types[1])  -- raise error in case of any problem
     return types[1]._unpack(v, pos+1, types, ver)
   end
 end

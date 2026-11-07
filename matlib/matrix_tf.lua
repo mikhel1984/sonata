@@ -96,7 +96,7 @@ transform.bidiag = function (M)
     local vec = transform.makeRange(B, irows, tk)
     local H1 = transform.householder(vec, k)
     U, B = U * H1:H(), H1 * B
-    if k < (w - 1) then
+    if k < w then
       vec = transform.makeRange(B, tk, icols):T()
       local H2 = transform.householder(vec, k + 1):H()
       B, V = B * H2, V * H2    -- H2 is transposed!
@@ -115,12 +115,15 @@ transform.findEigenvector = function (M, v, eps)
   -- (M - v * I)^-1
   local iM = M:copy()
   -- add 'noize'
-  v = (_norm(v) > 0) and 1.01 * v or 1E-4
-  for i = 1, M._rows do iM[i][i] = M[i][i] - v end
+  repeat
+    v = (_norm(v) > 0) and (1.01 * v) or 1E-4
+    for i = 1, M._rows do iM[i][i] = M[i][i] - v end
+  until iM:rank() == M._rows  -- avoid exact eigenvalue
   iM = iM:inv()
   -- random b
   local b = M._init(M._rows, 1, {})   -- zeros
-  for i = 1, M._rows do b[i][1] = math.random() end
+  -- random in [0, 1), i.e. 1 - random in (0, 1]
+  for i = 1, M._rows do b[i][1] = 1 - math.random() end
   b = (1 / b:norm()) * b
   -- find
   local prev = b
@@ -311,6 +314,7 @@ end
 --  @param M Source matrix.
 --  @return Matrices U, B, V, value E
 transform.qrSweep = function (M)
+  -- TODO use Wilkinson shift
   local m, n, B = M._rows, M._cols, M
   local U, V = M:eye(m, m), M:eye(n, n)
   local w, TOL = math.min(m, n), 1E-13

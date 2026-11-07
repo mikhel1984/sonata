@@ -39,12 +39,18 @@ end
 
 -- Move elements to new position (and table)
 versions.move = table.move or function (src, sfrom, sto, dfrom, dest)
-  if dest and (dest ~= src or dfrom < sfrom or dfrom > sto) then
+  if dest == nil then
+    error "Expected destination table"
+  elseif dest ~= src or dfrom < sfrom or dfrom > sto then
+    -- safe copy
     for i = sfrom, sto do
       dest[dfrom] = src[i]
       dfrom = dfrom + 1
     end
+  elseif src == dest and sfrom == dfrom then
+    -- trivial case
   else
+    -- unsafe copy
     local temp = versions.move(src, sfrom, sto, sfrom, {})
     dest = versions.move(temp, sfrom, sto, dfrom, src)
   end
@@ -69,13 +75,15 @@ end
 -- Logarithm with specific base
 -- use log10 as a marker for version 5.1
 versions.log = math.log10 and function (x, n)
-  return _mlog(x) / _mlog(n)
+  return _mlog(x) / (n and _mlog(n) or 1)
 end or _mlog
 
 
 -- Pack into table
 versions.pack = table.pack or function (...)
-  return {...}
+  local t = {..., n=0}
+  t.n = #t
+  return t
 end
 
 
@@ -93,8 +101,7 @@ end
 
 -- Hyperbolic tan.
 versions.tanh = math.tanh or function (x)
-  local v = _mexp(2*x)
-  return (v - 1) / (v + 1)
+  return 1 - 2/(_mexp(2*x) + 1)
 end
 
 
@@ -167,7 +174,7 @@ cross.norm = function (v)
   local mt = getmetatable(v)
   if mt then
     -- table
-    return mt.float and _mabs(v:float()) or mt._norm and v:_norm() or nil
+    return mt._norm and v:_norm() or mt.float and _mabs(v:float()) or nil
   end
   -- number
   return _mabs(v)
@@ -179,12 +186,14 @@ end
 --  @param fTol Required tolerance (1E-k)
 --  @return Rounded value.
 cross.round = function (v, fTol)
+  assert(fTol > 0)
   if type(v) == 'number' then
     local p, q = _modf(v / fTol)
     if     q >  0.5 then p = p + 1
     elseif q < -0.5 then p = p - 1
     -- round half to even
     elseif q == 0.5 and p % 2 ~= 0 then p = p + 1
+    elseif q == -0.5 and p % 2 ~= 0 then p = p - 1
     end
     return p * fTol
   end
@@ -349,13 +358,13 @@ utils.Fn = function (sExpr)
   if not a then
     a, b = 'x', sExpr
   end
-  local fn = versions.loadStr(
-    string.format("return function (%s) return %s end", a, b))
+  local fn = assert(versions.loadStr(
+    string.format("return function (%s) return %s end", a, b)))
   return fn and fn()
 end
 
 
---- Find maximal width for each column, align size.
+--- Find maximal width for each column, align size. Only ASCII symbols.
 --  @param tbl Table with lists of strings.
 --  @param right Alignment to right.
 --  @return list of width.
@@ -433,7 +442,7 @@ utils.packNum = function (x, acc)
   local v, p = _modf(_mabs(x))
   if p == 0.0 then
     -- integer
-    if v < 128 then
+    if v < 128 then  -- TODO correct range for negative numbers
       return string.pack('Bb', acc['&b'], x)
     elseif v < 32768 then
       return string.pack('Bi2', acc['&i2'], x)
@@ -513,8 +522,8 @@ utils.packStr = function (s, acc)
     return string.pack('BB', acc['"B'], n) .. s
   elseif n < 65536 then
     return string.pack('BI2', acc['"I2'], n) .. s
-  elseif n < 16777216 then
-    return string.pack('BI3', acc['"I3'], n) .. s
+  -- elseif n < 16777216 then
+  --   return string.pack('BI3', acc['"I3'], n) .. s  -- platform dependent
   elseif n < 4294967296 then
     return string.pack('BI4', acc['"I4'], n) .. s
   else
@@ -528,7 +537,7 @@ end
 --  @return -1, 0 or 1
 utils.sign = function (d)
   local tp = type(d)
-  if tp == 'number' or (tp == 'table' and d.__lt) then
+  if tp == 'number' or (tp == 'table' and getmetatable(d).__lt) then
     return (d > 0) and 1 or (d < 0) and -1 or 0
   end
   return 0
@@ -604,6 +613,11 @@ local calc = {
 --  @param n Integer value.
 --  @return factorial value.
 calc.fl = function (n)
+  if n >= 170 then
+    error "Factorial overflow"
+  elseif n < 0 then
+    error "Factorial not defined"
+  end
   local prod = 1
   for i = 2, n do prod = prod * i end
   return prod
