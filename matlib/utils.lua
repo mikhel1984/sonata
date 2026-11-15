@@ -12,7 +12,8 @@
 
 --	MODULE
 
-local _modf = math.modf
+local _modf, _mabs = math.modf, math.abs
+local _mexp, _msqrt, _mlog = math.exp, math.sqrt, math.log
 
 
 --=============== Choose versions =======================
@@ -38,12 +39,18 @@ end
 
 -- Move elements to new position (and table)
 versions.move = table.move or function (src, sfrom, sto, dfrom, dest)
-  if dest and (dest ~= src or dfrom < sfrom or dfrom > sto) then
+  if dest == nil then
+    error "Expected destination table"
+  elseif dest ~= src or dfrom < sfrom or dfrom > sto then
+    -- safe copy
     for i = sfrom, sto do
       dest[dfrom] = src[i]
       dfrom = dfrom + 1
     end
+  elseif src == dest and sfrom == dfrom then
+    -- trivial case
   else
+    -- unsafe copy
     local temp = versions.move(src, sfrom, sto, sfrom, {})
     dest = versions.move(temp, sfrom, sto, dfrom, src)
   end
@@ -68,13 +75,33 @@ end
 -- Logarithm with specific base
 -- use log10 as a marker for version 5.1
 versions.log = math.log10 and function (x, n)
-  return math.log(x) / math.log(n)
-end or math.log
+  return _mlog(x) / (n and _mlog(n) or 1)
+end or _mlog
 
 
 -- Pack into table
 versions.pack = table.pack or function (...)
-  return {...}
+  local t = {..., n=0}
+  t.n = #t
+  return t
+end
+
+
+-- Hyperbolic sin.
+versions.sinh = math.sinh or function (x)
+  return (_mexp(x) - _mexp(-x))*0.5
+end
+
+
+-- Hyperbolic cos.
+versions.cosh = math.cosh or function (x)
+  return (_mexp(x) + _mexp(-x))*0.5
+end
+
+
+-- Hyperbolic tan.
+versions.tanh = math.tanh or function (x)
+  return 1 - 2/(_mexp(2*x) + 1)
 end
 
 
@@ -144,13 +171,13 @@ end
 --  @param v Some object.
 --  @return Norm or nil.
 cross.norm = function (v)
-  local tp = type(v)
-  if tp == 'number' then
-    return math.abs(v)
-  elseif tp == 'table' then
-    return v.float and math.abs(v:float()) or v._norm and v:_norm() or nil
+  local mt = getmetatable(v)
+  if mt then
+    -- table
+    return mt._norm and v:_norm() or mt.float and _mabs(v:float()) or nil
   end
-  return nil
+  -- number
+  return _mabs(v)
 end
 
 
@@ -159,10 +186,14 @@ end
 --  @param fTol Required tolerance (1E-k)
 --  @return Rounded value.
 cross.round = function (v, fTol)
+  assert(fTol > 0)
   if type(v) == 'number' then
     local p, q = _modf(v / fTol)
     if     q >  0.5 then p = p + 1
     elseif q < -0.5 then p = p - 1
+    -- round half to even
+    elseif q == 0.5 and p % 2 ~= 0 then p = p + 1
+    elseif q == -0.5 and p % 2 ~= 0 then p = p - 1
     end
     return p * fTol
   end
@@ -199,6 +230,94 @@ local utils = {
 }
 
 
+-- Hash estimation.
+-- Represent hash as a sequence of integer number from 0 to 93.
+-- The result is mapped to 'visible' ASCII range 33 - 126.
+-- Goal: equal hash for tables with equal elements.
+-- Different hashes between sessions when table has functions or metatables.
+local hash = {
+  -- metamethods
+  mm = {
+    __add = true, __sub = true, __mul = true, __div = true, __mod = true,
+    __pow = true, __unm = true, __idiv = true, __band = true, __bor = true,
+    __bxor = true, __bnot = true, __shl = true, __shr = true, __concat = true,
+    __len = true, __eq = true, __lt = true, __le = true,
+    __index = true, __newindex = true, __call = true,
+  },
+  DEPTH = 10,
+  -- function parameters
+  LEN = 94, PRIME1 = 89, PRIME2 = 83, START = 33,
+}
+
+
+--- Combine hash sequences, save result to first table.
+--  @param h1 First hash sequence.
+--  @param h2 Second hash sequence.
+--  @param shift Positive shift value.
+--  @return updated first table.
+hash.add = function (h1, h2, shift)
+  local p, z = hash.PRIME2, hash.LEN
+  for i = 1, #h1 do
+    local j = (i - 1 + shift) % #h2 + 1
+    -- 83 is other prime less then 94
+    h1[i] = (h1[i]*p + h2[j]) % z
+  end
+  return h1
+end
+
+
+--- Convert object to string, find its hash sequence.
+--  @param s Source object.
+--  @return hash code sequence.
+hash.fromStr = function (s)
+  s = tostring(s)
+  local h = hash.init()
+  local p, z = hash.PRIME1, hash.LEN
+  for i = 1, #s do
+    local j = (i - 1) % #h + 1
+    h[j] = (h[j]*p + string.byte(s, i)) % z
+  end
+  return h
+end
+
+
+--- Prepare table for hash elements.
+--  @return table with zeros.
+hash.init = function () return {0, 0, 0, 0, 0, 0} end
+
+
+--- Find hash sequence for the given object.
+--  @param v Source object.
+--  @param cnt Table depth counter.
+--  @return hash code sequence.
+hash.main = function (v, cnt)
+  return (type(v) == "table" and cnt < hash.DEPTH)
+     and hash.tbl(v, cnt+1)
+      or hash.fromStr(v)
+end
+
+
+--- Find hash sequence for table.
+--  @param v Source object.
+--  @param cnt Table depth counter.
+--  @return hash code sequence.
+hash.tbl = function (v, cnt)
+  local h = hash.init()
+  h[#h] = 1  -- make difference with empty string
+  local shift, mm = 1, hash.mm
+  for k, w in pairs(v) do
+    local h1 = (k == v) and hash.fromStr(k) or hash.main(k, cnt)
+    local h2 = (w == v or mm[k]) and hash.fromStr(w) or hash.main(w, cnt)
+    -- combine
+    hash.add(h, hash.add(h1, h2, shift), 0)
+    shift = shift + 1
+  end
+  local mt = getmetatable(v)
+  if mt then hash.add(h, hash.fromStr(mt), shift) end
+  return h
+end
+
+
 --- Transform sequence of strings to number.
 --  @param t Table with strings.
 --  @return Table with numbers when possible.
@@ -231,6 +350,41 @@ local function _toNumbers (t)
 end
 
 
+--- Generate function from string.
+--  @param sExpr Expression for execution.
+--  @return Function based on the expression.
+utils.Fn = function (sExpr)
+  local a, b = string.match(sExpr, "(.*)->(.+)")
+  if not a then
+    a, b = 'x', sExpr
+  end
+  local fn = assert(versions.loadStr(
+    string.format("return function (%s) return %s end", a, b)))
+  return fn and fn()
+end
+
+
+--- Find maximal width for each column, align size. Only ASCII symbols.
+--  @param tbl Table with lists of strings.
+--  @param right Alignment to right.
+--  @return list of width.
+utils.align = function (tbl, right)
+  local base = right and '%%%ds' or '%%-%ds'
+  local len = {}
+  for _, row in ipairs(tbl) do
+    for j, str in ipairs(row) do len[j] = math.max(len[j] or 0, #str) end
+  end
+  -- align
+  for j, d in ipairs(len) do
+    local templ = string.format(base, d)
+    for _, row in ipairs(tbl) do
+      row[j] = string.format(templ, row[j])
+    end
+  end
+  return len
+end
+
+
 --- Find element that equal or bigger then the given one.
 --  @param t Table with sorted data.
 --  @param val Value for search.
@@ -256,43 +410,14 @@ utils.binsearch = function (t, val, fn)
 end
 
 
---- Generate function from string.
---  @param sExpr Expression for execution.
---  @return Function based on the expression.
-utils.Fn = function (sExpr)
-  local a, b = string.match(sExpr, "(.*)->(.+)")
-  if not a then
-    a, b = 'x', sExpr
-  end
-  local fn = versions.loadStr(
-    string.format("return function (%s) return %s end", a, b))
-  return fn and fn()
-end
-
-
---- 'Smart' number to string conversation.
---  @param d Number.
---  @return String representation.
-utils.numstr = function (d)
-  local int, frac = _modf(d)
-  local a = math.abs(int)
-  -- short integer
-  if frac == 0 then
-    if a < 1E5 then
-      return string.format('%d', int)
-    end
-  elseif int == 0 then
-    if math.abs(frac) >= 0.01 then
-      return string.format("%.3f", d)
-    end
-  elseif a < 10 then
-    return string.format('%.3f', d)
-  elseif a < 100 then
-    return string.format('%.2f', d)
-  elseif a < 1000 then
-    return string.format('%.1f', d)
-  end
-  return string.format('%.2E', d)
+--- Find hash of the object as a string.
+--  It is designed only to compare different objects in the same session.
+--  @param v Source object.
+--  @return ASCII hash string.
+utils.hash = function (v)
+  local h = hash.main(v, 0)
+  for i = 1, #h do h[i] = h[i] + hash.START end
+  return string.char(versions.unpack(h))
 end
 
 
@@ -309,49 +434,15 @@ utils.lex = function (s)
 end
 
 
---- Check sign if possible.
---  @param d Value to check.
---  @return -1, 0 or 1
-utils.sign = function (d)
-  local tp = type(d)
-  if tp == 'number' or (tp == 'table' and d.__lt) then
-    return (d > 0) and 1 or (d < 0) and -1 or 0
-  else
-    return 1
-  end
-end
-
-
---- Find maximal width for each column, align size.
---  @param tbl Table with lists of strings.
---  @param right Alignment to right.
---  @return list of width.
-utils.align = function (tbl, right)
-  local base = right and '%%%ds' or '%%-%ds'
-  local len = {}
-  for _, row in ipairs(tbl) do
-    for j, str in ipairs(row) do len[j] = math.max(len[j] or 0, #str) end
-  end
-  -- align
-  for j, d in ipairs(len) do
-    local templ = string.format(base, d)
-    for _, row in ipairs(tbl) do
-      row[j] = string.format(templ, row[j])
-    end
-  end
-  return len
-end
-
-
 --- Define number size and convert it to binary string.
 --  @param x Value to pack.
 --  @param acc Accumulator table.
 --  @return binary string.
 utils.packNum = function (x, acc)
-  local v, p = _modf(math.abs(x))
+  local v, p = _modf(_mabs(x))
   if p == 0.0 then
     -- integer
-    if v < 128 then
+    if v < 128 then  -- TODO correct range for negative numbers
       return string.pack('Bb', acc['&b'], x)
     elseif v < 32768 then
       return string.pack('Bi2', acc['&i2'], x)
@@ -364,7 +455,7 @@ utils.packNum = function (x, acc)
     end
   else
     -- float
-    if v > 3.4E38 or p < -3.4E38 then
+    if v > 3.4E38 or p < 3.4E-38 then
       return string.pack('Bd', acc['&d'], x)
     else
       return string.pack('Bf', acc['&f'], x)
@@ -395,6 +486,32 @@ utils.packSeq = function (src, i0, ii, acc)
 end
 
 
+--- 'Smart' number to string conversation.
+--  @param d Number.
+--  @return String representation.
+utils.numstr = function (d)
+  local int, frac = _modf(d)
+  local a = _mabs(int)
+  -- short integer
+  if frac == 0 then
+    if a < 1E5 then
+      return string.format('%d', int)
+    end
+  elseif int == 0 then
+    if _mabs(frac) >= 0.01 then
+      return string.format("%.3f", d)
+    end
+  elseif a < 10 then
+    return string.format('%.3f', d)
+  elseif a < 100 then
+    return string.format('%.2f', d)
+  elseif a < 1000 then
+    return string.format('%.1f', d)
+  end
+  return string.format('%.2E', d)
+end
+
+
 --- Check size and pack string.
 --  @param s Source string.
 --  @param acc Accumulator table.
@@ -405,13 +522,25 @@ utils.packStr = function (s, acc)
     return string.pack('BB', acc['"B'], n) .. s
   elseif n < 65536 then
     return string.pack('BI2', acc['"I2'], n) .. s
-  elseif n < 16777216 then
-    return string.pack('BI3', acc['"I3'], n) .. s
+  -- elseif n < 16777216 then
+  --   return string.pack('BI3', acc['"I3'], n) .. s  -- platform dependent
   elseif n < 4294967296 then
     return string.pack('BI4', acc['"I4'], n) .. s
   else
     error "Too big string, max is 4294967296"
   end
+end
+
+
+--- Check sign if possible.
+--  @param d Value to check.
+--  @return -1, 0 or 1
+utils.sign = function (d)
+  local tp = type(d)
+  if tp == 'number' or (tp == 'table' and getmetatable(d).__lt) then
+    return (d > 0) and 1 or (d < 0) and -1 or 0
+  end
+  return 0
 end
 
 
@@ -460,33 +589,51 @@ end
 --  @param ver Pack version algorithm.
 --  @return string and next position.
 utils.unpackStr = function (s, pos, key, ver)
-  local n, pos = string.unpack(string.sub(key, 2), s, pos)
+  local n = nil
+  n, pos = string.unpack(string.sub(key, 2), s, pos)
   return string.sub(s, pos, pos+n-1), pos+n
 end
 
 
 --============== Calc ================
 
-local mexp, msqrt, mlog = math.exp, math.sqrt, math.log
 
 -- Additional functions.
 local calc = {
-  -- hyperbolic cosine
-  cosh = function (x) return 0.5*(mexp(x) + mexp(-x)) end,
-  -- hyperbolic sine
-  sinh = function (x) return 0.5*(mexp(x) - mexp(-x)) end,
   -- inverse hyperbolic sine
-  asinh = function (x) return mlog(x + msqrt(x*x+1)) end,
+  asinh = function (x) return _mlog(x + _msqrt(x*x+1)) end,
   -- inverse hyperbolic cosine
-  acosh = function (x) return mlog(x + msqrt(x*x-1)) end,
+  acosh = function (x) return _mlog(x + _msqrt(x*x-1)) end,
   -- inverse hyperbolic tangent
-  atanh = function (x) return 0.5*mlog((1 + x)/(1 - x)) end,
-  -- hyperbolic tangent
-  tanh = function (x)
-    local t = mexp(2*x)
-    return (t-1)/(t+1)
-  end,
+  atanh = function (x) return 0.5*_mlog((1 + x)/(1 - x)) end,
 }
+
+
+--- Factorial.
+--  @param n Integer value.
+--  @return factorial value.
+calc.fl = function (n)
+  if n >= 170 then
+    error "Factorial overflow"
+  elseif n < 0 then
+    error "Factorial not defined"
+  end
+  local prod = 1
+  for i = 2, n do prod = prod * i end
+  return prod
+end
+
+
+--- Combinations.
+--  @param n Total number of elements.
+--  @param k Number of elements in combination.
+--  @return number of combinations.
+calc.comb = function (n, k)
+  local num, denom = 1, 1
+  for i = n, n-k+1, -1 do num = num * i end
+  for i = 2, k do denom = denom * i end
+  return num / denom
+end
 
 
 --============== Queue ================

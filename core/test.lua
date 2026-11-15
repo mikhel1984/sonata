@@ -271,7 +271,7 @@ end
 --  @return Average time in msec.
 test.time = function (fn, ...)
   local n, sum, t = 10, 0, 0
-  for i = 1, n do
+  for _ = 1, n do
     t = os.clock(); fn(...); t = os.clock() - t
     sum = sum + t
   end

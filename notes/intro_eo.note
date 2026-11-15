@@ -1,6 +1,6 @@
 -- Bonvenon al la programo por matematikaj kalkuloj "Sonata"!
 -- Ĉi tio estas rapida komenca gvidilo.
--- Tajpu 'quit' por eliri.
+-- Tajpu 'quit()' aŭ ':q' por eliri.
 -- Premu "Enter" por daŭrigi...
 -- PAUSE
 
@@ -76,7 +76,7 @@ exp(3+i*4)
 -- altiro, precipe
 -- :ls - montri liston de komponantoj
 -- :N - saltu al N-a parto
--- Voku ':13' por vidi ĉi tiun mesaĝon denove.
+-- Voku ':12' por vidi ĉi tiun mesaĝon denove.
 -- PAUSE
 
 -- Pliaj informoj pri disponeblaj moduloj

@@ -110,7 +110,8 @@ ans = p4.B                  --.2>  p1.B
 --	LOCAL
 
 local _calc = require("matlib.utils")
-local _atan2 = _calc.versions.atan2
+local _ver = _calc.versions
+local _atan2 = _ver.atan2
 _calc = _calc.calc
 
 -- categories
@@ -336,14 +337,14 @@ ellipsoid.bl2utm = function (self, t)
   local alpha, e = self.utmAlpha, math.sqrt(self.e2)
   local clon = math.cos(lon)
   local tau, slat = math.tan(lat), math.sin(lat)
-  local n1 = _calc.sinh( e*_calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
+  local n1 = _ver.sinh( e*_calc.atanh( e*tau/math.sqrt(1+tau*tau)) )
   local tau1 = tau*math.sqrt(1+n1*n1) - n1*math.sqrt(1+tau*tau)
   local xi1 = _atan2(tau1, clon)
   local eta1 = _calc.asinh(math.sin(lon) / math.sqrt(tau1*tau1 + clon*clon))
   local xi, eta, p1, q1 = xi1, eta1, 1, 0
   for i = 1, 6 do
     local sxi, cxi = math.sin(2*i*xi1), math.cos(2*i*xi1)
-    local seta, ceta = _calc.sinh(2*i*eta1), _calc.cosh(2*i*eta1)
+    local seta, ceta = _ver.sinh(2*i*eta1), _ver.cosh(2*i*eta1)
     xi  =  xi + alpha[i] * sxi * ceta
     eta = eta + alpha[i] * cxi * seta
     p1  =  p1 + 2*i*alpha[i] * cxi * ceta
@@ -476,7 +477,7 @@ ellipsoid.toBLH = function (self, t)
     local e22 = self.e2 / (1 - self.e2)
     -- initial value for tan(B)
     local tg = Z / D * (1 + e22 * self.b / math.sqrt(X*X + Y*Y + Z*Z))
-    for i = 1, 2 do       -- TODO: use tol estimation
+    for _ = 1, 2 do       -- TODO: use tol estimation
       tg = tg * (1 - self.f)    -- get tan(theta)
       local theta = math.atan(tg)
       tg = (Z + e22 * self.b * math.sin(theta)^3) /
@@ -527,20 +528,20 @@ ellipsoid.utm2bl = function (self, t)
   local xi1, eta1, p, q = xi, eta, 1, 0
   for j = 1, 6 do
     local sxi, cxi = math.sin(2*j*xi), math.cos(2*j*xi)
-    local seta, ceta = _calc.sinh(2*j*eta), _calc.cosh(2*j*eta)
+    local seta, ceta = _ver.sinh(2*j*eta), _ver.cosh(2*j*eta)
     xi1  = xi1 - beta[j] * sxi * ceta
     eta1 = eta1 - beta[j] * cxi * seta
     p    = p - 2*j*beta[j] * cxi * ceta
     q    = q - 2*j*beta[j] * sxi * seta
   end
-  local sheta1 = _calc.sinh(eta1)
+  local sheta1 = _ver.sinh(eta1)
   local cxi1 =  math.cos(xi1)
   local tau1 = math.sin(xi1) / math.sqrt(sheta1*sheta1 + cxi1*cxi1)
   local taui = tau1
   -- find latitude
   repeat
     local sqrti = math.sqrt(1 + taui*taui)
-    local si = _calc.sinh( e*_calc.atanh(e*taui/sqrti) )
+    local si = _ver.sinh( e*_calc.atanh(e*taui/sqrti) )
     local taui1 = taui*math.sqrt(1+si*si) - si*sqrti
     local diff = (tau1 - taui1) / math.sqrt(1+taui1*taui1) *
       (1 + (1-e*e)*taui*taui) / ((1-e*e)*sqrti)
@@ -763,8 +764,6 @@ _about[geodesy] = {" (param_t=nil) --> E",
 
 -- Comment to remove descriptions
 geodesy.about = _about
--- clear load data
-_tag = nil
 
 return geodesy
 

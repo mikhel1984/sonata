@@ -16,8 +16,8 @@
 --  History and autocomplete (linux)
 --SONATA_READLINE = true
 
---	Unicode symbols for function plot
---SONATA_ASCIIPLOT_UNICODE = true
+--	Unicode symbols for pretty print
+--SONATA_UNICODE_SYMBOLS = true
 
 --  Reserve aliases (keywords)
 --SONATA_PROTECT_ALIAS = true
@@ -61,6 +61,7 @@ use = {
   extremum   = "Ex",     -- extremums and optimization
   fuzzy      = "Fz",     -- fuzzy logic elements
   autodiff   = "Ad",     -- automatic 1st and 2nd derivatives
+  statistics = "Stat",   -- elements or statistics
 }
 
 

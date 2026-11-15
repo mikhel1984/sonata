@@ -228,7 +228,7 @@ local function _lst2file (t1, t2, fn)
       assert(#t1 == #t2, 'Different table length!')
       for i, v1 in ipairs(t1) do f:write(v1, ' ', t2[i], '\n') end
     else -- must be function
-      for i, v1 in ipairs(t1) do f:write(v1, ' ', t2(v1), '\n') end
+      for _, v1 in ipairs(t1) do f:write(v1, ' ', t2(v1), '\n') end
     end
   else
     for i, v1 in ipairs(t1) do f:write(i, ' ', v1, '\n') end

@@ -1,4 +1,4 @@
-# Sonata v.1.03
+# Sonata v.1.04
 
 ## Ap (asciiplot)
 Use pseudography for data visualization.
@@ -48,6 +48,8 @@ Use pseudography for data visualization.
 Automatic differentiation.
 
 **A:acos() --> y_A** - Inverse cosine.
+
+**A:acosh() --> y_A** - Inverse hyperbolic cosine.
 
 **A:asin() --> y_A** - Inverse sine.
 
@@ -151,7 +153,7 @@ Manipulations with complex numbers.
 
 **C:im() --> var** - Get imaginary part.
 
-**C:log() --> y_C** - Complex logarithm.
+**C:log([base=e]) --> y_C** - Complex logarithm.
 
 **C:re() --> var** - Get real part.
 
@@ -223,37 +225,29 @@ Collection of constants.
 
 
 ## D (data)
-Data processing and statistics.
+Data rading and processing.
 
 **D (data_t) --> new_L** - Create list wrapper.
 
 **D:binsearch(sorted_t, value, [extract_fn]) --> index_i, value** - Find position of element in sorted list using binary search.
 
+**D:clip(data_t, min_f, max_f)** - Move each element into range (min, max).
+
 **D:col(src_t, col_N) --> ref_Col** - Make column reference.
 
 **D:copy(t) --> copy_t** - Make deep copy of the table.
-
-**D:corr(xs_t, ys_t) --> float** - Find correlation for two vectors.
-
-**D:cov(data_t) --> cov_M** - Find covariance matrix for list of vectors.
 
 **D:csvread(file_s, delim_s=',') --> tbl** - Read delimiter separated data as Lua table.
 
 **D:csvwrite(data_t, file_s, delim_s=',')** - Save Lua table as delimiter separated data into file.
 
+**D:cumsum(in_t) --> out_t** - Find cumulative sum for each position.
+
+**D:diff(in_t) --> out_t** - Find differences of sequential elements.
+
 **D:filter(in_t, fn|str|tbl) --> out_t** - Get result of the table filtering. Condition is boolean function, string or table of weights.
 
-**D:freq(data_t) --> tbl** - Return table with frequencies of elements.
-
-**D:gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t** - Make new list using given transformation. Optional condition function of the form f(value,index).
-
-**D:geomean(data_t, weigh_t=nil) --> num** - Geometrical mean.
-
-**D:harmmean(data_t, weigh_t=nil) --> num** - Harmonic mean.
-
-**D:histPlot(data_t, edges_t|N=10) --> fig** - Find and show histogram.
-
-**D:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t** - Calculate amount of bins. Edges can be either number or table.
+**D:gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t** - Make new list using given transformation f(value). Optional condition function of the form f(value,index).
 
 **D:icomb(list_t, N) --> fn()->t** - Iterate over all n-length combinations of elements from the source list.
 
@@ -263,27 +257,17 @@ Data processing and statistics.
 
 **D:is(data_t, fn|str) --> weigh_t** - Find weights using condition (boolean function or string).
 
-**D:isNot(data_t, fn|str) --> weigh_t** - Find inverted weights using condition (boolean function or string).
+**D:linspace(begin_d, end_d, points_N) --> new_R** - Generate range object with number of segments.
 
 **D:logrange(begin_d, end_d, step_d=±1) --> new_R)** - Generate logarithmic range.
 
-**D:max(data_t) --> var, ind_N** - Maximal element and its index.
-
 **D:md(data_t, names_t=nil, row_fn=nil) --> str** - Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.
-
-**D:mean(data_t, wight_t=nil) --> num** - Calculate average value. Weights can be used.
-
-**D:median(data_t) --> num** - Median of the list.
-
-**D:min(data_t) --> var, ind_N** - Minimal element and its index.
-
-**D:moment(data_t, order_N, weigth_t=nil) --> num** - Central moment of order N, weights can be defined.
 
 **D:pack(obj) --> bin_s** - Pack object to binary string.
 
 **D:range(begin_d, end_d, step_d=±1) --> new_R** - Generate range object.
 
-**D:reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var** - Apply function to its previous result and next element.
+**D:reduce(data, fn|str, initial=0) --> var** - Apply function to its previous result and next element.
 
 **D:ref(data_t, begin_N=1, end_N=#src_t) --> new_R** - Return reference to the range of elements.
 
@@ -291,11 +275,7 @@ Data processing and statistics.
 
 **D:row(src_t, row_N) --> ref_Row** - Make row reference.
 
-**D:sort(data_t, fn|str)** - Sort elements of the list
-
-**D:std(data_t, weight_t=nil) --> num** - Standard deviation. Weights can be used.
-
-**D:sum(data_t) --> var** - Get sum of all elements.
+**D:sort(data_t, fn|str)** - Sort elements of the list.
 
 **D:unpack(bin_s) --> obj** - Unpack object from binary string.
 
@@ -621,7 +601,7 @@ Lua based mathematics.
 
 **int(obj) --> x** - Convert object to integer number.
 
-**log(x) --> y** - Natural logarithm.
+**log(x, [base=e]) --> y** - Natural logarithm.
 
 **quit()** - Quit the program.
 
@@ -634,6 +614,8 @@ Lua based mathematics.
 **tan(x) --> y** - Tangent.
 
 **tanh(x) --> y** - Hyperbolic tangent.
+
+**tprint(tbl)** - Print table.
 
 **use([module_s]) --> str|nil** - Call use('module') or use{'module1','module2'} to load new functions.
 
@@ -659,11 +641,11 @@ Matrix operations. The matrices are spares by default. Indexation from 1.
 
 **M:exp() --> new_M** - Matrix exponential.
 
+**M:ij() --> op_Ref** - Make matrix for element wise operations.
+
 **M:inv() --> inv_M** - Return inverse matrix.
 
-**M:kron(M2) --> M⊗M2** - Find Kronecker product.
-
-**M:kronSum(M2) --> M⊕M2** - Find Kronecker sum.
+**M:kron() --> op_Ref** - Make object for Kronecker product and sum.
 
 **M:lu() --> L_M, U_M, perm_M** - LU decomposition for the matrix. Return L, U and P matrices.
 
@@ -723,17 +705,25 @@ Matrix operations. The matrices are spares by default. Indexation from 1.
 
 **V:skew() --> M** - Make skew-symmetric matrix from the 3-element vector.
 
+**V:sum() --> d** - Find sum of the vector elements.
+
 
 ## Num (numeric)
 Group of functions for numerical calculations.
 
-**Num:der(fn, x_d) --> num** - Calculate the derivative value for the given function.
+**EPS** - Minimal float point number.
 
-**Num:int(fn, x1_d, x2_d) --> num** - Get integral of the function. Improper integrals with infinite limits are possible.
+**FMAX** - Maximal float point number.
 
-**Num:lim(fn, xn_d, isPositive=false) --> y** - Estimate limit of a function.
+**Num:der(fn, x_d) --> num, [err]** - Calculate the derivative value for the given function.
 
-**Num:newton(fn, x0_d) --> num** - Find root of equation using Newton's rule.
+**Num:derRidders(fn, x_d) --> num, [err]** - Calculate derivative of the function using Ridders' method.
+
+**Num:int(fn, x1_d, x2_d) --> num, [err]** - Get integral of the function. Improper integrals with infinite limits are possible.
+
+**Num:lim(fn, xn_d, isPositive=false) --> y, [err]** - Estimate limit of a function.
+
+**Num:newton(fn, x0_d) --> num, [err]** - Find root of equation using Newton's rule.
 
 **Num:ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t** - Numerical approximation of the ODE solution.
 
@@ -791,7 +781,7 @@ Operations with quaternions.
 
 **Q:inv() --> inv_Q** - Find inverted quaternion.
 
-**Q:log() --> log_Q** - Quaternion logarithm.
+**Q:log([base=e]) --> log_Q** - Quaternion logarithm.
 
 **Q:normalized() --> unit_Q** - Return unit quaternion.
 
@@ -811,7 +801,7 @@ Operations with quaternions.
 
 **Q:z() --> var** - Get z component.
 
-**Quat {x, y, z, w} --> new_Q** - Create new quaternion.
+**Quat {w, x, y, z} --> new_Q** - Create new quaternion.
 
 **Quat:fromAA(angle_d, axis_t|V) --> Q** - Create quaternion using angle and axis.
 
@@ -964,6 +954,38 @@ Special mathematical functions.
 **Spec:gammq(order_N, x_d) --> num** - Incomplete gamma function Q(N,x) = 1-P(N,x).
 
 
+## Stat (statistics)
+Elements of statistics.
+
+**Stat:corr(xs_t, ys_t) --> float** - Find correlation for two vectors.
+
+**Stat:cov(data_t) --> cov_M** - Find covariance matrix for list of vectors.
+
+**Stat:freq(data_t) --> tbl** - Return table with frequencies of elements.
+
+**Stat:geomean(data_t, weigh_t=nil) --> num** - Geometrical mean.
+
+**Stat:harmmean(data_t, weigh_t=nil) --> num** - Harmonic mean.
+
+**Stat:histPlot(data_t, edges_t|N=10) --> fig** - Find and show histogram.
+
+**Stat:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t** - Calculate amount of bins. Edges can be either number or table.
+
+**Stat:max(data_t) --> var, ind_N** - Maximal element and its index.
+
+**Stat:mean(data_t, wight_t=nil) --> num** - Calculate average value. Weights can be used.
+
+**Stat:median(data_t) --> num** - Median of the list.
+
+**Stat:min(data_t) --> var, ind_N** - Minimal element and its index.
+
+**Stat:moment(data_t, order_N, weigth_t=nil) --> num** - Central moment of order N, weights can be defined.
+
+**Stat:std(data_t, weight_t=nil) --> num** - Standard deviation. Weights can be used.
+
+**Stat:sum(data_t) --> var** - Get sum of all elements.
+
+
 ## Sym (symbolic)
 Symbolic calculations.
 
@@ -973,19 +995,13 @@ Symbolic calculations.
 
 **S:expand() --> expanded_S** - Expand product of polynomials when possible.
 
-**S:isFn() --> bool** - Return true if the symbol is function.
-
 **S:ratDenom() --> denominator_S** - Get denominator of the expression.
 
 **S:ratNum() --> numerator_S** - Get numerator of the expression.
 
 **S:struct() --> str** - Show internal structure.
 
-**S:val() --> num** - Get constant value.
-
 **Sym (num|str) --> new_S** - Create new symbolic variable.
-
-**Sym:def(name_s, args_t, expr_S) --> fn_S** - Define symbolical function. S is either symbolic expression or a Lua function.
 
 
 ## U (units)

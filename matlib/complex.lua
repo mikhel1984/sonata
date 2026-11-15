@@ -423,8 +423,7 @@ end
 --  @param acc Accumulator table.
 --  @return String with object representation.
 complex._pack = function (self, acc)
-  local t = {string.pack('B', acc['complex']), _utils.packSeq(self._, 1, 2, acc)}
-  return table.concat(t)
+  return string.pack('B', acc['complex']).._utils.packSeq(self._, 1, 2, acc)
 end
 
 
@@ -551,7 +550,7 @@ _about[complex.cosh] = {"C:cosh() --> y_C",
 --- Polar form point position on the unit circle.
 --  @param ang Angle.
 --  @return Complex number.
-complex.E = function (self, ang)
+complex.E = function (_, ang)
   local v = _float(ang)
   return complex._new(math.cos(v), math.sin(v))
 end
@@ -589,16 +588,18 @@ _about[complex.im] = {"C:im() --> var", "Get imaginary part."}
 
 --- Natural logarithm
 --  @param v Real or complex value.
+--  @param b (=e) Logarithm base.
 --  @return Real or complex logarithm.
-complex.log = function (v)
+complex.log = function (v, b)
+  local b = b and math.log(b) or 1.0
   if type(v) == 'number' then
-    return v < 0 and complex._new(math.log(-v), math.pi) or math.log(v)
+    return v < 0 and complex._new(math.log(-v)/b, math.pi/b) or math.log(v)/b
   else
     local c1, c2 = assert(_float(v._[1])), assert(_float(v._[2]))
-    return complex._new(0.5*math.log(c1*c1 + c2*c2), _ver.atan2(c2, c1))
+    return complex._new(0.5*math.log(c1*c1 + c2*c2)/b, _ver.atan2(c2, c1)/b)
   end
 end
-_about[complex.log] = {"C:log() --> y_C", "Complex logarithm.", FUNCTIONS}
+_about[complex.log] = {"C:log([base=e]) --> y_C", "Complex logarithm.", FUNCTIONS}
 
 
 --- Get real part.

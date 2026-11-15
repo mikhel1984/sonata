@@ -149,10 +149,9 @@ local _utils = require("matlib.utils")
 local _ver = _utils.versions
 
 local _czero = _utils.cross.isZero
-_utils = _utils.utils
 local _tf = require("matlib.asciiplot_tf")
 
-local _inform = Sonata and Sonata.warning or print
+local _inform = Sonata and not Sonata.inLua and Sonata.warning or print
 local _modf, _log, _floor = math.modf, math.log, math.floor
 local _tag = { MANUAL='manual', CONF='settings' }
 local _sonataUseColor = SONATA_USE_COLOR
@@ -328,7 +327,7 @@ end
 --- Change size w.r.t initial value.
 --  @param factor Positive multiplier.
 axis.scale = function (self, factor)
-  local int, frac = _modf(self._size * factor)
+  local int = _modf(self._size * factor)
   axis.resize(self, (int % 2 == 1) and int or (int + 1))
 end
 
@@ -704,7 +703,7 @@ end
 --- Add coordinate axes.
 asciiplot._axes = function (self)
   local vertical, horizontal, mark, up, right = '|', '-', '+', 'A', '>'
-  if SONATA_ASCIIPLOT_UNICODE then
+  if SONATA_UNICODE_SYMBOLS then
     vertical, horizontal, mark, up, right = '│', '─', '┼', '▲', '▶'
   end
   -- vertical line
@@ -1564,8 +1563,6 @@ _about[asciiplot] = {" (width_N=73, height_N=21) --> new_F",
 
 -- Comment to remove descriptions
 asciiplot.about = _about
--- clear load data
-_tag = nil
 
 return asciiplot
 

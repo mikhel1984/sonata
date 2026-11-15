@@ -1,6 +1,6 @@
 -- Welcome to "Sonata", Lua program for numerical computations!
 -- Here you can find some tips about it.
--- Print 'quit' to exit the program.
+-- Print 'quit()' or ':q' to exit the program.
 -- Press "Enter" to continue...
 -- PAUSE
 
@@ -75,7 +75,7 @@ exp(3+i*4)
 -- intraction, in particular
 -- :ls - show list of parts
 -- :N  - jump to N-th part
--- Call ':13' to see this message once again.
+-- Call ':12' to see this message once again.
 -- PAUSE
 
 -- Get more information about the available modules
