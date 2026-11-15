@@ -6,12 +6,16 @@
 H3 {text-align:center;}
 P {line-height:1.3;}
 UL {column-count: 4; border: 2px solid blue; border-radius: 5px; padding: 5px 5px 5px 30px;}
-DIV {margin-left: 10px;}
-.EXAMPLE {border: 2px solid blue; border-radius: 5px; background: lightgrey; padding: 15px; margin: 10px 0px; color:navy; }
-.DESCRIPT {text-align:center; font-style:italic; }
+body > DIV {margin-left: 10px;}
+.DESCRIPT, .descript {text-align:center; font-style:italic; }
+.mod-body {display: flex; gap: 16px; align-items: flex-start;}
+.mod-fns, .mod-ex {flex: 1 1 0; min-width: 0;}
+.mod-fns {max-height: calc(100vh - 8em); overflow: auto;}
+.mod-fns P {margin: 0;}
+pre.example, .EXAMPLE {border: 2px solid blue; border-radius: 5px; background: lightgrey; padding: 15px; margin: 0; color:navy; max-height: calc(100vh - 8em); overflow: auto;}
 </style>
 <a name="Top"></a>
-<div><h1 align="center">Sonata v.1.03</h1>
+<div><h1 align="center">Sonata v.1.04</h1>
 <ul>
 <li><a href="#Ap">asciiplot</a></li>
 <li><a href="#Ad">autodiff</a></li>
@@ -34,6 +38,7 @@ DIV {margin-left: 10px;}
 <li><a href="#Rand">random</a></li>
 <li><a href="#Rat">rational</a></li>
 <li><a href="#Spec">special</a></li>
+<li><a href="#Stat">statistics</a></li>
 <li><a href="#Sym">symbolic</a></li>
 <li><a href="#U">units</a></li>
 </ul></div>
@@ -49,27 +54,32 @@ Sonata is a Lua program for mathematical calculations.<br>
 	-h	Get this help message.<br>
 	-e	Evaluate command line expression.<br>
 		e.g. -e "2+2"<br>
-	--lang	Generation or updating of the localization file.<br>
-		e.g. --lang          # show current language<br>
-		     --lang eo       # file for Esperanto localization<br>
-	--make	Wrap code into Lua.<br>
-		e.g. --make mylib.h mylib.c<br>
+	-i	Continue interaction after file evaluation.<br>
+		e.g. -i file1.note file2.note<br>
 	--io	Method for interaction.<br>
 		e.g. --io tcp 23456  # server mode<br>
 		     --io w          # output window mode<br>
-	--doc	Generating a documentation page.<br>
-		e.g. --doc           # original documentation<br>
-		     --doc ru        # translated documentation<br>
+	--version	Get or upgrade version.<br>
+		e.g. --version       # show version<br>
+		     --version upgrade  # pull the latest code<br>
 	--new	Generating a template for a new module.<br>
 		e.g. --new  matrices  Mat  "Matrix operations."<br>
+	--lang	Generation or updating of the localization file.<br>
+		e.g. --lang          # show current language<br>
+		     --lang eo       # file for Esperanto localization<br>
 	--test	Run unit tests.<br>
 		e.g. --test          # all tests<br>
 		     --test array    # tests for the given module<br>
+	--doc	Generating a documentation page.<br>
+		e.g. --doc           # original documentation<br>
+		     --doc ru        # translated documentation<br>
+	--make	Wrap code into Lua.<br>
+		e.g. --make mylib.h mylib.c<br>
 	 No flag  - Evaluate file(s).<br>
 <br>
-<b>VERSION</b>: 1.03<br>
+<b>VERSION</b>: 1.04<br>
 <br>
-<b>MODULES</b>: random, bigint, polynomial, graph, const, complex, numeric, asciiplot, matrix, autodiff, extremum, main, units, qubit, special, fuzzy, symbolic, quaternion, data, geodesy, lens, gnuplot, rational.<br>
+<b>MODULES</b>: symbolic, gnuplot, quaternion, asciiplot, rational, complex, qubit, statistics, lens, autodiff, fuzzy, geodesy, extremum, bigint, special, const, matrix, units, numeric, polynomial, graph, main, random, data.<br>
 <br>
 <b>BUGS</b>: mail to 'mikhel.sk@gmail.com'<br>
 </p>
@@ -77,7 +87,8 @@ Sonata is a Lua program for mathematical calculations.<br>
 <div><a name="Ap"></a>
 <h3># Ap (asciiplot) #</h3>
 <p class="descript">Use pseudography for data visualization.</p>
-<p><b>Ap (width_N=73, height_N=21) --> new_F</b> - Create new asciiplot.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>Ap (width_N=73, height_N=21) --> new_F</b> - Create new asciiplot.<br>
 <b>Ap:concat(F1, F2) --> str</b> - Horizontal concatenation of figures with the same height. Equal to F1..F2.<br>
 <b>F:addLine(x1_d, y1_d, x2_d, y2_d, char_s='*')</b> - Add line from (x1,y1) to (x2,y2).<br>
 <b>F:addPoint(x_d, y_d, char_s='*') --> row_N, col_N|nil</b> - Add point (x,y) using char.<br>
@@ -96,8 +107,8 @@ Sonata is a Lua program for mathematical calculations.<br>
 <b>F:setY(par_t)</b> - Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells).<br>
 <b>F:setZ(par_t)</b> - Axis configuration, set 'range' ({a,b}), 'view' ('min'/'mid'/'max'/false), 'log'-arithm (true/false), 'fix' range (true/false), 'size' (cells).<br>
 <b>F:title(str)</b> - Set new title.<br>
-<b>F:tplot(data_t, cols_t={x=1, polar=false, sym=nil, line=false}) --> F</b> - Plot the table data, choose columns if need.<br></p>
-<pre class="example">
+<b>F:tplot(data_t, cols_t={x=1, polar=false, sym=nil, line=false}) --> F</b> - Plot the table data, choose columns if need.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'asciiplot'
 Ap = require 'matlib.asciiplot'
@@ -228,12 +239,15 @@ fig6:plot(math.exp)
 fig6:legend 'off'
 print(fig6)
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Ad"></a>
 <h3># Ad (autodiff) #</h3>
 <p class="descript">Automatic differentiation.</p>
-<p><b>A:acos() --> y_A</b> - Inverse cosine.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>A:acos() --> y_A</b> - Inverse cosine.<br>
+<b>A:acosh() --> y_A</b> - Inverse hyperbolic cosine.<br>
 <b>A:asin() --> y_A</b> - Inverse sine.<br>
 <b>A:asinh() --> y_A</b> - Inverse hyperbolic sine.<br>
 <b>A:atan() --> y_A</b> - Inverse tangent.<br>
@@ -251,8 +265,8 @@ print(fig6)
 <b>A:sqrt() --> y_A</b> - Square root value.<br>
 <b>A:tan() --> y_A</b> - Tangent value.<br>
 <b>A:tanh() --> y_A</b> - Hyperbolic tangent value.<br>
-<b>Ad (value, [name]) --> new_A</b> - Create a new autodiff object.<br></p>
-<pre class="example">
+<b>Ad (value, [name]) --> new_A</b> - Create a new autodiff object.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'autodiff'
 Ad = require 'matlib.autodiff'
@@ -315,12 +329,14 @@ ans = x:exp():d2(x)         --.2>  math.exp(x())
 
 ans = x:log():d(x)          --.2>  1/x()
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Int"></a>
 <h3># Int (bigint) #</h3>
 <p class="descript">Operations with arbitrary long integers.</p>
-<p><b>B:F() --> B!</b> - Return factorial of non-negative integer B.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>B:F() --> B!</b> - Return factorial of non-negative integer B.<br>
 <b>B:FF() --> B!!</b> - Find double factorial.<br>
 <b>B:abs() --> abs_B</b> - Return module of arbitrary long number.<br>
 <b>B:digits(N=10) --> tbl</b> - Get digits in the new numeric base.<br>
@@ -335,8 +351,8 @@ ans = x:log():d(x)          --.2>  1/x()
 <b>Int:P(n, k, isRepeat=false) --> permutaions_B</b> - Find permutations with or without repetition.<br>
 <b>Int:gcd(...) --> B</b> - Find the greatest common divisor for the given integers.<br>
 <b>Int:lcm(...) --> B</b> - Find the least common multiple for the given integers.<br>
-<b>Int:ratF(num_B, denom_B) --> num!/denom!</b> - Find ratio of factorials.<br></p>
-<pre class="example">
+<b>Int:ratF(num_B, denom_B) --> num!/denom!</b> - Find ratio of factorials.<br></p></div>
+<div class="mod-ex"><pre class="example">
 -- use 'bigint'
 Int = require 'matlib.bigint'
 -- for pack/unpack
@@ -472,12 +488,14 @@ ans = type(t)                 --> 'string'
 -- unpack
 ans = D:unpack(t)             --> a
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Z"></a>
 <h3># Z (complex) #</h3>
 <p class="descript">Manipulations with complex numbers.</p>
-<p><b>C:abs() --> float</b> - Return module of complex number.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>C:abs() --> float</b> - Return module of complex number.<br>
 <b>C:acos() --> y_C</b> - Complex inverse cosine.<br>
 <b>C:acosh() --> y_C</b> - Complex inverse hyperbolic cosine.<br>
 <b>C:arg() --> float</b> - Return argument of complex number.<br>
@@ -490,7 +508,7 @@ ans = D:unpack(t)             --> a
 <b>C:cosh() --> y_C</b> - Return hyperbolic cosine of a real or complex number.<br>
 <b>C:exp() --> y_C</b> - Return exponent in for complex argument.<br>
 <b>C:im() --> var</b> - Get imaginary part.<br>
-<b>C:log() --> y_C</b> - Complex logarithm.<br>
+<b>C:log([base=e]) --> y_C</b> - Complex logarithm.<br>
 <b>C:re() --> var</b> - Get real part.<br>
 <b>C:sin() --> y_C</b> - Return sinus of a complex number.<br>
 <b>C:sinh() --> y_C</b> - Return hyperbolic sinus of a complex number.<br>
@@ -499,8 +517,8 @@ ans = D:unpack(t)             --> a
 <b>C:tanh() --> y_C</b> - Return hyperbolic tangent of a complex number.<br>
 <b>Z (re=0, im=0) --> new_C</b> - Create new complex number.<br>
 <b>Z:E(phy) --> cos(phy)+i*sin(phy)</b> - Make complex number exp(i*phy).<br>
-<b>Z:i(x=1) --> new_C</b> - Return x*i.<br></p>
-<pre class="example">
+<b>Z:i(x=1) --> new_C</b> - Return x*i.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'complex'
 Z = require 'matlib.complex'
@@ -616,12 +634,14 @@ ans = type(t)                 -->  'string'
 -- unpack
 ans = D:unpack(t)             -->  a
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="C"></a>
 <h3># C (const) #</h3>
 <p class="descript">Collection of constants.</p>
-<p><b>C.astro.au --> 1.5E11</b> - Astronomic unit.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>C.astro.au --> 1.5E11</b> - Astronomic unit.<br>
 <b>C.astro.k --> 0.017</b> - Gaussian gravitational constant.<br>
 <b>C.astro.ly --> 9.5E15</b> - One light year.<br>
 <b>C.astro.pc --> 3.1E16</b> - One parsec.<br>
@@ -643,8 +663,8 @@ ans = D:unpack(t)             -->  a
 <b>C.phy.mu0 --> 1.2E-6</b> - Permeability of free space.<br>
 <b>C.phy.sigma --> 5.6E-8</b> - Stefan-Boltzmann constant.<br>
 <b>C:add(name_s, value, units_s=nil)</b> - Temporary define constant.<br>
-<b>C:remove(name_s) --> bool</b> - Delete user-defined constant.<br></p>
-<pre class="example">
+<b>C:remove(name_s) --> bool</b> - Delete user-defined constant.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'const'
 C = require 'matlib.const'
@@ -672,104 +692,48 @@ ans = pcall(function() C.myConst = 0 end)  -->  false
 C:remove('myConst')
 ans = C.myConst               -->  nil
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="D"></a>
 <h3># D (data) #</h3>
-<p class="descript">Data processing and statistics.</p>
-<p><b>D (data_t) --> new_L</b> - Create list wrapper.<br>
+<p class="descript">Data rading and processing.</p>
+<div class="mod-body">
+<div class="mod-fns"><p><b>D (data_t) --> new_L</b> - Create list wrapper.<br>
 <b>D:binsearch(sorted_t, value, [extract_fn]) --> index_i, value</b> - Find position of element in sorted list using binary search.<br>
+<b>D:clip(data_t, min_f, max_f)</b> - Move each element into range (min, max).<br>
 <b>D:col(src_t, col_N) --> ref_Col</b> - Make column reference.<br>
 <b>D:copy(t) --> copy_t</b> - Make deep copy of the table.<br>
-<b>D:corr(xs_t, ys_t) --> float</b> - Find correlation for two vectors.<br>
-<b>D:cov(data_t) --> cov_M</b> - Find covariance matrix for list of vectors.<br>
 <b>D:csvread(file_s, delim_s=',') --> tbl</b> - Read delimiter separated data as Lua table.<br>
 <b>D:csvwrite(data_t, file_s, delim_s=',')</b> - Save Lua table as delimiter separated data into file.<br>
+<b>D:cumsum(in_t) --> out_t</b> - Find cumulative sum for each position.<br>
+<b>D:diff(in_t) --> out_t</b> - Find differences of sequential elements.<br>
 <b>D:filter(in_t, fn|str|tbl) --> out_t</b> - Get result of the table filtering. Condition is boolean function, string or table of weights.<br>
-<b>D:freq(data_t) --> tbl</b> - Return table with frequencies of elements.<br>
-<b>D:gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t</b> - Make new list using given transformation. Optional condition function of the form f(value,index).<br>
-<b>D:geomean(data_t, weigh_t=nil) --> num</b> - Geometrical mean.<br>
-<b>D:harmmean(data_t, weigh_t=nil) --> num</b> - Harmonic mean.<br>
-<b>D:histPlot(data_t, edges_t|N=10) --> fig</b> - Find and show histogram.<br>
-<b>D:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t</b> - Calculate amount of bins. Edges can be either number or table.<br>
+<b>D:gen(in_t, fn|str, [cond_fn|cond_str=nil]) --> out_t</b> - Make new list using given transformation f(value). Optional condition function of the form f(value,index).<br>
 <b>D:icomb(list_t, N) --> fn()->t</b> - Iterate over all n-length combinations of elements from the source list.<br>
 <b>D:inest(iterators_t, ...) --> fn()->t</b> - Combine sequence of nested iterators, each previous iterator generates agrument for the next one.<br>
 <b>D:iperm(list_t) --> fn()->t</b> - Iterate over all permutations of the source list.<br>
 <b>D:is(data_t, fn|str) --> weigh_t</b> - Find weights using condition (boolean function or string).<br>
-<b>D:isNot(data_t, fn|str) --> weigh_t</b> - Find inverted weights using condition (boolean function or string).<br>
+<b>D:linspace(begin_d, end_d, points_N) --> new_R</b> - Generate range object with number of segments.<br>
 <b>D:logrange(begin_d, end_d, step_d=±1) --> new_R)</b> - Generate logarithmic range.<br>
-<b>D:max(data_t) --> var, ind_N</b> - Maximal element and its index.<br>
 <b>D:md(data_t, names_t=nil, row_fn=nil) --> str</b> - Markdown-like table representation. Rows can be processed using function row_fn(t)-->t.<br>
-<b>D:mean(data_t, wight_t=nil) --> num</b> - Calculate average value. Weights can be used.<br>
-<b>D:median(data_t) --> num</b> - Median of the list.<br>
-<b>D:min(data_t) --> var, ind_N</b> - Minimal element and its index.<br>
-<b>D:moment(data_t, order_N, weigth_t=nil) --> num</b> - Central moment of order N, weights can be defined.<br>
 <b>D:pack(obj) --> bin_s</b> - Pack object to binary string.<br>
 <b>D:range(begin_d, end_d, step_d=±1) --> new_R</b> - Generate range object.<br>
-<b>D:reduce(data, fn|str, initial=datadata_t[1]_t[1]) --> var</b> - Apply function to its previous result and next element.<br>
+<b>D:reduce(data, fn|str, initial=0) --> var</b> - Apply function to its previous result and next element.<br>
 <b>D:ref(data_t, begin_N=1, end_N=#src_t) --> new_R</b> - Return reference to the range of elements.<br>
 <b>D:reverse(data_t)</b> - Reverse table elements.<br>
 <b>D:row(src_t, row_N) --> ref_Row</b> - Make row reference.<br>
-<b>D:sort(data_t, fn|str)</b> - Sort elements of the list<br>
-<b>D:std(data_t, weight_t=nil) --> num</b> - Standard deviation. Weights can be used.<br>
-<b>D:sum(data_t) --> var</b> - Get sum of all elements.<br>
+<b>D:sort(data_t, fn|str)</b> - Sort elements of the list.<br>
 <b>D:unpack(bin_s) --> obj</b> - Unpack object from binary string.<br>
 <b>D:zeros(n1, [n2,..]) --> tbl</b> - Make table with zeros.<br>
-<b>D:zip(fn|str, ...) --> tbl</b> - Sequentially apply function to list of tables.<br></p>
-<pre class="example">
+<b>D:zip(fn|str, ...) --> tbl</b> - Sequentially apply function to list of tables.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'data'
 D = require 'matlib.data'
--- external dependencies, can be loaded implicitly
-require 'matlib.special'
-require 'matlib.matrix'
-require 'matlib.asciiplot'
 
--- initial data (tables)
+-- initial data
 X = {3,2,5,6,3,4,3,1}
--- weight
-W = {1,1,0}
--- enought to define w[i] ~= 1
-W[5] = 2; W[6] = 2
--- average
-ans = D:mean(X)             --.3>  3.375
-
--- standard deviation
-ans = D:std(X,W)            --.3>  1.314
-
--- covariance matrix
-Y = {0,2,1,3,7,5,8,4}
-tmp = D:cov({X,Y})
-ans = tmp[1][2]             --.2>  -0.656
-
--- correlation
-ans = D:corr(X, Y)          --.2> -0.166
-
--- maximum element and index
-_,ans = D:max(X)              -->  4
-
--- median
-ans = D:median(X)             -->  3
-
--- table of frequencies
-tmp = D:freq(X)
-ans = tmp[3]                  -->  3
-
--- central moment
-ans = D:moment(X,2)         --.3>  2.234
-
--- summ of elements
-ans = D:sum(X)                -->  27
-
--- minimum value
-ans = D:min(X)                -->  1
-
--- geometrical mean
-ans = D:geomean(X)          --.3>  2.995
-
--- harmonic mean
-ans = D:harmmean(X,W)       --.3>  2.571
-
 -- check if X[i] > 2
 a = D:is(X, "x > 2")
 ans = a[1]                    -->  1
@@ -786,16 +750,17 @@ ans = tmp[1]                  -->  X[1]
 -- reverse elements
 q = {1, 2, 3, 4, 5}
 D:reverse(q)
-ans = q[1]                   --> 5
+ans = q[1]                    -->  5
 
 -- merge sort
 D:sort(q, "x,y -> x < y")
-ans = q[1]                   --> 1
+ans = q[1]                    -->  1
 
 -- binary search
-ans, _ = D:binsearch(q, 2)   --> 2
+ans, _ = D:binsearch(q, 2)    -->  2
 
 -- generate new list
+Y = {0,2,1,3,7,5,8,4}
 -- use 'lazy' function definition
 tmp = D:zip("x1,x2 -> {x1-x2, x1+x2}", X, Y)
 ans = tmp[1][2]               -->  X[1]+Y[1]
@@ -805,27 +770,16 @@ ans = tmp[1][2]               -->  X[1]+Y[1]
 tmp = D:gen(X,
   "x^2",                 -- rule
   "x, n -> n % 2 == 0")  -- condition
-ans = tmp[2]                  --> X[4]*X[4]
+ans = tmp[2]                  -->  X[4]*X[4]
 
 -- sum of squares
 ans = D:reduce(q, "acc,x -> acc+x^2", 0)  --> 55
 
 -- make array 2x3
 zs = D:zeros(2, 3)
-ans = #zs[2]                  --> 3
+ans = #zs[2]                  -->  3
 
-ans = zs[1][1]                --> 0
-
--- find histogram
-a,b = D:histcounts(X, 3)
-ans = b[1]                    -->  2.25
-
--- define edges
-a,b = D:histcounts(X,{2,4,7})
-ans = a[1]                    -->  1
-
--- show histogram
-print(D:histPlot(X, {2, 4, 7}))
+ans = zs[1][1]                -->  0
 
 -- table range reference
 a = D:ref(X, 3, 6)
@@ -837,11 +791,11 @@ ans = a[1]                    -->  X[3]
 -- can be called with << and >>
 a1 = a:shift(-1)
 -- show new borders
-print(a:range())
+print(a:scope())
 
 -- sequential processing
 a = D(X)
-ans = a:filter("x > 3"):sum()  --> 15
+ans = a:filter("x > 3"):reduce("x,y -> x+y")  -->  15
 
 -- dsv write
 nm = os.tmpname()
@@ -856,19 +810,19 @@ ans = tt[2][2]                -->  t[2][2]
 
 -- get column
 vc = D:col(t, 2)
-ans = vc[2]                   --> t[2][2]
+ans = vc[2]                   -->  t[2][2]
 
 -- get row
 vr = D:row(t, 1)
-ans = vr[3]                   --> t[1][3]
+ans = vr[3]                   -->  t[1][3]
 
 -- pack
 bin = D:pack(t)
-ans = #bin                    --> 31
+ans = #bin                    -->  31
 
 -- unpack
 t2 = D:unpack(bin)
-ans = t2[1][2]                --> t[1][2]
+ans = t2[1][2]                -->  t[1][2]
 
 -- Markdown-like print for a table
 print(D:md(t))
@@ -922,7 +876,7 @@ ans = b[2]                    -->  4
 
 -- reverse range
 b1 = b:reverse()
-ans = b1[1]                   --> 10
+ans = b1[1]                   -->  10
 
 -- linear transformations
 -- with range Range objects
@@ -933,19 +887,21 @@ ans = b2[1]                   -->  8
 c = b:map(math.sin)
 ans = c[1]                  --.3>  0.909
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Ex"></a>
 <h3># Ex (extremum) #</h3>
 <p class="descript">Extremum search and optimization methods.</p>
-<p><b>Ex:annealing(task={energy=fn,update=fn,init=x0,T=energy(x0),alpha=0.9,loop=1}) -> x_M, energy_d</b> - Simulated annealing method.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>Ex:annealing(task={energy=fn,update=fn,init=x0,T=energy(x0),alpha=0.9,loop=1}) -> x_M, energy_d</b> - Simulated annealing method.<br>
 <b>Ex:fit(model_fn, param_t, xs_t, ys_t) --> minParam_t, sqSum_d</b> - Fit data with nonlinear model y = fn(x,t), where t is a parameter dictionary.<br>
 <b>Ex:linprog(c_M, param={Au=nil,bu=nil,Ae=nil,be=nil,Al=nil,bl=nil}) -> x_M, min_d</b> - Solve LP problem c*x -> min with Au*x <= bu, Ae*x == be, Al*x >= bl.<br>
 <b>Ex:maximum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d</b> - Find maximum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach.<br>
 <b>Ex:maximum1D(fn, a_d, c_d, param={method='golden',b=millde,dfun=nil}) -> x_d, min_d</b> - Find maximum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method).<br>
 <b>Ex:minimum(fn, p_M, param={method='Powel',dfun=nil}) -> x_M, min_d</b> - Find minimum of a multidimentional function. Parameters: method=Powel|simplex, dfun - gradient. p is matrix in case of simplex approach.<br>
-<b>Ex:minimum1D(fn, a_d, c_d, param={method='golden',b=middle,dfun=nil}) -> x_d, min_d</b> - Find minimum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method).<br></p>
-<pre class="example">
+<b>Ex:minimum1D(fn, a_d, c_d, param={method='golden',b=middle,dfun=nil}) -> x_d, min_d</b> - Find minimum of a function with scalar argument. Parameters: method=Brent|nil, b - initial point, dfun - derivative (for Brent method).<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'extremum'
 Ex = require 'matlib.extremum'
@@ -1059,12 +1015,14 @@ tinit = {A=3, B=2, C=-2}
 tm, fm = Ex:fit(foo, tinit, xs, ys)
 ans = tm.A                  --.2> t0.A
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Fz"></a>
 <h3># Fz (fuzzy) #</h3>
 <p class="descript">Fuzzy logic elements.</p>
-<p><b>D:getName() --> str</b> - Get domain name.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>D:getName() --> str</b> - Get domain name.<br>
 <b>D:getRange() --> range_t</b> - Get domain range.<br>
 <b>D:setList() --> sets_t</b> - Get list of set names in domain.<br>
 <b>F:andf(F2) --> new_F</b> - Fuzzy set intersection. Equal to F & F2.<br>
@@ -1090,8 +1048,8 @@ ans = tm.A                  --.2> t0.A
 <b>S:addDomain(range_t, name_s) --> D</b> - Add new domain to system, return reference.<br>
 <b>S:addRule(in_F, out_F, weight_d=1)</b> - Add new rule to system.<br>
 <b>S:apPlot(domain_s, set_s=nil) --> fig</b> - Visualize fuzzy set with asciiplot. Plot all the sets when name not defined.<br>
-<b>S:setEnv(params_t)</b> - Update system environment.<br></p>
-<pre class="example">
+<b>S:setEnv(params_t)</b> - Update system environment.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'fuzzy'
 Fz = require 'matlib.fuzzy'
@@ -1181,12 +1139,14 @@ fs.temperature = nil       -- remove domain
 fs[1] = nil                -- remove rule
 ans = #fs                     -->  2
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Geo"></a>
 <h3># Geo (geodesy) #</h3>
 <p class="descript">Coordinate transformations and other geodetic tasks.</p>
-<p><b>E.blhInto[E2] --> fn</b> - Get function to transform geodetic coordinates from E to E2 system using the Molodensky method.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>E.blhInto[E2] --> fn</b> - Get function to transform geodetic coordinates from E to E2 system using the Molodensky method.<br>
 <b>E.xyzInto[E2] --> fn</b> - Get function to transform coordinates from E to E2 system.<br>
 <b>E:bl2utm(blh_t) --> utm_t</b> - Find UTM projection for the given coordinates.<br>
 <b>E:into(E2, lin, rot, m)</b> - Define transormation rules between ellipsoids.<br>
@@ -1200,8 +1160,8 @@ ans = #fs                     -->  2
 <b>Geo:dms2deg(deg_d, min_d=0, sec_d=0) --> deg</b> - Convert degrees, minutes and seconds to degrees.<br>
 <b>Geo:grav(latitude_d) --> acceleration</b> - International gravity formula, angle in degrees.<br>
 <b>Geo:hashDecode(hash_s) --> coord_t, range_t</b> - Find central point and range of the zone.<br>
-<b>Geo:hashEncode(coord_t, letter_N=6) --> hash_s</b> - Find hash for the given point.<br></p>
-<pre class="example">
+<b>Geo:hashEncode(coord_t, letter_N=6) --> hash_s</b> - Find hash for the given point.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'geodesy'
 Geo = require 'matlib.geodesy'
@@ -1295,12 +1255,14 @@ print(h)
 p4, _ = Geo:hashDecode(h)
 ans = p4.B                  --.2>  p1.B
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Gp"></a>
 <h3># Gp (gnuplot) #</h3>
 <p class="descript">Interface for calling Gnuplot from Sonata.</p>
-<p><b>G:add(curve_v)</b> - Add new curve to figure.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>G:add(curve_v)</b> - Add new curve to figure.<br>
 <b>G:copy() --> cpy_G</b> - Get copy of the plot options.<br>
 <b>G:show()</b> - Plot data, represented as Lua table.<br>
 <b>Gp () --> new_G</b> - Prepare Gnuplot object.<br>
@@ -1330,8 +1292,8 @@ raw='set pm3d'                -- set Gnuplot options manually<br>
 <b>Gp:surfplot(x1_t, y1_t, fn1, [nm_s, x2_t, y2_t,..])</b> - Make surfacе plot. 'x' and 'y' are lists of numbers, 'fn' is functin, 'nm' - surface name.<br>
 <b>Gp:tplot(var, [x_N, y1_N, y2_N,..])</b> - Plot table, matrix or data file. Optional elements define columns.<br>
 <b>Gp:tpolar(var, [x_N, y1_N, y2_N,..])</b> - Polar plot for table, matrix or data file. Optional elements define columns.<br>
-<b>Gp:tsurf(var, [x_N, y_N, z1_N, z2_N,..])</b> - Surface plot for table, matrix or data file. Optional elements define columns.<br></p>
-<pre class="example">
+<b>Gp:tsurf(var, [x_N, y_N, z1_N, z2_N,..])</b> - Surface plot for table, matrix or data file. Optional elements define columns.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'gnuplot'
 Gp = require 'matlib.gnuplot'
@@ -1419,12 +1381,14 @@ f = Gp()
 f:add {fn1,with='lines',title='x^2-x'}
 f:show()
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Graph"></a>
 <h3># Graph (graph) #</h3>
 <p class="descript">Operations with graphs.</p>
-<p><b>G:add(n1, n2=nil, w_d=1)</b> - Add new node or edge.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>G:add(n1, n2=nil, w_d=1)</b> - Add new node or edge.<br>
 <b>G:addEdges(list_t)</b> - Import edges and weights from list.<br>
 <b>G:addNodes(list_t)</b> - Import nodes from list.<br>
 <b>G:apPlot([width_N, height_N]) --> fig</b> - Show graph structure with asciiplot. Arrows are marked with 'A'.<br>
@@ -1451,8 +1415,8 @@ f:show()
 <b>G:size() --> nodes_N</b> - Get node number. Equal to #G.<br>
 <b>G:toSvg(name_s)</b> - Convert graph to SVG image using Graphviz.<br>
 <b>Graph (params_t={}) --> new_G</b> - Create graph. Parameters are {dir=bool, O|K|C|P=number|names_t, name='n'}.<br>
-<b>Graph:concat(G_t) --> new_G</b> - Combine graphs into one object.<br></p>
-<pre class="example">
+<b>Graph:concat(G_t) --> new_G</b> - Combine graphs into one object.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'graph'
 Graph = require 'matlib.graph'
@@ -1579,12 +1543,14 @@ ans = type(t)                 -->  'string'
 -- data unpack
 ans = D:unpack(t)             --> b
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Lens"></a>
 <h3># Lens (lens) #</h3>
 <p class="descript">Matrix methods in paraxial optics.</p>
-<p><b>L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize_d</b> - Find output beam curvature and spot radius.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>L:beam(inCurv_d, inSize_d, lambda_d) --> outCurv_d, outSize_d</b> - Find output beam curvature and spot radius.<br>
 <b>L:cardinal(nLft_d=1, nRht_d=1) --> points_t</b> - Find location of the cardinal points of the given system w.r.t input and output planes, use refractive indeces if need. Return table of distances.<br>
 <b>L:copy() --> cpy_L</b> - Create a copy of the object.<br>
 <b>L:emit(lambda_d) --> outCurv_d, outSize_d|nil, waist_d|nil, shift_d|nil </b> - Find laser cavity output beam curvature. In the case of stable cavity also returns size radius, waist radius and its shift from the plane.<br>
@@ -1599,8 +1565,8 @@ ans = D:unpack(t)             --> b
 <b>Lens:gParam(waist_d, lambda_d) --> div_d, range_d</b> - Find divergence angle and Raileigh range for a Gaussian beam.<br>
 <b>Lens:gSize(waist_d, lambda_d, dist_d) --> curv_d, rad_d</b> - Find Gaussian beam radius and curvature at some distance.<br>
 <b>Lens:solve(fn, index_N, initial_d) --> found_d</b> - Find condition when component with the given index is equal to 0, use initial assumption.<br>
-<b>Lens:thin(focal_d) --> L</b> - Find the thin lens system matrix for the given focal distance.<br></p>
-<pre class="example">
+<b>Lens:thin(focal_d) --> L</b> - Find the thin lens system matrix for the given focal distance.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'lens'
 Lens = require 'matlib.lens'
@@ -1705,12 +1671,14 @@ air_rod = Lens: T(250) : T(30, 1.56)
 cavity = Lens:M(-300) .. air_rod .. Lens:M(-300) .. air_rod
 ans, _ = cavity:emit(lambda)         --.1> 300.0
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Main"></a>
 <h3># Main (main) #</h3>
 <p class="descript">Lua based mathematics.</p>
-<p><b>Fn(expr_s) --> fn</b> - Generate function from expression 'args -> value'<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>Fn(expr_s) --> fn</b> - Generate function from expression 'args -> value'<br>
 <b>Map(fn, in_t) --> out_t|nil</b> - Evaluate function for each table element.<br>
 <b>PI --> 3.14</b> - Number pi.<br>
 <b>Plot(args_t) --> fig</b> - Plot arguments in form 't', 't1,t1', 'fn,nm', 'fn1,fn2' etc. Parameters could be added with axis prefix like xrange, ylog etc.<br>
@@ -1731,15 +1699,16 @@ ans, _ = cavity:emit(lambda)         --.1> 300.0
 <b>help(fn='main') --> str</b> - Show information about the function.<br>
 <b>hypot(...)</b> - Hypotenuse.<br>
 <b>int(obj) --> x</b> - Convert object to integer number.<br>
-<b>log(x) --> y</b> - Natural logarithm.<br>
+<b>log(x, [base=e]) --> y</b> - Natural logarithm.<br>
 <b>quit()</b> - Quit the program.<br>
 <b>sin(x) --> y</b> - Sine.<br>
 <b>sinh(x) --> y</b> - Hyperbolic sinus.<br>
 <b>sqrt(x) --> y</b> - Square root.<br>
 <b>tan(x) --> y</b> - Tangent.<br>
 <b>tanh(x) --> y</b> - Hyperbolic tangent.<br>
-<b>use([module_s]) --> str|nil</b> - Call use('module') or use{'module1','module2'} to load new functions.<br></p>
-<pre class="example">
+<b>tprint(tbl)</b> - Print table.<br>
+<b>use([module_s]) --> str|nil</b> - Call use('module') or use{'module1','module2'} to load new functions.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 require 'matlib.main'
 -- for bind example
@@ -1778,12 +1747,14 @@ print(s)
 -- use Lua functions if need
 ans = math.deg(PI)          --.2>  180.0
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Mat"></a>
 <h3># Mat (matrix) #</h3>
 <p class="descript">Matrix operations. The matrices are spares by default. Indexation from 1.</p>
-<p><b>M:H() --> conj_Ref</b> - Return conjugabe transpose. <br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>M:H() --> conj_Ref</b> - Return conjugabe transpose. <br>
 <b>M:T() --> transpose_Ref</b> - Return matrix transpose.<br>
 <b>M:chol() --> lower_M|nil</b> - Cholesky decomposition of positive definite symmetric matrix.<br>
 <b>M:cols() --> N</b> - Get number of columns.<br>
@@ -1792,9 +1763,9 @@ ans = math.deg(PI)          --.2>  180.0
 <b>M:diag() --> V</b> - Get diagonal of the matrix.<br>
 <b>M:eig() --> vectors_M, values_M</b> - Find matrices of eigenvectors and eigenvalues.<br>
 <b>M:exp() --> new_M</b> - Matrix exponential.<br>
+<b>M:ij() --> op_Ref</b> - Make matrix for element wise operations.<br>
 <b>M:inv() --> inv_M</b> - Return inverse matrix.<br>
-<b>M:kron(M2) --> M⊗M2</b> - Find Kronecker product.<br>
-<b>M:kronSum(M2) --> M⊕M2</b> - Find Kronecker sum.<br>
+<b>M:kron() --> op_Ref</b> - Make object for Kronecker product and sum.<br>
 <b>M:lu() --> L_M, U_M, perm_M</b> - LU decomposition for the matrix. Return L, U and P matrices.<br>
 <b>M:map(fn|str) --> found_M</b> - Apply the given function to all elements, return new matrix.<br>
 <b>M:minor(row_N, col_N) --> minor_M</b> - Find minor for the matrix element.<br>
@@ -1823,8 +1794,9 @@ ans = math.deg(PI)          --.2>  180.0
 <b>V:dot(V2) --> num</b> - Scalar product of two vectors.<br>
 <b>V:normalize()</b> - Normalize to unit vector.<br>
 <b>V:outer(V2) --> M</b> - Outer product or two vectors.<br>
-<b>V:skew() --> M</b> - Make skew-symmetric matrix from the 3-element vector.<br></p>
-<pre class="example">
+<b>V:skew() --> M</b> - Make skew-symmetric matrix from the 3-element vector.<br>
+<b>V:sum() --> d</b> - Find sum of the vector elements.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'matrix'
 Mat = require 'matlib.matrix'
@@ -1832,6 +1804,9 @@ Mat = require 'matlib.matrix'
 Z = require 'matlib.complex'
 -- pack/unpack
 D = require 'matlib.data'
+-- eigenvalues
+require 'matlib.polynomial'
+require 'matlib.complex'
 
 -- define matrix objects
 a = Mat {{1,2},{3,4}}
@@ -2058,11 +2033,11 @@ h = m:H()
 ans = h[2][1]                 -->  Z(3,-4)
 
 -- Kronecker product
-m = a:kron(a)
+m = a:kron() * a
 ans = m[4][3]                 -->  a[2][2]*a[2][1]
 
 -- Kronecker sum
-m = a:kronSum(a)
+m = a:kron() + a
 ans = m[1][1]                 -->  2
 
 -- column wise vector
@@ -2078,20 +2053,25 @@ ans = type(t)                 -->  "string"
 v = D:unpack(t)
 ans = v[1][2]               --.3>  m[1][2]
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Num"></a>
 <h3># Num (numeric) #</h3>
 <p class="descript">Group of functions for numerical calculations.</p>
-<p><b>Num:der(fn, x_d) --> num</b> - Calculate the derivative value for the given function.<br>
-<b>Num:int(fn, x1_d, x2_d) --> num</b> - Get integral of the function. Improper integrals with infinite limits are possible.<br>
-<b>Num:lim(fn, xn_d, isPositive=false) --> y</b> - Estimate limit of a function.<br>
-<b>Num:newton(fn, x0_d) --> num</b> - Find root of equation using Newton's rule.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>EPS</b> - Minimal float point number.<br>
+<b>FMAX</b> - Maximal float point number.<br>
+<b>Num:der(fn, x_d) --> num, [err]</b> - Calculate the derivative value for the given function.<br>
+<b>Num:derRidders(fn, x_d) --> num, [err]</b> - Calculate derivative of the function using Ridders' method.<br>
+<b>Num:int(fn, x1_d, x2_d) --> num, [err]</b> - Get integral of the function. Improper integrals with infinite limits are possible.<br>
+<b>Num:lim(fn, xn_d, isPositive=false) --> y, [err]</b> - Estimate limit of a function.<br>
+<b>Num:newton(fn, x0_d) --> num, [err]</b> - Find root of equation using Newton's rule.<br>
 <b>Num:ode(fn, interval_t, y0, {dt=del/20,exit=nil}) --> ys_t</b> - Numerical approximation of the ODE solution.<br>
 List of parameters is optional and can includes time step and exit condition.<br>
 Return table of intermediate points in form {t, x(t)}.<br>
-<b>Num:solve(fn, low_d, up_d) --> num</b> - Find root of equation fn(x)=0 on interval [a,b].<br></p>
-<pre class="example">
+<b>Num:solve(fn, low_d, up_d) --> num</b> - Find root of equation fn(x)=0 on interval [a,b].<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'numeric'
 Num = require 'matlib.numeric'
@@ -2114,6 +2094,10 @@ ans = d                     --.3>  math.pi
 -- numeric derivative
 b = Num:der(math.sin, 0)
 ans = b                     --.0>  1
+
+-- derivative with Riders' method
+b = Num:derRidders(math.cos, 0)
+ans = b                     --.2>  0
 
 -- numeric limit
 fn = function (x) return math.sin(x) / x end
@@ -2162,12 +2146,14 @@ y = Num:ode(myfun, {0, 1E2}, 1, {exit=cond})
 -- time of execution before break
 ans = y[#y][1]              --.1>  2.3
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Poly"></a>
 <h3># Poly (polynomial) #</h3>
 <p class="descript">Operations with polynomials.</p>
-<p><b>P:copy() --> cpy_P</b> - Get copy of the polynomial.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>P:copy() --> cpy_P</b> - Get copy of the polynomial.<br>
 <b>P:der() --> der_P</b> - Calculate derivative of polynomial.<br>
 <b>P:int(x0_d=0) --> int_P</b> - Calculate integral, define free coefficient if need.<br>
 <b>P:roots() --> roots_t</b> - Find all the polynomial roots.<br>
@@ -2182,15 +2168,15 @@ ans = y[#y][1]              --.1>  2.3
 <b>Poly:lin(xs_t, ys_t, before_d=nil, after_d=before_d) --> Ps_t</b> - Linear data interpolation. Return table with polynomials.<br>
 <b>Poly:spline(xs_t, ys_t) --> Ps_t</b> - Cubic spline data interpolation. Return table with polynomials.<br>
 <b>Poly:taylor(x_d, fx_d, [fx'_d, fx''_d,..]) --> P</b> - Get Taylor series.<br>
-<b>Poly:x() --> P</b> - Get object to define polynomial as a sum of k*x^n<br></p>
-<pre class="example">
+<b>Poly:x() --> P</b> - Get object to define polynomial as a sum of k*x^n<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'polynomial'
 Poly = require 'matlib.polynomial'
 -- external dependencies, can be loaded implicitly
 Comp = require 'matlib.complex' -- for complex roots
 -- make matrix
-Mat = require 'matlib.matrix'   
+Mat = require 'matlib.matrix'
 -- for pack/unpack
 D = require 'matlib.data'
 
@@ -2311,16 +2297,18 @@ ans = type(t)                -->  'string'
 -- unpack
 ans = D:unpack(t)            -->  p
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Quat"></a>
 <h3># Quat (quaternion) #</h3>
 <p class="descript">Operations with quaternions.</p>
-<p><b>Q:abs() --> num</b> - Value of the norm.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>Q:abs() --> num</b> - Value of the norm.<br>
 <b>Q:conj() --> conj_Q</b> - Get conjugation. Equal to ~Q.<br>
 <b>Q:exp() --> exp_Q</b> - Quaternion exponential.<br>
 <b>Q:inv() --> inv_Q</b> - Find inverted quaternion.<br>
-<b>Q:log() --> log_Q</b> - Quaternion logarithm.<br>
+<b>Q:log([base=e]) --> log_Q</b> - Quaternion logarithm.<br>
 <b>Q:normalized() --> unit_Q</b> - Return unit quaternion.<br>
 <b>Q:rotate(in_t|V) --> out_t</b> - Apply quaternion to rotate the vector.<br>
 <b>Q:toAA() --> angle_d, axis_t|nil</b> - Get angle and axis of rotation.<br>
@@ -2330,12 +2318,12 @@ ans = D:unpack(t)            -->  p
 <b>Q:x() --> var</b> - Get x component.<br>
 <b>Q:y() --> var</b> - Get y component.<br>
 <b>Q:z() --> var</b> - Get z component.<br>
-<b>Quat {x, y, z, w} --> new_Q</b> - Create new quaternion.<br>
+<b>Quat {w, x, y, z} --> new_Q</b> - Create new quaternion.<br>
 <b>Quat:fromAA(angle_d, axis_t|V) --> Q</b> - Create quaternion using angle and axis.<br>
 <b>Quat:fromRPY(roll_d, pitch_d, yaw_d) --> Q</b> - Convert Euler angles to quaternion.<br>
 <b>Quat:fromRot(M) --> Q</b> - Convert rotation matrix to quaternion.<br>
-<b>Quat:slerp(beg_Q, end_Q, rat_f) --> rat_Q</b> - Spherical linear interpolation for the given ratio.<br></p>
-<pre class="example">
+<b>Quat:slerp(beg_Q, end_Q, rat_f) --> rat_Q</b> - Spherical linear interpolation for the given ratio.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'quaternion'
 Quat = require 'matlib.quaternion'
@@ -2431,12 +2419,14 @@ ans = type(t)                 -->  'string'
 aa = D:unpack(t)
 ans = aa:w()                --.3>  a:w()
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Qb"></a>
 <h3># Qb (qubit) #</h3>
 <p class="descript">Quantum computing simulation</p>
-<p><b>G:CNOT(slave_i, master_i) --> upd_G</b> - Add CNOT gate.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>G:CNOT(slave_i, master_i) --> upd_G</b> - Add CNOT gate.<br>
 <b>G:H([ind1, ind2 ...]) --> upd_G</b> - Add Hadamard gate.<br>
 <b>G:P(phase, [ind1, ind2 ...] --> G</b> - Add phase shift gate.<br>
 <b>G:R(axis_s, angle, [ind1, ind2 ...] --> G</b> - Add rotation for axis 'X', 'Y' or 'Z'.<br>
@@ -2458,8 +2448,8 @@ ans = aa:w()                --.3>  a:w()
 <b>Qb (state_s|num) --> Q</b> - Create new qubit.<br>
 <b>Qb:combine([Q1, Q2, ...]) --> Q|nil</b> - Make a system of qubits. Same as Q1..Q2 for two components.<br>
 <b>Qb:fromVector(V) --> Q</b> - Initialize qubit state from vector.<br>
-<b>Qb:gates(input_n) --> G</b> - Initialize gates for the given numer of inputs.<br></p>
-<pre class="example">
+<b>Qb:gates(input_n) --> G</b> - Initialize gates for the given numer of inputs.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'qubit'
 Qb = require 'matlib.qubit'
@@ -2571,12 +2561,14 @@ g5 = g5 * oracle_diffuse^2
 -- check result (it is random)
 ans = g5(Qb'000'):meas()      --> Qb'101'
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Rand"></a>
 <h3># Rand (random) #</h3>
 <p class="descript">Random number generators.</p>
-<p><b>R:array(n1, [n2,..]) --> tbl</b> - Get multidimentional random array.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>R:array(n1, [n2,..]) --> tbl</b> - Get multidimentional random array.<br>
 <b>R:binomial(p_d, N) --> int</b> - Binomial distributed random values.<br>
 <b>R:bytes(N) --> str</b> - Get sequence of random bytes.<br>
 <b>R:cauchy(mu_d=0, sigma_d=1) --> float</b> - Cauchy distributed random numbers.<br>
@@ -2593,13 +2585,13 @@ ans = g5(Qb'000'):meas()      --> Qb'101'
 <b>R:seed(N=os.time) --> R</b> - Set random generator seed.<br>
 <b>R:shuffle(tbl)</b> - Change order of elements in place.<br>
 <b>Rand () --> float</b> - Uniform distributed random number between 0 and 1.<br>
-<b>Rand:new() --> R</b> - Create random generator object.<br></p>
-<pre class="example">
+<b>Rand:new() --> R</b> - Create random generator object.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'random'
 Rand = require 'matlib.random'
 Ap = require 'matlib.asciiplot'     -- for visualization
-_D = require 'matlib.data'          -- hystogram
+Stat = require 'matlib.statistics'  -- hystogram
 Spec = require 'matlib.special'     -- gamma function
 -- prepare for data generation
 N = 100  -- number of points
@@ -2614,9 +2606,10 @@ lst = {}
 for i = 1, N do
   lst[i] = Rand()
 end
+print("mu", (0+1)/2, "var", (1-0)^2/12)
 
 -- visualize
-ts, te = _D:histcounts(lst, 10)
+ts, te = Stat:histcounts(lst, 10)
 normalize(ts, 1)
 table.insert(te, 'rest')
 fig = Ap()
@@ -2632,9 +2625,9 @@ for i = 1, N do
 end
 
 -- visualize renerated data
-ts, te = _D:histcounts(lst, 10)
+ts, te = Stat:histcounts(lst, 10)
 normalize(ts, 1)
-table.insert(te, 'rest') 
+table.insert(te, 'rest')
 fig:bar(te, ts)
 print(fig)
 
@@ -2643,6 +2636,7 @@ mu, sig = 1, 0.5
 for i = 1, N do
   lst[i] = rnd:norm(mu, sig)
 end
+print("mu", mu, "var", sig*sig)
 
 -- show normal distribution
 fig = Ap(53, 19)
@@ -2651,7 +2645,7 @@ fig:setX {view='min'}
 function visualize (data, a, b, step, fn)
   local lim = {}
   for x = a, b, step do lim[#lim+1] = x end
-  local ts, te = _D:histcounts(data, lim)
+  local ts, te = Stat:histcounts(data, lim)
   normalize(ts, step)
   fig:plot(te, ts, 'random', fn, 'pdf')
   print(fig)
@@ -2667,6 +2661,7 @@ lam = 0.5
 for i = 1, N do
   lst[i] = Rand:exp(lam)
 end
+print("mu", 1/lam, "var", 1/lam^2)
 
 -- show exponential distribution
 pdf = function (x) return  lam*math.exp(-lam*x) end
@@ -2678,6 +2673,7 @@ mu = 2; sig = 2
 for i = 1, N do
   lst[i] = Rand:logistic(mu, sig)
 end
+print("mu", mu, "var", (sig*math.pi)^2/3)
 
 -- show logistic distribution
 pdf = function (x)
@@ -2691,6 +2687,7 @@ sig = 0.5
 for i = 1, N do
   lst[i] = rnd:rayleigh(sig)
 end
+print("mu", sig*math.sqrt(math.pi/2), "var", (4-math.pi)/2*sig^2)
 
 -- show Raileigh distribution
 pdf = function (x)
@@ -2715,6 +2712,7 @@ alpha = 7; beta = 1
 for i = 1, N do
   lst[i] = rnd:gamma(alpha, beta)
 end
+print("mu", alpha/beta, "var", alpha/beta^2)
 
 -- show gamma distribution
 gamma = Spec:gamma(alpha)
@@ -2728,6 +2726,7 @@ lambda = 4
 for i = 1, N do
   lst[i] = Rand:poisson(lambda)
 end
+print("mu", lambda, "var", lambda)
 
 -- show Poisson distribution
 -- find factorial
@@ -2747,6 +2746,7 @@ n = 20; p = 0.4
 for i = 1, N do
   lst[i] = Rand:binomial(p, n)
 end
+print("mu", n*p, "var", n*p*(1-p))
 
 -- show binomial distribution
 pmf = function (x)
@@ -2793,19 +2793,21 @@ ans = #arr[1][1]              --> 3
 
 ans = arr[2][1][2] <= 1.0     --> true
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Rat"></a>
 <h3># Rat (rational) #</h3>
 <p class="descript">Computations with rational numbers.</p>
-<p><b>R:denom() --> var</b> - Return the denominator of the rational number.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>R:denom() --> var</b> - Return the denominator of the rational number.<br>
 <b>R:float() --> num</b> - Return rational number as decimal.<br>
 <b>R:num() --> var</b> - Return the numerator of rational number.<br>
 <b>R:toCF() --> coeff_t</b> - Transform rational number to continued fraction.<br>
 <b>Rat (num, denom=1) --> new_R</b> - Create rational number using num (and denom).<br>
 <b>Rat:from(src_f, err_f=1E-3) --> R</b> - Estimate ratio from floating point value.<br>
-<b>Rat:fromCF(coeff_t) --> R</b> - Transform continued fraction to rational number.<br></p>
-<pre class="example">
+<b>Rat:fromCF(coeff_t) --> R</b> - Transform continued fraction to rational number.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'rational'
 Rat = require 'matlib.rational'
@@ -2881,12 +2883,14 @@ ans = type(t)                 -->  'string'
 -- unpack
 ans = D:unpack(t)             -->  z
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Spec"></a>
 <h3># Spec (special) #</h3>
 <p class="descript">Special mathematical functions.</p>
-<p><b>Spec:besseli(order_N, x_d) --> num</b> - Modified Bessel function In(x).<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>Spec:besseli(order_N, x_d) --> num</b> - Modified Bessel function In(x).<br>
 <b>Spec:besselj(order_N, x_d) --> num</b> - Bessel function of the first kind.<br>
 <b>Spec:besselk(order_N, x_d) --> num</b> - Modified Bessel function Kn(x).<br>
 <b>Spec:bessely(order_N, x_d) --> num</b> - Bessel function of the second kind.<br>
@@ -2900,8 +2904,8 @@ ans = D:unpack(t)             -->  z
 <b>Spec:gamma(x_d) --> num</b> - Gamma function.<br>
 <b>Spec:gammaln(x_d) --> num</b> - Natural logarithm of gamma function.<br>
 <b>Spec:gammp(order_N, x_d) --> num</b> - Incomplete gamma function P(N,x).<br>
-<b>Spec:gammq(order_N, x_d) --> num</b> - Incomplete gamma function Q(N,x) = 1-P(N,x).<br></p>
-<pre class="example">
+<b>Spec:gammq(order_N, x_d) --> num</b> - Incomplete gamma function Q(N,x) = 1-P(N,x).<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'special'
 Spec = require 'matlib.special'
@@ -2945,22 +2949,107 @@ ans = Spec:besselk(5, 5) * 1E2   --3>  3.2706
 -- Dawson function
 ans = Spec:dawson(3.3)       --3>  0.1598
 
---</pre>
+--</pre></div>
+</div>
+<a href="#Top">Top</a></div>
+<div><a name="Stat"></a>
+<h3># Stat (statistics) #</h3>
+<p class="descript">Elements of statistics.</p>
+<div class="mod-body">
+<div class="mod-fns"><p><b>Stat:corr(xs_t, ys_t) --> float</b> - Find correlation for two vectors.<br>
+<b>Stat:cov(data_t) --> cov_M</b> - Find covariance matrix for list of vectors.<br>
+<b>Stat:freq(data_t) --> tbl</b> - Return table with frequencies of elements.<br>
+<b>Stat:geomean(data_t, weigh_t=nil) --> num</b> - Geometrical mean.<br>
+<b>Stat:harmmean(data_t, weigh_t=nil) --> num</b> - Harmonic mean.<br>
+<b>Stat:histPlot(data_t, edges_t|N=10) --> fig</b> - Find and show histogram.<br>
+<b>Stat:histcounts(data_t, edges_t|N=10) --> sum_t, edges_t</b> - Calculate amount of bins. Edges can be either number or table.<br>
+<b>Stat:max(data_t) --> var, ind_N</b> - Maximal element and its index.<br>
+<b>Stat:mean(data_t, wight_t=nil) --> num</b> - Calculate average value. Weights can be used.<br>
+<b>Stat:median(data_t) --> num</b> - Median of the list.<br>
+<b>Stat:min(data_t) --> var, ind_N</b> - Minimal element and its index.<br>
+<b>Stat:moment(data_t, order_N, weigth_t=nil) --> num</b> - Central moment of order N, weights can be defined.<br>
+<b>Stat:std(data_t, weight_t=nil) --> num</b> - Standard deviation. Weights can be used.<br>
+<b>Stat:sum(data_t) --> var</b> - Get sum of all elements.<br></p></div>
+<div class="mod-ex"><pre class="example">
+
+-- use 'statistics'
+Stat = require 'matlib.statistics'
+-- external dependencies, can be loaded implicitly
+require 'matlib.matrix'
+require 'matlib.asciiplot'
+
+-- initial data (tables)
+X = {3,2,5,6,3,4,3,1}
+-- weight
+W = {1,1,0}
+-- enought to define w[i] ~= 1
+W[5] = 2; W[6] = 2
+-- average
+ans = Stat:mean(X)          --.3>  3.375
+
+-- standard deviation
+ans = Stat:std(X,W)         --.3>  1.314
+
+-- covariance matrix
+Y = {0,2,1,3,7,5,8,4}
+tmp = Stat:cov({X,Y})
+ans = tmp[1][2]             --.2>  -0.656
+
+-- correlation
+ans = Stat:corr(X, Y)       --.2>  -0.166
+
+-- maximum element and index
+_,ans = Stat:max(X)           -->  4
+
+-- median
+ans = Stat:median(X)          -->  3
+
+-- table of frequencies
+tmp = Stat:freq(X)
+ans = tmp[3]                  -->  3
+
+-- central moment
+ans = Stat:moment(X,2)      --.3>  2.234
+
+-- summ of elements
+ans = Stat:sum(X)             -->  27
+
+-- minimum value
+ans = Stat:min(X)             -->  1
+
+-- geometrical mean
+ans = Stat:geomean(X)       --.3>  2.995
+
+-- harmonic mean
+ans = Stat:harmmean(X,W)    --.3>  2.571
+
+-- find histogram
+a,b = Stat:histcounts(X, 3)
+ans = b[1]                    -->  2.25
+
+-- define edges
+a,b = Stat:histcounts(X,{2,4,7})
+ans = a[1]                    -->  1
+
+-- show histogram
+print(Stat:histPlot(X, {2, 4, 7}))
+
+
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="Sym"></a>
 <h3># Sym (symbolic) #</h3>
 <p class="descript">Symbolic calculations.</p>
-<p><b>S:diff(var_S) --> derivative_S</b> - Find symbolic derivative.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>S:diff(var_S) --> derivative_S</b> - Find symbolic derivative.<br>
 <b>S:eval(env_t={}) --> upd_S|num</b> - Evaluate symbolic expression with the given environment.<br>
 <b>S:expand() --> expanded_S</b> - Expand product of polynomials when possible.<br>
-<b>S:isFn() --> bool</b> - Return true if the symbol is function.<br>
 <b>S:ratDenom() --> denominator_S</b> - Get denominator of the expression.<br>
 <b>S:ratNum() --> numerator_S</b> - Get numerator of the expression.<br>
 <b>S:struct() --> str</b> - Show internal structure.<br>
-<b>S:val() --> num</b> - Get constant value.<br>
-<b>Sym (num|str) --> new_S</b> - Create new symbolic variable.<br>
-<b>Sym:def(name_s, args_t, expr_S) --> fn_S</b> - Define symbolical function. S is either symbolic expression or a Lua function.<br></p>
-<pre class="example">
+<b>Sym (num|str) --> new_S</b> - Create new symbolic variable.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'symbolic'
 Sym = require 'matlib.symbolic'
@@ -2971,9 +3060,9 @@ ans = (x == y)                -->  false
 
 -- parse expressions
 e1, e2 = Sym('x+y, x*y')
-ans = e1                      --> x+y
+ans = e1                      -->  y+x
 
-ans = e2                      --> y*x
+ans = e2                      -->  y*x
 
 -- sum
 ans = x + 2*y - x + y         -->  3*y
@@ -2986,46 +3075,44 @@ ans = x^y * x^(2*y)           -->  x^(3*y)
 
 -- evaluate
 S = (x+y)*(x-y)
-ans = S:eval{x=2, y=1}        -->  Sym(3)
+ans = S:eval{x=2, y=1}        -->  3
 
 -- define function
-foo = Sym:def('foo', {x, y}, x^y)
+foo = function (x, y) return x^y end
 ans = foo(y, x)               -->  y^x
-
--- numeric value
-ans = foo(Sym(2), Sym(3)):val()  -->  8
-
--- get by name
-ssin = Sym.fn.sin
-ans = ssin:isFn()             --> true
 
 -- expand
 ans = S:expand()              -->  x*x-y*y
 
 -- derivative
-ans = (x^3-ssin(2*x)):diff(x)       -->  3.0*x*x-2*Sym.fn.cos(2*x)
+ans = (x^3-Sym:sin(2*x)):diff(x)     -->  3.0*x*x-2*Sym:cos(2*x)
+
+-- partial derivative
+ans = foo(x, y):diff(y, 2)    -->  x^y*Sym:log(x)^2
 
 -- parts
 S1 = (x-y)/(x+y)
-ans = S1:ratNum()                -->  x-y
+ans = S1:ratNum()             -->  x-y
 
-ans = S1:ratDenom()              --> x+y
+ans = S1:ratDenom()           -->  x+y
 
 -- internal structure
 print(S1:struct())
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><a name="U"></a>
 <h3># U (units) #</h3>
 <p class="descript">Operations and conversations according the units.</p>
-<p><b>U (val=1, name_s) --> new_U</b> - Create new elements with units.<br>
+<div class="mod-body">
+<div class="mod-fns"><p><b>U (val=1, name_s) --> new_U</b> - Create new elements with units.<br>
 <b>U.prefix</b> - Table of possible prefixes for units.<br>
 <b>U.rules</b> - Table of rules for conversation.<br>
 <b>U:convert(new_s) --> upd_U|nil</b> - Convert one units to another, return new object or nil.<br>
 <b>U:copy() --> cpy_U</b> - Create copy of the element.<br>
-<b>U:u() --> str</b> - Get units.<br></p>
-<pre class="example">
+<b>U:u() --> str</b> - Get units.<br></p></div>
+<div class="mod-ex"><pre class="example">
 
 -- use 'units'
 U = require 'matlib.units'
@@ -3088,7 +3175,8 @@ ans = type(t)                 -->  'string'
 -- unpack
 ans = D:unpack(t)             -->  a
 
---</pre>
+--</pre></div>
+</div>
 <a href="#Top">Top</a></div>
 <div><p align="center"><i>2017-2026, Stanislav Mikhel</i></p></div>
 </body></html>
