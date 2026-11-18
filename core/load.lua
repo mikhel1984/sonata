@@ -13,7 +13,7 @@
 -- Global state.
 Sonata = {
   -- version
-  MAJOR_V = 1, MINOR_V = 4,
+  MAJOR_V = 1, MINOR_V = 5,
   -- keep modules
   alias = {}, _modules = {},
 }

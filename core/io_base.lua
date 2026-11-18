@@ -90,7 +90,7 @@ io_base.doShowTable = function (t)
       local data = table.concat(out)
       out = {"\n"}
       if not continue(i, data) then
-        return "\n}"
+        io_base.info("\n}")
       end
     end
   end
@@ -112,7 +112,7 @@ io_base.doShowTable = function (t)
     end
   end
   out[#out+1] = "}"
-  return table.concat(out)
+  io_base.info(table.concat(out))
 end
 
 
